@@ -103,7 +103,7 @@ constr.rigidbody  = ft_getopt(constr, 'rigidbody', false);
 constr.sequential = ft_getopt(constr, 'sequential', false);
 
 if isempty(optimfun)
-  % determine whether the Matlab Optimization toolbox is available and can be used
+  % determine whether the MATLAB Optimization toolbox is available and can be used
   if ft_hastoolbox('optim')
     optimfun = @fminunc;
   else

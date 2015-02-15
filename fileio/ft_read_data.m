@@ -565,7 +565,7 @@ switch dataformat
     end
     
   case  {'ctf_old', 'read_ctf_meg4'}
-    % read it using the open-source matlab code that originates from CTF and that was modified by the FCDC
+    % read it using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
     dat = read_ctf_meg4(datafile, hdr.orig, begsample, endsample, chanindx);
     
   case 'ctf_read_meg4'
@@ -641,7 +641,7 @@ switch dataformat
     end
     
   case 'fcdc_matbin'
-    % multiplexed data in a *.bin file, accompanied by a matlab file containing the header
+    % multiplexed data in a *.bin file, accompanied by a MATLAB file containing the header
     offset        = begsample-1;
     numsamples    = endsample-begsample+1;
     if isfield(hdr, 'precision'),

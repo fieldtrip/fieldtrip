@@ -411,7 +411,7 @@ varargout = varargin;
 
 ft_postamble debug              % this clears the onCleanup function used for debugging in case of an error
 ft_postamble trackconfig        % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
+ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
 % ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
 % ft_postamble history varargout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
 
@@ -597,7 +597,7 @@ elseif avgoverchancmb && ~any(isnan(selchancmb))
   % str2 = sprintf('mean(%s)', str2);
   data.label = {str1, str2};
 elseif all(isfinite(selchancmb))
-  data.labelcmb = data.labelcmb(selchancmb);
+  data.labelcmb = data.labelcmb(selchancmb,:);
 elseif numel(selchancmb)==1 && any(~isfinite(selchancmb))
   % do nothing
 elseif numel(selchancmb)>1  && any(~isfinite(selchancmb))

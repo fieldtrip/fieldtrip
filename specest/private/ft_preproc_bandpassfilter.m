@@ -15,9 +15,9 @@ function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
 %                'firws' windowed sinc FIR filter
-%                'fir' FIR filter using Matlab fir1 function
-%                'firls' FIR filter using Matlab firls function (requires Matlab Signal Processing Toolbox)
-%                'brickwall' Frequency-domain filter using Matlab FFT and iFFT function
+%                'fir' FIR filter using MATLAB fir1 function
+%                'firls' FIR filter using MATLAB firls function (requires MATLAB Signal Processing Toolbox)
+%                'brickwall' Frequency-domain filter using MATLAB FFT and iFFT function
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
@@ -256,15 +256,15 @@ switch type
     end
     z(pos1:pos2) = 1;
     A = 1;
-    B = firls(N,f,z); % requires Matlab signal processing toolbox
+    B = firls(N,f,z); % requires MATLAB signal processing toolbox
   case 'brickwall'
-    ax = linspace(0, Fs, size(dat,2)); % frequency coefficients
-    fl = nearest(ax, min(Fbp))-1; % low cut-off frequency
-    fh = nearest(ax, max(Fbp))+1; % high cut-off frequency
+    ax = linspace(0, Fs, size(dat,2));  % frequency coefficients
+    fl = nearest(ax, min(Fbp))-1;       % low cut-off frequency
+    fh = nearest(ax, max(Fbp))+1;       % high cut-off frequency
     a  = 0; % suppresion rate of frequencies-not-of-interest
-    f           = fft(dat,[],2); % FFT
-    f(:,1:fl)   = a.*f(:,1:fl); % perform low cut-off
-    f(:,fh:end) = a.*f(:,fh:end); % perform high cut-off
+    f           = fft(dat,[],2);        % FFT
+    f(:,1:fl)   = a.*f(:,1:fl);         % perform low cut-off
+    f(:,fh:end) = a.*f(:,fh:end);       % perform high cut-off
     filt        = 2*real(ifft(f,[],2)); % iFFT
     return
   otherwise

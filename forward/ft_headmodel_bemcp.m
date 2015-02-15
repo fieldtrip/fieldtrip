@@ -75,7 +75,7 @@ if numel(vol.bnd)>1 && ~isequal(order(:)', 1:numel(vol.bnd))
 end
 
 if isempty(conductivity)
-  warning('No conductivity is declared, Assuming standard values\n')
+  warning('No conductivity is declared, assuming standard values')
   % brain/skull/skin
   conductivity = [1 1/80 1] * 0.33;
   vol.cond = conductivity;

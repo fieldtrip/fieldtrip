@@ -78,6 +78,7 @@ if abort
   return
 end
 
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
@@ -134,6 +135,21 @@ cfg.dimord = sprintf('%s_', dimtok{datdim});
 cfg.dimord = cfg.dimord(1:end-1); % remove trailing _
 cfg.dim    = dimsiz(datdim);
 
+if isfield(varargin{1}, 'dim')
+  % the positions can be mapped onto a 3-D volume
+  if prod(cfg.dim)==prod(varargin{1}.dim)
+    % one value per grid position, i.e. [nx ny nz]
+    cfg.origdim = varargin{1}.dim;
+  else
+    % multiple value per grid position
+    cfg.origdim = [varargin{1}.dim cfg.dim(2:end)];
+  end
+end
+
+if numel(cfg.dim)==1
+  cfg.dim(2) = 1;  % add a trailing singleton dimensions
+end
+
 if isempty(rptdim)
   % repetitions are across multiple inputs
   dat = nan(prod(dimsiz), length(varargin));
@@ -177,27 +193,17 @@ end
 
 % determine the number of output arguments
 try
-  % the nargout function in Matlab 6.5 and older does not work on function handles
+  % the nargout function in MATLAB 6.5 and older does not work on function handles
   num = nargout(statmethod);
 catch
   num = 1;
 end
 
 % perform the statistical test
-if strcmp(func2str(statmethod),'ft_statistics_montecarlo')
-  % because ft_statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data,
-  % the following (ugly) work around is necessary
-  if num>1
-    [stat, cfg] = statmethod(cfg, dat, design);
-  else
-    [stat] = statmethod(cfg, dat, design);
-  end
+if num>1
+  [stat, cfg] = statmethod(cfg, dat, design);
 else
-  if num>1
-    [stat, cfg] = statmethod(cfg, dat, design);
-  else
-    [stat] = statmethod(cfg, dat, design);
-  end
+  [stat] = statmethod(cfg, dat, design);
 end
 
 if ~isstruct(stat)

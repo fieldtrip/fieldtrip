@@ -38,7 +38,8 @@ function source = ft_datatype_source(source, varargin)
 % Revision history:
 %
 % (2014) The subfields in the avg and trial fields are now present in the
-% main structure, e.g. source.avg.pow is now source.pow.
+% main structure, e.g. source.avg.pow is now source.pow. Furthermore, the
+% inside is always represented as logical vector.
 %
 % (2011) The source representation should always be irregular, i.e. not
 % a 3-D volume, contain a "pos" field and not contain a "transform".
@@ -138,7 +139,7 @@ switch version
         else
           source.(fn{i}) = dat;
         end
-        clear dum
+        clear dat
       end % j
       source = rmfield(source, 'avg');
     end

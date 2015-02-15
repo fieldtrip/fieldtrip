@@ -114,14 +114,14 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
 cfg = ft_checkconfig(cfg, 'required',    {'inwardshift', 'template'});
 
 % set the default configuration
-if ~isfield(cfg, 'headshape'),     cfg.headshape = [];            end
-if ~isfield(cfg, 'pruneratio'),    cfg.pruneratio = 1e-3;         end
-if ~isfield(cfg, 'spheremesh'),    cfg.spheremesh = 642;          end
-if ~isfield(cfg, 'verify'),        cfg.verify = 'yes';            end
-if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';          end
-if ~isfield(cfg, 'trials'),        cfg.trials = 'all';            end
-if ~isfield(cfg, 'channel'),       cfg.channel = 'MEG';           end
-if ~isfield(cfg, 'topoparam'),     cfg.topoparam = 'rms';         end
+cfg.headshape  = ft_getopt(cfg, 'headshape', []);
+cfg.pruneratio = ft_getopt(cfg, 'pruneratio', 1e-3);
+cfg.spheremesh = ft_getopt(cfg, 'spheremesh', 642);
+cfg.verify     = ft_getopt(cfg, 'verify',     'yes');
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'yes');
+cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
+cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
+cfg.topoparam  = ft_getopt(cfg, 'topoparam',  'rms');
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -143,10 +143,11 @@ if isstruct(cfg.template)
 end
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = [];
+tmpcfg.trials = cfg.trials;
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 Ntrials = length(data.trial);
 

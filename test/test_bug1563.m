@@ -18,7 +18,7 @@ if nargin<2
 end
 
 if ~isequal('PCWIN64', computer)
-  warning('this bug only occurs under windows and matlab 64 bit')
+  warning('this bug only occurs under Windows and MATLAB 64 bit')
 end
 
 %% Try to reproduce

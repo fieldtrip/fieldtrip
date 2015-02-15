@@ -113,6 +113,7 @@ switch parcelversion
     
     % make a list of fields that represent a parcellation
     fn = fieldnames(parcellation);
+    fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
     sel = false(size(fn));
     for i=1:numel(fn)
       sel(i) = isnumeric(parcellation.(fn{i})) && numel(parcellation.(fn{i}))==dim;

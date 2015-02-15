@@ -26,7 +26,7 @@ hdr.nChans = 100;
 
 stopwatch = tic;
 % run the test for 10 minutes
-% after a few attempts, Matlab crashes
+% after a few attempts, MATLAB crashes
 while (toc(stopwatch)<600)
     disp(['counter: ' num2str(cnt)]); cnt = cnt + 1;
     ft_create_buffer(1972);

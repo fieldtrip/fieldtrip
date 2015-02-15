@@ -173,7 +173,7 @@ elseif strcmp(sel, 'montage')
   maxval = max(dat(:));
 %  for z=1:size(dat,3)
 %    % convert to 4D image for montage display
-%    % transpose to correct for x-y axis change in Matlab image function
+%    % transpose to correct for x-y axis change in MATLAB image function
 %    img(:,:,1,z) = transpose(dat(:,:,z));
 %  end
 %  montage(img);

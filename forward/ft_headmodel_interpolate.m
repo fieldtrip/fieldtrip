@@ -113,20 +113,21 @@ if ischar(grid)
   pos = pos';pos(4,:) = 1;
   transform = pos/ind;
   
-  inside = sub2ind(dim, ind(1,:), ind(2,:), ind(3,:)); % note that ind is transposed
+  insideindx = sub2ind(dim, ind(1,:), ind(2,:), ind(3,:)); % note that ind is transposed
   
   if false
-    % this shows how the positions are reconstructed from dim+transform+inside
+    % this shows how the positions are reconstructed from dim+transform+insideindx
     [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
     vox = [X(:) Y(:) Z(:)];
     head = ft_warp_apply(transform, vox);
-    assert(norm(head(inside,:)-ssg)/norm(ssg)<1e-9); % there is a little bit rounding off error
+    assert(norm(head(insideindx,:)-ssg)/norm(ssg)<1e-9); % there is a little bit rounding off error
   end
   
   grid           = [];
   grid.dim       = dim;
   grid.transform = transform;
-  grid.inside    = inside; % all other grid points are assumed to be "outside"
+  grid.inside    = false(prod(dim),1);
+  grid.inside(insideindx) = true;
   grid.leadfield = cell(dim);
   
   % ensure that it has geometrical units (probably mm)
@@ -136,14 +137,14 @@ if ischar(grid)
   [lftdim, lft] = readBESAlft(lftfile);
   
   assert(lftdim(1)==length(sens.label), 'inconsistent number of electrodes');
-  assert(lftdim(2)==length(inside), 'inconsistent number of grid positions');
+  assert(lftdim(2)==length(insideindx), 'inconsistent number of grid positions');
   assert(lftdim(3)==3, 'unexpected number of leadfield columns');
   assert(isequal(grid.unit, sens.unit), 'inconsistent geometrical units');
   
   
-  for i=1:length(grid.inside)
+  for i=1:length(insideindx)
     sel = 3*(i-1)+(1:3);
-    grid.leadfield{grid.inside(i)} = lft(:,sel);
+    grid.leadfield{insideindx)} = lft(:,sel);
   end
   
   fprintf('finished import of BESA leadfield file\n');
@@ -158,10 +159,10 @@ if isfield(grid, 'leadfield')
   % which should be reorganized into channel-specific volumes and stored to disk as nifti files
   
   % ensure that it is represented as 3-D volume
-  grid = ft_checkdata(grid, 'datatype', 'volume', 'inside', 'index');
+  grid = ft_checkdata(grid, 'datatype', 'volume');
   
   nchan = length(sens.label);
-  if size(grid.leadfield{grid.inside(1)},1)~=nchan
+  if size(grid.leadfield{insideindx(1)},1)~=nchan
     error('the number of channels does not match');
   end
   
@@ -169,7 +170,8 @@ if isfield(grid, 'leadfield')
   vol.type      = 'interpolate';
   vol.dim       = grid.dim;
   vol.transform = grid.transform;
-  vol.inside    = grid.inside;
+  vol.inside    = false(grid.dim);
+  vol.inside(insideindx) = true;
   vol.sens      = sens;
   vol.filename  = cell(size(sens.label));
   
@@ -197,7 +199,7 @@ if isfield(grid, 'leadfield')
   
   for i=1:nchan
     dat = zeros([vol.dim 3]);
-    for j=grid.inside(:)'
+    for j=insideindx(:)'
       % [i1, i2, i3] = ind2sub(vol.dim, j);
       % ind2sub is slow, simply look them up instead
       i1 = ind1(j);

@@ -7,7 +7,7 @@ function test_tutorial_spike20130308
 
 % Reading in spike data
 % 
-% Make sure you run ft_defaults after having added the main FieldTrip path (e.g. addpath('path_to_fieldtrip')), ensuring that the required functions are in your Matlab path. For spike analysis there is spike toolbox that is located in fieldtrip/contrib/spike.
+% Make sure you run ft_defaults after having added the main FieldTrip path (e.g. addpath('path_to_fieldtrip')), ensuring that the required functions are in your MATLAB path. For spike analysis there is spike toolbox that is located in fieldtrip/contrib/spike.
 % 
 % Spike data can be read out using the function ft_read_spike. At the time of writing this tutorial the supported formats are neurosim, mclust t files, neuralynx (nse, nst, ntt, nts) and plexon (nex and plx) files.. The original data can be obtained from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/spike/p029_sort_final_01.nex. After reading out the spike data, we select the spike channels of interest.
 
@@ -101,7 +101,7 @@ event = ft_read_event('p029_sort_final_01.nex')
 %     type
 %     duration
 %     offset
-% specifies for each of the 37689 recorded events the sample (if available: this corresponds to the LFP samples, see the spike-field tutorial), the value (a number uniquely identifying the event) and the timestamp at which it occurred. Using the value and timestamp fields, we built a user-specified function that constructs a cfg.trl matrix. In this case, we take -2.75 before stimulus onset until the first change of the stimulus. We first create a trial function that needs to be saved in the Matlab path.
+% specifies for each of the 37689 recorded events the sample (if available: this corresponds to the LFP samples, see the spike-field tutorial), the value (a number uniquely identifying the event) and the timestamp at which it occurred. Using the value and timestamp fields, we built a user-specified function that constructs a cfg.trl matrix. In this case, we take -2.75 before stimulus onset until the first change of the stimulus. We first create a trial function that needs to be saved in the MATLAB path.
 
 % For the purpose of walking through the tutorial, you should copy and paste the code above in the MATLAB editor and save the m-file as trialfun_stimon.m. Alternatively you can download the trial function from the ftp server.
 % 

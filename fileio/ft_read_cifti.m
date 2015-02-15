@@ -511,8 +511,7 @@ if ~isempty(BrainModel)
             brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfNodes;
           case {'2', '2.0'}
             greynodeIndex{i}       = BrainModel(i).VertexIndices;
-            %brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
-            brainstructureIndex{i} = 1:numel(BrainModel(i).VertexIndices);
+            brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
           otherwise
             error('unsupported cifti version');
         end % switch

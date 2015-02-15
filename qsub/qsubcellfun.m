@@ -185,7 +185,7 @@ stack = min(stack, numjob);
 
 % give some feedback about the stacking
 if stack>1
-  fprintf('stacking %d matlab jobs in each qsub job\n', stack);
+  fprintf('stacking %d MATLAB jobs in each qsub job\n', stack);
 end
 
 % prepare some arrays that are used for bookkeeping

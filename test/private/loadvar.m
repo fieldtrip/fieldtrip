@@ -16,7 +16,7 @@ else
 end
 
 % note that this sometimes fails, returning an empty var
-% this is probably due to matlab filename and matlab version issues
+% this is probably due to MATLAB filename and MATLAB version issues
 var = whos('-file', filename);
 
 if length(var)==0 && nargin==1

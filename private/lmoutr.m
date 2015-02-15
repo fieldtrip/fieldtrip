@@ -28,7 +28,7 @@ function [varargout] = funname(varargin)
 % $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This is the Matlab implementation.
+% This is the MATLAB implementation.
 % The mex file is many times faster and therefore preferred.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function [la, mu, dist] = lmoutr(v1, v2, v3, r);

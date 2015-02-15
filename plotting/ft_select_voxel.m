@@ -5,7 +5,7 @@ function ft_select_voxel(handle, eventdata, varargin)
 %
 % Use as
 %   voxel = ft_select_voxel(h, eventdata, ...)
-% The first two arguments are automatically passed by Matlab to any
+% The first two arguments are automatically passed by MATLAB to any
 % callback function.
 %
 % Additional options should be specified in key-value pairs and can be

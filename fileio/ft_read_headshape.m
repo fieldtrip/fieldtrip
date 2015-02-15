@@ -658,7 +658,7 @@ else
         shape.fid.pnt   = tmp.elec.chanpos;
         shape.fid.label = tmp.elec.label;
       else
-        error('no headshape found in Matlab file');
+        error('no headshape found in MATLAB file');
       end
       
     case {'freesurfer_triangle_binary', 'freesurfer_quadrangle'}

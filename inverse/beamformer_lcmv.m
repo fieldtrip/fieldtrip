@@ -373,7 +373,7 @@ s = s(1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to compute the pseudo inverse. This is the same as the
-% standard Matlab function, except that the default tolerance is twice as
+% standard MATLAB function, except that the default tolerance is twice as
 % high.
 %   Copyright 1984-2004 The MathWorks, Inc.
 %   $Revision$  $Date: 2009/03/23 21:14:42 $

@@ -48,7 +48,7 @@ fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 
 switch fileformat
   case 'matlab'
-    matfile = filename;   % this solves a problem with the matlab compiler v3
+    matfile = filename;   % this solves a problem with the MATLAB compiler v3
     ws = warning('off', 'MATLAB:load:variableNotFound');
     tmp = load(matfile, 'vol');
     warning(ws);

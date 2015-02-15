@@ -274,7 +274,7 @@ switch dataformat
   case 'fcdc_matbin'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % multiplexed data in a *.bin file (ieee-le, 64 bit floating point values),
-    % accompanied by a matlab V6 file containing the header
+    % accompanied by a MATLAB V6 file containing the header
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.mat']);
@@ -377,17 +377,17 @@ switch dataformat
     
   case 'matlab'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % plain matlab file
+    % plain MATLAB file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file '.mat']);
     if      append &&  exist(filename, 'file')
-      % read the previous header and data from matlab file
+      % read the previous header and data from MATLAB file
       prev = load(filename);
       if ~isempty(hdr) && ~isequal(hdr, prev.hdr)
         error('inconsistent header');
       else
-        % append the new data to that from the matlab file
+        % append the new data to that from the MATLAB file
         dat = cat(2, prev.dat, dat);
       end
     elseif  append && ~exist(filename, 'file')

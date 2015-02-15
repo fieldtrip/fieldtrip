@@ -95,7 +95,7 @@ for i=1:length(varargin)
     end
   else
     if isfield(varargin{i},'trial') && ~isfield(varargin{i},'avg');
-      error(['dataset ' num2str(i) ' does not contain avg field: seeft_timelockanalysis']);
+      error('input dataset %d does not contain avg field: see ft_timelockanalysis', i);
     end
   end
 end

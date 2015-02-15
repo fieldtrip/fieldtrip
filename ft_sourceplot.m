@@ -199,7 +199,6 @@ if nargin==3
   % interpolate on the fly
   tmpcfg = keepfields(cfg, {'downsample', 'interpmethod'});
   tmpcfg.parameter = cfg.funparameter;
-  orgcfg.parameter = cfg.funparameter;
   functional = ft_sourceinterpolate(tmpcfg, functional, anatomical);
   [cfg, functional] = rollback_provenance(cfg, functional);
 end
@@ -211,6 +210,9 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.mom', 'mom'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.pow', 'pow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys

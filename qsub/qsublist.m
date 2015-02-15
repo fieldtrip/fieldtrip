@@ -157,7 +157,7 @@ switch cmd
       % only perform the more expensive check once the log files exist
       switch backend
         case 'torque'
-          [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o [A-Z]']);
+          [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o "[A-Z]"']);
           retval = strcmp(strtrim(jobstatus) ,'C');
         case 'lsf'
           [dum, jobstatus] = system(['bjobs ' pbsid ' | awk ''NR==2'' | awk ''{print $3}'' ']);

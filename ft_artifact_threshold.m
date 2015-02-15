@@ -115,18 +115,19 @@ if ~isfield(artfctdef, 'range'),    artfctdef.range = inf;           end
 if ~isfield(artfctdef, 'min'),      artfctdef.min =  -inf;           end
 if ~isfield(artfctdef, 'max'),      artfctdef.max =   inf;           end
 
+% the data is either passed into the function by the user or read from file with cfg.inputfile
+hasdata = exist('data', 'var');
+
 % read the header, or get it from the input data
-if nargin > 1
-  % data given as input
-  isfetch = true;
-  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = ft_fetch_header(data);
-else
-  % only cfg given
-  isfetch = false;
+if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+else
+  % data given as input
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr = ft_fetch_header(data);
 end
 
 % set default cfg.continuous
@@ -145,7 +146,7 @@ channelindx = match_str(hdr.label,channel);
 artifact    = [];
 
 for trlop = 1:numtrl
-  if isfetch
+  if hasdata
     dat = ft_fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   else
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);

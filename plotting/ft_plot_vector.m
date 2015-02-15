@@ -6,7 +6,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   ft_plot_vector(Y, ...)
 % or as
 %   ft_plot_vector(X, Y, ...)
-% where X and Y are similar as the input to the Matlab plot function.
+% where X and Y are similar as the input to the MATLAB plot function.
 %
 % Optional arguments should come in key-value pairs and can include
 %   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'

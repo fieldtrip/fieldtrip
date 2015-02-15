@@ -14,8 +14,8 @@ function [spectrum] = specest_nanfft(dat, time, varargin)
 %   basis      = precomputes set of basis functions (sines/cosines)
 %   datataype  = 0, 1, 2
 %
-% FFT SPEED NOT YET OPTIMIZED (e.g. matlab version, transpose or not)
-% FUNCTION IS RECURSIVE, SHOULD BE AVOIDED IN FAVOR OF TRANSPARANCY
+% FIXME: FFT speed not yet optimized, e.g. MATLAB version, transpose or not, ...
+% FIXME: function is recursive, should be avoided in favor of transparancy
 %
 % See also SPECEST_MTMFFT, SPECEST_CONVOL, SPECEST_HILBERT, SPECEST_MTMCONVOL, SPECEST_MVAR, SPECEST_WAVELET
 

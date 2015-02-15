@@ -1,7 +1,7 @@
 function test_ft_headmodel_bemcp
 
-% MEM 12gb (or less?)
-% WALLTIME 03:00:00 (or less?)
+% MEM 12gb
+% WALLTIME 03:00:00
 
 % TEST test_ft_prepare_bemcp
 % TEST ft_headmodel_localspheres ft_prepare_localspheres

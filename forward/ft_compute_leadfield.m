@@ -274,7 +274,7 @@ elseif ismeg
         end
       else
         warning('No system matrix is present, Calling the Nemo Lab pipeline')
-        lf = ft_leadfield_openmeeg(pos, vol, sens);
+        lf = leadfield_openmeeg(pos, vol, sens);
       end
       
     case {'infinite_magneticdipole', 'infinite'}
@@ -439,7 +439,7 @@ elseif iseeg
         lf = vol.mat*dsm;
       else
         disp('No system matrix is present, calling the Nemo Lab pipeline...')
-        lf = ft_leadfield_openmeeg(pos, vol, sens);
+        lf = leadfield_openmeeg(pos, vol, sens);
       end
       
     case 'metufem'

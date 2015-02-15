@@ -297,27 +297,17 @@ if hasdata
   end
   
   % set the defaults
-  if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
+  cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
   
   % select trials of interest
-  if ~strcmp(cfg.trials, 'all')
-    data = ft_selectdata(data, 'rpt', cfg.trials);
-  end
-  
-  % translate the channel groups (like 'all' and 'MEG') into real labels
-  cfg.channel = ft_channelselection(cfg.channel, data.label);
-  rawindx = match_str(data.label, cfg.channel);
+  tmpcfg = keepfields(cfg, {'channel', 'trials'});
+  data   = ft_selectdata(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
   
   % this will contain the newly processed data
-  dataout = [];
-  
   % some fields from the input should be copied over in the output
-  copyfield = {'hdr', 'fsample', 'grad', 'elec', 'sampleinfo', 'trialinfo', 'topo', 'topolabel', 'unmixing'};
-  for i=1:length(copyfield)
-    if isfield(data, copyfield{i})
-      dataout.(copyfield{i}) = data.(copyfield{i});
-    end
-  end
+  dataout = keepfields(data, {'hdr', 'fsample', 'grad', 'elec', 'sampleinfo', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
   
   ft_progress('init', cfg.feedback, 'preprocessing');
   ntrl = length(data.trial);
@@ -350,9 +340,9 @@ if hasdata
     end
     
     data.trial{i} = ft_preproc_padding(data.trial{i}, cfg.padtype, begpadding, endpadding);
-    data.time{i} =  ft_preproc_padding(data.time{i}, 'nan',       begpadding, endpadding); % pad time-axis with nans (see bug2220)
-    % do the preprocessing on the selected channels
-    [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}(rawindx,:), data.label(rawindx),  data.time{i}, cfg, begpadding, endpadding);
+    data.time{i}  = ft_preproc_padding(data.time{i}, 'nan',        begpadding, endpadding); % pad time-axis with nans (see bug2220)
+    % do the filtering etc.
+    [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}, data.label,  data.time{i}, cfg, begpadding, endpadding);
     
   end % for all trials
   

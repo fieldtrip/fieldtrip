@@ -28,7 +28,7 @@ function [varargout] = funname(varargin)
 % $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This is the native Matlab implementation.
+% This is the native MATLAB implementation.
 % The mex file is many times faster and is therefore preferred.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function [proj] = routlm(v1, v2, v3, la, mu);

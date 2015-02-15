@@ -102,9 +102,9 @@ if abort
 end
 
 % set the defaults
-if ~isfield(cfg, 'method'),        cfg.method = 'spline';    end
-if ~isfield(cfg, 'conductivity'),  cfg.conductivity = 0.33;  end    % in S/m
-if ~isfield(cfg, 'trials'),        cfg.trials = 'all';       end
+cfg.method       = ft_getopt(cfg, 'method',       'spline');
+cfg.conductivity = ft_getopt(cfg, 'conductivity', 0.33); % in S/m
+cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
 
 if strcmp(cfg.method, 'hjorth')
   cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
@@ -119,10 +119,10 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'iseeg','yes','ismeg',[]); 
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = keepfields(cfg, 'trials');
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % get the electrode positions
 tmpcfg = cfg;

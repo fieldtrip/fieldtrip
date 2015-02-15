@@ -64,6 +64,10 @@ cfg = ft_definetrial(cfg);
 
 cfg.trlunit='samples'; %ft_trialfun_general gives us samles, not timestamps
 cfg.hdr = spike.hdr; %using 'samples' requires the header information.
+
+% the ft_spike functions use pedantic cfg checking, so remove the trialdef
+% field which is illegal here
+cfg = rmfield(cfg, 'trialdef');
 spikeTrials = ft_spike_maketrials(cfg,spike); 
 
 
@@ -141,6 +145,9 @@ cfg = ft_definetrial(cfg);
 
 cfg.trlunit='samples'; %ft_trialfun_general gives us samles, not timestamps
 cfg.hdr = ft_read_header(cfg.datafile);
+% the ft_spike functions use pedantic cfg checking, so remove the trialdef
+% field which is illegal here
+cfg = rmfield(cfg, 'trialdef');
 spikeTrials = ft_spike_maketrials(cfg,spike); 
 
 cfg             = [];

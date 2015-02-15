@@ -36,7 +36,7 @@ function [varargout] = funname(varargin)
 % $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The first section contains the plain Matlab implementation. The mex file
+% The first section contains the plain MATLAB implementation. The mex file
 % is many times faster and this function is called so frequently (for
 % large meshes), that the mex file should be used in all practical cases.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

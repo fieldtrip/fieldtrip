@@ -396,12 +396,15 @@ switch headerformat
     if any(diff(hdr.orig.SampleRate))
       error('channels with different sampling rate not supported');
     end
-    % assign the channel type and units for the known channels
-    hdr.chantype = repmat({'unknown'}, size(hdr.label));
-    hdr.chanunit = repmat({'unknown'}, size(hdr.label));
-    chan = ~cellfun(@isempty, regexp(hdr.label, '^[A-D]\d*$'));
-    hdr.chantype(chan) = {'eeg'};
-    hdr.chanunit(chan) = {'uV'};
+    
+    if ~ft_senstype(hdr, 'ext1020')
+        % assign the channel type and units for the known channels
+        hdr.chantype = repmat({'unknown'}, size(hdr.label));
+        hdr.chanunit = repmat({'unknown'}, size(hdr.label));
+        chan = ~cellfun(@isempty, regexp(hdr.label, '^[A-D]\d*$'));
+        hdr.chantype(chan) = {'eeg'};
+        hdr.chanunit(chan) = {'uV'};
+    end
     
     if ft_filetype(filename, 'bham_bdf')
       % TODO channel renaming should be made a general option
@@ -568,7 +571,7 @@ switch headerformat
     hdr.orig = orig;
     
   case {'ctf_old', 'read_ctf_res4'}
-    % read it using the open-source matlab code that originates from CTF and that was modified by the FCDC
+    % read it using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
     orig             = read_ctf_res4(headerfile);
     hdr.Fs           = orig.Fs;
     hdr.nChans       = orig.nChans;
@@ -1193,7 +1196,7 @@ switch headerformat
     end
     
   case 'fcdc_matbin'
-    % this is multiplexed data in a *.bin file, accompanied by a matlab file containing the header
+    % this is multiplexed data in a *.bin file, accompanied by a MATLAB file containing the header
     load(headerfile, 'hdr');
     
   case 'fcdc_mysql'

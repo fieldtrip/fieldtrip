@@ -90,17 +90,17 @@ end
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 
 % set the defaults
-if ~isfield(cfg, 'resamplefs'),     cfg.resamplefs     = [];      end
-if ~isfield(cfg, 'time'),           cfg.time           = {};      end
-if ~isfield(cfg, 'detrend'),        cfg.detrend        = 'no';    end
-if ~isfield(cfg, 'demean'),         cfg.demean         = 'no';    end
-if ~isfield(cfg, 'feedback'),       cfg.feedback       = 'text';  end
-if ~isfield(cfg, 'trials'),         cfg.trials         = 'all';   end
-if ~isfield(cfg, 'method'),         cfg.method         = 'pchip'; end  % interpolation method
+cfg.resamplefs = ft_getopt(cfg, 'resamplefs', []);
+cfg.time       = ft_getopt(cfg, 'time',       {});
+cfg.detrend    = ft_getopt(cfg, 'detrend',    'no');
+cfg.demean     = ft_getopt(cfg, 'demean',     'no');
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
+cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
+cfg.method     = ft_getopt(cfg, 'method',     'pchip');
 
 % give the user control over whether to use resample (applies anti-aliasing
 % filter) or downsample (does not apply filter)
-if ~isfield(cfg, 'resamplemethod'), cfg.resamplemethod = 'resample'; end
+cfg.resamplemethod = ft_getopt(cfg, 'resamplemethod', 'resample');
 
 % store original datatype
 convert = ft_datatype(data);
@@ -114,10 +114,10 @@ if isempty(cfg.resamplefs) && isempty(cfg.time),
 end
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data       = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = keepfields(cfg, 'trials');
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % sampleinfo, if present, becomes invalid because of the resampling
 if isfield(data, 'sampleinfo'),

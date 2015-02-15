@@ -189,20 +189,39 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch field
+  % the logic for this code is to first check whether the size of a field
+  % has an exact match to a potential dimensionality, if not, check for a
+  % partial match (ignoring nans)
+  
+  % note that the case for a cell dimension (typically pos) is handled at
+  % the end of this section
+  
   case {'individual'}
     if isequalwithoutnans(datsiz, [nsubj nchan ntime])
       dimord = 'subj_chan_time';
     end
     
   case {'avg' 'var' 'dof'}
-    if isequalwithoutnans(datsiz, [nrpt nchan ntime])
+    if isequal(datsiz, [nrpt nchan ntime])
+      dimord = 'rpt_chan_time';
+    elseif isequal(datsiz, [nchan ntime])
+      dimord = 'chan_time';
+    elseif isequalwithoutnans(datsiz, [nrpt nchan ntime])
       dimord = 'rpt_chan_time';
     elseif isequalwithoutnans(datsiz, [nchan ntime])
       dimord = 'chan_time';
     end
     
   case {'powspctrm' 'fourierspctrm'}
-    if isequalwithoutnans(datsiz, [nrpt nchan nfreq ntime])
+    if isequal(datsiz, [nrpt nchan nfreq ntime])
+      dimord = 'rpt_chan_freq_time';
+    elseif isequal(datsiz, [nrpt nchan nfreq])
+      dimord = 'rpt_chan_freq';
+    elseif isequal(datsiz, [nchan nfreq ntime])
+      dimord = 'chan_freq_time';
+    elseif isequal(datsiz, [nchan nfreq])
+      dimord = 'chan_freq';
+    elseif isequalwithoutnans(datsiz, [nrpt nchan nfreq ntime])
       dimord = 'rpt_chan_freq_time';
     elseif isequalwithoutnans(datsiz, [nrpt nchan nfreq])
       dimord = 'rpt_chan_freq';
@@ -213,7 +232,27 @@ switch field
     end
     
   case {'crsspctrm' 'cohspctrm'}
-    if isequalwithoutnans(datsiz, [nrpt nchancmb nfreq ntime])
+    if isequal(datsiz, [nrpt nchancmb nfreq ntime])
+      dimord = 'rpt_chancmb_freq_time';
+    elseif isequal(datsiz, [nrpt nchancmb nfreq])
+      dimord = 'rpt_chancmb_freq';
+    elseif isequal(datsiz, [nchancmb nfreq ntime])
+      dimord = 'chancmb_freq_time';
+    elseif isequal(datsiz, [nchancmb nfreq])
+      dimord = 'chancmb_freq';
+    elseif isequal(datsiz, [nrpt nchan nchan nfreq ntime])
+      dimord = 'rpt_chan_chan_freq_time';
+    elseif isequal(datsiz, [nrpt nchan nchan nfreq])
+      dimord = 'rpt_chan_chan_freq';
+    elseif isequal(datsiz, [nchan nchan nfreq ntime])
+      dimord = 'chan_chan_freq_time';
+    elseif isequal(datsiz, [nchan nchan nfreq])
+      dimord = 'chan_chan_freq';
+    elseif isequal(datsiz, [npos nori])
+      dimord = 'pos_ori';
+    elseif isequal(datsiz, [npos 1])
+      dimord = 'pos';
+    elseif isequalwithoutnans(datsiz, [nrpt nchancmb nfreq ntime])
       dimord = 'rpt_chancmb_freq_time';
     elseif isequalwithoutnans(datsiz, [nrpt nchancmb nfreq])
       dimord = 'rpt_chancmb_freq';
@@ -237,55 +276,43 @@ switch field
     
   case {'cov' 'coh' 'csd' 'noisecov' 'noisecsd'}
     % these occur in timelock and in source structures
-    if isequalwithoutnans(datsiz, [nrpt nchan nchan])
+    if isequal(datsiz, [nrpt nchan nchan])
+      dimord = 'rpt_chan_chan';
+    elseif isequal(datsiz, [nchan nchan])
+      dimord = 'chan_chan';
+    elseif isequal(datsiz, [npos nori nori])
+      dimord = 'pos_ori_ori';
+    elseif isequal(datsiz, [npos nrpt nori nori])
+      dimord = 'pos_rpt_ori_ori';
+    elseif isequalwithoutnans(datsiz, [nrpt nchan nchan])
       dimord = 'rpt_chan_chan';
     elseif isequalwithoutnans(datsiz, [nchan nchan])
       dimord = 'chan_chan';
     elseif isequalwithoutnans(datsiz, [npos nori nori])
-      if iscell(data.(field))
-        dimord = '{pos}_ori_ori';
-      else
-        dimord = 'pos_ori_ori';
-      end
+      dimord = 'pos_ori_ori';
     elseif isequalwithoutnans(datsiz, [npos nrpt nori nori])
-      if iscell(data.(field))
-        dimord = '{pos}_rpt_ori_ori';
-      else
-        dimord = 'pos_rpt_ori_ori';
-      end
+      dimord = 'pos_rpt_ori_ori';
     end
     
   case {'pow'}
-    if isequalwithoutnans(datsiz, [npos ntime])
-      if iscell(data.(field))
-        dimord = '{pos}_time';
-      else
-        dimord = 'pos_time';
-      end
-    elseif isequalwithoutnans(datsiz, [npos nfreq])
-      if iscell(data.(field))
-        dimord = '{pos}_freq';
-      else
-        dimord = 'pos_freq';
-      end
+    if isequal(datsiz, [npos ntime])
+      dimord = 'pos_time';
+    elseif isequal(datsiz, [npos nfreq])
+      dimord = 'pos_freq';
+    elseif isequal(datsiz, [npos nrpt])
+      dimord = 'pos_rpt';
+    elseif isequal(datsiz, [nrpt npos ntime])
+      dimord = 'rpt_pos_time';
+    elseif isequal(datsiz, [nrpt npos nfreq])
+      dimord = 'rpt_pos_freq';
     elseif isequal(datsiz, [npos 1]) % in case there are no repetitions
-      if iscell(data.(field))
-        dimord = '{pos}';
-      else
-        dimord = 'pos';
-      end
+      dimord = 'pos';
+    elseif isequalwithoutnans(datsiz, [npos ntime])
+      dimord = 'pos_time';
+    elseif isequalwithoutnans(datsiz, [npos nfreq])
+      dimord = 'pos_freq';
     elseif isequalwithoutnans(datsiz, [npos nrpt])
-      if iscell(data.(field))
-        dimord = '{pos}_rpt';
-      else
-        dimord = 'pos_rpt';
-      end
-    elseif isequal(datsiz, [1 npos])
-      if iscell(data.(field))
-        dimord = '{pos}';
-      else
-        dimord = 'pos';
-      end
+      dimord = 'pos_rpt';
     elseif isequalwithoutnans(datsiz, [nrpt npos ntime])
       dimord = 'rpt_pos_time';
     elseif isequalwithoutnans(datsiz, [nrpt npos nfreq])
@@ -293,90 +320,58 @@ switch field
     end
     
   case {'mom'}
-    if isequalwithoutnans(datsiz, [npos nori nrpt])
-      if iscell(data.(field))
-        dimord = '{pos}_ori_rpt';
-      else
-        dimord = 'pos_ori_rpt';
-      end
+    if isequal(datsiz, [npos nori nrpt])
+      dimord = 'pos_ori_rpt';
+    elseif isequal(datsiz, [npos nori ntime])
+      dimord = 'pos_ori_time';
+    elseif isequal(datsiz, [npos nori nfreq])
+      dimord = 'pos_ori_nfreq';
+    elseif isequal(datsiz, [npos ntime])
+      dimord = 'pos_time';
+    elseif isequal(datsiz, [npos nfreq])
+      dimord = 'pos_freq';
+    elseif isequal(datsiz, [npos 3])
+      dimord = 'pos_ori';
+    elseif isequal(datsiz, [npos 1])
+      dimord = 'pos';
+    elseif isequal(datsiz, [npos nrpt])
+      dimord = 'pos_rpt';
+    elseif isequalwithoutnans(datsiz, [npos nori nrpt])
+      dimord = 'pos_ori_rpt';
     elseif isequalwithoutnans(datsiz, [npos nori ntime])
-      if iscell(data.(field))
-        dimord = '{pos}_ori_time';
-      else
-        dimord = 'pos_ori_time';
-      end
+      dimord = 'pos_ori_time';
     elseif isequalwithoutnans(datsiz, [npos nori nfreq])
-      if iscell(data.(field))
-        dimord = '{pos}_ori_nfreq';
-      else
-        dimord = 'pos_ori_nfreq';
-      end
+      dimord = 'pos_ori_nfreq';
     elseif isequalwithoutnans(datsiz, [npos ntime])
-      if iscell(data.(field))
-        dimord = '{pos}_time';
-      else
-        dimord = 'pos_time';
-      end
+      dimord = 'pos_time';
     elseif isequalwithoutnans(datsiz, [npos nfreq])
-      if iscell(data.(field))
-        dimord = '{pos}_freq';
-      else
-        dimord = 'pos_freq';
-      end
+      dimord = 'pos_freq';
     elseif isequalwithoutnans(datsiz, [npos 3])
-      if iscell(data.(field))
-        dimord = '{pos}_ori';
-      else
-        dimord = 'pos_ori';
-      end
+      dimord = 'pos_ori';
     elseif isequalwithoutnans(datsiz, [npos 1])
-      if iscell(data.(field))
-        dimord = '{pos}';
-      else
-        dimord = 'pos';
-      end
+      dimord = 'pos';
     elseif isequalwithoutnans(datsiz, [npos nrpt])
-      if iscell(data.(field))
-        dimord = '{pos}_rpt';
-      else
-        dimord = 'pos_rpt';
-      end
+      dimord = 'pos_rpt';
     end
     
   case {'filter'}
     if isequalwithoutnans(datsiz, [npos nori nchan]) || (isequal(datsiz([1 2]), [npos nori]) && isinf(nchan))
-      if iscell(data.(field))
-        dimord = '{pos}_ori_chan';
-      else
-        dimord = 'pos_ori_chan';
-      end
+      dimord = 'pos_ori_chan';
     end
     
   case {'leadfield'}
     if isequalwithoutnans(datsiz, [npos nchan nori]) || (isequal(datsiz([1 3]), [npos nori]) && isinf(nchan))
-      if iscell(data.(field))
-        dimord = '{pos}_chan_ori';
-      else
-        dimord = 'pos_chan_ori';
-      end
+      dimord = 'pos_chan_ori';
     end
     
   case {'ori' 'eta'}
     if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos 3])
-      if iscell(data.(field))
-        dimord = '{pos}_ori';
-      else
-        dimord = 'pos_ori';
-      end
+      dimord = 'pos_ori';
     end
     
   case {'csdlabel'}
     if isequal(datsiz, [npos nori]) || isequal(datsiz, [npos 3])
-      if iscell(data.(field))
-        dimord = '{pos}_ori';
-      else
-        dimord = 'pos_ori';
-      end
+      dimord = 'pos_ori';
     end
     
   case {'trial'}
@@ -434,6 +429,11 @@ switch field
     end
     
 end % switch field
+
+% deal with possible first pos which is a cell
+if exist('dimord', 'var') && strcmp(dimord(1:3), 'pos') && iscell(data.(field))
+  dimord = ['{pos}' dimord(4:end)];
+end
 
 if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

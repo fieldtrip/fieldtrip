@@ -15,8 +15,7 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 %
 % In both cases the configuration should also contain
 %   cfg.trl         = structure that defines the data segments of interest. See FT_DEFINETRIAL
-%   cfg.continuous  = 'yes' or 'no' whether the file contains continuous
-%   data (default   = 'yes')
+%   cfg.continuous  = 'yes' or 'no' whether the file contains continuous data (default   = 'yes')
 %   cfg.method      = 'detect', TMS-artifacts are detected by preprocessing
 %                     the data to be sensitive to transient high gradients, typical for
 %                     TMS-pulses.
@@ -191,12 +190,12 @@ switch cfg.method
     
     % Get the trialfun
     cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
-  
+    
     % Evaluate the trialfun
     fprintf('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
     trl   = feval(cfg.trialfun, cfg);
     
-    % Prepare the found events for output 
+    % Prepare the found events for output
     artifact = trl(:,1:2);
     cfg.artfctdef.tms.artifact = artifact;
     fprintf('found %d events\n', size(artifact,1));

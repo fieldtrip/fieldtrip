@@ -344,7 +344,7 @@ if ~isempty(dtype)
       israw = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'raw'}) && issource
-      data = data2raw(data);
+      data = source2raw(data);
       data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
       issource = 0;
       israw = 1;
@@ -531,6 +531,9 @@ if ~isempty(ismeg)
 end
 
 if ~isempty(inside)
+  if strcmp(inside, 'index')
+    warning('the indexed representation of inside/outside source locations is deprecated');
+  end
   % TODO absorb the fixinside function into this code
   data   = fixinside(data, inside);
   okflag = isfield(data, 'inside');
@@ -2093,3 +2096,35 @@ data.label = spike.label;
 data.fsample = fsample;
 if isfield(spike,'hdr'), data.hdr = spike.hdr; end
 if isfield(spike,'cfg'), data.cfg = spike.cfg; end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [data] = source2raw(source)
+
+fn = fieldnames(source);
+fn = setdiff(fn, {'pos', 'dim', 'transform', 'time', 'freq', 'cfg'});
+for i=1:length(fn)
+  dimord{i} = getdimord(source, fn{i});
+end
+sel = strcmp(dimord, 'pos_time');
+assert(sum(sel)>0, 'the source structure does not contain a suitable field to represent as raw channel-level data');
+assert(sum(sel)<2, 'the source structure contains multiple fields that can be represented as raw channel-level data');
+fn     = fn{sel};
+dimord = dimord{sel};
+
+switch dimord
+  case 'pos_time'
+    % add fake raw channel data to the original data structure
+    data.trial{1} = source.(fn);
+    data.time{1}  = source.time;
+    % add fake channel labels
+    data.label = {};
+    for i=1:size(source.pos,1)
+      data.label{i} = sprintf('source%d', i);
+    end
+    data.label = data.label(:);
+    data.cfg = source.cfg;
+  otherwise
+    % FIXME other formats could be implemented as well
+end
