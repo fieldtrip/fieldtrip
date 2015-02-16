@@ -77,7 +77,7 @@ if abort
 end
 
 % check if the input data is valid for this function
-source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
+% source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'});    % trial selection is not implented here, you may want to consider ft_selectdata
 
@@ -129,7 +129,7 @@ end
 
 % determine the type of data, this is only relevant for a few specific types
 ispccdata = isfield(source, 'avg')   && isfield(source.avg, 'csdlabel');
-islcmvavg = isfield(source, 'avg')   && isfield(source, 'time') && isfield(source.avg,   'mom') && size(source.avg.pow, 2)==1;
+islcmvavg = isfield(source, 'avg')   && isfield(source, 'time') && isfield(source.avg,   'mom') && any(size(source.avg.pow)==1);
 islcmvtrl = isfield(source, 'trial') && isfield(source, 'time') && isfield(source.trial, 'mom');
 ismneavg  = isfield(source, 'avg')   && isfield(source, 'time') && isfield(source.avg,   'mom') && size(source.avg.pow, 2)==numel(source.time);
 
