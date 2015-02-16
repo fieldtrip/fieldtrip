@@ -2,7 +2,7 @@ function y = subsasgn(x, index, val)
 
 % SUBSASGN Assign a new value to a specified field in a config objects and increment its assignment counter.
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2015, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
