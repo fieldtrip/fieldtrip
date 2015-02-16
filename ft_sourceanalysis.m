@@ -248,9 +248,6 @@ elseif isfreq && isfield(data, 'labelcmb')
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
-% select only those channels that are present in the data
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-
 if nargin>2 && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
   error('input of two conditions only makes sense if you want to randomize or permute');
 elseif nargin<3 && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
@@ -274,17 +271,17 @@ source = [];
 
 if istimelock
   % add the time axis to the output
-  tmpcfg = keepfields(cfg, {'latency'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency'});
   tmpcfg.avgovertime = 'no';
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
   
-  % add the time axis to the output
+  % copy the descriptive fields to the output
   source = copyfields(data, source, {'time'});
   
 elseif isfreq
-  tmpcfg = keepfields(cfg, {'latency', 'frequency'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency'});
   tmpcfg.avgoverfreq = 'yes';
   if isfield(data, 'time')
     tmpcfg.avgovertime = 'yes';
