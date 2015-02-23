@@ -230,20 +230,18 @@ cfg.(cfg.method).lambda        = ft_getopt(cfg.(cfg.method), 'lambda',        []
 cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
 cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
 
-convertfreq = 0;
-convertcomp = 0;
+convertfreq = false;
+convertcomp = false;
 if ~istimelock && (strcmp(cfg.method, 'mne') || strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
   % these timelock methods are also supported for frequency or component data
   if isfreq
-    [data, cfg] = freq2timelock(cfg, data);
-    convertfreq = 1;  % flag indicating that the data was converted
-  elseif iscomp
-    [data, cfg] = comp2timelock(cfg, data);
-    convertcomp = 1;  % flag indicating that the data was converted
+    convertfreq = true;
+    % the conversion will be done below, after the latency, frequency and channel selection
   end
-  istimelock = 1;     % from now on the data can be treated as timelocked
-  isfreq     = 0;
-  iscomp     = 0;
+  if iscomp
+    convertcomp = true;
+    % the conversion will be done below, after the latency and channel selection
+  end
 elseif isfreq && isfield(data, 'labelcmb')
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
@@ -302,6 +300,14 @@ elseif isfreq
 elseif iscomp
   % FIXME, select the components here
   % FIXME, add the component numbers to the output
+end
+
+if convertfreq || convertcomp 
+  % convert the data structure into a representation that can be handled by the low level functions
+  data        = ft_checkdata(data, 'datatype', 'timelock');
+  istimelock  = 1; % from now on the data can be treated as timelocked
+  isfreq      = 0;
+  iscomp      = 0;
 end
 
 if isfreq
@@ -385,6 +391,30 @@ if isfield(cfg.grid, 'filter')
     warning_once('ignoring predefined filter as it does not match the number of source positions');
   end
 end
+
+% The following code pertains to bug 1746 but is not functional yet. It is
+% put in here as a placeholder, but it still requires some careful thinking
+% before it can go live.
+% if isfield(grid, 'label') && (isfield(grid, 'leadfield') || isfield(grid, 'filter'))
+%   % match the channels in the leadfields/filters with those in the data
+%   [i1, i2] = match_str(cfg.channel, grid.label);
+%   if ~isequal(i2(:), (1:numel(grid.label))')
+%     if isfield(grid, 'leadfield')
+%       fprintf('\n\nSubselecting/reordering the channels in the precomputed leadfields\n\n');
+%       inside_indx = find(grid.inside);
+%       for k = inside_indx(:)'
+%         grid.leadfield{k} = grid.leadfield{k}(i2, :);
+%       end
+%     end
+%     if isfield(grid, 'filter')
+%       fprintf('\n\nSubselecting/reordering the channels in the precomputed filters\n\n');
+%       for k = grid.inside(:)'
+%         grid.filter{k} = grid.filter{k}(:, i2);
+%       end
+%     end
+%     grid.label = grid.label(i2);
+%   end
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
@@ -973,6 +1003,9 @@ end
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the grid structure
   source = copyfields(dip, source, {'pos', 'inside', 'leadfield', 'filter'}); 
+  
+  % prevent duplication of these fields when copying the content of dip into source.avg or source.trial
+  dip    = removefields(dip,       {'pos', 'inside', 'leadfield', 'filter'});
 end
 
 if ~istrue(cfg.keepleadfield)
