@@ -2006,37 +2006,31 @@ function timelock = freq2timelock(freq)
 % on which the timelocked source reconstruction methods can
 % perform their trick.
 %
-% This function also performs frequency and channel selection, using
-%   cfg.frequency
-%   cfg.channel
-%
 % After source reconstruction, you should use TIMELOCK2FREQ.
 
 if isfield(freq, 'fourierspctrm')
   fprintf('constructing real/imag data representation from single trial fourier representation\n');
   % select the complex amplitude at the frequency of interest
-  cdim = dimnum(freq.dimord, 'chan');  % should be 2
-  fdim = dimnum(freq.dimord, 'freq');     % should be 3
+  cdim = find(strcmp(freq.dimord, 'chan'));  % should be 2
+  fdim = find(strcmp(freq.dimord, 'freq'));  % should be 3
+  
   fbin = nearest(freq.freq, cfg.frequency);
   cfg.frequency = freq.freq(fbin);
-  if cdim==2 && fdim==3
+  if cdim==2 && fdim==3 && numel(freq.freq)==1
     % other dimords are not supported, since they do not occur
-    spctrm = dimindex(freq.fourierspctrm, fdim, fbin)';
+    spctrm = transpose(freq.fourierspctrm);
+  else
+    error('conversion of fourierspctrm failed');
   end
-  % select the desired channels in the data
-  cfg.channel = ft_channelselection(cfg.channel, freq.label);
-  [dum, chansel] = match_str(cfg.channel, freq.label);
-  spctrm = spctrm(chansel,:);
   % concatenate the real and imaginary part
   avg = [real(spctrm) imag(spctrm)];
 elseif isfield(freq, 'crsspctrm')
   fprintf('constructing real/imag data representation from csd matrix\n');
   % hmmm... I have no idea whether this is correct
-  cfg.channel = ft_channelselection(cfg.channel, freq.label);
+  tmpcfg.channel   = freq.label;
+  tmpcfg.frequency = freq.freq; 
   % this subfunction also takes care of the channel selection
-  [Cf, Cr, Pr, Ntrials, dum] = prepare_freq_matrices(cfg, freq);
-  cfg.frequency = dum.frequency;
-  cfg.channel   = dum.channel;
+  [Cf, Cr, Pr, Ntrials, dum] = prepare_freq_matrices(tmpcfg, freq);
   if length(size(Cf))==3
     % average the cross-spectrum over trials
     Cf = squeeze(mean(Cf,1));
