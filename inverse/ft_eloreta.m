@@ -144,7 +144,7 @@ if rank_lf(1)<size(dip.leadfield{1})
   fprintf('projecting the forward solutions on the lower dimensional subspace\n');
   for i=1:size(dip.pos,1)
     [u,s,v{i}] = svd(dip.leadfield{i}, 'econ');
-    dip.leadfield{i} = dip.leadfield{i}*v{i}(:,1:rank_lf);
+    dip.leadfield{i} = dip.leadfield{i}*v{i}(:,1:rank_lf(i));
   end
 end
 
@@ -157,7 +157,7 @@ leadfield     = permute(reshape(cat(2,dip.leadfield{:}),Nchan,Nori,Ndip),[1 3 2]
 if ~isfield(dip, 'filter')
   filt = mkfilt_eloreta_v2(leadfield, lambda);
   for i=1:size(dip.pos,1)
-    dip.filter{i} = squeeze(filt(:,i,:))';
+    dip.filter{i,1} = squeeze(filt(:,i,:))';
   end
 end
 
@@ -166,7 +166,7 @@ dip.pow = zeros(size(dip.pos,1),1);
 dip.ori = cell(size(dip.pos,1),1);
 for i=1:size(dip.pos,1)
   csd        = dip.filter{i}*Cf*dip.filter{i}';
-  [u,s,v]    = svd(real(csd));
+  [u,s,vv]    = svd(real(csd));
   dip.pow(i) = s(1);
   dip.ori{i} = u(:,1);
 end
