@@ -1726,7 +1726,7 @@ fn(~cellfun(@isempty, regexp(fn, 'dimord$'))) = []; % remove irrelevant (dimord)
 sel = false(size(fn));
 for i=1:numel(fn)
   try
-    sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_chan'});
+    sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_freq_time', 'chan_chan'});
   end
 end
 parameter = fn(sel);
@@ -1747,6 +1747,9 @@ end
 for i=1:numel(parameter)
   source.(parameter{i}) = unparcellate(data, source, parameter{i}, parcelparam);
 end
+
+% copy over fields (these are necessary for visualising the data in ft_sourceplot)
+source = copyfields(data, source, {'time', 'freq'});
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
