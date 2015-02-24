@@ -21,7 +21,6 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %                    'mne'     minimum norm estimation
 %                    'rv'      scan residual variance with single dipole
 %                    'music'   multiple signal classification
-%                    'mvl'     multivariate Laplace source localization
 %                    'eloreta' exact low-resolution electromagnetic tomography
 % The DICS and PCC methods are for frequency domain data, all other methods
 % are for time domain data. ELORETA can be used both for frequency and time
