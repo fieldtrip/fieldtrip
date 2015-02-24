@@ -25,3 +25,15 @@ end
 cfg.t_ftimwin = 0.5;
 cfg.toi       = 0.25;
 ft_mvaranalysis(cfg,data);
+
+% load in the data provided by Tyler Grummett
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2784.mat');
+load(filename);
+
+cfg = [];
+mdata = ft_mvaranalysis(cfg, temp);
+
+% the issue Tyler had could be reproduced and was caused by a combination
+% of things: the tfwin being 501 samples long, as well as the time axes of
+% the trials being different. ft_mvaranalysis has been adjusted to more
+% robustly deal with these cases.
