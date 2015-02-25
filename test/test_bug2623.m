@@ -8,10 +8,8 @@ function test_bug2623
 %    parcellated2source is a subfunction inside ft_checkdata
 % 2. unparcelled data is visualised using ft_sourceplot
 
-% Test on language dataset
-
 % load data ('source'), and parcellation 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_bug2623.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2623.mat'));
 
 % (1) parcellate
 cfg = [];
