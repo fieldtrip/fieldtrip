@@ -393,17 +393,17 @@ if isempty(ispatch   ),   ispatch    = Inf;                end;
 
 % expand single-column arguments
 o = ones(narrows,1);
-if (size(start     ,1)==1),   start      = o * start     ;   end;
-if (size(stop      ,1)==1),   stop       = o * stop      ;   end;
-if (length(len       )==1),   len        = o * len       ;   end;
-if (length(baseangle )==1),   baseangle  = o * baseangle ;   end;
-if (length(tipangle  )==1),   tipangle   = o * tipangle  ;   end;
-if (length(wid       )==1),   wid        = o * wid       ;   end;
-if (length(page      )==1),   page       = o * page      ;   end;
-if (size(crossdir  ,1)==1),   crossdir   = o * crossdir  ;   end;
-if (length(ends      )==1),   ends       = o * ends      ;   end;
-if (length(ispatch   )==1),   ispatch    = o * ispatch   ;   end;
-ax = o * gca;
+if (size(start     ,1)==1),   start      = repmat(start    , narrows, 1);   end;
+if (size(stop      ,1)==1),   stop       = repmat(stop     , narrows, 1);   end;
+if (length(len       )==1),   len        = repmat(len      , narrows, 1);   end;
+if (length(baseangle )==1),   baseangle  = repmat(baseangle, narrows, 1);   end;
+if (length(tipangle  )==1),   tipangle   = repmat(tipangle , narrows, 1);   end;
+if (length(wid       )==1),   wid        = repmat(wid      , narrows, 1);   end;
+if (length(page      )==1),   page       = repmat(page     , narrows, 1);   end;
+if (size(crossdir  ,1)==1),   crossdir   = repmat(crossdir , narrows, 1);   end;
+if (length(ends      )==1),   ends       = repmat(ends     , narrows, 1);   end;
+if (length(ispatch   )==1),   ispatch    = repmat(ispatch  , narrows, 1);   end;
+ax =repmat(gca, narrows, 1);
 
 % if we've got handles, get the defaults from the handles
 if ~isempty(oldh),
@@ -484,7 +484,7 @@ while (any(axnotdone)),
     curpage = page(ii);
     % get axes limits and aspect ratio
     axl = [get(curax,'XLim'); get(curax,'YLim'); get(curax,'ZLim')];
-    oldaxlims(min(find(oldaxlims(:,1)==0)),:) = [curax reshape(axl',1,6)];
+    oldaxlims(min(find(oldaxlims(:,1)==0)),:) = [double(curax) reshape(axl',1,6)];
     % get axes size in pixels (points)
     u = get(curax,'Units');
     axposoldunits = get(curax,'Position');
@@ -570,7 +570,7 @@ while (any(axnotdone)),
         axl(ii,[1 2])=-axl(ii,[2 1]);
     end;
     % compute the range of 2-D values
-    curT = get(curax,'Xform');
+    curT = view(curax);
     lim = curT*[0 1 0 1 0 1 0 1;0 0 1 1 0 0 1 1;0 0 0 0 1 1 1 1;1 1 1 1 1 1 1 1];
     lim = lim(1:2,:)./([1;1]*lim(4,:));
     curlimmin = min(lim')';
