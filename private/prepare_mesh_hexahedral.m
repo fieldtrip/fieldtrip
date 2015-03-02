@@ -25,7 +25,7 @@ cfg.background  = ft_getopt(cfg, 'background');
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
   fn = fieldnames(mri);
-  for i=1:numel(fn),if numel(mri.(fn{i}))==prod(mri.dim), segfield=fn{i};end;end
+    for i=1:numel(fn),if (numel(mri.(fn{i}))==prod(mri.dim))&(~strcmp(fn{i},'inside')), segfield=fn{i};end;end
   cfg.tissue=setdiff(unique(mri.(segfield)(:)),0);
 end
 
