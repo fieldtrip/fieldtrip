@@ -173,6 +173,7 @@ switch version
         
         
         if iscell(dat)
+          datsiz(1) = nrpt; % swap the size of pos with the size of rpt
           val  = cell(npos,1);
           indx = find(source.inside);
           for k=1:length(indx)
