@@ -381,6 +381,31 @@ else
   try, tmpcfg.spheremesh  = cfg.spheremesh;   end
   try, tmpcfg.inwardshift = cfg.inwardshift;  end
   grid = ft_prepare_sourcemodel(tmpcfg);
+  if isfield(grid,'leadfield') && isfield(grid,'label')
+    if length(grid.label)<length(cfg.channel)
+      % FIXME: subselect appropriate channels in data and sens to match
+      % predefined leadfield
+      error('not enough channels in predefined leadfield for the data present');
+    elseif length(cfg.channel)<length(grid.label)
+      % leadfield should be recomputed for average re-reference of
+      % subset of channels.
+      error('not enough channels in data for the predefined leadfield');
+    end
+    [ic,il]=match_str(cfg.channel,data.label);
+    if ~all(ic==il) % this will be ok for freq but not necessarily timelock
+      error('fixme: reorder data fields to match cfg.channel');
+    end
+    [ic,il]=match_str(cfg.channel,grid.label);
+    grid.label=grid.label(il);
+    for ii=1:length(grid.leadfield)
+      if grid.inside(ii)
+        grid.leadfield{ii}=grid.leadfield{ii}(il,:);
+      end
+    end
+  elseif isfield(grid,'leadfield') && ~isfield(grid,'label')
+    % or should this be an error?
+    warning('order of leadfield may not match the data')
+  end
 end
 
 if isfield(cfg.grid, 'filter')
