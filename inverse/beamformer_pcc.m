@@ -259,19 +259,19 @@ for i=1:size(dip.pos,1)
   clear filtn
   
   if keepcsd
-    dipout.csd{i} = filt * Cf * ctranspose(filt);
+    dipout.csd{i,1} = filt * Cf * ctranspose(filt);
   end
   if projectnoise
-    dipout.noisecsd{i} = noise * (filt * ctranspose(filt));
+    dipout.noisecsd{i,1} = noise * (filt * ctranspose(filt));
   end
   if keepmom && ~isempty(dat)
-    dipout.mom{i} = filt * dat;
+    dipout.mom{i,1} = filt * dat;
   end
   if keepfilter
-    dipout.filter{i} = filt;
+    dipout.filter{i,1} = filt;
   end
   if keepleadfield
-    dipout.leadfield{i} = lf;
+    dipout.leadfield{i,1} = lf;
   end
   
   ft_progress(i/size(dip.pos,1), 'beaming source %d from %d\n', i, size(dip.pos,1));
@@ -284,7 +284,7 @@ for i=1:size(dip.pos,1)
   refchanlabel = repmat({'refchan'}, 1, Nrefchan);
   supchanlabel = repmat({'supchan'}, 1, Nsupchan);
   % concatenate all the labels
-  dipout.csdlabel{i} = [scandiplabel refdiplabel supdiplabel refchanlabel supchanlabel];
+  dipout.csdlabel{i,1} = [scandiplabel refdiplabel supdiplabel refchanlabel supchanlabel];
 end % for all dipoles
 
 ft_progress('close');
