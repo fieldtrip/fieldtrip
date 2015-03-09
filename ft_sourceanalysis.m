@@ -1026,7 +1026,7 @@ end
 
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the grid structure
-  source = copyfields(dip, source, {'pos', 'inside', 'leadfield', 'filter'}); 
+  source = copyfields(dip, source, {'pos', 'inside', 'leadfield'});%, 'filter'}); 
   
   % prevent duplication of these fields when copying the content of dip into source.avg or source.trial
   dip    = removefields(dip,       {'pos', 'inside', 'leadfield'});%, 'filter'});
