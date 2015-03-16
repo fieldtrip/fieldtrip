@@ -326,7 +326,7 @@ case {'signrank'}
   for chan = 1:Nobs
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
     [p(chan), h(chan), stats] = signrank(dat(chan, selA), dat(chan, selB),'alpha', cfg.alpha,'tail', cfg.tail);
-    s(chan) = stats.signrank;
+    s(chan) = stats.signedrank;
   end
   ft_progress('close');
 
