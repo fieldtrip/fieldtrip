@@ -96,6 +96,16 @@ end
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 freq = fixdimord(freq);
 
+if ~iscolumn(freq.label)
+  freq.label = freq.label';
+end
+if ~isrow(freq.freq)
+  freq.freq = freq.freq';
+end
+if isfield(freq, 'time') && ~isrow(freq.time)
+  freq.time = freq.time';
+end
+
 switch version
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
