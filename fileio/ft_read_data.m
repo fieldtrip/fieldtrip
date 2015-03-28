@@ -837,6 +837,15 @@ switch dataformat
     % pass the header along to speed it up, it will be read on the fly in case it is empty 
     dat = read_mff_data(filename, 'sample', begsample, endsample, chanindx, hdr);
     
+  case 'jaga16'
+    fid = fopen(filename, 'r');
+    fseek(fid, hdr.orig.offset + (begtrial-1)*hdr.orig.packetsize, 'bof');
+    buf = fread(fid, (endtrial-begtrial+1)*hdr.orig.packetsize/2, 'uint16');
+    fclose(fid);
+    packet = jaga16_packet(buf, hdr.orig.packetsize==1396);  % 1396 bytes with timestamp, 1388 without
+    dat    = packet.dat;
+    dimord = 'chans_samples';
+        
   case 'micromed_trc'
     dat = read_micromed_trc(filename, begsample, endsample);
     if ~isequal(chanindx(:)', 1:hdr.nChans)

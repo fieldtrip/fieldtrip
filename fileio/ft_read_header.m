@@ -1274,6 +1274,43 @@ switch headerformat
     % add the gradiometer definition
     hdr.grad         = itab2grad(header_info);
     
+  case 'jaga16'
+    % this is hard-coded for the Jinga-Hi JAGA16
+    packetsize = (4*2 + 6*2 + 16*43*2);  % in bytes
+    fid  = fopen(filename, 'r');
+    buf  = fread(fid, packetsize/2, 'uint16');
+    fclose(fid);
+    
+    if buf(1)==0
+      % it does not have timestamps, i.e. it is the raw UDP stream
+      packet     = jaga16_packet(buf(1:end-4), false);
+      packetsize = packetsize - 8; % in bytes
+    else
+      % each packet starts with a timestamp
+      packet = jaga16_packet(buf, true);
+    end
+    
+    % determine the number of packets from the file size
+    info     = dir(filename);
+    npackets = floor((info.bytes)/packetsize/2);
+    
+    hdr             = [];
+    hdr.Fs          = packet.fsample;
+    hdr.nChans      = packet.nchan;  
+    hdr.nSamples    = 43;
+    hdr.nSamplesPre = 0;        
+    hdr.nTrials     = npackets; 
+    hdr.label       = cell(1,hdr.nChans);
+    for i=1:hdr.nChans
+      hdr.label{i} = sprintf('%d', i);
+    end
+
+    % remember some low-level details
+    hdr.orig.offset     = 0;
+    hdr.orig.packetsize = packetsize;
+    hdr.orig.packet     = packet;
+    hdr.orig.info       = info;
+    
   case 'micromed_trc'
     orig = read_micromed_trc(filename);
     hdr             = [];
