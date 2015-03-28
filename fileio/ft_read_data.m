@@ -842,8 +842,14 @@ switch dataformat
     fseek(fid, hdr.orig.offset + (begtrial-1)*hdr.orig.packetsize, 'bof');
     buf = fread(fid, (endtrial-begtrial+1)*hdr.orig.packetsize/2, 'uint16');
     fclose(fid);
-    packet = jaga16_packet(buf, hdr.orig.packetsize==1396);  % 1396 bytes with timestamp, 1388 without
-    dat    = packet.dat;
+    % the packet is 1396 bytes with timestamp or 1388 without
+    packet = jaga16_packet(buf, hdr.orig.packetsize==1396);  
+    % Our amplifier was rated as +/- 5mV input signal range, and we use 16
+    % bit ADC.  However when we actually measured the signal range in our
+    % device the input range can go as high as +/- 6 mV.  In this case our
+    % bit resolution is about 0.2uV/bit. (instead of 0.16uV/bit)
+    calib  = 0.2; 
+    dat    = calib * packet.dat;
     dimord = 'chans_samples';
         
   case 'micromed_trc'

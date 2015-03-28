@@ -842,7 +842,13 @@ elseif (filetype_check_extension(filename, '.ini') ||  filetype_check_extension(
   type = 'deymed_ini';
   manufacturer = 'Deymed';
   content = 'eeg header information';
-  
+
+elseif filetype_check_extension(filename, '.dat') && (filetype_check_header(filename, [0 0 16 0 16 0], 8) || filetype_check_header(filename, [0 0 16 0 16 0], 0))
+  % this should go before curry_dat
+  type = 'jaga16';
+  manufacturer = 'Jinga-Hi';
+  content = 'electrophysiological data';
+
   % known Curry V4 file types
 elseif filetype_check_extension(filename, '.dap')
   type = 'curry_dap';   % FIXME, can also be MPI Frankfurt electrophysiological data
