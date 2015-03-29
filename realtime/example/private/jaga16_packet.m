@@ -1,6 +1,6 @@
-function packet = jaga_packet(buf, hastimestamp)
+function packet = jaga16_packet(buf, hastimestamp)
 
-% JAGA_PACKET converts the JAGA16 byte stream into packets
+% JAGA16_PACKET converts the JAGA16 byte stream into packets
 
 % Copyright (C) 2015 Robert Oostenveld
 %
