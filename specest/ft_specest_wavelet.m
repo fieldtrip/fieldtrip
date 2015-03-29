@@ -46,9 +46,14 @@ if isempty(fbopt),
   fbopt.n = 1;
 end
 
-
 % Set n's
 [nchan,ndatsample] = size(dat);
+
+% This does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
+end
 
 % Remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
@@ -184,6 +189,7 @@ for ifreqoi = 1:nfreqoi
   
 end
 
+
 % Compute fft
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
 datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
@@ -210,3 +216,4 @@ for ifreqoi = 1:nfreqoi
     spectrum(:,ifreqoi,reqtimeboiind) = dum(:,reqtimeboi);
   end
 end
+

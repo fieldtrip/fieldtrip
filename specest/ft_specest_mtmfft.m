@@ -34,7 +34,6 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 % these are for speeding up computation of tapers on subsequent calls
 persistent previous_argin previous_tap
 
-
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper'); if isempty(taper), error('You must specify a taper'); end
 pad       = ft_getopt(varargin, 'pad');
@@ -47,7 +46,6 @@ verbose   = ft_getopt(varargin, 'verbose', true);
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 tapopt    = ft_getopt(varargin, 'taperopt');
 
-
 if isempty(fbopt),
   fbopt.i = 1;
   fbopt.n = 1;
@@ -58,8 +56,17 @@ if isempty(tapsmofrq) && strcmp(taper, 'dpss')
   error('you need to specify tapsmofrq when using dpss tapers')
 end
 
+% this does not work on integer data
+dat = cast(dat, 'double');
+
 % Set n's
 [nchan,ndatsample] = size(dat);
+
+% This does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
+end
 
 % Remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
@@ -80,8 +87,6 @@ end
 postpad    = ceil((pad - dattime) * fsample);
 endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;                   % total time in seconds of padded data
-
-
 
 % Set freqboi and freqoi
 freqoiinput = freqoi;
@@ -194,8 +199,6 @@ else % variable number of slepian tapers requested
   ntaper = cellfun(@size,tap,repmat({1},[1 nfreqoi]));
 end
 
-
-
 % determine phase-shift so that for all frequencies angle(t=0) = 0
 timedelay = time(1);
 if timedelay ~= 0
@@ -212,9 +215,6 @@ if timedelay ~= 0
   angletransform = repmat(angletransform,[nchan,1]);
 end
 
-
-
-
 % compute fft
 if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tapers not requested
   str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
@@ -226,10 +226,9 @@ if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tap
     fprintf([str, '\n']);
   end
   spectrum = cell(ntaper(1),1);
+  
   for itap = 1:ntaper(1)
-
     dum = fft(ft_preproc_padding(bsxfun(@times,dat,tap(itap,:)), padtype, 0, postpad),[], 2);
-    
     dum = dum(:,freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
@@ -238,6 +237,7 @@ if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tap
     dum = dum .* sqrt(2 ./ endnsample);
     spectrum{itap} = dum;
   end
+  
   spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper(1) nfreqboi]);% collecting in a cell-array and later reshaping provides significant speedups
   spectrum = permute(spectrum, [2 1 3]);
   
@@ -258,7 +258,7 @@ else % variable number of slepian tapers requested
           fprintf([str, '\n']);
         end
         for itap = 1:ntaper(ifreqoi)
-
+          
           dum = fft(ft_preproc_padding(bsxfun(@times,dat,tap{ifreqoi}(itap,:)), padtype, 0, postpad), [], 2);
           
           dum = dum(:,freqboi(ifreqoi));
@@ -306,14 +306,10 @@ else % variable number of slepian tapers requested
   end % switch dimord
 end
 
-
 % remember the current input arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
 previous_argin = current_argin;
 previous_tap   = tap;
-
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

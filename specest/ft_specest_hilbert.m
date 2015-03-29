@@ -52,6 +52,12 @@ end
 % Set n's
 [nchan,ndatsample] = size(dat);
 
+% This does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
+end
+
 % Remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
   dat = ft_preproc_polyremoval(dat, polyorder, 1, ndatsample);
@@ -153,3 +159,4 @@ for ifreqoi = 1:nfreqoi
   dum = transpose(hilbert(transpose(ft_preproc_padding(flt, padtype, prepad, postpad))));
   spectrum(:,ifreqoi,:) = dum(:,timeboi+prepad);
 end
+

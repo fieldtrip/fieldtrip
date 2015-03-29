@@ -37,8 +37,6 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 % these are for speeding up computation of tapers on subsequent calls
 persistent previous_argin previous_wltspctrm
 
-
-
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper', 'dpss');
 pad       = ft_getopt(varargin, 'pad');
@@ -69,8 +67,13 @@ elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
 end
 
 % Set n's
-
 [nchan,ndatsample] = size(dat);
+
+% This does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
+end
 
 % Remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
@@ -345,8 +348,6 @@ end % switch dimord
 % reused on a subsequent call in case the same input argument is given
 previous_argin     = current_argin;
 previous_wltspctrm = wltspctrm;
-
-
 
 
 % % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases. however, when there is a huge variability in number of tapers per freqoi
