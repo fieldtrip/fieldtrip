@@ -60,21 +60,21 @@ int tcprequest(int server, const message_t *request, message_t **response_ptr) {
 		/* send the request to the server, first the message definition */
     /* FIXME: bufwrite expects unsigned int, gets size_t. Similar for return. */
 		if ((n = bufwrite(server, request->def, sizeof(messagedef_t)))!=sizeof(messagedef_t)) {
-			fprintf(stderr, "write size = %d, should be %d\n", n, sizeof(messagedef_t));
+			fprintf(stderr, "write size = %d, should be %lu\n", n, sizeof(messagedef_t));
       /* FIXME: n is unsigned, %d indicates signed ints. */
 			goto cleanup;
 		}
 
 		/* send the request to the server, then the message payload */
 		if ((n = bufwrite(server, request->buf, request->def->bufsize))!=request->def->bufsize) {
-			fprintf(stderr, "write size = %d, should be %d\n", n, request->def->bufsize);
+			fprintf(stderr, "write size = %d, should be %u\n", n, request->def->bufsize);
 			goto cleanup;
 		}
 	}
 
 	/* read the response from the server, first the message definition */
 	if ((n = bufread(server, response->def, sizeof(messagedef_t))) != sizeof(messagedef_t)) {
-		fprintf(stderr, "packet size = %d, should be %d\n", n, sizeof(messagedef_t));
+		fprintf(stderr, "packet size = %d, should be %lu\n", n, sizeof(messagedef_t));
 		goto cleanup;
 	}
 
