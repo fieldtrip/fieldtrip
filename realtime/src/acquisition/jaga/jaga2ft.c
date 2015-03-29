@@ -19,12 +19,36 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+
 #include "buffer.h"
+#include "socketserver.h"
 
 #define BUFLEN   1388
 #define JAGAPORT 55000
-#define FTHOST   "localhost"
+#define FTHOST   "-"
 #define FTPORT   1972
+
+static char usage[] =
+"\n" \
+    "Usage: jaga2ft [ftHost] [ftPort]\n" \
+    "\n" \
+    "When ftPort is omitted, it will default to 1972.\n" \
+    "When ftHost is omitted, it will default to '-'.\n" \
+    "Using '-' for the buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n" \
+    "\n" \
+    "Example use:\n" \
+    "   jaga2ft                 # start a local buffer on port 1972\n" \
+    "   jaga2ft - 1234          # start a local buffer on port 1234\n" \
+    "   jaga2ft mentat002 1234  # connect to remote buffer\n" \
+    "\n" \
+    ;  
+
+int keepRunning = 1;
+
+void abortHandler(int sig) {
+  printf("Ctrl-C pressed -- stopping...\n");
+  keepRunning = 0;
+}
 
 void diep(char *s)
 {
@@ -58,15 +82,14 @@ int main(int argc, char *argv[])
   int blocksize      = 43;
 
   /* these are used in the communication with the FT buffer and represent statefull information */
-  int ftserver           = -1;
+  int ftSocket           = -1;
+  ft_buffer_server_t *ftServer;
   message_t    *request  = NULL;
   message_t    *response = NULL;
   header_t     *header   = NULL;
   data_t       *data     = NULL;
 
-  if (argc<3) {
-    printf("Usage: %s <hostname> <port>\n", argv[0]);
-  }
+  printf(usage);
 
   if (argc>1)
     strcpy(host.name, argv[1]);
@@ -82,11 +105,28 @@ int main(int argc, char *argv[])
 
   fprintf(stderr, "jaga2ft: hostname     =  %s\n", host.name);
   fprintf(stderr, "jaga2ft: port         =  %d\n", host.port);
-  ftserver = open_connection(host.name, host.port);
-  if (ftserver<0) {
-    fprintf(stderr, "jaga2ft: could not open connection to buffer\n");
-    exit(1);
+
+  /* Spawn tcpserver or connect to remote buffer */
+  if (strcmp(host.name, "-") == 0) {
+    ftServer = ft_start_buffer_server(host.port, NULL, NULL, NULL);
+    if (ftServer==NULL) {
+      fprintf(stderr, "jaga2ft: could not start up a local buffer serving at port %i\n", host.port);
+      return 1;
+    }
+    ftSocket = 0;
+    printf("jaga2ft: streaming to local buffer on port %i\n", host.port);
   }
+  else {
+    ftSocket = open_connection(host.name, host.port);
+
+    if (ftSocket < 0) {
+      fprintf(stderr, "jaga2ft: could not connect to remote buffer at %s:%i\n", host.name, host.port);
+      return 1;
+    }
+    printf("jaga2ft: streaming to remote buffer at %s:%i\n", host.name, host.port);
+  }  
+
+
 
   /* open the UDP server */
   if ((udpsocket=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
@@ -153,7 +193,7 @@ int main(int argc, char *argv[])
   /* this is not needed any more */
   cleanup_header(&header);
 
-  status = clientrequest(ftserver, request, &response);
+  status = clientrequest(ftSocket, request, &response);
   if (verbose>0) fprintf(stderr, "jaga2ft: clientrequest returned %d\n", status);
   if (status) {
     fprintf(stderr, "jaga2ft: could not send request to buffer\n");
@@ -174,10 +214,15 @@ int main(int argc, char *argv[])
 
   cleanup_message(&response);
 
+  /* register CTRL-C handler */
+  signal(SIGINT, abortHandler);
+
+  printf("Starting to listen - press CTRL-C to quit\n");
+
   /* add a small pause between writing header + first data block */
   usleep(200000);
 
-  while (1) 
+  while (keepRunning) 
   {
 
     if (verbose>1) 
@@ -223,7 +268,7 @@ int main(int argc, char *argv[])
     request->def->bufsize = append(&request->buf, request->def->bufsize, data->def, sizeof(datadef_t));
     request->def->bufsize = append(&request->buf, request->def->bufsize, data->buf, data->def->bufsize);
 
-    status = clientrequest(ftserver, request, &response);
+    status = clientrequest(ftSocket, request, &response);
     if (verbose>0) fprintf(stderr, "jaga2ft: clientrequest returned %d\n", status);
     if (status) {
       fprintf(stderr, "jaga2ft: err3\n");
@@ -254,7 +299,14 @@ int main(int argc, char *argv[])
 
   } /* while(1) */
 
-  close_connection(ftserver);
+  data->buf = NULL; /* this is not allocated on the heap but pointing to somewhere on the stack */
+  cleanup_data(&data);
   close(udpsocket);
+
+  if (ftSocket > 0) {
+    close_connection(ftSocket);
+  } else {
+    ft_stop_buffer_server(ftServer);
+  }
   return 0;
 }
