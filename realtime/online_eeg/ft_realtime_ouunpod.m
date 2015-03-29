@@ -195,15 +195,23 @@ while true
     dat = ft_preproc_baselinecorrect(dat);
     dat = ft_preproc_highpassfilter(dat, hdr.Fs, 5, 1, 'but', 'twopass');
     
-    if hdr.Fs>110
-      dat = ft_preproc_bandstopfilter(dat, hdr.Fs, [45 55], 4, 'but', 'twopass');
+    if hdr.Fs<11025
+      % sampling range is low, assume it is EEG
+      if hdr.Fs>110
+        % apply line noise filter
+        dat = ft_preproc_bandstopfilter(dat, hdr.Fs, [45 55], 4, 'but', 'twopass');
+      end
+      if hdr.Fs>230
+        % apply line noise filter
+        dat = ft_preproc_bandstopfilter(dat, hdr.Fs, [95 115], 4, 'but', 'twopass');
+      end
+      [spec, ntaper, freqoi] = ft_specest_mtmfft(dat, time, 'taper', 'dpss', 'tapsmofrq', 2, 'freqoi', cfg.foilim(1):cfg.foilim(2));
+
+    else
+      % sampling range is high, assume it is audio
+      [spec, ntaper, freqoi] = ft_specest_mtmfft(dat, time, 'taper', 'hanning', 'freqoi', cfg.foilim(1):cfg.foilim(2));
     end
     
-    if hdr.Fs>230
-      dat = ft_preproc_bandstopfilter(dat, hdr.Fs, [95 115], 4, 'but', 'twopass');
-    end
-    
-    [spec ntaper freqoi] = ft_specest_mtmfft(dat, time, 'taper', 'dpss', 'tapsmofrq', 2, 'freqoi', cfg.foilim(1):cfg.foilim(2));
     pow = squeeze(mean(abs(spec.^2), 1)); % compute power, average over tapers
     
     if ~exist('TFR', 'var')
