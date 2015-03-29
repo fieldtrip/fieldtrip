@@ -91,7 +91,7 @@ void *memprofile(void *arg) {
 		if (memprofileStatus) {
 				/* only a single instance should be running */
 				pthread_mutex_unlock(&mutexmemprofile);	
-				return;
+				return NULL;
 		}
 		else {
 				memprofileStatus = 1;
