@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 		host.port = atoi(argv[1]);
 	}
 	else {
-	    printf("Using default port, recommended usage 'demo_buffer [port]'. \n");
+	    printf("Using default port, recommended usage 'buffer [port]'. \n");
 		host.port = DEFAULT_PORT;
 	}
 
