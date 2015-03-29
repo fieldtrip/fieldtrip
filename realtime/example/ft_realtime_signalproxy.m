@@ -2,10 +2,10 @@ function ft_realtime_signalproxy(cfg)
 
 % FT_REALTIME_SIGNALPROXY creates some random data and writes it to a FieldTrip buffer.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
 %   ft_realtime_signalproxy(cfg)
@@ -30,6 +30,8 @@ function ft_realtime_signalproxy(cfg)
 %   cfg.bpfreq        = bandpass frequency range, specified as [low high] in Hz
 %
 % To stop this realtime function, you have to press Ctrl-C
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2009-2011, Robert Oostenveld
 %

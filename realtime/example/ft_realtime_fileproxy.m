@@ -1,13 +1,12 @@
 function ft_realtime_fileproxy(cfg)
 
-% FT_REALTIME_FILEPROXY reads continuous data from an EEG/MEG file and writes it to
-% a FieldTrip buffer. This works for any file format that is supported by
-% FieldTrip.
+% FT_REALTIME_FILEPROXY reads continuous data from an EEG/MEG file and writes it to a
+% FieldTrip buffer. This works for any file format that is supported by FieldTrip.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
 %   ft_realtime_fileproxy(cfg)
@@ -34,6 +33,8 @@ function ft_realtime_fileproxy(cfg)
 %   cfg.target.dataformat    = string, default is determined automatic
 %
 % To stop this realtime function, you have to press Ctrl-C
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2008, Robert Oostenveld
 %

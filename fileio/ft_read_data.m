@@ -1,9 +1,8 @@
 function [dat] = ft_read_data(filename, varargin)
 
-% FT_READ_DATA reads electrophysiological data from a variety of EEG,
-% MEG and LFP files and represents it in a common data-independent
-% format. The supported formats are listed in the accompanying
-% FT_READ_HEADER function.
+% FT_READ_DATA reads electrophysiological data from a variety of EEG, MEG and LFP
+% files and represents it in a common data-independent format. The supported formats
+% are listed in the accompanying FT_READ_HEADER function.
 %
 % Use as
 %   dat = ft_read_data(filename, ...)
@@ -23,10 +22,10 @@ function [dat] = ft_read_data(filename, varargin)
 %   'headerformat'   string
 %   'fallback'       can be empty or 'biosig' (default = [])
 %
-% This function returns a 2-D matrix of size Nchans*Nsamples for
-% continuous data when begevent and endevent are specified, or a 3-D
-% matrix of size Nchans*Nsamples*Ntrials for epoched or trial-based
-% data when begtrial and endtrial are specified.
+% This function returns a 2-D matrix of size Nchans*Nsamples for continuous
+% data when begevent and endevent are specified, or a 3-D matrix of size 
+% Nchans*Nsamples*Ntrials for epoched or trial-based data when begtrial 
+% and endtrial are specified.
 %
 % The list of supported file formats can be found in FT_READ_HEADER.
 %
