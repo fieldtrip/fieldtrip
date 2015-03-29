@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <signal.h>
 
 #include "buffer.h"
 #include "socketserver.h"
@@ -226,8 +227,8 @@ int main(int argc, char *argv[])
   {
 
     if (verbose>1) 
-      for (unsigned int i=0; i<12; i++) 
-        printf("buf[%2u] = %hhu\n", i, buf[i]);
+      for (n=0; n<12; n++) 
+        printf("buf[%2u] = %hhu\n", n, buf[n]);
 
     /* parse the UDP package */
     packet.version = *(uint16_t *)(buf+0);
