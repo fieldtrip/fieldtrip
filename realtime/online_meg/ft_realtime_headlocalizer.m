@@ -1,8 +1,7 @@
 function ft_realtime_headlocalizer(cfg)
 
-% FT_REALTIME_HEADLOCALIZER is a realtime application for online
-% visualization of the head position indicator (HPI) coils in CTF275 and
-% Neuromag systems.
+% FT_REALTIME_HEADLOCALIZER is a realtime application for online visualization of the
+% head position indicator (HPI) coils in CTF275 and Elekta/Neuromag systems.
 %
 % Repositioning within a recording session can be achieved by marking the HPI
 % coil positions at an arbitrary point, i.e. by clicking the 'Update' button.
@@ -18,7 +17,7 @@ function ft_realtime_headlocalizer(cfg)
 %
 % Use as
 %   ft_realtime_headlocalizer(cfg)
-% with the following potential configuration options
+% with the following configuration options
 %   cfg.dataset         = string, name or location of a dataset/buffer (default = 'buffer://odin:1972')
 %   cfg.template        = string, name of a template dataset for between-session repositioning (default = [])
 %   cfg.bufferdata      = whether to start on the 'first or 'last' data that is available (default = 'last')
@@ -27,8 +26,9 @@ function ft_realtime_headlocalizer(cfg)
 %   cfg.accuracy_green  = distance from fiducial coordinate; green when within limits (default = 0.15 cm)
 %   cfg.accuracy_orange = orange when within limits, red when out (default = 0.3 cm)
 %
-% This method is described by Stolk et al., Online and offline tools for head
-% movement compensation in MEG. NeuroImage, 2013.
+% This method is described in Stolk A, Todorovic A, Schoffelen JM, Oostenveld R.
+% "Online and offline tools for head movement compensation in MEG." 
+% Neuroimage. 2013 Mar;68:39-48. doi: 10.1016/j.neuroimage.2012.11.047.
 
 % Copyright (C) 2008-2013,  Arjen Stolk & Robert Oostenveld
 %
@@ -50,8 +50,22 @@ function ft_realtime_headlocalizer(cfg)
 %
 % $Id$
 
-% defaults
+agreement = {
+  'By using this realtime headlocalizer tool in your research, you agree to citing the publication below.'
+  ''
+  'Stolk A, Todorovic A, Schoffelen JM, Oostenveld R.'
+  '"Online and offline tools for head movement compensation in MEG."'
+  'Neuroimage. 2013 Mar;68:39-48.'
+  };
+
+if ~strcmp(questdlg(agreement,'User agreement', 'Yes', 'Cancel', 'Cancel'), 'Yes')
+  return
+end
+
+% do the general setup of the function
 ft_defaults
+
+% set the defaults
 cfg.dataset         = ft_getopt(cfg, 'dataset', 'buffer://odin:1972'); % location of the buffer/dataset
 cfg.accuracy_green  = ft_getopt(cfg, 'accuracy_green',  .15); % green when within this distance from reference
 cfg.accuracy_orange = ft_getopt(cfg, 'accuracy_orange',  .3); % orange when within this distance from reference
@@ -60,8 +74,10 @@ cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
 
+% ensure pesistent variables are cleared
+clear ft_read_header
+
 % start by reading the header from the realtime buffer
-clear ft_read_header; % ensure pesistent variables are cleared
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate dataset into datafile+headerfile
 hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
 
@@ -73,7 +89,6 @@ count       = 0;
 % determine MEG system type
 isneuromag = ft_senstype(hdr.grad, 'neuromag');
 isctf      = ft_senstype(hdr.grad, 'ctf275');
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read template head position, to reposition to, if template file is specified
