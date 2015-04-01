@@ -511,8 +511,7 @@ if ~isempty(BrainModel)
             brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfNodes;
           case {'2', '2.0'}
             greynodeIndex{i}       = BrainModel(i).VertexIndices;
-            %brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
-            brainstructureIndex{i} = 1:numel(BrainModel(i).VertexIndices);
+            brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
           otherwise
             error('unsupported cifti version');
         end % switch
@@ -927,10 +926,10 @@ if ~isempty(NamedMap)
   % the following assumes a single NamedMap
   if isfield(NamedMap, 'LabelTable')
     % use the key-label combination in the label table
-    haslabeltable = true;
-    key           = NamedMap.LabelTable.Key;
+    haslabeltable    = true;
+    key              = NamedMap.LabelTable.Key;
+    source.datalabel = NamedMap.LabelTable.Label(:);
   end
-  source.datalabel = NamedMap.LabelTable.Label(:);
 end
 
 if readdata

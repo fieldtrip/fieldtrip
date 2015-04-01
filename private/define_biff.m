@@ -1,4 +1,4 @@
-% DEFINE_BIFF matlab script to define the known BIFF chunk types 
+% DEFINE_BIFF script to define the known BIFF chunk types 
 %
 % This function should not be called seperately, it is intended to
 % be used from withing read_biff and write_biff.

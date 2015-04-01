@@ -14,9 +14,9 @@ function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabilityfix
 %   type       optional filter type, can be
 %                'but' Butterworth IIR filter (default)
 %                'firws' windowed sinc FIR filter
-%                'fir' FIR filter using Matlab fir1 function
-%                'firls' FIR filter using Matlab firls function (requires Matlab Signal Processing Toolbox)
-%                'brickwall' Frequency-domain filter using Matlab FFT and iFFT function
+%                'fir' FIR filter using MATLAB fir1 function
+%                'firls' FIR filter using MATLAB firls function (requires MATLAB Signal Processing Toolbox)
+%                'brickwall' Frequency-domain filter using MATLAB FFT and iFFT function
 %   dir        optional filter direction, can be
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
@@ -123,12 +123,16 @@ end
 
 % Set default filter function
 if nargin < 12 || isempty(usefftfilt)
-  usefftfilt = 'no';
-end
-if strcmp(usefftfilt, 'yes')
-    usefftfilt = 1;
+  usefftfilt = false;
 else
-    usefftfilt = 0;
+  % convert to boolean value
+  usefftfilt = istrue(usefftfilt);
+end
+
+% Filtering does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
 end
 
 % Nyquist frequency
@@ -249,13 +253,13 @@ switch type
     pos2 = length(f);
     z(pos1:pos2) = 1;
     A = 1;
-    B = firls(N,f,z); % requires Matlab signal processing toolbox
+    B = firls(N,f,z); % requires MATLAB signal processing toolbox
   case 'brickwall'
-    ax = linspace(0, Fs, size(dat,2)); % frequency coefficients
-    fl = nearest(ax, Fhp)-1; % low cut-off frequency
+    ax = linspace(0, Fs, size(dat,2));  % frequency coefficients
+    fl = nearest(ax, Fhp)-1;            % low cut-off frequency
     a  = 0; % suppresion rate of frequencies-not-of-interest
-    f           = fft(dat,[],2); % FFT
-    f(:,1:fl)   = a.*f(:,1:fl); % perform low cut-off
+    f           = fft(dat,[],2);        % FFT
+    f(:,1:fl)   = a.*f(:,1:fl);         % perform low cut-off
     filt        = 2*real(ifft(f,[],2)); % iFFT
     return
   otherwise
@@ -283,9 +287,10 @@ catch
       warning('backtrace', 'off')
       warning_once(sprintf('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2));
       warning('backtrace', 'on')
-      filt1 = ft_preproc_highpassfilter(dat  ,Fs,Fhp,N1,type,dir,instabilityfix);
-      filt  = ft_preproc_highpassfilter(filt1,Fs,Fhp,N2,type,dir,instabilityfix);
+      filt = ft_preproc_highpassfilter(dat ,Fs,Fhp,N1,type,dir,instabilityfix);
+      filt = ft_preproc_highpassfilter(filt,Fs,Fhp,N2,type,dir,instabilityfix);
     otherwise
       error('incorrect specification of instabilityfix');
   end % switch
 end
+

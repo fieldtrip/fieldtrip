@@ -6,8 +6,7 @@ function test_ft_statistics_montecarlo
 % TEST test_ft_statistics_montecarlo
 % TEST ft_statistics_montecarlo ft_timelockstatistics ft_freqstatistics ft_sourcestatistics clusterstat findcluster
 
-% test the functionality of ft_statistics_montecarlo, in particular with
-% respect to the clustering behaviour.
+% test the functionality of ft_statistics_montecarlo, in particular with respect to the clustering behaviour.
 
 % start with some data
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat');

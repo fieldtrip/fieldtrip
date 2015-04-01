@@ -1,7 +1,7 @@
 function [d] = inv2x2(x)
 
 % INV2X2 computes inverse of matrix x, using explicit analytic definition
-% if size(x,1) < 4, otherwise use matlab inv-function
+% if size(x,1) < 4, otherwise use MATLAB inv-function
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

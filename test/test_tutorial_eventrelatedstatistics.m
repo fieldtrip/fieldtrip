@@ -14,7 +14,7 @@ ft_default.feedback = 'no';
 if nargin==0
   % this is where the data should be located
   datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
-else
+end
 
 load(fullfile(datadir, 'GA_ERF_orig.mat'));
 
@@ -59,7 +59,7 @@ figure; plot(M','o-'); xlim([0.5 2.5])
 legend({'subj1', 'subj2', 'subj3', 'subj4', 'subj5', 'subj6', ...
         'subj7', 'subj8', 'subj9', 'subj10'}, 'location','EastOutside');
       
-%% T-test with Matlab function
+%% T-test with MATLAB function
 
 %dependent samples ttest
 FCminFIC = values_FC - values_FIC;

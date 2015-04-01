@@ -77,7 +77,7 @@ xrange    = istrue(xrange);
 yrange    = istrue(yrange);
 clear     = istrue(clear);
 
-% get the figure handle, dependent on matlab version
+% get the figure handle, dependent on MATLAB version
 if matlabversion('2014b', Inf) % >= 2014b?
  while ~isa(handle, 'matlab.ui.Figure')
     handle = p;

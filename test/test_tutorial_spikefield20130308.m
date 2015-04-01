@@ -8,10 +8,8 @@ function test_tutorial_spikefield20130308
 % Preprocessing
 % The data for this tutorial can be downloaded on ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/spikefield/p029_sort_final_01.nex. Make sure you add the main Fieldtrip directory to your path and run ft_defaults. We first read in the spike data by ft_read_spike and select the following channels for analysis from the spike structure using ft_spike_select by
 
-cd (dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spikefield'));
-
-filename = 'p029_sort_final_01.nex';
-spike  = ft_read_spike(filename);
+filenex = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spikefield/p029_sort_final_01.nex');
+spike  = ft_read_spike(filenex);
 
 cfg              = [];
 cfg.spikechannel = {'sig002a_wf', 'sig003a_wf'};
@@ -65,7 +63,7 @@ spike  = ft_spike_select(cfg, spike);
 
 % get the cfg.trl
 cfg = [];
-cfg.dataset  = filename;
+cfg.dataset  = filenex;
 cfg.trialfun = 'trialfun_stimon_samples';
 cfg          = ft_definetrial(cfg);
 
@@ -108,7 +106,7 @@ cfg.dftfilter = 'yes';
 % We now have two options to further process the raw spike data such that the resulting spike structure has the same trial definition as the data_lfp structure. First of all, we can directly create trials for the spike structure, by
 
 cfg = [];
-cfg.dataset   = filename;
+cfg.dataset   = filenex;
 cfg.trialfun  = 'trialfun_stimon_samples';
 cfg           = ft_definetrial(cfg);
 trl           = cfg.trl;
@@ -137,7 +135,7 @@ spikeTrials   = ft_spike_maketrials(cfg,spike);
 % An equivalent method (but potentially more error-prone!) would have been to directly use the timestamp representation per event to create the trials, i.e. use the 'trialfun_stimon' that we defined in the [ftp:fieldtrip.fcdonders.nl/tutorial/spike] tutorial.
 
 cfg          = [];
-cfg.dataset  = filename;
+cfg.dataset  = filenex;
 cfg.trialfun = 'trialfun_stimon'; % this was defined in the [ftp:fieldtrip.fcdonders.nl/tutorial/spike] tutorial
 cfg          = ft_definetrial(cfg);
 cfg.timestampspersecond = 40000;
@@ -162,7 +160,7 @@ data_all = ft_appendspike([],data_lfp, spike);
 %
 % The spike trains have now been binarized (as mentioned earlier, values higher than 1 can occasionally occur if the sample frequency is not high enough), and a piece of data.trial{i} has the following content:
 %
-disp(data_all.trial{1}(:,4002:4005))
+disp(data_all.trial{1}(:,4002:4005));
 
 %   -12.3496  -12.9317  -16.8991  -14.4778 % the LFP chans
 %    -3.5391    3.5410    2.4398    0.0795
@@ -242,7 +240,7 @@ xlim(cfg.timwin)
 % The FFT algorithm allows that only one spikechannel can be selected at a time. One can either have the spike train in binarized format or enter it separately as a third input.
 
 cfg              = [];
-cfg.method       = 'fft';
+cfg.method       = 'mtmfft';
 cfg.foilim       = [20 100]; % cfg.timwin determines spacing
 cfg.timwin       = [-0.05 0.05]; % time window of 100 msec
 cfg.taper        = 'hanning';
@@ -272,7 +270,7 @@ mag = abs(stsFFT.fourierspctrm{1})
 % The convolution algorithm (cfg.method = 'convol') accepts spikes both in binarized (raw) and spike format. Multiple spike channels can be selected at the same time. For every frequency, we can specify a different time window as well, such that for example the number of cycles per frequency can be kept constant. The algorithm allows for large speed-ups if the number of spikes and units is large, as the instantaneous LFP phase is determined (only once) for all possible time-points through convolution. However this method is not preferred if there are few spikes and very long LFP traces (in this case iteratively using the FFT method would be faster).
 
 cfg           = [];
-cfg.method    = 'convol';
+cfg.method    = 'mtmconvol';
 cfg.foi       = 20:10:100;
 cfg.t_ftimwin = 5./cfg.foi; % 5 cycles per frequency
 cfg.taper     = 'hanning';

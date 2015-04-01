@@ -77,7 +77,7 @@ pos2 = target;
 % feval that is executed by the optimalization toolbox.
 errorfun = str2func('ft_warp_error');
 
-% determine whether the Matlab Optimization toolbox is available and can be used
+% determine whether the MATLAB Optimization toolbox is available and can be used
 if ft_hastoolbox('optim')
   optimfun = @fminunc;
 else

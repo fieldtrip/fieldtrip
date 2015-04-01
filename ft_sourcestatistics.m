@@ -78,6 +78,7 @@ if abort
   return
 end
 
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
@@ -104,15 +105,13 @@ cfg.latency     = ft_getopt(cfg, 'latency',     'all');
 cfg.avgovertime = ft_getopt(cfg, 'avgovertime', 'no');
 cfg.frequency   = ft_getopt(cfg, 'frequency',   'all');
 cfg.avgoverfreq = ft_getopt(cfg, 'avgoverfreq', 'no');
+cfg.parameter   = ft_getopt(cfg, 'parameter', 'pow');
 
-if isempty(cfg.parameter)
-  if isfield(varargin{1}, 'pow')
-    cfg.parameter = 'pow';
-  end
-end
-
-if length(cfg.parameter)>4 && strcmp(cfg.parameter(1:4), 'avg.')
+if strncmp(cfg.parameter, 'avg.', 4)
   cfg.parameter = cfg.parameter(5:end); % remove the 'avg.' part
+end
+for i=1:length(varargin)
+  assert(isfield(varargin{i}, cfg.parameter), 'data does not contain parameter "%s"', cfg.parameter);
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
@@ -122,8 +121,8 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 dimord = getdimord(varargin{1}, cfg.parameter);
-dimsiz = getdimsiz(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
+dimsiz = getdimsiz(varargin{1}, cfg.parameter);
 dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
 rptdim = find( strcmp(dimtok, 'subj') |  strcmp(dimtok, 'rpt') |  strcmp(dimtok, 'rpttap'));
 datdim = find(~strcmp(dimtok, 'subj') & ~strcmp(dimtok, 'rpt') & ~strcmp(dimtok, 'rpttap'));
@@ -133,6 +132,21 @@ datsiz = dimsiz(datdim);
 cfg.dimord = sprintf('%s_', dimtok{datdim});
 cfg.dimord = cfg.dimord(1:end-1); % remove trailing _
 cfg.dim    = dimsiz(datdim);
+
+if isfield(varargin{1}, 'dim')
+  % the positions can be mapped onto a 3-D volume
+  if prod(cfg.dim)==prod(varargin{1}.dim)
+    % one value per grid position, i.e. [nx ny nz]
+    cfg.origdim = varargin{1}.dim;
+  else
+    % multiple value per grid position
+    cfg.origdim = [varargin{1}.dim cfg.dim(2:end)];
+  end
+end
+
+if numel(cfg.dim)==1
+  cfg.dim(2) = 1;  % add a trailing singleton dimensions
+end
 
 if isempty(rptdim)
   % repetitions are across multiple inputs
@@ -177,27 +191,17 @@ end
 
 % determine the number of output arguments
 try
-  % the nargout function in Matlab 6.5 and older does not work on function handles
+  % the nargout function in MATLAB 6.5 and older does not work on function handles
   num = nargout(statmethod);
 catch
   num = 1;
 end
 
 % perform the statistical test
-if strcmp(func2str(statmethod),'ft_statistics_montecarlo')
-  % because ft_statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data,
-  % the following (ugly) work around is necessary
-  if num>1
-    [stat, cfg] = statmethod(cfg, dat, design);
-  else
-    [stat] = statmethod(cfg, dat, design);
-  end
+if num>1
+  [stat, cfg] = statmethod(cfg, dat, design);
 else
-  if num>1
-    [stat, cfg] = statmethod(cfg, dat, design);
-  else
-    [stat] = statmethod(cfg, dat, design);
-  end
+  [stat] = statmethod(cfg, dat, design);
 end
 
 if ~isstruct(stat)
@@ -222,8 +226,7 @@ stat.dimord = cfg.dimord;
 stat = copyfields(varargin{1}, stat, {'freq', 'time', 'pos', 'dim', 'transform'});
 
 % these were only present to inform the low-level functions
-cfg = rmfield(cfg, 'dim');
-cfg = rmfield(cfg, 'dimord');
+cfg = removefields(cfg, {'dim', 'dimord', 'tri', 'inside'});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

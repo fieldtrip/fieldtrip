@@ -1046,12 +1046,16 @@ for j = 1:size(combination,1)
       load(outputfile); % this contains the previous "source"
       sourcenew = rmfield(sourcenew, 'cfg'); % these are different, a.o. due to the callinfo
       source    = rmfield(source, 'cfg');
-      assert(isequal(source, sourcenew));
+      assert(isequal(source, sourcenew), sprintf('assertion failed: the computed data are different from the data in file %s',outputfile));
     end
 
-  catch
-    % not all combinations are going to work, give a warning if it fails
-    warning('failed on %s', outputfile);
+  catch me
+    if strcmp(me.message, sprintf('assertion failed: the computed data are different from the data in file %s',outputfile))
+      error('assertion failed: the computed data are different from the data in file %s',outputfile);
+    else
+      % not all combinations are going to work, give a warning if it fails
+      warning('failed on %s', outputfile);
+    end
   end
 
 end % combination

@@ -25,10 +25,9 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
 % Alternatively the position of a few sources at locations of interest can
 % be specified, for example obtained from an anatomical or functional MRI
-%   cfg.grid.pos        = Nx3 matrix with position of each source
+%   cfg.grid.pos        = N*3 matrix with position of each source
+%   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
-%   cfg.grid.inside     = vector with indices of the sources inside the brain (optional)
-%   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
 %
 % The volume conduction model of the head should be specified as
 %   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
@@ -46,8 +45,8 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.normalize       = 'yes' or 'no' (default = 'no')
 %   cfg.normalizeparam  = depth normalization parameter (default = 0.5)
 %   cfg.backproject     = 'yes' or 'no' (default = 'yes') determines when reducerank is applied
-%                         whether the lower rank leadfield is projected back onto the original 
-%                         linear subspace, or not. 
+%                         whether the lower rank leadfield is projected back onto the original
+%                         linear subspace, or not.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -124,6 +123,10 @@ cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved t
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
+% this code expects the inside to be represented as a logical array
+cfg.grid = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
+cfg = ft_checkconfig(cfg, 'index2logical', 'yes');
+
 if strcmp(cfg.sel50p, 'yes') && strcmp(cfg.lbex, 'yes')
   error('subspace projection with either lbex or sel50p is mutually exclusive');
 end
@@ -156,7 +159,7 @@ try, tmpcfg.inwardshift = cfg.inwardshift;  end
 grid = ft_prepare_sourcemodel(tmpcfg);
 
 % check whether units are equal (NOTE: this was previously not required,
-% this check can be removed if the underlying bug is resolved. See 
+% this check can be removed if the underlying bug is resolved. See
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387
 if ~isfield(vol, 'unit') || ~isfield(grid, 'unit') || ~isfield(sens, 'unit')
   warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387)');
@@ -167,14 +170,16 @@ else
 end
 
 if ft_voltype(vol, 'openmeeg')
-  % the system call to the openmeeg executable makes it rather slow
+  % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
- 
-  ndip = length(grid.inside);
-  ok = false(1,ndip);
-  batchsize = ndip;
-
+  
+  % find the indices of all grid points that are inside the brain
+  insideindx = find(grid.inside);
+  ndip       = length(insideindx);
+  ok         = false(1,ndip);
+  batchsize  = ndip;
+  
   while ~all(ok)
     % find the first one that is not yet done
     begdip = find(~ok, 1);
@@ -182,7 +187,7 @@ if ft_voltype(vol, 'openmeeg')
     enddip = min((begdip+batchsize-1), ndip); % don't go beyond the end
     batch  = begdip:enddip;
     try
-      lf = ft_compute_leadfield(grid.pos(grid.inside(batch),:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+      lf = ft_compute_leadfield(grid.pos(insideindx(batch),:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
       ok(batch) = true;
     catch
       ok(batch) = false;
@@ -200,32 +205,39 @@ if ft_voltype(vol, 'openmeeg')
     % reassign the large leadfield matrix over the single grid locations
     for i=1:length(batch)
       sel = (3*i-2):(3*i);           % 1:3, 4:6, ...
-      dipindx = grid.inside(batch(i));
+      dipindx = insideindx(batch(i));
       grid.leadfield{dipindx} = lf(:,sel);
     end
     
     clear lf
     
   end % while
-    
+  
 else
+  % find the indices of all grid points that are inside the brain
+  insideindx = find(grid.inside);
+  
   ft_progress('init', cfg.feedback, 'computing leadfield');
-  for i=1:length(grid.inside)
+  for i=1:length(insideindx)
     % compute the leadfield on all grid positions inside the brain
-    ft_progress(i/length(grid.inside), 'computing leadfield %d/%d\n', i, length(grid.inside));
-    dipindx = grid.inside(i);
-    grid.leadfield{dipindx} = ft_compute_leadfield(grid.pos(dipindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+    ft_progress(i/length(insideindx), 'computing leadfield %d/%d\n', i, length(insideindx));
+    thisindx = insideindx(i);
+    grid.leadfield{thisindx} = ft_compute_leadfield(grid.pos(thisindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
     
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      grid.leadfield{dipindx} = grid.leadfield{dipindx} * grid.mom(:,dipindx);
+      grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
     end
   end % for all grid locations inside the brain
   ft_progress('close');
 end
 
-% fill the positions outside the brain with NaNs
-grid.leadfield(grid.outside) = {nan};
+% represent the leadfield for positions outside the brain as empty array
+grid.leadfield(~grid.inside) = {[]};
+
+% add the label of the channels
+grid.label           = sens.label;
+grid.leadfielddimord = '{pos}_chan_ori';
 
 % mollify the leadfields
 if ~strcmp(cfg.mollify, 'no')

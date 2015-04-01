@@ -40,7 +40,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
 %   cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
-%   cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
+%   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
 %   cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
@@ -164,7 +164,7 @@ cfg.box            = ft_getopt(cfg, 'box', 'no');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',   8);
 cfg.graphcolor     = ft_getopt(cfg, 'graphcolor', 'brgkywrgbkywrgbkywrgbkyw');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer'); % let matlab decide on default
+cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.linestyle      = ft_getopt(cfg, 'linestyle',  '-');

@@ -1,8 +1,9 @@
-function y = access(x, cmd)
+function y = access(x, cmd, key, val)
 
 % ACCESS Return the number of accesses (assignments and references) to a CONFIGURATION object.
+%
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2015, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -34,16 +35,25 @@ if nargin==1
 
   fprintf('----------- reference -----------\n');
   disp(x.reference);
+
+  fprintf('----------- hidden -----------\n');
+  disp(x.hidden);
+  
 else
   switch cmd(1)
-    case 'v'
+    case 'v' % values
       y = x.value;
-    case 'r'
-      y = x.reference;
-    case 'a'
-      y = x.assign;
-    case 'o'
+    case 'o' % original
       y = x.original;
+    case 'a' % assignment
+      y = x.assign;
+    case 'r' % reference
+      y = x.reference;
+    case 'g' % get hidden
+      y = x.hidden.(key);
+    case 's' % set hidden
+      x.hidden.(key) = val;
+      y = x;
     otherwise
       error('Incorrect command for accessing a config object.')
   end

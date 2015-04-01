@@ -125,7 +125,7 @@ if abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
   % there used to be other system specific trialfuns in previous versions

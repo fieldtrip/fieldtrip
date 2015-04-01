@@ -1,14 +1,13 @@
-% RT_MICROMEDPROXY reads continuous data from a Micromed acquisition
-% system through the BCI interface and writes it to a FieldTrip
-% buffer.
+% FT_REALTIME_MICROMEDPROXY reads continuous data from a Micromed acquisition system
+% through the BCI interface and writes it to a FieldTrip buffer.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
-%   rt_micromedproxy(cfg)
+%   ft_realtime_micromedproxy(cfg)
 %
 % The configuration should contain
 %   cfg.feedback             = 'yes' or 'no' (default = 'no')
@@ -30,3 +29,5 @@
 % Copyright (C) 2009, Erik Aarnoutse, UMC Utrecht, The Netherlands
 % Copyright (C) 2009, Cristiano Rizzo, Micromed A.S., Italy
 % Copyright (C) 2009, Robert Oostenveld, Donders Institute Nijmegen, The Netherlands
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER

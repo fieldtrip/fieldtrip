@@ -842,7 +842,13 @@ elseif (filetype_check_extension(filename, '.ini') ||  filetype_check_extension(
   type = 'deymed_ini';
   manufacturer = 'Deymed';
   content = 'eeg header information';
-  
+
+elseif filetype_check_extension(filename, '.dat') && (filetype_check_header(filename, [0 0 16 0 16 0], 8) || filetype_check_header(filename, [0 0 16 0 16 0], 0))
+  % this should go before curry_dat
+  type = 'jaga16';
+  manufacturer = 'Jinga-Hi';
+  content = 'electrophysiological data';
+
   % known Curry V4 file types
 elseif filetype_check_extension(filename, '.dap')
   type = 'curry_dap';   % FIXME, can also be MPI Frankfurt electrophysiological data
@@ -1039,7 +1045,7 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files
-  % there is a matlab V6 file with the header and a binary file with the data (multiplexed, ieee-le, double)
+  % there is a MATLAB V6 file with the header and a binary file with the data (multiplexed, ieee-le, double)
   type = 'fcdc_matbin';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
   content = 'multiplexed electrophysiology data';

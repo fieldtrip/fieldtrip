@@ -51,19 +51,19 @@ cfgmix3.grad=ft_convert_units(cfg.grad,'cm');
 % ft_defaults;
 gridLFmmcur = ft_prepare_leadfield(cfgmm);
 gridLFcmcur = ft_prepare_leadfield(cfgcm);
-gridLFmmcur.leadfield{gridLFmmcur.inside(1)}(1,:)
-gridLFcmcur.leadfield{gridLFcmcur.inside(1)}(1,:)
+gridLFmmcur.leadfield{find(gridLFmmcur.inside, 1)}(1,:)
+gridLFcmcur.leadfield{find(gridLFcmcur.inside, 1)}(1,:)
 
-% save  grid1794.mat gridLF*
+% save grid1794.mat gridLF*
 gridLFmix1 = ft_prepare_leadfield(cfgmix1);
 gridLFmix2 = ft_prepare_leadfield(cfgmix2);
 gridLFmix3 = ft_prepare_leadfield(cfgmix3);
 
-gridLFcmcur.leadfield{gridLFcmcur.inside(1)}(1,:)
-gridLFmmcur.leadfield{gridLFmmcur.inside(1)}(1,:)
-gridLFmix1.leadfield{gridLFcmcur.inside(1)}(1,:)
-gridLFmix2.leadfield{gridLFmmcur.inside(1)}(1,:)
-gridLFmix3.leadfield{gridLFmmcur.inside(1)}(1,:)
+gridLFcmcur.leadfield{find(gridLFcmcur.inside, 1)}(1,:)
+gridLFmmcur.leadfield{find(gridLFmmcur.inside, 1)}(1,:)
+gridLFmix1.leadfield{find(gridLFcmcur.inside, 1)}(1,:)
+gridLFmix2.leadfield{find(gridLFmmcur.inside, 1)}(1,:)
+gridLFmix3.leadfield{find(gridLFmmcur.inside, 1)}(1,:)
 
 assert(isequaln(rmfield(gridLFmmcur,'cfg'),rmfield(gridLFcmcur,'cfg')))
 assert(isequaln(rmfield(gridLFmix1,'cfg'),rmfield(gridLFcmcur,'cfg')))
@@ -106,8 +106,8 @@ cfgmix3.grad=ft_convert_units(cfg.grad,'cm');
 % ft_defaults;
 gridLFmmcur= ft_prepare_leadfield(cfgmm);
 gridLFcmcur= ft_prepare_leadfield(cfgcm);
-gridLFmmcur.leadfield{gridLFmmcur.inside(1)}(1,:)
-gridLFcmcur.leadfield{gridLFcmcur.inside(1)}(1,:)
+gridLFmmcur.leadfield{find(gridLFmmcur.inside, 1)}(1,:)
+gridLFcmcur.leadfield{find(gridLFcmcur.inside, 1)}(1,:)
 
 % save  grid1794.mat gridLF*
 gridLFmix1= ft_prepare_leadfield(cfgmix1);
@@ -139,8 +139,8 @@ assert(isequaln(rmfield(gridLFmix3,'cfg'),rmfield(gridLFcmcur,'cfg')))
 % gridLFcmcur= ft_prepare_leadfield(cfg);
 % 
 % 
-% gridLFcmcur.leadfield{gridLFcmcur.inside(1)}(1,:)
-% gridLFmmcur.leadfield{gridLFmmcur.inside(1)}(1,:)
+% gridLFcmcur.leadfield{find(gridLFcmcur.inside, 1)}(1,:)
+% gridLFmmcur.leadfield{find(gridLFmmcur.inside, 1)}(1,:)
 % gridLFcmjune.leadfield{gridLFcmjune.inside(1)}(1,:)
 % gridLFmmjune.leadfield{gridLFmmjune.inside(1)}(1,:)
 % 

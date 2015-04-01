@@ -86,6 +86,13 @@ if isfield(timelock, 'numsamples'),       timelock = rmfield(timelock, 'numsampl
 if isfield(timelock, 'numcovsamples'),    timelock = rmfield(timelock, 'numcovsamples');    end
 if isfield(timelock, 'numblcovsamples'),  timelock = rmfield(timelock, 'numblcovsamples');  end
 
+if ~iscolumn(timelock.label)
+  timelock.label = timelock.label';
+end
+if ~isrow(timelock.time)
+  timelock.time = timelock.time';
+end
+
 switch version
   case '2011v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

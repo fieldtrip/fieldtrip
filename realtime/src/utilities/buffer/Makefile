@@ -66,17 +66,14 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-# demo_buffer_tia does not work.
-TARGETS = $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/demo_buffer$(SUFFIX) $(BINDIR)/demo_buffer_rda$(SUFFIX) 
+# buffer_tia does not work.
+TARGETS = $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer_rda$(SUFFIX) 
 
 ###############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/demo_buffer_rda$(SUFFIX): \
+$(BINDIR)/buffer_rda$(SUFFIX): \
 	LDLIBS := $(FTBUFFER)/src/rdaserver.o $(LDLIBS)
-
-$(BINDIR)/buffer$(SUFFIX): $(BINDIR)/demo_buffer$(SUFFIX)
-	cp $^ $@
 
 $(BINDIR)/%$(SUFFIX): %.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)

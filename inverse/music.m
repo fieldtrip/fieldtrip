@@ -55,12 +55,27 @@ if isempty(numcomponent)
   error('you must specify the number of signal components');
 end
 
-% ensure that these are row-vectors
-dip.inside = dip.inside(:)';
-dip.outside = dip.outside(:)';
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% find the dipole positions that are inside/outside the brain
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, vol);
+end
 
-Nchan = length(grad.label);
-Ndip  = length(dip.inside);
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
+% select only the dipole positions inside the brain for scanning
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
 
 if ~isempty(cov)
   % compute signal and noise subspace from covariance matrix
@@ -74,14 +89,13 @@ us = u(:,(numcomponent+1):end);
 ps = us * us';
 
 % allocate space to hold the result
-jr = zeros(length(dip.inside)+length(dip.outside),1);
+dipout.jr = nan(size(dip.pos,1),1);
 
 ft_progress('init', feedback, 'computing music metric');
-for i=1:length(dip.inside)
-
-  ft_progress(i/length(dip.inside), 'computing music metric %d/%d\n', i, length(dip.inside));
-  i = dip.inside(i);
-
+for i=1:size(dip.pos,1)
+  
+  ft_progress(i/size(dip.pos,1), 'computing music metric %d/%d\n', i, size(dip.pos,1));
+  
   if isfield(dip, 'leadfield')
     % reuse the leadfield that was previously computed
     lf = dip.leadfield{i};
@@ -92,24 +106,22 @@ for i=1:length(dip.inside)
     % compute the leadfield
     lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
-
+  
   % compute the MUSIC metric, c.f. equation 26
-  jr(i) = (norm(ps * lf)./norm(lf)).^2;
+  dipout.jr(i) = (norm(ps * lf)./norm(lf)).^2;
   % as described in the Mosher 1992 paper on page 550, "...the general approach is to
   % evaluare Jr(i) over a fine three-dimensional grid, plot its inverse,
   % and look for p sharp spikes..."
-
+  
 end
 ft_progress('close');
 
-% locations outside the head get assigned a nan
-jr(dip.outside) = nan;
+% wrap it all up, prepare the complete output
+dipout.inside   = originside;
+dipout.pos      = origpos;
 
-% assign the output data
-dipout.jr = jr(:);  % ensure that it is a column vector
-
-% add other descriptive information to the output source model
-dipout.pos     = dip.pos;
-dipout.inside  = dip.inside;
-dipout.outside = dip.outside;
-
+% reassign the scan values over the inside and outside grid positions
+if isfield(dipout, 'jr')
+  dipout.jr( originside) = dipout.jr;
+  dipout.jr(~originside) = nan;
+end

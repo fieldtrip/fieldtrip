@@ -137,11 +137,9 @@ for i =1:numel(cfg.tissue)
   % seg = volumesmooth(seg, nan, nan);
   
   % ensure that the segmentation is binary and that there is a single contiguous region
-  % FIXME is this still needed when it is already binary?
   seg = volumethreshold(seg, 0.5, tissue);
   
   % the function that generates the mesh will fail if there is a hole in the middle
-  % FIXME is this still needed when it is already binary?
   seg = volumefillholes(seg);
   
   switch cfg.method

@@ -75,7 +75,7 @@ elseif isunix
             ldLibraryPath0 = getenv('LD_LIBRARY_PATH');          % We'll restore this at the end
         end
         UNIX_LDLIBRARYPATH = '/usr/lib:/usr/local/lib';
-        setenv('LD_LIBRARY_PATH',UNIX_LDLIBRARYPATH);   % Matlab changes the default LD_LIBRARY_PATH variable
+        setenv('LD_LIBRARY_PATH',UNIX_LDLIBRARYPATH);   % MATLAB changes the default LD_LIBRARY_PATH variable
     end
 end
 

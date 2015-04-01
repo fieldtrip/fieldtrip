@@ -39,7 +39,7 @@
 #define SO_RCVBUF_SIZE 16384
 #define SO_SNDBUF_SIZE 16384
 
-/* this is because the function  has been renamed, but is perhaps already in use in other software */
+/* this is because the function has been renamed, but is perhaps already in use in other software */
 #define open_remotehost open_connection
 
 /* FIXME these should be variable */
@@ -52,21 +52,8 @@
 
 #ifdef __cplusplus
 extern "C" {
-	
-#endif
 
-/* declaration of "public" buffer API functions */
-/* SK: where are these, and what are they for ? */
-int read_header( const char *hostname, int port,           void **ppw);
-int read_data(   const char *hostname, int port, int *pnw, void **ppw);
-int read_event(  const char *hostname, int port, int *pnw, void **ppw);
-int write_header(const char *hostname, int port,           void **ppw);
-int write_data(  const char *hostname, int port, int *pnw, void **ppw);
-int write_event( const char *hostname, int port, int *pnw, void **ppw);
-int flush_header(const char *hostname, int port);
-int flush_data(  const char *hostname, int port);
-int flush_event( const char *hostname, int port);
-void cleanup_buffer();
+#endif
 
 /* definition of the functions that implement the network transparent server */
 void *tcpserver(void *);
@@ -117,8 +104,8 @@ int ft_convert_chunks_from_native(UINT32_T size, UINT32_T nchans, void *buf);
 int ft_swap_from_native(UINT16_T orgCommand, message_t *msg);
 
 typedef struct {
-	char name[256];
-	int  port;
+    char name[256];
+    int  port;
 } host_t;
 
 #ifdef __cplusplus

@@ -930,7 +930,7 @@ return;
 function Yml = shlib_Yml(l, m, theta, phi)
 % function Yml = shlib_Yml(l, m, theta, phi)
 %
-% A matlab function that takes a given order and degree, and the matrix of
+% MATLAB function that takes a given order and degree, and the matrix of
 % theta and phi and constructs a spherical harmonic from these. The
 % analogue in the 1D case would be to give a particular frequency.
 %

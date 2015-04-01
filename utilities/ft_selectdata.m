@@ -99,7 +99,7 @@ end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'selmode',  'select'});
 cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
-cfg = ft_checkconfig(cfg, 'renamed', {'foilim' 'latency'});
+cfg = ft_checkconfig(cfg, 'renamed', {'foilim' 'frequency'});
 cfg = ft_checkconfig(cfg, 'renamed', {'avgoverroi' 'avgoverpos'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.pow' 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.mom' 'mom'});
@@ -111,7 +111,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'trial.nai' 'nai'});
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
 cfg.select    = ft_getopt(cfg, 'select',   'intersect');  % default is to take intersection, alternative 'union'
 
-if strcmp(dtype, 'volume')
+if strcmp(dtype, 'volume') || strcmp(dtype, 'segmentation')
   % it must be a source representation, not a volume representation
   for i=1:length(varargin)
     varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source');
@@ -411,7 +411,7 @@ varargout = varargin;
 
 ft_postamble debug              % this clears the onCleanup function used for debugging in case of an error
 ft_postamble trackconfig        % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
+ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
 % ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
 % ft_postamble history varargout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
 
@@ -597,7 +597,7 @@ elseif avgoverchancmb && ~any(isnan(selchancmb))
   % str2 = sprintf('mean(%s)', str2);
   data.label = {str1, str2};
 elseif all(isfinite(selchancmb))
-  data.labelcmb = data.labelcmb(selchancmb);
+  data.labelcmb = data.labelcmb(selchancmb,:);
 elseif numel(selchancmb)==1 && any(~isfinite(selchancmb))
   % do nothing
 elseif numel(selchancmb)>1  && any(~isfinite(selchancmb))

@@ -1,32 +1,47 @@
 function [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat, time, varargin)
 
-% FT_SPECEST_WAVELET performs time-frequency analysis on any time series trial
-% data using the 'wavelet method' based on Morlet wavelets, doing
-% convolution in the time domain by multiplication in the frequency domain
+% FT_SPECEST_WAVELET performs time-frequency analysis on any time series trial data
+% using the 'wavelet method' based on Morlet wavelets, doing convolution in the time
+% domain by multiplication in the frequency domain.
 %
 % Use as
 %   [spectrum,freqoi,timeoi] = ft_specest_wavelet(dat,time...)
 % where
-%   dat      = matrix of chan*sample
-%   time     = vector, containing time in seconds for each sample
-%   spectrum = array of chan*freqoi*timeoi of fourier coefficients
-%   freqoi   = vector of frequencies in spectrum
-%   timeoi   = vector of timebins in spectrum
+%   dat       = matrix of chan*sample
+%   time      = vector, containing time in seconds for each sample
+%   spectrum  = array of chan*freqoi*timeoi of fourier coefficients
+%   freqoi    = vector of frequencies in spectrum
+%   timeoi    = vector of timebins in spectrum
 %
-% Optional arguments should be specified in key-value pairs and can include:
-%   pad        = number, total length of data after zero padding (in seconds)
+% Optional arguments should be specified in key-value pairs and can include
+%   pad       = number, total length of data after zero padding (in seconds)
 %   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default = 'zero')
-%   freqoi     = vector, containing frequencies of interest
-%   timeoi     = vector, containing time points of interest (in seconds)
-%   width      = number or vector, width of the wavelet, determines the temporal and spectral resolution
-%   gwidth     = number, determines the length of the used wavelets in standard deviations of the implicit Gaussian kernel
-%   verbose    = output progress to console (0 or 1, default 1)
-%   polyorder  = number, the order of the polynomial to fitted to and removed from the data
-%                  prior to the fourier transform (default = 0 -> remove DC-component)
+%   freqoi    = vector, containing frequencies of interest
+%   timeoi    = vector, containing time points of interest (in seconds)
+%   width     = number or vector, width of the wavelet, determines the temporal and spectral resolution
+%   gwidth    = number, determines the length of the used wavelets in standard deviations of the implicit Gaussian kernel
+%   verbose   = output progress to console (0 or 1, default 1)
+%   polyorder = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_MTMFFT
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
@@ -46,9 +61,14 @@ if isempty(fbopt),
   fbopt.n = 1;
 end
 
-
 % Set n's
 [nchan,ndatsample] = size(dat);
+
+% This does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
+end
 
 % Remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
@@ -184,6 +204,7 @@ for ifreqoi = 1:nfreqoi
   
 end
 
+
 % Compute fft
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
 datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
@@ -210,3 +231,4 @@ for ifreqoi = 1:nfreqoi
     spectrum(:,ifreqoi,reqtimeboiind) = dum(:,reqtimeboi);
   end
 end
+

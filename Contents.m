@@ -52,7 +52,7 @@
 % the actual work, such as reading data from binary files and forward and inverse
 % modelling of the EEG/MEG. These low-level functions are contained in the private
 % subdirectory. These other toolboxes on which the framework depends are copyrighted by
-% their respective authors, see each individual matlab file for the details.
+% their respective authors, see each individual MATLAB file for the details.
 %
 % Unauthorised copying and distribution of functions that are not explicitely covered by
 % the GPL is not allowed!

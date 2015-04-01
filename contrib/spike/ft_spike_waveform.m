@@ -204,9 +204,9 @@ for iUnit = 1:nUnits
   end
    
   % --- compute the average waveform here and put in a structure for the next function
-  mnWaveform(iUnit,:,:)  = mn;
-  varWaveform(iUnit,:,:) = sd.^2;
-  dofWaveform(iUnit,:,:) = dof;
+  mnWaveform(iUnit,1:nLeads,:)  = mn;
+  varWaveform(iUnit,1:nLeads,:) = sd.^2;
+  dofWaveform(iUnit,1:nLeads,:) = dof;
   if nargout==2
     spike.waveform{spikeindx} = waves;
     spike.waveformtime = time;

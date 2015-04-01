@@ -109,11 +109,9 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'yes', 'max'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'bonferoni', 'bonferroni'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
 cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
-cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', ...
-  'removemarginalmeans', ...
-  'randomfactor', ...
-  'voxelthreshold', ...
-  'voxelstatistic'});
+cfg = ft_checkconfig(cfg, 'forbidden',   {'ztransform', 'removemarginalmeans', 'randomfactor', 'voxelthreshold', 'voxelstatistic'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'statfun', 'depsamplesF', 'ft_statfun_depsamplesFmultivariate'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'statfun', 'ft_statfun_depsamplesF', 'ft_statfun_depsamplesFmultivariate'});
 
 % set the defaults for the main function
 cfg.alpha        = ft_getopt(cfg, 'alpha',      0.05);
@@ -145,7 +143,7 @@ if strcmp(cfg.correctm, 'cluster')
   
   % deal with the neighbourhood of the channels/triangulation/voxels
   if isempty(cfg.connectivity)
-    if isfield(cfg, 'dim')
+    if isfield(cfg, 'dim') && ~isfield(cfg, 'channel')
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       fprintf('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
@@ -153,6 +151,7 @@ if strcmp(cfg.correctm, 'cluster')
         cfg = fixinside(cfg, 'index');
       end
     elseif isfield(cfg, 'tri')
+      % input data describes a surface along which neighbours can be defined
       fprintf('using connectivity of vertices along triangulated surface\n');
       cfg.connectivity = triangle2connectivity(cfg.tri);
       if isfield(cfg, 'insideorig')
@@ -201,9 +200,6 @@ end
 
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
-if isempty(statfun) && (strcmp(cfg.statistic,'depsamplesF') || strcmp(cfg.statistic,'ft_statfun_depsamplesF'));
-  error(['statistic function ' cfg.statistic ' has recently changed its name to ft_statfun_depsamplesFmultivariate']);
-end
 if isempty(statfun)
   error('could not locate the appropriate statistics function');
 else
@@ -270,6 +266,7 @@ try
 catch
   num = 1;
 end
+
 if num==1,
   % only the statistic is returned
   [statobs] = statfun(cfg, dat, design);
@@ -291,6 +288,7 @@ else
   % remember the statistic for later reference, continue to work with the statistic
   statfull.stat = statobs;
 end
+
 time_eval = cputime - time_pre;
 fprintf('estimated time per randomization is %.2f seconds\n', time_eval);
 
@@ -305,7 +303,7 @@ end
 if strcmp(cfg.precondition, 'after'),
   tmpcfg = cfg;
   tmpcfg.preconditionflag = 1;
-  [tmpstat, tmpcfg, dat]     = statfun(tmpcfg, dat, design);
+  [tmpstat, tmpcfg, dat] = statfun(tmpcfg, dat, design);
 end
 
 % compute the statistic for the randomized data and count the outliers
@@ -325,7 +323,7 @@ for i=1:Nrand
     % keep each randomization in memory for cluster postprocessing
     dum = statfun(cfg, tmpdat, tmpdesign);
     if isstruct(dum)
-      statrand(:,i) = getfield(dum, 'stat');
+      statrand(:,i) = dum.stat;
     else
       statrand(:,i) = dum;
     end
@@ -333,7 +331,7 @@ for i=1:Nrand
     % do not keep each randomization in memory, but process them on the fly
     statrand = statfun(cfg, tmpdat, tmpdesign);
     if isstruct(statrand)
-      statrand = getfield(statrand, 'stat');
+      statrand = statrand.stat;
     end
     % the following line is for debugging
     % stat.statkeep(:,i) = statrand;

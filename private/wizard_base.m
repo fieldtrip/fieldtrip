@@ -1,6 +1,6 @@
 function h = wizard_gui(filename)
 
-% This is the low level wizard function. It evaluates the matlab content
+% This is the low level wizard function. It evaluates the MATLAB content
 % in the workspace of the calling function. To prevent overwriting
 % variables in the BASE workspace, this function should be called from a
 % wrapper function. The wrapper function whoudl pause execution untill the
@@ -107,7 +107,7 @@ elseif data.current>length(data.script)
   ui_help = uicontrol(h, 'tag', 'ui_help', 'KeyPressFcn', @cb_keyboard, 'style', 'text', 'max', 10, 'horizontalAlignment', 'left', 'FontName', '', 'backgroundColor', get(h, 'color'));
   % display the finalization text
   title = cat(2, data.file, ' - finish');
-  help = sprintf('If you click finish, the variables created by the script will be exported to the Matlab workspace\n');
+  help = sprintf('If you click finish, the variables created by the script will be exported to the MATLAB workspace\n');
   set(ui_help, 'string', help);
   set(h, 'Name', title);
 else

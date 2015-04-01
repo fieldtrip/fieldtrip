@@ -1,6 +1,6 @@
 function test_ft_datatype_source
 
-% WALLTIME 00:20:00
+% WALLTIME 24:00:00
 % MEM 4gb
 
 % TEST test_bug2185

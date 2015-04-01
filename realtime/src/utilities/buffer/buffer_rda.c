@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	if (host.port <= 0 || blocksize < 0) {
-		fprintf(stderr, "Usage: demo_buffer_rda [port [blocksize]]\nPort number must be positive, block size must be >= 0.\n");
+		fprintf(stderr, "Usage: buffer_rda [port [blocksize]]\nPort number must be positive, block size must be >= 0.\n");
 		return 1;
 	}
 	

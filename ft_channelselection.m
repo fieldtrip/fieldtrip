@@ -28,8 +28,7 @@ function [channel] = ft_channelselection(desired, datachannel, senstype)
 %  'EOG'     is replaced by all recognized EOG channels
 %  'ECG'     is replaced by all recognized ECG channels
 %  'EMG'     is replaced by all channels in the datafile starting with 'EMG'
-%  'lfp'     is replaced by all channels in the datafile starting with
-%  'lfp'
+%  'lfp'     is replaced by all channels in the datafile starting with 'lfp'
 %  'mua'     is replaced by all channels in the datafile starting with 'mua'
 %  'spike'   is replaced by all channels in the datafile starting with 'spike'
 %  10        is replaced by the 10th channel in the datafile

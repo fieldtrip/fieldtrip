@@ -1,7 +1,7 @@
 function ft_realtime_signalviewer(cfg)
 
-% FT_REALTIME_SIGNALVIEWER is an example realtime application for online
-% viewing of the data. It should work both for EEG and MEG. 
+% FT_REALTIME_SIGNALVIEWER is an example realtime application for online viewing of
+% the data. It should work both for EEG and MEG.
 %
 % Use as
 %   ft_realtime_signalviewer(cfg)
@@ -25,19 +25,18 @@ function ft_realtime_signalviewer(cfg)
 %
 % Some notes about skipping data and catching up with the data stream:
 %
-% cfg.jumptoeof='yes' causes the realtime function to jump to the end
-% when the function _starts_. It causes all data acquired prior to
-% starting the realtime function to be skipped.
+% cfg.jumptoeof='yes' causes the realtime function to jump to the end when the
+% function _starts_. It causes all data acquired prior to starting the realtime
+% function to be skipped.
 % 
-% cfg.bufferdata=last causes the realtime function to jump to the last
-% available data while _running_. If the realtime loop is not fast enough,
-% it causes some data to be dropped.
+% cfg.bufferdata=last causes the realtime function to jump to the last available data
+% while _running_. If the realtime loop is not fast enough, it causes some data to be
+% dropped.
 % 
-% If you want to skip all data that was acquired before you start the
-% RT function, but don't want to miss any data that was acquired while
-% the realtime function is started, then you should use jumptoeof=yes and
-% bufferdata=first. If you want to analyse data from a file, then you
-% should use jumptoeof=no and bufferdata=first.
+% If you want to skip all data that was acquired before you start the RT function,
+% but don't want to miss any data that was acquired while the realtime function is
+% started, then you should use jumptoeof=yes and bufferdata=first. If you want to
+% analyse data from a file, then you should use jumptoeof=no and bufferdata=first.
 %
 % To stop this realtime function, you have to press Ctrl-C
 

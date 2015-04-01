@@ -18,7 +18,7 @@
 %                   maxnum=Inf the function will never return.
 %     filter      = regular expression filter for job IDs to respond to.
 %                   The default tests for jobs generated from the current
-%                   matlab process. A cell array of strings can be
+%                   MATLAB process. A cell array of strings can be
 %                   provided; in that case, exact match is required.
 %     sleep       = number of seconds to sleep between checks (default=0)
 %

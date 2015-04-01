@@ -1,13 +1,12 @@
 function ft_write_data(filename, dat, varargin)
 
-% FT_WRITE_DATA exports electrophysiological data such as EEG to a file.
-% The input data is assumed to be scaled in microVolt.
+% FT_WRITE_DATA exports electrophysiological data such as EEG to a file. 
 %
 % Use as
 %   ft_write_data(filename, dat, ...)
 %
-% The specified filename can already contain the filename extension,
-% but that is not required since it will be added automatically.
+% The specified filename can contain the filename extension. If it has no filename
+% extension not, it will be added automatically.
 %
 % Additional options should be specified in key-value pairs and can be
 %   'header'         header structure that describes the data, see FT_READ_HEADER
@@ -27,6 +26,8 @@ function ft_write_data(filename, dat, varargin)
 %   fcdc_mysql
 %   fcdc_buffer
 %   matlab
+%
+% For EEG data formats, the input data is assumed to be scaled in microvolt.
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
@@ -274,7 +275,7 @@ switch dataformat
   case 'fcdc_matbin'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % multiplexed data in a *.bin file (ieee-le, 64 bit floating point values),
-    % accompanied by a matlab V6 file containing the header
+    % accompanied by a MATLAB V6 file containing the header
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.mat']);
@@ -377,17 +378,17 @@ switch dataformat
     
   case 'matlab'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % plain matlab file
+    % plain MATLAB file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file '.mat']);
     if      append &&  exist(filename, 'file')
-      % read the previous header and data from matlab file
+      % read the previous header and data from MATLAB file
       prev = load(filename);
       if ~isempty(hdr) && ~isequal(hdr, prev.hdr)
         error('inconsistent header');
       else
-        % append the new data to that from the matlab file
+        % append the new data to that from the MATLAB file
         dat = cat(2, prev.dat, dat);
       end
     elseif  append && ~exist(filename, 'file')

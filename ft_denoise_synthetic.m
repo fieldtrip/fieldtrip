@@ -60,7 +60,7 @@ end
 cfg = ft_checkconfig(cfg, 'required', {'gradient'});
 
 % set the defaults
-if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
+cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
 
 % store the original type of the input data
 dtype = ft_datatype(data);
@@ -81,10 +81,10 @@ if ~hasref
 end
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = keepfields(cfg, 'trials');
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % remember the original channel ordering
 labelorg = data.label;

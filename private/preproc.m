@@ -217,9 +217,9 @@ if ~isfield(cfg, 'subspace'),     cfg.subspace = [];            end
 if ~isfield(cfg, 'custom'),       cfg.custom = '';              end
 if ~isfield(cfg, 'resample'),     cfg.resample = '';            end
 
-% test whether the Matlab signal processing toolbox is available
+% test whether the MATLAB signal processing toolbox is available
 if strcmp(cfg.medianfilter, 'yes') && ~ft_hastoolbox('signal')
-  error('median filtering requires the Matlab signal processing toolbox');
+  error('median filtering requires the MATLAB signal processing toolbox');
 end
 
 % do a sanity check on the filter configuration

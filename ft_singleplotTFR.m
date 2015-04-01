@@ -355,7 +355,7 @@ end
 % 
 % % masking only possible for evenly spaced axis
 % if strcmp(cfg.masknans, 'yes') && (~evenx || ~eveny)
-%   warning('(one of the) axis are not evenly spaced -> nans cannot be masked out ->  cfg.masknans is set to ''no'';')
+%   warning('(one of the) axis are not evenly spaced -> nans cannot be masked out -> cfg.masknans is set to ''no'';')
 %   cfg.masknans = 'no';
 % end
 % 

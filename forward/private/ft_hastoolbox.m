@@ -435,7 +435,7 @@ if autoadd>0 && ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
-  % use the matlab subdirectory in your homedirectory, this works on linux and mac
+  % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
@@ -479,7 +479,7 @@ if isdeployed
 elseif exist(toolbox, 'dir')
   if ~silent,
     ws = warning('backtrace', 'off');
-    warning('adding %s toolbox to your Matlab path', toolbox);
+    warning('adding %s toolbox to your MATLAB path', toolbox);
     warning(ws); % return to the previous warning level
   end
   addpath(toolbox);

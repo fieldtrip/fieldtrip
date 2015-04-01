@@ -1027,7 +1027,7 @@ switch eventformat
     event = read_buffer_offline_events(eventfile, hdr);
     
   case 'fcdc_matbin'
-    % this is multiplexed data in a *.bin file, accompanied by a matlab file containing the header and event
+    % this is multiplexed data in a *.bin file, accompanied by a MATLAB file containing the header and event
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file '.mat']);
     % read the events from the MATLAB file

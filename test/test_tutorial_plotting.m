@@ -31,7 +31,7 @@ cfg.channel = 'MLC24';
 clf;
 ft_singleplotER(cfg,avgFC);
 
-% matlab toolbox alternative of ft_singleplotER
+% MATLAB toolbox alternative of ft_singleplotER
 selected_data = avgFC.avg(9,241:601); %MLC24 is the 9th channel, -0.2 to 1.0 is sample 241 to 601
 time = avgFC.time(241:601);
 figure;
@@ -138,7 +138,6 @@ cohFC      = tmp2;
 cohFC.coh  = tmp2.corr;
 cohFC.freq = 1;
 cohFC = rmfield(cohFC, 'coh');
-cohFC = rmfield(cohFC, 'time');
 
 cfg = [];
 cfg.foi = 1;

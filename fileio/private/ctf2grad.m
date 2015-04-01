@@ -222,7 +222,7 @@ if isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
 
 elseif isfield(hdr, 'sensType') && isfield(hdr, 'Chan')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % the header was read using the open-source matlab code that originates from CTF and that was modified by the FCDC
+  % the header was read using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   selMEG = find(hdr.sensType==5);

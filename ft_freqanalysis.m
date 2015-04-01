@@ -253,6 +253,16 @@ switch cfg.method
         error('you must specify a smoothing parameter with taper = dpss');
       end
     end
+    cfg = ft_checkconfig(cfg, 'required', 'toi');
+    if ischar(cfg.toi) && strcmp(cfg.toi, 'all')
+      % do an educated guess with respect to the requested time bins
+      begtim  = min(cellfun(@min,data.time));
+      endtim  = max(cellfun(@max,data.time));
+      cfg.toi = linspace(begtim,endtim,round((endtim-begtim)./mean(diff(data.time{1})))+1);
+      
+    elseif ischar(cfg.toi)
+      error('cfg.toi should be either a numeric vector, or can be ''all''');
+    end
     
   case 'mtmfft'
     cfg.taper       = ft_getopt(cfg, 'taper', 'dpss');

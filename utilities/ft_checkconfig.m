@@ -38,12 +38,13 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   unused          = {'opt1', 'opt2', etc.} % list the unused options, these will be removed and a warning is issued
 %   createsubcfg    = {'subname', etc.}      % list the names of the subcfg
 %   dataset2files   = 'yes', 'no'            % converts dataset into headerfile and datafile
+%   index2logical   = 'yes', 'no'            % converts cfg.index or cfg.grid.index into logical representation
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
 %   trackconfig     = 'on', 'off'            % start/end config tracking
 %
 % See also FT_CHECKDATA, FT_DEFAULTS
 
-% Copyright (C) 2007-2012, Robert Oostenveld, Saskia Haegens
+% Copyright (C) 2007-2014, Robert Oostenveld, Saskia Haegens
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -79,6 +80,7 @@ renamedval      = ft_getopt(varargin, 'renamedval');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
 checkfilenames  = ft_getopt(varargin, 'dataset2files');
+checkinside     = ft_getopt(varargin, 'index2logical', 'off');
 checksize       = ft_getopt(varargin, 'checksize', 'off');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
@@ -473,13 +475,31 @@ if ~isempty(createsubcfg)
   end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% checkinside, i.e. index2logical
+%
+% Converts indexed cfg.inside/outside into logical representation if neccessary.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if istrue(checkinside)
+  if isfield(cfg, 'inside') && any(cfg.inside>1)
+    inside = false(size(cfg.pos,1),1);
+    inside(cfg.inside) = true;
+    cfg = removefields(cfg, {'inside', 'outside'});
+    cfg.inside = inside;
+  elseif isfield(cfg, 'grid') && isfield(cfg.grid, 'inside') && any(cfg.grid.inside>1)
+    inside = false(size(cfg.grid.pos,1),1);
+    inside(cfg.grid.inside) = true;
+    cfg.grid = removefields(cfg.grid, {'inside', 'outside'});
+    cfg.grid.inside = inside;
+  end
+end % if checkinside
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkfilenames, i.e. dataset2files
 %
 % Converts cfg.dataset into cfg.headerfile and cfg.datafile if neccessary.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(checkfilenames) && strcmp(checkfilenames, 'yes')
+if istrue(checkfilenames)
   
   % start with empty fields if they are not present
   if ~isfield(cfg, 'dataset')
@@ -551,19 +571,19 @@ if ~isempty(trackconfig)
         % turn ON configuration tracking
         cfg = config(cfg);
         % remember that configtracking has been turned on
-        cfg.trkcfgcount = 1;
+        cfg = access(cfg, 'set', 'counter', 1);
       elseif isa(cfg, 'config')
         % remember how many times trackconfig has been turned on
-        cfg.trkcfgcount = cfg.trkcfgcount+1; % count the 'ONs'
+        cfg = access(cfg, 'set', 'counter', access(cfg, 'get', 'counter')+1); % count the 'ONs'
       end
     end
     
     if strcmp(trackconfig, 'off') && isa(cfg, 'config')
       % turn OFF configuration tracking, optionally give report and/or cleanup
-      cfg.trkcfgcount=cfg.trkcfgcount-1; % count(down) the 'OFFs'
+      cfg = access(cfg, 'set', 'counter', access(cfg, 'get', 'counter')-1); % count(down) the 'OFFs'
       
-      if cfg.trkcfgcount==0 % only proceed when number of 'ONs' matches number of 'OFFs'
-        cfg=rmfield(cfg, 'trkcfgcount');
+      if access(cfg, 'get', 'counter')==0
+        % only proceed when number of 'ONs' matches number of 'OFFs'
         
         if strcmp(cfg.trackconfig, 'report') || strcmp(cfg.trackconfig, 'cleanup')
           % gather information about the tracked results

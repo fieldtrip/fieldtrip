@@ -293,19 +293,16 @@ if strcmp(cfg.visualize, 'yes')
     fprintf('visualizing %s of %s \n', num2str(p), num2str(nplots));
     toi = [p*cfg.plotunit-(cfg.plotunit-5) p*cfg.plotunit-5]; % select 1-hour chunks
     
+    tmpcfg.toi = toi;
+    temp_timelock = ft_selectdata(tmpcfg, timelock);
+    temp_timelock.cfg = cfg; % be sure to add the cfg here
+    temp_freq     = ft_selectdata(tmpcfg, freq);
+    temp_summary  = ft_selectdata(tmpcfg, summary);
     if exist('headpos','var')
-      temp_timelock = ft_selectdata(timelock, 'toilim', toi);
-      temp_timelock.cfg = cfg; % be sure to add the cfg here
-      temp_freq     = ft_selectdata(freq,     'toilim', toi);
-      temp_summary  = ft_selectdata(summary,  'toilim', toi);
-      temp_headpos  = ft_selectdata(headpos,  'toilim', toi);
+      temp_headpos  = ft_selectdata(tmpcfg, headpos);
       draw_figure(info, temp_timelock, temp_freq, temp_summary, temp_headpos, toi);
       clear temp_timelock; clear temp_freq; clear temp_summary; clear temp_headpos; clear toi;
     else
-      temp_timelock = ft_selectdata(timelock, 'toilim', toi);
-      temp_timelock.cfg = cfg; % be sure to add the cfg here
-      temp_freq     = ft_selectdata(freq,     'toilim', toi);
-      temp_summary  = ft_selectdata(summary,  'toilim', toi);
       draw_figure(info, temp_timelock, temp_freq, temp_summary, toi);
       clear temp_timelock; clear temp_freq; clear temp_summary; clear toi;
     end

@@ -193,7 +193,9 @@ for iSmp = 1:length(numsmp)
   findx         = nearest(faxis,cfg.foi(iSmp));
   [foi(iSmp)]   = deal(faxis(findx)); % this is the actual frequency used, from the DFT formula
 end
-cfg.foi = unique(foi); % take the unique frequencies from this
+%
+[cfg.foi,B,C] = unique(foi); % take the unique frequencies from this
+cfg.t_ftimwin = cfg.t_ftimwin(B);
 
 % compute the minima and maxima of the data, this is done to remove EEG portions where there are potential saturation effects
 if strcmp(cfg.rejectsaturation,'yes')
@@ -278,7 +280,6 @@ for iTrial = 1:nTrials
     else
        ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);    
     end      
-    
     % compute the LFP phase at every time-point
     spec = zeros(length(data.time{iTrial}),nchansel);
     for iChan = 1:nchansel

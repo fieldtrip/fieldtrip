@@ -9,13 +9,13 @@ function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample,
 %   order      the order of the polynomial
 %   begsample  index of the begin sample for the estimate of the polynomial
 %   endsample  index of the end sample for the estimate of the polynomial
-%   flag       optional boolean to specify whether the first order basis 
+%   flag       optional boolean to specify whether the first order basis
 %              vector will zscored prior to computing higher order basis
 %              vectors from the first-order basis vector (and the beta
 %              weights). This is to avoid numerical problems with the
 %              inversion of the covariance when the polynomial is of high
 %              order/number of samples is large
-% 
+%
 % If begsample and endsample are not specified, it will use the whole
 % window to estimate the polynomial.
 %
@@ -58,6 +58,10 @@ if nargin<5 || isempty(order)
   flag = 0;
 end
 
+% this does not work on integer data
+typ = class(dat);
+dat = cast(dat, 'double');
+
 % construct a "time" axis
 nsamples = size(dat,2);
 basis    = (1:nsamples)-1;
@@ -78,3 +82,6 @@ beta    = dat(:,begsample:endsample)*x(:,begsample:endsample)'*invxcov;
 
 % remove the estimated basis functions
 dat = dat - beta*x;
+
+% convert back to the original input type
+dat = cast(dat, typ);

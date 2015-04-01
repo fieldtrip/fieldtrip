@@ -113,7 +113,7 @@ switch lower(method)
       [pnt, tri] = refine(pnt, tri, 'banks');
       ntri = size(tri,1);
     end
-    % reduce number of triangles using Matlab function
+    % reduce number of triangles using MATLAB function
     [trir, pntr] = reducepatch(tri, pnt, varargin{1});
     
   otherwise

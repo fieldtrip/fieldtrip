@@ -103,7 +103,7 @@ end
 hasdata = exist('data', 'var');
 
 if ~hasdata
-  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
   trl = cfg.trl;

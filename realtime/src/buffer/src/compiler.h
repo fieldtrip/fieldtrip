@@ -2,7 +2,7 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
-#if    defined (__BORLANDC__)
+#if defined (__BORLANDC__)
 #define COMPILER_BORLAND
 
 #elif defined (_MSC_VER)

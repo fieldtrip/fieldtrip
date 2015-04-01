@@ -2074,7 +2074,7 @@ switch atlasformat
     atlas = [];
     for k = 1:size(g.cdata,2)
       tmporig  = g.cdata(:,k);
-      tmpnew   = zeros(size(tmporig))+nan;
+      tmpnew   = nan(size(tmporig));
       tmplabel = cell(0,1);
       cnt = 0;
       for m = 1:numel(label)
