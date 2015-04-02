@@ -307,7 +307,7 @@ if ~isempty(noisecov) && ~hasfilter
 elseif ~isempty(noisecov)
   % compute estimate of the projected noise
   for i=1:size(dip.pos,1)
-    dipout.noisecov{i} = dipout.filter{i}*noisecov*dipout.filter{i}';
+    dipout.noisecov{i} = dip.filter{i}*noisecov*dip.filter{i}';
   end
 end
 
