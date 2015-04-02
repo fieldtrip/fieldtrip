@@ -13,6 +13,8 @@ INCPATH = -I.
 LIBPATH = -L.
 LIBS = -lbuffer -lm -lpthread
 
+FORCE32 ?= 0
+
 ifeq "$(PLATFORM)" "mingw32"
 	INCPATH	+= -I. -I../../external/pthreads-win32/include
 	LIBPATH += -L. -L../../external/pthreads-win32/lib
@@ -39,11 +41,27 @@ ifeq "$(UNAME)" "Darwin"
     endif
     ifeq "$(MACHINE)" "x86_64"
         # compile for 64 bit
-        CFLAGS += -m64
-        CXXFLAGS += -m64
-        LDFLAGS += -m64
+         ifeq "$(FORCE32)" "0"
+	        CFLAGS += -m64
+	        CXXFLAGS += -m64
+	        LDFLAGS += -m64
+	    endif
+	    ifeq "$(FORCE32)" "1"
+	        CFLAGS += -m32
+        	CXXFLAGS += -m32
+       		LDFLAGS += -m32
+	    endif
     endif
 endif
+
+ifeq "$(UNAME)" "Linux"
+	ifeq "$(FORCE32)" "1"
+		CFLAGS += -m32
+        CXXFLAGS += -m32
+        LDFLAGS += -m32
+    endif
+endif
+
 
 CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
 CXXFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g

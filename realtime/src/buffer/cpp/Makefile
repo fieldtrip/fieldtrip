@@ -15,6 +15,8 @@ LDFLAGS += -lpthread -lbuffer
 INCPATH = -I../src -I. 
 SUFFIX =
 
+FORCE32 ?= 0
+
 ifeq "$(PLATFORM)" "mingw32"
 	LDFLAGS += ../../external/pthreads-win32/lib/pthreadGC2.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
 	INCPATH += -I../../external/pthreads-win32/include
@@ -31,6 +33,11 @@ endif
 
 ifeq "$(UNAME)" "Linux"
 	LDFLAGS += -ldl
+	ifeq "$(FORCE32)" "1"
+		CFLAGS += -m32
+        CXXFLAGS += -m32
+        LDFLAGS += -m32
+    endif
 endif
 
 ifeq "$(UNAME)" "Darwin"
@@ -41,13 +48,21 @@ ifeq "$(UNAME)" "Darwin"
         LDFLAGS += -m32
     endif
     ifeq "$(MACHINE)" "x86_64"
-        CFLAGS += -m64
-        CXXFLAGS += -m64
-        LDFLAGS += -m64
-    endif
+	    ifeq "$(FORCE32)" "0"
+	        CFLAGS += -m64
+	        CXXFLAGS += -m64
+	        LDFLAGS += -m64
+	    endif
+	    ifeq "$(FORCE32)" "1"
+	        CFLAGS += -m32
+        	CXXFLAGS += -m32
+       		LDFLAGS += -m32
+	    endif
+	endif
 endif
 
 CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3
+
 
 ##############################################################################
 all: odmTest$(SUFFIX)
