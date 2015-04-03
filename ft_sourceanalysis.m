@@ -208,6 +208,8 @@ cfg.wakewulf         = ft_getopt(cfg, 'wakewulf', 'yes');
 cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
 cfg.channel          = ft_getopt(cfg, 'channel',  'all');
 cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
+cfg.latency          = ft_getopt(cfg, 'latency',  'all');
+cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
 
 % the default for this depends on EEG/MEG and is set below
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end
@@ -251,8 +253,8 @@ elseif nargin<3 && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 
   error('randomization or permutation requires that you give two conditions as input');
 end
 
-if isfield(cfg, 'latency') && istimelock
-  error('specification of cfg.latency is only required for time-frequency data');
+if isfield(cfg, 'latency') && ischar(cfg.latency) && strcmp(cfg.latency, 'all') && istimelock
+  %error('specification of cfg.latency is only required for time-frequency data');
 end
 
 if sum([strcmp(cfg.jackknife, 'yes'), strcmp(cfg.bootstrap, 'yes'), strcmp(cfg.pseudovalue, 'yes'), strcmp(cfg.singletrial, 'yes'), strcmp(cfg.rawtrial, 'yes'), strcmp(cfg.randomization, 'yes'), strcmp(cfg.permutation, 'yes')])>1
@@ -299,14 +301,6 @@ elseif isfreq
 elseif iscomp
   % FIXME, select the components here
   % FIXME, add the component numbers to the output
-end
-
-if convertfreq || convertcomp 
-  % convert the data structure into a representation that can be handled by the low level functions
-  data        = ft_checkdata(data, 'datatype', 'timelock');
-  istimelock  = 1; % from now on the data can be treated as timelocked
-  isfreq      = 0;
-  iscomp      = 0;
 end
 
 if isfreq
@@ -443,7 +437,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta'}))
+if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne'}))
   
   if strcmp(cfg.method, 'pcc')
     % HACK: requires some extra defaults
@@ -513,6 +507,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta'}))
     % convert the input data, so that Cf, Cr and Pr contain either the average over all trials (if Ntrials==1)
     % or the individual cross-spectral-densities/powers of each individual trial (if Ntrials>1)
     [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, data);
+        
   end
   
   if strcmp(cfg.method, 'dics')
@@ -668,11 +663,19 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta'}))
       dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:}, 'Cr', Cr(i,:), 'Pr', Pr(i));
     elseif strcmp(cfg.method, 'dics') && strcmp(submethod, 'dics_refdip')
       dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip);
-    elseif strcmp(cfg.method, 'pcc')
+    elseif strcmp(cfg.method, 'pcc') && ~isempty(avg)
+      % FIXME added by jansch because an appropriate subselection of avg
+      % should be done first (i.e. select the tapers that belong to this
+      % repetition
+      error('rawtrial in combination with pcc has been temporarily disabled');
       dip(i) = beamformer_pcc(grid, sens, vol, avg, squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
+    elseif strcmp(cfg.method, 'pcc') && isempty(avg)
+      dip(i) = beamformer_pcc(grid, sens, vol, avg, squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
+    
     elseif strcmp(cfg.method, 'eloreta')
       dip(i) = ft_eloreta(grid, sens, vol, [], squeeze(Cf(i,:,:)), optarg{:});
-    else
+    elseif strcmp(cfg.method, 'mne')
+      %dip(i) = minimumnormestimate(grid, sens, vol, avg, optarg{:});
       error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
     end
   end
