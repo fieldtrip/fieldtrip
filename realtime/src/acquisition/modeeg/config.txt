@@ -11,6 +11,7 @@
 # Channels listed before the first [save] or [stream] line will be added
 # to both saving and streaming selections. Write [select] to enable 
 # selection for both saving and streaming.
+
 [select]
 1=Left
 2=Right
