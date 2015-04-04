@@ -100,7 +100,7 @@ struct GDF_Header {
 		
 	// compiling this function will always yield an error, which is what we want!
 	template<typename T> static GDF_Type getType(T dummy) { 
-		return 0; 
+		return (GDF_Type)0; 
 	}
 
 	// "specialised versions" of the above template function, returning the
