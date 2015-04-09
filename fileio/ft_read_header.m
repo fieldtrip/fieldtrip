@@ -335,12 +335,12 @@ switch headerformat
     hdr.nTrials     = 1;
     hdr.label       = orig.label;
     
-  case {'biosig'}
+  case 'biosig'
     % this requires the biosig toolbox
     ft_hastoolbox('BIOSIG', 1);
     hdr = read_biosig_header(filename);
     
-  case {'gdf'}
+  case 'gdf'
     % this requires the biosig toolbox
     ft_hastoolbox('BIOSIG', 1);
     % In the case that the gdf files are written by one of the FieldTrip
@@ -669,10 +669,23 @@ switch headerformat
     hdr.nSamplesPre = hdr.xmin*hdr.rate/1000;
     hdr.nTrials     = 1;        % it can always be interpreted as continuous data
     % remove the data and variance if present
-    hdr = rmfield(hdr, 'data');
-    try, hdr = rmfield(hdr, 'variance'); end
+    hdr = removefields(hdr, {'data', 'variance'});
     
-  case 'eeglab_set'
+  case 'eep_cnt'
+    % check that the required low-level toolbox is available
+    ft_hastoolbox('eeprobe', 1);
+    % read the first sample from the continous data, this will also return the header
+    orig = read_eep_cnt(filename, 1, 1);
+    hdr.Fs          = orig.rate;
+    hdr.nSamples    = orig.nsample;
+    hdr.nSamplesPre = 0;
+    hdr.label       = orig.label;
+    hdr.nChans      = orig.nchan;
+    hdr.nTrials     = 1;        % it can always be interpreted as continuous data
+    hdr.orig        = orig;     % remember the original details
+    
+
+ case 'eeglab_set'
     hdr = read_eeglabheader(filename);
     
   case 'eeglab_erp'
@@ -719,17 +732,6 @@ switch headerformat
     
   case  'ced_spike6mat'
     hdr = read_spike6mat_header(filename);
-    
-  case 'eep_cnt'
-    % check that the required low-level toolbox is available
-    ft_hastoolbox('eeprobe', 1);
-    % read the first sample from the continous data, which will also return the header
-    hdr = read_eep_cnt(filename, 1, 1);
-    hdr.Fs          = hdr.rate;
-    hdr.nSamples    = hdr.nsample;
-    hdr.nSamplesPre = 0;
-    hdr.nChans      = hdr.nchan;
-    hdr.nTrials     = 1;        % it can always be interpreted as continuous data
     
   case 'egi_egia'
     [fhdr,chdr,ename,cnames,fcom,ftext] = read_egis_header(filename);
