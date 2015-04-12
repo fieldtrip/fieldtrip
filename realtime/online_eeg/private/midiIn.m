@@ -1,44 +1,46 @@
-function varargout = midiOut(varargin)
+function varargout = midiIn(varargin)
 
-% midiOut -- connect to a MIDI output device and send notes
+% midiIn -- connect to a MIDI input device and record notes or other events
 %
-% >> S = midiOut('L')
+% >> S = midiIn('L')
 % Returns a list of MIDI devices as a structure array. Fields are 'index',
 % 'name', 'input' and 'output'. The last two are flags (1 or 0) that determine
 % whether the device can be used as an input, or output, or both.
 %
-% >> midiOut('O', index)
+% >> midiIn('O', index)
 % Opens a MIDI device by its index (as returned by aforementioned 'L' call).
 % If the device is already opened, nothing will happen. If another device is
 % opened, that one will be closed first.
 %
-% >> midiOut('C')
+% >> midiIn('C')
 % Closes the current connection.
 %
-% >> midiOut('+', channel, notes, velocities)
-% Send one or more 'note on' messages at the given channel (1..16).
-% 'notes' and 'velocities' must be given as double-precision arrays with
-% equal number of elements. Messages will be transmitted in order.
+% >> A = midiIn('G')
+% Get all notes that were recorded since starting or since the previous call. This
+% returns a matrix with 4 columns representing the channel, note, velocity and
+% timestamp (in miliseconds).
 %
-% >> midiOut('-', channel, notes, velocities)
-% Send one or more 'note off' messages, same parameters as for 'note on'.
+% >> midiIn('F')
+% Flush all recorded notes.
 %
-% >> midiOut('.', channel)
-% Send an 'all notes off' message at the given channel.
+% >> midiIn('V', value)
+% Toggle verbose mode, can be 0 or 1.
 %
-% >> midiOut('P', channel, program)
-% Send a 'program change' to the given channel.
+% For example, receive notes from the piano
+% >> midiIn('O', 1)
+% % play some melody
+% >> a = midiIn('G')
 %
-% >> midiOut(msg)
-% Send raw data. 'msg' must be of type 'uint8' and have a multiple of 3 elements.
-%
-% For example, play the note C4 (261.63 Hz) on the piano
+% Subsequently play the sequence of notes on the piano
 % >> midiOut('O', 2)
-% >> midiOut('+', 1, 60, 127)
+% >> note     = a(:,2);
+% >> velocity = a(:,3);
+% >> delay    = diff([a(1,4); a(:,4)])/1000;
+% >> for i=1:length(note); pause(delay(i)); midiOut('+', 1, note(i), velocity(i)); end
 %
-% See also MIDIIN
+% See also MIDIOUT
 
-% Copyright (C) 2010, Stefan Klanke
+% Copyright (C) 2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
