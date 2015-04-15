@@ -176,7 +176,7 @@ for i=1:length(channel)
       continue;
   end
   
-  if strcmp((channel{i}(1)), '-')
+  if strcmp((channel{i}(1)), '-') 
     % skip channels to be excluded
     continue;
   end
@@ -189,8 +189,11 @@ for i=1:length(channel)
   end
   
 end
-findreg  = unique(findreg); % remove multiple occurances due to multiple wildcards
-labelreg = datachannel(labelreg);
+
+if ~isempty(findreg)
+  findreg  = unique(findreg); % remove multiple occurances due to multiple wildcards
+  labelreg = datachannel(labelreg);
+end
 
 % initialize all the system-specific variables to empty
 labelmeg     = [];
@@ -304,7 +307,6 @@ if ~isempty(badchannel)
   end
   badchannel = ft_channelselection(badchannel, datachannel); % support exclusion of channel groups
 end
-findreg    = [findreg find(findbadchannel)'];
 
 % determine if any of the known groups is mentioned in the channel list
 findall        = find(strcmp(channel, 'all'));
