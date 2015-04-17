@@ -357,7 +357,7 @@ if strcmp(cfg.covariance, 'yes')
 end
 
 % some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing'};
+copyfield = {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'};
 for i=1:length(copyfield)
   if isfield(data, copyfield{i})
     timelock.(copyfield{i}) = data.(copyfield{i});

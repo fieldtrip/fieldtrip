@@ -157,7 +157,7 @@ for i=2:length(varargin)
   datfield = intersect(datfield, fieldnames(varargin{i}));
 end
 datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'transform' 'dim' 'unit' 'topolabel' 'lfplabel'}; % these fields will not be touched in any way by the code
+xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'dim' 'unit' 'topolabel' 'lfplabel'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
 datfield  = setdiff(datfield, orgdim1);

@@ -25,6 +25,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.elecfile    filename containing electrode positions
 %   cfg.grad        structure with gradiometer definition, or
 %   cfg.gradfile    filename containing gradiometer definition
+%   cfg.opto        structure with optode structure definition, or
+%   cfg.optofile    filename containing optode structure definition
 %   cfg.output      filename to which the layout will be written (default = [])
 %   cfg.montage     'no' or a montage structure (default = 'no')
 %   cfg.image       filename, use an image to construct a layout (e.g. usefull for ECoG grids)
@@ -41,6 +43,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
 %   data.grad     structure with gradiometer definition
+%   data.opto     structure with optode structure definition
 %
 % Alternatively you can specify the following layouts which will be
 % generated for all channels present in the data. Note that these layouts
@@ -421,6 +424,11 @@ elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
   data = ft_checkdata(data);
   layout = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  
+elseif isfield(data, 'opto') && isstruct(data.opto)
+  fprintf('creating layout from data.hdr.opto\n');
+  data = ft_checkdata(data);
+  layout = sens2lay(data.opto, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   
 elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   % deal with image file

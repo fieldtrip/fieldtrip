@@ -1781,6 +1781,10 @@ switch headerformat
     % remember the original header details
     hdr.orig = orig;
     
+  case 'oxy3'
+    ft_hastoolbox('artinis', 1);    
+    hdr = read_artinis_oxy3(filename);    
+    
   case 'plexon_ds'
     hdr = read_plexon_ds(filename);
     
