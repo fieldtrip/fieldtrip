@@ -202,7 +202,9 @@ switch toolbox
   case 'MRI'    % other functions in the mri section
     status = (exist('avw_hdr_read', 'file') && exist('avw_img_read', 'file'));
   case 'NEUROSHARE'
-    status  = (exist('ns_OpenFile', 'file') && exist('ns_SetLibrary', 'file') && exist('ns_GetAnalogData', 'file'));
+    status  = (exist('ns_OpenFile', 'file') && exist('ns_SetLibrary', 'file') && exist('ns_GetAnalogData', 'file'));    
+  case 'ARTINIS'
+    status  = exist('read_artinis_oxy3', 'file');
   case 'BESA'
     status = (exist('readBESAtfc', 'file') && exist('readBESAswf', 'file'));
   case 'EEPROBE'
