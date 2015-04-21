@@ -14,7 +14,7 @@ ft_hastoolbox('spm8up', 1);
 % approach to eliminate potential vitamin E capsules etc.
 
 if ~islogical(input)
-  fprintf('thresholding %s at a relative threshold of %0.3f\m', str, thresh);
+  fprintf('thresholding %s at a relative threshold of %0.3f\n', str, thresh);
   output = double(input>(thresh*max(input(:))));
 else
   % there is no reason to apply a threshold, but spm_bwlabel still needs a
@@ -32,8 +32,8 @@ if n>1
   tmp = sort(tmp, 'ascend');              % sort according to cluster number
   m   = zeros(1,n);
   for k=1:n
-    m(cluster) = find(tmp==k, 1, 'last'); % determine the voxel count for each cluster
-    tmp   = tmp(m(k)+1:end);              % remove the last cluster that was counted
+    m(k) = sum(tmp==k);       % determine the voxel count for each cluster
+    tmp  = tmp(m(k)+1:end);   % remove the last cluster that was counted
   end
   % select the tissue that has the most voxels belonging to it
   [m, i] = max(m);

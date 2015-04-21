@@ -160,10 +160,13 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
   end
   
   if ~ok
-    error('time axes of all trials should be identical');
+    error('the number of time points in all trials should be identical');
   else
     cfg.toi       = mean(data.time{1}([1 end]))       + 0.5/data.fsample;
     cfg.t_ftimwin = data.time{1}(end)-data.time{1}(1) + 1/data.fsample;
+    
+    % also replace all time axes with the first one:
+    data.time(:) = data.time(1);
   end
   
 elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
@@ -238,11 +241,13 @@ else
 end
 ntap = size(tap,1);
 
-%---preprocess data if necessary
+%---preprocess data if necessary -> changed 20150224, JM does not think
+%this step is necessary: it creates problems downstream if the time axes of
+%the trials are different
 %---cut off the uninteresting data segments
-tmpcfg        = [];
-tmpcfg.toilim = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
-data          = ft_redefinetrial(tmpcfg, data);
+%tmpcfg        = [];
+%tmpcfg.toilim = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
+%data          = ft_redefinetrial(tmpcfg, data);
 ntrl          = length(data.trial);
 
 %---demean
@@ -319,11 +324,13 @@ end
 ft_progress('init', cfg.feedback, 'computing AR-model');
 for j = 1:ntoi
   ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
+  begsample     = nearest(timeaxis, cfg.toi(j)-cfg.t_ftimwin/2);
+  endsample     = begsample+tfwin-1;
   sample        = nearest(timeaxis, cfg.toi(j));
   cfg.toi(j)    = timeaxis(sample);
   
   tmpcfg        = [];
-  tmpcfg.toilim = [timeaxis(sample-ceil(tfwin/2)) timeaxis(sample+floor(tfwin/2)-1)];
+  tmpcfg.toilim = timeaxis([begsample endsample]);
   tmpcfg.feedback = 'no';
   tmpcfg.minlength= 'maxperlen';
   tmpdata       = ft_redefinetrial(tmpcfg, data);

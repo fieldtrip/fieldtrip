@@ -6,7 +6,7 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % or in a specialized pipeline format (e.g. PSOM, JIST, LONI, Taverna).
 %
 % Use as
-%   output = ft_analysisprotocol(cfg, data)
+%   output = ft_analysispipeline(cfg, data)
 %
 % The first cfg input contains the settings that apply to the behaviour of this
 % particular function and the second data input argument can be the output of any

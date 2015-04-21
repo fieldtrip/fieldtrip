@@ -171,7 +171,7 @@ if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   trl = cfg.trl;
-
+  
 else
   % check whether the value for trlpadding makes sense
   % negative trlpadding only allowed with in-memory data
@@ -667,13 +667,19 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function keyboard_cb(h, eventdata)
 
-if isempty(eventdata)
+if isobject(eventdata)
+  % this happens for MATLAB2014b and up, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2857
+  % FIXME the keboard does not seem to work at all at the moment, hence the following work around solves it for now
+  % determine the key that corresponds to the uicontrol element that was activated
+  key = get(h, 'userdata');
+elseif isempty(eventdata)
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
   key = parseKeyboardEvent(eventdata);
 end
+
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
   set(h, 'enable', 'off');

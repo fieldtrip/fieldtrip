@@ -2,7 +2,7 @@ function y = struct(x, varargin)
 
 % STRUCT Convert a config object into a structure object.
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2015, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

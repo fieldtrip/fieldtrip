@@ -256,7 +256,7 @@ elseif ~isempty(subspace)
     % by construction.
     invCf    = diag(1./diag(Cf));
     subspace = u(:,1:subspace)';
-    dat      = subspace*dat;
+    if ~isempty(dat), dat = subspace*dat; end
     
     if strcmp(submethod, 'dics_refchan')
       Cr = subspace*Cr;
@@ -349,8 +349,8 @@ switch submethod
           
           % and compute the leadfield for that orientation
           lf  = lf * maxpowori;
-          dipout.ori{i} = maxpowori;
-          dipout.eta{i} = eta;
+          dipout.ori{i,1} = maxpowori;
+          dipout.eta{i,1} = eta;
           if ~isempty(subspace), lforig = lforig * maxpowori; end
           
           % recompute the filter to only use that orientation
@@ -364,38 +364,38 @@ switch submethod
       if powlambda1
         if size(csd,1) == 1
           % only 1 orientation, no need to do svd
-          dipout.pow(i) = real(csd);
+          dipout.pow(i,1) = real(csd);
         else
-          dipout.pow(i) = lambda1(csd);                           % compute the power at the dipole location, Gross eqn. 8
+          dipout.pow(i,1) = lambda1(csd);                           % compute the power at the dipole location, Gross eqn. 8
         end
       elseif powtrace
-        dipout.pow(i) = real(trace(csd));                         % compute the power at the dipole location
+        dipout.pow(i,1) = real(trace(csd));                         % compute the power at the dipole location
       end
       if keepcsd
-        dipout.csd{i} = csd;
+        dipout.csd{i,1} = csd;
       end
       if projectnoise
         if powlambda1
-          dipout.noise(i) = noise * lambda1(filt * ctranspose(filt));
+          dipout.noise(i,1) = noise * lambda1(filt * ctranspose(filt));
         elseif powtrace
-          dipout.noise(i) = noise * real(trace(filt * ctranspose(filt)));
+          dipout.noise(i,1) = noise * real(trace(filt * ctranspose(filt)));
         end
         if keepcsd
-          dipout.noisecsd{i} = noise * filt * ctranspose(filt);
+          dipout.noisecsd{i,1} = noise * filt * ctranspose(filt);
         end
       end
       if keepfilter
         if ~isempty(subspace)
-          dipout.filter{i} = filt*subspace; %FIXME should this be subspace, or pinv(subspace)?
+          dipout.filter{i,1} = filt*subspace; %FIXME should this be subspace, or pinv(subspace)?
         else
-          dipout.filter{i} = filt;
+          dipout.filter{i,1} = filt;
         end
       end
       if keepleadfield
         if ~isempty(subspace)
-          dipout.leadfield{i} = lforig;
+          dipout.leadfield{i,1} = lforig;
         else
-          dipout.leadfield{i} = lf;
+          dipout.leadfield{i,1} = lf;
         end
       end
       ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
@@ -458,7 +458,7 @@ switch submethod
           
           % compute the leadfield for that orientation
           lf  = lf * maxpowori;
-          dipout.ori{i} = maxpowori;
+          dipout.ori{i,1} = maxpowori;
           
           % recompute the filter to only use that orientation
           filt = pinv(lf' * invCf * lf) * lf' * invCf;
@@ -479,29 +479,29 @@ switch submethod
       elseif powtrace
         coh = norm(csd)^2 / (pow * Pr);
       end
-      dipout.pow(i) = pow;
-      dipout.coh(i) = coh;
+      dipout.pow(i,1) = pow;
+      dipout.coh(i,1) = coh;
       if keepcsd
-        dipout.csd{i} = csd;
+        dipout.csd{i,1} = csd;
       end
       if projectnoise
         if powlambda1
-          dipout.noise(i) = noise * lambda1(filt * ctranspose(filt));
+          dipout.noise(i,1) = noise * lambda1(filt * ctranspose(filt));
         elseif powtrace
-          dipout.noise(i) = noise * real(trace(filt * ctranspose(filt)));
+          dipout.noise(i,1) = noise * real(trace(filt * ctranspose(filt)));
         end
         if keepcsd
-          dipout.noisecsd{i} = noise * filt * ctranspose(filt);
+          dipout.noisecsd{i,1} = noise * filt * ctranspose(filt);
         end
       end
       if keepfilter
-        dipout.filter{i} = filt;
+        dipout.filter{i,1} = filt;
       end
       if keepleadfield
         if ~isempty(subspace)
-          dipout.leadfield{i} = lforig;
+          dipout.leadfield{i,1} = lforig;
         else
-          dipout.leadfield{i} = lf;
+          dipout.leadfield{i,1} = lf;
         end
       end
       ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
@@ -555,23 +555,23 @@ switch submethod
       elseif powtrace
         coh = real(trace((csd)))^2 / (pow * Pref);         % compute the coherence between the first and second dipole
       end
-      dipout.pow(i) = pow;
-      dipout.coh(i) = coh;
+      dipout.pow(i,1) = pow;
+      dipout.coh(i,1) = coh;
       if keepcsd
-        dipout.csd{i} = csd;
+        dipout.csd{i,1} = csd;
       end
       if projectnoise
         if powlambda1
-          dipout.noise(i) = noise * lambda1(filt2 * ctranspose(filt2));
+          dipout.noise(i,1) = noise * lambda1(filt2 * ctranspose(filt2));
         elseif powtrace
-          dipout.noise(i) = noise * real(trace(filt2 * ctranspose(filt2)));
+          dipout.noise(i,1) = noise * real(trace(filt2 * ctranspose(filt2)));
         end
         if keepcsd
-          dipout.noisecsd{i} = noise * filt2 * ctranspose(filt2);
+          dipout.noisecsd{i,1} = noise * filt2 * ctranspose(filt2);
         end
       end
       if keepleadfield
-        dipout.leadfield{i} = lf2;
+        dipout.leadfield{i,1} = lf2;
       end
       ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end

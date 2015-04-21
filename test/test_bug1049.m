@@ -13,12 +13,12 @@ global ft_default;
 ft_default.feedback = 'no';
 
 % get volume conductor model
-cd('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds');
-vol = ft_read_vol('default.hdm');
+volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
+vol     = ft_read_vol(volname);
 
 % get data + sensor info
-cd('/home/common/matlab/fieldtrip/data/test/latest/raw/meg');
-load('preproc_ctf151');
+dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
+load(dataname);
 
 % create 3D grid
 cfg      = [];

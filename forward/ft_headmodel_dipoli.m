@@ -148,10 +148,11 @@ fprintf('using the executable "%s"\n', dipoli);
 
 
 % write the triangulations to file
-bndfile = {};
-bnddip = vol.bnd;
+prefix  = tempname;
+bndfile = cell(1,numboundaries);
+bnddip  = vol.bnd;
 for i=1:numboundaries
-  bndfile{i} = [tempname '.tri'];
+  bndfile{i} = sprintf('%s_%d.tri', prefix, i);
   % checks if normals are inwards oriented otherwise flips them
   ok = checknormals(bnddip(i));
   if ~ok

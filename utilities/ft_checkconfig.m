@@ -193,7 +193,6 @@ end
 if ~isempty(allowed)
   % there are some general options that should always be allowed
   allowed = union(allowed, {
-    'trkcfgcount'
     'trackconfig'
     'checkconfig'
     'checksize'
@@ -572,19 +571,19 @@ if ~isempty(trackconfig)
         % turn ON configuration tracking
         cfg = config(cfg);
         % remember that configtracking has been turned on
-        cfg = access(cfg, 'set', 'trkcfgcount', 1);
+        cfg = access(cfg, 'set', 'counter', 1);
       elseif isa(cfg, 'config')
         % remember how many times trackconfig has been turned on
-        cfg = access(cfg, 'set', 'trkcfgcount', access(cfg, 'get', 'trkcfgcount'));
+        cfg = access(cfg, 'set', 'counter', access(cfg, 'get', 'counter')+1); % count the 'ONs'
       end
     end
     
     if strcmp(trackconfig, 'off') && isa(cfg, 'config')
       % turn OFF configuration tracking, optionally give report and/or cleanup
-      cfg.trkcfgcount=cfg.trkcfgcount-1; % count(down) the 'OFFs'
+      cfg = access(cfg, 'set', 'counter', access(cfg, 'get', 'counter')-1); % count(down) the 'OFFs'
       
-      if cfg.trkcfgcount==0 % only proceed when number of 'ONs' matches number of 'OFFs'
-        cfg=rmfield(cfg, 'trkcfgcount');
+      if access(cfg, 'get', 'counter')==0
+        % only proceed when number of 'ONs' matches number of 'OFFs'
         
         if strcmp(cfg.trackconfig, 'report') || strcmp(cfg.trackconfig, 'cleanup')
           % gather information about the tracked results

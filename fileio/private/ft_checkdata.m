@@ -1726,7 +1726,7 @@ fn(~cellfun(@isempty, regexp(fn, 'dimord$'))) = []; % remove irrelevant (dimord)
 sel = false(size(fn));
 for i=1:numel(fn)
   try
-    sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_chan'});
+    sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_freq_time', 'chan_chan'});
   end
 end
 parameter = fn(sel);
@@ -1747,6 +1747,9 @@ end
 for i=1:numel(parameter)
   source.(parameter{i}) = unparcellate(data, source, parameter{i}, parcelparam);
 end
+
+% copy over fields (these are necessary for visualising the data in ft_sourceplot)
+source = copyfields(data, source, {'time', 'freq'});
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1995,6 +1998,93 @@ for iUnit = 1:nUnits
   spike.trial{iUnit}     = trialInds(:)';
   
   if iUnit==1, spike.trialtime             = trialTimes; end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function timelock = freq2timelock(freq)
+
+% FREQ2TIMELOCK  transform the frequency data into something
+% on which the timelocked source reconstruction methods can
+% perform their trick.
+%
+% After source reconstruction, you should use TIMELOCK2FREQ.
+
+if isfield(freq, 'fourierspctrm')
+  fprintf('constructing real/imag data representation from single trial fourier representation\n');
+  % select the complex amplitude at the frequency of interest
+  cdim = find(strcmp(freq.dimord, 'chan'));  % should be 2
+  fdim = find(strcmp(freq.dimord, 'freq'));  % should be 3
+  
+  fbin = nearest(freq.freq, cfg.frequency);
+  cfg.frequency = freq.freq(fbin);
+  if cdim==2 && fdim==3 && numel(freq.freq)==1
+    % other dimords are not supported, since they do not occur
+    spctrm = transpose(freq.fourierspctrm);
+  else
+    error('conversion of fourierspctrm failed');
+  end
+  % concatenate the real and imaginary part
+  avg = [real(spctrm) imag(spctrm)];
+elseif isfield(freq, 'crsspctrm')
+  fprintf('constructing real/imag data representation from csd matrix\n');
+  % hmmm... I have no idea whether this is correct
+  tmpcfg.channel   = freq.label;
+  tmpcfg.frequency = freq.freq; 
+  % this subfunction also takes care of the channel selection
+  [Cf, Cr, Pr, Ntrials, dum] = prepare_freq_matrices(tmpcfg, freq);
+  if length(size(Cf))==3
+    % average the cross-spectrum over trials
+    Cf = squeeze(mean(Cf,1));
+  end
+  % reconstruct something that spans the same space as the fft of the data, hmmm...
+  [u, s, v] = svd(Cf);
+  spctrm = u * sqrt(s);
+  % concatenate the real and imaginary part
+  avg = [real(spctrm) imag(spctrm)];
+else
+  error('unknown representation of frequency domain data');
+end
+
+timelock        = [];
+timelock.avg    = avg;
+timelock.label  = cfg.channel;
+timelock.time   = 1:size(timelock.avg,2);
+if isfield(freq, 'cfg'), timelock.cfg = freq.cfg; end
+timelock.dimord = 'chan_time';
+
+if isfield(freq, 'grad')
+  timelock.grad = freq.grad;
+end
+
+if isfield(freq, 'elec')
+  timelock.elec = freq.elec;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function timelock = comp2timelock(comp)
+
+% COMP2TIMELOCK transform the independent components into something
+% on which the timelocked source reconstruction methods can
+% perform their trick.
+
+% only convert, do not perform channel or component selection
+timelock        = [];
+timelock.avg    = comp.topo;
+timelock.label  = comp.topolabel;
+timelock.time   = 1:size(timelock.avg,2);
+if isfield(comp, 'cfg'), timelock.cfg = comp.cfg; end
+timelock.dimord = 'chan_time';
+
+if isfield(comp, 'grad')
+  timelock.grad = comp.grad;
+end
+
+if isfield(comp, 'elec')
+  timelock.elec = comp.elec;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

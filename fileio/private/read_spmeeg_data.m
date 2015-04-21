@@ -58,7 +58,11 @@ if isfield(header, 'orig')
         datatype = header.orig.data.datatype;
     end
     if isfield(header.orig, 'scale')
-        scale = header.orig.scale.values;
+        if isnumeric(header.orig.scale)
+            scale = header.orig.scale;
+        else
+            scale = header.orig.scale.values;
+        end
     elseif isfield(header.orig.data, 'scale')
         scale = header.orig.data.scale;
     end

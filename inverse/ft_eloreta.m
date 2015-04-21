@@ -32,6 +32,10 @@ function [dipout] = ft_eloreta(dip, grad, vol, dat, Cf, varargin)
 % dipole (regional source) is assumed on each location. If a dipole moment
 % is specified, its orientation will be used and only the strength will
 % be fitted to the data.
+%
+% This implements: R.D. Pascual-Marqui; Discrete, 3D distributed, linear imaging
+% methods of electric neuronal activity. Part 1: exact, zero error localization.
+% arXiv:0710.3341 [math-ph], 2007-October-17, http://arxiv.org/pdf/0710.3341
 
 % Copyright (C) 2013, Marlene Boenstrup, Jan-Mathijs Schoffelen and Guido
 % Nolte
@@ -128,11 +132,11 @@ end
 % check the rank of the leadfields, and project onto the lower dimensional
 % subspace if the number of columns per leadfield > rank: this to avoid
 % numerical issues in the filter computation
-rank_lf = zeros(size(dip.pos,1));
+rank_lf = zeros(1,size(dip.pos,1));
 for i=1:size(dip.pos,1)
   rank_lf(i) = rank(dip.leadfield{i});
 end
-if ~all(rank_lf==rank_lf(1)),
+if ~all(rank_lf==rank_lf(1))
   error('the forward solutions have a different rank for each location, which is not supported');
 end
 if rank_lf(1)<size(dip.leadfield{1})
@@ -140,7 +144,7 @@ if rank_lf(1)<size(dip.leadfield{1})
   fprintf('projecting the forward solutions on the lower dimensional subspace\n');
   for i=1:size(dip.pos,1)
     [u,s,v{i}] = svd(dip.leadfield{i}, 'econ');
-    dip.leadfield{i} = dip.leadfield{i}*v{i}(:,1:rank_lf);
+    dip.leadfield{i} = dip.leadfield{i}*v{i}(:,1:rank_lf(i));
   end
 end
 
@@ -153,7 +157,7 @@ leadfield     = permute(reshape(cat(2,dip.leadfield{:}),Nchan,Nori,Ndip),[1 3 2]
 if ~isfield(dip, 'filter')
   filt = mkfilt_eloreta_v2(leadfield, lambda);
   for i=1:size(dip.pos,1)
-    dip.filter{i} = squeeze(filt(:,i,:))';
+    dip.filter{i,1} = squeeze(filt(:,i,:))';
   end
 end
 
@@ -161,8 +165,8 @@ end
 dip.pow = zeros(size(dip.pos,1),1);
 dip.ori = cell(size(dip.pos,1),1);
 for i=1:size(dip.pos,1)
-  csd     = dip.filter{i}*Cf*dip.filter{i}';
-  [u,s,v] = svd(real(csd));
+  csd        = dip.filter{i}*Cf*dip.filter{i}';
+  [u,s,vv]    = svd(real(csd));
   dip.pow(i) = s(1);
   dip.ori{i} = u(:,1);
 end
@@ -183,23 +187,23 @@ dipout.inside  = originside;
 dipout.pos     = origpos;
 
 % reassign the scan values over the inside and outside grid positions
-if isfield(dipout, 'pow') % here pow is cell
+if isfield(dip, 'pow') % here pow is cell
   dipout.pow( originside) = dip.pow;
   dipout.pow(~originside) = nan;
 end
-if isfield(dipout, 'ori') % here ori is cell
+if isfield(dip, 'ori') % here ori is cell
   dipout.ori( originside) = dip.ori;
   dipout.ori(~originside) = {[]};
 end
-if isfield(dipout, 'leadfield') && keepleadfield
+if isfield(dip, 'leadfield') && keepleadfield
   dipout.leadfield( originside) = dip.leadfield;
   dipout.leadfield(~originside) = {[]};
 end
-if isfield(dipout, 'filter') && keepfilter
+if isfield(dip, 'filter') && keepfilter
   dipout.filter( originside) = dip.filter;
   dipout.filter(~originside) = {[]};
 end
-if isfield(dipout, 'mom') && keepmom
+if isfield(dip, 'mom') && keepmom
   dipout.mom( originside) = dip.mom;
   dipout.mom(~originside) = {[]};
 end

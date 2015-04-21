@@ -35,7 +35,7 @@ function [r] = issubfield(s, f)
 % $Id$
 
 %try
-%  getsubfield(s, f);    % if this works, then the subfield must be present  
+%  getsubfield(s, f);    % if this works, then the subfield must be present
 %  r = true;
 %catch
 %  r = false;                % apparently the subfield is not present
@@ -45,9 +45,9 @@ t = textscan(f,'%s','delimiter','.');
 t = t{1};
 r = true;
 for k = 1:numel(t)
-  try,
+  if isfield(s, t{k})
     s = s.(t{k});
-  catch
+  else
     r = false;
     return;
   end
