@@ -27,8 +27,10 @@ function [stat, cfg] = ft_statistics_stats(cfg, dat, design)
 %                   'paired-ttest'
 %                   'anova1'
 %                   'kruskalwallis'
+%                   'signtest'
+%                   'signrank'
 %
-% See also TTEST, TTEST2, KRUSKALWALLIS
+% See also TTEST, TTEST2, KRUSKALWALLIS, SIGNTEST, SIGNRANK
 
 % Undocumented local options:
 % cfg.avgovertime
@@ -245,6 +247,88 @@ case 'ttest_window_avg_vs_const'
   % originally implemented by Jens Schwartzbach, but it has been
   % superseded by the use of ft_selectdata for data selection
   error(sprintf('%s is not supported any more, use cfg.avgovertime=''yes'' instead', cfg.statistic));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+case {'signtest'}
+  % set the defaults
+  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
+  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  
+  switch cfg.tail
+    case 0
+      cfg.tail = 'both';
+    case -1
+      cfg.tail = 'left';
+    case 1
+      cfg.tail = 'right';
+  end;
+  
+  if size(design,1)~=1
+    error('design matrix should only contain one factor (i.e. one row)');
+  end
+  Ncond = length(unique(design));
+  if Ncond~=2
+    error(sprintf('%s method is only supported for two condition', cfg.statistic));
+  end
+  Nobs  = size(dat, 1);
+  selA = find(design==design(1));
+  selB = find(design~=design(1));
+  Nrepl = [length(selA), length(selB)];
+
+  h = zeros(Nobs, 1);
+  p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
+  fprintf('number of observations %d\n', Nobs);
+  fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
+
+  ft_progress('init', cfg.feedback);
+  for chan = 1:Nobs
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    [p(chan), h(chan), stats] = signtest(dat(chan, selA), dat(chan, selB),'alpha', cfg.alpha,'tail', cfg.tail);
+    s(chan) = stats.sign;
+  end
+  ft_progress('close');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+case {'signrank'}
+  % set the defaults
+  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
+  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  
+  switch cfg.tail
+    case 0
+      cfg.tail = 'both';
+    case -1
+      cfg.tail = 'left';
+    case 1
+      cfg.tail = 'right';
+  end;
+  
+  if size(design,1)~=1
+    error('design matrix should only contain one factor (i.e. one row)');
+  end
+  Ncond = length(unique(design));
+  if Ncond~=2
+    error(sprintf('%s method is only supported for two condition', cfg.statistic));
+  end
+  Nobs  = size(dat, 1);
+  selA = find(design==design(1));
+  selB = find(design~=design(1));
+  Nrepl = [length(selA), length(selB)];
+
+  h = zeros(Nobs, 1);
+  p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
+  fprintf('number of observations %d\n', Nobs);
+  fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
+
+  ft_progress('init', cfg.feedback);
+  for chan = 1:Nobs
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    [p(chan), h(chan), stats] = signrank(dat(chan, selA), dat(chan, selB),'alpha', cfg.alpha,'tail', cfg.tail);
+    s(chan) = stats.signedrank;
+  end
+  ft_progress('close');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 otherwise

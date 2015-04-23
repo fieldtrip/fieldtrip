@@ -213,7 +213,7 @@ end
 
 % pre-allocate some memory space for the covariance matrices
 if strcmp(cfg.covariance, 'yes')
-  covsig = zeros(ntrial, nchan, nchan); covsig(:) = nan;
+  covsig = nan(ntrial, nchan, nchan);
   numcovsigsamples = zeros(ntrial,1);
 end
 
@@ -224,7 +224,7 @@ s        = zeros(nchan, maxwin);    % this will contain the sum
 ss       = zeros(nchan, maxwin);    % this will contain the squared sum
 dof      = zeros(1, maxwin);
 if (strcmp(cfg.keeptrials,'yes'))
-  singtrial = zeros(ntrial, nchan, maxwin); singtrial(:) = nan;
+  singtrial = nan(ntrial, nchan, maxwin);
 end
 
 ft_progress('init', cfg.feedback, 'averaging trials');
@@ -357,7 +357,7 @@ if strcmp(cfg.covariance, 'yes')
 end
 
 % some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing'};
+copyfield = {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'};
 for i=1:length(copyfield)
   if isfield(data, copyfield{i})
     timelock.(copyfield{i}) = data.(copyfield{i});

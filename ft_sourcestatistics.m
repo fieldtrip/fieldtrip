@@ -105,15 +105,13 @@ cfg.latency     = ft_getopt(cfg, 'latency',     'all');
 cfg.avgovertime = ft_getopt(cfg, 'avgovertime', 'no');
 cfg.frequency   = ft_getopt(cfg, 'frequency',   'all');
 cfg.avgoverfreq = ft_getopt(cfg, 'avgoverfreq', 'no');
+cfg.parameter   = ft_getopt(cfg, 'parameter', 'pow');
 
-if isempty(cfg.parameter)
-  if isfield(varargin{1}, 'pow')
-    cfg.parameter = 'pow';
-  end
-end
-
-if length(cfg.parameter)>4 && strcmp(cfg.parameter(1:4), 'avg.')
+if strncmp(cfg.parameter, 'avg.', 4)
   cfg.parameter = cfg.parameter(5:end); % remove the 'avg.' part
+end
+for i=1:length(varargin)
+  assert(isfield(varargin{i}, cfg.parameter), 'data does not contain parameter "%s"', cfg.parameter);
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.

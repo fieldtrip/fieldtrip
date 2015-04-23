@@ -48,10 +48,9 @@ if Fold==Fnew
   return
 end
 
-typ = class(dat);
-
 % resample and decimate require double formatted input
-if ~strcmp(method, 'downsample') && ~strcmp(typ, 'double')
+if ~strcmp(method, 'downsample')
+  typ = class(dat);
   dat = cast(dat, 'double');
 end
 
@@ -78,7 +77,7 @@ switch method
     error('unsupported resampling method');
 end
 
-if ~strcmp(method, 'downsample') && ~strcmp(typ, 'double')
+if ~strcmp(method, 'downsample')
   % convert back into the original input format
   datout = cast(datout, typ);
 end

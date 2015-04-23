@@ -1759,6 +1759,9 @@ switch eventformat
     
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);
+  
+  case 'oxy3'
+    event = read_artinis_oxy3(filename, true);
     
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)

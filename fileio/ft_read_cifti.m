@@ -734,10 +734,19 @@ if readdata
       error('unsupported dimord %s', source.dimord);
   end % switch
   
-  if isfield(Cifti, 'mapname') && length(Cifti.mapname)>1
+  if isfield(Cifti, 'mapname') && (length(Cifti.mapname)>1 || isfield(Cifti, 'labeltable'))
     % use distict names if there are multiple scalars or labels
     for i=1:length(Cifti.mapname)
       fieldname = fixname(Cifti.mapname{i});
+      
+      % truncate the string if it's too long: MATLAB maximizes the string
+      % length to 63 characters (and throws a warning when truncating), 
+      % anticipating a possible presence of the labeltable it will be 
+      % truncated here to 58
+      if numel(fieldname)>58
+        warning_once(sprintf('%s exceeds MATLAB''s maximum name length of 63 characters and has been truncated to %s',fieldname,fieldname(1:58)));
+        fieldname = fieldname(1:58);
+      end
       source.(fieldname) = dat(:,i);
       if isfield(Cifti, 'labeltable')
         source.([fieldname 'label']) = Cifti.labeltable{i};
@@ -922,31 +931,31 @@ else
 end
 
 haslabeltable = false;
-if ~isempty(NamedMap)
-  % the following assumes a single NamedMap
-  if isfield(NamedMap, 'LabelTable')
-    % use the key-label combination in the label table
-    haslabeltable    = true;
-    key              = NamedMap.LabelTable.Key;
-    source.datalabel = NamedMap.LabelTable.Label(:);
-  end
-end
+% if ~isempty(NamedMap)
+%   % the following assumes a single NamedMap
+%   if isfield(NamedMap, 'LabelTable')
+%     % use the key-label combination in the label table
+%     haslabeltable    = true;
+%     key              = NamedMap.LabelTable.Key;
+%     source.datalabel = NamedMap.LabelTable.Label(:);
+%   end
+% end
 
 if readdata
   if isfield(source, 'data')
     % rename the data field
     source.(fixname(dataname)) = source.data;
     
-    % adopt FT convention for parcel-to-label mapping
-    if haslabeltable
-      tempdata = nan+zeros(size(source.data));
-      for k = 1:numel(key)
-        tempdata(source.data==key(k)) = k;
-      end
-      source.data = tempdata;
-    end
-    source = rmfield(source, 'data');
-    
+%     % adopt FT convention for parcel-to-label mapping
+%     if haslabeltable
+%       tempdata = nan+zeros(size(source.data));
+%       for k = 1:numel(key)
+%         tempdata(source.data==key(k)) = k;
+%       end
+%       source.data = tempdata;
+%     end
+%     source = rmfield(source, 'data');
+%     
   end
   
   % rename the datalabel field

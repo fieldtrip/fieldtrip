@@ -3,10 +3,10 @@ function ft_realtime_neuralynxproxy(cfg)
 % FT_REALTIME_NEURALYNXPROXY reads continuous data from a Neuralynx Cheetah
 % acquisition system and writes it to a FieldTrip buffer.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
 %   ft_realtime_neuralynxproxy(cfg)
@@ -20,6 +20,8 @@ function ft_realtime_neuralynxproxy(cfg)
 %   cfg.target.dataformat    = string, default is determined automatic
 %
 % To stop this realtime function, you have to press Ctrl-C
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2008, Robert Oostenveld
 %

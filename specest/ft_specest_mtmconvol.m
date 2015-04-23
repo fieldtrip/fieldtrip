@@ -1,19 +1,19 @@
 function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varargin)
 
-% FT_SPECEST_MTMCONVOL performs wavelet convolution in the time domain 
-% by multiplication in the frequency domain
+% FT_SPECEST_MTMCONVOL performs wavelet convolution in the time domain by
+% multiplication in the frequency domain.
 %
 % Use as
 %   [spectrum,freqoi,timeoi] = ft_specest_mtmconvol(dat,time,...)
 % where
-%   dat      = matrix of chan*sample
-%   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of ntaper*chan*freqoi*timeoi of fourier coefficients
-%   ntaper   = vector containing the number of tapers per freqoi
-%   freqoi   = vector of frequencies in spectrum
-%   timeoi   = vector of timebins in spectrum
+%   dat       = matrix of chan*sample
+%   time      = vector, containing time in seconds for each sample
+%   spectrum  = matrix of ntaper*chan*freqoi*timeoi of fourier coefficients
+%   ntaper    = vector containing the number of tapers per freqoi
+%   freqoi    = vector of frequencies in spectrum
+%   timeoi    = vector of timebins in spectrum
 %
-% Optional arguments should be specified in key-value pairs and can include:
+% Optional arguments should be specified in key-value pairs and can include
 %   taper     = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad       = number, indicating time-length of data to be padded out to in seconds
 %   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
@@ -21,23 +21,35 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   timwin    = vector, containing length of time windows (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
 %   tapsmofrq = number, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for
-%                memory efficiency
+%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency
 %   verbose   = output progress to console (0 or 1, default 1)
 %   taperopt  = additional taper options to be used in the WINDOW function, see WINDOW
-%   polyorder = number, the order of the polynomial to fitted to and removed from the data
-%                  prior to the fourier transform (default = 0 -> remove DC-component)
+%   polyorder = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
 % these are for speeding up computation of tapers on subsequent calls
 persistent previous_argin previous_wltspctrm
-
-
 
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper', 'dpss');
@@ -69,8 +81,13 @@ elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
 end
 
 % Set n's
-
 [nchan,ndatsample] = size(dat);
+
+% This does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
+end
 
 % Remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
@@ -345,8 +362,6 @@ end % switch dimord
 % reused on a subsequent call in case the same input argument is given
 previous_argin     = current_argin;
 previous_wltspctrm = wltspctrm;
-
-
 
 
 % % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases. however, when there is a huge variability in number of tapers per freqoi

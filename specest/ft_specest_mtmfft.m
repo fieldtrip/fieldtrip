@@ -1,39 +1,52 @@
 function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 
 % FT_SPECEST_MTMFFT computes a fast Fourier transform using multitapering with
-% the DPSS sequence or using a variety of single tapers
+% multiple tapers from the DPSS sequence or using a variety of single tapers.
 %
 % Use as
 %   [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat,time...)
 % where
-%   dat      = matrix of chan*sample
-%   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of taper*chan*freqoi of fourier coefficients
-%   ntaper   = vector containing number of tapers per element of freqoi
-%   freqoi   = vector of frequencies in spectrum
+%   dat        = matrix of chan*sample
+%   time       = vector, containing time in seconds for each sample
+%   spectrum   = matrix of taper*chan*freqoi of fourier coefficients
+%   ntaper     = vector containing number of tapers per element of freqoi
+%   freqoi     = vector of frequencies in spectrum
 %
-% Optional arguments should be specified in key-value pairs and can include:
+% Optional arguments should be specified in key-value pairs and can include
 %   taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad        = number, total length of data after zero padding (in seconds)
 %   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
 %   freqoi     = vector, containing frequencies of interest
 %   tapsmofrq  = the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
 %   dimord     = 'tap_chan_freq' (default) or 'chan_time_freqtap' for memory efficiency (only when use variable number slepian tapers)
-%   polyorder  = number, the order of the polynomial to fitted to and removed from the data
-%                  prior to the fourier transform (default = 0 -> remove DC-component)
+%   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
 %   taperopt   = additional taper options to be used in the WINDOW function, see WINDOW
 %   verbose    = output progress to console (0 or 1, default 1)
-%
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
 % these are for speeding up computation of tapers on subsequent calls
 persistent previous_argin previous_tap
-
 
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper'); if isempty(taper), error('You must specify a taper'); end
@@ -47,7 +60,6 @@ verbose   = ft_getopt(varargin, 'verbose', true);
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 tapopt    = ft_getopt(varargin, 'taperopt');
 
-
 if isempty(fbopt),
   fbopt.i = 1;
   fbopt.n = 1;
@@ -58,8 +70,17 @@ if isempty(tapsmofrq) && strcmp(taper, 'dpss')
   error('you need to specify tapsmofrq when using dpss tapers')
 end
 
+% this does not work on integer data
+dat = cast(dat, 'double');
+
 % Set n's
 [nchan,ndatsample] = size(dat);
+
+% This does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
+end
 
 % Remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
@@ -80,8 +101,6 @@ end
 postpad    = ceil((pad - dattime) * fsample);
 endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;                   % total time in seconds of padded data
-
-
 
 % Set freqboi and freqoi
 freqoiinput = freqoi;
@@ -194,8 +213,6 @@ else % variable number of slepian tapers requested
   ntaper = cellfun(@size,tap,repmat({1},[1 nfreqoi]));
 end
 
-
-
 % determine phase-shift so that for all frequencies angle(t=0) = 0
 timedelay = time(1);
 if timedelay ~= 0
@@ -212,9 +229,6 @@ if timedelay ~= 0
   angletransform = repmat(angletransform,[nchan,1]);
 end
 
-
-
-
 % compute fft
 if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tapers not requested
   str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
@@ -226,10 +240,9 @@ if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tap
     fprintf([str, '\n']);
   end
   spectrum = cell(ntaper(1),1);
+  
   for itap = 1:ntaper(1)
-
     dum = fft(ft_preproc_padding(bsxfun(@times,dat,tap(itap,:)), padtype, 0, postpad),[], 2);
-    
     dum = dum(:,freqboi);
     % phase-shift according to above angles
     if timedelay ~= 0
@@ -238,6 +251,7 @@ if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tap
     dum = dum .* sqrt(2 ./ endnsample);
     spectrum{itap} = dum;
   end
+  
   spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper(1) nfreqboi]);% collecting in a cell-array and later reshaping provides significant speedups
   spectrum = permute(spectrum, [2 1 3]);
   
@@ -258,7 +272,7 @@ else % variable number of slepian tapers requested
           fprintf([str, '\n']);
         end
         for itap = 1:ntaper(ifreqoi)
-
+          
           dum = fft(ft_preproc_padding(bsxfun(@times,dat,tap{ifreqoi}(itap,:)), padtype, 0, postpad), [], 2);
           
           dum = dum(:,freqboi(ifreqoi));
@@ -306,14 +320,10 @@ else % variable number of slepian tapers requested
   end % switch dimord
 end
 
-
 % remember the current input arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
 previous_argin = current_argin;
 previous_tap   = tap;
-
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

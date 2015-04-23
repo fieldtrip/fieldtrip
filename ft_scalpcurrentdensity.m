@@ -24,9 +24,19 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   cfg.elec         = structure with electrode definition
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %
+% The finite method require the following
+%   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
+%
 % The spline and finite method require the following
 %   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
-% 
+%   cfg.lambda       = regularization parameter (default = 1e-05)
+%   cfg.order        = order of the splines (default = 4)
+%   cfg.degree       = degree of legendre polynomials (default for 
+%                       <=32 electrodes = 9, 
+%                       <=64 electrodes = 14,
+%                       <=128 electrodes = 20,
+%                       else            = 32
+%
 % The hjorth method requires the following
 %   cfg.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 %
@@ -106,10 +116,28 @@ cfg.method       = ft_getopt(cfg, 'method',       'spline');
 cfg.conductivity = ft_getopt(cfg, 'conductivity', 0.33); % in S/m
 cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
 
-if strcmp(cfg.method, 'hjorth')
-  cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
-else
-  cfg = ft_checkconfig(cfg); % perform a simple consistency check
+switch cfg.method
+  case 'hjorth'
+    cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+  case 'spline'
+    cfg.lambda  = ft_getopt(cfg, 'lambda', 1e-5); 
+    cfg.order   = ft_getopt(cfg, 'order', 4); 
+    cfg.degree  = ft_getopt(cfg, 'degree', []); 
+    
+    if isempty(cfg.degree) % determines degree of Legendre polynomials bases on number of electrodes
+      nchan = numel(data.label);
+      if nchan<=32
+        cfg.degree = 9;
+      elseif nchan<=64
+        cfg.degree = 14;
+      elseif nchan<=128
+        cfg.degree = 20;
+      else
+        cfg.degree = 32;
+      end
+    end;
+  otherwise
+    cfg = ft_checkconfig(cfg); % perform a simple consistency check
 end
 
 % store original datatype
@@ -160,7 +188,7 @@ if strcmp(cfg.method, 'spline')
     % are interested here
     
     ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
-    [V2, L2, L1] = splint(elec.chanpos, data.trial{trlop}, [0 0 1]);
+    [V2, L2, L1] = splint(elec.chanpos, data.trial{trlop}, [0 0 1], cfg.order, cfg.degree, cfg.lambda);
     scd.trial{trlop} = L1;
   end
   

@@ -144,7 +144,7 @@ if ischar(grid)
   
   for i=1:length(insideindx)
     sel = 3*(i-1)+(1:3);
-    grid.leadfield{insideindx)} = lft(:,sel);
+    grid.leadfield{insideindx(i)} = lft(:,sel);
   end
   
   fprintf('finished import of BESA leadfield file\n');

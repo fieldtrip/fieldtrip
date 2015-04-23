@@ -161,15 +161,19 @@ dimord = dimordtmp{1}; clear dimordtmp
 dimtok = tokenize(dimord, '_');
 
 % this determines which descriptive fields will get copied over
-haschan = any(strcmp(dimtok, 'chan'));
-hasfreq = any(strcmp(dimtok, 'freq'));
-hastime = any(strcmp(dimtok, 'time'));
-haspos  = any(strcmp(dimtok, 'pos'));
+haschan    = any(strcmp(dimtok, 'chan'));
+haschancmb = any(strcmp(dimtok, 'chancmb'));
+hasfreq    = any(strcmp(dimtok, 'freq'));
+hastime    = any(strcmp(dimtok, 'time'));
+haspos     = any(strcmp(dimtok, 'pos'));
 
 % construct the output data structure
 data = [];
 if haschan
   data.label = varargin{1}.label;
+end
+if haschancmb
+  data.labelcmb = varargin{1}.labelcmb;
 end
 if hasfreq
   data.freq = varargin{1}.freq;

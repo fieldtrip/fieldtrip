@@ -2,15 +2,15 @@ function ft_realtime_signalproxy(cfg)
 
 % FT_REALTIME_SIGNALPROXY creates some random data and writes it to a FieldTrip buffer.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
 %   ft_realtime_signalproxy(cfg)
 % with the following configuration options
-%   cfg.blocksize            = number, in seconds (default = 1)
+%   cfg.blocksize            = number, in seconds (default = 0.5)
 %   cfg.channel              = cell-array with channel names
 %   cfg.fsample              = sampling frequency
 %   cfg.speed                = relative speed at which data is written (default = 1)
@@ -30,6 +30,8 @@ function ft_realtime_signalproxy(cfg)
 %   cfg.bpfreq        = bandpass frequency range, specified as [low high] in Hz
 %
 % To stop this realtime function, you have to press Ctrl-C
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2009-2011, Robert Oostenveld
 %
@@ -56,7 +58,7 @@ if ~isfield(cfg, 'target'),               cfg.target = [];                      
 if ~isfield(cfg.target, 'headerformat'),  cfg.target.headerformat = [];                     end % default is detected automatically
 if ~isfield(cfg.target, 'dataformat'),    cfg.target.dataformat = [];                       end % default is detected automatically
 if ~isfield(cfg.target, 'datafile'),      cfg.target.datafile = 'buffer://localhost:1972';  end
-if ~isfield(cfg, 'blocksize'),            cfg.blocksize = 1;                                end % in seconds
+if ~isfield(cfg, 'blocksize'),            cfg.blocksize = 0.5;                              end % in seconds
 if ~isfield(cfg, 'channel'),              cfg.channel = ft_senslabel('eeg1020');            end
 if ~isfield(cfg, 'fsample'),              cfg.fsample = 250;                                end % in Hz
 if ~isfield(cfg, 'speed'),                cfg.speed = 1 ;                                   end % relative
@@ -64,9 +66,9 @@ if ~isfield(cfg, 'speed'),                cfg.speed = 1 ;                       
 if ~isfield(cfg, 'lpfilter'),             cfg.lpfilter = 'no';                              end
 if ~isfield(cfg, 'hpfilter'),             cfg.hpfilter = 'no';                              end
 if ~isfield(cfg, 'bpfilter'),             cfg.bpfilter = 'no';                              end
-if ~isfield(cfg, 'lpfiltord'),            cfg.lpfiltord = [];                                end
-if ~isfield(cfg, 'hpfiltord'),            cfg.hpfiltord = [];                                end
-if ~isfield(cfg, 'bpfiltord'),            cfg.bpfiltord = [];                                end
+if ~isfield(cfg, 'lpfiltord'),            cfg.lpfiltord = [];                               end
+if ~isfield(cfg, 'hpfiltord'),            cfg.hpfiltord = [];                               end
+if ~isfield(cfg, 'bpfiltord'),            cfg.bpfiltord = [];                               end
 if ~isfield(cfg, 'lpfilttype'),           cfg.lpfilttype = 'but';                           end
 if ~isfield(cfg, 'hpfilttype'),           cfg.hpfilttype = 'but';                           end
 if ~isfield(cfg, 'bpfilttype'),           cfg.bpfilttype = 'but';                           end

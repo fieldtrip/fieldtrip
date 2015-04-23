@@ -143,13 +143,11 @@ else
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     end
   else
-    for i=size(dip.pos,1)
+      
+    for i=1:size(dip.pos,1)
       % compute the leadfield
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
     end
-  end
-  for i=size(dip.pos,1)
-    dip.leadfield{i} = [];
   end
 end
 
@@ -309,7 +307,7 @@ if ~isempty(noisecov) && ~hasfilter
 elseif ~isempty(noisecov)
   % compute estimate of the projected noise
   for i=1:size(dip.pos,1)
-    dipout.noisecov{i} = dipout.filter{i}*noisecov*dipout.filter{i}';
+    dipout.noisecov{i} = dip.filter{i}*noisecov*dip.filter{i}';
   end
 end
 

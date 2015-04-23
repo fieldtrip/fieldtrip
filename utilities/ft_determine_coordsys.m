@@ -333,7 +333,7 @@ if ~isempty(str) && ~strcmp(str, 'unknown')
   strx = tokenize(str, '_');
   
   switch lower(strx{1})
-    case {'ras' 'itab' 'neuromag' 'spm' 'mni'}
+    case {'ras' 'itab' 'neuromag' 'spm' 'mni' 'tal'}
       labelx = {'-X (left)'      '+X (right)'   };
       labely = {'-Y (posterior)' '+Y (anterior)'};
       labelz = {'-Z (inferior)'  '+Z (superior)'};

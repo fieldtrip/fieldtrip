@@ -380,7 +380,7 @@ bool readHeader() {
 	request.prepGetHeader();
 	
 	if (tcprequest(ftCon.getSocket(), request.out(), response.in()) < 0) {
-		errDisconnect("Error in communication - check buffer server.");
+		errDisconnect("Error in communication - check buffer server");
 		return false;
 	}
 	

@@ -1042,16 +1042,19 @@ opt.ijk = opt.ijk(1:3)';
 str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), xi, yi, zi), opt.ijk);
 
 if opt.init
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3].*opt.update, 'doscale', false, 'clim', opt.clim);
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   
   opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
-  parenttag  = get(cell2mat(get(opt.anahandles,'parent')),'tag');
+  parenttag = get(opt.anahandles,'parent');
+  parenttag{1} = get(parenttag{1}, 'tag');
+  parenttag{2} = get(parenttag{2}, 'tag');
+  parenttag{3} = get(parenttag{3}, 'tag');
   [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
   opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
   opt.anahandles = opt.anahandles(:)';
   set(opt.anahandles, 'tag', 'ana');
 else
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles.*opt.update, 'doscale', false, 'clim', opt.clim);
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   
   if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
     fprintf('==================================================================================\n');

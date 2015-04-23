@@ -15,7 +15,7 @@ int verbose = 0; /* FIXME: make static. */
 void cleanup_socket(int *arg) {
 	if (verbose>0) fprintf(stderr, "cleanup_socket: s = %d\n", *arg);
 	if ((*arg)>0) {
-		close_connection(*arg); /* FIXME: check return type. */
+		close_connection(*arg); /* FIXME: check return type */
     }
     *arg = 0;
 	return;
@@ -27,7 +27,7 @@ void cleanup_message(void **arg) {
 	if (message) {
 		FREE(message->def);
 		FREE(message->buf);
-		FREE(message); /* FIXME: freed message is still reachable arg! */
+		FREE(message); /* FIXME: freed message is still reachable from arg! */
 	}
 	return;
 }

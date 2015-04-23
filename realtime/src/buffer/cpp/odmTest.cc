@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
-	if (ODM.configureFromFile("config6.txt") != 0) {
+	if (ODM.configureFromFile("config.txt") != 0) {
 		fprintf(stderr, "Configuration file is invalid\n");
 		return 0;
 	}

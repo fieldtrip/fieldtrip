@@ -147,6 +147,11 @@ else
 end
 
 % check the consistency of the montage
+if ~iscell(montage.labelorg) || ~iscell(montage.labelnew)
+  error('montage labels need to be specified in cell-arrays');
+end
+
+% check the consistency of the montage
 if ~all(isfield(montage, {'tra', 'labelorg', 'labelnew'}))
   error('the second input argument does not correspond to a montage');
 end

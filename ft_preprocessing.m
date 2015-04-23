@@ -611,6 +611,9 @@ else
     if isfield(hdr, 'elec')
       dataout.elec             = hdr.elec;             % EEG information in header (f.e. headerformat = 'neuromag_fif')
     end
+    if isfield(hdr, 'opto')
+      dataout.opto             = hdr.opto;             % NIRS  information in header (f.e. headerformat = 'artinis')
+    end
     
   end % for all channel groups
   

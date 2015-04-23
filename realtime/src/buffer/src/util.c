@@ -369,7 +369,6 @@ int open_unix_connection(const char *name) {
  *
  */
 
-//#define EPOCHFILETIME (116444736000000000i64)
 #define EPOCHFILETIME ((INT64_T) 116444736000000000LL)
 
 #ifdef COMPILER_LCC
