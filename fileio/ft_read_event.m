@@ -608,8 +608,8 @@ switch eventformat
           % represent the annotation as event
           event(end+1).type    = 'annotation';
           event(end ).value    = anot;
-          event(end ).sample   = round(time*hdr.Fs) + 1;
-          event(end ).duration = duration;
+          event(end ).sample   = round(time*hdr.Fs) + 1; % expressed in samples, first sample in the file is 1
+          event(end ).duration = round(duration*hdr.Fs); % expressed in samples
           event(end ).offset   = 0;
         end
       end
