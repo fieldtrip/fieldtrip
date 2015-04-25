@@ -18,6 +18,10 @@ function [trl, event] = ft_trialfun_general(cfg)
 %   cfg.trialdef.eventtype  = '?'
 % a list with the events in your datafile will be displayed on screen.
 %
+% If you specify
+%   cfg.trialdef.eventtype = 'gui'
+% a graphical user interface will allow you to select events of interest.
+%
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
 % Copyright (C) 2005-2012, Robert Oostenveld
@@ -110,7 +114,6 @@ if isfield(cfg.trialdef, 'triallength')
   return
 end
 
-sel = [];
 trl = [];
 val = [];
 if isfield(cfg.trialdef, 'eventtype')
@@ -128,56 +131,20 @@ else
   usegui = 0;
 end
 
-if ~isfield(cfg.trialdef, 'eventvalue')
-  cfg.trialdef.eventvalue = [];
-elseif ischar(cfg.trialdef.eventvalue)
-  % convert single string into cell-array, otherwise the intersection does not work as intended
-  cfg.trialdef.eventvalue = {cfg.trialdef.eventvalue};
-end
+% start by selecting all events
+sel = true(1, length(event)); % this should be a row vector
 
-% select all events of the specified type and with the specified value
+% select all events of the specified type
 if isfield(cfg.trialdef, 'eventtype') && ~isempty(cfg.trialdef.eventtype)
-  sel = ismember({event.type}, cfg.trialdef.eventtype);
-else
-  sel = true(size(event));
+  for i=1:numel(event)
+    sel(i) = sel(i) && ismatch(event(i).type, cfg.trialdef.eventtype);
+  end
 end
 
-if ~isempty(cfg.trialdef.eventvalue)
-  % this cannot be done robustly in a single line of code
-  if ~iscell(cfg.trialdef.eventvalue)
-    valchar    = ischar(cfg.trialdef.eventvalue);
-    valnumeric = isnumeric(cfg.trialdef.eventvalue);
-  else
-    valchar    = ischar(cfg.trialdef.eventvalue{1});
-    valnumeric = isnumeric(cfg.trialdef.eventvalue{1});
-  end
+% select all events with the specified value
+if isfield(cfg.trialdef, 'eventvalue') && ~isempty(cfg.trialdef.eventvalue)
   for i=1:numel(event)
-    if (ischar(event(i).value) && valchar) || (isnumeric(event(i).value) && valnumeric)
-      if ~iscell(cfg.trialdef.eventvalue)
-        sel(i) = sel(i) & ~isempty(intersect(event(i).value, cfg.trialdef.eventvalue));
-      elseif ~isempty(event(i).value) % Don't want empty cells
-        % Cells - we need to make sure that we are dealing with cell arrays
-        % of strings and not numbers - in the future, it might be easier to
-        % just convert everything to cell arrays of strings to begin with
-        
-        if isnumeric(event(i).value)
-          eventvalue = num2str(event(i).value);
-        else
-          eventvalue = event(i).value;
-        end
-        
-        td_eventvalue = cell(size(cfg.trialdef.eventvalue));
-        for jj = 1:length(td_eventvalue)
-          if isnumeric(cfg.trialdef.eventvalue{jj})
-            td_eventvalue{jj} = num2str(cfg.trialdef.eventvalue{jj});
-          else
-            td_eventvalue{jj} = cfg.trialdef.eventvalue{jj};
-          end
-        end
-        
-        sel(i) = sel(i) & ~isempty(intersect({eventvalue}, td_eventvalue));
-      end
-    end
+    sel(i) = sel(i) && ismatch(event(i).value, cfg.trialdef.eventvalue);
   end
 end
 
@@ -236,11 +203,11 @@ for i=sel
   trlend = trlbeg + trldur;
   % add the beginsample, endsample and offset of this trial to the list
   % if all samples are in the dataset
-  if trlbeg>0 && trlend<=hdr.nSamples.*hdr.nTrials,
+  if trlbeg>0 && trlend<=hdr.nSamples*hdr.nTrials,
     trl = [trl; [trlbeg trlend trloff]];
     if isnumeric(event(i).value),
       val = [val; event(i).value];
-    elseif ischar(event(i).value) && (event(i).value(1)=='S'|| event(i).value(1)=='R')
+    elseif ischar(event(i).value) && numel(event(i).value)>1 && (event(i).value(1)=='S'|| event(i).value(1)=='R')
       % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
       val = [val; str2double(event(i).value(2:end))];
     else
@@ -254,7 +221,7 @@ if ~isempty(val) && ~all(isnan(val))
   trl = [trl val];
 end
 
-if usegui
+if usegui && ~isempty(trl)
   % This complicated line just computes the trigger times in seconds and
   % converts them to a cell array of strings to use in the GUI
   eventstrings = cellfun(@num2str, mat2cell((trl(:, 1)- trl(:, 3))./hdr.Fs , ones(1, size(trl, 1))), 'UniformOutput', 0);
@@ -305,7 +272,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that allows the user to select an event using gui
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function trialdef=select_event(event, trialdef)
+function trialdef = select_event(event, trialdef)
 if isempty(event)
   fprintf('no events were found in the datafile\n');
   return
@@ -325,7 +292,7 @@ else
   for i=1:Neventtype
     sel = find(strcmp(eventtype{i}, {event.type}));
     
-    emptyval=find(cellfun('isempty', {event(sel).value}));
+    emptyval = find(cellfun('isempty', {event(sel).value}));
     
     if all(cellfun(@isnumeric, {event(sel).value}))
       [event(sel(emptyval)).value]=deal(Inf);
@@ -338,21 +305,21 @@ else
       [event(sel(emptyval)).value]=deal('Inf');
       eventvalue = unique({event(sel).value});
       if ~iscell(eventvalue)
-        eventvalue={eventvalue};
+        eventvalue = {eventvalue};
       end
     end
     for j=1:length(eventvalue)
       if (isnumeric(eventvalue(j)) && eventvalue(j)~=Inf) || ...
           (iscell(eventvalue(j)) && ischar(eventvalue{j}) && ~strcmp(eventvalue{j}, 'Inf'))
-        settings=[settings; [eventtype(i), eventvalue(j)]];
+        settings = [settings; [eventtype(i), eventvalue(j)]];
       else
-        settings=[settings; [eventtype(i), {[]}]];
+        settings = [settings; [eventtype(i), {[]}]];
       end
       
       if isa(eventvalue, 'numeric')
-        strsettings=[strsettings; {['Type: ' eventtype{i} ' ; Value: ' num2str(eventvalue(j))]}];
+        strsettings = [strsettings; {['Type: ' eventtype{i} ' ; Value: ' num2str(eventvalue(j))]}];
       else
-        strsettings=[strsettings; {['Type: ' eventtype{i} ' ; Value: ' eventvalue{j}]}];
+        strsettings = [strsettings; {['Type: ' eventtype{i} ' ; Value: ' eventvalue{j}]}];
       end
     end
   end
@@ -361,11 +328,31 @@ else
     return
   end
   
-  [selection ok]= listdlg('ListString',strsettings, 'SelectionMode', 'multiple', 'Name', 'Select event', 'ListSize', [300 300]);
+  [selection, ok] = listdlg('ListString',strsettings, 'SelectionMode', 'multiple', 'Name', 'Select event', 'ListSize', [300 300]);
   
   if ok
-    trialdef.eventtype=settings(selection,1);
-    trialdef.eventvalue=settings(selection,2);
+    trialdef.eventtype  = settings(selection,1);
+    trialdef.eventvalue = settings(selection,2);
   end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION returns true if x is a member of array y, regardless of the class of x and y
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function s = ismatch(x, y)
+if isempty(x) || isempty(y)
+  s = false;
+elseif ischar(x) && iscell(y)
+  y = y(strcmp(class(x), cellfun(@class, y, 'UniformOutput', false)));
+  s = ismember(x, y);
+elseif isnumeric(x) && isnumeric(y)
+  s = ismember(x, y);
+elseif isnumeric(x) && iscell(y) && all(cellfun(@isnumeric, y))
+  s = false;
+  for i=1:numel(y)
+    s = s || ismember(x, y{i});
+  end
+else
+  s = false;
 end
 
