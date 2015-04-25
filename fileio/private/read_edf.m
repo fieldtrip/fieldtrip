@@ -219,10 +219,13 @@ if needhdr
     hdr.nChans       = EDF.NS;
     hdr.label        = cellstr(EDF.Label);
     % it is continuous data, therefore append all records in one trial
-    hdr.nSamples     = EDF.Dur * EDF.SampleRate(1);
+    hdr.nSamples     = EDF.NRec * EDF.Dur * EDF.SampleRate(1);
     hdr.nSamplesPre  = 0;
-    hdr.nTrials      = EDF.NRec;
+    hdr.nTrials      = 1;
     hdr.orig         = EDF;
+    % this will be used on subsequent reading of data
+    hdr.orig.chansel    = 1:hdr.nChans; 
+    hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
     
   elseif all(EDF.SampleRate(1:end-1)==EDF.SampleRate(1))
     % only the last channel has a deviant sampling frequency
@@ -236,9 +239,9 @@ if needhdr
     hdr.label        = cellstr(EDF.Label);
     hdr.label        = hdr.label(chansel);
     % it is continuous data, therefore append all records in one trial
-    hdr.nSamples     = EDF.Dur * EDF.SampleRate(chansel(1));
+    hdr.nSamples     = EDF.NRec * EDF.Dur * EDF.SampleRate(chansel(1));
     hdr.nSamplesPre  = 0;
-    hdr.nTrials      = EDF.NRec;
+    hdr.nTrials      = 1;
     hdr.orig         = EDF;
     % this will be used on subsequent reading of data
     hdr.orig.chansel    = chansel; 
@@ -259,9 +262,9 @@ if needhdr
     hdr.label        = cellstr(EDF.Label);
     hdr.label        = hdr.label(chansel);
     % it is continuous data, therefore append all records in one trial
-    hdr.nSamples     = EDF.Dur * EDF.SampleRate(chansel(1));
+    hdr.nSamples     = EDF.NRec * EDF.Dur * EDF.SampleRate(chansel(1));
     hdr.nSamplesPre  = 0;
-    hdr.nTrials      = EDF.NRec;
+    hdr.nTrials      = 1;
     hdr.orig         = EDF;
     % this will be used on subsequent reading of data
     hdr.orig.chansel    = chansel;
