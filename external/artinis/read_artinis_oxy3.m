@@ -33,7 +33,7 @@ else % nargin > 1 && ~islogical(header)
   if nargin <5
     chanindx = 1:size(data, 1);
     if nargin < 4
-      endsample = 1:size(data, 2);    
+      endsample = size(data, 2);    
       if nargin < 3
         begsample = 1;
       end
