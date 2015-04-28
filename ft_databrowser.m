@@ -686,8 +686,6 @@ end
 % 'edit preproc'-button
 uicontrol('tag', 'preproccfg', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string','preproc cfg','position', [0.91, 0.55 - ((iArt-1)*0.09), 0.08, 0.04],'callback',@preproc_cfg1_cb)
 
-
-
 ft_uilayout(h, 'tag', 'labels',  'width', 0.10, 'height', 0.05);
 ft_uilayout(h, 'tag', 'buttons', 'width', 0.05, 'height', 0.05);
 
@@ -701,7 +699,6 @@ ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto'
 
 definetrial_cb(h);
 redraw_cb(h);
-
 
 % %% Scrollbar
 %
