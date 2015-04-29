@@ -927,7 +927,7 @@ else
   % it is a parcellated source structure, i.e. represented by one channel per parcel
   % copy the geometrical description of the brainordinates into a sub-structure
   source.brainordinate = brainordinate;
-  source.label = {Parcel(:).Name};
+  source.label = {Parcel(:).Name}';
 end
 
 haslabeltable = false;
