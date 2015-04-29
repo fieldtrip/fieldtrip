@@ -945,7 +945,7 @@ if readdata
   if isfield(source, 'data')
     % rename the data field
     source.(fixname(dataname)) = source.data;
-    
+    source = rmfield(source, 'data');
 %     % adopt FT convention for parcel-to-label mapping
 %     if haslabeltable
 %       tempdata = nan+zeros(size(source.data));
