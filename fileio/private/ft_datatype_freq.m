@@ -106,6 +106,9 @@ end
 if isfield(freq, 'time') && ~isrow(freq.time)
   freq.time = freq.time';
 end
+if ~isfield(freq, 'label') && ~isfield(freq, 'labelcmb')
+  warning('data structure is incorrect since it has no channel labels');
+end
 
 switch version
   case '2011'
