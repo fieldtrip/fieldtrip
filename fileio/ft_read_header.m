@@ -239,6 +239,18 @@ hdr = [];
 % read the data with the low-level reading function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch headerformat
+   case 'AnyWave'
+    orig = read_ahdf5_hdr(datafile);
+    hdr.orig = orig;
+    hdr.Fs = orig.channels(1).samplingRate;
+    hdr.nChans = numel(orig.channels);
+    hdr.nSamples = orig.numberOfSamples;
+    hdr.nTrials = orig.numberOfBlocks;
+    hdr.nSamplesPre = 0;
+    hdr.label = orig.label;
+    hdr.reference = orig.reference(:);
+    hdr.chanunit = orig.unit(:);
+    hdr.chantype = orig.type(:);
   case '4d'
     orig            = read_4d_hdr(datafile);
     hdr.Fs          = orig.header_data.SampleFrequency;
