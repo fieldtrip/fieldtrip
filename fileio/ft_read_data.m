@@ -282,7 +282,8 @@ end
 % read the data with the low-level reading function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch dataformat
-  
+  case 'AnyWave'
+     dat = read_ah5_data(filename, hdr, begsample, endsample, chanindx);
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
     [fid,message] = fopen(datafile,'rb','ieee-be');
     % determine the type and size of the samples

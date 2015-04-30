@@ -1198,6 +1198,10 @@ elseif filetype_check_extension(filename, '.csv')
   type = 'csv';
   manufacturer = 'Generic';
   content = 'Comma-separated values, see http://en.wikipedia.org/wiki/Comma-separated_values';
+elseif filetype_check_extension(filename, '.ah5')
+    type = 'AnyWave';
+    manufacturer = 'AnyWave, http://meg.univ-amu.fr/wiki/AnyWave';
+    content = 'MEG/SEEG/EEG data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

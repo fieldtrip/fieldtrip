@@ -410,6 +410,8 @@ switch eventformat
       event = [];
     end
     
+  case 'AnyWave'
+    event = read_ah5_markers(hdr, filename);
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
     if fid==-1,
