@@ -152,7 +152,7 @@ elseif isfield(cfg, 'trialfun')
   cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
     
   if isempty(cfg.trialfun)
-    error('the specified trialfun was not found');
+    error('the specified trialfun ''%s'' was not found', func2str(cfg.trialfun));
   else
     fprintf('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
   end

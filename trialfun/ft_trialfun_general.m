@@ -342,10 +342,12 @@ end
 function s = ismatch(x, y)
 if isempty(x) || isempty(y)
   s = false;
+elseif ischar(x) && ischar(y)
+  s = strcmp(x, y);
+elseif isnumeric(x) && isnumeric(y)
+  s = ismember(x, y);
 elseif ischar(x) && iscell(y)
   y = y(strcmp(class(x), cellfun(@class, y, 'UniformOutput', false)));
-  s = ismember(x, y);
-elseif isnumeric(x) && isnumeric(y)
   s = ismember(x, y);
 elseif isnumeric(x) && iscell(y) && all(cellfun(@isnumeric, y))
   s = false;
