@@ -34,5 +34,5 @@ HEADERS += \
 
 
 LIBS +=             -L../../lib -lbuffer -lwinmm -lws2_32 \ #statically linked
-                    -L../../lib  -lfltk -lpthreadGC2 #dynamically linked, problematic in both cases
+                    -L../../lib -lfltk -lpthreadGC2 #dynamically linked, for some reason linking fltk statically didn't work
 #                    -L$$REALTIMEFOLDER/bin/win32 -lpthreadGC2 #dynamically linked
