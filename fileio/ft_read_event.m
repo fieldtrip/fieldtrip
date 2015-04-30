@@ -102,7 +102,7 @@ end
 if iscell(filename)
   warning_once(sprintf('concatenating events from %d files', numel(filename)));
   % use recursion to read events from multiple files
-
+  
   hdr = ft_getopt(varargin, 'header');
   if isempty(hdr) || ~isfield(hdr, 'orig') || ~iscell(hdr.orig)
     for i=1:numel(filename)
@@ -583,21 +583,33 @@ switch eventformat
       evt = (evt - hdr.orig.Off(hdr.orig.annotation)) ./ hdr.orig.Cal(hdr.orig.annotation);
       % convert the 16 bit format into the separate bytes
       evt = typecast(int16(evt), 'uint8');
-      % construct the Time-stamped Annotations Lists (TAL)
-      tal  = tokenize(evt, char(0), true);
+      % construct the Time-stamped Annotations Lists (TAL), see http://www.edfplus.info/specs/edfplus.html#tal
+      tal  = tokenize(char(evt), char(0), true);
       
       event = [];
       for i=1:length(tal)
-        tok  = tokenize(tal{i}, char(20));
-        time = str2double(char(tok{1}));
+        % the unprintable characters 20 and 21 are used as separators between time, duration and the annotation
+        % duration can be skipped in which case its preceding 21 must also be skipped
+        
+        tok = tokenize(tal{i}, char(20)); % split time and annotation
+        if any(tok{1}==21)
+          % the time and duration are specified
+          dum = tokenize(tok{1}, char(21)); % split time and duration
+          time     = str2double(dum{1});
+          duration = str2double(dum{2});
+        else
+          % only the time is specified
+          time     = str2double(tok{1});
+          duration = [];
+        end
         % there can be multiple annotations per time, the last cell is always empty
         for j=2:length(tok)-1
           anot = char(tok{j});
           % represent the annotation as event
           event(end+1).type    = 'annotation';
           event(end ).value    = anot;
-          event(end ).sample   = round(time*hdr.Fs) + 1;
-          event(end ).duration = 0;
+          event(end ).sample   = round(time*hdr.Fs) + 1; % expressed in samples, first sample in the file is 1
+          event(end ).duration = round(duration*hdr.Fs); % expressed in samples
           event(end ).offset   = 0;
         end
       end
@@ -829,52 +841,52 @@ switch eventformat
     % construct event according to FieldTrip rules
     eventCount = 0;
     for iXml = 1:length(eventNames)
-        eval(['eventField=isfield(xml.' eventNames{iXml} ',''event'');'])
-        if eventField
-            for iEvent = 1:length(xml.(eventNames{iXml}))
-                eventTime  = xml.(eventNames{iXml})(iEvent).event.beginTime;
-                eventTime(11) = ' '; eventTime(end-5:end) = [];
-                if strcmp('-',eventTime(21))
-                    % event out of range (before recording started): do nothing.
+      eval(['eventField=isfield(xml.' eventNames{iXml} ',''event'');'])
+      if eventField
+        for iEvent = 1:length(xml.(eventNames{iXml}))
+          eventTime  = xml.(eventNames{iXml})(iEvent).event.beginTime;
+          eventTime(11) = ' '; eventTime(end-5:end) = [];
+          if strcmp('-',eventTime(21))
+            % event out of range (before recording started): do nothing.
+          else
+            eventSDV = datenum(eventTime);
+            eventOffset = round((eventSDV - begSDV)*24*60*60*hdr.Fs); %in samples, relative to start of recording
+            if eventOffset < 0
+              % event out of range (before recording started): do nothing
+            else
+              % calculate eventSample, relative to start of epoch
+              if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
+                SampIndex=[];
+                for iEpoch = 1:size(hdr.orig.epochdef,1)
+                  [dum,dum2] = intersect(squeeze(Msamp2offset(2,iEpoch,:)), eventOffset);
+                  if ~isempty(dum2)
+                    EpochNum = iEpoch;
+                    SampIndex = dum2;
+                  end
+                end
+                if ~isempty(SampIndex)
+                  eventSample = Msamp2offset(1,EpochNum,SampIndex);
                 else
-                    eventSDV = datenum(eventTime);
-                    eventOffset = round((eventSDV - begSDV)*24*60*60*hdr.Fs); %in samples, relative to start of recording
-                    if eventOffset < 0
-                        % event out of range (before recording started): do nothing
-                    else
-                        % calculate eventSample, relative to start of epoch
-                        if isfield(hdr.orig.xml,'epochs') && length(hdr.orig.xml.epochs) > 1
-                            SampIndex=[];
-                            for iEpoch = 1:size(hdr.orig.epochdef,1)
-                                [dum,dum2] = intersect(squeeze(Msamp2offset(2,iEpoch,:)), eventOffset);
-                                if ~isempty(dum2)
-                                    EpochNum = iEpoch;
-                                    SampIndex = dum2;
-                                end
-                            end
-                            if ~isempty(SampIndex)
-                                eventSample = Msamp2offset(1,EpochNum,SampIndex);
-                            else
-                                eventSample=[]; %Drop event if past end of epoch
-                            end;
-                        else
-                            eventSample = eventOffset+1;
-                        end
-                        if ~isempty(eventSample)
-                            eventCount=eventCount+1;
-                            event(eventCount).type     = eventNames{iXml}(8:end);
-                            event(eventCount).sample   = eventSample;
-                            event(eventCount).offset   = 0;
-                            event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
-                            event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
-                            event(eventCount).orig    = xml.(eventNames{iXml})(iEvent).event;
-                        end;
-                    end  %if that takes care of non "-" events that are still out of range
-                end %if that takes care of "-" events, which are out of range
-            end %iEvent
-        end;
+                  eventSample=[]; %Drop event if past end of epoch
+                end;
+              else
+                eventSample = eventOffset+1;
+              end
+              if ~isempty(eventSample)
+                eventCount=eventCount+1;
+                event(eventCount).type     = eventNames{iXml}(8:end);
+                event(eventCount).sample   = eventSample;
+                event(eventCount).offset   = 0;
+                event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
+                event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
+                event(eventCount).orig    = xml.(eventNames{iXml})(iEvent).event;
+              end;
+            end  %if that takes care of non "-" events that are still out of range
+          end %if that takes care of "-" events, which are out of range
+        end %iEvent
+      end;
     end
- 
+    
     % add "epoch" events for epoched data, i.e. data with variable length segments
     if (hdr.nTrials==1)
       eventCount=length(event);
@@ -1759,6 +1771,9 @@ switch eventformat
     
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);
+    
+  case 'oxy3'
+    event = read_artinis_oxy3(filename, true);
     
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)

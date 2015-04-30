@@ -96,11 +96,12 @@ end
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 freq = fixdimord(freq);
 
-if ~iscolumn(freq.label)
-  freq.label = freq.label';
-end
 if ~isrow(freq.freq)
   freq.freq = freq.freq';
+end
+if isfield(freq, 'label') && ~iscolumn(freq.label)
+  % this is not present if the dimord is chancmb_freq or chancmb_freq_time
+  freq.label = freq.label';
 end
 if isfield(freq, 'time') && ~isrow(freq.time)
   freq.time = freq.time';

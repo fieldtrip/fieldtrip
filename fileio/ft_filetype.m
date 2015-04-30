@@ -980,6 +980,12 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nr
   manufacturer = 'BUCN';
   content = 'ascii formatted nirs data';
   
+  % known Artinis file format
+elseif filetype_check_extension(filename, '.oxy3')  
+  type = 'oxy3';
+  manufacturer = 'Artinis Medical Systems';
+  content = '(f)NIRS data';
+  
   % known TETGEN file types, see http://tetgen.berlios.de/fformats.html
 elseif any(filetype_check_extension(filename, {'.node' '.poly' '.smesh' '.ele' '.face' '.edge' '.vol' '.var' '.neigh'})) && exist(fullfile(p, [f '.node']), 'file') && filetype_check_ascii(fullfile(p, [f '.node']), 100) && exist(fullfile(p, [f '.poly']), 'file')
   type = 'tetgen_poly';

@@ -51,6 +51,8 @@ CHUNK_NIFTI1 = 5
 CHUNK_SIEMENS_AP = 6
 CHUNK_CTF_RES4 = 7
 CHUNK_NEUROMAG_FIF = 8
+CHUNK_NEUROMAG_ISOTRAK = 9
+CHUNK_NEUROMAG_HPIRESULT = 10
 
 # List for converting FieldTrip datatypes to Numpy datatypes
 numpyType = ['int8', 'uint8', 'uint16', 'uint32', 'uint64',
@@ -65,7 +67,7 @@ dataType = [-1, 5, 1, 6, 2, -1, -1, 7, 3, 8, 4, 9, 10]
 
 def serialize(A):
     """
-    Returns Fieldtrip data type and string representation of the given
+    Returns FieldTrip data type and string representation of the given
     object, if possible.
     """
     if isinstance(A, str):

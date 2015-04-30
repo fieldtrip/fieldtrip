@@ -9,7 +9,7 @@ MACHINE=`uname -m`
 echo $UNAME
 echo $MACHINE
 
-function contains() {
+function contains () {
     # helper function to determine whether a bash array contains a certain element
     # http://stackoverflow.com/questions/3685970/bash-check-if-an-array-contains-a-value
     local n=$#
@@ -26,7 +26,7 @@ function contains() {
 
 if [ "$UNAME" = "Linux" ]; then
   if [ "$MACHINE" = "armv6l" ]; then
-    BLACKLIST=(audio biosemi ctf emotiv neuralynx neuromag siemens tmsi tobi)
+    BLACKLIST=(amp audio biosemi ctf emotiv neuralynx neuromag siemens tmsi tobi)
   else
     BLACKLIST=(audio emotiv neuralynx siemens tmsi tobi)
   fi

@@ -172,19 +172,10 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'parallel', 'trials'});
 
 % determine the type of input data
-if isfield(data, 'freq')
-  isfreq     = 1;
-  iscomp     = 0;
-  istimelock = 0;
-elseif isfield(data, 'topo')
-  isfreq     = 0;
-  iscomp     = 1;
-  istimelock = 0;
-elseif isfield(data, 'time')
-  iscomp     = 0;
-  isfreq     = 0;
-  istimelock = 1;
-else
+isfreq     = ft_datatype(data, 'freq');
+iscomp     = ft_datatype(data, 'comp');
+istimelock = ft_datatype(data, 'timelock');
+if all(~[isfreq iscomp istimelock])
   error('input data is not recognized');
 end
 
@@ -208,6 +199,8 @@ cfg.wakewulf         = ft_getopt(cfg, 'wakewulf', 'yes');
 cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
 cfg.channel          = ft_getopt(cfg, 'channel',  'all');
 cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
+cfg.latency          = ft_getopt(cfg, 'latency',   'all');
+cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
 
 % the default for this depends on EEG/MEG and is set below
 % if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end
@@ -229,14 +222,9 @@ cfg.(cfg.method).lambda        = ft_getopt(cfg.(cfg.method), 'lambda',        []
 cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
 cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
 
-convertfreq = false;
 convertcomp = false;
-if ~istimelock && (strcmp(cfg.method, 'mne') || strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
+if iscomp && (strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
   % these timelock methods are also supported for frequency or component data
-  if isfreq
-    convertfreq = true;
-    % the conversion will be done below, after the latency, frequency and channel selection
-  end
   if iscomp
     convertcomp = true;
     % the conversion will be done below, after the latency and channel selection
@@ -251,8 +239,8 @@ elseif nargin<3 && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 
   error('randomization or permutation requires that you give two conditions as input');
 end
 
-if isfield(cfg, 'latency') && istimelock
-  error('specification of cfg.latency is only required for time-frequency data');
+if isfield(cfg, 'latency') && ischar(cfg.latency) && strcmp(cfg.latency, 'all') && istimelock
+  %error('specification of cfg.latency is only required for time-frequency data');
 end
 
 if sum([strcmp(cfg.jackknife, 'yes'), strcmp(cfg.bootstrap, 'yes'), strcmp(cfg.pseudovalue, 'yes'), strcmp(cfg.singletrial, 'yes'), strcmp(cfg.rawtrial, 'yes'), strcmp(cfg.randomization, 'yes'), strcmp(cfg.permutation, 'yes')])>1
@@ -299,14 +287,7 @@ elseif isfreq
 elseif iscomp
   % FIXME, select the components here
   % FIXME, add the component numbers to the output
-end
-
-if convertfreq || convertcomp 
-  % convert the data structure into a representation that can be handled by the low level functions
-  data        = ft_checkdata(data, 'datatype', 'timelock');
-  istimelock  = 1; % from now on the data can be treated as timelocked
-  isfreq      = 0;
-  iscomp      = 0;
+  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the fieldtrip development team');
 end
 
 if isfreq
@@ -368,18 +349,12 @@ elseif (strcmp(cfg.permutation,   'yes') || ...
   grid = ft_prepare_leadfield(cfg, data);
 else
   % only prepare the dipole grid positions, the leadfield will be computed on the fly if not present
-  tmpcfg = [];
+  
+  % copy all options that are potentially used in ft_prepare_sourcemodel
+  tmpcfg      = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
   tmpcfg.vol  = vol;
   tmpcfg.grad = sens; % this can be electrodes or gradiometers
-  % copy all options that are potentially used in ft_prepare_sourcemodel
-  try, tmpcfg.grid        = cfg.grid;         end
-  try, tmpcfg.mri         = cfg.mri;          end
-  try, tmpcfg.headshape   = cfg.headshape;    end
-  try, tmpcfg.symmetry    = cfg.symmetry;     end
-  try, tmpcfg.smooth      = cfg.smooth;       end
-  try, tmpcfg.threshold   = cfg.threshold;    end
-  try, tmpcfg.spheremesh  = cfg.spheremesh;   end
-  try, tmpcfg.inwardshift = cfg.inwardshift;  end
+  
   grid = ft_prepare_sourcemodel(tmpcfg);
   if isfield(grid,'leadfield') && isfield(grid,'label')
     if length(grid.label)<length(cfg.channel)
@@ -443,87 +418,106 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta'}))
+if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne', 'rv', 'music'}))
   
-  if strcmp(cfg.method, 'pcc')
-    % HACK: requires some extra defaults
-    if ~isfield(cfg, 'refdip'), cfg.refdip = []; end
-    if ~isfield(cfg, 'supdip'), cfg.supdip = []; end
-    if ~isfield(cfg, 'refchan'), cfg.refchan = []; end
-    if ~isfield(cfg, 'supchan'), cfg.supchan = []; end
-    cfg.refchan = ft_channelselection(cfg.refchan, data.label);
-    cfg.supchan = ft_channelselection(cfg.supchan, data.label);
-    
-    % HACK: use some experimental code
-    if nargin>2,
-      error('not supported')
-    end
-    tmpcfg         = cfg;
-    tmpcfg.refchan = ''; % prepare_freq_matrices should not know explicitly about the refchan
-    tmpcfg.channel = cfg.channel(:)';
-    if isfield(cfg, 'refchan')
-      % add the refchan implicitely
-      tmpcfg.channel = [tmpcfg.channel cfg.refchan(:)'];
-    end
-    if isfield(cfg, 'supchan')
-      % add the supchan implicitely
-      tmpcfg.channel = [tmpcfg.channel cfg.supchan(:)'];
-    end
-    
-    % select the data in the channels and the frequency of interest
-    [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
-    
-    if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
-      [dum, refchanindx] = match_str(cfg.refchan, tmpcfg.channel);
-    else
-      refchanindx = [];
-    end
-    if isfield(cfg, 'supchan') && ~isempty(cfg.supchan)
-      [dum, supchanindx] = match_str(cfg.supchan,tmpcfg.channel);
-    else
-      supchanindx = [];
-    end
-    Nchans = length(tmpcfg.channel); % update the number of channels
-    
-    % if the input data has a complete fourier spectrum, project it through the filters
-    % FIXME it was incorrect , since the
-    % ' leads to a conjugate transposition check this in beamformer_pcc
-    if isfield(data, 'fourierspctrm')
-      [dum, datchanindx] = match_str(tmpcfg.channel, data.label);
-      fbin = nearest(data.freq, cfg.frequency);
-      if strcmp(data.dimord, 'chan_freq')
-        avg = data.fourierspctrm(datchanindx, fbin);
-      elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq'),
-        %avg = data.fourierspctrm(:, datchanindx, fbin)';
-        avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
-      elseif strcmp(data.dimord, 'chan_freq_time')
-        tbin = nearest(data.time, cfg.latency);
-        avg = data.fourierspctrm(datchanindx, fbin, tbin);
-      elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time'),
-        tbin = nearest(data.time, cfg.latency);
-        %avg = data.fourierspctrm(:, datchanindx, fbin, tbin)';
-        avg = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
+  switch cfg.method
+    case 'pcc'
+      % this can handle both a csd matrix and a fourier matrix, but needs
+      % special handling of the refdip etc.
+      cfg.refdip = ft_getopt(cfg, 'refdip', []);
+      cfg.supdip = ft_getopt(cfg, 'supdip', []);
+      cfg.refchan = ft_getopt(cfg, 'refchan', []);
+      cfg.supchan = ft_getopt(cfg, 'supchan', []);
+      cfg.refchan = ft_channelselection(cfg.refchan, data.label);
+      cfg.supchan = ft_channelselection(cfg.supchan, data.label);
+      
+      % HACK: use some experimental code
+      if nargin>2,
+        error('not supported')
       end
-    else
-      avg = [];
-    end
+      tmpcfg         = cfg;
+      tmpcfg.refchan = ''; % prepare_freq_matrices should not know explicitly about the refchan
+      tmpcfg.channel = cfg.channel(:)';
+      if isfield(cfg, 'refchan')
+        % add the refchan implicitely
+        tmpcfg.channel = [tmpcfg.channel cfg.refchan(:)'];
+      end
+      if isfield(cfg, 'supchan')
+        % add the supchan implicitely
+        tmpcfg.channel = [tmpcfg.channel cfg.supchan(:)'];
+      end
+      
+      % select the data in the channels and the frequency of interest
+      [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
+      
+      if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
+        [dum, refchanindx] = match_str(cfg.refchan, tmpcfg.channel);
+      else
+        refchanindx = [];
+      end
+      if isfield(cfg, 'supchan') && ~isempty(cfg.supchan)
+        [dum, supchanindx] = match_str(cfg.supchan,tmpcfg.channel);
+      else
+        supchanindx = [];
+      end
+      Nchans = length(tmpcfg.channel); % update the number of channels
+      
+      % if the input data has a complete fourier spectrum, it can be projected through the filters
+      if isfield(data, 'fourierspctrm')
+        [dum, datchanindx] = match_str(tmpcfg.channel, data.label);
+        fbin = nearest(data.freq, cfg.frequency);
+        if strcmp(data.dimord, 'chan_freq')
+          avg = data.fourierspctrm(datchanindx, fbin);
+        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq'),
+          avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
+        elseif strcmp(data.dimord, 'chan_freq_time')
+          tbin = nearest(data.time, cfg.latency);
+          avg = data.fourierspctrm(datchanindx, fbin, tbin);
+        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time'),
+          tbin = nearest(data.time, cfg.latency);
+          avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
+        end
+      else
+        avg = [];
+      end
+      
+    case {'eloreta' 'mne' 'rv' 'music'}
+      % these can handle both a csd matrix and a fourier matrix
+      [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, data);
+      
+      % if the input data has a complete fourier spectrum, it can be projected through the filters
+      if isfield(data, 'fourierspctrm')
+        [dum, datchanindx] = match_str(cfg.channel, data.label);
+        fbin = nearest(data.freq, cfg.frequency);
+        if strcmp(data.dimord, 'chan_freq')
+          avg = data.fourierspctrm(datchanindx, fbin);
+        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq'),
+          avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
+        elseif strcmp(data.dimord, 'chan_freq_time')
+          tbin = nearest(data.time, cfg.latency);
+          avg = data.fourierspctrm(datchanindx, fbin, tbin);
+        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time'),
+          tbin = nearest(data.time, cfg.latency);
+          avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
+        end
+      else
+        avg = [];
+      end
+      
+    case 'dics'
     
-  else
-    % HACK: use the default code
-    % convert the input data, so that Cf, Cr and Pr contain either the average over all trials (if Ntrials==1)
-    % or the individual cross-spectral-densities/powers of each individual trial (if Ntrials>1)
-    [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, data);
-  end
-  
-  if strcmp(cfg.method, 'dics')
-    % assign a descriptive name to each of the dics sub-methods, the default is power only
-    if strcmp(cfg.method, 'dics') && isfield(cfg, 'refdip') && ~isempty(cfg.refdip);
-      submethod = 'dics_refdip';
-    elseif strcmp(cfg.method, 'dics') && isfield(cfg, 'refchan') && ~isempty(cfg.refchan);
-      submethod = 'dics_refchan';
-    else
-      submethod = 'dics_power';
-    end
+      [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, data);
+      
+      % assign a descriptive name to each of the dics sub-methods, the default is power only
+      if isfield(cfg, 'refdip') && ~isempty(cfg.refdip);
+        submethod = 'dics_refdip';
+      elseif isfield(cfg, 'refchan') && ~isempty(cfg.refchan);
+        submethod = 'dics_refchan';
+      else
+        submethod = 'dics_power';
+      end
+      
+    otherwise
   end
   
   % fill these with NaNs, so that I dont have to treat them separately
@@ -662,19 +656,34 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta'}))
       ft_progress(i/Nrepetitions, 'scanning repetition %d of %d', i, Nrepetitions);
     end
     
-    if     strcmp(cfg.method, 'dics') && strcmp(submethod, 'dics_power')
-      dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:});
-    elseif strcmp(cfg.method, 'dics') && strcmp(submethod, 'dics_refchan')
-      dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:}, 'Cr', Cr(i,:), 'Pr', Pr(i));
-    elseif strcmp(cfg.method, 'dics') && strcmp(submethod, 'dics_refdip')
-      dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip);
-    elseif strcmp(cfg.method, 'pcc')
-      dip(i) = beamformer_pcc(grid, sens, vol, avg, squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
-    elseif strcmp(cfg.method, 'eloreta')
-      dip(i) = ft_eloreta(grid, sens, vol, [], squeeze(Cf(i,:,:)), optarg{:});
-    else
-      error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
+    switch cfg.method
+      case 'dics'
+        if strcmp(submethod, 'dics_power')
+          dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:});
+        elseif strcmp(submethod, 'dics_refchan')
+          dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:}, 'Cr', Cr(i,:), 'Pr', Pr(i));
+        elseif strcmp(submethod, 'dics_refdip')
+          dip(i) = beamformer_dics(grid, sens, vol, [],  squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip);
+        end
+      case 'pcc'
+        if ~isempty(avg) && istrue(cfg.rawtrial)
+          % FIXME added by jansch because an appropriate subselection of avg
+          % should be done first (i.e. select the tapers that belong to this
+          % repetition
+          error('rawtrial in combination with pcc has been temporarily disabled');
+        else
+          dip(i) = beamformer_pcc(grid, sens, vol, avg, squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
+        end
+      case 'eloreta'
+        dip(i) = ft_eloreta(grid, sens, vol, avg, squeeze(Cf(i,:,:)), optarg{:});
+      case 'mne'
+        dip(i) = minimumnormestimate(grid, sens, vol, avg, optarg{:});
+        % error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
+      case {'rv' 'music'}
+        error('method ''%s'' is temporarily unsupported for source reconstruction with frequency domain data. Please contact the fieldtrip development team if you think that you need this functionality',cfg.method);
+      otherwise 
     end
+    
   end
   if Nrepetitions > 1
     ft_progress('close');
@@ -1004,7 +1013,11 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music'
     error(sprintf('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method));
   end
   
-end % if freq or timelock data
+elseif iscomp
+  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the fieldtrip development team');
+else
+  error('the specified method ''%s'' combined with the input data of type ''%s'' are not supported', cfg.method, ft_datatype(data));
+end % if freq or timelock or comp data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % clean up and collect the results
@@ -1040,12 +1053,6 @@ end
 % remove the precomputed leadfields from the cfg regardless of what keepleadfield is saying
 % it should not be kept in cfg, since there it takes up too much space
 cfg.grid = removefields(cfg.grid, {'leadfield'});
-
-if convertfreq
-  % FIXME, convert the source reconstruction back to a frequency representation
-elseif convertcomp
-  % FIXME, convert the source reconstruction back to a component representation
-end
 
 if strcmp(cfg.jackknife, 'yes')
   source.method = 'jackknife';

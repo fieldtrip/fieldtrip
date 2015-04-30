@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010, Stefan Klanke
+ * 	Modified by Tim van Mourik 2015
  * Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
@@ -241,7 +242,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	Fl::visual(FL_RGB);
-	window = new Fl_Window(100,100,400,350,"Realtime fMRI streamer");
+	window = new Fl_Window(100,100,400,350,"Realtime fMRI streamer, (C) Stefan Klanke & Tim van Mourik");
 	inpHostname = new Fl_Input(20,30,200,25,"Hostname");
 	inpPort = new Fl_Int_Input(230,30,60,25,"Port");
 	butConnect = new Fl_Button(300,30,80,25,"Connect");

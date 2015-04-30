@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010, Stefan Klanke
+ * 	Modified by Tim van Mourik 2015
  * Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
@@ -12,8 +13,10 @@ FolderWatcher::FolderWatcher(const char *directory) : vecFilenames(0) {
 	isListening = false;
 	
 	activeBuffer = 0;
-	
-	dirHandle = CreateFile(directory, 
+
+//    dirHandle = CreateFile(directory,
+//    dirHandle = CreateFile((LPCSTR)directory,
+    dirHandle = CreateFile((LPCWSTR)directory,
 					FILE_LIST_DIRECTORY, 
 					FILE_SHARE_WRITE|FILE_SHARE_READ|FILE_SHARE_DELETE, 
 					NULL, 
@@ -85,8 +88,9 @@ int FolderWatcher::processChanges(int which) {
 		
 		fileInfoBufferPtr += info->NextEntryOffset;
 		#ifdef UNICODE
-        lstrcpynW(filename, info->FileName, min(MAX_PATH, info->FileNameLength / sizeof(WCHAR) + 1));
-		#else
+//        lstrcpynW(filename, info->FileName, std::min((long unsigned int)MAX_PATH, info->FileNameLength / sizeof(WCHAR) + 1));
+        lstrcpynW((LPWSTR)filename, info->FileName, std::min((long unsigned int)MAX_PATH, info->FileNameLength / sizeof(WCHAR) + 1));
+        #else
         {
             int count = WideCharToMultiByte(CP_ACP, 0, info->FileName, info->FileNameLength / sizeof(WCHAR), filename, MAX_PATH - 1, NULL, NULL);
             filename[count] = 0;

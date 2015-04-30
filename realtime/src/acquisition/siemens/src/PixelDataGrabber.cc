@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010, Stefan Klanke
+ * 	Modified by Tim van Mourik 2015
  * Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
  * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
@@ -625,8 +626,9 @@ bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf, bo
 	HANDLE fHandle;
 	LARGE_INTEGER creationThisFile;
 
-	fHandle = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	
+//    fHandle = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    fHandle = CreateFile((LPCWSTR)filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
 	if (fHandle != INVALID_HANDLE_VALUE) {
 		DWORD read, size;
 		FILETIME fileTime;

@@ -1027,6 +1027,9 @@ switch dataformat
     tmp = np_readdata(filename, hdr.orig, begsample - 1, endsample - begsample + 1, 'samples');
     dat = tmp.data(:,chanindx)';
     
+  case 'oxy3'
+    dat = read_artinis_oxy3(filename, hdr, begsample, endsample, chanindx);
+    
   case 'plexon_ds'
     dat = read_plexon_ds(filename, hdr, begsample, endsample, chanindx);
     

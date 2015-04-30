@@ -1,17 +1,13 @@
-function SP=sap2matlab(blob)
-
 % SAP2MATLAB parses Siemens ASCII protocol data and generates a 
 % corresponding MATLAB data structure.
 %
-% Use as
-%   SP = sap2matlab(blob)
-%
-% where 'blob' needs to be of type uint8 or char. This function
+% This function
 % is currently used for de-serialising the header information
 % from a FieldTrip buffer containing fMRI data from a Siemens
 % scanner.
 
-% Copyright (C) 2010, Stefan Klanke
+% Copyright (C) 2010, Stefan Klanke,
+% 	Modified by Tim van Mourik, 2014
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -33,15 +29,27 @@ function SP=sap2matlab(blob)
 
 warning('Trying to compile MEX file')
 oldDir = pwd;
-[srcDir, srcName] = fileparts(mfilename('fullpath'));
 try
-  cd(srcDir);			% we're now in private
-  cd('../siemens');
-  mex sap2matlab.c siemensap.c -I.
-  cd(oldDir);
-  SP = sap2matlab(blob);
+    %This is where the header files are located
+    options = '-I../include';
+    %These two C-files are copiled 
+    fileNames = '../src/sap2matlab.c ../src/siemensap.c ';
+    %the compilation does not depend on external libraries
+    libraries = [];
+    eval(['mex ' fileNames, libraries, options]);
 catch
-  cd(oldDir);
-  rethrow(lasterror)
+    rethrow(lasterror)
 end
+
+%% Test
+%This file contains an example string that will be parsed by sap2matlab
+load('mrprotString.mat');
+S = sap2matlab(apstr);
+
+
+
+
+
+
+
 

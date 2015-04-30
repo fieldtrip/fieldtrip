@@ -30,9 +30,8 @@
 
 void reportPmError(PmError err);
 
-int isInit = 0;
+int isInit = 0, openID = -1;
 PortMidiStream *outStream = NULL;
-int openID = -1;
 
 void exitFunction() {
   if (isInit) {
@@ -89,6 +88,8 @@ mxArray *getDevices() {
 void reportPmError(PmError err) {
   switch(err) {
     case pmNoError:
+      return;
+    case pmGotData:
       return;
     case pmHostError:
       mexErrMsgTxt("PortMidi error: Host error");
@@ -251,7 +252,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       break;
     case 'C':   /* Close output stream */
       if (outStream == NULL) {
-        mexWarnMsgTxt("No MIDI output device is opened - ignoring 'close' command.");
+        mexWarnMsgTxt("No MIDI output device is opened - ignoring 'close' command");
       } else {
         err = Pm_Close(outStream);
         outStream = NULL;
@@ -264,7 +265,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       
       if (nrhs<2 || !mxIsNumeric(prhs[1])) mexErrMsgTxt("Bad call\n");
       device = (int) mxGetScalar(prhs[1]);
-      if (device < 1 || device > Pm_CountDevices()) mexErrMsgTxt("Device index out of range.");
+      if (device < 1 || device > Pm_CountDevices()) mexErrMsgTxt("Device index out of range");
       --device;
       
       if (outStream != NULL) {
@@ -272,7 +273,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           mexWarnMsgTxt("MIDI output device is already open - ignoring request");
           return;
         }
-        mexWarnMsgTxt("Another MIDI output device is open - closing that one.");
+        mexWarnMsgTxt("Another MIDI output device is open - closing that one");
         err = Pm_Close(outStream);
         outStream = NULL;
         if (err != pmNoError) reportPmError(err);

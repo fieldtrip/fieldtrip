@@ -32,9 +32,11 @@ function varargout = midiOut(varargin)
 % >> midiOut(msg)
 % Send raw data. 'msg' must be of type 'uint8' and have a multiple of 3 elements.
 %
-% For example, play the note C4 (261.63 Hz) on a piano
+% For example, play the note C4 (261.63 Hz) on the piano
 % >> midiOut('O', 2)
 % >> midiOut('+', 1, 60, 127)
+%
+% See also MIDIIN
 
 % Copyright (C) 2010, Stefan Klanke
 %

@@ -42,8 +42,10 @@ function [type] = ft_senstype(input, desired)
 %   'biosemi256'
 %   'neuralynx'
 %   'plexon'
+%   'artinis'
 %   'eeg' (this was called 'electrode' in older versions)
 %   'meg' (this was called 'magnetometer' in older versions)
+%   'nirs'
 %
 % The optional input argument for the desired type can be any of the above,
 % or any of the following
@@ -124,16 +126,17 @@ if isequal(current_argin, previous_argin)
   return
 end
 
-isdata   = isa(input, 'struct')  && (isfield(input, 'hdr') || isfield(input, 'time') || isfield(input, 'freq') || isfield(input, 'grad') || isfield(input, 'elec'));
+isdata   = isa(input, 'struct')  && (isfield(input, 'hdr') || isfield(input, 'time') || isfield(input, 'freq') || isfield(input, 'grad') || isfield(input, 'elec') || isfield(input, 'opto'));
 isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
 iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
 isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style
 iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style
+isnirs   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'transceiver');             
 islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
 haslabel = isa(input, 'struct')  && isfield(input, 'label');
 
-if ~(isdata || isheader || isgrad || iselec || islabel || haslabel) && isfield(input, 'hdr')
+if ~(isdata || isheader || isgrad || iselec || isnirs || islabel || haslabel) && isfield(input, 'hdr')
   input    = input.hdr;
   isheader = true;
 end
@@ -153,6 +156,9 @@ if isdata
   elseif issubfield(input, 'hdr.elec')
     sens   = input.hdr.elec;
     iselec = true;
+  elseif issubfield(input, 'hdr.opto')
+    sens   = input.hdr.opto;
+    isnirs = true;
   elseif issubfield(input, 'hdr.label')
     sens.label = input.hdr.label;
     islabel    = true;
@@ -168,6 +174,9 @@ elseif isheader
   elseif isfield(input, 'elec')
     sens   = input.elec;
     iselec = true;
+  elseif isfield(input, 'opto')
+    sens   = input.opto;
+    isnirs = true;
   elseif isfield(input, 'label')
     sens.label = input.label;
     islabel    = true;
@@ -177,6 +186,9 @@ elseif isgrad
   sens = input;
   
 elseif iselec
+  sens = input;
+  
+elseif isnirs
   sens = input;
   
 elseif islabel
@@ -270,6 +282,18 @@ else
       type = 'eeg';
     end
     
+  elseif isnirs
+    % this looks like NIRS
+    
+    % determine the type of eeg/acquisition system based on the channel names alone
+    % this uses a recursive call to the "islabel" section further down
+    type = ft_senstype(sens.label);
+    %sens_temp.type = type;
+    if strcmp(type, 'unknown') %|| ~ft_senstype(sens_temp,'eeg')
+      % although we don't know the type, we do know that it is EEG
+      type = 'nirs';
+    end
+    
   elseif islabel
     % look only at the channel labels
     if     (mean(ismember(ft_senslabel('ant128'),         sens.label)) > 0.8)
@@ -350,9 +374,11 @@ else
     elseif any(ismember(ft_senslabel('btiref'), sens.label))
       type = 'bti'; % it might be 148 or 248 channels
     elseif any(ismember(ft_senslabel('ctfref'), sens.label))
-      type = 'ctf'; % it might be 151 or 275 channels
-    end
+      type = 'ctf'; % it might be 151 or 275 channels     
     
+%     elseif (mean(ismember(sens.label,    ft_senslabel('nirs'))) > 0.8)
+%       type = 'nirs';
+    end
   end % look at label, ori and/or pnt
 end % if isfield(sens, 'type')
 
