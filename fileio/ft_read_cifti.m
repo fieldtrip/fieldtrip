@@ -927,7 +927,7 @@ else
   % it is a parcellated source structure, i.e. represented by one channel per parcel
   % copy the geometrical description of the brainordinates into a sub-structure
   source.brainordinate = brainordinate;
-  source.label = {Parcel(:).Name};
+  source.label = {Parcel(:).Name}';
 end
 
 haslabeltable = false;
@@ -945,7 +945,7 @@ if readdata
   if isfield(source, 'data')
     % rename the data field
     source.(fixname(dataname)) = source.data;
-    
+    source = rmfield(source, 'data');
 %     % adopt FT convention for parcel-to-label mapping
 %     if haslabeltable
 %       tempdata = nan+zeros(size(source.data));

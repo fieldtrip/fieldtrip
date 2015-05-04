@@ -6,19 +6,19 @@ FTBUFFER =          $$REALTIMEFOLDER/src/buffer
 SOURCE_DIRECTORY =  $$FTBUFFER/src
 INCLUDE_DIRECTORY = $$FTBUFFER/src
 
+CONFIG +=           static
+
+OBJECTS_DIR =       obj
+
 TEMPLATE =          lib
 
-Debug:TARGET =      ../../../debug/buffer
-Release:TARGET =    ../../../release/buffer
+TARGET =            ../../../lib/buffer
 
 INCLUDEPATH +=      $$FTBUFFER/src
 
 win32:{
-Debug:LIBS +=       -L../../debug -lpthreadGC2 \
-                    -L../../debug -lws2_32
-
-Release:LIBS +=     -L../../release -lpthreadGC2 \
-                    -L../../release -lws2_32
+LIBS +=             -L$$REALTIMEFOLDER/bin/win32 -lpthreadGC2 \ #dynamic
+                    -L../../lib -lwinmm -lws2_32 #static
 }
 
 HEADERS += \

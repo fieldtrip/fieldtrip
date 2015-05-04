@@ -4,18 +4,22 @@
 REALTIMEFOLDER=     ../../../../..
 FTBUFFER =          $$REALTIMEFOLDER/src/buffer
 
-CONFIG += static
-
 SOURCE_DIRECTORY =  ../../src
 INCLUDE_DIRECTORY = ../../include
 
-Debug:TARGET =      ../../../debug/gui_streamer
-Release:TARGET =    ../../../release/gui_streamer
+CONFIG += static
+
+OBJECTS_DIR =       obj
+
+win32:{
+#TARGET =            $$REALTIMEFOLDER/../bin/win32/gui_streamer
+TARGET =            ../../../bin/win32/gui_streamer
+}
 
 INCLUDEPATH +=      ../../include \
                     $$FTBUFFER/src \
                     $$FTBUFFER/cpp \
-                    ../../fltk
+                    ../../fltk #change this path to FieldTrip/external
 
 SOURCES += \
                     $$SOURCE_DIRECTORY/gui_streamer.cc \
@@ -29,5 +33,6 @@ HEADERS += \
                     $$INCLUDE_DIRECTORY\siemensap.h
 
 
-Debug:LIBS +=       -L../../debug -lwinmm -lws2_32 -lbuffer -lfltk
-Release:LIBS +=     -L../../release -lwinmm -lws2_32 -lbuffer -lfltk
+LIBS +=             -L../../lib -lbuffer -lwinmm -lws2_32 \ #statically linked
+                    -L../../lib -lfltk -lpthreadGC2 #dynamically linked, for some reason linking fltk statically didn't work
+#                    -L$$REALTIMEFOLDER/bin/win32 -lpthreadGC2 #dynamically linked
