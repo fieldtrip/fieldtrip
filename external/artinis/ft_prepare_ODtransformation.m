@@ -19,9 +19,6 @@ function [montage, cfg] = ft_prepare_ODtransformation(cfg, data)
 %  cfg.channel            = Nx1 cell-array with selection of channels
 %                           (default = 'nirs'), see FT_CHANNELSELECTION for
 %                           more details
-%  cfg.target             = string, can be 'OD; (optical densities), 'O2Hb'
-%                           (oxygenated hemoglobin) or 'HHb' (deoxygenated
-%                           hemoglobin')
 %
 % Optional configuration settings are
 %  cfg.age                = scalar, age of the subject (necessary to
@@ -92,13 +89,8 @@ data = ft_checkdata(data);
 
 % set the defaults
 cfg.channel = ft_getopt(cfg, 'channel', 'nirs');
-cfg.target  = ft_getopt(cfg, 'target', []);
 cfg.age     = ft_getopt(cfg, 'age', []);
 cfg.dpf     = ft_getopt(cfg, 'dpf', []);
-
-if isempty(cfg.target)
-  error('no target of the transformation specified');
-end
 
 % get the optode definition
 %sens = ft_fetch_sens(cfg, data);
@@ -140,7 +132,6 @@ end
 chanidx     = match_str(sens.label, cfg.channel);
 
 % check on DPF values
-dpfs = [];
 if ~isempty(cfg.age) && ~isempty(cfg.dpf)
   error('unsure if age or dpf in configuration should take precedence');
 elseif ~isempty(cfg.age)
@@ -151,20 +142,9 @@ else
   dpfs = sens.DPF(chanidx);
 end
 
-% check how many and which chromophores are desired
-switch(cfg.target)
-  case 'OD'
-    inverse = true;
-    error('not implemented yet')
-  case 'O2Hb'
-    chromophoreIdx = 3;
-    chromophoreName = 'O2Hb';
-  case 'HHb'
-    chromophoreIdx = 2;
-    chromophoreName = 'HHb';
-  otherwise
-    error('target conversion chromophore not identified');
-end
+% which chromophores are desired
+chromophoreIdx = [3 2];
+chromophoreName = {'O2Hb' 'HHb'};
 
 %% transform to concentrations or to OD
 % read in the coefficient table
@@ -229,7 +209,7 @@ for c=1:size(chancmb, 2)
   % create the new labels for the channels
   chanorg = cfg.channel(find(chanidx, 1, 'first'));
   for n=1:numel(chromophoreIdx)
-    labelnew(traIdx(n)) = regexprep(chanorg, sprintf('%s%s', regexptranslate('wildcard', '[*]'), '$'), sprintf('[%s]', chromophoreName));
+    labelnew(traIdx(n), 1) = regexprep(chanorg, sprintf('%s%s', regexptranslate('wildcard', '[*]'), '$'), sprintf('[%s]', chromophoreName{n}));
   end
   
   

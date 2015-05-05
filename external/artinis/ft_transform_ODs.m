@@ -15,10 +15,10 @@ function [data] = ft_transform_ODs(cfg, data)
 %  cfg.channel            = Nx1 cell-array with selection of channels
 %                           (default = 'nirs'), see FT_CHANNELSELECTION for
 %                           more details
-%  cfg.target             = Mx1 cell-array, can be 'OD' (optical densities), 
-%                           'O2Hb' (oxygenated hemoglobin), 'HHb' de-
-%                           oxygenated hemoglobin') or 'tHb' (total hemo-
-%                           globin), or a combination of those 
+%  cfg.target             = Mx1 cell-array, can be 'O2Hb' (oxygenated hemo-
+%                           globin), 'HHb' de-oxygenated hemoglobin') or 
+%                           'tHb' (total hemoglobin), or a combination of 
+%                           those (default: {'O2Hb', 'HHb'})
 %
 % Optional configuration settings are
 %  cfg.age                = scalar, age of the subject (necessary to
@@ -96,6 +96,8 @@ ft_preamble provenance  data
 ft_preamble trackconfig
 ft_preamble debug
 
+cfg.channel = ft_getopt(cfg, 'channel', 'nirs');
+
 data = ft_checkdata(data, 'datatype', {'raw', 'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 
 % determine the type of input data
@@ -123,7 +125,9 @@ else
   error('input data is not recognized');
 end
 
-cfg.target  = ft_getopt(cfg, 'target', 'tHb');
+data = ft_selectdata(cfg, data);
+
+cfg.target  = ft_getopt(cfg, 'target', {'O2Hb', 'HHb'});
 
 target = cfg.target;
 if ~iscell(target)
@@ -134,61 +138,61 @@ tHbidx = ismember(target, 'tHb');
 HHbidx = ismember(target, 'HHb');
 O2Hbidx = ismember(target, 'O2Hb');
 
-computetHb = tHbidx~=0;
-existsHHb  = isempty(HHbidx);
-existsO2Hb  = isempty(O2Hbidx);
+computetHb  = tHbidx~=0;
+computeHHb  = HHbidx~=0;
+computeO2Hb = O2Hbidx~=0;
 
-% total hemoglobin is the sum of oxygenated and deoxygenated hemoglobin
-if computetHb
-  if ~existsHHb
-    target{end+1} = 'HHb';
-    HHbidx = numel(target);
-  end
-  if ~existsO2Hb
-    target{end+1} = 'O2Hb';
-    O2Hbidx = numel(target);
-  end
-end
+% cfg-handling is done inside here
+[montage, cfg] = ft_prepare_ODtransformation(cfg, data);
 
-
-for t=1:numel(target)
+% save montage in the cfg
+cfg.montage = montage;
   
-  if (t==tHbidx)
-    continue; % this will be dealt with later
-  end
-  
-  cfg.target = target{t};
-  % cfg-handling is done inside here
-  [montage, cfg] = ft_prepare_ODtransformation(cfg, data);
-  
-  % save montage in the cfg
-  cfg.montage{t} = montage;  
-end
+% apply the (combined) montages
+dataout = ft_apply_montage(data, montage);
 
 if computetHb
-  % make a single montage matrix
-  cfg.montage{tHbidx}.labelorg = cfg.montage{HHbidx}.labelorg;
-  cfg.montage{tHbidx}.labelnew = regexprep(cfg.montage{HHbidx}.labelnew, sprintf('%s%s', regexptranslate('wildcard', '[*]'), '$'), sprintf('[%s]', target{tHbidx}));
-  cfg.montage{tHbidx}.tra      = cfg.montage{HHbidx}.tra+cfg.montage{O2Hbidx}.tra;  
+  % total hemoglobin is the sum of oxygenated and deoxygenated hemoglobin
+  tmpcfg = [];
+  tmpcfg.channel = '*[O2Hb]';
+  dataO2Hb = ft_selectdata(tmpcfg, dataout);
+  dataO2Hb.label = strrep(dataO2Hb.label, 'O2Hb', 'tHb');
   
-  %order reversed wrt above!
-  if ~existsO2Hb
-    cfg.montage(O2Hbidx) = [];
-    target(O2Hbidx) = [];
-  end
+  tmpcfg = [];
+  tmpcfg.channel = '*[HHb]';
+  dataHHb = ft_selectdata(tmpcfg, dataout);
+  dataHHb.label = strrep(dataHHb.label, 'HHb', 'tHb');
+
+  tmpcfg = [];
+  tmpcfg.operation = 'add'; 
+  tmpcfg.parameter = 'trial';
+  dataTotal = ft_math(tmpcfg, dataO2Hb, dataHHb);
   
-  if ~existsHHb
-    cfg.montage(HHbidx) = [];
-    target(HHbidx) = [];
+  if ~computeHHb && ~computeO2Hb
+    % replace dataout 
+    dataout.label = dataTotal.label;
+    dataout.trial = dataTotal.trial;
+  else
+    % concat to dataout
+    dataout.label = vertcat(dataout.label, dataTotal.label);
+    dataout.trial = cellfun(@vertcat, dataout.trial, dataTotal.trial, 'UniformOutput', false);
   end
 end
 
-dataout = [];
-cfg.target = target;
-for t=1:numel(cfg.target)
-  % apply the (combined) montages
-  dataout{t} = ft_apply_montage(data, cfg.montage{t});
+% remove O2 or H if desired
+tmpcfg = [];
+tmpcfg.channel = [];
+if computetHb
+  tmpcfg.channel = horzcat(tmpcfg.channel, {'*tHb]'}); 
 end
+if computeHHb
+  tmpcfg.channel =  horzcat(tmpcfg.channel, {'*HHb]'}); 
+end
+if computeO2Hb
+  tmpcfg.channel =  horzcat(tmpcfg.channel, {'*O2Hb]'}); 
+end
+
+dataout = ft_selectdata(tmpcfg, dataout);
 
 if size(dataout)>1
   if isfreq
@@ -199,7 +203,7 @@ if size(dataout)>1
     data = ft_appenddata([], dataout{:});
   end
 else
-  data = dataout{1};
+  data = dataout;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
