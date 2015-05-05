@@ -134,13 +134,9 @@ if ~iscell(target)
   target     = {target};
 end
 
-tHbidx = ismember(target, 'tHb');
-HHbidx = ismember(target, 'HHb');
-O2Hbidx = ismember(target, 'O2Hb');
-
-computetHb  = tHbidx~=0;
-computeHHb  = HHbidx~=0;
-computeO2Hb = O2Hbidx~=0;
+computetHb  = any(ismember(target, 'tHb'));
+computeHHb  = any(ismember(target, 'HHb'));
+computeO2Hb = any(ismember(target, 'O2Hb'));
 
 % cfg-handling is done inside here
 [montage, cfg] = ft_prepare_ODtransformation(cfg, data);
@@ -179,7 +175,7 @@ if computetHb
   end
 end
 
-% remove O2 or H if desired
+% remove O2 or H if not desired
 tmpcfg = [];
 tmpcfg.channel = [];
 if computetHb
