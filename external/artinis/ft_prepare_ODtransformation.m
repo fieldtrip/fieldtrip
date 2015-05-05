@@ -50,27 +50,42 @@ function [montage, cfg] = ft_prepare_ODtransformation(cfg, data)
 %
 % cfg.logarithm           = string, can be 'natural' or 'base10' (default =
 
-% This file is part of the FieldTrip NIRS toolbox developed and maintained
-% by Artinis Medical Systems (http://www.artinis.com). For more information
+% You are using the FieldTrip NIRS toolbox developed and maintained by 
+% Artinis Medical Systems (http://www.artinis.com). For more information
 % on FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-%
-% This work is licensed under the Creative Commons
-% Attribution-NonCommercial-NoDerivs 3.0 Unported License. To view a copy
-% of this license, visit http://creativecommons.org/licenses/by-nc-nd/3.0/
-% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
-% 94042, USA.
 % 
-% Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:
+% This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 
+% International License. To view a copy of this license, visit 
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to 
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+% 
+% Creative Commons Attribution-ShareAlike 4.0 International License:
 % -----------------------------------
 % You are free to:
+% 
 %     Share — copy and redistribute the material in any medium or format
-%     The licensor cannot revoke these freedoms as long as you follow the license terms.
+%     Adapt — remix, transform, and build upon the material
+%     for any purpose, even commercially.
+% 
+%     The licensor cannot revoke these freedoms as long as you follow the 
+%     license terms.
 % 
 % Under the following terms:
-%     Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-%     NonCommercial — You may not use the material for commercial purposes.
-%     NoDerivatives — If you remix, transform, or build upon the material, you may not distribute the modified material.
-%     No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+% 
+%     Attribution — You must give appropriate credit, provide a link to 
+%                    the license, and indicate if changes were made. You 
+%                    may do so in any reasonable manner, but not in any way 
+%                    that suggests the licensor endorses you or your use.
+% 
+%     ShareAlike — If you remix, transform, or build upon the material, 
+%                   you must distribute your contributions under the same 
+%                   license as the original.
+% 
+%     No additional restrictions — You may not apply legal terms or 
+%                                   technological measures that legally 
+%                                   restrict others from doing anything the 
+%                                   license permits.
+% 
 % -----------------------------------
 % 
 % This toolbox is not to be used for medical or clinical purposes.
