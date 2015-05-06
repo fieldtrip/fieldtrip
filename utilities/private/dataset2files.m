@@ -128,8 +128,8 @@ switch format
     datafile   = fullfile(path, [file '.bin']);
   case 'fcdc_buffer_offline'
     [path, file, ext] = fileparts(filename);
-    headerfile = fullfile(path, 'header');
-    datafile   = fullfile(path, 'samples');
+    headerfile = fullfile(path, file, 'header');
+    datafile   = fullfile(path, file, 'samples');
   case {'tdt_tsq' 'tdt_tev'}
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.tsq']);
