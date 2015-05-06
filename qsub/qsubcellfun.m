@@ -69,7 +69,7 @@ function varargout = qsubcellfun(fname, varargin)
 % See also QSUBCOMPILE, QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011-2014, Robert Oostenveld
+% Copyright (C) 2011-2015, Robert Oostenveldfalse
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -169,18 +169,14 @@ numjob      = numel(varargin{1});
 
 % determine the number of MATLAB jobs to "stack" together into seperate qsub jobs
 if isequal(stack, 'auto')
-  if strcmp(compile, 'yes') || strcmp(compile, 'auto') || ~isempty(fcomp)
-    % compilation and stacking are incompatible with each other
-    % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1255
-    stack = 1;
-  elseif ~isempty(timreq)
+  if ~isempty(timreq)
     stack = floor(180/timreq);
   else
     stack = 1;
   end
 end
 
-% ensure that the stacking is not too high
+% ensure that the stacking is not higher than the number of jobs
 stack = min(stack, numjob);
 
 % give some feedback about the stacking
@@ -201,7 +197,13 @@ collecttime = inf(1, numjob);
 % it can be difficult to determine the number of output arguments
 try
   if isequal(fname, 'cellfun') || isequal(fname, @cellfun)
-    numargout = nargout(varargin{1}{1});
+    if isa(varargin{1}{1}, 'char') || isa(varargin{1}{1}, 'function_handle')
+      numargout = nargout(varargin{1}{1});
+    elseif isa(varargin{1}{1}, 'struct')
+      % the function to be executed has been compiled
+      fcomp = varargin{1}{1};
+      numargout = nargout(fcomp.fname);
+    end
   else
     numargout = nargout(fname);
   end
@@ -217,7 +219,8 @@ catch
 end
 
 if numargout<0
-  % the nargout function returns -1 in case of a variable number of output arguments
+  % the nargout function retur      % it should contain function handles, not strings
+ns -1 in case of a variable number of output arguments
   numargout = 1;
 elseif numargout>nargout
   % the number of output arguments is constrained by the users' call to this function
@@ -225,6 +228,23 @@ elseif numargout>nargout
 elseif nargout>numargout
   error('Too many output arguments.');
 end
+
+% running a compiled version in parallel takes no MATLAB licenses
+% auto compilation will be attempted if the total batch takes more than 30 minutes
+if istrue(compile) || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
+  try
+    % try to compile into a stand-allone application
+    fcomp = qsubcompile(fname, 'batch', batch, 'batchid', batchid);
+  catch
+    if istrue(compile)
+      % the error that was caught is critical
+      rethrow(lasterror);
+    elseif strcmp(compile, 'auto')
+      % compilation was only optional, the caught error is not critical
+      warning(lasterr);
+    end
+  end % try-catch
+end % if compile
 
 if stack>1
   % combine multiple jobs in one, the idea is to use recursion like this
@@ -248,11 +268,16 @@ if stack>1
     optarg{end+1} = 'whichfunction';
     optarg{end+1} = whichfunction;
   end
+  if ~any(strcmpi(optarg, 'compile'))
+    optarg{end+1} = 'compile';
+    optarg{end+1} = compile;
+  end
   
   % update these settings for the recursive call
   optarg{find(strcmpi(optarg, 'timreq'))+1}        = timreq*stack;
   optarg{find(strcmpi(optarg, 'stack'))+1}         = 1;
   optarg{find(strcmpi(optarg, 'UniformOutput'))+1} = false;
+  optarg{find(strcmpi(optarg, 'compile'))+1}       = false;
   
   % FIXME the partitioning can be further perfected
   partition     = floor((0:numjob-1)/stack)+1;
@@ -260,7 +285,12 @@ if stack>1
   
   stackargin = cell(1,numargin+3); % include the fname, uniformoutput, false
   if istrue(compile)
-    stackargin{1} = repmat({fcomp}, 1, numpartition);
+    if ischar(fcomp.fname)
+      % it should contain function handles, not strings
+      stackargin{1} = repmat({str2func(fcomp.fname)}, 1, numpartition);
+    else
+      stackargin{1} = repmat({fcomp.fname}, 1, numpartition);
+    end
   else
     if ischar(fname)
       % it should contain function handles, not strings
@@ -301,23 +331,6 @@ if stack>1
   
   return;
 end
-
-% running a compiled version in parallel takes no MATLAB licenses
-% auto compilation will be attempted if the total batch takes more than 30 minutes
-if strcmp(compile, 'yes') || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
-  try
-    % try to compile into a stand-allone applicationA
-    fcomp = qsubcompile(fname, 'batch', batch, 'batchid', batchid);
-  catch
-    if strcmp(compile, 'yes')
-      % the error that was caught is critical
-      rethrow(lasterror);
-    elseif strcmp(compile, 'auto')
-      % compilation was only optional, the caught error is not critical
-      warning(lasterr);
-    end
-  end % try-catch
-end % if compile
 
 % check the input arguments
 for i=1:numargin
