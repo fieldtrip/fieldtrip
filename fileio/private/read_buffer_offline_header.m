@@ -114,7 +114,7 @@ bin=[];
 finfo=dir(headerfile);
 if ( isempty(finfo) || finfo.bytes==0 )
   warning(sprintf('Couldnt open binary header file : %s',headerfile));
-  hdr=txt;
+  hdr = copyfields(txt, hdr, fieldnames(txt)); % ensure that the predefined stuff still exists
 else  
   if ( ~isfield(hdr.orig,'endianness') )
     hdr.orig.endianness='native';
