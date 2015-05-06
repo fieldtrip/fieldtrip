@@ -8,9 +8,8 @@ function test_old_ft_write_volume
 % this script tests whether ft_volumewrite and ft_write_volume works
 
 % create some data
-cd('~jansch/matlab/fieldtrip/external/spm8/templates/');
 ft_hastoolbox('spm8',1);
-mri = ft_read_mri('T1.nii');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
 
 % create 'blob' in occipital cortex
 tmp = zeros(mri.dim);
