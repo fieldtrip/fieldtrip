@@ -1,10 +1,8 @@
 % SAP2MATLAB parses Siemens ASCII protocol data and generates a 
 % corresponding MATLAB data structure.
 %
-% This function
-% is currently used for de-serialising the header information
-% from a FieldTrip buffer containing fMRI data from a Siemens
-% scanner.
+% This function is used for de-serialising the header information
+% from a FieldTrip buffer containing fMRI data from a Siemens scanner.
 
 % Copyright (C) 2010, Stefan Klanke,
 % 	Modified by Tim van Mourik, 2014
@@ -42,14 +40,7 @@ catch
 end
 
 %% Test
-%This file contains an example string that will be parsed by sap2matlab
+%  This file contains an example string that will be parsed by sap2matlab
 load('mrprotString.mat');
 S = sap2matlab(apstr);
-
-
-
-
-
-
-
 
