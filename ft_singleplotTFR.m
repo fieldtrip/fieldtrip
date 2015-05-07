@@ -131,8 +131,7 @@ cfg.masknans       = ft_getopt(cfg, 'masknans',     'yes');
 cfg.directionality = ft_getopt(cfg, 'directionality',[]);
 cfg.figurename     = ft_getopt(cfg, 'figurename',    []);
 
-
-dimord = data.dimord;
+dimord = getdimord(data, cfg.parameter);
 dimtok = tokenize(dimord, '_');
 
 % Set x/y/parameter defaults
@@ -374,14 +373,13 @@ if length(sellab) > 1 && ~isempty(cfg.maskparameter)
   cfg.maskparameter = [];
 end
 
-dat = data.(cfg.parameter);
 % get dimord dimensions
-dims = textscan(data.dimord,'%s', 'Delimiter', '_');
-dims = dims{1};
-ydim = find(strcmp(yparam, dims));
-xdim = find(strcmp(xparam, dims));
-zdim = setdiff(1:ndims(dat), [ydim xdim]);
+ydim = find(strcmp(yparam, dimtok));
+xdim = find(strcmp(xparam, dimtok));
+zdim = setdiff(1:length(dimtok), [ydim xdim]); % all other dimensions
+
 % and permute
+dat = data.(cfg.parameter);
 dat = permute(dat, [zdim(:)' ydim xdim]);
 if isfull
   dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
