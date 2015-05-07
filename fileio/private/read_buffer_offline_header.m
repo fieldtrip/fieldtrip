@@ -1,4 +1,5 @@
 function [hdr, nameFlag] = read_buffer_offline_header(headerfile)
+
 % function [hdr, nameFlag] = read_buffer_offline_header(headerfile)
 %
 % This function reads a FCDC buffer header from a binary file or text file
@@ -50,7 +51,7 @@ nameFlag = 0;
 txt=[];
 finfo=dir([headerfile '.txt']);
 if ( isempty(finfo) || finfo.bytes==0 )
-  warning(sprintf('Couldnt open text header file : %s',headerfile));
+  warning(sprintf('Could not open text header file : %s',headerfile));
 else  
   txt.nSamples=0;
   FA = fopen([headerfile '.txt'], 'r');
