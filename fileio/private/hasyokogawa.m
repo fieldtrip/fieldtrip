@@ -42,13 +42,16 @@ function [version] = hasyokogawa(desired)
 ws = warning('off', 'MATLAB:pfileOlderThanMfile');
 
 % there are a few versions of the old preliminary implementation, such as
-% 12bitBeta3, 16bitBeta3 and 16bitBeta6. Medio 2011 a completely new
+% 12bitBeta3, 16bitBeta3 and 16bitBeta6. In 2011 a completely new
 % implementation was officially released, which contains functions with
 % other names. At the time of writing this, the new implementation is
 % version 1.4.
 
+if exist('getYkgwVersion')
+  res = getYkgwVersion();
+  version = res.version;
 
-if exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('GetMeg160ContinuousRawDataM')
+elseif exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('GetMeg160ContinuousRawDataM')
   % start with unknown, try to refine the version
   version = 'unknown';
   
@@ -82,10 +85,6 @@ if exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('GetM
       end
     end
   end
-  
-elseif exist('getYkgwVersion')
-  res = getYkgwVersion();
-  version = res.version;
   
 else
   % return empty if none of them is present
