@@ -606,13 +606,15 @@ switch cfg.method
     clear C D E d
     
   case 'svd'
+    % it is more memory efficient to use the (non-scaled) covariance
     if cfg.numcomponent<Nchans
       % compute only the first components
-      [u, s, v] = svds(dat, cfg.numcomponent);
+      [u, s, v] = svds(dat*dat', cfg.numcomponent);
     else
       % compute all components
-      [u, s, v] = svd(dat, 0);
+      [u, s, v] = svd(dat*dat', 0);
     end
+    clear s v % not needed
     
     unmixing = u';
     mixing = [];
