@@ -26,7 +26,7 @@ function source = ft_read_cifti(filename, varargin)
 %   'cortexleft'       = string, filename with left cortex (optional, default is automatic)
 %   'cortexright'      = string, filename with right cortex (optional, default is automatic)
 %   'hemisphereoffset' = number, amount in milimeter to move the hemispheres apart from each other (default = 0)
-%   'debug'            = boolean, write a debug.xml file (default = true)
+%   'debug'            = boolean, write a debug.xml file (default = false)
 %
 % See also FT_WRITE_CIFTI, FT_READ_MRI, FT_WRITE_MRI
 
@@ -35,7 +35,7 @@ function source = ft_read_cifti(filename, varargin)
 % - fibers (i.e. dfan and dfibersamp) are unsupported/untested
 % - metadata is unsupported
 
-% Copyright (C) 2013-2014, Robert Oostenveld
+% Copyright (C) 2013-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -60,7 +60,7 @@ readsurface      = ft_getopt(varargin, 'readsurface', true);
 cortexleft       = ft_getopt(varargin, 'cortexleft', {});
 cortexright      = ft_getopt(varargin, 'cortexright', {});
 hemisphereoffset = ft_getopt(varargin, 'hemisphereoffset', 0); % in mm, move the two hemispheres apart from each other
-debug            = ft_getopt(varargin, 'debug', true);
+debug            = ft_getopt(varargin, 'debug', false);
 
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
@@ -554,7 +554,6 @@ if ~isempty(BrainModel)
   end
   
   greynodeOffset = nan(size(BrainModel));
-  brainstructureOffset = nan(size(BrainModel));
   for i=1:numel(BrainModel)
     if strcmp(BrainModel(i).ModelType, 'CIFTI_MODEL_TYPE_SURFACE')
       sel = find(strcmp({Surface(:).BrainStructure}, BrainModel(i).BrainStructure));
@@ -565,9 +564,8 @@ if ~isempty(BrainModel)
     end
     % shift the greynodes to become consistent with the voxel data
     greynodeIndex{i} = greynodeIndex{i} + greynodeOffset(i);
-    % shift the brainstructures to become consistent with the brainordinate positions
-    brainstructureOffset(i) = numel([brainstructureIndex{1:i-1}]);
-    brainstructureIndex{i} = brainstructureIndex{i} + brainstructureOffset(i);
+    % shift the brainstructures to become consistent with the voxel data
+    brainstructureIndex{i} = brainstructureIndex{i} + greynodeOffset(i);
   end
   
 end % if BrainModel
@@ -930,7 +928,7 @@ else
   source.label = {Parcel(:).Name}';
 end
 
-haslabeltable = false;
+% haslabeltable = false;
 % if ~isempty(NamedMap)
 %   % the following assumes a single NamedMap
 %   if isfield(NamedMap, 'LabelTable')
