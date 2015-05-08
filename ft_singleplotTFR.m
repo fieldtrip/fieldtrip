@@ -130,6 +130,7 @@ cfg.channel        = ft_getopt(cfg, 'channel',      'all');
 cfg.masknans       = ft_getopt(cfg, 'masknans',     'yes');
 cfg.directionality = ft_getopt(cfg, 'directionality',[]);
 cfg.figurename     = ft_getopt(cfg, 'figurename',    []);
+cfg.parameter      = ft_getopt(cfg, 'parameter', 'powspctrm');
 
 dimord = getdimord(data, cfg.parameter);
 dimtok = tokenize(dimord, '_');
@@ -140,7 +141,6 @@ if ~any(ismember(dimtok, 'time'))
 else
   xparam = 'time';
   yparam = 'freq';
-  cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
 end
 
 if isfield(cfg, 'channel') && isfield(data, 'label')
