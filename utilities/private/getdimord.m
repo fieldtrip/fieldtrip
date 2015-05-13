@@ -564,9 +564,9 @@ ok = false;
 for k = 1:numel(dimtok)
   switch dimtok{k}
     case 'chan'
-      ok = numel(data.label==1);
+      ok = numel(data.label)==1;
     otherwise
-      ok = numel(data.(dimtok{k})==1);
+      ok = numel(data.(dimtok{k}))==1;
   end
   if ok,
     break;
