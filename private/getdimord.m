@@ -566,7 +566,9 @@ for k = 1:numel(dimtok)
     case 'chan'
       ok = numel(data.label)==1;
     otherwise
-      ok = numel(data.(dimtok{k}))==1;
+      if isfield(data, dimtok{k}); % check whether field exists
+        ok = numel(data.(dimtok{k}))==1;
+      end;
   end
   if ok,
     break;
