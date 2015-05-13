@@ -9,7 +9,7 @@ end
 size_first=size(varargin{1});
 
 for k=2:n
-    if ~isequal(size_first, varargin{k})
+    if ~isequal(size_first, size(varargin{k}))
         eq=false;
         return;
     end
