@@ -612,7 +612,7 @@ switch cfg.method
         for k = 1:nblocks
           for m = (k+1):nblocks
             cnt  = cnt+1;
-            rest = setdiff(blocks, [k m]);
+            rest = setdiff(blocks, [k m],'legacy'); % legacy because from 2012b onwards setdiff tries to maintain dimensions of input
             tmp{cnt, 1} = [k m rest];
             tmp{cnt, 2} = [k   rest];
             newlabelcmb{cnt, 1} = data.block(m).name; % note the index swap: convention is driver in left column
