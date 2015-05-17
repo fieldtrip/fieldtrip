@@ -47,7 +47,7 @@ nfreq = size(onoff, 2);
 ntime = size(onoff, 3);
 
 % ensure that spm8 (preferred) or spm2 is available, needed for spm_bwlabeln
-hasspm = ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
+hasspm = ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
 if ~hasspm
   error('the spm_bwlabeln function from SPM is needed for clustering');
 end

@@ -1,7 +1,7 @@
 function test_bug1954
 
 % MEM 2gb
-% WALLTIME 00:30:00
+% WALLTIME 00:45:00
 
 load(fullfile(fileparts(which('ft_defaults')), 'template', 'headmodel', 'standard_mri.mat'));
 

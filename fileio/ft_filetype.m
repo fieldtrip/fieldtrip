@@ -147,7 +147,13 @@ if isempty(filename)
 end
 
 % the parts of the filename are used further down
-[p, f, x] = fileparts(filename);
+if isdir(filename)
+  p = filename;
+  f = '';
+  x = '';
+else
+  [p, f, x] = fileparts(filename);
+end
 
 % prevent this test if the filename resembles an URI, i.e. like "scheme://"
 if isempty(strfind(filename , '://')) && isdir(filename)
@@ -624,7 +630,7 @@ elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.ntt'))
   manufacturer = 'Neuralynx';
   content = 'tetrode recordings ';
   
-elseif isdir(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'events'), 'file')
+elseif isdir(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'samples'), 'file') && exist(fullfile(p, 'events'), 'file')
   type = 'fcdc_buffer_offline';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
   content = 'FieldTrip buffer offline dataset';

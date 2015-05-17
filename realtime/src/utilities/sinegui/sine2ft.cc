@@ -185,11 +185,11 @@ int main(int argc, char *argv[]) {
 	
 	inpBlockSize = new Fl_Int_Input(110,75,80,25,"Block size");
 	inpBlockSize->align(FL_ALIGN_TOP);
-	inpBlockSize->value("512");
+	inpBlockSize->value("32");
 	
 	inpFSample = new Fl_Float_Input(200,75,80,25,"Sampl.freq");
 	inpFSample->align(FL_ALIGN_TOP);
-	inpFSample->value("2000");
+	inpFSample->value("256");
 	
 	butStartStop = new Fl_Button(100,110,100,25,"Start");
 	butStartStop->callback(startStopCallback);

@@ -15,10 +15,10 @@ function [data] = ft_transform_ODs(cfg, data)
 %  cfg.channel            = Nx1 cell-array with selection of channels
 %                           (default = 'nirs'), see FT_CHANNELSELECTION for
 %                           more details
-%  cfg.target             = Mx1 cell-array, can be 'OD' (optical densities), 
-%                           'O2Hb' (oxygenated hemoglobin), 'HHb' de-
-%                           oxygenated hemoglobin') or 'tHb' (total hemo-
-%                           globin), or a combination of those 
+%  cfg.target             = Mx1 cell-array, can be 'O2Hb' (oxygenated hemo-
+%                           globin), 'HHb' de-oxygenated hemoglobin') or 
+%                           'tHb' (total hemoglobin), or a combination of 
+%                           those (default: {'O2Hb', 'HHb'})
 %
 % Optional configuration settings are
 %  cfg.age                = scalar, age of the subject (necessary to
@@ -54,27 +54,42 @@ function [data] = ft_transform_ODs(cfg, data)
 %
 % Note that HomER uses the inverse, natural logarithm. The inverse is taken after the ln transform
 
-% This file is part of the FieldTrip NIRS toolbox developed and maintained
-% by Artinis Medical Systems (http://www.artinis.com). For more information
+% You are using the FieldTrip NIRS toolbox developed and maintained by 
+% Artinis Medical Systems (http://www.artinis.com). For more information
 % on FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-%
-% This work is licensed under the Creative Commons
-% Attribution-NonCommercial-NoDerivs 3.0 Unported License. To view a copy
-% of this license, visit http://creativecommons.org/licenses/by-nc-nd/3.0/
-% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
-% 94042, USA.
 % 
-% Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:
+% This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 
+% International License. To view a copy of this license, visit 
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to 
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+% 
+% Creative Commons Attribution-ShareAlike 4.0 International License:
 % -----------------------------------
 % You are free to:
+% 
 %     Share — copy and redistribute the material in any medium or format
-%     The licensor cannot revoke these freedoms as long as you follow the license terms.
+%     Adapt — remix, transform, and build upon the material
+%     for any purpose, even commercially.
+% 
+%     The licensor cannot revoke these freedoms as long as you follow the 
+%     license terms.
 % 
 % Under the following terms:
-%     Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-%     NonCommercial — You may not use the material for commercial purposes.
-%     NoDerivatives — If you remix, transform, or build upon the material, you may not distribute the modified material.
-%     No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+% 
+%     Attribution — You must give appropriate credit, provide a link to 
+%                    the license, and indicate if changes were made. You 
+%                    may do so in any reasonable manner, but not in any way 
+%                    that suggests the licensor endorses you or your use.
+% 
+%     ShareAlike — If you remix, transform, or build upon the material, 
+%                   you must distribute your contributions under the same 
+%                   license as the original.
+% 
+%     No additional restrictions — You may not apply legal terms or 
+%                                   technological measures that legally 
+%                                   restrict others from doing anything the 
+%                                   license permits.
+% 
 % -----------------------------------
 % 
 % This toolbox is not to be used for medical or clinical purposes.
@@ -95,6 +110,8 @@ ft_preamble loadvar     data
 ft_preamble provenance  data
 ft_preamble trackconfig
 ft_preamble debug
+
+cfg.channel = ft_getopt(cfg, 'channel', 'nirs');
 
 data = ft_checkdata(data, 'datatype', {'raw', 'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 
@@ -123,72 +140,70 @@ else
   error('input data is not recognized');
 end
 
-cfg.target  = ft_getopt(cfg, 'target', 'tHb');
+data = ft_selectdata(cfg, data);
+
+cfg.target  = ft_getopt(cfg, 'target', {'O2Hb', 'HHb'});
 
 target = cfg.target;
 if ~iscell(target)
   target     = {target};
 end
 
-tHbidx = ismember(target, 'tHb');
-HHbidx = ismember(target, 'HHb');
-O2Hbidx = ismember(target, 'O2Hb');
+computetHb  = any(ismember(target, 'tHb'));
+computeHHb  = any(ismember(target, 'HHb'));
+computeO2Hb = any(ismember(target, 'O2Hb'));
 
-computetHb = tHbidx~=0;
-existsHHb  = isempty(HHbidx);
-existsO2Hb  = isempty(O2Hbidx);
+% cfg-handling is done inside here
+[montage, cfg] = ft_prepare_ODtransformation(cfg, data);
 
-% total hemoglobin is the sum of oxygenated and deoxygenated hemoglobin
-if computetHb
-  if ~existsHHb
-    target{end+1} = 'HHb';
-    HHbidx = numel(target);
-  end
-  if ~existsO2Hb
-    target{end+1} = 'O2Hb';
-    O2Hbidx = numel(target);
-  end
-end
-
-
-for t=1:numel(target)
+% save montage in the cfg
+cfg.montage = montage;
   
-  if (t==tHbidx)
-    continue; % this will be dealt with later
-  end
-  
-  cfg.target = target{t};
-  % cfg-handling is done inside here
-  [montage, cfg] = ft_prepare_ODtransformation(cfg, data);
-  
-  % save montage in the cfg
-  cfg.montage{t} = montage;  
-end
+% apply the (combined) montages
+dataout = ft_apply_montage(data, montage);
 
 if computetHb
-  % make a single montage matrix
-  cfg.montage{tHbidx}.labelorg = cfg.montage{HHbidx}.labelorg;
-  cfg.montage{tHbidx}.labelnew = regexprep(cfg.montage{HHbidx}.labelnew, sprintf('%s%s', regexptranslate('wildcard', '[*]'), '$'), sprintf('[%s]', target{tHbidx}));
-  cfg.montage{tHbidx}.tra      = cfg.montage{HHbidx}.tra+cfg.montage{O2Hbidx}.tra;  
+  % total hemoglobin is the sum of oxygenated and deoxygenated hemoglobin
+  tmpcfg = [];
+  tmpcfg.channel = '*[O2Hb]';
+  dataO2Hb = ft_selectdata(tmpcfg, dataout);
+  dataO2Hb.label = strrep(dataO2Hb.label, 'O2Hb', 'tHb');
   
-  %order reversed wrt above!
-  if ~existsO2Hb
-    cfg.montage(O2Hbidx) = [];
-    target(O2Hbidx) = [];
-  end
+  tmpcfg = [];
+  tmpcfg.channel = '*[HHb]';
+  dataHHb = ft_selectdata(tmpcfg, dataout);
+  dataHHb.label = strrep(dataHHb.label, 'HHb', 'tHb');
+
+  tmpcfg = [];
+  tmpcfg.operation = 'add'; 
+  tmpcfg.parameter = 'trial';
+  dataTotal = ft_math(tmpcfg, dataO2Hb, dataHHb);
   
-  if ~existsHHb
-    cfg.montage(HHbidx) = [];
-    target(HHbidx) = [];
+  if ~computeHHb && ~computeO2Hb
+    % replace dataout 
+    dataout.label = dataTotal.label;
+    dataout.trial = dataTotal.trial;
+  else
+    % concat to dataout
+    dataout.label = vertcat(dataout.label, dataTotal.label);
+    dataout.trial = cellfun(@vertcat, dataout.trial, dataTotal.trial, 'UniformOutput', false);
   end
 end
 
-dataout = [];
-cfg.target = target;
-for t=1:numel(cfg.target)
-  % apply the (combined) montages
-  dataout{t} = ft_apply_montage(data, cfg.montage{t});
+% remove O2 or H if not desired
+tmpcfg = [];
+tmpcfg.channel = [];
+if computetHb
+  tmpcfg.channel = horzcat(tmpcfg.channel, {'*tHb]'}); 
 end
+if computeHHb
+  tmpcfg.channel =  horzcat(tmpcfg.channel, {'*HHb]'}); 
+end
+if computeO2Hb
+  tmpcfg.channel =  horzcat(tmpcfg.channel, {'*O2Hb]'}); 
+end
+
+dataout = ft_selectdata(tmpcfg, dataout);
 
 if size(dataout)>1
   if isfreq
@@ -199,7 +214,7 @@ if size(dataout)>1
     data = ft_appenddata([], dataout{:});
   end
 else
-  data = dataout{1};
+  data = dataout;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

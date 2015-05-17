@@ -163,6 +163,10 @@ siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan nlag];
 
 if isfield(data, 'dimord')
   dimtok  = tokenize(data.dimord, '_');
+  if length(dimtok)>length(datsiz) && check_trailingdimsunitlength(data, dimtok((length(datsiz)+1):end))
+    % add the trailing singleton dimensions to datsiz, if needed
+    datsiz  = [datsiz ones(1,max(0,length(dimtok)-length(datsiz)))];
+  end
   if length(dimtok)==length(datsiz)
     success = false(size(dimtok));
     for i=1:length(dimtok)
@@ -550,3 +554,25 @@ c = ~isnan(a(:)) & ~isnan(b(:));
 ok = isequal(a(c), b(c));
 
 end % function isequalwithoutnans
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function ok = check_trailingdimsunitlength(data, dimtok)
+
+ok = false;
+for k = 1:numel(dimtok)
+  switch dimtok{k}
+    case 'chan'
+      ok = numel(data.label)==1;
+    otherwise
+      if isfield(data, dimtok{k}); % check whether field exists
+        ok = numel(data.(dimtok{k}))==1;
+      end;
+  end
+  if ok,
+    break;
+  end
+end
+
+end % function check_trailingdimsunitlength

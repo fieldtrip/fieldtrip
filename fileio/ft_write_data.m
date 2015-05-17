@@ -60,7 +60,7 @@ end
 
 % get the options
 append        = ft_getopt(varargin, 'append', false);
-nbits         = ft_getopt(varargin, 'nbits'); % for riff_wave
+nbits         = ft_getopt(varargin, 'nbits', 16); % for riff_wave
 chanindx      = ft_getopt(varargin, 'chanindx');
 hdr           = ft_getopt(varargin, 'header');
 evt           = ft_getopt(varargin, 'event');

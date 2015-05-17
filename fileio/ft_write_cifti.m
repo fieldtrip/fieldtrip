@@ -27,14 +27,14 @@ function ft_write_cifti(filename, source, varargin)
 %   'parcellation'     = string, fieldname that describes the parcellation (default = 'parcellation')
 %   'precision'        = string, can be 'single', 'double', 'int32', etc. (default ='single')
 %   'writesurface'     = boolean, can be false or true (default = true)
-%   'debug'            = boolean, write a debug.xml file (default = true)
+%   'debug'            = boolean, write a debug.xml file (default = false)
 %
 % The brainstructure refers to the global anatomical structure, such as CortexLeft, Thalamus, etc.
 % The parcellation refers to the the detailled parcellation, such as BA1, BA2, BA3, etc.
 %
 % See also FT_READ_CIFTI, FT_READ_MRI, FT_WRITE_MRI
 
-% Copyright (C) 2013-2014, Robert Oostenveld
+% Copyright (C) 2013-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -59,7 +59,7 @@ brainstructure  = ft_getopt(varargin, 'brainstructure'); % the default is determ
 parcellation    = ft_getopt(varargin, 'parcellation');   % the default is determined further down
 precision       = ft_getopt(varargin, 'precision', 'single');
 writesurface    = ft_getopt(varargin, 'writesurface', true);
-debug            = ft_getopt(varargin, 'debug', true);
+debug            = ft_getopt(varargin, 'debug', false);
 
 if isfield(source, 'brainordinate')
   % this applies to a parcellated data representation
