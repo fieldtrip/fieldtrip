@@ -109,7 +109,7 @@ if istrue(coil)
   if coildiameter==0
     hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), style);
   else
-    plotcoil(pnt, ori, coildiameter);
+    plotcoil(pnt, ori, coildiameter, style);
   end
   
 else
@@ -119,7 +119,7 @@ else
   if coildiameter==0
     hs = plot3(sens.chanpos(:,1), sens.chanpos(:,2), sens.chanpos(:,3), style);
   else
-    plotcoil(sens.chanpos, sens.chanori, coildiameter);
+    plotcoil(sens.chanpos, sens.chanori, coildiameter, style);
   end
   
   
@@ -155,8 +155,8 @@ warning(ws); % revert to original state
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotcoil(pnt, ori, coildiameter)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'%%%%%%%%%%%%%%%%%%
+function plotcoil(pnt, ori, coildiameter, style)
 % construct a template coil at [0 0 0], oriented towards [0 0 1]
 pos = circle(12);
 s   = scale([coildiameter coildiameter coildiameter]/2);
@@ -172,7 +172,7 @@ for i=1:size(pnt,1)
   rim = ft_warp_apply(t*r2*r1*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
   rim(1,:) = rim(end,:);            % replace the first (central) point with the last, this closes the circle
   h = line(rim(:,1), rim(:,2), rim(:,3));
-  set(h, 'color', 'k');
+  set(h, 'color', style(1));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
