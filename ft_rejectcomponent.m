@@ -81,6 +81,8 @@ nargin = 1;
 nargin = nargin + exist('comp', 'var');
 nargin = nargin + exist('data', 'var');
 
+istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
+
 if nargin==3
   % check if the input data is valid for this function
   data    = ft_checkdata(data, 'datatype', 'raw');
@@ -234,6 +236,11 @@ if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
   sens.balance.(invcompfield).tra(remove, :)   = [];
   sens.balance.(invcompfield).labelnew(remove) = [];
   data.(sensfield)  = sens;
+end
+
+if istlck
+  % convert the raw structure back into a timelock structure
+  data = ft_checkdata(data, 'datatype', 'timelock');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
