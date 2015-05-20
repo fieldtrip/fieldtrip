@@ -1310,42 +1310,44 @@ switch eventformat
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', true);
         event   = appendevent(event, trigger);
         
-        % throw out everything that is not a (real) trigger...
-        [sel1, sel2] = match_str({trigger.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
-        trigger_tmp = trigger(sel1);
-        %trigger_bits = size(unique(sel2), 1);
-        all_triggers = unique(sel2);
-        trigger_bits = max(all_triggers) - min(all_triggers) + 1;
-        
-        % collect all samples where triggers occured...
-        all_samples = unique([trigger_tmp.sample]);
-        
-        new_triggers = [];
-        i = 1;
-        while i <= length(all_samples)
-          cur_triggers = [];
-          j = 0;
+        if ~isempty(trigger)
+          % throw out everything that is not a (real) trigger...
+          [sel1, sel2] = match_str({trigger.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
+          trigger_tmp = trigger(sel1);
+          %trigger_bits = size(unique(sel2), 1);
+          all_triggers = unique(sel2);
+          trigger_bits = max(all_triggers) - min(all_triggers) + 1;
           
-          % look also in adjacent samples according to tolerance
-          while (i+j <= length(all_samples)) && (all_samples(i+j) - all_samples(i) <= tolerance)
-            if j >= 1
-              fprintf('Fixing trigger at sample %d\n', all_samples(i));
+          % collect all samples where triggers occured...
+          all_samples = unique([trigger_tmp.sample]);
+          
+          new_triggers = [];
+          i = 1;
+          while i <= length(all_samples)
+            cur_triggers = [];
+            j = 0;
+            
+            % look also in adjacent samples according to tolerance
+            while (i+j <= length(all_samples)) && (all_samples(i+j) - all_samples(i) <= tolerance)
+              if j >= 1
+                fprintf('Fixing trigger at sample %d\n', all_samples(i));
+              end %if
+              cur_triggers = appendevent(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
+              j = j + 1;
+            end %while
+            
+            % construct new trigger field
+            if ~isempty(cur_triggers)
+              new_triggers(end+1).type = 'Trigger';
+              new_triggers(end).sample = all_samples(i);
+              [sel1, sel2] = match_str({cur_triggers.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
+              new_triggers(end).value = bin2dec((dec2bin(sum(2.^(sel2-1)), trigger_bits)));
             end %if
-            cur_triggers = appendevent(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
-            j = j + 1;
+            
+            i = i + j;
           end %while
-          
-          % construct new trigger field
-          if ~isempty(cur_triggers)
-            new_triggers(end+1).type = 'Trigger';
-            new_triggers(end).sample = all_samples(i);
-            [sel1, sel2] = match_str({cur_triggers.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
-            new_triggers(end).value = bin2dec((dec2bin(sum(2.^(sel2-1)), trigger_bits)));
-          end %if
-          
-          i = i + j;
-        end %while
-        event = appendevent(event, new_triggers);
+          event = appendevent(event, new_triggers);
+        end %if
         
       end
       
