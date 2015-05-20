@@ -170,7 +170,7 @@ labelnirs   = datachannel(~cellfun(@isempty, regexp(datachannel, sprintf('%s%s',
 
 % use regular expressions to deal with the wildcards
 labelreg = false(size(datachannel));
-findreg = [];
+findreg  = [];
 for i=1:length(channel)
   if length(channel{i}) < 1
       continue;
@@ -185,9 +185,8 @@ for i=1:length(channel)
   lreg = ~cellfun(@isempty, regexp(datachannel, rexp));
   if any(lreg)
     labelreg = labelreg | lreg;  
-    findreg  = [findreg i];
-  end
-  
+    findreg  = [findreg; i];
+  end  
 end
 
 if ~isempty(findreg)
