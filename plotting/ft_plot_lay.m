@@ -73,6 +73,10 @@ mask    = istrue(mask);
 outline = istrue(outline);
 verbose = istrue(verbose);
 
+if ~(point || box || label || mask || outline)
+  % there is nothing to be plotted
+  return;
+end
 
 % everything is added to the current figure
 holdflag = ishold;
