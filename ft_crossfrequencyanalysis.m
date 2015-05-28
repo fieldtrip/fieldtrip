@@ -70,9 +70,9 @@ freqlow  = ft_checkdata(freqlow,  'datatype', 'freq', 'feedback', 'yes');
 freqhigh = ft_checkdata(freqhigh, 'datatype', 'freq', 'feedback', 'yes');
 
 cfg.chanlow    = ft_getopt(cfg, 'chanlow');
-cfg.chanhigh   = ft_getopt(cfg, 'chanlow');
-cfg.freqlow    = ft_getopt(cfg, 'chanlow');
-cfg.freqhigh   = ft_getopt(cfg, 'chanlow');
+cfg.chanhigh   = ft_getopt(cfg, 'chanhigh');
+cfg.freqlow    = ft_getopt(cfg, 'freqlow');
+cfg.freqhigh   = ft_getopt(cfg, 'freqhigh');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials');
 
 % make selection of frequencies and channels
