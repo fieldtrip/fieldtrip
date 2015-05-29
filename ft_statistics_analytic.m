@@ -38,7 +38,7 @@ function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
-% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2006-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -114,7 +114,7 @@ else
       % test the most significant significance probability against alpha/N, the second largest against alpha/(N-1), etc.
       fprintf('performing Hochberg''s correction for multiple comparisons (this is *not* the Benjamini-Hochberg FDR procedure!)\n');
       fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
-      [pvals, indx] = sort(stat.prob(:));                     % this sorts the significance probabilities from smallest to largest
+      [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
       k = find(pvals <= (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'last'); % compare each significance probability against its individual threshold
       mask = (1:length(pvals))'<=k;
       stat.mask = zeros(size(stat.prob));
