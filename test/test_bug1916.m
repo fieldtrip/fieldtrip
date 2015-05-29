@@ -7,9 +7,9 @@ function test_bug1916
 % TEST scalingfactor
 
 if isempty(which('scalingfactor'))
-  % it is in the private directory
-  p = fileparts(which('ft_defaults'));
-  cd(fullfile(p, 'private'));
+  % it is in the fieldtrip/private directory
+  [ftver, ftpath] = ft_version;
+  cd(fullfile(ftpath, 'private'));
 end
 
 old = 'mT/mm';

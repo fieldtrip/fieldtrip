@@ -6,7 +6,7 @@ function test_bug2556
 % TEST test_bug2556
 % TEST ft_sourceparcellate ft_checkdata
 
-ftpath = fileparts(which('ft_defaults'));
+[ftver, ftpath] = ft_version;
 filename = fullfile(ftpath, 'template', 'atlas', 'aal', 'ROI_MNI_V4.nii');
 
 aal = ft_read_atlas(filename);

@@ -10,8 +10,8 @@ function inspect_qsubcellfun3
 % will be completely full with other jobs, causing this job to timeout
 
 if isempty(which('qsubcellfun'))
-  [p, f, x] = fileparts(which('ft_defaults'));
-  addpath(fullfile(p, 'qsub'));
+  [ftver, ftpath] = ft_version;
+  addpath(fullfile(ftpath, 'qsub'));
 end
 
 result1 = cellfun(@subfunction, {1, 2, 3}, 'UniformOutput', false);

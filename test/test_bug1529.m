@@ -6,10 +6,10 @@ function test_bug1529
 % TEST test_bug1529
 % TEST ft_plot_ortho
 
-fieldtrippath = fileparts(which('ft_defaults'));
+[ftver, ftpath] = ft_version;
 
 %% Load the SPMtemplate 
-mritem = ft_read_mri([ fieldtrippath '/external/spm8/templates/T1.nii']);
+mritem = ft_read_mri([ftpath '/external/spm8/templates/T1.nii']);
 % mrichecked = ft_determine_coordsys(mritem) ;
 mritem.coordsys = 'spm'; % define the coordinate system (why is this not part of ft_read_mri?)
 

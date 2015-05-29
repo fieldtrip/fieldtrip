@@ -11,8 +11,8 @@ function test_nanstat
 % this includes assertVectorsAlmostEqual etcetera
 ft_hastoolbox('xunit', 1);
 
-p = which('ft_defaults');
-cd(fullfile(fileparts(p), 'src'));
+[ftver, ftpath] = ft_version;
+cd(fullfile(ftpath, 'src'));
 
 % test different data types
 X = {};

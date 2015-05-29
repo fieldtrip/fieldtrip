@@ -5,12 +5,11 @@ function inspect_qsubcellfun4
 % this test is designed for executing functions that are private to the function in which qsubcellfun is called
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1891
 
-p = which('ft_defaults');
-if ~isempty(p)
-  % clean up the path, only qsub and somepath
-  restoredefaultpath
-  addpath(fullfile(fileparts(p), 'qsub'));
-end
+[ftver, ftpath] = ft_version;
+
+% clean up the path, only qsub and somepath
+restoredefaultpath
+addpath(fullfile(ftpath, 'qsub'));
 
 addpath /home/common/matlab/fieldtrip/data/test/bug1891/somepath
 
