@@ -668,8 +668,17 @@ switch headerformat
     
   case 'edf'
     % this reader is largely similar to the bdf reader
-    hdr = read_edf(filename);
-    
+    if isempty(chanindx)
+        hdr = read_edf(filename);
+    else
+        hdr = read_edf(filename,[],1);
+        if chanindx > hdr.orig.NS
+            error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+        else
+            hdr = read_edf(filename,[],chanindx);
+        end;
+    end;
+ 
   case 'eep_avr'
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
