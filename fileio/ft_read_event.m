@@ -9,20 +9,21 @@ function [event] = ft_read_event(filename, varargin)
 %   [event] = ft_read_event(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   'dataformat'    string
-%   'headerformat'  string
-%   'eventformat'   string
-%   'header'        structure, see FT_READ_HEADER
-%   'detectflank'   string, can be 'bit', 'up', 'down', 'both' or 'auto' (default is system specific)
-%   'trigshift'     integer, number of samples to shift from flank to detect trigger value (default = 0)
-%   'trigindx'      list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
-%   'threshold'     threshold for analog trigger channels (default is system specific)
-%   'blocking'      wait for the selected number of events (default = 'no')
-%   'timeout'       amount of time in seconds to wait when blocking (default = 5)
-%   'tolerance'     tolerance in samples when merging analogue trigger
-%                   channels, only for Neuromag (default = 1,
-%                   meaning that an offset of one sample in both directions
-%                   is compensated for)
+%   'dataformat'     string
+%   'headerformat'   string
+%   'eventformat'    string
+%   'header'         structure, see FT_READ_HEADER
+%   'detectflank'    string, can be 'bit', 'up', 'down', 'both' or 'auto' (default is system specific)
+%   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
+%   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
+%   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
+%   'threshold'      threshold for analog trigger channels (default is system specific)
+%   'blocking'       wait for the selected number of events (default = 'no')
+%   'timeout'        amount of time in seconds to wait when blocking (default = 5)
+%   'tolerance'      tolerance in samples when merging analogue trigger
+%                    channels, only for Neuromag (default = 1,
+%                    meaning that an offset of one sample in both directions
+%                    is compensated for)
 %
 % Furthermore, you can specify optional arguments as key-value pairs
 % for filtering the events, e.g. to select only events of a specific
@@ -147,6 +148,7 @@ threshold        = ft_getopt(varargin, 'threshold');           % this is used fo
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
 checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');      % will be passed to ft_read_header
 eventformat      = ft_getopt(varargin, 'eventformat');
+chanindx         = ft_getopt(varargin, 'chanindx');            % used for EDF files with variable sampling rate
 
 if isempty(eventformat)
   % only do the autodetection if the format was not specified
@@ -575,7 +577,7 @@ switch eventformat
   case 'edf'
     % EDF itself does not contain events, but EDF+ does define an annotation channel
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'chanindx', chanindx);
     end
     
     if issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation)

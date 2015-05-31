@@ -12,6 +12,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'fallback'       can be empty or 'biosig' (default = [])
 %   'coordsys'       string, 'head' or 'dewar' (default = 'head')
 %   'checkmaxfilter' boolean, whether to check that maxfilter has been correctly applied (default = true)
+%   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -139,6 +140,7 @@ end
 headerformat   = ft_getopt(varargin, 'headerformat');
 retry          = ft_getopt(varargin, 'retry', false);     % the default is not to retry reading the header
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
+chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF with different sampling rates
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);

@@ -7,7 +7,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % Use as
 %   [hdr] = read_edf(filename);
 % where
-%    filename        name of the datafile, including the .bdf extension
+%    filename        name of the datafile, including the .edf extension
 % This returns a header structure with the following elements
 %   hdr.Fs           sampling frequency
 %   hdr.nChans       number of channels
@@ -20,7 +20,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % Use as
 %   [hdr] = read_edf(filename, [], chanindx);
 % where
-%    filename        name of the datafile, including the .bdf extension
+%    filename        name of the datafile, including the .edf extension
 %    chanindx        index of channels to read (optional, default is all)
 % This returns a header structure with the following elements
 %   hdr.Fs           sampling frequency
@@ -34,7 +34,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % Or use as
 %   [dat] = read_edf(filename, hdr, begsample, endsample, chanindx);
 % where
-%    filename        name of the datafile, including the .bdf extension
+%    filename        name of the datafile, including the .edf extension
 %    hdr             header structure, see above
 %    begsample       index of the first sample to read
 %    endsample       index of the last sample to read
@@ -44,7 +44,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % Or use as
 %   [evt] = read_edf(filename, hdr);
 % where
-%    filename        name of the datafile, including the .bdf extension
+%    filename        name of the datafile, including the .edf extension
 %    hdr             header structure, see above
 % This returns an Nsamples data vector of just the annotation channel
 
