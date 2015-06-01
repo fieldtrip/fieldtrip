@@ -148,10 +148,10 @@ end
 % select trials and channels of interest
 tmpcfg = [];
 tmpcfg.trials  = cfg.trials;
-tmpcfg.channel = setdiff(data.label, ft_channelselection({'MEG' 'MEGREF'}, data.label));
+tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label));
 rest = ft_selectdata(tmpcfg, data);
 
-tmpcfg.channel = ft_channelselection({'MEG' 'MEGREF'}, data.label); 
+tmpcfg.channel = ft_channelselection(cfg.channel, data.label); 
 data = ft_selectdata(tmpcfg, data);
 
 % restore the provenance information
