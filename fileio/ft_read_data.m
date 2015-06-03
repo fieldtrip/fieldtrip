@@ -180,27 +180,27 @@ if isempty(checkboundary)
   checkboundary = ~ft_getopt(varargin, 'continuous');
 end
 
-% read the header if not provided
+% read the header if it is not provided
 if isempty(hdr)
-  hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter, 'chanindx', chanindx);
-elseif strcmp(headerformat,'edf') && ft_getopt(varargin, 'header') && ~isequal(hdr.orig.chansel(:), chanindx(:))
-  disp('Reloading EDF header for selected channels.');
-  hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter, 'chanindx', chanindx);
+    if isempty(chanindx)
+        hdr = ft_read_header(filename, 'headerformat', headerformat);
+        % test whether the requested channels can be accomodated
+        if min(chanindx)<1 || max(chanindx)>hdr.nChans
+            error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+        end
+    else
+        hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx);
+    end;
 end
 
 % set the default channel selection, which is all channels
 if isempty(chanindx)
-  chanindx = 1:hdr.nChans;
+    chanindx = 1:hdr.nChans;
 end
 
 % read until the end of the file if the endsample is "inf"
 if any(isinf(endsample)) && any(endsample>0)
   endsample = hdr.nSamples*hdr.nTrials;
-end
-
-% test whether the requested channels can be accomodated
-if min(chanindx)<1 || max(chanindx)>hdr.nChans
-  error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
 end
 
 % test whether the requested data segment is not outside the file
