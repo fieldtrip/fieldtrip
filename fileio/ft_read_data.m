@@ -182,21 +182,21 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-    if isempty(chanindx)
-        hdr = ft_read_header(filename, 'headerformat', headerformat);
-        % test whether the requested channels can be accomodated
-    else
-        if min(chanindx)<1 || max(chanindx)>hdr.nChans
-            error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
-        end
-
-        hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx);
-    end;
+  if isempty(chanindx)
+    hdr = ft_read_header(filename, 'headerformat', headerformat);
+  else
+    hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx);
+  end;
 end
 
 % set the default channel selection, which is all channels
 if isempty(chanindx)
-    chanindx = 1:hdr.nChans;
+  chanindx = 1:hdr.nChans;
+end
+
+% test whether the requested channels can be accomodated  
+if min(chanindx)<1 || max(chanindx)>hdr.nChans
+  error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
 end
 
 % read until the end of the file if the endsample is "inf"
