@@ -139,6 +139,11 @@ if isfield(cfg.trialdef, 'eventtype') && ~isempty(cfg.trialdef.eventtype)
   for i=1:numel(event)
     sel(i) = sel(i) && ismatch(event(i).type, cfg.trialdef.eventtype);
   end
+elseif ~isfield(cfg.trialdef, 'eventtype') || isempty(cfg.trialdef.eventtype)
+  % search for trial events
+  for i=1:numel(event)
+    sel(i) = sel(i) && ismatch(event(i).type, 'trial');
+  end
 end
 
 % select all events with the specified value
@@ -217,7 +222,7 @@ for i=sel
 end
 
 % append the vector with values
-if ~isempty(val) && ~all(isnan(val))
+if ~isempty(val) && ~all(isnan(val)) && size(trl,1)==size(val,1)
   trl = [trl val];
 end
 
