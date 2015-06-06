@@ -39,12 +39,20 @@ fid = fopen(filename, 'rb', 'ieee-le');
 
 % determine the length of the file
 fseek(fid, 0, 'eof');
-headersize = 16384;
-recordsize = 1044;
-NRecords   = floor((ftell(fid) - headersize)/recordsize);
+headersize = 16384; % 16k = 16*1024b
+recordsize = 1044; % ok record size = 
+                   % 8 for timestamp 
+                   % 4 for channelnumber 
+                   % 4 for sample freq 
+                   % 4 for valid samples 
+                   % 1024 = 512*2 for samples
+                   % 1044 total
+                   % http://neuralynx.com/software/NeuralynxDataFileFormats.pdf
+recordpoints = 512;
+
+NRecords   = (ftell(fid) - headersize)/recordsize; % no floor operation needed
 
 if NRecords>0
-     
   % read out part of the dataset to detect whether there were jumps
   NRecords_to_read = min(NRecords, 100); % read out maximum 100 blocks of data
   TimeStamp        = zeros(1,NRecords_to_read,'uint64');
@@ -67,16 +75,16 @@ if NRecords>0
   
   % explicitly sort the timestamps to deal with negative timestamp jumps that can occur
   ts1 = TimeStamp(1);
-  dts = double(TimeStamp - TimeStamp(1));
+  dts = TimeStamp - TimeStamp(1); % why move to double?
   dts = unique(dts);
   dts = sort(dts);
-  TimeStamp = uint64(dts) + ts1;
+  TimeStamp = dts + ts1; % no need to go back to uint64
    
   % for this block of data: automatically detect the gaps; 
   % there's a gap if no round off error of the sampling frequency could
   % explain the jump (which is always > one block)
-  Fs       = mode(double(SampFreq));
-  if abs(Fs/hdr.SamplingFrequency-1)>0.01
+  Fs       = mode(SampFreq); % again why double?
+  if abs(Fs/hdr.SamplingFrequency - 1 )>0.01
       warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
       hdr.SamplingFrequency, Fs);
     
@@ -91,9 +99,9 @@ if NRecords>0
   end
   
   % detect the number of timestamps per block while avoiding influencce of gaps
-  d = double(TimeStamp(2:end)-TimeStamp(1:end-1));    
-  maxJump  = ceil(10^6./(Fs-1))*512;
-  gapCorrectedTimeStampPerSample =  nanmean(d(d<maxJump))/512;    
+  d = TimeStamp(2:end)-TimeStamp(1:end-1);    % why so? TimeStamp is already uint64 and already sorted
+  maxJump  = ceil(10^6./Fs)*recordpoints;
+  gapCorrectedTimeStampPerSample =  nanmean(d(d<=maxJump))/recordpoints;    
 
   % read the timestamp from the first and last record
   if (ispc), fclose(fid); end
@@ -106,11 +114,12 @@ if NRecords>0
   
   % compare whether there's at least a block missing
   minJump = min(d);
-  ts_range_predicted = (NRecords-1)*512*gapCorrectedTimeStampPerSample;
-  ts_range_observed  = double(tsE-ts1);
-  if abs(ts_range_predicted-ts_range_observed)>minJump
-     warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki on http://fieldtrip.fcdonders.nl/getting_started/neuralynx?&#discontinuous_recordings',...
-       abs(ts_range_predicted-ts_range_observed) );       
+  ts_range_predicted = (NRecords-1)*recordpoints*gapCorrectedTimeStampPerSample;
+  ts_range_observed  = tsE-ts1;
+  ts_range_diff = double(ts_range_observed)-ts_range_predicted;
+  if abs(ts_range_diff)>minJump
+     warning('discontinuous recording, observed number of timestamps and predicted number of timestamps differ by %2.2f seconds\n Please consult the wiki on http://fieldtrip.fcdonders.nl/getting_started/neuralynx?&#discontinuous_recordings',...
+       ts_range_diff/10^6 );       
   end
       
 else

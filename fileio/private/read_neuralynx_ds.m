@@ -170,7 +170,10 @@ if needhdr
     hdr.nSamples           = NRecords(1) * 512;
     hdr.FirstTimeStamp     = FirstTimeStamp(1);
     hdr.LastTimeStamp      = LastTimeStamp(1);
-    hdr.TimeStampPerSample = TimeStampPerSample(1);
+    
+%     this is soooooo wrong, if you have gaps in recording
+%     hdr.TimeStampPerSample = TimeStampPerSample(1);
+    hdr.TimeStampPerSample = 10^6/hdr.Fs;
   end
 
   % remember the original header details
