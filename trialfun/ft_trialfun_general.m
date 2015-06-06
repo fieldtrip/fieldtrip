@@ -74,8 +74,13 @@ if ~isfield(cfg, 'eventformat'),  cfg.eventformat  = []; end
 if ~isfield(cfg, 'headerformat'), cfg.headerformat = []; end
 if ~isfield(cfg, 'dataformat'),   cfg.dataformat   = []; end
 
-% read the header, contains the sampling frequency
-hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+% what if we have had header already, lets inherit it
+if isfield(cfg, 'header')
+    hdr = cfg.header;
+else
+    % read the header otherwise, contains the sampling frequency
+    hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+end
 
 % read the events
 if isfield(cfg, 'event')
