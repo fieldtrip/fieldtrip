@@ -1498,16 +1498,16 @@ switch eventformat
     end
     % the event file is contained in the dataset directory
     if exist(fullfile(filename, 'Events.Nev'))
-      filename = fullfile(filename, 'Events.Nev');
+      nevfilename = fullfile(filename, 'Events.Nev');
     elseif exist(fullfile(filename, 'Events.nev'))
-      filename = fullfile(filename, 'Events.nev');
+      nevfilename = fullfile(filename, 'Events.nev');
     elseif exist(fullfile(filename, 'events.Nev'))
-      filename = fullfile(filename, 'events.Nev');
+      nevfilename = fullfile(filename, 'events.Nev');
     elseif exist(fullfile(filename, 'events.nev'))
-      filename = fullfile(filename, 'events.nev');
+      nevfilename = fullfile(filename, 'events.nev');
     end
     % read the events, apply filter is applicable
-    nev = read_neuralynx_nev(filename, ...
+    nev = read_neuralynx_nev(nevfilename, ...
                              'type', flt_type, ...
                              'value', flt_value, ...
                              'mintimestamp', flt_mintimestamp, ...
@@ -1526,14 +1526,29 @@ switch eventformat
       duration  = repmat({[]},size(value));
       offset    = repmat({[]},size(value));
       
-      %%%% this is sooo wrong in case of non-continuous recording, e.g. with
-      %%%% pauses, I would suggest rereading one channel and to map samples to timestamps
-      %%%% I could try to correct it with your assistance. 
+      %%%% I think I managed to correct it
       %%%% Mike from KFU, mikhail.yu.sintsov@gmail.com
-      sample    = num2cell(round(double(cell2mat(timestamp) - hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1));
-      warning(['nlx event reader generates event samples automatically from timestamps, '...
-               'there is no such information about samples in nlx event file, '...      
-               'make sure your data is consistent before going further']);
+      try
+          % assume we have correct ncs file there
+          lst = dir(fullfile(filename, '*.ncs'));
+          ncsfname = fullfile(filename, lst(1).name);
+          ncs = read_neuralynx_ncs(ncsfname);
+          
+          ncsTimeStamp = repmat(double(ncs.TimeStamp), 512, 1) + ...
+                         hdr.TimeStampPerSample*repmat([0: 511]', 1, ncs.NRecords);
+          ncsTimeStamp = ncsTimeStamp(:);
+          
+          % this procedure is really slow, but it is reliable enough
+          sample = cellfun(@(t) find(abs(ncsTimeStamp-double(t))==min(abs(ncsTimeStamp-double(t))), 1),...
+                           timestamp, 'UniformOutput', false);     
+      catch Exception
+          disp(Exception);
+          sample    = num2cell(round(double(cell2mat(timestamp) - hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1));
+          warning(['nlx event reader generates event samples automatically from timestamps, '...
+                   'there is no such information about samples in nlx event file, '...      
+                   'make sure your data is consistent before going further']);
+      end
+      
       % convert it into a structure array
       event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'duration', duration, 'offset', offset, 'number', number);
     end
