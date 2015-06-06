@@ -1526,8 +1526,6 @@ switch eventformat
       duration  = repmat({[]},size(value));
       offset    = repmat({[]},size(value));
       
-      %%%% I think I managed to correct it
-      %%%% Mike from KFU, mikhail.yu.sintsov@gmail.com
       try
           % assume we have correct ncs files there
           lst = dir(fullfile(filename, '*.ncs'));
@@ -1542,7 +1540,7 @@ switch eventformat
           ncsTimeStamp = ncsTimeStamp(:);
           
           % sanity check
-          if max(ncsTimeStamp) < timestamp{end}
+          if max(ncsTimeStamp) < timestamp{end} || min(ncsTimeStamp) > timestamp{1}
               error(['incomplete data to produce timestamp-2-sample mapping from ' ncsfname]);
           end
           
