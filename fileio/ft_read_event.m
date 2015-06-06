@@ -1529,15 +1529,24 @@ switch eventformat
       %%%% I think I managed to correct it
       %%%% Mike from KFU, mikhail.yu.sintsov@gmail.com
       try
-          % assume we have correct ncs file there
+          % assume we have correct ncs files there
           lst = dir(fullfile(filename, '*.ncs'));
+          
+          % lets just take first for a trial
           ncsfname = fullfile(filename, lst(1).name);
           ncs = read_neuralynx_ncs(ncsfname);
           
+          % create linearized timestamp for each sample
           ncsTimeStamp = repmat(double(ncs.TimeStamp), 512, 1) + ...
                          hdr.TimeStampPerSample*repmat([0: 511]', 1, ncs.NRecords);
           ncsTimeStamp = ncsTimeStamp(:);
           
+          % sanity check
+          if max(ncsTimeStamp) < timestamp{end}
+              error(['incomplete data to produce timestamp-2-sample mapping from ' ncsfname]);
+          end
+          
+          % mapping between timestamp and sample
           % this procedure is really slow, but it is reliable enough
           sample = cellfun(@(t) find(abs(ncsTimeStamp-double(t))==min(abs(ncsTimeStamp-double(t))), 1),...
                            timestamp, 'UniformOutput', false);     
