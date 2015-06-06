@@ -1497,7 +1497,7 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     % the event file is contained in the dataset directory
-    if     exist(fullfile(filename, 'Events.Nev'))
+    if exist(fullfile(filename, 'Events.Nev'))
       filename = fullfile(filename, 'Events.Nev');
     elseif exist(fullfile(filename, 'Events.nev'))
       filename = fullfile(filename, 'Events.nev');
@@ -1507,7 +1507,13 @@ switch eventformat
       filename = fullfile(filename, 'events.nev');
     end
     % read the events, apply filter is applicable
-    nev = read_neuralynx_nev(filename, 'type', flt_type, 'value', flt_value, 'mintimestamp', flt_mintimestamp, 'maxtimestamp', flt_maxtimestamp, 'minnumber', flt_minnumber, 'maxnumber', flt_maxnumber);
+    nev = read_neuralynx_nev(filename, ...
+                             'type', flt_type, ...
+                             'value', flt_value, ...
+                             'mintimestamp', flt_mintimestamp, ...
+                             'maxtimestamp', flt_maxtimestamp, ...
+                             'minnumber', flt_minnumber, ...
+                             'maxnumber', flt_maxnumber);
     
     % the following code should only be executed if there are events,
     % otherwise there will be an error subtracting an uint64 from an []
@@ -1519,7 +1525,15 @@ switch eventformat
       type      = repmat({'trigger'},size(value));
       duration  = repmat({[]},size(value));
       offset    = repmat({[]},size(value));
+      
+      %%%% this is sooo wrong in case of non-continuous recording, e.g. with
+      %%%% pauses, I would suggest rereading one channel and to map samples to timestamps
+      %%%% I could try to correct it with your assistance. 
+      %%%% Mike from KFU, mikhail.yu.sintsov@gmail.com
       sample    = num2cell(round(double(cell2mat(timestamp) - hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1));
+      warning(['nlx event reader generates event samples automatically from timestamps, '...
+               'there is no such information about samples in nlx event file, '...      
+               'make sure your data is consistent before going further']);
       % convert it into a structure array
       event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'duration', duration, 'offset', offset, 'number', number);
     end
