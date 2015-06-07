@@ -69,7 +69,7 @@ function varargout = qsubcellfun(fname, varargin)
 % See also QSUBCOMPILE, QSUBFEVAL, CELLFUN, PEERCELLFUN, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011-2015, Robert Oostenveldfalse
+% Copyright (C) 2011-2015, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -219,8 +219,7 @@ catch
 end
 
 if numargout<0
-  % the nargout function retur      % it should contain function handles, not strings
-ns -1 in case of a variable number of output arguments
+  % the nargout function returns -1 in case of a variable number of output arguments
   numargout = 1;
 elseif numargout>nargout
   % the number of output arguments is constrained by the users' call to this function

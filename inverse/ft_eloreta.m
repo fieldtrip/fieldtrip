@@ -27,7 +27,7 @@ function [dipout] = ft_eloreta(dip, grad, vol, dat, Cf, varargin)
 %  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
 %  'normalize'        = normalize the leadfield
 %  'normalizeparam'   = parameter for depth normalization (default = 0.5)
-
+%
 % If the dipole definition only specifies the dipole location, a rotating
 % dipole (regional source) is assumed on each location. If a dipole moment
 % is specified, its orientation will be used and only the strength will

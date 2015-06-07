@@ -6,7 +6,7 @@ function test_bug2040
 % TEST test_bug2040
 % TEST nansum
 
-f = fileparts(which('ft_defaults'));
+[ftver, ftpath] = ft_version;
 
 p  = tempname;
 p1 = fullfile(p, 'mexfile');
@@ -20,9 +20,9 @@ mkdir(fullfile(p3));
 
 % separate the three implementations
 cd(p1);
-copyfile(fullfile(f, 'src', ['nansum.' mexext]), '.');
+copyfile(fullfile(ftpath, 'src', ['nansum.' mexext]), '.');
 cd(p2);
-copyfile(fullfile(f, 'src', 'nansum.m'), '.');
+copyfile(fullfile(ftpath, 'src', 'nansum.m'), '.');
 cd(p3);
 % don't copy anything here, assume that the Mathworks signal processing toolbox is on the path
 

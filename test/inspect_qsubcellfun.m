@@ -7,8 +7,8 @@ function inspect_qsubcellfun
 % TEST qsubcellfun qsubfeval qsubget
 
 if isempty(which('qsubcellfun'))
-  [p, f, x] = fileparts(which('ft_defaults'));
-  addpath(fullfile(p, 'qsub'));
+  [ftver, ftpath] = ft_version;
+  addpath(fullfile(ftpath, 'qsub'));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

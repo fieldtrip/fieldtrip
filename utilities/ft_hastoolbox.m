@@ -99,46 +99,47 @@ url = {
   'PLOTTING'   'see http://www.ru.nl/neuroimaging/fieldtrip'
   'SPIKE'      'see http://www.ru.nl/neuroimaging/fieldtrip'
   'CONNECTIVITY' 'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'PEER'       'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'PLOTTING'   'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'DENOISE'    'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
-  'BCI2000'    'see http://bci2000.org'
-  'NLXNETCOM'  'see http://www.neuralynx.com'
-  'DIPOLI'     'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
-  'MNE'        'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
-  'TCP_UDP_IP' 'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
-  'BEMCP'      'contact Christophe Phillips'
-  'OPENMEEG'   'see http://gforge.inria.fr/projects/openmeeg and http://gforge.inria.fr/frs/?group_id=435'
-  'PRTOOLS'    'see http://www.prtools.org'
-  'ITAB'       'contact Stefania Della Penna'
-  'BSMART'     'see http://www.brain-smart.org'
-  'PEER'       'see http://fieldtrip.fcdonders.nl/development/peer'
-  'FREESURFER' 'see http://surfer.nmr.mgh.harvard.edu/fswiki'
-  'SIMBIO'     'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
-  'VGRID'      'see http://www.rheinahrcampus.de/~medsim/vgrid/manual.html'
-  'FNS'        'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
-  'GIFTI'      'see http://www.artefact.tk/software/matlab/gifti'
-  'XML4MAT'    'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
-  'SQDPROJECT' 'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
-  'BCT'        'see http://www.brain-connectivity-toolbox.net/'
-  'CCA'        'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
-  'EGI_MFF'    'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
+  'PEER'          'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'PLOTTING'      'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
+  'BCI2000'       'see http://bci2000.org'
+  'NLXNETCOM'     'see http://www.neuralynx.com'
+  'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
+  'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
+  'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
+  'BEMCP'         'contact Christophe Phillips'
+  'OPENMEEG'      'see http://gforge.inria.fr/projects/openmeeg and http://gforge.inria.fr/frs/?group_id=435'
+  'PRTOOLS'       'see http://www.prtools.org'
+  'ITAB'          'contact Stefania Della Penna'
+  'BSMART'        'see http://www.brain-smart.org'
+  'PEER'          'see http://fieldtrip.fcdonders.nl/development/peer'
+  'FREESURFER'    'see http://surfer.nmr.mgh.harvard.edu/fswiki'
+  'SIMBIO'        'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
+  'VGRID'         'see http://www.rheinahrcampus.de/~medsim/vgrid/manual.html'
+  'FNS'           'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
+  'GIFTI'         'see http://www.artefact.tk/software/matlab/gifti'
+  'XML4MAT'       'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
+  'SQDPROJECT'    'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
+  'BCT'           'see http://www.brain-connectivity-toolbox.net/'
+  'CCA'           'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
+  'EGI_MFF'       'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
   'TOOLBOX_GRAPH' 'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
-  'NETCDF'     'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
-  'MYSQL'      'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
-  'ISO2MESH'   'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
-  'DATAHASH'   'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
-  'IBTB'       'see http://www.ibtb.org'
-  'ICASSO'     'see http://www.cis.hut.fi/projects/ica/icasso'
-  'XUNIT'      'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
-  'PLEXON'     'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
-  'MISC'       'various functions that were downloaded from http://www.mathworks.com/matlabcentral/fileexchange and elsewhere'
+  'NETCDF'        'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
+  'MYSQL'         'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
+  'ISO2MESH'      'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
+  'DATAHASH'      'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
+  'IBTB'          'see http://www.ibtb.org'
+  'ICASSO'        'see http://www.cis.hut.fi/projects/ica/icasso'
+  'XUNIT'         'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
+  'PLEXON'        'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
+  'MISC'          'various functions that were downloaded from http://www.mathworks.com/matlabcentral/fileexchange and elsewhere'
   '35625-INFORMATION-THEORY-TOOLBOX'      'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
   '29046-MUTUAL-INFORMATION'              'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
   '14888-MUTUAL-INFORMATION-COMPUTATION'  'see http://www.mathworks.com/matlabcentral/fileexchange/14888-mutual-information-computation'
-  'PLOT2SVG'    'see http://www.mathworks.com/matlabcentral/fileexchange/7401-scalable-vector-graphics-svg-export-of-figures'
-  'BRAINSUITE'  'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
-  'BRAINVISA'   'see http://brainvisa.info'
+  'PLOT2SVG'      'see http://www.mathworks.com/matlabcentral/fileexchange/7401-scalable-vector-graphics-svg-export-of-figures'
+  'BRAINSUITE'    'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
+  'BRAINVISA'     'see http://brainvisa.info'
+  'FILEEXCHANGE'  'see http://www.mathworks.com/matlabcentral/fileexchange/'
   };
 
 if nargin<2
@@ -202,7 +203,7 @@ switch toolbox
   case 'MRI'    % other functions in the mri section
     status = (exist('avw_hdr_read', 'file') && exist('avw_img_read', 'file'));
   case 'NEUROSHARE'
-    status  = (exist('ns_OpenFile', 'file') && exist('ns_SetLibrary', 'file') && exist('ns_GetAnalogData', 'file'));    
+    status  = (exist('ns_OpenFile', 'file') && exist('ns_SetLibrary', 'file') && exist('ns_GetAnalogData', 'file'));
   case 'ARTINIS'
     status  = exist('read_artinis_oxy3', 'file');
   case 'BESA'
@@ -356,6 +357,8 @@ switch toolbox
     
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
+  case 'FILEEXCHANGE'
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/external/fileexchange'], 'once'));
   case 'COMPAT'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/compat'],              'once'));
   case 'STATFUN'
@@ -486,7 +489,7 @@ elseif exist(toolbox, 'dir')
   end
   addpath(toolbox);
   status = 1;
-elseif (~isempty(regexp(toolbox, 'spm5$')) || ~isempty(regexp(toolbox, 'spm8$')) || ~isempty(regexp(toolbox, 'spm12$'))) && exist([toolbox 'b'], 'dir')
+elseif (~isempty(regexp(toolbox, 'spm5$', 'once')) || ~isempty(regexp(toolbox, 'spm8$', 'once')) || ~isempty(regexp(toolbox, 'spm12$', 'once'))) && exist([toolbox 'b'], 'dir')
   status = myaddpath([toolbox 'b'], silent);
 else
   status = 0;
@@ -528,4 +531,3 @@ catch
     status = true;
   end
 end
-

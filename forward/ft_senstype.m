@@ -165,6 +165,8 @@ if isdata
   elseif isfield(input, 'label')
     sens.label = input.label;
     islabel    = true;
+  else
+    sens = [];
   end
   
 elseif isheader

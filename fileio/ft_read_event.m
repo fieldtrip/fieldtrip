@@ -9,20 +9,21 @@ function [event] = ft_read_event(filename, varargin)
 %   [event] = ft_read_event(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   'dataformat'    string
-%   'headerformat'  string
-%   'eventformat'   string
-%   'header'        structure, see FT_READ_HEADER
-%   'detectflank'   string, can be 'bit', 'up', 'down', 'both' or 'auto' (default is system specific)
-%   'trigshift'     integer, number of samples to shift from flank to detect trigger value (default = 0)
-%   'trigindx'      list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
-%   'threshold'     threshold for analog trigger channels (default is system specific)
-%   'blocking'      wait for the selected number of events (default = 'no')
-%   'timeout'       amount of time in seconds to wait when blocking (default = 5)
-%   'tolerance'     tolerance in samples when merging analogue trigger
-%                   channels, only for Neuromag (default = 1,
-%                   meaning that an offset of one sample in both directions
-%                   is compensated for)
+%   'dataformat'     string
+%   'headerformat'   string
+%   'eventformat'    string
+%   'header'         structure, see FT_READ_HEADER
+%   'detectflank'    string, can be 'bit', 'up', 'down', 'both' or 'auto' (default is system specific)
+%   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
+%   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
+%   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
+%   'threshold'      threshold for analog trigger channels (default is system specific)
+%   'blocking'       wait for the selected number of events (default = 'no')
+%   'timeout'        amount of time in seconds to wait when blocking (default = 5)
+%   'tolerance'      tolerance in samples when merging analogue trigger
+%                    channels, only for Neuromag (default = 1,
+%                    meaning that an offset of one sample in both directions
+%                    is compensated for)
 %
 % Furthermore, you can specify optional arguments as key-value pairs
 % for filtering the events, e.g. to select only events of a specific
@@ -147,6 +148,7 @@ threshold        = ft_getopt(varargin, 'threshold');           % this is used fo
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
 checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');      % will be passed to ft_read_header
 eventformat      = ft_getopt(varargin, 'eventformat');
+chanindx         = ft_getopt(varargin, 'chanindx');            % used for EDF files with variable sampling rate
 
 if isempty(eventformat)
   % only do the autodetection if the format was not specified
@@ -575,7 +577,7 @@ switch eventformat
   case 'edf'
     % EDF itself does not contain events, but EDF+ does define an annotation channel
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'chanindx', chanindx);
     end
     
     if issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation)
@@ -1310,42 +1312,44 @@ switch eventformat
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', analogindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', true);
         event   = appendevent(event, trigger);
         
-        % throw out everything that is not a (real) trigger...
-        [sel1, sel2] = match_str({trigger.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
-        trigger_tmp = trigger(sel1);
-        %trigger_bits = size(unique(sel2), 1);
-        all_triggers = unique(sel2);
-        trigger_bits = max(all_triggers) - min(all_triggers) + 1;
-        
-        % collect all samples where triggers occured...
-        all_samples = unique([trigger_tmp.sample]);
-        
-        new_triggers = [];
-        i = 1;
-        while i <= length(all_samples)
-          cur_triggers = [];
-          j = 0;
+        if ~isempty(trigger)
+          % throw out everything that is not a (real) trigger...
+          [sel1, sel2] = match_str({trigger.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
+          trigger_tmp = trigger(sel1);
+          %trigger_bits = size(unique(sel2), 1);
+          all_triggers = unique(sel2);
+          trigger_bits = max(all_triggers) - min(all_triggers) + 1;
           
-          % look also in adjacent samples according to tolerance
-          while (i+j <= length(all_samples)) && (all_samples(i+j) - all_samples(i) <= tolerance)
-            if j >= 1
-              fprintf('Fixing trigger at sample %d\n', all_samples(i));
+          % collect all samples where triggers occured...
+          all_samples = unique([trigger_tmp.sample]);
+          
+          new_triggers = [];
+          i = 1;
+          while i <= length(all_samples)
+            cur_triggers = [];
+            j = 0;
+            
+            % look also in adjacent samples according to tolerance
+            while (i+j <= length(all_samples)) && (all_samples(i+j) - all_samples(i) <= tolerance)
+              if j >= 1
+                fprintf('Fixing trigger at sample %d\n', all_samples(i));
+              end %if
+              cur_triggers = appendevent(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
+              j = j + 1;
+            end %while
+            
+            % construct new trigger field
+            if ~isempty(cur_triggers)
+              new_triggers(end+1).type = 'Trigger';
+              new_triggers(end).sample = all_samples(i);
+              [sel1, sel2] = match_str({cur_triggers.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
+              new_triggers(end).value = bin2dec((dec2bin(sum(2.^(sel2-1)), trigger_bits)));
             end %if
-            cur_triggers = appendevent(cur_triggers, trigger_tmp([trigger_tmp.sample] == all_samples(i+j)));
-            j = j + 1;
+            
+            i = i + j;
           end %while
-          
-          % construct new trigger field
-          if ~isempty(cur_triggers)
-            new_triggers(end+1).type = 'Trigger';
-            new_triggers(end).sample = all_samples(i);
-            [sel1, sel2] = match_str({cur_triggers.type}, {'STI001', 'STI002', 'STI003', 'STI004', 'STI005', 'STI006', 'STI007', 'STI008'});
-            new_triggers(end).value = bin2dec((dec2bin(sum(2.^(sel2-1)), trigger_bits)));
-          end %if
-          
-          i = i + j;
-        end %while
-        event = appendevent(event, new_triggers);
+          event = appendevent(event, new_triggers);
+        end %if
         
       end
       

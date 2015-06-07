@@ -12,8 +12,10 @@ function mri = ft_defacevolume(cfg, mri)
 %   mri = ft_defacevolume(cfg, mri)
 %
 % The configuration can contain the following options
-%   cfg.center = position of the initial box (default = [0 0 0])
-%   cfg.size   = size of the initial box (default is automatic)
+%   cfg.translate  = initial position of the center of the box (default = [0 0 0])
+%   cfg.scale      = initial size of the box along each dimension (default is automatic)
+%   cfg.translate  = initial rotation of the box (default = [0 0 0])
+%   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %
 % See also FT_ANONIMIZEDATA, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
 
@@ -53,8 +55,10 @@ if abort
 end
 
 % set the defaults
-cfg.center = ft_getopt(cfg, 'center', [0 0 0]);
-cfg.size   = ft_getopt(cfg, 'size'); % automatic default is determined further down
+cfg.rotate    = ft_getopt(cfg, 'rotate', [0 0 0]);
+cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined further down
+cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
+cfg.selection = ft_getopt(cfg, 'selection', 'outside');
 
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
@@ -129,50 +133,49 @@ for k = 1:n
   set(hld(k+n*2), 'linewidth', 3, 'color', 'b');
 end
 
-mask.pos = cfg.center;
-mask.siz = cfg.size;
-if isempty(mask.siz)
-  mask.siz = [axmax axmax axmax]/2;
+if isempty(cfg.scale)
+  cfg.scale = [axmax axmax axmax]/2;
 end
 
-guidata(figHandle, mask);
+guidata(figHandle, cfg);
 
 % add the GUI elements
 cb_creategui(gca);
 cb_redraw(gca);
 
 uiwait(figHandle);
-mask = guidata(figHandle);
+cfg = guidata(figHandle);
 delete(figHandle);
 drawnow
-fprintf('applying mask to MRI voxels\n')
+fprintf('keeping all voxels from MRI that are %s the box\n', cfg.selection)
 
-x1 = mask.pos(1) - mask.siz(1);
-y1 = mask.pos(1) - mask.siz(1);
-z1 = mask.pos(2) - mask.siz(2);
-x2 = mask.pos(2) + mask.siz(2);
-y2 = mask.pos(3) + mask.siz(3);
-z2 = mask.pos(3) + mask.siz(3);
-
-R = mask.R;
-S = mask.S;
-T = mask.T;
+R = cfg.R;
+S = cfg.S;
+T = cfg.T;
 
 % it is possible to convert the box to headcoordinates, but it is more efficient the other way around
 [X, Y, Z] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
 voxpos = ft_warp_apply(mri.transform, [X(:) Y(:) Z(:)]);  % voxel positions in head coordinates
-voxpos = ft_warp_apply(inv(T*S*R), voxpos);           % voxel positions in box coordinates
+voxpos = ft_warp_apply(inv(T*S*R), voxpos);               % voxel positions in box coordinates
 
-inside = ...
-  voxpos(:,1) > -mask.siz(1) & ...
-  voxpos(:,1) < +mask.siz(1) & ...
-  voxpos(:,2) > -mask.siz(2) & ...
-  voxpos(:,2) < +mask.siz(2) & ...
-  voxpos(:,3) > -mask.siz(3) & ...
-  voxpos(:,3) < +mask.siz(3);
+keep = ...
+  voxpos(:,1) > -0.5 & ...
+  voxpos(:,1) < +0.5 & ...
+  voxpos(:,2) > -0.5 & ...
+  voxpos(:,2) < +0.5 & ...
+  voxpos(:,3) > -0.5 & ...
+  voxpos(:,3) < +0.5;
 
-mri.anatomy(inside) = 0;
-fprintf('masked %.0f%% of the voxels\n', 100*mean(inside));
+if strcmp(cfg.selection, 'inside')
+  % invert the selection, i.e. keep the voxels inside the box
+  keep = ~keep;
+end
+
+mri.anatomy(keep) = 0;
+fprintf('erasing %.0f%% of the voxels\n', 100*mean(keep));
+
+% remove the temporary fields from the configuration, keep the rest for provenance
+cfg = removefields(cfg, {'R', 'S', 'T'});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -187,7 +190,7 @@ function cb_redraw(figHandle, varargin)
 persistent p
 % define the position of each GUI element
 figHandle = get(figHandle, 'parent');
-mask = guidata(figHandle);
+cfg = guidata(figHandle);
 
 rx = str2double(get(findobj(figHandle, 'tag', 'rx'), 'string'));
 ry = str2double(get(findobj(figHandle, 'tag', 'ry'), 'string'));
@@ -199,16 +202,27 @@ sx = str2double(get(findobj(figHandle, 'tag', 'sx'), 'string'));
 sy = str2double(get(findobj(figHandle, 'tag', 'sy'), 'string'));
 sz = str2double(get(findobj(figHandle, 'tag', 'sz'), 'string'));
 
-R = rotate   ([rx ry rz]);
-T = translate([tx ty tz]);
-S = scale    ([sx sy sz]);
+% remember the user specified transformation
+cfg.rotate    = [rx ry rz];
+cfg.translate = [tx ty tz];
+cfg.scale     = [sx sy sz];
 
-x1 = mask.pos(1) - mask.siz(1);
-y1 = mask.pos(1) - mask.siz(1);
-z1 = mask.pos(2) - mask.siz(2);
-x2 = mask.pos(2) + mask.siz(2);
-y2 = mask.pos(3) + mask.siz(3);
-z2 = mask.pos(3) + mask.siz(3);
+R = rotate   (cfg.rotate);
+T = translate(cfg.translate);
+S = scale    (cfg.scale);
+
+% remember the transformation matrices
+cfg.R = R;
+cfg.T = T;
+cfg.S = S;
+
+% start with a cube of unit dimensions
+x1 = -0.5;
+y1 = -0.5;
+z1 = -0.5;
+x2 = +0.5;
+y2 = +0.5;
+z2 = +0.5;
 
 plane1 = [
   x1 y1 z1
@@ -246,12 +260,12 @@ plane6 = [
   x2 y2 z2
   x1 y2 z2];
 
-plane1 = ft_warp_apply(T, ft_warp_apply(R*S, plane1));
-plane2 = ft_warp_apply(T, ft_warp_apply(R*S, plane2));
-plane3 = ft_warp_apply(T, ft_warp_apply(R*S, plane3));
-plane4 = ft_warp_apply(T, ft_warp_apply(R*S, plane4));
-plane5 = ft_warp_apply(T, ft_warp_apply(R*S, plane5));
-plane6 = ft_warp_apply(T, ft_warp_apply(R*S, plane6));
+plane1 = ft_warp_apply(T*R*S, plane1);
+plane2 = ft_warp_apply(T*R*S, plane2);
+plane3 = ft_warp_apply(T*R*S, plane3);
+plane4 = ft_warp_apply(T*R*S, plane4);
+plane5 = ft_warp_apply(T*R*S, plane5);
+plane6 = ft_warp_apply(T*R*S, plane6);
 
 if all(ishandle(p))
   delete(p);
@@ -265,15 +279,14 @@ p(5) = patch(plane5(:,1), plane5(:,2), plane5(:,3), 'y');
 p(6) = patch(plane6(:,1), plane6(:,2), plane6(:,3), 'y');
 set(p, 'FaceAlpha', 0.3);
 
-mask.R = R;
-mask.T = T;
-mask.S = S;
-guidata(figHandle, mask);
+guidata(figHandle, cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_creategui(figHandle, varargin)
 % define the position of each GUI element
 figHandle = get(figHandle, 'parent');
+cfg = guidata(figHandle);
+
 % constants
 CONTROL_WIDTH   = 0.05;
 CONTROL_HEIGHT  = 0.08;
@@ -282,9 +295,9 @@ CONTROL_VOFFSET = 0.20;
 
 % rotateui
 uicontrol('tag', 'rotateui', 'parent', figHandle, 'units', 'normalized', 'style', 'text', 'string', 'rotate', 'callback', [])
-uicontrol('tag', 'rx', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'ry', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'rz', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+uicontrol('tag', 'rx', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.rotate(1)), 'callback', @cb_redraw)
+uicontrol('tag', 'ry', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.rotate(2)), 'callback', @cb_redraw)
+uicontrol('tag', 'rz', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.rotate(3)), 'callback', @cb_redraw)
 ft_uilayout(figHandle, 'tag', 'rotateui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET);
 ft_uilayout(figHandle, 'tag', 'rx',       'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET);
 ft_uilayout(figHandle, 'tag', 'ry',       'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET);
@@ -292,9 +305,9 @@ ft_uilayout(figHandle, 'tag', 'rz',       'BackgroundColor', [0.8 0.8 0.8], 'wid
 
 % scaleui
 uicontrol('tag', 'scaleui', 'parent', figHandle, 'units', 'normalized', 'style', 'text', 'string', 'scale', 'callback', [])
-uicontrol('tag', 'sx', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
-uicontrol('tag', 'sy', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
-uicontrol('tag', 'sz', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
+uicontrol('tag', 'sx', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.scale(1)), 'callback', @cb_redraw)
+uicontrol('tag', 'sy', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.scale(2)), 'callback', @cb_redraw)
+uicontrol('tag', 'sz', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.scale(3)), 'callback', @cb_redraw)
 ft_uilayout(figHandle, 'tag', 'scaleui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
 ft_uilayout(figHandle, 'tag', 'sx',      'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
 ft_uilayout(figHandle, 'tag', 'sy',      'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
@@ -302,9 +315,9 @@ ft_uilayout(figHandle, 'tag', 'sz',      'BackgroundColor', [0.8 0.8 0.8], 'widt
 
 % translateui
 uicontrol('tag', 'translateui', 'parent', figHandle, 'units', 'normalized', 'style', 'text', 'string', 'translate', 'callback', [])
-uicontrol('tag', 'tx', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'ty', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'tz', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+uicontrol('tag', 'tx', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.translate(1)), 'callback', @cb_redraw)
+uicontrol('tag', 'ty', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.translate(2)), 'callback', @cb_redraw)
+uicontrol('tag', 'tz', 'parent', figHandle, 'units', 'normalized', 'style', 'edit', 'string', num2str(cfg.translate(3)), 'callback', @cb_redraw)
 ft_uilayout(figHandle, 'tag', 'translateui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
 ft_uilayout(figHandle, 'tag', 'tx',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
 ft_uilayout(figHandle, 'tag', 'ty',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);

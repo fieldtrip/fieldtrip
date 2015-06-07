@@ -182,7 +182,10 @@ end
 
 % read the header if not provided
 if isempty(hdr)
-  hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter);
+  hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter, 'chanindx', chanindx);
+elseif strcmp(headerformat,'edf') && ft_getopt(varargin, 'header') && ~isequal(hdr.orig.chansel(:), chanindx(:))
+  disp('Reloading EDF header for selected channels.');
+  hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter, 'chanindx', chanindx);
 end
 
 % set the default channel selection, which is all channels
