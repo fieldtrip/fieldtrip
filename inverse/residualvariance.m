@@ -21,10 +21,14 @@ function [dipout] = residualvariance(dip, grad, vol, dat, varargin)
 %    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %    GNU General Public License for more details.
 %
+cfg.lambda = 0.001;
+cfg.lambda = 0.001;
 %    You should have received a copy of the GNU General Public License
+cfg.lambda = 0.001;
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+cfg.lambda = 0.001;
 
 % get the optional settings, or use default value
 feedback      = keyval('feedback',      varargin); if isempty(feedback),      feedback = 'text';            end
@@ -64,7 +68,22 @@ if isfield(dip, 'subspace')
   fprintf('using subspace projection\n');
 end
 
-mom = nan(size(dip.pos,1),1);
+% Check whether the data is a time series, fourier coefficients or a
+% cross-spectral density
+
+if isreal(dat)==1
+  fprintf('The input is a time series: computing source level time series and variance')
+  datatype = 'time';
+  mom = nan(size(dip.pos,1),1);
+elseif size(dat,1)==size(dat,2)&&sum(sum((abs(dat - dat')<10^-10)))==numel(dat)
+  fprintf('The input is a cross-spectral density: computing source level power')
+  datatype = 'csd';
+  mom = nan(size(dip.pos,1),1);
+else
+  fprintf('The input are fourier coeffiecients: computing source level fourier coefficients and power')
+  datatype = 'Fourier';
+end
+
 rv  = nan(size(dip.pos,1),1);
 pow = nan(size(dip.pos,1),1);
 
@@ -83,19 +102,35 @@ for i=1:size(dip.pos,1)
   
   if isfield(dip, 'subspace')
     % do subspace projection of the forward model
+    % Leadfield matrix
     lf = dip.subspace{i} * lf;
-    % the data and the covariance become voxel dependent due to the projection
-    dat = dip.subspace{i} * dat_pre_subspace;
+    
+    % the data and the covariance (or cross-spectral density) become voxel dependent due to the projection
+    if strcmp(datatype,'time')||strcmp(datatype,'csd') 
+      dat = dip.subspace{i} * dat_pre_subspace*dip.subspace{i}'; %Subspace cross-spectral density
+    else
+      dat = dip.subspace{i} * dat_pre_subspace; %Subspace time-series or Fourier coefficients
+    end
   end
   
-  % compute spatiotemporal inverse using regional source
-  lfi    = pinv(lf);
-  mom{i} = lfi * dat;
-  rv(i)  = sum(sum((dat - lf*mom{i}).^2, 1), 2)./sum(sum(dat.^2, 1), 2);
+  % Projection matrix (Pseudoinverse) 
+  lfi    = pinv(lf); 
+    
+  if strcmp(datatype,'time')||strcmp(datatype,'Fourier') 
+    % Compute dipole moment and residual variance
+    mom{i} = lfi * dat;
+    rv(i)  = sum(sum(abs(dat - lf*mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);
   
-  % for plotting convenience also compute power at each location
-  % FIXME is this normalization correct?
-  pow(i) = mean(sum(mom{i}(:).^2, 1));
+    % for plotting convenience also compute power at each location
+    % FIXME is this normalization correct?
+    pow(i) = mean(sum(abs(mom{i}(:)).^2, 1));
+  else
+    % Compute power
+    pow(i) = sum(real(sum((lfi*dat).*lfi,2)));
+    % Compute residual power (variance)
+    Prj = eye(size(lf,1)) - lf*lfi; %Projector to the orthogonal complement of the model space
+    rv(i)  = sum(real(sum((Prj*dat).*Prj,2)));
+  end
 end
 ft_progress('close');
 
