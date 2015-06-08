@@ -353,14 +353,14 @@ if ~isempty(callback)
     callback  = {funhandle, val};
   end
   for icmenu = 1:numel(hcmenuopt)
-    set(hcmenuopt(icmenu),'callback',{@evalContextCallback, callback{:}})
+    set(hcmenuopt(icmenu),'callback',{@evalcontextcallback, callback{:}})
   end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function evalContextCallback(hcmenuopt, eventdata, varargin)
+function evalcontextcallback(hcmenuopt, eventdata, varargin)
 
 % delete selection box if present
 % get parent (uimenu -> uicontextmenu -> parent)
