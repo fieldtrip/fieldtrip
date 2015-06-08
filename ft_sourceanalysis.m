@@ -500,8 +500,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne', 'rv', 'mus
           tbin = nearest(data.time, cfg.latency);
           avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
         end
-      else
-        avg = [];
+      else % The input data is a CSD matrix, this is enough for computing source power, coherence and residual power.
+        avg = Cf;
       end
       
     case 'dics'
@@ -679,7 +679,9 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne', 'rv', 'mus
       case 'mne'
         dip(i) = minimumnormestimate(grid, sens, vol, avg, optarg{:});
         % error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
-      case {'rv' 'music'}
+      case {'rv'}
+        dip(i) = residualvariance(grid, sens, vol, avg, optarg{:}) ;
+      case {'music'}
         error('method ''%s'' is temporarily unsupported for source reconstruction with frequency domain data. Please contact the fieldtrip development team if you think that you need this functionality',cfg.method);
       otherwise 
     end
