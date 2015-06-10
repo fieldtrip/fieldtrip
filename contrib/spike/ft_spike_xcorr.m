@@ -123,7 +123,7 @@ cfg = ft_checkopt(cfg, 'maxlag', 'doublescalar');
 cfg = ft_checkopt(cfg, 'binsize', 'doublescalar');
 cfg = ft_checkopt(cfg, 'outputunit', 'char', {'proportion', 'center', 'raw'});
 
-cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit'});
 
 doShiftPredictor  = strcmp(cfg.method, 'shiftpredictor'); % shift predictor
 

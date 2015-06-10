@@ -87,7 +87,7 @@ cfg = ft_checkopt(cfg, 'normalize','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg, 'fsample', 'double');
 
-cfg = ft_checkconfig(cfg, 'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
 
 spike = ft_checkdata(spike, 'datatype', 'spike', 'feedback', 'yes');
 

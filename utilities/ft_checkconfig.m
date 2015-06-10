@@ -200,12 +200,17 @@ if ~isempty(allowed)
     'trackcallinfo'
     'trackdatainfo'
     'trackparaminfo'
+    'callinfo'
+    'version'
+    'warning'
     'debug'
+    'track'
+    'progress'
     });
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
   if ~isempty(c)
-    error('The field cfg.%s is not allowed\n', c{1});
+    error('The field cfg.%s is not allowed\n', c{i});
   end
 end
 
@@ -353,7 +358,7 @@ if ~isempty(createsubcfg)
           'realfilter'
           'subspace'
           };
-      
+        
       case 'eloreta'
         fieldname = {
           'keepfilter'
@@ -685,7 +690,7 @@ norecursion  = {'event'}; % these fields should not be handled recursively
 fieldsorig = fieldnames(cfg);
 for i=1:numel(fieldsorig)
   for k=1:numel(cfg)  % process each structure in a struct-array
-
+    
     if any(strcmp(fieldsorig{i}, ignorefields))
       % keep this field, regardless of its size
       continue
