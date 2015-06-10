@@ -45,6 +45,17 @@ function ft_defaults
 global ft_default
 persistent initialized
 
+if isempty(initialized)
+  initialized = false;
+end
+
+% locate the file that contains the persistent FieldTrip preferences
+fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
+if exist(fieldtripprefs, 'file')
+  prefs       = load(fieldtripprefs); % the file contains multiple fields
+  ft_default  = mergeconfig(ft_default, prefs);
+end  
+
 % Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.
 % Note that ft_getopt might not be available on the path at this moment and can therefore not yet be used.
 
@@ -59,16 +70,19 @@ if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';   
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no, this is still under development
 if ~isfield(ft_default, 'trackparaminfo'), ft_default.trackparaminfo = 'no';     end % yes or no, this is still under development
 
-% track whether we have executed ft_defaults already. Note that we should
-% not use ft_default itself directly, because the user might have set stuff
-% in that struct already before ft_defaults is called for the first time.
-if ~isempty(initialized) && exist('ft_hastoolbox', 'file')
+% Check whether this ft_defaults function has already been executed. Note that we
+% should not use ft_default itself directly, because the user might have set stuff
+% in that struct already prior to ft_defaults being called for the first time.
+if initialized && exist('ft_hastoolbox', 'file')
   return;
 end
 
+% track the FieldTrip usage
+ft_track('ft_default');
+
 % Ensure that the path containing ft_defaults is on the path.
 % This allows people to do "cd path_to_fieldtrip; ft_defaults"
-ftPath = fileparts(mfilename('fullpath')); % get path, strip away 'ft_defaults'
+ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
 ftPath = strrep(ftPath, '\', '\\');
 if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
   warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
