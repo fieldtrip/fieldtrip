@@ -77,9 +77,6 @@ if initialized && exist('ft_hastoolbox', 'file')
   return;
 end
 
-% track the FieldTrip usage
-ft_track('ft_default');
-
 % Ensure that the path containing ft_defaults is on the path.
 % This allows people to do "cd path_to_fieldtrip; ft_defaults"
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
@@ -226,6 +223,9 @@ if ~isdeployed
   end
   
 end
+
+% track the FieldTrip usage
+ft_track('ft_default');
 
 % remember that the function has executed in a persistent variable
 initialized = true;
