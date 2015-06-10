@@ -387,7 +387,7 @@ elseif ischar(cfg.layout)
       fprintf('reading layout from file %s\n', cfg.layout);
       layout = readlay(cfg.layout);
     else
-      warning_once(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
+      ft_warning(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
       cfg.layout = [cfg.layout(1:end-3) 'mat'];
       layout = ft_prepare_layout(cfg);
       return;
@@ -985,7 +985,7 @@ else
   % them around if requested
   if size(unique(prj,'rows'),1) / size(prj,1) < 0.8
     if strcmp(overlap, 'shift')
-      warning_once('the specified sensor configuration has many overlapping channels, creating a layout by shifting them around (use a template layout for better control over the positioning)');
+      ft_warning('the specified sensor configuration has many overlapping channels, creating a layout by shifting them around (use a template layout for better control over the positioning)');
       prj = shiftxy(prj', 0.2)';
       prjForDist = prj;
     elseif strcmp(overlap, 'no')

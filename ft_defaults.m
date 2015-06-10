@@ -239,12 +239,12 @@ end % function ft_default
 function checkMultipleToolbox(toolbox, keyfile)
 list = which(keyfile, '-all');
 if length(list)>1
-  [ws, warned] = warning_once(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
+  [ws, warned] = ft_warning(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
   if warned % only throw the warning once
     for i=1:length(list)
       warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
-  warning_once('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://fieldtrip.fcdonders.nl/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://fieldtrip.fcdonders.nl/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkMultipleToolbox

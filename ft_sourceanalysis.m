@@ -387,7 +387,7 @@ if isfield(cfg.grid, 'filter')
   if numel(cfg.grid.filter) == size(grid.pos, 1)
     grid.filter = cfg.grid.filter;
   else
-    warning_once('ignoring predefined filter as it does not match the number of source positions');
+    ft_warning('ignoring predefined filter as it does not match the number of source positions');
   end
 end
 
@@ -722,7 +722,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music'
       end
     end
     hascovariance = 0;
-    warning_once('No covariance matrix found - will assume identity covariance matrix (mininum-norm solution)');
+    ft_warning('No covariance matrix found - will assume identity covariance matrix (mininum-norm solution)');
   end
   
   if strcmp(cfg.method, 'pcc')

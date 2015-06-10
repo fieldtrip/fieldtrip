@@ -1470,7 +1470,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc'),
       set(opt.hc, 'XLim', [opt.fcolmin opt.fcolmax]);
     end
   else
-    warning_once('no colorbar possible without functional data');
+    ft_warning('no colorbar possible without functional data');
   end
 end
 

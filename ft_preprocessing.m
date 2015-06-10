@@ -272,7 +272,7 @@ if hasdata
         strcmp(cfg.medianfilter, 'yes')
       padding = round(cfg.padding * data.fsample);
       if strcmp(cfg.padtype, 'data')
-        warning_once('datapadding not possible with in-memory data - padding will be performed by data mirroring');
+        ft_warning('datapadding not possible with in-memory data - padding will be performed by data mirroring');
         cfg.padtype = 'mirror';
       end
     else

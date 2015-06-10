@@ -54,7 +54,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init            % this will reset warning_once and show the function help if nargin==0 and return an error
+ft_preamble init            % this will reset ft_warning and show the function help if nargin==0 and return an error
 ft_preamble provenance      % this records the time and memory usage at the beginning of the function
 ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
@@ -105,7 +105,7 @@ for i=1:ntrl
     for j=1:size(idx_start_c,1)
      sample_window = [idx_start_c(j)-prewindow:idx_start_c(j)-1 idx_end_c(j)+1:idx_end_c(j)+postwindow]; % Indices of time-points used for interpolation
      if any(sample_window<1) || any(sample_window>size(datain.trial{i},2)) % Check whether sampling window falls within data range
-       warning_once('Sample window partially outside of data-range, using less samples');
+       ft_warning('Sample window partially outside of data-range, using less samples');
        sample_window(sample_window<1|sample_window>size(datain.trial{i},2))=[];
      elseif any(isnan(datain.trial{i}(idx_start_r(j),sample_window))) % Check whether sampling window overlaps with other chunk of nans
       error('Sample window overlaps with other chunk of nans');

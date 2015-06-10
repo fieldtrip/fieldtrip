@@ -742,7 +742,7 @@ if readdata
       % anticipating a possible presence of the labeltable it will be 
       % truncated here to 58
       if numel(fieldname)>58
-        warning_once(sprintf('%s exceeds MATLAB''s maximum name length of 63 characters and has been truncated to %s',fieldname,fieldname(1:58)));
+        ft_warning(sprintf('%s exceeds MATLAB''s maximum name length of 63 characters and has been truncated to %s',fieldname,fieldname(1:58)));
         fieldname = fieldname(1:58);
       end
       source.(fieldname) = dat(:,i);

@@ -1,37 +1,37 @@
-function [ws warned] = warning_once(varargin)
-%
-% WARNING_ONCE will throw a warning for every unique point in the
+function [ws warned] = ft_warning(varargin)
+
+% FT_WARNING will throw a warning for every unique point in the
 % stacktrace only, e.g. in a for-loop a warning is thrown only once.
 %
 % Use as one of the following
-%   warning_once(string)
-%   warning_once(id, string)
-% Alternatively, you can use warning_once using a timeout
-%   warning_once(string, timeout)
-%   warning_once(id, string, timeout)
+%   ft_warning(string)
+%   ft_warning(id, string)
+% Alternatively, you can use ft_warning using a timeout
+%   ft_warning(string, timeout)
+%   ft_warning(id, string, timeout)
 % where timeout should be inf if you don't want to see the warning ever
 % again.
 %
-% Use as warning_once('-clear') to clear old warnings from the current
+% Use as ft_warning('-clear') to clear old warnings from the current
 % stack
 %
 % It can be used instead of the MATLAB built-in function WARNING, thus as
-%   s = warning_once(...)
+%   s = ft_warning(...)
 % or as
-%   warning_once(s)
+%   ft_warning(s)
 % where s is a structure with fields 'identifier' and 'state', storing the
-% state information. In other words, warning_once accepts as an input the
+% state information. In other words, ft_warning accepts as an input the
 % same structure it returns as an output. This returns or restores the
 % states of warnings to their previous values.
 %
 % It can also be used as
-%    [s w] = warning_once(...)
+%    [s w] = ft_warning(...)
 % where w is a boolean that indicates whether a warning as been thrown or not.
 %
 % Please note that you can NOT use it like this
-%   warning_once('the value is %d', 10)
+%   ft_warning('the value is %d', 10)
 % instead you should do
-%   warning_once(sprintf('the value is %d', 10))
+%   ft_warning(sprintf('the value is %d', 10))
 
 % Copyright (C) 2012, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, J?rn M. Horschig
@@ -166,7 +166,7 @@ else
   
 end
 
-end % function warning_once
+end % function ft_warning
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper functions
@@ -177,7 +177,7 @@ name(name==',')=[];
 end % function
 
 function [fname ft_previous_warnings line] = fieldnameFromStack(ft_previous_warnings)
-% stack(1) is this function, stack(2) is warning_once
+% stack(1) is this function, stack(2) is ft_warning
 stack = dbstack('-completenames');
 if size(stack) < 3
   fname = [];

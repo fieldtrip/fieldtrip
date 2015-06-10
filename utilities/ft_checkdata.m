@@ -114,11 +114,11 @@ hasbrain             = ft_getopt(varargin, 'hasbrain');
 % check whether people are using deprecated stuff
 depHastrialdef = ft_getopt(varargin, 'hastrialdef');
 if (~isempty(depHastrialdef))
-  warning_once('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
+  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
   hassampleinfo = depHastrialdef;
 end
 if (~isempty(ft_getopt(varargin, 'hasoffset')))
-  warning_once('ft_checkdata option ''hasoffset'' has been removed and will be ignored');
+  ft_warning('ft_checkdata option ''hasoffset'' has been removed and will be ignored');
 end
 
 % determine the type of input data

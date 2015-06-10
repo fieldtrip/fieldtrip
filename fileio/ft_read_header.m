@@ -105,7 +105,7 @@ end
 
 if iscell(filename)
   % use recursion to read events from multiple files
-  warning_once(sprintf('concatenating header from %d files', numel(filename)));
+  ft_warning(sprintf('concatenating header from %d files', numel(filename)));
   hdr = cell(size(filename));
   for i=1:numel(filename)
     hdr{i} = ft_read_header(filename{i}, varargin{:});
@@ -306,7 +306,7 @@ switch headerformat
       hdr.label       = parameters.ChannelNames.Values;
     else
       % give this warning only once
-      warning_once('creating fake channel names');
+      ft_warning('creating fake channel names');
       for i=1:hdr.nChans
         hdr.label{i} = sprintf('%d', i);
       end
@@ -334,7 +334,7 @@ switch headerformat
       hdr.label = tokenize(orig.label, ' ');
     else
       % give this warning only once
-      warning_once('creating fake channel names');
+      ft_warning('creating fake channel names');
       for i=1:hdr.nChans
         hdr.label{i} = sprintf('%d', i);
       end
@@ -738,7 +738,7 @@ switch headerformat
     hdr.TimeStampPerSample  = mean(diff(asc.dat(1,:)));
     hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
     % give this warning only once
-    warning_once('creating fake channel names');
+    ft_warning('creating fake channel names');
     for i=1:hdr.nChans
       hdr.label{i} = sprintf('%d', i);
     end
@@ -1207,12 +1207,12 @@ switch headerformat
       else
         hdr.label = cell(hdr.nChans,1);
         if hdr.nChans < 2000 % don't do this for fMRI etc.
-          warning_once('creating fake channel names');        % give this warning only once
+          ft_warning('creating fake channel names');        % give this warning only once
           for i=1:hdr.nChans
             hdr.label{i} = sprintf('%d', i);
           end
         else
-          warning_once('skipping fake channel names');        % give this warning only once
+          ft_warning('skipping fake channel names');        % give this warning only once
           checkUniqueLabels = false;
         end
       end
@@ -1230,7 +1230,7 @@ switch headerformat
       case 1
         % has generated fake channels
         % give this warning only once
-        warning_once('creating fake channel names');
+        ft_warning('creating fake channel names');
         checkUniqueLabels = false; % no need to check these
       case 2
         % got labels from chunk, check those
@@ -1409,7 +1409,7 @@ switch headerformat
     hdr.chanunit    = cellstr(reshape(Var.channelunits, hdr.nChans, 2));
     hdr.chantype    = cellstr(reshape(lower(Var.channeltypes), hdr.nChans, 3));
     
-    warning_once('creating fake channel names');
+    ft_warning('creating fake channel names');
     hdr.label = cell(hdr.nChans, 1);
     for i=1:hdr.nChans
       hdr.label{i} = sprintf('%d', i);
@@ -1549,7 +1549,7 @@ switch headerformat
         if istrue(checkmaxfilter)
           error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
         else
-          warning_once('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+          ft_warning('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
         end
       end
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial

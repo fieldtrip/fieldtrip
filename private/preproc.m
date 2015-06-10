@@ -277,7 +277,7 @@ end
 
 if any(any(isnan(dat)))
   % filtering is not possible for at least a selection of the data
-  warning_once('data contains NaNs, no filtering applied');
+  ft_warning('data contains NaNs, no filtering applied');
   return;
 end
 

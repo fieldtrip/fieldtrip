@@ -186,7 +186,7 @@ for k = 1:size(input, 3)
     % switch to the appropriate function from the BCT
     switch cfg.method
       case 'assortativity'
-        if ~isbinary, warning_once(binarywarning); end
+        if ~isbinary, ft_warning(binarywarning); end
         
         if isdirected
           output(k,m) = assortativity(input(:,:,k,m), 1);
@@ -216,7 +216,7 @@ for k = 1:size(input, 3)
           output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
         end
       case 'degrees'
-        if ~isbinary, warning_once(binarywarning); end
+        if ~isbinary, ft_warning(binarywarning); end
         
         if isdirected
           [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
@@ -225,7 +225,7 @@ for k = 1:size(input, 3)
           output(:,k,m) = degrees_und(input(:,:,k,m));
         end
       case 'density'
-        if ~isbinary, warning_once(binarywarning); end
+        if ~isbinary, ft_warning(binarywarning); end
       
         if isdirected
           output(k,m) = density_dir(input(:,:,k,m));

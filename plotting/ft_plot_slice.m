@@ -96,7 +96,7 @@ if ~isa(dat, 'double')
 end
 
 if exist('msk', 'var') && isempty(mask)
-  warning_once('using the second input argument as mask rather than the one from the varargin list');
+  ft_warning('using the second input argument as mask rather than the one from the varargin list');
   mask = msk; clear msk;
 end
 

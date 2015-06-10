@@ -237,7 +237,7 @@ for i=1:size(dip.pos,1)
       % update the number of dipole components
       Ndip = size(lfa,2);
     else
-      warning_once('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
+      ft_warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
     end
   end
   

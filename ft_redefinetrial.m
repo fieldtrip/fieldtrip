@@ -253,7 +253,7 @@ elseif ~isempty(cfg.trl)
     if size(cfg.trl,2)>3 %In case user specified a trialinfo
       data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
       if isfield(dataold,'trialinfo')
-        warning_once('Original data has trialinfo, using user specified trialinfo instead');
+        ft_warning('Original data has trialinfo, using user specified trialinfo instead');
       end;
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
       if isequal(dataold.trialinfo(iTrlorig,:),1) || numel(iTrlorig)==1 % Checks whether trials that are combined have same trialinfo

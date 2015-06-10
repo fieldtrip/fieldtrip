@@ -8,5 +8,5 @@ toc
 end % main function
 
 function issue_warning
-warning_once('this warning should not show too often');
+ft_warning('this warning should not show too often');
 end % subfunction

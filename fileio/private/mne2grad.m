@@ -231,7 +231,7 @@ if nEEG>0
       if kChan<=numel(dig_eeg)
         elec.elecpos(kChan,1:3) = orig.dig(dig_eeg(kChan)).r;
       else
-        warning_once('not all EEG channel positions have been digitized');
+        ft_warning('not all EEG channel positions have been digitized');
         elec.elecpos(kChan,1:3) = nan;
       end
     end
