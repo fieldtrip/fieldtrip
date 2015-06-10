@@ -196,16 +196,15 @@ if ~isempty(allowed)
     'trackconfig'
     'checkconfig'
     'checksize'
-    'showcallinfo'
-    'trackcallinfo'
+    'trackusage'
     'trackdatainfo'
-    'trackparaminfo'
+    'trackcallinfo'
+    'showcallinfo'
     'callinfo'
     'version'
     'warning'
     'debug'
-    'track'
-    'progress'
+    'previous'
     });
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
@@ -597,8 +596,29 @@ if ~isempty(trackconfig)
           
           key = fieldnames(cfg);
           key = key(:)';
-          
-          ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous', 'debug', 'track'}; % these fields should never be removed!
+
+          ignorefields = {
+             % these fields from the user should never be removed
+             'trl'
+             'trlold'
+             'event'
+             'artifact'
+             'artfctdef'
+             % these fields are for internal usage
+             'trackconfig'
+             'checkconfig'
+             'checksize'
+             'trackusage'
+             'trackdatainfo'
+             'trackcallinfo'
+             'showcallinfo'
+             'callinfo'
+             'version'
+             'warning'
+             'debug'
+             'previous'
+           };
+
           skipsel      = match_str(key, ignorefields);
           key(skipsel) = [];
           

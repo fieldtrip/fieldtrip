@@ -1,10 +1,12 @@
-% FT_PREAMBLE_INIT is a helper script that display the calling-function's
-% help in case the user did not specify any input argument. This can be
-% used in all fieldtrip main functions that take at least a cfg input
-% argument, and most also take one or multiple data structures.
+% FT_PREAMBLE_INIT is a helper script that is used at the start of all FieldTrip main
+% functions. It checks whether the user specified at lease one input arguments (i.e.
+% the cfg) or shows the help of the calling function. It checks whether the output file
+% already exists and whether it is OK to overwrite it. It tracks the function call.
 %
 % Use as
 %   ft_preamble init
+%
+% See also FT_TRACKUSAGE
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
@@ -26,6 +28,8 @@
 %
 % $Id$
 
+global ft_default
+
 if nargin==0
   stack = dbstack('-completenames');
   % stack(1) is this script
@@ -38,10 +42,10 @@ if nargin==0
   msg.identifier  = '';
   msg.stack       = stack;
   error(msg);
-end
+end % if nargin
 
 % determine whether function execution should be aborted or continued
-if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile) && isfield(cfg, 'outputfilepresent') && ~isempty(cfg.outputfilepresent)
+if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
   % check whether the output file already exists
   if ~exist(cfg.outputfile, 'file')
     abort = false;
@@ -58,16 +62,25 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile) && isfield(cfg, 'outpu
           warning('output file %s is already present: aborting function execution', cfg.outputfile);
           abort = true;
         end
-      case 'error'
-        error('output file %s is already present', cfg.outputfile);
       case 'overwrite'
         warning('output file %s is already present: it will be overwritten', cfg.outputfile);
         abort = false;
+      case 'error'
+        error('output file %s is already present', cfg.outputfile);
       otherwise
         error('invalid option for cfg.outputfilepresent');
     end % case
   end
 else
   abort = false;
-end
+end % if outputfile
+
+if isfield(ft_default, 'trackusage') && ~(isequal(ft_default.trackusage, false) || isequal(ft_default.trackusage, 'no') || isequal(ft_default.trackusage, 'off'))
+  % track the usage of the calling function
+  stack = dbstack('-completenames');
+  % stack(1) is this script
+  % stack(2) is the calling ft_postamble function
+  % stack(3) is the main FieldTrip function that we are interested in
+  ft_trackusage('function call', 'function', stack(3).name);
+end % if trackusage
 
