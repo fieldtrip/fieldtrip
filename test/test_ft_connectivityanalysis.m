@@ -12,9 +12,6 @@ function test_ft_connectivityanalysis
 % apart from using FT_CONNECTIVITYANALYSIS, it also relies on
 % FT_CONNECTIVITYSIMULATION, FT_FREQANALYSIS, FT_MVARANALYSIS
 
-clear all;
-
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 

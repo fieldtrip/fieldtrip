@@ -7,7 +7,6 @@ function test_tutorial_eventrelatedstatistics(datadir)
 % TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
 % TEST ft_topoplotER ft_clusterplot
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 

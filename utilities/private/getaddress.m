@@ -1,11 +1,15 @@
-function user = getusername()
+function address = getip(hostname)
 
-% GETUSERNAME
+% GETADDRESS returns the IP address
 %
 % Use as
-%   str = getusername();
+%   address = getaddress();
+% or
+%   address = getaddress(hostname);
+%
+% See also GETUSERNAME, GETHOSTNAME
 
-% Copyright (C) 2011-2012, Robert Oostenveld
+% Copyright (C) 2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -26,22 +30,24 @@ function user = getusername()
 % $Id$
 
 % this is to speed up subsequent calls
-persistent previous_argout
-if ~isempty(previous_argout)
-  user = previous_argout;
+persistent previous_argin previous_argout
+
+if nargin==0
+  hostname = [];
+end
+
+if ~isempty(previous_argout) && isequal(hostname, previous_argin)
+  address = previous_argout;
   return
 end
 
-if (ispc())
-  user = getenv('UserName');
+if ~isempty(hostname)
+  address = java.net.InetAddress.getByName(hostname);
 else
-  user = getenv('USER');
+  address = java.net.InetAddress.getLocalHost;
 end
-
-if (isempty(user))
-  user = 'unknown';
-end
+address = char(address.getHostAddress);
 
 % remember for subsequent calls
-previous_argout = user;
-
+previous_argin  = hostname;
+previous_argout = address;

@@ -209,7 +209,7 @@ if ~isempty(allowed)
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
   if ~isempty(c)
-    error('The field cfg.%s is not allowed\n', c{i});
+    error('The field cfg.%s is not allowed\n', c{1});
   end
 end
 

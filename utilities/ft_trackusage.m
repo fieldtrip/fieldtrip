@@ -28,6 +28,16 @@ function ft_trackusage(event, varargin)
 % See also FT_DEFAULTS
 
 global ft_default
+persistent initialized
+
+if isempty(initialized)
+  initialized = false;
+end
+
+if nargin<1
+  % there is nothing to track
+  return
+end
 
 %% Since the functionality is still in beta testing, disable the tracking for most users
 if ~strcmp(getusername, 'roboos')
@@ -64,8 +74,7 @@ if ~isfield(ft_default, 'trackusage')
   % the default is to allow tracking
   % create a salt for one-way encryption of identifying information
   rng('shuffle');
-  trackusage  = dec2hex(intmax('uint32')*rand(1));  % create a secret salt, this is never shared
-  trackusage = '22B6B7B8'
+  trackusage = dec2hex(intmax('uint32')*rand(1));  % create a secret salt, this is never shared
   warning('enabling online tracking of FieldTrip usage, see http://www.fieldtriptoolbox.org/faq/tracking');
   if exist(fieldtripprefs, 'file')
     % update the existing preferences file
@@ -94,12 +103,13 @@ end
 ft_hastoolbox('fileexchange', 1);
 
 % this are the default properties to track
-properties.token     = '1187d9a6959c39d0e733d6273d1658a5'; % this is specific for the FieldTrip project
-properties.user      = CalcMD5(sprintf('%s%s', ft_default.trackusage, getusername)); % hash it with a secret salt
-properties.host      = CalcMD5(sprintf('%s%s', ft_default.trackusage, gethostname)); % hash it with a secret salt
-properties.matlab    = version;
-properties.fieldtrip = ft_version;
-properties.computer  = lower(computer);
+properties.token       = '1187d9a6959c39d0e733d6273d1658a5'; % this is specific for the FieldTrip project
+properties.user        = CalcMD5(sprintf('%s%s', ft_default.trackusage, getusername)); % hash it with a secret salt
+properties.host        = CalcMD5(sprintf('%s%s', ft_default.trackusage, gethostname)); % hash it with a secret salt
+properties.matlab      = version('-release');
+properties.fieldtrip   = ft_version;
+properties.computer    = lower(computer);
+properties.distinct_id = properties.user; % this links the event to the profile
 
 % add the custom properties, these come in key-value pairs
 for i=1:2:numel(varargin)
@@ -112,11 +122,25 @@ event_base64 = base64encode(event_json);
 event_http   = sprintf('http://api.mixpanel.com/track/?data=%s', event_base64);
 
 [output, status] = urlread(event_http, 'TimeOut', 15);
-
 if ~status
   disp(output);
-  error('could not send tracker event for "%s"', event);
+  error('could not send tracker information for "%s"', event);
 end
+
+if ~initialized
+  % this only gets send once
+  user_json   = sprintf('{"$token": "%s", "$distinct_id": "%s", "$ip": "%s", "$set": {} }',  properties.token, properties.user, getaddress());
+  user_base64 = base64encode(user_json);
+  user_http   = sprintf('http://api.mixpanel.com/engage/?data=%s', user_base64);
+  
+  [output, status] = urlread(user_http, 'TimeOut', 15);
+  if ~status
+    disp(output);
+    error('could not send tracker information for "%s"', event);
+  end
+  
+  initialized = true;
+end % if initialized
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

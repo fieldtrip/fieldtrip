@@ -8,9 +8,6 @@ function test_bug1309
 % This tests for the reliability of the ft_convert_units function when dealing
 % with different input types (vol,sens,etc.)
 
-ft_defaults;
-
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 

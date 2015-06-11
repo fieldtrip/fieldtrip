@@ -6,6 +6,10 @@ function test_bug2355
 % TEST test_bug2355
 % TEST ft_prepare_sourcemodel
 
+global ft_default
+ft_default.checkconfig = 'off';
+ft_default.trackconfig = 'off';
+
 %% make a spherical model fitted to scalp surface, in cm
 vol = [];
 vol.r = 12;
@@ -28,10 +32,6 @@ end
 % cfg.sourceunits was used prior to 31 October 2013
 
 clear cfg* grid*
-
-global ft_default
-ft_default.checkconfig = 'off';
-ft_default.trackconfig = 'off';
 
 cfg1.elec = elec;
 cfg1.vol  = vol;
