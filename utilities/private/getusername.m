@@ -1,11 +1,9 @@
 function user = getusername()
 
-% GETUSERNAME returns the login name of the user
+% GETUSERNAME
 %
 % Use as
-%   str = username();
-%
-% See also GERADDRESS, GETHOSTNAME
+%   str = getusername();
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %
