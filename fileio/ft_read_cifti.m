@@ -26,6 +26,7 @@ function source = ft_read_cifti(filename, varargin)
 %   'cortexleft'       = string, filename with left cortex (optional, default is automatic)
 %   'cortexright'      = string, filename with right cortex (optional, default is automatic)
 %   'hemisphereoffset' = number, amount in milimeter to move the hemispheres apart from each other (default = 0)
+%   'mapname'          = string, 'field' to represent multiple maps separately, or 'array' to represent as array (default = 'field')
 %   'debug'            = boolean, write a debug.xml file (default = false)
 %
 % See also FT_WRITE_CIFTI, FT_READ_MRI, FT_WRITE_MRI
@@ -61,6 +62,7 @@ cortexleft       = ft_getopt(varargin, 'cortexleft', {});
 cortexright      = ft_getopt(varargin, 'cortexright', {});
 hemisphereoffset = ft_getopt(varargin, 'hemisphereoffset', 0); % in mm, move the two hemispheres apart from each other
 debug            = ft_getopt(varargin, 'debug', false);
+mapname          = ft_getopt(varargin, 'mapname', 'field');
 
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
@@ -732,24 +734,36 @@ if readdata
       error('unsupported dimord %s', source.dimord);
   end % switch
   
+  if isfield(Cifti, 'mapname') && isfield(Cifti, 'labeltable') && strcmp(mapname, 'array')
+    error('multiple maps cannot be represented as array in the presence of a labeltable');
+    % Each map can have a different labeltable. In principle this could be solved by
+    % concatenating all labeltables and remapping all elements to this list of
+    % labels.
+  end
+  
   if isfield(Cifti, 'mapname') && (length(Cifti.mapname)>1 || isfield(Cifti, 'labeltable'))
-    % use distict names if there are multiple scalars or labels
-    for i=1:length(Cifti.mapname)
-      fieldname = fixname(Cifti.mapname{i});
-      
-      % truncate the string if it's too long: MATLAB maximizes the string
-      % length to 63 characters (and throws a warning when truncating), 
-      % anticipating a possible presence of the labeltable it will be 
-      % truncated here to 58
-      if numel(fieldname)>58
-        ft_warning(sprintf('%s exceeds MATLAB''s maximum name length of 63 characters and has been truncated to %s',fieldname,fieldname(1:58)));
-        fieldname = fieldname(1:58);
-      end
-      source.(fieldname) = dat(:,i);
-      if isfield(Cifti, 'labeltable')
-        source.([fieldname 'label']) = Cifti.labeltable{i};
-      end
-    end
+    switch mapname
+      case 'field'
+        % use distict names if there are multiple scalars or labels
+        for i=1:length(Cifti.mapname)
+          fieldname = Cifti.mapname{i};
+          if isfield(Cifti, 'labeltable') && length(fieldname)>58
+            % this is needed to be able to append 'label' to the end
+            fieldname = fieldname(1:58);
+          end
+          source.(fieldname) = dat(:,i);
+          if isfield(Cifti, 'labeltable')
+            % append 'label' to the end
+            source.([fieldname 'label']) = Cifti.labeltable{i};
+          end
+        end
+      case 'array'
+        source.mapname = {NamedMap.MapName}; % keep the original names, not the field names
+        source.data    = dat;
+        source.dimord  = [source.dimord '_mapname'];
+      otherwise
+        error('incorrect specification of mapname "%s"', mapname);
+    end % switch mapname
   else
     % the name of the data will be based on the filename
     source.data = dat;
@@ -953,7 +967,6 @@ if readdata
 %       source.data = tempdata;
 %     end
 %     source = rmfield(source, 'data');
-%     
   end
   
   % rename the datalabel field
