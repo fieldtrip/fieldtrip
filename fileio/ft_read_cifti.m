@@ -735,10 +735,17 @@ if readdata
   end % switch
   
   if isfield(Cifti, 'mapname') && isfield(Cifti, 'labeltable') && strcmp(mapname, 'array')
-    error('multiple maps cannot be represented as array in the presence of a labeltable');
-    % Each map can have a different labeltable. In principle this could be solved by
-    % concatenating all labeltables and remapping all elements to this list of
-    % labels.
+    allthesame = true;
+    for i=2:length(Cifti.labeltable)
+      allthesame = allthesame && isequal(Cifti.labeltable{1}, Cifti.labeltable{i});
+    end
+    if allthesame
+      warning('using the same labels for all maps in the array');
+      source.datalabel = Cifti.labeltable{1};
+      Cifti = rmfield(Cifti, 'labeltable');
+    else
+      error('multiple maps cannot be represented as array in the presence of different labeltables');
+    end
   end
   
   if isfield(Cifti, 'mapname') && (length(Cifti.mapname)>1 || isfield(Cifti, 'labeltable'))
@@ -747,15 +754,15 @@ if readdata
         % use distict names if there are multiple scalars or labels
         for i=1:length(Cifti.mapname)
           fieldname = Cifti.mapname{i};
-          if isfield(Cifti, 'labeltable') && length(fieldname)>58
-            % this is needed to be able to append 'label' to the end
-            fieldname = fieldname(1:58);
+          if isfield(Cifti, 'labeltable')
+            if length(fieldname)>58
+              % truncate it, needed to be able to append 'label' to the end
+              fieldname = fieldname(1:58);
+              % append 'label' to the end
+              source.([fieldname 'label']) = Cifti.labeltable{i};
+            end
           end
           source.(fieldname) = dat(:,i);
-          if isfield(Cifti, 'labeltable')
-            % append 'label' to the end
-            source.([fieldname 'label']) = Cifti.labeltable{i};
-          end
         end
       case 'array'
         source.mapname = {NamedMap.MapName}; % keep the original names, not the field names
