@@ -39,9 +39,11 @@ switch what
         tf=is_matlab() && matlabversion(7.8, inf);
 
     case {'nosplash','nodisplay','nojvm'}
+        % Only on Matlab
         tf=is_matlab();
 
     case 'no-gui'
+        % Only on Octave
         tf=is_octave();
 
     otherwise
