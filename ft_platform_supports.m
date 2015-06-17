@@ -12,6 +12,9 @@ switch what
     case 'which-all'
         tf=is_matlab();
 
+    case 'onCleanup'
+        tf=is_octave() || matlabversion(7.8, Inf);
+
     otherwise
         error('unsupported value for first argument: %s', what);
 
