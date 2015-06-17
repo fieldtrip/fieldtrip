@@ -134,7 +134,11 @@ if ~isdeployed
   
   try
     % some alternative implementations of statistics functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+    if ~ft_isoctave()
+      % Octave has already the required functions in the 'statistics' and
+      % 'nan' packages
+      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+    end
   end
   
   try
@@ -237,6 +241,11 @@ end % function ft_default
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function checkMultipleToolbox(toolbox, keyfile)
+if ft_isoctave()
+    % which(...,'-all') syntax is not supported in Octave
+    return
+end
+
 list = which(keyfile, '-all');
 if length(list)>1
   [ws, warned] = ft_warning(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
