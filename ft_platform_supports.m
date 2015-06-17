@@ -35,6 +35,15 @@ switch what
         % of the binary that was run to start Octave
         tf=is_octave();
 
+    case 'singleCompThread'
+        tf=is_matlab() && matlabversion(7.8, inf);
+
+    case {'nosplash','nodisplay','nojvm'}
+        tf=is_matlab();
+
+    case 'no-gui'
+        tf=is_octave();
+
     otherwise
         error('unsupported value for first argument: %s', what);
 

@@ -213,15 +213,24 @@ if ~compiled
     matlabcmd = previous_matlabcmd;
   end
   
-  if matlabversion(7.8, inf)
+  if ft_platform_supports('singleCompThread')
     % this is only supported for version 7.8 onward
     matlabcmd = [matlabcmd ' -singleCompThread'];
   end
   
   % these options can be appended regardless of the version
-  matlabcmd = [matlabcmd ' -nosplash'];
+  if ft_platform_supports('nosplash');
+    matlabcmd = [matlabcmd ' -nosplash'];
+  end
   if ~istrue(display)
-    matlabcmd = [matlabcmd ' -nodisplay'];
+    if ft_platform_supports('nodisplay');
+      % Matlab
+      matlabcmd = [matlabcmd ' -nodisplay'];
+    end
+    if ft_platform_supports('no-gui');
+      % GNU Octave
+      matlabcmd = [matlabcmd ' --no-gui'];
+    end
   end
   if ~istrue(jvm)
     matlabcmd = [matlabcmd ' -nojvm'];
