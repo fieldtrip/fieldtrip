@@ -203,8 +203,10 @@ if ~compiled
       matlabcmd = 'matlab';
     end
     
-    % keep the matlab command for subsequent calls, this will save all the matlabversion calls
-    % and the system('which ...') call on the scheduling of subsequent distributed jobs
+    % keep the matlab command for subsequent calls, this will
+    % avoid subsequent attempts to set the matlabcmd
+    % and the system('which ...') call on the scheduling of subsequent
+    % distributed jobs
     previous_matlabcmd = matlabcmd;
   else
     % re-use the matlab command that was determined on the previous call to this function
