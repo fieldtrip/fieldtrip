@@ -25,6 +25,10 @@ switch what
         % previous versions use numeric handles
         tf=is_matlab() && matlabversion('2014b', Inf);
 
+    case 'libmx_c_interface'
+        tf=matlabversion(-Inf, '2013b');
+
+
 
     otherwise
         error('unsupported value for first argument: %s', what);
