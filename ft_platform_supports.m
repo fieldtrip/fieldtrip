@@ -15,6 +15,11 @@ switch what
     case 'onCleanup'
         tf=is_octave() || matlabversion(7.8, Inf);
 
+    case 'int32_logical_operations'
+        % earlier version of Matlab don't support bitand (and similar)
+        % operations on int32
+        tf=is_octave() || ~matlabversion(-inf, '2012a');
+
     otherwise
         error('unsupported value for first argument: %s', what);
 
