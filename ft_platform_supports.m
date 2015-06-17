@@ -60,11 +60,11 @@ end % switch
 
 end % function
 
-function tf=environment_is_matlab()
-    tf=~environment_is_octave();
+function tf=is_matlab()
+    tf=~is_octave();
 end
 
-function tf=environment_is_octave()
+function tf=is_octave()
     persistent cached_tf;
 
     if isempty(cached_tf)
