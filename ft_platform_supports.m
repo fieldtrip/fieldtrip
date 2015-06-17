@@ -9,6 +9,8 @@ function tf=ft_platform_supports(what,varargin)
 %   value                           means that the following is supported:
 %
 %   'which-all'                     which(...,'all')
+%   'exists-in-private-directory'   exists(...) will look in the /private
+%                                   subdirectory to see if a file exists
 %   'onCleanup'                     onCleanup(...)
 %   'int32_logical_operations'      bitand(a,b) with a, b of type int32
 %   'graphics_objects'              graphics sysem is object-oriented
@@ -34,6 +36,9 @@ end
 switch what
     case 'matlabversion'
         tf=is_matlab() && matlabversion(varargin{:});
+
+    case 'exists-in-private-directory'
+        tf=is_matlab();
 
     case 'which-all'
         tf=is_matlab();
