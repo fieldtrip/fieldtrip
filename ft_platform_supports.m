@@ -12,6 +12,11 @@ function tf=ft_platform_supports(what,varargin)
 %   'exists-in-private-directory'   exists(...) will look in the /private
 %                                   subdirectory to see if a file exists
 %   'onCleanup'                     onCleanup(...)
+%   'griddata-vector-input          griddata can be used with vectors
+%                                   as input
+%   'griddata-v4'                   griddata supports the 'v4'
+%                                   interpolation method
+%   'uimenu'                        uimenu(...)
 %   'int32_logical_operations'      bitand(a,b) with a, b of type int32
 %   'graphics_objects'              graphics sysem is object-oriented
 %   'libmx_c_interface'             libmx is supported through mex in the
@@ -41,6 +46,15 @@ switch what
         tf=is_matlab();
 
     case 'which-all'
+        tf=is_matlab();
+
+    case 'griddata-vector-input'
+        tf=is_matlab();
+
+    case 'griddata-v4'
+        tf=is_matlab();
+
+    case 'uimenu'
         tf=is_matlab();
 
     case 'onCleanup'

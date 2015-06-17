@@ -200,7 +200,7 @@ if ~isempty(datmask)
 end
 
 % take out NaN channels if interpmethod does not work with NaNs
-if flagNaN && strcmp(interpmethod, 'v4')
+if flagNaN && strcmp(interpmethod, default_interpmethod)
   dat(NaNind) = [];
   chanX(NaNind) = [];
   chanY(NaNind) = [];
@@ -214,7 +214,15 @@ chanY = double(chanY);
 %interpolate data
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
 yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
-[Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
+
+if ft_platform_supports('griddata-vector-input')
+  % in GNU Octave, griddata does not support vector
+  % positions; make a grid to get the locations in vector form
+  [xi,yi]=meshgrid(xi,yi);
+  [Xi, Yi, Zi] = griddata(chanX, chanY, dat, xi, yi, interpmethod); % interpolate the topographic data
+else
+  [Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
+end
 
 if ~isempty(maskimage)
   % apply mask to the data to hide parts of the interpolated data (outside the circle) and channels that were specified to be masked
