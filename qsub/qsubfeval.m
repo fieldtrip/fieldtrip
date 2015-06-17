@@ -178,31 +178,22 @@ if ~compiled
   elseif isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
 
-    % use wrapper to check the matlab version
-    matlabversion=@(varargin)ft_platform_supports('matlabversion',varargin{:})
-
     if ft_platform_supports('program_invocation_name')
+      % supported in GNU Octave
       matlabcmd = program_invocation_name();
-    elseif matlabversion(7.1)
-      matlabcmd = 'matlab71';
-    elseif matlabversion(7.2)
-      matlabcmd = 'matlab72';
-    elseif matlabversion(7.3)
-      matlabcmd = 'matlab73';
-    elseif matlabversion(7.4)
-      matlabcmd = 'matlab74';
-    elseif matlabversion(7.5)
-      matlabcmd = 'matlab75';
-    elseif matlabversion(7.6)
-      matlabcmd = 'matlab76';
-    elseif matlabversion(7.7)
-      matlabcmd = 'matlab77';
-    elseif matlabversion(7.8) % 2009a
-      matlabcmd = 'matlab78';
-    elseif matlabversion(7.9) % 2009b
-      matlabcmd = 'matlab79';
     else
-      matlabcmd = sprintf('matlab%s', version('-release')); % the version command returns a string like '2014a'
+      matlabcmd = '';
+      % try all versions between 7.1 and 7.9
+      for matlab_version=71:79
+        matlab_version_decimated=matlab_version*.1;
+        if ft_platform_supports('matlabversion',matlab_version_decimated)
+          matlabcmd = sprintf('matlab%d',matlab_version);
+          break;
+        end
+      end
+      if isempty(matlabcmd)
+        matlabcmd = sprintf('matlab%s', version('-release')); % the version command returns a string like '2014a'
+      end
     end
     
     if system(sprintf('which %s > /dev/null', matlabcmd))==1
