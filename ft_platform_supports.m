@@ -46,6 +46,13 @@ switch what
         % Only on Octave
         tf=is_octave();
 
+    case 'RandStream.setGlobalStream'
+        tf=is_matlab() && matlabversion('2008b', '2011b');
+
+    case 'RandStream.setDefaultStream'
+        tf=is_matlab() && matlabversion('2012a', inf);
+
+
     otherwise
         error('unsupported value for first argument: %s', what);
 
