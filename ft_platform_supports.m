@@ -52,6 +52,16 @@ switch what
     case 'RandStream.setDefaultStream'
         tf=is_matlab() && matlabversion('2012a', inf);
 
+    case 'randomized_PRNG_on_startup'
+        tf=is_octave() || ~matlabversion(-Inf,'7.3');
+
+    case 'rng'
+        % recent Matlab versions
+        tf=is_matlab() && matlabversion('7.12',Inf);
+
+    case 'rand-state'
+        % GNU Octave
+        tf=is_octave();
 
     otherwise
         error('unsupported value for first argument: %s', what);
