@@ -1,6 +1,32 @@
 function tf=ft_platform_supports(what,varargin)
 % return whether the current platform supports a specific capability
-
+%
+% Usage:
+%   tf=ft_platform_supports(what)
+%   tf=ft_platform_supports('matlabversion',min_version,max_version)
+%
+% The following values are allowed for the 'what' parameter:
+%   value                           means that the following is supported:
+%
+%   'which-all'                     which(...,'all')
+%   'onCleanup'                     onCleanup(...)
+%   'int32_logical_operations'      bitand(a,b) with a, b of type int32
+%   'graphics_objects'              graphics sysem is object-oriented
+%   'libmx_c_interface'             libmx is supported through mex in the
+%                                   C-language (recent Matlab versions only
+%                                   support C++)
+%   'program_invocation_name'       program_invocation_name() (GNU Octave)
+%   'singleCompThread'              start Matlab with -singleCompThread
+%   'nosplash'                                        -nosplash
+%   'nodisplay'                                       -nodisplay
+%   'nojvm'                                           -nojvm
+%   'no-gui'                        start GNU Octave with --no-gui
+%   'RandStream.setGlobalStream'    RandStream.setGlobalStream(...)
+%   'RandStream.setDefaultStream'   RandStream.setDefaultStream(...)
+%   'rng'                           rng(...)
+%   'rand-state'                    rand('state')
+%
+%
 if ~ischar(what)
     error('first argument must be a string');
 end
