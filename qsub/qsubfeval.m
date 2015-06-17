@@ -177,7 +177,13 @@ if ~compiled
     % take the user-specified matlab startup script
   elseif isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
-    if matlabversion(7.1)
+
+    % use wrapper to check the matlab version
+    matlabversion=@(varargin)ft_platform_supports('matlabversion',varargin{:})
+
+    if ft_platform_supports('program_invocation_name')
+      matlabcmd = program_invocation_name();
+    elseif matlabversion(7.1)
       matlabcmd = 'matlab71';
     elseif matlabversion(7.2)
       matlabcmd = 'matlab72';

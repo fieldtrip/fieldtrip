@@ -26,9 +26,14 @@ switch what
         tf=is_matlab() && matlabversion('2014b', Inf);
 
     case 'libmx_c_interface'
+        % removed after 2013b
+        %
         tf=matlabversion(-Inf, '2013b');
 
-
+    case 'program_invocation_name'
+        % Octave supports program_invocation_name, which returns the path
+        % of the binary that was run to start Octave
+        tf=is_octave();
 
     otherwise
         error('unsupported value for first argument: %s', what);
