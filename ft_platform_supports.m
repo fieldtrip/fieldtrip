@@ -20,6 +20,12 @@ switch what
         % operations on int32
         tf=is_octave() || ~matlabversion(-inf, '2012a');
 
+    case 'graphics_objects'
+        % introduced in Matlab 2014b, graphics is handled through objects;
+        % previous versions use numeric handles
+        tf=is_matlab() && matlabversion('2014b', Inf);
+
+
     otherwise
         error('unsupported value for first argument: %s', what);
 
