@@ -32,8 +32,11 @@ function state=randomseed(setseed)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
 if isempty(setseed) % save out rand state for later use
-  if matlabversion(-Inf,'7.3') 
+  if ~ft_platform_supports('randomized_PRNG_on_startup')
+    % old Matlab versions (<= v7.3)
     rand('twister',sum(100*clock)) % can fail otherwise, if first time rand is called per matlab session
+  end
+  if matlabversion(-Inf,'7.3') 
     state=rand('twister');
   elseif matlabversion('7.4','7.6') 
     state=rand('twister');
