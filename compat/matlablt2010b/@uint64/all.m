@@ -1,4 +1,4 @@
-function y = any(x)
+function y = all(x)
 
 % ALL True if all elements of a vector are nonzero.
 %
