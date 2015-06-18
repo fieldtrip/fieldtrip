@@ -87,7 +87,7 @@ function varargout = qsubcellfun(fname, varargin)
 % $Id$
 % -----------------------------------------------------------------------
 
-if matlabversion(7.8, Inf)
+if ft_platform_supports('onCleanup')
   % switch to zombie when finished or when Ctrl-C gets pressed
   % the onCleanup function does not exist for older versions
   onCleanup(@cleanupfun);
