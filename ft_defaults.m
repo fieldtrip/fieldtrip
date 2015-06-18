@@ -150,6 +150,9 @@ if ~isdeployed
   try
     % these directories contain functions that were added to MATLAB in
     % recent versions to replace an older function.
+    if matlabversion(-Inf, '2010a')
+      ft_hastoolbox('compat/matlablt2010b', 2, 1);
+    end
     if matlabversion(-Inf, '2011b')
       ft_hastoolbox('compat/matlablt2012a', 2, 1);
     end
