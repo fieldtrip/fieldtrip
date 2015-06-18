@@ -26,7 +26,7 @@ function [argout] = mxSerialize(argin)
 %
 % $Id$
 
-if matlabversion(-Inf, '2013b') % older than 2014a
+if ft_platform_supports('libmx_c_interface') % older than 2014a
   % use the original implementation of the mex file
   argout = mxSerialize_c(argin);
 else

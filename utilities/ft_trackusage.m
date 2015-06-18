@@ -169,8 +169,8 @@ j = j(1:end-2); % remove the last comma and space
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [output, status] = my_urlread(event_http)
-% the timeout option is only available from 2012b onward
-if matlabversion('2012b', inf)
+% the timeout option is only available from MATLAB 2012b onward
+if ft_platform_supports('urlread-timeout')
   [output, status] = urlread(event_http, 'TimeOut', 15);
 else
   [output, status] = urlread(event_http);
