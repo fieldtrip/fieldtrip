@@ -30,10 +30,10 @@ mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
   M = mxGetM(prhs[0]);
   N = mxGetN(prhs[0]);
   
-  if (N>1 & M>1)
+  if (N>1 && M>1)
     mexErrMsgTxt ("This works only on 1-D arrays (i.e. vectors)");
   
-  if (N==0 & M==0)
+  if (N==0 || M==0)
     mexErrMsgTxt ("This works only on 1-D arrays (i.e. vectors)");
   
   
