@@ -177,26 +177,23 @@ if ~compiled
     % take the user-specified matlab startup script
   elseif isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
-    if matlabversion(7.1)
-      matlabcmd = 'matlab71';
-    elseif matlabversion(7.2)
-      matlabcmd = 'matlab72';
-    elseif matlabversion(7.3)
-      matlabcmd = 'matlab73';
-    elseif matlabversion(7.4)
-      matlabcmd = 'matlab74';
-    elseif matlabversion(7.5)
-      matlabcmd = 'matlab75';
-    elseif matlabversion(7.6)
-      matlabcmd = 'matlab76';
-    elseif matlabversion(7.7)
-      matlabcmd = 'matlab77';
-    elseif matlabversion(7.8) % 2009a
-      matlabcmd = 'matlab78';
-    elseif matlabversion(7.9) % 2009b
-      matlabcmd = 'matlab79';
+
+    if ft_platform_supports('program_invocation_name')
+      % supported in GNU Octave
+      matlabcmd = program_invocation_name();
     else
-      matlabcmd = sprintf('matlab%s', version('-release')); % the version command returns a string like '2014a'
+      matlabcmd = '';
+      % try all versions between 7.1 and 7.9
+      for matlab_version=71:79
+        matlab_version_decimated=matlab_version*.1;
+        if ft_platform_supports('matlabversion',matlab_version_decimated)
+          matlabcmd = sprintf('matlab%d',matlab_version);
+          break;
+        end
+      end
+      if isempty(matlabcmd)
+        matlabcmd = sprintf('matlab%s', version('-release')); % the version command returns a string like '2014a'
+      end
     end
     
     if system(sprintf('which %s > /dev/null', matlabcmd))==1
@@ -206,23 +203,34 @@ if ~compiled
       matlabcmd = 'matlab';
     end
     
-    % keep the matlab command for subsequent calls, this will save all the matlabversion calls
-    % and the system('which ...') call on the scheduling of subsequent distributed jobs
+    % keep the matlab command for subsequent calls, this will
+    % avoid subsequent attempts to set the matlabcmd
+    % and the system('which ...') call on the scheduling of subsequent
+    % distributed jobs
     previous_matlabcmd = matlabcmd;
   else
     % re-use the matlab command that was determined on the previous call to this function
     matlabcmd = previous_matlabcmd;
   end
   
-  if matlabversion(7.8, inf)
+  if ft_platform_supports('singleCompThread')
     % this is only supported for version 7.8 onward
     matlabcmd = [matlabcmd ' -singleCompThread'];
   end
   
   % these options can be appended regardless of the version
-  matlabcmd = [matlabcmd ' -nosplash'];
+  if ft_platform_supports('nosplash');
+    matlabcmd = [matlabcmd ' -nosplash'];
+  end
   if ~istrue(display)
-    matlabcmd = [matlabcmd ' -nodisplay'];
+    if ft_platform_supports('nodisplay');
+      % Matlab
+      matlabcmd = [matlabcmd ' -nodisplay'];
+    end
+    if ft_platform_supports('no-gui');
+      % GNU Octave
+      matlabcmd = [matlabcmd ' --no-gui'];
+    end
   end
   if ~istrue(jvm)
     matlabcmd = [matlabcmd ' -nojvm'];
