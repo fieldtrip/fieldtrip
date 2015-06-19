@@ -13,6 +13,7 @@ function tf=ft_platform_supports(what,varargin)
 %                                   subdirectory to see if a file exists
 %   'onCleanup'                     onCleanup(...)
 %   'int32_logical_operations'      bitand(a,b) with a, b of type int32
+%   'int64_arithmetic'              a+b with a, b of type [u]int64
 %   'graphics_objects'              graphics sysem is object-oriented
 %   'libmx_c_interface'             libmx is supported through mex in the
 %                                   C-language (recent Matlab versions only
@@ -48,10 +49,15 @@ switch what
     tf=is_octave() || matlabversion(7.8, Inf);
     
   case 'int32_logical_operations'
-    % earlier version of Matlab don't support bitand (and similar)
+    % earlier versions of Matlab don't support bitand (and similar)
     % operations on int32
     tf=is_octave() || ~matlabversion(-inf, '2012a');
-    
+
+  case 'int64_arithmetic'
+    % earlier versions of Matlab don't support plus, minus (and similar)
+    % operations on int64 and uint64
+    tf=is_octave() || ~matlabversion(-inf, '2010a');
+
   case 'graphics_objects'
     % introduced in Matlab 2014b, graphics is handled through objects;
     % previous versions use numeric handles
