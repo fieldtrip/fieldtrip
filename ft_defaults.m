@@ -88,7 +88,7 @@ if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
 end
 
 if ~isdeployed
-  
+
   % Some people mess up their path settings and then have
   % different versions of certain toolboxes on the path.
   % The following will issue a warning
@@ -120,41 +120,41 @@ if ~isdeployed
   checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
   checkMultipleToolbox('biosig',              'sopen.m');
   checkMultipleToolbox('icasso',              'icassoEst.m');
-  
+
   if isempty(which('ft_hastoolbox'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox function
     % which is required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
   end
-  
+
   try
     % external/signal directory contains alternative implementations of some signal processing functions
     addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
   end
-  
+
   try
     % some alternative implementations of statistics functions
     addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
   end
-  
+
   try
     % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required
   end
-  
+
   try
     % this directory contains the backward compatibility wrappers for the ft_xxx function name change
     ft_hastoolbox('compat', 3, 1); % not required
   end
-  
+
   try
     % these directories contain functions that were added to MATLAB in
     % recent versions to replace an older function.
-    if matlabversion(-Inf, '2011b')
+    if ft_platform_supports('matlabversion',-Inf, '2011b')
       ft_hastoolbox('compat/matlablt2012a', 2, 1);
     end
   end
-  
+
   try
     % these contains template layouts, neighbour structures, MRIs and cortical meshes
     ft_hastoolbox('template/layout', 1, 1);
@@ -164,52 +164,52 @@ if ~isdeployed
     ft_hastoolbox('template/neighbours', 1, 1);
     ft_hastoolbox('template/sourcemodel', 1, 1);
   end
-  
+
   try
     % this is used in statistics
     ft_hastoolbox('statfun', 1, 1);
   end
-  
+
   try
     % this is used in definetrial
     ft_hastoolbox('trialfun', 1, 1);
   end
-  
+
   try
     % this contains the low-level reading functions
     ft_hastoolbox('fileio', 1, 1);
   end
-  
+
   try
     % this is for filtering time-series data
     ft_hastoolbox('preproc', 1, 1);
   end
-  
+
   try
     % this contains forward models for the EEG and MEG volume conduction problem
     ft_hastoolbox('forward', 1, 1);
   end
-  
+
   try
     % numerous functions depend on this module
     ft_hastoolbox('inverse', 1, 1);
   end
-  
+
   try
     % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
     ft_hastoolbox('plotting', 1, 1);
   end
-  
+
   try
     % this contains the functions to compute connecitivy metrics
     ft_hastoolbox('connectivity', 1,1);
   end
-  
+
   try
     % this contains the functions for spike and spike-field analysis
     ft_hastoolbox('spike', 1,1);
   end
-  
+
   try
     % this contains specific code and examples for realtime processing
     ft_hastoolbox('realtime/example', 3, 1);    % not required
@@ -217,12 +217,12 @@ if ~isdeployed
     ft_hastoolbox('realtime/online_meg', 3, 1); % not required
     ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
   end
-  
+
   try
     % this contains intermediate-level functions for spectral analysis
     ft_hastoolbox('specest', 1, 1);
   end
-  
+
 end
 
 % track the usage of this function, this only happens once at startup
@@ -237,6 +237,10 @@ end % function ft_default
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function checkMultipleToolbox(toolbox, keyfile)
+if ~ft_platform_supports('which-all')
+  return;
+end
+
 list = which(keyfile, '-all');
 if length(list)>1
   [ws, warned] = ft_warning(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));

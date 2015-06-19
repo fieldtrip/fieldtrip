@@ -331,7 +331,10 @@ switch eventformat
     schan = find(strcmpi(hdr.label,'STATUS'));
     sdata = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
     
-    if matlabversion(-inf, '2012a')
+    if ft_platform_supports('int32_logical_operations')
+      % convert to 32-bit integer representation and only preserve the lowest 24 bits
+      sdata = bitand(int32(sdata), 2^24-1);
+    else
       % find indices of negative numbers
       bit24i = find(sdata < 0);
       % make number positive and preserve bits 0-22
@@ -340,9 +343,6 @@ switch eventformat
       sdata(bit24i) = sdata(bit24i)+(2^(24-1));
       % typecast the data to ensure that the status channel is represented in 32 bits
       sdata = uint32(sdata);
-    else
-      % convert to 32-bit integer representation and only preserve the lowest 24 bits
-      sdata = bitand(int32(sdata), 2^24-1);
     end
     
     byte1 = 2^8  - 1;
