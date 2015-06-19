@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007, Robert Oostenveld
  *
- * This implements [y, i] = max(x)
+ * This implements [y, i] = min(x)
  *
  * This function does not check the occurence of integer overflowing.
  *
@@ -30,10 +30,10 @@ mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
   M = mxGetM(prhs[0]);
   N = mxGetN(prhs[0]);
   
-  if (N>1 & M>1)
+  if (N>1 && M>1)
     mexErrMsgTxt ("This works only on 1-D arrays (i.e. vectors)");
   
-  if (N==0 & M==0)
+  if (N==0 || M==0)
     mexErrMsgTxt ("This works only on 1-D arrays (i.e. vectors)");
   
   
@@ -48,7 +48,7 @@ mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
   i[0] = n+1; /* offset by one */
   
   for (n=1; n<(M*N); n++)
-    if (x[n]>m[0])
+    if (x[n]<m[0])
   {
     m[0] = x[n];
     i[0] = n+1; /* offset by one */
