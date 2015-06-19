@@ -153,6 +153,10 @@ if ~isdeployed
     if ft_platform_supports('matlabversion',-Inf, '2011b')
       ft_hastoolbox('compat/matlablt2012a', 2, 1);
     end
+
+    if ~ft_platform_supports('int64_arithmetic')
+      ft_hastoolbox('fileio/matlablt2010b', 2, 1);
+    end
   end
 
   try
