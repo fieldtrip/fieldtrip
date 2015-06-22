@@ -1,9 +1,11 @@
-function tf=ft_platform_supports(what,varargin)
-% return whether the current platform supports a specific capability
+function tf = ft_platform_supports(what,varargin)
+
+% FT_PLATFORM_SUPPORTS returns a boolean indicating whether the current platform
+% supports a specific capability
 %
 % Usage:
-%   tf=ft_platform_supports(what)
-%   tf=ft_platform_supports('matlabversion',min_version,max_version)
+%   tf = ft_platform_supports(what)
+%   tf = ft_platform_supports('matlabversion', min_version, max_version)
 %
 % The following values are allowed for the 'what' parameter:
 %   value                           means that the following is supported:
@@ -28,75 +30,73 @@ function tf=ft_platform_supports(what,varargin)
 %   'rng'                           rng(...)
 %   'rand-state'                    rand('state')
 %   'urlread-timeout'               urlread(..., 'Timeout', t)
-%
-%
+
 if ~ischar(what)
   error('first argument must be a string');
 end
 
 switch what
   case 'matlabversion'
-    tf=is_matlab() && matlabversion(varargin{:});
+    tf = is_matlab() && matlabversion(varargin{:});
     
   case 'exists-in-private-directory'
-    tf=is_matlab();
+    tf = is_matlab();
     
   case 'which-all'
-    tf=is_matlab();
+    tf = is_matlab();
     
   case 'onCleanup'
-    tf=is_octave() || matlabversion(7.8, Inf);
+    tf = is_octave() || matlabversion(7.8, Inf);
     
   case 'int32_logical_operations'
     % earlier version of Matlab don't support bitand (and similar)
     % operations on int32
-    tf=is_octave() || ~matlabversion(-inf, '2012a');
+    tf = is_octave() || ~matlabversion(-inf, '2012a');
     
   case 'graphics_objects'
     % introduced in Matlab 2014b, graphics is handled through objects;
     % previous versions use numeric handles
-    tf=is_matlab() && matlabversion('2014b', Inf);
+    tf = is_matlab() && matlabversion('2014b', Inf);
     
   case 'libmx_c_interface'
     % removed after 2013b
-    %
-    tf=matlabversion(-Inf, '2013b');
+    tf = matlabversion(-Inf, '2013b');
     
   case 'program_invocation_name'
     % Octave supports program_invocation_name, which returns the path
     % of the binary that was run to start Octave
-    tf=is_octave();
+    tf = is_octave();
     
   case 'singleCompThread'
-    tf=is_matlab() && matlabversion(7.8, inf);
+    tf = is_matlab() && matlabversion(7.8, inf);
     
   case {'nosplash','nodisplay','nojvm'}
     % Only on Matlab
-    tf=is_matlab();
+    tf = is_matlab();
     
   case 'no-gui'
     % Only on Octave
-    tf=is_octave();
-    
-  case 'RandStream.setGlobalStream'
-    tf=is_matlab() && matlabversion('2008b', '2011b');
+    tf = is_octave();
     
   case 'RandStream.setDefaultStream'
-    tf=is_matlab() && matlabversion('2012a', inf);
+    tf = is_matlab() && matlabversion('2008b', '2011b');
+    
+  case 'RandStream.setGlobalStream'
+    tf = is_matlab() && matlabversion('2012a', inf);
     
   case 'randomized_PRNG_on_startup'
-    tf=is_octave() || ~matlabversion(-Inf,'7.3');
+    tf = is_octave() || ~matlabversion(-Inf,'7.3');
     
   case 'rng'
     % recent Matlab versions
-    tf=is_matlab() && matlabversion('7.12',Inf);
+    tf = is_matlab() && matlabversion('7.12',Inf);
     
   case 'rand-state'
     % GNU Octave
-    tf=is_octave();
+    tf = is_octave();
     
   case 'urlread-timeout'
-    tf=matlabversion('2012b',Inf);
+    tf = matlabversion('2012b',Inf);
     
   otherwise
     error('unsupported value for first argument: %s', what);
@@ -108,30 +108,26 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function tf=is_matlab()
-tf=~is_octave();
+function tf = is_matlab()
+tf = ~is_octave();
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function tf=is_octave()
+function tf = is_octave()
 persistent cached_tf;
 
 if isempty(cached_tf)
-  cached_tf=logical(exist('OCTAVE_VERSION', 'builtin'));
+  cached_tf = logical(exist('OCTAVE_VERSION', 'builtin'));
 end
 
-tf=cached_tf;
+tf = cached_tf;
 end % function
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function [inInterval] = matlabversion(min, max)
 
 % MATLABVERSION checks if the current MATLAB version is within the interval
