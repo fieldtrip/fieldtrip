@@ -175,10 +175,16 @@ for i=1:length(uid_MatrixIndicesMap)
     end
   end
   
-  uid_Volume = find(map,'/MatrixIndicesMap/Volume');
+  switch Cifti.Version
+    case {'1' '1.0'}
+      uid_Volume = find(tree,'/CIFTI/Matrix/Volume');
+      volume = branch(tree, uid_Volume);
+    case {'2' '2.0'}
+      uid_Volume = find(map,'/MatrixIndicesMap/Volume');
+      volume = branch(map, uid_Volume);
+  end
   % the following will fail if there are multiple volumes
   if ~isempty(uid_Volume)
-    volume = branch(map, uid_Volume);
     attr = attributes(volume, 'get', 1); % there should only be one attribute here
     if ~iscell(attr), attr = {attr}; end % treat one attribute just like multiple attributes
     for j=1:numel(attr)
@@ -552,7 +558,7 @@ if ~isempty(BrainModel)
   if ~isempty(Surface)
     voxeloffset = sum([Surface.SurfaceNumberOfVertices]);
   else
-    voxeloffset  = 0;
+    voxeloffset = 0;
   end
   
   greynodeOffset = nan(size(BrainModel));
