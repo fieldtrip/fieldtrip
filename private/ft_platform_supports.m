@@ -100,7 +100,7 @@ switch what
     tf = is_octave();
     
   case 'urlread-timeout'
-    tf = is_matlab && matlabversion('2012b',Inf);
+    tf = is_matlab() && matlabversion('2012b',Inf);
 
   case 'griddata-vector-input'
     tf = is_matlab()
