@@ -76,6 +76,7 @@ function [ftver, ftpath] = ft_version(cmd)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 persistent issvn
+persistent isgit
 
 if nargin<1
   % the default is to return the info
@@ -91,6 +92,11 @@ repository      = 'http://fieldtrip.googlecode.com/svn/trunk/';
 if isempty(issvn)
   % are we dealing with an SVN working copy of fieldtrip?
   issvn = isdir(fullfile(ftpath, '.svn'));
+end
+
+if isempty(isgit)
+  % are we dealing with an GIT working copy of fieldtrip?
+  isgit = isdir(fullfile(ftpath, '.git'));
 end
 
 switch cmd
@@ -111,26 +117,52 @@ switch cmd
       
       rev = regexp(output, 'Revision: (.*)', 'tokens', 'dotexceptnewline');
       rev = rev{1}{1};
+      ftver = ['r' rev];
+      
+    elseif isgit
+      tmpfile = tempname;
+      
+      olddir = pwd();
+      cd(ftpath);
+      [status, output] = system(sprintf('git show > %s', tmpfile));
+      cd(olddir);
+      if status > 0
+        error('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
+      end
+      
+      fp = fopen(tmpfile);
+      if fp>0
+        line = fgetl(fp); % the first line contains the commit number
+        fclose(fp);
+        rev = regexp(line, ' ', 'split');
+        rev = rev{2};
+        
+        % this is a string like 4d3c309129f12146885120c2853a11362e048ea7
+        ftver = rev;
+      else
+        ftver = 'unknown';
+      end
       
     else
       % determine the latest revision from the signature file
       fp = fopen(signaturefile, 'r');
-      line = fgetl(fp); % just get first line, file should be ordered newest-first
-      fclose(fp);
-      
-      rev = regexp(line, '[^\t]*\t([^\t])*\t.*', 'tokens');
-      rev = rev{1}{1};
-      
+      if fp>0
+        line = fgetl(fp); % just get first line, file should be ordered newest-first
+        fclose(fp);
+        
+        rev = regexp(line, '[^\t]*\t([^\t])*\t.*', 'tokens');
+        rev = rev{1}{1};
+        ftver = ['r' rev];
+      else
+        ftver = 'unknown';
+      end
+
     end
     
-    if nargout > 0
-      ftver = ['r' rev];
-    elseif issvn
-      fprintf('\nThis is FieldTrip, version r%s (svn).\n\n', rev);
-    else
-      fprintf('\nThis is FieldTrip, version r%s.\n\n', rev);
+    if nargout==0
+      fprintf('\nThis is FieldTrip, version %s.\n\n', ftver);
+      clear ftver
     end
-    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     

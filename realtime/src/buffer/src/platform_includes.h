@@ -16,6 +16,7 @@
     #include <unistd.h>
     #include <strings.h>
     #include <stdint.h>
+    #include "osx/clock_gettime.h"
 
     #define closesocket(s) (close(s))
     
