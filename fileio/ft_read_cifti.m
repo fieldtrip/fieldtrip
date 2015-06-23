@@ -67,6 +67,21 @@ mapname          = ft_getopt(varargin, 'mapname', 'field');
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
 
+if ~isempty(regexp(filename, 'nii.gz$', 'once'))
+  % the file is compressed, unzip on the fly
+  if ispc
+    error('cannot decompress gzipped files on a PC');
+  else
+    tempfile = [tempname '.nii.gz'];
+    [a, b] = system(sprintf('cp %s %s', filename, tempfile));
+    [a, b] = system(sprintf('gunzip %s', tempfile));
+  end
+  origfile = filename;
+  filename = tempfile(1:end-3); % strip the .gz
+else
+  origfile = filename;
+end
+
 % read the header section
 hdr = read_nifti2_hdr(filename);
 
@@ -175,10 +190,20 @@ for i=1:length(uid_MatrixIndicesMap)
     end
   end
   
-  uid_Volume = find(map,'/MatrixIndicesMap/Volume');
+  switch Cifti.Version
+    case {'1' '1.0'}
+      uid_Volume = find(tree,'/CIFTI/Matrix/Volume');
+    case {'2' '2.0'}
+      uid_Volume = find(map,'/MatrixIndicesMap/Volume');
+  end
   % the following will fail if there are multiple volumes
   if ~isempty(uid_Volume)
-    volume = branch(map, uid_Volume);
+    switch Cifti.Version
+      case {'1' '1.0'}
+        volume = branch(tree, uid_Volume);
+      case {'2' '2.0'}
+        volume = branch(map, uid_Volume);
+    end
     attr = attributes(volume, 'get', 1); % there should only be one attribute here
     if ~iscell(attr), attr = {attr}; end % treat one attribute just like multiple attributes
     for j=1:numel(attr)
@@ -552,7 +577,7 @@ if ~isempty(BrainModel)
   if ~isempty(Surface)
     voxeloffset = sum([Surface.SurfaceNumberOfVertices]);
   else
-    voxeloffset  = 0;
+    voxeloffset = 0;
   end
   
   greynodeOffset = nan(size(BrainModel));
@@ -785,6 +810,9 @@ source.unit = 'mm'; % per definition
 % try to get the geometrical information from the corresponding gifti files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if readsurface
+  
+  % use the filename prior to decompression
+  filename = origfile;
   
   [p, f, x] = fileparts(filename);
   t = tokenize(f, '.');

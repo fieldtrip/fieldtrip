@@ -39,6 +39,11 @@ optout = {};
 lastwarn('');
 lasterr('');
 
+% these will be determined later on, but are set here to empty for better error handling
+masterid = [];
+timallow = [];
+memallow = [];
+
 % there are many reasons why the execution may fail, hence the elaborate try-catch
 try
   

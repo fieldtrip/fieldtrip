@@ -10,11 +10,17 @@
 #include <string.h>
 #include "buffer.h"
 #include <pthread.h>
+#include <time.h>  /* for clock */
+#include <sys/time.h>
 
 /* FIXME should these be static? */
 static header_t   *header   = NULL;
 static data_t     *data     = NULL;
 static event_t    *event    = NULL;
+
+/* these are used for fine-tuning the sample number of incoming events */
+struct timespec putdat_clock;
+struct timespec putevt_clock;
 
 static unsigned int current_max_num_sample = 0;
 
@@ -35,6 +41,7 @@ static int thisevent = 0;     /* points at the buffer */
  *
  * -- Boris
 */
+
 pthread_mutex_t mutexheader   = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexdata     = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexevent    = PTHREAD_MUTEX_INITIALIZER;
@@ -42,7 +49,7 @@ pthread_mutex_t mutexevent    = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t getData_cond   = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t getData_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-#define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr,"Out of memory with unchecked malloc in line %d",__LINE__); exit(1); }
+#define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr, "Out of memory with unchecked malloc in line %d", __LINE__); exit(1); }
 
 /*****************************************************************************/
 
@@ -147,8 +154,8 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	*/
 	int verbose = 0;
 
-    /* these are used for blocking the read requests */
-    struct timeval tp;
+  /* these are used for blocking the read requests */
+  struct timeval tp;
 	struct timespec ts;
 
 	/* use a local variable for datasel (in GET_DAT) */
@@ -264,6 +271,13 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					fprintf(stderr, "dmarequest: invalid size definitions in PUT_DAT request\n");
 					response->def->command = PUT_ERR;
 				} else {
+
+          /* record the time at which the data was received */
+          if (clock_gettime(CLOCK_REALTIME, &putdat_clock) != 0) {
+            perror("clock_gettime");
+            return -1;
+          }
+
 					/* number of bytes per sample (all channels) is given by wordsize x number of channels */
 					unsigned int chansize = wordsize * data->def->nchans;
 					/* request_data points to actual data samples within the request, use char* for convenience */
@@ -290,6 +304,12 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 			pthread_mutex_lock(&mutexheader);
 			pthread_mutex_lock(&mutexevent);
 
+      /* record the time at which the event was received */
+      if (clock_gettime(CLOCK_REALTIME, &putevt_clock) != 0) {
+        perror("clock_gettime");
+        return -1;
+      }
+
 			/* Give an error message if there is no header, or if the given event array is defined badly */
 			if (header==NULL || event==NULL || check_event_array(request->def->bufsize, request->buf) < 0) {
 				response->def->version = VERSION;
@@ -309,28 +329,28 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					eventdef = (eventdef_t*)((char*)request->buf+offset);
 					if (verbose>1) print_eventdef(eventdef);
 
-					event[thisevent].def = (eventdef_t*)malloc(sizeof(eventdef_t));
-					DIE_BAD_MALLOC(event[thisevent].def);
-					memcpy(event[thisevent].def, (char*)request->buf+offset, sizeof(eventdef_t));
-					
-					/* automatically convert event->def->sample to current sample number
-						(thus this event "belongs" to the first sample of the next block from PUT_DAT)
-					*/
-					if (event[thisevent].def->sample == EVENT_AUTO_SAMPLE) {
-						event[thisevent].def->sample = header->def->nsamples;
-					}
-					
-					offset += sizeof(eventdef_t);
-					event[thisevent].buf = malloc(eventdef->bufsize);
-					DIE_BAD_MALLOC(event[thisevent].buf);
-					memcpy(event[thisevent].buf, (char*)request->buf+offset, eventdef->bufsize);
-					offset += eventdef->bufsize;
-					if (verbose>1) print_eventdef(event[thisevent].def);
-					thisevent++;
-					thisevent = WRAP(thisevent, MAXNUMEVENT);
-					header->def->nevents++;
-				}
-			}
+          event[thisevent].def = (eventdef_t*)malloc(sizeof(eventdef_t));
+          DIE_BAD_MALLOC(event[thisevent].def);
+          memcpy(event[thisevent].def, (char*)request->buf+offset, sizeof(eventdef_t));
+
+          if (event[thisevent].def->sample == EVENT_AUTO_SAMPLE) {
+            /* automatically convert event->def->sample to current sample number */
+            /* make some fine adjustment of the assigned sample number */
+            double adjust = (putevt_clock.tv_sec - putdat_clock.tv_sec) + (double)(putevt_clock.tv_nsec - putdat_clock.tv_nsec) / 1000000000L;
+            event[thisevent].def->sample = header->def->nsamples + (int)(header->def->fsample*adjust);
+          }
+
+          offset += sizeof(eventdef_t);
+          event[thisevent].buf = malloc(eventdef->bufsize);
+          DIE_BAD_MALLOC(event[thisevent].buf);
+          memcpy(event[thisevent].buf, (char*)request->buf+offset, eventdef->bufsize);
+          offset += eventdef->bufsize;
+          if (verbose>1) print_eventdef(event[thisevent].def);
+          thisevent++;
+          thisevent = WRAP(thisevent, MAXNUMEVENT);
+          header->def->nevents++;
+        }
+      }
 
 			pthread_mutex_unlock(&mutexevent);
 			pthread_mutex_unlock(&mutexheader);

@@ -131,24 +131,32 @@ switch cmd
       end
       
       fp = fopen(tmpfile);
-      line = fgetl(fp); % the first line contains the commit number
-      fclose(fp);
-      rev = regexp(line, ' ', 'split');
-      rev = rev{2};
-      
-      % this is a string like 4d3c309129f12146885120c2853a11362e048ea7
-      ftver = rev;
+      if fp>0
+        line = fgetl(fp); % the first line contains the commit number
+        fclose(fp);
+        rev = regexp(line, ' ', 'split');
+        rev = rev{2};
+        
+        % this is a string like 4d3c309129f12146885120c2853a11362e048ea7
+        ftver = rev;
+      else
+        ftver = 'unknown';
+      end
       
     else
       % determine the latest revision from the signature file
       fp = fopen(signaturefile, 'r');
-      line = fgetl(fp); % just get first line, file should be ordered newest-first
-      fclose(fp);
-      
-      rev = regexp(line, '[^\t]*\t([^\t])*\t.*', 'tokens');
-      rev = rev{1}{1};
-      ftver = ['r' rev];
-      
+      if fp>0
+        line = fgetl(fp); % just get first line, file should be ordered newest-first
+        fclose(fp);
+        
+        rev = regexp(line, '[^\t]*\t([^\t])*\t.*', 'tokens');
+        rev = rev{1}{1};
+        ftver = ['r' rev];
+      else
+        ftver = 'unknown';
+      end
+
     end
     
     if nargout==0
