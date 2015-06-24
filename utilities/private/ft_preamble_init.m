@@ -75,12 +75,14 @@ else
   abort = false;
 end % if outputfile
 
-if isfield(ft_default, 'trackusage') && ~(isequal(ft_default.trackusage, false) || isequal(ft_default.trackusage, 'no') || isequal(ft_default.trackusage, 'off'))
-  % track the usage of the calling function
-  stack = dbstack('-completenames');
-  % stack(1) is this script
-  % stack(2) is the calling ft_postamble function
-  % stack(3) is the main FieldTrip function that we are interested in
-  ft_trackusage('function call', 'function', stack(3).name);
-end % if trackusage
-
+if false
+  % this is currently generating too much data and therefore disabled
+  if isfield(ft_default, 'trackusage') && ~(isequal(ft_default.trackusage, false) || isequal(ft_default.trackusage, 'no') || isequal(ft_default.trackusage, 'off'))
+    % track the usage of the calling function
+    stack = dbstack('-completenames');
+    % stack(1) is this script
+    % stack(2) is the calling ft_postamble function
+    % stack(3) is the main FieldTrip function that we are interested in
+    ft_trackusage('function call', 'function', stack(3).name);
+  end % if trackusage
+end
