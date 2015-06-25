@@ -135,10 +135,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble loadvar     mri
+ft_preamble provenance  mri
 ft_preamble trackconfig
 ft_preamble debug
-ft_preamble loadvar mri
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -627,9 +627,10 @@ end
 segmented = removefields(segmented, remove);
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous mri
-ft_postamble history segmented
-ft_postamble savevar segmented
+ft_postamble previous   mri
+ft_postamble provenance segmented
+ft_postamble history    segmented
+ft_postamble savevar    segmented
+ft_postamble debug
+

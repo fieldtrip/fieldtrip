@@ -337,6 +337,9 @@ ft_uilayout(figHandle, 'tag', 'tx',          'BackgroundColor', [0.8 0.8 0.8], '
 ft_uilayout(figHandle, 'tag', 'ty',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
 ft_uilayout(figHandle, 'tag', 'tz',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
 
+% somehow the toolbar gets lost in 2012b
+set(figHandle, 'toolbar', 'figure');
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_close(figHandle, varargin)
 % the figure will be closed in the main function after collecting the guidata
