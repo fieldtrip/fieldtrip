@@ -58,6 +58,11 @@ vertexcolor = ft_getopt(varargin, 'vertexcolor', 'none');
 edgecolor   = ft_getopt(varargin, 'edgecolor'); % the default for this is set below
 facealpha   = ft_getopt(varargin, 'facealpha', 1);
 surfaceonly = ft_getopt(varargin, 'surfaceonly');
+unit        = ft_getopt(varargin, 'unit');
+
+if ~isempty(unit)
+  vol = ft_convert_units(vol, unit);
+end
 
 faceindex   = istrue(faceindex);   % yes=view the face number
 vertexindex = istrue(vertexindex); % yes=view the vertex number

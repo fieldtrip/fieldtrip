@@ -49,6 +49,11 @@ coil          = ft_getopt(varargin, 'coil',   false);
 label         = ft_getopt(varargin, 'label',  'off');
 chantype      = ft_getopt(varargin, 'chantype');
 coildiameter  = ft_getopt(varargin, 'coildiameter', 0);
+unit          = ft_getopt(varargin, 'unit');
+
+if ~isempty(unit)
+  sens = ft_convert_units(sens, unit);
+end
 
 % select a subset of channels to be plotted
 if ~isempty(chantype)

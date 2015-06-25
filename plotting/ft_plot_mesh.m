@@ -84,7 +84,12 @@ vertexmarker = ft_getopt(varargin, 'vertexmarker', '.');
 facealpha    = ft_getopt(varargin, 'facealpha',   1);
 edgealpha    = ft_getopt(varargin, 'edgealpha',   1);
 tag          = ft_getopt(varargin, 'tag',         '');
-surfaceonly   = ft_getopt(varargin, 'surfaceonly',  false);
+surfaceonly  = ft_getopt(varargin, 'surfaceonly',  false);
+unit         = ft_getopt(varargin, 'unit');
+
+if ~isempty(unit)
+  bnd = ft_convert_units(bnd, unit);
+end
 
 if surfaceonly
   bnd = mesh2edge(bnd);
