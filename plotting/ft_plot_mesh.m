@@ -57,8 +57,7 @@ ws = warning('on', 'MATLAB:divideByZero');
 
 if ~isstruct(bnd) && isnumeric(bnd) && size(bnd,2)==3
   % the input seems like a list of points, convert into something that resembles a mesh
-  warning('off', 'MATLAB:warn_r14_stucture_assignment');
-  bnd.pnt = bnd;
+  bnd = struct('pnt', bnd);
 elseif isfield(bnd, 'pos')
   % the input seems to be a set of points from ft_prepare_sourcemodel or ft_dipolefitting
   bnd.pnt = bnd.pos;
