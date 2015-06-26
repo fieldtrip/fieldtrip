@@ -188,9 +188,9 @@ if ~hasdata
   
 else
   % check whether the value for trlpadding makes sense
-  % negative trlpadding only allowed with in-memory data
-  if cfg.artfctdef.zvalue.trlpadding < 0
-    error('negative trlpadding is only allowed with in-memory data');
+  if cfg.artfctdef.zvalue.trlpadding > 0
+    % negative trlpadding is allowed with in-memory data
+    error('you cannot use positive trlpadding with in-memory data');
   end
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
