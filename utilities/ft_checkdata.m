@@ -1227,6 +1227,11 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   
   complete = all(cmbindx(:)~=0);
   
+   % remove obsolete fields
+  try data      = rmfield(data, 'powspctrm');  end
+  try data      = rmfield(data, 'labelcmb');   end
+  try data      = rmfield(data, 'dof');        end
+  
   fn = fieldnames(data);
   for ii=1:numel(fn)
     if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
@@ -1261,12 +1266,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
       end
     end % if numel
   end % for ii
-  
-  % remove obsolete fields
-  try data      = rmfield(data, 'powspctrm');  end
-  try data      = rmfield(data, 'labelcmb');   end
-  try data      = rmfield(data, 'dof');        end
-  
+   
   if ntim>1,
     data.dimord = 'chan_chan_freq_time';
   else
