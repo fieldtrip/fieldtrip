@@ -352,7 +352,6 @@ for i=1:numel(varargin)
   % also update the fields that describe the dimensions, time/freq/pos have been dealt with as data
   if haschan,    varargin{i} = makeselection_chan   (varargin{i}, selchan{i}, avgoverchan); end % update the label field
   if haschancmb, varargin{i} = makeselection_chancmb(varargin{i}, selchancmb{i}, avgoverchancmb); end % update the labelcmb field
-  if fieldhasfreq && ~all(isnan(selfreq{i})), varargin{i}.freq = selfreq{i}; end;
   
 end % for varargin
 
