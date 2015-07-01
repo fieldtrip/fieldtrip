@@ -105,7 +105,7 @@ switch cmd
   case 'info'
     % show the latest revision present in this copy of fieldtrip
     
-    if 0
+    if issvn
       % use svn system call to determine latest revision
       olddir = pwd();
       cd(ftpath);
@@ -119,7 +119,7 @@ switch cmd
       rev = rev{1}{1};
       ftver = ['r' rev];
       
-    elseif 0
+    elseif isgit
       tmpfile = tempname;
       
       olddir = pwd();
