@@ -18,16 +18,17 @@ CPPOBJ =
 
 # defaults, might be overwritten further down
 CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR)
-CFLAGS += -Wunused -Wall -pedantic -O3 -g 
-CXXFLAGS = $(CFLAGS)
+# CFLAGS += -Wunused -Wall -pedantic -O3 -g 
+CFLAGS += -w
 LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer -lpthread $(CPPOBJ)
+LDLIBS = -lbuffer $(CPPOBJ)
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
 	SUFFIX = .exe
-	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
+	CFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDFLAGS += -L$(FIELDTRIP)/realtime/src/external/pthreads-win32/lib
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
@@ -35,7 +36,7 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(UNAME)" "Linux"
-	$LDLIBS += -ldl -lstdc++
+	$LDLIBS += -ldl -lstdc++ -lpthread
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -54,13 +55,11 @@ ifeq "$(UNAME)" "Darwin"
 	ifeq "$(MACHINE)" "i386"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS += -m32
-		CXXFLAGS += -m32
 		LDFLAGS += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
 		CFLAGS += -m64
-		CXXFLAGS += -m64
 		LDFLAGS += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
@@ -80,7 +79,7 @@ all: $(TARGETS)
 $(TARGETS):
 
 $(BINDIR)/%$(SUFFIX): serial.o %.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 $(BINDIR)/modeeg_setupbluesmirf$(SUFFIX): LDLIBS=
 

@@ -5,6 +5,8 @@
  *
  */
 
+#include <sched.h>
+
 #include <rdaserver.h>
 #include <fcntl.h>
 #include <errno.h>

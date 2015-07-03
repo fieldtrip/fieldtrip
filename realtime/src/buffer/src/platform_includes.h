@@ -1,6 +1,7 @@
 #include "platform.h"
 #include "compiler.h"
 
+
 #if defined (COMPILER_BORLAND)
 
 #endif
@@ -83,6 +84,7 @@
     #include <winsock2.h>
     #include <sys/time.h>
     #include <stdint.h>
+    #include "win32/clock_gettime.h"
 
     #define bzero(b,len)    (memset((b), '\0', (len)), (void) 0)
     #define usleep(x)       (Sleep((x)/1000))
