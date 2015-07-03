@@ -38,9 +38,15 @@ static char usage[] =
     "Using '-' for the buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n" \
     "\n" \
     "Example use:\n" \
+#ifdef (PLATFORM_WIN32)
+    "   openbci2ft COM3:                 # start a local buffer on port 1972\n" \
+    "   openbci2ft COM3: - 1234          # start a local buffer on port 1234\n" \
+    "   openbci2ft COM3: mentat002 1234  # connect to remote buffer\n" \
+#else
     "   openbci2ft /dev/tty.usbserial-DN0094FY                 # start a local buffer on port 1972\n" \
     "   openbci2ft /dev/tty.usbserial-DN0094FY - 1234          # start a local buffer on port 1234\n" \
     "   openbci2ft /dev/tty.usbserial-DN0094FY mentat002 1234  # connect to remote buffer\n" \
+#endif
     "\n" \
     ;  
 
