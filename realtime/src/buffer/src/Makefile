@@ -14,7 +14,6 @@ LIBPATH = -L.
 LIBS = -lbuffer -lm -lpthread
 
 ifeq "$(PLATFORM)" "mingw32"
-	CC += -DCOMPILER_MINGW # FIXME should not be needed, suggests error in compiler.h
 	INCPATH	+= -I. -I../../external/pthreads-win32/include
 	LIBPATH += -L. -L../../external/pthreads-win32/lib
 	LIBS += -lpthreadGC2

@@ -14,6 +14,7 @@
 #include <math.h>
 #include <signal.h>
 
+#include "platform.h"
 #include "serial.h"
 #include "buffer.h"
 #include "socketserver.h"
@@ -29,6 +30,7 @@
 #define OPENBCI_CALIB1  (1000000 * 4.5 / 24 / (2^23-1)) /* in uV, for 24x gain */
 #define OPENBCI_CALIB2  0.002 / (2^4)                   /* in mG */
 
+#if defined (PLATFORM_WIN32)
 static char usage[] =
 "\n" \
     "Usage: openbci2ft <device> [ftHost] [ftPort]\n" \
@@ -38,17 +40,27 @@ static char usage[] =
     "Using '-' for the buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n" \
     "\n" \
     "Example use:\n" \
-#ifdef (PLATFORM_WIN32)
     "   openbci2ft COM3:                 # start a local buffer on port 1972\n" \
     "   openbci2ft COM3: - 1234          # start a local buffer on port 1234\n" \
     "   openbci2ft COM3: mentat002 1234  # connect to remote buffer\n" \
+    "\n" \
+    ;  
 #else
+static char usage[] =
+"\n" \
+    "Usage: openbci2ft <device> [ftHost] [ftPort]\n" \
+    "\n" \
+    "When ftPort is omitted, it will default to 1972.\n" \
+    "When ftHost is omitted, it will default to '-'.\n" \
+    "Using '-' for the buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n" \
+    "\n" \
+    "Example use:\n" \
     "   openbci2ft /dev/tty.usbserial-DN0094FY                 # start a local buffer on port 1972\n" \
     "   openbci2ft /dev/tty.usbserial-DN0094FY - 1234          # start a local buffer on port 1234\n" \
     "   openbci2ft /dev/tty.usbserial-DN0094FY mentat002 1234  # connect to remote buffer\n" \
-#endif
     "\n" \
-    ;  
+	;
+#endif
 
 int keepRunning = 1;
 
