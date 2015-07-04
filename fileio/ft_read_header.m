@@ -241,7 +241,7 @@ hdr = [];
 % read the data with the low-level reading function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch headerformat
-   case 'AnyWave'
+  case 'AnyWave'
     orig = read_ahdf5_hdr(datafile);
     hdr.orig = orig;
     hdr.Fs = orig.channels(1).samplingRate;
@@ -671,16 +671,16 @@ switch headerformat
   case 'edf'
     % this reader is largely similar to the bdf reader
     if isempty(chanindx)
-        hdr = read_edf(filename);
+      hdr = read_edf(filename);
     else
-        hdr = read_edf(filename,[],1);
-        if chanindx > hdr.orig.NS
-            error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
-        else
-            hdr = read_edf(filename,[],chanindx);
-        end;
+      hdr = read_edf(filename,[],1);
+      if chanindx > hdr.orig.NS
+        error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+      else
+        hdr = read_edf(filename,[],chanindx);
+      end;
     end;
- 
+    
   case 'eep_avr'
     % check that the required low-level toolbox is available
     ft_hastoolbox('eeprobe', 1);
@@ -707,8 +707,8 @@ switch headerformat
     hdr.nTrials     = 1;        % it can always be interpreted as continuous data
     hdr.orig        = orig;     % remember the original details
     
-
- case 'eeglab_set'
+    
+  case 'eeglab_set'
     hdr = read_eeglabheader(filename);
     
   case 'eeglab_erp'
@@ -1218,6 +1218,22 @@ switch headerformat
       end
     end
     
+    if ~isfield(hdr, 'chantype')
+      % prevent overwriting the chantypes that we might have gotten from a RES4 chunk
+      hdr.chantype = cell(hdr.nChans,1);
+      if hdr.nChans < 2000 % don't do this for fMRI etc.
+        hdr.chantype = repmat({'unknown'}, 1, hdr.nChans);
+      end
+    end
+    
+    if ~isfield(hdr, 'chanunit')
+      % prevent overwriting the chanunits that we might have gotten from a RES4 chunk
+      hdr.chanunit = cell(hdr.nChans,1);
+      if hdr.nChans < 2000 % don't do this for fMRI etc.
+        hdr.chanunit = repmat({'unknown'}, 1, hdr.nChans);
+      end
+    end
+    
     hdr.orig.bufsize = orig.bufsize;
     
     
@@ -1304,7 +1320,7 @@ switch headerformat
     packetsize = (4*2 + 6*2 + 16*43*2); % in bytes
     % read the first packet
     fid  = fopen(filename, 'r');
-    buf  = fread(fid, packetsize/2, 'uint16');  
+    buf  = fread(fid, packetsize/2, 'uint16');
     fclose(fid);
     
     if buf(1)==0
@@ -1322,10 +1338,10 @@ switch headerformat
     
     hdr             = [];
     hdr.Fs          = packet.fsample;
-    hdr.nChans      = packet.nchan;  
+    hdr.nChans      = packet.nchan;
     hdr.nSamples    = 43;
-    hdr.nSamplesPre = 0;        
-    hdr.nTrials     = npackets; 
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = npackets;
     hdr.label       = cell(hdr.nChans,1);
     hdr.chantype    = cell(hdr.nChans,1);
     hdr.chanunit    = cell(hdr.nChans,1);
@@ -1805,8 +1821,8 @@ switch headerformat
     hdr.orig = orig;
     
   case 'oxy3'
-    ft_hastoolbox('artinis', 1);    
-    hdr = read_artinis_oxy3(filename);    
+    ft_hastoolbox('artinis', 1);
+    hdr = read_artinis_oxy3(filename);
     
   case 'plexon_ds'
     hdr = read_plexon_ds(filename);
