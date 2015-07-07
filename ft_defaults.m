@@ -202,12 +202,17 @@ if ~isdeployed
 
   try
     % this contains the functions to compute connecitivy metrics
-    ft_hastoolbox('connectivity', 1,1);
+    ft_hastoolbox('connectivity', 1, 1);
   end
 
   try
     % this contains the functions for spike and spike-field analysis
-    ft_hastoolbox('spike', 1,1);
+    ft_hastoolbox('spike', 1, 1);
+  end
+
+  try
+    % this contains user contributed functions
+    ft_hastoolbox('contrib/misc', 1, 1);
   end
 
   try

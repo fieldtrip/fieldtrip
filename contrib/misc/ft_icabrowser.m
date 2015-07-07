@@ -1,4 +1,5 @@
-function [rej_comp] = ica_browser(cfg, comp)
+function [rej_comp] = ft_icabrowser(cfg, comp)
+
 % ICA component viewer and GUI
 %
 % loads in comp structure from FieldTrip ft_componentanalysis
@@ -28,6 +29,7 @@ assert(exist('comp', 'var') > 0, 'could not find a comp structure');
 
 % setup
 var_data = cat(2,comp.trial{:});
+var_time = (1:(size(var_data,2)))/comp.fsample;
 % only do the fft on a subset of trials, saves time
 fft_data = cat(2,comp.trial{1:5:end});
 % preallocate rejected components
@@ -47,9 +49,8 @@ end
 prefix = cfg.prefix;
 
 % to save time redoing this for each topo
-cfglay = [];
-cfglay.layout = cfg.layout;
-lay = ft_prepare_layout(cfglay);
+cfglay = keepfields(cfg, {'layout'});
+lay = ft_prepare_layout(cfglay, comp);
 
 cfgtopo = [];
 cfgtopo.layout    = lay;     % specify the layout file that should be used for plotting
@@ -62,6 +63,18 @@ if isfield(cfg, 'colormap'),  cfgtopo.colormap  = cfg.colormap;  end
 err = 0;
 manpos = [0.1 0.1 0.8 0.8]; % figure position, can be updated later
 
+% ------------------------------------------------
+% COMPUTE LATENCY FOR 2s-WINDOWS
+% ------------------------------------------------
+
+slen = floor(2*comp.fsample);
+smax = floor(size(var_data,2)/slen);
+comp_var  = nan(subpl, smax); % preallocate
+comp_time = nan(1, smax);     % preallocate
+for s = 1 : smax
+  comp_time(s) = mean(var_time(1,(s-1)*slen+1:s*slen));
+end
+        
 while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
     
     while il < subpl, % il is the subplot count
@@ -79,10 +92,8 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
         % COMPUTE VARIANCE FOR 2s-WINDOWS
         % ------------------------------------------------
         
-        smax =  floor(size(var_data,2)/250);
-        comp_var(i, 1:smax) = nan; % preallocate
         for s = 1 : smax
-            comp_var(i,s)=var(var_data(i,(s-1)*200+1:s*200));
+            comp_var(i,s)=var(var_data(i,(s-1)*slen+1:s*slen));
         end
         
         % ------------------------------------------------
@@ -128,8 +139,8 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
         % PLOT VARIANCE OVER TIME
         % ------------------------------------------------
         subcomp{2}{il} = subplot(subpl,3,(i-(l-1)*subpl)*3-1);
-        scatter(1:smax,comp_var(i,:),'k.');
-        xlabel('Time'); ylabel('Variance');
+        scatter(comp_time,comp_var(i,:),'k.');
+        xlabel('Time (s)'); ylabel('Variance');
         axis tight; set(gca, 'tickdir', 'out');
         
         % ------------------------------------------------
@@ -341,4 +352,4 @@ end
         err = 1;
     end
 
-end
+end % main function
