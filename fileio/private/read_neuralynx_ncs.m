@@ -33,6 +33,36 @@ if nargin<3
   endrecord = inf;
 end
 
+% Using mex files will decrease reading times 2-10-fold on big files
+% I had 0.5 sec vs 3.1 sec on 20kHz 600sec file
+% searching for registered precompiled Nlx2MatCSC, provided by Neuralynx
+isMex = exist('Nlx2MatCSC', 'file')==3;
+if isMex
+    % Neuralynx mex files use C-style flags, so let's name them
+    % for convinience
+    READ_ALL = ones(1,5);
+    flags = num2cell(diag(READ_ALL), [1,5]);
+    [READ_TST READ_CHAN READ_FREQ READ_VAL READ_SAMP] = flags{:};
+    % the request vector will look like: 
+    %     >> TST_FLAG+FREQ_FLAG+SAMP_FLAG
+    %     >> ans =
+    %              1
+    %              0
+    %              1
+    %              0
+    %              1
+    HEADER_NO = 0;
+    HEADER_YES = 1;
+    EXTRACT_RECORD_RANGE = 2;
+end
+% isMex = false;
+
+% assume we have mex installed by default as it is really helpful
+if ~isMex
+    warning(['No Nlx2MatCSC Mex registered in the system please see '...
+             'http://neuralynx.com/research_software/file_converters_and_utilities/']);
+end
+
 % the file starts with a 16*1024 bytes header in ascii, followed by a number of records
 hdr = neuralynx_getheader(filename);
 fid = fopen(filename, 'rb', 'ieee-le');
@@ -47,22 +77,51 @@ if NRecords>0
      
   % read out part of the dataset to detect whether there were jumps
   NRecords_to_read = min(NRecords, 100); % read out maximum 100 blocks of data
-  TimeStamp        = zeros(1,NRecords_to_read,'uint64');
-  ChanNumber       = zeros(1,NRecords_to_read);  
-  SampFreq         = zeros(1,NRecords_to_read);
-    
-  for k=1:NRecords_to_read
-    
-    % set to the correct position    
-    status = fseek(fid, headersize + (k-1)*recordsize, 'bof');        
-    if status~=0
-      error('cannot jump to the requested record');
-    end
+      
+  isRead = false;
+  try
+      
+      if ~isMex
+          error('No Nlx2MatCSC Mex registered in the system');
+      end
+      
+      % do we need ChanNumber in this section? it is not used
+      [TimeStamp,  ...
+       ChanNumber, ... 
+       SampFreq    ] = Nlx2MatCSC(filename,...
+                                  READ_TST+READ_CHAN+READ_FREQ,...
+                                  HEADER_NO,... % no need in header, let FT read the header
+                                  EXTRACT_RECORD_RANGE,...
+                                  [1, NRecords_to_read]);
+      TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output
+                                     % as mex gives us doubles 
+      isRead = true;
+  catch Exception
+      isRead = false;
+%       disp(getReport(Exception));
+      warning('Failed to read with Mex Nlx2MatCSC, attempting to read manually...')
+      
+      TimeStamp        = zeros(1,NRecords_to_read,'uint64');
+      ChanNumber       = zeros(1,NRecords_to_read);  
+      SampFreq         = zeros(1,NRecords_to_read);
+      for k=1:NRecords_to_read
 
-    % read a single continuous data record
-    TimeStamp(k)    = fread(fid,   1, 'uint64=>uint64');
-    ChanNumber(k)   = fread(fid,   1, 'int32');
-    SampFreq(k)     = fread(fid,   1, 'int32');    
+        % set to the correct position    
+        status = fseek(fid, headersize + (k-1)*recordsize, 'bof');        
+        if status~=0
+          error('cannot jump to the requested record');
+        end
+
+        % read a single continuous data record
+        TimeStamp(k)    = fread(fid,   1, 'uint64=>uint64');
+        ChanNumber(k)   = fread(fid,   1, 'int32');
+        SampFreq(k)     = fread(fid,   1, 'int32');    
+      end
+      isRead = true;
+  end
+  
+  if ~isRead 
+      error('Failed to read data');
   end
   
   % explicitly sort the timestamps to deal with negative timestamp jumps that can occur
@@ -129,28 +188,62 @@ elseif endrecord>NRecords
 end
 
 if begrecord>=1 && endrecord>=begrecord
-  % rewind to the first record to be read
-  status = fseek(fid, headersize + (begrecord-1)*recordsize, 'bof');
-  if status~=0
-    error('cannot jump to the requested record');
+  % leave numrecord information here for proper synchronisation
+  numrecord    = (endrecord-begrecord+1);
+  
+  isRead = false;
+  try
+      % assume we have mex installed by default as it is really helpful
+      if ~isMex
+          error('No Nlx2MatCSC Mex registered in the system');
+      end
+      
+      [TimeStamp,      ...
+       ChanNumber,     ... 
+       SampFreq,       ...
+       NumValidSamp,   ...
+       Samp            ] = Nlx2MatCSC(filename,...
+                                       READ_ALL,...
+                                       HEADER_NO,... % no need in header
+                                       EXTRACT_RECORD_RANGE,...
+                                       [begrecord, endrecord]);
+
+      TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output
+      isRead = true;
+  catch Exception
+      isRead = false;
+%       disp(getReport(Exception));
+      warning('Failed to read with Mex Nlx2MatCSC, attempting to read manually...')
+      
+      % manual reading
+      % rewind to the first record to be read
+      status = fseek(fid, headersize + (begrecord-1)*recordsize, 'bof');
+      if status~=0
+        error('cannot jump to the requested record');
+      end
+
+      TimeStamp    = zeros(1,numrecord,'uint64');
+      ChanNumber   = zeros(1,numrecord);
+      SampFreq     = zeros(1,numrecord);
+      NumValidSamp = zeros(1,numrecord);
+      Samp         = zeros(512,numrecord);  % this allows easy reshaping into a 1xNsamples vector
+      
+      for k=1:numrecord
+        % read a single continuous data record
+        TimeStamp(k)    = fread(fid,   1, 'uint64=>uint64');
+        ChanNumber(k)   = fread(fid,   1, 'int32');
+        SampFreq(k)     = fread(fid,   1, 'int32');
+        NumValidSamp(k) = fread(fid,   1, 'int32');
+        Samp(:,k)       = fread(fid, 512, 'int16');
+        % mark the invalid samples
+        Samp((NumValidSamp+1):end,k) = nan;
+      end
+      
+      isRead = true;
   end
   
-  numrecord    = (endrecord-begrecord+1);
-  TimeStamp    = zeros(1,numrecord,'uint64');
-  ChanNumber   = zeros(1,numrecord);
-  SampFreq     = zeros(1,numrecord);
-  NumValidSamp = zeros(1,numrecord);
-  Samp         = zeros(512,numrecord);  % this allows easy reshaping into a 1xNsamples vector
-  
-  for k=1:numrecord
-    % read a single continuous data record
-    TimeStamp(k)    = fread(fid,   1, 'uint64=>uint64');
-    ChanNumber(k)   = fread(fid,   1, 'int32');
-    SampFreq(k)     = fread(fid,   1, 'int32');
-    NumValidSamp(k) = fread(fid,   1, 'int32');
-    Samp(:,k)       = fread(fid, 512, 'int16');
-    % mark the invalid samples
-    Samp((NumValidSamp+1):end,k) = nan;
+  if ~isRead 
+      error('Failed to read data');
   end
   
   ts1 = TimeStamp(1);
@@ -167,9 +260,6 @@ if begrecord>=1 && endrecord>=begrecord
   ncs.NumValidSamp = NumValidSamp(indx);
   % apply the scaling factor from ADBitVolts and convert to uV
   ncs.dat          = Samp(:,indx) * hdr.ADBitVolts * 1e6;
-
-  
-  
 end
 fclose(fid);
 
