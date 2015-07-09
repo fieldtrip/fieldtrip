@@ -148,11 +148,23 @@ if ~isdeployed
   end
 
   try
-    % these directories contain functions that were added to MATLAB in
-    % recent versions to replace an older function.
-    if ft_platform_supports('matlabversion',-Inf, '2011b')
-      ft_hastoolbox('compat/matlablt2012a', 2, 1);
-    end
+    % these directories deal with compatibility with older MATLAB versions
+    if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2008b'), ft_hastoolbox('compat/matlablt2009a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2009a'), ft_hastoolbox('compat/matlablt2009b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2009b'), ft_hastoolbox('compat/matlablt2010a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2010a'), ft_hastoolbox('compat/matlablt2010b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2010b'), ft_hastoolbox('compat/matlablt2011a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2011a'), ft_hastoolbox('compat/matlablt2011b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2011b'), ft_hastoolbox('compat/matlablt2012a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2012a'), ft_hastoolbox('compat/matlablt2012b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2012b'), ft_hastoolbox('compat/matlablt2013a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2013a'), ft_hastoolbox('compat/matlablt2013b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2013b'), ft_hastoolbox('compat/matlablt2014a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2014a'), ft_hastoolbox('compat/matlablt2014a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2014a'), ft_hastoolbox('compat/matlablt2015b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2015b'), ft_hastoolbox('compat/matlablt2015b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2015b'), ft_hastoolbox('compat/matlablt2016a', 3, 1); end
   end
 
   try
