@@ -33,7 +33,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id: ft_hastoolbox.m 10418 2015-05-22 10:19:38Z roboos $
 
 % this function is called many times in FieldTrip and associated toolboxes
 % use efficient handling if the same toolbox has been investigated before
@@ -104,6 +104,7 @@ url = {
   'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
+  'NEURALYNX'     'see http://neuralynx.com/research_software/file_converters_and_utilities/' 
   'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
@@ -254,6 +255,8 @@ switch toolbox
     status  = exist('load_bcidat', 'file');
   case 'NLXNETCOM'
     status  = (exist('MatlabNetComClient', 'file') && exist('NlxConnectToServer', 'file') && exist('NlxGetNewCSCData', 'file'));
+  case 'NEURALYNX'
+    status = (exist('Nlx2MatCSC', 'file')) % we use only this func at the moment
   case 'DIPOLI'
     status  = exist('dipoli.maci', 'file');
   case 'MNE'
