@@ -4,10 +4,11 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 % multiplication in the frequency domain.
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = ft_specest_mtmconvol(dat,time,...)
-% where
+%   [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat,time,...)
+% where input
 %   dat       = matrix of chan*sample
 %   time      = vector, containing time in seconds for each sample
+% and output
 %   spectrum  = matrix of ntaper*chan*freqoi*timeoi of fourier coefficients
 %   ntaper    = vector containing the number of tapers per freqoi
 %   freqoi    = vector of frequencies in spectrum
