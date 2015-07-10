@@ -1499,17 +1499,23 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     % the event file is contained in the dataset directory
-    if     exist(fullfile(filename, 'Events.Nev'))
-      filename = fullfile(filename, 'Events.Nev');
+    if exist(fullfile(filename, 'Events.Nev'))
+      nevfilename = fullfile(filename, 'Events.Nev');
     elseif exist(fullfile(filename, 'Events.nev'))
-      filename = fullfile(filename, 'Events.nev');
+      nevfilename = fullfile(filename, 'Events.nev');
     elseif exist(fullfile(filename, 'events.Nev'))
-      filename = fullfile(filename, 'events.Nev');
+      nevfilename = fullfile(filename, 'events.Nev');
     elseif exist(fullfile(filename, 'events.nev'))
-      filename = fullfile(filename, 'events.nev');
+      nevfilename = fullfile(filename, 'events.nev');
     end
     % read the events, apply filter is applicable
-    nev = read_neuralynx_nev(filename, 'type', flt_type, 'value', flt_value, 'mintimestamp', flt_mintimestamp, 'maxtimestamp', flt_maxtimestamp, 'minnumber', flt_minnumber, 'maxnumber', flt_maxnumber);
+    nev = read_neuralynx_nev(nevfilename, ...
+                             'type', flt_type, ...
+                             'value', flt_value, ...
+                             'mintimestamp', flt_mintimestamp, ...
+                             'maxtimestamp', flt_maxtimestamp, ...
+                             'minnumber', flt_minnumber, ...
+                             'maxnumber', flt_maxnumber);
     
     % the following code should only be executed if there are events,
     % otherwise there will be an error subtracting an uint64 from an []
@@ -1521,7 +1527,37 @@ switch eventformat
       type      = repmat({'trigger'},size(value));
       duration  = repmat({[]},size(value));
       offset    = repmat({[]},size(value));
-      sample    = num2cell(round(double(cell2mat(timestamp) - hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1));
+      
+      try
+          % assume we have correct ncs files there
+          lst = dir(fullfile(filename, '*.ncs'));
+          
+          % lets just take first for a trial
+          ncsfname = fullfile(filename, lst(1).name);
+          ncs = read_neuralynx_ncs(ncsfname);
+          
+          % create linearized timestamp for each sample
+          ncsTimeStamp = repmat(double(ncs.TimeStamp), 512, 1) + ...
+                         hdr.TimeStampPerSample*repmat([0: 511]', 1, ncs.NRecords);
+          ncsTimeStamp = ncsTimeStamp(:);
+          
+          % sanity check
+          if max(ncsTimeStamp) < timestamp{end} || min(ncsTimeStamp) > timestamp{1}
+              error(['incomplete data to produce timestamp-2-sample mapping from ' ncsfname]);
+          end
+          
+          % mapping between timestamp and sample
+          % this procedure is really slow, but it is reliable enough
+          sample = cellfun(@(t) find(abs(ncsTimeStamp-double(t))==min(abs(ncsTimeStamp-double(t))), 1),...
+                           timestamp, 'UniformOutput', false);     
+      catch Exception
+          disp(Exception);
+          sample    = num2cell(round(double(cell2mat(timestamp) - hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1));
+          warning(['nlx event reader generates event samples automatically from timestamps, '...
+                   'there is no such information about samples in nlx event file, '...      
+                   'make sure your data is consistent before going further']);
+      end
+      
       % convert it into a structure array
       event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'duration', duration, 'offset', offset, 'number', number);
     end

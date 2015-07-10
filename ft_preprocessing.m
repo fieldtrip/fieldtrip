@@ -380,8 +380,13 @@ else
   cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   
-  % read the header
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  % what if we have had header already, lets inherit it
+  if isfield(cfg, 'header')
+      hdr = cfg.header;
+  else
+      % read the header otherwise
+      hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  end
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
