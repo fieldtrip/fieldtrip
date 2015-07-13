@@ -42,11 +42,12 @@ end
 % I had 0.5 sec vs 3.1 sec on 20kHz 600sec file
 
 % determine whether precompiled Nlx2MatCSC from Neualynx is available
-isMex = ft_hastoolbox('neuralynx', 3); % do not give warning if not available
-if ~isMex && ~mexWarning
-  warning('Reading Neuralynx CSC files is faster if you install the MATLAB importer mex files, see http://neuralynx.com/research_software/file_converters_and_utilities/');
-  mexWarning = true;
-end
+% isMex = ft_hastoolbox('neuralynx', 3); % do not give warning if not available
+isMex = false; % see bug 2924, implementation is not fully confirmed
+% if ~isMex && ~mexWarning
+%   warning('Reading Neuralynx CSC files is faster if you install the MATLAB importer mex files, see http://neuralynx.com/research_software/file_converters_and_utilities/');
+%   mexWarning = true;
+% end
 
 if isMex
   % Neuralynx mex files use C-style flags, so let's name them for convinience
