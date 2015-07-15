@@ -1,4 +1,4 @@
-function vol = ft_headmodel_dipoli(geom, varargin)
+function headmodel = ft_headmodel_dipoli(geom, varargin)
 
 % FT_HEADMODEL_DIPOLI creates a volume conduction model of the head
 % using the boundary element method (BEM) for EEG. This function takes
@@ -15,14 +15,13 @@ function vol = ft_headmodel_dipoli(geom, varargin)
 % executable with the name "dipoli" which is provided by Thom Oostendorp.
 %
 % Use as
-%   vol = ft_headmodel_dipoli(geom, ...)
+%   headmodel = ft_headmodel_dipoli(geom, ...)
 %
 % The geom is given as a boundary or a struct-array of boundaries (surfaces)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
 %   isolatedsource   = string, 'yes' or 'no'
-%   hdmfile          = string, filename with BEM headmodel
 %   conductivity     = vector, conductivity of each compartment
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
@@ -40,31 +39,31 @@ if isfield(geom,'bnd')
 end
 
 % start with an empty volume conductor
-vol = [];
-vol.bnd = geom;
+headmodel = [];
+headmodel.bnd = geom;
 
 % determine the number of compartments
-numboundaries = numel(vol.bnd);
+numboundaries = numel(headmodel.bnd);
 
 % % The following checks can in principle be performed, but are too
 % % time-consuming. Instead the code here relies on the calling function to
 % % feed in the correct geometry.
 % %
-% % if ~all(surface_closed(vol.bnd))
+% % if ~all(surface_closed(headmodel.bnd))
 % %   error('...');
 % % end
-% % if any(surface_intersection(vol.bnd))
+% % if any(surface_intersection(headmodel.bnd))
 % %   error('...');
 % % end
-% % if any(surface_selfintersection(vol.bnd))
+% % if any(surface_selfintersection(headmodel.bnd))
 % %   error('...');
 % % end
 % 
 % % The following checks should always be done.
-% vol.bnd = surface_orientation(vol.bnd, 'outwards'); % might have to be inwards
+% headmodel.bnd = surface_orientation(headmodel.bnd, 'outwards'); % might have to be inwards
 % 
-% order = surface_nesting(vol.bnd, 'outsidefirst'); % might  have to be insidefirst
-% vol.bnd = vol.bnd(order);
+% order = surface_nesting(headmodel.bnd, 'outsidefirst'); % might  have to be insidefirst
+% headmodel.bnd = headmodel.bnd(order);
 % FIXME also the cond
 % 
 
@@ -88,15 +87,15 @@ end
 
 
 % determine the desired nesting of the compartments
-order = surface_nesting(vol.bnd, 'outsidefirst');
+order = surface_nesting(headmodel.bnd, 'outsidefirst');
 
 % rearrange boundaries and conductivities
-if numel(vol.bnd)>1
+if numel(headmodel.bnd)>1
   fprintf('reordering the boundaries to: ');
   fprintf('%d ', order);
   fprintf('\n');
   % update the order of the compartments
-  vol.bnd          = vol.bnd(order);
+  headmodel.bnd          = headmodel.bnd(order);
 end
 
 if isempty(conductivity)
@@ -113,19 +112,19 @@ if isempty(conductivity)
   else
     error('Conductivity values are required!')
   end
-  vol.cond = conductivity;
+  headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
     error('a conductivity value should be specified for each compartment');
   end
-  vol.cond = conductivity(order);
+  headmodel.cond = conductivity(order);
 end
 
-vol.skin_surface = 1;
-vol.source       = numboundaries; % this is now the last one
+headmodel.skin_surface = 1;
+headmodel.source       = numboundaries; % this is now the last one
 
 if isolatedsource
-  fprintf('using compartment %d for the isolated source approach\n', vol.source);
+  fprintf('using compartment %d for the isolated source approach\n', headmodel.source);
 else
   fprintf('not using the isolated source approach\n');
 end
@@ -150,7 +149,7 @@ fprintf('using the executable "%s"\n', dipoli);
 % write the triangulations to file
 prefix  = tempname;
 bndfile = cell(1,numboundaries);
-bnddip  = vol.bnd;
+bnddip  = headmodel.bnd;
 for i=1:numboundaries
   bndfile{i} = sprintf('%s_%d.tri', prefix, i);
   % checks if normals are inwards oriented otherwise flips them
@@ -171,13 +170,13 @@ fprintf(fid, '#!/bin/sh\n');
 fprintf(fid, '\n');
 fprintf(fid, '%s -i %s << EOF\n', dipoli, amafile);
 for i=1:numboundaries
-  if isolatedsource && vol.source==i
+  if isolatedsource && headmodel.source==i
     % the isolated potential approach should be applied using this compartment
     fprintf(fid, '!%s\n', bndfile{i});
   else
     fprintf(fid, '%s\n', bndfile{i});
   end
-  fprintf(fid, '%g\n', vol.cond(i));
+  fprintf(fid, '%g\n', headmodel.cond(i));
 end
 fprintf(fid, '\n');
 fprintf(fid, '\n');
@@ -190,18 +189,18 @@ try
   % execute dipoli and read the resulting file
   dos(exefile);
   ama = loadama(amafile);
-  vol = ama2vol(ama);
+  headmodel = ama2vol(ama);
   
-  % This is to maintain the vol.bnd convention (outward oriented), whereas
+  % This is to maintain the headmodel.bnd convention (outward oriented), whereas
   % in terms of further calculation it shuold not really matter.
   % The calculation fo the head model is done with inward normals
   % (sometimes flipped from the original input). This assures that the 
-  % outward oriented mesh is saved outward oriiented in the vol structure 
-  for i=1:numel(vol.bnd)
-    isinw = checknormals(vol.bnd(i));
+  % outward oriented mesh is saved outward oriiented in the headmodel structure 
+  for i=1:numel(headmodel.bnd)
+    isinw = checknormals(headmodel.bnd(i));
     fprintf('flipping the normals outwards, after head matrix calculation\n')
     if isinw
-      vol.bnd(i).tri = fliplr(vol.bnd(i).tri);
+      headmodel.bnd(i).tri = fliplr(headmodel.bnd(i).tri);
     end
   end
   
@@ -218,7 +217,7 @@ delete(amafile);
 delete(exefile);
 
 % remember that it is a dipoli model
-vol.type = 'dipoli';
+headmodel.type = 'dipoli';
 
 
 function ok = checknormals(bnd)

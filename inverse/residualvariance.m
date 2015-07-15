@@ -1,10 +1,10 @@
-function [dipout] = residualvariance(dip, grad, vol, dat, varargin)
+function [dipout] = residualvariance(dip, grad, headmodel, dat, varargin)
 
 % RESIDUALVARIANCE scan with a single dipole and computes the RV
 % at each grid location.
 %
 % Use as
-%   [dipout] = residualvariance(dip, grad, vol, dat, ...)
+%   [dipout] = residualvariance(dip, grad, headmodel, dat, ...)
 
 % Copyright (C) 2004-2006, Robert Oostenveld
 %
@@ -38,7 +38,7 @@ feedback      = keyval('feedback',      varargin); if isempty(feedback),      fe
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -97,7 +97,7 @@ for i=1:size(dip.pos,1)
     lf = dip.leadfield{i};
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel);
   end
   
   if isfield(dip, 'subspace')

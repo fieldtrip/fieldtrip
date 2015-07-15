@@ -1,10 +1,10 @@
-function [dipout] = dipole_fit(dip, sens, vol, dat, varargin)
+function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 
 % DIPOLE_FIT performs an equivalent current dipole fit with a single
 % or a small number of dipoles to explain an EEG or MEG scalp topography.
 %
 % Use as
-%   [dipout] = dipole_fit(dip, sens, vol, dat, ...)
+%   [dipout] = dipole_fit(dip, sens, headmodel, dat, ...)
 %
 % Additional input arguments should be specified as key-value pairs and can include
 %   'constr'      = Structure with constraints
@@ -55,27 +55,27 @@ function [dipout] = dipole_fit(dip, sens, vol, dat, varargin)
 
 % It is neccessary to provide backward compatibility support for the old function call
 % in case people want to use it in conjunction with EEGLAB and the dipfit1 plugin.
-% old style: function [dipout] = dipole_fit(dip, dat, sens, vol, constr), where constr is optional
-% new style: function [dipout] = dipole_fit(dip, sens, vol, dat, varargin), where varargin is in key-value pairs
+% old style: function [dipout] = dipole_fit(dip, dat, sens, headmodel, constr), where constr is optional
+% new style: function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs
 if nargin==4 && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
   warning('converting from old style input\n');
-  olddat   = sens;
-  oldsens  = vol;
-  oldvol   = dat;
-  dat      = olddat;
-  sens     = oldsens;
-  vol      = oldvol;
+  olddat    = sens;
+  oldsens   = headmodel;
+  oldhdm    = dat;
+  dat       = olddat;
+  sens      = oldsens;
+  headmodel = oldhdm;
 elseif nargin==5  && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
   % furthermore the additional constraint has to be fixed
   warning('converting from old style input\n');
-  olddat   = sens;
-  oldsens  = vol;
-  oldvol   = dat;
-  dat      = olddat;
-  sens     = oldsens;
-  vol      = oldvol;
+  olddat    = sens;
+  oldsens   = headmodel;
+  oldhdm    = dat;
+  dat       = olddat;
+  sens      = oldsens;
+  headmodel = oldhdm;
   varargin = {'constr', varargin{1}};  % convert into a  key-value pair
 else
   % looks like new style, i.e. with optional key-value arguments
@@ -161,7 +161,7 @@ else
 end
 
 % perform the optimization with either the fminsearch or fminunc function
-[param, fval, exitflag, output] = optimfun(@dipfit_error, param, options, dat, sens, vol, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
+[param, fval, exitflag, output] = optimfun(@dipfit_error, param, options, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
 
 if exitflag==0
   error('Maximum number of iterations exceeded before reaching the minimum, please try with another initial guess.')
@@ -169,7 +169,7 @@ end
 
 % do the linear optimization of the dipole moment parameters
 % the error is not interesting any more, only the dipole moment is relevant
-[err, mom] = dipfit_error(param, dat, sens, vol, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
+[err, mom] = dipfit_error(param, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight);
 
 % convert the non-linear parameter vector into the dipole model parameters
 [pos, ori] = param2dipolemodel(param, constr);
@@ -262,7 +262,7 @@ end
 % DIPFIT_ERROR computes the error between measured and model data
 % and can be used for non-linear fitting of dipole position
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [err, mom] = dipfit_error(param, dat, sens, vol, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight)
+function [err, mom] = dipfit_error(param, dat, sens, headmodel, constr, metric, checkinside, reducerank, normalize, normalizeparam, weight)
 
 % flush pending graphics events, ensure that fitting is interruptible
 drawnow;
@@ -277,14 +277,14 @@ end;
 
 % check whether the dipole is inside the source compartment
 if checkinside
-  inside = ft_inside_vol(pos, vol);
+  inside = ft_inside_vol(pos, headmodel);
   if ~all(inside)
     error('Dipole is outside the source compartment');
   end
 end
 
 % construct the leadfield matrix for all dipoles
-lf = ft_compute_leadfield(pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+lf = ft_compute_leadfield(pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
 if ~isempty(ori)
   lf = lf * ori;
 end

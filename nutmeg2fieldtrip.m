@@ -1,4 +1,4 @@
-function [data, mri, grid]=nutmeg2fieldtrip(cfg,fileorstruct)
+function [data, mri, grid] = nutmeg2fieldtrip(cfg,fileorstruct)
 
 % NUTMEG2FIELDTRIP converts from NUTMEG either a sensor data structure
 % ('nuts') to a valid FieldTrip 'raw' structure (plus 'grid' and 'mri' if
@@ -150,7 +150,7 @@ if nutsorbeam==1
     raw.grad.balance.current='G3BR';
   end
   
-  raw.vol.o=structin.meg.lsc; % note this may include reference channels. may need to do str_match of lsc_sensor_labels with sensor_labels?
+  raw.headmodel.o = structin.meg.lsc; % note this may include reference channels. may need to do str_match of lsc_sensor_labels with sensor_labels?
   data=raw;
   clear raw
   
