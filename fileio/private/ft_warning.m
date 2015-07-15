@@ -67,8 +67,15 @@ if isstruct(varargin{1})
 end
 
 if ~isfield(ft_default, 'warning')
+  ft_default.warning = [];
+end
+if ~isfield(ft_default.warning, 'stopwatch')
   ft_default.warning.stopwatch  = [];
+end
+if ~isfield(ft_default.warning, 'identifier')
   ft_default.warning.identifier = [];
+end
+if ~isfield(ft_default.warning, 'ignore')
   ft_default.warning.ignore = {};
 end
 
