@@ -8,7 +8,7 @@ function test_bug2928
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2928/e889.dcm');
 
-mi = ft_read_mri(filename);
+mri = ft_read_mri(filename);
 
 cfg = [];
 cfg.coordsys = 'neuromag';
