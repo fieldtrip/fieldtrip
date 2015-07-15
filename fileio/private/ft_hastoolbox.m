@@ -105,6 +105,7 @@ url = {
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
   'NEURALYNX'     'see http://neuralynx.com/research_software/file_converters_and_utilities/' 
+  'NEURALYNX_UELI' 'see http://neuralynx.com/research_software/file_converters_and_utilities/' 
   'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
@@ -257,6 +258,8 @@ switch toolbox
     status  = (exist('MatlabNetComClient', 'file') && exist('NlxConnectToServer', 'file') && exist('NlxGetNewCSCData', 'file'));
   case 'NEURALYNX'
     status = (exist('Nlx2MatCSC', 'file')) % we use only this func at the moment
+  case 'NEURALYNX_UELI'
+    status = (exist('Nlx2MatCSC_v3', 'file'))
   case 'DIPOLI'
     status  = exist('dipoli.maci', 'file');
   case 'MNE'

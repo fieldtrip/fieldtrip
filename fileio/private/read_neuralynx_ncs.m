@@ -37,9 +37,23 @@ end
 % I had 0.5 sec vs 3.1 sec on 20kHz 600sec file
 
 % determine whether precompiled Nlx2MatCSC from Neualynx is available
-isMex = ft_hastoolbox('neuralynx', 2); % give warning if not available
+isMex = 0;
+isMexv3 = 0;
+if ispc
+    % two ways
+    % first look for nlx libs
+    isMex = ft_hastoolbox('neuralynx', 2); 
+    if ~isMex
+        % look for Ueli's libs otherwise
+        isMexv3 = ft_hastoolbox('neuralynx_ueli', 2);
+    end
+elseif ismac || isunix
+    % one way
+    % look for Ueli's libs only
+    isMexv3 = ft_hastoolbox('neuralynx_v3', 2);
+end
 
-if isMex
+if isMex || isMexv3
   % Neuralynx mex files use C-style flags, so let's name them for convinience
   READ_ALL = ones(1,5);
   flags = num2cell(diag(READ_ALL), [1,5]);
@@ -56,7 +70,6 @@ if isMex
   HEADER_YES = 1;
   EXTRACT_RECORD_RANGE = 2;
 end
-% isMex = false;
 
 % the file starts with a 16*1024 bytes header in ascii, followed by a number of records
 hdr = neuralynx_getheader(filename);
@@ -86,6 +99,18 @@ if NRecords>0
                                 EXTRACT_RECORD_RANGE,...
                                 [1, NRecords_to_read]);
     TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output, as mex gives us doubles
+  elseif isMexv3
+      
+    
+    [TimeStamp,  ...
+     ChanNumber, ...
+     SampFreq    ] = Nlx2MatCSC_v3(filename,...
+                                   READ_TST+READ_CHAN+READ_FREQ,...
+                                   HEADER_NO,... % no need in header, let FT read the header
+                                   EXTRACT_RECORD_RANGE,...
+                                   [0, NRecords_to_read-1]);
+    TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output, as mex gives us doubles
+      
   else
     
     TimeStamp        = zeros(1,NRecords_to_read,'uint64');
@@ -184,6 +209,19 @@ if begrecord>=1 && endrecord>=begrecord
       HEADER_NO,... % no need in header
       EXTRACT_RECORD_RANGE,...
       [begrecord, endrecord]);
+    
+    TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output
+  elseif isMexv3
+    
+    [TimeStamp,      ...
+      ChanNumber,     ...
+      SampFreq,       ...
+      NumValidSamp,   ...
+      Samp            ] = Nlx2MatCSC_v3(filename,...
+      READ_ALL,...
+      HEADER_NO,... % no need in header
+      EXTRACT_RECORD_RANGE,...
+      [begrecord-1, endrecord-1]);
     
     TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output
   else
