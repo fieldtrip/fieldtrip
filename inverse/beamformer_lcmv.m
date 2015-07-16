@@ -1,4 +1,4 @@
-function [dipout] = beamformer_lcmv(dip, grad, vol, dat, Cy, varargin)
+function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 
 % BEAMFORMER_LCMV scans on pre-defined dipole locations with a single dipole
 % and returns the beamformer spatial filter output for a dipole on every
@@ -6,11 +6,11 @@ function [dipout] = beamformer_lcmv(dip, grad, vol, dat, Cy, varargin)
 % NaN value.
 %
 % Use as
-%   [dipout] = beamformer_lcmv(dipin, grad, vol, dat, cov, varargin)
+%   [dipout] = beamformer_lcmv(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
-%   vol         is the volume conductor definition
+%   headmodel   is the volume conductor definition
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
@@ -114,7 +114,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -222,10 +222,10 @@ for i=1:size(dip.pos,1)
     lf = dip.leadfield{i};    
   elseif  ~isfield(dip, 'leadfield') && isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
   if isfield(dip, 'subspace')

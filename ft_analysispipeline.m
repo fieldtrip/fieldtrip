@@ -138,6 +138,8 @@ if ~isfield(cfg, 'remove')
     'grid.outside'
     'vol.bnd.pnt'
     'vol.bnd.tri'
+    'headmodel.bnd.pnt'
+    'headmodel.bnd.tri'
     };
 elseif ~iscell(cfg.remove)
   cfg.remove = {cfg.remove};
@@ -272,7 +274,7 @@ else
   previous = {};
 end
 
-% parse the side branches, e.g. cfg.vol and cfg.layout
+% parse the side branches, e.g. cfg.vol/cfg.headmodel and cfg.layout
 fn = fieldnames(cfg);
 branch = {};
 for i=1:numel(fn)
@@ -689,13 +691,13 @@ for k = 1:numel(pipeline)
   
   % strip away the cfg.previous fields, and all data-like fields
   tmpcfg = removefields(pipeline(k).cfg,...
-    {'previous', 'grid', 'vol', 'event', 'warning'});
+    {'previous', 'grid', 'headmodel', 'event', 'warning'});
   
   % record the usercfg and proctime if present
   if isfield(tmpcfg, 'callinfo')
     if isfield(tmpcfg.callinfo, 'usercfg')
       usercfg = removefields(tmpcfg.callinfo.usercfg,...
-        {'previous', 'grid', 'vol', 'event', 'warning'});
+        {'previous', 'grid', 'headmodel', 'event', 'warning'});
       
       % avoid processing usercfg twice
       tmpcfg.callinfo = rmfield(tmpcfg.callinfo, 'usercfg');

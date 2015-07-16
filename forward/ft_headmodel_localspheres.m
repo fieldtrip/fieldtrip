@@ -1,4 +1,4 @@
-function vol = ft_headmodel_localspheres(geometry, grad, varargin)
+function headmodel = ft_headmodel_localspheres(geometry, grad, varargin)
 
 % FT_HEADMODEL_LOCALSPHERES constructs a MEG volume conduction model in
 % with a local sphere fitted to the head or brain surface for each separate
@@ -10,7 +10,7 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 %   Biol. 1999 Feb;44(2):423-40
 %
 % Use as
-%   vol = ft_headmodel_localspheres(geom, grad, ...)
+%   headmodel = ft_headmodel_localspheres(geom, grad, ...)
 %
 % Optional arguments should be specified in key-value pairs and can include
 %   radius    = number, radius of sphere within which headshape points will
@@ -72,7 +72,7 @@ if isstruct(geometry) && numel(geometry)>1
 end
 
 % start with an empty volume conductor
-vol = [];
+headmodel = [];
 
 % ensure that the geometry has units, estimate them if needed
 geometry = ft_convert_units(geometry);
@@ -81,12 +81,12 @@ geometry = ft_convert_units(geometry);
 grad = ft_convert_units(grad, geometry.unit);
 
 % copy the geometrical units into the volume conductor
-vol.unit = geometry.unit;
+headmodel.unit = geometry.unit;
 
 % ensure that all defaults have the same user-defined units
-radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', vol.unit) * 8.5);
-maxradius = ft_getopt(varargin, 'maxradius', scalingfactor('cm', vol.unit) * 20);
-baseline  = ft_getopt(varargin, 'baseline',  scalingfactor('cm', vol.unit) * 5);
+radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', headmodel.unit) * 8.5);
+maxradius = ft_getopt(varargin, 'maxradius', scalingfactor('cm', headmodel.unit) * 20);
+baseline  = ft_getopt(varargin, 'baseline',  scalingfactor('cm', headmodel.unit) * 5);
 
 % get the points from the triangulated surface
 geometry = geometry.pnt;
@@ -116,18 +116,18 @@ end
 [single_o, single_r] = fitsphere(geometry);
 fprintf('single sphere,   %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', Nshape, single_o(1), single_o(2), single_o(3), single_r);
 
-vol = [];
+headmodel = [];
 if strcmp(singlesphere, 'yes')
   % only return a single sphere
-  vol.r = single_r;
-  vol.o = single_o;
+  headmodel.r = single_r;
+  headmodel.o = single_o;
   return;
 end
 
 % allocate empty matrices that will hold the results
-vol.r = zeros(Nchan,1);    % radius of every sphere
-vol.o = zeros(Nchan,3);    % origin of every sphere
-vol.label = cell(Nchan,1); % corresponding gradiometer channel label for every sphere
+headmodel.r = zeros(Nchan,1);    % radius of every sphere
+headmodel.o = zeros(Nchan,3);    % origin of every sphere
+headmodel.label = cell(Nchan,1); % corresponding gradiometer channel label for every sphere
 
 for chan=1:Nchan
   coilsel = find(grad.tra(chan,:)~=0);
@@ -188,9 +188,9 @@ for chan=1:Nchan
   end
   
   % add this sphere to the volume conductor
-  vol.o(chan,:)   = o;
-  vol.r(chan)     = r;
-  vol.label{chan} = grad.label{chan};
+  headmodel.o(chan,:)   = o;
+  headmodel.r(chan)     = r;
+  headmodel.label{chan} = grad.label{chan};
 end % for all channels
 
-vol.type = 'localspheres';
+headmodel.type = 'localspheres';

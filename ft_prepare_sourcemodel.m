@@ -1,4 +1,4 @@
-function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
+function [grid, cfg] = ft_prepare_sourcemodel(cfg, headmodel, sens)
 
 % FT_PREPARE_SOURCEMODEL constructs a source model, for example a 3-D grid or a
 % cortical sheet. The source model that can be used for source reconstruction,
@@ -67,10 +67,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, vol, sens)
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
 % The headmodel or volume conduction model can be specified as
-%   cfg.hdmfile         = string, file containing the volume conduction model, see FT_READ_SENS
-% or alternatively
-%   cfg.vol             = structure with volume conduction model
-%   data.vol            = structure with volume conduction model
+%   cfg.headmodel       = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % Other configuration options
 %   cfg.grid.unit       = string, can be 'mm', 'cm', 'm' (default is automatic)
@@ -124,6 +121,8 @@ end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'deprecated', 'mriunits');
+cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
@@ -148,10 +147,10 @@ if isfield(cfg, 'grid')
 end
 cfg = ft_checkconfig(cfg, 'index2logical', 'yes');
 
-if ~isfield(cfg, 'vol') && nargin>1
+if ~isfield(cfg, 'headmodel') && nargin>1
   % put it in the configuration structure
   % this is for backward compatibility, 13 Januari 2011
-  cfg.vol = vol;
+  cfg.headmodel = headmodel;
 end
 
 if ~isfield(cfg, 'grad') && ~isfield(cfg, 'elec') && nargin>2
@@ -190,7 +189,7 @@ if basedongrid && basedonpos
   basedongrid = false;
 end
 
-if ~any([basedonauto basedongrid basedonpos basedonshape basedonmri basedoncortex basedonmni]) && ~isempty(cfg.vol)
+if ~any([basedonauto basedongrid basedonpos basedonshape basedonmri basedoncortex basedonmni]) && ~isempty(cfg.headmodel)
   % fall back to default behaviour, which is to create a surface grid (e.g. used in MEGREALIGN)
   basedonvol = 1;
 end
@@ -270,9 +269,9 @@ grid = [];
 
 % get the volume conduction model
 try
-  vol = ft_fetch_vol(cfg);
+  headmodel = ft_fetch_vol(cfg);
 catch
-  vol = [];
+  headmodel = [];
 end
 
 % get the gradiometer or electrode definition
@@ -290,9 +289,9 @@ if strcmp(cfg.grid.unit, 'auto')
   elseif ~isempty(sens)
     % copy the units from the sensor array
     cfg.grid.unit = sens.unit;
-  elseif ~isempty(vol)
+  elseif ~isempty(headmodel)
     % copy the units from the volume conduction model
-    cfg.grid.unit = vol.unit;
+    cfg.grid.unit = headmodel.unit;
   else
     warning('assuming "cm" as default source units');
     cfg.grid.unit = 'cm';
@@ -305,8 +304,8 @@ if ~isempty(sens)
 end
 
 % convert the head model to the desired units for the source model
-if ~isempty(vol)
-  vol = ft_convert_units(vol, cfg.grid.unit);
+if ~isempty(headmodel)
+  headmodel = ft_convert_units(headmodel, cfg.grid.unit);
 end
 
 if basedonauto
@@ -535,7 +534,7 @@ if basedonvol
   % for megrealign). Assume that all points are inside the volume.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % please note that cfg.inwardshift should be expressed in the units consistent with cfg.grid.unit
-  grid.pos     = headsurface(vol, sens, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
+  grid.pos     = headsurface(headmodel, sens, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   grid.unit    = cfg.grid.unit;
   grid.inside  = true(size(grid.pos,1),1);
 end
@@ -620,23 +619,23 @@ end
 grid = ft_convert_units(grid, cfg.grid.unit);
 
 if strcmp(cfg.spherify, 'yes')
-  if ~ft_voltype(vol, 'singlesphere') && ~ft_voltype(vol, 'concentricspheres')
+  if ~ft_voltype(headmodel, 'singlesphere') && ~ft_voltype(headmodel, 'concentricspheres')
     error('this only works for spherical volume conduction models');
   end
   % deform the cortex so that it fits in a unit sphere
   pnt = mesh_spherify(grid.pos, [], 'shift', 'range');
   % scale it to the radius of the innermost sphere, make it a tiny bit smaller to
   % ensure that the support point with the exact radius 1 is still inside the sphere
-  pnt = pnt*min(vol.r)*0.999;
-  pnt(:,1) = pnt(:,1) + vol.o(1);
-  pnt(:,2) = pnt(:,2) + vol.o(2);
-  pnt(:,3) = pnt(:,3) + vol.o(3);
+  pnt = pnt*min(headmodel.r)*0.999;
+  pnt(:,1) = pnt(:,1) + headmodel.o(1);
+  pnt(:,2) = pnt(:,2) + headmodel.o(2);
+  pnt(:,3) = pnt(:,3) + headmodel.o(3);
   grid.pos = pnt;
 end
 
 if ~isempty(cfg.moveinward)
   % construct a triangulated boundary of the source compartment
-  [pnt1, tri1] = headsurface(vol, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
+  [pnt1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
   inside = bounding_mesh(grid.pos, pnt1, tri1);
   if ~all(inside)
     pnt2 = grid.pos(~inside,:);
@@ -651,7 +650,7 @@ end
 % determine the dipole locations that are inside the source compartment of the
 % volume conduction model, i.e. inside the brain
 if ~isfield(grid, 'inside')
-  grid.inside = ft_inside_vol(grid.pos, vol, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
+  grid.inside = ft_inside_vol(grid.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift); % this returns a boolean vector
 end
 
 if strcmp(cfg.grid.tight, 'yes')

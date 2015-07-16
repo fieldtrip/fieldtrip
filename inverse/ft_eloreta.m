@@ -1,11 +1,11 @@
-function [dipout] = ft_eloreta(dip, grad, vol, dat, Cf, varargin)
+function [dipout] = ft_eloreta(dip, grad, headmodel, dat, Cf, varargin)
 %
 % Use as
-%   [dipout] = ft_eloreta(dipin, grad, vol, dat, cov, varargin)
+%   [dipout] = ft_eloreta(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
-%   vol         is the volume conductor definition
+%   headmodel   is the volume conductor definition
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
@@ -81,7 +81,7 @@ keepleadfield  = istrue(keepleadfield);
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -116,7 +116,7 @@ if ~isfield(dip, 'leadfield')
   % compute the leadfield
   fprintf('computing leadfields\n');
   for i=1:size(dip.pos,1)
-    dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
 end
 

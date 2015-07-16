@@ -1,4 +1,4 @@
-function [pnt, tri] = headsurface(vol, sens, varargin)
+function [pnt, tri] = headsurface(headmodel, sens, varargin)
 
 % HEADSURFACE constructs a triangulated description of the skin or brain
 % surface from a volume conduction model, from a set of electrodes or
@@ -6,10 +6,10 @@ function [pnt, tri] = headsurface(vol, sens, varargin)
 % surface.
 %
 % Use as
-%   [pnt, tri] = headsurface(vol, sens, ...)
+%   [pnt, tri] = headsurface(headmodel, sens, ...)
 % where
-%   vol            volume conduction model (structure)
-%   sens           electrode or gradiometer array (structure)
+%   headmodel      = volume conduction model (structure)
+%   sens           = electrode or gradiometer array (structure)
 %
 % Optional arguments should be specified in key-value pairs:
 %   surface        = 'skin' or 'brain' (default = 'skin')
@@ -39,7 +39,7 @@ function [pnt, tri] = headsurface(vol, sens, varargin)
 % $Id$
 
 if nargin<1
-  vol = [];
+  headmodel = [];
 end
 
 if nargin<2
@@ -68,29 +68,29 @@ if ~isempty(headshape)
   tri = headshape.tri;
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ~isempty(vol) && isfield(vol, 'r') && length(vol.r)<5
-  if length(vol.r)==1
+elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
+  if length(headmodel.r)==1
     % single sphere model, cannot distinguish between skin and/or brain
-    radius = vol.r;
-    if isfield(vol, 'o')
-      origin = vol.o;
+    radius = headmodel.r;
+    if isfield(headmodel, 'o')
+      origin = headmodel.o;
     else
       origin = [0 0 0];
     end
-  elseif length(vol.r)<5
+  elseif length(headmodel.r)<5
     % multiple concentric sphere model
     switch surface
       case 'skin'
         % using outermost sphere
-        radius = max(vol.r);
+        radius = max(headmodel.r);
       case 'brain'
         % using innermost sphere
-        radius = min(vol.r);
+        radius = min(headmodel.r);
       otherwise
         error('other surfaces cannot be constructed this way');
     end
-    if isfield(vol, 'o')
-      origin = vol.o;
+    if isfield(headmodel, 'o')
+      origin = headmodel.o;
     else
       origin = [0 0 0];
     end
@@ -121,7 +121,7 @@ elseif ~isempty(vol) && isfield(vol, 'r') && length(vol.r)<5
   pnt(:,3) = pnt(:,3) + origin(3);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_voltype(vol, 'localspheres')
+elseif ft_voltype(headmodel, 'localspheres')
   % local spheres MEG model, this also requires a gradiometer structure
   grad = sens;
   if ~isfield(grad, 'tra') || ~isfield(grad, 'coilpos')
@@ -129,15 +129,15 @@ elseif ft_voltype(vol, 'localspheres')
   end
   Nchans   = size(grad.tra, 1);
   Ncoils   = size(grad.tra, 2);
-  Nspheres = size(vol.o, 1);
+  Nspheres = size(headmodel.o, 1);
   if Nspheres~=Ncoils
     error('there should be just as many spheres as coils');
   end
   % for each coil, determine a surface point using the corresponding sphere
-  vec = grad.coilpos - vol.o;
+  vec = grad.coilpos - headmodel.o;
   nrm = sqrt(sum(vec.^2,2));
   vec = vec ./ [nrm nrm nrm];
-  pnt = vol.o + vec .* [vol.r vol.r vol.r];
+  pnt = headmodel.o + vec .* [headmodel.r headmodel.r headmodel.r];
   pnt = unique(pnt, 'rows');
   %  make a triangularization that is needed to find the rim of the helmet
   prj = elproj(pnt);
@@ -156,21 +156,21 @@ elseif ft_voltype(vol, 'localspheres')
   tri = projecttri(pnt);
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif ft_voltype(vol, 'bem') ||  ft_voltype(vol, 'singleshell')
+elseif ft_voltype(headmodel, 'bem') ||  ft_voltype(headmodel, 'singleshell')
   % volume conduction model with triangulated boundaries
   switch surface
     case 'skin'
-      if ~isfield(vol, 'skin')
-        vol.skin   = find_outermost_boundary(vol.bnd);
+      if ~isfield(headmodel, 'skin')
+        headmodel.skin   = find_outermost_boundary(headmodel.bnd);
       end
-      pnt = vol.bnd(vol.skin).pnt;
-      tri = vol.bnd(vol.skin).tri;
+      pnt = headmodel.bnd(headmodel.skin).pnt;
+      tri = headmodel.bnd(headmodel.skin).tri;
     case 'brain'
-      if ~isfield(vol, 'source')
-        vol.source  = find_innermost_boundary(vol.bnd);
+      if ~isfield(headmodel, 'source')
+        headmodel.source  = find_innermost_boundary(headmodel.bnd);
       end
-      pnt = vol.bnd(vol.source).pnt;
-      tri = vol.bnd(vol.source).tri;
+      pnt = headmodel.bnd(headmodel.source).pnt;
+      tri = headmodel.bnd(headmodel.source).tri;
     otherwise
       error('other surfaces cannot be constructed this way');
   end
