@@ -39,7 +39,7 @@ end
 if isfield(cfg, 'headmodel') && ischar(cfg.headmodel)
   fprintf('reading headmodel from file ''%s''\n', cfg.headmodel);
   headmodel = ft_read_vol(cfg.headmodel);
-elseif isfield(cfg, 'headmodel') && isstruct(cfg.headmodel)
+elseif isfield(cfg, 'headmodel') && (isstruct(cfg.headmodel) || isa(cfg.headmodel, 'config'))
   headmodel = cfg.headmodel;
 else
   error('no headmodel specified');
