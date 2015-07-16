@@ -28,7 +28,10 @@
 %
 % $Id$
 
-global ft_default
+if false
+  % disabled for now, see further down
+  global ft_default
+end
 
 if nargin==0
   stack = dbstack('-completenames');
@@ -47,9 +50,17 @@ end % if nargin
 % determine whether function execution should be aborted or continued
 if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
   % check whether the output file already exists
-  if ~exist(cfg.outputfile, 'file')
-    abort = false;
+  [p, f, x] = fileparts(cfg.outputfile);
+  if isempty(p)
+    % relative path was speciield
+    outputfile = fullfile(pwd, cfg.outputfile);
   else
+    % absolute path was specified
+    outputfile = cfg.outputfile;
+  end
+  if ~exist(outputfile, 'file')
+    abort = false;
+  elseif isfield(cfg, 'outputfilepresent')
     % the output file exists, determine how to deal with it
     switch cfg.outputfilepresent
       case 'keep'
@@ -72,6 +83,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     end % case
   end
 else
+  % default is not to abort
   abort = false;
 end % if outputfile
 
