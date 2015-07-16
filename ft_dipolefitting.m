@@ -318,7 +318,7 @@ if strcmp(cfg.gridsearch, 'yes')
   end
 
   % construct the dipole grid on which the gridsearch will be done
-  tmpcfg = [];
+  tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
@@ -326,7 +326,6 @@ if strcmp(cfg.gridsearch, 'yes')
     tmpcfg.grad = sens;
   end
   % copy all options that are potentially used in ft_prepare_sourcemodel
-  tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
   grid = ft_prepare_sourcemodel(tmpcfg);
 
   ngrid = size(grid.pos,1);
