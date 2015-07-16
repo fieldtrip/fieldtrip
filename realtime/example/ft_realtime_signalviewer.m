@@ -29,7 +29,7 @@ function ft_realtime_signalviewer(cfg)
 % function _starts_. It causes all data acquired prior to starting the realtime
 % function to be skipped.
 % 
-% cfg.bufferdata=last causes the realtime function to jump to the last available data
+% cfg.bufferdata='last' causes the realtime function to jump to the last available data
 % while _running_. If the realtime loop is not fast enough, it causes some data to be
 % dropped.
 % 
