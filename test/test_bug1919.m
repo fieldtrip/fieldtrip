@@ -44,7 +44,6 @@ system = {
   'yokogawa160'
   'yokogawa160_planar'
   'yokogawa440'
-  'yokogawa440_planar'
   'eeg'
   'electrode'
   };
@@ -69,7 +68,6 @@ system = {
   'itab153_planar'
   'yokogawa64_planar'
   'yokogawa160_planar'
-  'yokogawa440_planar'
   };
 
 for i=1:length(system)
