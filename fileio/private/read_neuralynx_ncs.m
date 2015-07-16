@@ -42,14 +42,27 @@ end
 % I had 0.5 sec vs 3.1 sec on 20kHz 600sec file
 
 % determine whether precompiled Nlx2MatCSC from Neualynx is available
-% isMex = ft_hastoolbox('neuralynx', 3); % do not give warning if not available
-isMex = false; % see bug 2924, implementation is not fully confirmed
-% if ~isMex && ~mexWarning
+
+isMexv6 = false;
+isMexv3 = false;
+if ispc
+  % first look for Neuralynx version 6 libs (windows only)
+  isMexv6 = ft_hastoolbox('neuralynx_v6', 2); % let's leave warnings for debug
+  if ~isMexv6
+    % look for Ueli's libs as alternative
+    isMexv3 = ft_hastoolbox('neuralynx_v3', 2); % let's leave warnings for debug
+  end
+elseif ismac || isunix
+  % look for Ueli's libs only
+  isMexv3 = ft_hastoolbox('neuralynx_v3', 2); % let's leave warnings for debug
+end
+
+% if ~isMexv6 && ~mexWarning
 %   warning('Reading Neuralynx CSC files is faster if you install the MATLAB importer mex files, see http://neuralynx.com/research_software/file_converters_and_utilities/');
 %   mexWarning = true;
 % end
 
-if isMex
+if isMexv6 || isMexv3
   % Neuralynx mex files use C-style flags, so let's name them for convinience
   READ_ALL = ones(1,5);
   flags = num2cell(diag(READ_ALL), [1,5]);
@@ -66,7 +79,6 @@ if isMex
   HEADER_YES = 1;
   EXTRACT_RECORD_RANGE = 2;
 end
-% isMex = false;
 
 % the file starts with a 16*1024 bytes header in ascii, followed by a number of records
 hdr = neuralynx_getheader(filename);
@@ -83,13 +95,14 @@ if NRecords>0
   % read out part of the dataset to detect whether there were jumps
   NRecords_to_read = min(NRecords, 100); % read out maximum 100 blocks of data
   
-  if isMex
-    % no need in header, let FT read the header
-    % note that the indexing in the mex file is 0-offset (C++ style) rather than 1-offset (MATLAB style)
-    [TimeStamp, ChanNumber, SampFreq] = Nlx2MatCSC(filename, READ_TST+READ_CHAN+READ_FREQ, HEADER_NO, EXTRACT_RECORD_RANGE, [0, NRecords_to_read-1]);
+  if isMexv6
+    [TimeStamp, ChanNumber, SampFreq] = Nlx2MatCSC(filename, READ_TST+READ_CHAN+READ_FREQ, HEADER_NO, EXTRACT_RECORD_RANGE, [1, NRecords_to_read]);
     TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output, as mex gives us doubles
+  elseif isMexv3
+    % note that the indexing in the mex file is 0-offset (C++ style) rather than 1-offset (MATLAB style)
+    [TimeStamp, ChanNumber, SampFreq] = Nlx2MatCSC_v3(filename, READ_TST+READ_CHAN+READ_FREQ, HEADER_NO, EXTRACT_RECORD_RANGE, [0, NRecords_to_read-1]);
+    TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output, as mex gives us doubles      
   else
-    
     TimeStamp        = zeros(1, NRecords_to_read, 'uint64');
     ChanNumber       = zeros(1, NRecords_to_read);
     SampFreq         = zeros(1, NRecords_to_read);
@@ -106,7 +119,7 @@ if NRecords>0
       ChanNumber(k)   = fread(fid,   1, 'int32');
       SampFreq(k)     = fread(fid,   1, 'int32');
     end
-  end % if isMex
+  end % if isMexv6
   
   % explicitly sort the timestamps to deal with negative timestamp jumps that can occur
   ts1 = TimeStamp(1);
@@ -174,14 +187,17 @@ end
 if begrecord>=1 && endrecord>=begrecord
   % leave numrecord information here for proper synchronisation
   numrecord    = (endrecord-begrecord+1);
-  
-  if isMex
+  if isMexv6
+    % warning('Reading with neuralynx_v6 mex files');
+    [TimeStamp, ChanNumber, SampFreq, NumValidSamp, Samp] = Nlx2MatCSC(filename, READ_ALL, HEADER_NO, EXTRACT_RECORD_RANGE, [begrecord, endrecord]);
+    TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output
+  elseif isMexv3
+    % warning('Reading with neuralynx_v3 mex files');
     % note that the indexing in the mex file is 0-offset (C++ style) rather than 1-offset (MATLAB style)
-    [TimeStamp, ChanNumber, SampFreq, NumValidSamp, Samp] = Nlx2MatCSC(filename, READ_ALL, HEADER_NO, EXTRACT_RECORD_RANGE, [begrecord-1, endrecord-1]);
+    [TimeStamp, ChanNumber, SampFreq, NumValidSamp, Samp] = Nlx2MatCSC_v3(filename, READ_ALL, HEADER_NO, EXTRACT_RECORD_RANGE, [begrecord-1, endrecord-1]);
     TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output
   else
-    
-    % manual reading
+    % warning('Reading with native MATLAB code');
     % rewind to the first record to be read
     status = fseek(fid, headersize + (begrecord-1)*recordsize, 'bof');
     if status~=0
@@ -205,7 +221,7 @@ if begrecord>=1 && endrecord>=begrecord
       Samp((NumValidSamp+1):end,k) = nan;
     end
     
-  end % if isMex
+  end % if isMexv6
   
   ts1 = TimeStamp(1);
   dts = double(TimeStamp-ts1); % no problem with doubles here as numbers are small
