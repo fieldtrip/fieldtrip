@@ -28,10 +28,11 @@
 %
 % $Id$
 
-if false
-  % disabled for now, see further down
-  global ft_default
-end
+% disabled for now, see further down
+global ft_default
+
+% this script requires some options that can be user-specified, but otherwise are obtained from ft_default
+cfg = mergeconfig(cfg, keepfields(ft_default, {'outpuitfile', 'outputfilepresent'}));
 
 if nargin==0
   stack = dbstack('-completenames');
@@ -49,18 +50,19 @@ end % if nargin
 
 % determine whether function execution should be aborted or continued
 if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
+  assert(any(strcmp(fieldnames(cfg), 'outputfilepresent')), 'cfg.outputfilepresent is a required option, please see FT_DEFAULTS');
   % check whether the output file already exists
   [p, f, x] = fileparts(cfg.outputfile);
   if isempty(p)
-    % relative path was speciield
+    % the relative path was speciield
     outputfile = fullfile(pwd, cfg.outputfile);
   else
-    % absolute path was specified
+    % the absolute path was specified
     outputfile = cfg.outputfile;
   end
   if ~exist(outputfile, 'file')
     abort = false;
-  elseif isfield(cfg, 'outputfilepresent')
+  else
     % the output file exists, determine how to deal with it
     switch cfg.outputfilepresent
       case 'keep'
@@ -83,7 +85,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     end % case
   end
 else
-  % default is not to abort
+  % there is no reason to abort execution
   abort = false;
 end % if outputfile
 

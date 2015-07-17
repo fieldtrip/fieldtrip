@@ -90,7 +90,7 @@ if ~isfield(cfg, 'showcallinfo'), cfg.showcallinfo = 'no';   end
 ft_defaults
 ft_preamble init
 ft_preamble loadvar    data
-ft_preamble provenance
+ft_preamble provenance data
 ft_preamble trackconfig
 ft_preamble debug
 
