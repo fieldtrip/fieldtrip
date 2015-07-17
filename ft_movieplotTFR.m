@@ -111,7 +111,7 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-layout = ft_prepare_layout(cfg);
+layout = ft_prepare_layout(cfg, data);
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
