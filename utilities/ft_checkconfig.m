@@ -205,6 +205,7 @@ if ~isempty(allowed)
     'warning'
     'debug'
     'previous'
+    'outputfilepresent'
     });
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
