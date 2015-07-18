@@ -59,7 +59,8 @@ if exist(fieldtripprefs, 'file')
 end
 
 % Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.
-% Note that ft_getopt might not be available on the path at this moment and can therefore not yet be used.
+% NOTE ft_getopt might not be available on the path at this moment and can therefore not yet be used.
+% NOTE all options here should be explicitly listed as allowed in ft_checkconfig
 
 if ~isfield(ft_default, 'trackconfig'),       ft_default.trackconfig    = 'off';    end % cleanup, report, off
 if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';  end % pedantic, loose, silent
