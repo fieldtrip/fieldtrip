@@ -63,11 +63,10 @@ end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'individual', 'template'});
-cfg = ft_checkconfig(cfg, 'required', {'individual', 'template'});
-cfg = ft_checkconfig(cfg.individual, 'renamed', {'vol', 'headmodel'});
-cfg = ft_checkconfig(cfg.individual, 'renamed', {'volstyle', 'headmodelstyle'});
-cfg = ft_checkconfig(cfg.template, 'renamed', {'vol', 'headmodel'});
-cfg = ft_checkconfig(cfg.template, 'renamed', {'volstyle', 'headmodelstyle'});
+cfg.individual = ft_checkconfig(cfg.individual, 'renamed', {'vol', 'headmodel'});
+cfg.individual = ft_checkconfig(cfg.individual, 'renamed', {'volstyle', 'headmodelstyle'});
+cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'vol', 'headmodel'});
+cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'volstyle', 'headmodelstyle'});
 
 cfg.individual.elec           = ft_getopt(cfg.individual, 'elec', []);
 cfg.individual.grad           = ft_getopt(cfg.individual, 'grad', []);
@@ -377,17 +376,17 @@ if ~isempty(individual.headshape)
   if isfield(individual.headshape, 'fid') && ~isempty(individual.headshape.fid.pnt)
     ft_plot_mesh(individual.headshape.fid.pnt,'vertexcolor', 'r', 'vertexsize',20)
   end
-end
+  if get(findobj(fig, 'tag', 'toggle axes'), 'value')
+    axis on
+  else
+    axis off
+  end
+  if get(findobj(fig, 'tag', 'toggle grid'), 'value')
+    grid on
+  else
+    grid off
+  end
 
-if get(findobj(fig, 'tag', 'toggle axes'), 'value')
-  axis on
-else
-  axis off
-end
-if get(findobj(fig, 'tag', 'toggle grid'), 'value')
-  grid on
-else
-  grid off
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
