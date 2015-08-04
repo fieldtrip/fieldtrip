@@ -1094,6 +1094,9 @@ function preproc_cfg1_cb(h,eventdata)
 parent = get(h, 'parent');
 cfg = getappdata(parent, 'cfg');
 
+editfontsize = cfg.editfontsize;
+editfontunits = cfg.editfontunits;
+
 % parse cfg.preproc
 if ~isempty(cfg.preproc)
   tmpcfg = cfg.preproc;
@@ -1131,7 +1134,7 @@ set(ppeh, 'backgroundColor', [1 1 1]);
 set(ppeh, 'horizontalAlign', 'left');
 set(ppeh, 'max', 2);
 set(ppeh, 'min', 0);
-set(ppeh, 'FontName', 'Courier', 'FontSize', cfg.editfontsize, 'FontUnits', cfg.editfontunits);
+set(ppeh, 'FontName', 'Courier', 'FontSize', editfontsize, 'FontUnits', editfontunits);
 set(ppeh, 'string', code);
 
 % add handle for the edit style to figure
