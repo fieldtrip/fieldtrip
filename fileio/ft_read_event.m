@@ -17,6 +17,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
+%   'triglabel'      list of channel labels for the trigger detection, only for Artinis oxy3-files (default is all ADC* channels)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
@@ -142,6 +143,7 @@ hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up');   % up, down or both
 trigshift        = ft_getopt(varargin, 'trigshift');           % default is assigned in subfunction
 trigindx         = ft_getopt(varargin, 'trigindx');            % this allows to override the automatic trigger channel detection and is useful for Yokogawa
+triglabel        = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis oxy3 data)
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
@@ -1783,7 +1785,40 @@ switch eventformat
     event = read_bucn_nirsevent(filename);
     
   case 'oxy3'
+    ft_hastoolbox('artinis', 1);    
     event = read_artinis_oxy3(filename, true);
+    
+    if isempty(hdr)
+      hdr = read_artinis_oxy3(filename);
+    end
+    
+    if isempty(trigindx) % indx gets precedence over labels! numbers before words
+      trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
+    end
+        
+    % read the trigger channel and do flank detection
+    triggers = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
+    
+    % remove consecutive triggers
+    i = 1;
+    last_trigger_sample = triggers(i).sample;
+    while i<numel(triggers)
+      if strcmp(triggers(i).type, triggers(i+1).type) && triggers(i+1).sample-last_trigger_sample <= tolerance
+        [triggers(i).value, idx] = max([triggers(i).value, triggers(i+1).value]);
+        fprintf('Merging triggers at sample %d and %d\n', triggers(i).sample, triggers(i+1).sample);        
+        last_trigger_sample =  triggers(i+1).sample;
+        if (idx==2)
+          triggers(i).sample = triggers(i+1).sample;
+        end
+          
+        triggers(i+1) = [];        
+      else
+        i=i+1;
+        last_trigger_sample = triggers(i).sample;
+      end
+    end
+    
+    event = appendevent(event, triggers);
     
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)

@@ -33,8 +33,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 %   cfg.chanunit   = units for the channel data
 %
 % The volume conduction model of the head should be specified as
-%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % The EEG or MEG sensor positions should be specified as
 %   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
@@ -84,6 +83,9 @@ if abort
   return
 end
 
+cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
+
 % set the defaults
 if ~isfield(cfg, 'dip'),        cfg.dip = [];             end
 if ~isfield(cfg.dip, 'pos'),    cfg.dip.pos = [-5 0 15];  end
@@ -96,13 +98,11 @@ if ~isfield(cfg, 'channel'),    cfg.channel = 'all';      end
 if ~isfield(cfg, 'dipoleunit'), cfg.dipoleunit = 'nA*m';  end
 if ~isfield(cfg, 'chanunit'),   cfg.chanunit = {};        end
 
-cfg = ft_checkconfig(cfg);
-
 cfg.dip = fixdipole(cfg.dip);
 Ndipoles = size(cfg.dip.pos,1);
 
 % prepare the volume conductor and the sensor array
-[vol, sens, cfg] = prepare_headmodel(cfg, []);
+[headmodel, sens, cfg] = prepare_headmodel(cfg, []);
 
 if ~isfield(cfg, 'ntrials')
   if isfield(cfg.dip, 'signal')
@@ -195,9 +195,9 @@ ft_progress('init', cfg.feedback, 'computing simulated data');
 for trial=1:Ntrials
   ft_progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
   if numel(cfg.chanunit) == numel(cfg.channel)
-      lf = ft_compute_leadfield(dippos{trial}, sens, vol, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
+      lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
   else
-      lf = ft_compute_leadfield(dippos{trial}, sens, vol);
+      lf = ft_compute_leadfield(dippos{trial}, sens, headmodel);
   end
   nsamples = size(dipsignal{trial},2);
   nchannels = size(lf,1);

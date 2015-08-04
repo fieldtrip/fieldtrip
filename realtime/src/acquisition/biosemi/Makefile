@@ -50,7 +50,7 @@ ifeq "$(UNAME)" "Linux"
 		# the amplifier hooked up to the R-Pi.
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 		LDFLAGS += -L$(FTBUFFER)/src
-		LDLIBS += -lbuffer -lpthread -ldl
+		LDLIBS += -lbuffer -lpthread -ldl -lrt
     endif
 endif
 

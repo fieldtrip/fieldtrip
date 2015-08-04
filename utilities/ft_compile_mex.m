@@ -48,6 +48,8 @@ end
 % MACI
 % MACI64
 
+[ftver, ftpath] = ft_version;
+
 L = [];
 L = add_mex_source(L,'fileio/@uint64','abs');
 L = add_mex_source(L,'fileio/@uint64','min');
@@ -105,15 +107,14 @@ if ft_platform_supports('libmx_c_interface')
   L = add_mex_source(L,'src','mxSerialize_c');
   L = add_mex_source(L,'src','mxDeserialize_c');
 else
-   % use the C++ interface
+  % use the C++ interface
   L = add_mex_source(L,'src','mxSerialize_cpp');
   L = add_mex_source(L,'src','mxDeserialize_cpp');
 end
 
 oldDir = pwd;
-[baseDir, myName] = fileparts(mfilename('fullpath'));
 try
-  compile_mex_list(L, baseDir, force);
+  compile_mex_list(L, ftpath, force);
 catch
   % the "catch me" syntax is broken on MATLAB74, this fixes it
   me = lasterror;

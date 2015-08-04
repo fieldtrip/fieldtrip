@@ -112,12 +112,13 @@ switch cmd
       [status, output] = system('svn info');
       cd(olddir);
       if status > 0
-        error('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
+          warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
+          ftver = 'unknown';
+      else
+          rev = regexp(output, 'Revision: (.*)', 'tokens', 'dotexceptnewline');
+          rev = rev{1}{1};
+          ftver = ['r' rev];
       end
-      
-      rev = regexp(output, 'Revision: (.*)', 'tokens', 'dotexceptnewline');
-      rev = rev{1}{1};
-      ftver = ['r' rev];
       
     elseif isgit
       tmpfile = tempname;

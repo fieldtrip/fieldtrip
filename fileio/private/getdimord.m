@@ -417,7 +417,7 @@ switch field
       dimord = '{chan}_spike';
     elseif ft_datatype(data, 'raw') && iscell(data.(field)) && datsiz(1)==nrpt
       dimord = '{rpt}_time';
-    elseif isvector(data.(field)) && isequal(datsiz, [1 ntime])
+    elseif isvector(data.(field)) && isequal(datsiz, [1 ntime ones(1,numel(datsiz)-2)])
       dimord = 'time';
     end
     

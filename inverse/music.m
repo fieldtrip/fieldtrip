@@ -1,4 +1,4 @@
-function [dipout] = music(dip, grad, vol, dat, varargin)
+function [dipout] = music(dip, grad, headmodel, dat, varargin)
 
 % MUSIC source localization using MUltiple SIgnal Classification
 %
@@ -7,7 +7,7 @@ function [dipout] = music(dip, grad, vol, dat, varargin)
 % measured data matrix.
 %
 % Use as
-%   [dipout] = music(dip, grad, vol, dat, ...)
+%   [dipout] = music(dip, grad, headmodel, dat, ...)
 %
 % Optional input arguments should be specified as key-value pairs and can be
 %   'cov'              = data covariance matrix
@@ -59,7 +59,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -101,10 +101,10 @@ for i=1:size(dip.pos,1)
     lf = dip.leadfield{i};
   elseif isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
   % compute the MUSIC metric, c.f. equation 26

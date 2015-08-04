@@ -1,4 +1,4 @@
-function vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
+function headmodel = ft_headmodel_slab(geom1, geom2, Pc, varargin)
 
 % FT_HEADMODEL_SLAB creates an EEG volume conduction model that
 % is described with an infinite conductive slab. You can think
@@ -7,7 +7,7 @@ function vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
 % (e.g. air).
 %
 % Use as
-%   vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
+%   headmodel = ft_headmodel_slab(geom1, geom2, Pc, varargin)
 % where
 %   geom1.pnt = Nx3 vector specifying N points through which the 'upper' plane is fitted 
 %   geom2.pnt = Nx3 vector specifying N points through which the 'lower' plane is fitted 
@@ -75,17 +75,17 @@ if ~incond
   N2 = -N2;
 end
 
-vol       = [];
-vol.cond  = cond;
-vol.pnt1   = P1(:)'; % a point that lies on the plane that separates the conductive tissue from the air
-vol.ori1   = N1(:)'; % a unit vector pointing towards the air
-vol.ori1   = vol.ori1/norm(vol.ori1);
-vol.pnt2   = P2(:)'; 
-vol.ori2   = N2(:)'; 
-vol.ori2   = vol.ori2/norm(vol.ori2);
+headmodel       = [];
+headmodel.cond  = cond;
+headmodel.pnt1   = P1(:)'; % a point that lies on the plane that separates the conductive tissue from the air
+headmodel.ori1   = N1(:)'; % a unit vector pointing towards the air
+headmodel.ori1   = headmodel.ori1/norm(headmodel.ori1);
+headmodel.pnt2   = P2(:)'; 
+headmodel.ori2   = N2(:)'; 
+headmodel.ori2   = headmodel.ori2/norm(headmodel.ori2);
 
 if strcmpi(model,'monopole')
-  vol.type  = 'slab_monopole';    
+  headmodel.type  = 'slab_monopole';    
 else
   error('unknow method')
 end

@@ -1,13 +1,13 @@
-function [depth] = ft_sourcedepth(pos, vol)
+function [depth] = ft_sourcedepth(pos, headmodel)
 
 % FT_SOURCEDEPTH computes the distance from the source to the surface of
-% the source compartment (usually the brain).
+% the source compartment (usually the brain) in the volume conduction model.
 %
 % Use as
-%   depth = ft_sourcedepth(pos, vol);
+%   depth = ft_sourcedepth(pos, headmodel);
 % where
-%   pos     Nx3 matrix with the position of N sources
-%   vol     structure describing volume condition model
+%   pos       =  Nx3 matrix with the position of N sources
+%   headmodel =  structure describing volume condition model
 %
 % A negative depth indicates that the source is inside the source
 % compartment, positive indicates outside.
@@ -35,33 +35,33 @@ function [depth] = ft_sourcedepth(pos, vol)
 % $Id$
 
 % determine the type of volume conduction model
-switch ft_voltype(vol)
+switch ft_voltype(headmodel)
 
 % single-sphere or multiple concentric spheres
 case {'singlesphere', 'concentricspheres'}
-  if ~isfield(vol, 'source')
+  if ~isfield(headmodel, 'source')
     % locate the innermost compartment and remember it
-    [dum, vol.source] = min(vol.r);
+    [dum, headmodel.source] = min(headmodel.r);
   end
-  if isfield(vol, 'o')
+  if isfield(headmodel, 'o')
     % shift dipole positions toward origin of sphere
-    tmp = pos - repmat(vol.o, size(pos,1), 1);
+    tmp = pos - repmat(headmodel.o, size(pos,1), 1);
   else
     tmp = pos;
   end
-  depth = sqrt(sum(tmp.^2, 2))-vol.r(vol.source); % positive if outside, negative if inside
+  depth = sqrt(sum(tmp.^2, 2))-headmodel.r(headmodel.source); % positive if outside, negative if inside
 
 % boundary element model
 case {'bem' 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag','openmeeg'}
-  if isfield(vol, 'source')
+  if isfield(headmodel, 'source')
     % use the specified source compartment
-    pnt = vol.bnd(vol.source).pnt;
-    tri = vol.bnd(vol.source).tri;
+    pnt = headmodel.bnd(headmodel.source).pnt;
+    tri = headmodel.bnd(headmodel.source).tri;
   else
     % locate the innermost compartment and remember it
-    vol.source = find_innermost_boundary(vol.bnd);
-    pnt = vol.bnd(vol.source).pnt;
-    tri = vol.bnd(vol.source).tri;
+    headmodel.source = find_innermost_boundary(headmodel.bnd);
+    pnt = headmodel.bnd(headmodel.source).pnt;
+    tri = headmodel.bnd(headmodel.source).tri;
   end
   inside = bounding_mesh(pos, pnt, tri);
   ntri   = size(tri,1);

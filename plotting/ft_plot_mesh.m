@@ -57,8 +57,7 @@ ws = warning('on', 'MATLAB:divideByZero');
 
 if ~isstruct(bnd) && isnumeric(bnd) && size(bnd,2)==3
   % the input seems like a list of points, convert into something that resembles a mesh
-  warning('off', 'MATLAB:warn_r14_stucture_assignment');
-  bnd.pnt = bnd;
+  bnd = struct('pnt', bnd);
 elseif isfield(bnd, 'pos')
   % the input seems to be a set of points from ft_prepare_sourcemodel or ft_dipolefitting
   bnd.pnt = bnd.pos;
@@ -84,7 +83,12 @@ vertexmarker = ft_getopt(varargin, 'vertexmarker', '.');
 facealpha    = ft_getopt(varargin, 'facealpha',   1);
 edgealpha    = ft_getopt(varargin, 'edgealpha',   1);
 tag          = ft_getopt(varargin, 'tag',         '');
-surfaceonly   = ft_getopt(varargin, 'surfaceonly',  false);
+surfaceonly  = ft_getopt(varargin, 'surfaceonly',  false);
+unit         = ft_getopt(varargin, 'unit');
+
+if ~isempty(unit)
+  bnd = ft_convert_units(bnd, unit);
+end
 
 if surfaceonly
   bnd = mesh2edge(bnd);

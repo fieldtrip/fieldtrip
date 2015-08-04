@@ -1,4 +1,4 @@
-function vol = ft_headmodel_concentricspheres(geometry, varargin)
+function headmodel = ft_headmodel_concentricspheres(geometry, varargin)
 
 % FT_HEADMODEL_CONCENTRICSPHERES creates a volume conduction model
 % of the head based on three or four concentric spheres. For a 3-sphere
@@ -16,7 +16,7 @@ function vol = ft_headmodel_concentricspheres(geometry, varargin)
 % to all individual surfaces.
 %
 % Use as
-%   vol = ft_headmodel_concentricspheres(geometry, ...)
+%   headmodel = ft_headmodel_concentricspheres(geometry, ...)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
@@ -68,13 +68,13 @@ if ~isstruct(geometry) || ~isfield(geometry, 'pnt')
 end
 
 % start with an empty volume conductor
-vol = [];
+headmodel = [];
 
 % ensure that the geometry has units, estimate them if needed
 geometry = ft_convert_units(geometry);
 
 % copy the geometrical units into the volume conductor
-vol.unit = geometry(1).unit;
+headmodel.unit = geometry(1).unit;
 
 if isequal(fitind, 'all')
   fitind = 1:numel(geometry);
@@ -98,33 +98,33 @@ fprintf('initial sphere: radius = %.1f\n', single_r);
 for i = 1:numel(geometry)
   npnt     = size(geometry(i).pnt,1);
   dist     = sqrt(sum(((geometry(i).pnt - repmat(single_o, npnt, 1)).^2), 2));
-  vol.r(i) = mean(dist);
+  headmodel.r(i) = mean(dist);
 end
 
-vol.o    = single_o;              % specify the center of the spheres
-vol.cond = conductivity;          % specify the conductivity of the spheres, can be empty up to here
-vol.type = 'concentricspheres';
+headmodel.o    = single_o;              % specify the center of the spheres
+headmodel.cond = conductivity;          % specify the conductivity of the spheres, can be empty up to here
+headmodel.type = 'concentricspheres';
 
 % sort the spheres from the smallest to the largest
-[vol.r, indx] = sort(vol.r);
+[headmodel.r, indx] = sort(headmodel.r);
 
-if isempty(vol.cond)
+if isempty(headmodel.cond)
   % it being empty indicates that the user did not specify a conductivity, use a default instead
-  if length(vol.r)==1
-    vol.cond = 1;                        % brain
-  elseif length(vol.r)==3
-    vol.cond = [0.3300   0.0042 0.3300]; % brain,      skull, skin
-  elseif length(vol.r)==4
-    vol.cond = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
+  if length(headmodel.r)==1
+    headmodel.cond = 1;                        % brain
+  elseif length(headmodel.r)==3
+    headmodel.cond = [0.3300   0.0042 0.3300]; % brain,      skull, skin
+  elseif length(headmodel.r)==4
+    headmodel.cond = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
   else
     error('conductivity values should be specified for each tissue type');
   end
 else
   % the conductivity as specified by the user should be in the same order as the geometries
   % sort the spheres from the smallest to the largest ('insidefirst' order)
-  vol.cond = vol.cond(indx);
+  headmodel.cond = headmodel.cond(indx);
 end
 
 for i=1:numel(geometry)
-  fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, vol.r(i), vol.cond(i));
+  fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, headmodel.r(i), headmodel.cond(i));
 end

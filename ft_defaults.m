@@ -59,13 +59,15 @@ if exist(fieldtripprefs, 'file')
 end
 
 % Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.
-% Note that ft_getopt might not be available on the path at this moment and can therefore not yet be used.
+% NOTE ft_getopt might not be available on the path at this moment and can therefore not yet be used.
+% NOTE all options here should be explicitly listed as allowed in ft_checkconfig
 
-if ~isfield(ft_default, 'trackconfig'),    ft_default.trackconfig    = 'off';    end % cleanup, report, off
-if ~isfield(ft_default, 'checkconfig'),    ft_default.checkconfig    = 'loose';  end % pedantic, loose, silent
-if ~isfield(ft_default, 'checksize'),      ft_default.checksize      = 1e5;      end % number in bytes, can be inf
-if ~isfield(ft_default, 'showcallinfo'),   ft_default.showcallinfo   = 'yes';    end % yes or no, this is used in ft_pre/postamble_provenance
-if ~isfield(ft_default, 'debug'),          ft_default.debug          = 'no';     end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
+if ~isfield(ft_default, 'trackconfig'),       ft_default.trackconfig    = 'off';    end % cleanup, report, off
+if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';  end % pedantic, loose, silent
+if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;      end % number in bytes, can be inf
+if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';    end % yes or no, this is used in ft_pre/postamble_provenance
+if ~isfield(ft_default, 'debug'),             ft_default.debug          = 'no';     end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
+if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'overwrite'; end % can be keep, overwrite, error
 
 % these options allow to disable parts of the provenance
 if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
@@ -148,15 +150,23 @@ if ~isdeployed
   end
 
   try
-    % these directories contain functions that were added to MATLAB in
-    % recent versions to replace an older function.
-    if ft_platform_supports('matlabversion',-Inf, '2011b')
-      ft_hastoolbox('compat/matlablt2012a', 2, 1);
-    end
-
-    if ~ft_platform_supports('int64_arithmetic')
-      ft_hastoolbox('fileio/matlablt2010b', 2, 1);
-    end
+    % these directories deal with compatibility with older MATLAB versions
+    if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2008b'), ft_hastoolbox('compat/matlablt2009a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2009a'), ft_hastoolbox('compat/matlablt2009b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2009b'), ft_hastoolbox('compat/matlablt2010a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2010a'), ft_hastoolbox('compat/matlablt2010b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2010b'), ft_hastoolbox('compat/matlablt2011a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2011a'), ft_hastoolbox('compat/matlablt2011b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2011b'), ft_hastoolbox('compat/matlablt2012a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2012a'), ft_hastoolbox('compat/matlablt2012b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2012b'), ft_hastoolbox('compat/matlablt2013a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2013a'), ft_hastoolbox('compat/matlablt2013b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2013b'), ft_hastoolbox('compat/matlablt2014a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2014a'), ft_hastoolbox('compat/matlablt2014a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2014a'), ft_hastoolbox('compat/matlablt2015b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2015b'), ft_hastoolbox('compat/matlablt2015b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2015b'), ft_hastoolbox('compat/matlablt2016a', 3, 1); end
   end
 
   try
@@ -206,12 +216,17 @@ if ~isdeployed
 
   try
     % this contains the functions to compute connecitivy metrics
-    ft_hastoolbox('connectivity', 1,1);
+    ft_hastoolbox('connectivity', 1, 1);
   end
 
   try
     % this contains the functions for spike and spike-field analysis
-    ft_hastoolbox('spike', 1,1);
+    ft_hastoolbox('spike', 1, 1);
+  end
+
+  try
+    % this contains user contributed functions
+    ft_hastoolbox('contrib/misc', 1, 1);
   end
 
   try

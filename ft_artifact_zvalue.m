@@ -73,21 +73,22 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.lpfilter      = 'no' or 'yes'  lowpass filter
 %   cfg.artfctdef.zvalue.hpfilter      = 'no' or 'yes'  highpass filter
 %   cfg.artfctdef.zvalue.bpfilter      = 'no' or 'yes'  bandpass filter
-%   cfg.artfctdef.zvalue.lnfilter      = 'no' or 'yes'  line noise removal using notch filter
+%   cfg.artfctdef.zvalue.bsfilter      = 'no' or 'yes'  bandstop filter for line noise removal
 %   cfg.artfctdef.zvalue.dftfilter     = 'no' or 'yes'  line noise removal using discrete fourier transform
 %   cfg.artfctdef.zvalue.medianfilter  = 'no' or 'yes'  jump preserving median filter
 %   cfg.artfctdef.zvalue.lpfreq        = lowpass  frequency in Hz
 %   cfg.artfctdef.zvalue.hpfreq        = highpass frequency in Hz
 %   cfg.artfctdef.zvalue.bpfreq        = bandpass frequency range, specified as [low high] in Hz
-%   cfg.artfctdef.zvalue.lnfreq        = line noise frequency in Hz, default 50Hz
+%   cfg.artfctdef.zvalue.bsfreq        = bandstop frequency range, specified as [low high] in Hz
 %   cfg.artfctdef.zvalue.lpfiltord     = lowpass  filter order
 %   cfg.artfctdef.zvalue.hpfiltord     = highpass filter order
 %   cfg.artfctdef.zvalue.bpfiltord     = bandpass filter order
-%   cfg.artfctdef.zvalue.lnfiltord     = line noise notch filter order
+%   cfg.artfctdef.zvalue.bsfiltord     = bandstop filter order 
 %   cfg.artfctdef.zvalue.medianfiltord = length of median filter
-%   cfg.artfctdef.zvalue.lpfilttype    = digital filter type, 'but' (default) or 'fir'
-%   cfg.artfctdef.zvalue.hpfilttype    = digital filter type, 'but' (default) or 'fir'
-%   cfg.artfctdef.zvalue.bpfilttype    = digital filter type, 'but' (default) or 'fir'
+%   cfg.artfctdef.zvalue.lpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.hpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.bpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.bsfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
 %   cfg.artfctdef.zvalue.detrend       = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.demean        = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.baselinewindow = [begin end] in seconds, the default is the complete trial
@@ -188,9 +189,9 @@ if ~hasdata
   
 else
   % check whether the value for trlpadding makes sense
-  % negative trlpadding only allowed with in-memory data
-  if cfg.artfctdef.zvalue.trlpadding < 0
-    error('negative trlpadding is only allowed with in-memory data');
+  if cfg.artfctdef.zvalue.trlpadding > 0
+    % negative trlpadding is allowed with in-memory data
+    error('you cannot use positive trlpadding with in-memory data');
   end
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');

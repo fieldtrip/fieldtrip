@@ -45,7 +45,6 @@ type = {
   'yokogawa160'
   'yokogawa160_planar'
   'yokogawa440'
-  'yokogawa440_planar'
   };
 
 

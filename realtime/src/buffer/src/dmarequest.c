@@ -8,10 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "buffer.h"
 #include <pthread.h>
 #include <time.h>  /* for clock */
 #include <sys/time.h>
+
+#include "buffer.h"
+#include "platform_includes.h"
 
 /* FIXME should these be static? */
 static header_t   *header   = NULL;

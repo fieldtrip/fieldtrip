@@ -1,6 +1,6 @@
 function mri = ft_defacevolume(cfg, mri)
 
-% FT_DEFACEVOLUME allows you to blank out specific regions from an anatomical MRI,
+% FT_DEFACEVOLUME allows you to erase specific regions from an anatomical MRI,
 % such as the face and ears. The graphical user interface allows you to position a
 % box over the anatomical MRI inside which all anatomical voxel values will be
 % replaced by zero. Depending on the alignment of the anatomical MRI and whether both
@@ -16,6 +16,11 @@ function mri = ft_defacevolume(cfg, mri)
 %   cfg.scale      = initial size of the box along each dimension (default is automatic)
 %   cfg.translate  = initial rotation of the box (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
+%   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
+%
+% If you specify no smoothing, the selected area will be zero-masked. If you
+% specify a certain amount of smoothing (in voxels FWHM), the selected area will
+% be replaced by a smoothed version of the data.
 %
 % See also FT_ANONIMIZEDATA, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
 
@@ -59,6 +64,7 @@ cfg.rotate    = ft_getopt(cfg, 'rotate', [0 0 0]);
 cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined further down
 cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
 cfg.selection = ft_getopt(cfg, 'selection', 'outside');
+cfg.smooth    = ft_getopt(cfg, 'smooth', 'no');
 
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
@@ -171,8 +177,16 @@ if strcmp(cfg.selection, 'inside')
   keep = ~keep;
 end
 
-mri.anatomy(keep) = 0;
-fprintf('erasing %.0f%% of the voxels\n', 100*mean(keep));
+if isequal(cfg.smooth, 'no')
+  fprintf('zero-filling %.0f%% of the volume\n', 100*mean(keep));
+  mri.anatomy(keep) = 0;
+else
+  tmp = mri.anatomy;
+  tmp = (1 + 0.5.*randn(size(tmp))).*tmp; % add 50% noise to each voxel
+  tmp = volumesmooth(tmp, cfg.smooth, 'anatomy');
+  fprintf('smoothing %.0f%% of the volume\n', 100*mean(keep));
+  mri.anatomy(keep) = tmp(keep);
+end
 
 % remove the temporary fields from the configuration, keep the rest for provenance
 cfg = removefields(cfg, {'R', 'S', 'T'});
@@ -322,6 +336,9 @@ ft_uilayout(figHandle, 'tag', 'translateui', 'BackgroundColor', [0.8 0.8 0.8], '
 ft_uilayout(figHandle, 'tag', 'tx',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
 ft_uilayout(figHandle, 'tag', 'ty',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
 ft_uilayout(figHandle, 'tag', 'tz',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
+
+% somehow the toolbar gets lost in 2012b
+set(figHandle, 'toolbar', 'figure');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_close(figHandle, varargin)
