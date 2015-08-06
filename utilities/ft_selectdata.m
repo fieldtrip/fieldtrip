@@ -634,7 +634,7 @@ end
 % this call to match_str ensures that that labels are always in the
 % order of the first input argument see bug_2917
 [ix, iy] = match_str(varargin{1}.label, label);
-label = varargin{1}.label(ix)
+label = varargin{1}.label(ix);
 
 indx = nan+zeros(numel(label), ndata);
 for k = 1:ndata
