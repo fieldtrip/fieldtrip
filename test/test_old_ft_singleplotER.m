@@ -9,8 +9,8 @@ function test_old_ft_singleplotER
 % different input datatypes. no other functionality is tested.
 % the script has been written in order to test a clean up of the code
 
-cd('/home/common/matlab/fieldtrip/data/test/preproc/eeg');
-load('preproc_10trials_neuroscan16');
+filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/'), 'preproc_neuroscan16');
+load(filename);
 
 %there's an unresolved issue with duplicate labels 'FREE'
 %FIXME
@@ -21,7 +21,7 @@ data.label{4} = 'FREE4';
 
 cfg = [];
 cfg.channel = data.label(5:end);
-cfg.demean = 'yes';
+cfg.preproc.demean = 'yes';
 cfg.trials = 1:5;
 tlck1 = ft_timelockanalysis(cfg, data);
 cfg.trials = 6:10;
@@ -58,15 +58,16 @@ cfgc2.method = 'coh';
 coh   = ft_connectivityanalysis(cfgc2, freqx);
 
 %plot connectivity-data
-cfg.zparam = 'cohspctrm';
+cfg.parameter = 'cohspctrm';
+cfg.refchannel = coh.label(1);
 ft_singleplotER(cfg, coh);
 
 %create connectivity-data with sparse linear indexing
-cfgc2.channelcmb = [repmat(freqx.label(5),[numel(freqx.label)-1 1]) freqx.label([1:4 6:end])'];
+cfgc2.channelcmb = [repmat(freqx.label(5),[numel(freqx.label)-1 1]) freqx.label([1:4 6:end])];
 coh2  = ft_connectivityanalysis(cfgc2, freqx);
 
 %plot
-cfg.cohrefchannel = coh2.labelcmb{1,1};
+cfg.refchannel = coh2.labelcmb{1,1};
 ft_singleplotER(cfg, coh2);
 
 %create connectivity-data with very sparse linear indexing
@@ -78,8 +79,8 @@ ft_singleplotER(cfg, coh3);
 
 %-------------------------------------------------------
 %test the additional stuff, masks, boxes, linestyles etc
-
-cfg.zparam    = 'avg';
+cfg = [];
+cfg.parameter = 'avg';
 cfg.linestyle = {'-' '-.'};
 figure;ft_singleplotER(cfg, tlck1, tlck2);
 
