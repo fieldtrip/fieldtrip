@@ -135,6 +135,10 @@ hasfreq = isfield(stat, 'freq');
 
 is1D = xor(hastime, hasfreq); % either one
 is2D = and(hastime, hasfreq); % both
+singlelatency = numel(stat.time);
+if singlelatency > 1
+    is2D = 1;
+end;
 
 % deal with single latency
 if hastime ==1;
