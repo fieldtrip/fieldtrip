@@ -223,19 +223,28 @@ for i=1:size(dip.pos,1)
       % compute the leadfield for the optimal dipole orientation
       % subsequently the leadfield for only that dipole orientation will
       % be used for the final filter computation
-      if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
-        filt = dip.filter{i};
+      if isfield(dip, 'filter') && size(dip.filter{i},1)==1
+        % nothing to do
+        ft_warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
       else
-        filt = pinv(lfa' * invCmeg * lfa) * lfa' * invCmeg;
+        if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
+          filt = dip.filter{i};
+        else
+          filt = pinv(lfa' * invCmeg * lfa) * lfa' * invCmeg;
+        end
+        [u, s, v] = svd(real(filt * Cmeg * ctranspose(filt)));
+        maxpowori = u(:,1);
+        if numel(s)>1, 
+          eta = s(1,1)./s(2,2);
+        else
+          eta = nan;
+        end
+        lfa  = lfa * maxpowori;
+        dipout.ori{i} = maxpowori;
+        dipout.eta{i} = eta;
+        % update the number of dipole components
+        Ndip = size(lfa,2);
       end
-      [u, s, v] = svd(real(filt * Cmeg * ctranspose(filt)));
-      maxpowori = u(:,1);
-      eta = s(1,1)./s(2,2);
-      lfa  = lfa * maxpowori;
-      dipout.ori{i} = maxpowori;
-      dipout.eta{i} = eta;
-      % update the number of dipole components
-      Ndip = size(lfa,2);
     else
       ft_warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
     end
@@ -270,7 +279,7 @@ for i=1:size(dip.pos,1)
   if keepfilter
     dipout.filter{i,1} = filt;
   end
-  if keepleadfield
+  if keepleadfield && needleadfield
     dipout.leadfield{i,1} = lf;
   end
   
