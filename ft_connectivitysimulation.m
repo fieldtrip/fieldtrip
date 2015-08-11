@@ -177,10 +177,10 @@ switch cfg.method
         tmp(:, m) = params'*state0 + noise(:,m);
       end
       
-      if cfg.absnoise>0
+      trial{k} = tmp(:,nlag+1:end);
+      if any(cfg.absnoise>0)
         trial{k} = trial{k} + diag(cfg.absnoise)*randn(size(trial{k}));
       end
-      trial{k} = tmp(:,nlag+1:end);
       time{k}  = tim;
     end
     
