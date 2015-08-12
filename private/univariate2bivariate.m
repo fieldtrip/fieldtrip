@@ -222,7 +222,7 @@ switch dtype
     elseif strcmp(inparam, 'mom') && strcmp(outparam, 'crsspctrm'),
       % get mom as rpttap_pos_freq matrix
       % FIXME this assumes only 1 freq bin
-      sizmom = size(data.mom{find(data.inside,1,'first')});
+      sizmom = size(data.mom{data.inside(1)});
       
       if sizmom(1)==1,
         mom = zeros(size(data.pos,1), sizmom(2));
