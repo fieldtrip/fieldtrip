@@ -30,6 +30,11 @@ function tf = ft_platform_supports(what,varargin)
 %   'rng'                           rng(...)
 %   'rand-state'                    rand('state')
 %   'urlread-timeout'               urlread(..., 'Timeout', t)
+%   'griddata-vector-input'         griddata(...,...,...,a,b) with a and b
+%                                   vectors
+%   'griddata-v4'                   griddata(...,...,...,...,...,'v4'),
+%                                   that is v4 interpolation support
+%   'uimenu'                        uimenu(...)
 
 if ~ischar(what)
   error('first argument must be a string');
@@ -96,8 +101,17 @@ switch what
     tf = is_octave();
     
   case 'urlread-timeout'
-    tf = matlabversion('2012b',Inf);
+    tf = is_matlab() && matlabversion('2012b',Inf);
+
+  case 'griddata-vector-input'
+    tf = is_matlab();
+
+  case 'griddata-v4'
+    tf = is_matlab() && matlabversion('2009a',Inf);
     
+  case 'uimenu'
+    tf = is_matlab();
+
   otherwise
     error('unsupported value for first argument: %s', what);
     
