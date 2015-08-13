@@ -34,6 +34,7 @@ function tf = ft_platform_supports(what,varargin)
 %                                   vectors
 %   'griddata-v4'                   griddata(...,...,...,...,...,'v4'),
 %                                   that is v4 interpolation support
+%   'uimenu'                        uimenu(...)
 
 if ~ischar(what)
   error('first argument must be a string');
@@ -103,11 +104,14 @@ switch what
     tf = is_matlab() && matlabversion('2012b',Inf);
 
   case 'griddata-vector-input'
-    tf = is_matlab()
+    tf = is_matlab();
 
   case 'griddata-v4'
     tf = is_matlab() && matlabversion('2009a',Inf);
     
+  case 'uimenu'
+    tf = is_matlab();
+
   otherwise
     error('unsupported value for first argument: %s', what);
     
