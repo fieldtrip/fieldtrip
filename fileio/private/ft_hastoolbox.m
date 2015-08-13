@@ -104,6 +104,7 @@ url = {
   'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
+  
   'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
@@ -140,6 +141,8 @@ url = {
   'BRAINSUITE'    'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
   'BRAINVISA'     'see http://brainvisa.info'
   'FILEEXCHANGE'  'see http://www.mathworks.com/matlabcentral/fileexchange/'
+  'NEURALYNX_V6'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Neuralynx (windows only)' 
+  'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser' 
   };
 
 if nargin<2
@@ -254,6 +257,7 @@ switch toolbox
     status  = exist('load_bcidat', 'file');
   case 'NLXNETCOM'
     status  = (exist('MatlabNetComClient', 'file') && exist('NlxConnectToServer', 'file') && exist('NlxGetNewCSCData', 'file'));
+  
   case 'DIPOLI'
     status  = exist('dipoli.maci', 'file');
   case 'MNE'
@@ -329,6 +333,12 @@ switch toolbox
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
   case 'BRAINVISA'
     filelist = {'loadmesh.m' 'plotmesh.m' 'savemesh.m'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'NEURALYNX_V6'
+    filelist = {['Nlx2MatCSC.', mexext]};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'NEURALYNX_V3'
+    filelist = {['Nlx2MatCSC_v3.', mexext]};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
     
     % the following are fieldtrip modules/toolboxes
@@ -457,7 +467,7 @@ if autoadd>0 && ~status
     if autoadd==1
       error(msg);
     elseif autoadd==2
-      warning(msg);
+      ft_warning(msg);
     else
       % fail silently
     end

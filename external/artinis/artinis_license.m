@@ -2,10 +2,12 @@ function artinis_license
 
 % ARTINIS_LICENSE prints the license only once upon the first call to
 % this function. If the user does a "clear all", the license will
-% again be shown.  This function should be included in every openmeeg
+% again be shown.  This function should be included in every artinis
 % function to ensure that the license is displayed at least once.
 
 % Copyright (C) 2009-2011, Robert Oostenveld
+% Copyright (C) 2014-2015, Jörn M. Horschig, Artinis Medical Systems, www.artinis.com
+
 
 persistent status
 

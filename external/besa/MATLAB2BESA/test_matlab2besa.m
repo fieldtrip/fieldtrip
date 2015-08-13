@@ -16,6 +16,19 @@ time_scale_factor = 1.0;
 besa_save2Avr(custom_path, file_name, data_matrix, ...
     time_samples, channel_labels, data_scale_factor, time_scale_factor);
 
+%% Save as generic binary
+
+% Load example data 1
+load data_avr.mat
+
+% Set parameters
+file_name = 'test1';
+data_matrix = data_avr.Data;
+SamplingRate = 1000.0/data_avr.DI;
+
+% Save the data
+besa_matrix2Gen(data_matrix, SamplingRate, file_name);
+
 %% Load example data 2
 load besa_channels.mat
 

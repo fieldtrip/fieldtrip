@@ -46,7 +46,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg)             or
 %   bnd = ft_prepare_mesh(cfg, headmodel)
 % but more consistent would be to specify a volume conduction model with
-%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
+%   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %   cfg.headshape     = name of file containing the volume conduction model, see FT_READ_VOL
 %
 % Undocumented options, I have no clue why they exist
@@ -162,11 +162,11 @@ switch cfg.method
     [pnt, tri] = makesphere(cfg.numvertices);
     bnd = [];
     mri = ft_convert_units(mri);      % ensure that it has units
-    vol = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
-    for i=1:length(vol.r)
-      bnd(i).pnt(:,1) = pnt(:,1)*vol.r(i) + vol.o(1);
-      bnd(i).pnt(:,2) = pnt(:,2)*vol.r(i) + vol.o(2);
-      bnd(i).pnt(:,3) = pnt(:,3)*vol.r(i) + vol.o(3);
+    headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
+    for i=1:length(headmodel.r)
+      bnd(i).pnt(:,1) = pnt(:,1)*headmodel.r(i) + headmodel.o(1);
+      bnd(i).pnt(:,2) = pnt(:,2)*headmodel.r(i) + headmodel.o(2);
+      bnd(i).pnt(:,3) = pnt(:,3)*headmodel.r(i) + headmodel.o(3);
       bnd(i).tri = tri;
     end
     

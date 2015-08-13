@@ -164,7 +164,61 @@ switch dtype
         data.powcovdimord = 'pos';
         % data.dim(2) = size(data.pos,1);
       end
+    
+    elseif strcmp(inparam, 'mom') && strcmp(outparam, 'powcov'),
       
+      nvox = size(data.pos,1);
+      if isfield(data, 'cumtapcnt')
+        cumtapcnt = data.cumtapcnt;
+      else
+        cumtapcnt = ones(size(data.mom{find(data.inside,1,'first')},2),1);
+      end
+      nrpt = size(cumtapcnt,1);
+      
+      % make projection matrix to get from mom to pow
+      vec = zeros(0,1);
+      i1  = zeros(0,1);
+      i2  = zeros(0,1);
+      for k = 1:nrpt
+        i1  = cat(1,i1,ones(cumtapcnt(k),1)*k);
+        i2  = cat(1,i2,numel(i2)+(1:cumtapcnt(k))');
+        vec = cat(1,vec,ones(cumtapcnt(k),1)./cumtapcnt(k));
+      end
+      P = sparse(i1,i2,vec);
+      
+      pow    = nan(nvox,nrpt);
+      inside = find(data.inside);
+      for k = inside(:)'
+        pow(k,:) = P*(abs(data.mom{k}).^2)';
+      end
+      
+      if sqrtflag, pow = sqrt(pow); end
+      if demeanflag,
+        mdat = nanmean(pow,2);
+        pow  = pow - mdat(:,ones(1,nrpt)); % FIXME only works for 1 frequency
+      end
+      
+      if ncmb == size(pow,1)
+        data.powcov = pow * pow';
+        data.powcovdimord = 'pos_pos';
+        powindx = [];
+      else
+        data.powcov = [reshape(pow * pow(cmb,:)', [ncmb*nvox 1]); sum(pow.^2,2)];
+        try,
+          data = rmfield(data, 'pow');
+          data = rmfield(data, 'powdimord');
+        end
+        % powindx = [nvox+(1:nvox) nvox+(1:nvox); cmb*ones(1,nvox) nvox+(1:nvox)]';
+        powindx = [repmat(ncmb*nvox+(1:nvox)',[ncmb 1]) reshape(repmat(ncmb*nvox+cmb(:)', [nvox 1]),[nvox*ncmb 1]); ncmb*nvox+(1:nvox)' ncmb*nvox+(1:nvox)'];
+        data.pos = [repmat(data.pos, [ncmb+1 1])];% FIXME come up with something reshape( repmat(data.pos(cmb,:),[nvox 1]);data.pos data.pos];
+        data.inside = reshape(repmat(data.inside(:), [1 ncmb+1])+repmat(nvox*(0:ncmb), [nvox 1]), [nvox*(ncmb+1) 1]);
+        if ~isempty(data.outside)
+          data.outside = reshape(repmat(data.outside(:), [1 ncmb+1])+repmat(nvox*(0:ncmb), [nvox 1]), [nvox*(ncmb+1) 1]);
+        end
+        data.powcovdimord = 'pos';
+        % data.dim(2) = size(data.pos,1);
+      end
+    
     elseif strcmp(inparam, 'mom') && strcmp(outparam, 'crsspctrm'),
       % get mom as rpttap_pos_freq matrix
       % FIXME this assumes only 1 freq bin
@@ -259,7 +313,7 @@ switch dtype
           [nrpt,nvox] = size(mom);
           data.crsspctrm = (transpose(mom)*conj(mom))./nrpt;
           data = rmfield(data, 'mom');
-          data = rmfield(data, 'momdimord');
+          try, data = rmfield(data, 'momdimord'); end
           powindx = [];
           data.crsspctrmdimord = 'pos_pos_freq'; % FIXME hard coded
         end
