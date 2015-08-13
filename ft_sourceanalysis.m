@@ -1037,7 +1037,7 @@ if isfield(grid, 'tri')
 end
 
 if exist('grid', 'var')
-  source = copyfields(grid, source, {'pos', 'inside', 'leadfield', 'filter'});
+  source = copyfields(grid, source, {'pos', 'inside', 'leadfield'});%, 'filter'});
 end
 
 if exist('dip', 'var')

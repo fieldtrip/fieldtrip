@@ -632,9 +632,12 @@ for k = 1:ndata
 end
 
 % this call to match_str ensures that that labels are always in the
-% order of the first input argument see bug_2917
+% order of the first input argument see bug_2917, but also temporarily keep
+% the labels from the other data structures not present in the first one
+% (in case selmode = 'union')
 [ix, iy] = match_str(varargin{1}.label, label);
-label = varargin{1}.label(ix)
+label1   = varargin{1}.label(:); % ensure column array
+label    = [label1(ix); label(setdiff(1:numel(label),iy))]; 
 
 indx = nan+zeros(numel(label), ndata);
 for k = 1:ndata

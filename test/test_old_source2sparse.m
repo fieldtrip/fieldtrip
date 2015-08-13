@@ -95,6 +95,10 @@ cfgs.keepmom     = 'yes';
 
 %there are two ways for not crashing the second round of ft_sourceanalysis
 %with fixori = 'yes';
+if all(islogical(source.inside))
+  source.inside = find(source.inside);
+end
+
 for k = 1:numel(source.inside)
   kk = source.inside(k);
   cfgs.grid.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};

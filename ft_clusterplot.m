@@ -89,16 +89,16 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight', ...
   'commentpos'});
 
 % set the defaults
-if ~isfield(cfg,'alpha'),                  cfg.alpha = 0.05;                                    end;
-if ~isfield(cfg,'highlightseries'),        cfg.highlightseries = {'on','on','on','on','on'};    end;
-if ~isfield(cfg,'highlightsymbolseries'),  cfg.highlightsymbolseries = ['*','x','+','o','.'];   end;
-if ~isfield(cfg,'highlightsizeseries'),    cfg.highlightsizeseries = [6 6 6 6 6];               end;
-if ~isfield(cfg,'hllinewidthseries'),      cfg.hllinewidthseries = [1 1 1 1 1];                 end;
-if ~isfield(cfg,'highlightcolorpos'),      cfg.highlightcolorpos = [0 0 0];                     end;
-if ~isfield(cfg,'highlightcolorneg'),      cfg.highlightcolorneg = [0 0 0];                     end;
-if ~isfield(cfg,'parameter'),              cfg.parameter = 'stat';                              end;
-if ~isfield(cfg,'saveaspng'),              cfg.saveaspng = 'no';                                end;
-if ~isfield(cfg,'subplotsize'),            cfg.subplotsize = [3 5];                             end;
+cfg.alpha                 = ft_getopt(cfg, 'alpha',                 0.05);
+cfg.highlightseries       = ft_getopt(cfg, 'highlightseries',       {'on','on','on','on','on'});
+cfg.highlightsymbolseries = ft_getopt(cfg, 'highlightsymbolseries', ['*','x','+','o','.']);
+cfg.highlightsizeseries   = ft_getopt(cfg, 'highlightsizeseries',   [6 6 6 6 6]);
+cfg.hllinewidthseries     = ft_getopt(cfg, 'hllinewidthseries',     [1 1 1 1 1]);
+cfg.highlightcolorpos     = ft_getopt(cfg, 'highlightcolorpos',     [0 0 0]);
+cfg.highlightcolorneg     = ft_getopt(cfg, 'highlightcolorneg',     [0 0 0]);
+cfg.parameter             = ft_getopt(cfg, 'parameter',             'stat');
+cfg.saveaspng             = ft_getopt(cfg, 'saveaspng',             'no');
+cfg.subplotsize           = ft_getopt(cfg, 'subplotsize',           [3 5]);
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
@@ -129,32 +129,34 @@ cfgtopo.layout = ft_prepare_layout(cfg, stat);
 % detect 2D or 1D
 hastime = isfield(stat, 'time');
 hasfreq = isfield(stat, 'freq');
-% if hastime ==1 || numel(stat.time)==1 || hasfreq==1 
-%     stat= rmfield(stat,'time');
-% end;
 
-is1D = xor(hastime, hasfreq); % either one
-is2D = and(hastime, hasfreq); % both
-
-% deal with single latency
-if hastime ==1;
-    singlelatency = numel(stat.time);
-    if singlelatency == 1
-        stat=rmfield(stat,'time');
-        is1D=1;
-        stat.dimord = 'chan_freq';
-        hastime = 0;
-    end;
-end;
-
-if hasfreq && ~hastime
+% below is an attempt to correctly deal with singleton time dimensions 
+is2D = false;
+if hastime && hasfreq
+  if numel(stat.time)==1
+    % deal with the trailing singleton 3D matrix in the numeric data
+    stat = rmfield(stat, 'time');
+    stat.dimord = 'chan_freq';
+  else
+    is2D = true;
+  end
+  hastime = false;
+elseif hastime && ~hasfreq
+  if numel(stat.time)==1
+    % deal with the trailing singleton 3D matrix in the numeric data
+    stat        = rmfield(stat, 'time');
+    stat.dimord = 'chan_freq';
+  end
+  hastime = false;
+elseif ~hastime && hasfreq
   % make the subsequent code believe we are dealing with time instead of freq data
-  stat.time = stat.freq;
-  stat = rmfield(stat, 'freq');
-  stat.dimord = 'chan_freq';
-  is1D = 0;
-  is2D = 1;
-end;
+  stat.time   = stat.freq;
+  stat        = rmfield(stat, 'freq');
+  stat.dimord = 'chan_time';
+elseif ~hastime && ~hasfreq
+  % nothing needed
+end
+
 
 if issubfield(stat, 'cfg.correcttail') && ((strcmp(stat.cfg.correcttail,'alpha') || strcmp(stat.cfg.correcttail,'prob')) && (stat.cfg.tail == 0));
   if ~(cfg.alpha >= stat.cfg.alpha);
@@ -398,8 +400,6 @@ else
       end
     else
       cfgtopo.highlightchannel = list{1};
-      cfgtopo.xparam = 'time';
-      cfgtopo.yparam = '';
       cfgtopo.comment = strcat(compos,comneg);
       cfgtopo.commentpos = 'title';
       ft_topoplotTFR(cfgtopo, stat);

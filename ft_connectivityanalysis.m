@@ -147,7 +147,7 @@ cfg.partchannel = ft_getopt(cfg, 'partchannel', '');
 cfg.parameter   = ft_getopt(cfg, 'parameter', []);
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || (isfield(data, 'dimord') && strcmp(data.dimord(1:6), 'rptjck'));
-hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || (isfield(data, 'avg') && isfield(data.avg, 'mom')); % FIXME old-fashioned pcc data
+hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || (isfield(data, 'avg') && isfield(data.avg, 'mom')) || (isfield(data, 'trial') && isfield(data.trial, 'mom')); % FIXME old-fashioned pcc data
 dojack  = strcmp(cfg.jackknife, 'yes');
 normrpt = 0; % default, has to be overruled e.g. in plv, because of single replicate normalisation
 normpow = 1; % default, has to be overruled e.g. in csd,
@@ -348,11 +348,6 @@ end
 
 dtype = ft_datatype(data);
 
-% ensure that source data is in 'new' representation
-if strcmp(dtype, 'source'),
-  data = ft_checkdata(data, 'sourcerepresentation', 'new');
-end
-
 % FIXME throw an error if cfg.complex~='abs', and dojack==1
 % FIXME throw an error if no replicates and cfg.method='plv'
 % FIXME trial selection has to be implemented still
@@ -415,8 +410,11 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'crsspctrm', dtype, 'cmb', cfg.refindx, 'keeprpt', 0);
         % [data, powindx, hasrpt] = univariate2bivariate(data, 'fourierspctrm', 'crsspctrm', dtype, 0, cfg.refindx, [], 1);
       elseif strcmp(inparam, 'powcov')
-        data = ft_checkdata(data, 'sourcerepresentation', 'new', 'haspow', 'yes');
-        [data, powindx, hasrpt] = univariate2bivariate(data, 'pow', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method, 'amplcorr'), 'keeprpt', 0);
+        if isfield(data, 'pow')
+          [data, powindx, hasrpt] = univariate2bivariate(data, 'pow', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method, 'amplcorr'), 'keeprpt', 0);
+        elseif isfield(data, 'mom')
+          [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'powcov', dtype, 'demeanflag', strcmp(cfg.removemean, 'yes'), 'cmb', cfg.refindx, 'sqrtflag', strcmp(cfg.method, 'amplcorr'), 'keeprpt', 0);
+        end
       end
       
     case 'comp'
@@ -704,7 +702,18 @@ switch cfg.method
     optarg = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt};
     if isfield(data, 'mom')
       % this is expected to be a single frequency
-      dat    = cat(2, data.mom{data.inside}).';
+      %dat    = cat(2, data.mom{data.inside}).';
+      
+      % HACK
+      dimord = getdimord(data, 'mom');
+      dimtok = tokenize(dimord, '_');
+      posdim = find(strcmp(dimtok,'{pos}')); 
+      posdim = 4; % we concatenate across positions...
+      rptdim = find(~cellfun('isempty',strfind(dimtok,'rpt')));
+      rptdim = rptdim-1; % the posdim has to be taken into account...
+      dat    = cat(4, data.mom{data.inside});
+      dat    = permute(dat,[posdim rptdim setdiff(1:ndims(dat),[posdim rptdim])]); 
+      
       datout = ft_connectivity_powcorr_ortho(dat, optarg{:});
     elseif strcmp(data.dimord, 'rpttap_chan_freq')
       % loop over all frequencies
