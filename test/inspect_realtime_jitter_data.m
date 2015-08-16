@@ -29,5 +29,5 @@ while true
   ft_write_data(filename, dat, 'header', hdr, 'append', block~=1);
   
   disp(block);
-  pause(delay);
+  pause(blocksize/hdr.Fs); % in seconds
 end
