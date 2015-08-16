@@ -2096,9 +2096,6 @@ if checkUniqueLabels
   end
 end
 
-% ensure that it is a column array
-hdr.label = hdr.label(:);
-
 % as of November 2011, the header is supposed to include the channel type (see FT_CHANTYPE,
 % e.g. meggrad, megref, eeg) and the units of each channel (see FT_CHANUNIT, e.g. uV, fT)
 
@@ -2121,6 +2118,11 @@ end
 if isfield(hdr, 'elec')
   hdr.elec = ft_datatype_sens(hdr.elec);
 end
+
+% ensure that these are column arrays
+hdr.label    = hdr.label(:);
+hdr.chantype = hdr.chantype(:);
+hdr.chanunit = hdr.chanunit(:);
 
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up

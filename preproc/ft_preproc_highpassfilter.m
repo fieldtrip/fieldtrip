@@ -233,6 +233,7 @@ switch type
       if rem(N,2)==1,   N=N+1;    end
     end
     [B, A] = fir1(N, max(Fhp)/Fn, 'high');
+    
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453
     warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')
@@ -254,6 +255,7 @@ switch type
     z(pos1:pos2) = 1;
     A = 1;
     B = firls(N,f,z); % requires MATLAB signal processing toolbox
+    
   case 'brickwall'
     ax = linspace(0, Fs, size(dat,2));  % frequency coefficients
     fl = nearest(ax, Fhp)-1;            % low cut-off frequency
@@ -262,6 +264,7 @@ switch type
     f(:,1:fl)   = a.*f(:,1:fl);         % perform low cut-off
     filt        = 2*real(ifft(f,[],2)); % iFFT
     return
+    
   otherwise
     error('unsupported filter type "%s"', type);
 end
