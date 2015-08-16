@@ -70,7 +70,7 @@ if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
 if ~isfield(cfg, 'readevent'),      cfg.readevent = 'no';     end % capture events?
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
-if ~isfield(cfg, 'demean'),         cfg.demean = 'yes';          end % baseline correction
+if ~isfield(cfg, 'demean'),         cfg.demean = 'yes';       end % baseline correction
 
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
