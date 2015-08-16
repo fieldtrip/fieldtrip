@@ -172,7 +172,7 @@ flt_maxtimestamp = ft_getopt(varargin, 'maxtimestamp');
 flt_minnumber    = ft_getopt(varargin, 'minnumber');
 flt_maxnumber    = ft_getopt(varargin, 'maxnumber');
 
-% thie allows blocking reads to avoid having to poll many times for online processing
+% this allows blocking reads to avoid having to poll many times for online processing
 blocking         = ft_getopt(varargin, 'blocking', false); % true or false
 timeout          = ft_getopt(varargin, 'timeout', 5); % seconds
 
@@ -1007,9 +1007,9 @@ switch eventformat
       warning('disabling blocking because no selection was specified');
       blocking = false;
     end
-    
+
     if blocking
-      nsamples  = -1; % disable waiting for samples
+      nsamples = 0; % disable waiting for samples
       if isempty(flt_minnumber)
         nevents = flt_maxnumber;
       elseif isempty(flt_maxnumber)
@@ -1017,12 +1017,12 @@ switch eventformat
       else
         nevents = max(flt_minnumber, flt_maxnumber);
       end
-      available = buffer_wait_dat([nsamples nevents timeout*1000], host, port);
+      available = buffer_wait_dat([nsamples nevents timeout], host, port);
       if available.nevents<nevents
         error('buffer timed out while waiting for %d events', nevents);
       end
     end
-    
+
     try
       event = buffer('get_evt', [], host, port);
     catch
@@ -1898,47 +1898,3 @@ if isempty(event)
   event = struct('type', {}, 'value', {}, 'sample', {}, 'offset', {}, 'duration', {});
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% poll implementation for backwards compatibility with ft buffer version 1
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function available = buffer_wait_dat(selection, host, port)
-% selection(1) nsamples
-% selection(2) nevents
-% selection(3) timeout in msec
-
-% check if backwards compatibilty mode is required
-try
-  % the WAIT_DAT request waits until it has more samples or events
-  selection(1) = selection(1)-1;
-  selection(2) = selection(2)-1;
-  % the following should work for buffer version 2
-  available = buffer('WAIT_DAT', selection, host, port);
-  
-catch
-  % the error means that the buffer is version 1, which does not support the WAIT_DAT request
-  % the wait_dat can be implemented by polling the buffer
-  nsamples = selection(1);
-  nevents  = selection(2);
-  timeout  = selection(3)/1000; % in seconds
-  
-  stopwatch = tic;
-  
-  % results are retrieved in the order written to the buffer
-  orig = buffer('GET_HDR', [], host, port);
-  
-  if timeout > 0
-    % wait maximal timeout seconds until more than nsamples samples or nevents events have been received
-    while toc(stopwatch)<timeout
-      if nsamples == -1 && nevents == -1,             break, end
-      if nsamples ~= -1 && orig.nsamples >= nsamples, break, end
-      if nevents  ~= -1 && orig.nevents  >= nevents,  break, end
-      orig = buffer('GET_HDR', [], host, port);
-      pause(0.001);
-    end
-  else
-    % no reason to wait
-  end
-  
-  available.nsamples = orig.nsamples;
-  available.nevents  = orig.nevents;
-end % try buffer v1 or v2

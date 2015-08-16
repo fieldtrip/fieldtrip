@@ -21,6 +21,8 @@ function [dat] = ft_read_data(filename, varargin)
 %   'dataformat'     string
 %   'headerformat'   string
 %   'fallback'       can be empty or 'biosig' (default = [])
+%   'blocking'       wait for the selected number of events (default = 'no')
+%   'timeout'        amount of time in seconds to wait when blocking (default = 5)
 %
 % This function returns a 2-D matrix of size Nchans*Nsamples for continuous
 % data when begevent and endevent are specified, or a 3-D matrix of size
@@ -122,6 +124,13 @@ dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp');
 
+% this allows blocking reads to avoid having to poll many times for online processing
+blocking         = ft_getopt(varargin, 'blocking', false); % true or false
+timeout          = ft_getopt(varargin, 'timeout', 5); % seconds
+
+% convert from 'yes'/'no' into boolean
+blocking = istrue(blocking);
+
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
@@ -207,7 +216,7 @@ end
 % test whether the requested data segment is not outside the file
 if any(begsample<1)
   error('FILEIO:InvalidBegSample', 'cannot read data before the begin of the file');
-elseif any(endsample>(hdr.nSamples*hdr.nTrials))
+elseif any(endsample>(hdr.nSamples*hdr.nTrials)) && ~blocking
   error('FILEIO:InvalidEndSample', 'cannot read data after the end of the file');
 end
 
@@ -634,8 +643,18 @@ switch dataformat
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);
+
+    if blocking
+      nsamples = endsample; % indices should be zero-offset
+      nevents  = 0;         % disable waiting for events
+      available = buffer_wait_dat([nsamples nevents timeout], host, port);
+      if available.nsamples<nsamples
+        error('buffer timed out while waiting for %d samples', nsamples);
+      end
+    end
+
     dat = buffer('get_dat', [begsample-1 endsample-1], host, port);  % indices should be zero-offset
-    dat = dat.buf(chanindx,:);                                        % select the desired channels
+    dat = dat.buf(chanindx,:);                                       % select the desired channels
     
   case 'fcdc_buffer_offline'
     % read from a offline FieldTrip buffer data files
