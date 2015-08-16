@@ -1,7 +1,7 @@
 function ft_realtime_heartratemonitor(cfg)
 
 % FT_REALTIME_HEARTRATEMONITOR is an example realtime application for online
-% viewing of the data. It should work both for EEG and MEG.
+% detection of heart beats. It should work both for EEG and MEG.
 %
 % Use as
 %   ft_realtime_heartratemonitor(cfg)
@@ -47,12 +47,16 @@ if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is d
 if ~isfield(cfg, 'headerformat'),   cfg.headerformat = [];    end % default is detected automatically
 if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];     end % default is detected automatically
 if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 0.1;      end % in seconds
-if ~isfield(cfg, 'threshold'),      cfg.threshold = -4;       end % in seconds
+if ~isfield(cfg, 'threshold'),      cfg.threshold = -4;       end % in uV
 if ~isfield(cfg, 'mindist'),        cfg.mindist = 0.1;        end % in seconds
 if ~isfield(cfg, 'overlap'),        cfg.overlap = 0;          end % in seconds
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
 if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
 if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
+
+if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
+  cfg.dataset = 'buffer://localhost:1972';
+end
 
 % translate dataset into datafile+headerfile
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -111,15 +115,15 @@ set(h2, 'Position', [580 300 560 420]);
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while true
-
+  
   % determine number of samples available in buffer
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
-
+  
   % see whether new samples are available
   newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
-
+  
   if newsamples>=blocksize
-
+    
     % determine the samples to process
     if strcmp(cfg.bufferdata, 'last')
       begsample  = hdr.nSamples*hdr.nTrials - blocksize + 1;
@@ -130,37 +134,37 @@ while true
     else
       error('unsupported value for cfg.bufferdata');
     end
-
+    
     % this allows overlapping data segments
     if overlap && (begsample>overlap)
       begsample = begsample - overlap;
       endsample = endsample - overlap;
     end
-
+    
     % remember up to where the data was read
     prevSample  = endsample;
     count       = count + 1;
     fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
-
+    
     % read data segment from buffer
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
-
+    
     % keep track of the timing
     t1 = toc;
     n1 = n1 + size(dat,2);
     fprintf('read %d samples in %f seconds, realtime ratio = %f\n', n1-n0, t1-t0, ((n1-n0)/(t1-t0))/hdr.Fs);
-
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % from here onward it is specific to the display of the data
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    
     time   = offset2time(begsample, hdr.Fs, endsample-begsample+1);
     sample = begsample:endsample;
     label  = hdr.label(chanindx);
-
+    
     % apply some preprocessing options
     [dat, prevState] = ft_preproc_standardize(dat, [], [], prevState);
-
+    
     if isempty(pad)
       % this only applies to the first segment being processed
       pad = dat(:,1);
@@ -168,11 +172,11 @@ while true
       % remember the last sample for padding the next segment
       pad = dat(:,end);
     end
-
+    
     dat    = [pad dat];
     sample = [sample(1)-1 sample];
     time   = [time(1)-1/hdr.Fs time];
-
+    
     if true
       figure(h1)
       % plot the data
@@ -180,7 +184,7 @@ while true
       xlim([time(1) time(end)]);
       ylim([-6 6]);
     end
-
+    
     if cfg.threshold<0
       % detect negative peaks
       [peakval, peakind] = findpeaks(-dat, 'minpeakheight', -cfg.threshold);
@@ -192,7 +196,7 @@ while true
     sel = (peakind==size(dat,2));
     peakval(sel) = [];
     peakind(sel) = [];
-
+    
     for i=1:length(peakval)
       % make a sound for each heart beat
       soundsc(beep);
@@ -204,10 +208,10 @@ while true
       xlabel('time (s)');
       ylabel('beats per minute');
     end
-
+    
     % force Matlab to update the figure
     drawnow
-
+    
   end % if enough new samples
 end % while true
 
