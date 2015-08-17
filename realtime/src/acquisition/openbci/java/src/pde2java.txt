@@ -1,0 +1,17 @@
+# This file contains an outline of the changed made to the java-processing source files to obtain
+# the raw java versions used here.
+PApplet  -> removed all references
+Serial   -> added a blocking read functionality, updated serialEvent callback to be compatiable
+            moved adding the event listener to an explicit method call
+char()   -> (char)(
+int()    -> (int)(
+byte()   -> (byte)(
+str()    -> (
+println()-> System.out.println
+output() -> System.out.println
+print()  -> System.out.print
+verbosePrint() -> System.out.println
+millis() -> System.currentTimeMillis()
+delay()  -> Thread.sleep()
+openBCI.STATE_XXX => STATE_XXX
+openBCI. -> 
