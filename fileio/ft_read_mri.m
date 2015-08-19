@@ -128,6 +128,10 @@ case 'ctf_svl'
 case 'asa_mri' 
   [img, seg, hdr] = read_asa_mri(filename);
   transform = hdr.transformMRI2Head;
+  if isempty(seg)
+    % in case seg exists it will be added to the output
+    clear seg
+  end
   
 case 'minc'
   if ~(hasspm2 || hasspm5)
@@ -415,6 +419,11 @@ if exist('img', 'var')
   mri.dim = [nx ny nz];
   % store the anatomical data
   mri.anatomy = img;
+end
+
+if exist('seg', 'var')
+  % store the segmented data
+  mri.seg = seg;
 end
 
 if exist('hdr', 'var')
