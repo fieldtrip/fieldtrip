@@ -29,6 +29,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 %   matlabcmd   = string, the Linux command line to start MATLAB on the compute nodes (default is automatic
 %   display     = 'yes' or 'no', whether the nodisplay option should be passed to MATLAB (default = 'no', meaning nodisplay)
 %   jvm         = 'yes' or 'no', whether the nojvm option should be passed to MATLAB (default = 'yes', meaning with jvm)
+%   rerunable   = 'yes' or 'no', whether the job can be restarted on a torque/maui/moab cluster (default = 'no')
 %
 % See also QSUBCELLFUN, QSUBGET, FEVAL, DFEVAL, DFEVALASYNC
 
@@ -105,6 +106,7 @@ jvm           = ft_getopt(optarg, 'jvm', 'yes');
 numargout     = ft_getopt(optarg, 'nargout', []);
 whichfunction = ft_getopt(optarg, 'whichfunction');               % the complete filename to the function, including path
 waitfor       = ft_getopt(optarg, 'waitfor', {});                 % default is empty cell-array
+rerunable     = ft_getopt(optarg, 'rerunable');                   % the default is determined in qsubfeval
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -161,7 +163,7 @@ curPwd = getcustompwd();
 randomseed = rand(1)*double(intmax);
 
 % pass some options that influence the remote execution
-options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed, 'nargout', numargout, 'whichfunction', whichfunction};
+options = {'pwd', curPwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'timreq', timreq, 'randomseed', randomseed, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable};
 
 inputfile    = fullfile(curPwd, sprintf('%s_input.mat', jobid));
 matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
