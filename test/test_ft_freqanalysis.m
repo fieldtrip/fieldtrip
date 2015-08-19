@@ -1,6 +1,6 @@
 function test_ft_freqanalysis(datainfo, writeflag, version)
 
-% MEM 5000mb
+% MEM 8000mb
 % WALLTIME 00:40:00
 
 % TEST test_ft_freqanalysis 
