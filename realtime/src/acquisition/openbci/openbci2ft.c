@@ -497,15 +497,13 @@ int main(int argc, char *argv[])
   serialWrite(&SP, 1, "b");
 
   /* determine the reference time for the timestamps */
-  /* FIXME another reference time would be "startup", i.e. since latest boot */
   if (strcasecmp(config.timeref, "start")==0) {
-    /* start of acquisition */
-    get_monotonic_time(&tic);
+    /* since the start of the acquisition */
+    get_monotonic_time(&tic, TIMESTAMP_REF_BOOT);
   }
-  else if (strcasecmp(config.timeref, "day")==0) {
+  else if (strcasecmp(config.timeref, "boot")==0) {
     /* since the start of the day */
-    get_monotonic_time(&tic);
-    tic.tv_sec -= (tic.tv_sec % (24*3600));
+    tic.tv_sec  = 0;
     tic.tv_nsec = 0;
   }
   else if (strcasecmp(config.timeref, "epoch")==0) {
@@ -596,7 +594,12 @@ int main(int argc, char *argv[])
         ((FLOAT32_T *)(data->buf))[nchans*sample + (chan++)] = OPENBCI_CALIB2 * (buf[28]<<24 | buf[31]<<16)/32767;
 
       if (ISTRUE(config.timestamp)) {
-        get_monotonic_time(&toc);
+        if (strcasecmp(config.timeref, "start")==0)
+          get_monotonic_time(&toc, TIMESTAMP_REF_BOOT);
+        else if (strcasecmp(config.timeref, "boot")==0)
+          get_monotonic_time(&toc, TIMESTAMP_REF_BOOT);
+        else if (strcasecmp(config.timeref, "epoch")==0)
+          get_monotonic_time(&toc, TIMESTAMP_REF_EPOCH);
         ((FLOAT32_T *)(data->buf))[nchans*sample + (chan++)] = get_elapsed_time(&tic, &toc);
       }
 
