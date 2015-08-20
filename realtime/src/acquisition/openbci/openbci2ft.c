@@ -26,8 +26,9 @@
 #define OPENBCI_CALIB1  (1000000 * 4.5 / 24 / (2^23-1)) /* in uV, for 24x gain */
 #define OPENBCI_CALIB2  0.002 / (2^4)                   /* in mG */
 
-typedef struct
-{
+int keepRunning = 1;
+
+typedef struct {
   int        blocksize;
   int        port;
   const char *hostname;
@@ -115,10 +116,16 @@ static char usage[] =
     ;
 #endif
 
-int keepRunning = 1;
+int serialWriteSlow(SerialPort *SP, int size, void *buffer) {
+  int retval = 0; 
+  for (int i; i<size; i++) {
+    retval += serialWrite(SP, 1, buffer+i);
+    usleep(1000);
+  }
+  return retval;
+}
 
-static int iniHandler(void* external, const char* section, const char* name, const char* value)
-{
+static int iniHandler(void* external, const char* section, const char* name, const char* value) {
   configuration *local = (configuration*)external;
 
 #define MATCH(s, n) strcasecmp(section, s) == 0 && strcasecmp(name, n) == 0
@@ -232,8 +239,7 @@ void abortHandler(int sig) {
   keepRunning = 0;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   int n, i, c, count = 0, sample = 0, chan = 0, status = 0, verbose = 0;
   unsigned char buf[OPENBCI_BUFLEN], byte;
   SerialPort SP;
@@ -485,6 +491,16 @@ int main(int argc, char *argv[])
         c = 0;
     }
   } /* while waiting for '$$$' */
+
+  /* send the channel settings */
+  serialWriteSlow(&SP, strlen(config.setting_chan1), config.setting_chan1);
+  serialWriteSlow(&SP, strlen(config.setting_chan2), config.setting_chan2);
+  serialWriteSlow(&SP, strlen(config.setting_chan3), config.setting_chan3);
+  serialWriteSlow(&SP, strlen(config.setting_chan4), config.setting_chan4);
+  serialWriteSlow(&SP, strlen(config.setting_chan5), config.setting_chan5);
+  serialWriteSlow(&SP, strlen(config.setting_chan6), config.setting_chan6);
+  serialWriteSlow(&SP, strlen(config.setting_chan7), config.setting_chan7);
+  serialWriteSlow(&SP, strlen(config.setting_chan8), config.setting_chan8);
 
   fprintf(stderr, "openbci2ft: initializing ... ok\n");
 
