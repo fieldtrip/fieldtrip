@@ -35,6 +35,8 @@ typedef struct
   const char *datalog;
   const char *testsignal;
   const char *timestamp;
+  const char *timeref;
+
   const char *enable_chan1;
   const char *enable_chan2;
   const char *enable_chan3;
@@ -134,6 +136,8 @@ static int iniHandler(void* external, const char* section, const char* name, con
     local->testsignal = strdup(value);
   } else if (MATCH("General", "timestamp")) {
     local->timestamp = strdup(value);
+  } else if (MATCH("General", "timeref")) {
+    local->timeref = strdup(value);
 
   } else if (MATCH("ChannelEnable", "chan1")) {
     local->enable_chan1 = strdup(value);
@@ -259,6 +263,7 @@ int main(int argc, char *argv[])
   config.datalog       = strdup("off");
   config.testsignal    = strdup("off");
   config.timestamp     = strdup("on");
+  config.timeref       = strdup("start");
 
   config.enable_chan1  = strdup("on");
   config.enable_chan2  = strdup("on");
@@ -491,8 +496,27 @@ int main(int argc, char *argv[])
   /* start streaming data */
   serialWrite(&SP, 1, "b");
 
-  /* determine the time of acquisition start */
-  get_monotonic_time(&tic);
+  /* determine the reference time for the timestamps */
+  /* FIXME another reference time would be "startup", i.e. since latest boot */
+  if (strcasecmp(config.timeref, "start")==0) {
+    /* start of acquisition */
+    get_monotonic_time(&tic);
+  }
+  else if (strcasecmp(config.timeref, "day")==0) {
+    /* since the start of the day */
+    get_monotonic_time(&tic);
+    tic.tv_sec -= (tic.tv_sec % (24*3600));
+    tic.tv_nsec = 0;
+  }
+  else if (strcasecmp(config.timeref, "epoch")==0) {
+    /* since the start of the epoch, i.e. 1-1-1970 */
+    tic.tv_sec  = 0;
+    tic.tv_nsec = 0;
+  }
+  else {
+    fprintf(stderr, "Incorrect specification of timeref, should be 'start', 'day' or 'epoch'\n");
+    return 1;
+  }
 
   while (keepRunning) {
 

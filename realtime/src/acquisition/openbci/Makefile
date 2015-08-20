@@ -20,7 +20,7 @@ CPPOBJ =
 CFLAGS = -I. -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/inih/ -I$(CPPDIR)
 # CFLAGS += -Wunused -Wall -pedantic -O3 -g 
 CFLAGS += -w
-LDFLAGS = -L$(FTBUFFER)/src
+LDFLAGS = -L$(FTBUFFER)/src 
 LDLIBS = -lbuffer $(CPPOBJ)
 
 ifeq "$(PLATFORM)" "mingw32"
@@ -55,7 +55,7 @@ ifeq "$(UNAME)" "Darwin"
 	ifeq "$(MACHINE)" "i386"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS += -m32
-		LDFLAGS += -m32
+		LDFLAGS += -m32 
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
