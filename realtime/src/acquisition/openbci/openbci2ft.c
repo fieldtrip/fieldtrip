@@ -33,8 +33,8 @@ typedef struct {
   int        port;
   const char *hostname;
   const char *serial;
-  const char *datalog;
   const char *reset;
+  const char *datalog;
   const char *testsignal;
   const char *timestamp;
   const char *timeref;
@@ -118,19 +118,12 @@ static char usage[] =
 #endif
 
 int serialWriteSlow(SerialPort *SP, int size, void *buffer) {
-		int retval = 0; 
-		char c;
-		for (int i; i<size; i++) {
-				retval += serialWrite(SP, 1, buffer+i);
-				usleep(10000);
-/*
-				while (serialInputPending(&SP)) {
-						serialRead(&SP, 1, &c);
-						printf("%c", c);
-				}
-*/
-		}
-		return retval;
+  int retval = 0; 
+  for (int i=0; i<size; i++) {
+    retval += serialWrite(SP, 1, buffer+i);
+    usleep(100000);
+  }
+  return retval;
 }
 
 static int iniHandler(void* external, const char* section, const char* name, const char* value) {
@@ -145,10 +138,10 @@ static int iniHandler(void* external, const char* section, const char* name, con
     local->hostname = strdup(value);
   } else if (MATCH("General", "serial")) {
     local->serial = strdup(value);
-  } else if (MATCH("General", "datalog")) {
-    local->datalog = strdup(value);
   } else if (MATCH("General", "reset")) {
     local->reset = strdup(value);
+  } else if (MATCH("General", "datalog")) {
+    local->datalog = strdup(value);
   } else if (MATCH("General", "testsignal")) {
     local->testsignal = strdup(value);
   } else if (MATCH("General", "timestamp")) {
@@ -276,8 +269,8 @@ int main(int argc, char *argv[]) {
   config.port          = 1972;
   config.hostname      = strdup("-");
   config.serial        = strdup("/dev/tty.usbserial-DN0094FY");
-  config.datalog       = strdup("off");
   config.reset         = strdup("on");
+  config.datalog       = strdup("off");
   config.testsignal    = strdup("off");
   config.timestamp     = strdup("on");
   config.timeref       = strdup("start");
@@ -386,6 +379,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "openbci2ft: hostname     =  %s\n", host.name);
   fprintf(stderr, "openbci2ft: port         =  %d\n", host.port);
   fprintf(stderr, "openbci2ft: blocksize    =  %d\n", config.blocksize);
+  fprintf(stderr, "openbci2ft: reset        =  %s\n", config.reset);
   fprintf(stderr, "openbci2ft: datalog      =  %s\n", config.datalog);
   fprintf(stderr, "openbci2ft: timestamp    =  %s\n", config.timestamp);
   fprintf(stderr, "openbci2ft: testsignal   =  %s\n", config.testsignal);
@@ -487,28 +481,49 @@ int main(int argc, char *argv[]) {
   /* 8-bit board will always be initialized upon opening serial port, 32-bit board needs explicit initialization */
 
   fprintf(stderr, "openbci2ft: initializing ...\n");
+  fprintf(stderr, "openbci2ft: press reset on the OpenBCI board if this takes too long\n");
 
   if (ISTRUE(config.reset))
-		  serialWrite(&SP, 1, "v"); /* soft reset, this will return $$$ */
+    serialWrite(&SP, 1, "v"); /* soft reset, this will return $$$ */
   else
-		  serialWrite(&SP, 1, "D"); /* query default channel settings, this will also return $$$ */
-
-  fprintf(stderr, "openbci2ft: press reset on the OpenBCI board if this takes too long\n");
+    serialWrite(&SP, 1, "D"); /* query default channel settings, this will also return $$$ */
 
   /* wait for '$$$' which indicates that the OpenBCI has been initialized */
   c = 0;
   while (c!=3) {
-		  usleep(1000);
-		  n = serialRead(&SP, 1, &byte);
-		  if (n==1) {
-				  if (byte=='$')
-						  c++;
-				  else
-						  c = 0;
-		  }
+    usleep(1000);
+    n = serialRead(&SP, 1, &byte);
+    if (n==1) {
+      if (byte=='$')
+        c++;
+      else
+        c = 0;
+    }
   } /* while waiting for '$$$' */
 
-  /* send the channel settings */
+  if (strcasecmp(config.datalog, "14s")==0)
+    serialWrite(&SP, 1, "a"); 
+  else if (strcasecmp(config.datalog, "5min")==0)
+    serialWrite(&SP, 1, "A"); 
+  else if (strcasecmp(config.datalog, "15min")==0)
+    serialWrite(&SP, 1, "S"); 
+  else if (strcasecmp(config.datalog, "30min")==0)
+    serialWrite(&SP, 1, "F"); 
+  else if (strcasecmp(config.datalog, "1hr")==0)
+    serialWrite(&SP, 1, "G"); 
+  else if (strcasecmp(config.datalog, "2hr")==0)
+    serialWrite(&SP, 1, "H"); 
+  else if (strcasecmp(config.datalog, "4hr")==0)
+    serialWrite(&SP, 1, "J"); 
+  else if (strcasecmp(config.datalog, "12hr")==0)
+    serialWrite(&SP, 1, "K"); 
+  else if (strcasecmp(config.datalog, "24hr")==0)
+    serialWrite(&SP, 1, "L"); 
+  else if (strcasecmp(config.datalog, "off")!=0) {
+    fprintf(stderr, "Incorrect specification of datalog\n");
+    return 1;
+  }
+
   serialWriteSlow(&SP, strlen(config.setting_chan1), config.setting_chan1);
   serialWriteSlow(&SP, strlen(config.setting_chan2), config.setting_chan2);
   serialWriteSlow(&SP, strlen(config.setting_chan3), config.setting_chan3);
@@ -517,6 +532,23 @@ int main(int argc, char *argv[]) {
   serialWriteSlow(&SP, strlen(config.setting_chan6), config.setting_chan6);
   serialWriteSlow(&SP, strlen(config.setting_chan7), config.setting_chan7);
   serialWriteSlow(&SP, strlen(config.setting_chan8), config.setting_chan8);
+
+  if (strcasecmp(config.testsignal, "gnd")==0)
+    serialWrite(&SP, 1, "0"); 
+  else if (strcasecmp(config.testsignal, "dc")==0)
+    serialWrite(&SP, 1, "-"); 
+  else if (strcasecmp(config.testsignal, "1xSlow")==0)
+    serialWrite(&SP, 1, "="); 
+  else if (strcasecmp(config.testsignal, "1xFast")==0)
+    serialWrite(&SP, 1, "p"); 
+  else if (strcasecmp(config.testsignal, "2xSlow")==0)
+    serialWrite(&SP, 1, "["); 
+  else if (strcasecmp(config.testsignal, "2xFast")==0)
+    serialWrite(&SP, 1, "]"); 
+  else if (strcasecmp(config.testsignal, "off")!=0) {
+    fprintf(stderr, "Incorrect specification of datalog\n");
+    return 1;
+  }
 
   fprintf(stderr, "openbci2ft: initializing ... ok\n");
 
@@ -550,16 +582,16 @@ int main(int argc, char *argv[]) {
 
   while (keepRunning) {
 
-		  sample = 0;
-		  while (sample<config.blocksize) {
-				  /* wait for the first byte of the following packet */
-				  buf[0] = 0;
-				  while (buf[0]!=0xA0) {
-						  if (serialInputPending(&SP))
-								  n = serialRead(&SP, 1, buf);
-						  else
-								  usleep(1000);
-				  } /* while */
+    sample = 0;
+    while (sample<config.blocksize) {
+      /* wait for the first byte of the following packet */
+      buf[0] = 0;
+      while (buf[0]!=0xA0) {
+        if (serialInputPending(&SP))
+          n = serialRead(&SP, 1, buf);
+        else
+          usleep(1000);
+      } /* while */
 
       /*
        * Header
