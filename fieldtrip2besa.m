@@ -22,6 +22,9 @@ function fieldtrip2besa(filename, data, varargin)
 % parse the optional input arguments
 channel = ft_getopt(varargin, 'channel');
 
+% this requires the "MATLAB to BESA Export functions" which are available from http://www.besa.de/downloads/matlab/
+ft_hastoolbox('matlab2besa', 1);
+
 datatype = ft_datatype(data);
 switch datatype
   
