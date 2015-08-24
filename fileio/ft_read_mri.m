@@ -94,11 +94,11 @@ end
 
 if strcmp(mriformat, 'compressed')
   % the file is compressed, unzip on the fly
-  origfile = filename;
+  inflated = true;
   filename = inflate_file(filename);
   mriformat = ft_filetype(filename);
 else
-  origfile = filename;
+  inflated = false;
 end
 
 % test whether the file exists
@@ -449,7 +449,7 @@ try
   mri.coordsys = coordsys;
 end
 
-if ~isequal(origfile, filename)
+if inflated
   % compressed file has been unzipped on the fly, clean up
   delete(filename);
 end

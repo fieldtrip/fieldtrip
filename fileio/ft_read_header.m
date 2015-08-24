@@ -157,11 +157,11 @@ end
 
 if strcmp(headerformat, 'compressed')
   % the file is compressed, unzip on the fly
-  origfile     = filename;
+  inflated     = true;
   filename     = inflate_file(filename);
   headerformat = ft_filetype(filename);
 else
-  origfile     = filename;
+  inflated     = false;
 end
 
 realtime = any(strcmp(headerformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
@@ -2135,7 +2135,7 @@ hdr.nSamplesPre = double(hdr.nSamplesPre);
 hdr.nTrials     = double(hdr.nTrials);
 hdr.nChans      = double(hdr.nChans);
 
-if ~isequal(origfile, filename)
+if inflated
   % compressed file has been unzipped on the fly, clean up
   delete(filename);
 end

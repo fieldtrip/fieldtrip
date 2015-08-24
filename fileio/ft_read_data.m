@@ -172,11 +172,11 @@ end
 
 if strcmp(dataformat, 'compressed')
   % the file is compressed, unzip on the fly
-  origfile   = filename;
+  inflated   = true;
   filename   = inflate_file(filename);
   dataformat = ft_filetype(filename);
 else
-  origfile   = filename;
+  inflated   = false;
 end
 
 % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
@@ -1363,7 +1363,7 @@ elseif requestsamples && strcmp(dimord, 'chans_samples_trials')
   dat = dat(:,begselection2:endselection2);
 end
 
-if ~isequal(origfile, filename)
+if inflated
   % compressed file has been unzipped on the fly, clean up
   delete(filename);
 end

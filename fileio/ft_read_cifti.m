@@ -69,9 +69,11 @@ readdata = istrue(readdata);
 
 if strcmp(dataformat, 'compressed')
   % the file is compressed, unzip on the fly
+  inflated = true;
   origfile = filename;
   filename = inflate_file(filename);
 else
+  inflated = false;
   origfile = filename;
 end
 
@@ -395,7 +397,7 @@ if readdata
 end
 fclose(fid);
 
-if ~isequal(origfile, filename)
+if inflated
   % compressed file has been unzipped on the fly, clean up
   delete(filename);
 end
