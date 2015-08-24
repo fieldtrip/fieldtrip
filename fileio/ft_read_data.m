@@ -170,10 +170,13 @@ if ~isempty(endtrial) && mod(endtrial, 1)
   endtrial = round(endtrial);
 end
 
-% if we are dealing with a compressed dataset, inflate it first
 if strcmp(dataformat, 'compressed')
-  filename = inflate_file(filename);
+  % the file is compressed, unzip on the fly
+  origfile   = filename;
+  filename   = inflate_file(filename);
   dataformat = ft_filetype(filename);
+else
+  origfile   = filename;
 end
 
 % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
@@ -1358,6 +1361,11 @@ elseif requestsamples && strcmp(dimord, 'chans_samples_trials')
   begselection2 = begsample - begselection + 1;
   endselection2 = endsample - begselection + 1;
   dat = dat(:,begselection2:endselection2);
+end
+
+if ~isequal(origfile, filename)
+  % compressed file has been unzipped on the fly, clean up
+  delete(filename);
 end
 
 if strcmp(dataformat, 'bci2000_dat') || strcmp(dataformat, 'eyelink_asc') || strcmp(dataformat, 'gtec_mat')

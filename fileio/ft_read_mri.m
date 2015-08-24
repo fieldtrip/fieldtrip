@@ -92,10 +92,13 @@ if isempty(mriformat)
   mriformat = ft_filetype(filename);
 end
 
-% extract if needed
 if strcmp(mriformat, 'compressed')
+  % the file is compressed, unzip on the fly
+  origfile = filename;
   filename = inflate_file(filename);
   mriformat = ft_filetype(filename);
+else
+  origfile = filename;
 end
 
 % test whether the file exists
@@ -446,6 +449,14 @@ try
   mri.coordsys = coordsys;
 end
 
+if ~isequal(origfile, filename)
+  % compressed file has been unzipped on the fly, clean up
+  delete(filename);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function value = loadvar(filename, varname)
 var = whos('-file', filename);
 if length(var)==1
