@@ -96,6 +96,7 @@ function [data] = ft_preprocessing(cfg, data)
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
+%   cfg.refmethod     = 'avg' or 'median' (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
@@ -218,6 +219,7 @@ if ~isfield(cfg, 'medianfilter'), cfg.medianfilter = 'no';      end
 % these options relate to the actual preprocessing, it is neccessary to specify here because of channel selection
 if ~isfield(cfg, 'reref'),        cfg.reref = 'no';             end
 if ~isfield(cfg, 'refchannel'),   cfg.refchannel = {};          end
+if ~isfield(cfg, 'refmethod'),    cfg.refmethod = 'avg';        end
 if ~isfield(cfg, 'implicitref'),  cfg.implicitref = [];         end
 
 cfg.padtype = ft_getopt(cfg, 'padtype', 'data');
