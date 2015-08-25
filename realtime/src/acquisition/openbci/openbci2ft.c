@@ -118,8 +118,8 @@ static char usage[] =
 #endif
 
 int serialWriteSlow(SerialPort *SP, int size, void *buffer) {
-  int retval = 0; 
-  for (int i=0; i<size; i++) {
+  int i, retval = 0; 
+  for (i=0; i<size; i++) {
     retval += serialWrite(SP, 1, buffer+i);
     usleep(100000);
   }

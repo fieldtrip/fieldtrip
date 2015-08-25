@@ -32,7 +32,6 @@ ifeq "$(PLATFORM)" "mingw32"
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
-	RM = del
 endif
 
 ifeq "$(UNAME)" "Linux"

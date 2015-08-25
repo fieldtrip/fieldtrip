@@ -19,21 +19,42 @@
  * Windows ??
  */
 
-#ifdef __MACH__
+#include "platform.h"
+#include "compiler.h"
+
+#if defined(PLATFORM_OSX)
 #include <mach/clock.h>
 #include <mach/mach.h>
 #include <unistd.h>
-#else
+#elif defined(PLATFORM_LINUX)
 #include <time.h>
 #include <sys/time.h>
-#include <stdio.h>
+#elif defined(PLATFORM_WINDOWS)
+#include <Windows.h>
+#include <Winbase.h>
+
+#define CLOCK_BOOTTIME 1
+#define CLOCK_REALTIME 2
+
+struct timespec { long tv_sec; long tv_nsec; };    //header part
+
+int clock_gettime(int unused, struct timespec *spec)      //C-file part
+{ 
+  __int64 wintime;
+  GetSystemTimeAsFileTime((FILETIME*)&wintime);
+  wintime      -=116444736000000000;           //1jan1601 to 1jan1970
+  spec->tv_sec  =wintime / 10000000;           //seconds
+  spec->tv_nsec =wintime % 10000000 *100;      //nano-seconds
+  return 0;
+}
+
 #endif
 
 #include <stdio.h>
 #include "timestamp.h"
 
 void get_monotonic_time(struct timespec *ts, int timestamp_ref){
-#ifdef __MACH__
+#if defined(PLATFORM_OSX)
   clock_serv_t cclock;
   mach_timespec_t mts;
   switch (timestamp_ref) {
@@ -48,7 +69,16 @@ void get_monotonic_time(struct timespec *ts, int timestamp_ref){
   mach_port_deallocate(mach_task_self(), cclock);
   ts->tv_sec = mts.tv_sec;
   ts->tv_nsec = mts.tv_nsec;
-#else
+#elif defined(PLATFORM_LINUX)
+  switch (timestamp_ref) {
+    case TIMESTAMP_REF_BOOT:
+      clock_gettime(CLOCK_BOOTTIME, ts);
+      break;
+    case TIMESTAMP_REF_EPOCH:
+      clock_gettime(CLOCK_REALTIME, ts);
+      break;
+  }
+#elif defined(PLATFORM_WINDOWS) && defined(COMPILER_MINGW)
   switch (timestamp_ref) {
     case TIMESTAMP_REF_BOOT:
       clock_gettime(CLOCK_BOOTTIME, ts);
