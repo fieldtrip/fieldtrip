@@ -23,8 +23,8 @@
     <target name="server" depends="compile">
         <mkdir dir="${jar.dir}"/>
         <jar destfile="${jar.dir}/BufferServer.jar">
-			 <fileset dir="${classes.dir}" includes="*.class"/>
-			 <fileset dir="${src.dir}" includes="*.java"/>
+			 <fileset dir="${classes.dir}" includes="**/*.class"/>
+			 <fileset dir="${src.dir}" includes="**/*.java"/>
           <manifest>
             <attribute name="Main-Class" value="${main-class}"/>
           </manifest>
@@ -44,7 +44,7 @@
       </java>
     </target>
 
-    <target name="clean">   <delete> <fileset dir="." includes="*.class"/> </delete> </target>
+    <target name="clean">   <delete> <fileset dir="." includes="**/*.class"/> </delete> </target>
     <target name="build" depends="server"/>
     <target name="clean-build" depends="clean,build"/>
     <target name="main" depends="build,dist"/>
