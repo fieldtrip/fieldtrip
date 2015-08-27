@@ -30,9 +30,9 @@ function index = ft_documentationindex(filename)
 
 ft_defaults
 
-p = fileparts(which(mfilename));
+[ftver, ftpath] = ft_version;
 
-f1 = dir(fullfile(p, 'ft_*.m'));
+f1 = dir(fullfile(ftpath, 'ft_*.m'));
 f1 = {f1.name}';
 
 funname = f1;
