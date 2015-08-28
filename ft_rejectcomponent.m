@@ -21,9 +21,9 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 % data.grad in further computation, for example for leadfield computation.
 %
 % The configuration structure can contain
-%   cfg.component = list of components to remove, e.g. [1 4 7] or see FT_CHANNELSELECTION
-%   cfg.demean    = 'no' or 'yes', whether to demean the input data (default = 'yes')
-%   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
+%   cfg.component  = list of components to remove, e.g. [1 4 7] or see FT_CHANNELSELECTION
+%   cfg.demean     = 'no' or 'yes', whether to demean the input data (default = 'yes')
+%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...

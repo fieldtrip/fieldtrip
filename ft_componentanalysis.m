@@ -15,7 +15,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
-%   cfg.demean       = 'no' or 'yes' (default = 'yes')
+%   cfg.demean       = 'no' or 'yes', whether to demean the input data (default = 'yes')
 %   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
 %
 % The runica method supports the following method-specific options. The values that
