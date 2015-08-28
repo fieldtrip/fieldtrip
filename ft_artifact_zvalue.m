@@ -19,8 +19,10 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 % If you are calling FT_ARTIFACT_ZVALUE with only the configuration as first
 % input argument and the data still has to be read from file, you should
 % specify
-%   cfg.headerfile
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
 % and optionally
 %   cfg.headerformat
 %   cfg.dataformat
