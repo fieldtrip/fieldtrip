@@ -94,7 +94,8 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.tissue
 %   cfg.tissueval
 %   cfg.conductivity
-%   cfg.elec or cfg.grad
+%   cfg.elec
+%   cfg.grad
 %   cfg.transform
 %   cfg.unit
 %

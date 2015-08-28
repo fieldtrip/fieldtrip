@@ -16,10 +16,10 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %                       flexibly add or remove edges between vertices
 % or one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
-%   cfg.elec          = structure with EEG electrode positions
-%   cfg.grad          = structure with MEG gradiometer positions
-%   cfg.elecfile      = filename containing EEG electrode positions
-%   cfg.gradfile      = filename containing MEG gradiometer positions
+%   cfg.elec          = structure with electrode definition
+%   cfg.grad          = structure with gradiometer definition
+%   cfg.elecfile      = filename containing electrode definition
+%   cfg.gradfile      = filename containing gradiometer definition
 %
 % If cfg.neighbours is not defined, this function will call
 % FT_PREPARE_NEIGHBOURS to determine the channel neighbours. The
