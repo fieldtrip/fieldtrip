@@ -26,19 +26,22 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % are for time domain data. ELORETA can be used both for frequency and time
 % domain data.
 %
-% The positions of the sources can be specified as a regular 3-D
+% The source model to use in the reconstruction should be specified as
+%   cfg.grid            = structure, see FT_PREPARE_SOURCEMODEL or FT_PREPARE_LEADFIELD
+% The positions of the dipoles can be specified as a regular 3-D
 % grid that is aligned with the axes of the head coordinate system
 %   cfg.grid.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
-% Alternatively the position of a few sources at locations of interest can
-% be specified, for example obtained from an anatomical or functional MRI
-%   cfg.grid.pos        = N*3 matrix with position of each source
 %   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
-% You can also use the FT_PREPARE_LEADFIELD function to create a grid with
-% dipole positions and with precomputed leadfields.
+% If the source model destribes a triangulated cortical sheet, it is described as
+%   cfg.grid.pos        = N*3 matrix with the vertex positions of the cortical sheet
+%   cfg.grid.tri        = M*3 matrix that describes the triangles connecting the vertices
+% Alternatively the position of a few dipoles at locations of interest can be
+% specified, for example obtained from an anatomical or functional MRI
+%   cfg.grid.pos        = N*3 matrix with position of each source
 %
 % Besides the source positions, you may also include previously computed
 % spatial filters and/or leadfields like this
