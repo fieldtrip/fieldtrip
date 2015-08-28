@@ -1,10 +1,13 @@
-function nmt_sourceplot_spm8(cfg)
+function nmt_spm8_plot(cfg)
 global st
-%% TODO: fill these variables based on cfg
-
 
 if(~exist('cfg','var'))
     cfg = st.nmt.cfg;
+end
+
+% if there is no time dimension, set cfg.time to index first and only column
+if(~isfield(cfg,'time'))
+    cfg.time = [1 1];
 end
 
 if(cfg.time(1) == cfg.time(2)) % single time point selected
@@ -12,21 +15,20 @@ if(cfg.time(1) == cfg.time(2)) % single time point selected
     
     scalemax = max(abs(st.nmt.fun(:)));
     scalemin = -max(abs(st.nmt.fun(:)));
-
+    
     % set colorscale: anatomical (first 64) + functional (second 64)
     % grayscale for MRI; jet for painted activation
     set(st.fig,'Colormap',[gray(64);jet(64)]);
 else % time interval selected
     fun = nmt_ts_intervalpower(st.nmt.fun(:,cfg.time(1):cfg.time(2)));
-
+    
     scalemax = max(fun(:));
     scalemin = min(fun(:));
-
+    
     % set colorscale: anatomical (first 64) + functional (second 64)
     % grayscale for MRI; jet for painted activation
     set(st.fig,'Colormap',[gray(64);hot(64)]);
 end
-
 
 
 

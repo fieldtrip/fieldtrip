@@ -133,14 +133,14 @@ end
 switch(op)
     case 'ts'
         % if this was an interactive button-press in time series
-        currpt = get(st.nmt.ax_ts,'CurrentPoint')
+        currpt = get(st.nmt.ax_ts,'CurrentPoint');
         currpt = currpt(1,1);
         
         if strcmpi(get(gcbf,'SelectionType'),'alt') % right-click
-            st.nmt.cfg.time(2) = dsearchn(st.nmt.time',currpt)
+            st.nmt.cfg.time(2) = dsearchn(st.nmt.time',currpt);
         else % left-click
-            st.nmt.cfg.time(1) = dsearchn(st.nmt.time',currpt)
-            st.nmt.cfg.time(2) = dsearchn(st.nmt.time',currpt)
+            st.nmt.cfg.time(1) = dsearchn(st.nmt.time',currpt);
+            st.nmt.cfg.time(2) = dsearchn(st.nmt.time',currpt);
         end
     otherwise
         % otherwise, time interval was already specified, so nothing to do
