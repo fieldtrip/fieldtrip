@@ -5,6 +5,16 @@ function dimsiz = getdimsiz(data, field)
 % Use as
 %   dimsiz = getdimsiz(data, field)
 %
+% If the length of the vector that is returned is smaller than the
+% number of dimensions that you would expect from GETDIMORD, you
+% should assume that it has trailing singleton dimensions.
+%
+% Example use
+%   dimord = getdimord(datastructure, fieldname);
+%   dimtok = tokenize(dimord, '_');
+%   dimsiz = getdimsiz(datastructure, fieldname);
+%   dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+%
 % See also GETDIMORD
 
 if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
