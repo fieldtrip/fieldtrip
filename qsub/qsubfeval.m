@@ -171,7 +171,14 @@ matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 % rename and save the variables
 argin = varargin;
 optin = options;
-save(inputfile, 'argin', 'optin');
+% if variables < ~500 MB, store it in old (uncompressed) format, which is faster
+s1 = whos('argin');
+s2 = whos('optin');
+if (s1.bytes + s2.bytes < 500000000)
+  save(inputfile, 'argin', 'optin', '-v6');
+else
+  save(inputfile, 'argin', 'optin', '-v7.3');
+end
 
 if ~compiled
   
