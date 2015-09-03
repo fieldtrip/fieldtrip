@@ -4,6 +4,13 @@ function nmt_image(op,varargin)
 
 global st
 
+% reset MRI axis positions to proper location, in case they moved (e.g.,
+% due to manipulation by SPM controls)
+for ii=1:3
+    set(st.vols{1}.ax{ii}.ax,'Position',[st.nmt.mriaxpos(:,ii)]);
+end
+
+
 feval(st.nmt.spm_refresh_handle);
 
 if(~exist('op','var') || ~ischar(op))
@@ -99,7 +106,7 @@ switch(op)
                 else
                     pos = spm_orthviews('pos');
                 end
-                nut_reposition(pos);
+                nmt_reposition(pos);
             end
         end
         return
@@ -114,7 +121,7 @@ switch(op)
                 else
                     pos = spm_orthviews('pos');
                 end
-                nut_reposition(pos);
+                nmt_reposition(pos);
             end
         end
         return
@@ -160,7 +167,16 @@ else
     plot(st.nmt.ax_ts,st.nmt.time,nan(length(st.nmt.time),1));
 end
 
-set(st.nmt.ax_ts,'XLim',st.nmt.time([1 end]),'YLim',[st.vols{1}.blobs{1}.min st.vols{1}.blobs{1}.max]);
+% set y-axis range based on whole volume range (single time point), or
+% selected timeslice range
+if(st.nmt.cfg.time(1)==st.nmt.cfg.time(2))
+    ymin = min(st.nmt.fun(:));
+    ymax = max(st.nmt.fun(:));
+else
+    ymin =  min(min(st.nmt.fun(:,st.nmt.cfg.time(1):st.nmt.cfg.time(2))));
+    ymax =  max(max(st.nmt.fun(:,st.nmt.cfg.time(1):st.nmt.cfg.time(2))));
+end
+set(st.nmt.ax_ts,'XLim',st.nmt.time([1 end]),'YLim',[ymin ymax]);
 xlabel(st.nmt.ax_ts,['Time (s)']);
 
 
@@ -170,13 +186,14 @@ line_max=axisvalues(4);
 line_min=axisvalues(3);
 ts_xhair_color = 'red';
 ts_xhair_width = 1;
-hold(st.nmt.ax_ts,'on');
-plot(st.nmt.ax_ts,[st.nmt.time(st.nmt.cfg.time(1)) st.nmt.time(st.nmt.cfg.time(1))],[line_min line_max],'Color',ts_xhair_color,'LineWidth',ts_xhair_width);
-plot(st.nmt.ax_ts,[st.nmt.time(st.nmt.cfg.time(2)) st.nmt.time(st.nmt.cfg.time(2))],[line_min line_max],'Color',ts_xhair_color,'LineWidth',ts_xhair_width);
-hold(st.nmt.ax_ts,'off');
+
+ylim=get(st.nmt.ax_ts,'YLim');
+axes(st.nmt.ax_ts);
+h=patch([st.nmt.time(st.nmt.cfg.time(1)) st.nmt.time(st.nmt.cfg.time(2)) st.nmt.time(st.nmt.cfg.time(2)) st.nmt.time(st.nmt.cfg.time(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[1 0.4 0.4],'EdgeColor','red');
 
 set(st.nmt.ax_ts,'ButtonDownFcn',@nmt_repos_start);
 nmt_spm8_plot
+
 
 
 function nmt_repos_start(varargin)
