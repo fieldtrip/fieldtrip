@@ -45,7 +45,7 @@ ifeq "$(UNAME)" "Linux"
 	endif
 	ifeq "$(MACHINE)" "armv6l"
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-		LDLIBS += -lrt
+		LDLIBS += -lrt -lpthread
 	endif
 endif
 

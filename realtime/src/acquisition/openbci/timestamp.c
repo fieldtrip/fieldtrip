@@ -26,9 +26,16 @@
 #include <mach/clock.h>
 #include <mach/mach.h>
 #include <unistd.h>
+
 #elif defined(PLATFORM_LINUX)
 #include <time.h>
 #include <sys/time.h>
+
+#ifndef CLOCK_BOOTTIME
+/* should be present since Linux 2.6.39, but is missing on Raspbian */
+#define CLOCK_BOOTTIME CLOCK_MONOTONIC
+#endif
+
 #elif defined(PLATFORM_WINDOWS)
 #include <Windows.h>
 #include <Winbase.h>
