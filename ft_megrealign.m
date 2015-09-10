@@ -182,6 +182,7 @@ Ntrials = length(data.trial);
 % construct the average template gradiometer array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Ntemplate = length(cfg.template);
+template = zeros(Ntemplate, 1);
 for i=1:Ntemplate
   if ischar(cfg.template{i}),
     fprintf('reading template sensor position from %s\n', cfg.template{i});
