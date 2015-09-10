@@ -31,6 +31,10 @@ function [varargout] = ft_plot_patch(hdat,vdat,varargin)
 %   'vlim'            = vertical scaling limits within the local axes
 %
 % Example 1
+% hdat = [1:10 10:-1:1];
+% vdat = rand(1,10);
+% vdat = [vdat vdat(end:-1:1)+1];
+% ft_plot_patch(hdat,vdat)
 %
 % See also FT_PLOT_VECTOR
 
