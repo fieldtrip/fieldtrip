@@ -12,106 +12,106 @@ datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg');
 curdir = pwd;
 cd('/home/language/jansch/matlab/fieldtrip/private');
 
-% % fourier data, multiple trials
-% load(fullfile(datadir,'freq_mtmfft_fourier_trl_ctf275.mat'));
-% 
-% cfg           = [];
-% cfg.frequency = 5;
-% cfg.channel   = ft_channelselection('MEG',freq.label);
-% [a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% 
-% cfg.frequency = 5.4;
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% 
-% cfg.frequency = 10;
-% cfg.refchan   = 'BR1';
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% assert(isequal(a2,b2));
-% assert(isequal(a3,b3));
-% 
-% cfg.frequency = 10.6;
-% cfg.refchan   = 'BR1';
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% assert(isequal(a2,b2));
-% assert(isequal(a3,b3));
-% 
-% % powandcsd data, multiple trials
-% load(fullfile(datadir,'freq_mtmfft_powandcsd_trl_ctf275.mat'));
-% 
-% cfg           = [];
-% cfg.frequency = 5;
-% cfg.channel   = ft_channelselection('MEG',freq.label);
-% [a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% 
-% cfg.frequency = 5.4;
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% 
-% cfg.frequency = 10;
-% cfg.refchan   = 'BR1';
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% assert(isequal(a2,b2));
-% assert(isequal(a3,b3));
-% 
-% cfg.frequency = 10.6;
-% cfg.refchan   = 'BR1';
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% assert(isequal(a2,b2));
-% assert(isequal(a3,b3));
-% 
-% % powandcsd data, multiple trials and time
-% load(fullfile(datadir,'freq_mtmconvol_powandcsd_trl_ctf275.mat'));
-% 
-% cfg           = [];
-% cfg.frequency = 6;
-% cfg.latency   = 0.5;
-% cfg.channel   = ft_channelselection('MEG',freq.label);
-% [a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% 
-% cfg.frequency = 5.5;
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% 
-% cfg.frequency = 6;
-% cfg.latency   = 0.54;
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% 
-% 
-% cfg.frequency = 10;
-% cfg.refchan   = 'BR1';
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% assert(isequal(a2,b2));
-% assert(isequal(a3,b3));
-% 
-% cfg.frequency = 10.6;
-% cfg.refchan   = 'BR1';
-% [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
-% [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-% assert(isequal(a1,b1));
-% assert(isequal(a2,b2));
-% assert(isequal(a3,b3));
+% fourier data, multiple trials
+load(fullfile(datadir,'freq_mtmfft_fourier_trl_ctf275.mat'));
+
+cfg           = [];
+cfg.frequency = 5;
+cfg.channel   = ft_channelselection('MEG',freq.label);
+[a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+
+cfg.frequency = 5.4;
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+
+cfg.frequency = 10;
+cfg.refchan   = 'BR1';
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+assert(isequal(a2,b2));
+assert(isequal(a3,b3));
+
+cfg.frequency = 10.6;
+cfg.refchan   = 'BR1';
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+assert(isequal(a2,b2));
+assert(isequal(a3,b3));
+
+% powandcsd data, multiple trials
+load(fullfile(datadir,'freq_mtmfft_powandcsd_trl_ctf275.mat'));
+
+cfg           = [];
+cfg.frequency = 5;
+cfg.channel   = ft_channelselection('MEG',freq.label);
+[a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+
+cfg.frequency = 5.4;
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+
+cfg.frequency = 10;
+cfg.refchan   = 'BR1';
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+assert(isequal(a2,b2));
+assert(isequal(a3,b3));
+
+cfg.frequency = 10.6;
+cfg.refchan   = 'BR1';
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+assert(isequal(a2,b2));
+assert(isequal(a3,b3));
+
+% powandcsd data, multiple trials and time
+load(fullfile(datadir,'freq_mtmconvol_powandcsd_trl_ctf275.mat'));
+
+cfg           = [];
+cfg.frequency = 6;
+cfg.latency   = 0.5;
+cfg.channel   = ft_channelselection('MEG',freq.label);
+[a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+
+cfg.frequency = 5.5;
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+
+cfg.frequency = 6;
+cfg.latency   = 0.54;
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+
+
+cfg.frequency = 10;
+cfg.refchan   = 'BR1';
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+assert(isequal(a2,b2));
+assert(isequal(a3,b3));
+
+cfg.frequency = 10.6;
+cfg.refchan   = 'BR1';
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
+assert(isequal(a1,b1));
+assert(isequal(a2,b2));
+assert(isequal(a3,b3));
 
 % fourier data, multiple trials and time
 load(fullfile(datadir,'freq_mtmconvol_fourier_trl_ctf275.mat'));
