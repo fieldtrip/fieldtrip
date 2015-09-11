@@ -12,6 +12,9 @@ function ft_plot_lay(lay, varargin)
 %   'label'       = yes/no
 %   'labelsize'   = number indicating font size (e.g. 6)
 %   'labeloffset' = offset of label from point (suggestion is 0.005)
+%   'labelrotate' = scalar, vector with rotation angle (in degrees) per label (default = 0)
+%   'labelalignh' = string, or cell-array specifying the horizontal alignment of the text (default = 'left')
+%   'labelalignv' = string, or cell-array specifying the vertical alignment of the text (default = 'middle')
 %   'mask'        = yes/no
 %   'outline'     = yes/no
 %   'verbose'     = yes/no
@@ -56,6 +59,7 @@ point        = ft_getopt(varargin, 'point',        true);
 box          = ft_getopt(varargin, 'box',          true);
 label        = ft_getopt(varargin, 'label',        true);
 labelsize    = ft_getopt(varargin, 'labelsize',    10);
+labelfont    = ft_getopt(varargin, 'labelfont',    'helvetica');
 labeloffset  = ft_getopt(varargin, 'labeloffset',  0);
 mask         = ft_getopt(varargin, 'mask',         true);
 outline      = ft_getopt(varargin, 'outline',      true);
@@ -64,6 +68,13 @@ pointsymbol  = ft_getopt(varargin, 'pointsymbol');
 pointcolor   = ft_getopt(varargin, 'pointcolor');
 pointsize    = ft_getopt(varargin, 'pointsize');
 interpreter  = ft_getopt(varargin, 'interpreter', 'tex');
+
+% some stuff related to some refined label plotting
+labelrotate   = ft_getopt(varargin, 'labelrotate',  0);
+labelalignh   = ft_getopt(varargin, 'labelalignh',  'left');
+labelalignv   = ft_getopt(varargin, 'labelalignv',  'middle');
+labelcolor    = ft_getopt(varargin, 'labelcolor', 'k');
+
 
 % convert between true/false/yes/no etc. statements
 point   = istrue(point);
@@ -139,7 +150,26 @@ if label
   % the MATLAB text function fails if the position for the string is specified in single precision
   X = double(X);
   Y = double(Y);
-  text(X+labeloffset, Y+(labeloffset*1.5), Lbl ,'fontsize',labelsize,'interpreter',interpreter);
+  
+  % check whether fancy label plotting is needed, this requires a for loop,
+  % otherwise print text in a single shot
+  if numel(labelrotate)==1
+    text(X+labeloffset, Y+(labeloffset*1.5), Lbl ,'fontsize',labelsize,'fontname',labelfont,'interpreter',interpreter,'horizontalalignment',labelalignh,'verticalalignment',labelalignv,'color',labelcolor);
+  else
+    n = numel(Lbl);
+    if ~iscell(labelalignh)
+      labelalignh = repmat({labelalignh},[n 1]);
+    end
+    if ~iscell(labelalignv)
+      labelalignv = repmat({labelalignv},[n 1]);
+    end
+    if numel(Lbl)~=numel(labelrotate)||numel(Lbl)~=numel(labelalignh)||numel(Lbl)~=numel(labelalignv)
+      eror('there is something wrong with the input arguments');
+    end
+    for k = 1:numel(Lbl)
+      text(X(k)+labeloffset, Y(k)+(labeloffset*1.5), Lbl{k}, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k),'color',labelcolor);
+    end
+  end
 end
 
 if box
