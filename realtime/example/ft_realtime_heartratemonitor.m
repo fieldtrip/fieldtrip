@@ -9,7 +9,8 @@ function ft_realtime_heartratemonitor(cfg)
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
 %   cfg.jumptoeof  = whether to skip to the end of the stream/file at startup (default = 'yes')
-%   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
+%   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'first')
+%   cfg.threshold  = value, after normalization (default = 3)
 %
 % The source of the data is configured as
 %   cfg.dataset       = string
@@ -23,7 +24,7 @@ function ft_realtime_heartratemonitor(cfg)
 %
 % To stop the realtime function, you have to press Ctrl-C
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -48,12 +49,17 @@ if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is d
 if ~isfield(cfg, 'headerformat'),   cfg.headerformat = [];    end % default is detected automatically
 if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];     end % default is detected automatically
 if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 0.1;      end % in seconds
-if ~isfield(cfg, 'threshold'),      cfg.threshold = -4;       end % in uV
+if ~isfield(cfg, 'threshold'),      cfg.threshold = 3;        end % in uV
 if ~isfield(cfg, 'mindist'),        cfg.mindist = 0.1;        end % in seconds
 if ~isfield(cfg, 'overlap'),        cfg.overlap = 0;          end % in seconds
 if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
-if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
-if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
+if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'yes';    end % jump to end of file at initialization
+if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'first'; end % first or last
+if ~isfield(cfg, 'demean'),         cfg.demean = 'yes';       end % baseline correction
+if ~isfield(cfg, 'detrend'),        cfg.detrend = 'no';       end
+if ~isfield(cfg, 'olfilter'),       cfg.olfilter = 'no';      end % continuous online filter
+if ~isfield(cfg, 'olfiltord'),      cfg.olfiltord = 4;        end
+if ~isfield(cfg, 'olfreq'),         cfg.olfreq = [2 45];      end
 
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
@@ -72,6 +78,7 @@ hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', 
 cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
+
 if nchan==0
   error('no channels were selected');
 elseif nchan>1
@@ -93,6 +100,8 @@ pad   = [];
 pads  = [];
 count = 0;
 
+tpl = [];
+
 ws_noPeaks    = warning('off', 'signal:findpeaks:noPeaks');
 ws_PeakHeight = warning('off', 'signal:findpeaks:largeMinPeakHeight');
 
@@ -103,7 +112,7 @@ n0 = 0;
 t1 = t0;
 n1 = n0;
 
-% this will keep the heartrate history
+% this will keep the heartrate timing
 heartrate = [];
 
 % these are for the feedback
@@ -157,6 +166,7 @@ while true
   
   % read data segment from buffer
   dat = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false, 'blocking', true);
+  dat = double(dat);
   
   % fprintf('time between subsequent reads is %f seconds\n', toc-t1);
   
@@ -176,6 +186,65 @@ while true
   sample = begsample:endsample;
   
   % apply some preprocessing options
+  if strcmp(cfg.demean, 'yes')
+    dat = ft_preproc_baselinecorrect(dat);
+  end
+  if strcmp(cfg.detrend, 'yes')
+    dat = ft_preproc_detrend(dat);
+  end
+  
+  if strcmp(cfg.olfilter, 'yes')
+    if ~exist('FM', 'var')
+      % initialize online filter
+      if cfg.olfreq(1)==0
+        fprintf('using online low-pass filter\n');
+        [B, A] = butter(cfg.olfiltord, cfg.olfreq(2)/hdr.Fs);
+      elseif cfg.olfreq(2)>=hdr.Fs/2
+        fprintf('using online high-pass filter\n');
+        [B, A] = butter(cfg.olfiltord, cfg.olfreq(1)/hdr.Fs, 'high');
+      else
+        fprintf('using online band-pass filter\n');
+        [B, A] = butter(cfg.olfiltord, cfg.olfreq/hdr.Fs);
+      end
+      % use one sample to initialize
+      FM = ft_preproc_online_filter_init(B, A, dat(:,1));
+    end
+    % apply online filter
+    [FM, dat] = ft_preproc_online_filter_apply(FM, dat);
+  end
+  
+  if ~exist('CM', 'var') && numel(heartrate)>10
+    % initialize online filter
+    tpl = nan(10, round(0.6*hdr.Fs)+1);
+    for i=2:11 % skip the first
+      begsample = round((heartrate(i)-0.25)*hdr.Fs);
+      endsample = round((heartrate(i)+0.35)*hdr.Fs);
+      tpl(i-1,:) = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
+    end
+    % apply some preprocessing options
+    if strcmp(cfg.demean, 'yes')
+      tpl = ft_preproc_baselinecorrect(tpl);
+    end
+    if strcmp(cfg.detrend, 'yes')
+      tpl = ft_preproc_detrend(tpl);
+    end
+    tpl = median(tpl);
+    tpl = tpl-mean(tpl);
+    tpl = tpl/sqrt(max(filter(fliplr(tpl), 1, tpl)));
+    
+    B  = fliplr(tpl);
+    A  = 1;
+    CM = ft_preproc_online_filter_init(B, A, dat(:,1));
+    
+    % reset standardization
+    prevState = [];
+  end
+  
+  if exist('CM', 'var')
+    % apply online filter
+    [CM, dat] = ft_preproc_online_filter_apply(CM, dat);
+  end
+  
   [dat, prevState] = ft_preproc_standardize(dat, [], [], prevState);
   
   if isempty(pad)
@@ -199,17 +268,20 @@ while true
     [peakval, peakind] = findpeaks(dat, 'minpeakheight', cfg.threshold);
   end
   
-  for i=1:length(peakval)
-    % a heartbeat that is detected at the start should be played back immediately
-    % a heartbeat that is detected at the end should be delayed a bit
-    delay = (length(dat)-peakind(i))/hdr.Fs;
-    delay = round(1000*delay)/1000; % only milisecond precision
-    feedback_timer = timer('TimerFcn', @feedback_beep, 'ExecutionMode', 'singleShot', 'StartDelay', delay);
-    start(feedback_timer);
+  if numel(peakind)/(blocksize/hdr.Fs)>3
+    % heartrate cannot be above 180 bpm
+    warning('skipping due to noise');
+    peakval = [];
+    peakind = [];
   end
   
   % FIXME having the heartrate vector growing is not a very good idea
-  heartrate = [heartrate time(peakind)];
+  if isempty(tpl)
+    heartrate = [heartrate time(peakind)];
+  else
+    % correct for shift due to the crosscorrelation
+    heartrate = [heartrate time(peakind)-0.3];
+  end
   
   if ishandle(h1f)
     set(h1c, 'xdata', time, 'ydata', dat);
@@ -217,13 +289,21 @@ while true
   end
   
   if numel(heartrate)>2 && ishandle(h2f)
-    set(h2c, 'xdata', heartrate(2:end), 'ydata', diff(heartrate)*60);
+    set(h2c, 'xdata', heartrate(2:end), 'ydata', 60./diff(heartrate));
     set(h2a, 'xlim', heartrate([2 end]));
-    set(h2a, 'ylim', [0 max(diff(heartrate)*90)]);
+    set(h2a, 'ylim', [0 160]);
   end
   
   % force Matlab to redraw the figures
   drawnow
+  
+  delay = peakind/hdr.Fs;            % adjust for the timing of the event in the data block
+  delay = round(1000*delay)/1000;    % only milisecond precision
+  for i=1:length(delay)
+    % a heartbeat that is detected at the start should be played back immediately
+    % a heartbeat that is detected at the end should be delayed a bit
+    % start(timer('TimerFcn', @feedback_beep, 'ExecutionMode', 'singleShot', 'StartDelay', delay(i)));
+  end
   
 end % while true
 
@@ -235,12 +315,14 @@ persistent beep time
 if isempty(beep)
   beep = sin(1000*2*pi*(1:800)/8192);
 end
+soundsc(beep);
 if isempty(time)
   time = toc;
 end
-disp(toc-time);
-soundsc(beep);
+% fprintf('beep interval = %f\n', toc-time);
+% disp(varargin{2}.Data);
 time = toc;
+
 % delete the timer object that called this function
 stop(varargin{1});
 delete(varargin{1});

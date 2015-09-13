@@ -85,8 +85,9 @@ static char usage[] =
 "\n" \
         "Use as\n" \
         "   openbci2ft <device> [ftHost] [ftPort]\n" \
-        "or\n" \
-        "   openbci2ft <configuration.ini>\n" \
+        "with the parameters as specified below, or\n" \
+        "   openbci2ft <config>\n" \
+        "with the name of a configuration file for detailed setup.\n"
         "\n" \
         "When ftPort is omitted, it will default to 1972.\n" \
         "When ftHost is omitted, it will default to '-'.\n" \
@@ -103,8 +104,9 @@ static char usage[] =
 "\n" \
         "Use as\n" \
         "   openbci2ft <device> [ftHost] [ftPort]\n" \
-        "or\n" \
-        "   openbci2ft <configuration.ini>\n" \
+        "with the parameters as specified below, or\n" \
+        "   openbci2ft <config>\n" \
+        "with the name of a configuration file for detailed setup.\n"
         "\n" \
         "When ftPort is omitted, it will default to 1972.\n" \
         "When ftHost is omitted, it will default to '-'.\n" \
