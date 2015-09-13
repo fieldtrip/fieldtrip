@@ -195,6 +195,8 @@ static int iniHandler(void* external, const char* section, const char* name, con
         local->label_chan10 = strdup(value);
     } else if (MATCH("ChannelLabel", "chan11")) {
         local->label_chan11 = strdup(value);
+    } else if (MATCH("ChannelLabel", "chan12")) {
+        local->label_chan12 = strdup(value);
 
         /* only for channel 1-8, not for accelerometers */
     } else if (MATCH("ChannelSetting", "chan1")) {
@@ -290,18 +292,18 @@ int main(int argc, char *argv[]) {
     config.enable_chan10 = strdup("on");
     config.enable_chan11 = strdup("on");
 
-    config.label_chan1  = strdup("1");
-    config.label_chan2  = strdup("2");
-    config.label_chan3  = strdup("3");
-    config.label_chan4  = strdup("4");
-    config.label_chan5  = strdup("5");
-    config.label_chan6  = strdup("6");
-    config.label_chan7  = strdup("7");
-    config.label_chan8  = strdup("8");
-    config.label_chan9  = strdup("X");
-    config.label_chan10 = strdup("Y");
-    config.label_chan11 = strdup("Z");
-    config.label_chan12 = strdup("timestamp");
+    config.label_chan1  = strdup("ADC1");
+    config.label_chan2  = strdup("ADC2");
+    config.label_chan3  = strdup("ADC3");
+    config.label_chan4  = strdup("ADC4");
+    config.label_chan5  = strdup("ADC5");
+    config.label_chan6  = strdup("ADC6");
+    config.label_chan7  = strdup("ADC7");
+    config.label_chan8  = strdup("ADC8");
+    config.label_chan9  = strdup("AccelerationX");
+    config.label_chan10 = strdup("AccelerationY");
+    config.label_chan11 = strdup("AccelerationZ");
+    config.label_chan12 = strdup("TimeStamp");
 
     config.setting_chan1  = strdup("x1060110X");
     config.setting_chan2  = strdup("x2060110X");
