@@ -181,6 +181,7 @@ Ntrials = length(data.trial);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct the average template gradiometer array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+template = struct([]); % initialize as empty structure
 for i=1:length(cfg.template)
   if ischar(cfg.template{i}),
     fprintf('reading template sensor position from %s\n', cfg.template{i});
@@ -193,12 +194,8 @@ for i=1:length(cfg.template)
   else
     error('unrecognized template input');
   end
-  if i==1
-    % prevent "Subscripted assignment between dissimilar structures" error
-    template = tmp;
-  else
-    template(i) = tmp;
-  end
+  % prevent "Subscripted assignment between dissimilar structures" error
+  template = appendstruct(template, tmp); clear tmp
 end
 
 grad = ft_average_sens(template);
