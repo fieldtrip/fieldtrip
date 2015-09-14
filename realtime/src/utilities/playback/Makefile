@@ -27,6 +27,7 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(UNAME)" "Linux"
+	LDLIBS += -lrt
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
 	endif
@@ -35,7 +36,6 @@ ifeq "$(UNAME)" "Linux"
 	endif
 	ifeq "$(MACHINE)" "armv6l"
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-		LDLIBS += -lrt
 	endif
 endif
 
@@ -54,7 +54,6 @@ ifeq "$(UNAME)" "Darwin"
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
 		BINDIR = $(FIELDTRIP)/realtime/bin/mac
-		LDLIBS += -lrt
 	endif
 endif
 
@@ -77,7 +76,7 @@ ft_offline.o: ft_offline.c
 	$(CC) -c $^ $(CFLAGS)
 			
 $(BINDIR)/playback$(SUFFIX): playback.o
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 		
 $(BINDIR)/recording$(SUFFIX): recording.o ft_offline.o ../../buffer/src/socketserver.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
