@@ -310,14 +310,15 @@ end
 % perform channel selection, unless in the other plotting functions this
 % can always be done because ft_multiplotER is the entry point into the
 % interactive stream, but will not be revisited
-for i=1:Ndata
-  if isfield(varargin{i}, 'label')
-    % only do the channel selection when it can actually be done,
-    % i.e. when the data are bivariate ft_selectdata will crash, moreover
-    % the bivariate case is handled below
-    varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel);
-  end
-end
+if isfield(varargin{1}, 'label')
+  % only do the channel selection when it can actually be done,
+  % i.e. when the data are bivariate ft_selectdata will crash, moreover
+  % the bivariate case is handled below
+  tmpcfg = keepfields(cfg, 'channel');
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+end  
 
 if isfield(varargin{1}, 'label') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, varargin{1}.label);
@@ -527,14 +528,20 @@ for i=1:Ndata
   xidmax(i, 1) = nearest(varargin{i}.(xparam), xmax);
 end
 
-if strcmp('freq', yparam) && strcmp('freq', dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i}, 'param', cfg.parameter, 'foilim', cfg.zlim, 'avgoverfreq', 'yes');
-  end
-elseif strcmp('time', yparam) && strcmp('freq', dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i}, 'param', cfg.parameter, 'toilim', cfg.zlim, 'avgovertime', 'yes');
-  end
+if strcmp('freq',yparam) && strcmp('freq',dtype)
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgoverfreq = 'yes';
+  tmpcfg.frequency   = cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+elseif strcmp('time',yparam) && strcmp('freq',dtype)
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgovertime = 'yes';
+  tmpcfg.latency     = cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 end
 
 % Get physical y-axis range (vlim / parameter):
