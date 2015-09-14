@@ -1,7 +1,7 @@
 function test_prepare_freq_matrices
 
-% WALLTIME = 00:10:00
-% MEM = 500mb
+% WALLTIME 00:10:00
+% MEM 1000mb
 
 % TEST test_prepare_freq_matrices
 % TEST prepare_freq_matrices
