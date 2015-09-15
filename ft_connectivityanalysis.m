@@ -158,8 +158,6 @@ if ~strcmp(cfg.trials, 'all')
   tmpcfg.trials = cfg.trials;
   data = ft_selectdata(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
-  
-  %data = ft_selectdata(data, 'rpt', cfg.trials);
 end
 
 % select channels/channelcombination of interest and set the cfg-options accordingly
@@ -178,7 +176,9 @@ if isfield(data, 'label'),
     cfg.partchannel = ft_channelselection(cfg.partchannel, data.label);
     selchan = [selchan; cfg.partchannel];
   end
-  data = ft_selectdata(data, 'channel', unique(selchan));
+  tmpcfg = [];
+  tmpcfg.channel = unique(selchan);
+  data = ft_selectdata(tmpcfg, data);
 elseif isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
   if ~isempty(cfg.partchannel)
@@ -474,7 +474,21 @@ if hasrpt && dojack && hasjack,
   % do nothing
 elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var')),
   % compute leave-one-outs
-  data = ft_selectdata(data, 'jackknife', 'yes');
+  % assume the inparam(s) are well-behaved, i.e. they have the 'rpt'
+  % dimension as the first dimension
+  if iscell(inparam)
+    for k = 1:numel(inparam)
+      nrpt   = size(data.(inparam{k}),1);
+      sumdat = sum(data.(inparam{k}),1);
+      data.(inparam{k}) = (sumdat(ones(nrpt,1),:,:,:,:,:) - data.(inparam{k}))./(nrpt-1);
+      clear sumdat;
+    end
+  else
+    nrpt   = size(data.(inparam),1);
+    sumdat = sum(data.(inparam),1);
+    data.(inparam) = (sumdat(ones(nrpt,1),:,:,:,:,:) - data.(inparam))./(nrpt-1);
+    clear sumdat;
+  end
   hasjack = 1;
 elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho'))% || needrpt)
   % create dof variable
@@ -483,7 +497,9 @@ elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || st
   elseif isfield(data, 'cumtapcnt')
     dof = sum(data.cumtapcnt);
   end
-  data = ft_selectdata(data, 'avgoverrpt', 'yes');
+  tmpcfg = [];
+  tmpcfg.avgoverrpt = 'yes';
+  data = ft_selectdata(tmpcfg, data);
   hasrpt = 0;
 else
   % nothing required
