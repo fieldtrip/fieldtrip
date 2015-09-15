@@ -386,11 +386,20 @@ end
 % restore the original dimord fields in the data
 for i=1:length(orgdim1)
   dimtok = tokenize(orgdim2{i}, '_');
-  if ~keeprptdim, dimtok = setdiff(dimtok, {'rpt' 'rpttap' 'subj'}); end
-  if ~keepposdim, dimtok = setdiff(dimtok, {'pos' '{pos}'}); end
-  if ~keepchandim, dimtok = setdiff(dimtok, {'chan'}); end
-  if ~keepfreqdim, dimtok = setdiff(dimtok, {'freq'}); end
-  if ~keeptimedim, dimtok = setdiff(dimtok, {'time'}); end
+  
+  % using a setdiff may result in double occurrences of chan and pos to
+  % disappear, so this causes problems as per bug 2962
+  % if ~keeprptdim, dimtok = setdiff(dimtok, {'rpt' 'rpttap' 'subj'}); end
+  % if ~keepposdim, dimtok = setdiff(dimtok, {'pos' '{pos}'}); end
+  % if ~keepchandim, dimtok = setdiff(dimtok, {'chan'}); end
+  % if ~keepfreqdim, dimtok = setdiff(dimtok, {'freq'}); end
+  % if ~keeptimedim, dimtok = setdiff(dimtok, {'time'}); end
+  if ~keeprptdim, dimtok = dimtok(~ismember(dimtok, {'rpt' 'rpttap' 'subj'})); end
+  if ~keepposdim, dimtok = dimtok(~ismember(dimtok, {'pos' '{pos}'}));         end
+  if ~keepchandim, dimtok = dimtok(~ismember(dimtok, {'chan'})); end
+  if ~keepfreqdim, dimtok = dimtok(~ismember(dimtok, {'freq'})); end
+  if ~keeptimedim, dimtok = dimtok(~ismember(dimtok, {'time'})); end
+  
   dimord = sprintf('%s_', dimtok{:});
   dimord = dimord(1:end-1); % remove the trailing _
   for j=1:length(varargin)
