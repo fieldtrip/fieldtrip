@@ -207,7 +207,10 @@ end
 if isfield(cfg,'colormap')
   if size(cfg.colormap,2)~=3, error('topoplot(): Colormap must be a n x 3 matrix'); end
   colormap(cfg.colormap);
-end;
+  ncolors = size(cfg.colormap,1);
+else
+  ncolors =[]; % let the low-level function deal with this
+end
 
 dtype  = ft_datatype(data);
 
@@ -771,7 +774,7 @@ if ~strcmp(cfg.style,'blank')
     'datmask', msk};
   if strcmp(style,'imsat') || strcmp(style,'imsatiso')
     % add clim to opt
-    opt = [opt {'clim',[zmin zmax]}];
+    opt = [opt {'clim',[zmin zmax],'ncolors',ncolors}];
   end
   ft_plot_topo(chanX,chanY,dat,opt{:});
 elseif ~strcmp(cfg.style,'blank')

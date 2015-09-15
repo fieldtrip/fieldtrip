@@ -21,6 +21,8 @@ function [dat] = ft_read_data(filename, varargin)
 %   'dataformat'     string
 %   'headerformat'   string
 %   'fallback'       can be empty or 'biosig' (default = [])
+%   'blocking'       wait for the selected number of events (default = 'no')
+%   'timeout'        amount of time in seconds to wait when blocking (default = 5)
 %
 % This function returns a 2-D matrix of size Nchans*Nsamples for continuous
 % data when begevent and endevent are specified, or a 3-D matrix of size
@@ -122,6 +124,13 @@ dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp');
 
+% this allows blocking reads to avoid having to poll many times for online processing
+blocking         = ft_getopt(varargin, 'blocking', false); % true or false
+timeout          = ft_getopt(varargin, 'timeout', 5); % seconds
+
+% convert from 'yes'/'no' into boolean
+blocking = istrue(blocking);
+
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
@@ -161,10 +170,13 @@ if ~isempty(endtrial) && mod(endtrial, 1)
   endtrial = round(endtrial);
 end
 
-% if we are dealing with a compressed dataset, inflate it first
 if strcmp(dataformat, 'compressed')
-  filename = inflate_file(filename);
+  % the file is compressed, unzip on the fly
+  inflated   = true;
+  filename   = inflate_file(filename);
   dataformat = ft_filetype(filename);
+else
+  inflated   = false;
 end
 
 % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
@@ -182,21 +194,19 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-  if isempty(chanindx)
-    hdr = ft_read_header(filename, 'headerformat', headerformat);
-  else
     hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx);
-  end;
-end
-
-% set the default channel selection, which is all channels
-if isempty(chanindx)
-  chanindx = 1:hdr.nChans;
-end
-
-% test whether the requested channels can be accomodated
-if min(chanindx)<1 || max(chanindx)>hdr.nChans
-  error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+    if isempty(chanindx)
+        chanindx = 1:hdr.nChans;
+    end
+else
+    % set the default channel selection, which is all channels
+    if isempty(chanindx)
+        chanindx = 1:hdr.nChans;
+    end
+    % test whether the requested channels can be accomodated
+    if min(chanindx)<1 || max(chanindx)>hdr.nChans
+        error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+    end
 end
 
 % read until the end of the file if the endsample is "inf"
@@ -207,7 +217,7 @@ end
 % test whether the requested data segment is not outside the file
 if any(begsample<1)
   error('FILEIO:InvalidBegSample', 'cannot read data before the begin of the file');
-elseif any(endsample>(hdr.nSamples*hdr.nTrials))
+elseif any(endsample>(hdr.nSamples*hdr.nTrials)) && ~blocking
   error('FILEIO:InvalidEndSample', 'cannot read data after the end of the file');
 end
 
@@ -634,8 +644,18 @@ switch dataformat
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
     [host, port] = filetype_check_uri(filename);
+
+    if blocking
+      nsamples = endsample; % indices should be zero-offset
+      nevents  = 0;         % disable waiting for events
+      available = buffer_wait_dat([nsamples nevents timeout], host, port);
+      if available.nsamples<nsamples
+        error('buffer timed out while waiting for %d samples', nsamples);
+      end
+    end
+
     dat = buffer('get_dat', [begsample-1 endsample-1], host, port);  % indices should be zero-offset
-    dat = dat.buf(chanindx,:);                                        % select the desired channels
+    dat = dat.buf(chanindx,:);                                       % select the desired channels
     
   case 'fcdc_buffer_offline'
     % read from a offline FieldTrip buffer data files
@@ -1339,6 +1359,11 @@ elseif requestsamples && strcmp(dimord, 'chans_samples_trials')
   begselection2 = begsample - begselection + 1;
   endselection2 = endsample - begselection + 1;
   dat = dat(:,begselection2:endselection2);
+end
+
+if inflated
+  % compressed file has been unzipped on the fly, clean up
+  delete(filename);
 end
 
 if strcmp(dataformat, 'bci2000_dat') || strcmp(dataformat, 'eyelink_asc') || strcmp(dataformat, 'gtec_mat')

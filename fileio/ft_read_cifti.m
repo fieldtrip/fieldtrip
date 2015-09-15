@@ -67,18 +67,13 @@ mapname          = ft_getopt(varargin, 'mapname', 'field');
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
 
-if ~isempty(regexp(filename, 'nii.gz$', 'once'))
+if strcmp(dataformat, 'compressed')
   % the file is compressed, unzip on the fly
-  if ispc
-    error('cannot decompress gzipped files on a PC');
-  else
-    tempfile = [tempname '.nii.gz'];
-    [a, b] = system(sprintf('cp %s %s', filename, tempfile));
-    [a, b] = system(sprintf('gunzip %s', tempfile));
-  end
+  inflated = true;
   origfile = filename;
-  filename = tempfile(1:end-3); % strip the .gz
+  filename = inflate_file(filename);
 else
+  inflated = false;
   origfile = filename;
 end
 
@@ -401,6 +396,11 @@ if readdata
   voxdata = reshape(voxdata, hdr.dim(6:end));
 end
 fclose(fid);
+
+if inflated
+  % compressed file has been unzipped on the fly, clean up
+  delete(filename);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert to FieldTrip source representation, i.e. according to FT_DATATYPE_SOURCE and FT_DATATYPE_PARCELLATION

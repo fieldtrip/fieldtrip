@@ -70,6 +70,7 @@ mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
 clim          = ft_getopt(varargin, 'clim', []);
 parent        = ft_getopt(varargin, 'parent', []);
+ncolors       = ft_getopt(varargin, 'ncolors',        64); % in the caller function, a colormap can be used with an aribtrary resolution, this is only relevant for the saturation based coloring
 
 % check for nans in the data, they can be still left incase people want to mask non channels.
 if any(isnan(dat))
@@ -131,7 +132,7 @@ chanY = chanY(:) * yScaling + vpos;
 if strcmp(interplim, 'electrodes'),
   hlim = [min(chanX) max(chanX)];
   vlim = [min(chanY) max(chanY)];
-elseif strcmp(interplim, 'mask') && ~isempty(mask),
+elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~isempty(mask),
   hlim = [inf -inf];
   vlim = [inf -inf];
   for i=1:length(mask)
@@ -161,7 +162,7 @@ if isequal(current_argin, previous_argin)
   maskimage = previous_maskimage;
 elseif ~isempty(mask)
   % convert the mask into a binary image
-  maskimage = false(gridscale);
+  maskimage = zeros(gridscale);%false(gridscale);
   %hlim      = [min(chanX) max(chanX)];
   %vlim      = [min(chanY) max(chanY)];
   xi        = linspace(hlim(1), hlim(2), gridscale);   % x-axis for interpolation (row vector)
@@ -180,7 +181,7 @@ elseif ~isempty(mask)
     mask{i}(:, 1) = mask{i}(:, 1)*xScaling+hpos;
     mask{i}(:, 2) = mask{i}(:, 2)*yScaling+vpos;
     mask{i}(end+1, :) = mask{i}(1, :);                   % force them to be closed
-    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = true;
+    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = i;%true;
   end
   
 else
@@ -214,17 +215,31 @@ chanY = double(chanY);
 %interpolate data
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
 yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
+<<<<<<< HEAD
 
 if ft_platform_supports('griddata-vector-input')
   % in GNU Octave, griddata does not support vector
   % positions; make a grid to get the locations in vector form
   [xi,yi]=meshgrid(xi,yi);
-  [Xi, Yi, Zi] = griddata(chanX, chanY, dat, xi, yi, interpmethod); % interpolate the topographic data
+  xi=xi';
+end
+
+if ~isempty(maskimage) && strcmp(interplim, 'mask_individual')
+  % do the interpolation for each set of electrodes within a mask, useful
+  % for ECoG data with multiple grids, to avoid cross talk
+  Zi = zeros(size(maskimage));
+  for i=1:max(maskimage(:))
+    chansel = inside_contour([chanX chanY], mask{i});
+    [Xi, Yi, tmpZi]  = griddata(chanX(chansel)', chanY(chansel), dat(chansel), xi', yi, interpmethod);
+    Zi(maskimage==i) = tmpZi(maskimage==i);
+  end
 else
   [Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
 end
 
 if ~isempty(maskimage)
+  % make boolean  
+  maskimage      = maskimage~=0;
   % apply mask to the data to hide parts of the interpolated data (outside the circle) and channels that were specified to be masked
   % this combines the input options mask and maskdat
   Zi(~maskimage) = NaN;
@@ -263,12 +278,12 @@ elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   
   % Transform cdat-values to have a 0-64 range, dependent on clim
   % (think of it as the data having an exact range of min=clim(1) to max=(clim2), convert this range to 0-64)
-  tmpcdat = (tmpcdat + -clim(1)) * (64 / (-clim(1) + clim(2)));
+  tmpcdat = (tmpcdat + -clim(1)) * (ncolors / (-clim(1) + clim(2)));
   %tmpcdat = (tmpcdat + -min(min(tmpcdat))) * (64 / max(max((tmpcdat + -min(min(tmpcdat))))))
   
   % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
   satmask(isnan(tmpcdat)) = 0;
-  tmpcdat(isnan(tmpcdat)) = 32;
+  tmpcdat(isnan(tmpcdat)) = round(ncolors./2);
   % ind->rgb->hsv ||change saturation values||  hsv->rgb ->  plot
   rgbcdat = ind2rgb(uint8(floor(tmpcdat)), colormap);
   hsvcdat = rgb2hsv(rgbcdat);

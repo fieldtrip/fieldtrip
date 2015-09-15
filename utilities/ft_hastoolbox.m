@@ -74,7 +74,8 @@ url = {
   'EEGSF'      'see http://eeg.sourceforge.net'  % alternative name
   'MRI'        'see http://eeg.sourceforge.net'  % alternative name
   'NEUROSHARE' 'see http://www.neuroshare.org'
-  'BESA'       'see http://www.megis.de, or contact Karsten Hoechstetter'
+  'BESA'         'see http://www.besa.de/downloads/matlab/ and get the "BESA MATLAB Readers"'
+  'MATLAB2BESA'  'see http://www.besa.de/downloads/matlab/ and get the "MATLAB to BESA Export functions"'
   'EEPROBE'    'see http://www.ant-neuro.com, or contact Maarten van der Velde'
   'YOKOGAWA'   'this is deprecated, please use YOKOGAWA_MEG_READER instead'
   'YOKOGAWA_MEG_READER' 'see http://www.yokogawa.com/me/me-login-en.htm'
@@ -210,7 +211,11 @@ switch toolbox
   case 'ARTINIS'
     status  = exist('read_artinis_oxy3', 'file');
   case 'BESA'
-    status = (exist('readBESAtfc', 'file') && exist('readBESAswf', 'file'));
+    filelist = {'readBESAavr' 'readBESAelp' 'readBESAswf'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'MATLAB2BESA'
+    filelist = {'besa_save2Avr' 'besa_save2Elp' 'besa_save2Swf'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
   case 'EEPROBE'
     status  = (exist('read_eep_avr', 'file') && exist('read_eep_cnt', 'file'));
   case 'YOKOGAWA'

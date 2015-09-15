@@ -31,10 +31,10 @@ endif
 
 ifeq "$(UNAME)" "Linux"
 	ifeq "$(MACHINE)" "i686"
-		$LDLIBS += -ldl
+		LDLIBS += -ldl -lrt
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		$LDLIBS += -ldl
+		LDLIBS += -ldl -lrt
 	endif
 	ifeq "$(MACHINE)" "armv6l"
 		LDLIBS += -ldl -lrt

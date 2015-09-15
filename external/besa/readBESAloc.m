@@ -57,9 +57,7 @@ Nodes = Nodes';
 Nodes = Nodes*1e3;
 
 % NOTE LF grid node coordinates are in ACPC space and in m. The AC point
-% is then, e.g., at (0.1275, 0.1275, 0.1275).
-
-Nodes = Nodes - 127.5; % the same for x, y and z
+% is then, e.g., at (0.128, 0.128, 0.128).
 
 % NOTE The file actually continues beyond this point. It furthermore
 % contains the neighbours for each grid node. But we do not need this

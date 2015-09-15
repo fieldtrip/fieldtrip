@@ -30,72 +30,72 @@ function ft_documentationreference(outdir)
 
 ft_defaults
 
-p = fileparts(which(mfilename));
+[ftver, ftpath] = ft_version;
 
-f1 = dir(fullfile(p, '*.m'));
+f1 = dir(fullfile(ftpath, '*.m'));
 f1 = {f1.name}';
 
-f2 = dir(fullfile(p, 'utilities', '*.m'));
+f2 = dir(fullfile(ftpath, 'utilities', '*.m'));
 f2 = {f2.name}';
 
-f3 = dir(fullfile(p, 'preproc', '*.m'));
+f3 = dir(fullfile(ftpath, 'preproc', '*.m'));
 f3 = {f3.name}';
 
-f4 = dir(fullfile(p, 'fileio', '*.m'));
+f4 = dir(fullfile(ftpath, 'fileio', '*.m'));
 f4 = {f4.name}';
 
-f5 = dir(fullfile(p, 'forward', '*.m'));
+f5 = dir(fullfile(ftpath, 'forward', '*.m'));
 f5 = {f5.name}';
 
-f6 = dir(fullfile(p, 'inverse', '*.m'));
+f6 = dir(fullfile(ftpath, 'inverse', '*.m'));
 f6 = {f6.name}';
 
-f7 = dir(fullfile(p, 'realtime', '*.m'));
+f7 = dir(fullfile(ftpath, 'realtime', '*.m'));
 f7 = {f7.name}';
 
-f8 = dir(fullfile(p, 'realtime', 'example', '*.m'));
+f8 = dir(fullfile(ftpath, 'realtime', 'example', '*.m'));
 f8 = {f8.name}';
 
-f9 = dir(fullfile(p, 'peer', '*.m'));
+f9 = dir(fullfile(ftpath, 'peer', '*.m'));
 f9 = {f9.name}';
 
-f10 = dir(fullfile(p, 'plotting', '*.m'));
+f10 = dir(fullfile(ftpath, 'plotting', '*.m'));
 f10 = {f10.name}';
 
-f11 = dir(fullfile(p, 'statfun', '*.m'));
+f11 = dir(fullfile(ftpath, 'statfun', '*.m'));
 f11 = {f11.name}';
 
-f12 = dir(fullfile(p, 'specest', '*.m'));
+f12 = dir(fullfile(ftpath, 'specest', '*.m'));
 f12 = {f12.name}';
 
-f13 = dir(fullfile(p, 'connectivity', '*.m'));
+f13 = dir(fullfile(ftpath, 'connectivity', '*.m'));
 f13 = {f13.name}';
 
-f14 = dir(fullfile(p, 'contrib', '*.m'));
+f14 = dir(fullfile(ftpath, 'contrib', '*.m'));
 f14 = {f14.name}';
 
-f15 = dir(fullfile(p, 'qsub', '*.m'));
+f15 = dir(fullfile(ftpath, 'qsub', '*.m'));
 f15 = {f15.name}';
 
-f16 = dir(fullfile(p, 'contrib', 'spike', '*.m'));
+f16 = dir(fullfile(ftpath, 'contrib', 'spike', '*.m'));
 f16 = {f16.name}';
 
-f17 = dir(fullfile(p, 'contrib', 'trentool', '*.m'));
+f17 = dir(fullfile(ftpath, 'contrib', 'trentool', '*.m'));
 f17 = {f17.name}';
 
-f18 = dir(fullfile(p, 'utility', '*.m'));
+f18 = dir(fullfile(ftpath, 'utility', '*.m'));
 f18 = {f18.name}';
 
-f19 = dir(fullfile(p, 'engine', '*.m'));
+f19 = dir(fullfile(ftpath, 'engine', '*.m'));
 f19 = {f19.name}';
 
-f20 = dir(fullfile(p, 'realtime', 'online_eeg', '*.m'));
+f20 = dir(fullfile(ftpath, 'realtime', 'online_eeg', '*.m'));
 f20 = {f20.name}';
 
-f21 = dir(fullfile(p, 'realtime', 'online_meg', '*.m'));
+f21 = dir(fullfile(ftpath, 'realtime', 'online_meg', '*.m'));
 f21 = {f21.name}';
 
-f22 = dir(fullfile(p, 'realtime', 'online_mri', '*.m'));
+f22 = dir(fullfile(ftpath, 'realtime', 'online_mri', '*.m'));
 f22 = {f22.name}';
 
 funname = cat(1, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22);

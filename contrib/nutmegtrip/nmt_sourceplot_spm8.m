@@ -172,7 +172,19 @@ if abort
     return
 end
 
-% functional = ft_checkdata(functional, 'datatype', 'source', 'hasunit', 'yes');
+% ensure that old and unsupported options are not being relied on by the end-user's script
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
+cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.pow', 'pow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.coh', 'coh'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.mom', 'mom'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.pow', 'pow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
+
+
+functional = ft_checkdata(functional, 'datatype', 'source', 'hasunit', 'yes');
 
 %% SPM8 expects everything in mm
 functional = ft_convert_units(functional,'mm');
@@ -195,30 +207,15 @@ if ~isempty(cfg.funparameter)
         st.nmt.pos = functional.pos;
         
         switch(cfg.funparameter)
-            case {'mom','avg.mom'}
-                fun = cell2mat(getsubfield(functional,cfg.funparameter));
+            case {'mom'}
+                 fun = cell2mat(getsubfield(functional,cfg.funparameter));
                 
                 inside = find(functional.inside);
-              
-                if(length(inside) < length(functional.inside))
-                    % if funparameter contents have empty values for 'outside' voxels
-                    st.nmt.fun = nan(length(functional.inside),size(fun,2));
-                    st.nmt.fun(inside,:) = fun;
-                else % if funparameter contents and pos have values for all voxels (including 'outside')
-                    st.nmt.fun = fun;
-
-                    outside = find(~functional.inside);
-                    st.nmt.fun(outside,:) = NaN;
-                end
-                   
+                st.nmt.fun = nan(length(functional.inside),size(fun,2));
+                st.nmt.fun(inside,:) = fun;
+                
                 st.nmt.time = functional.time;
                 
-                 if(length(functional.time) ~= size(fun,2))
-                     % Robert's example source.mat has length(time) = 15
-                     % but size(fun,2) = 10 --- is this normal??
-                     warning('time vector different length than moment vector! dropping extra points so we can proceed.')
-                     st.nmt.time((size(fun,2)+1) : end) = [];
-                 end
                 
                 
                 if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
@@ -244,7 +241,6 @@ if ~isempty(cfg.funparameter)
                 if(length(cfg.time(1)) == 1)
                     cfg.time(2) = cfg.time(1);
                 end
-                
             otherwise
                 st.nmt.fun = getsubfield(functional, cfg.funparameter);
                 if isfield(functional, 'time')
@@ -253,9 +249,7 @@ if ~isempty(cfg.funparameter)
                 if isfield(functional, 'freq')
                   st.nmt.freq = functional.freq;
                 end
-                
         end
-        
         
         st.nmt.cfg = cfg;
     else

@@ -29,7 +29,7 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(UNAME)" "Linux"
-	LDLIBS += -lpthread -ldl
+	LDLIBS += -lpthread -ldl -lrt
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -39,7 +39,6 @@ ifeq "$(UNAME)" "Linux"
 	endif
 	ifeq "$(MACHINE)" "armv6l"
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-		LDLIBS += -lrt
 	endif
 endif
 

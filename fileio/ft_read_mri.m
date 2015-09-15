@@ -92,10 +92,13 @@ if isempty(mriformat)
   mriformat = ft_filetype(filename);
 end
 
-% extract if needed
 if strcmp(mriformat, 'compressed')
+  % the file is compressed, unzip on the fly
+  inflated = true;
   filename = inflate_file(filename);
   mriformat = ft_filetype(filename);
+else
+  inflated = false;
 end
 
 % test whether the file exists
@@ -128,6 +131,10 @@ case 'ctf_svl'
 case 'asa_mri' 
   [img, seg, hdr] = read_asa_mri(filename);
   transform = hdr.transformMRI2Head;
+  if isempty(seg)
+    % in case seg exists it will be added to the output
+    clear seg
+  end
   
 case 'minc'
   if ~(hasspm2 || hasspm5)
@@ -417,6 +424,11 @@ if exist('img', 'var')
   mri.anatomy = img;
 end
 
+if exist('seg', 'var')
+  % store the segmented data
+  mri.seg = seg;
+end
+
 if exist('hdr', 'var')
   % store the header with all file format specific details
   mri.hdr = hdr;
@@ -437,6 +449,14 @@ try
   mri.coordsys = coordsys;
 end
 
+if inflated
+  % compressed file has been unzipped on the fly, clean up
+  delete(filename);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function value = loadvar(filename, varname)
 var = whos('-file', filename);
 if length(var)==1

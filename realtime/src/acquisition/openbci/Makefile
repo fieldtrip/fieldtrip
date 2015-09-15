@@ -17,10 +17,10 @@ CPPDIR = $(FTBUFFER)/cpp
 CPPOBJ = 
 
 # defaults, might be overwritten further down
-CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR)
+CFLAGS = -I. -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/inih/ -I$(CPPDIR)
 # CFLAGS += -Wunused -Wall -pedantic -O3 -g 
 CFLAGS += -w
-LDFLAGS = -L$(FTBUFFER)/src
+LDFLAGS = -L$(FTBUFFER)/src 
 LDLIBS = -lbuffer $(CPPOBJ)
 
 ifeq "$(PLATFORM)" "mingw32"
@@ -32,11 +32,10 @@ ifeq "$(PLATFORM)" "mingw32"
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
-	RM = del
 endif
 
 ifeq "$(UNAME)" "Linux"
-	$LDLIBS += -ldl -lstdc++ -lpthread
+	LDLIBS += -ldl -lstdc++ -lpthread -lrt
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -46,7 +45,6 @@ ifeq "$(UNAME)" "Linux"
 	endif
 	ifeq "$(MACHINE)" "armv6l"
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-		LDLIBS += -lrt
 	endif
 endif
 
@@ -55,7 +53,7 @@ ifeq "$(UNAME)" "Darwin"
 	ifeq "$(MACHINE)" "i386"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS += -m32
-		LDFLAGS += -m32
+		LDFLAGS += -m32 
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
@@ -78,10 +76,11 @@ all: $(TARGETS)
 
 $(TARGETS):
 
-$(BINDIR)/%$(SUFFIX): serial.o %.o
+$(BINDIR)/%$(SUFFIX): ini.o timestamp.o serial.o %.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-$(BINDIR)/modeeg_setupbluesmirf$(SUFFIX): LDLIBS=
+ini.o: $(FIELDTRIP)/realtime/src/external/inih/ini.c
+	$(CC) $(CFLAGS) -c -o $@ $^ 
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

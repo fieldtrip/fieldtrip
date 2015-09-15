@@ -1,0 +1,67 @@
+<project name="openBCI2ft" basedir="." default="main">
+
+    <property name="src.dir"     value="src"/>
+    <property name="build.dir"   value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="jar.dir"     value="${build.dir}/jar"/>
+    <property name="main-class"  value="${ant.project.name}"/>
+
+	 <!-- Any library jar's we depend on? -->
+	 <property name="lib.dir"     value="lib"/>
+	 <property name="buffer.jar"  value="../buffer/java/BufferClient.jar"/>
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+		  <fileset file="${buffer.jar}"/>
+    </path>
+
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+		  <mkdir dir="${lib.dir}"/>
+        <javac srcdir="${src.dir}" 
+					destdir="${classes.dir}" 
+					classpathref="classpath" 
+					debug="on"
+					debuglevel="lines,vars,source"/>
+	 </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <jar destfile="${jar.dir}/${ant.project.name}.jar">
+			 <fileset dir="${classes.dir}"/>
+			 <fileset dir="${src.dir}" includes="*.java"/>
+          <manifest>
+            <attribute name="Main-Class" value="${main-class}"/>
+          </manifest>
+        </jar>
+    </target>
+
+    <target name="run" depends="jar">
+      <java fork="true" classname="${main-class}">
+		  <arg value="/dev/ttyUSB0"/>
+		  <arg value="localhost:1972"/>
+		  <arg value="6"/>
+        <classpath>
+			 <path refid="classpath"/>
+			 <path location="${jar.dir}/${ant.project.name}.jar"/>
+        </classpath>
+      </java>
+    </target>
+
+    <target name="jssc_test" depends="compile">
+      <java fork="true" classname="jssc_test">
+        <classpath>
+			 <path refid="classpath"/>
+			 <path location="${classes.dir}"/>
+        </classpath>
+      </java>
+    </target>
+
+	 <target name="dist" depends="jar">
+		<copy file="${jar.dir}/${ant.project.name}.jar" todir="."/>
+	 </target>
+
+    <target name="clean">   <delete dir="${build.dir}"/>  </target>
+    <target name="build" depends="compile"/>
+    <target name="clean-build" depends="clean,build"/>
+    <target name="main" depends="jar,dist"/>
+</project>

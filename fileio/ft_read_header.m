@@ -156,9 +156,12 @@ if iscell(headerformat)
 end
 
 if strcmp(headerformat, 'compressed')
-  % we are dealing with a compressed dataset, inflate it first
+  % the file is compressed, unzip on the fly
+  inflated     = true;
   filename     = inflate_file(filename);
   headerformat = ft_filetype(filename);
+else
+  inflated     = false;
 end
 
 realtime = any(strcmp(headerformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
@@ -2096,9 +2099,6 @@ if checkUniqueLabels
   end
 end
 
-% ensure that it is a column array
-hdr.label = hdr.label(:);
-
 % as of November 2011, the header is supposed to include the channel type (see FT_CHANTYPE,
 % e.g. meggrad, megref, eeg) and the units of each channel (see FT_CHANUNIT, e.g. uV, fT)
 
@@ -2122,6 +2122,11 @@ if isfield(hdr, 'elec')
   hdr.elec = ft_datatype_sens(hdr.elec);
 end
 
+% ensure that these are column arrays
+hdr.label    = hdr.label(:);
+hdr.chantype = hdr.chantype(:);
+hdr.chanunit = hdr.chanunit(:);
+
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up
 hdr.Fs          = double(hdr.Fs);
@@ -2129,6 +2134,11 @@ hdr.nSamples    = double(hdr.nSamples);
 hdr.nSamplesPre = double(hdr.nSamplesPre);
 hdr.nTrials     = double(hdr.nTrials);
 hdr.nChans      = double(hdr.nChans);
+
+if inflated
+  % compressed file has been unzipped on the fly, clean up
+  delete(filename);
+end
 
 if cache && exist(headerfile, 'file')
   % put the header in the cache

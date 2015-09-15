@@ -21,8 +21,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                   as-is (see below for details)
 %   cfg.rotate      number, rotation around the z-axis in degrees (default = [], which means automatic)
 %   cfg.projection  string, 2D projection method can be 'stereographic', 'orthographic', 'polar', 'gnomic' or 'inverse' (default = 'polar')
-%   cfg.elec        structure with electrode positions, or
-%   cfg.elecfile    filename containing electrode positions
+%   cfg.elec        structure with electrode definition, or
+%   cfg.elecfile    filename containing electrode definition
 %   cfg.grad        structure with gradiometer definition, or
 %   cfg.gradfile    filename containing gradiometer definition
 %   cfg.opto        structure with optode structure definition, or

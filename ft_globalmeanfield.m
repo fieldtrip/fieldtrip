@@ -89,7 +89,7 @@ datain = ft_selectdata(tmpcfg, datain);
 datain = ft_checkdata(datain, 'datatype', {'timelock'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % get the options
-method    = ft_getopt(cfg, 'method', 'amplitude');        
+cfg.method    = ft_getopt(cfg, 'method', 'amplitude');        
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg, 'method', 'char', {'amplitude', 'power'});

@@ -26,19 +26,22 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % are for time domain data. ELORETA can be used both for frequency and time
 % domain data.
 %
-% The positions of the sources can be specified as a regular 3-D
+% The source model to use in the reconstruction should be specified as
+%   cfg.grid            = structure, see FT_PREPARE_SOURCEMODEL or FT_PREPARE_LEADFIELD
+% The positions of the dipoles can be specified as a regular 3-D
 % grid that is aligned with the axes of the head coordinate system
 %   cfg.grid.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
-% Alternatively the position of a few sources at locations of interest can
-% be specified, for example obtained from an anatomical or functional MRI
-%   cfg.grid.pos        = N*3 matrix with position of each source
 %   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
-% You can also use the FT_PREPARE_LEADFIELD function to create a grid with
-% dipole positions and with precomputed leadfields.
+% If the source model destribes a triangulated cortical sheet, it is described as
+%   cfg.grid.pos        = N*3 matrix with the vertex positions of the cortical sheet
+%   cfg.grid.tri        = M*3 matrix that describes the triangles connecting the vertices
+% Alternatively the position of a few dipoles at locations of interest can be
+% specified, for example obtained from an anatomical or functional MRI
+%   cfg.grid.pos        = N*3 matrix with position of each source
 %
 % Besides the source positions, you may also include previously computed
 % spatial filters and/or leadfields like this
@@ -231,6 +234,10 @@ if iscomp && (strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
     % the conversion will be done below, after the latency and channel selection
   end
 elseif isfreq && isfield(data, 'labelcmb')
+  % ensure that the cross-spectral densities are chan_chan_therest,
+  % otherwise the latency and frequency selection could fail, so we don't
+  % need to worry about linearly indexed cross-spectral densities below
+  % this point
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
@@ -292,26 +299,12 @@ elseif iscomp
 end
 
 if isfreq
-  if  ~strcmp(data.dimord, 'chan_freq')                 && ...
-      ~strcmp(data.dimord, 'rpt_chan_freq')             && ...
-      ~strcmp(data.dimord, 'rpttap_chan_freq')          && ...
-      ~strcmp(data.dimord, 'chancmb_freq')              && ...
-      ~strcmp(data.dimord, 'rpt_chancmb_freq')          && ...
-      ~strcmp(data.dimord, 'rpttap_chancmb_freq')       && ...
-      ~strcmp(data.dimord, 'chan_chan_freq')            && ...
-      ~strcmp(data.dimord, 'rpt_chan_chan_freq')        && ...
-      ~strcmp(data.dimord, 'rpttap_chan_chan_freq')     && ...
-      ~strcmp(data.dimord, 'chan_freq_time')            && ...
-      ~strcmp(data.dimord, 'rpt_chan_freq_time')        && ...
-      ~strcmp(data.dimord, 'rpttap_chan_freq_time')     && ...
-      ~strcmp(data.dimord, 'chancmb_freq_time')         && ...
-      ~strcmp(data.dimord, 'rpt_chancmb_freq_time')     && ...
-      ~strcmp(data.dimord, 'rpttap_chancmb_freq_time')  && ...
-      ~strcmp(data.dimord, 'chan_chan_freq_time')       && ...
-      ~strcmp(data.dimord, 'rpt_chan_chan_freq_time')   && ...
-      ~strcmp(data.dimord, 'rpttap_chan_chan_freq')     && ...
-      error('dimord of input frequency data is not recognized');
-  end
+  % as per the call to ft_checkdata above, the dimord of the freq-data is
+  % either (rpt_)chan_chan_otherstuff, or rpttap_chan_otherstuff. The
+  % former is with cross-spectra, the latter is with fourierspctrm
+  
+  % previously there was some explicit dimord checking here, but I think
+  % with the more consistent data handling it is not necessary anymore.
 end
 
 % collect and preprocess the electrodes/gradiometer and head model

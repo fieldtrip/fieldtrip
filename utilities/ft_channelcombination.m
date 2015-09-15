@@ -1,4 +1,4 @@
-function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto)
+function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto, dirflag)
 
 % FT_CHANNELCOMBINATION creates a cell-array with combinations of EEG/MEG
 % channels for subsequent cross-spectral-density and coherence analysis
@@ -18,15 +18,24 @@ function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto)
 % channel labels. Channels that are not present in the raw datafile
 % are automatically removed from the channel list.
 %
-% Please note that the default behaviour is to exclude to exclude symetric
-% pairs and auto-combinations.
+% When directional connectivity measures will subsequently be computed, the
+% interpretation of each channel-combination is that the direction of the
+% interaction is from the first column to the second column.
+
+% Note that the default behaviour is to exclude symmetric pairs and 
+% auto-combinations.
 %
 % See also FT_CHANNELSELECTION
 
-% Undocumented local options: optional third input argument includeauto,
-% specifies to include the auto-combinations
+% Undocumented options: 
+%   includeauto = 0 (or 1), include auto-combinations
+%   dirflag     = 0 (or 1, or 2) specifies the treatment of the order in
+%                   the columns of the output. If dirflag = 0, the order is
+%                   preserved, if dirflag = 1, the order is reversed,
+%                   second input column is put first. If dirflag = 2, both
+%                   directions are added to the list of combinations.
 
-% Copyright (C) 2003-2011, Robert Oostenveld
+% Copyright (C) 2003-2015, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -46,9 +55,8 @@ function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto)
 %
 % $Id$
 
-if nargin==2,
-  includeauto = 0;
-end
+if nargin<3 || isempty(includeauto), includeauto = 0; end
+if nargin<4 || isempty(dirflag),     dirflag     = 0; end
 
 if ischar(channelcmb) && strcmp(channelcmb, 'all')
   % make all possible combinations of all channels
@@ -60,9 +68,6 @@ if size(channelcmb,1)==2 && size(channelcmb,2)~=2
   warning('transposing channelcombination matrix');
   channelcmb = channelcmb';
 end
-
-% this will hold the output
-collect = {};
 
 % allow for channelcmb to be a 1x2 cell-array containing cells
 if numel(channelcmb)==2 && iscell(channelcmb{1}) && iscell(channelcmb{2})
@@ -84,84 +89,83 @@ if numel(channelcmb)==2 && iscell(channelcmb{1}) && iscell(channelcmb{2})
 end
 
 if isempty(setdiff(channelcmb(:), datachannel))
-  % there is nothing to do, since there are no channelgroups with special names
+  % there is not much to do, since there are no channelgroups with special names
   % each element of the input therefore already contains a proper channel name
+  
+  switch dirflag
+    case 0
+      % nothing to do
+    case 1
+      % switch the order
+      channelcmb = channelcmb(:,[2 1]);
+    case 2
+      channelcmb = [channelcmb; channelcmb(:,[2 1])];
+    otherwise
+      error('unknown value for input argument ''dirflag''');
+  end
   collect = channelcmb;
   
   if includeauto
-    for ch=1:numel(datachannel)
-      collect{end+1,1} = datachannel{ch};
-      collect{end,  2} = datachannel{ch};
+    autochannel = unique(channelcmb(:));
+    for ch=1:numel(autochannel)
+      collect = cat(1, collect, [autochannel(ch) autochannel(ch)]);
     end
   end
+  
 else
   % a combination is made for each row of the input selection after
   % translating the channel group (such as 'all') to the proper channel names
   % and within each set, double occurences and autocombinations are removed
   
+  selmat = false(numel(datachannel));
   for sel=1:size(channelcmb,1)
     % translate both columns and subsequently make all combinations
     channelcmb1 = ft_channelselection(channelcmb(sel,1), datachannel);
     channelcmb2 = ft_channelselection(channelcmb(sel,2), datachannel);
     
-    % compute indices of channelcmb1 and channelcmb2 relative to datachannel
-    [dum,indx,indx1]=intersect(channelcmb1,datachannel);
-    [dum,indx,indx2]=intersect(channelcmb2,datachannel);
+    % translate both columns and subsequently make all combinations
+    list1 = match_str(datachannel, channelcmb1);
+    list2 = match_str(datachannel, channelcmb2);
     
-    % remove double occurrences of channels in either set of signals
-    indx1   = unique(indx1);
-    indx2   = unique(indx2);
+    selmat(list1,list2) = true;
     
-    % create a matrix in which all possible combinations are set to one
-    cmb = zeros(length(datachannel));
-    for ch1=1:length(indx1)
-      for ch2=1:length(indx2)
-        cmb(indx1(ch1),indx2(ch2))=1;
-      end
+    if ~includeauto,
+      % exclude the auto-combinations
+      selmat = selmat & ~eye(size(selmat));
+    else
+      % ensure that the appropriate diagonal entries are filled
+      autovec = false(numel(datachannel),1);
+      autovec([list1(:);list2(:)]) = true;
+      selmat = selmat | diag(autovec);
     end
     
-    % remove auto-combinations
-    cmb = cmb & ~eye(size(cmb));
-    
-    % remove double occurences
-    cmb = cmb & ~tril(cmb, -1)';
-    
-    [indx1,indx2] = find(cmb);
-    
-    % extend the previously allocated cell-array to also hold the new
-    % channel combinations (this is done to prevent memory allocation and
-    % copying in each iteration in the for-loop below)
-    num = size(collect,1);               % count the number of existing combinations
-    dum = cell(num + length(indx1), 2);  % allocate space for the existing+new combinations
-    if num>0
-      dum(1:num,:) = collect(:,:);       % copy the exisisting combinations into the new array
-    end
-    collect = dum;
-    clear dum
-    
-    % convert to channel-names
-    for ch=1:length(indx1)
-      collect{num+ch,1}=datachannel{indx1(ch)};
-      collect{num+ch,2}=datachannel{indx2(ch)};
+    if dirflag==2,
+      % also fill the other 'direction'
+      selmat(list2,list1) = true;
     end
   end
   
-  if includeauto
-    cmb           = eye(length(datachannel));
-    [indx1,indx2] = find(cmb);
-    num           = size(collect,1);
-    dum           = cell(num + length(indx1), 2);
-    if num>0,
-      dum(1:num,:) = collect(:,:);
-    end
-    collect = dum;
-    clear dum
-    
-    % convert to channel-names for the auto-combinations
-    for ch=1:length(indx1)
-      collect{num+ch,1} = datachannel{indx1(ch)};
-      collect{num+ch,2} = datachannel{indx2(ch)};
-    end
+  if dirflag<2
+    % remove double occurrences
+    selmat   = selmat & ~tril(selmat, -1)';
   end
-end
+  [i1, i2] = find(selmat);
+    
+  switch dirflag
+    case 0
+      % original behaviour, 
+      % row-to-column, i.e. outflow according to FT's convention
+      indx = [i1 i2];
+    case 1
+      % column-to-row, i.e. inflow according to FT's convention
+      indx = [i2 i1];
+    case 2
+      % both
+      indx = [i1 i2];
+             
+    otherwise
+      error('unknown value for input argument ''dirflag''');
+  end
 
+  collect = [datachannel(indx(:,1)) datachannel(indx(:,2))];
+end

@@ -1,18 +1,9 @@
-function ft_spmfig_setup(cfg)
+function nmt_spmfig_setup(cfg)
 % adds custom features to SPM MRI display window
 % e.g., head coords, MNI coords, activation intensity
 % Author: Sarang S. Dalal, NEMOlab
 
 global st
-
-% if(~isempty(beam))
-%     voxelsize = beam.voxelsize; % this determines scroll bar increments...
-%     coreg = beam.coreg;
-% else
-%     voxelsize = [5 5 5];
-%     coreg = nuts.coreg;
-%     rivets.sliderenable = 'on';
-% end
 
 fg = spm_figure('GetWin','Graphics');
 WS = spm('winscale');
@@ -26,7 +17,7 @@ delete(findobj('ToolTipString','move crosshairs to origin'));
 delete(inlabel);
 set(st.in,'Visible','off');
 
-beaminlabel = uicontrol(fg,'Style','Text','Position',[60 350 120 020].*WS,'String','Activation Intensity:');
+beaminlabel = uicontrol(fg,'Style','Text','Position',[60 350 120 020].*WS,'String','Functional:');
 st.nmt.beamin = uicontrol(fg,'Style','edit', 'Position',[175 350  125 020].*WS,'String','');
 
 uicontrol(fg,'Style','Text', 'Position',[75 255 35 020].*WS,'String','MNI:');
@@ -40,7 +31,50 @@ st.nmt.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'Str
 set(st.mp,'Callback','spm_image(''setposmm''); nmt_image(''shopos'');');
 set(st.vp,'Callback','spm_image(''setposvx''); nmt_image(''shopos'');');
 
-% %add sliders for scrolling through MRI
+for ii=1:7
+   spmUIhL = findobj('Callback',['spm_image(''repos'',' num2str(ii) ')']);
+   set(spmUIhL,'Callback',['spm_image(''repos'',' num2str(ii) '); nmt_image']);
+end
+
+spmUIhR = [findobj('Style','popupmenu'); findobj('Style','togglemenu')];
+for ii=1:length(spmUIhR)
+    cb = get(spmUIhR(ii),'Callback');
+    set(spmUIhR(ii),'Callback',[cb '; nmt_image;']);
+end
+
+% %% so instead, just destroy them all
+% hitlist = ...
+% [75 220 100 016
+% 75 200 100 016
+% 75 180 100 016
+% 75 160 100 016 
+% 75 140 100 016 
+% 75 120 100 016 
+% 75 100 100 016 
+% 75  80 100 016 
+% 75  60 100 016 
+% 175 220 065 020 
+% 175 200 065 020 
+% 175 180 065 020 
+% 175 160 065 020 
+% 175 140 065 020 
+% 175 120 065 020 
+% 175 100 065 020 
+% 175  80 065 020 
+% 175  60 065 020
+% 70 35 125 020
+% 195 35 55 020
+% ];
+% 
+% for ii=1:size(hitlist,1)
+%     delete(findobj('Position',hitlist(ii,:).*WS));
+% end
+%     
+
+
+
+
+%% add sliders for scrolling through MRI
 % if ndefaults.sliders
 %     ax_pos = get(st.vols{1}.ax{1}.ax,'Position');
 %     cor_pos = get(st.vols{1}.ax{2}.ax,'Position');
@@ -68,6 +102,9 @@ for i=1:3  % step through three orthogonal views
 end
 
 % for time series or spectrogram data, expand SPM window and create new axes
+if(isfield(st.nmt,''))
+end
+
 switch(cfg.funparameter)
     case {'avg.mom','mom'}
         % MRI slices have "relative" position; change to fixed position
@@ -80,6 +117,9 @@ switch(cfg.funparameter)
         
         set(SPM_axes_obj,'Units','normalized');
         
+        for ii=1:3
+            st.vols{1}.ax{ii}.axpos = get(SPM_axes_obj(ii),'Position');
+        end
         
         %% modeled after section in spm_orthviews.m that sets axis positions
         Dims = diff(st.bb)'+1;
@@ -117,6 +157,11 @@ switch(cfg.funparameter)
         set(st.nmt.ax_ts,'Units','pixels', ...
             'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2) s*(Dims(1)+Dims(2)) s*(Dims(2))],...
             'Units','normalized','Visible','on')
+        
+        % save new MRI axis positions, because original SPM controls may mess them up
+        for ii=1:3
+            st.nmt.mriaxpos(:,ii) = get(st.vols{1}.ax{ii}.ax,'Position');
+        end
 end
 
 tmp = get(SPM_axes_obj(1),'ButtonDownFcn');
