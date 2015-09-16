@@ -83,11 +83,8 @@ if nargin<1
   cmd = 'info';
 end
 
-[ftpath, f, x]  = fileparts(mfilename('fullpath'));
-ftpath          = ftpath(1:end-10); % strip away '/utilities' where this function is located
-signaturefile   = fullfile(ftpath, 'signature.md5');
-remotesignature = 'http://fieldtrip.fcdonders.nl/signature.md5';
-repository      = 'http://fieldtrip.googlecode.com/svn/trunk/';
+ftpath = fileparts(mfilename('fullpath'));
+ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
 
 if isempty(issvn)
   % are we dealing with an SVN working copy of fieldtrip?
@@ -145,19 +142,9 @@ switch cmd
       end
       
     else
-      % determine the latest revision from the signature file
-      fp = fopen(signaturefile, 'r');
-      if fp>0
-        line = fgetl(fp); % just get first line, file should be ordered newest-first
-        fclose(fp);
-        
-        rev = regexp(line, '[^\t]*\t([^\t])*\t.*', 'tokens');
-        rev = rev{1}{1};
-        ftver = ['r' rev];
-      else
-        ftver = 'unknown';
-      end
-
+      % get it from the Contents.m file in the FieldTrip release
+      a = ver(ftpath);
+      ftver = a.Version;
     end
     
     if nargout==0
