@@ -123,12 +123,13 @@ end
 disp('Close the figure to output new sensor positions');
 
 % set the defaults
-if ~isfield(cfg, 'channel'),       cfg.channel = 'all';       end
-if ~isfield(cfg, 'feedback'),      cfg.feedback = 'no';       end
-if ~isfield(cfg, 'casesensitive'), cfg.casesensitive = 'yes'; end
-if ~isfield(cfg, 'headshape'),     cfg.headshape = [];        end % for triangulated head surface, without labels
-if ~isfield(cfg, 'template'),      cfg.template = [];         end % for electrodes or fiducials, always with labels
-if ~isfield(cfg, 'label'),         cfg.label = 'off';         end % show labels
+cfg.channel       = ft_getopt(cfg, 'channel',  'all');
+cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
+cfg.casesensitive = ft_getopt(cfg, 'casesensitive', 'no');
+cfg.headshape     = ft_getopt(cfg, 'headshape', []);     % for triangulated head surface, without labels
+cfg.template      = ft_getopt(cfg, 'template',  []);     % for electrodes or fiducials, always with labels
+cfg.label         = ft_getopt(cfg, 'label',     'off');  % show labels
+
 if ~isfield(cfg, 'warp') && strcmp(cfg.method, 'interactive')
   cfg.warp = 'traditional';
 elseif ~isfield(cfg, 'warp')
@@ -141,7 +142,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
 cfg = ft_checkconfig(cfg, 'renamedval',{'warp', 'homogenous', 'rigidbody'});
 cfg = ft_checkconfig(cfg, 'renamedval',{'warp', 'homogeneous', 'rigidbody'});
 
-if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
+if ~isempty(cfg.headshape) && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
   cfg.headshape = struct(cfg.headshape);
 end
@@ -166,6 +167,9 @@ elec = ft_convert_units(elec); % ensure that the units are specified
 % ensure up-to-date sensor descriptions 
 elec = ft_datatype_sens(elec);
 
+% ensure the elec to have a coordsys
+elec = ft_determine_coordsys(elec);
+  
 % ensure that channel and electrode positions are the same
 assert(isequaln(elec.elecpos,elec.chanpos),'This function requires same electrode and channel positions.'); 
 
@@ -195,35 +199,35 @@ if usetemplate
 end
 
 if useheadshape
-    % get the surface describing the head shape
-    if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
-        if isfield(cfg.headshape,'pos') && ~isfield(cfg.headshape,'pnt')
-            cfg.headshape.pnt = cfg.headshape.pos;
-        end
-        headshape = mesh2edge(cfg.headshape);
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
-        if isfield(cfg.headshape,'pos') && ~isfield(cfg.headshape,'pnt')
-            cfg.headshape.pnt = cfg.headshape.pos;
-        end
-        headshape = mesh2edge(cfg.headshape);
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
-        % use the headshape surface specified in the configuration
-        headshape = cfg.headshape;
-    elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
-        % use the headshape points specified in the configuration
-        headshape.pnt = cfg.headshape;
-    elseif ischar(cfg.headshape)
-        % read the headshape from file
-        headshape = ft_read_headshape(cfg.headshape);
-    else
-        error('cfg.headshape is not specified correctly')
+  % get the surface describing the head shape
+  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'hex')
+    if isfield(cfg.headshape,'pos') && ~isfield(cfg.headshape,'pnt')
+      cfg.headshape.pnt = cfg.headshape.pos;
     end
-    if ~isfield(headshape, 'tri') && ~isfield(headshape,'poly')
-        % generate a closed triangulation from the surface points
-        headshape.pnt = unique(headshape.pnt, 'rows');
-        headshape.tri = projecttri(headshape.pnt);
+    headshape = mesh2edge(cfg.headshape);
+  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'tet')
+    if isfield(cfg.headshape,'pos') && ~isfield(cfg.headshape,'pnt')
+      cfg.headshape.pnt = cfg.headshape.pos;
     end
-    headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
+    headshape = mesh2edge(cfg.headshape);
+  elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+    % use the headshape surface specified in the configuration
+    headshape = cfg.headshape;
+  elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
+    % use the headshape points specified in the configuration
+    headshape.pnt = cfg.headshape;
+  elseif ischar(cfg.headshape)
+    % read the headshape from file
+    headshape = ft_read_headshape(cfg.headshape);
+  else
+    error('cfg.headshape is not specified correctly')
+  end
+  if ~isfield(headshape, 'tri') && ~isfield(headshape,'poly')
+    % generate a closed triangulation from the surface points
+    headshape.pnt = unique(headshape.pnt, 'rows');
+    headshape.tri = projecttri(headshape.pnt);
+  end
+  headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
 end
 
 % remember the original electrode locations and labels
@@ -346,6 +350,16 @@ elseif strcmp(cfg.method, 'template') && useheadshape
 elseif strcmp(cfg.method, 'fiducial')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
+   switch elec.coordsys
+    case {'unknown' 'als'}
+      % default to CTF's convention
+      coordsys = 'ctf'
+    case {'ras'}
+      coordsys = 'neuromag';
+    otherwise
+      coordsys = elec.coordsys;
+  end
+  
   % try to determine the fiducials automatically if not specified
   if ~isfield(cfg, 'fiducial')
     option1 = {'nasion' 'left' 'right'};
@@ -408,12 +422,12 @@ elseif strcmp(cfg.method, 'fiducial')
   templ_rpa = mean(templ_rpa,1);
   
   % realign both to a common coordinate system
-  elec2common  = ft_headcoordinates(elec_nas, elec_lpa, elec_rpa);
-  templ2common = ft_headcoordinates(templ_nas, templ_lpa, templ_rpa);
+  elec2common  = ft_headcoordinates(elec_nas, elec_lpa, elec_rpa,    coordsys);
+  templ2common = ft_headcoordinates(templ_nas, templ_lpa, templ_rpa, coordsys);
   
   % compute the combined transform and realign the electrodes to the template
   norm         = [];
-  norm.m       = elec2common * inv(templ2common);
+  norm.m       = elec2common / templ2common;
   if ~strcmp(cfg.warp, 'rigidbody')
     error('method=fiducial implies rigid body warp. See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1722');
   else
@@ -432,6 +446,7 @@ elseif strcmp(cfg.method, 'fiducial')
   fprintf('mean distance between fiducials prior to realignment %f, after realignment %f\n', dpre, dpost);
   
   if strcmp(cfg.feedback, 'yes')
+    
     % plot the first three electrodes before transformation
     my_plot3(elec.chanpos(1,:), 'r*');
     my_plot3(elec.chanpos(2,:), 'r*');
