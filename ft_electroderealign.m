@@ -168,7 +168,9 @@ elec = ft_convert_units(elec); % ensure that the units are specified
 elec = ft_datatype_sens(elec);
 
 % ensure the elec to have a coordsys
-elec = ft_determine_coordsys(elec);
+if ~isfield(elec, 'coordsys')
+  elec = ft_determine_coordsys(elec);
+end
   
 % ensure that channel and electrode positions are the same
 assert(isequaln(elec.elecpos,elec.chanpos),'This function requires same electrode and channel positions.'); 
