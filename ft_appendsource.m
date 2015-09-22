@@ -57,8 +57,12 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
 end
 
-% use a helper function to select the consistent parts of the data and to concatenate it
-source = ft_selectdata(varargin{:}, 'param', {'pow'});
+% FIXME 
+error('this function does not work.....yet');
+% initially there was an old-style call to ft_selectdata here, but I would
+% assume nobody has ever used this function, since even in the old-style it
+% was bound to crash. I suggest to build the function here, from scratch
+% once the need arises...
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
