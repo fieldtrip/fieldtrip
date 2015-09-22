@@ -215,9 +215,8 @@ chanY = double(chanY);
 %interpolate data
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
 yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
-<<<<<<< HEAD
 
-if ft_platform_supports('griddata-vector-input')
+if ~ft_platform_supports('griddata-vector-input')
   % in GNU Octave, griddata does not support vector
   % positions; make a grid to get the locations in vector form
   [xi,yi]=meshgrid(xi,yi);
