@@ -1100,8 +1100,8 @@ switch headerformat
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
-    elseif ispc && filename(2)~=':'
-      % add the full path, including drive letter
+    elseif ispc && ~any(strcmp(filename(2),{':','\'}))
+      % add the full path, including drive letter or slashes as needed.
       filename = fullfile(pwd, filename);
     end
     hdr = read_mff_header(filename);
