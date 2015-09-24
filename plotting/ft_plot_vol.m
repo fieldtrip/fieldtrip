@@ -7,14 +7,15 @@ function ft_plot_vol(headmodel, varargin)
 %   hs = ft_plot_vol(headmodel, varargin)
 %
 % Optional arguments should come in key-value pairs and can include
-%     'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
-%     'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
-%     'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
-%     'faceindex'    = true or false
-%     'vertexindex'  = true or false
-%     'facealpha'    = transparency, between 0 and 1 (default = 1)
-%     'edgealpha'    = transparency, between 0 and 1 (default = 1)
-%     'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
+%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
+%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
+%   'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%   'faceindex'    = true or false
+%   'vertexindex'  = true or false
+%   'facealpha'    = transparency, between 0 and 1 (default = 1)
+%   'edgealpha'    = transparency, between 0 and 1 (default = 1)
+%   'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
+%   'unit'         = string, convert to the specified geometrical units (default = [])
 %
 % Example
 %   headmodel   = [];

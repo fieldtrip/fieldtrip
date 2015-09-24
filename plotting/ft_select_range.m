@@ -22,7 +22,7 @@ function ft_select_range(handle, eventdata, varargin)
 %   'yrange'      = boolean, yrange variable or not
 %   'clear'       = boolean
 %
-% Example use:
+% Example
 %   x = randn(10,1);
 %   y = randn(10,1);
 %   figure; plot(x, y, '.');

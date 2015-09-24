@@ -4,6 +4,7 @@ function [varargout] = ft_plot_patch(hdat,vdat,varargin)
 % similar in usage as ft_plot_vector, and they can be combined, for example,
 % to plot an area equivalent to a SEM or STD-DEV around a line.
 %
+% Use as
 %   ft_plot_patch(X, Y, ...)
 % where X and Y are similar as the input to the MATLAB patch() function.
 %
@@ -30,11 +31,11 @@ function [varargout] = ft_plot_patch(hdat,vdat,varargin)
 %   'hlim'            = horizontal scaling limits within the local axes
 %   'vlim'            = vertical scaling limits within the local axes
 %
-% Example 1
-% hdat = [1:10 10:-1:1];
-% vdat = rand(1,10);
-% vdat = [vdat vdat(end:-1:1)+1];
-% ft_plot_patch(hdat,vdat)
+% Example
+%   hdat = [1:10 10:-1:1];
+%   vdat = rand(1,10);
+%   vdat = [vdat vdat(end:-1:1)+1];
+%   ft_plot_patch(hdat,vdat)
 %
 % See also FT_PLOT_VECTOR
 

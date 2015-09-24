@@ -14,6 +14,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'coilorientation' = true/false, plot the orientation of each coil (default = false)
 %   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
 %   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
+%   'unit'            = string, convert to the specified geometrical units (default = [])
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');
