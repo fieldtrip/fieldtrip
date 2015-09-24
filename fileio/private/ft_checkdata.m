@@ -117,9 +117,6 @@ if (~isempty(depHastrialdef))
   ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
   hassampleinfo = depHastrialdef;
 end
-if (~isempty(ft_getopt(varargin, 'hasoffset')))
-  ft_warning('ft_checkdata option ''hasoffset'' has been removed and will be ignored');
-end
 
 % determine the type of input data
 % this can be raw, freq, timelock, comp, spike, source, volume, dip
