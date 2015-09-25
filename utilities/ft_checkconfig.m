@@ -518,6 +518,9 @@ if istrue(checkfilenames)
   end
   
   if ~isempty(cfg.dataset)
+    % the dataset is an abstract concept and might relate to a file, a
+    % constellation of fioles or a directory containing multiple files
+    
     if isequal(cfg.dataset, 'gui') || isequal(cfg.dataset, 'uigetfile')
       % display a graphical file selection dialog
       [f, p] = uigetfile('*.*', 'Select a data file');
@@ -537,32 +540,35 @@ if istrue(checkfilenames)
     end
     
     % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
-    % this requires correct autodetection of the format
+    % this requires correct autodetection of the format of the data set
     [cfg.dataset, cfg.headerfile, cfg.datafile] = dataset2files(cfg.dataset, []);
     
-    % fill dataformat if unspecified
-    if ~isfield(cfg,'dataformat') || isempty(cfg.dataformat)
-      cfg.dataformat = ft_filetype(cfg.datafile);
-    end
-    
-    % fill dataformat if unspecified
-    if ~isfield(cfg,'headerformat') || isempty(cfg.headerformat)
-      cfg.headerformat = ft_filetype(cfg.headerfile);
-    end
-    
   elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile);
-    % assume that the datafile also contains the header
+    % assume that the datafile also contains the header information
+    cfg.dataset    = cfg.datafile;
     cfg.headerfile = cfg.datafile;
+    
   elseif isempty(cfg.datafile) && ~isempty(cfg.headerfile);
     % assume that the headerfile also contains the data
+    cfg.dataset  = cfg.headerfile;
     cfg.datafile = cfg.headerfile;
   end
-  % remove empty fields (otherwise a subsequent check on required fields doesn't make any sense)
-  if isempty(cfg.dataset),    cfg=rmfield(cfg, 'dataset');    end
-  if isempty(cfg.headerfile), cfg=rmfield(cfg, 'headerfile'); end
-  if isempty(cfg.datafile),   cfg=rmfield(cfg, 'datafile');   end
+  
+  % fill dataformat if unspecified, doing this only once saves time later
+  if ~isfield(cfg,'dataformat') || isempty(cfg.dataformat)
+    cfg.dataformat = ft_filetype(cfg.datafile);
+  end
+  
+  % fill headerformat if unspecified, doing this only once saves time later
+  if ~isfield(cfg,'headerformat') || isempty(cfg.headerformat)
+    cfg.headerformat = ft_filetype(cfg.headerfile);
+  end
+  
+  % remove empty fields, otherwise a subsequent check on required fields doesn't make any sense
+  if isempty(cfg.dataset),    cfg = rmfield(cfg, 'dataset');    end
+  if isempty(cfg.headerfile), cfg = rmfield(cfg, 'headerfile'); end
+  if isempty(cfg.datafile),   cfg = rmfield(cfg, 'datafile');   end
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % configtracking
