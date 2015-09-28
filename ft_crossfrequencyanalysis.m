@@ -1,7 +1,6 @@
 function crossfreq = ft_crossfrequencyanalysis(cfg,freqlow,freqhigh)
 
-% FT_CROSSFREQUENCYANALYSIS performs cross-frequency analysis using various
-% algorithms
+% FT_CROSSFREQUENCYANALYSIS performs cross-frequency analysis using various algorithms
 %
 % Use as
 %   crossfreq = ft_crossfrequencyanalysis(cfg, freqlo, freqhi)
@@ -14,7 +13,7 @@ function crossfreq = ft_crossfrequencyanalysis(cfg,freqlow,freqhigh)
 %   cfg.chanhigh    selection of channels for the high frequency, see FT_CHANNELSELECTION
 %   cfg.method      'plv' - phase locking value
 %                   'mvl' - mean vector length
-%                   'mi'  - modulaiton index
+%                   'mi'  - modulation index
 %   cfg.keeptrials  string, can be 'yes' or 'no'
 %
 % To facilitate data-handling and distributed computing you can use
@@ -76,14 +75,21 @@ cfg.freqhigh   = ft_getopt(cfg, 'freqhigh');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials');
 
 % make selection of frequencies and channels
-tmpcfg = keepfields(cfg, {'freqlow', 'chanlow'});
+tmpcfg = [];
+tmpcfg.channel   = cfg.chanlow;
+tmpcfg.frequency = cfg.freqlow;
 freqlow = ft_selectdata(tmpcfg, freqlow);
-[cfg, freqlow] = rollback_provenance(cfg, freqlow);
+[tmpcfg, freqlow] = rollback_provenance(cfg, freqlow);
+cfg.chanlow = tmpcfg.channel;
+cfg.freqlow = tmpcfg.frequency;
 
-tmpcfg = keepfields(cfg, {'freqhigh', 'chanhigh'});
+tmpcfg = [];
+tmpcfg.channel = cfg.chanhigh;
+tmpcfg.foi     = cfg.freqhigh;
 freqhigh = ft_selectdata(tmpcfg, freqhigh);
-[cfg, freqhigh] = rollback_provenance(cfg, freqhigh);
-
+[tmpcfg, freqhigh] = rollback_provenance(cfg, freqhigh);
+cfg.chanhigh = tmpcfg.channel;
+cfg.freqhigh = tmpcfg.frequency;
 
 LF = freqlow.freq;
 HF = freqhigh.freq;
