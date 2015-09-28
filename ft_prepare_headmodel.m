@@ -50,6 +50,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   interpolate        interpolate the precomputed leadfield
 %
 % For MEG the following methods are available:
+%   openmeeg           boundary element method, based on the OpenMEEG software
 %   singlesphere       analytical single sphere model
 %   localspheres       local spheres model for MEG, one sphere per channel
 %   singleshell        realisically shaped single shell approximation, based on the implementation from Guido Nolte
@@ -232,7 +233,7 @@ switch cfg.method
     headmodel = ft_headmodel_interpolate(cfg.outputfile, sens, data, 'smooth', cfg.smooth);
     
   case 'besa'
-    % the cfg.headmodel§ points to the filename of the FEM solution that was computed
+    % the cfg.headmodel? points to the filename of the FEM solution that was computed
     % in BESA, cfg.elecfile should point to the corresponding electrode specification
     sens = ft_fetch_sens(cfg, data);
     headmodel = ft_headmodel_interpolate(cfg.outputfile, sens, cfg.headmodel, 'smooth', cfg.smooth);
