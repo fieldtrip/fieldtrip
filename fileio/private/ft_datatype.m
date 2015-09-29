@@ -43,7 +43,7 @@ isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfiel
 istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
 iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
-issource       =  isfield(data, 'pos');
+issource       =  isfield(data, 'pos') || isfield(data, 'pnt'); % pnt is deprecated
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
@@ -178,7 +178,7 @@ end
 function [res] = check_segmentation(volume)
 res = false;
 
-if ~isfield(volume, 'dim')
+if ~isfield(volume, 'dim') && ~isfield(volume, 'transform')
   return
 end
 
