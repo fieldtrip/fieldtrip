@@ -393,6 +393,11 @@ elseif isUnstructuredFun && ~isUnstructuredAna
     interp = setsubfield(interp, dat_name{i}, allav);
   end
   
+  if ~isfield(interp, 'freq') && ~isfield(interp, 'time')
+      % the output should be a volume representation, not a source
+    interp = rmfield(interp, 'pos');
+  end
+  
 elseif ~isUnstructuredFun && isUnstructuredAna 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % functional data defined on a volume, anatomy on a point cloud/mesh
@@ -486,10 +491,6 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
   interp = keepfields(functional, {'time', 'freq'});
   interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit', 'anatomy'});
 
-  % remember the coordinate trandsformation for both
-  transform_ana = anatomical.transform;
-  transform_fun = functional.transform;
-  
   % convert the anatomical voxel positions into voxel indices into the functional volume
   anatomical.transform = functional.transform \ anatomical.transform;
   functional.transform = eye(4);
@@ -511,7 +512,6 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
     az(:)>=minfz & ...
     az(:)<=maxfz;
   fprintf('selecting subvolume of %.1f%%\n', 100*sum(sel)./prod(anatomical.dim));
-  
   
   if all(functional.inside(:))
     % keep all voxels marked as inside
@@ -599,9 +599,8 @@ end % computing the interpolation according to the input data
 if isfield(interp, 'freq') || isfield(interp, 'time')
   % the output should be a source representation, not a volumetric representation
   if ~isfield(interp, 'pos')
-    [X,Y,Z]    = ndgrid(1:interp.dim(1), 1:interp.dim(2), 1:interp.dim(3));
-    interp.pos = ft_warp_apply(interp.transform, [X(:) Y(:) Z(:)]);
-    % FIXME should dim and/or transform be removed?
+    [x, y, z] = voxelcoords(interp.dim, interp.transform);
+    interp.pos = [x(:) y(:) z(:)];
   end
 end
 
