@@ -57,6 +57,9 @@ nori      = nan; % this will be 3 in many cases
 ntopochan = inf;
 nspike    = inf; % this is only for the first spike channel
 nlag      = nan;
+ndim1     = nan;
+ndim2     = nan;
+ndim3     = nan;
 
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
@@ -119,6 +122,12 @@ elseif isfield(data, 'dim')
   npos = prod(data.dim);
 end
 
+if isfield(data, 'dim')
+  ndim1 = data.dim(1);
+  ndim2 = data.dim(2);
+  ndim3 = data.dim(3);
+end
+
 if isfield(data, 'csdlabel')
   % this is used in PCC beamformers
   if length(data.csdlabel)==npos
@@ -154,8 +163,8 @@ end
 % determine the size of the actual data
 datsiz = getdimsiz(data, field);
 
-tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan' 'lag'};
-siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan nlag];
+tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan' 'lag' 'dim1' 'dim2' 'dim3'};
+siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan nlag ndim1 ndim2 ndim3];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ATTEMPT 2: a general dimord is present and might apply
