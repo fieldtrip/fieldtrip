@@ -516,8 +516,17 @@ if ~exist('dimord', 'var')
   end
 end % if dimord does not exist
 
+if ~exist('dimord', 'var')
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % ATTEMPT 6: check whether it is a 3-D volume
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if isequal(datsiz, [ndim1 ndim2 ndim3])
+    dimord = 'dim1_dim2_dim3';
+  end
+end % if dimord does not exist
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ATTEMPT 6: return "unknown" for all unknown dimensions
+% FINAL RESORT: return "unknown" for all unknown dimensions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~exist('dimord', 'var')
   % this should not happen
