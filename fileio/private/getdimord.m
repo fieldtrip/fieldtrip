@@ -493,6 +493,9 @@ if ~exist('dimord', 'var')
     dimtok(datsiz==nchan)     = {'chan'};
     dimtok(datsiz==nfreq)     = {'freq'};
     dimtok(datsiz==ntime)     = {'time'};
+    dimtok(datsiz==ndim1)     = {'dim1'};
+    dimtok(datsiz==ndim2)     = {'dim2'};
+    dimtok(datsiz==ndim3)     = {'dim3'};
     
     if isempty(dimtok{end}) && datsiz(end)==1
       % remove the unknown trailing singleton dimension
