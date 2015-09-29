@@ -209,6 +209,11 @@ switch field
   % note that the case for a cell dimension (typically pos) is handled at
   % the end of this section
   
+  case {'pos'}
+    if isequalwithoutnans(datsiz, [npos 3])
+      dimord = 'pos_unknown';
+    end
+    
   case {'individual'}
     if isequalwithoutnans(datsiz, [nsubj nchan ntime])
       dimord = 'subj_chan_time';
