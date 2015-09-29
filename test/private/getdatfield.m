@@ -15,7 +15,7 @@ datfield  = fieldnames(data);
 xtrafield =  {'label' 'labelcmb'};
 datfield  = setdiff(datfield, xtrafield);
 
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'dim' 'unit' 'topolabel' 'lfplabel'};
+xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'dim' 'unit' 'topolabel' 'lfplabel' 'tri' 'tet' 'hex'};
 datfield  = setdiff(datfield, xtrafield);
 
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
