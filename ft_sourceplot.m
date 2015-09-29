@@ -1,26 +1,25 @@
 function ft_sourceplot(cfg, functional, anatomical)
 
-% FT_SOURCEPLOT plots functional source reconstruction data on slices or on
-% a surface, optionally as an overlay on anatomical MRI data, where
-% statistical data can be used to determine the opacity of the mask. Input
-% data comes from FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE or statistical
-% values from FT_SOURCESTATISTICS.
+% FT_SOURCEPLOT plots functional source reconstruction data on slices or on a
+% surface, optionally as an overlay on anatomical MRI data, where statistical data
+% can be used to determine the opacity of the mask. Input data comes from
+% FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE or statistical values from
+% FT_SOURCESTATISTICS.
 %
 % Use as
 %   ft_sourceplot(cfg, data)
 % where the input data can contain an anatomical MRI, functional source
 % reconstruction results and/or statistical data. If both anatomical and
-% functional/statistical data is provided as input, they should be
-% represented or interpolated on the same same 3-D grid, e.g. using
-% FT_SOURCEINTERPOLATE.
+% functional/statistical data is provided as input, they should be represented or
+% interpolated on the same same 3-D grid, e.g. using FT_SOURCEINTERPOLATE.
 %
 % The slice and ortho visualization plot the data in the input data voxel
-% arrangement, i.e. the three ortho views are the 1st, 2nd and 3rd
-% dimension of the 3-D data matrix, not of the head coordinate system. The
-% specification of the coordinate for slice intersection is specified in
-% head coordinates, i.e. relative to the fiducials and in mm or cm. If you
-% want the visualisation to be consistent with the head coordinate system,
-% you can reslice the data using FT_VOLUMERESLICE.
+% arrangement, i.e. the three ortho views are the 1st, 2nd and 3rd dimension of
+% the 3-D data matrix, not of the head coordinate system. The specification of the
+% coordinate for slice intersection is specified in head coordinates, i.e.
+% relative to the fiducials and in mm or cm. If you want the visualisation to be
+% consistent with the head coordinate system, you can reslice the data using
+% FT_VOLUMERESLICE.
 %
 % The configuration should contain:
 %   cfg.method        = 'slice',      plots the data on a number of slices in the same plane
@@ -104,12 +103,12 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.title         = string, title of the figure window
 %
 % When cfg.method = 'surface', the functional data will be rendered onto a
-% cortical mesh (can be an inflated mesh). If the input source data
-% contains a tri-field, no interpolation is needed. If the input source
-% data does not contain a tri-field (i.e. a description of a mesh), an
-% interpolation is performed onto a specified surface. Note that the
-% coordinate system in which the surface is defined should be the same as
-% the coordinate system that is represented in source.pos.
+% cortical mesh (can be an inflated mesh). If the input source data contains a
+% tri-field, no interpolation is needed. If the input source data does not contain
+% a tri-field (i.e. a description of a mesh), an interpolation is performed onto a
+% specified surface. Note that the coordinate system in which the surface is
+% defined should be the same as the coordinate system that is represented in
+% source.pos.
 %
 % The following parameters apply to surface-plotting when an interpolation
 % is required
@@ -143,8 +142,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 % disk. This mat files should contain only a single variable corresponding to the
 % input structure.
 %
-% See also FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE, FT_SOURCESTATISTICS,
-% FT_VOLUMELOOKUP, FT_READ_ATLAS, FT_READ_MRI
+% See also FT_SOURCEMOVIE, FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE,
+% FT_SOURCESTATISTICS, FT_VOLUMELOOKUP, FT_READ_ATLAS, FT_READ_MRI
 
 % TODO have to be built in:
 %   cfg.marker        = [Nx3] array defining N marker positions to display (orig: from sliceinterp)
@@ -157,7 +156,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   surface also optimal when inside present
 %   come up with a good glass brain projection
 
-% Copyright (C) 2007-2012, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2007-2015, Robert Oostenveld, Ingrid Nieuwenhuis
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -626,7 +625,9 @@ h = figure;
 set(h, 'color', [1 1 1]);
 set(h, 'visible', 'on');
 set(h, 'renderer', cfg.renderer);
-title(cfg.title);
+if ~isempty(cfg.title)
+  title(cfg.title);
+end
 
 %%% set color and opacity mapping for this figure
 if hasfun
@@ -651,12 +652,12 @@ switch cfg.method
     
     % white BG => mskana
     
-    %% TODO: HERE THE FUNCTION THAT MAKES TO SLICE DIMENSION ALWAYS THE THIRD
-    %% DIMENSION, AND ALSO KEEP TRANSFORMATION MATRIX UP TO DATE
+    % TODO: HERE THE FUNCTION THAT MAKES TO SLICE DIMENSION ALWAYS THE THIRD DIMENSION, AND ALSO KEEP TRANSFORMATION MATRIX UP TO DATE
     % zoiets
     % if hasana; ana = shiftdim(ana,cfg.slicedim-1); end;
     % if hasfun; fun = shiftdim(fun,cfg.slicedim-1); end;
     % if hasmsk; msk = shiftdim(msk,cfg.slicedim-1); end;
+    
     %%%%% select slices
     if ~ischar(cfg.slicerange)
       ind_fslice = cfg.slicerange(1);
