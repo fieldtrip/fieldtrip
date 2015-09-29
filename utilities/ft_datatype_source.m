@@ -226,6 +226,23 @@ switch version
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
     
+    % ensure that all data fields have the correct dimensions
+    fn = getdatfield(source);
+    for i=1:numel(fn)
+      dimord = getdimord(source, fn{i});
+      dimtok = tokenize(dimord, '_');
+      dimsiz = getdimsiz(source, fn{i});
+      dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+      if numel(dimsiz)>=3 && strcmp(dimtok{1}, 'dim1') && strcmp(dimtok{2}, 'dim2') && strcmp(dimtok{3}, 'dim3')
+        % convert it from voxel-based representation to position-based representation
+        try
+          source.(fn{i}) = reshape(source.(fn{i}), [prod(dimsiz(1:3)) dimsiz(4:end) 1]);
+        catch
+          warning('could not reshape %s to the expected dimensions', fn{i});
+        end
+      end
+    end
+      
     
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -316,6 +333,9 @@ function source = fixpos(source)
 if ~isfield(source, 'pos')
   if isfield(source, 'xgrid') && isfield(source, 'ygrid') && isfield(source, 'zgrid')
     source.pos = grid2pos(source.xgrid, source.ygrid, source.zgrid);
+  elseif isfield(source, 'pnt')
+    source.pos = source.pnt; 
+    source = rmfield(source, 'pnt');
   elseif isfield(source, 'dim') && isfield(source, 'transform')
     source.pos = dim2pos(source.dim, source.transform);
   else
