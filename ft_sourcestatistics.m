@@ -115,7 +115,7 @@ for i=1:length(varargin)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'parameter'});
+tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
