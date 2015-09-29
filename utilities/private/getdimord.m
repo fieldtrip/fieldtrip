@@ -5,7 +5,7 @@ function dimord = getdimord(data, field, varargin)
 % Use as
 %   dimord = getdimord(data, field)
 %
-% See also GETDIMSIZ
+% See also GETDIMSIZ, GETDATFIELD
 
 if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
   field = ['avg.' field];
@@ -428,8 +428,7 @@ switch field
     
   otherwise
     if isfield(data, 'dim') && isequal(datsiz, data.dim)
-      % FIXME is this the desired dimord for volume data? A dimord of vox or voxel is not recommended according to fixdimord.
-      dimord = 'pos';
+      dimord = 'dim1_dim2_dim3';
     end
     
 end % switch field
