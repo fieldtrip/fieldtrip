@@ -122,16 +122,18 @@ switch version
       % move the average fields to the main structure
       fn = fieldnames(volume.avg);
       for i=1:length(fn)
-        dat = volume.avg.(fn{i});
-        try
-          volume.(fn{i}) = reshape(dat, volume.dim);
-        catch
-          warning('could not reshape %s to expected dimensions');
-          volume.(fn{i}) = dat;
-        end
-        clear dat
+        volume.(fn{i}) = volume.avg.(fn{i});
       end
       volume = rmfield(volume, 'avg');
+    end
+    
+    fn = getdatfield(volume);
+    for i=1:numel(fn)
+      try
+        volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim);
+      catch
+        warning('could not reshape %s to the expected dimensions', fn{i});
+      end
     end
     
     % ensure that it is always logical
