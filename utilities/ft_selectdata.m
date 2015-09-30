@@ -157,9 +157,13 @@ for i=2:length(varargin)
   datfield = intersect(datfield, fieldnames(varargin{i}));
 end
 datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'dim' 'unit' 'topolabel' 'lfplabel'}; % these fields will not be touched in any way by the code
+datfield  = setdiff(datfield, {'dim'});              % not used for selection, also not treated as data field
+xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
-orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
+orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$'))); % xxxlabel
+datfield  = setdiff(datfield, orgdim1);
+datfield  = datfield(:)';
+orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$'))); % xxxdimord
 datfield  = setdiff(datfield, orgdim1);
 datfield  = datfield(:)';
 
@@ -181,12 +185,12 @@ for i=1:length(datfield)
 end
 
 % do not consider fields of which the dimensions are unknown
-sel = cellfun(@isempty, regexp(dimord, 'unknown'));
-for i=find(~sel)
-  fprintf('not including "%s" in selection\n', datfield{i});
-end
-datfield = datfield(sel);
-dimord   = dimord(sel);
+% sel = cellfun(@isempty, regexp(dimord, 'unknown'));
+% for i=find(~sel)
+%   fprintf('not including "%s" in selection\n', datfield{i});
+% end
+% datfield = datfield(sel);
+% dimord   = dimord(sel);
 
 % determine all dimensions that are present in all data fields
 dimtok = {};
@@ -334,7 +338,10 @@ for i=1:numel(varargin)
     if avgoverpos && ~keepposdim
       keepdim(strcmp(dimtok, 'pos'))   = false;
       keepdim(strcmp(dimtok, '{pos}')) = false;
+      keepdim(strcmp(dimtok, 'dim'))   = false;
       keepfield = setdiff(keepfield, {'pos' '{pos}' 'dim'});
+    elseif avgoverpos && keepposdim
+      keepfield = setdiff(keepfield, {'dim'}); % this should be removed anyway
     else
       keepfield = [keepfield {'pos' '{pos}' 'dim'}];
     end
