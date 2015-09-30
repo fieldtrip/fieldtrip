@@ -43,7 +43,7 @@ isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfiel
 istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
 iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
-issource       =  isfield(data, 'pos'); %  || isfield(data, 'pnt'); % pnt is deprecated
+issource       =  isfield(data, 'pos') || isfield(data, 'pnt'); % pnt is deprecated
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
@@ -52,6 +52,11 @@ issegmentation = check_segmentation(data);
 isparcellation = check_parcellation(data);
 ismontage      = isfield(data, 'labelorg') && isfield(data, 'labelnew') && isfield(data, 'tra');
 isevent        = isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
+
+if issource && isstruct(data) && numel(data)>1
+  % this applies to struct arrays with meshes, i.e. with a pnt+tri
+  issource = false;
+end
 
 if ~isfreq
   % this applies to a freq structure from 2003 up to early 2006
