@@ -127,6 +127,9 @@ switch version
       volume = rmfield(volume, 'avg');
     end
     
+    % ensure that it is always logical
+    volume = fixinside(volume, 'logical');
+    
     fn = getdatfield(volume);
     for i=1:numel(fn)
       try
@@ -135,9 +138,6 @@ switch version
         warning('could not reshape %s to the expected dimensions', fn{i});
       end
     end
-    
-    % ensure that it is always logical
-    volume = fixinside(volume, 'logical');
     
   case '2012b'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
