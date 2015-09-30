@@ -52,8 +52,11 @@ end % main function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function siz = cellmatsize(x)
 if iscell(x)
-  if isvector(x)
-  cellsize = numel(x);          % the number of elements in the cell-array
+  if isempty(x)
+    siz = 0;
+    return % nothing else to do
+  elseif isvector(x)
+    cellsize = numel(x);          % the number of elements in the cell-array
   else
     cellsize = size(x);
     x = x(:); % convert to vector for further size detection
