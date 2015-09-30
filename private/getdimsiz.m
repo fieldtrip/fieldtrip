@@ -52,7 +52,12 @@ end % main function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function siz = cellmatsize(x)
 if iscell(x)
+  if isvector(x)
   cellsize = numel(x);          % the number of elements in the cell-array
+  else
+    cellsize = size(x);
+    x = x(:); % convert to vector for further size detection
+  end
   [dum, indx] = max(cellfun(@numel, x));
   matsize = size(x{indx});      % the size of the content of the cell-array
   siz = [cellsize matsize];     % concatenate the two
