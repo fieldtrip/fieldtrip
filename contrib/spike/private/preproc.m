@@ -357,10 +357,7 @@ if strcmp(cfg.demean, 'yes')
 end
 if strcmp(cfg.dftfilter, 'yes')
   datorig = dat;
-  for i=1:length(cfg.dftfreq)
-    % filter out the 50Hz noise, optionally also the 100 and 150 Hz harmonics
-    dat = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq(i));
-  end
+  dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq);
   if strcmp(cfg.dftinvert, 'yes'),
     dat = datorig - dat;
   end
