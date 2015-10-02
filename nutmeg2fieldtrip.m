@@ -120,16 +120,16 @@ if nutsorbeam==1
   raw.label=structin.meg.sensor_labels;
   raw.grad.label=structin.meg.sensor_labels;
   if isfield(structin.meg,'refSensorOrient')
-    raw.grad.ori=[structin.meg.sensorOrient; structin.meg.refSensorOrient];
-    raw.grad.pnt=[structin.meg.sensorCoord; structin.meg.refSensorCoord];
+    raw.grad.coilori=[structin.meg.sensorOrient; structin.meg.refSensorOrient];
+    raw.grad.coilpos=[structin.meg.sensorCoord; structin.meg.refSensorCoord];
   else
-    raw.grad.ori=[structin.meg.sensorOrient];
-    raw.grad.pnt=[structin.meg.sensorCoord];
+    raw.grad.coilori=[structin.meg.sensorOrient];
+    raw.grad.coilpos=[structin.meg.sensorCoord];
   end
-  if size(raw.grad.ori,1)<2*size(structin.meg.data,2)
-    raw.grad.ori=cat(1,raw.grad.ori,raw.grad.ori);
+  if size(raw.grad.coilori,1)<2*size(structin.meg.data,2)
+    raw.grad.coilori=cat(1,raw.grad.coilori,raw.grad.coilori);
   end
-  raw.grad.pnt=reshape(permute(raw.grad.pnt,[1 3 2]),size(raw.grad.pnt,1)*size(raw.grad.pnt,3),size(raw.grad.pnt,2));
+  raw.grad.coilpos=reshape(permute(raw.grad.coilpos,[1 3 2]),size(raw.grad.coilpos,1)*size(raw.grad.coilpos,3),size(raw.grad.coilpos,2));
   if isfield(structin.meg,'chanmixMtx')
     raw.grad.tra=structin.meg.chanmixMtx{1};
   else
