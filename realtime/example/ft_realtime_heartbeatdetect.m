@@ -1,10 +1,10 @@
-function ft_realtime_heartratemonitor(cfg)
+function ft_realtime_heartbeatdetect(cfg)
 
-% FT_REALTIME_HEARTRATEMONITOR is an example realtime application for online
+% FT_REALTIME_HEARTBEATDETECT is an example realtime application for online
 % detection of heart beats. It should work both for EEG and MEG.
 %
 % Use as
-%   ft_realtime_heartratemonitor(cfg)
+%   ft_realtime_heartbeatdetect(cfg)
 % with the following configuration options
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
@@ -45,23 +45,24 @@ function ft_realtime_heartratemonitor(cfg)
 % $Id$
 
 % set the default configuration options
-if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is detected automatically
-if ~isfield(cfg, 'headerformat'),   cfg.headerformat = [];    end % default is detected automatically
-if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];     end % default is detected automatically
-if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 0.1;      end % in seconds
-if ~isfield(cfg, 'threshold'),      cfg.threshold = 3;        end % in uV
-if ~isfield(cfg, 'mindist'),        cfg.mindist = 0.1;        end % in seconds
-if ~isfield(cfg, 'overlap'),        cfg.overlap = 0;          end % in seconds
-if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
-if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'yes';    end % jump to end of file at initialization
-if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'first'; end % first or last
-if ~isfield(cfg, 'demean'),         cfg.demean = 'yes';       end % baseline correction
-if ~isfield(cfg, 'detrend'),        cfg.detrend = 'no';       end
-if ~isfield(cfg, 'olfilter'),       cfg.olfilter = 'no';      end % continuous online filter
-if ~isfield(cfg, 'olfiltord'),      cfg.olfiltord = 4;        end
-if ~isfield(cfg, 'olfreq'),         cfg.olfreq = [2 45];      end
+cfg.dataformat   = ft_getopt(cfg, 'dataformat');          % default is detected automatically
+cfg.headerformat = ft_getopt(cfg, 'headerformat');        % default is detected automatically
+cfg.eventformat  = ft_getopt(cfg, 'eventformat');         % default is detected automatically
+cfg.blocksize    = ft_getopt(cfg, 'blocksize', 0.1);      % in seconds
+cfg.threshold    = ft_getopt(cfg, 'threshold', 3);        % after normalization
+cfg.mindist      = ft_getopt(cfg, 'mindist', 0.1);        % in seconds
+cfg.channel      = ft_getopt(cfg, 'channel', 'all');
+cfg.jumptoeof    = ft_getopt(cfg, 'jumptoeof', 'yes');    % jump to end of file at initialization
+cfg.bufferdata   = ft_getopt(cfg, 'bufferdata', 'first'); % first or last
+cfg.demean       = ft_getopt(cfg, 'demean', 'yes');       % baseline correction
+cfg.detrend      = ft_getopt(cfg, 'detrend', 'no');
+cfg.olfilter     = ft_getopt(cfg, 'olfilter', 'no');      % continuous online filter
+cfg.olfiltord    = ft_getopt(cfg, 'olfiltord',  4);
+cfg.olfreq       = ft_getopt(cfg, 'olfreq',  [2 45]);
+cfg.dftfilter    = ft_getopt(cfg, 'dftfilter', 'yes');    % filter using discrete Fourier transform
+cfg.dftfreq      = ft_getopt(cfg, 'dftfreq',  50);        % line noise frequency
 
-if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
+if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'datafile') && ~isfield(cfg, 'headerfile')
   cfg.dataset = 'buffer://localhost:1972';
 end
 
@@ -87,7 +88,6 @@ end
 
 % determine the size of blocks to process
 blocksize = round(cfg.blocksize * hdr.Fs);
-overlap   = round(cfg.overlap*hdr.Fs);
 
 if strcmp(cfg.jumptoeof, 'yes')
   prevSample = hdr.nSamples * hdr.nTrials;
@@ -96,8 +96,6 @@ else
 end
 
 prevState = [];
-pad   = [];
-pads  = [];
 count = 0;
 
 tpl = [];
@@ -112,8 +110,8 @@ n0 = 0;
 t1 = t0;
 n1 = n0;
 
-% this will keep the heartrate timing
-heartrate = [];
+% this will keep the time of each heart beat
+heartbeat = [];
 
 % these are for the feedback
 close all
@@ -131,9 +129,11 @@ plot(nan, '.');
 h2a = get(h2f, 'children');
 h2c = get(h2a, 'children');
 set(h2f, 'Position', [580 300 560 420]);
-title('heartrate');
+title('heartbeat');
 xlabel('time (s)');
 ylabel('beats per minute');
+
+c = onCleanup(@cleanup_cb);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
@@ -147,16 +147,10 @@ while true
     begsample  = hdr.nSamples*hdr.nTrials - blocksize + 1;
     endsample  = hdr.nSamples*hdr.nTrials;
   elseif strcmp(cfg.bufferdata, 'first')
-    begsample  = prevSample+1;
-    endsample  = prevSample+blocksize ;
+    endsample  = min(prevSample+blocksize, hdr.nSamples*hdr.nTrials);
+    begsample  = endsample - blocksize + 1;
   else
     error('unsupported value for cfg.bufferdata');
-  end
-  
-  % this allows overlapping data segments
-  if overlap && (begsample>overlap)
-    begsample = begsample - overlap;
-    endsample = endsample - overlap;
   end
   
   % remember up to where the data was read
@@ -182,8 +176,8 @@ while true
   % from here onward it is specific to the display of the data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  time   = offset2time(begsample, hdr.Fs, endsample-begsample+1);
   sample = begsample:endsample;
+  time   = sample./hdr.Fs;
   
   % apply some preprocessing options
   if strcmp(cfg.demean, 'yes')
@@ -191,6 +185,9 @@ while true
   end
   if strcmp(cfg.detrend, 'yes')
     dat = ft_preproc_detrend(dat);
+  end
+  if strcmp(cfg.dftfilter, 'yes')
+    dat = ft_preproc_dftfilter(dat, hdr.Fs, cfg.dftfreq);
   end
   
   if strcmp(cfg.olfilter, 'yes')
@@ -213,51 +210,7 @@ while true
     [FM, dat] = ft_preproc_online_filter_apply(FM, dat);
   end
   
-  if ~exist('CM', 'var') && numel(heartrate)>10
-    % initialize online filter
-    tpl = nan(10, round(0.6*hdr.Fs)+1);
-    for i=2:11 % skip the first
-      begsample = round((heartrate(i)-0.25)*hdr.Fs);
-      endsample = round((heartrate(i)+0.35)*hdr.Fs);
-      tpl(i-1,:) = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
-    end
-    % apply some preprocessing options
-    if strcmp(cfg.demean, 'yes')
-      tpl = ft_preproc_baselinecorrect(tpl);
-    end
-    if strcmp(cfg.detrend, 'yes')
-      tpl = ft_preproc_detrend(tpl);
-    end
-    tpl = median(tpl);
-    tpl = tpl-mean(tpl);
-    tpl = tpl/sqrt(max(filter(fliplr(tpl), 1, tpl)));
-    
-    B  = fliplr(tpl);
-    A  = 1;
-    CM = ft_preproc_online_filter_init(B, A, dat(:,1));
-    
-    % reset standardization
-    prevState = [];
-  end
-  
-  if exist('CM', 'var')
-    % apply online filter
-    [CM, dat] = ft_preproc_online_filter_apply(CM, dat);
-  end
-  
   [dat, prevState] = ft_preproc_standardize(dat, [], [], prevState);
-  
-  if isempty(pad)
-    % this only applies to the first segment being processed
-  else
-    dat    = [pad  dat];
-    sample = [pads sample];
-    time   = sample./hdr.Fs;
-  end
-  
-  % remember the last few samples, to be used for padding the next segment
-  pad  = dat(:,[end-1 end-0]);
-  pads = sample([end-1 end-0]);
   
   if cfg.threshold<0
     % detect negative peaks
@@ -269,68 +222,52 @@ while true
   end
   
   if numel(peakind)/(blocksize/hdr.Fs)>3
-    % heartrate cannot be above 180 bpm
+    % heartbeat cannot be above 180 bpm
     warning('skipping due to noise');
     peakval = [];
     peakind = [];
   end
   
-  % FIXME having the heartrate vector growing is not a very good idea
-  if isempty(tpl)
-    heartrate = [heartrate time(peakind)];
-  else
-    % correct for shift due to the crosscorrelation
-    heartrate = [heartrate time(peakind)-0.3];
-  end
+  % FIXME having the heartbeat vector growing is not a very good idea
+  heartbeat = [heartbeat time(peakind)];
   
   if ishandle(h1f)
     set(h1c, 'xdata', time, 'ydata', dat);
     set(h1a, 'xlim', time([1 end]));
   end
   
-  if numel(heartrate)>2 && ishandle(h2f)
-    set(h2c, 'xdata', heartrate(2:end), 'ydata', 60./diff(heartrate));
-    set(h2a, 'xlim', heartrate([2 end]));
+  if numel(heartbeat)>5 && ishandle(h2f)
+    % skip the first heartbeat for the axes
+    set(h2c, 'xdata', heartbeat(2:end), 'ydata', 60./diff(heartbeat));
+    set(h2a, 'xlim', heartbeat([2 end]) + [0 1]);
     set(h2a, 'ylim', [0 160]);
   end
+  
+  %   if numel(heartbeat)>3
+  %     event.type = 'heartrate';
+  %     event.value = heartbeat(end) - heartbeat(end-1);
+  %     event.sample = [];
+  %     event.offset = 0;
+  %     event.duration = 0;
+  %     ft_write_event(cfg.dataset, event);
+  %   end
   
   % force Matlab to redraw the figures
   drawnow
   
-  delay = peakind/hdr.Fs;            % adjust for the timing of the event in the data block
-  delay = round(1000*delay)/1000;    % only milisecond precision
-  for i=1:length(delay)
-    % a heartbeat that is detected at the start should be played back immediately
-    % a heartbeat that is detected at the end should be delayed a bit
-    % start(timer('TimerFcn', @feedback_beep, 'ExecutionMode', 'singleShot', 'StartDelay', delay(i)));
-  end
-  
 end % while true
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that gives a beep as feedback
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function feedback_beep(varargin)
-persistent beep time
-if isempty(beep)
-  beep = sin(1000*2*pi*(1:800)/8192);
-end
-soundsc(beep);
-if isempty(time)
-  time = toc;
-end
-% fprintf('beep interval = %f\n', toc-time);
-% disp(varargin{2}.Data);
-time = toc;
-
-% delete the timer object that called this function
-stop(varargin{1});
-delete(varargin{1});
+beep = audioplayer(0.05*sin(1000*2*pi*(1:1024)/8192), 8192);
+play(beep);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [time] = offset2time(offset, fsample, nsamples)
-offset   = double(offset);
-nsamples = double(nsamples);
-time = (offset + (0:(nsamples-1)))/fsample;
+function cleanup_cb(varargin)
+delete(timerfindall)
+
