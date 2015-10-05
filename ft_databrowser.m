@@ -623,6 +623,9 @@ else
   opt.plotLabelFlag = 0;
 end
 
+% set changedchanflg as true for initialization
+opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
+
 h = figure;
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
@@ -1293,6 +1296,7 @@ switch key
     end
     % convert numeric array into cell-array with channel labels
     cfg.channel = opt.hdr.label(chansel);
+    opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
@@ -1307,6 +1311,7 @@ switch key
     end
     % convert numeric array into cell-array with channel labels
     cfg.channel = opt.hdr.label(chansel);
+    opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
@@ -1393,6 +1398,7 @@ switch key
     select = match_str(opt.hdr.label, cfg.channel);
     select = select_channel_list(opt.hdr.label, select);
     cfg.channel = opt.hdr.label(select);
+    opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
@@ -1459,6 +1465,7 @@ opt = guidata(getparent(h));
 if ~isempty(varargin) && ischar(varargin{1})
   cfg.viewmode = varargin{1};
 end
+opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
 guidata(getparent(h), opt);
 delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
 redraw_cb(h);
@@ -1491,6 +1498,13 @@ begsample = opt.trlvis(opt.trlop, 1);
 endsample = opt.trlvis(opt.trlop, 2);
 offset    = opt.trlvis(opt.trlop, 3);
 chanindx  = match_str(opt.hdr.label, cfg.channel);
+
+% parse opt.changedchanflg, and reset
+changedchanflg = true;
+if opt.changedchanflg
+  changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
+  opt.changedchanflg = false;
+end  
 
 if ~isempty(opt.event) && isstruct(opt.event)
   % select only the events in the current time window
@@ -1584,17 +1598,19 @@ if strcmp(cfg.viewmode, 'butterfly')
   opt.laytime = laytime;
 else
   % this needs to be reconstructed if the channel selection changes
-  tmpcfg = [];
-  if strcmp(cfg.viewmode, 'component')
-    tmpcfg.layout  = 'vertical';
-  else
-    tmpcfg.layout  = cfg.viewmode;
+  if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
+    tmpcfg = [];
+    if strcmp(cfg.viewmode, 'component')
+      tmpcfg.layout  = 'vertical';
+    else
+      tmpcfg.layout  = cfg.viewmode;
+    end
+    tmpcfg.channel = cfg.channel;
+    tmpcfg.skipcomnt = 'yes';
+    tmpcfg.skipscale = 'yes';
+    tmpcfg.showcallinfo = 'no';
+    opt.laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
   end
-  tmpcfg.channel = cfg.channel;
-  tmpcfg.skipcomnt = 'yes';
-  tmpcfg.skipscale = 'yes';
-  tmpcfg.showcallinfo = 'no';
-  opt.laytime = ft_prepare_layout(tmpcfg, opt.orgdata);
 end
 
 % determine the position of the channel/component labels relative to the real axes
@@ -1730,7 +1746,10 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
   
   % determine channel indices into data outside of loop
   laysels = match_str(opt.laytime.label, opt.hdr.label);
-  
+  % delete old chan labels before renewing, if they need to be renewed
+  if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
+    delete(findobj(h,'tag', 'chanlabel'));
+  end
   for i = 1:length(chanindx)
     if strcmp(cfg.viewmode, 'component')
       color = 'k';
@@ -1741,9 +1760,8 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
     laysel = laysels(i);
     
     if ~isempty(datsel) && ~isempty(laysel)
-      % only plot labels when current chanlabel objects are less then the total number of channels (see bug 2065)
-      % this is a cheap quick fix. If it causes error in plotting components, do this conditional on viewmode
-      if numel(findobj(h, 'tag', 'chanlabel'))<numel(chanindx)
+      % only plot chanlabels when necessary
+      if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
         if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
           ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right', 'interpreter', 'none', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
           set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
