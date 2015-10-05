@@ -136,7 +136,9 @@ if ~isdeployed
 
   try
     % some alternative implementations of statistics functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+    if ~ft_platform_supports('stats')
+      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+    end
   end
 
   try

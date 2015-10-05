@@ -20,6 +20,8 @@ function tf = ft_platform_supports(what,varargin)
 %   'libmx_c_interface'             libmx is supported through mex in the
 %                                   C-language (recent Matlab versions only
 %                                   support C++)
+%   'stats'                         all statistical functions in
+%                                   FieldTrip's external/stats directory
 %   'program_invocation_name'       program_invocation_name() (GNU Octave)
 %   'singleCompThread'              start Matlab with -singleCompThread
 %   'nosplash'                                        -nosplash
@@ -71,6 +73,18 @@ switch what
     % removed after 2013b
     tf = matlabversion(-Inf, '2013b');
     
+  case 'stats'
+    root_dir=fileparts(which('ft_defaults'));
+    external_stats_dir=fullfile(root_dir,'external','stats');
+
+    % these files are only used by other functions in the external/stats
+    % directory
+    exclude_mfiles={'common_size.m',...
+                    'iscomplex.m',...
+                    'lgamma.m'};
+
+    tf = has_all_functions_in_dir(external_stats_dir,exclude_mfiles);
+
   case 'program_invocation_name'
     % Octave supports program_invocation_name, which returns the path
     % of the binary that was run to start Octave
@@ -141,6 +155,28 @@ if isempty(cached_tf)
 end
 
 tf = cached_tf;
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tf = has_all_functions_in_dir(in_dir, exclude_mfiles)
+% returns true if all functions in in_dir are already provided by the
+% platform
+  m_files=dir(fullfile(in_dir,'*.m'));
+  n=numel(m_files);
+
+  for k=1:n
+    m_filename=m_files(k).name;
+    if isempty(which(m_filename)) && ...
+                isempty(strmatch(m_filename,exclude_mfiles))
+      tf=false;
+      return;
+    end
+  end
+
+  tf=true;
+
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
