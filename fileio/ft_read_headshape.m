@@ -912,15 +912,15 @@ else
         % try reading it as volume conductor
         % and treat the skin surface as headshape
         try
-          vol = ft_read_vol(filename);
-          if ~ft_voltype(vol, 'bem')
+          headmodel = ft_read_vol(filename);
+          if ~ft_voltype(headmodel, 'bem')
             error('skin surface can only be extracted from boundary element model');
           else
-            if ~isfield(vol, 'skin')
-              vol.skin = find_outermost_boundary(vol.bnd);
+            if ~isfield(headmodel, 'skin')
+              headmodel.skin = find_outermost_boundary(headmodel.bnd);
             end
-            shape.pnt = vol.bnd(vol.skin).pnt;
-            shape.tri = vol.bnd(vol.skin).tri; % also return the triangulation
+            shape.pnt = headmodel.bnd(headmodel.skin).pnt;
+            shape.tri = headmodel.bnd(headmodel.skin).tri; % also return the triangulation
             success = 1;
           end
         catch

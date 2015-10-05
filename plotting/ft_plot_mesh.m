@@ -1,38 +1,40 @@
-function [hs] = ft_plot_mesh(bnd, varargin)
+function [hs] = ft_plot_mesh(mesh, varargin)
 
 % FT_PLOT_MESH visualizes the information of a mesh contained in the first
-% argument bnd. The boundary argument (bnd) typically contains two fields
+% argument mesh. The boundary argument (mesh) typically contains two fields
 % called .pnt and .tri referring to the vertices and the triangulation of
 % the mesh.
 %
 % Use as
-%   ft_plot_mesh(bnd, ...)
+%   ft_plot_mesh(mesh, ...)
 % or if you only want to plot the 3-D vertices
 %   ft_plot_mesh(pnt, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%     'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
-%     'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
-%     'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
-%     'faceindex'    = true or false
-%     'vertexindex'  = true or false
-%     'facealpha'    = transparency, between 0 and 1 (default = 1)
-%     'edgealpha'    = transparency, between 0 and 1 (default = 1)
-%     'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
-%     'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
+%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
+%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
+%   'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%   'faceindex'    = true or false
+%   'vertexindex'  = true or false
+%   'facealpha'    = transparency, between 0 and 1 (default = 1)
+%   'edgealpha'    = transparency, between 0 and 1 (default = 1)
+%   'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
+%   'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
+%   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
+%   'unit'         = string, convert to the specified geometrical units (default = [])
 %
-% If you don't want the faces or vertices to be plotted, you should specify the color as 'none'.
+% If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
 % Example
 %   [pnt, tri] = icosahedron162;
-%   bnd.pnt = pnt;
-%   bnd.tri = tri;
-%   ft_plot_mesh(bnd, 'facecolor', 'skin', 'edgecolor', 'none')
+%   mesh.pnt = pnt;
+%   mesh.tri = tri;
+%   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')
 %   camlight
 %
 % See also TRIMESH, PATCH
 
-% Copyright (C) 2009-2013, Robert Oostenveld
+% Copyright (C) 2009-2015, Robert Oostenveld
 % Copyright (C) 2009, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -55,20 +57,19 @@ function [hs] = ft_plot_mesh(bnd, varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
-if ~isstruct(bnd) && isnumeric(bnd) && size(bnd,2)==3
+if ~isstruct(mesh) && isnumeric(mesh) && size(mesh,2)==3
   % the input seems like a list of points, convert into something that resembles a mesh
-  warning('off', 'MATLAB:warn_r14_stucture_assignment');
-  bnd.pnt = bnd;
-elseif isfield(bnd, 'pos')
+  mesh = struct('pnt', mesh);
+elseif isfield(mesh, 'pos')
   % the input seems to be a set of points from ft_prepare_sourcemodel or ft_dipolefitting
-  bnd.pnt = bnd.pos;
+  mesh.pnt = mesh.pos;
 end
 
 % the input is a structure, but might also be a struct-array
-if numel(bnd)>1
+if numel(mesh)>1
   % plot each of the boundaries
-  for i=1:numel(bnd)
-    ft_plot_mesh(bnd(i), varargin{:})
+  for i=1:numel(mesh)
+    ft_plot_mesh(mesh(i), varargin{:})
   end
   return
 end
@@ -84,18 +85,23 @@ vertexmarker = ft_getopt(varargin, 'vertexmarker', '.');
 facealpha    = ft_getopt(varargin, 'facealpha',   1);
 edgealpha    = ft_getopt(varargin, 'edgealpha',   1);
 tag          = ft_getopt(varargin, 'tag',         '');
-surfaceonly   = ft_getopt(varargin, 'surfaceonly',  false);
+surfaceonly  = ft_getopt(varargin, 'surfaceonly',  false);
+unit         = ft_getopt(varargin, 'unit');
 
-if surfaceonly
-  bnd = mesh2edge(bnd);
+if ~isempty(unit)
+  mesh = ft_convert_units(mesh, unit);
 end
 
-haspnt  = isfield(bnd, 'pnt');  % vertices
-hastri  = isfield(bnd, 'tri');  % triangles   as a Mx3 matrix with vertex indices
-hastet  = isfield(bnd, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
-hashex  = isfield(bnd, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
-hasline = isfield(bnd, 'line'); % line segments in 3-D
-haspoly = isfield(bnd, 'poly'); % polynomial surfaces in 3-D
+if surfaceonly
+  mesh = mesh2edge(mesh);
+end
+
+haspnt  = isfield(mesh, 'pnt');  % vertices
+hastri  = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
+hastet  = isfield(mesh, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
+hashex  = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
+hasline = isfield(mesh, 'line'); % line segments in 3-D
+haspoly = isfield(mesh, 'poly'); % polynomial surfaces in 3-D
 
 if (hastet || hashex) && ~surfaceonly
   warning('you probably want to use the "surfaceonly" option for plotting only the outer surface')
@@ -138,12 +144,12 @@ if ~holdflag
   hold on
 end
 
-if isfield(bnd, 'pnt')
+if isfield(mesh, 'pnt')
   % this is assumed to reflect 3-D vertices
-  pnt = bnd.pnt;
-elseif isfield(bnd, 'prj')
+  pnt = mesh.pnt;
+elseif isfield(mesh, 'prj')
   % this happens sometimes if the 3-D vertices are projected to a 2-D plane
-  pnt = bnd.prj;
+  pnt = mesh.prj;
 else
   error('no vertices found');
 end
@@ -158,29 +164,29 @@ if hastri+hastet+hashex+hasline+haspoly>1
 end
 
 if hastri
-  tri = bnd.tri;
+  tri = mesh.tri;
 elseif haspoly
   % these are treated just like triangles
-  tri = bnd.poly;
+  tri = mesh.poly;
 elseif hastet
   % represent the tetraeders as the four triangles
   tri = [
-    bnd.tet(:,[1 2 3]);
-    bnd.tet(:,[2 3 4]);
-    bnd.tet(:,[3 4 1]);
-    bnd.tet(:,[4 1 2])];
+    mesh.tet(:,[1 2 3]);
+    mesh.tet(:,[2 3 4]);
+    mesh.tet(:,[3 4 1]);
+    mesh.tet(:,[4 1 2])];
   % or according to SimBio:  (1 2 3), (2 4 3), (4 1 3), (1 4 2)
   % there are shared triangles between neighbouring tetraeders, remove these
   tri = unique(tri, 'rows');
 elseif hashex
   % represent the hexaheders as a collection of 6 patches
   tri = [
-    bnd.hex(:,[1 2 3 4]);
-    bnd.hex(:,[5 6 7 8]);
-    bnd.hex(:,[1 2 6 5]);
-    bnd.hex(:,[2 3 7 6]);
-    bnd.hex(:,[3 4 8 7]);
-    bnd.hex(:,[4 1 5 8]);
+    mesh.hex(:,[1 2 3 4]);
+    mesh.hex(:,[5 6 7 8]);
+    mesh.hex(:,[1 2 6 5]);
+    mesh.hex(:,[2 3 7 6]);
+    mesh.hex(:,[3 4 8 7]);
+    mesh.hex(:,[4 1 5 8]);
     ];
   % there are shared faces between neighbouring hexaheders, remove these
   tri = unique(tri, 'rows');
@@ -189,7 +195,7 @@ else
 end
 
 if hasline
-  line = bnd.line;
+  line = mesh.line;
 else
   line = [];
 end
@@ -255,33 +261,69 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
   
   if isempty(vertexcolor)
     % use black for all points
-    if size(pnt,2)==2
-      hs = plot(pnt(:,1), pnt(:,2), ['k' vertexmarker]);
+    if isscalar(vertexsize)
+      if size(pnt,2)==2
+        hs = plot(pnt(:,1), pnt(:,2), ['k' vertexmarker]);
+      else
+        hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), ['k' vertexmarker]);
+      end
+      set(hs, 'MarkerSize', vertexsize);
     else
-      hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), ['k' vertexmarker]);
+      if size(pnt,2)==2
+        for i=1:size(pnt,1)
+          hs = plot(pnt(i,1), pnt(i,2), ['k' vertexmarker]);
+          set(hs, 'MarkerSize', vertexsize(i));
+        end
+      else
+        for i=1:size(pnt,1)
+          hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), ['k' vertexmarker]);
+          set(hs, 'MarkerSize', vertexsize(i));
+        end
+      end
     end
-    set(hs, 'MarkerSize', vertexsize);
     
   elseif ischar(vertexcolor) && numel(vertexcolor)==1
     % one color for all points
-    if size(pnt,2)==2
-      hs = plot(pnt(:,1), pnt(:,2), [vertexcolor vertexmarker]);
+    if isscalar(vertexsize)
+      if size(pnt,2)==2
+        hs = plot(pnt(:,1), pnt(:,2), [vertexcolor vertexmarker]);
+      else
+        hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), [vertexcolor vertexmarker]);
+      end
+      set(hs, 'MarkerSize', vertexsize);
     else
-      hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), [vertexcolor vertexmarker]);
+      if size(pnt,2)==2
+        for i=1:size(pnt,1)
+          hs = plot(pnt(i,1), pnt(i,2), [vertexcolor vertexmarker]);
+          set(hs, 'MarkerSize', vertexsize(i));
+        end
+      else
+        for i=1:size(pnt,1)
+          hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), [vertexcolor vertexmarker]);
+          set(hs, 'MarkerSize', vertexsize(i));
+        end
+      end
     end
-    set(hs, 'MarkerSize', vertexsize);
     
   elseif ischar(vertexcolor) && numel(vertexcolor)==size(pnt,1)
     % one color for each point
     if size(pnt,2)==2
       for i=1:size(pnt,1)
         hs = plot(pnt(i,1), pnt(i,2), [vertexcolor(i) vertexmarker]);
-        set(hs, 'MarkerSize', vertexsize);
+        if isscalar(vertexsize)
+          set(hs, 'MarkerSize', vertexsize);
+        else
+          set(hs, 'MarkerSize', vertexsize(i));
+        end
       end
     else
       for i=1:size(pnt,1)
         hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), [vertexcolor(i) vertexmarker]);
-        set(hs, 'MarkerSize', vertexsize);
+        if isscalar(vertexsize)
+          set(hs, 'MarkerSize', vertexsize);
+        else
+          set(hs, 'MarkerSize', vertexsize(i));
+        end
       end
     end
     
@@ -300,12 +342,20 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
     if size(pnt,2)==2
       for i=1:size(pnt,1)
         hs = plot(pnt(i,1), pnt(i,2), vertexmarker);
-        set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor(i,:));
+        if isscalar(vertexsize)
+          set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor(i,:));
+        else
+          set(hs, 'MarkerSize', vertexsize(i), 'MarkerEdgeColor', vertexcolor(i,:));
+        end
       end
     else
       for i=1:size(pnt,1)
         hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), vertexmarker);
-        set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor(i,:));
+        if isscalar(vertexsize)
+          set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor(i,:));
+        else
+          set(hs, 'MarkerSize', vertexsize(i), 'MarkerEdgeColor', vertexcolor(i,:));
+        end
       end
     end
     

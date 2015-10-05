@@ -2,7 +2,7 @@ function [type, dimord] = ft_datatype(data, desired)
 
 % FT_DATATYPE determines the type of data represented in a FieldTrip data
 % structure and returns a string with raw, freq, timelock source, comp,
-% spike, source, volume, dip.
+% spike, source, volume, dip, montage, event.
 %
 % Use as
 %   [type, dimord] = ft_datatype(data)
@@ -13,7 +13,7 @@ function [type, dimord] = ft_datatype(data, desired)
 % FT_DATATYPE_TIMELOCK FT_DATATYPE_DIP FT_DATATYPE_HEADMODEL
 % FT_DATATYPE_RAW FT_DATATYPE_SENS FT_DATATYPE_SPIKE FT_DATATYPE_VOLUME
 
-% Copyright (C) 2008-2012, Robert Oostenveld
+% Copyright (C) 2008-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -43,13 +43,20 @@ isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfiel
 istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
 iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
-issource       =  isfield(data, 'pos');
+issource       =  isfield(data, 'pos') || isfield(data, 'pnt'); % pnt is deprecated
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
 ischan         = check_chan(data);
 issegmentation = check_segmentation(data);
 isparcellation = check_parcellation(data);
+ismontage      = isfield(data, 'labelorg') && isfield(data, 'labelnew') && isfield(data, 'tra');
+isevent        = isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
+
+if issource && isstruct(data) && numel(data)>1
+  % this applies to struct arrays with meshes, i.e. with a pnt+tri
+  issource = false;
+end
 
 if ~isfreq
   % this applies to a freq structure from 2003 up to early 2006
@@ -109,6 +116,10 @@ elseif iselec
   type = 'elec';
 elseif isgrad
   type = 'grad';
+elseif ismontage
+  type = 'montage';
+elseif isevent
+  type = 'event';
 else
   type = 'unknown';
 end
@@ -172,7 +183,7 @@ end
 function [res] = check_segmentation(volume)
 res = false;
 
-if ~isfield(volume, 'dim')
+if ~isfield(volume, 'dim') && ~isfield(volume, 'transform')
   return
 end
 

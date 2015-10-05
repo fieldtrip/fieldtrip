@@ -39,12 +39,16 @@ if nargin<1
   return
 end
 
-%% Since the functionality is still in beta testing, disable the tracking for most users
-if ~strcmp(getusername, 'roboos')
-  return
-end
-
-if ~(isempty(regexp(gethostname, '^mac011', 'once')) || isempty(regexp(gethostname, '^dccn', 'once')) || isempty(regexp(gethostname, '^fcdc', 'once')))
+%% Since the functionality is still in beta testing, only enable the tracking for some developpers
+knownuser = false;
+knownuser = knownuser || (strcmp(getusername, 'roboos')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^mac011', 'once'))));
+knownuser = knownuser || (strcmp(getusername, 'jansch')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+knownuser = knownuser || (strcmp(getusername, 'jimher')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+knownuser = knownuser || (strcmp(getusername, 'nielam')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+knownuser = knownuser || (strcmp(getusername, 'tzvpop')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+knownuser = knownuser || (strcmp(getusername, 'lucamb')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+knownuser = knownuser || (strcmp(getusername, 'elivzan') && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+if ~knownuser
   return
 end
 
@@ -125,7 +129,7 @@ event_http   = sprintf('http://api.mixpanel.com/track/?data=%s', event_base64);
 [output, status] = my_urlread(event_http);
 if ~status
   disp(output);
-  error('could not send tracker information for "%s"', event);
+  warning('could not send tracker information for "%s"', event);
 end
 
 if ~initialized
@@ -137,7 +141,7 @@ if ~initialized
   [output, status] = my_urlread(user_http);
   if ~status
     disp(output);
-    error('could not send tracker information for "%s"', event);
+    warning('could not send tracker information for "%s"', event);
   end
   
   initialized = true;

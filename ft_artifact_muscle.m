@@ -6,9 +6,10 @@ function [cfg, artifact] = ft_artifact_muscle(cfg, data)
 % Use as
 %   [cfg, artifact] = ft_artifact_muscle(cfg)
 % with the configuration options
-%   cfg.dataset
-%   cfg.headerfile
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_muscle(cfg, data)

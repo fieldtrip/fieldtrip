@@ -95,6 +95,7 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s)
+%   cfg.refmethod     = 'avg' or 'median' (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
@@ -157,6 +158,7 @@ end
 % set the defaults for the rereferencing options
 if ~isfield(cfg, 'reref'),        cfg.reref = 'no';             end
 if ~isfield(cfg, 'refchannel'),   cfg.refchannel = {};          end
+if ~isfield(cfg, 'refmethod'),    cfg.refmethod = 'avg';        end
 if ~isfield(cfg, 'implicitref'),  cfg.implicitref = [];         end
 % set the defaults for the signal processing options
 if ~isfield(cfg, 'polyremoval'),  cfg.polyremoval = 'no';       end
@@ -262,7 +264,7 @@ if strcmp(cfg.reref, 'yes'),
   if isempty(refindx)
     error('reference channel was not found')
   end
-  dat = ft_preproc_rereference(dat, refindx);
+  dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
 end
 
 if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
@@ -355,10 +357,7 @@ if strcmp(cfg.demean, 'yes')
 end
 if strcmp(cfg.dftfilter, 'yes')
   datorig = dat;
-  for i=1:length(cfg.dftfreq)
-    % filter out the 50Hz noise, optionally also the 100 and 150 Hz harmonics
-    dat = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq(i));
-  end
+  dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq);
   if strcmp(cfg.dftinvert, 'yes'),
     dat = datorig - dat;
   end

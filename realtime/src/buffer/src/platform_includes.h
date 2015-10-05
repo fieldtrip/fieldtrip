@@ -1,12 +1,18 @@
 #include "platform.h"
 #include "compiler.h"
 
+
 #if defined (COMPILER_BORLAND)
 
 #endif
 
-/* these platforms will always use a similar gcc compiler */
+#if defined (PLATFORM_OSX)
+    /* this needs an alternative for clock_gettime */
+    #include "osx/clock_gettime.h"
+#endif
+
 #if defined (PLATFORM_LINUX) || defined (PLATFORM_OSX)
+    /* these platforms will always use a similar gcc compiler */
     #include <sys/types.h>
     #include <sys/socket.h>
     #include <sys/un.h>
@@ -78,6 +84,7 @@
     #include <winsock2.h>
     #include <sys/time.h>
     #include <stdint.h>
+    #include "win32/clock_gettime.h"
 
     #define bzero(b,len)    (memset((b), '\0', (len)), (void) 0)
     #define usleep(x)       (Sleep((x)/1000))

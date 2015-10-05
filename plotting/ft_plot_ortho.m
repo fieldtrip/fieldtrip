@@ -4,6 +4,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %
 % Use as
 %   ft_plot_ortho(dat, ...)
+% or
 %   ft_plot_ortho(dat, mask, ...)
 % where dat and mask are equal-sized 3-D arrays.
 %

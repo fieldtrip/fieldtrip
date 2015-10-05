@@ -433,13 +433,19 @@ for i=1:Ndata
 end
 
 if strcmp('freq',yparam) && strcmp('freq',dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
-  end
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgoverfreq = 'yes';
+  tmpcfg.frequency   = cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'toilim',cfg.zlim,'avgovertime','yes');
-  end
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgovertime = 'yes';
+  tmpcfg.latency     = cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 end
 
 cla

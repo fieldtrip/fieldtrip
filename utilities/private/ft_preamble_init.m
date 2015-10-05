@@ -28,7 +28,11 @@
 %
 % $Id$
 
+% disabled for now, see further down
 global ft_default
+
+% this script requires some options that can be user-specified, but otherwise are obtained from ft_default
+cfg = mergeconfig(cfg, keepfields(ft_default, {'outpuitfile', 'outputfilepresent'}));
 
 if nargin==0
   stack = dbstack('-completenames');
@@ -46,8 +50,17 @@ end % if nargin
 
 % determine whether function execution should be aborted or continued
 if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
+  assert(any(strcmp(fieldnames(cfg), 'outputfilepresent')), 'cfg.outputfilepresent is a required option, please see FT_DEFAULTS');
   % check whether the output file already exists
-  if ~exist(cfg.outputfile, 'file')
+  [p, f, x] = fileparts(cfg.outputfile);
+  if isempty(p)
+    % the relative path was speciield
+    outputfile = fullfile(pwd, cfg.outputfile);
+  else
+    % the absolute path was specified
+    outputfile = cfg.outputfile;
+  end
+  if ~exist(outputfile, 'file')
     abort = false;
   else
     % the output file exists, determine how to deal with it
@@ -72,15 +85,18 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     end % case
   end
 else
+  % there is no reason to abort execution
   abort = false;
 end % if outputfile
 
-if isfield(ft_default, 'trackusage') && ~(isequal(ft_default.trackusage, false) || isequal(ft_default.trackusage, 'no') || isequal(ft_default.trackusage, 'off'))
-  % track the usage of the calling function
-  stack = dbstack('-completenames');
-  % stack(1) is this script
-  % stack(2) is the calling ft_postamble function
-  % stack(3) is the main FieldTrip function that we are interested in
-  ft_trackusage('function call', 'function', stack(3).name);
-end % if trackusage
-
+if false
+  % this is currently generating too much data and therefore disabled
+  if isfield(ft_default, 'trackusage') && ~(isequal(ft_default.trackusage, false) || isequal(ft_default.trackusage, 'no') || isequal(ft_default.trackusage, 'off'))
+    % track the usage of the calling function
+    stack = dbstack('-completenames');
+    % stack(1) is this script
+    % stack(2) is the calling ft_postamble function
+    % stack(3) is the main FieldTrip function that we are interested in
+    ft_trackusage('function call', 'function', stack(3).name);
+  end % if trackusage
+end

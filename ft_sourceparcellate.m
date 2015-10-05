@@ -94,7 +94,7 @@ if ~isempty(transform)
 end
 
 % ensure it is a source, not a volume
-source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');
+source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
 
 % ensure that the source and the parcellation are anatomically consistent
 if ~isequalwithequalnans(source.pos, parcellation.pos)

@@ -78,7 +78,7 @@ ft_preamble loadvar data    % this reads the input data in case the user specifi
 % ensure that the input data is valid for this function, this will also do 
 % backward-compatibility conversions of old data that for example was 
 % read from an old *.mat file
-data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'hasoffset', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 if isfield(data,'fsample');
   fsample = getsubfield(data,'fsample');

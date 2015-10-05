@@ -15,7 +15,9 @@ function varargout = qsubcellfun(fname, varargin)
 %   StopOnError    = boolean (default = true)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timreq         = number, the time in seconds required to run a single job
+%   timoverhead    = number in seconds, how much time to allow MATLAB to start (default = 180 seconds)
 %   memreq         = number, the memory in bytes required to run a single job
+%   memoverhead    = number in bytes, how much memory to account for MATLAB itself (default = 1024^3, i.e. 1GB)
 %   stack          = number, stack multiple jobs in a single qsub job (default = 'auto')
 %   backend        = string, can be 'torque', 'sge', 'slurm', 'lsf', 'system', 'local' (default is automatic)
 %   batchid        = string, to identify the jobs in the queue (default is user_host_pid_batch)
@@ -25,6 +27,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   matlabcmd      = string, the Linux command line to start MATLAB on the compute nodes (default is automatic
 %   display        = 'yes' or 'no', whether the nodisplay option should be passed to MATLAB (default = 'no', meaning nodisplay)
 %   jvm            = 'yes' or 'no', whether the nojvm option should be passed to MATLAB (default = 'yes', meaning with jvm)
+%   rerunable      = 'yes' or 'no', whether the job can be restarted on a torque/maui/moab cluster (default = 'no')
 %
 % It is required to give an estimate of the time and memory requirements of
 % the individual jobs. The memory requirement of the MATLAB executable
@@ -108,6 +111,8 @@ StopOnError   = ft_getopt(optarg, 'StopOnError',   true    );
 diary         = ft_getopt(optarg, 'diary',         'error' ); % 'always', 'never', 'warning', 'error'
 timreq        = ft_getopt(optarg, 'timreq');
 memreq        = ft_getopt(optarg, 'memreq');
+timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
+memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
 stack         = ft_getopt(optarg, 'stack',   'auto'); % 'auto' or a number
 compile       = ft_getopt(optarg, 'compile', 'no');   % can be 'auto', 'yes' or 'no'
 backend       = ft_getopt(optarg, 'backend', []);     % the default will be determined by qsubfeval
@@ -119,6 +124,7 @@ display       = ft_getopt(optarg, 'display', 'no');
 matlabcmd     = ft_getopt(optarg, 'matlabcmd', []);
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 whichfunction = ft_getopt(optarg, 'whichfunction');   % the complete filename to the function, including path
+rerunable     = ft_getopt(optarg, 'rerunable');       % the default is determined in qsubfeval
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -351,10 +357,10 @@ for submit=1:numjob
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
-    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
+    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
   else
     % use the non-compiled version
-    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction);
+    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
   end
   
   % fprintf('submitted job %d\n', submit);

@@ -44,7 +44,7 @@ function [data] = ft_channelrepair(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_MEGREALIGN, FT_MEGPLANAR, FT_NEIGHBOURSELECTION
+% See also FT_MEGREALIGN, FT_MEGPLANAR, FT_PREPARE_NEIGHBOURS
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 % Copyright (C) 2012-2013, J?rn M. Horschig, Jason Farquhar

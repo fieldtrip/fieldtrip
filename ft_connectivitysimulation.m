@@ -81,7 +81,7 @@ function [simulated] = ft_connectivitysimulation(cfg)
 % See also FT_FREQSIMULATION, FT_DIPOLESIMULATION, FT_SPIKESIMULATION,
 % FT_CONNECTIVITYANALYSIS
 
-% Copyright (C) 2009, Donders Institute for Brain, Cognition and Behaviour
+% Copyright (C) 2009-2015, Donders Institute for Brain, Cognition and Behaviour
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -122,20 +122,20 @@ cfg = ft_checkconfig(cfg, 'rename',   {'blc', 'demean'});
 % method specific defaults
 switch cfg.method
   case {'ar'}
-    %method specific defaults
-    cfg = ft_checkconfig(cfg, 'required', {'params' 'noisecov'});
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', zeros(cfg.nsignal,1));
+    cfg          = ft_checkconfig(cfg, 'required', {'params' 'noisecov'});
   case {'linear_mix'}
-    if ~isfield(cfg, 'bpfilter'), cfg.bpfilter = 'yes';   end
-    if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
-    if ~isfield(cfg, 'demean'),   cfg.demean   = 'yes';   end
-    if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
-    cfg = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
+    cfg.bpfilter = ft_getopt(cfg, 'bpfilter', 'yes');
+    cfg.bpfreq   = ft_getopt(cfg, 'bpfreq',   [15 25]);
+    cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
+    cfg          = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
   case {'mvnrnd'}
-    if ~isfield(cfg, 'bpfilter'), cfg.bpfilter = 'yes';   end
-    if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
-    if ~isfield(cfg, 'demean'),   cfg.demean   = 'yes';   end
-    if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
-    cfg = ft_checkconfig(cfg, 'required', {'covmat' 'delay'});
+    cfg.bpfilter = ft_getopt(cfg, 'bpfilter', 'yes');
+    cfg.bpfreq   = ft_getopt(cfg, 'bpfreq',   [15 25]);
+    cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
+    cfg          = ft_checkconfig(cfg, 'required', {'covmat' 'delay'});
   otherwise
 end
 
@@ -176,7 +176,11 @@ switch cfg.method
         state0    = reshape(fliplr(tmp(:,(m-nlag):(m-1))), [nlag*nsignal 1]);
         tmp(:, m) = params'*state0 + noise(:,m);
       end
+      
       trial{k} = tmp(:,nlag+1:end);
+      if any(cfg.absnoise>0)
+        trial{k} = trial{k} + diag(cfg.absnoise)*randn(size(trial{k}));
+      end
       time{k}  = tim;
     end
     

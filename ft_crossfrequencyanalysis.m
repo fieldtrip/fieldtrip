@@ -1,7 +1,6 @@
 function crossfreq = ft_crossfrequencyanalysis(cfg,freqlow,freqhigh)
 
-% FT_CROSSFREQUENCYANALYSIS performs cross-frequency analysis using various
-% algorithms
+% FT_CROSSFREQUENCYANALYSIS performs cross-frequency analysis using various algorithms
 %
 % Use as
 %   crossfreq = ft_crossfrequencyanalysis(cfg, freqlo, freqhi)
@@ -14,7 +13,7 @@ function crossfreq = ft_crossfrequencyanalysis(cfg,freqlow,freqhigh)
 %   cfg.chanhigh    selection of channels for the high frequency, see FT_CHANNELSELECTION
 %   cfg.method      'plv' - phase locking value
 %                   'mvl' - mean vector length
-%                   'mi'  - modulaiton index
+%                   'mi'  - modulation index
 %   cfg.keeptrials  string, can be 'yes' or 'no'
 %
 % To facilitate data-handling and distributed computing you can use
@@ -69,21 +68,28 @@ end
 freqlow  = ft_checkdata(freqlow,  'datatype', 'freq', 'feedback', 'yes');
 freqhigh = ft_checkdata(freqhigh, 'datatype', 'freq', 'feedback', 'yes');
 
-cfg.chanlow    = ft_getopt(cfg, 'chanlow');
-cfg.chanhigh   = ft_getopt(cfg, 'chanhigh');
+cfg.chanlow    = ft_getopt(cfg, 'chanlow', 'all');
+cfg.chanhigh   = ft_getopt(cfg, 'chanhigh', 'all');
 cfg.freqlow    = ft_getopt(cfg, 'freqlow');
 cfg.freqhigh   = ft_getopt(cfg, 'freqhigh');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials');
 
 % make selection of frequencies and channels
-tmpcfg = keepfields(cfg, {'freqlow', 'chanlow'});
+tmpcfg = [];
+tmpcfg.channel   = cfg.chanlow;
+tmpcfg.frequency = cfg.freqlow;
 freqlow = ft_selectdata(tmpcfg, freqlow);
-[cfg, freqlow] = rollback_provenance(cfg, freqlow);
+[tmpcfg, freqlow] = rollback_provenance(cfg, freqlow);
+try, cfg.chanlow = tmpcfg.channel;   end
+try, cfg.freqlow = tmpcfg.frequency; end
 
-tmpcfg = keepfields(cfg, {'freqhigh', 'chanhigh'});
+tmpcfg = [];
+tmpcfg.channel = cfg.chanhigh;
+tmpcfg.foi     = cfg.freqhigh;
 freqhigh = ft_selectdata(tmpcfg, freqhigh);
-[cfg, freqhigh] = rollback_provenance(cfg, freqhigh);
-
+[tmpcfg, freqhigh] = rollback_provenance(cfg, freqhigh);
+try, cfg.chanhigh = tmpcfg.channel;   end
+try, cfg.freqhigh = tmpcfg.frequency; end
 
 LF = freqlow.freq;
 HF = freqhigh.freq;

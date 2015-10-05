@@ -95,8 +95,13 @@ cfgs.keepmom     = 'yes';
 
 %there are two ways for not crashing the second round of sourceanalysis
 %with fixori = 'yes';
-for k = 1:numel(source.inside)
-  kk = source.inside(k);
+if all(islogical(source.inside))
+  insidevec = find(source.inside);
+else
+  insidevec = source.inside;
+end
+for k = 1:numel(insidevec)
+  kk = insidevec(k);
   cfgs.grid.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
 end
 spcc  = ft_sourceanalysis(cfgs, freq);

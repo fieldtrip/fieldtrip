@@ -65,7 +65,7 @@ if allowscaling
 end 
 
 tfields   = {'pos' 'pnt' 'o' 'chanpos' 'chanposorg' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
-rfields   = {'ori' 'nrm' 'coilori'}; % only apply rotation
+rfields   = {'ori' 'nrm' 'coilori' 'chanori'}; % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication
 recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume

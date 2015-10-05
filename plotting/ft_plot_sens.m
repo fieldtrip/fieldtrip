@@ -8,11 +8,13 @@ function hs = ft_plot_sens(sens, varargin)
 % or PREPARE_VOL_SENS.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   'style'         = plotting style for the points representing the channels, see plot3 (default = 'k.')
-%   'coil'          = true/false, plot each individual coil or the channelposition (default = false)
-%   'coildiameter'  = diameter of the MEG gradiometer coils (default = 0)
-%   'label'         = show the label, can be 'off', 'label', 'number' (default = 'off')
-%   'chantype'      = string or cell-array with strings, for example 'meg' (default = 'all')
+%   'style'           = plotting style for the points representing the channels, see plot3 (default = 'k.')
+%   'coil'            = true/false, plot each individual coil or the channelposition (default = false)
+%   'coildiameter'    = diameter of the MEG gradiometer coils (default = 0)
+%   'coilorientation' = true/false, plot the orientation of each coil (default = false)
+%   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
+%   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
+%   'unit'            = string, convert to the specified geometrical units (default = [])
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');
@@ -44,11 +46,17 @@ ws = warning('on', 'MATLAB:divideByZero');
 sens = ft_datatype_sens(sens);
 
 % get the optional input arguments
-style         = ft_getopt(varargin, 'style',  'k.');
-coil          = ft_getopt(varargin, 'coil',   false);
-label         = ft_getopt(varargin, 'label',  'off');
-chantype      = ft_getopt(varargin, 'chantype');
-coildiameter  = ft_getopt(varargin, 'coildiameter', 0);
+style           = ft_getopt(varargin, 'style', 'k.');
+coil            = ft_getopt(varargin, 'coil', false);
+label           = ft_getopt(varargin, 'label', 'off');
+chantype        = ft_getopt(varargin, 'chantype');
+coildiameter    = ft_getopt(varargin, 'coildiameter', 0);
+coilorientation = ft_getopt(varargin, 'coilorientation', false);
+unit            = ft_getopt(varargin, 'unit');
+
+if ~isempty(unit)
+  sens = ft_convert_units(sens, unit);
+end
 
 % select a subset of channels to be plotted
 if ~isempty(chantype)
@@ -92,7 +100,19 @@ if ~holdflag
 end
 
 if all(any(isnan(sens.chanpos), 2))
-    coil = true;
+  coil = true;
+end
+
+if istrue(coilorientation) && isfield(sens, 'coilori')
+  pnt = sens.coilpos;
+  ori = sens.coilori;
+  scale = scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
+  for i=1:size(pnt,1)
+    x = [pnt(i,1) pnt(i,1)+ori(i,1)*scale];
+    y = [pnt(i,2) pnt(i,2)+ori(i,2)*scale];
+    z = [pnt(i,3) pnt(i,3)+ori(i,3)*scale];
+    line(x, y, z)
+  end
 end
 
 if istrue(coil)

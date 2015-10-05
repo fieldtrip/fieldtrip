@@ -90,12 +90,12 @@ function data = ft_math(cfg, varargin)
 
 revision = '$Id$';
 
-ft_defaults                   % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init              % this will show the function help if nargin==0 and return an error
-ft_preamble provenance        % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
+ft_defaults                     % this ensures that the path is correct and that the ft_defaults global variable is available
+ft_preamble init                % this will show the function help if nargin==0 and return an error
+ft_preamble loadvar varargin    % this reads the input data in case the user specified the cfg.inputfile option
+ft_preamble provenance varargin % this records the time and memory usage at the beginning of the function
+ft_preamble trackconfig         % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 ft_preamble debug
-ft_preamble loadvar varargin  % this reads the input data in case the user specified the cfg.inputfile option
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort

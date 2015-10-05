@@ -192,8 +192,9 @@ while true
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % apply some preprocessing to the data
-    dat = ft_preproc_baselinecorrect(dat);
-    dat = ft_preproc_highpassfilter(dat, hdr.Fs, 5, 1, 'but', 'twopass');
+    dat = ft_preproc_polyremoval(dat, 1);
+    dat = ft_preproc_highpassfilter(dat, hdr.Fs,  3, 1, 'but', 'twopass');
+    dat = ft_preproc_lowpassfilter (dat, hdr.Fs, 35, 3, 'but', 'twopass');
     
     if hdr.Fs<11025
       % sampling range is low, assume it is EEG

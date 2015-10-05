@@ -1,0 +1,13 @@
+;; Object BufferServer
+;; EDE Project Files are auto generated: Do Not Edit
+(ede-proj-project "BufferServer"
+  :file "Project.ede"
+  :name "BufferServer"
+  :targets (list 
+   (ede-proj-target-makefile-program "BufferServer"
+    :name "BufferServer"
+    :path ""
+    :source '("BufferServer.java")
+    )
+   )
+  )

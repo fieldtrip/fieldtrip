@@ -5,7 +5,7 @@ function dimord = getdimord(data, field, varargin)
 % Use as
 %   dimord = getdimord(data, field)
 %
-% See also GETDIMSIZ
+% See also GETDIMSIZ, GETDATFIELD
 
 if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
   field = ['avg.' field];
@@ -57,6 +57,9 @@ nori      = nan; % this will be 3 in many cases
 ntopochan = inf;
 nspike    = inf; % this is only for the first spike channel
 nlag      = nan;
+ndim1     = nan;
+ndim2     = nan;
+ndim3     = nan;
 
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
@@ -119,6 +122,12 @@ elseif isfield(data, 'dim')
   npos = prod(data.dim);
 end
 
+if isfield(data, 'dim')
+  ndim1 = data.dim(1);
+  ndim2 = data.dim(2);
+  ndim3 = data.dim(3);
+end
+
 if isfield(data, 'csdlabel')
   % this is used in PCC beamformers
   if length(data.csdlabel)==npos
@@ -154,8 +163,8 @@ end
 % determine the size of the actual data
 datsiz = getdimsiz(data, field);
 
-tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan' 'lag'};
-siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan nlag];
+tok = {'subj' 'rpt' 'rpttap' 'chan' 'chancmb' 'freq' 'time' 'pos' 'ori' 'topochan' 'lag' 'dim1' 'dim2' 'dim3'};
+siz = [nsubj nrpt nrpttap nchan nchancmb nfreq ntime npos nori ntopochan nlag ndim1 ndim2 ndim3];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ATTEMPT 2: a general dimord is present and might apply
@@ -200,6 +209,11 @@ switch field
   % note that the case for a cell dimension (typically pos) is handled at
   % the end of this section
   
+  case {'pos'}
+    if isequalwithoutnans(datsiz, [npos 3])
+      dimord = 'pos_unknown';
+    end
+    
   case {'individual'}
     if isequalwithoutnans(datsiz, [nsubj nchan ntime])
       dimord = 'subj_chan_time';
@@ -417,7 +431,7 @@ switch field
       dimord = '{chan}_spike';
     elseif ft_datatype(data, 'raw') && iscell(data.(field)) && datsiz(1)==nrpt
       dimord = '{rpt}_time';
-    elseif isvector(data.(field)) && isequal(datsiz, [1 ntime])
+    elseif isvector(data.(field)) && isequal(datsiz, [1 ntime ones(1,numel(datsiz)-2)])
       dimord = 'time';
     end
     
@@ -428,8 +442,7 @@ switch field
     
   otherwise
     if isfield(data, 'dim') && isequal(datsiz, data.dim)
-      % FIXME is this the desired dimord for volume data? A dimord of vox or voxel is not recommended according to fixdimord.
-      dimord = 'pos';
+      dimord = 'dim1_dim2_dim3';
     end
     
 end % switch field
@@ -485,6 +498,9 @@ if ~exist('dimord', 'var')
     dimtok(datsiz==nchan)     = {'chan'};
     dimtok(datsiz==nfreq)     = {'freq'};
     dimtok(datsiz==ntime)     = {'time'};
+    dimtok(datsiz==ndim1)     = {'dim1'};
+    dimtok(datsiz==ndim2)     = {'dim2'};
+    dimtok(datsiz==ndim3)     = {'dim3'};
     
     if isempty(dimtok{end}) && datsiz(end)==1
       % remove the unknown trailing singleton dimension
@@ -505,8 +521,17 @@ if ~exist('dimord', 'var')
   end
 end % if dimord does not exist
 
+if ~exist('dimord', 'var')
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % ATTEMPT 6: check whether it is a 3-D volume
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if isequal(datsiz, [ndim1 ndim2 ndim3])
+    dimord = 'dim1_dim2_dim3';
+  end
+end % if dimord does not exist
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ATTEMPT 6: return "unknown" for all unknown dimensions
+% FINAL RESORT: return "unknown" for all unknown dimensions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~exist('dimord', 'var')
   % this should not happen

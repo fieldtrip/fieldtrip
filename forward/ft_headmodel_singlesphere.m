@@ -1,4 +1,4 @@
-function vol = ft_headmodel_singlesphere(geometry, varargin)
+function headmodel = ft_headmodel_singlesphere(geometry, varargin)
 
 % FT_HEADMODEL_SINGLESPHERE creates a volume conduction model of the
 % head by fitting a spherical model to a set of points that describe
@@ -9,7 +9,7 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 % 1977 Jul;24(4):372-81.
 %
 % Use as
-%   vol = ft_headmodel_singlesphere(pnt, ...)
+%   headmodel = ft_headmodel_singlesphere(pnt, ...)
 %
 % Optional arguments should be specified in key-value pairs and can include
 %   conductivity     = number, conductivity of the sphere
@@ -68,20 +68,20 @@ if numel(geometry)~=1
 end
 
 % start with an empty volume conductor
-vol = [];
+headmodel = [];
 
 % ensure that the geometry has units, estimate them if needed
 geometry = ft_convert_units(geometry);
 
 % copy the geometrical units into the volume conductor
-vol.unit = geometry.unit;
+headmodel.unit = geometry.unit;
 
 % fit a single sphere to all headshape points
 [single_o, single_r] = fitsphere(geometry.pnt);
 
-vol.r    = single_r;
-vol.o    = single_o;
-vol.cond = conductivity;
-vol.type = 'singlesphere';
+headmodel.r    = single_r;
+headmodel.o    = single_o;
+headmodel.cond = conductivity;
+headmodel.type = 'singlesphere';
 
-fprintf('single sphere: radius = %.1f, conductivity = %f\n', vol.r, vol.cond);
+fprintf('single sphere: radius = %.1f, conductivity = %f\n', headmodel.r, headmodel.cond);

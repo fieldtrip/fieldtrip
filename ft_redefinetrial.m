@@ -271,6 +271,9 @@ elseif ~isempty(cfg.trl)
   if isfield(dataold, 'elec')
     data.elec      = dataold.elec;
   end
+  if isfield(dataold, 'opto')
+    data.opto      = dataold.opto;
+  end
   if isfield(dataold, 'sampleinfo')
     % adjust the trial definition
     data.sampleinfo  = trl(:, 1:2);

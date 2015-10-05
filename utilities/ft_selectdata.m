@@ -157,9 +157,13 @@ for i=2:length(varargin)
   datfield = intersect(datfield, fieldnames(varargin{i}));
 end
 datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used for selection, but are not treated as data fields
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'dim' 'unit' 'topolabel' 'lfplabel'}; % these fields will not be touched in any way by the code
+datfield  = setdiff(datfield, {'dim'});              % not used for selection, also not treated as data field
+xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
-orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$')));
+orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$'))); % xxxlabel
+datfield  = setdiff(datfield, orgdim1);
+datfield  = datfield(:)';
+orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$'))); % xxxdimord
 datfield  = setdiff(datfield, orgdim1);
 datfield  = datfield(:)';
 
@@ -181,12 +185,12 @@ for i=1:length(datfield)
 end
 
 % do not consider fields of which the dimensions are unknown
-sel = cellfun(@isempty, regexp(dimord, 'unknown'));
-for i=find(~sel)
-  fprintf('not including "%s" in selection\n', datfield{i});
-end
-datfield = datfield(sel);
-dimord   = dimord(sel);
+% sel = cellfun(@isempty, regexp(dimord, 'unknown'));
+% for i=find(~sel)
+%   fprintf('not including "%s" in selection\n', datfield{i});
+% end
+% datfield = datfield(sel);
+% dimord   = dimord(sel);
 
 % determine all dimensions that are present in all data fields
 dimtok = {};
@@ -334,7 +338,10 @@ for i=1:numel(varargin)
     if avgoverpos && ~keepposdim
       keepdim(strcmp(dimtok, 'pos'))   = false;
       keepdim(strcmp(dimtok, '{pos}')) = false;
+      keepdim(strcmp(dimtok, 'dim'))   = false;
       keepfield = setdiff(keepfield, {'pos' '{pos}' 'dim'});
+    elseif avgoverpos && keepposdim
+      keepfield = setdiff(keepfield, {'dim'}); % this should be removed anyway
     else
       keepfield = [keepfield {'pos' '{pos}' 'dim'}];
     end
@@ -386,11 +393,20 @@ end
 % restore the original dimord fields in the data
 for i=1:length(orgdim1)
   dimtok = tokenize(orgdim2{i}, '_');
-  if ~keeprptdim, dimtok = setdiff(dimtok, {'rpt' 'rpttap' 'subj'}); end
-  if ~keepposdim, dimtok = setdiff(dimtok, {'pos' '{pos}'}); end
-  if ~keepchandim, dimtok = setdiff(dimtok, {'chan'}); end
-  if ~keepfreqdim, dimtok = setdiff(dimtok, {'freq'}); end
-  if ~keeptimedim, dimtok = setdiff(dimtok, {'time'}); end
+  
+  % using a setdiff may result in double occurrences of chan and pos to
+  % disappear, so this causes problems as per bug 2962
+  % if ~keeprptdim, dimtok = setdiff(dimtok, {'rpt' 'rpttap' 'subj'}); end
+  % if ~keepposdim, dimtok = setdiff(dimtok, {'pos' '{pos}'}); end
+  % if ~keepchandim, dimtok = setdiff(dimtok, {'chan'}); end
+  % if ~keepfreqdim, dimtok = setdiff(dimtok, {'freq'}); end
+  % if ~keeptimedim, dimtok = setdiff(dimtok, {'time'}); end
+  if ~keeprptdim, dimtok = dimtok(~ismember(dimtok, {'rpt' 'rpttap' 'subj'})); end
+  if ~keepposdim, dimtok = dimtok(~ismember(dimtok, {'pos' '{pos}'}));         end
+  if ~keepchandim, dimtok = dimtok(~ismember(dimtok, {'chan'})); end
+  if ~keepfreqdim, dimtok = dimtok(~ismember(dimtok, {'freq'})); end
+  if ~keeptimedim, dimtok = dimtok(~ismember(dimtok, {'time'})); end
+  
   dimord = sprintf('%s_', dimtok{:});
   dimord = dimord(1:end-1); % remove the trailing _
   for j=1:length(varargin)
@@ -631,6 +647,13 @@ for k = 1:ndata
   label      = union(label, selchannel);
 end
 
+% this call to match_str ensures that that labels are always in the
+% order of the first input argument see bug_2917, but also temporarily keep
+% the labels from the other data structures not present in the first one
+% (in case selmode = 'union')
+[ix, iy] = match_str(varargin{1}.label, label);
+label1   = varargin{1}.label(:); % ensure column array
+label    = [label1(ix); label(setdiff(1:numel(label),iy))]; 
 
 indx = nan+zeros(numel(label), ndata);
 for k = 1:ndata
@@ -1250,47 +1273,4 @@ else
   x = mean(x, seldim);
 end
 end % function cellmatmean
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%ISROW True if input is a row vector.
-%   ISROW(V) returns logical 1 (true) if SIZE(V) returns [1 n]
-%   with a nonnegative integer value n, and logical 0 (false) otherwise.
-%
-% This is a drop-in replacement for the MATLAB function with the same name,
-% which does not exist in versions < 2010.
-%
-% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2567
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function s = isrow(v)
-siz = size(v);
-m = siz(1);
-n = siz(2);
-if numel(siz)==2 && m==1 && n>0
-  s = true;
-else
-  s = false;
-end
-end % function isrow
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%ISROW True if input is a column vector.
-%   ISROW(V) returns logical 1 (true) if SIZE(V) returns [m 1]
-%   with a nonnegative integer value m, and logical 0 (false) otherwise.
-%
-% This is a drop-in replacement for the MATLAB function with the same name,
-% which does not exist in versions < 2010.
-%
-% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2567
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function s = iscolumn(v)
-siz = size(v);
-m = siz(1);
-n = siz(2);
-if numel(siz)==2 && m>0 && n==1
-  s = true;
-else
-  s = false;
-end
-end % function iscolumn
 

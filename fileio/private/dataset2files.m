@@ -99,12 +99,14 @@ switch format
   case 'brainvision_vhdr'
     [path, file, ext] = fileparts(filename);
     headerfile = fullfile(path, [file '.vhdr']);
-    if exist(fullfile(path, [file '.eeg']))
+    if exist(fullfile(path, [file '.eeg']), 'file')
       datafile   = fullfile(path, [file '.eeg']);
-    elseif exist(fullfile(path, [file '.seg']))
+    elseif exist(fullfile(path, [file '.seg']), 'file')
       datafile   = fullfile(path, [file '.seg']);
-    elseif exist(fullfile(path, [file '.dat']))
+    elseif exist(fullfile(path, [file '.dat']), 'file')
       datafile   = fullfile(path, [file '.dat']);
+    else
+      error('cannot determine the data file that corresponds to %s', filename);
     end
   case 'brainvision_eeg'
     [path, file, ext] = fileparts(filename);
