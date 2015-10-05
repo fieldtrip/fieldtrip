@@ -14,6 +14,7 @@ function tf = ft_platform_supports(what,varargin)
 %   'exists-in-private-directory'   exists(...) will look in the /private
 %                                   subdirectory to see if a file exists
 %   'onCleanup'                     onCleanup(...)
+%   'alim'                          alim(...)
 %   'int32_logical_operations'      bitand(a,b) with a, b of type int32
 %   'graphics_objects'              graphics sysem is object-oriented
 %   'libmx_c_interface'             libmx is supported through mex in the
@@ -52,6 +53,9 @@ switch what
     
   case 'onCleanup'
     tf = is_octave() || matlabversion(7.8, Inf);
+
+  case 'alim'
+    tf = is_matlab();
     
   case 'int32_logical_operations'
     % earlier version of Matlab don't support bitand (and similar)

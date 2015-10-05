@@ -213,9 +213,11 @@ if ~isempty(highlight)
       delete(h); % this is needed because "hold on" might have been called previously, e.g. in ft_multiplotTFR
       h = uimagesc(hdat, vdat, cdat, clim);
       set(h,'tag',tag);
-      set(h,'AlphaData',highlight);
-      set(h, 'AlphaDataMapping', 'scaled');
-      alim([0 1]);
+      if ft_platform_supports('alim')
+        set(h,'AlphaData',highlight);
+        set(h, 'AlphaDataMapping', 'scaled');
+        alim([0 1]);
+      end
     
     case 'saturation'
       satmask = highlight;
