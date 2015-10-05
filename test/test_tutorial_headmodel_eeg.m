@@ -93,6 +93,10 @@ close all;
  fiducials.label={'Nz','LPA','RPA'};
  fiducials.unit='mm';
  
+ % ensure the elec to have a coordsys field, in order to avoid
+ % the interactive step due to the call to ft_determine_coordsys
+ % in ft_electroderealign
+ elec.coordsys = 'ctf';
  
  cfg=[];
  cfg.method='fiducial';

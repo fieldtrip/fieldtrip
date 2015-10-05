@@ -11,7 +11,7 @@ function [selected] = ft_select_point3d(bnd, varargin)
 %   'multiple'   = true/false, make multiple selections, pressing "q" on the keyboard finalizes the selection (default = false)
 %   'nearest'    = true/false (default = true)
 %
-% Example use
+% Example
 %   [pnt, tri] = icosahedron162;
 %   bnd.pnt = pnt;
 %   bnd.tri = tri;

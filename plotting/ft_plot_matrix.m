@@ -26,7 +26,7 @@ function ft_plot_matrix(varargin)
 %   'hlim'            = horizontal scaling limits within the local axes
 %   'vlim'            = vertical scaling limits within the local axes
 %
-% Example use
+% Example
 %   ft_plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 %
 % See also T_PLOT_VECTOR

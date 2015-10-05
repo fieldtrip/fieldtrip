@@ -15,7 +15,7 @@ function dimsiz = getdimsiz(data, field)
 %   dimsiz = getdimsiz(datastructure, fieldname);
 %   dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
 %
-% See also GETDIMORD
+% See also GETDIMORD, GETDATFIELD
 
 if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
   field = ['avg.' field];
@@ -52,7 +52,15 @@ end % main function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function siz = cellmatsize(x)
 if iscell(x)
-  cellsize = numel(x);          % the number of elements in the cell-array
+  if isempty(x)
+    siz = 0;
+    return % nothing else to do
+  elseif isvector(x)
+    cellsize = numel(x);          % the number of elements in the cell-array
+  else
+    cellsize = size(x);
+    x = x(:); % convert to vector for further size detection
+  end
   [dum, indx] = max(cellfun(@numel, x));
   matsize = size(x{indx});      % the size of the content of the cell-array
   siz = [cellsize matsize];     % concatenate the two

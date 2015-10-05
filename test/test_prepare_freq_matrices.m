@@ -10,7 +10,7 @@ function test_prepare_freq_matrices
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg');
 
 curdir = pwd;
-cd('/home/language/jansch/matlab/fieldtrip/private');
+cd(dccnpath('/home/common/matlab/fieldtrip'));
 
 % fourier data, multiple trials
 load(fullfile(datadir,'freq_mtmfft_fourier_trl_ctf275.mat'));

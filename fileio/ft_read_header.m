@@ -1100,8 +1100,8 @@ switch headerformat
     if isunix && filename(1)~=filesep
       % add the full path to the dataset directory
       filename = fullfile(pwd, filename);
-    elseif ispc && filename(2)~=':'
-      % add the full path, including drive letter
+    elseif ispc && ~any(strcmp(filename(2),{':','\'}))
+      % add the full path, including drive letter or slashes as needed.
       filename = fullfile(pwd, filename);
     end
     hdr = read_mff_header(filename);
@@ -1704,6 +1704,7 @@ switch headerformat
     % this pertains to generic header file, and the other neuroscope
     % formats will recurse into this one
     [p,f,e]    = fileparts(filename);
+    if isempty(p), p = pwd; end
     listing    = dir(p);
     filenames  = {listing.name}';
     
@@ -2049,6 +2050,32 @@ switch headerformat
       end
     end
     hdr.orig = orig;
+  
+  case 'blackrock_nsx'
+    ft_hastoolbox('NPMK', 1);
+    
+    % ensure that the filename contains a full path specification,
+    % otherwise the low-level function fails
+    [p,f,e] = fileparts(filename);
+    if ~isempty(p)
+      % this is OK
+    elseif isempty(p)
+      filename = which(filename);
+    end
+    orig = openNSx(filename, 'noread');
+    
+    hdr        = [];
+    hdr.orig   = orig;
+    hdr.Fs     = orig.MetaTags.SamplingFreq;
+    hdr.nChans = orig.MetaTags.ChannelCount;
+    hdr.nSamples    = orig.MetaTags.DataPoints;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1; %?
+    hdr.label       = deblank({orig.ElectrodesInfo.Label})';
+    hdr.chanunit    = deblank({hdr.orig.ElectrodesInfo.AnalogUnits})';
+    
+  case 'blackrock_nev'
+    error('this still needs some work');
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);

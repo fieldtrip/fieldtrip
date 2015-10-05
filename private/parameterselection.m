@@ -107,6 +107,8 @@ for i=1:length(param)
       if nels==prod(dim),
         select{end+1} = param{i};
       end
+    elseif isfield(data, 'dim') && numel(dim)>3 && isequal(dim(1:3), data.dim(1:3))
+      select{end+1} = param{i};
     end
   end
 end

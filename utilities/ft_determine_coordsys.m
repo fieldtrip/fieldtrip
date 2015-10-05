@@ -217,7 +217,7 @@ switch dtype
     camlight;
     
   case {'grad' 'elec' 'sens'}
-    ft_plot_sens(data);
+    ft_plot_sens(data, 'label', 'label');
     camlight;
     
   case {'raw', 'timelock', 'freq', 'mvar', 'freqmvar', 'comp'}
@@ -225,7 +225,7 @@ switch dtype
     if isfield(data, 'grad')
       ft_plot_sens(data.grad);
     elseif isfield(data, 'elec')
-      ft_plot_sens(data.elec);
+      ft_plot_sens(data.elec, 'label', 'label');
     end
     
   case 'unknown'

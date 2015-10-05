@@ -67,7 +67,7 @@ end
 % ensure that the input data is valid for this function, this will also do
 % backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
-data     = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'hasoffset', 'yes');
+data     = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 template = ft_checkdata(template, 'datatype', 'timelock');
 
 % get the options

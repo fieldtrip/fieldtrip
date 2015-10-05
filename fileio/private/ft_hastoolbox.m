@@ -144,6 +144,7 @@ url = {
   'FILEEXCHANGE'  'see http://www.mathworks.com/matlabcentral/fileexchange/'
   'NEURALYNX_V6'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Neuralynx (windows only)' 
   'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser' 
+  'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   };
 
 if nargin<2
@@ -344,6 +345,9 @@ switch toolbox
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
   case 'NEURALYNX_V3'
     filelist = {['Nlx2MatCSC_v3.', mexext]};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'NPMK'
+    filelist = {'OpenNSx' 'OpenNEV'};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
     
     % the following are fieldtrip modules/toolboxes

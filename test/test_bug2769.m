@@ -27,6 +27,7 @@ seg1 = sqrt(sum(pos1.^2, 2))<4;
 mri1.anatomy = reshape(seg1, mri1.dim);
 mri1.seg     = reshape(seg1, mri1.dim);
 
+
 mri2 = [];
 mri2.dim = [19 19 19];
 mri2.transform = [
@@ -42,6 +43,10 @@ seg2 = sqrt(sum(pos2.^2, 2))<4;
 
 mri2.anatomy = reshape(seg2, mri2.dim);
 mri2.seg     = reshape(seg2, mri2.dim);
+
+% add some noise, otherwise it resembles a segmentation
+mri1.anatomy = mri1.anatomy + 0.1*randn(size(mri1.anatomy));
+mri2.anatomy = mri2.anatomy + 0.1*randn(size(mri2.anatomy));
 
 cfg = [];
 ft_sourceplot(cfg, mri1);

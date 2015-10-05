@@ -8,7 +8,7 @@ function hs = ft_plot_headshape(headshape,varargin)
 % be shown.
 %
 % Use as
-%   hs = ft_plot_headshape(shape, ...)
+%   ft_plot_headshape(shape, ...)
 % where the shape is a structure obtained from FT_READ_HEADSHAPE.
 %
 % Optional arguments should come in key-value pairs and can include

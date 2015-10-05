@@ -524,6 +524,7 @@ elseif cfg.tail==-1
 end
 
 % collect the remaining details in the output structure
+stat = struct(); % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2972
 stat.prob = prob;
 if needpos,
   stat.posclusters         = posclusters;
