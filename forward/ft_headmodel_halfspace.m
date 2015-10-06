@@ -1,4 +1,4 @@
-function headmodel = ft_headmodel_halfspace(geom, Pc, varargin)
+function headmodel = ft_headmodel_halfspace(mesh, Pc, varargin)
 
 % FT_HEADMODEL_HALFSPACE creates an EEG volume conduction model that
 % is described with an infinite conductive halfspace. You can think
@@ -7,9 +7,9 @@ function headmodel = ft_headmodel_halfspace(geom, Pc, varargin)
 % (e.g. air).
 %
 % Use as
-%    headmodel = ft_headmodel_halfspace(geom, Pc, ...)
+%    headmodel = ft_headmodel_halfspace(mesh, Pc, ...)
 % where
-%   geom.pnt = Nx3 vector specifying N points through which a plane is fitted 
+%   mesh.pos = Nx3 vector specifying N points through which a plane is fitted 
 %   Pc       = 1x3 vector specifying the spatial position of a point lying in the conductive halfspace 
 %              (this determines the plane normal's direction)
 %
@@ -50,16 +50,16 @@ end
 % the description of this volume conduction model consists of the
 % description of the plane, and a point in the void halfspace
 
-if isstruct(geom) && isfield(geom,'pnt')
-  pnt = geom.pnt;
-elseif size(geom,2)==3
-  pnt = geom;
+if isstruct(mesh) && isfield(mesh,'pos')
+  pos = mesh.pos;
+elseif size(mesh,2)==3
+  pos = mesh;
 else
   error('incorrect specification of the geometry');
 end
 
 % fit a plane to the points
-[N,P] = fit_plane(pnt);
+[N,P] = fit_plane(pos);
 
 % checks if Pc is in the conductive part. If not, flip
 incond = acos(dot(N,(Pc-P)./norm(Pc-P))) > pi/2;
@@ -69,7 +69,7 @@ end
 
 headmodel       = [];
 headmodel.cond  = cond;
-headmodel.pnt   = P(:)'; % a point that lies on the plane that separates the conductive tissue from the air
+headmodel.pos   = P(:)'; % a point that lies on the plane that separates the conductive tissue from the air
 headmodel.ori   = N(:)'; % a unit vector pointing towards the air
 headmodel.ori   = headmodel.ori/norm(headmodel.ori);
 

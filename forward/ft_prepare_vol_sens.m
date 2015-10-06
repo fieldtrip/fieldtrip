@@ -273,16 +273,16 @@ elseif ismeg
       % compute the surface normals for each vertex point
       if ~isfield(headmodel.bnd, 'nrm')
         fprintf('computing surface normals\n');
-        headmodel.bnd.nrm = normals(headmodel.bnd.pnt, headmodel.bnd.tri);
+        headmodel.bnd.nrm = normals(headmodel.bnd.pos, headmodel.bnd.tri);
       end
       
       % estimate center and radius
-      [center,radius] = fitsphere(headmodel.bnd.pnt);
+      [center,radius] = fitsphere(headmodel.bnd.pos);
       
       % initialize the forward calculation (only if  coils are available)
       if size(sens.coilpos,1)>0 && ~isfield(headmodel, 'forwpar')
         s = scalingfactor(headmodel.unit, 'cm');
-        headmodel.forwpar = meg_ini([s*headmodel.bnd.pnt headmodel.bnd.nrm], s*center', order, [s*sens.coilpos sens.coilori]);
+        headmodel.forwpar = meg_ini([s*headmodel.bnd.pos headmodel.bnd.nrm], s*center', order, [s*sens.coilpos sens.coilori]);
         headmodel.forwpar.scale = s;
       end
       
@@ -336,24 +336,24 @@ elseif iseeg
       md = dist( (sens.elecpos-repmat(ref_el,[numelec 1]))' );
       % take the min distance as reference
       md = min(md(1,2:end));
-      pnt = sens.elecpos;
+      pos = sens.elecpos;
       % scan the electrodes and reposition the ones which are in the
       % wrong halfspace (projected on the plane)... if not too far away!
-      for i=1:size(pnt,1)
-        P = pnt(i,:);
-        is_in_empty = acos(dot(headmodel.ori,(P-headmodel.pnt)./norm(P-headmodel.pnt))) < pi/2;
+      for i=1:size(pos,1)
+        P = pos(i,:);
+        is_in_empty = acos(dot(headmodel.ori,(P-headmodel.pos)./norm(P-headmodel.pos))) < pi/2;
         if is_in_empty
-          dPplane = abs(dot(headmodel.ori, headmodel.pnt-P, 2));
+          dPplane = abs(dot(headmodel.ori, headmodel.pos-P, 2));
           if dPplane>md
             error('Some electrodes are too distant from the plane: consider repositioning them')
           else
             % project point on plane
-            Ppr = pointproj(P,[headmodel.pnt headmodel.ori]);
-            pnt(i,:) = Ppr;
+            Ppr = pointproj(P,[headmodel.pos headmodel.ori]);
+            pos(i,:) = Ppr;
           end
         end
       end
-      sens.elecpos = pnt;
+      sens.elecpos = pos;
       
     case {'slab_monopole'}
       % electrodes' all-to-all distances
@@ -362,54 +362,54 @@ elseif iseeg
       md  = dist( (sens.elecpos-repmat(ref_el,[numel 1]))' );
       % choose min distance between electrodes
       md  = min(md(1,2:end));
-      pnt = sens.elecpos;
+      pos = sens.elecpos;
       % looks for contacts outside the strip which are not too far away
       % and projects them on the nearest plane
-      for i=1:size(pnt,1)
-        P = pnt(i,:);
-        instrip1 = acos(dot(headmodel.ori1,(P-headmodel.pnt1)./norm(P-headmodel.pnt1))) > pi/2;
-        instrip2 = acos(dot(headmodel.ori2,(P-headmodel.pnt2)./norm(P-headmodel.pnt2))) > pi/2;
+      for i=1:size(pos,1)
+        P = pos(i,:);
+        instrip1 = acos(dot(headmodel.ori1,(P-headmodel.pos1)./norm(P-headmodel.pos1))) > pi/2;
+        instrip2 = acos(dot(headmodel.ori2,(P-headmodel.pos2)./norm(P-headmodel.pos2))) > pi/2;
         is_in_empty = ~(instrip1&instrip2);
         if is_in_empty
-          dPplane1 = abs(dot(headmodel.ori1, headmodel.pnt1-P, 2));
-          dPplane2 = abs(dot(headmodel.ori2, headmodel.pnt2-P, 2));
+          dPplane1 = abs(dot(headmodel.ori1, headmodel.pos1-P, 2));
+          dPplane2 = abs(dot(headmodel.ori2, headmodel.pos2-P, 2));
           if dPplane1>md && dPplane2>md
             error('Some electrodes are too distant from the planes: consider repositioning them')
           elseif dPplane2>dPplane1
             % project point on nearest plane
-            Ppr = pointproj(P,[headmodel.pnt1 headmodel.ori1]);
-            pnt(i,:) = Ppr;
+            Ppr = pointproj(P,[headmodel.pos1 headmodel.ori1]);
+            pos(i,:) = Ppr;
           else
             % project point on nearest plane
-            Ppr = pointproj(P,[headmodel.pnt2 headmodel.ori2]);
-            pnt(i,:) = Ppr;
+            Ppr = pointproj(P,[headmodel.pos2 headmodel.ori2]);
+            pos(i,:) = Ppr;
           end
         end
       end
-      sens.elecpos = pnt;
+      sens.elecpos = pos;
       
     case {'singlesphere', 'concentricspheres'}
       % ensure that the electrodes ly on the skin surface
       radius = max(headmodel.r);
-      pnt    = sens.elecpos;
+      pos    = sens.elecpos;
       if isfield(headmodel, 'o')
         % shift the the centre of the sphere to the origin
-        pnt(:,1) = pnt(:,1) - headmodel.o(1);
-        pnt(:,2) = pnt(:,2) - headmodel.o(2);
-        pnt(:,3) = pnt(:,3) - headmodel.o(3);
+        pos(:,1) = pos(:,1) - headmodel.o(1);
+        pos(:,2) = pos(:,2) - headmodel.o(2);
+        pos(:,3) = pos(:,3) - headmodel.o(3);
       end
-      distance = sqrt(sum(pnt.^2,2)); % to the center of the sphere
+      distance = sqrt(sum(pos.^2,2)); % to the center of the sphere
       if any((abs(distance-radius)/radius)>0.005)
         warning('electrodes do not lie on skin surface -> using radial projection')
       end
-      pnt = pnt * radius ./ [distance distance distance];
+      pos = pos * radius ./ [distance distance distance];
       if isfield(headmodel, 'o')
         % shift the center back to the original location
-        pnt(:,1) = pnt(:,1) + headmodel.o(1);
-        pnt(:,2) = pnt(:,2) + headmodel.o(2);
-        pnt(:,3) = pnt(:,3) + headmodel.o(3);
+        pos(:,1) = pos(:,1) + headmodel.o(1);
+        pos(:,2) = pos(:,2) + headmodel.o(2);
+        pos(:,3) = pos(:,3) + headmodel.o(3);
       end
-      sens.elecpos = pnt;
+      sens.elecpos = pos;
       
     case {'bem', 'dipoli', 'asa', 'bemcp', 'openmeeg'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -433,13 +433,13 @@ elseif iseeg
         else
           fprintf('projecting electrodes on skin surface\n');
           % compute linear interpolation from triangle vertices towards electrodes
-          [el, prj] = project_elec(sens.elecpos, headmodel.bnd(headmodel.skin_surface).pnt, headmodel.bnd(headmodel.skin_surface).tri);
-          tra       = transfer_elec(headmodel.bnd(headmodel.skin_surface).pnt, headmodel.bnd(headmodel.skin_surface).tri, el);
+          [el, prj] = project_elec(sens.elecpos, headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri);
+          tra       = transfer_elec(headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri, el);
           
           % replace the original electrode positions by the projected positions
           sens.elecpos = prj;
           
-          if size(headmodel.mat,1)==size(headmodel.bnd(headmodel.skin_surface).pnt,1)
+          if size(headmodel.mat,1)==size(headmodel.bnd(headmodel.skin_surface).pos,1)
             % construct the transfer from only the skin vertices towards electrodes
             interp = tra;
           else
@@ -449,7 +449,7 @@ elseif iseeg
               if i==headmodel.skin_surface
                 interp = [interp, tra];
               else
-                interp = [interp, zeros(size(el,1), size(headmodel.bnd(i).pnt,1))];
+                interp = [interp, zeros(size(el,1), size(headmodel.bnd(i).pos,1))];
               end
             end
           end
@@ -461,7 +461,7 @@ elseif iseeg
           if strcmp(ft_voltype(headmodel), 'openmeeg')
             % check that the external toolbox is present
             ft_hastoolbox('openmeeg', 1);
-            nb_points_external_surface = size(headmodel.bnd(headmodel.skin_surface).pnt,1);
+            nb_points_external_surface = size(headmodel.bnd(headmodel.skin_surface).pos,1);
             headmodel.mat = headmodel.mat((end-nb_points_external_surface+1):end,:);
             headmodel.mat = interp(:,1:nb_points_external_surface) * headmodel.mat;
             
@@ -478,8 +478,8 @@ elseif iseeg
       
     case 'fns'
       if isfield(headmodel,'bnd')
-        [el, prj] = project_elec(sens.elecpos, headmodel.bnd.pnt, headmodel.bnd.tri);
-        sens.tra = transfer_elec(headmodel.bnd.pnt, headmodel.bnd.tri, el);
+        [el, prj] = project_elec(sens.elecpos, headmodel.bnd.pos, headmodel.bnd.tri);
+        sens.tra = transfer_elec(headmodel.bnd.pos, headmodel.bnd.tri, el);
         % replace the original electrode positions by the projected positions
         sens.elecpos = prj;
       end
@@ -491,10 +491,10 @@ elseif iseeg
       % extract the outer surface
       bnd = mesh2edge(headmodel);
       for j=1:length(sens.label)
-        d = bsxfun(@minus, bnd.pnt, sens.elecpos(j,:));
+        d = bsxfun(@minus, bnd.pos, sens.elecpos(j,:));
         [d, i] = min(sum(d.^2, 2));
         % replace the position of each electrode by the closest vertex
-        sens.elecpos(j,:) = bnd.pnt(i,:);
+        sens.elecpos(j,:) = bnd.pos(i,:);
       end
       
       headmodel.transfer = sb_transfer(headmodel,sens);

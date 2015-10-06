@@ -1,4 +1,4 @@
-function [lf] = inf_medium_leadfield(rd, pnt, cond);
+function [lf] = inf_medium_leadfield(rd, pnt, cond)
 
 % INF_MEDIUM_LEADFIELD calculate the infinite medium leadfield
 % on positions pnt for dipole position R and conductivity cond

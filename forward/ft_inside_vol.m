@@ -63,12 +63,12 @@ switch ft_voltype(headmodel)
   case 'localspheres'
     if ~isempty(headshape) && ~isempty(grad)
       % use the specified headshape to construct the bounding triangulation
-      [pnt, tri] = headsurface(headmodel, grad, 'headshape', headshape, 'inwardshift', inwardshift, 'surface', 'skin');
-      inside = bounding_mesh(pos, pnt, tri);
+      [pos, tri] = headsurface(headmodel, grad, 'headshape', headshape, 'inwardshift', inwardshift, 'surface', 'skin');
+      inside = bounding_mesh(pos, pos, tri);
     elseif ~isempty(grad)
       % use the volume conductor model to construct an approximate headshape
-      [pnt, tri] = headsurface(headmodel, grad, 'inwardshift', inwardshift, 'surface', 'skin');
-      inside = bounding_mesh(pos, pnt, tri);
+      [pos, tri] = headsurface(headmodel, grad, 'inwardshift', inwardshift, 'surface', 'skin');
+      inside = bounding_mesh(pos, pos, tri);
     else
       % only check whether the dipole is in any of the spheres
       nspheres = size(headmodel.r,1);
@@ -97,7 +97,7 @@ switch ft_voltype(headmodel)
     for i = 1:size(pos,1);
       pol = pos(i,:);
       % condition of dipoles/monopoles falling in the non conductive halfspace
-      inside(i) = acos(dot(headmodel.ori,(pol-headmodel.pnt)./norm(pol-headmodel.pnt))) >= pi/2;
+      inside(i) = acos(dot(headmodel.ori,(pol-headmodel.pos)./norm(pol-headmodel.pos))) >= pi/2;
     end
     
   case 'slab_monopole'
@@ -106,15 +106,15 @@ switch ft_voltype(headmodel)
       pol = pos(i,:);
       % condition of dipoles/monopoles falling in the non conductive halfspace
       % Attention: voxels on the boundary are automatically considered outside the strip
-      instrip1  = acos(dot(headmodel.ori1,(pol-headmodel.pnt1)./norm(pol-headmodel.pnt1))) > pi/2;
-      instrip2  = acos(dot(headmodel.ori2,(pol-headmodel.pnt2)./norm(pol-headmodel.pnt2))) > pi/2;
+      instrip1  = acos(dot(headmodel.ori1,(pol-headmodel.pos1)./norm(pol-headmodel.pos1))) > pi/2;
+      instrip2  = acos(dot(headmodel.ori2,(pol-headmodel.pos2)./norm(pol-headmodel.pos2))) > pi/2;
       inside(i) = instrip1 & instrip2;
     end
     
   case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag'}
     % this is a model with a realistic shape described by a triangulated boundary
-    [pnt, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
-    inside = bounding_mesh(pos, pnt, tri);
+    [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
+    inside = bounding_mesh(pos, pos, tri);
     
   case {'simbio'}
     

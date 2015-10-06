@@ -1,4 +1,4 @@
-function [lf] = ft_compute_leadfield(pos, sens, headmodel, varargin)
+function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 
 % FT_COMPUTE_LEADFIELD computes a forward solution for a dipole in a a volume
 % conductor model. The forward solution is expressed as the leadfield
@@ -7,9 +7,9 @@ function [lf] = ft_compute_leadfield(pos, sens, headmodel, varargin)
 % dipole.
 %
 % Use as
-%   [lf] = ft_compute_leadfield(pos, sens, headmodel, ...)
+%   [lf] = ft_compute_leadfield(dippos, sens, headmodel, ...)
 % with input arguments
-%   pos       = position dipole (1*3 or Ndip*3)
+%   dippos       = position dipole (1*3 or Ndip*3)
 %   sens      = structure with gradiometer or electrode definition
 %   headmodel = structure with volume conductor definition
 %
@@ -87,7 +87,7 @@ if iscell(sens) && iscell(headmodel) && numel(sens)==numel(headmodel)
   % this represents combined EEG and MEG sensors, where each modality has its own volume conduction model
   lf = cell(1, numel(sens));
   for i=1:length(sens)
-    lf{i} = ft_compute_leadfield(pos, sens{i}, headmodel{i}, varargin{:});
+    lf{i} = ft_compute_leadfield(dippos, sens{i}, headmodel{i}, varargin{:});
   end
   lf = cat(1, lf{:});
   return;
@@ -111,13 +111,13 @@ end
 
 if ~isstruct(sens) && size(sens, 2)==3
   % definition of electrode positions only, restructure it
-  sens = struct('pnt', sens);
+  sens = struct('elecpos', sens);
 end
 
 % ft_prepare_vol_sens should be called prior to ft_compute_leadfield
 % to ensure that the sens and headmodel are up to date, since the backward
 % compatibility check should not be performed for each dipole location
-% sens = ft_datatype_sens(sens);
+% sens       = ft_datatype_sens(sens);
 % headmodel  = ft_datatype_headmodel(headmodel);
 
 % determine whether it is EEG or MEG
@@ -126,9 +126,9 @@ ismeg = ft_senstype(sens, 'meg');
 
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a
 % as a Nx3 matrix, i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
-Ndipoles = numel(pos)/3;
-if all(size(pos)==[1 3*Ndipoles])
-  pos = reshape(pos, 3, Ndipoles)';
+Ndipoles = numel(dippos)/3;
+if all(size(dippos)==[1 3*Ndipoles])
+  dippos = reshape(dippos, 3, Ndipoles)';
 end
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
@@ -155,7 +155,7 @@ elseif ismeg
       
       if isfield(headmodel, 'o')
         % shift dipole and magnetometers to origin of sphere
-        pos = pos - repmat(headmodel.o, Ndipoles, 1);
+        dippos = dippos - repmat(headmodel.o, Ndipoles, 1);
         pnt = pnt - repmat(headmodel.o, size(pnt, 1), 1);
       end
       
@@ -163,11 +163,11 @@ elseif ismeg
         % loop over multiple dipoles
         lf = zeros(size(pnt, 1), 3*Ndipoles);
         for i=1:Ndipoles
-          lf(:, (3*i-2):(3*i)) = meg_leadfield1(pos(i, :), pnt, ori);
+          lf(:, (3*i-2):(3*i)) = meg_leadfield1(dippos(i, :), pnt, ori);
         end
       else
         % only single dipole
-        lf = meg_leadfield1(pos, pnt, ori);
+        lf = meg_leadfield1(dippos, pnt, ori);
       end
       
       if isfield(sens, 'tra')
@@ -194,7 +194,7 @@ elseif ismeg
       for chan=1:ncoils
         for dip=1:Ndipoles
           % shift dipole and magnetometer coil to origin of sphere
-          dippos = pos(dip, :) - headmodel.o(chan, :);
+          dippos = dippos(dip, :) - headmodel.o(chan, :);
           chnpos = sens.coilpos(chan, :) - headmodel.o(chan, :);
           tmp = meg_leadfield1(dippos, chnpos, sens.coilori(chan, :));
           lf(chan, (3*dip-2):(3*dip)) = tmp;
@@ -214,10 +214,10 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % compute the forward model for all channels
       % tmp1 = ones(1, Ndipoles);
-      % tmp2 = 0.01*pos'; %convert to cm
+      % tmp2 = 0.01*dippos'; %convert to cm
       % lf = megfield([tmp2 tmp2 tmp2], [[1 0 0]'*tmp1 [0 1 0]'*tmp1 [0 0 1]'*tmp1]);
       for dip=1:Ndipoles
-        R = 0.01*pos(i, :)'; % convert from cm to m
+        R = 0.01*dippos(i, :)'; % convert from cm to m
         Qx = [1 0 0];
         Qy = [0 1 0];
         Qz = [0 0 1];
@@ -238,9 +238,9 @@ elseif ismeg
       % orthogonal x/y/z directions
       dippar = zeros(Ndipoles*3, 6);
       for i=1:Ndipoles
-        dippar((i-1)*3+1, :) = [headmodel.forwpar.scale*pos(i, :) 1 0 0]; % single dipole with unit strength, x-orientation
-        dippar((i-1)*3+2, :) = [headmodel.forwpar.scale*pos(i, :) 0 1 0]; % single dipole with unit strength, y-orientation
-        dippar((i-1)*3+3, :) = [headmodel.forwpar.scale*pos(i, :) 0 0 1]; % single dipole with unit strength, z-orientation
+        dippar((i-1)*3+1, :) = [headmodel.forwpar.scale*dippos(i, :) 1 0 0]; % single dipole with unit strength, x-orientation
+        dippar((i-1)*3+2, :) = [headmodel.forwpar.scale*dippos(i, :) 0 1 0]; % single dipole with unit strength, y-orientation
+        dippar((i-1)*3+3, :) = [headmodel.forwpar.scale*dippos(i, :) 0 0 1]; % single dipole with unit strength, z-orientation
       end
       % compute the leadfield for each individual coil
       lf = meg_forward(dippar, headmodel.forwpar);
@@ -260,8 +260,8 @@ elseif ismeg
       if isfield(headmodel,'mat')
         % switch the non adaptive algorithm on
         nonadaptive = true; % HACK : this is hardcoded at the moment
-        dsm = openmeeg_dsm(pos, headmodel, nonadaptive);
-        [h2mm, s2mm]= openmeeg_megm(pos, headmodel, sens);
+        dsm = openmeeg_dsm(dippos, headmodel, nonadaptive);
+        [h2mm, s2mm]= openmeeg_megm(dippos, headmodel, sens);
         
         %if isfield(headmodel, 'mat')
         lf = s2mm+h2mm*(headmodel.mat*dsm);
@@ -274,7 +274,7 @@ elseif ismeg
         end
       else
         warning('No system matrix is present, Calling the Nemo Lab pipeline')
-        lf = leadfield_openmeeg(pos, headmodel, sens);
+        lf = leadfield_openmeeg(dippos, headmodel, sens);
       end
       
     case {'infinite_magneticdipole', 'infinite'}
@@ -289,11 +289,11 @@ elseif ismeg
         % loop over multiple dipoles
         lf = zeros(size(pnt, 1), 3*Ndipoles);
         for i=1:Ndipoles
-          lf(:, (3*i-2):(3*i)) = magnetic_dipole(pos(i, :), pnt, ori);
+          lf(:, (3*i-2):(3*i)) = magnetic_dipole(dippos(i, :), pnt, ori);
         end
       else
         % only single dipole
-        lf = magnetic_dipole(pos, pnt, ori);
+        lf = magnetic_dipole(dippos, pnt, ori);
       end
       
       if isfield(sens, 'tra')
@@ -313,11 +313,11 @@ elseif ismeg
         % loop over multiple dipoles
         lf = zeros(size(pnt, 1), 3*Ndipoles);
         for i=1:Ndipoles
-          lf(:, (3*i-2):(3*i)) = current_dipole(pos(i, :), pnt, ori);
+          lf(:, (3*i-2):(3*i)) = current_dipole(dippos(i, :), pnt, ori);
         end
       else
         % only single dipole
-        lf = current_dipole(pos, pnt, ori);
+        lf = current_dipole(dippos, pnt, ori);
       end
       
       if isfield(sens, 'tra')
@@ -355,13 +355,13 @@ elseif iseeg
       [radii, indx] = sort(headmodel.r/max(headmodel.r));
       sigma = headmodel.cond(indx);
       r = (sens.elecpos-repmat(center, Nelec, 1))./max(headmodel.r);
-      pos = pos./max(headmodel.r);
+      dippos = dippos./max(headmodel.r);
       
       if Ndipoles>1
         % loop over multiple dipoles
         lf = zeros(Nelec, 3*Ndipoles);
         for i=1:Ndipoles
-          rq = pos(i, :) - center;
+          rq = dippos(i, :) - center;
           % compute the potential for each dipole ortientation
           % it would be much more efficient to change the punita function
           q1 = [1 0 0]; lf(:, (3*i-2)) = multisphere(Nspheres, radii, sigma, r, rq, q1);
@@ -371,7 +371,7 @@ elseif iseeg
       else
         % only single dipole
         lf = zeros(Nelec, 3);
-        rq = pos - center;
+        rq = dippos - center;
         % compute the potential for each dipole ortientation
         % it would be much more efficient to change the punita function
         q1 = [1 0 0] ; lf(:, 1) = multisphere(Nspheres, radii, sigma, r, rq, q1);
@@ -397,7 +397,7 @@ elseif iseeg
       if isfield(headmodel, 'o')
         % shift the origin of the spheres, electrodes and dipole
         sens.elecpos = sens.elecpos - repmat(headmodel.o, size(sens.elecpos, 1), 1);
-        pos = pos - repmat(headmodel.o, Ndipoles, 1);
+        dippos = dippos - repmat(headmodel.o, Ndipoles, 1);
       end
       
       switch Nspheres
@@ -421,31 +421,31 @@ elseif iseeg
       
       lf = zeros(size(sens.elecpos, 1), 3*Ndipoles);
       for i=1:Ndipoles
-        lf(:, (3*i-2):(3*i)) = feval(funnam, pos(i, :), sens.elecpos, headmodel);
+        lf(:, (3*i-2):(3*i)) = feval(funnam, dippos(i, :), sens.elecpos, headmodel);
       end
       
     case {'bem', 'dipoli', 'asa', 'bemcp'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % EEG boundary element method volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      lf = eeg_leadfieldb(pos, sens.elecpos, headmodel);
+      lf = eeg_leadfieldb(dippos, sens.elecpos, headmodel);
       
     case 'openmeeg'
       ft_hastoolbox('openmeeg', 1)
       if isfield(headmodel, 'mat')
         % switch the non adaptive algorithm on
         nonadaptive = true; % HACK this is hardcoded at the moment
-        dsm = openmeeg_dsm(pos, headmodel, nonadaptive);
+        dsm = openmeeg_dsm(dippos, headmodel, nonadaptive);
         lf = headmodel.mat*dsm;
       else
         disp('No system matrix is present, calling the Nemo Lab pipeline...')
-        lf = leadfield_openmeeg(pos, headmodel, sens);
+        lf = leadfield_openmeeg(dippos, headmodel, sens);
       end
       
     case 'metufem'
       p3 = zeros(Ndipoles * 3, 6);
       for i = 1:Ndipoles
-        p3((3*i - 2) : (3 * i), 1:3) = [pos(i, :); pos(i, :); pos(i, :)];
+        p3((3*i - 2) : (3 * i), 1:3) = [dippos(i, :); dippos(i, :); dippos(i, :)];
         p3((3*i - 2) : (3 * i), 4:6) = [1 0 0; 0 1 0; 0 0 1];
       end
       lf = metufem('pot', p3', 'interp');
@@ -454,40 +454,40 @@ elseif iseeg
       session = headmodel.session;
       p3 = zeros(Ndipoles * 3, 6);
       for i = 1:Ndipoles
-        p3((3*i - 2) : (3 * i), 1:3) = [pos(i, :); pos(i, :); pos(i, :)];
+        p3((3*i - 2) : (3 * i), 1:3) = [dippos(i, :); dippos(i, :); dippos(i, :)];
         p3((3*i - 2) : (3 * i), 4:6) = [1 0 0; 0 1 0; 0 0 1];
       end
       [lf, session] = bem_solve_lfm_eeg(session, p3);
       
     case {'infinite_currentdipole' 'infinite'}
       % FIXME the conductivity of the medium is not known
-      lf = inf_medium_leadfield(pos, sens.elecpos, 1);
+      lf = inf_medium_leadfield(dippos, sens.elecpos, 1);
       
     case 'halfspace'
-      lf = eeg_halfspace_medium_leadfield(pos, sens.elecpos, headmodel);
+      lf = eeg_halfspace_medium_leadfield(dippos, sens.elecpos, headmodel);
       
     case 'infinite_monopole'
-      lf = eeg_infinite_monopole(pos, sens.elecpos, headmodel);
+      lf = eeg_infinite_monopole(dippos, sens.elecpos, headmodel);
       
     case 'halfspace_monopole'
-      lf = eeg_halfspace_monopole(pos, sens.elecpos, headmodel);
+      lf = eeg_halfspace_monopole(dippos, sens.elecpos, headmodel);
       
     case 'slab_monopole'
-      lf = eeg_slab_monopole(pos, sens.elecpos, headmodel);
+      lf = eeg_slab_monopole(dippos, sens.elecpos, headmodel);
       
     case 'simbio'
       ft_hastoolbox('simbio', 1);
       % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
-      lf = leadfield_simbio(pos, headmodel);
+      lf = leadfield_simbio(dippos, headmodel);
       
     case 'fns'
       % note that the electrode information is contained in the headmodel
       % tolerance = 1e-8;
-      lf = leadfield_fns(pos, headmodel);
+      lf = leadfield_fns(dippos, headmodel);
       
     case 'interpolate'
       % note that the electrode information is contained in the headmodel
-      lf = leadfield_interpolate(pos, headmodel);
+      lf = leadfield_interpolate(dippos, headmodel);
       % the leadfield is already correctly referenced, i.e. it represents the
       % channel values rather than the electrode values. Prevent that the
       % referencing is done once more.

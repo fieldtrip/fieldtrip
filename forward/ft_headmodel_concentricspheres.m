@@ -1,4 +1,4 @@
-function headmodel = ft_headmodel_concentricspheres(geometry, varargin)
+function headmodel = ft_headmodel_concentricspheres(mesh, varargin)
 
 % FT_HEADMODEL_CONCENTRICSPHERES creates a volume conduction model
 % of the head based on three or four concentric spheres. For a 3-sphere
@@ -16,7 +16,7 @@ function headmodel = ft_headmodel_concentricspheres(geometry, varargin)
 % to all individual surfaces.
 %
 % Use as
-%   headmodel = ft_headmodel_concentricspheres(geometry, ...)
+%   headmodel = ft_headmodel_concentricspheres(mesh, ...)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
@@ -50,54 +50,57 @@ conductivity = ft_getopt(varargin, 'conductivity'); % default is determined belo
 fitind       = ft_getopt(varargin, 'fitind', 'all');
 
 if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
-  % the geometrical units should be specified in the input geometry
+  % the geometrical units should be specified in the input mesh
   error('the ''unit'' option is not supported any more');
 end
 
-if isnumeric(geometry) && size(geometry,2)==3
+if isnumeric(mesh) && size(mesh,2)==3
   % assume that it is a Nx3 array with vertices
   % convert it to a structure, this is needed to determine the units further down
-  geometry = struct('pnt', geometry);
-elseif isstruct(geometry) && isfield(geometry,'bnd')
+  mesh = struct('pos', mesh);
+elseif isstruct(mesh) && isfield(mesh,'bnd')
   % take the triangulated surfaces from the input structure
-  geometry = geometry.bnd;
+  mesh = mesh.bnd;
 end
 
-if ~isstruct(geometry) || ~isfield(geometry, 'pnt')
-  error('the input geometry should be a set of points or a single triangulated surface')
+% replace pnt with pos
+mesh = fixpos(mesh);
+
+if ~isstruct(mesh) || ~isfield(mesh, 'pos')
+  error('the input mesh should be a set of points or a single triangulated surface')
 end
 
 % start with an empty volume conductor
 headmodel = [];
 
-% ensure that the geometry has units, estimate them if needed
-geometry = ft_convert_units(geometry);
+% ensure that the mesh has units, estimate them if needed
+mesh = ft_convert_units(mesh);
 
 % copy the geometrical units into the volume conductor
-headmodel.unit = geometry(1).unit;
+headmodel.unit = mesh(1).unit;
 
 if isequal(fitind, 'all')
-  fitind = 1:numel(geometry);
+  fitind = 1:numel(mesh);
 end
 
 % concatenate the vertices of all surfaces
-pnt = {geometry.pnt};
-pnt = cat(1, pnt{:});
+pos = {mesh.pos};
+pos = cat(1, pos{:});
 
 % remove double vertices
-pnt  = unique(pnt, 'rows');
-npnt = size(pnt, 1);
+pos  = unique(pos, 'rows');
+npos = size(pos, 1);
 
 % fit a single sphere to all combined headshape points
-[single_o, single_r] = fitsphere(pnt);
-fprintf('initial sphere: number of unique surface points = %d\n', npnt);
+[single_o, single_r] = fitsphere(pos);
+fprintf('initial sphere: number of unique surface points = %d\n', npos);
 fprintf('initial sphere: center = [%.1f %.1f %.1f]\n', single_o(1), single_o(2), single_o(3));
 fprintf('initial sphere: radius = %.1f\n', single_r);
 
 % fit the radius of each concentric sphere to the corresponding surface points
-for i = 1:numel(geometry)
-  npnt     = size(geometry(i).pnt,1);
-  dist     = sqrt(sum(((geometry(i).pnt - repmat(single_o, npnt, 1)).^2), 2));
+for i = 1:numel(mesh)
+  npos     = size(mesh(i).pos,1);
+  dist     = sqrt(sum(((mesh(i).pos - repmat(single_o, npos, 1)).^2), 2));
   headmodel.r(i) = mean(dist);
 end
 
@@ -125,6 +128,6 @@ else
   headmodel.cond = headmodel.cond(indx);
 end
 
-for i=1:numel(geometry)
+for i=1:numel(mesh)
   fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, headmodel.r(i), headmodel.cond(i));
 end

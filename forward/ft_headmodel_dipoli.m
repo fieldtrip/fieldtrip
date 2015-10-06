@@ -1,4 +1,4 @@
-function headmodel = ft_headmodel_dipoli(geom, varargin)
+function headmodel = ft_headmodel_dipoli(mesh, varargin)
 
 % FT_HEADMODEL_DIPOLI creates a volume conduction model of the head
 % using the boundary element method (BEM) for EEG. This function takes
@@ -15,9 +15,9 @@ function headmodel = ft_headmodel_dipoli(geom, varargin)
 % executable with the name "dipoli" which is provided by Thom Oostendorp.
 %
 % Use as
-%   headmodel = ft_headmodel_dipoli(geom, ...)
+%   headmodel = ft_headmodel_dipoli(mesh, ...)
 %
-% The geom is given as a boundary or a struct-array of boundaries (surfaces)
+% The mesh is given as a boundary or a struct-array of boundaries (surfaces)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
@@ -34,13 +34,13 @@ ft_hastoolbox('dipoli', 1);
 isolatedsource  = ft_getopt(varargin, 'isolatedsource');
 conductivity    = ft_getopt(varargin, 'conductivity');
 
-if isfield(geom,'bnd')
-  geom = geom.bnd;
+if isfield(mesh,'bnd')
+  mesh = mesh.bnd;
 end
 
 % start with an empty volume conductor
 headmodel = [];
-headmodel.bnd = geom;
+headmodel.bnd = mesh;
 
 % determine the number of compartments
 numboundaries = numel(headmodel.bnd);
@@ -158,7 +158,7 @@ for i=1:numboundaries
     fprintf('flipping normals'' direction\n')
     bnddip(i).tri = fliplr(bnddip(i).tri);
   end
-  write_tri(bndfile{i}, bnddip(i).pnt, bnddip(i).tri);
+  write_tri(bndfile{i}, bnddip(i).pos, bnddip(i).tri);
 end
 
 % these will hold the shell script and the inverted system matrix
@@ -223,15 +223,15 @@ headmodel.type = 'dipoli';
 function ok = checknormals(bnd)
 % checks if the normals are inward oriented
 ok = 0;
-pnt = bnd.pnt;
+pos = bnd.pos;
 tri = bnd.tri;
 % translate to the center
-org = median(pnt,1);
-pnt(:,1) = pnt(:,1) - org(1);
-pnt(:,2) = pnt(:,2) - org(2);
-pnt(:,3) = pnt(:,3) - org(3);
+org = median(pos,1);
+pos(:,1) = pos(:,1) - org(1);
+pos(:,2) = pos(:,2) - org(2);
+pos(:,3) = pos(:,3) - org(3);
 
-w = sum(solid_angle(pnt, tri));
+w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   % FIXME: this method is rigorous only for star shaped surfaces

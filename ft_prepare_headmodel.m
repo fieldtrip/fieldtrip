@@ -191,6 +191,8 @@ cfg.headmodel       = ft_getopt(cfg, 'headmodel');      % can contain CTF locals
 if nargin>1,
   % check if the input data is valid for this function and ensure that it has the units specified
   data = ft_checkdata(data, 'hasunit', 'yes');
+  % replace pnt by pos
+  data = fixpos(data);
 else
   data = [];
 end
@@ -203,9 +205,8 @@ if istrue(cfg.siunits)
   if isfield(cfg, 'grad') && ~isempty(cfg.grad)
     cfg.grad = ft_convert_units(cfg.grad, 'm');
   end
-  
   if isfield(cfg, 'elec') && ~isempty(cfg.elec)
-      cfg.elec = ft_convert_units(cfg.elec, 'm');
+    cfg.elec = ft_convert_units(cfg.elec, 'm');
   end
 end
 
@@ -219,7 +220,7 @@ if isfield(data, 'bnd')
 end
 
 % boolean variables to manages the different geometrical input data objects
-input_mesh  = isfield(data, 'pnt') && ~isfield(data, 'label');
+input_mesh  = isfield(data, 'pos') && ~isfield(data, 'label');
 input_seg   = ft_datatype(data, 'segmentation');
 input_elec  = ft_datatype(data, 'sens');
 
@@ -266,9 +267,9 @@ switch cfg.method
       if any(isnan(headmodel.mat(:)))
         % HACK add a little bit of noise, with the NatMEG tutorial data, I discovered that this prevents the warning
         % Matrix is singular, close to singular or badly scaled. Results may be inaccurate. RCOND = NaN.
-        geometry(1).pnt = geometry(1).pnt + randn(size(geometry(1).pnt))*scalingfactor('um', geometry(1).unit);
-        geometry(2).pnt = geometry(2).pnt + randn(size(geometry(2).pnt))*scalingfactor('um', geometry(2).unit);
-        geometry(3).pnt = geometry(3).pnt + randn(size(geometry(3).pnt))*scalingfactor('um', geometry(3).unit);
+        geometry(1).pos = geometry(1).pos + randn(size(geometry(1).pos))*scalingfactor('um', geometry(1).unit);
+        geometry(2).pos = geometry(2).pos + randn(size(geometry(2).pos))*scalingfactor('um', geometry(2).unit);
+        geometry(3).pos = geometry(3).pos + randn(size(geometry(3).pos))*scalingfactor('um', geometry(3).unit);
         warning('NaN detected, trying once more with slightly different vertex positions');
         headmodel = ft_headmodel_bemcp(geometry, 'conductivity', cfg.conductivity);
       end
@@ -288,10 +289,10 @@ switch cfg.method
       tmpcfg.tissue = cfg.tissue;
       geometry = ft_prepare_mesh(tmpcfg, data);
     elseif input_elec
-      geometry.pnt = data.chanpos;
+      geometry.pos = data.chanpos;
       geometry.unit = data.unit;
     elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-      geometry.pnt = cfg.headshape;
+      geometry.pos = cfg.headshape;
     elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
       geometry = cfg.headshape;
     elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
@@ -351,10 +352,10 @@ switch cfg.method
         end
       end
     elseif input_elec
-      geometry.pnt = data.chanpos;
+      geometry.pos = data.chanpos;
       geometry.unit = data.unit;
     elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-      geometry.pnt = cfg.headshape;
+      geometry.pos = cfg.headshape;
     elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
       geometry = cfg.headshape;
     elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)

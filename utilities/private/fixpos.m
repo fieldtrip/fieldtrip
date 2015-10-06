@@ -8,9 +8,11 @@ end
 
 if numel(data)>1
   % loop over all individual elements
+  clear tmp
   for i=1:numel(data)
-    data(i) = fixpos(data(i));
+    tmp(i) = fixpos(data(i));
   end
+  data = tmp;
   return
 end
 

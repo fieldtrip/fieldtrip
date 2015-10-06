@@ -263,14 +263,14 @@ elseif isfield(grid, 'filename')
   end
   
   % create a 2D projection and triangulation
-  pnt = inputvol.sens.elecpos;
-  prj = elproj(pnt);
+  pos = inputvol.sens.elecpos;
+  prj = elproj(pos);
   tri = delaunay(prj(:,1), prj(:,2));
   
   % project the electrodes on the triangulation and compute the
   % bilinear interpolation from the original to the new electrodes
-  [el, prj] = project_elec(sens.elecpos, pnt, tri);
-  tra = transfer_elec(pnt, tri, el);
+  [el, prj] = project_elec(sens.elecpos, pos, tri);
+  tra = transfer_elec(pos, tri, el);
   
   % define the spaces and the number of elements that they comprise
   n1 = length(inputvol.sens.label);    % computed channels
