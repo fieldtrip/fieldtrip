@@ -40,7 +40,7 @@ function headmodel = triangle4pt(headmodel)
 Ns = length(headmodel.bnd);
 for ii=1:Ns % treat each mesh one at a time
   tri = headmodel.bnd(ii).tri;
-  pnt = headmodel.bnd(ii).pnt;
+  pos = headmodel.bnd(ii).pos;
   Nt = size(tri,1);
   pnt4 = zeros(Nt,3);
   for jj=1:Nt % treat each triangle on a t a time
@@ -56,10 +56,10 @@ for ii=1:Ns % treat each mesh one at a time
     lv = tri(lt,:);
     lv = setxor(lv(:)',tri(jj,:));
     % list of 3 voxels connected by 2 edges to the jj_th triangle.
-    sph_pnt = pnt([tri(jj,:) lv],:);
+    sph_pnt = pos([tri(jj,:) lv],:);
     [center,radius] = fitsphere(sph_pnt);
     % best fitting sphere radius & centre, for the 6 points chosen
-    pnt_c = sum(pnt(tri(jj,:),:))/3;
+    pnt_c = sum(pos(tri(jj,:),:))/3;
     % centroid of the triangle treated
     if isfinite(radius)
         tmp = pnt_c-center;
@@ -77,8 +77,8 @@ end
 
 return
 
-% figure, plot3(pnt(:,1),pnt(:,2),pnt(:,3),'.')
+% figure, plot3(pos(:,1),pos(:,2),pos(:,3),'.')
 % axis equal, hold on
-% plot3(pnt(tri(jj,:),1),pnt(tri(jj,:),2),pnt(tri(jj,:),3),'*')
-% plot3(pnt(lv,1),pnt(lv,2),pnt(lv,3),'o')
+% plot3(pos(tri(jj,:),1),pos(tri(jj,:),2),pos(tri(jj,:),3),'*')
+% plot3(pos(lv,1),pos(lv,2),pos(lv,3),'o')
 % plot3(pnt4(jj,1),pnt4(jj,2),pnt4(jj,3),'rs')

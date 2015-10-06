@@ -378,7 +378,7 @@ else
 %     elseif (mean(ismember(sens.label,    ft_senslabel('nirs'))) > 0.8)
 %       type = 'nirs';
     end
-  end % look at label, ori and/or pnt
+  end % look at label, ori and/or pos
 end % if isfield(sens, 'type')
 
 if strcmp(type, 'unknown') && ~recursion
