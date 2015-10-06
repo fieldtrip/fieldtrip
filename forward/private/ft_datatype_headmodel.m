@@ -50,7 +50,9 @@ function headmodel = ft_datatype_headmodel(headmodel, varargin)
 %
 % Revision history:
 %
-% (2014/latest) All numeric values are represented in double precision.
+% (2015/latest) Use the field name "pos" instead of "pnt" for vertex positions.
+%
+% (2014) All numeric values are represented in double precision.
 %
 % (2013) Always use the field "cond" for conductivity.
 %
@@ -71,7 +73,7 @@ function headmodel = ft_datatype_headmodel(headmodel, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2014';
+  version = '2015';
 end
 
 if isempty(headmodel)
@@ -80,9 +82,15 @@ end
 
 switch version
   
+  case '2015'
+    % first make it consistent with the 2014 version
+    headmodel = ft_datatype_headmodel(headmodel, 'version', '2013');
+    
+    % rename pnt into pos
+    headmodel = fixpos(headmodel);
+
   case '2014'
-    % first make it consistent with the 2013 version that makes a
-    % consistency check with 2012 first
+    % first make it consistent with the 2013 version
     headmodel = ft_datatype_headmodel(headmodel, 'version', '2013');
     
     % ensure that all numbers are represented in double precision
