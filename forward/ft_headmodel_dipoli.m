@@ -34,9 +34,12 @@ ft_hastoolbox('dipoli', 1);
 isolatedsource  = ft_getopt(varargin, 'isolatedsource');
 conductivity    = ft_getopt(varargin, 'conductivity');
 
-if isfield(mesh,'bnd')
+if isfield(mesh, 'bnd')
   mesh = mesh.bnd;
 end
+
+% replace pnt with pos
+mesh = fixpos(mesh);
 
 % start with an empty volume conductor
 headmodel = [];

@@ -39,16 +39,17 @@ ft_hastoolbox('bemcp', 1);
 % get the optional input arguments
 conductivity    = ft_getopt(varargin, 'conductivity');
 
-if isfield(mesh,'bnd')
+if isfield(mesh, 'bnd')
   mesh = mesh.bnd;
 end
+
+% replace pnt with pos
+mesh = fixpos(mesh);
 
 % ensure that the vertices and triangles are double precision, otherwise the bemcp mex files will crash
 for i=1:length(mesh)
   mesh(i).pos = double(mesh(i).pos);
-  if isfield(mesh(i),'tri')
-    mesh(i).tri = double(mesh(i).tri);
-  end
+  mesh(i).tri = double(mesh(i).tri);
 end
 
 % start with an empty volume conductor
