@@ -57,6 +57,11 @@ if ~strcmp(mfilename, 'ft_trackusage')
   return
 end
 
+if ~ft_platform_supports('rng')
+  % this function should not (yet) be used on Octave
+  return
+end
+
 %% The first part pertains to keeping the tracking settings consistent over multiple MATLAB sessions
 
 % This functionality overlaps in part with what normally would be done using

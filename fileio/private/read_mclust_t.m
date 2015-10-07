@@ -1,7 +1,6 @@
-function S = LoadSpikes(tfilelist)
+function S = read_mclust_t(tfilelist)
 
 % adapted from M-clust function LoadSpikes
-
 
 %-------------------
 % Check input type
