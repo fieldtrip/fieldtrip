@@ -357,12 +357,7 @@ if strcmp(cfg.covariance, 'yes')
 end
 
 % some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'};
-for i=1:length(copyfield)
-  if isfield(data, copyfield{i})
-    timelock.(copyfield{i}) = data.(copyfield{i});
-  end
-end
+timelock = copyfields(data, timelock, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
   % copy the trialinfo into the output, but not the sampleinfo
