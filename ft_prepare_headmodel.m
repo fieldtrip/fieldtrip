@@ -220,7 +220,7 @@ if isfield(data, 'bnd')
 end
 
 % boolean variables to manages the different geometrical input data objects
-input_mesh  = isfield(data, 'pos') && ~isfield(data, 'label');
+input_mesh  = ft_datatype(data, 'mesh');
 input_seg   = ft_datatype(data, 'segmentation');
 input_elec  = ft_datatype(data, 'sens');
 

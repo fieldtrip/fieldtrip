@@ -56,15 +56,13 @@ if ft_platform_supports('exists-in-private-directory')
     evalin('caller', ['ft_preamble_' cmd]);
   end
 else
-  % Octave does not find files by name, so the full filename must
-  % be specified.
+  % Octave does not find files by name, so the full filename must be specified.
   if exist(['private/ft_preamble_' cmd '.m'], 'file')
 
     % save the original working directory
     orig_pwd=pwd();
 
-    % ensure original working directory is restored when exiting this
-    % function
+    % ensure original working directory is restored when exiting this function
     cleaner=onCleanup(@()cd(orig_pwd));
 
     % cd to private directory

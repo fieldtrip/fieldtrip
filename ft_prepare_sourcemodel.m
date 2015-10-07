@@ -169,15 +169,15 @@ if isfield(cfg.grid, 'resolution') && isfield(cfg.grid, 'zgrid') && ~ischar(cfg.
   error('You cannot specify cfg.grid.resolution and an explicit cfg.grid.zgrid simultaneously');
 end
 
-% a source model can be constructed in a number of ways
-basedongrid   = isfield(cfg.grid, 'xgrid') && ~ischar(cfg.grid.xgrid);                              % regular 3D grid with explicit specification
-basedonpos    = isfield(cfg.grid, 'pos');                                                           % using user-supplied grid positions, which can be regular or irregular
-basedonshape  = ~isempty(cfg.headshape);                                                            % surface grid based on inward shifted head surface from external file
-basedonmri    = isfield(cfg, 'mri') && ~(isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
-basedonmni    = isfield(cfg, 'mri') && (isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni));  % regular 3D grid, based on warped MNI template
-basedonvol    = false;                                                                              % surface grid based on inward shifted brain surface from volume conductor
-basedoncortex = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'}))); % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
-basedonauto   = isfield(cfg.grid, 'resolution') && ~basedonmri && ~basedonmni;                      % regular 3D grid with specification of the resolution
+% the source model can be constructed in a number of ways
+basedongrid       = isfield(cfg.grid, 'xgrid') && ~ischar(cfg.grid.xgrid);                              % regular 3D grid with explicit specification
+basedonpos        = isfield(cfg.grid, 'pos');                                                           % using user-supplied grid positions, which can be regular or irregular
+basedonshape      = ~isempty(cfg.headshape);                                                            % surface grid based on inward shifted head surface from external file
+basedonmri        = isfield(cfg, 'mri') && ~(isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
+basedonmni        = isfield(cfg, 'mri') && (isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni));  % regular 3D grid, based on warped MNI template
+basedonvol        = false;                                                                              % surface grid based on inward shifted brain surface from volume conductor
+basedoncortex     = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'}))); % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
+basedonresolution = isfield(cfg.grid, 'resolution') && ~basedonmri && ~basedonmni;                      % regular 3D grid with specification of the resolution
 
 if basedonshape && basedoncortex
   % treating it as cortical sheet has preference
@@ -189,7 +189,7 @@ if basedongrid && basedonpos
   basedongrid = false;
 end
 
-if ~any([basedonauto basedongrid basedonpos basedonshape basedonmri basedoncortex basedonmni]) && ~isempty(cfg.headmodel)
+if ~any([basedonresolution basedongrid basedonpos basedonshape basedonmri basedoncortex basedonmni]) && ~isempty(cfg.headmodel)
   % fall back to default behaviour, which is to create a surface grid (e.g. used in MEGREALIGN)
   basedonvol = 1;
 end
@@ -197,7 +197,7 @@ end
 % these are mutually exclusive, but printing all requested methods here
 % facilitates debugging of weird configs. Also specify the defaults here to
 % keep the overview
-if basedonauto
+if basedonresolution
   fprintf('creating dipole grid based on automatic 3D grid with specified resolution\n');
   cfg.grid.xgrid  = ft_getopt(cfg.grid, 'xgrid',  'auto');
   cfg.grid.ygrid  = ft_getopt(cfg.grid, 'ygrid',  'auto');
@@ -249,7 +249,7 @@ if basedonmni
 end
 
 % these are mutually exclusive
-if sum([basedonauto basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex basedonmni])~=1
+if sum([basedonresolution basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex basedonmni])~=1
   error('incorrect cfg specification for constructing a dipole grid');
 end
 
@@ -308,7 +308,7 @@ if ~isempty(headmodel)
   headmodel = ft_convert_units(headmodel, cfg.grid.unit);
 end
 
-if basedonauto
+if basedonresolution
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % construct a regular 3D grid that spans a box encompassing all electrode
   % or gradiometer coils, this will typically also cover the complete brain

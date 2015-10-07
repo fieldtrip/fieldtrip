@@ -35,24 +35,29 @@ function [type, dimord] = ft_datatype(data, desired)
 
 if nargin<2
   desired = [];
+elseif strcmp(desired, 'segmentation')
+  desired = 'volume+label';
+elseif strcmp(desired, 'parcellation')
+  desired = 'source+label';
 end
 
-% determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip, segmentation, parcellation
+% determine the type of input data
 israw          =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
 isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
 istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
 iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
-issource       =  (isfield(data, 'pos') || isfield(data, 'pnt')) && ~isfield(data, 'label'); % pnt is deprecated
+issource       = (isfield(data, 'pos') || isfield(data, 'pnt')); % pnt is deprecated
+ismesh         = (isfield(data, 'pos') || isfield(data, 'pnt')) && (isfield(data, 'tri') || isfield(data, 'tet') || isfield(data, 'hex')); % pnt is deprecated
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
-ischan         = check_chan(data);
-issegmentation = check_segmentation(data);
-isparcellation = check_parcellation(data);
-ismontage      = isfield(data, 'labelorg') && isfield(data, 'labelnew') && isfield(data, 'tra');
-isevent        = isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
-isheadmodel    = false; % FIXME this is not yet supported
+ischan         =  check_chan(data);
+issegmentation =  check_segmentation(data);
+isparcellation =  check_parcellation(data);
+ismontage      =  isfield(data, 'labelorg') && isfield(data, 'labelnew') && isfield(data, 'tra');
+isevent        =  isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
+isheadmodel    =  false; % FIXME this is not yet implemented
 
 if issource && isstruct(data) && numel(data)>1
   % this applies to struct arrays with meshes, i.e. with a pnt+tri
@@ -98,18 +103,19 @@ elseif isdip
   type = 'dip';
 elseif istimelock
   type = 'timelock';
-elseif issegmentation
-  % a segmentation data structure is a volume data structure, but in general not vice versa
-  % segmentation should conditionally go before volume, otherwise the returned ft_datatype will be volume
-  type = 'segmentation';
+elseif isvolume && issegmentation
+  type = 'volume+label';
 elseif isvolume
   type = 'volume';
-elseif isparcellation
-  % a parcellation data structure is a source data structure, but in general not vice versa
-  % parcellation should conditionally go before source, otherwise the returned ft_datatype will be source
-  type = 'parcellation';
+elseif issource && isparcellation
+  type = 'source+label';
+elseif ismesh && isparcellation
+  type = 'mesh+label';
 elseif issource
   type = 'source';
+elseif ismesh
+  % this is the same as a source, but also includes triangles, tetraheders or hexaheders
+  type = 'mesh';
 elseif ischan
   % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
   type = 'chan';
@@ -137,9 +143,11 @@ if nargin>1
     case 'comp'
       type = any(strcmp(type, {'comp', 'raw+comp', 'timelock+comp', 'freq+comp'}));
     case 'volume'
-      type = any(strcmp(type, {'volume', 'segmentation'}));
+      type = any(strcmp(type, {'volume', 'volume+label'}));
     case 'source'
-      type = any(strcmp(type, {'source', 'parcellation'}));
+      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label'}));
+    case 'mesh'
+      type = any(strcmp(type, {'mesh', 'mesh+label'}));
     case 'sens'
       type = any(strcmp(type, {'elec', 'grad'}));
     otherwise
