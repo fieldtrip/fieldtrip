@@ -62,14 +62,14 @@ for ii=1:Ns % treat each mesh one at a time
     pnt_c = sum(pos(tri(jj,:),:))/3;
     % centroid of the triangle treated
     if isfinite(radius)
-        tmp = pnt_c-center;
-        vd = tmp/norm(tmp);
-        % unit vector from sphere center in direction of middle triangle
-        pnt4(jj,:) = center+vd*radius ;
-        % projection of the centroid, at 'radius' from the center
+      tmp = pos_c-center;
+      vd = tmp/norm(tmp);
+      % unit vector from sphere center in direction of middle triangle
+      pnt4(jj,:) = center+vd*radius ;
+      % projection of the centroid, at 'radius' from the center
     else
-        % radius at infinite, i.e. flat surface
-        pnt4(jj,:) = pnt_c;
+      % radius at infinite, i.e. flat surface
+      pnt4(jj,:) = pos_c;
     end
   end
   headmodel.bnd(ii).pnt4 = pnt4;

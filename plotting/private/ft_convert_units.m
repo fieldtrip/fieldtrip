@@ -113,6 +113,10 @@ else
     siz = norm(idrange(obj.fid.pnt));
     unit = ft_estimate_units(siz);
     
+  elseif isfield(obj, 'fid') && isfield(obj.fid, 'pos') && ~isempty(obj.fid.pos)
+    siz = norm(idrange(obj.fid.pos));
+    unit = ft_estimate_units(siz);
+    
   elseif ft_voltype(obj, 'infinite')
     % this is an infinite medium volume conductor, which does not care about units
     unit = 'm';
@@ -220,6 +224,7 @@ end % if
 
 % fiducials
 if isfield(obj, 'fid') && isfield(obj.fid, 'pnt'), obj.fid.pnt = scale * obj.fid.pnt; end
+if isfield(obj, 'fid') && isfield(obj.fid, 'pos'), obj.fid.pos = scale * obj.fid.pos; end
 
 % dipole grid
 if isfield(obj, 'resolution'), obj.resolution = scale * obj.resolution; end
