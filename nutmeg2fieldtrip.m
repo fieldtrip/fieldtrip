@@ -52,10 +52,10 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble callinfo
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
+ft_preamble provenance
+ft_preamble trackconfig
 
 if ~isstruct(fileorstruct) && exist(fileorstruct,'file')
   structin=load(fileorstruct);
@@ -238,6 +238,9 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble history data
+ft_postamble provenance
+% save the output cfg in all three output data structures
+ft_postamble history    data
+ft_postamble history    mri
+ft_postamble history    grid
 

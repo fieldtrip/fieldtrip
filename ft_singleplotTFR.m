@@ -87,9 +87,9 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
-ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -548,8 +548,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
+ft_postamble provenance
 
 % add a menu to the figure, but only if the current figure does not have subplots
 % also, delete any possibly existing previous menu, this is safe because delete([]) does nothing

@@ -89,10 +89,10 @@ if ~isfield(cfg, 'showcallinfo'), cfg.showcallinfo = 'no';   end
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble debug
 ft_preamble loadvar    data
 ft_preamble provenance data
 ft_preamble trackconfig
-ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort

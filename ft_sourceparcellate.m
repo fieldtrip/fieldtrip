@@ -51,10 +51,10 @@ revision = '$Id$';
 
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -336,10 +336,10 @@ end
 
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous source parcellation
-ft_postamble history parcel
-ft_postamble savevar parcel
+ft_postamble previous   source parcellation
+ft_postamble provenance parcel
+ft_postamble history    parcel
+ft_postamble savevar    parcel
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to complute something over the first dimension

@@ -14,8 +14,8 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble callinfo
+ft_preamble init
+ft_preamble provenance
 
 if ~ft_hastoolbox('SPM12') && ~ft_hastoolbox('SPM8')
   % it should be version spm8 or higher, since spm99, spm2 and spm5 did not yet the "meeg" object
@@ -52,6 +52,6 @@ end
 cfg = [];
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance data
 ft_postamble history data
 
