@@ -189,6 +189,10 @@ cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
 cfg.headmodel       = ft_getopt(cfg, 'headmodel');      % can contain CTF localspheres model
 
 if nargin>1,
+  % the data should describe the geometrical mesh
+  if isfield(data, 'bnd')
+    data = data.bnd;
+  end
   % check if the input data is valid for this function and ensure that it has the units specified
   data = ft_checkdata(data, 'hasunit', 'yes');
   % replace pnt by pos
@@ -215,9 +219,7 @@ if nargin>1 && isfield(data, 'cond')
   cfg.conductivity = data.cond;
 end
 
-if isfield(data, 'bnd')
-  data = data.bnd;
-end
+data = fixpos(data);
 
 % boolean variables to manages the different geometrical input data objects
 input_mesh  = ft_datatype(data, 'mesh');
@@ -228,7 +230,7 @@ input_elec  = ft_datatype(data, 'sens');
 switch cfg.method
   
   case 'interpolate'
-    % the "data" here represents the output of FT_PREPARE_LEADIFLED, i.e. a regular dipole 
+    % the "data" here represents the output of FT_PREPARE_LEADFIELD, i.e. a regular dipole
     % grid with pre-computed leadfields
     sens = ft_fetch_sens(cfg, data);
     headmodel = ft_headmodel_interpolate(cfg.outputfile, sens, data, 'smooth', cfg.smooth);

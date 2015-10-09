@@ -32,8 +32,8 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %   'weight'          = number or 1xN vector, weight for each dipole position (default = 1)
 %   'backproject'     = 'yes' (default) or 'no', in the case of a rank reduction
-%                       this parameter determines whether the result will be 
-%                       backprojected onto the original subspace 
+%                       this parameter determines whether the result will be
+%                       backprojected onto the original subspace
 %
 % The leadfield weight may be used to specify a (normalized)
 % corresponding surface area for each dipole, e.g. when the dipoles
@@ -150,24 +150,24 @@ elseif ismeg
       % MEG single-sphere volume conductor model
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      pnt = sens.coilpos; % position of each coil
-      ori = sens.coilori; % orientation of each coil
+      coilpos = sens.coilpos; % position of each coil
+      coilori = sens.coilori; % orientation of each coil
       
       if isfield(headmodel, 'o')
         % shift dipole and magnetometers to origin of sphere
         dippos = dippos - repmat(headmodel.o, Ndipoles, 1);
-        pnt = pnt - repmat(headmodel.o, size(pnt, 1), 1);
+        coilpos = coilpos - repmat(headmodel.o, size(coilpos, 1), 1);
       end
       
       if Ndipoles>1
         % loop over multiple dipoles
-        lf = zeros(size(pnt, 1), 3*Ndipoles);
+        lf = zeros(size(coilpos, 1), 3*Ndipoles);
         for i=1:Ndipoles
-          lf(:, (3*i-2):(3*i)) = meg_leadfield1(dippos(i, :), pnt, ori);
+          lf(:, (3*i-2):(3*i)) = meg_leadfield1(dippos(i, :), coilpos, coilori);
         end
       else
         % only single dipole
-        lf = meg_leadfield1(dippos, pnt, ori);
+        lf = meg_leadfield1(dippos, coilpos, coilori);
       end
       
       if isfield(sens, 'tra')
@@ -282,18 +282,18 @@ elseif ismeg
       % magnetic dipole instead of electric (current) dipole in an infinite vacuum
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      pnt = sens.coilpos; % position of each coil
-      ori = sens.coilori; % orientation of each coil
+      coilpos = sens.coilpos; % position of each coil
+      coilori = sens.coilori; % orientation of each coil
       
       if Ndipoles>1
         % loop over multiple dipoles
-        lf = zeros(size(pnt, 1), 3*Ndipoles);
+        lf = zeros(size(coilpos, 1), 3*Ndipoles);
         for i=1:Ndipoles
-          lf(:, (3*i-2):(3*i)) = magnetic_dipole(dippos(i, :), pnt, ori);
+          lf(:, (3*i-2):(3*i)) = magnetic_dipole(dippos(i, :), coilpos, coilori);
         end
       else
         % only single dipole
-        lf = magnetic_dipole(dippos, pnt, ori);
+        lf = magnetic_dipole(dippos, coilpos, coilori);
       end
       
       if isfield(sens, 'tra')
@@ -306,18 +306,18 @@ elseif ismeg
       % current dipole in an infinite homogenous conducting medium
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      pnt = sens.coilpos; % position of each coil
-      ori = sens.coilori; % orientation of each coil
+      coilpos = sens.coilpos; % position of each coil
+      coilori = sens.coilori; % orientation of each coil
       
       if Ndipoles>1
         % loop over multiple dipoles
-        lf = zeros(size(pnt, 1), 3*Ndipoles);
+        lf = zeros(size(coilpos, 1), 3*Ndipoles);
         for i=1:Ndipoles
-          lf(:, (3*i-2):(3*i)) = current_dipole(dippos(i, :), pnt, ori);
+          lf(:, (3*i-2):(3*i)) = current_dipole(dippos(i, :), coilpos, coilori);
         end
       else
         % only single dipole
-        lf = current_dipole(dippos, pnt, ori);
+        lf = current_dipole(dippos, coilpos, coilori);
       end
       
       if isfield(sens, 'tra')
@@ -338,7 +338,7 @@ elseif iseeg
       % contributed by Punita Christopher. Note that this one should not get
       % confused with the MEG localspheres model.
       
-      Nelec = size(sens.elecpos, 1);
+      Nelec    = size(sens.elecpos, 1);
       Nspheres = length(headmodel.r);
       
       % the center of the spherical volume conduction model does not have
@@ -534,9 +534,9 @@ if ~strcmp(reducerank, 'no') && reducerank<3
       lf(:, (3*ii-2):(3*ii)) = u * s * v';
     else
       % if not backprojected, the new leadfield has a different dimension
-      if ii==1, 
+      if ii==1,
         newlf    = zeros(size(lf,1), Ndipoles*reducerank);
-        origrank = size(lf,2)./Ndipoles; 
+        origrank = size(lf,2)./Ndipoles;
       end
       newlf(:, reducerank*(ii-1) + (1:reducerank)) = lf(:, origrank*(ii-1) + (1:origrank))*v(:,1:reducerank);
     end
@@ -606,6 +606,3 @@ if ~isempty(dipoleunit)
   scale = scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
   lf    = lf/scale;                         % the leadfield is expressed in chanunit per dipoleunit, i.e. chanunit/dipoleunit
 end
-
-
-
