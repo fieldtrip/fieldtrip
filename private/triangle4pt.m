@@ -59,7 +59,7 @@ for ii=1:Ns % treat each mesh one at a time
     sph_pnt = pos([tri(jj,:) lv],:);
     [center,radius] = fitsphere(sph_pnt);
     % best fitting sphere radius & centre, for the 6 points chosen
-    pnt_c = sum(pos(tri(jj,:),:))/3;
+    pos_c = sum(pos(tri(jj,:),:))/3;
     % centroid of the triangle treated
     if isfinite(radius)
       tmp = pos_c-center;
