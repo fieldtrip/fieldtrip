@@ -47,7 +47,7 @@ isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfiel
 istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
 iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
-issource       = (isfield(data, 'pos') || isfield(data, 'pnt')); % pnt is deprecated
+issource       = (isfield(data, 'pos') || isfield(data, 'pnt')) && isstruct(data) && numel(data)==1; % pnt is deprecated, this does not apply to a mesh array
 ismesh         = (isfield(data, 'pos') || isfield(data, 'pnt')) && (isfield(data, 'tri') || isfield(data, 'tet') || isfield(data, 'hex')); % pnt is deprecated
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
@@ -146,6 +146,7 @@ if nargin>1
       type = any(strcmp(type, {'volume', 'volume+label'}));
     case 'source'
       type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label'}));
+      type = type && isstruct(data) && numel(data)==1; % this does not apply to a mesh-array
     case 'mesh'
       type = any(strcmp(type, {'mesh', 'mesh+label'}));
     case 'sens'

@@ -225,6 +225,7 @@ data = fixpos(data);
 input_mesh  = ft_datatype(data, 'mesh');
 input_seg   = ft_datatype(data, 'segmentation');
 input_elec  = ft_datatype(data, 'sens');
+input_pos   = ~input_mesh && isfield(data, 'pos'); % surface points without triangulation
 
 % the construction of the volume conductor model is performed below
 switch cfg.method
@@ -283,7 +284,7 @@ switch cfg.method
     
   case 'concentricspheres'
     % the low-level functions needs surface points, triangles are not needed
-    if input_mesh
+    if input_mesh || input_pos
       geometry = data;
     elseif input_seg
       tmpcfg = [];
@@ -306,10 +307,10 @@ switch cfg.method
     headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', cfg.conductivity, 'fitind', cfg.fitind);
     
   case 'halfspace'
-    if input_mesh
+    if input_mesh || input_pos
       geometry = data;
     else
-      error('data with mesh is required as data input for the halfspace method');
+      error('a surface mesh is required as input for the halfspace method');
     end
     if isempty(cfg.point)
       error('cfg.point is required for halfspace method');
@@ -324,8 +325,8 @@ switch cfg.method
   case {'localspheres' 'singlesphere' 'singleshell'}
     cfg.grad = ft_getopt(cfg, 'grad');           % used for localspheres
     
-    % these three methods all require a single mesh or set of surface points
-    if input_mesh
+    % these three methods all require a set of surface points
+    if input_mesh || input_pos
       geometry = data;
     elseif input_seg
       tmpcfg = [];
