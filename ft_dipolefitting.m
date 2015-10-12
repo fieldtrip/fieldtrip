@@ -564,6 +564,9 @@ source.dip    = dip;
 source.Vdata  = Vdata;  % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 source.Vmodel = Vmodel; % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 
+% the units of the fitted source are the same as the units of the headmodel and the sensor array
+source.dip.unit = headmodel.unit;
+
 % assign a latency, frequeny or component axis to the output
 if iscomp
   source.component = cfg.component;
@@ -577,16 +580,6 @@ else
   tend = nearest(data.time, cfg.latency(end));
   source.time   = data.time(tbeg:tend);
   source.dimord = 'chan_time';
-end
-
-% FIXME why would this be done?
-if isfield(data, 'grad')
-  % copy the gradiometer array along
-  source.grad = data.grad;
-end
-if isfield(data, 'elec')
-  % copy the electrode array along
-  source.elec = data.elec;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
