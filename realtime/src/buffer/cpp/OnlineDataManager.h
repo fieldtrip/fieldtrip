@@ -18,6 +18,11 @@ class OnlineDataManager : public StringRequestHandler {
     
 public:
     
+    OnlineDataManager(int nStatus, int nCont, float fSample) {
+        // keep code backwards compatible after adding decimation saving option
+        OnlineDataManager(nStatus, nCont, fSample, fSample);
+    }
+    
     OnlineDataManager(int nStatus, int nCont, float fSample, float fSampleSaving) {
         this->nStatus = nStatus;
         this->nCont   = nCont;
