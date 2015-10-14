@@ -25,7 +25,7 @@ try
     for i=1:length(vol.bnd)
         [junk,tname] = fileparts(tempname);
         bndfile{i} = [tname '.tri'];
-        om_save_tri(bndfile{i}, vol.bnd(i).pnt, vol.bnd(i).tri);
+        om_save_tri(bndfile{i}, vol.bnd(i).pos, vol.bnd(i).tri);
     end
 
     % these will hold the shell script and the inverted system matrix
