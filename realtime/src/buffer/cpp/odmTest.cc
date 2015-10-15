@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 	char hostname[256];
 	int port;
 			
-	OnlineDataManager<int, float> ODM(1, NCHAN, 2000.0);
+	OnlineDataManager<int, float> ODM(1, NCHAN, 2000.0, 2000.0);
 	
 	ODM.setPhysicalDimCode(GDF_VOLT + GDF_MILLI);
 	ODM.setSlopeAndOffset(0.001, 0);
