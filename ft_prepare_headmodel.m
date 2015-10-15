@@ -219,8 +219,6 @@ if nargin>1 && isfield(data, 'cond')
   cfg.conductivity = data.cond;
 end
 
-data = fixpos(data);
-
 % boolean variables to manages the different geometrical input data objects
 input_mesh  = ft_datatype(data, 'mesh');
 input_seg   = ft_datatype(data, 'segmentation');
