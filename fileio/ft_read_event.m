@@ -13,11 +13,11 @@ function [event] = ft_read_event(filename, varargin)
 %   'headerformat'   string
 %   'eventformat'    string
 %   'header'         structure, see FT_READ_HEADER
-%   'detectflank'    string, can be 'bit', 'up', 'down', 'both' or 'auto' (default is system specific)
+%   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak', 'trough' or 'auto' (default is system specific)
 %   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
-%   'triglabel'      list of channel labels for the trigger detection, only for Artinis oxy3-files (default is all ADC* channels)
+%   'triglabel'      list of channel labels for the trigger detection (default is all ADC* channels for Artinis oxy3-files)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
@@ -142,8 +142,8 @@ filename = fetch_url(filename);
 hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up');   % up, down or both
 trigshift        = ft_getopt(varargin, 'trigshift');           % default is assigned in subfunction
-trigindx         = ft_getopt(varargin, 'trigindx');            % this allows to override the automatic trigger channel detection and is useful for Yokogawa
-triglabel        = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis oxy3 data)
+trigindx         = ft_getopt(varargin, 'trigindx');            % this allows to override the automatic trigger channel detection (e.g., useful for Yokogawa)
+triglabel        = ft_getopt(varargin, 'triglabel');           % this allows to override the automatic trigger channel detection (e.g., useful for EDF)
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
@@ -582,7 +582,32 @@ switch eventformat
       hdr = ft_read_header(filename, 'chanindx', chanindx);
     end
     
-    if issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation)
+    if ~isempty(trigindx) || ~isempty(triglabel)
+        if ~isempty(triglabel) % indx gets preference over label
+            trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
+        end
+        % use a helper function to read the trigger channels and detect the flanks
+        % pass all the other users options to the read_trigger function
+        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
+        if strcmp(detectflank, 'peak') || strcmp(detectflank, 'trough')
+            waitforoffset = 0;
+            for i = 1:numel(trigger)
+                if strcmp(trigger(i).type, 'onset')
+                    onsettrig = i;
+                    waitforoffset = 1;
+                elseif strcmp(trigger(i).type, 'offset') && waitforoffset
+                    event(end+1).type     = detectflank; % peak or trough
+                    event(end  ).value    = trigger(onsettrig).value;
+                    event(end  ).sample   = trigger(onsettrig).sample;
+                    event(end  ).duration = trigger(i).sample - trigger(onsettrig).sample;
+                    event(end  ).offset   = -hdr.nSamplesPre;  % number of samples prior to the trigger
+                    waitforoffset = 0;
+                end
+            end
+        else
+            event = trigger; % without duration
+        end
+    elseif issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation)
       % read the data of the annotation channel as 16 bit
       evt = read_edf(filename, hdr);
       % undo the faulty calibration
@@ -1793,6 +1818,7 @@ switch eventformat
     end
     
     if isempty(trigindx) % indx gets precedence over labels! numbers before words
+      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis oxy3 data)
       trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
     end
         
@@ -1897,4 +1923,3 @@ if isempty(event)
   % ensure that it has the correct fields, even if it is empty
   event = struct('type', {}, 'value', {}, 'sample', {}, 'offset', {}, 'duration', {});
 end
-
