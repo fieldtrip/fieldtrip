@@ -364,15 +364,15 @@ elseif needdat || needevt
   end
   
   if chanSel
-    epochlength = EDF.Dur * EDF.SampleRate(chanindx(1));   % in samples for the selected channel
-    blocksize   = sum(EDF.Dur * EDF.SampleRate);              % in samples for all channels
+    epochlength = round(EDF.Dur * EDF.SampleRate(chanindx(1)));   % in samples for the selected channel
+    blocksize   = round(sum(EDF.Dur * EDF.SampleRate));           % in samples for all channels
     chanoffset  = EDF.Dur * EDF.SampleRate;
-    chanoffset  = cumsum([0; chanoffset(1:end-1)]);
+    chanoffset  = round(cumsum([0; chanoffset(1:end-1)]));
     % get the selection from the subset of channels
     nchans   = length(chanindx);
-  else
-    epochlength = EDF.Dur * EDF.SampleRate(1);                % in samples for a single channel
-    blocksize   = sum(EDF.Dur * EDF.SampleRate);              % in samples for all channels
+  else  
+    epochlength = round(EDF.Dur * EDF.SampleRate(1));             % in samples for a single channel
+    blocksize   = round(sum(EDF.Dur * EDF.SampleRate));           % in samples for all channels
     % use all channels
     nchans = EDF.NS;
   end
