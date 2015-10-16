@@ -348,10 +348,13 @@ elseif needdat || needevt
   %channel selection, taking into account both the user channel selection
   %as well as any correction that might have been made due to heterogenous
   %sampling rates.
-  if isfield(EDF, 'chansel')
+  if ~isempty(chanindx) % user-specified channels
+      % chanindx defined by function input
+      chanSel = 1;  
+  elseif isfield(EDF, 'chansel') % otherwise EDF-specified channels
       chanindx = EDF.chansel;
       chanSel = 1;
-  else
+  else % otherwise simply select all channels
       chanindx = [1:EDF.NS]; 
       chanSel = 0;
   end;
