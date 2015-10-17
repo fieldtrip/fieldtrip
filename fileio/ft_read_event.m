@@ -583,30 +583,30 @@ switch eventformat
     end
     
     if ~isempty(trigindx) || ~isempty(triglabel)
-        if ~isempty(triglabel) % indx gets preference over label
-            trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
-        end
-        % use a helper function to read the trigger channels and detect the flanks
-        % pass all the other users options to the read_trigger function
-        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
-        if strcmp(detectflank, 'peak') || strcmp(detectflank, 'trough')
+      if ~isempty(triglabel) % indx gets preference over label
+        trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
+      end
+      % use a helper function to read the trigger channels and detect the flanks
+      % pass all the other users options to the read_trigger function
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
+      if strcmp(detectflank, 'peak') || strcmp(detectflank, 'trough')
+        waitforoffset = 0;
+        for i = 1:numel(trigger)
+          if strcmp(trigger(i).type, 'onset')
+            onsettrig = i;
+            waitforoffset = 1;
+          elseif strcmp(trigger(i).type, 'offset') && waitforoffset
+            event(end+1).type     = detectflank; % peak or trough
+            event(end  ).value    = trigger(onsettrig).value;
+            event(end  ).sample   = trigger(onsettrig).sample;
+            event(end  ).duration = trigger(i).sample - trigger(onsettrig).sample;
+            event(end  ).offset   = -hdr.nSamplesPre;  % number of samples prior to the trigger
             waitforoffset = 0;
-            for i = 1:numel(trigger)
-                if strcmp(trigger(i).type, 'onset')
-                    onsettrig = i;
-                    waitforoffset = 1;
-                elseif strcmp(trigger(i).type, 'offset') && waitforoffset
-                    event(end+1).type     = detectflank; % peak or trough
-                    event(end  ).value    = trigger(onsettrig).value;
-                    event(end  ).sample   = trigger(onsettrig).sample;
-                    event(end  ).duration = trigger(i).sample - trigger(onsettrig).sample;
-                    event(end  ).offset   = -hdr.nSamplesPre;  % number of samples prior to the trigger
-                    waitforoffset = 0;
-                end
-            end
-        else
-            event = trigger; % without duration
+          end
         end
+      else
+        event = trigger; % without duration
+      end
     elseif issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation)
       % read the data of the annotation channel as 16 bit
       evt = read_edf(filename, hdr);
@@ -1032,7 +1032,7 @@ switch eventformat
       warning('disabling blocking because no selection was specified');
       blocking = false;
     end
-
+    
     if blocking
       nsamples = 0; % disable waiting for samples
       if isempty(flt_minnumber)
@@ -1047,7 +1047,7 @@ switch eventformat
         error('buffer timed out while waiting for %d events', nevents);
       end
     end
-
+    
     try
       event = buffer('get_evt', [], host, port);
     catch
@@ -1646,7 +1646,7 @@ switch eventformat
     end
     trgindx = match_str(hdr.label, 'DTRIG');
     if ~isempty(trgindx)
-      trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
       event   = appendevent(event, trigger);
     end
     
@@ -1810,7 +1810,7 @@ switch eventformat
     event = read_bucn_nirsevent(filename);
     
   case 'oxy3'
-    ft_hastoolbox('artinis', 1);    
+    ft_hastoolbox('artinis', 1);
     event = read_artinis_oxy3(filename, true);
     
     if isempty(hdr)
@@ -1821,30 +1821,30 @@ switch eventformat
       triglabel = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis oxy3 data)
       trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
     end
-        
+    
     % read the trigger channel and do flank detection
-    triggers = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
+    trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
     
     % remove consecutive triggers
     i = 1;
-    last_trigger_sample = triggers(i).sample;
-    while i<numel(triggers)
-      if strcmp(triggers(i).type, triggers(i+1).type) && triggers(i+1).sample-last_trigger_sample <= tolerance
-        [triggers(i).value, idx] = max([triggers(i).value, triggers(i+1).value]);
-        fprintf('Merging triggers at sample %d and %d\n', triggers(i).sample, triggers(i+1).sample);        
-        last_trigger_sample =  triggers(i+1).sample;
+    last_trigger_sample = trigger(i).sample;
+    while i<numel(trigger)
+      if strcmp(trigger(i).type, trigger(i+1).type) && trigger(i+1).sample-last_trigger_sample <= tolerance
+        [trigger(i).value, idx] = max([trigger(i).value, trigger(i+1).value]);
+        fprintf('Merging triggers at sample %d and %d\n', trigger(i).sample, trigger(i+1).sample);
+        last_trigger_sample =  trigger(i+1).sample;
         if (idx==2)
-          triggers(i).sample = triggers(i+1).sample;
+          trigger(i).sample = trigger(i+1).sample;
         end
-          
-        triggers(i+1) = [];        
+        
+        trigger(i+1) = [];
       else
         i=i+1;
-        last_trigger_sample = triggers(i).sample;
+        last_trigger_sample = trigger(i).sample;
       end
     end
     
-    event = appendevent(event, triggers);
+    event = appendevent(event, trigger);
     
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)
