@@ -48,3 +48,9 @@ else
   file = strrep(file,'\','/');
 end
 
+[p, f, x] = fileparts(file);
+if ~exist(file, 'file') && exist([f x], 'file')
+  warning('using local copy %s instead of %s', [f x], file);
+  file = [f x];
+end
+

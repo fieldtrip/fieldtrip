@@ -24,13 +24,13 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.chantype            Nx1 cell-array with the channel type, see FT_CHANTYPE
 %   hdr.chanunit            Nx1 cell-array with the physical units, see FT_CHANUNIT
 %
-% For continuously recorded data, nSamplesPre=0 and nTrials=1.
-%
 % For some data formats that are recorded on animal electrophysiology
 % systems (e.g. Neuralynx, Plexon), the following optional fields are
 % returned, which allows for relating the timing of spike and LFP data
-%   hdr.FirstTimeStamp      number, 32 bit or 64 bit unsigned integer
-%   hdr.TimeStampPerSample  double
+%   hdr.FirstTimeStamp      number, represented as 32 bit or 64 bit unsigned integer
+%   hdr.TimeStampPerSample  number, represented in double precision
+%
+% For continuously recorded data, nSamplesPre=0 and nTrials=1.
 %
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.

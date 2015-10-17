@@ -151,7 +151,7 @@ if abort
 end
 
 hasdata = (nargin>1);
-hascomp = hasdata && ft_datatype(data, 'comp');
+hascomp = hasdata && ft_datatype(data, 'comp'); % can be 'raw+comp' or 'timelock+comp'
 
 % for backward compatibility
 cfg = ft_checkconfig(cfg, 'unused',     {'comps', 'inputfile', 'outputfile'});

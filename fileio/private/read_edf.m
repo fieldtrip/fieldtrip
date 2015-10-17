@@ -194,8 +194,8 @@ if needhdr
     EDF.PhysMax = EDF.DigMax;
   end
   EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');   %
-  tmp = fread(EDF.FILE.FID,[8,EDF.NS],'char')'; %   samples per data record
-  EDF.SPR = str2num(char(tmp));               % samples per data record
+  tmp = fread(EDF.FILE.FID,[8,EDF.NS],'char')'; % samples per data record
+  EDF.SPR = str2num(char(tmp));                 % samples per data record
 
   fseek(EDF.FILE.FID,32*EDF.NS,0);
 
@@ -340,24 +340,38 @@ elseif needdat || needevt
   % retrieve the original header
   EDF = hdr.orig;
  
-  %if there is a chansel field, it can happen either because the user
-  %specified channel selections or because the read_edf function had to
-  %automatically choose a subset to cope with heterogenous sampling rates
-  %or even both.  In any case, at this point in the file reading process
-  %the contents of the chansel field has the proper specification for
-  %channel selection, taking into account both the user channel selection
-  %as well as any correction that might have been made due to heterogenous
-  %sampling rates.
-  if ~isempty(chanindx) % user-specified channels
-      % chanindx defined by function input
-      chanSel = 1;  
-  elseif isfield(EDF, 'chansel') % otherwise EDF-specified channels
-      chanindx = EDF.chansel;
-      chanSel = 1;
-  else % otherwise simply select all channels
-      chanindx = [1:EDF.NS]; 
-      chanSel = 0;
-  end;
+  % There can be an optional chansel field containing a list of predefined
+  % channels. These channels are in that case also the only ones represented in
+  % the fieldtrip header, which means that teh other channels are simply not
+  % visible to the naive user. This field can be present because the user
+  % specified an explicit channel selection in FT_READ_HEADER or because the
+  % read_edf function had to automatically choose a subset to cope with
+  % heterogenous sampling rates or even both.  In any case, at this point in the
+  % file reading process the contents of the chansel field has the proper
+  % specification for channel selection, taking into account both the user channel
+  % selection as well as any correction that might have been made due to
+  % heterogenous sampling rates.
+  
+  if     ~isempty(chanindx) && ~isfield(EDF, 'chansel')
+    % a subset of channels should been selected from the full list of channels in the file
+    chanindx = chanindx; % keep as it is
+    chanSel  = true;
+  elseif ~isempty(chanindx) &&  isfield(EDF, 'chansel')
+    % a subset of channels should been selected from the predefined list
+    chanindx = EDF.chansel(chanindx);
+    chanSel  = true;
+  elseif  isempty(chanindx) &&  isfield(EDF, 'chansel')
+    % all channels from the predefined list should be selected
+    chanindx = EDF.chansel(chanindx);
+    chanSel  = true;
+  elseif  isempty(chanindx) && ~isfield(EDF, 'chansel')
+    %  simply select all channels that are present in the file
+    chanindx = 1:EDF.NS;
+    chanSel = false;
+  else
+    % the code should not end up here
+    error('these were all four possible options')
+  end
   
   if needevt
     % read the annotation channel, not the data channels
