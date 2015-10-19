@@ -26,11 +26,11 @@ for i=1:length(filename)
   parcellation1 = ft_datatype_parcellation(mesh);
   parcellation2 = ft_datatype_parcellation(mesh,'parcellationstyle','probabilistic');
 
-  if~(ft_datatype(parcellation1,'parcellation'))
+  if ~(ft_datatype(parcellation1,'parcellation'))
     error('the conversion to a parcellation failed');
   end
 
-  if~(ft_datatype(parcellation2,'parcellation'))
+  if ~(ft_datatype(parcellation2,'parcellation'))
     error('the conversion to a parcellation failed');
   end
 

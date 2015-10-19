@@ -35,10 +35,6 @@ function [type, dimord] = ft_datatype(data, desired)
 
 if nargin<2
   desired = [];
-elseif strcmp(desired, 'segmentation')
-  desired = 'volume+label';
-elseif strcmp(desired, 'parcellation')
-  desired = 'source+label';
 end
 
 % determine the type of input data
@@ -148,6 +144,10 @@ if nargin>1
       type = type && isstruct(data) && numel(data)==1;                            % an array of meshes does not qualify
     case 'mesh'
       type = any(strcmp(type, {'mesh', 'mesh+label'}));
+    case 'segmentation'
+      type = strcmp(type, 'volume+label');
+    case 'parcellation'
+      type = any(strcmp(type, {'source+label' 'mesh+label'}));
     case 'sens'
       type = any(strcmp(type, {'elec', 'grad'}));
     otherwise
