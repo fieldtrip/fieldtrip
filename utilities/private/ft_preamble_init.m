@@ -32,7 +32,7 @@
 global ft_default
 
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
-cfg = mergeconfig(cfg, keepfields(ft_default, {'outpuitfile', 'outputfilepresent'}));
+cfg = mergeconfig(cfg, ft_default);
 
 if nargin==0
   stack = dbstack('-completenames');
