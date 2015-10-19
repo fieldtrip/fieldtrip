@@ -42,6 +42,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Yokogawa (*.ave, *.con, *.raw)
 %   NetMEG (*.nc)
 %   ITAB - Chieti (*.mhd)
+%   Tristan Babysquid (*.fif)
 %
 % The following EEG dataformats are supported
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
