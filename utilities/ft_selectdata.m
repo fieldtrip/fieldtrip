@@ -1014,9 +1014,20 @@ end
 
 if isfield(cfg, 'frequency')
   % deal with string selection
+  % some of these do not make sense, but are here for consistency with ft_multiplotER
   if ischar(cfg.frequency)
     if strcmp(cfg.frequency, 'all')
       cfg.frequency = [min(freqaxis) max(freqaxis)];
+    elseif strcmp(cfg.frequency, 'maxmin')
+      cfg.frequency = [min(freqaxis) max(freqaxis)]; % the same as 'all'
+    elseif strcmp(cfg.frequency, 'minzero')
+      cfg.frequency = [min(freqaxis) 0]; 
+    elseif strcmp(cfg.frequency, 'maxabs')
+      cfg.frequency = [-max(abs(freqaxis)) max(abs(freqaxis))]; 
+    elseif strcmp(cfg.frequency, 'zeromax')
+      cfg.frequency = [0 max(freqaxis)];
+    elseif strcmp(cfg.frequency, 'zeromax')
+      cfg.frequency = [0 max(freqaxis)];      
     else
       error('incorrect specification of cfg.frequency');
     end
