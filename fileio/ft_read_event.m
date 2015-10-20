@@ -582,32 +582,9 @@ switch eventformat
       hdr = ft_read_header(filename, 'chanindx', chanindx);
     end
     
-    if ~isempty(trigindx) || ~isempty(triglabel)
-      if ~isempty(triglabel) % indx gets preference over label
-        trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
-      end
-      % use a helper function to read the trigger channels and detect the flanks
-      % pass all the other users options to the read_trigger function
-      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      if strcmp(detectflank, 'peak') || strcmp(detectflank, 'trough')
-        waitforoffset = 0;
-        for i = 1:numel(trigger)
-          if strcmp(trigger(i).type, 'onset')
-            onsettrig = i;
-            waitforoffset = 1;
-          elseif strcmp(trigger(i).type, 'offset') && waitforoffset
-            event(end+1).type     = detectflank; % peak or trough
-            event(end  ).value    = trigger(onsettrig).value;
-            event(end  ).sample   = trigger(onsettrig).sample;
-            event(end  ).duration = trigger(i).sample - trigger(onsettrig).sample;
-            event(end  ).offset   = -hdr.nSamplesPre;  % number of samples prior to the trigger
-            waitforoffset = 0;
-          end
-        end
-      else
-        event = trigger; % without duration
-      end
-    elseif issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation)
+    if ~isempty(detectflank) % parse the trigger channel for events
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'threshold', threshold);
+    elseif issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation) % read out the annotation channel for events
       % read the data of the annotation channel as 16 bit
       evt = read_edf(filename, hdr);
       % undo the faulty calibration
