@@ -1,4 +1,4 @@
-function [s] = ft_statfun_diff(cfg, dat, design)
+function [s, cfg] = ft_statfun_diff(cfg, dat, design)
 
 % FT_STATFUN_DIFF computes the difference of the mean in two conditions.
 % Although it can be used for statistical testing, it is not very
