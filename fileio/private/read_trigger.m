@@ -50,15 +50,15 @@ fixartinis  = ft_getopt(varargin, 'fixartinis',   false);
 threshold   = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
-    hdr = ft_read_header(filename);
+  hdr = ft_read_header(filename);
 end
 
 if isempty(begsample)
-    begsample = 1;
+  begsample = 1;
 end
 
 if isempty(endsample)
-    endsample = hdr.nSamples*hdr.nTrials;
+  endsample = hdr.nSamples*hdr.nTrials;
 end
 
 % read the trigger channel as raw data, can safely assume that it is continuous
@@ -68,187 +68,165 @@ dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample
 event = [];
 
 if isempty(dat)
-    % there are no triggers to detect
-    return
+  % there are no triggers to detect
+  return
 end
 
 % Detect situations where the channel value changes almost at every time
 % step which are likely to be noise
 if denoise
-    for i=1:length(chanindx)
-        if (sum(diff(find(diff(dat(i,:))~=0)) == 1)/length(dat(i,:))) > 0.8
-            warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
-            dat(i,:) = 0;
-        end
+  for i=1:length(chanindx)
+    if (sum(diff(find(diff(dat(i,:))~=0)) == 1)/length(dat(i,:))) > 0.8
+      warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
+      dat(i,:) = 0;
     end
+  end
 end
 
 if fixbiosemi
-    % find indices of negative numbers
-    signbit = find(dat < 0);
-    % change type to double (otherwise bitcmp will fail)
-    dat = double(dat);
-    % make number positive and preserve bits 0-22
-    dat(signbit) = bitcmp(abs(dat(signbit))-1,32);
-    % apparently the 24 bits are still shifted by one byte
-    dat(signbit) = bitshift(dat(signbit),-8);
-    % re-insert the sign bit on its original location, i.e. bit24
-    dat(signbit) = dat(signbit)+(2^(24-1));
-    % typecast the data to ensure that the status channel is represented in 32 bits
-    dat = uint32(dat);
-    
-    byte1 = 2^8  - 1;
-    byte2 = 2^16 - 1 - byte1;
-    byte3 = 2^24 - 1 - byte1 - byte2;
-    
-    % get the respective status and trigger bits
-    trigger   = bitand(dat, bitor(byte1, byte2)); %  contained in the lower two bytes
-    
-    % in principle the following bits could also be used, but it would require looking at both flanks for the epoch, cmrange and battery
-    % if this code ever needs to be enabled, then it should be done consistently with the biosemi_bdf section in ft_read_event
-    % epoch   = int8(bitget(dat, 16+1));
-    % cmrange = int8(bitget(dat, 20+1));
-    % battery = int8(bitget(dat, 22+1));
-    
-    % below it will continue with the matrix "dat"
-    dat = trigger;
+  % find indices of negative numbers
+  signbit = find(dat < 0);
+  % change type to double (otherwise bitcmp will fail)
+  dat = double(dat);
+  % make number positive and preserve bits 0-22
+  dat(signbit) = bitcmp(abs(dat(signbit))-1,32);
+  % apparently the 24 bits are still shifted by one byte
+  dat(signbit) = bitshift(dat(signbit),-8);
+  % re-insert the sign bit on its original location, i.e. bit24
+  dat(signbit) = dat(signbit)+(2^(24-1));
+  % typecast the data to ensure that the status channel is represented in 32 bits
+  dat = uint32(dat);
+  
+  byte1 = 2^8  - 1;
+  byte2 = 2^16 - 1 - byte1;
+  byte3 = 2^24 - 1 - byte1 - byte2;
+  
+  % get the respective status and trigger bits
+  trigger   = bitand(dat, bitor(byte1, byte2)); %  contained in the lower two bytes
+  
+  % in principle the following bits could also be used, but it would require looking at both flanks for the epoch, cmrange and battery
+  % if this code ever needs to be enabled, then it should be done consistently with the biosemi_bdf section in ft_read_event
+  % epoch   = int8(bitget(dat, 16+1));
+  % cmrange = int8(bitget(dat, 20+1));
+  % battery = int8(bitget(dat, 22+1));
+  
+  % below it will continue with the matrix "dat"
+  dat = trigger;
 end
 
 if fixctf
-    % correct for reading the data as signed 32-bit integer, whereas it should be interpreted as an unsigned int
-    dat(dat<0) = dat(dat<0) + 2^32;
+  % correct for reading the data as signed 32-bit integer, whereas it should be interpreted as an unsigned int
+  dat(dat<0) = dat(dat<0) + 2^32;
 end
 
 % fix suggested by Ralph Huonker to deal with triggers that need to be
 % interpreted as unsigned integers, rather than signed
 if strncmpi(dataformat, 'neuromag', 8) && ~fixneuromag
-    if any(dat<0)
-        tmpdat = zeros(size(dat));
-        for k = 1:size(dat,1)
-            tmpdat(k,:) = double(typecast(int16(dat(k,:)), 'uint16'));
-        end
-        dat = tmpdat; clear tmpdat;
+  if any(dat<0)
+    tmpdat = zeros(size(dat));
+    for k = 1:size(dat,1)
+      tmpdat(k,:) = double(typecast(int16(dat(k,:)), 'uint16'));
     end
+    dat = tmpdat; clear tmpdat;
+  end
 end
 
 if fixneuromag
-    % according to Joachim Gross, real events always have triggers > 5
-    % this is probably to avoid the noisefloor
-    dat(dat<5) = 0;
+  % according to Joachim Gross, real events always have triggers > 5
+  % this is probably to avoid the noisefloor
+  dat(dat<5) = 0;
 end
 
 if fix4d8192
-    % synchronization pulses have a value of 8192 and are set to 0
-    dat = dat - bitand(dat, 8192);
-    % triggers containing the first bit assume a value of 4096 when sent by presentation
-    % this does not seem to hold for matlab; check this
-    % dat = dat - bitand(dat, 4096)*4095/4096;
+  % synchronization pulses have a value of 8192 and are set to 0
+  dat = dat - bitand(dat, 8192);
+  % triggers containing the first bit assume a value of 4096 when sent by presentation
+  % this does not seem to hold for matlab; check this
+  % dat = dat - bitand(dat, 4096)*4095/4096;
 end
 
 if fixartinis
-    % we are dealing with an AD box here, and analog values can be noisy.
-    dat = round(10*dat)/10; % steps of 0.1V are to be assumed
+  % we are dealing with an AD box here, and analog values can be noisy.
+  dat = round(10*dat)/10; % steps of 0.1V are to be assumed
 end
 
 if ~isempty(threshold)
-    % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
-    dat(abs(dat)<threshold) = 0;
+  % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
+  if ischar(threshold) % evaluate string (e.g., threshold = 'nanmedian')
+    threshold = eval([threshold '(dat)']);
+  end
+  % discretize the signal
+  dat(abs(dat)<threshold)  = 0;
+  dat(abs(dat)>=threshold) = 1;
 end
 
 if strcmp(detectflank, 'auto')
-    % look at the first value in the trigger channel to determine whether the trigger is pulled up or down
-    % this fails if the first sample is zero and if the trigger values are negative
-    if all(dat(:,1)==0)
-        detectflank = 'up';
-    else
-        detectflank = 'down';
-    end
+  % look at the first value in the trigger channel to determine whether the trigger is pulled up or down
+  % this fails if the first sample is zero and if the trigger values are negative
+  if all(dat(:,1)==0)
+    detectflank = 'up';
+  else
+    detectflank = 'down';
+  end
 end
 
 for i=1:length(chanindx)
-    % process each trigger channel independently
-    channel = hdr.label{chanindx(i)};
-    trig    = dat(i,:);
-    
-    if trigpadding
-        pad = trig(1);
-    else
-        pad = 0;
-    end
-    
-    switch detectflank
-        case 'bit'
-            trig = uint32([pad trig]);
-            for k=1:32
-                bitval = bitget(trig, k);                             % get each of the bits separately
-                for j=find(~bitval(1:end-1) & bitval(2:end))
-                    event(end+1).type   = channel;
-                    event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
-                    event(end  ).value  = 2^(k-1);                      % assign the value represented by this bit
-                end % j
-            end % k
-        case 'up'
-            % convert the trigger into an event with a value at a specific sample
-            for j=find(diff([pad trig(:)'])>0)
-                event(end+1).type   = channel;
-                event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
-                event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going up
-            end
-        case 'updiff'
-            for j=find(diff([pad trig(:)'])>0)
-                event(end+1).type   = channel;
-                event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
-                event(end  ).value  = trig(j+trigshift)-trig(j-1);  % assign the trigger value just _after_ going up minus the value before
-            end
-        case 'down'
-            % convert the trigger into an event with a value at a specific sample
-            for j=find(diff([pad trig(:)'])<0)
-                event(end+1).type   = channel;
-                event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-                event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
-            end
-        case 'both'
-            % convert the trigger into an event with a value at a specific sample
-            for j=find(diff([pad trig(:)'])>0)
-                event(end+1).type   = [channel '_up'];        % distinguish between up and down flank
-                event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-                event(end  ).value  = trig(j+trigshift);      % assign the trigger value just _after_ going up
-            end
-            % convert the trigger into an event with a value at a specific sample
-            for j=find(diff([pad trig(:)'])<0)
-                event(end+1).type   = [channel '_down'];      % distinguish between up and down flank
-                event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-                event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
-            end
-        case 'peak' % peak defined as > 3/2 of the median
-            % convert the trigger into an event with a value at a specific sample
-            difftrace = diff([pad trig(:)']>(3/2)*median(trig));
-            for j=find(difftrace~=0)
-                if difftrace(j)>0
-                    event(end+1).type   = ['onset'];              % ft_read_event will use onset and offset to calculate the duration
-                    event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-                    event(end  ).value  = trig(j+trigshift);      % assign the trigger value just _after_ going up
-                elseif difftrace(j)<0
-                    event(end+1).type   = ['offset'];             % ft_read_event will use onset and offset to calculate the duration
-                    event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-                    event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
-                end
-            end
-        case 'trough' % trough defined as < 1/2 of the median
-            % convert the trigger into an event with a value at a specific sample
-            difftrace = diff([pad trig(:)']<(1/2)*median(trig));
-            for j=find(difftrace~=0)
-                if difftrace(j)>0
-                    event(end+1).type   = ['onset'];              % ft_read_event will use onset and offset to calculate the duration
-                    event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-                    event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
-                elseif difftrace(j)<0
-                    event(end+1).type   = ['offset'];             % ft_read_event will use onset and offset to calculate the duration
-                    event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-                    event(end  ).value  = trig(j+trigshift);      % assign the trigger value just _after_ going up
-                end
-            end
-        otherwise
-            error('incorrect specification of ''detectflank''');
-    end
+  % process each trigger channel independently
+  channel = hdr.label{chanindx(i)};
+  trig    = dat(i,:);
+  
+  if trigpadding
+    pad = trig(1);
+  else
+    pad = 0;
+  end
+  
+  switch detectflank
+    case 'bit'
+      trig = uint32([pad trig]);
+      for k=1:32
+        bitval = bitget(trig, k);                             % get each of the bits separately
+        for j=find(~bitval(1:end-1) & bitval(2:end))
+          event(end+1).type   = channel;
+          event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
+          event(end  ).value  = 2^(k-1);                      % assign the value represented by this bit
+        end % j
+      end % k
+    case 'up'
+      % convert the trigger into an event with a value at a specific sample
+      for j=find(diff([pad trig(:)'])>0)
+        event(end+1).type   = channel;
+        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone up
+        event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going up
+      end
+    case 'updiff'
+      for j=find(diff([pad trig(:)'])>0)
+        event(end+1).type   = channel;
+        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone up
+        event(end  ).value  = trig(j+trigshift)-trig(j-1);  % assign the trigger value just _after_ going up minus the value before
+      end
+    case 'down'
+      % convert the trigger into an event with a value at a specific sample
+      for j=find(diff([pad trig(:)'])<0)
+        event(end+1).type   = channel;
+        event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
+        event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
+      end
+    case 'both'
+      % convert the trigger into an event with a value at a specific sample
+      difftrace = diff([pad trig(:)']);
+      for j=find(difftrace~=0)
+        if difftrace(j)>0
+          event(end+1).type   = [channel '_up'];        % distinguish between up and down flank
+          event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone up
+          event(end  ).value  = trig(j+trigshift);      % assign the trigger value just _after_ going up
+        elseif difftrace(j)<0
+          event(end+1).type   = [channel '_down'];      % distinguish between up and down flank
+          event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
+          event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
+        end
+      end
+    otherwise
+      error('incorrect specification of ''detectflank''');
+  end
 end
