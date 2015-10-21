@@ -18,7 +18,7 @@ end
 hdr           = ft_read_header(cfg.dataset);
 
 % read the events from the data
-chanidx       = 1;
+chanindx      = 1;
 detectflank   = 'up';
 threshold     = '(3/2)*nanmedian'; % or, e.g., 1/2 times the median for down flanks
 event         = ft_read_event(cfg.dataset, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold);
