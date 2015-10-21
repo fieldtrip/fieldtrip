@@ -1,11 +1,11 @@
- function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
+function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 
 % FT_STATFUN_CORRELATIONT computes correlations between two variables and
 % converts resulting correlation coefficients to t-statistics for the
 % purpose of multiple comparison correction. The correlation coefficients
 % are stored in the rho field of the output argument.
 %
-% In case of calculating brain-behavior correlations, ensure the brain data is 
+% In case of calculating brain-behavior correlations, ensure the brain data is
 % matched in terms of size and dimensions to the behavioral data, or vice versa.
 %
 % Use this function by calling one of the high-level statistics functions as
@@ -36,7 +36,7 @@
 %               quantile cfg.alpha (with cfg.tail=-1), at quantiles
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
 %               quantile (1-cfg.alpha) (with cfg.tail=1).
-%   cfg.type  = 'Spearman' to compute Spearman's rho (default), see 'help corr' for other options. 
+%   cfg.type  = 'Spearman' to compute Spearman's rho (default), see 'help corr' for other options.
 %
 % Design specification
 %   cfg.ivar  = row number of the design that contains the labels of the conditions that must be
@@ -75,13 +75,13 @@ if ~isfield(cfg, 'type'),           cfg.type           = 'Spearman'; end
 
 % perform some checks on the configuration
 if strcmp(cfg.resampling, 'permutation')
-   error('shuffling the design matrix may bias the permutation distribution, see bugreport #2992 for details');
+  error('shuffling the design matrix may bias the permutation distribution, see bugreport #2992 for details');
 end
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated');
+  error('P-values can only be calculated if the test statistics are calculated');
 end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
-    error('uvar must be specified for dependent samples statistics');
+  error('uvar must be specified for dependent samples statistics');
 end
 
 % perform some checks on the design
@@ -90,68 +90,68 @@ sel2 = find(design(cfg.ivar,:)==2);
 n1  = length(sel1);
 n2  = length(sel2);
 if (n1+n2)<size(design,2) || (n1~=n2)
-    error('Invalid specification of the design array.');
+  error('Invalid specification of the design array.');
 end
 nunits = length(design(cfg.uvar, sel1));
 df = nunits - 1;
 if nunits<2
-    error('The data must contain at least two units (usually subjects).')
+  error('The data must contain at least two units (usually subjects).')
 end
 if (nunits*2)~=(n1+n2)
-    error('Invalid specification of the design array.');
+  error('Invalid specification of the design array.');
 end
 nsmpls = size(dat,1);
 
 if strcmp(cfg.computestat,'yes') % compute the statistic
+  
+  % store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
+  poslabelsperunit = zeros(nunits,2);
+  poslabel1        = find(design(cfg.ivar,:)==1);
+  poslabel2        = find(design(cfg.ivar,:)==2);
+  [dum,i]          = sort(design(cfg.uvar,poslabel1), 'ascend');
+  poslabelsperunit(:,1) = poslabel1(i);
+  [dum,i]          = sort(design(cfg.uvar,poslabel2), 'ascend');
+  poslabelsperunit(:,2) = poslabel2(i);
+  
+  for nvox = 1:nsmpls % for each sample/observation
     
-    % store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
-    poslabelsperunit = zeros(nunits,2);
-    poslabel1        = find(design(cfg.ivar,:)==1);
-    poslabel2        = find(design(cfg.ivar,:)==2);
-    [dum,i]          = sort(design(cfg.uvar,poslabel1), 'ascend');
-    poslabelsperunit(:,1) = poslabel1(i);
-    [dum,i]          = sort(design(cfg.uvar,poslabel2), 'ascend');
-    poslabelsperunit(:,2) = poslabel2(i);
+    % assign to two variables
+    dat1(:,1) = dat(nvox,poslabelsperunit(1:max(nunits),1));
+    dat2(:,1) = dat(nvox,poslabelsperunit(1:max(nunits),2));
     
-    for nvox = 1:nsmpls % for each sample/observation
-        
-        % assign to two variables
-        dat1(:,1) = dat(nvox,poslabelsperunit(1:max(nunits),1));
-        dat2(:,1) = dat(nvox,poslabelsperunit(1:max(nunits),2));
-        
-        % calculate the correlation coefficient between the two variables
-        rho = corr(dat1, dat2, 'type', cfg.type);
-        clear dat1 dat2
-        
-        % convert correlation coefficient to t-statistic (for MCP correction): t^2 = DF*R^2 / (1-R^2)
-        tstat = rho*(sqrt(max(nunits)-2))/sqrt((1-rho^2));
-        
-        s.stat(nvox,1) = tstat;% store t values in s.stat variable for use with ft_statistics_montecarlo.m
-        s.rho(nvox,1) = rho; % store r values in s.rho variable (these are the actual correlation coefficients)  
-        clear rho tstat      
-    end
+    % calculate the correlation coefficient between the two variables
+    rho = corr(dat1, dat2, 'type', cfg.type);
+    clear dat1 dat2
+    
+    % convert correlation coefficient to t-statistic (for MCP correction): t^2 = DF*R^2 / (1-R^2)
+    tstat = rho*(sqrt(max(nunits)-2))/sqrt((1-rho^2));
+    
+    s.stat(nvox,1) = tstat;% store t values in s.stat variable for use with ft_statistics_montecarlo.m
+    s.rho(nvox,1) = rho; % store r values in s.rho variable (these are the actual correlation coefficients)
+    clear rho tstat
+  end
 end
 
 if strcmp(cfg.computecritval,'yes')
-    % also compute the critical values
-    s.df      = df;
-    if cfg.tail==-1
-        s.critval = tinv(cfg.alpha,df);
-    elseif  cfg.tail==0
-        s.critval = [tinv(cfg.alpha/2,df),tinv(1-cfg.alpha/2,df)];
-    elseif cfg.tail==1
-        s.critval = tinv(1-cfg.alpha,df);
-    end
+  % also compute the critical values
+  s.df      = df;
+  if cfg.tail==-1
+    s.critval = tinv(cfg.alpha,df);
+  elseif  cfg.tail==0
+    s.critval = [tinv(cfg.alpha/2,df),tinv(1-cfg.alpha/2,df)];
+  elseif cfg.tail==1
+    s.critval = tinv(1-cfg.alpha,df);
+  end
 end
 
 if strcmp(cfg.computeprob,'yes')
-    % also compute the p-values
-    s.df      = df;
-    if cfg.tail==-1
-        s.prob = tcdf(s.stat,s.df);
-    elseif  cfg.tail==0
-        s.prob = 2*tcdf(-abs(s.stat),s.df);
-    elseif cfg.tail==1
-        s.prob = 1-tcdf(s.stat,s.df);
-    end
+  % also compute the p-values
+  s.df      = df;
+  if cfg.tail==-1
+    s.prob = tcdf(s.stat,s.df);
+  elseif  cfg.tail==0
+    s.prob = 2*tcdf(-abs(s.stat),s.df);
+  elseif cfg.tail==1
+    s.prob = 1-tcdf(s.stat,s.df);
+  end
 end
