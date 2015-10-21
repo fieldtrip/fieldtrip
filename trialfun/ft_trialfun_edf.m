@@ -23,7 +23,7 @@ detectflank   = 'up';
 threshold     = '(3/2)*nanmedian'; % or, e.g., 1/2 times the median for down flanks
 event         = ft_read_event(cfg.dataset, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold);
 
-% look for up events
+% define trials around the events
 trl           = [];
 pretrig       = 1 * hdr.Fs; % e.g., 1 sec before trigger
 posttrig      = 2 * hdr.Fs; % e.g., 2 sec after trigger
