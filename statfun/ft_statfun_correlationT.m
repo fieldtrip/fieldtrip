@@ -1,4 +1,4 @@
-function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
+ function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 
 % FT_STATFUN_CORRELATIONT computes correlations between two variables and
 % converts resulting correlation coefficients to t-statistics for the
@@ -74,9 +74,12 @@ if ~isfield(cfg, 'tail'),           cfg.tail           = 1;     end
 if ~isfield(cfg, 'type'),           cfg.type           = 'Spearman'; end
 
 % perform some checks on the configuration
+if strcmp(cfg.resampling, 'permutation')
+   error('shuffling the design matrix may bias the permutation distribution, see bugreport #2992 for details');
+end
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
-end;
+    error('P-values can only be calculated if the test statistics are calculated');
+end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
     error('uvar must be specified for dependent samples statistics');
 end
