@@ -28,11 +28,9 @@ trl           = [];
 pretrig       = 1 * hdr.Fs; % e.g., 1 sec before trigger
 posttrig      = 2 * hdr.Fs; % e.g., 2 sec after trigger
 for i = 1:numel(event)
-  if ~isempty(strfind(event(i).type, 'up')) % in case of an up event
     offset    = -hdr.nSamplesPre;  % number of samples prior to the trigger
     trlbegin  = event(i).sample - pretrig;
     trlend    = event(i).sample + posttrig;
     newtrl    = [trlbegin trlend offset];
     trl       = [trl; newtrl]; % store in the trl matrix
-  end
 end
