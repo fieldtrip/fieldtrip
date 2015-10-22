@@ -75,7 +75,7 @@ if ~isfield(cfg, 'type'),           cfg.type           = 'Spearman'; end
 
 % perform some checks on the configuration
 if strcmp(cfg.resampling, 'permutation')
-  error('shuffling the design matrix may bias the permutation distribution, see bugreport #2992 for details');
+  error('shuffling the design matrix may bias the permutation distribution, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2992');
 end
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
   error('P-values can only be calculated if the test statistics are calculated');
