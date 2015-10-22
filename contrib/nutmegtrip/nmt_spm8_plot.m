@@ -10,6 +10,7 @@ if(~isfield(cfg,'time'))
     cfg.time = [1 1];
 end
 
+
 if(cfg.time(1) == cfg.time(2)) % single time point selected
     fun = st.nmt.fun(:,cfg.time(1));
     
@@ -31,7 +32,9 @@ else % time interval selected
 end
 
 
-
+msk = st.nmt.msk;
+msk(msk==0) = NaN;
+fun = msk(:,cfg.time(1)).*fun; % FIXME: what to do when time interval selected?
 
 %% figure out voxelsize
 % in case of nonstandard nifti orientation

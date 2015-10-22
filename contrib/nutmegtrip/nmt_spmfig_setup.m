@@ -155,13 +155,13 @@ switch(cfg.funparameter)
         
         % Transverse
         set(st.nmt.ax_ts,'Units','pixels', ...
-            'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2) s*(Dims(1)+Dims(2)) s*(Dims(2))],...
-            'Units','normalized','Visible','on')
-        
-        % save new MRI axis positions, because original SPM controls may mess them up
-        for ii=1:3
-            st.nmt.mriaxpos(:,ii) = get(st.vols{1}.ax{ii}.ax,'Position');
-        end
+           'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2) s*(Dims(1)+Dims(2)) s*(Dims(2))*0.8],...
+            'Visible','on')
+end
+
+% save new MRI axis positions, because original SPM controls may mess them up
+for ii=1:3
+    st.nmt.mriaxpos(:,ii) = get(st.vols{1}.ax{ii}.ax,'Position');
 end
 
 tmp = get(SPM_axes_obj(1),'ButtonDownFcn');
