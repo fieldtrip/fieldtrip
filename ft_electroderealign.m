@@ -31,8 +31,8 @@ function [norm] = ft_electroderealign(cfg)
 % electrode positions by clicking on the skin surface.
 %
 % Use as
-%   [elec] = ft_electroderealign(cfg) 
-% 
+%   [elec] = ft_electroderealign(cfg)
+%
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning or placing the electrodes
 %                        'fiducial'        realign using the NAS, LPA and RPA fiducials
@@ -164,16 +164,16 @@ elseif nargin>1
 end
 elec = ft_convert_units(elec); % ensure that the units are specified
 
-% ensure up-to-date sensor descriptions 
+% ensure up-to-date sensor descriptions
 elec = ft_datatype_sens(elec);
 
 % ensure the elec to have a coordsys
 if ~isfield(elec, 'coordsys')
   elec = ft_determine_coordsys(elec);
 end
-  
+
 % ensure that channel and electrode positions are the same
-assert(isequaln(elec.elecpos,elec.chanpos),'This function requires same electrode and channel positions.'); 
+assert(isequaln(elec.elecpos,elec.chanpos),'This function requires same electrode and channel positions.');
 
 usetemplate  = isfield(cfg, 'template')  && ~isempty(cfg.template);
 useheadshape = isfield(cfg, 'headshape') && ~isempty(cfg.headshape);
@@ -241,9 +241,11 @@ if strcmp(cfg.casesensitive, 'no')
   for i=1:length(elec.label)
     elec.label{i} = lower(elec.label{i});
   end
-  for j=1:length(template)
-    for i=1:length(template(j).label)
-      template(j).label{i} = lower(template(j).label{i});
+  if usetemplate
+    for j=1:length(template)
+      for i=1:length(template(j).label)
+        template(j).label{i} = lower(template(j).label{i});
+      end
     end
   end
 end
@@ -352,7 +354,7 @@ elseif strcmp(cfg.method, 'template') && useheadshape
 elseif strcmp(cfg.method, 'fiducial')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-   switch elec.coordsys
+  switch elec.coordsys
     case {'unknown' 'als'}
       % default to CTF's convention
       coordsys = 'ctf'
@@ -580,7 +582,7 @@ function cb_creategui(hObject, eventdata, handles)
 fig = get(hObject, 'parent');
 % constants
 CONTROL_WIDTH  = 0.05;
-CONTROL_HEIGHT = 0.06; 
+CONTROL_HEIGHT = 0.06;
 CONTROL_HOFFSET = 0.7;
 CONTROL_VOFFSET = 0.5;
 % rotateui
@@ -633,14 +635,8 @@ ft_uilayout(fig, 'tag', 'alpha',   'BackgroundColor', [0.8 0.8 0.8], 'width', 3*
 function cb_redraw(hObject, eventdata, handles)
 fig = get(hObject, 'parent');
 headshape = getappdata(fig, 'headshape');
-bnd.pnt = headshape.pnt; %ft_plot_mesh wants headshape in bnd fields
-if isfield(headshape,'tri')
-bnd.tri = headshape.tri;
-elseif isfield(headshape, 'poly')
-bnd.poly = headshape.poly;
-end
-elec = getappdata(fig, 'elec');
-template = getappdata(fig, 'template');
+elec      = getappdata(fig, 'elec');
+template  = getappdata(fig, 'template');
 % get the transformation details
 rx = str2num(get(findobj(fig, 'tag', 'rx'), 'string'));
 ry = str2num(get(findobj(fig, 'tag', 'ry'), 'string'));
@@ -674,16 +670,12 @@ if ~isempty(headshape)
   skin   = [255 213 119]/255;
   brain  = [202 100 100]/255;
   cortex = [255 213 119]/255;
-  ft_plot_mesh(bnd,'facecolor', skin,'EdgeColor','none','facealpha',0.7);
+  ft_plot_mesh(headshape, 'facecolor', skin, 'EdgeColor', 'none', 'facealpha', 0.7);
   lighting gouraud
   material shiny
   camlight
 end
 
-
-if isfield(elec, 'fid') && ~isempty(elec.fid.chanpos)
-  ft_plot_sens(elec.fid,'style', 'r*');
-end
 if get(findobj(fig, 'tag', 'toggle axes'), 'value')
   axis on
   grid on
@@ -698,7 +690,12 @@ else
   cfg.label = 'off';
 end
 hold on
+
 ft_plot_sens(elec,'label',cfg.label);
+
+if isfield(elec, 'fid') && ~isempty(elec.fid.chanpos)
+  ft_plot_sens(elec.fid,'style', 'r*');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_apply(hObject, eventdata, handles)
