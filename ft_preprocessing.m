@@ -99,7 +99,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
 %   cfg.refmethod     = 'avg' or 'median' (default = 'avg')
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
-%   cfg.montage       = 'no' or a montage structure (default = 'no')
+%   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %
 % Preprocessing options that you should only use when you are calling FT_PREPROCESSING with
 % also the second input argument "data" are
