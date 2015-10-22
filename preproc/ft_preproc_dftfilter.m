@@ -62,7 +62,7 @@ end
 Fl = Fl(:);
 
 % determine the largest integer number of line-noise cycles that fits in the data
-n  = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
+n  = round(floor(nsamples .* eps(Fl)./Fs) * Fs./Fl);
 if all(n==n(1))
   % make a selection of samples such that the line-noise fits the data
   sel = 1:n;
