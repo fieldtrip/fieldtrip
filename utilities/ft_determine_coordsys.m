@@ -29,6 +29,8 @@ function [data] = ft_determine_coordsys(data, varargin)
 %
 % See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
 
+% Copyright (C) 2015, Jan-Mathijs Schoffelen
+%
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
@@ -53,7 +55,6 @@ axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the
 data  = ft_checkdata(data);
 dtype = ft_datatype(data);
 data  = ft_convert_units(data);
-unit  = data.unit;
 
 % the high-level data structures are detected with ft_datatype, but there are
 % also some low-level data structures that need to be supproted here
@@ -69,28 +70,7 @@ if strcmp(dtype, 'unknown')
   end
 end
 
-% determine the size of the "unit" sphere in the origin and the length of the axes
-switch unit
-  case 'mm'
-    axmax = 150;
-    rbol  = 5;
-  case 'cm'
-    axmax = 15;
-    rbol  = 0.5;
-  case 'm'
-    axmax = 0.15;
-    rbol  = 0.005;
-  otherwise
-    error('unknown units (%s)', unit);
-end
-
-% this is useful if the anatomy is from a non-human primate or rodent
-axmax = axisscale*axmax;
-rbol  = axisscale*rbol;
-
-fprintf('The axes are %g %s long in each direction\n', axmax, unit);
-fprintf('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
-
+% NOTE this section should be kept consistent with the shorter labels in FT_PLOT_AXES
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
   label = cell(3,1);
   if length(data.coordsys)==3 && length(intersect(data.coordsys, 'rlasif'))==3
@@ -112,17 +92,13 @@ if isfield(data, 'coordsys') && ~isempty(data.coordsys)
           error('incorrect letter in the coordsys');
       end % switch
     end % for each of the three axes
-  elseif strcmpi(data.coordsys, 'itab') || strcmpi(data.coordsys, 'neuromag')
+  elseif strcmpi(data.coordsys, 'itab') || strcmpi(data.coordsys, 'neuromag') || strcmpi(data.coordsys, 'tal') || strcmpi(data.coordsys, 'mni') || strcmpi(data.coordsys, 'spm')
     label{1} = 'the right';
     label{2} = 'anterior';
     label{3} = 'superior';
   elseif strcmpi(data.coordsys, 'ctf') || strcmpi(data.coordsys, '4d') || strcmpi(data.coordsys, 'bti')
     label{1} = 'anterior';
     label{2} = 'the left';
-    label{3} = 'superior';
-  elseif strcmpi(data.coordsys, 'tal') || strcmpi(data.coordsys, 'mni') || strcmpi(data.coordsys, 'spm')
-    label{1} = 'the right';
-    label{2} = 'anterior';
     label{3} = 'superior';
   elseif strcmpi(data.coordsys, 'paxinos')
     label{1} = 'the right';
@@ -139,13 +115,6 @@ if isfield(data, 'coordsys') && ~isempty(data.coordsys)
   fprintf('The positive x-axis is pointing towards %s\n', label{1});
   fprintf('The positive y-axis is pointing towards %s\n', label{2});
   fprintf('The positive z-axis is pointing towards %s\n', label{3});
-end
-
-% create the labels that are to be plotted along the axes
-if isfield(data, 'coordsys')
-  [labelx, labely, labelz] = xyz2label(data.coordsys);
-else
-  [labelx, labely, labelz] = xyz2label('unknown');
 end
 
 % plot the geometrical object
@@ -237,44 +206,8 @@ if isfield(data, 'tri')
   lighting gouraud
 end
 
-% get the xyz-axes
-xdat  = [-axmax 0 0; axmax 0 0];
-ydat  = [0 -axmax 0; 0 axmax 0];
-zdat  = [0 0 -axmax; 0 0 axmax];
-
-% get the xyz-axes dotted
-xdatdot = (-axmax:(axmax/15):axmax);
-xdatdot = xdatdot(1:floor(numel(xdatdot)/2)*2);
-xdatdot = reshape(xdatdot, [2 numel(xdatdot)/2]);
-n       = size(xdatdot,2);
-ydatdot = [zeros(2,n) xdatdot zeros(2,n)];
-zdatdot = [zeros(2,2*n) xdatdot];
-xdatdot = [xdatdot zeros(2,2*n)];
-
-% plot axes
-hl = line(xdat, ydat, zdat);
-set(hl(1), 'linewidth', 1, 'color', 'r');
-set(hl(2), 'linewidth', 1, 'color', 'g');
-set(hl(3), 'linewidth', 1, 'color', 'b');
-hld = line(xdatdot, ydatdot, zdatdot);
-for k = 1:n
-  set(hld(k    ), 'linewidth', 3, 'color', 'r');
-  set(hld(k+n*1), 'linewidth', 3, 'color', 'g');
-  set(hld(k+n*2), 'linewidth', 3, 'color', 'b');
-end
-
-% create the ball at the origin
-[O.pnt, O.tri] = icosahedron42;
-O.pnt = O.pnt.*rbol;
-ft_plot_mesh(O, 'edgecolor', 'none');
-
-% add the labels to the axis
-text(xdat(1,1),ydat(1,1),zdat(1,1),labelx{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(1,2),ydat(1,2),zdat(1,2),labely{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(1,3),ydat(1,3),zdat(1,3),labelz{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,1),ydat(2,1),zdat(2,1),labelx{2},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,2),ydat(2,2),zdat(2,2),labely{2},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,3),ydat(2,3),zdat(2,3),labelz{2},'color','y','fontsize',15,'linewidth',2);
+% plot the 3-D axes, labels, and sphere at the origin 
+ft_plot_axes(data, 'axisscale', axisscale);
 
 if istrue(dointeractive),
   
@@ -322,35 +255,3 @@ if istrue(dointeractive),
   data.coordsys = coordsys;
 end % if interactive
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION to go from aplrsi to better interpretable format
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [labelx, labely, labelz] = xyz2label(str)
-
-if ~isempty(str) && ~strcmp(str, 'unknown')
-  % the first part is important for the orientations
-  % the second part optionally contains information on the origin
-  strx = tokenize(str, '_');
-  
-  switch lower(strx{1})
-    case {'ras' 'itab' 'neuromag' 'spm' 'mni' 'tal'}
-      labelx = {'-X (left)'      '+X (right)'   };
-      labely = {'-Y (posterior)' '+Y (anterior)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    case {'als' 'ctf' '4d', 'bti'}
-      labelx = {'-X (posterior)' '+X (anterior)'};
-      labely = {'-Y (right)'     '+Y (left)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    case {'paxinos'}
-      labelx = {'-X (left)'      '+X (right)'};
-      labely = {'-Y (inferior)'  '+Y (superior)'};
-      labelz = {'-Z (anterior)'  '+Z (posterior)'};
-    otherwise
-      error('unknown coordsys');
-  end
-  
-else
-  labelx = {'-X (unknown)' '+X (unknown)'};
-  labely = {'-Y (unknown)' '+Y (unknown)'};
-  labelz = {'-Z (unknown)' '+Z (unknown)'};
-end
