@@ -16,6 +16,13 @@ function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 %   cfg.statistic = 'ft_statfun_correlationT'
 % see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
 %
+% When using this function to calculate a randomization distribution, for
+% statistical inference purposes, it is recommended to use the bootstrapping 
+% approach (cfg.resampling = 'bootstrap') when calling any of the
+% high-level statistics functions above. The default (cfg.resampling = 'permutation')
+% may be prone to systematic across-condition bias, see bugreport #2992: 
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2992
+%
 % For low-level use, the external interface of this function has to be
 %   [s,cfg] = ft_statfun_correlationT(cfg, dat, design);
 % where
@@ -74,14 +81,14 @@ if ~isfield(cfg, 'tail'),           cfg.tail           = 1;     end
 if ~isfield(cfg, 'type'),           cfg.type           = 'Spearman'; end
 
 % perform some checks on the configuration
-if strcmp(cfg.resampling, 'permutation')
-  error('shuffling the design matrix may bias the permutation distribution, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2992');
-end
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
   error('P-values can only be calculated if the test statistics are calculated');
 end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
   error('uvar must be specified for dependent samples statistics');
+end
+if strcmp(cfg.resampling, 'permutation')
+  warning('permutation may be prone to systematic across-condition bias, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2992, consider using the bootstrap resampling method instead (cfg.resampling = ''bootstrap'')');
 end
 
 % perform some checks on the design
