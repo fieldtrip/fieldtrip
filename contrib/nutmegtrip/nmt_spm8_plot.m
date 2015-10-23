@@ -36,6 +36,8 @@ msk = st.nmt.msk;
 msk(msk==0) = NaN;
 fun = msk(:,cfg.time(1)).*fun;
 
+disp(['t = ' num2str(st.nmt.time(cfg.time))]);
+
 %% figure out voxelsize
 % in case of nonstandard nifti orientation
 voxelspacing = abs(st.nmt.pos(2,:) - st.nmt.pos(1,:));
