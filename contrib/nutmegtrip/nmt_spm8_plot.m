@@ -34,7 +34,7 @@ end
 
 msk = st.nmt.msk;
 msk(msk==0) = NaN;
-fun = msk(:,cfg.time(1)).*fun; % FIXME: what to do when time interval selected?
+fun = msk(:,cfg.time(1)).*fun;
 
 %% figure out voxelsize
 % in case of nonstandard nifti orientation

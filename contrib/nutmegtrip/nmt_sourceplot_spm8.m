@@ -641,7 +641,7 @@ end
 % prevent outside fun from being plotted
 if hasfun && isfield(functional,'inside') && ~hasmsk
   hasmsk = 1;
-  msk = zeros(dim);
+  msk = ones(size(fun));
   cfg.opacitymap = 'rampup';
   opacmin = 0;
   opacmax = 1;
