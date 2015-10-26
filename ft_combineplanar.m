@@ -180,10 +180,13 @@ if isfreq
             dum = permute(dum, [2 3 1]);
             dum = reshape(dum, [2 Ntim*Nrpt]);
             timbin = ~isnan(dum(1,:));
-            dum2   = svdfft(dum(:,timbin),1,data.cumtapcnt);
+            [loading, ~,  ori, sin_val] = svdfft(dum(:,timbin),2,data.cumtapcnt);
+            dum2   = loading(1,:);
             dum(1,timbin) = dum2;
             dum = reshape(dum(1,:),[Ntim Nrpt]);
             fourier(:,j,k,:) = transpose(dum);
+            data.ori{k} = ori; % to change into a cell
+            data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
             
             %for m = 1:Ntim
             %  dum                     = data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),m);
@@ -233,10 +236,15 @@ elseif (israw || istimelock)
         for m = 1:Nrpt
           tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
         end
-        if strcmp(cfg.method, 'abssvd')
-          tmpdat2 = abs(svdfft(tmpdat,1));
-        elseif strcmp(cfg.method, 'svd')
-          tmpdat2 = svdfft(tmpdat,1);
+        if strcmp(cfg.method, 'abssvd')||strcmp(cfg.method, 'svd')
+          [loading, ~,  ori, sin_val] = svdfft(tmpdat,2);
+          data.ori{k} = ori; % to change into a cell
+          data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
+          if strcmp(cfg.method, 'abssvd')
+            tmpdat2 = abs(loading(1,:));
+          else
+            tmpdat2 = loading(1,:); 
+          end
         end
         tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
         for m = 1:Nrpt
