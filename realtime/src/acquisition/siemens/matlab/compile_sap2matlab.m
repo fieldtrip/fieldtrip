@@ -41,6 +41,16 @@ end
 
 %% Test
 %  This file contains an example string that will be parsed by sap2matlab
-load('mrprotString.mat');
+load('mrprotString.mat', 'apstr');
 S = sap2matlab(apstr);
+
+
+%%
+file = '../Projects/TestReadMrprot/mrprot_triotim.txt';
+f = fopen(file, 'r');
+textData = fread(f);
+fclose(f);
+
+S = sap2matlab(sprintf('%s', textData));
+
 

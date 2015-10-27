@@ -627,7 +627,7 @@ bool PixelDataGrabber::tryReadFile(const char *filename, SimpleStorage &sBuf, bo
 	LARGE_INTEGER creationThisFile;
 
 //    fHandle = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    fHandle = CreateFile((LPCWSTR)filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    fHandle = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (fHandle != INVALID_HANDLE_VALUE) {
 		DWORD read, size;
