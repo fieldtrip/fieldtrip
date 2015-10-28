@@ -143,7 +143,7 @@ hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up');   % up, down or both
 trigshift        = ft_getopt(varargin, 'trigshift');           % default is assigned in subfunction
 trigindx         = ft_getopt(varargin, 'trigindx');            % this allows to override the automatic trigger channel detection (e.g., useful for Yokogawa)
-triglabel        = ft_getopt(varargin, 'triglabel');           % this allows to override the automatic trigger channel detection (e.g., useful for EDF)
+triglabel        = ft_getopt(varargin, 'triglabel');           % this allows to override the automatic trigger channel detection
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
@@ -577,14 +577,14 @@ switch eventformat
     event = read_shm_event(filename, varargin{:});
     
   case 'edf'
-    % EDF itself does not contain events, but EDF+ does define an annotation channel
+    % read the header
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'chanindx', chanindx);
+      hdr = ft_read_header(filename);
     end
     
-    if ~isempty(detectflank) % parse the trigger channel for events
+    if ~isempty(detectflank) % parse the trigger channel (indicated by chanindx) for events
       event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'threshold', threshold);
-    elseif issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation) % read out the annotation channel for events
+    elseif issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation) % EDF itself does not contain events, but EDF+ does define an annotation channel
       % read the data of the annotation channel as 16 bit
       evt = read_edf(filename, hdr);
       % undo the faulty calibration
