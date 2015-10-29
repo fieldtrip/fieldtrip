@@ -5,6 +5,9 @@ function nmt_spmfig_setup(cfg)
 
 global st
 
+nmt_textboxcolor = [0.93 0.81 0.63];
+nmt_bgcolor = [0.8 0.7 0.54];
+
 fg = spm_figure('GetWin','Graphics');
 WS = spm('winscale');
 
@@ -17,16 +20,15 @@ delete(findobj('ToolTipString','move crosshairs to origin'));
 delete(inlabel);
 set(st.in,'Visible','off');
 
-beaminlabel = uicontrol(fg,'Style','Text','Position',[60 350 120 020].*WS,'String','Functional:');
-st.nmt.beamin = uicontrol(fg,'Style','edit', 'Position',[175 350  125 020].*WS,'String','');
+beaminlabel = uicontrol(fg,'Style','Text','Position',[60 350 120 020].*WS,'String','Functional:','HorizontalAlignment','left');
+st.nmt.gui.beamin = uicontrol(fg,'Style','edit', 'Position',[130 350  120 020].*WS,'String','','HorizontalAlignment','left','BackgroundColor',nmt_textboxcolor);
 
 uicontrol(fg,'Style','Text', 'Position',[75 255 35 020].*WS,'String','MNI:');
 % st.mnip = uicontrol(fg,'Style','edit', 'Position',[110 255 135 020].*WS,'String','','Callback','nmt_image(''setposmni'')','ToolTipString','move crosshairs to MNI mm coordinates');
 % st.mnilabel=uicontrol('Style','text','BackgroundColor',[1 1 1],'Units','normalized','Position',[.6 .5 .3 .15],'FontSize',12);
 
 uicontrol(fg,'Style','Text', 'Position',[75 315 35 020].*WS,'String','MEG:');
-% st.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String',sprintf('%.1f %.1f %.1f',nut_mri2meg(spm_orthviews('pos')')),'Callback','nmt_image(''setposmeg'')','ToolTipString','move crosshairs to MEG mm coordinates');
-st.nmt.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String',sprintf('%.1f %.1f %.1f',(spm_orthviews('pos')')),'Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
+st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String',sprintf('%.1f %.1f %.1f',(spm_orthviews('pos')')),'Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
 
 set(st.mp,'Callback','spm_image(''setposmm''); nmt_image(''shopos'');');
 set(st.vp,'Callback','spm_image(''setposvx''); nmt_image(''shopos'');');
@@ -36,11 +38,24 @@ for ii=1:7
    set(spmUIhL,'Callback',['spm_image(''repos'',' num2str(ii) '); nmt_image']);
 end
 
+
 spmUIhR = [findobj('Style','popupmenu'); findobj('Style','togglemenu')];
 for ii=1:length(spmUIhR)
     cb = get(spmUIhR(ii),'Callback');
     set(spmUIhR(ii),'Callback',[cb '; nmt_image;']);
 end
+
+textboxUIh = findobj('Style','edit');
+buttonUIh = findobj('Style','pushbutton');
+button2UIh = findobj('Style','togglebutton');
+popupmenuUIh = findobj('Style','popupmenu');
+set([textboxUIh;buttonUIh;button2UIh;popupmenuUIh],'BackgroundColor',nmt_textboxcolor);
+
+textUIh = findobj('Style','text');
+frameUIh = findobj('Style','frame');
+set([textUIh;frameUIh],'BackgroundColor',nmt_bgcolor);
+
+
 
 % %% so instead, just destroy them all
 % hitlist = ...
@@ -150,18 +165,35 @@ switch(cfg.funparameter)
         end;
         
         %%
-        st.nmt.ax_ts = axes('Visible','off','DrawMode','fast','Parent',st.fig,...
+        st.nmt.gui.ax_ts = axes('Visible','off','DrawMode','fast','Parent',st.fig,...
             'YDir','normal');
         
         % Transverse
-        set(st.nmt.ax_ts,'Units','pixels', ...
+        set(st.nmt.gui.ax_ts,'Units','pixels', ...
            'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2) s*(Dims(1)+Dims(2)) s*(Dims(2))*0.8],...
-            'Visible','on')
+            'Visible','on');
+ 
+        uicontrol(fg,'Style','Text','String','Selected Time:','BackgroundColor',[1 1 1],'HorizontalAlignment','right','Parent',st.fig,...
+            'Position',[offx+s*Dims(1)+4*skx-60 offy+s*Dims(2)-75 150 25]);
+
+        st.nmt.gui.t1 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig);
+        set(st.nmt.gui.t1,'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-70 80 25],...
+            'HorizontalAlignment','right','Visible','on');
+ 
+        uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
+                    'Position',[offx+s*Dims(1)+4*skx+185 offy+s*Dims(2)-75 50 25]);
+
+        
+        st.nmt.gui.t2 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
+            'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-70 80 25],...
+            'HorizontalAlignment','right','Visible','on');
+        
+
 end
 
 % save new MRI axis positions, because original SPM controls may mess them up
 for ii=1:3
-    st.nmt.mriaxpos(:,ii) = get(st.vols{1}.ax{ii}.ax,'Position');
+    st.nmt.gui.mriaxpos(:,ii) = get(st.vols{1}.ax{ii}.ax,'Position');
 end
 
 tmp = get(SPM_axes_obj(1),'ButtonDownFcn');

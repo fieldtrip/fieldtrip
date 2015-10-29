@@ -675,7 +675,7 @@ end
 %% start building the figure
 global st
 
-% things get messy if there's an SPM window alreayd open
+% things get messy if there's an SPM window already open
 spmfigh = spm_figure('FindWin');
 if(~isempty(spmfigh))
     close(spmfigh)
@@ -726,26 +726,26 @@ if ~isempty(cfg.funparameter)
                 
                 if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
                     [~,peakind] = max(abs(st.nmt.fun(:)));
-                    [peakvoxind,peaktimeind] = ind2sub(size(st.nmt.fun),peakind);
-                    cfg.time(1) = peaktimeind;
-                    cfg.vox = peakvoxind;
+                    [peakvox_idx,peaktime_idx] = ind2sub(size(st.nmt.fun),peakind);
+                    cfg.time_idx(1) = peaktime_idx;
+                    cfg.vox_idx = peakvox_idx;
                 end
 
                 if(~isfield(cfg,'time') & isfield(cfg,'vox'))
-                    [~,peaktimeind] = max(abs(st.nmt.fun(cfg.vox,:)));
-                    cfg.time(1) = peaktimeind;
+                    [~,peaktime_idx] = max(abs(st.nmt.fun(cfg.vox_idx,:)));
+                    cfg.time_idx(1) = peaktime_idx;
                 end
 
                 if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
-                    [~,peakvoxind] = max(abs(st.nmt.fun(cfg.time,:)));
-                    cfg.vox = peakvoxind;
+                    [~,peakvox_idx] = max(abs(st.nmt.fun(cfg.time_idx,:)));
+                    cfg.vox_idx = peakvox_idx;
                 end
                 
                 % move MRI crosshairs to desired/peak voxel
-                spm_orthviews('Reposition',st.nmt.pos(cfg.vox,:))
+                spm_orthviews('Reposition',st.nmt.pos(cfg.vox_idx,:))
                 
-                if(length(cfg.time(1)) == 1)
-                    cfg.time(2) = cfg.time(1);
+                if(length(cfg.time_idx(1)) == 1)
+                    cfg.time_idx(2) = cfg.time_idx(1);
                 end
             otherwise
                 st.nmt.fun = getsubfield(functional, cfg.funparameter);
@@ -768,5 +768,5 @@ else
     fprintf('no functional parameter\n');
 end
 
-nmt_spm8_plot(cfg)
-nmt_image
+nmt_spm8_plot(cfg);
+nmt_image;

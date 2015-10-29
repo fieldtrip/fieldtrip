@@ -5,14 +5,14 @@ if(~exist('cfg','var'))
     cfg = st.nmt.cfg;
 end
 
-% if there is no time dimension, set cfg.time to index first and only column
-if(~isfield(cfg,'time'))
-    cfg.time = [1 1];
+% if there is no time dimension, set cfg.time_idx to index first and only column
+if(~isfield(cfg,'time_idx'))
+    cfg.time_idx = [1 1];
 end
 
 
-if(cfg.time(1) == cfg.time(2)) % single time point selected
-    fun = st.nmt.fun(:,cfg.time(1));
+if(cfg.time_idx(1) == cfg.time_idx(2)) % single time point selected
+    fun = st.nmt.fun(:,cfg.time_idx(1));
     
     scalemax = max(abs(st.nmt.fun(:)));
     scalemin = -max(abs(st.nmt.fun(:)));
@@ -21,7 +21,7 @@ if(cfg.time(1) == cfg.time(2)) % single time point selected
     % grayscale for MRI; jet for painted activation
     set(st.fig,'Colormap',[gray(64);jet(64)]);
 else % time interval selected
-    fun = nmt_ts_intervalpower(st.nmt.fun(:,cfg.time(1):cfg.time(2)));
+    fun = nmt_ts_intervalpower(st.nmt.fun(:,cfg.time_idx(1):cfg.time_idx(2)));
     
     scalemax = max(fun(:));
     scalemin = min(fun(:));
@@ -34,9 +34,7 @@ end
 
 msk = st.nmt.msk;
 msk(msk==0) = NaN;
-fun = msk(:,cfg.time(1)).*fun;
-
-disp(['t = ' num2str(st.nmt.time(cfg.time))]);
+fun = msk(:,cfg.time_idx(1)).*fun;
 
 %% figure out voxelsize
 % in case of nonstandard nifti orientation
