@@ -85,7 +85,7 @@ if strcmp(cfg.computestat,'yes') % compute the statistic
     clear dat
     
     % convert correlation coefficient to t-statistic (for MCP correction): t^2 = DF*R^2 / (1-R^2)
-    tstat = rho*(sqrt(df))./sqrt((1-rho.^2));
+    tstat = rho*(sqrt(nrepl-2))./sqrt((1-rho.^2));
     
     s.stat = tstat; % store t values in s.stat variable for use with ft_statistics_montecarlo.m
     s.rho = rho; % store r values in s.rho variable (these are the actual correlation coefficients)
