@@ -156,8 +156,11 @@ if ~isempty(threshold)
     threshold = eval([threshold '(dat)']);
   end
   % discretize the signal
-  dat(abs(dat)<threshold)  = 0;
-  dat(abs(dat)>=threshold) = 1;
+  lo = find(dat<threshold);
+  hi = find(dat>=threshold);
+  dat(lo) = 0;
+  dat(hi) = 1;
+  clear lo hi
 end
 
 if strcmp(detectflank, 'auto')
