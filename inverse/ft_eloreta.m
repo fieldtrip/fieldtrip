@@ -84,12 +84,8 @@ if ~isfield(dip, 'inside')
   dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
-if any(dip.inside>1)
-  % convert to logical representation
-  tmp = false(size(dip.pos,1),1);
-  tmp(dip.inside) = true;
-  dip.inside = tmp;
-end
+% ensure logical representation
+dip.inside = logical(dip.inside);
 
 % keep the original details on inside and outside positions
 originside = dip.inside;
