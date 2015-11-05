@@ -42,6 +42,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.selfun                  = string, name of function which is evaluated using the right-click context menu
 %                                  The selected data and cfg.selcfg are passed on to this function.
 %   cfg.selcfg                  = configuration options for function in cfg.selfun
+%   cfg.seldat                  = 'selected' or 'all', specifies whether only the currently selected or all channels
+%                                 will be passed to the selfun (default = 'selected')
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties.
 %                                 If the databrowser crashes, set to 'painters'.
 %
@@ -168,9 +170,10 @@ cfg.artfctdef       = ft_getopt(cfg, 'artfctdef', struct);
 cfg.selectfeature   = ft_getopt(cfg, 'selectfeature','visual');     % string or cell-array
 cfg.selectmode      = ft_getopt(cfg, 'selectmode', 'markartifact');
 cfg.blocksize       = ft_getopt(cfg, 'blocksize');                 % now used for both continuous and non-continuous data, defaulting done below
-cfg.preproc         = ft_getopt(cfg, 'preproc');                     % see preproc for options
-cfg.selfun          = ft_getopt(cfg, 'selfun');                      % default functions: 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
-cfg.selcfg          = ft_getopt(cfg, 'selcfg');                      % defaulting done below, requires layouts/etc to be processed
+cfg.preproc         = ft_getopt(cfg, 'preproc');                   % see preproc for options
+cfg.selfun          = ft_getopt(cfg, 'selfun');                    % default functions: 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
+cfg.selcfg          = ft_getopt(cfg, 'selcfg');                    % defaulting done below, requires layouts/etc to be processed
+cfg.seldat          = ft_getopt(cfg, 'seldat', 'current');
 cfg.colorgroups     = ft_getopt(cfg, 'colorgroups', 'sequential');
 cfg.channelcolormap = ft_getopt(cfg, 'channelcolormap', [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75]);
 cfg.eegscale        = ft_getopt(cfg, 'eegscale');
@@ -528,34 +531,8 @@ end
 
 % cfg.selfun - labels that are presented in rightclick menu, and is appended using ft_getuserfun(..., 'browse') later on to create a function handle
 % cfg.selcfg - cfgs for functions to be executed
-defselfun = [];
-defselcfg = [];
-% simplefft
-defselfun{1} = 'simpleFFT';
-tmpcfg = [];
-tmpcfg.chancolors = chancolors;
-defselcfg{1}  = tmpcfg;
-% multiplotER
-defselfun{2}  = 'multiplotER';
-tmpcfg = [];
-tmpcfg.layout = cfg.layout;
-defselcfg{2}  = tmpcfg;
-% topoplotER
-defselfun{3}  = 'topoplotER';
-tmpcfg = [];
-tmpcfg.layout = cfg.layout;
-defselcfg{3}  = tmpcfg;
-% topoplotVAR
-defselfun{4}  = 'topoplotVAR';
-tmpcfg = [];
-tmpcfg.layout = cfg.layout;
-defselcfg{4}  = tmpcfg;
-% movieplotER
-defselfun{5}  = 'movieplotER';
-tmpcfg = [];
-tmpcfg.layout = cfg.layout;
-tmpcfg.interactive = 'yes';
-defselcfg{5}  = tmpcfg;
+defselfun = {};
+defselcfg = {};
 
 
 % add defselfuns to user-specified defselfuns
@@ -563,9 +540,36 @@ if ~iscell(cfg.selfun) && ~isempty(cfg.selfun)
   cfg.selfun = {cfg.selfun};
   cfg.selfun = [cfg.selfun defselfun];
   % do the same for the cfgs
-  cfg.selcfg = {cfg.selcfg}; % assume the cfg isnt a cell
+  cfg.selcfg = {cfg.selcfg}; % assume the cfg is not a cell-array
   cfg.selcfg = [cfg.selcfg defselcfg];
 else
+  % simplefft
+  defselcfg{1} = [];
+  defselcfg{1}.chancolors = chancolors;
+  defselfun{1} = 'simpleFFT';
+  % multiplotER
+  defselcfg{2} = [];
+  defselcfg{2}.layout = cfg.layout;
+  defselfun{2} = 'multiplotER';
+  % topoplotER
+  defselcfg{3} = [];
+  defselcfg{3}.layout = cfg.layout;
+  defselfun{3} = 'topoplotER';
+  % topoplotVAR
+  defselcfg{4} = [];
+  defselcfg{4}.layout = cfg.layout;
+  defselfun{4} = 'topoplotVAR';
+  % movieplotER
+  defselcfg{5} = [];
+  defselcfg{5}.layout      = cfg.layout;
+  defselcfg{5}.interactive = 'yes';
+  defselfun{5} = 'movieplotER';
+  % audiovideo
+  defselcfg{6} = [];
+  defselcfg{6}.audiofile = ft_getopt(cfg, 'audiofile');
+  defselcfg{6}.videofile = ft_getopt(cfg, 'videofile');
+  defselfun{6} = 'audiovideo';
+  
   cfg.selfun = defselfun;
   cfg.selcfg = defselcfg;
 end
@@ -1064,21 +1068,21 @@ else
   selfunind = strcmp(cfg.selfun, cmenulab);
   
   % cut out the requested data segment
-  seldata.label    = opt.curdata.label;
-  seldata.time{1}  = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
-  seldata.trial{1} = ft_fetch_data(opt.curdata, 'begsample', begsel, 'endsample', endsel);
-  seldata.fsample  = opt.fsample;
-  seldata.cfg.trl  = [begsel endsel offset];
-  if isfield(opt.orgdata, 'grad')
-    seldata.grad = opt.orgdata.grad;
+  switch cfg.seldat
+    case 'current'
+      seldata             = keepfields(opt.curdata, {'label', 'grad', 'elec', 'hdr'});
+      seldata.trial{1}    = ft_fetch_data(opt.curdata, 'begsample', begsel, 'endsample', endsel);
+    case 'all'
+      seldata             = keepfields(opt.org, {'label', 'grad', 'elec', 'hdr'});
+      seldata.trial{1}    = ft_fetch_data(opt.orgdata, 'begsample', begsel, 'endsample', endsel);
   end
-  if isfield(opt.orgdata, 'elec')
-    seldata.elec = opt.orgdata.elec;
-  end
+  seldata.time{1}     = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);
+  seldata.fsample     = opt.fsample;
+  seldata.sampleinfo  = [begsel endsel offset];
   
   % prepare input
   funhandle = ft_getuserfun(cmenulab, 'browse');
-  funcfg = cfg.selcfg{selfunind};
+  funcfg    = cfg.selcfg{selfunind};
   % get windowname and give as input (can be used for the other functions as well, not implemented yet)
   if ~strcmp(opt.trialviewtype, 'trialsegment')
     str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
@@ -1103,10 +1107,7 @@ editfontunits = cfg.editfontunits;
 
 % parse cfg.preproc
 if ~isempty(cfg.preproc)
-  tmpcfg = cfg.preproc;
-  cfg = [];
-  cfg.preproc = tmpcfg;
-  code = printstruct('cfg', cfg);
+  code = printstruct('cfg', cfg.preproc);
 else
   code = '';
 end
@@ -1373,17 +1374,17 @@ switch key
     % select the vertical scaling
     response = inputdlg('vertical scale, [ymin ymax], ''maxabs'' or ''maxmin''', 'specify', 1, {['[ ' num2str(cfg.ylim) ' ]']});
     if ~isempty(response)
-      response = ['[' response{1} ']']; % convert to string and add brackets, just to ensure that str2num will work
-      if strcmp(response, '[maxmin]')
+      if strcmp(response, 'maxmin')
         minval = min(opt.curdata.trial{1}(:));
         maxval = max(opt.curdata.trial{1}(:));
         cfg.ylim = [minval maxval];
-      elseif strcmp(response, '[maxabs]')
+      elseif strcmp(response, 'maxabs')
         minval = min(opt.curdata.trial{1}(:));
         maxval = max(opt.curdata.trial{1}(:));
         cfg.ylim = [-max(abs([minval maxval])) max(abs([minval maxval]))];
       else
-        tmp = str2num(response);
+        % convert to string and add brackets, just to ensure that str2num will work
+        tmp = str2num(['[' response{1} ']']);
         if numel(tmp)==2
           cfg.ylim = tmp;
         else
@@ -1505,7 +1506,7 @@ changedchanflg = true;
 if opt.changedchanflg
   changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
   opt.changedchanflg = false;
-end  
+end
 
 if ~isempty(opt.event) && isstruct(opt.event)
   % select only the events in the current time window
@@ -1581,6 +1582,7 @@ end
 opt.curdata.label      = lab;
 opt.curdata.time{1}    = tim;
 opt.curdata.trial{1}   = dat;
+opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample offset];
 

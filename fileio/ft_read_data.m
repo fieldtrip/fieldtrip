@@ -646,8 +646,8 @@ switch dataformat
     [host, port] = filetype_check_uri(filename);
 
     if blocking
-      nsamples = endsample; % indices should be zero-offset
-      nevents  = 0;         % disable waiting for events
+      nsamples  = endsample; % indices should be zero-offset
+      nevents   = 0;         % disable waiting for events
       available = buffer_wait_dat([nsamples nevents timeout], host, port);
       if available.nsamples<nsamples
         error('buffer timed out while waiting for %d samples', nsamples);
@@ -669,14 +669,14 @@ switch dataformat
     offset        = begsample-1;
     numsamples    = endsample-begsample+1;
     if isfield(hdr, 'precision'),
-      sampletype    = hdr.precision;
+      sampletype  = hdr.precision;
     else
-      sampletype    = 'double'; %original format without precision info in hdr is always in double
+      sampletype  = 'double'; %original format without precision info in hdr is always in double
     end
     if strcmp(sampletype, 'single')
-      samplesize    = 4;
+      samplesize  = 4;
     elseif strcmp(sampletype, 'double')
-      samplesize    = 8;
+      samplesize  = 8;
     end
     [fid,message] = fopen(datafile,'rb','ieee-le');
     % jump to the desired data
@@ -1274,6 +1274,15 @@ switch dataformat
     dat     = LoadBinary(filename, 'frequency', hdr.Fs, 'offset', begsample-1, 'nRecords', endsample-begsample, 'nChannels', hdr.orig.nChannels, 'channels', chanindx, 'precision', precision).';
     scaling = hdr.orig.voltageRange/hdr.orig.amplification/(2^hdr.orig.nBits); % scale to S.I. units, i.e. V
     dat     = scaling.*dat;
+
+  case 'videomeg_aud'
+    dat = read_videomeg_aud(filename, hdr, begsample, endsample);
+    dat = dat(chanindx,:);
+    
+  case 'videomeg_vid'
+    dat = read_videomeg_vid(filename, hdr, begsample, endsample);
+    dat = dat(chanindx,:);
+    
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
@@ -1281,7 +1290,7 @@ switch dataformat
       error('unsupported data format (%s)', dataformat);
     end
     
-end
+end % switch dataformat
 
 if ~exist('dimord', 'var')
   dimord = 'chans_samples';  % almost all low-level readers return the data as 2D array

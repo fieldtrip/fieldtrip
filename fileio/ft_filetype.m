@@ -1064,6 +1064,16 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   manufacturer = 'BrainVISA';
   content = 'annotation/metadata';
 
+  % raw audio and video data from https://github.com/andreyzhd/VideoMEG
+elseif filetype_check_extension(filename, '.aud') && filetype_check_header(filename, 'ELEKTA_AUDIO_FILE')
+  type = 'videomeg_aud';
+  manufacturer = 'VideoMEG';
+  content = 'audio';
+elseif filetype_check_extension(filename, '.vid') && filetype_check_header(filename, 'ELEKTA_VIDEO_FILE')
+  type = 'videomeg_vid';
+  manufacturer = 'VideoMEG';
+  content = 'video';
+  
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files

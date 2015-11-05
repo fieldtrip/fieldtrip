@@ -2051,7 +2051,7 @@ switch headerformat
       end
     end
     hdr.orig = orig;
-  
+    
   case 'blackrock_nsx'
     ft_hastoolbox('NPMK', 1);
     
@@ -2075,8 +2075,16 @@ switch headerformat
     hdr.label       = deblank({orig.ElectrodesInfo.Label})';
     hdr.chanunit    = deblank({hdr.orig.ElectrodesInfo.AnalogUnits})';
     
+  case 'videomeg_aud'
+    hdr = read_videomeg_aud(filename);
+    
+  case 'videomeg_vid'
+    hdr = read_videomeg_vid(filename);
+    checkUniqueLabels = false;
+     
   case 'blackrock_nev'
     error('this still needs some work');
+    
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);
@@ -2130,12 +2138,12 @@ end
 % as of November 2011, the header is supposed to include the channel type (see FT_CHANTYPE,
 % e.g. meggrad, megref, eeg) and the units of each channel (see FT_CHANUNIT, e.g. uV, fT)
 
-if ~isfield(hdr, 'chantype')
+if ~isfield(hdr, 'chantype') && checkUniqueLabels
   % use a helper function which has some built in intelligence
   hdr.chantype = ft_chantype(hdr);
 end % for
 
-if ~isfield(hdr, 'chanunit')
+if ~isfield(hdr, 'chanunit') && checkUniqueLabels
   % use a helper function which has some built in intelligence
   hdr.chanunit = ft_chanunit(hdr);
 end % for
@@ -2152,8 +2160,8 @@ end
 
 % ensure that these are column arrays
 hdr.label    = hdr.label(:);
-hdr.chantype = hdr.chantype(:);
-hdr.chanunit = hdr.chanunit(:);
+if isfield(hdr, 'chantype'), hdr.chantype = hdr.chantype(:); end
+if isfield(hdr, 'chanunit'), hdr.chanunit = hdr.chanunit(:); end
 
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up
