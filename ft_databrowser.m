@@ -568,6 +568,7 @@ else
   defselcfg{6} = [];
   defselcfg{6}.audiofile = ft_getopt(cfg, 'audiofile');
   defselcfg{6}.videofile = ft_getopt(cfg, 'videofile');
+  defselcfg{6}.anonimize = ft_getopt(cfg, 'anonimize');
   defselfun{6} = 'audiovideo';
   
   cfg.selfun = defselfun;

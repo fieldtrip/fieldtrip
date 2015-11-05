@@ -14,6 +14,7 @@ function ft_audiovideobrowser(cfg, data)
 % and/or the video file
 %   cfg.audiofile = string
 %   cfg.videofile = string
+%   cfg.anonimize = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
 %
 % The data can specify the segments of interest, but those can be overruled by
 %   cfg.trl       = Nx3 matrix, see FT_DEFINETRIAL
@@ -62,6 +63,8 @@ data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'h
 cfg.audiofile   = ft_getopt(cfg, 'audiofile');
 cfg.videofile   = ft_getopt(cfg, 'videofile');
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
+cfg.anonimize   = ft_getopt(cfg, 'anonimize');
+
 
 % the data structure is needed for the synchronization information
 datahdr = data.hdr;
@@ -145,6 +148,11 @@ while (true)
     
     videodat = uint8(videodat);
     videodat = reshape(videodat, [videohdr.orig.dim size(videodat,2)]);
+    
+    if ~isempty(cfg.anonimize)
+      % place a bar over the eyes
+      videodat(cfg.anonimize(1):cfg.anonimize(2), cfg.anonimize(3):cfg.anonimize(4), :) = 0;
+    end
     
     % remember the header details to speed up subsequent calls
     previous_videohdr  = videohdr;
