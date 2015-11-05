@@ -45,7 +45,7 @@ axis tight
 %%% MASKING
 % 5 style surf with binary mask
 figure
-ft_plot_topo(x, y, val, 'datmask', val>0.5, 'style', 'surf');
+ft_plot_topo(x, y, val, 'datmask', val>0.5, 'style', 'surf', 'clim', [0 1]);
 hold on; plot(x, y, 'k*')
 axis tight
 
