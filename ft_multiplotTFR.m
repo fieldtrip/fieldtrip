@@ -516,9 +516,6 @@ end
 if isfield(cfg, 'colormap')
   if size(cfg.colormap, 2)~=3, error('multiplotTFR(): Colormap must be a n x 3 matrix'); end
   set(gcf, 'colormap', cfg.colormap);
-  ncolors = size(cfg.colormap,1);
-else
-  ncolors =[]; % let the low-level function deal with this
 end
 
 % Plot channels:
@@ -541,18 +538,18 @@ for k=1:length(chanseldat)
   if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
     nans_mask = ~isnan(cdata);
     mask = double(nans_mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k),'ncolors',ncolors)
+    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
   elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
     nans_mask = ~isnan(cdata);
     mask = nans_mask .* mdata;
     mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k),'ncolors',ncolors)
+    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
   elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
     mask = mdata;
     mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k),'ncolors',ncolors)
+    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
   else
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k),'ncolors',ncolors)
+    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
   end
   
   % Currently the handle isn't being used below, this is here for possible use in the future

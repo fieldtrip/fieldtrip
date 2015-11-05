@@ -70,7 +70,6 @@ mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
 clim          = ft_getopt(varargin, 'clim', []);
 parent        = ft_getopt(varargin, 'parent', []);
-ncolors       = ft_getopt(varargin, 'ncolors',        64); % in the caller function, a colormap can be used with an aribtrary resolution, this is only relevant for the saturation based coloring
 
 % check for nans in the data, they can be still left incase people want to mask non channels.
 if any(isnan(dat))
@@ -257,6 +256,9 @@ if strcmp(style, 'surf') || strcmp(style, 'surfiso')
   
 elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   % Plot the surface in an alternate style (using imagesc and saturation masking) so that it can be nicely saved to a vectorized format
+  
+  % determine ncolors automatically
+  ncolors = size(get(gcf,'colormap'),1); % if a figure has been created by the caller function, gcf changes nothing, if not, a figure is created
   
   % set mask and check for clim
   if isempty(clim)

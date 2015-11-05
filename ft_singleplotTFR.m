@@ -453,9 +453,6 @@ end
 if isfield(cfg,'colormap')
   if size(cfg.colormap,2)~=3, error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
   set(gcf,'colormap',cfg.colormap);
-  ncolors = size(cfg.colormap,1);
-else
-  ncolors =[]; % let the low-level function deal with this
 end
 
 % Draw plot (and mask NaN's if requested):
@@ -463,17 +460,17 @@ cla
 if isequal(cfg.masknans,'yes') && isempty(cfg.maskparameter)
   nans_mask = ~isnan(datamatrix);
   mask = double(nans_mask);
-  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask,'ncolors',ncolors)
+  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'yes') && ~isempty(cfg.maskparameter)
   nans_mask = ~isnan(datamatrix);
   mask = mask .* nans_mask;
   mask = double(mask);
-  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask,'ncolors',ncolors)
+  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 elseif isequal(cfg.masknans,'no') && ~isempty(cfg.maskparameter)
   mask = double(mask);
-  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask,'ncolors',ncolors)
+  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','highlightstyle',cfg.maskstyle,'highlight', mask)
 else
-  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip','ncolors',ncolors)
+  ft_plot_matrix(xvector, yvector, datamatrix, 'clim',[zmin,zmax],'tag','cip')
 end
 hold on
 axis xy;

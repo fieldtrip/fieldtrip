@@ -79,7 +79,6 @@ highlight      = ft_getopt(varargin, 'highlight');
 highlightstyle = ft_getopt(varargin, 'highlightstyle', 'opacity');
 box            = ft_getopt(varargin, 'box',            false);
 tag            = ft_getopt(varargin, 'tag',            '');
-ncolors        = ft_getopt(varargin, 'ncolors',        64); % in the caller function, a colormap can be used with an aribtrary resolution, this is only relevant for the saturation based coloring
 
 if ~isempty(highlight) && ~isequal(size(highlight), size(cdat))
   error('the dimensions of the highlight should be identical to the dimensions of the data');
@@ -218,6 +217,8 @@ if ~isempty(highlight)
       alim([0 1]);
     
     case 'saturation'
+      % determine ncolors automatically
+      ncolors = size(get(gcf,'colormap'),1); % if a figure has been created by the caller function, gcf changes nothing, if not, a figure is created (which the below would do otherwise)
       satmask = highlight;
       tmpcdat = cdat;
       % Transform cdat-values to have a 0-64 range, dependent on clim
