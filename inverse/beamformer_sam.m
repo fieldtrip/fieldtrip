@@ -154,7 +154,7 @@ for diplop=1:size(dip.pos,1)
     [junk, min_ind] = min(all_costfun_val);
     
     optim_options = optimset('Display', 'final', 'TolX', 1e-3, 'Display', 'off');
-    [opt_angle, fval, exitflag, output] = fminsearch('SAM_costfun', all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, all_cov, inv_cov, noise_cov);
+    [opt_angle, fval, exitflag, output] = fminsearch(@SAM_costfun, all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, all_cov, inv_cov, noise_cov);
     MDip        = settang(opt_angle, tanu, tanv);
     MagDip      = sqrt(dot(MDip,MDip));
     opt_vox_or  = (MDip/MagDip)';
