@@ -42,6 +42,9 @@ grad        = ft_getopt(varargin, 'grad');
 headshape   = ft_getopt(varargin, 'headshape');
 inwardshift = ft_getopt(varargin, 'inwardshift');
 
+% for backward compatibility
+headmodel = fixpos(headmodel);
+
 % determine the type of volume conduction model
 switch ft_voltype(headmodel)
   
@@ -123,8 +126,8 @@ switch ft_voltype(headmodel)
     brain = brain | headmodel.tissue == find(strcmp(headmodel.tissuelabel, 'white'));
     brain = brain | headmodel.tissue == find(strcmp(headmodel.tissuelabel, 'csf'));
     
-    minbrain = min(headmodel.dippos(headmodel.hex(brain(:)), :), [], 1);
-    maxbrain = max(headmodel.dippos(headmodel.hex(brain(:)), :), [], 1);
+    minbrain = min(headmodel.pos(headmodel.hex(brain(:)), :), [], 1);
+    maxbrain = max(headmodel.pos(headmodel.hex(brain(:)), :), [], 1);
     
     mindippos = min(dippos, [], 1);
     maxdippos = max(dippos, [], 1);
