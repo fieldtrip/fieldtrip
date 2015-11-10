@@ -23,8 +23,8 @@
 #define OPENBCI_BUFLEN  33
 #define OPENBCI_NCHANS  11 /* 8x EEG, 3x accelerometer */
 #define OPENBCI_FSAMPLE 250
-#define OPENBCI_CALIB1  (1000000 * 4.5 / 24 / (2^23-1)) /* in uV, for 24x gain */
-#define OPENBCI_CALIB2  0.002 / (2^4)                   /* in mG */
+#define OPENBCI_CALIB1  (4.5   / (24 * (2^23-1))) /* in uV, for 24x gain */
+#define OPENBCI_CALIB2  (0.002 / (2^4))           /* in mG */
 
 int keepRunning = 1;
 
@@ -656,7 +656,7 @@ int main(int argc, char *argv[]) {
         serialWrite (&SP, 1, "]");
     else if (strcasecmp (config.testsignal, "off") != 0)
     {
-        fprintf (stderr, "Incorrect specification of datalog\n");
+        fprintf (stderr, "Incorrect specification of testsignal\n");
         return 1;
     }
 
