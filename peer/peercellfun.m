@@ -48,7 +48,7 @@ function varargout = peercellfun(fname, varargin)
 % $Id$
 % -----------------------------------------------------------------------
 
-if ft_platform_suports('onCleanup')
+if ft_platform_supports('onCleanup')
   % switch to zombie when finished or when ctrl-c gets pressed
   % the onCleanup function does not exist for older versions
   onCleanup(@peerzombie);
