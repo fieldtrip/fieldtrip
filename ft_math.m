@@ -5,16 +5,21 @@ function data = ft_math(cfg, varargin)
 %
 % Use as
 %   data = ft_math(cfg, data1, data2, ...)
-% with one or multiple FieldTrip data structures as input and where cfg is a
-% configuration structure that should contain
-%
-%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply',
-%                   'log10', 'abs' or a functional specification of the operation (see below)
-%  cfg.parameter  = string, field from the input data on which the operation is
+% with one or multiple FieldTrip data structures as the input and the configuration
+% structure cfg in which you specify the mathematical operation that is to be
+% executed on the desired parameter from the data
+%   cfg.parameter = string, field from the input data on which the operation is
 %                   performed, e.g. 'pow' or 'avg'
+%   cfg.operation = string, for example '(x1-x2)/(x1+x2)' or 'x1/6'
 %
-% Optionally, if you specify only a single input data structure and the operation
-% 'add', 'subtract', 'divide' or 'multiply', the configuration should also contain
+% In the specification of the mathematical operation, x1 is the parameter obtained
+% from the first input data structure, x2 from the second, etc.
+%
+% Rather than specifying the operation as a string that is evaluated, you can also
+% specify it as a single operation. The advantage is that it is computed faster.
+%    cfg.operation = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10', 'abs'
+% If you specify only a single input data structure and the operation is 'add',
+% 'subtract', 'divide' or 'multiply', the configuration should also contain:
 %   cfg.scalar    = scalar value to be used in the operation
 %
 % The operation 'add' is implemented as follows
@@ -41,11 +46,6 @@ function data = ft_math(cfg, varargin)
 %   y = x1 * s
 % if you specify one input argument and a scalar value.
 %
-% It is also possible to specify your own operation as a string, like this
-%   cfg.operation = '(x1-x2)/(x1+x2)'
-% or using 's' for the scalar value like this
-%   cfg.operation = '(x1-x2)^s'
-%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
@@ -64,7 +64,7 @@ function data = ft_math(cfg, varargin)
 %                involve element-wise combination of the data and the
 %                matrix.
 
-% Copyright (C) 2012-2014, Robert Oostenveld
+% Copyright (C) 2012-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
