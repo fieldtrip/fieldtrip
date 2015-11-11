@@ -56,7 +56,7 @@ switch cfg.method
     % give the user instructions
     disp('Use the mouse to click on the desired electrode positions');
     disp('Afterwards you may have to update the electrode labels');
-    disp('Close the figure or press "q" when you are done');
+    disp('Press "q" when you are done');
     % open a figure
     figure;
     % plot the faces of the 2D or 3D triangulation

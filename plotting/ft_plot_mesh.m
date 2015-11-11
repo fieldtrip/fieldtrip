@@ -76,8 +76,13 @@ end
 
 % get the optional input arguments
 vertexcolor  = ft_getopt(varargin, 'vertexcolor');
-facecolor    = ft_getopt(varargin, 'facecolor',   'white');
-edgecolor    = ft_getopt(varargin, 'edgecolor',   'k');
+if isfield(mesh, 'tri') && size(mesh.tri,1)>10000
+  facecolor    = ft_getopt(varargin, 'facecolor',   [0.5 0.5 0.5]);
+  edgecolor    = ft_getopt(varargin, 'edgecolor',   'none');
+else
+  facecolor    = ft_getopt(varargin, 'facecolor',   'white');
+  edgecolor    = ft_getopt(varargin, 'edgecolor',   'k');
+end
 faceindex    = ft_getopt(varargin, 'faceindex',   false);
 vertexindex  = ft_getopt(varargin, 'vertexindex', false);
 vertexsize   = ft_getopt(varargin, 'vertexsize',  10);
