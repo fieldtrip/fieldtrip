@@ -136,6 +136,10 @@ if ~isempty(str) && ~strcmp(str, 'unknown')
       labelx = {'-X (left)'      '+X (right)'};
       labely = {'-Y (inferior)'  '+Y (superior)'};
       labelz = {'-Z (anterior)'  '+Z (posterior)'};
+    case {'lps'}
+      labelx = {'-X (right)'      '+X (left)'};
+      labely = {'-Y (anterior)'  '+Y (posterior)'};
+      labelz = {'-Z (inferior)'  '+Z (superior)'};
     otherwise
       error('unknown coordsys');
   end
