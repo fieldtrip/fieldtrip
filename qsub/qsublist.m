@@ -165,7 +165,12 @@ switch cmd
       switch backend
         case 'torque'
           [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o "[A-Z]"']);
-          retval = strcmp(strtrim(jobstatus) ,'C');
+          if isempty(jobstatus)
+            warning('cannot determine the status for pbsid %s', pbsid);
+            retval = 1;
+          else
+            retval = strcmp(strtrim(jobstatus) ,'C');
+          end
         case 'lsf'
           [dum, jobstatus] = system(['bjobs ' pbsid ' | awk ''NR==2'' | awk ''{print $3}'' ']);
           retval = strcmp(strtrim(jobstatus), 'DONE');
