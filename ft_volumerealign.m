@@ -512,8 +512,7 @@ switch cfg.method
     
     if ischar(cfg.headshape)
       % old-style specification, convert cfg into new representation
-      cfg.headshape.headshape   = cfg.headshape;
-      
+      cfg.headshape = struct('headshape', cfg.headshape);
       if isfield(cfg, 'scalpsmooth'),
         cfg.headshape.scalpsmooth = cfg.scalpsmooth;
         cfg = rmfield(cfg, 'scalpsmooth');
@@ -522,9 +521,10 @@ switch cfg.method
         cfg.headshape.scalpthreshold = cfg.scalpthreshold;
         cfg = rmfield(cfg, 'scalpthreshold');
       end
+      
     elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
       % old-style specification, convert into new representation
-      cfg.headshape.headshape   = cfg.headshape;
+      cfg.headshape = struct('headshape', cfg.headshape);
       if isfield(cfg, 'scalpsmooth'),
         cfg.headshape.scalpsmooth = cfg.scalpsmooth;
         cfg = rmfield(cfg, 'scalpsmooth');
@@ -533,12 +533,12 @@ switch cfg.method
         cfg.headshape.scalpthreshold = cfg.scalpthreshold;
         cfg = rmfield(cfg, 'scalpthreshold');
       end
-      
     elseif isstruct(cfg.headshape)
       % new-style specification, do nothing
     else
       error('incorrect specification of cfg.headshape');
     end
+    
     if ischar(cfg.headshape.headshape)
       shape = ft_read_headshape(cfg.headshape.headshape);
     else
