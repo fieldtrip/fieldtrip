@@ -12,6 +12,7 @@ function ft_plot_axes(object, varargin)
 % Additional optional input arguments should be specified as key-value pairs
 % and can include
 %   axisscale    = scaling factor for the reference axes and sphere (default = 1)
+%   fontcolor    = string (default = 'y')
 %
 % See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_VOL
 
@@ -35,7 +36,8 @@ function ft_plot_axes(object, varargin)
 %
 % $Id$
 
-axisscale = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
+axisscale = ft_getopt(varargin, 'axisscale', 1);   % this is used to scale the axmax and rbol
+fontcolor = ft_getopt(varargin, 'fontcolor', 'y'); % default is yellow
 
 if isfield(object, 'unit')
   unit = object.unit;
@@ -99,12 +101,12 @@ ft_plot_mesh(O, 'edgecolor', 'none');
 [labelx, labely, labelz] = xyz2label(coordsys);
 
 % add the labels to the axis
-text(xdat(1,1),ydat(1,1),zdat(1,1),labelx{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(1,2),ydat(1,2),zdat(1,2),labely{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(1,3),ydat(1,3),zdat(1,3),labelz{1},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,1),ydat(2,1),zdat(2,1),labelx{2},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,2),ydat(2,2),zdat(2,2),labely{2},'color','y','fontsize',15,'linewidth',2);
-text(xdat(2,3),ydat(2,3),zdat(2,3),labelz{2},'color','y','fontsize',15,'linewidth',2);
+text(xdat(1,1), ydat(1,1), zdat(1,1), labelx{1}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
+text(xdat(1,2), ydat(1,2), zdat(1,2), labely{1}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
+text(xdat(1,3), ydat(1,3), zdat(1,3), labelz{1}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
+text(xdat(2,1), ydat(2,1), zdat(2,1), labelx{2}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
+text(xdat(2,2), ydat(2,2), zdat(2,2), labely{2}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
+text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
 
 if ~prevhold
   hold off
