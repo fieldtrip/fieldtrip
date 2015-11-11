@@ -64,7 +64,10 @@ if issvn
   [status, output] = system('svn info');
   cd(olddir);
   if status > 0
-    warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
+    if ~ispc
+      % the command line tools will probably not be available on windows
+      warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
+    end
     ftver = 'unknown';
   else
     rev = regexp(output, 'Revision: (.*)', 'tokens', 'dotexceptnewline');
@@ -80,7 +83,8 @@ elseif isgit
   [status, output] = system(sprintf('git show > %s', tmpfile));
   cd(olddir);
   if status > 0
-    error('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
+    % FIXME the command line tools will probably not be available on windows
+    error('you seem to have an GIT development copy of FieldTrip, yet ''git show'' does not work as expected');
   end
   
   fp = fopen(tmpfile);
