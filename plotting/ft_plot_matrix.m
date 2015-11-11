@@ -29,7 +29,7 @@ function ft_plot_matrix(varargin)
 % Example
 %   ft_plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 %
-% See also T_PLOT_VECTOR
+% See also FT_PLOT_VECTOR
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %
