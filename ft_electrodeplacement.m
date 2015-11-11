@@ -1,10 +1,7 @@
 function [elec] = ft_electrodeplacement(cfg, varargin)
 
-% FIXME: embed in volumerealign?
-% FIXME: plot markers! fiducials?
-% FIXME; CT dimensions
-% FIXME: result button?
 % FIXME: magnet option
+% FIXME: result button?
 
 % do the general setup of the function
 ft_defaults
@@ -49,7 +46,6 @@ switch cfg.method
     headshape = fixpos(varargin{1});
     headshape = ft_determine_coordsys(headshape);
 end
-
 
 switch cfg.method
   case 'headshape'
@@ -182,6 +178,9 @@ switch cfg.method
       'Callback', @cb_sliceslider);
     
     % electrode listbox
+    if isempty(cfg.channel) % ability to specify grid types, e.g. grid1_elec1, strip1_elec1?
+      cfg.channel = strcat({'elec'},int2str((1:150).')).'; % elec1, elec2, ...
+    end
     for c = 1:numel(cfg.channel)
       chanstrings{c} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
     end
@@ -196,28 +195,27 @@ switch cfg.method
     % switches / radio buttons
     h8 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
+      'Value', 0, ...
       'String','Magnet',...
       'Units', 'normalized', ...
       'Position',[2*xsize(1) 0.15 xsize(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
-      'HandleVisibility','on');
+      'HandleVisibility','on', ...
+      'Callback', @cb_magnetbutton);
     
     h9 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
+      'Value', 0, ...
       'String','Labels',...
       'Units', 'normalized', ...
       'Position',[2*xsize(1) 0.07 xsize(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
-      'HandleVisibility','on');
+      'HandleVisibility','on', ...
+      'Callback', @cb_labelsbutton);
     
-    if isfield(cfg, 'pnt')
-      pnt = cfg.pnt;
-    else
-      pnt = zeros(0,3);
-    end
+    markervox   = zeros(0,3);
     markerpos   = zeros(0,3);
     markerlabel = {};
-    markercolor = {};
     
     % instructions to the user
     fprintf(strcat(...
@@ -231,6 +229,7 @@ switch cfg.method
     opt.ysize         = ysize;
     opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9];
     opt.handlesfigure = h;
+    opt.handlesmarker = [];
     opt.quit          = false;
     opt.ana           = dat;
     opt.update        = [1 1 1];
@@ -238,13 +237,13 @@ switch cfg.method
     opt.tag           = 'ik';
     opt.mri           = mri;
     opt.showcrosshair = true;
+    opt.vox           = [opt.ijk]; % voxel coordinates (physical units)
+    opt.pos           = ft_warp_apply(mri.transform, opt.ijk); % head coordinates (e.g. mm)
+    opt.showlabels    = 0;
+    opt.label         = cfg.channel;
     opt.showmarkers   = true;
-    opt.markers       = {markerpos markerlabel markercolor};
+    opt.markers       = repmat({markervox markerpos markerlabel},numel(cfg.channel),1);
     opt.clim          = cfg.clim;
-    opt.fiducial      = [];
-    opt.fidlabel      = cfg.channel;
-    opt.fidletter     = [];
-    opt.pnt           = pnt;
     if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
       opt.unit = mri.unit;  % this is shown in the feedback on screen
     else
@@ -260,14 +259,25 @@ switch cfg.method
     end
     delete(h);
     
+    % collect the results
+    elec.label  = {};
     elec.elecpos  = [];
-    elec.chanpos  = elec.elecpos;
-    elec.label    = [];
-    elec.type     = [];
-    elec.unit     = [];
+    for i=1:length(opt.markers)
+      if ~isempty(opt.markers{i,1})
+        elec.label = [elec.label; opt.markers{i,3}];
+        elec.elecpos = [elec.elecpos; opt.markers{i,2}];
+      end
+    end
+    elec.chanpos  = elec.elecpos; % identicial to elecpos
+    elec.tra = eye(size(elec.elecpos,1));
+    if isfield(mri, 'coordsys')
+      elec.unit  = mri.unit;
+    end
+    if isfield(mri, 'coordsys')
+      elec.coordsys = mri.coordsys;
+    end
     
 end % switch method
-
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -330,18 +340,18 @@ else
     str = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
     
     lab = 'crosshair';
-    vox = [xi yi zi];
-    ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
-    pos = ft_warp_apply(mri.transform, vox);
+    opt.vox = [xi yi zi];
+    ind = sub2ind(mri.dim(1:3), round(opt.vox(1)), round(opt.vox(2)), round(opt.vox(3)));
+    opt.pos = ft_warp_apply(mri.transform, opt.vox);
     switch opt.unit
       case 'mm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, vox, pos, opt.unit);
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
       case 'cm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, vox, pos, opt.unit);
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
       case 'm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, vox, pos, opt.unit);
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
       otherwise
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
     end
   end
 end
@@ -372,42 +382,42 @@ else
   set(opt.handlescross,'Visible','off');
 end
 
-markercolor = {'r', 'g', 'b', 'y'};
-
 delete(opt.handlesmarker(opt.handlesmarker(:)>0));
 opt.handlesmarker = [];
 
-% for i=1:length(opt.fidlabel)
-%   pos = opt.fiducial.(opt.fidlabel{i});
-% %   if any(isnan(pos))
-% %     continue
-% %   end
-%
-%   posi = pos(1);
-%   posj = pos(2);
-%   posk = pos(3);
-%
-%   subplot(h1);
-%   hold on
-%   opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', 'o', 'color', markercolor{i});
-%   hold off
-%
-%   subplot(h2);
-%   hold on
-%   opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', 'o', 'color', markercolor{i});
-%   hold off
-%
-%   subplot(h3);
-%   hold on
-%   opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', 'o', 'color', markercolor{i});
-%   hold off
-% end % for each fiducial
-
-if opt.showmarkers
-  set(opt.handlesmarker,'Visible','on');
-else
-  set(opt.handlesmarker,'Visible','off');
-end
+for i=1:length(opt.markers)
+  if ~isempty(opt.markers{i,1})
+    pos = opt.markers{i,1}; % voxel coordinates
+    
+    posi = pos(1);
+    posj = pos(2);
+    posk = pos(3);
+    
+    subplot(h1);
+    hold on
+    if opt.showlabels
+      opt.handlesmarker(i,4) = text(posi, 1, posk, opt.markers{i,3});
+    end
+    opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', '+', 'color', 'r');
+    hold off
+    
+    subplot(h2);
+    hold on
+    if opt.showlabels
+      opt.handlesmarker(i,5) = text(opt.dim(1), posj, posk, opt.markers{i,3});
+    end
+    opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', '+', 'color', 'r');
+    hold off
+    
+    subplot(h3);
+    hold on
+    if opt.showlabels
+      opt.handlesmarker(i,6) = text(posi, posj, opt.dim(3), opt.markers{i,3});
+    end
+    opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', '+', 'color', 'r');
+    hold off
+  end
+end % for each marker
 
 % adjust slice slider accordingly
 set(opt.handlesaxes(6), 'Value', opt.ijk(3));
@@ -459,14 +469,6 @@ switch key
     
   case '3'
     subplot(opt.handlesaxes(3));
-    
-    %   case opt.fidletter
-    %     sel = strcmp(key, opt.fidletter);
-    %     fprintf('==================================================================================\n');
-    %     fprintf('selected %s\n', opt.fidlabel{sel});
-    %     opt.fiducial.(opt.fidlabel{sel}) = opt.ijk;
-    %     setappdata(h, 'opt', opt);
-    %     cb_redraw(h);
     
   case 'q'
     setappdata(h, 'opt', opt);
@@ -735,20 +737,42 @@ if ~isempty(elecidx)
   eleclis = cellstr(get(h7, 'String')); % all labels
   eleclab = eleclis{elecidx}; % this elec's label
   
-  % toggle electrode status
+  h = getparent(h7);
+  opt = getappdata(h, 'opt');
+  
+  % toggle electrode status and assign markers
   if strfind(eleclab, 'silver') % not yet, check
     eleclab = regexprep(eleclab, '"silver"','"black"'); % replace font color
-    % store crosshairpos - assign to this electrode
-    % call draw marker callback - depends on if magnet
-    % call draw label callback - depends on if drawlabel
+    opt.markers(elecidx,:) = {opt.vox opt.pos opt.label(elecidx)};  % assign marker position and label
   elseif strfind(eleclab, 'black') % already chosen before, uncheck
     eleclab = regexprep(eleclab, '"black"','"silver"'); % replace font color
-    % store crosshairpos - assign to this electrode
+    opt.markers(elecidx,:) = {zeros(0,3) zeros(0,3) {}};  % assign marker position and label
   end
+  
+  % update plot
   eleclis{elecidx} = eleclab;
   set(h7, 'String', eleclis);
-  
-  % redraw main figure
-  h = getparent(h7);
+  setappdata(h, 'opt', opt);
   cb_redraw(h);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_magnetbutton(h8, eventdata)
+
+h = getparent(h8);
+opt = getappdata(h, 'opt');
+opt.magnet = get(h8, 'value');
+setappdata(h, 'opt', opt);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_labelsbutton(h9, eventdata)
+
+h = getparent(h9);
+opt = getappdata(h, 'opt');
+opt.showlabels = get(h9, 'value');
+setappdata(h, 'opt', opt);
+cb_redraw(h);
