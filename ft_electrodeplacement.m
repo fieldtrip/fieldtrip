@@ -55,7 +55,7 @@ switch cfg.method
   case 'headshape'
     % give the user instructions
     disp('Use the mouse to click on the desired electrode positions');
-    disp('Afterwards you manually have to assign the electrode names to "elec.label"');
+    disp('Afterwards you may have to update the electrode labels');
     disp('Close the figure or press "q" when you are done');
     % open a figure
     figure;
@@ -66,10 +66,18 @@ switch cfg.method
     material shiny
     camlight
     % rotate3d on
-    xyz = ft_select_point3d(headshape, 'multiple', true);
-    norm.chanpos = xyz;
-    for i=1:size(norm.chanpos,1)
-      norm.label{i,1} = sprintf('%d', i);
+    xyz = ft_select_point3d(headshape, 'nearest', false, 'multiple', true, 'marker', '*');
+    numelec = size(xyz, 1);
+    
+    % construct the output electrode structure
+    elec = keepfields(headshape, {'unit', 'coordsys'});
+    elec.elecpos = xyz;
+    for i=1:numelec
+      try
+        elec.label{i} = cfg.channel{i};
+      catch
+        elec.label{i} = sprintf('%d', i);
+      end
     end
     
     
@@ -252,13 +260,14 @@ switch cfg.method
     end
     delete(h);
     
+    elec.elecpos  = [];
+    elec.chanpos  = elec.elecpos;
+    elec.label    = [];
+    elec.type     = [];
+    elec.unit     = [];
+    
 end % switch method
 
-elec.elecpos  = [];
-elec.chanpos  = elec.elecpos;
-elec.label    = [];
-elec.type     = [];
-elec.unit     = [];
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
