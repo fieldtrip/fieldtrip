@@ -112,6 +112,11 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %
 % $Id$
 
+% DEPRECATED by roboos on 11 November 2015
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1830
+% support for this functionality can be removed mid 2016
+warning('FT_SENSORREALIGN is deprecated, please use FT_ELECTRODEREALIGN instead.')
+
 revision = '$Id$';
 
 % do the general setup of the function
