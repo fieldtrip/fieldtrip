@@ -38,16 +38,6 @@ elec_realigned2 = ft_sensorrealign(cfg);
 assert(~isequal(elec_realigned2.chanpos, elec_original.chanpos));
 
 %%
-% this is a temporary function that I am working on as replacement for the ft_electroderealign and ft_sensorrealign
-% i.e. it is the merger between them
-cfg = [];
-cfg.elec = elec_original;
-cfg.method = 'interactive';
-elec_realigned3 = ft_sensorrealign_new(cfg);
-
-assert(~isequal(elec_realigned3.chanpos, elec_original.chanpos));
-
-%%
 cfg = [];
 cfg.individual.elec = elec_original;
 cfg.template.headshape = [];
