@@ -70,10 +70,11 @@ end
 
 % set the defaults
 cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
-cfg.clim       = ft_getopt(cfg, 'clim',          [0 1]);
 cfg.method     = ft_getopt(cfg, 'method');               % volume, headshape
 cfg.channel    = ft_getopt(cfg, 'channel',          []); % default will be determined further down {'1', '2', ...}
+cfg.clim       = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit
 cfg.radius     = ft_getopt(cfg, 'radius',            2); % magnet feature: detect peaks within n radius physical voxels   
+cfg.elec       = ft_getopt(cfg, 'elec',             []); % already defined electrodes, for plotting purposes 
 
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
@@ -278,9 +279,18 @@ switch cfg.method
       'SliderStep', [.1 .1], ...
       'Callback', @cb_zoomslider);
     
-    markervox   = zeros(0,3);
-    markerpos   = zeros(0,3);
-    markerlabel = {};
+    if ~isempty(cfg.elec)
+      for e = 1:numel(cfg.elec.label)
+        markers{e,1} = cfg.elec.voxorig(e,:);
+        markers{e,2} = cfg.elec.elecpos(e,:);
+        markers{e,3} = cfg.elec.label{e};
+      end
+    else
+      markervox   = zeros(0,3);
+      markerpos   = zeros(0,3);
+      markerlabel = {};
+      markers = repmat({markervox markerpos markerlabel},numel(cfg.channel),1);
+    end
     
     % instructions to the user
     fprintf(strcat(...
@@ -309,7 +319,7 @@ switch cfg.method
     opt.magnet        = get(h8, 'Value');
     opt.radius        = cfg.radius;
     opt.showmarkers   = true;
-    opt.markers       = repmat({markervox markerpos markerlabel},numel(cfg.channel),1);
+    opt.markers       = markers;
     opt.clim          = cfg.clim;
     opt.zoom          = 0;
     if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
@@ -473,7 +483,7 @@ end
 delete(opt.handlesmarker(opt.handlesmarker(:)>0));
 opt.handlesmarker = [];
 
-for i=1:length(opt.markers)
+for i=1:size(opt.markers,1)
   if ~isempty(opt.markers{i,1})
     pos = opt.markers{i,1}; % voxel coordinates
     
