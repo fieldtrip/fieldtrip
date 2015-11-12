@@ -54,10 +54,6 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % $Id$
 
-% FIXME: make magnet feature calculate center-of-weight?
-% FIXME: add plot3 result button?
-% FIXME: cf with intraoperative mri (CT scan dims?)
-% FIXME: Mgrid bioimagesuite output
 
 % do the general setup of the function
 ft_defaults
@@ -71,12 +67,13 @@ ft_preamble trackconfig
 if abort
   return
 end
-mfilename
+
 % set the defaults
 cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',          [0 1]);
-cfg.channel    = ft_getopt(cfg, 'channel', []);   % default will be determined further down {'1', '2', ...}
-cfg.method     = ft_getopt(cfg, 'method');        % volume, headshape
+cfg.method     = ft_getopt(cfg, 'method');               % volume, headshape
+cfg.channel    = ft_getopt(cfg, 'channel',          []); % default will be determined further down {'1', '2', ...}
+cfg.radius     = ft_getopt(cfg, 'radius',            2); % magnet feature: detect peaks within n radius physical voxels   
 
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
@@ -309,7 +306,8 @@ switch cfg.method
     opt.pos           = ft_warp_apply(mri.transform, opt.ijk); % head coordinates (e.g. mm)
     opt.showlabels    = 0;
     opt.label         = cfg.channel;
-    opt.magnet        = 0;
+    opt.magnet        = get(h8, 'Value');
+    opt.radius        = cfg.radius;
     opt.showmarkers   = true;
     opt.markers       = repmat({markervox markerpos markerlabel},numel(cfg.channel),1);
     opt.clim          = cfg.clim;
@@ -723,7 +721,7 @@ opt.ijk = max(opt.ijk(:)', [1 1 1]);
 if opt.magnet % magnetize
   try
     center = opt.ijk;
-    radius = 3; % 7 voxels diameter
+    radius = opt.radius;
     cubic = opt.ana(center(1)-radius:center(1)+radius, center(2)-radius:center(2)+radius, center(3)-radius:center(3)+radius);
     [val, idx] = max(cubic(:)); % find peak intensity voxel within the radius
     [ix, iy, iz] = ind2sub(size(cubic), idx);
