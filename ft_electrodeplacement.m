@@ -1,7 +1,63 @@
 function [elec] = ft_electrodeplacement(cfg, varargin)
 
-% FIXME: magnet option
-% FIXME: result button?
+% FT_ELECTRODEPLACEMENT allows placing electrodes on volume or headshape.
+% The different methods are described in detail below.
+
+% VOLUME - Navigate an orthographic display of a volume (e.g. CT or
+% MR scan), and assign an electrode label to the current crosshair location
+% by clicking on a label in the eletrode list. You can undo the selection by 
+% clicking on the same label again. The electrode labels shown in the list 
+% can be prespecified using cfg.channel when calling ft_electrodeplacement.
+% The zoom slider allows zooming in at the location of the crosshair.
+% The intensity sliders allow thresholding the image's low and high values.
+% The magnet feature transports the crosshair to the nearest peak intensity 
+% voxel, within a 3 voxel radius of the selected location. 
+% The labels feature displays the labels of the selected electrodes within 
+% the orthoplot.
+%
+% HEADSHAPE - Navigate a triangulated head/brain surface, and assign
+% an electrode location by clicking on the brain. The electrode
+% is placed on the triangulation itself. FIXME: this needs updating
+%
+% Use as
+%   [elec] = ft_electrodeplacement(cfg, mri)
+% where the input mri should be an anatomical CT or MRI volume
+% Use as
+%   [elec] = ft_electrodeplacement(cfg, headshape)
+% where the input headshape should be a surface triangulation
+
+% The configuration can contain the following options
+%   cfg.method         = string representing the method for aligning or placing the electrodes
+%                        'mri'             place electrodes in a brain volume
+%                        'headshape'       place electrodes on the head surface
+%   cfg.channel        = Nx1 cell-array with selection of channels (default = '1','2', ...)
+%
+% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
+
+% Copyright (C) 2015, Arjen Stolk & Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+% FIXME: make magnet feature calculate center-of-weight?
+% FIXME: add plot3 result button?
+% FIXME: cf with intraoperative mri (CT scan dims?)
+% FIXME: Mgrid bioimagesuite output
 
 % do the general setup of the function
 ft_defaults
@@ -15,18 +71,12 @@ ft_preamble trackconfig
 if abort
   return
 end
-
+mfilename
 % set the defaults
 cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',          [0 1]);
 cfg.channel    = ft_getopt(cfg, 'channel', []);   % default will be determined further down {'1', '2', ...}
-cfg.headshape  = ft_getopt(cfg, 'headshape');     % for triangulated head surface, without labels
 cfg.method     = ft_getopt(cfg, 'method');        % volume, headshape
-
-if ~isempty(cfg.headshape)
-  varargin{1} = cfg.headshape;
-  cfg = rmfield(cfg, 'headshape');
-end
 
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
@@ -74,15 +124,14 @@ switch cfg.method
       catch
         elec.label{i} = sprintf('%d', i);
       end
-    end
-    
+    end    
     
   case 'volume'
     % start building the figure
     h = figure(...
-      'MenuBar','none',...
-      'Name','ft_electrodelocalise',...
-      'Units','normalized', ...
+      'MenuBar', 'none',...
+      'Name', mfilename,...
+      'Units', 'normalized', ...
       'Color', [1 1 1], ...
       'Visible', 'on');
     
@@ -132,7 +181,7 @@ switch cfg.method
     h45text = uicontrol('Style', 'text',...
       'String','Intensity',...
       'Units', 'normalized', ...
-      'Position',[2*xsize(1) ysize(2)+0.03 xsize(1)/3 0.04],...
+      'Position',[2*xsize(1)+0.03 ysize(2)+0.03 xsize(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
     
@@ -179,7 +228,9 @@ switch cfg.method
     
     % electrode listbox
     if isempty(cfg.channel) % ability to specify grid types, e.g. grid1_elec1, strip1_elec1?
-      cfg.channel = strcat({'elec'},int2str((1:150).')).'; % elec1, elec2, ...
+      for c = 1:150
+        cfg.channel{c} = sprintf('%d', c);
+      end
     end
     for c = 1:numel(cfg.channel)
       chanstrings{c} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
@@ -195,7 +246,7 @@ switch cfg.method
     % switches / radio buttons
     h8 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
-      'Value', 0, ...
+      'Value', 1, ...
       'String','Magnet',...
       'Units', 'normalized', ...
       'Position',[2*xsize(1) 0.15 xsize(1)/3 0.05],...
@@ -213,6 +264,23 @@ switch cfg.method
       'HandleVisibility','on', ...
       'Callback', @cb_labelsbutton);
     
+    % intensity range sliders
+    h10text = uicontrol('Style', 'text',...
+      'String','Zoom',...
+      'Units', 'normalized', ...
+      'Position',[1.8*xsize(1)+0.01 ysize(2)+0.03 xsize(1)/4 0.04],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility','on');
+    
+    h10 = uicontrol('Style', 'slider', ...
+      'Parent', h, ...
+      'Min', 0, 'Max', 0.9, ...
+      'Value', 0, ...
+      'Units', 'normalized', ...
+      'Position', [1.8*xsize(1)+0.02 0.10+ysize(2)/3 0.05 ysize(2)/2], ...
+      'SliderStep', [.1 .1], ...
+      'Callback', @cb_zoomslider);
+    
     markervox   = zeros(0,3);
     markerpos   = zeros(0,3);
     markerlabel = {};
@@ -227,7 +295,7 @@ switch cfg.method
     opt.ijk           = [xc yc zc];
     opt.xsize         = xsize;
     opt.ysize         = ysize;
-    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9];
+    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10];
     opt.handlesfigure = h;
     opt.handlesmarker = [];
     opt.quit          = false;
@@ -241,9 +309,11 @@ switch cfg.method
     opt.pos           = ft_warp_apply(mri.transform, opt.ijk); % head coordinates (e.g. mm)
     opt.showlabels    = 0;
     opt.label         = cfg.channel;
+    opt.magnet        = 0;
     opt.showmarkers   = true;
     opt.markers       = repmat({markervox markerpos markerlabel},numel(cfg.channel),1);
     opt.clim          = cfg.clim;
+    opt.zoom          = 0;
     if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
       opt.unit = mri.unit;  % this is shown in the feedback on screen
     else
@@ -261,11 +331,15 @@ switch cfg.method
     
     % collect the results
     elec.label  = {};
-    elec.elecpos  = [];
+    elec.elecpos = [];
+    elec.chanpos = [];
+    elec.tra = [];
+    elec.voxorig = [];
     for i=1:length(opt.markers)
       if ~isempty(opt.markers{i,1})
         elec.label = [elec.label; opt.markers{i,3}];
         elec.elecpos = [elec.elecpos; opt.markers{i,2}];
+        elec.voxorig = [elec.voxorig; opt.markers{i,1}]; % keep the original voxel coordinates
       end
     end
     elec.chanpos  = elec.elecpos; % identicial to elecpos
@@ -332,6 +406,10 @@ if opt.init
   opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
   opt.anahandles = opt.anahandles(:)';
   set(opt.anahandles, 'tag', 'ana');
+  
+  opt.h1axis = axis(h1); % for zooming purposes
+  opt.h2axis = axis(h2);
+  opt.h3axis = axis(h3);
 else
   ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   
@@ -353,6 +431,18 @@ else
       otherwise
         fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
     end
+  end
+  
+  if opt.zoom~=0 % zoom in
+    xloadj = round((xi-opt.h1axis(1))-(xi-opt.h1axis(1))*opt.zoom);
+    xhiadj = round((opt.h1axis(2)-xi)-(opt.h1axis(2)-xi)*opt.zoom);
+    yloadj = round((yi-opt.h1axis(3))-(yi-opt.h1axis(3))*opt.zoom);
+    yhiadj = round((opt.h1axis(4)-yi)-(opt.h1axis(4)-yi)*opt.zoom);
+    zloadj = round((zi-opt.h1axis(5))-(zi-opt.h1axis(5))*opt.zoom);
+    zhiadj = round((opt.h1axis(6)-zi)-(opt.h1axis(6)-zi)*opt.zoom);
+    axis(h1, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
+    axis(h2, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
+    axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
   end
 end
 
@@ -395,26 +485,26 @@ for i=1:length(opt.markers)
     
     subplot(h1);
     hold on
+    opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', '+', 'color', 'r');
     if opt.showlabels
       opt.handlesmarker(i,4) = text(posi, 1, posk, opt.markers{i,3});
     end
-    opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', '+', 'color', 'r');
     hold off
     
     subplot(h2);
     hold on
+    opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', '+', 'color', 'r');
     if opt.showlabels
       opt.handlesmarker(i,5) = text(opt.dim(1), posj, posk, opt.markers{i,3});
     end
-    opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', '+', 'color', 'r');
     hold off
     
     subplot(h3);
     hold on
+    opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', '+', 'color', 'r');
     if opt.showlabels
       opt.handlesmarker(i,6) = text(posi, posj, opt.dim(3), opt.markers{i,3});
     end
-    opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', '+', 'color', 'r');
     hold off
   end
 end % for each marker
@@ -629,6 +719,17 @@ if ~isempty(tag) && ~opt.init
 end
 opt.ijk = min(opt.ijk(:)', opt.dim);
 opt.ijk = max(opt.ijk(:)', [1 1 1]);
+
+if opt.magnet % magnetize
+  try
+    center = opt.ijk;
+    radius = 3; % 7 voxels diameter
+    cubic = opt.ana(center(1)-radius:center(1)+radius, center(2)-radius:center(2)+radius, center(3)-radius:center(3)+radius);
+    [val, idx] = max(cubic(:)); % find peak intensity voxel within the radius
+    [ix, iy, iz] = ind2sub(size(cubic), idx);
+    opt.ijk = center+[ix, iy, iz]-radius-1;
+  end
+end
 setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -774,5 +875,16 @@ function cb_labelsbutton(h9, eventdata)
 h = getparent(h9);
 opt = getappdata(h, 'opt');
 opt.showlabels = get(h9, 'value');
+setappdata(h, 'opt', opt);
+cb_redraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_zoomslider(h10, eventdata)
+
+h = getparent(h10);
+opt = getappdata(h, 'opt');
+opt.zoom = round(get(h10, 'value')*10)/10;
 setappdata(h, 'opt', opt);
 cb_redraw(h);
