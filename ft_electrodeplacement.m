@@ -433,17 +433,6 @@ else
     end
   end
   
-  if opt.zoom~=0 % zoom in
-    xloadj = round((xi-opt.h1axis(1))-(xi-opt.h1axis(1))*opt.zoom);
-    xhiadj = round((opt.h1axis(2)-xi)-(opt.h1axis(2)-xi)*opt.zoom);
-    yloadj = round((yi-opt.h1axis(3))-(yi-opt.h1axis(3))*opt.zoom);
-    yhiadj = round((opt.h1axis(4)-yi)-(opt.h1axis(4)-yi)*opt.zoom);
-    zloadj = round((zi-opt.h1axis(5))-(zi-opt.h1axis(5))*opt.zoom);
-    zhiadj = round((opt.h1axis(6)-zi)-(opt.h1axis(6)-zi)*opt.zoom);
-    axis(h1, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
-    axis(h2, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
-    axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
-  end
 end
 
 % make the last current axes current again
@@ -452,18 +441,29 @@ if ~isempty(sel)
   set(opt.handlesfigure, 'currentaxes', sel(1));
 end
 
+% zoom
+xloadj = round((xi-opt.h1axis(1))-(xi-opt.h1axis(1))*opt.zoom)+.5;
+xhiadj = round((opt.h1axis(2)-xi)-(opt.h1axis(2)-xi)*opt.zoom)+.5;
+yloadj = round((yi-opt.h1axis(3))-(yi-opt.h1axis(3))*opt.zoom)+.5;
+yhiadj = round((opt.h1axis(4)-yi)-(opt.h1axis(4)-yi)*opt.zoom)+.5;
+zloadj = round((zi-opt.h1axis(5))-(zi-opt.h1axis(5))*opt.zoom)+.5;
+zhiadj = round((opt.h1axis(6)-zi)-(opt.h1axis(6)-zi)*opt.zoom)+.5;
+axis(h1, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
+axis(h2, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
+axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
+
 if opt.init
   % draw the crosshairs for the first time
-  hch1 = crosshair([xi 1 zi], 'parent', h1, 'color', 'yellow');
-  hch3 = crosshair([xi yi opt.dim(3)], 'parent', h3, 'color', 'yellow');
-  hch2 = crosshair([opt.dim(1) yi zi], 'parent', h2, 'color', 'yellow');
+  hch1 = crosshair([xi yi zi], 'parent', h1, 'color', 'yellow'); % [xi 1 zi]
+  hch2 = crosshair([xi yi zi], 'parent', h2, 'color', 'yellow'); % [opt.dim(1) yi zi]
+  hch3 = crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % [xi yi opt.dim(3)]
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
   opt.handlesmarker = [];
 else
   % update the existing crosshairs, don't change the handles
-  crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
-  crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
-  crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
+  crosshair([xi yi zi], 'handle', opt.handlescross(1, :));
+  crosshair([xi yi zi], 'handle', opt.handlescross(2, :));
+  crosshair([xi yi zi], 'handle', opt.handlescross(3, :));
 end
 
 if opt.showcrosshair
@@ -485,30 +485,30 @@ for i=1:length(opt.markers)
     
     subplot(h1);
     hold on
-    opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', '+', 'color', 'r');
+    opt.handlesmarker(i,1) = plot3(posi, posj, posk, 'marker', '+', 'color', 'r'); % posi, 1, posk
     if opt.showlabels
-      opt.handlesmarker(i,4) = text(posi, 1, posk, opt.markers{i,3});
+      opt.handlesmarker(i,4) = text(posi, posj, posk, opt.markers{i,3});
     end
     hold off
     
     subplot(h2);
     hold on
-    opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', '+', 'color', 'r');
+    opt.handlesmarker(i,2) = plot3(posi, posj, posk, 'marker', '+', 'color', 'r'); % opt.dim(1), posj, posk
     if opt.showlabels
-      opt.handlesmarker(i,5) = text(opt.dim(1), posj, posk, opt.markers{i,3});
+      opt.handlesmarker(i,5) = text(posi, posj, posk, opt.markers{i,3});
     end
     hold off
     
     subplot(h3);
     hold on
-    opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', '+', 'color', 'r');
+    opt.handlesmarker(i,3) = plot3(posi, posj, posk, 'marker', '+', 'color', 'r'); % posi, posj, opt.dim(3)
     if opt.showlabels
-      opt.handlesmarker(i,6) = text(posi, posj, opt.dim(3), opt.markers{i,3});
+      opt.handlesmarker(i,6) = text(posi, posj, posk, opt.markers{i,3});
     end
     hold off
   end
 end % for each marker
-
+  
 % adjust slice slider accordingly
 set(opt.handlesaxes(6), 'Value', opt.ijk(3));
 
