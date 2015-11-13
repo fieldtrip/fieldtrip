@@ -5,14 +5,14 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 
 % VOLUME - Navigate an orthographic display of a volume (e.g. CT or
 % MR scan), and assign an electrode label to the current crosshair location
-% by clicking on a label in the eletrode list. You can undo the selection by 
-% clicking on the same label again. The electrode labels shown in the list 
+% by clicking on a label in the eletrode list. You can undo the selection by
+% clicking on the same label again. The electrode labels shown in the list
 % can be prespecified using cfg.channel when calling ft_electrodeplacement.
 % The zoom slider allows zooming in at the location of the crosshair.
 % The intensity sliders allow thresholding the image's low and high values.
-% The magnet feature transports the crosshair to the nearest peak intensity 
-% voxel, within a 3 voxel radius of the selected location. 
-% The labels feature displays the labels of the selected electrodes within 
+% The magnet feature transports the crosshair to the nearest peak intensity
+% voxel, within a 3 voxel radius of the selected location.
+% The labels feature displays the labels of the selected electrodes within
 % the orthoplot.
 %
 % HEADSHAPE - Navigate a triangulated head/brain surface, and assign
@@ -56,7 +56,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 
 
 % FIXME: for re-plotting CT coords on MR describe axes in terms of coordinate system instead of ijk
-% FIXME: alike ft_warp_apply(mri.transform, opt.ijk); 
+% FIXME: alike ft_warp_apply(mri.transform, opt.ijk);
 % thus, pos and crosshair should be in mri space, and ijk in voxelspace?
 
 % do the general setup of the function
@@ -78,7 +78,7 @@ cfg.method        = ft_getopt(cfg, 'method');               % volume, headshape
 cfg.channel       = ft_getopt(cfg, 'channel',          []); % default will be determined further down {'1', '2', ...}
 cfg.elec          = ft_getopt(cfg, 'elec',             []); % use previously placed electrodes
 % intensity options
-cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit voxels   
+cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit voxels
 % magnet options
 cfg.magradius     = ft_getopt(cfg, 'magradius',         2); % magnet: detect voxels within n radius physical
 cfg.magtype       = ft_getopt(cfg, 'magtype',      'peak'); % magnet: detect peaks or troughs
@@ -129,7 +129,7 @@ switch cfg.method
       catch
         elec.label{i} = sprintf('%d', i);
       end
-    end    
+    end
     
   case 'volume'
     % start building the figure
@@ -237,7 +237,7 @@ switch cfg.method
       for e = 1:numel(cfg.elec.label)
         cfg.channel{e} = cfg.elec.label{e};
         chanstrings{e} = ['<HTML><FONT color="black">' cfg.channel{e} '</FONT></HTML>']; % hmtl'ize
-
+        
         markers{e,1} = cfg.elec.ijkorig(e,:); % marker stuff
         markers{e,2} = cfg.elec.elecpos(e,:);
         markers{e,3} = cfg.elec.label{e};
@@ -247,7 +247,7 @@ switch cfg.method
         for c = 1:150
           cfg.channel{c} = sprintf('%d', c);
         end
-      end    
+      end
       for c = 1:numel(cfg.channel)
         chanstrings{c} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
       end
@@ -441,9 +441,10 @@ if opt.init
   opt.anahandles = opt.anahandles(:)';
   set(opt.anahandles, 'tag', 'ana');
   
-  opt.h1axis = axis(h1); % for zooming purposes
-  opt.h2axis = axis(h2);
-  opt.h3axis = axis(h3);
+  % for zooming purposes
+  opt.axis = zeros(1,6);
+  opt.axis([1 3 5]) = 0.5;
+  opt.axis([2 4 6]) = size(opt.ana) + 0.5;
 else
   ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   
@@ -476,12 +477,12 @@ if ~isempty(sel)
 end
 
 % zoom
-xloadj = round((xi-opt.h1axis(1))-(xi-opt.h1axis(1))*opt.zoom);
-xhiadj = round((opt.h1axis(2)-xi)-(opt.h1axis(2)-xi)*opt.zoom);
-yloadj = round((yi-opt.h1axis(3))-(yi-opt.h1axis(3))*opt.zoom);
-yhiadj = round((opt.h1axis(4)-yi)-(opt.h1axis(4)-yi)*opt.zoom);
-zloadj = round((zi-opt.h1axis(5))-(zi-opt.h1axis(5))*opt.zoom);
-zhiadj = round((opt.h1axis(6)-zi)-(opt.h1axis(6)-zi)*opt.zoom);
+xloadj = round((xi-opt.axis(1))-(xi-opt.axis(1))*opt.zoom);
+xhiadj = round((opt.axis(2)-xi)-(opt.axis(2)-xi)*opt.zoom);
+yloadj = round((yi-opt.axis(3))-(yi-opt.axis(3))*opt.zoom);
+yhiadj = round((opt.axis(4)-yi)-(opt.axis(4)-yi)*opt.zoom);
+zloadj = round((zi-opt.axis(5))-(zi-opt.axis(5))*opt.zoom);
+zhiadj = round((opt.axis(6)-zi)-(opt.axis(6)-zi)*opt.zoom);
 axis(h1, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
 axis(h2, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
 axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
@@ -542,10 +543,11 @@ for i=1:size(opt.markers,1)
     hold off
   end
 end % for each marker
-  
+
 % adjust slice slider accordingly
 set(opt.handlesaxes(6), 'Value', opt.ijk(3));
 
+% do not initialize on the next call
 opt.init = false;
 setappdata(h, 'opt', opt);
 set(h, 'currentaxes', curr_ax);
@@ -701,7 +703,7 @@ end % switch key
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_buttonpress(h, eventdata)
 
-h   = getparent(h);
+h = getparent(h);
 cb_getposition(h);
 switch get(h, 'selectiontype')
   case 'normal'
@@ -725,7 +727,7 @@ set(h, 'windowbuttonmotionfcn', '');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_tracemouse(h, eventdata)
 
-h   = getparent(h);
+h = getparent(h);
 cb_getposition(h);
 cb_redraw(h);
 
@@ -758,16 +760,36 @@ if opt.magnet % magnetize
   try
     center = opt.ijk;
     radius = opt.magradius;
-    cubic = opt.ana(center(1)-radius:center(1)+radius, center(2)-radius:center(2)+radius, center(3)-radius:center(3)+radius);
+    % FIXME here it would be possible to adjust the selection at the edges of the volume
+    xsel = center(1)+(-radius:radius);
+    ysel = center(2)+(-radius:radius);
+    zsel = center(3)+(-radius:radius);
+    cubic  = opt.ana(xsel, ysel, zsel);
     if strcmp(opt.magtype, 'peak')
-      [val, idx] = max(cubic(:)); % find peak intensity voxel within the radius
+      % find the peak intensity voxel within the cube
+      [val, idx] = max(cubic(:));
+      [ix, iy, iz] = ind2sub(size(cubic), idx);
     elseif strcmp(opt.magtype, 'trough')
-      [val, idx] = min(cubic(:)); % find trough intensity voxel within the radius
+      % find the trough intensity voxel within the cube
+      [val, idx] = min(cubic(:));
+      [ix, iy, iz] = ind2sub(size(cubic), idx);
+    elseif strcmp(opt.magtype, 'weighted')
+      % find the weighted center of mass in the cube
+      dim = size(cubic);
+      [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+      cubic = cubic./sum(cubic(:));
+      ix = round(X(:)' * cubic(:));
+      iy = round(Y(:)' * cubic(:));
+      iz = round(Z(:)' * cubic(:));
     end
-    [ix, iy, iz] = ind2sub(size(cubic), idx);
-    opt.ijk = center+[ix, iy, iz]-radius-1;
+    % adjust the indices for the selection
+    opt.ijk = [ix, iy, iz] + center - radius - 1;
+    fprintf(' clicked at [%d %d %d], %s magnetized adjustment [%d %d %d]\n', center, opt.magtype, opt.ijk-center);
+  catch
+    % this fails if the selection is at the edge of the volume
+    warning('cannot magnetize at the edge of the volume');
   end
-end
+end % if magnetize
 setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -826,6 +848,7 @@ newlim = get(h4, 'value');
 h = getparent(h4);
 opt = getappdata(h, 'opt');
 opt.clim(1) = newlim;
+fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -838,6 +861,7 @@ newlim = get(h5, 'value');
 h = getparent(h5);
 opt = getappdata(h, 'opt');
 opt.clim(2) = newlim;
+fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
