@@ -11,7 +11,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % The zoom slider allows zooming in at the location of the crosshair.
 % The intensity sliders allow thresholding the image's low and high values.
 % The magnet feature transports the crosshair to the nearest peak intensity
-% voxel, within a 3 voxel radius of the selected location.
+% voxel, within a certain voxel radius of the selected location.
 % The labels feature displays the labels of the selected electrodes within
 % the orthoplot.
 %
@@ -30,7 +30,15 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %   cfg.method         = string representing the method for aligning or placing the electrodes
 %                        'mri'             place electrodes in a brain volume
 %                        'headshape'       place electrodes on the head surface
+%   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = '1','2', ...)
+%   cfg.elec           = struct containing previously placed electrodes (this overwrites cfg.channel)
+%   cfg.clim           = color range of the data (default = [0 1], i.e. the full range)
+%   cfg.magtype        = string representing the 'magnet' type used for placing the electrodes
+%                        'peak'            place electrodes at peak intensity voxel (default)
+%                        'trough'          place electrodes at trough intensity voxel
+%                        'weighted'        place electrodes at center-of-mass
+%   cfg.magradius      = number representing the radius for the cfg.magtype based search (default = 2)
 %
 % See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
 
@@ -55,10 +63,6 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % $Id$
 
 
-% FIXME: for re-plotting CT coords on MR describe axes in terms of coordinate system instead of ijk
-% FIXME: alike ft_warp_apply(mri.transform, opt.ijk);
-% thus, pos and crosshair should be in mri space, and ijk in voxelspace?
-
 % do the general setup of the function
 ft_defaults
 ft_preamble init
@@ -73,15 +77,15 @@ if abort
 end
 
 % set the defaults
-cfg.parameter     = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.method        = ft_getopt(cfg, 'method');               % volume, headshape
+cfg.parameter     = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',          []); % default will be determined further down {'1', '2', ...}
 cfg.elec          = ft_getopt(cfg, 'elec',             []); % use previously placed electrodes
 % intensity options
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit voxels
 % magnet options
-cfg.magradius     = ft_getopt(cfg, 'magradius',         2); % magnet: detect voxels within n radius physical
-cfg.magtype       = ft_getopt(cfg, 'magtype',      'peak'); % magnet: detect peaks or troughs
+cfg.magtype       = ft_getopt(cfg, 'magtype',      'peak'); % detect peaks or troughs or center-of-mass
+cfg.magradius     = ft_getopt(cfg, 'magradius',         2); % specify the physical unit radius
 
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
@@ -206,7 +210,7 @@ switch cfg.method
       'Position', [2*xsize(1)+0.07 0.10+ysize(2)/3 0.05 ysize(2)/2], ...
       'Callback', @cb_maxslider);
     
-    % intensity range slider (dual-knob slider): the java component gives issues when wanting to
+    % java intensity range slider (dual-knob slider): the java component gives issues when wanting to
     % access the opt structure
     % [jRangeSlider] = com.jidesoft.swing.RangeSlider(0,1,cfg.clim(1),cfg.clim(2));  % min,max,low,high
     % [jRangeSlider, h4] = javacomponent(jRangeSlider, [], h);
@@ -214,33 +218,15 @@ switch cfg.method
     % set(jRangeSlider, 'Orientation', 1, 'PaintTicks', true, 'PaintLabels', true, ...
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
     
-    % slice slider
-    h6text = uicontrol('Style', 'text',...
-      'String','Slice',...
-      'Units', 'normalized', ...
-      'Position',[0.07 0.02 xsize(1)/3-0.03 0.04],...
-      'BackgroundColor', [1 1 1], ...
-      'HandleVisibility','on');
-    
-    h6 = uicontrol('Style', 'slider', ...
-      'Parent', h, ...
-      'Min', 1, 'Max', mri.dim(3), ...
-      'Value', zc, ...
-      'Units', 'normalized', ...
-      'Position', [xsize(1)/3+0.05 0.01 2*(xsize(1)/3) 0.05], ...
-      'SliderStep', [1/mri.dim(3) 1/mri.dim(3)], ...
-      'Callback', @cb_sliceslider);
-    
     % electrode listbox
     if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
       cfg.channel = []; % ensure cfg.channel is empty, for filling it up
       for e = 1:numel(cfg.elec.label)
         cfg.channel{e} = cfg.elec.label{e};
-        chanstrings{e} = ['<HTML><FONT color="black">' cfg.channel{e} '</FONT></HTML>']; % hmtl'ize
+        chanstring{e} = ['<HTML><FONT color="black">' cfg.channel{e} '</FONT></HTML>']; % hmtl'ize
         
-        markers{e,1} = cfg.elec.ijkorig(e,:); % marker stuff
+        markers{e,1} = cfg.elec.label{e};
         markers{e,2} = cfg.elec.elecpos(e,:);
-        markers{e,3} = cfg.elec.label{e};
       end
     else % otherwise use standard / prespecified (cfg.channel) electrode labels
       if isempty(cfg.channel)
@@ -249,25 +235,22 @@ switch cfg.method
         end
       end
       for c = 1:numel(cfg.channel)
-        chanstrings{c} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
+        chanstring{c} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
       end
       
-      markervox   = zeros(0,3); % marker stuff
-      markerpos   = zeros(0,3);
-      markerlabel = {};
-      markers = repmat({markervox markerpos markerlabel},numel(cfg.channel),1);
+      markers = repmat({{} zeros(0,3)},numel(cfg.channel),1);
     end
     
-    h7 = uicontrol('Style', 'listbox', ...
+    h6 = uicontrol('Style', 'listbox', ...
       'Parent', h, ...
-      'Value', [], 'Min', 0, 'Max', numel(chanstrings), ...
+      'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
       'Units', 'normalized', ...
       'Position', [0.07+xsize(1)+0.05 0.07 xsize(1)/2 ysize(2)], ...
       'Callback', @cb_eleclistbox, ...
-      'String', chanstrings);
+      'String', chanstring);
     
     % switches / radio buttons
-    h8 = uicontrol('Style', 'radiobutton',...
+    h7 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
       'Value', 1, ...
       'String','Magnet',...
@@ -277,7 +260,7 @@ switch cfg.method
       'HandleVisibility','on', ...
       'Callback', @cb_magnetbutton);
     
-    h9 = uicontrol('Style', 'radiobutton',...
+    h8 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
       'Value', 0, ...
       'String','Labels',...
@@ -288,14 +271,14 @@ switch cfg.method
       'Callback', @cb_labelsbutton);
     
     % zoom slider
-    h10text = uicontrol('Style', 'text',...
+    h9text = uicontrol('Style', 'text',...
       'String','Zoom',...
       'Units', 'normalized', ...
       'Position',[1.8*xsize(1)+0.01 ysize(2)+0.03 xsize(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
     
-    h10 = uicontrol('Style', 'slider', ...
+    h9 = uicontrol('Style', 'slider', ...
       'Parent', h, ...
       'Min', 0, 'Max', 0.9, ...
       'Value', 0, ...
@@ -303,23 +286,16 @@ switch cfg.method
       'Position', [1.8*xsize(1)+0.02 0.10+ysize(2)/3 0.05 ysize(2)/2], ...
       'SliderStep', [.1 .1], ...
       'Callback', @cb_zoomslider);
-    
-    if ~isempty(cfg.elec)
-      for e = 1:numel(cfg.elec.label)
-        markers{e,1} = cfg.elec.ijkorig(e,:);
-        markers{e,2} = cfg.elec.elecpos(e,:);
-        markers{e,3} = cfg.elec.label{e};
-      end
-    else
-      markervox   = zeros(0,3);
-      markerpos   = zeros(0,3);
-      markerlabel = {};
-      markers = repmat({markervox markerpos markerlabel},numel(cfg.channel),1);
-    end
-    
+        
     % instructions to the user
     fprintf(strcat(...
-      ' \n'));
+      '1. To change the slice viewed in one plane, either:\n',...
+          '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
+          '      superior slice in the horizontal plane, click on a superior position in the\n',...
+          '      coronal plane, or\n',...
+          '   b. use the arrow keys to increase or decrease the slice number by one\n',...
+      '2. To assign an electrode label to the crosshair location:\n',...
+          '   a. click on an electrode label in the list\n'));
     
     % create structure to be passed to gui
     opt               = [];
@@ -327,7 +303,7 @@ switch cfg.method
     opt.ijk           = [xc yc zc];
     opt.xsize         = xsize;
     opt.ysize         = ysize;
-    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10];
+    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9];
     opt.handlesfigure = h;
     opt.handlesmarker = [];
     opt.quit          = false;
@@ -342,7 +318,7 @@ switch cfg.method
     opt.pos           = ft_warp_apply(mri.transform, opt.ijk); % head coordinates (e.g. mm)
     opt.showlabels    = 0;
     opt.label         = cfg.channel;
-    opt.magnet        = get(h8, 'Value');
+    opt.magnet        = get(h7, 'Value');
     opt.magradius     = cfg.magradius;
     opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
@@ -369,12 +345,10 @@ switch cfg.method
     elec.elecpos = [];
     elec.chanpos = [];
     elec.tra = [];
-    elec.ijkorig = [];
     for i=1:length(opt.markers)
       if ~isempty(opt.markers{i,1})
-        elec.label = [elec.label; opt.markers{i,3}];
+        elec.label = [elec.label; opt.markers{i,1}];
         elec.elecpos = [elec.elecpos; opt.markers{i,2}];
-        elec.ijkorig = [elec.ijkorig; opt.markers{i,1}]; % keep the original voxel coordinates
       end
     end
     elec.chanpos  = elec.elecpos; % identicial to elecpos
@@ -513,7 +487,7 @@ opt.handlesmarker = [];
 
 for i=1:size(opt.markers,1)
   if ~isempty(opt.markers{i,1})
-    pos = opt.markers{i,1}; % voxel coordinates
+    pos = ft_warp_apply(inv(mri.transform), opt.markers{i,2});
     
     posi = pos(1);
     posj = pos(2);
@@ -523,7 +497,7 @@ for i=1:size(opt.markers,1)
     hold on
     opt.handlesmarker(i,1) = plot3(posi, yi-yloadj, posk, 'marker', '+', 'color', 'r'); % [xi yi-yloadj zi]
     if opt.showlabels
-      opt.handlesmarker(i,4) = text(posi, yi-yloadj, posk, opt.markers{i,3});
+      opt.handlesmarker(i,4) = text(posi, yi-yloadj, posk, opt.markers{i,1}, 'color', 'b');
     end
     hold off
     
@@ -531,7 +505,7 @@ for i=1:size(opt.markers,1)
     hold on
     opt.handlesmarker(i,2) = plot3(xi+xhiadj, posj, posk, 'marker', '+', 'color', 'r'); % [xi+xhiadj yi zi]
     if opt.showlabels
-      opt.handlesmarker(i,5) = text(xi+xhiadj, posj, posk, opt.markers{i,3});
+      opt.handlesmarker(i,5) = text(xi+xhiadj, posj, posk, opt.markers{i,1}, 'color', 'b');
     end
     hold off
     
@@ -539,14 +513,11 @@ for i=1:size(opt.markers,1)
     hold on
     opt.handlesmarker(i,3) = plot3(posi, posj, zi, 'marker', '+', 'color', 'r'); % [xi yi zi]
     if opt.showlabels
-      opt.handlesmarker(i,6) = text(posi, posj, zi, opt.markers{i,3});
+      opt.handlesmarker(i,6) = text(posi, posj, zi, opt.markers{i,1}, 'color', 'b');
     end
     hold off
   end
 end % for each marker
-
-% adjust slice slider accordingly
-set(opt.handlesaxes(6), 'Value', opt.ijk(3));
 
 % do not initialize on the next call
 opt.init = false;
@@ -785,6 +756,7 @@ if opt.magnet % magnetize
     end
     % adjust the indices for the selection
     opt.ijk = [ix, iy, iz] + center - radius - 1;
+    fprintf('==================================================================================\n');    
     fprintf(' clicked at [%d %d %d], %s magnetized adjustment [%d %d %d]\n', center, opt.magtype, opt.ijk-center);
   catch
     % this fails if the selection is at the edge of the volume
@@ -879,7 +851,7 @@ cb_redraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_intensityslider(h4, eventdata)
+function cb_intensityslider(h4, eventdata) % java intensity range slider - not fully functional
 
 loval = get(h4, 'value');
 hival = get(h4, 'highvalue');
@@ -892,40 +864,28 @@ cb_redraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_sliceslider(h6, eventdata)
+function cb_eleclistbox(h6, eventdata)
 
-newslice = round(get(h6, 'value'));
-h = getparent(h6);
-opt = getappdata(h, 'opt');
-opt.ijk(3) = newslice;
-setappdata(h, 'opt', opt);
-cb_redraw(h);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_eleclistbox(h7, eventdata)
-
-elecidx = get(h7, 'Value'); % chosen elec
+elecidx = get(h6, 'Value'); % chosen elec
 if ~isempty(elecidx)
-  eleclis = cellstr(get(h7, 'String')); % all labels
+  eleclis = cellstr(get(h6, 'String')); % all labels
   eleclab = eleclis{elecidx}; % this elec's label
   
-  h = getparent(h7);
+  h = getparent(h6);
   opt = getappdata(h, 'opt');
   
   % toggle electrode status and assign markers
   if strfind(eleclab, 'silver') % not yet, check
     eleclab = regexprep(eleclab, '"silver"','"black"'); % replace font color
-    opt.markers(elecidx,:) = {opt.vox opt.pos opt.label(elecidx)};  % assign marker position and label
+    opt.markers(elecidx,:) = {opt.label(elecidx) opt.pos};  % assign marker position and label
   elseif strfind(eleclab, 'black') % already chosen before, uncheck
     eleclab = regexprep(eleclab, '"black"','"silver"'); % replace font color
-    opt.markers(elecidx,:) = {zeros(0,3) zeros(0,3) {}};  % assign marker position and label
+    opt.markers(elecidx,:) = {{} zeros(0,3)};  % assign marker position and label
   end
   
   % update plot
   eleclis{elecidx} = eleclab;
-  set(h7, 'String', eleclis);
+  set(h6, 'String', eleclis);
   setappdata(h, 'opt', opt);
   cb_redraw(h);
 end
@@ -933,31 +893,31 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_magnetbutton(h8, eventdata)
+function cb_magnetbutton(h7, eventdata)
 
-h = getparent(h8);
+h = getparent(h7);
 opt = getappdata(h, 'opt');
-opt.magnet = get(h8, 'value');
+opt.magnet = get(h7, 'value');
 setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_labelsbutton(h9, eventdata)
+function cb_labelsbutton(h8, eventdata)
 
-h = getparent(h9);
+h = getparent(h8);
 opt = getappdata(h, 'opt');
-opt.showlabels = get(h9, 'value');
+opt.showlabels = get(h8, 'value');
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_zoomslider(h10, eventdata)
+function cb_zoomslider(h9, eventdata)
 
-h = getparent(h10);
+h = getparent(h9);
 opt = getappdata(h, 'opt');
-opt.zoom = round(get(h10, 'value')*10)/10;
+opt.zoom = round(get(h9, 'value')*10)/10;
 setappdata(h, 'opt', opt);
 cb_redraw(h);
