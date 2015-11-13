@@ -331,7 +331,8 @@ switch cfg.method
     opt.handlesfigure = h;
     opt.handlesmarker = [];
     opt.quit          = false;
-    opt.ana           = dat;
+    opt.ana           = dat; % this will be clipped
+    opt.org           = dat; % this will remain unclipped
     opt.update        = [1 1 1];
     opt.init          = true;
     opt.tag           = 'ik';
@@ -429,7 +430,7 @@ opt.ijk = opt.ijk(1:3)';
 str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), xi, yi, zi), opt.ijk);
 
 if opt.init
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false);
   
   opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
   parenttag = get(opt.anahandles,'parent');
@@ -446,7 +447,7 @@ if opt.init
   opt.axis([1 3 5]) = 0.5;
   opt.axis([2 4 6]) = size(opt.ana) + 0.5;
 else
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false);
   
   if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
     fprintf('==================================================================================\n');
@@ -848,6 +849,11 @@ newlim = get(h4, 'value');
 h = getparent(h4);
 opt = getappdata(h, 'opt');
 opt.clim(1) = newlim;
+% re-apply the clipping to the original anatomy
+opt.ana = opt.org;
+opt.ana(opt.ana<opt.clim(1)) = opt.clim(1);
+opt.ana(opt.ana>opt.clim(2)) = opt.clim(2);
+opt.ana = opt.ana/(opt.clim(2)-opt.clim(1));
 fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
@@ -861,6 +867,11 @@ newlim = get(h5, 'value');
 h = getparent(h5);
 opt = getappdata(h, 'opt');
 opt.clim(2) = newlim;
+% re-apply the clipping to the original anatomy
+opt.ana = opt.org;
+opt.ana(opt.ana<opt.clim(1)) = opt.clim(1);
+opt.ana(opt.ana>opt.clim(2)) = opt.clim(2);
+opt.ana = opt.ana/(opt.clim(2)-opt.clim(1));
 fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
