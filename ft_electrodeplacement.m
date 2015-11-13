@@ -129,7 +129,7 @@ switch cfg.method
     elec.elecpos = xyz;
     for i=1:numelec
       try
-        elec.label{i} = cfg.channel{i};
+        elec.label{i} = cfg.channel{i,1};
       catch
         elec.label{i} = sprintf('%d', i);
       end
@@ -151,8 +151,8 @@ switch cfg.method
     set(h, 'CloseRequestFcn',     @cb_cleanup);
     
     % axes settings
-    xdim = mri.dim(1) + mri.dim(2); %FIXME: for re-plotting CT coords on MR describe axes in terms of coordinate system instead of ijk
-    ydim = mri.dim(2) + mri.dim(3); % FIXME: ft_warp_apply(mri.transform, opt.ijk);
+    xdim = mri.dim(1) + mri.dim(2);
+    ydim = mri.dim(2) + mri.dim(3);
     
     xsize(1) = 0.82*mri.dim(1)/xdim;
     xsize(2) = 0.82*mri.dim(2)/xdim;
@@ -222,23 +222,24 @@ switch cfg.method
     if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
       cfg.channel = []; % ensure cfg.channel is empty, for filling it up
       for e = 1:numel(cfg.elec.label)
-        cfg.channel{e} = cfg.elec.label{e};
-        chanstring{e} = ['<HTML><FONT color="black">' cfg.channel{e} '</FONT></HTML>']; % hmtl'ize
+        cfg.channel{e,1} = cfg.elec.label{e};
+        chanstring{e} = ['<HTML><FONT color="black">' cfg.channel{e,1} '</FONT></HTML>']; % hmtl'ize
         
-        markers{e,1} = cfg.elec.label{e};
-        markers{e,2} = cfg.elec.elecpos(e,:);
+        markerlab{e,1} = cfg.elec.label{e};
+        markerpos{e,1} = cfg.elec.elecpos(e,:);
       end
     else % otherwise use standard / prespecified (cfg.channel) electrode labels
       if isempty(cfg.channel)
         for c = 1:150
-          cfg.channel{c} = sprintf('%d', c);
+          cfg.channel{c,1} = sprintf('%d', c);
         end
       end
       for c = 1:numel(cfg.channel)
-        chanstring{c} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
+         chanstring{c} = ['<HTML><FONT color="silver">' cfg.channel{c,1} '</FONT></HTML>']; % hmtl'ize
+        
+         markerlab{c,1} = {};
+         markerpos{c,1} = zeros(0,3);
       end
-      
-      markers = repmat({{} zeros(0,3)},numel(cfg.channel),1);
     end
     
     h6 = uicontrol('Style', 'listbox', ...
@@ -255,7 +256,7 @@ switch cfg.method
       'Value', 1, ...
       'String','Magnet',...
       'Units', 'normalized', ...
-      'Position',[2*xsize(1) 0.15 xsize(1)/3 0.05],...
+      'Position',[2*xsize(1) 0.17 xsize(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_magnetbutton);
@@ -265,20 +266,30 @@ switch cfg.method
       'Value', 0, ...
       'String','Labels',...
       'Units', 'normalized', ...
-      'Position',[2*xsize(1) 0.07 xsize(1)/3 0.05],...
+      'Position',[2*xsize(1) 0.12 xsize(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_labelsbutton);
     
+    h9 = uicontrol('Style', 'radiobutton',...
+      'Parent', h, ...
+      'Value', 1, ...
+      'String','Global',...
+      'Units', 'normalized', ...
+      'Position',[2*xsize(1) 0.07 xsize(1)/3 0.05],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility','on', ...
+      'Callback', @cb_globalbutton);
+    
     % zoom slider
-    h9text = uicontrol('Style', 'text',...
+    h10text = uicontrol('Style', 'text',...
       'String','Zoom',...
       'Units', 'normalized', ...
       'Position',[1.8*xsize(1)+0.01 ysize(2)+0.03 xsize(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
     
-    h9 = uicontrol('Style', 'slider', ...
+    h10 = uicontrol('Style', 'slider', ...
       'Parent', h, ...
       'Min', 0, 'Max', 0.9, ...
       'Value', 0, ...
@@ -303,7 +314,7 @@ switch cfg.method
     opt.ijk           = [xc yc zc];
     opt.xsize         = xsize;
     opt.ysize         = ysize;
-    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9];
+    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10];
     opt.handlesfigure = h;
     opt.handlesmarker = [];
     opt.quit          = false;
@@ -322,7 +333,9 @@ switch cfg.method
     opt.magradius     = cfg.magradius;
     opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
-    opt.markers       = markers;
+    opt.global        = get(h9, 'Value'); % show all markers in the current slices
+    opt.markerlab     = markerlab;
+    opt.markerpos     = markerpos;
     opt.clim          = cfg.clim;
     opt.zoom          = 0;
     if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
@@ -345,10 +358,10 @@ switch cfg.method
     elec.elecpos = [];
     elec.chanpos = [];
     elec.tra = [];
-    for i=1:length(opt.markers)
-      if ~isempty(opt.markers{i,1})
-        elec.label = [elec.label; opt.markers{i,1}];
-        elec.elecpos = [elec.elecpos; opt.markers{i,2}];
+    for i=1:length(opt.markerlab)
+      if ~isempty(opt.markerlab{i,1})
+        elec.label = [elec.label; opt.markerlab{i,1}];
+        elec.elecpos = [elec.elecpos; opt.markerpos{i,1}];
       end
     end
     elec.chanpos  = elec.elecpos; % identicial to elecpos
@@ -485,39 +498,62 @@ end
 delete(opt.handlesmarker(opt.handlesmarker(:)>0));
 opt.handlesmarker = [];
 
-for i=1:size(opt.markers,1)
-  if ~isempty(opt.markers{i,1})
-    pos = ft_warp_apply(inv(mri.transform), opt.markers{i,2});
-    
-    posi = pos(1);
-    posj = pos(2);
-    posk = pos(3);
-    
+idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
+if ~isempty(idx)
+  for i=1:numel(idx)
+    markerlab{i,1} = opt.markerlab{idx(i),1};
+    markerpos(i,:) = opt.markerpos{idx(i),1};
+  end
+  pos = round(ft_warp_apply(inv(mri.transform), markerpos));
+  
+  posi = pos(:,1);
+  posj = pos(:,2);
+  posk = pos(:,3);
+  
+  % draw markers
+  if opt.global % show all markers in the current slices
     subplot(h1);
     hold on
-    opt.handlesmarker(i,1) = plot3(posi, yi-yloadj, posk, 'marker', '+', 'color', 'r'); % [xi yi-yloadj zi]
+    opt.handlesmarker(:,1) = plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
     if opt.showlabels
-      opt.handlesmarker(i,4) = text(posi, yi-yloadj, posk, opt.markers{i,1}, 'color', 'b');
+      for i=1:numel(markerlab)
+        opt.handlesmarker(i,4) = text(posi(i), yi-yloadj, posk(i), markerlab{i,1}, 'color', 'b');
+      end
     end
     hold off
-    
     subplot(h2);
     hold on
-    opt.handlesmarker(i,2) = plot3(xi+xhiadj, posj, posk, 'marker', '+', 'color', 'r'); % [xi+xhiadj yi zi]
+    opt.handlesmarker(:,2) = plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
     if opt.showlabels
-      opt.handlesmarker(i,5) = text(xi+xhiadj, posj, posk, opt.markers{i,1}, 'color', 'b');
+      for i=1:numel(markerlab)
+        opt.handlesmarker(i,5) = text(posi(i)+xhiadj, posj(i), posk(i), markerlab{i,1}, 'color', 'b');
+      end
     end
     hold off
-    
     subplot(h3);
     hold on
-    opt.handlesmarker(i,3) = plot3(posi, posj, zi, 'marker', '+', 'color', 'r'); % [xi yi zi]
+    opt.handlesmarker(:,3) = plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
     if opt.showlabels
-      opt.handlesmarker(i,6) = text(posi, posj, zi, opt.markers{i,1}, 'color', 'b');
+      for i=1:numel(markerlab)
+        opt.handlesmarker(i,6) = text(posi(i), posj(i), zi, markerlab{i,1}, 'color', 'b');
+      end
     end
     hold off
-  end
-end % for each marker
+  else % draw only the markers in the vicinity (FIXME: right now it shows the 'underlying' markers)
+    subplot(h1);
+    hold on
+    opt.handlesmarker(:,1) = plot3(posi, posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
+    hold off 
+    subplot(h2);
+    hold on
+    opt.handlesmarker(:,2) = plot3(posi, posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
+    hold off 
+    subplot(h3);
+    hold on
+    opt.handlesmarker(:,3) = plot3(posi, posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
+    hold off
+  end 
+end % for all markers
 
 % do not initialize on the next call
 opt.init = false;
@@ -572,7 +608,7 @@ switch key
     setappdata(h, 'opt', opt);
     cb_cleanup(h);
     
-  case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
+  case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'}
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
     elseif strcmp(tag,'ik') && (strcmp(key,'j') || strcmp(key,'leftarrow')  || isequal(key, 28)), opt.ijk(1) = opt.ijk(1)-1; opt.update = [0 1 0];
@@ -868,6 +904,10 @@ function cb_eleclistbox(h6, eventdata)
 
 elecidx = get(h6, 'Value'); % chosen elec
 if ~isempty(elecidx)
+  if numel(elecidx)>1
+    fprintf('too many labels selected\n');
+    return
+  end
   eleclis = cellstr(get(h6, 'String')); % all labels
   eleclab = eleclis{elecidx}; % this elec's label
   
@@ -877,10 +917,12 @@ if ~isempty(elecidx)
   % toggle electrode status and assign markers
   if strfind(eleclab, 'silver') % not yet, check
     eleclab = regexprep(eleclab, '"silver"','"black"'); % replace font color
-    opt.markers(elecidx,:) = {opt.label(elecidx) opt.pos};  % assign marker position and label
+    opt.markerlab{elecidx,1} = opt.label(elecidx,1); % assign marker label
+    opt.markerpos{elecidx,1} = opt.pos; % assign marker position
   elseif strfind(eleclab, 'black') % already chosen before, uncheck
     eleclab = regexprep(eleclab, '"black"','"silver"'); % replace font color
-    opt.markers(elecidx,:) = {{} zeros(0,3)};  % assign marker position and label
+    opt.markerlab{elecidx,1} = {}; % assign marker label
+    opt.markerpos{elecidx,1} = zeros(0,3); % assign marker position
   end
   
   % update plot
@@ -914,10 +956,21 @@ cb_redraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_zoomslider(h9, eventdata)
+function cb_globalbutton(h9, eventdata)
 
 h = getparent(h9);
 opt = getappdata(h, 'opt');
-opt.zoom = round(get(h9, 'value')*10)/10;
+opt.global = get(h9, 'value');
+setappdata(h, 'opt', opt);
+cb_redraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_zoomslider(h10, eventdata)
+
+h = getparent(h10);
+opt = getappdata(h, 'opt');
+opt.zoom = round(get(h10, 'value')*10)/10;
 setappdata(h, 'opt', opt);
 cb_redraw(h);
