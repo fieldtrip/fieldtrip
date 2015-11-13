@@ -55,6 +55,10 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % $Id$
 
 
+% FIXME: for re-plotting CT coords on MR describe axes in terms of coordinate system instead of ijk
+% FIXME: alike ft_warp_apply(mri.transform, opt.ijk); 
+% thus, pos and crosshair should be in mri space, and ijk in voxelspace?
+
 % do the general setup of the function
 ft_defaults
 ft_preamble init
@@ -69,12 +73,15 @@ if abort
 end
 
 % set the defaults
-cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
-cfg.method     = ft_getopt(cfg, 'method');               % volume, headshape
-cfg.channel    = ft_getopt(cfg, 'channel',          []); % default will be determined further down {'1', '2', ...}
-cfg.clim       = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit
-cfg.radius     = ft_getopt(cfg, 'radius',            2); % magnet feature: detect peaks within n radius physical voxels   
-cfg.elec       = ft_getopt(cfg, 'elec',             []); % already defined electrodes, for plotting purposes 
+cfg.parameter     = ft_getopt(cfg, 'parameter', 'anatomy');
+cfg.method        = ft_getopt(cfg, 'method');               % volume, headshape
+cfg.channel       = ft_getopt(cfg, 'channel',          []); % default will be determined further down {'1', '2', ...}
+cfg.elec          = ft_getopt(cfg, 'elec',             []); % use previously placed electrodes
+% intensity options
+cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit voxels   
+% magnet options
+cfg.magradius     = ft_getopt(cfg, 'magradius',         2); % magnet: detect voxels within n radius physical
+cfg.magtype       = ft_getopt(cfg, 'magtype',      'peak'); % magnet: detect peaks or troughs
 
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
@@ -140,15 +147,15 @@ switch cfg.method
     set(h, 'CloseRequestFcn',     @cb_cleanup);
     
     % axes settings
-    xdim = mri.dim(1) + mri.dim(2);
-    ydim = mri.dim(2) + mri.dim(3);
+    xdim = mri.dim(1) + mri.dim(2); %FIXME: for re-plotting CT coords on MR describe axes in terms of coordinate system instead of ijk
+    ydim = mri.dim(2) + mri.dim(3); % FIXME: ft_warp_apply(mri.transform, opt.ijk);
     
     xsize(1) = 0.82*mri.dim(1)/xdim;
     xsize(2) = 0.82*mri.dim(2)/xdim;
     ysize(1) = 0.82*mri.dim(3)/ydim;
     ysize(2) = 0.82*mri.dim(2)/ydim;
     
-    xc = round(mri.dim(1)/2); % start view
+    xc = round(mri.dim(1)/2); % start with center view
     yc = round(mri.dim(2)/2);
     zc = round(mri.dim(3)/2);
     
@@ -225,14 +232,32 @@ switch cfg.method
       'Callback', @cb_sliceslider);
     
     % electrode listbox
-    if isempty(cfg.channel) % ability to specify grid types, e.g. grid1_elec1, strip1_elec1?
-      for c = 1:150
-        cfg.channel{c} = sprintf('%d', c);
+    if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
+      cfg.channel = []; % ensure cfg.channel is empty, for filling it up
+      for e = 1:numel(cfg.elec.label)
+        cfg.channel{e} = cfg.elec.label{e};
+        chanstrings{e} = ['<HTML><FONT color="black">' cfg.channel{e} '</FONT></HTML>']; % hmtl'ize
+
+        markers{e,1} = cfg.elec.ijkorig(e,:); % marker stuff
+        markers{e,2} = cfg.elec.elecpos(e,:);
+        markers{e,3} = cfg.elec.label{e};
       end
+    else % otherwise use standard / prespecified (cfg.channel) electrode labels
+      if isempty(cfg.channel)
+        for c = 1:150
+          cfg.channel{c} = sprintf('%d', c);
+        end
+      end    
+      for c = 1:numel(cfg.channel)
+        chanstrings{c} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
+      end
+      
+      markervox   = zeros(0,3); % marker stuff
+      markerpos   = zeros(0,3);
+      markerlabel = {};
+      markers = repmat({markervox markerpos markerlabel},numel(cfg.channel),1);
     end
-    for c = 1:numel(cfg.channel)
-      chanstrings{c} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
-    end
+    
     h7 = uicontrol('Style', 'listbox', ...
       'Parent', h, ...
       'Value', [], 'Min', 0, 'Max', numel(chanstrings), ...
@@ -262,7 +287,7 @@ switch cfg.method
       'HandleVisibility','on', ...
       'Callback', @cb_labelsbutton);
     
-    % intensity range sliders
+    % zoom slider
     h10text = uicontrol('Style', 'text',...
       'String','Zoom',...
       'Units', 'normalized', ...
@@ -281,7 +306,7 @@ switch cfg.method
     
     if ~isempty(cfg.elec)
       for e = 1:numel(cfg.elec.label)
-        markers{e,1} = cfg.elec.voxorig(e,:);
+        markers{e,1} = cfg.elec.ijkorig(e,:);
         markers{e,2} = cfg.elec.elecpos(e,:);
         markers{e,3} = cfg.elec.label{e};
       end
@@ -317,7 +342,8 @@ switch cfg.method
     opt.showlabels    = 0;
     opt.label         = cfg.channel;
     opt.magnet        = get(h8, 'Value');
-    opt.radius        = cfg.radius;
+    opt.magradius     = cfg.magradius;
+    opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
     opt.markers       = markers;
     opt.clim          = cfg.clim;
@@ -342,12 +368,12 @@ switch cfg.method
     elec.elecpos = [];
     elec.chanpos = [];
     elec.tra = [];
-    elec.voxorig = [];
+    elec.ijkorig = [];
     for i=1:length(opt.markers)
       if ~isempty(opt.markers{i,1})
         elec.label = [elec.label; opt.markers{i,3}];
         elec.elecpos = [elec.elecpos; opt.markers{i,2}];
-        elec.voxorig = [elec.voxorig; opt.markers{i,1}]; % keep the original voxel coordinates
+        elec.ijkorig = [elec.ijkorig; opt.markers{i,1}]; % keep the original voxel coordinates
       end
     end
     elec.chanpos  = elec.elecpos; % identicial to elecpos
@@ -450,27 +476,27 @@ if ~isempty(sel)
 end
 
 % zoom
-xloadj = round((xi-opt.h1axis(1))-(xi-opt.h1axis(1))*opt.zoom)+.5;
-xhiadj = round((opt.h1axis(2)-xi)-(opt.h1axis(2)-xi)*opt.zoom)+.5;
-yloadj = round((yi-opt.h1axis(3))-(yi-opt.h1axis(3))*opt.zoom)+.5;
-yhiadj = round((opt.h1axis(4)-yi)-(opt.h1axis(4)-yi)*opt.zoom)+.5;
-zloadj = round((zi-opt.h1axis(5))-(zi-opt.h1axis(5))*opt.zoom)+.5;
-zhiadj = round((opt.h1axis(6)-zi)-(opt.h1axis(6)-zi)*opt.zoom)+.5;
+xloadj = round((xi-opt.h1axis(1))-(xi-opt.h1axis(1))*opt.zoom);
+xhiadj = round((opt.h1axis(2)-xi)-(opt.h1axis(2)-xi)*opt.zoom);
+yloadj = round((yi-opt.h1axis(3))-(yi-opt.h1axis(3))*opt.zoom);
+yhiadj = round((opt.h1axis(4)-yi)-(opt.h1axis(4)-yi)*opt.zoom);
+zloadj = round((zi-opt.h1axis(5))-(zi-opt.h1axis(5))*opt.zoom);
+zhiadj = round((opt.h1axis(6)-zi)-(opt.h1axis(6)-zi)*opt.zoom);
 axis(h1, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
 axis(h2, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
 axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
 
 if opt.init
   % draw the crosshairs for the first time
-  hch1 = crosshair([xi yi zi], 'parent', h1, 'color', 'yellow'); % [xi 1 zi]
-  hch2 = crosshair([xi yi zi], 'parent', h2, 'color', 'yellow'); % [opt.dim(1) yi zi]
-  hch3 = crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % [xi yi opt.dim(3)]
+  hch1 = crosshair([xi yi-yloadj zi], 'parent', h1, 'color', 'yellow'); % was [xi 1 zi], now corrected for zoom
+  hch2 = crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
+  hch3 = crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
   opt.handlesmarker = [];
 else
   % update the existing crosshairs, don't change the handles
-  crosshair([xi yi zi], 'handle', opt.handlescross(1, :));
-  crosshair([xi yi zi], 'handle', opt.handlescross(2, :));
+  crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
+  crosshair([xi+xhiadj yi zi], 'handle', opt.handlescross(2, :));
   crosshair([xi yi zi], 'handle', opt.handlescross(3, :));
 end
 
@@ -493,25 +519,25 @@ for i=1:size(opt.markers,1)
     
     subplot(h1);
     hold on
-    opt.handlesmarker(i,1) = plot3(posi, posj, posk, 'marker', '+', 'color', 'r'); % posi, 1, posk
+    opt.handlesmarker(i,1) = plot3(posi, yi-yloadj, posk, 'marker', '+', 'color', 'r'); % [xi yi-yloadj zi]
     if opt.showlabels
-      opt.handlesmarker(i,4) = text(posi, posj, posk, opt.markers{i,3});
+      opt.handlesmarker(i,4) = text(posi, yi-yloadj, posk, opt.markers{i,3});
     end
     hold off
     
     subplot(h2);
     hold on
-    opt.handlesmarker(i,2) = plot3(posi, posj, posk, 'marker', '+', 'color', 'r'); % opt.dim(1), posj, posk
+    opt.handlesmarker(i,2) = plot3(xi+xhiadj, posj, posk, 'marker', '+', 'color', 'r'); % [xi+xhiadj yi zi]
     if opt.showlabels
-      opt.handlesmarker(i,5) = text(posi, posj, posk, opt.markers{i,3});
+      opt.handlesmarker(i,5) = text(xi+xhiadj, posj, posk, opt.markers{i,3});
     end
     hold off
     
     subplot(h3);
     hold on
-    opt.handlesmarker(i,3) = plot3(posi, posj, posk, 'marker', '+', 'color', 'r'); % posi, posj, opt.dim(3)
+    opt.handlesmarker(i,3) = plot3(posi, posj, zi, 'marker', '+', 'color', 'r'); % [xi yi zi]
     if opt.showlabels
-      opt.handlesmarker(i,6) = text(posi, posj, posk, opt.markers{i,3});
+      opt.handlesmarker(i,6) = text(posi, posj, zi, opt.markers{i,3});
     end
     hold off
   end
@@ -731,9 +757,13 @@ opt.ijk = max(opt.ijk(:)', [1 1 1]);
 if opt.magnet % magnetize
   try
     center = opt.ijk;
-    radius = opt.radius;
+    radius = opt.magradius;
     cubic = opt.ana(center(1)-radius:center(1)+radius, center(2)-radius:center(2)+radius, center(3)-radius:center(3)+radius);
-    [val, idx] = max(cubic(:)); % find peak intensity voxel within the radius
+    if strcmp(opt.magtype, 'peak')
+      [val, idx] = max(cubic(:)); % find peak intensity voxel within the radius
+    elseif strcmp(opt.magtype, 'trough')
+      [val, idx] = min(cubic(:)); % find trough intensity voxel within the radius
+    end
     [ix, iy, iz] = ind2sub(size(cubic), idx);
     opt.ijk = center+[ix, iy, iz]-radius-1;
   end
