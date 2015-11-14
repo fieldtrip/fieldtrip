@@ -81,8 +81,9 @@ cfg.method        = ft_getopt(cfg, 'method');               % volume, headshape
 cfg.parameter     = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',          []); % default will be determined further down {'1', '2', ...}
 cfg.elec          = ft_getopt(cfg, 'elec',             []); % use previously placed electrodes
-% intensity options
+% view options
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit voxels
+cfg.markerdist    = ft_getopt(cfg, 'markerdist',        5); % marker-slice distance for including in the view
 % magnet options
 cfg.magtype       = ft_getopt(cfg, 'magtype',      'peak'); % detect peaks or troughs or center-of-mass
 cfg.magradius     = ft_getopt(cfg, 'magradius',         2); % specify the physical unit radius
@@ -273,7 +274,7 @@ switch cfg.method
     
     h9 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
-      'Value', 1, ...
+      'Value', 0, ...
       'String','Global',...
       'Units', 'normalized', ...
       'Position',[2*xsize(1) 0.07 xsize(1)/3 0.05],...
@@ -336,6 +337,7 @@ switch cfg.method
     opt.global        = get(h9, 'Value'); % show all markers in the current slices
     opt.markerlab     = markerlab;
     opt.markerpos     = markerpos;
+    opt.markerdist    = cfg.markerdist; % hidden option
     opt.clim          = cfg.clim;
     opt.zoom          = 0;
     if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
@@ -410,7 +412,6 @@ if any([xi yi zi] > mri.dim) || any([xi yi zi] <= 0)
 end
 
 opt.ijk = [xi yi zi 1]';
-xyz = mri.transform * opt.ijk;
 opt.ijk = opt.ijk(1:3)';
 
 % construct a string with user feedback
@@ -498,61 +499,87 @@ end
 delete(opt.handlesmarker(opt.handlesmarker(:)>0));
 opt.handlesmarker = [];
 
+% draw markers
 idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
 if ~isempty(idx)
   for i=1:numel(idx)
     markerlab{i,1} = opt.markerlab{idx(i),1};
     markerpos(i,:) = opt.markerpos{idx(i),1};
   end
-  pos = round(ft_warp_apply(inv(mri.transform), markerpos));
   
-  posi = pos(:,1);
-  posj = pos(:,2);
-  posk = pos(:,3);
+  pos = round(ft_warp_apply(inv(mri.transform), markerpos)); % head to vox
+  tmp1 = pos(:,1);
+  tmp2 = pos(:,2);
+  tmp3 = pos(:,3);
   
-  % draw markers
-  if opt.global % show all markers in the current slices
-    subplot(h1);
+  subplot(h1);
+  if ~opt.global % filter markers distant to the current slice (N units and further)
+    posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
+    posi = tmp1(posj_idx);
+    posj = tmp2(posj_idx);
+    posk = tmp3(posj_idx);
+  else % plot all markers on the current slice
+    posj_idx = 1:numel(tmp1);
+    posi = tmp1;
+    posj = tmp2;
+    posk = tmp3;
+  end
+  if ~isempty(posi)
     hold on
     opt.handlesmarker(:,1) = plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
     if opt.showlabels
-      for i=1:numel(markerlab)
-        opt.handlesmarker(i,4) = text(posi(i), yi-yloadj, posk(i), markerlab{i,1}, 'color', 'b');
+      for i=1:numel(posj_idx)
+        opt.handlesmarker(i,4) = text(posi(i), yi-yloadj, posk(i), markerlab{posj_idx(i),1}, 'color', 'b');
       end
     end
     hold off
-    subplot(h2);
+  end
+  
+  subplot(h2);
+  if ~opt.global % filter markers distant to the current slice (N units and further)
+    posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
+    posi = tmp1(posi_idx);
+    posj = tmp2(posi_idx);
+    posk = tmp3(posi_idx);
+  else % plot all markers on the current slice
+    posi_idx = 1:numel(tmp1);
+    posi = tmp1;
+    posj = tmp2;
+    posk = tmp3;
+  end
+  if ~isempty(posj)
     hold on
     opt.handlesmarker(:,2) = plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
     if opt.showlabels
-      for i=1:numel(markerlab)
-        opt.handlesmarker(i,5) = text(posi(i)+xhiadj, posj(i), posk(i), markerlab{i,1}, 'color', 'b');
+      for i=1:numel(posi_idx)
+        opt.handlesmarker(i,5) = text(posi(i)+xhiadj, posj(i), posk(i), markerlab{posi_idx(i),1}, 'color', 'b');
       end
     end
     hold off
-    subplot(h3);
+  end
+  
+  subplot(h3);
+  if ~opt.global % filter markers distant to the current slice (N units and further)
+    posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
+    posi = tmp1(posk_idx);
+    posj = tmp2(posk_idx);
+    posk = tmp3(posk_idx);
+  else % plot all markers on the current slice
+    posk_idx = 1:numel(tmp1);
+    posi = tmp1;
+    posj = tmp2;
+    posk = tmp3;
+  end
+  if ~isempty(posk)
     hold on
     opt.handlesmarker(:,3) = plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
     if opt.showlabels
-      for i=1:numel(markerlab)
-        opt.handlesmarker(i,6) = text(posi(i), posj(i), zi, markerlab{i,1}, 'color', 'b');
+      for i=1:numel(posk_idx)
+        opt.handlesmarker(i,6) = text(posi(i), posj(i), zi, markerlab{posk_idx(i),1}, 'color', 'b');
       end
     end
     hold off
-  else % draw only the markers in the vicinity (FIXME: right now it shows the 'underlying' markers)
-    subplot(h1);
-    hold on
-    opt.handlesmarker(:,1) = plot3(posi, posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
-    hold off 
-    subplot(h2);
-    hold on
-    opt.handlesmarker(:,2) = plot3(posi, posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
-    hold off 
-    subplot(h3);
-    hold on
-    opt.handlesmarker(:,3) = plot3(posi, posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
-    hold off
-  end 
+  end
 end % for all markers
 
 % do not initialize on the next call
