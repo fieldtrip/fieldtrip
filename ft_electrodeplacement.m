@@ -307,7 +307,8 @@ switch cfg.method
           '      coronal plane, or\n',...
           '   b. use the arrow keys to increase or decrease the slice number by one\n',...
       '2. To assign an electrode label to the crosshair location:\n',...
-          '   a. click on an electrode label in the list\n'));
+          '   a. click on an electrode label in the list\n',...
+      '3. To finalize markers, close the window or press q on the keyboard\n'));
     
     % create structure to be passed to gui
     opt               = [];
@@ -368,7 +369,7 @@ switch cfg.method
     end
     elec.chanpos  = elec.elecpos; % identicial to elecpos
     elec.tra = eye(size(elec.elecpos,1));
-    if isfield(mri, 'coordsys')
+    if isfield(mri, 'unit')
       elec.unit  = mri.unit;
     end
     if isfield(mri, 'coordsys')
