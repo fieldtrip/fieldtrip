@@ -62,6 +62,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % $Id$
 
+revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
