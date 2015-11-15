@@ -13,7 +13,8 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % The magnet feature transports the crosshair to the nearest peak intensity
 % voxel, within a certain voxel radius of the selected location.
 % The labels feature displays the labels of the selected electrodes within
-% the orthoplot.
+% the orthoplot. The global feature allows toggling the view between all
+% and near-crosshair markers.
 %
 % HEADSHAPE - Navigate a triangulated head/brain surface, and assign
 % an electrode location by clicking on the brain. The electrode
