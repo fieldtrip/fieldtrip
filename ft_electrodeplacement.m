@@ -1,8 +1,8 @@
 function [elec] = ft_electrodeplacement(cfg, varargin)
 
-% FT_ELECTRODEPLACEMENT allows placing electrodes on volume or headshape.
+% FT_ELECTRODEPLACEMENT allows placing electrodes on a volume or headshape.
 % The different methods are described in detail below.
-
+%
 % VOLUME - Navigate an orthographic display of a volume (e.g. CT or
 % MR scan), and assign an electrode label to the current crosshair location
 % by clicking on a label in the eletrode list. You can undo the selection by
@@ -25,7 +25,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % Use as
 %   [elec] = ft_electrodeplacement(cfg, headshape)
 % where the input headshape should be a surface triangulation
-
+%
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning or placing the electrodes
 %                        'mri'             place electrodes in a brain volume
