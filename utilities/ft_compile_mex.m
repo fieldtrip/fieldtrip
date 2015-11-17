@@ -99,7 +99,7 @@ L = add_mex_source(L,'src','sandwich2x2');
 L = add_mex_source(L,'src','combineClusters');
 
 % this one is located elsewhere
-L = add_mex_source(L,'external/fileexchange','CalcMD5');
+L = add_mex_source(L,'external/fileexchange','CalcMD5',[],[],'CFLAGS=''-std=c99 -fPIC''');
 
 % this one depends on the MATLAB version
 if ft_platform_supports('libmx_c_interface')
