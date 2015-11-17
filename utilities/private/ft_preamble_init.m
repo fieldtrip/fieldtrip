@@ -46,7 +46,8 @@ if nargin==0
 end % if nargin
 
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
-cfg = mergeconfig(cfg, ft_default);
+% merge the default options into the configuration, except the preamble field which is used for passing arguments
+cfg = mergeconfig(cfg, rmfield(ft_default, 'preamble'));
 
 % determine whether function execution should be aborted or continued
 if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
