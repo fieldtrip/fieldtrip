@@ -20,7 +20,7 @@ function nmt_sourceplot_spm8(cfg,functional)
 % The configuration should contain:
 %   cfg.funparameter  = string, field in data with the functional parameter of interest (default = [])
 %   cfg.mripath = string, location of Nifti-format MRI
-%   **TODO** cfg.maskparameter = string, field in the data to be used for opacity masking of fun data (default = [])
+%   cfg.maskparameter = string, field in the data to be used for opacity masking of fun data (default = [])
 %                        If values are between 0 and 1, zero is fully transparant and one is fully opaque.
 %                        If values in the field are not between 0 and 1 they will be scaled depending on the values
 %                        of cfg.opacitymap and cfg.opacitylim (see below)
@@ -159,38 +159,6 @@ function nmt_sourceplot_spm8(cfg,functional)
 
 revision = '$Id$';
 
-if(0)
-% do the general setup of the function
-ft_defaults
-ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
-ft_preamble debug
-ft_preamble loadvar functional
-
-% the abort variable is set to true or false in ft_preamble_init
-if abort
-    return
-end
-
-% ensure that old and unsupported options are not being relied on by the end-user's script
-% instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
-cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
-cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.pow', 'pow'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.coh', 'coh'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.mom', 'mom'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.pow', 'pow'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
-
-% set the defaults for all methods
-cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
-cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
-cfg.title         = ft_getopt(cfg, 'title',         '');
-cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
-end
-
 %%
 % do the general setup of the function
 ft_defaults
@@ -228,6 +196,16 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.mom', 'mom'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
+
+
+% set the defaults for all methods
+cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
+cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
+cfg.title         = ft_getopt(cfg, 'title',         '');
+cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
+cfg.topoplot      = ft_getopt(cfg, 'topoplot',  '');
+
+
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys
@@ -711,7 +689,8 @@ if ~isempty(cfg.funparameter)
         hasfun = 1;
         
         st.nmt.pos = functional.pos;
-        
+        st.nmt.cfg = cfg;
+      
         switch(cfg.funparameter)
             case {'mom'}
                 fun = cell2mat(getsubfield(functional,cfg.funparameter));
@@ -747,19 +726,22 @@ if ~isempty(cfg.funparameter)
                 if(length(cfg.time_idx(1)) == 1)
                     cfg.time_idx(2) = cfg.time_idx(1);
                 end
-            otherwise
-                st.nmt.fun = getsubfield(functional, cfg.funparameter);
+                
+                st.nmt.cfg.time_idx = cfg.time_idx;
+            case 'timefreq-notyetimplemented'
                 if isfield(functional, 'time')
-                  st.nmt.time = functional.time;
+                    st.nmt.time = functional.time;
                 end
                 if isfield(functional, 'freq')
-                  st.nmt.freq = functional.freq;
+                    st.nmt.freq = functional.freq;
                 end
+            otherwise
+                st.nmt.fun = getsubfield(functional, cfg.funparameter);
+                st.nmt.cfg.time_idx = [1 1]; % no time dimension in this case
         end
 
         st.nmt.msk = msk;
         
-        st.nmt.cfg = cfg;
     else
         error('cfg.funparameter not found in functional');
     end
@@ -767,6 +749,13 @@ else
     hasfun = 0;
     fprintf('no functional parameter\n');
 end
+
+switch(cfg.topoplot)
+        case 'timelock'
+            st.nmt.timelock = functional.timelock;
+        case {'spatialfilter','leadfield','leadfieldX','leadfieldY','leadfieldZ','leadfieldori'}
+            st.nmt.cfg.
+
 
 nmt_spm8_plot(cfg);
 nmt_image;
