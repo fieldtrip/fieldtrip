@@ -751,11 +751,13 @@ else
 end
 
 switch(cfg.topoplot)
-        case 'timelock'
-            st.nmt.timelock = functional.timelock;
-        case {'spatialfilter','leadfield','leadfieldX','leadfieldY','leadfieldZ','leadfieldori'}
-            st.nmt.cfg.
-
+    case 'timelock'
+        st.nmt.timelock = functional.timelock;
+    case {'spatialfilter'}
+        st.nmt.spatialfilter = functional.filter
+    case {'leadfield','leadfieldX','leadfieldY','leadfieldZ','leadfieldori'}
+        st.nmt.grid = functional.grid;
+end
 
 nmt_spm8_plot(cfg);
 nmt_image;

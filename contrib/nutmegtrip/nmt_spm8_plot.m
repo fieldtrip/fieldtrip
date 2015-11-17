@@ -129,7 +129,7 @@ if(isfield(st.nmt,'time'))
         case 'timelock'
             cfgplot.xlim = st.nmt.time(st.nmt.cfg.time_idx);
             cfgplot.zlim = 'maxabs';
-            nmt_addtopo(cfgplot,st.nmt.cfg.timelock);
+            nmt_addtopo(cfgplot,st.nmt.timelock);
         case {'spatialfilter','leadfield','leadfieldX','leadfieldY','leadfieldZ','leadfieldori'}
             % FIXME: this isn't so elegant :-)
             % currently steals some information from timelock structure
