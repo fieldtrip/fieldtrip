@@ -39,6 +39,7 @@ cfgd.downsample = 2;
 mri1b = ft_volumedownsample(cfgd, mri1);
 mri2b = ft_volumedownsample(cfgd, mri2);
 
+setenv('FSLOUTPUTTYPE','NIFTI_GZ'); % see: https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=fsl;f0b2757e.1311
 cfg          = [];
 cfg.method   = 'fsl';
 cfg.fsl.path = '/opt/fsl/bin'; % '/opt/fsl_5.0/bin'; % fsl_5.0 only works on high mentats due to libraries
