@@ -17,6 +17,12 @@ switch(op)
             st.nmt.cfg.time_idx(1) = dsearchn(st.nmt.time',currpt);
             st.nmt.cfg.time_idx(2) = dsearchn(st.nmt.time',currpt);
         end
+    case 'textbox'
+        t1 = str2num(get(st.nmt.gui.t1,'String'));
+        t2 = str2num(get(st.nmt.gui.t2,'String'));
+        
+        st.nmt.cfg.time_idx(1) = dsearchn(st.nmt.time',t1);
+        st.nmt.cfg.time_idx(2) = dsearchn(st.nmt.time',t2);
     otherwise
         % otherwise, time interval was already specified, so nothing to do
 end

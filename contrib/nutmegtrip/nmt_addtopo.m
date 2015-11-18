@@ -1,4 +1,7 @@
 function nmt_addtopo(cfgplot,erp)
+% configures and display topoplot on nutmegtrip viewer
+% (not intended for use outside of nutmegtrip plot functions)
+
 global st
 figure(st.fig);
 for ii=1:3

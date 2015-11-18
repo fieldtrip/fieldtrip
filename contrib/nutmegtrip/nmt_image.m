@@ -39,7 +39,7 @@ switch(op)
             
             
             if(size(st.nmt.fun,2)>1)
-                nmt_reposition;
+                nmt_timeselect;
             end
             
 %             [~,mriname]=fileparts(st.vols{1}.fname);

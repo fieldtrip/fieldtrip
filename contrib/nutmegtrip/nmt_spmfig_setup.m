@@ -117,9 +117,6 @@ for i=1:3  % step through three orthogonal views
 end
 
 % for time series or spectrogram data, expand SPM window and create new axes
-if(isfield(st.nmt,''))
-end
-
 switch(cfg.funparameter)
     case {'avg.mom','mom','pow','avg.pow'}
         % MRI slices have "relative" position; change to fixed position
@@ -177,7 +174,7 @@ switch(cfg.funparameter)
 
         st.nmt.gui.t1 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig);
         set(st.nmt.gui.t1,'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-70 80 25],...
-            'HorizontalAlignment','right','Visible','off');
+            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
         st.nmt.gui.timeguih(3) = st.nmt.gui.t1;
  
         st.nmt.gui.timeguih(4) = uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
@@ -186,9 +183,14 @@ switch(cfg.funparameter)
         
         st.nmt.gui.t2 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
             'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-70 80 25],...
-            'HorizontalAlignment','right','Visible','off');
+            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
         st.nmt.gui.timeguih(5) = st.nmt.gui.t2;
-
+        
+        
+        st.nmt.gui.animate = uicontrol('Style','pushbutton','String','Animate','BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
+            'Position',[offx+s*Dims(1)+4*skx+300 offy+s*Dims(2)-70 80 25],...
+            'HorizontalAlignment','right','Visible','off','Callback','nmt_animate');
+        st.nmt.gui.timeguih(6) = st.nmt.gui.animate;
 end
 
 st.nmt.gui.ax_topo_pos = [offx+s*Dims(1)+4*skx offy+s*Dims(2)-700 2*s*(Dims(2)) 2*s*(Dims(2))];

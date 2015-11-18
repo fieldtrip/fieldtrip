@@ -1,4 +1,8 @@
 function nmt_spm8_plot(cfg)
+% nmt_spm8_plot(cfg)
+% plots desired activation on SPM8 viewer
+% designed for use via nmt_sourceplot_spm8, but possibly usable independently
+
 global st
 
 if(~exist('cfg','var'))
@@ -136,7 +140,7 @@ if(isfield(st.nmt,'time'))
             topo.label = st.nmt.timelock.label;
             topo.grad = st.nmt.timelock.grad;
             topo.dimord = 'chan_time';
-            topo.time = [0 1 2 3];
+            topo.time = [0 1 2 3]; % not really time, but selection of magnitude or x/y/z components
             switch(cfg.topoplot)
                 case 'spatialfilter'
                     topo.time = 0; % fake time (take vector norm)
@@ -194,12 +198,12 @@ function nmt_repos_start(varargin)
 global st
 % if(st.nmt.gui.ax_ts == gcbo) % if ts axes were clicked (i.e., not MRI)
     set(gcbf,'windowbuttonmotionfcn',@nmt_repos_move, 'windowbuttonupfcn',@nmt_repos_end);
-    nmt_reposition('ts');
+    nmt_timeselect('ts');
 % end
 %_______________________________________________________________________
 %_______________________________________________________________________
 function nmt_repos_move(varargin)
-nmt_reposition('ts');
+nmt_timeselect('ts');
 %_______________________________________________________________________
 %_______________________________________________________________________
 function nmt_repos_end(varargin)

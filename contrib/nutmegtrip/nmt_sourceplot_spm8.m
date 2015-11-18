@@ -1,5 +1,5 @@
 function nmt_sourceplot_spm8(cfg,functional)
-% FT_SOURCEPLOT_SPM8
+% NMT_SOURCEPLOT_SPM8
 % plots functional source reconstruction data on slices or on
 % a surface, optionally as an overlay on anatomical MRI data, where
 % statistical data can be used to determine the opacity of the mask. Input
@@ -660,7 +660,7 @@ if(~isempty(spmfigh))
 end
 
 spm_image('init',cfg.mripath); % load/reload structural MRI
-nmt_spmfig_setup(cfg)
+nmt_spmfig_setup(cfg);
 
 title(cfg.title);
 
@@ -754,7 +754,7 @@ switch(cfg.topoplot)
     case 'timelock'
         st.nmt.timelock = functional.timelock;
     case {'spatialfilter'}
-        st.nmt.spatialfilter = functional.filter
+        st.nmt.spatialfilter = functional.filter;
     case {'leadfield','leadfieldX','leadfieldY','leadfieldZ','leadfieldori'}
         st.nmt.grid = functional.grid;
 end
