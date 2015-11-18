@@ -294,14 +294,14 @@ for i=1:numel(varargin)
     
     % cfg.latency is used to select individual spikes, not to select from a continuously sampled time axis
     
-    if fieldhasspike,   varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'spike')),             selspike{i},   false,       datfield{j}, 'intersect'); end
-    if fieldhaspos,     varargin{i} = makeselection(varargin{i}, find(ismember(dimtok, {'pos', '{pos}'})), selpos{i},     avgoverpos,  datfield{j}, cfg.select); end
-    if fieldhaschan,    varargin{i} = makeselection(varargin{i}, find(ismember(dimtok,{'chan' '{chan}'})), selchan{i},    avgoverchan, datfield{j}, cfg.select); end
-    if fieldhaschancmb, varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'chancmb')),           selchancmb{i}, avgoverchancmb, datfield{j}, cfg.select); end
-    if fieldhastime,    varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'time')),              seltime{i},    avgovertime, datfield{j}, cfg.select); end
-    if fieldhasfreq,    varargin{i} = makeselection(varargin{i}, find(strcmp(dimtok,'freq')),              selfreq{i},    avgoverfreq, datfield{j}, cfg.select); end
-    if fieldhasrpt,     varargin{i} = makeselection(varargin{i}, rptdim{i},                                selrpt{i},     avgoverrpt,  datfield{j}, 'intersect'); end
-    if fieldhasrpttap,  varargin{i} = makeselection(varargin{i}, rptdim{i},                                selrpttap{i},  avgoverrpt,  datfield{j}, 'intersect'); end
+    if fieldhasspike,   varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'spike')),             selspike{i},   false,           'intersect'); end
+    if fieldhaspos,     varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(ismember(dimtok, {'pos', '{pos}'})), selpos{i},     avgoverpos,      cfg.select);  end
+    if fieldhaschan,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(ismember(dimtok,{'chan' '{chan}'})), selchan{i},    avgoverchan,     cfg.select);  end
+    if fieldhaschancmb, varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'chancmb')),           selchancmb{i}, avgoverchancmb,  cfg.select);  end
+    if fieldhastime,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'time')),              seltime{i},    avgovertime,     cfg.select);  end
+    if fieldhasfreq,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'freq')),              selfreq{i},    avgoverfreq,     cfg.select);  end
+    if fieldhasrpt,     varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, rptdim{i},                                selrpt{i},     avgoverrpt,      'intersect'); end
+    if fieldhasrpttap,  varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, rptdim{i},                                selrpttap{i},  avgoverrpt,      'intersect'); end
     
     % update the fields that should be kept in the structure as a whole
     % and update the dimord for this specific datfield
@@ -420,7 +420,7 @@ if strcmp(dtype, 'source') && ~isempty(restoreavg)
   for i=1:length(varargin)
     varargin{i}.avg = keepfields(varargin{i}, restoreavg);
     varargin{i}     = removefields(varargin{i}, restoreavg);
-  end  
+  end
 end
 
 varargout = varargin;
@@ -453,39 +453,31 @@ end % main function ft_selectdata
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function data = makeselection(data, seldim, selindx, avgoverdim, datfield, selmode)
+function data = makeselection(data, datfield, dimtok, seldim, selindx, avgoverdim, selmode)
 
 if numel(seldim) > 1
   for k = 1:numel(seldim)
-    data = makeselection(data, seldim(k), selindx, avgoverdim, datfield, selmode);
+    data = makeselection(data, datfield, dimtok, seldim(k), selindx, avgoverdim, selmode);
   end
   return;
 end
 
 if isnumeric(data.(datfield))
   if isrow(data.(datfield)) && seldim==1
-    dimord = getdimord(data, datfield);
-    dimtok = tokenize(dimord, '_');
     if length(dimtok)==1
       seldim = 2; % switch row and column
     end
   elseif iscolumn(data.(datfield)) && seldim==2
-    dimord = getdimord(data, datfield);
-    dimtok = tokenize(dimord, '_');
     if length(dimtok)==1
       seldim = 1; % switch row and column
     end
   end
 elseif iscell(data.(datfield))
   if isrow(data.(datfield){1}) && seldim==2
-    dimord = getdimord(data, datfield);
-    dimtok = tokenize(dimord, '_'); % the first is the cell-array, i.e. {rpt} or {pos}
     if length(dimtok)==2
       seldim = 3; % switch row and column
     end
   elseif iscolumn(data.(datfield){1}) && seldim==3
-    dimord = getdimord(data, datfield);
-    dimtok = tokenize(dimord, '_'); % the first is the cell-array, i.e. {rpt} or {pos}
     if length(dimtok)==2
       seldim = 2; % switch row and column
     end
@@ -503,7 +495,7 @@ switch selmode
         if ~isempty(selindx{j}) && all(isnan(selindx{j}))
           % no selection needs to be made
         else
-          data.(datfield){j} = cellmatselect(data.(datfield){j}, seldim-1, selindx{j});
+          data.(datfield){j} = cellmatselect(data.(datfield){j}, seldim-1, selindx{j}, numel(dimtok)==1);
         end
       end
       
@@ -512,7 +504,7 @@ switch selmode
       if ~isempty(selindx) && all(isnan(selindx))
         % no selection needs to be made
       else
-        data.(datfield) = cellmatselect(data.(datfield), seldim, selindx);
+        data.(datfield) = cellmatselect(data.(datfield), seldim, selindx, numel(dimtok)==1);
       end
     end
     
@@ -653,7 +645,7 @@ end
 % (in case selmode = 'union')
 [ix, iy] = match_str(varargin{1}.label, label);
 label1   = varargin{1}.label(:); % ensure column array
-label    = [label1(ix); label(setdiff(1:numel(label),iy))]; 
+label    = [label1(ix); label(setdiff(1:numel(label),iy))];
 
 indx = nan+zeros(numel(label), ndata);
 for k = 1:ndata
@@ -1021,13 +1013,13 @@ if isfield(cfg, 'frequency')
     elseif strcmp(cfg.frequency, 'maxmin')
       cfg.frequency = [min(freqaxis) max(freqaxis)]; % the same as 'all'
     elseif strcmp(cfg.frequency, 'minzero')
-      cfg.frequency = [min(freqaxis) 0]; 
+      cfg.frequency = [min(freqaxis) 0];
     elseif strcmp(cfg.frequency, 'maxabs')
-      cfg.frequency = [-max(abs(freqaxis)) max(abs(freqaxis))]; 
+      cfg.frequency = [-max(abs(freqaxis)) max(abs(freqaxis))];
     elseif strcmp(cfg.frequency, 'zeromax')
       cfg.frequency = [0 max(freqaxis)];
     elseif strcmp(cfg.frequency, 'zeromax')
-      cfg.frequency = [0 max(freqaxis)];      
+      cfg.frequency = [0 max(freqaxis)];
     else
       error('incorrect specification of cfg.frequency');
     end
@@ -1207,7 +1199,13 @@ end % function makeunion
 % SUBFUNCTION to make a selextion in data representations like {pos}_ori_time
 % FIXME this will fail for {xxx_yyy}_zzz
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function x = cellmatselect(x, seldim, selindx)
+function x = cellmatselect(x, seldim, selindx, maybevector)
+if nargin<4
+  % some fields are a vector with an unspecified singleton dimension, these can be transposed
+  % if the singleton dimension represents something explicit, they should not be transposed
+  % they might for example represent a single trial, or a single channel
+  maybevector = true;
+end
 if iscell(x)
   if seldim==1
     x = x(selindx);
@@ -1218,7 +1216,7 @@ if iscell(x)
       end
       switch seldim
         case 2
-          if isvector(x{i})
+          if maybevector && isvector(x{i})
             % sometimes the data is 1xN, whereas the dimord describes only the first dimension
             % in this case a row and column vector can be interpreted as equivalent
             x{i} = x{i}(selindx);
@@ -1241,7 +1239,7 @@ if iscell(x)
 else
   switch seldim
     case 1
-      if isvector(x)
+      if maybevector && isvector(x)
         % sometimes the data is 1xN, whereas the dimord describes only the first dimension
         % in this case a row and column vector can be interpreted as equivalent
         x = x(selindx);
