@@ -103,8 +103,8 @@ while ~completed && (timeout == 0 || toc(stopwatch)<timeout)
     % clean up all temporary files
     % delete(inputfile); % this one has already been deleted in qsubexec immediately after loading it
     if exist(outputfile, 'file'), delete(outputfile); end
-    if exist(logout, 'file'), delete(logout); end
-    if exist(logerr, 'file'), delete(logerr); end
+    if ~isempty(dir(logout)), delete(logout); end % note the wildcard in the file name
+    if ~isempty(dir(logerr)), delete(logerr); end % note the wildcard in the file name
     
     % remove the job from the persistent list
     qsublist('del', jobid);
