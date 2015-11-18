@@ -28,7 +28,8 @@ st.mnip = uicontrol(fg,'Style','edit', 'Position',[110 255 135 020].*WS,'String'
 % st.mnilabel=uicontrol('Style','text','BackgroundColor',[1 1 1],'Units','normalized','Position',[.6 .5 .3 .15],'FontSize',12);
 
 uicontrol(fg,'Style','Text', 'Position',[75 315 35 020].*WS,'String','MEG:');
-st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String',sprintf('%.1f %.1f %.1f',(spm_orthviews('pos')')),'Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
+%st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String',sprintf('%.1f %.1f %.1f',(spm_orthviews('pos')')),'Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
+st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String','','Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
 
 set(st.mp,'Callback','spm_image(''setposmm''); nmt_image(''shopos'');');
 set(st.vp,'Callback','spm_image(''setposvx''); nmt_image(''shopos'');');

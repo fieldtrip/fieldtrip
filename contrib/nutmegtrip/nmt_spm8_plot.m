@@ -73,7 +73,7 @@ spm_orthviews('redraw'); % blob doesn't always show until redraw is forced
 
 %% refresh current voxel and functional quantity display
 posmrimm = spm_orthviews('pos')';
-set(st.nmt.gui.megp,'String',sprintf('%.1f %.1f %.1f',posmrimm));
+% set(st.nmt.gui.megp,'String',sprintf('%.1f %.1f %.1f',posmeg));
 
 blobidx = nmt_transform_coord(inv(st.vols{1}.blobs{1}.mat),posmrimm);
 blobidx = round(blobidx);
