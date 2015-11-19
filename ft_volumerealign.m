@@ -165,7 +165,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % corresponding with the input/output structure.
 %
 % See also FT_READ_MRI, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS, SPM_AFFREG,
-% SPM_NORMALISE
+% SPM_NORMALISE, SPM_COREG
 
 % Undocumented options:
 %
@@ -867,7 +867,7 @@ switch cfg.method
       flags.nits    = 0; %set number of non-linear iterations to zero
       params        = spm_normalise(V2,V1,[],[],[],flags);
       %mri.transform = (target.transform/params.Affine)/T;
-      transform = (target.transform/params.Affine)/T/mri.transform;
+      transform     = (target.transform/params.Affine)/T/mri.transform;
       % transform     = eye(4);
       
     elseif strcmpi(cfg.spmversion, 'spm12')
@@ -876,13 +876,13 @@ switch cfg.method
       
       tname1 = [tempname, '.nii'];
       tname2 = [tempname, '.nii'];
-      VG = ft_write_mri(tname1, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm'); % reference image
-      VF = ft_write_mri(tname2, mri.anatomy, 'transform', mri.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm'); % source (moved) image
+      V1 = ft_write_mri(tname1, mri.anatomy, 'transform', mri.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm'); % source (moved) image
+      V2 = ft_write_mri(tname2, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm'); % reference image
       
       flags         = cfg.spm;
-      x             = spm_coreg(VG,VF,flags);
-      transform     = spm_matrix(x(:)');
-      
+      x             = spm_coreg(V2,V1,flags); % spm_realign does within modality rigid body movement parameter estimation
+      transform     = inv(spm_matrix(x(:)')); % from V1 to V2, to be multiplied still with the original transform (mri.transform), see below
+     
     end
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
