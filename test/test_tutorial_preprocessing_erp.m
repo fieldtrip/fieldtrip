@@ -1,4 +1,4 @@
-function test_example_preprocessing_eeg
+function test_tutorial_preprocessing_erp
 
 % MEM 1500mb
 % WALLTIME 00:10:00
