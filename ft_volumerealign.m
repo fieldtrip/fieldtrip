@@ -41,12 +41,12 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning
 %                        'interactive' use the GUI to specify the fiducials
-%                        'fiducial'    use pre-specified fiducials 
+%                        'fiducial'    use pre-specified fiducials
 %                        'headshape'   match the MRI surface to a headshape
 %                        'spm'         match to template anatomical MRI
-%                        'fsl'         match to template anatomical MRI 
-%   cfg.coordsys       = string specifying the origin and the axes of the coordinate 
-%                        system. Supported coordinate systems are 'ctf', '4d', 
+%                        'fsl'         match to template anatomical MRI
+%   cfg.coordsys       = string specifying the origin and the axes of the coordinate
+%                        system. Supported coordinate systems are 'ctf', '4d',
 %                        'bti', 'yokogawa', 'asa', 'itab', 'neuromag', 'spm',
 %                        'tal' and 'paxinos'. See http://tinyurl.com/ojkuhqz
 %   cfg.clim           = [min max], scaling of the anatomy color (default
@@ -73,7 +73,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.fiducial.ac      = [i j k], position of anterior commissure
 %   cfg.fiducial.pc      = [i j k], position of posterior commissure
 %   cfg.fiducial.xzpoint = [i j k], point on the midsagittal-plane with a
-%                          positive Z-coordinate, i.e. an interhemispheric 
+%                          positive Z-coordinate, i.e. an interhemispheric
 %                          point above ac and pc
 % The coordinate system will be according to the RAS_Tal convention i.e.
 % the origin corresponds with the anterior commissure the Y-axis is along
@@ -137,6 +137,16 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.spm.regtype = 'subj', 'rigid'
 %   cfg.spm.smosrc  = scalar value
 %   cfg.spm.smoref  = scalar value
+% When cfg.spmversion = 'spm12', the following options apply: 
+%   cfg.spm.sep     = optimisation sampling steps (mm), default: [4 2]
+%   cfg.spm.params  = starting estimates (6 elements), default: [0 0 0  0 0 0]
+%   cfg.spm.cost_fun = cost function string:
+%                       'mi'  - Mutual Information (default)
+%                       'nmi' - Normalised Mutual Information
+%                       'ecc' - Entropy Correlation Coefficient
+%                       'ncc' - Normalised Cross Correlation
+%   cfg.spm.tol     = tolerences for accuracy of each param, default: [0.02 0.02 0.02 0.001 0.001 0.001]
+%   cfg.spm.fwhm    = smoothing to apply to 256x256 joint histogram, default: [7 7] 
 %
 % With the 'interactive' and 'fiducial' methods it is possible to define an
 % additional point (with the key 'z'), which should be a point on the positive side
@@ -310,10 +320,10 @@ switch cfg.method
     switch cfg.viewmode
       
       case 'ortho'
-    % start building the figure
-    h = figure;
-    set(h, 'color', [1 1 1]);
-    set(h, 'visible', 'on');
+        % start building the figure
+        h = figure;
+        set(h, 'color', [1 1 1]);
+        set(h, 'visible', 'on');
         % add callbacks
         set(h, 'windowbuttondownfcn', @cb_buttonpress);
         set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
@@ -419,7 +429,7 @@ switch cfg.method
         cb_redraw(h);
         
       case 'surface'
-
+        
         % make a mesh from the skin surface
         cfg.headshape = ft_getopt(cfg, 'headshape');
         cfg.headshape.scalpsmooth    = ft_getopt(cfg.headshape, 'scalpsmooth',    2, 1); % empty is OK
@@ -489,7 +499,7 @@ switch cfg.method
         else
           opt.unit = '';        % this is not shown
         end
-
+        
         setappdata(h, 'opt', opt);
         cb_redraw_surface(h);
         
@@ -615,7 +625,7 @@ switch cfg.method
     
     % the icp function wants this as a function handle.
     weights = @(x)assignweights(x,w);
-
+    
     ft_hastoolbox('fileexchange',1);
     
     % construct the coregistration matrix
@@ -814,49 +824,66 @@ switch cfg.method
       ft_hastoolbox('SPM12',1);
     end
     
-    if ~isfield(cfg, 'spm'), cfg.spm = []; end
-    cfg.spm.regtype = ft_getopt(cfg.spm, 'regtype', 'subj');
-    cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  2);
-    cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
-    
-    if ~isfield(mri,    'coordsys'),
-      mri = ft_convert_coordsys(mri);
-    else
-      fprintf('Input volume has coordinate system ''%s''\n', mri.coordsys);
-    end
-    if ~isfield(target, 'coordsys'),
-      target = ft_convert_coordsys(target);
-    else
-      fprintf('Target volume has coordinate system ''%s''\n', target.coordsys);
-    end
-    if strcmp(mri.coordsys, target.coordsys)
-      % this should hopefully work
-    else
-      % only works when it is possible to approximately align the input to
-      % the target coordsys
-      if strcmp(target.coordsys, 'spm')
-        mri = ft_convert_coordsys(mri, 'spm');
+    if strcmpi(cfg.spmversion, 'spm2') || strcmpi(cfg.spmversion, 'spm8')
+      
+      if ~isfield(cfg, 'spm'), cfg.spm = []; end
+      cfg.spm.regtype = ft_getopt(cfg.spm, 'regtype', 'subj');
+      cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  2);
+      cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
+      
+      if ~isfield(mri,    'coordsys'),
+        mri = ft_convert_coordsys(mri);
       else
-        error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
+        fprintf('Input volume has coordinate system ''%s''\n', mri.coordsys);
       end
+      if ~isfield(target, 'coordsys'),
+        target = ft_convert_coordsys(target);
+      else
+        fprintf('Target volume has coordinate system ''%s''\n', target.coordsys);
+      end
+      if strcmp(mri.coordsys, target.coordsys)
+        % this should hopefully work
+      else
+        % only works when it is possible to approximately align the input to
+        % the target coordsys
+        if strcmp(target.coordsys, 'spm')
+          mri = ft_convert_coordsys(mri, 'spm');
+        else
+          error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
+        end
+      end
+      
+      % flip and permute the 3D volume itself, so that the voxel and
+      % headcoordinates approximately correspond
+      [tmp,    pvec_mri,    flip_mri, T] = align_ijk2xyz(mri);
+      [target]                           = align_ijk2xyz(target);
+      
+      tname1 = [tempname, '.img'];
+      tname2 = [tempname, '.img'];
+      V1 = ft_write_mri(tname1, mri.anatomy,    'transform', mri.transform,    'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
+      V2 = ft_write_mri(tname2, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
+      
+      flags         = cfg.spm;
+      flags.nits    = 0; %set number of non-linear iterations to zero
+      params        = spm_normalise(V2,V1,[],[],[],flags);
+      %mri.transform = (target.transform/params.Affine)/T;
+      transform = (target.transform/params.Affine)/T/mri.transform;
+      % transform     = eye(4);
+      
+    elseif strcmpi(cfg.spmversion, 'spm12')
+      
+      if ~isfield(cfg, 'spm'), cfg.spm = []; end
+      
+      tname1 = [tempname, '.nii'];
+      tname2 = [tempname, '.nii'];
+      VG = ft_write_mri(tname1, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm'); % reference image
+      VF = ft_write_mri(tname2, mri.anatomy, 'transform', mri.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm'); % source (moved) image
+      
+      flags         = cfg.spm;
+      x             = spm_coreg(VG,VF,flags);
+      transform     = spm_matrix(x(:)');
+      
     end
-    
-    % flip and permute the 3D volume itself, so that the voxel and
-    % headcoordinates approximately correspond
-    [tmp,    pvec_mri,    flip_mri, T] = align_ijk2xyz(mri);
-    [target]                           = align_ijk2xyz(target);
-    
-    tname1 = [tempname, '.img'];
-    tname2 = [tempname, '.img'];
-    V1 = ft_write_mri(tname1, tmp.anatomy,    'transform', tmp.transform,    'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
-    V2 = ft_write_mri(tname2, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
-    
-    flags         = cfg.spm;
-    flags.nits    = 0; %set number of non-linear iterations to zero
-    params        = spm_normalise(V2,V1,[],[],[],flags);
-    %mri.transform = (target.transform/params.Affine)/T;
-    transform = (target.transform/params.Affine)/T/mri.transform;
-    % transform     = eye(4);
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
     else
@@ -866,7 +893,6 @@ switch cfg.method
     % delete the temporary files
     delete(tname1);
     delete(tname2);
-    
   otherwise
     error('unsupported method "%s"', cfg.method);
 end
@@ -1135,9 +1161,9 @@ opt.handlesmarker = [];
 
 for i=1:length(opt.fidlabel)
   pos = opt.fiducial.(opt.fidlabel{i});
-%   if any(isnan(pos))
-%     continue
-%   end
+  %   if any(isnan(pos))
+  %     continue
+  %   end
   
   posi = pos(1);
   posj = pos(2);
