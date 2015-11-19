@@ -24,8 +24,7 @@ beaminlabel = uicontrol(fg,'Style','Text','Position',[60 350 120 020].*WS,'Strin
 st.nmt.gui.beamin = uicontrol(fg,'Style','edit', 'Position',[130 350  120 020].*WS,'String','','HorizontalAlignment','left','BackgroundColor',nmt_textboxcolor);
 
 uicontrol(fg,'Style','Text', 'Position',[75 255 35 020].*WS,'String','MNI:');
-st.mnip = uicontrol(fg,'Style','edit', 'Position',[110 255 135 020].*WS,'String','','Callback','nmt_image(''setposmni'')','ToolTipString','move crosshairs to MNI mm coordinates');
-% st.mnilabel=uicontrol('Style','text','BackgroundColor',[1 1 1],'Units','normalized','Position',[.6 .5 .3 .15],'FontSize',12);
+st.nmt.gui.mnip = uicontrol(fg,'Style','edit', 'Position',[110 255 135 020].*WS,'String','','Callback','nmt_image(''setposmni'')','ToolTipString','move crosshairs to MNI mm coordinates');
 
 uicontrol(fg,'Style','Text', 'Position',[75 315 35 020].*WS,'String','MEG:');
 %st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String',sprintf('%.1f %.1f %.1f',(spm_orthviews('pos')')),'Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
@@ -162,6 +161,10 @@ switch(cfg.funparameter)
             skx = s*(Dims(1)+Dims(2))*0.02;
         end;
         
+        %%
+        st.nmt.gui.mnilabel=uicontrol('Style','text','BackgroundColor',[1 1 1],'FontSize',10,...
+            'Position',[offx+s*Dims(1)/4 offy+s*Dims(2)-110 150 100]);
+
         %%
         st.nmt.gui.ax_ts = axes('Visible','off','DrawMode','fast','Parent',st.fig,...
             'YDir','normal');

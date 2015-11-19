@@ -75,6 +75,13 @@ spm_orthviews('redraw'); % blob doesn't always show until redraw is forced
 posmrimm = spm_orthviews('pos')';
 % set(st.nmt.gui.megp,'String',sprintf('%.1f %.1f %.1f',posmeg));
 
+
+if(~isempty(st.nmt.cfg.atlas))
+    atlas_labels = atlas_lookup(st.nmt.cfg.atlas,posmrimm,'inputcoord','mni','queryrange',3);
+    set(st.nmt.gui.mnilabel,'String',atlas_labels);
+end
+
+
 blobidx = nmt_transform_coord(inv(st.vols{1}.blobs{1}.mat),posmrimm);
 blobidx = round(blobidx);
 blobdim = size(st.vols{1}.blobs{1}.vol);
