@@ -85,6 +85,7 @@ cfg.channel       = ft_getopt(cfg, 'channel',          []); % default will be de
 cfg.elec          = ft_getopt(cfg, 'elec',             []); % use previously placed electrodes
 % view options
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit voxels
+cfg.viewdim       = ft_getopt(cfg, 'viewdim',      'data'); % viewing dimensions of the subplots, 'square' or 'data' 
 cfg.markerdist    = ft_getopt(cfg, 'markerdist',        5); % marker-slice distance for including in the view
 % magnet options
 cfg.magtype       = ft_getopt(cfg, 'magtype',      'peak'); % detect peaks or troughs or center-of-mass
@@ -154,13 +155,17 @@ switch cfg.method
     set(h, 'CloseRequestFcn',     @cb_cleanup);
     
     % axes settings
-    xdim = mri.dim(1) + mri.dim(2);
-    ydim = mri.dim(2) + mri.dim(3);
-    
-    xsize(1) = 0.82*mri.dim(1)/xdim;
-    xsize(2) = 0.82*mri.dim(2)/xdim;
-    ysize(1) = 0.82*mri.dim(3)/ydim;
-    ysize(2) = 0.82*mri.dim(2)/ydim;
+    if strcmp(cfg.viewdim, 'data')
+      xdim = mri.dim(1) + mri.dim(2); % data-defined viewing dimensions
+      ydim = mri.dim(2) + mri.dim(3);
+      xsize(1) = 0.82*mri.dim(1)/xdim;
+      xsize(2) = 0.82*mri.dim(2)/xdim;
+      ysize(1) = 0.82*mri.dim(3)/ydim;
+      ysize(2) = 0.82*mri.dim(2)/ydim;
+    elseif strcmp(cfg.viewdim, 'square')
+      xsize = [0.41 0.41]; % square viewing dimensions
+      ysize = [0.41 0.41];
+    end
     
     xc = round(mri.dim(1)/2); % start with center view
     yc = round(mri.dim(2)/2);
