@@ -518,9 +518,14 @@ switch cfg.model
     if success
       % re-compute the leadfield in order to compute the model potential and dipole moment
       lf = ft_compute_leadfield(dip.pos, sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-      % compute all details of the final dipole model
-      dip.mom = pinv(lf)*Vdata;
-      dip.pot = lf*dip.mom;
+      if isfield(dip, 'mom') && isfield(dip, 'ampl')
+        % the orientation and amplitude have already been estimated, this applies to the case of a fixed dipole orientation
+        dip.pot = (lf * dip.mom) * dip.ampl;
+      else
+        % compute all details of the final dipole model using linear estimation
+        dip.mom = pinv(lf)*Vdata;
+        dip.pot = lf*dip.mom;
+      end
       dip.rv  = rv(Vdata, dip.pot);
       Vmodel  = dip.pot;
     end
@@ -545,7 +550,12 @@ switch cfg.model
     if isfreq
       % the matrix with the dipole moment is encrypted and cannot be interpreted straight away
       % reconstruct the frequency representation of the data at the source level
-      [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom);
+      if isfield(dip, 'mom') && isfield(dip, 'ampl')
+        % this applies to the case of a fixed dipole orientation
+        [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom * dip.ampl);
+      else
+        [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom);
+      end
     end
   case 'moving'
     if isfreq
