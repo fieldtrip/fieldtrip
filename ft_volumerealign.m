@@ -137,7 +137,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.spm.regtype = 'subj', 'rigid'
 %   cfg.spm.smosrc  = scalar value
 %   cfg.spm.smoref  = scalar value
-% When cfg.spmversion = 'spm12', the following options apply: 
+% When cfg.spmversion = 'spm12', the following options apply:
 %   cfg.spm.sep     = optimisation sampling steps (mm), default: [4 2]
 %   cfg.spm.params  = starting estimates (6 elements), default: [0 0 0  0 0 0]
 %   cfg.spm.cost_fun = cost function string:
@@ -146,7 +146,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                       'ecc' - Entropy Correlation Coefficient
 %                       'ncc' - Normalised Cross Correlation
 %   cfg.spm.tol     = tolerences for accuracy of each param, default: [0.02 0.02 0.02 0.001 0.001 0.001]
-%   cfg.spm.fwhm    = smoothing to apply to 256x256 joint histogram, default: [7 7] 
+%   cfg.spm.fwhm    = smoothing to apply to 256x256 joint histogram, default: [7 7]
 %
 % With the 'interactive' and 'fiducial' methods it is possible to define an
 % additional point (with the key 'z'), which should be a point on the positive side
@@ -223,6 +223,8 @@ cfg.fiducial   = ft_getopt(cfg, 'fiducial',  []);
 cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim       = ft_getopt(cfg, 'clim',      []);
 cfg.viewmode   = ft_getopt(cfg, 'viewmode',  'ortho'); % for method=interactive
+cfg.viewdim    = ft_getopt(cfg, 'viewdim',   'data'); % viewing dimensions of the orthoplots, 'square' or 'data' 
+
 cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
 cfg.snapshotfile = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
 cfg.spmversion   = ft_getopt(cfg, 'spmversion', 'spm8');
@@ -330,19 +332,23 @@ switch cfg.method
         set(h, 'windowkeypressfcn',   @cb_keyboard);
         set(h, 'CloseRequestFcn',     @cb_cleanup);
         
-        % enforce the size of the subplots to be isotropic
-        xdim = mri.dim(1) + mri.dim(2);
-        ydim = mri.dim(2) + mri.dim(3);
-        
         % inspect transform matrix, if the voxels are isotropic then the screen
         % pixels also should be square
         hasIsotropicVoxels = norm(mri.transform(1:3,1)) == norm(mri.transform(1:3,2))...
           && norm(mri.transform(1:3,2)) == norm(mri.transform(1:3,3));
         
-        xsize(1) = 0.82*mri.dim(1)/xdim;
-        xsize(2) = 0.82*mri.dim(2)/xdim;
-        ysize(1) = 0.82*mri.dim(3)/ydim;
-        ysize(2) = 0.82*mri.dim(2)/ydim;
+        % axes settings
+        if strcmp(cfg.viewdim, 'data')
+          xdim = mri.dim(1) + mri.dim(2); % data-defined viewing dimensions
+          ydim = mri.dim(2) + mri.dim(3);
+          xsize(1) = 0.82*mri.dim(1)/xdim;
+          xsize(2) = 0.82*mri.dim(2)/xdim;
+          ysize(1) = 0.82*mri.dim(3)/ydim;
+          ysize(2) = 0.82*mri.dim(2)/ydim;
+        elseif strcmp(cfg.viewdim, 'square')
+          xsize = [0.41 0.41]; % square viewing dimensions
+          ysize = [0.41 0.41];
+        end
         
         % create figure handles
         
@@ -882,7 +888,7 @@ switch cfg.method
       flags         = cfg.spm;
       x             = spm_coreg(V2,V1,flags); % spm_realign does within modality rigid body movement parameter estimation
       transform     = inv(spm_matrix(x(:)')); % from V1 to V2, to be multiplied still with the original transform (mri.transform), see below
-     
+      
     end
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
