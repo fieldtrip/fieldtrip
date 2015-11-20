@@ -228,6 +228,8 @@ cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
 cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
+cfg.viewdim       = ft_getopt(cfg, 'viewdim',       'data'); % viewing dimensions of the orthoplots, 'square' or 'data' 
+
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -866,10 +868,6 @@ switch cfg.method
     yi = round(yi); yi = max(yi, 1); yi = min(yi, dim(2));
     zi = round(zi); zi = max(zi, 1); zi = min(zi, dim(3));
     
-    % enforce the size of the subplots to be isotropic
-    xdim = dim(1) + dim(2);
-    ydim = dim(2) + dim(3);
-    
     % inspect transform matrix, if the voxels are isotropic then the screen
     % pixels also should be square
     hasIsotropicVoxels = 0;
@@ -880,10 +878,18 @@ switch cfg.method
         && norm(functional.transform(1:3,2)) == norm(functional.transform(1:3,3));
     end
     
-    xsize(1) = 0.82*dim(1)/xdim;
-    xsize(2) = 0.82*dim(2)/xdim;
-    ysize(1) = 0.82*dim(3)/ydim;
-    ysize(2) = 0.82*dim(2)/ydim;
+    % axes settings
+    if strcmp(cfg.viewdim, 'data')
+      xdim = dim(1) + dim(2); % data-defined viewing dimensions
+      ydim = dim(2) + dim(3);
+      xsize(1) = 0.82*dim(1)/xdim;
+      xsize(2) = 0.82*dim(2)/xdim;
+      ysize(1) = 0.82*dim(3)/ydim;
+      ysize(2) = 0.82*dim(2)/ydim;
+    elseif strcmp(cfg.viewdim, 'square')
+      xsize = [0.41 0.41]; % square viewing dimensions
+      ysize = [0.41 0.41];
+    end
     
     %% this method is interactive, add callbacks
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
