@@ -93,7 +93,7 @@ for k = 1:n
 end
 
 % create the ball at the origin
-[O.pnt, O.tri] = icosahedron42;
+[O.pnt, O.tri] = icosahedron642;
 O.pnt = O.pnt.*rbol;
 ft_plot_mesh(O, 'edgecolor', 'none');
 
