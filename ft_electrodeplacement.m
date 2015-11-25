@@ -78,18 +78,24 @@ if abort
   return
 end
 
+% ensure that old and unsupported options are not being relied on by the end-user's script
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
+cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+
 % set the defaults
-cfg.method        = ft_getopt(cfg, 'method');               % volume, headshape
-cfg.parameter     = ft_getopt(cfg, 'parameter', 'anatomy');
-cfg.channel       = ft_getopt(cfg, 'channel',          []); % default will be determined further down {'1', '2', ...}
-cfg.elec          = ft_getopt(cfg, 'elec',             []); % use previously placed electrodes
+cfg.method        = ft_getopt(cfg, 'method');                 % volume, headshape
+cfg.parameter     = ft_getopt(cfg, 'parameter',    'anatomy');
+cfg.channel       = ft_getopt(cfg, 'channel',             []); % default will be determined further down {'1', '2', ...}
+cfg.elec          = ft_getopt(cfg, 'elec',                []); % use previously placed electrodes
+cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 % view options
-cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % initial volume intensity limit voxels
-cfg.viewdim       = ft_getopt(cfg, 'viewdim',      'data'); % viewing dimensions of the subplots, 'square' or 'data' 
-cfg.markerdist    = ft_getopt(cfg, 'markerdist',        5); % marker-slice distance for including in the view
+cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
+cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance for including in the view
 % magnet options
-cfg.magtype       = ft_getopt(cfg, 'magtype',      'peak'); % detect peaks or troughs or center-of-mass
-cfg.magradius     = ft_getopt(cfg, 'magradius',         2); % specify the physical unit radius
+cfg.magtype       = ft_getopt(cfg, 'magtype',         'peak'); % detect peaks or troughs or center-of-mass
+cfg.magradius     = ft_getopt(cfg, 'magradius',            2); % specify the physical unit radius
+cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',      'data'); % display size of the voxel, 'data' or 'square'
+cfg.axisratio     = ft_getopt(cfg, 'axisratio',       'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
@@ -148,47 +154,71 @@ switch cfg.method
       'Color', [1 1 1], ...
       'Visible', 'on');
     
-    % add callbacks
+    % axes settings
+    if strcmp(cfg.axisratio, 'voxel')
+      % determine the number of voxels to be plotted along each axis
+      axlen1 = dim(1);
+      axlen2 = dim(2);
+      axlen3 = dim(3);
+    elseif strcmp(cfg.axisratio, 'data')
+      % determine the length of the edges along each axis
+      [cp_voxel, cp_head] = cornerpoints(mri.dim, mri.transform);
+      axlen1 = norm(cp_head(2,:)-cp_head(1,:));
+      axlen2 = norm(cp_head(4,:)-cp_head(1,:));
+      axlen3 = norm(cp_head(5,:)-cp_head(1,:));
+    elseif strcmp(cfg.axisratio, 'square')
+      % the length of the axes should be equal
+      axlen1 = 1;
+      axlen2 = 1;
+      axlen3 = 1;
+    end
+    
+    % this is the size reserved for subplot h1, h2 and h3
+    h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
+    h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
+    h2size(1) = 0.82*axlen2/(axlen1 + axlen2);
+    h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
+    h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
+    h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
+    
+    if strcmp(cfg.voxelratio, 'square')
+      voxlen1 = 1;
+      voxlen2 = 1;
+      voxlen3 = 1;
+    elseif strcmp(cfg.voxelratio, 'data')
+      % the size of the voxel is scaled with the data
+      [cp_voxel, cp_head] = cornerpoints(mri.dim, mri.transform);
+      voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
+      voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
+      voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
+    end
+    
+    %% the figure is interactive, add callbacks
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_cleanup);
+
+    % ensure that this is done in interactive mode
+    set(h, 'renderer', cfg.renderer);
     
-    % axes settings
-    if strcmp(cfg.viewdim, 'data')
-      xdim = mri.dim(1) + mri.dim(2); % data-defined viewing dimensions
-      ydim = mri.dim(2) + mri.dim(3);
-      xsize(1) = 0.82*mri.dim(1)/xdim;
-      xsize(2) = 0.82*mri.dim(2)/xdim;
-      ysize(1) = 0.82*mri.dim(3)/ydim;
-      ysize(2) = 0.82*mri.dim(2)/ydim;
-    elseif strcmp(cfg.viewdim, 'square')
-      xsize = [0.41 0.41]; % square viewing dimensions
-      ysize = [0.41 0.41];
-    end
+    % axis handles will hold the anatomical functional if present, along with labels etc.
+    h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
+    h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
+    h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
+    
+    set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
+    set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
+    set(h3, 'Tag', 'ij', 'Visible', 'off');
+    
+    set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+    set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+    set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
     
     xc = round(mri.dim(1)/2); % start with center view
     yc = round(mri.dim(2)/2);
     zc = round(mri.dim(3)/2);
-    
-    % axis handles will hold the anatomical data if present, along with labels etc.
-    h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
-    h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
-    h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
-    set(h1,'Tag','ik','Visible','off','XAxisLocation','top');
-    set(h2,'Tag','jk','Visible','off','XAxisLocation','top');
-    set(h3,'Tag','ij','Visible','off');
-    
-    % inspect transform matrix, if the voxels are isotropic then the screen
-    % pixels also should be square
-    hasIsotropicVoxels = norm(mri.transform(1:3,1)) == norm(mri.transform(1:3,2))...
-      && norm(mri.transform(1:3,2)) == norm(mri.transform(1:3,3));
-    if hasIsotropicVoxels
-      set(h1,'DataAspectRatio',[1 1 1]);
-      set(h2,'DataAspectRatio',[1 1 1]);
-      set(h3,'DataAspectRatio',[1 1 1]);
-    end
-    
+
     dat = double(mri.(cfg.parameter));
     dmin = min(dat(:));
     dmax = max(dat(:));
@@ -198,7 +228,7 @@ switch cfg.method
     h45text = uicontrol('Style', 'text',...
       'String','Intensity',...
       'Units', 'normalized', ...
-      'Position',[2*xsize(1)+0.03 ysize(2)+0.03 xsize(1)/4 0.04],...
+      'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
     
@@ -207,7 +237,7 @@ switch cfg.method
       'Min', 0, 'Max', 1, ...
       'Value', cfg.clim(1), ...
       'Units', 'normalized', ...
-      'Position', [2*xsize(1)+0.02 0.10+ysize(2)/3 0.05 ysize(2)/2], ...
+      'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
       'Callback', @cb_minslider);
     
     h5 = uicontrol('Style', 'slider', ...
@@ -215,14 +245,14 @@ switch cfg.method
       'Min', 0, 'Max', 1, ...
       'Value', cfg.clim(2), ...
       'Units', 'normalized', ...
-      'Position', [2*xsize(1)+0.07 0.10+ysize(2)/3 0.05 ysize(2)/2], ...
+      'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
       'Callback', @cb_maxslider);
     
     % java intensity range slider (dual-knob slider): the java component gives issues when wanting to
     % access the opt structure
     % [jRangeSlider] = com.jidesoft.swing.RangeSlider(0,1,cfg.clim(1),cfg.clim(2));  % min,max,low,high
     % [jRangeSlider, h4] = javacomponent(jRangeSlider, [], h);
-    % set(h4, 'Units', 'normalized', 'Position', [0.05+xsize(1) 0.07 0.07 ysize(2)], 'Parent', h);
+    % set(h4, 'Units', 'normalized', 'Position', [0.05+h1size(1) 0.07 0.07 h3size(2)], 'Parent', h);
     % set(jRangeSlider, 'Orientation', 1, 'PaintTicks', true, 'PaintLabels', true, ...
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
     
@@ -254,7 +284,7 @@ switch cfg.method
       'Parent', h, ...
       'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
       'Units', 'normalized', ...
-      'Position', [0.07+xsize(1)+0.05 0.07 xsize(1)/2 ysize(2)], ...
+      'Position', [0.07+h1size(1)+0.05 0.07 h1size(1)/2 h3size(2)], ...
       'Callback', @cb_eleclistbox, ...
       'String', chanstring);
     
@@ -264,7 +294,7 @@ switch cfg.method
       'Value', 1, ...
       'String','Magnet',...
       'Units', 'normalized', ...
-      'Position',[2*xsize(1) 0.17 xsize(1)/3 0.05],...
+      'Position',[2*h1size(1) 0.17 h1size(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_magnetbutton);
@@ -274,7 +304,7 @@ switch cfg.method
       'Value', 0, ...
       'String','Labels',...
       'Units', 'normalized', ...
-      'Position',[2*xsize(1) 0.12 xsize(1)/3 0.05],...
+      'Position',[2*h1size(1) 0.12 h1size(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_labelsbutton);
@@ -284,7 +314,7 @@ switch cfg.method
       'Value', 0, ...
       'String','Global',...
       'Units', 'normalized', ...
-      'Position',[2*xsize(1) 0.07 xsize(1)/3 0.05],...
+      'Position',[2*h1size(1) 0.07 h1size(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_globalbutton);
@@ -293,7 +323,7 @@ switch cfg.method
     h10text = uicontrol('Style', 'text',...
       'String','Zoom',...
       'Units', 'normalized', ...
-      'Position',[1.8*xsize(1)+0.01 ysize(2)+0.03 xsize(1)/4 0.04],...
+      'Position',[1.8*h1size(1)+0.01 h3size(2)+0.03 h1size(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
     
@@ -302,7 +332,7 @@ switch cfg.method
       'Min', 0, 'Max', 0.9, ...
       'Value', 0, ...
       'Units', 'normalized', ...
-      'Position', [1.8*xsize(1)+0.02 0.10+ysize(2)/3 0.05 ysize(2)/2], ...
+      'Position', [1.8*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
       'SliderStep', [.1 .1], ...
       'Callback', @cb_zoomslider);
         
@@ -321,8 +351,9 @@ switch cfg.method
     opt               = [];
     opt.dim           = mri.dim;
     opt.ijk           = [xc yc zc];
-    opt.xsize         = xsize;
-    opt.ysize         = ysize;
+    opt.h1size        = h1size;
+    opt.h2size        = h2size;
+    opt.h3size        = h3size;
     opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10];
     opt.handlesfigure = h;
     opt.handlesmarker = [];
@@ -398,7 +429,7 @@ ft_postamble savevar    elec
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata)
-
+tic
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
@@ -594,6 +625,7 @@ end % for all markers
 opt.init = false;
 setappdata(h, 'opt', opt);
 set(h, 'currentaxes', curr_ax);
+toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
