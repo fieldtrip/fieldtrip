@@ -157,9 +157,9 @@ switch cfg.method
     % axes settings
     if strcmp(cfg.axisratio, 'voxel')
       % determine the number of voxels to be plotted along each axis
-      axlen1 = dim(1);
-      axlen2 = dim(2);
-      axlen3 = dim(3);
+      axlen1 = mri.dim(1);
+      axlen2 = mri.dim(2);
+      axlen3 = mri.dim(3);
     elseif strcmp(cfg.axisratio, 'data')
       % determine the length of the edges along each axis
       [cp_voxel, cp_head] = cornerpoints(mri.dim, mri.transform);
