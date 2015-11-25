@@ -81,7 +81,7 @@ function ft_uilayout(h, varargin)
 tag    = ft_getopt(varargin, 'tag');
 style  = ft_getopt(varargin, 'style');
 
-if any(ismember(tag, '.*?^$'))
+if any(tag=='.' | tag=='*' | tag=='?' | tag=='^' | tag=='$')
   % use regular expressions
   tagopt = {'-regexp'};
 else
