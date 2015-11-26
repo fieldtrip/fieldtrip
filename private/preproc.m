@@ -280,148 +280,149 @@ end
 if any(any(isnan(dat)))
   % filtering is not possible for at least a selection of the data
   ft_warning('data contains NaNs, no filtering applied');
-  return;
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% do the filtering on the padded data
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(cfg.denoise),
-  hflag    = isfield(cfg.denoise, 'hilbert') && strcmp(cfg.denoise.hilbert, 'yes');
-  datlabel = match_str(label, cfg.denoise.channel);
-  reflabel = match_str(label, cfg.denoise.refchannel);
-  tmpdat   = ft_preproc_denoise(dat(datlabel,:), dat(reflabel,:), hflag);
-  dat(datlabel,:) = tmpdat;
-end
-
-% The filtering should in principle be done prior to the demeaning to
-% ensure that the resulting mean over the baseline window will be
-% guaranteed to be zero (even if there are filter artifacts). 
-% However, the filtering benefits from the data being pulled towards zero,
-% causing less edge artifacts. That is why we start by removing the slow
-% drift, then filter, and then repeat the demean/detrend/polyremove.
-if strcmp(cfg.polyremoval, 'yes')
-  nsamples  = size(dat,2);
-  begsample = 1        + begpadding;
-  endsample = nsamples - endpadding;
-  dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample); % this will also demean and detrend
-elseif strcmp(cfg.detrend, 'yes')
-  nsamples  = size(dat,2);
-  begsample = 1        + begpadding;
-  endsample = nsamples - endpadding;
-  dat = ft_preproc_polyremoval(dat, 1, begsample, endsample); % this will also demean
-elseif strcmp(cfg.demean, 'yes')
-  nsamples  = size(dat,2);
-  begsample = 1        + begpadding;
-  endsample = nsamples - endpadding;
-  dat = ft_preproc_polyremoval(dat, 0, begsample, endsample);
-end
-
-if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
-if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir, cfg.lpinstabilityfix, cfg.lpfiltdf, cfg.lpfiltwintype, cfg.lpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
-if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir, cfg.hpinstabilityfix, cfg.hpfiltdf, cfg.hpfiltwintype, cfg.hpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
-if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir, cfg.bpinstabilityfix, cfg.bpfiltdf, cfg.bpfiltwintype, cfg.bpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
-if strcmp(cfg.bsfilter, 'yes')
-  for i=1:size(cfg.bsfreq,1)
-    % apply a bandstop filter for each of the specified bands, i.e. cfg.bsfreq should be Nx2
-    dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir, cfg.bsinstabilityfix, cfg.bsfiltdf, cfg.bsfiltwintype, cfg.bsfiltdev, cfg.plotfiltresp, cfg.usefftfilt);
+  
+else
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % do the filtering on the padded data
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if ~isempty(cfg.denoise),
+    hflag    = isfield(cfg.denoise, 'hilbert') && strcmp(cfg.denoise.hilbert, 'yes');
+    datlabel = match_str(label, cfg.denoise.channel);
+    reflabel = match_str(label, cfg.denoise.refchannel);
+    tmpdat   = ft_preproc_denoise(dat(datlabel,:), dat(reflabel,:), hflag);
+    dat(datlabel,:) = tmpdat;
   end
-end
-if strcmp(cfg.polyremoval, 'yes')
-  % the begin and endsample of the polyremoval period correspond to the complete data minus padding
-  nsamples  = size(dat,2);
-  begsample = 1        + begpadding;
-  endsample = nsamples - endpadding;
-  dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample);
-end
-if strcmp(cfg.detrend, 'yes')
-  % the begin and endsample of the detrend period correspond to the complete data minus padding
-  nsamples  = size(dat,2);
-  begsample = 1        + begpadding;
-  endsample = nsamples - endpadding;
-  dat = ft_preproc_detrend(dat, begsample, endsample);
-end
-if strcmp(cfg.demean, 'yes')
-  if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
-    % the begin and endsample of the baseline period correspond to the complete data minus padding
+  
+  % The filtering should in principle be done prior to the demeaning to
+  % ensure that the resulting mean over the baseline window will be
+  % guaranteed to be zero (even if there are filter artifacts).
+  % However, the filtering benefits from the data being pulled towards zero,
+  % causing less edge artifacts. That is why we start by removing the slow
+  % drift, then filter, and then repeat the demean/detrend/polyremove.
+  if strcmp(cfg.polyremoval, 'yes')
     nsamples  = size(dat,2);
     begsample = 1        + begpadding;
     endsample = nsamples - endpadding;
-    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
-  else
-    % determine the begin and endsample of the baseline period and baseline correct for it
-    begsample = nearest(time, cfg.baselinewindow(1));
-    endsample = nearest(time, cfg.baselinewindow(2));
-    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+    dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample); % this will also demean and detrend
+  elseif strcmp(cfg.detrend, 'yes')
+    nsamples  = size(dat,2);
+    begsample = 1        + begpadding;
+    endsample = nsamples - endpadding;
+    dat = ft_preproc_polyremoval(dat, 1, begsample, endsample); % this will also demean
+  elseif strcmp(cfg.demean, 'yes')
+    nsamples  = size(dat,2);
+    begsample = 1        + begpadding;
+    endsample = nsamples - endpadding;
+    dat = ft_preproc_polyremoval(dat, 0, begsample, endsample);
   end
-end
-if strcmp(cfg.dftfilter, 'yes')
-  datorig = dat;
-  dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq);
-  if strcmp(cfg.dftinvert, 'yes'),
-    dat = datorig - dat;
+  
+  if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
+  if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir, cfg.lpinstabilityfix, cfg.lpfiltdf, cfg.lpfiltwintype, cfg.lpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
+  if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir, cfg.hpinstabilityfix, cfg.hpfiltdf, cfg.hpfiltwintype, cfg.hpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
+  if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir, cfg.bpinstabilityfix, cfg.bpfiltdf, cfg.bpfiltwintype, cfg.bpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
+  if strcmp(cfg.bsfilter, 'yes')
+    for i=1:size(cfg.bsfreq,1)
+      % apply a bandstop filter for each of the specified bands, i.e. cfg.bsfreq should be Nx2
+      dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir, cfg.bsinstabilityfix, cfg.bsfiltdf, cfg.bsfiltwintype, cfg.bsfiltdev, cfg.plotfiltresp, cfg.usefftfilt);
+    end
   end
-end
-if ~strcmp(cfg.hilbert, 'no')
-  dat = ft_preproc_hilbert(dat, cfg.hilbert);
-end
-if strcmp(cfg.rectify, 'yes'),
-  dat = ft_preproc_rectify(dat);
-end
-if isnumeric(cfg.boxcar)
-  numsmp = round(cfg.boxcar*fsample);
-  if ~rem(numsmp,2)
-    % the kernel should have an odd number of samples
-    numsmp = numsmp+1;
+  if strcmp(cfg.polyremoval, 'yes')
+    % the begin and endsample of the polyremoval period correspond to the complete data minus padding
+    nsamples  = size(dat,2);
+    begsample = 1        + begpadding;
+    endsample = nsamples - endpadding;
+    dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample);
   end
-  % kernel = ones(1,numsmp) ./ numsmp;
-  % dat    = convn(dat, kernel, 'same');
-  dat = ft_preproc_smooth(dat, numsmp); % better edge behaviour
-end
-if isnumeric(cfg.conv)
-  kernel = (cfg.conv(:)'./sum(cfg.conv));
-  if ~rem(length(kernel),2)
-    kernel = [kernel 0];
+  if strcmp(cfg.detrend, 'yes')
+    % the begin and endsample of the detrend period correspond to the complete data minus padding
+    nsamples  = size(dat,2);
+    begsample = 1        + begpadding;
+    endsample = nsamples - endpadding;
+    dat = ft_preproc_detrend(dat, begsample, endsample);
   end
-  dat = convn(dat, kernel, 'same');
-end
-if strcmp(cfg.derivative, 'yes'),
-  dat = ft_preproc_derivative(dat, 1);
-end
-if strcmp(cfg.absdiff, 'yes'),
-  % this implements abs(diff(data), which is required for jump detection
-  dat = abs([diff(dat, 1, 2) zeros(size(dat,1),1)]);
-end
-if strcmp(cfg.standardize, 'yes'),
-  dat = ft_preproc_standardize(dat, 1, size(dat,2));
-end
-if ~isempty(cfg.subspace),
-  dat = ft_preproc_subspace(dat, cfg.subspace);
-end
-if ~isempty(cfg.custom),
-  if ~isfield(cfg.custom, 'nargout')
-    cfg.custom.nargout = 1;
+  if strcmp(cfg.demean, 'yes')
+    if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
+      % the begin and endsample of the baseline period correspond to the complete data minus padding
+      nsamples  = size(dat,2);
+      begsample = 1        + begpadding;
+      endsample = nsamples - endpadding;
+      dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+    else
+      % determine the begin and endsample of the baseline period and baseline correct for it
+      begsample = nearest(time, cfg.baselinewindow(1));
+      endsample = nearest(time, cfg.baselinewindow(2));
+      dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+    end
   end
-  if cfg.custom.nargout==1
-    dat = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
-  elseif cfg.custom.nargout==2
-    [dat, time] = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+  if strcmp(cfg.dftfilter, 'yes')
+    datorig = dat;
+    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq);
+    if strcmp(cfg.dftinvert, 'yes'),
+      dat = datorig - dat;
+    end
   end
-end
-if strcmp(cfg.resample, 'yes')
-  if ~isfield(cfg, 'resamplefs')
-    cfg.resamplefs = fsample./2;
+  if ~strcmp(cfg.hilbert, 'no')
+    dat = ft_preproc_hilbert(dat, cfg.hilbert);
   end
-  if ~isfield(cfg, 'resamplemethod')
-    cfg.resamplemethod = 'resample';
+  if strcmp(cfg.rectify, 'yes'),
+    dat = ft_preproc_rectify(dat);
   end
-  [dat               ] = ft_preproc_resample(dat,  fsample, cfg.resamplefs, cfg.resamplemethod); 
-  [time, dum, fsample] = ft_preproc_resample(time, fsample, cfg.resamplefs, cfg.resamplemethod);
-end
-if ~isempty(cfg.precision)
-  % convert the data to another numeric precision, i.e. double, single or int32
-  dat = cast(dat, cfg.precision);
-end
+  if isnumeric(cfg.boxcar)
+    numsmp = round(cfg.boxcar*fsample);
+    if ~rem(numsmp,2)
+      % the kernel should have an odd number of samples
+      numsmp = numsmp+1;
+    end
+    % kernel = ones(1,numsmp) ./ numsmp;
+    % dat    = convn(dat, kernel, 'same');
+    dat = ft_preproc_smooth(dat, numsmp); % better edge behaviour
+  end
+  if isnumeric(cfg.conv)
+    kernel = (cfg.conv(:)'./sum(cfg.conv));
+    if ~rem(length(kernel),2)
+      kernel = [kernel 0];
+    end
+    dat = convn(dat, kernel, 'same');
+  end
+  if strcmp(cfg.derivative, 'yes'),
+    dat = ft_preproc_derivative(dat, 1);
+  end
+  if strcmp(cfg.absdiff, 'yes'),
+    % this implements abs(diff(data), which is required for jump detection
+    dat = abs([diff(dat, 1, 2) zeros(size(dat,1),1)]);
+  end
+  if strcmp(cfg.standardize, 'yes'),
+    dat = ft_preproc_standardize(dat, 1, size(dat,2));
+  end
+  if ~isempty(cfg.subspace),
+    dat = ft_preproc_subspace(dat, cfg.subspace);
+  end
+  if ~isempty(cfg.custom),
+    if ~isfield(cfg.custom, 'nargout')
+      cfg.custom.nargout = 1;
+    end
+    if cfg.custom.nargout==1
+      dat = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+    elseif cfg.custom.nargout==2
+      [dat, time] = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+    end
+  end
+  if strcmp(cfg.resample, 'yes')
+    if ~isfield(cfg, 'resamplefs')
+      cfg.resamplefs = fsample./2;
+    end
+    if ~isfield(cfg, 'resamplemethod')
+      cfg.resamplemethod = 'resample';
+    end
+    [dat               ] = ft_preproc_resample(dat,  fsample, cfg.resamplefs, cfg.resamplemethod);
+    [time, dum, fsample] = ft_preproc_resample(time, fsample, cfg.resamplefs, cfg.resamplemethod);
+  end
+  if ~isempty(cfg.precision)
+    % convert the data to another numeric precision, i.e. double, single or int32
+    dat = cast(dat, cfg.precision);
+  end
+end % if any(isnan)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % remove the filter padding and do the preprocessing on the remaining trial data
@@ -432,4 +433,3 @@ if begpadding~=0 || endpadding~=0
     time = ft_preproc_padding(time, 'remove', begpadding, endpadding);
   end
 end
-
