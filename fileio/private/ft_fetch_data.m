@@ -190,13 +190,18 @@ else
   %   end
   
   if begsample >= trl(1) && begsample <= trl(2)
+    % the begin sample can be found in the available data
     if endsample >= trl(1) && endsample <= trl(2)
       dat(:,datbegindx:datendindx) = data.trial{1}(chanindx,begindx:endindx);
     else
       dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,begindx:tmptrl(2));
     end
   elseif endsample >= trl(1) && endsample <= trl(2)
+    % the end sample can be found in the available data
     dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,tmptrl(1):endindx);
+  else
+    % neither the begin, nor the end sample are in the available data
+    dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,tmptrl(1):tmptrl(2));
   end
   
 end % if trlnum is multiple or one
