@@ -114,9 +114,15 @@ if trlnum>1,
   % samplenum(count>1) = NaN;
   
   % make a subselection for the desired samples
-  count     = count    (begsample:endsample);
-  trialnum  = trialnum (begsample:endsample);
-  samplenum = samplenum(begsample:endsample);
+  if begsample<1
+    count     = count    (1:endsample);
+    trialnum  = trialnum (1:endsample);
+    samplenum = samplenum(1:endsample);
+  else
+    count     = count    (begsample:endsample);
+    trialnum  = trialnum (begsample:endsample);
+    samplenum = samplenum(begsample:endsample);
+  end
   
   % check if all samples are present and are not present twice or more
   if any(count>1)
