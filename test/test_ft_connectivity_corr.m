@@ -10,7 +10,7 @@ cfg = [];
 cfg.method = 'powcorr';
 stat = ft_connectivityanalysis(cfg, tmp);
 
-isequal(stat.powcorrspctrm,corr(tmp.powspctrm)))  
+isequal(stat.powcorrspctrm,corr(tmp.powspctrm))  
 clear tmp stat
     
 tmp.trial = rand(10,3,5);
@@ -22,3 +22,4 @@ tmp.cov = rand(3,3);
 cfg = [];
 cfg.method = 'corr';
 stat = ft_connectivityanalysis(cfg, tmp);
+clear tmp stat
