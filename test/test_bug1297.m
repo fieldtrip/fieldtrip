@@ -1,7 +1,7 @@
 function test_1297
 
-% MEM 2gb
-% WALLTIME 00:15:00
+% MEM 2500mb
+% WALLTIME 00:30:00
 
 % TEST test_1297
 % TEST ft_volumesegment

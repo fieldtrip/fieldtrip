@@ -1,6 +1,6 @@
 function test_tutorial_natmeg_dipolefitting
 
-% WALLTIME 00:20:00
+% WALLTIME 00:40:00
 % MEM 10gb
 
 % this script executes the MATLAB content from
