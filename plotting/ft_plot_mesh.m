@@ -2,13 +2,13 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 
 % FT_PLOT_MESH visualizes the information of a mesh contained in the first
 % argument mesh. The boundary argument (mesh) typically contains two fields
-% called .pnt and .tri referring to the vertices and the triangulation of
+% called .pos and .tri referring to the vertices and the triangulation of
 % the mesh.
 %
 % Use as
 %   ft_plot_mesh(mesh, ...)
 % or if you only want to plot the 3-D vertices
-%   ft_plot_mesh(pnt, ...)
+%   ft_plot_mesh(pos, ...)
 %
 % Optional arguments should come in key-value pairs and can include
 %   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
@@ -26,8 +26,8 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
 % Example
-%   [pnt, tri] = icosahedron162;
-%   mesh.pnt = pnt;
+%   [pos, tri] = icosahedron162;
+%   mesh.pos = pos;
 %   mesh.tri = tri;
 %   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')
 %   camlight
@@ -57,12 +57,12 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
+% rename pnt into pos
+mesh = fixpos(mesh);
+
 if ~isstruct(mesh) && isnumeric(mesh) && size(mesh,2)==3
   % the input seems like a list of points, convert into something that resembles a mesh
-  mesh = struct('pnt', mesh);
-elseif isfield(mesh, 'pos')
-  % the input seems to be a set of points from ft_prepare_sourcemodel or ft_dipolefitting
-  mesh.pnt = mesh.pos;
+  mesh = struct('pos', mesh);
 end
 
 % the input is a structure, but might also be a struct-array
@@ -101,7 +101,7 @@ if surfaceonly
   mesh = mesh2edge(mesh);
 end
 
-haspnt  = isfield(mesh, 'pnt');  % vertices
+haspos  = isfield(mesh, 'pos');  % vertices
 hastri  = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
 hastet  = isfield(mesh, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
 hashex  = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
@@ -113,7 +113,7 @@ if (hastet || hashex) && ~surfaceonly
 end
 
 if isempty(vertexcolor)
-  if haspnt && (hastri || hastet || hashex || hasline || haspoly)
+  if haspos && (hastri || hastet || hashex || hasline || haspoly)
     vertexcolor ='none';
   else
     vertexcolor ='k';
@@ -149,17 +149,17 @@ if ~holdflag
   hold on
 end
 
-if isfield(mesh, 'pnt')
+if isfield(mesh, 'pos')
   % this is assumed to reflect 3-D vertices
-  pnt = mesh.pnt;
+  pos = mesh.pos;
 elseif isfield(mesh, 'prj')
   % this happens sometimes if the 3-D vertices are projected to a 2-D plane
-  pnt = mesh.prj;
+  pos = mesh.prj;
 else
   error('no vertices found');
 end
 
-if isempty(pnt)
+if isempty(pos)
   hs=[];
   return
 end
@@ -205,13 +205,13 @@ else
   line = [];
 end
 
-if haspnt
+if haspos
   if ~isempty(tri)
-    hs = patch('Vertices', pnt, 'Faces', tri);
+    hs = patch('Vertices', pos, 'Faces', tri);
   elseif ~isempty(line)
-    hs = patch('Vertices', pnt, 'Faces', line);
+    hs = patch('Vertices', pos, 'Faces', line);
   else
-    hs = patch('Vertices', pnt, 'Faces', []);
+    hs = patch('Vertices', pos, 'Faces', []);
   end
   %set(hs, 'FaceColor', facecolor);
   set(hs, 'EdgeColor', edgecolor);
@@ -221,7 +221,7 @@ end
 % the vertexcolor can be specified either as a RGB color for each vertex, or as a single value at each vertex
 % the facecolor can be specified either as a RGB color for each triangle, or as a single value at each triangle
 % if there are triangles, the vertexcolor is used for linear interpolation over the patches
-vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pnt,1)==numel(vertexcolor) || size(pnt,1)==size(vertexcolor,1) && (size(vertexcolor,2)==1 || size(vertexcolor,2)==3));
+vertexpotential = ~isempty(tri) && ~ischar(vertexcolor) && (size(pos,1)==numel(vertexcolor) || size(pos,1)==size(vertexcolor,1) && (size(vertexcolor,2)==1 || size(vertexcolor,2)==3));
 facepotential   = ~isempty(tri) && ~ischar(facecolor  ) && (size(tri,1)==numel(facecolor  ) || size(tri,1)==size(facecolor  ,1) && (size(facecolor  ,2)==1 || size(facecolor,  2)==3));
 
 % if both vertexcolor and facecolor are numeric arrays, let the vertexcolor prevail
@@ -236,10 +236,10 @@ else
 end
 
 % if facealpha is an array with number of elements equal to the number of vertices
-if size(pnt,1)==numel(facealpha)
+if size(pos,1)==numel(facealpha)
   set(hs, 'FaceVertexAlphaData', facealpha);
   set(hs, 'FaceAlpha', 'interp');
-elseif ~isempty(pnt) && numel(facealpha)==1 && facealpha~=1
+elseif ~isempty(pos) && numel(facealpha)==1 && facealpha~=1
   % the default is 1, so that does not have to be set
   set(hs, 'FaceAlpha', facealpha);
 end
@@ -253,9 +253,9 @@ if faceindex
   % plot the triangle indices (numbers) at each face
   for face_indx=1:size(tri,1)
     str = sprintf('%d', face_indx);
-    tri_x = (pnt(tri(face_indx,1), 1) +  pnt(tri(face_indx,2), 1) +  pnt(tri(face_indx,3), 1))/3;
-    tri_y = (pnt(tri(face_indx,1), 2) +  pnt(tri(face_indx,2), 2) +  pnt(tri(face_indx,3), 2))/3;
-    tri_z = (pnt(tri(face_indx,1), 3) +  pnt(tri(face_indx,2), 3) +  pnt(tri(face_indx,3), 3))/3;
+    tri_x = (pos(tri(face_indx,1), 1) +  pos(tri(face_indx,2), 1) +  pos(tri(face_indx,3), 1))/3;
+    tri_y = (pos(tri(face_indx,1), 2) +  pos(tri(face_indx,2), 2) +  pos(tri(face_indx,3), 2))/3;
+    tri_z = (pos(tri(face_indx,1), 3) +  pos(tri(face_indx,2), 3) +  pos(tri(face_indx,3), 3))/3;
     h   = text(tri_x, tri_y, tri_z, str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
     hs  = [hs; h];
   end
@@ -267,21 +267,21 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
   if isempty(vertexcolor)
     % use black for all points
     if isscalar(vertexsize)
-      if size(pnt,2)==2
-        hs = plot(pnt(:,1), pnt(:,2), ['k' vertexmarker]);
+      if size(pos,2)==2
+        hs = plot(pos(:,1), pos(:,2), ['k' vertexmarker]);
       else
-        hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), ['k' vertexmarker]);
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), ['k' vertexmarker]);
       end
       set(hs, 'MarkerSize', vertexsize);
     else
-      if size(pnt,2)==2
-        for i=1:size(pnt,1)
-          hs = plot(pnt(i,1), pnt(i,2), ['k' vertexmarker]);
+      if size(pos,2)==2
+        for i=1:size(pos,1)
+          hs = plot(pos(i,1), pos(i,2), ['k' vertexmarker]);
           set(hs, 'MarkerSize', vertexsize(i));
         end
       else
-        for i=1:size(pnt,1)
-          hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), ['k' vertexmarker]);
+        for i=1:size(pos,1)
+          hs = plot3(pos(i,1), pos(i,2), pos(i,3), ['k' vertexmarker]);
           set(hs, 'MarkerSize', vertexsize(i));
         end
       end
@@ -290,31 +290,31 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
   elseif ischar(vertexcolor) && numel(vertexcolor)==1
     % one color for all points
     if isscalar(vertexsize)
-      if size(pnt,2)==2
-        hs = plot(pnt(:,1), pnt(:,2), [vertexcolor vertexmarker]);
+      if size(pos,2)==2
+        hs = plot(pos(:,1), pos(:,2), [vertexcolor vertexmarker]);
       else
-        hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), [vertexcolor vertexmarker]);
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), [vertexcolor vertexmarker]);
       end
       set(hs, 'MarkerSize', vertexsize);
     else
-      if size(pnt,2)==2
-        for i=1:size(pnt,1)
-          hs = plot(pnt(i,1), pnt(i,2), [vertexcolor vertexmarker]);
+      if size(pos,2)==2
+        for i=1:size(pos,1)
+          hs = plot(pos(i,1), pos(i,2), [vertexcolor vertexmarker]);
           set(hs, 'MarkerSize', vertexsize(i));
         end
       else
-        for i=1:size(pnt,1)
-          hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), [vertexcolor vertexmarker]);
+        for i=1:size(pos,1)
+          hs = plot3(pos(i,1), pos(i,2), pos(i,3), [vertexcolor vertexmarker]);
           set(hs, 'MarkerSize', vertexsize(i));
         end
       end
     end
     
-  elseif ischar(vertexcolor) && numel(vertexcolor)==size(pnt,1)
+  elseif ischar(vertexcolor) && numel(vertexcolor)==size(pos,1)
     % one color for each point
-    if size(pnt,2)==2
-      for i=1:size(pnt,1)
-        hs = plot(pnt(i,1), pnt(i,2), [vertexcolor(i) vertexmarker]);
+    if size(pos,2)==2
+      for i=1:size(pos,1)
+        hs = plot(pos(i,1), pos(i,2), [vertexcolor(i) vertexmarker]);
         if isscalar(vertexsize)
           set(hs, 'MarkerSize', vertexsize);
         else
@@ -322,8 +322,8 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
         end
       end
     else
-      for i=1:size(pnt,1)
-        hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), [vertexcolor(i) vertexmarker]);
+      for i=1:size(pos,1)
+        hs = plot3(pos(i,1), pos(i,2), pos(i,3), [vertexcolor(i) vertexmarker]);
         if isscalar(vertexsize)
           set(hs, 'MarkerSize', vertexsize);
         else
@@ -334,19 +334,19 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
     
   elseif ~ischar(vertexcolor) && size(vertexcolor,1)==1
     % one RGB color for all points
-    if size(pnt,2)==2
-      hs = plot(pnt(:,1), pnt(:,2), vertexmarker);
+    if size(pos,2)==2
+      hs = plot(pos(:,1), pos(:,2), vertexmarker);
       set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor);
     else
-      hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), vertexmarker);
+      hs = plot3(pos(:,1), pos(:,2), pos(:,3), vertexmarker);
       set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor);
     end
     
-  elseif ~ischar(vertexcolor) && size(vertexcolor,1)==size(pnt,1) && size(vertexcolor,2)==3
+  elseif ~ischar(vertexcolor) && size(vertexcolor,1)==size(pos,1) && size(vertexcolor,2)==3
     % one RGB color for each point
-    if size(pnt,2)==2
-      for i=1:size(pnt,1)
-        hs = plot(pnt(i,1), pnt(i,2), vertexmarker);
+    if size(pos,2)==2
+      for i=1:size(pos,1)
+        hs = plot(pos(i,1), pos(i,2), vertexmarker);
         if isscalar(vertexsize)
           set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor(i,:));
         else
@@ -354,8 +354,8 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
         end
       end
     else
-      for i=1:size(pnt,1)
-        hs = plot3(pnt(i,1), pnt(i,2), pnt(i,3), vertexmarker);
+      for i=1:size(pos,1)
+        hs = plot3(pos(i,1), pos(i,2), pos(i,3), vertexmarker);
         if isscalar(vertexsize)
           set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor(i,:));
         else
@@ -372,12 +372,12 @@ end % plotting the vertices as points
 
 if vertexindex
   % plot the vertex indices (numbers) at each node
-  for node_indx=1:size(pnt,1)
+  for node_indx=1:size(pos,1)
     str = sprintf('%d', node_indx);
-    if size(pnt, 2)==2
-      h = text(pnt(node_indx, 1), pnt(node_indx, 2), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
+    if size(pos, 2)==2
+      h = text(pos(node_indx, 1), pos(node_indx, 2), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
     else
-      h = text(pnt(node_indx, 1), pnt(node_indx, 2), pnt(node_indx, 3), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
+      h = text(pos(node_indx, 1), pos(node_indx, 2), pos(node_indx, 3), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
     end
     hs = [hs; h];
   end

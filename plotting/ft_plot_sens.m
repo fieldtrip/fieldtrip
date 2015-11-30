@@ -104,13 +104,13 @@ if all(any(isnan(sens.chanpos), 2))
 end
 
 if istrue(coilorientation) && isfield(sens, 'coilori')
-  pnt = sens.coilpos;
+  pos = sens.coilpos;
   ori = sens.coilori;
   scale = scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
-  for i=1:size(pnt,1)
-    x = [pnt(i,1) pnt(i,1)+ori(i,1)*scale];
-    y = [pnt(i,2) pnt(i,2)+ori(i,2)*scale];
-    z = [pnt(i,3) pnt(i,3)+ori(i,3)*scale];
+  for i=1:size(pos,1)
+    x = [pos(i,1) pos(i,1)+ori(i,1)*scale];
+    y = [pos(i,2) pos(i,2)+ori(i,2)*scale];
+    z = [pos(i,3) pos(i,3)+ori(i,3)*scale];
     line(x, y, z)
   end
 end
@@ -118,18 +118,18 @@ end
 if istrue(coil)
   % simply plot the position of all coils or electrodes
   if isfield(sens, 'coilpos')
-    pnt = sens.coilpos;
+    pos = sens.coilpos;
   elseif isfield(sens, 'elecpos')
-    pnt = sens.elecpos;
+    pos = sens.elecpos;
   end
   if isfield(sens, 'coilori')
     ori = sens.coilori;
   end
   
   if coildiameter==0
-    hs = plot3(pnt(:,1), pnt(:,2), pnt(:,3), style);
+    hs = plot3(pos(:,1), pos(:,2), pos(:,3), style);
   else
-    plotcoil(pnt, ori, coildiameter, style);
+    plotcoil(pos, ori, coildiameter, style);
   end
   
 else
@@ -176,11 +176,11 @@ warning(ws); % revert to original state
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'%%%%%%%%%%%%%%%%%%
-function plotcoil(pnt, ori, coildiameter, style)
+function plotcoil(pos, ori, coildiameter, style)
 % construct a template coil at [0 0 0], oriented towards [0 0 1]
 pos = circle(12);
 s   = scale([coildiameter coildiameter coildiameter]/2);
-for i=1:size(pnt,1)
+for i=1:size(pos,1)
   x = ori(i,1);
   y = ori(i,2);
   z = ori(i,3);
@@ -188,7 +188,7 @@ for i=1:size(pnt,1)
   th = atan2(sqrt(x^2+y^2), z)*180/pi;
   r1 = rotate([0 th 0]);
   r2 = rotate([0 0 ph]);
-  t  = translate(pnt(i,:));
+  t  = translate(pos(i,:));
   rim = ft_warp_apply(t*r2*r1*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
   rim(1,:) = rim(end,:);            % replace the first (central) point with the last, this closes the circle
   h = line(rim(:,1), rim(:,2), rim(:,3));
@@ -198,13 +198,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [pnt, tri] = circle(n)
+function [pos, tri] = circle(n)
 phi = linspace(0, 2*pi, n+1);
 phi = phi(1:end-1)';
 x = cos(phi);
 y = sin(phi);
 z = zeros(size(phi));
-pnt = [0 0 0; x y z];
+pos = [0 0 0; x y z];
 if nargout>1
   tri = zeros(n,3);
   for i=1:n-1
