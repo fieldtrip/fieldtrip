@@ -19,7 +19,7 @@ if numel(data)>1
 end
 
 % replace pnt by pos
-if isfield(data, 'pnt') && ~isfield(data, 'label')
+if isfield(data, 'pnt')
   data.pos = data.pnt;
   data = rmfield(data, 'pnt');
 end
