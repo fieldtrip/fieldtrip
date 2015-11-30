@@ -1,7 +1,7 @@
 function test_bug2954
 
 % WALLTIME 00:10:00
-% MEM 1gb
+% MEM 2gb
 
 %%
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/edf/0601_s.edf');
