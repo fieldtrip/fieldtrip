@@ -60,7 +60,7 @@ try
   end
 catch
   headmodel = [];
-  geom = mri;
+  geom = fixpos(mri);
   % copy the boundaries from the geometry into the volume conduction model
   headmodel.bnd = geom.bnd;
 end
@@ -156,8 +156,8 @@ elseif strcmp(cfg.method, 'bemcp')
     for j=1:numboundaries
       if i~=j
         % determine for a single vertex on each surface if it is inside or outside the other surfaces
-        curpos = headmodel.bnd(i).pnt(1,:); % any point on the boundary is ok
-        curpnt = headmodel.bnd(j).pnt;
+        curpos = headmodel.bnd(i).pos(1,:); % any point on the boundary is ok
+        curpnt = headmodel.bnd(j).pos;
         curtri = headmodel.bnd(j).tri;
         nesting(i,j) = bounding_mesh(curpos, curpnt, curtri);
       end
@@ -189,7 +189,7 @@ elseif strcmp(cfg.method, 'bemcp')
   
   % 2. BEM model estimation, only for the scalp surface
   
-  defl =[ 0 0 1/size(headmodel.bnd(headmodel.skin_surface).pnt,1)];
+  defl =[ 0 0 1/size(headmodel.bnd(headmodel.skin_surface).pos,1)];
   % ensure deflation for skin surface, i.e. average reference over skin
   
   % NOTE:
@@ -212,15 +212,15 @@ elseif strcmp(cfg.method, 'bemcp')
   % matrix, i.e. C11st = C11-eye(N)
   
   weight = (headmodel.cond(1)-headmodel.cond(2))/((headmodel.cond(1)+headmodel.cond(2))*2*pi);
-  C11st  = bem_Cii_lin(headmodel.bnd(1).tri,headmodel.bnd(1).pnt, weight,defl(1),headmodel.bnd(1).pnt4);
+  C11st  = bem_Cii_lin(headmodel.bnd(1).tri,headmodel.bnd(1).pos, weight,defl(1),headmodel.bnd(1).pnt4);
   weight = (headmodel.cond(1)-headmodel.cond(2))/((headmodel.cond(2)+headmodel.cond(3))*2*pi);
-  C21    = bem_Cij_lin(headmodel.bnd(2).pnt,headmodel.bnd(1).pnt,headmodel.bnd(1).tri, weight,defl(1));
+  C21    = bem_Cij_lin(headmodel.bnd(2).pos,headmodel.bnd(1).pos,headmodel.bnd(1).tri, weight,defl(1));
   tmp1   = C21/C11st;
   
   weight = (headmodel.cond(2)-headmodel.cond(3))/((headmodel.cond(1)+headmodel.cond(2))*2*pi);
-  C12    = bem_Cij_lin(headmodel.bnd(1).pnt,headmodel.bnd(2).pnt,headmodel.bnd(2).tri, weight,defl(2));
+  C12    = bem_Cij_lin(headmodel.bnd(1).pos,headmodel.bnd(2).pos,headmodel.bnd(2).tri, weight,defl(2));
   weight = (headmodel.cond(2)-headmodel.cond(3))/((headmodel.cond(2)+headmodel.cond(3))*2*pi);
-  C22st  = bem_Cii_lin(headmodel.bnd(2).tri,headmodel.bnd(2).pnt, weight,defl(2),headmodel.bnd(2).pnt4);
+  C22st  = bem_Cii_lin(headmodel.bnd(2).tri,headmodel.bnd(2).pos, weight,defl(2),headmodel.bnd(2).pnt4);
   tmp2   = C12/C22st;
   
   % Try to spare some memory:
@@ -232,14 +232,14 @@ elseif strcmp(cfg.method, 'bemcp')
   % Combine with the effect of surface 3 (scalp) on the first 2
   %------------------------------------------------------------
   weight = (headmodel.cond(1)-headmodel.cond(2))/(headmodel.cond(3)*2*pi);
-  C31    = bem_Cij_lin(headmodel.bnd(3).pnt,headmodel.bnd(1).pnt,headmodel.bnd(1).tri, weight,defl(1));
+  C31    = bem_Cij_lin(headmodel.bnd(3).pos,headmodel.bnd(1).pos,headmodel.bnd(1).tri, weight,defl(1));
   %   tmp4   = C31/(- tmp2 * C21 + C11st );
   %   clear C31 C21 C11st
   tmp4 = C31/tmp10;
   clear C31 tmp10
   
   weight = (headmodel.cond(2)-headmodel.cond(3))/(headmodel.cond(3)*2*pi);
-  C32    = bem_Cij_lin(headmodel.bnd(3).pnt,headmodel.bnd(2).pnt,headmodel.bnd(2).tri, weight,defl(2));
+  C32    = bem_Cij_lin(headmodel.bnd(3).pos,headmodel.bnd(2).pos,headmodel.bnd(2).tri, weight,defl(2));
   %   tmp3   = C32/(- tmp1 * C12 + C22st );
   %   clear  C12 C22st C32
   tmp3 = C32/tmp11;
@@ -254,15 +254,15 @@ elseif strcmp(cfg.method, 'bemcp')
   % As the gama1 intermediate matrix is built as the sum of 3 matrices, I can
   % spare some memory by building them one at a time, and summing directly
   weight = headmodel.cond(3)/((headmodel.cond(1)+headmodel.cond(2))*2*pi);
-  Ci3    = bem_Cij_lin(headmodel.bnd(1).pnt,headmodel.bnd(3).pnt,headmodel.bnd(3).tri, weight,defl(3));
+  Ci3    = bem_Cij_lin(headmodel.bnd(1).pos,headmodel.bnd(3).pos,headmodel.bnd(3).tri, weight,defl(3));
   gama1  = - tmp5*Ci3; % gama1 = - tmp5*C13;
   
   weight = headmodel.cond(3)/((headmodel.cond(2)+headmodel.cond(3))*2*pi);
-  Ci3    = bem_Cij_lin(headmodel.bnd(2).pnt,headmodel.bnd(3).pnt,headmodel.bnd(3).tri, weight,defl(3));
+  Ci3    = bem_Cij_lin(headmodel.bnd(2).pos,headmodel.bnd(3).pos,headmodel.bnd(3).tri, weight,defl(3));
   gama1  = gama1 - tmp6*Ci3; % gama1 = - tmp5*C13 - tmp6*C23;
   
   weight = 1/(2*pi);
-  Ci3    = bem_Cii_lin(headmodel.bnd(3).tri,headmodel.bnd(3).pnt, weight,defl(3),headmodel.bnd(3).pnt4);
+  Ci3    = bem_Cii_lin(headmodel.bnd(3).tri,headmodel.bnd(3).pos, weight,defl(3),headmodel.bnd(3).pnt4);
   gama1  = gama1 - Ci3; % gama1 = - tmp5*C13 - tmp6*C23 - C33st;
   clear Ci3
   
@@ -278,7 +278,7 @@ elseif strcmp(cfg.method, 'openmeeg')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   ft_hastoolbox('openmeeg', 1);
   
-  if size(headmodel.bnd(1).pnt,1)>10000
+  if size(headmodel.bnd(1).pos,1)>10000
     error('OpenMEEG does not manage meshes with more than 10000 vertices (use reducepatch)')
   else
     % use the openmeeg wrapper function
