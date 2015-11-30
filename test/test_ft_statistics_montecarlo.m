@@ -1,7 +1,7 @@
 function test_ft_statistics_montecarlo
 
 % MEM 4gb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
 % TEST test_ft_statistics_montecarlo
 % TEST ft_statistics_montecarlo ft_timelockstatistics ft_freqstatistics ft_sourcestatistics clusterstat findcluster
