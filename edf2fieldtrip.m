@@ -73,3 +73,20 @@ end
 % concatenate them into a single data structure
 data = ft_appenddata(cfg, data{:});
 
+% reorder the channels to the original order in the EDF file
+origlabel     = cellstr(hdr.orig.Label);
+[currentorder, origorder] = match_str(origlabel, data.label); % sorted according to the 1st input argument
+data.label    = data.label(origorder);
+data.trial{1} = data.trial{1}(origorder,:);
+
+% annotate the manual operation in the data structure provenance
+cfg = [];
+cfg.comment = 'reordered the channels to the original order in the EDF file';
+data = ft_annotate(cfg, data);
+
+if isfield(data, 'hdr')
+  % remove this, as otherwise it might be very confusing with the subselections
+  data = rmfield(data, 'hdr');
+end
+
+

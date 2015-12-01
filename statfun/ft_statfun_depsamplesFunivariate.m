@@ -1,4 +1,4 @@
-function [s,cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
+function [s, cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 
 % FT_STATFUN_DEPSAMPLESFUNIIVARIATE calculates the univariate repeated-mesures
 % ANOVA on the biological data in dat (the dependent variable), using the

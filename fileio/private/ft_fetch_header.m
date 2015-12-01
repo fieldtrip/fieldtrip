@@ -71,3 +71,11 @@ elseif isfield(data, 'hdr') && isfield(data.hdr, 'elec')
   hdr.elec = data.hdr.elec;  
 end
     
+% retrieve the synchronization information
+if isfield(data, 'hdr') && isfield(data.hdr, 'FirstTimeStamp')
+  hdr.FirstTimeStamp = data.hdr.FirstTimeStamp;
+end
+if isfield(data, 'hdr') && isfield(data.hdr, 'TimeStampPerSample')
+  hdr.TimeStampPerSample = data.hdr.TimeStampPerSample;
+end
+

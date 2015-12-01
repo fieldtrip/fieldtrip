@@ -132,13 +132,13 @@ parent          = ft_getopt(varargin, 'parent', []);
 %     highlight = highlight(:);
 % end
 
-npnt  = numel(hdat);
-nline = numel(vdat)/npnt;
+npos  = numel(hdat);
+nline = numel(vdat)/npos;
 
-if ~isequal(size(hdat), [1 npnt])
+if ~isequal(size(hdat), [1 npos])
   hdat = hdat';
 end
-if ~isequal(size(vdat), [nline npnt])
+if ~isequal(size(vdat), [nline npos])
   vdat = vdat';
 end
 
@@ -158,7 +158,7 @@ if strcmp(highlightstyle, 'difference') && isempty(highlight)
 end
 
 if ~isempty(highlight)
-  if numel(highlight)~=npnt
+  if numel(highlight)~=npos
     error('the length of the highlight vector should correspond to the length of the data');
   else
     % make sure the vector points in the same direction as the data
@@ -388,7 +388,7 @@ switch highlightstyle
       for i=1:size(vdat,1)
         h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
-    elseif isnumeric(color) && size(color,1)==npnt
+    elseif isnumeric(color) && size(color,1)==npos
       % the color is specified as Nx3 matrix with RGB values and varies over the length of the line
       for i=1:(size(vdat,2)-1)
         for j=1:size(vdat,1)

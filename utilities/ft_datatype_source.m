@@ -329,20 +329,6 @@ switch version
     error('unsupported version "%s" for source datatype', version);
 end
 
-function source = fixpos(source)
-if ~isfield(source, 'pos')
-  if isfield(source, 'xgrid') && isfield(source, 'ygrid') && isfield(source, 'zgrid')
-    source.pos = grid2pos(source.xgrid, source.ygrid, source.zgrid);
-  elseif isfield(source, 'pnt')
-    source.pos = source.pnt; 
-    source = rmfield(source, 'pnt');
-  elseif isfield(source, 'dim') && isfield(source, 'transform')
-    source.pos = dim2pos(source.dim, source.transform);
-  else
-    error('cannot reconstruct individual source positions');
-  end
-end
-
 function pos = grid2pos(xgrid, ygrid, zgrid)
 [X, Y, Z] = ndgrid(xgrid, ygrid, zgrid);
 pos = [X(:) Y(:) Z(:)];

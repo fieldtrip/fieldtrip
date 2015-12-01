@@ -159,11 +159,11 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble randomseed
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
+ft_preamble randomseed
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -200,7 +200,7 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
     'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
   
   cfg.unmixing = pinv(cfg.topo);
-  cfg = rmfield(cfg,'topo');
+  cfg = rmfield(cfg, 'topo');
 end
 
 if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
@@ -216,18 +216,9 @@ if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   tmpchan = match_str(cfg.channel, cfg.topolabel);
   cfg.channel = cfg.channel(tmpchan);
   
-  % remove all cfg settings  that do not apply
-  tmpcfg              = [];
-  tmpcfg.demean       = cfg.demean;
-  tmpcfg.trials       = cfg.trials;
-  tmpcfg.unmixing     = cfg.unmixing;    % the NxM unmixing matrix (M channels, N components)
-  tmpcfg.topolabel    = cfg.topolabel;   % the Mx1 labels of the data that was used in determining the mixing matrix
-  tmpcfg.channel      = cfg.channel;     % the Mx1 labels of the data that is presented now to this function
-  tmpcfg.numcomponent = 'all';
-  tmpcfg.method       = 'predetermined unmixing matrix';
-  tmpcfg.doscale      = cfg.doscale;
-  tmpcfg.updatesens   = cfg.updatesens;
-  cfg                 = tmpcfg;
+  % update some settings where there is no further choice to be made by the user
+  cfg.numcomponent = 'all';
+  cfg.method       = 'predetermined unmixing matrix';
 end
 
 % add the options for the specified methods to the configuration, only if needed
@@ -865,8 +856,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble randomseed
-ft_postamble previous data
-ft_postamble history comp
-ft_postamble savevar comp
+ft_postamble previous   data
+ft_postamble provenance comp
+ft_postamble history    comp
+ft_postamble savevar    comp

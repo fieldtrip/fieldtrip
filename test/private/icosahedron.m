@@ -1,8 +1,8 @@
-function [pnt, tri] = icosahedron()
+function [pos, tri] = icosahedron()
 
 % ICOSAHEDRON creates an icosahedron
 %
-% [pnt, tri] = icosahedron
+% [pos, tri] = icosahedron
 % creates an icosahedron with 12 vertices and 20 triangles
 % 
 % See also OCTAHEDRON, ICOSAHEDRON42, ICOSAHEDRON162, ICOSAHEDRON642, ICOSAHEDRON2562
@@ -50,20 +50,20 @@ tri = [
   12   7  11
 ];
 
-pnt = zeros(12, 3);
+pos = zeros(12, 3);
 
 rho=0.4*sqrt(5);
 phi=2*pi*(0:4)/5;
 
-pnt( 1, :) = [0 0  1];          % top point
+pos( 1, :) = [0 0  1];          % top point
 
-pnt(2:6, 1) = rho*cos(phi)';
-pnt(2:6, 2) = rho*sin(phi)';
-pnt(2:6, 3) = rho/2;
+pos(2:6, 1) = rho*cos(phi)';
+pos(2:6, 2) = rho*sin(phi)';
+pos(2:6, 3) = rho/2;
 
-pnt(7:11, 1) = rho*cos(phi - pi/5)';
-pnt(7:11, 2) = rho*sin(phi - pi/5)';
-pnt(7:11, 3) = -rho/2;
+pos(7:11, 1) = rho*cos(phi - pi/5)';
+pos(7:11, 2) = rho*sin(phi - pi/5)';
+pos(7:11, 3) = -rho/2;
 
-pnt(12, :) = [0 0 -1];          % bottom point
+pos(12, :) = [0 0 -1];          % bottom point
 

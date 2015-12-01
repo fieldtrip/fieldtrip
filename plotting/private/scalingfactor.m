@@ -43,15 +43,20 @@ function factor = scalingfactor(old, new)
 %   sievert     Sv  equivalent dose (of ionizing radiation) J/kg    L2#T-2
 %   katal       kat catalytic activity  mol/s   T-1#N
 %
+% The following alternative units are supported
+%   inch        inch  length
+%   feet        feet  length
+%   gauss       gauss magnetic field strength
+%
 % The following derived units are not supported due to potential confusion
 % between their ascii character representation
 %   ohm             #   electric resistance, impedance, reactance   V/A M#L2#T-3#I-2
 %   watt            W   power, radiant flux J/s = V#A   M#L2#T-3
-%   degree Celsius	°C	temperature relative to 273.15 K	K	?
+%   degree Celsius	?C	temperature relative to 273.15 K	K	?
 %
 % See also http://en.wikipedia.org/wiki/International_System_of_Units
 
-% Copyright (C) 2012, Robert Oostenveld
+% Copyright (C) 2012-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -100,11 +105,13 @@ if isequal(old, new)
   return
 end
 
-unit = {'m' 'g' 's' 'A' 'K' 'mol' 'cd' 'Hz' 'rad' 'sr' 'N' 'Pa' 'J' 'C' 'V' 'F' 'S' 'Wb' 'T' 'H' 'lm' 'lx' 'Bq' 'Gy' 'Sv' 'kat'};
+unit = {'m' 'g' 's' 'A' 'K' 'mol' 'cd' 'Hz' 'rad' 'sr' 'N' 'Pa' 'J' 'C' 'V' 'F' 'S' 'Wb' 'T' 'H' 'lm' 'lx' 'Bq' 'Gy' 'Sv' 'kat' 'inch' 'feet' 'gauss'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the following section pertains to checking that units are compatible
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+unknown = -1;
 
 % each of the fundamental units is represented by a prime number
 m   = 2;
@@ -114,7 +121,6 @@ A   = 7;
 K   = 11;
 mol = 13;
 cd  = 17;
-unknown = -1;
 
 % each of the derives units is represented by a product and/or ratio of prime numbers
 Hz  = 1/s;
@@ -136,6 +142,11 @@ Bq  = 1/s;
 Gy  = J/kg;
 Sv  = J/kg;
 kat = mol/s;
+
+% these are the same units as more fundamental units, and only differ with respect to multiplying them with a constant
+inch = m;     % it is actually 0.0254 m
+feet = inch;  % it is actually 12 inch
+gauss = T;    % it is actually 10^-4 T
 
 % deal with all possible prefixes
 for i=1:length(unit)
@@ -201,6 +212,11 @@ Bq  = 1;
 Gy  = 1;
 Sv  = 1;
 kat = 1;
+
+% these are the same units as more fundamental units, and only differ with respect to multiplying them with a constant
+inch  = 0.0254;
+feet  = 0.0254*12;
+gauss = 1e-4;
 
 % deal with all possible prefixes
 for i=1:length(unit)

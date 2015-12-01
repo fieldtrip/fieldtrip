@@ -1,4 +1,4 @@
-function [stat] = ft_statfun_mean(cfg, dat, design)
+function [s, cfg] = ft_statfun_mean(cfg, dat, design)
 
 % FT_STATFUN_MEAN computes the mean over all replications for each of
 % the observations (i.e. channel-time-frequency points or voxels).
@@ -34,5 +34,5 @@ function [stat] = ft_statfun_mean(cfg, dat, design)
 %
 % $Id$
 
-stat = mean(dat,2);
+s = mean(dat,2);
 

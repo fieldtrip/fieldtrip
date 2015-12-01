@@ -99,7 +99,7 @@ switch(padtype)
   case 'localmean'
     prepad    = min(prepadlength, floor(size(dat, 2)/2));
     edgeleft  = mean(dat(:, 1:prepad), 2);
-    postpad   = min(prepadlength, floor(size(dat, 2)/2));
+    postpad   = min(postpadlength, floor(size(dat, 2)/2));
     edgeright = mean(dat(:, 1+end-postpad:end), 2);
     dat       = [edgeleft*ones(1,prepadlength) dat edgeright*ones(1,postpadlength)];
     return;

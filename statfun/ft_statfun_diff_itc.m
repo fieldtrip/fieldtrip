@@ -1,4 +1,4 @@
-function [s] = ft_statfun_diff_itc(cfg, dat, design)
+function [s, cfg] = ft_statfun_diff_itc(cfg, dat, design)
 
 % FT_STATFUN_DIFF_ITC computes the difference in the inter-trial
 % coherence between two conditions. The input data for this test

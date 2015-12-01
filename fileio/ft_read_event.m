@@ -13,11 +13,11 @@ function [event] = ft_read_event(filename, varargin)
 %   'headerformat'   string
 %   'eventformat'    string
 %   'header'         structure, see FT_READ_HEADER
-%   'detectflank'    string, can be 'bit', 'up', 'down', 'both' or 'auto' (default is system specific)
+%   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak', 'trough' or 'auto' (default is system specific)
 %   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'trigindx'       list with channel numbers for the trigger detection, only for Yokogawa (default is automatic)
-%   'triglabel'      list of channel labels for the trigger detection, only for Artinis oxy3-files (default is all ADC* channels)
+%   'triglabel'      list of channel labels for the trigger detection (default is all ADC* channels for Artinis oxy3-files)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
@@ -142,8 +142,8 @@ filename = fetch_url(filename);
 hdr              = ft_getopt(varargin, 'header');
 detectflank      = ft_getopt(varargin, 'detectflank', 'up');   % up, down or both
 trigshift        = ft_getopt(varargin, 'trigshift');           % default is assigned in subfunction
-trigindx         = ft_getopt(varargin, 'trigindx');            % this allows to override the automatic trigger channel detection and is useful for Yokogawa
-triglabel        = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis oxy3 data)
+trigindx         = ft_getopt(varargin, 'trigindx');            % this allows to override the automatic trigger channel detection (e.g., useful for Yokogawa)
+triglabel        = ft_getopt(varargin, 'triglabel');           % this allows to override the automatic trigger channel detection
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
 threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
@@ -577,12 +577,14 @@ switch eventformat
     event = read_shm_event(filename, varargin{:});
     
   case 'edf'
-    % EDF itself does not contain events, but EDF+ does define an annotation channel
+    % read the header
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'chanindx', chanindx);
+      hdr = ft_read_header(filename);
     end
     
-    if issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation)
+    if ~isempty(detectflank) % parse the trigger channel (indicated by chanindx) for events
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'threshold', threshold);
+    elseif issubfield(hdr, 'orig.annotation') && ~isempty(hdr.orig.annotation) % EDF itself does not contain events, but EDF+ does define an annotation channel
       % read the data of the annotation channel as 16 bit
       evt = read_edf(filename, hdr);
       % undo the faulty calibration
@@ -684,16 +686,11 @@ switch eventformat
     end
     
     if ~isempty(trg) && ~isempty(hdr)
-      if filetype_check_header(filename, 'RIFF')
-        scaler = 1000; % for 32-bit files from ASAlab triggers are in miliseconds
-      elseif filetype_check_header(filename, 'RF64');
-        scaler = 1; % for 64-bit files from ASAlab triggers are in seconds
-      end
       % translate the EEProbe trigger codes to events
       for i=1:length(trg)
         event(i).type     = 'trigger';
-        event(i).sample   = round((trg(i).time/scaler) * hdr.Fs) + 1;    % convert from ms to samples
-        event(i).value    = trg(i).code;
+        event(i).sample   = trg(i).offset;
+        event(i).value    = trg(i).type;
         event(i).offset   = 0;
         event(i).duration = 0;
       end
@@ -1007,7 +1004,7 @@ switch eventformat
       warning('disabling blocking because no selection was specified');
       blocking = false;
     end
-
+    
     if blocking
       nsamples = 0; % disable waiting for samples
       if isempty(flt_minnumber)
@@ -1022,7 +1019,7 @@ switch eventformat
         error('buffer timed out while waiting for %d events', nevents);
       end
     end
-
+    
     try
       event = buffer('get_evt', [], host, port);
     catch
@@ -1621,7 +1618,7 @@ switch eventformat
     end
     trgindx = match_str(hdr.label, 'DTRIG');
     if ~isempty(trgindx)
-      trigger = read_trigger(filename, 'header', hdr, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
       event   = appendevent(event, trigger);
     end
     
@@ -1785,7 +1782,7 @@ switch eventformat
     event = read_bucn_nirsevent(filename);
     
   case 'oxy3'
-    ft_hastoolbox('artinis', 1);    
+    ft_hastoolbox('artinis', 1);
     event = read_artinis_oxy3(filename, true);
     
     if isempty(hdr)
@@ -1793,32 +1790,33 @@ switch eventformat
     end
     
     if isempty(trigindx) % indx gets precedence over labels! numbers before words
+      triglabel = ft_getopt(varargin, 'triglabel', 'ADC*');  % this allows subselection of AD channels to be markes as trigger channels (for Artinis oxy3 data)
       trigindx = find(ismember(hdr.label, ft_channelselection(triglabel, hdr.label)));
     end
-        
+    
     % read the trigger channel and do flank detection
-    triggers = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
+    trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
     
     % remove consecutive triggers
     i = 1;
-    last_trigger_sample = triggers(i).sample;
-    while i<numel(triggers)
-      if strcmp(triggers(i).type, triggers(i+1).type) && triggers(i+1).sample-last_trigger_sample <= tolerance
-        [triggers(i).value, idx] = max([triggers(i).value, triggers(i+1).value]);
-        fprintf('Merging triggers at sample %d and %d\n', triggers(i).sample, triggers(i+1).sample);        
-        last_trigger_sample =  triggers(i+1).sample;
+    last_trigger_sample = trigger(i).sample;
+    while i<numel(trigger)
+      if strcmp(trigger(i).type, trigger(i+1).type) && trigger(i+1).sample-last_trigger_sample <= tolerance
+        [trigger(i).value, idx] = max([trigger(i).value, trigger(i+1).value]);
+        fprintf('Merging triggers at sample %d and %d\n', trigger(i).sample, trigger(i+1).sample);
+        last_trigger_sample =  trigger(i+1).sample;
         if (idx==2)
-          triggers(i).sample = triggers(i+1).sample;
+          trigger(i).sample = trigger(i+1).sample;
         end
-          
-        triggers(i+1) = [];        
+        
+        trigger(i+1) = [];
       else
         i=i+1;
-        last_trigger_sample = triggers(i).sample;
+        last_trigger_sample = trigger(i).sample;
       end
     end
     
-    event = appendevent(event, triggers);
+    event = appendevent(event, trigger);
     
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)
@@ -1897,4 +1895,3 @@ if isempty(event)
   % ensure that it has the correct fields, even if it is empty
   event = struct('type', {}, 'value', {}, 'sample', {}, 'offset', {}, 'duration', {});
 end
-

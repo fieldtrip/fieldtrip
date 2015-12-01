@@ -190,6 +190,9 @@ if ~compiled
     if ft_platform_supports('program_invocation_name')
       % supported in GNU Octave
       matlabcmd = program_invocation_name();
+    elseif ~isempty(getenv('MATLAB_BIN'))
+      % supported on Linux and R2014b, perhaps also on others
+      matlabcmd = getenv('MATLAB_BIN');
     else
       matlabcmd = '';
       % try all versions between 7.1 and 7.9

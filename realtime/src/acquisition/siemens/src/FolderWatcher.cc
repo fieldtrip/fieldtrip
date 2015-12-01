@@ -11,20 +11,19 @@
 FolderWatcher::FolderWatcher(const char *directory) : vecFilenames(0) {
 	dirHandle = INVALID_HANDLE_VALUE;
 	isListening = false;
-	
+    completionPort = 0;
+
 	activeBuffer = 0;
 
-//    dirHandle = CreateFile(directory,
-//    dirHandle = CreateFile((LPCSTR)directory,
-    dirHandle = CreateFile((LPCWSTR)directory,
+    dirHandle = CreateFileA(directory,
 					FILE_LIST_DIRECTORY, 
 					FILE_SHARE_WRITE|FILE_SHARE_READ|FILE_SHARE_DELETE, 
 					NULL, 
 					OPEN_EXISTING, 
 					FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OVERLAPPED, 
-					NULL);
-				
-	if (dirHandle != INVALID_HANDLE_VALUE) {
+                    NULL);
+
+    if (dirHandle != INVALID_HANDLE_VALUE) {
 		completionPort = CreateIoCompletionPort(dirHandle, NULL, 0, 0);
 		if (completionPort == NULL) {
 			CloseHandle(dirHandle);
@@ -82,22 +81,16 @@ int FolderWatcher::processChanges(int which) {
 	
 	isListening = false;	
 	
-	do {
+    do
+    {
 		char filename[MAX_PATH];
 		info = (FILE_NOTIFY_INFORMATION *) fileInfoBufferPtr;
 		
-		fileInfoBufferPtr += info->NextEntryOffset;
-		#ifdef UNICODE
-//        lstrcpynW(filename, info->FileName, std::min((long unsigned int)MAX_PATH, info->FileNameLength / sizeof(WCHAR) + 1));
-        lstrcpynW((LPWSTR)filename, info->FileName, std::min((long unsigned int)MAX_PATH, info->FileNameLength / sizeof(WCHAR) + 1));
-        #else
-        {
-            int count = WideCharToMultiByte(CP_ACP, 0, info->FileName, info->FileNameLength / sizeof(WCHAR), filename, MAX_PATH - 1, NULL, NULL);
-            filename[count] = 0;
-        }
-		#endif
+        fileInfoBufferPtr += info->NextEntryOffset;
+        int count = WideCharToMultiByte(CP_ACP, 0, info->FileName, info->FileNameLength / sizeof(WCHAR), filename, MAX_PATH - 1, NULL, NULL);
+        filename[count] = 0;
 		vecFilenames.push_back(filename);
-		// printf("%i: %s\n", vecFilenames.size(), filename);
+         printf("%i: %s\n", vecFilenames.size(), filename);
 	} while (info->NextEntryOffset > 0);
 	
 	return vecFilenames.size();

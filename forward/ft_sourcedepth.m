@@ -1,12 +1,12 @@
-function [depth] = ft_sourcedepth(pos, headmodel)
+function [depth] = ft_sourcedepth(dippos, headmodel)
 
 % FT_SOURCEDEPTH computes the distance from the source to the surface of
 % the source compartment (usually the brain) in the volume conduction model.
 %
 % Use as
-%   depth = ft_sourcedepth(pos, headmodel);
+%   depth = ft_sourcedepth(dippos, headmodel);
 % where
-%   pos       =  Nx3 matrix with the position of N sources
+%   dippos    =  Nx3 matrix with the position of N sources
 %   headmodel =  structure describing volume condition model
 %
 % A negative depth indicates that the source is inside the source
@@ -45,9 +45,9 @@ case {'singlesphere', 'concentricspheres'}
   end
   if isfield(headmodel, 'o')
     % shift dipole positions toward origin of sphere
-    tmp = pos - repmat(headmodel.o, size(pos,1), 1);
+    tmp = dippos - repmat(headmodel.o, size(dippos,1), 1);
   else
-    tmp = pos;
+    tmp = dippos;
   end
   depth = sqrt(sum(tmp.^2, 2))-headmodel.r(headmodel.source); % positive if outside, negative if inside
 
@@ -55,25 +55,25 @@ case {'singlesphere', 'concentricspheres'}
 case {'bem' 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag','openmeeg'}
   if isfield(headmodel, 'source')
     % use the specified source compartment
-    pnt = headmodel.bnd(headmodel.source).pnt;
+    pos = headmodel.bnd(headmodel.source).pos;
     tri = headmodel.bnd(headmodel.source).tri;
   else
     % locate the innermost compartment and remember it
     headmodel.source = find_innermost_boundary(headmodel.bnd);
-    pnt = headmodel.bnd(headmodel.source).pnt;
+    pos = headmodel.bnd(headmodel.source).pos;
     tri = headmodel.bnd(headmodel.source).tri;
   end
-  inside = bounding_mesh(pos, pnt, tri);
+  inside = bounding_mesh(dippos, pos, tri);
   ntri   = size(tri,1);
   npos   = size(pos,1);
   dist   = zeros(ntri, 1);
   depth  = zeros(npos, 1);
   for i=1:npos
     for j=1:ntri
-      v1 = pnt(tri(j,1),:);
-      v2 = pnt(tri(j,2),:);
-      v3 = pnt(tri(j,3),:);
-      [proj, dist(j)] = ptriproj(v1, v2, v3, pos(i,:), 1);
+      v1 = pos(tri(j,1),:);
+      v2 = pos(tri(j,2),:);
+      v3 = pos(tri(j,3),:);
+      [proj, dist(j)] = ptriproj(v1, v2, v3, dippos(i,:), 1);
     end
     if inside(i)
       depth(i) = -min(dist);

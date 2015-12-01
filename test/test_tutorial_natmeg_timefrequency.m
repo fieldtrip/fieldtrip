@@ -1,6 +1,6 @@
 function test_tutorial_natmeg_timefrequency
 
-% WALLTIME 00:20:00
+% WALLTIME 00:30:00
 % MEM 4gb
 
 % this script executes the MATLAB content from

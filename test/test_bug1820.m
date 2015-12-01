@@ -1,7 +1,7 @@
 function test_bug1820
 
 % MEM 12gb
-% WALLTIME 03:00:00
+% WALLTIME 04:30:00
 
 % TEST test_bug1820
 % TEST ft_prepare_mesh ft_headmodel_simbio ft_prepare_vol_sens ft_compute_leadfield

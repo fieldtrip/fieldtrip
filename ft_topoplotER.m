@@ -164,10 +164,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble loadvar    varargin
+ft_preamble debug
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
-ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -195,10 +195,10 @@ cfg = topoplot_common(cfg, varargin{:});
 cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
-ft_postamble debug
 
 if ~nargout
   clear cfg

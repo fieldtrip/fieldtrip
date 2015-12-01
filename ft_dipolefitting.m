@@ -128,10 +128,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -518,9 +518,14 @@ switch cfg.model
     if success
       % re-compute the leadfield in order to compute the model potential and dipole moment
       lf = ft_compute_leadfield(dip.pos, sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-      % compute all details of the final dipole model
-      dip.mom = pinv(lf)*Vdata;
-      dip.pot = lf*dip.mom;
+      if isfield(dip, 'mom') && isfield(dip, 'ampl')
+        % the orientation and amplitude have already been estimated, this applies to the case of a fixed dipole orientation
+        dip.pot = (lf * dip.mom) * dip.ampl;
+      else
+        % compute all details of the final dipole model using linear estimation
+        dip.mom = pinv(lf)*Vdata;
+        dip.pot = lf*dip.mom;
+      end
       dip.rv  = rv(Vdata, dip.pot);
       Vmodel  = dip.pot;
     end
@@ -545,7 +550,12 @@ switch cfg.model
     if isfreq
       % the matrix with the dipole moment is encrypted and cannot be interpreted straight away
       % reconstruct the frequency representation of the data at the source level
-      [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom);
+      if isfield(dip, 'mom') && isfield(dip, 'ampl')
+        % this applies to the case of a fixed dipole orientation
+        [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom * dip.ampl);
+      else
+        [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom);
+      end
     end
   case 'moving'
     if isfreq
@@ -564,6 +574,9 @@ source.dip    = dip;
 source.Vdata  = Vdata;  % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 source.Vmodel = Vmodel; % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 
+% the units of the fitted source are the same as the units of the headmodel and the sensor array
+source.dip.unit = headmodel.unit;
+
 % assign a latency, frequeny or component axis to the output
 if iscomp
   source.component = cfg.component;
@@ -579,20 +592,10 @@ else
   source.dimord = 'chan_time';
 end
 
-% FIXME why would this be done?
-if isfield(data, 'grad')
-  % copy the gradiometer array along
-  source.grad = data.grad;
-end
-if isfield(data, 'elec')
-  % copy the electrode array along
-  source.elec = data.elec;
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history source
-ft_postamble savevar source
+ft_postamble previous   data
+ft_postamble provenance source
+ft_postamble history    source
+ft_postamble savevar    source

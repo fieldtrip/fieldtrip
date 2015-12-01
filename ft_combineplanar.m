@@ -1,16 +1,19 @@
 function [data] = ft_combineplanar(cfg, data)
 
 % FT_COMBINEPLANAR computes the planar gradient magnitude over both directions
-% combining the two gradients at each sensor to a single positive-valued number.
-% This can be done for averaged planar gradient ERF or single-trial/avegared TFR 
-% (i.e. powerspectra).
+% combining the two gradients at each sensor to a single positive-valued number. This
+% can be done for single-trial/averaged planar gradient ERFs or single-trial/averaged
+% TFRs.
 %
 % Use as
 %   [data] = ft_combineplanar(cfg, data)
 % where data contains an averaged planar gradient ERF or single-trial/avegared TFR.
 %
+% The configuration can contain
+%   cfg.method         = 'sum', 'svd' or 'abssvd' (default = 'sum')
+%
 % In the case of ERFs, the configuration can contain
-%   cfg.demean         = 'yes' or 'no' (default)
+%   cfg.demean         = 'yes' or 'no' (default = 'no')
 %   cfg.baselinewindow = [begin end]
 %
 % After combining the planar data, the planar gradiometer definition does not
@@ -29,7 +32,6 @@ function [data] = ft_combineplanar(cfg, data)
 % See also FT_MEGPLANAR
 
 % Undocumented local options:
-% cfg.combinemethod
 % cfg.foilim
 % cfg.trials
 
@@ -59,10 +61,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -77,14 +79,15 @@ cfg = ft_checkconfig(cfg, 'forbidden',   {'combinegrad'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'baseline'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'combinemethod', 'method'});
 
 % set the defaults
 cfg.demean         = ft_getopt(cfg, 'demean',         'no');
 cfg.foilim         = ft_getopt(cfg, 'foilim',         [-inf inf]);
 cfg.baselinewindow = ft_getopt(cfg, 'baselinewindow', [-inf inf]);
-cfg.combinemethod  = ft_getopt(cfg, 'combinemethod',  'sum');
 cfg.trials         = ft_getopt(cfg, 'trials',         'all', 1);
 cfg.feedback       = ft_getopt(cfg, 'feedback',       'none');
+cfg.method         = ft_getopt(cfg, 'method',         'sum');
 
 if isfield(cfg, 'baseline')
   warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
@@ -119,7 +122,7 @@ lab_other = data.label(sel_other);
 
 % define the channel names after combining the planar combinations
 % they should be sorted according to the order of the planar channels in the data
-[dum, sel_planar] = match_str(data.label(sel_dH),planar(:,1)); 
+[dum, sel_planar] = match_str(data.label(sel_dH),planar(:,1));
 lab_comb          = planar(sel_planar,3);
 
 % perform baseline correction
@@ -140,7 +143,7 @@ end
 
 if isfreq
   
-  switch cfg.combinemethod
+  switch cfg.method
     case 'sum'
       if isfield(data, 'powspctrm'),
         % compute the power of each planar channel, by summing the horizontal and vertical gradients
@@ -158,7 +161,7 @@ if isfreq
         data.powspctrm = cat(catdim, combined, other);
         data.label     = cat(1, lab_comb(:), lab_other(:));
       else
-        error('cfg.combinemethod = ''%s'' only works for frequency data with powspctrm', cfg.combinemethod);
+        error('cfg.method = ''%s'' only works for frequency data with powspctrm', cfg.method);
       end
     case 'svd'
       if isfield(data, 'fourierspctrm'),
@@ -177,10 +180,13 @@ if isfreq
             dum = permute(dum, [2 3 1]);
             dum = reshape(dum, [2 Ntim*Nrpt]);
             timbin = ~isnan(dum(1,:));
-            dum2   = svdfft(dum(:,timbin),1,data.cumtapcnt);
+            [loading, ~,  ori, sin_val] = svdfft(dum(:,timbin),2,data.cumtapcnt);
+            dum2   = loading(1,:);
             dum(1,timbin) = dum2;
             dum = reshape(dum(1,:),[Ntim Nrpt]);
             fourier(:,j,k,:) = transpose(dum);
+            data.ori{k} = ori; % to change into a cell
+            data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
             
             %for m = 1:Ntim
             %  dum                     = data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),m);
@@ -196,11 +202,11 @@ if isfreq
         data.label         = cat(1, lab_comb(:), lab_other(:));
         data.freq          = data.freq(fbin);
       else
-        error('cfg.combinemethod = ''%s'' only works for frequency data with fourierspctrm', cfg.combinemethod);
+        error('cfg.method = ''%s'' only works for frequency data with fourierspctrm', cfg.method);
       end
     otherwise
-      error('cfg.combinemethod = ''%s'' is not supported for frequency data', cfg.combinemethod);
-  end
+      error('cfg.method = ''%s'' is not supported for frequency data', cfg.method);
+  end % switch method
   
 elseif (israw || istimelock)
   if istimelock,
@@ -208,7 +214,7 @@ elseif (israw || istimelock)
     data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
   end
   
-  switch cfg.combinemethod
+  switch cfg.method
     case 'sum'
       Nrpt = length(data.trial);
       for k = 1:Nrpt
@@ -217,7 +223,8 @@ elseif (israw || istimelock)
         data.trial{k} = [combined; other];
       end
       data.label = cat(1, lab_comb(:), lab_other(:));
-    case 'svd'
+      
+    case {'svd' 'abssvd'}
       Nrpt = length(data.trial);
       Nsgn = length(sel_dH);
       Nsmp = cellfun('size', data.trial, 2);
@@ -229,7 +236,16 @@ elseif (israw || istimelock)
         for m = 1:Nrpt
           tmpdat(:, (Csmp(m)+1):Csmp(m+1)) = data.trial{m}([sel_dH(k) sel_dV(k)],:);
         end
-        tmpdat2 = abs(svdfft(tmpdat,1));
+        if strcmp(cfg.method, 'abssvd')||strcmp(cfg.method, 'svd')
+          [loading, ~,  ori, sin_val] = svdfft(tmpdat,2);
+          data.ori{k} = ori; % to change into a cell
+          data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
+          if strcmp(cfg.method, 'abssvd')
+            tmpdat2 = abs(loading(1,:));
+          else
+            tmpdat2 = loading(1,:); 
+          end
+        end
         tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
         for m = 1:Nrpt
           if k==1, trial{m} = zeros(Nsgn, Nsmp(m)); end
@@ -242,9 +258,10 @@ elseif (israw || istimelock)
       end
       data.trial = trial;
       data.label = cat(1, lab_comb(:), lab_other(:));
+      
     otherwise
-      error('cfg.combinemethod = ''%s'' is not supported for timelocked or raw data', cfg.combinemethod);
-  end
+      error('cfg.method = ''%s'' is not supported for timelocked or raw data', cfg.method);
+  end % switch method
   
   if istimelock,
     % convert raw to timelock
@@ -268,7 +285,7 @@ if isfield(data, 'grad')
   sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
   lab_other = data.grad.label(sel_other);
   lab_comb  = planar(sel_comb,3);
- 
+  
   sel      = [sel_dH(:);sel_other(:)];
   newlabel = [lab_comb;lab_other];
   
@@ -279,19 +296,19 @@ if isfield(data, 'grad')
   newgrad.label    = newlabel;
   newgrad.unit     = data.grad.unit;
   
-  data.grad = newgrad; 
+  data.grad = newgrad;
 end
 
 
 % convert back to input type if necessary
 if istimelock
-   data = ft_checkdata(data, 'datatype', 'timelock');
+  data = ft_checkdata(data, 'datatype', 'timelock');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble previous   data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

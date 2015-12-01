@@ -24,13 +24,13 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.chantype            Nx1 cell-array with the channel type, see FT_CHANTYPE
 %   hdr.chanunit            Nx1 cell-array with the physical units, see FT_CHANUNIT
 %
-% For continuously recorded data, nSamplesPre=0 and nTrials=1.
-%
 % For some data formats that are recorded on animal electrophysiology
 % systems (e.g. Neuralynx, Plexon), the following optional fields are
 % returned, which allows for relating the timing of spike and LFP data
-%   hdr.FirstTimeStamp      number, 32 bit or 64 bit unsigned integer
-%   hdr.TimeStampPerSample  double
+%   hdr.FirstTimeStamp      number, represented as 32 bit or 64 bit unsigned integer
+%   hdr.TimeStampPerSample  number, represented in double precision
+%
+% For continuously recorded data, nSamplesPre=0 and nTrials=1.
 %
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
@@ -42,6 +42,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Yokogawa (*.ave, *.con, *.raw)
 %   NetMEG (*.nc)
 %   ITAB - Chieti (*.mhd)
+%   Tristan Babysquid (*.fif)
 %
 % The following EEG dataformats are supported
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
@@ -2050,7 +2051,7 @@ switch headerformat
       end
     end
     hdr.orig = orig;
-  
+    
   case 'blackrock_nsx'
     ft_hastoolbox('NPMK', 1);
     
@@ -2074,8 +2075,16 @@ switch headerformat
     hdr.label       = deblank({orig.ElectrodesInfo.Label})';
     hdr.chanunit    = deblank({hdr.orig.ElectrodesInfo.AnalogUnits})';
     
+  case 'videomeg_aud'
+    hdr = read_videomeg_aud(filename);
+    
+  case 'videomeg_vid'
+    hdr = read_videomeg_vid(filename);
+    checkUniqueLabels = false;
+     
   case 'blackrock_nev'
     error('this still needs some work');
+    
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       hdr = read_biosig_header(filename);
@@ -2129,12 +2138,12 @@ end
 % as of November 2011, the header is supposed to include the channel type (see FT_CHANTYPE,
 % e.g. meggrad, megref, eeg) and the units of each channel (see FT_CHANUNIT, e.g. uV, fT)
 
-if ~isfield(hdr, 'chantype')
+if ~isfield(hdr, 'chantype') && checkUniqueLabels
   % use a helper function which has some built in intelligence
   hdr.chantype = ft_chantype(hdr);
 end % for
 
-if ~isfield(hdr, 'chanunit')
+if ~isfield(hdr, 'chanunit') && checkUniqueLabels
   % use a helper function which has some built in intelligence
   hdr.chanunit = ft_chanunit(hdr);
 end % for
@@ -2151,8 +2160,8 @@ end
 
 % ensure that these are column arrays
 hdr.label    = hdr.label(:);
-hdr.chantype = hdr.chantype(:);
-hdr.chanunit = hdr.chanunit(:);
+if isfield(hdr, 'chantype'), hdr.chantype = hdr.chantype(:); end
+if isfield(hdr, 'chanunit'), hdr.chanunit = hdr.chanunit(:); end
 
 % ensure that these are double precision and not integers, otherwise
 % subsequent computations that depend on these might be messed up

@@ -47,7 +47,7 @@ fixneuromag = ft_getopt(varargin, 'fixneuromag',  false);
 fix4d8192   = ft_getopt(varargin, 'fix4d8192',    false);
 fixbiosemi  = ft_getopt(varargin, 'fixbiosemi',   false);
 fixartinis  = ft_getopt(varargin, 'fixartinis',   false);
-threshold   = ft_getopt(varargin, 'threshold'          ); 
+threshold   = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
   hdr = ft_read_header(filename);
@@ -127,7 +127,7 @@ if strncmpi(dataformat, 'neuromag', 8) && ~fixneuromag
     for k = 1:size(dat,1)
       tmpdat(k,:) = double(typecast(int16(dat(k,:)), 'uint16'));
     end
-    dat = tmpdat; clear tmpdat;  
+    dat = tmpdat; clear tmpdat;
   end
 end
 
@@ -146,13 +146,21 @@ if fix4d8192
 end
 
 if fixartinis
-  % we are dealing with an AD box here, and analog values can be noisy.  
+  % we are dealing with an AD box here, and analog values can be noisy.
   dat = round(10*dat)/10; % steps of 0.1V are to be assumed
 end
 
 if ~isempty(threshold)
   % the trigger channels contain an analog (and hence noisy) TTL signal and should be thresholded
-  dat(abs(dat)<threshold) = 0;
+  if ischar(threshold) % evaluate string (e.g., threshold = 'nanmedian')
+    threshold = eval([threshold '(dat)']);
+  end
+  % discretize the signal
+  lo = find(dat<threshold);
+  hi = find(dat>=threshold);
+  dat(lo) = 0;
+  dat(hi) = 1;
+  clear lo hi
 end
 
 if strcmp(detectflank, 'auto')
@@ -169,13 +177,13 @@ for i=1:length(chanindx)
   % process each trigger channel independently
   channel = hdr.label{chanindx(i)};
   trig    = dat(i,:);
-
+  
   if trigpadding
     pad = trig(1);
   else
     pad = 0;
   end
-
+  
   switch detectflank
     case 'bit'
       trig = uint32([pad trig]);
@@ -191,13 +199,13 @@ for i=1:length(chanindx)
       % convert the trigger into an event with a value at a specific sample
       for j=find(diff([pad trig(:)'])>0)
         event(end+1).type   = channel;
-        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
+        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone up
         event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going up
       end
     case 'updiff'
       for j=find(diff([pad trig(:)'])>0)
         event(end+1).type   = channel;
-        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
+        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone up
         event(end  ).value  = trig(j+trigshift)-trig(j-1);  % assign the trigger value just _after_ going up minus the value before
       end
     case 'down'
@@ -209,16 +217,17 @@ for i=1:length(chanindx)
       end
     case 'both'
       % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([pad trig(:)'])>0)
-        event(end+1).type   = [channel '_up'];        % distinguish between up and down flank
-        event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-        event(end  ).value  = trig(j+trigshift);      % assign the trigger value just _after_ going up
-      end
-      % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([pad trig(:)'])<0)
-        event(end+1).type   = [channel '_down'];      % distinguish between up and down flank
-        event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
-        event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
+      difftrace = diff([pad trig(:)']);
+      for j=find(difftrace~=0)
+        if difftrace(j)>0
+          event(end+1).type   = [channel '_up'];        % distinguish between up and down flank
+          event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone up
+          event(end  ).value  = trig(j+trigshift);      % assign the trigger value just _after_ going up
+        elseif difftrace(j)<0
+          event(end+1).type   = [channel '_down'];      % distinguish between up and down flank
+          event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
+          event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
+        end
       end
     otherwise
       error('incorrect specification of ''detectflank''');

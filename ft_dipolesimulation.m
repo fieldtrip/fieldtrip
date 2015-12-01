@@ -74,9 +74,9 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
-ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -239,7 +239,7 @@ simulated.label   = sens.label;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble history simulated
-ft_postamble savevar simulated
+ft_postamble provenance simulated
+ft_postamble history    simulated
+ft_postamble savevar    simulated
 

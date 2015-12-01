@@ -16,17 +16,22 @@ char gdfname[1024];
 char cfgname[1024];
 bool haveGDF;
 
-void acquisition(BioSemiClient& BS, int numHwChan, int fSample) {
+void acquisition(BioSemiClient& BS, int numHwChan, int fSample, int fSampleSaving) {
 	// number of samples grabbed from USB in total
 	int sampleCounter = 0;
 	// value of the trigger channel (middle 16 bits of that)
 	int triggerState = 0;
+    int triggerSize = 0;     /**< size of triggerStates, i.e., number of stored trigger states for each status channel */
+    int *triggerStates = NULL;  /**< remember all triggers received and that still need to be processed to ODM */
+    int deci = (int)(fSample/fSampleSaving);
+    int copied_trigger;
+    
 	// "CMS in range" flag as reported most recently
 	int cmsInRange = 0;
 	// number of samples until we're due a report again
-	int nsBattery = 0, nsCMS = 0; 
+	int nsBattery = 0, nsCMS = 0;
 	// ODM grabs original 32-bit integer data, scales it to microVolts for streaming
-	OnlineDataManager<int, float> ODM(1, numHwChan, (float) fSample);
+	OnlineDataManager<int, float> ODM(1, numHwChan, (float) fSample, (float) fSampleSaving);
 	// just for reporting: print current time relative to time when we started this
 	double T0 = BS.getCurrentTime();
 	
@@ -45,7 +50,6 @@ void acquisition(BioSemiClient& BS, int numHwChan, int fSample) {
 			return;
 		}
 	}
-	
 	ODM.setStatusLabel(0, "STATUS");
 	// min:  (-2^31)/8192.0  (int32 -> microVolt)
 	// max: (2^31-1)/8192.0  (int32 -> microVolt)
@@ -69,11 +73,12 @@ void acquisition(BioSemiClient& BS, int numHwChan, int fSample) {
 		int *ptr;
 		const SignalConfiguration& config = ODM.getSignalConfiguration();
 		double batt = 0.0;
-		
 		if (conIn.checkKey()) {
 			int c = conIn.getKey();
-			if (c==27) break; // quit
-			
+            if (c==27) {
+                printf("\n");
+                break; // quit
+            }
 			if (haveGDF) {
 				if (c=='s' || c=='S') {
 					if (!ODM.enableSaving()) {
@@ -83,6 +88,7 @@ void acquisition(BioSemiClient& BS, int numHwChan, int fSample) {
 				}
 			
 				if (c=='d' || c=='D') {
+                    printf("\n");
 					ODM.disableSaving();
 				}
 			}
@@ -127,20 +133,20 @@ void acquisition(BioSemiClient& BS, int numHwChan, int fSample) {
 				nsBattery -= block.numSamples;
 			}
 		}
-		
+
+        bool printnewline = true;
 		for (int j=0;j<block.numSamples;j++) {
 			// dest_j points to j-th sample in block provided by ODM
+            
 			int *dest_j = ptr + j*(1+numHwChan);
 			// source offset, j-th sample
 			int soff   = block.startIndex + j*block.stride; 
 			// status word (incl. triggers)
-			int value  = BS.getValue(soff + 1);				
+			int value  = BS.getValue(soff + 1);
+            int orig_trigger = value;
 			// "CMS within range" flag in Biosemi logic
 			int cmsBit = (value & 0x10000000) ? 0:1;
-			
-			// copy status value
-			dest_j[0] = value;
-			
+						
 			if (nsCMS == 0 || cmsBit != cmsInRange) {
 				ODM.getEventList().add(j, "CMS_IN_RANGE", cmsBit);
 				//printf("\n-!- CMS in range: %i\n", cmsBit);
@@ -163,19 +169,65 @@ void acquisition(BioSemiClient& BS, int numHwChan, int fSample) {
 					int lv = value & 0x00FF;
 					int ht = triggerState >> 8;
 					int lt = triggerState & 0x00FF;
-					
+                    
+                    if ((hv != ht || lv != lt) && printnewline) { printf("\n"); printnewline=false; }
 					if (hv != ht) {
 						ODM.getEventList().add(j, config.getHighTriggerName(), hv);
-						printf("\n-!- %s at sample %i => %i\n", config.getHighTriggerName(), sNow, hv);
+						printf("-!- %s at sample %i => %i\n", config.getHighTriggerName(), sNow, hv);
 					}
 					if (lv != lt) {
 						ODM.getEventList().add(j, config.getLowTriggerName(), lv);
-						printf("\n-!- %s at sample %i => %i\n", config.getLowTriggerName(), sNow, lv);
+						printf("-!- %s at sample %i => %i\n", config.getLowTriggerName(), sNow, lv);
 					}
 				}
+                
+                if (deci>1) {
+                    // copy possible STATUS information as many times as decimation will skip STATUS samples
+                    // if (sampleCounter modulus deci) is zero, change STATUS sample to next trigger value in the queue
+                    // The queue stores triggers that were sent too quickly and would get lost by the decimation
+                    triggerSize = triggerSize + 2; // also add intermediate zero trigger value
+                    if (triggerSize > 500) {
+                        fprintf(stderr,"Cannot process and delay such a large number (%d) of received triggers\n",(int)(triggerSize/2));
+                        return;
+                    }
+                    int *more_numbers = (int*) realloc (triggerStates, triggerSize * sizeof(int));
+                    if (more_numbers!=NULL) {
+                        triggerStates=more_numbers;
+                        triggerStates[triggerSize-2] = orig_trigger; // store original STATUS value
+                        triggerStates[triggerSize-1] = 0; // also add inbetween zero STATUS value
+                    }
+                    else {
+                        free (triggerStates);
+                        fprintf(stderr,"Error (re)allocating memory");
+                        return;
+                    }
+                }
 			}
 			triggerState = value;
-			
+
+            if (deci > 1) {
+                if ((sampleCounter+j) % deci == 0) {
+                    // change trigger for next #deci samples
+                    if (triggerSize > 0) {
+                        // take from queued triggers
+                        copied_trigger = triggerStates[0]; // take oldest
+                        // shift/remove items in array
+                        for(int p=1; p < triggerSize; p++) triggerStates[p-1] = triggerStates[p];
+                        triggerSize = triggerSize - 1;
+                        triggerStates = (int*) realloc (triggerStates, triggerSize * sizeof(int));
+                        // verify return value != null
+                        // ....
+                    } else {
+                        copied_trigger = 0;
+                    }
+                }
+                dest_j[0] = copied_trigger;
+            }
+            else {
+                // copy status value
+                dest_j[0] = orig_trigger;
+            }
+            
 			// copy continuous channels into memory provided by ODM
 			// selection, scaling, streaming + saving will be handled from there
 			for (int i=0;i<numHwChan;i++) {
@@ -192,14 +244,17 @@ void acquisition(BioSemiClient& BS, int numHwChan, int fSample) {
 		
 		sampleCounter += block.numSamples;
 	}
+    
+    if (triggerStates != NULL) free(triggerStates);
 }
 
 
 int main(int argc, char *argv[]) {
 	BioSemiClient BS;
+    int decimationSaving;
 	
 	if (argc<2) {
-		printf("Usage: biosemi2ft <config-file> [gdf-file] [hostname=localhost [port=1972 [ctrlPort=8000]]]\n");
+		printf("Usage: biosemi2ft <config-file> [gdf-file] [hostname=localhost [port=1972 [ctrlPort=8000 [decimation=1]]]\n");
 		return 0;
 	}
 	
@@ -238,20 +293,29 @@ int main(int argc, char *argv[]) {
 	} else {
 		ctrlPort = 8000;
 	}
-	
 	if (!ctrlServ.startListening(ctrlPort)) {
 		fprintf(stderr, "Cannot listen on port %d for configuration commands\n", ctrlPort);
 		return 1;
 	}
-	
+
+    if (argc>6) {
+        decimationSaving = atoi(argv[6]);
+    } else {
+        decimationSaving = 1; // save data to file with original amplifiers sample frequency
+    }
+    if (decimationSaving < 1 || decimationSaving > 8) {
+        fprintf(stderr,"The downsample decimation factor (%d) for saving to file should be in the range [1-8]\n",decimationSaving);
+        return 1;
+    }
+        
 	if (!BS.openDevice()) return 1;
 	
-	printf("Speed mode.........: %i\n", BS.getSpeedMode());
-	printf("Number of channels.: %i\n", BS.getNumChannels());
-	printf("Number of AIB chns.: %i\n", BS.getNumChanAIB());
-	printf("Sampling frequency.: %i Hz\n", BS.getSamplingFreq());
+	printf("Speed mode.......................: %i\n", BS.getSpeedMode());
+	printf("Number of channels...............: %i\n", BS.getNumChannels());
+	printf("Number of AIB channels...........: %i\n", BS.getNumChanAIB());
+	printf("Sampling frequency (amplifier)...: %i Hz\n", BS.getSamplingFreq());
 	
-	acquisition(BS, BS.getNumChannels() + BS.getNumChanAIB(), BS.getSamplingFreq());
+	acquisition(BS, BS.getNumChannels() + BS.getNumChanAIB(), BS.getSamplingFreq(), BS.getSamplingFreq()/decimationSaving);
 	
 	BS.closeDevice();
 	return 0;

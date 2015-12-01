@@ -31,9 +31,6 @@
 % disabled for now, see further down
 global ft_default
 
-% this script requires some options that can be user-specified, but otherwise are obtained from ft_default
-cfg = mergeconfig(cfg, keepfields(ft_default, {'outpuitfile', 'outputfilepresent'}));
-
 if nargin==0
   stack = dbstack('-completenames');
   % stack(1) is this script
@@ -47,6 +44,10 @@ if nargin==0
   msg.stack       = stack;
   error(msg);
 end % if nargin
+
+% this script requires some options that can be user-specified, but otherwise are obtained from ft_default
+% merge the default options into the configuration, except the preamble field which is used for passing arguments
+cfg = mergeconfig(cfg, rmfield(ft_default, 'preamble'));
 
 % determine whether function execution should be aborted or continued
 if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)

@@ -8,7 +8,7 @@ function [datout, tim] = ft_preproc_resample(dat, Fold, Fnew, method)
 %   dat    = matrix with the input data (Nchans X Nsamples)
 %   Fold   = scalar, original sampling frequency in Hz
 %   Fnew   = scalar, desired sampling frequency in Hz
-%   method = string, can be 'resample', 'decimate', 'downsample'
+%   method = string, can be 'resample', 'decimate', 'downsample', 'fft'
 %
 % The resample method applies an anti-aliasing (lowpass) FIR filter to
 % the data during the resampling process, and compensates for the filter's
@@ -69,16 +69,36 @@ switch method
     end
     
   case 'downsample'
-    fac = Fold/Fnew;
+    fac = round(Fold/Fnew);
     % the actual implementation resamples along columns
     datout = downsample(dat', fac)';
     
-  otherwise
-    error('unsupported resampling method');
+    case 'fft'
+        % Code written for SPM by Jean Daunizeau
+        fac         = Fnew/Fold;
+        nresampled  = floor(nsamples*fac);
+        fac         = nresampled/nsamples;
+        datfft      = fftshift(fft(dat,[],2),2);
+        middle = floor(size(datfft,2)./2)+1;
+        if fac>1 % upsample
+            npad = floor((nresampled-nsamples)./2);
+            
+            if nsamples/2 == floor(nsamples/2)
+                datfft(:,1) = []; % throw away non symmetric DFT coef
+            end
+            
+            datfft  = [zeros(size(datfft,1),npad), datfft,zeros(size(datfft,1),npad)];
+        else % downsample
+            ncut    = floor(nresampled./2);
+            datfft  = datfft(:,middle-ncut:middle+ncut);
+        end
+        datout      = fac*ifft(ifftshift(datfft,2),[],2);
+    otherwise
+        error('unsupported resampling method');
 end
 
 if ~strcmp(method, 'downsample')
-  % convert back into the original input format
-  datout = cast(datout, typ);
+    % convert back into the original input format
+    datout = cast(datout, typ);
 end
 

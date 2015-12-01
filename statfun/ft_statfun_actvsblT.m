@@ -1,4 +1,4 @@
-function [s,cfg] = ft_statfun_actvsblT(cfg, dat, design)
+function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 
 % FT_STATFUN_ACTVSBLT calculates the activation-versus-baseline T-statistic 
 % on the biological data in dat (the dependent variable), using the information on 

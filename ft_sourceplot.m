@@ -181,10 +181,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
-ft_preamble loadvar functional
+ft_preamble loadvar functional anatomical
+ft_preamble provenance functional anatomical
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -197,9 +197,6 @@ if ischar(functional)
 end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
-% instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
-cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.mom', 'mom'});
@@ -207,6 +204,11 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'location', 'interactive', 'auto'});
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
+cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys
@@ -228,6 +230,8 @@ cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
 cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
+cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
+cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -866,54 +870,76 @@ switch cfg.method
     yi = round(yi); yi = max(yi, 1); yi = min(yi, dim(2));
     zi = round(zi); zi = max(zi, 1); zi = min(zi, dim(3));
     
-    % enforce the size of the subplots to be isotropic
-    xdim = dim(1) + dim(2);
-    ydim = dim(2) + dim(3);
-    
-    % inspect transform matrix, if the voxels are isotropic then the screen
-    % pixels also should be square
-    hasIsotropicVoxels = 0;
-    if isfield(functional, 'transform'),
-      % NOTE: it is not a given that the functional to be plotted has a transform,
-      % i.e. source functional (uninterpolated)
-      hasIsotropicVoxels = norm(functional.transform(1:3,1)) == norm(functional.transform(1:3,2))...
-        && norm(functional.transform(1:3,2)) == norm(functional.transform(1:3,3));
+    % axes settings
+    if strcmp(cfg.axisratio, 'voxel')
+      % determine the number of voxels to be plotted along each axis
+      axlen1 = dim(1);
+      axlen2 = dim(2);
+      axlen3 = dim(3);
+    elseif strcmp(cfg.axisratio, 'data')
+      % determine the length of the edges along each axis
+      [cp_voxel, cp_head] = cornerpoints(dim, functional.transform);
+      axlen1 = norm(cp_head(2,:)-cp_head(1,:));
+      axlen2 = norm(cp_head(4,:)-cp_head(1,:));
+      axlen3 = norm(cp_head(5,:)-cp_head(1,:));
+    elseif strcmp(cfg.axisratio, 'square')
+      % the length of the axes should be equal
+      axlen1 = 1;
+      axlen2 = 1;
+      axlen3 = 1;
     end
     
-    xsize(1) = 0.82*dim(1)/xdim;
-    xsize(2) = 0.82*dim(2)/xdim;
-    ysize(1) = 0.82*dim(3)/ydim;
-    ysize(2) = 0.82*dim(2)/ydim;
+    % this is the size reserved for subplot h1, h2 and h3
+    h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
+    h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
+    h2size(1) = 0.82*axlen2/(axlen1 + axlen2);
+    h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
+    h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
+    h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
     
-    %% this method is interactive, add callbacks
+    if strcmp(cfg.voxelratio, 'square')
+      voxlen1 = 1;
+      voxlen2 = 1;
+      voxlen3 = 1;
+    elseif strcmp(cfg.voxelratio, 'data')
+      % the size of the voxel is scaled with the data
+      [cp_voxel, cp_head] = cornerpoints(dim, functional.transform);
+      voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
+      voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
+      voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
+    end
+    
+    %% the figure is interactive, add callbacks
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_cleanup);
     
+    % ensure that this is done in interactive mode
+    set(h, 'renderer', cfg.renderer); 
+    
     %% create figure handles
     
     % axis handles will hold the anatomical functional if present, along with labels etc.
-    h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
-    h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
-    h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
-    set(h1, 'Tag', 'ik', 'Visible',cfg.axis, 'XAxisLocation', 'top');
-    set(h2, 'Tag', 'jk', 'Visible',cfg.axis, 'XAxisLocation', 'top');
-    set(h3, 'Tag', 'ij', 'Visible',cfg.axis);
-    set(h, 'renderer', cfg.renderer); % ensure that this is done in interactive mode
+    h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
+    h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
+    h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
     
-    if hasIsotropicVoxels
-      set(h1, 'DataAspectRatio',[1 1 1]);
-      set(h2, 'DataAspectRatio',[1 1 1]);
-      set(h3, 'DataAspectRatio',[1 1 1]);
-    end
+    set(h1, 'Tag', 'ik', 'Visible', cfg.axis, 'XAxisLocation', 'top');
+    set(h2, 'Tag', 'jk', 'Visible', cfg.axis, 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
+    set(h3, 'Tag', 'ij', 'Visible', cfg.axis);
+    
+    set(h1, 'DataAspectRatio',1./[voxlen1 voxlen2 voxlen3]);
+    set(h2, 'DataAspectRatio',1./[voxlen1 voxlen2 voxlen3]);
+    set(h3, 'DataAspectRatio',1./[voxlen1 voxlen2 voxlen3]);
     
     % create structure to be passed to gui
-    opt = [];
+    opt               = [];
     opt.dim           = dim;
     opt.ijk           = [xi yi zi];
-    opt.xsize         = xsize;
-    opt.ysize         = ysize;
+    opt.h1size        = h1size;
+    opt.h2size        = h2size;
+    opt.h3size        = h3size;
     opt.handlesaxes   = [h1 h2 h3];
     opt.handlesfigure = h;
     opt.axis          = cfg.axis;
@@ -1212,8 +1238,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous functional
+ft_postamble provenance
 
 % add a menu to the figure
 % also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
@@ -1421,7 +1447,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc'),
     end
     opt.hc = colorbar;
     set(opt.hc, 'location', 'southoutside');
-    set(opt.hc, 'position',[0.07+opt.xsize(1)+0.05 0.07+opt.ysize(2)-0.05 opt.xsize(2) 0.05]);
+    set(opt.hc, 'position',[0.06+0.06+opt.h1size(1) 0.06-0.06+opt.h3size(2) opt.h2size(1) 0.06]);
     
     try
       set(opt.hc, 'XLim', [opt.fcolmin opt.fcolmax]);
@@ -1433,8 +1459,8 @@ end
 
 if ~((opt.hasfreq && numel(functional.freq)>1) || opt.hastime)
   if opt.init
-    subplot('position',[0.07+opt.xsize(1)+0.05 0.07 opt.xsize(2) opt.ysize(2)]);
-    set(gca, 'visible', 'off');
+    ht = subplot('position',[0.06+0.06+opt.h1size(1) 0.06 opt.h2size(1) opt.h3size(2)]);
+    set(ht, 'visible', 'off');
     opt.ht1=text(0,0.6,str1);
     opt.ht2=text(0,0.5,str2);
     opt.ht3=text(0,0.4,str4);

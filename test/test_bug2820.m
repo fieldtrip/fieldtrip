@@ -1,7 +1,7 @@
 function test_bug2820
 
 % WALLTIME 00:10:00
-% MEM 1500mb
+% MEM 2gb
 
 % it should be is2Dana && ~is2Dfun, so start with a surface
 [ftver, ftpath] = ft_version;

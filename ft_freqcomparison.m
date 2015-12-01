@@ -34,9 +34,9 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -129,6 +129,6 @@ fprintf('performing %s comparison \n', cfg.comparisontype);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history freq       % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
+ft_postamble previous   varargin
+ft_postamble provenance freq
+ft_postamble history    freq

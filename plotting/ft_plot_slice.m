@@ -71,7 +71,7 @@ if numel(varargin)>0 && (isempty(varargin{1}) || isnumeric(varargin{1}) || islog
 end
 
 % get the optional input arguments
-transform           = ft_getopt(varargin, 'transform');
+transform           = ft_getopt(varargin, 'transform', eye(4));
 loc                 = ft_getopt(varargin, 'location');
 ori                 = ft_getopt(varargin, 'orientation', [0 0 1]);
 resolution          = ft_getopt(varargin, 'resolution', 1);
@@ -113,11 +113,6 @@ end
 % shift the location to be along the orientation vector
 loc = ori*dot(loc,ori);
 
-% set the default transformation matrix
-if isempty(transform)
-  transform = eye(4);
-end
-
 % it should be a cell-array
 if isstruct(mesh)
   tmp = mesh;
@@ -134,14 +129,9 @@ end
 dointersect = ~isempty(mesh);
 if dointersect
   for k = 1:numel(mesh)
-    if isfield(mesh{k}, 'pos')
-      % use pos instead of pnt
-      mesh{k}.pnt = mesh{k}.pos;
-      mesh{k} = rmfield(mesh{k}, 'pos');
-    end
-    if ~isfield(mesh{k}, 'pnt') || ~isfield(mesh{k}, 'tri')
-      % error('the mesh should be a structure with pnt and tri');
-      mesh{k}.pnt = [];
+    if ~isfield(mesh{k}, 'pos') || ~isfield(mesh{k}, 'tri')
+      % error('the mesh should be a structure with pos and tri');
+      mesh{k}.pos = [];
       mesh{k}.tri = [];
     end
   end
@@ -212,8 +202,10 @@ T2 = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
 T3 = transform\T2;
 
 % determine a grid of points in the projection plane
-xplane = floor(min(corner_pc(:, 1))):resolution:ceil(max(corner_pc(:, 1)));
-yplane = floor(min(corner_pc(:, 2))):resolution:ceil(max(corner_pc(:, 2)));
+% xplane = floor(min(corner_pc(:, 1))):resolution:ceil(max(corner_pc(:, 1)));
+% yplane = floor(min(corner_pc(:, 2))):resolution:ceil(max(corner_pc(:, 2)));
+xplane = ceil(min(corner_pc(:, 1))):resolution:floor(max(corner_pc(:, 1)));
+yplane = ceil(min(corner_pc(:, 2))):resolution:floor(max(corner_pc(:, 2)));
 zplane = 0;
 [Xi, Yi, Zi]      = ndgrid(xplane, yplane, zplane);
 siz               = size(squeeze(Xi));
@@ -226,7 +218,14 @@ interp_center_vc = ft_warp_apply(T3, interp_center_pc);
 Xi = reshape(interp_center_vc(:, 1), siz);
 Yi = reshape(interp_center_vc(:, 2), siz);
 Zi = reshape(interp_center_vc(:, 3), siz);
-V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
+
+if isequal(transform, eye(4)) && isequal(interpmethod, 'nearest') && all(isinteger(Xi(:))) && all(isinteger(Yi(:))) && all(isinteger(Zi(:)))
+  % simply look up the values
+  V = dat(sub2ind(dim, Xi(:), Yi(:), Zi(:)));
+  V = reshape(V, siz);
+else
+  V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
+end
 
 if all(isnan(V(:)))
   % the projection plane lies completely outside the box spanned by the data
@@ -344,7 +343,7 @@ if dointersect
   v3 = loc + inplane(3,:);
   
   for k = 1:numel(mesh)
-    [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pnt, mesh{k}.tri, v1, v2, v3);
+    [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.tri, v1, v2, v3);
     
     % draw each individual line segment of the intersection
     if ~isempty(xmesh),

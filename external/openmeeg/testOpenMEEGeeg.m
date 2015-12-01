@@ -59,12 +59,12 @@ assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
 function [rdms,mags] = run_bem_computation(r,c,pos)
 
     %% Description of the spherical mesh
-    [pnt, tri] = icosahedron42;
-    % [pnt, tri] = icosahedron162;
-    % [pnt, tri] = icosahedron642;
+    [pos, tri] = icosahedron42;
+    % [pos, tri] = icosahedron162;
+    % [pos, tri] = icosahedron642;
 
     %% Create a set of electrodes on the outer surface
-    sens.elecpos = max(r) * pnt;
+    sens.elecpos = max(r) * pos;
     sens.label = {};
     nsens = size(sens.elecpos,1);
     for ii=1:nsens
@@ -74,7 +74,7 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     %% Create a triangulated mesh, the first boundary is inside
     vol = [];
     for ii=1:length(r)
-        vol.bnd(ii).pnt = pnt * r(ii);
+        vol.bnd(ii).pos = pos * r(ii);
         vol.bnd(ii).tri = tri;
     end
     

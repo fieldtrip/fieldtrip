@@ -34,7 +34,7 @@ if isfield(freq, 'fourierspctrm')
   fprintf('constructing real/imag data representation from single trial fourier representation\n');
   % select the complex amplitude at the frequency of interest
   cdim = dimnum(freq.dimord, 'chan');  % should be 2
-  fdim = dimnum(freq.dimord, 'freq');     % should be 3
+  fdim = dimnum(freq.dimord, 'freq');  % should be 3
   fbin = nearest(freq.freq, cfg.frequency);
   cfg.frequency = freq.freq(fbin);
   if cdim==2 && fdim==3

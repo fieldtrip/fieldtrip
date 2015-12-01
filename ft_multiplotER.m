@@ -126,7 +126,7 @@ revision = '$Id$';
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar    varargin
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
@@ -315,9 +315,20 @@ if isfield(varargin{1}, 'label')
   % i.e. when the data are bivariate ft_selectdata will crash, moreover
   % the bivariate case is handled below
   tmpcfg = keepfields(cfg, 'channel');
+  tmpvar = varargin{1};
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
   % restore the provenance information 
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+
+  if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
+    % the mask parameter is not present after ft_selectdata, because it is
+    % not included in all input arguments. Make the same selection and copy
+    % it over
+    tmpvar = ft_selectdata(tmpcfg, tmpvar);
+    varargin{1}.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
+  end
+  
+  clear tmpvar tmpcfg
 end  
 
 if isfield(varargin{1}, 'label') % && strcmp(cfg.interactive, 'no')
@@ -326,10 +337,11 @@ elseif isfield(varargin{1}, 'labelcmb') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
-% check whether rpt/subj is present and remove if necessary and whether
+% check whether rpt/subj is present and remove if necessary
+% FIXME this should be implemented with avgoverpt in ft_selectdata
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
-  tmpcfg        = [];
+  tmpcfg = [];
   
   % disable hashing of input data (speeds up things)
   tmpcfg.trackcallinfo = 'no';
@@ -354,6 +366,7 @@ if strcmp(dtype, 'timelock') && hasrpt,
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
+  
 elseif strcmp(dtype, 'freq') && hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
@@ -766,10 +779,10 @@ if ~isempty(cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble debug
+ft_postamble trackconfig
 ft_postamble previous varargin
+ft_postamble provenance
 
 % add a menu to the figure, but only if the current figure does not have subplots
 % also, delete any possibly existing previous menu, this is safe because delete([]) does nothing

@@ -41,6 +41,8 @@ function [tok] = tokenize(str, sep, rep)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
+str = str(:)';
+
 if nargin<2
   sep = [9:13 32]; % White space characters
 end
@@ -56,9 +58,14 @@ if isequal(current_argin, previous_argin)
   return
 end
 
-tok = {};
-f = find(ismember(str, sep));
+if numel(sep)==1
+  f = find(str==sep);
+else
+  f = find(ismember(str, sep));
+end
 f = [0, f, length(str)+1];
+
+tok = cell(1, length(f)-1);
 for i=1:(length(f)-1)
   tok{i} = str((f(i)+1):(f(i+1)-1));
 end

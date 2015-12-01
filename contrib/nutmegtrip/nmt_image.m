@@ -7,7 +7,7 @@ global st
 % reset MRI axis positions to proper location, in case they moved (e.g.,
 % due to manipulation by SPM controls)
 for ii=1:3
-    set(st.vols{1}.ax{ii}.ax,'Position',[st.nmt.mriaxpos(:,ii)]);
+    set(st.vols{1}.ax{ii}.ax,'Position',[st.nmt.gui.mriaxpos(:,ii)]);
 end
 
 
@@ -21,24 +21,25 @@ switch(op)
     case 'shopos'
         if isfield(st,'mp'),
             fg  = spm_figure('Findwin','Graphics');
-            posmrimm = spm_orthviews('pos')';
-            set(st.nmt.megp,'String',sprintf('%.1f %.1f %.1f',posmrimm));
-            
-            blobidx = nmt_transform_coord(inv(st.vols{1}.blobs{1}.mat),posmrimm);
-            blobidx = round(blobidx);
-            blobdim = size(st.vols{1}.blobs{1}.vol);
-            if(all(blobidx <= blobdim & blobidx > 0))
-                blobintensity = st.vols{1}.blobs{1}.vol(blobidx(1),blobidx(2),blobidx(3));
-                st.nmt.voxind  = sub2ind(size(st.vols{1}.blobs{1}.vol),blobidx(1),blobidx(2),blobidx(3));
-            else % if out of blob's bounds
-                blobintensity = NaN;
-                st.nmt.voxind = NaN;
-            end
-            set(st.nmt.beamin,'String',sprintf('%g',blobintensity));
+%             posmrimm = spm_orthviews('pos')';
+%             set(st.nmt.gui.megp,'String',sprintf('%.1f %.1f %.1f',posmrimm));
+           
+             
+%             blobidx = nmt_transform_coord(inv(st.vols{1}.blobs{1}.mat),posmrimm);
+%             blobidx = round(blobidx);
+%             blobdim = size(st.vols{1}.blobs{1}.vol);
+%             if(all(blobidx <= blobdim & blobidx > 0))
+%                 blobintensity = st.vols{1}.blobs{1}.vol(blobidx(1),blobidx(2),blobidx(3));
+%                 st.nmt.cfg.vox_idx  = sub2ind(size(st.vols{1}.blobs{1}.vol),blobidx(1),blobidx(2),blobidx(3));
+%             else % if out of blob's bounds
+%                 blobintensity = NaN;
+%                 st.nmt.cfg.vox_idx = NaN;
+%             end
+%             set(st.nmt.gui.beamin,'String',sprintf('%+g',blobintensity));
             
             
             if(size(st.nmt.fun,2)>1)
-                nmt_reposition;
+                nmt_timeselect;
             end
             
 %             [~,mriname]=fileparts(st.vols{1}.fname);
@@ -97,22 +98,22 @@ switch(op)
         return
     case 'setposmeg'
         warning('TODO: not yet fully implemented');
-        if isfield(st,'megp'),
+        if isfield(st.nmt.gui,'megp'),
             fg = spm_figure('Findwin','Graphics');
-            if(any(findobj(fg) == st.nmt.megp))
-                pos = sscanf(get(st.nmt.megp,'String'), '%g %g %g',[1 3]);
+            if(any(findobj(fg) == st.nmt.gui.megp))
+                pos = sscanf(get(st.nmt.gui.megp,'String'), '%g %g %g',[1 3]);
                 if(length(pos)==3)
                     pos = nut_meg2mri(pos);
                 else
                     pos = spm_orthviews('pos');
                 end
-                nmt_reposition(pos);
+                nmt_repos(pos);
             end
         end
         return
     case 'setposmni'
         warning('TODO: not yet fully implemented');
-        if isfield(st,'mnip'),
+        if isfield(st.nmt.gui,'mnip'),
             fg = spm_figure('Findwin','Graphics');
             if(any(findobj(fg) == st.nmt.mnip))
                 pos = sscanf(get(st.nmt.mnip,'String'), '%g %g %g',[1 3]);
@@ -121,7 +122,7 @@ switch(op)
                 else
                     pos = spm_orthviews('pos');
                 end
-                nmt_reposition(pos);
+                nmt_repos(pos);
             end
         end
         return
@@ -130,83 +131,3 @@ switch(op)
 end
 
 
-function nmt_reposition(op)
-global st
-
-if(~exist('op','var'))
-    op = '';
-end
-
-switch(op)
-    case 'ts'
-        % if this was an interactive button-press in time series
-        currpt = get(st.nmt.ax_ts,'CurrentPoint');
-        currpt = currpt(1,1);
-        
-        if strcmpi(get(gcbf,'SelectionType'),'alt') % right-click
-            st.nmt.cfg.time(2) = dsearchn(st.nmt.time',currpt);
-        else % left-click
-            st.nmt.cfg.time(1) = dsearchn(st.nmt.time',currpt);
-            st.nmt.cfg.time(2) = dsearchn(st.nmt.time',currpt);
-        end
-    otherwise
-        % otherwise, time interval was already specified, so nothing to do
-end
-
-if(st.nmt.cfg.time(2) < st.nmt.cfg.time(1))
-    % enforce that time1 < time2
-    st.nmt.cfg.time = st.nmt.cfg.time([2 1]);
-end
-
-
-
-if(isfinite(st.nmt.voxind))
-    plot(st.nmt.ax_ts,st.nmt.time,st.nmt.fun(st.nmt.voxind,:));
-    grid(st.nmt.ax_ts,'on');
-else
-    plot(st.nmt.ax_ts,st.nmt.time,nan(length(st.nmt.time),1));
-end
-
-% set y-axis range based on whole volume range (single time point), or
-% selected timeslice range
-if(st.nmt.cfg.time(1)==st.nmt.cfg.time(2))
-    ymin = min(st.nmt.fun(:));
-    ymax = max(st.nmt.fun(:));
-else
-    ymin =  min(min(st.nmt.fun(:,st.nmt.cfg.time(1):st.nmt.cfg.time(2))));
-    ymax =  max(max(st.nmt.fun(:,st.nmt.cfg.time(1):st.nmt.cfg.time(2))));
-end
-set(st.nmt.ax_ts,'XLim',st.nmt.time([1 end]),'YLim',[ymin ymax]);
-xlabel(st.nmt.ax_ts,['Time (s)']);
-
-
-%% plot vertical line indicating selected time point
-axisvalues = axis(st.nmt.ax_ts);
-line_max=axisvalues(4);
-line_min=axisvalues(3);
-ts_xhair_color = 'red';
-ts_xhair_width = 1;
-
-ylim=get(st.nmt.ax_ts,'YLim');
-axes(st.nmt.ax_ts);
-h=patch([st.nmt.time(st.nmt.cfg.time(1)) st.nmt.time(st.nmt.cfg.time(2)) st.nmt.time(st.nmt.cfg.time(2)) st.nmt.time(st.nmt.cfg.time(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[1 0.4 0.4],'EdgeColor','red');
-
-set(st.nmt.ax_ts,'ButtonDownFcn',@nmt_repos_start);
-nmt_spm8_plot
-
-
-
-function nmt_repos_start(varargin)
-global st
-% if(st.nmt.ax_ts == gcbo) % if ts axes were clicked (i.e., not MRI)
-    set(gcbf,'windowbuttonmotionfcn',@nmt_repos_move, 'windowbuttonupfcn',@nmt_repos_end);
-    nmt_reposition('ts');
-% end
-%_______________________________________________________________________
-%_______________________________________________________________________
-function nmt_repos_move(varargin)
-nmt_reposition('ts');
-%_______________________________________________________________________
-%_______________________________________________________________________
-function nmt_repos_end(varargin)
-set(gcbf,'windowbuttonmotionfcn','', 'windowbuttonupfcn','');

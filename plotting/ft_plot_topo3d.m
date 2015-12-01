@@ -1,4 +1,4 @@
-function ft_plot_topo3d(pnt, val, varargin)
+function ft_plot_topo3d(pos, val, varargin)
 
 % FT_PLOT_TOPO3D makes a 3-D topographic representation of the electric
 % potential or field at the sensor locations
@@ -55,24 +55,24 @@ if ~holdflag
   hold on
 end
 
-if size(val,2)==size(pnt,1)
+if size(val,2)==size(pos,1)
   val = val';
 end
 
 % the interpolation requires a triangulation
-tri = projecttri(pnt, 'delaunay');
+tri = projecttri(pos, 'delaunay');
 
 if nrefine>0,
-  pntorig = pnt;
+  posorig = pos;
   triorig = tri;
   valorig = val;
   for k = 1:nrefine
-    [pnt,tri] = refine(pnt, tri);
+    [pos,tri] = refine(pos, tri);
   end
-  prjorig = elproj(pntorig);
-  prj     = elproj(pnt);
+  prjorig = elproj(posorig);
+  prj     = elproj(pos);
   val     = griddata(prjorig(:,1),prjorig(:,2),valorig,prj(:,1),prj(:,2),'v4');
-  if numel(facealpha)==size(pntorig,1)
+  if numel(facealpha)==size(posorig,1)
     facealpha = griddata(prjorig(:,1),prjorig(:,2),facealpha,prj(:,1),prj(:,2),'v4');
   end
 end
@@ -82,19 +82,19 @@ if ~isequal(topostyle, false)
   switch topostyle
     case 'color'
       % plot a 2D or 3D triangulated surface with linear interpolation
-      if length(val)==size(pnt,1)
-        hs = patch('Vertices', pnt, 'Faces', tri, 'FaceVertexCData', val, 'FaceColor', 'interp');
+      if length(val)==size(pos,1)
+        hs = patch('Vertices', pos, 'Faces', tri, 'FaceVertexCData', val, 'FaceColor', 'interp');
       else
-        hs = patch('Vertices', pnt, 'Faces', tri, 'CData', val, 'FaceColor', 'flat');
+        hs = patch('Vertices', pos, 'Faces', tri, 'CData', val, 'FaceColor', 'flat');
       end
       set(hs, 'EdgeColor', 'none');
       set(hs, 'FaceLighting', 'none');
       
       % if facealpha is an array with number of elements equal to the number of vertices
-      if size(pnt,1)==numel(facealpha)
+      if size(pos,1)==numel(facealpha)
         set(hs, 'FaceVertexAlphaData', facealpha);
         set(hs, 'FaceAlpha', 'interp');
-      elseif ~isempty(pnt) && numel(facealpha)==1 && facealpha~=1
+      elseif ~isempty(pos) && numel(facealpha)==1 && facealpha~=1
         % the default is 1, so that does not have to be set
         set(hs, 'FaceAlpha', facealpha);
       end
@@ -131,7 +131,7 @@ if ~strcmp(contourstyle, 'none')
     intersect2 = [];
     
     for tri_indx=find(use)'
-      pos  = pnt(tri(tri_indx,:), :);
+      pos  = pos(tri(tri_indx,:), :);
       v(1) = triangle_val(tri_indx,1);
       v(2) = triangle_val(tri_indx,2);
       v(3) = triangle_val(tri_indx,3);
@@ -168,7 +168,7 @@ if ~strcmp(contourstyle, 'none')
   Y = [intersect1(:,2) intersect2(:,2)]';
   C = [cntlevel(:)     cntlevel(:)]';
   
-  if size(pnt,2)>2
+  if size(pos,2)>2
     Z = [intersect1(:,3) intersect2(:,3)]';
   else
     Z = zeros(2, length(cntlevel));

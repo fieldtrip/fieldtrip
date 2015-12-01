@@ -189,8 +189,14 @@ cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
 cfg.headmodel       = ft_getopt(cfg, 'headmodel');      % can contain CTF localspheres model
 
 if nargin>1,
+  % the data should describe the geometrical mesh
+  if isfield(data, 'bnd')
+    data = data.bnd;
+  end
   % check if the input data is valid for this function and ensure that it has the units specified
   data = ft_checkdata(data, 'hasunit', 'yes');
+  % replace pnt by pos
+  data = fixpos(data);
 else
   data = [];
 end
@@ -203,9 +209,8 @@ if istrue(cfg.siunits)
   if isfield(cfg, 'grad') && ~isempty(cfg.grad)
     cfg.grad = ft_convert_units(cfg.grad, 'm');
   end
-  
   if isfield(cfg, 'elec') && ~isempty(cfg.elec)
-      cfg.elec = ft_convert_units(cfg.elec, 'm');
+    cfg.elec = ft_convert_units(cfg.elec, 'm');
   end
 end
 
@@ -214,20 +219,17 @@ if nargin>1 && isfield(data, 'cond')
   cfg.conductivity = data.cond;
 end
 
-if isfield(data, 'bnd')
-  data = data.bnd;
-end
-
 % boolean variables to manages the different geometrical input data objects
-input_mesh  = isfield(data, 'pnt') && ~isfield(data, 'label');
+input_mesh  = ft_datatype(data, 'mesh');
 input_seg   = ft_datatype(data, 'segmentation');
 input_elec  = ft_datatype(data, 'sens');
+input_pos   = ~input_mesh && isfield(data, 'pos'); % surface points without triangulation
 
 % the construction of the volume conductor model is performed below
 switch cfg.method
   
   case 'interpolate'
-    % the "data" here represents the output of FT_PREPARE_LEADIFLED, i.e. a regular dipole 
+    % the "data" here represents the output of FT_PREPARE_LEADFIELD, i.e. a regular dipole
     % grid with pre-computed leadfields
     sens = ft_fetch_sens(cfg, data);
     headmodel = ft_headmodel_interpolate(cfg.outputfile, sens, data, 'smooth', cfg.smooth);
@@ -266,9 +268,9 @@ switch cfg.method
       if any(isnan(headmodel.mat(:)))
         % HACK add a little bit of noise, with the NatMEG tutorial data, I discovered that this prevents the warning
         % Matrix is singular, close to singular or badly scaled. Results may be inaccurate. RCOND = NaN.
-        geometry(1).pnt = geometry(1).pnt + randn(size(geometry(1).pnt))*scalingfactor('um', geometry(1).unit);
-        geometry(2).pnt = geometry(2).pnt + randn(size(geometry(2).pnt))*scalingfactor('um', geometry(2).unit);
-        geometry(3).pnt = geometry(3).pnt + randn(size(geometry(3).pnt))*scalingfactor('um', geometry(3).unit);
+        geometry(1).pos = geometry(1).pos + randn(size(geometry(1).pos))*scalingfactor('um', geometry(1).unit);
+        geometry(2).pos = geometry(2).pos + randn(size(geometry(2).pos))*scalingfactor('um', geometry(2).unit);
+        geometry(3).pos = geometry(3).pos + randn(size(geometry(3).pos))*scalingfactor('um', geometry(3).unit);
         warning('NaN detected, trying once more with slightly different vertex positions');
         headmodel = ft_headmodel_bemcp(geometry, 'conductivity', cfg.conductivity);
       end
@@ -280,7 +282,7 @@ switch cfg.method
     
   case 'concentricspheres'
     % the low-level functions needs surface points, triangles are not needed
-    if input_mesh
+    if input_mesh || input_pos
       geometry = data;
     elseif input_seg
       tmpcfg = [];
@@ -288,10 +290,10 @@ switch cfg.method
       tmpcfg.tissue = cfg.tissue;
       geometry = ft_prepare_mesh(tmpcfg, data);
     elseif input_elec
-      geometry.pnt = data.chanpos;
+      geometry.pos = data.chanpos;
       geometry.unit = data.unit;
     elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-      geometry.pnt = cfg.headshape;
+      geometry.pos = cfg.headshape;
     elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
       geometry = cfg.headshape;
     elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)
@@ -303,10 +305,10 @@ switch cfg.method
     headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', cfg.conductivity, 'fitind', cfg.fitind);
     
   case 'halfspace'
-    if input_mesh
+    if input_mesh || input_pos
       geometry = data;
     else
-      error('data with mesh is required as data input for the halfspace method');
+      error('a surface mesh is required as input for the halfspace method');
     end
     if isempty(cfg.point)
       error('cfg.point is required for halfspace method');
@@ -321,8 +323,8 @@ switch cfg.method
   case {'localspheres' 'singlesphere' 'singleshell'}
     cfg.grad = ft_getopt(cfg, 'grad');           % used for localspheres
     
-    % these three methods all require a single mesh or set of surface points
-    if input_mesh
+    % these three methods all require a set of surface points
+    if input_mesh || input_pos
       geometry = data;
     elseif input_seg
       tmpcfg = [];
@@ -351,10 +353,10 @@ switch cfg.method
         end
       end
     elseif input_elec
-      geometry.pnt = data.chanpos;
+      geometry.pos = data.chanpos;
       geometry.unit = data.unit;
     elseif ~isempty(cfg.headshape) && isnumeric(cfg.headshape)
-      geometry.pnt = cfg.headshape;
+      geometry.pos = cfg.headshape;
     elseif ~isempty(cfg.headshape) && isstruct(cfg.headshape)
       geometry = cfg.headshape;
     elseif ~isempty(cfg.headshape) && ischar(cfg.headshape)

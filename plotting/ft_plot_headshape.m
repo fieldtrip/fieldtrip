@@ -45,10 +45,13 @@ function hs = ft_plot_headshape(headshape,varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
+% rename pnt into pos
+headshape = fixpos(headshape);
+
 if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
   % the input seems like a list of points, convert into something that resembles a headshape
   warning('off', 'MATLAB:warn_r14_stucture_assignment');
-  headshape.pnt = headshape;
+  headshape.pos = headshape;
 end
 
 % the default behaviour depends on whether there is a triangulated surface or not
@@ -81,7 +84,7 @@ end
 
 
 mesh = [];
-mesh.pnt = headshape.pnt;
+mesh.pos = headshape.pos;
 if hastri
   mesh.tri = headshape.tri;
 else
@@ -95,17 +98,17 @@ if isfield(headshape, 'fid')
   if ~isempty(transform)
     % spatially transform the fiducials
     % FIXME what is the reason for this?
-    fid.pnt = ft_warp_apply(transform, fid.pnt);
+    fid.pos = ft_warp_apply(transform, fid.pos);
   end
   
   % show the fiducial labels
-  for i=1:size(fid.pnt,1)
-    hs = plot3(fid.pnt(i,1), fid.pnt(i,2), fid.pnt(i,3), 'Marker',fidmarker,'MarkerEdgeColor',fidcolor);
+  for i=1:size(fid.pos,1)
+    hs = plot3(fid.pos(i,1), fid.pos(i,2), fid.pos(i,3), 'Marker',fidmarker,'MarkerEdgeColor',fidcolor);
     if isfield(fid,'label') && istrue(fidlabel)
       % the text command does not like int or single position values
-      x = double(fid.pnt(i, 1));
-      y = double(fid.pnt(i, 2));
-      z = double(fid.pnt(i, 3));
+      x = double(fid.pos(i, 1));
+      y = double(fid.pos(i, 2));
+      z = double(fid.pos(i, 3));
       str = sprintf('%s', fid.label{i});
       h   = text(x, y, z, str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle','Interpreter','none');
       hs  = [hs; h];

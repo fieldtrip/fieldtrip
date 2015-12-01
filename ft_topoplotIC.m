@@ -104,10 +104,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble loadvar    comp
+ft_preamble debug
+ft_preamble loadvar comp
 ft_preamble provenance comp
 ft_preamble trackconfig
-ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -189,10 +189,10 @@ cfg = removefields(cfg, 'funcname');
 cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous comp
 ft_postamble provenance
-ft_postamble debug
 
 if ~nargout
   clear cfg

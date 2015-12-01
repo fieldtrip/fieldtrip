@@ -201,6 +201,7 @@ param = reshape(pos', 1, numel(pos));
 
 % add the orientation to the nonlinear parameters
 if constr.fixedori
+  numdip = size(pos,1);
   for i=1:numdip
     % add the orientation to the list of parameters
     [th, phi, r] = cart2sph(ori(1,i), ori(2,i), ori(3,i));
