@@ -6,6 +6,10 @@ if nargin==1
   recurse = 1;
 end
 
+if ~isa(data, 'struct')
+    return;
+end
+
 if numel(data)>1
   % loop over all individual elements
   clear tmp
