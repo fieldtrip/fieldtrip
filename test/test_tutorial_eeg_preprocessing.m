@@ -7,16 +7,18 @@ function test_tutorial_eeg_preprocessing
 % TEST ft_definetrial ft_preprocessing
 
 %% defining trials
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/preprocessing_eeg/s04.vhdr');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp/s04.vhdr');
 
 cfg = [];
 cfg.trialfun     = 'trialfun_affcog';
 cfg.headerfile   = dataset;
 cfg = ft_definetrial(cfg);
-
-cfg.trl
+trl = cfg.trl;
 
 %% pre-processing and re-referencing
+cfg = [];
+cfg.datafile        = 's04.eeg';
+cfg.trl             = trl;
 
 % Baseline-correction options
 cfg.demean          = 'yes';
