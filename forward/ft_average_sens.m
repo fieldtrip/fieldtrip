@@ -48,6 +48,8 @@ for i=1:nsens
 end
 sens = newsens; clear newsens
 
+fiducials = fixpos(fiducials);
+
 % set the defaults
 if isempty(weights) || ~any(weights)
   weights = ones(1, nsens);
