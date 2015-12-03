@@ -99,7 +99,7 @@ if toplot
 end
 
 for i=1:nsens
-  if ~isequal(sens(i).label, sens(1).label)
+  if ~isequal(sens(i).label(:), sens(1).label(:))
     error('all sensor arrays should have the same sensors for averaging');
   end
   
