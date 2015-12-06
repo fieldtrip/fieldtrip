@@ -732,6 +732,13 @@ switch headerformat
     % ft_read_data and ft_read_event will get it from there
     hdr.orig        = orig;
     
+
+  case 'tobii_tsv'
+    tsv = read_tobii_tsv(filename);
+    keyboard
+    % remember the original header details
+    hdr.orig = tsv;
+    
   case 'eyelink_asc'
     asc = read_eyelink_asc(filename);
     hdr.nChans              = size(asc.dat,1);
