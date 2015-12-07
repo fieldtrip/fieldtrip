@@ -198,7 +198,7 @@ switch cfg.method
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_cleanup);
-
+    
     % ensure that this is done in interactive mode
     set(h, 'renderer', cfg.renderer);
     
@@ -218,7 +218,7 @@ switch cfg.method
     xc = round(mri.dim(1)/2); % start with center view
     yc = round(mri.dim(2)/2);
     zc = round(mri.dim(3)/2);
-
+    
     dat = double(mri.(cfg.parameter));
     dmin = min(dat(:));
     dmax = max(dat(:));
@@ -273,10 +273,10 @@ switch cfg.method
         end
       end
       for c = 1:numel(cfg.channel)
-         chanstring{c} = ['<HTML><FONT color="silver">' cfg.channel{c,1} '</FONT></HTML>']; % hmtl'ize
+        chanstring{c} = ['<HTML><FONT color="silver">' cfg.channel{c,1} '</FONT></HTML>']; % hmtl'ize
         
-         markerlab{c,1} = {};
-         markerpos{c,1} = zeros(0,3);
+        markerlab{c,1} = {};
+        markerpos{c,1} = zeros(0,3);
       end
     end
     
@@ -335,16 +335,16 @@ switch cfg.method
       'Position', [1.8*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
       'SliderStep', [.1 .1], ...
       'Callback', @cb_zoomslider);
-        
+    
     % instructions to the user
     fprintf(strcat(...
       '1. To change the slice viewed in one plane, either:\n',...
-          '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
-          '      superior slice in the horizontal plane, click on a superior position in the\n',...
-          '      coronal plane, or\n',...
-          '   b. use the arrow keys to increase or decrease the slice number by one\n',...
+      '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
+      '      superior slice in the horizontal plane, click on a superior position in the\n',...
+      '      coronal plane, or\n',...
+      '   b. use the arrow keys to increase or decrease the slice number by one\n',...
       '2. To assign an electrode label to the crosshair location:\n',...
-          '   a. click on an electrode label in the list\n',...
+      '   a. click on an electrode label in the list\n',...
       '3. To finalize markers, close the window or press q on the keyboard\n'));
     
     % create structure to be passed to gui
@@ -675,6 +675,28 @@ switch key
     setappdata(h, 'opt', opt);
     cb_cleanup(h);
     
+  case 'g' % global/local elec view (h9) toggle
+    if isequal(opt.global, 0)
+      opt.global = 1;
+      set(opt.handlesaxes(9), 'Value', 1);
+    elseif isequal(opt.global, 1)
+      opt.global = 0;
+      set(opt.handlesaxes(9), 'Value', 0);
+    end
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
+  case 'l' % elec label view (h8) toggle
+    if isequal(opt.showlabels, 0)
+      opt.showlabels = 1;
+      set(opt.handlesaxes(8), 'Value', 1);
+    elseif isequal(opt.showlabels, 1)
+      opt.showlabels = 0;
+      set(opt.handlesaxes(8), 'Value', 0);
+    end
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+    
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'}
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -859,7 +881,7 @@ if opt.magnet % magnetize
     end
     % adjust the indices for the selection
     opt.ijk = [ix, iy, iz] + center - radius - 1;
-    fprintf('==================================================================================\n');    
+    fprintf('==================================================================================\n');
     fprintf(' clicked at [%d %d %d], %s magnetized adjustment [%d %d %d]\n', center, opt.magtype, opt.ijk-center);
   catch
     % this fails if the selection is at the edge of the volume
@@ -868,7 +890,7 @@ if opt.magnet % magnetize
 end % if magnetize
 setappdata(h, 'opt', opt);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_cleanup(h, eventdata)
@@ -915,7 +937,7 @@ if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_minslider(h4, eventdata)
@@ -933,7 +955,7 @@ fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_maxslider(h5, eventdata)
@@ -951,7 +973,7 @@ fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_intensityslider(h4, eventdata) % java intensity range slider - not fully functional
@@ -964,12 +986,13 @@ opt.clim = [loval hival];
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_eleclistbox(h6, eventdata)
 
 elecidx = get(h6, 'Value'); % chosen elec
+listtopidx = get(h6, 'ListboxTop'); % ensure listbox does not move upon label selec
 if ~isempty(elecidx)
   if numel(elecidx)>1
     fprintf('too many labels selected\n');
@@ -995,11 +1018,12 @@ if ~isempty(elecidx)
   % update plot
   eleclis{elecidx} = eleclab;
   set(h6, 'String', eleclis);
+  set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
   setappdata(h, 'opt', opt);
   cb_redraw(h);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_magnetbutton(h7, eventdata)
@@ -1009,7 +1033,7 @@ opt = getappdata(h, 'opt');
 opt.magnet = get(h7, 'value');
 setappdata(h, 'opt', opt);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_labelsbutton(h8, eventdata)
@@ -1020,7 +1044,7 @@ opt.showlabels = get(h8, 'value');
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_globalbutton(h9, eventdata)
@@ -1031,7 +1055,7 @@ opt.global = get(h9, 'value');
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_zoomslider(h10, eventdata)
