@@ -697,7 +697,17 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
-  case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'}
+  case 'm' % magnet (h7) toggle
+    if isequal(opt.magnet, 0)
+      opt.magnet = 1;
+      set(opt.handlesaxes(7), 'Value', 1);
+    elseif isequal(opt.magnet, 1)
+      opt.magnet = 0;
+      set(opt.handlesaxes(7), 'Value', 0);
+    end
+    setappdata(h, 'opt', opt);
+    
+  case {28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'}
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
     elseif strcmp(tag,'ik') && (strcmp(key,'j') || strcmp(key,'leftarrow')  || isequal(key, 28)), opt.ijk(1) = opt.ijk(1)-1; opt.update = [0 1 0];
