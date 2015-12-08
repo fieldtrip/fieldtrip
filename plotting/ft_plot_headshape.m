@@ -12,12 +12,13 @@ function hs = ft_plot_headshape(headshape,varargin)
 % where the shape is a structure obtained from FT_READ_HEADSHAPE.
 %
 % Optional arguments should come in key-value pairs and can include
-%   'vertexcolor' = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
-%   'vertexsize'  = scalar value specifying the size of the vertices (default = 10)
-%   'fidcolor'    = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
-%   'fidmarker'   = ['.', '*', '+',  ...]
-%   'fidlabel'    = ['yes', 'no', 1, 0, 'true', 'false']
-%   'transform'   = transformation matrix for the fiducials, converts MRI voxels into head shape coordinates
+%   'vertexcolor'  = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
+%   'vertexsize'   = scalar value specifying the size of the vertices (default = 10)
+%   'fidcolor'     = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
+%   'fidmarker'    = ['.', '*', '+',  ...]
+%   'fidlabel'     = ['yes', 'no', 1, 0, 'true', 'false']
+%   'transform'    = transformation matrix for the fiducials, converts MRI voxels into head shape coordinates
+%   'unit'         = string, convert to the specified geometrical units (default = [])
 %
 % Example
 %   shape = ft_read_headshape(filename);
@@ -59,19 +60,25 @@ hastri = isfield(headshape, 'tri');
 
 % get the optional input arguments
 if hastri
-  vertexcolor = ft_getopt(varargin, 'vertexcolor',  'none');
-  facecolor   = ft_getopt(varargin, 'facecolor',    [1 1 1]/2);
-  edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
+  vertexcolor  = ft_getopt(varargin, 'vertexcolor',  'none');
+  facecolor    = ft_getopt(varargin, 'facecolor',    [1 1 1]/2);
+  edgecolor    = ft_getopt(varargin, 'edgecolor',    'none');
 else
-  vertexcolor = ft_getopt(varargin, 'vertexcolor',  'r');
-  facecolor   = ft_getopt(varargin, 'facecolor',    'none');
-  edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
+  vertexcolor  = ft_getopt(varargin, 'vertexcolor',  'r');
+  facecolor    = ft_getopt(varargin, 'facecolor',    'none');
+  edgecolor    = ft_getopt(varargin, 'edgecolor',    'none');
 end
-vertexsize  = ft_getopt(varargin, 'vertexsize',   10);
-fidcolor    = ft_getopt(varargin, 'fidcolor',     'g');
-fidmarker   = ft_getopt(varargin, 'fidmarker',    '*');
-fidlabel    = ft_getopt(varargin, 'fidlabel',     true);
-transform   = ft_getopt(varargin, 'transform');
+vertexsize   = ft_getopt(varargin, 'vertexsize',   10);
+fidcolor     = ft_getopt(varargin, 'fidcolor',     'g');
+fidmarker    = ft_getopt(varargin, 'fidmarker',    '*');
+fidlabel     = ft_getopt(varargin, 'fidlabel',     true);
+transform    = ft_getopt(varargin, 'transform');
+unit         = ft_getopt(varargin, 'unit');
+
+if ~isempty(unit)
+  headshape = ft_convert_units(headshape, unit);
+end
+
 
 % start with empty return values
 hs      = [];
