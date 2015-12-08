@@ -412,7 +412,19 @@ if ~isempty(createsubcfg)
           'snr'
           'scalesourcecov'
           };
-        
+      case 'harmony'
+        fieldname = {
+          'feedback'
+          'lambda'
+          'keepfilter'
+          'prewhiten'
+          'snr'
+          'scalesourcecov'
+          'filter_order'
+          'filter_bs'
+          'connected_components'
+          'number_harmonics'
+          };
       case 'music'
         fieldname = {
           'feedback'
