@@ -326,8 +326,7 @@ switch headerformat
     end
 
   case 'besa_besa'
-    orig = read_besa_besa(filename);
-    % FIXME convert the output from the low-level reader into FT header structure
+    hdr = read_besa_besa(filename);
     
   case 'besa_avr'
     orig = read_besa_avr(filename);
