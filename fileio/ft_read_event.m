@@ -289,6 +289,10 @@ switch eventformat
       end
     end
     
+  case 'besa_besa'
+    orig = read_besa_besa(filename);
+    % FIXME convert the output from the low-level reader into FT event structur
+
   case {'besa_avr', 'besa_swf'}
     if isempty(hdr)
       hdr = ft_read_header(filename);

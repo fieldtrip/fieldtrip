@@ -379,6 +379,11 @@ switch dataformat
     end
     dimord = 'chans_samples';
     
+  case 'besa_besa'
+    orig = read_besa_besa(filename, chanindx, begsample, endsample);
+    % FIXME extend low-level reader with data selection
+    % FIXME convert the output from the low-level reader into data matrix
+
   case 'besa_avr'
     % BESA average data
     orig = readBESAavr(filename);

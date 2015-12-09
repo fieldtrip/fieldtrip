@@ -324,6 +324,10 @@ switch headerformat
       hdr.orig.states         = states;
       hdr.orig.total_samples  = total_samples;
     end
+
+  case 'besa_besa'
+    orig = read_besa_besa(filename);
+    % FIXME convert the output from the low-level reader into FT header structure
     
   case 'besa_avr'
     orig = read_besa_avr(filename);
