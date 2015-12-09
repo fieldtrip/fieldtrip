@@ -290,8 +290,17 @@ switch eventformat
     end
     
   case 'besa_besa'
-    orig = read_besa_besa(filename);
-    % FIXME convert the output from the low-level reader into FT event structur
+    % read the header
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    
+    if ~isempty(detectflank) % parse the trigger channel (indicated by chanindx) for events
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'threshold', threshold);
+    elseif issubfield(hdr, 'orig.events') && ~isempty(hdr.orig.events.offsets) % FIXME: add support for reading in events from the datafile
+    else
+      event = [];
+    end
 
   case {'besa_avr', 'besa_swf'}
     if isempty(hdr)
