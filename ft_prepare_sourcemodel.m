@@ -313,20 +313,42 @@ if basedonresolution
   % construct a regular 3D grid that spans a box encompassing all electrode
   % or gradiometer coils, this will typically also cover the complete brain
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if isempty(sens)
-    error('creating a 3D-grid sourcemodel this way requires sensor position information to estimate the extent of the brain');
+  if ~isempty(sens)
+    minpos = min(sens.chanpos,[],1);
+    maxpos = max(sens.chanpos,[],1);
+  elseif ~isempty(headmodel)
+    minpos = [inf inf inf];
+    maxpos = [-inf -inf -inf];
+    for k = 1:numel(headmodel.bnd)
+      tmpbnd = headmodel.bnd(k);
+      if ~isfield(tmpbnd, 'pnt') && isfield(tmpbnd, 'pos')
+        pos = tmpbnd.pos;
+      elseif isfield(tmpbnd, 'pnt') && ~isfield(tmpbnd, 'pos')
+        pos = tmpbnd.pnt;
+      end
+      minpos = min(minpos, min(pos,[],1));
+      maxpos = max(maxpos, max(pos,[],1));
+    end
+    
+    % add a few % on either side
+    minpos(minpos<0) = minpos(minpos<0).*1.08;
+    maxpos(maxpos>0) = maxpos(maxpos>0).*1.08;
+    minpos(minpos>0) = minpos(minpos>0).*0.92;
+    maxpos(maxpos<0) = maxpos(maxpos<0).*0.92;
+  else
+    error('creating a 3D-grid sourcemodel this way requires either sensor position information or a headmodel to estimate the extent of the brain');
   end
   fprintf('creating dipole grid with %g %s resolution\n', cfg.grid.resolution, cfg.grid.unit);
   % FIXME there is a potential problem here with the use of "floor", as it will
   % behave differently depending on the units of the source model
   if ischar(cfg.grid.xgrid) && strcmp(cfg.grid.xgrid, 'auto')
-    grid.xgrid = floor(min(sens.chanpos(:,1))):cfg.grid.resolution:ceil(max(sens.chanpos(:,1)));
+    grid.xgrid = floor(minpos(1)):cfg.grid.resolution:ceil(maxpos(1));
   end
   if ischar(cfg.grid.ygrid) && strcmp(cfg.grid.ygrid, 'auto')
-    grid.ygrid = floor(min(sens.chanpos(:,2))):cfg.grid.resolution:ceil(max(sens.chanpos(:,2)));
+    grid.ygrid = floor(minpos(2)):cfg.grid.resolution:ceil(maxpos(2));
   end
   if ischar(cfg.grid.zgrid) && strcmp(cfg.grid.zgrid, 'auto')
-    grid.zgrid = floor(min(sens.chanpos(:,3))):cfg.grid.resolution:ceil(max(sens.chanpos(:,3)));
+    grid.zgrid = floor(minpos(3)):cfg.grid.resolution:ceil(maxpos(3));
   end
   grid.dim   = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
