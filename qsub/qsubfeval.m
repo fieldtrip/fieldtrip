@@ -186,13 +186,16 @@ if ~compiled
     % take the user-specified matlab startup script
   elseif isempty(previous_matlabcmd)
     % determine the name of the matlab startup script
-
+    
     if ft_platform_supports('program_invocation_name')
       % supported in GNU Octave
       matlabcmd = program_invocation_name();
     elseif ~isempty(getenv('MATLAB_BIN'))
-      % supported on Linux and R2014b, perhaps also on others
+      % supported on Linux + R2014b, perhaps also on others
       matlabcmd = getenv('MATLAB_BIN');
+    elseif ~isempty(getenv('MATLABDIR'))
+      % supported on Linux + R2012b, perhaps also on others
+      matlabcmd = fullfile(getenv('MATLABDIR'), 'bin/matlab');
     else
       matlabcmd = '';
       % try all versions between 7.1 and 7.9
