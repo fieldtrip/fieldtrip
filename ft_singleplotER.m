@@ -145,6 +145,8 @@ cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.directionality  = ft_getopt(cfg, 'directionality',   []);
 cfg.figurename      = ft_getopt(cfg, 'figurename',       []);
 cfg.preproc         = ft_getopt(cfg, 'preproc', []);
+cfg.frequency       = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
+cfg.latency         = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
 
 
 Ndata = numel(varargin);
@@ -434,14 +436,14 @@ end
 if strcmp('freq',yparam) && strcmp('freq',dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgoverfreq = 'yes';
-  tmpcfg.frequency   = cfg.zlim;
+  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
   % restore the provenance information 
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgovertime = 'yes';
-  tmpcfg.latency     = cfg.zlim;
+  tmpcfg.latency     = cf.latency;%cfg.zlim;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
   % restore the provenance information 
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
