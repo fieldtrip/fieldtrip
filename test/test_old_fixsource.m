@@ -162,5 +162,6 @@ slcmv          = ft_checkdata(source, 'sourcerepresentation', 'new');
 
 cfgs.grid.filter = slcmv.filter;
 cfgs.rawtrial    = 'yes';
+%cfgs.keepfilter  = 'no';
 source           = ft_sourceanalysis(cfgs, tlck);
 slcmv2           = ft_checkdata(source, 'sourcerepresentation', 'new');
