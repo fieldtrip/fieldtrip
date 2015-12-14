@@ -2062,8 +2062,13 @@ switch atlasformat
     ft_hastoolbox('gifti', 1);
     g = gifti(filename);
     
-    label = g.labels.name(:);
-    key   = g.labels.key(:);
+    if isfield(g, 'labels'),
+      label = g.labels.name(:);
+      key   = g.labels.key(:);
+    else 
+      label = g.private.label.name(:);
+      key   = g.private.label.key(:);
+    end
     
     %label = g.private.label.name; % provides the name of the parcel
     %key   = g.private.label.key;  % maps value to name
