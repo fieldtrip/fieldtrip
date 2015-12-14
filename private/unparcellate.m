@@ -40,11 +40,13 @@ elseif size(parameter,2)==1
   tmp = data;
   clear data;
   data.label = parameter;
+  data = setsubfield(data, parameter, tmp);
 elseif size(parameter,2)==2
   % this contains labelcmb e.g. pairwise granger
   tmp = data;
   clear data;
   data.labelcmb = parameter;
+  data = setsubfield(data, parameter, tmp);
 end
 
 if isfield(data, 'label')
