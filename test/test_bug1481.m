@@ -16,22 +16,26 @@ cfg.reref='yes';
 cfg.refchannel='all';
 data_reref=ft_preprocessing(cfg,data);
 
-% TO DO: create a montage rereference and call cfg.montage, then assess if
-% ft_rejectcomponent still works correctly.
-
-% cfg=[];
-% cfg.montage=montage;
-% data_reref=ft_preprocessing(cfg,data);
-
 cfg=[];
 cfg.method='fastica';
 cfg.numcomponent = 10; % to make it go fast
 cfg.randomseed = 13; % so we get the same output each time
 comp = ft_componentanalysis(cfg,data_reref);
 
-
+% this step does not add a balancing matrix to the elec-description
 cfg = [];
 cfg.component = 2; % chosen randomly
 rej1 = ft_rejectcomponent(cfg, comp, data_reref);
+
+% create a montage rereference and call cfg.montage, then assess if
+% ft_componentanalysis/ft_rejectcomponent still works correctly.
+montage = [];
+montage.tra = eye(numel(data.label))-ones(numel(data.label))./numel(data.label);
+montage.labelorg = data.label;
+montage.labelnew = data.label;
+
+cfg=[];
+cfg.montage=montage;
+data_reref2=ft_preprocessing(cfg,data);
 
 
