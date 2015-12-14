@@ -109,5 +109,5 @@ spccnew = ft_checkdata(spccold, 'sourcerepresentation', 'new');
 spccold2 = ft_source2sparse(spccold);
 spccnew2 = ft_source2sparse(spccnew);
 
-spccold3 = source2full(spccold2);
-spccnew3 = source2full(spccnew2);
+spccold3 = ft_source2full(spccold2);
+spccnew3 = ft_source2full(spccnew2);
