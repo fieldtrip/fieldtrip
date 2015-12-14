@@ -188,8 +188,8 @@ end
 
 % add channel labels on grand X and Y axes
 for k = 1:nchan
-  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k}, 'Interpreter', 'none');
-  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k}, 'Interpreter', 'none');
+  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k}, 'Interpreter', 'none', 'horizontalalignment', 'right');
+  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k}, 'Interpreter', 'none', 'horizontalalignment', 'left', 'rotation', 90);
 end
 
 % add 'from' and 'to' labels
