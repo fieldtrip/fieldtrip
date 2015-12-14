@@ -47,26 +47,25 @@ ft_preamble trackconfig
 ft_preamble loadvar data
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',  'absmax',  'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'funparameter'});
-cfg = ft_checkconfig(cfg, 'renamed',	  {'parameter', 'funparameter'});
-cfg = ft_checkconfig(cfg, 'renamed',	  {'mask',      'maskparameter'});
-cfg = ft_checkconfig(cfg, 'renamed',	  {'framespersec',      'framerate'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',         'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'zparam',       'funparameter'});
+cfg = ft_checkconfig(cfg, 'renamed',	  {'parameter',    'funparameter'});
+cfg = ft_checkconfig(cfg, 'renamed',	  {'mask',         'maskparameter'});
+cfg = ft_checkconfig(cfg, 'renamed',	  {'framespersec', 'framerate'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'yparam'});
 
 % set default cfg settings
-cfg.xlim            = ft_getopt(cfg, 'xlim', 'maxmin');
-cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxmin');
-cfg.zlim            = ft_getopt(cfg, 'zlim', 'maxmin');
+cfg.xlim            = ft_getopt(cfg, 'xlim',   'maxmin');
+cfg.ylim            = ft_getopt(cfg, 'ylim',   'maxmin');
+cfg.zlim            = ft_getopt(cfg, 'zlim',   'maxmin');
 cfg.xparam          = ft_getopt(cfg, 'xparam', 'time');
 cfg.yparam          = ft_getopt(cfg, 'yparam', []);
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter');
 cfg.inputfile       = ft_getopt(cfg, 'inputfile',    []);
-cfg.moviefreq       = ft_getopt(cfg, 'moviefreq', []);
-cfg.movietime       = ft_getopt(cfg, 'movietime', []);
-cfg.movierpt        = ft_getopt(cfg, 'movierpt', 1);
-
+cfg.moviefreq       = ft_getopt(cfg, 'moviefreq',    []);
+cfg.movietime       = ft_getopt(cfg, 'movietime',    []);
+cfg.movierpt        = ft_getopt(cfg, 'movierpt',     1);
 
 for i=1:numel(varargin)
   if ~isempty(cfg.yparam) && ~isfield(varargin{i}, 'freq')
@@ -78,14 +77,15 @@ for i=1:numel(varargin)
   end
 end
 
-% set data flags
-opt = [];
-opt.valx = 1;
-opt.valy = 1;
+% set guidata flags
+opt                 = [];
+opt.valx            = 1;
+opt.valy            = 1;
+opt.valz            = 1;
 opt.record          = ~istrue(ft_getopt(cfg, 'interactive', 'yes'));
 opt.framesfile      = ft_getopt(cfg, 'framesfile',   []);
 opt.samperframe     = ft_getopt(cfg, 'samperframe',  1);
-opt.framerate       = ft_getopt(cfg, 'framerate', 5);          
+opt.framerate       = ft_getopt(cfg, 'framerate',    5);          
 opt.fixedframesfile = ~isempty(opt.framesfile);
 opt.xvalues   = varargin{1}.(cfg.xparam); % below consistency is checked
 if ~isempty(cfg.yparam)
@@ -95,267 +95,116 @@ else
 end
 
 % check data options and consistency
-for i=1:numel(varargin)
-  opt.issource{i}   = ft_datatype(varargin{i}, 'source');
-  opt.isfreq{i}     = ft_datatype(varargin{i}, 'freq');
-  opt.istimelock{i} = ft_datatype(varargin{i}, 'timelock');
-  if opt.issource{i}+opt.isfreq{i}+opt.istimelock{i} ~= 1
+Ndata = numel(varargin);
+for i = 1:Ndata
+  opt.issource(i)   = ft_datatype(varargin{i}, 'source');
+  opt.isfreq(i)     = ft_datatype(varargin{i}, 'freq');
+  opt.istimelock(i) = ft_datatype(varargin{i}, 'timelock');
+  if opt.issource(i)+opt.isfreq(i)+opt.istimelock(i) ~= 1
     error('data argument %i cannot be definitely identified as frequency, timelock or source data', i);
   end
+end
+
+if Ndata>1,
+  if all(opt.issource==1),
+    % this is allowed maybe in the future: multiple source input arguments
+    error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
+  elseif all(opt.isfreq==1),
+    % this is allowed maybe in the future: multiple freq input arguments
+    error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
+  elseif all(opt.istimelock==1),
+    % this is allowed maybe in the future: multiple timelock input arguments
+    error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
+  elseif Ndata==2 && sum(opt.issource==1)
+    % this may be allowed, provided the source data is a parcellation and
+    % the other argument a parcellated data structure
+    if ~ft_datatype(varargin{opt.issource}, 'parcellation')
+      error('the source data structure should be a parcellation');
+    end
+  end
+end
+
+% set the funparameter
+if any(opt.isfreq)
+  opt.funparameter = ft_getopt(cfg, 'funparameter', 'powspctrm'); % use power as default
+elseif any(opt.istimelock)
+  opt.funparameter = ft_getopt(cfg, 'funparameter', 'avg'); % use power as default
+elseif any(opt.issource)
+  % FIXME a call to ft_checkdata wouldn't hurt here :-)
+  opt.funparameter = ft_getopt(cfg, 'funparameter', 'avg.pow'); % use power as default
+end
+
+if any(opt.issource) && (any(opt.isfreq) || any(opt.istimelock))
+  opt.anatomy  = varargin{opt.issource};
+  opt.ismesh   = isfield(opt.anatomy, 'tri');
+  opt.isvolume = isfield(opt.anatomy, 'dim');
   
-  if opt.issource{i}
-  % transfer anatomical information to opt
-    if isfield(varargin{i}, 'sulc')
-      opt.anatomy{i}.sulc = varargin{i}.sulc;
-    end
+  varargin     = varargin(~opt.issource);
+  opt.dat{1}   = getsubfield(varargin{1}, opt.funparameter);
+  funtok = tokenize(opt.funparameter, '.');
+  opt.dimord   = getdimord(varargin{1}, funtok{end});
+elseif any(opt.issource)
+  opt.anatomy  = varargin{opt.issource};
+  opt.ismesh   = isfield(opt.anatomy, 'tri');
+  opt.isvolume = isfield(opt.anatomy, 'dim');
   
-    if isfield(varargin{i}, 'tri')
-      opt.anatomy{i}.tri = varargin{i}.tri;
-    else
-      error('source.tri missing of data input argument %i, this function requires a triangulated cortical sheet as source model', i);
-    end
+  opt.dat{1}   = getsubfield(varargin{opt.issource}, opt.funparameter);
+  funtok = tokenize(opt.funparameter, '.');
+  opt.dimord   = getdimord(varargin{1}, funtok{end});
+else
+  opt.layout   = ft_prepare_layout(cfg); % let ft_prepare_layout do the error handling for now
+  
+  % ensure that the data in all inputs has the same channels, time-axis, etc.
+  tmpcfg = keepfields(cfg, {'frequency', 'latency', 'channel'});
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+  % restore the provenance information
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
-    if isfield(varargin{i}, 'pnt')
-      opt.anatomy{i}.pnt = varargin{i}.pnt;
-    elseif isfield(varargin{i}, 'pos')
-      opt.anatomy{i}.pos = varargin{i}.pos;
-    else
-      error('source.pos or source.pnt is missing for data input argument %i', i);
-    end
-  else
-    % identify the interpretation of the functional data
-    dtype = ft_datatype(varargin{i}); 
-    switch dtype;
-      case 'raw'
-        varargin{i}   = ft_checkdata(varargin{i}, 'datatype', 'timelock');
-        dtype  = ft_datatype(varargin{i});
-        dimord = varargin{i}.dimord;
-      case  {'timelock' 'freq' 'chan' 'unknown'}
-        dimord = varargin{i}.dimord;
-      case 'comp'
-        dimord = 'chan_comp';
-      otherwise
-    end
-    dimtok = tokenize(dimord, '_');
+  [opt.seldat, opt.sellay] = match_str(varargin{1}.label, opt.layout.label);
+  opt.chanx = opt.layout.pos(opt.sellay,1);
+  opt.chany = opt.layout.pos(opt.sellay,2);
+  
+  for i = 1:numel(varargin)
+    opt.dat{i} = getsubfield(varargin{i}, opt.funparameter);
   end
+  opt.dimord = getdimord(varargin{1}, opt.funparameter);
+end
 
-  if opt.isfreq{i}
-    opt.funparameter{i}  = ft_getopt(cfg, 'funparameter', 'powspctrm'); % use power as default
-  elseif opt.istimelock{i}
-    opt.funparameter{i}  = ft_getopt(cfg, 'funparameter', 'avg'); % use power as default
-  elseif opt.issource{i}
-    opt.funparameter{i}  = ft_getopt(cfg, 'funparameter', 'avg.pow'); % use power as default
-  end
+dimtok = tokenize(opt.dimord, '_');
+if any(strcmp(dimtok, 'rpt') | strcmp(dimtok, 'subj'))
+  error('the input data cannot contain trials or subjects, please average first using ft_selectdata');
+end
 
+opt.ydim = find(strcmp(cfg.yparam, dimtok));
+opt.xdim = find(strcmp(cfg.xparam, dimtok));
+opt.zdim = setdiff(1:ndims(opt.dat{1}), [opt.ydim opt.xdim]);
+if opt.zdim ~=1
+  error('input %i data does not have the correct format of N x time (x freq)', i);
+end
 
-  % read or create the layout that will be used for plotting:
-  if ~opt.issource{i} && isfield(cfg, 'layout')
-    opt.layout{i} = ft_prepare_layout(cfg);
+% permute the data matrix
+for i = 1:numel(opt.dat)
+  opt.dat{i} = permute(opt.dat{i}, [opt.zdim(:)' opt.xdim opt.ydim]);
+end  
+opt.xdim = 2;
+if ~isempty(cfg.yparam)
+  opt.ydim = 3;
+else
+  opt.ydim = [];
+end
 
-    % Check for bivariate metric with 'chan_chan' in the dimord:
-    selchan = strmatch('chan', dimtok);
-    isfull  = length(selchan)>1;
-
-    % Check for bivariate metric with a labelcmb field:
-    haslabelcmb = isfield(data, 'labelcmb');
-
-    if (isfull || haslabelcmb) && isfield(varargin{i}, opt.funparameter{i})
-      % A reference channel is required:
-      if ~isfield(cfg, 'refchannel')
-        error('no reference channel is specified');
-      end
-
-      % check for refchannel being part of selection
-      if ~strcmp(cfg.refchannel,'gui')
-        if haslabelcmb
-          cfg.refchannel = ft_channelselection(cfg.refchannel, unique(varargin{i}.labelcmb(:)));
-        else
-          cfg.refchannel = ft_channelselection(cfg.refchannel, varargin{i}.label);
-        end
-        if (isfull      && ~any(ismember(varargin{i}.label, cfg.refchannel))) || ...
-            (haslabelcmb && ~any(ismember(varargin{i}.labelcmb(:), cfg.refchannel)))
-          error('cfg.refchannel is a not present in the (selected) channels)')
-        end
-      end
-
-      if ~isfull,
-        % Convert 2-dimensional channel matrix to a single dimension:
-        if isempty(cfg.directionality)
-          sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
-          sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,1)));
-        elseif strcmp(cfg.directionality, 'outflow')
-          sel1 = [];
-          sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,1)));
-        elseif strcmp(cfg.directionality, 'inflow')
-          sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
-          sel2 = [];
-        end
-        fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), opt.funparameter{i});
-        if length(sel1)+length(sel2)==0
-          error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
-        end
-        varargin{i}.(opt.funparameter{i}) = varargin{i}.(opt.funparameter{i})([sel1;sel2],:,:);
-        varargin{i}.label     = [varargin{i}.labelcmb(sel1,1);varargin{i}.labelcmb(sel2,2)];
-        varargin{i}           = rmfield(varargin{i}, 'labelcmb');
-      else
-        % General case
-        sel               = match_str(varargin{i}.label, cfg.refchannel);
-        siz               = [size(varargin{i}.(opt.funparameter{i})) 1];
-        if strcmp(cfg.directionality, 'inflow') || isempty(cfg.directionality)
-          %the interpretation of 'inflow' and 'outflow' depend on
-          %the definition in the bivariate representation of the data
-          %in FieldTrip the row index 'causes' the column index channel
-          %varargin{i}.(opt.funparameter{i}) = reshape(mean(varargin{i}.(opt.funparameter{i})(:,sel,:),2),[siz(1) 1 siz(3:end)]);
-          sel1 = 1:siz(1);
-          sel2 = sel;
-          meandir = 2;
-        elseif strcmp(cfg.directionality, 'outflow')
-          %varargin{i}.(opt.funparameter{i}) = reshape(mean(varargin{i}.(opt.funparameter{i})(sel,:,:),1),[siz(1) 1 siz(3:end)]);
-          sel1 = sel;
-          sel2 = 1:siz(1);
-          meandir = 1;
-
-        elseif strcmp(cfg.directionality, 'inflow-outflow')
-          % do the subtraction and recursively call the function again
-          tmpcfg = cfg;
-          tmpcfg.directionality = 'inflow';
-          tmpdata = varargin{i};
-          tmp     = varargin{i}.(tmpopt.funparameter{i});
-          siz     = [size(tmp) 1];
-          for k = 1:siz(3)
-            for m = 1:siz(4)
-              tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
-            end
-          end
-          tmpdata.(tmpopt.funparameter{i}) = tmp;
-          if numel(varargin)>1   
-            error('channel combinations are not yet supported for more than one input argument');
-          end
-          moviefunction(tmpcfg, tmpdata);
-          return;
-
-        elseif strcmp(cfg.directionality, 'outflow-inflow')
-          % do the subtraction and recursively call the function again
-          tmpcfg = cfg;
-          tmpcfg.directionality = 'outflow';
-          tmpdata = varargin{i};
-          tmp     = varargin{i}.(tmpopt.funparameter{i});
-          siz     = [size(tmp) 1];
-          for k = 1:siz(3)
-            for m = 1:siz(4)
-              tmp(:,:,k,m) = tmp(:,:,k,m)-tmp(:,:,k,m)';
-            end
-          end
-          tmpdata.(tmpopt.funparameter{i}) = tmp;
-          if numel(varargin)>1   
-            error('channel combinations are not yet supported for more than one input argument');
-          end
-          moviefunction(tmpcfg, tmpdata);
-          return;
-
-        end
-      end
-    end
-
-    % select the channels in the data that match with the layout:
-    [opt.seldat{i}, opt.sellay{i}] = match_str(varargin{i}.label, opt.layout{i}.label);
-
-    if isempty(opt.seldat{i}.seldat)
-      error('labels in data and labels in layout do not match for data');
-    end
-
-
-    selcfg = [];
-    selcfg.channel = varargin{i}.label(opt.seldat{i});
-    varargin{i} = ft_selectdata(selcfg, varargin{i});
-
-    % get the x and y coordinates and labels of the channels in the data
-    opt.chanx{i} = opt.layout{i}.pos(opt.sellay{i},1);
-    opt.chany{i} = opt.layout{i}.pos(opt.sellay{i},2);
-  else
-    if ~opt.issource{i}
-      error('you need to specify a layout in case of freq or timelock data');
-    end
-  end
-
-  opt.xvalues   = intersect(opt.xvalues, varargin{i}.(cfg.xparam));
-  if isempty(opt.xvalues)
-    error('%s values are not intersecting across input arguments', (cfg.xparam));
-  end
-  opt.yvalues   = [];
-  if ~isempty(cfg.yparam)
-    opt.yvalues = varargin{i}.(cfg.yparam);
-    if isempty(opt.yvalues)
-      error('%s values are not intersecting across input arguments', (cfg.yparam));
-    end
-  end
-  opt.dat{i}       = getsubfield(varargin{i}, opt.funparameter{i});
-
-
-% check consistency of xparam and yparam
-% NOTE: i set two different defaults for the 'chan_time' and the 'chan_freq_time' case
-  if isfield(varargin{i},'dimord')
-    % get dimord dimensions
-  %   dimtok = textscan(varargin{i}.dimord,'%s', 'Delimiter', '_');
-  %   dimtok = dimtok{1};
-
-    % remove subject dimension
-    rpt_dim = strcmp('rpt', dimtok) | strcmp('subj', dimtok);
-    if sum(rpt_dim)~=0
-      dimtok(rpt_dim) = [];
-      opt.dat = squeeze(nanmean(opt.dat{i}, find(rpt_dim)));
-    end
-    opt.ydim{i} = find(strcmp(cfg.yparam, dimtok));
-    opt.xdim{i} = find(strcmp(cfg.xparam, dimtok));
-    opt.zdim{i} = setdiff(1:ndims(opt.dat{i}), [opt.ydim{i} opt.xdim{i}]);
-    if opt.zdim ~=1
-      error('input %i data does not have the correct format of N x time (x freq)', i);
-    end
-    % and permute
-    opt.dat{i} = permute(opt.dat, [opt.zdim(:)' opt.xdim opt.ydim]);
-
-    opt.xdim{i} = 2;
-    if ~isempty(cfg.yparam)
-      opt.ydim{i} = 3;
-    else
-      opt.ydim{i} = [];
-    end
-
-  elseif opt.issource{i}
-      % TODO FIXME this is hardcoded now, can it be made more generic?
-      opt.xdim{i} = 2;
-      opt.xvalues   = intersect(opt.xvalues, varargin{i}.(cfg.xparam));
-      opt.ydim{i} = [];
-  end
-
-  if opt.issource{i}
-    if size(varargin{i}.pos)~=size(opt.dat{i},1)
-      error('inconsistent number of vertices in the cortical mesh');
-    end
-
-    if ~isfield(varargin{i}, 'tri')
-      error('source.tri missing, this function requires a triangulated cortical sheet as source model');
-    end  
-  end
-
-
+% get the mask
+for i = 1:numel(varargin)
   if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
     opt.mask{i} = double(getsubfield(varargin{i}, cfg.maskparameter)~=0);
   else
     opt.mask{i} = ones(size(opt.dat{i}));
   end
-
-  if length(opt.xvalues)~=size(opt.dat{i}, opt.xdim{i})
-    error('inconsistent size of "%s" compared to "%s"', opt.funparameter{i}, cfg.xparam);
-  end
-  if ~isempty(opt.ydim{i}) && length(opt.yvalues)~=size(opt.dat{i},opt.ydim{i})
-    error('inconsistent size of "%s" compared to "%s"', opt.funparameter{i}, cfg.yparam);
-  end
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create GUI and plot stuff
-%* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% draw the figure with the GUI
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 opt = createGUI(opt);
 
 if isempty(cfg.yparam)
@@ -373,7 +222,8 @@ set(opt.handles.label.xparam, 'String', opt.xparam);
 opt.timer = timer;
 set(opt.timer, 'timerfcn', {@cb_timer, opt.handles.figure}, 'period', 0.1, 'executionmode', 'fixedSpacing');
 
-opt = prepareBrainplot(opt);
+opt = plot_geometry(opt);
+opt = plot_other(opt);
 
 opt.speed = 1;
 guidata(opt.handles.figure, opt);
@@ -395,7 +245,6 @@ else
   cb_colorbar(opt.handles.figure, cfg.zlim);
 end
 
-
 if opt.record
   opt.record = false;
   opt.quit = true;
@@ -415,39 +264,58 @@ end
 function opt = createGUI(opt)
 
 %% main figure
-opt.handles.figure = figure(...
-  'Units', 'normalized', ...
-  'Name','ft_movieplot',...
-  'Menu', 'none', ...
-  'Toolbar', 'figure', ...
-  'NumberTitle','off',...
-  'UserData',[],...
-  'Tag','mainFigure',...
-  'Visible','on');
+opt.handles.figure = figure(    ...
+  'Units',       'normalized',  ...
+  'Name',        'ft_movieplot',...
+  'Menu',        'none',        ...
+  'Toolbar',     'figure',      ...
+  'NumberTitle', 'off',         ...
+  'UserData',    [],            ...
+  'Tag',         'mainFigure',  ...
+  'Visible',     'on',          ...
+  'windowbuttondownfcn', @cb_getposition);
   %'WindowButtonUpFcn', @cb_stopDrag, ...
 
 %%  panels 
 clf
 
-
-% visualization panel
-opt.handles.panel.visualization = uipanel(...
-  'tag',    'mainPanels', ... % tag according to position
-  'parent', opt.handles.figure,...
-  'units',  'normalized', ...
-  'title',  'Visualization',...
-  'clipping','on',...
-  'visible', 'on');
+% visualization panel for the geometrical information
+opt.handles.panel.visualization_geometry = uipanel(...
+  'tag',      'mainPanels1',      ... % tag according to position
+  'parent',   opt.handles.figure, ...
+  'units',    'normalized',       ...
+  'title',    'Visualization_geometry', ...
+  'clipping', 'on',               ...
+  'visible',  'on');
 
 % rearrange 
-ft_uilayout(opt.handles.figure, ...
-  'tag', 'mainPanels', ...
-  'backgroundcolor', [.8 .8 .8], ...
-  'hpos', 'auto', ...
-  'vpos', .15, ...
-  'halign', 'left', ...
-  'width', 1, ...
-  'height', 0.1);
+ft_uilayout(opt.handles.figure,     ...
+  'tag',             'mainPanels1', ...
+  'backgroundcolor', [.8 .8 .8],    ...
+  'hpos',            'auto',        ...
+  'vpos',            .15,           ...
+  'halign',          'left',        ...
+  'width',           1,             ...
+  'height',          0.1);
+
+% visualization panel for the non-geometrical information
+opt.handles.panel.visualization = uipanel(...
+  'tag',      'mainPanels2',      ... % tag according to position
+  'parent',   opt.handles.figure, ...
+  'units',    'normalized',       ...
+  'title',    'Visualization',    ...
+  'clipping', 'on',               ...
+  'visible',  'on');
+
+% rearrange 
+ft_uilayout(opt.handles.figure,     ...
+  'tag',             'mainPanels2', ...
+  'backgroundcolor', [.8 .8 .8],    ...
+  'hpos',            'auto',        ...
+  'vpos',            .55,           ...
+  'halign',          'left',        ...
+  'width',           0.5,           ...
+  'height',          0.1);
 
 % settings panel (between different views can be switched)
 % opt.handles.panel.view = uipanel(...
@@ -460,22 +328,22 @@ ft_uilayout(opt.handles.figure, ...
 
 % settings panel ()
 opt.handles.panel.settings = uipanel(...
-  'tag',    'sidePanels', ... % tag according to position
-  'parent', opt.handles.figure,...
-  'units',  'normalized', ...
-  'title',  'Settings',...
-  'clipping','on',...
-  'visible', 'on');
+  'tag',      'sidePanels',       ... % tag according to position
+  'parent',   opt.handles.figure, ...
+  'units',    'normalized',       ...
+  'title',    'Settings',         ...
+  'clipping', 'on',               ...
+  'visible',  'on');
 
-% rearrange panels
-ft_uilayout(opt.handles.figure, ...
-  'tag', 'sidePanels', ...
-  'backgroundcolor', [.8 .8 .8], ...
-  'hpos', 'auto', ...
-  'vpos', 0.15, ...
-  'halign', 'right', ...
-  'width', 0.15, ...
-  'height', 0.85);
+% rearrange panel
+ft_uilayout(opt.handles.figure,    ...
+  'tag',             'sidePanels', ...
+  'backgroundcolor', [.8 .8 .8],   ...
+  'hpos',            'auto',       ...
+  'vpos',            0.15,         ...
+  'halign',          'right',      ...
+  'width',           0.15,         ...
+  'height',          0.55);
 
 % control panel
 opt.handles.panel.controls = uipanel(...
@@ -487,27 +355,32 @@ opt.handles.panel.controls = uipanel(...
   'visible', 'on');
 
 % rearrange 
-ft_uilayout(opt.handles.figure, ...
-  'tag', 'lowerPanels', ...
-  'backgroundcolor', [.8 .8 .8], ...
-  'hpos', 'auto', ...
-  'vpos', 0, ...
-  'halign', 'right', ...
-  'width', 1, ...
-  'height', 0.15);
+ft_uilayout(opt.handles.figure,     ...
+  'tag',             'lowerPanels', ...
+  'backgroundcolor', [0.8 0.8 0.8], ...
+  'hpos',            'auto',        ...
+  'vpos',            0,             ...
+  'halign',          'right',       ...
+  'width',           1,             ...
+  'height',          0.15);
 
 ft_uilayout(opt.handles.figure, ...
-  'tag', 'mainPanels',  ...
+  'tag',   'mainPanels1',       ...
   'retag', 'sidePanels');
 
 ft_uilayout(opt.handles.figure, ...
-  'tag', 'sidePanels', ...
-  'backgroundcolor', [.8 .8 .8], ...
-  'hpos', 'auto', ...
-  'vpos', 'align', ...
-  'halign', 'left', ...
-  'valign', 'top', ...
-  'height', .85);
+  'tag',   'mainPanels2',       ...
+  'retag', 'sidePanels');
+
+ft_uilayout(opt.handles.figure,    ...
+  'tag',             'sidePanels', ...
+  'backgroundcolor', [.8 .8 .8],   ...
+  'hpos',            'auto',       ...
+  'vpos',            'align',      ...
+  'halign',          'left',       ...
+  'valign',          'top',        ...
+  'height',          .85);
+
 
 % add axes
 % 3 axes for switching to topo viewmode
@@ -655,7 +528,7 @@ opt.handles.label.xparam = uicontrol(...
   'Style','text',...
   'Tag','xparamLabel');
 
-if ~isempty(opt.ydim{1})
+if ~isempty(opt.ydim)
   opt.handles.slider.yparam = uicontrol(...
     'Parent',opt.handles.panel.controls,...
     'Units','normalized',...
@@ -785,31 +658,49 @@ opt.handles.button.incrUpperColor = uicontrol(...
   'String','+',...
   'Tag','incrUpperColor');
 
-%
+% Handle to the axes that will contain the geometry
 opt.handles.axes.movie = axes(...
-  'Parent',opt.handles.panel.visualization,...
-  'Position',[0 0 1 1],...
-  'CameraPosition',[0.5 0.5 9.16025403784439],...
-  'CameraPositionMode',get(0,'defaultaxesCameraPositionMode'),...
-  'CLim',get(0,'defaultaxesCLim'),...
-  'CLimMode','manual',...
-  'Color',[0.9 0.9 0.94],...
-  'ColorOrder',get(0,'defaultaxesColorOrder'),...
-  'XColor',get(0,'defaultaxesXColor'),...
-  'YColor',get(0,'defaultaxesYColor'),...
-  'ZColor',get(0,'defaultaxesZColor'),...
-  'HandleVisibility', 'on', ...
-  'ButtonDownFcn',@cb_view,...
-  'Tag','movieAxes');
+  'Parent',             opt.handles.panel.visualization_geometry,...
+  'Position',           [0 0 1 1],                     ...
+  'CameraPosition',     [0.5 0.5 9.16025403784439],    ...
+  'CameraPositionMode', get(0,'defaultaxesCameraPositionMode'),...
+  'CLim',               get(0,'defaultaxesCLim'),      ...
+  'CLimMode',           'manual',                      ...
+  'Color',              [0.9 0.9 0.94],                ...
+  'ColorOrder',         get(0,'defaultaxesColorOrder'),...
+  'XColor',             get(0,'defaultaxesXColor'),    ...
+  'YColor',             get(0,'defaultaxesYColor'),    ...
+  'ZColor',             get(0,'defaultaxesZColor'),    ...
+  'HandleVisibility',   'on',                          ...
+  'ButtonDownFcn',      @cb_view,                      ...
+  'Tag',                'geometry');
+
+% Handle to the axes that will contain the non-geometry
+opt.handles.axes.other = axes(...
+  'Parent',             opt.handles.panel.visualization,...
+  'Position',           [0 0 1 1],                     ...
+  'CameraPosition',     [0.5 0.5 9.16025403784439],    ...
+  'CameraPositionMode', get(0,'defaultaxesCameraPositionMode'),...
+  'CLim',               get(0,'defaultaxesCLim'),      ...
+  'CLimMode',           'manual',                      ...
+  'Color',              [0.9 0.9 0.94],                ...
+  'ColorOrder',         get(0,'defaultaxesColorOrder'),...
+  'XColor',             get(0,'defaultaxesXColor'),    ...
+  'YColor',             get(0,'defaultaxesYColor'),    ...
+  'ZColor',             get(0,'defaultaxesZColor'),    ...
+  'HandleVisibility',   'on',                          ...
+  'ButtonDownFcn',      @cb_view,                      ...
+  'Tag',                'other');
+
 
 % Disable axis labels
-axis(opt.handles.axes.movie, 'equal');
+axis(opt.handles.axes.movie,    'equal');
 axis(opt.handles.axes.colorbar, 'equal');
 % axis(opt.handles.axes.A, 'equal');
 % axis(opt.handles.axes.B, 'equal');
 % axis(opt.handles.axes.C, 'equal');
 %
-axis(opt.handles.axes.movie, 'off');
+axis(opt.handles.axes.movie,    'off');
 axis(opt.handles.axes.colorbar, 'off');
 % axis(opt.handles.axes.A, 'off');
 % axis(opt.handles.axes.B, 'off');
@@ -820,16 +711,20 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function updateMovie(opt)
-for i=1:numel(opt.dat)
-  if ~opt.issource{i}
-    set(opt.handles.grid{i}, 'cdata', griddata(opt.chanx{i}, opt.chany{i}, opt.mask{i}(:,opt.valx,opt.valy).*opt.dat{i}(:,opt.valx,opt.valy), opt.xdata{i}, opt.nanmask{i}.*opt.ydata{i}, 'v4'));
-  else
-    set(opt.handles.mesh{i}, 'FaceVertexCData',  squeeze(opt.dat{i}(:,opt.valx,opt.valy)));
-    set(opt.handles.mesh{i}, 'FaceVertexAlphaData', squeeze(opt.mask{i}(:,opt.valx,opt.valy)));
+function update_panels(opt)
+  for i=1:numel(opt.dat)
+    if ~any(opt.issource)
+      set(opt.handles.grid{i}, 'cdata', griddata(opt.chanx{i}, opt.chany{i}, opt.mask{i}(:,opt.valx,opt.valy).*opt.dat{i}(:,opt.valx,opt.valy), opt.xdata{i}, opt.nanmask{i}.*opt.ydata{i}, 'v4'));
+    else
+      set(opt.handles.mesh{i}, 'FaceVertexCData',     squeeze(opt.dat{i}(:,opt.valx,opt.valy)));
+      set(opt.handles.mesh{i}, 'FaceVertexAlphaData', squeeze(opt.mask{i}(:,opt.valx,opt.valy)));
+    end
   end
-end
 
+  if opt.doplot
+    opt.valz
+    set(get(opt.handles.axes.other,'children'), 'ydata', opt.dat{1}(opt.valz,:));
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -956,7 +851,7 @@ opt.valy = valy;
 
 guidata(h, opt);
 
-updateMovie(opt);
+update_panels(opt);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1284,6 +1179,79 @@ set(f, 'WindowButtonMotionFcn', @cb_dragLine);
 guidata(h, opt);
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_getposition(h, eventdata)
+
+h   = findobj(h, 'tag', 'mainFigure');
+opt = guidata(h);
+
+pos = get(get(h, 'currentaxes'), 'currentpoint');
+switch get(get(h, 'currentaxes'), 'tag'),
+  case 'geometry'
+    if opt.ismesh
+      % get the intersection with the mesh
+      [ipos, d] = intersect_line(opt.anatomy.pos, opt.anatomy.tri, pos(1,:), pos(2,:));
+      [md, ix]  = min(abs(d));
+   
+      dpos     = opt.anatomy.pos - ipos(ix*ones(size(opt.anatomy.pos,1),1),:);
+      opt.valz = nearest(sum(dpos.^2,2),0);
+   
+    elseif opt.isvolume
+    else
+    end
+    
+  case 'other'
+  otherwise
+end
+
+% if strcmp(get(get(h, 'currentaxes'), 'tag'), 'timecourse')
+%   % get the current point
+%   pos = get(opt.hy, 'currentpoint');
+%   set(opt.sliderx, 'value', nearest(opt.xparam, pos(1,1))./numel(opt.xparam));
+%   if isfield(opt, 'hline')
+%     set(opt.slidery, 'value', nearest(opt.yparam, pos(1,2))./numel(opt.yparam));
+%   end
+% elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
+%   % get the current point, which is defined as the intersection through the
+%   % axis-box (in 3D)
+%   pos       = get(opt.hx, 'currentpoint');
+%   
+%   % get the intersection with the mesh
+%   [ipos, d] = intersect_line(opt.pos, opt.tri, pos(1,:), pos(2,:));
+%   [md, ix]  = min(abs(d));
+%   
+%   dpos      = opt.pos - ipos(ix*ones(size(opt.pos,1),1),:);
+%   opt.vindx = nearest(sum(dpos.^2,2),0);
+%   
+%   if isfield(opt, 'parcellation')
+%     opt.pindx = find(opt.parcellation(opt.vindx,:));
+%     disp(opt.pindx);
+%   end
+% elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh2')
+%   % get the current point, which is defined as the intersection through the
+%   % axis-box (in 3D)
+%   pos       = get(opt.hz, 'currentpoint');
+%   
+%   % get the intersection with the mesh
+%   [ipos, d] = intersect_line(opt.pos, opt.tri, pos(1,:), pos(2,:));
+%   [md, ix]  = min(abs(d));
+%   
+%   dpos      = opt.pos - ipos(ix*ones(size(opt.pos,1),1),:);
+%   opt.vindx = nearest(sum(dpos.^2,2),0);
+%   
+%   if isfield(opt, 'parcellation')
+%     opt.pindx2 = find(opt.parcellation(opt.vindx,:));
+%     disp(opt.pindx2);
+%   end
+%   
+% end
+guidata(h, opt);
+cb_slider(h);
+
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1337,29 +1305,29 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function opt = prepareBrainplot(opt)
+function opt = plot_geometry(opt)
   numArgs = numel(opt.dat);
   numRows = floor(sqrt(numArgs));
   numCols = ceil(sqrt(numArgs));
   for i=1:numArgs
-    subplot(numRows, numCols, i);
+    axes(opt.handles.axes.movie);
     opt.handles.axes.movie_subplot{i} = gca;
-    if opt.issource{i}
-      if isfield(opt, 'sulc') && ~isempty(opt.sulc{i})
-        vdat = opt.sulc{i};
+    if isfield(opt, 'anatomy') && opt.ismesh
+      if isfield(opt.anatomy, 'sulc') && ~isempty(opt.anatomy.sulc)
+        vdat = opt.anatomy.sulc;
         vdat(vdat>0.5) = 0.5;
         vdat(vdat<-0.5)= -0.5;
         vdat = vdat-min(vdat);
         vdat = 0.35.*(vdat./max(vdat))+0.3;
         vdat = repmat(vdat,[1 3]);
-        mesh = ft_plot_mesh(opt.anatomy{i}, 'edgecolor', 'none', 'vertexcolor', vdat);
+        mesh = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'vertexcolor', vdat);
       else
-        mesh = ft_plot_mesh(opt.anatomy{i}, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
+        mesh = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'facecolor', [0.5 0.5 0.5]);
       end
       lighting gouraud
       % set(mesh, 'Parent', opt.handles.axes.movie);
       % mesh = ft_plot_mesh(source, 'edgecolor', 'none', 'vertexcolor', 0*opt.dat(:,1,1), 'facealpha', 0*opt.mask(:,1,1));
-      opt.handles.mesh{i} = ft_plot_mesh(opt.anatomy{i}, 'edgecolor', 'none', 'vertexcolor', opt.dat{i}(:,1,1));
+      opt.handles.mesh{i} = ft_plot_mesh(opt.anatomy, 'edgecolor', 'none', 'vertexcolor', opt.dat{i}(:,1,1));
       set(opt.handles.mesh{i}, 'AlphaDataMapping', 'scaled');
       set(opt.handles.mesh{i}, 'FaceVertexAlphaData', opt.mask{i}(:,opt.valx,opt.valy));
       % TODO FIXME below does not work
@@ -1386,6 +1354,29 @@ function opt = prepareBrainplot(opt)
       end
     end
   end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function opt = plot_other(opt)
+  dimord  = opt.dimord;
+  
+  switch dimord
+    case {'pos_time' 'pos_freq' 'chan_time' 'chan_freq'}
+      opt.doplot    = true;
+      opt.doimagesc = false;
+    case {'pos_freq_time' 'chan_freq_time' 'chan_chan_freq' 'chan_chan_time' 'pos_pos_freq' 'pos_pos_time'}
+      opt.doplot    = false;
+      opt.doimagesc = false;
+    otherwise
+  end
+  
+  if opt.doplot
+    plot(opt.handles.axes.other, opt.xvalues, nanmean(opt.dat{1}(opt.valz,:),1));
+  elseif opt.doimagesc
+  end
+ 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
