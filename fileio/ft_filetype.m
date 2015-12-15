@@ -1005,6 +1005,12 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nr
   manufacturer = 'BUCN';
   content = 'ascii formatted nirs data';
   
+  % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
+elseif filetype_check_extension(filename, '.nirs') && filetype_check_header(filename, 'MATLAB')
+  type = 'homer_nirs';
+  manufacturer = 'Homer';
+  content = '(f)NIRS data';
+  
   % known Artinis file format
 elseif filetype_check_extension(filename, '.oxy3')  
   type = 'oxy3';
