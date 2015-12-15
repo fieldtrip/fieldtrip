@@ -1064,8 +1064,11 @@ switch eventformat
     filename = fullfile(path, [file '.mat']);
     % read the events from the MATLAB file
     tmp   = load(filename, 'event');
-    event = tmp.event;
-    
+    if isfield(tmp, 'event')
+      event = tmp.event;
+    else
+      event = [];
+    end
     
   case 'fcdc_fifo'
     fifo = filetype_check_uri(filename);
