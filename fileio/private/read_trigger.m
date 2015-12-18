@@ -12,7 +12,7 @@ function [event] = read_trigger(filename, varargin)
 %  - merge read_ctf_trigger into this function (requires trigshift and bitmasking option)
 %  - merge biosemi code into this function (requires bitmasking option)
 
-% Copyright (C) 2008-2013, Robert Oostenveld
+% Copyright (C) 2008-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -33,21 +33,22 @@ function [event] = read_trigger(filename, varargin)
 % $Id$
 
 % get the optional input arguments
-hdr         = ft_getopt(varargin, 'header'             );
-dataformat  = ft_getopt(varargin, 'dataformat'         );
-begsample   = ft_getopt(varargin, 'begsample'          );
-endsample   = ft_getopt(varargin, 'endsample'          );
-chanindx    = ft_getopt(varargin, 'chanindx'           );
-detectflank = ft_getopt(varargin, 'detectflank'        ); % can be bit, up, down, both, auto
-denoise     = ft_getopt(varargin, 'denoise',      true );
-trigshift   = ft_getopt(varargin, 'trigshift',    false); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
-trigpadding = ft_getopt(varargin, 'trigpadding',  true );
-fixctf      = ft_getopt(varargin, 'fixctf',       false);
-fixneuromag = ft_getopt(varargin, 'fixneuromag',  false);
-fix4d8192   = ft_getopt(varargin, 'fix4d8192',    false);
-fixbiosemi  = ft_getopt(varargin, 'fixbiosemi',   false);
-fixartinis  = ft_getopt(varargin, 'fixartinis',   false);
-threshold   = ft_getopt(varargin, 'threshold'          );
+hdr          = ft_getopt(varargin, 'header'             );
+dataformat   = ft_getopt(varargin, 'dataformat'         );
+begsample    = ft_getopt(varargin, 'begsample'          );
+endsample    = ft_getopt(varargin, 'endsample'          );
+chanindx     = ft_getopt(varargin, 'chanindx'           );
+detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be bit, up, down, both, auto
+denoise      = ft_getopt(varargin, 'denoise',      true );
+trigshift    = ft_getopt(varargin, 'trigshift',    false); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
+trigpadding  = ft_getopt(varargin, 'trigpadding',  true );
+fixctf       = ft_getopt(varargin, 'fixctf',       false);
+fixneuromag  = ft_getopt(varargin, 'fixneuromag',  false);
+fix4d8192    = ft_getopt(varargin, 'fix4d8192',    false);
+fixbiosemi   = ft_getopt(varargin, 'fixbiosemi',   false);
+fixartinis   = ft_getopt(varargin, 'fixartinis',   false);
+fixstaircase = ft_getopt(varargin, 'fixstaircase',   false);
+threshold    = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
   hdr = ft_read_header(filename);
@@ -148,6 +149,17 @@ end
 if fixartinis
   % we are dealing with an AD box here, and analog values can be noisy.
   dat = round(10*dat)/10; % steps of 0.1V are to be assumed
+end
+
+if fixstaircase
+  for i=1:numel(chanindx)
+    onset  = find(diff([0 dat]>0));
+    offset = find(diff([dat 0]<0));
+    for j=1:numel(onset)
+      % replace all values with the most ocurring value in the window of the TTL pulse
+      dat(i,onset:offset) = mode(dat(i,onset:offset));
+    end
+  end
 end
 
 if ~isempty(threshold)
