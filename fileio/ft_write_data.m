@@ -288,15 +288,25 @@ switch dataformat
       
       % update the existing header
       hdr          = old.hdr;
-      hdr.nSamples = hdr.nSamples + size(dat,2);
-      save(headerfile, 'hdr', '-v6');
+      hdr.nSamples = hdr.nSamples + nsamples;
       
+      % there are no new events
+      if isfield(old, 'event')
+        event = old.event;
+      else
+        event = [];
+      end
+      
+      save(headerfile, 'hdr', 'event', '-v6');
+
       % update the data file
       [fid,message] = fopen(datafile,'ab','ieee-le');
       fwrite(fid, dat, hdr.precision);
       fclose(fid);
       
     else
+      hdr.nSamples = nsamples;
+      hdr.nTrials  = 1;
       if nchans~=hdr.nChans && length(chanindx)==nchans
         % assume that the header corresponds to the original multichannel
         % file and that the data represents a subset of channels
@@ -306,8 +316,10 @@ switch dataformat
       if ~isfield(hdr, 'precision')
         hdr.precision = 'double';
       end
+      % there are no events
+      event = [];
       % write the header file
-      save(headerfile, 'hdr', '-v6');
+      save(headerfile, 'hdr', 'event', '-v6');
       
       % write the data file
       [fid,message] = fopen(datafile,'wb','ieee-le');
