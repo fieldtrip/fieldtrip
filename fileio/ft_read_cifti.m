@@ -67,7 +67,7 @@ mapname          = ft_getopt(varargin, 'mapname', 'field');
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
 
-if strcmp(dataformat, 'compressed')
+if ft_filetype(filename, 'compressed')
   % the file is compressed, unzip on the fly
   inflated = true;
   origfile = filename;

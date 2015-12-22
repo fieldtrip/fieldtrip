@@ -17,9 +17,14 @@ assert(mri.transform(1,1)==5);
 
 % use a command line tool from FSL
 [r,s] = system('which fslhd');
-disp(r)
-disp(s)
-[r,s] = system(['fslhd ',tmp,'.nii | grep pixdim']);
+if r==0
+  disp(r)
+  disp(s)
+else
+  % use hard-coded FSL version
+  s = '/opt/fsl/5.0.9/bin/fslhd';
+end
+[r,s] = system([deblank(s) ' ' tmp '.nii | grep pixdim']);
 disp(r)
 disp(s)
 

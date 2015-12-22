@@ -147,7 +147,7 @@ for i=1:2:num_of_args;
       % should be a string
       switch lower(simfcn)
        case 'abscorr'
-        ; % ok
+        % ok
         sR.cluster.simfcn=lower(simfcn);
        otherwise
         error('''simfcn'' must be string ''abscorr'' or an MxM similarity matrix');
@@ -210,7 +210,7 @@ end
 
 switch lower(sR.cluster.simfcn)
  case '<similarities given explicitly>'
-  ; % already handled
+  % already handled
  case 'abscorr'
   sR.cluster.similarity=abs(corrw(icassoGet(sR,'W'),icassoGet(sR,'dewhitemat')));
   %just to make sure  

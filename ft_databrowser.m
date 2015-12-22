@@ -1108,7 +1108,7 @@ editfontunits = cfg.editfontunits;
 
 % parse cfg.preproc
 if ~isempty(cfg.preproc)
-  code = printstruct('cfg', cfg.preproc);
+  code = printstruct('cfg.preproc', cfg.preproc);
 else
   code = '';
 end
@@ -1155,20 +1155,23 @@ end % function preproc_cfg1_cb
 function preproc_cfg2_cb(h,eventdata)
 parent = get(h, 'parent');
 superparent = getappdata(parent, 'superparent');
-ppeh   = getappdata(parent, 'ppeh');
+ppeh = getappdata(parent, 'ppeh');
 code = get(ppeh, 'string');
 
-% remove descriptive lines (so they don't display on command line)
-code = cellstr(code(5:end,:));
 % get rid of empty lines and white space
-remind = [];
+skip = [];
 for iline = 1:numel(code)
   code{iline} = strtrim(code{iline});
   if isempty(code{iline})
-    remind = [remind iline];
+    skip = [skip iline];
+    continue
+  end
+  if code{iline}(1)=='%'
+    skip = [skip iline];
+    continue
   end
 end
-code(remind) = [];
+code(skip) = [];
 
 if ~isempty(code)
   ispreproccfg = strncmp(code, 'cfg.preproc.',12);
@@ -1187,7 +1190,7 @@ if ~isempty(code)
   end
   maincfg = getappdata(superparent, 'cfg');
   maincfg.preproc = cfg.preproc;
-  setappdata(superparent, 'cfg',maincfg)
+  setappdata(superparent, 'cfg', maincfg)
 end
 
 close(parent)

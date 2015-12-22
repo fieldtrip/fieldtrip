@@ -379,6 +379,9 @@ switch dataformat
     end
     dimord = 'chans_samples';
     
+  case 'besa_besa'
+    dat = read_besa_besa(filename, chanindx, begsample, endsample);
+
   case 'besa_avr'
     % BESA average data
     orig = readBESAavr(filename);
@@ -1274,7 +1277,20 @@ switch dataformat
     dat     = LoadBinary(filename, 'frequency', hdr.Fs, 'offset', begsample-1, 'nRecords', endsample-begsample, 'nChannels', hdr.orig.nChannels, 'channels', chanindx, 'precision', precision).';
     scaling = hdr.orig.voltageRange/hdr.orig.amplification/(2^hdr.orig.nBits); % scale to S.I. units, i.e. V
     dat     = scaling.*dat;
-
+  case 'blackrock_nsx'
+    % use the NPMK toolbox for the file reading
+    ft_hastoolbox('NPMK', 1);
+    
+    % ensure that the filename contains a full path specification,
+    % otherwise the low-level function fails
+    [p,f,e] = fileparts(filename);
+    if ~isempty(p)
+      % this is OK
+    elseif isempty(p)
+      filename = which(filename);
+    end
+    orig = openNSx(filename, 'duration', [begsample endsample]);
+    keyboard
   case 'videomeg_aud'
     dat = read_videomeg_aud(filename, hdr, begsample, endsample);
     dat = dat(chanindx,:);
@@ -1282,7 +1298,6 @@ switch dataformat
   case 'videomeg_vid'
     dat = read_videomeg_vid(filename, hdr, begsample, endsample);
     dat = dat(chanindx,:);
-    
   otherwise
     if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);

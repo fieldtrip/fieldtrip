@@ -1,6 +1,6 @@
 function test_tutorial_spike
 
-% MEM 2500mb
+% MEM 4gb
 % WALLTIME 00:10:00
 
 % TEST test_tutorial_spike

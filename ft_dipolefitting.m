@@ -575,7 +575,9 @@ source.Vdata  = Vdata;  % FIXME this should be renamed (if possible w.r.t. EEGLA
 source.Vmodel = Vmodel; % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 
 % the units of the fitted source are the same as the units of the headmodel and the sensor array
-source.dip.unit = headmodel.unit;
+for i=1:length(source.dip)
+  source.dip(i).unit = headmodel.unit;
+end
 
 % assign a latency, frequeny or component axis to the output
 if iscomp

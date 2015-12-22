@@ -386,6 +386,22 @@ for k = 1:numel(param)
   end
 end % for k = 1:numel(param)
 
+% deal with the sensor information, if present
+if isfield(varargin{1}, 'grad') || isfield(varargin{1}, 'elec')
+  keepsensinfo = true;
+
+  if isfield(varargin{1}, 'grad'), sensfield = 'grad'; end
+  if isfield(varargin{1}, 'elec'), sensfield = 'elec'; end
+  
+  for k = 2:Ndata
+    keepsensinfo = keepsensinfo && isequaln(varargin{1}.(sensfield), varargin{k}.(sensfield));
+  end
+  
+  if keepsensinfo,
+    freq.(sensfield) = varargin{1}.(sensfield);
+  end
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig

@@ -1,7 +1,7 @@
 function test_tutorial_tmseeg
 
 % MEM 16gb
-% WALLTIME 00:40:00
+% WALLTIME 01:20:00
 
 % TEST test_tutorial_tmseeg
 % TEST ft_math ft_interpolatenan

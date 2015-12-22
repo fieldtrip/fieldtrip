@@ -324,6 +324,9 @@ switch headerformat
       hdr.orig.states         = states;
       hdr.orig.total_samples  = total_samples;
     end
+
+  case 'besa_besa'
+    hdr = read_besa_besa(filename);
     
   case 'besa_avr'
     orig = read_besa_avr(filename);
@@ -731,6 +734,13 @@ switch headerformat
     % store the complete information in hdr.orig
     % ft_read_data and ft_read_event will get it from there
     hdr.orig        = orig;
+    
+
+  case 'tobii_tsv'
+    tsv = read_tobii_tsv(filename);
+    keyboard
+    % remember the original header details
+    hdr.orig = tsv;
     
   case 'eyelink_asc'
     asc = read_eyelink_asc(filename);

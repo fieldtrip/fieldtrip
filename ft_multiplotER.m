@@ -175,6 +175,9 @@ cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.preproc        = ft_getopt(cfg, 'preproc');
 cfg.tolerance      = ft_getopt(cfg, 'tolerance', 1e-5);
+cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
+cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
+
 if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive, 'yes')
   warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
   cfg.interactive = 'no';
@@ -544,14 +547,14 @@ end
 if strcmp('freq',yparam) && strcmp('freq',dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgoverfreq = 'yes';
-  tmpcfg.frequency   = cfg.zlim;
+  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
   % restore the provenance information 
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgovertime = 'yes';
-  tmpcfg.latency     = cfg.zlim;
+  tmpcfg.latency     = cfg.latency;%cfg.zlim;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
   % restore the provenance information 
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});

@@ -138,7 +138,9 @@ cfgs.statistic        = 'indepsamplesT';
 cfgs.numrandomization = 1;
 cfgs.design           = [ones(1,5) ones(1,5)*2];
 cfgs.implementation   = 'new';
-statnew1 = ft_sourcestatistics(cfgs, spcc);
+%statnew1 = ft_sourcestatistics(cfgs, spcc); % this is not going to work,
+%because in the new representation, there's no explicit conversion from mom
+%into pow
 cfgs.implementation   = 'old';
 statold1 = ft_sourcestatistics(cfgs, spcc2);
 cfgs.parameter        = 'mom';

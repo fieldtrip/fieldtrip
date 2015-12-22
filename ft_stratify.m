@@ -77,6 +77,7 @@ if ~isfield(cfg, 'method'),       cfg.method  = 'histogram';                    
 if ~isfield(cfg, 'equalbinavg'),  cfg.equalbinavg = 'yes';                          end
 if ~isfield(cfg, 'numbin'),       cfg.numbin  = 10;                                 end
 if ~isfield(cfg, 'numiter'),      cfg.numiter = 2000;                               end
+if ~isfield(cfg, 'binedges'),     cfg.binedges = [];                                end
 %if ~isfield(cfg, 'dimord'),       error('no information about dimensionality in cfg'); end
 if ~isfield(cfg, 'pairtrials'),   cfg.pairtrials='spikesort';                       end
 if ~isfield(cfg, 'channel'),      cfg.channel='all';                                end
@@ -104,6 +105,15 @@ if strcmp(cfg.method, 'histogram'),
     varargout{2} = output{2};
     varargout{3} = b;
   else
+    if ~isempty(cfg.binedges)
+      fprintf('using the bin edges for the histogram as defined in the cfg\n');
+      if iscell(cfg.binedges)
+        cfg.numbin = cellfun(@numel, cfg.binedges)-1;
+      else
+        cfg.numbin = numel(cfg.binedges)-1;
+      end
+    end
+    
     %------prepare some stuff
     if numel(cfg.numbin) ~= nchan
       cfg.numbin = repmat(cfg.numbin(1), [1 nchan]);
@@ -117,7 +127,15 @@ if strcmp(cfg.method, 'histogram'),
       %create a 'common binspace'
       [ndum,x] = hist(tmp, cfg.numbin(j));
       dx    = diff(x);
-      xc    = [-inf x(1:end-1)+0.5*dx(1) inf];
+      if ~isempty(cfg.binedges)
+        if iscell(cfg.binedges)
+          xc = cfg.binedges{j};
+        else
+          xc = cfg.binedges;
+        end
+      else
+        xc    = [-inf x(1:end-1)+0.5*dx(1) inf];
+      end
       
       %make histograms and compute the 'target histogram', which
       %will equalize the conditions while throwing away as few

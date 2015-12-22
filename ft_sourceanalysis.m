@@ -256,7 +256,7 @@ if sum([strcmp(cfg.jackknife, 'yes'), strcmp(cfg.bootstrap, 'yes'), strcmp(cfg.p
 end
 
 if strcmp(cfg.rawtrial,'yes') && isfield(cfg,'grid') && ~isfield(cfg.grid,'filter')
-  error('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in grid.filter');
+  warning('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in grid.filter');
 end
 
 % start with an empty output structure
@@ -412,7 +412,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne', 'rv', 'music'}))
+if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 'rv', 'music'}))
   
   switch cfg.method
     case 'pcc'
@@ -475,7 +475,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne', 'rv', 'mus
         avg = [];
       end
       
-    case {'eloreta' 'mne' 'rv' 'music'}
+    case {'eloreta' 'mne' 'rv' 'music' 'harmony'}
       % these can handle both a csd matrix and a fourier matrix
       [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, data);
       
@@ -672,11 +672,13 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne', 'rv', 'mus
         dip(i) = ft_eloreta(grid, sens, headmodel, avg, squeeze(Cf(i,:,:)), optarg{:});
       case 'mne'
         dip(i) = minimumnormestimate(grid, sens, headmodel, avg, optarg{:});
+      case 'harmony'
+        dip(i) = harmony(grid, sens, headmodel, avg, optarg{:});
         % error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
       case {'rv'}
         dip(i) = residualvariance(grid, sens, headmodel, avg, optarg{:}) ;
       case {'music'}
-        error('method ''%s'' is temporarily unsupported for source reconstruction with frequency domain data. Please contact the fieldtrip development team if you think that you need this functionality',cfg.method);
+        error(sprintf('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method));
       otherwise 
     end
     
@@ -688,7 +690,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne', 'rv', 'mus
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do time domain source reconstruction
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music', 'pcc', 'mvl' 'eloreta'}))
+elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv', 'music', 'pcc', 'mvl' 'eloreta'}))
   
   % determine the size of the data
   Nsamples = size(data.avg,2);
@@ -973,6 +975,16 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'rv', 'music'
         dip(i) = minimumnormestimate(grid, sens, headmodel, squeeze_avg, optarg{:}, 'noisecov', squeeze(Cy(i,:,:)));
       else
         dip(i) = minimumnormestimate(grid, sens, headmodel, squeeze_avg, optarg{:});
+      end
+    end
+  elseif strcmp(cfg.method, 'harmony')
+    for i=1:Nrepetitions
+      fprintf('estimating current density distribution for repetition %d\n', i);
+      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      if hascovariance
+        dip(i) = harmony(grid, sens, headmodel, squeeze_avg, optarg{:}, 'noisecov', squeeze(Cy(i,:,:)));
+      else
+        dip(i) = harmony(grid, sens, headmodel, squeeze_avg, optarg{:});
       end
     end
   elseif strcmp(cfg.method, 'rv')

@@ -1,4 +1,4 @@
-function test_bug2822
+function test_bug_harmony
 
 % TEST inspect_bug2822
 % TEST implement frequency domain MNE reconstruction
@@ -32,7 +32,7 @@ dataFIC = ft_preprocessing(cfg);
 %% Frequency analysis
 
 cfg              = [];
-cfg.output       = 'fourier';
+cfg.output       = 'powandcsd';
 cfg.channel      = 'MEG';
 cfg.method       = 'mtmfft';
 cfg.taper        = 'hanning';
@@ -57,26 +57,21 @@ ft_plot_vol(vol, 'facecolor', 'none');alpha 0.5;
 ft_plot_mesh(mesh, 'edgecolor', 'none'); camlight 
 ft_plot_sens(dataFIC.grad, 'style', '*b');
 
-%% Source analysis MNE
+%% Source analysis HARMONY
 
 cfg = [];
-cfg.method = 'mne';
-cfg.rawtrial = 'yes';
+cfg.method = 'harmony';
+%cfg.rawtrial = 'yes';
+cfg.harmony.filter_order = 1;
+cfg.harmony.filter_bs = 1;
+cfg.harmony.number_harmonics = 150;
+cfg.harmony.connected_components = 1;
 cfg.frequency = 18;
 cfg.grid   = mesh;
 cfg.vol    = vol;
-cfg.lambda = 0.001;
+cfg.harmony.noisecov = 10^-15*eye(149);
+cfg.harmony.lambda = 0.001;
 source_freq_mne = ft_sourceanalysis(cfg, freq);
-
-%% Source analysis RV
-
-cfg = [];
-cfg.method = 'rv';
-cfg.frequency = 18;
-cfg.grid   = mesh;
-cfg.vol    = vol;
-cfg.lambda = 0.001;
-source_freq_rv = ft_sourceanalysis(cfg, freq);
 
 %% Plot
 figure,

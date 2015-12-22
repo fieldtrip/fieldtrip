@@ -42,8 +42,8 @@ if (dfA+dfB)<size(design, 2)
   warning('inappropriate design, it should only contain 1''s and 2''s');
 end
 % compute the averages and the difference
-avgA = mean(dat(:,selA), 2);
-avgB = mean(dat(:,selB), 2);
+avgA = nanmean(dat(:,selA), 2);
+avgB = nanmean(dat(:,selB), 2);
 s = avgA - avgB;
 
 % the stat field is used in STATISTICS_MONTECARLO to make the

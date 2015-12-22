@@ -48,6 +48,8 @@ for i=1:nsens
 end
 sens = newsens; clear newsens
 
+fiducials = fixpos(fiducials);
+
 % set the defaults
 if isempty(weights) || ~any(weights)
   weights = ones(1, nsens);
@@ -97,7 +99,7 @@ if toplot
 end
 
 for i=1:nsens
-  if ~isequal(sens(i).label, sens(1).label)
+  if ~isequal(sens(i).label(:), sens(1).label(:))
     error('all sensor arrays should have the same sensors for averaging');
   end
   
