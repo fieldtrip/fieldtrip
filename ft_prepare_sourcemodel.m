@@ -460,7 +460,7 @@ if basedonmri
   head = dat./max(dat(:)) > cfg.threshold;
   
   % convert the source/functional data into the same units as the anatomical MRI
-  scale = scalingfactor(cfg.grid.unit, mri.unit);
+  scale = ft_scalingfactor(cfg.grid.unit, mri.unit);
   
   ind                 = find(head(:));
   fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));

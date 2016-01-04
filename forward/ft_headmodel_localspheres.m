@@ -89,9 +89,9 @@ grad = ft_convert_units(grad, mesh.unit);
 headmodel.unit = mesh.unit;
 
 % ensure that all defaults have the same user-defined units
-radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', headmodel.unit) * 8.5);
-maxradius = ft_getopt(varargin, 'maxradius', scalingfactor('cm', headmodel.unit) * 20);
-baseline  = ft_getopt(varargin, 'baseline',  scalingfactor('cm', headmodel.unit) * 5);
+radius    = ft_getopt(varargin, 'radius',    ft_scalingfactor('cm', headmodel.unit) * 8.5);
+maxradius = ft_getopt(varargin, 'maxradius', ft_scalingfactor('cm', headmodel.unit) * 20);
+baseline  = ft_getopt(varargin, 'baseline',  ft_scalingfactor('cm', headmodel.unit) * 5);
 
 % get the points from the triangulated surface
 mesh = mesh.pos;

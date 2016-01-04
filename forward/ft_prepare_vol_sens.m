@@ -281,7 +281,7 @@ elseif ismeg
       
       % initialize the forward calculation (only if  coils are available)
       if size(sens.coilpos,1)>0 && ~isfield(headmodel, 'forwpar')
-        s = scalingfactor(headmodel.unit, 'cm');
+        s = ft_scalingfactor(headmodel.unit, 'cm');
         headmodel.forwpar = meg_ini([s*headmodel.bnd.pos headmodel.bnd.nrm], s*center', order, [s*sens.coilpos sens.coilori]);
         headmodel.forwpar.scale = s;
       end

@@ -139,7 +139,7 @@ dip = fixdipole(dip);
 [param, constr] = dipolemodel2param(dip.pos, dip.mom, constr);
 
 % determine the scale
-scale = scalingfactor(sens.unit, 'cm');
+scale = ft_scalingfactor(sens.unit, 'cm');
 
 % set the parameters for the optimization function
 if isequal(optimfun, @fminunc)

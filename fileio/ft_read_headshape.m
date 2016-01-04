@@ -883,7 +883,7 @@ else
               origunit = read_asa(filename, 'UnitHeadShapePoints', '%s', 1);
               pnt  = read_asa(filename, 'HeadShapePoints', '%f', npnt, ':');
               
-              pnt = scalingfactor(origunit, 'mm')*pnt;
+              pnt = ft_scalingfactor(origunit, 'mm')*pnt;
               
               shape.pnt = pnt;
           end

@@ -596,13 +596,13 @@ end
 if ~isempty(chanunit)
   assert(all(strcmp(sens.chanunit, 'V') | strcmp(sens.chanunit, 'V/m') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'T/m')), 'unit conversion only possible for SI input units');
   % compute conversion factor and multiply each row of the matrix
-  scale = cellfun(@scalingfactor, sens.chanunit(:), chanunit(:));
+  scale = cellfun(@ft_scalingfactor, sens.chanunit(:), chanunit(:));
   lf = bsxfun(@times, lf, scale(:));
   % prior to this conversion, the units might be  (T/m)/(A*m) for planar gradients or   (V/m)/(A*m) for bipolar EEG
   % after this conversion, the units will be     (T/cm)/(A*m)                      or (uV/mm)/(A*m)
 end
 
 if ~isempty(dipoleunit)
-  scale = scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
+  scale = ft_scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
   lf    = lf/scale;                         % the leadfield is expressed in chanunit per dipoleunit, i.e. chanunit/dipoleunit
 end
