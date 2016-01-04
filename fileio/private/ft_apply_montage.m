@@ -291,11 +291,11 @@ end
 
 % update the channel scaling if the input has different units than the montage expects
 if isfield(input, 'chanunit') && ~isequal(input.chanunit, montage.chanunitorg)
-  scale = scalingfactor(input.chanunit, montage.chanunitorg);
+  scale = ft_scalingfactor(input.chanunit, montage.chanunitorg);
   montage.tra = montage.tra * diag(scale);
   montage.chanunitorg = input.chanunit;
 elseif isfield(input, 'chanunitnew') && ~isequal(input.chanunitnew, montage.chanunitorg)
-  scale = scalingfactor(input.chanunitnew, montage.chanunitorg);
+  scale = ft_scalingfactor(input.chanunitnew, montage.chanunitorg);
   montage.tra = montage.tra * diag(scale);
   montage.chanunitorg = input.chanunitnew;
 end

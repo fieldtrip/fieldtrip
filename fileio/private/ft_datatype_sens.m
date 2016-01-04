@@ -172,11 +172,11 @@ switch version
       for i=1:nchan
         if ~isempty(regexp(sens.chanunit{i}, 'm$', 'once'))
           % this channel is expressed as amplitude per distance
-          sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, [amplitude '/' distance]);
+          sens.tra(i,:)    = sens.tra(i,:) * ft_scalingfactor(sens.chanunit{i}, [amplitude '/' distance]);
           sens.chanunit{i} = [amplitude '/' distance];
         elseif ~isempty(regexp(sens.chanunit{i}, '[T|V]$', 'once'))
           % this channel is expressed as amplitude
-          sens.tra(i,:)    = sens.tra(i,:) * scalingfactor(sens.chanunit{i}, amplitude);
+          sens.tra(i,:)    = sens.tra(i,:) * ft_scalingfactor(sens.chanunit{i}, amplitude);
           sens.chanunit{i} = amplitude;
         else
           error('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);

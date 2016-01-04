@@ -165,7 +165,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the scaling factor from the input units to the desired ones
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-scale = scalingfactor(unit, target);
+scale = ft_scalingfactor(unit, target);
 
 if istrue(feedback)
   % give some information about the conversion

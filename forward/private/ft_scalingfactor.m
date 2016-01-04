@@ -7,11 +7,11 @@ function factor = ft_scalingfactor(old, new)
 % where old and new are strings that specify the units.
 %
 % For example
-%   scalingfactor('m', 'cm')          % returns 100
-%   scalingfactor('V', 'uV')          % returns 1000
-%   scalingfactor('T/cm', 'fT/m')     % returns 10^15 divided by 10^-2, which is 10^17
-%   scalingfactor('cm^2', 'mm^2')     % returns 100
-%   scalingfactor('1/ms', 'Hz')       % returns 1000
+%   ft_scalingfactor('m', 'cm')          % returns 100
+%   ft_scalingfactor('V', 'uV')          % returns 1000
+%   ft_scalingfactor('T/cm', 'fT/m')     % returns 10^15 divided by 10^-2, which is 10^17
+%   ft_scalingfactor('cm^2', 'mm^2')     % returns 100
+%   ft_scalingfactor('1/ms', 'Hz')       % returns 1000
 %
 % The following fundamental units are supported
 %   metre       m   length  l (a lowercase L), x, r L
