@@ -1,9 +1,9 @@
-function factor = scalingfactor(old, new)
+function factor = ft_scalingfactor(old, new)
 
-% SCALINGFACTOR determines the scaling factor from old to new units.
+% FT_SCALINGFACTOR determines the scaling factor from old to new units.
 %
 % Use as
-%   factor = scalingfactor(old, new)
+%   factor = ft_scalingfactor(old, new)
 % where old and new are strings that specify the units.
 %
 % For example
