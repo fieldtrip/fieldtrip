@@ -89,7 +89,7 @@ if ~isequal(class(old), class(new))
 end
 
 if iscell(old)
-  factor = cellfun(@scalingfactor, old(:), new(:));
+  factor = cellfun(@ft_scalingfactor, old(:), new(:));
   return
 end
 
