@@ -40,10 +40,41 @@ end
 
 cfg = [];
 cfg.component = 1;
-data_reject1 = ft_rejectcomponent(cfg, comp, data);
+
+ok = false;
+try
+  data_reject1 = ft_rejectcomponent(cfg, comp, data);
+catch err
+  if strcmp(err.identifier, 'FieldTrip:NaNsinInputData')
+    ok = true;
+  end
+end
+
+if ~ok
+  error('ft_rejectcomponent did not throw the expected error');
+end
 
 % check
 tmp = cat(1, data_reject1.trial{:});
+if any(isnan(tmp(:)))
+  errfun('cleaned data contains nans');
+end
+
+%% rejectcomponent with 3rd input argument after zeroing nans
+
+% NOTE: the original bug did not occur here
+
+dat2 = data;
+for k = 1:numel(dat2.trial)
+  dat2.trial{k}(isnan(dat2.trial{k})) = 0;
+end
+
+cfg = [];
+cfg.component = 1;
+data_reject1b = ft_rejectcomponent(cfg, comp, dat2);
+
+% check
+tmp = cat(1, data_reject1b.trial{:});
 if any(isnan(tmp(:)))
   errfun('cleaned data contains nans');
 end
@@ -80,3 +111,17 @@ tmp = cat(1, data_reject3.trial{:});
 if any(isnan(tmp(:)))
   errfun('cleaned data contains nans');
 end
+
+%% if we zero-out nans beforehand, does that fix the bug?
+
+% NOTE: the original bug did not occur here
+
+cfg = [];
+cfg.channel = 'EEG';
+data_reject1c = ft_selectdata(cfg, data_reject1b);
+
+d1 = cat(1, data_reject3.trial{:});
+d2 = cat(1, data_reject1c.trial{:});
+
+assert(identical(d1,d2,'reltol',1e-6));
+
