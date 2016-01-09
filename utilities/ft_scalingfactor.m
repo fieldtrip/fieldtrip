@@ -1,6 +1,8 @@
 function factor = ft_scalingfactor(old, new)
 
-% FT_SCALINGFACTOR determines the scaling factor from old to new units.
+% FT_SCALINGFACTOR determines the scaling factor from old to new units, i.e. it
+% returns a number with which the data in the old units needs to be multiplied
+% to get it expressed in the new units. 
 %
 % Use as
 %   factor = ft_scalingfactor(old, new)
@@ -160,7 +162,7 @@ for i=1:length(unit)
   eval(sprintf('a%s = %s;', unit{i}, unit{i}));
   eval(sprintf('z%s = %s;', unit{i}, unit{i}));
   eval(sprintf('y%s = %s;', unit{i}, unit{i}));
-  
+
   eval(sprintf('da%s = %s;', unit{i}, unit{i}));
   eval(sprintf('h%s  = %s;', unit{i}, unit{i}));
   eval(sprintf('k%s  = %s;', unit{i}, unit{i}));
@@ -230,7 +232,7 @@ for i=1:length(unit)
   eval(sprintf('a%s = 1e-18 * %s;', unit{i}, unit{i}));
   eval(sprintf('z%s = 1e-21 * %s;', unit{i}, unit{i}));
   eval(sprintf('y%s = 1e-24 * %s;', unit{i}, unit{i}));
-  
+
   eval(sprintf('da%s = 1e1  * %s;', unit{i}, unit{i}));
   eval(sprintf('h%s  = 1e2  * %s;', unit{i}, unit{i}));
   eval(sprintf('k%s  = 1e3  * %s;', unit{i}, unit{i}));

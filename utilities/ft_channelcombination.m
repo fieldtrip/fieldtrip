@@ -21,13 +21,13 @@ function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto,
 % When directional connectivity measures will subsequently be computed, the
 % interpretation of each channel-combination is that the direction of the
 % interaction is from the first column to the second column.
-
-% Note that the default behaviour is to exclude symmetric pairs and 
+%
+% Note that the default behaviour is to exclude symmetric pairs and
 % auto-combinations.
 %
 % See also FT_CHANNELSELECTION
 
-% Undocumented options: 
+% Undocumented options:
 %   includeauto = 0 (or 1), include auto-combinations
 %   dirflag     = 0 (or 1, or 2) specifies the treatment of the order in
 %                   the columns of the output. If dirflag = 0, the order is
@@ -91,7 +91,7 @@ end
 if isempty(setdiff(channelcmb(:), datachannel))
   % there is not much to do, since there are no channelgroups with special names
   % each element of the input therefore already contains a proper channel name
-  
+
   switch dirflag
     case 0
       % nothing to do
@@ -104,31 +104,31 @@ if isempty(setdiff(channelcmb(:), datachannel))
       error('unknown value for input argument ''dirflag''');
   end
   collect = channelcmb;
-  
+
   if includeauto
     autochannel = unique(channelcmb(:));
     for ch=1:numel(autochannel)
       collect = cat(1, collect, [autochannel(ch) autochannel(ch)]);
     end
   end
-  
+
 else
   % a combination is made for each row of the input selection after
   % translating the channel group (such as 'all') to the proper channel names
   % and within each set, double occurences and autocombinations are removed
-  
+
   selmat = false(numel(datachannel));
   for sel=1:size(channelcmb,1)
     % translate both columns and subsequently make all combinations
     channelcmb1 = ft_channelselection(channelcmb(sel,1), datachannel);
     channelcmb2 = ft_channelselection(channelcmb(sel,2), datachannel);
-    
+
     % translate both columns and subsequently make all combinations
     list1 = match_str(datachannel, channelcmb1);
     list2 = match_str(datachannel, channelcmb2);
-    
+
     selmat(list1,list2) = true;
-    
+
     if ~includeauto,
       % exclude the auto-combinations
       selmat = selmat & ~eye(size(selmat));
@@ -138,22 +138,22 @@ else
       autovec([list1(:);list2(:)]) = true;
       selmat = selmat | diag(autovec);
     end
-    
+
     if dirflag==2,
       % also fill the other 'direction'
       selmat(list2,list1) = true;
     end
   end
-  
+
   if dirflag<2
     % remove double occurrences
     selmat   = selmat & ~tril(selmat, -1)';
   end
   [i1, i2] = find(selmat);
-    
+
   switch dirflag
     case 0
-      % original behaviour, 
+      % original behaviour,
       % row-to-column, i.e. outflow according to FT's convention
       indx = [i1 i2];
     case 1
@@ -162,7 +162,7 @@ else
     case 2
       % both
       indx = [i1 i2];
-             
+
     otherwise
       error('unknown value for input argument ''dirflag''');
   end

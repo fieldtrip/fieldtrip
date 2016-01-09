@@ -88,7 +88,7 @@ function [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 %   the y-axis points from dorsal to ventral, i.e. from inferior to superior
 %   the z-axis passes through bregma and lambda and points from cranial to caudal, i.e. from anterior to posterior
 %
-% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
+% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN
 
 % Copyright (C) 2003-2014 Robert Oostenveld
 %

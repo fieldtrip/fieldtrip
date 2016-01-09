@@ -74,10 +74,10 @@ if issvn
     rev = rev{1}{1};
     ftver = ['r' rev];
   end
-  
+
 elseif isgit
   tmpfile = tempname;
-  
+
   olddir = pwd();
   cd(ftpath);
   [status, output] = system(sprintf('git show > %s', tmpfile));
@@ -86,30 +86,28 @@ elseif isgit
     % FIXME the command line tools will probably not be available on windows
     error('you seem to have an GIT development copy of FieldTrip, yet ''git show'' does not work as expected');
   end
-  
+
   fp = fopen(tmpfile);
   if fp>0
     line = fgetl(fp); % the first line contains the commit number
     fclose(fp);
     rev = regexp(line, ' ', 'split');
     rev = rev{2};
-    
+
     % this is a string like 4d3c309129f12146885120c2853a11362e048ea7
     ftver = rev;
   else
     ftver = 'unknown';
   end
-  
+
 else
   % get it from the Contents.m file in the FieldTrip release
   a = ver(ftpath);
   ftver = a.Version;
-  
+
 end % if issvn, isgit or otherwise
 
 if nargout==0
   fprintf('\nThis is FieldTrip, version %s.\n\n', ftver);
   clear ftver
 end
-
-

@@ -10,7 +10,7 @@ function ft_compile_mex(force)
 % compiler settings
 %
 % The standards procedure for compiling mex files is detailled on
-% http://fieldtriptoolbox.org/development/guidelines/code#compiling_mex_files
+% http://www.fieldtriptoolbox.org/development/guidelines/code#compiling_mex_files
 %
 % Please note that this script does NOT set up your MEX environment for
 % you, so in case you haven't selected the C compiler on Windows yet, you
@@ -205,7 +205,7 @@ for i=1:length(L)
     continue;
   end
   SF = dir(sfname);
-  
+
   if ~force
     mfname = [baseDir filesep L(i).dir filesep name '.' mexext];
     MF = dir(mfname);

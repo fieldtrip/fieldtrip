@@ -603,7 +603,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % represent the covariance matrix in a particular manner
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function data = fixcov(data, desired)
+function [data] = fixcov(data, desired)
 if any(isfield(data, {'cov', 'corr'}))
   if ~isfield(data, 'labelcmb')
     current = 'full';
@@ -1160,7 +1160,7 @@ end % convert from one to another bivariate representation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function source = parcellated2source(data)
+function [source] = parcellated2source(data)
 if ~isfield(data, 'brainordinate')
   error('projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
 end

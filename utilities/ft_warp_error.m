@@ -4,11 +4,11 @@ function [dist] = ft_warp_error(M, input, target, varargin)
 % and can be used as the goalfunction in a 3D warping minimalisation
 %
 % Use as
-%   [dist] = ft_warp_error(M, input, target, 'method')
+%   dist = ft_warp_error(M, input, target, 'method')
 %
-% It returns the mean Euclidian distance (residu) when attempting to
-% transform the input towards the target using transformation M
-% and using the specified warping method.
+% It returns the mean Euclidian distance (i.e. the residual) for an interative
+% optimalization to transform the input towards the target using the
+% transformation M with the specified warping method.
 %
 % See also FT_WARP_OPTIM, FT_WARP_APPLY
 
@@ -78,4 +78,3 @@ else
   dif    = input - target;
   dist   = mean(sqrt(sum(dif' .^2)));
 end
-

@@ -1,11 +1,12 @@
-function s1 = appendstruct(s1, s2);
+function [s1] = appendstruct(s1, s2)
 
-% APPENDSTRUCT appends a structure to a struct-array. It also works if the initial
-% structure is an empty structure or an empty double array.
+% APPENDSTRUCT appends a structure to a structure or struct-array.
+% It also works if the initial structure is an empty structure or
+% an empty double array.
 %
 % Use as
 %   a = appendstruct(a, b)
-% which 
+% which appends b to a.
 %
 % See also PRINTSTRUCT, COPYFIELDS, KEEPFIELDS, REMOVEFIELDS
 

@@ -1,4 +1,4 @@
-function parcellation = ft_datatype_parcellation(parcellation, varargin)
+function [parcellation] = ft_datatype_parcellation(parcellation, varargin)
 
 % FT_DATATYPE_PARCELLATION describes the FieldTrip MATLAB structure for parcellated
 % cortex-based data and atlases. A parcellation can either be indexed or probabilistic
@@ -98,19 +98,19 @@ end
 
 switch parcelversion
   case '2012'
-    
+
     if isfield(parcellation, 'pnt')
       parcellation.pos = parcellation.pnt;
       parcellation = rmfield(parcellation, 'pnt');
     end
-    
+
     % convert the inside/outside fields, they should be logical rather than an index
     if isfield(parcellation, 'inside')
       parcellation = fixinside(parcellation, 'logical');
     end
-    
+
     dim = size(parcellation.pos,1);
-    
+
     % make a list of fields that represent a parcellation
     fn = fieldnames(parcellation);
     fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
@@ -120,10 +120,10 @@ switch parcelversion
     end
     % only consider numeric fields of the correct size
     fn = fn(sel);
-    
+
     % determine whether the style of the input fields is probabilistic or indexed
     [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
-    
+
     % ignore the fields that do not contain a parcellation
     sel = indexed | probabilistic;
     fn            = fn(sel);
@@ -146,29 +146,29 @@ switch parcelversion
       end
       [indexed, probabilistic] = determine_segmentationstyle(parcellation, fn, dim);
     end
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the parcellation is internally consistent
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     if any(probabilistic)
       parcellation = fixsegmentation(parcellation, fn(probabilistic), 'probabilistic');
     end
-    
+
     if any(indexed)
       parcellation = fixsegmentation(parcellation, fn(indexed), 'indexed');
     end
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % convert the parcellation to the desired style
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     if strcmp(parcellationstyle, 'indexed') && any(probabilistic)
       parcellation  = convert_segmentationstyle(parcellation, fn(probabilistic), [dim 1], 'indexed');
     elseif strcmp(parcellationstyle, 'probabilistic') && any(indexed)
       parcellation  = convert_segmentationstyle(parcellation, fn(indexed), [dim 1], 'probabilistic');
     end % converting converting to desired style
-    
+
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for parcellation datatype', parcelversion);
@@ -181,4 +181,3 @@ parcellation = ft_datatype_source(parcellation, 'version', sourceversion);
 % the fields that are specific for the parcellation and add them later again.
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the parcellation fields needed.
-
