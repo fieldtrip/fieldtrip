@@ -14,7 +14,6 @@ function headmodel = ft_headmodel_fns(seg, varargin)
 %   tissue           = see fns_contable_write
 %   tissueval        = match tissues of segmentation input
 %   transform        = 4x4 transformation matrix (default eye(4))
-%   units            = string (default 'cm')
 %   sens             = sensor information (for which ft_datatype(sens,'sens')==1)
 %   deepelec         = used in the case of deep voxel solution
 %   tolerance        = scalar (default 1e-8)
@@ -156,7 +155,6 @@ headmodel.tissue     = tissue;
 headmodel.tissueval  = tissueval;
 headmodel.transform  = transform;
 headmodel.segdim     = size(seg);
-headmodel.units      = units;
 headmodel.type       = 'fns';
 headmodel.transfer   = transfer;
 

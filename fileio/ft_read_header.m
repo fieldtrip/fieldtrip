@@ -1430,7 +1430,7 @@ switch headerformat
       Dim.(fname) = fval;
     end
     
-    % convert the relevant fields into teh default header structure
+    % convert the relevant fields into the default header structure
     hdr.Fs          = 1000/Var.samplinginterval;
     hdr.nChans      = length(Var.channelstatus);
     hdr.nSamples    = Var.numsamples;
