@@ -105,7 +105,7 @@ url = {
   'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
-  
+
   'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
@@ -142,8 +142,8 @@ url = {
   'BRAINSUITE'    'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
   'BRAINVISA'     'see http://brainvisa.info'
   'FILEEXCHANGE'  'see http://www.mathworks.com/matlabcentral/fileexchange/'
-  'NEURALYNX_V6'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Neuralynx (windows only)' 
-  'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser' 
+  'NEURALYNX_V6'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Neuralynx (windows only)'
+  'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser'
   'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
   };
@@ -189,7 +189,7 @@ switch toolbox
         status = 1;
       end
     end
-    
+
     %This is to avoid crashes when trying to add SPM to the path
     if ~status
       toolbox = 'SPM8';
@@ -264,7 +264,7 @@ switch toolbox
     status  = exist('load_bcidat', 'file');
   case 'NLXNETCOM'
     status  = (exist('MatlabNetComClient', 'file') && exist('NlxConnectToServer', 'file') && exist('NlxGetNewCSCData', 'file'));
-  
+
   case 'DIPOLI'
     status  = exist('dipoli.maci', 'file');
   case 'MNE'
@@ -353,7 +353,7 @@ switch toolbox
   case 'VIDEOMEG'
     filelist = {'comp_tstamps' 'load_audio0123', 'load_video123'};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
-    
+
     % the following are fieldtrip modules/toolboxes
   case 'FILEIO'
     status  = (exist('ft_read_header', 'file') && exist('ft_read_data', 'file') && exist('ft_read_event', 'file') && exist('ft_read_sens', 'file'));
@@ -367,7 +367,7 @@ switch toolbox
     status  = exist('ft_connectivity_corr', 'file') && exist('ft_connectivity_granger', 'file');
   case 'SPIKE'
     status = exist('ft_spiketriggeredaverage.m', 'file') && exist('ft_spiketriggeredspectrum.m', 'file');
-    
+
     % these were missing, added them using the below style, see bug 1804 - roevdmei
   case 'INVERSE'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/inverse'],             'once'));  % INVERSE is not added above, consider doing it there -roevdmei
@@ -377,7 +377,7 @@ switch toolbox
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/specest'],             'once'));  % SPECEST is not added above, consider doing it there -roevdmei
   case 'PREPROC'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/preproc'],             'once')); % PREPROC is not added above, consider doing it there -roevdmei
-    
+
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
   case 'FILEEXCHANGE'
@@ -420,13 +420,13 @@ status = (status~=0);
 
 % try to determine the path of the requested toolbox
 if autoadd>0 && ~status
-  
+
   % for core fieldtrip modules
   prefix = fileparts(which('ft_defaults'));
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % for external fieldtrip modules
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if ~status
@@ -438,7 +438,7 @@ if autoadd>0 && ~status
       feval(licensefile);
     end
   end
-  
+
   % for contributed fieldtrip extensions
   prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
   if ~status
@@ -450,25 +450,25 @@ if autoadd>0 && ~status
       feval(licensefile);
     end
   end
-  
+
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   if ~status
     % the toolbox is not on the path and cannot be added
     sel = find(strcmp(url(:,1), toolbox));
