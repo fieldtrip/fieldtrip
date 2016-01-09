@@ -7,7 +7,7 @@ function [varargout] = ft_selectdata(varargin)
 % Use as
 %  [data] = ft_selectdata(cfg, data, ...)
 %
-% The cfg artument is a configuration structure which can contain
+% The cfg argument is a configuration structure which can contain
 %   cfg.tolerance   = scalar, tolerance value to determine equality of time/frequency bins (default = 1e-5)
 %
 % For data with trials or subjects as repetitions, you can specify
@@ -17,6 +17,7 @@ function [varargout] = ft_selectdata(varargin)
 % For data with a channel dimension you can specify
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION
 %   cfg.avgoverchan = string, can be 'yes' or 'no' (default = 'no')
+%   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
 % For data with channel combinations you can specify
 %   cfg.channelcmb     = Nx2 cell-array with selection of channels (default = 'all'), see FT_CHANNELCOMBINATION
@@ -26,11 +27,13 @@ function [varargout] = ft_selectdata(varargin)
 %   cfg.latency     = scalar    -> can be 'all', 'prestim', 'poststim'
 %   cfg.latency     = [beg end]
 %   cfg.avgovertime = string, can be 'yes' or 'no' (default = 'no')
+%   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
 % For data with a frequency dimension you can specify
 %   cfg.frequency   = scalar    -> can be 'all'
 %   cfg.frequency   = [beg end]
 %   cfg.avgoverfreq = string, can be 'yes' or 'no' (default = 'no')
+%   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
 % If multiple input arguments are provided, FT_SELECTDATA will adjust the individual inputs
 % such that either the intersection across inputs is retained (i.e. only the channel, time,
@@ -243,6 +246,14 @@ if avgoverfreq,    assert(hasfreq,    'there is no frequency dimension, so avera
 if avgovertime,    assert(hastime,    'there is no time dimension, so averaging over time is not possible'); end
 if avgoverrpt,     assert(hasrpt||hasrpttap, 'there are no repetitions, so averaging is not possible'); end
 
+% set averaging function
+cfg.nanmean = ft_getopt(cfg, 'nanmean', 'no');
+if strcmp(cfg.nanmean, 'yes')
+  average = @nanmean;
+else
+  average = @mean;
+end 
+
 % by default we keep most of the dimensions in the data structure when averaging over them
 keepposdim     = istrue(ft_getopt(cfg, 'keepposdim',  true));
 keepchandim    = istrue(ft_getopt(cfg, 'keepchandim', true));
@@ -294,14 +305,14 @@ for i=1:numel(varargin)
     
     % cfg.latency is used to select individual spikes, not to select from a continuously sampled time axis
     
-    if fieldhasspike,   varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'spike')),             selspike{i},   false,           'intersect'); end
-    if fieldhaspos,     varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(ismember(dimtok, {'pos', '{pos}'})), selpos{i},     avgoverpos,      cfg.select);  end
-    if fieldhaschan,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(ismember(dimtok,{'chan' '{chan}'})), selchan{i},    avgoverchan,     cfg.select);  end
-    if fieldhaschancmb, varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'chancmb')),           selchancmb{i}, avgoverchancmb,  cfg.select);  end
-    if fieldhastime,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'time')),              seltime{i},    avgovertime,     cfg.select);  end
-    if fieldhasfreq,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'freq')),              selfreq{i},    avgoverfreq,     cfg.select);  end
-    if fieldhasrpt,     varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, rptdim{i},                                selrpt{i},     avgoverrpt,      'intersect'); end
-    if fieldhasrpttap,  varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, rptdim{i},                                selrpttap{i},  avgoverrpt,      'intersect'); end
+    if fieldhasspike,   varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'spike')),             selspike{i},   false,           'intersect', average); end
+    if fieldhaspos,     varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(ismember(dimtok, {'pos', '{pos}'})), selpos{i},     avgoverpos,      cfg.select, average);  end
+    if fieldhaschan,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(ismember(dimtok,{'chan' '{chan}'})), selchan{i},    avgoverchan,     cfg.select, average);  end
+    if fieldhaschancmb, varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'chancmb')),           selchancmb{i}, avgoverchancmb,  cfg.select, average);  end
+    if fieldhastime,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'time')),              seltime{i},    avgovertime,     cfg.select, average);  end
+    if fieldhasfreq,    varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, find(strcmp(dimtok,'freq')),              selfreq{i},    avgoverfreq,     cfg.select, average);  end
+    if fieldhasrpt,     varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, rptdim{i},                                selrpt{i},     avgoverrpt,      'intersect', average); end
+    if fieldhasrpttap,  varargin{i} = makeselection(varargin{i}, datfield{j}, dimtok, rptdim{i},                                selrpttap{i},  avgoverrpt,      'intersect', average); end
     
     % update the fields that should be kept in the structure as a whole
     % and update the dimord for this specific datfield
@@ -453,11 +464,11 @@ end % main function ft_selectdata
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function data = makeselection(data, datfield, dimtok, seldim, selindx, avgoverdim, selmode)
+function data = makeselection(data, datfield, dimtok, seldim, selindx, avgoverdim, selmode, average)
 
 if numel(seldim) > 1
   for k = 1:numel(seldim)
-    data = makeselection(data, datfield, dimtok, seldim(k), selindx, avgoverdim, selmode);
+    data = makeselection(data, datfield, dimtok, seldim(k), selindx, avgoverdim, selmode, average);
   end
   return;
 end
@@ -509,7 +520,7 @@ switch selmode
     end
     
     if avgoverdim
-      data.(datfield) = cellmatmean(data.(datfield), seldim);
+      data.(datfield) = cellmatmean(data.(datfield), seldim, average);
     end
     
   case 'union'
@@ -540,7 +551,7 @@ switch selmode
     end
     
     if avgoverdim
-      data.(datfield) = mean(data.(datfield), seldim);
+      data.(datfield) = average(data.(datfield), seldim);
     end
 end % switch
 
@@ -1266,7 +1277,7 @@ end % function cellmatselect
 % SUBFUNCTION to take an average in data representations like {pos}_ori_time
 % FIXME this will fail for {xxx_yyy}_zzz
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function x = cellmatmean(x, seldim)
+function x = cellmatmean(x, seldim, average)
 if iscell(x)
   if seldim==1
     for i=2:numel(x)
@@ -1275,11 +1286,11 @@ if iscell(x)
     x = {x{1}/numel(x)};
   else
     for i=1:numel(x)
-      x{i} = mean(x{i}, seldim-1);
+      x{i} = average(x{i}, seldim-1);
     end % for
   end
 else
-  x = mean(x, seldim);
+  x = average(x, seldim);
 end
 end % function cellmatmean
 
