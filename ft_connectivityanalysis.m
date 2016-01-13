@@ -490,7 +490,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
     clear sumdat;
   end
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho'))% || needrpt)
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho') || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -754,6 +754,8 @@ switch cfg.method
     if strcmp(dtype, 'timelock')
       dat = data.(inparam);
       dat = reshape(permute(dat, [2 3 1]), [size(dat, 2) size(dat, 1)*size(dat, 3)]);
+      notsel = sum(~isfinite(dat))>0;
+      dat = dat(:,~notsel);
       
       data = rmfield(data, 'time');
       data.dimord = 'chan_chan';
