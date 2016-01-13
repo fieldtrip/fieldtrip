@@ -21,7 +21,7 @@ end
 
 nsmp   = size(input,2);
 
-output = zeros(numel(refindx), size(input,1))+nan;
+output = zeros(size(input,1), numel(refindx))+nan;
 for k = 1:numel(refindx)
   signal1 = input(refindx(k),:);
   
@@ -41,7 +41,7 @@ for k = 1:numel(refindx)
     
     % discretize signal2 and compute mi
     R2 = binr(R, opts.nt', numbin, 'eqpop');
-    output(k,m) = information(R2, opts, 'I'); % this computes mutual information
+    output(m,k) = information(R2, opts, 'I'); % this computes mutual information
     
   end
 end

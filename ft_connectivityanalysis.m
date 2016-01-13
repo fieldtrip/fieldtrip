@@ -324,7 +324,7 @@ switch cfg.method
     if ~isfield(cfg, 'mi'), cfg.mi = []; end
     cfg.mi.numbin = ft_getopt(cfg.mi, 'numbin', 10);
     % what are the input requirements?
-    data = ft_checkdata(data, 'datatype', {'timelock' 'freq' 'source'});
+    data = ft_checkdata(data, 'datatype', {'raw' 'timelock' 'freq' 'source'});
     dtype = ft_datatype(data);
     if strcmp(dtype, 'timelock')
       if ~isfield(data, 'trial')
@@ -333,6 +333,8 @@ switch cfg.method
         inparam = 'trial';
       end
       hasrpt = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
+    elseif strcmp(dtype, 'raw')
+      inparam = 'trial';
     elseif strcmp(dtype, 'freq')
       inparam = 'something';
     else
@@ -516,7 +518,7 @@ if ~hasrpt && needrpt
   end
   if isfield(data, 'dimord')
     data.dimord = ['rpt_', data.dimord];
-  else
+  elseif ~strcmp(dtype, 'raw')
     data.([inparam, 'dimord']) = ['rpt_', data.([inparam, 'dimord'])];
   end
 end
@@ -751,21 +753,43 @@ switch cfg.method
   case 'mi'
     % mutual information using the information breakdown toolbox
     % presence of the toolbox is checked in the low-level function
-    if strcmp(dtype, 'timelock')
-      dat = data.(inparam);
-      dat = reshape(permute(dat, [2 3 1]), [size(dat, 2) size(dat, 1)*size(dat, 3)]);
-      notsel = sum(~isfinite(dat))>0;
-      dat = dat(:,~notsel);
-      
-      data = rmfield(data, 'time');
-      data.dimord = 'chan_chan';
-    elseif strcmp(dtype, 'freq')
-      error('not yet implemented');
-    elseif strcmp(dtype, 'source')
-      % for the time being work with mom
-      % dat = cat(2, data.mom{data.inside}).';
-      dat = cat(1, data.mom{data.inside});
-      % dat = abs(dat);
+    switch dtype
+      case 'raw'
+        dat = cat(2,data.(inparam){:});
+        notsel = sum(~isfinite(dat))>0;
+        dat = dat(:,~notsel);
+        
+        data = rmfield(data, 'time');
+        if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
+          outdimord = 'chan_chan';
+        elseif numel(cfg.refindx)==1,
+          outdimord = 'chan';
+        else
+          error('at present cfg.refindx should be either ''all'', or scalar');
+        end
+      case 'timelock'
+        dat = data.(inparam);
+        dat = reshape(permute(dat, [2 3 1]), [size(dat, 2) size(dat, 1)*size(dat, 3)]);
+        notsel = sum(~isfinite(dat))>0;
+        dat = dat(:,~notsel);
+        
+        data = rmfield(data, 'time');
+        if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
+          outdimord = 'chan_chan';
+        elseif numel(cfg.refindx)==1,
+          outdimord = 'chan';
+        else
+          error('at present cfg.refindx should be either ''all'', or scalar');
+        end
+        
+        %data.dimord = 'chan_chan';
+      case 'freq'
+        error('not yet implemented');
+      case 'source'
+        % for the time being work with mom
+        % dat = cat(2, data.mom{data.inside}).';
+        dat = cat(1, data.mom{data.inside});
+        % dat = abs(dat);
     end
     optarg = {'numbin', cfg.mi.numbin, 'refindx', cfg.refindx};
     [datout] = ft_connectivity_mutualinformation(dat, optarg{:});
@@ -879,14 +903,22 @@ switch dtype
     if isfield(data, 'labelcmb'),
       stat.labelcmb = data.labelcmb;
     end
-    tok = tokenize(getdimord(data, inparam), '_');
-    dimord = '';
-    for k = 1:numel(tok)
-      if isempty(strfind(tok{k}, 'rpt'))
-        dimord = [dimord, '_', tok{k}];
+    
+    % deal with the dimord
+    if exist('outdimord', 'var'),
+      stat.dimord = outdimord;
+    else
+      % guess
+      tok = tokenize(getdimord(data, inparam), '_');
+      dimord = '';
+      for k = 1:numel(tok)
+        if isempty(strfind(tok{k}, 'rpt'))
+          dimord = [dimord, '_', tok{k}];
+        end
       end
+      stat.dimord = dimord(2:end);
     end
-    stat.dimord = dimord(2:end);
+    
     stat.(outparam) = datout;
     if ~isempty(varout),
       stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
@@ -897,6 +929,17 @@ switch dtype
     stat.(outparam) = datout;
     if ~isempty(varout),
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
+    end
+    
+  case 'raw'
+    stat = [];
+    stat.label = data.label;
+    stat.(outparam) = datout;
+    if ~isempty(varout),
+      stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
+    end
+    if exist('outdimord', 'var'),
+      stat.dimord = outdimord;
     end
 end % switch dtype
 
