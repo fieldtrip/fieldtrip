@@ -66,6 +66,10 @@ opts.nt     = ft_getopt(opts, 'nt', []);
 opts.method = ft_getopt(opts, 'method', 'dr');
 opts.bias   = ft_getopt(opts, 'bias',   'pt');
 
+% get rid of nans in the input
+notsel = sum(~isfinite(input))>0;
+input  = input(:,~notsel);
+
 [nchan, nsmp] = size(input);
 output        = zeros(nchan, numel(refindx))+nan;
 

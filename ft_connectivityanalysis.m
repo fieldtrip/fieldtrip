@@ -755,10 +755,6 @@ switch cfg.method
     % presence of the toolbox is checked in the low-level function
     switch dtype
       case 'raw'
-        dat = cat(2,data.(inparam){:});
-        notsel = sum(~isfinite(dat))>0;
-        dat = dat(:,~notsel);
-        
         data = rmfield(data, 'time');
         if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
           outdimord = 'chan_chan';
@@ -770,9 +766,6 @@ switch cfg.method
       case 'timelock'
         dat = data.(inparam);
         dat = reshape(permute(dat, [2 3 1]), [size(dat, 2) size(dat, 1)*size(dat, 3)]);
-        notsel = sum(~isfinite(dat))>0;
-        dat = dat(:,~notsel);
-        
         data = rmfield(data, 'time');
         if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
           outdimord = 'chan_chan';
