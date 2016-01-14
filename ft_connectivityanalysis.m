@@ -755,6 +755,8 @@ switch cfg.method
     % presence of the toolbox is checked in the low-level function
     switch dtype
       case 'raw'
+        dat = cat(2, data.trial{:});
+        
         data = rmfield(data, 'time');
         if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
           outdimord = 'chan_chan';
