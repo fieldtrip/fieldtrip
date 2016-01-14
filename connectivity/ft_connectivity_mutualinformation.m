@@ -8,15 +8,18 @@ function output = ft_connectivity_mutualinformation(input, varargin)
 %
 % mi = ft_connectivity_mutualinformation(data, varargin)
 %
+% The input data is a Nchan x Nobservations matrix.
+%
 % Additional input arguments come as key-value pairs:
 %   histmethod = The way that histograms are generated from the data. Possible values
 %                are 'eqpop' (default), 'eqspace', 'ceqspace', 'gseqspace'.
 %                See the help of the 'binr' function in the ibtb toolbox for more information.
 %   numbin     = scalar value. The number of bins used to create the histograms needed for 
 %                the entropy computations
-%   refindx    = scalar value or 'all'. The channel that is used as 'reference channel'.
 %   opts       = structure that is passed on to the 'information' function in the ibtb
 %                toolbox. See the help of that function for more information.
+%   refindx    = scalar value or 'all'. The channel that is used as 'reference channel'.
+%   refdata    = 1xNobservations vector, as an alternative to the refindx. Refdata takes precedence over refindx 
 %
 % The output contains the estimated mutual information between all channels and the reference channel(s).
 
@@ -48,16 +51,8 @@ ft_hastoolbox('ibtb', 1);
 histmethod = ft_getopt(varargin, 'histmethod', 'eqpop');
 numbin     = ft_getopt(varargin, 'numbin',     10);
 refindx    = ft_getopt(varargin, 'refindx',    'all');
-
-if ischar(refindx) && strcmp(refindx, 'all')
-  refindx = (1:size(input,1))';
-end
-
-% check validity of refindx
-if length(refindx)~=numel(refindx)
-  % could be channelcmb indexing
-  error('channelcmb indexing is not, yet supported');
-end
+refdata    = ft_getopt(varargin, 'refdata',    []);
+lags       = ft_getopt(varargin, 'lags',       0); % shift of data w.r.t. reference, in samples
 
 % set some additional options that pertain to the algorithmic details of the
 % mutual information computation
@@ -65,6 +60,49 @@ opts        = ft_getopt(varargin, 'opts', []);
 opts.nt     = ft_getopt(opts, 'nt', []);
 opts.method = ft_getopt(opts, 'method', 'dr');
 opts.bias   = ft_getopt(opts, 'bias',   'pt');
+
+if ischar(refindx) && strcmp(refindx, 'all')
+  refindx = (1:size(input,1))';
+end
+
+if numel(lags)>1 || lags~=0,
+  if numel(refindx)>1, error('with multiple lags, or with a lag~=0 only a single refindx is allowed'); end
+  refdata = input(refindx,:);
+  n       = size(refdata,2);
+  
+  output = zeros(size(input,1), numel(lags));
+  for k = 1:numel(lags)
+        
+    beg1 = max(0, lags(k))  + 1;
+    beg2 = max(0, -lags(k)) + 1;
+    n1   = n-abs(lags(k));
+    
+    end1 = beg1+n1-1;
+    end2 = beg2+n1-1;
+    
+    tmpdata = nan(size(refdata));
+    tmpdata(beg1:end1) = refdata(beg2:end2);
+    
+    tmp = ft_connectivity_mutualinformation(input, 'refdata', tmpdata, 'opts', opts, 'histmethod', histmethod, 'numbin', numbin);
+    output(:,k) = tmp(1:end-1);
+  end
+  return;
+  
+  
+end
+
+if ~isempty(refdata)
+  input   = cat(1, input, refdata);
+  refindx = size(input,1);
+end
+
+
+% check validity of refindx
+if length(refindx)~=numel(refindx)
+  % could be channelcmb indexing
+  error('channelcmb indexing is not supported');
+end
+
 
 % get rid of nans in the input
 notsel = sum(~isfinite(input))>0;

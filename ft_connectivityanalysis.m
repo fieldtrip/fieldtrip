@@ -323,6 +323,8 @@ switch cfg.method
     % create the subcfg for the mutual information
     if ~isfield(cfg, 'mi'), cfg.mi = []; end
     cfg.mi.numbin = ft_getopt(cfg.mi, 'numbin', 10);
+    cfg.mi.lags   = ft_getopt(cfg.mi, 'lags',   0);
+    
     % what are the input requirements?
     data = ft_checkdata(data, 'datatype', {'raw' 'timelock' 'freq' 'source'});
     dtype = ft_datatype(data);
@@ -335,13 +337,14 @@ switch cfg.method
       hasrpt = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
     elseif strcmp(dtype, 'raw')
       inparam = 'trial';
+      hasrpt  = 1;
     elseif strcmp(dtype, 'freq')
       inparam = 'something';
     else
       inparam = 'something else';
     end
-    needrpt = true;
     outparam = 'mi';
+    needrpt  = 1;
   case {'di'}
     % wat eigenlijk?
   otherwise
@@ -753,11 +756,19 @@ switch cfg.method
   case 'mi'
     % mutual information using the information breakdown toolbox
     % presence of the toolbox is checked in the low-level function
+    
+    if ~strcmp(dtype, 'raw') && (numel(cfg.mi.lags)>1 || cfg.mi.lags~=0),
+      error('computation of lagged mutual information is only possible with ''raw'' data in the input'); 
+    end
+    
     switch dtype
       case 'raw'
-        dat = cat(2, data.trial{:});
+        % ensure the lags to be in samples, not in seconds.
+        cfg.mi.lags = round(cfg.mi.lags.*data.fsample);
         
-        data = rmfield(data, 'time');
+        dat = catnan(data.trial, max(abs(cfg.mi.lags)));
+        
+        
         if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
           outdimord = 'chan_chan';
         elseif numel(cfg.refindx)==1,
@@ -765,6 +776,13 @@ switch cfg.method
         else
           error('at present cfg.refindx should be either ''all'', or scalar');
         end
+        if numel(cfg.mi.lags)>1
+          data.time = cfg.mi.lags./data.fsample;
+          outdimord = [outdimord,'_time'];
+        else
+          data = rmfield(data, 'time');
+        end
+        
       case 'timelock'
         dat = data.(inparam);
         dat = reshape(permute(dat, [2 3 1]), [size(dat, 2) size(dat, 1)*size(dat, 3)]);
@@ -786,7 +804,7 @@ switch cfg.method
         dat = cat(1, data.mom{data.inside});
         % dat = abs(dat);
     end
-    optarg = {'numbin', cfg.mi.numbin, 'refindx', cfg.refindx};
+    optarg = {'numbin', cfg.mi.numbin, 'lags', cfg.mi.lags, 'refindx', cfg.refindx};
     [datout] = ft_connectivity_mutualinformation(dat, optarg{:});
     varout = [];
     nrpt = [];
@@ -959,3 +977,28 @@ ft_postamble previous   data
 ft_postamble provenance stat
 ft_postamble history    stat
 ft_postamble savevar    stat
+
+
+%-------------------------------------------------------------------------------
+%subfunction to concatenate data with nans in between, needed for
+%time-shifted mi
+function [datamatrix] = catnan(datacells, nnans)
+
+nchan = size(datacells{1}, 1);
+nsmp  = cellfun('size',datacells,2);
+nrpt  = numel(datacells);
+
+%---initialize
+datamatrix = nan(nchan, sum(nsmp) + nnans*(nrpt+1));
+
+%---fill the matrix
+for k = 1:nrpt
+  if k==1,
+    begsmp = 1+nnans;
+    endsmp = nsmp(1)+nnans;
+  else
+    begsmp = k*nnans + sum(nsmp(1:(k-1))) + 1;
+    endsmp = k*nnans + sum(nsmp(1:k));
+  end
+  datamatrix(:,begsmp:endsmp) = datacells{k};
+end
