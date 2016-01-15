@@ -41,7 +41,7 @@ function output = ft_connectivity_mutualinformation(input, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_connectivity_corr.m 9965 2014-11-13 16:56:13Z roboos $
+% $Id$
 
  
 % check whether the required toolbox is available
