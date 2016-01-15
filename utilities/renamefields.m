@@ -1,13 +1,13 @@
-function b = copyfields(a, b, fields)
+function b = renamefields(a, old, new)
 
-% COPYFIELDS copies a selection of the fields from one structure to another
+% RENAMEFIELDS renames a selection of the fields in a structure
 %
 % Use as
-%   b = copyfields(a, b, fields);
-% which copies the specified fields over from structure a to structure b. Fields that
+%   b = renamefields(a, old, new);
+% which renames the fields with the old name to the new name. Fields that
 % are specified but not present will be silently ignored.
 %
-% See also KEEPFIELDS, REMOVEFIELDS, RENAMEFIELDS
+% See also COPYFIELDS, KEEPFIELDS, REMOVEFIELDS
 
 % Copyright (C) 2014, Robert Oostenveld
 %
@@ -34,19 +34,23 @@ if isempty(a)
   return
 end
 
-if isempty(b)
-  % this prevents problems if a is an empty double, i.e. []
-  b = keepfields(a, fields);
-  return
+% these should be cell-arrays
+if ischar(old)
+  old = {old};
+end
+if ischar(new)
+  new = {new};
 end
 
-if ischar(fields)
-  fields = {fields};
-elseif ~iscell(fields)
-  error('fields input argument must be a cell array of strings or a single string');
+if length(old)~=length(new)
+  error('the number of field names does not match between old and new');
 end
 
-fields = intersect(fieldnames(a), fields);
-for i=1:numel(fields)
-  b.(fields{i}) = a.(fields{i});
+% keep the fields that were not mentioned
+b = keepfields(a, setdiff(fieldnames(a), old));
+% copy the fields over with their new name
+for i=1:length(old)
+  if isfield(a, old{i});
+    b.(new{i}) = a.(old{i});
+  end
 end
