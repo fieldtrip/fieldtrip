@@ -155,7 +155,7 @@ elseif ismeg
       
       if isfield(headmodel, 'o')
         % shift dipole and magnetometers to origin of sphere
-        dippos = dippos - repmat(headmodel.o, Ndipoles, 1);
+        dippos  = dippos  - repmat(headmodel.o, Ndipoles, 1);
         coilpos = coilpos - repmat(headmodel.o, size(coilpos, 1), 1);
       end
       
@@ -191,13 +191,13 @@ elseif ismeg
       end
       
       lf = zeros(ncoils, 3*Ndipoles);
-      for chan=1:ncoils
+      for coil=1:ncoils
         for dip=1:Ndipoles
           % shift dipole and magnetometer coil to origin of sphere
-          dippos = dippos(dip, :) - headmodel.o(chan, :);
-          chnpos = sens.coilpos(chan, :) - headmodel.o(chan, :);
-          tmp = meg_leadfield1(dippos, chnpos, sens.coilori(chan, :));
-          lf(chan, (3*dip-2):(3*dip)) = tmp;
+          tmppos  = dippos(dip, :) - headmodel.o(coil, :);
+          coilpos = sens.coilpos(coil, :) - headmodel.o(coil, :);
+          tmp = meg_leadfield1(tmppos, coilpos, sens.coilori(coil, :));
+          lf(coil, (3*dip-2):(3*dip)) = tmp;
         end
       end
       
@@ -217,7 +217,7 @@ elseif ismeg
       % tmp2 = 0.01*dippos'; %convert to cm
       % lf = megfield([tmp2 tmp2 tmp2], [[1 0 0]'*tmp1 [0 1 0]'*tmp1 [0 0 1]'*tmp1]);
       for dip=1:Ndipoles
-        R = 0.01*dippos(i, :)'; % convert from cm to m
+        R = 0.01*dippos(dip, :)'; % convert from cm to m
         Qx = [1 0 0];
         Qy = [0 1 0];
         Qz = [0 0 1];
