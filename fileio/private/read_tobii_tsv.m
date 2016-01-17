@@ -68,7 +68,7 @@ elseif needdat
     line = fgetl(fid);
     val = tokenize(line, 9); % horizontal tab is 9 in ascii table
     num = cellfun(@str2num, val, 'UniformOutput', false);
-    valid = cellfun(@isempty, num, 'UniformOutput', true) && ;
+    valid = cellfun(@isempty, num, 'UniformOutput', true);
     val(~str) = num;
     val( str) = nan;
     dat(:,cursample-begsample+1) = val;
@@ -79,3 +79,4 @@ elseif needdat
   % return the data
   out = hdr;
 end
+
