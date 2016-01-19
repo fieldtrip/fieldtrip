@@ -1,4 +1,4 @@
-function [data] = spm2fieldtrip(D)
+function data = spm2fieldtrip(D)
 
 % SPM2FIELDTRIP converts an SPM8 meeg object into a FieldTrip raw data structure
 %
@@ -39,4 +39,3 @@ end
 %   data.sampleinfo(i,1) = D.indsample(i);
 %   data.sampleinfo(i,2) = D.indsample(i) + D.nsamples;
 % end
-
