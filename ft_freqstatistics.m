@@ -188,12 +188,14 @@ if strcmp(func2str(statmethod),'ft_statistics_montecarlo')
   % the following (ugly) work around is necessary
   if num>1
     [stat, cfg] = statmethod(cfg, dat, design);
+    cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
   else
     [stat] = statmethod(cfg, dat, design);
   end
 else
   if num>1
     [stat, cfg] = statmethod(cfg, dat, design);
+    cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
   else
     [stat] = statmethod(cfg, dat, design);
   end

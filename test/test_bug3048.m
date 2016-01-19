@@ -3,7 +3,9 @@ function test_bug3048
 % MEM 2gb
 % WALLTIME 00:20:00
 
-% TEST ft_preamble ft_preamble_randomseed ft_dipolesimulation ft_freqsimulation ft_connectivitysimulation
+% TEST ft_preamble ft_preamble_randomseed ft_dipolesimulation
+% ft_freqsimulation ft_connectivitysimulation ft_statistics_montecarlo
+% ft_freqstatistics ft_timelockstatistics
 
 
 %%
@@ -73,5 +75,49 @@ dip2 = ft_dipolesimulation(cfg);
 assert(~isequal(dip0.trial{1}, dip1.trial{1}));
 assert( isequal(dip1.trial{1}, dip2.trial{1}));
 
+%%
+% test ft_statistics_montecarlo
+cfg = [];
+cfg.statistic = 'ft_statfun_depsamplesT';
+cfg.ivar = 1;
+cfg.uvar = 2;
+cfg.numrandomization = 100;
+design = [ones(1,10) ones(1,10)*2;1:10 1:10];
+dat    = randn(5,20);
 
+[stat1, cfg1] = ft_statistics_montecarlo(cfg, dat, design);
+[stat2, cfg2] = ft_statistics_montecarlo(cfg, dat, design);
+cfg.randomseed = cfg2.callinfo.randomseed;
+[stat3, cfg3] = ft_statistics_montecarlo(cfg, dat, design);
+
+assert(~isequal(stat1.prob, stat2.prob));
+assert( isequal(stat2.prob, stat3.prob));
+
+%% 
+% test the higher level stats functions
+cfg.randomseed = [];
+cfg.design     = design;
+cfg.method     = 'montecarlo';
+freq.powspctrm = randn(20,5,10);
+freq.freq      = 1:10;
+freq.dimord    = 'rpt_chan_freq';
+for k = 1:5, freq.label{k} = sprintf('chan%02d',k); end
+stat1 = ft_freqstatistics(cfg, freq);
+stat2 = ft_freqstatistics(cfg, freq);
+cfg.randomseed = stat2.cfg.callinfo.randomseed;
+stat3 = ft_freqstatistics(cfg, freq);
+assert(~isequal(stat1.prob, stat2.prob));
+assert( isequal(stat2.prob, stat3.prob));
+
+cfg.randomseed = [];
+tlck.trial     = randn(20,5,10);
+tlck.time      = 1:10;
+tlck.label     = freq.label;
+tlck.dimord    = 'rpt_chan_time';
+stat1 = ft_timelockstatistics(cfg, tlck);
+stat2 = ft_timelockstatistics(cfg, tlck);
+cfg.randomseed = stat2.cfg.callinfo.randomseed;
+stat3 = ft_timelockstatistics(cfg, tlck);
+assert(~isequal(stat1.prob, stat2.prob));
+assert( isequal(stat2.prob, stat3.prob));
 

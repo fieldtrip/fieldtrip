@@ -200,6 +200,7 @@ end
 % perform the statistical test
 if num>1
   [stat, cfg] = statmethod(cfg, dat, design);
+  cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
 else
   [stat] = statmethod(cfg, dat, design);
 end
