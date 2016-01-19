@@ -75,7 +75,10 @@ cfg.detrend      = ft_getopt(cfg, 'detrend',      'no');
 cfg.olfilter     = ft_getopt(cfg, 'olfilter',     'no');    % continuous online filter
 cfg.olfiltord    = ft_getopt(cfg, 'olfiltord',    4);
 cfg.olfreq       = ft_getopt(cfg, 'olfreq',       [2 45]);
-cfg.offset       = ft_getopt(cfg, 'offset',       1e7);     % in units of the data, e.g. uV for the OpenBCI board
+cfg.offset       = ft_getopt(cfg, 'offset',       []);      % in units of the data, e.g. uV for the OpenBCI board
+cfg.dftfilter    = ft_getopt(cfg, 'dftfilter',    'no');
+cfg.dftfreq      = ft_getopt(cfg, 'dftfreq',      [50 100 150]);
+
 
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
@@ -99,7 +102,9 @@ if nchan==0
   error('no channels were selected');
 end
 
-if numel(cfg.offset)==1
+if numel(cfg.offset)==0
+  % it will be determined on the first data segment
+elseif numel(cfg.offset)==1
   cfg.offset = repmat(cfg.offset, size(cfg.channel));
 end
 
@@ -175,6 +180,10 @@ while true
     dat = ft_preproc_detrend(dat);
   end
   
+  if strcmp(cfg.dftfilter, 'yes')
+    dat = ft_preproc_dftfilter(dat, hdr.Fs, cfg.dftfreq);
+  end
+    
   if strcmp(cfg.olfilter, 'yes')
     if count==1
       if cfg.olfreq(1)==0
@@ -192,15 +201,17 @@ while true
     [FM, dat] = ft_preproc_online_filter_apply(FM, dat);
   end
   
-  % shift each of the channels with a given offset
-  if ~isempty(cfg.offset)
-    nchan = size(dat,1);
-    for i=1:nchan
-      dat(i,:) = dat(i,:) + (nchan-i-1)*cfg.offset(i);
-    end
+  if isempty(cfg.offset)
+    cfg.offset = ((1:nchan)-1) .* mean(max(abs(dat),[],2));
   end
   
-  % plot the data just like a standard FieldTrip raw data strucute
+  % shift each of the channels with a given offset
+  nchan = size(dat,1);
+  for i=1:nchan
+    dat(i,:) = dat(i,:) + (nchan-i-1)*cfg.offset(i);
+  end
+  
+  % plot the data
   plot(time, dat);
   xlim([time(1) time(end)]);
   
