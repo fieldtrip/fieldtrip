@@ -136,15 +136,12 @@ if isempty(timeout)
 end
 
 if timeout ~= inf
-  fname = decomma(fixname(fname)); % make a nice string that is allowed as structure fieldname
-  if length(fname) > 63 % MATLAB max name
-    fname = fname(1:63);
-  end
-  line = [];
+  fname = fixname(fname); % make a nice string that is allowed as fieldname in a structures
+  line  = [];
 else
   % here, we create the fieldname functionA.functionB.functionC... 
-  [tmpfname ft_default.warning.identifier line] = fieldnameFromStack(ft_default.warning.identifier);
-  if ~isempty(tmpfname)
+  [tmpfname, ft_default.warning.identifier, line] = fieldnameFromStack(ft_default.warning.identifier);
+  if ~isempty(tmpfname),
     fname = tmpfname;
     clear tmpfname;
   end
@@ -195,11 +192,7 @@ end % function ft_warning
 % helper functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function name = decomma(name)
-name(name==',')=[];
-end % function
-
-function [fname ft_previous_warnings line] = fieldnameFromStack(ft_previous_warnings)
+function [fname, ft_previous_warnings, line] = fieldnameFromStack(ft_previous_warnings)
 % stack(1) is this function, stack(2) is ft_warning
 stack = dbstack('-completenames');
 if size(stack) < 3
