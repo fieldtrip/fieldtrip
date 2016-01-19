@@ -4,7 +4,7 @@ function C=clustering_coef_bd(A)
 %   C = clustering_coef_bd(A);
 %
 %   The clustering coefficient is the fraction of triangles around a node
-%   (equiv. the fraction of node’s neighbors that neighbors of each other).
+%   (equiv. the fraction of node's neighbors that are neighbors of each other).
 %
 %   Input:      A,      binary directed connection matrix
 %

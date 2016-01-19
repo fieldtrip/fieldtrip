@@ -37,5 +37,5 @@ for i = 1:N
     end
 end
 
-fclose(fid)
+fclose(fid);
 

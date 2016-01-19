@@ -24,12 +24,12 @@ t = ones(2).*2;
 N = 2^mx_lvl;
 sz_cl = sz_cl-1;
 
-n = [0 0 0:mx_lvl-3];
+% n = [0 0 0:mx_lvl-3];
 
 for lvl=1:mx_lvl-1
    CIJ = ones(2^(lvl+1),2^(lvl+1));
-   group1 = [1:size(CIJ,1)/2];
-   group2 = [size(CIJ,1)/2+1:size(CIJ,1)];
+   group1 = 1:size(CIJ,1)/2;
+   group2 = size(CIJ,1)/2+1:size(CIJ,1);
    CIJ(group1,group1) = t;
    CIJ(group2,group2) = t;
    CIJ = CIJ+ones(size(CIJ,1),size(CIJ,1));
