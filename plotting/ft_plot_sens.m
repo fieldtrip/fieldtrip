@@ -106,7 +106,7 @@ end
 if istrue(coilorientation) && isfield(sens, 'coilori')
   pos = sens.coilpos;
   ori = sens.coilori;
-  scale = scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
+  scale = ft_scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
   for i=1:size(pos,1)
     x = [pos(i,1) pos(i,1)+ori(i,1)*scale];
     y = [pos(i,2) pos(i,2)+ori(i,2)*scale];

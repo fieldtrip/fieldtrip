@@ -4,7 +4,7 @@ function test_bug2570
 % MEM 1gb
 
 % TEST test_bug2570
-% TEST ft_apply_montage scalingfactor
+% TEST ft_apply_montage ft_scalingfactor
 
 montage = [];
 montage.tra = 1e6;

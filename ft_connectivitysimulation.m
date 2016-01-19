@@ -41,9 +41,9 @@ function [simulated] = ft_connectivitysimulation(cfg)
 %   cfg.bpfreq    = [bplow bphigh] (default: [15 25])
 %   cfg.demean    = 'yes' (or 'no')
 %   cfg.baselinewindow = [begin end] in seconds, the default is the complete trial
-%   cfg.absnoise  = scalar (default: 1), specifying the standard
-%                   deviation of white noise superimposed on top
-%                   of the simulated signals
+%   cfg.absnoise  = scalar (default: 1), specifying the standard deviation of 
+%                   white noise superimposed on top of the simulated signals
+%   cfg.randomseed = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % Method 'mvnrnd' implements a linear mixing with optional timeshifts in
 % where the number of unobserved signals is equal to the number of observed
@@ -108,6 +108,7 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
+ft_preamble randomseed
 ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
@@ -283,6 +284,7 @@ simulated.label   = label;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
+ft_postamble randomseed
 ft_postamble provenance
 ft_postamble history simulated
 ft_postamble savevar simulated

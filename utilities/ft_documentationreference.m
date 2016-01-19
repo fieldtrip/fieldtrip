@@ -3,7 +3,7 @@ function ft_documentationreference(outdir)
 % FT_DOCUMENTATIONREFERENCE is a function to maintain the online documentation.
 %
 % Normal users will not be calling this function, but will rather look at
-% http://fieldtrip.fcdonders.nl/reference where the output of this function can
+% http://www.fieldtriptoolbox.org/reference where the output of this function can
 % be found.
 %
 % See FT_DOCUMENTATIONINDEX
@@ -113,16 +113,16 @@ funname = flipdim(funname,1); % to avoid problems with overlapping function name
 for i=1:length(funname)
   filename = fullfile(outdir, [funname{i} '.txt']);
   str = help(funname{i});
-  
+
   % make text html-compatible
   str = strrep(str, '<', '&lt;');
   str = strrep(str, '>', '&gt;');
-  
+
   % add crossrefs
   for f=1:length(funname)
     str = strrep(str, [' ', upper(funname{f})], [' <a href=/reference/', funname{f}, '><font color=green>', upper(funname{f}),'</font></a>']);
   end
-  
+
   fid = fopen(filename, 'wt');
   fprintf(fid, '=====  %s =====\n\n', upper(funname{i}));
   fprintf(fid, 'Note that this reference documentation is identical to the help that is displayed in MATLAB when you type "help %s".\n\n', funname{i});

@@ -268,9 +268,9 @@ switch cfg.method
       if any(isnan(headmodel.mat(:)))
         % HACK add a little bit of noise, with the NatMEG tutorial data, I discovered that this prevents the warning
         % Matrix is singular, close to singular or badly scaled. Results may be inaccurate. RCOND = NaN.
-        geometry(1).pos = geometry(1).pos + randn(size(geometry(1).pos))*scalingfactor('um', geometry(1).unit);
-        geometry(2).pos = geometry(2).pos + randn(size(geometry(2).pos))*scalingfactor('um', geometry(2).unit);
-        geometry(3).pos = geometry(3).pos + randn(size(geometry(3).pos))*scalingfactor('um', geometry(3).unit);
+        geometry(1).pos = geometry(1).pos + randn(size(geometry(1).pos))*ft_scalingfactor('um', geometry(1).unit);
+        geometry(2).pos = geometry(2).pos + randn(size(geometry(2).pos))*ft_scalingfactor('um', geometry(2).unit);
+        geometry(3).pos = geometry(3).pos + randn(size(geometry(3).pos))*ft_scalingfactor('um', geometry(3).unit);
         warning('NaN detected, trying once more with slightly different vertex positions');
         headmodel = ft_headmodel_bemcp(geometry, 'conductivity', cfg.conductivity);
       end

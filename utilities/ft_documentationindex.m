@@ -1,9 +1,9 @@
-function index = ft_documentationindex(filename)
+function [index] = ft_documentationindex(filename)
 
-% FT_DOCUMENTATIONINDEX is a function to maintain the online documentation. 
+% FT_DOCUMENTATIONINDEX is a helper function to maintain the online documentation.
 %
 % Normal users will not be calling this function, but will rather look at
-% http://fieldtrip.fcdonders.nl/reference/index where the output of this
+% http://www.fieldtriptoolboxorg/reference/index where the output of this
 % function can be found.
 %
 % See FT_DOCUMENTATIONREFERENCE
@@ -166,15 +166,14 @@ for i=1:size(index,1)
     fprintf(fid, '===== %s =====\n\n', upper(char(currletter)));
   end
   fprintf(fid, '** %s ** // %s //\\\\\n', index{i,2}, index{i,1});
-  
+
   % do postprocessing to make sure we don't mess up dokuwiki layout
   % '' is a markup instruction for dokuwiki so escape by replacing it
   % with %%''%%
   index{i,3} = strrep(index{i,3},'''''','%%''''%%');
-  
+
   fprintf(fid, '%s\n\n', index{i,3});
 end
 fclose(fid);
 
 return
-

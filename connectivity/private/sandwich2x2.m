@@ -1,4 +1,4 @@
-function [z] = sandwich2x2(x, y)
+function z = sandwich2x2(x, y)
 
 % SANDWICH2X2 compute x*y*x' provided y is Hermitian and dimensionality is 2x2xN
 
@@ -50,4 +50,3 @@ z(2,2,:,:) = xabs2(2,1,:,:) .* y(1,1,:,:) + ...
 %
 %a1*abs(b1)^2 + a2*(b1'*b2) + a2'*(b1*b2') + a3*abs(b2)^2    a1*b1*b3'    + a2*b2*b3'   + a2'*b1*b4'   + a3*b2*b4'
 %a1*b1'*b3    + a2*b1'*b4   + a2'*b2'*b3   + a3*b2'*b4       a1*abs(b3)^2 + a2*(b3'*b4) + a2'*(b3*b4') + a3*abs(b4)^2
-

@@ -1342,7 +1342,7 @@ if ~isempty(chanunit)
   end
   
   % determine the scaling factor for each channel
-  scaling = cellfun(@scalingfactor, hdr.chanunit(chanindx(:)), chanunit(:));
+  scaling = cellfun(@ft_scalingfactor, hdr.chanunit(chanindx(:)), chanunit(:));
   
   switch dimord
     case 'chans_samples'

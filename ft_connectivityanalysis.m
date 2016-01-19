@@ -323,8 +323,10 @@ switch cfg.method
     % create the subcfg for the mutual information
     if ~isfield(cfg, 'mi'), cfg.mi = []; end
     cfg.mi.numbin = ft_getopt(cfg.mi, 'numbin', 10);
+    cfg.mi.lags   = ft_getopt(cfg.mi, 'lags',   0);
+    
     % what are the input requirements?
-    data = ft_checkdata(data, 'datatype', {'timelock' 'freq' 'source'});
+    data = ft_checkdata(data, 'datatype', {'raw' 'timelock' 'freq' 'source'});
     dtype = ft_datatype(data);
     if strcmp(dtype, 'timelock')
       if ~isfield(data, 'trial')
@@ -333,13 +335,16 @@ switch cfg.method
         inparam = 'trial';
       end
       hasrpt = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
+    elseif strcmp(dtype, 'raw')
+      inparam = 'trial';
+      hasrpt  = 1;
     elseif strcmp(dtype, 'freq')
       inparam = 'something';
     else
       inparam = 'something else';
     end
-    needrpt = true;
     outparam = 'mi';
+    needrpt  = 1;
   case {'di'}
     % wat eigenlijk?
   otherwise
@@ -490,7 +495,7 @@ elseif hasrpt && dojack && ~(exist('debiaswpli', 'var') || exist('weightppc', 'v
     clear sumdat;
   end
   hasjack = 1;
-elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho'))% || needrpt)
+elseif hasrpt && ~(exist('debiaswpli', 'var') || exist('weightppc', 'var') || strcmp(cfg.method, 'powcorr_ortho') || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -516,7 +521,7 @@ if ~hasrpt && needrpt
   end
   if isfield(data, 'dimord')
     data.dimord = ['rpt_', data.dimord];
-  else
+  elseif ~strcmp(dtype, 'raw')
     data.([inparam, 'dimord']) = ['rpt_', data.([inparam, 'dimord'])];
   end
 end
@@ -751,21 +756,55 @@ switch cfg.method
   case 'mi'
     % mutual information using the information breakdown toolbox
     % presence of the toolbox is checked in the low-level function
-    if strcmp(dtype, 'timelock')
-      dat = data.(inparam);
-      dat = reshape(permute(dat, [2 3 1]), [size(dat, 2) size(dat, 1)*size(dat, 3)]);
-      
-      data = rmfield(data, 'time');
-      data.dimord = 'chan_chan';
-    elseif strcmp(dtype, 'freq')
-      error('not yet implemented');
-    elseif strcmp(dtype, 'source')
-      % for the time being work with mom
-      % dat = cat(2, data.mom{data.inside}).';
-      dat = cat(1, data.mom{data.inside});
-      % dat = abs(dat);
+    
+    if ~strcmp(dtype, 'raw') && (numel(cfg.mi.lags)>1 || cfg.mi.lags~=0),
+      error('computation of lagged mutual information is only possible with ''raw'' data in the input'); 
     end
-    optarg = {'numbin', cfg.mi.numbin, 'refindx', cfg.refindx};
+    
+    switch dtype
+      case 'raw'
+        % ensure the lags to be in samples, not in seconds.
+        cfg.mi.lags = round(cfg.mi.lags.*data.fsample);
+        
+        dat = catnan(data.trial, max(abs(cfg.mi.lags)));
+        
+        
+        if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
+          outdimord = 'chan_chan';
+        elseif numel(cfg.refindx)==1,
+          outdimord = 'chan';
+        else
+          error('at present cfg.refindx should be either ''all'', or scalar');
+        end
+        if numel(cfg.mi.lags)>1
+          data.time = cfg.mi.lags./data.fsample;
+          outdimord = [outdimord,'_time'];
+        else
+          data = rmfield(data, 'time');
+        end
+        
+      case 'timelock'
+        dat = data.(inparam);
+        dat = reshape(permute(dat, [2 3 1]), [size(dat, 2) size(dat, 1)*size(dat, 3)]);
+        data = rmfield(data, 'time');
+        if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
+          outdimord = 'chan_chan';
+        elseif numel(cfg.refindx)==1,
+          outdimord = 'chan';
+        else
+          error('at present cfg.refindx should be either ''all'', or scalar');
+        end
+        
+        %data.dimord = 'chan_chan';
+      case 'freq'
+        error('not yet implemented');
+      case 'source'
+        % for the time being work with mom
+        % dat = cat(2, data.mom{data.inside}).';
+        dat = cat(1, data.mom{data.inside});
+        % dat = abs(dat);
+    end
+    optarg = {'numbin', cfg.mi.numbin, 'lags', cfg.mi.lags, 'refindx', cfg.refindx};
     [datout] = ft_connectivity_mutualinformation(dat, optarg{:});
     varout = [];
     nrpt = [];
@@ -877,14 +916,22 @@ switch dtype
     if isfield(data, 'labelcmb'),
       stat.labelcmb = data.labelcmb;
     end
-    tok = tokenize(getdimord(data, inparam), '_');
-    dimord = '';
-    for k = 1:numel(tok)
-      if isempty(strfind(tok{k}, 'rpt'))
-        dimord = [dimord, '_', tok{k}];
+    
+    % deal with the dimord
+    if exist('outdimord', 'var'),
+      stat.dimord = outdimord;
+    else
+      % guess
+      tok = tokenize(getdimord(data, inparam), '_');
+      dimord = '';
+      for k = 1:numel(tok)
+        if isempty(strfind(tok{k}, 'rpt'))
+          dimord = [dimord, '_', tok{k}];
+        end
       end
+      stat.dimord = dimord(2:end);
     end
-    stat.dimord = dimord(2:end);
+    
     stat.(outparam) = datout;
     if ~isempty(varout),
       stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
@@ -895,6 +942,17 @@ switch dtype
     stat.(outparam) = datout;
     if ~isempty(varout),
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
+    end
+    
+  case 'raw'
+    stat = [];
+    stat.label = data.label;
+    stat.(outparam) = datout;
+    if ~isempty(varout),
+      stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
+    end
+    if exist('outdimord', 'var'),
+      stat.dimord = outdimord;
     end
 end % switch dtype
 
@@ -919,3 +977,28 @@ ft_postamble previous   data
 ft_postamble provenance stat
 ft_postamble history    stat
 ft_postamble savevar    stat
+
+
+%-------------------------------------------------------------------------------
+%subfunction to concatenate data with nans in between, needed for
+%time-shifted mi
+function [datamatrix] = catnan(datacells, nnans)
+
+nchan = size(datacells{1}, 1);
+nsmp  = cellfun('size',datacells,2);
+nrpt  = numel(datacells);
+
+%---initialize
+datamatrix = nan(nchan, sum(nsmp) + nnans*(nrpt+1));
+
+%---fill the matrix
+for k = 1:nrpt
+  if k==1,
+    begsmp = 1+nnans;
+    endsmp = nsmp(1)+nnans;
+  else
+    begsmp = k*nnans + sum(nsmp(1:(k-1))) + 1;
+    endsmp = k*nnans + sum(nsmp(1:k));
+  end
+  datamatrix(:,begsmp:endsmp) = datacells{k};
+end

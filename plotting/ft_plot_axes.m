@@ -53,8 +53,8 @@ else
   coordsys = 'unknown';
 end
 
-axmax = 150 * scalingfactor('mm', unit);
-rbol  =   5 * scalingfactor('mm', unit);
+axmax = 150 * ft_scalingfactor('mm', unit);
+rbol  =   5 * ft_scalingfactor('mm', unit);
 
 % this is useful if the anatomy is from a non-human primate or rodent
 axmax = axisscale*axmax;

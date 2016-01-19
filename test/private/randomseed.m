@@ -37,9 +37,10 @@ function state = randomseed(setseed)
 if nargin<1
   setseed = [];
 end
+
 state = [];
 
-if isempty(setseed)
+if isempty(setseed) || strcmp(setseed, 'yes')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % save out rand state for later use
   

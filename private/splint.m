@@ -26,6 +26,7 @@ function [V2, L2, L1] = splint(elc1, V1, elc2, order, degree, lambda)
 %   F. Perrin, J. Pernier, O. Bertrand, and J. F. Echallier.
 %   Corrigenda: EEG 02274, Electroencephalography and Clinical
 %   Neurophysiology 76:565.
+
 % Copyright (C) 2003, Robert Oostenveld
 % 
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
@@ -49,7 +50,7 @@ function [V2, L2, L1] = splint(elc1, V1, elc2, order, degree, lambda)
 N = size(elc1,1);   % number of known electrodes
 M = size(elc2,1);   % number of unknown electrodes
 T = size(V1,2);     % number of timepoints in the potential
-Z = V1;         % potential on known electrodes, can be matrix
+Z = V1;             % potential on known electrodes, can be matrix
 
 % remember the actual size of the sphere
 sphere1_scale = mean(sqrt(sum(elc1.^2,2)));
@@ -111,6 +112,7 @@ else
   end
   [gx, hx] = gh(CosEji, order, degree);
 end
+
 % compute interpolated potential on all unknown electrodes by matrix multiplication
 V2 = [ones(M,1) gx] * C;
 

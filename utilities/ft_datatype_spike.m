@@ -1,4 +1,4 @@
-function spike = ft_datatype_spike(spike, varargin)
+function [spike] = ft_datatype_spike(spike, varargin)
 
 % FT_DATATYPE_SPIKE describes the FieldTrip MATLAB structure for spike data
 %

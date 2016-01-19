@@ -155,7 +155,7 @@ elseif ismeg
       
       if isfield(headmodel, 'o')
         % shift dipole and magnetometers to origin of sphere
-        dippos = dippos - repmat(headmodel.o, Ndipoles, 1);
+        dippos  = dippos  - repmat(headmodel.o, Ndipoles, 1);
         coilpos = coilpos - repmat(headmodel.o, size(coilpos, 1), 1);
       end
       
@@ -191,13 +191,13 @@ elseif ismeg
       end
       
       lf = zeros(ncoils, 3*Ndipoles);
-      for chan=1:ncoils
+      for coil=1:ncoils
         for dip=1:Ndipoles
           % shift dipole and magnetometer coil to origin of sphere
-          dippos = dippos(dip, :) - headmodel.o(chan, :);
-          chnpos = sens.coilpos(chan, :) - headmodel.o(chan, :);
-          tmp = meg_leadfield1(dippos, chnpos, sens.coilori(chan, :));
-          lf(chan, (3*dip-2):(3*dip)) = tmp;
+          tmppos  = dippos(dip, :) - headmodel.o(coil, :);
+          coilpos = sens.coilpos(coil, :) - headmodel.o(coil, :);
+          tmp = meg_leadfield1(tmppos, coilpos, sens.coilori(coil, :));
+          lf(coil, (3*dip-2):(3*dip)) = tmp;
         end
       end
       
@@ -217,7 +217,7 @@ elseif ismeg
       % tmp2 = 0.01*dippos'; %convert to cm
       % lf = megfield([tmp2 tmp2 tmp2], [[1 0 0]'*tmp1 [0 1 0]'*tmp1 [0 0 1]'*tmp1]);
       for dip=1:Ndipoles
-        R = 0.01*dippos(i, :)'; % convert from cm to m
+        R = 0.01*dippos(dip, :)'; % convert from cm to m
         Qx = [1 0 0];
         Qy = [0 1 0];
         Qz = [0 0 1];
@@ -596,13 +596,13 @@ end
 if ~isempty(chanunit)
   assert(all(strcmp(sens.chanunit, 'V') | strcmp(sens.chanunit, 'V/m') | strcmp(sens.chanunit, 'T') | strcmp(sens.chanunit, 'T/m')), 'unit conversion only possible for SI input units');
   % compute conversion factor and multiply each row of the matrix
-  scale = cellfun(@scalingfactor, sens.chanunit(:), chanunit(:));
+  scale = cellfun(@ft_scalingfactor, sens.chanunit(:), chanunit(:));
   lf = bsxfun(@times, lf, scale(:));
   % prior to this conversion, the units might be  (T/m)/(A*m) for planar gradients or   (V/m)/(A*m) for bipolar EEG
   % after this conversion, the units will be     (T/cm)/(A*m)                      or (uV/mm)/(A*m)
 end
 
 if ~isempty(dipoleunit)
-  scale = scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
+  scale = ft_scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
   lf    = lf/scale;                         % the leadfield is expressed in chanunit per dipoleunit, i.e. chanunit/dipoleunit
 end

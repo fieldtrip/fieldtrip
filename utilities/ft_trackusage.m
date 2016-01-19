@@ -16,7 +16,8 @@ function ft_trackusage(event, varargin)
 % it is impossible to decode these MD5 hashes and recover the original
 % identifiers.
 %
-% It is possible to disable the tracking by specifying
+% It is possible to disable the tracking for all functions by specifying
+% the following
 %   global ft_defaults
 %   ft_default.trackusage = 'no'
 %
@@ -142,13 +143,13 @@ if ~initialized
   user_json   = sprintf('{"$token": "%s", "$distinct_id": "%s", "$ip": "%s", "$set": {} }',  properties.token, properties.user, getaddress());
   user_base64 = base64encode(user_json);
   user_http   = sprintf('http://api.mixpanel.com/engage/?data=%s', user_base64);
-  
+
   [output, status] = my_urlread(user_http);
   if ~status
     disp(output);
     warning('could not send tracker information for "%s"', event);
   end
-  
+
   initialized = true;
 end % if initialized
 

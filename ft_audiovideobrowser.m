@@ -1,23 +1,28 @@
 function ft_audiovideobrowser(cfg, data)
 
 % FT_AUDIOVIDEOBROWSER reads and vizualizes the audio and/or video data
-% corresponding to the EEG/MEG data that is passed into this
-% function.
+% corresponding to the EEG/MEG data that is passed into this function.
 %
 % Use as
+%   ft_audiovideobrowser(cfg)
+% or as
 %   ft_audiovideobrowser(cfg, data)
-% where the input data is the result from FT_PREPROCESSING or from
-% FT_COMPONENTANALYSIS. The data should contain the original file header
-% with synchronization information.
+% where the input data is the result from FT_PREPROCESSING or from FT_COMPONENTANALYSIS.
 %
-% The configuration structure should contain the filename of the audio file
-% and/or the video file
-%   cfg.audiofile = string
-%   cfg.videofile = string
-%   cfg.anonimize = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
+% The configuration structure can contain the following options
+%   cfg.datahdr     = header structure of the EEG/MEG data, see FT_READ_HEADER
+%   cfg.audiohdr    = header structure of the audio data, see FT_READ_HEADER
+%   cfg.videohdr    = header structure of the video data, see FT_READ_HEADER
+%   cfg.audiofile   = string with the filename
+%   cfg.videofile   = string with the filename
+%   cfg.trl         = Nx3 matrix, see FT_DEFINETRIAL
+%   cfg.anonimize   = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
+%   cfg.interactive = 'yes' or 'no' (default = 'yes')
 %
-% The data can specify the segments of interest, but those can be overruled by
-%   cfg.trl       = Nx3 matrix, see FT_DEFINETRIAL
+% If you do NOT specify cfg.datahdr, the header must be present in the input data.
+% If you do NOT specify cfg.audiohdr, the header will be read from the audio file.
+% If you do NOT specify cfg.videohdr, the header will be read from the video file.
+% If you do NOT specify cfg.trl, the input data should contain a sampleinfo field.
 %
 % See also FT_DATABROWSER
 
@@ -58,23 +63,42 @@ if abort
   return
 end
 
-data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+if nargin>1
+  data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+end
 
-cfg.audiofile   = ft_getopt(cfg, 'audiofile');
-cfg.videofile   = ft_getopt(cfg, 'videofile');
+% get the options from the user or set defaults
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
 cfg.anonimize   = ft_getopt(cfg, 'anonimize');
+% the headers contain the information required for synchronization
+cfg.datahdr     = ft_getopt(cfg, 'datahdr');
+cfg.audiohdr    = ft_getopt(cfg, 'audiohdr');
+cfg.videohdr    = ft_getopt(cfg, 'videohdr');
+% the data is read on the fly
+cfg.audiofile   = ft_getopt(cfg, 'audiofile');
+cfg.videofile   = ft_getopt(cfg, 'videofile');
 
+if ~isempty(cfg.datahdr)
+  % get it from the configuration
+  datahdr = cfg.datahdr;
+elseif nargin>1
+  % get it from the input data
+  datahdr = ft_fetch_header(data);
+else
+  % in principle it would be possible to read it from cfg.datafile, but the
+  % synchronization information will not automatically be present, as that
+  % requires parsing one of the trigger channels
+  error('the data header is not available')
+end
 
-% the data structure is needed for the synchronization information
-datahdr = data.hdr;
-assert(isfield(datahdr, 'FirstTimeStamp'));
-assert(isfield(datahdr, 'TimeStampPerSample'));
+assert(isfield(datahdr, 'FirstTimeStamp'), 'sycnhronization information is missing in the data header');
+assert(isfield(datahdr, 'TimeStampPerSample'), 'sycnhronization information is missing in the data header');
 
+% determine the begin and end samples of the data segments, the corresponding audio and video fragments will be displayes
 if isfield(cfg, 'trl')
   fprintf('using cfg.trl\n');
   trl = cfg.trl;
-elseif isfield(data, 'sampleinfo')
+elseif nargin>1 && isfield(data, 'sampleinfo')
   fprintf('using data.sampleinfo\n');
   trl = data.sampleinfo;
 else
@@ -93,8 +117,11 @@ while (true)
   if ~isempty(cfg.audiofile)
     if isequal(previous_audiofile, cfg.audiofile)
       audiohdr = previous_audiohdr;
+    elseif ~isempty(cfg.audiohdr)
+      fprintf('using the header and timestamps from the configuration\n');
+      audiohdr = cfg.audiohdr;
     else
-      fprintf('reading header and timestamps from %s\n', cfg.audiofile);
+      fprintf('reading the header and timestamps from %s\n', cfg.audiofile);
       audiohdr = ft_read_header(cfg.audiofile);
     end
     
@@ -124,8 +151,11 @@ while (true)
   if ~isempty(cfg.videofile)
     if isequal(previous_videofile, cfg.videofile)
       videohdr = previous_videohdr;
+    elseif ~isempty(cfg.videohdr)
+      fprintf('using the header and timestamps from the configuration\n');
+      videohdr = cfg.videohdr;
     else
-      fprintf('reading header and timestamps from %s\n', cfg.videofile);
+      fprintf('reading the header and timestamps from %s\n', cfg.videofile);
       videohdr = ft_read_header(cfg.videofile);
     end
     

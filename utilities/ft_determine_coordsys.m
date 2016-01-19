@@ -59,15 +59,20 @@ data  = ft_convert_units(data);
 % the high-level data structures are detected with ft_datatype, but there are
 % also some low-level data structures that need to be supproted here
 if strcmp(dtype, 'unknown')
-  if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pnt'))
+  if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pos'))
     dtype = 'headshape';
-  elseif isfield(data, 'tet') && isfield(data, 'pnt')
+  elseif isfield(data, 'hex') && isfield(data, 'pos')
+    dtype = 'mesh';
+  elseif isfield(data, 'tet') && isfield(data, 'pos')
     dtype = 'mesh';
   elseif ~strcmp(ft_voltype(data), 'unknown')
     dtype = 'headmodel';
   elseif ~strcmp(ft_senstype(data), 'unknown')
     dtype = 'sens';
   end
+elseif strcmp(dtype, 'mesh+label')
+  % we don't care about the labels here
+  dtype = 'mesh';
 end
 
 % NOTE this section should be kept consistent with the shorter labels in FT_PLOT_AXES
@@ -111,7 +116,7 @@ if isfield(data, 'coordsys') && ~isempty(data.coordsys)
   else
     error('unsupported coordsys');
   end
-  
+
   fprintf('The positive x-axis is pointing towards %s\n', label{1});
   fprintf('The positive y-axis is pointing towards %s\n', label{2});
   fprintf('The positive z-axis is pointing towards %s\n', label{3});
@@ -143,23 +148,23 @@ switch dtype
         end
       end
     end
-    
+
     if isempty(funparam)
       error('don''t know which volumetric parameter to plot');
     end
-    
+
     % the volumetric data needs to be interpolated onto three orthogonal planes
     % determine a resolution that is close to, or identical to the original resolution
     [corner_vox, corner_head] = cornerpoints(data.dim, data.transform);
     diagonal_head = norm(range(corner_head));
     diagonal_vox  = norm(range(corner_vox));
     resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
-    
+
     clear ft_plot_slice
     ft_plot_ortho(funparam, 'transform', data.transform, 'resolution', resolution, 'style', 'intersect');
     axis vis3d
     view([110 36]);
-    
+
   case 'source'
     if isfield(data, 'inside') && ~isfield(data, 'tri')
       % only plot the source locations that are inside the volume conduction model
@@ -168,27 +173,27 @@ switch dtype
       ft_plot_mesh(data, 'edgecolor','none', 'facecolor', [0.6 0.8 0.6], 'facealpha', 0.6);
     end
     camlight;
-    
+
   case 'dip'
     ft_plot_mesh(data, 'edgecolor','none', 'facecolor', 'none');
     camlight;
-    
+
   case 'headshape'
     ft_plot_headshape(data);
     camlight;
-    
+
   case 'mesh'
     ft_plot_mesh(data);
     camlight;
-    
+
   case 'headmodel'
     ft_plot_vol(data);
     camlight;
-    
+
   case {'grad' 'elec' 'sens'}
     ft_plot_sens(data, 'label', 'label');
     camlight;
-    
+
   case {'raw', 'timelock', 'freq', 'mvar', 'freqmvar', 'comp'}
     % the data may contain a gradiometer or electrode definition
     if isfield(data, 'grad')
@@ -196,7 +201,7 @@ switch dtype
     elseif isfield(data, 'elec')
       ft_plot_sens(data.elec, 'label', 'label');
     end
-    
+
   case 'unknown'
 end % switch dtype{k}
 
@@ -206,11 +211,11 @@ if isfield(data, 'tri')
   lighting gouraud
 end
 
-% plot the 3-D axes, labels, and sphere at the origin 
+% plot the 3-D axes, labels, and sphere at the origin
 ft_plot_axes(data, 'axisscale', axisscale);
 
 if istrue(dointeractive),
-  
+
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
     value = smartinput('Do you want to change the anatomical labels for the axes [Y, n]? ', 'y');
@@ -218,11 +223,11 @@ if istrue(dointeractive),
     % default is no
     value = smartinput('Do you want to change the anatomical labels for the axes [y, N]? ', 'n');
   end
-  
+
   if strcmpi(value, 'n')
     return
   end
-  
+
   % interactively determine orientation
   orientation = '   ';
   while ~any(strcmp(orientation(1), {'r', 'l', 'a', 'p', 's', 'i'}))
@@ -234,13 +239,13 @@ if istrue(dointeractive),
   while ~any(strcmp(orientation(3), {'r', 'l', 'a', 'p', 's', 'i'}))
     orientation(3) = smartinput('What is the anatomical label for the positive Z-axis [r, l, a, p, s, i]? ', '');
   end
-  
+
   % interactively determine origin
   origin = ' ';
   while ~any(strcmp(origin, {'a', 'i', 'n'}))
     origin = input('Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), n(ot a landmark)? ', 's');
   end
-  
+
   if origin=='a' && strcmp(orientation, 'ras')
     coordsys = 'spm';
   elseif origin=='i' && strcmp(orientation, 'als')
@@ -251,7 +256,6 @@ if istrue(dointeractive),
     % just use the orientation
     coordsys = orientation;
   end
-  
+
   data.coordsys = coordsys;
 end % if interactive
-

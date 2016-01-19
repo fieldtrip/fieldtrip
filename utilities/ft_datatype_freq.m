@@ -1,4 +1,4 @@
-function freq = ft_datatype_freq(freq, varargin)
+function [freq] = ft_datatype_freq(freq, varargin)
 
 % FT_DATATYPE_FREQ describes the FieldTrip MATLAB structure for freq data
 %
@@ -7,7 +7,7 @@ function freq = ft_datatype_freq(freq, varargin)
 % FT_FREQANALYSIS function.
 %
 % An example of a freq structure containing the powerspectrum for 306 channels
-% and 102 frequencies is
+% and 120 frequencies is
 %
 %       dimord: 'chan_freq'          defines how the numeric data should be interpreted
 %    powspctrm: [306x120 double]     the power spectum
@@ -30,7 +30,7 @@ function freq = ft_datatype_freq(freq, varargin)
 %   - label, dimord, freq
 %
 % Optional fields:
-%   - powspctrm, fouriesspctrm, csdspctrm, cohspctrm, time, labelcmb, grad, elec, cumsumcnt, cumtapcnt, trialinfo 
+%   - powspctrm, fouriesspctrm, csdspctrm, cohspctrm, time, labelcmb, grad, elec, cumsumcnt, cumtapcnt, trialinfo
 %
 % Deprecated fields:
 %   - <none>
@@ -117,12 +117,12 @@ switch version
       % ensure that the gradiometer structure is up to date
       freq.grad = ft_datatype_sens(freq.grad);
     end
-    
+
     if isfield(freq, 'elec')
       % ensure that the electrode structure is up to date
       freq.elec = ft_datatype_sens(freq.elec);
     end
- 
+
     if isfield(freq, 'foi') && ~isfield(freq, 'freq')
       % this was still the case in early 2006
       freq.freq = freq.foi;
@@ -151,4 +151,3 @@ switch version
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for freq datatype', version);
 end
-

@@ -1,4 +1,4 @@
-function headmodel = ft_datatype_headmodel(headmodel, varargin)
+function [headmodel] = ft_datatype_headmodel(headmodel, varargin)
 
 % FT_DATATYPE_HEADMODEL describes the FieldTrip MATLAB structure for a volume
 % conduction model of the head that can be used for forward computations of
@@ -67,6 +67,22 @@ function headmodel = ft_datatype_headmodel(headmodel, varargin)
 
 % Copyright (C) 2011-2012, Cristiano Micheli, Robert Oostenveld
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
 % get the optional input arguments, which should be specified as key-value pairs
@@ -81,25 +97,25 @@ if isempty(headmodel)
 end
 
 switch version
-  
+
   case '2015'
     % first make it consistent with the 2014 version
     headmodel = ft_datatype_headmodel(headmodel, 'version', '2013');
-    
+
     % rename pnt into pos
     headmodel = fixpos(headmodel);
 
   case '2014'
     % first make it consistent with the 2013 version
     headmodel = ft_datatype_headmodel(headmodel, 'version', '2013');
-    
+
     % ensure that all numbers are represented in double precision
     headmodel = ft_struct2double(headmodel);
-    
+
   case '2013'
     % first make it consistent with the 2012 version
     headmodel = ft_datatype_headmodel(headmodel, 'version', '2012');
-    
+
     % then rename (if neccessary the c into cond
     if isfield(headmodel, 'c') && ~isfield(headmodel, 'cond')
       headmodel.cond = headmodel.c;
@@ -109,7 +125,7 @@ switch version
     elseif isfield(headmodel, 'cond') && isfield(headmodel, 'c') && ~isequal(headmodel.cond, headmodel.c)
       error('inconsistent specification of conductive properties for %s model', headmodel.type);
     end
-    
+
   case '2012'
     % the following will be determined on the fly in ft_prepare_vol_sens
     if isfield(headmodel, 'skin_surface'),        headmodel = rmfield(headmodel, 'skin_surface');        end
@@ -117,7 +133,7 @@ switch version
     if isfield(headmodel, 'inner_skull_surface'), headmodel = rmfield(headmodel, 'inner_skull_surface'); end
     if isfield(headmodel, 'skin'),                headmodel = rmfield(headmodel, 'skin');                end
     if isfield(headmodel, 'source'),              headmodel = rmfield(headmodel, 'source');              end
-    
+
     % ensure a consistent naming of the volume conduction model types
     % these should match with the FT_HEADMODEL_XXX functions
     if isfield(headmodel, 'type')
@@ -145,12 +161,12 @@ switch version
         error('this format is not supported anymore');
       end
     end
-    
+
     if isfield(headmodel, 'sens')
       % this applies to type=interpolate, ensure that the sensor description is up to date
       headmodel.sens = ft_datatype_sens(headmodel.sens);
     end
-    
+
     if isfield(headmodel, 'type') && any(strcmp(headmodel.type, {'concentricspheres', 'singlesphere'}))
       if isfield(headmodel, 'cond') && ~isfield(headmodel, 'c')
         headmodel.c = headmodel.cond;
@@ -161,12 +177,12 @@ switch version
         error('inconsistent specification of conductive properties for %s model', headmodel.type);
       end
     end
-    
+
     % ensure that the geometrical units are specified
     if ~isfield(headmodel, 'unit')
       headmodel = ft_convert_units(headmodel);
     end
-    
+
   otherwise
     error('converting to version "%s" is not supported', version);
 end

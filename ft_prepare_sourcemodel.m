@@ -174,7 +174,7 @@ basedongrid       = isfield(cfg.grid, 'xgrid') && ~ischar(cfg.grid.xgrid);      
 basedonpos        = isfield(cfg.grid, 'pos');                                                           % using user-supplied grid positions, which can be regular or irregular
 basedonshape      = ~isempty(cfg.headshape);                                                            % surface grid based on inward shifted head surface from external file
 basedonmri        = isfield(cfg, 'mri') && ~(isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni)); % regular 3D grid, based on segmented MRI, restricted to gray matter
-basedonmni        = isfield(cfg, 'mri') && (isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni));  % regular 3D grid, based on warped MNI template
+basedonmni        = isfield(cfg, 'mri') &&  (isfield(cfg.grid, 'warpmni') && istrue(cfg.grid.warpmni)); % regular 3D grid, based on warped MNI template
 basedonvol        = false;                                                                              % surface grid based on inward shifted brain surface from volume conductor
 basedoncortex     = isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'}))); % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
 basedonresolution = isfield(cfg.grid, 'resolution') && ~basedonmri && ~basedonmni;                      % regular 3D grid with specification of the resolution
@@ -460,7 +460,7 @@ if basedonmri
   head = dat./max(dat(:)) > cfg.threshold;
   
   % convert the source/functional data into the same units as the anatomical MRI
-  scale = scalingfactor(cfg.grid.unit, mri.unit);
+  scale = ft_scalingfactor(cfg.grid.unit, mri.unit);
   
   ind                 = find(head(:));
   fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));

@@ -1,4 +1,4 @@
-function data = ft_datatype_raw(data, varargin)
+function [data] = ft_datatype_raw(data, varargin)
 
 % FT_DATATYPE_RAW describes the FieldTrip MATLAB structure for raw data
 %
