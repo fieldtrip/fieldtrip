@@ -59,15 +59,20 @@ data  = ft_convert_units(data);
 % the high-level data structures are detected with ft_datatype, but there are
 % also some low-level data structures that need to be supproted here
 if strcmp(dtype, 'unknown')
-  if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pnt'))
+  if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pos'))
     dtype = 'headshape';
-  elseif isfield(data, 'tet') && isfield(data, 'pnt')
+  elseif isfield(data, 'hex') && isfield(data, 'pos')
+    dtype = 'mesh';
+  elseif isfield(data, 'tet') && isfield(data, 'pos')
     dtype = 'mesh';
   elseif ~strcmp(ft_voltype(data), 'unknown')
     dtype = 'headmodel';
   elseif ~strcmp(ft_senstype(data), 'unknown')
     dtype = 'sens';
   end
+elseif strcmp(dtype, 'mesh+label')
+  % we don't care about the labels here
+  dtype = 'mesh';
 end
 
 % NOTE this section should be kept consistent with the shorter labels in FT_PLOT_AXES
