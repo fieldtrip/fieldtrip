@@ -1,4 +1,4 @@
-function [s] = getsubfield(s, f)
+function s = getsubfield(s, f)
 
 % GETSUBFIELD returns a field from a structure just like the standard
 % GETFIELD function, except that you can also specify nested fields

@@ -1,4 +1,4 @@
-function [s] = rmsubfield(s, f, v)
+function s = rmsubfield(s, f, v)
 
 % RMSUBFIELD removes the contents of the specified field from a structure
 % just like the standard Matlab RMFIELD function, except that you can also

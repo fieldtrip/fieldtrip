@@ -1,4 +1,4 @@
-function [val] = ft_getopt(opt, key, default, emptymeaningful)
+function val = ft_getopt(opt, key, default, emptymeaningful)
 
 % FT_GETOPT gets the value of a specified option from a configuration structure
 % or from a cell-array with key-value pairs.
