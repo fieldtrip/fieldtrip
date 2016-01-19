@@ -4,12 +4,11 @@ function test_bug3048
 % WALLTIME 00:20:00
 
 % TEST ft_preamble ft_preamble_randomseed ft_dipolesimulation
-% ft_freqsimulation ft_connectivitysimulation ft_statistics_montecarlo
-% ft_freqstatistics ft_timelockstatistics
-
+% TEST ft_freqsimulation ft_connectivitysimulation ft_statistics_montecarlo
+% TEST ft_freqstatistics ft_timelockstatistics
 
 %%
-
+% test ft_freqsimulation
 cfg = [];
 
 freq0 = ft_freqsimulation(cfg);
@@ -22,7 +21,7 @@ assert(~isequal(freq0.trial{1}, freq1.trial{1}));
 assert( isequal(freq1.trial{1}, freq2.trial{1}));
 
 %%
-
+% test ft_connectivitysimulation
 cfg             = [];
 cfg.ntrials     = 500;
 cfg.triallength = 1;
@@ -42,7 +41,6 @@ cfg.noisecov = [
   0.0  1.0  0.0;
   0.0  0.0  0.2];
 
-
 conn0 = ft_connectivitysimulation(cfg);
 conn1 = ft_connectivitysimulation(cfg);
 
@@ -53,7 +51,7 @@ assert(~isequal(conn0.trial{1}, conn1.trial{1}));
 assert( isequal(conn1.trial{1}, conn2.trial{1}));
 
 %%
-
+% test ft_dipolesimulation
 cfg = [];
 cfg.relnoise = 1;
 cfg.dip.pos = [0 0 0.05];
