@@ -215,19 +215,21 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'landmark', 'fiducial'}); % cfg.landmark -> cfg.fiducial
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
+cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
 % set the defaults
-cfg.coordsys   = ft_getopt(cfg, 'coordsys',  []);
-cfg.method     = ft_getopt(cfg, 'method',    []); % deal with this below
-cfg.fiducial   = ft_getopt(cfg, 'fiducial',  []);
-cfg.parameter  = ft_getopt(cfg, 'parameter', 'anatomy');
-cfg.clim       = ft_getopt(cfg, 'clim',      []);
-cfg.viewmode   = ft_getopt(cfg, 'viewmode',  'ortho'); % for method=interactive
-cfg.viewdim    = ft_getopt(cfg, 'viewdim',   'data'); % viewing dimensions of the orthoplots, 'square' or 'data' 
-
-cfg.snapshot   = ft_getopt(cfg, 'snapshot',  false);
-cfg.snapshotfile = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
-cfg.spmversion   = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.coordsys      = ft_getopt(cfg, 'coordsys',  []);
+cfg.method        = ft_getopt(cfg, 'method',    []); % deal with this below
+cfg.fiducial      = ft_getopt(cfg, 'fiducial',  []);
+cfg.parameter     = ft_getopt(cfg, 'parameter', 'anatomy');
+cfg.clim          = ft_getopt(cfg, 'clim',      []);
+cfg.viewmode      = ft_getopt(cfg, 'viewmode',  'ortho'); % for method=interactive
+cfg.snapshot      = ft_getopt(cfg, 'snapshot',  false);
+cfg.snapshotfile  = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
+cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.voxelratio    = ft_getopt(cfg, 'voxelratio', 'data'); % display size of the voxel, 'data' or 'square'
+cfg.axisratio     = ft_getopt(cfg, 'axisratio',  'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 
 if isempty(cfg.method)
   if isempty(cfg.fiducial)
@@ -338,14 +340,14 @@ switch cfg.method
           && norm(mri.transform(1:3,2)) == norm(mri.transform(1:3,3));
         
         % axes settings
-        if strcmp(cfg.viewdim, 'data')
+        if strcmp(cfg.axisratio, 'data')
           xdim = mri.dim(1) + mri.dim(2); % data-defined viewing dimensions
           ydim = mri.dim(2) + mri.dim(3);
           xsize(1) = 0.82*mri.dim(1)/xdim;
           xsize(2) = 0.82*mri.dim(2)/xdim;
           ysize(1) = 0.82*mri.dim(3)/ydim;
           ysize(2) = 0.82*mri.dim(2)/ydim;
-        elseif strcmp(cfg.viewdim, 'square')
+        elseif strcmp(cfg.axisratio, 'square')
           xsize = [0.41 0.41]; % square viewing dimensions
           ysize = [0.41 0.41];
         end
