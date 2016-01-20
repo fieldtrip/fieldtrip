@@ -37,7 +37,7 @@ end;
 % remove excess connections
 overby = KK-K;
 if(overby>0)
-    [i j] = find(dCIJ);
+    [i,j] = find(dCIJ);
     rp = randperm(length(i));
     for ii=1:overby
         CIJ(i(rp(ii)),j(rp(ii))) = 0;
