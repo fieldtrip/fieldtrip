@@ -946,6 +946,12 @@ if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
     if size(chanposorg, 1) == numel(sens.label)
         sens.chanpos = chanposorg;
     end
+% In case not all the locations have NaNs it might still be useful to plot them
+% But perhaps it'd be better to have any(any
+elseif any(all(isnan(sens.chanpos)))
+    [sel1, sel2] = match_str(sens.label, sens.labelorg);
+    sens.chanpos = chanposorg(sel2, :);
+    sens.label   = sens.labelorg(sel2);
 end
 
 fprintf('creating layout for %s system\n', ft_senstype(sens));
