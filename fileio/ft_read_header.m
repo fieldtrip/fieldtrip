@@ -70,6 +70,8 @@ function [hdr] = ft_read_header(filename, varargin)
 %
 % The following Eyetracker dataformats are supported
 %   EyeLink - SR Research (*.asc)
+%   Tobii - (*.tsv)
+%   SensoMotoric Instruments - (*.txt)
 %
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
@@ -193,7 +195,7 @@ else
   checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
   if isempty(cache),
-    if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc') || strcmp(headerformat, 'gtec_mat') || strcmp(headerformat, 'biosig')
+    if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc')  || strcmp(headerformat, 'smi_txt') || strcmp(headerformat, 'gtec_mat') || strcmp(headerformat, 'biosig')
       cache = true;
     else
       cache = false;
@@ -738,10 +740,53 @@ switch headerformat
 
   case 'tobii_tsv'
     tsv = read_tobii_tsv(filename);
-    keyboard
+    % keyboard
     % remember the original header details
     hdr.orig = tsv;
+  
+  case 'smi_txt'
+    smi = read_smi_txt(filename);
+    hdr.nChans              = size(smi.dat,1);
+    hdr.nSamples            = size(smi.dat,2);
+    hdr.nSamplesPre         = 0;
+    hdr.nTrials             = 1;
+    hdr.FirstTimeStamp      = smi.trigger(1,1).timestamp;
     
+    % if the header contains the sampling rate use it and if not, compute
+    % it from scratch. If computed, sampling rate might have numerical
+    % issues due to tolerance (the reason that I write the two options)
+    if isfield(smi,'Fs') && ~isempty(smi.Fs);
+      hdr.Fs = smi.Fs;
+      hdr.TimeStampPerSample = 1000./hdr.Fs;
+    else
+      hdr.TimeStampPerSample  = mean(diff(smi.dat(1,:)));
+      hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
+    end
+    
+    if hdr.nChans ~= size(smi.label,1);
+      error('data and header have different number of channels');
+    else
+      hdr.label = smi.label;
+    end
+    
+    % remember the original header details
+    hdr.orig.header = smi.header;
+    % remember all header and data details upon request
+    if cache
+      hdr.orig = smi;
+    end
+    % add channel units when possible. 
+    for i=1:hdr.nChans;
+      chanunit = regexp(hdr.label{i,1},'(?<=\[).+?(?=\])','match');
+      if ~isempty(chanunit)
+        hdr.chanunit{i,1} = chanunit{1};
+        hdr.chantype{i,1} = 'eyetracker';
+      else
+        hdr.chanunit{i,1} = 'unknown';
+        hdr.chantype{i,1} = 'unknown';
+      end
+    end
+
   case 'eyelink_asc'
     asc = read_eyelink_asc(filename);
     hdr.nChans              = size(asc.dat,1);
