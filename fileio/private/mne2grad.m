@@ -12,7 +12,12 @@ function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 %
 % See also CTF2GRAD, BTI2GRAD
 
-% Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script
+%%%%%%%%%%%%%%%%%% BEGIN REVISION HISTORY %%%%%%%%%%%%%%%%%%
+% 
+% Robert Oostenveld 22/01/2016 reimplemented construction of integration
+% points on basis of coil_def.dat file from MNE
+% 
+% Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script 
 % based on fiff_access). lhunt@fmrib.ox.ac.uk
 %
 % Teresa Cheung 09/24/2011 revision to Laurence Hunt's script. The coil
@@ -20,7 +25,10 @@ function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 % Vectorview (306) planar gradiometers and magnetometers. Coil geometry for
 % the Neuromag-122 planar gradiometer is different and is not read with
 % this script (coil_type should equal 2)
+%
+%%%%%%%%%%%%%%%%%% END REVISION HISTORY %%%%%%%%%%%%%%%%%%
 
+% Copyrights (C) 2016, Robert Oostenveld
 % Copyrights (C) 2011, Teresa Cheung
 % Copyrights (C) 2008, Laurence Hunt
 % Copyrights (C) 2005, Joachim Gross
@@ -62,11 +70,11 @@ else
   orig = hdr; % assume that it is the original header
 end
 
-% start with empty gradiometer
+% start with empty gradiometer definition
 grad = [];
-grad.coilpos  = [];
-grad.coilori  = [];
-grad.tra      = [];
+
+% start with empty electrode definition
+elec = [];
 
 % begin by transforming all channel locations into the desired coordinate system, if possible
 if ~dewar
