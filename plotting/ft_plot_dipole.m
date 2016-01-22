@@ -11,7 +11,7 @@ function ft_plot_dipole(pos, ori, varargin)
 %   'diameter' = number indicating sphere diameter (default = 'auto')
 %   'length'   = number indicating length of the stick (default = 'auto')
 %   'color'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'r')
-%   'units'    = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
+%   'unit'     = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
 %   'scale'    = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
 %
 % Example
@@ -44,11 +44,21 @@ amplitudescale = ft_getopt(varargin, 'scale',    'none');
 color          = ft_getopt(varargin, 'color',    'r'); % can also be a RGB triplet
 diameter       = ft_getopt(varargin, 'diameter', 'auto');
 length         = ft_getopt(varargin, 'length',   'auto');
-units          = ft_getopt(varargin, 'units',    'cm');
+unit           = ft_getopt(varargin, 'unit',     'cm');
+
+
+% for backward compatibility, this can be changed into an error at the end of 2016
+units = ft_getopt(varargin, 'units');
+if ~isempty(units)
+  warning('please use "unit" instead of "units"');
+  unit = units;
+  clear units
+end
+  
 
 if isequal(diameter, 'auto')
   % the default is a 5 mm sphere
-  switch units
+  switch unit
     case 'm'
       diameter = 0.005;
     case 'cm'
@@ -56,13 +66,13 @@ if isequal(diameter, 'auto')
     case 'mm'
       diameter = 5;
     otherwise
-      error('unsupported units');
+      error('unsupported unit');
   end
 end
 
 if isequal(length, 'auto')
   % the default is a 15 mm stick
-  switch units
+  switch unit
     case 'm'
       length = 0.015;
     case 'cm'
@@ -70,7 +80,7 @@ if isequal(length, 'auto')
     case 'mm'
       length = 15;
     otherwise
-      error('unsupported units');
+      error('unsupported unit');
   end
 end
 
