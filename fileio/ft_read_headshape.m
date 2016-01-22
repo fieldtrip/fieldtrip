@@ -9,7 +9,6 @@ function [shape] = ft_read_headshape(filename, varargin)
 % or
 %   [shape] = ft_read_headshape({filename1, filename2}, ...)
 %
-%
 % If you specify the filename as a cell-array, the following situations are supported:
 %  - a two-element cell-array with the file names for the left and
 %    right hemisphere, e.g. FreeSurfer's {'lh.orig' 'rh.orig'}, or
@@ -28,10 +27,10 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'concatenate' = 'no' or 'yes' (default = 'yes')
 %
 % Supported input file formats include
-%   'matlab'       Containing FieldTrip or BrainStorm headshapes or cortical meshes
-%   'stl'          STereoLithography file format, for use with CAD and generic 3D mesh editing programs
-%   'vtk'          Visualization ToolKit file format, for use with paraview
-%   'mne_*'        MNE surface description in ascii format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
+%   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
+%   'stl'          STereoLithography file format, for use with CAD and/or generic 3D mesh editing programs
+%   'vtk'          Visualization ToolKit file format, for use with Paraview
+%   'mne_*'        MNE surface description in ASCII format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
 %   'ctf_*'
 %   '4d_*'
 %   'itab_asc'
