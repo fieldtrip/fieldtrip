@@ -13,7 +13,7 @@ function [header] = read_besa_besa_header(fname)
 % 
 % 
 % 
-% 2015 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
+% 2016 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
 
 % For debugging %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
 warning on;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
@@ -190,12 +190,12 @@ else
   header.nSamples = [];
 end
 
-header.nSamplesPre = []; % Continuous data
+header.nSamplesPre = 0; % Continuous data
 header.nTrials     = 1;  % Continuous data
 
 %  Channel labels
 if isfield(header.orig.channel_info,'channel_labels')
-  header.label = header.orig.channel_info.channel_labels;
+  header.label = header.orig.channel_info.channel_labels';
 else
   warning('ReadBesaMatlab:WarningMissingHeaderInfo','Missing channel labels in header.orig. Creating default channel names');
   for channel_n = 1:header.nChans
@@ -835,8 +835,7 @@ switch event_tag
   case 'ASGM'
     % Average segment start event tag
     event_obj = read_event_tag_asgm(fid,ftell(fid),event_length,event_obj);
-  case 'MPS'
-    % THREE CHARACTERS? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+  case 'MPS '
     % Multiple pattern search event tag
     %   used by BESA internally
     if(fseek(fid,event_length,'cof') == -1)
@@ -865,8 +864,7 @@ switch event_tag
   case 'EPOC'
     % Epoch event tag
     event_obj = read_event_tag_epoc(fid,ftell(fid),event_length,event_obj);
-  case 'IMP'
-    % THREE CHARACTERS? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+  case 'IMP '
     % Impedance event tag
     event_obj = read_event_tag_imp(fid,ftell(fid),event_length,event_obj);
   otherwise
@@ -1114,8 +1112,7 @@ while ~feof(fid) && ftell(fid) < (pair_offset+pair_length)
           event_obj.partner_event = read_event_tag_segm(fid,ftell(fid),event_length,event_obj);
         case 'ASGM'
           event_obj.partner_event = read_event_tag_asgm(fid,ftell(fid),event_length,event_obj);
-        case 'MPS'
-          % THREE CHARACTERS? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+        case 'MPS '
           if(fseek(fid,event_length,'cof') == -1)
             fclose(fid);
             error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPS]',event_length);
@@ -1135,8 +1132,7 @@ while ~feof(fid) && ftell(fid) < (pair_offset+pair_length)
           event_obj.partner_event = read_event_tag_arti(fid,ftell(fid),event_length,event_obj);
         case 'EPOC'
           event_obj.partner_event = read_event_tag_epoc(fid,ftell(fid),event_length,event_obj);
-        case 'IMP'
-          % THREE CHARACTERS? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+        case 'IMP '
           event_obj.partner_event = read_event_tag_imp(fid,ftell(fid),event_length,event_obj);
         otherwise
           % Unrecognzed tag. Try to skip forward by offset
@@ -1205,8 +1201,7 @@ while ~feof(fid) && ftell(fid) < (imp_offset+imp_length)
       %  Set to 0 if the impedance status (valid/invalid) is stored
       %  Set to 1 if impedance values (in kOhm) are stored
       event_obj.impedance.format = fread(fid,1,'*int32');
-    case 'NR'
-      % TWO CHARACTERS? %%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+    case 'NR  '
       % Number of channels for which impedance information is stored.
       %   (Number of elements stored in TYPE, LABL and VAL)
       event_obj.impedance.n_channels = fread(fid,1,'*uint32');
@@ -1221,8 +1216,7 @@ while ~feof(fid) && ftell(fid) < (imp_offset+imp_length)
       %   Note: Channel type and channel label are used for identification of channel for which impedance information is set.
       %   (Compare to data elements CHTS and CHLA as specified in chapter 2.3).
       event_obj.impedance.labels = read_chars(fid,current_length);
-    case 'VAL'
-      % TWO CHARACTERS? %%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+    case 'VAL '
       % Impedance values
       % Depending on format set in FORM either an impedance STATUS (ok/not ok) or an impedance VALUE (in kOhm) is stored
       %   A value of -1 means that the impedance is not set or invalid

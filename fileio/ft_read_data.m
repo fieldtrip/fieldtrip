@@ -380,7 +380,7 @@ switch dataformat
     dimord = 'chans_samples';
     
   case 'besa_besa'
-    dat = read_besa_besa(filename, chanindx, begsample, endsample);
+    dat = read_besa_besa(filename, hdr, begsample, endsample, chanindx);
 
   case 'besa_avr'
     % BESA average data

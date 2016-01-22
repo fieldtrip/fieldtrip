@@ -53,7 +53,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   EGI - Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw, *.sbin, *.mff)
 %   GTec (*.mat)
 %   Generic data formats (*.edf, *.gdf)
-%   Megis/BESA (*.avr, *.swf)
+%   Megis/BESA (*.avr, *.swf, *.besa)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
 %   Nexstim (*.nxe)
 %
@@ -327,7 +327,16 @@ switch headerformat
     end
 
   case 'besa_besa'
-    hdr = read_besa_besa(filename);
+    if isempty(chanindx)
+      hdr = read_besa_besa(filename);
+    else
+      hdr = read_besa_besa(filename,[],1);
+      if chanindx > hdr.orig.channel_info.orig_n_channels
+        error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+      else
+        hdr = read_besa_besa(filename,[],chanindx);
+      end;
+    end;
     
   case 'besa_avr'
     orig = read_besa_avr(filename);

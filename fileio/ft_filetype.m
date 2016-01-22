@@ -771,7 +771,7 @@ elseif filetype_check_extension(filename, '.sfh') && filetype_check_header(filen
 elseif filetype_check_extension(filename, '.besa')
   type = 'besa_besa';
   manufacturer = 'BESA';
-  content = 'electrophysiological data'
+  content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.srf') && filetype_check_header(filename, [0 0 0 0], 4)
   type = 'brainvoyager_srf';
   manufacturer = 'BrainVoyager'; % see http://support.brainvoyager.com/installation-introduction/23-file-formats/375-users-guide-23-the-format-of-srf-files.html

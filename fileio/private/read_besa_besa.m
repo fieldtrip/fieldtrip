@@ -1,26 +1,142 @@
 
-function [header,data] = read_besa_besa(fname)
+function [data] = read_besa_besa(filename, header, begsample, endsample, chanindx)
 %% Reads BESA .besa format files
 % See formatting document <a href="matlab:web(http://www.besa.de/downloads/file-formats/)">here</a>
 % 
-% [header,data] = readbesa(fname)
+%
+% Use as
+%   [header] = read_besa_besa(filename);
+% where
+%    filename        name of the datafile, including the .besa extension
+% This returns a header structure with the following elements
+%   header.Fs           sampling frequency
+%   header.nChans       number of channels
+%   header.nSamples     number of samples per trial
+%   header.nSamplesPre  number of pre-trigger samples in each trial
+%   header.nTrials      number of trials
+%   header.label        cell-array with labels of each channel
+%   header.orig         detailled EDF header information
+%
+% Use as
+%   [header] = read_besa_besa(filename, [], chanindx);
+% where
+%    filename        name of the datafile, including the .edf extension
+%    chanindx        index of channels to read (optional, default is all)
+%                    Note that since 
+% This returns a header structure with the following elements
+%   header.Fs           sampling frequency
+%   header.nChans       number of channels
+%   header.nSamples     number of samples per trial
+%   header.nSamplesPre  number of pre-trigger samples in each trial
+%   header.nTrials      number of trials
+%   header.label        cell-array with labels of each channel
+%   header.orig         detailled EDF header information
+%
+% Or use as
+%   [dat] = read_besa_besa(filename, header, begsample, endsample, chanindx);
+% where
+%    filename        name of the datafile, including the .edf extension
+%    header          header structure, see above
+%    begsample       index of the first sample to read
+%    endsample       index of the last sample to read
+%    chanindx        index of channels to read (optional, default is all)
+% This returns a Nchans X Nsamples data matrix
 % 
-% inputs:
-%  fname [string] - path to .besa file
 % 
-% outputs:
-%  alldata [n_samples x n_channels] - The data
-%  header [structure] - Header structure
-% 
-% 
-% 
-% 2015 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
+% 2016 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
+
 
 % For debugging %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
 warning on;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
 
+switch nargin
+  case 1
+    chanindx=[];
+  case 2
+    chanindx=[];
+  case 3
+    chanindx=begsample;
+  case 4
+    error('ReadBesaMatlab:ErrorInput','Number of input arguments should be 1,2,3, or 5');
+end
+
+
+
+
+needhdr = (nargin==1)||(nargin==3);
+needevt = (nargin==2); % Not implemented yet  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+needdat = (nargin==5);
+
+if needhdr
+  % Return only header data
+  data = read_besa_besa_header(filename);
+  % Empty chanindx means we want all channels
+  if isempty(chanindx)
+    chanindx = 1:data.nChans;
+  end
+  % Return header data for certain channels
+  %  Keep original channel info also
+  data.orig.chansel = chanindx; % header.orig.chansel is used for reading channels from data
+  data.nChans = numel(chanindx);
+  data.label = data.label(chanindx);
+  data.orig.channel_info.orig_n_channels = data.orig.channel_info.n_channels;
+  data.orig.channel_info.n_channels = numel(chanindx);
+  data.orig.channel_info.orig_lsbs = data.orig.channel_info.lsbs;
+  data.orig.channel_info.lsbs = data.orig.channel_info.lsbs(chanindx);
+  data.orig.channel_info.orig_channel_labels = data.orig.channel_info.channel_labels;
+  data.orig.channel_info.channel_labels = data.orig.channel_info.channel_labels(chanindx);
+  data.orig.channel_info.orig_channel_states = data.orig.channel_info.channel_states;
+  data.orig.channel_info.channel_states = data.orig.channel_info.channel_states(chanindx);
+  return
+end
+
+% Empty chanindx means we want all channels
+if isempty(chanindx)
+  chanindx = 1:header.nChans;
+end
+
+%% Determine channels to pull from data
+% Default is all channels
+channels_to_pull = 1:header.nChans;
+if isempty(chanindx)
+  if isfield(header.orig,'chansel')
+    if ~isequal(sort(channels_to_pull),sort(header.orig.chansel))
+      % header.orig.chansel exists but is not equal to chanindx
+      %   Using header.orig.chansel
+      warning('ReadBesaMatlab:WarningChanselDNEChanindx','header.orig.chansel and chanindx should be equal. chanindx = []. Using header.orig.chansel.');
+      channels_to_pull = header.orig.chansel;
+    end
+  end
+else
+  channels_to_pull = chanindx;
+  if isfield(header.orig,'chansel')
+    if ~isequal(sort(channels_to_pull),sort(header.orig.chansel))
+      % header.orig.chansel exists but is not equal to chanindx
+      %  Using header.orig.chansel
+      warning('ReadBesaMatlab:WarningChanselDNEChanindx','header.orig.chansel and chanindx should be equal. Using header.orig.chansel.');
+      channels_to_pull = header.orig.chansel;
+    end
+  else
+    % chansindx is not empty but header.orig.chansel does not exist
+    %  Using chansindx
+    warning('ReadBesaMatlab:WarningChanselDNEChanindx','header.orig.chansel and chanindx should be equal. header.orig.chansel does not exist. Using chanindx.');
+    header.orig.chansel = chanindx;
+    header.nChans = header(chanindx);
+    header.label = header.label(chanindx);
+    header.orig.channel_info.orig_n_channels = header.orig.channel_info.n_channels;
+    header.orig.channel_info.n_channels = numel(chanindx);
+    header.orig.channel_info.orig_lsbs = header.orig.channel_info.lsbs;
+    header.orig.channel_info.lsbs = header.orig.channel_info.lsbs(chanindx);
+    header.orig.channel_info.orig_channel_labels = header.orig.channel_info.channel_labels;
+    header.orig.channel_info.channel_labels = header.orig.channel_info.channel_labels(chanindx);
+    header.orig.channel_info.orig_channel_states = header.orig.channel_info.channel_states;
+    header.orig.channel_info.channel_states = header.orig.channel_info.channel_states(chanindx);
+    channels_to_pull = header.orig.chansel;
+  end
+end
+
 %% Open file
-[fid,msg] = fopen(fname,'r');
+[fid,msg] = fopen(filename,'r');
 assert(fid~=-1,'ReadBesaMatlab:ErrorOpeningFile',msg);
 
 % Get length of file
@@ -28,38 +144,66 @@ fseek(fid,0,'eof');
 file_length = ftell(fid);
 fseek(fid,0,'bof');
 
-%% Read and save all header information
-[header] = read_besa_besa_header(fname);
-
 %% Data blocks
-% Collect data block info
-data_block_offsets   = header.orig.tags.tags.position(strcmp(header.orig.tags.tags.type,'BDAT'));
-data_block_n_samples = header.orig.tags.tags.n_samples(strcmp(header.orig.tags.tags.type,'BDAT'));
-data_block_samples_begin = ones(numel(data_block_n_samples),1);
-data_block_samples_end   = ones(numel(data_block_n_samples),1)*data_block_n_samples(1);
-for block_n = 2:numel(data_block_n_samples)
-  data_block_samples_begin(block_n) = data_block_samples_end(block_n-1) + 1;
-  data_block_samples_end(block_n)   = data_block_samples_end(block_n-1) + data_block_n_samples(block_n);
+if needdat
+  % Collect data block info
+  data_block_offsets   = header.orig.tags.tags.position(strcmp(header.orig.tags.tags.type,'BDAT'));
+  data_block_n_samples = header.orig.tags.tags.n_samples(strcmp(header.orig.tags.tags.type,'BDAT'));
+  data_block_samples_beg = ones(numel(data_block_n_samples),1);
+  data_block_samples_end   = ones(numel(data_block_n_samples),1)*data_block_n_samples(1);
+  for block_n = 2:numel(data_block_n_samples)
+    data_block_samples_beg(block_n) = data_block_samples_end(block_n-1) + 1;
+    data_block_samples_end(block_n)   = data_block_samples_end(block_n-1) + data_block_n_samples(block_n);
+  end
+  
+  % Choose blocks that contain requested samples
+  if isempty(begsample) || begsample < 1
+    begsample = 1;
+  end
+  if isempty(endsample) || endsample > sum(data_block_n_samples)
+    endsample = sum(data_block_n_samples);
+  end
+  blocks_to_pull = [];
+  for block_n = 1:numel(data_block_n_samples)
+    if( ~(data_block_samples_beg(block_n)<begsample && data_block_samples_end(block_n)<begsample) && ...
+        ~(data_block_samples_beg(block_n)>endsample && data_block_samples_end(block_n)>endsample) )
+      blocks_to_pull(end+1) = block_n; %#ok<AGROW>
+    end
+  end
+  % These values correspond to indices in each block
+  samples_to_pull_beg = ones(numel(data_block_n_samples),1);
+  samples_to_pull_end = data_block_n_samples';
+  for block_n = blocks_to_pull
+    if(data_block_samples_beg(block_n)<begsample)
+      samples_to_pull_beg(block_n) = begsample-data_block_samples_beg(block_n)+1;
+    end
+    if(data_block_samples_end(block_n)>endsample)
+      samples_to_pull_end(block_n) = endsample-data_block_samples_beg(block_n)+1;
+    end
+  end
+  % These values will correspond to the output sample number
+  data_block_samples_beg = max(data_block_samples_beg-begsample+1, 1);
+  data_block_samples_end = min(data_block_samples_end-begsample+1, endsample-begsample+1);
+  
+  % Check for necessary values
+  if(~isfield(header.orig.channel_info,'n_channels'))
+    fclose(fid);
+    error('ReadBesaMatlab:ErrorNoNChannels','header.orig.channel_info.n_channels does not exist. This is needed for reading data blocks');
+  end
+  if(~isfield(header.orig.channel_info,'lsbs'))
+    % No least significant bit values found, so setting them all to 1.0
+    header.orig.channel_info.lsbs = ones(header.orig.channel_info.n_channels,1,'double');
+  end
+  
+  % Loop over all data blocks and add to alldata matrix
+  data = zeros(numel(channels_to_pull), endsample-begsample+1);
+  for block_n = blocks_to_pull
+    blockdata = read_BDAT(fid, file_length, data_block_offsets(block_n), header.orig.channel_info.orig_n_channels, header.orig.channel_info.orig_lsbs);
+    data(:,data_block_samples_beg(block_n):data_block_samples_end(block_n)) = ...
+      blockdata(samples_to_pull_beg(block_n):samples_to_pull_end(block_n),channels_to_pull)';
+  end
+  % NEED TO IMPLEMENT OVERWRITES %%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
 end
-
-% Check for necessary values
-if(~isfield(header.orig.channel_info,'n_channels'))
-  fclose(fid);
-  error('ReadBesaMatlab:ErrorNoNChannels','header.orig.channel_info.n_channels does not exist. This is needed for reading data blocks');
-end
-if(~isfield(header.orig.channel_info,'lsbs'))
-  % No least significant bit values found, so setting them all to 1.0
-  header.orig.channel_info.lsbs = ones(header.orig.channel_info.n_channels,1,'double');
-end
-
-% Loop over all data blocks and add to alldata matrix
-data = zeros(sum(data_block_n_samples),header.orig.channel_info.n_channels);
-for block_n = 1:numel(data_block_n_samples)
-  data(data_block_samples_begin(block_n):data_block_samples_end(block_n),:) = ...
-    read_BDAT(fid, file_length, data_block_offsets(block_n), header.orig.channel_info.n_channels, header.orig.channel_info.lsbs);
-end
-% NEED TO IMPLEMENT OVERWRITES %%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-
 
 
 %% DATA BLOCK FUNCTIONS
@@ -67,10 +211,16 @@ end
 function block_data = read_BDAT(fid, file_length, bdat_offset, n_channels, lsbs)
 %% Read data block
 %
+% fif - file ID
+% file_length - total length of the file in bytes
+% bdat_offset - The location of this data block in the file
+% n_channels - number of channels
 % lsbs - [1 x n_channels array] - int data is multiplied by this for scaling
 
-% CHECK FOR LSB LESS THAN ZERO %%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-% Please note that zero or negative LSB values are not allowed. If a non-positive value is found in the array, a value of "1.f" is used instead. %%%%%%%%%%%%%%%%%%%%%%%%%%%
+if min(lsbs < 0)
+  lsbs = ones(size(lsbs));
+end
+% Please note that zero or negative LSB values are not allowed. If a non-positive value is found in the array, a value of "1.f" is used instead.
 
 % Constants for data type
 CONST_FLOAT = 0;
@@ -258,7 +408,6 @@ switch num2str([data_type data_comp])
     if(strcmp(num2str([data_type data_comp]),num2str([CONST_INT16 CONST_COMPRESSED])))
       % Multiply int16 data by lsbs
       block_data = bsxfun(@times,lsbs',block_data);
-      % CHECK FOR LSB LESS THAN ZERO %%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
     end
 end
 
