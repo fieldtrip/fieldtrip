@@ -63,11 +63,12 @@ if ~isempty(chantype)
   
   if ischar(chantype)
     chantype = {chantype};
-  end
-  chansel = match_str(sens.chantype, chantype);
+  end  
   
   % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
   sens = undobalancing(sens);
+  
+  chansel = match_str(sens.chantype, chantype);
   
   % remove the channels that are not selected
   sens.chanpos = sens.chanpos(chansel,:);
