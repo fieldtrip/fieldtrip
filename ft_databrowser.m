@@ -201,6 +201,7 @@ cfg.editfontsize    = ft_getopt(cfg, 'editfontsize', 12);
 cfg.editfontunits   = ft_getopt(cfg, 'editfontunits', 'points');     % inches, centimeters, normalized, points, pixels
 cfg.axisfontsize    = ft_getopt(cfg, 'axisfontsize', 10);
 cfg.axisfontunits   = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, centimeters, normalized, points, pixels
+cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
