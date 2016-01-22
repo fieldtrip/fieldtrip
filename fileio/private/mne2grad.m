@@ -1,16 +1,18 @@
-function [grad, elec] = mne2grad(hdr, dewar)
+function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 
-% MNE2GRAD creates gradiometer definition for FIFF dataset
+% MNE2GRAD converts a header from a fif file that was read using the MNE toolbox into
+% a gradiometer structure that can be understood by the FieldTrip low-level forward
+% and inverse routines.
 %
 % Use as
-%   [grad, elec] = mne2grad(hdr, dewar)
-%
-% The optional second argument is a boolean that can be used to return the sensors
-% in dewar coordinates (default is head coordinates)
+%   [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
+% where
+%   dewar        = boolean, whether to return it in dewar or head coordinates (default is head coordinates)
+%   coilaccuracy = empty or a number (default is empty)
 %
 % See also CTF2GRAD, BTI2GRAD
 
-% Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script 
+% Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script
 % based on fiff_access). lhunt@fmrib.ox.ac.uk
 %
 % Teresa Cheung 09/24/2011 revision to Laurence Hunt's script. The coil
@@ -45,7 +47,11 @@ if nargin<2 || isempty(dewar)
   dewar = false;
 end
 
-grad = [];
+if nargin<3 || isempty(coilaccuracy)
+  % if empty it will use the original code
+  % otherwise it will use the specified accuracy coil definition from the MNE coil_def.dat
+  coilaccuracy = []; 
+end
 
 % orig = fiff_read_meas_info(filename);
 % orig = fiff_setup_read_raw(filename);
@@ -56,8 +62,13 @@ else
   orig = hdr; % assume that it is the original header
 end
 
-% begin by transforming all channel locations into the desired coordinate system, if possible
+% start with empty gradiometer
+grad = [];
+grad.coilpos  = [];
+grad.coilori  = [];
+grad.tra      = [];
 
+% begin by transforming all channel locations into the desired coordinate system, if possible
 if ~dewar
   if ~isempty(orig.dev_head_t)
     orig.chs = fiff_transform_meg_chs(orig.chs,orig.dev_head_t);
@@ -80,130 +91,222 @@ else
   end
 end
 
-% how many Planar gradiometers?
-nPlaGrad = 0;
-for i = 1:orig.nchan;
-  nPlaGrad = nPlaGrad +(orig.chs(i).coil_type==3012 | orig.chs(i).coil_type==3013 | orig.chs(i).coil_type==3014 | orig.chs(i).coil_type==2) ;
-end
-
-% how many Magnetometers?
-nMag = 0;
-for i = 1:orig.nchan;
-  nMag = nMag +(orig.chs(i).coil_type==3022 | orig.chs(i).coil_type==3023 | orig.chs(i).coil_type==3024);
-end
-
-% how many Axial gradiometers?
-nAxGrad = 0;
-for i = 1:orig.nchan;
-  nAxGrad = nAxGrad +(orig.chs(i).coil_type==7001); % babySQUID
+if ~isempty(coilaccuracy)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % use the coil definitions from the MNE coil_def.dat file
+  % these allow for varying accuracy which is specified by 
+  % coilaccuracy = 0, 1 or 2
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  ft_hastoolbox('mne', 1);
+  [ftver, ftpath] = ft_version;
+  def = mne_load_coil_def(fullfile(ftpath, 'external', 'mne', 'coil_def.dat'));
+  
+  k = 1;
+  for i=1:length(orig.chs)
+    thisdef = def([def.id]==orig.chs(i).coil_type & [def.accuracy]==coilaccuracy);
+    if isempty(thisdef)
+      continue;
+    end
+    weight = thisdef.coildefs(:,1);
+    pos = thisdef.coildefs(:,2:4);
+    ori = thisdef.coildefs(:,5:7);
+    H = orig.chs(i).coil_trans;
+    pos = ft_warp_apply(H, pos);
+    T = H;
+    R = H;
+    T(1:3,1:3) = 0; % remove the rotation, keep the translation
+    R(1:3,4)   = 0; % remove the translation, keep the rotation
+    ori = ft_warp_apply(H, ori);
+    for j=1:thisdef.num_points
+      grad.coilpos(k,:) = pos(j,:);
+      grad.coilori(k,:) = ori(j,:);
+      grad.tra(i,k)     = weight(j);
+      k = k + 1;
+    end
+    grad.label{i} = orig.ch_names{i};
+    grad.chanpos(i,:) = T(1:3,4);
+    grad.chanori(i,:) = ft_warp_apply(R, [0 0 1]);
+    % FIFF.FIFF_UNIT_HZ  = 101;
+    % FIFF.FIFF_UNIT_N   = 102;
+    % FIFF.FIFF_UNIT_PA  = 103;
+    % FIFF.FIFF_UNIT_J   = 104;
+    % FIFF.FIFF_UNIT_W   = 105;
+    % FIFF.FIFF_UNIT_C   = 106;
+    % FIFF.FIFF_UNIT_V   = 107;
+    % FIFF.FIFF_UNIT_F   = 108;
+    % FIFF.FIFF_UNIT_OHM = 109;
+    % FIFF.FIFF_UNIT_MHO = 110;
+    % FIFF.FIFF_UNIT_WB  = 111;
+    % FIFF.FIFF_UNIT_T   = 112;
+    % FIFF.FIFF_UNIT_H   = 113;
+    % FIFF.FIFF_UNIT_CEL = 114;
+    % FIFF.FIFF_UNIT_LM  = 115;
+FIFF.FIFF_UNIT_LX  = 116;
+    switch orig.chs(i).unit
+      case -1
+        grad.chanunit{i} = 'unknown';
+      case  107
+        grad.chanunit{i} = 'V';
+      case  112
+        grad.chanunit{i} = 'T';
+      case  201
+        grad.chanunit{i} = 'FIXME';
+      otherwise
+        error('unknown units');
+    end
+  end
+  
+  grad.label = grad.label(:);
+  grad.unit  = 'm'; % the coil_def.dat file is in meter
+  
+  remove = cellfun(@isempty, grad.label);
+  grad.label   = grad.label(~remove);
+  grad.tra     = grad.tra(~remove,:);
+  grad.chanpos = grad.chanpos(~remove,:);
+  grad.chanori = grad.chanori(~remove,:);
+  
+else
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % use the original implementation
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  % how many Planar gradiometers?
+  nPlaGrad = 0;
+  for i = 1:orig.nchan;
+    nPlaGrad = nPlaGrad +(orig.chs(i).coil_type==3012 | orig.chs(i).coil_type==3013 | orig.chs(i).coil_type==3014 | orig.chs(i).coil_type==2) ;
+  end
+  
+  % how many Magnetometers?
+  nMag = 0;
+  for i = 1:orig.nchan;
+    nMag = nMag +(orig.chs(i).coil_type==3022 | orig.chs(i).coil_type==3023 | orig.chs(i).coil_type==3024);
+  end
+  
+  % how many Axial gradiometers?
+  nAxGrad = 0;
+  for i = 1:orig.nchan;
+    nAxGrad = nAxGrad +(orig.chs(i).coil_type==7001); % babySQUID
+  end
+  
+  % % how many IAS (internal active shielding) channels?
+  % nIAS = 0;
+  % for i = 1:orig.nchan;
+  %   nIAS = nIAS + ~isempty(strmatch('IAS', orig.chs(i).ch_name));
+  % end
+  
+  % how many magnetic field sensors in total?
+  nSensors = nPlaGrad + nMag + nAxGrad;
+  
+  % how many coils in total?
+  nCoils = nPlaGrad*2 + nMag + nAxGrad*2;
+  
+  % intialise grad structure
+  grad.coilpos  = zeros(nCoils,3);
+  grad.coilori  = zeros(nCoils,3);
+  grad.tra      = zeros(nSensors,nCoils);
+  grad.unit     = 'cm'; % see below for the conversion, the original fif units are in meter
+  grad.label    = cell(nSensors,1);
+  
+  if dewar
+    grad.coordsys = 'dewar';
+  else
+    grad.coordsys = 'neuromag';
+  end
+  
+  % initialise elec structure, this can remain empty
+  elec = [];
+  
+  % define coils
+  kCoil = 1;
+  kChan = 1;
+  % cf. Joachim's original script - I've implemented it this way in case MEG
+  % and EEG channels are not listed first in the .fif file; this shouldn't
+  % ever be the case but acts as a safety net...
+  
+  for n = 1:orig.nchan
+    if (orig.chs(n).coil_type==3022 || orig.chs(n).coil_type==3023 || orig.chs(n).coil_type==3024) % magnetometer
+      t = orig.chs(n).coil_trans;
+      
+      % TC 2011 09 24 I have changed the coil definition, the original was
+      % grad.coilpos(kCoil,:) = t(1:3,4);
+      
+      grad.coilpos(kCoil,:) = t(1:3,4)+0.0003*t(1:3,3);
+      grad.coilori(kCoil,:) = t(1:3,3);
+      grad.tra(kChan,kCoil) = 1;
+      kCoil = kCoil+1;
+      grad.label{kChan} = deblank(orig.ch_names{n});
+      grad.chantype{kChan,1}='megmag';
+      kChan = kChan+1;
+      
+    elseif (orig.chs(n).coil_type==3012 || orig.chs(n).coil_type==3013 || orig.chs(n).coil_type==3014 || orig.chs(n).coil_type==2) % planar gradiometer
+      t = orig.chs(n).coil_trans;
+      
+      % TC 2011 09 24 I have changed the coil definition, the original was
+      % grad.coilpos(kCoil,:) = 0.0000*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % for the 1st coil
+      % grad.coilpos(kCoil,:) = 0.0000*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1)); % for the 2nd coil
+      
+      grad.coilpos(kCoil,:) = 0.0003*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1); % for the 1st coil
+      grad.coilori(kCoil,:) = t(1:3,3);
+      grad.tra(kChan,kCoil) = -1;
+      kCoil = kCoil+1;
+      
+      grad.coilpos(kCoil,:) = 0.0003*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1); % for the 2nd coil
+      grad.coilori(kCoil,:) = t(1:3,3);
+      grad.tra(kChan,kCoil) = 1;
+      kCoil = kCoil+1;
+      
+      grad.label{kChan} = deblank(orig.ch_names{n});
+      grad.chantype{kChan,1}='megplanar';
+      kChan = kChan+1;
+      
+    elseif (orig.chs(n).coil_type==7001)  % babySQUID axial gradiometer bottom coils
+      t = orig.chs(n).coil_trans;
+      
+      grad.coilpos(kCoil,:)=t(1:3,4);  % for the 1st coil
+      grad.coilori(kCoil,:)=t(1:3,3);
+      grad.tra(kChan,kCoil)=1;
+      kCoil=kCoil+1;
+      
+      grad.coilpos(kCoil,:)=t(1:3,4)+0.050*t(1:3,3);  % for the 2nd coil
+      grad.coilori(kCoil,:)=t(1:3,3);
+      grad.tra(kChan,kCoil)=-1;
+      kCoil=kCoil+1;
+      
+      grad.label{kChan}=deblank(orig.ch_names{n});
+      grad.chantype{kChan,1}='megaxial';
+      kChan=kChan+1;
+      
+    else
+      % do nothing - either an EEG channel or something else such as a stim channel
+    end
+  end
+  
+  % check we've got all the MEG channels:
+  kChan = kChan-1;
+  if kChan ~= (nPlaGrad + nMag +nAxGrad)
+    error('Number of MEG channels identified does not match number of channels in grad structure');
+  end
+  
+  % determine the type of acquisition system
+  if nAxGrad>0
+    grad.type = 'babysquid74';
+  elseif nPlaGrad>122 && nMag~=0
+    grad.type = 'neuromag306';
+  elseif nPlaGrad<=122 && nMag==0
+    grad.type = 'neuromag122';
+  else
+    % do not specify type of acquisition system
+  end
+  
+  % multiply by 100 to get cm
+  grad.coilpos = 100*grad.coilpos;
 end
 
 % how many EEG channels?
 nEEG = 0;
 for i = 1:orig.nchan;
   nEEG = nEEG +(orig.chs(i).kind==2);
-end
-
-% % how many IAS (internal active shielding) channels?
-% nIAS = 0;
-% for i = 1:orig.nchan;
-%   nIAS = nIAS + ~isempty(strmatch('IAS', orig.chs(i).ch_name));
-% end
-
-% how many sensors in total?
-nSensors = nPlaGrad + nMag + nAxGrad;
-
-% how many coils in total?
-nCoils = nPlaGrad*2 + nMag + nAxGrad*2;
-
-% intialise grad structure
-grad.coilpos  = zeros(nCoils,3);
-grad.coilori  = zeros(nCoils,3);
-grad.tra      = zeros(nSensors,nCoils);
-grad.unit     = 'cm'; % see below for the conversion, the original fif units are in meter
-grad.label    = cell(nSensors,1);
-
-if dewar
-  grad.coordsys = 'dewar';
-else
-  grad.coordsys = 'neuromag';
-end
-
-% initialise elec structure, this can remain empty
-elec = [];
-
-% define coils
-kCoil = 1;
-kChan = 1;
-% cf. Joachim's original script - I've implemented it this way in case MEG
-% and EEG channels are not listed first in the .fif file; this shouldn't
-% ever be the case but acts as a safety net...
-
-for n = 1:orig.nchan
-  if (orig.chs(n).coil_type==3022 || orig.chs(n).coil_type==3023 || orig.chs(n).coil_type==3024) % magnetometer
-    t = orig.chs(n).coil_trans;
-    
-    % TC 2011 09 24 I have changed the coil definition, the original was
-    % grad.coilpos(kCoil,:) = t(1:3,4);
-    
-    grad.coilpos(kCoil,:) = t(1:3,4)+0.0003*t(1:3,3);
-    grad.coilori(kCoil,:) = t(1:3,3);
-    grad.tra(kChan,kCoil) = 1;
-    kCoil = kCoil+1;
-    grad.label{kChan} = deblank(orig.ch_names{n});
-    grad.chantype{kChan,1}='megmag';
-    kChan = kChan+1;
-    
-  elseif (orig.chs(n).coil_type==3012 || orig.chs(n).coil_type==3013 || orig.chs(n).coil_type==3014 || orig.chs(n).coil_type==2) % planar gradiometer
-    t = orig.chs(n).coil_trans;
-    
-    % TC 2011 09 24 I have changed the coil definition, the original was
-    % grad.coilpos(kCoil,:) = 0.0000*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1)); % for the 1st coil
-    % grad.coilpos(kCoil,:) = 0.0000*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1)); % for the 2nd coil
-    
-    grad.coilpos(kCoil,:) = 0.0003*t(1:3,3)+t(1:3,4)-0.0084*t(1:3,1); % for the 1st coil
-    grad.coilori(kCoil,:) = t(1:3,3);
-    grad.tra(kChan,kCoil) = -1;
-    kCoil = kCoil+1;
-    
-    grad.coilpos(kCoil,:) = 0.0003*t(1:3,3)+t(1:3,4)+0.0084*t(1:3,1); % for the 2nd coil
-    grad.coilori(kCoil,:) = t(1:3,3);
-    grad.tra(kChan,kCoil) = 1;
-    kCoil = kCoil+1;
-    
-    grad.label{kChan} = deblank(orig.ch_names{n});
-    grad.chantype{kChan,1}='megplanar';
-    kChan = kChan+1;
-    
-  elseif (orig.chs(n).coil_type==7001)  % babySQUID axial gradiometer bottom coils
-    t = orig.chs(n).coil_trans;
-    
-    grad.coilpos(kCoil,:)=t(1:3,4);  % for the 1st coil
-    grad.coilori(kCoil,:)=t(1:3,3);
-    grad.tra(kChan,kCoil)=1;
-    kCoil=kCoil+1;
-    
-    grad.coilpos(kCoil,:)=t(1:3,4)+0.050*t(1:3,3);  % for the 2nd coil
-    grad.coilori(kCoil,:)=t(1:3,3);
-    grad.tra(kChan,kCoil)=-1;
-    kCoil=kCoil+1;
-    
-    grad.label{kChan}=deblank(orig.ch_names{n});
-    grad.chantype{kChan,1}='megaxial';
-    kChan=kChan+1;
-        
-  else
-    % do nothing - either an EEG channel or something else such as a stim channel
-  end
-end
-
-% multiply by 100 to get cm
-grad.coilpos = 100*grad.coilpos;
-
-% check we've got all the MEG channels:
-kChan = kChan-1;
-if kChan ~= (nPlaGrad + nMag +nAxGrad)
-  error('Number of MEG channels identified does not match number of channels in grad structure');
 end
 
 % define EEG channels
@@ -247,18 +350,7 @@ if nEEG>0
   elec.elecpos = 100*elec.elecpos;
 end
 
-% determine the type of acquisition system
-if nAxGrad>0
-  grad.type = 'babysquid74';
-elseif nPlaGrad>122 && nMag~=0
-  grad.type = 'neuromag306';
-elseif nPlaGrad<=122 && nMag==0
-  grad.type = 'neuromag122';
-else
-  % do not specify type of acquisition system
-end
-
-% remove grad if empty
+% remove grad if completely empty
 if size(grad.label,1) == 0
   grad = [];
 end

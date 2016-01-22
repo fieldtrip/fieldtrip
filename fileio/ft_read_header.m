@@ -142,6 +142,7 @@ headerformat   = ft_getopt(varargin, 'headerformat');
 retry          = ft_getopt(varargin, 'retry', false);     % the default is not to retry reading the header
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF with different sampling rates
+coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -570,7 +571,7 @@ switch headerformat
     end
     % add a gradiometer structure for forward and inverse modelling
     try
-      hdr.grad = ctf2grad(orig, strcmp(coordsys, 'dewar'));
+      hdr.grad = ctf2grad(orig, strcmp(coordsys, 'dewar'), coilaccuracy);
     catch
       % this fails if the res4 file is not correctly closed, e.g. during realtime processing
       tmp = lasterror;
@@ -1159,7 +1160,7 @@ switch headerformat
       
       % add a gradiometer structure for forward and inverse modelling
       try
-        [grad, elec] = mne2grad(cachechunk, 1); % 1: 'coordsys' = 'dewar'
+        [grad, elec] = mne2grad(cachechunk, true, coilaccuracy); % the coordsys is 'dewar'
         if ~isempty(grad)
           hdr.grad = grad;
         end
@@ -1521,10 +1522,10 @@ switch headerformat
     hdr.label       = info.ch_names(:);
     hdr.nChans      = info.nchan;
     hdr.Fs          = info.sfreq;
-    
+
     % add a gradiometer structure for forward and inverse modelling
     try
-      [grad, elec] = mne2grad(info, strcmp(coordsys, 'dewar'));
+      [grad, elec] = mne2grad(info, strcmp(coordsys, 'dewar'), coilaccuracy);
       if ~isempty(grad)
         hdr.grad = grad;
       end

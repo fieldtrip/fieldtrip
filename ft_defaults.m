@@ -21,8 +21,9 @@ function ft_defaults
 %
 % See also FT_HASTOOLBOX, FT_CHECKCONFIG
 
-% Note that this should be a function and not a script, otherwise the
-% ft_hastoolbox function appears not be found in fieldtrip/private.
+% undocumented options
+%   ft_default.siunits        = 'yes' or 'no'
+%   ft_default.coilaccuracy   = empty or number, can be 0 or higher
 
 % Copyright (C) 2009-2015, Robert Oostenveld
 %
@@ -271,3 +272,4 @@ if length(list)>1
   ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://fieldtrip.fcdonders.nl/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkMultipleToolbox
+
