@@ -94,6 +94,10 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.precision     = 'single' or 'double' (default = 'double')
 %   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e.first derivative then rectify)
 %
+% Prperocessing options that only apply to MEG data are
+%   cfg.coordsys      = string, 'head' or 'dewar' (default = 'head')
+%   cfg.coilaccuracy  = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
+%
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
@@ -191,10 +195,32 @@ cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
 cfg = ft_checkconfig(cfg, 'renamed', {'output', 'export'});
 
 % set the defaults
-if ~isfield(cfg, 'method'),       cfg.method = 'trial';         end
-if ~isfield(cfg, 'channel'),      cfg.channel = {'all'};        end
-if ~isfield(cfg, 'removemcg'),    cfg.removemcg = 'no';         end
-if ~isfield(cfg, 'removeeog'),    cfg.removeeog = 'no';         end
+cfg.method        = ft_getopt(cfg, 'method', 'trial');
+cfg.channel       = ft_getopt(cfg, 'channel', 'all');
+cfg.removemcg     = ft_getopt(cfg, 'removemcg', 'no');
+cfg.removeeog     = ft_getopt(cfg, 'removeeog', 'no');
+cfg.precision     = ft_getopt(cfg, 'precision', 'double');     
+cfg.padding       = ft_getopt(cfg, 'padding', 0);          % padding is only done when filtering
+cfg.paddir        = ft_getopt(cfg, 'paddir', 'both');         
+cfg.headerformat  = ft_getopt(cfg, 'headerformat');        % is passed to low-level function, empty implies autodetection
+cfg.dataformat    = ft_getopt(cfg, 'dataformat');          % is passed to low-level function, empty implies autodetection
+cfg.coordsys      = ft_getopt(cfg, 'coordsys', 'head');    % is passed to low-level function
+cfg.coilaccuracy  = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-level function
+
+% these options relate to the actual preprocessing, it is neccessary to specify here because of padding
+cfg.dftfilter     = ft_getopt(cfg, 'dftfilter', 'no');
+cfg.lpfilter      = ft_getopt(cfg, 'lpfilter', 'no');
+cfg.hpfilter      = ft_getopt(cfg, 'hpfilter', 'no');
+cfg.bpfilter      = ft_getopt(cfg, 'bpfilter', 'no');
+cfg.bsfilter      = ft_getopt(cfg, 'bsfilter', 'no');
+cfg.medianfilter  = ft_getopt(cfg, 'medianfilter', 'no');
+cfg.padtype       = ft_getopt(cfg, 'padtype', 'data');
+
+% these options relate to the actual preprocessing, it is neccessary to specify here because of channel selection
+cfg.reref         = ft_getopt(cfg, 'reref', 'no');
+cfg.refchannel    = ft_getopt(cfg, 'refchannel', {});
+cfg.refmethod     = ft_getopt(cfg, 'refmethod', 'avg');
+cfg.implicitref   = ft_getopt(cfg, 'implicitref');
 
 if ~isfield(cfg, 'feedback'),
   if strcmp(cfg.method, 'channel')
@@ -203,27 +229,6 @@ if ~isfield(cfg, 'feedback'),
     cfg.feedback = 'text';
   end
 end
-
-if ~isfield(cfg, 'precision'),    cfg.precision = 'double';     end
-if ~isfield(cfg, 'padding'),      cfg.padding = 0;              end % padding is only done when filtering
-if ~isfield(cfg, 'paddir'),       cfg.paddir  = 'both';         end
-if ~isfield(cfg, 'headerformat'), cfg.headerformat = [];        end % is passed to low-level function, empty implies autodetection
-if ~isfield(cfg, 'dataformat'),   cfg.dataformat = [];          end % is passed to low-level function, empty implies autodetection
-
-% these options relate to the actual preprocessing, it is neccessary to specify here because of padding
-if ~isfield(cfg, 'dftfilter'),    cfg.dftfilter = 'no';         end
-if ~isfield(cfg, 'lpfilter'),     cfg.lpfilter = 'no';          end
-if ~isfield(cfg, 'hpfilter'),     cfg.hpfilter = 'no';          end
-if ~isfield(cfg, 'bpfilter'),     cfg.bpfilter = 'no';          end
-if ~isfield(cfg, 'bsfilter'),     cfg.bsfilter = 'no';          end
-if ~isfield(cfg, 'medianfilter'), cfg.medianfilter = 'no';      end
-% these options relate to the actual preprocessing, it is neccessary to specify here because of channel selection
-if ~isfield(cfg, 'reref'),        cfg.reref = 'no';             end
-if ~isfield(cfg, 'refchannel'),   cfg.refchannel = {};          end
-if ~isfield(cfg, 'refmethod'),    cfg.refmethod = 'avg';        end
-if ~isfield(cfg, 'implicitref'),  cfg.implicitref = [];         end
-
-cfg.padtype = ft_getopt(cfg, 'padtype', 'data');
 
 % support for the following options was removed on 20 August 2004 in Revision 1.46
 if isfield(cfg, 'emgchannel'), error('EMG specific preprocessing is not supported any more'); end
@@ -241,7 +246,7 @@ end
 if isfield(cfg, 'nsdf'),
   % FIXME this should be handled by ft_checkconfig, but ft_checkconfig does not allow yet for
   % specific errors in the case of forbidden fields
-  error('the use of cfg.nsdf is deprecated. fieldtrip tries to determine the bit resolution automatically. you can overrule this by specifying cfg.dataformat and cfg.headerformat. see: http://fieldtrip.fcdonders.nl/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
+  error('The use of cfg.nsdf is deprecated. FieldTrip tries to determine the bit resolution automatically. You can overrule this by specifying cfg.dataformat and cfg.headerformat. See: http://fieldtrip.fcdonders.nl/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
 end
 
 if isfield(cfg, 'export') && ~isempty(cfg.export)
@@ -251,7 +256,9 @@ if isfield(cfg, 'export') && ~isempty(cfg.export)
   end
 end
 
+% data can be passed by the user, but might also have been loaded from cfg.inputfile
 hasdata = exist('data', 'var');
+
 if hasdata
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do preprocessing of data that has already been read into memory
@@ -379,12 +386,12 @@ else
   
   % check if the input cfg is valid for this function
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
-  cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
+  cfg = ft_checkconfig(cfg, 'required',   {'headerfile', 'datafile'});
   cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   
   % read the header
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy);
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
