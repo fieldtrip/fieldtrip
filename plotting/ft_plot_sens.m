@@ -177,21 +177,21 @@ warning(ws); % revert to original state
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'%%%%%%%%%%%%%%%%%%
-function plotcoil(pos, ori, coildiameter, style)
+function plotcoil(coilpos, coilori, coildiameter, style)
 % construct a template coil at [0 0 0], oriented towards [0 0 1]
-pos = circle(12);
+pos = circle(24);
 s   = scale([coildiameter coildiameter coildiameter]/2);
-for i=1:size(pos,1)
-  x = ori(i,1);
-  y = ori(i,2);
-  z = ori(i,3);
+for i=1:size(coilpos,1)
+  x  = coilori(i,1);
+  y  = coilori(i,2);
+  z  = coilori(i,3);
   ph = atan2(y, x)*180/pi;
   th = atan2(sqrt(x^2+y^2), z)*180/pi;
   r1 = rotate([0 th 0]);
   r2 = rotate([0 0 ph]);
-  t  = translate(pos(i,:));
+  t  = translate(coilpos(i,:));
   rim = ft_warp_apply(t*r2*r1*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
-  rim(1,:) = rim(end,:);            % replace the first (central) point with the last, this closes the circle
+  rim(1,:) = rim(end,:);               % replace the first (central) point with the last, this closes the circle
   h = line(rim(:,1), rim(:,2), rim(:,3));
   set(h, 'color', style(1));
 end
