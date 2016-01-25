@@ -82,17 +82,6 @@ coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neurom
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
 
-% optionally get the data from the URL and make a temporary local copy
-filename = fetch_url(filename);
-
-if isempty(fileformat)
-  % only do the autodetection if the format was not specified
-  fileformat = ft_filetype(filename);
-end
-
-if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
-  error('at present extracting annotation information only works in conjunction with mne_source files');
-end
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -201,6 +190,18 @@ if iscell(filename)
   
   return
 end % if iscell
+
+% optionally get the data from the URL and make a temporary local copy
+filename = fetch_url(filename);
+
+if isempty(fileformat)
+  % only do the autodetection if the format was not specified
+  fileformat = ft_filetype(filename);
+end
+
+if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
+  error('at present extracting annotation information only works in conjunction with mne_source files');
+end
 
 % start with an empty structure
 shape           = [];
