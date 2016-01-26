@@ -50,4 +50,4 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     break
   end
 end
-
+sens = ft_datatype_sens(sens);
