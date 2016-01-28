@@ -13,11 +13,11 @@ function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 % See also CTF2GRAD, BTI2GRAD
 
 %%%%%%%%%%%%%%%%%% BEGIN REVISION HISTORY %%%%%%%%%%%%%%%%%%
-% 
+%
 % Robert Oostenveld 22/01/2016 reimplemented construction of integration
 % points on basis of coil_def.dat file from MNE
-% 
-% Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script 
+%
+% Laurence Hunt 03/12/2008 (with thanks to Joachim Gross's original script
 % based on fiff_access). lhunt@fmrib.ox.ac.uk
 %
 % Teresa Cheung 09/24/2011 revision to Laurence Hunt's script. The coil
@@ -58,7 +58,7 @@ end
 if nargin<3 || isempty(coilaccuracy)
   % if empty it will use the original code
   % otherwise it will use the specified accuracy coil definition from the MNE coil_def.dat
-  coilaccuracy = []; 
+  coilaccuracy = [];
 end
 
 % orig = fiff_read_meas_info(filename);
@@ -102,7 +102,7 @@ end
 if ~isempty(coilaccuracy)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % use the coil definitions from the MNE coil_def.dat file
-  % these allow for varying accuracy which is specified by 
+  % these allow for varying accuracy which is specified by
   % coilaccuracy = 0, 1 or 2
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
@@ -111,6 +111,14 @@ if ~isempty(coilaccuracy)
   def = mne_load_coil_def(fullfile(ftpath, 'external', 'mne', 'coil_def.dat'));
   
   k = 1;
+  
+  grad.chanpos = nan(length(orig.chs),3);
+  grad.chanori = nan(length(orig.chs),3);
+  grad.label = cell(length(orig.chs),1);
+  grad.tra      = nan(length(orig.chs),0);
+  grad.chantype = repmat({'unknown'}, size(grad.label));
+  grad.chanunit = repmat({'unknown'}, size(grad.label));
+  
   for i=1:length(orig.chs)
     thisdef = def([def.id]==orig.chs(i).coil_type & [def.accuracy]==coilaccuracy);
     if isempty(thisdef)
@@ -135,44 +143,115 @@ if ~isempty(coilaccuracy)
     grad.label{i} = orig.ch_names{i};
     grad.chanpos(i,:) = T(1:3,4);
     grad.chanori(i,:) = ft_warp_apply(R, [0 0 1]);
-    % FIFF.FIFF_UNIT_HZ  = 101;
-    % FIFF.FIFF_UNIT_N   = 102;
-    % FIFF.FIFF_UNIT_PA  = 103;
-    % FIFF.FIFF_UNIT_J   = 104;
-    % FIFF.FIFF_UNIT_W   = 105;
-    % FIFF.FIFF_UNIT_C   = 106;
-    % FIFF.FIFF_UNIT_V   = 107;
-    % FIFF.FIFF_UNIT_F   = 108;
-    % FIFF.FIFF_UNIT_OHM = 109;
-    % FIFF.FIFF_UNIT_MHO = 110;
-    % FIFF.FIFF_UNIT_WB  = 111;
-    % FIFF.FIFF_UNIT_T   = 112;
-    % FIFF.FIFF_UNIT_H   = 113;
-    % FIFF.FIFF_UNIT_CEL = 114;
-    % FIFF.FIFF_UNIT_LM  = 115;
-FIFF.FIFF_UNIT_LX  = 116;
-    switch orig.chs(i).unit
-      case -1
-        grad.chanunit{i} = 'unknown';
-      case  107
-        grad.chanunit{i} = 'V';
-      case  112
-        grad.chanunit{i} = 'T';
-      case  201
-        grad.chanunit{i} = 'FIXME';
-      otherwise
-        error('unknown units');
-    end
   end
   
   grad.label = grad.label(:);
   grad.unit  = 'm'; % the coil_def.dat file is in meter
   
+  % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211
+  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==2)' % planar gradiometers
+    grad.chantype(sel) = {'megplanar'}; %Neuromag-122 planar gradiometer
+  end
+  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3012)' %planar gradiometers
+    grad.chantype(sel) = {'megplanar'}; %Type T1 planar grad
+  end
+  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3013)' %planar gradiometers
+    grad.chantype(sel) = {'megplanar'}; %Type T2 planar grad
+  end
+  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3014)' %planar gradiometers
+    grad.chantype(sel) = {'megplanar'}; %Type T3 planar grad
+  end
+  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3022)' %magnetometers
+    grad.chantype(sel) = {'megmag'};    %Type T1 magenetometer
+  end
+  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3023)' %magnetometers
+    grad.chantype(sel) = {'megmag'};    %Type T2 magenetometer
+  end
+  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3024)' %magnetometers
+    grad.chantype(sel) = {'megmag'};    %Type T3 magenetometer
+  end
+  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==7001)' %axial gradiometer
+    grad.chantype(sel) = {'megaxial'};
+  end
+  for sel=find([orig.chs.kind]==301)' %MEG reference channel, located far from head
+    grad.chantype(sel) = {'ref'};
+  end
+  for sel=find([orig.chs.kind]==2)'   %EEG channels
+    grad.chantype(sel) = {'eeg'};
+  end
+  for sel=find([orig.chs.kind]==201)' %MCG channels
+    grad.chantype(sel) = {'mcg'};
+  end
+  for sel=find([orig.chs.kind]==3)' %Stim channels
+    if any([orig.chs(sel).logno] == 101) %new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
+      grad.chantype(sel([orig.chs(sel).logno] == 101)) = {'digital trigger'};
+      grad.chantype(sel([orig.chs(sel).logno] == 102)) = {'digital trigger'};
+      grad.chantype(sel([orig.chs(sel).logno] <= 32))  = {'analog trigger'};
+      others = [orig.chs(sel).logno] > 32 & [orig.chs(sel).logno] ~= 101 & ...
+        [orig.chs(sel).logno] ~= 102;
+      grad.chantype(sel(others)) = {'other trigger'};
+    elseif any([orig.chs(sel).logno] == 14) %older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
+      grad.chantype(sel([orig.chs(sel).logno] == 14)) = {'digital trigger'};
+      grad.chantype(sel([orig.chs(sel).logno] == 15)) = {'digital trigger'};
+      grad.chantype(sel([orig.chs(sel).logno] == 16)) = {'digital trigger'};
+      grad.chantype(sel([orig.chs(sel).logno] <= 13)) = {'analog trigger'};
+      others = [orig.chs(sel).logno] > 16;
+      grad.chantype(sel(others)) = {'other trigger'};
+    else
+      warning('There does not seem to be a suitable trigger channel.');
+      grad.chantype(sel) = {'other trigger'};
+    end
+  end
+  for sel=find([orig.chs.kind]==202)' %EOG
+    grad.chantype(sel) = {'eog'};
+  end
+  for sel=find([orig.chs.kind]==302)' %EMG
+    grad.chantype(sel) = {'emg'};
+  end
+  for sel=find([orig.chs.kind]==402)' %ECG
+    grad.chantype(sel) = {'ecg'};
+  end
+  for sel=find([orig.chs.kind]==502)' %MISC
+    grad.chantype(sel) = {'misc'};
+  end
+  for sel=find([orig.chs.kind]==602)' %Resp
+    grad.chantype(sel) = {'respiration'};
+  end
+  
+  % FIFF.FIFF_UNIT_HZ  = 101;
+  % FIFF.FIFF_UNIT_N   = 102;
+  % FIFF.FIFF_UNIT_PA  = 103;
+  % FIFF.FIFF_UNIT_J   = 104;
+  % FIFF.FIFF_UNIT_W   = 105;
+  % FIFF.FIFF_UNIT_C   = 106;
+  % FIFF.FIFF_UNIT_V   = 107;
+  % FIFF.FIFF_UNIT_F   = 108;
+  % FIFF.FIFF_UNIT_OHM = 109;
+  % FIFF.FIFF_UNIT_MHO = 110;
+  % FIFF.FIFF_UNIT_WB  = 111;
+  % FIFF.FIFF_UNIT_T   = 112;
+  % FIFF.FIFF_UNIT_H   = 113;
+  % FIFF.FIFF_UNIT_CEL = 114;
+  % FIFF.FIFF_UNIT_LM  = 115;
+  % FIFF.FIFF_UNIT_LX  = 116;
+  
+  for sel=find([orig.chs.unit]==107)'
+    grad.chanunit(sel) = {'V'};
+  end
+  for sel=find([orig.chs.unit]==112)'
+    grad.chanunit(sel) = {'T'};
+  end
+  for sel=find([orig.chs.unit]==201)'
+    grad.chanunit(sel) = {'T/m'};
+  end
+  
   remove = cellfun(@isempty, grad.label);
-  grad.label   = grad.label(~remove);
-  grad.tra     = grad.tra(~remove,:);
-  grad.chanpos = grad.chanpos(~remove,:);
-  grad.chanori = grad.chanori(~remove,:);
+  grad.label    = grad.label(~remove);
+  grad.chantype = grad.chantype(~remove);
+  grad.chanunit = grad.chanunit(~remove);
+  grad.tra      = grad.tra(~remove,:);
+  grad.chanpos  = grad.chanpos(~remove,:);
+  grad.chanori  = grad.chanori(~remove,:);
   
 else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -310,6 +389,8 @@ else
   % multiply by 100 to get cm
   grad.coilpos = 100*grad.coilpos;
 end
+
+
 
 % how many EEG channels?
 nEEG = 0;
