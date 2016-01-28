@@ -522,7 +522,8 @@ end
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function path = unixpath(path)
-path(path=='\') = '/'; % replace backward slashes with forward slashes
+%path(path=='\') = '/'; % replace backward slashes with forward slashes
+path = strrep(path,'\','/');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
