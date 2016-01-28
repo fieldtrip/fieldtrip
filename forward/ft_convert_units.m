@@ -245,6 +245,12 @@ if isfield(obj, 'transformorig'),
   obj.transformorig = H * obj.transformorig;
 end
 
+% sourcemodel obtained through mne also has a orig-field with the high
+% number of vertices
+if isfield(obj, 'orig') && (isfield(obj.orig, 'pnt') || isfield(obj.orig, 'pos'))
+  obj.orig.pnt = scale * obj.orig.pnt; 
+end
+
 % remember the unit
 obj.unit = target;
 
