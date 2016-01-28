@@ -170,7 +170,7 @@ for k = 1:nslice
       % update the positions
       set(p(kk), 'ydata', offset(1) + xtmp);
       set(p(kk), 'xdata', offset(2) + ytmp);
-      set(p(kk), 'zdata',         0.1 * ztmp);
+      set(p(kk), 'zdata',         0.0001 * ztmp);
     end
     pprevious = [pprevious(:);p(:)];
   end
