@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ################################################################################
 #
 # This Bash script synchronizes multiple copies of the same file in the repository.
