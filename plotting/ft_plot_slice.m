@@ -30,6 +30,8 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 % undocumented
 %   'intersectmesh'  = triangulated mesh through which the intersection of the plane will be plotted (e.g. cortical sheet)
 %   'intersectcolor' = color for the intersection
+%   'plotmarker'     = Nx3 matrix with points to be plotted as markers,
+%                       e.g. dipole positions
 
 % Copyrights (C) 2010-2014, Jan-Mathijs Schoffelen
 % Copyrights (C) 2014, Robert Oostenveld and Jan-Mathijs Schoffelen
@@ -87,6 +89,10 @@ mesh                = ft_getopt(varargin, 'intersectmesh');
 intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'yrgbmyrgbm');
 intersectlinewidth  = ft_getopt(varargin, 'intersectlinewidth', 2);
 intersectlinestyle  = ft_getopt(varargin, 'intersectlinestyle');
+
+plotmarker          = ft_getopt(varargin, 'plotmarker');
+markersize          = ft_getopt(varargin, 'markersize', 'auto');
+markercolor         = ft_getopt(varargin, 'markercolor', 'w');
 
 % convert from yes/no/true/false/0/1 into a proper boolean
 doscale = istrue(doscale);
@@ -362,6 +368,20 @@ if ~isempty(cmap)
   end
 end
 
+if ~isempty(plotmarker)
+  % determine three points on the plane
+  inplane = eye(3) - (eye(3) * ori') * ori;
+  v1 = loc + inplane(1,:);
+  v2 = loc + inplane(2,:);
+  v3 = loc + inplane(3,:);
+  for k = 1:size(plotmarker,1)
+    [pr(k,:),d(k,:)] = ptriprojn(v1,v2,v3,plotmarker(k,:));
+  end
+  sel = d<eps*1e8;
+  if sum(sel)>0,
+    ft_plot_dipole(pr(sel,:),repmat([0;0;1],1,size(pr,1)),'length',0,'color',markercolor,'diameter',markersize);
+  end
+end
 
 % update the axes to ensure that the whole volume fits
 ax = [min(corner_hc) max(corner_hc)];

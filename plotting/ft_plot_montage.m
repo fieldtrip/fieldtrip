@@ -49,7 +49,7 @@ slicesize = ft_getopt(varargin, 'slicesize');
 nslice    = ft_getopt(varargin, 'nslice');
 
 % the intersectmesh and intersectcolor options are passed on to FT_PLOT_SLICE
-dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh'));
+dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh')) || ~isempty(ft_getopt(varargin, 'plotmarker'));
 
 % set the location if empty
 if isempty(loc) && (isempty(transform) || all(all(transform-eye(4)==0)==1))
@@ -170,7 +170,7 @@ for k = 1:nslice
       % update the positions
       set(p(kk), 'ydata', offset(1) + xtmp);
       set(p(kk), 'xdata', offset(2) + ytmp);
-      set(p(kk), 'zdata',         0 * ztmp);
+      set(p(kk), 'zdata',         0.1 * ztmp);
     end
     pprevious = [pprevious(:);p(:)];
   end
