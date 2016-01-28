@@ -47,6 +47,7 @@ ori       = ft_getopt(varargin, 'orientation');
 srange    = ft_getopt(varargin, 'slicerange');
 slicesize = ft_getopt(varargin, 'slicesize');
 nslice    = ft_getopt(varargin, 'nslice');
+backgroundcolor = ft_getopt(varargin, 'backgroundcolor', [0 0 0]);
 
 % the intersectmesh and intersectcolor options are passed on to FT_PLOT_SLICE
 dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh')) || ~isempty(ft_getopt(varargin, 'plotmarker'));
@@ -178,7 +179,7 @@ for k = 1:nslice
   %systems. I don't know what's going on there, but the statement is not
   %really necessary, so commented out.
 end
-set(gcf, 'color', [0 0 0]);
+set(gcf, 'color', backgroundcolor);
 set(gca, 'zlim', [0 1]);
 %axis equal;
 axis off;
