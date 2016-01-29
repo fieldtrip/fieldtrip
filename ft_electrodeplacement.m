@@ -338,14 +338,13 @@ switch cfg.method
     
     % instructions to the user
     fprintf(strcat(...
-      '1. To change the slice viewed in one plane, either:\n',...
-      '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
-      '      superior slice in the horizontal plane, click on a superior position in the\n',...
-      '      coronal plane, or\n',...
+      '1. Viewing options:\n',...
+      '   a. use the left mouse button to navigate the image, or\n',...
       '   b. use the arrow keys to increase or decrease the slice number by one\n',...
-      '2. To assign an electrode label to the crosshair location:\n',...
-      '   a. click on an electrode label in the list\n',...
-      '3. To finalize markers, close the window or press q on the keyboard\n'));
+      '2. Placement options:\n',...
+      '   a. click an electrode label in the list to assign the crosshair location, or\n',...
+      '   b. doubleclick a previously assigned electrode label to remove its marker\n',...
+      '3. To finalize, close the window or press q on the keyboard\n'));
     
     % create structure to be passed to gui
     opt               = [];
@@ -1016,13 +1015,20 @@ if ~isempty(elecidx)
   
   % toggle electrode status and assign markers
   if strfind(eleclab, 'silver') % not yet, check
+    fprintf('assigning marker %s\n', opt.label{elecidx,1});
     eleclab = regexprep(eleclab, '"silver"','"black"'); % replace font color
     opt.markerlab{elecidx,1} = opt.label(elecidx,1); % assign marker label
     opt.markerpos{elecidx,1} = opt.pos; % assign marker position
-  elseif strfind(eleclab, 'black') % already chosen before, uncheck
-    eleclab = regexprep(eleclab, '"black"','"silver"'); % replace font color
-    opt.markerlab{elecidx,1} = {}; % assign marker label
-    opt.markerpos{elecidx,1} = zeros(0,3); % assign marker position
+  elseif strfind(eleclab, 'black') % already chosen before, move cusor to marker or uncheck
+    if strcmp(get(h,'SelectionType'),'normal') % single click to move cursor to
+      fprintf('moving cursor to marker %s\n', opt.label{elecidx,1});
+      opt.ijk = ft_warp_apply(inv(opt.mri.transform), opt.markerpos{elecidx,1}); % move cursor to marker position
+    elseif strcmp(get(h,'SelectionType'),'open') % double click to uncheck
+      fprintf('removing marker %s\n', opt.label{elecidx,1});
+      eleclab = regexprep(eleclab, '"black"','"silver"'); % replace font color
+      opt.markerlab{elecidx,1} = {}; % assign marker label
+      opt.markerpos{elecidx,1} = zeros(0,3); % assign marker position
+    end
   end
   
   % update plot
