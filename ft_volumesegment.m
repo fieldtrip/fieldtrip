@@ -283,13 +283,13 @@ if dotpm
   original = [];
   original.transform = mri.transform;
   original.coordsys  = mri.coordsys;
-  if isfield(mri,'unit')
-    original.unit    = mri.unit;
+  if isfield(mri, 'unit')
+    original.unit = mri.unit;
   else
     mri = ft_convert_units(mri); % guess the unit field if not present
     original.unit = mri.unit;
   end
-  mri = ft_convert_units(mri,    'mm');
+  mri = ft_convert_units(mri, 'mm');
   if isdeployed
     mri = ft_convert_coordsys(mri, 'spm', 2, cfg.template);
   else
@@ -529,7 +529,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       clear anatomy a1 a2 a3;
       
       % threshold again to remove little parts outside of head
-      scalpmask=volumethreshold(scalpmask);
+      scalpmask = volumethreshold(scalpmask);
       
       % output: scalp (cummulative) (if this is the only requested output)
       if numel(outp)==1
@@ -625,6 +625,9 @@ end
 
 % remove unnecessary fields
 segmented = removefields(segmented, remove);
+
+% ensure that the output is in the same units as the input
+segmented = ft_convert_units(segmented, mri.unit);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
