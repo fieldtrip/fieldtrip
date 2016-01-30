@@ -208,8 +208,7 @@ try
   end
   
 catch
-  warning('an error ocurred while running dipoli');
-  disp(lasterr);
+  error('an error ocurred while running the dipoli executable - please look at the screen output');
 end
 
 % delete the temporary files
