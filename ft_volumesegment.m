@@ -136,8 +136,8 @@ revision = '$Id$';
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar mri
-ft_preamble provenance  mri
+ft_preamble loadvar    mri
+ft_preamble provenance mri
 ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
@@ -625,9 +625,6 @@ end
 
 % remove unnecessary fields
 segmented = removefields(segmented, remove);
-
-% ensure that the output is in the same units as the input
-segmented = ft_convert_units(segmented, mri.unit);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
