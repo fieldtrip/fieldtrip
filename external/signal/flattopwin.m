@@ -1,3 +1,4 @@
+function w = flattopwin (L, sym)
 % Author: Paul Kienzle <pkienzle@users.sf.net> (2004)
 % This program is granted to the public domain.
 %
@@ -23,23 +24,22 @@
 % [1] Gade, S; Herlufsen, H; (1987) 'Use of weighting functions in DFT/FFT
 % analysis (Part I)', Bruel & Kjaer Technical Review No.3.
 
-function w = flattopwin (L, sym)
   if nargin == 0 || nargin > 2
     help(mfilename);
   end % if
 
   divisor = L-1;
   if nargin > 1
-    match = strmatch(sym,['periodic';'symmetric']);
-    if isempty(match),
-      error('window type must be periodic or symmetric');
-    elseif match == 1
+    if strcmp(sym, 'periodic')
       divisor = L;
-    else
+    elseif strcmp(sym, 'symmetric')
       divisor = L-1;
-    end % if
-    end % if
+    else
+      error('second argument must be ''periodic'' or ''symmetric''');
+    end
+  end % if
     
   x = 2*pi*[0:L-1]'/divisor;
   w = (1-1.93*cos(x)+1.29*cos(2*x)-0.388*cos(3*x)+0.0322*cos(4*x))/4.6402;
+  
 end

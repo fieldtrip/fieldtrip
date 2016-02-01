@@ -94,7 +94,7 @@ H = [
 if 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The following code can be used to construct the combined rotation matrix
-% for either xyz or zyx ordering (using the Matlab symbolic math toolbox)
+% for either xyz or zyx ordering (using the MATLAB symbolic math toolbox)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   syms sX sY sZ cX cY cZ
   % this is for only rotating around x

@@ -5,6 +5,32 @@
 ----------------------------------------------------------------------------
 
 iso2mesh ChangeLog (key features marked by *):
+
+2013/07/16  (1.5.0, codename: Laba Porridge)
+        1.*label-wise mesh density control in CGAL 3D mesher (Peter Varga)
+        2. plotting mesh slices with the "{x,y,z}=value" syntax in plotmesh
+
+2013/01/20  (1.4.9, codename: Laba Porridge - beta)
+        1.*loadjson and savejson for unified 3D mesh data exchange
+        2. support COMSOL mphtxt file format (Donghyeon Kim)
+        3. raytrace outputs intersection element ID list
+        4.*qmeshcut supports more flexible mesh slicing options
+        5. plotmesh accepts cell array face list for general polyhedra handling
+        6. s2m supports 'cgalpoly' option
+        7. fix remeshsurf coordinate offset bug
+        8. return region seeds from v2s
+        9. new function meshrefine for mesh refinement
+       10. saving surface mesh to STL (ASCII or binary) format
+       11. new function meshacylinder to mesh a 3D cylinder
+       12.**surface mesh boolean operations (surfboolean) via GTS library
+       13. qmeshcut supports element-based value list
+       14. fast mesh intersection testing utilities surfboolean('self')
+       15.**self-intersecting surface repairing and decoupling using meshfix utility
+       16. export mesh to ABAQUS format
+       17.*add binaries for 32/64bit Intel Mac OS and Raspberry Pi (armhf)
+       18.*define a JSON-based mesh format (JMesh) for general-purpose data exchange
+       19. add surfreorient,readgts,savegts,uniqedges,raysurf,savejmesh and many more
+
 2011/06/03 (1.0.1, codename: Mapo Tofu - Update 1)
         1. added 64bit CGAL binaries for Linux (Windows/MacOS are not yet supported)
         2.*plotmesh can use the 4th column of node input as colormap/value

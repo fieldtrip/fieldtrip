@@ -190,7 +190,10 @@ if nargin==1
   end;
 
   EDF.AS.spb = sum(EDF.SPR);    % Samples per Block
-
+  
+  % close the file
+  fclose(EDF.FILE.FID);
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % convert the header to Fieldtrip-style
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

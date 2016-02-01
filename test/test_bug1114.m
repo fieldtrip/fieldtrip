@@ -1,36 +1,41 @@
 function test_bug1114
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % This function parses all fieldtrip main and module functions and determines
 % whether there are any dependencies on fieldtrip/compat or any other
 % compat directory. If so, the files are printed with an error.
 
-fieldtripdir = fileparts(which('ft_defaults'));
+[ftver, ftpath] = ft_version;
 
 % ensure that the compat directories are on the path
-addpath(fullfile(fieldtripdir, 'compat'))
-addpath(fullfile(fieldtripdir, 'fileio/compat'))
-addpath(fullfile(fieldtripdir, 'forward/compat'))
-addpath(fullfile(fieldtripdir, 'plotting/compat'))
-addpath(fullfile(fieldtripdir, 'preproc/compat'))
-addpath(fullfile(fieldtripdir, 'utilities/compat'))
+addpath(fullfile(ftpath, 'compat'))
+addpath(fullfile(ftpath, 'fileio/compat'))
+addpath(fullfile(ftpath, 'forward/compat'))
+addpath(fullfile(ftpath, 'plotting/compat'))
+addpath(fullfile(ftpath, 'preproc/compat'))
+addpath(fullfile(ftpath, 'utilities/compat'))
 
 dirlist = {
-  fieldtripdir
-  fullfile(fieldtripdir, 'fileio')
-  fullfile(fieldtripdir, 'forward')
-  fullfile(fieldtripdir, 'inverse')
-  fullfile(fieldtripdir, 'plotting')
-  fullfile(fieldtripdir, 'connectivity')
-  fullfile(fieldtripdir, 'specest')
-  fullfile(fieldtripdir, 'trialfun')
-  fullfile(fieldtripdir, 'statfun')
-  fullfile(fieldtripdir, 'utilities')
-  fullfile(fieldtripdir, 'private')
+  ftpath
+  fullfile(ftpath, 'fileio')
+  fullfile(ftpath, 'forward')
+  fullfile(ftpath, 'inverse')
+  fullfile(ftpath, 'plotting')
+  fullfile(ftpath, 'connectivity')
+  fullfile(ftpath, 'specest')
+  fullfile(ftpath, 'trialfun')
+  fullfile(ftpath, 'statfun')
+  fullfile(ftpath, 'utilities')
+  fullfile(ftpath, 'private')
   };
 
 for dirindex=1:length(dirlist)
   functionlist = dir(fullfile(dirlist{dirindex}, '*.m'));
   functionlist = {functionlist.name};
+  
+  fprintf('==== processing directory %s ====\n', dirlist{dirindex});
   
   % find the dependencies
   [outlist, depmat] = mydepfun(functionlist);
@@ -44,7 +49,9 @@ for dirindex=1:length(dirlist)
   
   if ~isempty(compat)
     % report on the problems
+    fprintf('\nThe compat functions ...\n');
     disp(outlist(compat));
+    fprintf('... are being used by\n');
     disp(functionlist(any(depmat(:,compat),2))');
     error('some of the FT functions depend on compat functions');
     % warning('some of the FT functions depend on compat functions');

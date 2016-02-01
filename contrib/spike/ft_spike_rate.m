@@ -10,9 +10,9 @@ function [rate] = ft_spike_rate(cfg,spike)
 % within the function)
 %
 % Configurations:
-%   cfg.outputunit       = 'rate' (default) or 'spike'. If 'rate', we convert
+%   cfg.outputunit       = 'rate' (default) or 'spikecount'. If 'rate', we convert
 %                          the output per trial to firing rates (spikes/sec).
-%                          If 'spike', we count the number spikes per trial.
+%                          If 'spikecount', we count the number spikes per trial.
 %   cfg.spikechannel     = see FT_CHANNELSELECTION for details
 %   cfg.trials           = vector of indices (e.g., 1:2:10)
 %                          logical selection of trials (e.g., [1010101010])
@@ -40,13 +40,29 @@ function [rate] = ft_spike_rate(cfg,spike)
 
 % Copyright (C) 2010, Martin Vinck
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
 revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 

@@ -11,8 +11,6 @@ function [outermost, inside] = find_outermost_boundary(bnd)
 %   bnd(i).tri  triangles of boundary i (matrix of size Mx3)
 
 % Copyright (C) 2003, Robert Oostenveld
-%
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailled information
 
 ncmp = length(bnd);
 
@@ -20,8 +18,8 @@ ncmp = length(bnd);
 for i=1:ncmp
 for j=1:ncmp
   % determine for a single vertex on each surface if it is inside or outside the other surfaces
-  curpos = bnd(i).pnt(1,:); % any point on the boundary is ok
-  curpnt = bnd(j).pnt;
+  curpos = bnd(i).pos(1,:); % any point on the boundary is ok
+  curpnt = bnd(j).pos;
   curtri = bnd(j).tri;
   if i==j
     inside(i,j) = 0;

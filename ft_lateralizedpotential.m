@@ -38,8 +38,7 @@ function [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 %   Brain symmetry and topographic analysis of lateralized event-related
 %   potentials. Clin Neurophysiol. 114(7):1194-202, 2003.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -73,12 +72,18 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar avgL avgR
+ft_preamble provenance avgL avgR
+ft_preamble trackconfig
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% check if the input data is valid for this function
 avgL = ft_checkdata(avgL, 'datatype', 'timelock');
 avgR = ft_checkdata(avgR, 'datatype', 'timelock');
 
@@ -111,11 +116,11 @@ Nchan = size(cfg.channelcmb);
 for i=1:Nchan
   % here the channel names "C3" and "C4" are used to clarify the 
   % computation of the lateralized potential on all channel pairs
-  C3R = strmatch(cfg.channelcmb{i,1}, avgR.label);
-  C4R = strmatch(cfg.channelcmb{i,2}, avgR.label);
-  C3L = strmatch(cfg.channelcmb{i,1}, avgL.label);
-  C4L = strmatch(cfg.channelcmb{i,2}, avgL.label);
-  if ~isempty(C3R) && ~isempty(C4R) && ~isempty(C3L) && ~isempty(C4L)
+  C3R = strcmp(cfg.channelcmb{i,1}, avgR.label);
+  C4R = strcmp(cfg.channelcmb{i,2}, avgR.label);
+  C3L = strcmp(cfg.channelcmb{i,1}, avgL.label);
+  C4L = strcmp(cfg.channelcmb{i,2}, avgL.label);
+  if any(C3R) && any(C4R) && any(C3L) && any(C4L)
     lrp.label{end+1}     = sprintf('%s/%s', cfg.channelcmb{i,1}, cfg.channelcmb{i,2});
     lrp.plotlabel{end+1} = cfg.channelcmb{i,1};
     erpC3L = avgL.avg(C3L,:);
@@ -129,7 +134,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous avgL avgR
-ft_postamble history lrp
-ft_postamble savevar lrp
+ft_postamble previous   avgL avgR
+ft_postamble provenance lrp
+ft_postamble history    lrp
+ft_postamble savevar    lrp

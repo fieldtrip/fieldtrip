@@ -126,6 +126,14 @@ if dir(first).kind == FIFF.FIFF_DATA_SKIP
     first_skip = tag.data;
     first = first + 1;
 end
+%
+%  Get first sample tag if it is there
+%
+if dir(first).kind == FIFF.FIFF_FIRST_SAMPLE
+    tag = fiff_read_tag(fid,dir(first).pos);
+    first_samp = first_samp + tag.data;
+    first = first + 1;
+end
 data.first_samp = first_samp;
 %
 %   Go through the remaining tags in the directory

@@ -17,7 +17,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            data. Values between 0 and 1, 0 = transparent 
 %   cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
 %                            'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
@@ -111,21 +111,24 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure. For this particular function, the input should be
 % structured as a cell array.
 %
-% See also:
-%  FT_TOPOPLOTER, FT_TOPOPLOTIC, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
+% See also FT_TOPOPLOTER, FT_TOPOPLOTIC, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
-% It is possible to use multiple highlight-selections (e.g.: multiple statistical clusters of channels)
-% To do this, all the content of the highlight-options (including cfg.highlight) should be placed in a cell-array
-% (even if the normal content was already in a cell-array). Specific marker settings (e.g. color, size) are defaulted when
-% not present.
+% Undocumented options: 
+%
+% It is possible to use multiple highlight-selections (e.g.: multiple
+% statistical clusters of channels) To do this, all the content of
+% the highlight-options (including cfg.highlight) should be placed
+% in a cell-array (even if the normal content was already in a
+% cell-array). Specific marker settings (e.g. color, size) are defaulted
+% when not present.
+% 
 % Example (3 selections):
 % cfg.highlight          = {'labels', 'labels', 'numbers'}
 % cfg.highlightchannel   = {{'MZF03','MZC01','MRT54'}, [1:5], 'C*'}
@@ -135,15 +138,6 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
-
-% This function depends on FT_TIMELOCKBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.channel
-% cfg.baselinewindow
-%
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %
@@ -169,12 +163,21 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
-% this is just a wrapper function around the common code that does all the hard work
-% the reason for this wrapper function is to have a placeholder for TFR-specific documentation
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
+% make sure figure window titles are labeled appropriately, pass this onto the actual
+% plotting function if we don't specify this, the window will be called
+% 'ft_topoplotTFR', which is confusing to the user
+cfg.funcname = mfilename;
 if nargin > 1
   cfg.dataname = {inputname(2)};
   for k = 3:nargin
@@ -182,33 +185,21 @@ if nargin > 1
   end
 end
 
-% make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function if we don't specify this, the window will be called
-% 'ft_topoplotTFR', which is confusing to the user
-cfg.funcname = mfilename;
+% prepare the layout, this should be done only once
+cfg.layout = ft_prepare_layout(cfg, varargin{:});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
 [cfg] = topoplot_common(cfg, varargin{:});
 
-% remove it again
-cfg = rmfield(cfg, 'funcname');
+% remove this field again, it is only used for figure labels
+cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
 % this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
-ft_postamble provenance
+ft_postamble debug
+ft_postamble trackconfig
 ft_postamble previous varargin
-
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-if isempty(strfind(get(gcf, 'Tag'), 'ft-menushowing'))
-  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
-  
-  % mark the figure so that we don't add multiple menus to the same (in the
-  % case of subplots)
-  set(gcf, 'Tag', [get(gcf, 'Tag') ',ft-menushowing']);
-end
+ft_postamble provenance
 
 if ~nargout
   clear cfg

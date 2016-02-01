@@ -122,7 +122,10 @@ int buffer_putevt(int server, mxArray * plhs[], const mxArray * prhs[])
   /* define the event, it has the fields type_type type_numel value_type value_numel sample offset duration */
   
 	Nev = mxGetNumberOfElements(prhs[0]);
-	if (Nev == 0) return;
+	if (Nev == 0) {
+    result = 0; /* negative numbers indicate an error of clientrequest, 0 indicates that it worked fine */
+    return result;
+  }
 	
 	if (!mxIsStruct(prhs[0])) mexErrMsgTxt("events must be given as structs.");
 		

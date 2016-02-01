@@ -24,7 +24,7 @@ function [newbnd] = mesh2edge(bnd)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: mesh2edge.m 7372 2013-01-23 09:15:52Z roboos $
+% $Id$
 
 if isfield(bnd, 'tri')
   % make a list of all edges

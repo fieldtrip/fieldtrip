@@ -1,5 +1,8 @@
 function test_tutorial_clusterpermutationfreq(dataset, datadir)
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_tutorial_eventrelatedstatistics
 % TEST ft_freqanalysis ft_multiplotTFR ft_singleplotTFR ft_freqstatistics
 % TEST ft_topoplotTFR ft_clustTFRplot ft_megplanar ft_combineplanar
@@ -8,8 +11,8 @@ global ft_default;
 ft_default.feedback = 'no';
 
 if nargin==0
-  dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
-  datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_freq');
+  dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_freq');
 end
 
 %% PREprocessing
@@ -83,9 +86,9 @@ freqFC_planar_cmb.grad = dataFC.grad;
 cfg = [];
 cfg.channel          = {'MEG'};
 cfg.latency          = 'all';
-cfg.frequency        = [20 20];
+cfg.frequency        = 20;
 cfg.method           = 'montecarlo';
-cfg.statistic        = 'indepsamplesT';
+cfg.statistic        = 'ft_statfun_indepsamplesT';
 cfg.correctm         = 'cluster';
 cfg.clusteralpha     = 0.05;
 cfg.clusterstatistic = 'maxsum';
@@ -168,8 +171,8 @@ cfg.channel          = {'MEG', '-MLP31', '-MLO12'};
 cfg.channel          = {'MEG'};
 cfg.latency          = [0.8 1.4];
 cfg.method           = 'montecarlo';
-cfg.frequency        = [20 20];
-cfg.statistic        = 'actvsblT';
+cfg.frequency        = 20;
+cfg.statistic        = 'ft_statfun_actvsblT';
 cfg.correctm         = 'cluster';
 cfg.clusteralpha     = 0.05;
 cfg.clusterstatistic = 'maxsum';
@@ -210,9 +213,9 @@ load(fullfile(datadir, 'GA_TFR_orig.mat'));
 cfg = [];
 cfg.channel          = {'MEG'};
 cfg.latency          = [0 1.8];
-cfg.frequency        = [20 20];
+cfg.frequency        = 20;
 cfg.method           = 'montecarlo';
-cfg.statistic        = 'depsamplesT';
+cfg.statistic        = 'ft_statfun_depsamplesT';
 cfg.correctm         = 'cluster';
 cfg.clusteralpha     = 0.05;
 cfg.clusterstatistic = 'maxsum';

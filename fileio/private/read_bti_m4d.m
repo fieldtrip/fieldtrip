@@ -86,14 +86,18 @@ while ischar(line)
     error('unexpected content in m4d file');
   end
 
-  if ~isempty(strfind(line, 'Begin'))
+  if ~isempty(strfind(line, 'Begin')) && (~isempty(strfind(line, 'Meg_Position_Information')) || ~isempty(strfind(line, 'Ref_Position_Information'))) 
+    % jansch added the second ~isempty() to accommodate for when the
+    % block is about Eeg_Position_Information, which does not pertain to
+    % gradiometers, and moreover can be empty (added: Aug 03, 2013)
+    
     sep = strfind(key, '.');
     sep = sep(end);
     key = key(1:(sep-1));
 
     % if the key ends with begin and there is no value, then there is a block
     % of numbers following that relates to the magnetometer/gradiometer information.
-    % All lines in that Begin-End block should be treated seperately
+    % All lines in that Begin-End block should be treated separately
     val = {};
     lab = {};
     num = {};
@@ -118,6 +122,7 @@ while ischar(line)
     lab = lab(:);
     num = num(:);
     num = cell2mat(num);
+    
     % the following is FieldTrip specific
     if size(num,2)==6
       msi.grad.label = [msi.grad.label; lab(:)];

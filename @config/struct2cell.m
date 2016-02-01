@@ -1,7 +1,7 @@
 function c = struct2cell(s)
 
 % STRUCT2CELL Convert structure array to cell array by first converting
-% the config objection into a struct and then using standard Matlab call.
+% the config objection into a struct and then using standard MATLAB call.
 
 % Copyright (C) 2008, Robert Oostenveld
 %

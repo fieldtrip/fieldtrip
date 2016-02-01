@@ -59,14 +59,12 @@ cfg = ft_checkconfig(cfg, 'required',    {'method'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 
 % set the defaults
-if ~isfield(cfg, 'channel'),              cfg.channel = 'all';                     end
-if ~isfield(cfg, 'latency'),              cfg.latency = 'all';                     end
-if ~isfield(cfg, 'frequency'),            cfg.frequency = 'all';                   end
-if ~isfield(cfg, 'roi'),                  cfg.roi = [];                            end
-if ~isfield(cfg, 'avgoverchan'),          cfg.avgoverchan = 'no';                  end
-if ~isfield(cfg, 'avgovertime'),          cfg.avgovertime = 'no';                  end
-if ~isfield(cfg, 'avgoverfreq'),          cfg.avgoverfreq = 'no';                  end
-if ~isfield(cfg, 'avgoverroi'),           cfg.avgoverroi = 'no';                   end
+cfg.latency     = ft_getopt(cfg, 'latency', 'all');
+cfg.frequency   = ft_getopt(cfg, 'frequency', 'all');
+cfg.roi         = ft_getopt(cfg, 'roi',       []);
+cfg.avgovertime = ft_getopt(cfg, 'avgovertime', 'no');
+cfg.avgoverfreq = ft_getopt(cfg, 'avgoverfreq', 'no');
+cfg.avgoverroi  = ft_getopt(cfg, 'avgoverroi',  'no');
 
 % determine the type of the input and hence the output data
 if ~exist('OCTAVE_VERSION')
@@ -94,6 +92,12 @@ if (istimelock+isfreq+issource)~=1
   error('Could not determine the type of the input data');
 end
 
+if istimelock || isfreq,
+  % these defaults only apply to channel level data
+  cfg.channel     = ft_getopt(cfg, 'channel',     'all');
+  cfg.avgoverchan = ft_getopt(cfg, 'avgoverchan', 'no');
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the biological data (the dependent parameter)
 %  and the experimental design (the independent parameter)
@@ -103,13 +107,13 @@ if issource
   % test that all source inputs have the same dimensions and are spatially aligned
   for i=2:length(varargin)
     if isfield(varargin{1}, 'dim') && (length(varargin{i}.dim)~=length(varargin{1}.dim) || ~all(varargin{i}.dim==varargin{1}.dim))
-      error('dimensions of the source reconstructions do not match, use NORMALISEVOLUME first');
+      error('dimensions of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
     end
     if isfield(varargin{1}, 'pos') && (length(varargin{i}.pos(:))~=length(varargin{1}.pos(:)) || ~all(varargin{i}.pos(:)==varargin{1}.pos(:)))
-      error('grid locations of the source reconstructions do not match, use NORMALISEVOLUME first');
+      error('grid locations of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
     end
     if isfield(varargin{1}, 'transform') && ~all(varargin{i}.transform(:)==varargin{1}.transform(:))
-      error('spatial coordinates of the source reconstructions do not match, use NORMALISEVOLUME first');
+      error('spatial coordinates of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
     end
   end
 
@@ -133,7 +137,7 @@ if issource
         tmpcfg.roi = cfg.roi{i};
         tmpcfg.inputcoord = cfg.inputcoord;
         tmpcfg.atlas = cfg.atlas;
-        tmp = volumelookup(tmpcfg, varargin{1});
+        tmp = ft_volumelookup(tmpcfg, varargin{1});
       end
       if strcmp(cfg.avgoverroi, 'no') && ~isfield(cfg, 'hemisphere')
         % no reason to deal with seperated left/right hemispheres
@@ -219,6 +223,12 @@ if issource
     cfg.dimord = 'roi';
   end
 
+  % check whether the original input data contains a dim, which would allow
+  % for 3D reshaping and clustering with bwlabeln
+  if isfield(varargin{1}, 'transform') || ((isfield(varargin{1}, 'dim') && prod(varargin{1}.dim)==size(varargin{1}.pos,1)))
+    cfg.connectivity = 'bwlabeln';
+  end
+  
 elseif isfreq || istimelock
   % get the ERF/TFR data by means of PREPARE_TIMEFREQ_DATA
   cfg.datarepresentation = 'concatenated';
@@ -244,8 +254,10 @@ elseif isfreq || istimelock
   % remove to save some memory
   data.biol = [];
 
-  % add gradiometer/electrode information to the configuration
-  if ~isfield(cfg,'neighbours') && isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
+  % verify that neighbours are present in case needed (not needed when
+  % averaging over channels)
+  if ~(isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)) &&...
+      ~isfield(cfg,'neighbours') && isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
     error('You need to specify a neighbourstructure');
     %cfg.neighbours = ft_neighbourselection(cfg,varargin{1});
   end
@@ -277,7 +289,7 @@ fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
 
 % check that the design completely describes the data
 if size(dat,2) ~= size(cfg.design,2)
-  error('the size of the design matrix does not match the number of observations in the data');
+  error('the size of the design matrix (%d) does not match the number of observations in the data (%d)', size(cfg.design,2), size(dat,2));
 end
 
 % determine the number of output arguments
@@ -288,16 +300,16 @@ catch
   num = 1;
 end
 
-design=cfg.design;
-cfg=rmfield(cfg,'design'); % to not confuse lower level functions with both cfg.design and design input
+design = cfg.design;
+cfg    = rmfield(cfg,'design'); % to not confuse lower level functions with both cfg.design and design input
 
 % perform the statistical test 
 if strcmp(func2str(statmethod),'ft_statistics_montecarlo') % because ft_statistics_montecarlo (or to be precise, clusterstat) requires to know whether it is getting source data, 
                                                         % the following (ugly) work around is necessary                                             
   if num>1
-    [stat, cfg] = statmethod(cfg, dat, design, 'issource',issource);
+    [stat, cfg] = statmethod(cfg, dat, design);
   else
-    [stat] = statmethod(cfg, dat, design, 'issource', issource);
+    [stat] = statmethod(cfg, dat, design);
   end
 else
   if num>1
@@ -469,7 +481,7 @@ return % statistics_wrapper main()
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for extracting the data of interest
-% data resemples PCC beamed source reconstruction, multiple trials are coded in mom
+% data resembles PCC beamed source reconstruction, multiple trials are coded in mom
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [dat, cfg] = get_source_pcc_mom(cfg, varargin)
 Nsource = length(varargin);
@@ -477,11 +489,17 @@ Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
 Ninside = length(varargin{1}.inside);
 dim     = varargin{1}.dim;
 for i=1:Nsource
-  dipsel  = find(strcmp(varargin{i}.avg.csdlabel, 'scandip'));
   ntrltap = sum(varargin{i}.cumtapcnt);
   dat{i}  = zeros(Ninside, ntrltap);
   for j=1:Ninside
     k = varargin{1}.inside(j);
+    if ischar(varargin{i}.avg.csdlabel{1})
+      % this represents the 'old-style' csdlabel, one list for all dipoles
+      dipsel  = find(strcmp(varargin{i}.avg.csdlabel, 'scandip'));
+    else
+      % this represents the 'new-style' csdlabel, one list for each of the dipoles
+      dipsel  = find(strcmp(varargin{i}.avg.csdlabel{k}, 'scandip'));
+    end
     dat{i}(j,:) = reshape(varargin{i}.avg.mom{k}(dipsel,:), 1, ntrltap);
   end
 end
@@ -574,9 +592,18 @@ if isfield(varargin{1}, 'inside')
   end
 end
 % remember the dimension of the source data
-if ~isfield(cfg, 'dim')
-  warning('for clustering on trial-based data you explicitly have to specify cfg.dim');
+if isfield(varargin{1}, 'dim')
+  cfg.dim = varargin{1}.dim;
+else
+  cfg.dim = size(varargin{1}.trial(1).(cfg.parameter));
+  cfg.dim(1) = numel(varargin{1}.inside);
+  cfg.insideorig = varargin{1}.inside;
+  cfg.inside     = varargin{1}.inside;
 end
+
+%if ~isfield(cfg, 'dim')
+  %warning('for clustering on trial-based data you explicitly have to specify cfg.dim');
+%end
 % remember which voxels are inside the brain
 cfg.inside = varargin{1}.inside;
 
@@ -587,9 +614,13 @@ cfg.inside = varargin{1}.inside;
 function [dat, cfg] = get_source_avg(cfg, varargin)
 Nsource = length(varargin);
 Nvoxel  = length(varargin{1}.inside) + length(varargin{1}.outside);
-dim     = varargin{1}.dim;
-
-inside  = false(prod(dim),1);
+if isfield(varargin{1}, 'dim')
+  dim    = varargin{1}.dim;
+  inside = false(prod(dim),1);
+else
+  dim    = numel(varargin{1}.inside);
+  inside = false(size(varargin{1}.pos,1),1);
+end
 inside(varargin{1}.inside) = true;
 
 tmp     = getsubfield(varargin{1}, cfg.parameter);
@@ -614,15 +645,24 @@ for i=1:Nsource
   tmp = getsubfield(varargin{i}, cfg.parameter);
   dat(:,i) = tmp(:);
 end
+insideorig = find(inside(:,1));
 inside = find(inside(:));
 if isfield(varargin{1}, 'inside')
-  fprintf('only selecting voxels inside the brain for statistics (%.1f%%)\n', 100*length(varargin{1}.inside)/prod(varargin{1}.dim));
+  if isfield(varargin{1}, 'pos')
+    npos = size(varargin{1}.pos,1);
+  elseif isfield(varargin{1}, 'dim')
+    npos = prod(varargin{1}.dim);
+  else
+    npos = length(varargin{1}.inside); % uninformative, at least prevents crash
+  end
+  fprintf('only selecting voxels inside the brain for statistics (%.1f%%)\n', 100*length(varargin{1}.inside)/npos);
   dat = dat(inside,:);
 end
 % remember the dimension of the source data
 cfg.dim = dim;
 % remember which voxels are inside the brain
-cfg.inside = inside(:);
+cfg.inside     = inside(:);
+cfg.insideorig = insideorig;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for creating a design matrix

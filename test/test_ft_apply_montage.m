@@ -1,5 +1,8 @@
 function test_ft_apply_montage
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_apply_montage
 % TEST ft_apply_montage
 

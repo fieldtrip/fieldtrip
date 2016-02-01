@@ -1,4 +1,4 @@
-function [z] = mtimes2x2(x, y)
+function z = mtimes2x2(x, y)
 
 % MTIMES2X2 compute x*y where the dimensionatity is 2x2xN or 2x2xNxM
 

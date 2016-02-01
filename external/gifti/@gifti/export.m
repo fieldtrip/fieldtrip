@@ -45,7 +45,7 @@ switch lower(target)
             s.vert = double(subsref(this, substruct('.', 'vertices')));
         end
         if isfield(this,'faces')
-            s.face = uint16(subsref(this, substruct('.', 'faces')));
+            s.face = uint32(subsref(this, substruct('.', 'faces')));
         end
         
     otherwise

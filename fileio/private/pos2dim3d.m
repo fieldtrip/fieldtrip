@@ -9,6 +9,8 @@ function [dim] = pos2dim3d(pos,dimold)
 %  and dimold optionally the original dimensionality of the functional data
 %  The output dim is a 3+ element vector of which the first three elements
 %  correspond to the 3D volumetric dimensions
+%
+% See also POS2DIM, POS2TRANSFORM
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 
@@ -32,16 +34,6 @@ else
   end
 end
 
-%this part depends on the assumption that the list of positions is describing a full 3D volume in 
-%an ordered way which allows for the extraction of a transformation matrix
-%i.e. slice by slice
-npos = size(pos,1);
-dpos = zscore(abs(diff(pos,[],1)));
+% extract the dim now that the bookkeeping is done
+dim = pos2dim(pos);
 
-[tmp, ind] = max(dpos,[],2);
-tmpdim(1)  = find(tmp>2,1,'first');
-dpos       = dpos(tmpdim:tmpdim:npos-1,:);
-[tmp, ind] = max(dpos(:,setdiff(1:3, ind(tmpdim))),[],2);
-tmpdim(2)  = find(tmp>1.1*min(tmp),1,'first'); %this threshold seems to work on what I tried out
-tmpdim(3)  = npos./prod(tmpdim);
-dim        = [tmpdim dimold(2:end)];

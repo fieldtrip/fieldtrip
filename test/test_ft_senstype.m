@@ -1,5 +1,8 @@
 function test_ft_senstype
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_senstype
 % TEST ft_senstype
 
@@ -8,11 +11,7 @@ function test_ft_senstype
 
 cnt = 0;
 
-if isunix
-  maindir = '/home/common/matlab/fieldtrip/data/test/latest/raw/';
-elseif ispc
-  maindir = 'H:/common/matlab/fieldtrip/data/test/latest/raw/';
-end
+maindir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw');
   
 subdir = 'eeg';
 d = dir(fullfile(maindir, subdir, '*.mat'));

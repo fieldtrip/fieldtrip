@@ -1,7 +1,7 @@
 function [cfg] = ft_movieplotER(cfg, data)
 
-% FT_MOVIEPLOTER makes a movie of the topographic distribution of the
-% time-locked average.
+% FT_MOVIEPLOTER makes a movie of the the event-related potentials, event-related
+% fields or oscillatory activity (power or coherence) versus frequency.
 %
 % Use as
 %   ft_movieplotER(cfg, timelock)
@@ -9,11 +9,15 @@ function [cfg] = ft_movieplotER(cfg, data)
 % can contain
 %   cfg.parameter    = string, parameter that is color coded (default = 'avg')
 %   cfg.xlim         = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim         = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim         = plotting limits for color dimension, 'maxmin',
+%                          'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.samperframe  = number, samples per fram (default = 1)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.framesfile   = [], no file saved, or 'string', filename of saved frames.mat (default = []);
 %   cfg.layout       = specification of the layout, see below
+%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.colorbar     = 'yes', 'no' (default = 'no')
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -27,8 +31,7 @@ function [cfg] = ft_movieplotER(cfg, data)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -59,15 +62,30 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'timelock');
 
 % set the defaults
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
-cfg.interactive = ft_getopt(cfg, 'interactive', 'no');
+cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
+cfg.baseline    = ft_getopt(cfg, 'baseline', 'no');
+
+% apply optional baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter'});
+  data = ft_timelockbaseline(tmpcfg, data);
+  [cfg, data] = rollback_provenance(cfg, data);
+  % prevent the baseline correction from happening in ft_movieplotTFR
+  cfg = removefields(cfg, {'baseline', 'baselinetype'});
+end
 
 cfg = ft_movieplotTFR(cfg, data);
 

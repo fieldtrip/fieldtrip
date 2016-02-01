@@ -1,4 +1,4 @@
-function [cluster, num] = findcluster(onoff, spatdimneighbstructmat, varargin)
+function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
 
 % FINDCLUSTER returns all connected clusters in a 3 dimensional matrix
 % with a connectivity of 6.
@@ -19,11 +19,8 @@ function [cluster, num] = findcluster(onoff, spatdimneighbstructmat, varargin)
 % to a channel (combination) along the first dimension and along that row/column, elements
 % with "1" define the neighbouring channel(s) (combinations). The first dimension of
 % onoff should correspond to the channel(s) (combinations).
-% The lower triangle of spatdimneighbstructmat, including the diagonal, is
-% assumed to be zero. 
 %
-% See also BWSELECT, BWLABELN (image processing toolbox) 
-% and SPM_CLUSTERS (spm2 toolbox).
+% See also SPM_BWLABEL (spm toolbox) 
 
 % Copyright (C) 2004, Robert Oostenveld
 %
@@ -50,7 +47,7 @@ nfreq = size(onoff, 2);
 ntime = size(onoff, 3);
 
 % ensure that spm8 (preferred) or spm2 is available, needed for spm_bwlabeln
-hasspm = ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
+hasspm = ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
 if ~hasspm
   error('the spm_bwlabeln function from SPM is needed for clustering');
 end
@@ -91,12 +88,16 @@ end;
 % for each channel (combination), find the connected time-frequency clusters
 labelmat = zeros(size(onoff));
 total = 0;
-for spatdimlev=1:spatdimlength
-  [labelmat(spatdimlev, :, :), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), nfreq, ntime)), 6); % the previous code contained a '4' for input
-  labelmat(spatdimlev, :, :) = labelmat(spatdimlev, :, :) + (labelmat(spatdimlev, :, :)~=0)*total;
-  total = total + num;
+if nfreq*ntime>1
+  for spatdimlev=1:spatdimlength
+    [labelmat(spatdimlev, :, :), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), nfreq, ntime)), 6); % the previous code contained a '4' for input
+    labelmat(spatdimlev, :, :) = labelmat(spatdimlev, :, :) + (labelmat(spatdimlev, :, :)~=0)*total;
+    total = total + num;
+  end
+else
+  labelmat(onoff>0) = 1:sum(onoff(:));
+  total = sum(onoff(:));
 end
-
 % combine the time and frequency dimension for simplicity
 labelmat = reshape(labelmat, spatdimlength, nfreq*ntime);
 
@@ -108,3 +109,5 @@ cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uin
 % reshape the output to the original format of the data
 cluster = reshape(cluster, spatdimlength, nfreq, ntime);
 
+% update the total number
+total = numel(unique(cluster(:)))-1; % the value of 0 does not count

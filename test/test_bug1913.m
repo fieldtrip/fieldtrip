@@ -1,5 +1,7 @@
 function test_bug1913
 
+% MEM 1500mb
+
 % TEST test_bug1913
 
 fn1 = '/home/common/matlab/fieldtrip/data/test/original/eeg/eeprobe/martlbc1.cnt';

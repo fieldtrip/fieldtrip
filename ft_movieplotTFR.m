@@ -1,6 +1,7 @@
 function [cfg] = ft_movieplotTFR(cfg, data)
 
-% FT_MOVIEPLOTTFR makes a movie of a time frequency representation of power or coherence 
+% FT_MOVIEPLOTTFR makes a movie of the time-frequency representation of power or
+% coherence.
 %
 % Use as
 %   ft_movieplotTFR(cfg, data)
@@ -12,7 +13,7 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   cfg.ylim         = selection boundaries over second dimension in data (e.g., freq)
 %                          'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.zlim         = plotting limits for color dimension, 'maxmin',
-%                          'maxabs' or [zmin zmax] (default = 'maxmin')
+%                          'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.samperframe  = number, samples per fram (default = 1)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.framesfile   = [] (optional), no file saved, or 'string', filename of saved frames.mat (default = []);
@@ -20,6 +21,9 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   cfg.movietime    = number, movie frames are all frequencies at the fixed time movietime (default = []);
 %   cfg.layout       = specification of the layout, see below
 %   cfg.interactive  = 'no' or 'yes', make it interactive
+%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.colorbar     = 'yes', 'no' (default = 'no')
 %
 % the layout defines how the channels are arranged. you can specify the
 % layout in a variety of ways:
@@ -33,8 +37,7 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 % layout. if you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% to facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% to facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % if you specify this option the input data will be read from a *.mat
 % file on disk. this mat files should contain only a single variable named 'data',
@@ -65,13 +68,19 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% check the input dtaa, this function is also called from ft_movieplotER
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% check if the input data is valid for this function
+% note that this function is also called from ft_movieplotER
 data = ft_checkdata(data, 'datatype', {'timelock', 'freq'});
 
 % check if the input cfg is valid for this function
@@ -91,6 +100,8 @@ cfg.framesfile    = ft_getopt(cfg, 'framesfile',   []);
 cfg.moviefreq     = ft_getopt(cfg, 'moviefreq', []);
 cfg.movietime     = ft_getopt(cfg, 'movietime', []);
 cfg.movierpt      = ft_getopt(cfg, 'movierpt', 1);
+cfg.baseline      = ft_getopt(cfg, 'baseline', 'no');
+cfg.colorbar      = ft_getopt(cfg, 'colorbar', 'no');
 cfg.interactive   = ft_getopt(cfg, 'interactive', 'yes');
 dointeractive     = istrue(cfg.interactive);
 
@@ -100,7 +111,14 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-layout = ft_prepare_layout(cfg);
+layout = ft_prepare_layout(cfg, data);
+
+% apply optional baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter'});
+  data = ft_freqbaseline(tmpcfg, data);
+  [cfg, data] = rollback_provenance(cfg, data);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
@@ -164,7 +182,6 @@ else
   hasyparam = false;
 end
 
-
 % select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(data.label, layout.label);
 if isempty(seldat)
@@ -194,6 +211,14 @@ elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
   cfg.zlim     = [];
   cfg.zlim(1)  = -max(abs(parameter(:)));
   cfg.zlim(2)  =  max(abs(parameter(:)));
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'zeromax')
+  cfg.zlim     = [];
+  cfg.zlim(1)  = 0;
+  cfg.zlim(2)  = max(parameter(:));
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'minzero')
+  cfg.zlim     = [];
+  cfg.zlim(1)  = min(parameter(:));
+  cfg.zlim(2)  = 0;
 end
 
 h = gcf;
@@ -260,21 +285,22 @@ if dointeractive
   set(t, 'timerfcn', {@cb_timer, h}, 'period', 0.1, 'executionmode', 'fixedspacing');
   
   % collect the data and the options to be used in the figure
-  opt.lay   = layout;
-  opt.chanx = chanx;
-  opt.chany = chany;
+  opt.lay      = layout;
+  opt.chanx    = chanx;
+  opt.chany    = chany;
   opt.xvalues  = xvalues; % freq
   opt.yvalues  = yvalues; % time
-  opt.xparam = xparam;
-  opt.yparam = yparam;
-  opt.dat   = parameter;
-  opt.zlim  = cfg.zlim;
-  opt.speed = 1;
-  opt.cfg   = cfg;
-  opt.sx    = sx; % slider freq
-  opt.sy    = sy; % slider time
-  opt.p     = p;
-  opt.t     = t;
+  opt.xparam   = xparam;
+  opt.yparam   = yparam;
+  opt.dat      = parameter;
+  opt.zlim     = cfg.zlim;
+  opt.speed    = 1;
+  opt.cfg      = cfg;
+  opt.sx       = sx; % slider freq
+  opt.sy       = sy; % slider time
+  opt.p        = p;
+  opt.t        = t;
+  opt.colorbar = istrue(cfg.colorbar);
   if ~hasyparam
     opt.timdim = 2;
   else
@@ -283,6 +309,9 @@ if dointeractive
   [dum, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask');
   caxis(cfg.zlim);
   axis off;
+  if opt.colorbar
+    colorbar
+  end
   
   % add sum stuff at a higher level for quicker access in the callback
   % routine
@@ -360,8 +389,9 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
+ft_postamble previous   data
+ft_postamble provenance data
+ft_postamble history    data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -25,7 +25,7 @@ function [vol, M, tmpdcminfo, mr_parms] = load_dicom_series(seriesno,dcmdir,dcmf
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2011/03/02 00:04:12 $
-%    $Revision: 1.6 $
+%    $Revision$
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
@@ -112,12 +112,12 @@ return;
 %---------------------------------------------------%
 function dcmdir = getdcmdir(dcmfile)
 
-ind = findstr(dcmfile,'/');
+ind = findstr(dcmfile,filesep);
 if(~isempty(ind))
   if(max(ind)~=1)
     dcmdir = dcmfile(1:max(ind)-1);
   else
-  dcmdir = '/';
+  dcmdir = filesep;
   end
 else
   dcmdir = '.';

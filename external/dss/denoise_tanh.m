@@ -12,7 +12,7 @@ function [params, s_new] = denoise_tanh(params, s, state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: denoise_tanh.m,v 1.15 2005/12/02 12:23:18 jaakkos Exp $
+% $Id$
 
 if nargin<3 | ~isstruct(state)
     params.name = 'Supergaussian';

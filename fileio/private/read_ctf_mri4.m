@@ -1,4 +1,4 @@
-function [mri, hdr, cpersist] = read_ctf_mri4(filename);
+function [mri, hdr, cpersist] = read_ctf_mri4(filename)
 
 % READ_CTF_MRI reads header and imnage data from CTF format MRI file
 %
@@ -181,9 +181,9 @@ hdr.transformHead2MRI = transformMatrix*inv(scale);
 hdr.transformMRI2Head = scale*inv(transformMatrix);
 
 % compute location of fiducials in MRI and HEAD coordinates
-hdr.fiducial.head.nas = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.nas, 'homogenous');
-hdr.fiducial.head.lpa = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.lpa, 'homogenous');
-hdr.fiducial.head.rpa = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rpa, 'homogenous');
+hdr.fiducial.head.nas = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.nas, 'homogenous');
+hdr.fiducial.head.lpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.lpa, 'homogenous');
+hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rpa, 'homogenous');
 
 
 %
@@ -273,12 +273,13 @@ hdr.fiducial.head.rpa = warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rpa, 
         value = fread(fid, 1, 'int32');
       case 6
         value = fread(fid, 1, 'int16');
+      case 7
+        value = fread(fid, 1, 'uint16');
       case 10
         vsize = fread(fid, 1, 'int32');
         value = char(fread(fid, vsize, 'char'))';
       otherwise
         error(['Unsupported valuetype (' num2str(vtype) ') found in CPersist object']);
-        return
     end
   end
 

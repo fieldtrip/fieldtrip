@@ -1,13 +1,12 @@
 function ft_realtime_brainampproxy(cfg)
 
 % FT_REALTIME_BRAINAMPPROXY reads continuous data from a BrainAmp EEG acquisition
-% system through the RDA network interface and writes it to a FieldTrip
-% buffer.
+% system through the RDA network interface and writes it to a FieldTrip buffer.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
 %   ft_realtime_brainampproxy(cfg)
@@ -25,6 +24,8 @@ function ft_realtime_brainampproxy(cfg)
 %   cfg.target.eventformat   = string, default is determined automatic
 %
 % To stop this realtime function, you have to press Ctrl-C
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2009, Robert Oostenveld
 %

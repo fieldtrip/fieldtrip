@@ -66,7 +66,7 @@ classdef garrote < dml.method
         
       [n,p] = size(X);
       if isempty(obj.valset)
-        obj.valset=0.1*p;
+        obj.valset=0.1*n;
       end
       
       % handle multiple datasets
@@ -85,7 +85,9 @@ classdef garrote < dml.method
       
       if isempty(obj.max_sum_m), obj.max_sum_m = n/2; end
       
+      warning off
       args=struct(obj);    
+      warning on
       obj.res = vg_method_train(X',Y',args);
 
     end
@@ -99,7 +101,7 @@ classdef garrote < dml.method
 
     function m = model(obj)
 
-      m = obj.res;
+      m.m_mf = obj.m_mf;
       
     end
 

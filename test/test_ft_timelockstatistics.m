@@ -1,5 +1,8 @@
 function test_ft_timelockstatistics
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_timelockstatistics
 % TEST ft_timelockstatistics, findcluster, clusterstat, ft_statistics_montecarlo
 
@@ -25,7 +28,7 @@ neighbours(3).label = 'chan3';
 neighbours(3).neighblabel = {'chan1', 'chan2'};
 cfg.neighbours  = neighbours;
 cfg.method      = 'montecarlo';
-cfg.statistic   = 'depsamplesT';
+cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05; 
 cfg.correctm    = 'cluster'; 
 cfg.clusterstatistic = 'maxsum';
@@ -36,11 +39,10 @@ cfg.ivar   = 1;
 cfg.uvar   = 2;
 stat = ft_timelockstatistics(cfg,timelock{:});
 
-
 % do stats - analytic
 cfg = [];
 cfg.method      = 'analytic';
-cfg.statistic   = 'depsamplesT';
+cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05; 
 cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
 cfg.ivar   = 1;

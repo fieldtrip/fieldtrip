@@ -3,8 +3,9 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- *
  */
+
+#include <sched.h>
 
 #include <rdaserver.h>
 #include <fcntl.h>
@@ -720,7 +721,7 @@ void *_rdaserver_thread(void *arg) {
 		/* Check if we have a new client connection */
 		if (sel>0 && FD_ISSET(SC->server_socket, &readSet)) {
 			struct sockaddr_in sa;
-			int size_sa = sizeof(sa);
+			unsigned int size_sa = sizeof(sa);
 			SOCKET newSock;
 	
 			newSock = accept(SC->server_socket, (struct sockaddr *)&sa, &size_sa);

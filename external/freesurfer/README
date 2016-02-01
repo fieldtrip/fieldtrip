@@ -16,3 +16,7 @@ read_fscolorlut.m
 Simple_surface_labels2009.txt
 colortable_desikan_killiany.txt
 colortable_BA.txt
+
+The following files are copied from freesurfer version 5.1:
+write_surf.m
+fwrite3.m

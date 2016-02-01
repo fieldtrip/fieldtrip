@@ -6,16 +6,17 @@ function l = length(tree,r)
 % r    - 'real' if present, returns the real number of nodes in the
 %         tree (deleted nodes aren't populated)
 % l    - length of the XML tree (number of nodes)
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Return the number of nodes of an XMLTree object.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(1,2,nargin));
+
+%error(nargchk(1,2,nargin));
 
 % Return the full number of nodes once allocated
 l = length(tree.tree);

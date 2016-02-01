@@ -24,7 +24,9 @@ function hm=plotmesh(node,varargin)
 %            for simple point plotting, opt can be markers
 %            or color options, such as 'r.', or opt can be 
 %            a logic statement to select a subset of the mesh,
-%            such as 'x>0 & y+z<1'; opt can have more than one
+%            such as 'x>0 & y+z<1', or an equation defining
+%            a plane at which a mesh cross-section is plotted, for
+%            example 'y=2*x'; opt can have more than one
 %            items to combine these options, for example: 
 %            plotmesh(...,'x>0','r.'); the range selector must
 %            appear before the color/marker specifier
@@ -48,6 +50,7 @@ function hm=plotmesh(node,varargin)
 %   h=plotmesh(node,elem,'x<20 & y>0');
 %   h=plotmesh(node,face,elem);
 %   h=plotmesh(node,face,elem,'linestyle','--');
+%   h=plotmesh(node,elem,'z=20');
 % 
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
@@ -61,7 +64,7 @@ if(nargin>1)
    hasopt=0;
    for i=1:length(varargin)
    	if(ischar(varargin{i}))
-		if(regexp(varargin{i},'[0-9&|]'))
+		if(regexp(varargin{i},'[0-9x-zX-Z><=&|]'))
 			selector=varargin{i};
 			if(nargin>=i+1) opt=varargin(i+1:end); end
 		else
@@ -118,7 +121,12 @@ holdstate=ishold;
 if(~holdstate)
     cla;
 end
-if(isempty(face) & isempty(elem))
+if(size(node,2)==4 && size(elem,2)==5)
+    warning(['You have specified the node colors by both the 4th ' ...
+            'and 5th columns of node and face inputs, respectively. ' ...
+            'The node input takes priority']);
+end
+if(isempty(face) && isempty(elem))
    if(isempty(selector))
         if(isempty(opt))
    		h=plot3(node(:,1),node(:,2),node(:,3),'o');
@@ -185,17 +193,28 @@ if(~isempty(elem))
 	x=cent(:,1);
     y=cent(:,2);
 	z=cent(:,3);
-    idx=eval(['find(' selector ')']);
-    if(~isempty(idx))
+    if(regexp(selector,'='))
+      if(size(node,2)==4)
+          [cutpos,cutvalue,facedata]=qmeshcut(elem,node(:,1:3),node(:,1:4),selector);  
+      elseif(size(node,2)==3)
+          [cutpos,cutvalue,facedata]=qmeshcut(elem,node,node(:,3),selector);
+      else
+          error('plotmesh can only plot 3D tetrahedral meshes');
+      end
+      h=patch('Vertices',cutpos,'Faces',facedata,'FaceVertexCData',cutvalue,'facecolor','interp',opt{:});
+    else
+      idx=eval(['find(' selector ')']);
+      if(~isempty(idx))
 	    if(isempty(opt))
 		h=plottetra(node,elem(idx,:));
 	    else
 		h=plottetra(node,elem(idx,:),opt{:});
         end
-    else
+      else
         warning('no tetrahedral element to plot');
 	end
-   end
+     end
+    end
 end
 
 if(exist('h','var') & ~holdstate)

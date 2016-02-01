@@ -1,9 +1,11 @@
 function test_tutorial_beamformer20120321
 
+% MEM 10gb
+% WALLTIME 02:30:00
+
 % TEST test_tutorial_beamformer
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 
@@ -59,6 +61,7 @@ cfg.vol             = vol;
 cfg.reducerank      = 2;
 cfg.channel         = {'MEG','-MLP31', '-MLO12'};
 cfg.grid.resolution = 1;   % use a 3-D grid with a 1 cm resolution
+cfg.grid.unit = 'cm';
 [grid] = ft_prepare_leadfield(cfg);
 
 %% Source analysis
@@ -157,7 +160,7 @@ cfg.funcolormap    = 'jet';
 cfg.opacitylim     = [0.0 1.2];
 cfg.opacitymap     = 'rampup';
 cfg.projmethod     = 'nearest';
-cfg.surffile       = 'surface_l4_both.mat';
+cfg.surffile       = 'surface_white_both.mat';
 cfg.surfdownsample = 10;
 figure
 ft_sourceplot(cfg, sourceDiffIntN);

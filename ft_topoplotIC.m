@@ -1,4 +1,4 @@
-function [cfg] = ft_topoplotIC(cfg, varargin)
+function [cfg] = ft_topoplotIC(cfg, comp)
 
 % FT_TOPOPLOTIC plots the topographic distribution of an independent
 % component that was computed using the FT_COMPONENTANALYSIS function,
@@ -14,7 +14,7 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 %
 % The configuration can have the following parameters:
 %   cfg.colormap           = any sized colormap, see COLORMAP
-%   cfg.zlim               = 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.marker             = 'on', 'labels', 'numbers', 'off'
 %   cfg.markersymbol       = channel marker symbol (default = 'o')
 %   cfg.markercolor        = channel marker color (default = [0 0 0] (black))
@@ -57,6 +57,9 @@ function [cfg] = ft_topoplotIC(cfg, varargin)
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
 %                            [x y] coordinates
+%   cfg.title              = string or 'auto' or 'off', specify a figure
+%                            title, or use 'component N' (auto) as the
+%                            title
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -100,13 +103,45 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar comp
+ft_preamble provenance comp
+ft_preamble trackconfig
 
-% make sure figure window titles are labeled appropriately, pass this onto
-% the actual plotting function
-% if we don't specify this, the window will be called 'ft_topoplotTFR',
-% which is confusing to the user
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% check if the input data is valid for this function
+% this will remove all time-series information
+comp = ft_checkdata(comp, 'datatype', 'comp');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'required', 'component');
+
+% set the config defaults
+cfg.title = ft_getopt(cfg, 'title', 'auto');
+
+% interactive plotting doesn't work for chan_comp dimord.
+if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
+  warning('Interactive plotting is not supported.');
+end
+cfg.interactive = 'no';
+
+% prepare the layout, this should be done only once
+cfg.layout = ft_prepare_layout(cfg, comp);
+
+% don't show the callinfo for each separate component
+cfg.showcallinfo = 'no';
+
+% create temporary variable to prevent overwriting the selected components
+selcomp = cfg.component;
+
+% make sure figure window titles are labeled appropriately, pass this onto the actual
+% plotting function if we don't specify this, the window will be called
+% 'ft_topoplotTFR', which is confusing to the user
 cfg.funcname = mfilename;
 if nargin > 1
   cfg.dataname = {inputname(2)};
@@ -115,43 +150,52 @@ if nargin > 1
   end
 end
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', 'component');
-
-% FIXME why is this done like this instead of using ft_checkdata?
-% add a dimord
-varargin{:}.dimord = 'chan_comp';
-
-% create temporary variable
-selcomp = cfg.component;
-
-% prepare the layout only once
-cfg.layout = ft_prepare_layout(cfg, varargin{:});
-
-% don't show the callinfo for each separate component
-cfg.showcallinfo = 'no';
-
-% allow multiplotting
 nplots = numel(selcomp);
 if nplots>1
+  % make multiple plots in a single figure
   nyplot = ceil(sqrt(nplots));
   nxplot = ceil(nplots./nyplot);
   for i = 1:length(selcomp)
     subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
-    ft_topoplotTFR(cfg, varargin{:});
-    title(['component ' num2str(selcomp(i))]);
-  end
+    
+    % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
+    [cfg] = topoplot_common(cfg, comp);
+    
+    if strcmp(cfg.title, 'auto')
+      title(['component ' num2str(selcomp(i))]);
+    elseif ~strcmp(cfg.title, 'off')
+      title(cfg.title);
+    end
+  end % for all components
+  
 else
   cfg.component = selcomp;
-  ft_topoplotTFR(cfg, varargin{:});
-  title(['component ' num2str(selcomp)]);
+  
+  % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
+  [cfg] = topoplot_common(cfg, comp);
+  
+  if strcmp(cfg.title, 'auto')
+    title(['component ' num2str(selcomp)]);
+  elseif ~strcmp(cfg.title, 'off')
+    title(cfg.title);
+  end
 end
+
+% remove this field again, it is only used for figure labels
+cfg = removefields(cfg, 'funcname');
 
 % show the callinfo for all components together
 cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous comp
 ft_postamble provenance
-ft_postamble previous varargin
+
+if ~nargout
+  clear cfg
+end
+
 

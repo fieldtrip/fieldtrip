@@ -1,5 +1,8 @@
 function test_bug272
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug272
 % TEST ft_timelockanalysis ft_prepare_layout ft_multiplotER ft_topoplotER 
 

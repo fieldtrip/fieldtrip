@@ -19,12 +19,6 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 % non-linear search to minimize the distance between the input sensor
 % positions and the corresponding template sensors.
 %
-% HEADSHAPE - You can apply a spatial transformation/deformation that
-% automatically minimizes the distance between the electrodes and the head
-% surface. The warping methods use a non-linear search to minimize the
-% distance between the input sensor positions and the projection of the
-% electrodes on the head surface.
-%
 % INTERACTIVE - You can display the skin surface together with the
 % electrode or gradiometer positions, and manually (using the graphical
 % user interface) adjust the rotation, translation and scaling parameters,
@@ -32,6 +26,12 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %
 % MANUAL - You can display the skin surface and manually determine the
 % electrode positions by clicking on the skin surface.
+%
+% HEADSHAPE - You can apply a spatial transformation/deformation that
+% automatically minimizes the distance between the electrodes and the head
+% surface. The warping methods use a non-linear search to minimize the
+% distance between the input sensor positions and the projection of the
+% electrodes on the head surface.
 %
 % Use as
 %   [sensor] = ft_sensorrealign(cfg) or
@@ -43,9 +43,9 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %   cfg.method         = string representing the method for aligning or placing the electrodes
 %                        'fiducial'        realign using three fiducials (e.g. NAS, LPA and RPA)
 %                        'template'        realign the sensors to match a template set
-%                        'headshape'       realign the sensors to fit the head surface
 %                        'interactive'     realign manually using a graphical user interface
 %                        'manual'          manual positioning of the electrodes by clicking in a graphical user interface
+%                        'headshape'       realign the sensors to fit the head surface
 %   cfg.warp          = string describing the spatial transformation for the template method
 %                        'rigidbody'       apply a rigid-body warp (default)
 %                        'globalrescale'   apply a rigid-body warp with global rescaling
@@ -112,14 +112,24 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %
 % $Id$
 
+% DEPRECATED by roboos on 11 November 2015
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1830
+% support for this functionality can be removed mid 2016
+warning('FT_SENSORREALIGN is deprecated, please use FT_ELECTRODEREALIGN instead.')
+
 revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
+ft_preamble provenance elec_original
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % the interactive method uses a global variable to get the data from the figure when it is closed
 global norm
@@ -176,13 +186,15 @@ end % switch cfg.method
 if nargin==1
   try % try to get the description from the cfg
     elec_original = ft_fetch_sens(cfg);
-  catch lasterr
+  catch
+    % the "catch me" syntax is broken on MATLAB74, this fixes it
+    me = lasterror;
     % start with an empty set of electrodes, this is useful for manual positioning
     elec_original = [];
     elec_original.pnt    = zeros(0,3);
     elec_original.label  = cell(0,1);
     elec_original.unit   = 'mm';
-    warning(lasterr.message, lasterr.identifier);
+    warning(me.message, me.identifier);
   end
 elseif nargin>1
   % the input electrodes were specified as second input argument
@@ -221,7 +233,7 @@ if usetemplate
       template(i) = ft_read_sens(cfg.target{i});
     end
   end
-  
+
   clear tmp
   for i=1:Ntemplate
     tmp(i) = ft_datatype_sens(template(i));            % ensure up-to-date sensor description
@@ -232,9 +244,9 @@ end
 
 if useheadshape
   % get the surface describing the head shape
-  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt') || isfield(cfg.headshape, 'pos')
     % use the headshape surface specified in the configuration
-    headshape = cfg.headshape;
+    headshape = fixpos(cfg.headshape);
   elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
     % use the headshape points specified in the configuration
     headshape.pnt = cfg.headshape;
@@ -282,13 +294,13 @@ norm = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(cfg.method, 'template')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % determine electrode selection and overlapping subset for warping
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
   for i=1:Ntemplate
     cfg.channel = ft_channelselection(cfg.channel, template(i).label);
   end
-  
+
   % make consistent subselection of electrodes
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label = elec.label(datsel);
@@ -298,60 +310,60 @@ if strcmp(cfg.method, 'template')
     template(i).label = template(i).label(datsel);
     template(i).pnt   = template(i).pnt(datsel,:);
   end
-  
+
   % compute the average of the template electrode positions
   average = ft_average_sens(template);
-  
+
   fprintf('warping electrodes to average template... '); % the newline comes later
-  [norm.chanpos, norm.m] = warp_optim(elec.chanpos, average.chanpos, cfg.warp);
+  [norm.chanpos, norm.m] = ft_warp_optim(elec.chanpos, average.chanpos, cfg.warp);
   norm.label = elec.label;
-  
+
   dpre  = mean(sqrt(sum((average.chanpos - elec.chanpos).^2, 2)));
   dpost = mean(sqrt(sum((average.chanpos - norm.chanpos).^2, 2)));
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
-  
+
   if strcmp(cfg.feedback, 'yes')
     % plot all electrodes before warping
     ft_plot_sens(elec, 'r*');
-    
+
     % plot all electrodes after warping
     ft_plot_sens(norm, 'm.', 'label', 'label');
-    
+
     % plot the template electrode locations
     ft_plot_sens(average, 'b.');
-    
+
     % plot lines connecting the input and the realigned electrode locations with the template locations
     my_line3(elec.chanpos, average.chanpos, 'color', 'r');
     my_line3(norm.chanpos, average.chanpos, 'color', 'm');
   end
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'headshape')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % determine electrode selection and overlapping subset for warping
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
-  
+
   % make subselection of electrodes
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label   = elec.label(datsel);
   elec.chanpos = elec.chanpos(datsel,:);
-  
+
   fprintf('warping electrodes to skin surface... '); % the newline comes later
-  [norm.chanpos, norm.m] = warp_optim(elec.chanpos, headshape, cfg.warp);
+  [norm.chanpos, norm.m] = ft_warp_optim(elec.chanpos, headshape, cfg.warp);
   norm.label = elec.label;
-  
-  dpre  = warp_error([],     elec.chanpos, headshape, cfg.warp);
-  dpost = warp_error(norm.m, elec.chanpos, headshape, cfg.warp);
+
+  dpre  = ft_warp_error([],     elec.chanpos, headshape, cfg.warp);
+  dpost = ft_warp_error(norm.m, elec.chanpos, headshape, cfg.warp);
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'fiducial')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % the fiducials have to be present in the electrodes and in the template set
   label = intersect(lower(elec.label), lower(template.label));
-  
+
   if ~isfield(cfg, 'fiducial') || isempty(cfg.fiducial)
     % try to determine the names of the fiducials automatically
     option1 = {'nasion' 'left' 'right'};
@@ -377,17 +389,17 @@ elseif strcmp(cfg.method, 'fiducial')
     end
   end
   fprintf('matching fiducials {''%s'', ''%s'', ''%s''}\n', cfg.fiducial{1}, cfg.fiducial{2}, cfg.fiducial{3});
-  
+
   % determine electrode selection
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label = elec.label(datsel);
   elec.chanpos   = elec.chanpos(datsel,:);
-  
+
   if length(cfg.fiducial)~=3
     error('you must specify three fiducials');
   end
-  
+
   % do case-insensitive search for fiducial locations
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
@@ -398,11 +410,11 @@ elseif strcmp(cfg.method, 'fiducial')
   elec_nas = elec.chanpos(nas_indx,:);
   elec_lpa = elec.chanpos(lpa_indx,:);
   elec_rpa = elec.chanpos(rpa_indx,:);
-  
+
   % FIXME change the flow in the remainder
   % if one or more template electrode sets are specified, then align to the average of those
   % if no template is specified, then align so that the fiducials are along the axis
-  
+
   % find the matching fiducials in the template and average them
   templ_nas = nan(Ntemplate,3);
   templ_lpa = nan(Ntemplate,3);
@@ -421,17 +433,17 @@ elseif strcmp(cfg.method, 'fiducial')
   templ_nas = mean(templ_nas,1);
   templ_lpa = mean(templ_lpa,1);
   templ_rpa = mean(templ_rpa,1);
-  
+
   % realign both to a common coordinate system
-  elec2common  = headcoordinates(elec_nas, elec_lpa, elec_rpa);
-  templ2common = headcoordinates(templ_nas, templ_lpa, templ_rpa);
-  
+  elec2common  = ft_headcoordinates(elec_nas, elec_lpa, elec_rpa);
+  templ2common = ft_headcoordinates(templ_nas, templ_lpa, templ_rpa);
+
   % compute the combined transform and realign the electrodes to the template
-  norm       = [];
-  norm.m     = elec2common * inv(templ2common);
-  norm.chanpos   = warp_apply(norm.m, elec.chanpos, 'homogeneous');
-  norm.label = elec.label;
-  
+  norm         = [];
+  norm.m       = elec2common * inv(templ2common);
+  norm.chanpos = ft_warp_apply(norm.m, elec.chanpos, 'homogeneous');
+  norm.label   = elec.label;
+
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
   rpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{3}));
@@ -441,7 +453,7 @@ elseif strcmp(cfg.method, 'fiducial')
   rpa_indx = match_str(lower(norm.label), lower(cfg.fiducial{3}));
   dpost = mean(sqrt(sum((norm.chanpos([nas_indx lpa_indx rpa_indx],:) - [templ_nas; templ_lpa; templ_rpa]).^2, 2)));
   fprintf('mean distance between fiducials prior to realignment %f, after realignment %f\n', dpre, dpost);
-  
+
   if strcmp(cfg.feedback, 'yes')
     % plot the first three electrodes before transformation
     my_plot3(elec.chanpos(1,:), 'r*');
@@ -450,7 +462,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(elec.chanpos(1,:), elec.label{1}, 'color', 'r');
     my_text3(elec.chanpos(2,:), elec.label{2}, 'color', 'r');
     my_text3(elec.chanpos(3,:), elec.label{3}, 'color', 'r');
-    
+
     % plot the template fiducials
     my_plot3(templ_nas, 'b*');
     my_plot3(templ_lpa, 'b*');
@@ -458,7 +470,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(templ_nas, ' nas', 'color', 'b');
     my_text3(templ_lpa, ' lpa', 'color', 'b');
     my_text3(templ_rpa, ' rpa', 'color', 'b');
-    
+
     % plot all electrodes after transformation
     my_plot3(norm.chanpos, 'm.');
     my_plot3(norm.chanpos(1,:), 'm*');
@@ -468,7 +480,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(norm.chanpos(2,:), norm.label{2}, 'color', 'm');
     my_text3(norm.chanpos(3,:), norm.label{3}, 'color', 'm');
   end
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'interactive')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -499,7 +511,7 @@ elseif strcmp(cfg.method, 'interactive')
   clear global norm
   norm = tmp;
   clear tmp
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'manual')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -521,7 +533,7 @@ elseif strcmp(cfg.method, 'manual')
   for i=1:size(norm.chanpos,1)
     norm.label{i,1} = sprintf('%d', i);
   end
-  
+
 else
   error('unknown method');
 end
@@ -537,7 +549,7 @@ switch cfg.method
     catch
       % the previous section will fail for nonlinear transformations
       elec_realigned.label   = elec_original.label;
-      elec_realigned.chanpos = warp_apply(norm.m, elec_original.chanpos, cfg.warp);
+      elec_realigned.chanpos = ft_warp_apply(norm.m, elec_original.chanpos, cfg.warp);
     end
     % remember the transformation
     elec_realigned.(cfg.warp) = norm.m;
@@ -558,9 +570,9 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous elec_original
-ft_postamble history elec_realigned
+ft_postamble previous   elec_original
+ft_postamble provenance elec_realigned
+ft_postamble history    elec_realigned
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -576,121 +588,59 @@ for i=1:size(xyzB,1)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION to layout a moderately complex graphical user interface
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function h = layoutgui(fig, geometry, position, style, string, value, tag, callback)
-horipos  = geometry(1); % lower left corner of the GUI part in the figure
-vertpos  = geometry(2); % lower left corner of the GUI part in the figure
-width    = geometry(3); % width  of the GUI part in the figure
-height   = geometry(4); % height of the GUI part in the figure
-horidist = 0.05;
-vertdist = 0.05;
-options  = {'units', 'normalized', 'HorizontalAlignment', 'center'}; %  'VerticalAlignment', 'middle'
-Nrow     = size(position,1);
-h        = cell(Nrow,1);
-for i=1:Nrow
-  if isempty(position{i})
-    continue;
-  end
-  position{i} = position{i} ./ sum(position{i});
-  Ncol = size(position{i},2);
-  ybeg = (Nrow-i  )/Nrow + vertdist/2;
-  yend = (Nrow-i+1)/Nrow - vertdist/2;
-  for j=1:Ncol
-    xbeg    = sum(position{i}(1:(j-1))) + horidist/2;
-    xend    = sum(position{i}(1:(j  ))) - horidist/2;
-    pos(1) = xbeg*width  + horipos;
-    pos(2) = ybeg*height + vertpos;
-    pos(3) = (xend-xbeg)*width;
-    pos(4) = (yend-ybeg)*height;
-    h{i}{j} = uicontrol(fig, ...
-      options{:}, ...
-      'position', pos, ...
-      'style',    style{i}{j}, ...
-      'string',   string{i}{j}, ...
-      'tag',      tag{i}{j}, ...
-      'value',    value{i}{j}, ...
-      'callback', callback{i}{j} ...
-      );
-  end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_creategui(hObject, eventdata, handles)
-% define the position of each GUI element
-position = {
-  [2 1 1 1]
-  [2 1 1 1]
-  [2 1 1 1]
-  [1]
-  [1]
-  [1]
-  [1]
-  [1 1]
-  };
-
-% define the style of each GUI element
-style = {
-  {'text' 'edit' 'edit' 'edit'}
-  {'text' 'edit' 'edit' 'edit'}
-  {'text' 'edit' 'edit' 'edit'}
-  {'pushbutton'}
-  {'pushbutton'}
-  {'toggle'}
-  {'toggle'}
-  {'text' 'edit'}
-  };
-
-% define the descriptive string of each GUI element
-string = {
-  {'rotate'    0 0 0}
-  {'translate' 0 0 0}
-  {'scale'     1 1 1}
-  {'redisplay'}
-  {'apply'}
-  {'toggle labels'}
-  {'toggle axes'}
-  {'opacity' 0.7}
-  };
-
-% define the value of each GUI element
-value = {
-  {[] [] [] []}
-  {[] [] [] []}
-  {[] [] [] []}
-  {[]}
-  {[]}
-  {0}
-  {0}
-  {[] []}
-  };
-
-% define a tag for each GUI element
-tag = {
-  {'' 'rx' 'ry' 'rz'}
-  {'' 'tx' 'ty' 'tz'}
-  {'' 'sx' 'sy' 'sz'}
-  {''}
-  {''}
-  {'toggle labels'}
-  {'toggle axes'}
-  {'' 'alpha'}
-  };
-
-% define the callback function of each GUI element
-callback = {
-  {[] @cb_redraw @cb_redraw @cb_redraw}
-  {[] @cb_redraw @cb_redraw @cb_redraw}
-  {[] @cb_redraw @cb_redraw @cb_redraw}
-  {@cb_redraw}
-  {@cb_apply}
-  {@cb_redraw}
-  {@cb_redraw}
-  {[] @cb_redraw}
-  };
-
+% % define the position of each GUI element
 fig = get(hObject, 'parent');
-layoutgui(fig, [0.7 0.05 0.25 0.50], position, style, string, value, tag, callback);
+% constants
+CONTROL_WIDTH  = 0.05;
+CONTROL_HEIGHT = 0.06;
+CONTROL_HOFFSET = 0.7;
+CONTROL_VOFFSET = 0.5;
+% rotateui
+uicontrol('tag', 'rotateui', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'rotate', 'callback', [])
+uicontrol('tag', 'rx', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+uicontrol('tag', 'ry', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+uicontrol('tag', 'rz', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+ft_uilayout(fig, 'tag', 'rotateui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET);
+ft_uilayout(fig, 'tag', 'rx',       'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET);
+ft_uilayout(fig, 'tag', 'ry',       'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET);
+ft_uilayout(fig, 'tag', 'rz',       'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET);
+
+% scaleui
+uicontrol('tag', 'scaleui', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'scale', 'callback', [])
+uicontrol('tag', 'sx', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
+uicontrol('tag', 'sy', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
+uicontrol('tag', 'sz', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
+ft_uilayout(fig, 'tag', 'scaleui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'sx',      'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'sy',      'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'sz',      'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
+
+% translateui
+uicontrol('tag', 'translateui', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'translate', 'callback', [])
+uicontrol('tag', 'tx', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+uicontrol('tag', 'ty', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+uicontrol('tag', 'tz', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+ft_uilayout(fig, 'tag', 'translateui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'tx',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'ty',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'tz',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
+
+% control buttons
+uicontrol('tag', 'redisplaybtn', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay', 'value', [], 'callback', @cb_redraw);
+uicontrol('tag', 'applybtn', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',     'value', [], 'callback', @cb_apply);
+uicontrol('tag', 'toggle labels', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle label', 'value', 0, 'callback', @cb_redraw);
+uicontrol('tag', 'toggle axes', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle axes', 'value', 0, 'callback', @cb_redraw);
+ft_uilayout(fig, 'tag', 'redisplaybtn',  'BackgroundColor', [0.8 0.8 0.8], 'width', 6*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'applybtn',      'BackgroundColor', [0.8 0.8 0.8], 'width', 6*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'toggle labels', 'BackgroundColor', [0.8 0.8 0.8], 'width', 6*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-5*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'toggle axes',   'BackgroundColor', [0.8 0.8 0.8], 'width', 6*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-6*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+
+% alpha ui (somehow not implemented, facealpha is fixed at 0.7
+uicontrol('tag', 'alphaui', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'alpha', 'value', [], 'callback', []);
+uicontrol('tag', 'alpha',   'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0.7',   'value', [], 'callback', @cb_redraw);
+ft_uilayout(fig, 'tag', 'alphaui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 3*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-7*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'alpha',   'BackgroundColor', [0.8 0.8 0.8], 'width', 3*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-7*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(hObject, eventdata, handles)
@@ -802,4 +752,3 @@ norm   = getappdata(fig, 'elec');
 norm.m = getappdata(fig, 'transform');
 set(fig, 'CloseRequestFcn', @delete);
 delete(fig);
-

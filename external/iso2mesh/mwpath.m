@@ -47,8 +47,12 @@ if(isempty(p))
 		if(~isempty(username))
                     tdir=[tdir username filesep];
                     if(exist(tdir)==0) mkdir(tdir); end
-                end
-		tempname=[tdir session fname];
+        end
+        if(nargin==0)
+            tempname=tdir;
+        else
+            tempname=[tdir session fname];
+        end
 	end
 else
 	tempname=[p filesep session fname];

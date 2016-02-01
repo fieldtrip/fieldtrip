@@ -1,5 +1,8 @@
 function test_tutorial_eventrelatedaveraging(dataset)
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_tutorial_eventrelatedaveraging
 % TEST ft_preprocessing ft_timelockanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_megplanar ft_combineplanar
 
@@ -8,7 +11,7 @@ function test_tutorial_eventrelatedaveraging(dataset)
 
 if nargin<1
   % use the tutorial dataset from home/common
-  dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 else
   % use the dataset specified in the input, but check that it is called
   % Subject01.ds

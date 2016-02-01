@@ -38,7 +38,7 @@ function ft_preamble(cmd, varargin)
 % the following section ensures that these scripts are included as
 % dependencies when using the MATLAB compiler
 %
-%#function ft_preamble_help
+%#function ft_preamble_init
 %#function ft_preamble_debug
 %#function ft_preamble_trackconfig
 %#function ft_preamble_provenance
@@ -50,8 +50,27 @@ global ft_default
 % this is a trick to pass the input arguments into the ft_preamble_xxx script
 ft_default.preamble = varargin;
 
-if exist(['ft_preamble_' cmd], 'file')
-  evalin('caller', ['ft_preamble_' cmd]);
+if ft_platform_supports('exists-in-private-directory')
+  % Matlab can directly see the command, no trickery needed as in Octave.
+  if exist(['ft_preamble_' cmd], 'file')
+    evalin('caller', ['ft_preamble_' cmd]);
+  end
+else
+  % Octave does not find files by name, so the full filename must be specified.
+  if exist(['private/ft_preamble_' cmd '.m'], 'file')
+
+    % save the original working directory
+    orig_pwd=pwd();
+
+    % ensure original working directory is restored when exiting this function
+    cleaner=onCleanup(@()cd(orig_pwd));
+
+    % cd to private directory
+    cd([fileparts(which(mfilename)) '/private']);
+
+    % evaluate ft_preamble_* function
+    evalin('caller', ['ft_preamble_' cmd]);
+  end
 end
 
 if isfield(ft_default, 'preamble')

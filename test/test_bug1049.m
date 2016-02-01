@@ -1,20 +1,23 @@
 function test_bug1049
 
+% MEM 2000mb
+% WALLTIME 00:10:00
+
 % TEST test_bug1049
+% TEST ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
 
 % this function creates a set of source-structures to be used for testing
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 
 % get volume conductor model
-cd('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds');
-vol = ft_read_vol('default.hdm');
+volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
+vol     = ft_read_vol(volname);
 
 % get data + sensor info
-cd('/home/common/matlab/fieldtrip/data/test/latest/raw/meg');
-load('preproc_ctf151');
+dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
+load(dataname);
 
 % create 3D grid
 cfg      = [];

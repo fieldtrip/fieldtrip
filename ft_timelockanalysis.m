@@ -18,8 +18,9 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %   cfg.removemean         = 'no' or 'yes' for covariance computation (default = 'yes')
 %   cfg.vartrllength       = 0, 1 or 2 (see below)
 %
-% Depending on cfg.vartrllength, variable trials and missing values
-% are treated differently:
+% Depending on cfg.vartrllength, variable length trials and trials with 
+% differences in their time axes (so even if they are of the same length, e.g. 1
+% second snippets of data cut from a single long recording) are treated differently:
 %   0 - do not accept variable length trials [default]
 %   1 - accept variable length trials, but only take those trials in which
 %       data is present in both the average and the covariance window
@@ -28,8 +29,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %       average and covariance computation. Missing values are replaced
 %       by NaN and are not included in the computation.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -66,35 +66,6 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % cfg.normalizevar
 % cfg.normalizecov
 
-% This function depends on PREPROC which has the following options:
-% cfg.absdiff
-% cfg.boxcar
-% cfg.bpfilter
-% cfg.bpfiltord
-% cfg.bpfilttype
-% cfg.bpfreq
-% cfg.demean
-% cfg.baselinewindow
-% cfg.derivative
-% cfg.detrend
-% cfg.dftfilter
-% cfg.dftfreq
-% cfg.hilbert
-% cfg.hpfilter
-% cfg.hpfiltord
-% cfg.hpfilttype
-% cfg.hpfreq
-% cfg.implicitref
-% cfg.lpfilter
-% cfg.lpfiltord
-% cfg.lpfilttype
-% cfg.lpfreq
-% cfg.medianfilter
-% cfg.medianfiltord
-% cfg.rectify
-% cfg.refchannel
-% cfg.reref
-
 % Copyright (C) 2003-2006, Markus Bauer
 % Copyright (C) 2003-2006, Robert Oostenveld
 %
@@ -120,46 +91,46 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble loadvar    data
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
-ft_preamble debug
 
-% return immediately after distributed execution
-if ~isempty(ft_getopt(cfg, 'distribute'))
+% the abort variable is set to true or false in ft_preamble_init
+if abort
   return
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'comp'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'deprecated',  {'normalizecov', 'normalizevar'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'latency', 'blcovariance', 'blcovariancewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'normalizecov', 'normalizevar'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'latency', 'blcovariance', 'blcovariancewindow'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-if ~isfield(cfg, 'channel'),       cfg.channel      = 'all';  end
-if ~isfield(cfg, 'trials'),        cfg.trials       = 'all';  end
-if ~isfield(cfg, 'keeptrials'),    cfg.keeptrials   = 'no';   end
-if ~isfield(cfg, 'covariance'),    cfg.covariance   = 'no';   end
-if ~isfield(cfg, 'removemean'),    cfg.removemean   = 'yes';  end
-if ~isfield(cfg, 'vartrllength'),  cfg.vartrllength = 0;      end
-if ~isfield(cfg, 'feedback'),      cfg.feedback     = 'text'; end
-if ~isfield(cfg, 'preproc'),       cfg.preproc      = [];     end
-
-% select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
-
-ntrial = length(data.trial);
+cfg.trials       = ft_getopt(cfg, 'trials',      'all', 1);
+cfg.channel      = ft_getopt(cfg, 'channel',     'all');
+cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
+cfg.covariance   = ft_getopt(cfg, 'covariance',  'no');
+cfg.removemean   = ft_getopt(cfg, 'removemean',  'yes');
+cfg.vartrllength = ft_getopt(cfg, 'vartrllength', 0);
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
+cfg.preproc      = ft_getopt(cfg, 'preproc',      []);
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+
+% select trials of interest
+tmpcfg = [];
+tmpcfg.trials = cfg.trials;
+tmpcfg.channel = cfg.channel;
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 if ~isempty(cfg.preproc)
   % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
@@ -168,13 +139,16 @@ if ~isempty(cfg.preproc)
     cfg.preproc.feedback = cfg.feedback;
   end
   data = ft_preprocessing(cfg.preproc, data);
+  [cfg.preproc, data] = rollback_provenance(cfg.preproc, data);
 end
 
-% determine the channels of interest
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-chansel     = match_str(data.label, cfg.channel);
-nchan       = length(cfg.channel);  % number of channels
+% determine the size of the data
+ntrial      = length(data.trial);
+nchan       = length(data.label);   % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
+
+if ntrial==0, error('Number of trials selected in data is zero');   end
+if nchan==0,  error('Number of channels selected in data is zero'); end
 
 % determine the duration of each trial
 begsamplatency = zeros(1,ntrial);
@@ -239,7 +213,7 @@ end
 
 % pre-allocate some memory space for the covariance matrices
 if strcmp(cfg.covariance, 'yes')
-  covsig = zeros(ntrial, nchan, nchan); covsig(:) = nan;
+  covsig = nan(ntrial, nchan, nchan);
   numcovsigsamples = zeros(ntrial,1);
 end
 
@@ -250,7 +224,7 @@ s        = zeros(nchan, maxwin);    % this will contain the sum
 ss       = zeros(nchan, maxwin);    % this will contain the squared sum
 dof      = zeros(1, maxwin);
 if (strcmp(cfg.keeptrials,'yes'))
-  singtrial = zeros(ntrial, nchan, maxwin); singtrial(:) = nan;
+  singtrial = nan(ntrial, nchan, maxwin);
 end
 
 ft_progress('init', cfg.feedback, 'averaging trials');
@@ -289,7 +263,7 @@ for i=1:ntrial
     begsampl = nearest(data.time{i}, latency(1));
     endsampl = nearest(data.time{i}, latency(2));
     numsamples(i) = endsampl-begsampl+1;
-    dat = data.trial{i}(chansel, begsampl:endsampl);
+    dat = data.trial{i}(:, begsampl:endsampl);
     if (latency(1)<begsamplatency(i))
       trlshift = floor((begsamplatency(i)-latency(1))*data.fsample);
     else
@@ -312,7 +286,7 @@ for i=1:ntrial
     endsampl = nearest(data.time{i}, cfg.covariancewindow(2));
     numcovsigsamples(i) = endsampl-begsampl+1;
     % select the relevant samples from this trial, do NOT pad with zeros
-    dat = data.trial{i}(chansel, begsampl:endsampl);
+    dat = data.trial{i}(:, begsampl:endsampl);
     if ~isempty(dat)  % we did not exlude this case above
       if strcmp(cfg.removemean, 'yes')
         dat = ft_preproc_baselinecorrect(dat);
@@ -337,7 +311,7 @@ avg = s ./ repmat(dof(:)', [nchan 1]);
 % var = (ss - (s.^2)./tmp1) ./ tmp2;
 dof = repmat(dof(:)', [nchan 1]);
 
-if any(dof > 1)
+if any(dof(:) > 1)
   var = (ss - (s.^2)./dof) ./ (dof-1);
 else
   var = nan(size(avg));
@@ -355,9 +329,9 @@ if strcmp(cfg.covariance, 'yes')
     end
   else
     if strcmp(cfg.removemean, 'yes')
-      covsig = squeeze(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
+      covsig = shiftdim(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
     else
-      covsig = squeeze(nansum(covsig, 1)) / sum(numcovsigsamples);
+      covsig = shiftdim(nansum(covsig, 1)) / sum(numcovsigsamples);
     end
   end
 end
@@ -371,7 +345,7 @@ timelock.var        = var;
 %timelock.fsample    = data.fsample; % timelock.fsample is obsolete
 timelock.time       = linspace(latency(1), latency(2), size(avg,2));
 timelock.dof        = dof;
-timelock.label      = data.label(chansel);
+timelock.label      = data.label(:);
 if (strcmp(cfg.keeptrials,'yes'))
   timelock.trial = singtrial;
   timelock.dimord = 'rpt_chan_time';
@@ -381,25 +355,19 @@ end
 if strcmp(cfg.covariance, 'yes')
   timelock.cov = covsig;
 end
-if isfield(data, 'grad')
-  % copy the gradiometer array along
-  timelock.grad = data.grad;
-end
-if isfield(data, 'elec')
-  % copy the electrode array along
-  timelock.elec = data.elec;
-end
+
+% some fields from the input should be copied over in the output
+timelock = copyfields(data, timelock, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
+
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
-  % copy the trialinfo into the output
-  % but not the sampleinfo
+  % copy the trialinfo into the output, but not the sampleinfo
   timelock.trialinfo = data.trialinfo;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance timelock
 ft_postamble history    timelock
 ft_postamble savevar    timelock
-ft_postamble debug
-

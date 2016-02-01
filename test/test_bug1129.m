@@ -1,12 +1,13 @@
 function test_bug1129
 
-% TEST: test_bug1129 ft_preprocessing ft_preproc_bandpassfilter
-% ft_preproc_bandstopfilter ft_preproc_lowpassfilter
-% ft_preproc_highpassfilter
+% MEM 1500mb
+% WALLTIME 00:10:00
+
+% TEST test_bug1129
+% TEST ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
 
 % change filter order for 'fir' (fir1) filter type, rather than 25 by
 % default, instead to be based on Fs, low-frequency, and data-length
-cd /home/common/matlab/fieldtrip/test
 
 %% low-level functions on random data
 close all
@@ -79,7 +80,8 @@ for N=[199 432 1000] % test 'firls' option
 end
 
 %% high-level ft_preprocessing
-load test_bug1129
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+load bug1129.mat
 
 cfg=[];
 cfg.bpfreq=[8 12];
@@ -143,7 +145,7 @@ cfg.hpfreq=[8];
 cfg.hpfilter='yes';
 rawfilt=ft_preprocessing(cfg,raw3);
 
-% assert(isequalwithequalnans(data, datanew));
+% assert(isequaln(data, datanew));
 
 %%
 % create a random signal

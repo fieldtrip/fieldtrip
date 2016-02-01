@@ -9,15 +9,15 @@ function [voxel, head] = cornerpoints(dim, transform)
 
 % determine the corner points of the volume in voxel space
 voxel = [
-  1      1      1
+  1          1      1
   dim(1)     1      1
   dim(1) dim(2)     1
-  1  dim(2)     1
-  1      1  dim(3)
+  1      dim(2)     1
+  1          1  dim(3)
   dim(1)     1  dim(3)
   dim(1) dim(2) dim(3)
-  1  dim(2) dim(3)
+  1      dim(2) dim(3)
   ];
 
 % determine the corner points of the volume in plotting space
-head = warp_apply(transform, voxel);
+head = ft_warp_apply(transform, voxel);

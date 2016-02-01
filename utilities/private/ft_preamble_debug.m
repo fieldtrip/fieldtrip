@@ -1,14 +1,20 @@
-% FT_PREAMBLE_DEBUG is a helper script for debugging problems with FieldTrip functions
+% FT_PREAMBLE_DEBUG is a helper script for debugging problems with FieldTrip
+% functions. It installs an "onCleanup" function that gets executed if an error is
+% detected, allowing to automatically save the input data and configuration to disk.
 %
-% In case of an error, the debugCleanup function does the remainder of the work.
+% In case of an error, the DEBUGCLEANUP function does the remainder of the work. In
+% case a normal termination, FT_POSTAMBLE_DEBUG will be called first, followed by
+% DEBUGCLEANUP.
 %
-% In case a normal termination, pt_postamble_debug will be called first, followed by
-% debugCleanup.
+% Use as
+%   ft_preamble debug
+%   .... regular code goes here ...
+%   ft_postamble debug
 %
 % See also FT_POSTAMBLE_DEBUG, DEBUGCLEANUP
 
 % these variables are shared by the three debug handlers
-global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin 
+global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin
 
 if ~isempty(Ce9dei2ZOo_debug) && ~isequal(Ce9dei2ZOo_debug, 'no')
   % the debugging handler is already set by a higher-level function
@@ -29,9 +35,10 @@ Ce9dei2ZOo_argin   = [];
 lasterr('');
 lastwarn('');
 
-% remember the input arguments
+% remember the variables that were passed as input arguments
 Ce9dei2ZOo_workspace = evalin('caller', 'whos');
-Ce9dei2ZOo_workspace = setdiff({Ce9dei2ZOo_workspace.name}, {'ft_default', 'revision', 'ftohDiW7th_FuncClock', 'ftohDiW7th_FuncMem', 'ftohDiW7th_FuncTimer', 'Ce9dei2ZOo_debug', 'Ce9dei2ZOo_funname', 'Ce9dei2ZOo_argin'});
+Ce9dei2ZOo_workspace = Ce9dei2ZOo_workspace(~strcmp({Ce9dei2ZOo_workspace.class}, 'function_handle')); % only variables, not anonymous functions
+Ce9dei2ZOo_workspace = setdiff({Ce9dei2ZOo_workspace.name}, {'ft_default', 'revision', 'abort', 'ftohDiW7th_FuncMem', 'ftohDiW7th_FuncTimer', 'Ce9dei2ZOo_debug', 'Ce9dei2ZOo_funname', 'Ce9dei2ZOo_argin'});
 Ce9dei2ZOo_argin     = [];
 for Ce9dei2ZOo_indx=1:length(Ce9dei2ZOo_workspace)
   Ce9dei2ZOo_argin(Ce9dei2ZOo_indx).name  = Ce9dei2ZOo_workspace{Ce9dei2ZOo_indx};
@@ -54,7 +61,7 @@ switch cfg.debug
   case 'saveonerror'
     Ce9dei2ZOo_debug  = 'saveonerror';
     % when the Ce9dei2ZOo_handle gets deleted, the debugCleanup function will be executed
-    Ce9dei2ZOo_handle = onCleanup(@debugCleanup); 
+    Ce9dei2ZOo_handle = onCleanup(@debugCleanup);
     
   case 'saveonsuccess'
     Ce9dei2ZOo_debug  = 'saveonsuccess';

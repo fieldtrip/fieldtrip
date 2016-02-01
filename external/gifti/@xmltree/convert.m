@@ -1,29 +1,29 @@
 function s = convert(tree,uid)
-% XMLTREE/CONVERT Converter an XML tree in a Matlab structure
+% XMLTREE/CONVERT Converter an XML tree in a structure
 % 
 % tree      - XMLTree object
 % uid       - uid of the root of the subtree, if provided.
 %             Default is root
 % s         - converted structure
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
-% Convert an xmltree into a Matlab structure, when possible.
+% Convert an XMLTree into a structure, when possible.
 % When several identical tags are present, a cell array is used.
 % The root tag is not saved in the structure.
 % If provided, only the structure corresponding to the subtree defined
 % by the uid UID is returned.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2015  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
 % Exemple:
-% tree: <toto><titi>field1</titi><tutu>field2</tutu><titi>field3</titi></toto>
-% toto = convert(tree);
-% <=> toto = struct('titi',{{'field1', 'field3'}},'tutu','field2')
+% tree = '<a><b>field1</b><c>field2</c><b>field3</b></a>';
+% toto = convert(xmltree(tree));
+% <=> toto = struct('b',{{'field1', 'field3'}},'c','field2')
 
-error(nargchk(1,2,nargin));
+%error(nargchk(1,2,nargin));
 
 % Get the root uid of the output structure
 if nargin == 1
@@ -45,7 +45,7 @@ s = sub_convert(tree,s,root_uid,{});
 
 s = rmfield(s,'deletedummy');
 
-%=======================================================================
+%==========================================================================
 function s = sub_convert(tree,s,uid,arg)
     type = get(tree,uid,'type');
     switch type
@@ -86,7 +86,7 @@ function s = sub_convert(tree,s,uid,arg)
 %             end                                     %-
         case 'chardata'
             s = sub_setfield(s,arg{:},get(tree,uid,'value'));
-            %- convert strings into their Matlab equivalent when possible
+            %- convert strings into their numerical equivalent when possible
             %- e.g. string '3.14159' becomes double scalar 3.14159
 %             v = get(tree,uid,'value');              %-
 %             cv = str2num(v);                        %-
@@ -113,7 +113,7 @@ function s = sub_convert(tree,s,uid,arg)
                     try
                         s = sub_setfield(s,arg{:},feval(app,get(tree,uid,'value')));
                     catch
-                        warning('[XMLTREE] Unknown target application');
+                        warning('[XMLTree] Unknown target application');
                     end
             end
         case 'comment'
@@ -122,7 +122,7 @@ function s = sub_convert(tree,s,uid,arg)
             warning(sprintf('Type %s unknown : not saved',get(tree,uid,'type')));
     end
     
-%=======================================================================
+%==========================================================================
 function s = sub_setfield(s,varargin)
 % Same as setfield but using '{}' rather than '()'
 %if (isempty(varargin) | length(varargin) < 2)

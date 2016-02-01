@@ -26,5 +26,5 @@ function [lf] = leadfield_fns(dip, vol)
 
 
 % convert in voxel coordinates
-dipvx = warp_apply(inv(vol.transform),dip);
+dipvx = ft_warp_apply(inv(vol.transform),dip);
 lf    = fns_leadfield(vol.transfer,vol.segdim,dipvx);

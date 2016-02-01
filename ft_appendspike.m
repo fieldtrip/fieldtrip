@@ -40,10 +40,15 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
+ft_preamble provenance varargin
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 isspike = zeros(size(varargin));
 for i=1:length(varargin)
@@ -54,6 +59,7 @@ end
 if all(isspike)
   spike = {};
   for i=1:length(varargin)
+    % check if the input data is valid for this function
     spike{i} = ft_checkdata(varargin{i}, 'datatype', 'spike');
   end
   
@@ -93,7 +99,12 @@ else
     error('not all channel labels are unique');
   end
   
-  trl = ft_findcfg(data.cfg, 'trl');
+  if isfield(data, 'cfg')
+    trl = ft_findcfg(data.cfg, 'trl');
+  else
+    trl = [];
+  end
+
   if isempty(trl);
     error('could not find the trial information in the continuous data');
   end
@@ -139,7 +150,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous varargin
+ft_postamble provenance data
 ft_postamble history data
 ft_postamble savevar data

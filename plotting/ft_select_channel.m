@@ -6,7 +6,7 @@ function ft_select_channel(handle, eventdata, varargin)
 %
 % Use as
 %   label = ft_select_channel(h, eventdata, ...)
-% The first two arguments are automatically passed by Matlab to any
+% The first two arguments are automatically passed by MATLAB to any
 % callback function.
 %
 % Additional options should be specified in key-value pairs and can be

@@ -10,7 +10,7 @@ function [params, result] = ortho_sparse(params, W, w)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: ortho_sparse.m,v 1.1 2005/11/30 08:19:48 jaakkos Exp $
+% $Id$
 
 if nargin<2
     params.name = 'Sparse orthogonalization';

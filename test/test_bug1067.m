@@ -1,8 +1,15 @@
 function test_bug1067
+
+% MEM 1500mb
+% WALLTIME 00:10:00
+
+% TEST test_bug1067
+
 % tests whether parameters that are in ft_freq* but not in ft_source* will
 % be caught by ft_source* (and vice versa)
 
-
+% change into fielctrip/test
+cd(fileparts(mfilename('fullpath')));
 
 % get all functions
 source_functions = dir(fullfile('..','ft_source*.m'));
@@ -41,7 +48,7 @@ for i=1:num_fncs
   % find options per function (hashmap like)
   s_opts = [];
   s_hash = [];
-  delimiters = '=.%(,)\t '';/*-+{}<>[]';
+  delimiters = '=.%(,)\t '';/*-+{}<>[]~';
   for j=1:numel(s_cfg)
     s_opts = s_content(s_cfg(j)+numel(cfg_prefix):end);
     s_opts = textscan(s_opts, '%s', 'delimiter', delimiters, 'commentstyle', 'matlab');

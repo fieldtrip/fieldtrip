@@ -228,7 +228,7 @@ fclose(fid);
 if strcmp(pa,''),
     pa=pwd;
 end
-fid=fopen([pa '\' fn(1:14) '.EE_'],'r');
+fid=fopen([pa filesep fn(1:14) '.EE_'],'r');
 if fid==-1,
     error('Unable to read setup (marker 70) in *.EE_ file.');
 end
@@ -283,7 +283,7 @@ if ~isempty(dw),
         pa=pwd;
     end
     try
-        algo=load([pa '\npalgo.mat']);
+        algo=load([pa filesep 'npalgo.mat']);
         idx=find(strcmp(algo.algo(:,1),np_info.algorithm)==1);
         if ~isempty(idx),
             np_info.algorithm=cell2mat(algo.algo(idx,2));
@@ -356,7 +356,7 @@ np_info.PhysMax=zeros(1,np_info.K);
 if (nargin==2) && (strcmp(upper(option),'NO_MINMAX'))
     return;
 end
-fid=fopen([np_info.pathname '\' np_info.filename],'r');
+fid=fopen([np_info.pathname filesep np_info.filename],'r');
 if fid==-1,
     error('Error while opening *.EEG file (read PhysMinMax).');
 end

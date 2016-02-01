@@ -14,16 +14,15 @@ function ft_select_range(handle, eventdata, varargin)
 % the selection option.
 % 
 % Input arguments:
-%   event       = string, event used as hook.
-%   callback    = function handle or cell-array containing function handle and additional input arguments
-%   contextmenu = cell-array containing labels shown in right-click menu
-%   multiple    = boolean, allowing multiple selection boxes or not
-%   xrange      = boolean, xrange variable or not
-%   yrange      = boolean, yrange variable or not
-%   clear       = boolean
+%   'event'       = string, event used as hook.
+%   'callback'    = function handle or cell-array containing function handle and additional input arguments
+%   'contextmenu' = cell-array containing labels shown in right-click menu
+%   'multiple'    = boolean, allowing multiple selection boxes or not
+%   'xrange'      = boolean, xrange variable or not
+%   'yrange'      = boolean, yrange variable or not
+%   'clear'       = boolean
 %
-%
-% Example use:
+% Example
 %   x = randn(10,1);
 %   y = randn(10,1);
 %   figure; plot(x, y, '.');
@@ -78,10 +77,18 @@ xrange    = istrue(xrange);
 yrange    = istrue(yrange);
 clear     = istrue(clear);
 
-p = handle;
-while ~isequal(p, 0)
-  handle = p;
-  p = get(handle, 'parent');
+% get the figure handle, dependent on MATLAB version
+if ft_platform_supports('graphics_objects')
+ while ~isa(handle, 'matlab.ui.Figure')
+    handle = p;
+    p = get(handle, 'parent');
+ end
+else
+    p = handle;
+    while ~isequal(p, 0) 
+      handle = p;
+      p = get(handle, 'parent');
+    end
 end
 
 if ishandle(handle)
@@ -265,7 +272,7 @@ switch lower(event)
       set(userData.box(end), 'xData', xData);
       set(userData.box(end), 'yData', yData);
       set(userData.box(end), 'Color', [0 0 0]);
-      set(userData.box(end), 'EraseMode', 'xor');
+      %set(userData.box(end), 'EraseMode', 'xor');
       set(userData.box(end), 'LineStyle', '--');
       set(userData.box(end), 'LineWidth', 1.5);
       set(userData.box(end), 'Visible', 'on');
@@ -346,14 +353,14 @@ if ~isempty(callback)
     callback  = {funhandle, val};
   end
   for icmenu = 1:numel(hcmenuopt)
-    set(hcmenuopt(icmenu),'callback',{@evalContextCallback, callback{:}})
+    set(hcmenuopt(icmenu),'callback',{@evalcontextcallback, callback{:}})
   end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function evalContextCallback(hcmenuopt, eventdata, varargin)
+function evalcontextcallback(hcmenuopt, eventdata, varargin)
 
 % delete selection box if present
 % get parent (uimenu -> uicontextmenu -> parent)

@@ -1,15 +1,16 @@
-function varargout = interp_gridded(transform, val, pnt, varargin)
+function varargout = interp_gridded(transform, val, pos, varargin)
 
 % INTERP_GRIDDED computes a matrix that interpolates values that were
-% observed on a regular 3-D grid onto a random set of points.
+% observed on positions in a regular 3-D grid onto positions that are
+% unstructured, e.g. the vertices of a cortical sheet.
 %
 % Use as
-%   [val]                = interp_gridded(transform, val, pnt, ...) or
-%   [interpmat, distmat] = interp_gridded(transform, val, pnt, ...)
+%   [val]                = interp_gridded(transform, val, pos, ...) or
+%   [interpmat, distmat] = interp_gridded(transform, val, pos, ...)
 % where
 %   transform  homogenous coordinate transformation matrix for the volume
 %   val        3-D matrix with the values in the volume
-%   pnt        Mx3 matrix with the vertex positions onto which the data should
+%   pos        Mx3 matrix with the vertex positions onto which the data should
 %              be interpolated
 % 
 % Optional arguments are specified in key-value pairs and can be
@@ -18,7 +19,7 @@ function varargout = interp_gridded(transform, val, pnt, varargin)
 %    distmat      = NxM matrix with precomputed distances
 %    inside       = indices for inside voxels (or logical array)
 
-% Copyright (C) 2007, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2007-2015, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -43,6 +44,10 @@ if nargin<3
 end
 
 % get the optional arguments
+projvec      = ft_getopt(varargin, 'projvec',       1);
+projweight   = ft_getopt(varargin, 'projweight',    ones(size(projvec)));
+projcomb     = ft_getopt(varargin, 'projcomb',      'mean'); % or max
+projthresh   = ft_getopt(varargin, 'projthresh',    []);
 projmethod   = ft_getopt(varargin, 'projmethod');    % required
 sphereradius = ft_getopt(varargin, 'sphereradius');  % required for some projection methods
 distmat      = ft_getopt(varargin, 'distmat');       % will be computed if not present
@@ -50,7 +55,7 @@ inside       = ft_getopt(varargin, 'inside');
 
 dim = size(val);
 dimres = svd(transform(1:3,1:3)); % to reduce the number of elements in the distance matrix
-npnt = size(pnt,1);
+npnt = size(pos,1);
 npos = prod(dim);
 
 if isempty(distmat)
@@ -58,7 +63,7 @@ if isempty(distmat)
   switch projmethod
     case 'nearest'
       % determine the nearest voxel for each vertex
-      sub = round(warp_apply(inv(transform), pnt, 'homogenous'));  % express
+      sub = round(ft_warp_apply(inv(transform), pos, 'homogenous'));  % express
       sub(sub(:)<1) = 1;
       sub(sub(:,1)>dim(1),1) = dim(1);
       sub(sub(:,2)>dim(2),2) = dim(2);
@@ -76,24 +81,27 @@ if isempty(distmat)
       end
 
       [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-      pos = warp_apply(sparse(transform), [X(:) Y(:) Z(:)]);
+      pos = ft_warp_apply(sparse(transform), [X(:) Y(:) Z(:)]);
       % the distance only has to be computed to voxels inside the brain
       pos  = pos(inside,:);
       npos = size(pos,1);
       % compute the distance between all voxels and each surface point
-      dpntsq  = sum(pnt.^2,2); % squared distance to origin
+      dpntsq  = sum(pos.^2,2); % squared distance to origin
       dpossq  = sum(pos.^2,2); % squared distance to origin
       maxnpnt = double(npnt*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
       distmat = spalloc(npnt, npos, maxnpnt);
       ft_progress('init', 'textbar', 'computing distance matrix');
       for j = 1:npnt
         ft_progress(j/npnt);
-        d   = sqrt(dpntsq(j) + dpossq - 2 * pos * pnt(j,:)');
+        d   = sqrt(dpntsq(j) + dpossq - 2 * pos * pos(j,:)');
         sel = find(d<sphereradius);
         distmat(j, sel) = single(d(sel)) + eps('single');
       end
       ft_progress('close');
 
+    case 'project'
+      % do nothing I believe
+    
     otherwise
       error('unsupported projection method');
   end % case projmethod
@@ -115,21 +123,60 @@ switch projmethod
   case 'sphere_weighteddistance'
     projmat         = distmat;
     [ind1, ind2, d] = find(projmat);
-    projmat         = sparse(ind1, ind2, 1./d, npnt, npnt1);
+    projmat         = sparse(ind1, ind2, 1./d, npnt, npos);
     [ind1, ind2, d] = find(projmat);
     normnz          = sqrt(full(sum(projmat.^2, 2)));
-    projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npnt1);
-
+    projmat         = sparse(ind1, ind2, d./normnz(ind1), npnt, npos);
+  
+  case 'project'
+      % this method is Joachim's implementation that was originally in
+      % ft_sourceplot, it assumes the functional data to be defined on a
+      % regular 3D grid, and that the transformation to world-space is known
+      
+      % we also need the dim
+      dim = ft_getopt(varargin, 'dim');
+      dat = zeros(size(pos,1),1);
+      
+      % convert projvec in mm to a factor, assume mean distance of 70mm
+      projvec = (70-projvec)/70;
+      for iproj = 1:length(projvec),
+        sub = round(ft_warp_apply(inv(transform), pos*projvec(iproj), 'homogenous'));  % express
+        sub(sub(:)<1) = 1;
+        sub(sub(:,1)>dim(1),1) = dim(1);
+        sub(sub(:,2)>dim(2),2) = dim(2);
+        sub(sub(:,3)>dim(3),3) = dim(3);
+        ind = sub2ind(dim, sub(:,1), sub(:,2), sub(:,3));
+        if strcmp(projcomb,'mean')
+          dat = dat + projweight(iproj) * val(ind);
+        elseif strcmp(projcomb,'max')
+          dat  = max([dat projweight(iproj) * val(ind)],[],2);
+          tmp2 = min([dat projweight(iproj) * val(ind)],[],2);
+          fi   = find(dat < max(tmp2));
+          val(fi) = tmp2(fi);
+        else
+          error('undefined method to combine projections; use cfg.projcomb= mean or max')
+        end
+      end
+      if strcmp(projcomb,'mean'),
+        dat = dat/length(projvec);
+      end
+      %     if ~isempty(projthresh),
+      %       mm=max(abs(val(:)));
+      %       maskval(abs(val) < projthresh*mm) = 0;
+      %     end
+      %
+    
   otherwise
     error('unsupported projection method');
 end  % case projmethod
 
-if nargout==1
+if nargout==1 && ~strcmp(projmethod, 'project')
   % return the interpolated values
   varargout{1} = projmat * val(:);
+elseif nargout==1
+  varargout{1} = dat;
 else
   % return the interpolation and the distance matrix
   varargout{1} = projmat;
   varargout{2} = distmat;
 end
-

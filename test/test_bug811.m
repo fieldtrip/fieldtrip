@@ -1,5 +1,8 @@
 function test_bug811
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug811
 % TEST ft_checkdata spm2fieldtrip
 

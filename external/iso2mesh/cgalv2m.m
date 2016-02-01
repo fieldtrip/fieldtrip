@@ -74,7 +74,12 @@ if(~isempty(getvarfrom('base','ISO2MESH_RANDSEED')))
         randseed=getvarfrom('base','ISO2MESH_RANDSEED');
 end
 
-cmd=sprintf('"%s%s" "%s" "%s" %f %f %f %f %f %d',mcpath('cgalmesh'),exesuff,...
+if(ischar(maxvol))
+    format_maxvol='%s';
+else
+    format_maxvol='%f';
+end
+cmd=sprintf(['"%s%s" "%s" "%s" %f %f %f %f ' format_maxvol ' %d'],mcpath('cgalmesh'),exesuff,...
     mwpath('pre_cgalmesh.inr'),mwpath('post_cgalmesh.mesh'),ang,ssize,...
     approx,reratio,maxvol,randseed);
 system(cmd);

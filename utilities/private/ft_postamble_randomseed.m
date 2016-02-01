@@ -1,6 +1,12 @@
-% FT_POSTAMBLE_RANDOMSEED is a helper script that reports the state of the
-% random number generator used for calling rand/randn/randi functions.
-% See FT_PREAMBLE_RANDOMSEED
+% FT_POSTAMBLE_RANDOMSEED is a helper script that stores the state of the
+% random number generator which is used for calling rand/randn/randi functions.
+%
+% Use as
+%   ft_preamble randomseed
+%   ... regular code goes here ...
+%   ft_postamble randomseed
+%
+% See also FT_PREAMBLE_RANDOMSEED
 
 if exist('ftFuncRandomseed','var')
   cfg.callinfo.randomseed = ftFuncRandomseed;

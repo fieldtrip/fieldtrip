@@ -2,7 +2,7 @@ function [newnode,newelem]=mergemesh(node,elem,varargin)
 %
 % [newnode,newelem]=mergemesh(node,elem,varargin)
 %
-% merge two or more tetrahedral meshes or triangular surfaces
+% concatenate two or more tetrahedral meshes or triangular surfaces
 % 
 % author: Qianqian Fang <fangq at nmr.mgh.harvard.edu>
 %
@@ -15,12 +15,14 @@ function [newnode,newelem]=mergemesh(node,elem,varargin)
 %      newelem: tetrahedral element or surfaces after merging (nn,4) or (nhn,5)
 %
 % note: you can call meshcheckrepair for the output newnode and
-% newelem to remove the duplicated nodes or elements
+% newelem to remove the duplicated nodes or elements. mergemesh does
+% detect self-intersecting elements when merging; to remove self-intersecting
+% elements, you need to use mergesurf().
 %
 % example:
 %
-%   [node1,elem1,face1]=meshabox([0 0 0],[10 10 10],1,1);
-%   [node2,elem2,face2]=meshasphere([5 5 13.1],3,0.3,3);
+%   [node1,face1,elem1]=meshabox([0 0 0],[10 10 10],1,1);
+%   [node2,face2,elem2]=meshasphere([5 5 13.1],3,0.3,3);
 %   [newnode,newelem]=mergemesh(node1,elem1,node2,elem2);
 %   plotmesh(newnode,newelem);
 %   figure;

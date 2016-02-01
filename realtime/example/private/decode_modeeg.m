@@ -2,7 +2,7 @@ function [data, rem] = decode_modeeg(raw)
 
 % DECODE_MODEEG takes a piece of the Modular EEG (OpenEEG) data
 % stream from the serial port or bluetooth and decodes it.
-% 
+%
 % Use as
 %  [dat, rem] = decode_modeeg(raw)
 % where
@@ -34,6 +34,12 @@ function [data, rem] = decode_modeeg(raw)
 % $Id$
 
 packetsize = 17;
+
+
+% ensure that it is an uint8 vector
+if ~isa(raw, 'uint8')
+  raw = uint8(raw);
+end
 
 begbyte   = find(raw(1:17)==hex2dec('a5') & raw(2:18)==hex2dec('5a'));
 numpacket = floor((length(raw)-begbyte)/packetsize);

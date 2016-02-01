@@ -1,0 +1,135 @@
+2013-03-12 Version 4.0
+
+New features:
+  - Multilatent models: multinomial, softmax, Cox-PH, density
+    estimation, density regression, input dependent noise, input
+    dependent overdispersion in Weibull, zero-inflated negative binomial
+  - Survival models: Cox-PH, Log-Gaussian, Log-logistic, diagnostic criteria
+  - Quantile regression
+  - PASS-GP active set selection for classification
+  - optional memory save in gradient computation
+  - approximative gradient for EP-LOO
+  - Octave compatibility. Please download Octave specific version of GPstuff
+    to use GPstuff with Octave. Following features of v4.0 work only with 
+    Matlab:
+     - Inputdependent multilatent models
+     - Zero-Inflated Negative-Binomial model
+     - Cox proportional hazard model
+     - Compactly Supported (PPCS*) covariance functions
+     - Kronecker speedup for density estimation
+
+Improvements:
+  - much faster parallel-EP (now default)
+  - faster sequential EP
+
+New functions & files
+  - demo_inputdependentnoise: input dependent noise in Gaussian model
+  - demo_inputdependentweibull: input dependent overdispersion in Weibull
+  - demo_lgpdens: density estimation, density regression
+  - demo_loopred: leave-one-out cross-validation approximations
+  - demo_mcmc: different MCMC methods demonstrated
+  - demo_memorysave: memory save in gradient computation
+  - demo_modelcomparison2: additional model comparsion demo
+  - demo_multiclass: multi-class classification
+  - demo_multinom: multinomial model
+  - demo_passgp: PASS-GP active set selection for classification
+  - demo_quantilegp: Quantile regression
+  - demo_survival_comparison: survival model diagnostic criteria
+  - demo_survival_coxph: Gaussian process Cox-PH model
+  - demo_zinegbin: zero-inflated negative binomial
+  - gpep_loog.m: approximate gradient for EP-LOO
+  - gp_kfcv_cdf.m: K-fold cross validation to predict CDF for GP model
+  - gp_kfcve.m: mean negative log k-fold-cv predictive density.
+  - gpla_looe.m: Laplace Leave-one-out energy (negative preditive density)
+  - gp_predcdf.m: Predictive distribution CDF estimation
+  - lgpdens_cum.m: Bayesian Bootstrap density estimation integration
+  - lgpdens.m: Density estimation with Gaussian Processes
+  - lik_coxph.m: Cox proportaional hazard likelihood
+  - lik_inputdependentnoise.m: Input-dependent noise likelihood
+  - lik_inputdependentweibull.m: Input-dependent Weibull likelihood
+  - lik_lgpc.m: Logistic likelihood for conditional density estimation
+  - lik_lgp.m: Logistic likelihood for density estimation
+  - lik_loggaussian.m: Log-Gaussian likelihood
+  - lik_loglogistic.m: Log-logistic likelihood
+  - lik_multinom.m: Multinomial likelihood
+  - lik_qgp.m: Quantile-GP regression likelihood
+  - lik_softmax.m: Softmax (multiclass) likelihood
+  - lik_zinegbin.m: Zero-Inflated Negative-Binomial likelihood
+  - passgp.m: Pass-GP routine 
+  - pred_coxphhs.m: Hazard and survival functions for Cox-Ph likelihood
+  - pred_coxph.m: Returns useful values for Cox-PH likelihood
+  - pred_coxphp.m: Integrate model (cox-ph) with respect to time
+
+And some bug fixes 
+
+2012-10-29 Version 3.4.1 published.
+
+Bug fixes
+ - LOO-CV predictions fixed (gp_loopred, gpmc_loopred, gpla_e, gpep_e)
+ - k-fold-cv for PIC sparse approximation fixed (gp_kfcv)
+ - other bug fixes (gp_pred, gp_e, prior_t)
+
+Improved functions
+ - LOO-CV added to demo_modelassessment1, demo_modelassessment2,
+   xunit tests
+ - DTC,VAR,SOR sparse approximations for Laplace (gpla_g, gpla_pred)
+ - improved robustnes of optimisation functions (fminscg, fminlbfgs)
+ - new function for setting random stream (setrandstream)
+ - many demos made to display less clutter
+
+2012-10-08 Version 3.4 published. 
+
+Improved functions
+ - GP_IA     improved autoscale and display options
+ - GP_KFCV   optional return values for cvpreds (f,lp,y)
+ - GP_LOOEG  approximate gradients for EP-LOO (no implicit terms)
+ - GP_OPTIM  new options 'lambda' and 'lambdalimit' used by fminscg
+ - GP_SET    new option 'savememory' for memory saving in gradient calculations
+ - FMINSCG   new options 'lambda' and 'lambdalimit'
+
+Other changes
+ - SuiteSparse v 3.4 included in the distribution package
+ - gp/demos renamed to gp/demodata
+ - Few bug fixes and several documentation fixes
+
+2012-06-20 Version 3.3 published. Some new functions and bug fixes. 
+
+New functions
+ - GP_CPRED      Conditional predictions using specific covariates
+ - GPCF_SCALED   Create a scaled covariance function
+ - SURROGATE_SLS Markov chain Monte Carlo sampling using Surrogate 
+                 data Slice Sampling
+
+ - PRIOR_INVT    Inverse Student-t prior structure
+ - PRIOR_INVUNIF Inverse uniform prior structure
+ - PRIOR_LOGT    Student-t prior structure for the logarithm of the parameter
+
+ - HMC_NUTS      No-U-Turn Sampler (NUTS)
+
+ - ADDLOGS       Add numbers represented by their logarithms.
+ - LOGITINV      Inverse of the logit transformation
+ - MAPCOLOR      Returns a colormap ranging from blue through gray to red
+ - SUMLOGS       Sum of vector where numbers are represented by
+                 their logarithms.
+
+ - TEST_ALL      Unit testing with xunit package (requires xunit
+                 from Mathowrks File Exchange)
+
+Improved functions
+ - Robust-EP method improved
+ - GP_PRED       Makes predictions using training data if no test
+                 data is given
+ - GP_LOOPRED    Supports now sparse approximations FIC, PIC,
+                 CS+FIC and latent method Laplace
+ - GP_MC         By default use Surrogate Slice Sampler for
+                 hyperparameters and Elliptical Slice Sampler for
+                 latent values. Supports now also NUTS.
+ - SLS           Added Shrinking-rank SLS, Covariance-matching SLS
+
+Several bug and documentation fixes
+
+2012-03-16 Version 3.2.1 published. Many bug fixes.
+
+2011-10-11 Version 3.2 published. New observation models and new inference algorithms (e.g. EP for Student-t model) added plus bug fixes.
+
+2011-04-15 Version 3.1 published. New functionalities and major update to argument syntax making the package easier to use.

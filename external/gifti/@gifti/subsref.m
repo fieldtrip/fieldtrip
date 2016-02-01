@@ -6,11 +6,12 @@ function varargout = subsref(this,subs)
 % Guillaume Flandin
 % $Id$
 
-if length(this) > 1
+if length(this) > 1 && ~strcmp(subs(1).type,'()')
     warning('Not implemented.');
     for i=1:numel(this)
         varargout{i} = subsref(this(i),subs);
     end
+    return;
 end
 
 switch subs(1).type
@@ -25,6 +26,8 @@ switch subs(1).type
         else
             if strcmp(subs(1).subs,'mat')
                 varargout{1} = this.data{j}.space.MatrixData;
+            elseif strcmp(subs(1).subs,'labels')
+                varargout{1} = this.label;
             else
                 if length(j) == 1
                     varargout{1} = this.data{j}.data;

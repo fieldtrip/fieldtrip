@@ -1,13 +1,12 @@
 function ft_realtime_modeegproxy(cfg)
 
-% FT_REALTIME_MODEEGPROXY reads continuous data from a modeeg EEG acquisition
-% system through the serial port or through BlueTooth and writes it to a FieldTrip
-% buffer.
+% FT_REALTIME_MODEEGPROXY reads continuous data from a modeeg EEG acquisition system
+% through the serial port or through BlueTooth and writes it to a FieldTrip buffer.
 %
-% The FieldTrip buffer is a network transparent server that allows the
-% acquisition client to stream data to it. An analysis client can connect
-% to read the data upon request. Multiple clients can connect simultaneously,
-% each analyzing a specific aspect of the data concurrently.
+% The FieldTrip buffer is a network transparent server that allows the acquisition
+% client to stream data to it. An analysis client can connect to read the data upon
+% request. Multiple clients can connect simultaneously, each analyzing a specific
+% aspect of the data concurrently.
 %
 % Use as
 %   ft_realtime_modeegproxy(cfg)
@@ -22,6 +21,8 @@ function ft_realtime_modeegproxy(cfg)
 %   cfg.target.dataformat    = string, default is determined automatic
 %
 % To stop this realtime function, you have to press Ctrl-C
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2012, Robert Oostenveld
 %
@@ -53,8 +54,6 @@ if ~isfield(cfg, 'blocksize'),          cfg.blocksize = 0.125;                  
 if ~isfield(cfg, 'target'),             cfg.target = [];                                  end
 if ~isfield(cfg.target, 'datafile'),    cfg.target.datafile = 'buffer://localhost:1972';  end
 if ~isfield(cfg.target, 'dataformat'),  cfg.target.dataformat = [];                       end % default is to use autodetection of the output format
-
-
 
 % make a connection to the serial port
 fid = fopen(cfg.filename, 'r');

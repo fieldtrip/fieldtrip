@@ -48,7 +48,7 @@ function varargout = peercellfun(fname, varargin)
 % $Id$
 % -----------------------------------------------------------------------
 
-if matlabversion(7.8, Inf)
+if ft_platform_supports('onCleanup')
   % switch to zombie when finished or when ctrl-c gets pressed
   % the onCleanup function does not exist for older versions
   onCleanup(@peerzombie);
@@ -341,7 +341,7 @@ while ~all(submitted) || ~all(collected)
       peerget_err = lasterror;
 
       % the peerslave command line executable itself can return a number of errors
-      %  1) could not start the matlab engine
+      %  1) could not start the MATLAB engine
       %  2) failed to execute the job (argin)
       %  3) failed to execute the job (optin)
       %  4) failed to execute the job (eval)
@@ -350,12 +350,12 @@ while ~all(submitted) || ~all(collected)
       %  7) failed to execute the job
       % errors 1-3 are not the users fault and happen prior to execution, therefore they should always result in a resubmission
 
-      if ~isempty(strfind(peerget_err.message, 'could not start the matlab engine')) || ...
+      if ~isempty(strfind(peerget_err.message, 'could not start the MATLAB engine')) || ...
          ~isempty(strfind(peerget_err.message, 'failed to execute the job (argin)')) || ...
          ~isempty(strfind(peerget_err.message, 'failed to execute the job (optin)'))
         % this is due to a license problem or a memory problem
-        if ~isempty(strfind(peerget_err.message, 'could not start the matlab engine'))
-          warning('resubmitting job %d because the matlab engine could not get a license', collect);
+        if ~isempty(strfind(peerget_err.message, 'could not start the MATLAB engine'))
+          warning('resubmitting job %d because the MATLAB engine could not get a license', collect);
         end
         % reset all job information, this will cause it to be automatically resubmitted
         jobid      (collect) = nan;
@@ -463,7 +463,7 @@ while ~all(submitted) || ~all(collected)
   % end
 
   % search for jobs that were submitted but that are still not busy after 60 seconds
-  % this happens if the peerslave is not able to get a matlab license
+  % this happens if the peerslave is not able to get a MATLAB license
   elapsed = toc(stopwatch) - submittime;
   elapsed(~submitted)       = 0;
   elapsed(collected)        = 0;
@@ -502,7 +502,7 @@ while ~all(submitted) || ~all(collected)
   % this is also what is used by the peerslave to kill the job
   estimated = 3*timreq;
 
-  % add some time to allow the matlab engine to start
+  % add some time to allow the MATLAB engine to start
   estimated = estimated + 60;
 
   % test whether one of the submitted jobs should be resubmitted

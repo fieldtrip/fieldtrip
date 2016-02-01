@@ -1,4 +1,4 @@
-function [grid] = sel50p(cfg, grid, sens);
+function [grid] = sel50p(cfg, grid, sens)
 
 % This function will add the field "subspace" to the grid definition.
 %

@@ -1,4 +1,4 @@
-function [s] = ft_statfun_diff_itc(cfg, dat, design)
+function [s, cfg] = ft_statfun_diff_itc(cfg, dat, design)
 
 % FT_STATFUN_DIFF_ITC computes the difference in the inter-trial
 % coherence between two conditions. The input data for this test
@@ -18,15 +18,21 @@ function [s] = ft_statfun_diff_itc(cfg, dat, design)
 % Use this function by calling 
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 % with the following configuration options
-%   cfg.statistic = 'diff_itc'
 %   cfg.method    = 'montecarlo'
-% and optionally (for use in the statfun) the option
-%  cfg.complex = 'diffabs' to compute the difference of the absolute ITC values, or
-%  cfg.complex = 'absdiff' to compute the absolute value of the difference in the complex ITC values
+%   cfg.statistic = 'diff_itc'
+% and optionally the options
+%  cfg.complex    = 'diffabs' to compute the difference of the absolute ITC values (default), or
+%                   'absdiff' to compute the absolute value of the difference in the complex ITC values.
 % 
-% See FT_FREQSTATISTICS and STATISTICS_MONTECARLO for more details
+% NOTE: For this specific statistic there is no known parametric distribution, hence
+% the probability and critical value cannot be computed. This specific statistic can
+% therefore only be used with cfg.method='montecarlo'. If you want to do this in combination
+% with cfg.correctm='cluster', you need cfg.clusterthreshold='nonparametric_common' or
+% cfg.clusterthreshold='nonparametric_individual'.
+%
+% See FT_FREQSTATISTICS and FT_STATISTICS_MONTECARLO for more details
 
-% Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2008-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

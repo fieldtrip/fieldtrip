@@ -21,7 +21,7 @@ function [obj] = ft_convert_units(obj, target, varargin)
 %
 % See FT_ESTIMATE_UNITS, FT_READ_VOL, FT_READ_SENS
 
-% Copyright (C) 2005-2012, Robert Oostenveld
+% Copyright (C) 2005-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -52,7 +52,7 @@ if isstruct(obj) && numel(obj)>1
   % deal with a structure array
   for i=1:numel(obj)
     if nargin>1
-      tmp(i) = ft_convert_units(obj(i), target);
+      tmp(i) = ft_convert_units(obj(i), target, varargin{:});
     else
       tmp(i) = ft_convert_units(obj(i));
     end
@@ -61,15 +61,38 @@ if isstruct(obj) && numel(obj)>1
   return
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % determine the unit-of-dimension of the input object
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(obj, 'unit') && ~isempty(obj.unit)
   % use the units specified in the object
   unit = obj.unit;
+  
+elseif isfield(obj, 'bnd') && isfield(obj.bnd, 'unit')
+  
+  unit = unique({obj.bnd.unit});
+  if ~all(strcmp(unit, unit{1}))
+    error('inconsistent units in the individual boundaries');
+  else
+    unit = unit{1};
+  end
+  
+  % keep one representation of the units rather than keeping it with each boundary
+  % the units will be reassigned further down
+  obj.bnd = rmfield(obj.bnd, 'unit');
   
 else
   % try to determine the units by looking at the size of the object
   if isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
     siz = norm(idrange(obj.chanpos));
+    unit = ft_estimate_units(siz);
+    
+  elseif isfield(obj, 'elecpos') && ~isempty(obj.elecpos)
+    siz = norm(idrange(obj.elecpos));
+    unit = ft_estimate_units(siz);
+    
+  elseif isfield(obj, 'coilpos') && ~isempty(obj.coilpos)
+    siz = norm(idrange(obj.coilpos));
     unit = ft_estimate_units(siz);
     
   elseif isfield(obj, 'pnt') && ~isempty(obj.pnt)
@@ -88,6 +111,10 @@ else
     
   elseif isfield(obj, 'fid') && isfield(obj.fid, 'pnt') && ~isempty(obj.fid.pnt)
     siz = norm(idrange(obj.fid.pnt));
+    unit = ft_estimate_units(siz);
+    
+  elseif isfield(obj, 'fid') && isfield(obj.fid, 'pos') && ~isempty(obj.fid.pos)
+    siz = norm(idrange(obj.fid.pos));
     unit = ft_estimate_units(siz);
     
   elseif ft_voltype(obj, 'infinite')
@@ -110,6 +137,10 @@ else
     siz = norm(idrange(obj.bnd(1).pnt));
     unit = ft_estimate_units(siz);
     
+  elseif isfield(obj, 'bnd') && isstruct(obj.bnd) && isfield(obj.bnd(1), 'pos') && ~isempty(obj.bnd(1).pos)
+    siz = norm(idrange(obj.bnd(1).pos));
+    unit = ft_estimate_units(siz);
+
   elseif isfield(obj, 'nas') && isfield(obj, 'lpa') && isfield(obj, 'rpa')
     pnt = [obj.nas; obj.lpa; obj.rpa];
     siz = norm(idrange(pnt));
@@ -131,41 +162,60 @@ elseif strcmp(unit, target)
   return
 end
 
-% compue the scaling factor from the input units to the desired ones
-scale = scalingfactor(unit, target);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% compute the scaling factor from the input units to the desired ones
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+scale = ft_scalingfactor(unit, target);
 
 if istrue(feedback)
   % give some information about the conversion
   fprintf('converting units from ''%s'' to ''%s''\n', unit, target)
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% apply the scaling factor
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % volume conductor model
 if isfield(obj, 'r'), obj.r = scale * obj.r; end
 if isfield(obj, 'o'), obj.o = scale * obj.o; end
-if isfield(obj, 'bnd'), for i=1:length(obj.bnd), obj.bnd(i).pnt = scale * obj.bnd(i).pnt; end, end
+if isfield(obj, 'bnd') && isfield(obj.bnd, 'pnt')
+  for i=1:length(obj.bnd)
+    obj.bnd(i).pnt = scale * obj.bnd(i).pnt;
+  end
+end
+if isfield(obj, 'bnd') && isfield(obj.bnd, 'pos')
+  for i=1:length(obj.bnd)
+    obj.bnd(i).pos = scale * obj.bnd(i).pos;
+  end
+end
 
-% gradiometer array
+% old-fashioned gradiometer array
 if isfield(obj, 'pnt1'), obj.pnt1 = scale * obj.pnt1; end
 if isfield(obj, 'pnt2'), obj.pnt2 = scale * obj.pnt2; end
 if isfield(obj, 'prj'),  obj.prj  = scale * obj.prj;  end
 
 % gradiometer array, electrode array, head shape or dipole grid
-if isfield(obj, 'pnt'),     obj.pnt     = scale * obj.pnt; end
-if isfield(obj, 'chanpos'), obj.chanpos = scale * obj.chanpos; end
-if isfield(obj, 'coilpos'), obj.coilpos = scale * obj.coilpos; end
-if isfield(obj, 'elecpos'), obj.elecpos = scale * obj.elecpos; end
+if isfield(obj, 'pnt'),        obj.pnt        = scale * obj.pnt;        end
+if isfield(obj, 'pos'),        obj.pos        = scale * obj.pos;        end
+if isfield(obj, 'chanpos'),    obj.chanpos    = scale * obj.chanpos;    end
+if isfield(obj, 'chanposorg'), obj.chanposorg = scale * obj.chanposorg; end
+if isfield(obj, 'coilpos'),    obj.coilpos    = scale * obj.coilpos;    end
+if isfield(obj, 'elecpos'),    obj.elecpos    = scale * obj.elecpos;    end
 
 % gradiometer array that combines multiple coils in one channel
 if isfield(obj, 'tra') && isfield(obj, 'chanunit')
   % find the gradiometer channels that are expressed as unit of field strength divided by unit of distance, e.g. T/cm
   for i=1:length(obj.chanunit)
     tok = tokenize(obj.chanunit{i}, '/');
-    if length(tok)==1
-      % assume that it is T or so
-    elseif length(tok)==2
-      % assume that it is T/cm or so
+    if ~isempty(regexp(obj.chanunit{i}, 'm$', 'once'))
+      % assume that it is T/m or so
       obj.tra(i,:)    = obj.tra(i,:) / scale;
       obj.chanunit{i} = [tok{1} '/' target];
+    elseif ~isempty(regexp(obj.chanunit{i}, '[T|V]$', 'once'))
+      % assume that it is T or V, don't do anything
+    elseif strcmp(obj.chanunit{i}, 'unknown')
+      % assume that it is T or V, don't do anything
     else
       error('unexpected units %s', obj.chanunit{i});
     end
@@ -174,9 +224,15 @@ end % if
 
 % fiducials
 if isfield(obj, 'fid') && isfield(obj.fid, 'pnt'), obj.fid.pnt = scale * obj.fid.pnt; end
+if isfield(obj, 'fid') && isfield(obj.fid, 'pos'), obj.fid.pos = scale * obj.fid.pos; end
 
 % dipole grid
-if isfield(obj, 'pos'), obj.pos = scale * obj.pos; end
+if isfield(obj, 'resolution'), obj.resolution = scale * obj.resolution; end
+
+% x,y,zgrid can also be 'auto'
+if isfield(obj, 'xgrid') && ~ischar(obj.xgrid), obj.xgrid = scale * obj.xgrid; end
+if isfield(obj, 'ygrid') && ~ischar(obj.ygrid), obj.ygrid = scale * obj.ygrid; end
+if isfield(obj, 'zgrid') && ~ischar(obj.zgrid), obj.zgrid = scale * obj.zgrid; end
 
 % anatomical MRI or functional volume
 if isfield(obj, 'transform'),
@@ -187,6 +243,12 @@ end
 if isfield(obj, 'transformorig'),
   H = diag([scale scale scale 1]);
   obj.transformorig = H * obj.transformorig;
+end
+
+% sourcemodel obtained through mne also has a orig-field with the high
+% number of vertices
+if isfield(obj, 'orig') && (isfield(obj.orig, 'pnt') || isfield(obj.orig, 'pos'))
+  obj.orig.pnt = scale * obj.orig.pnt; 
 end
 
 % remember the unit

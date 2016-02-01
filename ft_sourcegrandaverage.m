@@ -22,8 +22,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 %   cfg.parameter          = string, describing the functional data to be processed, e.g. 'pow', 'nai' or 'coh'
 %   cfg.keepindividual     = 'no' or 'yes'
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -69,261 +68,175 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 
 revision = '$Id$';
 
-if 1,
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % original implementation
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
-  % do the general setup of the function
-  ft_defaults
-  ft_preamble help
-  ft_preamble provenance
-  ft_preamble trackconfig
-  ft_preamble debug
-  ft_preamble loadvar varargin
-  
-  % check if the input data is valid for this function
-  for i=1:length(varargin)
-    varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'source', 'feedback', 'no');
-  end
-  
-  % set the defaults
-  if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
-  if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
-  if ~isfield(cfg, 'concatenate'),    cfg.concatenate    = 'no'; end
-  if ~isfield(cfg, 'randomization'),  cfg.randomization = 'no';  end
-  if ~isfield(cfg, 'permutation'),    cfg.permutation = 'no';    end
-  if ~isfield(cfg, 'c1'),             cfg.c1 = [];               end
-  if ~isfield(cfg, 'c2'),             cfg.c2 = [];               end
-  
-  if strcmp(cfg.concatenate, 'yes') && strcmp(cfg.keepindividual, 'yes'),
-    error('you can specify either cfg.keepindividual or cfg.concatenate to be yes, but not both');
-  end
-  
-  Nsubject = length(varargin);
-  Nvoxel   = size(varargin{1}.pos,1);
-  dat      = zeros(Nvoxel, Nsubject);
-  inside   = zeros(Nvoxel, Nsubject);
-  
-  if isfield(varargin{1}, 'pos')
-    % check that the source locations of each input source reconstruction are the same
-    for i=2:Nsubject
-      if size(varargin{i}.pos,1)~=size(varargin{1}.pos,1) || any(varargin{i}.pos(:)~=varargin{1}.pos(:))
-        error('different grid locations in source reconstructions');
+% do the general setup of the function
+ft_defaults
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% check if the input data is valid for this function
+for i=1:length(varargin)
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', 'inside', 'logical');
+  varargin{i} = ft_datatype_source(varargin{i}, 'version', 'upcoming');
+end
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
+
+% set the defaults
+cfg.keepindividual  = ft_getopt(cfg, 'keepindividual', 'no');
+cfg.parameter       = ft_getopt(cfg, 'parameter', 'pow');
+
+if strncmp(cfg.parameter, 'avg.', 4)
+  cfg.parameter = cfg.parameter(5:end); % remove the 'avg.' part
+end
+for i=1:length(varargin)
+  assert(isfield(varargin{i}, cfg.parameter), 'data does not contain parameter "%s"', cfg.parameter);
+end
+
+% check that these fields are identical for each input source
+checkfields = {'pos' 'dim' 'xgrid' 'ygrid' 'zgrid' 'transform' 'inside' 'outside'};
+for k = 1:numel(checkfields)
+  tmpstr = checkfields{k};
+  if isfield(varargin{1}, tmpstr)
+    tmpvar1 = varargin{1}.(tmpstr);
+    for i=2:length(varargin)
+      tmpvar2 = varargin{i}.(tmpstr);
+      if any(size(tmpvar1)~=size(tmpvar2)) || any(tmpvar1(:)~=tmpvar2(:))
+        error('the input sources vary in the field %s', tmpstr);
       end
     end
-    grandavg.pos = varargin{1}.pos;
   end
+end
+
+% ensure a consistent selection of the data over all inputs
+tmpcfg = keepfields(cfg, {'parameter', 'trials', 'latency', 'frequency', 'foilim'});
+[varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+[cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+
+% start with an empty output structure
+grandavg = [];
+
+if iscell(varargin{1}.(cfg.parameter))
   
-  if isfield(varargin{1}, 'dim')
-    % check that the dimensions of each input volume is the same
-    for i=2:Nsubject
-      if any(varargin{i}.dim(:)~=varargin{1}.dim(:))
-        error('different dimensions of the source reconstructions');
-      end
-    end
-    grandavg.dim = varargin{1}.dim;
-  end
+  % collect the data
+  dat = cellfun(@getfield, varargin, repmat({cfg.parameter}, size(varargin)), 'UniformOutput', false);
   
-  if isfield(varargin{1}, 'xgrid') && isfield(varargin{1}, 'ygrid') && isfield(varargin{1}, 'zgrid')
-    % check that the grid locations of each input volume are the same
-    for i=2:Nsubject
-      if length(varargin{i}.xgrid)~=length(varargin{1}.xgrid) || any(varargin{i}.xgrid~=varargin{1}.xgrid)
-        error('different xgrid in source reconstructions');
-      elseif length(varargin{i}.ygrid)~=length(varargin{1}.ygrid) || any(varargin{i}.ygrid~=varargin{1}.ygrid)
-        error('different ygrid in source reconstructions');
-      elseif length(varargin{i}.zgrid)~=length(varargin{1}.zgrid) || any(varargin{i}.zgrid~=varargin{1}.zgrid)
-        error('different zgrid in source reconstructions');
-      end
-    end
-    grandavg.xgrid = varargin{1}.xgrid;
-    grandavg.ygrid = varargin{1}.ygrid;
-    grandavg.zgrid = varargin{1}.zgrid;
-  end
+  npos = numel(dat{1});
+  nrpt = numel(dat);
+  dat  = cat(2, dat{:}); % make it {pos_rpt}
   
-  if isfield(varargin{1}, 'transform')
-    % check that the homogenous transformation matrix of each input volume is the same
-    for i=2:Nsubject
-      if any(varargin{i}.transform(:)~=varargin{1}.transform(:))
-        error('different homogenous transformation matrices in source reconstructions');
-      end
-    end
-    grandavg.transform = varargin{1}.transform;
-  end
-  
-  % get the source parameter from each input source reconstruction
-  %  get the inside parameter from each input source reconstruction
-  for i=1:Nsubject
-    tmp = getsubfield(varargin{i}, parameterselection(cfg.parameter, varargin{i}));
-    dat(:,i) = tmp(:);
-    tmp = getsubfield(varargin{i}, 'inside');
-    inside(tmp,i) = 1;
-  end
-  
-  % remove 'avg' if cfg.parameter contains it to avoid avg.avg field
-  [partok, parrem] = strtok(cfg.parameter, '.');
-  if isequal('avg', partok)
-    cfg.parameter = parrem(2:end);
-  elseif ~isempty(parrem)
-    warning_once('nested parameters in grandaverage are not recommended and not fully supported!');
-  end
-  
-  % ensure that voxels that are not in the scanned brain region are excluded from the averaging
-  dat(~inside) = nan;
-  
-  if strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes')
-    if strcmp(cfg.keepindividual, 'yes')
-      error('you cannot keep individual data in combination with randomization or permutation');
-    end
-    
-    % construct a design vector that contains the condition number 1 or 2
-    design = zeros(1,Nsubject);
-    design(cfg.c1) = 1;
-    design(cfg.c2) = 2;
-    if any(design==0)
-      error('not all input source structures have been assigned to a condition');
-    elseif length(design)~=Nsubject
-      error('not enough input source structures given cfg.c1 and cfg.c2');
-    end
-    
-    % create a matrix with all randomized assignments to the two conditions
-    if strcmp(cfg.randomization, 'yes')
-      res = zeros(cfg.numrandomization, Nsubject);
-      for i=1:cfg.numrandomization
-        res(i,:) = design(randperm(Nsubject));
-      end
-    elseif strcmp(cfg.permutation, 'yes')
-      sel1 = find(design==1);
-      sel2 = find(design==2);
-      if length(sel1)~=length(sel2)
-        error('permutation requires that there is an equal number of replications in each conditions')
-      end
-      res = zeros(cfg.numpermutation, Nsubject);
-      for i=1:cfg.numpermutation
-        flip = randn(1,length(sel1))>0;
-        res(i,sel1) = 1;
-        res(i,sel2) = 2;
-        res(i,sel1(find(flip))) = 2;
-        res(i,sel2(find(flip))) = 1;
-      end
-    end % randomization or permutation
-    
-    % randomize the input source parameter between the two conditions
-    clear trialA
-    clear trialB
-    for i=1:size(res,1)
-      selA = find(res(i,:)==1);
-      selB = find(res(i,:)==2);
-      % create the randomized averaged data
-      trialA(i) = setsubfield([], cfg.parameter, nanmean(dat(:,selA),2));
-      trialB(i) = setsubfield([], cfg.parameter, nanmean(dat(:,selB),2));
-    end
-    % create the observed average data
-    selA = find(design==1);
-    selB = find(design==2);
-    avgA = setsubfield([], cfg.parameter, nanmean(dat(:,selA),2));
-    avgB = setsubfield([], cfg.parameter, nanmean(dat(:,selB),2));
-    
-    % construct a source structure that can be fed into SOURCESTATISTICS_RANDOMIZATION or SOURCESTATISTICS_RANDCLUSTER
-    grandavg.trialA  = trialA;
-    grandavg.trialB  = trialB;
-    grandavg.avgA    = avgA;
-    grandavg.avgB    = avgB;
-    
+  if isfield(varargin{1}, 'inside')
+    % it is logically indexed, take the first inside source location
+    probe = find(varargin{1}.inside, 1, 'first');
   else
-    if strcmp(cfg.concatenate, 'no'),
-      % compute a plain average and variance over all input source structures
-      grandavg.avg    = setsubfield([], cfg.parameter, nanmean(dat,2));
-      grandavg.var    = setsubfield([], cfg.parameter, nanstd(dat,[],2).^2);
-      grandavg.dimord = 'voxel';
-    else
-      grandavg.avg    = setsubfield([], cfg.parameter, dat);
-      grandavg.dimord = 'voxel_freq';
-      grandavg.dim    = [grandavg.dim size(dat,2)];
-    end
-    
-    if strcmp(cfg.keepindividual, 'yes')
-      clear trial
-      for i=1:Nsubject
-        trial(i) = setsubfield([], cfg.parameter, dat(:,i));
-      end
-      grandavg.trial = trial;
-    end
+    % just take the first source position
+    probe = 1;
   end
   
-  % determine which sources were inside or outside the brain in all subjects
-  allinside  = find(all( inside,2));
-  alloutside = find(all(~inside,2));
-  someinside = find(any( inside,2));
-  fprintf('%d voxels are inside the brain of all subjects\n',               length(allinside));
-  fprintf('%d voxels are inside the brain of some, but not all subjects\n', length(someinside));
-  fprintf('%d voxels are outside the brain of all subjects\n',              length(alloutside));
-  warning('marking only voxels inside the brain of all subjects as ''inside''');
-  if strcmp(cfg.concatenate, 'no'),
-    grandavg.inside  = find(all( inside,2));
-    grandavg.outside = find(any(~inside,2));
-    grandavg.df      = sum(inside,2);
-  else
-    grandavg.inside  = find(inside(:));
-    grandavg.outside = setdiff([1:prod(size(dat))]', grandavg.inside);
-  end
-  
-else
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % new implementation (with restricted functionality)
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
-  % do the general setup of the function
-  ft_defaults
-  ft_preamble help
-  ft_preamble provenance
-  ft_preamble trackconfig
-  ft_preamble debug
-  ft_preamble loadvar varargin
-  
-  % check if the input data is valid for this function
-  for i=1:length(varargin)
-    varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', 'sourcerepresentation', 'new');
-    % FIXME also allow volume structures to be used
-  end
-  
-  % check if the input cfg is valid for this function
-  cfg = ft_checkconfig(cfg, 'deprecated', {'concatenate', 'randomization', 'permutation', 'c1', 'c2'});
-  
-  % set the defaults
-  if ~isfield(cfg, 'parameter'),      cfg.parameter = 'pow';     end
-  if ~isfield(cfg, 'keepindividual'), cfg.keepindividual = 'no'; end
-  
-  Nsubject = length(varargin);
-  
-  % check that these fields are identical for each input source
-  checkfields = {'pos' 'dim' 'xgrid' 'ygrid' 'zgrid' 'transform'};
-  for k = 1:numel(checkfields)
-    tmpstr = checkfields{k};
-    if isfield(varargin{1}, tmpstr)
-      tmpvar1 = varargin{1}.(tmpstr);
-      for i=2:Nsubject
-        tmpvar2 = varargin{i}.(tmpstr);
-        if any(size(tmpvar1)~=size(tmpvar2)) || any(tmpvar1(:)~=tmpvar2(:))
-          error('the input sources vary in the field %s', tmpstr);
-        end
-      end
-      grandavg.(tmpstr) = varargin{1}.(tmpstr);
-    end
-  end
+  olddim = size(dat{probe,1});
+  newdim = [1 olddim];
   
   if strcmp(cfg.keepindividual, 'yes')
-    grandavg = ft_selectdata(varargin{:}, 'param', cfg.parameter);
+    dat = cellfun(@reshape,  dat, repmat({newdim}, size(dat)), 'UniformOutput', false);
+    for i=1:npos
+      dat{i,1} = cat(1, dat{i,:}); % concatenate them into the first one
+    end
+    grandavg.(cfg.parameter) = dat(:,1);
+    
+    if ~isequal(size(grandavg.(cfg.parameter)), size(varargin{1}.(cfg.parameter)))
+      % this is a bit unexpected, but let's reshape it back into the original size
+      grandavg.(cfg.parameter) = reshape(grandavg.(cfg.parameter), size(varargin{1}.(cfg.parameter)));
+    end
+    
+    if isfield(varargin{1}, [cfg.parameter 'dimord'])
+      dimord = varargin{1}.([cfg.parameter 'dimord']);
+      dimtok = tokenize(dimord, '_');
+      dimtok = {dimtok{1} 'rpt' dimtok{2:end}};
+      dimord = sprintf('%s_', dimtok{:});
+      dimord = dimord(1:end-1); % remove the trailing '_'
+      grandavg.([cfg.parameter 'dimord']) = dimord;
+      
+    elseif isfield(varargin{1}, 'dimord')
+      dimord = varargin{1}.dimord;
+      dimtok = tokenize(dimord, '_');
+      dimtok = {dimtok{1} 'rpt' dimtok{2:end}};
+      dimord = sprintf('%s_', dimtok{:});
+      dimord = dimord(1:end-1); % remove the trailing '_'
+      grandavg.dimord = dimord;
+    end
+    
   else
-    grandavg = ft_selectdata(varargin{:}, 'param', cfg.parameter, 'avgoverrpt', 'yes');
-  end
- 
-end % if 1 or 0
+    for i=1:npos
+      for j=2:nrpt
+        dat{i,1} = dat{i,1} + dat{i,j}; % add them all to the first one
+      end
+      dat{i,1} = dat{i,1}/nrpt;
+    end
+    grandavg.(cfg.parameter) = dat(:,1);
+    
+    if isfield(varargin{1}, [cfg.parameter 'dimord'])
+      grandavg.([cfg.parameter 'dimord']) = varargin{1}.([cfg.parameter 'dimord']);
+    elseif isfield(varargin{1}, 'dimord')
+      grandavg.dimord = varargin{1}.dimord;
+    end
+    
+  end % if keepindividual
+  clear dat
+  
+else
+  % determine the dimensions, include the new repetition dimension
+  olddim = size(varargin{1}.(cfg.parameter));
+  newdim = [1 olddim];
+  
+  % collect and reshape the data
+  dat = cellfun(@getfield, varargin, repmat({cfg.parameter}, size(varargin)), 'UniformOutput', false);
+  
+  if strcmp(cfg.keepindividual, 'yes')
+    % concatenate the data into a single array
+    dat = cellfun(@reshape,  dat, repmat({newdim}, size(dat)), 'UniformOutput', false);
+    grandavg.(cfg.parameter) = cat(1, dat{:});
+    if isfield(varargin{1}, [cfg.parameter 'dimord'])
+      grandavg.([cfg.parameter 'dimord']) = ['rpt_' varargin{1}.([cfg.parameter 'dimord'])];
+    elseif isfield(varargin{1}, 'dimord')
+      grandavg.dimord = ['rpt_' varargin{1}.dimord];
+    end
+    
+  else
+    % sum the data in a single array
+    for i=2:length(dat)
+      dat{1} = dat{1} + dat{i};
+    end
+    grandavg.(cfg.parameter) = dat{1}/length(varargin);
+    if isfield(varargin{1}, [cfg.parameter 'dimord'])
+      grandavg.([cfg.parameter 'dimord']) = varargin{1}.([cfg.parameter 'dimord']);
+    elseif isfield(varargin{1}, 'dimord')
+      grandavg.dimord = varargin{1}.dimord;
+    end
+  end % if keepindividual
+  clear dat
+  
+end % if iscell
+
+% the fields that describe the actual data need to be copied over from the input to the output
+grandavg = copyfields(varargin{1}, grandavg, {'pos', 'time', 'freq', 'dim', 'transform', 'inside', 'outside', 'unit', 'coordsys'});
+
+% these fields might not be needed
+dimord = getdimord(grandavg, cfg.parameter);
+if isempty(strfind(dimord, 'time')), grandavg = removefields(grandavg, 'time'); end
+if isempty(strfind(dimord, 'freq')), grandavg = removefields(grandavg, 'freq'); end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous varargin
-ft_postamble history grandavg
-ft_postamble savevar grandavg
+ft_postamble previous   varargin
+ft_postamble provenance grandavg
+ft_postamble history    grandavg
+ft_postamble savevar    grandavg

@@ -1,13 +1,13 @@
-function vol = ft_headmodel_interpolate(filename, sens, grid, varargin)
+function headmodel = ft_headmodel_interpolate(filename, sens, grid, varargin)
 
 % FT_HEADMODEL_INTERPOLATE describes a volume conduction model of the head in which
 % subsequent leadfield computations can be performed using a simple interpolation
 % scheme.
 %
 % Use as
-%   vol = ft_headmodel_interpolate(filename, sens, leadfield)
+%   headmodel = ft_headmodel_interpolate(filename, sens, leadfield)
 % or
-%   vol = ft_headmodel_interpolate(filename, sens, leadfield)
+%   headmodel = ft_headmodel_interpolate(filename, sens, leadfield)
 %
 % The input parameters are the filename to which the model will be written,
 % the electrode definition (see ft_DATATYPE_SENS). The third input argument
@@ -16,12 +16,12 @@ function vol = ft_headmodel_interpolate(filename, sens, grid, varargin)
 %
 % The output volume conduction model is stored on disk in a MATLAB file together with a
 % number of NIFTi files. The mat file contains a structure with the following fields
-%   vol.sens        = structure, electrode sensor description, see FT_DATATYE_SENS
-%   vol.filename    = cell-array with NIFTI filenames, one file per channel
+%   headmodel.sens        = structure, electrode sensor description, see FT_DATATYE_SENS
+%   headmodel.filename    = cell-array with NIFTI filenames, one file per channel
 % and contains
-%   vol.dim         = [Nx Ny Nz] vector with the number of grid points along each dimension
-%   vol.transform   = 4x4 homogenous transformation matrix
-%   vol.unit        = string with the geometrical units of the positions, e.g. 'cm' or 'mm'
+%   headmodel.dim         = [Nx Ny Nz] vector with the number of grid points along each dimension
+%   headmodel.transform   = 4x4 homogenous transformation matrix
+%   headmodel.unit        = string with the geometrical units of the positions, e.g. 'cm' or 'mm'
 % to describe the source positions.
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
@@ -49,74 +49,228 @@ function vol = ft_headmodel_interpolate(filename, sens, grid, varargin)
 % check the validity of the input arguments
 assert(ft_datatype(sens, 'sens'), 'the second input argument should be a sensor definition');
 
-% the file with the path but without the extension
+% get the optional input arguments
+smooth = ft_getopt(varargin, 'smooth', true);
+
+% get the filename with the path but without the extension
 [p, f, x] = fileparts(filename);
+if isempty(p)
+  p = pwd;
+end
 filename = fullfile(p, f);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART ONE (optional), read the pre-computed besa leadfield
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if ischar(grid)
+  % the input is a filename that points to a BESA precomputed leadfield
+  filename = grid;
+  clear grid
+  
+  % this requires the BESA functions
+  ft_hastoolbox('besa', 1);
+  
+  % get the filename with the path but without the extension
+  [p, f, x] = fileparts(filename);
+  if isempty(p)
+    p = pwd;
+  end
+  lftfile = fullfile(p, [f, '.lft']);
+  locfile = fullfile(p, [f, '.loc']);
+  
+  % Read source space grid nodes
+  [ssg, IdxNeighbour] = readBESAloc(locfile);
+  fprintf('Number of nodes: %i\n', size(ssg, 1));
+  fprintf('Number of neighbours/node: %i\n', size(IdxNeighbour, 1));
+  
+  % the locations are represented as a Nx3 list of grid points
+  % convert the representation to dim/transform/inside
+  
+  minx = min(ssg(:,1));
+  maxx = max(ssg(:,1));
+  miny = min(ssg(:,2));
+  maxy = max(ssg(:,2));
+  minz = min(ssg(:,3));
+  maxz = max(ssg(:,3));
+  
+  xgrid = sort(unique(ssg(:,1)));
+  ygrid = sort(unique(ssg(:,2)));
+  zgrid = sort(unique(ssg(:,3)));
+  
+  dim = [length(xgrid) length(ygrid) length(zgrid)];
+  
+  pos = ssg;
+  ind = zeros(size(pos));
+  
+  for i=1:size(ssg,1)
+    ind(i,1) = find(xgrid==pos(i,1));
+    ind(i,2) = find(ygrid==pos(i,2));
+    ind(i,3) = find(zgrid==pos(i,3));
+  end
+  
+  ind = ind';ind(4,:) = 1;
+  pos = pos';pos(4,:) = 1;
+  transform = pos/ind;
+  
+  insideindx = sub2ind(dim, ind(1,:), ind(2,:), ind(3,:)); % note that ind is transposed
+  
+  if false
+    % this shows how the positions are reconstructed from dim+transform+insideindx
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    vox = [X(:) Y(:) Z(:)];
+    head = ft_warp_apply(transform, vox);
+    assert(norm(head(insideindx,:)-ssg)/norm(ssg)<1e-9); % there is a little bit rounding off error
+  end
+  
+  grid           = [];
+  grid.dim       = dim;
+  grid.transform = transform;
+  grid.inside    = false(prod(dim),1);
+  grid.inside(insideindx) = true;
+  grid.leadfield = cell(dim);
+  
+  % ensure that it has geometrical units (probably mm)
+  grid = ft_convert_units(grid);
+  
+  % Read leadfield, all channels, all locations, 3 orientations
+  [lftdim, lft] = readBESAlft(lftfile);
+  
+  assert(lftdim(1)==length(sens.label), 'inconsistent number of electrodes');
+  assert(lftdim(2)==length(insideindx), 'inconsistent number of grid positions');
+  assert(lftdim(3)==3, 'unexpected number of leadfield columns');
+  assert(isequal(grid.unit, sens.unit), 'inconsistent geometrical units');
+  
+  
+  for i=1:length(insideindx)
+    sel = 3*(i-1)+(1:3);
+    grid.leadfield{insideindx(i)} = lft(:,sel);
+  end
+  
+  fprintf('finished import of BESA leadfield file\n');
+end % process the BESA file, grid is now compatible with FT_PREPARE_LEADFIELD
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART TWO: write the leadfield to a set of nifti files
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if isfield(grid, 'leadfield')
   % the input pre-computed leadfields reflect the output of FT_PREPARE_LEADFIELD
   % which should be reorganized into channel-specific volumes and stored to disk as nifti files
   
   % ensure that it is represented as 3-D volume
-  grid = ft_checkdata(grid, 'datatype', 'volume', 'inside', 'index');
+  grid = ft_checkdata(grid, 'datatype', 'volume');
   
   nchan = length(sens.label);
-  if size(grid.leadfield{grid.inside(1)},1)~=nchan
+  if size(grid.leadfield{insideindx(1)},1)~=nchan
     error('the number of channels does not match');
   end
   
-  vol = [];
-  vol.type      = 'interpolate';
-  vol.dim       = grid.dim;
-  vol.transform = grid.transform;
-  vol.inside    = grid.inside;
-  vol.sens      = sens;
-  vol.filename  = cell(size(sens.label));
+  headmodel = [];
+  headmodel.type      = 'interpolate';
+  headmodel.dim       = grid.dim;
+  headmodel.transform = grid.transform;
+  headmodel.inside    = false(grid.dim);
+  headmodel.inside(insideindx) = true;
+  headmodel.sens      = sens;
+  headmodel.filename  = cell(size(sens.label));
   
   if isfield(grid, 'unit')
     % get the units from the dipole grid
-    vol.unit = grid.unit;
+    headmodel.unit = grid.unit;
   else
     % estimate the units
-    vol = ft_convert_units(vol);
+    headmodel = ft_convert_units(headmodel);
   end
   
-  lfx = zeros(vol.dim);
-  lfy = zeros(vol.dim);
-  lfz = zeros(vol.dim);
+  % these go in the same directory as the other nii files, they will be removed after use
+  masklf  = fullfile(p, 'masklf.nii');
+  smasklf = fullfile(p, 'smasklf.nii');
+  rawlf   = fullfile(p, 'rawlf.nii');
+  srawlf  = fullfile(p, 'srawlf.nii');
+  
+  % ensure that the output directory exists
+  if ~exist(p, 'dir')
+    mkdir(p);
+  end
+
+  % these indices only have to be determined once and speed-up the reassignment
+  [ind1, ind2, ind3] = ndgrid(1:headmodel.dim(1), 1:headmodel.dim(2), 1:headmodel.dim(3));
   
   for i=1:nchan
-    for j=grid.inside(:)'
-      lfx(j) = grid.leadfield{j}(i,1);
-      lfy(j) = grid.leadfield{j}(i,2);
-      lfz(j) = grid.leadfield{j}(i,3);
+    dat = zeros([headmodel.dim 3]);
+    for j=insideindx(:)'
+      % [i1, i2, i3] = ind2sub(headmodel.dim, j);
+      % ind2sub is slow, simply look them up instead
+      i1 = ind1(j);
+      i2 = ind2(j);
+      i3 = ind3(j);
+      dat(i1, i2, i3, :) = grid.leadfield{j}(i,:);
     end
-    lf = cat(4, lfx, lfy, lfz);
-    vol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
-    fprintf('writing single channel leadfield to %s\n', vol.filename{i})
-    ft_write_mri(vol.filename{i}, lf);
+    
+    if istrue(smooth)
+      if i == 1
+        ft_write_mri(masklf,~~dat(:, :, :, 1), 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+        spm_smooth(masklf, smasklf, grid.transform(1,1)*[1 1 1]);
+        mask = spm_read_vols(spm_vol(smasklf));
+        
+        spm_unlink(masklf);
+        spm_unlink(smasklf);
+      end
+      
+      ft_write_mri(rawlf, dat, 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+      spm_smooth(rawlf, srawlf, grid.transform(1,1)*[1 1 1]);
+      dat = spm_read_vols(spm_vol(srawlf));
+      dat = dat./repmat(mask, [1 1 1, size(dat, 4)]);
+      dat(~isfinite(dat)) = 0;
+      
+      spm_unlink(rawlf);
+      spm_unlink(srawlf);
+    end
+    
+    
+    headmodel.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
+    fprintf('writing single channel leadfield to %s\n', headmodel.filename{i})
+    
+    if exist('spm_bsplinc', 'file')
+      dat = cat(4, dat, 0*dat);
+      for k = 1:3
+        dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
+      end
+    end
+    
+    ft_write_mri(headmodel.filename{i}, dat , 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+    
   end
   
   filename = sprintf('%s.mat', filename);
-  fprintf('writing volume conductor structure to %s\n', filename)
-  save(filename, 'vol');
+  fprintf('writing volume conduction model metadata to %s\n', filename)
+  save(filename, 'headmodel');
   
 elseif isfield(grid, 'filename')
   % the input pre-computed leadfields reflect the output of FT_HEADMODEL_INTERPOLATE,
   % which should be re-interpolated on the channel level and then stored to disk as nifti files
-  ft_hastoolbox('spm8', 1);
+  ft_hastoolbox('spm8up', 1);
   
   inputvol = grid;
   
+  if ~isfield(sens, 'tra')
+    sens.tra = eye(length(sens.label));
+  end
+  
+  if ~isfield(inputvol.sens, 'tra')
+    inputvol.sens.tra = eye(length(inputvol.sens.label));
+  end
+  
   % create a 2D projection and triangulation
-  pnt = inputvol.sens.elecpos;
-  prj = elproj(pnt);
+  pos = inputvol.sens.elecpos;
+  prj = elproj(pos);
   tri = delaunay(prj(:,1), prj(:,2));
   
   % project the electrodes on the triangulation and compute the
   % bilinear interpolation from the original to the new electrodes
-  [el, prj] = project_elec(sens.elecpos, pnt, tri);
-  tra = transfer_elec(pnt, tri, el);
+  [el, prj] = project_elec(sens.elecpos, pos, tri);
+  tra = transfer_elec(pos, tri, el);
   
   % define the spaces and the number of elements that they comprise
   n1 = length(inputvol.sens.label);    % computed channels
@@ -129,7 +283,7 @@ elseif isfield(grid, 'filename')
   make4from3.labelnew = sens.label;
   make4from3.tra      = sens.tra;
   for i=1:n3
-    make4from3.labelorg{i} = sprintf('p3_%d', i);
+    make4from3.labelorg{i} = sprintf('3to4_%d', i);
   end
   
   % this is the montage for getting the computed channels from the computed electrode positions
@@ -155,6 +309,8 @@ elseif isfield(grid, 'filename')
   make4from1.labelnew = make4from3.labelnew;
   
   sens = ft_apply_montage(inputvol.sens, make4from1, 'keepunused', 'no');
+  % make the rounding off errors equal to zero
+  sens.tra(sens.tra<10*eps) = 0;
   
   % map the leadfields for the old channels into memory
   chan = cell(1,n1);
@@ -177,23 +333,31 @@ elseif isfield(grid, 'filename')
       weight = make4from1.tra(i,j);
       if weight
         % interpolate the leadfields from the old to the new channels
-        dat = dat + weight * chan{j}.dat(:,:,:,:);
+        dat = dat + weight * chan{j}.dat(:,:,:,1:3);
+      end
+    end
+    if exist('spm_bsplinc', 'file')
+      dat = cat(4, dat, 0*dat);
+      for k = 1:3
+        dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
       end
     end
     outputvol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', outputvol.filename{i})
-    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform);
+    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
   end
   
   % update the volume conductor
   outputvol.sens = sens;
   
   % rename and save to disk
-  vol = outputvol;
+  headmodel = outputvol;
   clear inputvol outputvol
   
   filename = sprintf('%s.mat', filename);
   fprintf('writing volume conductor structure to %s\n', filename)
-  save(filename, 'vol');
+  save(filename, 'headmodel');
   
 end
+
+

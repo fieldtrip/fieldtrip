@@ -6,7 +6,7 @@ classdef analysis
 %   {method1 method2 method3 ...} that are called in this order and where 
 %   the output of the previous method acts as input to the next method.
 %
-%   DEVELOPER
+%   DEVELOPER 
 %   Marcel van Gerven (m.vangerven@donders.ru.nl)
 
     properties

@@ -5,16 +5,16 @@ function child = children(tree,uid)
 % tree   - a tree
 % uid    - uid of the element
 % child  - array of the UIDs of children of node uid
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Return UID's of children of node uid
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(2,2,nargin));
+%error(nargchk(2,2,nargin));
 
 child = [];
 uid = uid(:);

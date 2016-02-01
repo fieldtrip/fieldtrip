@@ -40,13 +40,18 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
+ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
-ft_preamble debug
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % set the defaults
 if ~isfield(cfg, 'numclusters'), cfg.numclusters = 12; end
@@ -144,7 +149,7 @@ if 1,
   zaxis  = [repmat(origin, [10 1]) + [0:9]'*zdir; ...
     repmat(origin, [3  1]) - [0:2]'*zdir];
   
-  %plot some stuff
+  % plot some stuff
   figure; hold on;
   plot3(xaxis(:,1),xaxis(:,2),xaxis(:,3),'k.-');
   plot3(yaxis(:,1),yaxis(:,2),yaxis(:,3),'k.-');
@@ -157,10 +162,10 @@ if 1,
   axis vis3d; axis off
 end
 
-%compute transformation matrix from dewar to head coordinates
+% compute transformation matrix from dewar to head coordinates
 transform = zeros(4, 4, size(nas,1));
 for k = 1:size(transform, 3)
-  transform(:,:,k) = headcoordinates(nas(k,:), lpa(k,:), rpa(k,:), 'ctf');
+  transform(:,:,k) = ft_headcoordinates(nas(k,:), lpa(k,:), rpa(k,:), 'ctf');
 end
 
 npos        = size(transform, 3);
@@ -170,11 +175,11 @@ gradnew.coilpos = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
 gradnew.coilori = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
 gradnew.tra = repmat(grad.tra, [1 npos]);
 for m = 1:npos
-  tmptransform                                = transform(:,:,m);
-  gradnew.coilpos((m-1)*ncoils+1:(m*ncoils), :) = warp_apply(tmptransform, grad.coilpos); %back to head-crd
-  tmptransform(1:3, 4)                        = 0; %keep rotation only
-  gradnew.coilori((m-1)*ncoils+1:(m*ncoils), :) = warp_apply(tmptransform, grad.coilori);
-  gradnew.tra(:, (m-1)*ncoils+1:(m*ncoils)) = grad.tra.*(numperbin(m)./sum(numperbin));
+  tmptransform                                  = transform(:,:,m);
+  gradnew.coilpos((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilpos); % back to head-crd
+  tmptransform(1:3, 4)                          = 0; % keep rotation only
+  gradnew.coilori((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilori);
+  gradnew.tra(:, (m-1)*ncoils+1:(m*ncoils))     = grad.tra.*(numperbin(m)./sum(numperbin));
 end
 
 grad = gradnew;

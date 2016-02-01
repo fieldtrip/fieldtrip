@@ -5,16 +5,17 @@ function subtree = branch(tree,uid)
 % tree    - XMLTree object
 % uid     - UID of the root element of the subtree
 % subtree - XMLTree object (a subtree from tree)
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Return a subtree from a tree.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(2,2,nargin));
+
+%error(nargchk(2,2,nargin));
 
 if uid > length(tree) || ...
    numel(uid)~=1 || ...
@@ -35,7 +36,7 @@ for i=1:length(child)
     subtree.tree{root(subtree)}.contents = [subtree.tree{root(subtree)}.contents l+1];
 end
 
-%=======================================================================
+%==========================================================================
 function tree = sub_branch(t,tree,uid,p)
 
     l = length(tree);

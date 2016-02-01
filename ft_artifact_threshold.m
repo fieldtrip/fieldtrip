@@ -7,9 +7,10 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 % Use as
 %   [cfg, artifact] = ft_artifact_threshold(cfg)
 % with the configuration options
-%   cfg.dataset
-%   cfg.headerfile
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_threshold(cfg, data)
@@ -38,8 +39,7 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 % will mark the whole trial as an artifact if the threshold is exceeded.
 % Furthermore, this function does not support artifact- or filterpadding.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
 % file on disk and/or the output data will be written to a *.mat file. These mat
@@ -73,9 +73,14 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
@@ -111,18 +116,19 @@ if ~isfield(artfctdef, 'range'),    artfctdef.range = inf;           end
 if ~isfield(artfctdef, 'min'),      artfctdef.min =  -inf;           end
 if ~isfield(artfctdef, 'max'),      artfctdef.max =   inf;           end
 
+% the data is either passed into the function by the user or read from file with cfg.inputfile
+hasdata = exist('data', 'var');
+
 % read the header, or get it from the input data
-if nargin > 1
-  % data given as input
-  isfetch = true;
-  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = ft_fetch_header(data);
-else
-  % only cfg given
-  isfetch = false;
-  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+if ~hasdata
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+else
+  % data given as input
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr = ft_fetch_header(data);
 end
 
 % set default cfg.continuous
@@ -141,7 +147,7 @@ channelindx = match_str(hdr.label,channel);
 artifact    = [];
 
 for trlop = 1:numtrl
-  if isfetch
+  if hasdata
     dat = ft_fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   else
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);

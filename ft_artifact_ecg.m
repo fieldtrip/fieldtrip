@@ -29,8 +29,7 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -63,9 +62,14 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
@@ -99,7 +103,7 @@ end
 hasdata = exist('data', 'var');
 
 if ~hasdata
-  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
   trl = cfg.trl;

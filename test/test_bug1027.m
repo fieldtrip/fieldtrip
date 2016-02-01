@@ -1,11 +1,16 @@
 function test_bug1027
 
-% TEST test_bug1027 ft_artifact_zvalue
+% MEM 1500mb
+% WALLTIME 00:10:00
+
+% TEST test_bug1027
+% TEST ft_artifact_zvalue
 
 % the original bug was that ft_artifact_zvalue could not deal with variable
 % length trials
 
-load test_bug1027
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
+load bug1027.mat
 
 cfg = [];
 cfg.artfctdef.zvalue.channel = {'EOG061'};

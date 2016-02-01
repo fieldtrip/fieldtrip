@@ -27,6 +27,16 @@ fp = fopen(filename);
 if (fp)
     % Read header of .swf file
     headline = fscanf(fp,'Npts= %f TSB= %f DI= %f SB= %f');
+    % Read required information.
+    %swf.Npts = fscanf(fp,'Npts= %i');
+    %swf.TSB = fscanf(fp,' TSB= %f');    
+    %swf.DI = fscanf(fp,'DI= %f');
+    
+    %try 
+    %    swf.SB = fscanf(fp,'SB= %f'); 
+    %catch
+    %end
+    
     % New BESA versions include more information in the .swf file header; skip that
     i=1;
     while i<1000

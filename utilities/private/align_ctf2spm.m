@@ -49,7 +49,7 @@ spmhead_Lpa_canal    = spmvox2spmhead * spmvox_Lpa_canal ;
 spmhead_Rpa_canal    = spmvox2spmhead * spmvox_Rpa_canal ;
 
 ctfvox2ctfhead  = mri.transform;
-spmhead2ctfhead = headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'ctf');
+spmhead2ctfhead = ft_headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'ctf');
 
 %ctfvox2spmhead =  inv(spmhead2ctfhead) *  ctfvox2ctfhead;
 ctfvox2spmhead =  spmhead2ctfhead \ ctfvox2ctfhead;
@@ -112,8 +112,8 @@ if opt==1
   mri.head2headOrig = spmhead2ctfhead2;
   
   % delete the temporary files
-  delete(tname1);
-  delete(tname2);
+  delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
+  delete(tname2); delete(strrep(tname2, 'img', 'hdr'));
   
 elseif opt==2
   % use spm_normalise
@@ -158,7 +158,7 @@ elseif opt==2
   mri.head2headOrig = spmhead2ctfhead2;
   
   % delete the temporary files
-  delete(tname1);
-  delete(tname2);
+  delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
+  delete(tname2); delete(strrep(tname2, 'img', 'hdr'));
 end
 

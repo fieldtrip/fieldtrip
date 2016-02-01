@@ -1,5 +1,10 @@
 function R4F = decode_res4(chunk)
 
+% DECODE_RES4 is a helper function for real-time processing of CTF data. This
+% function is used to decode the content of the optional ctf_res4 chunck.
+%
+% See also DECODE_FIF, DECODE_NIFTI1, SAP2MATLAB
+
 % decode the res4 file content
 if 0
   % using  READ_CTF_RES4 -- this does not produce a proper .grad structure
@@ -35,4 +40,3 @@ else
   delete(meg4fn);
   rmdir(dsname);
 end
-

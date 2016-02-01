@@ -7,12 +7,13 @@ function [freq] = ft_freqbaseline(cfg, freq)
 % where the freq data comes from FT_FREQANALYSIS and the configuration
 % should contain
 %   cfg.baseline     = [begin end] (default = 'no')
-%   cfg.baselinetype = 'absolute', 'relchange', 'relative', or 'db' (default = 'absolute')
+%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange' or 'db' (default = 'absolute')
 %   cfg.parameter    = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
 %
-% See also FT_FREQANALYSIS, FT_TIMELOCKBASELINE, FT_FREQCOMPARISON
+% See also FT_FREQANALYSIS, FT_TIMELOCKBASELINE, FT_FREQCOMPARISON,
+% FT_FREQGRANDAVERAGE
 
 % Undocumented local options:
 %   cfg.inputfile  = one can specifiy preanalysed saved data as input
@@ -44,14 +45,19 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar freq
+ft_preamble provenance freq
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', {'freq+comp', 'freq'}, 'feedback', 'yes');
 
 % update configuration fieldnames
 cfg              = ft_checkconfig(cfg, 'renamed', {'param', 'parameter'});
@@ -63,7 +69,7 @@ cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 
 % check validity of input options
 cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector'});
-cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db'});
+cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db', 'vssum'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
 % make sure cfg.parameter is a cell array of strings
@@ -101,15 +107,8 @@ freqOut.freq   = freq.freq;
 freqOut.dimord = freq.dimord;
 freqOut.time   = freq.time;
 
-if isfield(freq, 'grad')
-  freqOut.grad = freq.grad;
-end
-if isfield(freq, 'elec')
-  freqOut.elec = freq.elec;
-end
-if isfield(freq, 'trialinfo')
-  freqOut.trialinfo = freq.trialinfo;
-end
+freqOut = copyfields(freq, freqOut,...
+  {'grad', 'elec', 'trialinfo','topo', 'topolabel', 'unmixing'});
 
 % loop over all fields that should be normalized
 for k = 1:numel(cfg.parameter)
@@ -120,7 +119,7 @@ for k = 1:numel(cfg.parameter)
     freqOut.(par) = ...
       performNormalization(freq.time, freq.(par), cfg.baseline, cfg.baselinetype);
     
-  elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'chan_chan_freq_time')
+  elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'chan_chan_freq_time') || strcmp(freq.dimord, 'subj_chan_freq_time')
     
     freqOut.(par) = zeros(size(freq.(par)));
     
@@ -143,17 +142,22 @@ end
 % Output scaffolding
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if numel(cfg.parameter)==1
+  % convert from cell-array to string
+  cfg.parameter = cfg.parameter{1};
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous freq
+ft_postamble previous   freq
 
 % rename the output variable to accomodate the savevar postamble
 freq = freqOut;
 
-ft_postamble history freq
-ft_postamble savevar freq
+ft_postamble provenance freq
+ft_postamble history    freq
+ft_postamble savevar    freq
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that actually performs the normalization on an arbitrary quantity
@@ -176,6 +180,8 @@ elseif (strcmp(baselinetype, 'relative'))
   data = data ./ meanVals;
 elseif (strcmp(baselinetype, 'relchange'))
   data = (data - meanVals) ./ meanVals;
+elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
+  data = (data - meanVals) ./ (data + meanVals);
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
 else

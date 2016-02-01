@@ -1,4 +1,4 @@
-function write_neuralynx_nse(filename, nse);
+function write_neuralynx_nse(filename, nse)
 
 % WRITE_NEURALYNX_NSE writes spike timestamps and waveforms to a NSE file
 % The input data should be scaled in uV.

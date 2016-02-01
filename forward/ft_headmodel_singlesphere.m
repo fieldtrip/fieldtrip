@@ -1,4 +1,4 @@
-function vol = ft_headmodel_singlesphere(geometry, varargin)
+function headmodel = ft_headmodel_singlesphere(mesh, varargin)
 
 % FT_HEADMODEL_SINGLESPHERE creates a volume conduction model of the
 % head by fitting a spherical model to a set of points that describe
@@ -9,7 +9,7 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 % 1977 Jul;24(4):372-81.
 %
 % Use as
-%   vol = ft_headmodel_singlesphere(pnt, ...)
+%   headmodel = ft_headmodel_singlesphere(mesh, ...)
 %
 % Optional arguments should be specified in key-value pairs and can include
 %   conductivity     = number, conductivity of the sphere
@@ -18,7 +18,7 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 
 % FIXME document the EEG case
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2013, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -40,42 +40,51 @@ function vol = ft_headmodel_singlesphere(geometry, varargin)
 
 % get the optional arguments
 conductivity = ft_getopt(varargin, 'conductivity', 1);
-unit         = ft_getopt(varargin, 'unit');
 
-if length(conductivity)~=1
+if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
+  % the geometrical units should be specified in the input mesh
+  error('the ''unit'' option is not supported any more');
+end
+
+if isnumeric(mesh) && size(mesh,2)==3
+  % assume that it is a Nx3 array with vertices
+  % convert it to a structure, this is needed to determine the units further down
+  mesh = struct('pos', mesh);
+elseif isstruct(mesh) && isfield(mesh,'bnd')
+  % take the triangulated surfaces from the input structure
+  mesh = mesh.bnd;
+end
+
+% replace pnt with pos
+mesh = fixpos(mesh);
+
+if ~isstruct(mesh) || ~isfield(mesh, 'pos')
+  error('the input mesh should be a set of points or a single triangulated surface')
+end
+
+if numel(conductivity)~=1
   error('the conductivity should be a single number')
 end
 
-if isnumeric(geometry) && size(geometry,2)==3
-  % assume that it is a Nx3 array with vertices
-  % convert it to a structure, this is needed to determine the units further down
-  geometry = struct('pnt', geometry);
-elseif isstruct(geometry) && isfield(geometry,'bnd')
-  % take the triangulated surfaces from the input structure
-  geometry = geometry.bnd;
-elseif ~(isstruct(geometry) && isfield(geometry,'pnt'))
-  error('the input geometry should be a set of points or a single triangulated surface')
+if numel(mesh)~=1
+  error('fitting a single sphere requires a single mesh')
 end
 
 % start with an empty volume conductor
-vol = [];
+headmodel = [];
 
-if ~isempty(unit)
-  vol.unit = unit;                       % use the user-specified units for the output
-else
-  geometry = ft_convert_units(geometry); % ensure that it has units, estimate them if needed
-  vol.unit = geometry.unit;              % copy the geometrical units into the volume conductor
-end
+% ensure that the mesh has units, estimate them if needed
+mesh = ft_convert_units(mesh);
 
-% get the points from the triangulated surface
-geometry = geometry.pnt;
+% copy the geometrical units into the volume conductor
+headmodel.unit = mesh.unit;
 
 % fit a single sphere to all headshape points
-[single_o, single_r] = fitsphere(geometry);
+[single_o, single_r] = fitsphere(mesh.pos);
 
-vol.r = single_r;
-vol.o = single_o;
-vol.c = conductivity;
-vol.type = 'singlesphere';
-vol      = ft_convert_units(vol); % ensure the object to have a unit
+headmodel.r    = single_r;
+headmodel.o    = single_o;
+headmodel.cond = conductivity;
+headmodel.type = 'singlesphere';
 
+fprintf('single sphere: radius = %.1f, conductivity = %f\n', headmodel.r, headmodel.cond);

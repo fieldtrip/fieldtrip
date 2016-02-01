@@ -5,13 +5,13 @@ function p = parent(tree,uid)
 % tree   - XMLTree object
 % uid    - UID of the lonely child
 % p      - UID of the parent ([] if root is the child)
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Return the uid of the parent of a node.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
 p = tree.tree{uid}.parent;

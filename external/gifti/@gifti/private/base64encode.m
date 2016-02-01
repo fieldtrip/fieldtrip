@@ -43,8 +43,6 @@ function y = base64encode(x, eol)
 %   E-mail:      pjacklam@online.no
 %   URL:         http://home.online.no/~pjacklam
 
-   % check number of input arguments
-   error(nargchk(1, 2, nargin));
 
    % make sure we have the EOL value
    if nargin < 2

@@ -10,16 +10,16 @@ function [cfg, varargout] = rollback_provenance(cfg, varargin)
 %   tmpcfg.downsample = cfg.downsample;  % copy over
 %   tmpcfg.smooth     = 'no';            % override the default
 %   mri = ft_volumedownsample(tmpcfg, mri);
-%   [cfg, mri] = rollback_provenance(tmpcfg, mri);
+%   [cfg, mri] = rollback_provenance(cfg, mri);
 %
-%   tmpcfg = [];
+%   tmpcfg           = [];
 %   tmpcfg.parameter = cfg.parameter;
 %   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 %   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 %
 % See also FT_PREAMBLE, FT_POSTAMBLE
 
-% Copyright (C) 2013, Robert Oostenveld
+% Copyright (C) 2013-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -41,27 +41,40 @@ function [cfg, varargout] = rollback_provenance(cfg, varargin)
 
 for i=1:(nargin-1)
   
+  if ~isfield(varargin{i}, 'cfg')
+    % nothing to do
+    continue
+  end
+  
   fn0 = fieldnames(cfg);
+  
+  if ~isfield(varargin{i}, 'cfg')
+    % input does not contain cfg, so no rollback to be performed
+    continue;
+  end
+  
   fn1 = fieldnames(varargin{i}.cfg);
+  
   % only work on the fields that are explicitly present in the cfg
   fn = intersect(fn0, fn1);
   
   % ignore the provenance fields themselves
   fn = setdiff(fn, { ...
-    'callinfo'
+    'trackconfig'
     'checkconfig'
     'checksize'
-    'debug'
-    'showcallinfo'
-    'trackcallinfo'
-    'trackconfig'
+    'trackusage'
     'trackdatainfo'
-    'trackparaminfo'
+    'trackcallinfo'
+    'showcallinfo'
+    'callinfo'
     'version'
+    'warning'
+    'debug'
+    'previous'
     });
   
   for j=1:length(fn)
-    fprintf('updating cfg.%s\n', fn{j});
     cfg.(fn{j}) = varargin{i}.cfg.(fn{j});
   end % for all fields that overlap
   

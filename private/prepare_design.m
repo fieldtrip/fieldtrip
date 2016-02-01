@@ -67,7 +67,7 @@ function [cfg] = prepare_design(cfg)
 if any(strcmp(cfg.statistic,{'indepsamplesT','indepsamplesregrT','indepsamplesZcoh','indepsamplesF'}))
     designtype = 'between';
 end;
-if any(strcmp(cfg.statistic,{'depsamplesregrT','depsamplesT','actvsblT','depsamplesF'}))
+if any(strcmp(cfg.statistic,{'depsamplesregrT','depsamplesT','actvsblT','depsamplesFmultivariate'}))
     designtype = 'within';
 end;
 if ~(exist('designtype')==1)

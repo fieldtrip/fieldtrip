@@ -17,9 +17,13 @@ function [res] = mne_file_name(dir,name)
 me='MNE:mne_file_name';
 
 if ~ispref('MNE','MNE_ROOT')
-    error(me,'MNE_ROOT not defined');
+    mne_root = getenv('MNE_ROOT');
+    if isempty(mne_root)
+        error(me,'MNE_ROOT not defined');
+    end
+else
+    mne_root=getpref('MNE','MNE_ROOT');
 end
-mne_root=getpref('MNE','MNE_ROOT');
 
 if nargin == 2
     res = sprintf('%s/%s/%s',mne_root,dir,name);

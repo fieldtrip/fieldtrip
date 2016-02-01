@@ -1,4 +1,4 @@
-function y = get(x, key, inc)
+function varargout = get(x, key, inc)
 
 % GET Return the value of a field in a config object.
 
@@ -28,11 +28,15 @@ if nargin<3
   inc = true;
 end
 
-if isfield(x.value, key)
-  y = x.value.(key);
-  if inc
-    increment(x.reference.(key));
+varargout = cell(1,numel(x));
+for i=1:numel(x)
+  if isfield(x(i).value, key)
+    varargout{i} = x(i).value.(key);
+    if inc
+      increment(x(i).reference.(key));
+    end
+  else
+    error('Reference to non-existent field ''%s''.', key);
   end
-else
-  error(sprintf('Reference to non-existent field ''%s''.', key));
 end
+

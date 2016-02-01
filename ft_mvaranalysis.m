@@ -56,8 +56,7 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 %   cfg.toi       = [t1 t2 ... tx] the time points at which the windows are
 %                    centered
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -96,11 +95,16 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
@@ -156,10 +160,13 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
   end
   
   if ~ok
-    error('time axes of all trials should be identical');
+    error('the number of time points in all trials should be identical');
   else
     cfg.toi       = mean(data.time{1}([1 end]))       + 0.5/data.fsample;
     cfg.t_ftimwin = data.time{1}(end)-data.time{1}(1) + 1/data.fsample;
+    
+    % also replace all time axes with the first one:
+    data.time(:) = data.time(1);
   end
   
 elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
@@ -234,11 +241,14 @@ else
 end
 ntap = size(tap,1);
 
-%---preprocess data if necessary
+%---preprocess data if necessary -> changed 20150224, JM does not think
+%this step is necessary: it creates problems downstream if the time axes of
+%the trials are different
 %---cut off the uninteresting data segments
-tmpcfg        = [];
-tmpcfg.toilim = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
-data          = ft_redefinetrial(tmpcfg, data);
+%tmpcfg        = [];
+%tmpcfg.toilim = cfg.toi([1 end]) + cfg.t_ftimwin.*[-0.5 0.5];
+%data          = ft_redefinetrial(tmpcfg, data);
+ntrl          = length(data.trial);
 
 %---demean
 if strcmp(cfg.demean, 'yes'),
@@ -314,11 +324,13 @@ end
 ft_progress('init', cfg.feedback, 'computing AR-model');
 for j = 1:ntoi
   ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
+  begsample     = nearest(timeaxis, cfg.toi(j)-cfg.t_ftimwin/2);
+  endsample     = begsample+tfwin-1;
   sample        = nearest(timeaxis, cfg.toi(j));
   cfg.toi(j)    = timeaxis(sample);
   
   tmpcfg        = [];
-  tmpcfg.toilim = [timeaxis(sample-floor(tfwin/2)) timeaxis(sample+ceil(tfwin/2)-1)];
+  tmpcfg.toilim = timeaxis([begsample endsample]);
   tmpcfg.feedback = 'no';
   tmpcfg.minlength= 'maxperlen';
   tmpdata       = ft_redefinetrial(tmpcfg, data);
@@ -445,10 +457,10 @@ mvardata.fsampleorig = data.fsample;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history mvardata
-ft_postamble savevar mvardata
+ft_postamble previous   data
+ft_postamble provenance mvardata
+ft_postamble history    mvardata
+ft_postamble savevar    mvardata
 
 %----------------------------------------------------
 %subfunction to concatenate data with nans in between
@@ -480,6 +492,6 @@ end
 %------------------------------------------------------
 %---subfunction to ensure that the first two input arguments are of double
 % precision this prevents an instability (bug) in the computation of the
-% tapers for Matlab 6.5 and 7.0
+% tapers for MATLAB 6.5 and 7.0
 function [tap] = double_dpss(a, b, varargin)
 tap = dpss(double(a), double(b), varargin{:});

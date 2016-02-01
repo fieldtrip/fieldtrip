@@ -19,7 +19,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   neighbours = ft_prepare_neighbours(cfg, data)
 %
 % The configuration can contain
-%   cfg.method        = 'distance', 'triangulation' or 'template' (default = 'distance')
+%   cfg.method        = 'distance', 'triangulation' or 'template' 
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance')
 %   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
@@ -69,10 +69,15 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
+ft_preamble provenance data
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'method'});
@@ -82,7 +87,11 @@ cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 
 hasdata = nargin>1;
-if hasdata, data = ft_checkdata(data); end
+
+if hasdata
+  % check if the input data is valid for this function
+  data = ft_checkdata(data);
+end
 
 if strcmp(cfg.method, 'template')
   neighbours = [];
@@ -164,7 +173,7 @@ else
     case 'distance'
       % use a smart default for the distance
       if ~isfield(cfg, 'neighbourdist')
-        sens = ft_checkdata(sens, 'hasunits', 'yes');
+        sens = ft_checkdata(sens, 'hasunit', 'yes');
         if isfield(sens, 'unit') && strcmp(sens.unit, 'm')
           cfg.neighbourdist = 0.04;
         elseif isfield(sens, 'unit') && strcmp(sens.unit, 'dm')
@@ -256,17 +265,16 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-if hasdata
-  ft_postamble previous data
-end
-ft_postamble history neighbours
+ft_postamble previous   data
+ft_postamble provenance neighbours
+ft_postamble history    neighbours
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that compute the neighbourhood geometry from the
 % gradiometer/electrode positions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [neighbours]=compneighbstructfromgradelec(chanpos, label, neighbourdist)
+function [neighbours] = compneighbstructfromgradelec(chanpos, label, neighbourdist)
 
 nsensors = length(label);
 

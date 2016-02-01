@@ -1,5 +1,8 @@
 function test_bug682
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug682
 % TEST channelposition ft_datatype_sens yokogawa2grad ft_prepare_layout
 

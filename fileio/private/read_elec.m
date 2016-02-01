@@ -5,7 +5,7 @@ function [el, lab] = read_elec(fn);
 %
 % [el, lab] = read_elec(filename)
 %
-% where el = [dhk, la, mu]
+% where el = [tri, la, mu]
 % and lab contains the electrode labels (if present)
 %
 % See also READ_TRI, TRANSFER_ELEC

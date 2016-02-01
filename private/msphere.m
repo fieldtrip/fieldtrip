@@ -14,7 +14,7 @@ function [pnt, tri] = msphere(N)
 % 
 % The code of this function is in the public domain and originates 
 % from the sci.math newsgroup. The full news message can be found
-% below. This Matlab implementation was made by Robert Oostenveld.
+% below. This MATLAB implementation was made by Robert Oostenveld.
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -92,7 +92,7 @@ while (1)
       phi(end+1) = newphi;
       th(end+1)  = (j/Q)*2*pi;
       % in case of even number of contours
-      if mod(M,2) & k>(M/2)
+      if mod(M,2) && k>(M/2)
         th(end) = th(end) + pi/Q;
       end
     end
@@ -115,7 +115,7 @@ while (1)
 end
 
 % take the vertex packing that most closely matches the requirement
-[m, i] = min(abs(storelen-N));
+[dum, i] = min(abs(storelen-N));
 th  = storeM(i).th;
 phi = storeM(i).phi;
 

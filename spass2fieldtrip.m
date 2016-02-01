@@ -42,8 +42,8 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble callinfo
+ft_preamble init
+ft_preamble provenance
 
 fsample_ana = ft_getopt(varargin, 'fsample_ana', 1000); 
 fsample_swa = ft_getopt(varargin, 'fsample_swa', 32000); 
@@ -89,7 +89,7 @@ for i=1:size(ana.data,1)
   lfp.label{i,1} = sprintf('chan%d', i);
 end
 
-% the data is trial based, try to estimate teh time between subsequent
+% the data is trial based, try to estimate the time between subsequent
 % trials, or better: the time between subsequent stimuli
 isi = 10^ceil(log10(max(nsamples)+1));
 
@@ -153,5 +153,5 @@ lfp.hdr.FirstTimeStamp = 0;
 lfp.hdr.TimeStampPerSample = fsample_swa./fsample_ana;
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
+ft_postamble provenance lfp spike
 ft_postamble history lfp spike

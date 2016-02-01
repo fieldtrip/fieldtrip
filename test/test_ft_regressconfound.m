@@ -1,5 +1,8 @@
 function test_ft_regressconfound
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_regressconfound
 % TEST ft_regressconfound
 
@@ -41,6 +44,7 @@ timelock.label = {'1' '2'};
 timelock.time  = 1:5;
 timelock.dimord = 'rpt_chan_time';
 timelock.trial = randn(20,2,5);
+timelock.avg = randn(2,5);
 
 cfg = [];
 cfg.confound = randn(20,3);

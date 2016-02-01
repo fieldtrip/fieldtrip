@@ -1,9 +1,11 @@
 function host = gethostname()
 
-% HOSTNAME
+% HOSTNAME returns the hostname of this computer
 %
 % Use as
 %   str = hostname;
+%
+% See also GETUSERNAME, GETADDRESS
 
 % Copyright (C) 2011, Eelke Spaak
 %

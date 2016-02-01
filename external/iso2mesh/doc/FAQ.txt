@@ -12,8 +12,8 @@ Frequently asked questions about iso2mesh
 
           4. [5]iso2mesh failed when writing files to disk
 
-          5. [6]When displaying the surface produced by iso2mesh with
-          OpenGL, there are lot of holes, how to fix this?
+          5. [6]When displaying a surface produced by iso2mesh, there are
+          many holes, how to fix this?
 
           6. [7]Subroutine meshresample returns an empty mesh, why?
 
@@ -29,13 +29,16 @@ Frequently asked questions about iso2mesh
    This is the most frequently encountered problem using this toolbox.
    There are three possible causes of this error:
 
-1. the volume you are trying to mesh contains regions having shared boundarysegments
+1. the volume you are trying to mesh contains joint regions between more than 2 materials
 
    This is most likely happening when you see the above error message. Try
    to plot your volume slice by slice, and pay attention to any voxels
-   whose neighbors have more than 2 different values. If you do see these
-   type of voxels (junctions), unfortunately, iso2mesh can not handle this
-   situation at this point. Here are two possible temporary work-arounds:
+   whose neighbors have more than 2 different values. If this is the case,
+   you can only use this type of input with vol2mesh/v2m with 'cgalmesh'
+   option as the "method" parameter. If you use either "simplify" or
+   "cgalsurf" (default) options, iso2mesh will fail. If for some reason
+   you have to use these options, here are two possible temporary
+   work-arounds:
     1. if there are not many junction voxels, you may want to manually
        edit your image and disconnect the regions that share the same
        boundary and make sure all the sub-regions are either completely
@@ -112,7 +115,7 @@ Frequently asked questions about iso2mesh
    temporary folder, or set your session id, you can find more info at
    [12]Advanced page.
 
-5. When displaying the surface produced by iso2mesh with OpenGL, there are lot of holes, how to fix this?
+5. When displaying a surface produced by iso2mesh, there are many holes, howto fix this?
 
    The node orders in the output surface mesh are random, some are
    oriented clockwise, some are counter-clockwise. This will make OpenGL,
@@ -202,18 +205,21 @@ Frequently asked questions about iso2mesh
 
 9. How to mesh a domain containing multiple isolated objects ?
 
-   A couple of users had reported that iso2mesh failed to return all
-   inclusions in a 3D image when using the 'cgalsurf' and 'cgalmesh'
-   options. The 'simplify' option did work but it occasionally raised the
-   [16]intersecting-surface error and aborted the meshing process.
+   This is a known issue with the CGAL [16]surface mesher and [17]3D
+   mesher. A bug report has been filed [18]here, but it was not known if
+   any fix has been applied upstream.
 
-   This issue was found to be related to the methods in CGAL to populate
-   the initial mesh. It does not reliably cover all inclusions for a
-   general input. A further investigation is needed to fix the problem in
-   the CGAL code.
+   For v2m/v2s with a 'cgalmesh' option, a simple work-around is to remove
+   zero-voxels by adding 1 to the 3D image. Then cgalmesher should be able
+   to recover all inclusions, along with the background. You can then
+   remove the background by checking the domain ID. For example:
 
-   If the target domain is a binary image, the following command is a
-   work-around:
+  [no,el]=v2m(uint8(img+1), [], opt, maxvol, 'cgalmesh');
+  el=el(find(el(:,5)>1),:);
+  [no,newel]=removeisolatednode(no(:,1:3),el(:,1:4));
+  newel(:,5)=el(:,5)-1;
+
+   If the target domain is a binary image, there is another work-around:
 function [node,elem]=meshisolatedobj(img,opt,maxvol)
 %
 % Usage:
@@ -252,7 +258,7 @@ References
    3. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#After_mesh_generation_the_surface_plot_looks_messed_up_what_was_wrong
    4. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#Matlab_complains_about_imread_imclose_or_imfill_missing
    5. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#iso2mesh_failed_when_writing_files_to_disk
-   6. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#When_displaying_the_surface_produced_by_iso2mesh_with_OpenGL_there_are_lot_of_holes_how_to_fix_this
+   6. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#When_displaying_a_surface_produced_by_iso2mesh_there_are_many_holes_how_to_fix_this
    7. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#Subroutine_meshresample_returns_an_empty_mesh_why
    8. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#Which_meshing_option_should_I_choose
    9. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#How_do_I_control_mesh_density_in_iso2mesh
@@ -262,4 +268,6 @@ References
   13. http://iso2mesh.sourceforge.net/upload/head_mesh.jpg
   14. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/Workflow
   15. http://iso2mesh.sf.net/upload/iso2mesh_a_one_liner_mesh_generator.pdf
-  16. http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Doc/FAQ#I_am_getting_a_Two_subfaces_are_found_intersecting_each_other_error_what_should_I_do
+  16. http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Surface_mesher/Chapter_main.html
+  17. http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Mesh_3/Chapter_main.html
+  18. http://cgal-discuss.949826.n4.nabble.com/missing-objects-when-meshing-a-3D-image-with-multiple-disconnected-inclusions-td3349283.html

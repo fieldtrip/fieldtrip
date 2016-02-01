@@ -40,8 +40,14 @@ fid = fopen(filename, 'rb', 'ieee-le');
 % determine the length of the file
 fseek(fid, 0, 'eof');
 headersize = 16384;
-recordsize = 112;
-NRecords   = floor((ftell(fid) - headersize)/recordsize);
+if isfield(hdr, 'RecordSize')
+  recordsize = hdr.RecordSize;
+else
+  % this is the default, resulting in 32 samples per spike snippet
+  recordsize = 112;
+end
+NSamples = (recordsize-48)/2;
+NRecords = floor((ftell(fid) - headersize)/recordsize);
 
 if NRecords>0
   if (ispc), fclose(fid); end
@@ -55,7 +61,7 @@ else
 end
 
 if begrecord==0 && endrecord==0
-  % only read the header  
+  % only read the header
 elseif begrecord<1
   error('cannot read before the first record');
 elseif begrecord>NRecords
@@ -67,14 +73,14 @@ end
 if begrecord>=1 && endrecord>=begrecord
   % rewind to the first record to be read
   fseek(fid, headersize + (begrecord-1)*recordsize, 'bof');
-
+  
   numrecord    = (endrecord-begrecord+1);
   TimeStamp    = zeros(1,numrecord,'uint64');
   ScNumber     = zeros(1,numrecord);
   CellNumber   = zeros(1,numrecord);
   Param        = zeros(8,numrecord);
-  Samp         = zeros(1,32,numrecord);
-
+  Samp         = zeros(1,NSamples,numrecord);
+  
   k = 1;
   while (begrecord+k-1)<=endrecord
     % read a single electrode record
@@ -82,10 +88,10 @@ if begrecord>=1 && endrecord>=begrecord
     ScNumber(k)    = fread(fid,  1, 'int32');
     CellNumber(k)  = fread(fid,  1, 'int32');
     Param(:,k)     = fread(fid,  8, 'int32');
-    Samp(1,:,k)      = fread(fid, 32, 'int16');
+    Samp(1,:,k)    = fread(fid, NSamples, 'int16');
     k = k + 1;
   end
-
+  
   nse.TimeStamp   = TimeStamp;
   nse.ScNumber    = ScNumber;
   nse.CellNumber  = CellNumber;

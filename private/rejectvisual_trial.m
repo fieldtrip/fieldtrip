@@ -1,14 +1,20 @@
-function [chansel, trlsel, cfg] = rejectvisual_trial(cfg, data);
+function [chansel, trlsel, cfg] = rejectvisual_trial(cfg, data)
 
 % SUBFUNCTION for ft_rejectvisual
 
-% determine the initial selection of trials and channels
+% determine the initial selection of trials
+ntrl = length(data.trial);
+if isequal(cfg.trials, 'all') % support specification like 'all'
+  cfg.trials = 1:ntrl;
+end
+trlsel  = false(1,ntrl);
+trlsel(cfg.trials) = true;
+
+% determine the initial selection of channels
 nchan = length(data.label);
-ntrl  = length(data.trial);
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-trlsel  = true(1,ntrl);
+cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
 chansel = false(1,nchan);
-chansel(match_str(data.label, cfg.channel)) = 1;
+chansel(match_str(data.label, cfg.channel)) = true;
 
 % compute the sampling frequency from the first two timepoints
 fsample = 1/mean(diff(data.time{1}));
@@ -246,14 +252,14 @@ info.quit = 1;
 guidata(h,info);
 uiresume;
 
-function str = description_channel(info);
+function str = description_channel(info)
 if info.chansel(info.chanlop)
   str = sprintf('channel %s marked as GOOD\n', info.data.label{info.chanlop});
 else
   str = sprintf('channel %s marked as BAD\n', info.data.label{info.chanlop});
 end
 
-function str = description_trial(info);
+function str = description_trial(info)
 if info.trlsel(info.trlop)
   str = sprintf('trial %d marked as GOOD\n', info.trlop);
 else

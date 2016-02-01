@@ -15,20 +15,22 @@ function [stat, cfg] = ft_statistics_stats(cfg, dat, design)
 % FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively and with
 % cfg.method = 'montecarlo'
 %
-%  This function uses the Matlab statistics toolbox to perform various
+%  This function uses the MATLAB statistics toolbox to perform various
 %  statistical tests on timelock, frequency or source data. Supported
 %  configuration options are
 %   cfg.alpha     = number, critical value for rejecting the null-hypothesis (default = 0.05)
 %   cfg.tail      = number, -1, 1 or 0 (default = 0)
 %   cfg.feedback  = string, 'gui', 'text', 'textbar' or 'no' (default = 'textbar')
 %   cfg.method    = 'stats'
-%   cfg.statistic = 'ttest'        test against a mean of zero
+%   cfg.statistic = 'ttest'          test against a mean of zero
 %                   'ttest2'         compare the mean in two conditions
 %                   'paired-ttest'
 %                   'anova1'
 %                   'kruskalwallis'
+%                   'signtest'
+%                   'signrank'
 %
-% See also TTEST, TTEST2, KRUSKALWALLIS
+% See also TTEST, TTEST2, KRUSKALWALLIS, SIGNTEST, SIGNRANK
 
 % Undocumented local options:
 % cfg.avgovertime
@@ -82,6 +84,7 @@ case {'ttest', 'ttest_samples_vs_const'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
   ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d\n', Nrepl);
@@ -89,7 +92,8 @@ case {'ttest', 'ttest_samples_vs_const'}
   ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
-    [h(chan), p(chan), ci(chan, :)] = ttest(dat(chan, :), cfg.constantvalue, cfg.alpha, cfg.tail);
+    [h(chan), p(chan), ci(chan, :), stats] = ttest(dat(chan, :), cfg.constantvalue, cfg.alpha, cfg.tail);
+    s(chan) = stats.tstat;
   end
   ft_progress('close');
 
@@ -114,6 +118,7 @@ case {'ttest2', 'ttest_2samples_by_timepoint'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
   ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
@@ -150,6 +155,7 @@ case {'paired-ttest'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
   ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
@@ -157,7 +163,8 @@ case {'paired-ttest'}
   ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
-    [h(chan), p(chan), ci(chan, :)] = ttest(dat(chan, selA)-dat(chan, selB), 0, cfg.alpha, cfg.tail);
+    [h(chan), p(chan), ci(chan, :), stats] = ttest(dat(chan, selA)-dat(chan, selB), 0, cfg.alpha, cfg.tail);
+    s(chan) = stats.tstat;
   end
   ft_progress('close');
 
@@ -173,7 +180,6 @@ case {'anova1'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
-  ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d\n', Nrepl);
   fprintf('number of levels %d\n', Ncond);
@@ -197,7 +203,6 @@ case {'kruskalwallis'}
 
   h = zeros(Nobs, 1);
   p = zeros(Nobs, 1);
-  ci = zeros(Nobs, 2);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d\n', Nrepl);
   fprintf('number of levels %d\n', Ncond);
@@ -238,10 +243,92 @@ case {'kruskalwallis'}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case 'ttest_window_avg_vs_const'
-  % this used to be a feature of the timelockanaolysis as it was
+  % this used to be a feature of the timelockanalysis as it was
   % originally implemented by Jens Schwartzbach, but it has been
-  % superseded by the use of prepare_timefreq_data for data selection
+  % superseded by the use of ft_selectdata for data selection
   error(sprintf('%s is not supported any more, use cfg.avgovertime=''yes'' instead', cfg.statistic));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+case {'signtest'}
+  % set the defaults
+  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
+  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  
+  switch cfg.tail
+    case 0
+      cfg.tail = 'both';
+    case -1
+      cfg.tail = 'left';
+    case 1
+      cfg.tail = 'right';
+  end;
+  
+  if size(design,1)~=1
+    error('design matrix should only contain one factor (i.e. one row)');
+  end
+  Ncond = length(unique(design));
+  if Ncond~=2
+    error(sprintf('%s method is only supported for two condition', cfg.statistic));
+  end
+  Nobs  = size(dat, 1);
+  selA = find(design==design(1));
+  selB = find(design~=design(1));
+  Nrepl = [length(selA), length(selB)];
+
+  h = zeros(Nobs, 1);
+  p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
+  fprintf('number of observations %d\n', Nobs);
+  fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
+
+  ft_progress('init', cfg.feedback);
+  for chan = 1:Nobs
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    [p(chan), h(chan), stats] = signtest(dat(chan, selA), dat(chan, selB),'alpha', cfg.alpha,'tail', cfg.tail);
+    s(chan) = stats.sign;
+  end
+  ft_progress('close');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+case {'signrank'}
+  % set the defaults
+  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
+  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  
+  switch cfg.tail
+    case 0
+      cfg.tail = 'both';
+    case -1
+      cfg.tail = 'left';
+    case 1
+      cfg.tail = 'right';
+  end;
+  
+  if size(design,1)~=1
+    error('design matrix should only contain one factor (i.e. one row)');
+  end
+  Ncond = length(unique(design));
+  if Ncond~=2
+    error(sprintf('%s method is only supported for two condition', cfg.statistic));
+  end
+  Nobs  = size(dat, 1);
+  selA = find(design==design(1));
+  selB = find(design~=design(1));
+  Nrepl = [length(selA), length(selB)];
+
+  h = zeros(Nobs, 1);
+  p = zeros(Nobs, 1);
+  s = zeros(Nobs, 1);
+  fprintf('number of observations %d\n', Nobs);
+  fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
+
+  ft_progress('init', cfg.feedback);
+  for chan = 1:Nobs
+    ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
+    [p(chan), h(chan), stats] = signrank(dat(chan, selA), dat(chan, selB),'alpha', cfg.alpha,'tail', cfg.tail);
+    s(chan) = stats.signedrank;
+  end
+  ft_progress('close');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 otherwise

@@ -1,0 +1,31 @@
+May 1, 2009, version 1.1.2
+
+    * added more examples to user guide and to spqr.m
+    * removed "static" declaration of functions in Source/* files.  This
+	corrects a problem with the Mac OS compiler.
+
+Mar 24, 2009, version 1.1.1
+
+    * #include <cstring> added to SPQR/Include/spqr.hpp, required
+        by gcc 4.3.2 (but not needed by gcc 4.1.0 or other compilers...).
+
+Sept 20, 2008, version 1.1.0
+
+    * No bugs fixed since no known bugs were present in v1.0.0
+    * Added new ordering options, in particular the default ordering:
+        - COLAMD if m <= 2*n after removing singletons; otherwise:
+          AMD then try METIS if installed and if AMD gives a high fill-in
+          and flop count.
+    * User Guide, and two draft journal articles (to be submitted to ACM TOMS)
+           in the SPQR/Doc directory.
+    * Added control of the # of threads used by TBB (it was set
+	to the TBB default in version 1.0.0).
+    * Additional demos.
+    * Added -DTIMING option, and additional components to info output
+    * Added spqr_singletons mexFunction
+    * Modified example in comments of spqr_assemble.cpp to coincide with article
+
+Aug 21, 2008
+
+    * version 1.0.0
+

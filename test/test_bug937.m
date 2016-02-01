@@ -1,5 +1,8 @@
 function test_bug937
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug937
 % TEST ft_prepare_mesh ft_voltype ft_plot_mesh
 
@@ -30,7 +33,6 @@ assert(ft_voltype(svolcs,'concentricspheres'))
 % To generate a volume of 3 concentric spheres (works if number of voxels is odd)
 % use this code:
 %
-% addpath /home/common/matlab/fieldtrip_private/
 % res = 1; % in mm
 % for i=3:-1:1
 %   tmp2 = zeros(151,151,151);
@@ -105,6 +107,7 @@ ft_plot_mesh(bnd(2),'edgecolor','g','facecolor','none')
 ft_plot_mesh(bnd(3),'edgecolor','r','facecolor','none')
 
 % set of points
+clear bnd
 for i=1:3
   cfg = [];
   cfg.headshape   = svol.bnd(i).pnt;

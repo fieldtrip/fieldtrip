@@ -21,13 +21,17 @@ node=[];
 elem=[];
 fid=fopen(fname,'rt');
 line=fgetl(fid);
+dim=sscanf(line,'OFF %d %d %d');
 line=nonemptyline(fid);
-dim=sscanf(line,'%d',3);
-line=nonemptyline(fid);
+if(size(dim,1)~=3)
+    dim=sscanf(line,'%d',3);
+    line=nonemptyline(fid);
+end
 nodalcount=3;
 if(~isempty(line))
     [val nodalcount]=sscanf(line,'%f',inf);
 else
+    fclose(fid);
     return;
 end
 node=fscanf(fid,'%f',[nodalcount,dim(1)-1])';
@@ -38,6 +42,7 @@ facetcount=4;
 if(~isempty(line))
     [val facetcount]=sscanf(line,'%f',inf);
 else
+    fclose(fid);
     return;
 end
 elem=fscanf(fid,'%f',[facetcount,dim(2)-1])';
@@ -58,4 +63,8 @@ str='';
 if(fid==0) error('invalid file'); end
 while((isempty(regexp(str,'\S')) || ~isempty(regexp(str,'^#')))  && ~feof(fid))
     str=fgetl(fid);
+    if(~ischar(str))
+        str='';
+        return;
+    end
 end

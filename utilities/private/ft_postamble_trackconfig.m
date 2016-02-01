@@ -1,7 +1,14 @@
-% FT_POSTAMBLE_TRACKCONFIG is a helper script that requests ft_checkconfig
-% to switch off the (optional) configuration tracking and to report on the
-% used and unused options and/or clean up the output cfg structure. This
-% should be used together with FT_PREAMBLE_TRACKCONFIG.
+% FT_POSTAMBLE_TRACKCONFIG is a helper script that calls ft_checkconfig to switch the
+% (optional) configuration tracking off and to report on the used and unused options
+% and/or clean up the output cfg structure. This should be used together with
+% FT_PREAMBLE_TRACKCONFIG.
+%
+% Use as
+%   ft_preamble trackconfig
+%   ... regular code goes here ...
+%   ft_postamble trackconfig
+%
+% See also FT_PREAMBLE_TRACKCONFIG
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
@@ -34,6 +41,12 @@ if isfield(cfg, 'outputfile')
 end
 if isfield(cfg, 'outputlock')
   cfg.outputlock;
+end
+if isfield(cfg, 'trackcallinfo')
+  % this one should be touched, otherwise it will be removed and when it is
+  % specified as 'no', it won't be correctly caught in
+  % ft_postamble_provenance (jansch: 20130810)
+  cfg.trackcallinfo;
 end
 
 % get the output cfg

@@ -21,10 +21,12 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                   as-is (see below for details)
 %   cfg.rotate      number, rotation around the z-axis in degrees (default = [], which means automatic)
 %   cfg.projection  string, 2D projection method can be 'stereographic', 'orthographic', 'polar', 'gnomic' or 'inverse' (default = 'polar')
-%   cfg.elec        structure with electrode positions, or
-%   cfg.elecfile    filename containing electrode positions
+%   cfg.elec        structure with electrode definition, or
+%   cfg.elecfile    filename containing electrode definition
 %   cfg.grad        structure with gradiometer definition, or
 %   cfg.gradfile    filename containing gradiometer definition
+%   cfg.opto        structure with optode structure definition, or
+%   cfg.optofile    filename containing optode structure definition
 %   cfg.output      filename to which the layout will be written (default = [])
 %   cfg.montage     'no' or a montage structure (default = 'no')
 %   cfg.image       filename, use an image to construct a layout (e.g. usefull for ECoG grids)
@@ -41,13 +43,15 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
 %   data.grad     structure with gradiometer definition
+%   data.opto     structure with optode structure definition
 %
 % Alternatively you can specify the following layouts which will be
 % generated for all channels present in the data. Note that these layouts
 % are suitable for multiplotting, but not for topoplotting.
-%   cfg.layout = 'ordered'  will give you a NxN ordered layout
-%   cfg.layout = 'vertical' will give you a Nx1 ordered layout
-%   cfg.layout = 'butterfly'  will give you a layout with all channels on top of each other
+%   cfg.layout = 'ordered'   will give you a NxN ordered layout
+%   cfg.layout = 'vertical'  will give you a Nx1 ordered layout
+%   cfg.layout = 'butterfly' will give you a layout with all channels on top of each other
+%   cfg.layout = 'circular'  will distribute the channels on a circle
 %
 % The output layout structure will contain the following fields
 %   layout.label   = Nx1 cell-array with channel labels
@@ -57,14 +61,12 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
 %   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
-% See also FT_LAYOUTPLOT, FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR
-
-% TODO switch to using planarchannelset function
+% See also FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_PLOT_LAY
 
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
 
-% Copyright (C) 2007-2009, Robert Oostenveld
+% Copyright (C) 2007-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -88,8 +90,13 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
@@ -105,25 +112,24 @@ end
 % set default configuration options
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~isfield(cfg, 'rotate'),     cfg.rotate = [];                end  % [] => rotation is determined based on the type of sensors
-if ~isfield(cfg, 'style'),      cfg.style = '2d';               end
-if ~isfield(cfg, 'projection'), cfg.projection = 'polar';       end
-if ~isfield(cfg, 'layout'),     cfg.layout = [];                end
-if ~isfield(cfg, 'grad'),       cfg.grad = [];                  end
-if ~isfield(cfg, 'elec'),       cfg.elec = [];                  end
-if ~isfield(cfg, 'gradfile'),   cfg.gradfile = [];              end
-if ~isfield(cfg, 'elecfile'),   cfg.elecfile = [];              end
-if ~isfield(cfg, 'output'),     cfg.output = [];                end
-if ~isfield(cfg, 'feedback'),   cfg.feedback = 'no';            end
-if ~isfield(cfg, 'montage'),    cfg.montage = 'no';             end
-if ~isfield(cfg, 'image'),      cfg.image = [];                 end
-if ~isfield(cfg, 'bw'),         cfg.bw = 0;                     end
-if ~isfield(cfg, 'channel'),    cfg.channel = 'all';            end
-if ~isfield(cfg, 'skipscale'),  cfg.skipscale = 'no';           end
-if ~isfield(cfg, 'skipcomnt'),  cfg.skipcomnt = 'no';           end
-if ~isfield(cfg, 'overlap'),    cfg.overlap = 'shift';          end
-
-cfg = ft_checkconfig(cfg);
+cfg.rotate     = ft_getopt(cfg, 'rotate',     []); % [] => rotation is determined based on the type of sensors
+cfg.style      = ft_getopt(cfg, 'style',      '2d');
+cfg.projection = ft_getopt(cfg, 'projection', 'polar');
+cfg.layout     = ft_getopt(cfg, 'layout',     []);
+cfg.grad       = ft_getopt(cfg, 'grad',       []);
+cfg.elec       = ft_getopt(cfg, 'elec',       []);
+cfg.gradfile   = ft_getopt(cfg, 'gradfile',   []);
+cfg.elecfile   = ft_getopt(cfg, 'elecfile',   []);
+cfg.output     = ft_getopt(cfg, 'output',     []);
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'no');
+cfg.montage    = ft_getopt(cfg, 'montage',    'no');
+cfg.image      = ft_getopt(cfg, 'image',      []);
+cfg.mesh       = ft_getopt(cfg, 'mesh',       []); % experimental, should only work with meshes defined in 2D
+cfg.bw         = ft_getopt(cfg, 'bw',         0);
+cfg.channel    = ft_getopt(cfg, 'channel',    'all');
+cfg.skipscale  = ft_getopt(cfg, 'skipscale',  'no');
+cfg.skipcomnt  = ft_getopt(cfg, 'skipcomnt',  'no');
+cfg.overlap    = ft_getopt(cfg, 'overlap',    'shift');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to generate the layout structure
@@ -160,16 +166,55 @@ elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout,
   mindist = min(d(:));
   layout.width  = ones(nchans,1) * mindist * 0.8;
   layout.height = ones(nchans,1) * mindist * 0.6;
+
+elseif isequal(cfg.layout, 'circular')
+  rho = ft_getopt(cfg, 'rho', []);
   
+  if nargin>1 && ~isempty(data)
+    % look at the data to determine the overlapping channels
+    cfg.channel  = ft_channelselection(cfg.channel, data.label);
+    chanindx     = match_str(data.label, cfg.channel);
+    nchan        = length(data.label(chanindx));
+    layout.label = data.label(chanindx);
+  else
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
+    layout.label = cfg.channel;
+  end
+  
+  if isempty(rho)
+    % do an equally spaced layout, starting at 12 o'clock, going clockwise
+    rho = linspace(0,1,nchan+1);
+    rho = 2.*pi.*rho(1:end-1);
+  else
+    if numel(rho) ~= nchan
+      error('the number of elements in the polar angle vector should be equal to the number of channels');
+    end
+    
+    % convert to radians
+    rho = 2.*pi.*rho./360;
+  end
+  x   = sin(rho);
+  y   = cos(rho);
+
+  layout.pos     = [x(:) y(:)];
+  layout.width   = ones(nchan,1) * 0.01;
+  layout.height  = ones(nchan,1) * 0.01;
+  layout.mask    = {};
+  layout.outline = {};
+  skipscale = true; % a scale is not desired
+  skipcomnt = true; % a comment is initially not desired, or at least requires more thought
+    
 elseif isequal(cfg.layout, 'butterfly')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
-    cfg.channel = ft_channelselection(cfg.channel, data.label);
-    chanindx    = match_str(data.label, cfg.channel);
-    nchan       = length(data.label(chanindx));
-    layout.label   = data.label(chanindx);
+    cfg.channel  = ft_channelselection(cfg.channel, data.label);
+    chanindx     = match_str(data.label, cfg.channel);
+    nchan        = length(data.label(chanindx));
+    layout.label = data.label(chanindx);
   else
-    nchan     = length(cfg.channel);
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
   layout.pos     = zeros(nchan,2);  % centered at (0,0)
@@ -184,12 +229,20 @@ elseif isequal(cfg.layout, 'vertical')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
     data = ft_checkdata(data);
-    cfg.channel = ft_channelselection(data.label, cfg.channel); % with this order order of channels stays the same
-    [dum chanindx] = match_str(cfg.channel, data.label); % order of channels according to cfg specified by user
-    nchan       = length(data.label(chanindx));
-    layout.label   = data.label(chanindx);
+    originalorder = cfg.channel;
+    cfg.channel = ft_channelselection(cfg.channel, data.label); 
+    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
+      % try to keep the order identical to that specified in the configuration
+      [sel1, sel2] = match_str(originalorder, cfg.channel);
+      % re-order them according to the cfg specified by the user
+      cfg.channel  = cfg.channel(sel2);
+    end
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
+    layout.label = cfg.channel;
   else
-    nchan     = length(cfg.channel);
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
   for i=1:(nchan+2)
@@ -206,6 +259,52 @@ elseif isequal(cfg.layout, 'vertical')
   end
   layout.mask    = {};
   layout.outline = {};
+
+elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}))
+  % it can be 2column, 3column, etcetera
+  % note that this code (in combination with the code further down) fails for 1column
+  if nargin>1 && ~isempty(data)
+    % look at the data to determine the overlapping channels
+    data = ft_checkdata(data);
+    originalorder = cfg.channel;
+    cfg.channel = ft_channelselection(cfg.channel, data.label); 
+    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
+      % try to keep the order identical to that specified in the configuration
+      [sel1, sel2] = match_str(originalorder, cfg.channel);
+      % re-order them according to the cfg specified by the user
+      cfg.channel  = cfg.channel(sel2);
+    end
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
+    layout.label = cfg.channel;
+  else
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
+    layout.label = cfg.channel;
+  end
+  
+  ncol = find(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}));
+  nrow = ceil(nchan/ncol);
+  
+  k = 0;
+  for i=1:ncol
+    for j=1:nrow
+      k = k+1;
+      if k>nchan
+        continue
+      end
+      x = i/ncol - 1/(ncol*2); 
+      y = 1-j/(nrow+1);
+      layout.pos   (k,:) = [x y];
+      layout.width (k,1) = 0.85/ncol;
+      layout.height(k,1) = 0.9 * 1/(nrow+1);
+    end
+  end
+  
+  layout.mask    = {};
+  layout.outline = {};
+  skipscale = true; % a scale is not desired
+  skipcomnt = true; % a comment is initially not desired, or at least requires more thought
   
 elseif isequal(cfg.layout, 'ordered')
   if nargin>1 && ~isempty(data)
@@ -216,7 +315,8 @@ elseif isequal(cfg.layout, 'ordered')
     nchan       = length(data.label(chanindx));
     layout.label   = data.label(chanindx);
   else
-    nchan     = length(cfg.channel);
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
   ncol = ceil(sqrt(nchan))+1;
@@ -228,7 +328,7 @@ elseif isequal(cfg.layout, 'ordered')
       if k<=nchan
         x = (j-1)/ncol;
         y = (nrow-i-1)/nrow;
-        layout.pos(k,:) = [x y];
+        layout.pos(k,:)    = [x y];
         layout.width(k,1)  = 0.8 * 1/ncol;
         layout.height(k,1) = 0.8 * 1/nrow;
       end
@@ -253,16 +353,17 @@ elseif isequal(cfg.layout, 'ordered')
 elseif ischar(cfg.layout)
   
   % layout file name specified
-  
   if isempty(strfind(cfg.layout, '.'))
     
     cfg.layout = [cfg.layout '.mat'];
     if exist(cfg.layout, 'file')
       fprintf('layout file without .mat (or .lay) extension specified, appending .mat\n');
       layout = ft_prepare_layout(cfg);
+      return;
     else
       cfg.layout = [cfg.layout(1:end-3) 'lay'];
       layout = ft_prepare_layout(cfg);
+      return;
     end
     
   elseif ft_filetype(cfg.layout, 'matlab')
@@ -286,9 +387,10 @@ elseif ischar(cfg.layout)
       fprintf('reading layout from file %s\n', cfg.layout);
       layout = readlay(cfg.layout);
     else
-      warning_once(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
+      ft_warning(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
       cfg.layout = [cfg.layout(1:end-3) 'mat'];
       layout = ft_prepare_layout(cfg);
+      return;
     end
     
   elseif ~ft_filetype(cfg.layout, 'layout')
@@ -323,32 +425,51 @@ elseif isfield(data, 'grad') && isstruct(data.grad)
   data = ft_checkdata(data);
   layout = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   
-elseif ~isempty(cfg.image) && isempty(cfg.layout)
-  fprintf('reading background image from %s\n', cfg.image);
-  [p,f,e] = fileparts(cfg.image);
-  switch e
-    case '.mat'
-      tmp = whos('-file', cfg.image);
-      load(cfg.image, tmp.name);
-      eval(['img = ',tmp.name,';']);
-    otherwise
-      img = imread(cfg.image);
+elseif isfield(data, 'opto') && isstruct(data.opto)
+  fprintf('creating layout from data.hdr.opto\n');
+  data = ft_checkdata(data);
+  layout = sens2lay(data.opto, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  
+elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
+  % deal with image file
+  if ~isempty(cfg.image)
+  
+    fprintf('reading background image from %s\n', cfg.image);
+    [p,f,e] = fileparts(cfg.image);
+    switch e
+      case '.mat'
+        tmp    = load(cfg.image);
+        fnames = fieldnames(tmp);
+        if numel(fnames)~=1
+          error('there is not just a single variable in %s', cfg.image);
+        else
+          img = tmp.(fname{1});
+        end
+      otherwise
+        img = imread(cfg.image);
+    end
+    img = flipdim(img, 1); % in combination with "axis xy"
+    
+    figure
+    bw = cfg.bw;
+    
+    if bw
+      % convert to greyscale image
+      img = mean(img, 3);
+      imagesc(img);
+      colormap gray
+    else
+      % plot as RGB image
+      image(img);
+    end
+    
+  elseif ~isempty(cfg.mesh)
+    if isfield(cfg.mesh, 'sulc')
+      ft_plot_mesh(cfg.mesh, 'edgecolor','none','vertexcolor',cfg.mesh.sulc);colormap gray;
+    else
+      ft_plot_mesh(cfg.mesh, 'edgecolor','none');
+    end
   end
-  img = flipdim(img, 1); % in combination with "axis xy"
-  
-  figure
-  bw = cfg.bw;
-  
-  if bw
-    % convert to greyscale image
-    img = mean(img, 3);
-    imagesc(img);
-    colormap gray
-  else
-    % plot as RGB image
-    image(img);
-  end
-  
   hold on
   axis equal
   axis off
@@ -387,7 +508,11 @@ elseif ~isempty(cfg.image) && isempty(cfg.layout)
           pos = pos(1:end-1,:);
           % completely redraw the figure
           cla
-          h = image(img);
+          if ~isempty(cfg.image)
+            h = image(img);
+          else
+            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+          end
           hold on
           axis equal
           axis off
@@ -446,7 +571,11 @@ elseif ~isempty(cfg.image) && isempty(cfg.layout)
           polygon{thispolygon} = polygon{thispolygon}(1:end-1,:);
           % completely redraw the figure
           cla
-          h = image(img);
+          if ~isempty(cfg.image)
+            h = image(img);
+          else
+            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+          end
           hold on
           axis equal
           axis off
@@ -541,7 +670,11 @@ elseif ~isempty(cfg.image) && isempty(cfg.layout)
           polygon{thispolygon} = polygon{thispolygon}(1:end-1,:);
           % completely redraw the figure
           cla
-          h = image(img);
+          if ~isempty(cfg.image)
+            h = image(img);
+          else
+            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+          end
           hold on
           axis equal
           axis off
@@ -613,15 +746,6 @@ else
   error('no layout detected, please specify cfg.layout')
 end
 
-% make the subset as specified in cfg.channel
-cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
-chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
-% return the layout for the subset of channels
-layout.pos    = layout.pos(chansel,:);
-layout.width  = layout.width(chansel);
-layout.height = layout.height(chansel);
-layout.label  = layout.label(chansel);
-
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
 if ~strcmp(cfg.style, '3d')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -663,6 +787,18 @@ if ~strcmp(cfg.style, '3d')
   end
 end
 
+% make the subset as specified in cfg.channel
+cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
+chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
+% return the layout for the subset of channels
+layout.pos    = layout.pos(chansel,:);
+layout.label  = layout.label(chansel);
+if ~strcmp(cfg.style, '3d')
+  % these don't exist for the 3D layout
+  layout.width  = layout.width(chansel);
+  layout.height = layout.height(chansel);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % apply the montage, i.e. combine bipolar channels into a new representation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -697,10 +833,12 @@ if ~any(strcmp('COMNT', layout.label)) && strcmpi(cfg.style, '2d') && ~skipcomnt
   layout.label{end+1}  = 'COMNT';
   layout.width(end+1)  = mean(layout.width);
   layout.height(end+1) = mean(layout.height);
-  X                 = min(layout.pos(:,1));
-  Y                 = max(layout.pos(:,2));
-  Y                 = min(layout.pos(:,2));
-  layout.pos(end+1,:)  = [X Y];
+  if ~isempty(layout.pos)
+    XY = layout.pos;
+  else
+    XY = cat(1, layout.outline{:}, layout.mask{:});
+  end
+  layout.pos(end+1,:)  = [min(XY(:,1)) min(XY(:,2))];
 elseif any(strcmp('COMNT', layout.label)) && skipcomnt
   % remove the scale entry
   sel = find(strcmp('COMNT', layout.label));
@@ -715,10 +853,12 @@ if ~any(strcmp('SCALE', layout.label)) && strcmpi(cfg.style, '2d') && ~skipscale
   layout.label{end+1}  = 'SCALE';
   layout.width(end+1)  = mean(layout.width);
   layout.height(end+1) = mean(layout.height);
-  X                 = max(layout.pos(:,1));
-  Y                 = max(layout.pos(:,2));
-  Y                 = min(layout.pos(:,2));
-  layout.pos(end+1,:)  = [X Y];
+  if ~isempty(layout.pos)
+    XY = layout.pos;
+  else
+    XY = cat(1, layout.outline{:}, layout.mask{:});
+  end
+  layout.pos(end+1,:)  = [max(XY(:,1)) min(XY(:,2))];
 elseif any(strcmp('SCALE', layout.label)) && skipscale
   % remove the scale entry
   sel = find(strcmp('SCALE', layout.label));
@@ -731,7 +871,7 @@ end
 % to plot the layout for debugging, you can use this code snippet
 if strcmp(cfg.feedback, 'yes') && strcmpi(cfg.style, '2d')
   tmpcfg = [];
-  tmpcfg.layout = lay;
+  tmpcfg.layout = layout;
   ft_layoutplot(tmpcfg);
 end
 
@@ -790,11 +930,29 @@ return % function readlay
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function layout = sens2lay(sens, rz, method, style, overlap)
 
+% ensure that the sens structure is according to the latest conventions,
+% i.e. deal with backward compatibility
+sens = ft_datatype_sens(sens);
+
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
-% this should not be necessary anymore, because the sensor description is
-% up-to-date, i.e. explicit information with respect to the channel
-% positions is present
-%sens = undobalancing(sens);
+% this not only removed the linear projections, but also ensures that the channel labels are correctly named
+if isfield(sens, 'chanposorg')
+    chanposorg = sens.chanposorg;
+else
+    chanposorg = [];
+end
+if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')            
+    sens = undobalancing(sens);
+    if size(chanposorg, 1) == numel(sens.label)
+        sens.chanpos = chanposorg;
+    end
+% In case not all the locations have NaNs it might still be useful to plot them
+% But perhaps it'd be better to have any(any
+elseif any(all(isnan(sens.chanpos)))
+    [sel1, sel2] = match_str(sens.label, sens.labelorg);
+    sens.chanpos = chanposorg(sel2, :);
+    sens.label   = sens.labelorg(sel2);
+end
 
 fprintf('creating layout for %s system\n', ft_senstype(sens));
 
@@ -811,7 +969,7 @@ if isempty(rz)
       rz = 0;
   end
 end
-sens.chanpos = warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
+sens.chanpos = ft_warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
 
 % determine the 3D channel positions
 pnt   = sens.chanpos;
@@ -833,7 +991,7 @@ else
   % them around if requested
   if size(unique(prj,'rows'),1) / size(prj,1) < 0.8
     if strcmp(overlap, 'shift')
-      warning_once('the specified sensor configuration has many overlapping channels, creating a layout by shifting them around (use a template layout for better control over the positioning)');
+      ft_warning('the specified sensor configuration has many overlapping channels, creating a layout by shifting them around (use a template layout for better control over the positioning)');
       prj = shiftxy(prj', 0.2)';
       prjForDist = prj;
     elseif strcmp(overlap, 'no')
@@ -861,11 +1019,16 @@ else
     d(:, tmpsel) = inf;
   end
   
-  % take mindist as the median of the first quartile of closest channel pairs with non-zero distance
-  mindist = min(d); % get closest neighbour for all channels
-  mindist = sort(mindist(mindist>1e-6),'ascend');
-  mindist = mindist(1:round(numel(label)/4));
-  mindist = median(mindist);
+  if any(isfinite(d(:)))
+      % take mindist as the median of the first quartile of closest channel pairs with non-zero distance
+      mindist = min(d); % get closest neighbour for all channels
+      mindist = sort(mindist(mindist>1e-6),'ascend');
+      mindist = mindist(1:round(numel(label)/4));
+      mindist = median(mindist);
+  else
+      mindist = eps; % not sure this is a good value but it's just to prevent crashes when
+                     % the EEG sensor definition is meaningless
+  end    
   
   X = prj(:,1);
   Y = prj(:,2);

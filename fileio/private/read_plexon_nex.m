@@ -121,7 +121,7 @@ for i=1:length(channel)
 
     case 6
       % Markers
-      ts = fread(fid, [1 vh.Count], 'int32=>int32');
+      buf.ts = fread(fid, [1 vh.Count], 'int32=>int32');
       for j=1:vh.NMarkers
         buf.MarkerNames{j,1} = fread(fid, [1 64], 'uint8=>char');
         for k=1:vh.Count

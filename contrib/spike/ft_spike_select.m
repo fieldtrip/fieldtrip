@@ -1,4 +1,4 @@
-function [spike] = ft_spike_psth(cfg,spike)
+function [spike] = ft_spike_select(cfg,spike)
 
 % FT_SPIKE_SELECT selects subsets of spikes, channels and trials from a
 % spike structure
@@ -22,7 +22,23 @@ function [spike] = ft_spike_psth(cfg,spike)
 % Outputs:
 %   Spike structure with selections
 
-%  Copyright (C) 2012, Martin Vinck
+% Copyright (C) 2012, Martin Vinck
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
@@ -30,7 +46,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -40,7 +56,7 @@ spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 % get the default options
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.trials       = ft_getopt(cfg, 'trials', 'all');
-cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
+cfg.latency      = ft_getopt(cfg, 'latency', 'maxperiod');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});

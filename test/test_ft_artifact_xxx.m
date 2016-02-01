@@ -1,5 +1,8 @@
 function test_ft_artifact_xxx
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_artifact_xxx
 % TEST ft_artifact_clip ft_artifact_eog ft_artifact_muscle ft_artifact_zvalue ft_artifact_ecg ft_artifact_jump ft_artifact_threshold
 
@@ -12,7 +15,7 @@ endsample = begsample + 600 - 1;
 offset = zeros(size(begsample));
 
 cfg = [];
-cfg.dataset     = '/home/common/matlab/fieldtrip/data/Subject01.ds';
+cfg.dataset     = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 cfg.continuous  = 'yes';
 cfg.trl         = [begsample(:) endsample(:) offset(:)];
 
@@ -71,14 +74,11 @@ cfg.artfctdef.jump.trlpadding = 0;
 cfg.artfctdef.jump.artpadding = 0;
 cfg.artfctdef.jump.fltpadding = 0;
 
-[cfg, artifact] = ft_artifact_ecg(cfg, data);
-[cfg, artifact] = ft_artifact_clip(cfg, data);
-[cfg, artifact] = ft_artifact_threshold(cfg, data);
-[cfg, artifact] = ft_artifact_zvalue(cfg, data);
-[cfg, artifact] = ft_artifact_eog(cfg, data);
-[cfg, artifact] = ft_artifact_muscle(cfg, data);
-[cfg, artifact] = ft_artifact_jump(cfg, data);
-
-cfg2 = cfg;
-clear cfg;
+[cfg, artifact1] = ft_artifact_ecg(cfg, data);
+[cfg, artifact2] = ft_artifact_clip(cfg, data);
+[cfg, artifact3] = ft_artifact_threshold(cfg, data);
+[cfg, artifact4] = ft_artifact_zvalue(cfg, data);
+[cfg, artifact5] = ft_artifact_eog(cfg, data);
+[cfg, artifact6] = ft_artifact_muscle(cfg, data);
+[cfg, artifact7] = ft_artifact_jump(cfg, data);
 

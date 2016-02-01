@@ -1,5 +1,8 @@
 function test_ft_componentanalysis(datainfo, writeflag, version)
 
+% MEM 2gb
+% WALLTIME 00:10:00
+
 % TEST test_ft_componentanalysis
 % ft_componentanalysis ref_datasets
 
@@ -18,7 +21,7 @@ end
 
 for k = 1:numel(datainfo)
   datanew = componentanalysis(datainfo(k), writeflag, version);
-
+  
   fname = fullfile(datainfo(k).origdir,version,'comp',datainfo(k).type,['comp_',datainfo(k).datatype]);
   tmp = load(fname);
   if isfield(tmp, 'comp')
@@ -47,6 +50,7 @@ for k = 1:numel(datainfo)
   end
   
   [ok,msg] = identical(data, datanew,'abstol',1e-7,'diffabs',1);
+  disp(['now you are in k=' num2str(k)]);
   if ~ok
     disp(msg);
     error('there were differences between reference and new data, see above for details');
@@ -71,16 +75,37 @@ switch dataset.datatype
 end
 
 cfg.inputfile  = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
+outputfile     = fullfile(dataset.origdir,version,'comp',dataset.type,['comp_',dataset.datatype])
 if writeflag
-  cfg.outputfile = fullfile(dataset.origdir,version,'comp',dataset.type,['comp_',dataset.datatype]);
+  cfg.outputfile = outputfile;
 end
 
-if ~strcmp(version, 'latest') && str2num(version)<20100000
+if ~strcmp(version, 'latest') && str2double(version)<20100000
   % -- HISTORICAL --- older fieldtrip versions don't support inputfile and outputfile
+  try
+    % use the previous random seed
+    load(outputfile, 'comp');
+    if isfield(comp.cfg.callinfo, 'randomseed')
+      cfg.randomseed = comp.cfg.callinfo.randomseed;
+    end
+  catch
+    % use a new random seed
+  end
+  
   load(cfg.inputfile, 'data');
   comp = ft_componentanalysis(cfg, data);
   save(cfg.outputfile, 'comp');
 else
+  try
+    % use the previous random seed
+    load(outputfile, 'comp');
+    if isfield(comp.cfg.callinfo, 'randomseed')
+      cfg.randomseed = comp.cfg.callinfo.randomseed;
+    end
+  catch
+    % use a new random seed
+  end
+  
   comp = ft_componentanalysis(cfg);
 end
 

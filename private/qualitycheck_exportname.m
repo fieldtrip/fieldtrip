@@ -1,6 +1,6 @@
-function exportname = exportname_qualitycheck(dataset)
+function exportname = qualitycheck_exportname(dataset)
 
-% EXPORTNAME_QUALITYCHECK is used in ft_qualitycheck and the associated cron job
+% QUALITYCHECK_EXPORTNAME is used in ft_qualitycheck and the associated cron job
 
 [p, f, x] = fileparts(dataset);
 

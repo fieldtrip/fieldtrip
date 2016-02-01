@@ -1,5 +1,8 @@
 function test_bug1306b
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % Use function signature below for testing --- note that xUnit does not seem to support it.
 %function datanew = test_ft_preprocessing(datainfo, writeflag, version)
 
@@ -35,7 +38,7 @@ for k = 1:numel(datainfo)
 %   
 %   % do the comparison with the header removed, the output argument still
 %   % contains the header
-%   assert(isequalwithequalnans(data, datanew2));
+%   assert(isequaln(data, datanew2));
 end
 
 

@@ -1,4 +1,4 @@
-function [timelock, cfg] = comp2timelock(cfg, comp);
+function [timelock, cfg] = comp2timelock(cfg, comp)
 
 % COMP2TIMELOCK transform the independent components into something
 % on which the timelocked source reconstruction methods can
@@ -29,7 +29,7 @@ timelock        = [];
 timelock.avg    = comp.topo;
 timelock.label  = comp.topolabel;
 timelock.time   = 1:size(timelock.avg,2);
-timelock.cfg    = comp.cfg;
+if isfield(comp, 'cfg'), timelock.cfg = comp.cfg; end
 timelock.dimord = 'chan_time';
 
 if isfield(comp, 'grad')

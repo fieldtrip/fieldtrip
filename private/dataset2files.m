@@ -1,4 +1,4 @@
-function cfg = dataset2files(cfg);
+function cfg = dataset2files(cfg)
 
 % Helper function that converts a dataset into headerfile and datafile
 % if neccessary. This is used in PREPROCESSING and DEFINETRIAL

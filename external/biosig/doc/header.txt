@@ -3,7 +3,7 @@ SPECIFICATION OF HEADERINFORMATION OF EEG-Files
 -----------------------------------------------
 
 
-$Id: header.txt 2243 2009-12-02 09:29:47Z schloegl $
+$Id$
 Copyright (C) Alois Schloegl 2003-2005,2008,2009 <a.schloegl@ieee.org>
 This is part of the BIOSIG-toolbox http://biosig.sf.net/
 

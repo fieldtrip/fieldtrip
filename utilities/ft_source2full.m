@@ -1,4 +1,4 @@
-function [source] = ft_source2full(source);
+function [source] = ft_source2full(source)
 
 % FT_SOURCE2FULL recreates the grid locations outside the brain in the source 
 % reconstruction, so that the source volume again describes the full grid.
@@ -100,7 +100,7 @@ else
   % recreate the positions of the dipole grid
   [X, Y, Z] = ndgrid(xgrid, ygrid, zgrid);
   pos = [X(:) Y(:) Z(:)];
-  pos = warp_apply(inv([M T(:);0 0 0 1]), pos);
+  pos = ft_warp_apply(inv([M T(:);0 0 0 1]), pos);
 end
 
 Nsparse = length(source.inside);
@@ -148,7 +148,9 @@ if strcmp(stype, 'old'),
   [param]    = parameterselection('all', source);
   trlparam   = strmatch('trial', param);
   sel        = setdiff(1:length(param), trlparam);
-  param      = param(sel);
+  ind=find(ismember(param,'inside'));% find the index of 'inside' field
+  % because its position varies with isfield('plvspctrm') vs. 'cohspctrm'
+  param      = param(sel(ind));
   
   for j = 1:length(param)
     dat = getsubfield(source, param{j});
@@ -309,7 +311,7 @@ try
   % get the full name of the function
   cfg.version.name = mfilename('fullpath');
 catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
+  % required for compatibility with MATLAB versions prior to release 13 (6.5)
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end

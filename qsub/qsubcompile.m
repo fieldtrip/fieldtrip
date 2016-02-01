@@ -1,10 +1,10 @@
 function [fcomp] = qsubcompile(fname, varargin)
 
-% QSUBCOMPILE compiles your function into an standalone executable
-% that can easily be distributed on a cluster by QSUBCELLFUN.
-% Running a compiled version of your function does not take any
-% additional MATLAB licenses. Note that it does require that the
-% matching run-time environment is installed on your cluster.
+% QSUBCOMPILE compiles your function into an standalone executable that can easily
+% be distributed on a cluster by QSUBCELLFUN. Running a compiled version of your
+% function does not take any additional MATLAB licenses. Note that it does require
+% that the corresponding MATLAB run-time environment (MCR) is installed on your
+% cluster.
 %
 % Use as
 %   compiledfun = qsubcompile(fname)
@@ -16,16 +16,15 @@ function [fcomp] = qsubcompile(fname, varargin)
 %
 % Optional input arguments should be specified in key-value pairs
 % and can include
-%   batchid        = string that is used for the compiled application
-%                    filename and to identify the jobs in the queue, the
-%                    default is automatically determined and looks
-%                    like user_host_pid_batch.
-%   toolbox        = string or cell-array with strings, non-standard
-%                    Mathworks toolboxes to include (see below).
-%   executable     = string with the name of a previous compiled
-%                    executable to start, which usually takes the
-%                    form "run_xxx.sh". This implies that compilation
-%                    does not have to be done.
+%   batchid     = string that is used for the compiled application filename 
+%                 and to identify the jobs in the queue, the default is
+%                 automatically determined and looks like user_host_pid_batch.
+%   toolbox     = string or cell-array with strings, additional Mathworks 
+%                 toolboxes to include (see below).
+%   executable  = string with the name of a previous compiled executable 
+%                 to start, which usually takes the form "run_xxx.sh". This 
+%                 implies that compilation does not have to be done.
+%   numthreads  = number of threads, can be 1 or inf (default = 1)
 %
 % When executing a single batch of jobs using QSUBCELLFUN, you can also
 % compile your function on the fly with the compile flag like this
@@ -41,7 +40,7 @@ function [fcomp] = qsubcompile(fname, varargin)
 %
 % If you need to include Mathworks toolboxes that are not automatically
 % detected as dependencies by the MATLAB compiler, you can specify them
-% likt this
+% like this
 %   compiledfun = qsubcompile(fname, 'toolbox', {'signal', 'image', 'stats'})
 %
 % A common problem for compilation is caused by the use of addpath in
@@ -51,17 +50,16 @@ function [fcomp] = qsubcompile(fname, varargin)
 %    % ...
 %   end
 %
-% If you want to execute the same function multiple times with
-% different input arguments, you only have to compile it once. The
-% name of the executable can be specified as input parameter, and the
-% specified function within the executable can be re-execured. An example
-% is specyfying the executable as run_fieldtrip.sh, which is a compiled
-% version of the complete fieldtrip toolbox.
+% If you want to execute the same function multiple times with different input
+% arguments, you only have to compile it once. The name of the executable can be
+% specified as input parameter, and the specified function within the executable
+% can be re-execured. An example is specyfying the executable as run_fieldtrip.sh,
+% which is a compiled version of the complete fieldtrip toolbox.
 %
 % See also QSUBCELLFUN, QSUBFEVAL, MCC, ISDEPLOYED
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2012, Robert Oostenveld
+% Copyright (C) 2012-2013, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -79,20 +77,21 @@ function [fcomp] = qsubcompile(fname, varargin)
 % $Id$
 % -----------------------------------------------------------------------
 
-% Note that the function will be wrapped into qsubexec, which takes care of
+% Note that the user-function will be wrapped into qsubexec, which takes care of
 % the loading and saving of the input and output arguments.
 
-% It is possible for the user to have multiple MATLAB sessions running at
-% the same time (on the same or different computers) and to start multiple
-% instances of qsubcellfun. To ensure that those do not interfere with each
-% others, each batch of jobs (i.e. instance of qsubcellfun) should get a
-% unique identifier that is used in the filename of the temporary mat files.
+% It is possible for the user to have multiple MATLAB sessions running at the same
+% time (on the same or different computers) and to start multiple instances of
+% qsubcellfun. To ensure that those do not interfere with each others, each batch
+% of jobs (i.e. instance of qsubcellfun) should get a unique identifier that is
+% used in the filename of the temporary mat files.
 
 % get the optional input arguments
 batch      = ft_getopt(varargin, 'batch',   getbatch());               % this is a number that is automatically incremented
 batchid    = ft_getopt(varargin, 'batchid', generatebatchid(batch));   % this is a string like user_host_pid_batch
 toolbox    = ft_getopt(varargin, 'toolbox', {});
 executable = ft_getopt(varargin, 'executable');
+numthreads = ft_getopt(varargin, 'numthreads', 1); % our experience is that in many cases it is better to have multiple jobs on a single machine instead of a single multi-threaded job
 
 if ischar(toolbox)
   % this should be a cell-array with strings
@@ -120,6 +119,16 @@ for i=1:length(fdeps)
   if isa(fdeps{i}, 'function_handle')
     fdeps{i} = func2str(fdeps{i});
   end
+end
+
+if numthreads==1
+  % pass the singleCompThread option to the MCR
+  runtimeopt = '-nodisplay,-singleCompThread';
+elseif numthreads>0 && isinf(numthreads)
+  % the default behaviour of the MCR is to start as many computational threads as cores available
+  runtimeopt = '-nodisplay';
+else
+  error('unsupported number of threads (%d)', numthreads);
 end
 
 if ~isempty(toolbox)
@@ -157,7 +166,7 @@ else
   % try to compile into a stand-allone application
   fprintf('compiling %s into %s\n', fname, batchid);
   % ensure that cellfun is included, it might be needed for stacked jobs
-  mcc('-N', '-R', '-nodisplay', '-o', batchid, toolboxopt{:}, '-m', 'qsubexec', 'cellfun', fname, fdeps{:});
+  mcc('-N', '-R', runtimeopt, '-o', batchid, toolboxopt{:}, '-m', 'qsubexec', 'cellfun', fname, fdeps{:});
   fprintf('finished compiling\n');
   executable = fullfile(pwd, sprintf('run_%s.sh', batchid));
 end
@@ -176,4 +185,3 @@ fcomp.fdeps       = fdeps;
 fcomp.batch       = batch;
 fcomp.batchid     = batchid;
 fcomp.executable  = executable;
-

@@ -58,7 +58,11 @@ if isfield(header, 'orig')
         datatype = header.orig.data.datatype;
     end
     if isfield(header.orig, 'scale')
-        scale = header.orig.scale;
+        if isnumeric(header.orig.scale)
+            scale = header.orig.scale;
+        else
+            scale = header.orig.scale.values;
+        end
     elseif isfield(header.orig.data, 'scale')
         scale = header.orig.data.scale;
     end
@@ -89,7 +93,7 @@ if ~isempty(scale) && ~ismember(strtok(datatype, '-'), {'float32', 'float64'})
 
     for i = 1:length(utrlind)
         dat(:, trlind == utrlind(i)) = dat(:, trlind == utrlind(i)).* ...
-            repmat(squeeze(scale(chanindx,:,utrlind(i))), 1, sum(trlind == utrlind(i)));
+            repmat(squeeze(scale(chanindx,utrlind(i))), 1, sum(trlind == utrlind(i)));
     end
 
 end

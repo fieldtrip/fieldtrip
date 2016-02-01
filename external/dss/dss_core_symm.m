@@ -13,7 +13,7 @@ function state = dss_core_symm(state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: dss_core_symm.m,v 1.23 2005/12/02 12:23:18 jaakkos Exp $
+% $Id$
 
 dss_message(state,2,'Extracting components in symmetric DSS\n');
 

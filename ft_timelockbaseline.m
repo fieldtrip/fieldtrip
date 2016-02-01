@@ -11,8 +11,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %   cfg.parameter    = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
 %                      (default = 'avg')
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -20,7 +19,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE
+% See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE, FT_TIMELOCKGRANDAVERAGE
 
 % Undocumented local options:
 %   cfg.baselinewindow
@@ -51,14 +50,20 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar timelock
+ft_preamble provenance timelock
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
-timelock = ft_checkdata(timelock, 'datatype', 'timelock', 'feedback', 'yes');
+timelock = ft_checkdata(timelock, 'datatype',...
+  {'timelock+comp', 'timelock'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
@@ -150,7 +155,7 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
       elseif d == 2
         timelock.(par)(chansel,:) = ft_preproc_baselinecorrect(timelock.(par)(chansel,:), tbeg, tend);
       else
-        warning('Not doing anything -  matrices up to only three dimensions are supported');
+        warning('Not doing anything - matrices up to only three dimensions are supported');
       end
 
     end
@@ -168,11 +173,20 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
   
 end % ~strcmp(cfg.baseline, 'no')
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Output scaffolding
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if numel(cfg.parameter)==1
+  % convert from cell-array to string
+  cfg.parameter = cfg.parameter{1};
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous timelock
-ft_postamble history timelock
-ft_postamble savevar timelock
+ft_postamble previous   timelock
+ft_postamble provenance timelock
+ft_postamble history    timelock
+ft_postamble savevar    timelock
 

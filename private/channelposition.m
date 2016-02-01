@@ -1,12 +1,11 @@
-function [pnt, ori, lab] = channelposition(sens, varargin)
+function [pnt, ori, lab] = channelposition(sens)
 
 % CHANNELPOSITION computes the channel positions and orientations from the
 % coils or electrodes
 %
 % Use as
-%   [pos, ori, lab] = channelposition(sens, ...)
-% where sens is an electrode or gradiometer array and the optional input
-% arguments should be specified as key value pairs.
+%   [pos, ori, lab] = channelposition(sens)
+% where sens is an electrode or gradiometer array.
 %
 % See also FT_DATATYPE_SENS
 
@@ -30,13 +29,10 @@ function [pnt, ori, lab] = channelposition(sens, varargin)
 %
 % $Id$
 
-% FIXME varargin is not documented
-
-% get the optional input arguments
-getref = ft_getopt(varargin, 'channel', false);
-
 % remove the balancing from the sensor definition, e.g. planar gradients, 3rd-order gradients, PCA-cleaned data or ICA projections
-sens = undobalancing(sens);
+if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
+  sens = undobalancing(sens);
+end
 
 % keep it backward compatible with sensor definitions prior to 2011v1 (see ft_datatype_sens), which have pnt/ori instead of coilpos/coilori.
 if isfield(sens, 'ori')
@@ -128,36 +124,34 @@ switch ft_senstype(sens)
     ori(sel,:) = sens.coilori(ind, :);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % then do the references if needed
+    % then do the references
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if getref
-      sens = sensorig;
-      sel  = ft_chantype(sens, 'ref');
-      
-      sens.label = sens.label(sel);
-      sens.tra   = sens.tra(sel,:);
-      
-      % subsequently remove the unused coils
-      used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
-      sens.coilpos = sens.coilpos(used,:);
-      sens.coilori = sens.coilori(used,:);
-      sens.tra = sens.tra(:,used);
-      
-      [nchan, ncoil] = size(sens.tra);
-      refpnt = zeros(nchan,3);
-      refori = zeros(nchan,3); % FIXME not sure whether this will work
-      for i=1:nchan
-        weight = abs(sens.tra(i,:));
-        weight = weight ./ sum(weight);
-        refpnt(i,:) = weight * sens.coilpos;
-        refori(i,:) = weight * sens.coilori;
-      end
-      reflab = sens.label;
-      
-      lab(sel) = reflab;
-      pnt(sel,:) = refpnt;
-      ori(sel,:) = refori;
+    sens = sensorig;
+    sel  = ft_chantype(sens, 'ref');
+    
+    sens.label = sens.label(sel);
+    sens.tra   = sens.tra(sel,:);
+    
+    % subsequently remove the unused coils
+    used = any(abs(sens.tra)>0.0001, 1);  % allow a little bit of rounding-off error
+    sens.coilpos = sens.coilpos(used,:);
+    sens.coilori = sens.coilori(used,:);
+    sens.tra = sens.tra(:,used);
+    
+    [nchan, ncoil] = size(sens.tra);
+    refpnt = zeros(nchan,3);
+    refori = zeros(nchan,3); % FIXME not sure whether this will work
+    for i=1:nchan
+      weight = abs(sens.tra(i,:));
+      weight = weight ./ sum(weight);
+      refpnt(i,:) = weight * sens.coilpos;
+      refori(i,:) = weight * sens.coilori;
     end
+    reflab = sens.label;
+    
+    lab(sel)   = reflab;
+    pnt(sel,:) = refpnt;
+    ori(sel,:) = refori;
     
     sens = sensorig;
     
@@ -260,31 +254,57 @@ switch ft_senstype(sens)
     
   otherwise
     % compute the position for each gradiometer or electrode
+    nchan = length(sens.label);
+    if isfield(sens, 'elecpos')
+      nelec = size(sens.elecpos,1); % these are the electrodes
+    elseif isfield(sens, 'coilpos')
+      ncoil = size(sens.coilpos,1); % these are the coils
+    end
     
-    if isfield(sens, 'tra')
-      % each channel depends on multiple sensors (electrodes or coils)
-      % compute a weighted position for the channel
-      [nchan, ncoil] = size(sens.tra);
-      pnt = zeros(nchan,3);
-      ori = zeros(nchan,3); % FIXME not sure whether this will work
-      for i=1:nchan
-        weight = abs(sens.tra(i,:));
-        weight = weight ./ sum(weight);
-        pnt(i,:) = weight * sens.coilpos;
-        ori(i,:) = weight * sens.coilori;
-      end
+    if ~isfield(sens, 'tra') && isfield(sens, 'elecpos') && nchan==nelec
+      % there is one electrode per channel, which means that the channel position is identical to the electrode position
+      pnt = sens.elecpos;
+      ori = nan(size(pnt));
       lab = sens.label;
       
-    elseif isfield(sens, 'coilpos')
-      % there is one sensor per channel, which means that the channel position is identical to the sensor position
+    elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec))
+      % there is one electrode per channel, which means that the channel position is identical to the electrode position
+      pnt = sens.elecpos;
+      ori = nan(size(pnt));
+      lab = sens.label;
+      
+    elseif isfield(sens, 'tra') && isfield(sens, 'elecpos') && isequal(sens.tra, eye(nelec)-1/nelec)
+      % there is one electrode per channel, channels are average referenced
+      pnt = sens.elecpos;
+      ori = nan(size(pnt));
+      lab = sens.label;
+      
+    elseif ~isfield(sens, 'tra') && isfield(sens, 'coilpos') && nchan==ncoil
+      % there is one coil per channel, which means that the channel position is identical to the coil position
       pnt = sens.coilpos;
       ori = sens.coilori;
       lab = sens.label;
       
-    elseif isfield(sens, 'elecpos')
-      % there is one sensor per channel, which means that the channel position is identical to the sensor position
-      pnt = sens.elecpos;
-      ori = nan(size(sens.elecpos));
+    elseif isfield(sens, 'tra')
+      % each channel depends on multiple sensors (electrodes or coils), compute a weighted position for the channel
+      % for MEG gradiometer channels this means that the position is in between the two coils
+      % for bipolar EEG channels this means that the position is in between the two electrodes
+      pnt = nan(nchan,3);
+      ori = nan(nchan,3);
+      if isfield(sens, 'coilpos')
+        for i=1:nchan
+          weight = abs(sens.tra(i,:));
+          weight = weight ./ sum(weight);
+          pnt(i,:) = weight * sens.coilpos;
+          ori(i,:) = weight * sens.coilori;
+        end
+      elseif isfield(sens, 'elecpos')
+        for i=1:nchan
+          weight = abs(sens.tra(i,:));
+          weight = weight ./ sum(weight);
+          pnt(i,:) = weight * sens.elecpos;
+        end
+      end
       lab = sens.label;
       
     end
@@ -298,7 +318,7 @@ if n>1 && size(lab, 1)>1 % this is to prevent confusion when lab happens to be a
   ori = repmat(ori, n, 1);
 end
 
-% ensure that ther order is the same is in sens
+% ensure that the channel order is the same as in sens
 [sel1, sel2] = match_str(sens.label, lab);
 lab = lab(sel2);
 pnt = pnt(sel2, :);
@@ -307,18 +327,8 @@ ori = ori(sel2, :);
 % ensure that it is a row vector
 lab = lab(:);
 
-% the function can be called with a different number of output arguments
-if nargout==1
-  pnt = pnt;
-  ori = [];
-  lab = [];
-elseif nargout==2
-  pnt = pnt;
-  ori = lab;  % second output argument
-  lab = [];   % third output argument
-elseif nargout==3
-  pnt = pnt;
-  ori = ori;  % second output argument
-  lab = lab;  % third output argument
+% do a sanity check on the number of positions
+nchan = numel(sens.label);
+if length(lab)~=nchan || size(pnt,1)~=nchan || size(ori,1)~=nchan
+  warning('the positions were not determined for all channels');
 end
-

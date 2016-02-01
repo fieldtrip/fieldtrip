@@ -1,5 +1,8 @@
 function test_bug893
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug893
 % TEST ft_freqstatistics statfun_indepsamplesZcoh
 
@@ -18,7 +21,7 @@ freq.dimord        = 'rpttap_chan_freq';
 cfg           = [];
 cfg.design    = [ones(1,10) ones(1,10)*2];
 cfg.parameter = 'fourierspctrm';
-cfg.statistic = 'indepsamplesZcoh';
+cfg.statistic = 'ft_statfun_indepsamplesZcoh';
 cfg.method    = 'montecarlo';
 cfg.numrandomization = 1;
 cfg.label     = freq.label;

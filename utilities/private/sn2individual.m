@@ -8,16 +8,36 @@ function [warped]= sn2individual(P, input)
 % modified from code originally written by John Ashburner:
 % http://www.sph.umich.edu/~nichols/JG2/get_orig_coord2.m
 
+% Copyright (C) 2013, Jan-Mathijs Schoffelen
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
 if numel(P.Tr)==0,
   % only an affine transformation has been done
   T      = P.VF.mat*P.Affine/(P.VG.mat);
-  warped = warp_apply(T, input);
+  warped = ft_warp_apply(T, input);
 else
   % we need the spm_dctmtx function for the nonlinear case
   ft_hastoolbox('spm8', 1);
 
   dim  = P.VG.dim(1:3);
-  xyz  = warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates
+  xyz  = ft_warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates
   
   basX = spm_dctmtx(dim(1), size(P.Tr,1), xyz(:,1)-1);
   basY = spm_dctmtx(dim(2), size(P.Tr,2), xyz(:,2)-1);
@@ -40,5 +60,5 @@ else
   end
   
   T      = P.VF.mat*P.Affine;
-  warped = warp_apply(T, xyz+xyztmp);
+  warped = ft_warp_apply(T, xyz+xyztmp);
 end;

@@ -173,6 +173,7 @@ function FV = draw_sensor(CoilDef);
 % 4001 Magnes WH2500 magnetometer size = 11.50  mm
 % 4002 Magnes WH3600 gradiometer size = 18.00  mm base = 50.00  mm
 % 5001 CTF axial gradiometer size = 18.00  mm base = 50.00  mm
+% 7001 BabySQUID I axial gradiometer size = 6.0 mm base = 50 mm
 
 FV = struct('faces',[],'vertices',[]); % standard convention
 
@@ -212,7 +213,7 @@ switch CoilDef.id
         FV.vertices = ...
             [real(circle)' imag(circle)' zeros(Len_cir,1)]*Radius/1000;
         FV.faces = [1:length(FV.vertices)];
-    case {4002, 5001, 5003, 4004, 6001}
+    case {4002, 5001, 5003, 4004, 6001, 7001}
         % round coil 1st order gradiometer
         Radius = CoilDef.size*1000/2; % mm radius
         Baseline = CoilDef.baseline*1000; % axial separation

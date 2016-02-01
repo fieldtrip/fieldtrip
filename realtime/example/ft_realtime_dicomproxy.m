@@ -1,7 +1,7 @@
-function ft_realtime_dicomroxy(cfg)
+function ft_realtime_dicomproxy(cfg)
 
-% FT_REALTIME_DICOMPROXY simulates an fMRI acquisition system by reading a series
-% of DICOM files from disk, and streaming them to a FieldTrip buffer.
+% FT_REALTIME_DICOMPROXY simulates an fMRI acquisition system by reading a series of
+% DICOM files from disk, and streaming them to a FieldTrip buffer.
 %
 % Use as
 %   ft_realtime_dicomproxy(cfg)
@@ -11,10 +11,12 @@ function ft_realtime_dicomroxy(cfg)
 %   cfg.input                = string or cell array of strings (see below)
 %   cfg.speedup              = optional speedup parameter
 %
-% The input files can be specified as a cell array of filenames,
-% or as a single string with a wildcard, e.g., '/myhome/scan*.ima'
+% The input files can be specified as a cell array of filenames, or as a single
+% string with a wildcard, e.g., '/myhome/scan*.ima'
 %
 % This function requires functions from SPM, so make sure you have set up your path correctly.
+%
+% See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
 % Copyright (C) 2010, Stefan Klanke
 %
@@ -37,7 +39,7 @@ function ft_realtime_dicomroxy(cfg)
 % $Id$
 
 % set the defaults
-if isempty(cfg) | ~isfield(cfg, 'target') | ~isfield(cfg.target, 'datafile')
+if isempty(cfg) || ~isfield(cfg, 'target') || ~isfield(cfg.target, 'datafile')
   cfg.target.datafile = 'buffer://localhost:1972';  
 end
 cfg.target.dataformat = [];    

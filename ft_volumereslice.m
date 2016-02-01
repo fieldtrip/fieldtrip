@@ -1,4 +1,4 @@
-function [reslice] = ft_volumereslice(cfg, mri)
+function [resliced] = ft_volumereslice(cfg, mri)
 
 % FT_VOLUMERESLICE interpolates and reslices a volume along the
 % principal axes of the coordinate system according to a specified
@@ -11,7 +11,6 @@ function [reslice] = ft_volumereslice(cfg, mri)
 %
 % The configuration structure can contain
 %   cfg.resolution = number, in physical units
-% The new spatial extent can be specified with
 %   cfg.xrange     = [min max], in physical units
 %   cfg.yrange     = [min max], in physical units
 %   cfg.zrange     = [min max], in physical units
@@ -22,8 +21,7 @@ function [reslice] = ft_volumereslice(cfg, mri)
 % shifted (with respect to the origin of the coordinate system), for the
 % brain to fit nicely in the box.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -60,21 +58,39 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar mri
+ft_preamble provenance mri
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
 if isfield(mri, 'inside')
-  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes', 'inside', 'logical');
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'inside', 'logical');
 else
-  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunits', 'yes');
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 % set the defaults
-cfg.resolution = ft_getopt(cfg, 'resolution', 1);
+% set voxel resolution according to the input units- see bug2906
+unitcheckmm = strcmp(mri.unit,'mm');
+if unitcheckmm==1;
+    cfg.resolution = ft_getopt(cfg, 'resolution', 1);
+end;
+unitcheckcm = strcmp(mri.unit,'cm');
+if unitcheckcm==1;
+    cfg.resolution = ft_getopt(cfg, 'resolution', .1);
+end;
+unitcheckm = strcmp(mri.unit,'m');
+if unitcheckm==1;
+    cfg.resolution = ft_getopt(cfg, 'resolution', .001);
+end;
+%cfg.resolution = ft_getopt(cfg, 'resolution', 1);
 cfg.downsample = ft_getopt(cfg, 'downsample', 1);
 cfg.xrange     = ft_getopt(cfg, 'xrange', []);
 cfg.yrange     = ft_getopt(cfg, 'yrange', []);
@@ -96,7 +112,7 @@ if isfield(mri, 'coordsys')
     otherwise
       xshift = 0;
       yshift = 0;
-      zshift = 15./cfg.resolution;
+      zshift = 0;
   end
 else % if no coordsys is present
   xshift = 0;
@@ -126,11 +142,11 @@ if isempty(cfg.zrange)
   cfg.zrange = zrange;
 end
 
-if ~isequal(cfg.downsample, 1)
-  % downsample the anatomical volume
-  tmpcfg = [];
-  tmpcfg.downsample = cfg.downsample;
+if cfg.downsample~=1
+  % optionally downsample the anatomical and/or functional volumes
+  tmpcfg = keepfields(cfg, {'downsample'});
   mri = ft_volumedownsample(tmpcfg, mri);
+  [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
 % compute the desired grid positions
@@ -138,40 +154,38 @@ xgrid = cfg.xrange(1):cfg.resolution:cfg.xrange(2);
 ygrid = cfg.yrange(1):cfg.resolution:cfg.yrange(2);
 zgrid = cfg.zrange(1):cfg.resolution:cfg.zrange(2);
 
-reslice           = [];
-reslice.dim       = [length(xgrid) length(ygrid) length(zgrid)];
-reslice.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
-reslice.anatomy   = zeros(reslice.dim, 'int8');
+resliced           = [];
+resliced.dim       = [length(xgrid) length(ygrid) length(zgrid)];
+resliced.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
+resliced.anatomy   = zeros(resliced.dim, 'int8');
+resliced.unit      = mri.unit;
 
 clear xgrid ygrid zgrid
 
 % these are the same in the resliced as in the input anatomical MRI
 if isfield(mri, 'coordsys')
-  reslice.coordsys = mri.coordsys;
-end
-if isfield(mri, 'unit')
-  reslice.unit = mri.unit;
+  resliced.coordsys = mri.coordsys;
 end
 
-fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), reslice.dim(1), reslice.dim(2), reslice.dim(3));
+fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
 
 % the actual work is being done by ft_sourceinterpolate, which interpolates the real mri volume
 % on the resolution that is defined for the resliced volume
 tmpcfg = [];
 tmpcfg.parameter = 'anatomy';
-reslice = ft_sourceinterpolate(tmpcfg, mri, reslice);
+resliced = ft_sourceinterpolate(tmpcfg, mri, resliced);
 
 % remove fields that were not present in the input, this applies specifically to
 % the 'inside' field that may have been added by ft_sourceinterpolate
-reslice = rmfield(reslice, setdiff(fieldnames(reslice), fieldnames(mri)));
+resliced = rmfield(resliced, setdiff(fieldnames(resliced), fieldnames(mri)));
 
 % convert any non-finite values to 0 to avoid problems later on
-reslice.anatomy(~isfinite(reslice.anatomy)) = 0;
+resliced.anatomy(~isfinite(resliced.anatomy)) = 0;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous mri
-ft_postamble history reslice
-ft_postamble savevar reslice
+ft_postamble previous   mri
+ft_postamble provenance resliced
+ft_postamble history    resliced
+ft_postamble savevar    resliced

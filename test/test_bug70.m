@@ -1,10 +1,10 @@
 function test_bug70
 
+% MEM 1500mb
+% WALLTIME 00:20:00
+
 % TEST test_bug70
 % TEST ft_prepare_headmodel ft_prepare_leadfield
-
-fprintf('***  DIAGNOSTICAL INFORMATION ***\n');
-fprintf('test script is running on host: %s\n', gethostname());
 
 % this is the output of icosahedron162, including it like this
 % makes the test script independent of that function
@@ -526,10 +526,10 @@ lf2 = ft_prepare_leadfield(cfg);
 cfg.reducerank  = 3;
 lf3 = ft_prepare_leadfield(cfg);
 
-assert(~isequal(lf1.leadfield{1}, lf2.leadfield{1})); % these should be different
-assert(~isequal(lf1.leadfield{1}, lf3.leadfield{1})); % these should be different
-assert(~isequal(lf2.leadfield{1}, lf3.leadfield{1})); % these should be different
-assert( norm(lf.leadfield{1}-lf3.leadfield{1})<eps); % these should be identical, i.e. the default should be rank 3
+assert(~isequal(lf1.leadfield{1}, lf2.leadfield{1}));   % these should be different
+assert(~isequal(lf1.leadfield{1}, lf3.leadfield{1}));   % these should be different
+assert(~isequal(lf2.leadfield{1}, lf3.leadfield{1}));   % these should be different
+assert( norm(lf.leadfield{1}-lf3.leadfield{1})<10*eps); % these should be identical, i.e. the default should be rank 3
 
 assert(size(lf.leadfield{1},2)==3);
 assert(size(lf1.leadfield{1},2)==3);

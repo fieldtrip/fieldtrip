@@ -1,5 +1,8 @@
 function test_bug1245
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug_1245
 % TEST ft_multiplotER
 
@@ -10,6 +13,22 @@ function test_bug1245
 % determination algorithm includes the channels that are excluded from the
 % plotting
 
-load test_bug1245
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+
+% this is one way of having ft_multiplotER select avg as the parameter
+load bug1245.mat
 data.avg = [];
-figure;ft_multiplotER(cfg, data);
+figure
+ft_multiplotER(cfg, data);
+
+% this is another one way of having ft_multiplotER select avg as the parameter
+load bug1245.mat
+cfg.parameter = 'avg';
+figure
+ft_multiplotER(cfg, data);
+
+% but the data contains a 'trial' field, so better explicitly select that
+load bug1245.mat
+cfg.parameter = 'trial';
+figure
+ft_multiplotER(cfg, data);

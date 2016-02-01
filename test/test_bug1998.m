@@ -1,12 +1,15 @@
 function test_bug1998
 
+% WALLTIME 00:10:00
+% MEM 2gb
+
 % TEST test_bug1998
 % TEST ft_preprocessing ft_read_data read_neuralynx_ncs
 
 % this bug is detailled on http://bugzilla.fcdonders.nl/show_bug.cgi?id=1998
 % and the workaround is explained on http://fieldtrip.fcdonders.nl/getting_started/neuralynx?&#discontinuous_recordings
 
-cd(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug1998'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1998'));
 
 % start with normal preprocessing of a single channel
 cfg         = [];
@@ -35,6 +38,7 @@ xlabel('sample number')
 ylabel('time (s)')
 
 ts = ft_read_data(cfg.dataset, 'timestamp', 'true'); % raw timestamps
+ts = double(ts); % convert from uint64 into double
 
 figure
 plot(ts)

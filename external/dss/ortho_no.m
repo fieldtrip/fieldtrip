@@ -12,7 +12,7 @@ function [params, result] = ortho_default(params, W, w)
 % License. http://creativecommons.org/licenses/by-nc-sa/2.0/.
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: ortho_no.m,v 1.1 2005/11/30 08:14:41 jaakkos Exp $
+% $Id$
 
 if nargin<2
     params.name = 'No orthogonalization';

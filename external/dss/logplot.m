@@ -8,7 +8,7 @@ function logplot(x_orig, logscale)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: logplot.m,v 1.8 2005/04/20 10:19:24 kosti Exp $
+% $Id$
 
 if size(x_orig,1)==1
   x=x_orig';

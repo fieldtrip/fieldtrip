@@ -1,5 +1,8 @@
 function test_datatype_parcellation
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_datatype_parcellation
 % TEST ft_datatype_parcellation ft_datatype
 
@@ -16,7 +19,7 @@ example1 = [];
 example1.pos = pnt;
 example1.tri = tri;
 example1.coordsys = 'ctf';
-example1.units = 'mm';
+example1.unit = 'mm';
 example1.brodmann = zeros(162,1);
 example1.brodmannlabel = {'Brodmann Area 1', 'Brodmann Area 2', 'Brodmann Area 3'};
 example1.brodmann(1) = 1;
@@ -27,7 +30,7 @@ example2 = [];
 example2.pos = pnt;
 example2.tri = tri;
 example2.coordsys = 'ctf';
-example2.units = 'mm';
+example2.unit = 'mm';
 example2.Brodmann_Area_1 = false(162,1);
 example2.Brodmann_Area_2 = false(162,1);
 example2.Brodmann_Area_3 = false(162,1);

@@ -1,4 +1,4 @@
-function [timelock, cfg] = freq2timelock(cfg, freq);
+function [timelock, cfg] = freq2timelock(cfg, freq)
 
 % FREQ2TIMELOCK  transform the frequency data into something
 % on which the timelocked source reconstruction methods can
@@ -34,7 +34,7 @@ if isfield(freq, 'fourierspctrm')
   fprintf('constructing real/imag data representation from single trial fourier representation\n');
   % select the complex amplitude at the frequency of interest
   cdim = dimnum(freq.dimord, 'chan');  % should be 2
-  fdim = dimnum(freq.dimord, 'freq');     % should be 3
+  fdim = dimnum(freq.dimord, 'freq');  % should be 3
   fbin = nearest(freq.freq, cfg.frequency);
   cfg.frequency = freq.freq(fbin);
   if cdim==2 && fdim==3
@@ -42,7 +42,7 @@ if isfield(freq, 'fourierspctrm')
     spctrm = dimindex(freq.fourierspctrm, fdim, fbin)';
   end
   % select the desired channels in the data
-  cfg.channel = channelselection(cfg.channel, freq.label);
+  cfg.channel = ft_channelselection(cfg.channel, freq.label);
   [dum, chansel] = match_str(cfg.channel, freq.label);
   spctrm = spctrm(chansel,:);
   % concatenate the real and imaginary part
@@ -50,7 +50,7 @@ if isfield(freq, 'fourierspctrm')
 elseif isfield(freq, 'crsspctrm')
   fprintf('constructing real/imag data representation from csd matrix\n');
   % hmmm... I have no idea whether this is correct
-  cfg.channel = channelselection(cfg.channel, freq.label);
+  cfg.channel = ft_channelselection(cfg.channel, freq.label);
   % this subfunction also takes care of the channel selection
   [Cf, Cr, Pr, Ntrials, dum] = prepare_freq_matrices(cfg, freq);
   cfg.frequency = dum.frequency;
@@ -72,7 +72,7 @@ timelock        = [];
 timelock.avg    = avg;
 timelock.label  = cfg.channel;
 timelock.time   = 1:size(timelock.avg,2);
-timelock.cfg    = freq.cfg;
+if isfield(freq, 'cfg'), timelock.cfg = freq.cfg; end
 timelock.dimord = 'chan_time';
 
 if isfield(freq, 'grad')

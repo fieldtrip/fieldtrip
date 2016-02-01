@@ -1,13 +1,20 @@
 % FT_PREAMBLE_PROVENANCE is a helper script that records the time and memory at the
-% start of the function. This is to be used together with FT_POSTAMBLE_PROVENANCE which
-% will record and store the time and memory at the end of the function. This is
-% stored in the output configuration together with information about the enbvironment,
-% such as the name of the user and computer, the matlab and fieldtrip version, etc.
+% start of the function. At the end of the function FT_POSTAMBLE_PROVENANCE will
+% record and store the time and memory in the output configuration together with
+% information about the environment, such as the name of the user and computer, the
+% MATLAB and FieldTrip version, etc.
 %
-% Another aspects of provenance relates to uniquely identifying the input and the
-% output data. The code that deals with tracking the information about the input data
-% structures is found in ft_preamble_loadvar. The code that deals with tracking the
-% information about the output data structures is found in ft_preamble_history.
+% FieldTrip also attempts to uniquely identify the input and the output data. The
+% code that deals with tracking the input data structures is found in
+% FT_PREAMBLE_LOADVAR. The code that deals with tracking the information about the
+% output data structures is found in FT_POSTAMBLE_HISTORY.
+%
+% Use as
+%   ft_preamble provenance
+%   .... regular code goes here ...
+%   ft_postamble provenance
+%
+% See also FT_POSTAMBLE_PROVENANCE
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
@@ -37,7 +44,7 @@
 % the name of the variables are passed in the preamble field
 global ft_default
 
-if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
+if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)) 
   % do not track the call information
   return
 end
@@ -47,11 +54,39 @@ end
 cfg.callinfo.usercfg = cfg;
 
 % compute the MD5 hash of each of the input arguments
+% temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
 if isequal(ft_default.preamble, {'varargin'})
-  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, varargin, 'UniformOutput', false), 'UniformOutput', false);
+  tmpargin = varargin;
 else
-  cfg.callinfo.inputhash = cellfun(@CalcMD5, cellfun(@mxSerialize, cellfun(@eval, ft_default.preamble, 'UniformOutput', false), 'UniformOutput', false), 'UniformOutput', false);
+  isvar = cellfun(@(x) exist(x, 'var')==1, ft_default.preamble);
+  tmpargin = cellfun(@eval, ft_default.preamble(isvar), 'UniformOutput', false);
+  tmpargin( isvar) = tmpargin;
+  tmpargin(~isvar) = {[]};
+  clear isvar
 end
+cfg.callinfo.inputhash = cell(1,numel(tmpargin));
+for iargin = 1:numel(tmpargin)
+  tmparg = tmpargin{iargin}; % can't get number of bytes with whos unless taken out of it's cell
+  if isfield(tmparg,'cfg')
+    tmparg = rmfield(tmparg,'cfg');
+  else
+  end
+  % only calculate md5 when below 2^31 bytes (CalcMD5 can't handle larger input)
+  bytenum = whos('tmparg');
+  bytenum = bytenum.bytes;
+  if bytenum<2^31
+    try
+      cfg.callinfo.inputhash{iargin} = CalcMD5(mxSerialize(tmparg));
+    catch
+      % the mxSerialize mex file is not available on all platforms
+      % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
+      % do not compute a hash
+    end
+  else
+    % the data is too large, do not compute a hash
+  end
+end
+clear iargin tmpargin tmparg bytenum; % remove the extra references
 
 stack = dbstack('-completenames');
 % stack(1) is this script

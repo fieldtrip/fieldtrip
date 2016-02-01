@@ -11,7 +11,7 @@ TODO:
     or 
   [3 x d] start,end,step points for indexing in each col, 0 means all indices
   
-$Id: tprod_mex.c 2782 2011-02-03 11:00:18Z roboos $
+$Id$
 
 */
 

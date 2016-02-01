@@ -1,17 +1,14 @@
 function test_ft_movieplotTFR
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_movieplotTFR
 % TEST ft_movieplotTFR ft_movieplotER
 
 % the frequency analysis is based on the tutorials
 
-if ispc
-  homedir = 'H:';
-elseif isunix
-  homedir = '/home';
-end
-
-load(fullfile(homedir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'timefrequencyanalysis', 'dataFIC.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat'));
 
 cfg              = [];
 timelockFIC      = ft_timelockanalysis(cfg, dataFIC);
@@ -65,4 +62,11 @@ cfg.moviefreq   = 2;
 cfg.movierpt    = 3;
 cfg.layout = 'CTF151.lay';
 ft_movieplotTFR(cfg, freqFIC);
+
+% ensure that all figures are updated before XUnit starts to close the figures
+drawnow
+close all
+
+
+drawnow
 

@@ -10,6 +10,7 @@ function s = struct(this)
 % $Id$
 
 names = fieldnames(this);
+names = unique(names);
 values = cell(length(names), length(this(:)));
 
 for i=1:length(names)

@@ -1,14 +1,16 @@
-% function test_bug1806
+function test_bug1806
+
+% MEM 1500mb
+% WALLTIME 00:10:00
 
 % TEST test_bug1806
 % TEST ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
 
-ctf151 = load('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat');
-ctf275 = load('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat');
-
-
 global ft_default
 ft_default = [];
+
+ctf151_sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat');
+ctf275_sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat');
 
 cfg = [];
 cfg.dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
@@ -57,7 +59,7 @@ vol.o = [0 0 4];
 cfg = [];
 cfg.vol = vol;
 cfg.inwardshift = 0;
-cfg.template = {ctf275.grad};
+cfg.template = ctf275_sens;
 data_r = ft_megrealign(cfg, data);
 assert(strcmp(data_r.grad.type, 'ctf275'));
 

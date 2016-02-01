@@ -62,7 +62,12 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % input1 and input2 are the to be stratified with respect to each other
 % dimensionality of input1 (2) = chan x rpt. if nchan>1, do a "double"
@@ -72,6 +77,7 @@ if ~isfield(cfg, 'method'),       cfg.method  = 'histogram';                    
 if ~isfield(cfg, 'equalbinavg'),  cfg.equalbinavg = 'yes';                          end
 if ~isfield(cfg, 'numbin'),       cfg.numbin  = 10;                                 end
 if ~isfield(cfg, 'numiter'),      cfg.numiter = 2000;                               end
+if ~isfield(cfg, 'binedges'),     cfg.binedges = [];                                end
 %if ~isfield(cfg, 'dimord'),       error('no information about dimensionality in cfg'); end
 if ~isfield(cfg, 'pairtrials'),   cfg.pairtrials='spikesort';                       end
 if ~isfield(cfg, 'channel'),      cfg.channel='all';                                end
@@ -99,39 +105,59 @@ if strcmp(cfg.method, 'histogram'),
     varargout{2} = output{2};
     varargout{3} = b;
   else
+    if ~isempty(cfg.binedges)
+      fprintf('using the bin edges for the histogram as defined in the cfg\n');
+      if iscell(cfg.binedges)
+        cfg.numbin = cellfun(@numel, cfg.binedges)-1;
+      else
+        cfg.numbin = numel(cfg.binedges)-1;
+      end
+    end
+    
     %------prepare some stuff
+    if numel(cfg.numbin) ~= nchan
+      cfg.numbin = repmat(cfg.numbin(1), [1 nchan]);
+    end
     for j = 1:nchan
       tmp  = [];
       for cndlop = 1:ncond
-        tmp = [tmp input{cndlop}(j,:)];
+        tmp = cat(2, tmp, input{cndlop}(j,:));
       end %concatenate input-data
       
       %create a 'common binspace'
-      [ndum,x] = hist([tmp], cfg.numbin);
+      [ndum,x] = hist(tmp, cfg.numbin(j));
       dx    = diff(x);
-      xc    = [-inf x(1:end-1)+0.5*dx(1) inf];
+      if ~isempty(cfg.binedges)
+        if iscell(cfg.binedges)
+          xc = cfg.binedges{j};
+        else
+          xc = cfg.binedges;
+        end
+      else
+        xc    = [-inf x(1:end-1)+0.5*dx(1) inf];
+      end
       
       %make histograms and compute the 'target histogram', which
       %will equalize the conditions while throwing away as few
       %repetitions as possible
       tmp = [];
       for cndlop = 1:ncond
-        [n{cndlop}(j,:), b{cndlop}(j,:)] = histc(input{cndlop}(j,:), xc);
+        [n{cndlop}(j,1:numel(xc)), b{cndlop}(j,:)] = histc(input{cndlop}(j,:), xc);
         tmp = [tmp; n{cndlop}(j,:)];
       end
-      binaxis(j,:) = xc;
+      binaxis(j,1:(cfg.numbin(j)+1)) = xc;
     end
     
     %------index the trials
     %------create n-d histo
-    linearhisto = zeros(ncond, cfg.numbin.^nchan);
+    linearhisto = zeros(ncond, prod(cfg.numbin));
     for cndlop = 1:ncond
       tmpb = zeros(1, size(b{cndlop},2));
       for j = 1:nchan
         if j == 1,
-          tmpb = tmpb + (b{cndlop}(j,:)).*(cfg.numbin.^(j-1));
+          tmpb = tmpb + (b{cndlop}(j,:)).*prod(cfg.numbin(1:(j-1)));
         else
-          tmpb = tmpb + (b{cndlop}(j,:)-1).*(cfg.numbin.^(j-1));
+          tmpb = tmpb + (b{cndlop}(j,:)-1).*prod(cfg.numbin(1:(j-1)));
         end
       end
       b{cndlop}             = tmpb;

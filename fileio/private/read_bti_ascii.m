@@ -1,4 +1,4 @@
-function [file] = read_bti_ascii(filename);
+function [file] = read_bti_ascii(filename)
 
 % READ_BTI_ASCII reads general data from a BTI configuration file
 %

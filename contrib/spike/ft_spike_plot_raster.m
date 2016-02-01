@@ -31,6 +31,7 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 %                           subsequent rows representing trials (row-unit is 1).
 %   cfg.trialborders     =  'yes' or 'no'. If 'yes', borders of trials are
 %                           plotted
+%   cfg.plotselection   =  'yes' or 'no' (default). If yes plot Y axis only for selection in cfg.trials
 %   cfg.topplotsize      =  number ranging from 0 to 1, indicating the proportion of the
 %                           rasterplot that the top plot will take (e.g., with 0.7 the top
 %                           plot will be 70% of the rasterplot in size). Default = 0.5.
@@ -42,13 +43,29 @@ function [cfg] = ft_spike_plot_raster(cfg, spike, timelock)
 
 % Copyright (C) 2010-2013, Martin Vinck
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
 revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -57,7 +74,7 @@ spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes'); % converts r
 
 % get the default options
 cfg.spikechannel = ft_getopt(cfg,'spikechannel', 'all');
-cfg.trials       = ft_getopt(cfg,'trials', 'all');
+cfg.trials     = ft_getopt(cfg,'trials', 'all');
 cfg.latency      = ft_getopt(cfg,'latency','maxperiod');
 cfg.linewidth    = ft_getopt(cfg,'linewidth', 1);
 cfg.cmapneurons  = ft_getopt(cfg,'cmapneurons', 'auto');
@@ -66,6 +83,7 @@ cfg.topplotsize  = ft_getopt(cfg,'topplotsize', 0.5);
 cfg.topplotfunc  = ft_getopt(cfg,'topplotfunc', 'bar');
 cfg.errorbars    = ft_getopt(cfg,'errorbars', 'sem');
 cfg.trialborders = ft_getopt(cfg,'trialborders','yes');
+cfg.plotselection = ft_getopt(cfg,'plotselection','no');
 cfg.interactive  = ft_getopt(cfg,'interactive','yes');
 
 % ensure that the options are valid
@@ -79,9 +97,10 @@ cfg = ft_checkopt(cfg,'topplotsize', 'doublescalar');
 cfg = ft_checkopt(cfg,'topplotfunc', 'char', {'bar', 'line'});
 cfg = ft_checkopt(cfg,'errorbars', 'char', {'sem', 'std', 'conf95%', 'no', 'var'});
 cfg = ft_checkopt(cfg,'trialborders', 'char', {'yes', 'no'});
+cfg = ft_checkopt(cfg,'plotselection', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'interactive', 'char', {'yes', 'no'});
 
-cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'trials', 'linewidth', 'cmapneurons', 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'interactive'});
+cfg = ft_checkconfig(cfg, 'allowed', {'spikechannel', 'latency', 'trials', 'linewidth', 'cmapneurons', 'spikelength', 'topplotsize', 'topplotfunc', 'errorbars', 'trialborders', 'plotselection', 'interactive'});
 
 % check if a third input is present, and check if it's a timelock structure
 if nargin==3
@@ -102,12 +121,14 @@ if nUnits==0, error('No spikechannel selected by means of cfg.spikechannel'); en
 
 % get the number of trials and set the cfg.trials field
 nTrialsOrig = size(spike.trialtime,1);
+nTrialsShown = nTrialsOrig;
 if  strcmp(cfg.trials,'all')
   cfg.trials = 1:nTrialsOrig;
 elseif islogical(cfg.trials)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
+
 if max(cfg.trials)>nTrialsOrig, 
   error('maximum trial number in cfg.trials should not exceed length of spike.trial')
 end
@@ -152,6 +173,16 @@ for iUnit = 1:nUnits
   isInTrials     = ismember(spike.trial{unitIndx},cfg.trials);
   unitX{iUnit}   = spike.time{unitIndx}(isInTrials(:) & latencySel(:));
   unitY{iUnit}   = spike.trial{unitIndx}(isInTrials(:) & latencySel(:));
+  if strcmp(cfg.plotselection,'yes')
+   tempY{iUnit} = zeros(size(unitY{iUnit}));
+   u = unique(unitY{iUnit});
+   for i = 1:length(u)
+     idx = find(unitY{iUnit} == u(i));
+     tempY{iUnit}(idx) = i;
+   end
+   nTrialsShown = length(u); 
+   unitY{iUnit} = tempY{iUnit};
+  end
 end
 
 % some error checks on spike length
@@ -216,7 +247,7 @@ for iUnit = 1:nUnits
   end
   
   % make the raster plot and hold on for the next plots
-  rasterHdl = plot(x, y,'linewidth', cfg.linewidth,'Color', color);
+  rasterHdl = line(x, y,'LineWidth', cfg.linewidth,'Color', color);
   cfg.hdl.raster = rasterHdl;
   set(ax(1),'NextPlot', 'add')
   set(ax(1),'Box', 'off')
@@ -358,6 +389,9 @@ if doTopData
       if yl>0, yl = 0; end
     end
     ylim(2) = yl;
+  if ylim(2) == ylim(1) %if the plot is empty
+    ylim(2)=ylim(1)+1; %be nice to set
+  end
     set(gca,'YLim', ylim)
   end    
   
@@ -381,7 +415,8 @@ end
 
 % set the limits for the axis
 set(ax,'XLim', [cfg.latency])
-set(ax(1), 'YLim', [0.5 nTrialsOrig+0.5]); % number of trials
+if nTrialsShown==0; nTrialsShown = 1; end %
+set(ax(1), 'YLim', [0.5 nTrialsShown+0.5]); % number of trials
 set(ax,'TickDir','out') % put the tickmarks outside
 
 % now link the axes, constrain zooming and keep ticks intact
@@ -394,6 +429,15 @@ if ~iscell(limY), limY = {limY}; end
 if strcmp(cfg.interactive,'yes')
   set(zoom,'ActionPostCallback',{@mypostcallback,ax,limX,limY});
   set(pan,'ActionPostCallback',{@mypostcallback,ax,limX,limY});
+end
+
+% pass positions and axis handles so downstream
+% functions can respect the positions set here.
+cfg.pos.posRaster = posRaster;
+cfg.hdl.axRaster = ax(1);
+if doTopData
+ cfg.pos.posTopPlot = posTopPlot;
+ cfg.hdl.axTopPlot = ax(2);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

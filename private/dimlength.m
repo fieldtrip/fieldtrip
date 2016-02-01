@@ -180,11 +180,15 @@ else
       
     case 'chan'
       if ~isfield(data, 'inside'),
-        try
-          n = length(data.label);
-        catch
-          n = size(data.labelcmb, 1);
-        end
+        n = length(data.label);
+      else
+        %error('cannot determine number of repetitions for dim "%s"', seldim);
+        n = nan; %FIXME discuss appending label to source-like data
+      end
+      
+    case 'chancmb'
+      if ~isfield(data, 'inside'),
+        n = size(data.labelcmb, 1);        
       else
         %error('cannot determine number of repetitions for dim "%s"', seldim);
         n = nan; %FIXME discuss appending label to source-like data

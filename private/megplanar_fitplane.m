@@ -26,15 +26,17 @@ function montage = megplanar_fitplane(cfg, grad)
 %
 % $Id$
 
-neighbsel = cfg.neighbsel;
-distance = cfg.distance;
-
 lab   = grad.label;
-tmp   = ft_channelselection('MEG', lab);
-sel   = match_str(lab, tmp);
+% ensure the correct sensor order
+[chansel, sel] = match_str(cfg.channel, lab);
 pnt   = grad.chanpos(sel,:);
 ori   = grad.chanori(sel,:);
 lab   = lab(sel);
+
+% we need to ensure that this one is in cfg.channel order - this is done in
+% ft_megplanar!
+neighbsel = cfg.neighbsel(chansel, chansel);
+
 Ngrad = length(lab);
 
 gradH = zeros(Ngrad, Ngrad);

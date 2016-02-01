@@ -98,7 +98,7 @@ switch eventformat
       buffer('flush_evt', [], host, port);  % flush event
     end
 
-	% the MEX file now can handle various Matlab types directly and respects the fields
+	% the MEX file now can handle various MATLAB types directly and respects the fields
 	% sample, offset, duration
 	%   -- these must all be numeric and non-empty (only first element is of interest)
 	% type, value
@@ -111,7 +111,7 @@ switch eventformat
 	% information here. Please explicitly use ft_create_buffer instead.
   
   case 'fcdc_serial'
-    % this code is moved to a seperate file
+    % this code is moved to a separate file
     write_serial_event(filename, event);
 
   case 'fcdc_mysql'
@@ -234,7 +234,7 @@ switch eventformat
         % assume that it is a file. Since the file probably does not yet
         % exist, determine its type by only looking at the extension
         if filetype_check_extension(filename, '.mat')
-            % write the events to a matlab file
+            % write the events to a MATLAB file
             if exist(filename,'file') && strcmp(append, 'yes')
                 try
                     tmp = load(filename, 'event');

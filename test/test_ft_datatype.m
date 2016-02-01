@@ -1,12 +1,20 @@
 function test_ft_datatype
 
+% MEM 3gb
+% WALLTIME 01:30:00
+
 % TEST test_ft_datatype
 % TEST ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens
 
-% the style of this test script is also used in test_ft_analysisprotcol
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% this style is also used in test_ft_analysisprotocol and test_ft_datatype_source
 
 dirlist = {
   '/home/common/matlab/fieldtrip/data/test/latest'
+  '/home/common/matlab/fieldtrip/data/test/20131231'
+  '/home/common/matlab/fieldtrip/data/test/20130630'
+  '/home/common/matlab/fieldtrip/data/test/20121231'
+  '/home/common/matlab/fieldtrip/data/test/20120630'
   '/home/common/matlab/fieldtrip/data/test/20111231'
   '/home/common/matlab/fieldtrip/data/test/20110630'
   '/home/common/matlab/fieldtrip/data/test/20101231'
@@ -80,9 +88,66 @@ for j=1:length(dirlist)
         warning('not testing %s', filelist{i});
         % do nothing
     end % switch
-
+    
   end % for filelist
 end % for dirlist
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% see how it deals with raw/timelock/freq structures with component topographies
+% see SVN revision 9336 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=2518
 
+raw = [];
+raw.label = {'1', '2', '3'};
+for i=1:5
+  raw.time{i} = 1:10;
+  raw.trial{i} = randn(3, 10);
+end
+
+timelock = [];
+timelock.label = {'1', '2', '3'};
+timelock.time = 1:10;
+timelock.avg = randn(3, 10);
+timelock.dimord = 'chan_time';
+
+freq = [];
+freq.label = {'1', '2', '3'};
+freq.freq = 1:5;
+freq.time = 1:10;
+freq.powspctrm = randn(3, 5, 10);
+freq.dimord = 'chan_freq_time';
+
+assert(ft_datatype(raw,       'raw'), 'incorrect datatype');
+assert(ft_datatype(timelock,  'timelock'), 'incorrect datatype');
+assert(ft_datatype(freq,      'freq'), 'incorrect datatype');
+
+% create some structures that have features of two different types
+
+rawc = raw;
+rawc.topo = randn(4,3);
+rawc.unmixing = randn(3,4);
+rawc.topolabel = {'a', 'b', 'c', 'd'};
+
+timelockc = timelock;
+timelockc.topo = randn(4,3);
+timelockc.unmixing = randn(3,4);
+timelockc.topolabel = {'a', 'b', 'c', 'd'};
+
+freqc = freq;
+freqc.topo = randn(4,3);
+freqc.unmixing = randn(3,4);
+freqc.topolabel = {'a', 'b', 'c', 'd'};
+
+assert(ft_datatype(rawc,       'raw'),      'incorrect datatype');
+assert(ft_datatype(timelockc,  'timelock'), 'incorrect datatype');
+assert(ft_datatype(freqc,      'freq'),     'incorrect datatype');
+
+assert(ft_datatype(rawc,       'comp'), 'incorrect datatype');
+assert(ft_datatype(timelockc,  'comp'), 'incorrect datatype');
+assert(ft_datatype(freqc,      'comp'), 'incorrect datatype');
+
+% the default is that for raw+comp ft_datatype returns comp
+% the default for timelock+comp and freq+comp is to return them as timelock or freq for backward compatibility
+assert(strcmp(ft_datatype(rawc       ), 'raw+comp'),      'raw+comp datatype was expected');
+assert(strcmp(ft_datatype(timelockc  ), 'timelock+comp'), 'timelock+comp datatype was expected');
+assert(strcmp(ft_datatype(freqc      ), 'freq+comp'),     'freq+comp datatype was expected');

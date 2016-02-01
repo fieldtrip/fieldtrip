@@ -14,7 +14,7 @@ function varargout = ft_wizard(wizard_filename)
 % the name of the script is stored in a string, when an output argument is
 % requested, or if the name of the script contains spaces. If you do not
 % specify an output argument, the results will be stored as variables in
-% the main Matlab workspace. 
+% the main MATLAB workspace. 
 % 
 % Besides the buttons, you can use the following key combinations
 %   Ctrl-O        load a new script from a file

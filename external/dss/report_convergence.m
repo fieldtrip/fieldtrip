@@ -4,7 +4,7 @@ function [report_data] = report_convergence(report_data, state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: report_convergence.m,v 1.1 2005/05/06 12:43:04 kosti Exp $
+% $Id$
 
 if ~isfield(report_data, 'report_interval')
   report_data.report_interval = 5;

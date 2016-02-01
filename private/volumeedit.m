@@ -22,9 +22,9 @@ function [dataout] = volumeedit(data, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id:$
+% $Id$
 
-revision = '$Id: ft_sourceplot.m 7192 2012-12-13 22:32:56Z roboos $';
+revision = '$Id$';
 
 bckgrnd = ft_getopt(varargin, 'background', []);
 
@@ -139,6 +139,7 @@ delete(h);
 
 dataout = datain;
 dataout(~opt.mask) = 0;
+dataout(opt.mask)  = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -298,6 +299,7 @@ end
 
 tmpdata = opt.data;
 tmpdata(~opt.mask) = 0;
+tmpdata(opt.mask) = 1;
 xi2  = xi+(-opt.radius(1):opt.radius(1)); xi2(xi2<1) = 1; xi2(xi2>opt.dim(1)) = opt.dim(1);
 yi2  = yi+(-opt.radius(2):opt.radius(2)); yi2(yi2<1) = 1; yi2(yi2>opt.dim(2)) = opt.dim(2);
 zi2  = zi+(-opt.radius(3):opt.radius(3)); zi2(zi2<1) = 1; zi2(zi2>opt.dim(3)) = opt.dim(3);

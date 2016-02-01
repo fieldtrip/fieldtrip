@@ -8,10 +8,12 @@ function browse_multiplotER(cfg, data)
 % Copyright (C) 2009, Robert Oostenveld
 
 % convert to an ERP
-timelock = timelockanalysis([], data);
+timelock = ft_timelockanalysis([], data);
 
 default             = [];
 default.interactive = 'yes';
+default.axes        = 'no';
+default.baseline    = 'yes';
 cfg = mergeconfig(cfg, default);
 
 figure;

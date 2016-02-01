@@ -11,8 +11,7 @@ function [data] = ft_denoise_synthetic(cfg, data)
 %                  type to which the data should be changed
 %   cfg.trials   = 'all' or a selection given as a 1xN vector (default = 'all')
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -46,21 +45,27 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'gradient'});
 
 % set the defaults
-if ~isfield(cfg, 'trials'), cfg.trials = 'all'; end
+cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
 
 % store the original type of the input data
 dtype = ft_datatype(data);
 
+% check if the input data is valid for this function
 % this will convert timelocked input data to a raw data representation if needed
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 
@@ -76,10 +81,10 @@ if ~hasref
 end
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = keepfields(cfg, 'trials');
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % remember the original channel ordering
 labelorg = data.label;
@@ -136,8 +141,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble previous   data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data
 

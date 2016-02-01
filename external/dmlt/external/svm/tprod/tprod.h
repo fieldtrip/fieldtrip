@@ -6,7 +6,7 @@
   
   Tensor multiplication routine headers.
 
-  $Id: tprod.h 2782 2011-02-03 11:00:18Z roboos $
+  $Id$
 
  Copyright 2006-     by Jason Farquhar (jdrf@zepler.org)
  Permission is granted for anyone to copy, use, or modify this

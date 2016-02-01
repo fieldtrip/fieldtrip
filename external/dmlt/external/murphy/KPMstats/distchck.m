@@ -3,7 +3,7 @@ function [errorcode,out1,out2,out3,out4] = distchck(nparms,arg1,arg2,arg3,arg4)
 
 %   B.A. Jones  1-22-93
 %   Copyright (c) 1993-98 by The MathWorks, Inc.
-%   $Revision: 2212 $  $Date: 2004/02/10 18:58:56 $
+%   $Revision$  $Date: 2004/02/10 18:58:56 $
 
 errorcode = 0;
 

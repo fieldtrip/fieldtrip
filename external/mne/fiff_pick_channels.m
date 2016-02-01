@@ -61,7 +61,6 @@ if isempty(include)
     nzero = 0;
     for k = 1:length(exclude)
         c = strmatch(exclude{k},ch_names,'exact');
-        nzero = 0;
         if length(c) > 0
             sel(c(1)) = 0;
             nzero = nzero + 1;

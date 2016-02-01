@@ -1,4 +1,4 @@
-function [select] = select_channel_list(label, select, titlestr);
+function [select] = select_channel_list(label, select, titlestr)
 
 % SELECT_CHANNEL_LIST presents a dialog for selecting multiple elements
 % from a cell array with strings, such as the labels of EEG channels.
@@ -42,7 +42,7 @@ end
 pos      = get(0,'DefaultFigurePosition');
 pos(3:4) = [290 300];
 dlg      = dialog('Name', titlestr, 'Position', pos);
-axis off % explicitly turn of axis, sometimes an axis system appears
+set(gca, 'Visible', 'off'); % explicitly turn the axis off, as it sometimes appears
 
 select            = select(:)';     % ensure that it is a row array
 userdata.label    = label;
@@ -74,7 +74,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function label_redraw(h);
+function label_redraw(h)
 userdata = get(h, 'userdata');
 set(findobj(h, 'tag', 'lbsel'  ), 'string', userdata.label(userdata.select));
 set(findobj(h, 'tag', 'lbunsel'), 'string', userdata.label(userdata.unselect));
@@ -94,7 +94,7 @@ end
 set(findobj(h, 'tag', 'lbunsel'  ), 'value', tmp);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function label_addall(h, eventdata, handles, varargin);
+function label_addall(h, eventdata, handles, varargin)
 h = get(h, 'parent');
 userdata = get(h, 'userdata');
 userdata.select   = 1:length(userdata.label);
@@ -104,7 +104,7 @@ set(h, 'userdata', userdata);
 label_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function label_removeall(h, eventdata, handles, varargin);
+function label_removeall(h, eventdata, handles, varargin)
 h = get(h, 'parent');
 userdata = get(h, 'userdata');
 userdata.unselect = 1:length(userdata.label);
@@ -114,7 +114,7 @@ set(h, 'userdata', userdata);
 label_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function label_add(h, eventdata, handles, varargin);
+function label_add(h, eventdata, handles, varargin)
 h = get(h, 'parent');
 userdata = get(h, 'userdata');
 if ~isempty(userdata.unselect)

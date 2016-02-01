@@ -1,6 +1,11 @@
 function test_bug1786
-%
-% 
+
+% MEM 1500mb
+% WALLTIME 00:10:00
+
+% TEST test_bug1786
+% TEST ft_channelrepair ft_prepare_neighbours
+
 % Original report:
 % Hello,
 % 
@@ -11,11 +16,6 @@ function test_bug1786
 % Yoel
 %
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1786
-
-
-% TEST test_bug1786
-% TEST ft_channelrepair ft_prepare_neighbours
-
 
 % EEG bad electrode repair
 % requires fieldtrip
@@ -921,7 +921,7 @@ CHAN1020 = zeros(1,length(CHAN));
 XYZ1020  = zeros(length(CHAN),3);
 for c = 1:length(CHAN),
     chan = CHAN{c};
-    index = strmatch(lower(chan),lower(labels),'exact');
+    index = find(strcmp(lower(chan), lower(labels)));
     if ~isempty(index),
         CHAN1020(c) = index;
         XYZ1020(c,:) = [ x(index), y(index), z(index) ];

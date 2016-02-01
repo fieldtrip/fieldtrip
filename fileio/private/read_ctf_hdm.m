@@ -40,8 +40,8 @@ if isfield(ascii, 'MultiSphere_Data')
   for i=1:length(chans)
     tmp = getfield(ascii.MultiSphere_Data, chans{i});
     vol.label{i} = chans{i};
-    vol.r(i) = tmp(4);
-    vol.o(i, :) = tmp(1:3);
+    vol.r(i)     = tmp(4);
+    vol.o(i, :)  = tmp(1:3);
   end
   vol.r = vol.r(:); % ensure column vector
 elseif isfield(ascii, 'MEG_Sphere')

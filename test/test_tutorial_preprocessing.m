@@ -1,9 +1,12 @@
 function test_tutorial_preprocessing
 
+% WALLTIME 00:10:00
+% MEM 2gb
+
 % TEST test_tutorial_preprocessing
 % TEST ft_definetrial ft_preprocessing
 
-dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 
 cfg                         = [];
 cfg.dataset                 = dataset;

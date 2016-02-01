@@ -7,33 +7,26 @@ function lf = leadfield_interpolate(pos, vol)
 % Use as
 %   lf = leadfield_interpolate(pos, vol)
 
-% Copyright (C) 2012, whoever works on this
+% Copyright (C) 2013, Vladimir Litvak
 %
 % $Id$
 
-% FIXME this still needs to be implemented
+% express the position in voxel coordinates
+pos = ft_warp_apply(inv(vol.transform), pos);
 
-% compute the dipole positions in the volume conductor
-xgrid = 1:vol.dim(1);
-ygrid = 1:vol.dim(2);
-zgrid = 1:vol.dim(3);
-[x y z] = ndgrid(xgrid, ygrid, zgrid);
-gridpos = warp_apply(vol.transform, [x(:) y(:) z(:)]);
+lf = nan(length(vol.sens.label), 3*size(pos, 1));
 
-gridpos(:,1) = gridpos(:,1) - pos(1);
-gridpos(:,2) = gridpos(:,2) - pos(2);
-gridpos(:,3) = gridpos(:,3) - pos(3);
+use_splines = (vol.chan{1}.dat.dim(end) == 6);
 
-dist = sqrt(sum(gridpos.^2, 2));
-[val, indx] = min(dist);
-[i1, i2, i3] = ind2sub(vol.dim, indx);
-
-% FIXME this should of course be replaced by a better interpolation method
-warning('using nearest neighbour at grid position %d, location [%f %f %f]\n', indx, gridpos(indx,:)+pos);
-
-lf = nan(length(vol.sens.label), 3);
 for i=1:length(vol.sens.label)
-  % the leadfield nifti files have been mapped into memory by FT_PREPARE_VOL_SENS
-  lf(i,:) = squeeze(vol.chan{i}.dat(i1, i2, i3, :));
+    for j = 1:3
+        if use_splines
+            lf(i, j:3:end) = spm_bsplins(squeeze(vol.chan{i}.dat(:, :, :, 3+j)), ...
+                pos(:, 1), pos(:, 2), pos(:, 3), [4 4 4 0 0 0]);
+        else
+            lf(i, j:3:end) = spm_sample_vol(spm_vol([vol.filename{i} ',' num2str(j)]), ...
+                pos(:, 1), pos(:, 2), pos(:, 3), 4);
+        end
+    end
 end
 

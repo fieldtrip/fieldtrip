@@ -1,16 +1,16 @@
-function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
+function [dipout] = beamformer_dics(dip, grad, headmodel, dat, Cf, varargin)
 
 % BEAMFORMER_DICS scans on pre-defined dipole locations with a single dipole
 % and returns the beamformer spatial filter output for a dipole on every
-% location.  Dipole locations that are outside the head will return a
+% location. Dipole locations that are outside the head will return a
 % NaN value.
 %
 % Use as
-%   [dipout] = beamformer_dics(dipin, grad, vol, dat, cov, varargin)
+%   [dipout] = beamformer_dics(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
-%   vol         is the volume conductor definition
+%   headmodel   is the volume conductor definition
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
@@ -19,6 +19,7 @@ function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
 % The input dipole model consists of
 %   dipin.pos   positions for dipole, e.g. regular grid, Npositions x 3
 %   dipin.mom   dipole orientation (optional), 3 x Npositions
+% and can additionally contain things like a precomputed filter.
 %
 % Additional options should be specified in key-value pairs and can be
 %  'Pr'               = power of the external reference channel
@@ -87,7 +88,7 @@ keepleadfield  = keyval('keepleadfield', varargin); if isempty(keepleadfield), k
 lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      lambda = 0;                   end
 projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
 fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
-subspace       = keyval('subspace',      varargin); 
+subspace       = keyval('subspace',      varargin);
 
 % convert the yes/no arguments to the corresponding logical values
 keepcsd        = strcmp(keepcsd,       'yes');
@@ -95,6 +96,7 @@ keepfilter     = strcmp(keepfilter,    'yes');
 keepleadfield  = strcmp(keepleadfield, 'yes');
 projectnoise   = strcmp(projectnoise,  'yes');
 fixedori       = strcmp(fixedori,      'yes');
+dofeedback     = ~strcmp(feedback,     'none');
 % FIXME besides regular/complex lambda1, also implement a real version
 
 % default is to use the largest singular value of the csd matrix, see Gross 2001
@@ -123,38 +125,55 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  insideLogical = ft_inside_vol(dip.pos, vol);
-  dip.inside = find(insideLogical);
-  dip.outside = find(~dip.inside);
-elseif isfield(dip, 'inside') && ~isfield(dip, 'outside');
-  dip.outside    = setdiff(1:size(dip.pos,1), dip.inside);
-elseif ~isfield(dip, 'inside') && isfield(dip, 'outside');
-  dip.inside     = setdiff(1:size(dip.pos,1), dip.outside);
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
+% flags to avoid calling isfield repeatedly in the loop over grid positions (saves a lot of time)
+hasmom        = false;
+hasleadfield  = false;
+hasfilter     = false;
+hassubspace   = false;
+
 % select only the dipole positions inside the brain for scanning
-dip.origpos     = dip.pos;
-dip.originside  = dip.inside;
-dip.origoutside = dip.outside;
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
 if isfield(dip, 'mom')
-  dip.mom = dip.mom(:,dip.inside);
+  hasmom = 1;
+  dip.mom = dip.mom(:,originside);
 end
 if isfield(dip, 'leadfield')
-  fprintf('using precomputed leadfields\n');
-  dip.leadfield = dip.leadfield(dip.inside);
+  hasleadfield = 1;
+  if dofeedback
+    fprintf('using precomputed leadfields\n');
+  end
+  dip.leadfield = dip.leadfield(originside);
 end
 if isfield(dip, 'filter')
-  fprintf('using precomputed filters\n');
-  dip.filter = dip.filter(dip.inside);
+  hasfilter = 1;
+  if dofeedback
+    fprintf('using precomputed filters\n');
+  end
+  dip.filter = dip.filter(originside);
 end
 if isfield(dip, 'subspace')
-  fprintf('using subspace projection\n');
-  dip.subspace = dip.subspace(dip.inside);
+  hassubspace = 1;
+  if dofeedback
+    fprintf('using subspace projection\n');
+  end
+  dip.subspace = dip.subspace(originside);
 end
-dip.pos     = dip.pos(dip.inside, :);
-dip.inside  = 1:size(dip.pos,1);
-dip.outside = [];
 
 % dics has the following sub-methods, which depend on the function input arguments
 % power only, cortico-muscular coherence and cortico-cortical coherence
@@ -204,8 +223,10 @@ else
   invCf = pinv(Cf + lambda * eye(size(Cf)));
 end
 
-if isfield(dip, 'subspace')
-  fprintf('using source-specific subspace projection\n');
+if hassubspace
+  if dofeedback
+    fprintf('using source-specific subspace projection\n');
+  end
   % remember the original data prior to the voxel dependent subspace projection
   dat_pre_subspace = dat;
   Cf_pre_subspace = Cf;
@@ -214,7 +235,9 @@ if isfield(dip, 'subspace')
     Pr_pre_subspace = Pr;
   end
 elseif ~isempty(subspace)
-  fprintf('using data-specific subspace projection\n');
+  if dofeedback
+    fprintf('using data-specific subspace projection\n');
+  end
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
   if numel(subspace)==1,
     % interpret this as a truncation of the eigenvalue-spectrum
@@ -233,8 +256,8 @@ elseif ~isempty(subspace)
     % by construction.
     invCf    = diag(1./diag(Cf));
     subspace = u(:,1:subspace)';
-    dat      = subspace*dat;
-
+    if ~isempty(dat), dat = subspace*dat; end
+    
     if strcmp(submethod, 'dics_refchan')
       Cr = subspace*Cr;
     end
@@ -249,7 +272,7 @@ elseif ~isempty(subspace)
     else
       invCf = pinv(Cf);
     end
-  
+    
     if strcmp(submethod, 'dics_refchan')
       Cr = subspace*Cr;
     end
@@ -259,27 +282,29 @@ end
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
 switch submethod
-
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % dics_power
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_power'
     % only compute power of a dipole at the grid positions
     for i=1:size(dip.pos,1)
-      if isfield(dip, 'leadfield') && isfield(dip, 'mom') && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
+      if hasleadfield && hasmom && size(dip.mom, 1)==size(dip.leadfield{i}, 2)
         % reuse the leadfield that was previously computed and project
         lf = dip.leadfield{i} * dip.mom(:,i);
-      elseif  isfield(dip, 'leadfield') &&  isfield(dip, 'mom')
+      elseif  hasleadfield &&  hasmom
         % reuse the leadfield that was previously computed but don't project
         lf = dip.leadfield{i};
-      elseif  isfield(dip, 'leadfield') && ~isfield(dip, 'mom')
+      elseif  hasleadfield && ~hasmom
         % reuse the leadfield that was previously computed
-        lf = dip.leadfield{i};    
-      elseif ~isfield(dip, 'leadfield') && isfield(dip, 'mom')
+        lf = dip.leadfield{i};
+      elseif ~hasleadfield && hasmom
         % compute the leadfield for a fixed dipole orientation
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
       else
         % compute the leadfield
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
       end
-      if isfield(dip, 'subspace')
+      if hassubspace
         % do subspace projection of the forward model
         lf = dip.subspace{i} * lf;
         % the cross-spectral density becomes voxel dependent due to the projection
@@ -293,89 +318,106 @@ switch submethod
         % do subspace projection of the forward model only
         lforig = lf;
         lf     = subspace * lf;
-    
+        
         % according to Kensuke's paper, the eigenspace bf boils down to projecting
         % the 'traditional' filter onto the subspace
-        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
+        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt;
         % ESES = u(:,1:k)*u(:,1:k)';
         % however, even though it seems that the shape of the filter is identical to
         % the shape it is obtained with the following code, the w*lf=I does not
         % hold.
       end
-      if fixedori 
-        % compute the leadfield for the optimal dipole orientation
-        % subsequently the leadfield for only that dipole orientation will
-        % be used for the final filter computation
-        if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
-          filt = dip.filter{i};
-        else 
-          filt = pinv(lf' * invCf * lf) * lf' * invCf;
-        end
-        [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
-        maxpowori = u(:,1);
-        eta = s(1,1)./s(2,2);
-        lf  = lf * maxpowori;
-        dipout.ori{i} = maxpowori;
-        dipout.eta{i} = eta;
-        if ~isempty(subspace), lforig = lforig * maxpowori; end
-      end
-      if isfield(dip, 'filter')
-        % use the provided filter
+      
+      if hasfilter
+        % use precomputed filter
         filt = dip.filter{i};
       else
-        % construct the spatial filter
+        % compute filter
         filt = pinv(lf' * invCf * lf) * lf' * invCf;              % Gross eqn. 3, use PINV/SVD to cover rank deficient leadfield
       end
+      
+      if fixedori
+        % use single dipole orientation
+        if hasfilter && size(filt,1) == 1
+          % provided precomputed filter already projects to one
+          % orientation, nothing to be done here
+        else
+          % find out the optimal dipole orientation
+          [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
+          maxpowori = u(:,1);
+          eta = s(1,1)./s(2,2);
+          
+          % and compute the leadfield for that orientation
+          lf  = lf * maxpowori;
+          dipout.ori{i} = maxpowori;
+          dipout.eta(i) = eta;
+          if ~isempty(subspace), lforig = lforig * maxpowori; end
+          
+          % recompute the filter to only use that orientation
+          filt = pinv(lf' * invCf * lf) * lf' * invCf;
+        end
+      elseif hasfilter && size(filt,1) == 1
+        error('the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
+      end
+      
       csd = filt * Cf * ctranspose(filt);                         % Gross eqn. 4 and 5
       if powlambda1
-        dipout.pow(i) = lambda1(csd);                             % compute the power at the dipole location, Gross eqn. 8
+        if size(csd,1) == 1
+          % only 1 orientation, no need to do svd
+          dipout.pow(i,1) = real(csd);
+        else
+          dipout.pow(i,1) = lambda1(csd);                           % compute the power at the dipole location, Gross eqn. 8
+        end
       elseif powtrace
-        dipout.pow(i) = real(trace(csd));                         % compute the power at the dipole location
+        dipout.pow(i,1) = real(trace(csd));                         % compute the power at the dipole location
       end
       if keepcsd
-        dipout.csd{i} = csd;
+        dipout.csd{i,1} = csd;
       end
       if projectnoise
         if powlambda1
-          dipout.noise(i) = noise * lambda1(filt * ctranspose(filt));
+          dipout.noise(i,1) = noise * lambda1(filt * ctranspose(filt));
         elseif powtrace
-          dipout.noise(i) = noise * real(trace(filt * ctranspose(filt)));
+          dipout.noise(i,1) = noise * real(trace(filt * ctranspose(filt)));
         end
         if keepcsd
-          dipout.noisecsd{i} = noise * filt * ctranspose(filt);
+          dipout.noisecsd{i,1} = noise * filt * ctranspose(filt);
         end
       end
       if keepfilter
         if ~isempty(subspace)
-          dipout.filter{i} = filt*subspace; %FIXME should this be subspace, or pinv(subspace)?
+          dipout.filter{i,1} = filt*subspace; %FIXME should this be subspace, or pinv(subspace)?
         else
-          dipout.filter{i} = filt;
+          dipout.filter{i,1} = filt;
         end
       end
       if keepleadfield
         if ~isempty(subspace)
-          dipout.leadfield{i} = lforig;
+          dipout.leadfield{i,1} = lforig;
         else
-          dipout.leadfield{i} = lf;
+          dipout.leadfield{i,1} = lf;
         end
       end
       ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
-
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % dics_refchan
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_refchan'
     % compute cortico-muscular coherence, using reference cross spectral density
     for i=1:size(dip.pos,1)
-      if isfield(dip, 'leadfield')
+      if hasleadfield
         % reuse the leadfield that was previously computed
         lf = dip.leadfield{i};
-      elseif isfield(dip, 'mom')
+      elseif hasmom
         % compute the leadfield for a fixed dipole orientation
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
       end
-      if isfield(dip, 'subspace')
+      if hassubspace
         % do subspace projection of the forward model
         lforig = lf;
         lf = dip.subspace{i} * lf;
@@ -386,32 +428,45 @@ switch submethod
         % do subspace projection of the forward model only
         lforig = lf;
         lf     = subspace * lf;
-    
+        
         % according to Kensuke's paper, the eigenspace bf boils down to projecting
         % the 'traditional' filter onto the subspace
-        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
+        % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt;
         % ESES = u(:,1:k)*u(:,1:k)';
         % however, even though it seems that the shape of the filter is identical to
         % the shape it is obtained with the following code, the w*lf=I does not
         % hold.
       end
       
-      if fixedori
-        % compute the leadfield for the optimal dipole orientation
-        % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
-        filt = pinv(lf' * invCf * lf) * lf' * invCf;
-        [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
-        maxpowori = u(:,1);
-        lf  = lf * maxpowori;
-        dipout.ori{i} = maxpowori;
-      end
-      if isfield(dip, 'filter')
-        % use the provided filter
+      if hasfilter
+        % use precomputed filter
         filt = dip.filter{i};
       else
-        % construct the spatial filter
-        filt = pinv(lf' * invCf * lf) * lf' * invCf;                   % use PINV/SVD to cover rank deficient leadfield
+        % compute filter
+        filt = pinv(lf' * invCf * lf) * lf' * invCf;              % Gross eqn. 3, use PINV/SVD to cover rank deficient leadfield
       end
+      
+      if fixedori
+        % use single dipole orientation
+        if hasfilter && size(filt,1) == 1
+          % provided precomputed filter already projects to one
+          % orientation, nothing to be done here
+        else
+          % find out the optimal dipole orientation
+          [u, s, v] = svd(real(filt * Cf * ctranspose(filt)));
+          maxpowori = u(:,1);
+          
+          % compute the leadfield for that orientation
+          lf  = lf * maxpowori;
+          dipout.ori{i,1} = maxpowori;
+          
+          % recompute the filter to only use that orientation
+          filt = pinv(lf' * invCf * lf) * lf' * invCf;
+        end
+      elseif hasfilter && size(filt,1) == 1
+        error('the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
+      end
+      
       if powlambda1
         [pow, ori] = lambda1(filt * Cf * ctranspose(filt));            % compute the power and orientation at the dipole location, Gross eqn. 4, 5 and 8
       elseif powtrace
@@ -424,43 +479,46 @@ switch submethod
       elseif powtrace
         coh = norm(csd)^2 / (pow * Pr);
       end
-      dipout.pow(i) = pow;
-      dipout.coh(i) = coh;
+      dipout.pow(i,1) = pow;
+      dipout.coh(i,1) = coh;
       if keepcsd
-        dipout.csd{i} = csd;
+        dipout.csd{i,1} = csd;
       end
       if projectnoise
         if powlambda1
-          dipout.noise(i) = noise * lambda1(filt * ctranspose(filt));
+          dipout.noise(i,1) = noise * lambda1(filt * ctranspose(filt));
         elseif powtrace
-          dipout.noise(i) = noise * real(trace(filt * ctranspose(filt)));
+          dipout.noise(i,1) = noise * real(trace(filt * ctranspose(filt)));
         end
         if keepcsd
-          dipout.noisecsd{i} = noise * filt * ctranspose(filt);
+          dipout.noisecsd{i,1} = noise * filt * ctranspose(filt);
         end
       end
       if keepfilter
-        dipout.filter{i} = filt;
+        dipout.filter{i,1} = filt;
       end
       if keepleadfield
         if ~isempty(subspace)
-          dipout.leadfield{i} = lforig;
+          dipout.leadfield{i,1} = lforig;
         else
-          dipout.leadfield{i} = lf;
+          dipout.leadfield{i,1} = lf;
         end
       end
       ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
-
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % dics_refdip
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_refdip'
-    if isfield(dip, 'subspace') || ~isempty(subspace)
+    if hassubspace || ~isempty(subspace)
       error('subspace projections are not supported for beaming cortico-cortical coherence');
     end
     if fixedori
       error('fixed orientations are not supported for beaming cortico-cortical coherence');
     end
     % compute cortio-cortical coherence with a dipole at the reference position
-    lf1 = ft_compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+    lf1 = ft_compute_leadfield(refdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
     % construct the spatial filter for the first (reference) dipole location
     filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
     if powlambda1
@@ -469,17 +527,17 @@ switch submethod
       Pref = real(trace(filt1 * Cf * ctranspose(filt1)));  % compute the power at the first dipole location
     end
     for i=1:size(dip.pos,1)
-      if isfield(dip, 'leadfield')
+      if hasleadfield
         % reuse the leadfield that was previously computed
         lf2 = dip.leadfield{i};
-      elseif isfield(dip, 'mom')
+      elseif hasmom
         % compute the leadfield for a fixed dipole orientation
-        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
+        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
-        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
       end
-      if isfield(dip, 'filter')
+      if hasfilter
         % use the provided filter
         filt2 = dip.filter{i};
       else
@@ -497,63 +555,67 @@ switch submethod
       elseif powtrace
         coh = real(trace((csd)))^2 / (pow * Pref);         % compute the coherence between the first and second dipole
       end
-      dipout.pow(i) = pow;
-      dipout.coh(i) = coh;
+      dipout.pow(i,1) = pow;
+      dipout.coh(i,1) = coh;
       if keepcsd
-        dipout.csd{i} = csd;
+        dipout.csd{i,1} = csd;
       end
       if projectnoise
         if powlambda1
-          dipout.noise(i) = noise * lambda1(filt2 * ctranspose(filt2));
+          dipout.noise(i,1) = noise * lambda1(filt2 * ctranspose(filt2));
         elseif powtrace
-          dipout.noise(i) = noise * real(trace(filt2 * ctranspose(filt2)));
+          dipout.noise(i,1) = noise * real(trace(filt2 * ctranspose(filt2)));
         end
         if keepcsd
-          dipout.noisecsd{i} = noise * filt2 * ctranspose(filt2);
+          dipout.noisecsd{i,1} = noise * filt2 * ctranspose(filt2);
         end
       end
       if keepleadfield
-        dipout.leadfield{i} = lf2;
+        dipout.leadfield{i,1} = lf2;
       end
       ft_progress(i/size(dip.pos,1), 'scanning grid %d/%d\n', i, size(dip.pos,1));
     end
-
+    
 end % switch submethod
 
 ft_progress('close');
 
-dipout.inside  = dip.originside;
-dipout.outside = dip.origoutside;
-dipout.pos     = dip.origpos;
+% wrap it all up, prepare the complete output
+dipout.inside  = originside;
+dipout.pos     = origpos;
 
 % reassign the scan values over the inside and outside grid positions
 if isfield(dipout, 'leadfield')
-  dipout.leadfield(dipout.inside)  = dipout.leadfield;
-  dipout.leadfield(dipout.outside) = {[]};
+  dipout.leadfield( originside) = dipout.leadfield;
+  dipout.leadfield(~originside) = {[]};
 end
 if isfield(dipout, 'filter')
-  dipout.filter(dipout.inside)  = dipout.filter;
-  dipout.filter(dipout.outside) = {[]};
+  dipout.filter( originside) = dipout.filter;
+  dipout.filter(~originside) = {[]};
 end
 if isfield(dipout, 'ori')
-  dipout.ori(dipout.inside)  = dipout.ori;
-  dipout.ori(dipout.outside) = {[]};
+  dipout.ori( originside) = dipout.ori;
+  dipout.ori(~originside) = {[]};
+end
+if isfield(dipout, 'eta')
+  dipout.eta( originside) = dipout.eta;
+  dipout.eta(~originside) = nan;
 end
 if isfield(dipout, 'pow')
-  dipout.pow(dipout.inside)  = dipout.pow;
-  dipout.pow(dipout.outside) = nan;
+  dipout.pow( originside) = dipout.pow;
+  dipout.pow(~originside) = nan;
 end
 if isfield(dipout, 'noise')
-  dipout.noise(dipout.inside)  = dipout.noise;
-  dipout.noise(dipout.outside) = nan;
+  dipout.noise( originside) = dipout.noise;
+  dipout.noise(~originside) = nan;
 end
 if isfield(dipout, 'coh')
-  dipout.coh(dipout.inside)  = dipout.coh;
-  dipout.coh(dipout.outside) = nan;
+  dipout.coh( originside) = dipout.coh;
+  dipout.coh(~originside) = nan;
 end
 if isfield(dipout, 'csd')
-  dipout.csd(dipout.inside)  = dipout.csd;
-  dipout.csd(dipout.outside) = {[]};
+  dipout.csd( originside) = dipout.csd;
+  dipout.csd(~originside) = {[]};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -567,7 +629,7 @@ ori = u(:,1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to compute the pseudo inverse. This is the same as the
-% standard Matlab function, except that the default tolerance is twice as
+% standard MATLAB function, except that the default tolerance is twice as
 % high.
 %   Copyright 1984-2004 The MathWorks, Inc.
 %   $Revision$  $Date: 2009/06/17 13:40:37 $

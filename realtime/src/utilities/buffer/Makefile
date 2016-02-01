@@ -18,65 +18,62 @@ LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer
 
 ifeq "$(PLATFORM)" "mingw32"
-    BINDIR = $(FIELDTRIP)/realtime/bin/win32
-    SUFFIX = .exe
-    CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-    # LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-    LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-    # make clean target work on windows:
-    fixpath = $(subst /,\,$1)
-    RM = del
+	BINDIR = $(FIELDTRIP)/realtime/bin/win32
+	SUFFIX = .exe
+	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
+	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	# make clean target work on windows:
+	fixpath = $(subst /,\,$1)
+	RM = del
 endif
 
 ifeq "$(UNAME)" "Linux"
-    LDLIBS += -lpthread -ldl
-    fixpath = $1
-    ifeq "$(MACHINE)" "i686"
-        BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
-    endif
-    ifeq "$(MACHINE)" "x86_64"
-        BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-    endif
-    ifeq "$(MACHINE)" "armv6l"
-        BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-    endif
+	LDLIBS += -lpthread -ldl -lrt
+	fixpath = $1
+	ifeq "$(MACHINE)" "i686"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
 ifeq "$(UNAME)" "Darwin"
-    LDLIBS += -lpthread
-    fixpath = $1
-    ifeq "$(MACHINE)" "i386"
-        BINDIR = $(FIELDTRIP)/realtime/bin/maci
-        CFLAGS += -m32
-        CXXFLAGS += -m32
-        LDFLAGS += -m32
-    endif
-    ifeq "$(MACHINE)" "x86_64"
-        BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-        CFLAGS += -m64
-        CXXFLAGS += -m64
-        LDFLAGS += -m64
-    endif
-    ifeq "$(MACHINE)" "Power Macintosh"
-        BINDIR = $(FIELDTRIP)/realtime/bin/mac
-    endif
+	LDLIBS += -lpthread
+	fixpath = $1
+	ifeq "$(MACHINE)" "i386"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS += -m32
+		CXXFLAGS += -m32
+		LDFLAGS += -m32
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS += -m64
+		CXXFLAGS += -m64
+		LDFLAGS += -m64
+	endif
+	ifeq "$(MACHINE)" "Power Macintosh"
+		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+	endif
 endif
 
 ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-# demo_buffer_tia does not work.
-TARGETS = $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/demo_buffer$(SUFFIX) $(BINDIR)/demo_buffer_rda$(SUFFIX) 
+# buffer_tia does not work.
+TARGETS = $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer_rda$(SUFFIX) 
 
 ###############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/demo_buffer_rda$(SUFFIX): \
+$(BINDIR)/buffer_rda$(SUFFIX): \
 	LDLIBS := $(FTBUFFER)/src/rdaserver.o $(LDLIBS)
-
-$(BINDIR)/buffer$(SUFFIX): $(BINDIR)/demo_buffer$(SUFFIX)
-	cp $^ $@
 
 $(BINDIR)/%$(SUFFIX): %.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)

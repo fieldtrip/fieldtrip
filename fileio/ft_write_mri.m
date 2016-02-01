@@ -73,17 +73,14 @@ switch dataformat
     % mgz-volume using freesurfer
     ft_hastoolbox('freesurfer', 1);
     
-    % in matlab the transformation matrix assumes the voxel indices to be 1-based
+    % in MATLAB the transformation matrix assumes the voxel indices to be 1-based
     % freesurfer assumes the voxel indices to be 0-based
     transform = vox2ras_1to0(transform);
     save_mgh(dat, filename, transform);
     
   case {'nifti'}
-    %% nifti data, using SPM
-    % V = volumewrite_spm(filename, dat, transform, spmversion);
-    
-    % nifti data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
+    % nifti data, using Freesurfer
     
     datatype = class(dat);
     switch(datatype)
@@ -105,7 +102,7 @@ switch dataformat
     
     ndims = numel(size(dat));
     if ndims==3
-      dat = ipermute(dat, [2 1 3]); 
+      dat = ipermute(dat, [2 1 3]);
       % FIXME although this is probably correct
       % see the help of MRIread, anecdotally columns and rows seem to need a swap in
       % order to match the transform matrix (alternatively a row switch of the latter
@@ -117,6 +114,7 @@ switch dataformat
     mri          = [];
     mri.vol      = dat;
     mri.vox2ras0 = vox2ras_1to0(transform);
+    mri.volres   = sqrt(sum(transform(:,1:3).^2));
     MRIwrite(mri, filename, datatype);
     
   case {'vista'}

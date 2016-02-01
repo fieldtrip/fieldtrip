@@ -12,17 +12,20 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %
 % where the input comp is the result of FT_COMPONENTANALYSIS. The output
 % data will have the same format as the output of FT_PREPROCESSING.
+%
 % An optional input argument data can be provided. In that case
 % componentanalysis will do a subspace projection of the input data
 % onto the space which is spanned by the topographies in the unmixing
-% matrix in comp, after removal of the artifact components.
+% matrix in comp, after removal of the artifact components.  Please use
+% this option of including data as input, if you wish to use the output
+% data.grad in further computation, for example for leadfield computation.
 %
-% The configuration should contain
-%   cfg.component = list of components to remove, e.g. [1 4 7]
-%   cfg.demean    = 'no' or 'yes', whether to demean the input data (default = 'yes')
+% The configuration structure can contain
+%   cfg.component  = list of components to remove, e.g. [1 4 7] or see FT_CHANNELSELECTION
+%   cfg.demean     = 'no' or 'yes', whether to demean the input data (default = 'yes')
+%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -32,7 +35,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %
 % See also FT_COMPONENTANALYSIS, FT_PREPROCESSING
 
-% Copyright (C) 2005-2009, Robert Oostenveld
+% Copyright (C) 2005-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -56,43 +59,62 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar comp data
+ft_preamble provenance comp data
+ft_preamble trackconfig
 
-% set defaults
-cfg.component  = ft_getopt(cfg, 'component',  []);
-cfg.demean     = ft_getopt(cfg, 'demean',    'yes');
-cfg.feedback   = ft_getopt(cfg, 'feedback',  'text');
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
+% set the defaults
+cfg.component       = ft_getopt(cfg, 'component',  []);
+cfg.demean          = ft_getopt(cfg, 'demean',    'yes');
+cfg.feedback        = ft_getopt(cfg, 'feedback',  'text');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens',  'yes');
 
 % the data can be passed as input arguments or can be read from disk
 nargin = 1;
 nargin = nargin + exist('comp', 'var');
 nargin = nargin + exist('data', 'var');
 
+
 if nargin==3
+  % check if the input data is valid for this function
+  istlck  = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
   data    = ft_checkdata(data, 'datatype', 'raw');
+  comp    = ft_checkdata(comp, 'datatype', 'comp');
   label   = data.label;
-  hasdata = 1;
   nchans  = length(data.label);
+  ncomps  = length(comp.label);
+  hasdata = 1;
 elseif nargin==2
+  % check if the input data is valid for this function
+  istlck  = ft_datatype(comp, 'timelock');  % this will be temporary converted into raw
+  comp    = ft_checkdata(comp, 'datatype', 'raw+comp');
   label   = comp.topolabel;
+  ncomps  = length(comp.label);
   hasdata = 0;
 else
   error('incorrect number of input arguments');
 end
 
-comp    = ft_checkdata(comp, 'datatype', 'comp');
-ncomps  = length(comp.label);
+% cfg.component can be indicated by number or by label
+cfg.component = ft_channelselection(cfg.component, comp.label);
+reject = match_str(comp.label, cfg.component);
 
+if isempty(reject)
+  warning('no components were selected for rejection');
+end
 
-if min(cfg.component)<1
+if min(reject)<1
   error('you cannot remove components that are not present in the data');
 end
 
-if max(cfg.component)>ncomps
+if max(reject)>ncomps
   error('you cannot remove components that are not present in the data');
 end
 
@@ -105,15 +127,15 @@ if nargin==3 && strcmp(cfg.demean, 'yes')
 end
 
 % set the rejected component amplitudes to zero
-fprintf('removing %d components\n', length(cfg.component));
+fprintf('removing %d components\n', length(reject));
 if ~hasdata,
-  fprintf('keeping %d components\n',  ncomps-length(cfg.component));
+  fprintf('keeping %d components\n',  ncomps-length(reject));
 else
-  fprintf('keeping %d components\n',  nchans-length(cfg.component));
+  fprintf('keeping %d components\n',  nchans-length(reject));
 end
 
-%create a projection matrix by subtracting the subspace spanned by the
-%topographies of the to-be-removed components from identity
+% create a projection matrix by subtracting the subspace spanned by the
+% topographies of the to-be-removed components from identity
 [seldat, selcomp] = match_str(label, comp.topolabel);
 
 if length(seldat)~=length(label) && nargin==3,
@@ -121,61 +143,68 @@ if length(seldat)~=length(label) && nargin==3,
 end
 
 if hasdata
-  mixing = comp.topo(selcomp,:);
+  mixing   = comp.topo(selcomp,:);
   unmixing = comp.unmixing(:,selcomp);
-  tra = eye(length(selcomp)) - mixing(:, cfg.component)*unmixing(cfg.component, :);
-  %I am not sure about this, but it gives comparable results to the ~hasdata case
-  %when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
   
-  %we are going from data to components, and back again
-  labelorg = comp.topolabel(selcomp);
-  labelnew = comp.topolabel(selcomp);
+  % I am not sure about this, but it gives comparable results to the ~hasdata case
+  % when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
   
-  keepunused = 'yes'; %keep the original data which are not present in the mixing provided
+  montage     = [];
+  montage.tra = eye(length(selcomp)) - mixing(:, reject)*unmixing(reject, :);
+  % we are going from data to components, and back again
+  montage.labelorg = comp.topolabel(selcomp);
+  montage.labelnew = comp.topolabel(selcomp);
+  
+  keepunused = 'yes'; % keep the original data which are not present in the mixing provided
   
 else
   mixing = comp.topo(selcomp, :);
-  mixing(:, cfg.component) = 0;
-  tra = mixing;
+  mixing(:, reject) = 0;
   
-  %we are going from components to data
-  labelorg = comp.label;
-  labelnew = comp.topolabel(selcomp);
+  montage     = [];
+  montage.tra = mixing;
+  % we are going from components to data
+  montage.labelorg = comp.label;
+  montage.labelnew = comp.topolabel(selcomp);
   
-  %create data structure
+  keepunused = 'no'; % don't need to keep the original rejected components
+  
+  % create data structure
   data         = [];
   data.trial   = comp.trial;
   data.time    = comp.time;
   data.label   = comp.label;
   data.fsample = comp.fsample;
-  if isfield(comp, 'grad'), data.grad       = comp.grad;  end
-  if isfield(comp, 'elec'), data.elec       = comp.elec;  end
-  if isfield(comp, 'trialinfo'),   data.trialinfo  = comp.trialinfo;  end
-  if isfield(comp, 'sampleinfo'),   data.sampleinfo = comp.sampleinfo; end
-  
-  keepunused = 'no'; %don't need to keep the original rejected components
+  if isfield(comp, 'grad'),       data.grad       = comp.grad;       end
+  if isfield(comp, 'elec'),       data.elec       = comp.elec;       end
+  if isfield(comp, 'trialinfo'),  data.trialinfo  = comp.trialinfo;  end
+  if isfield(comp, 'sampleinfo'), data.sampleinfo = comp.sampleinfo; end
+end % if hasdata
+
+% apply the montage to the data and to the sensor description
+data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback);
+
+% apply the montage also to the elec/grad, if present
+if isfield(data, 'grad')
+  sensfield = 'grad';
+  if strcmp(cfg.updatesens, 'yes')
+    fprintf('applying the backprojection matrix to the gradiometer description\n');
+  else
+    fprintf('not applying the backprojection matrix to the gradiometer description\n');
+  end
+elseif isfield(data, 'elec') && isfield(data.elec, 'tra')
+  sensfield = 'elec';
+  if strcmp(cfg.updatesens, 'yes')
+    fprintf('applying the backprojection matrix to the electrode description\n');
+  else
+    fprintf('not applying the backprojection matrix to the electrode description\n');
+  end
+else
+  fprintf('not applying the backprojection matrix to the sensor description\n');
+  sensfield = [];
 end
 
-%OLD CODE
-% recontruct the trials
-%for i=1:ntrials
-%  data.trial{i} = projector * data.trial{i}(seldat,:);
-%end
-%data.label = data.label(seldat);
-
-%create montage and apply this to data and grad
-montage          = [];
-montage.tra      = tra;
-montage.labelorg = labelorg;
-montage.labelnew = labelnew;
-data             = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback);
-
-if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra')),
-  if isfield(data, 'grad')
-    sensfield = 'grad';
-  else
-    sensfield = 'elec';
-  end
+if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
   % keepunused = 'yes' is required to get back e.g. reference or otherwise
   % unused sensors in the sensor description. the unused components need to
   % be removed in a second step
@@ -208,19 +237,17 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   sens.balance.(invcompfield).tra(remove, :)   = [];
   sens.balance.(invcompfield).labelnew(remove) = [];
   data.(sensfield)  = sens;
-  %data.(sensfield)  = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'no', 'balancename', 'invcomp');
-else
-  %warning('the gradiometer description does not match the data anymore');
+end
+
+if istlck
+  % convert the raw structure back into a timelock structure
+  data = ft_checkdata(data, 'datatype', 'timelock');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-if nargin==2
-  ft_postamble previous comp
-elseif nargin==3
-  ft_postamble previous comp data
-end
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble previous   comp data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

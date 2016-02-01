@@ -3,7 +3,7 @@ function user = getusername()
 % GETUSERNAME
 %
 % Use as
-%   str = username;
+%   str = getusername();
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %

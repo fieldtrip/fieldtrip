@@ -7,7 +7,7 @@ function X = randlap(n,N);
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: randlap.m,v 1.3 2005/04/20 10:19:24 kosti Exp $
+% $Id$
 
 X0=log(rand(n,N)).*((rand(n,N)<.5)*2-1);
 for t=1:n

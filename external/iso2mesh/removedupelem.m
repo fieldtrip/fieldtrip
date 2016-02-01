@@ -2,7 +2,7 @@ function elem=removedupelem(elem)
 %
 % elem=removedupelem(elem)
 %
-% remove doubly duplicated elements
+% remove doubly duplicated (folded) elements
 %
 % author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
 %

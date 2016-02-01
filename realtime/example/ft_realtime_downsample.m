@@ -140,20 +140,6 @@ while true
     % from here onward it is specific to the downsampling
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % THE FOLLOWING LINES USE THE OLD GENERAL PREPROC FUNCTION
-    % AND WILL NOT WORK PROPERLY, SINCE THE SIGNAL IS CHOPPED
-    % BEFORE FILTERING
-    %    % put the data in a fieldtrip-like raw structure
-    %   data.trial{1} = dat;
-    %   data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
-    %   data.label    = hdr.label(chanindx);
-    %   data.hdr      = hdr;
-    %   data.fsample  = hdr.Fs;
-    %   % apply preprocessing options
-    %   dat = preproc(data.trial{1}, data.label, data.fsample, cfg);
-    %   % do the downsampling
-    %   dat = preproc_resample(dat, hdr.Fs, cfg.fsample, cfg.method);
-    
     [FM, dat] = online_filter_apply(FM, dat);
     [DM, xd] = online_downsample_apply(DM, dat);
 

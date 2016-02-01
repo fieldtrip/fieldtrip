@@ -4,11 +4,12 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 %
 % Use as
 %    output = ft_sourceparcellate(cfg, source, parcellation)
-% where the input source is a 3D voxel-based or a 2D surface-based source grid
-% that was for example obtained from FT_SOURCEANALYSIS or FT_COMPUTE_LEADFIELD.
-% The input parcellation is described in detail in FT_DATATYPE_PARCELLATION and
-% can be obtained from FT_READ_ATLAS. The output is a channel-based representation
-% with the combined (e.g. averaged) representation of the source parameters per parcel.
+% where the input source is a 2D surface-based or 3-D voxel-based source grid that was for
+% example obtained from FT_SOURCEANALYSIS or FT_COMPUTE_LEADFIELD. The input parcellation is
+% described in detail in FT_DATATYPE_PARCELLATION (2-D) or FT_DATATYPE_SEGMENTATION (3-D) and
+% can be obtained from FT_READ_ATLAS or from a custom parcellation/segmentation for your
+% individual subject. The output is a channel-based representation with the combined (e.g.
+% averaged) representation of the source parameters per parcel.
 %
 % The configuration "cfg" is a structure that can contain the following
 % fields
@@ -19,9 +20,11 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 % The values within a parcel or parcel-combination can be combined using
 % the following methods:
 %   'mean'      compute the mean
+%   'median'    compute the median (unsupported for fields that are represented in a cell-array)
 %   'eig'       compute the largest eigenvector
 %   'min'       take the minimal value
 %   'max'       take the maximal value
+%   'maxabs'    take the signed maxabs value
 %
 % See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION
 
@@ -48,11 +51,16 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 revision = '$Id$';
 
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % get the defaults
 cfg.parcellation = ft_getopt(cfg, 'parcellation');
@@ -71,10 +79,28 @@ else
   % the parcellation is specified as separate structure
 end
 
+% keep the transformation matrix
+if isfield(parcellation, 'transform')
+  transform = parcellation.transform;
+else
+  transform = [];
+end
+
 % ensure it is a parcellation, not a segmentation
 parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellationstyle', 'indexed');
+
+% keep the transformation matrix
+if ~isempty(transform)
+  parcellation.transform = transform;
+end
+
 % ensure it is a source, not a volume
-source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');
+source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
+
+% ensure that the source and the parcellation are anatomically consistent
+if ~isequalwithequalnans(source.pos, parcellation.pos)
+  error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
+end
 
 if isempty(cfg.parcellation)
   % determine the first field that can be used for the parcellation
@@ -92,51 +118,15 @@ if isempty(cfg.parcellation)
   error('you should specify the field containing the parcellation');
 end
 
-if isfield(source, 'dimord')
-  % determine the size of fields that are consistent with the general dimord
-  tok = tokenize(source.dimord, '_');
-  siz = nan(size(tok));
-  for i=1:length(tok)
-    switch tok{i}
-      case 'pos'
-        siz(i) = size(source.pos,1);
-      case 'time'
-        siz(i) = length(source.time);
-      case 'freq'
-        siz(i) = length(source.freq);
-      otherwise
-        error('cannot determine the dimensions for "%s"', tok{i});
-    end % switch
-  end
-  if numel(siz)==1
-    % the size function always returns 2 or more elements
-    siz(2) = 1;
-  end
-else
-  % this will cause a failure further down in the code
-  siz = nan;
-end
-
-fn     = fieldnames(source);
-sel    = false(size(fn));
+% determine the fields and corresponding dimords to work on
+fn = fieldnames(source);
+fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg', 'hdr'}); % remove fields that do not represent the data
+fn = fn(cellfun(@isempty, regexp(fn, 'dimord'))); % remove dimord fields
+fn = fn(cellfun(@isempty, regexp(fn, 'label'))); % remove label fields
 dimord = cell(size(fn));
 for i=1:numel(fn)
-  tmp = source.(fn{i});
-  if isfield(source, [fn{i} 'dimord'])
-    sel(i)    = true;
-    dimord{i} = source.([fn{i} 'dimord']); % a specific dimord
-  elseif iscell(tmp) && numel(tmp)==size(source.pos,1)
-    sel(i)    = true;
-    dimord{i} = '{pos}';
-  elseif ~iscell(tmp) && isequal(size(tmp), siz)
-    sel(i)    = true;
-    dimord{i} = source.dimord; % the general dimord
-  end
+  dimord{i} = getdimord(source, fn{i});
 end
-
-% these two will now contain the fields and corresponding dimord to work on
-fn     = fn(sel);
-dimord = dimord(sel);
 
 if any(strcmp(cfg.parameter, 'all'))
   cfg.parameter = fn;
@@ -151,7 +141,7 @@ else
   dimord = dimord(i2);
 end
 
-% although technically feasible, don't parcellate the parcellation itself
+% although it is technically feasible, don't parcellate the parcellation itself
 sel    = ~strcmp(cfg.parcellation, fn);
 fn     = fn(sel);
 dimord = dimord(sel);
@@ -167,7 +157,6 @@ nseg     = length(seglabel);
 
 if isfield(source, 'inside')
   % determine the conjunction of the parcellation and the inside source points
-  % points that are
   n0 = numel(source.inside);
   n1 = sum(source.inside(:));
   n2 = sum(seg(:)~=0);
@@ -206,6 +195,8 @@ for i=1:numel(fn)
         switch cfg.method
           case 'mean'
             tmp{j1,j2} = cellmean2(dat(seg==j1,seg==j2,:));
+          case 'median'
+            error('taking the median from data in a cell-array is not yet implemented');
           case 'min'
             tmp{j1,j2} = cellmin2(dat(seg==j1,seg==j2,:));
           case 'max'
@@ -228,6 +219,8 @@ for i=1:numel(fn)
       switch cfg.method
         case 'mean'
           tmp{j} = cellmean1(dat(seg==j));
+        case 'median'
+          error('taking the median from data in a cell-array is not yet implemented');
         case 'min'
           tmp{j} = cellmin1(dat(seg==j));
         case 'max'
@@ -252,16 +245,20 @@ for i=1:numel(fn)
     for j1=1:numel(seglabel)
       for j2=1:numel(seglabel)
         k = k + 1;
-        ft_progress(k/K, 'computing parcellation for parameter %s combined with %s', seglabel{j1}, seglabel{j2});
+        ft_progress(k/K, 'computing parcellation for %s combined with %s', seglabel{j1}, seglabel{j2});
         switch cfg.method
           case 'mean'
             tmp(j1,j2,:) = arraymean2(dat(seg==j1,seg==j2,:));
+          case 'median'
+            tmp(j1,j2,:) = arraymedian2(dat(seg==j1,seg==j2,:));
           case 'min'
             tmp(j1,j2,:) = arraymin2(dat(seg==j1,seg==j2,:));
           case 'max'
             tmp(j1,j2,:) = arraymax2(dat(seg==j1,seg==j2,:));
           case 'eig'
             tmp(j1,j2,:) = arrayeig2(dat(seg==j1,seg==j2,:));
+          case 'maxabs'
+            tmp(j1,j2,:) = arraymaxabs2(dat(seg==j1,seg==j2,:));
           otherwise
             error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -280,10 +277,26 @@ for i=1:numel(fn)
       switch cfg.method
         case 'mean'
           tmp(j,:) = arraymean1(dat(seg==j,:));
+        case 'mean_thresholded'
+          cfg.mean = ft_getopt(cfg, 'mean', struct('threshold', []));
+          if isempty(cfg.mean.threshold),
+            error('when cfg.method = ''mean_thresholded'', you should specify a cfg.mean.threshold');
+          end
+          if numel(cfg.mean.threshold)==size(dat,1)
+            % assume one threshold per vertex
+            threshold = cfg.mean.threshold(seg==j,:);
+          else
+            threshold = cfg.mean.threshold;
+          end
+          tmp(j,:) = arraymean1(dat(seg==j,:), threshold);
+        case 'median'
+          tmp(j,:) = arraymedian1(dat(seg==j,:));
         case 'min'
           tmp(j,:) = arraymin1(dat(seg==j,:));
         case 'max'
           tmp(j,:) = arraymax1(dat(seg==j,:));
+        case 'maxabs'
+          tmp(j,:) = arraymaxabs1(dat(seg==j,:));
         case 'eig'
           tmp(j,:) = arrayeig1(dat(seg==j,:));
         otherwise
@@ -315,18 +328,48 @@ for i=1:numel(fn)
   clear dat tmp tmpdimord j j1 j2
 end % for each of the fields that should be parcellated
 
+% a brainordinate is a brain location that is specified by either a surface vertex (node) or a volume voxel
+parcel.brainordinate = keepfields(parcellation, {'pos', 'tri', 'dim', 'transform'}); % keep the information about the geometry
+fn = fieldnames(parcellation);
+for i=1:numel(fn)
+  if isfield(parcellation, [fn{i} 'label'])
+    % keep each of the labeled fields from the parcellation
+    parcel.brainordinate.( fn{i}         ) = parcellation.( fn{i}         );
+    parcel.brainordinate.([fn{i} 'label']) = parcellation.([fn{i} 'label']);
+  end
+end
+
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous source parcellation
-ft_postamble history parcel
-ft_postamble savevar parcel
+ft_postamble previous   source parcellation
+ft_postamble provenance parcel
+ft_postamble history    parcel
+ft_postamble savevar    parcel
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to complute something over the first dimension
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = arraymean1(x)
-y = mean(x,1);
+function y = arraymean1(x, threshold)
+
+if nargin==1
+  y = mean(x,1);
+else
+  if numel(threshold)==1
+    % scalar comparison is possible
+  elseif size(threshold,1) == size(x,1)
+    % assume threshold to be column vector
+    threshold = repmat(threshold, [1, size(x,2)]);
+  end
+  sel = sum(x>threshold,2);
+  if ~isempty(sel)
+    y   = mean(x(sel>0,:),1);
+  else
+    y   = nan+zeros(1,size(x,2));
+  end
+end
+
+function y = arraymedian1(x)
+y = median(x,1);
 
 function y = arraymin1(x)
 y = min(x,[], 1);
@@ -341,6 +384,11 @@ x = reshape(x, siz(1), prod(siz(2:end)));
 y = s(1,1) * v(:,1);            % retain the largest eigenvector with appropriate scaling
 y = reshape(y, [siz(2:end) 1]); % size should have at least two elements
 
+function y = arraymaxabs1(x)
+% take the value that is at max(abs(x))
+[dum,ix] = max(abs(x), [], 1);
+y        = x(ix);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -348,6 +396,11 @@ function y = arraymean2(x)
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
 y = arraymean1(x);
+
+function y = arraymedian2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+y = arraymedian1(x);
 
 function y = arraymin2(x)
 siz = size(x);
@@ -363,6 +416,13 @@ function y = arrayeig2(x)
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
 y = arrayeig1(x);
+
+function y = arraymaxabs2(x)
+% take the value that is at max(abs(x))
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+[dum,ix] = max(abs(x), [], 1);
+y        = x(ix);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS for doing something over the first dimension of a cell array

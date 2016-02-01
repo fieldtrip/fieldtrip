@@ -48,5 +48,7 @@ if isfield(dip, 'mom')
     ntime = numel(dip.mom)/(ndip*3);
   end
   dip.mom = reshape(dip.mom, ndip*3, ntime);
+else
+  dip.mom = [];
 end
 

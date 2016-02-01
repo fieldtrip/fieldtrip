@@ -1,14 +1,15 @@
 #!/bin/sh
 
 #============================================================
-#  iso2mesh documentation to wiki convertor
+#  iso2mesh inline documentation to wiki convertor
 #
 #  Author: Qianqian Fang <fangq at nmr.mgh.harvard.edu>
 #============================================================
 
 print_help()
 {
-   awk '/^%/ {dp=1} /-- this function is part of iso2mesh/ {exit} 
+   awk '/^%/ {dp=1} /-- this function is part of iso2mesh/ {exit} \
+        /-- this function is part of jsonlab/ {exit} \
         /^function/ {dp=1} /./ {if(dp==1) print;}' $1 \
      | grep -v 'Qianqian' | grep -v 'date:' | grep -v '^%\s*$'| \
      sed -e 's/^%//g' -e 's/^function\(.*$\)/\n==== function\1 ====/g'
@@ -28,11 +29,11 @@ func_primitive="meshabox meshasphere meshanellip meshunitsphere meshacylinder"
 func_inquery="finddisconnsurf surfedge volface extractloops meshconn  
                 meshcentroid nodevolume elemvolume neighborelem 
 		faceneighbors edgeneighbors maxsurf flatsegment orderloopedge  
-		mesheuler bbxflatsegment surfplane surfinterior 
-                surfseeds meshquality meshedge surfnorm uniqedges"
+		mesheuler bbxflatsegment surfplane surfinterior surfpart
+                surfseeds meshquality meshedge surfnorm uniqedges advancefront"
 func_meshfix="meshcheckrepair meshreorient removedupelem 
                 removedupnodes removeisolatednode removeisolatedsurf
-                surfaceclean getintersecttri delendelem"
+                surfaceclean getintersecttri delendelem surfreorient"
 func_remesh="meshresample remeshsurf smoothsurf sortmesh mergemesh 
                 meshrefine mergesurf surfboolean"
 func_fileio="saveasc savedxf savestl savebinstl saveinr saveoff 
@@ -40,14 +41,15 @@ func_fileio="saveasc savedxf savestl savebinstl saveinr saveoff
                 savevrml readasc readinr readmedit readoff readsmf
 	        readtetgen deletemeshfile mcpath mwpath savemedit
 		savejson loadjson savejmesh savemphtxt savetetgenele
-                savetetgennode"
+                savetetgennode saveabaqus"
 func_binimage="bwislands fillholes3d deislands2d deislands3d 
                 imedge3d internalpoint smoothbinvol 
 		thickenbinvol thinbinvol"
-func_plotting="plotmesh plotsurf plottetra qmeshcut plottetview"
+func_plotting="plotmesh plotsurf plottetra qmeshcut"
 func_misc="surfdiffuse volmap2mesh isoctavemesh getvarfrom raytrace
 		getplanefrom3pt getexeext fallbackexeext iso2meshver
-                raysurf getoptkey rotatevec3d rotmat2vec"
+                raysurf getoptkey rotatevec3d rotmat2vec varargin2struct
+                jsonopt mergestruct"
 
 echo === "#" Streamlined mesh generation - shortcuts ===
 print_group $func_shortcut

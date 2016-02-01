@@ -1,7 +1,10 @@
-function test_tutorial_connectivity3
+function test_tutorial_connectivity3(datadir)
+
+% MEM 1500mb
+% WALLTIME 00:10:00
 
 % TEST test_tutorial_connectivity3
-% TEST ft_timelockanalysis ft_sourceanalysis ft_connectivityanalysis
+% TEST ft_timelockanalysis ft_sourceanalysis ft_connectivityanalysis ft_prepare_sourcemodel headsurface
 
 % This is the third section of the connectivity tutorial, which
 % starts with the CMC dataset, extracts a virtual channel and performs
@@ -11,15 +14,17 @@ global ft_default;
 ft_default.feedback = 'no';
 ft_default.checkconfig = 'loose';
 
-% this is where the data should be located
-cd /home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity
+if nargin==0
+  % this is where the data should be located
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity');
+end
 
-load source
+load(fullfile(datadir, 'source.mat'));
 
 [maxval, maxindx] = max(source.avg.coh);
 maxpos = source.pos(maxindx,:)
 
-load data
+load(fullfile(datadir,'data.mat'));
 
 %% compute the beamformer filter
 cfg                   = [];
@@ -31,7 +36,7 @@ timelock              = ft_timelockanalysis(cfg, data);
 
 cfg             = [];
 cfg.method      = 'lcmv';
-cfg.hdmfile     = 'SubjectCMC.hdm';
+cfg.hdmfile     = fullfile(datadir,'SubjectCMC.hdm');
 cfg.grid.pos    = maxpos;
 cfg.keepfilter  = 'yes';
 source          = ft_sourceanalysis(cfg, timelock);
@@ -83,8 +88,7 @@ emgdata = ft_selectdata(cfg, data);
 cfg = [];
 combineddata = ft_appenddata(cfg, virtualchanneldata, emgdata);
 
-save combineddata combineddata
-
+% save combineddata combineddata
 
 %% compute the spectral decomposition
 cfg            = [];
@@ -101,6 +105,7 @@ cfg.method = 'coh';
 coherence = ft_connectivityanalysis(cfg, freq);
 
 cfg = [];
+cfg.zlim = [0 0.2];
 figure
 ft_connectivityplot(cfg, coherence);
 title('coherence')

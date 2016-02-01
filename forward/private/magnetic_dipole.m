@@ -8,6 +8,8 @@ function [lf] = magnetic_dipole(R, pos, ori)
 %   R           position dipole
 %   pos         position magnetometers
 %   ori         orientation magnetometers
+%
+% See also CURRENT_DIPOLE
 
 % Copyright (C) 2003, Robert Oostenveld
 %
@@ -29,14 +31,16 @@ function [lf] = magnetic_dipole(R, pos, ori)
 %
 % $Id$
 
-u0 = 1e-7;
+mu0   = 4*pi*1e-7;
 nchan = size(pos,1);
 
 % ensure that the dipole position is a row vector
 R = reshape(R, [1 3]);
 
-% shift the magnetometers so that the dipole is in the origin
-pos = pos - repmat(R, [nchan 1]);
+% shift the magnetometer coils so that the dipole is in the origin
+pos(:,1) = pos(:,1) - R(1);
+pos(:,2) = pos(:,2) - R(2);
+pos(:,3) = pos(:,3) - R(3);
 
 % change the variable names for convenience
 % R position of magnetometer, relative to dipole
@@ -48,11 +52,11 @@ r = sqrt(sum(R.^2,2));
 % this is the original code, which follows the physical formulation closely
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % magnetic field on all magnetometer positions for an x-oriented dipole
-% Bmx = u0/(4*pi) * (3 * repmat(R(:,1), [1 3]) .* R - repmat([1 0 0], [nchan 1]) .* repmat(r.^2, [1 3])) ./ repmat(r.^5, [1 3]);
+% Bmx = mu0/(4*pi) * (3 * repmat(R(:,1), [1 3]) .* R - repmat([1 0 0], [nchan 1]) .* repmat(r.^2, [1 3])) ./ repmat(r.^5, [1 3]);
 % magnetic field on all magnetometer positions for an y-oriented dipole
-% Bmy = u0/(4*pi) * (3 * repmat(R(:,2), [1 3]) .* R - repmat([0 1 0], [nchan 1]) .* repmat(r.^2, [1 3])) ./ repmat(r.^5, [1 3]);
+% Bmy = mu0/(4*pi) * (3 * repmat(R(:,2), [1 3]) .* R - repmat([0 1 0], [nchan 1]) .* repmat(r.^2, [1 3])) ./ repmat(r.^5, [1 3]);
 % magnetic field on all magnetometer positions for an z-oriented dipole
-% Bmz = u0/(4*pi) * (3 * repmat(R(:,3), [1 3]) .* R - repmat([0 0 1], [nchan 1]) .* repmat(r.^2, [1 3])) ./ repmat(r.^5, [1 3]);
+% Bmz = mu0/(4*pi) * (3 * repmat(R(:,3), [1 3]) .* R - repmat([0 0 1], [nchan 1]) .* repmat(r.^2, [1 3])) ./ repmat(r.^5, [1 3]);
 % compute the field along the orientation of each magnetometer for an x/y/z oriented dipole
 % lf(:,1) = dot(Bmx, ori, 2);
 % lf(:,2) = dot(Bmy, ori, 2);
@@ -76,5 +80,5 @@ Tz = (3 * z .* R - mz .* r2);
 lf(:,1) = dot(Tx, ori, 2);
 lf(:,2) = dot(Ty, ori, 2);
 lf(:,3) = dot(Tz, ori, 2);
-lf = u0/(4*pi) * lf ./ r5;
+lf = mu0/(4*pi) * lf ./ r5;
 

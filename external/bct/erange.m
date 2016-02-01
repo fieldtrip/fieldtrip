@@ -29,7 +29,7 @@ Erange = zeros(N,N);
 for c=1:length(i)
    CIJcut = CIJ;
    CIJcut(i(c),j(c)) = 0;
-   [R,D] = reachdist(CIJcut);
+   [R,D] = reachdist(CIJcut);                   %#ok<ASGLU>
    Erange(i(c),j(c)) = D(i(c),j(c));
 end;
 

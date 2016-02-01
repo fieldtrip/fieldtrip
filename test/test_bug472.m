@@ -1,9 +1,11 @@
 function test_bug472
 
+% MEM 1500mb
+% WALLTIME 00:13:01
+
 % TEST test_bug472
 % TEST buffer.mexa64 buffer.mexmaci buffer.mexw64 buffer.mexglx buffer.mexmaci64 buffer.mexmac buffer.mexw32
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 
@@ -16,14 +18,13 @@ cnt = 1;
 % use default url
 url = 'buffer://localhost:1972';
 
-
 % dummy header
 hdr.Fs = 256;
 hdr.nChans = 100;
 
 stopwatch = tic;
 % run the test for 10 minutes
-% after a few attempts, Matlab crashes
+% after a few attempts, MATLAB crashes
 while (toc(stopwatch)<600)
     disp(['counter: ' num2str(cnt)]); cnt = cnt + 1;
     ft_create_buffer(1972);

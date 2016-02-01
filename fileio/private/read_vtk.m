@@ -1,10 +1,10 @@
-function [pnt, dhk] = read_vtk(fn)
+function [pnt, tri] = read_vtk(fn)
 
 % READ_VTK reads a triangulation from a VTK (Visualisation ToolKit) format file
 % Supported are triangles.
 %
 % Use as
-%   [pnt, dhk] = read_vtk(filename)
+%   [pnt, tri] = read_vtk(filename)
 %
 % See also WRITE_VTK
 
@@ -27,19 +27,19 @@ if fid~=-1
     pnt(i,:) = fscanf(fid, '%f', 3)';
   end
   
-  ndhk = 0;
-  while (~ndhk)
+  ntri = 0;
+  while (~ntri)
     line = fgetl(fid);
     if ~isempty(findstr(line, 'POLYGONS'))
       tmp = sscanf(line, 'POLYGONS %d %d');
-      ndhk = tmp(1);
+      ntri = tmp(1);
     end
   end
-  dhk = zeros(ndhk, 4);
-  for i=1:ndhk
-    dhk(i,:) = fscanf(fid, '%d', 4)';
+  tri = zeros(ntri, 4);
+  for i=1:ntri
+    tri(i,:) = fscanf(fid, '%d', 4)';
   end
-  dhk = dhk(:,2:4) + 1;
+  tri = tri(:,2:4) + 1;
   
   fclose(fid);
   

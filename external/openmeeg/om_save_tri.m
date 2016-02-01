@@ -8,8 +8,6 @@ function [] = om_save_tri(filename,points,faces,nrmls)
 %   Created by Alexandre Gramfort on 2008-03-09.
 %   Copyright (c) 2007 Alexandre Gramfort. All rights reserved.
 
-% Subversion does not use the Log keyword, use 'svn log <filename>' or 'svn -v log | less' to get detailed information
-
 if nargin<4 || isempty(nrmls)
     nrmls = om_normals(points,faces);
 end

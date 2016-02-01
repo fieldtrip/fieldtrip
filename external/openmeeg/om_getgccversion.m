@@ -27,3 +27,6 @@ cd(tmpdir);
 tmp = deblank(vec{cnt-2});
 num = findstr('gcc version ',tmp);
 version = str2num(tmp(num+11:num+12));
+if isempty(version) && findstr('clang',vec{2}) > 0
+    version = 5;
+end

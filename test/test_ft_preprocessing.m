@@ -1,5 +1,8 @@
 function test_ft_preprocessing(datainfo, writeflag, version)
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_preprocessing
 % TEST ft_preprocessing ref_datasets
 
@@ -29,9 +32,8 @@ for k = 1:numel(datainfo)
   datanew2     = datanew; 
   datanew2.hdr = [];
   
-  % do the comparison with the header removed, the output argument still
-  % contains the header
-  assert(isequalwithequalnans(data, datanew2));
+  % do the comparison with the header removed, the output argument still contains the header
+  assert(isequaln(data, datanew2));  
 end
 
 

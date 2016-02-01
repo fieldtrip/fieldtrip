@@ -19,7 +19,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 %
 % The following input objects are supported
 %   anatomical mri, see FT_READ_MRI
-%   anatomical or functional atlas, see FT_PREPARE_ATLAS
+%   anatomical or functional atlas, see FT_READ_ATLAS
 %   (not yet) electrode definition
 %   (not yet) gradiometer array definition
 %   (not yet) volume conductor definition
@@ -57,6 +57,13 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
   % determine the coordinate system of the input object
   obj = ft_determine_coordsys(obj, 'interactive', 'yes');
+end
+
+if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
+  % the call to ft_determine_coordsys should have taken care of this, but
+  % it is possible that the user aborted the coordinate system
+  % determination. See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2526
+  error('the coordinate system of the geometrical object is not specified');
 end
 
 % set default behavior to use an approximate alignment, followed by a call

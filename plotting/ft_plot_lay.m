@@ -7,22 +7,26 @@ function ft_plot_lay(lay, varargin)
 % where the layout is a FieldTrip structure obtained from FT_PREPARE_LAYOUT.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'point'         = yes/no
-%   'box'           = yes/no
-%   'label'         = yes/no
-%   'labelsize'     = number indicating font size (e.g. 6)
-%   'labeloffset'   = offset of label from point (suggestion is 0.005)
-%   'mask'          = yes/no
-%   'outline'       = yes/no
-%   'verbose'       = yes/no
-%   'pointsymbol'   = string with symbol (e.g. 'o') - all three point options need to be used together
-%   'pointcolor'    = string with color (e.g. 'k')
-%   'pointsize'     = number indicating size (e.g. 8)
+%   'point'       = yes/no
+%   'box'         = yes/no
+%   'label'       = yes/no
+%   'labelsize'   = number indicating font size (e.g. 6)
+%   'labeloffset' = offset of label from point (suggestion is 0.005)
+%   'labelrotate' = scalar, vector with rotation angle (in degrees) per label (default = 0)
+%   'labelalignh' = string, or cell-array specifying the horizontal alignment of the text (default = 'left')
+%   'labelalignv' = string, or cell-array specifying the vertical alignment of the text (default = 'middle')
+%   'mask'        = yes/no
+%   'outline'     = yes/no
+%   'verbose'     = yes/no
+%   'pointsymbol' = string with symbol (e.g. 'o') - all three point options need to be used together
+%   'pointcolor'  = string with color (e.g. 'k')
+%   'pointsize'   = number indicating size (e.g. 8)
 %
-%   hpos        = horizontal position of the lower left corner of the local axes
-%   vpos        = vertical position of the lower left corner of the local axes
-%   width       = width of the local axes
-%   height      = height of the local axes
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   'hpos'        = horizontal position of the lower left corner of the local axes
+%   'vpos'        = vertical position of the lower left corner of the local axes
+%   'width'       = width of the local axes
+%   'height'      = height of the local axes
 
 % Copyright (C) 2009, Robert Oostenveld
 %
@@ -55,6 +59,7 @@ point        = ft_getopt(varargin, 'point',        true);
 box          = ft_getopt(varargin, 'box',          true);
 label        = ft_getopt(varargin, 'label',        true);
 labelsize    = ft_getopt(varargin, 'labelsize',    10);
+labelfont    = ft_getopt(varargin, 'labelfont',    'helvetica');
 labeloffset  = ft_getopt(varargin, 'labeloffset',  0);
 mask         = ft_getopt(varargin, 'mask',         true);
 outline      = ft_getopt(varargin, 'outline',      true);
@@ -64,6 +69,13 @@ pointcolor   = ft_getopt(varargin, 'pointcolor');
 pointsize    = ft_getopt(varargin, 'pointsize');
 interpreter  = ft_getopt(varargin, 'interpreter', 'tex');
 
+% some stuff related to some refined label plotting
+labelrotate   = ft_getopt(varargin, 'labelrotate',  0);
+labelalignh   = ft_getopt(varargin, 'labelalignh',  'left');
+labelalignv   = ft_getopt(varargin, 'labelalignv',  'middle');
+labelcolor    = ft_getopt(varargin, 'labelcolor', 'k');
+
+
 % convert between true/false/yes/no etc. statements
 point   = istrue(point);
 box     = istrue(box);
@@ -72,6 +84,10 @@ mask    = istrue(mask);
 outline = istrue(outline);
 verbose = istrue(verbose);
 
+if ~(point || box || label || mask || outline)
+  % there is nothing to be plotted
+  return;
+end
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -84,12 +100,12 @@ end
 % create a matrix with all coordinates
 % from positions, mask, and outline
 allCoords = lay.pos;
-if ~isempty(lay.mask)
+if isfield(lay, 'mask') && ~isempty(lay.mask)
   for k = 1:numel(lay.mask)
     allCoords = [allCoords; lay.mask{k}];
   end
 end
-if ~isempty(lay.outline)
+if isfield(lay, 'outline') &&~isempty(lay.outline)
   for k = 1:numel(lay.outline)
     allCoords = [allCoords; lay.outline{k}];
   end
@@ -134,11 +150,30 @@ if label
   % the MATLAB text function fails if the position for the string is specified in single precision
   X = double(X);
   Y = double(Y);
-  text(X+labeloffset, Y+(labeloffset*1.5), Lbl ,'fontsize',labelsize,'interpreter',interpreter);
+  
+  % check whether fancy label plotting is needed, this requires a for loop,
+  % otherwise print text in a single shot
+  if numel(labelrotate)==1
+    text(X+labeloffset, Y+(labeloffset*1.5), Lbl ,'fontsize',labelsize,'fontname',labelfont,'interpreter',interpreter,'horizontalalignment',labelalignh,'verticalalignment',labelalignv,'color',labelcolor);
+  else
+    n = numel(Lbl);
+    if ~iscell(labelalignh)
+      labelalignh = repmat({labelalignh},[n 1]);
+    end
+    if ~iscell(labelalignv)
+      labelalignv = repmat({labelalignv},[n 1]);
+    end
+    if numel(Lbl)~=numel(labelrotate)||numel(Lbl)~=numel(labelalignh)||numel(Lbl)~=numel(labelalignv)
+      eror('there is something wrong with the input arguments');
+    end
+    for k = 1:numel(Lbl)
+      text(X(k)+labeloffset, Y(k)+(labeloffset*1.5), Lbl{k}, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k),'color',labelcolor);
+    end
+  end
 end
 
 if box
-  line([X-Width/2 X+Width/2 X+Width/2 X-Width/2 X-Width/2]',[Y-Height/2 Y-Height/2 Y+Height/2 Y+Height/2 Y-Height/2]');
+  line([X-Width/2 X+Width/2 X+Width/2 X-Width/2 X-Width/2]',[Y-Height/2 Y-Height/2 Y+Height/2 Y+Height/2 Y-Height/2]', 'color', [0 0 0]);
 end
 
 if outline && isfield(lay, 'outline')

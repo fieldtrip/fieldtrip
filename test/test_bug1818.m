@@ -1,5 +1,8 @@
 function test_bug1818
 
+% MEM 2gb
+% WALLTIME 00:10:00
+
 % test the reading function of meshes used for constructing SIMBIO FEM head models
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1818
 
@@ -23,11 +26,11 @@ for i=1:length(filename)
   parcellation1 = ft_datatype_parcellation(mesh);
   parcellation2 = ft_datatype_parcellation(mesh,'parcellationstyle','probabilistic');
 
-  if~(ft_datatype(parcellation1,'parcellation'))
+  if ~(ft_datatype(parcellation1,'parcellation'))
     error('the conversion to a parcellation failed');
   end
 
-  if~(ft_datatype(parcellation2,'parcellation'))
+  if ~(ft_datatype(parcellation2,'parcellation'))
     error('the conversion to a parcellation failed');
   end
 

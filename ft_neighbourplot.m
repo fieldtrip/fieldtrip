@@ -16,10 +16,10 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %                       flexibly add or remove edges between vertices
 % or one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
-%   cfg.elec          = structure with EEG electrode positions
-%   cfg.grad          = structure with MEG gradiometer positions
-%   cfg.elecfile      = filename containing EEG electrode positions
-%   cfg.gradfile      = filename containing MEG gradiometer positions
+%   cfg.elec          = structure with electrode definition
+%   cfg.grad          = structure with gradiometer definition
+%   cfg.elecfile      = filename containing electrode definition
+%   cfg.gradfile      = filename containing gradiometer definition
 %
 % If cfg.neighbours is not defined, this function will call
 % FT_PREPARE_NEIGHBOURS to determine the channel neighbours. The
@@ -54,13 +54,22 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
+ft_preamble provenance data
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 hasdata = nargin>1;
-if hasdata, data = ft_checkdata(data); end
+
+if hasdata
+  % check if the input data is valid for this function
+  data = ft_checkdata(data);
+end
 
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 
@@ -109,6 +118,7 @@ else
 end
 hf = figure;
 axis equal
+axis vis3d
 axis off
 hold on;
 hl = [];
@@ -202,8 +212,8 @@ cfg.neighbours = cfg.neighbours(neighb_idx);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
+ft_postamble provenance
 
 end % main function
 
@@ -282,9 +292,17 @@ elseif istrue(cfg.enableedit)
     y2 = proj(lastSensId,2);
     X = [x1 x2];
     Y = [y1 y2];
+    if size(proj, 2) == 2
+      hl(curSensId, lastSensId) = line(X, Y, 'color', 'r');
+      hl(lastSensId, curSensId) = line(X, Y, 'color', 'r');
+    elseif size(proj, 2) == 3
+      z1 = proj(curSensId,3);
+      z2 = proj(lastSensId,3);
+      Z =[z1 z2];
+      hl(curSensId, lastSensId) = line(X, Y, Z, 'color', 'r');
+      hl(lastSensId, curSensId) = line(X, Y, Z, 'color', 'r');
+    end
     
-    hl(curSensId, lastSensId) = line(X, Y, 'color', 'r');
-    hl(lastSensId, curSensId) = line(X, Y, 'color', 'r');
   end
   % draw nodes on top again
   delete(hs(curSensId));

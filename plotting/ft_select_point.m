@@ -1,18 +1,17 @@
 function [selected] = ft_select_point(pos, varargin)
 
-% FT_SELECT_POINT helper function for selecting a one or multiple points
-% in the current figure using the mouse.
+% FT_SELECT_POINT helper function for selecting a one or multiple points in the
+% current figure using the mouse. It returns a list of the [x y] coordinates of the
+% selected points.
 %
 % Use as
 %   [selected] = ft_select_point(pos, ...)
 %
-% It returns a list of the [x y] coordinates of the selected points.
-%
 % Optional input arguments should come in key-value pairs and can include
-%   'multiple'    true/false, make multiple selections, pressing "q" on the keyboard finalizes the selection (default = false)
-%   'nearest'     true/false (default = true)
+%   'multiple'   = true/false, make multiple selections, pressing "q" on the keyboard finalizes the selection (default = false)
+%   'nearest'    = true/false (default = true)
 %
-% Example use
+% Example
 %   pos = randn(10,2);
 %   figure
 %   plot(pos(:,1), pos(:,2), '.')

@@ -9,13 +9,15 @@ function [downsample] = ft_volumedownsample(cfg, source)
 % where the input mri should be a single anatomical volume that was
 % for example read with FT_READ_MRI or should be a volumetric source
 % reconstruction resulting from FT_SOURCEANALYSIS or FT_SOURCEINTERPOLATE.
-% 
+%
 % The configuration can contain
 %   cfg.downsample = integer number (default = 1, i.e. no downsampling)
+%   cfg.parameter  = string, data field to downsample (default = 'all')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
+%   cfg.keepinside = 'yes' or 'no', keep the inside/outside labeling (default = 'yes')
+%   cfg.spmversion = string, 'spm2' or 'spm8' (default = 'spm8')
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -23,9 +25,9 @@ function [downsample] = ft_volumedownsample(cfg, source)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_SOURCEINTERPOLATE, FT_VOLUMEWRITE and FT_VOLUMENORMALISE.
+% See also FT_SOURCEINTERPOLATE, FT_VOLUMEWRITE and FT_VOLUMENORMALISE
 
-% Copyright (C) 2004, Robert Oostenveld
+% Copyright (C) 2004-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -49,11 +51,16 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
 source = ft_checkdata(source, 'datatype', 'volume', 'feedback', 'no');
@@ -111,6 +118,8 @@ if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
     ft_hastoolbox('SPM2',1);
   elseif strcmpi(cfg.spmversion, 'spm8'),
     ft_hastoolbox('SPM8',1);
+  elseif strcmpi(cfg.spmversion, 'spm12'),
+    ft_hastoolbox('SPM12',1);
   end
   
   for j = 1:length(cfg.parameter)
@@ -119,9 +128,7 @@ if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
     elseif strcmp(cfg.parameter{j}, 'anatomy')
       fprintf('not smoothing %s\n', cfg.parameter{j});
     else
-      fprintf('smoothing %s with a kernel of %d voxels\n', cfg.parameter{j}, cfg.smooth);
-      tmp = double(getsubfield(source, cfg.parameter{j}));
-      spm_smooth(tmp, tmp, cfg.smooth);
+      tmp = volumesmooth(getsubfield(source, cfg.parameter{j}), cfg.smooth, cfg.parameter{j});
       setsubfield(source, cfg.parameter{j}, tmp);
     end
   end
@@ -144,7 +151,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous source
-ft_postamble history downsample
-ft_postamble savevar downsample
+ft_postamble previous   source
+ft_postamble provenance downsample
+ft_postamble history    downsample
+ft_postamble savevar    downsample

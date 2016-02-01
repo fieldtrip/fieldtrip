@@ -2,7 +2,7 @@ function seg=bbxflatsegment(node,loop)
 %
 % seg=bbxflatsegment(node,loop)
 %
-% decompose edge loops into flat segments alone x/y/z 
+% decompose edge loops into flat segments along the x/y/z 
 % planes of the bounding box
 %
 % author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)

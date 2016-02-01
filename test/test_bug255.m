@@ -1,5 +1,8 @@
 function test_bug255
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug255
 % TEST ft_timelockanalysis ft_prepare_layout ft_timelockstatistics ft_topoplotER
 
@@ -28,7 +31,7 @@ lay = ft_prepare_layout(cfg);
 
 % do statistics
 cfg = [];
-cfg.statistic   = 'indepsamplesT';
+cfg.statistic   = 'ft_statfun_indepsamplesT';
 cfg.avgovertime = 'yes';
 cfg.design      = [ones(1,5) ones(1,5)*2];
 cfg.method      = 'montecarlo';

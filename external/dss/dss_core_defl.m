@@ -10,7 +10,7 @@ function state = dss_core_defl(state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: dss_core_defl.m,v 1.25 2005/12/02 12:23:18 jaakkos Exp $
+% $Id$
 
 % -- Internal variables
 % wdim            Dimension of the whitened data

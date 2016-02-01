@@ -9,8 +9,7 @@ function [dataout] = ft_channelnormalise(cfg, data)
 % The configuration can contain
 %   cfg.trials = 'all' or a selection given as a 1xN vector (default = 'all')
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -44,14 +43,19 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % set the defaults
-if ~isfield(cfg, 'trials'),       cfg.trials = 'all';           end
+cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -60,10 +64,10 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = keepfields(cfg, 'trials');
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % initialise some variables
 nchan  = numel(data.label);
@@ -75,11 +79,16 @@ datssq = zeros(nchan,1);
 % FIXME this can be kept, provided the scaling is built in appropriately
 dataout         = [];
 dataout.label   = data.label;
-if isfield(data, 'fsample'); dataout.fsample = data.fsample; end;
 dataout.trial   = cell(1,ntrl);
 dataout.time    = data.time;
-if isfield(data, 'sampleinfo'),  dataout.sampleinfo  = data.sampleinfo;  end
-if isfield(data, 'trialinfo'), dataout.trialinfo = data.trialinfo; end
+
+% some fields from the input should be copied over in the output
+copyfield = {'fsample', 'sampleinfo', 'trialinfo'};
+for i=1:length(copyfield)
+  if isfield(data, copyfield{i})
+    dataout.(copyfield{i}) = data.(copyfield{i});
+  end
+end
 
 % compute the mean and std
 for k = 1:ntrl
@@ -106,7 +115,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history dataout
-ft_postamble savevar dataout
+ft_postamble previous   data
+ft_postamble provenance dataout
+ft_postamble history    dataout
+ft_postamble savevar    dataout

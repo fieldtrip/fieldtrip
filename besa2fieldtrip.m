@@ -1,4 +1,4 @@
-function [data] = besa2fieldtrip(input)
+function data = besa2fieldtrip(input)
 
 % BESA2FIELDTRIP reads and converts various BESA datafiles into a FieldTrip
 % data structure, which subsequently can be used for statistical analysis
@@ -7,22 +7,22 @@ function [data] = besa2fieldtrip(input)
 % Use as
 %   [data] = besa2fieldtrip(filename)
 % where the filename should point to a BESA datafile (or data that
-% is exported by BESA). The output is a Matlab structure that is
+% was exported by BESA). The output is a MATLAB structure that is
 % compatible with FieldTrip.
 %
 % The format of the output structure depends on the type of datafile:
-%   *.avr is converted to a structure similar to the output of TIMELOCKANALYSIS
-%   *.mul is converted to a structure similar to the output of TIMELOCKANALYSIS
-%   *.swf is converted to a structure similar to the output of TIMELOCKANALYSIS (*)
-%   *.tfc is converted to a structure similar to the output of FREQANALYSIS     (*)
-%   *.dat is converted to a structure similar to the output of SOURCANALYSIS
-%   *.dat combined with a *.gen or *.generic is converted to a structure similar to the output of PREPROCESSING
+%   *.avr is converted to a structure similar to the output of FT_TIMELOCKANALYSIS
+%   *.mul is converted to a structure similar to the output of FT_TIMELOCKANALYSIS
+%   *.swf is converted to a structure similar to the output of FT_TIMELOCKANALYSIS (*)
+%   *.tfc is converted to a structure similar to the output of FT_FREQANALYSIS     (*)
+%   *.dat is converted to a structure similar to the output of FT_SOURCANALYSIS
+%   *.dat combined with a *.gen or *.generic is converted to a structure similar to the output of FT_PREPROCESSING
 %
 % Note (*): If the BESA toolbox by Karsten Hochstatter is found on your
-% Matlab path, the readBESAxxx functions will be used (where xxx=tfc/swf),
+% MATLAB path, the readBESAxxx functions will be used (where xxx=tfc/swf),
 % alternatively the private functions from FieldTrip will be used.
 %
-% See also EEGLAB2FIELDTRIP
+% See also EEGLAB2FIELDTRIP, SPM2FIELDTRIP
 
 % Copyright (C) 2005-2010, Robert Oostenveld
 %
@@ -171,7 +171,7 @@ elseif ischar(input)
     data = [];
     data.label = [];
     if isfield(tmp, 'ChannelLabels'),
-        data.label = fixlabels(tmp.ChannelLabels); 
+        data.label = fixlabels(tmp.ChannelLabels);
     end;
     data.avg     = tmp.Data;
     data.time    = tmp.Time / 1000; % convert to seconds

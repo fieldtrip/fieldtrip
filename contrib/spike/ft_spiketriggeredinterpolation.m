@@ -18,7 +18,7 @@ function [data] = ft_spiketriggeredinterpolation(cfg, data)
 %   cfg.timwin       = [begin end], duration of LFP segment around each spike (default =
 %                      [-0.005 0.005]) to be removed
 %   cfg.interptoi    = value, time in seconds used for interpolation, which
-%                      must be larger than timwin (default = 0.01)
+%                      must be larger than timwin (default = 0.2)
 %   cfg.spikechannel = string, name of single spike channel to trigger on
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
@@ -53,7 +53,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -121,7 +121,7 @@ interppad = round( cfg.interptoi*data.fsample);
 for i=1:ntrial
   spikesmp = find(data.trial{i}(spikesel,:));
   
-  fprintf('processing trial %d of %d (%d spikes)\n', i, ntrial, length(spikesmp));
+  fprintf('Spike Triggered Interpolation: processing trial %d of %d (%d spikes)\n', i, ntrial, length(spikesmp));
   
   ft_progress('init', cfg.feedback, 'interpolating spikes');
   for j=1:length(spikesmp)
@@ -148,7 +148,9 @@ for i=1:ntrial
       xall  = [begsmp_interp          : endsmp_interp];
       x     = [begsmp_interp:begsmp-1   endsmp+1:endsmp_interp];
       y     =  data.trial{i}(chansel,x) ;
+      if length(chansel) > 1; y = y'; end %our channels are in rows but interp1 need cols
       yi    = interp1(x,y,xall,cfg.method);
+      if length(chansel) > 1; yi = yi'; end %get us back to rows
       
       % store the interpolated segment back in the data
       data.trial{i}(chansel,xall) = yi;            

@@ -240,7 +240,7 @@ for p = 1:count
     try
         if p == 1
             [ epoch ] = fiff_read_raw_segment(raw,from,to,picks);
-            times = double([(from-event_samp):(to-event_samp)])/raw.info.sfreq;
+            times = double([(int32(from)-int32(event_samp)):(int32(to)-int32(event_samp))])/raw.info.sfreq;
         else
             [ epoch ] = fiff_read_raw_segment(raw,from,to,picks);
         end

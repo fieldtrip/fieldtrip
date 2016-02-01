@@ -1,5 +1,8 @@
 function test_bug1563(datainfo, version)
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug1599
 % TEST ft_sourceanalysis beamformer_lcmv
 
@@ -15,7 +18,7 @@ if nargin<2
 end
 
 if ~isequal('PCWIN64', computer)
-  warning('this bug only occurs under windows and matlab 64 bit')
+  warning('this bug only occurs under Windows and MATLAB 64 bit')
 end
 
 %% Try to reproduce
@@ -46,16 +49,15 @@ cfg.lcmv.keepfilter = 'yes';
 cfg.lcmv.fixedori   ='no'; 
 source              = ft_sourceanalysis(cfg, timelock); 
 
-if isunix
-    template = '/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'; %template is distributed with spm
-elseif ispc
-    template = 'H:\common\matlab\fieldtrip\external\spm8\templates/T1.nii'; %template is distributed with spm
-end
+% template is distributed with spm
+template = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+
+source.coordsys = 'mni'; % this can also be determined with ft_determine_coordsys
 
 template_mri = ft_read_mri(template);
 cfg            = [];
 cfg.voxelcoord = 'no';
 cfg.parameter  = {'avg.pow'};
 cfg.interpmethod = 'spline';
-cfg.coordsys   = 'mni';
+% cfg.coordsys   = 'mni'; % not supported any more, should be specified in the input data
 source_int  = ft_sourceinterpolate(cfg, source, template_mri);

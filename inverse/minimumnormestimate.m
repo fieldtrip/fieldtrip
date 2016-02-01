@@ -1,20 +1,22 @@
-function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
+function [dipout] = minimumnormestimate(dip, grad, headmodel, dat, varargin)
 
 % MINIMUMNORMESTIMATE computes a linear estimate of the current in a
 % distributed source model.
-% 
+%
 % Use as
-%   [dipout] = minimumnormestimate(dip, grad, vol, dat, ...)
+%   [dipout] = minimumnormestimate(dip, grad, headmodel, dat, ...)
 %
 % Optional input arguments should come in key-value pairs and can include
 %   'noisecov'         = Nchan x Nchan matrix with noise covariance
+%   'noiselambda'      = scalar value, regularisation parameter for the noise
+%                        covariance matrix. (default=0)
 %   'sourcecov'        = Nsource x Nsource matrix with source covariance
 %                        (can be empty, the default will then be identity)
-%   'lambda'           = scalar, regularisation parameter (can be empty, 
-%                        it will then be estimated from snr) 
+%   'lambda'           = scalar, regularisation parameter (can be empty,
+%                        it will then be estimated from snr)
 %  'snr'               = scalar, signal to noise ratio
 %  'reducerank'        = reduce the leadfield rank, can be 'no' or a number
-%                        (e.g. 2) 
+%                        (e.g. 2)
 %  'normalize'         = normalize the leadfield
 %  'normalizeparam'    = parameter for depth normalization (default = 0.5)
 %  'keepfilter'        = 'no' or 'yes', keep the spatial filter in the
@@ -65,20 +67,17 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 %
 % $Id$
 
-% ensure that these are row-vectors
-dip.inside  = dip.inside(:)';
-dip.outside = dip.outside(:)';
-
 % get the optional inputs for the MNE method according to Dale et al 2000, and Liu et al. 2002
 noisecov       = ft_getopt(varargin, 'noisecov');
 sourcecov      = ft_getopt(varargin, 'sourcecov');
 lambda         = ft_getopt(varargin, 'lambda');  % can be empty, it will then be estimated based on SNR
-snr            = ft_getopt(varargin, 'snr');  % is used to estimate lambda if lambda is not specified
+noiselambda    = ft_getopt(varargin, 'noiselambda', []);
+snr            = ft_getopt(varargin, 'snr');     % is used to estimate lambda if lambda is not specified
 
 % these settings pertain to the forward model, the defaults are set in compute_leadfield
 reducerank     = ft_getopt(varargin, 'reducerank');
 normalize      = ft_getopt(varargin, 'normalize');
-normalizeparam = ft_getopt(varargin, 'normalizeparam');
+normalizeparam = ft_getopt(varargin, 'normalizeparam', 0.5);
 keepfilter     = istrue(ft_getopt(varargin, 'keepfilter', false));
 dowhiten       = istrue(ft_getopt(varargin, 'prewhiten',  false));
 doscale        = istrue(ft_getopt(varargin, 'scalesourcecov', false));
@@ -91,9 +90,43 @@ elseif ~isempty(lambda) && ~isempty(snr)
   error('either lambda or snr should be specified, not both');
 end
 
-if ~isempty(snr) && doscale
-  error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% find the dipole positions that are inside/outside the brain
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isfield(dip, 'inside')
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
+
+if any(dip.inside>1)
+  % convert to logical representation
+  tmp = false(size(dip.pos,1),1);
+  tmp(dip.inside) = true;
+  dip.inside = tmp;
+end
+
+% keep the original details on inside and outside positions
+originside = dip.inside;
+origpos    = dip.pos;
+
+% select only the dipole positions inside the brain for scanning
+dip.pos    = dip.pos(originside,:);
+dip.inside = true(size(dip.pos,1),1);
+if isfield(dip, 'mom'),
+  dip.mom = dip.mom(:,originside);
+end
+if isfield(dip, 'leadfield')
+  hasleadfield = 1;
+  dip.leadfield = dip.leadfield(originside);
+end
+if isfield(dip, 'filter')
+  hasfilter = 1;
+  dip.filter = dip.filter(originside);
+end
+
+%if ~isempty(snr) && doscale
+%  error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
+%end
 
 % compute leadfield
 if hasfilter
@@ -105,42 +138,45 @@ elseif hasleadfield
 else
   fprintf('computing forward model\n');
   if isfield(dip, 'mom')
-    for i=dip.inside
+    for i=size(dip.pos,1)
       % compute the leadfield for a fixed dipole orientation
-      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     end
   else
-    for i=dip.inside
+      
+    for i=1:size(dip.pos,1)
       % compute the leadfield
-      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
     end
-  end
-  for i=dip.outside
-    dip.leadfield{i} = nan;
   end
 end
 
-% compute the spatial filter
+%% compute the spatial filter
 if ~hasfilter
-  Nchan = size(dip.leadfield{dip.inside(1)},1);
   
-  % count the number of leadfield components for each source
+  % count the number of channels and leadfield components
+  Nchan   = size(dip.leadfield{1},1);
   Nsource = 0;
-  for i=dip.inside
+  for i=1:size(dip.pos,1)
     Nsource = Nsource + size(dip.leadfield{i}, 2);
   end
   
   % concatenate the leadfield components of all sources into one large matrix
   lf = zeros(Nchan, Nsource);
   n = 1;
-  for i=dip.inside
+  for i=1:size(dip.pos,1)
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
     lf(:,cbeg:cend) = dip.leadfield{i};
     n = n + size(dip.leadfield{i}, 2);
   end
   
-  fprintf('computing MNE source reconstruction, this may take some time...\n');
+  % Take the rieal part of the noise cross-spectral density matrix
+  if isreal(noisecov) == 0
+      fprintf('Taking the real part of the noise cross-spectral density matrix\n');
+      noisecov = real(noisecov);
+  end
+  
   % compute the inverse of the forward model, this is where prior information
   % on source and noise covariance would be useful
   if isempty(noisecov)
@@ -148,7 +184,7 @@ if ~hasfilter
     warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
     w = pinv(lf);
   elseif ~isempty(noisecov)
-    fprintf('computing the solution where the noise covariance is used for regularisation\n'); 
+    fprintf('computing the solution where the noise covariance is used for regularisation\n');
     % the noise covariance has been given and can be used to regularise the solution
     if isempty(sourcecov)
       sourcecov = speye(Nsource);
@@ -162,15 +198,20 @@ if ~hasfilter
       fprintf('prewhitening the leadfields using the noise covariance\n');
       
       % compute the prewhitening matrix
-      [U,S,V] = svd(C);
+      if ~isempty(noiselambda)
+        fprintf('using a regularized noise covariance matrix\n');
+        % note: if different channel types are present, one should probably load the diagonal with channel-type specific stuff
+        [U,S,V] = svd(C+eye(size(C))*noiselambda);
+      else
+        [U,S,V] = svd(C);
+      end
+      
       Tol     = 1e-12;
       diagS   = diag(S);
       sel     = find(diagS>Tol.*diagS(1));
-      
-      P = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)';
-      
-      A = P*A;
-      C = eye(size(P,1));
+      P       = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)'; % prewhitening matrix
+      A       = P*A; % prewhitened leadfields
+      C       = eye(size(P,1)); % prewhitened noise covariance matrix
     end
     
     if doscale
@@ -181,102 +222,147 @@ if ~hasfilter
       % order for this to make sense (otherwise the diagonal elements of C
       % have different units)
       fprintf('scaling the source covariance\n');
-      scale = trace(A*R*A')/trace(C);
+      scale = trace(A*(R*A'))/trace(C);
       R     = R./scale;
-      
-    elseif ~isempty(snr)
+    end
+    
+    if ~isempty(snr)
       % the regularisation parameter can be estimated from the noise covariance,
       % see equation 6 in Lin et al. 2004
       lambda = trace(A * R * A')/(trace(C)*snr^2);
     end
     
-    % equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
-    denom = (A*R*A'+(lambda^2)*C);
-    if cond(denom)<1e12
-      w = R * A' / denom;
-    else
-      fprintf('taking pseudo-inverse due to large condition number\n');
-      w = R * A' * pinv(denom);
-    end
-  
-    % unwhiten the filters to bring them back into signal subspace
-    if dowhiten
+    if dowhiten,
+      % as documented on MNE website, this is replacing the part of the code below, it gives
+      % more stable results numerically.
+      Rc      = chol(R, 'lower');
+      [U,S,V] = svd(A * Rc, 'econ');
+      s  = diag(S);
+      ss = s ./ (s.^2 + lambda);
+      w  = Rc * V * diag(ss) * U';
+   
+      % unwhiten the filters to bring them back into signal subspace
       w = w*P;
+   
+    else
+      %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
+      denom = (A*R*A'+(lambda^2)*C);
+      if cond(denom)<1e12
+        w = R * A' / denom;
+      else
+        fprintf('taking pseudo-inverse due to large condition number\n');
+        w = R * A' * pinv(denom);
+      end
     end
-       
+    
+  end % if empty noisecov
+  
+  %% for each of the timebins, estimate the source strength
+  if isreal(dat) == 1
+    fprintf('The input are sensors time-series: Computing the dipole moments\n')
+    mom = w * dat;
+    mom_ind = 1;
+  elseif size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
+    fprintf('The input is a sensor level cross-spectral density: Computing source level power\n')
+    pow = real(sum((w*dat).*w,2));
+    mom_ind = 0;
+  else
+    fprintf('The input is are sensor level Fourier-coefficients: Computing source level Fourier coefficients\n')
+    mom = w * dat;
+    mom_ind = 1;
   end
   
-  % for each of the timebins, estimate the source strength
-  mom = w * dat;
-  
-  % re-assign the estimated source strength over the inside and outside dipoles
-  n = 1;
-  for i=dip.inside
-    cbeg = n;
-    cend = n + size(dip.leadfield{i}, 2) - 1;
-    dipout.mom{i} = mom(cbeg:cend,:);
-    n = n + size(dip.leadfield{i}, 2);
+  % assign the estimated source strength to each dipole
+  if mom_ind == 1
+    n = 1;
+    for i=1:size(dip.pos,1)
+      cbeg = n;
+      cend = n + size(dip.leadfield{i}, 2) - 1;
+      dipout.mom{i} = mom(cbeg:cend,:);
+      n = n + size(dip.leadfield{i}, 2);
+    end
   end
-  dipout.mom(dip.outside) = {nan};
-
+  
 elseif hasfilter
-  
+  if isreal(dat) == 0
+      error('Using premade filters is currenly not supported for frequency domain analysis\n')
+  end
   % use the spatial filters from the data
   dipout.mom = cell(size(dip.pos,1),1);
-  for i=dip.inside
+  for i=1:size(dip.pos,1)
     dipout.mom{i} = dip.filter{i} * dat;
   end
-  dipout.mom(dip.outside) = {nan};
   
-end
+end % if hasfilter
 
 % for convenience also compute power (over the three orientations) at each location and for each time
-dipout.pow = nan( size(dip.pos,1), size(dat,2));
-for i=dip.inside
-  dipout.pow(i,:) = sum(dipout.mom{i}.^2, 1);
-end
 
-% add other descriptive information to the output source model
-dipout.pos     = dip.pos;
-dipout.inside  = dip.inside;
-dipout.outside = dip.outside;
+if mom_ind == 1
+  dipout.pow = nan(size(dip.pos,1), size(dat,2));
+  for i=1:size(dip.pos,1)
+    dipout.pow(i,:) = sum(abs(dipout.mom{i}).^2, 1);
+  end
+else
+    dipout.pow = nan(size(dip.pos,1), 1);
+    n = 1;
+    for i=1:size(dip.pos,1)
+      cbeg = n;
+      cend = n + size(dip.leadfield{i}, 2) - 1;
+      dipout.pow(i,:) = sum(pow(cbeg:cend),1);
+      n = n + size(dip.leadfield{i}, 2);
+    end
+end
 
 % deal with keepfilter option
 if keepfilter && ~hasfilter
   % spatial filters have been computed, store them in the output
   % re-assign spatial filter to conventional 1 cell per dipole location
   n = 1;
-  for i=dip.inside(:)'
+  for i=1:size(dip.pos,1)
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
     dipout.filter{i} = w(cbeg:cend,:);
     n    = n + size(dip.leadfield{i}, 2);
   end
-  dipout.filter(dip.outside)  = {nan};
-  
 elseif keepfilter
   dipout.filter = dip.filter;
 end
 
 % deal with noise covariance
 if ~isempty(noisecov) && ~hasfilter
-  
   % compute estimate of the projected noise
   n = 1;
-  for i=dip.inside(:)'
+  for i=1:size(dip.pos,1)
     cbeg = n;
     cend = n + size(dip.leadfield{i}, 2) - 1;
     dipout.noisecov{i} = w(cbeg:cend,:)*noisecov*w(cbeg:cend,:)';
     n    = n + size(dip.leadfield{i}, 2);
   end
-  dipout.noisecov(dip.outside) = {nan};
-
 elseif ~isempty(noisecov)
-  
   % compute estimate of the projected noise
-  for i=dip.inside(:)'
-    dipout.noisecov{i} = dipout.filter{i}*noisecov*dipout.filter{i}';
+  for i=1:size(dip.pos,1)
+    dipout.noisecov{i} = dip.filter{i}*noisecov*dip.filter{i}';
   end
-  dipout.noisecov(dip.outside) = {nan};
-
 end
+
+% wrap it all up, prepare the complete output
+dipout.inside  = originside;
+dipout.pos     = origpos;
+
+if isfield(dipout, 'mom')
+  dipout.mom( originside) = dipout.mom;
+  dipout.mom(~originside) = {[]};
+end
+if isfield(dipout, 'pow')
+  dipout.pow( originside,:) = dipout.pow;
+  dipout.pow(~originside,:) = nan;
+end
+if isfield(dipout, 'noisecov')
+  dipout.noisecov( originside) = dipout.noisecov;
+  dipout.noisecov(~originside) = {[]};
+end
+if isfield(dipout, 'filter')
+  dipout.filter( originside) = dipout.filter;
+  dipout.filter(~originside) = {[]};
+end
+

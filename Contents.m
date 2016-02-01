@@ -1,4 +1,7 @@
-% FieldTrip is the Matlab toolbox for MEG and EEG analysis that is being developed at
+% FieldTrip
+% Version unknown fieldtriptoolbox.org DD-MM-YYYY
+%
+% FieldTrip is the MATLAB toolbox for MEG and EEG analysis that is being developed at
 % the Centre for Cognitive Neuroimaging of the Donders Institute for Brain, Cognition
 % and Behaviour together with collaborating institutes. The FieldTrip software is
 % released as open source under the GNU general public license.
@@ -9,7 +12,7 @@
 % supports the data formats of all major MEG systems (CTF, Neuromag, BTi) and of the
 % most popular EEG systems, and new formats can be added easily. FieldTrip contains
 % high-level functions that you can use to construct your own analysis protocol in
-% Matlab. Furthermore, it easily allows developers to incorporate low-level algorithms
+% MATLAB. Furthermore, it easily allows developers to incorporate low-level algorithms
 % for new EEG/MEG analysis methods.
 %
 % The FieldTrip software is free but copyrighted software, distributed under the terms
@@ -28,9 +31,16 @@
 %   Eric Maris, DCC, FCDC
 %   Ingrid Nieuwenhuis, DCCN, FCDC
 %   Saskia Haegens, DCCN, FCDC
+%   Vladimir Litvak, UCL
+%   Eelke Spaak, DCCN
+%   Jorn Horschich, DCCN
+%   Roemer van der Meij, DCC
+%   Lilla Magyari, MPI, DCCN
 %   and others ...
 %
-% Copyrights (C) 2008-2012, Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands (DCCN, DCC, DCN)
+% Copyrights (C) 2008-2014, Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands (DCCN, DCC, DCN)
+% Copyrights (C) 2007-2014, University College London, United Kingdom (UCL)
+% Copyrights (C) 2011-2014, Max Planck Institute for Psycholynguistics, Nijmegen, The Netherlands (MPI)
 % Copyrights (C) 2008-2010, Centre for Cognitive Neuroimaging, Glasgow, United Kingdom (CCNi)
 % Copyrights (C) 2003-2008, F.C. Donders Centre, Radboud University Nijmegen, The Netherlands (FCDC)
 % Copyrights (C) 2004-2007, Nijmegen Institute for Cognition and Information, Radboud University Nijmegen, The Netherlands (NICI)
@@ -42,13 +52,13 @@
 % the actual work, such as reading data from binary files and forward and inverse
 % modelling of the EEG/MEG. These low-level functions are contained in the private
 % subdirectory. These other toolboxes on which the framework depends are copyrighted by
-% their respective authors, see each individual matlab file for the details.
+% their respective authors, see each individual MATLAB file for the details.
 %
 % Unauthorised copying and distribution of functions that are not explicitely covered by
 % the GPL is not allowed!
 %
 % Below is an overview of the most important FieldTrip functions, sorted by category.
-% You can get more details on a function by typing "help functionname" in Matlab.
+% You can get more details on a function by typing "help functionname" in MATLAB.
 %
 % Preprocessing and reading data
 %   ft_definetrial

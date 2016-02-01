@@ -1,4 +1,4 @@
-function [cutpos,cutvalue,facedata,elemid]=qmeshcut(elem,node,value,cutat)
+function [cutpos,cutvalue,facedata,elemid]=qmeshcut(elem,node,value,cutat,varargin)
 %
 % [cutpos,cutvalue,facedata,elemid]=qmeshcut(elem,node,value,cutat)
 %
@@ -37,6 +37,8 @@ function [cutpos,cutvalue,facedata,elemid]=qmeshcut(elem,node,value,cutat)
 %           same as "value".
 %   facedata: define the intersection polygons in the form of patch "Faces"
 %   elemid: the index of the elem in which each intersection polygon locates
+%
+%   without any output, qmeshcut generates a cross-section plot
 %
 % the outputs of this subroutine can be easily plotted using 
 %
@@ -188,5 +190,6 @@ facedata=[tripatch(:,[1 2 3 3]); quadpatch(:,[1 2 4 3])];
 
 % plot your results with the following command
 
-%patch('Vertices',cutpos,'Faces',facedata,'FaceVertexCData',cutvalue,'facecolor','interp');
-
+if(nargout==0)
+  patch('Vertices',cutpos,'Faces',facedata,'FaceVertexCData',cutvalue,'facecolor','interp',varargin{:});
+end

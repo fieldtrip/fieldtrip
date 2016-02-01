@@ -1,4 +1,4 @@
-function [grid] = mollify(cfg, grid);
+function [grid] = mollify(cfg, grid)
 
 % This function does something
 %

@@ -48,6 +48,8 @@ for i=1:nsens
 end
 sens = newsens; clear newsens
 
+fiducials = fixpos(fiducials);
+
 % set the defaults
 if isempty(weights) || ~any(weights)
   weights = ones(1, nsens);
@@ -71,12 +73,12 @@ else
   afiducials = [];
 end
 
-pnt = detrend(sens(1).chanpos, 'constant');
-[u s v]= svd(pnt'*pnt);
+pos = detrend(sens(1).chanpos, 'constant');
+[u s v]= svd(pos'*pos);
 
 % starting with the second PC works a little better (e.g. on BTi)
-x1 = pnt*u(:, 2);
-x2 = pnt*u(:, 1);
+x1 = pos*u(:, 2);
+x2 = pos*u(:, 1);
 
 % detemine the indices of three reference sensors that are close to the three principal axes
 [m ind1] = min(x1);
@@ -97,7 +99,7 @@ if toplot
 end
 
 for i=1:nsens
-  if ~isequal(sens(i).label, sens(1).label)
+  if ~isequal(sens(i).label(:), sens(1).label(:))
     error('all sensor arrays should have the same sensors for averaging');
   end
   
@@ -118,18 +120,18 @@ for i=1:nsens
 end
 
 % compute the homogeneous transformation matrix that aligns the three reference sensors to the x-, y-, and z-axis
-tra = headcoordinates(mean1, mean2, mean3);
+tra = ft_headcoordinates(mean1, mean2, mean3);
 
 if ismeg
   % just realign the MEG coils
-  tra1  = headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
+  tra1  = ft_headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
   asens = ft_transform_sens(tra\tra1, sens(1));
   
 elseif iseeg
   % also average sensor locations
-  pnt = zeros(size(sens(1).chanpos));
+  pos = zeros(size(sens(1).chanpos));
   for i=1:nsens
-    tra1  = headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
+    tra1  = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
     csens = ft_transform_sens(tra\tra1, sens(i));
     
     if toplot && iseeg
@@ -137,10 +139,10 @@ elseif iseeg
       hold on
     end
     
-    pnt = pnt + weights(i).*csens.chanpos;
+    pos = pos + weights(i).*csens.chanpos;
   end % for nsens
   
-  csens.chanpos = pnt;
+  csens.chanpos = pos;
   asens     = csens;
   
 else
@@ -162,39 +164,39 @@ switch nfid
     afiducials = [];
     
   case 1
-    tra1  = headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
+    tra1  = ft_headcoordinates(sens(1).chanpos(ind1, :), sens(1).chanpos(ind2, :), sens(1).chanpos(ind3, :));
     afiducials = ft_transform_headshape(tra\tra1, fiducials);
     
   case nsens    
-    hspnt = [];
+    hspos = [];
       
     for i=1:nsens
       hs = strmatch('headshape', fiducials(i).fid.label);
       fiducials(i).fid.label(hs)  = [];      
       
-      fiducials(i).pnt = [fiducials(i).pnt; fiducials(i).fid.pnt(hs, :)];
+      fiducials(i).pos = [fiducials(i).pos; fiducials(i).fid.pos(hs, :)];
       
-      fiducials(i).fid.pnt(hs, :) = [];      
+      fiducials(i).fid.pos(hs, :) = [];      
       
       if i == 1
-          fidpnt = zeros(size(fiducials(1).fid.pnt));
+          fidpos = zeros(size(fiducials(1).fid.pos));
       end
       
       if ~isequal(fiducials(i).fid.label, fiducials(1).fid.label)
         error('all fiducials should have the same labels for averaging');
       end
       
-      tra1 = headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
+      tra1 = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
       
       cfiducials = ft_transform_headshape(tra1, fiducials(i));
       
-      fidpnt = fidpnt + weights(i).*cfiducials.fid.pnt;
+      fidpos = fidpos + weights(i).*cfiducials.fid.pos;
       
-      hspnt = [hspnt; cfiducials.pnt];
+      hspos = [hspos; cfiducials.pos];
     end
     
-    cfiducials.pnt = hspnt;
-    cfiducials.fid.pnt = fidpnt;
+    cfiducials.pos = hspos;
+    cfiducials.fid.pos = fidpos;
     afiducials = ft_transform_headshape(inv(tra), cfiducials);
     
     afiducials = ft_convert_units(afiducials);
@@ -212,9 +214,9 @@ switch nfid
             c = 100;
     end
     
-    [upnt, ind] = unique(round(c*afiducials.pnt/tolerance), 'rows');
+    [upos, ind] = unique(round(c*afiducials.pos/tolerance), 'rows');
     
-    afiducials.pnt = afiducials.pnt(ind, :);
+    afiducials.pos = afiducials.pos(ind, :);
     
   otherwise
     error('there should be either one set of fiducials or a set per sensor array');

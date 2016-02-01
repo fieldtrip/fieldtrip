@@ -1,9 +1,8 @@
 function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 
 % FT_SPIKETRIGGEREDSPECTRUM_STAT computes phase-locking statistics for spike-LFP
-% phases. These contain the PPC statistics published in Vinck et al. 2010
-% (Neuroimage) and Vinck et al. 2011 (Journal of Computational
-% Neuroscience).
+% phases. These contain the PPC statistics according to Vinck et al. 2010 (Neuroimage)
+% and Vinck et al. 2011 (Journal of Computational Neuroscience).
 %
 % Use as:
 %   [stat] = ft_spiketriggeredspectrum_stat(cfg, spike)
@@ -68,18 +67,34 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 %                   'all' (default)
 %
 % Main outputs:
-%     freq.nspikes                    =  nChancmb-by-nFreqs-nTimepoints number
-%                                        of spikes used to compute stat
-%     freq.dimord                     = 'chan_freq_time'
-%     freq.labelcmb                   =  nChancmbs cell array with spike vs
-%                                        LFP labels
-%     freq.(cfg.method)               =  nChancmb-by-nFreqs-nTimepoints  statistic
-%     freq.freq                       =  1xnFreqs array of frequencies
-%     freq.nspikes                    =  number of spikes used to compute
+%   stat.nspikes                    =  nChancmb-by-nFreqs-nTimepoints number
+%                                      of spikes used to compute stat
+%   stat.dimord                     = 'chan_freq_time'
+%   stat.labelcmb                   =  nChancmbs cell array with spike vs
+%                                      LFP labels
+%   stat.(cfg.method)               =  nChancmb-by-nFreqs-nTimepoints  statistic
+%   stat.freq                       =  1xnFreqs array of frequencies
+%   stat.nspikes                    =  number of spikes used to compute
 %
-% Freq can be plotted using ft_singleplotTFR or ft_multiplotTFR
+% The output stat structure can be plotted using ft_singleplotTFR or ft_multiplotTFR.
 
-%   Copyright (c) Martin Vinck (2012)
+% Copyright (C) 2012, Martin Vinck
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
@@ -87,7 +102,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble callinfo
 ft_preamble trackconfig
 
@@ -234,10 +249,9 @@ if strcmp(cfg.timwin,'all')
           trialNum      = trials(iTrial);
           spikesInTrial = find(spike.trial == trialNum);
           spc           = spike.fourierspctrm(spikesInTrial,:,:);
-
           ft_progress(iTrial/nTrials, 'Processing trial %d from %d', iTrial, nTrials);              
           % compute PPC 1.0 and 2.0 according to Vinck et al. (2011) using summation per trial
-          if strcmp(cfg.method,'ppc1')
+          if strcmp(cfg.method,'ppc2')
             if ~isempty(spc)
               m = nanmean(spc,1); % no problem with NaN
               hasNum = ~isnan(m);
@@ -245,7 +259,7 @@ if strcmp(cfg.timwin,'all')
               SS(hasNum) = SS(hasNum) + m(hasNum).*conj(m(hasNum));
               dof(hasNum) = dof(hasNum) + 1; % dof needs to be kept per frequency
             end
-          elseif strcmp(cfg.method,'ppc2')
+          elseif strcmp(cfg.method,'ppc1')
             if ~isempty(spc)
                n      = sum(~isnan(spc),1);
                m      = nansum(spc,1); 
@@ -262,7 +276,7 @@ if strcmp(cfg.timwin,'all')
       hasTrl = dof>1;
       if strcmp(cfg.method,'ppc1')
         out(hasTrl) = (S(hasTrl).*conj(S(hasTrl)) - SS(hasTrl))./(dof(hasTrl).^2 - dofSS(hasTrl));
-      else
+      elseif strcmp(cfg.method, 'ppc2')
         out(hasTrl) = (S(hasTrl).*conj(S(hasTrl)) - SS(hasTrl))./(dof(hasTrl).*(dof(hasTrl)-1));
       end
   end

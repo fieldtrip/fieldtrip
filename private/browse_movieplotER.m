@@ -9,7 +9,7 @@ function browse_movieplotER(cfg, data)
 % Copyright (c) 2009, Ingrid Nieuwenhuis
 
 % convert to an ERP
-timelock = timelockanalysis([], data);
+timelock = ft_timelockanalysis([], data);
 
 if isfield(cfg, 'framesfile')
   cfg.framesfile = [cfg.framesfile, '_s', num2str(data.cfg.trl(1)), 'tos', num2str(data.cfg.trl(2))];

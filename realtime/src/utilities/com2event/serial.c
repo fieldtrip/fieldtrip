@@ -193,14 +193,14 @@ int serialSetParameters(SerialPort *SP, int baudrate, int bits, int parity, int 
       case  57600: newtio.c_cflag |= B57600; break;
       case 115200: newtio.c_cflag |= B115200; break;
       case 230400: newtio.c_cflag |= B230400; break;
-      default: fputs("Unrecognized baudrate\n.",stderr); return 0;
+      default: fputs("Unrecognized baudrate\n",stderr); return 0;
    }
    switch(bits) {
       case 5: newtio.c_cflag |= CS5; break;
       case 6: newtio.c_cflag |= CS6; break;
       case 7: newtio.c_cflag |= CS7; break;
       case 8: newtio.c_cflag |= CS8; break;
-      default: fputs("Unrecognized number of bits\n.",stderr); return 0;
+      default: fputs("Unrecognized number of bits\n",stderr); return 0;
    }
    if (parity) {
       newtio.c_cflag |= PARENB;

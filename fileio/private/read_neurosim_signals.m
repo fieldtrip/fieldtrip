@@ -30,8 +30,7 @@ if isdir(filename)
 end
 
 needdat = (nargout>1);
-needdat = true; % otherwise it fails to determine the number of samples in the file correctly
-
+hdr             = [];
 label = {};
 orig  = {};
 
@@ -41,6 +40,24 @@ fid = fopen(filename, 'rb');
 line =  '#';
 while ~isempty(line)
   % parse the content of the line, determine the label for each column
+   % find temporal information
+    if strfind(lower(line),'start time')
+        dum= regexp(line, 'time\s+(\d+.\d+E[+-]\d+)', 'tokens');
+        hdr.FirstTimeStamp = str2double(dum{1}{1});
+    end
+    if strfind(lower(line),'time bin')
+        dum= regexp(line, 'bin\s+(\d+.\d+E[+-]\d+)', 'tokens');
+        dt=str2double(dum{1}{1});
+        hdr.Fs= 1e3/dt;
+        hdr.TimeStampPerSample=dt;
+    end
+    if strfind(lower(line),'end time')
+        dum= regexp(line, 'time\s+(\d+.\d+E[+-]\d+)', 'tokens');
+        hdr.LastTimeStamp = str2double(dum{1}{1});
+        hdr.nSamples=(hdr.LastTimeStamp-hdr.FirstTimeStamp)/dt+1;
+    end
+  
+  
   colid = sscanf(line, '# column %d:', 1);
   if ~isempty(colid)
     label{colid} = strtrim(line(find(line==':')+1:end));
@@ -60,32 +77,21 @@ end
 if needdat
   % read the complete data
   dat = fscanf(fid, '%f', [length(label), inf]);
-else
-  % read only a small piece of data
-  % this allows the code further down to determine the sampling frequency
-  dat = fscanf(fid, '%f', [length(label), 10]);
 end
 
 fclose(fid);
 
-% get the time axis, this is needed to determine the sampling frequency
-time    = dat(match_str(label, 'Time'), :)/1e3; % this is in ms, not in seconds
-fsample = median(1./diff(time));
-
 % convert the header into fieldtrip style
-hdr             = [];
 hdr.label       = label(:);
-hdr.Fs          = fsample;
 hdr.nChans      = length(label);
 % represent it as a single continuous recording
 if needdat
+  % get the time axis, this is needed to determine the sampling frequency
+  time    = dat(match_str(label, 'Time'), :)/1e3; % this is in ms, not in seconds
+  fsample = median(1./diff(time));
   hdr.nSamples    = length(time);
-else
-  hdr.nSamples    = inf; % the total duration of the file is not known
 end
 
-hdr.FirstTimeStamp     = min(time);
-hdr.TimeStampPerSample = 1e3/fsample; % how many timestamps (ms) are in one sample
 hdr.nSamplesPre        = 0;
 hdr.nTrials            = 1;
 

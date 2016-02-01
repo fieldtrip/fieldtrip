@@ -8,4 +8,4 @@ lynx -dont_wrap_pre -dump "http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?key
 lynx -dont_wrap_pre -dump "http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?keywords=Doc/FAQ&embed=1" > FAQ.txt
 lynx -dont_wrap_pre -dump "http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?keywords=Advanced&embed=1" > Advanced_Features.txt
 
-wget http://iso2mesh.sourceforge.net/upload/iso2mesh_workflow_v09.jpg -Oiso2mesh_workflow.jpg
+wget http://iso2mesh.sourceforge.net/upload/iso2mesh_workflow_v2.png -Oiso2mesh_workflow.png

@@ -1,5 +1,8 @@
 function test_tutorial_clusterpermutationtimelock(dataset, datadir)
 
+% MEM 2gb
+% WALLTIME 00:10:00
+
 % TEST test_tutorial_eventrelatedstatistics
 % TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
 % TEST ft_topoplotER ft_clusterplot ft_megplanar ft_combineplanar
@@ -8,8 +11,8 @@ global ft_default;
 ft_default.feedback = 'no';
 
 if nargin==0
-  dataset = dccnfilename('/home/common/matlab/fieldtrip/data/Subject01.ds');
-  datadir = dccnfilename('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
+  dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
 end
 
 %% Reading the FIC data
@@ -87,7 +90,7 @@ timelockFC  = ft_timelockanalysis(cfg, dataFC_LP);
 
 cfg = [];
 cfg.method = 'montecarlo';       % use the Monte Carlo Method to calculate the significance probability
-cfg.statistic = 'indepsamplesT'; % use the independent samples T-statistic as a measure to evaluate 
+cfg.statistic = 'ft_statfun_indepsamplesT'; % use the independent samples T-statistic as a measure to evaluate 
                                  % the effect at the sample level
 cfg.correctm = 'cluster';
 cfg.clusteralpha = 0.05;         % alpha level of the sample-specific test statistic that will be used for thresholding
@@ -194,7 +197,7 @@ cfg.channel = {'MEG'};
 cfg.latency = [0 1];
 cfg.neighbours = neighbours;
 cfg.method = 'montecarlo';
-cfg.statistic = 'indepsamplesT';
+cfg.statistic = 'ft_statfun_indepsamplesT';
 cfg.correctm = 'cluster';
 cfg.clusteralpha = 0.05;
 cfg.clusterstatistic = 'maxsum';
@@ -267,7 +270,7 @@ cfg.channel = {'MEG'};
 cfg.latency = [0 1];
 
 cfg.method = 'montecarlo';
-cfg.statistic = 'depsamplesT';
+cfg.statistic = 'ft_statfun_depsamplesT';
 cfg.correctm = 'cluster';
 cfg.clusteralpha = 0.05;
 cfg.clusterstatistic = 'maxsum';

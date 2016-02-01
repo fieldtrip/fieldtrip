@@ -1,19 +1,20 @@
 function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varargin)
 
-% FT_SPECEST_MTMCONVOL performs wavelet convolution in the time domain 
-% by multiplication in the frequency domain
+% FT_SPECEST_MTMCONVOL performs wavelet convolution in the time domain by
+% multiplication in the frequency domain.
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = specest_mtmconvol(dat,time,...)
-% where
-%   dat      = matrix of chan*sample
-%   time     = vector, containing time in seconds for each sample
-%   spectrum = matrix of ntaper*chan*freqoi*timeoi of fourier coefficients
-%   ntaper   = vector containing the number of tapers per freqoi
-%   freqoi   = vector of frequencies in spectrum
-%   timeoi   = vector of timebins in spectrum
+%   [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat,time,...)
+% where input
+%   dat       = matrix of chan*sample
+%   time      = vector, containing time in seconds for each sample
+% and output
+%   spectrum  = matrix of ntaper*chan*freqoi*timeoi of fourier coefficients
+%   ntaper    = vector containing the number of tapers per freqoi
+%   freqoi    = vector of frequencies in spectrum
+%   timeoi    = vector of timebins in spectrum
 %
-% Optional arguments should be specified in key-value pairs and can include:
+% Optional arguments should be specified in key-value pairs and can include
 %   taper     = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   pad       = number, indicating time-length of data to be padded out to in seconds
 %   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
@@ -21,23 +22,35 @@ function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varar
 %   timwin    = vector, containing length of time windows (in seconds)
 %   freqoi    = vector, containing frequencies (in Hz)
 %   tapsmofrq = number, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for
-%                memory efficiency
+%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency
 %   verbose   = output progress to console (0 or 1, default 1)
 %   taperopt  = additional taper options to be used in the WINDOW function, see WINDOW
-%   polyorder = number, the order of the polynomial to fitted to and removed from the data
-%                  prior to the fourier transform (default = 0 -> remove DC-component)
+%   polyorder = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
 % Copyright (C) 2010, Donders Institute for Brain, Cognition and Behaviour
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
 % these are for speeding up computation of tapers on subsequent calls
 persistent previous_argin previous_wltspctrm
-
-
 
 % get the optional input arguments
 taper     = ft_getopt(varargin, 'taper', 'dpss');
@@ -69,8 +82,13 @@ elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
 end
 
 % Set n's
-
 [nchan,ndatsample] = size(dat);
+
+% This does not work on integer data
+typ = class(dat);
+if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+  dat = cast(dat, 'double');
+end
 
 % Remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
@@ -93,6 +111,7 @@ endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;            % total time in seconds of padded data
 
 % Set freqboi and freqoi
+freqoiinput = freqoi;
 if isnumeric(freqoi) % if input is a vector
   freqboi   = round(freqoi ./ (fsample ./ endnsample)) + 1; % is equivalent to: round(freqoi .* endtime) + 1;
   freqboi   = unique(freqboi);
@@ -113,19 +132,50 @@ end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
 
+% throw a warning if input freqoi is different from output freqoi
+if isnumeric(freqoiinput)
+  % check whether padding is appropriate for the requested frequency resolution
+  rayl = 1/endtime;
+  if any(rem(freqoiinput,rayl))
+    ft_warning('padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip');
+  end
+  if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
+    ft_warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
+  else
+    if any(abs(freqoiinput-freqoi) >= eps*1e6)
+      ft_warning('output frequencies are different from input frequencies');
+    end
+  end
+end
+
 % Set timeboi and timeoi
+timeoiinput = timeoi;
 offset = round(time(1)*fsample);
 if isnumeric(timeoi) % if input is a vector
+  timeoi   = unique(round(timeoi .* fsample) ./ fsample);
   timeboi  = round(timeoi .* fsample - offset) + 1;
   ntimeboi = length(timeboi);
-  timeoi   = round(timeoi .* fsample) ./ fsample;
 elseif strcmp(timeoi,'all') % if input was 'all'
   timeboi  = 1:length(time);
   ntimeboi = length(timeboi);
   timeoi   = time;
 end
 
+% throw a warning if input timeoi is different from output timeoi
+if isnumeric(timeoiinput)
+  if numel(timeoiinput) ~= numel(timeoi) % timeoi will not contain double time-bins when requested
+    ft_warning('output time-bins are different from input time-bins, multiples of the same bin were requested but not given');
+  else
+    if any(abs(timeoiinput-timeoi) >= eps*1e6) 
+      ft_warning('output time-bins are different from input time-bins');
+    end
+  end
+end
+
 % set number of samples per time-window (timwin is in seconds)
+if numel(timwin)==1 && nfreqoi~=1
+  timwin = repmat(timwin,[1 nfreqoi]);
+end
 timwinsample = round(timwin .* fsample);
 
 
@@ -237,8 +287,8 @@ end
 switch dimord
         
   case 'tap_chan_freq_time' % default
-    % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
-    datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
+    % compute fft, major speed increases are possible here, depending on which MATLAB is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
+    datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
     spectrum = cell(max(ntaper), nfreqoi);
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
@@ -261,7 +311,7 @@ switch dimord
         if itap > ntaper(ifreqoi)
           spectrum{itap,ifreqoi} = complex(nan(nchan,ntimeboi));
         else                                
-          dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
+          dum = fftshift(ifft(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1]), [], 2),2); % fftshift is necessary to implement zero-phase/acyclic/acausal convolution (either here, or the wavelet should be wrapped around sample=0)
           tmp = complex(nan(nchan,ntimeboi));
           tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
           tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
@@ -281,7 +331,7 @@ switch dimord
     end
     
     % start fft'ing
-    datspectrum = transpose(fft(transpose(ft_preproc_padding(dat, padtype, 0, postpad)))); % double explicit transpose to speedup fft
+    datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
     spectrum = complex(zeros([nchan ntimeboi sum(ntaper)]));
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
@@ -299,7 +349,7 @@ switch dimord
         reqtimeboi       = timeboi(reqtimeboiind);
         
         % compute datspectrum*wavelet, if there are reqtimeboi's that have data
-        dum = fftshift(transpose(ifft(transpose(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1])))),2); % double explicit transpose to speedup fft
+        dum = fftshift(ifft(datspectrum .* repmat(wltspctrm{ifreqoi}(itap,:),[nchan 1]), [], 2),2); % fftshift is necessary to implement zero-phase/acyclic/acausal convolution (either here, or the wavelet should be wrapped around sample=0)
         tmp = complex(nan(nchan,ntimeboi),nan(nchan,ntimeboi));
         tmp(:,reqtimeboiind) = dum(:,reqtimeboi);
         tmp = tmp .* sqrt(2 ./ timwinsample(ifreqoi));
@@ -315,12 +365,12 @@ previous_argin     = current_argin;
 previous_wltspctrm = wltspctrm;
 
 
-
-
 % % below code does the exact same as above, but without the trick of converting to cell-arrays for speed increases. however, when there is a huge variability in number of tapers per freqoi
 % % than this approach can benefit from the fact that the array can be precreated containing nans
-% % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
+% % compute fft, major speed increases are possible here, depending on which MATLAB is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 % datspectrum = transpose(fft(transpose([dat repmat(postpad,[nchan, 1])]))); % double explicit transpose to speedup fft
+% % NOTE: double explicit transpose around fft is not faster than using fft
+% with dim argument (in fact, it is slower)
 % spectrum = complex(nan([max(ntaper) nchan nfreqoi ntimeboi]),nan([max(ntaper) nchan nfreqoi ntimeboi])); % assumes fixed number of tapers
 % for ifreqoi = 1:nfreqoi
 %   fprintf('processing frequency %d (%.2f Hz), %d tapers\n', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
@@ -355,7 +405,7 @@ previous_wltspctrm = wltspctrm;
 % end
 % tapfreq = tapfreq(:);
 %
-% % compute fft, major speed increases are possible here, depending on which matlab is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
+% % compute fft, major speed increases are possible here, depending on which MATLAB is being used whether or not it helps, which mainly focuses on orientation of the to be fft'd matrix
 % %spectrum = complex(nan([numel(tapfreq),nchan,ntimeboi]));
 % datspectrum = fft([dat repmat(postpad,[nchan, 1])],[],2);
 % spectrum = cell(numel(tapfreq), nchan, ntimeboi);
@@ -371,7 +421,7 @@ previous_wltspctrm = wltspctrm;
 %
 %       % compute datspectrum*wavelet, if there are reqtimeboi's that have data
 %       if ~isempty(reqtimeboi)
-%         dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); % fftshift is necessary because of post zero-padding, not necessary when pre-padding
+%         dum = fftshift(ifft(datspectrum(ichan,:) .* wltspctrm{ifreqoi}(itap,:),[],2)); 
 %         %spectrum(tapfreqind,ichan,reqtimeboiind) = dum(reqtimeboi);
 %         tmp = complex(nan(1,ntimeboi));
 %         tmp(reqtimeboiind) = dum(reqtimeboi);
@@ -386,7 +436,7 @@ previous_wltspctrm = wltspctrm;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION ensure that the first two input arguments are of double
 % precision this prevents an instability (bug) in the computation of the
-% tapers for Matlab 6.5 and 7.0
+% tapers for MATLAB 6.5 and 7.0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [tap] = double_dpss(a, b, varargin)
 tap = dpss(double(a), double(b), varargin{:});

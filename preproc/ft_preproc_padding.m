@@ -9,7 +9,7 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 %   [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 % where
 %   dat           data matrix (Nchan x Ntime)
-%   padtype       'zero', 'mean', 'localmean', 'edge', 'mirror' or 'remove'
+%   padtype       'zero', 'mean', 'localmean', 'edge', 'mirror', 'nan' or 'remove'
 %   padlength     scalar, number of samples that will be padded 
 %   prepadlength  scalar, number of samples that will be padded before the data
 %   postpadlength scalar, number of samples that will be padded after the data
@@ -76,7 +76,7 @@ switch(padtype)
     % postdata padding
     begsample = 1;
     endsample = 0;
-    while padlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
+    while postpadlength > begsample % this will be a linear piecewise function consisting of two pieces taking turns
       endsample                                 = begsample + min(postpadlength-endsample, nsamples-1);
       padend(begsample:endsample-1)             = fliplr(mod(0:(endsample-begsample-1), nsamples)+nsamples-endsample+begsample);
       begsample = endsample-1;
@@ -99,12 +99,15 @@ switch(padtype)
   case 'localmean'
     prepad    = min(prepadlength, floor(size(dat, 2)/2));
     edgeleft  = mean(dat(:, 1:prepad), 2);
-    postpad   = min(prepadlength, floor(size(dat, 2)/2));
+    postpad   = min(postpadlength, floor(size(dat, 2)/2));
     edgeright = mean(dat(:, 1+end-postpad:end), 2);
     dat       = [edgeleft*ones(1,prepadlength) dat edgeright*ones(1,postpadlength)];
     return;
   case 'zero'
     dat       = [zeros(nchans,prepadlength) dat zeros(nchans,postpadlength)];
+    return;
+  case 'nan'
+    dat       = [nan(nchans,prepadlength) dat nan(nchans,postpadlength)];
     return;
   otherwise
     error('unknown padding option');

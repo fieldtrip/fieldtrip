@@ -65,10 +65,15 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
+ft_preamble provenance varargin
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -80,7 +85,7 @@ cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
 cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
 cfg.zscore     = ft_getopt(cfg, 'zscore',     'no');
-cfg.trials     = ft_getopt(cfg, 'trials',     'all');
+cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 
@@ -130,12 +135,12 @@ else
 end
 
 % select trials of interest
-if ~isfield(cfg, 'trials'),   cfg.trials = 'all';  end % set the default
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data    = ft_selectdata(data, 'rpt', cfg.trials);
-  refdata = ft_selectdata(refdata, 'rpt', cfg.trials);
-end
+tmpcfg  = keepfields(cfg, 'trials');
+data    = ft_selectdata(tmpcfg, data);
+refdata = ft_selectdata(tmpcfg, refdata);
+% restore the provenance information
+[cfg, data]    = rollback_provenance(cfg, data);
+[dum, refdata] = rollback_provenance(cfg, refdata); 
 
 refchan = ft_channelselection(cfg.refchannel, refdata.label);
 refindx = match_str(refdata.label, refchan);
@@ -291,10 +296,10 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous varargin
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble previous   varargin
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data
 
 %%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS

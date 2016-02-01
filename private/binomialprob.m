@@ -1,4 +1,4 @@
-function [bp, x] = binomialprob(pobs, alpha, subjratio);
+function [bp, x] = binomialprob(pobs, alpha, subjratio)
 
 % BINOMIALPROB computes the probability of observing a significant effect
 % in multiple tests. It allows you to test questions like "How likely
@@ -83,6 +83,6 @@ elseif ~isthresh && ~isalpha
   error('can only determine alpha automatically from thresholded statistical maps');
 end
 
-% this uses Matlab stats toolbox
+% this uses MATLAB stats toolbox
 bp = 1 - binocdf(x, N, p);
 

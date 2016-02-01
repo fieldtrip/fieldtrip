@@ -6,9 +6,10 @@ function [cfg, artifact] = ft_artifact_jump(cfg, data)
 % Use as
 %   [cfg, artifact] = ft_artifact_jump(cfg)
 % with the configuration options
-%   cfg.dataset 
-%   cfg.headerfile 
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_jump(cfg, data)
@@ -35,8 +36,7 @@ function [cfg, artifact] = ft_artifact_jump(cfg, data)
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -72,9 +72,14 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 % ft_preamble provenance is not needed because just a call to ft_artifact_zvalue
 % ft_preamble loadvar data is not needed because ft_artifact_zvalue will do this
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
@@ -97,65 +102,65 @@ if isfield(cfg.artfctdef.jump, 'artifact')
   return
 end
 
-if strcmp(cfg.artfctdef.jump.method, 'zvalue')
-  % the following fields should be supported for backward compatibility
-  dum = 0;
-  if isfield(cfg.artfctdef.jump,'pretim'),
-    dum = max(dum, cfg.artfctdef.jump.pretim);
-    cfg.artfctdef.jump = rmfield(cfg.artfctdef.jump,'pretim');
-  end
-  if isfield(cfg.artfctdef.jump,'psttim'),
-    dum = max(dum, cfg.artfctdef.jump.psttim);
-    cfg.artfctdef.jump = rmfield(cfg.artfctdef.jump,'psttim');
-  end
-  if dum
-    cfg.artfctdef.jump.artpadding = max(dum);
-  end
-  if isfield(cfg.artfctdef.jump,'padding'),
-    cfg.artfctdef.jump.trlpadding   = cfg.artfctdef.jump.padding;
-    cfg.artfctdef.jump = rmfield(cfg.artfctdef.jump,'padding');
-  end
-  % settings for preprocessing
-  if ~isfield(cfg.artfctdef.jump,'medianfilter'),  cfg.artfctdef.jump.medianfilter  = 'yes';        end
-  if ~isfield(cfg.artfctdef.jump,'medianfiltord'), cfg.artfctdef.jump.medianfiltord = 9;            end
-  if ~isfield(cfg.artfctdef.jump,'absdiff'),       cfg.artfctdef.jump.absdiff       = 'yes';        end  % compute abs(diff(data)), whereas the order of rectify=yes in combination with derivative=yes would be diff(abs(data)) due to the ordering in preproc
-  % settings for the zvalue subfunction
-  if ~isfield(cfg.artfctdef.jump,'cutoff'),        cfg.artfctdef.jump.cutoff     = 20;              end
-  if ~isfield(cfg.artfctdef.jump,'channel'),       cfg.artfctdef.jump.channel    = 'MEG';           end
-  if ~isfield(cfg.artfctdef.jump,'cumulative'),    cfg.artfctdef.jump.cumulative = 'no';            end
-  if isfield(cfg, 'padding') && cfg.padding~=0
-    if ~isfield(cfg.artfctdef.jump,'trlpadding'), cfg.artfctdef.jump.trlpadding = 0.5*cfg.padding; end
-    if ~isfield(cfg.artfctdef.jump,'artpadding'), cfg.artfctdef.jump.artpadding = 0.5*cfg.padding; end
-    if ~isfield(cfg.artfctdef.jump,'fltpadding'), cfg.artfctdef.jump.fltpadding = 0;               end
-  else
-    if ~isfield(cfg.artfctdef.jump,'trlpadding'), cfg.artfctdef.jump.trlpadding = 0;               end
-    if ~isfield(cfg.artfctdef.jump,'artpadding'), cfg.artfctdef.jump.artpadding = 0;               end
-    if ~isfield(cfg.artfctdef.jump,'fltpadding'), cfg.artfctdef.jump.fltpadding = 0;               end
-  end
-  % construct a temporary configuration that can be passed onto artifact_zvalue
-  tmpcfg                  = [];
-  tmpcfg.trl              = cfg.trl;
-  tmpcfg.artfctdef.zvalue = cfg.artfctdef.jump;
-  if isfield(cfg, 'continuous'),   tmpcfg.continuous       = cfg.continuous;    end
-  if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
-  if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
-  % call the zvalue artifact detection function
-
-  % the data is either passed into the function by the user or read from file with cfg.inputfile
-  hasdata = exist('data', 'var');
-  
-  if hasdata
-    cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-    [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
-  else
-    cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
-    cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-    tmpcfg.datafile    = cfg.datafile;
-    tmpcfg.headerfile  = cfg.headerfile;
-    [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
-  end
-  cfg.artfctdef.jump = tmpcfg.artfctdef.zvalue;
-else
+if ~strcmp(cfg.artfctdef.jump.method, 'zvalue')
   error(sprintf('jump artifact detection only works with cfg.method=''zvalue'''));
 end
+
+% the following fields should be supported for backward compatibility
+dum = 0;
+if isfield(cfg.artfctdef.jump,'pretim'),
+  dum = max(dum, cfg.artfctdef.jump.pretim);
+  cfg.artfctdef.jump = rmfield(cfg.artfctdef.jump,'pretim');
+end
+if isfield(cfg.artfctdef.jump,'psttim'),
+  dum = max(dum, cfg.artfctdef.jump.psttim);
+  cfg.artfctdef.jump = rmfield(cfg.artfctdef.jump,'psttim');
+end
+if dum
+  cfg.artfctdef.jump.artpadding = max(dum);
+end
+if isfield(cfg.artfctdef.jump,'padding'),
+  cfg.artfctdef.jump.trlpadding   = cfg.artfctdef.jump.padding;
+  cfg.artfctdef.jump = rmfield(cfg.artfctdef.jump,'padding');
+end
+% settings for preprocessing
+if ~isfield(cfg.artfctdef.jump,'medianfilter'),  cfg.artfctdef.jump.medianfilter  = 'yes';        end
+if ~isfield(cfg.artfctdef.jump,'medianfiltord'), cfg.artfctdef.jump.medianfiltord = 9;            end
+if ~isfield(cfg.artfctdef.jump,'absdiff'),       cfg.artfctdef.jump.absdiff       = 'yes';        end  % compute abs(diff(data)), whereas the order of rectify=yes in combination with derivative=yes would be diff(abs(data)) due to the ordering in preproc
+% settings for the zvalue subfunction
+if ~isfield(cfg.artfctdef.jump,'cutoff'),        cfg.artfctdef.jump.cutoff     = 20;              end
+if ~isfield(cfg.artfctdef.jump,'channel'),       cfg.artfctdef.jump.channel    = 'MEG';           end
+if ~isfield(cfg.artfctdef.jump,'cumulative'),    cfg.artfctdef.jump.cumulative = 'no';            end
+if isfield(cfg, 'padding') && cfg.padding~=0
+  if ~isfield(cfg.artfctdef.jump,'trlpadding'), cfg.artfctdef.jump.trlpadding = 0.5*cfg.padding; end
+  if ~isfield(cfg.artfctdef.jump,'artpadding'), cfg.artfctdef.jump.artpadding = 0.5*cfg.padding; end
+  if ~isfield(cfg.artfctdef.jump,'fltpadding'), cfg.artfctdef.jump.fltpadding = 0;               end
+else
+  if ~isfield(cfg.artfctdef.jump,'trlpadding'), cfg.artfctdef.jump.trlpadding = 0;               end
+  if ~isfield(cfg.artfctdef.jump,'artpadding'), cfg.artfctdef.jump.artpadding = 0;               end
+  if ~isfield(cfg.artfctdef.jump,'fltpadding'), cfg.artfctdef.jump.fltpadding = 0;               end
+end
+
+% construct a temporary configuration that can be passed onto artifact_zvalue
+tmpcfg                  = [];
+tmpcfg.trl              = cfg.trl;
+tmpcfg.artfctdef.zvalue = cfg.artfctdef.jump;
+if isfield(cfg, 'continuous'),   tmpcfg.continuous       = cfg.continuous;    end
+if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
+if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
+
+% the data is either passed into the function by the user or read from file with cfg.inputfile
+hasdata = exist('data', 'var');
+
+if ~hasdata
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+  cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
+  tmpcfg.datafile    = cfg.datafile;
+  tmpcfg.headerfile  = cfg.headerfile;
+  [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
+else
+  [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
+end
+
+cfg.artfctdef.jump = tmpcfg.artfctdef.zvalue;
 

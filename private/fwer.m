@@ -1,4 +1,4 @@
-function [h] = fwer(p, q);
+function [h] = fwer(p, q)
 
 % FWER family-wise error rate control using Bonferoni method
 %

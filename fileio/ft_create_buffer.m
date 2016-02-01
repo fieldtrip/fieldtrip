@@ -1,7 +1,7 @@
 function ft_create_buffer(port)
 
 % FT_CREATE_BUFFER starts the thread with the TCP server attached to the local
-% Matlab instance. The TCP server will listen to the specified network
+% MATLAB instance. The TCP server will listen to the specified network
 % port, and accept incoming read and write requests.
 %
 % Use as

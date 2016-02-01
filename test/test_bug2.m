@@ -1,5 +1,8 @@
 function test_bug2
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug2
 % TEST ft_freqanalysis ft_megplanar 
 

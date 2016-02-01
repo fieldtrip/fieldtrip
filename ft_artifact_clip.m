@@ -7,9 +7,10 @@ function [cfg, artifact] = ft_artifact_clip(cfg, data)
 % Use as
 %   [cfg, artifact] = ft_artifact_clip(cfg)
 % with the configuration options
-%   cfg.dataset 
-%   cfg.headerfile 
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_clip(cfg, data)
@@ -28,13 +29,12 @@ function [cfg, artifact] = ft_artifact_clip(cfg, data)
 % beginsamples of an artifact period, the second column contains the
 % endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
-% 
+%
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
 
@@ -62,9 +62,14 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
@@ -94,14 +99,23 @@ artifact = [];
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
 
-if hasdata
-  % read the header
-  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = ft_fetch_header(data);
-else
-  cfg = ft_checkconfig(cfg, 'dataset2files', {'yes'});
+if ~hasdata
+  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile,'headerformat', cfg.headerformat);
+  trl = cfg.trl;
+else
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr  = ft_fetch_header(data);
+  if isfield(data, 'sampleinfo'), 
+    trl = data.sampleinfo;
+    for k = 1:numel(data.trial)
+      trl(k,3) = time2offset(data.time{k}, data.fsample);
+    end
+  else
+    error('the input data does not contain a valid description of the sampleinfo');
+  end  
 end
 
 % set default cfg.continuous
@@ -120,14 +134,6 @@ sgnindx = match_str(hdr.label, label);
 % make a local copy for convenience
 artfctdef = cfg.artfctdef.clip;
 
-
-if isfield(cfg,'trl')
-  trl = cfg.trl;
-elseif hasdata
-  trl = data.sampleinfo;
-else
-  error('either the cfg should contain a trl or data has to be given as input')
-end
 ntrl = size(trl,1);
 nsgn = length(sgnindx);
 for trlop=1:ntrl
@@ -142,25 +148,25 @@ for trlop=1:ntrl
   if size(trl,2)>=3
     time = offset2time(trl(trlop,3), hdr.Fs, size(dat,2));
   elseif hasdata
-      time = data.time{trlop};
+    time = data.time{trlop};
   end
   datflt = preproc(dat, label, time, artfctdef);
   
   %check if cfg.artfctdef.clip.amplthreshold is an string indicating percentage (e.g. '10%')
   if ~isempty(cfg.artfctdef.clip.amplthreshold) && ischar(cfg.artfctdef.clip.amplthreshold) && cfg.artfctdef.clip.amplthreshold(end)=='%'
-      ratio = sscanf(cfg.artfctdef.clip.amplthreshold, '%f%%');
-      ratio = ratio/100;
-      identical = abs(datflt(:,1:(end-1))-datflt(:,2:end));
-      r = range(identical,2);
-      for sgnlop=1:length(sgnindx);
-          identical(sgnlop,:) = (identical(sgnlop,:)/r(sgnlop))*100;
-      end
-      identical = identical <= ratio;
+    ratio = sscanf(cfg.artfctdef.clip.amplthreshold, '%f%%');
+    ratio = ratio/100;
+    identical = abs(datflt(:,1:(end-1))-datflt(:,2:end));
+    r = range(identical,2);
+    for sgnlop=1:length(sgnindx);
+      identical(sgnlop,:) = (identical(sgnlop,:)/r(sgnlop))*100;
+    end
+    identical = identical <= ratio;
   else
-      % detect all samples that have the same value as the previous sample
-      identical = abs(datflt(:,1:(end-1))-datflt(:,2:end))<=cfg.artfctdef.clip.amplthreshold;
+    % detect all samples that have the same value as the previous sample
+    identical = abs(datflt(:,1:(end-1))-datflt(:,2:end))<=cfg.artfctdef.clip.amplthreshold;
   end
-
+  
   % ensure that the number of samples does not change
   identical = [identical zeros(nsgn,1)];
   

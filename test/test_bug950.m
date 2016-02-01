@@ -1,5 +1,8 @@
 function test_bug950
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST ft_megrealign test_bug950
 
 % the issue explored here is a reputed crash in megrealign due to a problem
@@ -8,8 +11,7 @@ function test_bug950
 % the headmodel for the inverse/forward steps
 
 % load in some data
-cd('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/');
-load('preproc_ctf151');
+load(dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/','preproc_ctf151')));
 
 cfg = [];
 cfg.gradient = 'G3BR';

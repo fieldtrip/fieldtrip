@@ -57,13 +57,29 @@ function [spike] = ft_spike_maketrials(cfg,spike)
 
 % Copyright (C) 2010-2013, Martin Vinck
 %
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
 revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help            % this will show the function help if nargin==0 and return an error
+ft_preamble init            % this will show the function help if nargin==0 and return an error
 ft_preamble provenance      % this records the time and memory usage at teh beginning of the function
 ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
@@ -108,7 +124,7 @@ else
   if ~isfield(cfg.hdr, 'Fs'), error('cfg.hdr.Fs, the sampling frequency of the LFP must be specified'); end
 end
 trlDouble = double(cfg.trl); % this is to compute trial lengths etc.  
-%cfg = ft_checkconfig(cfg, 'allowed', {'trlunit', 'timestampspersecond', 'hdr', 'trl'});
+cfg = ft_checkconfig(cfg, 'allowed', {'datafile', 'dataformat', 'dataset', 'event', 'headerfile', 'headerformat', 'trialfun', 'trlunit', 'timestampspersecond', 'hdr', 'trl'});
 
 if strcmp(cfg.trlunit,'timestamps')
   

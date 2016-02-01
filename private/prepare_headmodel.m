@@ -1,8 +1,8 @@
-function [vol, sens, cfg] = prepare_headmodel(cfg, data)
+function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that helps to prepare the electrodes/gradiometers and the volume
-% this is used in sourceanalysis and dipolefitting
+% SUBFUNCTION that helps to prepare the electrodes/gradiometers and the
+% volume conduction model. This is used in sourceanalysis and dipolefitting.
 %
 % This function will get the gradiometer/electrode definition using
 % FT_FETCH_SENS and the volume conductor definition using FT_FETCH_VOL
@@ -39,33 +39,37 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg, 'channel'),      cfg.channel = 'all';   end
-if ~isfield(cfg, 'order'),        cfg.order = 10;        end % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
-if ~isfield(cfg, 'sourceunits'),  cfg.sourceunits = [];  end % if needed, the default is set below
+cfg.channel  = ft_getopt(cfg, 'channel', 'all');
+cfg.order    = ft_getopt(cfg, 'order', 10);       % order of expansion for Nolte method; 10 should be enough for real applications; in simulations it makes sense to go higher
+cfg.siunits  = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
 
 if nargin<2
   data = [];
 end
 
 % get the volume conduction model
-vol = ft_fetch_vol(cfg, data);
+headmodel = ft_fetch_vol(cfg);
 
-% get the gradiometer or electrode definition
+% get the gradiometer or electrode definition, these can be in the cfg or in the data
 sens = ft_fetch_sens(cfg, data);
 
-% ensure that the units are the same
-if isempty(cfg.sourceunits)
-  if ~strcmp(vol.unit, sens.unit)
-    cfg.sourceunits = 'cm';
-    vol  = ft_convert_units(vol, cfg.sourceunits);
-    sens = ft_convert_units(sens, cfg.sourceunits);
-  else
-    % they are the same, nothing to change
+if istrue(cfg.siunits)
+  % ensure that the geometrical units are in SI units
+  sens       = ft_convert_units(sens,       'm', 'feedback', true);
+  headmodel  = ft_convert_units(headmodel,  'm', 'feedback', true);
+  if isfield(cfg, 'grid')
+    cfg.grid = ft_convert_units(cfg.grid,  'm', 'feedback', true);
   end
 else
-  % change them to the desired units
-  vol  = ft_convert_units(vol, cfg.sourceunits);
-  sens = ft_convert_units(sens, cfg.sourceunits);
+  % ensure that the geometrical units are the same
+  if isfield(cfg, 'grid') && isfield(cfg.grid, 'unit')
+    % convert it to the units of the source model
+    sens       = ft_convert_units(sens,       cfg.grid.unit, 'feedback', true);
+    headmodel  = ft_convert_units(headmodel,  cfg.grid.unit, 'feedback', true);
+  else
+    % convert it to the units of the head model
+    sens = ft_convert_units(sens, headmodel.unit, 'feedback', true);
+  end
 end
 
 if isfield(data, 'topolabel')
@@ -83,11 +87,11 @@ else
 end
 
 % ensure that these are a struct, which may be required in case configuration tracking is used
-vol  = struct(vol);
+headmodel  = struct(headmodel);
 sens = struct(sens);
 
 % the prepare_vol_sens function from the forwinv module does most of the actual work
-[vol, sens] = ft_prepare_vol_sens(vol, sens, 'channel', cfg.channel, 'order', cfg.order);
+[headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel, 'order', cfg.order);
 
 % update the selected channels in the configuration
 cfg.channel = sens.label;

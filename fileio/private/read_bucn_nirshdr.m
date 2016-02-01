@@ -1,6 +1,6 @@
 function [hdr] = read_bucn_nirshdr(filename)
 
-% READ_BUCN_NIRSHDR reads the header information of ASCII-formatted NIRS 
+% READ_BUCN_NIRSHDR reads the header information of ASCII-formatted NIRS
 % data acquired with the UCL-BIRKBECK machine and postprocessed by the
 % Paris group. The first line contains the channel labels and the rest of
 % the file contains per line a time sample. The first column specifies the
@@ -8,6 +8,8 @@ function [hdr] = read_bucn_nirshdr(filename)
 %
 % Use as
 %   [hdr] = read_bucn_nirshdr(filename)
+%
+% See also read_bucn_nirsdata, READ_BUCN_NIRSEVENT
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %

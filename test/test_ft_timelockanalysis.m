@@ -1,5 +1,8 @@
 function test_ft_timelockanalysis(datainfo, writeflag, version)
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_timelockanalysis
 % ft_timelockanalysis ref_datasets
 
@@ -32,9 +35,13 @@ for k = 1:numel(datainfo)
     data = tmp.timelock;
   end
   
-  datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
-  data    = rmfield(data,    'cfg');
-  assert(isequalwithequalnans(data, datanew));
+  datanew = removefields(datanew, 'cfg'); % these are per construction different if writeflag = 0;
+  data    = removefields(data,    'cfg');
+  [ok,msg] = identical(data, datanew,'reltol',eps*1e6);
+  disp(['now you are in k=' num2str(k)]);
+  if ~ok
+    error('stored and computed data not identical: %s', msg{:});
+  end
 end
 
 function [timelock] = timelockanalysis10trials(dataset, writeflag, version, covariance, keeptrials)

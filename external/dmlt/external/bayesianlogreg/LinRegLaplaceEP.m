@@ -110,7 +110,7 @@ priorGauss.diagK = zeros(nfeatures,1);
 priorGauss.auxK  = K;
 
 % compute the additional terms coming form the prior for the evidence
-[cholK,dummy,S]  = chol(priorGauss.auxK,'lower');
+cholK  = chol(priorGauss.auxK,'lower');
 LogPriorRestAux2 = (2*sum(log(full(diag(cholK))))-nfeatures*log(2*pi)); % no half because we need it two times
 LogPriorRestLL   = 0.5*(-v*y'*y - nobs*log(2*pi) + nobs*log(v) ); 
 
@@ -433,7 +433,7 @@ newterms = combine_terms(fullterms,terms,stepsize);
 
 newGauss = update_Gauss(newGauss,newterms,1);
 
-[L,check,dummy] = chol(newGauss.auxK,'lower');   % check whether full covariance matrix is ok
+[L,check] = chol(newGauss.auxK,'lower');   % check whether full covariance matrix is ok
                 % note that this is bit inefficient, since we redo the Cholesky later when everything is fine
 
 ok = (check == 0 & all(newGauss.hatK > 0) & all(newGauss.diagK > 0));  % perhaps a bit too strong???

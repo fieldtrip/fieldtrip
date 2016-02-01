@@ -1,6 +1,7 @@
 function [cfg] = ft_checkconfig(cfg, varargin)
 
-% FT_CHECKCONFIG checks the input cfg of the main FieldTrip functions.
+% FT_CHECKCONFIG checks the input cfg of the main FieldTrip functions
+% in three steps.
 %
 % 1: It checks whether the cfg contains all the required options, it gives
 % a warning when renamed or deprecated options are used, and it makes sure
@@ -38,12 +39,13 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   unused          = {'opt1', 'opt2', etc.} % list the unused options, these will be removed and a warning is issued
 %   createsubcfg    = {'subname', etc.}      % list the names of the subcfg
 %   dataset2files   = 'yes', 'no'            % converts dataset into headerfile and datafile
+%   index2logical   = 'yes', 'no'            % converts cfg.index or cfg.grid.index into logical representation
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
 %   trackconfig     = 'on', 'off'            % start/end config tracking
 %
 % See also FT_CHECKDATA, FT_DEFAULTS
 
-% Copyright (C) 2007-2012, Robert Oostenveld, Saskia Haegens
+% Copyright (C) 2007-2014, Robert Oostenveld, Saskia Haegens
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -63,11 +65,6 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %
 % $Id$
 
-global ft_default
-
-% merge the default configuration with the input configuration
-cfg = mergeconfig(cfg, ft_default);
-
 renamed         = ft_getopt(varargin, 'renamed');
 allowed         = ft_getopt(varargin, 'allowed');
 required        = ft_getopt(varargin, 'required');
@@ -78,6 +75,7 @@ renamedval      = ft_getopt(varargin, 'renamedval');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
 checkfilenames  = ft_getopt(varargin, 'dataset2files');
+checkinside     = ft_getopt(varargin, 'index2logical', 'off');
 checksize       = ft_getopt(varargin, 'checksize', 'off');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
@@ -193,11 +191,16 @@ if ~isempty(allowed)
     'trackconfig'
     'checkconfig'
     'checksize'
-    'showcallinfo'
-    'trackcallinfo'
+    'trackusage'
     'trackdatainfo'
-    'trackparaminfo'
+    'trackcallinfo'
+    'showcallinfo'
+    'callinfo'
+    'version'
+    'warning'
     'debug'
+    'previous'
+    'outputfilepresent'
     });
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
@@ -266,7 +269,7 @@ end
 if ~isempty(createsubcfg)
   for j=1:length(createsubcfg)
     subname = createsubcfg{j};
-    
+
     if isfield(cfg, subname)
       % get the options that are already specified in the substructure
       subcfg = getfield(cfg, subname);
@@ -274,7 +277,7 @@ if ~isempty(createsubcfg)
       % start with an empty substructure
       subcfg = [];
     end
-    
+
     % add all other relevant options to the substructure
     switch subname
       case 'preproc'
@@ -316,13 +319,14 @@ if ~isempty(createsubcfg)
           'boxcar'
           'absdiff'
           };
-        
+
       case 'grid'
         fieldname = {
           'xgrid'
           'ygrid'
           'zgrid'
           'resolution'
+          'unit'
           'filter'
           'leadfield'
           'inside'
@@ -331,7 +335,7 @@ if ~isempty(createsubcfg)
           'dim'
           'tight'
           };
-        
+
       case 'dics'
         fieldname = {
           'feedback'
@@ -349,7 +353,17 @@ if ~isempty(createsubcfg)
           'realfilter'
           'subspace'
           };
-        
+
+      case 'eloreta'
+        fieldname = {
+          'keepfilter'
+          'keepmom'
+          'lambda'
+          'normalize'
+          'normalizeparam'
+          'reducerank'
+          };
+
       case 'lcmv'
         fieldname = {
           'feedback'
@@ -367,7 +381,7 @@ if ~isempty(createsubcfg)
           'reducerank'
           'subspace'
           };
-        
+
       case 'pcc'
         fieldname = {
           'feedback'
@@ -383,13 +397,13 @@ if ~isempty(createsubcfg)
           'realfilter'
           'fixedori'
           };
-        
-      case {'loreta', 'rv'}
+
+      case {'rv'}
         fieldname = {
           'feedback'
           'lambda'
           };
-        
+
       case 'mne'
         fieldname = {
           'feedback'
@@ -399,13 +413,25 @@ if ~isempty(createsubcfg)
           'snr'
           'scalesourcecov'
           };
-        
+      case 'harmony'
+        fieldname = {
+          'feedback'
+          'lambda'
+          'keepfilter'
+          'prewhiten'
+          'snr'
+          'scalesourcecov'
+          'filter_order'
+          'filter_bs'
+          'connected_components'
+          'number_harmonics'
+          };
       case 'music'
         fieldname = {
           'feedback'
           'numcomponent'
           };
-        
+
       case 'sam'
         fieldname = {
           'meansphereorigin'
@@ -416,10 +442,10 @@ if ~isempty(createsubcfg)
           'normalize'
           'normalizeparam'
           };
-        
+
       case 'mvl'
         fieldname = {};
-        
+
       case {'npsf', 'granger'}
         % non-parametric spectral factorization -> csd2transfer
         fieldname = {
@@ -431,17 +457,18 @@ if ~isempty(createsubcfg)
           'sfmethod'
           'svd'
           'init'
+          'checkconvergence'
           };
-        
+
       otherwise
         error('unexpected name of the subfunction');
         fieldname = {};
-        
+
     end % switch subname
-    
+
     for i=1:length(fieldname)
       if ~isfield(subcfg, fieldname{i}) && isfield(cfg, fieldname{i})
-        
+
         if silent
           % don't mention it
         elseif loose
@@ -449,25 +476,43 @@ if ~isempty(createsubcfg)
         elseif pedantic
           error('The field cfg.%s is not longer supported, use cfg.%s.%s instead\n', fieldname{i}, subname, fieldname{i});
         end
-        
+
         subcfg = setfield(subcfg, fieldname{i}, getfield(cfg, fieldname{i}));  % set it in the subconfiguration
         cfg = rmfield(cfg, fieldname{i});                                      % remove it from the main configuration
       end
     end
-    
+
     % copy the substructure back into the main configuration structure
     cfg = setfield(cfg, subname, subcfg);
   end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% checkinside, i.e. index2logical
+%
+% Converts indexed cfg.inside/outside into logical representation if neccessary.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if istrue(checkinside)
+  if isfield(cfg, 'inside') && any(cfg.inside>1)
+    inside = false(size(cfg.pos,1),1);
+    inside(cfg.inside) = true;
+    cfg = removefields(cfg, {'inside', 'outside'});
+    cfg.inside = inside;
+  elseif isfield(cfg, 'grid') && isfield(cfg.grid, 'inside') && any(cfg.grid.inside>1)
+    inside = false(size(cfg.grid.pos,1),1);
+    inside(cfg.grid.inside) = true;
+    cfg.grid = removefields(cfg.grid, {'inside', 'outside'});
+    cfg.grid.inside = inside;
+  end
+end % if checkinside
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkfilenames, i.e. dataset2files
 %
 % Converts cfg.dataset into cfg.headerfile and cfg.datafile if neccessary.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(checkfilenames) && strcmp(checkfilenames, 'yes')
-  
+if istrue(checkfilenames)
+
   % start with empty fields if they are not present
   if ~isfield(cfg, 'dataset')
     cfg.dataset = [];
@@ -478,9 +523,12 @@ if ~isempty(checkfilenames) && strcmp(checkfilenames, 'yes')
   if ~isfield(cfg, 'headerfile')
     cfg.headerfile = [];
   end
-  
+
   if ~isempty(cfg.dataset)
-    if strcmp(cfg.dataset, 'gui') || strcmp(cfg.dataset, 'uigetfile')
+    % the dataset is an abstract concept and might relate to a file, a
+    % constellation of fioles or a directory containing multiple files
+
+    if isequal(cfg.dataset, 'gui') || isequal(cfg.dataset, 'uigetfile')
       % display a graphical file selection dialog
       [f, p] = uigetfile('*.*', 'Select a data file');
       if isequal(f, 0)
@@ -497,34 +545,37 @@ if ~isempty(checkfilenames) && strcmp(checkfilenames, 'yes')
       end
       cfg.dataset = d;
     end
-    
+
     % ensure that the headerfile and datafile are defined, which are sometimes different than the name of the dataset
-    % this requires correct autodetection of the format
+    % this requires correct autodetection of the format of the data set
     [cfg.dataset, cfg.headerfile, cfg.datafile] = dataset2files(cfg.dataset, []);
-    
-    % fill dataformat if unspecified
-    if ~isfield(cfg,'dataformat') || isempty(cfg.dataformat)
-      cfg.dataformat = ft_filetype(cfg.datafile);
-    end
-    
-    % fill dataformat if unspecified
-    if ~isfield(cfg,'headerformat') || isempty(cfg.headerformat)
-      cfg.headerformat = ft_filetype(cfg.headerfile);
-    end
-    
+
   elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile);
-    % assume that the datafile also contains the header
+    % assume that the datafile also contains the header information
+    cfg.dataset    = cfg.datafile;
     cfg.headerfile = cfg.datafile;
+
   elseif isempty(cfg.datafile) && ~isempty(cfg.headerfile);
     % assume that the headerfile also contains the data
+    cfg.dataset  = cfg.headerfile;
     cfg.datafile = cfg.headerfile;
   end
-  % remove empty fields (otherwise a subsequent check on required fields doesn't make any sense)
-  if isempty(cfg.dataset),    cfg=rmfield(cfg, 'dataset');    end
-  if isempty(cfg.headerfile), cfg=rmfield(cfg, 'headerfile'); end
-  if isempty(cfg.datafile),   cfg=rmfield(cfg, 'datafile');   end
-end
 
+  % fill dataformat if unspecified, doing this only once saves time later
+  if ~isfield(cfg,'dataformat') || isempty(cfg.dataformat)
+    cfg.dataformat = ft_filetype(cfg.datafile);
+  end
+
+  % fill headerformat if unspecified, doing this only once saves time later
+  if ~isfield(cfg,'headerformat') || isempty(cfg.headerformat)
+    cfg.headerformat = ft_filetype(cfg.headerfile);
+  end
+
+  % remove empty fields, otherwise a subsequent check on required fields doesn't make any sense
+  if isempty(cfg.dataset),    cfg = rmfield(cfg, 'dataset');    end
+  if isempty(cfg.headerfile), cfg = rmfield(cfg, 'headerfile'); end
+  if isempty(cfg.datafile),   cfg = rmfield(cfg, 'datafile');   end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % configtracking
@@ -533,43 +584,66 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(trackconfig)
   try
-    if strcmp(trackconfig, 'on') && isa(cfg, 'struct')
-      % turn ON configuration tracking
-      cfg = config(cfg);
-      % remember that configtracking has been turned on
-      cfg.trkcfgcount = 1;
-    elseif strcmp(trackconfig, 'on') && isa(cfg, 'config')
-      % remember how many times configtracking has been turned on
-      cfg.trkcfgcount = cfg.trkcfgcount+1; % count the 'ONs'
+    if strcmp(trackconfig, 'on')
+      if isa(cfg, 'struct')
+        % turn ON configuration tracking
+        cfg = config(cfg);
+        % remember that configtracking has been turned on
+        cfg = access(cfg, 'set', 'counter', 1);
+      elseif isa(cfg, 'config')
+        % remember how many times trackconfig has been turned on
+        cfg = access(cfg, 'set', 'counter', access(cfg, 'get', 'counter')+1); % count the 'ONs'
+      end
     end
-    
+
     if strcmp(trackconfig, 'off') && isa(cfg, 'config')
       % turn OFF configuration tracking, optionally give report and/or cleanup
-      cfg.trkcfgcount=cfg.trkcfgcount-1; % count(down) the 'OFFs'
-      
-      if cfg.trkcfgcount==0 % only proceed when number of 'ONs' matches number of 'OFFs'
-        cfg=rmfield(cfg, 'trkcfgcount');
-        
+      cfg = access(cfg, 'set', 'counter', access(cfg, 'get', 'counter')-1); % count(down) the 'OFFs'
+
+      if access(cfg, 'get', 'counter')==0
+        % only proceed when number of 'ONs' matches number of 'OFFs'
+
         if strcmp(cfg.trackconfig, 'report') || strcmp(cfg.trackconfig, 'cleanup')
           % gather information about the tracked results
           r = access(cfg, 'reference');
           o = access(cfg, 'original');
-          
+
           key = fieldnames(cfg);
           key = key(:)';
-          
-          ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous', 'debug'}; % these fields should never be removed!
+
+          ignorefields = {
+             % these fields from the user should never be removed
+             'trl'
+             'trlold'
+             'event'
+             'artifact'
+             'artfctdef'
+             % these fields are for internal usage
+             'trackconfig'
+             'checkconfig'
+             'checksize'
+             'trackusage'
+             'trackdatainfo'
+             'trackcallinfo'
+             'showcallinfo'
+             'callinfo'
+             'version'
+             'warning'
+             'debug'
+             'previous'
+           };
+
           skipsel      = match_str(key, ignorefields);
           key(skipsel) = [];
-          
+
           used     = zeros(size(key));
           original = zeros(size(key));
-          
+
           for i=1:length(key)
             used(i)     = (r.(key{i})>0);
             original(i) = (o.(key{i})>0);
           end
-          
+
           if ~silent
             % give report on screen
             fprintf('\nThe following config fields were specified by YOU and were USED\n');
@@ -579,7 +653,7 @@ if ~isempty(trackconfig)
             else
               fprintf('  <none>\n');
             end
-            
+
             fprintf('\nThe following config fields were specified by YOU and were NOT USED\n');
             sel = find(~used & original);
             if numel(sel)
@@ -587,7 +661,7 @@ if ~isempty(trackconfig)
             else
               fprintf('  <none>\n');
             end
-            
+
             fprintf('\nThe following config fields were set to DEFAULTS and were USED\n');
             sel = find(used & ~original);
             if numel(sel)
@@ -595,7 +669,7 @@ if ~isempty(trackconfig)
             else
               fprintf('  <none>\n');
             end
-            
+
             fprintf('\nThe following config fields were set to DEFAULTS and were NOT USED\n');
             sel = find(~used & ~original);
             if numel(sel)
@@ -605,7 +679,7 @@ if ~isempty(trackconfig)
             end
           end % report
         end % report/cleanup
-        
+
         if strcmp(cfg.trackconfig, 'cleanup')
           % remove the unused options from the configuration
           unusedkey = key(~used);
@@ -613,12 +687,12 @@ if ~isempty(trackconfig)
             cfg = rmfield(cfg, unusedkey{i});
           end
         end
-        
+
         % convert the configuration back to a struct
         cfg = struct(cfg);
       end
     end % off
-    
+
   catch
     disp(lasterr);
   end
@@ -654,7 +728,7 @@ for i=1:numel(fieldsorig)
     if any(strcmp(fieldsorig{i}, ignorefields))
       % keep this field, regardless of its size
       continue
-      
+
     elseif iscell(cfg(k).(fieldsorig{i}))
       % run recursively on each struct element that is contained in the cell-array
       for j=1:numel(cfg(k).(fieldsorig{i}))
@@ -662,11 +736,11 @@ for i=1:numel(fieldsorig)
           cfg(k).(fieldsorig{i}){j} = checksizefun(cfg(k).(fieldsorig{i}){j}, max_size);
         end
       end
-      
+
     elseif isstruct(cfg(k).(fieldsorig{i})) && ~any(strcmp(fieldsorig{i}, norecursion))
       % run recursively on a struct field
       cfg(k).(fieldsorig{i}) = checksizefun(cfg(k).(fieldsorig{i}), max_size);
-      
+
     else
       % determine the size of the field and remove it if too large
       temp = cfg(k).(fieldsorig{i});
@@ -675,7 +749,7 @@ for i=1:numel(fieldsorig)
         cfg(k).(fieldsorig{i}) = 'empty - this was cleared by checkconfig';
       end
       clear temp
-      
+
     end
   end % for numel(cfg)
 end % for each of the fieldsorig
@@ -683,7 +757,7 @@ end % for each of the fieldsorig
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION converts a cell array of structure arrays into a structure array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function newNeighbours = fixneighbours(neighbours)
+function [newNeighbours] = fixneighbours(neighbours)
 newNeighbours = struct;
 for i=1:numel(neighbours)
   if i==1, newNeighbours = neighbours{i};    end;

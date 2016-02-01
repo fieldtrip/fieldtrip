@@ -22,23 +22,23 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.nonlinear   = 'yes' or 'no', perform nonlinear search for optimal
 %                     dipole parameters (default = 'yes')
 %
-% If you start with a grid search, you should specify the grid locations at
-% which a test dipole will be placed. The positions of the dipoles can be
-% specified as a regular 3-D grid that is aligned with the axes of the head
-% coordinate system
+% If you start with a grid search, the complete grid with dipole
+% positions and optionally precomputed leadfields should be specified
+%   cfg.grid            = structure, see FT_PREPARE_SOURCEMODEL or FT_PREPARE_LEADFIELD
+% The positions of the dipoles can be specified as a regular 3-D
+% grid that is aligned with the axes of the head coordinate system
 %   cfg.grid.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
-% Alternatively a complete grid with dipole positions and precomputed
-% leadfields can be specified
-%   cfg.grid            = structure, see FT_PREPARE_LEADFIELD
-% or the position of a few dipoles at locations of interest can be
-% specified, for example obtained from an anatomical or functional MRI
-%   cfg.grid.pos        = Nx3 matrix with position of each source
+%   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
-%   cfg.grid.inside     = vector with indices of the sources inside the brain (optional)
-%   cfg.grid.outside    = vector with indices of the sources outside the brain (optional)
+% If the source model destribes a triangulated cortical sheet, it is described as
+%   cfg.grid.pos        = N*3 matrix with the vertex positions of the cortical sheet
+%   cfg.grid.tri        = M*3 matrix that describes the triangles connecting the vertices
+% Alternatively the position of a few dipoles at locations of interest can be
+% specified, for example obtained from an anatomical or functional MRI
+%   cfg.grid.pos        = N*3 matrix with position of each source
 %
 % If you do not start with a grid search, you have to give a starting location
 % for the nonlinear search
@@ -68,9 +68,12 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.optimfun = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
 %   cfg.dipfit.maxiter  = maximum number of function evaluations allowed (default depends on the optimfun)
 %
+% Optionally, you can modify the leadfields by reducing the rank, i.e.
+% remove the weakest orientation.
+%   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
+%
 % The volume conduction model of the head should be specified as
-%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % The EEG or MEG sensor positions can be present in the data or can be specified as
 %   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
@@ -78,8 +81,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -100,33 +102,8 @@ function [source] = ft_dipolefitting(cfg, data)
 
 % Undocumented local options:
 %   cfg.dipfit.constr   = Source model constraints, depends on cfg.symmetry
-%
-% This function depends on FT_PREPARE_DIPOLE_GRID which has the following options:
-% cfg.grid.xgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.xgrid = 'auto'), documented
-% cfg.grid.ygrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.ygrid = 'auto'), documented
-% cfg.grid.zgrid (default set in FT_PREPARE_DIPOLE_GRID: cfg.grid.zgrid = 'auto'), documented
-% cfg.grid.resolution, documented
-% cfg.grid.pos, documented
-% cfg.grid.dim, documented
-% cfg.grid.inside, documented
-% cfg.grid.outside, documented
-% cfg.symmetry, documented
-% cfg.mri
-% cfg.smooth
-% cfg.sourceunits
-% cfg.threshold
-%
-% This function depends on FT_PREPARE_VOL_SENS which has the following options:
-% cfg.channel (default set in FT_DIPOLEFITTING: cfg.channel = 'all'), documented
-% cfg.elec, documented
-% cfg.elecfile, documented
-% cfg.grad, documented
-% cfg.gradfile, documented
-% cfg.hdmfile, documented
-% cfg.order
-% cfg.vol, documented
 
-% Copyright (C) 2004-2012, Robert Oostenveld
+% Copyright (C) 2004-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -150,26 +127,40 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'}, 'feedback', 'yes');
 
-% set the defaults
-if ~isfield(cfg, 'channel'),     cfg.channel = 'all';        end
-if ~isfield(cfg, 'component'),   cfg.component = [];         end  % for comp input
-if ~isfield(cfg, 'frequency'),   cfg.frequency = [];         end  % for freq input
-if ~isfield(cfg, 'latency'),     cfg.latency = 'all';        end
-if ~isfield(cfg, 'feedback'),    cfg.feedback = 'text';      end
-if ~isfield(cfg, 'gridsearch'),  cfg.gridsearch = 'yes';     end
-if ~isfield(cfg, 'nonlinear'),   cfg.nonlinear = 'yes';      end
-if ~isfield(cfg, 'symmetry'),    cfg.symmetry = [];          end
+cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
-% put the low-level options pertaining to the dipole grid (used for initial scanning) in their own field
+% get the defaults
+cfg.channel         = ft_getopt(cfg, 'channel', 'all');
+cfg.component       = ft_getopt(cfg, 'component');        % for comp input
+cfg.frequency       = ft_getopt(cfg, 'frequency');        % for freq input
+cfg.latency         = ft_getopt(cfg, 'latency', 'all');   % for timeclock input
+cfg.feedback        = ft_getopt(cfg, 'feedback', 'text');
+cfg.gridsearch      = ft_getopt(cfg, 'gridsearch', 'yes');
+cfg.nonlinear       = ft_getopt(cfg, 'nonlinear', 'yes');
+cfg.symmetry        = ft_getopt(cfg, 'symmetry');
+% cfg.reducerank   = ft_getopt(cfg, 'reducerank', 'no');      % the default for this depends on EEG/MEG and is set below
+cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not used in dipole fitting
+cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in dipole fitting
+cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
+
+% put the low-level options pertaining to the dipole grid in their own field
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % the default for this depends on the data type
@@ -177,7 +168,7 @@ if ~isfield(cfg, 'model'),
   if ~isempty(cfg.component)
     % each component is fitted independently
     cfg.model = 'moving';
-  elseif ~isempty(cfg.latency)
+  elseif ~isempty(cfg.frequency)
     % fit the data with a dipole at one location
     cfg.model = 'regional';
   elseif ~isempty(cfg.latency)
@@ -241,7 +232,14 @@ end
 
 % prepare the volume conduction model and the sensor array
 % this updates the configuration with the appropriate fields
-[vol, sens, cfg] = prepare_headmodel(cfg, data);
+[headmodel, sens, cfg] = prepare_headmodel(cfg, data);
+
+% set the default for reducing the rank of the leadfields
+if ft_senstype(sens, 'eeg')
+  cfg.reducerank = ft_getopt(cfg, 'reducerank', 3);
+else
+  cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
+end
 
 % select the desired channels, the order should be the same as in the sensor structure
 [selsens, seldata] = match_str(sens.label, data.label);
@@ -321,31 +319,37 @@ if strcmp(cfg.gridsearch, 'yes')
   end
 
   % construct the dipole grid on which the gridsearch will be done
-  tmpcfg = [];
-  tmpcfg.vol  = vol;
-  tmpcfg.grad = sens; % this can be electrodes or gradiometers
+  tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+  tmpcfg.headmodel = headmodel;
+  if ft_senstype(sens, 'eeg')
+    tmpcfg.elec = sens;
+  else
+    tmpcfg.grad = sens;
+  end
   % copy all options that are potentially used in ft_prepare_sourcemodel
-  try, tmpcfg.grid        = cfg.grid;         end
-  try, tmpcfg.mri         = cfg.mri;          end
-  try, tmpcfg.headshape   = cfg.headshape;    end
-  try, tmpcfg.tightgrid   = cfg.tightgrid;    end
-  try, tmpcfg.symmetry    = cfg.symmetry;     end
-  try, tmpcfg.smooth      = cfg.smooth;       end
-  try, tmpcfg.threshold   = cfg.threshold;    end
-  try, tmpcfg.spheremesh  = cfg.spheremesh;   end
-  try, tmpcfg.inwardshift = cfg.inwardshift;  end
-  try, tmpcfg.sourceunits = cfg.sourceunits;  end
   grid = ft_prepare_sourcemodel(tmpcfg);
 
+  ngrid = size(grid.pos,1);
+  
+  switch cfg.model
+    case 'regional'
+      grid.error = nan(ngrid, 1);
+    case 'moving'
+      grid.error = nan(ngrid, ntime);
+    otherwise
+      error('unsupported cfg.model');
+  end
+  
+  insideindx = find(grid.inside);
   ft_progress('init', cfg.feedback, 'scanning grid');
-  for i=1:length(grid.inside)
-    ft_progress(i/length(grid.inside), 'scanning grid location %d/%d\n', i, length(grid.inside));
-    indx = grid.inside(i);
+  for i=1:length(insideindx)
+    ft_progress(i/length(insideindx), 'scanning grid location %d/%d\n', i, length(insideindx));
+    thisindx = insideindx(i);
     if isfield(grid, 'leadfield')
       % reuse the previously computed leadfield
-      lf = grid.leadfield{indx};
+      lf = grid.leadfield{thisindx};
     else
-      lf = ft_compute_leadfield(grid.pos(indx,:), sens, vol);
+      lf = ft_compute_leadfield(grid.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
     end
     % the model is V=lf*mom+noise, therefore mom=pinv(lf)*V estimates the
     % dipole moment this makes the model potential U=lf*pinv(lf)*V and the
@@ -358,10 +362,10 @@ if strcmp(cfg.gridsearch, 'yes')
     switch cfg.model
       case 'regional'
         % sum the error over all latencies
-        grid.error(indx,1) = sum(sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2));
+        grid.error(thisindx,1) = sum(sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2));
       case 'moving'
         % remember the error for each latency independently
-        grid.error(indx,:) = sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2);
+        grid.error(thisindx,:) = sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2);
       otherwise
         error('unsupported cfg.model');
     end % switch model
@@ -371,21 +375,22 @@ if strcmp(cfg.gridsearch, 'yes')
   switch cfg.model
     case 'regional'
       % find the grid point(s) with the minimum error
-      [err, indx] = min(grid.error(grid.inside));
-      dip.pos = grid.pos(grid.inside(indx),:);          % note that for a symmetric dipole pair this results in a vector
-      dip.pos = reshape(dip.pos,3,cfg.numdipoles)';    % convert to a Nx3 array
+      [err, indx] = min(grid.error);
+      dip.pos = grid.pos(indx,:);                       % note that for a symmetric dipole pair this results in a vector
+      dip.pos = reshape(dip.pos,3,cfg.numdipoles)';     % convert to a Nx3 array
       dip.mom = zeros(cfg.numdipoles*3,1);              % set the dipole moment to zero
       if cfg.numdipoles==1
         fprintf('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
       elseif cfg.numdipoles==2
         fprintf('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
       end
+      
     case 'moving'
       for t=1:ntime
         % find the grid point(s) with the minimum error
-        [err, indx] = min(grid.error(grid.inside,t));
-        dip(t).pos = grid.pos(grid.inside(indx),:);           % note that for a symmetric dipole pair this results in a vector
-        dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';  % convert to a Nx3 array
+        [err, indx] = min(grid.error(:,t));
+        dip(t).pos = grid.pos(indx,:);                        % note that for a symmetric dipole pair this results in a vector
+        dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
         if cfg.numdipoles==1
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
@@ -393,26 +398,27 @@ if strcmp(cfg.gridsearch, 'yes')
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
         end
       end
+      
     otherwise
       error('unsupported cfg.model');
   end % switch model
-end % if gridsearch
-
-if strcmp(cfg.gridsearch, 'no')
+  
+elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
     case 'regional'
-      dip = struct(cfg.dip);
+      dip = struct(cfg.dip);      % ensure that it is a struct, not a config object
     case 'moving'
       for t=1:ntime
-        dip(t) = struct(cfg.dip);
+        dip(t) = struct(cfg.dip); % ensure that it is a struct, not a config object
       end
     otherwise
       error('unsupported cfg.model');
   end % switch model
-end
+  
+end % if gridsearch yes/no
 
-% multiple dipoles can be represented either as a 1x(N*3) vector or as a  Nx3 matrix,
+% multiple dipoles can be represented either as a 1x(N*3) vector or as a Nx3 matrix,
 % i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
 switch cfg.model
   case 'regional'
@@ -427,11 +433,17 @@ end % switch model
 
 if isfield(cfg, 'dipfit')
   % convert the structure with the additional low-level options into key-value pairs
-  optarg = ft_cfg2keyval(getfield(cfg, 'dipfit'));
+  optarg = ft_cfg2keyval(cfg.dipfit);
 else
   % no additional low-level options were specified
   optarg = {};
 end
+
+% add the options for the leadfield computation
+optarg = ft_setopt(optarg, 'reducerank', cfg.reducerank);
+optarg = ft_setopt(optarg, 'normalize', cfg.normalize);
+optarg = ft_setopt(optarg, 'normalizeparam', cfg.normalizeparam);
+optarg = ft_setopt(optarg, 'backproject', cfg.backproject);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % perform the non-linear fit
@@ -442,7 +454,7 @@ if strcmp(cfg.nonlinear, 'yes')
       % perform the non-linear dipole fit for all latencies together
       % catch errors due to non-convergence
       try
-        dip = dipole_fit(dip, sens, vol, Vdata, optarg{:});
+        dip = dipole_fit(dip, sens, headmodel, Vdata, optarg{:});
         success = 1;
         if cfg.numdipoles==1
           fprintf('found minimum after non-linear optimization on [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
@@ -453,15 +465,16 @@ if strcmp(cfg.nonlinear, 'yes')
         success = 0;
         disp(lasterr);
       end
+      
     case 'moving'
       % perform the non-linear dipole fit for each latency independently
-      % instead of using dip(t) =  ft_dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
-      % this is to prevent errors of the type "Subscripted assignment between dissimilar structures"
+      % instead of using dip(t) = dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
+      % to prevent errors like "Subscripted assignment between dissimilar structures"
       dipin = dip;
       for t=1:ntime
         % catch errors due to non-convergence
         try
-          dipout(t) = dipole_fit(dipin(t), sens, vol, Vdata(:,t), optarg{:});
+          dipout(t) = dipole_fit(dipin(t), sens, headmodel, Vdata(:,t), optarg{:});
           success(t) = 1;
           if cfg.numdipoles==1
             fprintf('found minimum after non-linear optimization for topography %d on [%g %g %g]\n', t, dipout(t).pos(1), dipout(t).pos(2), dipout(t).pos(3));
@@ -469,6 +482,7 @@ if strcmp(cfg.nonlinear, 'yes')
             fprintf('found minimum after non-linear optimization for topography %d on [%g %g %g; %g %g %g]\n', t, dipout(t).pos(1,1), dipout(t).pos(1,2), dipout(t).pos(1,3), dipout(t).pos(2,1), dipout(t).pos(2,2), dipout(t).pos(2,3));
           end
         catch
+          % keep the position and moment according to the initial guess
           dipout(t).pos = dipin(t).pos;
           dipout(t).mom = dipin(t).mom;
           success(t) = 0;
@@ -483,7 +497,8 @@ if strcmp(cfg.nonlinear, 'yes')
 end % if nonlinear
 
 if strcmp(cfg.nonlinear, 'no')
-  % the optimal dipole positions are either obrained from scanning or from the initial configured seed
+  % the optimal dipole positions are either obtained from scanning
+  % or from the initial configured specified by the user
   switch cfg.model
     case 'regional'
       success = 1;
@@ -502,10 +517,15 @@ switch cfg.model
   case 'regional'
     if success
       % re-compute the leadfield in order to compute the model potential and dipole moment
-      lf = ft_compute_leadfield(dip.pos, sens, vol);
-      % compute all details of the final dipole model
-      dip.mom = pinv(lf)*Vdata;
-      dip.pot = lf*dip.mom;
+      lf = ft_compute_leadfield(dip.pos, sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+      if isfield(dip, 'mom') && isfield(dip, 'ampl')
+        % the orientation and amplitude have already been estimated, this applies to the case of a fixed dipole orientation
+        dip.pot = (lf * dip.mom) * dip.ampl;
+      else
+        % compute all details of the final dipole model using linear estimation
+        dip.mom = pinv(lf)*Vdata;
+        dip.pot = lf*dip.mom;
+      end
       dip.rv  = rv(Vdata, dip.pot);
       Vmodel  = dip.pot;
     end
@@ -513,7 +533,7 @@ switch cfg.model
     for t=1:ntime
       if success(t)
         % re-compute the leadfield in order to compute the model potential and dipole moment
-        lf = ft_compute_leadfield(dip(t).pos, sens, vol);
+        lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
         % compute all details of the final dipole model
         dip(t).mom = pinv(lf)*Vdata(:,t);
         dip(t).pot = lf*dip(t).mom;
@@ -530,7 +550,12 @@ switch cfg.model
     if isfreq
       % the matrix with the dipole moment is encrypted and cannot be interpreted straight away
       % reconstruct the frequency representation of the data at the source level
-      [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom);
+      if isfield(dip, 'mom') && isfield(dip, 'ampl')
+        % this applies to the case of a fixed dipole orientation
+        [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom * dip.ampl);
+      else
+        [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom);
+      end
     end
   case 'moving'
     if isfreq
@@ -549,6 +574,11 @@ source.dip    = dip;
 source.Vdata  = Vdata;  % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 source.Vmodel = Vmodel; % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 
+% the units of the fitted source are the same as the units of the headmodel and the sensor array
+for i=1:length(source.dip)
+  source.dip(i).unit = headmodel.unit;
+end
+
 % assign a latency, frequeny or component axis to the output
 if iscomp
   source.component = cfg.component;
@@ -564,20 +594,10 @@ else
   source.dimord = 'chan_time';
 end
 
-% FIXME why would this be done?
-if isfield(data, 'grad')
-  % copy the gradiometer array along
-  source.grad = data.grad;
-end
-if isfield(data, 'elec')
-  % copy the electrode array along
-  source.elec = data.elec;
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history source
-ft_postamble savevar source
+ft_postamble previous   data
+ft_postamble provenance source
+ft_postamble history    source
+ft_postamble savevar    source

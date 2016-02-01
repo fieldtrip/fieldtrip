@@ -1,5 +1,8 @@
 function test_bug1040
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST: bug1040
 
 % function to test ft_prepare_sourcemodel given configuration options (cfg), 
@@ -18,13 +21,11 @@ success = true;
 load('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singlesphere.mat', 'vol');
 
 % load gradiometer information of an exemplary subject
-load('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat', 'grad');
-grad_standard = grad; clear grad;
+grad_standard = ft_read_sens('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat');
 
 % load the same gradiometer information treated with ft_headmovement (10
 % clusters)
-load('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275_10clusters.mat', 'grad');
-grad_extended = grad; clear grad;
+grad_extended = ft_read_sens('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275_10clusters.mat');
 
 %%%%%%%%%%%%%%%%%%%%%
 % do the computations (standard)

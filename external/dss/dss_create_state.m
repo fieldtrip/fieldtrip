@@ -69,7 +69,7 @@ function state = dss_create_state(X_or_state, parameters)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: dss_create_state.m,v 1.30 2005/12/07 11:24:30 jaakkos Exp $
+% $Id$
 
 if nargin<1
   error('DSS initialization requires state structure with input data.');

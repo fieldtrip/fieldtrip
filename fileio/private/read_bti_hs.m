@@ -1,4 +1,4 @@
-function [output, firstIndexPoint] = read_hs_file( filename, outfile)
+function [output, firstIndexPoint] = read_4d_hs( filename, outfile)
 
 %read_hs_file Reads in BTI-Headshape files
 %   filename: file with the headshape informations
@@ -29,11 +29,11 @@ if nargin == 1
     outfile = [];
 end %if
 
-fid = fopen(filename, 'r', 'b');
-version = fread(fid, 1, '*uint32');
+fid       = fopen(filename, 'r', 'b');
+version   = fread(fid, 1, '*uint32');
 timestamp = fread(fid, 1, '*int32');
-checksum = fread(fid, 1, '*int32');
-nPoints = fread(fid, 1, '*int32');
+checksum  = fread(fid, 1, '*int32');
+nPoints   = fread(fid, 1, '*int32');
 
 firstIndexPoint = fread(fid, [3, 5], 'double')';
 

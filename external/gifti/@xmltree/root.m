@@ -4,13 +4,13 @@ function uid = root(tree)
 % 
 % tree   - XMLTree object
 % uid    - UID of the root element of tree
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Return the uid of the root element of the tree.
-%_______________________________________________________________________
+%__________________________________________________________________________
 % Copyright (C) 2002-2008  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
 % Actually root is necessarily the element whos UID is 1, by

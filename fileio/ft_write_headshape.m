@@ -9,16 +9,17 @@ function ft_write_headshape(filename, bnd, varargin)
 % or
 %   ft_write_headshape(filename, pos, ...)
 % where the bnd is a structure containing the vertices and triangles
-% (bnd.pnt and bnd.tri), or where pnt describes the surface or source
-% points.
+% (bnd.pnt and bnd.tri), or where pos is a Nx3 matrix that describes the 
+% surface or source points.
 %
 % Required input arguments should be specified as key-value pairs and
 % should include
-%   format		= string, see below
+%   'format'		  = string, see below
+%
 % Optional input arguments should be specified as key-value pairs and
 % can include
-%   data      = data matrix, size(1) should be number of vertices
-%   dimord    = string describing the dimensions of the data, e.g. 'pos_time'
+%   'data'        = data matrix, size(1) should be number of vertices
+%   'unit'        = string, e.g. 'mm'
 %
 % Supported output formats are
 %   'mne_tri'		MNE surface desciption in ascii format
@@ -27,13 +28,26 @@ function ft_write_headshape(filename, bnd, varargin)
 %   'vista'
 %   'tetgen'
 %   'gifti'
-%   'stl'       STereoLithography file format, for use with CAD and generic 3D mesh editing programs
-%   'vtk'       Visualization ToolKit file format, for use with Paraview
-%   'ply'       Stanford Polygon file format, for use with Paraview or Meshlab
+%   'stl'           STereoLithography file format, for use with CAD and generic 3D mesh editing programs
+%   'vtk'           Visualization ToolKit file format, for use with Paraview
+%   'ply'           Stanford Polygon file format, for use with Paraview or Meshlab
+%   'freesurfer'    Freesurfer surf-file format, using write_surf from FreeSurfer
 %
 % See also FT_READ_HEADSHAPE
 
-% Copyright (C) 2011, Lilla Magyari & Robert Oostenveld
+% Undocumented optional option:
+%   'metadata'     = struct-array, containing the fields 'name' and
+%                    'value', that will be used as metadata for the vertices. 
+% 
+% In the case of 'gifti' as required format you can optionally add a struct-array
+% containing metadata. This is useful of the resulting files are to be used in
+% combination with workbench. In this case it makes sense to specify the 
+% following names (with example values in brackets):
+%
+%   'AnatomicalStructurePrimary'   (e.g. 'CortexLeft'),
+%   'AnatomicalStructureSecondary' (e.g. 'MidLayer')
+
+% Copyright (C) 2011-2014, Lilla Magyari & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -53,14 +67,23 @@ function ft_write_headshape(filename, bnd, varargin)
 %
 % $Id$
 
-fileformat = ft_getopt(varargin,'format','unknown');
-data       = ft_getopt(varargin,'data',  []); % can be stored in a gifti file
-dimord     = ft_getopt(varargin,'dimord',[]); % optional for data
+fileformat    = ft_getopt(varargin, 'format', 'unknown');
+data          = ft_getopt(varargin, 'data');         % can be stored in a gifti file
+unit          = ft_getopt(varargin, 'unit');
+metadata      = ft_getopt(varargin, 'metadata');
+
+if ~isfield(bnd, 'pnt') && isfield(bnd, 'pos')
+  bnd.pnt = bnd.pos;
+end
 
 if ~isstruct(bnd)
   bnd.pnt = bnd;
 end
 
+if ~isempty(unit)
+  % convert to the desired units prior to writing to disk
+  bnd = ft_convert_units(bnd, unit);
+end
 
 switch fileformat
   case 'mne_pos'
@@ -125,7 +148,7 @@ switch fileformat
     % the third argument is the element type. At the moment only type 302
     % (triangle) is supported
     surf_to_tetgen(filename, bnd.pnt, bnd.tri, 302*ones(size(bnd.tri,1),1),[],[]);
-  
+    
   case 'vtk'
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.vtk']); % ensure it has the right extension
@@ -136,32 +159,74 @@ switch fileformat
     elseif isfield(bnd, 'hex')
       write_vtk(filename, bnd.pnt, bnd.hex);
     end
-
-  case 'ply'
+    
+  case {'ply', 'ply_ascii', 'ply_binary'}
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.ply']); % ensure it has the right extension
-    if isfield(bnd, 'tri')
-      write_ply(filename, bnd.pnt, bnd.tri);
-    elseif isfield(bnd, 'tet')
-      write_ply(filename, bnd.pnt, bnd.tet);
-    elseif isfield(bnd, 'hex')
-      write_ply(filename, bnd.pnt, bnd.hex);
+    
+    if isfield(bnd, 'pnt')
+      vertices = bnd.pnt;
+    elseif isfield(bnd, 'pos')
+      vertices = bnd.pos;
     end
-
+    
+    if isfield(bnd, 'tri')
+      elements = bnd.tri;
+    elseif isfield(bnd, 'tet')
+      elements = bnd.tet;
+    elseif isfield(bnd, 'hex')
+      elements = bnd.hex;
+    end
+    
+    if length(fileformat)>4
+      write_ply(filename, vertices, elements, fileformat(5:end));
+    else
+      write_ply(filename, vertices, elements, 'ascii');
+    end
+    
   case 'stl'
     nrm = normals(bnd.pnt, bnd.tri, 'triangle');
     write_stl(filename, bnd.pnt, bnd.tri, nrm);
-
+    
   case 'gifti'
     ft_hastoolbox('gifti', 1);
-    tmp = [];
+    
+    bnd = ft_convert_units(bnd, 'mm');  % defined in the GIFTI standard to be milimeter
+    
+    % start with an empty structure
+    tmp          = [];
     tmp.vertices = bnd.pnt;
     tmp.faces    = bnd.tri;
     if ~isempty(data)
       tmp.cdata = data;
     end
-    tmp = gifti(tmp);
-    save(tmp, filename);
+    tmp = gifti(tmp);     % construct a gifti object
+    
+    % check the presence of metadata
+    if ~isempty(metadata)
+      if isstruct(metadata)
+        fnames = fieldnames(metadata);
+        if any(strcmp(fnames,'name')) && any(strcmp(fnames,'value'))
+          % this is OK, and now assume the metadata to be written at the
+          % level of the vertex info
+          for k = 1:numel(tmp.private.data)
+            n(k,1) = size(tmp.private.data{k}.data,1);
+          end
+          ix = find(n==size(tmp.vertices,1));
+          tmp.private.data{ix}.metadata = metadata;
+        else
+          error('the metadata structure should contain the fields ''name'' and ''value''');
+        end
+      else
+        error('metadata should be provided as a struct-array');
+      end
+    end
+        
+    save(tmp, filename);  % write the object to file
+
+  case 'freesurfer'
+    ft_hastoolbox('freesurfer', 1);
+    write_surf(filename, bnd.pnt, bnd.tri);
     
   case []
     error('you must specify the output format');

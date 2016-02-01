@@ -1,4 +1,4 @@
-function [volume] = transform2grid(volume);
+function [volume] = transform2grid(volume)
 
 % TRANSFORM2GRID ensures that the volume contains the definition of the
 % cardian axes, i.e. xgrid/ygrid/zgrid. If the voluyme contains a

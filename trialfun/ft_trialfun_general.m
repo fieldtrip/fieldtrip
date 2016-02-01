@@ -18,6 +18,10 @@ function [trl, event] = ft_trialfun_general(cfg)
 %   cfg.trialdef.eventtype  = '?'
 % a list with the events in your datafile will be displayed on screen.
 %
+% If you specify
+%   cfg.trialdef.eventtype = 'gui'
+% a graphical user interface will allow you to select events of interest.
+%
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
 % Copyright (C) 2005-2012, Robert Oostenveld
@@ -42,6 +46,9 @@ function [trl, event] = ft_trialfun_general(cfg)
 
 % some events do not require the specification a type, pre or poststim period
 % in that case it is more convenient not to have them, instead of making them empty
+if ~isfield(cfg, 'trialdef')
+  cfg.trialdef = [];
+end
 if isfield(cfg.trialdef, 'eventvalue')  && isempty(cfg.trialdef.eventvalue   ), cfg.trialdef = rmfield(cfg.trialdef, 'eventvalue' ); end
 if isfield(cfg.trialdef, 'prestim')     && isempty(cfg.trialdef.prestim      ), cfg.trialdef = rmfield(cfg.trialdef, 'prestim'    ); end
 if isfield(cfg.trialdef, 'poststim')    && isempty(cfg.trialdef.poststim     ), cfg.trialdef = rmfield(cfg.trialdef, 'poststim'   ); end
@@ -67,7 +74,7 @@ if ~isfield(cfg, 'eventformat'),  cfg.eventformat  = []; end
 if ~isfield(cfg, 'headerformat'), cfg.headerformat = []; end
 if ~isfield(cfg, 'dataformat'),   cfg.dataformat   = []; end
 
-% read the header, contains the sampling frequency 
+% read the header, contains the sampling frequency
 hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 
 % read the events
@@ -107,54 +114,47 @@ if isfield(cfg.trialdef, 'triallength')
   return
 end
 
-sel = [];
 trl = [];
 val = [];
-if strcmp(cfg.trialdef.eventtype, '?')
-  % no trials should be added, show event information using subfunction and exit
-  show_event(event);
-  return
-end
-
-if strcmp(cfg.trialdef.eventtype, 'gui') || (isfield(cfg.trialdef, 'eventvalue') && length(cfg.trialdef.eventvalue)==1 && strcmp(cfg.trialdef.eventvalue, 'gui'))
-  cfg.trialdef = select_event(event, cfg.trialdef);
-  usegui = 1;
+if isfield(cfg.trialdef, 'eventtype')
+  if strcmp(cfg.trialdef.eventtype, '?')
+    % no trials should be added, show event information using subfunction and exit
+    show_event(event);
+    return
+  elseif strcmp(cfg.trialdef.eventtype, 'gui') || (isfield(cfg.trialdef, 'eventvalue') && length(cfg.trialdef.eventvalue)==1 && strcmp(cfg.trialdef.eventvalue, 'gui'))
+    cfg.trialdef = select_event(event, cfg.trialdef);
+    usegui = 1;
+  else
+    usegui = 0;
+  end
 else
   usegui = 0;
 end
 
-if ~isfield(cfg.trialdef, 'eventvalue')
-  cfg.trialdef.eventvalue = [];
-elseif ischar(cfg.trialdef.eventvalue)
-  % convert single string into cell-array, otherwise the intersection does not work as intended
-  cfg.trialdef.eventvalue = {cfg.trialdef.eventvalue};
-end
+% start by selecting all events
+sel = true(1, length(event)); % this should be a row vector
 
-% select all events of the specified type and with the specified value
-if ~isempty(cfg.trialdef.eventtype)
-  sel = ismember({event.type}, cfg.trialdef.eventtype);
-else
-  sel = true(size(event));
-end
-
-if ~isempty(cfg.trialdef.eventvalue)
-  % this cannot be done robustly in a single line of code
-  if ~iscell(cfg.trialdef.eventvalue)
-    valchar    = ischar(cfg.trialdef.eventvalue); 
-    valnumeric = isnumeric(cfg.trialdef.eventvalue); 
-  else
-    valchar    = ischar(cfg.trialdef.eventvalue{1});
-    valnumeric = isnumeric(cfg.trialdef.eventvalue{1});
-  end  
+% select all events of the specified type
+if isfield(cfg.trialdef, 'eventtype') && ~isempty(cfg.trialdef.eventtype)
   for i=1:numel(event)
-    if (ischar(event(i).value) && valchar) || (isnumeric(event(i).value) && valnumeric)
-      sel(i) = sel(i) & ~isempty(intersect(event(i).value, cfg.trialdef.eventvalue));
-    end
+    sel(i) = sel(i) && ismatch(event(i).type, cfg.trialdef.eventtype);
+  end
+elseif ~isfield(cfg.trialdef, 'eventtype') || isempty(cfg.trialdef.eventtype)
+  % search for trial events
+  for i=1:numel(event)
+    sel(i) = sel(i) && ismatch(event(i).type, 'trial');
+  end
+end
+
+% select all events with the specified value
+if isfield(cfg.trialdef, 'eventvalue') && ~isempty(cfg.trialdef.eventvalue)
+  for i=1:numel(event)
+    sel(i) = sel(i) && ismatch(event(i).value, cfg.trialdef.eventvalue);
   end
 end
 
 % convert from boolean vector into a list of indices
-sel = find(sel);  
+sel = find(sel);
 
 if usegui
   % Checks whether offset and duration are defined for all the selected
@@ -162,7 +162,7 @@ if usegui
   if (any(cellfun('isempty', {event(sel).offset})) || ...
       any(cellfun('isempty', {event(sel).duration}))) && ...
       ~(isfield(cfg.trialdef, 'prestim') && isfield(cfg.trialdef, 'poststim'))
-  
+    
     % If at least some of offset/duration values and prestim/poststim
     % values are missing tries to ask the user for prestim/poststim
     answer = inputdlg({'Prestimulus latency (sec)','Poststimulus latency (sec)'}, 'Enter borders');
@@ -208,11 +208,11 @@ for i=sel
   trlend = trlbeg + trldur;
   % add the beginsample, endsample and offset of this trial to the list
   % if all samples are in the dataset
-  if trlbeg>0 && trlend<=hdr.nSamples.*hdr.nTrials,
+  if trlbeg>0 && trlend<=hdr.nSamples*hdr.nTrials,
     trl = [trl; [trlbeg trlend trloff]];
-    if isnumeric(event(i).value), 
+    if isnumeric(event(i).value),
       val = [val; event(i).value];
-    elseif ischar(event(i).value) && (event(i).value(1)=='S'|| event(i).value(1)=='R')
+    elseif ischar(event(i).value) && numel(event(i).value)>1 && (event(i).value(1)=='S'|| event(i).value(1)=='R')
       % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
       val = [val; str2double(event(i).value(2:end))];
     else
@@ -222,27 +222,27 @@ for i=sel
 end
 
 % append the vector with values
-if ~isempty(val) && ~all(isnan(val))
+if ~isempty(val) && ~all(isnan(val)) && size(trl,1)==size(val,1)
   trl = [trl val];
 end
 
-if usegui
-    % This complicated line just computes the trigger times in seconds and
-    % converts them to a cell array of strings to use in the GUI
-    eventstrings = cellfun(@num2str, mat2cell((trl(:, 1)- trl(:, 3))./hdr.Fs , ones(1, size(trl, 1))), 'UniformOutput', 0);
-
-    % Let us start with handling at least the completely unsegmented case
-    % semi-automatically. The more complicated cases are better left
-    % to the user.
-    if hdr.nTrials==1
-        selected = find(trl(:,1)>0 & trl(:,2)<=hdr.nSamples);
-    else
-        selected = find(trl(:,1)>0);
-    end
-
-    indx = select_channel_list(eventstrings, selected , 'Select events');
-
-    trl=trl(indx, :);
+if usegui && ~isempty(trl)
+  % This complicated line just computes the trigger times in seconds and
+  % converts them to a cell array of strings to use in the GUI
+  eventstrings = cellfun(@num2str, mat2cell((trl(:, 1)- trl(:, 3))./hdr.Fs , ones(1, size(trl, 1))), 'UniformOutput', 0);
+  
+  % Let us start with handling at least the completely unsegmented case
+  % semi-automatically. The more complicated cases are better left
+  % to the user.
+  if hdr.nTrials==1
+    selected = find(trl(:,1)>0 & trl(:,2)<=hdr.nSamples);
+  else
+    selected = find(trl(:,1)>0);
+  end
+  
+  indx = select_channel_list(eventstrings, selected , 'Select events');
+  
+  trl=trl(indx, :);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -277,7 +277,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that allows the user to select an event using gui
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function trialdef=select_event(event, trialdef)
+function trialdef = select_event(event, trialdef)
 if isempty(event)
   fprintf('no events were found in the datafile\n');
   return
@@ -296,35 +296,35 @@ else
   strsettings={}; % The list of strings to show in the GUI
   for i=1:Neventtype
     sel = find(strcmp(eventtype{i}, {event.type}));
-
-    emptyval=find(cellfun('isempty', {event(sel).value}));
-
+    
+    emptyval = find(cellfun('isempty', {event(sel).value}));
+    
     if all(cellfun(@isnumeric, {event(sel).value}))
       [event(sel(emptyval)).value]=deal(Inf);
       eventvalue = unique([event(sel).value]);
     else
-      if ~isempty(strmatch('Inf', {event(sel).value},'exact'))
+      if ~isempty(find(strcmp('Inf', {event(sel).value})))
         % It's a very unlikely scenario but ...
         warning('Event value''Inf'' cannot be handled by GUI selection. Mistakes are possible.')
       end
       [event(sel(emptyval)).value]=deal('Inf');
       eventvalue = unique({event(sel).value});
       if ~iscell(eventvalue)
-        eventvalue={eventvalue};
+        eventvalue = {eventvalue};
       end
     end
     for j=1:length(eventvalue)
       if (isnumeric(eventvalue(j)) && eventvalue(j)~=Inf) || ...
           (iscell(eventvalue(j)) && ischar(eventvalue{j}) && ~strcmp(eventvalue{j}, 'Inf'))
-        settings=[settings; [eventtype(i), eventvalue(j)]];
+        settings = [settings; [eventtype(i), eventvalue(j)]];
       else
-        settings=[settings; [eventtype(i), {[]}]];
+        settings = [settings; [eventtype(i), {[]}]];
       end
-
+      
       if isa(eventvalue, 'numeric')
-        strsettings=[strsettings; {['Type: ' eventtype{i} ' ; Value: ' num2str(eventvalue(j))]}];
+        strsettings = [strsettings; {['Type: ' eventtype{i} ' ; Value: ' num2str(eventvalue(j))]}];
       else
-        strsettings=[strsettings; {['Type: ' eventtype{i} ' ; Value: ' eventvalue{j}]}];
+        strsettings = [strsettings; {['Type: ' eventtype{i} ' ; Value: ' eventvalue{j}]}];
       end
     end
   end
@@ -332,12 +332,34 @@ else
     fprintf('no events of the selected type were found in the datafile\n');
     return
   end
-
-  [selection ok]= listdlg('ListString',strsettings, 'SelectionMode', 'multiple', 'Name', 'Select event', 'ListSize', [300 300]);
-
+  
+  [selection, ok] = listdlg('ListString',strsettings, 'SelectionMode', 'multiple', 'Name', 'Select event', 'ListSize', [300 300]);
+  
   if ok
-    trialdef.eventtype=settings(selection,1);
-    trialdef.eventvalue=settings(selection,2);
+    trialdef.eventtype  = settings(selection,1);
+    trialdef.eventvalue = settings(selection,2);
   end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION returns true if x is a member of array y, regardless of the class of x and y
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function s = ismatch(x, y)
+if isempty(x) || isempty(y)
+  s = false;
+elseif ischar(x) && ischar(y)
+  s = strcmp(x, y);
+elseif isnumeric(x) && isnumeric(y)
+  s = ismember(x, y);
+elseif ischar(x) && iscell(y)
+  y = y(strcmp(class(x), cellfun(@class, y, 'UniformOutput', false)));
+  s = ismember(x, y);
+elseif isnumeric(x) && iscell(y) && all(cellfun(@isnumeric, y))
+  s = false;
+  for i=1:numel(y)
+    s = s || ismember(x, y{i});
+  end
+else
+  s = false;
 end
 

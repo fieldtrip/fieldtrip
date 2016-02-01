@@ -20,8 +20,8 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
 %                       see FT_CHANNELSELECTION for details
 %   cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.foilim        = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
-%   cfg.toilim        = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')
+%   cfg.frequency     = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
+%   cfg.latency       = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')
 %
 % A variance estimate can only be computed if results from trials and/or
 % tapers have been kept.
@@ -29,8 +29,7 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 % Descriptive statistics of bivariate metrics is not computed by this function anymore. To this end you
 % should use FT_CONNECTIVITYANALYSIS.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -69,11 +68,16 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar freq
+ft_preamble provenance freq
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'jacknife', 'jackknife'});
@@ -88,19 +92,23 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'combinechan');
 cfg = ft_checkconfig(cfg, 'deprecated', 'keepfourier');
 cfg = ft_checkconfig(cfg, 'deprecated', 'partchan');
 cfg = ft_checkconfig(cfg, 'deprecated', 'pseudovalue');
+cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
+cfg = ft_checkconfig(cfg, 'renamed', {'foilim' 'frequency'});
 
 % set the defaults
-cfg.feedback   = ft_getopt(cfg, 'feedback',  'textbar');
-cfg.jackknife  = ft_getopt(cfg, 'jackknife', 'no');
-cfg.variance   = ft_getopt(cfg, 'variance',  'no');
-cfg.trials     = ft_getopt(cfg, 'trials',    'all');
-cfg.channel    = ft_getopt(cfg, 'channel',   'all');
-cfg.foilim     = ft_getopt(cfg, 'foilim',    'all');
-cfg.toilim     = ft_getopt(cfg, 'toilim',    'all');
+cfg.feedback   = ft_getopt(cfg, 'feedback',   'textbar');
+cfg.jackknife  = ft_getopt(cfg, 'jackknife',  'no');
+cfg.variance   = ft_getopt(cfg, 'variance',   'no');
+cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
+cfg.channel    = ft_getopt(cfg, 'channel',    'all');
+cfg.frequency  = ft_getopt(cfg, 'frequency',  'all');
+cfg.latency    = ft_getopt(cfg, 'latency',    'all');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
 
 % check if the input data is valid for this function
 freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
+% get data in the correct representation, it should only have power
+freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
 
 % determine some specific details of the input data
 hasrpt   = ~isempty(strfind(freq.dimord, 'rpt')) || ~isempty(strfind(freq.dimord, 'subj'));
@@ -117,20 +125,24 @@ if ~hasrpt && ~strcmp(cfg.trials, 'all'), error('trial selection requires input 
 if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest
-if            ~strcmp(cfg.foilim,  'all'), freq = ft_selectdata(freq, 'foilim', cfg.foilim); end
-if hastim, if ~strcmp(cfg.toilim,  'all'), freq = ft_selectdata(freq, 'toilim', cfg.toilim); end; end
-if hasrpt, if ~strcmp(cfg.trials,  'all'), freq = ft_selectdata(freq, 'rpt',    cfg.trials); end; end
-
-if ~strcmp(cfg.channel, 'all'),
-  channel = ft_channelselection(cfg.channel, freq.label);
-  freq    = ft_selectdata(freq, 'channel', channel);
-end
-
-% get data in the correct representation
-freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency'});
+freq = ft_selectdata(tmpcfg, freq);
+% restore the provenance information
+[cfg, freq] = rollback_provenance(cfg, freq);
 
 if jckflg,
-  freq = ft_selectdata(freq, 'jackknife', 1);
+  % the data is 'sparsewithpow', so it contains a powspctrm and optionally a crsspctrm
+  % the checking of a 'rpt' is handled above, so it can be assumed that the 'rpt' is the
+  % first dimension
+  nrpt           = size(freq.powspctrm,1);
+  sumpowspctrm   = sum(freq.powspctrm,1);
+  freq.powspctrm = (sumpowspctrm(ones(nrpt,1),:,:,:,:) - freq.powspctrm)./(nrpt-1);
+  clear sumpowspctrm;
+  if isfield(freq, 'crsspctrm')
+    sumcrsspctrm   = sum(freq.crsspctrm,1);
+    freq.crsspctrm = (sumcrsspctrm(ones(nrpt,1),:,:,:,:) - freq.crsspctrm)./(nrpt-1);
+    clear sumcrsspctrm;
+  end   
 end
 
 if varflg,
@@ -199,12 +211,11 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous freq
 
 % rename the output variable to accomodate the savevar postamble
 freq = output;
 
-ft_postamble history freq
-ft_postamble savevar freq
-
+ft_postamble provenance freq
+ft_postamble history    freq
+ft_postamble savevar    freq

@@ -105,9 +105,11 @@ Stat.external.sum(1:Ncluster,1)=NaN;
 Stat.external.min(1:Ncluster,1)=NaN;
 Stat.external.avg(1:Ncluster,1)=NaN;
 Stat.external.max(1:Ncluster,1)=NaN;
+Stat.index = cell(1,Ncluster);
 
 for cluster=1:Ncluster,
   thisPartition=(partition==cluster);
+  Stat.index{cluster} = find(thisPartition);
   S_=S(thisPartition,thisPartition);
   Stat.N(cluster)=size(S_,1);
   S_(eye(size(S_))==1)=[];

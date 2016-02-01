@@ -1,9 +1,12 @@
 function test_bug2051
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug2051
 % TEST ft_math
 
-load(dccnfilename('/home/common/matlab/fieldtrip/data/test/bug2051/source_coh_lft.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2051/source_coh_lft.mat'))
 
 cfg = [];
 cfg.parameter = 'avg.pow';
@@ -17,7 +20,7 @@ timelock.label = {'a'};
 timelock.time = 1:100;
 timelock.dimord = 'chan_time';
 
-cg = [];
+cfg = [];
 cfg.parameter = 'pow';
 cfg.operation = 'log10';
 powlog = ft_math(cfg, timelock);

@@ -1,4 +1,4 @@
-function [grid] = patchsvd(cfg, grid);
+function [grid] = patchsvd(cfg, grid)
 
 % This function does something
 % cf. Limpiti et al IEEE trans biomed eng 2006;53(9);1740-54

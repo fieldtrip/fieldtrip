@@ -1,4 +1,4 @@
-function [outim]=ft_sliceinterp(cfg, ininterp)
+function [outim] = ft_sliceinterp(cfg, ininterp)
 
 % FT_SLICEINTERP plots a 2D-montage of source reconstruction and anatomical MRI
 % after these have been interpolated onto the same grid.
@@ -107,11 +107,16 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar ininterp
+ft_preamble provenance ininterp
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
 ininterp = ft_checkdata(ininterp, 'datatype', 'volume', 'feedback', 'yes');
@@ -361,7 +366,7 @@ end
 % merge anatomy, functional data and mask
 fprintf('constructing overlay...');
 if ischar(cfg.colormap)
-  % replace string by colormap using standard Matlab function
+  % replace string by colormap using standard MATLAB function
   cfg.colormap = colormap(cfg.colormap);
 end
 cmap = cfg.colormap;
@@ -460,6 +465,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
+ft_postamble history ininterp
 ft_postamble provenance
 
 

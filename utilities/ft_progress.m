@@ -1,10 +1,9 @@
 function ft_progress(varargin)
 
-% FT_PROGRESS shows a graphical or non-graphical progress indication similar
-% to the standard Matlab WAITBAR function, but with the extra option of
-% printing it in the command window as a plain text string or as a rotating
-% dial. Alternatively, you can also specify it not to give feedback on the
-% progress.
+% FT_PROGRESS shows a graphical or non-graphical progress indication similar to the
+% standard WAITBAR function, but with the extra option of printing it in the command
+% window as a plain text string or as a rotating dial. Alternatively, you can also
+% specify it not to give feedback on the progress.
 %
 % Prior to the for-loop, you should call either
 %   ft_progress('init', 'none',    'Please wait...')
@@ -49,6 +48,8 @@ function ft_progress(varargin)
 %
 % $Id$
 
+global ft_default;
+
 persistent p        % the previous value of the progress
 persistent c        % counter for the number of updates that is done
 persistent t0       % initial time, required for ETF
@@ -76,6 +77,7 @@ if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
   tprev = tic();
   lastArgin = [];
   closing = 0;
+  ft_default.progress.noerase = 0;
   
   % determine the type of feedback
   t = varargin{2};
@@ -96,7 +98,7 @@ if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
     else
       h = waitbar(0, 'Please wait');
     end
-  case {'text', 'textnl', 'textcr'}
+  case {'text', 'textnl', 'textcr', 'dial'}
     if ~isempty(s)
       % print the title to the screen and go to the next line
       fprintf('%s\n', s)
@@ -131,10 +133,17 @@ elseif nargin==1 && ischar(varargin{1}) && strcmp(varargin{1}, 'close')
   tprev = [];
   lastArgin = [];
   closing = 0;
-
+  ft_default.progress.noerase = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
+  
+  if isfield(ft_default, 'progress') &&...
+      isfield(ft_default.progress, 'noerase') &&...
+      ft_default.progress.noerase
+    strlen = 0;
+    ft_default.progress.noerase = 0;
+  end
   
   % make sure we don't update more than once every 100ms, significant
   % performance hit otherwise in certain conditions
@@ -156,7 +165,7 @@ else
     return;
   elseif (varargin{1}-p)<0.01 && strcmp(t, 'etf')
     % display should not be updated it the difference is less than one percent
-    return;
+    % return;
   end
 
   % count the number of updates, for debugging

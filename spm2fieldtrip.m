@@ -1,4 +1,4 @@
-function [data] = spm2fieldtrip(D)
+function data = spm2fieldtrip(D)
 
 % SPM2FIELDTRIP converts an SPM8 meeg object into a FieldTrip raw data structure
 %
@@ -10,19 +10,13 @@ function [data] = spm2fieldtrip(D)
 %
 % See also FT_PREPROCESSING, SPM_EEG_LOAD
 
-revision = '$Id$';
-
-% do the general setup of the function
-ft_defaults
-ft_preamble help
-ft_preamble callinfo
-
-if ~ft_hastoolbox('spm8')
-  error('this requires a full version of SPM8 on your MATLAB path');
+if ~ft_hastoolbox('SPM12') && ~ft_hastoolbox('SPM8')
+  % it should be version spm8 or higher, since spm99, spm2 and spm5 did not yet the "meeg" object
+  error('this requires the SPM toolbox on your MATLAB path');
 end
 
 if ~isa(D, 'meeg')
-  error('this requires an SPM8 "meeg" object as input')
+  error('this requires an SPM "meeg" object as input')
 end
 
 % this is how SPM8 represents it
@@ -45,12 +39,3 @@ end
 %   data.sampleinfo(i,1) = D.indsample(i);
 %   data.sampleinfo(i,2) = D.indsample(i) + D.nsamples;
 % end
-
-% create empty cfg-structure in order for the ft_postamble to work. It is
-% of no further consequence
-cfg = [];
-
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble callinfo
-ft_postamble history data
-

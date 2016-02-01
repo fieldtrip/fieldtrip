@@ -18,8 +18,7 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 %                        parameter(s) to average. default is set to
 %                        'powspctrm', if it is present in the data.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -28,7 +27,8 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 % input/output structure. For this particular function, the input should be
 % specified as a cell array.
 %
-% See also FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS, FT_FREQDESCRIPTIVES
+% See also FT_TIMELOCKGRANDAVERAGE, FT_FREQANALYSIS, FT_FREQDESCRIPTIVES,
+% FT_FREQBASELINE
 
 % FIXME averaging coherence is not possible if inputs contain different amounts of data (i.e. chan/freq/time)
 
@@ -56,11 +56,16 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -223,7 +228,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous varargin
-ft_postamble history grandavg
-ft_postamble savevar grandavg
+ft_postamble previous   varargin
+ft_postamble provenance grandavg
+ft_postamble history    grandavg
+ft_postamble savevar    grandavg

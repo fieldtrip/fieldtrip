@@ -1,11 +1,13 @@
 function test_bug1210
 
-% this is a test script that relates to http://bugzilla.fcdonders.nl/show_bug.cgi?id=1210
+% MEM 1500mb
+% WALLTIME 00:10:00
 
 % TEST test_bug1210
 % TEST ft_datatype_sens
 
-load test_bug1210
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+load bug1210.mat
 
 % the input is old-style
 assert(isfield(D.grad, 'pnt'));

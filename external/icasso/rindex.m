@@ -77,7 +77,7 @@ disp('Computing R-index...');
 for k=1:N,
   if any(hist(partition(k,:),1:Ncluster(k))==1),
     % contains one-item clusters (index very doubtful)
-    ri(k,1)=NaN;
+    ri(k,1)=NaN+i*NaN;
   elseif Ncluster(k)==1,
     % Degenerate partition (all in the same cluster)
     ri(k,1)=NaN;

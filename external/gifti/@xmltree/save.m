@@ -5,17 +5,18 @@ function varargout = save(tree, filename)
 % tree      - XMLTree
 % filename  - XML output filename
 % varargout - XML string
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Convert an XML tree into a well-formed XML string and write it into
 % a file or return it as a string if no filename is provided.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(1,2,nargin));
+
+%error(nargchk(1,2,nargin));
 
 prolog = '<?xml version="1.0" ?>\n';
 
@@ -45,7 +46,7 @@ else
     end
 end
 
-%=======================================================================
+%==========================================================================
 function xmlstr = print_subtree(tree,xmlstr,uid,order)
     if nargin < 4, order = 0; end
     xmlstr = [xmlstr blanks(3*order)];
@@ -86,7 +87,7 @@ function xmlstr = print_subtree(tree,xmlstr,uid,order)
                 tree.tree{uid}.type));
     end
 
-%=======================================================================
+%==========================================================================
 function save_subtree(tree,fid,uid,order)
     if nargin < 4, order = 0; end
     fprintf(fid,blanks(3*order));
@@ -124,10 +125,11 @@ function save_subtree(tree,fid,uid,order)
     end
 
 
-%=======================================================================
+%==========================================================================
 function str = entity(str)
-    str = strrep(str,'&','&amp;');
-    str = strrep(str,'<','&lt;');
-    str = strrep(str,'>','&gt;');
-    str = strrep(str,'"','&quot;');
-    str = strrep(str,'''','&apos;');
+    % This has the side effect of strtrim'ming the char array.
+    str = char(strrep(cellstr(str), '&',  '&amp;' ));
+    str = char(strrep(cellstr(str), '<',  '&lt;'  ));
+    str = char(strrep(cellstr(str), '>',  '&gt;'  ));
+    str = char(strrep(cellstr(str), '"',  '&quot;'));
+    str = char(strrep(cellstr(str), '''', '&apos;'));

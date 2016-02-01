@@ -1,7 +1,7 @@
 function [cfg] = ft_multiplotER(cfg, varargin)
 
-% FT_MULTIPLOTER plots the event-related fields or potentials versus time
-% or of oscillatory activity (power or coherence) versus frequency. Multiple
+% FT_MULTIPLOTER plots the event-related potentials, event-related fields
+% or oscillatory activity (power or coherence) versus frequency. Multiple
 % datasets can be overlayed.  The plots are arranged according to their
 % location specified in the layout.
 %
@@ -19,11 +19,11 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       'avg', 'powspctrm' or 'cohspctrm'
 %   cfg.maskparameter = field in the first dataset to be used for marking significant data
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
-%   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.ylim          = 'maxmin', 'maxabs', or [ymin ymax] (default = 'maxmin')
+%   cfg.hlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.vlim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
-%   cfg.baseline      = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baseline      = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 %   cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.axes          = 'yes', 'no' (default = 'yes')
@@ -39,8 +39,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       In a interactive plot you can select areas and produce a new
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
-%   cfg.renderer      = 'painters', 'zbuffer',' opengl' or 'none' (default = [])
-%   cfg.linestyle     = linestyle/marker type, see options of the matlab PLOT function (default = '-')
+%   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
+%   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
 %   cfg.graphcolor    = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
@@ -83,8 +83,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
 % file on disk. This mat files should contain only a single variable named 'data',
@@ -96,19 +95,9 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 
 % Undocumented local options:
 % cfg.layoutname
-% cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
-% over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
-
-% This function depends on FT_TIMELOCKBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.channel
-% cfg.baselinewindow
-% cfg.previous
-% cfg.version
-%
-% This function depends on FT_FREQBASELINE which has the following options:
-% cfg.baseline, documented
-% cfg.baselinetype
+% cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
+% cfg.preproc
+% cfg.orient = landscape/portrait
 
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
@@ -135,50 +124,88 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 ft_preamble debug
-ft_preamble loadvar    varargin
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
+
 for i=1:length(varargin)
+  % check if the input data is valid for this function
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback',    'inflow'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside',     'directionality'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel', 'refchannel'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'});
+cfg = ft_checkconfig(cfg, 'renamed', {'matrixside',  'directionality'});
+cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
-cfg.baseline        = ft_getopt(cfg, 'baseline',    'no');
-cfg.trials          = ft_getopt(cfg, 'trials',      'all');
-cfg.xlim            = ft_getopt(cfg, 'xlim',        'maxmin');
-cfg.ylim            = ft_getopt(cfg, 'ylim',        'maxmin');
-cfg.zlim            = ft_getopt(cfg, 'zlim',        'maxmin');
-cfg.comment         = ft_getopt(cfg, 'comment',     strcat([date '\n']));
-cfg.axes            = ft_getopt(cfg, 'axes',        'yes');
-cfg.showlabels      = ft_getopt(cfg, 'showlabels',  'no');
-cfg.showoutline     = ft_getopt(cfg, 'showoutline', 'no');
-cfg.box             = ft_getopt(cfg, 'box',         'no');
-cfg.fontsize        = ft_getopt(cfg, 'fontsize',    8);
-cfg.graphcolor      = ft_getopt(cfg, 'graphcolor',  'brgkywrgbkywrgbkywrgbkyw');
-cfg.interactive     = ft_getopt(cfg, 'interactive', 'yes');
-cfg.renderer        = ft_getopt(cfg, 'renderer',    []);
-cfg.maskparameter   = ft_getopt(cfg, 'maskparameter', []);
-cfg.linestyle       = ft_getopt(cfg, 'linestyle',   '-');
-cfg.linewidth       = ft_getopt(cfg, 'linewidth',   0.5);
-cfg.maskstyle       = ft_getopt(cfg, 'maskstyle',   'box');
-cfg.channel         = ft_getopt(cfg, 'channel',     'all');
-cfg.directionality  = ft_getopt(cfg, 'directionality',  '');
-cfg.figurename      = ft_getopt(cfg, 'figurename',   []);
+cfg.baseline       = ft_getopt(cfg, 'baseline', 'no');
+cfg.trials         = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.hlim           = ft_getopt(cfg, 'hlim', 'maxmin');
+cfg.vlim           = ft_getopt(cfg, 'vlim', 'maxmin');
+cfg.zlim           = ft_getopt(cfg, 'zlim', 'maxmin');
+cfg.comment        = ft_getopt(cfg, 'comment', strcat([date '\n']));
+cfg.axes           = ft_getopt(cfg, 'axes', 'yes');
+cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
+cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
+cfg.box            = ft_getopt(cfg, 'box', 'no');
+cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
+cfg.graphcolor     = ft_getopt(cfg, 'graphcolor', 'brgkywrgbkywrgbkywrgbkyw');
+cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
+cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on default
+cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
+cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
+cfg.linestyle      = ft_getopt(cfg, 'linestyle', '-');
+cfg.linewidth      = ft_getopt(cfg, 'linewidth', 0.5);
+cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'box');
+cfg.channel        = ft_getopt(cfg, 'channel', 'all');
+cfg.directionality = ft_getopt(cfg, 'directionality', '');
+cfg.figurename     = ft_getopt(cfg, 'figurename');
+cfg.preproc        = ft_getopt(cfg, 'preproc');
+cfg.tolerance      = ft_getopt(cfg, 'tolerance', 1e-5);
+cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
+cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
 
-Ndata = numel(varargin);
+if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive, 'yes')
+  warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
+  cfg.interactive = 'no';
+end
+
+Ndata = length(varargin);
+
+for i=1:Ndata
+  dtype{i}   = ft_datatype(varargin{i});
+  hastime(i) = ~isempty(strfind(varargin{i}.dimord, 'time'));
+  hasfreq(i) = ~isempty(strfind(varargin{i}.dimord, 'freq'));
+end
+
+% check if the input has consistent datatypes
+if ~all(strcmp(dtype, dtype{1})) || ~all(hastime==hastime(1)) || ~all(hasfreq==hasfreq(1))
+  error('different datatypes are not allowed as input');
+end
+dtype   = dtype{1};
+hastime = hastime(1);
+hasfreq = hasfreq(1);
+
+% ensure that all inputs are sufficiently consistent
+if hastime && ~checktime(varargin{:}, 'identical', cfg.tolerance);
+  error('this function requires identical time axes for all input structures');
+end
+if hasfreq && ~checkfreq(varargin{:}, 'identical', cfg.tolerance);
+  error('this function requires identical frequency axes for all input structures');
+end
 
 %FIXME rename directionality and refchannel in more meaningful options
 if ischar(cfg.graphcolor)
@@ -209,16 +236,33 @@ end
 %   error('interactive plotting is not supported with more than 1 input data set');
 % end
 
-% ensure that the inputs are consistent with each other
-for i=1:Ndata
-  dtype{i} = ft_datatype(varargin{i});
-end
-if ~all(strcmp(dtype{1}, dtype))
-  error('input data are of different type; this is not supported');
-end
-dtype  = dtype{1};
 dimord = varargin{1}.dimord;
 dimtok = tokenize(dimord, '_');
+
+% ensure that the preproc specific options are located in the cfg.preproc
+% substructure, but also ensure that the field 'refchannel' is present at the
+% highest level in the structure. This is a little hack by JM because the field
+% refchannel can also refer to the plotting of a connectivity metric. Also,
+% the freq2raw conversion does not work at all in the call to ft_preprocessing.
+% Therefore, for now, the preprocessing will not be done when there is freq
+% data in the input. A more generic solution should be considered.
+
+if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
+if ~any(strcmp({'freq', 'freqmvar'}, dtype)),
+  cfg = ft_checkconfig(cfg, 'createsubcfg', {'preproc'});
+end
+if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
+
+if ~isempty(cfg.preproc)
+  % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
+  fprintf('applying preprocessing options\n');
+  if ~isfield(cfg.preproc, 'feedback')
+    cfg.preproc.feedback = cfg.interactive;
+  end
+  for i=1:Ndata
+    varargin{i} = ft_preprocessing(cfg.preproc, varargin{i});
+  end
+end
 
 for i=1:Ndata
   % this is needed for correct treatment of GRAPHCOLOR later on
@@ -226,7 +270,7 @@ for i=1:Ndata
     if ~isempty(inputname(i+1))
       iname{i+1} = inputname(i+1);
     else
-      iname{i+1} = ['input',num2str(i,'%02d')];
+      iname{i+1} = ['input', num2str(i, '%02d')];
     end
   else
     iname{i+1} = cfg.inputfile{i};
@@ -269,14 +313,26 @@ end
 % perform channel selection, unless in the other plotting functions this
 % can always be done because ft_multiplotER is the entry point into the
 % interactive stream, but will not be revisited
-for i=1:Ndata
-  if isfield(varargin{i}, 'label')
-    % only do the channel selection when it can actually be done,
-    % i.e. when the data are bivariate ft_selectdata will crash, moreover
-    % the bivariate case is handled below
-    varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel);
+if isfield(varargin{1}, 'label')
+  % only do the channel selection when it can actually be done,
+  % i.e. when the data are bivariate ft_selectdata will crash, moreover
+  % the bivariate case is handled below
+  tmpcfg = keepfields(cfg, 'channel');
+  tmpvar = varargin{1};
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+
+  if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
+    % the mask parameter is not present after ft_selectdata, because it is
+    % not included in all input arguments. Make the same selection and copy
+    % it over
+    tmpvar = ft_selectdata(tmpcfg, tmpvar);
+    varargin{1}.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
   end
-end
+  
+  clear tmpvar tmpcfg
+end  
 
 if isfield(varargin{1}, 'label') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, varargin{1}.label);
@@ -284,10 +340,11 @@ elseif isfield(varargin{1}, 'labelcmb') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
-% check whether rpt/subj is present and remove if necessary and whether
+% check whether rpt/subj is present and remove if necessary
+% FIXME this should be implemented with avgoverpt in ft_selectdata
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
-  tmpcfg        = [];
+  tmpcfg = [];
   
   % disable hashing of input data (speeds up things)
   tmpcfg.trackcallinfo = 'no';
@@ -299,6 +356,12 @@ if strcmp(dtype, 'timelock') && hasrpt,
       tmpmask = varargin{i}.(cfg.maskparameter);
     end
     varargin{i} = ft_timelockanalysis(tmpcfg, varargin{i});
+    if ~strcmp(cfg.parameter, 'avg')
+      % rename avg back into its original parameter name
+      varargin{i}.(cfg.parameter) = varargin{i}.avg;
+      varargin{i} = rmfield(varargin{i}, 'avg');
+    end
+    
     % put back mask
     if ~isempty(cfg.maskparameter)
       varargin{i}.(cfg.maskparameter) = tmpmask;
@@ -306,6 +369,7 @@ if strcmp(dtype, 'timelock') && hasrpt,
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
+  
 elseif strcmp(dtype, 'freq') && hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
@@ -320,14 +384,14 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
   for i=1:Ndata
-    if isfield(cfg, 'parameter') && ~strcmp(cfg.parameter,'powspctrm')
+    if isfield(cfg, 'parameter') && ~strcmp(cfg.parameter, 'powspctrm')
       % freqdesctiptives will only work on the powspctrm field
       % hence a temporary copy of the data is needed
       tempdata.dimord    = varargin{i}.dimord;
       tempdata.freq      = varargin{i}.freq;
       tempdata.label     = varargin{i}.label;
       tempdata.powspctrm = varargin{i}.(cfg.parameter);
-      tempdata.cfg       = varargin{i}.cfg;
+      if isfield(varargin{i}, 'cfg') tempdata.cfg = varargin{i}.cfg; end
       tempdata           = ft_freqdescriptives(tmpcfg, tempdata);
       varargin{i}.(cfg.parameter)  = tempdata.powspctrm;
       clear tempdata
@@ -339,11 +403,16 @@ elseif strcmp(dtype, 'freq') && hasrpt,
   dimtok = tokenize(dimord, '_');
 end
 
-% Read or create the layout that will be used for plotting
+% % Read or create the layout that will be used for plotting
 cla
 lay = ft_prepare_layout(cfg, varargin{1});
 cfg.layout = lay;
-ft_plot_lay(lay, 'box', false,'label','no','point','no');
+
+% plot layout
+boxflg     = istrue(cfg.box);
+labelflg   = false; % channel labels are plotted further down using ft_plot_vector
+outlineflg = istrue(cfg.showoutline);
+ft_plot_lay(lay, 'box', boxflg, 'label', labelflg, 'outline', outlineflg, 'point', 'no', 'mask', 'no');
 
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
@@ -369,14 +438,14 @@ isfull  = length(selchan)>1;
 % Check for bivariate metric with a labelcmb
 haslabelcmb = isfield(varargin{1}, 'labelcmb');
 
-if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
+if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
   end
   
   % check for refchannel being part of selection
-  if ~strcmp(cfg.refchannel,'gui')
+  if ~strcmp(cfg.refchannel, 'gui')
     if haslabelcmb
       cfg.refchannel = ft_channelselection(cfg.refchannel, unique(varargin{1}.labelcmb(:)));
     else
@@ -396,13 +465,13 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
     title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
     % add the channel information to the figure
     info       = guidata(gcf);
-    info.x     = lay.pos(:,1);
-    info.y     = lay.pos(:,2);
+    info.x     = lay.pos(:, 1);
+    info.y     = lay.pos(:, 2);
     info.label = lay.label;
     guidata(h, info);
     %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
-    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonUpFcn',  {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonDownFcn'});
     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonMotionFcn'});
     return
   end
@@ -411,23 +480,23 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
     if ~isfull,
       % Convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.directionality)
-        sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
-        sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
+        sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 2)));
+        sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 1)));
       elseif strcmp(cfg.directionality, 'outflow')
         sel1 = [];
-        sel2 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,1), 'exact');
+        sel2 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 1)));
       elseif strcmp(cfg.directionality, 'inflow')
-        sel1 = strmatch(cfg.refchannel, varargin{i}.labelcmb(:,2), 'exact');
+        sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 2)));
         sel2 = [];
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
       if length(sel1)+length(sel2)==0
         error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
       end
-      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2],:,:);
-      varargin{i}.label     = [varargin{i}.labelcmb(sel1,1);varargin{i}.labelcmb(sel2,2)];
-      varargin{i}.labelcmb  = varargin{i}.labelcmb([sel1;sel2],:);
-      varargin{i}           = rmfield(varargin{i}, 'labelcmb');
+      varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2], :, :);
+      varargin{i}.label     = [varargin{i}.labelcmb(sel1, 1);varargin{i}.labelcmb(sel2, 2)];
+      varargin{i}.labelcmb  = varargin{i}.labelcmb([sel1;sel2], :);
+      %varargin{i}           = rmfield(varargin{i}, 'labelcmb');
     else
       % General case
       sel               = match_str(varargin{i}.label, cfg.refchannel);
@@ -436,12 +505,12 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
         %the interpretation of 'inflow' and 'outflow' depend on
         %the definition in the bivariate representation of the data
         %in FieldTrip the row index 'causes' the column index channel
-        %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
+        %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(:, sel, :), 2), [siz(1) 1 siz(3:end)]);
         sel1 = 1:siz(1);
         sel2 = sel;
         meandir = 2;
       elseif strcmp(cfg.directionality, 'outflow')
-        %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(sel,:,:),1),[siz(1) 1 siz(3:end)]);
+        %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(sel, :, :), 1), [siz(1) 1 siz(3:end)]);
         sel1 = sel;
         sel2 = 1:siz(1);
         meandir = 1;
@@ -456,7 +525,7 @@ if (isfull || haslabelcmb) && isfield(varargin{1}, cfg.parameter)
 end %handle the bivariate data
 
 % Get physical min/max range of x
-if strcmp(cfg.xlim,'maxmin')
+if strcmp(cfg.hlim, 'maxmin')
   % Find maxmin throughout all varargins:
   xmin = [];
   xmax = [];
@@ -465,28 +534,34 @@ if strcmp(cfg.xlim,'maxmin')
     xmax = max([xmax varargin{i}.(xparam)]);
   end
 else
-  xmin = cfg.xlim(1);
-  xmax = cfg.xlim(2);
+  xmin = cfg.hlim(1);
+  xmax = cfg.hlim(2);
 end
 
 % Get the index of the nearest bin
 for i=1:Ndata
-  xidmin(i,1) = nearest(varargin{i}.(xparam), xmin);
-  xidmax(i,1) = nearest(varargin{i}.(xparam), xmax);
+  xidmin(i, 1) = nearest(varargin{i}.(xparam), xmin);
+  xidmax(i, 1) = nearest(varargin{i}.(xparam), xmax);
 end
 
 if strcmp('freq',yparam) && strcmp('freq',dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
-  end
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgoverfreq = 'yes';
+  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'toilim',cfg.zlim,'avgovertime','yes');
-  end
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgovertime = 'yes';
+  tmpcfg.latency     = cfg.latency;%cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 end
 
-% Get physical y-axis range (ylim / parameter):
-if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
+% Get physical y-axis range (vlim / parameter):
+if strcmp(cfg.vlim, 'maxmin') || strcmp(cfg.vlim, 'maxabs')
   % Find maxmin throughout all varargins:
   ymin = [];
   ymax = [];
@@ -500,25 +575,28 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
     if isempty(seldat1)
       error('labels in data and labels in layout do not match');
     end
-    data = dat(intersect(seldat1,seldat2),:);
+    data = dat(intersect(seldat1, seldat2), :);
     ymin = min([ymin min(min(min(data)))]);
     ymax = max([ymax max(max(max(data)))]);
   end
   
-  % handle maxabs, make y-axis center on 0
-  if strcmp(cfg.ylim, 'maxabs')
+  if strcmp(cfg.vlim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
     ymin = -ymax;
+  elseif strcmp(cfg.vlim, 'zeromax')
+    ymin = 0;
+  elseif strcmp(cfg.vlim, 'minzero')
+    ymax = 0;
   end
   
 else
-  ymin = cfg.ylim(1);
-  ymax = cfg.ylim(2);
+  ymin = cfg.vlim(1);
+  ymax = cfg.vlim(2);
 end
 
 % convert the layout to Ole's style of variable names
-X      = lay.pos(:,1);
-Y      = lay.pos(:,2);
+X      = lay.pos(:, 1);
+Y      = lay.pos(:, 2);
 width  = lay.width;
 height = lay.height;
 Lbl    = lay.label;
@@ -526,29 +604,17 @@ Lbl    = lay.label;
 % Create empty channel coordinates and labels arrays:
 chanX(1:length(Lbl)) = NaN;
 chanY(1:length(Lbl)) = NaN;
-chanLabels = cell(1,length(Lbl));
+chanLabels = cell(1, length(Lbl));
 
 hold on;
 colorLabels = [];
-
-if isfield(lay, 'outline') && strcmp(cfg.showoutline, 'yes')
-  for i=1:length(lay.outline)
-    if ~isempty(lay.outline{i})
-      tmpX = lay.outline{i}(:,1);
-      tmpY = lay.outline{i}(:,2);
-      h = line(tmpX, tmpY);
-      set(h, 'color', 'k');
-      set(h, 'linewidth', 2);
-    end
-  end
-end
 
 % Plot each data set:
 for i=1:Ndata
   % Make vector dat with one value for each channel
   dat  = varargin{i}.(cfg.parameter);
   % get dimord dimensions
-  dims = textscan(varargin{i}.dimord,'%s', 'Delimiter', '_');
+  dims = textscan(varargin{i}.dimord, '%s', 'Delimiter', '_');
   dims = dims{1};
   ydim = find(strcmp(yparam, dims));
   xdim = find(strcmp(xparam, dims));
@@ -588,14 +654,14 @@ for i=1:Ndata
   datamatrix{i} = dat(seldat, :);
   
   % Select x and y coordinates and labels of the channels in the data
-  layX = cfg.layout.pos(sellay,1);
-  layY = cfg.layout.pos(sellay,2);
+  layX = cfg.layout.pos(sellay, 1);
+  layY = cfg.layout.pos(sellay, 2);
   layLabels = cfg.layout.label(sellay);
   
   if ~isempty(cfg.maskparameter)
     % one value for each channel, or one value for each channel-time point
-    maskmatrix = varargin{1}.(cfg.maskparameter)(seldat,:);
-    maskmatrix = maskmatrix(:,xidmin:xidmax);
+    maskmatrix = varargin{1}.(cfg.maskparameter)(seldat, :);
+    maskmatrix = maskmatrix(:, xidmin:xidmax);
   else
     % create an Nx0 matrix
     maskmatrix = zeros(length(seldat), 0);
@@ -603,7 +669,7 @@ for i=1:Ndata
   
   if Ndata > 1
     if ischar(GRAPHCOLOR);        colorLabels = [colorLabels iname{i+1} '=' GRAPHCOLOR(i+1) '\n'];
-    elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1,:)) '\n'];
+    elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1, :)) '\n'];
     end
   end
 end % for number of input data
@@ -612,27 +678,27 @@ for m=1:length(layLabels)
   % Plot ER
   
   if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(2:end);
-  elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(2:end,:);
+  elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(2:end, :);
   end
   
-  mask = maskmatrix(m,:);
+  mask = maskmatrix(m, :);
   
   for i=1:Ndata
-    yval(i,:) = datamatrix{i}(m,:);
+    yval(i, :) = datamatrix{i}(m, :);
   end
   
   % Clip out of bounds y values:
   yval(yval > ymax) = ymax;
   yval(yval < ymin) = ymin;
   
-  if strcmp(cfg.showlabels,'yes')
+  if strcmp(cfg.showlabels, 'yes')
     label = layLabels(m);
   else
     % don't show labels
     label = [];
   end
   
-  ft_plot_vector(xval, yval, 'width', width(m), 'height', height(m), 'hpos', layX(m), 'vpos', layY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'label', label, 'box', cfg.box);
+  ft_plot_vector(xval, yval, 'width', width(m), 'height', height(m), 'hpos', layX(m), 'vpos', layY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'label', label, 'box', cfg.box, 'fontsize', cfg.fontsize);
   
   if i==1,
     % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
@@ -647,48 +713,53 @@ end % for number of channels
 cfg.comment = [cfg.comment colorLabels];
 
 % Write comment text:
-l = cellstrmatch('COMNT',Lbl);
+l = cellstrmatch('COMNT', Lbl);
 if ~isempty(l)
-  ft_plot_text(X(l),Y(l),sprintf(cfg.comment),'Fontsize',cfg.fontsize,'interpreter','none');
+  ft_plot_text(X(l), Y(l), sprintf(cfg.comment), 'Fontsize', cfg.fontsize, 'interpreter', 'none');
 end
 
 % Plot scales:
-l = cellstrmatch('SCALE',Lbl);
+l = cellstrmatch('SCALE', Lbl);
 if ~isempty(l)
-  plotScales([xmin xmax],[ymin ymax],X(l),Y(l),width(1),height(1),cfg)
+  plotScales([xmin xmax], [ymin ymax], X(l), Y(l), width(1), height(1), cfg)
 end
 
 % set the figure window title
-if nargin > 1
-  dataname = {inputname(2)};
-  for k = 2:Ndata
-    dataname{end+1} = inputname(k+1);
+if isempty(get(gcf, 'Name'))
+  if nargin > 1
+    dataname = {inputname(2)};
+    for k = 2:Ndata
+      dataname{end+1} = inputname(k+1);
+    end
+  else % data provided through cfg.inputfile
+    dataname = cfg.inputfile;
   end
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
-end
-
-if isempty(cfg.figurename)
-  set(gcf, 'Name', sprintf('%d: %s: %s', gcf, mfilename, join_str(', ',dataname)));
-  set(gcf, 'NumberTitle', 'off');
+  
+  if isempty(cfg.figurename)
+    set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+    set(gcf, 'NumberTitle', 'off');
+  else
+    set(gcf, 'name', cfg.figurename);
+    set(gcf, 'NumberTitle', 'off');
+  end
 else
-  set(gcf, 'name', cfg.figurename);
-  set(gcf, 'NumberTitle', 'off');
+  dataname = {};
 end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
   
-  % add the channel information to the figure
-  info       = guidata(gcf);
-  info.x     = lay.pos(:,1);
-  info.y     = lay.pos(:,2);
-  info.label = lay.label;
+  % add the dataname and channel information to the figure
+  % this is used in the callbacks
+  info          = guidata(gcf);
+  info.x        = lay.pos(:, 1);
+  info.y        = lay.pos(:, 2);
+  info.label    = lay.label;
   info.dataname = dataname;
   guidata(gcf, info);
   
-  set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
+  set(gcf, 'WindowButtonUpFcn',  {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
+  set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
   set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
 end
 
@@ -698,8 +769,12 @@ if strcmp(cfg.box, 'yes')
   abc = axis;
   axis(abc + [-1 +1 -1 +1]*mean(abs(abc))/10)
 end
-orient landscape
 hold off
+
+% Set orientation for printing if specified
+if ~isempty(cfg.orient)
+  orient(gcf, cfg.orient);
+end
 
 % Set renderer if specified
 if ~isempty(cfg.renderer)
@@ -707,51 +782,50 @@ if ~isempty(cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble debug
+ft_postamble trackconfig
 ft_postamble previous varargin
+ft_postamble provenance
 
-% add a menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+% add a menu to the figure, but only if the current figure does not have subplots
+% also, delete any possibly existing previous menu, this is safe because delete([]) does nothing
+delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
+if numel(findobj(gcf, 'type', 'axes')) <= 1
+  ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
+  uimenu(ftmenu, 'Label', 'Show pipeline', 'Callback', {@menu_pipeline, cfg});
+  uimenu(ftmenu, 'Label', 'About', 'Callback', @menu_about);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotScales(xlim,ylim,xpos,ypos,width,height,cfg)
-x1 =  xpos;
-x2 =  xpos+width;
-y1 =  ypos;
-y2 =  ypos+width;
-ft_plot_box([xpos xpos+width ypos ypos+height],'edgecolor','b')
+function plotScales(hlim, vlim, hpos, vpos, width, height, cfg)
 
-if xlim(1) <=  0 && xlim(2) >= 0
-  xs =  xpos+width*([0 0]-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*(ylim-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','b');
+% the placement of all elements is identical
+placement = {'hpos', hpos, 'vpos', vpos, 'width', width, 'height', height, 'hlim', hlim, 'vlim', vlim};
+
+ft_plot_box([hlim vlim], placement{:}, 'edgecolor', 'k');
+
+if hlim(1)<=0 && hlim(2)>=0
+  ft_plot_vector([0 0], vlim, placement{:}, 'color', 'b');
 end
 
-if ylim(1) <= 0 && ylim(2) >= 0
-  xs =  xpos+width*(xlim-xlim(1))/(xlim(2)-xlim(1));
-  ys =  ypos+height*([0 0]-ylim(1))/(ylim(2)-ylim(1));
-  ft_plot_vector(xs,ys,'color','b');
+if vlim(1)<=0 && vlim(2)>=0
+  ft_plot_vector(hlim, [0 0], placement{:}, 'color', 'b');
 end
 
-ft_plot_text( x1,y1,num2str(xlim(1),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
-ft_plot_text( x2,y1,num2str(xlim(2),3),'rotation',90,'HorizontalAlignment','Right','VerticalAlignment','middle','Fontsize',cfg.fontsize);
-ft_plot_text( x2,y1,num2str(ylim(1),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
-ft_plot_text( x2,y2,num2str(ylim(2),3),'HorizontalAlignment','Left','VerticalAlignment','bottom','Fontsize',cfg.fontsize);
+ft_plot_text(hlim(1), vlim(1), [num2str(hlim(1), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'Fontsize', cfg.fontsize);
+ft_plot_text(hlim(2), vlim(1), [num2str(hlim(2), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'Fontsize', cfg.fontsize);
+ft_plot_text(hlim(1), vlim(1), [num2str(vlim(1), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'Fontsize', cfg.fontsize);
+ft_plot_text(hlim(1), vlim(2), [num2str(vlim(2), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'Fontsize', cfg.fontsize);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function l = cellstrmatch(str,strlist)
+function l = cellstrmatch(str, strlist)
 l = [];
 for k=1:length(strlist)
-  if strcmp(char(str),char(strlist(k)))
+  if strcmp(char(str), char(strlist(k)))
     l = [l k];
   end
 end
@@ -760,24 +834,24 @@ end
 % SUBFUNCTION which is called after selecting channels in case of cfg.refchannel='gui'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_multiplotER(label, cfg, varargin)
-if isfield(cfg, 'inputfile')
-  % the reading has already been done and varargin contains the data
-  cfg = rmfield(cfg, 'inputfile');
+if ~isempty(label)
+  if isfield(cfg, 'inputfile')
+    % the reading has already been done and varargin contains the data
+    cfg = rmfield(cfg, 'inputfile');
+  end
+  % put data name in here, this cannot be resolved by other means
+  info = guidata(gcf);
+  cfg.dataname = info.dataname;
+  if iscell(label)
+    label = label{1};
+  end
+  cfg.refchannel = label; % FIXME this only works with label being a string
+  fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
+  p = get(gcf, 'Position');
+  f = figure;
+  set(f, 'Position', p);
+  ft_multiplotER(cfg, varargin{:});
 end
-
-% put data name in here, this cannot be resolved by other means
-info = guidata(gcf);
-cfg.dataname = info.dataname;
-
-if iscell(label)
-  label = label{1};
-end
-cfg.refchannel = label; %FIXME this only works with label being a string
-fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
-p = get(gcf, 'Position');
-f = figure;
-set(f, 'Position', p);
-ft_multiplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
@@ -788,13 +862,10 @@ if ~isempty(label)
     % the reading has already been done and varargin contains the data
     cfg = rmfield(cfg, 'inputfile');
   end
-  cfg.xlim = 'maxmin';
   cfg.channel = label;
-  
   % put data name in here, this cannot be resolved by other means
   info = guidata(gcf);
   cfg.dataname = info.dataname;
-  
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
     fprintf('''%s'', ', cfg.channel{i});

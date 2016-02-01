@@ -17,7 +17,7 @@ function [A, W] = dss_fastica(Y, wM, dwM, params)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id: dss_fastica.m,v 1.7 2005/12/07 11:24:30 jaakkos Exp $
+% $Id$
 
 if (nargin<4); params=[]; end
 

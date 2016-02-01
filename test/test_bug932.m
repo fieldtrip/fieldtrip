@@ -1,5 +1,8 @@
 function test_bug932
 
+% MEM 2gb
+% WALLTIME 00:10:00
+
 % TEST test_bug932
 % TEST ft_freqstatistics ft_selectdata ft_appendfreq ft_datatype_freq ft_datatype_sens
 
@@ -17,7 +20,7 @@ for tt=[4,6]
   cfg.channel = 'all';
   cfg.avgoverchan = 'yes';
   cfg.method = 'analytic';
-  cfg.statistic = 'indepsamplesT';
+  cfg.statistic = 'ft_statfun_indepsamplesT';
   cfg.design(2,1:tatao+tatat) = [1:tatao 1:tatat];
   cfg.design(1,1:tatao+tatat) = [ones(1,tatao) 2*ones(1,tatat)];
   cfg.ivar =1;

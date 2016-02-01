@@ -1,8 +1,8 @@
 function [cfg] = ft_connectivityplot(cfg, varargin)
 
-% FT_CONNECTIVITYPLOT plots frequency-resolved connectivity between EEG/MEG
-% channels. The data are rendered in a square grid of subplots and each
-% subplot containing the connectivity spectrum.
+% FT_CONNECTIVITYPLOT plots channel-level frequency resolved connectivity. The
+% data are rendered in a square grid of subplots, each subplot containing the
+% connectivity spectrum between the two respective channels.
 %
 % Use as
 %   ft_connectivityplot(cfg, data)
@@ -13,12 +13,14 @@ function [cfg] = ft_connectivityplot(cfg, varargin)
 %
 % The cfg can have the following options:
 %   cfg.parameter   = string, the functional parameter to be plotted (default = 'cohspctrm')
-%   cfg.zlim        = [lower upper]
+%   cfg.xlim        = selection boundaries over first dimension in data (e.g., freq)
+%                     'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.zlim        = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
 %   cfg.channel     = list of channels to be included for the plotting (default = 'all'), see FT_CHANNELSELECTION for details
 %
 % See also FT_CONNECTIVITYANALYSIS, FT_CONNECTIVITYSIMULATION, FT_MULTIPLOTCC, FT_TOPOPLOTCC
 
-% Copyright (C) 2011, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2013, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -36,16 +38,21 @@ function [cfg] = ft_connectivityplot(cfg, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: ft_connectivityplot$
+% $Id$
 
 revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
+ft_preamble provenance varargin
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -58,8 +65,43 @@ cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
 % set the defaults
 cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'cohspctrm');
-cfg.zlim      = ft_getopt(cfg, 'zlim',       []);
+cfg.zlim      = ft_getopt(cfg, 'zlim',      'maxmin');
+cfg.xlim      = ft_getopt(cfg, 'xlim',      'maxmin');
 cfg.color     = ft_getopt(cfg, 'color',     'brgkywrgbkywrgbkywrgbkyw');
+
+% Get physical min/max range of x:
+if ischar(cfg.xlim) && strcmp(cfg.xlim,'maxmin')
+  xmin = inf;
+  xmax = -inf;
+  for k = 1:numel(varargin)
+    xmin = min(xmin,varargin{k}.freq(1));
+    xmax = max(xmax,varargin{k}.freq(end));
+  end
+else
+  xmin = cfg.xlim(1);
+  xmax = cfg.xlim(2);
+end
+cfg.xlim = [xmin xmax];
+
+% Get physical min/max range of z:
+if ischar(cfg.zlim) && strcmp(cfg.zlim,'maxmin')
+  zmin = inf;
+  zmax = -inf;
+  for k = 1:numel(varargin)
+    zmin = min(zmin,min(varargin{k}.(cfg.parameter)(:)));
+    zmax = max(zmax,max(varargin{k}.(cfg.parameter)(:)));
+  end
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
+  zmax = -inf;
+  for k = 1:numel(varargin)
+    zmax = max(zmax,max(abs(varargin{k}.(parameter)(:))));
+  end
+  zmin = -zmax;
+else
+  zmin = cfg.zlim(1);
+  zmax = cfg.zlim(2);
+end
+cfg.zlim = [zmin zmax];
 
 % make the function recursive if numel(varargin)>1
 % FIXME check explicitly which channels belong together
@@ -103,19 +145,21 @@ if ~isfield(data, cfg.parameter)
   error('the data does not contain the requested parameter %s', cfg.parameter);
 end
 
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-data        = ft_selectdata(data, 'channel', cfg.channel);
+% get the selection of the data
+tmpcfg           = [];
+tmpcfg.channel   = cfg.channel;
+tmpcfg.frequency = cfg.xlim;
+data             = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 dat   = data.(cfg.parameter);
 nchan = numel(data.label);
 nfreq = numel(data.freq);
 
-if isempty(cfg.zlim)
-  cfg.zlim = [min(dat(:)) max(dat(:))];
-end
-
 if (isfield(cfg, 'holdfig') && cfg.holdfig==0) || ~isfield(cfg, 'holdfig')
-  h = figure;hold on;
+  cla;
+  hold on;
 end
 
 for k = 1:nchan
@@ -129,14 +173,14 @@ for k = 1:nchan
       if k==1,
         % first column, plot scale on y axis
         fontsize = 10;
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(cfg.zlim(1),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize);
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2+0.5,num2str(cfg.zlim(2),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize);
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(cfg.zlim(1),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize,'Interpreter','none');
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2+0.5,num2str(cfg.zlim(2),3),'HorizontalAlignment','Right','VerticalAlignment','Middle','Fontsize',fontsize,'Interpreter','none');
       end
       if m==nchan,
         % bottom row, plot scale on x axis
         fontsize = 10;
-        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(data.freq(1  ),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize);
-        ft_plot_text( ix.*1.2+0.5,iy.*1.2-0.5,num2str(data.freq(end),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize);
+        ft_plot_text( ix.*1.2-0.5,iy.*1.2-0.5,num2str(data.freq(1  ),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize,'Interpreter','none');
+        ft_plot_text( ix.*1.2+0.5,iy.*1.2-0.5,num2str(data.freq(end),3),'HorizontalAlignment','Center','VerticalAlignment','top','Fontsize',fontsize,'Interpreter','none');
       end
     end
   end
@@ -144,8 +188,8 @@ end
 
 % add channel labels on grand X and Y axes
 for k = 1:nchan
-  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k});
-  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k});
+  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k}, 'Interpreter', 'none', 'horizontalalignment', 'right');
+  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k}, 'Interpreter', 'none', 'horizontalalignment', 'left', 'rotation', 90);
 end
 
 % add 'from' and 'to' labels
@@ -160,5 +204,5 @@ set(gcf, 'color', [1 1 1]);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous varargin
+ft_postamble provenance

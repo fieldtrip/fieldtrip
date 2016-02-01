@@ -1,0 +1,2 @@
+This is a selection of functions that serve as drop-in replacement
+for functions with the same name in the Mathworks statistics toolbox.

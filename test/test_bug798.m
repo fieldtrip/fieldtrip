@@ -1,5 +1,8 @@
 function test_bug798
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_bug798
 % TEST ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq
 
@@ -21,7 +24,7 @@ a = ft_checkdata(t2_subj1, 'datatype', 'timelock');
 % the reported problem was something like this, resulting in 274x0 sized outputs
 cfg = [];
 cfg.method = 'montecarlo';
-cfg.statistic = 'pooledT';
+cfg.statistic = 'ft_statfun_pooledT';
 cfg.tail = 0;
 cfg.alpha = 0.025;
 cfg.correctm = 'cluster';
@@ -29,7 +32,7 @@ cfg1 = [];
 cfg1.gradfile = 'ctf275.mat';
 cfg1.method = 'triangulation';
 cfg1.feedback = 'yes';
-cfg.neighbours = ft_neighbourselection(cfg1);
+cfg.neighbours = ft_prepare_neighbours(cfg1, t2_subj1);
 cfg.numrandomization = 10;
 cfg.clusterstatistic = 'maxsum';
 cfg.clusterthreshold = 'parametric';

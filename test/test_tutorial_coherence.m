@@ -1,7 +1,10 @@
 function test_tutorial_coherence
 
+% MEM 4500mb
+% WALLTIME 00:20:00
+
 % TEST test_tutorial_coherence
-% TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate
+% TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 
 addpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence');
 addpath('/home/common/matlab/fieldtrip/data/');
@@ -209,6 +212,7 @@ cfg.frequency = 18;
 cfg.hdmfile   = 'SubjectCMC.hdm';
 cfg.inwardshift     = 1;
 cfg.grid.resolution = 1;
+cfg.grid.unit       = 'cm';
 source        = ft_sourceanalysis(cfg, freq);
 
 mri = ft_read_mri('SubjectCMC.mri');

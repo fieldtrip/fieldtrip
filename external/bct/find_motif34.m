@@ -18,7 +18,7 @@ function M=find_motif34(m,n)
 %      Output       Motif_id            e.g. 1 to 13, if class is 3
 %
 %
-%Mika Rubinov, UNSW, 2007 (last modified July 2008)
+%Mika Rubinov, UNSW, 2007-2008
 
 persistent M3 ID3 M4 ID4
 

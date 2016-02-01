@@ -54,7 +54,7 @@ elseif all(isfield(D, {'type', 'Nsamples', 'Fsample', 'timeOnset'})) % SPM8
             if ~isempty(cevent)
                 for j = 1:numel(cevent)
                     if ~strcmp(cevent(j).type, 'trial')
-                        csample = (cevent(j).time - D.trials(i).onset)*header.Fs + 1;
+                        csample = round((cevent(j).time - D.trials(i).onset)*header.Fs + 1);
                         if csample > 0 && csample <= header.nSamples
                             tmp = rmfield(cevent(j), 'time');
                             if strcmp(D.type, 'continuous') && (D.timeOnset ~= 0)

@@ -1,4 +1,4 @@
-function [source] = ft_source2sparse(source);
+function [source] = ft_source2sparse(source)
 
 % FT_SOURCE2SPARSE removes the grid locations outside the brain from the source 
 % reconstruction, thereby saving memory.
@@ -37,6 +37,8 @@ ft_defaults
 if ~isfield(source, 'inside')
   warning('no gridpoints defined inside the brain');
   source.inside = [];
+elseif all(islogical(source.inside))
+  source = fixinside(source, 'index'); % in contrast to the new convention, this function still relies on an indexed inside
 end
 
 if ~isfield(source, 'outside')
@@ -153,7 +155,7 @@ try
   % get the full name of the function
   cfg.version.name = mfilename('fullpath');
 catch
-  % required for compatibility with Matlab versions prior to release 13 (6.5)
+  % required for compatibility with MATLAB versions prior to release 13 (6.5)
   [st, i] = dbstack;
   cfg.version.name = st(i);
 end

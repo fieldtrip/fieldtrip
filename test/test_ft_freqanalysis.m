@@ -1,5 +1,8 @@
 function test_ft_freqanalysis(datainfo, writeflag, version)
 
+% MEM 8000mb
+% WALLTIME 01:30:00
+
 % TEST test_ft_freqanalysis 
 % TEST ft_freqanalysis ref_datasets
 
@@ -18,30 +21,72 @@ end
 
 for k = 1:numel(datainfo)
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'fourier',   'yes');
+  fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_fourier_trl_',datainfo(k).datatype]);
+  load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
+  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  if ~ok, error('stored and computed data not identical: %s', msg{:}); end
+  
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'powandcsd', 'yes');
+  fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_powandcsd_trl_',datainfo(k).datatype]);
+  load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
+  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  if ~ok, error('stored and computed data not identical: %s', msg{:}); end
+  
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'pow',       'yes');
+%   fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_pow_trl_',datainfo(k).datatype]);
+%   load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
+%   [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+%   if ~ok, error('stored and computed data not identical: %s', msg{:}); end
+  
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'powandcsd', 'no');
-  datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'pow',       'no');
+  fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_powandcsd_',datainfo(k).datatype]);
+  load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
+  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  if ~ok, error('stored and computed data not identical: %s', msg{:}); end
 
+  datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'pow',       'no');
   fname = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_',datainfo(k).datatype]);
   load(fname);
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
-  assert(identical(freq, datanew,'reltol',eps*1e6));
+  
+  [ok,msg] = identical(freq, datanew,'reltol',1e-6);
+  if ~ok
+    error('stored and computed data not identical: %s', msg{:});
+  end
 end
 
 for k = 1:numel(datainfo)
   datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'fourier',   'yes');
-  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'powandcsd', 'yes');
-  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'pow',       'yes');
-  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'powandcsd', 'no');
-  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'pow',       'no');
+  fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmconvol_fourier_trl_',datainfo(k).datatype]);
+  load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
+  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  if ~ok, error('stored and computed data not identical: %s', msg{:}); end
 
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'powandcsd', 'yes');
+  fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmconvol_powandcsd_trl_',datainfo(k).datatype]);
+  load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
+  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  if ~ok, error('stored and computed data not identical: %s', msg{:}); end
+
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'pow',       'yes');
+
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'powandcsd', 'no');
+  fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmconvol_powandcsd_',datainfo(k).datatype]);
+  load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
+  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  if ~ok, error('stored and computed data not identical: %s', msg{:}); end
+
+  datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'pow',       'no');
   fname = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmconvol_',datainfo(k).datatype]);
   load(fname);
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
-  assert(identical(freq, datanew,'reltol',eps*1e6));
+  
+  [ok,msg] = identical(freq, datanew,'reltol',eps*1e6);
+  if ~ok
+    error('stored and computed data not identical: %s', msg{:});
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,6 +132,9 @@ end
 if ~exist('ft_freqanalysis') && exist('freqanalysis')
   eval('ft_freqanalysis = @freqanalysis;');
 end
+
+fprintf('testing mtmconvol with datatype=%s, output=%s, keeptrials=%s...\n',...
+  dataset.datatype, output, keeptrials);
 
 cfg            = [];
 cfg.method     = 'mtmconvol';
@@ -154,6 +202,9 @@ case 'yes'
 otherwise
   error('unexpected keeptrials');
 end
+
+fprintf('testing mtmfft with datatype=%s, output=%s, keeptrials=%s...\n',...
+  dataset.datatype, output, keeptrials);
 
 cfg            = [];
 cfg.method     = 'mtmfft';

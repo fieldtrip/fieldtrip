@@ -13,9 +13,9 @@ function [dat,baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 % If no begin and end sample are specified for the baseline estimate, it
 % will be estimated on the complete data.
 %
-% See also FT_PREPROC_POLYREMOVAL
+% See also FT_PREPROC_DETREND, FT_PREPROC_POLYREMOVAL
 
-% Copyright (C) 1998-2012, Robert Oostenveld
+% Copyright (C) 1998-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -39,14 +39,14 @@ function [dat,baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 % since we assume that polyremoval uses ones as its constant regressor
 
 % take the whole segment if begsample and endsample are not specified
-if nargin<2
+if nargin<2 || isempty(begsample)
   begsample = 1;
 end
-if nargin<3
+if nargin<3 || isempty(endsample)
   endsample = size(dat,2);
 end
 
-[dat,baseline] = ft_preproc_polyremoval(dat,0,begsample,endsample);
+[dat,baseline] = ft_preproc_polyremoval(dat, 0, begsample, endsample);
 
 % save this old code because it looks non-trivially optimized
 %

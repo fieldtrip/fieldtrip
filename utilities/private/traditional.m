@@ -1,4 +1,4 @@
-function [H] = traditional(f);
+function [H] = traditional(f)
 
 % TRADITIONAL creates the homogenous spatial transformation matrix
 % for a 9 parameter traditional "Talairach-model" transformation

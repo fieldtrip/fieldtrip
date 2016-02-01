@@ -18,7 +18,7 @@
 %                   maxnum=Inf the function will never return.
 %     filter      = regular expression filter for job IDs to respond to.
 %                   The default tests for jobs generated from the current
-%                   matlab process. A cell array of strings can be
+%                   MATLAB process. A cell array of strings can be
 %                   provided; in that case, exact match is required.
 %     sleep       = number of seconds to sleep between checks (default=0)
 %
@@ -46,7 +46,7 @@
 % $Id$
 
 maxnum = ft_getopt(varargin, 'maxnum', Inf);
-filter = ft_getopt(varargin, 'filter', [generatesesionid '.*']);
+filter = ft_getopt(varargin, 'filter', [generatesessionid '.*']);
 sleep  = ft_getopt(varargin, 'sleep', 0);
 
 if ischar(filter)
@@ -83,12 +83,11 @@ while (num < maxnum)
         pausejava(0.01);
       end
     
-      if (regexpFilt && ~isempty(regexp(jobid, filter, 'once'))) || ...
-          (~regexpFilt && ~isempty(strmatch(jobid, filter, 'exact')))
+      if (regexpFilt && ~isempty(regexp(jobid, filter, 'once'))) || (~regexpFilt && ~isempty(find(strcmp(jobid, filter))))
         
         if (~regexpFilt && nargin(callback)>1)
           % also provide an index into the filter array
-          callback(jobid, strmatch(jobid, filter, 'exact'));
+          callback(jobid, find(strcmp(jobid, filter)));
         else
           callback(jobid);
         end

@@ -2,7 +2,7 @@
 
 Main code for wrapping matlab's matrices in something else.
 
-$Id: mxInfo.c 2782 2011-02-03 11:00:18Z roboos $
+$Id$
 
 
 

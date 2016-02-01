@@ -3,17 +3,17 @@ function tree = delete(tree,uid)
 % 
 % tree      - XMLTree object
 % uid       - array of UID's of subtrees to be deleted
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Delete a subtree given its UID
 % The tree parameter must be in input AND in output
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2011  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-error(nargchk(2,2,nargin));
+%error(nargchk(2,2,nargin));
 
 uid = uid(:);
 for i=1:length(uid)
@@ -26,7 +26,7 @@ for i=1:length(uid)
     end
 end
 
-%=======================================================================
+%==========================================================================
 function tree = sub_delete(tree,uid)
     if isfield(tree.tree{uid},'contents')
         for i=1:length(tree.tree{uid}.contents)

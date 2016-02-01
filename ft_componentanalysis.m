@@ -15,7 +15,8 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
-%   cfg.demean       = 'no' or 'yes' (default = 'yes')
+%   cfg.demean       = 'no' or 'yes', whether to demean the input data (default = 'yes')
+%   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
 %
 % The runica method supports the following method-specific options. The values that
 % these options can take can be found with HELP RUNICA.
@@ -99,7 +100,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.csp.classlabels = vector that assigns a trial to class 1 or 2.
 %   cfg.csp.numfilters  = the number of spatial filters to use (default: 6).
 %
-% The icasso method implements icasso. It runs fastica a specified number of 
+% The icasso method implements icasso. It runs fastica a specified number of
 % times, and provides information about the stability of the components found
 % The following specific options can be defined, see ICASSOEST:
 %   cfg.icasso.mode
@@ -117,8 +118,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.randomseed   = integer seed value of user's choice
 %   cfg.randomseed   = comp.cfg.callinfo.randomseed (from previous call)
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -152,36 +152,43 @@ function [comp] = ft_componentanalysis(cfg, data)
 % undocumented cfg options:
 %   cfg.cellmode = string, 'no' or 'yes', allows to run in cell-mode, i.e.
 %     no concatenation across trials is needed. This is based on experimental
-%     code and only supported for 'dss', 'fastica' and 'bsscca' as methods. 
+%     code and only supported for 'dss', 'fastica' and 'bsscca' as methods.
 
 revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble randomseed
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
+ft_preamble randomseed
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden', {'detrend'});
-cfg = ft_checkconfig(cfg, 'renamed',   {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamedval',   {'method', 'predetermined mixing matrix', 'predetermined unmixing matrix'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'detrend'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'predetermined mixing matrix', 'predetermined unmixing matrix'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'topo'});
 
 % set the defaults
 cfg.method          = ft_getopt(cfg, 'method',       'runica');
 cfg.demean          = ft_getopt(cfg, 'demean',       'yes');
-cfg.trials          = ft_getopt(cfg, 'trials',       'all');
+cfg.trials          = ft_getopt(cfg, 'trials',       'all', 1);
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.cellmode        = ft_getopt(cfg, 'cellmode',     'no');
+cfg.doscale         = ft_getopt(cfg, 'doscale',      'yes');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens',  'yes');
 
 % select channels, has to be done prior to handling of previous (un)mixing matrix
 cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -193,7 +200,7 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
     'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
   
   cfg.unmixing = pinv(cfg.topo);
-  cfg = rmfield(cfg,'topo');
+  cfg = rmfield(cfg, 'topo');
 end
 
 if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
@@ -209,83 +216,74 @@ if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   tmpchan = match_str(cfg.channel, cfg.topolabel);
   cfg.channel = cfg.channel(tmpchan);
   
-  % remove all cfg settings  that do not apply
-  tmpcfg              = [];
-  tmpcfg.demean       = cfg.demean;
-  tmpcfg.trials       = cfg.trials;
-  tmpcfg.unmixing     = cfg.unmixing;    % the NxM unmixing matrix (M channels, N components)
-  tmpcfg.topolabel    = cfg.topolabel;   % the Mx1 labels of the data that was used in determining the mixing matrix
-  tmpcfg.channel      = cfg.channel;     % the Mx1 labels of the data that is presented now to this function
-  tmpcfg.numcomponent = 'all';
-  tmpcfg.method       = 'predetermined unmixing matrix';
-  cfg                 = tmpcfg;
+  % update some settings where there is no further choice to be made by the user
+  cfg.numcomponent = 'all';
+  cfg.method       = 'predetermined unmixing matrix';
 end
 
 % add the options for the specified methods to the configuration, only if needed
 switch cfg.method
-case 'icasso'
-  cfg.icasso        = ft_getopt(cfg,        'icasso', []);
-  cfg.icasso.mode   = ft_getopt(cfg.icasso, 'mode',   'both');
-  cfg.icasso.Niter  = ft_getopt(cfg.icasso, 'Niter',  15);
-  cfg.icasso.method = ft_getopt(cfg.icasso, 'method', 'fastica');
-  
-  cfg.fastica       = ft_getopt(cfg, 'fastica', []);
-case 'fastica'
-  % additional options, see FASTICA for details
-  cfg.fastica = ft_getopt(cfg, 'fastica', []);
-case 'runica'
-  % additional options, see RUNICA for details
-  cfg.runica       = ft_getopt(cfg,        'runica',  []);
-  cfg.runica.lrate = ft_getopt(cfg.runica, 'lrate',   0.001);
-case 'binica'
-  % additional options, see BINICA for details
-  cfg.binica       = ft_getopt(cfg,        'binica',  []);
-  cfg.binica.lrate = ft_getopt(cfg.binica, 'lrate',   0.001);
-case {'dss' 'dss2'} % JM at present has his own dss, that can deal with cell-array input, specify as dds2
-  % additional options, see DSS for details
-  cfg.dss               = ft_getopt(cfg,          'dss',      []);
-  cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
-  cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
-  cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
-case 'csp'
-  % additional options, see CSP for details
-  cfg.csp = ft_getopt(cfg, 'csp', []);
-  cfg.csp.numfilters = ft_getopt(cfg.csp, 'numfilters', 6);
-  cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
-case 'bsscca'
-  % additional options, see BSSCCA for details
-  cfg.bsscca       = ft_getopt(cfg,        'bsscca', []);
-  cfg.bsscca.delay = ft_getopt(cfg.bsscca, 'delay', 1);
-  if strcmp(cfg.cellmode, 'no')
-    fprintf('switching to cell-mode for method ''bsscca''\n');
-    cfg.cellmode = 'yes';
-  end
-otherwise
-  % do nothing
+  case 'icasso'
+    cfg.icasso        = ft_getopt(cfg,        'icasso', []);
+    cfg.icasso.mode   = ft_getopt(cfg.icasso, 'mode',   'both');
+    cfg.icasso.Niter  = ft_getopt(cfg.icasso, 'Niter',  15);
+    cfg.icasso.method = ft_getopt(cfg.icasso, 'method', 'fastica');
+    
+    cfg.fastica       = ft_getopt(cfg, 'fastica', []);
+  case 'fastica'
+    % additional options, see FASTICA for details
+    cfg.fastica = ft_getopt(cfg, 'fastica', []);
+  case 'runica'
+    % additional options, see RUNICA for details
+    cfg.runica       = ft_getopt(cfg,        'runica',  []);
+    cfg.runica.lrate = ft_getopt(cfg.runica, 'lrate',   0.001);
+  case 'binica'
+    % additional options, see BINICA for details
+    cfg.binica       = ft_getopt(cfg,        'binica',  []);
+    cfg.binica.lrate = ft_getopt(cfg.binica, 'lrate',   0.001);
+  case {'dss' 'dss2'} % JM at present has his own dss, that can deal with cell-array input, specify as dds2
+    % additional options, see DSS for details
+    cfg.dss               = ft_getopt(cfg,          'dss',      []);
+    cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
+    cfg.dss.denf.function = ft_getopt(cfg.dss.denf, 'function', 'denoise_fica_tanh');
+    cfg.dss.denf.params   = ft_getopt(cfg.dss.denf, 'params',   []);
+  case 'csp'
+    % additional options, see CSP for details
+    cfg.csp = ft_getopt(cfg, 'csp', []);
+    cfg.csp.numfilters = ft_getopt(cfg.csp, 'numfilters', 6);
+    cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
+  case 'bsscca'
+    % additional options, see BSSCCA for details
+    cfg.bsscca       = ft_getopt(cfg,        'bsscca', []);
+    cfg.bsscca.delay = ft_getopt(cfg.bsscca, 'delay', 1);
+    if strcmp(cfg.cellmode, 'no')
+      fprintf('switching to cell-mode for method ''bsscca''\n');
+      cfg.cellmode = 'yes';
+    end
+  otherwise
+    % do nothing
 end
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
-Ntrials  = length(data.trial);
+tmpcfg = [];
+tmpcfg.trials = cfg.trials;
+tmpcfg.channel = cfg.channel;
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
-% select channels of interest
-chansel = match_str(data.label, cfg.channel);
-fprintf('selecting %d channels\n', length(chansel));
-for trial=1:Ntrials
-  data.trial{trial} = data.trial{trial}(chansel,:);
-end
-data.label = data.label(chansel);
-Nchans     = length(chansel);
+Ntrials  = length(data.trial);
+Nchans   = length(data.label);
 if Nchans==0
   error('no channels were selected');
 end
 
 % default is to compute just as many components as there are channels in the data
 if strcmp(cfg.numcomponent, 'all')
+  defaultNumCompsUsed = true(1);
   cfg.numcomponent = length(data.label);
+else
+  defaultNumCompsUsed = false(1);
 end
 
 % determine the size of each trial, they can be variable length
@@ -302,17 +300,21 @@ if strcmp(cfg.demean, 'yes')
   end
 end
 
-% determine the scaling of the data, scale it to approximately unity
-% this will improve the performance of some methods, esp. fastica
-scale = norm((data.trial{1}*data.trial{1}')./size(data.trial{1},2));
-scale = sqrt(scale);
-if scale ~= 0
-  fprintf('scaling data with 1 over %f\n', scale);
-  for trial=1:Ntrials
-    data.trial{trial} = data.trial{trial} ./ scale;
+if strcmp(cfg.doscale, 'yes')
+  % determine the scaling of the data, scale it to approximately unity
+  % this will improve the performance of some methods, esp. fastica
+  scale = norm((data.trial{1}*data.trial{1}')./size(data.trial{1},2));
+  scale = sqrt(scale);
+  if scale ~= 0
+    fprintf('scaling data with 1 over %f\n', scale);
+    for trial=1:Ntrials
+      data.trial{trial} = data.trial{trial} ./ scale;
+    end
+  else
+    fprintf('no scaling applied, since factor is 0\n');
   end
 else
-  fprintf('no scaling applied, since factor is 0\n');
+  fprintf('no scaling applied to the data\n');
 end
 
 if strcmp(cfg.method, 'sobi')
@@ -376,34 +378,28 @@ end
 % perform the component analysis
 fprintf('starting decomposition using %s\n', cfg.method);
 switch cfg.method
- 
+  
   case 'icasso'
     % check whether the required low-level toolboxes are installed
     ft_hastoolbox('icasso',  1);
     
     if strcmp(cfg.icasso.method, 'fastica')
-      ft_hastoolbox('fastica', 1); 
-      cfg.fastica.numOfIC = cfg.numcomponent;  
-    
+      ft_hastoolbox('fastica', 1);
+      cfg.fastica.numOfIC = cfg.numcomponent;
+      
       optarg = ft_cfg2keyval(cfg.(cfg.icasso.method));
       sR     = icassoEst(cfg.icasso.mode, dat, cfg.icasso.Niter, optarg{:});
     else
-      error('only ''fastica'' is supported as method for icasso');
-     
-      % FIXME the code below does not work yet 
-      % prewhiten using fastica
-      [whitedat, A, B] = fastica(dat, 'only', 'white', 'lastEig', cfg.icasso.Npca);
-      tmpdata          = rmfield(data, 'trial');
-      tmpdata.trial{1} = whitedat;
-      tmpdata.time     = {1:size(whitedat,2)};
-      tmpdata.label    = data.label(1:size(whitedat,1));
-      sR.whiteningMatrix   = A;
-      sR.dewhiteningMatrix = B;
+      %       error('only ''fastica'' is supported as method for icasso');
+      %
+      %       % FIXME the code below does not work yet
       
       % recurse into ft_componentanalysis
       tmpcfg = rmfield(cfg, 'icasso');
       tmpcfg.method = cfg.icasso.method;
-
+      
+      tmpdata = data;
+      
       sR.W = cell(cfg.icasso.Niter, 1);
       sR.A = cell(cfg.icasso.Niter, 1);
       sR.index = zeros(0,2);
@@ -411,15 +407,19 @@ switch cfg.method
         tmp = ft_componentanalysis(tmpcfg, tmpdata);
         sR.W{k}  = tmp.unmixing;
         sR.A{k}  = tmp.topo;
-        sR.index = cat(1, sR.index, [ones(size(tmp.topo,2),1) (1:size(tmp.topo,2))']);
+        sR.index = cat(1, sR.index, [k*ones(size(tmp.topo,2),1) (1:size(tmp.topo,2))']);
+        
+        if strcmp(tmpcfg.method, 'dss')
+          sR.whiteningMatrix   = tmp.cfg.dss.V;
+          sR.dewhiteningMatrix = tmp.cfg.dss.dV;
+        end
       end
       sR.signal = dat;
       sR.mode   = cfg.icasso.mode;
       sR.rdim   = size(tmp.topo,2);
     end
-
     sR     = icassoExp(sR);
-    [Iq, mixing, unmixing, dat] = icassoShow(sR, 'estimate', 'off');%, 'L', cfg.numcomponent);    
+    [Iq, mixing, unmixing, dat] = icassoShow(sR, 'estimate', 'off');%, 'L', cfg.numcomponent);
     
     % sort the output according to Iq
     [srt, ix] = sort(-Iq); % account for NaNs
@@ -429,13 +429,22 @@ switch cfg.method
     
     cfg.icasso.Iq = Iq(ix);
     cfg.icasso.sR = rmfield(sR, 'signal');
-
+    
   case 'fastica'
     % check whether the required low-level toolboxes are installed
     ft_hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
     
-    % set the number of components to be estimated
-    cfg.fastica.numOfIC = cfg.numcomponent;
+    if ~defaultNumCompsUsed &&...
+        (~isfield(cfg, 'fastica') || ~isfield(cfg.fastica, 'numOfIC'))
+      % user has specified cfg.numcomponent and not specified
+      % cfg.fastica.numOfIC, so copy cfg.numcomponent over
+      cfg.fastica.numOfIC = cfg.numcomponent;
+    elseif ~defaultNumCompsUsed &&...
+        isfield(cfg, 'fastica') && isfield(cfg.fastica, 'numOfIC')
+      % user specified both cfg.numcomponent and cfg.fastica.numOfIC,
+      % unsure which one to use
+      error('you can specify either cfg.fastica.numOfIC or cfg.numcomponent (they will have the same effect), but not both');
+    end
     
     try
       % construct key-value pairs for the optional arguments
@@ -459,8 +468,20 @@ switch cfg.method
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
     
+    if ~defaultNumCompsUsed &&...
+        (~isfield(cfg, 'runica') || ~isfield(cfg.runica, 'pca'))
+      % user has specified cfg.numcomponent and not specified
+      % cfg.runica.pca, so copy cfg.numcomponent over
+      cfg.runica.pca = cfg.numcomponent;
+    elseif ~defaultNumCompsUsed &&...
+        isfield(cfg, 'runica') && isfield(cfg.runica, 'pca')
+      % user specified both cfg.numcomponent and cfg.runica.pca,
+      % unsure which one to use
+      error('you can specify either cfg.runica.pca or cfg.numcomponent (they will have the same effect), but not both');
+    end
+    
     % construct key-value pairs for the optional arguments
-    optarg = ft_cfg2keyval(cfg.runica);
+    optarg = [ft_cfg2keyval(cfg.runica) {'reset_randomseed' 0}]; % let FieldTrip deal with the random seed handling
     [weights, sphere] = runica(dat, optarg{:});
     
     % scale the sphering matrix to unit norm
@@ -475,6 +496,18 @@ switch cfg.method
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
+    
+    if ~defaultNumCompsUsed &&...
+        (~isfield(cfg, 'binica') || ~isfield(cfg.binica, 'pca'))
+      % user has specified cfg.numcomponent and not specified
+      % cfg.binica.pca, so copy cfg.numcomponent over
+      cfg.binica.pca = cfg.numcomponent;
+    elseif ~defaultNumCompsUsed &&...
+        isfield(cfg, 'binica') && isfield(cfg.binica, 'pca')
+      % user specified both cfg.numcomponent and cfg.binica.pca,
+      % unsure which one to use
+      error('you can specify either cfg.binica.pca or cfg.numcomponent (they will have the same effect), but not both');
+    end
     
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.binica);
@@ -530,14 +563,49 @@ switch cfg.method
     
     clear C D E d
     
+  case 'kpca'
+    
+    % linear kernel (same as normal covariance)
+    %kern = @(X,y) (sum(bsxfun(@times, X, y),2));
+    
+    % polynomial kernel degree 2
+    %kern = @(X,y) (sum(bsxfun(@times, X, y),2).^2);
+    
+    % RBF kernel
+    kern = @(X,y) (exp(-0.5* sqrt(sum(bsxfun(@minus, X, y).^2, 2))));
+    
+    % compute kernel matrix
+    C = zeros(Nchans,Nchans);
+    ft_progress('init', 'text', 'computing kernel matrix...');
+    for k = 1:Nchans
+      ft_progress(k/Nchans);
+      C(k,:) = kern(dat, dat(k,:));
+    end
+    ft_progress('close');
+    
+    % eigenvalue decomposition (EVD)
+    [E,D] = eig(C);
+    
+    % sort eigenvectors in descending order of eigenvalues
+    d = cat(2,(1:1:Nchans)',diag(D));
+    d = sortrows(d,[-2]);
+    
+    % return the desired number of principal components
+    unmixing = E(:,d(1:cfg.numcomponent,1))';
+    mixing = [];
+    
+    clear C D E d
+    
   case 'svd'
+    % it is more memory efficient to use the (non-scaled) covariance
     if cfg.numcomponent<Nchans
       % compute only the first components
-      [u, s, v] = svds(dat, cfg.numcomponent);
+      [u, s, v] = svds(dat*dat', cfg.numcomponent);
     else
       % compute all components
-      [u, s, v] = svd(dat, 0);
+      [u, s, v] = svd(dat*dat', 0);
     end
+    clear s v % not needed
     
     unmixing = u';
     mixing = [];
@@ -552,15 +620,29 @@ switch cfg.method
     if ~ischar(cfg.numcomponent)
       params.sdim = cfg.numcomponent;
     end
+    if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
+      params.wdim = cfg.dss.wdim;
+    end
+    if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
+      params.Y = params.V*dat;
+    end
+    
     % create the state
     state   = dss_create_state(dat, params);
+    if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
+      state.V = cfg.dss.V;
+    end
+    if isfield(cfg.dss, 'dV') && ~isempty(cfg.dss.dV)
+      state.dV = cfg.dss.dV;
+    end
+    
     % increase the amount of information that is displayed on screen
-    %state.verbose = 3;
+    % state.verbose = 3;
     % start the decomposition
     % state   = dss(state);  % this is for the DSS toolbox version 0.6 beta
     state   = denss(state);  % this is for the DSS toolbox version 1.0
-    %weights = state.W;
-    %sphere  = state.V;
+    % weights = state.W;
+    % sphere  = state.V;
     
     mixing   = state.A;
     unmixing = state.B;
@@ -572,6 +654,7 @@ switch cfg.method
     cfg.dss.stopf     = state.stopf;
     cfg.dss.W         = state.W;
     cfg.dss.V         = state.V;
+    cfg.dss.dV        = state.dV;
     cfg.numcomponent  = state.sdim;
     
   case 'sobi'
@@ -633,7 +716,7 @@ switch cfg.method
     end
     unmixing = s * u';
     mixing   = [];
-
+    
   case 'csp'
     C1 = cov(dat1');
     C2 = cov(dat2');
@@ -647,10 +730,9 @@ switch cfg.method
     % if represented in a concatenated array one has to keep track of the
     % trial boundaries
     
-    
     [unmixing, rho] = bsscca(dat,cfg.bsscca.delay);
     mixing          = [];
-    %unmixing        = diag(rho);
+    % unmixing      = diag(rho);
     
   case 'parafac'
     error('parafac is not supported anymore in ft_componentanalysis');
@@ -697,8 +779,14 @@ if size(mixing,2) > cfg.numcomponent
 end
 
 % compute the activations in each trial
-for trial=1:Ntrials
-  comp.trial{trial} = scale * unmixing * data.trial{trial};
+if strcmp(cfg.doscale, 'yes')
+  for trial=1:Ntrials
+    comp.trial{trial} = scale * unmixing * data.trial{trial};
+  end
+else
+  for trial=1:Ntrials
+    comp.trial{trial} = unmixing * data.trial{trial};
+  end
 end
 
 % store mixing/unmixing matrices in structure
@@ -718,13 +806,27 @@ end
 comp.topolabel = data.label(:);
 
 % apply the montage also to the elec/grad, if present
-if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
-  fprintf('applying the mixing matrix to the sensor description\n');
-  if isfield(data, 'grad')
-    sensfield = 'grad';
+if isfield(data, 'grad')
+  sensfield = 'grad';
+  if strcmp(cfg.updatesens, 'yes')
+    fprintf('applying the backprojection matrix to the gradiometer description\n');
   else
-    sensfield = 'elec';
+    fprintf('not applying the backprojection matrix to the gradiometer description\n');
   end
+elseif isfield(data, 'elec') && isfield(data.elec, 'tra')
+  sensfield = 'elec';
+  if strcmp(cfg.updatesens, 'yes')
+    fprintf('applying the backprojection matrix to the electrode description\n');
+  else
+    fprintf('not applying the backprojection matrix to the electrode description\n');
+  end
+else
+  fprintf('not applying the backprojection matrix to the sensor description\n');
+  sensfield = [];
+end
+
+if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
+  % construct a montage and apply it to the sensor description
   montage          = [];
   montage.labelorg = data.label;
   montage.labelnew = comp.label;
@@ -736,6 +838,9 @@ if isfield(data, 'grad') || (isfield(data, 'elec') && isfield(data.elec, 'tra'))
   if isfield(comp.(sensfield), 'type')
     comp.(sensfield) = rmfield(comp.(sensfield), 'type');
   end
+elseif ~isempty(sensfield) && strcmp(cfg.updatesens, 'no')
+  % simply copy it over
+  comp.(sensfield) = data.(sensfield);
 end
 
 % copy the sampleinfo into the output
@@ -751,8 +856,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble randomseed
-ft_postamble previous data
-ft_postamble history comp
-ft_postamble savevar comp
+ft_postamble previous   data
+ft_postamble provenance comp
+ft_postamble history    comp
+ft_postamble savevar    comp

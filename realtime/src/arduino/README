@@ -1,0 +1,6 @@
+This directory contains some code for working with the FieldTrip realtime interface on the
+Arduino platform. This code was developed for a specific demonstration at a public event for
+the BrainGain project.
+
+More documentation can be found at http://fieldtrip.fcdonders.nl/development/realtime/arduino
+

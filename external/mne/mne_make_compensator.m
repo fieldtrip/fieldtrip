@@ -96,7 +96,7 @@ end
 comp = eye(info.nchan,info.nchan) + C1 - C2 - C2*C1;
 
 if exclude_comp_chs
-    pick  = zeros(info.nchan);
+    pick  = zeros(info.nchan, 1);
     npick = 0;
     for k = 1:info.nchan
         if info.chs(k).kind ~= FIFF.FIFFV_REF_MEG_CH

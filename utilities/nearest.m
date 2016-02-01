@@ -22,6 +22,8 @@ function [indx] = nearest(array, val, insideflag, toleranceflag)
 % return an error, but nearest(1:10, 0.99, true, true) will return 1. The
 % tolerance that is allowed is half the distance between the subsequent
 % values in the array.
+%
+% See also FIND
 
 % Copyright (C) 2002-2012, Robert Oostenveld
 %
@@ -58,7 +60,7 @@ if numel(val)==2
     error('The limits you selected are outside the range available in the data');
   end
   indx(1) = sel(1);
-  indx(2) = sel(end);  
+  indx(2) = sel(end);
   if indx(1)>1 && abs(array(indx(1)-1)-val(1))<=intervaltol
     indx(1)=indx(1)-1;
   end
@@ -89,7 +91,11 @@ maxarray = max(array);
 if insideflag
   if ~toleranceflag
     if val<minarray || val>maxarray
-      error('the value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      if numel(array)==1
+        warning('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      else
+        error('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+      end
     end
   else
     if ~isequal(array, sort(array))
@@ -118,23 +124,41 @@ if val>maxarray
   % return the last occurence of the largest number
   [dum, indx] = max(flipud(array));
   indx = numel(array) + 1 - indx;
-  
+
 elseif val<minarray
   % return the first occurence of the smallest number
   [dum, indx] = min(array);
-  
+
 else
   % implements a threshold to correct for errors due to numerical precision
   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=498 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
-  if maxarray==minarray
-    precision = 1;
-  else
-    precision = (maxarray-minarray) / 10^6;
+  %   if maxarray==minarray
+  %     precision = 1;
+  %   else
+  %     precision = (maxarray-minarray) / 10^6;
+  %   end
+  %
+  %   % return the first occurence of the nearest number
+  %   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
+
+  % use find instead, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
+  wassorted = true;
+  if ~issorted(array)
+    wassorted = false;
+    [array, xidx] = sort(array);
   end
-  
-  % return the first occurence of the nearest number
-  [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
-  
+
+  indx2 = find(array<=val, 1, 'last');
+  indx3 = find(array>=val, 1, 'first');
+  if abs(array(indx2)-val) <= abs(array(indx3)-val)
+    indx = indx2;
+  else
+    indx = indx3;
+  end
+  if ~wassorted
+    indx = xidx(indx);
+  end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -160,4 +184,3 @@ function mbvector(a)
 if ndims(a) > 2 || (size(a, 1) > 1 && size(a, 2) > 1)
   error('Argument to mbvector must be a vector');
 end
-

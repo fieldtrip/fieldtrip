@@ -6,20 +6,22 @@
  */
 
 /*
-    Differences with matlab built-in findstr:
+    Differences with built-in findstr:
         - allows to search only the n first occurences of a pattern
         - allows to search only in a substring (given an index of the beginning)
    
-    Matlab hack:
+    MATLAB hack:
         - doesn't use mxGetString to prevent a copy of the string.
-        - assumes Matlab stores strings as unsigned short (Unicode 16 bits)
+        - assumes MATLAB stores strings as unsigned short (Unicode 16 bits)
           matrix.h: typedef uint16_T mxChar;
-          (that's the case for Matlab 5.* and 6.* but Matlab 4.* stores strings
-           as double)
+          (that's the case for MATLAB 5.*, 6.* and 7.* but MATLAB 4.* stores
+           strings as double and GNU Octave as char, see src/mxarray.h)
 */
 
 /* Comment the following line to use standard mxGetString (slower) */
+#if !defined (HAVE_OCTAVE)
 #define __HACK_MXCHAR__
+#endif
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 

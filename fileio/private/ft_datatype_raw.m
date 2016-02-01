@@ -1,4 +1,4 @@
-function data = ft_datatype_raw(data, varargin)
+function [data] = ft_datatype_raw(data, varargin)
 
 % FT_DATATYPE_RAW describes the FieldTrip MATLAB structure for raw data
 %
@@ -29,6 +29,10 @@ function data = ft_datatype_raw(data, varargin)
 %
 % Obsoleted fields:
 %   - offset
+%
+% Historical fields:
+%   - cfg, elec, fsample, grad, hdr, label, offset, sampleinfo, time,
+%   trial, trialdef, see bug2513
 %
 % Revision history:
 %
@@ -76,37 +80,44 @@ version       = ft_getopt(varargin, 'version', 'latest');
 hassampleinfo = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense'); % can be yes/no/ifmakessense
 hastrialinfo  = ft_getopt(varargin, 'hastrialinfo',  'ifmakessense'); % can be yes/no/ifmakessense
 
+% do some sanity checks
+assert(isfield(data, 'trial') && isfield(data, 'time') && isfield(data, 'label'), 'inconsistent raw data structure, some field is missing');
+assert(length(data.trial)==length(data.time), 'inconsistent number of trials in raw data structure');
+for i=1:length(data.trial)
+  assert(size(data.trial{i},2)==length(data.time{i}), 'inconsistent number of samples in trial %d', i);
+  assert(size(data.trial{i},1)==length(data.label), 'inconsistent number of channels in trial %d', i);
+end
+
 if isequal(hassampleinfo, 'ifmakessense')
-  hassampleinfo = 'yes';
+  hassampleinfo = 'no'; % default to not adding it
   if isfield(data, 'sampleinfo') && size(data.sampleinfo,1)~=numel(data.trial)
     % it does not make sense, so don't keep it
     hassampleinfo = 'no';
   end
   if isfield(data, 'sampleinfo')
+    hassampleinfo = 'yes'; % if it's already there, consider keeping it
     numsmp = data.sampleinfo(:,2)-data.sampleinfo(:,1)+1;
     for i=1:length(data.trial)
       if size(data.trial{i},2)~=numsmp(i);
         % it does not make sense, so don't keep it
         hassampleinfo = 'no';
+        % the actual removal will be done further down
+        warning('removing inconsistent sampleinfo');
         break;
       end
     end
   end
-  if strcmp(hassampleinfo, 'no')
-    % the actual removal will be done further down
-    warning('removing inconsistent sampleinfo');
-  end
 end
 
 if isequal(hastrialinfo, 'ifmakessense')
-  hastrialinfo = 'yes';
-  if isfield(data, 'trialinfo') && size(data.trialinfo,1)~=numel(data.trial)
-    % it does not make sense, so don't keep it
-    hastrialinfo = 'no';
-  end
-  if strcmp(hastrialinfo, 'no')
-    % the actual removal will be done further down
-    warning('removing inconsistent sampleinfo');
+  hastrialinfo = 'no';
+  if isfield(data, 'trialinfo')
+    hastrialinfo = 'yes';
+    if size(data.trialinfo,1)~=numel(data.trial)
+      % it does not make sense, so don't keep it
+      hastrialinfo = 'no';
+      warning('removing inconsistent trialinfo');
+    end
   end
 end
 
@@ -136,7 +147,17 @@ switch version
     end
     
     if ~isfield(data, 'fsample')
-      data.fsample = 1/mean(diff(data.time{1}));
+      for i=1:length(data.time)
+        if length(data.time{i})>1
+          data.fsample = 1/mean(diff(data.time{i}));
+          break
+        else
+          data.fsample = nan;
+        end
+      end
+      if isnan(data.fsample)
+        warning('cannot determine sampling frequency');
+      end
     end
     
     if isfield(data, 'offset')
@@ -286,7 +307,7 @@ needfix = needfix || ~all(skew==0) && all(skew<0.01);
 
 % if the skew is less than 1% it will be corrected
 if needfix
-  warning_once('correcting numerical inaccuracy in the time axes');
+  ft_warning('correcting numerical inaccuracy in the time axes');
   for i=1:length(data.time)
     % reconstruct the time axis of each trial, using the begin latency of
     % the first trial and the integer offset in samples of each trial

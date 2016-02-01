@@ -18,8 +18,8 @@ function [no,el,regions,holes]=vol2surf(img,ix,iy,iz,opt,dofix,method,isovalues)
 %	     opt(1,2,...).radbound: same as above, for each levelset
 %	   if method is 'simplify':
 %	     opt=a float number<1: compression rate for surf. simplification
-%	     opt.keeyratio=a float less than 1: same as above, same for all surf.
-%	     opt(1,2,..).keeyratio: setting compression rate for each levelset
+%	     opt.keepratio=a float less than 1: same as above, same for all surf.
+%	     opt(1,2,..).keepratio: setting compression rate for each levelset
 %	   opt(1,2,..).maxsurf: 1 - only use the largest disjointed surface
 %				0 - use all surfaces for that levelset
 %          opt(1,2,..).side: - 'upper': threshold at upper interface

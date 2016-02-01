@@ -71,35 +71,9 @@ function [beta,beta0,conv] = elasticlog(X,Y,nu,lambda,options,beta,beta0)
     beta = zeros(ninput,1);
   end
   beta = [beta; beta0];
-  
-  % Start iterations
-  
-  oldquadratic = [];
-  iter = 0;
-  conv=zeros(options.maxiter,1);
     
-  % quadratic approximation
-  ptild=1./(1+exp(- beta'*X)); % ntrials x 1
-  ptild(ptild<1e-5)=0;
-  ptild(ptild>0.99999)=1;
-  w=ptild.*(1-ptild);  % ntrials x 1 weights (17)
-  w(w==0)=1e-5;
-  Z = beta'*X + (Y-ptild)./w; % working response (16)
-  
-  % numerator of 10; needs updating after each change in w
-  T = bsxfun(@times,X,w)*Z';   % nvar x 1
-  Q = zeros(nvar,nvar);
-  qcomputed = zeros(nvar,1);
-  activeset = (beta ~= 0);
-  qcomputed(activeset) = 1;
-  Q(:,activeset) = bsxfun(@times,X,w)*X(activeset,:)' + lambda(:,activeset);   % precompute Q for nonzero beta
-  Q(diag(activeset)) = 0;
-  V = T-Q*beta;
-  
-  % denominator of Eq. 10; needs updating after each change in w
-  U = diag(lambda) + X.^2 * w';
-  
   % start iterations
+  V = []; U = []; qcomputed = []; w = []; Q=[];
   betaold = beta;
   iter = 0;
   activeset = true(1,nvar);
@@ -108,6 +82,8 @@ function [beta,beta0,conv] = elasticlog(X,Y,nu,lambda,options,beta,beta0)
     
     iter = iter+1;
     
+    quadratic_approximation();
+
     % one full pass with all variables and then only with active set
     activeset = coorddescent(activeset);
 
@@ -118,6 +94,8 @@ function [beta,beta0,conv] = elasticlog(X,Y,nu,lambda,options,beta,beta0)
     
     if sum(abs(beta-betaold)) < options.tol
       
+      quadratic_approximation();
+
       % again one full pass with all variables
       oldset = activeset;
       activeset = coorddescent(true(1,nvar));
@@ -175,6 +153,32 @@ function [beta,beta0,conv] = elasticlog(X,Y,nu,lambda,options,beta,beta0)
     end
     
   end
+  
+  function quadratic_approximation()
+    
+    ptild=1./(1+exp(- beta'*X)); % ntrials x 1
+    ptild(ptild<1e-5)=0;
+    ptild(ptild>0.99999)=1;
+    w=ptild.*(1-ptild);  % ntrials x 1 weights (17)
+    w(w==0)=1e-5;
+    
+    Z = beta'*X + (Y-ptild)./w; % working response (16)
+    
+    % numerator of 10; needs updating after each change in w
+    T = bsxfun(@times,X,w)*Z';   % nvar x 1
+    Q = zeros(nvar,nvar);
+    qcomputed = zeros(nvar,1);
+    activeset = (beta ~= 0)';
+    qcomputed(activeset) = 1;
+    Q(:,activeset) = bsxfun(@times,X,w)*X(activeset,:)' + lambda(:,activeset);   % precompute Q for nonzero beta
+    Q(diag(activeset)) = 0;
+    V = T-Q*beta;
+    
+    % denominator of Eq. 10; needs updating after each change in w
+    U = diag(lambda) + X.^2 * w';
+    
+  end
+
 
 end
 
@@ -187,7 +191,7 @@ function options = make_options(options)
   end
   
   fnames = {'offset','maxiter','tol'};
-  defaults = {1,1e4,1e-3};
+  defaults = {1,1e4,1e-6};
   
   for i=1:length(fnames),
     if ~isfield(options,fnames{i}),

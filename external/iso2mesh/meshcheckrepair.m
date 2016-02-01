@@ -11,9 +11,15 @@ function [node,elem]=meshcheckrepair(node,elem,opt,varargin)
 %      node: input/output, surface node list, dimension (nn,3)
 %      elem: input/output, surface face element list, dimension (be,3)
 %      opt: options, including
-%            'duplicated': remove duplicated elements
+%            'dupnode': remove duplicated nodes
+%            'dupelem' or 'duplicated': remove duplicated elements
+%            'dup': both above
 %            'isolated': remove isolated nodes
+%            'open': abort when open surface is found
 %            'deep': call external jmeshlib to remove non-manifold vertices
+%            'meshfix': repair a closed surface by the meshfix utility (new)
+%                       it can remove self-intersecting elements and fill holes
+%            'intersect': test a surface for self-intersecting elements
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
@@ -46,14 +52,23 @@ if(nargin==3 && strcmp(opt,'open'))
     end
 end
 
-exesuff=fallbackexeext(getexeext,'meshfix');
+if(nargin<3 || strcmp(opt,'deep'))
+    exesuff=getexeext;
+    exesuff=fallbackexeext(exesuff,'jmeshlib');
+    deletemeshfile(mwpath('post_sclean.off'));
+    saveoff(node(:,1:3),elem(:,1:3),mwpath('pre_sclean.off'));
+    system([' "' mcpath('jmeshlib') exesuff '" "' mwpath('pre_sclean.off') '" "' mwpath('post_sclean.off') '"']);
+    [node,elem]=readoff(mwpath('post_sclean.off'));
+end
 
+exesuff=fallbackexeext(getexeext,'meshfix');
 extra=varargin2struct(varargin{:});
 moreopt=' -q -a 0.01 ';
 if(isstruct(extra) && isfield(extra,'MeshfixParam'))
     moreopt=extra.MeshfixParam;
 end
-if(nargin<3 || strcmp(opt,'deep'))
+
+if(nargin>=3 && strcmp(opt,'meshfix'))
     deletemeshfile(mwpath('pre_sclean.off'));
     deletemeshfile(mwpath('pre_sclean_fixed.off'));
     saveoff(node,elem,mwpath('pre_sclean.off'));

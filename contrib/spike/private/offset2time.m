@@ -1,4 +1,4 @@
-function time = offset2time(offset, fsample, nsamples);
+function time = offset2time(offset, fsample, nsamples)
 
 % OFFSET2TIME converts the offset of a trial definition into a time-axis
 % according to the definition from DEFINETRIAL

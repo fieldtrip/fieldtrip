@@ -131,6 +131,7 @@ switch(xyzunits)
   case 1, xyzscale = 1000.000; % meters
   case 2, xyzscale =    1.000; % mm
   case 3, xyzscale =     .001; % microns
+  case 0, xyzscale =    1.000; % mm -- added by S.S. Dalal, 25.Sep.2013
 end
 hdr.pixdim(2:4) = hdr.pixdim(2:4) * xyzscale;
 hdr.srow_x = hdr.srow_x * xyzscale;

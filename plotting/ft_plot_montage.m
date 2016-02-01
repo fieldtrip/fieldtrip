@@ -8,16 +8,12 @@ function ft_plot_montage(dat, varargin)
 % where dat is a 3-D array.
 % 
 % Additional options should be specified in key-value pairs and can be
-%     'transform'     = 4x4 homogeneous transformation matrix specifying the mapping from
-%                       voxel space to the coordinate system in which the data are plotted.
-%     'location'      = 1x3 vector specifying a point on the plane which will be plotted
-%                       the coordinates are expressed in the coordinate system in which the
-%                       data will be plotted. location defines the origin of the plane
-%     'orientation'   = 1x3 vector specifying the direction orthogonal through the plane
-%                       which will be plotted (default = [0 0 1])
-%     'srange'        = 
-%     'slicesize'     = 
-%     'nslice'        = 
+%   'transform'     = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted.
+%   'location'      = 1x3 vector specifying a point on the plane which will be plotted the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
+%   'orientation'   = 1x3 vector specifying the direction orthogonal through the plane which will be plotted (default = [0 0 1])
+%   'srange'        = 
+%   'slicesize'     = 
+%   'nslice'        = scalar, number of slices
 % 
 % See also FT_PLOT_ORTHO, FT_PLOT_SLICE, FT_SOURCEPLOT
 
@@ -51,9 +47,10 @@ ori       = ft_getopt(varargin, 'orientation');
 srange    = ft_getopt(varargin, 'slicerange');
 slicesize = ft_getopt(varargin, 'slicesize');
 nslice    = ft_getopt(varargin, 'nslice');
+backgroundcolor = ft_getopt(varargin, 'backgroundcolor', [0 0 0]);
 
 % the intersectmesh and intersectcolor options are passed on to FT_PLOT_SLICE
-dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh'));
+dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh')) || ~isempty(ft_getopt(varargin, 'plotmarker'));
 
 % set the location if empty
 if isempty(loc) && (isempty(transform) || all(all(transform-eye(4)==0)==1))
@@ -102,8 +99,8 @@ if size(ori,1)==1 && size(loc,1)>1,
   ori = repmat(ori, size(loc,1), 1);
 end
 
-div    = [ceil(sqrt(nslice)) ceil(sqrt(nslice))];
-optarg = varargin;
+div     = [ceil(sqrt(nslice)) ceil(sqrt(nslice))];
+optarg  = varargin;
 corners = [inf -inf inf -inf inf -inf]; % get the corners for the axis specification
 for k = 1:nslice
   
@@ -129,7 +126,7 @@ for k = 1:nslice
   
   % project the positions onto the xy-plane
   pos = [xtmp(:) ytmp(:) ztmp(:)];
-  pos = warp_apply(inv(T), pos);
+  pos = ft_warp_apply(inv(T), pos);
   
   xtmp = reshape(pos(:,1), siz);
   ytmp = reshape(pos(:,2), siz);
@@ -165,7 +162,7 @@ for k = 1:nslice
       siz2 = size(xtmp);
       
       pos = [xtmp(:) ytmp(:) ztmp(:)];
-      pos = warp_apply(inv(T), pos);
+      pos = ft_warp_apply(inv(T), pos);
   
       xtmp = reshape(pos(:,1), siz2);
       ytmp = reshape(pos(:,2), siz2);
@@ -174,13 +171,15 @@ for k = 1:nslice
       % update the positions
       set(p(kk), 'ydata', offset(1) + xtmp);
       set(p(kk), 'xdata', offset(2) + ytmp);
-      set(p(kk), 'zdata',         0 * ztmp);
+      set(p(kk), 'zdata',         0.0001 * ztmp);
     end
     pprevious = [pprevious(:);p(:)];
   end
-  drawnow;
+  % drawnow; %this statement slows down the process big time on some file
+  %systems. I don't know what's going on there, but the statement is not
+  %really necessary, so commented out.
 end
-set(gcf, 'color', [0 0 0]);
+set(gcf, 'color', backgroundcolor);
 set(gca, 'zlim', [0 1]);
 %axis equal;
 axis off;

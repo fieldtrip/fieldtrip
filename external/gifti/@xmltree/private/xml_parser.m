@@ -4,22 +4,22 @@ function tree = xml_parser(xmlstr)
 %
 % xmlstr  - XML string to parse
 % tree    - tree structure corresponding to the XML file
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
-% xml_parser.m is an XML 1.0 (http://www.w3.org/TR/REC-xml) parser
-% written in Matlab. It aims to be fully conforming. It is currently not
-% a validating XML processor.
+% xml_parser.m is an XML 1.0 (http://www.w3.org/TR/REC-xml) parser.
+% It aims to be fully conforming. It is currently not a validating 
+% XML processor.
 %
 % A description of the tree structure provided in output is detailed in 
 % the header of this m-file.
-%_______________________________________________________________________
-% Copyright (C) 2002-2008  http://www.artefact.tk/
+%__________________________________________________________________________
+% Copyright (C) 2002-2015  http://www.artefact.tk/
 
-% Guillaume Flandin <guillaume@artefact.tk>
+% Guillaume Flandin
 % $Id$
 
-% XML Processor for MATLAB (The Mathworks, Inc.).
-% Copyright (C) 2002-2008 Guillaume Flandin <Guillaume@artefact.tk>
+% XML Processor for GNU Octave and MATLAB (The Mathworks, Inc.)
+% Copyright (C) 2002-2015 Guillaume Flandin <Guillaume@artefact.tk>
 %
 % This program is free software; you can redistribute it and/or
 % modify it under the terms of the GNU General Public License
@@ -34,25 +34,25 @@ function tree = xml_parser(xmlstr)
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation Inc, 59 Temple Pl. - Suite 330, Boston, MA 02111-1307, USA.
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 
 % Suggestions for improvement and fixes are always welcome, although no
 % guarantee is made whether and when they will be implemented.
 % Send requests to <Guillaume@artefact.tk>
 % Check also the latest developments on the following webpage:
 %           <http://www.artefact.tk/software/matlab/xml/>
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 
 % The implementation of this XML parser is much inspired from a 
-% Javascript parser available at <http://www.jeremie.com/>
+% Javascript parser that used to be available at <http://www.jeremie.com/>
 
-% A mex-file xml_findstr.c is also required, to encompass some
-% limitations of the built-in findstr Matlab function.
+% A C-MEX file xml_findstr.c is also required, to encompass some
+% limitations of the built-in FINDSTR function.
 % Compile it on your architecture using 'mex -O xml_findstr.c' command
 % if the compiled version for your system is not provided.
-% If this function behaves badly (crash or wrong results), comment the
-% line '#define __HACK_MXCHAR__' in xml_findstr.c and compile it again.
-%-----------------------------------------------------------------------
+% If this function does not behave as expected, comment the line
+% '#define __HACK_MXCHAR__' in xml_findstr.c and compile it again.
+%--------------------------------------------------------------------------
 
 % Structure of the output tree:
 % There are 5 types of nodes in an XML file: element, chardata, cdata,
@@ -93,7 +93,7 @@ function tree = xml_parser(xmlstr)
 %       |_ parent: uid of the parent
 %       |_ uid:    double
 %
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 
 % TODO/BUG/FEATURES:
 %  - [compile] only a warning if TagStart is empty ?
@@ -105,13 +105,13 @@ function tree = xml_parser(xmlstr)
 %  - remove globals? uppercase globals  rather persistent (clear mfile)?
 %  - xml_findstr is indeed xml_strfind according to Mathworks vocabulary
 %  - problem with entities: do we need to convert them here? (&eacute;)
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 
 %- XML string to parse and number of tags read
 global xmlstring Xparse_count xtree;
 
 %- Check input arguments
-error(nargchk(1,1,nargin));
+%error(nargchk(1,1,nargin));
 if isempty(xmlstr)
     error('[XML] Not enough parameters.')
 elseif ~ischar(xmlstr) || sum(size(xmlstr)>1)>1
@@ -139,10 +139,10 @@ tree = xtree;
 %- Remove global variables from the workspace
 clear global xmlstring Xparse_count xtree;
 
-%=======================================================================
+%==========================================================================
 % SUBFUNCTIONS
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function frag = compile(frag)
     global xmlstring xtree Xparse_count;
     
@@ -155,6 +155,7 @@ function frag = compile(frag)
         if isempty(TagStart)
             %- Character data
             error('[XML] Unknown data at the end of the XML file.');
+            Xparse_count = Xparse_count + 1;
             xtree{Xparse_count} = chardata;
             xtree{Xparse_count}.value = erode(entity(xmlstring(frag.str:end)));
             xtree{Xparse_count}.parent = frag.parent;
@@ -166,6 +167,7 @@ function frag = compile(frag)
                 frag.str = TagStart;
             else
                 %- Character data
+                Xparse_count = Xparse_count + 1;
                 xtree{Xparse_count} = chardata;
                 xtree{Xparse_count}.value = erode(entity(xmlstring(frag.str:TagStart-1)));
                 xtree{Xparse_count}.parent = frag.parent;
@@ -204,7 +206,7 @@ function frag = compile(frag)
         end
     end
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function frag = tag_element(frag)
     global xmlstring xtree Xparse_count;
     close =  xml_findstr(xmlstring,'>',frag.str,1);
@@ -224,6 +226,7 @@ function frag = tag_element(frag)
             name = starttag(1:nextspace-1);
             attribs = starttag(nextspace+1:end);
         end
+        Xparse_count = Xparse_count + 1;
         xtree{Xparse_count} = element;
         xtree{Xparse_count}.name = strip(name);
         if frag.parent
@@ -245,7 +248,7 @@ function frag = tag_element(frag)
         end
     end
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function frag = tag_pi(frag)
     global xmlstring xtree Xparse_count;
     close = xml_findstr(xmlstring,'?>',frag.str,1);
@@ -253,6 +256,7 @@ function frag = tag_pi(frag)
         warning('[XML] Tag <? opened but not closed.')
     else
         nextspace = xml_findstr(xmlstring,' ',frag.str,1);
+        Xparse_count = Xparse_count + 1;
         xtree{Xparse_count} = pri;
         if nextspace > close || nextspace == frag.str+2
             xtree{Xparse_count}.value = erode(xmlstring(frag.str+2:close-1));
@@ -267,13 +271,14 @@ function frag = tag_pi(frag)
         frag.str = close+2;
     end
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function frag = tag_comment(frag)
     global xmlstring xtree Xparse_count;
     close = xml_findstr(xmlstring,'-->',frag.str,1);
     if isempty(close)
         warning('[XML] Tag <!-- opened but not closed.')
     else
+        Xparse_count = Xparse_count + 1;
         xtree{Xparse_count} = comment;
         xtree{Xparse_count}.value = erode(xmlstring(frag.str+4:close-1));
         if frag.parent
@@ -283,13 +288,14 @@ function frag = tag_comment(frag)
         frag.str = close+3;
     end
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function frag = tag_cdata(frag)
     global xmlstring xtree Xparse_count;
     close = xml_findstr(xmlstring,']]>',frag.str,1);
     if isempty(close)
         warning('[XML] Tag <![CDATA[ opened but not closed.')
     else
+        Xparse_count = Xparse_count + 1;
         xtree{Xparse_count} = cdata;
         xtree{Xparse_count}.value = xmlstring(frag.str+9:close-1);
         if frag.parent
@@ -299,7 +305,7 @@ function frag = tag_cdata(frag)
         frag.str = close+3;
     end
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function all = attribution(str)
     %- Initialize attributs
     nbattr = 0;
@@ -308,49 +314,44 @@ function all = attribution(str)
     while 1,
         eq = xml_findstr(str,'=',1,1);
         if isempty(str) || isempty(eq), return; end
-        id = xml_findstr(str,'"',1,1);       % should also look for ''''
-        nextid = xml_findstr(str,'"',id+1,1);% rather than only '"'
+        id = sort([xml_findstr(str,'"',1,1),xml_findstr(str,'''',1,1)]); id=id(1);
+        nextid = sort([xml_findstr(str,'"',id+1,1),xml_findstr(str,'''',id+1,1)]);nextid=nextid(1);
         nbattr = nbattr + 1;
         all{nbattr}.key = strip(str(1:(eq-1)));
         all{nbattr}.val = entity(str((id+1):(nextid-1)));
         str = str((nextid+1):end);
     end
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function elm = element
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     elm = struct('type','element','name','','attributes',[],'contents',[],'parent',[],'uid',Xparse_count);
    
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function cdat = chardata
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     cdat = struct('type','chardata','value','','parent',[],'uid',Xparse_count);
    
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function cdat = cdata
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     cdat = struct('type','cdata','value','','parent',[],'uid',Xparse_count);
    
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function proce = pri
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     proce = struct('type','pi','value','','target','','parent',[],'uid',Xparse_count);
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function commt = comment
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     commt = struct('type','comment','value','','parent',[],'uid',Xparse_count);
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function frg = fragment
     frg = struct('str','','parent','','end','');
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function str = prolog(str)
     %- Initialize beginning index of elements tree
     b = 1;
@@ -390,13 +391,11 @@ function str = prolog(str)
     %- Skip prolog from the xml string
     str = str(b:end);
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function str = strip(str)
-    a = isspace(str);
-    a = find(a==1);
-    str(a) = '';
+    str(isspace(str)) = '';
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function str = normalize(str)
     % Find white characters (space, newline, carriage return, tabs, ...)
     i = isspace(str);
@@ -405,11 +404,10 @@ function str = normalize(str)
     % replace several white characters by only one
     if ~isempty(i)
         j = i - [i(2:end) i(end)];
-        k = find(j == -1);
-        str(i(k)) = [];
+        str(i(j == -1)) = [];
     end
 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function str = entity(str)
     str = strrep(str,'&lt;','<');
     str = strrep(str,'&gt;','>');
@@ -417,7 +415,7 @@ function str = entity(str)
     str = strrep(str,'&apos;','''');
     str = strrep(str,'&amp;','&');
    
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 function str = erode(str)
     if ~isempty(str) && str(1)==' ', str(1)=''; end;
     if ~isempty(str) && str(end)==' ', str(end)=''; end;

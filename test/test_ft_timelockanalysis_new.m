@@ -1,5 +1,8 @@
 function test_ft_timelockanalysis_new(datainfo,writeflag)
 
+% MEM 1500mb
+% WALLTIME 00:10:00
+
 % TEST test_ft_timelockanalysis_new
 % ft_timelockanalysis_new ft_timelockanalysis ref_datasets
 
@@ -37,7 +40,7 @@ for k = 1:10
   
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   data    = rmfield(data,    'cfg');
-  assert(isequalwithequalnans(data, datanew));
+  assert(isequaln(data, datanew));
 end
 
 test_cfg_options;
@@ -425,7 +428,7 @@ tlock2 = ft_selectdata(tlock, 'rpt',37:72)
 
 cfg=[];
 cfg.method='analytic';
-   cfg.statistic='indepsamplesT' ;
+   cfg.statistic='ft_statfun_indepsamplesT' ;
 stat=ft_timelockstatistics(cfg,tlock1,tlock2);
 end
 

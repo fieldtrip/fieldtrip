@@ -10,7 +10,7 @@ function err = save_nifti(hdr,niftifile)
 % reshaped to 27307x1x6xnframes. This is for handling the 7th
 % order icosahedron used by FS group analysis.
 %
-% $Id: save_nifti.m,v 1.13 2011/03/02 00:04:13 nicks Exp $
+% $Id$
 
 %
 % save_nifti.m
@@ -19,7 +19,7 @@ function err = save_nifti(hdr,niftifile)
 % CVS Revision Info:
 %    $Author: nicks $
 %    $Date: 2011/03/02 00:04:13 $
-%    $Revision: 1.13 $
+%    $Revision$
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %

@@ -5,6 +5,7 @@
 #define __StringServer_h
 
 #include <string>
+#include <ctype.h>
 
 class StringRequestHandler {
 	public:

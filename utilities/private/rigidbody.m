@@ -11,11 +11,11 @@ function [H] = rigidbody(f)
 %   y-shift
 %   z-shift
 % followed by the
-%   pitch (rotation around x-axis)
-%   roll  (rotation around y-axis)
-%   yaw   (rotation around z-axis)
+%   pitch (rotation around x-axis, in degrees)
+%   roll  (rotation around y-axis, in degrees)
+%   yaw   (rotation around z-axis, in degrees)
 
-% Copyright (C) 2000-2005, Robert Oostenveld
+% Copyright (C) 2000-2013, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by

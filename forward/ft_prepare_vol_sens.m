@@ -1,4 +1,4 @@
-function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
+function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 
 % FT_PREPARE_VOL_SENS does some bookkeeping to ensure that the volume
 % conductor model and the sensor array are ready for subsequent forward
@@ -6,14 +6,14 @@ function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 % be done efficiently prior to the leadfield calculations.
 %
 % Use as
-%   [vol, sens] = ft_prepare_vol_sens(vol, sens, ...)
+%   [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, ...)
 % with input arguments
-%   sens   structure with gradiometer or electrode definition
-%   vol    structure with volume conductor definition
+%   headmodel  structure with volume conductor definition
+%   sens       structure with gradiometer or electrode definition
 %
-% The vol structure represents a volume conductor model, its contents
-% depend on the type of model. The sens structure represents a sensor
-% array, i.e. EEG electrodes or MEG gradiometers.
+% The headmodel structure represents a volume conductor model of the head,
+% its contents depend on the type of model. The sens structure represents a
+% sensor array, i.e. EEG electrodes or MEG gradiometers.
 %
 % Additional options should be specified in key-value pairs and can be
 %   'channel'    cell-array with strings (default = 'all')
@@ -38,7 +38,7 @@ function [vol, sens] = ft_prepare_vol_sens(vol, sens, varargin)
 % See also FT_COMPUTE_LEADFIELD, FT_READ_VOL, FT_READ_SENS, FT_TRANSFORM_VOL,
 % FT_TRANSFORM_SENS
 
-% Copyright (C) 2004-2012, Robert Oostenveld
+% Copyright (C) 2004-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -66,41 +66,47 @@ order   = ft_getopt(varargin, 'order', 10);             % order of expansion for
 % ensure that the sensor description is up-to-date (Aug 2011)
 sens = ft_datatype_sens(sens);
 
+% this is to support volumes saved in mat-files, particularly interpolated
+if ischar(headmodel)
+  vpath     = fileparts(headmodel);   % remember the path to the file
+  headmodel = ft_read_vol(headmodel); % replace the filename with the content of the file
+end
+
 % ensure that the volume conduction description is up-to-date (Jul 2012)
-vol = ft_datatype_headmodel(vol);
+headmodel = ft_datatype_headmodel(headmodel);
 
 % determine whether the input contains EEG or MEG sensors
 iseeg = ft_senstype(sens, 'eeg');
 ismeg = ft_senstype(sens, 'meg');
 
 % determine the skin compartment
-if ~isfield(vol, 'skin_surface')
-  if isfield(vol, 'bnd')
-    vol.skin_surface   = find_outermost_boundary(vol.bnd);
-  elseif isfield(vol, 'r') && length(vol.r)<=4
-    [dum, vol.skin_surface] = max(vol.r);
+if ~isfield(headmodel, 'skin_surface')
+  if isfield(headmodel, 'bnd')
+    headmodel.skin_surface   = find_outermost_boundary(headmodel.bnd);
+  elseif isfield(headmodel, 'r') && length(headmodel.r)<=4
+    [dum, headmodel.skin_surface] = max(headmodel.r);
   end
 end
 
 % determine the inner_skull_surface compartment
-if ~isfield(vol, 'inner_skull_surface')
-  if isfield(vol, 'bnd')
-    vol.inner_skull_surface  = find_innermost_boundary(vol.bnd);
-  elseif isfield(vol, 'r') && length(vol.r)<=4
-    [dum, vol.inner_skull_surface] = min(vol.r);
+if ~isfield(headmodel, 'inner_skull_surface')
+  if isfield(headmodel, 'bnd')
+    headmodel.inner_skull_surface  = find_innermost_boundary(headmodel.bnd);
+  elseif isfield(headmodel, 'r') && length(headmodel.r)<=4
+    [dum, headmodel.inner_skull_surface] = min(headmodel.r);
   end
 end
 
 % otherwise the voltype assignment to an empty struct below won't work
-if isempty(vol)
-  vol = [];
+if isempty(headmodel)
+  headmodel = [];
 end
 
 % this makes them easier to recognise
 sens.type = ft_senstype(sens);
-vol.type  = ft_voltype(vol);
+headmodel.type  = ft_voltype(headmodel);
 
-if isfield(vol, 'unit') && isfield(sens, 'unit') && ~strcmp(vol.unit, sens.unit)
+if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
   error('inconsistency in the units of the volume conductor and the sensor array');
 end
 
@@ -113,9 +119,6 @@ elseif ~ismeg && ~iseeg
   
 elseif ismeg
   
-  % keep a copy of the original sensor array, this is needed for the MEG localspheres model
-  sens_orig = sens;
-  
   % always ensure that there is a linear transfer matrix for combining the coils into gradiometers
   if ~isfield(sens, 'tra');
     Nchans = length(sens.label);
@@ -126,25 +129,28 @@ elseif ismeg
     sens.tra = eye(Nchans, Ncoils);
   end
   
-  % select the desired channels from the gradiometer array
-  % order them according to the users specification
-  [selchan, selsens] = match_str(channel, sens.label);
+  if ~ft_voltype(headmodel, 'localspheres')
+    % select the desired channels from the gradiometer array
+    [selchan, selsens] = match_str(channel, sens.label);
+    % only keep the desired channels, order them according to the users specification
+    try, sens.chantype = sens.chantype(selsens,:); end
+    try, sens.chanunit = sens.chanunit(selsens,:); end
+    try, sens.chanpos  = sens.chanpos (selsens,:); end
+    try, sens.chanori  = sens.chanori (selsens,:); end
+    sens.label    = sens.label(selsens);
+    sens.tra      = sens.tra(selsens,:);
+  else
+    % for the localspheres model it is done further down
+  end
   
-  % first only modify the linear combination of coils into channels
-  try, sens.chantype = sens.chantype(selsens,:); end
-  try, sens.chanunit = sens.chanunit(selsens,:); end
-  sens.chanpos  = sens.chanpos(selsens,:);
-  sens.chanori  = sens.chanori(selsens,:);
-  sens.label    = sens.label(selsens);
-  sens.tra      = sens.tra(selsens,:);
-  % subsequently remove the coils that do not contribute to any channel output
+  % remove the coils that do not contribute to any channel output
   selcoil      = any(sens.tra~=0,1);
   sens.coilpos = sens.coilpos(selcoil,:);
   sens.coilori = sens.coilori(selcoil,:);
   sens.tra     = sens.tra(:,selcoil);
   
-  switch ft_voltype(vol)
-    case {'infinite' 'infinite_monopole'}
+  switch ft_voltype(headmodel)
+    case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
       % nothing to do
       
     case 'singlesphere'
@@ -160,7 +166,7 @@ elseif ismeg
       % in the forward model correspond with those in the data.
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       [selchan, selsens] = match_str(channel, sens.label);
-      vol.chansel = selsens;
+      headmodel.chansel = selsens;
       
     case 'localspheres'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -169,33 +175,22 @@ elseif ismeg
       % conduction model.
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      % use the original sensor array instead of the one with a subset of
-      % channels, because we need the complete mapping of coils to channels
-      sens = sens_orig;
-      
-      % remove the coils that do not contribute to any channel output
-      % since these do not have a corresponding sphere
-      selcoil      = find(sum(sens.tra,1)~=0);
-      sens.coilpos = sens.coilpos(selcoil,:);
-      sens.coilori = sens.coilori(selcoil,:);
-      sens.tra     = sens.tra(:,selcoil);
-      
       % the initial localspheres volume conductor has a local sphere per
       % channel, whereas it should have a local sphere for each coil
-      if size(vol.r,1)==size(sens.coilpos,1) && ~isfield(vol, 'label')
+      if size(headmodel.r,1)==size(sens.coilpos,1) && ~isfield(headmodel, 'label')
         % it appears that each coil already has a sphere, which suggests
         % that the volume conductor already has been prepared to match the
         % sensor array
         return
-      elseif size(vol.r,1)==size(sens.coilpos,1) && isfield(vol, 'label')
-        if ~isequal(vol.label(:), sens.label(:))
+      elseif size(headmodel.r,1)==size(sens.coilpos,1) && isfield(headmodel, 'label')
+        if ~isequal(headmodel.label(:), sens.label(:))
           % if only the order is different, it would be possible to reorder them
           error('the coils in the volume conduction model do not correspond to the sensor array');
         else
           % the coil-specific spheres in the volume conductor should not have a label
           % because the label is already specified for the coils in the
           % sensor array
-          vol = rmfield(vol, 'label');
+          headmodel = rmfield(headmodel, 'label');
         end
         return
       end
@@ -204,30 +199,34 @@ elseif ismeg
       % whereas the FieldTrip way of doing the forward computation is one-sphere-per-coil
       Nchans   = size(sens.tra,1);
       Ncoils   = size(sens.tra,2);
-      Nspheres = size(vol.label);
+      Nspheres = size(headmodel.label);
       
-      if isfield(vol, 'orig')
+      if isfield(headmodel, 'orig')
         % these are present in a CTF *.hdm file
-        singlesphere.o(1,1) = vol.orig.MEG_Sphere.ORIGIN_X;
-        singlesphere.o(1,2) = vol.orig.MEG_Sphere.ORIGIN_Y;
-        singlesphere.o(1,3) = vol.orig.MEG_Sphere.ORIGIN_Z;
-        singlesphere.r      = vol.orig.MEG_Sphere.RADIUS;
+        singlesphere.o(1,1) = headmodel.orig.MEG_Sphere.ORIGIN_X;
+        singlesphere.o(1,2) = headmodel.orig.MEG_Sphere.ORIGIN_Y;
+        singlesphere.o(1,3) = headmodel.orig.MEG_Sphere.ORIGIN_Z;
+        singlesphere.r      = headmodel.orig.MEG_Sphere.RADIUS;
         % ensure consistent units
-        singlesphere = ft_convert_units(singlesphere, vol.unit);
+        singlesphere = ft_convert_units(singlesphere, headmodel.unit);
         % determine the channels that do not have a corresponding sphere
         % and use the globally fitted single sphere for those
-        missing = setdiff(sens.label, vol.label);
+        missing = setdiff(sens.label, headmodel.label);
         if ~isempty(missing)
           warning('using the global fitted single sphere for %d channels that do not have a local sphere', length(missing));
         end
         for i=1:length(missing)
-          vol.label(end+1) = missing(i);
-          vol.r(end+1,:)   = singlesphere.r;
-          vol.o(end+1,:)   = singlesphere.o;
+          headmodel.label(end+1) = missing(i);
+          headmodel.r(end+1,:)   = singlesphere.r;
+          headmodel.o(end+1,:)   = singlesphere.o;
         end
       end
       
+      % make a new structure that only holds the local spheres, one per coil
       localspheres = [];
+      localspheres.type = headmodel.type;
+      localspheres.unit = headmodel.unit;
+      
       % for each coil in the MEG helmet, determine the corresponding channel and from that the corresponding local sphere
       for i=1:Ncoils
         coilindex = find(sens.tra(:,i)~=0); % to which channel does this coil belong
@@ -237,12 +236,12 @@ elseif ismeg
           [dum, coilindex] = max(abs(sens.tra(:,i)));
         end
         
-        coillabel = sens.label{coilindex};                    % what is the label of this channel
-        chanindex = strmatch(coillabel, vol.label, 'exact');  % what is the index of this channel in the list of local spheres
-        localspheres.r(i,:) = vol.r(chanindex);
-        localspheres.o(i,:) = vol.o(chanindex,:);
+        coillabel = sens.label{coilindex};               % what is the label of this channel
+        chanindex = find(strcmp(coillabel, headmodel.label));  % what is the index of this channel in the list of local spheres
+        localspheres.r(i,:) = headmodel.r(chanindex);
+        localspheres.o(i,:) = headmodel.o(chanindex,:);
       end
-      vol = localspheres;
+      headmodel = localspheres;
       
       % finally do the selection of channels and coils
       % order them according to the users specification
@@ -251,8 +250,8 @@ elseif ismeg
       % first only modify the linear combination of coils into channels
       try, sens.chantype = sens.chantype(selsens,:); end
       try, sens.chanunit = sens.chanunit(selsens,:); end
-      sens.chanpos = sens.chanpos(selsens,:);
-      sens.chanori = sens.chanori(selsens,:);
+      try, sens.chanpos  = sens.chanpos (selsens,:); end
+      try, sens.chanori  = sens.chanori (selsens,:); end
       sens.label   = sens.label(selsens);
       sens.tra     = sens.tra(selsens,:);
       % subsequently remove the coils that do not contribute to any sensor output
@@ -261,8 +260,8 @@ elseif ismeg
       sens.coilori = sens.coilori(selcoil,:);
       sens.tra     = sens.tra(:,selcoil);
       % make the same selection of coils in the localspheres model
-      vol.r = vol.r(selcoil);
-      vol.o = vol.o(selcoil,:);
+      headmodel.r = headmodel.r(selcoil);
+      headmodel.o = headmodel.o(selcoil,:);
       
     case 'singleshell'
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -272,21 +271,25 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
       % compute the surface normals for each vertex point
-      if ~isfield(vol.bnd, 'nrm')
+      if ~isfield(headmodel.bnd, 'nrm')
         fprintf('computing surface normals\n');
-        vol.bnd.nrm = normals(vol.bnd.pnt, vol.bnd.tri);
+        headmodel.bnd.nrm = normals(headmodel.bnd.pos, headmodel.bnd.tri);
       end
       
       % estimate center and radius
-      [center,radius] = fitsphere(vol.bnd.pnt);
+      [center,radius] = fitsphere(headmodel.bnd.pos);
       
-      % initialize the forward calculation (only if gradiometer coils are available)
-      if size(sens.coilpos,1)>0 && ~isfield(vol, 'forwpar')
-        vol.forwpar = meg_ini([vol.bnd.pnt vol.bnd.nrm], center', order, [sens.coilpos sens.coilori]);
+      % initialize the forward calculation (only if  coils are available)
+      if size(sens.coilpos,1)>0 && ~isfield(headmodel, 'forwpar')
+        s = ft_scalingfactor(headmodel.unit, 'cm');
+        headmodel.forwpar = meg_ini([s*headmodel.bnd.pos headmodel.bnd.nrm], s*center', order, [s*sens.coilpos sens.coilori]);
+        headmodel.forwpar.scale = s;
       end
       
     case 'openmeeg'
-      error('MEG not yet supported with openmeeg');
+      if isfield(headmodel,'mat') & ~isempty(headmodel.mat)
+        warning('MEG with openmeeg only supported with NEMO lab pipeline. Please omit the mat matrix from the headmodel structure.');
+      end
       
     case 'simbio'
       error('MEG not yet supported with simbio');
@@ -297,15 +300,21 @@ elseif ismeg
   
 elseif iseeg
   
+  % the electrodes are used, the channel positions are not relevant any more
+  % channel positinos need to be recomputed after projecting the electrodes on the skin
+  if isfield(sens, 'chanpos'); sens = rmfield(sens, 'chanpos'); end
+  
   % select the desired channels from the electrode array
   % order them according to the users specification
   [selchan, selsens] = match_str(channel, sens.label);
   Nchans = length(sens.label);
   
+  sens.label     = sens.label(selsens);
+  try, sens.chantype  = sens.chantype(selsens); end;
+  try, sens.chanunit  = sens.chanunit(selsens); end;
+  
   if isfield(sens, 'tra')
     % first only modify the linear combination of electrodes into channels
-    sens.chanpos = sens.chanpos(selsens,:);
-    sens.label   = sens.label(selsens);
     sens.tra     = sens.tra(selsens,:);
     % subsequently remove the electrodes that do not contribute to any channel output
     selelec      = any(sens.tra~=0,1);
@@ -313,13 +322,11 @@ elseif iseeg
     sens.tra     = sens.tra(:,selelec);
   else
     % the electrodes and channels are identical
-    sens.chanpos = sens.chanpos(selsens,:);
     sens.elecpos = sens.elecpos(selsens,:);
-    sens.label   = sens.label(selsens);
   end
   
-  switch ft_voltype(vol)
-    case {'infinite' 'infinite_monopole'}
+  switch ft_voltype(headmodel)
+    case {'infinite' 'infinite_monopole' 'infinite_currentdipole'}
       % nothing to do
       
     case {'halfspace', 'halfspace_monopole'}
@@ -329,24 +336,24 @@ elseif iseeg
       md = dist( (sens.elecpos-repmat(ref_el,[numelec 1]))' );
       % take the min distance as reference
       md = min(md(1,2:end));
-      pnt = sens.elecpos;
+      pos = sens.elecpos;
       % scan the electrodes and reposition the ones which are in the
       % wrong halfspace (projected on the plane)... if not too far away!
-      for i=1:size(pnt,1)
-        P = pnt(i,:);
-        is_in_empty = acos(dot(vol.ori,(P-vol.pnt)./norm(P-vol.pnt))) < pi/2;
+      for i=1:size(pos,1)
+        P = pos(i,:);
+        is_in_empty = acos(dot(headmodel.ori,(P-headmodel.pos)./norm(P-headmodel.pos))) < pi/2;
         if is_in_empty
-          dPplane = abs(dot(vol.ori, vol.pnt-P, 2));
+          dPplane = abs(dot(headmodel.ori, headmodel.pos-P, 2));
           if dPplane>md
             error('Some electrodes are too distant from the plane: consider repositioning them')
           else
             % project point on plane
-            Ppr = pointproj(P,[vol.pnt vol.ori]);
-            pnt(i,:) = Ppr;
+            Ppr = pointproj(P,[headmodel.pos headmodel.ori]);
+            pos(i,:) = Ppr;
           end
         end
       end
-      sens.elecpos = pnt;
+      sens.elecpos = pos;
       
     case {'slab_monopole'}
       % electrodes' all-to-all distances
@@ -355,54 +362,54 @@ elseif iseeg
       md  = dist( (sens.elecpos-repmat(ref_el,[numel 1]))' );
       % choose min distance between electrodes
       md  = min(md(1,2:end));
-      pnt = sens.elecpos;
+      pos = sens.elecpos;
       % looks for contacts outside the strip which are not too far away
       % and projects them on the nearest plane
-      for i=1:size(pnt,1)
-        P = pnt(i,:);
-        instrip1 = acos(dot(vol.ori1,(P-vol.pnt1)./norm(P-vol.pnt1))) > pi/2;
-        instrip2 = acos(dot(vol.ori2,(P-vol.pnt2)./norm(P-vol.pnt2))) > pi/2;
+      for i=1:size(pos,1)
+        P = pos(i,:);
+        instrip1 = acos(dot(headmodel.ori1,(P-headmodel.pos1)./norm(P-headmodel.pos1))) > pi/2;
+        instrip2 = acos(dot(headmodel.ori2,(P-headmodel.pos2)./norm(P-headmodel.pos2))) > pi/2;
         is_in_empty = ~(instrip1&instrip2);
         if is_in_empty
-          dPplane1 = abs(dot(vol.ori1, vol.pnt1-P, 2));
-          dPplane2 = abs(dot(vol.ori2, vol.pnt2-P, 2));
+          dPplane1 = abs(dot(headmodel.ori1, headmodel.pos1-P, 2));
+          dPplane2 = abs(dot(headmodel.ori2, headmodel.pos2-P, 2));
           if dPplane1>md && dPplane2>md
             error('Some electrodes are too distant from the planes: consider repositioning them')
           elseif dPplane2>dPplane1
             % project point on nearest plane
-            Ppr = pointproj(P,[vol.pnt1 vol.ori1]);
-            pnt(i,:) = Ppr;
+            Ppr = pointproj(P,[headmodel.pos1 headmodel.ori1]);
+            pos(i,:) = Ppr;
           else
             % project point on nearest plane
-            Ppr = pointproj(P,[vol.pnt2 vol.ori2]);
-            pnt(i,:) = Ppr;
+            Ppr = pointproj(P,[headmodel.pos2 headmodel.ori2]);
+            pos(i,:) = Ppr;
           end
         end
       end
-      sens.elecpos = pnt;
+      sens.elecpos = pos;
       
     case {'singlesphere', 'concentricspheres'}
       % ensure that the electrodes ly on the skin surface
-      radius = max(vol.r);
-      pnt    = sens.elecpos;
-      if isfield(vol, 'o')
+      radius = max(headmodel.r);
+      pos    = sens.elecpos;
+      if isfield(headmodel, 'o')
         % shift the the centre of the sphere to the origin
-        pnt(:,1) = pnt(:,1) - vol.o(1);
-        pnt(:,2) = pnt(:,2) - vol.o(2);
-        pnt(:,3) = pnt(:,3) - vol.o(3);
+        pos(:,1) = pos(:,1) - headmodel.o(1);
+        pos(:,2) = pos(:,2) - headmodel.o(2);
+        pos(:,3) = pos(:,3) - headmodel.o(3);
       end
-      distance = sqrt(sum(pnt.^2,2)); % to the center of the sphere
+      distance = sqrt(sum(pos.^2,2)); % to the center of the sphere
       if any((abs(distance-radius)/radius)>0.005)
         warning('electrodes do not lie on skin surface -> using radial projection')
       end
-      pnt = pnt * radius ./ [distance distance distance];
-      if isfield(vol, 'o')
+      pos = pos * radius ./ [distance distance distance];
+      if isfield(headmodel, 'o')
         % shift the center back to the original location
-        pnt(:,1) = pnt(:,1) + vol.o(1);
-        pnt(:,2) = pnt(:,2) + vol.o(2);
-        pnt(:,3) = pnt(:,3) + vol.o(3);
+        pos(:,1) = pos(:,1) + headmodel.o(1);
+        pos(:,2) = pos(:,2) + headmodel.o(2);
+        pos(:,3) = pos(:,3) + headmodel.o(3);
       end
-      sens.elecpos = pnt;
+      sens.elecpos = pos;
       
     case {'bem', 'dipoli', 'asa', 'bemcp', 'openmeeg'}
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -410,38 +417,39 @@ elseif iseeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
       % project the electrodes on the skin and determine the bilinear interpolation matrix
-      if ~isfield(vol, 'tra')
+      % HACK - use NEMO lab pipeline if mat field is absent for openmeeg (i.e. don't do anything)
+      if ~isfield(headmodel, 'tra') && (isfield(headmodel, 'mat') && ~isempty(headmodel.mat))
         % determine boundary corresponding with skin and inner_skull_surface
-        if ~isfield(vol, 'skin_surface')
-          vol.skin_surface = find_outermost_boundary(vol.bnd);
-          fprintf('determining skin compartment (%d)\n', vol.skin_surface);
+        if ~isfield(headmodel, 'skin_surface')
+          headmodel.skin_surface = find_outermost_boundary(headmodel.bnd);
+          fprintf('determining skin compartment (%d)\n', headmodel.skin_surface);
         end
-        if ~isfield(vol, 'source')
-          vol.source = find_innermost_boundary(vol.bnd);
-          fprintf('determining source compartment (%d)\n', vol.source);
+        if ~isfield(headmodel, 'source')
+          headmodel.source = find_innermost_boundary(headmodel.bnd);
+          fprintf('determining source compartment (%d)\n', headmodel.source);
         end
-        if size(vol.mat,1)~=size(vol.mat,2) && size(vol.mat,1)==length(sens.elecpos)
+        if size(headmodel.mat,1)~=size(headmodel.mat,2) && size(headmodel.mat,1)==length(sens.elecpos)
           fprintf('electrode transfer and system matrix were already combined\n');
         else
           fprintf('projecting electrodes on skin surface\n');
           % compute linear interpolation from triangle vertices towards electrodes
-          [el, prj] = project_elec(sens.elecpos, vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri);
-          tra       = transfer_elec(vol.bnd(vol.skin_surface).pnt, vol.bnd(vol.skin_surface).tri, el);
+          [el, prj] = project_elec(sens.elecpos, headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri);
+          tra       = transfer_elec(headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri, el);
           
           % replace the original electrode positions by the projected positions
           sens.elecpos = prj;
           
-          if size(vol.mat,1)==size(vol.bnd(vol.skin_surface).pnt,1)
+          if size(headmodel.mat,1)==size(headmodel.bnd(headmodel.skin_surface).pos,1)
             % construct the transfer from only the skin vertices towards electrodes
             interp = tra;
           else
             % construct the transfer from all vertices (also inner_skull_surface/outer_skull_surface) towards electrodes
             interp = [];
-            for i=1:length(vol.bnd)
-              if i==vol.skin_surface
+            for i=1:length(headmodel.bnd)
+              if i==headmodel.skin_surface
                 interp = [interp, tra];
               else
-                interp = [interp, zeros(size(el,1), size(vol.bnd(i).pnt,1))];
+                interp = [interp, zeros(size(el,1), size(headmodel.bnd(i).pos,1))];
               end
             end
           end
@@ -450,28 +458,28 @@ elseif iseeg
           % this speeds up the subsequent repeated leadfield computations
           fprintf('combining electrode transfer and system matrix\n');
           
-          if strcmp(ft_voltype(vol), 'openmeeg')
+          if strcmp(ft_voltype(headmodel), 'openmeeg')
             % check that the external toolbox is present
             ft_hastoolbox('openmeeg', 1);
+            nb_points_external_surface = size(headmodel.bnd(headmodel.skin_surface).pos,1);
+            headmodel.mat = headmodel.mat((end-nb_points_external_surface+1):end,:);
+            headmodel.mat = interp(:,1:nb_points_external_surface) * headmodel.mat;
             
-            nb_points_external_surface = size(vol.bnd(vol.skin_surface).pnt,1);
-            vol.mat = vol.mat((end-nb_points_external_surface+1):end,:);
-            vol.mat = interp(:,1:nb_points_external_surface) * vol.mat;
           else
             % convert to sparse matrix to speed up the subsequent multiplication
             interp  = sparse(interp);
-            vol.mat = interp * vol.mat;
+            headmodel.mat = interp * headmodel.mat;
             % ensure that the model potential will be average referenced
-            avg = mean(vol.mat, 1);
-            vol.mat = vol.mat - repmat(avg, size(vol.mat,1), 1);
+            avg = mean(headmodel.mat, 1);
+            headmodel.mat = headmodel.mat - repmat(avg, size(headmodel.mat,1), 1);
           end
         end
       end
       
     case 'fns'
-      if isfield(vol,'bnd')
-        [el, prj] = project_elec(sens.elecpos, vol.bnd.pnt, vol.bnd.tri);
-        sens.tra = transfer_elec(vol.bnd.pnt, vol.bnd.tri, el);
+      if isfield(headmodel,'bnd')
+        [el, prj] = project_elec(sens.elecpos, headmodel.bnd.pos, headmodel.bnd.tri);
+        sens.tra = transfer_elec(headmodel.bnd.pos, headmodel.bnd.tri, el);
         % replace the original electrode positions by the projected positions
         sens.elecpos = prj;
       end
@@ -481,53 +489,45 @@ elseif iseeg
       ft_hastoolbox('simbio', 1);
       
       % extract the outer surface
-      bnd = mesh2edge(vol);
+      bnd = mesh2edge(headmodel);
       for j=1:length(sens.label)
-        d = bsxfun(@minus, bnd.pnt, sens.elecpos(j,:));
+        d = bsxfun(@minus, bnd.pos, sens.elecpos(j,:));
         [d, i] = min(sum(d.^2, 2));
         % replace the position of each electrode by the closest vertex
-        sens.elecpos(j,:) = bnd.pnt(i,:);
+        sens.elecpos(j,:) = bnd.pos(i,:);
       end
       
-      if isfield(sens, 'chanpos')
-        % this is invalid after the projection to the surface
-        sens = rmfield(sens, 'chanpos');
-      end
-      
-      vol.transfer = sb_transfer(vol,sens);
+      headmodel.transfer = sb_transfer(headmodel,sens);
       
     case 'interpolate'
-      
-      if ~isfield(sens, 'tra') && isequal(sens.chanpos, sens.elecpos)
-        sens.tra = eye(size(sens.chanpos,1));
+      % this is to allow moving leadfield files
+      if ~exist(headmodel.filename{1}, 'file')
+        for i = 1:length(headmodel.filename)
+          [p, f, x] = fileparts(headmodel.filename{i});
+          headmodel.filename{i} = fullfile(vpath, [f x]);
+        end
       end
       
-      if ~isfield(vol.sens, 'tra') && isequal(vol.sens.chanpos, vol.sens.elecpos)
-        vol.sens.tra = eye(size(vol.sens.chanpos,1));
-      end
-      
-      % the channel positions can be nan, for example for a bipolar montage
-      match = isequal(sens.label, vol.sens.label)    & ...
-        isequalwithequalnans(sens.tra, vol.sens.tra) & ...
-        isequal(sens.elecpos, vol.sens.elecpos)      & ...
-        isequalwithequalnans(sens.chanpos, vol.sens.chanpos);
-      
-      if match
+      matchlab = isequal(sens.label, headmodel.sens.label);
+      matchpos = isequal(sens.elecpos, headmodel.sens.elecpos);
+      matchtra = (~isfield(sens, 'tra') && ~isfield(headmodel.sens, 'tra')) || isequal(sens.tra, headmodel.sens.tra); 
+
+      if matchlab && matchpos && matchtra
         % the input sensor array matches precisely with the forward model
         % no further interpolation is needed
       else
         % interpolate the channels in the forward model to the desired channels
         filename = tempname;
-        vol  = ft_headmodel_interpolate(filename, sens, vol);
+        headmodel  = ft_headmodel_interpolate(filename, sens, headmodel);
         % update the sensor array with the one from the volume conductor
-        sens = vol.sens;
+        sens = headmodel.sens;
       end % if recomputing interpolation
       
       % for the leadfield computations the @nifti object is used to map the image data into memory
-      ft_hastoolbox('spm8', 1);
-      for i=1:length(vol.sens.label)
+      ft_hastoolbox('spm8up', 1);
+      for i=1:length(headmodel.sens.label)
         % map each of the leadfield files into memory
-        vol.chan{i} = nifti(vol.filename{i});
+        headmodel.chan{i} = nifti(headmodel.filename{i});
       end
       
     otherwise
@@ -541,6 +541,12 @@ elseif iseeg
   %   sens.tra = eye(length(sens.label));
   % end
   
+  % update the channel positions as the electrodes were projected to the skin surface
+  [pos, ori, lab] = channelposition(sens);
+  [selsens, selpos] = match_str(sens.label, lab);
+  sens.chanpos = nan(length(sens.label),3);
+  sens.chanpos(selsens,:) = pos(selpos,:);
+
 end % if iseeg or ismeg
 
 if isfield(sens, 'tra')
@@ -554,7 +560,6 @@ if isfield(sens, 'tra')
     sens.tra = sparse(sens.tra);
   end
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -574,7 +579,6 @@ dp = plane(1:3) - line(:, 1:3);
 t = dot(ori(~par,:), dp(~par,:), 2)./dot(ori(~par,:), line(~par,4:6), 2);
 % compute coord of intersection point
 Ppr(~par, :) = line(~par,1:3) + repmat(t,1,3).*line(~par,4:6);
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function serves as a replacement for the dist function in the Neural

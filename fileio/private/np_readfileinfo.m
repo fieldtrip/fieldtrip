@@ -102,11 +102,11 @@ np_info=struct('filename','','pathname','','name','','firstname','','birthday','
 if strcmp(pa,''),
     pa=pwd;
 end
-MaskEEGFileNames=[pa '\' fn(1:14) '*.EEG'];
+MaskEEGFileNames=[pa filesep fn(1:14) '*.EEG'];
 d=dir(MaskEEGFileNames);
 e=cell(length(d),1);
 for i=1:length(d)
-    e{i}=[pa '\' d(i).name];
+    e{i}=[pa filesep d(i).name];
 end
 filenames=sort(e);
 

@@ -4,6 +4,9 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % second-order derivative (the surface Laplacian) of the EEG potential
 % distribution
 %
+% The relation between the surface Laplacian and the SCD is explained 
+% in more detail on http://tinyurl.com/ptovowl.
+%
 % Use as
 %   [data] = ft_scalpcurrentdensity(cfg, data)
 % or
@@ -21,9 +24,19 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   cfg.elec         = structure with electrode definition
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %
+% The finite method require the following
+%   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
+%
 % The spline and finite method require the following
 %   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
-% 
+%   cfg.lambda       = regularization parameter (default = 1e-05)
+%   cfg.order        = order of the splines (default = 4)
+%   cfg.degree       = degree of legendre polynomials (default for 
+%                       <=32 electrodes = 9, 
+%                       <=64 electrodes = 14,
+%                       <=128 electrodes = 20,
+%                       else            = 32
+%
 % The hjorth method requires the following
 %   cfg.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 %
@@ -32,8 +45,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % the SCD values are not scaled correctly. The spatial distribution still
 % will be correct.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following options:
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -88,37 +100,63 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble provenance
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
+
+% the abort variable is set to true or false in ft_preamble_init
+if abort
+  return
+end
 
 % set the defaults
-if ~isfield(cfg, 'method'),        cfg.method = 'spline';    end
-if ~isfield(cfg, 'conductivity'),  cfg.conductivity = 0.33;  end    % in S/m
-if ~isfield(cfg, 'trials'),        cfg.trials = 'all';       end
+cfg.method       = ft_getopt(cfg, 'method',       'spline');
+cfg.conductivity = ft_getopt(cfg, 'conductivity', 0.33); % in S/m
+cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
 
-if strcmp(cfg.method, 'hjorth')
-  cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
-else
-  cfg = ft_checkconfig(cfg); % perform a simple consistency check
+switch cfg.method
+  case 'hjorth'
+    cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
+  case 'spline'
+    cfg.lambda  = ft_getopt(cfg, 'lambda', 1e-5); 
+    cfg.order   = ft_getopt(cfg, 'order', 4); 
+    cfg.degree  = ft_getopt(cfg, 'degree', []); 
+    
+    if isempty(cfg.degree) % determines degree of Legendre polynomials bases on number of electrodes
+      nchan = numel(data.label);
+      if nchan<=32
+        cfg.degree = 9;
+      elseif nchan<=64
+        cfg.degree = 14;
+      elseif nchan<=128
+        cfg.degree = 20;
+      else
+        cfg.degree = 32;
+      end
+    end;
+  otherwise
+    cfg = ft_checkconfig(cfg); % perform a simple consistency check
 end
 
 % store original datatype
 dtype = ft_datatype(data);
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'ismeg', 'no');
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'iseeg','yes','ismeg',[]); 
 
 % select trials of interest
-if ~strcmp(cfg.trials, 'all')
-  fprintf('selecting %d trials\n', length(cfg.trials));
-  data = ft_selectdata(data, 'rpt', cfg.trials);
-end
+tmpcfg = keepfields(cfg, 'trials');
+data   = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % get the electrode positions
-elec = ft_fetch_sens(cfg, data);
+tmpcfg = cfg;
+tmpcfg.senstype = 'EEG';
+
+elec = ft_fetch_sens(tmpcfg, data);
 
 % remove all junk fields from the electrode array
 tmp  = elec;
@@ -150,7 +188,7 @@ if strcmp(cfg.method, 'spline')
     % are interested here
     
     ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
-    [V2, L2, L1] = splint(elec.chanpos, data.trial{trlop}, [0 0 1]);
+    [V2, L2, L1] = splint(elec.chanpos, data.trial{trlop}, [0 0 1], cfg.order, cfg.degree, cfg.lambda);
     scd.trial{trlop} = L1;
   end
   
@@ -236,11 +274,11 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
 
 % rename the output variable to accomodate the savevar postamble
 data = scd;
 
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

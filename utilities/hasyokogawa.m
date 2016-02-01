@@ -5,7 +5,7 @@ function [version] = hasyokogawa(desired)
 % installed. Only the newest version of the toolbox is accepted.
 %
 % Use as
-%   [string]  = hasyokogawa;
+%   string  = hasyokogawa;
 % which returns a string describing the toolbox version, e.g. "12bitBeta3",
 % "16bitBeta3", or "16bitBeta6" for preliminary versions, or '1.4' for the
 % official Yokogawa MEG Reader Toolbox. An empty string is returned if the toolbox
@@ -42,16 +42,19 @@ function [version] = hasyokogawa(desired)
 ws = warning('off', 'MATLAB:pfileOlderThanMfile');
 
 % there are a few versions of the old preliminary implementation, such as
-% 12bitBeta3, 16bitBeta3 and 16bitBeta6. Medio 2011 a completely new
+% 12bitBeta3, 16bitBeta3 and 16bitBeta6. In 2011 a completely new
 % implementation was officially released, which contains functions with
 % other names. At the time of writing this, the new implementation is
 % version 1.4.
 
+if exist('getYkgwVersion')
+  res = getYkgwVersion();
+  version = res.version;
 
-if exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('GetMeg160ContinuousRawDataM')
+elseif exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('GetMeg160ContinuousRawDataM')
   % start with unknown, try to refine the version
   version = 'unknown';
-  
+
   try
     % Call some functions with input argument "Inf": If
     % the functions are present they return their revision number.
@@ -82,11 +85,7 @@ if exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('GetM
       end
     end
   end
-  
-elseif exist('getYkgwVersion')
-  res = getYkgwVersion();
-  version = res.version;
-  
+
 else
   % return empty if none of them is present
   version = [];
@@ -96,7 +95,7 @@ if nargin>0
   % return a true/false value
   if isempty(version)
     version = false;
-  else 
+  else
     version = strcmpi(version, desired);
   end
 end
