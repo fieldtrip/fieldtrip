@@ -124,13 +124,13 @@ if isnumeric(freqoiinput)
   % check whether padding is appropriate for the requested frequency resolution
   rayl = 1/endtime;
   if any(rem(freqoiinput,rayl)) % not always the case when they mismatch
-    warning_once('padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip');
+    ft_warning('padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip');
   end
   if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
-    warning_once('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
+    ft_warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
   else
     if any(abs(freqoiinput-freqoi) >= eps*1e6)
-      warning_once('output frequencies are different from input frequencies');
+      ft_warning('output frequencies are different from input frequencies');
     end
   end
 end
@@ -156,7 +156,7 @@ else
         if isempty(tap)
           error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/ndatsample);
         elseif size(tap,1) == 1
-          warning_once('using only one taper for specified smoothing');
+          ft_warning('using only one taper for specified smoothing');
         end
       elseif numel(tapsmofrq)>1
         tap = cell(1,nfreqoi);

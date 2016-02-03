@@ -6,30 +6,29 @@ function test_bug1925
 % TEST test_bug1925
 % TEST surface_nesting ft_headmodel_bemcp
 
-p = which('ft_headmodel_bemcp');
-p = fileparts(p);
-cd(fullfile(p, 'private')); % this is where the surface_nesting function is located
+[ftver, ftpath] = ft_version;
+cd(fullfile(ftpath, 'forward/private')); % this is where the surface_nesting function is located
 
-[pnt, tri] = icosahedron162;
+[pos, tri] = icosahedron162;
 
 bnd10.id  = 10;
-bnd10.pnt = pnt*10;
+bnd10.pos = pos*10;
 bnd10.tri = tri;
 
 bnd20.id  = 20;
-bnd20.pnt = pnt*20;
+bnd20.pos = pos*20;
 bnd20.tri = tri;
 
 bnd30.id  = 30;
-bnd30.pnt = pnt*30;
+bnd30.pos = pos*30;
 bnd30.tri = tri;
 
 bnd40.id  = 40;
-bnd40.pnt = pnt*40;
+bnd40.pos = pos*40;
 bnd40.tri = tri;
 
 bnd50.id  = 50;
-bnd50.pnt = pnt*50;
+bnd50.pos = pos*50;
 bnd50.tri = tri;
 
 bnd    = bnd10;

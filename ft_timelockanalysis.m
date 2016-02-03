@@ -92,10 +92,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble loadvar    data
+ft_preamble debug
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
-ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -329,9 +329,9 @@ if strcmp(cfg.covariance, 'yes')
     end
   else
     if strcmp(cfg.removemean, 'yes')
-      covsig = squeeze(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
+      covsig = shiftdim(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
     else
-      covsig = squeeze(nansum(covsig, 1)) / sum(numcovsigsamples);
+      covsig = shiftdim(nansum(covsig, 1)) / sum(numcovsigsamples);
     end
   end
 end
@@ -357,12 +357,7 @@ if strcmp(cfg.covariance, 'yes')
 end
 
 % some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'};
-for i=1:length(copyfield)
-  if isfield(data, copyfield{i})
-    timelock.(copyfield{i}) = data.(copyfield{i});
-  end
-end
+timelock = copyfields(data, timelock, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
   % copy the trialinfo into the output, but not the sampleinfo
@@ -370,9 +365,9 @@ if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance timelock
 ft_postamble history    timelock
 ft_postamble savevar    timelock
-ft_postamble debug

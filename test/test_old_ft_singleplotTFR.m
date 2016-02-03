@@ -9,8 +9,8 @@ function test_old_ft_singleplotTFR
 % different input datatypes. no other functionality is tested.
 % the script has been written in order to test a clean up of the code
 
-cd('/home/common/matlab/fieldtrip/data/test/preproc/eeg');
-load('preproc_10trials_neuroscan16');
+filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/'), 'preproc_neuroscan16');
+load(filename);
 
 %there's an unresolved issue with duplicate labels 'FREE'
 %FIXME
@@ -46,12 +46,12 @@ cfgc2.method = 'coh';
 coh   = ft_connectivityanalysis(cfgc2, freqx);
 
 %plot connectivity-data
-cfg.zparam = 'cohspctrm';
-cfg.cohrefchannel = 'Cz';
+cfg.parameter = 'cohspctrm';
+cfg.refchannel = 'Cz';
 figure;ft_singleplotTFR(cfg, coh);
 
 %create connectivity-data with sparse linear indexing
-cfgc2.channelcmb = [repmat({'Cz'},[numel(freqx.label)-1 1]) setdiff(freqx.label,'Cz')'];
+cfgc2.channelcmb = [repmat({'Cz'},[numel(freqx.label)-1 1]) setdiff(freqx.label,'Cz')];
 coh2  = ft_connectivityanalysis(cfgc2, freqx);
 
 %plot

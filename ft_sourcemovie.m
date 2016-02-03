@@ -19,10 +19,27 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 %
 % See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE
 
-% Undocumented options: 
+% Undocumented options:
 %   cfg.parcellation
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2015, Robert Oostenveld
+% Copyright (C) 2012-2014, Jorn Horschig
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
@@ -35,10 +52,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -49,8 +66,8 @@ end
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam',    'funparameter'});
-cfg = ft_checkconfig(cfg, 'renamed',	 {'parameter', 'funparameter'});
+cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam',    'cfg.funparameter'});
+cfg = ft_checkconfig(cfg, 'renamed',	 {'parameter', 'cfg.funparameter'});
 cfg = ft_checkconfig(cfg, 'renamed',	 {'mask',      'maskparameter'});
 
 % these are not needed any more, once the source structure has a proper dimord
@@ -58,54 +75,63 @@ cfg = ft_checkconfig(cfg, 'renamed',	 {'mask',      'maskparameter'});
 % cfg = ft_checkconfig(cfg, 'deprecated', 'yparam');
 
 % get the options
-xlim          = ft_getopt(cfg, 'xlim');
-ylim          = ft_getopt(cfg, 'ylim');
-zlim          = ft_getopt(cfg, 'zlim');
-olim          = ft_getopt(cfg, 'alim');                           % don't use alim as variable name
-xparam        = ft_getopt(cfg, 'xparam', 'time');                 % use time as default
-yparam        = ft_getopt(cfg, 'yparam');                         % default is dealt with below
-funparameter  = ft_getopt(cfg, 'funparameter', 'pow');            % use power as default
-maskparameter = ft_getopt(cfg, 'maskparameter');
-parcellation  = ft_getopt(cfg, 'parcellation');
+xlim              = ft_getopt(cfg, 'xlim');
+ylim              = ft_getopt(cfg, 'ylim');
+zlim              = ft_getopt(cfg, 'zlim');
+olim              = ft_getopt(cfg, 'alim');                           % don't use alim as variable name
+cfg.xparam        = ft_getopt(cfg, 'xparam');                         % default is dealt with below
+cfg.yparam        = ft_getopt(cfg, 'yparam');                         % default is dealt with below
+cfg.funparameter  = ft_getopt(cfg, 'funparameter');
+cfg.maskparameter = ft_getopt(cfg, 'maskparameter');
+cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
+cfg.title         = ft_getopt(cfg, 'title',         '');
+cfg.parcellation  = ft_getopt(cfg, 'parcellation');
 
-if isempty(yparam) && isfield(source, 'freq')
-  % the default is freq (if present)
-  yparam = 'freq';
+% select the functional and the mask parameter
+cfg.funparameter  = parameterselection(cfg.funparameter, source);
+cfg.maskparameter = parameterselection(cfg.maskparameter, source);
+% only a single parameter should be selected
+try, cfg.funparameter  = cfg.funparameter{1};  end
+try, cfg.maskparameter = cfg.maskparameter{1}; end
+
+dimord = getdimord(source, cfg.funparameter);
+dimtok = tokenize(dimord, '_');
+
+if isempty(cfg.xparam) && numel(dimtok)>1
+  cfg.xparam = dimtok{2};
 end
 
-% update the configuration
-cfg.funparameter  = funparameter;
-cfg.maskparameter = maskparameter;
-cfg.xparam        = xparam;
-cfg.yparam        = yparam;
+if isempty(cfg.xparam) && numel(dimtok)>2
+  cfg.yparam = dimtok{3};
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if nargin==2
-  fun = getsubfield(source, funparameter);
-elseif nargin>2 && isfield(source2, 'pos'), 
-  fun  = getsubfield(source, funparameter);
-  fun2 = getsubfield(source2, funparameter); 
+  fun = getsubfield(source, cfg.funparameter);
+elseif nargin>2 && isfield(source2, 'pos'),
+  fun  = getsubfield(source, cfg.funparameter);
+  fun2 = getsubfield(source2, cfg.funparameter);
 elseif nargin>2
   % assume the first data argument to be a parcellation, and the second a
   % parcellated structure
-  tmp = getsubfield(source2, funparameter);
+  tmp = getsubfield(source2, cfg.funparameter);
   siz = [size(tmp) 1];
   fun = zeros([size(source.pos, 1), siz(2:end)]);
-  parcels      = source.(parcellation);
-  parcelslabel = source.([parcellation,'label']);
+  parcels      = source.(cfg.parcellation);
+  parcelslabel = source.([cfg.parcellation,'label']);
   for k = 1:numel(source2.label)
-    sel = match_str(source.([parcellation,'label']), source2.label{k});
+    sel = match_str(source.([cfg.parcellation,'label']), source2.label{k});
     if ~isempty(sel)
-      sel = source.(parcellation)==sel;
+      sel = source.(cfg.parcellation)==sel;
       fun(sel,:,:) = repmat(tmp(k,:,:), [sum(sel) 1]);
     end
   end
-  source.(xparam) = source2.(xparam);
-  if ~isempty(yparam)
-    source.(yparam) = source2.(yparam);
+  source.(cfg.xparam) = source2.(cfg.xparam);
+  if ~isempty(cfg.yparam)
+    source.(cfg.yparam) = source2.(cfg.yparam);
   end
 end
 if size(source.pos)~=size(fun,1)
@@ -116,22 +142,24 @@ if ~isfield(source, 'tri')
   error('source.tri missing, this function requires a triangulated cortical sheet as source model');
 end
 
-if ~isempty(maskparameter) && ischar(maskparameter)
-  mask = double(getsubfield(source, maskparameter));
+if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
+  mask = double(getsubfield(source, cfg.maskparameter));
 else
   mask = 0.5*ones(size(fun));
 end
 
-xparam = source.(xparam);
+xparam = source.(cfg.xparam);
 if length(xparam)~=size(fun,2)
   error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.xparam);
 end
 
-if ~isempty(yparam)
-  yparam = source.(yparam);
+if ~isempty(cfg.yparam)
+  yparam = source.(cfg.yparam);
   if length(yparam)~=size(fun,3)
     error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.yparam);
   end
+else
+  yparam = [];
 end
 
 if isempty(xlim)
@@ -167,8 +195,8 @@ end
 xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
-if nargin>2 && isfield(source2, 'pos'), 
-  fun2 = fun2(:,xbeg:xend,ybeg:yend); 
+if nargin>2 && isfield(source2, 'pos'),
+  fun2 = fun2(:,xbeg:xend,ybeg:yend);
 end
 mask    = mask(:,xbeg:xend,ybeg:yend);
 clear xbeg xend ybeg yend
@@ -221,14 +249,18 @@ if nargin>2 && isfield(source2, 'pos')
   opt.dat1 = opt.dat;
 end
 
-% get a handle to a figure
-h  = gcf;
+%% start building the figure
+h = figure;
 set(h, 'color', [1 1 1]);
-set(h, 'toolbar', 'figure');
 set(h, 'visible', 'on');
+set(h, 'renderer', cfg.renderer);
+set(h, 'toolbar', 'figure');
 set(h, 'CloseRequestFcn', @cb_quitbutton);
 set(h, 'position', [100 200 700 500]);
-set(h, 'windowbuttondownfcn', @cb_getposition); 
+set(h, 'windowbuttondownfcn', @cb_getposition);
+if ~isempty(cfg.title)
+  title(cfg.title);
+end
 
 % get timer object
 t = timer;
@@ -239,7 +271,7 @@ cambutton    = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutto
 playbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'play',   'userdata', 'p');
 recordbutton = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'record', 'userdata', 'r');
 quitbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',   'userdata', 'q');
-if isfield(opt, 'dat2'), 
+if isfield(opt, 'dat2'),
   displaybutton = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'display: var1',   'userdata', 'f');
 end
 
@@ -338,7 +370,7 @@ else
   abc   = [opt.xparam([1 end]) opt.yparam([1 end])];
   vline = plot(opt.xparam(ceil(siz(2)/2)).*[1 1], abc(3:4));
   hline = plot(abc(1:2), opt.yparam(ceil(siz(3)/2)).*[1 1]);
-  %error('not yet implemented');  
+  %error('not yet implemented');
 end
 set(hy, 'tag', 'timecourse');
 
@@ -353,8 +385,8 @@ opt.tline = tline; % handle to the ERF
 if exist('hline', 'var')
   opt.hline = hline;
 end
-if nargin>2 && isfield(source2, 'pos'), 
-  opt.tline2 = tline2; 
+if nargin>2 && isfield(source2, 'pos'),
+  opt.tline2 = tline2;
 end
 opt.playbutton   = playbutton; % handle to the playbutton
 opt.recordbutton = recordbutton; % handle to the recordbutton
@@ -398,8 +430,8 @@ delete(h);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous source
+ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -439,7 +471,7 @@ if previous_valx~=valx || previous_valy~=valy
   % update data in mesh
   set(opt.hs, 'FaceVertexCData',     squeeze(opt.dat(:,valx,valy)));
   set(opt.hs, 'FaceVertexAlphaData', mask);
-
+  
   set(opt.vline, 'xdata', [1 1]*opt.xparam(valx));
   if isfield(opt, 'hline')
     set(opt.hline, 'ydata', [1 1]*opt.yparam(valy));
@@ -571,7 +603,7 @@ opt = getappdata(h, 'opt');
 if strcmp(get(get(h, 'currentaxes'), 'tag'), 'timecourse')
   % get the current point
   pos = get(opt.hy, 'currentpoint');
-  set(opt.sliderx, 'value', nearest(opt.xparam, pos(1,1))./numel(opt.xparam));  
+  set(opt.sliderx, 'value', nearest(opt.xparam, pos(1,1))./numel(opt.xparam));
   if isfield(opt, 'hline')
     set(opt.slidery, 'value', nearest(opt.yparam, pos(1,2))./numel(opt.yparam));
   end
@@ -606,11 +638,11 @@ else
 end
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
-    set(h, 'enable', 'off');
-    drawnow;
-    set(h, 'enable', 'on');
+  set(h, 'enable', 'off');
+  drawnow;
+  set(h, 'enable', 'on');
 end
-  
+
 h = getparent(h);
 opt = getappdata(h, 'opt');
 
@@ -626,7 +658,7 @@ switch key
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-  
+    
   case 'rightarrow'
     opt.cfg.zlim(2) = opt.cfg.zlim(2)-0.1*abs(opt.cfg.zlim(2));
     setappdata(h, 'opt', opt);
@@ -638,7 +670,7 @@ switch key
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-  
+    
   case 'uparrow' % enhance threshold
     opt.threshold = opt.threshold+0.01.*max(opt.dat(:));
     setappdata(h, 'opt', opt);
@@ -688,14 +720,14 @@ switch key
     end
   case 'f'
     if isfield(opt, 'dat2')
-    if isequalwithequalnans(opt.dat,opt.dat2),
-      opt.dat = opt.dat1;
-      set(opt.displaybutton, 'string', 'display: var1');
-    end
-    if isequalwithequalnans(opt.dat,opt.dat1),
-      opt.dat = opt.dat2;
-      set(opt.displaybutton, 'string', 'display: var2');
-    end
+      if isequalwithequalnans(opt.dat,opt.dat2),
+        opt.dat = opt.dat1;
+        set(opt.displaybutton, 'string', 'display: var1');
+      end
+      if isequalwithequalnans(opt.dat,opt.dat1),
+        opt.dat = opt.dat2;
+        set(opt.displaybutton, 'string', 'display: var2');
+      end
     end
     setappdata(h, 'opt', opt);
     cb_slider(h);

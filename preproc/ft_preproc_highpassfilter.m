@@ -233,6 +233,7 @@ switch type
       if rem(N,2)==1,   N=N+1;    end
     end
     [B, A] = fir1(N, max(Fhp)/Fn, 'high');
+    
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453
     warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')
@@ -254,6 +255,7 @@ switch type
     z(pos1:pos2) = 1;
     A = 1;
     B = firls(N,f,z); % requires MATLAB signal processing toolbox
+    
   case 'brickwall'
     ax = linspace(0, Fs, size(dat,2));  % frequency coefficients
     fl = nearest(ax, Fhp)-1;            % low cut-off frequency
@@ -262,6 +264,7 @@ switch type
     f(:,1:fl)   = a.*f(:,1:fl);         % perform low cut-off
     filt        = 2*real(ifft(f,[],2)); % iFFT
     return
+    
   otherwise
     error('unsupported filter type "%s"', type);
 end
@@ -278,14 +281,14 @@ catch
       rethrow(lasterror);
     case 'reduce'
       warning('backtrace', 'off')
-      warning_once(sprintf('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1));
+      ft_warning(sprintf('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1));
       warning('backtrace', 'on')
       filt = ft_preproc_highpassfilter(dat,Fs,Fhp,N-1,type,dir,instabilityfix);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
       warning('backtrace', 'off')
-      warning_once(sprintf('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2));
+      ft_warning(sprintf('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2));
       warning('backtrace', 'on')
       filt = ft_preproc_highpassfilter(dat ,Fs,Fhp,N1,type,dir,instabilityfix);
       filt = ft_preproc_highpassfilter(filt,Fs,Fhp,N2,type,dir,instabilityfix);

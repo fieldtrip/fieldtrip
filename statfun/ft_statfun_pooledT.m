@@ -1,4 +1,4 @@
-function [s] = ft_statfun_pooledT(cfg, dat, design)
+function [s, cfg] = ft_statfun_pooledT(cfg, dat, design)
 
 % FT_STATFUN_POOLEDT computes the pooled t-value over a number of
 % replications. The idea is that you compute a contrast between two

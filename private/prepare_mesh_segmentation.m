@@ -60,7 +60,7 @@ if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
   fn = fieldnames(mri);
   for i=1:numel(fn)
-    if numel(mri.(fn{i}))==prod(mri.dim)
+    if numel(mri.(fn{i}))==prod(mri.dim) && isfield(mri, [fn{i},'label'])
       segfield=fn{i};
     end
   end

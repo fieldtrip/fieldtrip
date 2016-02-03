@@ -1,4 +1,4 @@
-function [d] = det2x2(x)
+function d = det2x2(x)
 
 % DET2X2 computes determinant of matrix x, using explicit analytic definition
 % if size(x,1) < 4, otherwise use MATLAB det-function
@@ -39,4 +39,3 @@ else
   error('not implemented');
   % write for loop for the higher dimensions, using normal inv
 end
-

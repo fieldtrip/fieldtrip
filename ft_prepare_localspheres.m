@@ -1,4 +1,4 @@
-function [vol, cfg] = ft_prepare_localspheres(cfg, mri)
+function [headmodel, cfg] = ft_prepare_localspheres(cfg, mri)
 
 % FT_PREPARE_LOCALSPHERES is deprecated, please use FT_PREPARE_HEADMODEL and
 % FT_PREPARE_MESH
@@ -32,10 +32,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar mri
+ft_preamble provenance mri
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -101,19 +101,19 @@ end
 [single_o, single_r] = fitsphere(headshape.pnt);
 fprintf('single sphere,   %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', Nshape, single_o(1), single_o(2), single_o(3), single_r);
 
-vol = [];
+headmodel = [];
 
 if strcmp(cfg.singlesphere, 'yes')
   % only return a single sphere
-  vol.r = single_r;
-  vol.o = single_o;
+  headmodel.r = single_r;
+  headmodel.o = single_o;
   return;
 end
 
 % start with an empty structure that will hold the results
-vol.r = zeros(Nchan,1);    % radius of every sphere
-vol.o = zeros(Nchan,3);    % origin of every sphere
-vol.label = cell(Nchan,1); % corresponding gradiometer channel label for every sphere
+headmodel.r = zeros(Nchan,1);    % radius of every sphere
+headmodel.o = zeros(Nchan,3);    % origin of every sphere
+headmodel.label = cell(Nchan,1); % corresponding gradiometer channel label for every sphere
 
 for chan=1:Nchan
   coilsel = find(grad.tra(chan,:)~=0);
@@ -174,22 +174,20 @@ for chan=1:Nchan
   end
   
   % add this sphere to the volume conductor
-  vol.o(chan,:)   = o;
-  vol.r(chan)     = r;
-  vol.label{chan} = grad.label{chan};
+  headmodel.o(chan,:)   = o;
+  headmodel.r(chan)     = r;
+  headmodel.label{chan} = grad.label{chan};
 end % for all channels
 
-vol.type = 'localspheres';
+headmodel.type = 'localspheres';
 
 % ensure that the geometrical units are specified
-vol = ft_convert_units(vol);
+headmodel = ft_convert_units(headmodel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-if hasmri
-  ft_postamble previous mri
-end
-ft_postamble history vol
+ft_postamble previous mri
+ft_postamble provenance headmodel
+ft_postamble history    headmodel
 

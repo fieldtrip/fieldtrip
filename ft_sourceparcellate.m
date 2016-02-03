@@ -24,6 +24,7 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 %   'eig'       compute the largest eigenvector
 %   'min'       take the minimal value
 %   'max'       take the maximal value
+%   'maxabs'    take the signed maxabs value
 %
 % See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION
 
@@ -51,10 +52,10 @@ revision = '$Id$';
 
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -94,7 +95,7 @@ if ~isempty(transform)
 end
 
 % ensure it is a source, not a volume
-source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');
+source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
 
 % ensure that the source and the parcellation are anatomically consistent
 if ~isequalwithequalnans(source.pos, parcellation.pos)
@@ -256,6 +257,8 @@ for i=1:numel(fn)
             tmp(j1,j2,:) = arraymax2(dat(seg==j1,seg==j2,:));
           case 'eig'
             tmp(j1,j2,:) = arrayeig2(dat(seg==j1,seg==j2,:));
+          case 'maxabs'
+            tmp(j1,j2,:) = arraymaxabs2(dat(seg==j1,seg==j2,:));
           otherwise
             error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -292,6 +295,8 @@ for i=1:numel(fn)
           tmp(j,:) = arraymin1(dat(seg==j,:));
         case 'max'
           tmp(j,:) = arraymax1(dat(seg==j,:));
+        case 'maxabs'
+          tmp(j,:) = arraymaxabs1(dat(seg==j,:));
         case 'eig'
           tmp(j,:) = arrayeig1(dat(seg==j,:));
         otherwise
@@ -336,10 +341,10 @@ end
 
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous source parcellation
-ft_postamble history parcel
-ft_postamble savevar parcel
+ft_postamble previous   source parcellation
+ft_postamble provenance parcel
+ft_postamble history    parcel
+ft_postamble savevar    parcel
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to complute something over the first dimension
@@ -379,6 +384,11 @@ x = reshape(x, siz(1), prod(siz(2:end)));
 y = s(1,1) * v(:,1);            % retain the largest eigenvector with appropriate scaling
 y = reshape(y, [siz(2:end) 1]); % size should have at least two elements
 
+function y = arraymaxabs1(x)
+% take the value that is at max(abs(x))
+[dum,ix] = max(abs(x), [], 1);
+y        = x(ix);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -406,6 +416,13 @@ function y = arrayeig2(x)
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
 y = arrayeig1(x);
+
+function y = arraymaxabs2(x)
+% take the value that is at max(abs(x))
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+[dum,ix] = max(abs(x), [], 1);
+y        = x(ix);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS for doing something over the first dimension of a cell array

@@ -1,4 +1,4 @@
-function [vol, cfg] = ft_prepare_singleshell(cfg, mri)
+function [headmodel, cfg] = ft_prepare_singleshell(cfg, mri)
 
 % FT_PREPARE_SINGLESHELL is deprecated, please use FT_PREPARE_HEADMODEL and
 % FT_PREPARE_MESH
@@ -35,10 +35,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar mri
+ft_preamble provenance mri
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -58,22 +58,20 @@ if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];    end % approximate nu
 hasmri = exist('mri', 'var');
 
 if hasmri
-  vol.bnd = ft_prepare_mesh(cfg, mri);
+  headmodel.bnd = ft_prepare_mesh(cfg, mri);
 else
-  vol.bnd = ft_prepare_mesh(cfg);
+  headmodel.bnd = ft_prepare_mesh(cfg);
 end
 
-vol.type = 'singleshell';
+headmodel.type = 'singleshell';
 
 % ensure that the geometrical units are specified
-vol = ft_convert_units(vol);
+headmodel = ft_convert_units(headmodel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-if hasmri
-  ft_postamble previous mri
-end
-ft_postamble history vol
+ft_postamble previous   mri
+ft_postamble provenance headmodel
+ft_postamble history    headmodel
 

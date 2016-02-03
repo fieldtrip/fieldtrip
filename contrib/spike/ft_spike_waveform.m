@@ -27,15 +27,31 @@ function [wave,spike] = ft_spike_waveform(cfg,spike)
 %   cfg.spikechannel     = See FT_CHANNELSELECTION for details.
 %
 % Outputs:
-%  Wave.avg   = average waveform
-%  Wave.time  = time of waveform axis
-%  Wave.var   = variance of waveform
-%  Wave.dof   = number of spikes contributing to average
+%   Wave.avg   = average waveform
+%   Wave.time  = time of waveform axis
+%   Wave.var   = variance of waveform
+%   Wave.dof   = number of spikes contributing to average
 %
 % Spike structure if two outputs are desired: waveform is replaced by interpolated and
 % cleaned waveforms, removing also their associated time-stamps and data.
-%
+
 %  Copyright (C) 2012, Martin Vinck & Thilo Womelsdorf
+%
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
@@ -71,7 +87,7 @@ cfg = ft_checkopt(cfg, 'normalize','char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg, 'fsample', 'double');
 
-cfg = ft_checkconfig(cfg, 'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'align', 'rejectclippedspikes', 'rejectonpeak', 'interpolate', 'normalize', 'spikechannel', 'fsample'});
 
 spike = ft_checkdata(spike, 'datatype', 'spike', 'feedback', 'yes');
 

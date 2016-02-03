@@ -22,22 +22,23 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.nonlinear   = 'yes' or 'no', perform nonlinear search for optimal
 %                     dipole parameters (default = 'yes')
 %
-% If you start with a grid search, you should specify the grid locations at
-% which a test dipole will be placed. The positions of the dipoles can be
-% specified as a regular 3-D grid that is aligned with the axes of the head
-% coordinate system
+% If you start with a grid search, the complete grid with dipole
+% positions and optionally precomputed leadfields should be specified
+%   cfg.grid            = structure, see FT_PREPARE_SOURCEMODEL or FT_PREPARE_LEADFIELD
+% The positions of the dipoles can be specified as a regular 3-D
+% grid that is aligned with the axes of the head coordinate system
 %   cfg.grid.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.resolution = number (e.g. 1 cm) for automatic grid generation
-% Alternatively a complete grid with dipole positions and precomputed
-% leadfields can be specified
-%   cfg.grid            = structure, see FT_PREPARE_LEADFIELD
-% or the position of a few dipoles at locations of interest can be
-% specified, for example obtained from an anatomical or functional MRI
-%   cfg.grid.pos        = N*3 matrix with position of each source
 %   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
+% If the source model destribes a triangulated cortical sheet, it is described as
+%   cfg.grid.pos        = N*3 matrix with the vertex positions of the cortical sheet
+%   cfg.grid.tri        = M*3 matrix that describes the triangles connecting the vertices
+% Alternatively the position of a few dipoles at locations of interest can be
+% specified, for example obtained from an anatomical or functional MRI
+%   cfg.grid.pos        = N*3 matrix with position of each source
 %
 % If you do not start with a grid search, you have to give a starting location
 % for the nonlinear search
@@ -72,8 +73,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
 %
 % The volume conduction model of the head should be specified as
-%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % The EEG or MEG sensor positions can be present in the data or can be specified as
 %   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
@@ -128,10 +128,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -140,6 +140,9 @@ end
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'}, 'feedback', 'yes');
+
+cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
 % get the defaults
 cfg.channel         = ft_getopt(cfg, 'channel', 'all');
@@ -229,7 +232,7 @@ end
 
 % prepare the volume conduction model and the sensor array
 % this updates the configuration with the appropriate fields
-[vol, sens, cfg] = prepare_headmodel(cfg, data);
+[headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
 % set the default for reducing the rank of the leadfields
 if ft_senstype(sens, 'eeg')
@@ -316,22 +319,14 @@ if strcmp(cfg.gridsearch, 'yes')
   end
 
   % construct the dipole grid on which the gridsearch will be done
-  tmpcfg = [];
-  tmpcfg.vol  = vol;
+  tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+  tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
   else
     tmpcfg.grad = sens;
   end
   % copy all options that are potentially used in ft_prepare_sourcemodel
-  try, tmpcfg.grid        = cfg.grid;         end
-  try, tmpcfg.mri         = cfg.mri;          end
-  try, tmpcfg.headshape   = cfg.headshape;    end
-  try, tmpcfg.symmetry    = cfg.symmetry;     end
-  try, tmpcfg.smooth      = cfg.smooth;       end
-  try, tmpcfg.threshold   = cfg.threshold;    end
-  try, tmpcfg.spheremesh  = cfg.spheremesh;   end
-  try, tmpcfg.inwardshift = cfg.inwardshift;  end
   grid = ft_prepare_sourcemodel(tmpcfg);
 
   ngrid = size(grid.pos,1);
@@ -354,7 +349,7 @@ if strcmp(cfg.gridsearch, 'yes')
       % reuse the previously computed leadfield
       lf = grid.leadfield{thisindx};
     else
-      lf = ft_compute_leadfield(grid.pos(thisindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+      lf = ft_compute_leadfield(grid.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
     end
     % the model is V=lf*mom+noise, therefore mom=pinv(lf)*V estimates the
     % dipole moment this makes the model potential U=lf*pinv(lf)*V and the
@@ -459,7 +454,7 @@ if strcmp(cfg.nonlinear, 'yes')
       % perform the non-linear dipole fit for all latencies together
       % catch errors due to non-convergence
       try
-        dip = dipole_fit(dip, sens, vol, Vdata, optarg{:});
+        dip = dipole_fit(dip, sens, headmodel, Vdata, optarg{:});
         success = 1;
         if cfg.numdipoles==1
           fprintf('found minimum after non-linear optimization on [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
@@ -479,7 +474,7 @@ if strcmp(cfg.nonlinear, 'yes')
       for t=1:ntime
         % catch errors due to non-convergence
         try
-          dipout(t) = dipole_fit(dipin(t), sens, vol, Vdata(:,t), optarg{:});
+          dipout(t) = dipole_fit(dipin(t), sens, headmodel, Vdata(:,t), optarg{:});
           success(t) = 1;
           if cfg.numdipoles==1
             fprintf('found minimum after non-linear optimization for topography %d on [%g %g %g]\n', t, dipout(t).pos(1), dipout(t).pos(2), dipout(t).pos(3));
@@ -522,10 +517,15 @@ switch cfg.model
   case 'regional'
     if success
       % re-compute the leadfield in order to compute the model potential and dipole moment
-      lf = ft_compute_leadfield(dip.pos, sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-      % compute all details of the final dipole model
-      dip.mom = pinv(lf)*Vdata;
-      dip.pot = lf*dip.mom;
+      lf = ft_compute_leadfield(dip.pos, sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+      if isfield(dip, 'mom') && isfield(dip, 'ampl')
+        % the orientation and amplitude have already been estimated, this applies to the case of a fixed dipole orientation
+        dip.pot = (lf * dip.mom) * dip.ampl;
+      else
+        % compute all details of the final dipole model using linear estimation
+        dip.mom = pinv(lf)*Vdata;
+        dip.pot = lf*dip.mom;
+      end
       dip.rv  = rv(Vdata, dip.pot);
       Vmodel  = dip.pot;
     end
@@ -533,7 +533,7 @@ switch cfg.model
     for t=1:ntime
       if success(t)
         % re-compute the leadfield in order to compute the model potential and dipole moment
-        lf = ft_compute_leadfield(dip(t).pos, sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+        lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
         % compute all details of the final dipole model
         dip(t).mom = pinv(lf)*Vdata(:,t);
         dip(t).pot = lf*dip(t).mom;
@@ -550,7 +550,12 @@ switch cfg.model
     if isfreq
       % the matrix with the dipole moment is encrypted and cannot be interpreted straight away
       % reconstruct the frequency representation of the data at the source level
-      [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom);
+      if isfield(dip, 'mom') && isfield(dip, 'ampl')
+        % this applies to the case of a fixed dipole orientation
+        [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom * dip.ampl);
+      else
+        [dip.pow, dip.csd, dip.fourier] = timelock2freq(dip.mom);
+      end
     end
   case 'moving'
     if isfreq
@@ -569,6 +574,11 @@ source.dip    = dip;
 source.Vdata  = Vdata;  % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 source.Vmodel = Vmodel; % FIXME this should be renamed (if possible w.r.t. EEGLAB)
 
+% the units of the fitted source are the same as the units of the headmodel and the sensor array
+for i=1:length(source.dip)
+  source.dip(i).unit = headmodel.unit;
+end
+
 % assign a latency, frequeny or component axis to the output
 if iscomp
   source.component = cfg.component;
@@ -584,20 +594,10 @@ else
   source.dimord = 'chan_time';
 end
 
-% FIXME why would this be done?
-if isfield(data, 'grad')
-  % copy the gradiometer array along
-  source.grad = data.grad;
-end
-if isfield(data, 'elec')
-  % copy the electrode array along
-  source.elec = data.elec;
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history source
-ft_postamble savevar source
+ft_postamble previous   data
+ft_postamble provenance source
+ft_postamble history    source
+ft_postamble savevar    source

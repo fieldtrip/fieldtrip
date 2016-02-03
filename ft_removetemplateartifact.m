@@ -53,10 +53,10 @@ revision = '$Id$';
 
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data template
+ft_preamble provenance data template
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -67,7 +67,7 @@ end
 % ensure that the input data is valid for this function, this will also do
 % backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
-data     = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'hasoffset', 'yes');
+data     = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 template = ft_checkdata(template, 'datatype', 'timelock');
 
 % get the options
@@ -139,7 +139,7 @@ ft_progress('close');
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data template
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble previous   data template
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

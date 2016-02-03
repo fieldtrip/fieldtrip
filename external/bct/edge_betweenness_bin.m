@@ -1,4 +1,4 @@
-function [EBC BC]=edge_betweenness_bin(G)
+function [EBC,BC]=edge_betweenness_bin(G)
 %EDGE_BETWEENNESS_BIN    Edge betweenness centrality
 %
 %   EBC = edge_betweenness_bin(A);
@@ -13,12 +13,13 @@ function [EBC BC]=edge_betweenness_bin(G)
 %   Output:     EBC,    edge betweenness centrality matrix.
 %               BC,     node betweenness centrality vector.
 %
-%   Note: Betweenness centrality may be normalised to [0,1] via BC/[(N-1)(N-2)]
+%   Note: Betweenness centrality may be normalised to the range [0,1] as
+%   BC/[(N-1)(N-2)], where N is the number of nodes in the network.
 %
 %   Reference: Brandes (2001) J Math Sociol 25:163-177.
 %
 %
-%   Mika Rubinov, UNSW, 2007-2010
+%   Mika Rubinov, UNSW/U Cambridge, 2007-2012
 
 
 n=length(G);

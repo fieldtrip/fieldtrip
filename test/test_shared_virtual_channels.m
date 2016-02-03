@@ -6,7 +6,6 @@ function test_shared_virtual_channels
 % TEST test_shared_virtual_channels
 % TEST ft_timelockanalysis ft_sourceanalysis ft_channelselection ft_databrowser
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 

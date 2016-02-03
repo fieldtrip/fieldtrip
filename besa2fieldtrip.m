@@ -1,4 +1,4 @@
-function [data] = besa2fieldtrip(input)
+function data = besa2fieldtrip(input)
 
 % BESA2FIELDTRIP reads and converts various BESA datafiles into a FieldTrip
 % data structure, which subsequently can be used for statistical analysis
@@ -7,7 +7,7 @@ function [data] = besa2fieldtrip(input)
 % Use as
 %   [data] = besa2fieldtrip(filename)
 % where the filename should point to a BESA datafile (or data that
-% is exported by BESA). The output is a MATLAB structure that is
+% was exported by BESA). The output is a MATLAB structure that is
 % compatible with FieldTrip.
 %
 % The format of the output structure depends on the type of datafile:
@@ -171,7 +171,7 @@ elseif ischar(input)
     data = [];
     data.label = [];
     if isfield(tmp, 'ChannelLabels'),
-        data.label = fixlabels(tmp.ChannelLabels); 
+        data.label = fixlabels(tmp.ChannelLabels);
     end;
     data.avg     = tmp.Data;
     data.time    = tmp.Time / 1000; % convert to seconds

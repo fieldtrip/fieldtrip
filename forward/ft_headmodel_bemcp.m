@@ -1,4 +1,4 @@
-function vol = ft_headmodel_bemcp(geom, varargin)
+function headmodel = ft_headmodel_bemcp(mesh, varargin)
 
 % FT_HEADMODEL_BEMCP creates a volume conduction model of the head
 % using the boundary element method (BEM) for EEG. This function
@@ -10,7 +10,7 @@ function vol = ft_headmodel_bemcp(geom, varargin)
 % MATLAB code, hence the name "bemcp".
 %
 % Use as
-%   vol = ft_headmodel_bemcp(geom, ...)
+%   headmodel = ft_headmodel_bemcp(mesh, ...)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
@@ -39,70 +39,71 @@ ft_hastoolbox('bemcp', 1);
 % get the optional input arguments
 conductivity    = ft_getopt(varargin, 'conductivity');
 
-if isfield(geom,'bnd')
-  geom = geom.bnd;
+if isfield(mesh, 'bnd')
+  mesh = mesh.bnd;
 end
 
+% replace pnt with pos
+mesh = fixpos(mesh);
+
 % ensure that the vertices and triangles are double precision, otherwise the bemcp mex files will crash
-for i=1:length(geom)
-  geom(i).pnt = double(geom(i).pnt);
-  if isfield(geom(i),'tri')
-    geom(i).tri = double(geom(i).tri);
-  end
+for i=1:length(mesh)
+  mesh(i).pos = double(mesh(i).pos);
+  mesh(i).tri = double(mesh(i).tri);
 end
 
 % start with an empty volume conductor
-vol = [];
-vol.bnd = geom;
+headmodel = [];
+headmodel.bnd = mesh;
 
 % determine the number of compartments
-numboundaries = length(vol.bnd);
+numboundaries = length(headmodel.bnd);
 
 if numboundaries~=3
   error('this only works for three surfaces');
 end
 
 % determine the desired nesting of the compartments
-order = surface_nesting(vol.bnd, 'insidefirst');
+order = surface_nesting(headmodel.bnd, 'insidefirst');
 
 % rearrange boundaries and conductivities
-if numel(vol.bnd)>1 && ~isequal(order(:)', 1:numel(vol.bnd))
+if numel(headmodel.bnd)>1 && ~isequal(order(:)', 1:numel(headmodel.bnd))
   fprintf('reordering the boundaries to: ');
   fprintf('%d ', order);
   fprintf('\n');
   % update the order of the compartments
-  vol.bnd    = vol.bnd(order);
+  headmodel.bnd    = headmodel.bnd(order);
 end
 
 if isempty(conductivity)
   warning('No conductivity is declared, assuming standard values')
   % brain/skull/skin
   conductivity = [1 1/80 1] * 0.33;
-  vol.cond = conductivity;
+  headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
     error('a conductivity value should be specified for each compartment');
   end
-  vol.cond = conductivity(order);
+  headmodel.cond = conductivity(order);
 end
 
-vol.skin_surface   = numboundaries;
-vol.source = 1;  
+headmodel.skin_surface   = numboundaries;
+headmodel.source = 1;  
 
 % do some sanity checks
-if vol.skin_surface~=3
+if headmodel.skin_surface~=3
   error('the third surface should be the skin');
 end
-% if vol.source~=1
+% if headmodel.source~=1
 %   error('the first surface should be the inside of the skull');
 % end
 
 % Build Triangle 4th point
-vol = triangle4pt(vol);
+headmodel = triangle4pt(headmodel);
 
 % 2. BEM model estimation, only for the scalp surface
 
-defl =[ 0 0 1/size(vol.bnd(vol.skin_surface).pnt,1)];
+defl =[ 0 0 1/size(headmodel.bnd(headmodel.skin_surface).pos,1)];
 % ensure deflation for skin surface, i.e. average reference over skin
 
 % NOTE:
@@ -124,16 +125,16 @@ defl =[ 0 0 1/size(vol.bnd(vol.skin_surface).pnt,1)];
 % C11st/C22st/C33st are simply the matrix C11/C22/C33 minus the identity
 % matrix, i.e. C11st = C11-eye(N)
 
-weight = (vol.cond(1)-vol.cond(2))/((vol.cond(1)+vol.cond(2))*2*pi);
-C11st  = bem_Cii_lin(vol.bnd(1).tri,vol.bnd(1).pnt, weight,defl(1),vol.bnd(1).pnt4);
-weight = (vol.cond(1)-vol.cond(2))/((vol.cond(2)+vol.cond(3))*2*pi);
-C21    = bem_Cij_lin(vol.bnd(2).pnt,vol.bnd(1).pnt,vol.bnd(1).tri, weight,defl(1));
+weight = (headmodel.cond(1)-headmodel.cond(2))/((headmodel.cond(1)+headmodel.cond(2))*2*pi);
+C11st  = bem_Cii_lin(headmodel.bnd(1).tri,headmodel.bnd(1).pos, weight,defl(1),headmodel.bnd(1).pnt4);
+weight = (headmodel.cond(1)-headmodel.cond(2))/((headmodel.cond(2)+headmodel.cond(3))*2*pi);
+C21    = bem_Cij_lin(headmodel.bnd(2).pos,headmodel.bnd(1).pos,headmodel.bnd(1).tri, weight,defl(1));
 tmp1   = C21/C11st;
 
-weight = (vol.cond(2)-vol.cond(3))/((vol.cond(1)+vol.cond(2))*2*pi);
-C12    = bem_Cij_lin(vol.bnd(1).pnt,vol.bnd(2).pnt,vol.bnd(2).tri, weight,defl(2));
-weight = (vol.cond(2)-vol.cond(3))/((vol.cond(2)+vol.cond(3))*2*pi);
-C22st  = bem_Cii_lin(vol.bnd(2).tri,vol.bnd(2).pnt, weight,defl(2),vol.bnd(2).pnt4);
+weight = (headmodel.cond(2)-headmodel.cond(3))/((headmodel.cond(1)+headmodel.cond(2))*2*pi);
+C12    = bem_Cij_lin(headmodel.bnd(1).pos,headmodel.bnd(2).pos,headmodel.bnd(2).tri, weight,defl(2));
+weight = (headmodel.cond(2)-headmodel.cond(3))/((headmodel.cond(2)+headmodel.cond(3))*2*pi);
+C22st  = bem_Cii_lin(headmodel.bnd(2).tri,headmodel.bnd(2).pos, weight,defl(2),headmodel.bnd(2).pnt4);
 tmp2   = C12/C22st;
 
 % Try to spare some memory:
@@ -144,15 +145,15 @@ clear C12 C22st
 
 % Combine with the effect of surface 3 (scalp) on the first 2
 %------------------------------------------------------------
-weight = (vol.cond(1)-vol.cond(2))/(vol.cond(3)*2*pi);
-C31    = bem_Cij_lin(vol.bnd(3).pnt,vol.bnd(1).pnt,vol.bnd(1).tri, weight,defl(1));
+weight = (headmodel.cond(1)-headmodel.cond(2))/(headmodel.cond(3)*2*pi);
+C31    = bem_Cij_lin(headmodel.bnd(3).pos,headmodel.bnd(1).pos,headmodel.bnd(1).tri, weight,defl(1));
 %   tmp4   = C31/(- tmp2 * C21 + C11st );
 %   clear C31 C21 C11st
 tmp4 = C31/tmp10;
 clear C31 tmp10
 
-weight = (vol.cond(2)-vol.cond(3))/(vol.cond(3)*2*pi);
-C32    = bem_Cij_lin(vol.bnd(3).pnt,vol.bnd(2).pnt,vol.bnd(2).tri, weight,defl(2));
+weight = (headmodel.cond(2)-headmodel.cond(3))/(headmodel.cond(3)*2*pi);
+C32    = bem_Cij_lin(headmodel.bnd(3).pos,headmodel.bnd(2).pos,headmodel.bnd(2).tri, weight,defl(2));
 %   tmp3   = C32/(- tmp1 * C12 + C22st );
 %   clear  C12 C22st C32
 tmp3 = C32/tmp11;
@@ -166,23 +167,23 @@ clear tmp1 tmp2 tmp3 tmp4
 %--------------------------------------------------
 % As the gama1 intermediate matrix is built as the sum of 3 matrices, I can
 % spare some memory by building them one at a time, and summing directly
-weight = vol.cond(3)/((vol.cond(1)+vol.cond(2))*2*pi);
-Ci3    = bem_Cij_lin(vol.bnd(1).pnt,vol.bnd(3).pnt,vol.bnd(3).tri, weight,defl(3));
+weight = headmodel.cond(3)/((headmodel.cond(1)+headmodel.cond(2))*2*pi);
+Ci3    = bem_Cij_lin(headmodel.bnd(1).pos,headmodel.bnd(3).pos,headmodel.bnd(3).tri, weight,defl(3));
 gama1  = - tmp5*Ci3; % gama1 = - tmp5*C13;
 
-weight = vol.cond(3)/((vol.cond(2)+vol.cond(3))*2*pi);
-Ci3    = bem_Cij_lin(vol.bnd(2).pnt,vol.bnd(3).pnt,vol.bnd(3).tri, weight,defl(3));
+weight = headmodel.cond(3)/((headmodel.cond(2)+headmodel.cond(3))*2*pi);
+Ci3    = bem_Cij_lin(headmodel.bnd(2).pos,headmodel.bnd(3).pos,headmodel.bnd(3).tri, weight,defl(3));
 gama1  = gama1 - tmp6*Ci3; % gama1 = - tmp5*C13 - tmp6*C23;
 
 weight = 1/(2*pi);
-Ci3    = bem_Cii_lin(vol.bnd(3).tri,vol.bnd(3).pnt, weight,defl(3),vol.bnd(3).pnt4);
+Ci3    = bem_Cii_lin(headmodel.bnd(3).tri,headmodel.bnd(3).pos, weight,defl(3),headmodel.bnd(3).pnt4);
 gama1  = gama1 - Ci3; % gama1 = - tmp5*C13 - tmp6*C23 - C33st;
 clear Ci3
 
 % Build system matrix
 %--------------------
 i_gama1 = inv(gama1);
-vol.mat = [i_gama1*tmp5 i_gama1*tmp6 i_gama1];
+headmodel.mat = [i_gama1*tmp5 i_gama1*tmp6 i_gama1];
 
 % remember the type
-vol.type = 'bemcp';
+headmodel.type = 'bemcp';

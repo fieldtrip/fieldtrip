@@ -1,31 +1,34 @@
 function atlas = ft_read_atlas(filename, varargin)
 
-% FT_READ_ATLAS reads an template/individual segmentation or parcellation
-% from disk. The volumetric segmentation or the surface-based parcellation
-% can either represent a template atlas (eg. AAL or the Talairach Daemon),
-% it can represent an individualized atlas (e.g. obtained from FreeSurfer)
-% or it can represent an unlabeled parcellation obtained from the
-% individual's DTi or resting state fMRI.
+% FT_READ_ATLAS reads an template/individual segmentation or parcellation from disk.
+% The volumetric segmentation or the surface-based parcellation can either represent
+% a template atlas (eg. AAL or the Talairach Daemon), it can represent an
+% individualized atlas (e.g. obtained from FreeSurfer) or it can represent an
+% unlabeled parcellation obtained from the individual's DTi or resting state fMRI.
 %
 % Use as
 %   atlas = ft_read_atlas(filename, ...)
+% or
 %   atlas = ft_read_atlas({filenamelabels, filenamemesh}, ...)
 %
-% For individual surface based atlases two filenames are needed:
-%   Filenamelabels points to the file that contains information with respect to
-%     the parcels' labels.
-%   Filenamemesh points to the file that defines the mesh on which the
-%     parcellation is defined.
+% Additional options should be specified in key-value pairs and can include
+%   'format'      = string, see below
+%   'unit'        = string, e.g. 'mm' (default is the native units of the file)
+%
+% For individual surface-based atlases from FreeSurfer you should specify two
+% filenames as a cell-array: the first points to the file that contains information
+% with respect to the parcels' labels, the second points to the file that defines the
+% mesh on which the parcellation is defined.
 %
 % The output atlas will be represented as structure according to
 % FT_DATATYPE_SEGMENTATION or FT_DATATYPE_PARCELLATION.
 %
-% The "lines" and the "colorcube" colormaps are useful for plotting the
-% different patches.
+% The "lines" and the "colorcube" colormaps are useful for plotting the different
+% patches, for example using FT_PLOT_MESH.
 %
-% See also FT_READ_MRI, FT_READ_HEADSHAPE
+% See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_PREPARE_SOURCEMODEL, FT_SOURCEPARCELLATE, FT_PLOT_MESH
 
-% Copyright (C) 2005-2014, Robert Oostenveld, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2016, Robert Oostenveld, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -104,9 +107,10 @@ else
 end
 
 % get the optional input arguments
-atlasformat = ft_getopt(varargin, 'format', defaultformat);
+fileformat = ft_getopt(varargin, 'format', defaultformat);
+unit       = ft_getopt(varargin, 'unit');
 
-switch atlasformat
+switch fileformat
   case 'aal'
     labelfile = fullfile(p, [f '.txt']);
     fid = fopen(labelfile, 'rt');
@@ -1719,7 +1723,7 @@ switch atlasformat
     % ensure freesurfer on the path and get the info how to get from value to label
     ft_hastoolbox('freesurfer', 1);
     
-    if strcmp(atlasformat, 'freesurfer_a2009s')
+    if strcmp(fileformat, 'freesurfer_a2009s')
       lookuptable = 'Simple_surface_labels2009.txt';
       parcelfield = 'a2009s';
       
@@ -1879,7 +1883,7 @@ switch atlasformat
         223 220  60
         221  60  60];
       
-    elseif strcmp(atlasformat, 'freesurfer_aparc')
+    elseif strcmp(fileformat, 'freesurfer_aparc')
       lookuptable = 'colortable_desikan_killiany.txt';
       parcelfield = 'aparc';
       
@@ -1959,7 +1963,7 @@ switch atlasformat
         150 150 200
         255 192  32];
       
-    elseif strcmp(atlasformat, 'freesurfer_ba')
+    elseif strcmp(fileformat, 'freesurfer_ba')
       lookuptable = 'colortable_BA.txt';
       parcelfield = 'BA';
       
@@ -2018,12 +2022,12 @@ switch atlasformat
     switch ft_filetype(filenamemesh)
       %case {'caret_surf' 'gifti'}
       %  tmp = gifti(filenamemesh);
-      %  bnd.pnt = ft_warp_apply(tmp.mat, tmp.vertices);
+      %  bnd.pos = ft_warp_apply(tmp.mat, tmp.vertices);
       %  bnd.tri = tmp.faces;
       %  reindex = false;
       case 'freesurfer_triangle_binary'
-        [pnt, tri] = read_surf(filenamemesh);
-        bnd.pnt    = pnt;
+        [pos, tri] = read_surf(filenamemesh);
+        bnd.pos    = pos;
         bnd.tri    = tri;
         reindex    = true;
       otherwise
@@ -2031,7 +2035,7 @@ switch atlasformat
     end
     
     % check the number of vertices
-    if size(bnd.pnt,1) ~= numel(p)
+    if size(bnd.pos,1) ~= numel(p)
       error('the number of vertices in the mesh does not match the number of elements in the parcellation');
     end
     
@@ -2052,7 +2056,7 @@ switch atlasformat
       newp   = p;
     end
     atlas       = [];
-    atlas.pos   = bnd.pnt;
+    atlas.pos   = bnd.pos;
     atlas.tri   = bnd.tri;
     atlas.(parcelfield)            = newp;
     atlas.([parcelfield, 'label']) = label(2:end);
@@ -2062,8 +2066,13 @@ switch atlasformat
     ft_hastoolbox('gifti', 1);
     g = gifti(filename);
     
-    label = g.labels.name(:);
-    key   = g.labels.key(:);
+    if isfield(g, 'labels'),
+      label = g.labels.name(:);
+      key   = g.labels.key(:);
+    else
+      label = g.private.label.name(:);
+      key   = g.private.label.key(:);
+    end
     
     %label = g.private.label.name; % provides the name of the parcel
     %key   = g.private.label.key;  % maps value to name
@@ -2095,15 +2104,15 @@ switch atlasformat
         end
       end
       
-% there is some additional meta data that may be useful, but for now
-% stick to the rather uninformative parcellation1/2/3 etc.
-%
-% if strcmp(g.private.data{k}.metadata(1).name, 'Name')
-%   parcelfield = fixname(g.private.data{k}.metadata(1).value);
-% else
-%   error('could not determine parcellation name'); 
-% end
-        
+      % there is some additional meta data that may be useful, but for now
+      % stick to the rather uninformative parcellation1/2/3 etc.
+      %
+      % if strcmp(g.private.data{k}.metadata(1).name, 'Name')
+      %   parcelfield = fixname(g.private.data{k}.metadata(1).value);
+      % else
+      %   error('could not determine parcellation name');
+      % end
+      
       if size(g.cdata,2)>1
         parcelfield = ['parcellation' num2str(k)];
       else
@@ -2116,7 +2125,7 @@ switch atlasformat
     
     if exist('filenamemesh', 'var')
       tmp       = ft_read_headshape(filenamemesh);
-      atlas.pos = tmp.pnt;
+      atlas.pos = tmp.pos;
       atlas.tri = tmp.tri;
       atlas     = ft_convert_units(atlas);
     elseif ~isfield(atlas, 'coordsys')
@@ -2172,11 +2181,44 @@ switch atlasformat
     atlas.coordsys    = 'mni';
     
   case 'mat'
-    load(filename);
-    if ~exist('atlas', 'var')
+    tmp = load(filename);
+    if isfield(tmp, 'Vertices') && isfield(tmp, 'Atlas')
+      % this applies to BrainStorm *.mat files containing cortical meshes
+      atlas.pos = tmp.Vertices;
+      % copy some optional fields over with a new name
+      atlas = copyfields(tmp, atlas, {'Faces', 'Curvature', 'SulciMap'});
+      atlas = renamefields(atlas, {'Faces', 'Curvature', 'SulciMap'}, {'tri', 'curv', 'sulc'});
+      for i=1:numel(tmp.Atlas)
+        name   = fixname(tmp.Atlas(i).Name);
+        nlabel = numel(tmp.Atlas(i).Scouts);
+        label  = cell(1, nlabel);
+        index  = zeros(size(atlas.pos,1), 1);
+        for j=1:nlabel
+          index(tmp.Atlas(i).Scouts(j).Vertices) = j;
+          label{j} = tmp.Atlas(i).Scouts(j).Label;
+        end
+        atlas.( name         ) = index;
+        atlas.([name 'label']) = label;
+      end
+    elseif isfield(tmp, 'atlas')
+      % this applies to FieldTrip *.mat files
+      atlas = tmp.atlas;
+    else
       error('the mat-file %s does not contain a variable called ''atlas''',filename);
     end
     
   otherwise
-    error('unsupported atlas format %s', atlasformat);
+    error('unsupported format "%s"', fileformat);
 end % case
+
+% this will add the units to the head shape and optionally convert
+if ~isempty(unit)
+  shape = ft_convert_units(shape, unit);
+else
+  try
+    % ft_convert_units will fail for triangle-only gifties.
+    shape = ft_convert_units(shape);
+  catch
+  end
+end
+

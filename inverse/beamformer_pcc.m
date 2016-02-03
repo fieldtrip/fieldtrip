@@ -1,15 +1,15 @@
-function [dipout] = beamformer_pcc(dip, grad, vol, dat, Cf, varargin)
+function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, Cf, varargin)
 
 % BEAMFORMER_PCC implements an experimental beamformer based on partial
 % canonical correlations or coherences. Dipole locations that are outside
 % the head will return a NaN value.
 %
 % Use as
-%   [dipout] = beamformer_pcc(dipin, grad, vol, dat, cov, ...)
+%   [dipout] = beamformer_pcc(dipin, grad, headmodel, dat, cov, ...)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
-%   vol         is the volume conductor definition
+%   headmodel   is the volume conductor definition
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
@@ -99,7 +99,7 @@ keepcsd = 1;
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -131,13 +131,13 @@ if isfield(dip, 'filter')
 end
 
 if ~isempty(refdip)
-  rf = ft_compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+  rf = ft_compute_leadfield(refdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
 else
   rf = [];
 end
 
 if ~isempty(supdip)
-  sf = ft_compute_leadfield(supdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+  sf = ft_compute_leadfield(supdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
 else
   sf = [];
 end
@@ -205,10 +205,10 @@ for i=1:size(dip.pos,1)
       lf = dip.leadfield{i};
     elseif ~isfield(dip, 'leadfield') && isfield(dip, 'mom')
       % compute the leadfield for a fixed dipole orientation
-      lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     else
       % compute the leadfield
-      lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+      lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
     end
     
     % concatenate scandip, refdip and supdip
@@ -223,21 +223,30 @@ for i=1:size(dip.pos,1)
       % compute the leadfield for the optimal dipole orientation
       % subsequently the leadfield for only that dipole orientation will
       % be used for the final filter computation
-      if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
-        filt = dip.filter{i};
+      if isfield(dip, 'filter') && size(dip.filter{i},1)==1
+        % nothing to do
+        ft_warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
       else
-        filt = pinv(lfa' * invCmeg * lfa) * lfa' * invCmeg;
+        if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
+          filt = dip.filter{i};
+        else
+          filt = pinv(lfa' * invCmeg * lfa) * lfa' * invCmeg;
+        end
+        [u, s, v] = svd(real(filt * Cmeg * ctranspose(filt)));
+        maxpowori = u(:,1);
+        if numel(s)>1, 
+          eta = s(1,1)./s(2,2);
+        else
+          eta = nan;
+        end
+        lfa  = lfa * maxpowori;
+        dipout.ori{i} = maxpowori;
+        dipout.eta(i) = eta;
+        % update the number of dipole components
+        Ndip = size(lfa,2);
       end
-      [u, s, v] = svd(real(filt * Cmeg * ctranspose(filt)));
-      maxpowori = u(:,1);
-      eta = s(1,1)./s(2,2);
-      lfa  = lfa * maxpowori;
-      dipout.ori{i} = maxpowori;
-      dipout.eta{i} = eta;
-      % update the number of dipole components
-      Ndip = size(lfa,2);
     else
-      warning_once('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
+      ft_warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
     end
   end
   
@@ -270,7 +279,7 @@ for i=1:size(dip.pos,1)
   if keepfilter
     dipout.filter{i,1} = filt;
   end
-  if keepleadfield
+  if keepleadfield && needleadfield
     dipout.leadfield{i,1} = lf;
   end
   
@@ -324,7 +333,7 @@ if isfield(dipout, 'ori')
 end
 if isfield(dipout, 'eta')
   dipout.eta( originside) = dipout.eta;
-  dipout.eta(~originside) = {[]};
+  dipout.eta(~originside) = nan;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

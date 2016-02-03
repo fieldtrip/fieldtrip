@@ -172,10 +172,10 @@ void udpCallback(Fl_Widget *widget) {
 	} 
 }
 
-
 bool startMonitor() {
-	strncpy(directory, inpDirectory->value(), 256);
-	if (pdg.monitorDirectory(directory)) {
+    strncpy(directory, inpDirectory->value(), 256);
+    if (pdg.monitorDirectory(directory))
+    {
 		addTimedMsg("Starting to monitor");
 		butListen->label("Stop");
 		inpDirectory->textcolor(FL_DARK_GREEN);
@@ -183,8 +183,11 @@ bool startMonitor() {
 		inpDirectory->redraw();
 		return true;
 	}
-	addTimedMsg("Could not start monitoring");
-	return false;
+    else
+    {
+        addTimedMsg("Could not start monitoring");
+        return false;
+    }
 }
 
 void stopMonitor() {

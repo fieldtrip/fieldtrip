@@ -1,7 +1,8 @@
 function test_tutorial_tmseeg
 
 % MEM 16gb
-% WALLTIME 00:20:00
+% WALLTIME 01:20:00
+
 % TEST test_tutorial_tmseeg
 % TEST ft_math ft_interpolatenan
 
@@ -356,20 +357,21 @@ cfg.trials = find(data_tms_clean.trialinfo==3); % 'contract' trials
 contract_avg = ft_timelockanalysis(cfg, data_tms_clean);
 
 % GMFP calculation
-time = relax_avg.time; % Vector representing the time-points
-relax_gmfp = sqrt(sum(((relax_avg.avg-repmat(mean(relax_avg.avg,1),numel(relax_avg.label),1)).^2),1)/numel(relax_avg.label));
-contract_gmfp = sqrt(sum(((contract_avg.avg-repmat(mean(contract_avg.avg,1),numel(contract_avg.label),1)).^2),1)/numel(contract_avg.label));
+cfg = [];
+cfg.method = 'amplitude';
+relax_gmfp = ft_globalmeanfield(cfg, relax_avg); 
+contract_gmfp = ft_globalmeanfield(cfg, contract_avg); 
 
 %Plot GMFP
 figure;
-plot(time, relax_gmfp,'b');
+plot(relax_gmfp.time, relax_gmfp.avg,'b');
 hold on;
-plot(time, contract_gmfp,'r');
+plot(contract_gmfp.time, contract_gmfp.avg,'r');
 xlabel('time (s)');
 ylabel('GMFP (uv^2)');
 legend({'Relax' 'Contract'});
 xlim([-0.1 0.6]);
-ylim([0 3]);
+ylim([0 3]); 
 
 
 %% Analysis - 3. TFRs

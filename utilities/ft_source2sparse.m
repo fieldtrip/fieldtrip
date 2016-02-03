@@ -37,6 +37,8 @@ ft_defaults
 if ~isfield(source, 'inside')
   warning('no gridpoints defined inside the brain');
   source.inside = [];
+elseif all(islogical(source.inside))
+  source = fixinside(source, 'index'); % in contrast to the new convention, this function still relies on an indexed inside
 end
 
 if ~isfield(source, 'outside')

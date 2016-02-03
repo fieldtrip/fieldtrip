@@ -59,10 +59,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar mri
+ft_preamble provenance mri
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -77,7 +77,20 @@ else
 end
 
 % set the defaults
-cfg.resolution = ft_getopt(cfg, 'resolution', 1);
+% set voxel resolution according to the input units- see bug2906
+unitcheckmm = strcmp(mri.unit,'mm');
+if unitcheckmm==1;
+    cfg.resolution = ft_getopt(cfg, 'resolution', 1);
+end;
+unitcheckcm = strcmp(mri.unit,'cm');
+if unitcheckcm==1;
+    cfg.resolution = ft_getopt(cfg, 'resolution', .1);
+end;
+unitcheckm = strcmp(mri.unit,'m');
+if unitcheckm==1;
+    cfg.resolution = ft_getopt(cfg, 'resolution', .001);
+end;
+%cfg.resolution = ft_getopt(cfg, 'resolution', 1);
 cfg.downsample = ft_getopt(cfg, 'downsample', 1);
 cfg.xrange     = ft_getopt(cfg, 'xrange', []);
 cfg.yrange     = ft_getopt(cfg, 'yrange', []);
@@ -99,7 +112,7 @@ if isfield(mri, 'coordsys')
     otherwise
       xshift = 0;
       yshift = 0;
-      zshift = 15./cfg.resolution;
+      zshift = 0;
   end
 else % if no coordsys is present
   xshift = 0;
@@ -145,15 +158,13 @@ resliced           = [];
 resliced.dim       = [length(xgrid) length(ygrid) length(zgrid)];
 resliced.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
 resliced.anatomy   = zeros(resliced.dim, 'int8');
+resliced.unit      = mri.unit;
 
 clear xgrid ygrid zgrid
 
 % these are the same in the resliced as in the input anatomical MRI
 if isfield(mri, 'coordsys')
   resliced.coordsys = mri.coordsys;
-end
-if isfield(mri, 'unit')
-  resliced.unit = mri.unit;
 end
 
 fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
@@ -174,7 +185,7 @@ resliced.anatomy(~isfinite(resliced.anatomy)) = 0;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous mri
-ft_postamble history resliced
-ft_postamble savevar resliced
+ft_postamble previous   mri
+ft_postamble provenance resliced
+ft_postamble history    resliced
+ft_postamble savevar    resliced

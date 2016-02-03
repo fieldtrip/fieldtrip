@@ -163,13 +163,13 @@ elseif strcmp(method, 'homogenous') || strcmp(method, 'homogeneous')
       M(3,1) M(3,2)  0  M(3,3)
       ];
   end
-    
+
   %warped = M * [input'; ones(1, size(input, 1))];
   %warped = warped(1:3,:)';
-  
+
   % below achieves the same as lines 154-155
   warped = [input ones(size(input, 1),1)]*M(1:3,:)';
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % using external function that returns a homogeneous transformation matrix
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

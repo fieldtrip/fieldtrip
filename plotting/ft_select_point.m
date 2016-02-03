@@ -7,12 +7,11 @@ function [selected] = ft_select_point(pos, varargin)
 % Use as
 %   [selected] = ft_select_point(pos, ...)
 %
-%
 % Optional input arguments should come in key-value pairs and can include
 %   'multiple'   = true/false, make multiple selections, pressing "q" on the keyboard finalizes the selection (default = false)
 %   'nearest'    = true/false (default = true)
 %
-% Example use
+% Example
 %   pos = randn(10,2);
 %   figure
 %   plot(pos(:,1), pos(:,2), '.')

@@ -113,6 +113,10 @@ else
     siz = norm(idrange(obj.fid.pnt));
     unit = ft_estimate_units(siz);
     
+  elseif isfield(obj, 'fid') && isfield(obj.fid, 'pos') && ~isempty(obj.fid.pos)
+    siz = norm(idrange(obj.fid.pos));
+    unit = ft_estimate_units(siz);
+    
   elseif ft_voltype(obj, 'infinite')
     % this is an infinite medium volume conductor, which does not care about units
     unit = 'm';
@@ -133,6 +137,10 @@ else
     siz = norm(idrange(obj.bnd(1).pnt));
     unit = ft_estimate_units(siz);
     
+  elseif isfield(obj, 'bnd') && isstruct(obj.bnd) && isfield(obj.bnd(1), 'pos') && ~isempty(obj.bnd(1).pos)
+    siz = norm(idrange(obj.bnd(1).pos));
+    unit = ft_estimate_units(siz);
+
   elseif isfield(obj, 'nas') && isfield(obj, 'lpa') && isfield(obj, 'rpa')
     pnt = [obj.nas; obj.lpa; obj.rpa];
     siz = norm(idrange(pnt));
@@ -157,7 +165,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the scaling factor from the input units to the desired ones
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-scale = scalingfactor(unit, target);
+scale = ft_scalingfactor(unit, target);
 
 if istrue(feedback)
   % give some information about the conversion
@@ -171,9 +179,14 @@ end
 % volume conductor model
 if isfield(obj, 'r'), obj.r = scale * obj.r; end
 if isfield(obj, 'o'), obj.o = scale * obj.o; end
-if isfield(obj, 'bnd'),
+if isfield(obj, 'bnd') && isfield(obj.bnd, 'pnt')
   for i=1:length(obj.bnd)
     obj.bnd(i).pnt = scale * obj.bnd(i).pnt;
+  end
+end
+if isfield(obj, 'bnd') && isfield(obj.bnd, 'pos')
+  for i=1:length(obj.bnd)
+    obj.bnd(i).pos = scale * obj.bnd(i).pos;
   end
 end
 
@@ -184,6 +197,7 @@ if isfield(obj, 'prj'),  obj.prj  = scale * obj.prj;  end
 
 % gradiometer array, electrode array, head shape or dipole grid
 if isfield(obj, 'pnt'),        obj.pnt        = scale * obj.pnt;        end
+if isfield(obj, 'pos'),        obj.pos        = scale * obj.pos;        end
 if isfield(obj, 'chanpos'),    obj.chanpos    = scale * obj.chanpos;    end
 if isfield(obj, 'chanposorg'), obj.chanposorg = scale * obj.chanposorg; end
 if isfield(obj, 'coilpos'),    obj.coilpos    = scale * obj.coilpos;    end
@@ -210,10 +224,11 @@ end % if
 
 % fiducials
 if isfield(obj, 'fid') && isfield(obj.fid, 'pnt'), obj.fid.pnt = scale * obj.fid.pnt; end
+if isfield(obj, 'fid') && isfield(obj.fid, 'pos'), obj.fid.pos = scale * obj.fid.pos; end
 
 % dipole grid
-if isfield(obj, 'pos'),        obj.pos = scale * obj.pos; end
 if isfield(obj, 'resolution'), obj.resolution = scale * obj.resolution; end
+
 % x,y,zgrid can also be 'auto'
 if isfield(obj, 'xgrid') && ~ischar(obj.xgrid), obj.xgrid = scale * obj.xgrid; end
 if isfield(obj, 'ygrid') && ~ischar(obj.ygrid), obj.ygrid = scale * obj.ygrid; end
@@ -228,6 +243,12 @@ end
 if isfield(obj, 'transformorig'),
   H = diag([scale scale scale 1]);
   obj.transformorig = H * obj.transformorig;
+end
+
+% sourcemodel obtained through mne also has a orig-field with the high
+% number of vertices
+if isfield(obj, 'orig') && (isfield(obj.orig, 'pnt') || isfield(obj.orig, 'pos'))
+  obj.orig.pnt = scale * obj.orig.pnt; 
 end
 
 % remember the unit

@@ -56,7 +56,7 @@ if ~all(dfreq==dfreq(1))
 end
 
 if freq(1)~=0
-  warning_once('FieldTrip:connectivity:sfactorization_wilson2x2', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  ft_warning('FieldTrip:connectivity:sfactorization_wilson2x2', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   

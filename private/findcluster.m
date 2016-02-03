@@ -47,7 +47,7 @@ nfreq = size(onoff, 2);
 ntime = size(onoff, 3);
 
 % ensure that spm8 (preferred) or spm2 is available, needed for spm_bwlabeln
-hasspm = ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
+hasspm = ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
 if ~hasspm
   error('the spm_bwlabeln function from SPM is needed for clustering');
 end
@@ -88,12 +88,16 @@ end;
 % for each channel (combination), find the connected time-frequency clusters
 labelmat = zeros(size(onoff));
 total = 0;
-for spatdimlev=1:spatdimlength
-  [labelmat(spatdimlev, :, :), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), nfreq, ntime)), 6); % the previous code contained a '4' for input
-  labelmat(spatdimlev, :, :) = labelmat(spatdimlev, :, :) + (labelmat(spatdimlev, :, :)~=0)*total;
-  total = total + num;
+if nfreq*ntime>1
+  for spatdimlev=1:spatdimlength
+    [labelmat(spatdimlev, :, :), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), nfreq, ntime)), 6); % the previous code contained a '4' for input
+    labelmat(spatdimlev, :, :) = labelmat(spatdimlev, :, :) + (labelmat(spatdimlev, :, :)~=0)*total;
+    total = total + num;
+  end
+else
+  labelmat(onoff>0) = 1:sum(onoff(:));
+  total = sum(onoff(:));
 end
-
 % combine the time and frequency dimension for simplicity
 labelmat = reshape(labelmat, spatdimlength, nfreq*ntime);
 

@@ -46,7 +46,7 @@ ft_sourceplot(cfgS, sourceDiffIntAVG);
 % no masking parameter
 % The source data is defined on a 3D grid, interpolation to a surface mesh will be performed
 % Warning: could not determine filetype of surface_l4_both.mat
-% > In fileio/private/warning_once at 158
+% > In fileio/private/ft_warning at 158
 %   In ft_filetype at 1189
 %   In ft_read_headshape at 110
 %   In ft_sourceplot at 890

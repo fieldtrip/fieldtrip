@@ -1,27 +1,29 @@
 function BC=betweenness_wei(G)
 %BETWEENNESS_WEI    Node betweenness centrality
 %
-%   BC = betweenness_wei(W);
+%   BC = betweenness_wei(L);
 %
 %   Node betweenness centrality is the fraction of all shortest paths in 
 %   the network that contain a given node. Nodes with high values of 
 %   betweenness centrality participate in a large number of shortest paths.
 %
-%   Input:      W,      weighted (directed/undirected) connection matrix.
+%   Input:      L,      Directed/undirected connection-length matrix.
 %
 %   Output:     BC,     node betweenness centrality vector.
 %
 %   Notes:
-%       The input matrix must be a mapping from weight to distance. For 
-%   instance, in a weighted correlation network, higher correlations are 
-%   more naturally interpreted as shorter distances, and the input matrix 
-%   should consequently be some inverse of the connectivity matrix.
-%       Betweenness centrality may be normalised to [0,1] via BC/[(N-1)(N-2)]
+%       The input matrix must be a connection-length matrix, typically
+%   obtained via a mapping from weight to length. For instance, in a
+%   weighted correlation network higher correlations are more naturally
+%   interpreted as shorter distances and the input matrix should
+%   consequently be some inverse of the connectivity matrix. 
+%       Betweenness centrality may be normalised to the range [0,1] as
+%   BC/[(N-1)(N-2)], where N is the number of nodes in the network.
 %
 %   Reference: Brandes (2001) J Math Sociol 25:163-177.
 %
 %
-%   Mika Rubinov, UNSW, 2007-2010
+%   Mika Rubinov, UNSW/U Cambridge, 2007-2012
 
 n=length(G);
 % E=find(G); G(E)=1./G(E);        %invert weights

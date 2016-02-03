@@ -8,7 +8,7 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 % with the original channel order in the data.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2004-2006, Robert Oostenveld
+% Copyright (C) 2015, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -29,266 +29,87 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg, 'dicsfix'), cfg.dicsfix = 'yes'; end
-if ~isfield(cfg, 'quickflag'), cfg.quickflag = 0; end
-if ~isfield(cfg, 'refchan'), cfg.refchan = []; end
+cfg = ft_checkconfig(cfg, 'deprecated', 'dicsfix');
+if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 1;     end
+if ~isfield(cfg, 'refchan'),    cfg.refchan    = [];    end
 
-quickflag = cfg.quickflag==1;
+keeptrials = istrue(cfg.keeptrials);
 
 Cf = [];
 Cr = [];
 Pr = [];
 
-% the old freqanalysis (up to revision 1.9) used sgn and sgncmb
-% for backward compatibility rename these
-if isfield(freq, 'sgn')
-  freq.label = freq.sgn;
-  freq = rmfield(freq, 'sgn');
-end
-if isfield(freq, 'sgncmb')
-  freq.labelcmb = freq.sgncmb;
-  freq = rmfield(freq, 'sgncmb');
-end
-
-% select the latency of interest for time-frequency data
-if strcmp(freq.dimord, 'chan_freq_time')
-  tbin = nearest(freq.time, cfg.latency);
-  fprintf('selecting timeslice %d\n', tbin);
-  freq.time = freq.time(tbin);
-  % remove all other latencies from the data structure and reduce the number of dimensions
-  if isfield(freq, 'powspctrm'),     freq.powspctrm     = squeeze(freq.powspctrm(:,:,tbin));     end;
-  if isfield(freq, 'crsspctrm'),     freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,tbin));     end;
-  if isfield(freq, 'fourierspctrm'), freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,tbin)); end;
-  freq.dimord = freq.dimord(1:(end-5));  % remove the '_time' part
-elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
-  tbin = nearest(freq.time, cfg.latency);
-  fprintf('selecting timeslice %d\n', tbin);
-  freq.time = freq.time(tbin);
-  % remove all other latencies from the data structure and reduce the number of dimensions
-  if isfield(freq, 'powspctrm'),    freq.powspctrm     = squeeze(freq.powspctrm(:,:,:,tbin));      end;
-  if isfield(freq, 'crsspctrm'),    freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,:,tbin));      end;
-  if isfield(freq, 'fourierspctrm') freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,:,tbin));  end;
-  freq.dimord = freq.dimord(1:(end-5));  % remove the '_time' part
+tok = tokenize(freq.dimord, '_');
+if any(strcmp(tok, 'rpttap'))
+  Ntrials = size(freq.cumtapcnt,1);
+elseif any(strcmp(tok, 'rpt'))
+  Ntrials = size(freq.cumtapcnt,1);
 else
-  tbin = [];
-end
-
-% the time-frequency latency has already been squeezed away (see above)
-if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq') || strcmp(freq.dimord, 'chan_chan_freq') || strcmp(freq.dimord, 'chan_chan_freq_time')
   Ntrials = 1;
-elseif strcmp(freq.dimord, 'rpt_chan_freq') || strcmp(freq.dimord, 'rpt_chancmb_freq') || strcmp(freq.dimord, 'rpt_chan_chan_freq')
-  Ntrials = size(freq.cumtapcnt,1);
-elseif strcmp(freq.dimord, 'rpttap_chan_freq') || strcmp(freq.dimord, 'rpttap_chancmb_freq') || strcmp(freq.dimord, 'rpttap_chan_chan_freq')
-  Ntrials = size(freq.cumtapcnt,1);
-elseif strcmp(freq.dimord, 'rpttap_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chancmb_freq_time') || strcmp(freq.dimord, 'rpttap_chan_chan_freq_time')
-  Ntrials = size(freq.cumtapcnt,1);
-else
-  error('unrecognized dimord for frequency data');
 end
 
-% find the frequency of interest
-fbin = nearest(freq.freq, cfg.frequency);
+% select from the frequency dimension
+if any(strcmp(tok, 'freq')),
+  % select the frequency of interest
+  tmpcfg             = [];
+  tmpcfg.frequency   = cfg.frequency;
+  tmpcfg.avgoverfreq = 'yes';
+  freq               = ft_selectdata(tmpcfg, freq);
 
-if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
-  % use the power and cross spectrum and construct a square matrix
+  % update the cfg
+  cfg.frequency      = freq.freq;
+end
 
-  % find the index of each sensor channel into powspctrm
-  % keep the channel order of the cfg
-  [dum, powspctrmindx] = match_str(cfg.channel, freq.label);
-  Nchans = length(powspctrmindx);
-
-  % find the index of each sensor channel combination into crsspctrm
-  % keep the channel order of the cfg
-  crsspctrmindx = zeros(Nchans);
-  for sgncmblop=1:size(freq.labelcmb,1)
-    ch1 = find(strcmp(cfg.channel, freq.labelcmb(sgncmblop,1)));
-    ch2 = find(strcmp(cfg.channel, freq.labelcmb(sgncmblop,2)));
-    if ~isempty(ch1) && ~isempty(ch2)
-      % this square matrix contains the indices into the signal combinations
-      crsspctrmindx(ch1,ch2) = sgncmblop;
-    end
-  end
-
-  % this complex rearrangement of channel indices transforms the CSDs into a square matrix
-  if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq')
-    % FIXME this fails in case dimord=rpt_chan_freq and only 1 trial
-    Cf = complex(nan(Nchans,Nchans));
-    % first use the complex conjugate for all reversed signal combinations
-    Cf(find(crsspctrmindx)) = freq.crsspctrm(crsspctrmindx(find(crsspctrmindx)), fbin);
-    Cf = ctranspose(Cf);
-    % and then get get the csd for all signal combinations
-    Cf(find(crsspctrmindx)) = freq.crsspctrm(crsspctrmindx(find(crsspctrmindx)), fbin);
-    % put the power on the diagonal
-    Cf(find(eye(Nchans))) = freq.powspctrm(powspctrmindx, fbin);
-  else
-    Cf  = complex(nan(Ntrials,Nchans,Nchans));
-    tmp = complex(nan(Nchans,Nchans));
-    for trial=1:Ntrials
-      % first use the complex conjugate for all signal combinations reversed
-      tmp(find(crsspctrmindx)) = freq.crsspctrm(trial, crsspctrmindx(find(crsspctrmindx)), fbin);
-      tmp = ctranspose(tmp);
-      % and then get get the csd for all signal combinations
-      tmp(find(crsspctrmindx)) = freq.crsspctrm(trial, crsspctrmindx(find(crsspctrmindx)), fbin);
-      % put the power on the diagonal
-      tmp(find(eye(Nchans))) = freq.powspctrm(trial, powspctrmindx, fbin);
-      Cf(trial,:,:) = tmp;
-    end
-  end
-
-  % do a sanity check on the cross-spectral-density matrix
-  if any(isnan(Cf(:)))
-    error('The cross-spectral-density matrix is not complete');
-  end
-
-  if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
-    % contruct the cross-spectral-density vector of the reference channel with all MEG channels
-    tmpindx = match_str(freq.labelcmb(:,1), cfg.refchan);
-    refindx = match_str(freq.labelcmb(tmpindx,2), cfg.channel);
-    refindx = tmpindx(refindx);
-    flipref = 0;
-    if isempty(refindx)
-      % first look in the second column, then in the first
-      tmpindx = match_str(freq.labelcmb(:,2), cfg.refchan);
-      refindx = match_str(freq.labelcmb(tmpindx,1), cfg.channel);
-      refindx = tmpindx(refindx);
-      flipref = 1;
-    end
-    if length(refindx)~=Nchans
-      error('The cross-spectral-density with the reference channel is not complete');
-    end
-    if Ntrials==1
-      Cr = freq.crsspctrm(refindx, fbin);
-    else
-      for trial=1:Ntrials
-        Cr(trial,:) = freq.crsspctrm(trial, refindx, fbin);
-      end
-    end
-    if flipref
-      Cr = conj(Cr);
-    end
-    % obtain the power of the reference channel
-    refindx = match_str(freq.label, cfg.refchan);
-    if length(refindx)<1
-      error('The reference channel was not found in powspctrm');
-    elseif length(refindx)>1
-      error('Multiple occurences of the reference channel found in powspctrm');
-    end
-    if Ntrials==1
-      Pr = freq.powspctrm(refindx, fbin);
-    else
-      for trial=1:Ntrials
-        Pr(trial) = freq.powspctrm(trial, refindx, fbin);
-      end
-      Pr = Pr(:);   % ensure that the first dimension contains the trials
-    end
-  end
-
-  if strcmp(cfg.dicsfix, 'yes')
-    Cr = conj(Cr);
-  end
-
-elseif isfield(freq, 'crsspctrm')
-  % this is from JMs version
-  hastime    = isfield(freq, 'time');
-  hasrefchan = ~isempty(cfg.refchan);
-
-  % select time-frequency window of interest
-  if hastime
-    freq = ft_selectdata(freq, 'foilim', cfg.frequency, 'toilim', cfg.latency);
-    fbin = 1;
-    tbin = 1:numel(freq.time);
-  else
-    freq = ft_selectdata(freq, 'foilim', cfg.frequency);
-    fbin = 1;
-  end
+% select from the time dimension
+if any(strcmp(tok, 'time')),
+  % select the latency of interest for time-frequency data
+  tmpcfg         = [];
+  tmpcfg.latency = cfg.latency;
+  tmpcfg.avgovertime = 'yes';
+  freq           = ft_selectdata(tmpcfg, freq);
   
-  % convert to square csd matrix
-  % think of incorporating 'quickflag' to speed up the
-  % computation from fourierspectra when single trial
-  % estimates are not required...
+  % update the cfg
+  cfg.latency    = freq.time;
+end  
+
+% create a square csd-matrix
+if keeptrials,
   freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
-
-  [dum, sensindx] = match_str(cfg.channel, freq.label);
-  powspctrmindx = sensindx;
-  if isempty(strfind(freq.dimord, 'rpt'))
-    Ntrials = 1;
-    Cf      = freq.crsspctrm(sensindx,sensindx,:,:);
-    if hasrefchan, 
-      refindx  = match_str(freq.label, cfg.refchan);
-      Cr       = freq.crsspctrm(sensindx,refindx,:,:);
-      Pr       = freq.crsspctrm(refindx,refindx,:,:);
-    else
-      Cr = [];
-      Pr = [];
-    end
-  elseif ~isempty(strfind(freq.dimord, 'rpt')),
-    Ntrials = length(freq.cumtapcnt);
-    Cf      = freq.crsspctrm(:,sensindx,sensindx,:,:);
-    if hasrefchan, 
-      refindx  = match_str(freq.label, cfg.refchan);
-      Cr       = freq.crsspctrm(:,sensindx,refindx,:,:);
-      Pr       = freq.crsspctrm(:,refindx,refindx,:,:);
-    else
-      Cr = [];
-      Pr = [];
-    end
-  end
 else
-  fprintf('computing cross-spectrum from fourier\n');
-  [dum, powspctrmindx] = match_str(cfg.channel, freq.label);
-  % use the fourier spectrum to compute the complete cross spectrum matrix
-  Nchans = length(powspctrmindx);
-  if strcmp(freq.dimord, 'chan_freq')
-    error('incompatible dimord for computing CSD matrix from fourier');
-  elseif strcmp(freq.dimord, 'rpt_chan_freq')
-    error('incompatible dimord for computing CSD matrix from fourier');
-  elseif strcmp(freq.dimord, 'rpttap_chan_freq'),
-    if quickflag,
-      Ntrials = 1;
-    end
-    Cf = zeros(Ntrials,Nchans,Nchans);
-    refindx = match_str(freq.label, cfg.refchan);
-    if ~isempty(refindx)
-      Cr = zeros(Ntrials,Nchans,1);
-      Pr = zeros(Ntrials,1,1);
-    end
+  freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
+end
+tok = tokenize(freq.dimord, '_');
 
-    if quickflag,
-      ntap = sum(freq.cumtapcnt);
-      dat  = transpose(freq.fourierspctrm(:, powspctrmindx, fbin));
-      Cf(1,:,:) = (dat * ctranspose(dat)) ./ ntap;
-      if ~isempty(refindx)
-        ref = transpose(freq.fourierspctrm(:, refindx, fbin));
-    Cr(1,:,1) = dat * ctranspose(ref) ./ ntap;
-    Pr(1,1,1) = ref * ctranspose(ref) ./ ntap;
-      end
-    else
-      freq.cumtapcnt = freq.cumtapcnt(:)';
-      for k=1:Ntrials
-        tapbeg = 1 + sum([0 freq.cumtapcnt(1:(k-1))]);
-        tapend =     sum([0 freq.cumtapcnt(1:(k  ))]);
-        ntap = freq.cumtapcnt(k);
-        dat  = transpose(freq.fourierspctrm(tapbeg:tapend, powspctrmindx, fbin));
-        Cf(k,:,:) = (dat * ctranspose(dat)) ./ ntap;
-        if ~isempty(refindx)
-          ref = transpose(freq.fourierspctrm(tapbeg:tapend, refindx, fbin));
-          Cr(k,:,1) = dat * ctranspose(ref) ./ ntap;
-          Pr(k,1,1) = ref * ctranspose(ref) ./ ntap;
-        end
-      end
-    end
+% extract the csd-matrix for the channels-of-interest
+[dum, chanindx] = match_str(cfg.channel, freq.label);
+
+% update the cfg
+cfg.channel     = freq.label(chanindx);
+if any(strncmp(tok, 'rpt', 3)),
+  Cf = freq.crsspctrm(:,chanindx,chanindx);
+else
+  Cf = freq.crsspctrm(chanindx,chanindx);
+end
+
+if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
+  refindx = match_str(freq.label, cfg.refchan);
+  if isempty(refindx),
+    error('the requested reference channel is not found in the data');
+  end
+  if any(strncmp(tok, 'rpt', 3)),
+    Cr = freq.crsspctrm(:,chanindx,refindx);
+    Pr = freq.crsspctrm(:,refindx,refindx);
   else
-    error('unsupported dimord for fourier cross-spectrum computation');
+    Cr = freq.crsspctrm(chanindx,refindx);
+    Pr = freq.crsspctrm(refindx,refindx);
   end
-end
+end  
 
-% update the configuration, so that the calling function exactly knows what was selected
-if ~isempty(tbin),
-  % a single latency was selected in the freq structure
-  cfg.latency = freq.time;
-else
-  cfg.latency = [];
+% do a sanity check on the cross-spectral-density matrix
+if any(isnan(Cf(:)))
+  error('The cross-spectral-density matrix is not complete');
 end
-cfg.frequency = freq.freq(fbin);
-cfg.channel   = freq.label(powspctrmindx);
+if any(isnan(Cr(:)))
+  error('The cross-spectral-density with the reference channel is not complete');
+end
 

@@ -3,11 +3,41 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % READ_EDF reads specified samples from an EDF continous datafile
 % It neglects all trial boundaries as if the data was acquired in
 % non-continous mode.
+% Note that since FieldTrip only accommodates a single sampling rate in a
+% given dataset whereas edf allows specification of a sampling rate for
+% each channel, if there are heterogenous sampling rates then this function
+% will automatically choose a subset.  If the last such channel is
+% different from the rest, the assumption will be made that it is the
+% annotation channel and the rest will be selected.  If that is not the
+% case, then the largest subset of channels with a consistent sampling rate
+% will be chosen.  To avoid this automatic selection process, the user may
+% specify their own choice of channels using chanindx.  In this case, the
+% automatic selection will only occur if the user selected channels
+% still have heterogenous sampling rates.  In this case the automatic
+% selection will occur amongst the user specified channels.  While reading
+% the header the resulting channel selection decision will be stored in
+% hdr.orig.chansel and the contents of this field will override chanindx
+% during data reading.
 %
 % Use as
 %   [hdr] = read_edf(filename);
 % where
-%    filename        name of the datafile, including the .bdf extension
+%    filename        name of the datafile, including the .edf extension
+% This returns a header structure with the following elements
+%   hdr.Fs           sampling frequency
+%   hdr.nChans       number of channels
+%   hdr.nSamples     number of samples per trial
+%   hdr.nSamplesPre  number of pre-trigger samples in each trial
+%   hdr.nTrials      number of trials
+%   hdr.label        cell-array with labels of each channel
+%   hdr.orig         detailled EDF header information
+%
+% Use as
+%   [hdr] = read_edf(filename, [], chanindx);
+% where
+%    filename        name of the datafile, including the .edf extension
+%    chanindx        index of channels to read (optional, default is all)
+%                    Note that since 
 % This returns a header structure with the following elements
 %   hdr.Fs           sampling frequency
 %   hdr.nChans       number of channels
@@ -20,12 +50,19 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % Or use as
 %   [dat] = read_edf(filename, hdr, begsample, endsample, chanindx);
 % where
-%    filename        name of the datafile, including the .bdf extension
+%    filename        name of the datafile, including the .edf extension
 %    hdr             header structure, see above
 %    begsample       index of the first sample to read
 %    endsample       index of the last sample to read
 %    chanindx        index of channels to read (optional, default is all)
 % This returns a Nchans X Nsamples data matrix
+%
+% Or use as
+%   [evt] = read_edf(filename, hdr);
+% where
+%    filename        name of the datafile, including the .edf extension
+%    hdr             header structure, see above
+% This returns an Nsamples data vector of just the annotation channel
 
 % Copyright (C) 2006, Robert Oostenveld
 %
@@ -47,9 +84,19 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 %
 % $Id$
 
-needhdr = (nargin==1);
+switch nargin
+    case 1
+        chanindx=[];
+    case 2
+        chanindx=[];
+    case 3
+        chanindx=begsample;
+    case 4   
+end;
+
+needhdr = (nargin==1)||(nargin==3);
 needevt = (nargin==2);
-needdat = (nargin>3);
+needdat = (nargin==5);
 
 if needhdr
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -147,8 +194,8 @@ if needhdr
     EDF.PhysMax = EDF.DigMax;
   end
   EDF.PreFilt= char(fread(EDF.FILE.FID,[80,EDF.NS],'char')');   %
-  tmp = fread(EDF.FILE.FID,[8,EDF.NS],'char')'; %   samples per data record
-  EDF.SPR = str2num(char(tmp));               % samples per data record
+  tmp = fread(EDF.FILE.FID,[8,EDF.NS],'char')'; % samples per data record
+  EDF.SPR = str2num(char(tmp));                 % samples per data record
 
   fseek(EDF.FILE.FID,32*EDF.NS,0);
 
@@ -193,6 +240,10 @@ if needhdr
     end;
   end;
 
+  if isempty(chanindx)
+      chanindx=[1:EDF.NS]; 
+  end;
+
   EDF.AS.spb = sum(EDF.SPR);    % Samples per Block
   bi=[0;cumsum(EDF.SPR)];
 
@@ -214,19 +265,25 @@ if needhdr
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % convert the header to Fieldtrip-style
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if all(EDF.SampleRate==EDF.SampleRate(1))
-    hdr.Fs           = EDF.SampleRate(1);
-    hdr.nChans       = EDF.NS;
+  if all(EDF.SampleRate(chanindx)==EDF.SampleRate(chanindx(1))) 
+    chansel=chanindx; 
+    hdr.Fs           = EDF.SampleRate(chanindx(1)); 
+    hdr.nChans       = length(chansel);
     hdr.label        = cellstr(EDF.Label);
+    hdr.label        = hdr.label(chansel); 
     % it is continuous data, therefore append all records in one trial
-    hdr.nSamples     = EDF.NRec * EDF.Dur * EDF.SampleRate(1);
+    hdr.nSamples     = EDF.NRec * EDF.Dur * EDF.SampleRate(chansel(1)); 
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = 1;
     hdr.orig         = EDF;
     % this will be used on subsequent reading of data
-    hdr.orig.chansel    = 1:hdr.nChans; 
+    if length(chansel) ~= EDF.NS 
+        hdr.orig.chansel    = chansel; 
+    else
+        hdr.orig.chansel    = 1:hdr.nChans;
+    end;
     hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
-    
+
   elseif all(EDF.SampleRate(1:end-1)==EDF.SampleRate(1))
     % only the last channel has a deviant sampling frequency
     % this is the case for EGI recorded datasets that have been converted
@@ -283,27 +340,56 @@ elseif needdat || needevt
   % retrieve the original header
   EDF = hdr.orig;
  
-  % determine whether a subset of channels should be used
-  % which is the case if channels have a variable sampling frequency
-  variableFs = isfield(EDF, 'chansel');
-
-  if variableFs && needevt
+  % There can be an optional chansel field containing a list of predefined
+  % channels. These channels are in that case also the only ones represented in
+  % the fieldtrip header, which means that teh other channels are simply not
+  % visible to the naive user. This field can be present because the user
+  % specified an explicit channel selection in FT_READ_HEADER or because the
+  % read_edf function had to automatically choose a subset to cope with
+  % heterogenous sampling rates or even both.  In any case, at this point in the
+  % file reading process the contents of the chansel field has the proper
+  % specification for channel selection, taking into account both the user channel
+  % selection as well as any correction that might have been made due to
+  % heterogenous sampling rates.
+  
+  if     ~isempty(chanindx) && ~isfield(EDF, 'chansel')
+    % a subset of channels should been selected from the full list of channels in the file
+    chanindx = chanindx; % keep as it is
+    chanSel  = true;
+  elseif ~isempty(chanindx) &&  isfield(EDF, 'chansel')
+    % a subset of channels should been selected from the predefined list
+    chanindx = EDF.chansel(chanindx);
+    chanSel  = true;
+  elseif  isempty(chanindx) &&  isfield(EDF, 'chansel')
+    % all channels from the predefined list should be selected
+    chanindx = EDF.chansel(chanindx);
+    chanSel  = true;
+  elseif  isempty(chanindx) && ~isfield(EDF, 'chansel')
+    %  simply select all channels that are present in the file
+    chanindx = 1:EDF.NS;
+    chanSel = false;
+  else
+    % the code should not end up here
+    error('these were all four possible options')
+  end
+  
+  if needevt
     % read the annotation channel, not the data channels
-    EDF.chansel = EDF.annotation;
+    chanindx = EDF.annotation;
     begsample = 1;
     endsample = EDF.SampleRate(end)*EDF.NRec*EDF.Dur;
   end
   
-  if variableFs
-    epochlength = EDF.Dur * EDF.SampleRate(EDF.chansel(1));   % in samples for the selected channel
-    blocksize   = sum(EDF.Dur * EDF.SampleRate);              % in samples for all channels
+  if chanSel
+    epochlength = round(EDF.Dur * EDF.SampleRate(chanindx(1)));   % in samples for the selected channel
+    blocksize   = round(sum(EDF.Dur * EDF.SampleRate));           % in samples for all channels
     chanoffset  = EDF.Dur * EDF.SampleRate;
-    chanoffset  = cumsum([0; chanoffset(1:end-1)]);
-    % use a subset of channels
-    nchans = length(EDF.chansel);
-  else
-    epochlength = EDF.Dur * EDF.SampleRate(1);                % in samples for a single channel
-    blocksize   = sum(EDF.Dur * EDF.SampleRate);              % in samples for all channels
+    chanoffset  = round(cumsum([0; chanoffset(1:end-1)]));
+    % get the selection from the subset of channels
+    nchans   = length(chanindx);
+  else  
+    epochlength = round(EDF.Dur * EDF.SampleRate(1));             % in samples for a single channel
+    blocksize   = round(sum(EDF.Dur * EDF.SampleRate));           % in samples for all channels
     % use all channels
     nchans = EDF.NS;
   end
@@ -313,23 +399,19 @@ elseif needdat || needevt
   endepoch    = floor((endsample-1)/epochlength) + 1;
   nepochs     = endepoch - begepoch + 1;
 
-  if nargin<5
-    chanindx = 1:nchans;
-  end
-
   % allocate memory to hold the data
   dat = zeros(length(chanindx),nepochs*epochlength);
   
   % read and concatenate all required data epochs
   for i=begepoch:endepoch
-    if variableFs
+    if chanSel
       % only a subset of channels with consistent sampling frequency is read
       offset = EDF.HeadLen + (i-1)*blocksize*2; % in bytes
       % read the complete data block
       buf = readLowLevel(filename, offset, blocksize); % see below in subfunction
       for j=1:length(chanindx)
         % cut out the part that corresponds with a single channel
-        dat(j,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf((1:epochlength) + chanoffset(EDF.chansel(chanindx(j))));
+        dat(j,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf((1:epochlength) + chanoffset(chanindx(j)));
       end
 
     elseif length(chanindx)==1
@@ -356,9 +438,7 @@ elseif needdat || needevt
   dat = dat(:, begsample:endsample);
 
   % Calibrate the data
-  if variableFs
-    calib = diag(EDF.Cal(EDF.chansel(chanindx)));
-  else
+  if chanSel
     calib = diag(EDF.Cal(chanindx));
   end
   if length(chanindx)>1
@@ -391,3 +471,5 @@ else
     return
   end
 end
+
+

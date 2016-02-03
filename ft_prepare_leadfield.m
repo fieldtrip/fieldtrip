@@ -30,8 +30,7 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
 %
 % The volume conduction model of the head should be specified as
-%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % The EEG or MEG sensor positions can be present in the data or can be specified as
 %   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
@@ -88,10 +87,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -106,6 +105,10 @@ else
   % check if the input data is valid for this function
   data = ft_checkdata(data);
 end
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
 % set the defaults
 cfg.normalize      = ft_getopt(cfg, 'normalize',      'no');
@@ -134,7 +137,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % collect and preprocess the electrodes/gradiometer and head model
-[vol, sens, cfg] = prepare_headmodel(cfg, data);
+[headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
 % set the default for reducing the rank of the leadfields
 if ft_senstype(sens, 'eeg')
@@ -144,32 +147,23 @@ else
 end
 
 % construct the dipole grid according to the configuration
-tmpcfg      = [];
-tmpcfg.vol  = vol;
-tmpcfg.grad = sens; % this can be electrodes or gradiometers
-% copy all options that are potentially used in ft_prepare_sourcemodel
-try, tmpcfg.grid        = cfg.grid;         end
-try, tmpcfg.mri         = cfg.mri;          end
-try, tmpcfg.headshape   = cfg.headshape;    end
-try, tmpcfg.symmetry    = cfg.symmetry;     end
-try, tmpcfg.smooth      = cfg.smooth;       end
-try, tmpcfg.threshold   = cfg.threshold;    end
-try, tmpcfg.spheremesh  = cfg.spheremesh;   end
-try, tmpcfg.inwardshift = cfg.inwardshift;  end
+tmpcfg           = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift'});
+tmpcfg.headmodel = headmodel;
+tmpcfg.grad      = sens; % either electrodes or gradiometers
 grid = ft_prepare_sourcemodel(tmpcfg);
 
 % check whether units are equal (NOTE: this was previously not required,
 % this check can be removed if the underlying bug is resolved. See
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387
-if ~isfield(vol, 'unit') || ~isfield(grid, 'unit') || ~isfield(sens, 'unit')
+if ~isfield(headmodel, 'unit') || ~isfield(grid, 'unit') || ~isfield(sens, 'unit')
   warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387)');
 else
-  if ~strcmp(vol.unit, grid.unit) || ~strcmp(grid.unit, sens.unit)
+  if ~strcmp(headmodel.unit, grid.unit) || ~strcmp(grid.unit, sens.unit)
     error('geometric objects (headmodel, sourcemodel, sensor configuration) are not expressed in the same units (this used to be allowed, and will be again in the future, but for now there is a bug which prevents a correct leadfield from being computed; see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387)');
   end
 end
 
-if ft_voltype(vol, 'openmeeg')
+if ft_voltype(headmodel, 'openmeeg')
   % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
@@ -187,7 +181,7 @@ if ft_voltype(vol, 'openmeeg')
     enddip = min((begdip+batchsize-1), ndip); % don't go beyond the end
     batch  = begdip:enddip;
     try
-      lf = ft_compute_leadfield(grid.pos(insideindx(batch),:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
+      lf = ft_compute_leadfield(grid.pos(insideindx(batch),:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam);
       ok(batch) = true;
     catch
       ok(batch) = false;
@@ -222,7 +216,7 @@ else
     % compute the leadfield on all grid positions inside the brain
     ft_progress(i/length(insideindx), 'computing leadfield %d/%d\n', i, length(insideindx));
     thisindx = insideindx(i);
-    grid.leadfield{thisindx} = ft_compute_leadfield(grid.pos(thisindx,:), sens, vol, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+    grid.leadfield{thisindx} = ft_compute_leadfield(grid.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
     
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation
@@ -264,6 +258,6 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history grid
+ft_postamble previous   data
+ft_postamble provenance grid
+ft_postamble history    grid

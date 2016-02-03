@@ -15,7 +15,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
-%   cfg.demean       = 'no' or 'yes' (default = 'yes')
+%   cfg.demean       = 'no' or 'yes', whether to demean the input data (default = 'yes')
 %   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
 %
 % The runica method supports the following method-specific options. The values that
@@ -159,11 +159,11 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble randomseed
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
+ft_preamble randomseed
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -200,7 +200,7 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
     'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
   
   cfg.unmixing = pinv(cfg.topo);
-  cfg = rmfield(cfg,'topo');
+  cfg = rmfield(cfg, 'topo');
 end
 
 if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
@@ -216,18 +216,9 @@ if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   tmpchan = match_str(cfg.channel, cfg.topolabel);
   cfg.channel = cfg.channel(tmpchan);
   
-  % remove all cfg settings  that do not apply
-  tmpcfg              = [];
-  tmpcfg.demean       = cfg.demean;
-  tmpcfg.trials       = cfg.trials;
-  tmpcfg.unmixing     = cfg.unmixing;    % the NxM unmixing matrix (M channels, N components)
-  tmpcfg.topolabel    = cfg.topolabel;   % the Mx1 labels of the data that was used in determining the mixing matrix
-  tmpcfg.channel      = cfg.channel;     % the Mx1 labels of the data that is presented now to this function
-  tmpcfg.numcomponent = 'all';
-  tmpcfg.method       = 'predetermined unmixing matrix';
-  tmpcfg.doscale      = cfg.doscale;
-  tmpcfg.updatesens   = cfg.updatesens;
-  cfg                 = tmpcfg;
+  % update some settings where there is no further choice to be made by the user
+  cfg.numcomponent = 'all';
+  cfg.method       = 'predetermined unmixing matrix';
 end
 
 % add the options for the specified methods to the configuration, only if needed
@@ -490,7 +481,7 @@ switch cfg.method
     end
     
     % construct key-value pairs for the optional arguments
-    optarg = ft_cfg2keyval(cfg.runica);
+    optarg = [ft_cfg2keyval(cfg.runica) {'reset_randomseed' 0}]; % let FieldTrip deal with the random seed handling
     [weights, sphere] = runica(dat, optarg{:});
     
     % scale the sphering matrix to unit norm
@@ -606,13 +597,15 @@ switch cfg.method
     clear C D E d
     
   case 'svd'
+    % it is more memory efficient to use the (non-scaled) covariance
     if cfg.numcomponent<Nchans
       % compute only the first components
-      [u, s, v] = svds(dat, cfg.numcomponent);
+      [u, s, v] = svds(dat*dat', cfg.numcomponent);
     else
       % compute all components
-      [u, s, v] = svd(dat, 0);
+      [u, s, v] = svd(dat*dat', 0);
     end
+    clear s v % not needed
     
     unmixing = u';
     mixing = [];
@@ -863,8 +856,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble randomseed
-ft_postamble previous data
-ft_postamble history comp
-ft_postamble savevar comp
+ft_postamble previous   data
+ft_postamble provenance comp
+ft_postamble history    comp
+ft_postamble savevar    comp

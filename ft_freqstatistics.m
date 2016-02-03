@@ -72,10 +72,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -188,12 +188,14 @@ if strcmp(func2str(statmethod),'ft_statistics_montecarlo')
   % the following (ugly) work around is necessary
   if num>1
     [stat, cfg] = statmethod(cfg, dat, design);
+    cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
   else
     [stat] = statmethod(cfg, dat, design);
   end
 else
   if num>1
     [stat, cfg] = statmethod(cfg, dat, design);
+    cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
   else
     [stat] = statmethod(cfg, dat, design);
   end
@@ -226,7 +228,7 @@ cfg = removefields(cfg, {'dim', 'dimord'});
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous varargin
-ft_postamble history stat
-ft_postamble savevar stat
+ft_postamble previous   varargin
+ft_postamble provenance stat
+ft_postamble history    stat
+ft_postamble savevar    stat

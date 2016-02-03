@@ -9,8 +9,11 @@ function [h] = fdr(p, q)
 %   Genovese CR, Lazar NA, Nichols T.
 %   Thresholding of statistical maps in functional neuroimaging using the false discovery rate.
 %   Neuroimage. 2002 Apr;15(4):870-8.
+%
+% There are two types of FDR correction (Benjamini-Hochberg & Benjamini-Yekutieli), of
+% which the second is currently implemented.
 
-% Copyright (C) 2005, Robert Oostenveld
+% Copyright (C) 2005-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -43,7 +46,11 @@ V = length(p);
 % compute the threshold probability for each voxel
 pi = ((1:V)/V)  * q / c(V);
 
-h = (ps<=pi);
+if any(ps<=pi)
+  h = ps<=(max(ps(ps<=pi)));
+else
+  h = false(size(ps));
+end
 
 % undo the sorting
 [dum, unsort] = sort(indx);

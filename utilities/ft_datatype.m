@@ -2,18 +2,18 @@ function [type, dimord] = ft_datatype(data, desired)
 
 % FT_DATATYPE determines the type of data represented in a FieldTrip data
 % structure and returns a string with raw, freq, timelock source, comp,
-% spike, source, volume, dip.
+% spike, source, volume, dip, montage, event.
 %
 % Use as
 %   [type, dimord] = ft_datatype(data)
 %   [status]       = ft_datatype(data, desired)
 %
-% See also FT_DATATYPE_COMP FT_DATATYPE_FREQ FT_DATATYPE_MVAR
-% FT_DATATYPE_SEGMENTATION FT_DATATYPE_PARCELLATION FT_DATATYPE_SOURCE
-% FT_DATATYPE_TIMELOCK FT_DATATYPE_DIP FT_DATATYPE_HEADMODEL
-% FT_DATATYPE_RAW FT_DATATYPE_SENS FT_DATATYPE_SPIKE FT_DATATYPE_VOLUME
+% See also FT_DATATYPE_COMP, FT_DATATYPE_FREQ, FT_DATATYPE_MVAR,
+% FT_DATATYPE_SEGMENTATION, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SOURCE,
+% FT_DATATYPE_TIMELOCK, FT_DATATYPE_DIP, FT_DATATYPE_HEADMODEL,
+% FT_DATATYPE_RAW, FT_DATATYPE_SENS, FT_DATATYPE_SPIKE, FT_DATATYPE_VOLUME
 
-% Copyright (C) 2008-2012, Robert Oostenveld
+% Copyright (C) 2008-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -37,19 +37,28 @@ if nargin<2
   desired = [];
 end
 
-% determine the type of input data, this can be raw, freq, timelock, comp, spike, source, volume, dip, segmentation, parcellation
+% determine the type of input data
 israw          =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
 isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
 istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
 iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
-issource       =  isfield(data, 'pos');
+issource       = (isfield(data, 'pos') || isfield(data, 'pnt')) && isstruct(data) && numel(data)==1; % pnt is deprecated, this does not apply to a mesh array
+ismesh         = (isfield(data, 'pos') || isfield(data, 'pnt')) && (isfield(data, 'tri') || isfield(data, 'tet') || isfield(data, 'hex')); % pnt is deprecated
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
-ischan         = check_chan(data);
-issegmentation = check_segmentation(data);
-isparcellation = check_parcellation(data);
+ischan         =  check_chan(data);
+issegmentation =  check_segmentation(data);
+isparcellation =  check_parcellation(data);
+ismontage      =  isfield(data, 'labelorg') && isfield(data, 'labelnew') && isfield(data, 'tra');
+isevent        =  isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
+isheadmodel    =  false; % FIXME this is not yet implemented
+
+if issource && isstruct(data) && numel(data)>1
+  % this applies to struct arrays with meshes, i.e. with a pnt+tri
+  issource = false;
+end
 
 if ~isfreq
   % this applies to a freq structure from 2003 up to early 2006
@@ -90,16 +99,16 @@ elseif isdip
   type = 'dip';
 elseif istimelock
   type = 'timelock';
-elseif issegmentation
-  % a segmentation data structure is a volume data structure, but in general not vice versa
-  % segmentation should conditionally go before volume, otherwise the returned ft_datatype will be volume
-  type = 'segmentation';
+elseif isvolume && issegmentation
+  type = 'volume+label';
 elseif isvolume
   type = 'volume';
-elseif isparcellation
-  % a parcellation data structure is a source data structure, but in general not vice versa
-  % parcellation should conditionally go before source, otherwise the returned ft_datatype will be source
-  type = 'parcellation';
+elseif ismesh && isparcellation
+  type = 'mesh+label';
+elseif ismesh
+  type = 'mesh';
+elseif issource && isparcellation
+  type = 'source+label';
 elseif issource
   type = 'source';
 elseif ischan
@@ -109,6 +118,10 @@ elseif iselec
   type = 'elec';
 elseif isgrad
   type = 'grad';
+elseif ismontage
+  type = 'montage';
+elseif isevent
+  type = 'event';
 else
   type = 'unknown';
 end
@@ -125,9 +138,16 @@ if nargin>1
     case 'comp'
       type = any(strcmp(type, {'comp', 'raw+comp', 'timelock+comp', 'freq+comp'}));
     case 'volume'
-      type = any(strcmp(type, {'volume', 'segmentation'}));
+      type = any(strcmp(type, {'volume', 'volume+label'}));
     case 'source'
-      type = any(strcmp(type, {'source', 'parcellation'}));
+      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label'})); % a single mesh qualifies as source structure
+      type = type && isstruct(data) && numel(data)==1;                            % an array of meshes does not qualify
+    case 'mesh'
+      type = any(strcmp(type, {'mesh', 'mesh+label'}));
+    case 'segmentation'
+      type = strcmp(type, 'volume+label');
+    case 'parcellation'
+      type = any(strcmp(type, {'source+label' 'mesh+label'}));
     case 'sens'
       type = any(strcmp(type, {'elec', 'grad'}));
     otherwise
@@ -172,7 +192,7 @@ end
 function [res] = check_segmentation(volume)
 res = false;
 
-if ~isfield(volume, 'dim')
+if ~isfield(volume, 'dim') && ~isfield(volume, 'transform')
   return
 end
 
@@ -213,6 +233,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [res] = check_parcellation(source)
 res = false;
+
+if numel(source)>1
+  % this applies to struct arrays with meshes, i.e. with a pnt+tri
+  return
+end
 
 if ~isfield(source, 'pos')
   return

@@ -73,10 +73,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar avgL avgR
+ft_preamble provenance avgL avgR
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -134,7 +134,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous avgL avgR
-ft_postamble history lrp
-ft_postamble savevar lrp
+ft_postamble previous   avgL avgR
+ft_postamble provenance lrp
+ft_postamble history    lrp
+ft_postamble savevar    lrp

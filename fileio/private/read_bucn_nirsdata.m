@@ -7,6 +7,8 @@ function [dat] = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanind
 %
 % Use as
 %   [dat] = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanindx)
+%
+% See also READ_BUCN_NIRSHDR, READ_BUCN_NIRSEVENT
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %

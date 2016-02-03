@@ -1,10 +1,10 @@
-function vol = ft_headmodel_fns(seg, varargin)
+function headmodel = ft_headmodel_fns(seg, varargin)
 
 % FT_HEADMODEL_FNS creates the volume conduction structure to be used
 % in the FNS forward solver.
 %
 % Use as
-%   vol = ft_headmodel_fns(seg, ...)
+%   headmodel = ft_headmodel_fns(seg, ...)
 %
 % Optional input arguments should be specified in key-value pairs and
 % can include
@@ -14,7 +14,6 @@ function vol = ft_headmodel_fns(seg, varargin)
 %   tissue           = see fns_contable_write
 %   tissueval        = match tissues of segmentation input
 %   transform        = 4x4 transformation matrix (default eye(4))
-%   units            = string (default 'cm')
 %   sens             = sensor information (for which ft_datatype(sens,'sens')==1)
 %   deepelec         = used in the case of deep voxel solution
 %   tolerance        = scalar (default 1e-8)
@@ -151,17 +150,16 @@ catch ME
 end
 
 % start with an empty volume conductor
-vol = [];
-vol.tissue     = tissue;
-vol.tissueval  = tissueval;
-vol.transform  = transform;
-vol.segdim     = size(seg);
-vol.units      = units;
-vol.type       = 'fns';
-vol.transfer   = transfer;
+headmodel = [];
+headmodel.tissue     = tissue;
+headmodel.tissueval  = tissueval;
+headmodel.transform  = transform;
+headmodel.segdim     = size(seg);
+headmodel.type       = 'fns';
+headmodel.transfer   = transfer;
 
 if ~isempty(deepelec)
-  vol.deepelec  = deepelec;
+  headmodel.deepelec  = deepelec;
 end
 
 function cleaner(segfile,confile,elecfile,exefile,datafile)

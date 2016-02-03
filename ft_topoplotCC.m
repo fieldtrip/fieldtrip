@@ -60,10 +60,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar freq
+ft_preamble provenance freq
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -88,6 +88,7 @@ cfg.arrowsize  = ft_getopt(cfg, 'arrowsize', nan);    % length of the arrow head
 cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan); % absolute, should be in figure units, i.e. the same units as the layout
 cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8);% relative to the complete line
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
+cfg.colormap    = ft_getopt(cfg, 'colormap',    colormap);
 
 lay = ft_prepare_layout(cfg, freq);
 
@@ -147,7 +148,7 @@ if isnan(cfg.arrowoffset)
   warning('using an arrowoffset of %f', cfg.arrowoffset);
 end
 
-rgb  = colormap;
+rgb  = cfg.colormap;
 if ~isempty(colorparam)
   cmin = min(colorparam(:));
   cmax = max(colorparam(:));
@@ -318,8 +319,8 @@ axis tight
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous freq
+ft_postamble provenance
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

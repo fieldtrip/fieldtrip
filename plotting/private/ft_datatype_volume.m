@@ -1,4 +1,4 @@
-function volume = ft_datatype_volume(volume, varargin)
+function [volume] = ft_datatype_volume(volume, varargin)
 
 % FT_DATATYPE_VOLUME describes the FieldTrip MATLAB structure for volumetric data.
 %
@@ -38,7 +38,7 @@ function volume = ft_datatype_volume(volume, varargin)
 % infinite values.
 %
 % (2012) A placeholder 2012 version was created that ensured the axes
-% of the coordinate system to be right-handed. This actually never 
+% of the coordinate system to be right-handed. This actually never
 % has made it to the default version. An executive decision regarding
 % this has not been made as far as I (JM) am aware, and probably it's
 % a more principled approach to keep the handedness free, so don't mess
@@ -53,9 +53,7 @@ function volume = ft_datatype_volume(volume, varargin)
 %
 % (2003) The initial version was defined
 %
-% See also FT_DATATYPE, FT_DATATYPE_COMP, FT_DATATYPE_DIP, FT_DATATYPE_FREQ,
-% FT_DATATYPE_MVAR, FT_DATATYPE_RAW, FT_DATATYPE_SOURCE, FT_DATATYPE_SPIKE,
-% FT_DATATYPE_TIMELOCK, FT_DATATYPE_VOLUME
+% See also FT_DATATYPE, FT_DATATYPE_DIP, FT_DATATYPE_SOURCE
 
 % Copyright (C) 2011-2015, Robert Oostenveld
 %
@@ -117,26 +115,28 @@ switch version
     if isfield(volume, 'anatomy')
       volume.anatomy(~isfinite(volume.anatomy)) = 0;
     end
-    
+
     if isfield(volume, 'avg') && isstruct(volume.avg)
       % move the average fields to the main structure
       fn = fieldnames(volume.avg);
       for i=1:length(fn)
-        dat = volume.avg.(fn{i});
-        try
-          volume.(fn{i}) = reshape(dat, volume.dim);
-        catch
-          warning('could not reshape %s to expected dimensions');
-          volume.(fn{i}) = dat;
-        end
-        clear dat
+        volume.(fn{i}) = volume.avg.(fn{i});
       end
       volume = rmfield(volume, 'avg');
     end
-    
+
     % ensure that it is always logical
     volume = fixinside(volume, 'logical');
-    
+
+    fn = getdatfield(volume);
+    for i=1:numel(fn)
+      try
+        volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim);
+      catch
+        warning('could not reshape %s to the expected dimensions', fn{i});
+      end
+    end
+
   case '2012b'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(volume, 'dimord')
@@ -146,20 +146,20 @@ switch version
     if isfield(volume, 'anatomy')
       volume.anatomy(~isfinite(volume.anatomy)) = 0;
     end
-    
+
   case '2012'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED 
+    % THIS ONE DOES NOT SEEM TO HAVE EVER BEEN USED
     % HOWEVER, KEEP IT FOR DOCUMENTATION PURPOSES
-   
+
     if isfield(volume, 'dimord')
       volume = rmfield(volume, 'dimord');
     end
-    
+
     % ensure the axes system in the transformation matrix to be
     % right-handed
     volume = volumeflip(volume, 'right');
-    
+
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(volume, 'dimord')
@@ -181,4 +181,3 @@ switch version
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for volume datatype', version);
 end
-

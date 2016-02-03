@@ -25,7 +25,7 @@ function [data] = ft_megrealign(cfg, data)
 % model of the head and of a source model.
 %
 % A volume conduction model of the head should be specified with
-%   cfg.vol         = structure, see FT_PREPARE_HEADMODEL
+%   cfg.headmodel   = structure, see FT_PREPARE_HEADMODEL
 %
 % A source model (i.e. a superficial layer with distributed sources) can be
 % constructed from a headshape file, or from the volume conduction model
@@ -98,10 +98,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -112,6 +112,8 @@ end
 cfg = ft_checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
 cfg = ft_checkconfig(cfg, 'required',    {'inwardshift', 'template'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hdmfile',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'vol',         'headmodel'});
 
 % set the default configuration
 cfg.headshape  = ft_getopt(cfg, 'headshape', []);
@@ -142,49 +144,58 @@ if isstruct(cfg.template)
   cfg.template = {cfg.template};
 end
 
-% select trials of interest
+% retain only the MEG channels in the data and temporarily store
+% the rest, these will be added back to the transformed data later.
+
+% select trials and channels of interest
 tmpcfg = [];
-tmpcfg.trials = cfg.trials;
+tmpcfg.trials  = cfg.trials;
+tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label));
+rest = ft_selectdata(tmpcfg, data);
+
+tmpcfg.channel = ft_channelselection(cfg.channel, data.label); 
 data = ft_selectdata(tmpcfg, data);
+
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
 Ntrials = length(data.trial);
 
-% retain only the MEG channels in the data and temporarily store
-% the rest, these will be added back to the transformed data later.
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-dataindx = match_str(data.label, cfg.channel);
-restindx = setdiff(1:length(data.label),dataindx);
-if ~isempty(restindx)
-  fprintf('removing %d non-MEG channels from the data\n', length(restindx));
-  rest.label = data.label(restindx);    % first remember the rest
-  data.label = data.label(dataindx);    % then reduce the data
-  for i=1:Ntrials
-    rest.trial{i} = data.trial{i}(restindx,:);  % first remember the rest
-    data.trial{i} = data.trial{i}(dataindx,:);  % then reduce the data
-  end
-else
-  rest.label = {};
-  rest.trial = {};
-end
+
+% cfg.channel = ft_channelselection(cfg.channel, data.label);
+% dataindx = match_str(data.label, cfg.channel);
+% restindx = setdiff(1:length(data.label),dataindx);
+% if ~isempty(restindx)
+%   fprintf('removing %d non-MEG channels from the data\n', length(restindx));
+%   rest.label = data.label(restindx);    % first remember the rest
+%   data.label = data.label(dataindx);    % then reduce the data
+%   for i=1:Ntrials
+%     rest.trial{i} = data.trial{i}(restindx,:);  % first remember the rest
+%     data.trial{i} = data.trial{i}(dataindx,:);  % then reduce the data
+%   end
+% else
+%   rest.label = {};
+%   rest.trial = {};
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct the average template gradiometer array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Ntemplate = length(cfg.template);
-for i=1:Ntemplate
+template = struct([]); % initialize as empty structure
+for i=1:length(cfg.template)
   if ischar(cfg.template{i}),
     fprintf('reading template sensor position from %s\n', cfg.template{i});
-    template(i) = ft_read_sens(cfg.template{i});
+    tmp = ft_read_sens(cfg.template{i});
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra'),
-    template(i) = cfg.template{i};
+    tmp = cfg.template{i};
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra'),
     % it seems to be a pre-2011v1 type gradiometer structure, update it
-    template(i) = ft_datatype_sens(cfg.template{i});
+    tmp = ft_datatype_sens(cfg.template{i});
   else
     error('unrecognized template input');
   end
+  % prevent "Subscripted assignment between dissimilar structures" error
+  template = appendstruct(template, tmp); clear tmp
 end
 
 grad = ft_average_sens(template);
@@ -200,14 +211,10 @@ template.grad = grad;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 volcfg = [];
-if isfield(cfg, 'hdmfile')
-  volcfg.hdmfile = cfg.hdmfile;
-elseif isfield(cfg, 'vol')
-  volcfg.vol = cfg.vol;
-end
-volcfg.grad    = data.grad;
-volcfg.channel = data.label; % this might be a subset of the MEG channels
-gradorig       = data.grad; % this is needed later on for plotting. As of
+volcfg.headmodel = cfg.headmodel;
+volcfg.grad      = data.grad;
+volcfg.channel   = data.label; % this might be a subset of the MEG channels
+gradorig         = data.grad;  % this is needed later on for plotting. As of
 % yet the next step is not entirely correct, because it does not keep track
 % of the balancing of the gradiometer array. FIXME this may require some
 % thought because the leadfields are computed with low level functions and
@@ -232,19 +239,11 @@ else
   cfg.verify = 'no';
 end
 
-% create the dipole grid on which the data will be projected
-tmpcfg = [];
-tmpcfg.vol  = volold;
-tmpcfg.grad = data.grad;
 % copy all options that are potentially used in ft_prepare_sourcemodel
-try, tmpcfg.grid        = cfg.grid;         end
-try, tmpcfg.mri         = cfg.mri;          end
-try, tmpcfg.headshape   = cfg.headshape;    end
-try, tmpcfg.symmetry    = cfg.symmetry;     end
-try, tmpcfg.smooth      = cfg.smooth;       end
-try, tmpcfg.threshold   = cfg.threshold;    end
-try, tmpcfg.spheremesh  = cfg.spheremesh;   end
-try, tmpcfg.inwardshift = cfg.inwardshift;  end
+tmpcfg            = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+tmpcfg.headmodel  = volold;
+tmpcfg.grad       = data.grad;
+% create the dipole grid on which the data will be projected
 grid = ft_prepare_sourcemodel(tmpcfg);
 pos = grid.pos;
 
@@ -411,14 +410,14 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
 
 % rename the output variable to accomodate the savevar postamble
 data = interp;
 
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

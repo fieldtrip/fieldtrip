@@ -60,16 +60,18 @@ for i=1:(nargin-1)
   
   % ignore the provenance fields themselves
   fn = setdiff(fn, { ...
-    'callinfo'
+    'trackconfig'
     'checkconfig'
     'checksize'
-    'debug'
-    'showcallinfo'
-    'trackcallinfo'
-    'trackconfig'
+    'trackusage'
     'trackdatainfo'
-    'trackparaminfo'
+    'trackcallinfo'
+    'showcallinfo'
+    'callinfo'
     'version'
+    'warning'
+    'debug'
+    'previous'
     });
   
   for j=1:length(fn)

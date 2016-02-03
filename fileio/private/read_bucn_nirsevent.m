@@ -10,6 +10,8 @@ function [event] = read_bucn_nirsevent(filename)
 %
 % Use as
 %   [event] = read_bucn_nirshdr(filename)
+%
+% See also READ_BUCN_NIRSHDR, READ_BUCN_NIRSDATA
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %

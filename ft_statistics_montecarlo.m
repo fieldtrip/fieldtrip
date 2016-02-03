@@ -80,7 +80,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.voxelthreshold   deprecated
 %   cfg.precondition     before|after|[], for the statfun
 
-% Copyright (C) 2005-2007, Robert Oostenveld
+% Copyright (C) 2005-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -100,12 +100,15 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
+ft_preamble randomseed; % deal with the user specified random seed
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'unitfactor',       'uvar'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'repeatedmeasures', 'uvar'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'clusterthreshold', 'nonparametric', 'nonparametric_individual'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'yes', 'max'});
+cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'none', 'no'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'bonferoni', 'bonferroni'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'correctm', 'holms', 'holm'});
 cfg = ft_checkconfig(cfg, 'required',    {'statistic'});
@@ -124,7 +127,6 @@ cfg.uvar         = ft_getopt(cfg, 'uvar',       []);
 cfg.cvar         = ft_getopt(cfg, 'cvar',       []);
 cfg.wvar         = ft_getopt(cfg, 'wvar',       []);
 cfg.correcttail  = ft_getopt(cfg, 'correcttail',  'no');
-%cfg.randomseed   = ft_getopt(cfg, 'randomseed',   'yes');
 cfg.precondition = ft_getopt(cfg, 'precondition', []);
 
 % explicit check for option 'yes' in cfg.correctail.
@@ -143,7 +145,7 @@ if strcmp(cfg.correctm, 'cluster')
   
   % deal with the neighbourhood of the channels/triangulation/voxels
   if isempty(cfg.connectivity)
-    if isfield(cfg, 'dim') && ~isfield(cfg, 'channel')
+    if isfield(cfg, 'dim') && ~isfield(cfg, 'channel') && ~isfield(cfg, 'tri')
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       fprintf('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
@@ -205,16 +207,6 @@ if isempty(statfun)
 else
   fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
-
-% % initialize the random number generator.
-% if strcmp(cfg.randomseed, 'no')
-%   % do nothing
-% elseif strcmp(cfg.randomseed, 'yes')
-%   rand('state',sum(100*clock));
-% else
-%   % seed with the user-given value
-%   rand('state',cfg.randomseed);
-% end;
 
 % construct the resampled design matrix or data-shuffling matrix
 fprintf('constructing randomized design\n');
@@ -499,6 +491,8 @@ for i=1:length(fn)
     stat = setfield(stat, fn{i}, getfield(statfull, fn{i}));
   end
 end
+
+ft_postamble randomseed; % deal with the potential user specified randomseed
 
 warning(ws); % revert to original state
 

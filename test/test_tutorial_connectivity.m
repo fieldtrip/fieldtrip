@@ -12,7 +12,6 @@ function test_tutorial_connectivity
 
 % See also test_tutorial_connectivity2 and test_tutorial_connectivity3
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 

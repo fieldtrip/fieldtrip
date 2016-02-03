@@ -1,4 +1,4 @@
-function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
+function [dipout] = beamformer_dics(dip, grad, headmodel, dat, Cf, varargin)
 
 % BEAMFORMER_DICS scans on pre-defined dipole locations with a single dipole
 % and returns the beamformer spatial filter output for a dipole on every
@@ -6,11 +6,11 @@ function [dipout] = beamformer_dics(dip, grad, vol, dat, Cf, varargin)
 % NaN value.
 %
 % Use as
-%   [dipout] = beamformer_dics(dipin, grad, vol, dat, cov, varargin)
+%   [dipout] = beamformer_dics(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
-%   vol         is the volume conductor definition
+%   headmodel   is the volume conductor definition
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
@@ -126,7 +126,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -299,10 +299,10 @@ switch submethod
         lf = dip.leadfield{i};
       elseif ~hasleadfield && hasmom
         % compute the leadfield for a fixed dipole orientation
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
       else
         % compute the leadfield
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
       end
       if hassubspace
         % do subspace projection of the forward model
@@ -349,8 +349,8 @@ switch submethod
           
           % and compute the leadfield for that orientation
           lf  = lf * maxpowori;
-          dipout.ori{i,1} = maxpowori;
-          dipout.eta{i,1} = eta;
+          dipout.ori{i} = maxpowori;
+          dipout.eta(i) = eta;
           if ~isempty(subspace), lforig = lforig * maxpowori; end
           
           % recompute the filter to only use that orientation
@@ -412,10 +412,10 @@ switch submethod
         lf = dip.leadfield{i};
       elseif hasmom
         % compute the leadfield for a fixed dipole orientation
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
-        lf = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+        lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
       end
       if hassubspace
         % do subspace projection of the forward model
@@ -518,7 +518,7 @@ switch submethod
       error('fixed orientations are not supported for beaming cortico-cortical coherence');
     end
     % compute cortio-cortical coherence with a dipole at the reference position
-    lf1 = ft_compute_leadfield(refdip, grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+    lf1 = ft_compute_leadfield(refdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
     % construct the spatial filter for the first (reference) dipole location
     filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
     if powlambda1
@@ -532,10 +532,10 @@ switch submethod
         lf2 = dip.leadfield{i};
       elseif hasmom
         % compute the leadfield for a fixed dipole orientation
-        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
+        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize) .* dip.mom(i,:)';
       else
         % compute the leadfield
-        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize);
+        lf2 = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
       end
       if hasfilter
         % use the provided filter
@@ -596,6 +596,10 @@ end
 if isfield(dipout, 'ori')
   dipout.ori( originside) = dipout.ori;
   dipout.ori(~originside) = {[]};
+end
+if isfield(dipout, 'eta')
+  dipout.eta( originside) = dipout.eta;
+  dipout.eta(~originside) = nan;
 end
 if isfield(dipout, 'pow')
   dipout.pow( originside) = dipout.pow;

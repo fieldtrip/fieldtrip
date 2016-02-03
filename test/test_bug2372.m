@@ -1,5 +1,11 @@
 function test_bug2372
 
+% WALLTIME 0:10:00
+% MEM 2gb
+
+% TEST test_bug2372
+% TEST ft_timelockgrandaverage ft_timelockanalysis
+
 global ft_default;
 ft_default.feedback = 'no';
 

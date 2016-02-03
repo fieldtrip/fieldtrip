@@ -1,4 +1,4 @@
-function [dipout] = beamformer_sam(dip, sens, vol, dat, all_cov, varargin)
+function [dipout] = beamformer_sam(dip, sens, headmodel, dat, all_cov, varargin)
 
 % BEAMFORMER_SAM scans on pre-defined dipole locations with a single
 % dipole and returns the CTF Synthetic Aperture Magnetometry (SAM)
@@ -6,11 +6,11 @@ function [dipout] = beamformer_sam(dip, sens, vol, dat, all_cov, varargin)
 % the head will return a NaN value.
 %
 % Use as
-%   [dipout] = beamformer_sam(dipin, sens, vol, dat, cov, varargin)
+%   [dipout] = beamformer_sam(dipin, sens, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   sens        is the gradiometer definition
-%   vol         is the volume conductor definition
+%   headmodel   is the volume conductor definition
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
@@ -51,11 +51,11 @@ normalizeparam    = keyval('normalizeparam',    varargin);
 
 % determine the mean sphere origin, required for spinning
 if isempty(meansphereorigin)
-  switch ft_voltype(vol)
+  switch ft_voltype(headmodel)
     case 'singlesphere'
-      meansphereorigin = vol.o;
+      meansphereorigin = headmodel.o;
     case 'localspheres'
-      meansphereorigin = mean(vol.o, 1);
+      meansphereorigin = mean(headmodel.o, 1);
     otherwise
       error('unsupported voltype for determining the mean sphere origin')
   end
@@ -65,7 +65,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -136,10 +136,10 @@ for diplop=1:size(dip.pos,1)
   elseif isfield(dip, 'mom')
     % compute the leadfield for a fixed dipole orientation
     % FIXME this probably won't work because of the spinning/nonspinning source orientation estimate being part of this code
-    lf = ft_compute_leadfield(vox_pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,diplop);
+    lf = ft_compute_leadfield(vox_pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,diplop);
   else
     % compute the leadfield
-    lf = ft_compute_leadfield(vox_pos, sens, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    lf = ft_compute_leadfield(vox_pos, sens, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
   if strcmp(fixedori, 'spinning')
@@ -154,7 +154,7 @@ for diplop=1:size(dip.pos,1)
     [junk, min_ind] = min(all_costfun_val);
     
     optim_options = optimset('Display', 'final', 'TolX', 1e-3, 'Display', 'off');
-    [opt_angle, fval, exitflag, output] = fminsearch('SAM_costfun', all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, all_cov, inv_cov, noise_cov);
+    [opt_angle, fval, exitflag, output] = fminsearch(@SAM_costfun, all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, all_cov, inv_cov, noise_cov);
     MDip        = settang(opt_angle, tanu, tanv);
     MagDip      = sqrt(dot(MDip,MDip));
     opt_vox_or  = (MDip/MagDip)';

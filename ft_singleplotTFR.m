@@ -87,9 +87,9 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
-ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -130,9 +130,9 @@ cfg.channel        = ft_getopt(cfg, 'channel',      'all');
 cfg.masknans       = ft_getopt(cfg, 'masknans',     'yes');
 cfg.directionality = ft_getopt(cfg, 'directionality',[]);
 cfg.figurename     = ft_getopt(cfg, 'figurename',    []);
+cfg.parameter      = ft_getopt(cfg, 'parameter', 'powspctrm');
 
-
-dimord = data.dimord;
+dimord = getdimord(data, cfg.parameter);
 dimtok = tokenize(dimord, '_');
 
 % Set x/y/parameter defaults
@@ -141,7 +141,6 @@ if ~any(ismember(dimtok, 'time'))
 else
   xparam = 'time';
   yparam = 'freq';
-  cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
 end
 
 if isfield(cfg, 'channel') && isfield(data, 'label')
@@ -374,14 +373,13 @@ if length(sellab) > 1 && ~isempty(cfg.maskparameter)
   cfg.maskparameter = [];
 end
 
-dat = data.(cfg.parameter);
 % get dimord dimensions
-dims = textscan(data.dimord,'%s', 'Delimiter', '_');
-dims = dims{1};
-ydim = find(strcmp(yparam, dims));
-xdim = find(strcmp(xparam, dims));
-zdim = setdiff(1:ndims(dat), [ydim xdim]);
+ydim = find(strcmp(yparam, dimtok));
+xdim = find(strcmp(xparam, dimtok));
+zdim = setdiff(1:length(dimtok), [ydim xdim]); % all other dimensions
+
 % and permute
+dat = data.(cfg.parameter);
 dat = permute(dat, [zdim(:)' ydim xdim]);
 if isfull
   dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
@@ -455,7 +453,7 @@ end
 if isfield(cfg,'colormap')
   if size(cfg.colormap,2)~=3, error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
   set(gcf,'colormap',cfg.colormap);
-end;
+end
 
 % Draw plot (and mask NaN's if requested):
 cla
@@ -547,8 +545,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
+ft_postamble provenance
 
 % add a menu to the figure, but only if the current figure does not have subplots
 % also, delete any possibly existing previous menu, this is safe because delete([]) does nothing

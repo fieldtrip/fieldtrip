@@ -22,6 +22,8 @@ function [indx] = nearest(array, val, insideflag, toleranceflag)
 % return an error, but nearest(1:10, 0.99, true, true) will return 1. The
 % tolerance that is allowed is half the distance between the subsequent
 % values in the array.
+%
+% See also FIND
 
 % Copyright (C) 2002-2012, Robert Oostenveld
 %
@@ -122,11 +124,11 @@ if val>maxarray
   % return the last occurence of the largest number
   [dum, indx] = max(flipud(array));
   indx = numel(array) + 1 - indx;
-  
+
 elseif val<minarray
   % return the first occurence of the smallest number
   [dum, indx] = min(array);
-  
+
 else
   % implements a threshold to correct for errors due to numerical precision
   % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=498 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
@@ -138,14 +140,14 @@ else
   %
   %   % return the first occurence of the nearest number
   %   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
-  
+
   % use find instead, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
   wassorted = true;
   if ~issorted(array)
     wassorted = false;
     [array, xidx] = sort(array);
   end
-  
+
   indx2 = find(array<=val, 1, 'last');
   indx3 = find(array>=val, 1, 'first');
   if abs(array(indx2)-val) <= abs(array(indx3)-val)
@@ -156,7 +158,7 @@ else
   if ~wassorted
     indx = xidx(indx);
   end
-  
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -182,4 +184,3 @@ function mbvector(a)
 if ndims(a) > 2 || (size(a, 1) > 1 && size(a, 2) > 1)
   error('Argument to mbvector must be a vector');
 end
-

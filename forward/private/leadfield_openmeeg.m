@@ -1,4 +1,4 @@
-function [lp, voxels_in] = ft_leadfield_openmeeg ( voxels, vol, sens, varargin )
+function [lp, voxels_in] = leadfield_openmeeg ( voxels, vol, sens, varargin )
 
 % FT_OM_COMPUTE_LEAD uses OpenMEEG to compute the lead fields / potentials
 % using the boundary element method (BEM).

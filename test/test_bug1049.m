@@ -8,7 +8,6 @@ function test_bug1049
 
 % this function creates a set of source-structures to be used for testing
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 

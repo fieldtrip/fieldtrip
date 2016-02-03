@@ -8,22 +8,23 @@ function [data] = ft_freqsimulation(cfg)
 % Use as
 %   [data] = ft_freqsimulation(cfg)
 %
-% The configuration options include
-%   cfg.method      = The methods are explained in more detail below, but they can be
+% The configuration options can include
+%   cfg.method     = The methods are explained in more detail below, but they can be
 %                     'superimposed'    simply add the contribution of the different frequencies
 %                     'broadband'       create a single broadband signal component
 %                     'phalow_amphigh'  phase of low freq correlated with amplitude of high freq
 %                     'amplow_amphigh'  amplitude of low freq correlated with amplithude of high freq
 %                     'phalow_freqhigh' phase of low freq correlated with frequency of high signal
 %                     'asymmetric'      single signal component with asymmetric positive/negative deflections
-%   cfg.output      = which channels should be in the output data, can be 'mixed' or 'all' (default = 'all')
+%   cfg.output     = which channels should be in the output data, can be 'mixed' or 'all' (default = 'all')
+%   cfg.randomseed = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % The number of trials and the time axes of the trials can be specified by
-%   cfg.fsample     = simulated sample frequency
-%   cfg.trllen      = length of simulated trials in seconds
-%   cfg.numtrl      = number of simulated trials
+%   cfg.fsample    = simulated sample frequency
+%   cfg.trllen     = length of simulated trials in seconds
+%   cfg.numtrl     = number of simulated trials
 % or by
-%   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
+%   cfg.time       = cell-array with one time axis per trial, which are for example obtained from an existing dataset
 %
 % For each of the methods default parameters are configured to generate
 % example data, including noise. To get full control over the generated
@@ -129,7 +130,8 @@ function [data] = ft_freqsimulation(cfg)
 %     4th channel: noise
 %
 % See also FT_FREQANALYSIS, FT_FREQDESCRIPTIVES, FT_FREQINTERPOLATION,
-% FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR
+% FT_CONNECTIVITYSIMULATION, FT_DIPOLESIMULATION, FT_MULTIPLOTTFR, FT_TOPOPLOTTFR,
+% FT_SINGLEPLOTTFR
 
 % Copyright (C) 2007-2008, Ingrid Nieuwenhuis & Robert Oostenveld, F.C. Donders Centre
 %
@@ -156,9 +158,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance
+ft_preamble randomseed
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -529,6 +532,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble randomseed
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

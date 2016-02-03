@@ -102,11 +102,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
-ft_preamble loadvar    varargin
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -146,6 +145,8 @@ cfg.channel         = ft_getopt(cfg, 'channel',      'all');
 cfg.directionality  = ft_getopt(cfg, 'directionality',   []);
 cfg.figurename      = ft_getopt(cfg, 'figurename',       []);
 cfg.preproc         = ft_getopt(cfg, 'preproc', []);
+cfg.frequency       = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
+cfg.latency         = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
 
 
 Ndata = numel(varargin);
@@ -433,13 +434,19 @@ for i=1:Ndata
 end
 
 if strcmp('freq',yparam) && strcmp('freq',dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'foilim',cfg.zlim,'avgoverfreq','yes');
-  end
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgoverfreq = 'yes';
+  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i},'param',cfg.parameter,'toilim',cfg.zlim,'avgovertime','yes');
-  end
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgovertime = 'yes';
+  tmpcfg.latency     = cf.latency;%cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 end
 
 cla
@@ -513,8 +520,12 @@ for i=1:Ndata
   
   % make mask
   if ~isempty(cfg.maskparameter)
-    datmask = varargin{1}.(cfg.maskparameter)(sellab,:);
-    datmask = datmask(xidmin(i):xidmax(i));
+    datmask = varargin{i}.(cfg.maskparameter)(sellab,:);
+    if size(datmask,2)>1
+      datmask = datmask(:,xidmin(i):xidmax(i));
+    else
+      datmask = datmask(xidmin(i):xidmax(i));
+    end
     maskdatavector = reshape(mean(datmask,1), [1 numel(xval)]);
   else
     maskdatavector = [];
@@ -664,8 +675,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous varargin
+ft_postamble provenance
 
 % add a menu to the figure, but only if the current figure does not have subplots
 % also, delete any possibly existing previous menu, this is safe because delete([]) does nothing

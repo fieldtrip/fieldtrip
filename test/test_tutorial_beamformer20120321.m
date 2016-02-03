@@ -6,7 +6,6 @@ function test_tutorial_beamformer20120321
 % TEST test_tutorial_beamformer
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 

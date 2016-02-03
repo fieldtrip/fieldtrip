@@ -36,8 +36,7 @@ function [data] = ft_megplanar(cfg, data)
 % of the volume conduction model.
 %
 % The volume conduction model of the head should be specified as
-%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % The following cfg fields are optional:
 %   cfg.feedback
@@ -77,10 +76,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -105,6 +104,9 @@ if isfreq,
   if ~isfield(data, 'fourierspctrm'), error('freq data should contain Fourier spectra'); end
 end
 
+cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
+
 % set the default configuration
 cfg.channel      = ft_getopt(cfg, 'channel',      'MEG');
 cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
@@ -112,9 +114,9 @@ cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape', 'headmodel', []});
 if ~strcmp(cfg.planarmethod, 'sourceproject')
   cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
-  cfg.neighbours = struct(cfg.neighbours);
 end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
@@ -122,7 +124,11 @@ if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   cfg.headshape = struct(cfg.headshape);
 end
 
-cfg = ft_checkconfig(cfg, 'renamedvalue',  {'headshape', 'headmodel', []});
+if isfield(cfg, 'neighbours') && isa(cfg.neighbours, 'config')
+  % convert the nested config-object back into a normal structure
+  cfg.neighbours = struct(cfg.neighbours);
+end
+
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
@@ -160,12 +166,12 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   % FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
   % volume model labels (in case of a localspheres model) and result in a gradiometer
   % definition that only contains the gradiometers that are present in the data.
-  [vol, axial.grad, cfg] = prepare_headmodel(cfg, data);
+  [headmodel, axial.grad, cfg] = prepare_headmodel(cfg, data);
   
   % determine the dipole layer that represents the surface of the brain
   if isempty(cfg.headshape)
     % construct from the inner layer of the volume conduction model
-    pos = headsurface(vol, axial.grad, 'surface', 'cortex', 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
+    pos = headsurface(headmodel, axial.grad, 'surface', 'cortex', 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
   else
     % get the surface describing the head shape
     if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
@@ -191,13 +197,13 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   
   % compute the forward model for the axial gradiometers
   fprintf('computing forward model for %d dipoles\n', size(pos,1));
-  lfold = ft_compute_leadfield(pos, axial.grad, vol);
+  lfold = ft_compute_leadfield(pos, axial.grad, headmodel);
   
   % construct the planar gradient definition and compute its forward model
   % this will not work for a localspheres model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
-  lfnew = ft_compute_leadfield(pos, planar.grad, vol);
+  lfnew = ft_compute_leadfield(pos, planar.grad, headmodel);
   
   % compute the interpolation matrix
   transform = lfnew * prunedinv(lfold, cfg.pruneratio);
@@ -362,14 +368,14 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
 
 % rename the output variable to accomodate the savevar postamble
 data = interp;
 
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

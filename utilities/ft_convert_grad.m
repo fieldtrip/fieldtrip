@@ -1,4 +1,4 @@
-function gradnew = ft_convert_grad(grad, amplitude, distance, scaling)
+function [gradnew] = ft_convert_grad(grad, amplitude, distance, scaling)
 
 % FT_CONVERT_GRAD is deprecated, please use ft_datatype_sens
 

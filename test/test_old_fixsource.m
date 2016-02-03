@@ -111,8 +111,13 @@ cfgs.keepmom     = 'yes';
 
 %there are two ways for not crashing the second round of ft_sourceanalysis
 %with fixori = 'yes';
-for k = 1:numel(source.inside)
-  kk = source.inside(k);
+if all(islogical(source.inside))
+  insidevec = find(source.inside);
+else
+  insidevec = source.inside;
+end
+for k = 1:numel(insidevec)
+  kk = insidevec(k);
   cfgs.grid.leadfield{kk} = sdics2.leadfield{kk}*sdics2.ori{kk};
 end
 source = ft_sourceanalysis(cfgs, freq);
@@ -122,8 +127,8 @@ spcc1f = ft_checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');
 % alternative
 % append a mom to the grid as (3xN) matrix
 cfgs.grid.mom = zeros(size(grid.pos))';
-for k = 1:numel(source.inside)
-  kk = source.inside(k);
+for k = 1:numel(insidevec)
+  kk = insidevec(k);
   cfgs.grid.mom(:,kk) = sdics2.ori{kk};
 end
 %FIXME there's an issue here with mom being expected to be Nx3 and 3xN in beamformer_pcc
@@ -157,5 +162,6 @@ slcmv          = ft_checkdata(source, 'sourcerepresentation', 'new');
 
 cfgs.grid.filter = slcmv.filter;
 cfgs.rawtrial    = 'yes';
+%cfgs.keepfilter  = 'no';
 source           = ft_sourceanalysis(cfgs, tlck);
 slcmv2           = ft_checkdata(source, 'sourcerepresentation', 'new');

@@ -1,13 +1,13 @@
-function vol = ft_headmodel_interpolate(filename, sens, grid, varargin)
+function headmodel = ft_headmodel_interpolate(filename, sens, grid, varargin)
 
 % FT_HEADMODEL_INTERPOLATE describes a volume conduction model of the head in which
 % subsequent leadfield computations can be performed using a simple interpolation
 % scheme.
 %
 % Use as
-%   vol = ft_headmodel_interpolate(filename, sens, leadfield)
+%   headmodel = ft_headmodel_interpolate(filename, sens, leadfield)
 % or
-%   vol = ft_headmodel_interpolate(filename, sens, leadfield)
+%   headmodel = ft_headmodel_interpolate(filename, sens, leadfield)
 %
 % The input parameters are the filename to which the model will be written,
 % the electrode definition (see ft_DATATYPE_SENS). The third input argument
@@ -16,12 +16,12 @@ function vol = ft_headmodel_interpolate(filename, sens, grid, varargin)
 %
 % The output volume conduction model is stored on disk in a MATLAB file together with a
 % number of NIFTi files. The mat file contains a structure with the following fields
-%   vol.sens        = structure, electrode sensor description, see FT_DATATYE_SENS
-%   vol.filename    = cell-array with NIFTI filenames, one file per channel
+%   headmodel.sens        = structure, electrode sensor description, see FT_DATATYE_SENS
+%   headmodel.filename    = cell-array with NIFTI filenames, one file per channel
 % and contains
-%   vol.dim         = [Nx Ny Nz] vector with the number of grid points along each dimension
-%   vol.transform   = 4x4 homogenous transformation matrix
-%   vol.unit        = string with the geometrical units of the positions, e.g. 'cm' or 'mm'
+%   headmodel.dim         = [Nx Ny Nz] vector with the number of grid points along each dimension
+%   headmodel.transform   = 4x4 homogenous transformation matrix
+%   headmodel.unit        = string with the geometrical units of the positions, e.g. 'cm' or 'mm'
 % to describe the source positions.
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
@@ -65,14 +65,14 @@ filename = fullfile(p, f);
 
 if ischar(grid)
   % the input is a filename that points to a BESA precomputed leadfield
-  hdmfile = grid;
+  filename = grid;
   clear grid
   
   % this requires the BESA functions
   ft_hastoolbox('besa', 1);
   
   % get the filename with the path but without the extension
-  [p, f, x] = fileparts(hdmfile);
+  [p, f, x] = fileparts(filename);
   if isempty(p)
     p = pwd;
   end
@@ -166,21 +166,21 @@ if isfield(grid, 'leadfield')
     error('the number of channels does not match');
   end
   
-  vol = [];
-  vol.type      = 'interpolate';
-  vol.dim       = grid.dim;
-  vol.transform = grid.transform;
-  vol.inside    = false(grid.dim);
-  vol.inside(insideindx) = true;
-  vol.sens      = sens;
-  vol.filename  = cell(size(sens.label));
+  headmodel = [];
+  headmodel.type      = 'interpolate';
+  headmodel.dim       = grid.dim;
+  headmodel.transform = grid.transform;
+  headmodel.inside    = false(grid.dim);
+  headmodel.inside(insideindx) = true;
+  headmodel.sens      = sens;
+  headmodel.filename  = cell(size(sens.label));
   
   if isfield(grid, 'unit')
     % get the units from the dipole grid
-    vol.unit = grid.unit;
+    headmodel.unit = grid.unit;
   else
     % estimate the units
-    vol = ft_convert_units(vol);
+    headmodel = ft_convert_units(headmodel);
   end
   
   % these go in the same directory as the other nii files, they will be removed after use
@@ -195,12 +195,12 @@ if isfield(grid, 'leadfield')
   end
 
   % these indices only have to be determined once and speed-up the reassignment
-  [ind1, ind2, ind3] = ndgrid(1:vol.dim(1), 1:vol.dim(2), 1:vol.dim(3));
+  [ind1, ind2, ind3] = ndgrid(1:headmodel.dim(1), 1:headmodel.dim(2), 1:headmodel.dim(3));
   
   for i=1:nchan
-    dat = zeros([vol.dim 3]);
+    dat = zeros([headmodel.dim 3]);
     for j=insideindx(:)'
-      % [i1, i2, i3] = ind2sub(vol.dim, j);
+      % [i1, i2, i3] = ind2sub(headmodel.dim, j);
       % ind2sub is slow, simply look them up instead
       i1 = ind1(j);
       i2 = ind2(j);
@@ -229,8 +229,8 @@ if isfield(grid, 'leadfield')
     end
     
     
-    vol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
-    fprintf('writing single channel leadfield to %s\n', vol.filename{i})
+    headmodel.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
+    fprintf('writing single channel leadfield to %s\n', headmodel.filename{i})
     
     if exist('spm_bsplinc', 'file')
       dat = cat(4, dat, 0*dat);
@@ -239,13 +239,13 @@ if isfield(grid, 'leadfield')
       end
     end
     
-    ft_write_mri(vol.filename{i}, dat , 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+    ft_write_mri(headmodel.filename{i}, dat , 'transform', grid.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
     
   end
   
   filename = sprintf('%s.mat', filename);
   fprintf('writing volume conduction model metadata to %s\n', filename)
-  save(filename, 'vol');
+  save(filename, 'headmodel');
   
 elseif isfield(grid, 'filename')
   % the input pre-computed leadfields reflect the output of FT_HEADMODEL_INTERPOLATE,
@@ -263,14 +263,14 @@ elseif isfield(grid, 'filename')
   end
   
   % create a 2D projection and triangulation
-  pnt = inputvol.sens.elecpos;
-  prj = elproj(pnt);
+  pos = inputvol.sens.elecpos;
+  prj = elproj(pos);
   tri = delaunay(prj(:,1), prj(:,2));
   
   % project the electrodes on the triangulation and compute the
   % bilinear interpolation from the original to the new electrodes
-  [el, prj] = project_elec(sens.elecpos, pnt, tri);
-  tra = transfer_elec(pnt, tri, el);
+  [el, prj] = project_elec(sens.elecpos, pos, tri);
+  tra = transfer_elec(pos, tri, el);
   
   % define the spaces and the number of elements that they comprise
   n1 = length(inputvol.sens.label);    % computed channels
@@ -351,12 +351,12 @@ elseif isfield(grid, 'filename')
   outputvol.sens = sens;
   
   % rename and save to disk
-  vol = outputvol;
+  headmodel = outputvol;
   clear inputvol outputvol
   
   filename = sprintf('%s.mat', filename);
   fprintf('writing volume conductor structure to %s\n', filename)
-  save(filename, 'vol');
+  save(filename, 'headmodel');
   
 end
 

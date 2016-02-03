@@ -8,6 +8,9 @@ function test_ft_analysispipeline
 
 % the style of this test script is also used in test_ft_datatype and test_bug2185
 
+global ft_default
+ft_default.trackusage = 'no'; % this calls ft_analysispipeline more than 6000 times, those should not all be tracked
+
 dirlist = {
   '/home/common/matlab/fieldtrip/data/test/latest'
   '/home/common/matlab/fieldtrip/data/test/20131231'

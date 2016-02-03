@@ -41,9 +41,9 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance data
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -58,7 +58,7 @@ cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
 % if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151.lay';        end;
-if ~isfield(cfg, 'xparam'),      cfg.xparam = 'foi';                end;
+%if ~isfield(cfg, 'xparam'),      cfg.xparam = 'freq';                end;
 if ~isfield(cfg, 'xlim'),        cfg.xlim   = 'all';                end;
 if ~isfield(cfg, 'parameter'),   cfg.parameter = 'avg.icohspctrm';  end;
 
@@ -66,7 +66,7 @@ if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'
   data.avg.icohspctrm = abs(imag(data.avg.cohspctrm));
 end
 
-if strcmp(data.dimord, 'refchan_chan_freq'),
+if strcmp(data.dimord, 'chan_chan_freq'),
   % reshape input-data, such that ft_topoplotTFR will take it
   cnt = 1;
   siz = size(data.prob);
@@ -74,8 +74,8 @@ if strcmp(data.dimord, 'refchan_chan_freq'),
   data.prob = reshape(data.prob, [siz(1)*siz(2) siz(3)]);
   data.stat = reshape(data.stat, [siz(1)*siz(2) siz(3)]);
   for j = 1:length(data.label)
-    for k = 1:length(data.reflabel)
-      data.labelcmb(cnt,:) = [data.reflabel(k) data.label(j)];
+    for k = 1:length(data.label)
+      data.labelcmb(cnt,:) = [data.label(k) data.label(j)];
       cnt = cnt + 1;
     end
   end
@@ -95,11 +95,17 @@ if isfield(cfg, 'xparam'),
 end
 
 % R=read or create the layout that will be used for plotting
-lay = ft_prepare_layout(cfg, varargin{1});
+lay = ft_prepare_layout(cfg);%, varargin{1});
 cfg.layout = lay;
 ft_plot_lay(lay, 'box', false,'label','no','point','no');
 
-[chNum,X,Y,Width,Height,Lbl] = textread(cfg.layout,'%f %f %f %f %f %s');
+%[chNum,X,Y,Width,Height,Lbl] = textread(cfg.layout,'%f %f %f %f %f %s');
+X = lay.pos(:,1);
+Y = lay.pos(:,2);
+Width = lay.width;
+Height = lay.height;
+Lbl = lay.label;
+chNum = numel(lay.label);
 
 xScaleFac = 1/(max(Width)+ max(X) - min(X));
 yScaleFac = 1/(max(Height)+ max(Y) - min(Y));
@@ -122,7 +128,7 @@ for k=1:length(chNum) - 2
       config.xparam = cfg.xparam;
       config.xlim   = xparam;
     else
-      config.xparam = 'time';
+      config.xparam = 'freq';
       config.xlim   = [k-0.5 k+0.5];
     end
     config.parameter = cfg.parameter;
@@ -138,5 +144,6 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
+ft_postamble previous   data
+ft_postamble history    data
 ft_postamble provenance
-ft_postamble previous data

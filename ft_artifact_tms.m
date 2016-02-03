@@ -6,9 +6,10 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 % Use as
 %   [cfg, artifact] = ft_artifact_tms(cfg)
 % with the configuration options
-%   cfg.dataset
-%   cfg.headerfile
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_tms(cfg, data)
@@ -30,7 +31,8 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 %
 % DETECT
 % The data is preprocessed (again) with the following configuration parameters,
-% which are optimal for identifying tms artifacts.
+% which are optimal for identifying tms artifacts. This acts as a wrapper
+% around ft_artifact_zvalue
 %   cfg.artfctdef.tms.derivative  = 'yes'
 %
 % Artifacts are identified by means of thresholding the z-transformed value
@@ -99,7 +101,7 @@ revision = '$Id$';
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 % ft_preamble provenance is not needed because just a call to ft_artifact_zvalue
 % ft_preamble loadvar data is not needed because ft_artifact_zvalue will do this
 
@@ -113,9 +115,8 @@ cfg = ft_checkconfig(cfg, 'allowedval',{'method','detect','marker'});
 if ~isfield(cfg,'artfctdef'),                       cfg.artfctdef                   = [];        end
 if ~isfield(cfg,'method'),                          cfg.method                      = 'detect';  end
 if ~isfield(cfg.artfctdef,'tms'),                   cfg.artfctdef.tms               = [];        end
-if ~isfield(cfg.artfctdef.tms,'method'),            cfg.artfctdef.tms.method        = 'zvalue';  end
-if ~isfield(cfg,'prestim'),                         cfg.prestim                     = 0.005;  end
-if ~isfield(cfg,'poststim'),                        cfg.poststim                    = 0.010;  end
+if ~isfield(cfg,'prestim'),                         cfg.prestim                     = 0.005;     end
+if ~isfield(cfg,'poststim'),                        cfg.poststim                    = 0.010;     end
 
 if isfield(cfg.artfctdef.tms, 'artifact')
   fprintf('tms artifact detection has already been done, retaining artifacts\n');
@@ -126,13 +127,14 @@ end
 switch cfg.method
   case 'detect'
     % settings for preprocessing
-    if ~isfield(cfg.artfctdef.tms,'derivative'),   cfg.artfctdef.tms.derivative   = 'yes';     end
+    if ~isfield(cfg.artfctdef.tms,'derivative'),   cfg.artfctdef.tms.derivative   = 'yes';    end
     % settings for the zvalue subfunction
-    if ~isfield(cfg.artfctdef.tms,'channel'),    cfg.artfctdef.tms.channel     = 'all';     end
-    if ~isfield(cfg.artfctdef.tms,'trlpadding'), cfg.artfctdef.tms.trlpadding  = 0.1;       end
-    if ~isfield(cfg.artfctdef.tms,'fltpadding'), cfg.artfctdef.tms.fltpadding  = 0.1;       end
-    if ~isfield(cfg.artfctdef.tms,'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;       end
-    if ~isfield(cfg.artfctdef.tms,'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;         end
+    if ~isfield(cfg.artfctdef.tms,'method'),     cfg.artfctdef.tms.method      = 'zvalue';    end
+    if ~isfield(cfg.artfctdef.tms,'channel'),    cfg.artfctdef.tms.channel     = 'all';       end
+    if ~isfield(cfg.artfctdef.tms,'trlpadding'), cfg.artfctdef.tms.trlpadding  = 0.1;         end
+    if ~isfield(cfg.artfctdef.tms,'fltpadding'), cfg.artfctdef.tms.fltpadding  = 0.1;         end
+    if ~isfield(cfg.artfctdef.tms,'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;        end
+    if ~isfield(cfg.artfctdef.tms,'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;           end
     % construct a temporary configuration that can be passed onto artifact_zvalue
     tmpcfg                  = [];
     tmpcfg.trl              = cfg.trl;

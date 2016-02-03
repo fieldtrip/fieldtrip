@@ -1,4 +1,4 @@
-function [s,cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
+function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 
 % FT_STATFUN_DEPSAMPLESREGRT calculates dependent samples regression T-statistic 
 % on the biological data in dat (the dependent variable), using the information on 

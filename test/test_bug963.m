@@ -79,13 +79,19 @@ for i=1:length(dataset)
   end
   
   % remove coordsys field as these were not yet present in reference files
-  if isfield(grad, 'coordsys')
-    grad = rmfield(grad, 'coordsys');
-  end
-  if isfield(hdr.grad, 'coordsys')
-    hdr.grad = rmfield(hdr.grad, 'coordsys');
-  end
-  
+%   if isfield(grad, 'coordsys')
+%     grad = rmfield(grad, 'coordsys');
+%   end
+%   if isfield(hdr.grad, 'coordsys')
+%     hdr.grad = rmfield(hdr.grad, 'coordsys');
+%   end
+%   if isfield(grad, 'labelorg')
+%     grad = rmfield(grad, 'labelorg');
+%   end
+%   if isfield(hdr.grad, 'labelorg')
+%     hdr.grad = rmfield(hdr.grad, 'labelorg');
+%   end
+%   
   assert(isequal(hdr.grad,           grad), sprintf('failed for %s', filename));
   assert(isequal(reference.grad,     grad), sprintf('failed for %s', filename));
   assert(isequal(reference.hdr.grad, grad), sprintf('failed for %s', filename));
@@ -104,7 +110,7 @@ end % for all datasets
 filename = '/home/common/matlab/fieldtrip/data/Subject01.ds';
 hdr1 = ft_read_header(filename, 'headerformat', 'ctf_ds');
 hdr2 = ft_read_header(filename, 'headerformat', 'read_ctf_res4');
-hdr3 = ft_read_header(filename, 'headerformat', 'ctf_read_res4');
+%hdr3 = ft_read_header(filename, 'headerformat', 'ctf_read_res4');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PART 3:

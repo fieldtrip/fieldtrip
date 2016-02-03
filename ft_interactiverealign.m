@@ -9,21 +9,21 @@ function cfg = ft_interactiverealign(cfg)
 %
 % The configuration structure should contain the individuals geometrical
 % objects that have to be realigned as
-%  cfg.individual.vol
 %  cfg.individual.elec
 %  cfg.individual.grad
+%  cfg.individual.headmodel
+%  cfg.individual.headmodelstyle = 'edge'    (default), 'surface' or 'both'
 %  cfg.individual.headshape
 %  cfg.individual.headshapestyle = 'vertex'  (default), 'surface' or 'both'
-%  cfg.individual.volstyle       = 'edge'    (default), 'surface' or 'both'
 %
 % The configuration structure should also contain the geometrical
 % objects of a template that serves as target
-%  cfg.template.vol
 %  cfg.template.elec
 %  cfg.template.grad
+%  cfg.template.headmodel
+%  cfg.template.headmodelstyle   = 'surface' (default), 'edge'   or 'both'
 %  cfg.template.headshape
 %  cfg.template.headshapestyle   = 'surface' (default), 'vertex' or 'both'
-%  cfg.individual.volstyle       = 'surface' (default), 'edge'   or 'both'
 %
 % See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_READ_SENS, FT_READ_VOL, FT_READ_HEADSHAPE
 
@@ -52,9 +52,9 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
+ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
-ft_preamble debug
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -63,50 +63,68 @@ end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'individual', 'template'});
+cfg.individual = ft_checkconfig(cfg.individual, 'renamed', {'vol', 'headmodel'});
+cfg.individual = ft_checkconfig(cfg.individual, 'renamed', {'volstyle', 'headmodelstyle'});
+cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'vol', 'headmodel'});
+cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'volstyle', 'headmodelstyle'});
 
 cfg.individual.elec           = ft_getopt(cfg.individual, 'elec', []);
 cfg.individual.grad           = ft_getopt(cfg.individual, 'grad', []);
 cfg.individual.headshape      = ft_getopt(cfg.individual, 'headshape', []);
 cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'vertex');
-cfg.individual.vol            = ft_getopt(cfg.individual, 'vol', []);
-cfg.individual.volstyle       = ft_getopt(cfg.individual, 'volstyle', 'edge');
+cfg.individual.headmodel      = ft_getopt(cfg.individual, 'headmodel', []);
+cfg.individual.headmodelstyle = ft_getopt(cfg.individual, 'headmodelstyle', 'edge');
 cfg.individual.mri            = ft_getopt(cfg.individual, 'mri', []);
 cfg.individual.mristyle       = ft_getopt(cfg.individual, 'mristyle', 'intersect');
 
-cfg.template.elec           = ft_getopt(cfg.template, 'elec', []);
-cfg.template.grad           = ft_getopt(cfg.template, 'grad', []);
-cfg.template.headshape      = ft_getopt(cfg.template, 'headshape', []);
-cfg.template.headshapestyle = ft_getopt(cfg.template, 'headshapestyle', 'vertex');
-cfg.template.vol            = ft_getopt(cfg.template, 'vol', []);
-cfg.template.volstyle       = ft_getopt(cfg.template, 'volstyle', 'edge');
-cfg.template.mri            = ft_getopt(cfg.template, 'mri', []);
-cfg.template.mristyle       = ft_getopt(cfg.template, 'mristyle', 'intersect');
+cfg.template.elec             = ft_getopt(cfg.template, 'elec', []);
+cfg.template.grad             = ft_getopt(cfg.template, 'grad', []);
+cfg.template.headshape        = ft_getopt(cfg.template, 'headshape', []);
+cfg.template.headshapestyle   = ft_getopt(cfg.template, 'headshapestyle', 'vertex');
+cfg.template.headmodel        = ft_getopt(cfg.template, 'headmodel', []);
+cfg.template.headmodelstyle   = ft_getopt(cfg.template, 'headmodelstyle', 'edge');
+cfg.template.mri              = ft_getopt(cfg.template, 'mri', []);
+cfg.template.mristyle         = ft_getopt(cfg.template, 'mristyle', 'intersect');
 
 template   = struct(cfg.template);
 individual = struct(cfg.individual);
 
+% ensure that they are consistent with the latest FieldTrip version
+if ~isempty(template.elec)
+  template.elec = ft_datatype_sens(template.elec);
+end
+if ~isempty(individual.elec)
+  individual.elec = ft_datatype_sens(individual.elec);
+end
+if ~isempty(template.headshape)
+  template.headshape = fixpos(template.headshape);
+end
+if ~isempty(individual.headshape)
+  individual.headshape = fixpos(individual.headshape);
+end
+
 % convert the coordinates of all geometrical objects into mm
-fn = {'elec', 'grad', 'headshape', 'vol', 'mri'};
+fn = {'elec', 'grad', 'headshape', 'headmodel', 'mri'};
 for i=1:length(fn)
-  if ~isempty(cfg.individual.(fn{i}))
-    cfg.individual.(fn{i}) = ft_convert_units(cfg.individual.(fn{i}), 'mm');
+  if ~isempty(individual.(fn{i}))
+    individual.(fn{i}) = ft_convert_units(individual.(fn{i}), 'mm');
   end
 end
 for i=1:length(fn)
-  if ~isempty(cfg.template.(fn{i}))
-    cfg.template.(fn{i}) = ft_convert_units(cfg.template.(fn{i}), 'mm');
+  if ~isempty(template.(fn{i}))
+    template.(fn{i}) = ft_convert_units(template.(fn{i}), 'mm');
   end
 end
 
 if ~isempty(template.headshape)
   if ~isfield(template.headshape, 'tri') || isempty(template.headshape.tri)
-    template.headshape.tri = projecttri(template.headshape.pnt);
+    template.headshape.tri = projecttri(template.headshape.pos);
   end
 end
 
-if ~isempty(individual.headshape) && isfield(individual.headshape, 'pnt') && ~isempty(individual.headshape.pnt)
+if ~isempty(individual.headshape)
   if ~isfield(individual.headshape, 'tri') || isempty(individual.headshape.tri)
-    individual.headshape.tri = projecttri(individual.headshape.pnt);
+    individual.headshape.tri = projecttri(individual.headshape.pos);
   end
 end
 
@@ -239,8 +257,8 @@ zlabel('z')
 hold on
 
 % the "individual" struct is a local copy, so it is safe to change it here
-if ~isempty(individual.vol)
-  individual.vol = ft_transform_vol(transform, individual.vol);
+if ~isempty(individual.headmodel)
+  individual.headmodel = ft_transform_vol(transform, individual.headmodel);
 end
 if ~isempty(individual.elec)
   individual.elec = ft_transform_sens(transform, individual.elec);
@@ -275,7 +293,7 @@ if ~isempty(template.elec)
   % FIXME use ft_plot_sens
   if isfield(template.elec, 'line')
     tmpbnd = [];
-    tmpbnd.pnt = template.elec.chanpos;
+    tmpbnd.pos = template.elec.chanpos;
     tmpbnd.tri = template.elec.line;
     ft_plot_mesh(tmpbnd,'vertexcolor', 'b', 'facecolor', 'none', 'edgecolor', 'b', 'vertexsize',10)
   else
@@ -287,7 +305,7 @@ if ~isempty(individual.elec)
   % FIXME use ft_plot_sens
   if isfield(individual.elec, 'line')
     tmpbnd = [];
-    tmpbnd.pnt = individual.elec.chanpos;
+    tmpbnd.pos = individual.elec.chanpos;
     tmpbnd.tri = individual.elec.line;
     ft_plot_mesh(tmpbnd,'vertexcolor', 'r', 'facecolor', 'none', 'edgecolor', 'r', 'vertexsize',10)
   else
@@ -307,13 +325,13 @@ if ~isempty(individual.grad)
   % FIXME also plot lines?
 end
 
-if ~isempty(template.vol)
+if ~isempty(template.headmodel)
   % FIXME this only works for boundary element models
-  for i = 1:numel(template.vol.bnd)
-    if strcmp(template.volstyle, 'edge') || strcmp(template.volstyle, 'both')
-      ft_plot_mesh(template.vol.bnd(i), 'facecolor', 'none', 'vertexcolor', 'b')
+  for i = 1:numel(template.headmodel.bnd)
+    if strcmp(template.headmodelstyle, 'edge') || strcmp(template.headmodelstyle, 'both')
+      ft_plot_mesh(template.headmodel.bnd(i), 'facecolor', 'none', 'vertexcolor', 'b')
     end
-    if strcmp(template.volstyle, 'surface') || ft_plot_mesh(template.vol.bnd(i), 'facecolor', 'b', 'edgecolor', 'none')
+    if strcmp(template.headmodelstyle, 'surface') || ft_plot_mesh(template.headmodel.bnd(i), 'facecolor', 'b', 'edgecolor', 'none')
       lighting gouraud
       material shiny
       camlight
@@ -321,14 +339,14 @@ if ~isempty(template.vol)
   end
 end
 
-if ~isempty(individual.vol)
+if ~isempty(individual.headmodel)
   % FIXME this only works for boundary element models
-  for i = 1:numel(individual.vol.bnd)
-    if strcmp(individual.volstyle, 'edge') || strcmp(individual.volstyle, 'both')
-      ft_plot_mesh(individual.vol.bnd(i), 'facecolor', 'none', 'vertexcolor', 'r')
+  for i = 1:numel(individual.headmodel.bnd)
+    if strcmp(individual.headmodelstyle, 'edge') || strcmp(individual.headmodelstyle, 'both')
+      ft_plot_mesh(individual.headmodel.bnd(i), 'facecolor', 'none', 'vertexcolor', 'r')
     end
-    if strcmp(individual.volstyle, 'surface') || strcmp(individual.volstyle, 'both')
-      ft_plot_mesh(individual.vol.bnd(i), 'facecolor', 'r', 'edgecolor', 'none')
+    if strcmp(individual.headmodelstyle, 'surface') || strcmp(individual.headmodelstyle, 'both')
+      ft_plot_mesh(individual.headmodel.bnd(i), 'facecolor', 'r', 'edgecolor', 'none')
       lighting gouraud
       material shiny
       camlight
@@ -337,7 +355,7 @@ if ~isempty(individual.vol)
 end
 
 if ~isempty(template.headshape)
-  if isfield(template.headshape, 'pnt') && ~isempty(template.headshape.pnt)
+  if isfield(template.headshape, 'pos') && ~isempty(template.headshape.pos)
     if strcmp(template.headshapestyle, 'surface') || strcmp(template.headshapestyle, 'both')
       ft_plot_mesh(template.headshape,'facecolor', 'b', 'edgecolor', 'none')
       lighting gouraud
@@ -347,16 +365,16 @@ if ~isempty(template.headshape)
     end
     
     if strcmp(template.headshapestyle, 'vertex') || strcmp(template.headshapestyle, 'both')
-      ft_plot_mesh(template.headshape.pnt,'vertexcolor', 'b')
+      ft_plot_mesh(template.headshape.pos,'vertexcolor', 'b')
     end
   end
-  if isfield(template.headshape, 'fid') && ~isempty(template.headshape.fid.pnt)
-    ft_plot_mesh(template.headshape.fid.pnt,'vertexcolor', 'b', 'vertexsize',20)
+  if isfield(template.headshape, 'fid') && ~isempty(template.headshape.fid.pos)
+    ft_plot_mesh(template.headshape.fid.pos,'vertexcolor', 'b', 'vertexsize',20)
   end
 end
 
 if ~isempty(individual.headshape)
-  if isfield(individual.headshape, 'pnt') && ~isempty(individual.headshape.pnt)
+  if isfield(individual.headshape, 'pos') && ~isempty(individual.headshape.pos)
     if strcmp(individual.headshapestyle, 'surface') || strcmp(individual.headshapestyle, 'both')
       ft_plot_mesh(individual.headshape,'facecolor', 'r', 'edgecolor', 'none')
       lighting gouraud
@@ -366,23 +384,23 @@ if ~isempty(individual.headshape)
     end
     
     if strcmp(individual.headshapestyle, 'vertex') || strcmp(individual.headshapestyle, 'both')
-      ft_plot_mesh(individual.headshape.pnt,'vertexcolor', 'r')
+      ft_plot_mesh(individual.headshape.pos,'vertexcolor', 'r')
     end
   end
-  if isfield(individual.headshape, 'fid') && ~isempty(individual.headshape.fid.pnt)
-    ft_plot_mesh(individual.headshape.fid.pnt,'vertexcolor', 'r', 'vertexsize',20)
+  if isfield(individual.headshape, 'fid') && ~isempty(individual.headshape.fid.pos)
+    ft_plot_mesh(individual.headshape.fid.pos,'vertexcolor', 'r', 'vertexsize',20)
   end
-end
-
-if get(findobj(fig, 'tag', 'toggle axes'), 'value')
-  axis on
-else
-  axis off
-end
-if get(findobj(fig, 'tag', 'toggle grid'), 'value')
-  grid on
-else
-  grid off
+  if get(findobj(fig, 'tag', 'toggle axes'), 'value')
+    axis on
+  else
+    axis off
+  end
+  if get(findobj(fig, 'tag', 'toggle grid'), 'value')
+    grid on
+  else
+    grid off
+  end
+  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

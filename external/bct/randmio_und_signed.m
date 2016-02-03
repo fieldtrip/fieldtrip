@@ -1,106 +1,80 @@
-function R=randmio_und_signed(R, ITER)
-%RANDMIO_UND_SIGNED     Random graph with preserved degree distribution
+function [R,eff] = randmio_und_signed(W, ITER)
+%RANDMIO_UND     Random graph with preserved signed degree distribution
 %
-%   R = randmio_und_signed(A,ITER);
+%   R       = randmio_und_signed(W,ITER);
+%   [R,eff] = randmio_und_signed(W,ITER);
 %
-%   This function randomizes an undirected weighted network with positive
-%   and negative weights, while simultaneously preserving the degree 
-%   distribution of positive and negative weights. The function does not 
-%   preserve the strength distribution in weighted networks.
+%   This function randomizes an undirected network with positively and
+%   negatively signed connections, while preserving the positively and
+%   negatively signed degree distribution. The function does not preserve
+%   the strength distribution in weighted networks.
 %
-%   Input:      A,      undirected (binary/weighted) connection matrix
+%   Input:      W,      undirected (binary/weighted) connection matrix
 %               ITER,   rewiring parameter
 %                       (each edge is rewired approximately ITER times)
 %
 %   Output:     R,      randomized network
+%               eff,    number of actual rewirings carried out
 %
-%   Reference: Maslov and Sneppen (2002) Science 296:910
+%   Reference:  Maslov and Sneppen (2002) Science 296:910
 %
 %
-%   2011
+%   2011-2015
 %   Dani Bassett, UCSB
-%   Mika Rubinov, UNSW
+%   Olaf Sporns,  Indiana U
+%   Mika Rubinov, U Cambridge
 
 %   Modification History:
-%   Mar 2011: Original (based on randmio_und.m)
+%   Mar 2011: Original (Dani Bassett, based on randmio_und.m)
+%   Mar 2012: Limit number of rewiring attempts,
+%             count number of successful rewirings (Olaf Sporns)
+%   Dec 2015: Rewritten the core of the rewiring algorithm to allow
+%             unbiased exploration of all network configurations. The new
+%             algorithm allows positive-positive/negative-negative
+%             rewirings, in addition to the previous positive-positive/0-0
+%             and negative-negative/0-0 rewirings (Mika Rubinov). 
 
-[i j]=find(tril(R));
-K=length(i);
-[i_plus j_plus] = find(tril(R)>0);
-[i_minus j_minus] = find(tril(R)<0);
-K_plus = length(i_plus);
-K_minus = length(i_minus);
+if nargin('randperm')==1
+    warning('This function requires a recent (>2011) version of MATLAB.')
+end
 
-ITER=K*ITER;
+R     = double(W);              % sign function requires double input
+n     = size(R,1);
+ITER  = ITER*n*(n-1)/2;
+
+% maximal number of rewiring attempts per 'iter'
+maxAttempts = round(n/2);
+% actual number of successful rewirings
+eff = 0;
 
 for iter=1:ITER
-    while 1                                     %while not rewired
-        while 1
-            % choose two edges to rewire - but make sure they are either
-            % both positive or both negative
-            if rand>0.5 % chooses to rewire positive weighs and negative weights at equal rates
-                e1=ceil(K_plus*rand);
-                e2=ceil(K_plus*rand);
-                type = 1;
-            else
-                e1=ceil(K_minus*rand);
-                e2=ceil(K_minus*rand);
-                type = 2;
-            end
-            if type==1;
-                while (e2==e1),
-                    e2=ceil(K_plus*rand);
-                end
-                a=i_plus(e1); b=j_plus(e1);
-                c=i_plus(e2); d=j_plus(e2);
-                if all(a~=[c d]) && all(b~=[c d]);
-                    break           %all four vertices must be different
-                end
-            end
-            if type==2;
-                while (e2==e1),
-                    e2=ceil(K_minus*rand);
-                end
-                a=i_minus(e1); b=j_minus(e1);
-                c=i_minus(e2); d=j_minus(e2);        
-                if all(a~=[c d]) && all(b~=[c d]);
-                    break           %all four vertices must be different
-                end
-            end
-        end
-        if type==1;
-            if rand>0.5
-                i_plus(e2)=d; j_plus(e2)=c; 	%flip edge c-d with 50% probability
-                c=i_plus(e2); d=j_plus(e2); 	%to explore all potential rewirings
-            end
-            %rewiring condition
-            if ~(R(a,d) || R(c,b))
-                R(a,d)=R(a,b); R(a,b)=0;
-                R(d,a)=R(b,a); R(b,a)=0;
-                R(c,b)=R(c,d); R(c,d)=0;
-                R(b,c)=R(d,c); R(d,c)=0;
-                
-                j_plus(e1) = d;          %reassign edge indices
-                j_plus(e2) = b;
-                break;
-            end %rewiring condition
-        end
-        if type==2;
-            if rand>0.5
-                i_minus(e2)=d; j_minus(e2)=c; 	%flip edge c-d with 50% probability
-                c=i_minus(e2); d=j_minus(e2); 	%to explore all potential rewirings
-            end
-            %rewiring condition
-            if ~(R(a,d) || R(c,b))
-                R(a,d)=R(a,b); R(a,b)=0;
-                R(d,a)=R(b,a); R(b,a)=0;
-                R(c,b)=R(c,d); R(c,d)=0;
-                R(b,c)=R(d,c); R(d,c)=0;
-                
-                j_minus(e1) = d;          %reassign edge indices
-                j_minus(e2) = b;
-                break;
-            end %rewiring condition
-        end
+    att=0;
+    while (att<=maxAttempts)    %while not rewired
+        %select four distinct vertices
+        nodes = randperm(n,4);
+        a = nodes(1);
+        b = nodes(2);
+        c = nodes(3);
+        d = nodes(4);
+        
+        r0_ab = R(a,b);
+        r0_cd = R(c,d);
+        r0_ad = R(a,d);
+        r0_cb = R(c,b);
+        
+        %rewiring condition
+        if      (sign(r0_ab)==sign(r0_cd)) && ...
+                (sign(r0_ad)==sign(r0_cb)) && ...
+                (sign(r0_ab)~=sign(r0_ad))
+            
+            R(a,d)=r0_ab; R(a,b)=r0_ad;
+            R(d,a)=r0_ab; R(b,a)=r0_ad;
+            R(c,b)=r0_cd; R(c,d)=r0_cb;
+            R(b,c)=r0_cd; R(d,c)=r0_cb;
+            
+            eff = eff+1;
+            break;
+        end %rewiring condition
+        att=att+1;
     end %while not rewired
 end %iterations

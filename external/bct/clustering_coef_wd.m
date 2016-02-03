@@ -3,26 +3,34 @@ function C=clustering_coef_wd(W)
 %
 %   C = clustering_coef_wd(W);
 %
-%   The weighted clustering coefficient is the average "intensity" of 
-%   triangles around a node.
+%   The weighted clustering coefficient is the average "intensity"
+%   (geometric mean) of all triangles associated with each node.
 %
 %   Input:      W,      weighted directed connection matrix
+%                       (all weights must be between 0 and 1)
 %
 %   Output:     C,      clustering coefficient vector
 %
 %   Reference: Fagiolo (2007) Phys Rev E 76:026107.
 %
+%   Note:   All weights must be between 0 and 1.
+%           This may be achieved using the weight_conversion.m function,
+%           W_nrm = weight_conversion(W, 'normalize');
 %
-%   Mika Rubinov, UNSW, 2007-2010
+%   Mika Rubinov, UNSW/U Cambridge, 2007-2015
+
+%   Modification history:
+%   2007: original
+%   2015: expanded documentation
 
 
-%Methodological note (also see clustering_coef_bd)
-%The weighted modification is as follows:
-%- The numerator: adjacency matrix is replaced with weights matrix ^ 1/3
-%- The denominator: no changes from the binary version
+%   Methodological note (also see clustering_coef_bd)
+%   The weighted modification is as follows:
+%   - The numerator: adjacency matrix is replaced with weights matrix ^ 1/3
+%   - The denominator: no changes from the binary version
 %
-%The above reduces to symmetric and/or binary versions of the clustering 
-%coefficient for respective graphs.
+%   The above reduces to symmetric and/or binary versions of the clustering 
+%   coefficient for respective graphs.
 
 A=W~=0;                     %adjacency matrix
 S=W.^(1/3)+(W.').^(1/3);	%symmetrized weights matrix ^1/3

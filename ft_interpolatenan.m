@@ -53,12 +53,12 @@ function dataout = ft_interpolatenan(cfg, datain)
 revision = '$Id$';
 
 % do the general setup of the function
-ft_defaults                 % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init            % this will reset warning_once and show the function help if nargin==0 and return an error
-ft_preamble provenance      % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
-ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
-ft_preamble loadvar datain  % this reads the input data in case the user specified the cfg.inputfile option
+ft_defaults
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar datain
+ft_preamble provenance datain
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -105,7 +105,7 @@ for i=1:ntrl
     for j=1:size(idx_start_c,1)
      sample_window = [idx_start_c(j)-prewindow:idx_start_c(j)-1 idx_end_c(j)+1:idx_end_c(j)+postwindow]; % Indices of time-points used for interpolation
      if any(sample_window<1) || any(sample_window>size(datain.trial{i},2)) % Check whether sampling window falls within data range
-       warning_once('Sample window partially outside of data-range, using less samples');
+       ft_warning('Sample window partially outside of data-range, using less samples');
        sample_window(sample_window<1|sample_window>size(datain.trial{i},2))=[];
      elseif any(isnan(datain.trial{i}(idx_start_r(j),sample_window))) % Check whether sampling window overlaps with other chunk of nans
       error('Sample window overlaps with other chunk of nans');
@@ -122,9 +122,9 @@ ft_progress('close');
 % Cleanup
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ft_postamble debug            % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig      % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
-ft_postamble previous datain  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-ft_postamble savevar dataout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous   datain
+ft_postamble provenance dataout
+ft_postamble history    dataout
+ft_postamble savevar    dataout

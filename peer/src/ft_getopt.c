@@ -46,7 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 				mexErrMsgTxt("the key should be specified as a string");
                 
         if (nrhs == 4 && !(mxIsLogical(prhs[3]) || mxIsNumeric(prhs[3]))) {
-            mxErrMsgTxt("if specified, input argument emptymeaningful should be a logical or numeric value");
+            mexErrMsgTxt("if specified, input argument emptymeaningful should be a logical or numeric value");
         }
         
         if (nrhs < 4) {

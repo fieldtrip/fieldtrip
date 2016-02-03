@@ -26,7 +26,8 @@ function source = ft_read_cifti(filename, varargin)
 %   'cortexleft'       = string, filename with left cortex (optional, default is automatic)
 %   'cortexright'      = string, filename with right cortex (optional, default is automatic)
 %   'hemisphereoffset' = number, amount in milimeter to move the hemispheres apart from each other (default = 0)
-%   'debug'            = boolean, write a debug.xml file (default = true)
+%   'mapname'          = string, 'field' to represent multiple maps separately, or 'array' to represent as array (default = 'field')
+%   'debug'            = boolean, write a debug.xml file (default = false)
 %
 % See also FT_WRITE_CIFTI, FT_READ_MRI, FT_WRITE_MRI
 
@@ -35,7 +36,7 @@ function source = ft_read_cifti(filename, varargin)
 % - fibers (i.e. dfan and dfibersamp) are unsupported/untested
 % - metadata is unsupported
 
-% Copyright (C) 2013-2014, Robert Oostenveld
+% Copyright (C) 2013-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -60,10 +61,22 @@ readsurface      = ft_getopt(varargin, 'readsurface', true);
 cortexleft       = ft_getopt(varargin, 'cortexleft', {});
 cortexright      = ft_getopt(varargin, 'cortexright', {});
 hemisphereoffset = ft_getopt(varargin, 'hemisphereoffset', 0); % in mm, move the two hemispheres apart from each other
-debug            = ft_getopt(varargin, 'debug', true);
+debug            = ft_getopt(varargin, 'debug', false);
+mapname          = ft_getopt(varargin, 'mapname', 'field');
+dataformat       = ft_getopt(varargin, 'dataformat', []);
 
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);
+
+if ft_filetype(filename, 'compressed')
+  % the file is compressed, unzip on the fly
+  inflated = true;
+  origfile = filename;
+  filename = inflate_file(filename);
+else
+  inflated = false;
+  origfile = filename;
+end
 
 % read the header section
 hdr = read_nifti2_hdr(filename);
@@ -173,10 +186,20 @@ for i=1:length(uid_MatrixIndicesMap)
     end
   end
   
-  uid_Volume = find(map,'/MatrixIndicesMap/Volume');
+  switch Cifti.Version
+    case {'1' '1.0'}
+      uid_Volume = find(tree,'/CIFTI/Matrix/Volume');
+    case {'2' '2.0'}
+      uid_Volume = find(map,'/MatrixIndicesMap/Volume');
+  end
   % the following will fail if there are multiple volumes
   if ~isempty(uid_Volume)
-    volume = branch(map, uid_Volume);
+    switch Cifti.Version
+      case {'1' '1.0'}
+        volume = branch(tree, uid_Volume);
+      case {'2' '2.0'}
+        volume = branch(map, uid_Volume);
+    end
     attr = attributes(volume, 'get', 1); % there should only be one attribute here
     if ~iscell(attr), attr = {attr}; end % treat one attribute just like multiple attributes
     for j=1:numel(attr)
@@ -375,6 +398,11 @@ if readdata
 end
 fclose(fid);
 
+if inflated
+  % compressed file has been unzipped on the fly, clean up
+  delete(filename);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert to FieldTrip source representation, i.e. according to FT_DATATYPE_SOURCE and FT_DATATYPE_PARCELLATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -550,11 +578,10 @@ if ~isempty(BrainModel)
   if ~isempty(Surface)
     voxeloffset = sum([Surface.SurfaceNumberOfVertices]);
   else
-    voxeloffset  = 0;
+    voxeloffset = 0;
   end
   
   greynodeOffset = nan(size(BrainModel));
-  brainstructureOffset = nan(size(BrainModel));
   for i=1:numel(BrainModel)
     if strcmp(BrainModel(i).ModelType, 'CIFTI_MODEL_TYPE_SURFACE')
       sel = find(strcmp({Surface(:).BrainStructure}, BrainModel(i).BrainStructure));
@@ -565,9 +592,8 @@ if ~isempty(BrainModel)
     end
     % shift the greynodes to become consistent with the voxel data
     greynodeIndex{i} = greynodeIndex{i} + greynodeOffset(i);
-    % shift the brainstructures to become consistent with the brainordinate positions
-    brainstructureOffset(i) = numel([brainstructureIndex{1:i-1}]);
-    brainstructureIndex{i} = brainstructureIndex{i} + brainstructureOffset(i);
+    % shift the brainstructures to become consistent with the voxel data
+    brainstructureIndex{i} = brainstructureIndex{i} + greynodeOffset(i);
   end
   
 end % if BrainModel
@@ -734,24 +760,43 @@ if readdata
       error('unsupported dimord %s', source.dimord);
   end % switch
   
-  if isfield(Cifti, 'mapname') && (length(Cifti.mapname)>1 || isfield(Cifti, 'labeltable'))
-    % use distict names if there are multiple scalars or labels
-    for i=1:length(Cifti.mapname)
-      fieldname = fixname(Cifti.mapname{i});
-      
-      % truncate the string if it's too long: MATLAB maximizes the string
-      % length to 63 characters (and throws a warning when truncating), 
-      % anticipating a possible presence of the labeltable it will be 
-      % truncated here to 58
-      if numel(fieldname)>58
-        warning_once(sprintf('%s exceeds MATLAB''s maximum name length of 63 characters and has been truncated to %s',fieldname,fieldname(1:58)));
-        fieldname = fieldname(1:58);
-      end
-      source.(fieldname) = dat(:,i);
-      if isfield(Cifti, 'labeltable')
-        source.([fieldname 'label']) = Cifti.labeltable{i};
-      end
+  if isfield(Cifti, 'mapname') && isfield(Cifti, 'labeltable') && strcmp(mapname, 'array')
+    allthesame = true;
+    for i=2:length(Cifti.labeltable)
+      allthesame = allthesame && isequal(Cifti.labeltable{1}, Cifti.labeltable{i});
     end
+    if allthesame
+      warning('using the same labels for all maps in the array');
+      source.datalabel = Cifti.labeltable{1};
+      Cifti = rmfield(Cifti, 'labeltable');
+    else
+      error('multiple maps cannot be represented as array in the presence of different labeltables');
+    end
+  end
+  
+  if isfield(Cifti, 'mapname') && (length(Cifti.mapname)>1 || isfield(Cifti, 'labeltable'))
+    switch mapname
+      case 'field'
+        % use distict names if there are multiple scalars or labels
+        for i=1:length(Cifti.mapname)
+          fieldname = Cifti.mapname{i};
+          if isfield(Cifti, 'labeltable')
+            if length(fieldname)>58
+              % truncate it, needed to be able to append 'label' to the end
+              fieldname = fieldname(1:58);
+              % append 'label' to the end
+              source.([fieldname 'label']) = Cifti.labeltable{i};
+            end
+          end
+          source.(fieldname) = dat(:,i);
+        end
+      case 'array'
+        source.mapname = {NamedMap.MapName}; % keep the original names, not the field names
+        source.data    = dat;
+        source.dimord  = [source.dimord '_mapname'];
+      otherwise
+        error('incorrect specification of mapname "%s"', mapname);
+    end % switch mapname
   else
     % the name of the data will be based on the filename
     source.data = dat;
@@ -766,6 +811,9 @@ source.unit = 'mm'; % per definition
 % try to get the geometrical information from the corresponding gifti files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if readsurface
+  
+  % use the filename prior to decompression
+  filename = origfile;
   
   [p, f, x] = fileparts(filename);
   t = tokenize(f, '.');
@@ -930,7 +978,7 @@ else
   source.label = {Parcel(:).Name}';
 end
 
-haslabeltable = false;
+% haslabeltable = false;
 % if ~isempty(NamedMap)
 %   % the following assumes a single NamedMap
 %   if isfield(NamedMap, 'LabelTable')
@@ -955,7 +1003,6 @@ if readdata
 %       source.data = tempdata;
 %     end
 %     source = rmfield(source, 'data');
-%     
   end
   
   % rename the datalabel field

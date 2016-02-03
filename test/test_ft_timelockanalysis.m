@@ -35,8 +35,8 @@ for k = 1:numel(datainfo)
     data = tmp.timelock;
   end
   
-  datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
-  data    = rmfield(data,    'cfg');
+  datanew = removefields(datanew, 'cfg'); % these are per construction different if writeflag = 0;
+  data    = removefields(data,    'cfg');
   [ok,msg] = identical(data, datanew,'reltol',eps*1e6);
   disp(['now you are in k=' num2str(k)]);
   if ~ok

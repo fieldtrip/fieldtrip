@@ -58,7 +58,11 @@ cfg.callinfo.usercfg = cfg;
 if isequal(ft_default.preamble, {'varargin'})
   tmpargin = varargin;
 else
-  tmpargin = cellfun(@eval, ft_default.preamble, 'UniformOutput', false);
+  isvar = cellfun(@(x) exist(x, 'var')==1, ft_default.preamble);
+  tmpargin = cellfun(@eval, ft_default.preamble(isvar), 'UniformOutput', false);
+  tmpargin( isvar) = tmpargin;
+  tmpargin(~isvar) = {[]};
+  clear isvar
 end
 cfg.callinfo.inputhash = cell(1,numel(tmpargin));
 for iargin = 1:numel(tmpargin)

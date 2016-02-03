@@ -22,7 +22,7 @@ function [stat, cfg] = ft_statistics_stats(cfg, dat, design)
 %   cfg.tail      = number, -1, 1 or 0 (default = 0)
 %   cfg.feedback  = string, 'gui', 'text', 'textbar' or 'no' (default = 'textbar')
 %   cfg.method    = 'stats'
-%   cfg.statistic = 'ttest'        test against a mean of zero
+%   cfg.statistic = 'ttest'          test against a mean of zero
 %                   'ttest2'         compare the mean in two conditions
 %                   'paired-ttest'
 %                   'anova1'

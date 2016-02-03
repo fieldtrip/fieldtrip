@@ -68,10 +68,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -115,7 +115,7 @@ for i=1:length(varargin)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'parameter'});
+tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
@@ -200,6 +200,7 @@ end
 % perform the statistical test
 if num>1
   [stat, cfg] = statmethod(cfg, dat, design);
+  cfg         = rollback_provenance(cfg); % ensure that changes to the cfg are passed back to the right level
 else
   [stat] = statmethod(cfg, dat, design);
 end
@@ -223,7 +224,7 @@ end
 stat.dimord = cfg.dimord;
 
 % copy the descripive fields into the output
-stat = copyfields(varargin{1}, stat, {'freq', 'time', 'pos', 'dim', 'transform'});
+stat = copyfields(varargin{1}, stat, {'freq', 'time', 'pos', 'dim', 'transform', 'tri'});
 
 % these were only present to inform the low-level functions
 cfg = removefields(cfg, {'dim', 'dimord', 'tri', 'inside'});
@@ -231,8 +232,8 @@ cfg = removefields(cfg, {'dim', 'dimord', 'tri', 'inside'});
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous varargin
-ft_postamble history stat
-ft_postamble savevar stat
+ft_postamble previous   varargin
+ft_postamble provenance stat
+ft_postamble history    stat
+ft_postamble savevar    stat
 

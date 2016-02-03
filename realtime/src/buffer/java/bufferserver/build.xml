@@ -1,0 +1,51 @@
+<project name="nl.fcdonders.fieldtrip" basedir="." default="main">
+  
+  <!-- Set the default java version to 1.5 to maximise compatability over OS/versions -->
+  <property name="ant.build.javac.source" value="1.5"/>
+  <property name="ant.build.javac.target" value="1.5"/>
+
+    <property name="src.dir"     value="."/>
+    <property name="build.dir"   value="."/>
+    <property name="classes.dir" value="."/>
+    <property name="jar.dir"     value="."/>
+    <property name="main-class"  value="${ant.project.name}.bufferserver.BufferServer"/>
+
+    <path id="classpath"> </path>
+
+    <target name="compile">
+        <javac srcdir="${src.dir}" 
+					destdir="${classes.dir}" 
+					classpathref="classpath" 
+					debug="on"
+					debuglevel="lines,vars,source"/>
+	 </target>
+
+    <target name="server" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <jar destfile="${jar.dir}/BufferServer.jar">
+			 <fileset dir="${classes.dir}" includes="**/*.class"/>
+			 <fileset dir="${src.dir}" includes="**/*.java"/>
+          <manifest>
+            <attribute name="Main-Class" value="${main-class}"/>
+          </manifest>
+        </jar>
+    </target>
+
+	 <target name="dist" depends="server">
+		<copy file="${jar.dir}/BufferServer.jar" todir="../"/>
+	 </target>
+
+    <target name="run" depends="server">
+      <java fork="true" classname="${main-class}">
+        <classpath>
+			 <path refid="classpath"/>
+			 <path location="${jar.dir}/BufferServer.jar"/>
+        </classpath>
+      </java>
+    </target>
+
+    <target name="clean">   <delete> <fileset dir="." includes="**/*.class"/> </delete> </target>
+    <target name="build" depends="server"/>
+    <target name="clean-build" depends="clean,build"/>
+    <target name="main" depends="build,dist"/>
+</project>

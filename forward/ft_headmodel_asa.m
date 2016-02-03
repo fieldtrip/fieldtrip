@@ -1,4 +1,4 @@
-function vol = ft_headmodel_asa(filename)
+function headmodel = ft_headmodel_asa(filename)
 
 % FT_HEADMODEL_ASA reads a volume conduction model from an ASA *.vol
 % file
@@ -11,7 +11,7 @@ function vol = ft_headmodel_asa(filename)
 % MRI and the computation of the BEM system are both handled by ASA.
 % 
 % Use as
-%   vol = ft_headmodel_asa(filename)
+%   headmodel = ft_headmodel_asa(filename)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
@@ -37,5 +37,5 @@ function vol = ft_headmodel_asa(filename)
 
 % read the headmodel from file
 % this works for ASA version 2.x, perhaps also for ASA 3.x 
-vol = ft_read_vol(filename);
+headmodel = ft_read_vol(filename);
 

@@ -167,9 +167,10 @@ if isfield(cfg, 'origdim'),
 end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
 
 % first do the clustering on the observed data
+spacereshapeable = numel(channeighbstructmat)==1&&~isfinite(channeighbstructmat);
 if needpos,
   
-  if ~isfinite(channeighbstructmat)
+  if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
     % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
     
@@ -201,7 +202,7 @@ if needpos,
 end % if needpos
 if needneg,
   
-  if ~isfinite(channeighbstructmat)
+  if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
     % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
     
@@ -259,7 +260,7 @@ ft_progress('init', cfg.feedback, 'computing clusters in randomization');
 for i=1:Nrand
   ft_progress(i/Nrand, 'computing clusters in randomization %d from %d\n', i, Nrand);
   if needpos,
-    if ~isfinite(channeighbstructmat)
+    if spacereshapeable
       tmp = zeros(cfg.dim);
       tmp(cfg.inside) = postailrnd(:,i);
       
@@ -307,14 +308,13 @@ for i=1:Nrand
     end
   end % needpos
   if needneg,
-    if ~isfinite(channeighbstructmat)
+    if spacereshapeable
       
       tmp = zeros(cfg.dim);
       tmp(cfg.inside) = negtailrnd(:,i);
       
       numdims = length(cfg.dim);
       if numdims == 2 || numdims == 3 % if 2D or 3D data
-        ft_hastoolbox('spm8',1);
         [negclusrnd, negrndnum] = spm_bwlabel(tmp, 2*numdims); % use spm_bwlabel for 2D/3D to avoid usage of image toolbox
       else
         negclusrnd = bwlabeln(tmp, conndef(length(cfg.dim),'min')); % spm_bwlabel yet (feb 2011) supports only 2D/3D data
@@ -524,6 +524,7 @@ elseif cfg.tail==-1
 end
 
 % collect the remaining details in the output structure
+stat = struct(); % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2972
 stat.prob = prob;
 if needpos,
   stat.posclusters         = posclusters;

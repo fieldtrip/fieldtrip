@@ -95,6 +95,10 @@ cfgs.keepmom     = 'yes';
 
 %there are two ways for not crashing the second round of ft_sourceanalysis
 %with fixori = 'yes';
+if all(islogical(source.inside))
+  source.inside = find(source.inside);
+end
+
 for k = 1:numel(source.inside)
   kk = source.inside(k);
   cfgs.grid.leadfield{kk} = sd.leadfield{kk}*sd.avg.ori{kk};
@@ -105,5 +109,5 @@ spccnew = ft_checkdata(spccold, 'sourcerepresentation', 'new');
 spccold2 = ft_source2sparse(spccold);
 spccnew2 = ft_source2sparse(spccnew);
 
-spccold3 = source2full(spccold2);
-spccnew3 = source2full(spccnew2);
+spccold3 = ft_source2full(spccold2);
+spccnew3 = ft_source2full(spccnew2);

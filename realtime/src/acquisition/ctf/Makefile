@@ -15,6 +15,7 @@ LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer -lncurses -lpthread -lm
 
 ifeq "$(UNAME)" "Linux"
+	LDLIBS += -lrt
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
 	endif

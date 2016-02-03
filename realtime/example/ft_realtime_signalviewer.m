@@ -8,8 +8,8 @@ function ft_realtime_signalviewer(cfg)
 % with the following configuration options
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'all')
-%   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'last')
 %   cfg.jumptoeof  = whether to skip to the end of the stream/file at startup (default = 'yes')
+%   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'first')
 %   cfg.readevent  = whether or not to copy events (default = 'no')
 %   cfg.demean     = 'no' or 'yes', whether to apply baseline correction (default = 'yes')
 %
@@ -28,11 +28,11 @@ function ft_realtime_signalviewer(cfg)
 % cfg.jumptoeof='yes' causes the realtime function to jump to the end when the
 % function _starts_. It causes all data acquired prior to starting the realtime
 % function to be skipped.
-% 
-% cfg.bufferdata=last causes the realtime function to jump to the last available data
+%
+% cfg.bufferdata='last' causes the realtime function to jump to the last available data
 % while _running_. If the realtime loop is not fast enough, it causes some data to be
 % dropped.
-% 
+%
 % If you want to skip all data that was acquired before you start the RT function,
 % but don't want to miss any data that was acquired while the realtime function is
 % started, then you should use jumptoeof=yes and bufferdata=first. If you want to
@@ -61,16 +61,24 @@ function ft_realtime_signalviewer(cfg)
 % $Id$
 
 % set the default configuration options
-if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is detected automatically
-if ~isfield(cfg, 'headerformat'),   cfg.headerformat = [];    end % default is detected automatically
-if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];     end % default is detected automatically
-if ~isfield(cfg, 'blocksize'),      cfg.blocksize = 1;        end % in seconds
-if ~isfield(cfg, 'overlap'),        cfg.overlap = 0;          end % in seconds
-if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
-if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
-if ~isfield(cfg, 'readevent'),      cfg.readevent = 'no';     end % capture events?
-if ~isfield(cfg, 'jumptoeof'),      cfg.jumptoeof = 'no';     end % jump to end of file at initialization
-if ~isfield(cfg, 'demean'),         cfg.demean = 'yes';          end % baseline correction
+cfg.dataformat   = ft_getopt(cfg, 'dataformat',   []);      % default is detected automatically
+cfg.headerformat = ft_getopt(cfg, 'headerformat', []);      % default is detected automatically
+cfg.eventformat  = ft_getopt(cfg, 'eventformat',  []);      % default is detected automatically
+cfg.blocksize    = ft_getopt(cfg, 'blocksize',    1);       % in seconds
+cfg.overlap      = ft_getopt(cfg, 'overlap',      0);       % in seconds
+cfg.channel      = ft_getopt(cfg, 'channel',      'all');
+cfg.readevent    = ft_getopt(cfg, 'readevent',    'no');    % capture events?
+cfg.bufferdata   = ft_getopt(cfg, 'bufferdata',   'first'); % first or last
+cfg.jumptoeof    = ft_getopt(cfg, 'jumptoeof',    'yes');   % jump to end of file at initialization
+cfg.demean       = ft_getopt(cfg, 'demean',       'yes');   % baseline correction
+cfg.detrend      = ft_getopt(cfg, 'detrend',      'no');
+cfg.olfilter     = ft_getopt(cfg, 'olfilter',     'no');    % continuous online filter
+cfg.olfiltord    = ft_getopt(cfg, 'olfiltord',    4);
+cfg.olfreq       = ft_getopt(cfg, 'olfreq',       [2 45]);
+cfg.offset       = ft_getopt(cfg, 'offset',       []);      % in units of the data, e.g. uV for the OpenBCI board
+cfg.dftfilter    = ft_getopt(cfg, 'dftfilter',    'no');
+cfg.dftfreq      = ft_getopt(cfg, 'dftfreq',      [50 100 150]);
+
 
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
@@ -94,6 +102,12 @@ if nchan==0
   error('no channels were selected');
 end
 
+if numel(cfg.offset)==0
+  % it will be determined on the first data segment
+elseif numel(cfg.offset)==1
+  cfg.offset = repmat(cfg.offset, size(cfg.channel));
+end
+
 % determine the size of blocks to process
 blocksize = round(cfg.blocksize * hdr.Fs);
 overlap   = round(cfg.overlap*hdr.Fs);
@@ -109,90 +123,122 @@ count = 0;
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while true
+  
+  % determine the samples to process
+  if strcmp(cfg.bufferdata, 'last')
+    % determine number of samples available in buffer
+    hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
+    begsample  = hdr.nSamples*hdr.nTrials - blocksize + 1;
+    endsample  = hdr.nSamples*hdr.nTrials;
+  elseif strcmp(cfg.bufferdata, 'first')
+    begsample  = prevSample+1;
+    endsample  = prevSample+blocksize ;
+  else
+    error('unsupported value for cfg.bufferdata');
+  end
+  
+  % this allows overlapping data segments
+  if overlap && (begsample>overlap)
+    begsample = begsample - overlap;
+    endsample = endsample - overlap;
+  end
+  
+  % remember up to where the data was read
+  prevSample  = endsample;
+  count       = count + 1;
+  fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
+  
+  % read data segment from buffer
+  dat = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false, 'blocking', true);
 
-  % determine number of samples available in buffer
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'cache', true);
-
-  % see whether new samples are available
-  newsamples = (hdr.nSamples*hdr.nTrials-prevSample);
-
-  if newsamples>=blocksize
-
-    % determine the samples to process
-    if strcmp(cfg.bufferdata, 'last')
-      begsample  = hdr.nSamples*hdr.nTrials - blocksize + 1;
-      endsample  = hdr.nSamples*hdr.nTrials;
-    elseif strcmp(cfg.bufferdata, 'first')
-      begsample  = prevSample+1;
-      endsample  = prevSample+blocksize ;
-    else
-      error('unsupported value for cfg.bufferdata');
+  % make a matching time axis
+  time = ((begsample:endsample)-1)/hdr.Fs;
+  
+  % it only makes sense to read those events associated with the currently processed data
+  if strcmp(cfg.readevent, 'yes')
+    evt = ft_read_event(cfg.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
+  end
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % from here onward it is specific to the display of the data
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  % convert the data to a FieldTrip-like raw structure
+  %   data          = [];
+  %   data.trial{1} = double(dat);
+  %   data.time{1}  = time;
+  %   data.label    = hdr.label(chanindx);
+  %   data.hdr      = hdr;
+  %   data.fsample  = hdr.Fs;
+  
+  % apply some preprocessing options
+  if strcmp(cfg.demean, 'yes')
+    % demean using the first sample
+    dat = ft_preproc_baselinecorrect(dat, 1, 1);
+  end
+  if strcmp(cfg.detrend, 'yes')
+    dat = ft_preproc_detrend(dat);
+  end
+  
+  if strcmp(cfg.dftfilter, 'yes')
+    dat = ft_preproc_dftfilter(dat, hdr.Fs, cfg.dftfreq);
+  end
+    
+  if strcmp(cfg.olfilter, 'yes')
+    if count==1
+      if cfg.olfreq(1)==0
+        fprintf('using online low-pass filter\n');
+        [B, A] = butter(cfg.olfiltord, cfg.olfreq(2)/hdr.Fs);
+      elseif cfg.olfreq(2)>=hdr.Fs/2
+        fprintf('using online high-pass filter\n');
+        [B, A] = butter(cfg.olfiltord, cfg.olfreq(1)/hdr.Fs, 'high');
+      else
+        fprintf('using online band-pass filter\n');
+        [B, A] = butter(cfg.olfiltord, cfg.olfreq/hdr.Fs);
+      end      % use one sample to initialize
+      FM = ft_preproc_online_filter_init(B, A, dat(:,1));
     end
-
-    % this allows overlapping data segments
-    if overlap && (begsample>overlap)
-      begsample = begsample - overlap;
-      endsample = endsample - overlap;
-    end
-
-    % remember up to where the data was read
-    prevSample  = endsample;
-    count       = count + 1;
-    fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
-
-    % read data segment from buffer
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'dataformat', cfg.dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
-
-    % it only makes sense to read those events associated with the currently processed data
-    if strcmp(cfg.readevent, 'yes')
-      evt = ft_read_event(cfg.eventfile, 'header', hdr, 'minsample', begsample, 'maxsample', endsample);
-    end
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % from here onward it is specific to the display of the data
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % put the data in a fieldtrip-like raw structure
-    data.trial{1} = double(dat);
-    data.time{1}  = offset2time(begsample, hdr.Fs, endsample-begsample+1);
-    data.label    = hdr.label(chanindx);
-    data.hdr      = hdr;
-    data.fsample  = hdr.Fs;
-
-    % apply some preprocessing options
-    if strcmp(cfg.demean, 'yes')
-      data.trial{1} = ft_preproc_baselinecorrect(data.trial{1});
-    end
-
-    % plot the data just like a standard FieldTrip raw data strucute
-    plot(data.time{1}, data.trial{1});
-    xlim([data.time{1}(1) data.time{1}(end)]);
-
-    if strcmp(cfg.readevent, 'yes')
-      for i=1:length(evt)
-        % draw a line and some text to indicate the event
-        time = offset2time(evt(i).sample, hdr.Fs, 1);
-        if ischar(evt(i).type) && isempty(evt(i).type)
-          description = sprintf('%s', evt(i).type);
-        elseif ischar(evt(i).type) && ischar(evt(i).type)
-          description = sprintf('%s %s', evt(i).type, evt(i).value);
-        elseif ischar(evt(i).type) && isnumeric(evt(i).type)
-          description = sprintf('%s %s', evt(i).type, num2str(evt(i).value));
-        else
-          description = 'event';
-        end
-
-        h = line([time time], ylim);
-        set(h, 'LineWidth', 2, 'LineStyle', ':', 'Color', 'k');
-        y = ylim; y = y(1);
-        h = text(time, y, description, 'VerticalAlignment', 'bottom');
+    [FM, dat] = ft_preproc_online_filter_apply(FM, dat);
+  end
+  
+  if isempty(cfg.offset)
+    cfg.offset = ((1:nchan)-1) .* mean(max(abs(dat),[],2));
+  end
+  
+  % shift each of the channels with a given offset
+  nchan = size(dat,1);
+  for i=1:nchan
+    dat(i,:) = dat(i,:) + (nchan-i-1)*cfg.offset(i);
+  end
+  
+  % plot the data
+  plot(time, dat);
+  xlim([time(1) time(end)]);
+  
+  if strcmp(cfg.readevent, 'yes')
+    for i=1:length(evt)
+      % draw a line and some text to indicate the event
+      time = offset2time(evt(i).sample, hdr.Fs, 1);
+      if ischar(evt(i).type) && isempty(evt(i).type)
+        description = sprintf('%s', evt(i).type);
+      elseif ischar(evt(i).type) && ischar(evt(i).type)
+        description = sprintf('%s %s', evt(i).type, evt(i).value);
+      elseif ischar(evt(i).type) && isnumeric(evt(i).type)
+        description = sprintf('%s %s', evt(i).type, num2str(evt(i).value));
+      else
+        description = 'event';
       end
+      
+      h = line([time time], ylim);
+      set(h, 'LineWidth', 2, 'LineStyle', ':', 'Color', 'k');
+      y = ylim; y = y(1);
+      h = text(time, y, description, 'VerticalAlignment', 'bottom');
     end
-
-    % force Matlab to update the figure
-    drawnow
-
-  end % if enough new samples
+  end
+  
+  % force Matlab to update the figure
+  drawnow
+  
 end % while true
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

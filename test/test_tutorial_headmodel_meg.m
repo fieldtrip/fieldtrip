@@ -1,7 +1,7 @@
 function test_tutorial_headmodel_meg(datadir)
 
 % MEM 2000mb
-% WALLTIME 00:27:44
+% WALLTIME 00:45:00
 
 % TEST test_tutorial_headmodel_meg
 % TEST ft_read_mri ft_volumesegment ft_prepare_headmodel ft_plot_vol

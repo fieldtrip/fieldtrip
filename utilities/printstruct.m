@@ -20,6 +20,8 @@ function str = printstruct(name, val)
 %   s = printstruct(b)
 %
 %   s = printstruct('c', randn(10)>0.5)
+%
+% See also DISP
 
 % Copyright (C) 2006-2013, Robert Oostenveld
 %
@@ -131,7 +133,7 @@ else
       dum = [dum ' ' printval(val{i,j}) ',']; % add the element with a comma
     end
     dum = [dum ' ' printval(val{i,siz(2)})]; % add the last one without comma
-    
+
     str = [str dum 10];
   end
   str = sprintf('%s};\n', str);
@@ -177,17 +179,17 @@ function str = printval(val)
 switch class(val)
   case 'char'
     str = ['''' val ''''];
-    
+
   case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
     str = printmat(val);
-    
+
   case 'function_handle'
     str = ['@' func2str(val)];
-    
+
   case 'struct'
     warning('cannot print structure at this level');
     str = '''FIXME: printing structures at this level is not supported''';
-    
+
   otherwise
     warning('cannot print unknown object at this level');
     str = '''FIXME: printing unknown objects is not supported''';

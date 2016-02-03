@@ -41,9 +41,9 @@ function [simulated] = ft_connectivitysimulation(cfg)
 %   cfg.bpfreq    = [bplow bphigh] (default: [15 25])
 %   cfg.demean    = 'yes' (or 'no')
 %   cfg.baselinewindow = [begin end] in seconds, the default is the complete trial
-%   cfg.absnoise  = scalar (default: 1), specifying the standard
-%                   deviation of white noise superimposed on top
-%                   of the simulated signals
+%   cfg.absnoise  = scalar (default: 1), specifying the standard deviation of 
+%                   white noise superimposed on top of the simulated signals
+%   cfg.randomseed = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % Method 'mvnrnd' implements a linear mixing with optional timeshifts in
 % where the number of unobserved signals is equal to the number of observed
@@ -81,7 +81,7 @@ function [simulated] = ft_connectivitysimulation(cfg)
 % See also FT_FREQSIMULATION, FT_DIPOLESIMULATION, FT_SPIKESIMULATION,
 % FT_CONNECTIVITYANALYSIS
 
-% Copyright (C) 2009, Donders Institute for Brain, Cognition and Behaviour
+% Copyright (C) 2009-2015, Donders Institute for Brain, Cognition and Behaviour
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -106,9 +106,10 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance
+ft_preamble randomseed
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -122,20 +123,20 @@ cfg = ft_checkconfig(cfg, 'rename',   {'blc', 'demean'});
 % method specific defaults
 switch cfg.method
   case {'ar'}
-    %method specific defaults
-    cfg = ft_checkconfig(cfg, 'required', {'params' 'noisecov'});
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', zeros(cfg.nsignal,1));
+    cfg          = ft_checkconfig(cfg, 'required', {'params' 'noisecov'});
   case {'linear_mix'}
-    if ~isfield(cfg, 'bpfilter'), cfg.bpfilter = 'yes';   end
-    if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
-    if ~isfield(cfg, 'demean'),   cfg.demean   = 'yes';   end
-    if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
-    cfg = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
+    cfg.bpfilter = ft_getopt(cfg, 'bpfilter', 'yes');
+    cfg.bpfreq   = ft_getopt(cfg, 'bpfreq',   [15 25]);
+    cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
+    cfg          = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
   case {'mvnrnd'}
-    if ~isfield(cfg, 'bpfilter'), cfg.bpfilter = 'yes';   end
-    if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
-    if ~isfield(cfg, 'demean'),   cfg.demean   = 'yes';   end
-    if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
-    cfg = ft_checkconfig(cfg, 'required', {'covmat' 'delay'});
+    cfg.bpfilter = ft_getopt(cfg, 'bpfilter', 'yes');
+    cfg.bpfreq   = ft_getopt(cfg, 'bpfreq',   [15 25]);
+    cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
+    cfg          = ft_checkconfig(cfg, 'required', {'covmat' 'delay'});
   otherwise
 end
 
@@ -176,7 +177,11 @@ switch cfg.method
         state0    = reshape(fliplr(tmp(:,(m-nlag):(m-1))), [nlag*nsignal 1]);
         tmp(:, m) = params'*state0 + noise(:,m);
       end
+      
       trial{k} = tmp(:,nlag+1:end);
+      if any(cfg.absnoise>0)
+        trial{k} = trial{k} + diag(cfg.absnoise)*randn(size(trial{k}));
+      end
       time{k}  = tim;
     end
     
@@ -279,6 +284,7 @@ simulated.label   = label;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
+ft_postamble randomseed
 ft_postamble provenance
 ft_postamble history simulated
 ft_postamble savevar simulated

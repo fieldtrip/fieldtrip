@@ -405,11 +405,14 @@ filename = {
   '177746.thickness.32k_fs_LR.dscalar.nii'
   };
 
+% the ones starting with x177746 have been confirmed by inspecting the XML section of the files
+% the files contain <MapName>177746_aparc</MapName>
+% the x in front is needed to make it a valid fieldname and results from "fixname"
 datafield = {
   'arealdistortion'
-  'aparc'
-  'ba'
-  'aparc_a2009s'
+  'x177746_aparc'
+  'x177746_ba'
+  'x177746_aparc_a2009s'
   'myelinmap'
   'corrthickness'
   'myelinmap_bc'

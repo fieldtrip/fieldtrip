@@ -5,16 +5,21 @@ function data = ft_math(cfg, varargin)
 %
 % Use as
 %   data = ft_math(cfg, data1, data2, ...)
-% with one or multiple FieldTrip data structures as input and where cfg is a
-% configuration structure that should contain
-%
-%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply',
-%                   'log10', 'abs' or a functional specification of the operation (see below)
-%  cfg.parameter  = string, field from the input data on which the operation is
+% with one or multiple FieldTrip data structures as the input and the configuration
+% structure cfg in which you specify the mathematical operation that is to be
+% executed on the desired parameter from the data
+%   cfg.parameter = string, field from the input data on which the operation is
 %                   performed, e.g. 'pow' or 'avg'
+%   cfg.operation = string, for example '(x1-x2)/(x1+x2)' or 'x1/6'
 %
-% Optionally, if you specify only a single input data structure and the operation
-% 'add', 'subtract', 'divide' or 'multiply', the configuration should also contain
+% In the specification of the mathematical operation, x1 is the parameter obtained
+% from the first input data structure, x2 from the second, etc.
+%
+% Rather than specifying the operation as a string that is evaluated, you can also
+% specify it as a single operation. The advantage is that it is computed faster.
+%    cfg.operation = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10', 'abs'
+% If you specify only a single input data structure and the operation is 'add',
+% 'subtract', 'divide' or 'multiply', the configuration should also contain:
 %   cfg.scalar    = scalar value to be used in the operation
 %
 % The operation 'add' is implemented as follows
@@ -41,11 +46,6 @@ function data = ft_math(cfg, varargin)
 %   y = x1 * s
 % if you specify one input argument and a scalar value.
 %
-% It is also possible to specify your own operation as a string, like this
-%   cfg.operation = '(x1-x2)/(x1+x2)'
-% or using 's' for the scalar value like this
-%   cfg.operation = '(x1-x2)^s'
-%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
@@ -64,7 +64,7 @@ function data = ft_math(cfg, varargin)
 %                involve element-wise combination of the data and the
 %                matrix.
 
-% Copyright (C) 2012-2014, Robert Oostenveld
+% Copyright (C) 2012-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -90,12 +90,13 @@ function data = ft_math(cfg, varargin)
 
 revision = '$Id$';
 
-ft_defaults                   % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init              % this will show the function help if nargin==0 and return an error
-ft_preamble provenance        % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
+% do teh general setup of the function
+ft_defaults
+ft_preamble init
 ft_preamble debug
-ft_preamble loadvar varargin  % this reads the input data in case the user specified the cfg.inputfile option
+ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
@@ -446,7 +447,7 @@ end % p over length(cfg.parameter)
 data.dimord = dimord;
 
 % certain fields should remain in the output, but only if they are identical in all inputs
-keepfield = {'grad', 'elec'};
+keepfield = {'grad', 'elec', 'inside'};
 for j=1:numel(keepfield)
   if isfield(varargin{1}, keepfield{j})
     tmp  = varargin{i}.(keepfield{j});
@@ -470,11 +471,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ft_postamble debug
-ft_postamble trackconfig        % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
-ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history data       % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-ft_postamble savevar data       % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+ft_postamble trackconfig
+ft_postamble previous   varargin
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

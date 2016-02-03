@@ -126,7 +126,7 @@ revision = '$Id$';
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar    varargin
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
@@ -175,6 +175,9 @@ cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.preproc        = ft_getopt(cfg, 'preproc');
 cfg.tolerance      = ft_getopt(cfg, 'tolerance', 1e-5);
+cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
+cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
+
 if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive, 'yes')
   warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
   cfg.interactive = 'no';
@@ -310,14 +313,26 @@ end
 % perform channel selection, unless in the other plotting functions this
 % can always be done because ft_multiplotER is the entry point into the
 % interactive stream, but will not be revisited
-for i=1:Ndata
-  if isfield(varargin{i}, 'label')
-    % only do the channel selection when it can actually be done,
-    % i.e. when the data are bivariate ft_selectdata will crash, moreover
-    % the bivariate case is handled below
-    varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel);
+if isfield(varargin{1}, 'label')
+  % only do the channel selection when it can actually be done,
+  % i.e. when the data are bivariate ft_selectdata will crash, moreover
+  % the bivariate case is handled below
+  tmpcfg = keepfields(cfg, 'channel');
+  tmpvar = varargin{1};
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+
+  if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
+    % the mask parameter is not present after ft_selectdata, because it is
+    % not included in all input arguments. Make the same selection and copy
+    % it over
+    tmpvar = ft_selectdata(tmpcfg, tmpvar);
+    varargin{1}.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
   end
-end
+  
+  clear tmpvar tmpcfg
+end  
 
 if isfield(varargin{1}, 'label') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, varargin{1}.label);
@@ -325,10 +340,11 @@ elseif isfield(varargin{1}, 'labelcmb') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
-% check whether rpt/subj is present and remove if necessary and whether
+% check whether rpt/subj is present and remove if necessary
+% FIXME this should be implemented with avgoverpt in ft_selectdata
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
-  tmpcfg        = [];
+  tmpcfg = [];
   
   % disable hashing of input data (speeds up things)
   tmpcfg.trackcallinfo = 'no';
@@ -353,6 +369,7 @@ if strcmp(dtype, 'timelock') && hasrpt,
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
+  
 elseif strcmp(dtype, 'freq') && hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
@@ -527,14 +544,20 @@ for i=1:Ndata
   xidmax(i, 1) = nearest(varargin{i}.(xparam), xmax);
 end
 
-if strcmp('freq', yparam) && strcmp('freq', dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i}, 'param', cfg.parameter, 'foilim', cfg.zlim, 'avgoverfreq', 'yes');
-  end
-elseif strcmp('time', yparam) && strcmp('freq', dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i}, 'param', cfg.parameter, 'toilim', cfg.zlim, 'avgovertime', 'yes');
-  end
+if strcmp('freq',yparam) && strcmp('freq',dtype)
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgoverfreq = 'yes';
+  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+elseif strcmp('time',yparam) && strcmp('freq',dtype)
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgovertime = 'yes';
+  tmpcfg.latency     = cfg.latency;%cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
+  % restore the provenance information 
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 end
 
 % Get physical y-axis range (vlim / parameter):
@@ -759,10 +782,10 @@ if ~isempty(cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble debug
+ft_postamble trackconfig
 ft_postamble previous varargin
+ft_postamble provenance
 
 % add a menu to the figure, but only if the current figure does not have subplots
 % also, delete any possibly existing previous menu, this is safe because delete([]) does nothing

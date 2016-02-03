@@ -74,7 +74,8 @@ url = {
   'EEGSF'      'see http://eeg.sourceforge.net'  % alternative name
   'MRI'        'see http://eeg.sourceforge.net'  % alternative name
   'NEUROSHARE' 'see http://www.neuroshare.org'
-  'BESA'       'see http://www.megis.de, or contact Karsten Hoechstetter'
+  'BESA'         'see http://www.besa.de/downloads/matlab/ and get the "BESA MATLAB Readers"'
+  'MATLAB2BESA'  'see http://www.besa.de/downloads/matlab/ and get the "MATLAB to BESA Export functions"'
   'EEPROBE'    'see http://www.ant-neuro.com, or contact Maarten van der Velde'
   'YOKOGAWA'   'this is deprecated, please use YOKOGAWA_MEG_READER instead'
   'YOKOGAWA_MEG_READER' 'see http://www.yokogawa.com/me/me-login-en.htm'
@@ -99,46 +100,52 @@ url = {
   'PLOTTING'   'see http://www.ru.nl/neuroimaging/fieldtrip'
   'SPIKE'      'see http://www.ru.nl/neuroimaging/fieldtrip'
   'CONNECTIVITY' 'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'PEER'       'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'PLOTTING'   'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'DENOISE'    'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
-  'BCI2000'    'see http://bci2000.org'
-  'NLXNETCOM'  'see http://www.neuralynx.com'
-  'DIPOLI'     'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
-  'MNE'        'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
-  'TCP_UDP_IP' 'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
-  'BEMCP'      'contact Christophe Phillips'
-  'OPENMEEG'   'see http://gforge.inria.fr/projects/openmeeg and http://gforge.inria.fr/frs/?group_id=435'
-  'PRTOOLS'    'see http://www.prtools.org'
-  'ITAB'       'contact Stefania Della Penna'
-  'BSMART'     'see http://www.brain-smart.org'
-  'PEER'       'see http://fieldtrip.fcdonders.nl/development/peer'
-  'FREESURFER' 'see http://surfer.nmr.mgh.harvard.edu/fswiki'
-  'SIMBIO'     'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
-  'VGRID'      'see http://www.rheinahrcampus.de/~medsim/vgrid/manual.html'
-  'FNS'        'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
-  'GIFTI'      'see http://www.artefact.tk/software/matlab/gifti'
-  'XML4MAT'    'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
-  'SQDPROJECT' 'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
-  'BCT'        'see http://www.brain-connectivity-toolbox.net/'
-  'CCA'        'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
-  'EGI_MFF'    'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
+  'PEER'          'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'PLOTTING'      'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
+  'BCI2000'       'see http://bci2000.org'
+  'NLXNETCOM'     'see http://www.neuralynx.com'
+
+  'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
+  'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
+  'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
+  'BEMCP'         'contact Christophe Phillips'
+  'OPENMEEG'      'see http://gforge.inria.fr/projects/openmeeg and http://gforge.inria.fr/frs/?group_id=435'
+  'PRTOOLS'       'see http://www.prtools.org'
+  'ITAB'          'contact Stefania Della Penna'
+  'BSMART'        'see http://www.brain-smart.org'
+  'PEER'          'see http://fieldtrip.fcdonders.nl/development/peer'
+  'FREESURFER'    'see http://surfer.nmr.mgh.harvard.edu/fswiki'
+  'SIMBIO'        'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
+  'VGRID'         'see http://www.rheinahrcampus.de/~medsim/vgrid/manual.html'
+  'FNS'           'see http://hhvn.nmsu.edu/wiki/index.php/FNS'
+  'GIFTI'         'see http://www.artefact.tk/software/matlab/gifti'
+  'XML4MAT'       'see http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0'
+  'SQDPROJECT'    'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
+  'BCT'           'see http://www.brain-connectivity-toolbox.net/'
+  'CCA'           'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
+  'EGI_MFF'       'see http://www.egi.com/ or contact either Phan Luu or Colin Davey at EGI'
   'TOOLBOX_GRAPH' 'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
-  'NETCDF'     'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
-  'MYSQL'      'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
-  'ISO2MESH'   'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
-  'DATAHASH'   'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
-  'IBTB'       'see http://www.ibtb.org'
-  'ICASSO'     'see http://www.cis.hut.fi/projects/ica/icasso'
-  'XUNIT'      'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
-  'PLEXON'     'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
-  'MISC'       'various functions that were downloaded from http://www.mathworks.com/matlabcentral/fileexchange and elsewhere'
+  'NETCDF'        'see http://www.mathworks.com/matlabcentral/fileexchange/15177'
+  'MYSQL'         'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
+  'ISO2MESH'      'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
+  'DATAHASH'      'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
+  'IBTB'          'see http://www.ibtb.org'
+  'ICASSO'        'see http://www.cis.hut.fi/projects/ica/icasso'
+  'XUNIT'         'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
+  'PLEXON'        'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
+  'MISC'          'various functions that were downloaded from http://www.mathworks.com/matlabcentral/fileexchange and elsewhere'
   '35625-INFORMATION-THEORY-TOOLBOX'      'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
   '29046-MUTUAL-INFORMATION'              'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
   '14888-MUTUAL-INFORMATION-COMPUTATION'  'see http://www.mathworks.com/matlabcentral/fileexchange/14888-mutual-information-computation'
-  'PLOT2SVG'    'see http://www.mathworks.com/matlabcentral/fileexchange/7401-scalable-vector-graphics-svg-export-of-figures'
-  'BRAINSUITE'  'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
-  'BRAINVISA'   'see http://brainvisa.info'
+  'PLOT2SVG'      'see http://www.mathworks.com/matlabcentral/fileexchange/7401-scalable-vector-graphics-svg-export-of-figures'
+  'BRAINSUITE'    'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
+  'BRAINVISA'     'see http://brainvisa.info'
+  'FILEEXCHANGE'  'see http://www.mathworks.com/matlabcentral/fileexchange/'
+  'NEURALYNX_V6'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Neuralynx (windows only)'
+  'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser'
+  'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
+  'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
   };
 
 if nargin<2
@@ -182,7 +189,7 @@ switch toolbox
         status = 1;
       end
     end
-    
+
     %This is to avoid crashes when trying to add SPM to the path
     if ~status
       toolbox = 'SPM8';
@@ -202,11 +209,15 @@ switch toolbox
   case 'MRI'    % other functions in the mri section
     status = (exist('avw_hdr_read', 'file') && exist('avw_img_read', 'file'));
   case 'NEUROSHARE'
-    status  = (exist('ns_OpenFile', 'file') && exist('ns_SetLibrary', 'file') && exist('ns_GetAnalogData', 'file'));    
+    status  = (exist('ns_OpenFile', 'file') && exist('ns_SetLibrary', 'file') && exist('ns_GetAnalogData', 'file'));
   case 'ARTINIS'
     status  = exist('read_artinis_oxy3', 'file');
   case 'BESA'
-    status = (exist('readBESAtfc', 'file') && exist('readBESAswf', 'file'));
+    filelist = {'readBESAavr' 'readBESAelp' 'readBESAswf'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'MATLAB2BESA'
+    filelist = {'besa_save2Avr' 'besa_save2Elp' 'besa_save2Swf'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
   case 'EEPROBE'
     status  = (exist('read_eep_avr', 'file') && exist('read_eep_cnt', 'file'));
   case 'YOKOGAWA'
@@ -253,6 +264,7 @@ switch toolbox
     status  = exist('load_bcidat', 'file');
   case 'NLXNETCOM'
     status  = (exist('MatlabNetComClient', 'file') && exist('NlxConnectToServer', 'file') && exist('NlxGetNewCSCData', 'file'));
+
   case 'DIPOLI'
     status  = exist('dipoli.maci', 'file');
   case 'MNE'
@@ -329,7 +341,19 @@ switch toolbox
   case 'BRAINVISA'
     filelist = {'loadmesh.m' 'plotmesh.m' 'savemesh.m'};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
-    
+  case 'NEURALYNX_V6'
+    filelist = {['Nlx2MatCSC.', mexext]};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'NEURALYNX_V3'
+    filelist = {['Nlx2MatCSC_v3.', mexext]};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'NPMK'
+    filelist = {'OpenNSx' 'OpenNEV'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'VIDEOMEG'
+    filelist = {'comp_tstamps' 'load_audio0123', 'load_video123'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+
     % the following are fieldtrip modules/toolboxes
   case 'FILEIO'
     status  = (exist('ft_read_header', 'file') && exist('ft_read_data', 'file') && exist('ft_read_event', 'file') && exist('ft_read_sens', 'file'));
@@ -343,7 +367,7 @@ switch toolbox
     status  = exist('ft_connectivity_corr', 'file') && exist('ft_connectivity_granger', 'file');
   case 'SPIKE'
     status = exist('ft_spiketriggeredaverage.m', 'file') && exist('ft_spiketriggeredspectrum.m', 'file');
-    
+
     % these were missing, added them using the below style, see bug 1804 - roevdmei
   case 'INVERSE'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/inverse'],             'once'));  % INVERSE is not added above, consider doing it there -roevdmei
@@ -353,9 +377,11 @@ switch toolbox
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/specest'],             'once'));  % SPECEST is not added above, consider doing it there -roevdmei
   case 'PREPROC'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/preproc'],             'once')); % PREPROC is not added above, consider doing it there -roevdmei
-    
+
     % the following are not proper toolboxes, but only subdirectories in the fieldtrip toolbox
     % these are added in ft_defaults and are specified with unix-style forward slashes
+  case 'FILEEXCHANGE'
+    status = ~isempty(regexp(unixpath(path), [fttrunkpath '/external/fileexchange'], 'once'));
   case 'COMPAT'
     status = ~isempty(regexp(unixpath(path), [fttrunkpath '/compat'],              'once'));
   case 'STATFUN'
@@ -394,13 +420,13 @@ status = (status~=0);
 
 % try to determine the path of the requested toolbox
 if autoadd>0 && ~status
-  
+
   % for core fieldtrip modules
   prefix = fileparts(which('ft_defaults'));
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % for external fieldtrip modules
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if ~status
@@ -412,7 +438,7 @@ if autoadd>0 && ~status
       feval(licensefile);
     end
   end
-  
+
   % for contributed fieldtrip extensions
   prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
   if ~status
@@ -424,25 +450,25 @@ if autoadd>0 && ~status
       feval(licensefile);
     end
   end
-  
+
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-  
+
   if ~status
     % the toolbox is not on the path and cannot be added
     sel = find(strcmp(url(:,1), toolbox));
@@ -454,7 +480,7 @@ if autoadd>0 && ~status
     if autoadd==1
       error(msg);
     elseif autoadd==2
-      warning(msg);
+      ft_warning(msg);
     else
       % fail silently
     end
@@ -486,7 +512,7 @@ elseif exist(toolbox, 'dir')
   end
   addpath(toolbox);
   status = 1;
-elseif (~isempty(regexp(toolbox, 'spm5$')) || ~isempty(regexp(toolbox, 'spm8$')) || ~isempty(regexp(toolbox, 'spm12$'))) && exist([toolbox 'b'], 'dir')
+elseif (~isempty(regexp(toolbox, 'spm5$', 'once')) || ~isempty(regexp(toolbox, 'spm8$', 'once')) || ~isempty(regexp(toolbox, 'spm12$', 'once'))) && exist([toolbox 'b'], 'dir')
   status = myaddpath([toolbox 'b'], silent);
 else
   status = 0;
@@ -496,7 +522,8 @@ end
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function path = unixpath(path)
-path(path=='\') = '/'; % replace backward slashes with forward slashes
+%path(path=='\') = '/'; % replace backward slashes with forward slashes
+path = strrep(path,'\','/');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
@@ -528,4 +555,3 @@ catch
     status = true;
   end
 end
-

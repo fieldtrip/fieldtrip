@@ -25,6 +25,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 % specifying an absolute or a relative noise level
 %   cfg.relnoise    = add noise with level relative to simulated signal
 %   cfg.absnoise    = add noise with absolute level
+%   cfg.randomseed  = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % Optional input arguments are
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
@@ -33,8 +34,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 %   cfg.chanunit   = units for the channel data
 %
 % The volume conduction model of the head should be specified as
-%   cfg.vol           = structure with volume conduction model, see FT_PREPARE_HEADMODEL
-%   cfg.hdmfile       = name of file containing the volume conduction model, see FT_READ_VOL
+%   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
 % The EEG or MEG sensor positions should be specified as
 %   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
@@ -42,8 +42,8 @@ function [simulated] = ft_dipolesimulation(cfg)
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEPLOT,
-% FT_PREPARE_VOL_SENS
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEPLOT, FT_FREQSIMULATION, 
+% FT_CONNECTIVITYSIMULATION
 
 % Undocumented local options
 % cfg.feedback
@@ -75,14 +75,18 @@ revision = '$Id$';
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance
+ft_preamble randomseed
+ft_preamble trackconfig
 
 % the abort variable is set to true or false in ft_preamble_init
 if abort
   return
 end
+
+cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
 % set the defaults
 if ~isfield(cfg, 'dip'),        cfg.dip = [];             end
@@ -96,13 +100,11 @@ if ~isfield(cfg, 'channel'),    cfg.channel = 'all';      end
 if ~isfield(cfg, 'dipoleunit'), cfg.dipoleunit = 'nA*m';  end
 if ~isfield(cfg, 'chanunit'),   cfg.chanunit = {};        end
 
-cfg = ft_checkconfig(cfg);
-
 cfg.dip = fixdipole(cfg.dip);
 Ndipoles = size(cfg.dip.pos,1);
 
 % prepare the volume conductor and the sensor array
-[vol, sens, cfg] = prepare_headmodel(cfg, []);
+[headmodel, sens, cfg] = prepare_headmodel(cfg, []);
 
 if ~isfield(cfg, 'ntrials')
   if isfield(cfg.dip, 'signal')
@@ -195,9 +197,9 @@ ft_progress('init', cfg.feedback, 'computing simulated data');
 for trial=1:Ntrials
   ft_progress(trial/Ntrials, 'computing simulated data for trial %d\n', trial);
   if numel(cfg.chanunit) == numel(cfg.channel)
-      lf = ft_compute_leadfield(dippos{trial}, sens, vol, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
+      lf = ft_compute_leadfield(dippos{trial}, sens, headmodel, 'dipoleunit', cfg.dipoleunit, 'chanunit', cfg.chanunit);
   else
-      lf = ft_compute_leadfield(dippos{trial}, sens, vol);
+      lf = ft_compute_leadfield(dippos{trial}, sens, headmodel);
   end
   nsamples = size(dipsignal{trial},2);
   nchannels = size(lf,1);
@@ -239,7 +241,8 @@ simulated.label   = sens.label;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble history simulated
-ft_postamble savevar simulated
+ft_postamble randomseed
+ft_postamble provenance simulated
+ft_postamble history    simulated
+ft_postamble savevar    simulated
 

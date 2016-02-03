@@ -1,7 +1,7 @@
-function segmentation = ft_datatype_segmentation(segmentation, varargin)
+function [segmentation] = ft_datatype_segmentation(segmentation, varargin)
 
 % FT_DATATYPE_SEGMENTATION describes the FieldTrip MATLAB structure for segmented
-% voxel-based data and atlases. A segmentation can either be indexed or probabilistic
+% voxel-based data and atlasses. A segmentation can either be indexed or probabilistic
 % (see below).
 %
 % A segmentation is a volumetric description which is usually derived from an anatomical
@@ -23,16 +23,6 @@ function segmentation = ft_datatype_segmentation(segmentation, varargin)
 %      brick0label: {Nx1 cell}
 %      brick1label: {Mx1 cell}
 %
-% An example of a whole-brain anatomical MRI that was segmented using FT_VOLUMESEGMENT
-% looks like this
-%
-%         dim: [256 256 256]         the size of the 3D volume in voxels
-%   transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to head coordinate system
-%    coordsys: 'ctf'                 the transformation matrix maps the voxels into this (head) coordinate system
-%        unit: 'mm'                  the units in which the coordinate system is expressed
-%        gray: [256x256x256 double]  probabilistic map of the gray matter
-%       white: [256x256x256 double]  probabilistic map of the white matter
-%         csf: [256x256x256 double]  probabilistic map of the cerebrospinal fluid
 %
 % An example segmentation with binary values that can be used for construction of a
 % BEM volume conduction model of the head looks like this
@@ -44,6 +34,17 @@ function segmentation = ft_datatype_segmentation(segmentation, varargin)
 %         brain: [256x256x256 logical] binary map representing the voxels which belong to the brain
 %         scalp: [256x256x256 logical] binary map representing the voxels which belong to the scalp
 %         skull: [256x256x256 logical] binary map representing the voxels which belong to the skull
+%
+% An example of a whole-brain anatomical MRI that was segmented using FT_VOLUMESEGMENT
+% looks like this
+%
+%         dim: [256 256 256]         the size of the 3D volume in voxels
+%   transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to head coordinate system
+%    coordsys: 'ctf'                 the transformation matrix maps the voxels into this (head) coordinate system
+%        unit: 'mm'                  the units in which the coordinate system is expressed
+%        gray: [256x256x256 double]  probabilistic map of the gray matter
+%       white: [256x256x256 double]  probabilistic map of the white matter
+%         csf: [256x256x256 double]  probabilistic map of the cerebrospinal fluid
 %
 % The examples above demonstrate that a segmentation can be indexed, i.e. consisting of
 % subsequent integer numbers (1, 2, ...) or probabilistic, consisting of real numbers
@@ -124,19 +125,19 @@ switch segversion
     fn = fieldnames(segmentation);
     fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
     [indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, segmentation.dim);
-    
+
     % ignore the fields that do not contain a segmentation
     sel = indexed | probabilistic;
     fn            = fn(sel);
     indexed       = indexed(sel);
     probabilistic = probabilistic(sel);
-    
+
     % convert from an exclusive to cumulative representation
     % this is only only for demonstration purposes
     % for i=1:length(sel)
     %   segmentation.(fn{sel(i)}) = volumefillholes(segmentation.(fn{sel(i)}));
     % end
-    
+
     [dum, i] = intersect(fn, {'scalp', 'skull', 'brain'});
     if numel(i)==3
       % put them in the preferred order
@@ -147,22 +148,22 @@ switch segversion
       % put them in the preferred order
       fn(i) = {'skin', 'skull', 'brain'};
     end
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the segmentation is internally consistent
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     if any(probabilistic)
       segmentation = fixsegmentation(segmentation, fn(probabilistic), 'probabilistic');
     end
     if any(indexed)
       segmentation = fixsegmentation(segmentation, fn(indexed), 'indexed');
     end
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % convert the segmentation to the desired style
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     if isempty(segmentationstyle)
       % keep it as it is
     elseif strcmp(segmentationstyle, 'indexed') && any(probabilistic)
@@ -174,11 +175,11 @@ switch segversion
       probabilistic(indexed) = true;  % these are now probabilistic
       indexed(indexed)       = false; % these are now probabilistic
     end % converting between probabilistic and indexed
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % add the brain if requested
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     if hasbrain
       if all(indexed)
         fn = fieldnames(segmentation);
@@ -187,7 +188,7 @@ switch segversion
           sel(i) = any(strcmp(fn, [fn{i} 'label']));
         end
         fn = fn(sel);
-        
+
         if numel(fn)>1
           error('cannot construct a brain mask on the fly; this requires a single indexed representation');
         else
@@ -211,7 +212,7 @@ switch segversion
             segmentation.brain = brain;
           end % try to construct the brain
         end
-        
+
       elseif all(probabilistic)
         if ~isfield(segmentation, 'brain')
           if ~all(isfield(segmentation, {'gray' 'white' 'csf'}))
@@ -234,7 +235,7 @@ switch segversion
         error('cannot construct a brain mask on the fly; this requires a uniquely indexed or a uniquely probabilitic representation');
       end
     end % if hasbrain
-    
+
   case '2005'
     % the only difference is that the indexed representation for xxx did not have the xxxlabel field prior to the 2012 version
     fn = fieldnames(segmentation);
@@ -242,7 +243,7 @@ switch segversion
     segmentation = rmfield(segmentation, fn(sel));
     % furthermore it corresponds to the oldest version of the volume representation
     volversion = '2003';
-    
+
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for segmentation datatype', segversion);
@@ -255,4 +256,3 @@ segmentation = ft_datatype_volume(segmentation, 'version', volversion);
 % the fields that are specific for the segmentation and add them later again.
 % At this moment ft_datatype_volume nicely passes all fields, so there is no
 % special handling of the segmentation fields needed.
-

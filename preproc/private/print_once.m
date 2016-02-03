@@ -6,7 +6,7 @@ function [ws warned] = print_once(varargin)
 % Use as one of the following
 %   print_once(string)
 %   print_once(id, string)
-% Alternatively, you can use warning_once using a timeout
+% Alternatively, you can use ft_warning using a timeout
 %   print_once(string, timeout)
 %   print_once(id, string, timeout)
 % where timeout should be inf if you don't want to see the warning ever
@@ -170,7 +170,7 @@ name(name==',')=[];
 end % function
 
 function [fname ft_previous_warnings line] = fieldnameFromStack(ft_previous_warnings)
-% stack(1) is this function, stack(2) is warning_once
+% stack(1) is this function, stack(2) is ft_warning
 stack = dbstack('-completenames');
 if size(stack) < 3
   fname = [];

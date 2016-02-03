@@ -56,4 +56,4 @@ end
 clear tmpindx
 
 % clear warnings from ft_default, so that they don't end up in the next cfg
-warning_once('-clear');
+ft_warning('-clear');
