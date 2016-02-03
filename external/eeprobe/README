@@ -1,8 +1,9 @@
 This directory contains a subset of the eeprobe/asa data importer,
-which is available from http://libeep.sourceforge.net/
+which is available from http://libeep.sourceforge.net and/or from
+http://download.ant-neuro.com/matlab/
 
 Please contact ANT in case the importer does not work for your
-combination of Matlab and operating system.
+combination of operating system and MATLAB version.
 
 ---------------------------------------------------------------------------
 
