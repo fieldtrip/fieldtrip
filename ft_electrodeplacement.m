@@ -455,7 +455,7 @@ opt.ijk = opt.ijk(1:3)';
 str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), xi, yi, zi), opt.ijk);
 
 if opt.init
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false);
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false,'clim', opt.clim);
   
   opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
   parenttag = get(opt.anahandles,'parent');
@@ -472,7 +472,7 @@ if opt.init
   opt.axis([1 3 5]) = 0.5;
   opt.axis([2 4 6]) = size(opt.ana) + 0.5;
 else
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false);
+  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false,'clim', opt.clim);
   
   if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
     fprintf('==================================================================================\n');
