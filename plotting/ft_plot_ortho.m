@@ -158,13 +158,13 @@ switch style
       hold on
     end
     
-    varargin{sel+1} = ori(1,:);
+    varargin{2*sel} = ori(1,:);
     hx = ft_plot_slice(dat, varargin{:});
     
-    varargin{sel+1} = ori(2,:);
+    varargin{2*sel} = ori(2,:);
     hy = ft_plot_slice(dat, varargin{:});
     
-    varargin{sel+1} = ori(3,:);
+    varargin{2*sel} = ori(3,:);
     hz = ft_plot_slice(dat, varargin{:});
     axis equal; axis tight; axis off;axis vis3d
     view(3);
