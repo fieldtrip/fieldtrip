@@ -74,11 +74,6 @@ if ~isa(dat, 'double')
   dat = cast(dat, 'double');
 end
 
-if ~isempty(clim)
-  % clip the data between the color limits
-  dat(dat<clim(1)) = clim(1);
-  dat(dat>clim(2)) = clim(2);
-end
 
 % determine the orientation key-value pair
 keys = varargin(sellist(1:2:end));
