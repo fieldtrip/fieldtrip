@@ -461,8 +461,7 @@ switch cfg.method
         opt.handlesaxes   = [h1 h2 h3];
         opt.handlesfigure = h;
         opt.quit          = false;
-        opt.ana           = dat; % this will be clipped
-        opt.org           = dat; % this will remain unclipped
+        opt.ana           = dat; 
         opt.update        = [1 1 1];
         opt.init          = true;
         opt.tag           = 'ik';
@@ -1537,11 +1536,6 @@ newlim = get(h4, 'value');
 h = getparent(h4);
 opt = getappdata(h, 'opt');
 opt.clim(1) = newlim;
-% re-apply the clipping to the original anatomy
-opt.ana = opt.org;
-opt.ana(opt.ana<opt.clim(1)) = opt.clim(1);
-opt.ana(opt.ana>opt.clim(2)) = opt.clim(2);
-opt.ana = opt.ana/(opt.clim(2)-opt.clim(1));
 fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
@@ -1555,11 +1549,6 @@ newlim = get(h5, 'value');
 h = getparent(h5);
 opt = getappdata(h, 'opt');
 opt.clim(2) = newlim;
-% re-apply the clipping to the original anatomy
-opt.ana = opt.org;
-opt.ana(opt.ana<opt.clim(1)) = opt.clim(1);
-opt.ana(opt.ana>opt.clim(2)) = opt.clim(2);
-opt.ana = opt.ana/(opt.clim(2)-opt.clim(1));
 fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
