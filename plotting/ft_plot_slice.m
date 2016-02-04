@@ -23,7 +23,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'style'        = string, 'flat' or '3D'
 %   'colormap'     = string, see COLORMAP
-%   'clim'         = 1x2 vector specifying the min and max for the colorscale
+%   'colorlim'     = 1x2 vector specifying the min and max for the colorscale
 %
 % See also FT_PLOT_ORTHO, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 
