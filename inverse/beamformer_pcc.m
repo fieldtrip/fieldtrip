@@ -241,7 +241,7 @@ for i=1:size(dip.pos,1)
         end
         lfa  = lfa * maxpowori;
         dipout.ori{i} = maxpowori;
-        dipout.eta{i} = eta;
+        dipout.eta(i) = eta;
         % update the number of dipole components
         Ndip = size(lfa,2);
       end
@@ -333,7 +333,7 @@ if isfield(dipout, 'ori')
 end
 if isfield(dipout, 'eta')
   dipout.eta( originside) = dipout.eta;
-  dipout.eta(~originside) = {[]};
+  dipout.eta(~originside) = nan;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

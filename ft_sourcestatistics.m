@@ -224,7 +224,7 @@ end
 stat.dimord = cfg.dimord;
 
 % copy the descripive fields into the output
-stat = copyfields(varargin{1}, stat, {'freq', 'time', 'pos', 'dim', 'transform'});
+stat = copyfields(varargin{1}, stat, {'freq', 'time', 'pos', 'dim', 'transform', 'tri'});
 
 % these were only present to inform the low-level functions
 cfg = removefields(cfg, {'dim', 'dimord', 'tri', 'inside'});

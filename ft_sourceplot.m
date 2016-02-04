@@ -653,6 +653,8 @@ switch cfg.method
     cfg.slicedim   = ft_getopt(cfg, 'slicedim',   3);
     cfg.slicerange = ft_getopt(cfg, 'slicerange', 'auto');
     
+    
+    
     % white BG => mskana
     
     % TODO: HERE THE FUNCTION THAT MAKES TO SLICE DIMENSION ALWAYS THE THIRD DIMENSION, AND ALSO KEEP TRANSFORMATION MATRIX UP TO DATE
@@ -660,6 +662,24 @@ switch cfg.method
     % if hasana; ana = shiftdim(ana,cfg.slicedim-1); end;
     % if hasfun; fun = shiftdim(fun,cfg.slicedim-1); end;
     % if hasmsk; msk = shiftdim(msk,cfg.slicedim-1); end;
+    
+    % ADDED BY JM: allow for slicedim different than 3
+    switch cfg.slicedim
+      case 1
+        dim = dim([2 3 1]);
+        if hasana, ana = permute(ana,[2 3 1]); end
+        if hasfun, fun = permute(fun,[2 3 1]); end
+        if hasmsk, msk = permute(msk,[2 3 1]); end
+        cfg.slicedim=3;
+      case 2
+        dim = dim([3 1 2]);
+        if hasana, ana = permute(ana,[3 1 2]); end
+        if hasfun, fun = permute(fun,[3 1 2]); end
+        if hasmsk, msk = permute(msk,[3 1 2]); end
+        cfg.slicedim=3;
+      otherwise
+        % nothing needed
+    end
     
     %%%%% select slices
     if ~ischar(cfg.slicerange)
@@ -707,14 +727,17 @@ switch cfg.method
       dim(end+1:3) = 1;
     end
     
+    %if cfg.slicedim~=3
+    %  error('only supported for slicedim=3');
+    %end
+    
+    
     m = dim(1);
     n = dim(2);
     M = ceil(sqrt(dim(3)));
     N = ceil(sqrt(dim(3)));
     num_patch = N*M;
-    if cfg.slicedim~=3
-      error('only supported for slicedim=3');
-    end
+    
     num_slice = (dim(cfg.slicedim));
     num_empt = num_patch-num_slice;
     % put empty slides on ana, fun, msk, mskana to fill Quilt up

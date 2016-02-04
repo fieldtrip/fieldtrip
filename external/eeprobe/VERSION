@@ -1,3 +1,6 @@
-the mexmaci64 mex files correspond to libeep-3.3.167
-the mexa64    mex files correspond to libeep-3.3.167
+the mexa64    mex files correspond to libeep-3.3.173
+the mexmaci64 mex files correspond to libeep-3.3.173
+the mexw32    mex files correspond to libeep-3.3.173
+the mexw64    mex files correspond to libeep-3.3.173
 the mexglx    mex files correspond to libeep-3.3.167
+the mexmac    mex files have an unknown version

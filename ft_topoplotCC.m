@@ -88,6 +88,7 @@ cfg.arrowsize  = ft_getopt(cfg, 'arrowsize', nan);    % length of the arrow head
 cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan); % absolute, should be in figure units, i.e. the same units as the layout
 cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8);% relative to the complete line
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
+cfg.colormap    = ft_getopt(cfg, 'colormap',    colormap);
 
 lay = ft_prepare_layout(cfg, freq);
 
@@ -147,7 +148,7 @@ if isnan(cfg.arrowoffset)
   warning('using an arrowoffset of %f', cfg.arrowoffset);
 end
 
-rgb  = colormap;
+rgb  = cfg.colormap;
 if ~isempty(colorparam)
   cmin = min(colorparam(:));
   cmax = max(colorparam(:));

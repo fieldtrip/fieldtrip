@@ -63,6 +63,7 @@ cortexright      = ft_getopt(varargin, 'cortexright', {});
 hemisphereoffset = ft_getopt(varargin, 'hemisphereoffset', 0); % in mm, move the two hemispheres apart from each other
 debug            = ft_getopt(varargin, 'debug', false);
 mapname          = ft_getopt(varargin, 'mapname', 'field');
+dataformat       = ft_getopt(varargin, 'dataformat', []);
 
 % convert 'yes'/'no' into boolean
 readdata = istrue(readdata);

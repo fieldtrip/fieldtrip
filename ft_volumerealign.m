@@ -326,59 +326,75 @@ switch cfg.method
       case 'ortho'
         % start building the figure
         h = figure;
-        set(h, 'color', [1 1 1]);
+        %set(h, 'color', [1 1 1]);
         set(h, 'visible', 'on');
-        % add callbacks
+        
+        % axes settings
+        if strcmp(cfg.axisratio, 'voxel')
+          % determine the number of voxels to be plotted along each axis
+          axlen1 = mri.dim(1);
+          axlen2 = mri.dim(2);
+          axlen3 = mri.dim(3);
+        elseif strcmp(cfg.axisratio, 'data')
+          % determine the length of the edges along each axis
+          [cp_voxel, cp_head] = cornerpoints(mri.dim, mri.transform);
+          axlen1 = norm(cp_head(2,:)-cp_head(1,:));
+          axlen2 = norm(cp_head(4,:)-cp_head(1,:));
+          axlen3 = norm(cp_head(5,:)-cp_head(1,:));
+        elseif strcmp(cfg.axisratio, 'square')
+          % the length of the axes should be equal
+          axlen1 = 1;
+          axlen2 = 1;
+          axlen3 = 1;
+        end
+        
+        % this is the size reserved for subplot h1, h2 and h3
+        h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
+        h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
+        h2size(1) = 0.82*axlen2/(axlen1 + axlen2);
+        h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
+        h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
+        h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
+        
+        if strcmp(cfg.voxelratio, 'square')
+          voxlen1 = 1;
+          voxlen2 = 1;
+          voxlen3 = 1;
+        elseif strcmp(cfg.voxelratio, 'data')
+          % the size of the voxel is scaled with the data
+          [cp_voxel, cp_head] = cornerpoints(mri.dim, mri.transform);
+          voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
+          voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
+          voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
+        end
+        
+        %% the figure is interactive, add callbacks
         set(h, 'windowbuttondownfcn', @cb_buttonpress);
         set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
         set(h, 'windowkeypressfcn',   @cb_keyboard);
         set(h, 'CloseRequestFcn',     @cb_cleanup);
         
-        % inspect transform matrix, if the voxels are isotropic then the screen
-        % pixels also should be square
-        hasIsotropicVoxels = norm(mri.transform(1:3,1)) == norm(mri.transform(1:3,2))...
-          && norm(mri.transform(1:3,2)) == norm(mri.transform(1:3,3));
+        % axis handles will hold the anatomical functional if present, along with labels etc.
+        h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
+        h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
+        h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
         
-        % axes settings
-        if strcmp(cfg.axisratio, 'data')
-          xdim = mri.dim(1) + mri.dim(2); % data-defined viewing dimensions
-          ydim = mri.dim(2) + mri.dim(3);
-          xsize(1) = 0.82*mri.dim(1)/xdim;
-          xsize(2) = 0.82*mri.dim(2)/xdim;
-          ysize(1) = 0.82*mri.dim(3)/ydim;
-          ysize(2) = 0.82*mri.dim(2)/ydim;
-        elseif strcmp(cfg.axisratio, 'square')
-          xsize = [0.41 0.41]; % square viewing dimensions
-          ysize = [0.41 0.41];
-        end
+        set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
+        set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
+        set(h3, 'Tag', 'ij', 'Visible', 'off');
         
-        % create figure handles
+        set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+        set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+        set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
         
-        % axis handles will hold the anatomical data if present, along with labels etc.
-        h1 = axes('position',[0.07 0.07+ysize(2)+0.05 xsize(1) ysize(1)]);
-        h2 = axes('position',[0.07+xsize(1)+0.05 0.07+ysize(2)+0.05 xsize(2) ysize(1)]);
-        h3 = axes('position',[0.07 0.07 xsize(1) ysize(2)]);
-        set(h1,'Tag','ik','Visible','on','XAxisLocation','top');
-        set(h2,'Tag','jk','Visible','on','XAxisLocation','top');
-        set(h3,'Tag','ij','Visible','on');
-        
-        if hasIsotropicVoxels
-          set(h1,'DataAspectRatio',[1 1 1]);
-          set(h2,'DataAspectRatio',[1 1 1]);
-          set(h3,'DataAspectRatio',[1 1 1]);
-        end
+        xc = round(mri.dim(1)/2); % start with center view
+        yc = round(mri.dim(2)/2);
+        zc = round(mri.dim(3)/2);
         
         dat = double(mri.(cfg.parameter));
         dmin = min(dat(:));
         dmax = max(dat(:));
         dat  = (dat-dmin)./(dmax-dmin);
-        
-        x = 1:mri.dim(1);
-        y = 1:mri.dim(2);
-        z = 1:mri.dim(3);
-        xc = round(mri.dim(1)/2);
-        yc = round(mri.dim(2)/2);
-        zc = round(mri.dim(3)/2);
         
         if isfield(cfg, 'pnt')
           pnt = cfg.pnt;
@@ -389,6 +405,36 @@ switch cfg.method
         markerlabel = {};
         markercolor = {};
         
+        % determine clim if empty (setting to [0 1] could be done at the top, but not sure yet if it interacts with the other visualizations -roevdmei)
+        if isempty(cfg.clim)
+          cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; % 
+        end
+        
+        % intensity range sliders
+        h45text = uicontrol('Style', 'text',...
+          'String','Intensity',...
+          'Units', 'normalized', ...
+          'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
+          'HandleVisibility','on');
+         
+        h4 = uicontrol('Style', 'slider', ...
+          'Parent', h, ...
+          'Min', 0, 'Max', 1, ...
+          'Value', cfg.clim(1), ...
+          'Units', 'normalized', ...
+          'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+          'Callback', @cb_minslider);
+            
+        h5 = uicontrol('Style', 'slider', ...
+          'Parent', h, ...
+          'Min', 0, 'Max', 1, ...
+          'Value', cfg.clim(2), ...
+          'Units', 'normalized', ...
+          'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+          'Callback', @cb_maxslider);
+
+        
+        % instructions to the user
         fprintf(strcat(...
           '1. To change the slice viewed in one plane, either:\n',...
           '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
@@ -409,12 +455,13 @@ switch cfg.method
         opt               = [];
         opt.dim           = mri.dim;
         opt.ijk           = [xc yc zc];
-        opt.xsize         = xsize;
-        opt.ysize         = ysize;
+        opt.h1size        = h1size;
+        opt.h2size        = h2size;
+        opt.h3size        = h3size;
         opt.handlesaxes   = [h1 h2 h3];
         opt.handlesfigure = h;
         opt.quit          = false;
-        opt.ana           = dat;
+        opt.ana           = dat; 
         opt.update        = [1 1 1];
         opt.init          = true;
         opt.tag           = 'ik';
@@ -1478,3 +1525,33 @@ end
 if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_minslider(h4, eventdata)
+
+newlim = get(h4, 'value');
+h = getparent(h4);
+opt = getappdata(h, 'opt');
+opt.clim(1) = newlim;
+fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+setappdata(h, 'opt', opt);
+cb_redraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_maxslider(h5, eventdata)
+
+newlim = get(h5, 'value');
+h = getparent(h5);
+opt = getappdata(h, 'opt');
+opt.clim(2) = newlim;
+fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+setappdata(h, 'opt', opt);
+cb_redraw(h);
+
+
+

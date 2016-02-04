@@ -13,7 +13,8 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   'maxiter'     = Maximum number of function evaluations allowed [ positive integer ]
 %   'metric'      = Error measure to be minimised [ rv | var | abs ]
 %   'checkinside' = Boolean flag to check whether dipole is inside source compartment [ 0 | 1 ]
-%   'weight'      = weight matrix for maximum likelihood estimation, e.g. inverse noise covariance
+%   'weight'      = weight matrix for maximum likelihood estimation, e.g. sqrt inverse noise covariance
+%   'noisecov'    = noise covariance matrix
 %
 % The following optional input arguments relate to the computation of the leadfields
 %   'reducerank'      = 'no' or number
@@ -27,13 +28,14 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   constr.mirror     = vector, used for symmetric dipole models
 %   constr.reduce     = vector, used for symmetric dipole models
 %   constr.expand     = vector, used for symmetric dipole models
+%   consrt.sequential = boolean, fit different dipoles to sequential slices of the data
 %
 % The maximum likelihood estimation implements
 %   Lutkenhoner B. "Dipole source localization by means of maximum
 %   likelihood estimation I. Theory and simulations" Electroencephalogr Clin
 %   Neurophysiol. 1998 Apr;106(4):314-21.
 
-% Copyright (C) 2003-2013, Robert Oostenveld
+% Copyright (C) 2003-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -92,6 +94,26 @@ reducerank     = ft_getopt(varargin, 'reducerank'     ); % for leadfield computa
 normalize      = ft_getopt(varargin, 'normalize'      ); % for leadfield computation
 normalizeparam = ft_getopt(varargin, 'normalizeparam' ); % for leadfield computation
 weight         = ft_getopt(varargin, 'weight'         ); % for maximum likelihood estimation
+noisecov       = ft_getopt(varargin, 'noisecov'       ); % for sphering
+
+if ~isempty(noisecov) && ~isempty(weigth)
+  error('you cannot specify both weight and noisecov');
+elseif ~isempty(noisecov)
+  [u, s] = svd(noisecov);
+  tol = max(size(noisecov)) * eps(norm(s,inf));
+  s = diag(s);
+  r1 = sum(s > tol)+1;
+  s(1:(r1-1)) = 1./sqrt(s(1:(r1-1)));
+  s(r1:end)   = 0;
+  sphere = diag(s) * u';
+  % apply the sphering to the data
+  dat = sphere*dat;
+  % apply the sphering to the forward model, specify it as a montage
+  montage.channelorg = sens.label;
+  montage.channelnew = sens.label;
+  montage.tra = sphere;
+  sens = ft_apply_montage(sens, montage);
+end
 
 if isfield(constr, 'mirror')
   % for backward compatibility
@@ -314,11 +336,17 @@ if ~isempty(weight)
 else
   % ordinary least squares, this is the same as MLE with weight=eye(nchans,nchans)
   if constr.sequential
-    numdip = numel(pos)/3;
-    mom = zeros(3*numdip, numdip);
+    % the number of slices is the same as the number of dipoles
+    % each slice has a number of frames (time points) in it
+    % so the data can be nchan*ndip or nchan*(ndip*nframe)
+    numdip   = numel(pos)/3;
+    numframe = size(dat,2)/numdip;
+    
+    mom = zeros(3*numdip, numdip*numframe);
     for i=1:numdip
-      sel = (1:3)+3*(i-1);  % 1:3 for the first dipole, 4:6 for the second dipole, ...
-      mom(sel,i) = pinv(lf(:,sel))*dat(:,i);
+      dipsel   = (1:3)        + 3*(i-1);         % 1:3 for the first dipole, 4:6 for the second dipole, ...
+      framesel = (1:numframe) + numframe*(i-1);  % 1:numframe for the first, (numframe+1):(2*numframe) for the second, ...
+      mom(dipsel,framesel) = pinv(lf(:,dipsel))*dat(:,framesel);
     end
   else
     mom = pinv(lf)*dat;

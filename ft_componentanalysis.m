@@ -481,7 +481,7 @@ switch cfg.method
     end
     
     % construct key-value pairs for the optional arguments
-    optarg = ft_cfg2keyval(cfg.runica);
+    optarg = [ft_cfg2keyval(cfg.runica) {'reset_randomseed' 0}]; % let FieldTrip deal with the random seed handling
     [weights, sphere] = runica(dat, optarg{:});
     
     % scale the sphering matrix to unit norm

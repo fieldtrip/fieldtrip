@@ -349,8 +349,8 @@ switch submethod
           
           % and compute the leadfield for that orientation
           lf  = lf * maxpowori;
-          dipout.ori{i,1} = maxpowori;
-          dipout.eta{i,1} = eta;
+          dipout.ori{i} = maxpowori;
+          dipout.eta(i) = eta;
           if ~isempty(subspace), lforig = lforig * maxpowori; end
           
           % recompute the filter to only use that orientation
@@ -596,6 +596,10 @@ end
 if isfield(dipout, 'ori')
   dipout.ori( originside) = dipout.ori;
   dipout.ori(~originside) = {[]};
+end
+if isfield(dipout, 'eta')
+  dipout.eta( originside) = dipout.eta;
+  dipout.eta(~originside) = nan;
 end
 if isfield(dipout, 'pow')
   dipout.pow( originside) = dipout.pow;

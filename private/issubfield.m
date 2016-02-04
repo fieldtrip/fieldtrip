@@ -1,8 +1,8 @@
-function [r] = issubfield(s, f)
+function r = issubfield(s, f)
 
 % ISSUBFIELD tests for the presence of a field in a structure just like the standard
-% ISFIELD function, except that you can also specify nested fields using a '.' in the
-% fieldname. The nesting can be arbitrary deep.
+% Matlab ISFIELD function, except that you can also specify nested fields
+% using a '.' in the fieldname. The nesting can be arbitrary deep.
 %
 % Use as
 %   f = issubfield(s, 'fieldname')
@@ -34,9 +34,25 @@ function [r] = issubfield(s, f)
 %
 % $Id$
 
-try
-  getsubfield(s, f);    % if this works, then the subfield must be present  
+%try
+%  getsubfield(s, f);    % if this works, then the subfield must be present
+%  r = true;
+%catch
+%  r = false;                % apparently the subfield is not present
+%end
+
+if isempty(f) || isempty(s)
+  r = false;
+else
+  t = textscan(f,'%s','delimiter','.');
+  t = t{1};
   r = true;
-catch
-  r = false;                % apparently the subfield is not present
+  for k = 1:numel(t)
+    if isfield(s, t{k})
+      s = s.(t{k});
+    else
+      r = false;
+      return;
+    end
+  end
 end

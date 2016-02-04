@@ -72,7 +72,8 @@ if numel(lags)>1 || lags~=0,
   
   output = zeros(size(input,1), numel(lags));
   for k = 1:numel(lags)
-        
+    fprintf('computing mutualinformation for time lag in samples %d\n', lags(k));
+    
     beg1 = max(0, lags(k))  + 1;
     beg2 = max(0, -lags(k)) + 1;
     n1   = n-abs(lags(k));

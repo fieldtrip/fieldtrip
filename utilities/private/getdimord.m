@@ -370,6 +370,10 @@ switch field
       dimord = 'pos';
     elseif isequalwithoutnans(datsiz, [npos nrpt])
       dimord = 'pos_rpt';
+    elseif isequalwithoutnans(datsiz, [npos nrpt nori ntime])
+      dimord = 'pos_rpt_ori_time';
+    elseif isequalwithoutnans(datsiz, [npos nrpt 1 ntime])
+      dimord = 'pos_rpt_ori_time';
     end
     
   case {'filter'}

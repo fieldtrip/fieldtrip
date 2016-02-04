@@ -21,10 +21,10 @@ function ft_defaults
 %
 % See also FT_HASTOOLBOX, FT_CHECKCONFIG
 
-% Note that this should be a function and not a script, otherwise the
-% ft_hastoolbox function appears not be found in fieldtrip/private.
+% undocumented options
+%   ft_default.siunits        = 'yes' or 'no'
 
-% Copyright (C) 2009-2015, Robert Oostenveld
+% Copyright (C) 2009-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -130,7 +130,7 @@ if ~isdeployed
   checkMultipleToolbox('icasso',              'icassoEst.m');
 
   try
-    % external/signal directory contains alternative implementations of some signal processing functions
+    % external/signal contains alternative implementations of some signal processing functions
     addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
   end
 
@@ -139,6 +139,11 @@ if ~isdeployed
     if ~ft_platform_supports('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
+  end
+
+  try
+    % external/images contains alternative implementations of some image processing functions
+    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
   end
 
   try
@@ -173,21 +178,21 @@ if ~isdeployed
 
   try
     % these contains template layouts, neighbour structures, MRIs and cortical meshes
-    ft_hastoolbox('template/layout', 1, 1);
-    ft_hastoolbox('template/anatomy', 1, 1);
-    ft_hastoolbox('template/headmodel', 1, 1);
-    ft_hastoolbox('template/electrode', 1, 1);
-    ft_hastoolbox('template/neighbours', 1, 1);
+    ft_hastoolbox('template/layout',      1, 1);
+    ft_hastoolbox('template/anatomy',     1, 1);
+    ft_hastoolbox('template/headmodel',   1, 1);
+    ft_hastoolbox('template/electrode',   1, 1);
+    ft_hastoolbox('template/neighbours',  1, 1);
     ft_hastoolbox('template/sourcemodel', 1, 1);
   end
 
   try
-    % this is used in statistics
+    % this is used in ft_statistics
     ft_hastoolbox('statfun', 1, 1);
   end
 
   try
-    % this is used in definetrial
+    % this is used in ft_definetrial
     ft_hastoolbox('trialfun', 1, 1);
   end
 
@@ -197,17 +202,17 @@ if ~isdeployed
   end
 
   try
-    % this is for filtering time-series data
+    % this is for filtering etc. on time-series data
     ft_hastoolbox('preproc', 1, 1);
   end
 
   try
-    % this contains forward models for the EEG and MEG volume conduction problem
+    % this contains forward models for the EEG and MEG volume conductor
     ft_hastoolbox('forward', 1, 1);
   end
 
   try
-    % numerous functions depend on this module
+    % this contains inverse source estimation methods
     ft_hastoolbox('inverse', 1, 1);
   end
 
@@ -217,7 +222,12 @@ if ~isdeployed
   end
 
   try
-    % this contains the functions to compute connecitivy metrics
+    % this contains intermediate-level functions for spectral analysis
+    ft_hastoolbox('specest', 1, 1);
+  end
+
+  try
+    % this contains the functions to compute connectivity metrics
     ft_hastoolbox('connectivity', 1, 1);
   end
 
@@ -237,11 +247,6 @@ if ~isdeployed
     ft_hastoolbox('realtime/online_mri', 3, 1); % not required
     ft_hastoolbox('realtime/online_meg', 3, 1); % not required
     ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
-  end
-
-  try
-    % this contains intermediate-level functions for spectral analysis
-    ft_hastoolbox('specest', 1, 1);
   end
 
 end
@@ -273,3 +278,4 @@ if length(list)>1
   ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://fieldtrip.fcdonders.nl/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkMultipleToolbox
+
