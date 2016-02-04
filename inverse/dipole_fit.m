@@ -109,8 +109,8 @@ elseif ~isempty(noisecov)
   % apply the sphering to the data
   dat = sphere*dat;
   % apply the sphering to the forward model, specify it as a montage
-  montage.labelorg = sens.label;
-  montage.labelnew = sens.label;
+  montage.channelorg = sens.label;
+  montage.channelnew = sens.label;
   montage.tra = sphere;
   sens = ft_apply_montage(sens, montage);
 end
