@@ -386,7 +386,7 @@ end % if isfield(sens, 'type')
 
 if strcmp(type, 'unknown') && ~recursion
   % try whether only lowercase channel labels makes a difference
-  if islabel
+  if islabel && iscellstr(input)
     recursion = true;
     type = ft_senstype(lower(input));
     recursion = false;
@@ -400,7 +400,7 @@ end
 
 if strcmp(type, 'unknown') && ~recursion
   % try whether only uppercase channel labels makes a difference
-  if islabel
+  if islabel && iscellstr(input)
     recursion = true;
     type = ft_senstype(upper(input));
     recursion = false;
