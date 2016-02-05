@@ -1,6 +1,6 @@
-function [varargout] = funname(varargin)
+function [varargout] = times(varargin)
 
-% FUNNAME compile the missing mex file on the fly
+% TIMES compile the missing mex file on the fly
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
