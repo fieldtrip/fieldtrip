@@ -74,6 +74,11 @@ if ~isa(dat, 'double')
   dat = cast(dat, 'double');
 end
 
+if ~isempty(clim)
+  % clip the data between the color limits
+  dat(dat<clim(1)) = clim(1);
+  dat(dat>clim(2)) = clim(2);
+end
 
 % determine the orientation key-value pair
 keys = varargin(sellist(1:2:end));
@@ -153,13 +158,13 @@ switch style
       hold on
     end
     
-    varargin{2*sel} = ori(1,:);
+    varargin{sel+1} = ori(1,:);
     hx = ft_plot_slice(dat, varargin{:});
     
-    varargin{2*sel} = ori(2,:);
+    varargin{sel+1} = ori(2,:);
     hy = ft_plot_slice(dat, varargin{:});
     
-    varargin{2*sel} = ori(3,:);
+    varargin{sel+1} = ori(3,:);
     hz = ft_plot_slice(dat, varargin{:});
     axis equal; axis tight; axis off;axis vis3d
     view(3);

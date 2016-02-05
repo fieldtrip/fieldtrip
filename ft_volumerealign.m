@@ -326,7 +326,7 @@ switch cfg.method
       case 'ortho'
         % start building the figure
         h = figure;
-        %set(h, 'color', [1 1 1]);
+        set(h, 'color', [1 1 1]);
         set(h, 'visible', 'on');
         
         % axes settings
@@ -405,36 +405,6 @@ switch cfg.method
         markerlabel = {};
         markercolor = {};
         
-        % determine clim if empty (setting to [0 1] could be done at the top, but not sure yet if it interacts with the other visualizations -roevdmei)
-        if isempty(cfg.clim)
-          cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; % 
-        end
-        
-        % intensity range sliders
-        h45text = uicontrol('Style', 'text',...
-          'String','Intensity',...
-          'Units', 'normalized', ...
-          'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
-          'HandleVisibility','on');
-         
-        h4 = uicontrol('Style', 'slider', ...
-          'Parent', h, ...
-          'Min', 0, 'Max', 1, ...
-          'Value', cfg.clim(1), ...
-          'Units', 'normalized', ...
-          'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
-          'Callback', @cb_minslider);
-            
-        h5 = uicontrol('Style', 'slider', ...
-          'Parent', h, ...
-          'Min', 0, 'Max', 1, ...
-          'Value', cfg.clim(2), ...
-          'Units', 'normalized', ...
-          'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
-          'Callback', @cb_maxslider);
-
-        
-        % instructions to the user
         fprintf(strcat(...
           '1. To change the slice viewed in one plane, either:\n',...
           '   a. click (left mouse) in the image on a different plane. Eg, to view a more\n',...
@@ -461,7 +431,7 @@ switch cfg.method
         opt.handlesaxes   = [h1 h2 h3];
         opt.handlesfigure = h;
         opt.quit          = false;
-        opt.ana           = dat; 
+        opt.ana           = dat;
         opt.update        = [1 1 1];
         opt.init          = true;
         opt.tag           = 'ik';
@@ -1525,33 +1495,3 @@ end
 if ~isempty(eventdata.Modifier)
   key = [eventdata.Modifier{1} '+' key];
 end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_minslider(h4, eventdata)
-
-newlim = get(h4, 'value');
-h = getparent(h4);
-opt = getappdata(h, 'opt');
-opt.clim(1) = newlim;
-fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
-setappdata(h, 'opt', opt);
-cb_redraw(h);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_maxslider(h5, eventdata)
-
-newlim = get(h5, 'value');
-h = getparent(h5);
-opt = getappdata(h, 'opt');
-opt.clim(2) = newlim;
-fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
-setappdata(h, 'opt', opt);
-cb_redraw(h);
-
-
-
