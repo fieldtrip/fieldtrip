@@ -1000,172 +1000,172 @@ end
 
 % visualize result
 if viewresult
-  switch nargin
-    
-    case 2
-      % input was a single vol
-      % start building the figure
-      h = figure;
-      set(h, 'visible', 'on');
-      
-      % axes settings
-      if strcmp(cfg.axisratio, 'voxel')
-        % determine the number of voxels to be plotted along each axis
-        axlen1 = realign.dim(1);
-        axlen2 = realign.dim(2);
-        axlen3 = realign.dim(3);
-      elseif strcmp(cfg.axisratio, 'data')
-        % determine the length of the edges along each axis
-        [cp_voxel, cp_head] = cornerpoints(realign.dim, realign.transform);
-        axlen1 = norm(cp_head(2,:)-cp_head(1,:));
-        axlen2 = norm(cp_head(4,:)-cp_head(1,:));
-        axlen3 = norm(cp_head(5,:)-cp_head(1,:));
-      elseif strcmp(cfg.axisratio, 'square')
-        % the length of the axes should be equal
-        axlen1 = 1;
-        axlen2 = 1;
-        axlen3 = 1;
-      end
-      
-      % this is the size reserved for subplot h1, h2 and h3
-      h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
-      h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
-      h2size(1) = 0.82*axlen2/(axlen1 + axlen2);
-      h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
-      h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
-      h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
-      
-      if strcmp(cfg.voxelratio, 'square')
-        voxlen1 = 1;
-        voxlen2 = 1;
-        voxlen3 = 1;
-      elseif strcmp(cfg.voxelratio, 'data')
-        % the size of the voxel is scaled with the data
-        [cp_voxel, cp_head] = cornerpoints(realign.dim, realign.transform);
-        voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
-        voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
-        voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
-      end
-      
-      %% the figure is interactive, add callbacks
-      set(h, 'windowbuttondownfcn', @cb_buttonpress);
-      set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
-      set(h, 'windowkeypressfcn',   @cb_keyboard);
-      set(h, 'CloseRequestFcn',     @cb_cleanup);
-      
-      % axis handles will hold the anatomical functional if present, along with labels etc.
-      h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
-      h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
-      h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
-      
-      set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
-      set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
-      set(h3, 'Tag', 'ij', 'Visible', 'off');
-      
-      set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-      set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-      set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-      
-      xc = round(realign.dim(1)/2); % start with center view
-      yc = round(realign.dim(2)/2);
-      zc = round(realign.dim(3)/2);
-      
-      dat = double(realign.(cfg.parameter));
-      dmin = min(dat(:));
-      dmax = max(dat(:));
-      dat  = (dat-dmin)./(dmax-dmin);
-      
-      if isfield(cfg, 'pnt')
-        pnt = cfg.pnt;
-      else
-        pnt = zeros(0,3);
-      end
-      markerpos   = zeros(0,3);
-      markerlabel = {};
-      markercolor = {};
-      
-      % determine clim if empty (setting to [0 1] could be done at the top, but not sure yet if it interacts with the other visualizations -roevdmei)
-      if isempty(cfg.clim)
-        cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; %
-      end
-      
-      % intensity range sliders
-      h45text = uicontrol('Style', 'text',...
-        'String','Intensity',...
-        'Units', 'normalized', ...
-        'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
-        'HandleVisibility','on');
-      
-      h4 = uicontrol('Style', 'slider', ...
-        'Parent', h, ...
-        'Min', 0, 'Max', 1, ...
-        'Value', cfg.clim(1), ...
-        'Units', 'normalized', ...
-        'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
-        'Callback', @cb_minslider);
-      
-      h5 = uicontrol('Style', 'slider', ...
-        'Parent', h, ...
-        'Min', 0, 'Max', 1, ...
-        'Value', cfg.clim(2), ...
-        'Units', 'normalized', ...
-        'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
-        'Callback', @cb_maxslider);
-      
-     
-      % create structure to be passed to gui
-      opt               = [];
-      opt.viewresult    = true; % flag to use for certain keyboard/redraw calls
-      opt.dim           = realign.dim;
-      opt.ijk           = [xc yc zc];
-      opt.h1size        = h1size;
-      opt.h2size        = h2size;
-      opt.h3size        = h3size;
-      opt.handlesaxes   = [h1 h2 h3];
-      opt.handlesfigure = h;
-      opt.quit          = false;
-      opt.ana           = dat;
-      opt.update        = [1 1 1];
-      opt.init          = true;
-      opt.tag           = 'ik';
-      opt.mri           = realign;
-      opt.showcrosshair = true;
-      opt.showmarkers   = false;
-      opt.markers       = {markerpos markerlabel markercolor};
-      opt.clim          = cfg.clim;
-      opt.fiducial      = cfg.fiducial;
-      opt.fidlabel      = fidlabel;
-      opt.fidletter     = fidletter;
-      opt.pnt           = pnt;
-      if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
-        opt.unit = mri.unit;  % this is shown in the feedback on screen
-      else
-        opt.unit = '';        % this is not shown
-      end
-      
-      setappdata(h, 'opt', opt);
-      cb_redraw(h);
-      
-
-      
-      
-      
-    case 3
-      % input were two vols, a target and mri
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-    otherwise
-      % leave it be
+  % set flags for one or twovol case
+  if nargin == 3
+    twovol = true; % input was two volumes, base is called mri, target is named realign
+    basevol = mri;
+  else
+    twovol = false; % input was one volumes, base is called realign
+    basevol = realign;
   end
+  
+  
+  % input was a single vol
+  % start building the figure
+  h = figure('numbertitle','off','name','realignment result');
+  set(h, 'visible', 'on');
+  
+  % axes settings
+  if strcmp(cfg.axisratio, 'voxel')
+    % determine the number of voxels to be plotted along each axis
+    axlen1 = basevol.dim(1);
+    axlen2 = basevol.dim(2);
+    axlen3 = basevol.dim(3);
+  elseif strcmp(cfg.axisratio, 'data')
+    % determine the length of the edges along each axis
+    [cp_voxel, cp_head] = cornerpoints(basevol.dim, basevol.transform);
+    axlen1 = norm(cp_head(2,:)-cp_head(1,:));
+    axlen2 = norm(cp_head(4,:)-cp_head(1,:));
+    axlen3 = norm(cp_head(5,:)-cp_head(1,:));
+  elseif strcmp(cfg.axisratio, 'square')
+    % the length of the axes should be equal
+    axlen1 = 1;
+    axlen2 = 1;
+    axlen3 = 1;
+  end
+  
+  % this is the size reserved for subplot h1, h2 and h3
+  h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
+  h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
+  h2size(1) = 0.82*axlen2/(axlen1 + axlen2);
+  h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
+  h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
+  h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
+  
+  if strcmp(cfg.voxelratio, 'square')
+    voxlen1 = 1;
+    voxlen2 = 1;
+    voxlen3 = 1;
+  elseif strcmp(cfg.voxelratio, 'data')
+    % the size of the voxel is scaled with the data
+    [cp_voxel, cp_head] = cornerpoints(basevol.dim, basevol.transform);
+    voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
+    voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
+    voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
+  end
+  
+  %% the figure is interactive, add callbacks
+  set(h, 'windowbuttondownfcn', @cb_buttonpress);
+  set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
+  set(h, 'windowkeypressfcn',   @cb_keyboard);
+  set(h, 'CloseRequestFcn',     @cb_cleanup);
+  
+  % axis handles will hold the anatomical functional if present, along with labels etc.
+  h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
+  h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
+  h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
+  
+  set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
+  set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
+  set(h3, 'Tag', 'ij', 'Visible', 'off');
+  
+  set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+  set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+  set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+  
+  % start with center view
+  xc = round(mri.dim(1)/2); 
+  yc = round(mri.dim(2)/2);
+  zc = round(mri.dim(3)/2);
+  
+  % normalize data to go from 0 to 1
+  dat = double(basevol.(cfg.parameter));
+  dmin = min(dat(:));
+  dmax = max(dat(:));
+  dat  = (dat-dmin)./(dmax-dmin);
+  
+  % all plotting for the realignment is done in voxel space
+  % for view the results however, it needs be in coordinate system space (necessary for the two volume case below)
+  % to be able to reuse all the plotting code, several workarounds are in place, which convert the indices
+  % from voxel space to the target coordinate system space
+  % this requires the coordinate system axis range in some case
+  dimrange = [];
+  dimrange(1,:) = ft_warp_apply(basevol.transform,[1 1 1]);
+  dimrange(2,:) = ft_warp_apply(basevol.transform, basevol.dim);
+  
+  if isfield(cfg, 'pnt')
+    pnt = cfg.pnt;
+  else
+    pnt = zeros(0,3);
+  end
+  markerpos   = zeros(0,3);
+  markerlabel = {};
+  markercolor = {};
+  
+  % determine clim if empty (setting to [0 1] could be done at the top, but not sure yet if it interacts with the other visualizations -roevdmei)
+  if isempty(cfg.clim)
+    cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; %
+  end
+  
+  % intensity range sliders
+  h45text = uicontrol('Style', 'text',...
+    'String','Intensity',...
+    'Units', 'normalized', ...
+    'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
+    'HandleVisibility','on');
+  
+  h4 = uicontrol('Style', 'slider', ...
+    'Parent', h, ...
+    'Min', 0, 'Max', 1, ...
+    'Value', cfg.clim(1), ...
+    'Units', 'normalized', ...
+    'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+    'Callback', @cb_minslider);
+  
+  h5 = uicontrol('Style', 'slider', ...
+    'Parent', h, ...
+    'Min', 0, 'Max', 1, ...
+    'Value', cfg.clim(2), ...
+    'Units', 'normalized', ...
+    'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+    'Callback', @cb_maxslider);
+  
+  
+  % create structure to be passed to gui
+  opt               = [];
+  opt.viewresult    = true; % flag to use for certain keyboard/redraw calls
+  opt.dim           = basevol.dim;
+  opt.dimrange      = dimrange;
+  opt.ijk           = [xc yc zc];
+  opt.h1size        = h1size;
+  opt.h2size        = h2size;
+  opt.h3size        = h3size;
+  opt.handlesaxes   = [h1 h2 h3];
+  opt.handlesfigure = h;
+  opt.quit          = false;
+  opt.ana           = dat;
+  opt.update        = [1 1 1];
+  opt.init          = true;
+  opt.tag           = 'ik';
+  opt.mri           = basevol;
+  opt.showcrosshair = true;
+  opt.showmarkers   = false;
+  opt.markers       = {markerpos markerlabel markercolor};
+  opt.clim          = cfg.clim;
+  opt.fiducial      = [];
+  opt.fidlabel      = [];
+  opt.fidletter     = [];
+  opt.pnt           = pnt;
+  if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
+    opt.unit = mri.unit;  % this is shown in the feedback on screen
+  else
+    opt.unit = '';        % this is not shown
+  end
+  
+  % add to figure and start initial draw
+  setappdata(h, 'opt', opt);
+  cb_redraw(h);
+  
 end
 
 
@@ -1292,24 +1292,33 @@ h1 = opt.handlesaxes(1);
 h2 = opt.handlesaxes(2);
 h3 = opt.handlesaxes(3);
 
+% extract to-be-plotted/clicked location and check whether inside figure
 xi = opt.ijk(1);
 yi = opt.ijk(2);
 zi = opt.ijk(3);
-
 if any([xi yi zi] > mri.dim) || any([xi yi zi] <= 0)
   return;
 end
 
-opt.ijk = [xi yi zi 1]';
-xyz = mri.transform * opt.ijk;
-opt.ijk = opt.ijk(1:3)';
-
-% construct a string with user feedback
-str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), xi, yi, zi), opt.ijk);
+% transform here to coordinate system space instead of voxel space if viewing results
+% the code were this transform will impact fiducial/etc coordinates is unaffected, as it is switched off
+% (note: fiducial/etc coordinates are transformed into coordinate space in the code dealing with realignment) 
+if opt.viewresult
+  tmp = ft_warp_apply(mri.transform,[xi yi zi]);
+  xi = tmp(1);
+  yi = tmp(2);
+  zi = tmp(3);
+end
 
 if opt.init
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
-  
+  if ~opt.viewresult
+    % if realigning, plotting is done in voxel space
+    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+  else
+    % if viewing result, plotting has to be done in coordinate system space
+    ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+  end
+  % fetch handles and in sert into figure
   opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
   parenttag = get(opt.anahandles,'parent');
   parenttag{1} = get(parenttag{1}, 'tag');
@@ -1320,29 +1329,36 @@ if opt.init
   opt.anahandles = opt.anahandles(:)';
   set(opt.anahandles, 'tag', 'ana');
 else
-  ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
-  
-  if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
-    fprintf('==================================================================================\n');
-    str = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
-    
-    lab = 'crosshair';
-    vox = [xi yi zi];
-    ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
-    pos = ft_warp_apply(mri.transform, vox);
-    switch opt.unit
-      case 'mm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, vox, pos, opt.unit);
-      case 'cm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, vox, pos, opt.unit);
-      case 'm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, vox, pos, opt.unit);
-      otherwise
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
-    end
+  if ~opt.viewresult
+    % if realigning, plotting is done in voxel space
+    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+  else
+    % if viewing result, plotting has to be done in coordinate system space
+    ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   end
   
+  % display current location
   if ~opt.viewresult
+    if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
+      fprintf('==================================================================================\n');
+      str = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
+      
+      lab = 'crosshair';
+      vox = [xi yi zi];
+      ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      pos = ft_warp_apply(mri.transform, vox);
+      switch opt.unit
+        case 'mm'
+          fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, vox, pos, opt.unit);
+        case 'cm'
+          fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, vox, pos, opt.unit);
+        case 'm'
+          fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, vox, pos, opt.unit);
+        otherwise
+          fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
+      end
+    end
+    
     for i=1:length(opt.fidlabel)
       lab = opt.fidlabel{i};
       vox = opt.fiducial.(lab);
@@ -1372,18 +1388,36 @@ if ~isempty(sel)
   set(opt.handlesfigure, 'currentaxes', sel(1));
 end
 
+% set crosshair coordinates dependent on voxel/system coordinate space
+% crosshair needs to be plotted 'towards' the viewing person, i.e. with a little offset
+% i.e. this is the coordinate of the 'flat' axes with a little bit extra in the direction of the axis
+% this offset cannot be higher than the to be plotted data, or it will not be visible (i.e. be outside of the visible axis)
+if ~opt.viewresult
+  crossoffs = opt.dim;
+  crossoffs(2) = 1; % workaround to use the below
+else
+  % because the orientation of the three slices are determined by eye(3) (no orientation is specified above),
+  % the direction of view is always:
+  % h1 -to+
+  % h2 +to-
+  % h3 -to+
+  % use this to create the offset for viewing the crosshair
+  mincoordstep = abs(ft_warp_apply(mri.transform,[1 1 1]) - ft_warp_apply(mri.transform,[2 2 2]));
+  crossoffs = [xi yi zi] + [1 -1 1].*mincoordstep;
+end
+
 if opt.init
   % draw the crosshairs for the first time
-  hch1 = crosshair([xi 1 zi], 'parent', h1, 'color', 'yellow');
-  hch3 = crosshair([xi yi opt.dim(3)], 'parent', h3, 'color', 'yellow');
-  hch2 = crosshair([opt.dim(1) yi zi], 'parent', h2, 'color', 'yellow');
+  hch1 = crosshair([xi crossoffs(2) zi], 'parent', h1, 'color', 'yellow');
+  hch2 = crosshair([crossoffs(1) yi zi], 'parent', h2, 'color', 'yellow');
+  hch3 = crosshair([xi yi crossoffs(3)], 'parent', h3, 'color', 'yellow');
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
   opt.handlesmarker = [];
 else
   % update the existing crosshairs, don't change the handles
-  crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
-  crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
-  crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
+  crosshair([xi crossoffs(2) zi], 'handle', opt.handlescross(1, :));
+  crosshair([crossoffs(1) yi zi], 'handle', opt.handlescross(2, :));
+  crosshair([xi yi crossoffs(3)], 'handle', opt.handlescross(3, :));
 end
 
 if opt.showcrosshair
@@ -1595,9 +1629,9 @@ switch key
     % do nothing
     
 end % switch key
-
-uiresume(h)
-
+if ~opt.viewresult
+  uiresume(h)
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1649,6 +1683,11 @@ pos     = mean(get(curr_ax, 'currentpoint'));
 
 tag = get(curr_ax, 'tag');
 
+% transform pos from coordinate system space to voxel space if viewing results
+if opt.viewresult
+  pos = ft_warp_apply(inv(opt.mri.transform),pos); % not sure under which circumstances the transformation matrix is not invertible...
+end
+  
 if ~isempty(tag) && ~opt.init
   if strcmp(tag, 'ik')
     opt.ijk([1 3])  = round(pos([1 3]));
