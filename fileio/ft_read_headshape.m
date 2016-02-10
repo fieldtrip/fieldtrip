@@ -121,7 +121,7 @@ if iscell(filename)
       end
       
       % concatenate any other fields
-      fnames = {'sulc' 'curv' 'area' 'thickness'};
+      fnames = {'sulc' 'curv' 'area' 'thickness' 'atlasroi'};
       for k = 1:numel(fnames)
         if isfield(bnd(1), fnames{k}) && isfield(bnd(2), fnames{k})
           shape.(fnames{k}) = cat(1, bnd.(fnames{k}));
@@ -328,7 +328,8 @@ switch fileformat
       if exist(tmpfilename, 'file'), g = gifti(tmpfilename); shape.sulc = g.cdata; end
       if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
       if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
-    end
+      if exist(strrep(tmpfilename, 'sulc', 'atlasroi'),  'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'atlasroi'));  shape.atlasroi  = g.cdata; end
+		end
     
   case 'caret_spec'
     [spec, headerinfo] = read_caret_spec(filename);
