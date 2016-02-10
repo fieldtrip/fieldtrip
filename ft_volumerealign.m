@@ -53,6 +53,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                        is to adjust to the minimum and maximum)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the
 %                         visualization
+%   cfg.viewresult     = string, 'yes' or 'no', whether or not to visualize aligned volume(s)
+%                        after realignment (default = 'no')
 %
 % When cfg.method = 'fiducial' and a coordinate system that is based on external
 % facial anatomical landmarks (common for EEG and MEG), the following is required to
@@ -230,6 +232,10 @@ cfg.snapshotfile  = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealig
 cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio', 'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',  'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
+cfg.viewresult    = ft_getopt(cfg, 'viewresult', 'no');
+
+%
+viewresult = istrue(cfg.viewresult);
 
 if isempty(cfg.method)
   if isempty(cfg.fiducial)
@@ -453,6 +459,7 @@ switch cfg.method
         
         % create structure to be passed to gui
         opt               = [];
+        opt.viewresult    = false; % flag to use for certain keyboard/redraw calls
         opt.dim           = mri.dim;
         opt.ijk           = [xc yc zc];
         opt.h1size        = h1size;
@@ -535,6 +542,7 @@ switch cfg.method
         
         % create structure to be passed to gui
         opt                 = [];
+        opt.viewresult      = false; % flag to use for certain keyboard/redraw calls
         opt.handlesfigure   = h;
         opt.handlesaxes     = h1;
         opt.handlesfigure   = h;
@@ -990,6 +998,179 @@ else
   warning('no coordinate system realignment has been done');
 end
 
+% visualize result
+if viewresult
+  switch nargin
+    
+    case 2
+      % input was a single vol
+      % start building the figure
+      h = figure;
+      set(h, 'visible', 'on');
+      
+      % axes settings
+      if strcmp(cfg.axisratio, 'voxel')
+        % determine the number of voxels to be plotted along each axis
+        axlen1 = realign.dim(1);
+        axlen2 = realign.dim(2);
+        axlen3 = realign.dim(3);
+      elseif strcmp(cfg.axisratio, 'data')
+        % determine the length of the edges along each axis
+        [cp_voxel, cp_head] = cornerpoints(realign.dim, realign.transform);
+        axlen1 = norm(cp_head(2,:)-cp_head(1,:));
+        axlen2 = norm(cp_head(4,:)-cp_head(1,:));
+        axlen3 = norm(cp_head(5,:)-cp_head(1,:));
+      elseif strcmp(cfg.axisratio, 'square')
+        % the length of the axes should be equal
+        axlen1 = 1;
+        axlen2 = 1;
+        axlen3 = 1;
+      end
+      
+      % this is the size reserved for subplot h1, h2 and h3
+      h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
+      h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
+      h2size(1) = 0.82*axlen2/(axlen1 + axlen2);
+      h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
+      h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
+      h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
+      
+      if strcmp(cfg.voxelratio, 'square')
+        voxlen1 = 1;
+        voxlen2 = 1;
+        voxlen3 = 1;
+      elseif strcmp(cfg.voxelratio, 'data')
+        % the size of the voxel is scaled with the data
+        [cp_voxel, cp_head] = cornerpoints(realign.dim, realign.transform);
+        voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
+        voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
+        voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
+      end
+      
+      %% the figure is interactive, add callbacks
+      set(h, 'windowbuttondownfcn', @cb_buttonpress);
+      set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
+      set(h, 'windowkeypressfcn',   @cb_keyboard);
+      set(h, 'CloseRequestFcn',     @cb_cleanup);
+      
+      % axis handles will hold the anatomical functional if present, along with labels etc.
+      h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
+      h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
+      h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
+      
+      set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
+      set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
+      set(h3, 'Tag', 'ij', 'Visible', 'off');
+      
+      set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+      set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+      set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+      
+      xc = round(realign.dim(1)/2); % start with center view
+      yc = round(realign.dim(2)/2);
+      zc = round(realign.dim(3)/2);
+      
+      dat = double(realign.(cfg.parameter));
+      dmin = min(dat(:));
+      dmax = max(dat(:));
+      dat  = (dat-dmin)./(dmax-dmin);
+      
+      if isfield(cfg, 'pnt')
+        pnt = cfg.pnt;
+      else
+        pnt = zeros(0,3);
+      end
+      markerpos   = zeros(0,3);
+      markerlabel = {};
+      markercolor = {};
+      
+      % determine clim if empty (setting to [0 1] could be done at the top, but not sure yet if it interacts with the other visualizations -roevdmei)
+      if isempty(cfg.clim)
+        cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; %
+      end
+      
+      % intensity range sliders
+      h45text = uicontrol('Style', 'text',...
+        'String','Intensity',...
+        'Units', 'normalized', ...
+        'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
+        'HandleVisibility','on');
+      
+      h4 = uicontrol('Style', 'slider', ...
+        'Parent', h, ...
+        'Min', 0, 'Max', 1, ...
+        'Value', cfg.clim(1), ...
+        'Units', 'normalized', ...
+        'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+        'Callback', @cb_minslider);
+      
+      h5 = uicontrol('Style', 'slider', ...
+        'Parent', h, ...
+        'Min', 0, 'Max', 1, ...
+        'Value', cfg.clim(2), ...
+        'Units', 'normalized', ...
+        'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+        'Callback', @cb_maxslider);
+      
+     
+      % create structure to be passed to gui
+      opt               = [];
+      opt.viewresult    = true; % flag to use for certain keyboard/redraw calls
+      opt.dim           = realign.dim;
+      opt.ijk           = [xc yc zc];
+      opt.h1size        = h1size;
+      opt.h2size        = h2size;
+      opt.h3size        = h3size;
+      opt.handlesaxes   = [h1 h2 h3];
+      opt.handlesfigure = h;
+      opt.quit          = false;
+      opt.ana           = dat;
+      opt.update        = [1 1 1];
+      opt.init          = true;
+      opt.tag           = 'ik';
+      opt.mri           = realign;
+      opt.showcrosshair = true;
+      opt.showmarkers   = false;
+      opt.markers       = {markerpos markerlabel markercolor};
+      opt.clim          = cfg.clim;
+      opt.fiducial      = cfg.fiducial;
+      opt.fidlabel      = fidlabel;
+      opt.fidletter     = fidletter;
+      opt.pnt           = pnt;
+      if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
+        opt.unit = mri.unit;  % this is shown in the feedback on screen
+      else
+        opt.unit = '';        % this is not shown
+      end
+      
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+      
+
+      
+      
+      
+    case 3
+      % input were two vols, a target and mri
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+    otherwise
+      % leave it be
+  end
+end
+
+
+
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
@@ -1161,20 +1342,22 @@ else
     end
   end
   
-  for i=1:length(opt.fidlabel)
-    lab = opt.fidlabel{i};
-    vox = opt.fiducial.(lab);
-    ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
-    pos = ft_warp_apply(mri.transform, vox);
-    switch opt.unit
-      case 'mm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, vox, pos, opt.unit);
-      case 'cm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, vox, pos, opt.unit);
-      case 'm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, vox, pos, opt.unit);
-      otherwise
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
+  if ~opt.viewresult
+    for i=1:length(opt.fidlabel)
+      lab = opt.fidlabel{i};
+      vox = opt.fiducial.(lab);
+      ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      pos = ft_warp_apply(mri.transform, vox);
+      switch opt.unit
+        case 'mm'
+          fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, vox, pos, opt.unit);
+        case 'cm'
+          fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, vox, pos, opt.unit);
+        case 'm'
+          fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, vox, pos, opt.unit);
+        otherwise
+          fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
+      end
     end
   end
 end
@@ -1214,31 +1397,33 @@ markercolor = {'r', 'g', 'b', 'y'};
 delete(opt.handlesmarker(opt.handlesmarker(:)>0));
 opt.handlesmarker = [];
 
-for i=1:length(opt.fidlabel)
-  pos = opt.fiducial.(opt.fidlabel{i});
-  %   if any(isnan(pos))
-  %     continue
-  %   end
-  
-  posi = pos(1);
-  posj = pos(2);
-  posk = pos(3);
-  
-  subplot(h1);
-  hold on
-  opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', 'o', 'color', markercolor{i});
-  hold off
-  
-  subplot(h2);
-  hold on
-  opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', 'o', 'color', markercolor{i});
-  hold off
-  
-  subplot(h3);
-  hold on
-  opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', 'o', 'color', markercolor{i});
-  hold off
-end % for each fiducial
+if ~opt.viewresult
+  for i=1:length(opt.fidlabel)
+    pos = opt.fiducial.(opt.fidlabel{i});
+    %   if any(isnan(pos))
+    %     continue
+    %   end
+    
+    posi = pos(1);
+    posj = pos(2);
+    posk = pos(3);
+    
+    subplot(h1);
+    hold on
+    opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', 'o', 'color', markercolor{i});
+    hold off
+    
+    subplot(h2);
+    hold on
+    opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', 'o', 'color', markercolor{i});
+    hold off
+    
+    subplot(h3);
+    hold on
+    opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', 'o', 'color', markercolor{i});
+    hold off
+  end % for each fiducial
+end
 
 if opt.showmarkers
   set(opt.handlesmarker,'Visible','on');
@@ -1298,12 +1483,14 @@ switch key
     subplot(opt.handlesaxes(3));
     
   case opt.fidletter
-    sel = strcmp(key, opt.fidletter);
-    fprintf('==================================================================================\n');
-    fprintf('selected %s\n', opt.fidlabel{sel});
-    opt.fiducial.(opt.fidlabel{sel}) = opt.ijk;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
+    if ~opt.viewresult
+      sel = strcmp(key, opt.fidletter);
+      fprintf('==================================================================================\n');
+      fprintf('selected %s\n', opt.fidlabel{sel});
+      opt.fiducial.(opt.fidlabel{sel}) = opt.ijk;
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+    end
     
   case 'q'
     setappdata(h, 'opt', opt);
@@ -1359,9 +1546,11 @@ switch key
     cb_redraw(h);
     
   case 102 % 'f'
-    opt.showmarkers = ~opt.showmarkers;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
+    if ~opt.viewresult
+      opt.showmarkers = ~opt.showmarkers;
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+    end
     
   case 3 % right mouse click
     % add point to a list
@@ -1484,9 +1673,14 @@ uiresume
 function cb_cleanup(h, eventdata)
 
 opt = getappdata(h, 'opt');
-opt.quit = true;
-setappdata(h, 'opt', opt);
-uiresume
+if ~opt.viewresult
+  opt.quit = true;
+  setappdata(h, 'opt', opt);
+  uiresume
+else
+  % not part of interactive process requiring output handling, quite immediately
+  delete(h);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
