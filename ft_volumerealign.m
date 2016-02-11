@@ -998,12 +998,16 @@ else
   warning('no coordinate system realignment has been done');
 end
 
-% visualize result
+% visualize result 
+% all plotting for the realignment is done in voxel space
+% for view the results however, it needs be in coordinate system space (necessary for the two volume case below)
+% to be able to reuse all the plotting code, several workarounds are in place, which convert the indices
+% from voxel space to the target coordinate system space
 if viewresult
   % set flags for one or twovol case
   if nargin == 3
-    twovol = true; % input was two volumes, base is called mri, target is named realign
-    basevol = mri;
+    twovol = true; % input was two volumes, base to be plotted on is called target, the aligned mri is named realign
+    basevol = target;
   else
     twovol = false; % input was one volumes, base is called realign
     basevol = realign;
@@ -1074,24 +1078,21 @@ if viewresult
   set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
   
   % start with center view
-  xc = round(mri.dim(1)/2); 
-  yc = round(mri.dim(2)/2);
-  zc = round(mri.dim(3)/2);
+  xc = round(basevol.dim(1)/2); 
+  yc = round(basevol.dim(2)/2);
+  zc = round(basevol.dim(3)/2);
   
   % normalize data to go from 0 to 1
   dat = double(basevol.(cfg.parameter));
   dmin = min(dat(:));
   dmax = max(dat(:));
   dat  = (dat-dmin)./(dmax-dmin);
-  
-  % all plotting for the realignment is done in voxel space
-  % for view the results however, it needs be in coordinate system space (necessary for the two volume case below)
-  % to be able to reuse all the plotting code, several workarounds are in place, which convert the indices
-  % from voxel space to the target coordinate system space
-  % this requires the coordinate system axis range in some case
-  dimrange = [];
-  dimrange(1,:) = ft_warp_apply(basevol.transform,[1 1 1]);
-  dimrange(2,:) = ft_warp_apply(basevol.transform, basevol.dim);
+  if nargin == 3 % do the same for the target
+    realigndat = double(realign.(cfg.parameter));
+    dmin = min(realigndat(:));
+    dmax = max(realigndat(:));
+    realigndat  = (realigndat-dmin)./(dmax-dmin);
+  end
   
   if isfield(cfg, 'pnt')
     pnt = cfg.pnt;
@@ -1107,11 +1108,12 @@ if viewresult
     cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; %
   end
   
+  
   % intensity range sliders
   h45text = uicontrol('Style', 'text',...
-    'String','Intensity',...
+    'String','Intensity target volume',...
     'Units', 'normalized', ...
-    'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
+    'Position',[2*h1size(1)-0.09 h3size(2)+0.03 h1size(1)/4 0.04],...
     'HandleVisibility','on');
   
   h4 = uicontrol('Style', 'slider', ...
@@ -1119,7 +1121,7 @@ if viewresult
     'Min', 0, 'Max', 1, ...
     'Value', cfg.clim(1), ...
     'Units', 'normalized', ...
-    'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+    'Position', [2*h1size(1)-0.10 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
     'Callback', @cb_minslider);
   
   h5 = uicontrol('Style', 'slider', ...
@@ -1127,15 +1129,36 @@ if viewresult
     'Min', 0, 'Max', 1, ...
     'Value', cfg.clim(2), ...
     'Units', 'normalized', ...
-    'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+    'Position', [2*h1size(1)-.05 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
     'Callback', @cb_maxslider);
   
+  % intensity range sliders
+  h45textre = uicontrol('Style', 'text',...
+    'String','Intensity realigned volume',...
+    'Units', 'normalized', ...
+    'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
+    'HandleVisibility','on');
+  
+  h4re = uicontrol('Style', 'slider', ...
+    'Parent', h, ...
+    'Min', 0, 'Max', 1, ...
+    'Value', cfg.clim(1), ...
+    'Units', 'normalized', ...
+    'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+    'Callback', @cb_minsliderre);
+  
+  h5re = uicontrol('Style', 'slider', ...
+    'Parent', h, ...
+    'Min', 0, 'Max', 1, ...
+    'Value', cfg.clim(2), ...
+    'Units', 'normalized', ...
+    'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+    'Callback', @cb_maxsliderre);
   
   % create structure to be passed to gui
   opt               = [];
   opt.viewresult    = true; % flag to use for certain keyboard/redraw calls
   opt.dim           = basevol.dim;
-  opt.dimrange      = dimrange;
   opt.ijk           = [xc yc zc];
   opt.h1size        = h1size;
   opt.h2size        = h2size;
@@ -1144,14 +1167,23 @@ if viewresult
   opt.handlesfigure = h;
   opt.quit          = false;
   opt.ana           = dat;
+  if twovol
+    opt.realignana  = realigndat;
+  end
   opt.update        = [1 1 1];
   opt.init          = true;
   opt.tag           = 'ik';
   opt.mri           = basevol;
+  if twovol
+    opt.realignvol  = realign;
+  end
   opt.showcrosshair = true;
   opt.showmarkers   = false;
   opt.markers       = {markerpos markerlabel markercolor};
   opt.clim          = cfg.clim;
+  if twovol
+    opt.realignclim = cfg.clim;
+  end
   opt.fiducial      = [];
   opt.fidlabel      = [];
   opt.fidletter     = [];
@@ -1167,8 +1199,6 @@ if viewresult
   cb_redraw(h);
   
 end
-
-
 
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -1316,25 +1346,74 @@ if opt.init
     ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   else
     % if viewing result, plotting has to be done in coordinate system space
-    ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    if ~isfield(opt,'realignvol') 
+      % one vol case
+      ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    else
+      % two vol case
+      % base, with color red
+      hbase = []; % need the handle for the individual surfs
+      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim,'datmask',opt.ana);
+      for ih = 1:3
+        col = get(hbase(ih),'CData');
+        col(:,:,2:3) = 0;
+        set(hbase(ih),'CData',col);
+      end
+      % alignvol, with color blue
+      hreal = []; % need the handle for the individual surfs
+      [hreal(1) hreal(2) hreal(3)] = ft_plot_ortho(opt.realignana, 'transform', opt.realignvol.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.realignclim,'datmask',opt.realignana);
+      for ih = 1:3
+        col = get(hreal(ih),'CData');
+        col(:,:,1:2) = 0;
+        set(hreal(ih),'CData',col);
+      end
+    end
   end
-  % fetch handles and in sert into figure
-  opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
-  parenttag = get(opt.anahandles,'parent');
-  parenttag{1} = get(parenttag{1}, 'tag');
-  parenttag{2} = get(parenttag{2}, 'tag');
-  parenttag{3} = get(parenttag{3}, 'tag');
-  [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
-  opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
-  opt.anahandles = opt.anahandles(:)';
-  set(opt.anahandles, 'tag', 'ana');
+  % fetch surf objects, set ana tag, and put in surfhandles
+  if ~opt.viewresult || (opt.viewresult && ~isfield(opt,'realignvol'))
+    opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
+    parenttag = get(opt.anahandles,'parent');
+    parenttag{1} = get(parenttag{1}, 'tag');
+    parenttag{2} = get(parenttag{2}, 'tag');
+    parenttag{3} = get(parenttag{3}, 'tag');
+    [i1,i2,i3] = intersect(parenttag, {'ik';'jk';'ij'});
+    opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
+    opt.anahandles = opt.anahandles(:)';
+    set(opt.anahandles, 'tag', 'ana');
+  else
+    % this should do the same as the above
+    set(hbase, 'tag', 'ana');
+    set(hreal, 'tag', 'ana');
+    opt.anahandles = {hbase,hreal};
+  end
 else
   if ~opt.viewresult
     % if realigning, plotting is done in voxel space
     ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   else
     % if viewing result, plotting has to be done in coordinate system space
-    ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    if ~isfield(opt,'realignvol') 
+      % one vol case
+      ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    else
+      % two vol case
+      % base, with color red
+      hbase = []; % need the handle for the individual surfs
+      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{1}, 'update', opt.update, 'doscale', false, 'clim', opt.clim,'datmask',opt.ana);
+      for ih = 1:3
+        col = get(hbase(ih),'CData');
+        col(:,:,2:3) = 0;
+        set(hbase(ih),'CData',col);
+      end
+      % alignvol, with color blue
+      hreal = []; % need the handle for the individual surfs
+      [hreal(1) hreal(2) hreal(3)] = ft_plot_ortho(opt.realignana, 'transform', opt.realignvol.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{2}, 'update', opt.update, 'doscale', false, 'clim', opt.realignclim,'datmask',opt.realignana);
+      for ih = 1:3
+        col = get(hreal(ih),'CData');
+        col(:,:,1:2) = 0;
+        set(hreal(ih),'CData',col);
+      end
+    end   
   end
   
   % display current location
@@ -1381,6 +1460,12 @@ end
 set(opt.handlesaxes(1),'Visible','on');
 set(opt.handlesaxes(2),'Visible','on');
 set(opt.handlesaxes(3),'Visible','on');
+if opt.viewresult
+  set(opt.handlesaxes(1),'color',[.94 .94 .94]);
+  set(opt.handlesaxes(2),'color',[.94 .94 .94]);
+  set(opt.handlesaxes(3),'color',[.94 .94 .94]);
+end
+
 
 % make the last current axes current again
 sel = findobj('type','axes','tag',tag);
@@ -1419,6 +1504,12 @@ else
   crosshair([crossoffs(1) yi zi], 'handle', opt.handlescross(2, :));
   crosshair([xi yi crossoffs(3)], 'handle', opt.handlescross(3, :));
 end
+% for some unknown god-awful reason, the line command 'disables' all transparency
+% the below command resets it (it was the only axes property changed after adding the crosshair
+% I could find, and putting it back to 'childorder' instead of 'depth' fixes the problem. Lucky find -roevdmei
+set(h1,'sortMethod','childorder')
+set(h2,'sortMethod','childorder')
+set(h3,'sortMethod','childorder')
 
 if opt.showcrosshair
   set(opt.handlescross,'Visible','on');
@@ -1787,4 +1878,29 @@ setappdata(h, 'opt', opt);
 cb_redraw(h);
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_minsliderre(h4, eventdata)
+
+newlim = get(h4, 'value');
+h = getparent(h4);
+opt = getappdata(h, 'opt');
+opt.realignclim(1) = newlim;
+fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+setappdata(h, 'opt', opt);
+cb_redraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_maxsliderre(h5, eventdata)
+
+newlim = get(h5, 'value');
+h = getparent(h5);
+opt = getappdata(h, 'opt');
+opt.realignclim(2) = newlim;
+fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+setappdata(h, 'opt', opt);
+cb_redraw(h);
 
