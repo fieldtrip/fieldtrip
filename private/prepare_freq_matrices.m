@@ -77,6 +77,7 @@ if keeptrials,
   freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
 else
   freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
+	Ntrials = 1;
 end
 tok = tokenize(freq.dimord, '_');
 

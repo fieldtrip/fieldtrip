@@ -274,7 +274,15 @@ if istimelock
   source = copyfields(data, source, {'time'});
   
 elseif isfreq
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'refchan'});
+	
+	% ensure that the refchan is kept, if present
+	if isfield(tmpcfg, 'refchan') && ~isempty(tmpcfg.refchan) && isempty(match_str(tmpcfg.channel, tmpcfg.refchan))		
+		if ischar(tmpcfg.refchan), tmpcfg.refchan = {tmpcfg.refchan}; end
+		tmpcfg.channel = cat(1,ft_channelselection(tmpcfg.channel, data.label), tmpcfg.refchan);
+		tmpcfg         = rmfield(tmpcfg, 'refchan');
+	end
+	
   tmpcfg.avgoverfreq = 'yes';
   if isfield(data, 'time')
     tmpcfg.avgovertime = 'yes';
