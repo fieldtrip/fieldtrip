@@ -278,8 +278,15 @@ elseif isfreq
 	
 	% ensure that the refchan is kept, if present
 	if isfield(tmpcfg, 'refchan') && ~isempty(tmpcfg.refchan) && isempty(match_str(tmpcfg.channel, tmpcfg.refchan))		
+	  hasrefchan = 1;
+	else 
+		hasrefchan = 0;
+	end
+		
+	if hasrefchan,
 		if ischar(tmpcfg.refchan), tmpcfg.refchan = {tmpcfg.refchan}; end
-		tmpcfg.channel = cat(1,ft_channelselection(tmpcfg.channel, data.label), tmpcfg.refchan);
+		tmpchannel     = ft_channelselection(tmpcfg.channel, data.label); % the channels needed for the spatial filter
+		tmpcfg.channel = cat(1, tmpchannel, tmpcfg.refchan);
 		tmpcfg         = rmfield(tmpcfg, 'refchan');
 	end
 	
@@ -290,7 +297,8 @@ elseif isfreq
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
-  
+  if hasrefchan, cfg.channel = match_str(data.label, tmpchannel); end
+	
   % copy the descriptive fields to the output
   source = copyfields(data, source, {'time', 'freq', 'cumtapcnt'});
   
@@ -358,31 +366,31 @@ else
   tmpcfg.grad      = sens; % this can be electrodes or gradiometers
   grid = ft_prepare_sourcemodel(tmpcfg);
 
-  if isfield(grid,'leadfield') && isfield(grid,'label')
-    if length(grid.label)<length(cfg.channel)
-      % FIXME: subselect appropriate channels in data and sens to match
-      % predefined leadfield
-      error('not enough channels in predefined leadfield for the data present');
-    elseif length(cfg.channel)<length(grid.label)
-      % leadfield should be recomputed for average re-reference of
-      % subset of channels.
-      error('not enough channels in data for the predefined leadfield');
-    end
-    [ic,il]=match_str(cfg.channel,data.label);
-    if ~all(ic==il) % this will be ok for freq but not necessarily timelock
-      error('fixme: reorder data fields to match cfg.channel');
-    end
-    [ic,il]=match_str(cfg.channel,grid.label);
-    grid.label=grid.label(il);
-    for ii=1:length(grid.leadfield)
-      if grid.inside(ii)
-        grid.leadfield{ii}=grid.leadfield{ii}(il,:);
-      end
-    end
-  elseif isfield(grid,'leadfield') && ~isfield(grid,'label')
-    % or should this be an error?
-    warning('order of leadfield may not match the data')
-  end
+%   if isfield(grid,'leadfield') && isfield(grid,'label')
+%     if length(grid.label)<length(cfg.channel)
+%       % FIXME: subselect appropriate channels in data and sens to match
+%       % predefined leadfield
+%       error('not enough channels in predefined leadfield for the data present');
+%     elseif length(cfg.channel)<length(grid.label)
+%       % leadfield should be recomputed for average re-reference of
+%       % subset of channels.
+%       error('not enough channels in data for the predefined leadfield');
+%     end
+%     [ic,il]=match_str(cfg.channel,data.label);
+%     if ~all(ic==il) % this m be ok for freq but not necessarily timelock
+%       %error('fixme: reorder data fields to match cfg.channel');
+%     end
+%     [ic,il]=match_str(cfg.channel,grid.label);
+%     grid.label=grid.label(il);
+%     for ii=1:length(grid.leadfield)
+%       if grid.inside(ii)
+%         grid.leadfield{ii}=grid.leadfield{ii}(il,:);
+%       end
+%     end
+%   elseif isfield(grid,'leadfield') && ~isfield(grid,'label')
+%     % or should this be an error?
+%     warning('order of leadfield may not match the data')
+%   end
 end
 
 if isfield(cfg.grid, 'filter')
