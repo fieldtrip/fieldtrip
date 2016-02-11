@@ -472,6 +472,7 @@ switch cfg.method
         % create structure to be passed to gui
         opt               = [];
         opt.viewresult    = false; % flag to use for certain keyboard/redraw calls
+        opt.twovol        = false; % flag to use for certain options of viewresult
         opt.dim           = mri.dim;
         opt.ijk           = [xc yc zc];
         opt.h1size        = h1size;
@@ -1122,77 +1123,84 @@ if viewresult
   
   
   % intensity range sliders
-  h45text = uicontrol('Style', 'text',...
-    'String','Intensity target volume',...
-    'Units', 'normalized', ...
-    'Position',[2*h1size(1)-0.09 h3size(2)+0.03 h1size(1)/4 0.04],...
-    'HandleVisibility','on');
- 
-  h4text = uicontrol('Style', 'text',...
-    'String','Min',...
-    'Units', 'normalized', ...
-    'Position',[2*h1size(1)-0.10 0.10+h3size(2)/3 0.05 h3size(2)/2],...
-    'HandleVisibility','on');
- 
-  h5text = uicontrol('Style', 'text',...
-    'String','Max',...
-    'Units', 'normalized', ...
-    'Position',[2*h1size(1)-.05 0.10+h3size(2)/3 0.05 h3size(2)/2],...
-    'HandleVisibility','on');
-
-  h4 = uicontrol('Style', 'slider', ...
-    'Parent', h, ...
-    'Min', 0, 'Max', 1, ...
-    'Value', cfg.clim(1), ...
-    'Units', 'normalized', ...
-    'Position', [2*h1size(1)-0.10 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
-    'Callback', @cb_minslider);
-  
-  h5 = uicontrol('Style', 'slider', ...
-    'Parent', h, ...
-    'Min', 0, 'Max', 1, ...
-    'Value', cfg.clim(2), ...
-    'Units', 'normalized', ...
-    'Position', [2*h1size(1)-.05 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
-    'Callback', @cb_maxslider);
+  if twovol
+    h45texttar = uicontrol('Style', 'text',...
+      'String','Intensity target volume',...
+      'Units', 'normalized', ...
+      'Position',[2*h1size(1)-0.09 h3size(2)+0.03 h1size(1)/4 0.04],...
+      'HandleVisibility','on');
+    
+    h4texttar = uicontrol('Style', 'text',...
+      'String','Min',...
+      'Units', 'normalized', ...
+      'Position',[2*h1size(1)-0.10 0.10+h3size(2)/3 0.05 h3size(2)/2],...
+      'HandleVisibility','on');
+    
+    h5texttar = uicontrol('Style', 'text',...
+      'String','Max',...
+      'Units', 'normalized', ...
+      'Position',[2*h1size(1)-.05 0.10+h3size(2)/3 0.05 h3size(2)/2],...
+      'HandleVisibility','on');
+    
+    h4tar = uicontrol('Style', 'slider', ...
+      'Parent', h, ...
+      'Min', 0, 'Max', 1, ...
+      'Value', cfg.clim(1), ...
+      'Units', 'normalized', ...
+      'Position', [2*h1size(1)-0.10 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+      'Callback', @cb_minslider,...
+      'tag','tar');
+    
+    h5tar = uicontrol('Style', 'slider', ...
+      'Parent', h, ...
+      'Min', 0, 'Max', 1, ...
+      'Value', cfg.clim(2), ...
+      'Units', 'normalized', ...
+      'Position', [2*h1size(1)-.05 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+      'Callback', @cb_maxslider,...
+      'tag','tar');
+  end
   
   % intensity range sliders
-  h45textre = uicontrol('Style', 'text',...
+  h45textrel = uicontrol('Style', 'text',...
     'String','Intensity realigned volume',...
     'Units', 'normalized', ...
     'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
     'HandleVisibility','on');
   
-  h4textre = uicontrol('Style', 'text',...
+  h4textrel = uicontrol('Style', 'text',...
     'String','Min',...
     'Units', 'normalized', ...
     'Position',[2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2],...
     'HandleVisibility','on');
  
-  h5textre = uicontrol('Style', 'text',...
+  h5textrel = uicontrol('Style', 'text',...
     'String','Max',...
     'Units', 'normalized', ...
     'Position',[2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2],...
     'HandleVisibility','on');
   
-  h4re = uicontrol('Style', 'slider', ...
+  h4rel = uicontrol('Style', 'slider', ...
     'Parent', h, ...
     'Min', 0, 'Max', 1, ...
     'Value', cfg.clim(1), ...
     'Units', 'normalized', ...
     'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
-    'Callback', @cb_minsliderre);
+    'Callback', @cb_minslider,...
+    'tag','rel');
   
-  h5re = uicontrol('Style', 'slider', ...
+  h5rel = uicontrol('Style', 'slider', ...
     'Parent', h, ...
     'Min', 0, 'Max', 1, ...
     'Value', cfg.clim(2), ...
     'Units', 'normalized', ...
     'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
-    'Callback', @cb_maxsliderre);
+    'Callback', @cb_maxslider,...
+    'tag','rel');
   
   % create structure to be passed to gui
   opt               = [];
+  opt.twovol        = twovol;
   opt.viewresult    = true; % flag to use for certain keyboard/redraw calls
   opt.dim           = basevol.dim;
   opt.ijk           = [xc yc zc];
@@ -1216,9 +1224,11 @@ if viewresult
   opt.showcrosshair = true;
   opt.showmarkers   = false;
   opt.markers       = {markerpos markerlabel markercolor};
-  opt.clim          = cfg.clim;
-  if twovol
+  if ~twovol
     opt.realignclim = cfg.clim;
+  else
+    opt.realignclim = cfg.clim;
+    opt.targetclim  = cfg.clim;
   end
   opt.fiducial      = [];
   opt.fidlabel      = [];
@@ -1382,14 +1392,14 @@ if opt.init
     ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   else
     % if viewing result, plotting has to be done in coordinate system space
-    if ~isfield(opt,'realignvol') 
+    if ~opt.twovol
       % one vol case
-      ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+      ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.realignclim);
     else
       % two vol case
       % base, with color red
       hbase = []; % need the handle for the individual surfs
-      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim,'datmask',opt.ana);
+      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.targetclim,'datmask',opt.ana);
       for ih = 1:3
         col = get(hbase(ih),'CData');
         col(:,:,2:3) = 0;
@@ -1406,7 +1416,7 @@ if opt.init
     end
   end
   % fetch surf objects, set ana tag, and put in surfhandles
-  if ~opt.viewresult || (opt.viewresult && ~isfield(opt,'realignvol'))
+  if ~opt.viewresult || (opt.viewresult && ~opt.twovol)
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
     parenttag = get(opt.anahandles,'parent');
     parenttag{1} = get(parenttag{1}, 'tag');
@@ -1428,14 +1438,14 @@ else
     ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   else
     % if viewing result, plotting has to be done in coordinate system space
-    if ~isfield(opt,'realignvol') 
+    if ~opt.twovol 
       % one vol case
-      ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+      ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.realignclim);
     else
       % two vol case
       % base, with color red
       hbase = []; % need the handle for the individual surfs
-      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{1}, 'update', opt.update, 'doscale', false, 'clim', opt.clim,'datmask',opt.ana);
+      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{1}, 'update', opt.update, 'doscale', false, 'clim', opt.targetclim,'datmask',opt.ana);
       for ih = 1:3
         col = get(hbase(ih),'CData');
         col(:,:,2:3) = 0;
@@ -1680,26 +1690,32 @@ switch key
     
     % contrast scaling
   case {43 'shift+equal'}  % numpad +
-    if isempty(opt.clim)
-      opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+    % disable if viewresult 
+    if ~opt.viewresult 
+      if isempty(opt.clim)
+        opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+      end
+      % reduce color scale range by 10%
+      cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+      %opt.clim(1) = opt.clim(1)+cscalefactor;
+      opt.clim(2) = opt.clim(2)-cscalefactor;
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
     end
-    % reduce color scale range by 10%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
-    %opt.clim(1) = opt.clim(1)+cscalefactor;
-    opt.clim(2) = opt.clim(2)-cscalefactor;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
     
   case {45 'shift+hyphen'} % numpad -
-    if isempty(opt.clim)
-      opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+    % disable if viewresult 
+    if ~opt.viewresult
+      if isempty(opt.clim)
+        opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+      end
+      % increase color scale range by 10%
+      cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+      %opt.clim(1) = opt.clim(1)-cscalefactor;
+      opt.clim(2) = opt.clim(2)+cscalefactor;
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
     end
-    % increase color scale range by 10%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
-    %opt.clim(1) = opt.clim(1)-cscalefactor;
-    opt.clim(2) = opt.clim(2)+cscalefactor;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
     
   case 99  % 'c'
     opt.showcrosshair = ~opt.showcrosshair;
@@ -1892,11 +1908,24 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_minslider(h4, eventdata)
 
+tag = get(h4,'tag');
 newlim = get(h4, 'value');
 h = getparent(h4);
 opt = getappdata(h, 'opt');
-opt.clim(1) = newlim;
-fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+if isempty(tag) 
+  opt.clim(1) = newlim;
+elseif strcmp(tag,'rel')
+  opt.realignclim(1) = newlim;
+elseif strcmp(tag,'tar')
+  opt.targetclim(1) = newlim;
+end
+if isempty(tag) 
+  fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+elseif strcmp(tag,'rel')
+  fprintf('realigned contrast limits updated to [%.03f %.03f]\n', opt.realignclim);
+elseif strcmp(tag,'tar')
+  fprintf('target contrast limits updated to [%.03f %.03f]\n', opt.targetclim);
+end
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -1905,38 +1934,24 @@ cb_redraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_maxslider(h5, eventdata)
 
+tag = get(h5,'tag');
 newlim = get(h5, 'value');
 h = getparent(h5);
 opt = getappdata(h, 'opt');
-opt.clim(2) = newlim;
-fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
-setappdata(h, 'opt', opt);
-cb_redraw(h);
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_minsliderre(h4, eventdata)
-
-newlim = get(h4, 'value');
-h = getparent(h4);
-opt = getappdata(h, 'opt');
-opt.realignclim(1) = newlim;
-fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
-setappdata(h, 'opt', opt);
-cb_redraw(h);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_maxsliderre(h5, eventdata)
-
-newlim = get(h5, 'value');
-h = getparent(h5);
-opt = getappdata(h, 'opt');
-opt.realignclim(2) = newlim;
-fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+if isempty(tag) 
+  opt.clim(2) = newlim;
+elseif strcmp(tag,'rel')
+  opt.realignclim(2) = newlim;
+elseif strcmp(tag,'tar')
+  opt.targetclim(2) = newlim;
+end
+if isempty(tag) 
+  fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+elseif strcmp(tag,'rel')
+  fprintf('realigned contrast limits updated to [%.03f %.03f]\n', opt.realignclim);
+elseif strcmp(tag,'tar')
+  fprintf('target contrast limits updated to [%.03f %.03f]\n', opt.targetclim);
+end
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
