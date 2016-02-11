@@ -57,18 +57,28 @@ end
 
 % with the bug unfixed, this gives a problem with the refchan handling, due
 % to ft_selectdata only keeping the MEG channels from an early stage
+if 0,
 cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
 cfg.grid      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
-cfg.keeptrials = 'yes';
 cfg.refchan   = 'BR1';
 s3             = ft_sourceanalysis(cfg, freq);
+end
 
-
-
+if 0,
+cfg           = [];
+cfg.method    = 'dics';
+cfg.frequency = 10;
+cfg.headmodel = vol;
+cfg.grid      = lf;
+cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
+cfg.refchan   = 'BR1';
+cfg.keeptrials = 'yes';
+s4             = ft_sourceanalysis(cfg, freq);
+end
 
 % With 3029 unfixed the following cfg gives an error due to the mismatch in
 % channels in data and leadfield
@@ -77,7 +87,7 @@ cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
 cfg.grid      = lf;
-s3            = ft_sourceanalysis(cfg, freq);
+s5            = ft_sourceanalysis(cfg, freq);
 
 keyboard
 
