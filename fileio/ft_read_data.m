@@ -1289,8 +1289,9 @@ switch dataformat
     elseif isempty(p)
       filename = which(filename);
     end
-    orig = openNSx(filename, 'duration', [begsample endsample]);
-    keyboard
+    orig = openNSx(filename, 'duration', [begsample endsample], 'channels', chanindx);
+    dat  = double(orig.Data);
+		
   case 'videomeg_aud'
     dat = read_videomeg_aud(filename, hdr, begsample, endsample);
     dat = dat(chanindx,:);
