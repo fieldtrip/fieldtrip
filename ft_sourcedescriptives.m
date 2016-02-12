@@ -105,6 +105,8 @@ cfg.keepnoisecsd     = ft_getopt(cfg, 'keepnoisecsd',     'no');
 cfg.keepnoisemom     = ft_getopt(cfg, 'keepnoisemom',     'yes');
 cfg.fwhm             = ft_getopt(cfg, 'fwhm',             'no');
 cfg.fwhmremovecenter = ft_getopt(cfg, 'fwhmremovecenter', 0);
+cfg.fwhmmethod       = ft_getopt(cfg, 'fwhmmethod',       'barnes');
+cfg.fwhmmaxdist      = ft_getopt(cfg, 'fwhmmaxdist',      []);
 cfg.fixedori         = ft_getopt(cfg, 'fixedori',         'over_trials');
 
 % only works for minimumnormestimate
@@ -1018,8 +1020,19 @@ end
 
 % compute fwhm
 if strcmp(cfg.fwhm, 'yes')
-  fprintf('computing fwhm of spatial filters\n');
-  source = estimate_fwhm1(source, cfg.fwhmremovecenter);
+  switch cfg.fwhmmethod
+    case 'barnes'
+      if ~isfield(source, 'dim') 
+        error('computation of fwhm is not possible with method ''barnes'' is not possible when the dipoles are not defined on a regular 3D grid');
+      end
+      fprintf('computing fwhm of spatial filters using method ''barnes''\n');
+      source = estimate_fwhm1(source, cfg.fwhmremovecenter);
+    case 'gaussfit'
+      fprintf('computing fwhm of spatial filters using method ''gaussfit''\n');
+      source = estimate_fwhm2(source, cfg.fwhmmaxdist);
+    otherwise
+      error('unknown method for fwhm estimation');
+  end
 end
 
 % do the general cleanup and bookkeeping at the end of the function
