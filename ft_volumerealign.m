@@ -1215,9 +1215,22 @@ if viewresult
   opt.handlesaxes   = [h1 h2 h3];
   opt.handlesfigure = h;
   opt.quit          = false;
-  opt.ana           = dat;
+  opt.ana           = dat; % keep this as is, to avoid making exceptions for opt.viewresult all over the plotting code
   if twovol
     opt.realignana  = realigndat;
+    % set up the masks in an intelligent way based on the percentile of the anatomy (this avoids extremely skewed data making one of the vols too transparent)
+    sortana = sort(dat(:));
+    cutoff  = sortana(find(cumsum(sortana ./ sum(sortana(:)))>.99,1));
+    mask    = dat;
+    mask(mask>cutoff) = cutoff;
+    mask    = (mask ./ cutoff) .* .5;
+    opt.targetmask = mask;
+    sortana = sort(realigndat(:));
+    cutoff  = sortana(find(cumsum(sortana ./ sum(sortana(:)))>.99,1));
+    mask    = realigndat;
+    mask(mask>cutoff) = cutoff;
+    mask    = (mask ./ cutoff) .* .5;
+    opt.realignmask = mask;
   end
   opt.update        = [1 1 1];
   opt.init          = true;
@@ -1404,7 +1417,7 @@ if opt.init
       % two vol case
       % base, with color red
       hbase = []; % need the handle for the individual surfs
-      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.targetclim,'datmask',opt.ana);
+      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.targetclim,'datmask',opt.targetmask, 'opacitylim',[0 1]);
       for ih = 1:3
         col = get(hbase(ih),'CData');
         col(:,:,2:3) = 0;
@@ -1412,7 +1425,7 @@ if opt.init
       end
       % alignvol, with color blue
       hreal = []; % need the handle for the individual surfs
-      [hreal(1) hreal(2) hreal(3)] = ft_plot_ortho(opt.realignana, 'transform', opt.realignvol.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.realignclim,'datmask',opt.realignana);
+      [hreal(1) hreal(2) hreal(3)] = ft_plot_ortho(opt.realignana, 'transform', opt.realignvol.transform, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.realignclim,'datmask',opt.realignmask, 'opacitylim',[0 1]);
       for ih = 1:3
         col = get(hreal(ih),'CData');
         col(:,:,1:2) = 0;
@@ -1450,7 +1463,7 @@ else
       % two vol case
       % base, with color red
       hbase = []; % need the handle for the individual surfs
-      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{1}, 'update', opt.update, 'doscale', false, 'clim', opt.targetclim,'datmask',opt.ana);
+      [hbase(1) hbase(2) hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{1}, 'update', opt.update, 'doscale', false, 'clim', opt.targetclim,'datmask',opt.targetmask, 'opacitylim',[0 1]);
       for ih = 1:3
         col = get(hbase(ih),'CData');
         col(:,:,2:3) = 0;
@@ -1458,7 +1471,7 @@ else
       end
       % alignvol, with color blue
       hreal = []; % need the handle for the individual surfs
-      [hreal(1) hreal(2) hreal(3)] = ft_plot_ortho(opt.realignana, 'transform', opt.realignvol.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{2}, 'update', opt.update, 'doscale', false, 'clim', opt.realignclim,'datmask',opt.realignana);
+      [hreal(1) hreal(2) hreal(3)] = ft_plot_ortho(opt.realignana, 'transform', opt.realignvol.transform, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{2}, 'update', opt.update, 'doscale', false, 'clim', opt.realignclim,'datmask',opt.realignmask, 'opacitylim',[0 1]);
       for ih = 1:3
         col = get(hreal(ih),'CData');
         col(:,:,1:2) = 0;
