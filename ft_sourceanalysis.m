@@ -206,9 +206,6 @@ cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 cfg.latency          = ft_getopt(cfg, 'latency',   'all');
 cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
 
-% the default for this depends on EEG/MEG and is set below
-% if ~isfield(cfg, 'reducerank'),     cfg.reducerank = 'no';      end
-
 % put the low-level options pertaining to the source reconstruction method in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
 
@@ -225,6 +222,7 @@ cfg.(cfg.method).feedback      = ft_getopt(cfg.(cfg.method), 'feedback',      't
 cfg.(cfg.method).lambda        = ft_getopt(cfg.(cfg.method), 'lambda',        []);
 cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
 cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
+cfg.cfg.method).reducerank     = ft_getopt(cfg.(cfg.method), 'reducerank',    []); % the default for this is handled below
 
 convertcomp = false;
 if iscomp && (strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
@@ -310,22 +308,22 @@ end
 % collect and preprocess the electrodes/gradiometer and head model
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
+% set the default for reducing the rank of the leadfields
+if isempty(cfg.(cfg.method).reducerank)
+  if ft_senstype(sens, 'eeg')
+    cfg.(cfg.method).reducerank = 'no';    % for EEG
+  elseif ft_senstype(sens, 'meg') && ft_voltype(headmodel, 'infinite')
+    cfg.(cfg.method).reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
+  elseif ft_senstype(sens, 'meg')
+    cfg.(cfg.method).reducerank = 'yes';   % for MEG with a current dipole in a volume conductor 
+  end
+end
+
 % It might be that the number of channels in the data, the number of
 % channels in the electrode/gradiometer definition and the number of
 % channels in the localspheres volume conduction model are different.
 % Hence a subset of the data channels will be used.
 Nchans = length(cfg.channel);
-
-% set the default for reducing the rank of the leadfields, this is an
-% option to the specific method and will be passed on to the low-level
-% function
-if ~isfield(cfg.(cfg.method), 'reducerank')
-  if ft_senstype(sens, 'meg')
-    cfg.(cfg.method).reducerank = 2;
-  else
-    cfg.(cfg.method).reducerank = 3;
-  end
-end
 
 if strcmp(cfg.keepleadfield, 'yes') && (~isfield(cfg, 'grid') || ~isfield(cfg.grid, 'leadfield'))
   % precompute the leadfields upon the users request

@@ -68,8 +68,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.optimfun = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
 %   cfg.dipfit.maxiter  = maximum number of function evaluations allowed (default depends on the optimfun)
 %
-% Optionally, you can modify the leadfields by reducing the rank, i.e.
-% remove the weakest orientation.
+% Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
 %
 % The volume conduction model of the head should be specified as
@@ -153,10 +152,10 @@ cfg.feedback        = ft_getopt(cfg, 'feedback', 'text');
 cfg.gridsearch      = ft_getopt(cfg, 'gridsearch', 'yes');
 cfg.nonlinear       = ft_getopt(cfg, 'nonlinear', 'yes');
 cfg.symmetry        = ft_getopt(cfg, 'symmetry');
-% cfg.reducerank   = ft_getopt(cfg, 'reducerank', 'no');      % the default for this depends on EEG/MEG and is set below
 cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not used in dipole fitting
 cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in dipole fitting
 cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
+cfg.reducerank      = ft_getopt(cfg, 'reducerank', []); % the default for this is handled below
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
@@ -235,21 +234,26 @@ end
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
 % set the default for reducing the rank of the leadfields
-if ft_senstype(sens, 'eeg')
-  cfg.reducerank = ft_getopt(cfg, 'reducerank', 3);
-else
-  cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
+if isempty(cfg.reducerank)
+  if ft_senstype(sens, 'eeg')
+    cfg.reducerank = 'no';    % for EEG
+  elseif ft_senstype(sens, 'meg') && ft_voltype(headmodel, 'infinite')
+    cfg.reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
+  elseif ft_senstype(sens, 'meg')
+    cfg.reducerank = 'yes';   % for MEG with a current dipole in a volume conductor 
+  end
 end
 
 % select the desired channels, the order should be the same as in the sensor structure
 [selsens, seldata] = match_str(sens.label, data.label);
+% take the selected channels
 Vdata = data.avg(seldata, :);
 
 if iscomp
   % select the desired component topographies
   Vdata = Vdata(:, cfg.component);
 elseif isfreq
-  % the desired frequency topographies have already been selected
+  % the desired frequencies have already been selected
   Vdata = Vdata(:, :);
 else
   % select the desired latencies
@@ -440,10 +444,10 @@ else
 end
 
 % add the options for the leadfield computation
-optarg = ft_setopt(optarg, 'reducerank', cfg.reducerank);
-optarg = ft_setopt(optarg, 'normalize', cfg.normalize);
+optarg = ft_setopt(optarg, 'reducerank',     cfg.reducerank);
+optarg = ft_setopt(optarg, 'normalize',      cfg.normalize);
 optarg = ft_setopt(optarg, 'normalizeparam', cfg.normalizeparam);
-optarg = ft_setopt(optarg, 'backproject', cfg.backproject);
+optarg = ft_setopt(optarg, 'backproject',    cfg.backproject);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % perform the non-linear fit
