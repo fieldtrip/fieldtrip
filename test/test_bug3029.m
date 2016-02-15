@@ -15,11 +15,13 @@ load(filename);
 
 filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol'), 'Subject01vol_singleshell');
 load(filename);
+vol = ft_datatype_headmodel(vol);
+[vol.bnd.nrm] = normals(vol.bnd.pos,vol.bnd.tri);
 
 cfg           = [];
 cfg.headmodel = vol;
 cfg.grad      = freq.grad;
-cfg.grid.resolution = 2;
+cfg.grid.resolution = 2.5;
 s             = ft_prepare_sourcemodel(cfg);
 
 cfg           = [];
@@ -55,9 +57,9 @@ cfg.keeptrials = 'yes';
 s2             = ft_sourceanalysis(cfg, freq);
 end
 
+if 0,
 % with the bug unfixed, this gives a problem with the refchan handling, due
 % to ft_selectdata only keeping the MEG channels from an early stage
-if 0,
 cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
@@ -66,9 +68,7 @@ cfg.grid      = lf;
 cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
 cfg.refchan   = 'BR1';
 s3             = ft_sourceanalysis(cfg, freq);
-end
 
-if 0,
 cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
@@ -78,18 +78,49 @@ cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch i
 cfg.refchan   = 'BR1';
 cfg.keeptrials = 'yes';
 s4             = ft_sourceanalysis(cfg, freq);
+
+assert(identical(s3.avg.coh, s4.avg.coh, 'reltol', 1e-8));
 end
 
-% With 3029 unfixed the following cfg gives an error due to the mismatch in
+% Tthe following cfg should give an error due to the mismatch in
 % channels in data and leadfield
+try,
+	cfg           = [];
+	cfg.method    = 'dics';
+	cfg.frequency = 10;
+	cfg.headmodel = vol;
+	cfg.grid      = lf;
+	s5            = ft_sourceanalysis(cfg, freq);
+catch
+	% this should be solved with proper error handling
+	if ~isempty(strfind(lasterr,'There''s a mismatch'))
+		% this is OK
+	else
+		error('there''s a problem');
+	end
+end
+
+% check whether it also works with pcc as a method
 cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
 cfg.headmodel = vol;
 cfg.grid      = lf;
-s5            = ft_sourceanalysis(cfg, freq);
+cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
+cfg.refchan   = 'BR1';
+cfg.dics.keepcsd = 'yes';
+cfg.dics.realfilter = 'yes';
+s3             = ft_sourceanalysis(cfg, freq);
 
-keyboard
-
+cfg           = [];
+cfg.method    = 'pcc';
+cfg.frequency = 10;
+cfg.headmodel = vol;
+cfg.grid      = lf;
+cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch in channels vs leadfields
+cfg.refchan   = 'BR1';
+s3b           = ft_sourceanalysis(cfg, freq);
+s3c           = ft_sourcedescriptives([], s3b);
+assert(identical(s3.avg.coh, s3c.avg.coh, 'reltol', 1e-8));
 
 % ALSO: check whether it also works with powandcsd data

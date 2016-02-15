@@ -366,31 +366,6 @@ else
   tmpcfg.grad      = sens; % this can be electrodes or gradiometers
   grid = ft_prepare_sourcemodel(tmpcfg);
 
-%   if isfield(grid,'leadfield') && isfield(grid,'label')
-%     if length(grid.label)<length(cfg.channel)
-%       % FIXME: subselect appropriate channels in data and sens to match
-%       % predefined leadfield
-%       error('not enough channels in predefined leadfield for the data present');
-%     elseif length(cfg.channel)<length(grid.label)
-%       % leadfield should be recomputed for average re-reference of
-%       % subset of channels.
-%       error('not enough channels in data for the predefined leadfield');
-%     end
-%     [ic,il]=match_str(cfg.channel,data.label);
-%     if ~all(ic==il) % this m be ok for freq but not necessarily timelock
-%       %error('fixme: reorder data fields to match cfg.channel');
-%     end
-%     [ic,il]=match_str(cfg.channel,grid.label);
-%     grid.label=grid.label(il);
-%     for ii=1:length(grid.leadfield)
-%       if grid.inside(ii)
-%         grid.leadfield{ii}=grid.leadfield{ii}(il,:);
-%       end
-%     end
-%   elseif isfield(grid,'leadfield') && ~isfield(grid,'label')
-%     % or should this be an error?
-%     warning('order of leadfield may not match the data')
-%   end
 end
 
 if isfield(cfg.grid, 'filter')
@@ -400,30 +375,6 @@ if isfield(cfg.grid, 'filter')
     ft_warning('ignoring predefined filter as it does not match the number of source positions');
   end
 end
-
-% The following code pertains to bug 1746 but is not functional yet. It is
-% put in here as a placeholder, but it still requires some careful thinking
-% before it can go live.
-% if isfield(grid, 'label') && (isfield(grid, 'leadfield') || isfield(grid, 'filter'))
-%   % match the channels in the leadfields/filters with those in the data
-%   [i1, i2] = match_str(cfg.channel, grid.label);
-%   if ~isequal(i2(:), (1:numel(grid.label))')
-%     if isfield(grid, 'leadfield')
-%       fprintf('\n\nSubselecting/reordering the channels in the precomputed leadfields\n\n');
-%       inside_indx = find(grid.inside);
-%       for k = inside_indx(:)'
-%         grid.leadfield{k} = grid.leadfield{k}(i2, :);
-%       end
-%     end
-%     if isfield(grid, 'filter')
-%       fprintf('\n\nSubselecting/reordering the channels in the precomputed filters\n\n');
-%       for k = grid.inside(:)'
-%         grid.filter{k} = grid.filter{k}(:, i2);
-%       end
-%     end
-%     grid.label = grid.label(i2);
-%   end
-% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
@@ -528,12 +479,41 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       end
       
     otherwise
-  end
-  
+	end
+ 
+	% This is the place to check for the consistency of the channel order in
+	% the pre-computed leadfields/spatial filters, and to correct for it, if
+	% necessary. This pertains to bugs 1746 and 3029.
+	if isfield(grid, 'label') && (isfield(grid, 'leadfield') || isfield(grid, 'filter'))
+		% match the channels in the leadfields/filters with those in the data
+		[i1, i2] = match_str(cfg.channel, grid.label);
+		if ~isequal(i2(:), (1:numel(grid.label))')
+			if isfield(grid, 'leadfield')
+				fprintf('\n\nSubselecting/reordering the channels in the precomputed leadfields\n\n');
+				inside_indx = find(grid.inside);
+				for k = inside_indx(:)'
+					grid.leadfield{k} = grid.leadfield{k}(i2, :);
+				end
+			end
+			if isfield(grid, 'filter')
+				fprintf('\n\nSubselecting/reordering the channels in the precomputed filters\n\n');
+				for k = grid.inside(:)'
+					grid.filter{k} = grid.filter{k}(:, i2);
+				end
+			end
+			grid.label = grid.label(i2);
+		end
+		if ~isequal(i1(:), (1:numel(cfg.channel))')
+			% this is not so easy to deal with, throw an error
+			error('There''s a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed leadfield/filter. This is not easy to solve automatically. Please look into this.');
+		end
+	end
+
+	
   % fill these with NaNs, so that I dont have to treat them separately
   if isempty(Cr), Cr = nan(Ntrials, Nchans, 1); end
   if isempty(Pr), Pr = nan(Ntrials, 1, 1); end
-  
+ 	
   if nargin>2
     % repeat the conversion for the baseline condition
     [bCf, bCr, bPr, Nbaseline, cfg] = prepare_freq_matrices(cfg, baseline);
@@ -659,7 +639,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   if Nrepetitions > 1
     ft_progress('init', 'text');
-  end
+	end
+
   for i=1:Nrepetitions
     
     if Nrepetitions > 1
