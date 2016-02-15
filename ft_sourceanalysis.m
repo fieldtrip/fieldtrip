@@ -237,7 +237,9 @@ elseif isfreq && isfield(data, 'labelcmb')
   % ensure that the cross-spectral densities are chan_chan_therest,
   % otherwise the latency and frequency selection could fail, so we don't
   % need to worry about linearly indexed cross-spectral densities below
-  % this point
+  % this point, this step may take some time, if multiple trials are
+  % present in the data
+	fprintf('converting the linearly indexed channelcombinations into a square CSD-matrix\n');
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
@@ -789,7 +791,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     % this is required for averaging 2 conditions using prepare_resampled_data
     cfg2 = [];
     cfg2.numcondition = 2;
-  end
+	end
   
   % prepare the resampling of the trials, or average the data if multiple trials are present and no resampling is neccessary
   if (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes') || strcmp(cfg.randomization, 'yes')) && ~strcmp(data.dimord, 'rpt_chan_time')
@@ -889,6 +891,34 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   % get the relevant low level options from the cfg and convert into key-value pairs
   optarg = ft_cfg2keyval(getfield(cfg, cfg.method));
   
+	% This is the place to check for the consistency of the channel order in
+	% the pre-computed leadfields/spatial filters, and to correct for it, if
+	% necessary. This pertains to bugs 1746 and 3029.
+	if isfield(grid, 'label') && (isfield(grid, 'leadfield') || isfield(grid, 'filter'))
+		% match the channels in the leadfields/filters with those in the data
+		[i1, i2] = match_str(cfg.channel, grid.label);
+		if ~isequal(i2(:), (1:numel(grid.label))')
+			if isfield(grid, 'leadfield')
+				fprintf('\n\nSubselecting/reordering the channels in the precomputed leadfields\n\n');
+				inside_indx = find(grid.inside);
+				for k = inside_indx(:)'
+					grid.leadfield{k} = grid.leadfield{k}(i2, :);
+				end
+			end
+			if isfield(grid, 'filter')
+				fprintf('\n\nSubselecting/reordering the channels in the precomputed filters\n\n');
+				for k = grid.inside(:)'
+					grid.filter{k} = grid.filter{k}(:, i2);
+				end
+			end
+			grid.label = grid.label(i2);
+		end
+		if ~isequal(i1(:), (1:numel(cfg.channel))')
+			% this is not so easy to deal with, throw an error
+			error('There''s a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed leadfield/filter. This is not easy to solve automatically. Please look into this.');
+		end
+	end
+	
   siz=[size(avg) 1];
   if strcmp(cfg.method, 'lcmv')% && ~isfield(grid, 'filter'),
     for i=1:Nrepetitions

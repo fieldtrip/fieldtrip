@@ -143,7 +143,7 @@ end
 
 % the following runs through irrespective of the bug being fixed, yet the
 % behavior might be unexpected: no single trial output is generated.
-if 0,
+if 1,
 cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
@@ -154,7 +154,7 @@ cfg.keeptrials = 'yes';
 s2             = ft_sourceanalysis(cfg, freq);
 end
 
-if 0,
+if 1,
 % with the bug unfixed, this gives a problem with the refchan handling, due
 % to ft_selectdata only keeping the MEG channels from an early stage
 cfg           = [];
@@ -181,7 +181,7 @@ end
 
 % Tthe following cfg should give an error due to the mismatch in
 % channels in data and leadfield
-if 0,
+if 1,
 try,
 	cfg           = [];
 	cfg.method    = 'dics';
@@ -200,7 +200,7 @@ end
 end
 
 % check whether it also works with pcc as a method
-if 0,
+if 1,
 cfg           = [];
 cfg.method    = 'dics';
 cfg.frequency = 10;
