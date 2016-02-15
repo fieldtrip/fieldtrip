@@ -1,12 +1,6 @@
-function y = any(x)
+function [varargout] = abs(varargin)
 
-% ALL True if all elements of a vector are nonzero.
-%
-% For vectors, ALL(V) returns logical 1 (TRUE) if none of the elements 
-% of the vector are zero.  Otherwise it returns logical 0 (FALSE).  For 
-% matrices, ALL(X) operates on the columns of X, returning a row vector
-% of logical 1's and 0's. For N-D arrays, ALL(X) operates on the first
-% non-singleton dimension.
+% ABS compile the missing mex file on the fly
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
@@ -28,34 +22,34 @@ function y = any(x)
 %
 % $Id$
 
-if nargin>1
-  error('this implementation is only supported with one input argument');
+% remember the original working directory
+pwdir = pwd;
+
+% determine the name and full path of this function
+funname = mfilename('fullpath');
+mexsrc  = [funname '.c'];
+[mexdir, mexname] = fileparts(funname);
+
+try
+  % try to compile the mex file on the fly
+  warning('trying to compile MEX file from %s', mexsrc);
+  cd(mexdir);
+  mex(mexsrc);
+  cd(pwdir);
+  success = true;
+
+catch
+  % compilation failed
+  disp(lasterr);
+  error('could not locate MEX file for %s', mexname);
+  cd(pwdir);
+  success = false;
 end
 
-siz = size(x);
-if numel(siz)>2
-  error('this implementation is only supported with vector or matrix input');
-end
-
-if siz(1)==1 || siz(2)==1
-  y = true;
-  for i=1:prod(siz)
-    if ~x(i)
-      y = false;
-      break
-    end
-  end
-
-else
-  y = true(1,siz(2));
-  for j=1:siz(2)
-    for i=1:siz(1)
-      if ~x(i,j)
-        y(1,j) = false;
-        break
-      end
-    end
-  end
-
+if success
+  % execute the mex file that was juist created
+  funname   = mfilename;
+  funhandle = str2func(funname);
+  [varargout{1:nargout}] = funhandle(varargin{:});
 end
 
