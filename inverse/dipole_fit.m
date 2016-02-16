@@ -13,7 +13,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   'maxiter'     = Maximum number of function evaluations allowed [ positive integer ]
 %   'metric'      = Error measure to be minimised [ rv | var | abs ]
 %   'checkinside' = Boolean flag to check whether dipole is inside source compartment [ 0 | 1 ]
-%   'weight'      = weight matrix for maximum likelihood estimation, e.g. sqrt inverse noise covariance
+%   'weight'      = weight matrix for maximum likelihood estimation, e.g. inverse noise covariance
 %   'noisecov'    = noise covariance matrix
 %
 % The following optional input arguments relate to the computation of the leadfields
@@ -96,7 +96,7 @@ normalizeparam = ft_getopt(varargin, 'normalizeparam' ); % for leadfield computa
 weight         = ft_getopt(varargin, 'weight'         ); % for maximum likelihood estimation
 noisecov       = ft_getopt(varargin, 'noisecov'       ); % for sphering
 
-if ~isempty(noisecov) && ~isempty(weigth)
+if ~isempty(noisecov) && ~isempty(weight)
   error('you cannot specify both weight and noisecov');
 elseif ~isempty(noisecov)
   [u, s] = svd(noisecov);
@@ -108,11 +108,8 @@ elseif ~isempty(noisecov)
   sphere = diag(s) * u';
   % apply the sphering to the data
   dat = sphere*dat;
-  % apply the sphering to the forward model, specify it as a montage
-  montage.labelorg = sens.label;
-  montage.labelnew = sens.label;
-  montage.tra = sphere;
-  sens = ft_apply_montage(sens, montage);
+  % apply the sphering to the forward model as a pre-multiplication
+  sens.tra = sphere*sens.tra;
 end
 
 if isfield(constr, 'mirror')
@@ -328,7 +325,7 @@ if ~isempty(weight)
       denom = dat' * weight * dat;
       err   = sum(num(:)) ./ sum(denom(:)); % Lutkenhonner equation 7, except for the gof=1-rv
     case 'var' % residual variance
-      num   = dif' * weight * dif';
+      num   = dif' * weight * dif;
       err   = sum(num(:));
     otherwise
       error('Unsupported error metric for maximum likelihood dipole fitting');
