@@ -92,7 +92,7 @@ case {'ttest', 'ttest_samples_vs_const'}
   ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
-    [h(chan), p(chan), ci(chan, :), stats] = ttest(dat(chan, :), cfg.constantvalue, cfg.alpha, cfg.tail);
+    [h(chan), p(chan), ci(chan, :), stats] = ttest_wrapper(dat(chan, :), cfg.constantvalue, cfg.alpha, cfg.tail);
     s(chan) = stats.tstat;
   end
   ft_progress('close');
@@ -126,7 +126,7 @@ case {'ttest2', 'ttest_2samples_by_timepoint'}
   ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
-    [h(chan), p(chan), ci(chan, :), stats] = ttest2(dat(chan, selA), dat(chan, selB), cfg.alpha, cfg.tail);
+    [h(chan), p(chan), ci(chan, :), stats] = ttest2_wrapper(dat(chan, selA), dat(chan, selB), cfg.alpha, cfg.tail);
     s(chan) = stats.tstat;
   end
   ft_progress('close');
@@ -163,7 +163,7 @@ case {'paired-ttest'}
   ft_progress('init', cfg.feedback);
   for chan = 1:Nobs
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
-    [h(chan), p(chan), ci(chan, :), stats] = ttest(dat(chan, selA)-dat(chan, selB), 0, cfg.alpha, cfg.tail);
+    [h(chan), p(chan), ci(chan, :), stats] = ttest_wrapper(dat(chan, selA)-dat(chan, selB), 0, cfg.alpha, cfg.tail);
     s(chan) = stats.tstat;
   end
   ft_progress('close');
@@ -340,4 +340,24 @@ stat = [];
 try, stat.mask = h; end
 try, stat.prob = p; end
 try, stat.stat = s; end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper functions for ttest and ttest2
+% - old Matlab, with syntax:                   ttest(x,y,alpha,tail,dim)
+% - new Matlab and GNU Octave, with syntax:    ttest(x,y,'alpha',alpha,...)
+function [h,p,ci,stats]=ttest_wrapper(x,y,alpha,tail)
+    [h,p,ci,stats]=general_ttestX_wrapper(@ttest,x,y,alpha,tail);
+
+function [h,p,ci,stats]=ttest2_wrapper(x,y,alpha,tail)
+    [h,p,ci,stats]=general_ttestX_wrapper(@ttest2,x,y,alpha,tail);
+
+function [h,p,ci,stats]=general_ttestX_wrapper(ttest_func,x,y,alpha,tail)
+    if nargin(ttest_func)>0
+        % old Matlab
+        [h,p,ci,stats]=ttest_func(x,y,alpha,tail);
+
+    else
+        % GNU Octave and new Matlab
+        [h,p,ci,stats]=ttest_func(x,y,'alpha',alpha,'tail',tail);
+    end
 

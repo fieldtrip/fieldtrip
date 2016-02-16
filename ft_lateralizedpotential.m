@@ -111,6 +111,17 @@ lrp.plotlabel = {};
 lrp.avg       = [];
 lrp.time      = avgL.time;
 
+% add timelock signature
+if isfield(avgL, 'dimord') && isfield(avgR, 'dimord')
+    if ~strcmp(avgL.dimord, avgR.dimord)
+        error('The input data are of different dimord types');
+    else
+        lrp.dimord = avgL.dimord;
+    end
+else
+    error('''dimord'' not found. The function expects timelock data');
+end
+
 % compute the lateralized potentials
 Nchan = size(cfg.channelcmb);
 for i=1:Nchan
