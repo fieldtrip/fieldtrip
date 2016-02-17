@@ -311,6 +311,15 @@ if ~all(chansel)
         data.trial{i}(~chansel,:) = nan;
       end
     case 'neighbours'
+      % show which channels are to be repaired
+      removed = find(~chansel);
+      fprintf('the following channels were repaired using ft_channelrepair: ');
+      for i=1:(length(removed)-1)
+        fprintf('%s, ', data.label{removed(i)});
+      end
+      fprintf('%s\n', data.label{removed(end)});
+      
+      % create cfg struct for call to ft_channelrepair
       cfg_chrep = [];
       cfg_chrep.badchannel = data.label(~chansel);
       cfg_chrep.neighbours = cfg.neighbours;
@@ -318,13 +327,8 @@ if ~all(chansel)
           cfg_chrep.grad = cfg.grad;
       end
       cfg_chrep.trials = 'all';
+      % repair bad channels
       data = ft_channelrepair(cfg_chrep,data);
-
-      if ~isfield(cfg,'badchan')
-        cfg.badchan = cfg_chrep.badchannel;
-      else
-        cfg.badchan = [cfg.badchan cfg_chrep.badchannel];
-      end
     otherwise
       error('invalid specification of cfg.keepchannel')
   end % case
