@@ -1,6 +1,6 @@
-function [varargout] = funname(varargin)
+function [varargout] = min(varargin)
 
-% FUNNAME compile the missing mex file on the fly
+% MIN compile the missing mex file on the fly
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

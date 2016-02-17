@@ -88,7 +88,7 @@ legend({'subj1', 'subj2', 'subj3', 'subj4', 'subj5', 'subj6', ...
 %% T-test with MATLAB function
 % dependent samples ttest
 FCminFIC = values_FC - values_FIC;
-[h,p,ci,stats] = ttest(FCminFIC, 0, 0.05) % H0: mean = 0, alpha 0.05
+[h,p,ci,stats] = ttest_wrapper(FCminFIC, 0, 0.05) % H0: mean = 0, alpha 0.05
 
 %% T-test with FieldTrip function
 cfg = [];
@@ -122,7 +122,7 @@ FICminFC = zeros(1,10);
 for iChan = 1:151
     for isub = 1:10
         FICminFC(isub) = mean(allsubjFIC{isub}.avg(iChan,timesel_FIC)) - mean(allsubjFC{isub}.avg(iChan,timesel_FC));
-        [h(iChan), p(iChan)] = ttest(FICminFC, 0, 0.05 ); % test each channel separately
+        [h(iChan), p(iChan)] = ttest_wrapper(FICminFC, 0, 0.05 ); % test each channel separately
     end
 end
  
@@ -143,7 +143,7 @@ FICminFC = zeros(1,10);
 for iChan = 1:151
     for isub = 1:10
         FICminFC(isub) = mean(allsubjFIC{isub}.avg(iChan,timesel_FIC)) - mean(allsubjFC{isub}.avg(iChan,timesel_FC));
-        [h(iChan), p(iChan)] = ttest(FICminFC, 0, 0.05/151); % test each channel separately
+        [h(iChan), p(iChan)] = ttest_wrapper(FICminFC, 0, 0.05/151); % test each channel separately
     end
 end
 
@@ -289,3 +289,15 @@ end
 if failed
   error('ft_clusterplot fails cause p was too high');
 end
+
+
+function [h,p,ci,stats]=ttest_wrapper(x,y,alpha)
+% helper functions for ttest
+% - old Matlab, with syntax:                   ttest(x,y,alpha,tail,dim)
+% - new Matlab and GNU Octave, with syntax:    ttest(x,y,'alpha',alpha,...)
+
+    if nargin(ttest)>0
+        [h,p,ci,stats]=ttest(x,y,alpha);
+    else
+        [h,p,ci,stats]=ttest(x,y,'alpha',alpha);
+    end
