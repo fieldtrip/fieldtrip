@@ -363,23 +363,23 @@ if ispccdata
   supdipselcell  = cell(Ndipole,1);
   supchanselcell = cell(Ndipole,1);
   
-  for diplop = 1:Ndipole
-    dipsel     = find(strcmp(csdlabel{diplop}, 'scandip'));
-    refchansel = find(strcmp(csdlabel{diplop}, 'refchan'));
-    refdipsel  = find(strcmp(csdlabel{diplop}, 'refdip'));
-    supchansel = find(strcmp(csdlabel{diplop}, 'supchan'));
-    supdipsel  = find(strcmp(csdlabel{diplop}, 'supdip'));
+  for i = insideindx
+    dipsel     = find(strcmp(csdlabel{i}, 'scandip'));
+    refchansel = find(strcmp(csdlabel{i}, 'refchan'));
+    refdipsel  = find(strcmp(csdlabel{i}, 'refdip'));
+    supchansel = find(strcmp(csdlabel{i}, 'supchan'));
+    supdipsel  = find(strcmp(csdlabel{i}, 'supdip'));
     
     hasrefdip  = ~isempty(refdipsel)  && hasrefdip; %NOTE: it has to be true for all dipoles!
     hasrefchan = ~isempty(refchansel) && hasrefchan;
     hassupdip  = ~isempty(supdipsel)  && hassupdip;
     hassupchan = ~isempty(supchansel) && hassupchan;
     
-    dipselcell{diplop}     = dipsel;
-    refdipselcell{diplop}  = refdipsel;
-    refchanselcell{diplop} = refchansel;
-    supdipselcell{diplop}  = supdipsel;
-    supchanselcell{diplop} = supchansel;
+    dipselcell{i}     = dipsel;
+    refdipselcell{i}  = refdipsel;
+    refchanselcell{i} = refchansel;
+    supdipselcell{i}  = supdipsel;
+    supchanselcell{i} = supchansel;
   end
   
   if keeptrials
@@ -453,18 +453,18 @@ if ispccdata
     
     % initialize the variables
     source.avg.pow           = nan(Ndipole, 1);
-    if ~isempty(refdipsel),  source.avg.refdippow     = nan(Ndipole, 1); end
-    if ~isempty(refchansel), source.avg.refchanpow    = nan(Ndipole, 1); end
-    if ~isempty(supdipsel),  source.avg.supdippow     = nan(Ndipole, 1); end
-    if ~isempty(supchansel), source.avg.supchanpow    = nan(Ndipole, 1); end
+    if hasrefdip,  source.avg.refdippow     = nan(Ndipole, 1); end
+    if hasrefchan, source.avg.refchanpow    = nan(Ndipole, 1); end
+    if hassupdip,  source.avg.supdippow     = nan(Ndipole, 1); end
+    if hassupchan, source.avg.supchanpow    = nan(Ndipole, 1); end
     if isnoise
       source.avg.noise         = nan(Ndipole, 1);
-      if ~isempty(refdipsel),  source.avg.refdipnoise     = nan(Ndipole, 1); end
-      if ~isempty(refchansel), source.avg.refchannoise    = nan(Ndipole, 1); end
-      if ~isempty(supdipsel),  source.avg.supdipnoise     = nan(Ndipole, 1); end
-      if ~isempty(supchansel), source.avg.supchannoise    = nan(Ndipole, 1); end
+      if hasrefdip,  source.avg.refdipnoise     = nan(Ndipole, 1); end
+      if hasrefchan, source.avg.refchannoise    = nan(Ndipole, 1); end
+      if hassupdip,  source.avg.supdipnoise     = nan(Ndipole, 1); end
+      if hassupchan, source.avg.supchannoise    = nan(Ndipole, 1); end
     end % if isnoise
-    if ~isempty(refsel),       source.avg.coh           = nan(Ndipole, 1); end
+    if hasrefdip||hasrefchan, source.avg.coh    = nan(Ndipole, 1); end
     if strcmp(cfg.eta, 'yes'),
       source.avg.eta           = nan(Ndipole, 1);
       source.avg.ori             = cell(1, Ndipole);
@@ -479,6 +479,8 @@ if ispccdata
     
     for i=insideindx
       dipsel = dipselcell{i};
+			refsel = [refchanselcell{i} refdipselcell{i}];
+			
       % compute the power of each source component
       if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1,
         source.avg.pow(i) = powmethodfun(source.avg.csd{i}(dipselcell{i},dipselcell{i}), 1);
@@ -486,10 +488,10 @@ if ispccdata
         source.avg.pow(i) = powmethodfun(source.avg.csd{i}(dipselcell{i},dipselcell{i}));
       end
       
-      if ~isempty(refdipsel),  source.avg.refdippow(i)  = powmethodfun(source.avg.csd{i}(refdipsel,refdipsel));   end
-      if ~isempty(supdipsel),  source.avg.supdippow(i)  = powmethodfun(source.avg.csd{i}(supdipsel,supdipsel));   end
-      if ~isempty(refchansel), source.avg.refchanpow(i) = powmethodfun(source.avg.csd{i}(refchansel,refchansel)); end
-      if ~isempty(supchansel), source.avg.supchanpow(i) = powmethodfun(source.avg.csd{i}(supchansel,supchansel)); end
+      if hasrefdip,  source.avg.refdippow(i)  = powmethodfun(source.avg.csd{i}(refdipsel,refdipsel));   end
+      if hassupdip,  source.avg.supdippow(i)  = powmethodfun(source.avg.csd{i}(supdipsel,supdipsel));   end
+      if hasrefchan, source.avg.refchanpow(i) = powmethodfun(source.avg.csd{i}(refchansel,refchansel)); end
+      if hassupchan, source.avg.supchanpow(i) = powmethodfun(source.avg.csd{i}(supchansel,supchansel)); end
       if isnoise
         % compute the power of the noise projected on each source component
         if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1,
@@ -497,10 +499,10 @@ if ispccdata
         else
           source.avg.noise(i) = powmethodfun(source.avg.noisecsd{i}(dipselcell{i},dipselcell{i}));
         end
-        if ~isempty(refdipsel),  source.avg.refdipnoise(i)  = powmethodfun(source.avg.noisecsd{i}(refdipsel,refdipsel));   end
-        if ~isempty(supdipsel),  source.avg.supdipnoise(i)  = powmethodfun(source.avg.noisecsd{i}(supdipsel,supdipsel));   end
-        if ~isempty(refchansel), source.avg.refchannoise(i) = powmethodfun(source.avg.noisecsd{i}(refchansel,refchansel)); end
-        if ~isempty(supchansel), source.avg.supchannoise(i) = powmethodfun(source.avg.noisecsd{i}(supchansel,supchansel)); end
+        if hasrefdip,  source.avg.refdipnoise(i)  = powmethodfun(source.avg.noisecsd{i}(refdipsel,refdipsel));   end
+        if hassupdip,  source.avg.supdipnoise(i)  = powmethodfun(source.avg.noisecsd{i}(supdipsel,supdipsel));   end
+        if hasrefchan, source.avg.refchannoise(i) = powmethodfun(source.avg.noisecsd{i}(refchansel,refchansel)); end
+        if hassupchan, source.avg.supchannoise(i) = powmethodfun(source.avg.noisecsd{i}(supchansel,supchansel)); end
       end % if isnoise
       
       if ~isempty(refsel)

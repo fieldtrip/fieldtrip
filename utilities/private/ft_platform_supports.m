@@ -14,11 +14,14 @@ function tf = ft_platform_supports(what,varargin)
 %   'exists-in-private-directory'   exists(...) will look in the /private
 %                                   subdirectory to see if a file exists
 %   'onCleanup'                     onCleanup(...)
+%   'alim'                          alim(...)
 %   'int32_logical_operations'      bitand(a,b) with a, b of type int32
 %   'graphics_objects'              graphics sysem is object-oriented
 %   'libmx_c_interface'             libmx is supported through mex in the
 %                                   C-language (recent Matlab versions only
 %                                   support C++)
+%   'stats'                         all statistical functions in
+%                                   FieldTrip's external/stats directory
 %   'program_invocation_name'       program_invocation_name() (GNU Octave)
 %   'singleCompThread'              start Matlab with -singleCompThread
 %   'nosplash'                                        -nosplash
@@ -30,6 +33,11 @@ function tf = ft_platform_supports(what,varargin)
 %   'rng'                           rng(...)
 %   'rand-state'                    rand('state')
 %   'urlread-timeout'               urlread(..., 'Timeout', t)
+%   'griddata-vector-input'         griddata(...,...,...,a,b) with a and b
+%                                   vectors
+%   'griddata-v4'                   griddata(...,...,...,...,...,'v4'),
+%                                   that is v4 interpolation support
+%   'uimenu'                        uimenu(...)
 
 if ~ischar(what)
   error('first argument must be a string');
@@ -47,6 +55,9 @@ switch what
     
   case 'onCleanup'
     tf = is_octave() || matlabversion(7.8, Inf);
+
+  case 'alim'
+    tf = is_matlab();
     
   case 'int32_logical_operations'
     % earlier version of Matlab don't support bitand (and similar)
@@ -62,6 +73,18 @@ switch what
     % removed after 2013b
     tf = matlabversion(-Inf, '2013b');
     
+  case 'stats'
+    root_dir=fileparts(which('ft_defaults'));
+    external_stats_dir=fullfile(root_dir,'external','stats');
+
+    % these files are only used by other functions in the external/stats
+    % directory
+    exclude_mfiles={'common_size.m',...
+                    'iscomplex.m',...
+                    'lgamma.m'};
+
+    tf = has_all_functions_in_dir(external_stats_dir,exclude_mfiles);
+
   case 'program_invocation_name'
     % Octave supports program_invocation_name, which returns the path
     % of the binary that was run to start Octave
@@ -96,8 +119,17 @@ switch what
     tf = is_octave();
     
   case 'urlread-timeout'
-    tf = matlabversion('2012b',Inf);
+    tf = is_matlab() && matlabversion('2012b',Inf);
+
+  case 'griddata-vector-input'
+    tf = is_matlab();
+
+  case 'griddata-v4'
+    tf = is_matlab() && matlabversion('2009a',Inf);
     
+  case 'uimenu'
+    tf = is_matlab();
+
   otherwise
     error('unsupported value for first argument: %s', what);
     
@@ -123,6 +155,28 @@ if isempty(cached_tf)
 end
 
 tf = cached_tf;
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tf = has_all_functions_in_dir(in_dir, exclude_mfiles)
+% returns true if all functions in in_dir are already provided by the
+% platform
+  m_files=dir(fullfile(in_dir,'*.m'));
+  n=numel(m_files);
+
+  for k=1:n
+    m_filename=m_files(k).name;
+    if isempty(which(m_filename)) && ...
+                isempty(strmatch(m_filename,exclude_mfiles))
+      tf=false;
+      return;
+    end
+  end
+
+  tf=true;
+
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
