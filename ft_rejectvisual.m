@@ -1,6 +1,5 @@
 function [data] = ft_rejectvisual(cfg, data)
 
-% Adding an edit to test git
 % FT_REJECTVISUAL shows the preprocessed data in all channels and/or trials to
 % allow the user to make a visual selection of the data that should be
 % rejected. The data can be displayed in a "summary" mode, in which case
@@ -21,9 +20,10 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     see FT_CHANNELSELECTION for details
 %   cfg.keepchannel = string, determines how to deal with channels that are
 %                     not selected, can be
-%                     'no'     completely remove deselected channels from the data (default)
-%                     'yes'    keep deselected channels in the output data
-%                     'nan'    fill the channels that are deselected with NaNs
+%                     'no'          completely remove deselected channels from the data (default)
+%                     'yes'         keep deselected channels in the output data
+%                     'nan'         fill the channels that are deselected with NaNs
+%                     'neighbours'  repair deselected channels using ft_channelrepair
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrial   = string, determines how to deal with trials that are
 %                     not selected, can be
@@ -310,7 +310,21 @@ if ~all(chansel)
       for i=1:length(data.trial)
         data.trial{i}(~chansel,:) = nan;
       end
-      
+    case 'neighbours'
+      cfg_chrep = [];
+      cfg_chrep.badchannel = data.label(~chansel);
+      cfg_chrep.neighbours = cfg.neighbours;
+      if isfield(cfg,'grad')
+          cfg_chrep.grad = cfg.grad;
+      end
+      cfg_chrep.trials = 'all';
+      data = ft_channelrepair(cfg_chrep,data);
+
+      if ~isfield(cfg,'badchan')
+        cfg.badchan = cfg_chrep.badchannel;
+      else
+        cfg.badchan = [cfg.badchan cfg_chrep.badchannel];
+      end
     otherwise
       error('invalid specification of cfg.keepchannel')
   end % case
