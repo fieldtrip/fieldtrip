@@ -1,11 +1,12 @@
 function [source] = estimate_fwhm1(source, removecenter)
 
-% ESTIMATE_FWHM1(SOURCE, THRESHOLD, CFALL, REMOVECENTER)
+% ESTIMATE_FWHM1(SOURCE, REMOVECENTER)
 %
 % This function computes the fwhm of the spatial filters, according to
 % Barnes et al 2003. the input source-structure should contain the filters
-% The fwhm-volume is appended to the output source-structure.
-%
+% The fwhm-volume is appended to the output source-structure. It is assumed
+% that the dipole positions are defined on a regularly spaced 3D grid.
+% 
 % This function can only deal with scalar filters.
 
 
