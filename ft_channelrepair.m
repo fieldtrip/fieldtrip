@@ -359,13 +359,7 @@ exfields = setdiff(datafields,interpfields);
 for f = 1:length(exfields)
     interp.(exfields{f}) = data.(exfields{f});
 end
-% 
-% if isfield(data, 'sampleinfo')
-%   interp.sampleinfo = data.sampleinfo;
-% end
-% if isfield(data, 'trialinfo')
-%   interp.trialinfo = data.trialinfo;
-% end
+
 if iseeg
   interp.elec  = sens;
 elseif ismeg
