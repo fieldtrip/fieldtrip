@@ -222,7 +222,7 @@ cfg.(cfg.method).feedback      = ft_getopt(cfg.(cfg.method), 'feedback',      't
 cfg.(cfg.method).lambda        = ft_getopt(cfg.(cfg.method), 'lambda',        []);
 cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
 cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
-cfg.cfg.method).reducerank     = ft_getopt(cfg.(cfg.method), 'reducerank',    []); % the default for this is handled below
+cfg.(cfg.method).reducerank     = ft_getopt(cfg.(cfg.method), 'reducerank',    []); % the default for this is handled below
 
 convertcomp = false;
 if iscomp && (strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
