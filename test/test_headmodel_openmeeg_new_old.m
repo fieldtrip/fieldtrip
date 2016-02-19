@@ -41,13 +41,13 @@ for i=1:size(optarg,1)
   vol{1} = ft_headmodel_openmeeg(geom.bnd,arg{:});
 
   % old way:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'openmeeg';
   vol{2} = ft_prepare_bemmodel(tmpcfg,geom);
   vol{2} = rmfield(vol{2},'unit');
   
   % new way - high level:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'openmeeg';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd);
   vol{3} = rmfield(vol{3},'unit');

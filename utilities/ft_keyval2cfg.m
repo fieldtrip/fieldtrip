@@ -1,12 +1,14 @@
-function [cfg] = keyval2cfg(varargin)
+function [cfg] = ft_keyval2cfg(varargin)
 
-% KEYVAL2CFG converts between a structure and a cell-array with key-value
+% FT_KEYVAL2CFG converts between a structure and a cell-array with key-value
 % pairs which can be used for optional input arguments. 
 % 
 % Use as
-%   [cfg] = keyval2cfg(varargin)
+%   [cfg] = ft_keyval2cfg(varargin)
+%
+% See also FT_CFG2KEYVAL, FT_GETOPT
 
-% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2006-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
