@@ -8,7 +8,7 @@ function [argout] = mxDeserialize(argin)
 % Copyright (C) 2005, Brad Phelan         http://xtargets.com
 % Copyright (C) 2007, Robert Oostenveld   http://www.fcdonders.ru.nl
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

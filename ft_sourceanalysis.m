@@ -124,7 +124,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 
 % Copyright (c) 2003-2008, Robert Oostenveld, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

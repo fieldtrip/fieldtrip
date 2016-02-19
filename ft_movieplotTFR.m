@@ -46,7 +46,7 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 % Copyright (c) 2009, Ingrid Nieuwenhuis
 % Copyright (c) 2011, jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
-% this file is part of fieldtrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% this file is part of fieldtrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    fieldtrip is free software: you can redistribute it and/or modify

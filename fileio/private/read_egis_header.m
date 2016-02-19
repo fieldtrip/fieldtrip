@@ -18,7 +18,7 @@ function [fhdr,chdr,ename,cnames,fcom,ftext] = read_egis_header(filename)
 %
 % Modified from EGI's EGI Toolbox with permission 2007-06-28 Joseph Dien
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

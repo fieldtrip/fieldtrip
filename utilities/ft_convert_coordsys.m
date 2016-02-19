@@ -36,7 +36,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 
 % Copyright (C) 2005-2011, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
