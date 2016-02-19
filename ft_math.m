@@ -149,7 +149,7 @@ tmpcfg.parameter = cfg.parameter;
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
-
+% restore the user-specified parameter option
 cfg.parameter = tmpcfg.parameter;
 
 for p = 1:length(cfg.parameter)

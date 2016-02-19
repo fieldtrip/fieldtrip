@@ -8,7 +8,7 @@
 %
 % See also FT_TRACKUSAGE
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -44,6 +44,11 @@ if nargin==0
   msg.stack       = stack;
   error(msg);
 end % if nargin
+
+% convert automatically from cell-array to structure
+if iscell(cfg)
+  cfg = ft_keyval2cfg(cfg);
+end
 
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
 % merge the default options into the configuration, except the preamble field which is used for passing arguments

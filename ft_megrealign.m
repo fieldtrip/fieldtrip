@@ -161,7 +161,6 @@ data = ft_selectdata(tmpcfg, data);
 
 Ntrials = length(data.trial);
 
-
 % cfg.channel = ft_channelselection(cfg.channel, data.label);
 % dataindx = match_str(data.label, cfg.channel);
 % restindx = setdiff(1:length(data.label),dataindx);

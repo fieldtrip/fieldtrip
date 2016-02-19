@@ -433,14 +433,14 @@ for i=1:Ndata
   xidmax(i,1) = nearest(varargin{i}.(xparam), xmax);
 end
 
-if strcmp('freq',yparam) && strcmp('freq',dtype)
+if strcmp('freq', yparam) && strcmp('freq', dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgoverfreq = 'yes';
   tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
   % restore the provenance information 
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
-elseif strcmp('time',yparam) && strcmp('freq',dtype)
+elseif strcmp('time', yparam) && strcmp('freq', dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgovertime = 'yes';
   tmpcfg.latency     = cf.latency;%cfg.zlim;

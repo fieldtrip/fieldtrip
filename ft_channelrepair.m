@@ -15,7 +15,7 @@ function [data] = ft_channelrepair(cfg, data)
 %   cfg.method         = 'nearest', 'average', 'spline' or 'slap' (default='nearest')
 %   cfg.badchannel     = cell-array, see FT_CHANNELSELECTION for details
 %   cfg.missingchannel = cell-array, see FT_CHANNELSELECTION for details
-%   cfg.neighbours     = neighbourhoodstructure, see also FT_PREPARE_NEIGHBOURS
+%   cfg.neighbours     = neighbourhood structure, see also FT_PREPARE_NEIGHBOURS
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.lambda         = regularisation parameter (default = 1e-5, not for method 'distance')
 %   cfg.order          = order of the polynomial interpolation (default = 4, not for method 'distance')

@@ -146,6 +146,7 @@ if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
   tmpcfg = keepfields(cfg, {'downsample'});
   mri = ft_volumedownsample(tmpcfg, mri);
+  % restore the provenance information
   [cfg, mri] = rollback_provenance(cfg, mri);
 end
 

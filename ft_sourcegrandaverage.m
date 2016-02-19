@@ -119,6 +119,7 @@ end
 % ensure a consistent selection of the data over all inputs
 tmpcfg = keepfields(cfg, {'parameter', 'trials', 'latency', 'frequency', 'foilim'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+% restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 % start with an empty output structure
