@@ -19,7 +19,7 @@ function [data] = ft_preprocessing(cfg, data)
 % specify
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
-%   cfg.padding      = length to which the trials are padded for filtering (default = 0)
+%   cfg.padding      = length (in seconds) to which the trials are padded for filtering (default = 0)
 %   cfg.padtype      = string, type of padding (default: 'data' padding or
 %                      'mirror', depending on feasibility)
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
