@@ -41,7 +41,7 @@ function [lp, voxels_in] = leadfield_openmeeg ( voxels, vol, sens, varargin )
 %
 % Copyright (C) 2013, Daniel D.E. Wong, Sarang S. Dalal
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

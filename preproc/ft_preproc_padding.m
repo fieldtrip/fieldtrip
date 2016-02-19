@@ -21,7 +21,7 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 
 % Copyright (C) 2012, Jörn M. Horschig, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

@@ -51,7 +51,7 @@ function [data] = ft_resampledata(cfg, data)
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
 % Copyright (C) 2004-2009, FC Donders Centre, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

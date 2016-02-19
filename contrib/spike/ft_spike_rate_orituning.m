@@ -28,7 +28,7 @@ function [Stat] = ft_spike_rate_orituning(cfg,varargin)
 
 % Copyright (C) 2010, Martin Vinck
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

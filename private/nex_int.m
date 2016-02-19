@@ -14,7 +14,7 @@ function [n, ts_left, ts_right] = nex_int(filename, varname)
 % original from Plexon, download from http://www.plexoninc.com (8/4/02)
 % modifications by Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
