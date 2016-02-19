@@ -21,7 +21,7 @@ function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
 %
 % Modified from EGI's EGI Toolbox with permission 2007-06-28 Joseph Dien
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

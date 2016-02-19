@@ -11,7 +11,7 @@ function [dat] = ft_fetch_data(data, varargin)
 % Copyright (C) 2009-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
 % Copyright (C) 2008, Esther Meeuwissen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

@@ -30,7 +30,7 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 
 % Copyright (C) 2012-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

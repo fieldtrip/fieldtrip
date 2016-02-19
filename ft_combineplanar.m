@@ -38,7 +38,7 @@ function [data] = ft_combineplanar(cfg, data)
 % Copyright (C) 2004, Ole Jensen
 % Copyright (C) 2004-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

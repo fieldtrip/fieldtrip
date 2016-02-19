@@ -46,7 +46,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 % Copyright (C) 2003-2006, Jens Schwarzbach
 % Copyright (C) 2013, Burkhard Maess
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
