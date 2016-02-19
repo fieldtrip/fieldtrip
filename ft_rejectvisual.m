@@ -18,12 +18,12 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'trial'    show the data per trial, all channels at once
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
 %                     see FT_CHANNELSELECTION for details
-%   cfg.keepchannel = string, determines how to deal with channels that are
-%                     not selected, can be
+%   cfg.keepchannel = string, determines how to deal with channels that are not selected, can be
 %                     'no'          completely remove deselected channels from the data (default)
 %                     'yes'         keep deselected channels in the output data
 %                     'nan'         fill the channels that are deselected with NaNs
-%                     'neighbours'  repair deselected channels using ft_channelrepair
+%                     'repair'      repair the deselected channels using FT_CHANNELREPAIR
+%   cfg.neighbours  = neighbourhood structure, see also FT_PREPARE_NEIGHBOURS (required for repairing channels)
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrial   = string, determines how to deal with trials that are
 %                     not selected, can be
@@ -91,7 +91,7 @@ function [data] = ft_rejectvisual(cfg, data)
 % cfg.feedback
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2014, Robert Oostenveld
+% Copyright (C) 2006-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
@@ -166,6 +166,11 @@ cfg.viewmode    = ft_getopt(cfg, 'viewmode'   , 'remove');
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+
+% check required fields at the start, rather than further down in the code
+if strcmp(cfg.keepchannel, 'repair')
+  cfg = ft_checkconfig(cfg, 'required', 'neighbours');
+end
 
 % determine the duration of each trial
 for i=1:length(data.time)
@@ -310,29 +315,39 @@ if ~all(chansel)
       for i=1:length(data.trial)
         data.trial{i}(~chansel,:) = nan;
       end
-    case 'neighbours'
+      
+    case 'repair'
       % show which channels are to be repaired
       removed = find(~chansel);
-      fprintf('the following channels were repaired using ft_channelrepair: ');
+      fprintf('the following channels were repaired using FT_CHANNELREPAIR: ');
       for i=1:(length(removed)-1)
         fprintf('%s, ', data.label{removed(i)});
       end
       fprintf('%s\n', data.label{removed(end)});
       
       % create cfg struct for call to ft_channelrepair
-      cfg_chrep = [];
-      cfg_chrep.badchannel = data.label(~chansel);
-      cfg_chrep.neighbours = cfg.neighbours;
-      if isfield(cfg,'grad')
-          cfg_chrep.grad = cfg.grad;
+      orgcfg = cfg;
+      tmpcfg = [];
+      tmpcfg.trials = 'all';
+      tmpcfg.badchannel = data.label(~chansel);
+      tmpcfg.neighbours = cfg.neighbours;
+      if isfield(cfg, 'grad')
+          tmpcfg.grad = cfg.grad;
       end
-      cfg_chrep.trials = 'all';
-      % repair bad channels
-      data = ft_channelrepair(cfg_chrep,data);
+      if isfield(cfg, 'elec')
+          tmpcfg.elec = cfg.elec;
+      end
+      % repair the channels that were selected as bad
+      data = ft_channelrepair(tmpcfg, data);
+      % restore the provenance information
+      [cfg, data] = rollback_provenance(cfg, data);
+      % restore the original trials parameter, it should not be 'all'
+      cfg = copyfields(orgcfg, cfg, {'trials'});
+
     otherwise
       error('invalid specification of cfg.keepchannel')
   end % case
-end
+end % if ~all(chansel)
 
 if ~all(trlsel)
   switch cfg.keeptrial
@@ -365,7 +380,7 @@ if ~all(trlsel)
     otherwise
       error('invalid specification of cfg.keeptrial')
   end % case
-end
+end % if ~all(trlsel)
 
 if isfield(data, 'sampleinfo')
   % construct the matrix with sample numbers prior to making the selection
@@ -384,6 +399,7 @@ end
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
+% restore the original channels and trials parameters
 cfg = copyfields(orgcfg, cfg, {'channel', 'trials'});
 
 % convert back to input type if necessary

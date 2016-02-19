@@ -297,6 +297,7 @@ elseif isfreq
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
+
   if hasrefchan, cfg.channel = match_str(data.label, tmpchannel); end
 	
   % copy the descriptive fields to the output

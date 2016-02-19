@@ -7,8 +7,8 @@ function [cfg, varargout] = rollback_provenance(cfg, varargin)
 % Some examples for use
 %
 %   tmpcfg            = [];
-%   tmpcfg.downsample = cfg.downsample;  % copy over
-%   tmpcfg.smooth     = 'no';            % override the default
+%   tmpcfg.downsample = cfg.downsample;  % simply copy this option
+%   tmpcfg.smooth     = 'no';            % override the default for this option
 %   mri = ft_volumedownsample(tmpcfg, mri);
 %   [cfg, mri] = rollback_provenance(cfg, mri);
 %
