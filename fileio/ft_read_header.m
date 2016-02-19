@@ -79,7 +79,7 @@ function [hdr] = ft_read_header(filename, varargin)
 
 % Copyright (C) 2003-2015 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

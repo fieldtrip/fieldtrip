@@ -119,7 +119,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % Copyright (C) 2011-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Johanna Zumer
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
