@@ -20,9 +20,10 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     see FT_CHANNELSELECTION for details
 %   cfg.keepchannel = string, determines how to deal with channels that are
 %                     not selected, can be
-%                     'no'     completely remove deselected channels from the data (default)
-%                     'yes'    keep deselected channels in the output data
-%                     'nan'    fill the channels that are deselected with NaNs
+%                     'no'          completely remove deselected channels from the data (default)
+%                     'yes'         keep deselected channels in the output data
+%                     'nan'         fill the channels that are deselected with NaNs
+%                     'neighbours'  repair deselected channels using ft_channelrepair
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrial   = string, determines how to deal with trials that are
 %                     not selected, can be
@@ -309,7 +310,25 @@ if ~all(chansel)
       for i=1:length(data.trial)
         data.trial{i}(~chansel,:) = nan;
       end
+    case 'neighbours'
+      % show which channels are to be repaired
+      removed = find(~chansel);
+      fprintf('the following channels were repaired using ft_channelrepair: ');
+      for i=1:(length(removed)-1)
+        fprintf('%s, ', data.label{removed(i)});
+      end
+      fprintf('%s\n', data.label{removed(end)});
       
+      % create cfg struct for call to ft_channelrepair
+      cfg_chrep = [];
+      cfg_chrep.badchannel = data.label(~chansel);
+      cfg_chrep.neighbours = cfg.neighbours;
+      if isfield(cfg,'grad')
+          cfg_chrep.grad = cfg.grad;
+      end
+      cfg_chrep.trials = 'all';
+      % repair bad channels
+      data = ft_channelrepair(cfg_chrep,data);
     otherwise
       error('invalid specification of cfg.keepchannel')
   end % case
