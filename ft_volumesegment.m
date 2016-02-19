@@ -271,6 +271,7 @@ if cfg.downsample~=1
   tmpcfg = keepfields(cfg, {'downsample'});
   tmpcfg.smooth = 'no'; % smoothing is done in ft_volumesegment itself
   mri = ft_volumedownsample(tmpcfg, mri);
+  % restore the provenance information
   [cfg, mri] = rollback_provenance(cfg, mri);
 end
 

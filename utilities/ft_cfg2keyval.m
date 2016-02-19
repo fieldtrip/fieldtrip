@@ -1,14 +1,14 @@
 function [optarg] = ft_cfg2keyval(cfg)
 
-% CFG2KEYVAL converts between a structure and a cell-array with key-value
+% FT_CFG2KEYVAL converts between a structure and a cell-array with key-value
 % pairs which can be used for optional input arguments.
 %
 % Use as
 %   optarg = ft_cfg2keyval(cfg)
 %
-% See also FT_GETOPT
+% See also FT_KEYVAL2CFG, FT_GETOPT
 
-% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2006-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.

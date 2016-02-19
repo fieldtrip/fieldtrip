@@ -193,8 +193,10 @@ if ~isUnstructuredAna && cfg.downsample~=1
   orgcfg.parameter = cfg.parameter;
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
+  % restore the provenance information
   [cfg, anatomical] = rollback_provenance(cfg, anatomical);
-  cfg.parameter = orgcfg.parameter; % restore the original functional parameter, it should not be anatomy
+  % restore the original parameter, it should not be 'anatomy'
+  cfg.parameter = orgcfg.parameter;
 end
 
 % collect the functional volumes that should be converted
