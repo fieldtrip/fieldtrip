@@ -200,6 +200,7 @@ if ~isempty(allowed)
     'warning'
     'debug'
     'previous'
+    'progress'
     'outputfilepresent'
     });
   fieldsused = fieldnames(cfg);
