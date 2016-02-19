@@ -351,12 +351,15 @@ else
 end
 
 % copy the additional fields over to the newly interpolated data
-if isfield(data, 'sampleinfo')
-  interp.sampleinfo = data.sampleinfo;
+datafields = fieldnames(data);
+interpfields = fieldnames(interp);
+
+exfields = setdiff(datafields,interpfields);
+
+for f = 1:length(exfields)
+    interp.(exfields{f}) = data.(exfields{f});
 end
-if isfield(data, 'trialinfo')
-  interp.trialinfo = data.trialinfo;
-end
+
 if iseeg
   interp.elec  = sens;
 elseif ismeg
