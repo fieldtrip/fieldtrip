@@ -869,7 +869,11 @@ switch fileformat
     % FIXME do transform
     % FIXME remove vertices that are not in a triangle
     % FIXME add unit
-    
+  
+	case 'besa_sfp'
+		[lab, pos] = read_besa_sfp(filename, 0);
+		shape.pos = pos;
+		
   case 'asa_elc'
     elec = ft_read_sens(filename);
     

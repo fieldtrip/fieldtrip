@@ -26,6 +26,15 @@ pos = [tmp{2:4}];
 
 if uniqueonly
 	[ulab,ix,iy] = unique(lab);
-
+  n = zeros(max(iy),1);
+	for k = 1:max(iy)
+		n(k) = sum(iy==k);
+	end
+	sel = iy(ismember(iy,find(n==1))); % selects the labels that occur once
+	tmp = ulab(sel);
+	
+	[i1,i2] = match_str(lab, tmp);
+	lab = lab(i1);
+	pos = pos(i1,:);
 end		
  
