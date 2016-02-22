@@ -5,14 +5,13 @@ function [varargout] = ft_qualitycheck(cfg)
 %
 % This function segments the data into 10-second pieces and performs the
 % following analyses:
-% 1) reads the properties of the dataset
-% 2) computes the headpositions and distance covered from recording onset
-%    (CTF only)
-% 3) computes the mean, max, min, and range of the signal amplitude
-% 4) detects trigger events
-% 5) detects jump artifacts
-% 6) computes the powerspectrum
-% 7) estimates the low-frequency (<2 Hz) and line noise (~50 Hz)
+%  1) reads the properties of the dataset
+%  2) computes the headpositions and distance covered from recording onset (CTF only)
+%  3) computes the mean, max, min, and range of the signal amplitude
+%  4) detects trigger events
+%  5) detects jump artifacts
+%  6) computes the powerspectrum
+%  7) estimates the low-frequency (<2 Hz) and line noise (~50 Hz)
 %
 % Use as
 %   [info, timelock, freq, summary, headpos] = ft_qualitycheck(cfg)

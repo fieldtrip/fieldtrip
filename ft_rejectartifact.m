@@ -105,6 +105,9 @@ if ft_abort
   return
 end
 
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
 % ft_checkdata is done further down
 
 % check if the input cfg is valid for this function
@@ -197,8 +200,8 @@ hasdata = exist('data', 'var');
 if hasdata
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
-  if isfield(data, 'sampleinfo')
 
+  if isfield(data, 'sampleinfo')
     trl = zeros(numel(data.trial), 3);
     trl(:,[1 2]) = data.sampleinfo;
 
@@ -215,6 +218,7 @@ if hasdata
   else
     trl = [];
   end
+  
 elseif isfield(cfg, 'trl')
   trl = cfg.trl;
 end
@@ -307,14 +311,14 @@ elseif length(trialall)<length(rejectall)
 end
 
 % make header, needed only for sampling frequency
-if nargin ==1
+if hasdata
+  hdr = ft_fetch_header(data);
+else
   if isfield(cfg, 'headerformat')
     hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   else
     hdr = ft_read_header(cfg.headerfile);
   end
-elseif nargin ==2
-  hdr = ft_fetch_header(data);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
