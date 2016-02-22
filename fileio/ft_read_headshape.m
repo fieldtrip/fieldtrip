@@ -700,6 +700,11 @@ switch fileformat
     shape.pos = pos;
     shape.tri = tri;
     
+  case 'obj'
+      obj = read_wobj(filename);
+      shape.pos = objmesh.
+      shape.tri = 
+    
   case 'vtk'
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
