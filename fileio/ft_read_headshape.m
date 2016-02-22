@@ -701,9 +701,10 @@ switch fileformat
     shape.tri = tri;
     
   case 'obj'
+      % Implemented for structure.io .obj thus far
       obj = read_wobj(filename);
-      shape.pos = objmesh.
-      shape.tri = 
+      shape.pos = obj.vertices;
+      shape.tri = obj.objects(2).data.vertices;
     
   case 'vtk'
     [pos, tri] = read_vtk(filename);
