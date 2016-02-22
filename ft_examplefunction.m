@@ -52,8 +52,8 @@ ft_preamble loadvar    datain % this reads the input data in case the user speci
 ft_preamble provenance datain % this records the time and memory usage at the beginning of the function
 ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
   return
 end

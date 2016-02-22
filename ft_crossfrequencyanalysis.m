@@ -59,8 +59,8 @@ ft_preamble loadvar freqlow freqhigh
 ft_preamble provenance freqlow freqhi
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
   return
 end

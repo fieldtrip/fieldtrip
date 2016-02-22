@@ -62,8 +62,8 @@ ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 

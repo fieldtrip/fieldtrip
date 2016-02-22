@@ -131,8 +131,8 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
