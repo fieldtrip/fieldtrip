@@ -41,7 +41,10 @@ function [data] = ft_denoise_synthetic(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -145,4 +148,3 @@ ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
-

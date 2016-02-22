@@ -83,11 +83,14 @@ function [cfg] = ft_rejectartifact(cfg, data)
 %
 % $Id$
 
-% FIXME this function contains a lot of lines of code that pertain to backward 
-% compatibility support that dates back to 2004/2005. It would be good to strip 
+% FIXME this function contains a lot of lines of code that pertain to backward
+% compatibility support that dates back to 2004/2005. It would be good to strip
 % that code and only keep the relevant parts
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -195,17 +198,17 @@ if hasdata
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   if isfield(data, 'sampleinfo')
-    
+
     trl = zeros(numel(data.trial), 3);
     trl(:,[1 2]) = data.sampleinfo;
-    
+
     % recreate offset vector (artifact functions depend on this)
     % TODO: the artifact rejection stuff should be rewritten to avoid
     % needing this workaround
     for ntrl = 1:numel(data.trial)
       trl(ntrl,3) = time2offset(data.time{ntrl}, data.fsample);
     end
-    
+
     if isfield(data, 'trialinfo')
       trl(:, 3+(1:size(data.trialinfo,2))) = data.trialinfo;
     end
@@ -218,18 +221,18 @@ end
 
 % ensure the crittoilim input argument is valid
 if ~isempty(cfg.artfctdef.crittoilim)
-  
+
   if (size(cfg.artfctdef.crittoilim,2) ~= 2 ...
     || (size(cfg.artfctdef.crittoilim,1) ~= size(trl,1) ...
         && size(cfg.artfctdef.crittoilim,1) ~= 1))
-    error('if specified, cfg.artfctdef.crittoilim should be a 1x2 or Nx2 vector');  
+    error('if specified, cfg.artfctdef.crittoilim should be a 1x2 or Nx2 vector');
   end
-  
+
   % if specified as 1x2 vector, expand into Nx2
   if (size(cfg.artfctdef.crittoilim,1) == 1)
     cfg.artfctdef.crittoilim = repmat(cfg.artfctdef.crittoilim,size(trl,1),1);
   end
-  
+
   checkCritToi = 1; % flag for convenience
 else
   checkCritToi = 0;
@@ -326,7 +329,7 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
   for i=1:size(trl,1)
     time{i} = offset2time(trl(i,3), hdr.Fs, trl(i,2)-trl(i,1)+1);
   end
-  
+
   figure
   title('linear display of the continuous data')
   xlabel('sample number');
@@ -348,7 +351,7 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
   smpend = dum(end) + hdr.Fs;
   axis([smpbeg smpend 0 1]);
   legend({'defined trials', cfg.artfctdef.type{:}});
-  
+
   figure
   title('individual trials after alignment')
   xlabel('time (s)');
@@ -402,15 +405,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'complete') || strcmp(cfg.artfctdef.reject, 'nan')
   trialok = [];
-  
+
   count_complete_reject = 0;
   count_partial_reject  = 0;
   count_nan = 0;
   count_outsidecrit = 0;
-  
+
   trlRemovedInd = [];
   trlPartiallyRemovedInd = [];
-  
+
   for trial=1:size(trl,1)
     % cut out the part of the rejection-axis corresponding with this trial
     rejecttrial = rejectall(trl(trial,1):trl(trial,2));
@@ -422,7 +425,7 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       count_complete_reject = count_complete_reject + 1;
       trlRemovedInd = [trlRemovedInd trial];
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'complete')
-      
+
       % some part of the trial is bad, check if within crittoilim?
       if (checkCritToi)
         critInd = (data.time{trial} >= cfg.artfctdef.crittoilim(trial,1) ...
@@ -440,7 +443,7 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
         trlRemovedInd = [trlRemovedInd trial];
         continue;
       end
-      
+
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'partial')
       % some part of the trial is bad, reject only the bad part
       trialnew = [];
@@ -459,7 +462,7 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       count_partial_reject = count_partial_reject + 1;
       trialok = [trialok; trialnew];
       trlPartiallyRemovedInd = [trlPartiallyRemovedInd trial];
-      
+
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'nan')
       % Some part of the trial is bad, replace bad part with nans
       data.trial{trial}(:,rejecttrial) = nan;
@@ -467,7 +470,7 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
       trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
     end
   end
-  
+
   fprintf('rejected  %3d trials completely\n', count_complete_reject);
   fprintf('rejected  %3d trials partially\n', count_partial_reject);
   fprintf('filled parts of  %3d trials with nans\n', count_nan);
@@ -477,7 +480,7 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
   fprintf('resulting %3d trials\n', size(trialok,1));
   cfg.trlold = trl;      % return the original trial definition in the configuration
   cfg.trl    = trialok;  % return the cleaned trial definition in the configuration
-  
+
   if strcmp(cfg.artfctdef.feedback, 'yes')
     fprintf('the following trials were completely removed: ');
     for k = trlRemovedInd
@@ -489,7 +492,7 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
     end
     fprintf('\n');
   end
-  
+
 else
   fprintf('not rejecting any data, only marking the artifacts\n');
 end

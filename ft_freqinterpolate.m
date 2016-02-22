@@ -41,7 +41,10 @@ function [freq] = ft_freqinterpolate(cfg, freq)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -70,7 +73,7 @@ for i = 1:size(cfg.foilim,1)
   % update the configuration
   cfg.foilim(i,1) = freq.freq(peakbeg);
   cfg.foilim(i,2) = freq.freq(peakend);
-  
+
   if strcmp(cfg.method, 'nan')
     switch freq.dimord
       case 'chan_freq'
@@ -84,10 +87,10 @@ for i = 1:size(cfg.foilim,1)
       otherwise
         error('unsupported dimord');
     end % switch
-    
+
   elseif strcmp(cfg.method, 'linear')
     error('not yet implemented');
-    
+
   else
     error('unsupported method');
   end

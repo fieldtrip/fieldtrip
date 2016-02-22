@@ -115,7 +115,10 @@ function [data] = ft_rejectvisual(cfg, data)
 % cfg.plotlayout = 'square' (default) or '1col', plotting every channel/trial under each other
 % cfg.viewmode   = 'remove', 'toggle' or 'hide', only applies to summary mode (default = 'remove')
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -263,7 +266,7 @@ switch cfg.method
       fprintf('showing the data per channel, all trials at once\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_channel(cfg, tmpdata);
-    
+
   case 'trial'
     if scaled
       fprintf('showing the scaled per trial, all channels at once\n');
@@ -271,7 +274,7 @@ switch cfg.method
       fprintf('showing the data per trial, all channels at once\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_trial(cfg, tmpdata);
-    
+
   case 'summary'
     if scaled
       fprintf('showing a summary of the scaled data for all channels and trials\n');
@@ -279,7 +282,7 @@ switch cfg.method
       fprintf('showing a summary of the data for all channels and trials\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_summary(cfg, tmpdata);
-    
+
   otherwise
     error('unsupported method %s', cfg.method);
 end % switch method
@@ -293,7 +296,7 @@ if ~all(chansel)
     case 'yes'
       % keep all channels, also when they are not selected
       fprintf('no channels were removed from the data\n');
-      
+
     case 'no'
       % show the user which channels are removed
       removed = find(~chansel);
@@ -302,7 +305,7 @@ if ~all(chansel)
         fprintf('%s, ', data.label{removed(i)});
       end
       fprintf('%s\n', data.label{removed(end)});
-      
+
     case 'nan'
       % show the user which channels are removed
       removed = find(~chansel);
@@ -315,7 +318,7 @@ if ~all(chansel)
       for i=1:length(data.trial)
         data.trial{i}(~chansel,:) = nan;
       end
-      
+
     case 'repair'
       % show which channels are to be repaired
       removed = find(~chansel);
@@ -324,7 +327,7 @@ if ~all(chansel)
         fprintf('%s, ', data.label{removed(i)});
       end
       fprintf('%s\n', data.label{removed(end)});
-      
+
       % create cfg struct for call to ft_channelrepair
       orgcfg = cfg;
       tmpcfg = [];
@@ -354,7 +357,7 @@ if ~all(trlsel)
     case 'yes'
       % keep all trials, also when they are not selected
       fprintf('no trials were removed from the data\n');
-      
+
     case 'no'
       % show the user which channels are removed
       removed = find(~trlsel);
@@ -363,7 +366,7 @@ if ~all(trlsel)
         fprintf('%d, ', removed(i));
       end
       fprintf('%d\n', removed(end));
-      
+
     case 'nan'
       % show the user which trials are removed
       removed = find(~trlsel);
@@ -376,7 +379,7 @@ if ~all(trlsel)
       for i=removed
         data.trial{i}(:,:) = nan;
       end
-      
+
     otherwise
       error('invalid specification of cfg.keeptrial')
   end % case

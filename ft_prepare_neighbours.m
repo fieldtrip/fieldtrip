@@ -19,7 +19,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   neighbours = ft_prepare_neighbours(cfg, data)
 %
 % The configuration can contain
-%   cfg.method        = 'distance', 'triangulation' or 'template' 
+%   cfg.method        = 'distance', 'triangulation' or 'template'
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance')
 %   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
@@ -65,7 +65,10 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -126,7 +129,7 @@ if strcmp(cfg.method, 'template')
   end
   % adjust filename
   if ~exist(cfg.template, 'file')
-    cfg.template = lower(cfg.template);  
+    cfg.template = lower(cfg.template);
   end
   % add necessary extensions
   if numel(cfg.template) < 4 || ~isequal(cfg.template(end-3:end), '.mat')
@@ -148,27 +151,27 @@ else
   else
     sens = ft_fetch_sens(cfg);
   end
-  
+
   if strcmp(ft_senstype(sens), 'neuromag306')
       warning('Neuromagr06 system detected - be aware of different sensor types, see http://fieldtrip.fcdonders.nl/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
   end
   chanpos = sens.chanpos;
   label   = sens.label;
-  
+
   if nargin > 1
     % remove channels that are not in data
     [dataidx sensidx] = match_str(data.label, label);
     chanpos = chanpos(sensidx, :);
     label   = label(sensidx);
   end
-  
+
   if ~strcmp(cfg.channel, 'all')
     desired = ft_channelselection(cfg.channel, label);
     [sensidx] = match_str(label, desired);
     chanpos = chanpos(sensidx, :);
     label   = label(sensidx);
   end
-  
+
   switch lower(cfg.method)
     case 'distance'
       % use a smart default for the distance
@@ -188,7 +191,7 @@ else
         end
         fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
       end
-      
+
       neighbours = compneighbstructfromgradelec(chanpos, label, cfg.neighbourdist);
     case {'triangulation', 'tri'} % the latter for reasons of simplicity
       if size(chanpos, 2)==2 || all(chanpos(:,3)==0)
@@ -234,7 +237,7 @@ desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, desired);
 
 neighb_idx = ismember(neighb_chans, desired);
 neighbours = neighbours(neighb_idx);
-  
+
 k = 0;
 for i=1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
@@ -243,7 +246,7 @@ for i=1:length(neighbours)
   % note however that in case of using a template, this function behaves
   % differently now (neighbourschans can still be channels not in
   % cfg.channel)
-  %else % only selected desired channels    
+  %else % only selected desired channels
   %  neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
   end
   k = k + length(neighbours(i).neighblabel);

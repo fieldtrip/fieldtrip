@@ -63,7 +63,10 @@ function [stat] = ft_sourcestatistics(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -236,4 +239,3 @@ ft_postamble previous   varargin
 ft_postamble provenance stat
 ft_postamble history    stat
 ft_postamble savevar    stat
-

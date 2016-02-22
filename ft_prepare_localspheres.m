@@ -27,7 +27,10 @@ function [headmodel, cfg] = ft_prepare_localspheres(cfg, mri)
 
 warning('FT_PREPARE_LOCALSPHERES is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''localspheres'' instead.')
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -43,7 +46,7 @@ if abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'}); 
+cfg = ft_checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'});
 
 % set the defaults
 if ~isfield(cfg, 'radius'),        cfg.radius = 8.5;        end
@@ -59,7 +62,7 @@ if ~isfield(cfg, 'headshape'),     cfg.headshape = [];      end
 hasmri = exist('mri', 'var'); % note that nargin will not work in case of cfg.inputfile
 if hasmri
   headshape = ft_prepare_mesh(cfg, mri);
-elseif isfield(cfg,'headshape') && nargin == 1 
+elseif isfield(cfg,'headshape') && nargin == 1
   if ischar(cfg.headshape)
     headshape = ft_read_headshape(cfg.headshape);
   else
@@ -119,13 +122,13 @@ for chan=1:Nchan
   coilsel = find(grad.tra(chan,:)~=0);
   allpnt  = grad.coilpos(coilsel, :);   % position of all coils belonging to this channel
   allori  = grad.coilori(coilsel, :);   % orientation of all coils belonging to this channel
-  
+
   if strcmp(cfg.feedback, 'yes')
     cla
     plot3(grad.coilpos(:,1), grad.coilpos(:,2), grad.coilpos(:,3), 'b.');   % all coils
     plot3(allpnt(:,1), allpnt(:,2), allpnt(:,3), 'r*');     % this channel in red
   end
-  
+
   % determine the average position and orientation of this channel
   thispnt = mean(allpnt,1);
   [u, s, v] = svd(allori);
@@ -134,13 +137,13 @@ for chan=1:Nchan
     % the orientation should be outwards pointing
     thisori = -thisori;
   end
-  
+
   % compute the distance from every coil along this channels orientation
   dist = zeros(size(coilsel));
   for i=1:length(coilsel)
     dist(i) = dot((allpnt(i,:)-thispnt), thisori);
   end
-  
+
   [m, i] = min(dist);
   % check whether the minimum difference is larger than a typical distance
   if abs(m)>(cfg.baseline/4)
@@ -148,7 +151,7 @@ for chan=1:Nchan
     % except when the center of the channel is approximately just as good (planar gradiometer)
     thispnt = allpnt(i,:);
   end
-  
+
   % find the headshape points that are close to this channel
   dist = sqrt(sum((headshape.pnt-repmat(thispnt,Nshape,1)).^2, 2));
   shapesel = find(dist<cfg.radius);
@@ -156,7 +159,7 @@ for chan=1:Nchan
     ft_plot_mesh(headshape.pnt(shapesel,:), 'vertexcolor', 'g');
     drawnow
   end
-  
+
   % fit a sphere to these headshape points
   if length(shapesel)>10
     [o, r] = fitsphere(headshape.pnt(shapesel,:));
@@ -166,13 +169,13 @@ for chan=1:Nchan
     o = single_o;
     r = single_r;
   end
-  
+
   if r > cfg.maxradius
     fprintf('channel = %s, not enough surface points, using all points\n', grad.label{chan});
     o = single_o;
     r = single_r;
   end
-  
+
   % add this sphere to the volume conductor
   headmodel.o(chan,:)   = o;
   headmodel.r(chan)     = r;
@@ -190,4 +193,3 @@ ft_postamble trackconfig
 ft_postamble previous mri
 ft_postamble provenance headmodel
 ft_postamble history    headmodel
-

@@ -47,7 +47,10 @@ function cfg = ft_interactiverealign(cfg)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -363,7 +366,7 @@ if ~isempty(template.headshape)
       camlight
       alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
     end
-    
+
     if strcmp(template.headshapestyle, 'vertex') || strcmp(template.headshapestyle, 'both')
       ft_plot_mesh(template.headshape.pos,'vertexcolor', 'b')
     end
@@ -382,7 +385,7 @@ if ~isempty(individual.headshape)
       camlight
       alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
     end
-    
+
     if strcmp(individual.headshapestyle, 'vertex') || strcmp(individual.headshapestyle, 'both')
       ft_plot_mesh(individual.headshape.pos,'vertexcolor', 'r')
     end
@@ -400,7 +403,7 @@ if ~isempty(individual.headshape)
   else
     grid off
   end
-  
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -460,7 +463,7 @@ switch val
     view([-180 0]);
   case 6
     view([0 0]);
-    
+
   otherwise
 end
 uiresume;

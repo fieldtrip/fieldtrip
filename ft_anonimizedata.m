@@ -55,7 +55,10 @@ function data = ft_anonimizedata(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -215,15 +218,15 @@ redraw_cb(h);
 resize_cb(h);
 
 while ~info.cleanup
-  
+
   uiwait(h); % we only get part this point with abort or cleanup
-  
+
   if ~ishandle(h)
     error('aborted by user');
   end
-  
+
   info = getappdata(h, 'info');
-  
+
   if info.cleanup
     if ~all(xor(info.keep, info.remove))
       warning('not all fields have been marked as "keep" or "remove"');

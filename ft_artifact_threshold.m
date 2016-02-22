@@ -69,7 +69,10 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -156,18 +159,18 @@ for trlop = 1:numtrl
   % compute the min, max and range over all channels and samples
   minval   = min(dat(:));
   maxval   = max(dat(:));
-  
+
   % compute the range as the maximum of the peak-to-peak values for each
   % channel
   ptpval = max(dat, [], 2) - min(dat, [], 2);
-  
+
   % track for bad trials for each channel
   badChnInd = find(ptpval > artfctdef.range);
-  
+
   % determine range and index of 'worst' channel
   worstChanRange = max(ptpval);
   worstChanInd = find(worstChanRange == ptpval);
-  
+
   % test the min, max and range against the specified thresholds
   if ~isempty(artfctdef.min) && minval<artfctdef.min
     fprintf('threshold artifact scanning: trial %d from %d exceeds min-threshold\n', trlop, numtrl);
@@ -194,4 +197,3 @@ cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
-

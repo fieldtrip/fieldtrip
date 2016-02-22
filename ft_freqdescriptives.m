@@ -64,7 +64,10 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -142,7 +145,7 @@ if jckflg,
     sumcrsspctrm   = sum(freq.crsspctrm,1);
     freq.crsspctrm = (sumcrsspctrm(ones(nrpt,1),:,:,:,:) - freq.crsspctrm)./(nrpt-1);
     clear sumcrsspctrm;
-  end   
+  end
 end
 
 if varflg,
@@ -160,13 +163,13 @@ if varflg,
     outssq = outssq + tmp.^2;
   end
   ft_progress('close');
-  
+
   if jckflg,
     bias = (n-1).^2;
   else
     bias = 1;
   end
-  
+
   powspctrm    = outsum./n;
   powspctrmsem = sqrt(bias.*(outssq - (outsum.^2)./n)./(n - 1)./n);
 elseif keepflg

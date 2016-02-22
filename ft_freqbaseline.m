@@ -41,7 +41,10 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -113,16 +116,16 @@ freqOut = copyfields(freq, freqOut,...
 % loop over all fields that should be normalized
 for k = 1:numel(cfg.parameter)
   par = cfg.parameter{k};
-  
+
   if strcmp(freq.dimord, 'chan_freq_time')
-    
+
     freqOut.(par) = ...
       performNormalization(freq.time, freq.(par), cfg.baseline, cfg.baselinetype);
-    
+
   elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'chan_chan_freq_time') || strcmp(freq.dimord, 'subj_chan_freq_time')
-    
+
     freqOut.(par) = zeros(size(freq.(par)));
-    
+
     % loop over trials, perform normalization per trial
     for l = 1:size(freq.(par), 1)
       tfdata = freq.(par)(l,:,:,:);
@@ -131,7 +134,7 @@ for k = 1:numel(cfg.parameter)
       freqOut.(par)(l,:,:,:) = ...
         performNormalization(freq.time, tfdata, cfg.baseline, cfg.baselinetype);
     end
-    
+
   else
     error('unsupported data dimensions: %s', freq.dimord);
   end
@@ -187,4 +190,3 @@ elseif (strcmp(baselinetype, 'db'))
 else
   error('unsupported method for baseline normalization: %s', baselinetype);
 end
-

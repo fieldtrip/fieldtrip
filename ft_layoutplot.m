@@ -72,7 +72,10 @@ function [cfg] = ft_layoutplot(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -160,7 +163,7 @@ end
 ft_plot_lay(lay, 'point', true, 'box', true, 'label', true, 'mask', true, 'outline', true);
 
 % the following code can be used to verify a bipolar montage, given the
-% layout of the monopolar channels 
+% layout of the monopolar channels
 if isfield(cfg, 'montage') && ~isempty(cfg.montage)
   fprintf('plotting an arrow for each of the bipolar electrode pairs\n');
   % the arrow begins at the +1 electrode
@@ -198,4 +201,3 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
-

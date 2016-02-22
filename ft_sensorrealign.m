@@ -117,7 +117,10 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 % support for this functionality can be removed mid 2016
 warning('FT_SENSORREALIGN is deprecated, please use FT_ELECTRODEREALIGN instead.')
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults

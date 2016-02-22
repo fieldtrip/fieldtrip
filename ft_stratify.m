@@ -58,7 +58,10 @@ function [varargout] = ft_stratify(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -95,7 +98,7 @@ end
 % histogram
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(cfg.method, 'histogram'),
-  
+
   nchan = size(input{1},1);
   ncond = length(input);
   %if nchan~=2, error('number of trials ~= 2, do not know how to stratify'); end
@@ -113,7 +116,7 @@ if strcmp(cfg.method, 'histogram'),
         cfg.numbin = numel(cfg.binedges)-1;
       end
     end
-    
+
     %------prepare some stuff
     if numel(cfg.numbin) ~= nchan
       cfg.numbin = repmat(cfg.numbin(1), [1 nchan]);
@@ -123,7 +126,7 @@ if strcmp(cfg.method, 'histogram'),
       for cndlop = 1:ncond
         tmp = cat(2, tmp, input{cndlop}(j,:));
       end %concatenate input-data
-      
+
       %create a 'common binspace'
       [ndum,x] = hist(tmp, cfg.numbin(j));
       dx    = diff(x);
@@ -136,7 +139,7 @@ if strcmp(cfg.method, 'histogram'),
       else
         xc    = [-inf x(1:end-1)+0.5*dx(1) inf];
       end
-      
+
       %make histograms and compute the 'target histogram', which
       %will equalize the conditions while throwing away as few
       %repetitions as possible
@@ -147,7 +150,7 @@ if strcmp(cfg.method, 'histogram'),
       end
       binaxis(j,1:(cfg.numbin(j)+1)) = xc;
     end
-    
+
     %------index the trials
     %------create n-d histo
     linearhisto = zeros(ncond, prod(cfg.numbin));
@@ -165,24 +168,24 @@ if strcmp(cfg.method, 'histogram'),
         linearhisto(cndlop,binlop) = sum(tmpb==binlop);
       end
     end
-    
+
     %------find intersection
     numok  = min(linearhisto,[],1);
     nummax = max(linearhisto,[],1);
     for j = 1:length(numok)
       minind{j} = find(linearhisto(:,j)==numok(j));
     end
-    
+
     %------do stratification the easy or the hard way
     if strcmp(cfg.equalbinavg, 'yes'),
       %---this is the hard way
       if nchan>1, error('the option equalbinavg only works for one channel input at the moment'); end
-      
+
       %---first allocate some memory
       for cndlop = 1:ncond
         sel{cndlop}     = zeros(1,size(b{cndlop},2));
       end
-      
+
       for binlop = 1:length(numok)
         if numok(binlop)>0,
           tmpmatmin    = nan(ncond,nummax(binlop));
@@ -201,7 +204,7 @@ if strcmp(cfg.method, 'histogram'),
           refavg = nanmean(tmpmatmin,2);
           refmin = mean(tmpmatmin(:,1:numok(binlop)        ),2);
           refmax = mean(tmpmatmax(:,end-numok(binlop)+1:end),2);
-          
+
           %---determine the amount of trials in this bin, so that for all conditions
           %it lies between the lowest possible and highest possible realisation
           ok     = 0; lowok = 0; hiok  = 0; cnt   = 0;
@@ -240,10 +243,10 @@ if strcmp(cfg.method, 'histogram'),
             if cnt==100,            ok = 1; end
             cnt = cnt+1;
           end
-          
+
           %---this is now the average that should be approximated
           [tmpref,refind] = min(refavg(minind{binlop}));
-          
+
           if numok(binlop)>0,
             for cndlop = 1:ncond
               pnt     = tmpmatmin(cndlop, 1:linearhisto(cndlop,binlop)) - tmpref;
@@ -291,7 +294,7 @@ if strcmp(cfg.method, 'histogram'),
           end
         end
       end
-      
+
     else
       %------stratify the easy way
       for cndlop = 1:ncond
@@ -305,7 +308,7 @@ if strcmp(cfg.method, 'histogram'),
         end
       end
     end
-    
+
     %------create output
     output = input;
     for cndlop = 1:ncond
@@ -313,36 +316,36 @@ if strcmp(cfg.method, 'histogram'),
     end
     varargout{1} = output;
     varargout{2} = binaxis;
-    
+
   end %if nchan>2
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % histogram_shift
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'histogram_shift'),
-  
+
   tmpcfg             = [];
   tmpcfg.method      = 'histogram';
   tmpcfg.equalbinavg = 'no';
-  
+
   nshift = size(input{1},1);
   ncond  = length(input);
   %if nchan~=2, error('number of trials ~= 2, do not know how to stratify'); end
-  
+
   for k = 1:cfg.niter
     tmpinput = input;
     for cndlop = 1:ncond
       sel{cndlop}      = floor(abs(rand(size(input{cndlop},2),1)-eps)*nshift)+1;
       tmpinput{cndlop} = input{cndlop}(sel{cndlop}+6.*[0:length(sel{cndlop})-1]')';
     end
-    
+
     [tmpoutput, binaxis] = stratify(tmpcfg, tmpinput{:});
     if k == 1,
       bestoutput = tmpoutput;
       bestaxis   = binaxis;
       bestok     = sum(~isnan(tmpoutput{1}));
     end
-    
+
     numok     = sum(~isnan(tmpoutput{1}))
     [bestok, ind] = max([bestok numok]);
     if ind>1,
@@ -350,12 +353,12 @@ elseif strcmp(cfg.method, 'histogram_shift'),
       bestaxis   = binaxis;
     end
   end
-  
+
   %------create output
   varargout{1} = bestoutput;
   varargout{2} = bestaxis;
   varargout{3} = sel;
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % splitxxxx
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -366,17 +369,17 @@ elseif ~isempty(strfind(cfg.method, 'split')),
   m2      = mean(varargin{2},2);
   sel{1} = zeros(1,size(varargin{1},2));
   sel{2} = zeros(1,size(varargin{2},2));
-  
+
   sel{1}(find(varargin{1}(1,:) <= m1(1) & varargin{1}(2,:) <= m1(2))) = 1;
   sel{1}(find(varargin{1}(1,:) <= m1(1) & varargin{1}(2,:) >  m1(2))) = 2;
   sel{1}(find(varargin{1}(1,:) >  m1(1) & varargin{1}(2,:) <= m1(2))) = 3;
   sel{1}(find(varargin{1}(1,:) >  m1(1) & varargin{1}(2,:) >  m1(2))) = 4;
-  
+
   sel{2}(find(varargin{2}(1,:) <= m2(1) & varargin{2}(2,:) <= m2(2))) = 1;
   sel{2}(find(varargin{2}(1,:) <= m2(1) & varargin{2}(2,:) >  m2(2))) = 2;
   sel{2}(find(varargin{2}(1,:) >  m2(1) & varargin{2}(2,:) <= m2(2))) = 3;
   sel{2}(find(varargin{2}(1,:) >  m2(1) & varargin{2}(2,:) >  m2(2))) = 4;
-  
+
   if ~isempty(strfind(cfg.method, 'hilo')),
     sel{1} = sel{1} == 4;
     sel{2} = sel{2} == 1;
@@ -390,14 +393,14 @@ elseif ~isempty(strfind(cfg.method, 'split')),
     sel{1} = sel{1} == 4;
     sel{2} = sel{2} == 4;
   end
-  
+
   %------create output
   output = input;
   for cndlop = 1:ncond
     output{cndlop}(:,find(sel{cndlop}==0))=nan;
   end
   varargout{1} = output;
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % equatespike
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -407,47 +410,47 @@ elseif strcmp(cfg.method, 'equatespike')
   end
   datA = input{1};
   datB = input{2};
-  
+
   ntrlA  = length(datA);
   ntrlB  = length(datB);
   nchanA = size(datA{1},1);
   nchanB = size(datB{1},1);
   nsmpA  = size(datA{1},2);
   nsmpB  = size(datB{1},2);
-  
+
   if (ntrlA~=ntrlB)
     error('number of trials should be the same in each condition');
   end
-  
+
   if (nchanA~=nchanB)
     error('number of channels should be the same in each condition');
   end
-  
+
   if (nsmpA~=nsmpB)
     error('number of samples should be the same in each condition');
   end
-  
+
   for i=1:ntrlA
     if size(datA{i},2)~=nsmpA
       error('number of samples should be the same in each trial');
     end
   end
-  
+
   for i=1:ntrlB
     if size(datB{i},2)~=nsmpB
       error('number of samples should be the same in each trial');
     end
   end
-  
+
   nchan = nchanA;   % the same for each condition
   ntrl = ntrlA;     % the same for each condition
-  
+
   if isequal(cfg.channel, 'all')
     chansel = 1:nchan;
   else
     chansel = cfg.channel;
   end
-  
+
   % count the number of spikes in each trial and channel
   numA = zeros(ntrlA, nchanA);
   numB = zeros(ntrlB, nchanB);
@@ -459,7 +462,7 @@ elseif strcmp(cfg.method, 'equatespike')
   end
   numA(:,setdiff(1:nchan, chansel)) = 0;
   numB(:,setdiff(1:nchan, chansel)) = 0;
-  
+
   fprintf('average (over trials) of the number of spikes per channel in condition A: ');
   fprintf('%.0f ', mean(numA,1));
   fprintf('\n');
@@ -472,13 +475,13 @@ elseif strcmp(cfg.method, 'equatespike')
   fprintf('standard deviation (over trials) of the number of spikes per channel in condition B: ');
   fprintf('%.0f ', std(numB,1));
   fprintf('\n');
-  
+
   if strcmp(cfg.pairtrials, 'linkage')
     % concatenate the spike numbers for both conditions
     num = [numA; numB];
     % compute the distance between all possible pairs
     y = pdist(num, 'cityblock');
-    
+
     % remove the connections between all pairs within a single condition
     y = squareform(y);
     sel = 1:ntrlA;
@@ -489,16 +492,16 @@ elseif strcmp(cfg.method, 'equatespike')
       y(i,i) = 0;
     end
     y = squareform(y);
-    
+
     % determine the pairs that are the closest
     z = linkage(y, cfg.linkage);
-    
+
     if any(any(z(1:ntrl,:)>2*ntrl))
       error('trial pairs are not correct after hierarchical clustering');
     else
       fprintf('remaining distance after hierarchical clustering is %d\n', sum(z(1:ntrl,3)));
     end
-    
+
     % ensure that the order of the pairs is always correct
     z = z(1:ntrl,:);
     for i=1:ntrl
@@ -506,7 +509,7 @@ elseif strcmp(cfg.method, 'equatespike')
         z(i,1:2) = z(i,2:1);
       end
     end
-    
+
     % figure
     % hold on
     % for i=1:ntrl
@@ -514,27 +517,27 @@ elseif strcmp(cfg.method, 'equatespike')
     %   y = [num(z(i,1),2) num(z(i,2),2)];
     %   plot(x, y, '.-');
     % end
-    
+
     indxA = z(:,1);
     indxB = z(:,2) - ntrlA;
     dist  = z(:,3);
-    
+
   elseif strcmp(cfg.pairtrials, 'spikesort')
     [srtA, srtB, indxA, indxB] = spikesort(numA, numB, 'presort', 'global');
     dist = sum(abs(numA(indxA,:)-numB(indxB,:)),2);
-    
+
   elseif strcmp(cfg.pairtrials, 'no')
     % no sorting to pair the trials is required
     indxA = 1:ntrlA;
     indxB = 1:ntrlA;
     dist = sum(abs(numA(indxA,:)-numB(indxB,:)),2);
-    
+
   else
     error('incorrect value for cfg.pairtrials');
   end % if pairtrials
-  
+
   fprintf('removing %d spikes from a total of %d spikes\n', sum(dist), sum(sum(numA))+sum(sum(numB)));
-  
+
   for i=1:ntrl
     delta = numA(indxA(i),:) - numB(indxB(i),:);
     outA{i} = datA{indxA(i)};
@@ -582,7 +585,7 @@ elseif strcmp(cfg.method, 'equatespike')
     end % for nchan
   end % for ntrl
   varargout{1} = {outA, outB};
-  
+
 elseif strcmp(cfg.method, 'lohi')
   %%%%%%%%%%%%%%%%%
   %experimental code working on single channel inputs (2) selecting the
@@ -597,7 +600,7 @@ elseif strcmp(cfg.method, 'lohi')
   if size(varargin{1},2)~=size(varargin{2},2)
     error('the number of observations should be equal');
   end
-  
+
   [srt1, ix1] = sort(input{1},'ascend');
   [srt2, ix2] = sort(input{2},'descend');
   mx1 = -inf;
@@ -610,13 +613,12 @@ elseif strcmp(cfg.method, 'lohi')
     mx1 = mean(input{1}(sel));
     mx2 = mean(input{2}(sel));
   end
-  
+
   varargout{1} = input{1};
   varargout{2} = input{2};
-  
+
   sel = setdiff(1:numel(srt1), sel);
   varargout{1}(sel) = nan;
   varargout{2}(sel) = nan;
-  
-end % cfg.method
 
+end % cfg.method

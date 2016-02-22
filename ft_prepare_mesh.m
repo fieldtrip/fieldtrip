@@ -73,7 +73,10 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -137,26 +140,26 @@ switch cfg.method
     % this makes sense with a non-segmented MRI as input
     % call the corresponding helper function
     bnd = prepare_mesh_manual(cfg, mri);
-    
+
   case {'projectmesh', 'iso2mesh', 'isosurface'}
     % this makes sense with a segmented MRI as input
     % call the corresponding helper function
     bnd = prepare_mesh_segmentation(cfg, mri);
-    
+
   case 'headshape'
     % call the corresponding helper function
     bnd = prepare_mesh_headshape(cfg);
-    
+
   case 'hexahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
     bnd = prepare_mesh_hexahedral(cfg, mri);
-    
+
   case 'tetrahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
     bnd = prepare_mesh_tetrahedral(cfg, mri);
-    
+
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
@@ -170,7 +173,7 @@ switch cfg.method
       bnd(i).pnt(:,3) = pnt(:,3)*headmodel.r(i) + headmodel.o(3);
       bnd(i).tri = tri;
     end
-    
+
   otherwise
     error('unsupported cfg.method')
 end

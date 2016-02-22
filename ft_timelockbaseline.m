@@ -46,7 +46,10 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -128,10 +131,10 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
   % update the configuration
   cfg.baseline(1) = timelock.time(tbeg);
   cfg.baseline(2) = timelock.time(tend);
-  
+
    for k = 1:numel(cfg.parameter)
     par = cfg.parameter{k};
-  
+
     % this if-statement is just there to give more specific text output
     if isequal(par, 'trial')
       fprintf('applying baseline correction on each individual trial\n');
@@ -170,7 +173,7 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
       timelock = rmfield(timelock, 'cov');
     end
    end
-  
+
 end % ~strcmp(cfg.baseline, 'no')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -189,4 +192,3 @@ ft_postamble previous   timelock
 ft_postamble provenance timelock
 ft_postamble history    timelock
 ft_postamble savevar    timelock
-

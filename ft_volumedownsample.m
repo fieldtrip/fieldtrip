@@ -47,7 +47,10 @@ function [downsample] = ft_volumedownsample(cfg, source)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -121,7 +124,7 @@ if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
   elseif strcmpi(cfg.spmversion, 'spm12'),
     ft_hastoolbox('SPM12',1);
   end
-  
+
   for j = 1:length(cfg.parameter)
     if strcmp(cfg.parameter{j}, 'inside')
       fprintf('not smoothing %s\n', cfg.parameter{j});

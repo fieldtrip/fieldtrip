@@ -48,8 +48,12 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
+% do the general setup of the function 
 ft_defaults
 ft_preamble init
 ft_preamble debug
@@ -181,7 +185,7 @@ end
 for i=1:numel(fn)
   % parcellate each of the desired parameters
   dat = source.(fn{i});
-  
+
   if strncmp('{pos_pos}', dimord{i}, 9)
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
     tmp = cell(nseg, nseg);
@@ -209,7 +213,7 @@ for i=1:numel(fn)
       end % for j2
     end % for j1
     ft_progress('close');
-    
+
   elseif strncmp('{pos}', dimord{i}, 5)
     fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
     tmp = cell(nseg, 1);
@@ -232,7 +236,7 @@ for i=1:numel(fn)
       end % switch
     end % for
     ft_progress('close');
-    
+
   elseif strncmp('pos_pos', dimord{i}, 7)
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
     siz     = size(dat);
@@ -265,7 +269,7 @@ for i=1:numel(fn)
       end % for j2
     end % for j1
     ft_progress('close');
-    
+
   elseif strncmp('pos', dimord{i}, 3)
     fprintf('creating %d parcels for %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
     siz     = size(dat);
@@ -304,12 +308,12 @@ for i=1:numel(fn)
       end % switch
     end % for
     ft_progress('close');
-    
+
   else
     error('unsupported dimord %s', dimord{i})
-    
+
   end % if pos, pos_pos, {pos}, etc.
-  
+
   % update the dimord, use chan rather than pos
   % this makes it look just like timelock or freq data
   tok = tokenize(dimord{i}, '_');
@@ -319,11 +323,11 @@ for i=1:numel(fn)
   tok(strcmp(tok, 'pos}'))  = { 'chan}'}; % replace pos by chan
   tmpdimord = sprintf('%s_', tok{:});
   tmpdimord = tmpdimord(1:end-1);         % exclude the last _
-  
+
   % store the results in the output structure
   parcel.(fn{i})            = tmp;
   parcel.([fn{i} 'dimord']) = tmpdimord;
-  
+
   % to avoid confusion
   clear dat tmp tmpdimord j j1 j2
 end % for each of the fields that should be parcellated

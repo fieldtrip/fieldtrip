@@ -40,7 +40,10 @@ function [cfg] = ft_connectivityplot(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -115,7 +118,7 @@ if numel(varargin)>1
   end
   ft_connectivityplot(tmpcfg, data);
   tmpcfg = cfg;
-  
+
   % FIXME also set the zlim scale to be consistent across inputs
   for k = 2:numel(varargin)
     tmpcfg.color   = tmpcfg.color(2:end);

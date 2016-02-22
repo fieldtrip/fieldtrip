@@ -30,7 +30,10 @@ function [headmodel, cfg] = ft_prepare_singleshell(cfg, mri)
 
 warning('FT_PREPARE_SINGLESHELL is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''singleshell'' instead.')
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -74,4 +77,3 @@ ft_postamble trackconfig
 ft_postamble previous   mri
 ft_postamble provenance headmodel
 ft_postamble history    headmodel
-

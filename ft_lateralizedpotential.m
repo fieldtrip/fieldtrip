@@ -10,7 +10,7 @@ function [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 % and the configuration should contain
 %   cfg.channelcmb = Nx2 cell array
 %
-% An example channelcombination containing the homologous channels 
+% An example channelcombination containing the homologous channels
 % in the 10-20 standard system is
 %    cfg.channelcmb = {'Fp1'   'Fp2'
 %                      'F7'    'F8'
@@ -68,7 +68,10 @@ function [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -88,7 +91,7 @@ avgL = ft_checkdata(avgL, 'datatype', 'timelock');
 avgR = ft_checkdata(avgR, 'datatype', 'timelock');
 
 % set the defaults
-if ~isfield(cfg, 'channelcmb'), 
+if ~isfield(cfg, 'channelcmb'),
   cfg.channelcmb = {
     'Fp1'   'Fp2'
     'F7'    'F8'
@@ -125,7 +128,7 @@ end
 % compute the lateralized potentials
 Nchan = size(cfg.channelcmb);
 for i=1:Nchan
-  % here the channel names "C3" and "C4" are used to clarify the 
+  % here the channel names "C3" and "C4" are used to clarify the
   % computation of the lateralized potential on all channel pairs
   C3R = strcmp(cfg.channelcmb{i,1}, avgR.label);
   C4R = strcmp(cfg.channelcmb{i,2}, avgR.label);

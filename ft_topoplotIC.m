@@ -99,7 +99,10 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -158,23 +161,23 @@ if nplots>1
   for i = 1:length(selcomp)
     subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
-    
+
     % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
     [cfg] = topoplot_common(cfg, comp);
-    
+
     if strcmp(cfg.title, 'auto')
       title(['component ' num2str(selcomp(i))]);
     elseif ~strcmp(cfg.title, 'off')
       title(cfg.title);
     end
   end % for all components
-  
+
 else
   cfg.component = selcomp;
-  
+
   % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
   [cfg] = topoplot_common(cfg, comp);
-  
+
   if strcmp(cfg.title, 'auto')
     title(['component ' num2str(selcomp)]);
   elseif ~strcmp(cfg.title, 'off')
@@ -197,5 +200,3 @@ ft_postamble provenance
 if ~nargout
   clear cfg
 end
-
-

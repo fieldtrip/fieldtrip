@@ -1,8 +1,8 @@
 function [data] = ft_channelrepair(cfg, data)
 
 % FT_CHANNELREPAIR repairs bad or missing channels in MEG or EEG data by
-% replacing them with the average of its neighbours weighted by distance 
-% ('nearest'-neighbour approach) or by the average of all neighbours 
+% replacing them with the average of its neighbours weighted by distance
+% ('nearest'-neighbour approach) or by the average of all neighbours
 % ('average'), by interpolation based on a surface Laplacian or by spherical
 % spline interpolating (see Perrin et al., 1989).
 % The nearest neighbour approach cannot be used reliably to repair multiple
@@ -67,7 +67,10 @@ function [data] = ft_channelrepair(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -151,19 +154,19 @@ interp.time    = data.time;
 
 % first repair badchannels
 if strcmp(cfg.method, 'nearest') || strcmp(cfg.method, 'average')
-  
+
   if ~isempty(cfg.badchannel)
     [goodchanlabels,goodchanindcs] = setdiff(data.label,cfg.badchannel);
     goodchanindcs = sort(goodchanindcs); % undo automatical sorting by setdiff
     connectivityMatrix = channelconnectivity(cfg, data);
     connectivityMatrix = connectivityMatrix(:, goodchanindcs); % all chans x good chans
-    
+
     Ntrials = length(data.trial);
     Nchans  = length(data.label);
-    
+
     repair  = eye(Nchans,Nchans);
     badindx = match_str(data.label, cfg.badchannel);
-    
+
     for k=badindx'
       fprintf('repairing channel %s\n', data.label{k});
       repair(k,k) = 0;
@@ -186,10 +189,10 @@ if strcmp(cfg.method, 'nearest') || strcmp(cfg.method, 'average')
       repair(k,l) = (1./distance);
       repair(k,l) = repair(k,l) ./ sum(repair(k,l));
     end
-    
+
     % use sparse matrix to speed up computations
     repair = sparse(repair);
-    
+
     % compute the repaired data for each trial
     fprintf('\n');
     fprintf('repairing bad channels for %i trials %d', Ntrials);
@@ -202,13 +205,13 @@ if strcmp(cfg.method, 'nearest') || strcmp(cfg.method, 'average')
     fprintf('no bad channels to repair\n');
     interp.trial = data.trial;
   end
-  
+
   if ~isempty(cfg.missingchannel)
     fprintf('Interpolated missing channels will be concatenated.\n');
-    
+
     Nchans  = length(interp.label);
     Ntrials = length(interp.trial);
-    
+
     % interpolation missing channels
     goodchanindcs = 1:numel(data.label);
     for chan=1:numel(cfg.missingchannel)
@@ -220,7 +223,7 @@ if strcmp(cfg.method, 'nearest') || strcmp(cfg.method, 'average')
     end
     connectivityMatrix = channelconnectivity(cfg, interp);
     connectivityMatrix = connectivityMatrix(:, goodchanindcs); % all chans x good chans
-    
+
     repair  = eye(Nchans,Nchans);
     missingindx = match_str(interp.label, cfg.missingchannel);
     unable = [];
@@ -251,10 +254,10 @@ if strcmp(cfg.method, 'nearest') || strcmp(cfg.method, 'average')
         repair(k,l) = repair(k,l) ./ sum(repair(k,l));
       end
     end
-    
+
     % use sparse matrix to speed up computations
     repair = sparse(repair);
-    
+
     fprintf('\n');
     % compute the missing data for each trial and remove those could not be
     % reconstructed
@@ -265,11 +268,11 @@ if strcmp(cfg.method, 'nearest') || strcmp(cfg.method, 'average')
       interp.trial{i} = repair * interp.trial{i};
       interp.trial{i}(unable, :) = [];
     end
-    
+
     interp.label(unable) = [];
     fprintf('\n');
   end
-  
+
 elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   if ~isempty(cfg.badchannel) || ~isempty(cfg.missingchannel)
     fprintf('Spherical spline and surface Laplacian interpolation will treat bad and missing channels the same. Missing channels will be concatenated at the end of your data structure.\n');
@@ -282,7 +285,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   try, chanori   = sens.chanori(sensidx, :); end
   try, chantype  = sens.chantype(sensidx, :); end
   try, chanunit  = sens.chanunit(sensidx, :); end
-  
+
   fprintf('Checking spherical fit... ');
   [c, r] = fitsphere(chanpos);
   d = chanpos - repmat(c, numel(find(sensidx)), 1);
@@ -295,7 +298,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   else
     fprintf('good spherical fit (residual: %.1f%%)\n', 100*(d-1));
   end
-  
+
   if strcmp(cfg.method, 'slap')
     warning('''slap'' method is not fully supported - be careful in interpreting your results');
   end
@@ -305,7 +308,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   label(missidx)                       = [];
   chanpos(end+1:end+numel(missidx), :) = chanpos(missidx, :);
   chanpos(missidx, :)                  = [];
-  
+
   % select good channels only for interpolation
   [goodchanlabels,goodchanindcs] = setdiff(label,badchannels);
   allchans = false;
@@ -318,12 +321,12 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   goodchanindcs      = sort(goodchanindcs);
   % only take good channels that are in data (and remember how they are sorted)
   [dataidx, sensidx] = match_str(data.label, label(goodchanindcs));
-  
+
   % interpolate
   fprintf('computing weight matrix...');
   repair = sphericalSplineInterpolate(chanpos(goodchanindcs(sensidx),:)',chanpos', cfg.lambda, cfg.order, cfg.method);
   fprintf(' done!\n');
-  
+
   if ~allchans
     % only use the rows corresponding to the channels that actually need interpolation
     repair(goodchanindcs(sensidx),:) = 0;
@@ -332,7 +335,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
       repair(goodchanindcs(sensidx(k)), i) = 1;
     end
   end % else all rows need to be interpolated
-  
+
   % compute the missing data for each trial and remove those could not be
   % reconstructed
   Ntrials = length(data.trial);
@@ -343,7 +346,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
     interp.trial{i} = repair * data.trial{i}(dataidx, :);
   end
   fprintf('\n');
-  % update channels labels due to reordering by 
+  % update channels labels due to reordering by
   interp.label = label;
 
 else

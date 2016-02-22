@@ -122,7 +122,10 @@ function [source] = ft_dipolefitting(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -185,7 +188,7 @@ if ~isfield(cfg, 'numdipoles')
 end
 
 % set up the symmetry constraints
-if ~isempty(cfg.symmetry) 
+if ~isempty(cfg.symmetry)
   if cfg.numdipoles~=2
     error('symmetry constraints are only supported for two-dipole models');
   elseif strcmp(cfg.symmetry, 'x')
@@ -240,7 +243,7 @@ if isempty(cfg.reducerank)
   elseif ft_senstype(sens, 'meg') && ft_voltype(headmodel, 'infinite')
     cfg.reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
   elseif ft_senstype(sens, 'meg')
-    cfg.reducerank = 'yes';   % for MEG with a current dipole in a volume conductor 
+    cfg.reducerank = 'yes';   % for MEG with a current dipole in a volume conductor
   end
 end
 
@@ -334,7 +337,7 @@ if strcmp(cfg.gridsearch, 'yes')
   grid = ft_prepare_sourcemodel(tmpcfg);
 
   ngrid = size(grid.pos,1);
-  
+
   switch cfg.model
     case 'regional'
       grid.error = nan(ngrid, 1);
@@ -343,7 +346,7 @@ if strcmp(cfg.gridsearch, 'yes')
     otherwise
       error('unsupported cfg.model');
   end
-  
+
   insideindx = find(grid.inside);
   ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(insideindx)
@@ -375,7 +378,7 @@ if strcmp(cfg.gridsearch, 'yes')
     end % switch model
   end % looping over the grid
   ft_progress('close');
-  
+
   switch cfg.model
     case 'regional'
       % find the grid point(s) with the minimum error
@@ -388,7 +391,7 @@ if strcmp(cfg.gridsearch, 'yes')
       elseif cfg.numdipoles==2
         fprintf('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
       end
-      
+
     case 'moving'
       for t=1:ntime
         % find the grid point(s) with the minimum error
@@ -402,11 +405,11 @@ if strcmp(cfg.gridsearch, 'yes')
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
         end
       end
-      
+
     otherwise
       error('unsupported cfg.model');
   end % switch model
-  
+
 elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
@@ -419,7 +422,7 @@ elseif strcmp(cfg.gridsearch, 'no')
     otherwise
       error('unsupported cfg.model');
   end % switch model
-  
+
 end % if gridsearch yes/no
 
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a Nx3 matrix,
@@ -469,7 +472,7 @@ if strcmp(cfg.nonlinear, 'yes')
         success = 0;
         disp(lasterr);
       end
-      
+
     case 'moving'
       % perform the non-linear dipole fit for each latency independently
       % instead of using dip(t) = dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
@@ -510,7 +513,7 @@ if strcmp(cfg.nonlinear, 'no')
       success = ones(1,ntime);
     otherwise
       error('unsupported cfg.model');
-      
+
   end % switch model
 end
 

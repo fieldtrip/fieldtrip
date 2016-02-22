@@ -86,7 +86,10 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -154,7 +157,7 @@ end
 % a layout structure)
 if isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'label') && isfield(cfg.layout, 'width') && isfield(cfg.layout, 'height')
   layout = cfg.layout;
-  
+
 elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout, 'label') && (~isfield(cfg.layout, 'width') || ~isfield(cfg.layout, 'height'))
   layout = cfg.layout;
   % add width and height for multiplotting
@@ -169,7 +172,7 @@ elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout,
 
 elseif isequal(cfg.layout, 'circular')
   rho = ft_getopt(cfg, 'rho', []);
-  
+
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
     cfg.channel  = ft_channelselection(cfg.channel, data.label);
@@ -181,7 +184,7 @@ elseif isequal(cfg.layout, 'circular')
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
-  
+
   if isempty(rho)
     % do an equally spaced layout, starting at 12 o'clock, going clockwise
     rho = linspace(0,1,nchan+1);
@@ -190,7 +193,7 @@ elseif isequal(cfg.layout, 'circular')
     if numel(rho) ~= nchan
       error('the number of elements in the polar angle vector should be equal to the number of channels');
     end
-    
+
     % convert to radians
     rho = 2.*pi.*rho./360;
   end
@@ -204,7 +207,7 @@ elseif isequal(cfg.layout, 'circular')
   layout.outline = {};
   skipscale = true; % a scale is not desired
   skipcomnt = true; % a comment is initially not desired, or at least requires more thought
-    
+
 elseif isequal(cfg.layout, 'butterfly')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
@@ -224,13 +227,13 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.outline = {};
   skipscale = true; % a scale is not desired
   skipcomnt = true; % a comment is initially not desired, or at least requires more thought
-  
+
 elseif isequal(cfg.layout, 'vertical')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
     data = ft_checkdata(data);
     originalorder = cfg.channel;
-    cfg.channel = ft_channelselection(cfg.channel, data.label); 
+    cfg.channel = ft_channelselection(cfg.channel, data.label);
     if iscell(originalorder) && length(originalorder)==length(cfg.channel)
       % try to keep the order identical to that specified in the configuration
       [sel1, sel2] = match_str(originalorder, cfg.channel);
@@ -267,7 +270,7 @@ elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5col
     % look at the data to determine the overlapping channels
     data = ft_checkdata(data);
     originalorder = cfg.channel;
-    cfg.channel = ft_channelselection(cfg.channel, data.label); 
+    cfg.channel = ft_channelselection(cfg.channel, data.label);
     if iscell(originalorder) && length(originalorder)==length(cfg.channel)
       % try to keep the order identical to that specified in the configuration
       [sel1, sel2] = match_str(originalorder, cfg.channel);
@@ -282,10 +285,10 @@ elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5col
     nchan        = length(cfg.channel);
     layout.label = cfg.channel;
   end
-  
+
   ncol = find(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}));
   nrow = ceil(nchan/ncol);
-  
+
   k = 0;
   for i=1:ncol
     for j=1:nrow
@@ -293,19 +296,19 @@ elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5col
       if k>nchan
         continue
       end
-      x = i/ncol - 1/(ncol*2); 
+      x = i/ncol - 1/(ncol*2);
       y = 1-j/(nrow+1);
       layout.pos   (k,:) = [x y];
       layout.width (k,1) = 0.85/ncol;
       layout.height(k,1) = 0.9 * 1/(nrow+1);
     end
   end
-  
+
   layout.mask    = {};
   layout.outline = {};
   skipscale = true; % a scale is not desired
   skipcomnt = true; % a comment is initially not desired, or at least requires more thought
-  
+
 elseif isequal(cfg.layout, 'ordered')
   if nargin>1 && ~isempty(data)
     % look at the data to determine the overlapping channels
@@ -334,27 +337,27 @@ elseif isequal(cfg.layout, 'ordered')
       end
     end
   end
-  
+
   layout.label{end+1}  = 'SCALE';
   layout.width(end+1)  = 0.8 * 1/ncol;
   layout.height(end+1) = 0.8 * 1/nrow;
   x = (ncol-2)/ncol;
   y = 0/nrow;
   layout.pos(end+1,:) = [x y];
-  
+
   layout.label{end+1}  = 'COMNT';
   layout.width(end+1)  = 0.8 * 1/ncol;
   layout.height(end+1) = 0.8 * 1/nrow;
   x = (ncol-1)/ncol;
   y = 0/nrow;
   layout.pos(end+1,:) = [x y];
-  
+
   % try to generate layout from other configuration options
 elseif ischar(cfg.layout)
-  
+
   % layout file name specified
   if isempty(strfind(cfg.layout, '.'))
-    
+
     cfg.layout = [cfg.layout '.mat'];
     if exist(cfg.layout, 'file')
       fprintf('layout file without .mat (or .lay) extension specified, appending .mat\n');
@@ -365,9 +368,9 @@ elseif ischar(cfg.layout)
       layout = ft_prepare_layout(cfg);
       return;
     end
-    
+
   elseif ft_filetype(cfg.layout, 'matlab')
-    
+
     fprintf('reading layout from file %s\n', cfg.layout);
     if ~exist(cfg.layout, 'file')
       error('the specified layout file %s was not found', cfg.layout);
@@ -380,9 +383,9 @@ elseif ischar(cfg.layout)
     else
       error('mat file does not contain a layout');
     end
-    
+
   elseif ft_filetype(cfg.layout, 'layout')
-    
+
     if exist(cfg.layout, 'file')
       fprintf('reading layout from file %s\n', cfg.layout);
       layout = readlay(cfg.layout);
@@ -392,48 +395,48 @@ elseif ischar(cfg.layout)
       layout = ft_prepare_layout(cfg);
       return;
     end
-    
+
   elseif ~ft_filetype(cfg.layout, 'layout')
     % assume that cfg.layout is an electrode file
     fprintf('creating layout from electrode file %s\n', cfg.layout);
     layout = sens2lay(ft_read_sens(cfg.layout), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   end
-  
+
 elseif ischar(cfg.elecfile)
   fprintf('creating layout from electrode file %s\n', cfg.elecfile);
   layout = sens2lay(ft_read_sens(cfg.elecfile), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-  
+
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
   fprintf('creating layout from cfg.elec\n');
   layout = sens2lay(cfg.elec, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-  
+
 elseif isfield(data, 'elec') && isstruct(data.elec)
   fprintf('creating layout from data.elec\n');
   data = ft_checkdata(data);
   layout = sens2lay(data.elec, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-  
+
 elseif ischar(cfg.gradfile)
   fprintf('creating layout from gradiometer file %s\n', cfg.gradfile);
   layout = sens2lay(ft_read_sens(cfg.gradfile), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-  
+
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
   fprintf('creating layout from cfg.grad\n');
   layout = sens2lay(cfg.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-  
+
 elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
   data = ft_checkdata(data);
   layout = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-  
+
 elseif isfield(data, 'opto') && isstruct(data.opto)
   fprintf('creating layout from data.hdr.opto\n');
   data = ft_checkdata(data);
   layout = sens2lay(data.opto, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-  
+
 elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   % deal with image file
   if ~isempty(cfg.image)
-  
+
     fprintf('reading background image from %s\n', cfg.image);
     [p,f,e] = fileparts(cfg.image);
     switch e
@@ -449,10 +452,10 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
         img = imread(cfg.image);
     end
     img = flipdim(img, 1); % in combination with "axis xy"
-    
+
     figure
     bw = cfg.bw;
-    
+
     if bw
       % convert to greyscale image
       img = mean(img, 3);
@@ -462,7 +465,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
       % plot as RGB image
       image(img);
     end
-    
+
   elseif ~isempty(cfg.mesh)
     if isfield(cfg.mesh, 'sulc')
       ft_plot_mesh(cfg.mesh, 'edgecolor','none','vertexcolor',cfg.mesh.sulc);colormap gray;
@@ -474,7 +477,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   axis equal
   axis off
   axis xy
-  
+
   % get the electrode positions
   pos = zeros(0,2);
   electrodehelp = [ ...
@@ -494,14 +497,14 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
       % this happens if the figure is closed
       return;
     end
-    
+
     switch k
       case 1
         pos = cat(1, pos, [x y]);
         % add it to the figure
         plot(x, y, 'b.');
         plot(x, y, 'yo');
-        
+
       case 8
         if size(pos,1)>0
           % remove the last point
@@ -519,15 +522,15 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           plot(pos(:,1), pos(:,2), 'b.');
           plot(pos(:,1), pos(:,2), 'yo');
         end
-        
+
       case 'q'
         again = 0;
-        
+
       otherwise
         warning('invalid button (%d)', k);
     end
   end
-  
+
   % get the mask outline
   polygon = {};
   thispolygon = 1;
@@ -547,14 +550,14 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
     for i=1:length(polygon)
       fprintf('polygon %d has %d points\n', i, size(polygon{i},1));
     end
-    
+
     try
       [x, y, k] = ginput(1);
     catch
       % this happens if the figure is closed
       return;
     end
-    
+
     switch k
       case 1
         polygon{thispolygon} = cat(1, polygon{thispolygon}, [x y]);
@@ -564,7 +567,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           y = polygon{i}([end-1 end],2);
         end
         plot(x, y, 'g.-');
-        
+
       case 8 % backspace
         if size(polygon{thispolygon},1)>0
           % remove the last point
@@ -593,7 +596,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
             plot(x, y, 'g.-');
           end
         end
-        
+
       case 'c'
         if size(polygon{thispolygon},1)>0
           % close the polygon
@@ -606,7 +609,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           thispolygon = thispolygon + 1;
           polygon{thispolygon} = zeros(0,2);
         end
-        
+
       case 'q'
         if size(polygon{thispolygon},1)>0
           % close the polygon
@@ -617,15 +620,15 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           plot(x, y, 'g.-');
         end
         again = 0;
-        
+
       otherwise
         warning('invalid button (%d)', k);
     end
   end
   % remember this set of polygons as the mask
   mask = polygon;
-  
-  
+
+
   % get the outline, e.g. head shape and sulci
   polygon = {};
   thispolygon = 1;
@@ -646,14 +649,14 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
     for i=1:length(polygon)
       fprintf('polygon %d has %d points\n', i, size(polygon{i},1));
     end
-    
+
     try
       [x, y, k] = ginput(1);
     catch
       % this happens if the figure is closed
       return;
     end
-    
+
     switch k
       case 1
         polygon{thispolygon} = cat(1, polygon{thispolygon}, [x y]);
@@ -663,7 +666,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           y = polygon{i}([end-1 end],2);
         end
         plot(x, y, 'm.-');
-        
+
       case 8 % backspace
         if size(polygon{thispolygon},1)>0
           % remove the last point
@@ -692,7 +695,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
             plot(x, y, 'm.-');
           end
         end
-        
+
       case 'c'
         if size(polygon{thispolygon},1)>0
           x = polygon{thispolygon}(1,1);
@@ -706,24 +709,24 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           thispolygon = thispolygon + 1;
           polygon{thispolygon} = zeros(0,2);
         end
-        
+
       case 'n'
         if size(polygon{thispolygon},1)>0
           % switch to the next polygon
           thispolygon = thispolygon + 1;
           polygon{thispolygon} = zeros(0,2);
         end
-        
+
       case 'q'
         again = 0;
-        
+
       otherwise
         warning('invalid button (%d)', k);
     end
   end
   % remember this set of polygons as the outline
   outline = polygon;
-  
+
   % convert electrode positions into a layout structure
   layout.pos = pos;
   nchans = size(pos,1);
@@ -741,7 +744,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   % add mask and outline polygons
   layout.mask    = mask;
   layout.outline = outline;
-  
+
 else
   error('no layout detected, please specify cfg.layout')
 end
@@ -805,7 +808,7 @@ end
 if ~strcmp(cfg.montage, 'no')
   Norg = length(cfg.montage.labelorg);
   Nnew = length(cfg.montage.labelnew);
-  
+
   for i=1:Nnew
     cfg.montage.tra(i,:) = abs(cfg.montage.tra(i,:));
     cfg.montage.tra(i,:) = cfg.montage.tra(i,:) ./ sum(cfg.montage.tra(i,:));
@@ -949,7 +952,7 @@ if isfield(sens, 'chanposorg')
 else
     chanposorg = [];
 end
-if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')            
+if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
     sens = undobalancing(sens);
     if size(chanposorg, 1) == numel(sens.label)
         sens.chanpos = chanposorg;
@@ -988,13 +991,13 @@ if strcmpi(style, '3d')
   layout.label = label;
 else
   prj = elproj(pnt, method);
-  
+
   % this copy will be used to determine the minimum distance between channels
   % we need a copy because prj retains the original positions, and
   % prjForDist might need to be changed if the user wants to keep
   % overlapping channels
   prjForDist = prj;
-  
+
   % check whether many channels occupy identical positions, if so shift
   % them around if requested
   if size(unique(prj,'rows'),1) / size(prj,1) < 0.8
@@ -1010,10 +1013,10 @@ else
       error('unknown value for cfg.overlap = ''%s''', overlap);
     end
   end
-  
+
   d = dist(prjForDist');
   d(logical(eye(size(d)))) = inf;
-  
+
   % This is a fix for .sfp files, containing positions of 'fiducial
   % electrodes'. Their presence determines the minimum distance between
   % projected electrode positions, leading to very small boxes.
@@ -1026,7 +1029,7 @@ else
     d(tmpsel, :) = inf;
     d(:, tmpsel) = inf;
   end
-  
+
   if any(isfinite(d(:)))
       % take mindist as the median of the first quartile of closest channel pairs with non-zero distance
       mindist = min(d); % get closest neighbour for all channels
@@ -1036,8 +1039,8 @@ else
   else
       mindist = eps; % not sure this is a good value but it's just to prevent crashes when
                      % the EEG sensor definition is meaningless
-  end    
-  
+  end
+
   X = prj(:,1);
   Y = prj(:,2);
   Width  = ones(size(X)) * mindist * 0.8;
@@ -1068,10 +1071,10 @@ while (~isempty(i) && l<50)
   xdiff = repmat(x,length(x),1) - repmat(x',1,length(x));
   ydiff = repmat(y,length(y),1) - repmat(y',1,length(y));
   xydist= sqrt(xdiff.^2 + ydiff.^2); %euclidean distance between all sensor pairs
-  
+
   [i,j] = find(xydist<mindist*0.999);
   rm=(i<=j); i(rm)=[]; j(rm)=[]; %only look at i>j
-  
+
   for m = 1:length(i);
     if (xydist(i(m),j(m)) == 0)
       diffvec = [mindist./sqrt(2) mindist./sqrt(2)];
@@ -1088,4 +1091,3 @@ while (~isempty(i) && l<50)
 end
 
 xy = [x; y];
-
