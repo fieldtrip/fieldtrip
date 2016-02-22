@@ -54,6 +54,8 @@ function [ws, warned] = ft_warning(varargin)
 % $Id$
 
 global ft_default
+warned = false;
+ws = [];
 
 stack = dbstack;
 if any(strcmp({stack.file}, 'ft_warning.m'))
@@ -65,7 +67,6 @@ if nargin < 1
   error('You need to specify at least a warning message');
 end
 
-warned = false;
 if isstruct(varargin{1})
   warning(varargin{1});
   return;
