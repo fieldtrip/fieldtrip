@@ -34,6 +34,9 @@ function [depth] = ft_sourcedepth(dippos, headmodel)
 %
 % $Id$
 
+% ensure the representation of the headmodel to be up-to-date
+headmodel = ft_datatype_headmodel(headmodel);
+
 % determine the type of volume conduction model
 switch ft_voltype(headmodel)
 
