@@ -489,7 +489,6 @@ elseif iseeg
     case 'simbio'
       ft_hastoolbox('simbio', 1);
       % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
-      headmodel.transfer = sb_transfer(headmodel,elec)
       lf = leadfield_simbio(dippos, headmodel);
       
     case 'fns'
