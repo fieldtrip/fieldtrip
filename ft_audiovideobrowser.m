@@ -48,7 +48,10 @@ function ft_audiovideobrowser(cfg, data)
 
 persistent previous_audiofile previous_videofile previous_audiohdr previous_videohdr
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -58,8 +61,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -108,11 +111,11 @@ end
 numtrl = size(trl,1);
 trllop = 1;
 while (true)
-  
+
   fprintf('processing trial %d from %d\n', trllop, numtrl);
   audiodat = [];
   videodat = [];
-  
+
   %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if ~isempty(cfg.audiofile)
     if isequal(previous_audiofile, cfg.audiofile)
@@ -124,29 +127,29 @@ while (true)
       fprintf('reading the header and timestamps from %s\n', cfg.audiofile);
       audiohdr = ft_read_header(cfg.audiofile);
     end
-    
+
     % the FirstTimeStamp might be expressed as uint32 or uint64
     datahdr.FirstTimeStamp  = double(datahdr.FirstTimeStamp);
     audiohdr.FirstTimeStamp = double(audiohdr.FirstTimeStamp);
-    
+
     begsample    = trl(trllop, 1); % expressed in the MEG/EEG data
     begtimestamp = (begsample-1)*datahdr.TimeStampPerSample + double(datahdr.FirstTimeStamp);
     begsample    = double(begtimestamp - audiohdr.FirstTimeStamp)/audiohdr.TimeStampPerSample + 1; % expressed in the audio data
     begsample    = round(begsample);
-    
+
     endsample    = trl(trllop, 2); % expressed in the MEG/EEG data
     endtimestamp = cast((endsample-1)*datahdr.TimeStampPerSample, 'like', audiohdr.FirstTimeStamp) + datahdr.FirstTimeStamp;
     endsample    = double(endtimestamp - audiohdr.FirstTimeStamp)/audiohdr.TimeStampPerSample + 1; % expressed in the audio data
     endsample    = round(endsample);
-    
+
     % read the audio data that corresponds to the selected MEG/EEG data
     audiodat = ft_read_data(cfg.audiofile, 'begsample', begsample, 'endsample', endsample, 'header', audiohdr);
-    
+
     % remember the header details to speed up subsequent calls
     previous_audiohdr  = audiohdr;
     previous_audiofile = cfg.audiofile;
   end
-  
+
   %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if ~isempty(cfg.videofile)
     if isequal(previous_videofile, cfg.videofile)
@@ -158,50 +161,50 @@ while (true)
       fprintf('reading the header and timestamps from %s\n', cfg.videofile);
       videohdr = ft_read_header(cfg.videofile);
     end
-    
+
     % the FirstTimeStamp might be expressed as uint32 or uint64
     datahdr.FirstTimeStamp  = double(datahdr.FirstTimeStamp);
     videohdr.FirstTimeStamp = double(videohdr.FirstTimeStamp);
-    
+
     begsample    = trl(trllop,1); % expressed in the MEG/EEG data
     begtimestamp = (begsample-1)*datahdr.TimeStampPerSample + double(datahdr.FirstTimeStamp);
     begsample    = double(begtimestamp - videohdr.FirstTimeStamp)/videohdr.TimeStampPerSample + 1; % expressed in the audio data
     begsample    = round(begsample);
-    
+
     endsample    = trl(trllop,2); % expressed in the MEG/EEG data
     endtimestamp = cast((endsample-1)*datahdr.TimeStampPerSample, 'like', videohdr.FirstTimeStamp) + datahdr.FirstTimeStamp;
     endsample    = double(endtimestamp - videohdr.FirstTimeStamp)/videohdr.TimeStampPerSample + 1; % expressed in the audio data
     endsample    = round(endsample);
-    
+
     % read the video data that corresponds to the selected MEG/EEG data
     videodat = ft_read_data(cfg.videofile, 'begsample', begsample, 'endsample', endsample, 'header', videohdr);
-    
+
     videodat = uint8(videodat);
     videodat = reshape(videodat, [videohdr.orig.dim size(videodat,2)]);
-    
+
     if ~isempty(cfg.anonimize)
       % place a bar over the eyes
       videodat(cfg.anonimize(1):cfg.anonimize(2), cfg.anonimize(3):cfg.anonimize(4), :) = 0;
     end
-    
+
     % remember the header details to speed up subsequent calls
     previous_videohdr  = videohdr;
     previous_videofile = cfg.videofile;
   end
   %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % FIXME this one does not play automatically
   if ~isempty(videodat)
     implay(videodat, videohdr.Fs);
     drawnow
   end
-  
+
   % FIXME this one plays automatically
   if ~isempty(audiodat)
     soundview(sum(audiodat,1), audiohdr.Fs);
     drawnow
   end
-  
+
   if istrue(cfg.interactive)
     response = 'x';
     while ~ismember(response, {'n', 'p', 'q'});
@@ -223,7 +226,7 @@ while (true)
       case 'q'
         break
     end
-    
+
   else
     % not interactive, show the audio/video of all trials
     if trllop<numtrl
@@ -231,9 +234,9 @@ while (true)
     else
       break
     end
-    
+
   end % if interactive
-  
+
 end % while true
 
 % do the general cleanup and bookkeeping at the end of the function

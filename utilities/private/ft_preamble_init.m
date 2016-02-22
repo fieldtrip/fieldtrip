@@ -67,7 +67,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     outputfile = cfg.outputfile;
   end
   if ~exist(outputfile, 'file')
-    abort = false;
+    ft_abort = false;
   else
     % the output file exists, determine how to deal with it
     switch cfg.outputfilepresent
@@ -75,15 +75,15 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
         if nargout>0
           % continue executing the parent function
           warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
-          abort = false;
+          ft_abort = false;
         else
           % stop executing the parent function
           warning('output file %s is already present: aborting function execution', cfg.outputfile);
-          abort = true;
+          ft_abort = true;
         end
       case 'overwrite'
         warning('output file %s is already present: it will be overwritten', cfg.outputfile);
-        abort = false;
+        ft_abort = false;
       case 'error'
         error('output file %s is already present', cfg.outputfile);
       otherwise
@@ -92,7 +92,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
   end
 else
   % there is no reason to abort execution
-  abort = false;
+  ft_abort = false;
 end % if outputfile
 
 if false

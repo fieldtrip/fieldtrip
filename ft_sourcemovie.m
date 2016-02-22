@@ -47,7 +47,10 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -57,8 +60,8 @@ ft_preamble loadvar source
 ft_preamble provenance source
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -360,11 +363,11 @@ if ~hasyparam
   abc = axis;
   axis([opt.xparam(1) opt.xparam(end) abc(3:4)]);
   vline = plot(opt.xparam(1)*[1 1], abc(3:4), 'r');
-  
+
   if nargin>2 && isfield(source2, 'pos')
     tline2 = plot(opt.xparam, mean(opt.dat2(opt.vindx,:)), 'r'); hold on;
   end
-  
+
 else
   tline = imagesc(opt.xparam, opt.yparam, squeeze(mean(opt.dat(opt.vindx,:,:)))'); axis xy; hold on;
   abc   = [opt.xparam([1 end]) opt.yparam([1 end])];
@@ -467,11 +470,11 @@ if previous_valx~=valx || previous_valy~=valy
   % update strings
   set(opt.stringx, 'string', sprintf('%s = %3.3f\n', opt.cfg.xparam, opt.xparam(valx)));
   set(opt.stringy, 'string', sprintf('%s = %3.3f\n', opt.cfg.yparam, opt.yparam(valy)));
-  
+
   % update data in mesh
   set(opt.hs, 'FaceVertexCData',     squeeze(opt.dat(:,valx,valy)));
   set(opt.hs, 'FaceVertexAlphaData', mask);
-  
+
   set(opt.vline, 'xdata', [1 1]*opt.xparam(valx));
   if isfield(opt, 'hline')
     set(opt.hline, 'ydata', [1 1]*opt.yparam(valy));
@@ -495,14 +498,14 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   end
   %set(opt.hy,    'ylim',  [min(tmp(:)) max(tmp(:))]);
   %set(opt.vline, 'ydata', [min(tmp(:)) max(tmp(:))]);
-  
+
   if isfield(opt, 'dat2')
     tmp = mean(opt.dat1(opt.vindx,:,valy),1);
     set(opt.tline, 'ydata', tmp);
     tmp = mean(opt.dat2(opt.vindx,:,valy),1);
     set(opt.tline2, 'ydata', tmp);
   end
-  
+
   set(opt.hy,    'yaxislocation', 'right');
   set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
   if isfield(opt, 'parcellation'),
@@ -611,14 +614,14 @@ elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
   % get the current point, which is defined as the intersection through the
   % axis-box (in 3D)
   pos       = get(opt.hx, 'currentpoint');
-  
+
   % get the intersection with the mesh
   [ipos, d] = intersect_line(opt.pos, opt.tri, pos(1,:), pos(2,:));
   [md, ix]  = min(abs(d));
-  
+
   dpos      = opt.pos - ipos(ix*ones(size(opt.pos,1),1),:);
   opt.vindx = nearest(sum(dpos.^2,2),0);
-  
+
 end
 setappdata(h, 'opt', opt);
 cb_slider(h);
@@ -652,25 +655,25 @@ switch key
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-    
+
   case 'shift+leftarrow' % change colorlim
     opt.cfg.zlim(1) = opt.cfg.zlim(1)+0.1*abs(opt.cfg.zlim(1));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-    
+
   case 'rightarrow'
     opt.cfg.zlim(2) = opt.cfg.zlim(2)-0.1*abs(opt.cfg.zlim(2));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-    
+
   case 'shift+rightarrow'
     opt.cfg.zlim(2) = opt.cfg.zlim(2)+0.1*abs(opt.cfg.zlim(2));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-    
+
   case 'uparrow' % enhance threshold
     opt.threshold = opt.threshold+0.01.*max(opt.dat(:));
     setappdata(h, 'opt', opt);

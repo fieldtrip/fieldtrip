@@ -113,11 +113,11 @@ cfg.callinfo.calltime = clock();
 cfg.version.name = stack.file;
 clear stack
 
-% the revision number is maintained by SVN in the revision variable in the calling function
-if ~exist('revision', 'var')
+% the revision number is maintained by SVN in the ft_revision variable in the calling function
+if ~exist('ft_revision', 'var')
   cfg.version.id   = 'unknown';
 else
-  cfg.version.id   = revision;
+  cfg.version.id   = ft_revision;
 end
 
 ftohDiW7th_FuncTimer = tic();
