@@ -45,7 +45,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     mutexunlock(cfg.outputlock);
   end
   
-  if ~nargout
+  if ~ft_nargout
     % do not return the output variable "ans"
     clear(ft_default.postamble{1});
   end

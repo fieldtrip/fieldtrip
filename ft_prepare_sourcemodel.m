@@ -105,7 +105,10 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, headmodel, sens)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -114,8 +117,8 @@ ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -329,7 +332,7 @@ if basedonresolution
       minpos = min(minpos, min(pos,[],1));
       maxpos = max(maxpos, max(pos,[],1));
     end
-    
+
     % add a few % on either side
     minpos(minpos<0) = minpos(minpos<0).*1.08;
     maxpos(maxpos>0) = maxpos(maxpos>0).*1.08;
@@ -383,18 +386,18 @@ if basedonmri
   % construct a grid based on the segmented MRI that is provided in the
   % configuration, only voxels in gray matter will be used
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   if ischar(cfg.mri)
     mri = ft_read_mri(cfg.mri);
   else
     mri = cfg.mri;
   end
-  
+
   % ensure the mri to have units
   if ~isfield(mri, 'unit')
     mri = ft_convert_units(mri);
   end
-  
+
   if ~isfield(cfg.grid, 'resolution')
     switch cfg.grid.unit
       case 'mm'
@@ -407,29 +410,29 @@ if basedonmri
         cfg.grid.resolution = 0.01;
     end
   end
-  
+
   issegmentation = false;
   if isfield(mri, 'gray')
     % this is not a boolean segmentation, but based on tissue probability
     % maps, being the original implementation here.
     dat = double(mri.gray);
-    
+
     % apply a smoothing of a certain amount of voxels
     if ~strcmp(cfg.smooth, 'no');
       dat = volumesmooth(dat, cfg.smooth, 'MRI gray matter');
     end
-    
+
   elseif isfield(mri, 'anatomy')
     % this could be a tpm stored on disk, i.e. the result of
     % ft_volumesegment. Reading it in always leads to the field 'anatomy'.
     % Note this could be any anatomical mask
     dat = double(mri.anatomy);
-    
+
     % apply a smoothing of a certain amount of voxels
     if ~strcmp(cfg.smooth, 'no');
       dat = volumesmooth(dat, cfg.smooth, 'anatomy');
     end
-    
+
   elseif ft_datatype(mri, 'segmentation')
     % this is a proper segmentation, where a set of boolean masks is in the
     % input, or and indexed volume, along with labels. FIXME for now still
@@ -441,7 +444,7 @@ if basedonmri
       mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic');
       fn  = booleanfields(mri);
     end
-    
+
     dat = false(mri.dim);
     for i=1:numel(fn)
       if ~strcmp(cfg.smooth, 'no')
@@ -453,15 +456,15 @@ if basedonmri
   else
     error('cannot determine the format of the segmentation in cfg.mri');
   end
-  
-  
+
+
   % determine for each voxel whether it belongs to the grey matter
   fprintf('thresholding MRI data at a relative value of %f\n', cfg.threshold);
   head = dat./max(dat(:)) > cfg.threshold;
-  
+
   % convert the source/functional data into the same units as the anatomical MRI
   scale = ft_scalingfactor(cfg.grid.unit, mri.unit);
-  
+
   ind                 = find(head(:));
   fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));
   [X,Y,Z]             = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));  % create the grid in MRI-coordinates
@@ -476,7 +479,7 @@ if basedonmri
   pos2mri             = ft_warp_apply(inv(mri.transform), pos2head);        % transform to MRI voxel coordinates
   pos2mri             = round(pos2mri);
   inside              = getinside(pos2mri, head);                           % use helper subfunction
-  
+
   grid.pos            = pos2head/scale;                                     % convert to source units
   grid.xgrid          = xgrid/scale;                                        % convert to source units
   grid.ygrid          = ygrid/scale;                                        % convert to source units
@@ -574,12 +577,12 @@ if basedonmni
   elseif isfield(cfg.grid, 'resolution') && cfg.grid.resolution~=round(cfg.grid.resolution)
     fname = ['standard_sourcemodel3d',num2str(floor(cfg.grid.resolution)),'point',num2str(10*(cfg.grid.resolution-floor(cfg.grid.resolution))),'mm.mat'];
   end
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % check whether the mni template grid exists for the specified resolution
   % if not create it: FIXME (this needs to be done still)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % get the mri
   if ischar(cfg.mri)
     if ~exist(fname, 'file')
@@ -589,7 +592,7 @@ if basedonmni
   else
     mri = cfg.mri;
   end
-  
+
   % get the template grid
   if ischar(fname)
     mnigrid = load(fname, 'sourcemodel');
@@ -597,14 +600,14 @@ if basedonmni
   else
     mnigrid = cfg.grid.template;
   end
-  
+
   % ensure these to have units in mm, the conversion of the source model is done further down
   mri     = ft_convert_units(mri,     'mm');
   mnigrid = ft_convert_units(mnigrid, 'mm');
-  
+
   % ensure that it is specified with logical inside
   mnigrid = fixinside(mnigrid);
-  
+
   % spatial normalisation of mri and construction of subject specific dipole grid positions
   tmpcfg           = [];
   tmpcfg.nonlinear = cfg.grid.nonlinear;
@@ -612,7 +615,7 @@ if basedonmni
     tmpcfg.template = cfg.grid.templatemri;
   end
   normalise = ft_volumenormalise(tmpcfg, mri);
-  
+
   if ~isfield(normalise, 'params') && ~isfield(normalise, 'initial')
     fprintf('applying an inverse warp based on a linear transformation only\n');
     grid.pos = ft_warp_apply(inv(normalise.cfg.final), mnigrid.pos);
@@ -633,7 +636,7 @@ if basedonmni
     % copy the boolean fields over
     grid = copyfields(mnigrid, grid, booleanfields(mnigrid));
   end
-  
+
 end
 
 % in most cases the source model will already be in the desired units, but e.g. for "basedonmni" it will be in 'mm'

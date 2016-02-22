@@ -3,9 +3,9 @@ function dataout = ft_examplefunction(cfg, datain)
 % FT_EXAMPLEFUNCTION demonstrates to new developers how a FieldTrip function should look like
 %
 % Use as
-%   outdata = ft_examplefunction(cfg, indata) 
-% where indata is <<describe the type of data or where it comes from>> 
-% and cfg is a configuration structure that should contain 
+%   outdata = ft_examplefunction(cfg, indata)
+% where indata is <<describe the type of data or where it comes from>>
+% and cfg is a configuration structure that should contain
 %
 % <<note that the cfg list should be indented with two spaces
 %
@@ -35,7 +35,10 @@ function dataout = ft_examplefunction(cfg, datain)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 
@@ -49,14 +52,14 @@ ft_preamble loadvar    datain % this reads the input data in case the user speci
 ft_preamble provenance datain % this records the time and memory usage at the beginning of the function
 ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
   return
 end
 
-% ensure that the input data is valid for this function, this will also do 
-% backward-compatibility conversions of old data that for example was 
+% ensure that the input data is valid for this function, this will also do
+% backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
 datain = ft_checkdata(datain, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
@@ -83,7 +86,7 @@ vartrllen = ft_getopt(cfg, 'vartrllen', 2);  % the default is 2
 % do your stuff...
 dataout = [];
 
-% this might involve more active checking of whether the input options 
+% this might involve more active checking of whether the input options
 % are consistent with the data and with each other
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
