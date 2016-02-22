@@ -1111,6 +1111,10 @@ elseif filetype_check_extension(filename, '.stl')
   type = 'stl';
   manufacturer = 'various';
   content = 'stereo litography file';
+elseif filetype_check_extension(filename, '.obj')
+  type = 'obj';
+  manufacturer = 'Wavefront Technologies';
+  content = 'Wavefront OBJ';
 elseif filetype_check_extension(filename, '.dcm') || filetype_check_extension(filename, '.ima') || filetype_check_header(filename, 'DICM', 128)
   type = 'dicom';
   manufacturer = 'Dicom';
