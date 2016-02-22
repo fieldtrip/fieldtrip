@@ -146,6 +146,7 @@ url = {
   'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser'
   'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
+  'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
   };
 
 if nargin<2
@@ -352,6 +353,9 @@ switch toolbox
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
   case 'VIDEOMEG'
     filelist = {'comp_tstamps' 'load_audio0123', 'load_video123'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'WAVEFRONT'
+    filelist = {'write_wobj' 'read_wobj'};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
 
     % the following are fieldtrip modules/toolboxes
