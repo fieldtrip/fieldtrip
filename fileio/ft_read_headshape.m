@@ -701,7 +701,8 @@ switch fileformat
     shape.tri = tri;
     
   case 'obj'
-      % Implemented for structure.io .obj thus far
+      ft_hastoolbox('wavefront', 1);
+      % Implemented for structure.io .obj thus far without colormapping
       obj = read_wobj(filename);
       shape.pos = obj.vertices;
       shape.tri = obj.objects(2).data.vertices;
