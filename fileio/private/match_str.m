@@ -72,7 +72,7 @@ Nb = numel(b);
 % See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1808
 empty_a = cellfun(@isnumeric, a) & cellfun(@isempty, a);
 empty_b = cellfun(@isnumeric, b) & cellfun(@isempty, b);
-% the following allows the unqiue function to operate normally
+% the following allows the unique function to operate normally
 a(empty_a) = {''};
 b(empty_b) = {''};
 

@@ -154,12 +154,11 @@ switch fileformat
     sens.elecpos = sens.elecpos(sel,:);
     
   case 'besa_sfp'
-    fid = fopen(filename);
-    tmp = textscan(fid, ' %[^ \t]%n%n%n');
-    fclose(fid);
-    sens.label   = tmp{1};
-    sens.elecpos = [tmp{2:4}];
-    
+    [lab, pos] = read_besa_sfp(filename);
+	
+    sens.label   = lab;
+    sens.elecpos = pos;
+		
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);

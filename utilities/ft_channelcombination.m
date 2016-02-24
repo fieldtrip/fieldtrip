@@ -58,6 +58,9 @@ function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto,
 if nargin<3 || isempty(includeauto), includeauto = 0; end
 if nargin<4 || isempty(dirflag),     dirflag     = 0; end
 
+% ensure that datachannel is a column vector
+datachannel = datachannel(:);
+
 if ischar(channelcmb) && strcmp(channelcmb, 'all')
   % make all possible combinations of all channels
   channelcmb = {'all' 'all'};
