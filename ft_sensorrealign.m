@@ -185,8 +185,11 @@ switch cfg.method
     cfg = ft_checkconfig(cfg, 'required', 'headshape', 'forbidden', 'target');
 end % switch cfg.method
 
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
 % get the electrode definition that should be warped
-if nargin==1
+if ~hasdata
   try % try to get the description from the cfg
     elec_original = ft_fetch_sens(cfg);
   catch
@@ -199,8 +202,9 @@ if nargin==1
     elec_original.unit   = 'mm';
     warning(me.message, me.identifier);
   end
-elseif nargin>1
+else
   % the input electrodes were specified as second input argument
+  % or read from cfg.inputfile
 end
 
 % ensure that the units are specified

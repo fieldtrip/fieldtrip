@@ -214,6 +214,9 @@ if ft_abort
   return
 end
 
+% the data can be passed as input argument or can be read from disk
+hastarget = exist('target', 'var');
+
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
@@ -1021,11 +1024,11 @@ end
 % from voxel space to the target coordinate system space
 if viewresult
   % set flags for one or twovol case
-  if nargin == 3
-    twovol = true; % input was two volumes, base to be plotted on is called target, the aligned mri is named realign
+  if hastarget
+    twovol  = true; % input was two volumes, base to be plotted on is called target, the aligned mri is named realign
     basevol = target;
   else
-    twovol = false; % input was one volumes, base is called realign
+    twovol  = false; % input was one volumes, base is called realign
     basevol = realign;
   end
 
@@ -1103,7 +1106,7 @@ if viewresult
   dmin = min(dat(:));
   dmax = max(dat(:));
   dat  = (dat-dmin)./(dmax-dmin);
-  if nargin == 3 % do the same for the target
+  if hastarget % do the same for the target
     realigndat = double(realign.(cfg.parameter));
     dmin = min(realigndat(:));
     dmax = max(realigndat(:));

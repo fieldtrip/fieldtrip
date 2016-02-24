@@ -75,17 +75,15 @@ end
 
 % set the defaults
 cfg.component       = ft_getopt(cfg, 'component',  []);
-cfg.demean          = ft_getopt(cfg, 'demean',    'yes');
-cfg.feedback        = ft_getopt(cfg, 'feedback',  'text');
-cfg.updatesens      = ft_getopt(cfg, 'updatesens',  'yes');
+cfg.demean          = ft_getopt(cfg, 'demean',     'yes');
+cfg.feedback        = ft_getopt(cfg, 'feedback',   'text');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens', 'yes');
 
 % the data can be passed as input arguments or can be read from disk
-nargin = 1;
-nargin = nargin + exist('comp', 'var');
-nargin = nargin + exist('data', 'var');
+hascomp = exist('comp', 'var');
+hasdata = exist('data', 'var');
 
-
-if nargin==3
+if hascomp && hasdata
   % check if the input data is valid for this function
   istlck  = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
   data    = ft_checkdata(data, 'datatype', 'raw');
@@ -93,14 +91,12 @@ if nargin==3
   label   = data.label;
   nchans  = length(data.label);
   ncomps  = length(comp.label);
-  hasdata = 1;
-elseif nargin==2
+elseif hascomp
   % check if the input data is valid for this function
   istlck  = ft_datatype(comp, 'timelock');  % this will be temporary converted into raw
   comp    = ft_checkdata(comp, 'datatype', 'raw+comp');
   label   = comp.topolabel;
   ncomps  = length(comp.label);
-  hasdata = 0;
 else
   error('incorrect number of input arguments');
 end
@@ -121,7 +117,7 @@ if max(reject)>ncomps
   error('you cannot remove components that are not present in the data');
 end
 
-if nargin==3 && strcmp(cfg.demean, 'yes')
+if hasdata && strcmp(cfg.demean, 'yes')
   % optionally perform baseline correction on each trial
   fprintf('baseline correcting data \n');
   for trial=1:numel(data.trial)
@@ -141,7 +137,7 @@ end
 % topographies of the to-be-removed components from identity
 [seldat, selcomp] = match_str(label, comp.topolabel);
 
-if length(seldat)~=length(label) && nargin==3,
+if hasdata && length(seldat)~=length(label)
   warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
 end
 

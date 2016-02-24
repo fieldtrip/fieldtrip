@@ -107,10 +107,10 @@ end
 
 % otherwise create the layout structure
 if isempty(lay)
-  if nargin < 2
-    lay = ft_prepare_layout(cfg);
-  else
+  if hasdata
     lay = ft_prepare_layout(cfg, data);
+  else
+    lay = ft_prepare_layout(cfg);
   end
 end
 
@@ -121,14 +121,14 @@ figure;
 
 % set the figure window title
 funcname = mfilename();
-if nargin < 2
-  if isfield(cfg, 'inputfile')
+if hasdata
+  if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
     dataname = cfg.inputfile;
   else
-    dataname = [];
+    dataname = inputname(2);
   end
 else
-  dataname = inputname(2);
+  dataname = [];
 end
 
 if ~isempty(dataname)

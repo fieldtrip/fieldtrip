@@ -263,13 +263,17 @@ cfg.maskparameter = parameterselection(cfg.maskparameter, functional);
 try, cfg.funparameter  = cfg.funparameter{1};  end
 try, cfg.maskparameter = cfg.maskparameter{1}; end
 
-if nargin==3
+
+% the data can be passed as input argument or can be read from disk
+hasanatomical = exist('anatomical', 'var');
+
+if hasanatomical
   % interpolate on the fly, this also does the downsampling if requested
   tmpcfg = keepfields(cfg, {'downsample', 'interpmethod'});
   tmpcfg.parameter = cfg.funparameter;
   functional = ft_sourceinterpolate(tmpcfg, functional, anatomical);
   [cfg, functional] = rollback_provenance(cfg, functional);
-elseif nargin==2 && cfg.downsample~=1
+elseif ~hasanatomical && cfg.downsample~=1
   % optionally downsample the functional volume
   tmpcfg = keepfields(cfg, {'downsample'});
   tmpcfg.parameter = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};

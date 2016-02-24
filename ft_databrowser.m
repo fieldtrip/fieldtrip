@@ -156,7 +156,8 @@ if ft_abort
   return
 end
 
-hasdata = (nargin>1);
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
 hascomp = hasdata && ft_datatype(data, 'comp'); % can be 'raw+comp' or 'timelock+comp'
 
 % for backward compatibility
@@ -650,7 +651,7 @@ set(dcm, 'updatefcn', @datacursortext);
 
 % set the figure window title
 funcname = mfilename();
-if nargin < 2
+if ~hasdata
   if isfield(cfg, 'dataset')
     dataname = cfg.dataset;
   elseif isfield(cfg, 'datafile')
@@ -658,6 +659,8 @@ if nargin < 2
   else
     dataname = [];
   end
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
 else
   dataname = inputname(2);
 end
