@@ -506,7 +506,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
 			end
 			if isfield(grid, 'filter')
 				fprintf('\n\nSubselecting/reordering the channels in the precomputed filters\n\n');
-				for k = grid.inside(:)'
+				inside_indx = find(grid.inside);
+				for k = inside_indx(:)'
 					grid.filter{k} = grid.filter{k}(:, i2);
 				end
 			end
