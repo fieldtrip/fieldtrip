@@ -874,6 +874,13 @@ switch fileformat
 		[lab, pos] = read_besa_sfp(filename, 0);
 		shape.pos = pos;
 		
+		% assume that all non-'headshape' points are fiducial markers
+		hs = strmatch('headshape', lab);
+		lab(hs) = [];
+		pos(hs, :) = [];
+		shape.fid.label = lab;
+		shape.fid.pos = pos;
+		
   case 'asa_elc'
     elec = ft_read_sens(filename);
     
