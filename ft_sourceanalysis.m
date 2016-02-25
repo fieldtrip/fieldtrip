@@ -161,7 +161,7 @@ if ft_abort
 end
 
 % the baseline data can be passed as input argument or can be read from disk
-hasbaseline = exist('data', 'baseline');
+hasbaseline = exist('baseline');
 
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
