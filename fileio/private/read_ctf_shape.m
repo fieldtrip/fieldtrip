@@ -35,7 +35,7 @@ end
 
 fid = fopen(filename, 'rt');
 num = fscanf(fid, '%d', 1);
-shape.pnt = fscanf(fid, '%f', inf);
-shape.pnt = reshape(shape.pnt, [3 num])';
+shape.pos = fscanf(fid, '%f', inf);
+shape.pos = reshape(shape.pos, [3 num])';
 fclose(fid);
 
