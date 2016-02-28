@@ -145,9 +145,9 @@ if ~isfield(cfg, 'remove')
     'grid.pos'
     'grid.inside'
     'grid.outside'
-    'vol.bnd.pnt'
+    'vol.bnd.pos'
     'vol.bnd.tri'
-    'headmodel.bnd.pnt'
+    'headmodel.bnd.pos'
     'headmodel.bnd.tri'
     };
 elseif ~iscell(cfg.remove)

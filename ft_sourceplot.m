@@ -1052,11 +1052,11 @@ switch cfg.method
       % FIXME this should be dealt with by ft_sourceinterpolate
 
       % read the triangulated cortical surface from file
-      surf  = ft_read_headshape(cfg.surffile);
+      surf = ft_read_headshape(cfg.surffile);
 
       if isfield(surf, 'transform'),
         % compute the surface vertices in head coordinates
-        surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
+        surf.pos = ft_warp_apply(surf.transform, surf.pos);
       end
 
       % downsample the cortical surface
@@ -1064,13 +1064,13 @@ switch cfg.method
         if ~isempty(cfg.surfinflated)
           error('downsampling the surface is not possible in combination with an inflated surface');
         end
-        fprintf('downsampling surface from %d vertices\n', size(surf.pnt,1));
-        [temp.tri, temp.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
+        fprintf('downsampling surface from %d vertices\n', size(surf.pos,1));
+        [temp.tri, temp.pos] = reducepatch(surf.tri, surf.pos, 1/cfg.surfdownsample);
         % find indices of retained patch faces
-        [dummy, idx] = ismember(temp.pnt, surf.pnt, 'rows');
+        [dummy, idx] = ismember(temp.pos, surf.pos, 'rows');
         idx(idx==0)  = [];
         surf.tri = temp.tri;
-        surf.pnt = temp.pnt;
+        surf.pos = temp.pos;
         clear temp
         % downsample other fields
         if isfield(surf, 'curv'),       surf.curv       = surf.curv(idx);       end
@@ -1084,7 +1084,7 @@ switch cfg.method
       end
 
       fprintf('%d voxels in functional data\n', prod(dim));
-      fprintf('%d vertices in cortical surface\n', size(surf.pnt,1));
+      fprintf('%d vertices in cortical surface\n', size(surf.pos,1));
 
       tmpcfg = [];
       tmpcfg.parameter = {cfg.funparameter};
@@ -1114,7 +1114,7 @@ switch cfg.method
 
     else
       surf     = [];
-      surf.pnt = functional.pos;
+      surf.pos = functional.pos;
       surf.tri = functional.tri;
 
       % if hasfun, val     = fun(functional.inside(:)); end
@@ -1132,7 +1132,7 @@ switch cfg.method
         surf = cfg.surfinflated;
         if isfield(surf, 'transform'),
           % compute the surface vertices in head coordinates
-          surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
+          surf.pos = ft_warp_apply(surf.transform, surf.pos);
         end
       end
     end
@@ -1144,17 +1144,17 @@ switch cfg.method
       % the curvature determines the color of gyri and sulci
       color = surf.curv(:) * cortex_dark + (1-surf.curv(:)) * cortex_light;
     else
-      color = repmat(cortex_light, size(surf.pnt,1), 1);
+      color = repmat(cortex_light, size(surf.pos,1), 1);
     end
 
-    h1 = patch('Vertices', surf.pnt, 'Faces', surf.tri, 'FaceVertexCData', color, 'FaceColor', 'interp');
+    h1 = patch('Vertices', surf.pos, 'Faces', surf.tri, 'FaceVertexCData', color, 'FaceColor', 'interp');
     set(h1, 'EdgeColor', 'none');
     axis   off;
     axis vis3d;
     axis equal;
 
     if hasfun
-      h2 = patch('Vertices', surf.pnt, 'Faces', surf.tri, 'FaceVertexCData', val, 'FaceColor', 'interp');
+      h2 = patch('Vertices', surf.pos, 'Faces', surf.tri, 'FaceVertexCData', val, 'FaceColor', 'interp');
       set(h2, 'EdgeColor', 'none');
       try
         caxis(gca,[fcolmin fcolmax]);

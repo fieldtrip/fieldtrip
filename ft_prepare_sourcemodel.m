@@ -516,7 +516,7 @@ if basedoncortex
   % ensure that the headshape is in the same units as the source
   shape     = ft_convert_units(shape, cfg.grid.unit);
   % return both the vertices and triangles from the cortical sheet
-  grid.pos  = shape.pnt;
+  grid.pos  = shape.pos;
   grid.tri  = shape.tri;
   grid.unit = shape.unit;
 end
@@ -527,12 +527,12 @@ if basedonshape
   % for megrealign). Assume that all points are inside the volume.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % get the surface describing the head shape
-  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
     % use the headshape surface specified in the configuration
     headshape = cfg.headshape;
   elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
     % use the headshape points specified in the configuration
-    headshape.pnt = cfg.headshape;
+    headshape.pos = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
@@ -543,8 +543,8 @@ if basedonshape
   headshape = ft_convert_units(headshape, cfg.grid.unit);
   if ~isfield(headshape, 'tri')
     % generate a closed triangulation from the surface points
-    headshape.pnt = unique(headshape.pnt, 'rows');
-    headshape.tri = projecttri(headshape.pnt);
+    headshape.pos = unique(headshape.pos, 'rows');
+    headshape.tri = projecttri(headshape.pos);
   end
   % please note that cfg.inwardshift should be expressed in the units consistent with cfg.grid.unit
   grid.pos     = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);
@@ -648,24 +648,24 @@ if strcmp(cfg.spherify, 'yes')
     error('this only works for spherical volume conduction models');
   end
   % deform the cortex so that it fits in a unit sphere
-  pnt = mesh_spherify(grid.pos, [], 'shift', 'range');
+  pos = mesh_spherify(grid.pos, [], 'shift', 'range');
   % scale it to the radius of the innermost sphere, make it a tiny bit smaller to
   % ensure that the support point with the exact radius 1 is still inside the sphere
-  pnt = pnt*min(headmodel.r)*0.999;
-  pnt(:,1) = pnt(:,1) + headmodel.o(1);
-  pnt(:,2) = pnt(:,2) + headmodel.o(2);
-  pnt(:,3) = pnt(:,3) + headmodel.o(3);
-  grid.pos = pnt;
+  pos = pos*min(headmodel.r)*0.999;
+  pos(:,1) = pos(:,1) + headmodel.o(1);
+  pos(:,2) = pos(:,2) + headmodel.o(2);
+  pos(:,3) = pos(:,3) + headmodel.o(3);
+  grid.pos = pos;
 end
 
 if ~isempty(cfg.moveinward)
   % construct a triangulated boundary of the source compartment
-  [pnt1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
-  inside = bounding_mesh(grid.pos, pnt1, tri1);
+  [pos1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
+  inside = bounding_mesh(grid.pos, pos1, tri1);
   if ~all(inside)
-    pnt2 = grid.pos(~inside,:);
-    [dum, pnt3] = project_elec(pnt2, pnt1, tri1);
-    grid.pos(~inside,:) = pnt3;
+    pos2 = grid.pos(~inside,:);
+    [dum, pos3] = project_elec(pos2, pos1, tri1);
+    grid.pos(~inside,:) = pos3;
   end
   if cfg.moveinward>cfg.inwardshift
     grid.inside  = true(size(grid.pos,1),1);

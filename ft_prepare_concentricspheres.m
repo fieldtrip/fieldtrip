@@ -81,14 +81,14 @@ else
 end
 
 % concatenate the vertices of all surfaces
-pnt = [];
+pos = [];
 for i = fitind
-  pnt = [pnt ; headshape(i).pnt];
+  pos = [pos ; headshape(i).pos];
 end
 % remove double vertices
-pnt = unique(pnt, 'rows');
+pos = unique(pos, 'rows');
 
-Npnt = size(pnt, 1);
+Npos = size(pos, 1);
 
 % set up an empty figure
 if strcmp(cfg.feedback, 'yes')
@@ -99,12 +99,12 @@ if strcmp(cfg.feedback, 'yes')
   axis off
   drawnow
   colors = {'b', 'y', 'm', 'r'};
-  [sphere_pnt, sphere_tri] = icosahedron162;
+  [sphere_pos, sphere_tri] = icosahedron162;
 end
 
 % fit a single sphere to all headshape points
-[single_o, single_r] = fitsphere(pnt);
-fprintf('initial sphere: number of surface points = %d\n', Npnt);
+[single_o, single_r] = fitsphere(pos);
+fprintf('initial sphere: number of surface points = %d\n', Npos);
 fprintf('initial sphere: center = [%.1f %.1f %.1f]\n', single_o(1), single_o(2), single_o(3));
 fprintf('initial sphere: radius = %.1f\n', single_r);
 
@@ -112,7 +112,7 @@ fprintf('initial sphere: radius = %.1f\n', single_r);
 headmodel = [];
 headmodel.o = single_o;
 for i = 1:numel(headshape)
-  dist     = sqrt(sum(((headshape(end-i+1).pnt - repmat(single_o, size(headshape(end-i+1).pnt,1), 1)).^2), 2));
+  dist     = sqrt(sum(((headshape(end-i+1).pos - repmat(single_o, size(headshape(end-i+1).pos,1), 1)).^2), 2));
   headmodel.r(i) = mean(dist);
 
   if strcmp(cfg.feedback, 'yes')
@@ -122,13 +122,13 @@ for i = 1:numel(headshape)
 
     % plot the original surface
     bndtmp = [];
-    bndtmp.pnt = headshape(end-i+1).pnt;
+    bndtmp.pos = headshape(end-i+1).pos;
     bndtmp.tri = headshape(end-i+1).tri;
     ft_plot_mesh(bndtmp,'facecolor','none')
 
     % plot the sphere surface
     bndtmp = [];
-    bndtmp.pnt = sphere_pnt*headmodel.r(i) + repmat(single_o, size(sphere_pnt, 1), 1);
+    bndtmp.pos = sphere_pos*headmodel.r(i) + repmat(single_o, size(sphere_pos, 1), 1);
     bndtmp.tri = sphere_tri;
     ft_plot_mesh(bndtmp,'edgecolor',colors{mod(i, numel(colors)) + 1},'facecolor','none');
   end
