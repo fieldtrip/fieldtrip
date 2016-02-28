@@ -266,7 +266,7 @@ if useheadshape
   end
   if ~isfield(headshape, 'tri') && ~isfield(headshape, 'poly')
     % generate a closed triangulation from the surface points
-    headshape.pnt = unique(headshape.pos, 'rows');
+    headshape.pos = unique(headshape.pos, 'rows');
     headshape.tri = projecttri(headshape.pos);
   end
   headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes

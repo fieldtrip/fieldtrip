@@ -971,5 +971,7 @@ else
   end
 end
 
+% ensure that vertex positions are given in pos, not in pnt
+shape = fixpos(shape);
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
