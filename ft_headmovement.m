@@ -11,14 +11,14 @@ function [grad] = ft_headmovement(cfg)
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.numclusters  = number of segments with constant headposition in which to split the data (default = 12)
 %
-% This method and related methods are described by Stolk et al., Online and 
+% This method and related methods are described by Stolk et al., Online and
 % offline tools for head movement compensation in MEG. NeuroImage, 2012.
 %
 % See also FT_REGRESSCONFOUND FT_REALTIME_HEADLOCALIZER
 
 % Copyright (C) 2008-2010, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -36,7 +36,10 @@ function [grad] = ft_headmovement(cfg)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -45,8 +48,8 @@ ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -95,7 +98,7 @@ for k = 1:length(data.trial)
   tmpdat  = data.trial{k};
   utmpdat = unique(tmpdat','rows')';
   dat     = [dat utmpdat];
-  
+
   wtmpdat = zeros(1,size(utmpdat,2));
   for m = 1:size(utmpdat,2)
     wtmpdat(1,m) = sum(sum(tmpdat-utmpdat(:,m)*ones(1,size(tmpdat,2))==0,1)==9);
@@ -139,16 +142,16 @@ if 1,
   xdir  = trf(1,1:3);
   ydir  = trf(2,1:3);
   zdir  = trf(3,1:3);
-  
+
   trf2   = inv(hc.homogenous);
   origin = trf2(1:3,4)';
-  
+
   xaxis  = [repmat(origin, [15 1]) + [0:14]'*xdir];
   yaxis  = [repmat(origin, [9  1]) + [0:8]'*ydir; ...
     repmat(origin, [9  1]) - [0:8]'*ydir];
   zaxis  = [repmat(origin, [10 1]) + [0:9]'*zdir; ...
     repmat(origin, [3  1]) - [0:2]'*zdir];
-  
+
   % plot some stuff
   figure; hold on;
   plot3(xaxis(:,1),xaxis(:,2),xaxis(:,3),'k.-');

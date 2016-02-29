@@ -9,7 +9,7 @@ function [shape] = read_ctf_shape(filename);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -35,7 +35,7 @@ end
 
 fid = fopen(filename, 'rt');
 num = fscanf(fid, '%d', 1);
-shape.pnt = fscanf(fid, '%f', inf);
-shape.pnt = reshape(shape.pnt, [3 num])';
+shape.pos = fscanf(fid, '%f', inf);
+shape.pos = reshape(shape.pos, [3 num])';
 fclose(fid);
 

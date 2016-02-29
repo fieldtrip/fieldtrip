@@ -15,7 +15,7 @@
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -40,9 +40,9 @@ global ft_default
 assign = @(var, val) assignin('caller', var, val);
 
 if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  
+
   % the input data should be read from file
-  if (nargin>1)
+  if (ft_nargin>1)
     error('cfg.inputfile should not be used in conjunction with giving input data to this function');
   else
     if isfield(cfg, 'inputlock') && ~isempty(cfg.inputlock)

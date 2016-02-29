@@ -48,7 +48,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -66,7 +66,10 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -76,8 +79,8 @@ ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -119,20 +122,21 @@ end
 % ensure a consistent selection of the data over all inputs
 tmpcfg = keepfields(cfg, {'parameter', 'trials', 'latency', 'frequency', 'foilim'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+% restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 % start with an empty output structure
 grandavg = [];
 
 if iscell(varargin{1}.(cfg.parameter))
-  
+
   % collect the data
   dat = cellfun(@getfield, varargin, repmat({cfg.parameter}, size(varargin)), 'UniformOutput', false);
-  
+
   npos = numel(dat{1});
   nrpt = numel(dat);
   dat  = cat(2, dat{:}); % make it {pos_rpt}
-  
+
   if isfield(varargin{1}, 'inside')
     % it is logically indexed, take the first inside source location
     probe = find(varargin{1}.inside, 1, 'first');
@@ -140,22 +144,22 @@ if iscell(varargin{1}.(cfg.parameter))
     % just take the first source position
     probe = 1;
   end
-  
+
   olddim = size(dat{probe,1});
   newdim = [1 olddim];
-  
+
   if strcmp(cfg.keepindividual, 'yes')
     dat = cellfun(@reshape,  dat, repmat({newdim}, size(dat)), 'UniformOutput', false);
     for i=1:npos
       dat{i,1} = cat(1, dat{i,:}); % concatenate them into the first one
     end
     grandavg.(cfg.parameter) = dat(:,1);
-    
+
     if ~isequal(size(grandavg.(cfg.parameter)), size(varargin{1}.(cfg.parameter)))
       % this is a bit unexpected, but let's reshape it back into the original size
       grandavg.(cfg.parameter) = reshape(grandavg.(cfg.parameter), size(varargin{1}.(cfg.parameter)));
     end
-    
+
     if isfield(varargin{1}, [cfg.parameter 'dimord'])
       dimord = varargin{1}.([cfg.parameter 'dimord']);
       dimtok = tokenize(dimord, '_');
@@ -163,7 +167,7 @@ if iscell(varargin{1}.(cfg.parameter))
       dimord = sprintf('%s_', dimtok{:});
       dimord = dimord(1:end-1); % remove the trailing '_'
       grandavg.([cfg.parameter 'dimord']) = dimord;
-      
+
     elseif isfield(varargin{1}, 'dimord')
       dimord = varargin{1}.dimord;
       dimtok = tokenize(dimord, '_');
@@ -172,7 +176,7 @@ if iscell(varargin{1}.(cfg.parameter))
       dimord = dimord(1:end-1); % remove the trailing '_'
       grandavg.dimord = dimord;
     end
-    
+
   else
     for i=1:npos
       for j=2:nrpt
@@ -181,24 +185,24 @@ if iscell(varargin{1}.(cfg.parameter))
       dat{i,1} = dat{i,1}/nrpt;
     end
     grandavg.(cfg.parameter) = dat(:,1);
-    
+
     if isfield(varargin{1}, [cfg.parameter 'dimord'])
       grandavg.([cfg.parameter 'dimord']) = varargin{1}.([cfg.parameter 'dimord']);
     elseif isfield(varargin{1}, 'dimord')
       grandavg.dimord = varargin{1}.dimord;
     end
-    
+
   end % if keepindividual
   clear dat
-  
+
 else
   % determine the dimensions, include the new repetition dimension
   olddim = size(varargin{1}.(cfg.parameter));
   newdim = [1 olddim];
-  
+
   % collect and reshape the data
   dat = cellfun(@getfield, varargin, repmat({cfg.parameter}, size(varargin)), 'UniformOutput', false);
-  
+
   if strcmp(cfg.keepindividual, 'yes')
     % concatenate the data into a single array
     dat = cellfun(@reshape,  dat, repmat({newdim}, size(dat)), 'UniformOutput', false);
@@ -208,7 +212,7 @@ else
     elseif isfield(varargin{1}, 'dimord')
       grandavg.dimord = ['rpt_' varargin{1}.dimord];
     end
-    
+
   else
     % sum the data in a single array
     for i=2:length(dat)
@@ -222,7 +226,7 @@ else
     end
   end % if keepindividual
   clear dat
-  
+
 end % if iscell
 
 % the fields that describe the actual data need to be copied over from the input to the output

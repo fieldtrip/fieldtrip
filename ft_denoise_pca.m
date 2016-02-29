@@ -8,8 +8,8 @@ function data = ft_denoise_pca(cfg, varargin)
 % applied to data from other MEG systems.
 %
 % Use as
-%   [dataout] = ft_denoise_pca(cfg, data) 
-% or 
+%   [dataout] = ft_denoise_pca(cfg, data)
+% or
 %   [dataout] = ft_denoise_pca(cfg, data, refdata)
 %
 % where data is a raw data-structure with MEG data that was obtained with
@@ -31,10 +31,10 @@ function data = ft_denoise_pca(cfg, varargin)
 %   cfg.trials     = list of trials that are used (default = 'all')
 %
 % if cfg.truncate is integer n > 1, n will be the number of singular values kept.
-% if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the 
+% if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
 % fraction cfg.truncate of the largest singular value.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC 
+% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
@@ -43,7 +43,7 @@ function data = ft_denoise_pca(cfg, varargin)
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
 % Copyright (c) 2010-2011, Jan-Mathijs Schoffelen, DCCN Nijmegen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -61,7 +61,10 @@ function data = ft_denoise_pca(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -70,8 +73,8 @@ ft_preamble debug
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -98,7 +101,7 @@ if strcmp(cfg.pertrial, 'yes'),
     tmp{k,1}      = ft_denoise_pca(tmpcfg, varargin{:});
   end
   data = ft_appenddata([], tmp{:});
-  return;  
+  return;
 end
 
 computeweights = ~isfield(cfg, 'pca');
@@ -108,7 +111,7 @@ if length(varargin)==1,
   data    = varargin{1};
   megchan = ft_channelselection(cfg.channel, data.label);
   refchan = ft_channelselection(cfg.refchannel, data.label);
-   
+
   % split data into data and refdata
   tmpcfg  = [];
   tmpcfg.channel = refchan;
@@ -122,7 +125,7 @@ else
   refdata = varargin{2};
   megchan = ft_channelselection(cfg.channel, data.label);
   refchan = ft_channelselection(cfg.refchannel, refdata.label);
-   
+
   % split data into data and refdata
   tmpcfg  = [];
   tmpcfg.channel = refchan;
@@ -130,7 +133,7 @@ else
   refdata = ft_preprocessing(tmpcfg, refdata);
   tmpcfg.channel = megchan;
   data    = ft_preprocessing(tmpcfg, data);
-  
+
   %FIXME do compatibility check on data vs refdata with respect to dimensions (time-trials)
 end
 
@@ -140,7 +143,7 @@ data    = ft_selectdata(tmpcfg, data);
 refdata = ft_selectdata(tmpcfg, refdata);
 % restore the provenance information
 [cfg, data]    = rollback_provenance(cfg, data);
-[dum, refdata] = rollback_provenance(cfg, refdata); 
+[dum, refdata] = rollback_provenance(cfg, refdata);
 
 refchan = ft_channelselection(cfg.refchannel, refdata.label);
 refindx = match_str(refdata.label, refchan);
@@ -173,7 +176,7 @@ refdata.trial = cellvecadd(refdata.trial, -m);
 stdpre = cellstd(data.trial, 2);
 
 if computeweights,
-  
+
   % zscore
   if strcmp(cfg.zscore, 'yes'),
     fprintf('zscoring the reference channel data\n');
@@ -181,12 +184,12 @@ if computeweights,
   else
     sdref = ones(nref,1);
   end
-  
+
   % compute covariance of refchannels and do svd
   fprintf('performing pca on the reference channel data\n');
   crefdat = cellcov(refdata.trial, [], 2, 0);
   [u,s,v] = svd(crefdat);
-  
+
   % determine the truncation and rotation
   if cfg.truncate<1
     % keep all singular vectors with singular values >= cfg.truncate*s(1,1)
@@ -197,23 +200,23 @@ if computeweights,
   end
   fprintf('keeping %d out of %d components\n',numel(keep),size(u,2));
   rotmat = u(:, keep)';
-  
+
   % rotate the refdata
   fprintf('projecting the reference data onto the pca-subspace\n');
   refdata.trial = cellfun(@mtimes, repmat({rotmat}, 1, ntrl), refdata.trial, 'UniformOutput', 0);
-  
+
   % project megdata onto the orthogonal basis
   fprintf('computing the regression weights\n');
   nom   = cellcov(data.trial, refdata.trial, 2, 0);
   denom = cellcov(refdata.trial, [],         2, 0);
   rw    = (pinv(denom)*nom')';
-  
+
   %subtract projected data
   fprintf('subtracting the reference channel data from the channel data\n');
   for k = 1:ntrl
     data.trial{k} = data.trial{k} - rw*refdata.trial{k};
   end
-  
+
   %rotate back and 'unscale'
   pca.w        = rw*rotmat*diag(1./sdref);
   pca.label    = data.label;
@@ -225,13 +228,13 @@ else
     % check whether the weight table contains the specified references
   % ensure the ordering of the meg-data to be consistent with the weights
   % ensure the ordering of the ref-data to be consistent with the weights
-  
+
   [i1,i2] = match_str(refchan, cfg.pca.reflabel);
   [i3,i4] = match_str(megchan, cfg.pca.label);
   if length(i2)~=length(cfg.pca.reflabel),
     error('you specified fewer references to use as there are in the precomputed weight table');
   end
-  
+
   refindx = refindx(i1);
   megindx = megindx(i3);
   cfg.pca.w = cfg.pca.w(i4,i2);
@@ -240,12 +243,12 @@ else
   if isfield(cfg.pca, 'rotmat'),
     cfg.pca = rmfield(cfg.pca, 'rotmat'); % dont know
   end
-  
+
   for k = 1:ntrl
     data.trial{k} = data.trial{k} - cfg.pca.w*refdata.trial{k};
   end
   pca = cfg.pca;
-  
+
 end
 
 % compute std of data after
@@ -261,7 +264,7 @@ if isfield(data, 'grad')
   montage     = [];
   labelnew    = pca.label;
   nlabelnew   = length(labelnew);
-  
+
   %add columns of refchannels not yet present in labelnew
   %[id, i1]  = setdiff(pca.reflabel, labelnew);
   %labelorg  = [labelnew; pca.reflabel(sort(i1))];
@@ -270,14 +273,14 @@ if isfield(data, 'grad')
 
   %start with identity
   montage.tra = eye(nlabelorg);
-  
+
   %subtract weights
   [i1, i2]  = match_str(labelorg, pca.reflabel);
   [i3, i4]  = match_str(labelorg, pca.label);
   montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
   montage.labelorg  = labelorg;
   montage.labelnew  = labelorg;
-   
+
   data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes', 'balancename', 'pca');
 
   % order the fields
@@ -308,12 +311,12 @@ ft_postamble savevar    data
 %-----cellcov
 function [c] = cellcov(x, y, dim, flag)
 
-% [C] = CELLCOV(X, DIM) computes the covariance, across all cells in x along 
+% [C] = CELLCOV(X, DIM) computes the covariance, across all cells in x along
 % the dimension dim. When there are three inputs, covariance is computed between
 % all cells in x and y
-% 
-% X (and Y) should be linear cell-array(s) of matrices for which the size in at 
-% least one of the dimensions should be the same for all cells 
+%
+% X (and Y) should be linear cell-array(s) of matrices for which the size in at
+% least one of the dimensions should be the same for all cells
 
 if nargin==2,
   flag = 1;
@@ -348,13 +351,13 @@ end
 
 nx   = max(nx);
 nsmp = cellfun('size', x, dim);
-if isempty(y), 
+if isempty(y),
   csmp = cellfun(@covc, x, repmat({dim},1,nx), 'UniformOutput', 0);
 else
   csmp = cellfun(@covc, x, y, repmat({dim},1,nx), 'UniformOutput', 0);
 end
 nc   = size(csmp{1});
-c    = sum(reshape(cell2mat(csmp), [nc(1) nc(2) nx]), 3)./sum(nsmp); 
+c    = sum(reshape(cell2mat(csmp), [nc(1) nc(2) nx]), 3)./sum(nsmp);
 
 function [c] = covc(x, y, dim)
 
@@ -372,11 +375,11 @@ end
 %-----cellmean
 function [m] = cellmean(x, dim)
 
-% [M] = CELLMEAN(X, DIM) computes the mean, across all cells in x along 
+% [M] = CELLMEAN(X, DIM) computes the mean, across all cells in x along
 % the dimension dim.
-% 
-% X should be an linear cell-array of matrices for which the size in at 
-% least one of the dimensions should be the same for all cells 
+%
+% X should be an linear cell-array of matrices for which the size in at
+% least one of the dimensions should be the same for all cells
 
 nx = size(x);
 if ~iscell(x) || length(nx)>2 || all(nx>1),
@@ -395,15 +398,15 @@ end
 nx   = max(nx);
 nsmp = cellfun('size', x, dim);
 ssmp = cellfun(@sum,   x, repmat({dim},1,nx), 'UniformOutput', 0);
-m    = sum(cell2mat(ssmp), dim)./sum(nsmp);  
+m    = sum(cell2mat(ssmp), dim)./sum(nsmp);
 
 %-----cellstd
 function [sd] = cellstd(x, dim, flag)
 
-% [M] = CELLSTD(X, DIM, FLAG) computes the standard deviation, across all cells in x along 
-% the dimension dim, normalising by the total number of samples 
-% 
-% X should be an linear cell-array of matrices for which the size in at 
+% [M] = CELLSTD(X, DIM, FLAG) computes the standard deviation, across all cells in x along
+% the dimension dim, normalising by the total number of samples
+%
+% X should be an linear cell-array of matrices for which the size in at
 % least one of the dimensions should be the same for all cells. If flag==1, the mean will
 % be subtracted first (default behaviour, but to save time on already demeaned data, it
 % can be set to 0).
@@ -432,7 +435,7 @@ end
 nx   = max(nx);
 nsmp = cellfun('size', x, dim);
 ssmp = cellfun(@sumsq,   x, repmat({dim},1,nx), 'UniformOutput', 0);
-sd   = sqrt(sum(cell2mat(ssmp), dim)./sum(nsmp));  
+sd   = sqrt(sum(cell2mat(ssmp), dim)./sum(nsmp));
 
 function [s] = sumsq(x, dim)
 
@@ -441,14 +444,14 @@ s = sum(x.^2, dim);
 %-----cellvecadd
 function [y] = cellvecadd(x, v)
 
-% [Y]= CELLVECADD(X, V) - add vector to all rows or columns of each matrix 
+% [Y]= CELLVECADD(X, V) - add vector to all rows or columns of each matrix
 % in cell-array X
 
 % check once and for all to save time
 persistent bsxfun_exists;
-if isempty(bsxfun_exists); 
-    bsxfun_exists=exist('bsxfun','builtin'); 
-    if ~bsxfun_exists; 
+if isempty(bsxfun_exists);
+    bsxfun_exists=exist('bsxfun','builtin');
+    if ~bsxfun_exists;
         error('bsxfun not found.');
     end
 end
@@ -473,9 +476,9 @@ function [y] = cellvecmult(x, v)
 
 % check once and for all to save time
 persistent bsxfun_exists;
-if isempty(bsxfun_exists); 
-    bsxfun_exists=exist('bsxfun','builtin'); 
-    if ~bsxfun_exists; 
+if isempty(bsxfun_exists);
+    bsxfun_exists=exist('bsxfun','builtin');
+    if ~bsxfun_exists;
         error('bsxfun not found.');
     end
 end
@@ -493,21 +496,21 @@ sx1 = cellfun('size', x, 1);
 sx2 = cellfun('size', x, 2);
 sv1 = cellfun('size', v, 1);
 sv2 = cellfun('size', v, 2);
-if all(sx1==sv1) && all(sv2==1),    
+if all(sx1==sv1) && all(sv2==1),
 elseif all(sx2==sv2) && all(sv1==1),
 elseif all(sv1==1) && all(sv2==1),
 else   error('inconsistent input');
-end  
+end
 
 y  = cellfun(@bsxfun, repmat({@times}, nx), x, v, 'UniformOutput', 0);
 
 %-----cellzscore
 function [z, sd, m] = cellzscore(x, dim, flag)
 
-% [Z, SD] = CELLZSCORE(X, DIM, FLAG) computes the zscore, across all cells in x along 
-% the dimension dim, normalising by the total number of samples 
-% 
-% X should be an linear cell-array of matrices for which the size in at 
+% [Z, SD] = CELLZSCORE(X, DIM, FLAG) computes the zscore, across all cells in x along
+% the dimension dim, normalising by the total number of samples
+%
+% X should be an linear cell-array of matrices for which the size in at
 % least one of the dimensions should be the same for all cells. If flag==1, the mean will
 % be subtracted first (default behaviour, but to save time on already demeaned data, it
 % can be set to 0). SD is a vector containing the standard deviations, used for the normalisation.
@@ -535,4 +538,3 @@ end
 
 sd   = cellstd(x, dim, 0);
 z    = cellvecmult(x, 1./sd);
-

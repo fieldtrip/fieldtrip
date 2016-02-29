@@ -17,7 +17,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 
 % Copyright (C) 2005-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -91,17 +91,17 @@ url = {
   'COMPILER'   'see http://www.mathworks.com/products/compiler'
   'FASTICA'    'see http://www.cis.hut.fi/projects/ica/fastica'
   'BRAINSTORM' 'see http://neuroimage.ucs.edu/brainstorm'
-  'FILEIO'     'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'PREPROC'    'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'FORWARD'    'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'INVERSE'    'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'SPECEST'    'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'REALTIME'   'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'PLOTTING'   'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'SPIKE'      'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'CONNECTIVITY' 'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'PEER'          'see http://www.ru.nl/neuroimaging/fieldtrip'
-  'PLOTTING'      'see http://www.ru.nl/neuroimaging/fieldtrip'
+  'FILEIO'     'see http://www.fieldtriptoolbox.org'
+  'PREPROC'    'see http://www.fieldtriptoolbox.org'
+  'FORWARD'    'see http://www.fieldtriptoolbox.org'
+  'INVERSE'    'see http://www.fieldtriptoolbox.org'
+  'SPECEST'    'see http://www.fieldtriptoolbox.org'
+  'REALTIME'   'see http://www.fieldtriptoolbox.org'
+  'PLOTTING'   'see http://www.fieldtriptoolbox.org'
+  'SPIKE'      'see http://www.fieldtriptoolbox.org'
+  'CONNECTIVITY' 'see http://www.fieldtriptoolbox.org'
+  'PEER'          'see http://www.fieldtriptoolbox.org'
+  'PLOTTING'      'see http://www.fieldtriptoolbox.org'
   'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
@@ -146,6 +146,7 @@ url = {
   'NEURALYNX_V3'  'see http://neuralynx.com/research_software/file_converters_and_utilities/ and take the version from Ueli Rutishauser'
   'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
+  'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
   };
 
 if nargin<2
@@ -352,6 +353,9 @@ switch toolbox
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
   case 'VIDEOMEG'
     filelist = {'comp_tstamps' 'load_audio0123', 'load_video123'};
+    status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
+  case 'WAVEFRONT'
+    filelist = {'write_wobj' 'read_wobj'};
     status = all(cellfun(@exist, filelist, repmat({'file'}, size(filelist))));
 
     % the following are fieldtrip modules/toolboxes

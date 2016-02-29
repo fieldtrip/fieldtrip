@@ -79,7 +79,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 
 % Copyright (C) 2003-2006, Ole Jensen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -97,7 +97,10 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -107,8 +110,8 @@ ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -186,7 +189,7 @@ for i=1:Ndata
   % check if the input data is valid for this function
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'freq'});
   dtype{i}    = ft_datatype(varargin{i});
-  
+
   % this is needed for correct treatment of graphcolor later on
   if nargin>1,
     if ~isempty(inputname(i+1))
@@ -294,7 +297,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
       varargin{i} = rmfield(varargin{i}, 'crsspctrm');
     end
   end
-  
+
   tmpcfg           = [];
   tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
@@ -347,7 +350,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
   end
-  
+
   % check for refchannel being part of selection
   if ~strcmp(cfg.refchannel,'gui')
     if haslabelcmb
@@ -360,12 +363,12 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
       error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
-  
+
   % interactively select the reference channel
   if strcmp(cfg.refchannel, 'gui')
     error('cfg.refchannel = ''gui'' is not supported in ft_singleplotER');
   end
-  
+
   for i=1:Ndata
     if ~isfull,
       % convert 2-dimensional channel matrix to a single dimension:
@@ -403,7 +406,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
         sel1 = sel;
         sel2 = 1:siz(1);
         meandir = 1;
-        
+
       elseif strcmp(cfg.directionality, 'ff-fd')
         error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
       elseif strcmp(cfg.directionality, 'fd-ff')
@@ -433,19 +436,19 @@ for i=1:Ndata
   xidmax(i,1) = nearest(varargin{i}.(xparam), xmax);
 end
 
-if strcmp('freq',yparam) && strcmp('freq',dtype)
+if strcmp('freq', yparam) && strcmp('freq', dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgoverfreq = 'yes';
   tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
-  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
-  % restore the provenance information 
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+  % restore the provenance information
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
-elseif strcmp('time',yparam) && strcmp('freq',dtype)
+elseif strcmp('time', yparam) && strcmp('freq', dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgovertime = 'yes';
   tmpcfg.latency     = cf.latency;%cfg.zlim;
-  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:}); 
-  % restore the provenance information 
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+  % restore the provenance information
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 end
 
@@ -462,7 +465,7 @@ for i=1:Ndata
   else
     error('the input data does not contain a label or labelcmb-field');
   end
-  
+
   % make vector dat with one value for each channel
   dat  = varargin{i}.(cfg.parameter);
   % get dimord dimensions
@@ -473,15 +476,15 @@ for i=1:Ndata
   zdim = setdiff(1:ndims(dat), [ydim xdim]);
   % and permute to make sure that dimensions are in the correct order
   dat = permute(dat, [zdim(:)' ydim xdim]);
-  
-  
+
+
   xval = varargin{i}.(xparam);
-  
+
   % take subselection of channels
   % this works for bivariate data with labelcmb because at this point the
   % data has a label-field
   sellab = match_str(varargin{i}.label, selchannel);
-  
+
   %     if ~isempty(yparam)
   %         if isfull
   %             dat = dat(sel1, sel2, ymin:ymax, xidmin(i):xidmax(i));
@@ -517,7 +520,7 @@ for i=1:Ndata
   %     end
   xval       = xval(xidmin(i):xidmax(i));
   datavector = reshape(mean(dat, 1), [1 numel(xval)]); % average over channels
-  
+
   % make mask
   if ~isempty(cfg.maskparameter)
     datmask = varargin{i}.(cfg.maskparameter)(sellab,:);
@@ -530,17 +533,17 @@ for i=1:Ndata
   else
     maskdatavector = [];
   end
-  
+
   if Ndata  > 1
     if ischar(graphcolor);        colorlabels = [colorlabels iname{i+1} '=' graphcolor(i+1) '\n'];
     elseif isnumeric(graphcolor); colorlabels = [colorlabels iname{i+1} '=' num2str(graphcolor(i+1,:)) '\n'];
     end
   end
-  
+
   if ischar(graphcolor);        color = graphcolor(i+1);
   elseif isnumeric(graphcolor); color = graphcolor(i+1,:);
   end
-  
+
   % update ymin and ymax for the current data set:
   if ischar(cfg.ylim)
     if i==1
@@ -565,8 +568,8 @@ for i=1:Ndata
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);
   end
-  
-  
+
+
   % only plot the mask once, for the first line (it's the same anyway for
   % all lines, and if plotted multiple times, it will overlay the others
   if i>1 && strcmp(cfg.maskstyle, 'box')

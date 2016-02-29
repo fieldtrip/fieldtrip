@@ -6,7 +6,7 @@ function [freq] = ft_freqcomparison(cfg, varargin)
 
 % Copyright (C) 2010-2011, Arjen Stolk, DCCN, Donders Institute
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -29,7 +29,10 @@ function [freq] = ft_freqcomparison(cfg, varargin)
 % support for this functionality can be removed at the end of 2013
 warning('FT_FREQCOMPARISON is deprecated, please use FT_MATH instead.')
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -38,8 +41,8 @@ ft_preamble debug
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -81,11 +84,11 @@ freq = varargin{1};
 
 if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'subj_chan_freq')
   % frequency comparison for multiple trials/subjects
-  
+
   if size(varargin{1}.powspctrm,3) ~= size(varargin{2}.powspctrm,3)
     error('input conditions have different sizes');
   end
-  
+
   if strcmp(cfg.comparisontype, 'absolute')
     for j = 1:size(varargin{2}.powspctrm,1)
       freq.powspctrm(j,:,:) = varargin{2}.powspctrm(j,:,:) - mean(varargin{1}.powspctrm,1);
@@ -101,14 +104,14 @@ if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'su
   else
     error('unsupported comparisontype');
   end
-  
+
 elseif strcmp(varargin{1}.dimord, 'chan_freq') || strcmp(varargin{1}.dimord, 'chan_freq_time')
   % frequency comparison for averages
-  
+
   if size(varargin{1}.powspctrm,2) ~= size(varargin{2}.powspctrm,2)
     error('input conditions have different sizes');
   end
-  
+
   if strcmp(cfg.comparisontype, 'absolute')
     freq.powspctrm = varargin{2}.powspctrm - varargin{1}.powspctrm;
   elseif strcmp(cfg.comparisontype, 'relchange')
@@ -118,7 +121,7 @@ elseif strcmp(varargin{1}.dimord, 'chan_freq') || strcmp(varargin{1}.dimord, 'ch
   else
     error('unsupported comparisontype');
   end
-  
+
 else
   error('unsupported dimord')
 end

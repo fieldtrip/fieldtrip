@@ -10,7 +10,7 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -72,11 +72,19 @@ if any(strcmp(tok, 'time')),
   cfg.latency    = freq.time;
 end  
 
-% create a square csd-matrix
-if keeptrials,
-  freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
-else
-  freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
+% create a square csd-matrix, if necessary
+hasfull = false;
+if isfield(freq, 'crsspctrm')
+	dimtok  = tokenize(getdimord(freq, 'crsspctrm'),'_');
+	hasfull = sum(strcmp(dimtok, 'chan'))==2;
+end
+if ~hasfull,
+	if keeptrials,
+		freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
+	else
+		freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
+		Ntrials = 1;
+	end
 end
 tok = tokenize(freq.dimord, '_');
 

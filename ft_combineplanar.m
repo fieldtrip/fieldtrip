@@ -38,7 +38,7 @@ function [data] = ft_combineplanar(cfg, data)
 % Copyright (C) 2004, Ole Jensen
 % Copyright (C) 2004-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -56,7 +56,10 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -66,8 +69,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -142,7 +145,7 @@ if strcmp(cfg.demean, 'yes')
 end
 
 if isfreq
-  
+
   switch cfg.method
     case 'sum'
       if isfield(data, 'powspctrm'),
@@ -187,7 +190,7 @@ if isfreq
             fourier(:,j,k,:) = transpose(dum);
             data.ori{k} = ori; % to change into a cell
             data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
-            
+
             %for m = 1:Ntim
             %  dum                     = data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),m);
             %  timbin                  = find(~isnan(dum(:,1)));
@@ -207,13 +210,13 @@ if isfreq
     otherwise
       error('cfg.method = ''%s'' is not supported for frequency data', cfg.method);
   end % switch method
-  
+
 elseif (israw || istimelock)
   if istimelock,
     % convert timelock to raw
     data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
   end
-  
+
   switch cfg.method
     case 'sum'
       Nrpt = length(data.trial);
@@ -223,7 +226,7 @@ elseif (israw || istimelock)
         data.trial{k} = [combined; other];
       end
       data.label = cat(1, lab_comb(:), lab_other(:));
-      
+
     case {'svd' 'abssvd'}
       Nrpt = length(data.trial);
       Nsgn = length(sel_dH);
@@ -243,7 +246,7 @@ elseif (israw || istimelock)
           if strcmp(cfg.method, 'abssvd')
             tmpdat2 = abs(loading(1,:));
           else
-            tmpdat2 = loading(1,:); 
+            tmpdat2 = loading(1,:);
           end
         end
         tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
@@ -258,16 +261,16 @@ elseif (israw || istimelock)
       end
       data.trial = trial;
       data.label = cat(1, lab_comb(:), lab_other(:));
-      
+
     otherwise
       error('cfg.method = ''%s'' is not supported for timelocked or raw data', cfg.method);
   end % switch method
-  
+
   if istimelock,
     % convert raw to timelock
     data = ft_checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
   end
-  
+
 else
   error('unsupported input data');
 end % which ft_datatype
@@ -280,22 +283,22 @@ if isfield(data, 'grad')
   % update the grad and only retain the channel related info
   [sel_dH, sel_comb] = match_str(data.grad.label, planar(:,1));  % indices of the horizontal channels
   sel_dV    = match_str(data.grad.label, planar(:,2));  % indices of the vertical   channels
-  
+
   % find the other channels that are present in the data
   sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
   lab_other = data.grad.label(sel_other);
   lab_comb  = planar(sel_comb,3);
-  
+
   sel      = [sel_dH(:);sel_other(:)];
   newlabel = [lab_comb;lab_other];
-  
+
   newgrad.chanpos  = data.grad.chanpos(sel,:);
   newgrad.chanori  = data.grad.chanori(sel,:);
   newgrad.chantype = data.grad.chantype(sel);
   newgrad.chanunit = data.grad.chanunit(sel);
   newgrad.label    = newlabel;
   newgrad.unit     = data.grad.unit;
-  
+
   data.grad = newgrad;
 end
 

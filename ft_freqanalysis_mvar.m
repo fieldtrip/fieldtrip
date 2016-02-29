@@ -12,11 +12,11 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 %   [freq] = ft_freqanalysis(cfg, data), with cfg.method = 'mvar'
 %
 % or
-% 
+%
 %   [freq] = ft_freqanalysis_mvar(cfg, data)
 %
 % The input data structure should be a data structure created by
-% FT_MVARANALYSIS, i.e. a data-structure of type 'mvar'. 
+% FT_MVARANALYSIS, i.e. a data-structure of type 'mvar'.
 %
 % The configuration can contain:
 %   cfg.foi = vector with the frequencies at which the spectral quantities
@@ -37,7 +37,7 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -55,7 +55,10 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -65,8 +68,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -120,7 +123,7 @@ if isfull
 elseif isbvar
   ncmb      = size(data.labelcmb,1)./4;
   nlag      = size(data.coeffs,2);
-  
+
   %---allocate memory
   h         = complex(zeros(ncmb*4, nfoi, ntoi), zeros(ncmb*4, nfoi, ntoi));
   a         = complex(zeros(ncmb*4, nfoi, ntoi), zeros(ncmb*4, nfoi, ntoi));
@@ -133,12 +136,12 @@ end
 ft_progress('init', cfg.feedback, 'computing MAR-model based TFR');
 for j = 1:ntoi
   ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
- 
+
   if isfull
     %---compute transfer function
     ar = reshape(data.coeffs(:,:,:,j), [nchan nchan*nlag]);
     [h(:,:,:,j), a(:,:,:,j)] = ar2h(ar, cfg.foi, data.fsampleorig);
-    
+
     %---compute cross-spectra
     nc = data.noisecov(:,:,j);
     for k = 1:nfoi
@@ -152,7 +155,7 @@ for j = 1:ntoi
       [tmph,tmpa] = ar2h(ar, cfg.foi, data.fsampleorig);
       h((kk-1)*4+(1:4),:,:) = reshape(tmph, [4 nfoi ntoi]);
       a((kk-1)*4+(1:4),:,:) = reshape(tmpa, [4 nfoi ntoi]);
-      
+
       %---compute cross-spectra
       nc = reshape(data.noisecov((kk-1)*4+(1:4),j), [2 2]);
       for k = 1:nfoi
@@ -160,7 +163,7 @@ for j = 1:ntoi
       end
     end
   end
-end  
+end
 ft_progress('close');
 
 %---create output-structure
@@ -223,7 +226,7 @@ end
 zar = reshape(zar, [nchan nchan nfoi]);
 h   = zeros(size(zar));
 for k = 1:nfoi
-  h(:,:,k) = inv(zar(:,:,k)); 
+  h(:,:,k) = inv(zar(:,:,k));
 end
 h   = sqrt(2).*h; %account for the negative frequencies, normalization necessary for
 %comparison with non-parametric (fft based) results in fieldtrip

@@ -42,7 +42,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEPLOT, FT_FREQSIMULATION, 
+% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEPLOT, FT_FREQSIMULATION,
 % FT_CONNECTIVITYSIMULATION
 
 % Undocumented local options
@@ -52,7 +52,7 @@ function [simulated] = ft_dipolesimulation(cfg)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -70,7 +70,10 @@ function [simulated] = ft_dipolesimulation(cfg)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -80,8 +83,8 @@ ft_preamble provenance
 ft_preamble randomseed
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -245,4 +248,3 @@ ft_postamble randomseed
 ft_postamble provenance simulated
 ft_postamble history    simulated
 ft_postamble savevar    simulated
-

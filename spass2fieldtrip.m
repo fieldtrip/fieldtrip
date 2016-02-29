@@ -38,15 +38,18 @@ function [lfp, spike, stm, bhv] = spass2fieldtrip(dirname, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
 ft_preamble provenance
 
-fsample_ana = ft_getopt(varargin, 'fsample_ana', 1000); 
-fsample_swa = ft_getopt(varargin, 'fsample_swa', 32000); 
+fsample_ana = ft_getopt(varargin, 'fsample_ana', 1000);
+fsample_swa = ft_getopt(varargin, 'fsample_swa', 32000);
 
 anafile = fullfile(dirname, [dirname '.ana']);
 swafile = fullfile(dirname, [dirname '.swa']);

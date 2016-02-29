@@ -6,9 +6,9 @@ function dataout = ft_interpolatenan(cfg, datain)
 % gaps.
 %
 % Use as
-%  outdata = ft_interpolatenan(cfg, indata) 
-% where indata is data as obtained from FT_PREPROCESSING 
-% and cfg is a configuratioun structure that should contain 
+%  outdata = ft_interpolatenan(cfg, indata)
+% where indata is data as obtained from FT_PREPROCESSING
+% and cfg is a configuratioun structure that should contain
 %
 %  cfg.method      = string, interpolation method, see HELP INTERP1 (default = 'linear')
 %  cfg.prewindow   = value, length of data prior to interpolation window, in seconds (default = 1)
@@ -28,7 +28,7 @@ function dataout = ft_interpolatenan(cfg, datain)
 
 % Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,7 +50,10 @@ function dataout = ft_interpolatenan(cfg, datain)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -60,8 +63,8 @@ ft_preamble loadvar datain
 ft_preamble provenance datain
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -114,10 +117,10 @@ for i=1:ntrl
      fill = interp1(sample_window, datain.trial{i}(idx_start_r(j),sample_window),fill_window,method); % Interpolation
      dataout.trial{i}(idx_start_r(j),fill_window)=fill; % Add interpolated segments to dataout
     end;
-  end; 
+  end;
 end; % i=1:ntrl
 ft_progress('close');
-  
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Cleanup
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

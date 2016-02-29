@@ -32,7 +32,7 @@ function data = ft_removetmsartifact(cfg, data)
 
 % Copyrights (C) 2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -52,14 +52,16 @@ function data = ft_removetmsartifact(cfg, data)
 
 % DEPRECATED by jimher on 19 September 2013
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1791 for more details
-
 warning('FT_REMOVETMSARTIFACT is deprecated, please follow TMS-EEG tutorial instead (http://fieldtrip.fcdonders.nl/tutorial/tms-eeg).')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -69,8 +71,8 @@ ft_preamble loadvar datain
 ft_preamble provenance datain
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -118,19 +120,19 @@ if isempty(cfg.pulseonset) || isempty(cfg.pulsewidth)
     [onset, width] = pulsedetect(data.trial{i});
     % these should be expressed in seconds
     cfg.pulseonset{i} = data.time{i}(onset);
-    
+
     if ~isempty(temp_pulse)
       cfg.pulsewidth{i} = repmat(temp_pulse, 1, length(onset));
     else
       cfg.pulsewidth{i} = width;
     end;
-    
+
     fprintf('detected %d pulses in trial %d\n', length(onset), i);
   end
 end % estimate pulse onset and width
 
 switch cfg.method
-  
+
   case 'twopassfilter'
     for i=1:numtrl
       for j=1:length(cfg.pulseonset{i})
@@ -138,28 +140,28 @@ switch cfg.method
         pulseonset = cfg.pulseonset{i}(j);
         pulsewidth = cfg.pulsewidth{i}(j);
         offset = cfg.offset;
-        
+
         % express it in samples,
         pulseonset = nearest(data.time{i}, pulseonset);
         pulsewidth  = round(pulsewidth*fsample);
         offset = round(offset*fsample);
-        
+
         % get the part of the data that is left and right of the TMS pulse artifact
         dat1 = data.trial{i}(:,1:pulseonset);
         dat2 = data.trial{i}(:,(pulseonset+1:end));
-        
+
         % filter the two pieces, prevent filter artifacts
         [filt1] = ft_preproc_lowpassfilter(dat1,fsample,cfg.lpfreq,cfg.lpfiltord,cfg.lpfilttype,'onepass');
         [filt2] = ft_preproc_lowpassfilter(dat2,fsample,cfg.lpfreq,cfg.lpfiltord,cfg.lpfilttype,'onepass-reverse');
-        
+
         % stitch the left and right parts of the data back together
         %data.trial{i} = [filt1 filt2];
         fill = [filt1 filt2];
-        
+
         % determine a short window around the tms pulse
         begsample = pulseonset + offset;
         endsample = pulseonset + pulsewidth + offset - 1;
-        
+
         % replace data in the pulse window with a filtered version
         if pulsewidth == 0
           data.trial{i} = fill;
@@ -168,41 +170,41 @@ switch cfg.method
         end;
       end % for pulses
     end % for trials
-    
+
   case 'interpolatepulse'
     for i=1:numtrl
       for j=1:length(cfg.pulseonset{i})
-        
+
         pulseonset = cfg.pulseonset{i}(j);
         pulsewidth = cfg.pulsewidth{i}(j);
         offset = cfg.offset;
-        
+
         % express it in samples,
         pulseonset = nearest(data.time{i}, pulseonset);
         pulsewidth  = round(pulsewidth*fsample);
         offset = round(offset*fsample);
-        
+
         begsample = pulseonset + offset;
         endsample = pulseonset + pulsewidth + offset - 1;
-        
+
         % determine a short window before the TMS pulse
         begsample1 = begsample - pulsewidth;
         endsample1 = begsample - 1;
-        
+
         % determine a short window after the TMS pulse
         begsample2 = endsample + 1;
         endsample2 = endsample + pulsewidth;
-        
+
         dat1 = data.trial{i}(:,begsample1:endsample1);
         dat2 = data.trial{i}(:,begsample2:endsample2);
         %fill = dat1(:,randperm(size(dat1,2))); % randomly shuffle the data points
         %fill = mean(dat1,2) + cumsum(std(dat1,[],2).*randn(size(dat1,1),size(dat1,2)));
 %         fill = linspace(mean(dat1,2),mean(dat2,2),endsample1-begsample1+1);
 %         fill = fill + cumsum(std(dat1,[],2).*randn(size(dat1,1),size(dat1,2)));
-        
+
 %         fill = cumsum(std(dat1,[],2).*randn(size(dat1,1),size(dat1,2)));
-        
-        
+
+
         switch cfg.fillmethod
             case 'fft'
             fft_dat1 = fft(dat1);
@@ -240,10 +242,10 @@ switch cfg.method
 
             % replace the data in the pulse window with a random shuffled version of the data just around it
         data.trial{i}(:,begsample:endsample) = fill;
-        
+
       end % for pulses
     end % for trials
-    
+
   otherwise
     error('unsupported method');
 end
@@ -278,4 +280,3 @@ pulsewidth  = offset - onset;
 % make the pulse a bit wider
 offset = offset - 2*pulsewidth;
 pulsewidth = pulsewidth*5;
-

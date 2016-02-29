@@ -64,7 +64,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 
 % Copyright (C) 2005-2006, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -82,7 +82,10 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -91,8 +94,8 @@ ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -115,7 +118,7 @@ cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam',         'yparam'});
 cfg.baseline       = ft_getopt(cfg, 'baseline',     'no');
 cfg.baselinetype   = ft_getopt(cfg, 'baselinetype', 'absolute');
 cfg.trials         = ft_getopt(cfg, 'trials',       'all', 1);
-cfg.xlim           = ft_getopt(cfg, 'xlim',         'maxmin'); 
+cfg.xlim           = ft_getopt(cfg, 'xlim',         'maxmin');
 cfg.ylim           = ft_getopt(cfg, 'ylim',         'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim',         'maxmin');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',      8);
@@ -164,9 +167,9 @@ if hasrpt,
   % or with multiple subjects in a frequency domain stat-structure
   % on the fly computation of coherence spectrum is not supported
   if isfield(data, 'crsspctrm'),
-    data = rmfield(data, 'crsspctrm'); 
+    data = rmfield(data, 'crsspctrm');
   end
-  
+
   tmpcfg           = [];
   tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
@@ -220,7 +223,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
   end
-  
+
   % check for refchannel being part of selection
   if ~strcmp(cfg.refchannel,'gui')
     if haslabelcmb
@@ -233,11 +236,11 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
       error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
-  
+
   % Interactively select the reference channel
   if strcmp(cfg.refchannel, 'gui')
     error('coh.refchannel = ''gui'' is not supported at the moment for ft_singleplotTFR');
-%     
+%
 %     % Open a single figure with the channel layout, the user can click on a reference channel
 %     h = clf;
 %     ft_plot_lay(lay, 'box', false);
@@ -254,7 +257,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
 %     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonMotionFcn'});
 %     return
   end
-  
+
   if ~isfull,
     % Convert 2-dimensional channel matrix to a single dimension:
     if isempty(cfg.directionality)
@@ -281,7 +284,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     siz               = [size(data.(cfg.parameter)) 1];
     if strcmp(cfg.directionality, 'inflow') || isempty(cfg.directionality)
       %the interpretation of 'inflow' and 'outflow' depend on
-      %the definition in the bivariate representation of the data  
+      %the definition in the bivariate representation of the data
       %data.(cfg.parameter) = reshape(mean(data.(cfg.parameter)(:,sel,:),2),[siz(1) 1 siz(3:end)]);
       sel1 = 1:siz(1);
       sel2 = sel;
@@ -351,13 +354,13 @@ end
 % dy = min(diff(y));  % smallest interval for Y
 % evenx = all(abs(diff(x)/dx-1)<1e-12);     % true if X is linearly spaced
 % eveny = all(abs(diff(y)/dy-1)<1e-12);     % true if Y is linearly spaced
-% 
+%
 % % masking only possible for evenly spaced axis
 % if strcmp(cfg.masknans, 'yes') && (~evenx || ~eveny)
 %   warning('(one of the) axis are not evenly spaced -> nans cannot be masked out -> cfg.masknans is set to ''no'';')
 %   cfg.masknans = 'no';
 % end
-% 
+%
 % if ~isempty(cfg.maskparameter) && (~evenx || ~eveny)
 %   warning('(one of the) axis are not evenly spaced -> no masking possible -> cfg.maskparameter cleared')
 %   cfg.maskparameter = [];
@@ -563,7 +566,7 @@ end
 function select_topoplotTFR(cfg, varargin)
 % first to last callback-input of ft_select_range is range
 % last callback-input of ft_select_range is contextmenu label, if used
-range = varargin{end-1}; 
+range = varargin{end-1};
 varargin = varargin(1:end-2); % remove range and last
 
 % get appdata belonging to current axis

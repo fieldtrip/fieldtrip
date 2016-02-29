@@ -46,7 +46,7 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %   cfg.parameter     = string (or cell-array) of the parameter(s) to be interpolated
 %   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
 %   cfg.interpmethod  = string, can be 'nearest', 'linear', 'cubic',  'spline', 'sphere_avg' or 'smudge' (default = 'linear for interpolating two 3D volumes, 'nearest' for all other cases)
-% 
+%
 % The supported interpolation methods are 'nearest', 'linear', 'cubic' or 'spline'
 % for interpolating two 3D volumes onto each other. For all other cases the supported
 % interpolation methods are 'nearest', 'sphere_avg' or 'smudge'.
@@ -69,7 +69,7 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % Copyright (C) 2003-2007, Robert Oostenveld
 % Copyright (C) 2011-2014, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -87,7 +87,10 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -97,8 +100,8 @@ ft_preamble loadvar functional anatomical
 ft_preamble provenance functional anatomical
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -193,8 +196,10 @@ if ~isUnstructuredAna && cfg.downsample~=1
   orgcfg.parameter = cfg.parameter;
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
+  % restore the provenance information
   [cfg, anatomical] = rollback_provenance(cfg, anatomical);
-  cfg.parameter = orgcfg.parameter; % restore the original functional parameter, it should not be anatomy
+  % restore the original parameter, it should not be 'anatomy'
+  cfg.parameter = orgcfg.parameter;
 end
 
 % collect the functional volumes that should be converted
@@ -217,42 +222,42 @@ if isUnstructuredFun && isUnstructuredAna && isfield(anatomical, 'orig') && isfi
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % functional data defined on subset of vertices in an anatomical mesh
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % FIXME this should not be decided on the basis of the data structures but on the basis of the cfg.interpmethod option
   % FIXME the distribution of 3 geometries over the 2 structures is weird
   % FIXME a (perhaps extreme) application of this would be to interpolate data from parcels on the sheet, i.e. an inverse parcellation
-  
+
   % anatomical data consists of a decimated triangulated mesh, containing
-  % the original description, allowing for smudging. 
+  % the original description, allowing for smudging.
 
   % smudge the low resolution functional data according to the strategy in
   % MNE-suite (chapter 8.3 of the manual)
-  
+
   interpmat = interp_ungridded(anatomical.pos, anatomical.orig.pos, 'projmethod', 'smudge', 'triout', anatomical.orig.tri);
   interpmat(~anatomical.inside(:), :) = 0;
-  
+
   % start with an empty structure, keep only some fields
   interp = keepfields(functional, {'time', 'freq'});
   interp = copyfields(anatomical, interp, {'coordsys', 'unit'});
   interp = copyfields(anatomical.orig, interp, {'pos', 'tri'});
-  
+
   % identify the inside voxels after interpolation
   nzeros     = sum(interpmat~=0,2);
   newinside  = (nzeros~=0);
   newoutside = (nzeros==0);
-  
+
   interp.inside = false(size(anatomical.pos,1),1);
   interp.inside(newinside) = true;
 
   % interpolate all functional data
   for i=1:length(dat_name)
     fprintf('interpolating %s\n', dat_name{i});
-    
+
     dimord = getdimord(functional, dat_name{i});
     dimtok = tokenize(dimord, '_');
     dimf   = getdimsiz(functional, dat_name{i});
     dimf(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
-    
+
     % should be 3-D array, can have trailing singleton dimensions
     if numel(dimf)<2
       dimf(2) = 1;
@@ -260,7 +265,7 @@ if isUnstructuredFun && isUnstructuredAna && isfield(anatomical, 'orig') && isfi
     if numel(dimf)<3
       dimf(3) = 1;
     end
-    
+
     allav = zeros([size(anatomical.orig.pos,1), dimf(2:end)]);
     for k=1:dimf(2)
       for m=1:dimf(3)
@@ -272,42 +277,42 @@ if isUnstructuredFun && isUnstructuredAna && isfield(anatomical, 'orig') && isfi
     end
     interp = setsubfield(interp, dat_name{i}, allav);
   end
-  
-    
-elseif isUnstructuredFun && isUnstructuredAna 
+
+
+elseif isUnstructuredFun && isUnstructuredAna
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % functional data defined on a point cloud/mesh, anatomy on a volume
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   cfg.sphereradius = ft_getopt(cfg, 'sphereradius', 0.5);
   cfg.power        = ft_getopt(cfg, 'power',        1);
-  
+
   interpmat = interp_ungridded(functional.pos, anatomical.pos, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'power', cfg.power); % FIXME include other key-value pairs as well
   interpmat(~anatomical.inside(:), :) = 0;
-  
+
   % start with an empty structure, keep only some fields
   interp = keepfields(functional, {'time', 'freq'});
   interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit'});
-  
+
   % identify the inside voxels after interpolation
   nzeros     = sum(interpmat~=0,2);
   newinside  = (nzeros~=0);
   newoutside = (nzeros==0);
-  
+
   interp.inside = false(size(anatomical.pos,1),1);
   interp.inside(newinside) = true;
 
   % interpolate all functional data
   for i=1:length(dat_name)
     fprintf('interpolating %s\n', dat_name{i});
-    
+
     dimord = getdimord(functional, dat_name{i});
     dimtok = tokenize(dimord, '_');
     dimf   = getdimsiz(functional, dat_name{i});
     dimf(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
-    
+
     % should be 3-D array, can have trailing singleton dimensions
     if numel(dimf)<2
       dimf(2) = 1;
@@ -315,7 +320,7 @@ elseif isUnstructuredFun && isUnstructuredAna
     if numel(dimf)<3
       dimf(3) = 1;
     end
-    
+
     allav = zeros([size(anatomical.pos,1), dimf(2:end)]);
     for k=1:dimf(2)
       for m=1:dimf(3)
@@ -327,46 +332,46 @@ elseif isUnstructuredFun && isUnstructuredAna
     end
     interp = setsubfield(interp, dat_name{i}, allav);
   end
-  
-  
-elseif isUnstructuredFun && ~isUnstructuredAna 
+
+
+elseif isUnstructuredFun && ~isUnstructuredAna
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % functional data defined on a point cloud/mesh, anatomy on a point cloud/mesh
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   cfg.sphereradius = ft_getopt(cfg, 'sphereradius', 0.5);
   cfg.power        = ft_getopt(cfg, 'power',        1);
-  
+
   [ax, ay, az] = voxelcoords(anatomical.dim, anatomical.transform);
   anatomical.pos = [ax(:) ay(:) az(:)];
   clear ax ay az
-  
+
   interpmat = interp_ungridded(functional.pos, anatomical.pos, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'power', cfg.power); % FIXME include other key-value pairs as well
   interpmat(~anatomical.inside(:), :) = 0;
-  
+
   % start with an empty structure, keep only some fields
   interp = keepfields(functional, {'time', 'freq'});
   interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit', 'anatomy'});
-  
+
   % identify the inside voxels after interpolation
   nzeros     = sum(interpmat~=0,2);
   newinside  = (nzeros~=0);
   newoutside = (nzeros==0);
-  
+
   interp.inside = false(anatomical.dim);
   interp.inside(newinside) = true;
-  
+
   % interpolate all functional data
   for i=1:length(dat_name)
     fprintf('interpolating %s\n', dat_name{i});
-    
+
     dimord = getdimord(functional, dat_name{i});
     dimtok = tokenize(dimord, '_');
     dimf   = getdimsiz(functional, dat_name{i});
     dimf(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
-    
+
     % should be 3-D array, can have trailing singleton dimensions
     if numel(dimf)<2
       dimf(2) = 1;
@@ -374,10 +379,10 @@ elseif isUnstructuredFun && ~isUnstructuredAna
     if numel(dimf)<3
       dimf(3) = 1;
     end
-    
+
     av    = zeros([anatomical.dim            ]);
     allav = zeros([anatomical.dim dimf(2:end)]);
-    
+
     for k=1:dimf(2)
       for m=1:dimf(3)
         fv     = dat_array{i}(:,k,m);
@@ -392,63 +397,63 @@ elseif isUnstructuredFun && ~isUnstructuredAna
     end
     interp = setsubfield(interp, dat_name{i}, allav);
   end
-  
+
   if ~isfield(interp, 'freq') && ~isfield(interp, 'time')
       % the output should be a volume representation, not a source
     interp = rmfield(interp, 'pos');
   end
-  
-elseif ~isUnstructuredFun && isUnstructuredAna 
+
+elseif ~isUnstructuredFun && isUnstructuredAna
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % functional data defined on a volume, anatomy on a point cloud/mesh
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'nearest');
   cfg.sphereradius = ft_getopt(cfg, 'sphereradius', []);
   cfg.power        = ft_getopt(cfg, 'power',        1);
-  
+
   % interpolate the 3D volume onto the anatomy
   if ~strcmp(cfg.interpmethod, 'project')
     % use interp_gridded
     [interpmat, dummy] = interp_gridded(functional.transform, zeros(functional.dim), anatomical.pos, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'inside', functional.inside, 'power', cfg.power);
-    
+
     % use interp_ungridded
     % interpmat = interp_ungridded(functional.pos, anatomical.pos, 'projmethod', cfg.interpmethod, 'sphereradius', cfg.sphereradius, 'inside', functional.inside, 'power', cfg.power);
   else
     % do the interpolation below, the current implementation of the
     % 'project' method does not output an interpmat (and is therefore quite
     % inefficient
-    
+
     % set the defaults
     cfg.projvec        = ft_getopt(cfg, 'projvec',       1);
     cfg.projweight     = ft_getopt(cfg, 'projweight',    ones(size(cfg.projvec)));
     cfg.projcomb       = ft_getopt(cfg, 'projcomb',      'mean'); % or max
     cfg.projthresh     = ft_getopt(cfg, 'projthresh',    []);
   end
-  
+
   % start with an empty structure, keep some fields
   interp = keepfields(functional, {'time', 'freq'});
   interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit'});
 
   % identify the inside voxels after interpolation
   interp.inside    = true(size(anatomical.pos,1),1);
-  
+
   % interpolate all functional data
   for i=1:length(dat_name)
     fprintf('interpolating %s\n', dat_name{i});
-    
+
     dimord = getdimord(functional, dat_name{i});
     dimtok = tokenize(dimord, '_');
     dimf   = getdimsiz(functional, dat_name{i});
     dimf(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
-    
+
     if prod(functional.dim)==dimf(1)
       % convert into 3-D, 4-D or 5-D array
       dimf        = [functional.dim dimf(2:end)];
       dat_array{i} = reshape(dat_array{i}, dimf);
     end
-    
+
     % should be 5-D array, can have trailing singleton dimensions
     if numel(dimf)<4
       dimf(4) = 1;
@@ -456,7 +461,7 @@ elseif ~isUnstructuredFun && isUnstructuredAna
     if numel(dimf)<5
       dimf(5) = 1;
     end
-    
+
     allav = zeros([size(anatomical.pos,1), dimf(4:end)]);
     if ~strcmp(cfg.interpmethod, 'project')
       for k=1:dimf(4)
@@ -478,15 +483,15 @@ elseif ~isUnstructuredFun && isUnstructuredAna
     end
     interp = setsubfield(interp, dat_name{i}, allav);
   end
-  
+
 elseif ~isUnstructuredFun && ~isUnstructuredAna
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % functional data defined on a volume, anatomy on a differently sampled volume
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % set default interpmethod for this situation
   cfg.interpmethod = ft_getopt(cfg, 'interpmethod', 'linear');
-  
+
   % start with an empty structure, keep some fields
   interp = keepfields(functional, {'time', 'freq'});
   interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit', 'anatomy'});
@@ -494,10 +499,10 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
   % convert the anatomical voxel positions into voxel indices into the functional volume
   anatomical.transform = functional.transform \ anatomical.transform;
   functional.transform = eye(4);
-  
+
   [fx, fy, fz] = voxelcoords(functional.dim, functional.transform);
   [ax, ay, az] = voxelcoords(anatomical.dim, anatomical.transform);
-  
+
   % estimate the subvolume of the anatomy that is spanned by the functional volume
   minfx = 1;
   minfy = 1;
@@ -512,7 +517,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
     az(:)>=minfz & ...
     az(:)<=maxfz;
   fprintf('selecting subvolume of %.1f%%\n', 100*sum(sel)./prod(anatomical.dim));
-  
+
   if all(functional.inside(:))
     % keep all voxels marked as inside
     interp.inside = true(anatomical.dim);
@@ -524,26 +529,26 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
     interp.inside(~sel) = 0;
     interp.inside = logical(interp.inside);
   end
-  
+
   % prepare the grid that is used in the interpolation
   fg = [fx(:) fy(:) fz(:)];
   clear fx fy fz
-  
+
   % reslice and interpolate all functional volumes
   for i=1:length(dat_name)
     fprintf('reslicing and interpolating %s\n', dat_name{i});
-    
+
     dimord = getdimord(functional, dat_name{i});
     dimtok = tokenize(dimord, '_');
     dimf   = getdimsiz(functional, dat_name{i});
     dimf(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
-    
+
     if prod(functional.dim)==dimf(1)
       % convert into 3-D, 4-D or 5-D array
       dimf = [functional.dim dimf(2:end)];
       dat_array{i} = reshape(dat_array{i}, dimf);
     end
-    
+
     % should be 5-D array, can have trailing singleton dimensions
     if numel(dimf)<4
       dimf(4) = 1;
@@ -551,17 +556,17 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
     if numel(dimf)<5
       dimf(5) = 1;
     end
-    
+
     av    = zeros([anatomical.dim            ]);
     allav = zeros([anatomical.dim dimf(4:end)]);
     functional.inside = functional.inside(:,:,:,1,1);
-    
+
     if any(dimf(4:end)>1) && ~strcmp(cfg.feedback, 'none')
       % this is needed to prevent feedback to be displayed for every time-frequency point
       warning('disabling feedback');
       cfg.feedback = 'none';
     end
-    
+
     for k=1:dimf(4)
       for m=1:dimf(5)
         fv = dat_array{i}(:,:,:,k,m);
@@ -593,7 +598,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
     end
     interp = setsubfield(interp, dat_name{i}, allav);
   end
-  
+
 end % computing the interpolation according to the input data
 
 if isfield(interp, 'freq') || isfield(interp, 'time')

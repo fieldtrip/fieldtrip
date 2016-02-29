@@ -7,7 +7,7 @@ function [headmodel, cfg] = ft_prepare_concentricspheres(cfg)
 
 % Copyright (C) 2009, Vladimir Litvak & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -27,17 +27,20 @@ function [headmodel, cfg] = ft_prepare_concentricspheres(cfg)
 
 warning('FT_PREPARE_CONCENTRICSPHERES is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''concentricspheres'' instead.')
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble provenance 
+ft_preamble provenance
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -78,14 +81,14 @@ else
 end
 
 % concatenate the vertices of all surfaces
-pnt = [];
+pos = [];
 for i = fitind
-  pnt = [pnt ; headshape(i).pnt];
+  pos = [pos ; headshape(i).pos];
 end
 % remove double vertices
-pnt = unique(pnt, 'rows');
+pos = unique(pos, 'rows');
 
-Npnt = size(pnt, 1);
+Npos = size(pos, 1);
 
 % set up an empty figure
 if strcmp(cfg.feedback, 'yes')
@@ -96,12 +99,12 @@ if strcmp(cfg.feedback, 'yes')
   axis off
   drawnow
   colors = {'b', 'y', 'm', 'r'};
-  [sphere_pnt, sphere_tri] = icosahedron162;
+  [sphere_pos, sphere_tri] = icosahedron162;
 end
 
 % fit a single sphere to all headshape points
-[single_o, single_r] = fitsphere(pnt);
-fprintf('initial sphere: number of surface points = %d\n', Npnt);
+[single_o, single_r] = fitsphere(pos);
+fprintf('initial sphere: number of surface points = %d\n', Npos);
 fprintf('initial sphere: center = [%.1f %.1f %.1f]\n', single_o(1), single_o(2), single_o(3));
 fprintf('initial sphere: radius = %.1f\n', single_r);
 
@@ -109,7 +112,7 @@ fprintf('initial sphere: radius = %.1f\n', single_r);
 headmodel = [];
 headmodel.o = single_o;
 for i = 1:numel(headshape)
-  dist     = sqrt(sum(((headshape(end-i+1).pnt - repmat(single_o, size(headshape(end-i+1).pnt,1), 1)).^2), 2));
+  dist     = sqrt(sum(((headshape(end-i+1).pos - repmat(single_o, size(headshape(end-i+1).pos,1), 1)).^2), 2));
   headmodel.r(i) = mean(dist);
 
   if strcmp(cfg.feedback, 'yes')
@@ -119,13 +122,13 @@ for i = 1:numel(headshape)
 
     % plot the original surface
     bndtmp = [];
-    bndtmp.pnt = headshape(end-i+1).pnt;
+    bndtmp.pos = headshape(end-i+1).pos;
     bndtmp.tri = headshape(end-i+1).tri;
     ft_plot_mesh(bndtmp,'facecolor','none')
 
     % plot the sphere surface
     bndtmp = [];
-    bndtmp.pnt = sphere_pnt*headmodel.r(i) + repmat(single_o, size(sphere_pnt, 1), 1);
+    bndtmp.pos = sphere_pos*headmodel.r(i) + repmat(single_o, size(sphere_pos, 1), 1);
     bndtmp.tri = sphere_tri;
     ft_plot_mesh(bndtmp,'edgecolor',colors{mod(i, numel(colors)) + 1},'facecolor','none');
   end
@@ -147,4 +150,3 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance headmodel
 ft_postamble history    headmodel
-

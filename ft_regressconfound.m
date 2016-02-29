@@ -46,7 +46,7 @@ function [data] = ft_regressconfound(cfg, datain)
 
 % Copyright (C) 2011, Arjen Stolk, Robert Oostenveld, Lennart Verhagen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -64,7 +64,10 @@ function [data] = ft_regressconfound(cfg, datain)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -74,8 +77,8 @@ ft_preamble loadvar datain
 ft_preamble provenance datain
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -170,67 +173,67 @@ issource   = false; % ft_datatype(datain, 'source');
 if istimelock
   switch datain.dimord
     case {'rpt_chan_time', 'subj_chan_time'}
-      
+
       % descriptives
       nrpt  = size(datain.trial, 1);
       nchan = size(datain.trial, 2);
       ntime = size(datain.trial, 3);
-      
+
       if nrpt~=size(regr,1)
         error('the size of your confound matrix does not match with the number of trials/subjects');
       end
-      
+
       % get the data on which the contribution of the confounds has to be estimated
       dat = reshape(datain.trial, [nrpt, nchan*ntime]);
-      
+
     otherwise
       error('unsupported timelock dimord "%s"', datain.dimord);
   end % switch
-  
+
 elseif isfreq
   switch datain.dimord
     case {'rpt_chan_freq_time', 'subj_chan_freq_time', 'rpttap_chan_freq_time', 'rpt_chan_freq', 'subj_chan_freq', 'rpttap_chan_freq'}
-      
+
       % descriptives
       nrpt  = size(datain.powspctrm, 1);
       nchan = size(datain.powspctrm, 2);
       nfreq = size(datain.powspctrm, 3);
       ntime = size(datain.powspctrm, 4); % this will be a singleton dimension in case there is no time
-      
+
       if nrpt~=size(regr,1)
         error('the size of your confound matrix does not match with the number of trials/subjects');
       end
-      
+
       % get the data on which the contribution of the confounds has to be estimated
       dat = reshape(datain.powspctrm, [nrpt, nchan*nfreq*ntime]);
-      
+
     otherwise
       error('unsupported freq dimord "%s"', datain.dimord);
   end % switch
-  
+
 elseif issource
-  
+
   % ensure that the source structure contains inside/outside specification
   datain = ft_checkdata(datain, 'datatype', 'source', 'hasinside', 'yes');
-  
+
   % descriptives
   nrpt    = size(datain.trial, 2);
   nvox    = size(datain.pos, 1);
   ninside = size(datain.inside, 2);
-  
+
   if nrpt~=size(regr,1)
     error('the size of your confound matrix does not match with the number of trials/subjects');
   end
-  
+
   % get the data on which the contribution of the confounds has to be estimated
   dat = zeros(nrpt, ninside);
   for i = 1:nrpt
     dat(i,:) = datain.trial(1,i).pow(datain.inside); % reshape to [nrpt, nvox]
   end
-  
+
   % else
   %   error('the input data should be either timelock, freq, or source with trials')
-  
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -249,11 +252,11 @@ end
 % estimate and remove the confounds
 fprintf('estimating the regression weights and removing the confounds \n');
 if isempty(find(isnan(dat))) % if there are no NaNs, process all at once
-  
+
   beta = regr\dat;                                                        % B = X\Y
-  
+
 else % otherwise process per colum set as defined by the nan distribution
-  
+
   [u,i,j] = unique(~isnan(dat)','rows','first'); % find unique rows
   uniquecolumns = u'; % unique column types
   Nuniques = numel(i); % number of unique types
@@ -267,7 +270,7 @@ else % otherwise process per colum set as defined by the nan distribution
   end
   beta = squeeze(nansum(beta_temp,1)); % sum the betas
   clear beta_temp;
-  
+
 end
 
 model = regr(:, cfg.reject) * beta(cfg.reject, :);                        % model = confounds * weights = X * X\Y
@@ -275,7 +278,7 @@ Yc = dat - model;                                                         % Ycle
 
 % beta statistics
 if strcmp(cfg.statistics, 'yes')
-  
+
   fprintf('performing statistics on the regression weights \n');
   dfe        = nrpt - nconf;                                              % degrees of freedom
   err        = dat - regr * beta;                                         % err = Y - X * B
@@ -286,18 +289,18 @@ if strcmp(cfg.statistics, 'yes')
   prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
   clear err dfe mse bvar;
   % FIXME: drop in replace tcdf from the statfun/private dir
-  
+
 end
 
 % reduced models analyses
 if ~isempty(cfg.ftest)
-  
+
   dfe        = nrpt - nconf;                                              % degrees of freedom
   err        = dat - regr * beta;                                         % err = Y - X * B
   tmse       = sum((err).^2)/dfe;                                         % mean squared error
-  
+
   for iter = 1:numel(cfg.ftest)
-    
+
     % regressors to test if they explain additional variance
     r          = str2num(cfg.ftest{iter});
     fprintf('F-testing explained additional variance of regressors %s \n', num2str(r));
@@ -324,9 +327,9 @@ if ~isempty(cfg.ftest)
     p(iter,idx_neg) = fcdf(-F(iter,idx_neg),rnr,rdfe);
     clear rerr rmse
     % FIXME: drop in replace tcdf from the statfun/private dir
-    
+
   end
-  
+
   clear dfe err tmse;
 end
 
@@ -354,41 +357,41 @@ if ~isempty(cfg.ftest)
   clear F p;
 end
 
-dataout.(cfg.parameter) = reshape(Yc, [nrpt dimsiz(datdim)]); 
+dataout.(cfg.parameter) = reshape(Yc, [nrpt dimsiz(datdim)]);
 clear Yc;
 
 if istimelock && strcmp(cfg.parameter, 'trial')
-  
+
   if isfield(datain, 'avg')
     % recompute the average
     fprintf('updataing average and variance\n');
     tempcfg            = [];
     tempcfg.keeptrials = 'yes';
     dataout = ft_timelockanalysis(tempcfg, dataout); % reaveraging
-    
+
     if strcmp(cfg.model, 'yes')
       % also average the model
       tempcfg            = [];
       tempcfg.keeptrials = 'yes';
       dataout.model      = ft_timelockanalysis(tempcfg, dataout.model); % reaveraging
     end
-  end  
+  end
 end
 
 
 if istimelock
-  
+
   % put the clean data back into place
   dataout.trial = reshape(Yc, [nrpt, nchan, ntime]); clear Yc;
   dataout.dimord = 'rpt_chan_time';
-  
+
   if isfield(datain, 'avg') % recompute the average
     fprintf('updataing average and variance\n');
     tempcfg            = [];
     tempcfg.keeptrials = 'yes';
     dataout = ft_timelockanalysis(tempcfg, dataout); % reaveraging
   end
-  
+
   % make a nested timelock structure that contains the model
   if strcmp(cfg.model, 'yes')
     fprintf('outputting the model which contains the confounds x weights \n');
@@ -396,7 +399,7 @@ if istimelock
     dataout.model.dimord  = dataout.dimord;
     dataout.model.time    = dataout.time;
     dataout.model.label   = dataout.label;
-    
+
     if isfield(datain, 'avg')
       % also average the model
       tempcfg            = [];
@@ -404,31 +407,31 @@ if istimelock
       dataout.model      = ft_timelockanalysis(tempcfg, dataout.model); % reaveraging
     end
   end
-  
+
   % beta statistics
   if strcmp(cfg.statistics, 'yes')
     dataout.stat     = reshape(tval, [nconf, nchan, ntime]);
     dataout.prob     = reshape(prob, [nconf, nchan, ntime]);
     clear tval prob;
   end
-  
+
   % reduced models analyses
   if ~isempty(cfg.ftest)
     dataout.fvar   = reshape(F, [numel(cfg.ftest), nchan, ntime]);
     dataout.pvar   = reshape(p, [numel(cfg.ftest), nchan, ntime]);
     clear F p;
   end
-  
+
   % add the beta weights to the output
   dataout.beta       = reshape(beta, [nconf, nchan, ntime]);
   clear beta dat;
-  
+
 elseif isfreq
-  
+
   % put the clean data back into place
   dataout.powspctrm = reshape(Yc, [nrpt, nchan, nfreq, ntime]); clear Yc;
   dataout.dimord = 'rpt_chan_freq_time';
-  
+
   % make a nested freq structure that contains the model
   if strcmp(cfg.model, 'yes')
     fprintf('outputting the model which contains the confounds x weights \n');
@@ -439,34 +442,34 @@ elseif isfreq
       dataout.model.time    = dataout.time;
     end
   end
-  
+
   % beta statistics
   if isfield(cfg, 'statistics') && strcmp(cfg.statistics, 'yes')
     dataout.stat     = reshape(tval, [nconf, nchan, nfreq, ntime]);
     dataout.prob     = reshape(prob, [nconf, nchan, nfreq, ntime]);
     clear tval prob;
   end
-  
+
   % reduced models analyses
   if isfield(cfg, 'ftest') && ~isempty(cfg.ftest)
     dataout.fvar   = reshape(F, [numel(cfg.ftest), nchan, nfreq, ntime]);
     dataout.pvar   = reshape(p, [numel(cfg.ftest), nchan, nfreq, ntime]);
     clear F p;
   end
-  
+
   % add the beta weights to the output
   dataout.beta     = reshape(beta, [nconf, nchan, nfreq, ntime]);
   clear beta dat;
-  
+
 elseif issource
-  
+
   % put the clean data back into place
   for i = 1:nrpt
     dataout.trial(1,i).pow = zeros(nvox,1);
     dataout.trial(1,i).pow(dataout.inside) = Yc(i,:);
   end
   clear Yc;
-  
+
   % make a nested source structure that contains the model
   if strcmp(cfg.model, 'yes')
     fprintf('outputting the model which contains the confounds x weights \n');
@@ -476,7 +479,7 @@ elseif issource
     end
     clear model;
   end
-  
+
   % beta statistics
   if isfield(cfg, 'statistics') && strcmp(cfg.statistics, 'yes')
     dataout.stat                       = zeros(nconf, nvox);
@@ -485,12 +488,12 @@ elseif issource
     dataout.prob(:,dataout.inside)     = prob;
     clear tval prob;
   end
-  
+
   % add the beta weights to the output
   dataout.beta = zeros(nconf, nvox);
   dataout.beta(:,dataout.inside) = beta;
   clear beta dat;
-  
+
 end
 
 % discard the gradiometer information because the weightings have been changed

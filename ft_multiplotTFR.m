@@ -13,10 +13,10 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %
 % The configuration can have the following parameters:
 %   cfg.parameter        = field to be represented as color (default depends on data.dimord)
-%                          'powspctrm' or 'cohspctrm' 
+%                          'powspctrm' or 'cohspctrm'
 %   cfg.maskparameter    = field in the data to be used for opacity masking of data
 %   cfg.maskstyle        = style used to masking, 'opacity', 'saturation' or 'outline' (default = 'opacity')
-%                          use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all 
+%                          use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all
 %                          sorts of image-problems (currently only possible with a white backgroud)
 %   cfg.maskalpha        = alpha value between 0 (transparant) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
 %   cfg.masknans         = 'yes' or 'no' (default = 'yes')
@@ -42,7 +42,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.fontsize         = font size of comment and labels (if present) (default = 8)
 %   cfg.interactive      = Interactive plot 'yes' or 'no' (default = 'yes')
 %                          In a interactive plot you can select areas and produce a new
-%                          interactive plot when a selected area is clicked. Multiple areas 
+%                          interactive plot when a selected area is clicked. Multiple areas
 %                          can be selected by holding down the SHIFT key.
 %   cfg.renderer         = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
 %   cfg.directionality   = '', 'inflow' or 'outflow' specifies for
@@ -87,12 +87,12 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 % If you specify this option the input data will be read from a *.mat
-% file on disk. This mat files should contain only a single variable named 'data', 
+% file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure. For this particular function, the
 % data should be provided as a cell array.
 %
 % See also:
-%   FT_MULTIPLOTER, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR, 
+%   FT_MULTIPLOTER, FT_SINGLEPLOTER, FT_SINGLEPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR,
 %   FT_PREPARE_LAYOUT
 
 % Undocumented local options:
@@ -103,7 +103,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -111,7 +111,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 %
-%    FieldTrip is distributed in the hope that it will be useful, 
+%    FieldTrip is distributed in the hope that it will be useful,
 %    but WITHOUT ANY WARRANTY; without even the implied warranty of
 %    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %    GNU General Public License for more details.
@@ -121,7 +121,10 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -131,8 +134,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -174,7 +177,7 @@ cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'opacity');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
-if ~isfield(cfg, 'box')             
+if ~isfield(cfg, 'box')
   if ~isempty(cfg.maskparameter)
     cfg.box = 'yes';
   else
@@ -195,7 +198,7 @@ if ~any(ismember(dimtok, 'time'))
 else
   xparam = 'time';
   yparam = 'freq';
-  cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');  
+  cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
 end
 
 if isfield(cfg, 'channel') && isfield(data, 'label')
@@ -213,12 +216,12 @@ end
 
 % check whether rpt/subj is present and remove if necessary and whether
 hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
-if hasrpt, 
+if hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
   % on the fly computation of coherence spectrum is not supported
-  if isfield(data, 'crsspctrm'), 
-    data = rmfield(data, 'crsspctrm'); 
+  if isfield(data, 'crsspctrm'),
+    data = rmfield(data, 'crsspctrm');
   end
   % keep mask-parameter if it is set
   if ~isempty(cfg.maskparameter)
@@ -250,7 +253,7 @@ if hasrpt,
 end % if hasrpt
 
 % Read or create the layout that will be used for plotting:
-cla; 
+cla;
 hold on
 lay = ft_prepare_layout(cfg, data);
 cfg.layout = lay;
@@ -283,7 +286,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
   end
-  
+
   % check for refchannel being part of selection
   if ~strcmp(cfg.refchannel, 'gui')
     if haslabelcmb
@@ -296,7 +299,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
       error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
-  
+
   % Interactively select the reference channel
   if strcmp(cfg.refchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
@@ -316,8 +319,8 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonMotionFcn'});
     return
   end
-  
-  if ~isfull, 
+
+  if ~isfull,
     % Convert 2-dimensional channel matrix to a single dimension:
     if isempty(cfg.directionality)
       sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:, 2)));
@@ -425,14 +428,14 @@ xdim = find(strcmp(xparam, dims));
 zdim = setdiff(1:ndims(dat), [ydim xdim]);
 % and permute
 dat = permute(dat, [zdim(:)' ydim xdim]);
-if isfull  
+if isfull
   dat = dat(sel1, sel2, ymin:ymax, xmin:xmax);
   dat = nanmean(dat, meandir);
   siz = size(dat);
   dat = reshape(dat, [max(siz(1:2)) siz(3) siz(4)]);
   dat = dat(sellab, :, :);
 % this makes no sense, so COMMENTED OUT AS OF FEBURARY 22 2012
-% elseif haslabelcmb 
+% elseif haslabelcmb
 %   dat = dat(sellab, ymin:ymax, xmin:xmax);
 else
   dat = dat(sellab, ymin:ymax, xmin:xmax);
@@ -471,7 +474,7 @@ end
 % Select the channels in the data that match with the layout:
 [chanseldat, chansellay] = match_str(label, lay.label);
 if isempty(chanseldat)
-  error('labels in data and labels in layout do not match'); 
+  error('labels in data and labels in layout do not match');
 end
 
 % if magnetometer/gradiometer scaling is requested, get indices for
@@ -525,7 +528,7 @@ for k=1:length(chanseldat)
   if ~isempty(cfg.maskparameter)
     mdata = shiftdim(maskdat(k, :, :));
   end
-  
+
   % scale if needed
   if (cfg.magscale ~= 1 && any(magInd == chanseldat(k)))
     cdata = cdata .* cfg.magscale;
@@ -533,7 +536,7 @@ for k=1:length(chanseldat)
   if (cfg.gradscale ~= 1 && any(gradInd == chanseldat(k)))
     cdata = cdata .* cfg.gradscale;
   end
-  
+
   % Draw plot (and mask Nan's with maskfield if requested)
   if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
     nans_mask = ~isnan(cdata);
@@ -551,7 +554,7 @@ for k=1:length(chanseldat)
   else
     ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
   end
-  
+
   % Currently the handle isn't being used below, this is here for possible use in the future
   h = findobj('tag', 'cip');
 end % for chanseldat
@@ -570,8 +573,8 @@ end
 k = cellstrmatch('SCALE', lay.label);
 if ~isempty(k)
   % Get average cdata across channels:
-  cdata = shiftdim(mean(datsel, 1)); 
- 
+  cdata = shiftdim(mean(datsel, 1));
+
   % Draw plot (and mask Nan's with maskfield if requested)
   if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
     mask = ~isnan(cdata);
@@ -619,7 +622,7 @@ if isempty(get(gcf, 'Name'))
   else
     funcname = mfilename;
   end
-  
+
   if isfield(cfg, 'dataname')
       dataname = cfg.dataname;
   elseif nargin > 1
@@ -627,7 +630,7 @@ if isempty(get(gcf, 'Name'))
   else % data provided through cfg.inputfile
     dataname = cfg.inputfile;
   end
-  
+
   if isempty(cfg.figurename)
     set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, dataname));
     set(gcf, 'NumberTitle', 'off');
@@ -723,14 +726,14 @@ if ~isempty(label)
     cfg = rmfield(cfg, 'inputfile');
   end
   cfg.channel = label;
-  
+
   % make sure ft_singleplotTFR does not apply a baseline correction again
   cfg.baseline = 'no';
-  
+
   % put data name in here, this cannot be resolved by other means
   info = guidata(gcf);
   cfg.dataname = info.dataname;
-  
+
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
     fprintf('''%s'', ', cfg.channel{i});

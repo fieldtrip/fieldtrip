@@ -70,7 +70,7 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 
 % Copyright (C) 2010-2012, Martin Vinck
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -128,7 +128,7 @@ cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method
 doShiftPredictor  = strcmp(cfg.method, 'shiftpredictor'); % shift predictor
 
 % determine the corresponding indices of the requested channel combinations
-cfg.channelcmb = ft_channelcombination(cfg.channelcmb, spike.label,true);
+cfg.channelcmb = ft_channelcombination(cfg.channelcmb, spike.label(:), true);
 cmbindx        = zeros(size(cfg.channelcmb));
 for k=1:size(cfg.channelcmb,1)
   cmbindx(k,1) = strmatch(cfg.channelcmb(k,1), spike.label, 'exact');

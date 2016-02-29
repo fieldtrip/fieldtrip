@@ -85,7 +85,7 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.lpfiltord     = lowpass  filter order
 %   cfg.artfctdef.zvalue.hpfiltord     = highpass filter order
 %   cfg.artfctdef.zvalue.bpfiltord     = bandpass filter order
-%   cfg.artfctdef.zvalue.bsfiltord     = bandstop filter order 
+%   cfg.artfctdef.zvalue.bsfiltord     = bandstop filter order
 %   cfg.artfctdef.zvalue.medianfiltord = length of median filter
 %   cfg.artfctdef.zvalue.lpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
 %   cfg.artfctdef.zvalue.hpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
@@ -102,7 +102,7 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
 % Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -120,7 +120,10 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -128,8 +131,8 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -183,7 +186,7 @@ if pertrial
   end
 end
 
-% the data is either passed into the function by the user or read from file with cfg.inputfile
+% the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
 
 if ~hasdata
@@ -191,7 +194,7 @@ if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   trl = cfg.trl;
-  
+
 else
   % check whether the value for trlpadding makes sense
   if cfg.artfctdef.zvalue.trlpadding > 0
@@ -251,7 +254,7 @@ numsmp = zeros(numsgn, 1);
 ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(numsgn) ' channels']);
 for trlop = 1:numtrl
   ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
-  
+
   if strcmp(cfg.memory, 'low') % store nothing in memory
     if hasdata
       dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
@@ -259,7 +262,7 @@ for trlop = 1:numtrl
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
-    
+
     if trlop==1 && ~pertrial
       sumval = zeros(size(dat,1), 1);
       sumsqr = zeros(size(dat,1), 1);
@@ -271,7 +274,7 @@ for trlop = 1:numtrl
       numsmp = zeros(size(dat,1), numtrl);
       numsgn = size(dat,1);
     end
-    
+
     if ~pertrial
       % accumulate the sum and the sum-of-squares
       sumval = sumval + sum(dat,2);
@@ -290,7 +293,7 @@ for trlop = 1:numtrl
       dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
     end
     dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat{trlop},2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
-    
+
     if trlop==1 && ~pertrial
       sumval = zeros(size(dat{1},1), 1);
       sumsqr = zeros(size(dat{1},1), 1);
@@ -302,7 +305,7 @@ for trlop = 1:numtrl
       numsmp = zeros(size(dat{1},1), numtrl);
       numsgn = size(dat{1},1);
     end
-    
+
     if ~pertrial
       % accumulate the sum and the sum-of-squares
       sumval = sumval + sum(dat{trlop},2);
@@ -356,7 +359,7 @@ for trlop = 1:numtrl
     zmax{trlop}  = -inf + zeros(1,size(dat,2));
     zsum{trlop}  = zeros(1,size(dat,2));
     zindx{trlop} = zeros(1,size(dat,2));
-    
+
     nsmp          = size(dat,2);
     zdata         = (dat - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
     zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
@@ -367,7 +370,7 @@ for trlop = 1:numtrl
     zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
     zsum{trlop}  = zeros(1,size(dat{trlop},2));
     zindx{trlop} = zeros(1,size(dat{trlop},2));
-    
+
     nsmp          = size(dat{trlop},2);
     zdata         = (dat{trlop} - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
     zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
@@ -472,7 +475,7 @@ else
   opt.zval = zsum;
 end
 opt.zindx = zindx;
-if nargin==1
+if hasdata
   opt.data = {};
 else
   opt.data = data;
@@ -489,13 +492,13 @@ if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
   opt.h1           = h1;
   opt.h2           = h2;
   opt.h3           = h3;
-  
+
   setappdata(h, 'opt', opt);
   artval_cb(h);
   redraw_cb(h);
-  
+
   % make the user interface elements for the data view
-  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'stop', 'userdata', 'q') 
+  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'stop', 'userdata', 'q')
   uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow')
   uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 'z')
   uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'uparrow')
@@ -513,27 +516,27 @@ if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
   %uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'ctrl+uparrow')
   %uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel','userdata', 'c')
   %uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'ctrl+downarrow')
-  
-  
-  
+
+
+
   ft_uilayout(h, 'tag', 'group1', 'width', 0.10, 'height', 0.05);
   ft_uilayout(h, 'tag', 'group2', 'width', 0.05, 'height', 0.05);
   ft_uilayout(h, 'tag', 'group3', 'width', 0.12, 'height', 0.05);
-  
+
   ft_uilayout(h, 'tag', 'group1', 'style', 'pushbutton', 'callback', @keyboard_cb);
   ft_uilayout(h, 'tag', 'group2', 'style', 'pushbutton', 'callback', @keyboard_cb);
   ft_uilayout(h, 'tag', 'group3', 'style', 'pushbutton', 'callback', @keyboard_cb);
-  
+
   ft_uilayout(h, 'tag', 'group1', 'retag', 'viewui');
   ft_uilayout(h, 'tag', 'group2', 'retag', 'viewui');
   ft_uilayout(h, 'tag', 'group3', 'retag', 'viewui');
   ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0.005);
-  
+
   while opt.quit==0
     uiwait(h);
     opt = getappdata(h, 'opt');
   end
-  
+
 else
   % compute the artifacts given the settings in the cfg
   setappdata(h, 'opt', opt);

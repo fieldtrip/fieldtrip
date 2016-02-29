@@ -73,7 +73,7 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -91,7 +91,10 @@ function [mvardata] = ft_mvaranalysis(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -101,8 +104,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -158,17 +161,17 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
       break
     end
   end
-  
+
   if ~ok
     error('the number of time points in all trials should be identical');
   else
     cfg.toi       = mean(data.time{1}([1 end]))       + 0.5/data.fsample;
     cfg.t_ftimwin = data.time{1}(end)-data.time{1}(1) + 1/data.fsample;
-    
+
     % also replace all time axes with the first one:
     data.time(:) = data.time(1);
   end
-  
+
 elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
   % do sliding window approach
 
@@ -195,7 +198,7 @@ if ~dobvar
   chanindx = match_str(data.label, cfg.channel);
   nchan    = length(chanindx);
   label    = data.label(chanindx);
-  
+
   ncmb     = nchan*nchan;
   cmbindx1 = repmat(chanindx(:),  [1 nchan]);
   cmbindx2 = repmat(chanindx(:)', [nchan 1]);
@@ -206,14 +209,14 @@ else
   for k = 1:size(cmbindx,1)
     [tmp, cmbindx(k,:)] = match_str(cfg.channelcmb(k,:)', data.label);
   end
-  
+
   nchan    = 2;
   label    = data.label(cmbindx);
-  
+
   ncmb     = nchan*nchan;
   labelcmb = cell(0,2);
   cmb      = cfg.channelcmb;
-  
+
   for k = 1:size(cmbindx,1)
     labelcmb{end+1,1} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
     labelcmb{end  ,2} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
@@ -284,7 +287,7 @@ if dozscore,
   end
   datavg = sumval./numsmp;
   datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
-  
+
   data.trial = data.trial(trlindx);
   data.time  = data.time(trlindx);
   ntrl       = length(trlindx);
@@ -328,15 +331,15 @@ for j = 1:ntoi
   endsample     = begsample+tfwin-1;
   sample        = nearest(timeaxis, cfg.toi(j));
   cfg.toi(j)    = timeaxis(sample);
-  
+
   tmpcfg        = [];
   tmpcfg.toilim = timeaxis([begsample endsample]);
   tmpcfg.feedback = 'no';
   tmpcfg.minlength= 'maxperlen';
   tmpdata       = ft_redefinetrial(tmpcfg, data);
-  
+
   cfg.toi(j)    = mean(tmpdata.time{1}([1 end]))+0.5./data.fsample; %FIXME think about this
-  
+
   %---create cell-array indexing which original trials should go into each replicate
   rpt  = {};
   nrpt = numel(tmpdata.trial);
@@ -353,20 +356,20 @@ for j = 1:ntoi
     rpt{1} = 1:numel(tmpdata.trial);
     nrpt   = 1;
   end
-  
+
   for rlop = 1:nrpt
-    
+
     if dobvar % bvar
       for m = 1:ntap
         %---construct data-matrix
         for k = 1:size(cmbindx,1)
           dat = catnan(tmpdata.trial, cmbindx(k,:), rpt{rlop}, tap(m,:), nnans, dobvar);
-          
+
           %---estimate autoregressive model
           switch cfg.toolbox
             case 'biosig'
               [ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
-              
+
               %---compute noise covariance
               tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
             case 'bsmart'
@@ -376,7 +379,7 @@ for j = 1:ntoi
               %the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
           end
           coeffs(rlop,k,:,:,j,m) = reshape(ar, [nchan*2 cfg.order]);
-          
+
           %---rescale noisecov if necessary
           if dozscore, % FIX ME for bvar
             noisecov(rlop,k,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
@@ -390,12 +393,12 @@ for j = 1:ntoi
       for m = 1:ntap
         %---construct data-matrix
         dat = catnan(tmpdata.trial, chanindx, rpt{rlop}, tap(m,:), nnans, dobvar);
-        
+
         %---estimate autoregressive model
         switch cfg.toolbox
           case 'biosig'
             [ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
-            
+
             %---compute noise covariance
             tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
           case 'bsmart'
@@ -405,7 +408,7 @@ for j = 1:ntoi
             %the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
         end
         coeffs(rlop,:,:,:,j,m) = reshape(ar, [nchan nchan cfg.order]);
-        
+
         %---rescale noisecov if necessary
         if dozscore,
           noisecov(rlop,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
@@ -415,9 +418,9 @@ for j = 1:ntoi
         dof(rlop,:,j) = numel(rpt{rlop});
       end %---tapers
     end
-    
+
   end %---replicates
-  
+
 end %---tois
 ft_progress('close');
 

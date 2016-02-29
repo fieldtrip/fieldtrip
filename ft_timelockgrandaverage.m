@@ -46,7 +46,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 % Copyright (C) 2003-2006, Jens Schwarzbach
 % Copyright (C) 2013, Burkhard Maess
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -64,7 +64,10 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -74,8 +77,8 @@ ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -160,7 +163,7 @@ if strcmp(cfg.keepindividual, 'yes')
     avgmat(s, :, :) = varargin{s}.(cfg.parameter);
   end
   grandavg.individual = avgmat; % Nsubj x Nchan x Nsamples
-  
+
 else % ~strcmp(cfg.keepindividual, 'yes')
   avgdof  = ones([Nsubj, datsiz]);
   avgvar  = zeros([Nsubj, datsiz]);
@@ -213,7 +216,7 @@ if isfield(varargin{1}, 'labelcmb')
 end
 
 switch cfg.method
-  
+
   case 'across'
     if isfield(varargin{1}, 'grad') % positions are different between subjects
       warning('discarding gradiometer information because it cannot be averaged');
@@ -221,7 +224,7 @@ switch cfg.method
     if isfield(varargin{1}, 'elec') % positions are different between subjects
       warning('discarding electrode information because it cannot be averaged');
     end
-    
+
   case 'within'
     % misses the test for all equal grad fields (should be the case for
     % averaging across blocks, if all block data is corrected for head
@@ -232,7 +235,7 @@ switch cfg.method
     if isfield(varargin{1}, 'elec')
       grandavg.elec = varargin{1}.elec;
     end
-    
+
   otherwise
     error('unsupported method "%s"', cfg.method);
 end

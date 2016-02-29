@@ -38,7 +38,7 @@ lastwarn('');
 % remember the variables that were passed as input arguments
 Ce9dei2ZOo_workspace = evalin('caller', 'whos');
 Ce9dei2ZOo_workspace = Ce9dei2ZOo_workspace(~strcmp({Ce9dei2ZOo_workspace.class}, 'function_handle')); % only variables, not anonymous functions
-Ce9dei2ZOo_workspace = setdiff({Ce9dei2ZOo_workspace.name}, {'ft_default', 'revision', 'abort', 'ftohDiW7th_FuncMem', 'ftohDiW7th_FuncTimer', 'Ce9dei2ZOo_debug', 'Ce9dei2ZOo_funname', 'Ce9dei2ZOo_argin'});
+Ce9dei2ZOo_workspace = setdiff({Ce9dei2ZOo_workspace.name}, {'ft_default', 'ft_revision', 'ft_nargin', 'ft_abort', 'ftohDiW7th_FuncMem', 'ftohDiW7th_FuncTimer', 'Ce9dei2ZOo_debug', 'Ce9dei2ZOo_funname', 'Ce9dei2ZOo_argin'});
 Ce9dei2ZOo_argin     = [];
 for Ce9dei2ZOo_indx=1:length(Ce9dei2ZOo_workspace)
   Ce9dei2ZOo_argin(Ce9dei2ZOo_indx).name  = Ce9dei2ZOo_workspace{Ce9dei2ZOo_indx};

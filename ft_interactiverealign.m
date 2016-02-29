@@ -29,7 +29,7 @@ function cfg = ft_interactiverealign(cfg)
 
 % Copyright (C) 2008, Vladimir Litvak
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,7 +47,10 @@ function cfg = ft_interactiverealign(cfg)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -56,8 +59,8 @@ ft_preamble debug
 ft_preamble provenance
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -363,7 +366,7 @@ if ~isempty(template.headshape)
       camlight
       alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
     end
-    
+
     if strcmp(template.headshapestyle, 'vertex') || strcmp(template.headshapestyle, 'both')
       ft_plot_mesh(template.headshape.pos,'vertexcolor', 'b')
     end
@@ -382,7 +385,7 @@ if ~isempty(individual.headshape)
       camlight
       alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
     end
-    
+
     if strcmp(individual.headshapestyle, 'vertex') || strcmp(individual.headshapestyle, 'both')
       ft_plot_mesh(individual.headshape.pos,'vertexcolor', 'r')
     end
@@ -400,7 +403,7 @@ if ~isempty(individual.headshape)
   else
     grid off
   end
-  
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -460,7 +463,7 @@ switch val
     view([-180 0]);
   case 6
     view([0 0]);
-    
+
   otherwise
 end
 uiresume;

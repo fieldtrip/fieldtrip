@@ -35,7 +35,7 @@ function [ws, warned] = ft_warning(varargin)
 
 % Copyright (C) 2012-2016, Robert Oostenveld, J?rn M. Horschig
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -54,6 +54,8 @@ function [ws, warned] = ft_warning(varargin)
 % $Id$
 
 global ft_default
+warned = false;
+ws = [];
 
 stack = dbstack;
 if any(strcmp({stack.file}, 'ft_warning.m'))
@@ -65,7 +67,6 @@ if nargin < 1
   error('You need to specify at least a warning message');
 end
 
-warned = false;
 if isstruct(varargin{1})
   warning(varargin{1});
   return;

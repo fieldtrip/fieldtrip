@@ -39,7 +39,7 @@ function [data] = ft_appenddata(cfg, varargin)
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -57,7 +57,10 @@ function [data] = ft_appenddata(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -67,8 +70,8 @@ ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -135,7 +138,7 @@ for i=1:Ndata
   else
     sampleinfo{i} = [];
   end
-  
+
   % the function should behave properly even if no sampleinfo is present,
   % hence the warning seems inappropriate (ES, 24-apr-2014)
 %   if isempty(sampleinfo{i})
@@ -192,7 +195,7 @@ try
   for j=2:Ndata
     hassampleinfos = isfield(varargin{1}, 'sampleinfo') &&...
       isfield(varargin{j}, 'sampleinfo');
-    
+
     if ((hassampleinfos &&...
         ~isequal(varargin{1}.sampleinfo, varargin{j}.sampleinfo)) ||...
         ~hassampleinfos) &&...
@@ -235,17 +238,17 @@ end
 
 if cattrial && catlabel
   error('cannot determine how the data should be concatenated');
-  
+
 elseif cattrial
   fprintf('concatenating the trials over all datasets\n');
-  
+
   data = [];
   data.label  = varargin{1}.label;
   data.trial  = {};
   data.time   = {};
   if hassampleinfo, data.sampleinfo = []; end
   if hastrialinfo,  data.trialinfo  = []; end;
-  
+
   for i=1:Ndata
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
@@ -254,27 +257,27 @@ elseif cattrial
     if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo,  varargin{i}.trialinfo);  end
     % FIXME is not entirely robust if the different inputs have different number of columns in trialinfo
   end
-  
+
 elseif catlabel
   fprintf('concatenating the channels within each trial\n');
-  
+
   if ~all(diff(Ntrial)==0)
     error('not all datasets have the same number of trials');
   else
     Ntrial = Ntrial(1);
   end
-  
+
   data = [];
   data.label = varargin{1}.label;
   data.trial = varargin{1}.trial;
   data.time  = varargin{1}.time;
   if hassampleinfo, data.sampleinfo=varargin{i}.sampleinfo; end
   if hastrialinfo,  data.trialinfo =varargin{i}.trialinfo;  end
-  
+
   for i=2:Ndata
     % concatenate the labels
     data.label = cat(1, data.label(:), varargin{i}.label(:));
-    
+
     % check whether the trialinfo and sampleinfo fields are consistent
     if hassampleinfo && ~isequaln(data.sampleinfo, varargin{i}.sampleinfo)
       removesampleinfo = 1;
@@ -283,17 +286,17 @@ elseif catlabel
       removetrialinfo = 1;
     end
   end
-  
+
   if ~isfield(data, 'fsample')
     fsample = 1/mean(diff(data.time{1}));
   else
     fsample = data.fsample;
   end
-  
+
   for j=1:Ntrial
     %pre-allocate memory for this trial
     data.trial{j} = [data.trial{j}; zeros(sum(Nchan(2:end)), size(data.trial{j},2))];
-    
+
     %fill this trial with data
     endchan = Nchan(1);
     %allow some jitter for irregular sample frequencies
@@ -307,7 +310,7 @@ elseif catlabel
       data.trial{j}(begchan:endchan,:) = varargin{i}.trial{j};
     end
   end
-  
+
 else
   % labels are inconsistent, cannot determine how to concatenate the data
   error('cannot determine how the data should be concatenated');

@@ -86,7 +86,10 @@ else
   headmodel.tissuelabel = mesh.tissuelabel;
 end
 
+
 headmodel.stiff = sb_calc_stiff(headmodel);
 headmodel.type = 'simbio';
+
+
 
 end
