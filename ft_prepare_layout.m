@@ -43,7 +43,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
 %   data.grad     structure with gradiometer definition
-%   data.opto     structure with optode structure definition
+%   data.topo     structure with optode structure definition
 %
 % Alternatively you can specify the following layouts which will be
 % generated for all channels present in the data. Note that these layouts
@@ -108,8 +108,8 @@ hasdata = exist('data', 'var');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if hasdata
-  data = [];
+if ~hasdata
+  data = struct([]);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
