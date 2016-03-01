@@ -203,8 +203,11 @@ while (true)
   end
 
   % FIXME this one plays automatically
+  % FIXME I don't know how to deal with multiple channels
   if ~isempty(audiodat)
-    soundview(sum(audiodat,1), audiohdr.Fs);
+    for channel=1:size(audiodat,1)
+      soundview(audiodat(channel,:), audiohdr.Fs);
+    end
     drawnow
   end
 
