@@ -14,7 +14,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   'metric'      = Error measure to be minimised [ rv | var | abs ]
 %   'checkinside' = Boolean flag to check whether dipole is inside source compartment [ 0 | 1 ]
 %   'weight'      = weight matrix for maximum likelihood estimation, e.g. inverse noise covariance
-%   'noisecov'    = noise covariance matrix
+
 %
 % The following optional input arguments relate to the computation of the leadfields
 %   'reducerank'      = 'no' or number
@@ -94,23 +94,6 @@ reducerank     = ft_getopt(varargin, 'reducerank'     ); % for leadfield computa
 normalize      = ft_getopt(varargin, 'normalize'      ); % for leadfield computation
 normalizeparam = ft_getopt(varargin, 'normalizeparam' ); % for leadfield computation
 weight         = ft_getopt(varargin, 'weight'         ); % for maximum likelihood estimation
-noisecov       = ft_getopt(varargin, 'noisecov'       ); % for sphering
-
-if ~isempty(noisecov) && ~isempty(weight)
-  error('you cannot specify both weight and noisecov');
-elseif ~isempty(noisecov)
-  [u, s] = svd(noisecov);
-  tol = max(size(noisecov)) * eps(norm(s,inf));
-  s = diag(s);
-  r1 = sum(s > tol)+1;
-  s(1:(r1-1)) = 1./sqrt(s(1:(r1-1)));
-  s(r1:end)   = 0;
-  sphere = diag(s) * u';
-  % apply the sphering to the data
-  dat = sphere*dat;
-  % apply the sphering to the forward model as a pre-multiplication
-  sens.tra = sphere*sens.tra;
-end
 
 if isfield(constr, 'mirror')
   % for backward compatibility
