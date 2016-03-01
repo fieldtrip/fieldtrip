@@ -855,6 +855,19 @@ elseif filetype_check_extension(filename, '.tev')
   manufacturer = 'Tucker-Davis-Technology';
   content = 'electrophysiological data';
   
+  % raw audio and video data from https://github.com/andreyzhd/VideoMEG
+  % the extension *.aud/*.vid is used at NatMEG and *.audio.dat/*.video.dat seems to be used in Helsinki
+elseif (filetype_check_extension(filename, '.aud') || filetype_check_extension(filename, '.audio.dat')) && filetype_check_header(filename, 'ELEKTA_AUDIO_FILE')
+  % this should go before curry_dat
+  type = 'videomeg_aud';
+  manufacturer = 'VideoMEG';
+  content = 'audio';
+elseif (filetype_check_extension(filename, '.vid') || filetype_check_extension(filename, '.video.dat')) && filetype_check_header(filename, 'ELEKTA_VIDEO_FILE')
+  % this should go before curry_dat
+  type = 'videomeg_vid';
+  manufacturer = 'VideoMEG';
+  content = 'video';
+
 elseif (filetype_check_extension(filename, '.dat') ||  filetype_check_extension(filename, '.Dat')) && (exist(fullfile(p, [f '.ini']), 'file') || exist(fullfile(p, [f '.Ini']), 'file'))
   % this should go before curry_dat
   type = 'deymed_dat';
@@ -1085,16 +1098,6 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   type = 'brainvisa_minf';
   manufacturer = 'BrainVISA';
   content = 'annotation/metadata';
-
-  % raw audio and video data from https://github.com/andreyzhd/VideoMEG
-elseif filetype_check_extension(filename, '.aud') && filetype_check_header(filename, 'ELEKTA_AUDIO_FILE')
-  type = 'videomeg_aud';
-  manufacturer = 'VideoMEG';
-  content = 'audio';
-elseif filetype_check_extension(filename, '.vid') && filetype_check_header(filename, 'ELEKTA_VIDEO_FILE')
-  type = 'videomeg_vid';
-  manufacturer = 'VideoMEG';
-  content = 'video';
   
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
