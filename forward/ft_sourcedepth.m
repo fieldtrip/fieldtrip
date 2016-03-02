@@ -68,7 +68,7 @@ case {'bem' 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag','openmeeg'}
   end
   inside = bounding_mesh(dippos, pos, tri);
   ntri   = size(tri,1);
-  npos   = size(pos,1);
+  npos   = size(dippos,1);
   dist   = zeros(ntri, 1);
   depth  = zeros(npos, 1);
   for i=1:npos
