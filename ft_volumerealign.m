@@ -214,6 +214,9 @@ if ft_abort
   return
 end
 
+% the data can be passed as input argument or can be read from disk
+hastarget = exist('target', 'var');
+
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 
@@ -611,7 +614,7 @@ switch cfg.method
         cfg = rmfield(cfg, 'scalpthreshold');
       end
 
-    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+    elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
       % old-style specification, convert into new representation
       cfg.headshape = struct('headshape', cfg.headshape);
       if isfield(cfg, 'scalpsmooth'),
@@ -669,8 +672,8 @@ switch cfg.method
       fprintf('doing interactive realignment with headshape\n');
       tmpcfg                       = [];
       tmpcfg.template.elec         = shape;     % this is the Polhemus recorded headshape
-      tmpcfg.template.elec.chanpos = shape.pnt; % ft_interactiverealign needs the field chanpos
-      tmpcfg.template.elec.label   = cell(size(shape.pnt,1),1);
+      tmpcfg.template.elec.chanpos = shape.pos; % ft_interactiverealign needs the field chanpos
+      tmpcfg.template.elec.label   = cell(size(shape.pos,1),1);
       tmpcfg.individual.headshape  = scalp;     % this is the headshape extracted from the anatomical MRI
       tmpcfg.individual.headshapestyle = 'surface';
       tmpcfg = ft_interactiverealign(tmpcfg);
@@ -694,10 +697,10 @@ switch cfg.method
     end
 
     if ~isfield(cfg, 'weights')
-      w = ones(size(shape.pnt,1),1);
+      w = ones(size(shape.pos,1),1);
     else
       w = cfg.weights(:);
-      if numel(w)~=size(shape.pnt,1),
+      if numel(w)~=size(shape.pos,1),
         error('number of weights should be equal to the number of points in the headshape');
       end
     end
@@ -708,8 +711,8 @@ switch cfg.method
     ft_hastoolbox('fileexchange',1);
 
     % construct the coregistration matrix
-    nrm = normals(scalp.pnt, scalp.tri, 'vertex');
-    [R, t, err, dummy, info] = icp(scalp.pnt', shape.pnt', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
+    nrm = normals(scalp.pos, scalp.tri, 'vertex');
+    [R, t, err, dummy, info] = icp(scalp.pos', shape.pos', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
 
     if doicp,
       fprintf('doing iterative closest points realignment with headshape\n');
@@ -720,13 +723,13 @@ switch cfg.method
       M2 = inv([R t;0 0 0 1]);
 
       % warp the extracted scalp points to the new positions
-      scalp.pnt = ft_warp_apply(M2, scalp.pnt);
+      scalp.pos = ft_warp_apply(M2, scalp.pos);
 
       target        = scalp;
-      target.pos    = target.pnt;
+      target.pos    = target.pos;
       target.inside = (1:size(target.pos,1))';
 
-      functional     = rmfield(shape,'pnt');
+      functional     = rmfield(shape,'pos');
       functional.pow = info.distanceout(:);
       functional.pos = info.qout';
 
@@ -754,10 +757,10 @@ switch cfg.method
       M2 = eye(4); % this is needed later on
 
       target        = scalp;
-      target.pos    = target.pnt;
+      target.pos    = target.pos;
       target.inside = (1:size(target.pos,1))';
 
-      functional     = rmfield(shape,'pnt');
+      functional     = rmfield(shape,'pos');
       functional.pow = info.distancein(:);
       functional.pos = info.qout';
 
@@ -1021,11 +1024,11 @@ end
 % from voxel space to the target coordinate system space
 if viewresult
   % set flags for one or twovol case
-  if nargin == 3
-    twovol = true; % input was two volumes, base to be plotted on is called target, the aligned mri is named realign
+  if hastarget
+    twovol  = true; % input was two volumes, base to be plotted on is called target, the aligned mri is named realign
     basevol = target;
   else
-    twovol = false; % input was one volumes, base is called realign
+    twovol  = false; % input was one volumes, base is called realign
     basevol = realign;
   end
 
@@ -1103,7 +1106,7 @@ if viewresult
   dmin = min(dat(:));
   dmax = max(dat(:));
   dat  = (dat-dmin)./(dmax-dmin);
-  if nargin == 3 % do the same for the target
+  if hastarget % do the same for the target
     realigndat = double(realign.(cfg.parameter));
     dmin = min(realigndat(:));
     dmax = max(realigndat(:));

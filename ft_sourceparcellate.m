@@ -57,8 +57,8 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar source
-ft_preamble provenance source
+ft_preamble loadvar source parcellation
+ft_preamble provenance source parcellation
 ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -72,15 +72,18 @@ cfg.parameter    = ft_getopt(cfg, 'parameter', 'all');
 cfg.method       = ft_getopt(cfg, 'method', 'mean'); % can be mean, min, max, svd
 cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
 
+% the data can be passed as input argument or can be read from disk
+hasparcellation = exist('parcellation', 'var');
+
 if ischar(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
 
-if nargin<3
+if hasparcellation
+  % the parcellation is specified as separate structure
+else
   % the parcellation is represented in the source structure itself
   parcellation = source;
-else
-  % the parcellation is specified as separate structure
 end
 
 % keep the transformation matrix

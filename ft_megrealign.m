@@ -314,10 +314,10 @@ if strcmp(cfg.feedback, 'yes')
   warning('showing MEG topography (RMS value over time) in the first trial only');
   Nchan = length(data.grad.label);
   [id,it]   = match_str(data.grad.label, template.grad.label);
-  pnt1 = data.grad.chanpos(id,:);
-  pnt2 = template.grad.chanpos(it,:);
-  prj1 = elproj(pnt1); tri1 = delaunay(prj1(:,1), prj1(:,2));
-  prj2 = elproj(pnt2); tri2 = delaunay(prj2(:,1), prj2(:,2));
+  pos1 = data.grad.chanpos(id,:);
+  pos2 = template.grad.chanpos(it,:);
+  prj1 = elproj(pos1); tri1 = delaunay(prj1(:,1), prj1(:,2));
+  prj2 = elproj(pos2); tri2 = delaunay(prj2(:,1), prj2(:,2));
 
   switch cfg.topoparam
     case 'rms'
@@ -330,29 +330,29 @@ if strcmp(cfg.feedback, 'yes')
       error('unsupported cfg.topoparam');
   end
 
-  X = [pnt1(:,1) pnt2(:,1)]';
-  Y = [pnt1(:,2) pnt2(:,2)]';
-  Z = [pnt1(:,3) pnt2(:,3)]';
+  X = [pos1(:,1) pos2(:,1)]';
+  Y = [pos1(:,2) pos2(:,2)]';
+  Z = [pos1(:,3) pos2(:,3)]';
 
   % show figure with old an new helmets, volume model and dipole grid
   figure
   hold on
   ft_plot_vol(volold);
   plot3(grid.pos(:,1),grid.pos(:,2),grid.pos(:,3),'b.');
-  plot3(pnt1(:,1), pnt1(:,2), pnt1(:,3), 'r.') % original positions
-  plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
+  plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
+  plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   view(-90, 90);
 
   % show figure with data on old helmet location
   figure
   hold on
-  plot3(pnt1(:,1), pnt1(:,2), pnt1(:,3), 'r.') % original positions
-  plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
+  plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
+  plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   axis equal; axis vis3d
   bnd1 = [];
-  bnd1.pnt = pnt1;
+  bnd1.pos = pos1;
   bnd1.tri = tri1;
   ft_plot_mesh(bnd1,'vertexcolor',p1,'edgecolor','none')
   title('RMS, before realignment')
@@ -361,12 +361,12 @@ if strcmp(cfg.feedback, 'yes')
   % show figure with data on new helmet location
   figure
   hold on
-  plot3(pnt1(:,1), pnt1(:,2), pnt1(:,3), 'r.') % original positions
-  plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
+  plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
+  plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   axis equal; axis vis3d
   bnd2 = [];
-  bnd2.pnt = pnt2;
+  bnd2.pos = pos2;
   bnd2.tri = tri2;
   ft_plot_mesh(bnd2,'vertexcolor',p2,'edgecolor','none')
   title('RMS, after realignment')

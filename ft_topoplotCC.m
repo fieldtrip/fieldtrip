@@ -129,10 +129,14 @@ axis equal
 
 % set the figure window title
 funcname = mfilename();
-if nargin < 2
-  dataname = cfg.inputfile;
+if hasdata
+  if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+    dataname = cfg.inputfile;
+  else
+    dataname = inputname(2);
+  end
 else
-  dataname = inputname(2);
+  dataname = [];
 end
 set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
 set(gcf, 'NumberTitle', 'off');

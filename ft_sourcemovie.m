@@ -65,6 +65,9 @@ if ft_abort
   return
 end
 
+% the data can be passed as input argument or can be read from disk
+hassource2 = exist('source2', 'var');
+
 % check if the input data is valid for this function
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
@@ -112,14 +115,13 @@ end
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if nargin==2
+if ~hassource2
   fun = getsubfield(source, cfg.funparameter);
-elseif nargin>2 && isfield(source2, 'pos'),
+elseif hassource2 && isfield(source2, 'pos'),
   fun  = getsubfield(source, cfg.funparameter);
   fun2 = getsubfield(source2, cfg.funparameter);
-elseif nargin>2
-  % assume the first data argument to be a parcellation, and the second a
-  % parcellated structure
+elseif hassource2
+  % assume the first data argument to be a parcellation, and the second a parcellated structure
   tmp = getsubfield(source2, cfg.funparameter);
   siz = [size(tmp) 1];
   fun = zeros([size(source.pos, 1), siz(2:end)]);
@@ -137,6 +139,7 @@ elseif nargin>2
     source.(cfg.yparam) = source2.(cfg.yparam);
   end
 end
+
 if size(source.pos)~=size(fun,1)
   error('inconsistent number of vertices in the cortical mesh');
 end
@@ -198,7 +201,7 @@ end
 xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
-if nargin>2 && isfield(source2, 'pos'),
+if hassource2 && isfield(source2, 'pos'),
   fun2 = fun2(:,xbeg:xend,ybeg:yend);
 end
 mask    = mask(:,xbeg:xend,ybeg:yend);
@@ -247,7 +250,7 @@ if exist('parcelslabel', 'var'), opt.parcellationlabel = parcelslabel; end
 
 % add functional data of optional third input to the opt structure
 % FIXME here we should first check whether the meshes correspond!
-if nargin>2 && isfield(source2, 'pos')
+if hassource2 && isfield(source2, 'pos')
   opt.dat2 = fun2;
   opt.dat1 = opt.dat;
 end
@@ -364,7 +367,7 @@ if ~hasyparam
   axis([opt.xparam(1) opt.xparam(end) abc(3:4)]);
   vline = plot(opt.xparam(1)*[1 1], abc(3:4), 'r');
 
-  if nargin>2 && isfield(source2, 'pos')
+  if hassource2 && isfield(source2, 'pos')
     tline2 = plot(opt.xparam, mean(opt.dat2(opt.vindx,:)), 'r'); hold on;
   end
 
@@ -388,7 +391,7 @@ opt.tline = tline; % handle to the ERF
 if exist('hline', 'var')
   opt.hline = hline;
 end
-if nargin>2 && isfield(source2, 'pos'),
+if hassource2 && isfield(source2, 'pos'),
   opt.tline2 = tline2;
 end
 opt.playbutton   = playbutton; % handle to the playbutton

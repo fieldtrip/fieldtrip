@@ -27,7 +27,7 @@ function [headmodel, cfg] = ft_prepare_bemmodel(cfg, mri)
 
 warning('FT_PREPARE_BEMMODEL is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''dipoli/openmeeg/bemcp'' instead.')
 
-r% these are used by the ft_preamble/ft_postamble function and scripts
+% these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
 ft_nargin   = nargin;
 ft_nargout  = nargout;

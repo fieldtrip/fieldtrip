@@ -191,7 +191,10 @@ cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the in
 cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
 cfg.headmodel       = ft_getopt(cfg, 'headmodel');      % can contain CTF localspheres model
 
-if nargin>1,
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
+if hasdata
   % the data should describe the geometrical mesh
   if isfield(data, 'bnd')
     data = data.bnd;
@@ -217,8 +220,8 @@ if istrue(cfg.siunits)
   end
 end
 
-% if the conductivity is in the data cfg.conductivity is overwritten
-if nargin>1 && isfield(data, 'cond')
+% the conductivity in the data overrules cfg.conductivity
+if hasdata && isfield(data, 'cond')
   cfg.conductivity = data.cond;
 end
 

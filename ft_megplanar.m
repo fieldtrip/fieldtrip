@@ -182,7 +182,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
       headshape = cfg.headshape;
     elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
       % use the headshape points specified in the configuration
-      headshape.pnt = cfg.headshape;
+      headshape.pos = cfg.headshape;
     elseif ischar(cfg.headshape)
       % read the headshape from file
       headshape = ft_read_headshape(cfg.headshape);
@@ -191,8 +191,8 @@ if strcmp(cfg.planarmethod, 'sourceproject')
     end
     if ~isfield(headshape, 'tri')
       % generate a closed triangulation from the surface points
-      headshape.pnt = unique(headshape.pnt, 'rows');
-      headshape.tri = projecttri(headshape.pnt);
+      headshape.pos = unique(headshape.pos, 'rows');
+      headshape.tri = projecttri(headshape.pos);
     end
     % construct from the head surface
     pos = headsurface([], [], 'headshape', headshape, 'inwardshift', cfg.inwardshift, 'npnt', cfg.spheremesh);

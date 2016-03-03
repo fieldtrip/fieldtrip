@@ -71,9 +71,9 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %
 % To realign the sensors using the fiducials, the target has to contain the
 % three template fiducials, e.g.
-%   cfg.target.pnt(1,:) = [110 0 0]     % location of the nose
-%   cfg.target.pnt(2,:) = [0  90 0]     % location of the left ear
-%   cfg.target.pnt(3,:) = [0 -90 0]     % location of the right ear
+%   cfg.target.pos(1,:) = [110 0 0]     % location of the nose
+%   cfg.target.pos(2,:) = [0  90 0]     % location of the left ear
+%   cfg.target.pos(3,:) = [0 -90 0]     % location of the right ear
 %   cfg.target.label    = {'NAS', 'LPA', 'RPA'}
 %
 % To align the sensors to a single template set or to multiple electrode
@@ -160,9 +160,9 @@ if ~isempty(cfg.coordsys)
   switch lower(cfg.coordsys)
     case 'ctf'
       cfg.target = [];
-      cfg.target.pnt(1,:) = [100  0 0];
-      cfg.target.pnt(2,:) = [0   80 0];
-      cfg.target.pnt(3,:) = [0  -80 0];
+      cfg.target.pos(1,:) = [100  0 0];
+      cfg.target.pos(2,:) = [0   80 0];
+      cfg.target.pos(3,:) = [0  -80 0];
       cfg.target.label{1} = 'NAS';
       cfg.target.label{2} = 'LPA';
       cfg.target.label{3} = 'RPA';
@@ -185,8 +185,11 @@ switch cfg.method
     cfg = ft_checkconfig(cfg, 'required', 'headshape', 'forbidden', 'target');
 end % switch cfg.method
 
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
 % get the electrode definition that should be warped
-if nargin==1
+if ~hasdata
   try % try to get the description from the cfg
     elec_original = ft_fetch_sens(cfg);
   catch
@@ -194,13 +197,14 @@ if nargin==1
     me = lasterror;
     % start with an empty set of electrodes, this is useful for manual positioning
     elec_original = [];
-    elec_original.pnt    = zeros(0,3);
+    elec_original.pos    = zeros(0,3);
     elec_original.label  = cell(0,1);
     elec_original.unit   = 'mm';
     warning(me.message, me.identifier);
   end
-elseif nargin>1
+else
   % the input electrodes were specified as second input argument
+  % or read from cfg.inputfile
 end
 
 % ensure that the units are specified
@@ -247,12 +251,12 @@ end
 
 if useheadshape
   % get the surface describing the head shape
-  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt') || isfield(cfg.headshape, 'pos')
+  if isstruct(cfg.headshape)
     % use the headshape surface specified in the configuration
     headshape = fixpos(cfg.headshape);
   elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
     % use the headshape points specified in the configuration
-    headshape.pnt = cfg.headshape;
+    headshape.pos = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
@@ -261,8 +265,8 @@ if useheadshape
   end
   if ~isfield(headshape, 'tri')
     % generate a closed triangulation from the surface points
-    headshape.pnt = unique(headshape.pnt, 'rows');
-    headshape.tri = projecttri(headshape.pnt);
+    headshape.pos = unique(headshape.pos, 'rows');
+    headshape.tri = projecttri(headshape.pos);
   end
   headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
 end
@@ -311,7 +315,7 @@ if strcmp(cfg.method, 'template')
   for i=1:Ntemplate
     [cfgsel, datsel] = match_str(cfg.channel, template(i).label);
     template(i).label = template(i).label(datsel);
-    template(i).pnt   = template(i).pnt(datsel,:);
+    template(i).pos   = template(i).pos(datsel,:);
   end
 
   % compute the average of the template electrode positions
@@ -429,9 +433,9 @@ elseif strcmp(cfg.method, 'fiducial')
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
       error(sprintf('not all fiducials were found in template %d', i));
     end
-    templ_nas(i,:) = template(i).pnt(nas_indx,:);
-    templ_lpa(i,:) = template(i).pnt(lpa_indx,:);
-    templ_rpa(i,:) = template(i).pnt(rpa_indx,:);
+    templ_nas(i,:) = template(i).pos(nas_indx,:);
+    templ_lpa(i,:) = template(i).pos(lpa_indx,:);
+    templ_rpa(i,:) = template(i).pos(rpa_indx,:);
   end
   templ_nas = mean(templ_nas,1);
   templ_lpa = mean(templ_lpa,1);
@@ -689,7 +693,7 @@ if ~isempty(headshape)
   camlight
 end
 
-if isfield(elec, 'fid') && ~isempty(elec.fid.pnt)
+if isfield(elec, 'fid') && ~isempty(elec.fid.pos)
   disp('Plotting the fiducials in red');
   ft_plot_sens(elec.fid,'style', 'r*');
 end

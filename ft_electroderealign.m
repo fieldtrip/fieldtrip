@@ -115,6 +115,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
+ft_preamble loadvar    elec_original
 ft_preamble provenance elec_original
 ft_preamble trackconfig
 
@@ -186,11 +187,15 @@ if isfield(cfg, 'target') && isa(cfg.target, 'config')
   cfg.target = struct(cfg.target);
 end
 
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
 % get the electrode definition that should be warped
-if nargin==1
+if ~hasdata
   elec_original = ft_fetch_sens(cfg);
-elseif nargin>1
+else
   % the input electrodes were specified as second input argument
+  % or read from cfg.inputfile
 end
 
 % ensure that the units are specified
@@ -261,7 +266,7 @@ if useheadshape
   end
   if ~isfield(headshape, 'tri') && ~isfield(headshape, 'poly')
     % generate a closed triangulation from the surface points
-    headshape.pnt = unique(headshape.pos, 'rows');
+    headshape.pos = unique(headshape.pos, 'rows');
     headshape.tri = projecttri(headshape.pos);
   end
   headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
