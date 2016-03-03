@@ -423,9 +423,18 @@ if ischar(cfg.ylim)
     case 'maxabs'
       maxabs   = max(abs([minval maxval]));
       scalefac = 10^(fix(log10(maxabs)));
+      if scalefac==0
+        % this happens if the data is all zeros
+        scalefac=1;
+      end
       maxabs   = (round(maxabs / scalefac * 100) / 100) * scalefac;
       cfg.ylim = [-maxabs maxabs];
     case 'maxmin'
+      if minval==maxval
+        % this happens if the data is constant, e.g. all zero or clipping
+        minval = minval - eps;
+        maxval = maxval + eps;
+      end
       cfg.ylim = [minval maxval];
     otherwise
       error('unsupported value for cfg.ylim');
