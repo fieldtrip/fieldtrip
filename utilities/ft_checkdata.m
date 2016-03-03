@@ -1014,7 +1014,15 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
       tmp = tokenize(data.labelcmb{k}, '[');
       data.labelcmb{k} = tmp{1};
     end
-    data.label = unique(data.labelcmb(:));
+    if isfield(data,'grad');
+     data.label = data.grad.label;
+    end
+    if isfield(data,'elec');
+     data.label = data.elec.label;
+    end
+  else
+    % this is related to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3078
+     error('sensor information is missing: please add the grad/elec structure');
   end
   
   nchan     = length(data.label);
