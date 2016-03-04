@@ -1,4 +1,4 @@
-function bnd = prepare_mesh_headshape(cfg)
+function mesh = prepare_mesh_headshape(cfg)
 
 % PREPARE_MESH_HEADSHAPE
 %
@@ -33,9 +33,12 @@ if isa(cfg.headshape, 'config')
 end
 
 % get the surface describing the head shape
-if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
   % use the headshape surface specified in the configuration
   headshape = cfg.headshape;
+elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+  % use the headshape surface specified in the configuration
+  headshape = fixpos(cfg.headshape);
 elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
   % use the headshape points specified in the configuration
   headshape.pnt = cfg.headshape;
@@ -48,18 +51,18 @@ end
 
 % usually a headshape only describes a single surface boundaries, but there are cases
 % that multiple surfaces are included, e.g. skin_surface, outer_skull_surface, inner_skull_surface
-nbnd = numel(headshape);
+nmesh = numel(headshape);
 
 if ~isfield(headshape, 'tri')
   % generate a closed triangulation from the surface points
-  for i=1:nbnd
+  for i=1:nmesh
     headshape(i).pnt = unique(headshape(i).pnt, 'rows');
     headshape(i).tri = projecttri(headshape(i).pnt);
   end
 end
 
 if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
-  for i=1:nbnd
+  for i=1:nmesh
     tri1 = headshape(i).tri;
     pnt1 = headshape(i).pnt;
     % The number of vertices is multiplied by 3 in order to have more
@@ -89,7 +92,7 @@ end
 
 % the output should only describe one or multiple boundaries and should not
 % include any other fields
-bnd = rmfield(headshape, setdiff(fieldnames(headshape), {'pnt', 'tri'}));
+mesh = rmfield(headshape, setdiff(fieldnames(headshape), {'pos', 'tri'}));
 
 function [tri1, pnt1] = refinepatch(tri, pnt, numvertices)
 fprintf('the original mesh has %d vertices against the %d requested\n',size(pnt,1),numvertices/3);
@@ -279,17 +282,17 @@ tri1 = tri;
 
 if 0
   % this is some test/demo code
-  bnd = [];
-  [bnd.pnt, bnd.tri] = icosahedron162;
+  mesh = [];
+  [mesh.pos, mesh.tri] = icosahedron162;
   
-  scale = 1+0.3*randn(size(pnt,1),1);
-  bnd.pnt = bnd.pnt .* [scale scale scale];
-  
-  figure
-  ft_plot_mesh(bnd)
-  
-  [bnd.pnt, bnd.tri] = fairsurface(bnd.pnt, bnd.tri, 10);
+  scale = 1+0.3*randn(size(pos,1),1);
+  mesh.pos = mesh.pos .* [scale scale scale];
   
   figure
-  ft_plot_mesh(bnd)
+  ft_plot_mesh(mesh)
+  
+  [mesh.pos, mesh.tri] = fairsurface(mesh.pos, mesh.tri, 10);
+  
+  figure
+  ft_plot_mesh(mesh)
 end
