@@ -199,7 +199,8 @@ end % if iscell
 % checks if there exists a .jpg file of 'filename'
   [pathstr,name]  = fileparts(filename);  
   if (exist([pathstr,name,'.jpg'],'file') == 2)   
-    image = [pathstr,name,'.jpg'];
+    image    = [pathstr,name,'.jpg'];
+    hasimage = 1;
   end  
     
 
@@ -719,7 +720,7 @@ switch fileformat
         shape.pos     = obj.vertices;
         shape.pos     = shape.pos - repmat(sum(shape.pos)/length(shape.pos),[length(shape.pos),1]); %centering vertices
         shape.tri     = obj.objects(2).data.vertices;
-        if ~isempty(image)
+        if (~isempty(image) && exist('hasimage','var'))
             texture = obj.vertices_texture;
             
             %Refines the mesh and textures to increase resolution of the
@@ -1003,7 +1004,7 @@ shape = fixpos(shape);
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
 
-if ~isempty(image)
+if (~isempty(image) && exist('hasimage','var'))
     shape.color = color;
 end    
     
