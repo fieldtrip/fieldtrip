@@ -11,15 +11,15 @@ function test_bug3078
 
 % create some data
 data = [];
-data.label = {'c';'b';'a'};
+data.label = {'d';'c';'b';'a'};
 for k = 1:5
-	data.trial{k} = randn(3,1000);
+	data.trial{k} = randn(4,1000);
 	data.time{k}  = (0:999)./1000;
 end
-data.grad.coilpos = [0 0 8;0 -8 0;0 8 0];
-data.grad.coilori = [0 0 1;0 -1 0;0 1 0];
-data.grad.tra     = eye(3);
-data.grad.label   = {'a';'b';'c'};
+data.grad.coilpos = [0 0 8;0 -8 0;0 8 0;8 0 0];
+data.grad.coilori = [0 0 1;0 -1 0;0 1 0;1 0 0];
+data.grad.tra     = eye(4);
+data.grad.label   = {'a';'b';'c';'d'};
 data.grad.chanpos = data.grad.coilpos;
 data.grad.chanori = data.grad.coilori;
 data.grad = ft_datatype_sens(data.grad);
@@ -103,7 +103,6 @@ if channelordernotflipped,
 	% what's not good, is that there's now way to know the order for sure,
 	% and it will be wrong if it's assumed to be the order in the leadfield
 end
-
 
 keyboard
 
