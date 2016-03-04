@@ -193,6 +193,16 @@ if iscell(filename)
   return
 end % if iscell
 
+% checks if there exists a .jpg file of 'filename'
+if isempty(image)
+  [pathstr,name]  = fileparts(filename);  
+  image = [pathstr,name,'.jpg'];
+  if ~(exist(image,'file') == 2)   
+    clear image
+  end    
+end    
+    
+
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
@@ -714,9 +724,8 @@ switch fileformat
             %Refines the mesh and textures to increase resolution of the
             %colormapping
             for i = 1:2
-                [shape.pos, shape.tri,texture] = refine(shape.pos,shape.tri,texture);              
-            end
-            
+                [shape.pos, shape.tri,texture] = refine(shape.pos,shape.tri,'banks',texture);              
+            end 
             picture     = imread(image);
             color = uint8(zeros(length(shape.pos),3));
             for i=1:length(shape.pos)
