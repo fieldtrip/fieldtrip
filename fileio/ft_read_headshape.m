@@ -85,6 +85,7 @@ fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
 image          = ft_getopt(varargin, 'image');               % path to .jpeg file
 
+
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
 if iscell(filename)
@@ -717,13 +718,14 @@ switch fileformat
         % Implemented for structure.io .obj thus far 
         obj = read_wobj(filename);
         shape.pos     = obj.vertices;
+        shape.pos     = shape.pos - repmat(sum(shape.pos)/length(shape.pos),[length(shape.pos),1]); %centering vertices
         shape.tri     = obj.objects(2).data.vertices;
         if ~isempty(image)
             texture = obj.vertices_texture;
             
             %Refines the mesh and textures to increase resolution of the
             %colormapping
-            for i = 1:2
+            for i = 1:1
                 [shape.pos, shape.tri,texture] = refine(shape.pos,shape.tri,'banks',texture);              
             end 
             picture     = imread(image);
