@@ -1,4 +1,4 @@
-function test_ft_warning
+function test_warning_once
 
 % MEM 1500mb
 % WALLTIME 00:10:00
