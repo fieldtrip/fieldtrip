@@ -922,8 +922,8 @@ if readsurface
           if exist(Lfilelist{j}, 'file')
             fprintf('reading CORTEX_LEFT surface from %s\n', Lfilelist{j});
             mesh = ft_read_headshape(Lfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-            mesh.pnt(:,1) = mesh.pnt(:,1) - hemisphereoffset;
-            pos(posIndex==i,:) = mesh.pnt;
+            mesh.pos(:,1) = mesh.pos(:,1) - hemisphereoffset;
+            pos(posIndex==i,:) = mesh.pos;
             tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
             break
           end
@@ -934,8 +934,8 @@ if readsurface
           if exist(Rfilelist{j}, 'file')
             fprintf('reading CORTEX_RIGHT surface from %s\n', Rfilelist{j});
             mesh = ft_read_headshape(Rfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-            mesh.pnt(:,1) = mesh.pnt(:,1) + hemisphereoffset;
-            pos(posIndex==i,:) = mesh.pnt;
+            mesh.pos(:,1) = mesh.pos(:,1) + hemisphereoffset;
+            pos(posIndex==i,:) = mesh.pos;
             tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
             break
           end
@@ -946,7 +946,7 @@ if readsurface
           if exist(Bfilelist{j}, 'file')
             fprintf('reading %s surface from %s\n', Surface(i).BrainStructure(17:end), Bfilelist{j});
             mesh = ft_read_headshape(Bfilelist{j}, 'unit', 'mm'); % volume and surface should be in consistent units, gifti is defined in mm, wb_view also expects mm
-            pos(posIndex==i,:) = mesh.pnt;
+            pos(posIndex==i,:) = mesh.pos;
             tri = cat(1, tri, mesh.tri + find(posIndex==i, 1, 'first') - 1);
             break
           end

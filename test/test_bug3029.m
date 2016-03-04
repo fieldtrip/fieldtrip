@@ -1,7 +1,7 @@
 function test_bug3029
 
-% MEM=1gb
-% WALLTIME=00:20:00
+% MEM 1gb
+% WALLTIME 00:20:00
 
 % TEST test_bug3029 ft_sourceanalysis prepare_freq_matrices
 

@@ -160,9 +160,13 @@ if ft_abort
   return
 end
 
+% the baseline data can be passed as input argument or can be read from disk
+hasbaseline = exist('baseline');
+
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
-if nargin>2
+
+if hasbaseline
   baseline = ft_checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 end
 
@@ -244,9 +248,9 @@ elseif isfreq && isfield(data, 'labelcmb')
   data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
-if nargin>2 && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
+if hasbaseline && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
   error('input of two conditions only makes sense if you want to randomize or permute');
-elseif nargin<3 && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
+elseif ~hasbaseline && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
   error('randomization or permutation requires that you give two conditions as input');
 end
 
@@ -397,9 +401,10 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       cfg.supchan = ft_channelselection(cfg.supchan, data.label);
 
       % HACK: use some experimental code
-      if nargin>2,
+      if hasbaseline
         error('not supported')
       end
+      
       tmpcfg         = cfg;
       tmpcfg.refchan = ''; % prepare_freq_matrices should not know explicitly about the refchan
       tmpcfg.channel = cfg.channel(:)';
@@ -518,7 +523,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   if isempty(Cr), Cr = nan(Ntrials, Nchans, 1); end
   if isempty(Pr), Pr = nan(Ntrials, 1, 1); end
 
-  if nargin>2
+  if hasbaseline
     % repeat the conversion for the baseline condition
     [bCf, bCr, bPr, Nbaseline, cfg] = prepare_freq_matrices(cfg, baseline);
     % fill these with NaNs, so that I dont have to treat them separately
@@ -728,9 +733,10 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     if ~isfield(cfg, 'supdip'), cfg.supdip = []; end
 
     % HACK: experimental code
-    if nargin>2
+    if hasbaseline
       error('not supported')
     end
+    
     tmpcfg = [];
     tmpcfg.channel = cfg.channel(:)';
     if isfield(cfg, 'refchan')
@@ -784,7 +790,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     Nchans     = length(data.label);
   end
 
-  if nargin>2
+  if hasbaseline
     % baseline and active are only available together for resampling purposes,
     % hence I assume here that there are multiple trials in both
     baseline.avg   = baseline.avg(datchanindx,:);

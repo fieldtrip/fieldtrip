@@ -74,6 +74,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
+ft_preamble loadvar    data
 ft_preamble provenance data
 ft_preamble trackconfig
 
@@ -89,7 +90,8 @@ cfg = ft_checkconfig(cfg, 'required', {'method'});
 cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 
-hasdata = nargin>1;
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
 
 if hasdata
   % check if the input data is valid for this function

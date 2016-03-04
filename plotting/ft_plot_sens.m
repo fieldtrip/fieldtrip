@@ -63,7 +63,7 @@ if ~isempty(chantype)
   
   if ischar(chantype)
     chantype = {chantype};
-  end  
+  end
   
   % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
   sens = undobalancing(sens);
@@ -143,24 +143,23 @@ else
     plotcoil(sens.chanpos, sens.chanori, coildiameter, style);
   end
   
-  
-  if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
-    for i=1:length(sens.label)
-      switch label
-        case {'on', 'yes'}
-          str = sens.label{i};
-        case {'label' 'labels'}
-          str = sens.label{i};
-        case {'number' 'numbers'}
-          str = num2str(i);
-        otherwise
-          error('unsupported value for option ''label''');
-      end % switch
-      text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str);
-    end % for
-  end % if empty or off/no
-  
-end
+end % if istrue(coil)
+
+if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
+  for i=1:length(sens.label)
+    switch label
+      case {'on', 'yes'}
+        str = sens.label{i};
+      case {'label' 'labels'}
+        str = sens.label{i};
+      case {'number' 'numbers'}
+        str = num2str(i);
+      otherwise
+        error('unsupported value for option ''label''');
+    end % switch
+    text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str);
+  end % for
+end % if empty or off/no
 
 axis vis3d
 axis equal

@@ -591,7 +591,7 @@ elseif strcmp(cfg.method, 'lohi')
   %experimental code working on single channel inputs (2) selecting the
   %lowest amplitude for input 1 and highest for input 2
   %%%%%%%%%%%%%%%%%
-  if nargin ~=3,
+  if length(varargin)~=2
     error('two input arguments with data required');
   end
   if size(varargin{1},1)~=1 || size(varargin{2},1)~=1

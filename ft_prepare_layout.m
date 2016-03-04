@@ -43,7 +43,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
 %   data.grad     structure with gradiometer definition
-%   data.opto     structure with optode structure definition
+%   data.topo     structure with optode structure definition
 %
 % Alternatively you can specify the following layouts which will be
 % generated for all channels present in the data. Note that these layouts
@@ -94,22 +94,23 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
+ft_preamble loadvar    data
+ft_preamble provenance data
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
 
+% the data can be passed as input argument or can be read from disk
+hasdata = exist('data', 'var');
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if nargin<2
-  data = [];
+if ~hasdata
+  data = struct([]);
 end
-% ft_checkdata used to be called here in case data nargin>1, I moved this
-% down to the branches of the big if-else-tree where data was actually
-% used. speedup ~500ms (ES, dec2012)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set default configuration options
@@ -148,7 +149,7 @@ end
 
 % ensure that there is a label field in the data, which is needed for
 % ordered/vertical/butterfly modes
-if nargin>1 && ~isfield(data, 'label') && isfield(data, 'labelcmb')
+if hasdata && ~isfield(data, 'label') && isfield(data, 'labelcmb')
   data.label = unique(data.labelcmb(:));
 end
 
@@ -173,7 +174,7 @@ elseif isstruct(cfg.layout) && isfield(cfg.layout, 'pos') && isfield(cfg.layout,
 elseif isequal(cfg.layout, 'circular')
   rho = ft_getopt(cfg, 'rho', []);
 
-  if nargin>1 && ~isempty(data)
+  if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
     cfg.channel  = ft_channelselection(cfg.channel, data.label);
     chanindx     = match_str(data.label, cfg.channel);
@@ -209,7 +210,7 @@ elseif isequal(cfg.layout, 'circular')
   skipcomnt = true; % a comment is initially not desired, or at least requires more thought
 
 elseif isequal(cfg.layout, 'butterfly')
-  if nargin>1 && ~isempty(data)
+  if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
     cfg.channel  = ft_channelselection(cfg.channel, data.label);
     chanindx     = match_str(data.label, cfg.channel);
@@ -229,7 +230,7 @@ elseif isequal(cfg.layout, 'butterfly')
   skipcomnt = true; % a comment is initially not desired, or at least requires more thought
 
 elseif isequal(cfg.layout, 'vertical')
-  if nargin>1 && ~isempty(data)
+  if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
     data = ft_checkdata(data);
     originalorder = cfg.channel;
@@ -266,7 +267,7 @@ elseif isequal(cfg.layout, 'vertical')
 elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}))
   % it can be 2column, 3column, etcetera
   % note that this code (in combination with the code further down) fails for 1column
-  if nargin>1 && ~isempty(data)
+  if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
     data = ft_checkdata(data);
     originalorder = cfg.channel;
@@ -310,7 +311,7 @@ elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5col
   skipcomnt = true; % a comment is initially not desired, or at least requires more thought
 
 elseif isequal(cfg.layout, 'ordered')
-  if nargin>1 && ~isempty(data)
+  if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
     data = ft_checkdata(data);
     cfg.channel = ft_channelselection(cfg.channel, data.label);

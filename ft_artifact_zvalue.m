@@ -186,7 +186,7 @@ if pertrial
   end
 end
 
-% the data is either passed into the function by the user or read from file with cfg.inputfile
+% the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
 
 if ~hasdata
@@ -475,7 +475,7 @@ else
   opt.zval = zsum;
 end
 opt.zindx = zindx;
-if nargin==1
+if hasdata
   opt.data = {};
 else
   opt.data = data;

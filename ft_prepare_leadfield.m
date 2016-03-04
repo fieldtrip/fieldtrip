@@ -100,7 +100,10 @@ if ft_abort
   return
 end
 
-if nargin<2
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
+if ~hasdata
   % the data variable will be passed to the prepare_headmodel function below
   % where it would be used for channel selection
   data = [];

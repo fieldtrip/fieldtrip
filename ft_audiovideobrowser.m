@@ -66,7 +66,10 @@ if ft_abort
   return
 end
 
-if nargin>1
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
+if hasdata
   data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 end
 
@@ -84,7 +87,7 @@ cfg.videofile   = ft_getopt(cfg, 'videofile');
 if ~isempty(cfg.datahdr)
   % get it from the configuration
   datahdr = cfg.datahdr;
-elseif nargin>1
+elseif hasdata
   % get it from the input data
   datahdr = ft_fetch_header(data);
 else
@@ -101,7 +104,7 @@ assert(isfield(datahdr, 'TimeStampPerSample'), 'sycnhronization information is m
 if isfield(cfg, 'trl')
   fprintf('using cfg.trl\n');
   trl = cfg.trl;
-elseif nargin>1 && isfield(data, 'sampleinfo')
+elseif hasdata && isfield(data, 'sampleinfo')
   fprintf('using data.sampleinfo\n');
   trl = data.sampleinfo;
 else
@@ -200,8 +203,11 @@ while (true)
   end
 
   % FIXME this one plays automatically
+  % FIXME I don't know how to deal with multiple channels
   if ~isempty(audiodat)
-    soundview(sum(audiodat,1), audiohdr.Fs);
+    for channel=1:size(audiodat,1)
+      soundview(audiodat(channel,:), audiohdr.Fs);
+    end
     drawnow
   end
 
