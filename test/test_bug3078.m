@@ -96,8 +96,8 @@ cfg.grid      = sourcemodel_lf2;
 source2 = ft_sourceanalysis(cfg, freq1);
 
 firstinside         = find(source1.inside,1,'first');
-channelorderflipped = (identical(source1.avg.filter{firstinside},source2.avg.filter{firstinside},'reltol',1e-4))
-if channelorderflipped,
+channelordernotflipped = (identical(source1.avg.filter{firstinside},source2.avg.filter{firstinside},'reltol',1e-4))
+if channelordernotflipped,
 	fprintf('Currently the order of the channels in the spatial filter is identical, despite the channel ordering in the input leadfields\n');
   % this is good, because it suggests that the order of labels in the data determines the channel order...
 	% what's not good, is that there's now way to know the order for sure,

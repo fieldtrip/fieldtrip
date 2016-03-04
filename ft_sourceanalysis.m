@@ -305,26 +305,6 @@ elseif iscomp
   error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the fieldtrip development team');
 end
 
-% related to bug http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3078
-if all(~isfield(data,'grad') && ~isfield(data,'elec'))
- error('data input does not contain sensor information: data.grad/data.elec');
-end
-
-if isfield(data,'grad')
-% cfg.channel will contain all the labels in the correct order because ft_selectdata
-  if ~isequal(data.grad.label,cfg.channel);
-    error('gradiometer information (data.grad.label) has NOT the same order as the data.label')
-  end
-end
-
-if isfield(data,'elec')
-% cfg.channel will contain all the labels in the correct order because ft_selectdata
-  if ~isequal(data.elec.label,cfg.channel);
-    error('electrode information (data.elec.label) has NOT the same order as the data.label')
-  end
-end
-% --
-
 convertcomp = false;
 if iscomp && (strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
   % these timelock methods are also supported for frequency or component data
