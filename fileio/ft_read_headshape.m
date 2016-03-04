@@ -83,7 +83,9 @@ concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
-image          = ft_getopt(varargin, 'image');               % path to .jpeg file
+image          = ft_getopt(varargin, 'image',[100, 100 ,100]);               % path to .jpeg file
+
+
 
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
@@ -195,13 +197,10 @@ if iscell(filename)
 end % if iscell
 
 % checks if there exists a .jpg file of 'filename'
-if isempty(image)
   [pathstr,name]  = fileparts(filename);  
-  image = [pathstr,name,'.jpg'];
-  if ~(exist(image,'file') == 2)   
-    clear image
-  end    
-end    
+  if (exist([pathstr,name,'.jpg'],'file') == 2)   
+    image = [pathstr,name,'.jpg'];
+  end  
     
 
 % optionally get the data from the URL and make a temporary local copy
