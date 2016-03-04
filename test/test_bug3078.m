@@ -71,10 +71,39 @@ cfg.dics.realfilter    = 'yes';
 source1 = ft_sourceanalysis(cfg, freq1);
 source2 = ft_sourceanalysis(cfg, freq2);
 
-firstinside = find(source1.inside,1,'first');
+firstinside         = find(source1.inside,1,'first');
 channelorderflipped = (identical(fliplr(source1.avg.filter{firstinside}),source2.avg.filter{firstinside},'reltol',1e-4))
 if channelorderflipped,
 	fprintf('Currently the order of the channels in the spatial filter is flipped, depending on whether ''fourier'' or ''powandcsd'' in input\n');
   % this is problematic if true, because at present there's no information
   % with respect to the order of the channels in the output...
 end
+ 
+% if channelorderflipped==0, there's no issue anymore with the freq1/freq2
+% channel order, let's proceed with checking the effect of channel order in the
+% leadfields
+
+cfg = [];
+cfg.method = 'dics';
+cfg.frequency = 20;
+cfg.headmodel = headmodel;
+cfg.grid      = sourcemodel_lf1;
+cfg.dics.keepleadfield = 'yes';
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.realfilter    = 'yes';
+source1 = ft_sourceanalysis(cfg, freq1);
+cfg.grid      = sourcemodel_lf2;
+source2 = ft_sourceanalysis(cfg, freq1);
+
+firstinside         = find(source1.inside,1,'first');
+channelorderflipped = (identical(source1.avg.filter{firstinside},source2.avg.filter{firstinside},'reltol',1e-4))
+if channelorderflipped,
+	fprintf('Currently the order of the channels in the spatial filter is identical, despite the channel ordering in the input leadfields\n');
+  % this is good, because it suggests that the order of labels in the data determines the channel order...
+	% what's not good, is that there's now way to know the order for sure,
+	% and it will be wrong if it's assumed to be the order in the leadfield
+end
+
+
+keyboard
+
