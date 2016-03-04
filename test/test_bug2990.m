@@ -6,10 +6,10 @@ function test_bug2990
 % TEST test_bug2990
 % TEST ft_prepare_sourcemodel ft_volumereslice
 
-load(dccnpath('/Volumes/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part1'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part1'));
 % the mri is from the dicom files, mri_realigned is in CTF coordinates, mri_realigned_resliced is after reslicing
 
-load(dccnpath('/Volumes/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part2'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part2'));
 % the cfg contains cfg.mri, which is more or less the mri_realigned (but more accurately coregistered than the sloppy ones in part1)
 
 cfg1 = cfg;
