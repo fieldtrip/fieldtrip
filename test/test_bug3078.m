@@ -11,7 +11,16 @@ function test_bug3078
 
 % create some data
 data = [];
-data.label = {'d';'c';'b';'a'};
+data.label = {'d';'c';'b';'a'}; 
+% do 4 channels: when playing with 3 channels and exploring the effect of 
+% taking a subset of channels in the cfg, I noticed strange behaviour when
+% converting sparse->full, or some interaction with ft_selectdata (I
+% suspect the haschancmb situation not being handled well with
+% 'sparsewithpow' input, if the number of combinations is equal to the
+% number of labels. this is very specifically the case if the input data
+% has a complete sparsewithpow representation with 3 channels (yielding 3
+% labelcmbs), as well as three labels. FIXME: THIS SHOULD BE FOLLOWED UP
+% ELSEWHERE
 for k = 1:5
 	data.trial{k} = randn(4,1000);
 	data.time{k}  = (0:999)./1000;
@@ -65,7 +74,6 @@ cfg.method = 'dics';
 cfg.frequency = 20;
 cfg.headmodel = headmodel;
 cfg.grid      = sourcemodel;
-cfg.dics.keepleadfield = 'yes';
 cfg.dics.keepfilter    = 'yes';
 cfg.dics.realfilter    = 'yes';
 source1 = ft_sourceanalysis(cfg, freq1);
@@ -104,5 +112,19 @@ if channelordernotflipped,
 	% and it will be wrong if it's assumed to be the order in the leadfield
 end
 
-keyboard
 
+% now see what happens with different settings of keepleadfield
+cfg = [];
+cfg.method = 'dics';
+cfg.frequency = 20;
+cfg.headmodel = headmodel;
+cfg.grid      = sourcemodel;
+cfg.dics.keepfilter    = 'yes';
+cfg.dics.realfilter    = 'yes';
+source1 = ft_sourceanalysis(cfg, freq1);
+cfg.keepleadfield = 'yes';
+source2 = ft_sourceanalysis(cfg, freq1);
+cfg.grid      = sourcemodel_lf1;
+source3 = ft_sourceanalysis(cfg, freq1);
+
+keyboard

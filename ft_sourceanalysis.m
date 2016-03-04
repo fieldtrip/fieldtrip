@@ -1078,25 +1078,32 @@ if isfield(grid, 'tri')
 end
 
 if exist('grid', 'var')
-  source = copyfields(grid, source, {'pos', 'inside', 'leadfield'});%, 'filter'});
+  source = copyfields(grid, source, {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
 end
 
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the grid structure
-  source = copyfields(dip, source, {'pos', 'inside', 'leadfield'});%, 'filter'});
+  source = copyfields(dip, source, {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
 
   % prevent duplication of these fields when copying the content of dip into source.avg or source.trial
-  dip    = removefields(dip,       {'pos', 'inside', 'leadfield'});%, 'filter'});
+  dip    = removefields(dip,       {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
+
+  if istrue(cfg.(cfg.method).keepfilter) && isfield(dip(1), 'filter')
+		for k = 1:numel(dip)
+			dip(k).label        = sens.label;
+		  dip(k).filterdimord = '{pos}_ori_chan';
+		end
+  end
 end
 
 if ~istrue(cfg.keepleadfield)
   % remove the precomputed leadfields from the output source (if present)
-  source = removefields(source, {'leadfield'});
+  source = removefields(source, {'leadfield' 'leadfielddimord' 'label'});
 end
 
 % remove the precomputed leadfields from the cfg regardless of what keepleadfield is saying
 % it should not be kept in cfg, since there it takes up too much space
-cfg.grid = removefields(cfg.grid, {'leadfield'});
+cfg.grid = removefields(cfg.grid, {'leadfield' 'leadfielddimord' 'filter' 'filterdimord' 'label'});
 
 if strcmp(cfg.jackknife, 'yes')
   source.method = 'jackknife';
