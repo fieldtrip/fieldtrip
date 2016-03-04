@@ -163,14 +163,14 @@ switch cfg.method
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
-    [pnt, tri] = makesphere(cfg.numvertices);
+    [pos, tri] = makesphere(cfg.numvertices);
     bnd = [];
     mri = ft_convert_units(mri);      % ensure that it has units
     headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
     for i=1:length(headmodel.r)
-      bnd(i).pnt(:,1) = pnt(:,1)*headmodel.r(i) + headmodel.o(1);
-      bnd(i).pnt(:,2) = pnt(:,2)*headmodel.r(i) + headmodel.o(2);
-      bnd(i).pnt(:,3) = pnt(:,3)*headmodel.r(i) + headmodel.o(3);
+      bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
+      bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(2);
+      bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
       bnd(i).tri = tri;
     end
 
@@ -197,24 +197,24 @@ ft_postamble history    bnd
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HELPER FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [pnt, tri] = makesphere(numvertices)
+function [pos, tri] = makesphere(numvertices)
 
 if isempty(numvertices)
-  [pnt,tri] = icosahedron162;
+  [pos,tri] = icosahedron162;
   fprintf('using the mesh specified by icosaedron162\n');
 elseif numvertices==42
-  [pnt,tri] = icosahedron42;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+  [pos,tri] = icosahedron42;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
 elseif numvertices==162
-  [pnt,tri] = icosahedron162;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+  [pos,tri] = icosahedron162;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
 elseif numvertices==642
-  [pnt,tri] = icosahedron642;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+  [pos,tri] = icosahedron642;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
 elseif numvertices==2562
-  [pnt,tri] = icosahedron2562;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+  [pos,tri] = icosahedron2562;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
 else
-  [pnt, tri] = msphere(numvertices);
-  fprintf('using the mesh specified by msphere with %d vertices\n',size(pnt,1));
+  [pos, tri] = msphere(numvertices);
+  fprintf('using the mesh specified by msphere with %d vertices\n',size(pos,1));
 end

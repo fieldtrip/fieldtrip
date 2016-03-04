@@ -881,6 +881,13 @@ switch fileformat
 		[lab, pos] = read_besa_sfp(filename, 0);
 		shape.pos = pos;
 		
+		% assume that all non-'headshape' points are fiducial markers
+		hs = strmatch('headshape', lab);
+		lab(hs) = [];
+		pos(hs, :) = [];
+		shape.fid.label = lab;
+		shape.fid.pos = pos;
+		
   case 'asa_elc'
     elec = ft_read_sens(filename);
     
@@ -964,5 +971,7 @@ else
   end
 end
 
+% ensure that vertex positions are given in pos, not in pnt
+shape = fixpos(shape);
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);

@@ -231,23 +231,6 @@ cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []
 cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'no');
 cfg.(cfg.method).reducerank     = ft_getopt(cfg.(cfg.method), 'reducerank',    []); % the default for this is handled below
 
-convertcomp = false;
-if iscomp && (strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
-  % these timelock methods are also supported for frequency or component data
-  if iscomp
-    convertcomp = true;
-    % the conversion will be done below, after the latency and channel selection
-  end
-elseif isfreq && isfield(data, 'labelcmb')
-  % ensure that the cross-spectral densities are chan_chan_therest,
-  % otherwise the latency and frequency selection could fail, so we don't
-  % need to worry about linearly indexed cross-spectral densities below
-  % this point, this step may take some time, if multiple trials are
-  % present in the data
-	fprintf('converting the linearly indexed channelcombinations into a square CSD-matrix\n');
-  data = ft_checkdata(data, 'cmbrepresentation', 'full');
-end
-
 if hasbaseline && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
   error('input of two conditions only makes sense if you want to randomize or permute');
 elseif ~hasbaseline && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
@@ -320,6 +303,43 @@ elseif iscomp
   % FIXME, select the components here
   % FIXME, add the component numbers to the output
   error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the fieldtrip development team');
+end
+
+% related to bug http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3078
+if all(~isfield(data,'grad') && ~isfield(data,'elec'))
+ error('data input does not contain sensor information: data.grad/data.elec');
+end
+
+if isfield(data,'grad')
+% cfg.channel will contain all the labels in the correct order because ft_selectdata
+  if ~isequal(data.grad.label,cfg.channel);
+    error('gradiometer information (data.grad.label) has NOT the same order as the data.label')
+  end
+end
+
+if isfield(data,'elec')
+% cfg.channel will contain all the labels in the correct order because ft_selectdata
+  if ~isequal(data.elec.label,cfg.channel);
+    error('electrode information (data.elec.label) has NOT the same order as the data.label')
+  end
+end
+% --
+
+convertcomp = false;
+if iscomp && (strcmp(cfg.method, 'rv') || strcmp(cfg.method, 'music'))
+  % these timelock methods are also supported for frequency or component data
+  if iscomp
+    convertcomp = true;
+    % the conversion will be done below, after the latency and channel selection
+  end
+elseif isfreq && isfield(data, 'labelcmb')
+  % ensure that the cross-spectral densities are chan_chan_therest,
+  % otherwise the latency and frequency selection could fail, so we don't
+  % need to worry about linearly indexed cross-spectral densities below
+  % this point, this step may take some time, if multiple trials are
+  % present in the data
+	fprintf('converting the linearly indexed channelcombinations into a square CSD-matrix\n');
+  data = ft_checkdata(data, 'cmbrepresentation', 'full');
 end
 
 if isfreq

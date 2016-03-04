@@ -9,7 +9,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % Use as
 %   cfg = ft_databrowser(cfg)
 %   cfg = ft_databrowser(cfg, data)
-% If you only specify the configuration structure, it should contains the name of the
+% If you only specify the configuration structure, it should contain the name of the
 % dataset on your hard disk (see below). If you specify input data, it should be a
 % data structure as obtained from FT_PREPROCESSING or from FT_COMPONENTANALYSIS.
 %
@@ -423,9 +423,18 @@ if ischar(cfg.ylim)
     case 'maxabs'
       maxabs   = max(abs([minval maxval]));
       scalefac = 10^(fix(log10(maxabs)));
+      if scalefac==0
+        % this happens if the data is all zeros
+        scalefac=1;
+      end
       maxabs   = (round(maxabs / scalefac * 100) / 100) * scalefac;
       cfg.ylim = [-maxabs maxabs];
     case 'maxmin'
+      if minval==maxval
+        % this happens if the data is constant, e.g. all zero or clipping
+        minval = minval - eps;
+        maxval = maxval + eps;
+      end
       cfg.ylim = [minval maxval];
     otherwise
       error('unsupported value for cfg.ylim');
