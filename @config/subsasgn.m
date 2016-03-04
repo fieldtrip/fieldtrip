@@ -75,7 +75,7 @@ elseif length(index)>1 && strcmp(index(1).type, '()')
       fn = fieldnames(y);
       fv = repmat({[]}, size(fn));
       ff = cat(1, fn', fv');
-      ff = struct(ff{:});
+      ff = config(ff{:});
       switch i
         case 1
           y((dimsize+1):maxindx,:,:,:,:,:) = ff;
