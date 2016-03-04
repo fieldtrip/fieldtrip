@@ -1,11 +1,12 @@
-function [pntr, trir, texr] = refine(pnt, tri,texture, method, varargin)
+function [pntr, trir, texr] = refine(pnt, tri, method, texture, varargin)
 
 % REFINE a 3D surface that is described by a triangulation
 %
 % Use as
-%   [pnt, tri] = refine(pnt, tri)
-%   [pnt, tri] = refine(pnt, tri, 'banks', selection)
-%   [pnt, tri] = refine(pnt, tri, 'updown', numtri)
+%   [pnt, tri]          = refine(pnt, tri)
+%   [pnt, tri]          = refine(pnt, tri, 'banks')
+%   [pnt, tri]          = refine(pnt, tri, 'updown', numtri)
+%   [pnt, tri, texture] = refine(pnt, tri, 'banks', texture) 
 %
 % If no method is specified, the default is to refine the mesh globally by bisecting
 % each edge according to the algorithm described in Banks, 1983.
@@ -16,6 +17,9 @@ function [pntr, trir, texr] = refine(pnt, tri,texture, method, varargin)
 % The alternative 'updown' method refines the mesh a couple of times
 % using Banks' algorithm, followed by a downsampling using the REDUCEPATCH
 % function.
+%
+% If the textures of the vertices are specified, the textures for the new
+% vertices are computed
 %
 % The Banks method is a memory efficient implementation which remembers the
 % previously inserted vertices. The refinement algorithm executes in linear
@@ -43,13 +47,13 @@ function [pntr, trir, texr] = refine(pnt, tri,texture, method, varargin)
 %
 % $Id$
 
-if nargin<4
+if nargin<3
   method = 'banks';
 end
 
 
 
-if strcmp(method, 'banks') && nargin==4
+if strcmp(method, 'banks') && nargin==5
   % FIXME this is work in progress
   keyboard
 end
@@ -165,7 +169,6 @@ switch lower(method)
     end
     % remove the space for the vertices that was not used
       pntr = pntr(1:current, :); 
-      texr = texr(1:current, :);
   end  
   case 'updown'
     ntri = size(tri,1);
