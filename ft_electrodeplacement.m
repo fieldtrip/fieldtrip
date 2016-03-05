@@ -100,6 +100,7 @@ cfg.magradius     = ft_getopt(cfg, 'magradius',            2); % specify the phy
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',      'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',       'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 
+
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
   switch ft_datatype(varargin{1})
@@ -119,6 +120,8 @@ switch cfg.method
     headshape = ft_determine_coordsys(headshape);
 end
 
+hascolor = isfield(headshape, 'color'); % color code for vertices
+
 switch cfg.method
   case 'headshape'
     % give the user instructions
@@ -128,11 +131,21 @@ switch cfg.method
     % open a figure
     figure;
     % plot the faces of the 2D or 3D triangulation
-    skin = [255 213 119]/255;
-    ft_plot_mesh(headshape,'facecolor', skin,'EdgeColor','none','facealpha',0.7);
-    lighting gouraud
-    material shiny
-    camlight
+    
+    if hascolor
+      skin = 'none';
+      ft_plot_mesh(headshape);
+    else
+      skin = [255 213 119]/255;
+      ft_plot_mesh(headshape,'facecolor', skin,'EdgeColor','none','facealpha',1);
+      lighting gouraud
+      material shiny
+      camlight
+    end
+    
+
+    
+
     % rotate3d on
     xyz = ft_select_point3d(headshape, 'nearest', false, 'multiple', true, 'marker', '*');
     numelec = size(xyz, 1);
