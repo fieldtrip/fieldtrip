@@ -1,4 +1,4 @@
-function [mvardata] = ft_mvaranalysis(cfg, data)
+function [mvardata, dataout] = ft_mvaranalysis(cfg, data)
 
 % FT_MVARANALYSIS performs multivariate autoregressive modeling on
 % time series data over multiple trials.
@@ -116,7 +116,7 @@ data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
 
-% set default configurations
+% set default configuration options
 cfg.toolbox = ft_getopt(cfg, 'toolbox', 'biosig');
 cfg.mvarmethod = ft_getopt(cfg, 'mvarmethod', 2); % only relevant for biosig
 cfg.order      = ft_getopt(cfg, 'order',      10);
@@ -131,10 +131,19 @@ cfg.toi        = ft_getopt(cfg, 'toi',        []);
 cfg.t_ftimwin  = ft_getopt(cfg, 't_ftimwin',  []);
 cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
 cfg.taper      = ft_getopt(cfg, 'taper',      'rectwin');
+cfg.univariate = ft_getopt(cfg, 'univariate', 0);
+cfg.output     = ft_getopt(cfg, 'output',     'none');
 
 % check that cfg.channel and cfg.channelcmb are not both specified
 if ~any(strcmp(cfg.channel, 'all')) && isfield(cfg, 'channelcmb')
   ft_warning('cfg.channelcmb defined, overriding cfg.channel setting and computing over bivariate pairs');
+else
+	% select trials of interest
+  tmpcfg = [];
+  tmpcfg.channel = cfg.channel;
+  data = ft_selectdata(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
 end
 
 % check whether the requested toolbox is present and check the configuration
@@ -175,14 +184,13 @@ else
   error('cfg should contain both cfg.toi and cfg.t_ftimwin');
 end
 
-cfg.channel = ft_channelselection(cfg.channel, data.label);
 
-keeprpt  = strcmp(cfg.keeptrials, 'yes');
-keeptap  = strcmp(cfg.keeptapers, 'yes');
-dojack   = strcmp(cfg.jackknife,  'yes');
-dozscore = strcmp(cfg.zscore,     'yes');
+keeprpt  = istrue(cfg.keeptrials);
+keeptap  = istrue(cfg.keeptapers);
+dojack   = istrue(cfg.jackknife);
+dozscore = istrue(cfg.zscore);
 dobvar   = isfield(cfg,           'channelcmb');
-
+dounivariate = istrue(cfg. univariate);
 
 if ~keeptap, error('not keeping tapers is not possible yet'); end
 if dojack && keeprpt, error('you cannot simultaneously keep trials and do jackknifing'); end
@@ -307,18 +315,23 @@ end
 timeaxis = mintim:1/data.fsample:maxtim;
 
 %---allocate memory
-if ~dobvar && (keeprpt || dojack)
-  coeffs   = zeros(length(data.trial), nchan, nchan, cfg.order, ntoi, ntap);
-  noisecov = zeros(length(data.trial), nchan, nchan,            ntoi, ntap);
-elseif ~dobvar
-  coeffs   = zeros(1, nchan, nchan, cfg.order, ntoi, ntap);
-  noisecov = zeros(1, nchan, nchan,            ntoi, ntap);
-elseif dobvar && (keeprpt || dojack)
+if dobvar && (keeprpt || dojack)
   % not yet implemented
   error('doing bivariate model fits in combination with multiple replicates is not yet possible');
 elseif dobvar
   coeffs   = zeros(1, size(cmbindx,1), 2*nchan,  cfg.order, ntoi, ntap);
   noisecov = zeros(1, size(cmbindx,1), 2*nchan,             ntoi, ntap);
+elseif dounivariate && (keeprpt || dojack)
+	error('doing univariate model fits in combination with multiple replicates is not yet possible');
+elseif dounivariate
+	coeffs   = zeros(1, nchan, cfg.order, ntoi, ntap);
+	noisecov = zeros(1, nchan,            ntoi, ntap);
+elseif (keeprpt || dojack)
+  coeffs   = zeros(length(data.trial), nchan, nchan, cfg.order, ntoi, ntap);
+  noisecov = zeros(length(data.trial), nchan, nchan,            ntoi, ntap);
+else
+  coeffs   = zeros(1, nchan, nchan, cfg.order, ntoi, ntap);
+  noisecov = zeros(1, nchan, nchan,            ntoi, ntap);
 end
 
 %---loop over the tois
@@ -400,27 +413,58 @@ for j = 1:ntoi
 				dat = catnan(tmpdata.trial, chanindx, rpt{rlop}, tap(m,:), nnans, dobvar);
 				
 				%---estimate autoregressive model
-				switch cfg.toolbox
-					case 'biosig'
-						[ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
+				if dounivariate,
+				  
+					%---loop across the channels
+					for p = 1:size(dat,1)
 						
-						%---compute noise covariance
-						tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
-					case 'bsmart'
-						[ar, tmpnoisecov] = armorf(dat, numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
-						ar = -ar; %convention is swapped sign with respect to biosig
-						%FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
-						%the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
-				end
-				coeffs(rlop,:,:,:,j,m) = reshape(ar, [nchan nchan cfg.order]);
-				
-				%---rescale noisecov if necessary
-				if dozscore,
-					noisecov(rlop,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
+						switch cfg.toolbox
+							case 'biosig'
+								[ar, rc, pe] = mvar(dat(p,:)', cfg.order, cfg.mvarmethod);
+								
+								%---compute noise covariance
+								tmpnoisecov     = pe(:,cfg.order+1:(cfg.order+1));
+							case 'bsmart'
+								[ar, tmpnoisecov] = armorf(dat(p,:), numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
+								ar = -ar; %convention is swapped sign with respect to biosig
+								%FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
+								%the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
+						end
+						coeffs(rlop,p,:,j,m) = reshape(ar, [1 cfg.order]);
+						
+						%---rescale noisecov if necessary
+						if dozscore,
+							noisecov(rlop,p,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
+						else
+							noisecov(rlop,p,j,m) = tmpnoisecov;
+						end
+						dof(rlop,:,j) = numel(rpt{rlop});
+					end
+					
 				else
-					noisecov(rlop,:,:,j,m) = tmpnoisecov;
-				end
-				dof(rlop,:,j) = numel(rpt{rlop});
+					switch cfg.toolbox
+						case 'biosig'
+							[ar, rc, pe] = mvar(dat', cfg.order, cfg.mvarmethod);
+							
+							%---compute noise covariance
+							tmpnoisecov     = pe(:,nchan*cfg.order+1:nchan*(cfg.order+1));
+						case 'bsmart'
+							[ar, tmpnoisecov] = armorf(dat, numel(rpt{rlop}), size(tmpdata.trial{1},2), cfg.order);
+							ar = -ar; %convention is swapped sign with respect to biosig
+							%FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
+							%the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
+					end
+					coeffs(rlop,:,:,:,j,m) = reshape(ar, [nchan nchan cfg.order]);
+					
+					%---rescale noisecov if necessary
+					if dozscore,
+						noisecov(rlop,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
+					else
+						noisecov(rlop,:,:,j,m) = tmpnoisecov;
+					end
+					dof(rlop,:,j) = numel(rpt{rlop});
+				end %---dounivariate
+				
 			end %---tapers
 		end
 		
@@ -432,11 +476,11 @@ ft_progress('close');
 %---create output-structure
 mvardata          = [];
 
-if ~dobvar && dojack,
+if ~dobvar && ~dounivariate && dojack,
   mvardata.dimord = 'rptjck_chan_chan_lag';
-elseif ~dobvar && keeprpt,
+elseif ~dobvar && ~dounivariate && keeprpt,
   mvardata.dimord = 'rpt_chan_chan_lag';
-elseif ~dobvar
+elseif ~dobvar && ~dounivariate
   mvardata.dimord = 'chan_chan_lag';
   mvardata.label  = label;
   siz    = [size(coeffs) 1];
@@ -452,6 +496,14 @@ elseif dobvar
   siz    = [size(noisecov) 1];
   noisecov = reshape(noisecov, [siz(2) * siz(3) siz(4)]);
   mvardata.labelcmb = labelcmb;
+elseif dounivariate
+	mvardata.dimord = 'chan_lag';
+	siz             = [size(coeffs) 1];
+	coeffs          = reshape(coeffs, siz(2:end));
+	siz    = [size(noisecov) 1];
+  if ~all(siz==1)
+    noisecov = reshape(noisecov, siz(2:end));
+  end
 end
 mvardata.coeffs   = coeffs;
 mvardata.noisecov = noisecov;
@@ -461,6 +513,46 @@ if numel(cfg.toi)>1
   mvardata.dimord = [mvardata.dimord,'_time'];
 end
 mvardata.fsampleorig = data.fsample;
+
+switch cfg.output
+	case 'none'
+		% no output requested, do not re-compile time-series data
+		dataout = [];
+	case {'model' 'residual'}
+		if keeprpt || dojack
+			error('reconstruction of the residuals with keeprpt or dojack is not yet implemented');
+		end
+		
+		dataout = keepfields(data, {'hdr','grad','fsample','trialinfo','label','cfg'});
+		trial   = cell(1,numel(data.trial));
+		time    = cell(1,numel(data.time));
+		for k = 1:numel(data.trial)
+			if strcmp(cfg.output, 'model')
+				trial{k} = zeros(size(data.trial{k},1), size(data.trial{k},2)-cfg.order);
+			else
+			  trial{k} = data.trial{k}(:, (cfg.order+1):end);
+			end
+		  time{k}  = data.time{k}((cfg.order+1):end);
+			for m = 1:cfg.order
+				if dounivariate
+					P = diag(mvardata.coeffs(:,m));
+				else
+					P = mvardata.coeffs(:,:,m);
+				end
+				
+				if strcmp(cfg.output, 'residual'),
+					P = -P;
+				end
+				
+				trial{k} = trial{k} + P * data.trial{k}(:,(cfg.order+1-m):(end-m));
+			end
+		end
+		dataout.trial = trial;
+		dataout.time  = time;
+	otherwise
+		error('output ''%s'' is not supported', cfg.output);
+end
+% FIXME dataout is not correctly post-ambled!
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
