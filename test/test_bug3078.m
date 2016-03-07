@@ -127,4 +127,3 @@ source2 = ft_sourceanalysis(cfg, freq1);
 cfg.grid      = sourcemodel_lf1;
 source3 = ft_sourceanalysis(cfg, freq1);
 
-keyboard
