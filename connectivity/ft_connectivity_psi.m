@@ -21,14 +21,15 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 %
 % Additional input arguments come as key-value pairs:
 %
-%   hasjack   0 or 1 specifying whether the Repetitions represent
-%                   leave-one-out samples (allowing for a variance
-%                   estimate)
-%   feedback 'none', 'text', 'textbar' type of feedback showing progress of
-%                   computation
-%   dimord          specifying how the input matrix should be interpreted
-%   powindx normalize nbin            the number of frequency bins across
-%   which to integrate
+%   nbin			=	scalar, half-bandwidth parameter: the number of frequency bins
+%								across which to integrate
+%   hasjack		= 0 or 1, specifying whether the repetitions represent
+%               leave-one-out samples (allowing for a variance estimate)
+%   feedback	= 'none', 'text', 'textbar' type of feedback showing progress of
+%               computation
+%   dimord		= string, specifying how the input matrix should be interpreted
+%   powindx 
+%   normalize 
 %
 % The output p contains the phase slope index, v is a variance estimate
 % which only can be computed if the data contains leave-one-out samples,

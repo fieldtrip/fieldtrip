@@ -65,6 +65,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     '-logabs', support for method 'coh', 'csd', 'plv'
 %   cfg.removemean  = 'yes' (default), or 'no', support for method
 %     'powcorr' and 'amplcorr'.
+%   cfg.bandwidth   = scalar, (default = Rayleigh frequency), needed for
+%			'psi', half-bandwidth of the integration across frequencies (in Hz)
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -308,16 +310,30 @@ switch cfg.method
     if strcmp(cfg.method, 'granger'),                 outparam = 'grangerspctrm'; end
     if strcmp(cfg.method, 'instantaneous_causality'), outparam = 'instantspctrm'; end
     if strcmp(cfg.method, 'total_interdependence'),   outparam = 'totispctrm';    end
+		
+		% check whether the frequency bins are more or less equidistant
+		dfreq = diff(data.freq)./mean(diff(data.freq));
+		assert(all(dfreq>0.999) && all(dfreq<1.001), 'non equidistant frequency bins are not supported for method ''psi''');
+		
   case {'dtf' 'pdc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
     outparam = [cfg.method, 'spctrm'];
   case {'psi'}
-    if ~isfield(cfg, 'normalize'), cfg.normalize = 'no'; end
+		
+		cfg.bandwidth = ft_getopt(cfg, 'bandwidth', []);
+		cfg.normalize = ft_getopt(cfg, 'normalize', 'no');
+		assert(~isempty(cfg.bandwidth), 'you need to supply cfg.bandwidth with ''psi'' as method');
+		
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     outparam = 'psispctrm';
-  case {'powcorr_ortho'}
+		
+		% check whether the frequency bins are more or less equidistant
+		dfreq = diff(data.freq)./mean(diff(data.freq));
+		assert(all(dfreq>0.999) && all(dfreq<1.001), 'non equidistant frequency bins are not supported for method ''psi''');
+		
+	case {'powcorr_ortho'}
     data = ft_checkdata(data, 'datatype', {'source', 'freq'});
     % inparam = 'avg.mom';
     inparam = 'mom';
@@ -716,7 +732,8 @@ switch cfg.method
 
   case 'psi'
     % phase slope index
-    nbin = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
+		nbin = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
+		
     optarg = {'feedback', cfg.feedback, 'dimord', data.dimord, 'nbin', nbin, 'normalize', cfg.normalize, 'hasrpt', hasrpt, 'hasjack', hasjack};
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
