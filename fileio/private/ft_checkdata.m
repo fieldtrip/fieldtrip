@@ -733,11 +733,11 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     data.dimord = ['rpt_',data.dimord];
   end
   
-  if flag, 
+  if flag,
     siz = size(data.powspctrm);
     data.powspctrm = reshape(data.powspctrm, [siz(2:end) 1]);
     if isfield(data, 'crsspctrm')
-      siz = size(data.crsspctrm); 
+      siz = size(data.crsspctrm);
       data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]);
     end
   end
@@ -826,9 +826,9 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
     data.powspctrm = reshape(data.powspctrm, [siz(2:end) 1]);
     if isfield(data,'crsspctrm')
       % this conditional statement is needed in case there's a single channel
-      siz            = size(data.crsspctrm); 
+      siz            = size(data.crsspctrm);
       data.crsspctrm = reshape(data.crsspctrm, [siz(2:end) 1]);
-    end 
+    end
   end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   
@@ -1150,9 +1150,12 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
   end
   
 elseif strcmp(current, 'sparsewithpow') && any(strcmp(desired, {'full', 'fullfast'}))
-  % this is how is currently done in prepare_freq_matrices
-  data = ft_checkdata(data, 'cmbrepresentation', 'sparse');
-  data = ft_checkdata(data, 'cmbrepresentation', 'full');
+  % recursively call ft_checkdata, but ensure channel order to be the same
+  % as the original input.
+  origlabelorder = data.label; % keep track of the original order of the channels
+  data       = ft_checkdata(data, 'cmbrepresentation', 'sparse');
+  data.label = origlabelorder; % this avoids the labels to be alphabetized in the next call
+  data       = ft_checkdata(data, 'cmbrepresentation', 'full');
   
 end % convert from one to another bivariate representation
 
