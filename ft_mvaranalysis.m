@@ -1,4 +1,4 @@
-function [mvardata, dataout] = ft_mvaranalysis(cfg, data)
+function [mvardata] = ft_mvaranalysis(cfg, data)
 
 % FT_MVARANALYSIS performs multivariate autoregressive modeling on
 % time series data over multiple trials.
@@ -42,10 +42,8 @@ function [mvardata, dataout] = ft_mvaranalysis(cfg, data)
 %   cfg.demean     = 'yes' (default) or 'no' explicit removal of DC-offset
 %   cfg.ems        = 'no' (default) or 'yes' explicit removal ensemble mean
 %
-% ft_mvaranalysis can be used to obtain one set of coefficients for
-% the whole common time axis defined in the data. It will throw an error
-% if the trials are of variable length, or if the time axes of the trials
-% are not equal to one another.
+% ft_mvaranalysis can be used to obtain one set of coefficients across
+% all time points in the data, also when the trials are of varying length.
 %
 % ft_mvaranalysis can be also used to obtain time-dependent sets of
 % coefficients based on a sliding window. In this case the input cfg
@@ -70,6 +68,12 @@ function [mvardata, dataout] = ft_mvaranalysis(cfg, data)
 % Undocumented local options:
 %   cfg.keeptapers
 %   cfg.taper
+%   cfg.output      = 'parameters', 'model', 'residual'. If 'parameters' is
+%     specified, the output is a mdata data structure, containing the
+%     coefficients and the noise covariance. If 'model' or 'residual' is
+%     specified, the output is a data structure containing either the
+%     modeled time series, or the residuals. This is only supported when
+%     the model is estimated across the whole time range.
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
@@ -132,7 +136,7 @@ cfg.t_ftimwin  = ft_getopt(cfg, 't_ftimwin',  []);
 cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
 cfg.taper      = ft_getopt(cfg, 'taper',      'rectwin');
 cfg.univariate = ft_getopt(cfg, 'univariate', 0);
-cfg.output     = ft_getopt(cfg, 'output',     'none');
+cfg.output     = ft_getopt(cfg, 'output',     'parameters');
 
 % check that cfg.channel and cfg.channelcmb are not both specified
 if ~any(strcmp(cfg.channel, 'all')) && isfield(cfg, 'channelcmb')
@@ -498,6 +502,7 @@ elseif dobvar
   mvardata.labelcmb = labelcmb;
 elseif dounivariate
 	mvardata.dimord = 'chan_lag';
+  mvardata.label  = label;
 	siz             = [size(coeffs) 1];
 	coeffs          = reshape(coeffs, siz(2:end));
 	siz    = [size(noisecov) 1];
@@ -515,9 +520,9 @@ end
 mvardata.fsampleorig = data.fsample;
 
 switch cfg.output
-	case 'none'
+	case 'parameters'
 		% no output requested, do not re-compile time-series data
-		dataout = [];
+		
 	case {'model' 'residual'}
 		if keeprpt || dojack
 			error('reconstruction of the residuals with keeprpt or dojack is not yet implemented');
@@ -549,10 +554,13 @@ switch cfg.output
 		end
 		dataout.trial = trial;
 		dataout.time  = time;
+    
+    cfg.coeffs   = mvardata.coeffs;
+    cfg.noisecov = mvardata.noisecov; 
+    mvardata     = dataout; clear dataout;
 	otherwise
 		error('output ''%s'' is not supported', cfg.output);
 end
-% FIXME dataout is not correctly post-ambled!
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
