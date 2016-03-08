@@ -342,16 +342,28 @@ if basedonresolution
     error('creating a 3D-grid sourcemodel this way requires either sensor position information or a headmodel to estimate the extent of the brain');
   end
   fprintf('creating dipole grid with %g %s resolution\n', cfg.grid.resolution, cfg.grid.unit);
-  % FIXME there is a potential problem here with the use of "floor", as it will
-  % behave differently depending on the units of the source model
+  
+  % round the bounding box limits to the nearest cm
+  switch cfg.grid.unit
+    case 'm'
+      minpos = floor(minpos*100)/100;
+      maxpos = ceil(maxpos*100)/100;
+    case 'cm'
+      minpos = floor(minpos);
+      maxpos = ceil(maxpos);
+    case 'mm'
+      minpos = floor(minpos/10)*10;
+      maxpos = ceil(maxpos/10)*10;
+  end
+  
   if ischar(cfg.grid.xgrid) && strcmp(cfg.grid.xgrid, 'auto')
-    grid.xgrid = floor(minpos(1)):cfg.grid.resolution:ceil(maxpos(1));
+    grid.xgrid = minpos(1):cfg.grid.resolution:maxpos(1);
   end
   if ischar(cfg.grid.ygrid) && strcmp(cfg.grid.ygrid, 'auto')
-    grid.ygrid = floor(minpos(2)):cfg.grid.resolution:ceil(maxpos(2));
+    grid.ygrid = minpos(2):cfg.grid.resolution:maxpos(2);
   end
   if ischar(cfg.grid.zgrid) && strcmp(cfg.grid.zgrid, 'auto')
-    grid.zgrid = floor(minpos(3)):cfg.grid.resolution:ceil(maxpos(3));
+    grid.zgrid = minpos(3):cfg.grid.resolution:maxpos(3);
   end
   grid.dim   = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
@@ -378,7 +390,7 @@ if basedonpos
   % a grid is already specified in the configuration, reuse as much of the
   % prespecified grid as possible (but only known objects)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  grid = keepfields(cfg.grid, {'pos', 'unit', 'xgrid', 'ygrid', 'zgrid', 'mom', 'tri', 'dim', 'transform', 'inside', 'lbex', 'subspace', 'leadfield', 'filter', 'label'});
+  grid = keepfields(cfg.grid, {'pos', 'unit', 'xgrid', 'ygrid', 'zgrid', 'mom', 'tri', 'dim', 'transform', 'inside', 'lbex', 'subspace', 'leadfield', 'filter', 'label', 'leadfielddimord'});
 end
 
 if basedonmri
