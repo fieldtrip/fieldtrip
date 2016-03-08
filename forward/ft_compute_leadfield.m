@@ -527,9 +527,9 @@ end % iseeg or ismeg
 % optionally apply leadfield rank reduction
 switch reducerank
   case 'yes'
-    reducerank = size(lf,2)-1;
+    reducerank = 2;
   case 'no'
-    reducerank = size(lf,2);
+    reducerank = 3;
   otherwise
     % assume that it is specified as a number, keep it like this
 end
