@@ -25,6 +25,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'coordsys'    = string, e.g. 'head' or 'dewar' (only supported for CTF)
 %   'unit'        = string, e.g. 'mm' (default is the native units of the file)
 %   'concatenate' = 'no' or 'yes' (default = 'yes')
+%   'image'       = path to .jpeg file
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
@@ -52,6 +53,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'caret_spec'
 %   'brainvisa_mesh'
 %   'brainsuite_dfs'
+%   'obj'           Wavefront .obj file obtained with the structure.io
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
@@ -81,6 +83,9 @@ concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
+image          = ft_getopt(varargin, 'image',[100, 100 ,100]);               % path to .jpeg file
+
+
 
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
@@ -190,6 +195,14 @@ if iscell(filename)
   
   return
 end % if iscell
+
+% checks if there exists a .jpg file of 'filename'
+  [pathstr,name]  = fileparts(filename);  
+  if (exist([pathstr,name,'.jpg'],'file') == 2)   
+    image    = [pathstr,name,'.jpg'];
+    hasimage = 1;
+  end  
+    
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -700,13 +713,28 @@ switch fileformat
     shape.pos = pos;
     shape.tri = tri;
     
-  case 'obj'
+    case 'obj'
       ft_hastoolbox('wavefront', 1);
-      % Implemented for structure.io .obj thus far without colormapping
-      obj = read_wobj(filename);
-      shape.pos = obj.vertices;
-      shape.tri = obj.objects(2).data.vertices;
-    
+        % Implemented for structure.io .obj thus far 
+        obj = read_wobj(filename);
+        shape.pos     = obj.vertices;
+        shape.pos     = shape.pos - repmat(sum(shape.pos)/length(shape.pos),[length(shape.pos),1]); %centering vertices
+        shape.tri     = obj.objects(2).data.vertices;
+        if (~isempty(image) && exist('hasimage','var'))
+            texture = obj.vertices_texture;
+            
+            %Refines the mesh and textures to increase resolution of the
+            %colormapping
+            for i = 1:1
+                [shape.pos, shape.tri,texture] = refine(shape.pos,shape.tri,'banks',texture);              
+            end 
+            picture     = imread(image);
+            color = uint8(zeros(length(shape.pos),3));
+            for i=1:length(shape.pos)
+                color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),1+floor(texture(i,1)*length(picture)),1:3);
+            end
+        end
+        
   case 'vtk'
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
@@ -975,3 +1003,8 @@ end
 shape = fixpos(shape);
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
+
+if (~isempty(image) && exist('hasimage','var'))
+    shape.color = color;
+end    
+    
