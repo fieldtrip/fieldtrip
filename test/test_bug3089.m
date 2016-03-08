@@ -1,8 +1,13 @@
+function test_bug3089
+
+% MEM 4000mb
+% WALLTIME 00:20:00
+
+% TEST test_bug3089
+% TEST ft_dipolefitting ft_compute_leadfield 
+
 dataset = 'oddball1_mc_downsampled.fif';
 
- 
-
- 
 cfg = [];
 cfg.dataset = dataset;
 cfg.trialdef.prestim        = 0.2;
