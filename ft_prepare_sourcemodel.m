@@ -353,7 +353,7 @@ if basedonresolution
       maxpos = ceil(maxpos);
     case 'mm'
       minpos = floor(minpos/10)*10;
-      maxpos = floor(maxpos/10)*10;
+      maxpos = ceil(maxpos/10)*10;
   end
   
   if ischar(cfg.grid.xgrid) && strcmp(cfg.grid.xgrid, 'auto')
@@ -363,7 +363,7 @@ if basedonresolution
     grid.ygrid = minpos(2):cfg.grid.resolution:maxpos(2);
   end
   if ischar(cfg.grid.zgrid) && strcmp(cfg.grid.zgrid, 'auto')
-    grid.zgrid = minpos(3):cfg.grid.resolution:ceil(maxpos(3);
+    grid.zgrid = minpos(3):cfg.grid.resolution:maxpos(3);
   end
   grid.dim   = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
