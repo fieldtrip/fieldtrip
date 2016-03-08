@@ -152,17 +152,6 @@ if domask
   end
 end
 
-% determine whether interpolation is needed
-dointerp = false;
-dointerp = dointerp || sum(sum(transform-eye(4)))~=0;
-dointerp = dointerp || ~all(round(loc)==loc);
-dointerp = dointerp || sum(ori)~=1;
-dointerp = dointerp || ~(resolution==round(resolution));
-% determine the caller function and toggle dointerp to true, if ft_plot_slice has been called from ft_plot_montage
-% this is necessary for the correct allocation of the persistent variables
-st = dbstack;
-if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
-
 % determine the voxel center
 % voxel_center_vc = [X(:) Y(:) Z(:)];
 % voxel_center_hc = ft_warp_apply(transform, voxel_center_vc);
@@ -197,6 +186,19 @@ if isempty(resolution)
   % the default resolution is 1 mm
   resolution = ft_scalingfactor('mm', unit);
 end
+
+% determine whether interpolation is needed
+dointerp = false;
+dointerp = dointerp || sum(sum(transform-eye(4)))~=0;
+dointerp = dointerp || ~all(round(loc)==loc);
+dointerp = dointerp || sum(ori)~=1;
+dointerp = dointerp || ~(resolution==round(resolution));
+% determine the caller function and toggle dointerp to true, if ft_plot_slice has been called from ft_plot_montage
+% this is necessary for the correct allocation of the persistent variables
+st = dbstack;
+if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
+
+
 
 % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
 [x, y] = projplane(ori);
