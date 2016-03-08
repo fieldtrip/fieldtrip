@@ -106,8 +106,6 @@ function [source] = ft_dipolefitting(cfg, data)
 % magnetometers and gradiometers to fit your dipole)
 %   cfg.dipfit.noisecov       = noise covariance matrix, see e.g. FT_TIMELOCK_ANALYSIS
 
-
-
 % Copyright (C) 2004-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -293,10 +291,6 @@ else
   Vdata = Vdata(:, tbeg:tend);
 end
 
-
-
-
-
 nchans = size(Vdata,1);
 ntime  = size(Vdata,2);
 Vmodel = zeros(nchans, ntime);
@@ -340,8 +334,6 @@ if numel(cfg.dip.pos)~=cfg.numdipoles*3 || numel(cfg.dip.mom)~=cfg.numdipoles*3
   error('inconsistent number of dipoles in configuration')
 end
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % perform the dipole scan, this is usefull for generating an initial guess
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -364,7 +356,6 @@ if strcmp(cfg.gridsearch, 'yes')
     tmpcfg.grad = sens;
   end
   
-
   % copy all options that are potentially used in ft_prepare_sourcemodel
   grid = ft_prepare_sourcemodel(tmpcfg);
 

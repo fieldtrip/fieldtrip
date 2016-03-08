@@ -16,15 +16,10 @@ cfg.trialdef.rsp_triggers   = [256 4096];
 cfg.trialdef.stim_triggers  = [1 2];
 cfg.trialfun                = 'trialfun_oddball_stimlocked';
 
- 
 cfg = ft_definetrial(cfg);
 
- 
-
- 
 %%
 
- 
 cfg.continuous    = 'yes';
 cfg.hpfilter      = 'no';
 cfg.detrend       = 'no';
@@ -44,7 +39,6 @@ data_meg = ft_preprocessing(cfg);
  
 %%
 
- 
 cfg = [];
 cfg.method = 'summary';
 cfg.keepchannel = 'yes';
@@ -78,21 +72,15 @@ data_meg = ft_preprocessing(cfg, data_meg_clean3);
 
 data = ft_appenddata([], data_eeg, data_meg);
 
-
- 
 %%
 
- 
 cfg = [];
 timelock_all = ft_timelockanalysis(cfg, data);
 
- 
 save timelock_all timelock_all
 
- 
 %%
 
- 
 cfg = [];
 cfg.layout = 'neuromag306mag.lay';
 figure; ft_multiplotER(cfg, timelock_all);
@@ -106,19 +94,15 @@ cfg = [];
 cfg.elec = timelock_all.elec;
 cfg.layout = ft_prepare_layout(cfg);
 figure; ft_multiplotER(cfg, timelock_all);
-
-
  
 %%
 
- 
 cfg = [];
 cfg.covariance = 'yes';
 cfg.covariancewindow = [-0.2 0];
 timelock_cov = ft_timelockanalysis(cfg, data);
 
 save timelock_cov timelock_cov
-
 
 %% load headmodels
 
