@@ -258,8 +258,8 @@ end
 Vdata = data.avg(seldata, :);
 
 % sphere the date using the noise covariance matrix supplied, if any
+% this affects both the gridsearch and the nonlinear optimization
 noisecov = ft_getopt(cfg.dipfit, 'noisecov');
-cfg.dipfit = rmfield(cfg.dipfit, 'noisecov'); %% only used here
 if ~isempty(noisecov)
   [u, s] = svd(noisecov);
   tol = max(size(noisecov)) * eps(norm(s, inf));
