@@ -8,23 +8,16 @@ function [dipout] = minimumnormestimate(dip, grad, headmodel, dat, varargin)
 %
 % Optional input arguments should come in key-value pairs and can include
 %   'noisecov'         = Nchan x Nchan matrix with noise covariance
-%   'noiselambda'      = scalar value, regularisation parameter for the noise
-%                        covariance matrix. (default=0)
-%   'sourcecov'        = Nsource x Nsource matrix with source covariance
-%                        (can be empty, the default will then be identity)
-%   'lambda'           = scalar, regularisation parameter (can be empty,
-%                        it will then be estimated from snr)
-%  'snr'               = scalar, signal to noise ratio
-%  'reducerank'        = reduce the leadfield rank, can be 'no' or a number
-%                        (e.g. 2)
-%  'normalize'         = normalize the leadfield
-%  'normalizeparam'    = parameter for depth normalization (default = 0.5)
-%  'keepfilter'        = 'no' or 'yes', keep the spatial filter in the
-%                        output
-%  'prewhiten'         = 'no' or 'yes', prewhiten the leadfield matrix with
-%                        the noise covariance matrix C.
-%  'scalesourcecov'    = 'no' or 'yes', scale the source covariance matrix R
-%                        such that trace(leadfield*R*leadfield')/trace(C)=1
+%   'noiselambda'      = scalar value, regularisation parameter for the noise covariance matrix (default = 0)
+%   'sourcecov'        = Nsource x Nsource matrix with source covariance (can be empty, the default will then be identity)
+%   'lambda'           = scalar, regularisation parameter (can be empty, it will then be estimated from snr)
+%   'snr'              = scalar, signal to noise ratio
+%   'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
+%   'normalize'        = normalize the leadfield
+%   'normalizeparam'   = parameter for depth normalization (default = 0.5)
+%   'keepfilter'       = 'no' or 'yes', keep the spatial filter in the output
+%   'prewhiten'        = 'no' or 'yes', prewhiten the leadfield matrix with the noise covariance matrix C
+%   'scalesourcecov'   = 'no' or 'yes', scale the source covariance matrix R such that trace(leadfield*R*leadfield')/trace(C)=1
 %
 % Note that leadfield normalization (depth regularisation) should be done
 % by scaling the leadfields outside this function, e.g. in
