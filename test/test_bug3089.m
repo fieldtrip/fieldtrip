@@ -6,7 +6,10 @@ function test_bug3089
 % TEST test_bug3089
 % TEST ft_dipolefitting ft_compute_leadfield 
 
-dataset = 'oddball1_mc_downsampled.fif';
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/oddball1_mc_downsampled.fif');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3089'));
+
+%%
 
 cfg = [];
 cfg.dataset = dataset;
