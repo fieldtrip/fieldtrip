@@ -120,8 +120,6 @@ switch cfg.method
     headshape = ft_determine_coordsys(headshape);
 end
 
-hascolor = isfield(headshape, 'color'); % color code for vertices
-
 switch cfg.method
   case 'headshape'
     % give the user instructions
@@ -131,7 +129,7 @@ switch cfg.method
     % open a figure
     figure;
     % plot the faces of the 2D or 3D triangulation
-    
+    hascolor = isfield(headshape, 'color'); % color code for vertices
     if hascolor
       skin = 'none';
       ft_plot_mesh(headshape);
