@@ -475,7 +475,7 @@ else
   opt.zval = zsum;
 end
 opt.zindx = zindx;
-if hasdata
+if ~hasdata
   opt.data = {};
 else
   opt.data = data;

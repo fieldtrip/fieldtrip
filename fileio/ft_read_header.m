@@ -1437,10 +1437,11 @@ switch headerformat
     hdr.nTrials     = 1; % continuous
     hdr.label       = cell(1,hdr.nChans);
     % give this warning only once
-    warning('creating fake channel names');
-    for i=1:hdr.nChans
-      hdr.label{i} = sprintf('%d', i);
-    end
+    hdr.label  = {orig.elec.Name};
+    hdr.chanunit = {orig.elec.Unit};
+    hdr.subjectname = orig.name;
+    %warning('using a modified read_micromed_trc() function');
+    
     % this should be a column vector
     hdr.label = hdr.label(:);
     % remember the original header details
