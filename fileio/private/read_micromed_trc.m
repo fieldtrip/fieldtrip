@@ -106,13 +106,13 @@ for iChan = 1 : header.Num_Chan
     Unit = fread(fid,1,'ushort');
     switch Unit
         case -1
-            header.elec(iChan).Unit = 'nVolt';
+            header.elec(iChan).Unit = 'nV';
         case 0
-            header.elec(iChan).Unit = 'µVolt';
+            header.elec(iChan).Unit = 'uV';
         case 1
-            header.elec(iChan).Unit = 'mVolt';
+            header.elec(iChan).Unit = 'mV';
         case 2
-            header.elec(iChan).Unit = 'Volt';
+            header.elec(iChan).Unit = 'V';
         case 100
             header.elec(iChan).Unit = '%';
         case 101
