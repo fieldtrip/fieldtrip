@@ -198,8 +198,8 @@ end % if iscell
 
 % checks if there exists a .jpg file of 'filename'
   [pathstr,name]  = fileparts(filename);  
-  if (exist([pathstr,name,'.jpg'],'file') == 2)   
-    image    = [pathstr,name,'.jpg'];
+  if exist(fullfile(pathstr,[name,'.jpg']))
+    image    = fullfile(pathstr,[name,'.jpg']);
     hasimage = 1;
   end  
     
