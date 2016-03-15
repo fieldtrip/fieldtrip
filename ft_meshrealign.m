@@ -12,13 +12,13 @@ function [mesh_original] = ft_meshrealign(cfg, mesh_original)
 %
 % If you want to realign the mesh using fiducials, the target and the
 % objective have to contain the three fiducials which relate , e.g.
-%   cfg.target.pos(1,:)    = [110 0 0]     % location of the nose
-%   cfg.target.pos(2,:)    = [0  90 0]     % location of the left ear
-%   cfg.target.pos(3,:)    = [0 -90 0]     % location of the right ear
+%   cfg.target.elecpos(1,:)    = [110 0 0]     % location of the nose
+%   cfg.target.elecpos(2,:)    = [0  90 0]     % location of the left ear
+%   cfg.target.elecpos(3,:)    = [0 -90 0]     % location of the right ear
 %   cfg.target.label       = {'NAS', 'LPA', 'RPA'}
-%   cfg.objective.pos(1,:) = [11 0 0]      % location of the nose
-%   cfg.objective.pos(2,:) = [0  9 0]      % location of the left ear
-%   cfg.objective.pos(3,:) = [0 -9 0]      % location of the right ear
+%   cfg.objective.elecpos(1,:) = [0 -110 0]      % location of the nose
+%   cfg.objective.elecpos(2,:) = [90   0 0]      % location of the left ear
+%   cfg.objective.elecpos(3,:) = [-90  0 0]      % location of the right ear
 %   cfg.objective.label    = {'NAS', 'LPA', 'RPA'}
 %
 % Copyright (C) 2016, Simon Homoelle
@@ -58,7 +58,7 @@ if ft_abort
     return
 end
 
-usefiducial              = isfield(cfg, 'target') & strcmp(cfg.method,'fiducial');
+usefiducial              = isfield(cfg, 'target') & isfield(cfg, 'objective') & strcmp(cfg.method,'fiducial');
 
 if usefiducial
     cfg.elec                 = cfg.objective;
@@ -69,7 +69,7 @@ if usefiducial
     mesh_original.pos        = transform(:,1:3);
     mesh_original.cfg        = mesh_realigned.cfg;
 else
-    
+    error('Cannot perform ft_meshrealign. Please read help ft_meshrealign, and check your cfg')
 end
 
 
