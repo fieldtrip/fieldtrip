@@ -1,6 +1,5 @@
 function [mesh_original] = ft_meshrealign(cfg, mesh_original)
 % FT_MESHREALIGN realigns mesh
-
 % FIDUCIAL - You can apply a rigid body realignment based on three fiducial
 % locations. After realigning, the fiducials in the input mesh
 % (typically nose, left and right ear) are along the same axes as the
