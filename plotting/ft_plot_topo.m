@@ -12,7 +12,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'mask'          = cell-array with line segments that forms the mask (see FT_PREPARE_LAYOUT)
 %   'outline'       = cell-array with line segments that for the outline (see  FT_PREPARE_LAYOUT)
 %   'isolines'      = vector with values for isocontour lines (default = [])
-%   'interplim'    = string, 'electrodes' or 'mask' (default = 'electrodes')
+%   'interplim'    = string, 'electrodes', 'head', 'mask' or 'mask_individual' (default = 'electrodes')
 %   'interpmethod'  = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
 %   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso'
 %   'clim'          = [min max], limits for color scaling
@@ -27,8 +27,10 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'height'        = height of the local axes
 %   'hlim'          = horizontal scaling limits within the local axes
 %   'vlim'          = vertical scaling limits within the local axes
+%
+% See also T_PREPARE_LAYOUT,  FT_PLOT_TOPO3D
 
-% Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
+% Copyrights (C) 2009-2016, Giovanni Piantoni, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,9 +60,9 @@ hpos          = ft_getopt(varargin, 'hpos',         0);
 vpos          = ft_getopt(varargin, 'vpos',         0);
 width         = ft_getopt(varargin, 'width',        []);
 height        = ft_getopt(varargin, 'height',       []);
-gridscale     = ft_getopt(varargin, 'gridscale',    67); % 67 in original
+gridscale     = ft_getopt(varargin, 'gridscale');
 shading       = ft_getopt(varargin, 'shading',      'flat');
-interplim     = ft_getopt(varargin, 'interplim',    'electrodes');
+interplim     = ft_getopt(varargin, 'interplim');
 interpmethod  = ft_getopt(varargin, 'interpmethod', 'v4');
 style         = ft_getopt(varargin, 'style',        'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso'
 tag           = ft_getopt(varargin, 'tag',          '');
@@ -70,6 +72,22 @@ mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
 clim          = ft_getopt(varargin, 'clim', []);
 parent        = ft_getopt(varargin, 'parent', []);
+
+if isempty(gridscale)
+  if numel(mask)>1
+    gridscale = numel(mask)*67;
+  else
+    gridscale = 67;
+  end
+end
+
+if isempty(interplim)
+  if numel(mask)>1
+    interplim = 'mask_individual';
+  else
+    interplim = 'electrodes';
+  end
+end
 
 % check for nans in the data, they can be still left incase people want to mask non channels.
 if any(isnan(dat))
@@ -138,7 +156,7 @@ elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~i
     hlim = [min([hlim(1); mask{i}(:, 1)*xScaling+hpos]) max([hlim(2); mask{i}(:, 1)*xScaling+hpos])];
     vlim = [min([vlim(1); mask{i}(:, 2)*yScaling+vpos]) max([vlim(2); mask{i}(:, 2)*yScaling+vpos])];
   end
-else
+else % head
   hlim = [min(chanX) max(chanX)];
   vlim = [min(chanY) max(chanY)];
 end
@@ -236,7 +254,7 @@ else
 end
 
 if ~isempty(maskimage)
-  % make boolean  
+  % make boolean
   maskimage      = maskimage~=0;
   % apply mask to the data to hide parts of the interpolated data (outside the circle) and channels that were specified to be masked
   % this combines the input options mask and maskdat
@@ -264,7 +282,7 @@ if strcmp(style, 'surf') || strcmp(style, 'surfiso')
   
 elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   % Plot the surface in an alternate style (using imagesc and saturation masking) so that it can be nicely saved to a vectorized format
- 
+  
   % set mask and cdat, and check for clim
   if isempty(clim)
     error('clim is required for style = ''imsat'' or style = ''imsatiso''')
@@ -304,7 +322,7 @@ elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   % do 5
   h = imagesc(xi, yi, rgbcdat,clim);
   set(h,'tag',tag);
-
+  
 end
 
 % Plot the outline of the head, ears and nose

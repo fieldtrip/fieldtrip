@@ -309,7 +309,7 @@ if dointeractive
   else
     opt.timdim = 3;
   end
-  [dum, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask');
+  [dum, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4', 'interplim', 'mask_individual');
   caxis(cfg.zlim);
   axis off;
   if opt.colorbar

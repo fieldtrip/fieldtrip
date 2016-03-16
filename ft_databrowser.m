@@ -183,15 +183,6 @@ cfg.selcfg          = ft_getopt(cfg, 'selcfg');                    % defaulting 
 cfg.seldat          = ft_getopt(cfg, 'seldat', 'current');
 cfg.colorgroups     = ft_getopt(cfg, 'colorgroups', 'sequential');
 cfg.channelcolormap = ft_getopt(cfg, 'channelcolormap', [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75]);
-cfg.eegscale        = ft_getopt(cfg, 'eegscale');
-cfg.eogscale        = ft_getopt(cfg, 'eogscale');
-cfg.ecgscale        = ft_getopt(cfg, 'ecgscale');
-cfg.emgscale        = ft_getopt(cfg, 'emgscale');
-cfg.megscale        = ft_getopt(cfg, 'megscale');
-cfg.magscale        = ft_getopt(cfg, 'magscale');
-cfg.gradscale       = ft_getopt(cfg, 'gradscale');
-cfg.chanscale       = ft_getopt(cfg, 'chanscale');
-cfg.mychanscale     = ft_getopt(cfg, 'mychanscale');
 cfg.layout          = ft_getopt(cfg, 'layout');
 cfg.plotlabels      = ft_getopt(cfg, 'plotlabels', 'yes');
 cfg.event           = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
@@ -208,6 +199,16 @@ cfg.editfontunits   = ft_getopt(cfg, 'editfontunits', 'points');     % inches, c
 cfg.axisfontsize    = ft_getopt(cfg, 'axisfontsize', 10);
 cfg.axisfontunits   = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, centimeters, normalized, points, pixels
 cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
+% these options pertain to scaling the data to achieve similar values
+cfg.eegscale        = ft_getopt(cfg, 'eegscale');
+cfg.eogscale        = ft_getopt(cfg, 'eogscale');
+cfg.ecgscale        = ft_getopt(cfg, 'ecgscale');
+cfg.emgscale        = ft_getopt(cfg, 'emgscale');
+cfg.megscale        = ft_getopt(cfg, 'megscale');
+cfg.magscale        = ft_getopt(cfg, 'magscale');
+cfg.gradscale       = ft_getopt(cfg, 'gradscale');
+cfg.chanscale       = ft_getopt(cfg, 'chanscale');
+cfg.mychanscale     = ft_getopt(cfg, 'mychanscale');
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -258,11 +259,7 @@ end
 
 if isempty(cfg.layout) && strcmp(cfg.viewmode, 'component')
   warning('No layout specified - will try to construct one using sensor positions');
-  tmpcfg = [];
-  try, tmpcfg.elec = cfg.elec; end
-  try, tmpcfg.grad = cfg.grad; end
-  try, tmpcfg.elecfile = cfg.elecfile; end
-  try, tmpcfg.gradfile = cfg.gradfile; end
+  tmpcfg = keepfields(cfg, {'grad', 'elec', 'gradfile', 'elecfile'});
   if hasdata
     cfg.layout = ft_prepare_layout(tmpcfg, data);
   else
@@ -378,8 +375,6 @@ if strcmp(cfg.continuous, 'no') && isempty(cfg.blocksize)
 elseif strcmp(cfg.continuous, 'yes') && isempty(cfg.blocksize)
   cfg.blocksize = 1;
 end
-
-
 
 % FIXME make a check for the consistency of cfg.continous, cfg.blocksize, cfg.trl and the data header
 
@@ -1567,44 +1562,40 @@ if nsamplepad>0
   tim = [tim linspace(tim(end),tim(end)+nsamplepad*mean(diff(tim)),nsamplepad)];  % possible machine precision error here
 end
 
-% apply scaling to selected channels
+% determine the scaling for the different types of channels
+datscale = ones(size(lab));
 % using wildcard to support subselection of channels
 if ~isempty(cfg.eegscale)
   chansel = match_str(lab, ft_channelselection('EEG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.eegscale;
+  datscale(chansel) = datscale(chansel) .* cfg.eegscale;
 end
 if ~isempty(cfg.eogscale)
   chansel = match_str(lab, ft_channelselection('EOG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.eogscale;
+  datscale(chansel) = datscale(chansel) .* cfg.eogscale;
 end
 if ~isempty(cfg.ecgscale)
   chansel = match_str(lab, ft_channelselection('ECG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.ecgscale;
+  datscale(chansel) = datscale(chansel) .* cfg.ecgscale;
 end
 if ~isempty(cfg.emgscale)
   chansel = match_str(lab, ft_channelselection('EMG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.emgscale;
+  datscale(chansel) = datscale(chansel) .* cfg.emgscale;
 end
 if ~isempty(cfg.megscale)
-  type = opt.hdr.grad.type;
-  chansel = match_str(lab, ft_channelselection('MEG', lab, type));
-  dat(chansel,:) = dat(chansel,:) .* cfg.megscale;
+  chansel = match_str(lab, ft_channelselection('MEG', lab, opt.hdr.grad.type));
+  datscale(chansel) = datscale(chansel) .* cfg.megscale;
 end
 if ~isempty(cfg.magscale)
-  chansel = match_str(lab, ft_channelselection('MEGMAG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.magscale;
+  chansel = match_str(lab, ft_channelselection('MEGMAG', lab, opt.hdr.grad.type));
+  datscale(chansel) = datscale(chansel) .* cfg.magscale;
 end
 if ~isempty(cfg.gradscale)
-  chansel = match_str(lab, ft_channelselection('MEGGRAD', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.gradscale;
-end
-if ~isempty(cfg.chanscale)
-  chansel = match_str(lab, ft_channelselection(cfg.channel, lab));
-  dat(chansel,:) = dat(chansel,:) .* repmat(cfg.chanscale,1,size(dat,2));
+  chansel = match_str(lab, ft_channelselection('MEGGRAD', lab, opt.hdr.grad.type));
+  datscale(chansel) = datscale(chansel) .* cfg.gradscale;
 end
 if ~isempty(cfg.mychanscale)
   chansel = match_str(lab, ft_channelselection(cfg.mychan, lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.mychanscale;
+  datscale(chansel) = datscale(chansel) .* cfg.mychanscale;
 end
 
 opt.curdata.label      = lab;
@@ -1614,12 +1605,20 @@ opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample offset];
 
+montage = [];
+montage.labelorg = lab;
+montage.labelnew = lab;
+montage.tra = diag(datscale);
+opt.curdata = ft_apply_montage(opt.curdata, montage);
+
+% update the local copy of the data matrix, channels might have been scaled
+dat = opt.curdata.trial{1};
+
 % to assure current feature is plotted on top
 ordervec = 1:length(opt.artdata.label);
 ordervec(opt.ftsel) = [];
 ordervec(end+1) = opt.ftsel;
 
-% FIXME speedup ft_prepare_layout
 if strcmp(cfg.viewmode, 'butterfly')
   laytime = [];
   laytime.label = {'dummy'};
@@ -1799,7 +1798,7 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
         end
       end
 
-      lh = ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
+      lh = ft_plot_vector(tim, dat(datsel,:), 'box', false, 'color', color, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
 
       % store this data in the line object so that it can be displayed in the
       % data cursor (see subfunction datacursortext below)
@@ -1949,7 +1948,7 @@ if strcmp(cfg.viewmode, 'component')
       % laychan is the actual topo layout, in pixel units for .mat files
       % laytopo is a vertical layout determining where to plot each topo, with one entry per component
 
-      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45);
+      ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask_individual', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45);
 
       %axis equal
       %drawnow

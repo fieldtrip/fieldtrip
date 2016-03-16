@@ -179,7 +179,7 @@ cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.preproc        = ft_getopt(cfg, 'preproc');
 cfg.tolerance      = ft_getopt(cfg, 'tolerance', 1e-5);
 cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
-cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
+cfg.latency        = ft_getopt(cfg, 'latency', 'all');   % needed for latency selection with TFR data, FIXME, probably not used
 
 if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive, 'yes')
   warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
@@ -654,7 +654,7 @@ for i=1:Ndata
   end
 
   % gather the data of multiple input arguments
-  datamatrix{i} = dat(seldat, :);
+  alldat{i} = dat(seldat, :);
 
   % Select x and y coordinates and labels of the channels in the data
   layX = cfg.layout.pos(sellay, 1);
@@ -687,7 +687,7 @@ for m=1:length(layLabels)
   mask = maskmatrix(m, :);
 
   for i=1:Ndata
-    yval(i, :) = datamatrix{i}(m, :);
+    yval(i, :) = alldat{i}(m, :);
   end
 
   % Clip out of bounds y values:
@@ -701,6 +701,7 @@ for m=1:length(layLabels)
     label = [];
   end
 
+  
   ft_plot_vector(xval, yval, 'width', width(m), 'height', height(m), 'hpos', layX(m), 'vpos', layY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'label', label, 'box', cfg.box, 'fontsize', cfg.fontsize);
 
   if i==1,
