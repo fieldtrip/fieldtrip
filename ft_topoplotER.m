@@ -52,7 +52,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'SouthOutside'       outside bottom
 %                            'EastOutside'        outside right
 %                            'WestOutside'        outside left
-%   cfg.interplimits       = limits for interpolation (default = 'head')
+%   cfg.interplimits       = limits for interpolation (default = 'mask_individual')
 %                            'electrodes' to the furthest electrode
 %                            'head' to the edge of head
 %                            'mask' to the edges of all masks combined

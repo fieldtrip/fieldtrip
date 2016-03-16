@@ -28,7 +28,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'hlim'          = horizontal scaling limits within the local axes
 %   'vlim'          = vertical scaling limits within the local axes
 %
-% See also T_PREPARE_LAYOUT,  FT_PLOT_TOPO3D
+% See also FT_PREPARE_LAYOUT,  FT_PLOT_TOPO3D
 
 % Copyrights (C) 2009-2016, Giovanni Piantoni, Robert Oostenveld
 %
@@ -72,6 +72,24 @@ mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
 clim          = ft_getopt(varargin, 'clim', []);
 parent        = ft_getopt(varargin, 'parent', []);
+
+iseven = @(n) mod(n,2)==0;
+
+if isequal(getenv('USER'), 'roboos')
+  % use the jansch trick
+  if iseven(numel(chanX))
+    % try to detect planar channels, and combine on the fly
+    chan1 = [chanX(1:2:end) chanY(1:2:end)];
+    chan2 = [chanX(2:2:end) chanY(2:2:end)];
+    rho = corr(chan1, chan2);
+    if rho(1,1)>(1-1e-6)
+      ft_warning('detected planar channels, combining according to Pythagorean theorem');
+      chanX = (chanX(1:2:end) + chanX(2:2:end))/2;
+      chanY = (chanY(1:2:end) + chanY(2:2:end))/2;
+      dat   = sqrt(dat(1:2:end).^2 + dat(2:2:end).^2);
+    end
+  end
+end
 
 if isempty(gridscale)
   if numel(mask)>1
@@ -197,8 +215,8 @@ elseif ~isempty(mask)
   for i=1:length(mask)
     mask{i}(:, 1) = mask{i}(:, 1)*xScaling+hpos;
     mask{i}(:, 2) = mask{i}(:, 2)*yScaling+vpos;
-    mask{i}(end+1, :) = mask{i}(1, :);                   % force them to be closed
-    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = i;%true;
+    mask{i}(end+1, :) = mask{i}(1, :);                     % force them to be closed
+    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = i;
   end
   
 else
@@ -244,10 +262,14 @@ if ~isempty(maskimage) && strcmp(interplim, 'mask_individual')
   % do the interpolation for each set of electrodes within a mask, useful
   % for ECoG data with multiple grids, to avoid cross talk
   Zi = zeros(size(maskimage));
-  for i=1:max(maskimage(:))
+  Xi = Zi;
+  Yi = Zi;
+  for i=1:numel(mask)
     chansel = inside_contour([chanX chanY], mask{i});
-    [Xi, Yi, tmpZi]  = griddata(chanX(chansel)', chanY(chansel), dat(chansel), xi', yi, interpmethod);
-    Zi(maskimage==i) = tmpZi(maskimage==i);
+    if any(chansel)
+      [Xi, Yi, tmpZi]  = griddata(chanX(chansel)', chanY(chansel), dat(chansel), xi', yi, interpmethod);
+      Zi(maskimage==i) = tmpZi(maskimage==i);
+    end
   end
 else
   [Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data

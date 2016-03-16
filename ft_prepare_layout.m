@@ -66,7 +66,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
 
-% Copyright (C) 2007-2013, Robert Oostenveld
+% Copyright (C) 2007-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
