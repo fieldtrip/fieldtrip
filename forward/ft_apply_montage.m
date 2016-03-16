@@ -251,8 +251,7 @@ if k > 0 && isfield(input, 'trial') % check for raw data now only
   end
 end
 if istrue(keepunused)
-  % add the channels that are not rereferenced to the input and output of the
-  % montage
+  % add the channels that are not rereferenced to the input and output of the montage
   montage.tra((m+(1:k)),(n+(1:k))) = eye(k);
   montage.labelorg    = cat(1, montage.labelorg(:), addlabel(:));
   montage.labelnew    = cat(1, montage.labelnew(:), addlabel(:));

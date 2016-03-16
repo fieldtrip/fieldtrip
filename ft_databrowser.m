@@ -226,11 +226,8 @@ if ~isempty(cfg.chanscale)
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
     error('cfg.chanscale should have the same number of elements as cfg.channel');
   end
-
-  % make sure chanscale is a column vector, not a row vector
-  if size(cfg.chanscale,2) > size(cfg.chanscale,1)
-    cfg.chanscale = cfg.chanscale';
-  end
+  % make sure this is a column vector, not a row vector
+  cfg.chanscale = cfg.chanscale(:);
 end
 
 if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
@@ -370,6 +367,7 @@ else
     end
   end
 end % if hasdata
+
 if strcmp(cfg.continuous, 'no') && isempty(cfg.blocksize)
   cfg.blocksize = (trlorg(1,2) - trlorg(1,1)+1) ./ hdr.Fs;
 elseif strcmp(cfg.continuous, 'yes') && isempty(cfg.blocksize)
@@ -397,6 +395,59 @@ if ~isempty(cfg.selectfeature)
       cfg.artfctdef.(cfg.selectfeature{i}).artifact = zeros(0,2);
     end
   end
+end
+
+% determine the scaling for the different types of channels
+% this is done once for all channels in the dataset and later applied as a montage to every selection
+if ~isempty(cfg.chanscale)
+  % one value per channel has been specified
+  montage = [];
+  montage.labelorg = cfg.channel;
+  montage.labelnew = cfg.channel;
+  montage.tra = diag(cfg.chanscale);
+else
+  % one value per channel-type has been specified
+  datscale = ones(size(hdr.label));
+  if issubfield(hdr, 'grad.type')
+    senstype = hdr.grad.type;
+  end
+  % using wildcards to support subselection of channels
+  if ~isempty(cfg.eegscale)
+    chansel = match_str(hdr.label, ft_channelselection('EEG', hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.eegscale;
+  end
+  if ~isempty(cfg.eogscale)
+    chansel = match_str(hdr.label, ft_channelselection('EOG', hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.eogscale;
+  end
+  if ~isempty(cfg.ecgscale)
+    chansel = match_str(hdr.label, ft_channelselection('ECG', hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.ecgscale;
+  end
+  if ~isempty(cfg.emgscale)
+    chansel = match_str(hdr.label, ft_channelselection('EMG', hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.emgscale;
+  end
+  if ~isempty(cfg.megscale)
+    chansel = match_str(hdr.label, ft_channelselection('MEG', hdr.label, senstype));
+    datscale(chansel) = datscale(chansel) .* cfg.megscale;
+  end
+  if ~isempty(cfg.magscale)
+    chansel = match_str(hdr.label, ft_channelselection('MEGMAG', hdr.label, senstype));
+    datscale(chansel) = datscale(chansel) .* cfg.magscale;
+  end
+  if ~isempty(cfg.gradscale)
+    chansel = match_str(hdr.label, ft_channelselection('MEGGRAD', hdr.label, senstype));
+    datscale(chansel) = datscale(chansel) .* cfg.gradscale;
+  end
+  if ~isempty(cfg.mychanscale)
+    chansel = match_str(hdr.label, ft_channelselection(cfg.mychan, hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.mychanscale;
+  end
+  montage = [];
+  montage.labelorg = hdr.label;
+  montage.labelnew = hdr.label;
+  montage.tra = diag(datscale);
 end
 
 % determine the vertical scaling
@@ -609,6 +660,7 @@ else
   opt.trialviewtype = 'trial';
 end
 opt.artdata     = artdata;
+opt.montage     = montage;
 opt.hdr         = hdr;
 opt.event       = event;
 opt.trlop       = 1;          % the active trial being displayed
@@ -1562,42 +1614,6 @@ if nsamplepad>0
   tim = [tim linspace(tim(end),tim(end)+nsamplepad*mean(diff(tim)),nsamplepad)];  % possible machine precision error here
 end
 
-% determine the scaling for the different types of channels
-datscale = ones(size(lab));
-% using wildcard to support subselection of channels
-if ~isempty(cfg.eegscale)
-  chansel = match_str(lab, ft_channelselection('EEG', lab));
-  datscale(chansel) = datscale(chansel) .* cfg.eegscale;
-end
-if ~isempty(cfg.eogscale)
-  chansel = match_str(lab, ft_channelselection('EOG', lab));
-  datscale(chansel) = datscale(chansel) .* cfg.eogscale;
-end
-if ~isempty(cfg.ecgscale)
-  chansel = match_str(lab, ft_channelselection('ECG', lab));
-  datscale(chansel) = datscale(chansel) .* cfg.ecgscale;
-end
-if ~isempty(cfg.emgscale)
-  chansel = match_str(lab, ft_channelselection('EMG', lab));
-  datscale(chansel) = datscale(chansel) .* cfg.emgscale;
-end
-if ~isempty(cfg.megscale)
-  chansel = match_str(lab, ft_channelselection('MEG', lab, opt.hdr.grad.type));
-  datscale(chansel) = datscale(chansel) .* cfg.megscale;
-end
-if ~isempty(cfg.magscale)
-  chansel = match_str(lab, ft_channelselection('MEGMAG', lab, opt.hdr.grad.type));
-  datscale(chansel) = datscale(chansel) .* cfg.magscale;
-end
-if ~isempty(cfg.gradscale)
-  chansel = match_str(lab, ft_channelselection('MEGGRAD', lab, opt.hdr.grad.type));
-  datscale(chansel) = datscale(chansel) .* cfg.gradscale;
-end
-if ~isempty(cfg.mychanscale)
-  chansel = match_str(lab, ft_channelselection(cfg.mychan, lab));
-  datscale(chansel) = datscale(chansel) .* cfg.mychanscale;
-end
-
 opt.curdata.label      = lab;
 opt.curdata.time{1}    = tim;
 opt.curdata.trial{1}   = dat;
@@ -1605,13 +1621,17 @@ opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample offset];
 
-montage = [];
-montage.labelorg = lab;
-montage.labelnew = lab;
-montage.tra = diag(datscale);
-opt.curdata = ft_apply_montage(opt.curdata, montage);
+montage = opt.montage;
+sel1 = match_str(montage.labelnew, lab);
+sel2 = match_str(montage.labelorg, lab);
+montage.labelnew = montage.labelnew(sel1);
+montage.labelorg = montage.labelorg(sel2);
+montage.tra      = montage.tra(sel1, sel2);
 
-% update the local copy of the data matrix, channels might have been scaled
+% apply the channel-specific scaling to the data
+opt.curdata = ft_apply_montage(opt.curdata, montage, 'bname', 'scale', 'feedback', 'no');
+
+% update the local copy of the data matrix, it might be rescaled
 dat = opt.curdata.trial{1};
 
 % to assure current feature is plotted on top
