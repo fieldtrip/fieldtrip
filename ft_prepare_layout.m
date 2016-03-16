@@ -147,6 +147,78 @@ if isa(cfg.layout, 'config')
   cfg.layout = struct(cfg.layout);
 end
 
+if isa(cfg.layout, 'cell')
+  % multiple layouts have been specified, recursively loop over them
+  tmpcfg = removefields(cfg, 'layout');
+  layout = cell(size(cfg.layout));
+  for i=1:numel(cfg.layout)
+    tmpcfg.layout = cfg.layout{i};
+    if i>1
+      tmpcfg.skipscale = 'yes';
+      tmpcfg.skipcmnt  = 'yes';
+    end
+    layout{i} = ft_prepare_layout(tmpcfg, data);
+  end
+  % only retain unique channel names
+  for i=1:numel(layout)
+    for j=(i+1):numel(layout)
+      [lab, sel] = intersect(layout{j}.label, layout{i}.label);
+      if ~isempty(lab)
+        s = sprintf('''%s'', ', lab{:});
+        s = s(1:end-2);
+        warning('multiple occurences of {%s}, only keeping the first', s);
+      end
+      layout{j}.label(sel)  = [];
+      layout{j}.pos(sel,:)  = [];
+      layout{j}.width(sel)  = [];
+      layout{j}.height(sel) = [];
+    end
+  end
+  
+  for i=1:numel(layout)
+    pos      = cat(1, layout{i}.pos, layout{i}.outline{:}, layout{i}.mask{:});
+    left(i)  = min(pos(:,1)) - 0.2*range(pos(:,1));
+    right(i) = max(pos(:,1)) + 0.2*range(pos(:,1));
+    width(i) = 1.4*range(pos(:,1));
+  end
+  shift = cumsum(width) + left - right;
+  shift = shift - shift(1);
+  
+  % shift the layouts horizontally
+  for i=1:numel(layout)
+    layout{i}.pos(:,1) = layout{i}.pos(:,1) + shift(i);
+    for j=1:numel(layout{i}.outline)
+      layout{i}.outline{j}(:,1) = layout{i}.outline{j}(:,1) + shift(i);
+    end
+    for j=1:numel(layout{i}.mask)
+      layout{i}.mask{j}(:,1) = layout{i}.mask{j}(:,1) + shift(i);
+    end
+  end
+  
+  % concatenate the different layouts in a single structure
+  combined = [];
+  combined.label   = {};
+  combined.pos     = [];
+  combined.width   = [];
+  combined.height  = [];
+  combined.outline = {};
+  combined.mask    = {};
+  for i=1:numel(layout)
+    if numel(layout{i}.label)>0
+      combined.label   = cat(1, combined.label,  layout{i}.label);
+      combined.pos     = cat(1, combined.pos,    layout{i}.pos);
+      combined.width   = cat(1, combined.width,  layout{i}.width);
+      combined.height  = cat(1, combined.height, layout{i}.height);
+      combined.outline = cat(2, combined.outline, layout{i}.outline);
+      combined.mask    = cat(2, combined.mask, layout{i}.mask);
+    end
+  end
+  
+  % ft_plot_lay(combined); axis on
+  layout = combined;
+  return
+end
+
 % ensure that there is a label field in the data, which is needed for
 % ordered/vertical/butterfly modes
 if hasdata && ~isfield(data, 'label') && isfield(data, 'labelcmb')
@@ -793,14 +865,14 @@ end
 
 % make the subset as specified in cfg.channel
 cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
-chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
+chansel     = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));            % include COMNT and SCALE, keep all channels in the order of the layout
 % return the layout for the subset of channels
 layout.pos    = layout.pos(chansel,:);
 layout.label  = layout.label(chansel);
 if ~strcmp(cfg.style, '3d')
   % these don't exist for the 3D layout
-  layout.width  = layout.width(chansel);
-  layout.height = layout.height(chansel);
+  layout.width  = layout.width(chansel(:));
+  layout.height = layout.height(chansel(:));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -834,9 +906,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~any(strcmp('COMNT', layout.label)) && strcmpi(cfg.style, '2d') && ~skipcomnt
   % add a placeholder for the comment in the upper left corner
-  layout.label{end+1}  = 'COMNT';
-  layout.width(end+1)  = mean(layout.width);
-  layout.height(end+1) = mean(layout.height);
+  layout.label{end+1}    = 'COMNT';
+  layout.width(end+1,1)  = mean(layout.width);
+  layout.height(end+1,1) = mean(layout.height);
   if ~isempty(layout.pos)
     XY = layout.pos;
   else
@@ -854,9 +926,9 @@ end
 
 if ~any(strcmp('SCALE', layout.label)) && strcmpi(cfg.style, '2d') && ~skipscale
   % add a placeholder for the scale in the upper right corner
-  layout.label{end+1}  = 'SCALE';
-  layout.width(end+1)  = mean(layout.width);
-  layout.height(end+1) = mean(layout.height);
+  layout.label{end+1}    = 'SCALE';
+  layout.width(end+1,1)  = mean(layout.width);
+  layout.height(end+1,1) = mean(layout.height);
   if ~isempty(layout.pos)
     XY = layout.pos;
   else
@@ -895,7 +967,6 @@ end
 
 % ensure proper format of some of label (see bug 1909 -roevdmei)
 layout.label  = layout.label(:);
-
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
@@ -1047,9 +1118,9 @@ else
   Width  = ones(size(X)) * mindist * 0.8;
   Height = ones(size(X)) * mindist * 0.6;
   layout.pos    = [X Y];
-  layout.width  = Width;
-  layout.height = Height;
-  layout.label  = label;
+  layout.width  = Width(:);
+  layout.height = Height(:);
+  layout.label  = label(:);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

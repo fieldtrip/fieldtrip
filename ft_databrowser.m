@@ -1418,10 +1418,13 @@ switch key
     end
   case 'c'
     % select channels
-    select = match_str(opt.hdr.label, cfg.channel);
     if ~isempty(cfg.layout) && strcmp(cfg.selectchannel, 'layout')
+      select = match_str(cfg.layout.label, cfg.channel);
       select = select_channel_list(cfg.layout, select, 'Select channels');
+      % the channel indices in the data don't match the indices in the layout
+      select = match_str(opt.hdr.label, cfg.layout.label(select));
     else
+      select = match_str(opt.hdr.label, cfg.channel);
       select = select_channel_list(opt.hdr.label, select, 'Select channels');
     end
     cfg.channel = opt.hdr.label(select);
