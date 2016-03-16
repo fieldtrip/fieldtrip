@@ -1,4 +1,4 @@
-function ft_plot_dipole(pos, ori, varargin)
+function h = ft_plot_dipole(pos, ori, varargin)
 
 % FT_PLOT_DIPOLE makes a 3-D representation of a dipole using a sphere and a stick
 % pointing along the dipole orientation
@@ -94,6 +94,8 @@ if all(size(ori) == [1 3])
   ori = ori';
 end
 
+h = [];
+
 % everything is added to the current figure
 holdflag = ishold;
 if ~holdflag
@@ -155,9 +157,13 @@ for i=1:size(pos,1)
   stick.pos = ft_warp_apply(translate([tx ty tz]), stick.pos, 'homogeneous');
   
   % plot the sphere and the stick
-  ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
-  ft_plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
+  p1 = ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
+  h = cat(2, h(:)', p1(:)');
+  clear p1;
   
+  p2 = ft_plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
+  h = cat(2, h(:)', p2(:)');
+  clear p2;
 end % for each dipole
 
 axis off
@@ -166,6 +172,10 @@ axis equal
 
 if ~holdflag
   hold off
+end
+
+if ~nargout
+  clear h
 end
 
 warning(ws); %revert to original state
