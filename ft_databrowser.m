@@ -28,7 +28,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
 %   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
-%   cfg.plotlabels              = 'yes' (default), 'no', 'some'; whether to plot channel labels in vertical
+%   cfg.selectchannel           = 'list' or 'layout', the GUI style for selecting channels (default = 'list')
+%   cfg.plotlabels              = 'yes', 'no', 'some'; whether to plot channel labels in vertical (default = 'yes')
 %                                 viewmode ('some' plots one in every ten labels; useful when plotting a
 %                                 large number of channels at a time)
 %   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value');
@@ -174,6 +175,7 @@ cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxabs');
 cfg.artfctdef       = ft_getopt(cfg, 'artfctdef', struct);
 cfg.selectfeature   = ft_getopt(cfg, 'selectfeature','visual');     % string or cell-array
 cfg.selectmode      = ft_getopt(cfg, 'selectmode', 'markartifact');
+cfg.selectchannel   = ft_getopt(cfg, 'selectchannel', 'layout');   % list or layout
 cfg.blocksize       = ft_getopt(cfg, 'blocksize');                 % now used for both continuous and non-continuous data, defaulting done below
 cfg.preproc         = ft_getopt(cfg, 'preproc');                   % see preproc for options
 cfg.selfun          = ft_getopt(cfg, 'selfun');                    % default functions: 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
@@ -247,26 +249,24 @@ if ~isfield(cfg, 'channel'),
   end
 end
 
+% read or create the layout, this will be used for the topoplots and for channelselection
+if ~isempty(cfg.layout)
+  tmpcfg = [];
+  tmpcfg.layout = cfg.layout;
+  cfg.layout = ft_prepare_layout(tmpcfg);
+end
 
-if strcmp(cfg.viewmode, 'component')
-  % read or create the layout that will be used for the topoplots
-
-  if ~isempty(cfg.layout)
-    tmpcfg = [];
-    tmpcfg.layout = cfg.layout;
-    cfg.layout = ft_prepare_layout(tmpcfg);
+if isempty(cfg.layout) && strcmp(cfg.viewmode, 'component')
+  warning('No layout specified - will try to construct one using sensor positions');
+  tmpcfg = [];
+  try, tmpcfg.elec = cfg.elec; end
+  try, tmpcfg.grad = cfg.grad; end
+  try, tmpcfg.elecfile = cfg.elecfile; end
+  try, tmpcfg.gradfile = cfg.gradfile; end
+  if hasdata
+    cfg.layout = ft_prepare_layout(tmpcfg, data);
   else
-    warning('No layout specified - will try to construct one using sensor positions');
-    tmpcfg = [];
-    try, tmpcfg.elec = cfg.elec; end
-    try, tmpcfg.grad = cfg.grad; end
-    try, tmpcfg.elecfile = cfg.elecfile; end
-    try, tmpcfg.gradfile = cfg.gradfile; end
-    if hasdata
-      cfg.layout = ft_prepare_layout(tmpcfg, data);
-    else
-      cfg.layout = ft_prepare_layout(tmpcfg);
-    end
+    cfg.layout = ft_prepare_layout(tmpcfg);
   end
 end
 
@@ -1419,7 +1419,11 @@ switch key
   case 'c'
     % select channels
     select = match_str(opt.hdr.label, cfg.channel);
-    select = select_channel_list(opt.hdr.label, select);
+    if ~isempty(cfg.layout) && strcmp(cfg.selectchannel, 'layout')
+      select = select_channel_list(cfg.layout, select, 'Select channels');
+    else
+      select = select_channel_list(opt.hdr.label, select, 'Select channels');
+    end
     cfg.channel = opt.hdr.label(select);
     opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     setappdata(h, 'opt', opt);
@@ -1814,7 +1818,7 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)
       ]);
     yTickLabel = {[.25 .75] .* range(opt.vlim) + opt.vlim(1)};
-  else
+  elseif ~isempty(chanindx)
     % two ticks per channel
     yTick = sort([
       opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/2)
@@ -1823,11 +1827,15 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)
       ]); % sort
     yTickLabel = {[.0 .25 .75 1] .* range(opt.vlim) + opt.vlim(1)};
+  else
+    warning('no channels were selected');
   end
-
-  yTickLabel = repmat(yTickLabel, 1, length(chanindx));
-  set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel);
-
+  
+  if ~isempty(chanindx)
+    yTickLabel = repmat(yTickLabel, 1, length(chanindx));
+    set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel);
+  end
+  
 else
   % the following is implemented for 2column, 3column, etcetera.
   % it also works for topographic layouts, such as CTF151
