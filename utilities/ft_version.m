@@ -55,13 +55,18 @@ if isempty(isgit)
   isgit = isdir(fullfile(ftpath, '.git'));
 end
 
-% show the latest revision present in this copy of fieldtrip
+if ispc
+  % this requires a file extension
+  ext = '.exe';
+else
+  ext = '';
+end
 
 if issvn
   % use svn system call to determine latest revision
   olddir = pwd();
   cd(ftpath);
-  [status, output] = system('svn info');
+  [status, output] = system(sprintf('svn%s info', ext));
   cd(olddir);
   if status > 0
     if ~ispc
@@ -74,37 +79,38 @@ if issvn
     rev = rev{1}{1};
     ftver = ['r' rev];
   end
-
+  
 elseif isgit
-  tmpfile = tempname;
-
+  % use git system call to determine latest revision
   olddir = pwd();
   cd(ftpath);
-  [status, output] = system(sprintf('git show > %s', tmpfile));
+  [status, output] = system(sprintf('git%s rev-parse --short HEAD', ext));
   cd(olddir);
   if status > 0
-    % FIXME the command line tools will probably not be available on windows
-    error('you seem to have an GIT development copy of FieldTrip, yet ''git show'' does not work as expected');
-  end
-
-  fp = fopen(tmpfile);
-  if fp>0
-    line = fgetl(fp); % the first line contains the commit number
-    fclose(fp);
-    rev = regexp(line, ' ', 'split');
-    rev = rev{2};
-
-    % this is a string like 4d3c309129f12146885120c2853a11362e048ea7
-    ftver = rev;
-  else
+    if ~ispc
+      % the command line tools will probably not be available on windows
+      warning('you seem to have an GIT development copy of FieldTrip, yet ''git rev-parse'' does not work as expected');
+    end
     ftver = 'unknown';
+  else
+    ftver = strtrim(output); % remove trailing newline character
   end
-
+  
+elseif isequal(regexp(ftpath, ['.*' filesep 'fieldtrip-fieldtrip-[[0-9][a-z]]{7}']), 1)
+  % this corresponds with being downloaded from the Mathworks file exchange link to github
+  % which results in a ftpath like /Users/robert/matlab/fieldtrip-fieldtrip-851478d
+  ftver = ftpath(end-6:end);
+  
+elseif isequal(regexp(ftpath, ['.*' filesep 'fieldtrip-20[0-9]{6}']), 1)
+  % this corresponds with the daily version from the ftp server
+  % which results in a ftpath like /Users/robert/matlab/fieldtrip-20160317
+  ftver = ftpath(end-7:end);
+  
 else
   % get it from the Contents.m file in the FieldTrip release
   a = ver(ftpath);
   ftver = a.Version;
-
+  
 end % if issvn, isgit or otherwise
 
 if nargout==0
