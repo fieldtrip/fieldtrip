@@ -29,7 +29,7 @@ function h = ft_plot_lay(lay, varargin)
 %   'width'       = width of the local axes
 %   'height'      = height of the local axes
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -62,7 +62,7 @@ label        = ft_getopt(varargin, 'label',       true);
 labelsize    = ft_getopt(varargin, 'labelsize',   10);
 labelfont    = ft_getopt(varargin, 'labelfont',   'helvetica');
 labelcolor   = ft_getopt(varargin, 'labelcolor',  'k');
-labeloffset  = ft_getopt(varargin, 'labeloffset', 0);
+labeloffset  = ft_getopt(varargin, 'labeloffset', [0 0]);
 mask         = ft_getopt(varargin, 'mask',        true);
 outline      = ft_getopt(varargin, 'outline',     true);
 verbose      = ft_getopt(varargin, 'verbose',     false);
@@ -73,8 +73,8 @@ interpreter  = ft_getopt(varargin, 'interpreter', 'tex');
 
 % some stuff related to some refined label plotting
 labelrotate   = ft_getopt(varargin, 'labelrotate', 0);
-labelalignh   = ft_getopt(varargin, 'labelalignh', 'left');
-labelalignv   = ft_getopt(varargin, 'labelalignv', 'middle');
+labelalignh   = ft_getopt(varargin, 'labelalignh', 'center');
+labelalignv   = ft_getopt(varargin, 'labelalignv', 'top');
 labelcolor    = ft_getopt(varargin, 'labelcolor', 'k');
 
 % convert between true/false/yes/no etc. statements
@@ -88,6 +88,11 @@ verbose = istrue(verbose);
 if ~(point || box || label || mask || outline)
   % there is nothing to be plotted
   return;
+end
+
+if isscalar(labeloffset)
+  % this used to be the default until 20160317
+  labeloffset(2) = 1.5*labeloffset(1);
 end
 
 % everything is added to the current figure
@@ -160,7 +165,7 @@ if label
   % check whether fancy label plotting is needed, this requires a for loop,
   % otherwise print text in a single shot
   if numel(labelrotate)==1
-    p = text(X+labeloffset, Y+(labeloffset*1.5), Lbl , 'color', labelcolor, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', labelcolor);
+    p = text(X+labeloffset(1), Y+labeloffset(2), Lbl , 'color', labelcolor, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', labelcolor);
     h = cat(2, h(:)', p(:)'); % the text command returns an array of handles
   else
     n = numel(Lbl);
@@ -174,7 +179,7 @@ if label
       eror('there is something wrong with the input arguments');
     end
     for k = 1:numel(Lbl)
-      p = text(X(k)+labeloffset, Y(k)+(labeloffset*1.5), Lbl{k}, 'color', labelcolor, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', labelcolor);
+      p = text(X(k)+labeloffset(1), Y(k)+labeloffset(2), Lbl{k}, 'color', labelcolor, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', labelcolor);
       h = cat(2, h(:)', p(:)'); % the text command returns an array of handles
     end
   end
