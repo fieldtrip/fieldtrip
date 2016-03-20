@@ -49,6 +49,9 @@ unsigned int bufwrite(int s, const void *buf, unsigned int numel) {
 		int numthis = 0;
 		unsigned int numcall = 0, numwrite = 0, verbose = 0;
 
+    if (verbose>1)
+      fprintf(stderr, "bufwrite: writing %u bytes to %d\n", numel, s);
+
 		while (numwrite<numel) {
 
 				numthis = send(s, (char*)buf+numwrite, numel-numwrite, 0);
