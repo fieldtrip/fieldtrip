@@ -143,6 +143,12 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
+if ~isfield(cfg, 'trl')
+  % get it from the data itself
+  cfg.trl = data.trialinfo;
+  cfg.trl(:,3) = 0;
+end
+
 % get the remaining settings
 numtrl      = size(cfg.trl,1);
 channel     = ft_channelselection(artfctdef.channel, hdr.label);
@@ -159,18 +165,18 @@ for trlop = 1:numtrl
   % compute the min, max and range over all channels and samples
   minval   = min(dat(:));
   maxval   = max(dat(:));
-
+  
   % compute the range as the maximum of the peak-to-peak values for each
   % channel
   ptpval = max(dat, [], 2) - min(dat, [], 2);
-
+  
   % track for bad trials for each channel
   badChnInd = find(ptpval > artfctdef.range);
-
+  
   % determine range and index of 'worst' channel
   worstChanRange = max(ptpval);
   worstChanInd = find(worstChanRange == ptpval);
-
+  
   % test the min, max and range against the specified thresholds
   if ~isempty(artfctdef.min) && minval<artfctdef.min
     fprintf('threshold artifact scanning: trial %d from %d exceeds min-threshold\n', trlop, numtrl);

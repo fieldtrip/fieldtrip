@@ -45,6 +45,9 @@ function [mri] = ft_read_mri(filename, varargin)
 %   ANT - Advanced Neuro Technology (*.mri)
 %   Yokogawa (*.mrk, incomplete)
 %
+% If you have a series of DICOM files, please provide the name of any of the files 
+% in the series (e.g. the first one). The other files will be found automatically.
+%
 % The output MRI may have a homogenous transformation matrix that converts
 % the coordinates of each voxel (in xgrid/ygrid/zgrid) into head
 % coordinates.

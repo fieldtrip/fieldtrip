@@ -101,20 +101,23 @@ if surfaceonly
   mesh = mesh2edge(mesh);
 end
 
-haspos  = isfield(mesh, 'pos');  % vertices
-hastri  = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
-hastet  = isfield(mesh, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
-hashex  = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
-hasline = isfield(mesh, 'line'); % line segments in 3-D
-haspoly = isfield(mesh, 'poly'); % polynomial surfaces in 3-D
+haspos   = isfield(mesh, 'pos');  % vertices
+hastri   = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
+hastet   = isfield(mesh, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
+hashex   = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
+hasline  = isfield(mesh, 'line'); % line segments in 3-D
+haspoly  = isfield(mesh, 'poly'); % polynomial surfaces in 3-D
+hascolor = isfield(mesh, 'color'); % color code for vertices
 
 if (hastet || hashex) && ~surfaceonly
   warning('you probably want to use the "surfaceonly" option for plotting only the outer surface')
 end
 
 if isempty(vertexcolor)
-  if haspos && (hastri || hastet || hashex || hasline || haspoly)
-    vertexcolor ='none';
+  if haspos && hascolor && (hastri || hastet || hashex || hasline || haspoly)
+    vertexcolor = mesh.color;   
+  elseif haspos && (hastri || hastet || hashex || hasline || haspoly)
+    vertexcolor ='none'; 
   else
     vertexcolor ='k';
   end

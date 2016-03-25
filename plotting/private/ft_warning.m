@@ -58,7 +58,7 @@ warned = false;
 ws = [];
 
 stack = dbstack;
-if any(strcmp({stack.file}, 'ft_warning.m'))
+if any(strcmp({stack(2:end).file}, 'ft_warning.m'))
   % don't call FT_WARNING recursively, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3068
   return;
 end

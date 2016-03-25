@@ -71,6 +71,7 @@ function [source] = ft_dipolefitting(cfg, data)
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank      = 'no', or number (default = 3 for EEG, 2 for MEG)
 %
+%
 % The volume conduction model of the head should be specified as
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
 %
@@ -101,6 +102,9 @@ function [source] = ft_dipolefitting(cfg, data)
 
 % Undocumented local options:
 %   cfg.dipfit.constr   = Source model constraints, depends on cfg.symmetry
+% Optionally, you can include a noise covariance structure to sphere the data (is useful when using both
+% magnetometers and gradiometers to fit your dipole)
+%   cfg.dipfit.noisecov       = noise covariance matrix, see e.g. FT_TIMELOCK_ANALYSIS
 
 % Copyright (C) 2004-2013, Robert Oostenveld
 %
@@ -159,6 +163,7 @@ cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not use
 cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in dipole fitting
 cfg.backproject     = ft_getopt(cfg, 'backproject');    % this is better not used in dipole fitting
 cfg.reducerank      = ft_getopt(cfg, 'reducerank', []); % the default for this is handled below
+cfg.dipfit          = ft_getopt(cfg, 'dipfit', []);   % the default for this is handled below
 
 % put the low-level options pertaining to the dipole grid in their own field
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
@@ -252,6 +257,23 @@ end
 % take the selected channels
 Vdata = data.avg(seldata, :);
 
+% sphere the date using the noise covariance matrix supplied, if any
+% this affects both the gridsearch and the nonlinear optimization
+noisecov = ft_getopt(cfg.dipfit, 'noisecov');
+if ~isempty(noisecov)
+  [u, s] = svd(noisecov);
+  tol = max(size(noisecov)) * eps(norm(s, inf));
+  s = diag(s);
+  r1 = sum(s > tol) + 1;
+  s(1:(r1 - 1)) = 1 ./ sqrt(s(1:(r1 - 1)));
+  s(r1:end)     = 0;
+  sphere = diag(s) * u';
+  % apply the sphering to the data
+  Vdata = sphere * Vdata;
+  % apply the sphering to the forward model as a pre-multiplication
+  sens.tra = sphere * sens.tra;
+end
+
 if iscomp
   % select the desired component topographies
   Vdata = Vdata(:, cfg.component);
@@ -333,6 +355,7 @@ if strcmp(cfg.gridsearch, 'yes')
   else
     tmpcfg.grad = sens;
   end
+  
   % copy all options that are potentially used in ft_prepare_sourcemodel
   grid = ft_prepare_sourcemodel(tmpcfg);
 
@@ -424,7 +447,6 @@ elseif strcmp(cfg.gridsearch, 'no')
   end % switch model
 
 end % if gridsearch yes/no
-
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a Nx3 matrix,
 % i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
 switch cfg.model
