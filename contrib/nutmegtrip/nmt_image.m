@@ -21,22 +21,25 @@ switch(op)
     case 'shopos'
         if isfield(st,'mp'),
             fg  = spm_figure('Findwin','Graphics');
-%             posmrimm = spm_orthviews('pos')';
-%             set(st.nmt.gui.megp,'String',sprintf('%.1f %.1f %.1f',posmrimm));
+            
+            %%
+            posmrimm = spm_orthviews('pos')';
+ %           set(st.nmt.gui.megp,'String',sprintf('%.1f %.1f %.1f',posmrimm));
            
              
-%             blobidx = nmt_transform_coord(inv(st.vols{1}.blobs{1}.mat),posmrimm);
-%             blobidx = round(blobidx);
-%             blobdim = size(st.vols{1}.blobs{1}.vol);
-%             if(all(blobidx <= blobdim & blobidx > 0))
-%                 blobintensity = st.vols{1}.blobs{1}.vol(blobidx(1),blobidx(2),blobidx(3));
-%                 st.nmt.cfg.vox_idx  = sub2ind(size(st.vols{1}.blobs{1}.vol),blobidx(1),blobidx(2),blobidx(3));
-%             else % if out of blob's bounds
-%                 blobintensity = NaN;
-%                 st.nmt.cfg.vox_idx = NaN;
-%             end
-%             set(st.nmt.gui.beamin,'String',sprintf('%+g',blobintensity));
-            
+            blobidx = nmt_transform_coord(inv(st.vols{1}.blobs{1}.mat),posmrimm);
+            blobidx = round(blobidx);
+            blobdim = size(st.vols{1}.blobs{1}.vol);
+            if(all(blobidx <= blobdim & blobidx > 0))
+%                blobintensity = st.vols{1}.blobs{1}.vol(blobidx(1),blobidx(2),blobidx(3));
+                st.nmt.cfg.vox_idx  = sub2ind(size(st.vols{1}.blobs{1}.vol),blobidx(1),blobidx(2),blobidx(3));
+                blobintensity = st.nmt.fun(st.nmt.cfg.vox_idx);
+            else % if out of blob's bounds
+                blobintensity = NaN;
+                st.nmt.cfg.vox_idx = NaN;
+            end
+            set(st.nmt.gui.beamin,'String',sprintf('%+g',blobintensity));
+            %%
             
             if(size(st.nmt.fun,2)>1)
                 nmt_timeselect;

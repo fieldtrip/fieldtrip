@@ -139,7 +139,7 @@ function nmt_sourceplot_spm8(cfg,functional)
 %
 % Author: Sarang S. Dalal
 %
-% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -169,7 +169,7 @@ ft_preamble debug
 ft_preamble loadvar functional
 
 % the abort variable is set to true or false in ft_preamble_init
-if abort
+if ft_abort
   return
 end
 
@@ -193,9 +193,13 @@ cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.mom', 'mom'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.itc', 'itc'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.tf', 'tf'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.itc', 'itc'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.tf', 'tf'});
 
 
 % set the defaults for all methods
@@ -662,8 +666,6 @@ end
 spm_image('init',cfg.mripath); % load/reload structural MRI
 nmt_spmfig_setup(cfg);
 
-title(cfg.title);
-
 %%% set color and opacity mapping for this figure
 if hasfun
   colormap(cfg.funcolormap);
@@ -692,7 +694,7 @@ if ~isempty(cfg.funparameter)
         st.nmt.cfg = cfg;
       
         switch(cfg.funparameter)
-            case {'mom'}
+            case {'mom','itc'}
                 fun = cell2mat(getsubfield(functional,cfg.funparameter));
                 
                 inside = find(functional.inside);
@@ -728,19 +730,48 @@ if ~isempty(cfg.funparameter)
                 end
                 
                 st.nmt.cfg.time_idx = cfg.time_idx;
-            case 'timefreq-notyetimplemented'
-                if isfield(functional, 'time')
-                    st.nmt.time = functional.time;
+            case 'tf'
+                fun = cell2mat(getsubfield(functional,cfg.funparameter));
+                
+                inside = find(functional.inside);
+                st.nmt.fun = nan(length(functional.inside),size(fun,2));
+                st.nmt.fun(inside,:) = fun;
+                
+                st.nmt.time = functional.time;
+                st.nmt.freq = functional.freq;
+                
+                if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                    [~,peakind] = max(abs(st.nmt.fun(:)));
+                    [peakvox_idx,peaktime_idx] = ind2sub(size(st.nmt.fun),peakind);
+                    cfg.time_idx(1) = peaktime_idx;
+                    cfg.vox_idx = peakvox_idx;
                 end
-                if isfield(functional, 'freq')
-                    st.nmt.freq = functional.freq;
+
+                if(~isfield(cfg,'time') & isfield(cfg,'vox'))
+                    [~,peaktime_idx] = max(abs(st.nmt.fun(cfg.vox_idx,:)));
+                    cfg.time_idx(1) = peaktime_idx;
                 end
+
+                if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                    [~,peakvox_idx] = max(abs(st.nmt.fun(cfg.time_idx,:)));
+                    cfg.vox_idx = peakvox_idx;
+                end
+                
+                % move MRI crosshairs to desired/peak voxel
+                spm_orthviews('Reposition',st.nmt.pos(cfg.vox_idx,:))
+                
+                if(length(cfg.time_idx(1)) == 1)
+                    cfg.time_idx(2) = cfg.time_idx(1);
+                end
+                
+                st.nmt.cfg.time_idx = cfg.time_idx;
+                
             otherwise
                 st.nmt.fun = getsubfield(functional, cfg.funparameter);
                 st.nmt.cfg.time_idx = [1 1]; % no time dimension in this case
         end
 
-        st.nmt.msk = msk;
+        st.nmt.msk = reshape(msk,size(st.nmt.fun));
         
     else
         error('cfg.funparameter not found in functional');

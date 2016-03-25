@@ -5,6 +5,12 @@ function nmt_spmfig_setup(cfg)
 
 global st
 
+if(isempty(cfg.title))
+    cfg.title = 'nutmegtrip';
+end
+set(st.fig,'Name',cfg.title);
+
+
 nmt_textboxcolor = [0.93 0.81 0.63];
 nmt_bgcolor = [0.8 0.7 0.54];
 
@@ -118,7 +124,7 @@ end
 
 % for time series or spectrogram data, expand SPM window and create new axes
 switch(cfg.funparameter)
-    case {'avg.mom','mom','pow','avg.pow'}
+    case {'avg.mom','mom','pow','avg.pow','coh','avg.coh','itc','avg.itc'}
         % MRI slices have "relative" position; change to fixed position
         un    = get(st.fig,'Units');set(st.fig,'Units','Pixels');
 
