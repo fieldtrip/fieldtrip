@@ -696,7 +696,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do time domain source reconstruction
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv', 'music', 'pcc', 'mvl' 'eloreta'}))
+elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv', 'music', 'pcc', 'mvl' 'eloreta' 'sloreta'}))
 
   % determine the size of the data
   Nsamples = size(data.avg,2);
@@ -985,7 +985,13 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     %       end
     %     end
 
-  elseif strcmp(cfg.method, 'eloreta'),
+elseif strcmp(cfg.method, 'sloreta')
+    for i=1:Nrepetitions
+      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      fprintf('scanning repetition %d\n', i);
+      dip(i) = ft_sloreta(grid, sens, headmodel, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:});
+    end
+elseif strcmp(cfg.method, 'eloreta'),
     for i=1:Nrepetitions
       fprintf('scanning repetition %d\n', i);
       dip(i) = ft_eloreta(grid, sens, headmodel, squeeze(avg(i,:,:)), squeeze(Cy(i,:,:)), optarg{:});
