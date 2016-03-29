@@ -13,6 +13,7 @@ end
 
 currvox = st.nmt.cfg.vox_idx; % currently selected voxel
 currtime = st.nmt.cfg.time_idx; % currently selected time
+currfreq = st.nmt.cfg.freq_idx; % currently selected freq
 
 if(isfield(cfg,'vox'))
     switch(class(cfg.vox))
@@ -53,7 +54,7 @@ else
     excludeindices = [];
 end
 
-fun = st.nmt.fun;
+fun = st.nmt.fun(:,:,st.nmt.cfg.freq_idx(1));
 fun(excludeindices,:,:,:) = NaN; % NaN out values outside search range
 
 %%

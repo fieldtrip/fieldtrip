@@ -32,7 +32,7 @@ function nmt_sourceplot_spm8(cfg,functional)
 %                        - Make your own field in the data with values between 0 and 1 to control opacity directly
 %
 % The following parameters can be used in all methods:
-%   **TODO** cfg.atlas         = string, filename of atlas to use (default = []) see FT_READ_ATLAS
+%   cfg.atlas         = string, filename of atlas to use (default = []) see FT_READ_ATLAS
 %                        for ROI masking (see "masking" below) or in "ortho-plotting" mode (see "ortho-plotting" below)
 %
 % The following parameters can be used for the functional data:
@@ -178,14 +178,6 @@ if ischar(functional)
   error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
-if nargin==3
-  % interpolate on the fly
-  tmpcfg = keepfields(cfg, {'downsample', 'interpmethod'});
-  tmpcfg.parameter = cfg.funparameter;
-  functional = ft_sourceinterpolate(tmpcfg, functional, anatomical);
-  [cfg, functional] = rollback_provenance(cfg, functional);
-end
-
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
@@ -208,6 +200,7 @@ cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.title         = ft_getopt(cfg, 'title',         '');
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
 cfg.topoplot      = ft_getopt(cfg, 'topoplot',  '');
+cfg.plottype      = ft_getopt(cfg, 'plottype', 'ts'); % default plot type is "time series"
 
 
 
@@ -390,7 +383,7 @@ if hasfun
     tmpfun = nan(tmpdim);
     insideindx = find(functional.inside);
     for i=insideindx(:)'
-      tmpfun(i,:) = fun{i};
+      tmpfun(i,:,:) = fun{i};
     end
     fun = tmpfun;       % replace the cell-array functional with a normal array
     clear tmpfun
@@ -481,7 +474,6 @@ if hasfun
       fun = abs(fun);
     end
     
-    % what if fun is 4D?
     if ndims(fun)>3 || prod(dim)==size(fun,1)
       if strcmp(dimord, 'pos_freq_time')
         % functional contains time-frequency representation
@@ -691,7 +683,6 @@ if ~isempty(cfg.funparameter)
         hasfun = 1;
         
         st.nmt.pos = functional.pos;
-        st.nmt.cfg = cfg;
       
         switch(cfg.funparameter)
             case {'mom','itc'}
@@ -729,21 +720,26 @@ if ~isempty(cfg.funparameter)
                     cfg.time_idx(2) = cfg.time_idx(1);
                 end
                 
-                st.nmt.cfg.time_idx = cfg.time_idx;
             case 'tf'
                 fun = cell2mat(getsubfield(functional,cfg.funparameter));
                 
                 inside = find(functional.inside);
-                st.nmt.fun = nan(length(functional.inside),size(fun,2));
-                st.nmt.fun(inside,:) = fun;
+                
+                fun = reshape(fun,[size(fun,1)/length(inside) length(inside) size(fun,2)]);
+                
+                fun = permute(fun,[2 3 1]);
+                
+                st.nmt.fun = nan(length(functional.inside),size(fun,2),size(fun,3));
+                st.nmt.fun(inside,:,:) = fun;
                 
                 st.nmt.time = functional.time;
-                st.nmt.freq = functional.freq;
+                st.nmt.freq = functional.freqbands;
                 
                 if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
                     [~,peakind] = max(abs(st.nmt.fun(:)));
-                    [peakvox_idx,peaktime_idx] = ind2sub(size(st.nmt.fun),peakind);
+                    [peakvox_idx,peaktime_idx,peakfreq_idx] = ind2sub(size(st.nmt.fun),peakind);
                     cfg.time_idx(1) = peaktime_idx;
+                    cfg.freq_idx(1) = peakfreq_idx;
                     cfg.vox_idx = peakvox_idx;
                 end
 
@@ -764,13 +760,13 @@ if ~isempty(cfg.funparameter)
                     cfg.time_idx(2) = cfg.time_idx(1);
                 end
                 
-                st.nmt.cfg.time_idx = cfg.time_idx;
                 
             otherwise
                 st.nmt.fun = getsubfield(functional, cfg.funparameter);
                 st.nmt.cfg.time_idx = [1 1]; % no time dimension in this case
         end
 
+        st.nmt.cfg = cfg;
         st.nmt.msk = reshape(msk,size(st.nmt.fun));
         
     else
