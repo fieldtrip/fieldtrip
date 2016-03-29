@@ -7,7 +7,7 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % Use as
 %   [data] = ft_combineplanar(cfg, data)
-% where data contains an averaged planar gradient ERF or single-trial/avegared TFR.
+% where data contains an averaged planar gradient ERF or single-trial/averaged TFR.
 %
 % The configuration can contain
 %   cfg.method         = 'sum', 'svd' or 'abssvd' (default = 'sum')
@@ -222,6 +222,15 @@ elseif (israw || istimelock)
       Nrpt = length(data.trial);
       for k = 1:Nrpt
         combined = sqrt(data.trial{k}(sel_dH,:).^2 + data.trial{k}(sel_dV,:).^2);
+        other    = data.trial{k}(sel_other,:);
+        data.trial{k} = [combined; other];
+      end
+      data.label = cat(1, lab_comb(:), lab_other(:));
+
+    case 'complex'
+      Nrpt = length(data.trial);
+      for k = 1:Nrpt
+        combined = data.trial{1}(sel_dH,:)*i + data.trial{1}(sel_dV,:);
         other    = data.trial{k}(sel_other,:);
         data.trial{k} = [combined; other];
       end
