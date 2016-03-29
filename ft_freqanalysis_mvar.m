@@ -84,13 +84,16 @@ if strcmp(cfg.foi, 'all'),
   cfg.foi = (0:1:data.fsampleorig/2);
 end
 
-isfull = isfield(data, 'label');
+dimtok = tokenize(data.dimord, '_');
+isfull = isfield(data, 'label') && sum(strcmp(dimtok,'chan'))==2;
+isuvar = isfield(data, 'label') && sum(strcmp(dimtok,'chan'))==1;
 isbvar = isfield(data, 'labelcmb');
-if isfull && isbvar
+
+if (isfull||isuvar) && isbvar
   error('data representaion is ambiguous');
 end
-if ~isfull && ~isbvar
-  error('data representation is ambiguous');
+if ~isfull && ~isbvar && ~isuvar
+  error('data representation is unsupported');
 end
 
 %keeprpt  = strcmp(cfg.keeptrials, 'yes');
@@ -108,14 +111,14 @@ else
   ntoi = 1;
 end
 
-if isfull
+if isfull || isuvar
   cfg.channel = ft_channelselection('all', data.label);
   %cfg.channel    = ft_channelselection(cfg.channel,      data.label);
   chanindx = match_str(data.label, cfg.channel);
   nchan    = length(chanindx);
   label    = data.label(chanindx);
   nlag     = size(data.coeffs,3); %change in due course
-
+  
   %---allocate memory
   h         = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
   a         = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
@@ -123,7 +126,7 @@ if isfull
 elseif isbvar
   ncmb      = size(data.labelcmb,1)./4;
   nlag      = size(data.coeffs,2);
-
+  
   %---allocate memory
   h         = complex(zeros(ncmb*4, nfoi, ntoi), zeros(ncmb*4, nfoi, ntoi));
   a         = complex(zeros(ncmb*4, nfoi, ntoi), zeros(ncmb*4, nfoi, ntoi));
@@ -136,17 +139,30 @@ end
 ft_progress('init', cfg.feedback, 'computing MAR-model based TFR');
 for j = 1:ntoi
   ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
-
+  
   if isfull
     %---compute transfer function
     ar = reshape(data.coeffs(:,:,:,j), [nchan nchan*nlag]);
     [h(:,:,:,j), a(:,:,:,j)] = ar2h(ar, cfg.foi, data.fsampleorig);
-
+    
     %---compute cross-spectra
     nc = data.noisecov(:,:,j);
     for k = 1:nfoi
       tmph               = h(:,:,k,j);
       crsspctrm(:,:,k,j) = tmph*nc*tmph';
+    end
+  elseif isuvar
+    %---compute transfer function
+    for m = 1:nchan
+      ar = reshape(data.coeffs(m,:,j), [1 nlag]);
+      [h(m,m,:,j), a(m,m,:,j)] = ar2h(ar, cfg.foi, data.fsampleorig);
+      
+      %---compute cross-spectra
+      nc = data.noisecov(m,j);
+      for k = 1:nfoi
+        tmph               = h(m,m,k,j);
+        crsspctrm(m,m,k,j) = tmph*nc*tmph';
+      end
     end
   elseif isbvar
     for kk = 1:ncmb
@@ -155,7 +171,7 @@ for j = 1:ntoi
       [tmph,tmpa] = ar2h(ar, cfg.foi, data.fsampleorig);
       h((kk-1)*4+(1:4),:,:) = reshape(tmph, [4 nfoi ntoi]);
       a((kk-1)*4+(1:4),:,:) = reshape(tmpa, [4 nfoi ntoi]);
-
+      
       %---compute cross-spectra
       nc = reshape(data.noisecov((kk-1)*4+(1:4),j), [2 2]);
       for k = 1:nfoi
