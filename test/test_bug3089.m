@@ -35,10 +35,8 @@ cfg.lpfreq        = 120;
 cfg.channel       = {'MEG', 'EEG'};
 cfg.precision     = 'single';
 cfg.coilaccuracy  = 1;
-
  
 data_meg = ft_preprocessing(cfg);
-
  
 %%
 
@@ -60,6 +58,7 @@ data_meg_clean3 = ft_rejectvisual(cfg, data_meg_clean2);
 
  
 save data_meg_clean3 data_meg_clean3
+
 %% reference eeg data
 cfg = [];
 cfg.reref = 'yes';

@@ -51,8 +51,6 @@ pthread_mutex_t mutexevent    = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t getData_cond   = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t getData_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-#define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr, "Out of memory with unchecked malloc in line %d", __LINE__); exit(1); }
-
 /*****************************************************************************/
 
 void free_header() {

@@ -18,10 +18,9 @@
   #include <poll.h>
 #endif
 
-#define THREADSLEEP 1000000  /* in microseconds */
-#define POLLSLEEP   100      /* in microseconds */
-#define MERGE_THRESHOLD      4096    /* TODO: optimize this value? Maybe look at MTU size */
-#define DIE_BAD_MALLOC(ptr)   if ((ptr)==NULL) { fprintf(stderr, "Out of memory in line %d", __LINE__); exit(1); }
+#define THREADSLEEP      1000000  /* in microseconds */
+#define POLLSLEEP        100      /* in microseconds */
+#define MERGE_THRESHOLD  4096     /* TODO: optimize this value? Maybe look at MTU size */
 
 typedef struct {
         void *message;
