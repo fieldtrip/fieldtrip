@@ -1,4 +1,4 @@
-function nmt_reposition(op)
+function nmt_timeselect(op)
 global st
 
 if(~exist('op','var'))
@@ -20,9 +20,15 @@ switch(op)
     case 'textbox'
         t1 = str2num(get(st.nmt.gui.t1,'String'));
         t2 = str2num(get(st.nmt.gui.t2,'String'));
-        
         st.nmt.cfg.time_idx(1) = dsearchn(st.nmt.time',t1);
         st.nmt.cfg.time_idx(2) = dsearchn(st.nmt.time',t2);
+
+        if(isfield(st.nmt,'freq'))
+            f1 = str2num(get(st.nmt.gui.f1,'String'));
+            f2 = str2num(get(st.nmt.gui.f2,'String'));
+            st.nmt.cfg.freq_idx(1) = dsearchn(st.nmt.freq(:,1),f1);
+            st.nmt.cfg.freq_idx(2) = dsearchn(st.nmt.freq(:,1),f2);
+        end
     otherwise
         % otherwise, time interval was already specified, so nothing to do
 end

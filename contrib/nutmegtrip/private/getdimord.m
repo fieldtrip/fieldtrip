@@ -312,6 +312,10 @@ switch field
       dimord = 'pos_rpt_ori_ori';
     end
     
+  case {'tf'}
+    if isequal(datsiz, [npos nfreq ntime])
+      dimord = 'pos_freq_time';
+    end
   case {'pow'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';

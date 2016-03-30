@@ -5,6 +5,12 @@ function nmt_spmfig_setup(cfg)
 
 global st
 
+if(isempty(cfg.title))
+    cfg.title = 'nutmegtrip';
+end
+set(st.fig,'Name',cfg.title);
+
+
 nmt_textboxcolor = [0.93 0.81 0.63];
 nmt_bgcolor = [0.8 0.7 0.54];
 
@@ -118,7 +124,7 @@ end
 
 % for time series or spectrogram data, expand SPM window and create new axes
 switch(cfg.funparameter)
-    case {'avg.mom','mom','pow','avg.pow'}
+    case {'mom','pow','coh','itc','tf'}
         % MRI slices have "relative" position; change to fixed position
         un    = get(st.fig,'Units');set(st.fig,'Units','Pixels');
 
@@ -190,11 +196,29 @@ switch(cfg.funparameter)
             'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
         st.nmt.gui.timeguih(5) = st.nmt.gui.t2;
         
-        
         st.nmt.gui.animate = uicontrol('Style','pushbutton','String','Animate','BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
             'Position',[offx+s*Dims(1)+4*skx+300 offy+s*Dims(2)-70 80 25],...
             'HorizontalAlignment','right','Visible','off','Callback','nmt_animate');
         st.nmt.gui.timeguih(6) = st.nmt.gui.animate;
+        
+        
+        st.nmt.gui.freqguih(1) = uicontrol(fg,'Style','Text','String','Selected Freq:','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
+            'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2)-105 150 25],'Visible','off');
+        
+        st.nmt.gui.f1 = uicontrol('Style','edit','String',num2str(1),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig);
+        set(st.nmt.gui.f1,'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-100 80 25],...
+            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
+        st.nmt.gui.freqguih(2) = st.nmt.gui.f1;
+        
+        st.nmt.gui.freqguih(3) = uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
+            'Position',[offx+s*Dims(1)+4*skx+185 offy+s*Dims(2)-105 50 25],'Visible','off');
+        
+        
+        st.nmt.gui.f2 = uicontrol('Style','edit','String',num2str(1),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
+            'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-100 80 25],...
+            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
+        st.nmt.gui.freqguih(4) = st.nmt.gui.f2;
+
 end
 
 st.nmt.gui.ax_topo_pos = [offx+s*Dims(1)+4*skx offy+s*Dims(2)-700 2*s*(Dims(2)) 2*s*(Dims(2))];
@@ -203,22 +227,22 @@ st.nmt.gui.ax_topo_pos = [offx+s*Dims(1)+4*skx offy+s*Dims(2)-700 2*s*(Dims(2)) 
 
 % add peak finder controls
 uicontrol(fg,'Style','PushButton','String','Find','BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx-50 offy+s*Dims(2)-110 50 25],...
+    'Position',[offx+s*Dims(1)+4*skx-50 offy+s*Dims(2)-130 50 25],...
     'Callback','nmt_peaksearch_helper;');
-st.nmt.gui.peakdomain = uicontrol(fg,'Style','PopupMenu','String',{'spatial','temporal','spatiotemporal'},'BackgroundColor',nmt_textboxcolor,'HorizontalAlignment','right','Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2)-115 110 25]);
+st.nmt.gui.peakdomain = uicontrol(fg,'Style','PopupMenu','String',{'spatiotemporal','spatial','temporal'},'BackgroundColor',nmt_textboxcolor,'HorizontalAlignment','right','Parent',st.fig,...
+    'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2)-135 110 25]);
 st.nmt.gui.peaktype = uicontrol(fg,'Style','PopupMenu','String',{'mag','max','min'},'BackgroundColor',nmt_textboxcolor,'HorizontalAlignment','right','Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-115 90 25]);
+    'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-135 90 25]);
 st.nmt.gui.searchradius1 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-110 30 25],...
+    'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-130 30 25],...
     'HorizontalAlignment','right','Visible','on');
 uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+240 offy+s*Dims(2)-115 30 25]);
-st.nmt.gui.searchradius2 = uicontrol('Style','edit','String',num2str(100),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+255 offy+s*Dims(2)-110 30 25],...
+    'Position',[offx+s*Dims(1)+4*skx+240 offy+s*Dims(2)-135 30 25]);
+st.nmt.gui.searchradius2 = uicontrol('Style','edit','String',num2str(200),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
+    'Position',[offx+s*Dims(1)+4*skx+255 offy+s*Dims(2)-130 30 25],...
     'HorizontalAlignment','right','Visible','on');
 uicontrol(fg,'Style','Text','String','mm from cursor','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-    'Position',[offx+s*Dims(1)+4*skx+300 offy+s*Dims(2)-115 100 25]);
+    'Position',[offx+s*Dims(1)+4*skx+300 offy+s*Dims(2)-135 100 25]);
 
 
 

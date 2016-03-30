@@ -365,6 +365,24 @@ if ~isempty(createsubcfg)
           'reducerank'
           };
 
+      case 'sloreta'
+        fieldname = {
+          'feedback'
+          'fixedori'
+          'keepcov'
+          'keepfilter'
+          'keepmom'
+          'keepsubspace'
+          'lambda'
+          'normalize'
+          'normalizeparam'
+          'powmethod'
+          'projectnoise'
+          'projectmom'
+          'reducerank'
+          'subspace'
+          };
+
       case 'lcmv'
         fieldname = {
           'feedback'

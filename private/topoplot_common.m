@@ -844,6 +844,16 @@ if ~strcmp(cfg.marker,'off')
     'labeloffset',cfg.labeloffset)
 end
 
+
+if(isfield(cfg,'vector'))
+    vecX = mean(real(data.(cfg.vector)(:,xmin:xmax)),2);
+    vecY = mean(imag(data.(cfg.vector)(:,xmin:xmax)),2);
+    
+    % scale quiver relative to largest gradiometer sample
+    k=0.15/max([max(abs(real(data.(cfg.vector)(:)))) max(abs(imag(data.(cfg.vector)(:))))]);
+    quiver(chanX, chanY, k*vecX, k*vecY,0,'red');
+end
+
 % Write comment
 if ~strcmp(cfg.comment,'no')
   if strcmp(cfg.commentpos, 'title')
