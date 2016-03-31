@@ -12,7 +12,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'dataformat'     string
 %   'headerformat'   string
 %   'eventformat'    string
-%   'header'         structure, see FT_READ_HEADER
+%   'header'         header structure, see FT_READ_HEADER
 %   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak', 'trough' or 'auto' (default is system specific)
 %   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
@@ -21,10 +21,8 @@ function [event] = ft_read_event(filename, varargin)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
-%   'tolerance'      tolerance in samples when merging analogue trigger
-%                    channels, only for Neuromag (default = 1,
-%                    meaning that an offset of one sample in both directions
-%                    is compensated for)
+%   'tolerance'      tolerance in samples when merging analogue trigger channels, only for Neuromag (default = 1, meaning 
+%                    that an offset of one sample in both directions is compensated for)
 %
 % Furthermore, you can specify optional arguments as key-value pairs
 % for filtering the events, e.g. to select only events of a specific
@@ -73,7 +71,7 @@ function [event] = ft_read_event(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2012 Robert Oostenveld
+% Copyright (C) 2004-2016 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -203,12 +201,10 @@ event = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read the events with the low-level reading function
+% please maintain this list in alphabetical order
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch eventformat
   
-  case 'fcdc_global'
-    event = event_queue;
-    
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
     if isempty(hdr)
       hdr = ft_read_header(filename, 'headerformat', eventformat);
@@ -301,7 +297,7 @@ switch eventformat
     else
       event = [];
     end
-
+    
   case {'besa_avr', 'besa_swf'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -463,6 +459,10 @@ switch eventformat
     end
     fclose(fid);
     
+    
+  case 'bucn_nirs'
+    event = read_bucn_nirsevent(filename);
+    
   case 'ced_son'
     % check that the required low-level toolbox is available
     ft_hastoolbox('neuroshare', 1);
@@ -473,7 +473,7 @@ switch eventformat
       'offset',   {orig.events.offset},...
       'duration', {orig.events.duration});
     
-  case  'ced_spike6mat'
+  case 'ced_spike6mat'
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
@@ -589,6 +589,18 @@ switch eventformat
     % read the events from shared memory
     event = read_shm_event(filename, varargin{:});
     
+  case 'dataq_wdq'
+    if isempty(hdr)
+      hdr     = ft_read_header(filename, 'headerformat', 'dataq_wdq');
+    end
+    trigger  = read_wdq_data(filename, hdr.orig, 'lowbits');
+    [ix, iy] = find(trigger>1); %it seems as if the value of 1 is meaningless
+    for i=1:numel(ix)
+      event(i).type   = num2str(ix(i));
+      event(i).value  = trigger(ix(i),iy(i));
+      event(i).sample = iy(i);
+    end
+    
   case 'edf'
     % read the header
     if isempty(hdr)
@@ -649,12 +661,6 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     event = read_erplabevent(filename, 'header', hdr);
-    
-  case 'spmeeg_mat'
-    if isempty(hdr)
-      hdr = ft_read_header(filename);
-    end
-    event = read_spmeeg_event(filename, 'header', hdr);
     
   case 'eep_avr'
     % check that the required low-level toolbox is available
@@ -965,7 +971,7 @@ switch eventformat
     for i=1:length(fn)
       event = rmfield(event, fn{i});
     end
-  
+    
   case 'smi_txt'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1015,6 +1021,9 @@ switch eventformat
       event(end  ).duration   = 1;
       event(end  ).offset     = 0;
     end
+    
+  case 'fcdc_global'
+    event = event_queue;
     
   case 'fcdc_buffer'
     % read from a networked buffer for realtime analysis
@@ -1207,6 +1216,29 @@ switch eventformat
     % read the events from a normal MATLAB file
     tmp   = load(filename, 'event');
     event = tmp.event;
+    
+  case {'manscan_mbi', 'manscan_mb2'}
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
+      trlind = [];
+      for i = 1:numel(hdr.orig.epochs)
+        trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
+      end
+    else
+      trlind = ones(1, hdr.nSamples);
+    end
+    if isfield(hdr.orig, 'events')
+      for i = 1:numel(hdr.orig.events)
+        for j = 1:length(hdr.orig.events(i).samples)
+          event(end+1).type   = 'trigger';
+          event(end).value    = hdr.orig.events(i).label;
+          event(end).sample   = find(cumsum(trlind == hdr.orig.events(i).epochs(j))...
+            == hdr.orig.events(i).samples(j), 1, 'first');
+        end
+      end
+    end
     
   case 'micromed_trc'
     if isempty(hdr)
@@ -1587,6 +1619,24 @@ switch eventformat
       event = struct('type', type, 'value', value, 'sample', sample, 'timestamp', timestamp, 'duration', duration, 'offset', offset, 'number', number);
     end
     
+  case 'nmc_archive_k'
+    event = read_nmc_archive_k_event(filename);
+    
+  case 'netmeg'
+    warning('FieldTrip:ft_read_event:unsupported_event_format', 'reading of events for the netmeg format is not yet supported');
+    event = [];
+    
+  case 'neuroshare' % NOTE: still under development
+    % check that the required neuroshare toolbox is available
+    ft_hastoolbox('neuroshare', 1);
+    
+    tmp = read_neuroshare(filename, 'readevent', 'yes');
+    for i=1:length(tmp.event.timestamp)
+      event(i).type      = tmp.hdr.eventinfo(i).EventType;
+      event(i).value     = tmp.event.data(i);
+      event(i).timestamp = tmp.event.timestamp(i);
+      event(i).sample    = tmp.event.sample(i);
+    end
     
   case 'neuralynx_cds'
     % this is a combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
@@ -1641,7 +1691,6 @@ switch eventformat
     %       event(i).duration = [];
     %       event(i).sample   = [];
     %     end
-    
     
   case {'neuroprax_eeg', 'neuroprax_mrk'}
     event = [];
@@ -1775,6 +1824,17 @@ switch eventformat
   case 'plexon_nex'
     event = read_nex_event(filename);
     
+  case 'tmsi_poly5'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    trgindx = find(strcmp(hdr.chantype, 'trigger'));
+    if ~isempty(trgindx)
+      % the "Digi" value goes down from 255 to 254
+      detectflank = 'downdiff';
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift);
+    end
+    
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
     % check that the required low-level toolbox is available
     if ~ft_hastoolbox('yokogawa', 0);
@@ -1788,44 +1848,10 @@ switch eventformat
     end
     event = read_yokogawa_event(filename, 'detectflank', detectflank, 'trigindx', trigindx, 'threshold', threshold);
     
-  case 'nmc_archive_k'
-    event = read_nmc_archive_k_event(filename);
-    
-  case 'netmeg'
-    warning('FieldTrip:ft_read_event:unsupported_event_format', 'reading of events for the netmeg format is not yet supported');
-    event = [];
-    
-  case 'neuroshare' % NOTE: still under development
-    % check that the required neuroshare toolbox is available
-    ft_hastoolbox('neuroshare', 1);
-    
-    tmp = read_neuroshare(filename, 'readevent', 'yes');
-    for i=1:length(tmp.event.timestamp)
-      event(i).type      = tmp.hdr.eventinfo(i).EventType;
-      event(i).value     = tmp.event.data(i);
-      event(i).timestamp = tmp.event.timestamp(i);
-      event(i).sample    = tmp.event.sample(i);
-    end
-    
-  case 'dataq_wdq'
-    if isempty(hdr)
-      hdr     = ft_read_header(filename, 'headerformat', 'dataq_wdq');
-    end
-    trigger  = read_wdq_data(filename, hdr.orig, 'lowbits');
-    [ix, iy] = find(trigger>1); %it seems as if the value of 1 is meaningless
-    for i=1:numel(ix)
-      event(i).type   = num2str(ix(i));
-      event(i).value  = trigger(ix(i),iy(i));
-      event(i).sample = iy(i);
-    end
-    
-  case 'bucn_nirs'
-    event = read_bucn_nirsevent(filename);
-    
   case 'oxy3'
     ft_hastoolbox('artinis', 1);
+
     event = read_artinis_oxy3(filename, true);
-    
     if isempty(hdr)
       hdr = read_artinis_oxy3(filename);
     end
@@ -1859,28 +1885,12 @@ switch eventformat
     
     event = appendevent(event, trigger);
     
-  case {'manscan_mbi', 'manscan_mb2'}
+  case 'spmeeg_mat'
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
-    if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
-      trlind = [];
-      for i = 1:numel(hdr.orig.epochs)
-        trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
-      end
-    else
-      trlind = ones(1, hdr.nSamples);
-    end
-    if isfield(hdr.orig, 'events')
-      for i = 1:numel(hdr.orig.events)
-        for j = 1:length(hdr.orig.events(i).samples)
-          event(end+1).type   = 'trigger';
-          event(end).value    = hdr.orig.events(i).label;
-          event(end).sample   = find(cumsum(trlind == hdr.orig.events(i).epochs(j))...
-            == hdr.orig.events(i).samples(j), 1, 'first');
-        end
-      end
-    end
+    event = read_spmeeg_event(filename, 'header', hdr);
+    
   otherwise
     warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
     event = [];
