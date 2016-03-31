@@ -57,6 +57,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Megis/BESA (*.avr, *.swf, *.besa)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
 %   Nexstim (*.nxe)
+%   TMSi (*.Poly5)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -77,7 +78,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2015 Robert Oostenveld
+% Copyright (C) 2003-2016 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

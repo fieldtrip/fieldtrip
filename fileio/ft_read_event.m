@@ -12,7 +12,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'dataformat'     string
 %   'headerformat'   string
 %   'eventformat'    string
-%   'header'         structure, see FT_READ_HEADER
+%   'header'         header structure, see FT_READ_HEADER
 %   'detectflank'    string, can be 'bit', 'up', 'down', 'both', 'peak', 'trough' or 'auto' (default is system specific)
 %   'chanindx'       list with channel indices in case of different sampling frequencies (only for EDF)
 %   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
@@ -21,10 +21,8 @@ function [event] = ft_read_event(filename, varargin)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
-%   'tolerance'      tolerance in samples when merging analogue trigger
-%                    channels, only for Neuromag (default = 1,
-%                    meaning that an offset of one sample in both directions
-%                    is compensated for)
+%   'tolerance'      tolerance in samples when merging analogue trigger channels, only for Neuromag (default = 1, meaning 
+%                    that an offset of one sample in both directions is compensated for)
 %
 % Furthermore, you can specify optional arguments as key-value pairs
 % for filtering the events, e.g. to select only events of a specific
@@ -73,7 +71,7 @@ function [event] = ft_read_event(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2012 Robert Oostenveld
+% Copyright (C) 2004-2016 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

@@ -33,7 +33,7 @@ function [dat] = ft_read_data(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
-% Copyright (C) 2003-2015 Robert Oostenveld
+% Copyright (C) 2003-2016 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -116,7 +116,7 @@ begtrial        = ft_getopt(varargin, 'begtrial');
 endtrial        = ft_getopt(varargin, 'endtrial');
 chanindx        = ft_getopt(varargin, 'chanindx');
 checkboundary   = ft_getopt(varargin, 'checkboundary');
-checkmaxfilter  = ft_getopt(varargin, 'checkmaxfilter', 'yes');
+checkmaxfilter  = ft_getopt(varargin, 'checkmaxfilter', 'yes'); % this is only passed as varargin to FT_READ_HEADER
 headerformat    = ft_getopt(varargin, 'headerformat');
 fallback        = ft_getopt(varargin, 'fallback');
 cache           = ft_getopt(varargin, 'cache', false);
@@ -125,8 +125,8 @@ chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp');
 
 % this allows blocking reads to avoid having to poll many times for online processing
-blocking         = ft_getopt(varargin, 'blocking', false); % true or false
-timeout          = ft_getopt(varargin, 'timeout', 5); % seconds
+blocking         = ft_getopt(varargin, 'blocking', false);  % true or false
+timeout          = ft_getopt(varargin, 'timeout', 5);       % seconds
 
 % convert from 'yes'/'no' into boolean
 blocking = istrue(blocking);
