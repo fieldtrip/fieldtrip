@@ -166,13 +166,13 @@ switch format
     datafile   = filename;
   case 'tmsi_poly5'
     [p, f, x] = fileparts(filename);
-    if stricmp(x, '.poly5')
+    if strcmpi(x, '.poly5')
       headerfile = filename;
       datafile = filename;
     else
-      filename = fullfile(p, f, [f '.poly5']);
+      filename = fullfile(p, f, [f '.eeg.poly5']);
       if ~exist(filename , 'file')
-        filename  = fullfile(p, f, [f '.Poly5']);
+        filename  = fullfile(p, f, [f '.EEG.Poly5']);
       end
       headerfile = filename;
       datafile = filename;
