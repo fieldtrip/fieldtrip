@@ -1,5 +1,6 @@
 function out = read_tobii_tsv(filename, varargin)
 
+% READ_TOBII_TSV
 %
 % Use as
 %   hdr = read_tobii_tsv(filename)
@@ -8,7 +9,6 @@ function out = read_tobii_tsv(filename, varargin)
 
 needhdr = (nargin==1);
 needdat = (nargin>1);
-
 
 
 if needhdr

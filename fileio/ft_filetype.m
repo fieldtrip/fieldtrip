@@ -150,7 +150,9 @@ end
 
 % the parts of the filename are used further down
 if isdir(filename)
-  p = filename;
+  [p, f, x] = fileparts(filename);
+  p = filename;  % the full path to the directory name
+  d = f;         % the last part of the directory name
   f = '';
   x = '';
 else
@@ -1257,7 +1259,12 @@ elseif filetype_check_extension(filename, '.ah5')
     type = 'AnyWave';
     manufacturer = 'AnyWave, http://meg.univ-amu.fr/wiki/AnyWave';
     content = 'MEG/SEEG/EEG data';
+elseif (isdir(filename) && exist(fullfile(p, [d '.EEG.Poly5']), 'file')) || filetype_check_extension(filename, '.Poly5')
+    type = 'tmsi_poly5';
+    manufacturer = 'TMSi PolyBench';
+    content = 'EEG';
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % finished determining the filetype
