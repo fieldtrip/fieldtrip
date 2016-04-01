@@ -101,6 +101,7 @@ cfg.demean     = ft_getopt(cfg, 'demean',     'no');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.method     = ft_getopt(cfg, 'method',     'pchip');
+cfg.sampleindex = ft_getopt(cfg, 'sampleindex', 'no');
 
 % give the user control over whether to use resample (applies anti-aliasing
 % filter) or downsample (does not apply filter)
