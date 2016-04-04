@@ -1,10 +1,10 @@
-function fun = nmt_ts_intervalpower(fun);
+function fun = nmt_ts_intervalpower(fun,meantype);
 % when time interval is selected, calculate desired representation of interval power
-switch(2)
-    case 1 % mean power
+switch(meantype)
+    case 'msq' % mean power
         fun = mean(fun.^2,2);
-    case 2 % RMS power
+    case 'rms' % RMS power
         fun = sqrt(mean(fun.^2,2));
-    case 3  % simple average
+    case 'mean'  % simple average
         fun = mean(fun,2);
 end

@@ -21,6 +21,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %                    'mne'     minimum norm estimation
 %                    'rv'      scan residual variance with single dipole
 %                    'music'   multiple signal classification
+%                    'sloreta' standardized low-resolution electromagnetic tomography
 %                    'eloreta' exact low-resolution electromagnetic tomography
 % The DICS and PCC methods are for frequency domain data, all other methods
 % are for time domain data. ELORETA can be used both for frequency and time
@@ -697,7 +698,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % do time domain source reconstruction
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv', 'music', 'pcc', 'mvl' 'eloreta'}))
+elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv', 'music', 'pcc', 'mvl', 'sloreta', 'eloreta'}))
   
   % determine the size of the data
   Nsamples = size(data.avg,2);
@@ -986,6 +987,13 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     %         end
     %       end
     %     end
+    
+  elseif strcmp(cfg.method, 'sloreta')
+    for i=1:Nrepetitions
+      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      fprintf('scanning repetition %d\n', i);
+      dip(i) = ft_sloreta(grid, sens, headmodel, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:});
+    end
     
   elseif strcmp(cfg.method, 'eloreta'),
     for i=1:Nrepetitions

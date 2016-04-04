@@ -14,32 +14,44 @@ if(~isfield(cfg,'time_idx'))
     cfg.time_idx = [1 1];
 end
 
+% if there is no frequency dimension, set cfg.time_idx to index first and only column
+if(~isfield(cfg,'freq_idx'))
+    cfg.freq_idx = [1];
+end
+
 
 if(cfg.time_idx(1) == cfg.time_idx(2)) % single time point selected
-    fun = st.nmt.fun(:,cfg.time_idx(1));
-    
-    scalemax = max(abs(st.nmt.fun(:)));
-    scalemin = -max(abs(st.nmt.fun(:)));
-    
+    fun = st.nmt.fun(:,cfg.time_idx(1),cfg.freq_idx(1));
     % set colorscale: anatomical (first 64) + functional (second 64)
     % grayscale for MRI; jet for painted activation
     set(st.fig,'Colormap',[gray(64);jet(64)]);
+    
+    scalemax = max(abs(st.nmt.fun(:)));
+    scalemin = -max(abs(st.nmt.fun(:)));
 else % time interval selected
-    fun = nmt_ts_intervalpower(st.nmt.fun(:,cfg.time_idx(1):cfg.time_idx(2)));
+    switch(cfg.plottype)
+        case 'tf'
+            fun = nmt_ts_intervalpower(st.nmt.fun(:,cfg.time_idx(1):cfg.time_idx(2),cfg.freq_idx(1):cfg.freq_idx(2)),'mean');
+            % set colorscale: anatomical (first 64) + functional (second 64)
+            % grayscale for MRI; jet for painted activation
+            set(st.fig,'Colormap',[gray(64);jet(64)]);
+        otherwise
+            fun = nmt_ts_intervalpower(st.nmt.fun(:,cfg.time_idx(1):cfg.time_idx(2),cfg.freq_idx(1):cfg.freq_idx(2)),'rms');
+            % set colorscale: anatomical (first 64) + functional (second 64)
+            % grayscale for MRI; jet for painted activation
+            set(st.fig,'Colormap',[gray(64);hot(64)]);
+    end
     
     scalemax = max(fun(:));
     scalemin = min(fun(:));
     
-    % set colorscale: anatomical (first 64) + functional (second 64)
-    % grayscale for MRI; jet for painted activation
-    set(st.fig,'Colormap',[gray(64);hot(64)]);
 end
 
 
 %% apply mask
 msk = st.nmt.msk;
 msk(msk==0) = NaN;
-maskedfun = (msk(:,cfg.time_idx(1)).*fun)';
+maskedfun = (msk(:,cfg.time_idx(1),cfg.freq_idx(1)).*fun)';
 
 %% figure out voxelsize
 % in case of nonstandard nifti orientation
@@ -98,25 +110,33 @@ set(st.nmt.gui.beamin,'String',sprintf('%+g',funval));
 
 
 %% update time series, if applicable
-if(isfield(st.nmt,'time'))
+if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     set(st.nmt.gui.timeguih,'Visible','On'); % ensure plot is visible
-    if(isfinite(st.nmt.cfg.vox_idx))
-        plot(st.nmt.gui.ax_ts,st.nmt.time,st.nmt.fun(st.nmt.cfg.vox_idx,:));
-        grid(st.nmt.gui.ax_ts,'on');
-    else
-        plot(st.nmt.gui.ax_ts,st.nmt.time,nan(length(st.nmt.time),1));
+    switch(cfg.plottype)
+        case 'tf'
+            set(st.nmt.gui.freqguih,'Visible','On'); % ensure plot is visible
+            nmt_tfplot(st.nmt.gui.ax_ts,st.nmt.time,st.nmt.freq,squeeze(st.nmt.fun(st.nmt.cfg.vox_idx,:,:)));
+        case 'ts'
+            if(isfinite(st.nmt.cfg.vox_idx))
+                plot(st.nmt.gui.ax_ts,st.nmt.time,st.nmt.fun(st.nmt.cfg.vox_idx,:,cfg.freq_idx));
+                grid(st.nmt.gui.ax_ts,'on');
+            else
+                plot(st.nmt.gui.ax_ts,st.nmt.time,nan(length(st.nmt.time),1));
+            end
+            
+            % set y-axis range based on whole volume range (single time point), or
+            % selected timeslice range
+            if(st.nmt.cfg.time_idx(1)==st.nmt.cfg.time_idx(2))
+                ymin = min(st.nmt.fun(:));
+                ymax = max(st.nmt.fun(:));
+            else
+                ymin =  min(min(st.nmt.fun(:,st.nmt.cfg.time_idx(1):st.nmt.cfg.time_idx(2))));
+                ymax =  max(max(st.nmt.fun(:,st.nmt.cfg.time_idx(1):st.nmt.cfg.time_idx(2))));
+            end
+            set(st.nmt.gui.ax_ts,'YLim',[ymin ymax]);
+  
     end
-    
-    % set y-axis range based on whole volume range (single time point), or
-    % selected timeslice range
-    if(st.nmt.cfg.time_idx(1)==st.nmt.cfg.time_idx(2))
-        ymin = min(st.nmt.fun(:));
-        ymax = max(st.nmt.fun(:));
-    else
-        ymin =  min(min(st.nmt.fun(:,st.nmt.cfg.time_idx(1):st.nmt.cfg.time_idx(2))));
-        ymax =  max(max(st.nmt.fun(:,st.nmt.cfg.time_idx(1):st.nmt.cfg.time_idx(2))));
-    end
-    set(st.nmt.gui.ax_ts,'XLim',st.nmt.time([1 end]),'YLim',[ymin ymax]);
+    set(st.nmt.gui.ax_ts,'XLim',st.nmt.time([1 end]));
     xlabel(st.nmt.gui.ax_ts,['Time (s)']);
     
     
@@ -203,10 +223,8 @@ end
 
 function nmt_repos_start(varargin)
 global st
-% if(st.nmt.gui.ax_ts == gcbo) % if ts axes were clicked (i.e., not MRI)
-    set(gcbf,'windowbuttonmotionfcn',@nmt_repos_move, 'windowbuttonupfcn',@nmt_repos_end);
-    nmt_timeselect('ts');
-% end
+set(gcbf,'windowbuttonmotionfcn',@nmt_repos_move, 'windowbuttonupfcn',@nmt_repos_end);
+nmt_timeselect('ts');
 %_______________________________________________________________________
 %_______________________________________________________________________
 function nmt_repos_move(varargin)
