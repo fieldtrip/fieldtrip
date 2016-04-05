@@ -1,55 +1,33 @@
 function nmt_tfplot(axh,twin,fwin,tf)
+% nutmegtrip uses this helper function to plot time-frequency data
 
-if(0)
-    handles = guidata(rivets.fig);
-    rivets.tf_ax = handles.nut_ts_axes;
-    
-    axes(rivets.tf_ax);
-    tmp=unique(beam.bands(:));
-    set(rivets.tf_ax,'YTick',tmp);
-    if ~isinteger(tmp)
-        tmp=round(tmp*10)/10;
-    end
-    set(rivets.tf_ax,'YTickLabel',num2str(tmp));
-    if get(handles.nut_check_logscale,'Value')
-        set(rivets.tf_ax,'YScale','log')           %,'YTick',[4 12 30 60 120 180 220]);
-    else
-        set(rivets.tf_ax,'YScale','linear')
-    end
-    
-    tfh = zeros(rivets.timeselect,rivets.freqselect);
-    
-    if(size(beam.s{1},1)==1)
-        beam.s{1} = beam.s{1}';
-    end
-    
-    cla(rivets.tf_ax);
-end
-
-
-
-
-
-%%
 % reformat beam.bands and corresponding tf info to include gaps
 % (NaN?)
 t = unique(twin(:));
-f = unique(fwin(:));
+f = fwin';
+f = f(:);
 
-[fnogaps,fnogaps_idx] = intersect(f,fwin(:,1)); % find gaps in frequency
-
-% create TF matrix; gaps remain filled with "k", to code points with no data
-% surf breaks with Nan or Inf so we pick realmax
-k = realmax;
-z = k*ones(length(f),length(t));
-z(fnogaps_idx,:) = tf';
+jj = 1;
+for ii=1:size(tf,2)
+    z(jj,:) = tf(:,ii);
+    z(jj+1,:) = tf(:,ii);
+    jj = jj+2;
+end
 
 global st
 st.nmt.gui.h_tf = mesh(axh,t,f,z);
 view(axh,2); % '2-D view' of spectrogram
 %set(st.nmt.gui.h_tf,'LineStyle','none'); % useful if plot made with 'surf'
+
+if(verLessThan('matlab','8.4')) % necessary to preserve colormap on functional image for Matlab R2014a and earlier
+    for ii=1:3
+        freezeColors(st.vols{1}.ax{ii}.ax);
+    end
+end
+
 caxis(axh,[st.vols{1}.blobs{1}.min st.vols{1}.blobs{1}.max*33/32]);
 colormap(axh,[jet(128); 1 1 1]);
+
 % set(axh,'YScale','log');
 % xlabel(axh,'Time');
 ylabel(axh,'Frequency (Hz)');

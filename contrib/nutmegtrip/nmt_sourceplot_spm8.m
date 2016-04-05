@@ -363,7 +363,7 @@ hasana = 1; % by definition, you's got ana if you're using this function :-)
 if ~isempty(cfg.funparameter)
   if issubfield(functional, cfg.funparameter)
     hasfun = 1;
-    fun = getsubfield(functional, cfg.funparameter);
+    tmpfun = getsubfield(functional, cfg.funparameter);
   else
     error('cfg.funparameter not found in functional');
   end
@@ -380,13 +380,17 @@ if hasfun
   
   if strcmp(dimtok{1}, '{pos}')
     tmpdim = getdimsiz(functional, cfg.funparameter);
-    tmpfun = nan(tmpdim);
+    fun = nan(tmpdim);
     insideindx = find(functional.inside);
-    for i=insideindx(:)'
-      tmpfun(i,:,:) = fun{i};
+    
+    tmpfun = cell2mat(tmpfun);
+    switch(dimord)
+        case '{pos}_freq_time'
+                tmpfun = reshape(tmpfun,[size(tmpfun,1)/length(insideindx) length(insideindx) size(tmpfun,2)]);
+                tmpfun = permute(tmpfun, [2 1 3]);
     end
-    fun = tmpfun;       % replace the cell-array functional with a normal array
-    clear tmpfun
+    fun(insideindx,:,:) = tmpfun; % replace the cell-array functional with a normal array
+    clear tmpfun;
     dimtok{1} = 'pos';  % update the description of the dimensions
     dimord([1 5]) = []; % remove the { and }
   end
@@ -480,13 +484,17 @@ if hasfun
         qi      = [1 1];
         hasfreq = numel(functional.freq)>1;
         hastime = numel(functional.time)>1;
-        fun     = reshape(fun, [dim numel(functional.freq) numel(functional.time)]);
+        %fun     = reshape(fun, [dim numel(functional.freq) numel(functional.time)]);
+        
+        fun = permute(fun,[1 3 2]); % reorder to pos_time_freq
+        dimord = 'pos_time_freq';
       elseif strcmp(dimord, 'pos_time')
         % functional contains evoked field
         qi      = 1;
         hasfreq = 0;
         hastime = numel(functional.time)>1;
-        fun     = reshape(fun, [dim numel(functional.time)]);
+        fun     = squeeze(fun);
+%        fun     = reshape(fun, [dim numel(functional.time)]);
       elseif strcmp(dimord, 'pos_freq')
         % functional contains frequency spectra
         qi      = 1;
@@ -684,24 +692,20 @@ if ~isempty(cfg.funparameter)
         
         st.nmt.pos = functional.pos;
 
-        st.nmt.fun = getsubfield(functional, cfg.funparameter);
-        if(iscell(fun))
-            st.nmt.fun = cell2mat(st.nmt.fun);
-        end
+%        getsubfield(functional, cfg.funparameter);
+%        if(iscell(fun))
+%            st.nmt.fun = cell2mat(st.nmt.fun);
+%        end
 
 %        switch(cfg.funparameter)
 %            case {'mom','itc'}
-        if(size(st.nmt.fun,2) > 1 & size(st.nmt.fun,3) == 1)
+
+        st.nmt.fun = fun;
+        clear fun;
+        
+        if(hastime & ~hasfreq)
             % voxels x time
-            fun = cell2mat(getsubfield(functional,cfg.funparameter));
-            
-            inside = find(functional.inside);
-            st.nmt.fun = nan(length(functional.inside),size(fun,2));
-            st.nmt.fun(inside,:) = fun;
-            
             st.nmt.time = functional.time;
-            
-            
             
             if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
                 [~,peakind] = max(abs(st.nmt.fun(:)));
@@ -728,19 +732,8 @@ if ~isempty(cfg.funparameter)
             end
             
             cfg.freq_idx = 1; % frequency dimension is singleton in this case
-        elseif(size(st.nmt.fun,2) > 1 & size(st.nmt.fun,3) > 1)
-            % voxels x time x frequency
-            fun = cell2mat(getsubfield(functional,cfg.funparameter));
-            
-            inside = find(functional.inside);
-            
-            fun = reshape(fun,[size(fun,1)/length(inside) length(inside) size(fun,2)]);
-            
-            fun = permute(fun,[2 3 1]);
-            
-            st.nmt.fun = nan(length(functional.inside),size(fun,2),size(fun,3));
-            st.nmt.fun(inside,:,:) = fun;
-            
+        elseif(hastime & hasfreq)
+            % voxels x frequency x time
             st.nmt.time = functional.time;
             st.nmt.freq = functional.freqbands;
             
