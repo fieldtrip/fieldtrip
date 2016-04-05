@@ -24,6 +24,6 @@ switch(peakdomain)
         error('well this is unexpected...')
 end
 
-[v,t]=nmt_peaksearch(cfg)
+[v,t]=nmt_peaksearch(cfg);
 
 nmt_repos(v,t);

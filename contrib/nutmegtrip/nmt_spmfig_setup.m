@@ -123,8 +123,8 @@ for i=1:3  % step through three orthogonal views
 end
 
 % for time series or spectrogram data, expand SPM window and create new axes
-switch(cfg.funparameter)
-    case {'mom','pow','coh','itc','tf'}
+%switch(cfg.funparameter)
+%    case {'mom','pow','coh','itc','tf','stat','pval'}
         % MRI slices have "relative" position; change to fixed position
         un    = get(st.fig,'Units');set(st.fig,'Units','Pixels');
 
@@ -219,7 +219,7 @@ switch(cfg.funparameter)
             'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
         st.nmt.gui.freqguih(4) = st.nmt.gui.f2;
 
-end
+%end
 
 st.nmt.gui.ax_topo_pos = [offx+s*Dims(1)+4*skx offy+s*Dims(2)-700 2*s*(Dims(2)) 2*s*(Dims(2))];
 % st.nmt.gui.ax_topo_pos = [offx+s*Dims(1)+4*skx offy+s*Dims(2)-700 2*s*(Dims(2)) 2*s*(Dims(2))];

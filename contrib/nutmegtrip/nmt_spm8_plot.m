@@ -54,13 +54,10 @@ msk(msk==0) = NaN;
 maskedfun = (msk(:,cfg.time_idx(1),cfg.freq_idx(1)).*fun)';
 
 %% figure out voxelsize
-% in case of nonstandard nifti orientation
-voxelspacing = abs(st.nmt.pos(2,:) - st.nmt.pos(1,:));
-voxeldir = find(voxelspacing); % determine which dimension contains a non-zero value
-if(length(voxeldir) > 1)
-    error('something is strange... is your voxel grid uniform and aligned to your coordinate system?')
-end
-voxelsize = st.nmt.pos(2,voxeldir) - st.nmt.pos(1,voxeldir);
+% voxelsize assumed to be most common non-zero difference value
+diffcoords = abs(diff(st.nmt.pos));
+diffcoords(diffcoords==0)=NaN; % replace zeroes with NaN
+voxelsize = mode(diffcoords(:));
 
 %% pos in MRI space
 blob2mri_tfm = [voxelsize          0          0  min(st.nmt.pos(:,1))-voxelsize
@@ -86,13 +83,6 @@ spm_orthviews('redraw'); % blob doesn't always show until redraw is forced
 %% refresh current voxel and functional quantity display
 posmrimm = spm_orthviews('pos')';
 % set(st.nmt.gui.megp,'String',sprintf('%.1f %.1f %.1f',posmeg));
-
-
-if(~isempty(st.nmt.cfg.atlas))
-    atlas_labels = atlas_lookup(st.nmt.cfg.atlas,posmrimm,'inputcoord','mni','queryrange',3);
-    set(st.nmt.gui.mnilabel,'String',atlas_labels);
-end
-
 
 blobidx = nmt_transform_coord(inv(st.vols{1}.blobs{1}.mat),posmrimm);
 blobidx = round(blobidx);

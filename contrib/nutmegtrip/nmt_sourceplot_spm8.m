@@ -683,87 +683,94 @@ if ~isempty(cfg.funparameter)
         hasfun = 1;
         
         st.nmt.pos = functional.pos;
-      
-        switch(cfg.funparameter)
-            case {'mom','itc'}
-                fun = cell2mat(getsubfield(functional,cfg.funparameter));
-                
-                inside = find(functional.inside);
-                st.nmt.fun = nan(length(functional.inside),size(fun,2));
-                st.nmt.fun(inside,:) = fun;
-                
-                st.nmt.time = functional.time;
-                
-                
-                
-                if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
-                    [~,peakind] = max(abs(st.nmt.fun(:)));
-                    [peakvox_idx,peaktime_idx] = ind2sub(size(st.nmt.fun),peakind);
-                    cfg.time_idx(1) = peaktime_idx;
-                    cfg.vox_idx = peakvox_idx;
-                end
 
-                if(~isfield(cfg,'time') & isfield(cfg,'vox'))
-                    [~,peaktime_idx] = max(abs(st.nmt.fun(cfg.vox_idx,:)));
-                    cfg.time_idx(1) = peaktime_idx;
-                end
+        st.nmt.fun = getsubfield(functional, cfg.funparameter);
+        if(iscell(fun))
+            st.nmt.fun = cell2mat(st.nmt.fun);
+        end
 
-                if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
-                    [~,peakvox_idx] = max(abs(st.nmt.fun(cfg.time_idx,:)));
-                    cfg.vox_idx = peakvox_idx;
-                end
-                
-                % move MRI crosshairs to desired/peak voxel
-                spm_orthviews('Reposition',st.nmt.pos(cfg.vox_idx,:))
-                
-                if(length(cfg.time_idx(1)) == 1)
-                    cfg.time_idx(2) = cfg.time_idx(1);
-                end
-                
-            case 'tf'
-                fun = cell2mat(getsubfield(functional,cfg.funparameter));
-                
-                inside = find(functional.inside);
-                
-                fun = reshape(fun,[size(fun,1)/length(inside) length(inside) size(fun,2)]);
-                
-                fun = permute(fun,[2 3 1]);
-                
-                st.nmt.fun = nan(length(functional.inside),size(fun,2),size(fun,3));
-                st.nmt.fun(inside,:,:) = fun;
-                
-                st.nmt.time = functional.time;
-                st.nmt.freq = functional.freqbands;
-                
-                if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
-                    [~,peakind] = max(abs(st.nmt.fun(:)));
-                    [peakvox_idx,peaktime_idx,peakfreq_idx] = ind2sub(size(st.nmt.fun),peakind);
-                    cfg.time_idx(1) = peaktime_idx;
-                    cfg.freq_idx(1) = peakfreq_idx;
-                    cfg.vox_idx = peakvox_idx;
-                end
-
-                if(~isfield(cfg,'time') & isfield(cfg,'vox'))
-                    [~,peaktime_idx] = max(abs(st.nmt.fun(cfg.vox_idx,:)));
-                    cfg.time_idx(1) = peaktime_idx;
-                end
-
-                if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
-                    [~,peakvox_idx] = max(abs(st.nmt.fun(cfg.time_idx,:)));
-                    cfg.vox_idx = peakvox_idx;
-                end
-                
-                % move MRI crosshairs to desired/peak voxel
-                spm_orthviews('Reposition',st.nmt.pos(cfg.vox_idx,:))
-                
-                if(length(cfg.time_idx(1)) == 1)
-                    cfg.time_idx(2) = cfg.time_idx(1);
-                end
-                
-                
-            otherwise
-                st.nmt.fun = getsubfield(functional, cfg.funparameter);
-                st.nmt.cfg.time_idx = [1 1]; % no time dimension in this case
+%        switch(cfg.funparameter)
+%            case {'mom','itc'}
+        if(size(st.nmt.fun,2) > 1 & size(st.nmt.fun,3) == 1)
+            % voxels x time
+            fun = cell2mat(getsubfield(functional,cfg.funparameter));
+            
+            inside = find(functional.inside);
+            st.nmt.fun = nan(length(functional.inside),size(fun,2));
+            st.nmt.fun(inside,:) = fun;
+            
+            st.nmt.time = functional.time;
+            
+            
+            
+            if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                [~,peakind] = max(abs(st.nmt.fun(:)));
+                [peakvox_idx,peaktime_idx] = ind2sub(size(st.nmt.fun),peakind);
+                cfg.time_idx(1) = peaktime_idx;
+                cfg.vox_idx = peakvox_idx;
+            end
+            
+            if(~isfield(cfg,'time') & isfield(cfg,'vox'))
+                [~,peaktime_idx] = max(abs(st.nmt.fun(cfg.vox_idx,:)));
+                cfg.time_idx(1) = peaktime_idx;
+            end
+            
+            if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                [~,peakvox_idx] = max(abs(st.nmt.fun(cfg.time_idx,:)));
+                cfg.vox_idx = peakvox_idx;
+            end
+            
+            % move MRI crosshairs to desired/peak voxel
+            spm_orthviews('Reposition',st.nmt.pos(cfg.vox_idx,:))
+            
+            if(length(cfg.time_idx(1)) == 1)
+                cfg.time_idx(2) = cfg.time_idx(1);
+            end
+            
+            cfg.freq_idx = 1; % frequency dimension is singleton in this case
+        elseif(size(st.nmt.fun,2) > 1 & size(st.nmt.fun,3) > 1)
+            % voxels x time x frequency
+            fun = cell2mat(getsubfield(functional,cfg.funparameter));
+            
+            inside = find(functional.inside);
+            
+            fun = reshape(fun,[size(fun,1)/length(inside) length(inside) size(fun,2)]);
+            
+            fun = permute(fun,[2 3 1]);
+            
+            st.nmt.fun = nan(length(functional.inside),size(fun,2),size(fun,3));
+            st.nmt.fun(inside,:,:) = fun;
+            
+            st.nmt.time = functional.time;
+            st.nmt.freq = functional.freqbands;
+            
+            if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                [~,peakind] = max(abs(st.nmt.fun(:)));
+                [peakvox_idx,peaktime_idx,peakfreq_idx] = ind2sub(size(st.nmt.fun),peakind);
+                cfg.time_idx(1) = peaktime_idx;
+                cfg.freq_idx(1) = peakfreq_idx;
+                cfg.vox_idx = peakvox_idx;
+            end
+            
+            if(~isfield(cfg,'time') & isfield(cfg,'vox'))
+                [~,peaktime_idx] = max(abs(st.nmt.fun(cfg.vox_idx,:)));
+                cfg.time_idx(1) = peaktime_idx;
+            end
+            
+            if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                [~,peakvox_idx] = max(abs(st.nmt.fun(cfg.time_idx,:)));
+                cfg.vox_idx = peakvox_idx;
+            end
+            
+            % move MRI crosshairs to desired/peak voxel
+            spm_orthviews('Reposition',st.nmt.pos(cfg.vox_idx,:))
+            
+            if(length(cfg.time_idx(1)) == 1)
+                cfg.time_idx(2) = cfg.time_idx(1);
+            end
+        else
+            cfg.time_idx = [1 1]; % no time dimension in this case, e.g., 'pow'
+            cfg.freq_idx = 1; % frequency dimension is singleton in this case
         end
 
         st.nmt.cfg = cfg;
