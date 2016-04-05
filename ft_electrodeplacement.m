@@ -127,6 +127,9 @@ switch cfg.method
     % give the user instructions
     disp('Use the mouse to click on the desired electrode positions');
     disp('Afterwards you may have to update the electrode labels');
+    disp('Press "r" to delete the last point add');
+    disp('Press "+/-" to zoom in/out');
+    disp('Press "w/a/s/d" to rotate');
     disp('Press "q" when you are done');
     % open a figure
     figure;
