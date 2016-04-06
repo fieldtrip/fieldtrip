@@ -10,7 +10,7 @@ function [data] = ft_combineplanar(cfg, data)
 % where data contains an averaged planar gradient ERF or single-trial/averaged TFR.
 %
 % The configuration can contain
-%   cfg.method         = 'sum', 'svd' or 'abssvd' (default = 'sum')
+%   cfg.method         = 'sum', 'svd', 'abssvd', or 'complex' (default = 'sum')
 %
 % In the case of ERFs, the configuration can contain
 %   cfg.demean         = 'yes' or 'no' (default = 'no')

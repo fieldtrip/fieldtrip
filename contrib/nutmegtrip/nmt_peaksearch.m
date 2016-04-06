@@ -75,9 +75,9 @@ if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
 elseif(~isfield(cfg,'time') & isfield(cfg,'vox'))
     switch(cfg.peaktype)
         case 'max'
-            [peakval,t_idx_peak] = max(fun(cfg.vox,:))
+            [peakval,t_idx_peak] = max(fun(cfg.vox,:));
         case 'mag'
-            [peakval,t_idx_peak] = max(abs(fun(cfg.vox,:)))
+            [peakval,t_idx_peak] = max(abs(fun(cfg.vox,:)));
         case 'min'
             [peakval,t_idx_peak] = min(fun(cfg.vox,:));
     end

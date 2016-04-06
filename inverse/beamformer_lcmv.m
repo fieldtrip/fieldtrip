@@ -86,6 +86,7 @@ projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  p
 projectmom     = keyval('projectmom',    varargin); if isempty(projectmom),    projectmom = 'no';            end
 fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
 computekurt    = keyval('kurtosis',      varargin); if isempty(computekurt),   computekurt = 'no';           end
+weightnorm     = keyval('weightnorm',    varargin); if isempty(weightnorm),    weightnorm = 'no';         end
 
 % convert the yes/no arguments to the corresponding logical values
 keepfilter     = istrue(keepfilter);
@@ -249,21 +250,45 @@ for i=1:size(dip.pos,1)
   end
   
   if fixedori
-    % compute the leadfield for the optimal dipole orientation
-    % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
-    % filt = pinv(lf' * invCy * lf) * lf' * invCy;
-    % [u, s, v] = svd(real(filt * Cy * ctranspose(filt)));
-    % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
-    [u, s, v] = svd(real(pinv(lf' * invCy *lf)));
-    eta = u(:,1);
-    lf  = lf * eta;
-    if ~isempty(subspace), lforig = lforig * eta; end
-    dipout.ori{i} = eta;
+      switch(weightnorm)
+          case {'unitnoisegain','nai'};
+              % optimal orientation calculation for unit-noise gain beamformer,
+              % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
+              [vv, dd] = eig(pinv(lf' * invCy *lf)*(lf' * invCy^2 *lf));
+              [~,maxeig]=max(diag(dd));
+              eta = vv(:,maxeig);
+              lf  = lf * eta;
+              if ~isempty(subspace), lforig = lforig * eta; end
+              dipout.ori{i} = eta;
+          otherwise
+              % compute the leadfield for the optimal dipole orientation
+              % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
+              % filt = pinv(lf' * invCy * lf) * lf' * invCy;
+              % [u, s, v] = svd(real(filt * Cy * ctranspose(filt)));
+              % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
+              [u, s, v] = svd(real(pinv(lf' * invCy *lf)));
+              eta = u(:,1);
+              lf  = lf * eta;
+              if ~isempty(subspace), lforig = lforig * eta; end
+              dipout.ori{i} = eta;
+      end
   end
   
   if isfield(dip, 'filter')
     % use the provided filter
     filt = dip.filter{i};
+  elseif strcmp(weightnorm,'nai')
+    % Van Veen's Neural Activity Index
+    % below equation is equivalent to following:  
+    % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
+    % filt = filt/sqrt(noise*filt*filt');
+    filt = pinv(sqrt(noise * lf' * invCy^2 * lf)) * lf' *invCy; % based on Sekihara & Nagarajan 2008 eqn. 4.15
+  elseif strcmp(weightnorm,'unitnoisegain')
+    % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
+    % below equation is equivalent to following:  
+    % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
+    % filt = filt/sqrt(filt*filt');
+    filt = pinv(sqrt(lf' * invCy^2 * lf)) * lf' *invCy;     % Sekihara & Nagarajan 2008 eqn. 4.15
   else
     % construct the spatial filter
     filt = pinv(lf' * invCy * lf) * lf' * invCy;              % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
