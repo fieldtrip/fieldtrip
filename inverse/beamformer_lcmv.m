@@ -278,15 +278,17 @@ for i=1:size(dip.pos,1)
     % use the provided filter
     filt = dip.filter{i};
   elseif strcmp(weightnorm,'nai')
+    % Van Veen's Neural Activity Index
     % below equation is equivalent to following:  
     % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
     % filt = filt/sqrt(noise*filt*filt');
-    filt = pinv(sqrt(noise * lf' * invCy^2 * lf)) * lf' *invCy;
+    filt = pinv(sqrt(noise * lf' * invCy^2 * lf)) * lf' *invCy; % based on Sekihara & Nagarajan 2008 eqn. 4.15
   elseif strcmp(weightnorm,'unitnoisegain')
+    % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
     % below equation is equivalent to following:  
     % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
-    % filt = filt/sqrt(noise*filt*filt');
-    filt = pinv(sqrt(lf' * invCy^2 * lf)) * lf' *invCy;
+    % filt = filt/sqrt(filt*filt');
+    filt = pinv(sqrt(lf' * invCy^2 * lf)) * lf' *invCy;     % Sekihara & Nagarajan 2008 eqn. 4.15
   else
     % construct the spatial filter
     filt = pinv(lf' * invCy * lf) * lf' * invCy;              % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
