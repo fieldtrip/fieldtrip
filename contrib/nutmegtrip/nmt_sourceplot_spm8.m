@@ -200,8 +200,13 @@ cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.title         = ft_getopt(cfg, 'title',         '');
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
 cfg.topoplot      = ft_getopt(cfg, 'topoplot',  '');
-cfg.plottype      = ft_getopt(cfg, 'plottype', 'ts'); % default plot type is "time series"
 
+switch(getdimord(functional,cfg.funparameter))
+    case '{pos}_freq_time'
+        cfg.plottype      = ft_getopt(cfg, 'plottype', 'tf'); % default plot type is "time-freq"
+    otherwise
+        cfg.plottype      = ft_getopt(cfg, 'plottype', 'ts'); % default plot type is "time series"
+end
 
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
@@ -393,7 +398,11 @@ if hasfun
     clear tmpfun;
     dimtok{1} = 'pos';  % update the description of the dimensions
     dimord([1 5]) = []; % remove the { and }
-  end
+  else
+    fun = tmpfun;
+    clear tmpfun;
+  end      
+
   
   if strcmp(dimord, 'pos_rgb')
     % treat functional data as rgb values

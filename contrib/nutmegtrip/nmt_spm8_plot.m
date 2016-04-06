@@ -108,7 +108,7 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
             nmt_tfplot(st.nmt.gui.ax_ts,st.nmt.time,st.nmt.freq,squeeze(st.nmt.fun(st.nmt.cfg.vox_idx,:,:)));
         case 'ts'
             if(isfinite(st.nmt.cfg.vox_idx))
-                plot(st.nmt.gui.ax_ts,st.nmt.time,st.nmt.fun(st.nmt.cfg.vox_idx,:,cfg.freq_idx));
+                plot(st.nmt.gui.ax_ts,st.nmt.time,squeeze(st.nmt.fun(st.nmt.cfg.vox_idx,:,:)));
                 grid(st.nmt.gui.ax_ts,'on');
             else
                 plot(st.nmt.gui.ax_ts,st.nmt.time,nan(length(st.nmt.time),1));
