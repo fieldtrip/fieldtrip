@@ -4,9 +4,11 @@ function nmt_addtopo(cfgplot,erp)
 
 global st
 figure(st.fig);
-% for ii=1:3  %% this may be needed for older versions of Matlab??
-%     freezeColors(st.vols{1}.ax{ii}.ax);
-% end
+if(verLessThan('matlab','8.4')) % necessary to preserve colormap on functional image for Matlab R2014a and earlier
+    for ii=1:3
+        freezeColors(st.vols{1}.ax{ii}.ax);
+    end
+end
 
 if(isfield(st.nmt.gui,'ax_topo'))
     delete(st.nmt.gui.ax_topo);
