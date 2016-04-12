@@ -109,13 +109,10 @@ if isequal(ft_default.trackusage, false) || isequal(ft_default.trackusage, 'no')
   return
 end
 
-% this contains the CalcMD5 function
-ft_hastoolbox('fileexchange', 1);
-
 % this are the default properties to track
 properties.token       = '1187d9a6959c39d0e733d6273d1658a5'; % this is specific for the FieldTrip project
-properties.user        = CalcMD5(sprintf('%s%s', ft_default.trackusage, getusername)); % hash it with a secret salt
-properties.host        = CalcMD5(sprintf('%s%s', ft_default.trackusage, gethostname)); % hash it with a secret salt
+properties.user        = ft_hash(sprintf('%s%s', ft_default.trackusage, getusername)); % hash it with a secret salt
+properties.host        = ft_hash(sprintf('%s%s', ft_default.trackusage, gethostname)); % hash it with a secret salt
 properties.matlab      = version('-release');
 properties.fieldtrip   = ft_version;
 properties.computer    = lower(computer);
