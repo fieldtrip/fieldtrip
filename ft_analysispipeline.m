@@ -185,11 +185,7 @@ end
 clear data
 
 % walk the tree, gather information about each node
-if istrue(cfg.feedback)
-  ft_progress('init', 'dial', 'parsing provenance...');
-else
-  ft_progress('init', 'none');
-end
+ft_progress('init', cfg.feedback, 'parsing provenance...');
 pipeline = walktree(datacfg);
 ft_progress('close');
 
@@ -258,13 +254,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for recursive walking along the cfg.previous.previous info
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function info = walktree(cfg)
+function info = walktree(cfg, count)
 
-ft_progress(0.1); % no percentage complete known
+ft_progress(0.1); % FIXME no percentage complete known
 
-if isempty(cfg) && ~isstruct(cfg)
-  % it should be an empty struct
-  cfg = struct();
+if isempty(cfg) || (isstruct(cfg) && numel(fieldnames(cfg))==0)
+  info = [];
+  return
 end
 
 this = getnode(cfg);
@@ -297,18 +293,20 @@ end
 info = [{this} branch previous];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION for gathering the information about each pipeline(i)
+% SUBFUNCTION for gathering the information about each pipeline
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function node = getnode(cfg)
 [p, f, x]      = myfileparts(getvalue(cfg, 'version.name'));
 node.cfg       = cfg;
 node.name      = f;
 node.id        = getvalue(cfg, 'version.id');
-node.this      = CalcMD5(mxSerialize(cfg));
+node.this      = struct2hash(cfg);
 if isfield(cfg, 'previous') && ~isempty(cfg.previous) && iscell(cfg.previous)
-  node.parent   = cellfun(@CalcMD5, cellfun(@mxSerialize, cfg.previous, 'UniformOutput', false), 'UniformOutput', false);
+  % skip the entries that are empty
+  cfg.previous = cfg.previous(~cellfun(@isempty, cfg.previous));
+  node.parent   = cellfun(@struct2hash, cfg.previous, 'UniformOutput', false);
 elseif isfield(cfg, 'previous') && ~isempty(cfg.previous) && isstruct(cfg.previous)
-  node.parent   = {CalcMD5(mxSerialize(cfg.previous))};
+  node.parent   = {struct2hash(cfg.previous)};
 elseif isfield(cfg, 'previous') && ~isempty(cfg.previous)
   error('unexpected content in cfg.previous');
 else
@@ -781,3 +779,25 @@ cfghtml = strrep(cfghtml, sprintf('\r'), '\r');
 cfghtml = strrep(cfghtml, sprintf('\n'), '\n');
 cfghtml = strrep(cfghtml, sprintf('\t'), '\t');
 cfghtml = strrep(cfghtml, '"', '\"');
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = struct2hash(s)
+% both of these are from Mathworks file exchange
+try
+  % this one uses a mex file
+  h = CalcMD5(mxSerialize(s));
+catch
+  % this one uses Java
+  h = DataHash(s);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function b = istrue(s)
+false_list = {'no' 'false' 'off' 'n' 'none'};
+b = ~any(strcmp(s, false_list));
+
