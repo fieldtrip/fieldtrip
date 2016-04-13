@@ -133,7 +133,7 @@ else
       dum = [dum ' ' printval(val{i,j}) ',']; % add the element with a comma
     end
     dum = [dum ' ' printval(val{i,siz(2)})]; % add the last one without comma
-
+    
     str = [str dum 10];
   end
   str = sprintf('%s};\n', str);
@@ -179,17 +179,22 @@ function str = printval(val)
 switch class(val)
   case 'char'
     str = ['''' val ''''];
-
+    
   case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
     str = printmat(val);
-
+    
   case 'function_handle'
     str = ['@' func2str(val)];
-
+    
   case 'struct'
-    warning('cannot print structure at this level');
-    str = '''FIXME: printing structures at this level is not supported''';
-
+    % print it as an anonymous structure
+    str = 'struct(';
+    fn = fieldnames(val);
+    for i=1:numel(fn)
+      str = [str '''' fn{i} '''' ', ' printval(val.(fn{i}))];
+    end
+    str = [str ')'];
+    
   otherwise
     warning('cannot print unknown object at this level');
     str = '''FIXME: printing unknown objects is not supported''';

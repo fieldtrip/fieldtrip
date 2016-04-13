@@ -81,25 +81,3 @@ if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   end
   
 end % if inputfile
-
-% the following section deals with tracking the information about the input data structures
-% the corresponding section for the output data structures is in ft_postamble_history
-
-if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
-  if isequal(ft_default.preamble, {'varargin'})
-    for i=1:length(varargin)
-      % store the hash for each input argument
-      cfg.datainfo.input{i} = hashvar(varargin{i});
-    end
-  else
-    % ft_default.preamble is a cell-array containing the variable names
-    for i=1:length(ft_default.preamble)
-      if exist(ft_default.preamble{i}, 'var')
-        cfg.datainfo.input{i} = eval(sprintf('hashvar(%s)', ft_default.preamble{i}));
-      else
-        % the function can have optional inputs that are unspecified, e.g. data for ft_preprocessing
-        cfg.datainfo.input{i} = [];
-      end
-    end
-  end
-end

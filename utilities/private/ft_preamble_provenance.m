@@ -16,7 +16,7 @@
 %
 % See also FT_POSTAMBLE_PROVENANCE
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -53,40 +53,40 @@ end
 % callinfo
 cfg.callinfo.usercfg = cfg;
 
-% compute the MD5 hash of each of the input arguments
-% temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
-if isequal(ft_default.preamble, {'varargin'})
-  tmpargin = varargin;
-else
-  isvar = cellfun(@(x) exist(x, 'var')==1, ft_default.preamble);
-  tmpargin = cellfun(@eval, ft_default.preamble(isvar), 'UniformOutput', false);
-  tmpargin( isvar) = tmpargin;
-  tmpargin(~isvar) = {[]};
-  clear isvar
-end
-cfg.callinfo.inputhash = cell(1,numel(tmpargin));
-for iargin = 1:numel(tmpargin)
-  tmparg = tmpargin{iargin}; % can't get number of bytes with whos unless taken out of it's cell
-  if isfield(tmparg,'cfg')
-    tmparg = rmfield(tmparg,'cfg');
+if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
+  % compute the MD5 hash of each of the input arguments
+  % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
+  if isequal(ft_default.preamble, {'varargin'})
+    tmpargin = varargin;
   else
+    isvar = cellfun(@(x) exist(x, 'var')==1, ft_default.preamble);
+    tmpargin = cellfun(@eval, ft_default.preamble(isvar), 'UniformOutput', false);
+    tmpargin( isvar) = tmpargin;
+    tmpargin(~isvar) = {[]};
+    clear isvar
   end
-  % only calculate md5 when below 2^31 bytes (CalcMD5 can't handle larger input)
-  bytenum = whos('tmparg');
-  bytenum = bytenum.bytes;
-  if bytenum<2^31
-    try
-      cfg.callinfo.inputhash{iargin} = CalcMD5(mxSerialize(tmparg));
-    catch
-      % the mxSerialize mex file is not available on all platforms
-      % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
-      % do not compute a hash
+  cfg.callinfo.inputhash = cell(1,numel(tmpargin));
+  for iargin = 1:numel(tmpargin)
+    tmparg = tmpargin{iargin}; % can't get number of bytes with whos unless taken out of it's cell
+    if isfield(tmparg,'cfg')
+      tmparg = rmfield(tmparg, 'cfg');
     end
-  else
-    % the data is too large, do not compute a hash
+    % only calculate md5 when below 2^31 bytes (CalcMD5 can't handle larger input)
+    bytenum = whos('tmparg');
+    bytenum = bytenum.bytes;
+    if bytenum<2^31
+      try
+        cfg.callinfo.inputhash{iargin} = ft_hash(tmparg);
+      catch
+        % the mxSerialize mex file is not available on all platforms, do not compute a hash
+        % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
+      end
+    else
+      % the data is too large, do not compute a hash
+    end
   end
+  clear tmpargin iargin tmparg bytenum; % remove the extra references
 end
-clear iargin tmpargin tmparg bytenum; % remove the extra references
 
 stack = dbstack('-completenames');
 % stack(1) is this script
