@@ -48,7 +48,7 @@ function ft_progress(varargin)
 %
 % $Id$
 
-global ft_default;
+global ft_default
 
 persistent p        % the previous value of the progress
 persistent c        % counter for the number of updates that is done
@@ -65,7 +65,7 @@ persistent lastArgin % the last varargin, this is used when ft_progress('close')
                      % but the previous invocation was not processed (due
                      % to the restriction in the number of updates to once
                      % every 100ms)
-persistent closing;
+persistent closing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
