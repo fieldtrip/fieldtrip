@@ -27,7 +27,7 @@ switch(op)
             f1 = str2num(get(st.nmt.gui.f1,'String'));
             f2 = str2num(get(st.nmt.gui.f2,'String'));
             st.nmt.cfg.freq_idx(1) = dsearchn(st.nmt.freq(:,1),f1);
-            st.nmt.cfg.freq_idx(2) = dsearchn(st.nmt.freq(:,1),f2);
+            st.nmt.cfg.freq_idx(2) = dsearchn(st.nmt.freq(:,2),f2);
         end
     otherwise
         % otherwise, time interval was already specified, so nothing to do

@@ -740,7 +740,7 @@ if ~isempty(cfg.funparameter)
                 cfg.time_idx(2) = cfg.time_idx(1);
             end
             
-            cfg.freq_idx = 1; % frequency dimension is singleton in this case
+            cfg.freq_idx = [1 1];
         elseif(hastime & hasfreq)
             % voxels x frequency x time
             st.nmt.time = functional.time;
@@ -770,9 +770,12 @@ if ~isempty(cfg.funparameter)
             if(length(cfg.time_idx(1)) == 1)
                 cfg.time_idx(2) = cfg.time_idx(1);
             end
+            if(length(cfg.freq_idx(1)) == 1)
+                cfg.freq_idx(2) = cfg.freq_idx(1);
+            end
         else
             cfg.time_idx = [1 1]; % no time dimension in this case, e.g., 'pow'
-            cfg.freq_idx = 1; % frequency dimension is singleton in this case
+            cfg.freq_idx = [1 1]; % frequency dimension is singleton in this case
         end
 
         st.nmt.cfg = cfg;

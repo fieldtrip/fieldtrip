@@ -16,11 +16,11 @@ end
 
 % if there is no frequency dimension, set cfg.time_idx to index first and only column
 if(~isfield(cfg,'freq_idx'))
-    cfg.freq_idx = [1];
+    cfg.freq_idx = [1 1];
 end
 
 
-if(cfg.time_idx(1) == cfg.time_idx(2)) % single time point selected
+if(cfg.time_idx(1) == cfg.time_idx(2) && cfg.freq_idx(1) == cfg.freq_idx(2)) % single time point selected
     fun = st.nmt.fun(:,cfg.time_idx(1),cfg.freq_idx(1));
     % set colorscale: anatomical (first 64) + functional (second 64)
     % grayscale for MRI; jet for painted activation
@@ -124,7 +124,7 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
                 ymax =  max(max(st.nmt.fun(:,st.nmt.cfg.time_idx(1):st.nmt.cfg.time_idx(2))));
             end
             set(st.nmt.gui.ax_ts,'YLim',[ymin ymax]);
-  
+            
     end
     set(st.nmt.gui.ax_ts,'XLim',st.nmt.time([1 end]));
     xlabel(st.nmt.gui.ax_ts,['Time (s)']);
@@ -140,12 +140,17 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     ylim=get(st.nmt.gui.ax_ts,'YLim');
     axes(st.nmt.gui.ax_ts);
     h=patch([st.nmt.time(st.nmt.cfg.time_idx(1)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[1 0.4 0.4],'EdgeColor','red');
-    
+
+    %% update GUI textboxes
     set(st.nmt.gui.t1,'String',num2str(st.nmt.time(st.nmt.cfg.time_idx(1))));
     set(st.nmt.gui.t2,'String',num2str(st.nmt.time(st.nmt.cfg.time_idx(2))));
+
+    set(st.nmt.gui.f1,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(1),1)));
+    set(st.nmt.gui.f2,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(2),2)));
     
     set(st.nmt.gui.ax_ts,'ButtonDownFcn',@nmt_repos_start);
     
+    %% optionally add topoplot
     switch(cfg.topoplot)
         case 'timelock'
             cfgplot.xlim = st.nmt.time(st.nmt.cfg.time_idx);
@@ -197,7 +202,7 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
 %                     cfgplot.zlim = 'maxabs';
 %                     topo.avg = nut_rownorm(st.nmt.grid.leadfield{st.nmt.cfg.vox_idx});
 %                 case 'leadfieldori'
-                    error('TODO: not yet implemented');
+%                     error('TODO: not yet implemented');
             end
             
             nmt_addtopo(cfgplot,topo);
