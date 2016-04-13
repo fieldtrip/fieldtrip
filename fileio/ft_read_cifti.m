@@ -954,6 +954,8 @@ if readsurface
         
     end % switch BrainStructure
   end
+else
+  tri = [];
 end % if readsurface
 
 % add the vertex and voxel positions
