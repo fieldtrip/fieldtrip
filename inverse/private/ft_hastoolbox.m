@@ -291,7 +291,7 @@ switch toolbox
   case 'VGRID'
     status  = exist('vgrid.m', 'file');
   case 'GIFTI'
-    status  = exist('gifti', 'file');
+    status  = exist('@gifti/gifti', 'file');
   case 'XML4MAT'
     status  = exist('xml2struct.m', 'file') && exist('xml2whos.m', 'file');
   case 'SQDPROJECT'
