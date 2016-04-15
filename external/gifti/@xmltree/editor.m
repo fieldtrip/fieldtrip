@@ -10,7 +10,7 @@ function editor(tree)
 % Copyright (C) 2002-2015  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: editor.m 6480 2015-06-13 01:08:30Z guillaume $
 
 
 %error(nargchk(1,1,nargin));

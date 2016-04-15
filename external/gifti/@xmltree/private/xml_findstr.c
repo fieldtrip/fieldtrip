@@ -1,7 +1,7 @@
 #include "mex.h"
 
 /*
- * $Id$
+ * $Id: xml_findstr.c 6480 2015-06-13 01:08:30Z guillaume $
  * Guillaume Flandin <guillaume@artefact.tk>
  */
 
