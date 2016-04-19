@@ -144,8 +144,8 @@ for i =1:numel(cfg.tissue)
   
   switch cfg.method
     case 'isosurface'
-      [tri, pnt] = isosurface(seg, 0.5);
-      pnt = pnt(:,[2 1 3]); % Mathworks isosurface indexes differently
+      [tri, pos] = isosurface(seg, 0.5);
+      pos = pos(:,[2 1 3]); % Mathworks isosurface indexes differently
       
     case 'iso2mesh'
       ft_hastoolbox('iso2mesh', 1);
@@ -155,7 +155,7 @@ for i =1:numel(cfg.tissue)
       opt.maxnode = cfg.numvertices(i);
       opt.maxsurf = 1;
       
-      [pnt, tri] = v2s(seg, 1, opt, 'cgalsurf');
+      [pos, tri] = v2s(seg, 1, opt, 'cgalsurf');
       tri = tri(:,1:3);
       
     case 'projectmesh'
@@ -164,7 +164,7 @@ for i =1:numel(cfg.tissue)
       ori(2) = mean(mriy(seg(:)));
       ori(3) = mean(mriz(seg(:)));
       
-      [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
+      [pos, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
       
     otherwise
       error('unsupported method "%s"', cfg.method);
@@ -172,7 +172,7 @@ for i =1:numel(cfg.tissue)
   
   numvoxels(i) = sum(find(seg(:))); % the number of voxels in this tissue
   
-  bnd(i).pnt = ft_warp_apply(mri.transform, pnt);
+  bnd(i).pos = ft_warp_apply(mri.transform, pos);
   bnd(i).tri = tri;
   bnd(i).unit = mri.unit;
   
@@ -200,8 +200,8 @@ function bnd = decouplesurf(bnd)
 for ii = 1:length(bnd)-1
   % Despite what the instructions for surfboolean says, surfaces should
   % be ordered from inside-out!!
-  [newnode, newelem] = surfboolean(bnd(ii+1).pnt,bnd(ii+1).tri,'decouple',bnd(ii).pnt,bnd(ii).tri);
-  bnd(ii+1).tri = newelem(newelem(:,4)==2,1:3) - size(bnd(ii+1).pnt,1);
-  bnd(ii+1).pnt = newnode(newnode(:,4)==2,1:3);
+  [newnode, newelem] = surfboolean(bnd(ii+1).pos,bnd(ii+1).tri,'decouple',bnd(ii).pos,bnd(ii).tri);
+  bnd(ii+1).tri = newelem(newelem(:,4)==2,1:3) - size(bnd(ii+1).pos,1);
+  bnd(ii+1).pos = newnode(newnode(:,4)==2,1:3);
 end % for
 end %function
