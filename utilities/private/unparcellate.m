@@ -64,7 +64,7 @@ if isfield(data, 'label')
       
       [parcelindx, chanindx] = match_str(parcellation.([parcelparam,'label']), data.label);
       
-      if strcmp(dimtok{1}, 'chan') && strcmp(dimtok{2}, 'chan')
+      if numel(dimtok)>1 && strcmp(dimtok{1}, 'chan') && strcmp(dimtok{2}, 'chan')
         % chan_chan_xxx
         for i=1:numel(parcelindx)
           for j=1:numel(parcelindx)

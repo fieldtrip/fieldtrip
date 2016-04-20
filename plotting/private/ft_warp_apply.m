@@ -43,16 +43,15 @@ function [warped] = ft_warp_apply(M, input, method, tol)
 %         VG: [1x1 struct]
 %      flags: [1x1 struct]
 %
-% If any other method is selected, it is assumed that it specifies
-% the name of an auxiliary function that will, when given the input
-% parameter vector M, return an 4x4 homogenous transformation
-% matrix. Supplied functions in the warping toolbox are translate,
-% rotate, scale, rigidbody, globalrescale, traditional, affine,
-% perspective.
+% If any other method is selected, it is assumed that it specifies the name of an
+% auxiliary function that will, when given the input parameter vector M, return an
+% 4x4 homogenous transformation matrix. Supplied functions are 'translate', 'rotate',
+% 'scale', 'rigidbody', 'globalrescale', 'traditional', 'affine', 'perspective',
+% 'quaternion'.
 %
 % See also FT_WARP_OPTIM, FT_WARP_ERROR
 
-% Copyright (C) 2000-2013, Robert Oostenveld
+% Copyright (C) 2000-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

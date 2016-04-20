@@ -176,7 +176,7 @@ if isfield(data, 'dimord')
     % add the trailing singleton dimensions to datsiz, if needed
     datsiz  = [datsiz ones(1,max(0,length(dimtok)-length(datsiz)))];
   end
-  if length(dimtok)==length(datsiz)
+  if length(dimtok)==length(datsiz) || (length(dimtok)==(length(datsiz)-1) && datsiz(end)==1)
     success = false(size(dimtok));
     for i=1:length(dimtok)
       sel = strcmp(tok, dimtok{i});

@@ -682,8 +682,8 @@ switch headerformat
         error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
       else
         hdr = read_edf(filename,[],chanindx);
-      end;
-    end;
+      end
+    end
     
   case 'eep_avr'
     % check that the required low-level toolbox is available

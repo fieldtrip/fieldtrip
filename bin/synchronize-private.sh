@@ -2320,6 +2320,17 @@ ARRAY+=(utilities/private/ptriprojn.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# quaternion.m
+
+ARRAY=()
+ARRAY+=(fileio/private/quaternion.m)
+ARRAY+=(inverse/private/quaternion.m)
+ARRAY+=(plotting/private/quaternion.m)
+ARRAY+=(private/quaternion.m)
+ARRAY+=(utilities/private/quaternion.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # randomseed.m
 
 ARRAY=()
