@@ -715,11 +715,6 @@ if ~isempty(cfg.funparameter)
         if(hastime & ~hasfreq)
             % voxels x time
             st.nmt.time = functional.time;
-            if(isfield(functional,'freqbands'))
-                st.nmt.freq = functional.freqbands;
-            else
-                st.nmt.freq = [0 inf];
-            end
             
             if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
                 [~,peakind] = max(abs(st.nmt.fun(:)));

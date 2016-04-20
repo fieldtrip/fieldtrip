@@ -932,7 +932,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   
   siz=[size(avg) 1];
   if strcmp(cfg.method, 'lcmv')% && ~isfield(grid, 'filter'),
-    for i=1:Nrepetitions
+    parfor i=1:Nrepetitions
       squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
       fprintf('scanning repetition %d\n', i);
       dip(i) = beamformer_lcmv(grid, sens, headmodel, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:});
