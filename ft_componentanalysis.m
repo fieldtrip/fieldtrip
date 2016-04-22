@@ -392,46 +392,54 @@ switch cfg.method
 
       optarg = ft_cfg2keyval(cfg.(cfg.icasso.method));
       sR     = icassoEst(cfg.icasso.mode, dat, cfg.icasso.Niter, optarg{:});
-    else
-      %       error('only ''fastica'' is supported as method for icasso');
-      %
-      %       % FIXME the code below does not work yet
-
-      % recurse into ft_componentanalysis
-      tmpcfg = rmfield(cfg, 'icasso');
+    elseif strcmp(cfg.icasso.method, 'dss')
+      % recurse into ft_componentanalysis and do some post processing
+      tmpcfg        = rmfield(cfg, 'icasso');
       tmpcfg.method = cfg.icasso.method;
+      tmpdata       = data;
 
-      tmpdata = data;
-
-      sR.W = cell(cfg.icasso.Niter, 1);
-      sR.A = cell(cfg.icasso.Niter, 1);
+      % initialize the variables to hold the output
+      sR.W     = cell(cfg.icasso.Niter, 1);
+      sR.A     = cell(cfg.icasso.Niter, 1);
       sR.index = zeros(0,2);
       for k = 1:cfg.icasso.Niter
         tmp = ft_componentanalysis(tmpcfg, tmpdata);
         sR.W{k}  = tmp.unmixing;
         sR.A{k}  = tmp.topo;
         sR.index = cat(1, sR.index, [k*ones(size(tmp.topo,2),1) (1:size(tmp.topo,2))']);
-
-        if strcmp(tmpcfg.method, 'dss')
-          sR.whiteningMatrix   = tmp.cfg.dss.V;
-          sR.dewhiteningMatrix = tmp.cfg.dss.dV;
-        end
+        sR.whiteningMatrix   = tmp.cfg.dss.V;
+        sR.dewhiteningMatrix = tmp.cfg.dss.dV;
       end
       sR.signal = dat;
       sR.mode   = cfg.icasso.mode;
       sR.rdim   = size(tmp.topo,2);
+    else
+      error('only ''fastica'' or ''dss'' is supported as method for icasso');
     end
-    sR     = icassoExp(sR);
-    [Iq, mixing, unmixing, dat] = icassoShow(sR, 'estimate', 'off');%, 'L', cfg.numcomponent);
+    
+    % do the rest of the icasso related processing
+    sR = icassoCluster(sR,'strategy','AL','simfcn','abscorr','s2d','sim2dis','L',cfg.numcomponent);
+    sR = icassoProjection(sR,'cca','s2d','sqrtsim2dis','epochs',75);
+    [Iq, mixing, unmixing, ~, index2centrotypes]=icassoResult(sR,cfg.numcomponent);
+    
+    % this step is done, because in icassoResult mixing is determined to be
+    % pinv(unmixing), which yields strange results. Better take it from the
+    % individual iterations. NOTE: as a consequence unmixing*mixing is not
+    % necessarily identity anymore !!!
+    for k = 1:size(mixing,2)
+      ix = sR.index(index2centrotypes(k),:);
+      mixing(:,k) = sR.A{ix(1)}(:,ix(2));
+    end
+    
+    %[Iq, mixing, unmixing, dat] = icassoShow(sR, 'estimate', 'off', 'L', cfg.numcomponent);
 
     % sort the output according to Iq
     [srt, ix] = sort(-Iq); % account for NaNs
     mixing    = mixing(:, ix);
     unmixing  = unmixing(ix, :);
 
-
     cfg.icasso.Iq = Iq(ix);
-    cfg.icasso.sR = rmfield(sR, 'signal');
+    cfg.icasso.sR = rmfield(sR, 'signal'); % keep the rest of the information
 
   case 'fastica'
     % check whether the required low-level toolboxes are installed
