@@ -235,11 +235,10 @@ elseif ~isempty(cfg.trl)
   % start with a completely new data structure
   data          = [];
   data.hdr      = hdr;
-  data.label    = dataold.label;
-  data.fsample  = dataold.fsample;
   data.trial    = cell(1,size(trl,1));
   data.time     = cell(1,size(trl,1));
-
+  data          = copyfields(dataold, data, {'fsample' 'label' 'topo' 'topolabel' 'unmixing' 'mixing' 'grad' 'elec' 'opto'}); % account for all potential fields to be copied over
+  
   for iTrl=1:length(trl(:,1))
     begsample = trl(iTrl,1);
     endsample = trl(iTrl,2);
@@ -267,16 +266,7 @@ elseif ~isempty(cfg.trl)
     end;
   end %for iTrl
 
-  % add the necessary fields to the output
-  if isfield(dataold, 'grad')
-    data.grad      = dataold.grad;
-  end
-  if isfield(dataold, 'elec')
-    data.elec      = dataold.elec;
-  end
-  if isfield(dataold, 'opto')
-    data.opto      = dataold.opto;
-  end
+  % adjust the sampleinfo in the output
   if isfield(dataold, 'sampleinfo')
     % adjust the trial definition
     data.sampleinfo  = trl(:, 1:2);

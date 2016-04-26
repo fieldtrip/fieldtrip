@@ -685,7 +685,7 @@ switch cfg.method
       tmpcfg                       = [];
       tmpcfg.template.elec         = shape;     % this is the Polhemus recorded headshape
       tmpcfg.template.elec.chanpos = shape.pos; % ft_interactiverealign needs the field chanpos
-      tmpcfg.template.elec.label   = cell(size(shape.pos,1),1);
+      tmpcfg.template.elec.label = cellstr(num2str((1:size(shape.pos,1))'));
       tmpcfg.individual.headshape  = scalp;     % this is the headshape extracted from the anatomical MRI
       tmpcfg.individual.headshapestyle = 'surface';
       tmpcfg = ft_interactiverealign(tmpcfg);
