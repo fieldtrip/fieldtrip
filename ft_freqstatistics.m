@@ -165,7 +165,7 @@ end
 design = cfg.design;
 
 % determine the function handle to the intermediate-level statistics function
-if exist(['ft_statistics_' cfg.method])
+if exist(['ft_statistics_' cfg.method], 'file')
   statmethod = str2func(['ft_statistics_' cfg.method]);
 else
   error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);

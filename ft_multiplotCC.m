@@ -119,13 +119,15 @@ Ypos = 0.9*yScaleFac*(Y-min(Y));
 
 for k=1:length(chNum) - 2
   subplotOL('position',[Xpos(k) Ypos(k)+(Height(k)*yScaleFac) Width(k)*xScaleFac*2 Height(k)*yScaleFac*2])
-  config.layout     = cfg.layout;
-  if exist('tmpdata'),
-
+  config.layout = cfg.layout;
+  if exist('tmpdata', 'var')
     config.style      = 'straight';
     config.marker     = 'off';
-    try, config.refmarker = strmatch(Lbl(k), data.reflabel);
-    catch, config.refmarker  = strmatch(Lbl(k), data.label); end
+    try
+        config.refmarker = strmatch(Lbl(k), data.reflabel);
+    catch
+        config.refmarker = strmatch(Lbl(k), data.label);
+    end
     config.interplimits = 'electrodes';
     if isfield(cfg, 'xparam'),
       config.xparam = cfg.xparam;
@@ -134,10 +136,10 @@ for k=1:length(chNum) - 2
       config.xparam = 'freq';
       config.xlim   = [k-0.5 k+0.5];
     end
-    config.parameter = cfg.parameter;
+    config.parameter  = cfg.parameter;
     config.refchannel = Lbl(k);
-    config.colorbar = 'no';
-    config.zlim     = scale;
+    config.colorbar   = 'no';
+    config.zlim       = scale;
     config.grid_scale = 30;
     ft_topoplotTFR(config, data);
     drawnow;
