@@ -41,7 +41,7 @@ end
 pad = ceil(order/2);
 dat = ft_preproc_padding(dat, 'localmean', pad);
 
-hasfast = exist('fastmedfilt1d');
+hasfast = exist('fastmedfilt1d', 'file');
 if hasfast == 2 || hasfast == 3
   % use fast median filter mex file
   for k = 1:size(dat,1)
