@@ -74,8 +74,14 @@ else
     % blob already exists, just update values
     st.vols{1}.blobs{1}.vol = reshape(maskedfun,size(st.vols{1}.blobs{1}.vol));
 end
-st.vols{1}.blobs{1}.max = scalemax;
-st.vols{1}.blobs{1}.min = scalemin;
+
+if(isfield(cfg,'zlim'))
+    st.vols{1}.blobs{1}.max = cfg.zlim(2);
+    st.vols{1}.blobs{1}.min = cfg.zlim(1);
+else
+    st.vols{1}.blobs{1}.max = scalemax;
+    st.vols{1}.blobs{1}.min = scalemin;
+end
 
 % ft_image
 spm_orthviews('redraw'); % blob doesn't always show until redraw is forced

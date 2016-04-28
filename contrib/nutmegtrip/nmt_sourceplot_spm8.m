@@ -560,9 +560,10 @@ end
 % handle mask
 if hasmsk
   % reshape to match fun
-  if strcmp(dimord, 'pos_freq_time')
+  if strcmp(dimord, 'pos_time_freq')
     % functional contains timefrequency representation
-    msk     = reshape(msk, [dim numel(functional.freq) numel(functional.time)]);
+    msk = permute(msk,[1 3 2]); % reorder to pos_time_freq
+    msk     = reshape(msk, [dim numel(functional.time) numel(functional.freq)]);
   elseif strcmp(dimord, 'pos_time')
     % functional contains evoked field
     msk     = reshape(msk, [dim numel(functional.time)]);

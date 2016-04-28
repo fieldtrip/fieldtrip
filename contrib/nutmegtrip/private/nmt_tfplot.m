@@ -16,7 +16,7 @@ ffin = ffin(:);
 
 z = nan(size(ffin,1),size(tf,1));
 
-for ii=1:size(fwin,2)
+for ii=1:size(fwin,1)
     z(2*fwinfin2fwin(ii)-1,:) = tf(:,ii);
     z(2*fwinfin2fwin(ii),:) = tf(:,ii);
 end
@@ -26,7 +26,7 @@ st.nmt.gui.h_tf = mesh(axh,t,ffin,z);
 view(axh,2); % '2-D view' of spectrogram
 %set(st.nmt.gui.h_tf,'LineStyle','none'); % useful if plot made with 'surf'
 axis(axh,'tight');
-set(axh,'YScale','log');
+%set(axh,'YScale','log');
 
 if(verLessThan('matlab','8.4')) % necessary to preserve colormap on functional image for Matlab R2014a and earlier
     for ii=1:3
