@@ -810,40 +810,40 @@ source.unit = 'mm'; % per definition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to get the geometrical information from the corresponding gifti files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% use the filename prior to decompression
+filename = origfile;
+
+[p, f, x] = fileparts(filename);
+t = tokenize(f, '.');
+
+subject  = 'unknown';
+dataname = 'unknown';
+geomodel = '';
+
+% the following assumes HCP/WorkBench/Caret file naming conventions
+if length(t)==2
+  subject  = t{1};
+  dataname = t{2};
+elseif length(t)==3
+  subject  = t{1};
+  dataname = t{2};
+  content  = t{3};
+elseif length(t)==4
+  subject  = t{1};
+  dataname = t{2};
+  geomodel = t{3};
+  content  = t{4};
+elseif length(t)==5
+  subject  = t{1};
+  dataname = [t{2} '.' t{3}];
+  geomodel = t{4};
+  content  = t{5};
+else
+  warning('cannot parse file name');
+end
+
 if readsurface
-  
-  % use the filename prior to decompression
-  filename = origfile;
-  
-  [p, f, x] = fileparts(filename);
-  t = tokenize(f, '.');
-  
-  subject  = 'unknown';
-  dataname = 'unknown';
-  geomodel = '';
-  
-  % the following assumes HCP/WorkBench/Caret file naming conventions
-  if length(t)==2
-    subject  = t{1};
-    dataname = t{2};
-  elseif length(t)==3
-    subject  = t{1};
-    dataname = t{2};
-    content  = t{3};
-  elseif length(t)==4
-    subject  = t{1};
-    dataname = t{2};
-    geomodel = t{3};
-    content  = t{4};
-  elseif length(t)==5
-    subject  = t{1};
-    dataname = [t{2} '.' t{3}];
-    geomodel = t{4};
-    content  = t{5};
-  else
-    error('cannot parse file name');
-  end
-  
   % construct a list of possible file names for the surface geometry
   Lfilelist = {
     [subject '.L' '.midthickness'  '.' geomodel '.surf.gii']
