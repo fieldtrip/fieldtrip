@@ -27,7 +27,7 @@ function ft_realtime_jaga16proxy(cfg)
 %
 % See also FT_REALTIME_SIGNALPROXY, FT_REALTIME_SIGNALVIEWER
 
-% Copyright (C) 2015, Robert Oostenveld
+% Copyright (C) 2015-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -115,7 +115,6 @@ while (true)
   while isempty(buf)
     siz = pnet(con,'readpacket');
     buf = pnet(con, 'read');
-    buf = typecast(uint8(buf), 'uint16');
     if isempty(buf)
       pause(43/1023);
     end
