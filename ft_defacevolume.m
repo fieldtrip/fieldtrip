@@ -1,12 +1,12 @@
 function mri = ft_defacevolume(cfg, mri)
 
-% FT_DEFACEVOLUME allows you to erase specific regions from an anatomical MRI,
-% such as the face and ears. The graphical user interface allows you to position a
-% box over the anatomical MRI inside which all anatomical voxel values will be
-% replaced by zero. Depending on the alignment of the anatomical MRI and whether both
-% face and ears need to be removed, you might have to call this function multiple
-% times in succession. Following defacing, you should check the result with
-% FT_SOURCEPLOT.
+% FT_DEFACEVOLUME allows you to de-identify an anatomical MRI by erasing specific
+% regions from an anatomical MRI, such as the face and ears. The graphical user
+% interface allows you to position a box over the anatomical MRI inside which all
+% anatomical voxel values will be replaced by zero. Depending on the alignment of the
+% anatomical MRI and whether both face and ears need to be removed, you might have to
+% call this function multiple times in succession. Following defacing, you should
+% check the result with FT_SOURCEPLOT.
 %
 % Use as
 %   mri = ft_defacevolume(cfg, mri)

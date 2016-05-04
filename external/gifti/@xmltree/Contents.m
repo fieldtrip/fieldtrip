@@ -1,5 +1,5 @@
 % XMLTree: XML Toolbox for MATLAB and GNU Octave
-% Version 1.4  13-Jun-2015
+% Version 2.0  14-Aug-2015
 %
 % XML file I/O.
 %   xmltree     - Constructor (XML parser).
@@ -27,7 +27,6 @@
 %
 % Graphical user interface methods (basic).
 %   editor      - Graphical display of a tree.
-%   view        - (deprecated).
 %
 % Low level class methods.
 %   char        - Convert a tree into a string (for display).
@@ -52,4 +51,4 @@
 % Copyright 2002-2015  http://www.artefact.tk/
 
 % Guillaume Flandin <Guillaume@artefact.tk>
-% $Id$
+% $Id: Contents.m 6480 2015-06-13 01:08:30Z guillaume $
