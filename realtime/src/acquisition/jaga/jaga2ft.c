@@ -71,6 +71,24 @@ int main(int argc, char *argv[])
     uint16_t fsample;
     uint16_t sec;
     uint16_t smp;
+  } packet_v0;
+
+  struct {
+    uint8_t version;
+    uint8_t nchans;
+    uint16_t diagnostic_word;
+    uint16_t mode_word;
+    uint16_t fsample;
+    uint32_t smp;
+  } packet_v3;
+
+  /* this is the common denominator of packet format v0 and v3 */
+  struct {
+    uint16_t version;
+    uint16_t nchans;
+    uint16_t nbit;
+    uint16_t fsample;
+    uint32_t smp;
   } packet;
 
   int sample = 0, status = 0, verbose = 0;
@@ -127,17 +145,18 @@ int main(int argc, char *argv[])
     printf("jaga2ft: streaming to remote buffer at %s:%i\n", host.name, host.port);
   }  
 
-
-
   /* open the UDP server */
   if ((udpsocket=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
-    diep("socket");
+    diep("socket udp");
+  int enable = 1;
+  if (setsockopt(udpsocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    diep("setsockopt");
   memset((char *) &si_me, 0, sizeof(si_me));
   si_me.sin_family      = AF_INET;
   si_me.sin_port        = htons(JAGAPORT);
   si_me.sin_addr.s_addr = htonl(INADDR_ANY);
   if (bind(udpsocket, &si_me, sizeof(si_me))==-1)
-    diep("bind");
+    diep("bind udp");
 
   /* allocate the elements that will be used in the communication to the FT buffer */
   request      = malloc(sizeof(message_t));
@@ -161,12 +180,38 @@ int main(int argc, char *argv[])
     printf("jaga2ft: received %d byte packet from %s:%d\n", n, inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
 
   /* parse the UDP package */
-  packet.version = *(uint16_t *)(buf+0);
-  packet.nchans  = *(uint16_t *)(buf+2);
-  packet.nbit    = *(uint16_t *)(buf+4);
-  packet.fsample = *(uint16_t *)(buf+6);
-  packet.sec     = *(uint16_t *)(buf+8);
-  packet.smp     = *(uint16_t *)(buf+10);
+  if (buf[0]==0) {
+    packet_v0.version = *(uint16_t *)(buf+0);
+    packet_v0.nchans  = *(uint16_t *)(buf+2);
+    packet_v0.nbit    = *(uint16_t *)(buf+4);
+    packet_v0.fsample = *(uint16_t *)(buf+6);
+    packet_v0.sec     = *(uint16_t *)(buf+8);
+    packet_v0.smp     = *(uint16_t *)(buf+10);
+    /* the packets are quite similar, the data starts at the same location */
+    packet.version = packet_v0.version;
+    packet.nchans  = packet_v0.nchans;
+    packet.nbit    = packet_v0.nbit;
+    packet.fsample = packet_v0.fsample;
+    packet.smp     = packet_v0.smp;
+  }
+  else if (buf[0]==3) {
+    packet_v3.version         = *(uint8_t  *)(buf+0);
+    packet_v3.nchans          = *(uint8_t  *)(buf+1);
+    packet_v3.diagnostic_word = *(uint16_t *)(buf+2);
+    packet_v3.mode_word       = *(uint16_t *)(buf+4);
+    packet_v3.fsample         = *(uint16_t *)(buf+6);
+    packet_v3.smp             = *(uint32_t *)(buf+8);
+    /* the packets are quite similar, the data starts at the same location */
+    packet.version = packet_v3.version;
+    packet.nchans  = packet_v3.nchans;
+    packet.nbit    = 16;
+    packet.fsample = packet_v3.fsample;
+    packet.smp     = packet_v3.smp;
+  }
+  else {
+    fprintf(stderr, "invalid packet version");
+    exit(1);
+  }
 
   /* update the defaults */
   nchans  = packet.nchans;
@@ -228,24 +273,46 @@ int main(int argc, char *argv[])
 
     if (verbose>1) 
       for (n=0; n<12; n++) 
-        printf("buf[%2u] = %hhu\n", n, buf[n]);
+	printf("buf[%2u] = %hhu\n", n, buf[n]);
 
     /* parse the UDP package */
-    packet.version = *(uint16_t *)(buf+0);
-    packet.nchans  = *(uint16_t *)(buf+2);
-    packet.nbit    = *(uint16_t *)(buf+4);
-    packet.fsample = *(uint16_t *)(buf+6);
-    packet.sec     = *(uint16_t *)(buf+8);
-    packet.smp     = *(uint16_t *)(buf+10);
+    if (buf[0]==0) {
+      packet_v0.version = *(uint16_t *)(buf+0);
+      packet_v0.nchans  = *(uint16_t *)(buf+2);
+      packet_v0.nbit    = *(uint16_t *)(buf+4);
+      packet_v0.fsample = *(uint16_t *)(buf+6);
+      packet_v0.sec     = *(uint16_t *)(buf+8);
+      packet_v0.smp     = *(uint16_t *)(buf+10);
+      /* the packets are quite similar, the data starts at the same location */
+      packet.version = packet_v0.version;
+      packet.nchans  = packet_v0.nchans;
+      packet.nbit    = packet_v0.nbit;
+      packet.fsample = packet_v0.fsample;
+      packet.smp     = packet_v0.smp;
+    }
+    else if (buf[0]==3) {
+      packet_v3.version         = *(uint8_t  *)(buf+0);
+      packet_v3.nchans          = *(uint8_t  *)(buf+1);
+      packet_v3.diagnostic_word = *(uint16_t *)(buf+2);
+      packet_v3.mode_word       = *(uint16_t *)(buf+4);
+      packet_v3.fsample         = *(uint16_t *)(buf+6);
+      packet_v3.smp             = *(uint32_t *)(buf+8);
+      /* the packets are quite similar, the data starts at the same location */
+      packet.version = packet_v3.version;
+      packet.nchans  = packet_v3.nchans;
+      packet.nbit    = 16;
+      packet.fsample = packet_v3.fsample;
+      packet.smp     = packet_v3.smp;
+    }
+    else {
+      fprintf(stderr, "invalid packet version");
+      exit(1);
+    }
 
     /* point to the data */
     data->buf = (buf+12);
 
     /* do some sanity checks */
-    if (packet.version!=0) {
-      fprintf(stderr, "jaga2ft: inconsistent version %hu\n", packet.version);
-      exit(1);
-    }
     if (packet.nchans!=nchans) {
       fprintf(stderr, "jaga2ft: inconsistent number of channels %hu\n", packet.nchans);
       exit(1);
@@ -255,7 +322,7 @@ int main(int argc, char *argv[])
       exit(1);
     }
     if (packet.fsample!=fsample) {
-      fprintf(stderr, "jaga2ft: inconsistent samling rate %hu\n", packet.fsample);
+      fprintf(stderr, "jaga2ft: inconsistent sampling rate %hu\n", packet.fsample);
       exit(1);
     }
 
