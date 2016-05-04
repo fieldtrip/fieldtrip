@@ -111,7 +111,7 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     switch(cfg.plottype)
         case 'tf'
             set(st.nmt.gui.freqguih,'Visible','On'); % ensure plot is visible
-            nmt_tfplot(st.nmt.gui.ax_ts,st.nmt.time,st.nmt.freq,squeeze(st.nmt.fun(st.nmt.cfg.vox_idx,:,:)));
+            nmt_tfplot(st.nmt.gui.ax_ts,st.nmt.time,st.nmt.freq,squeeze(st.nmt.fun(st.nmt.cfg.vox_idx,:,:)),@nmt_repos_start);
         case 'ts'
             if(isfinite(st.nmt.cfg.vox_idx))
                 plot(st.nmt.gui.ax_ts,st.nmt.time,squeeze(st.nmt.fun(st.nmt.cfg.vox_idx,:,:)));
@@ -143,17 +143,27 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     ts_xhair_color = 'red';
     ts_xhair_width = 1;
     
-    ylim=get(st.nmt.gui.ax_ts,'YLim');
+    switch(st.nmt.cfg.plottype)
+        case 'ts'
+            ylim=get(st.nmt.gui.ax_ts,'YLim');
+        case 'tf'
+            ylim = [st.nmt.freq(st.nmt.cfg.freq_idx(1),1) st.nmt.freq(st.nmt.cfg.freq_idx(2),2)]
+    end
     axes(st.nmt.gui.ax_ts);
-    h=patch([st.nmt.time(st.nmt.cfg.time_idx(1)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[1 0.4 0.4],'EdgeColor','red');
+    h=patch([st.nmt.time(st.nmt.cfg.time_idx(1)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[400 400 400 400],[1 0.4 0.4],'EdgeColor','red');
 
     %% update GUI textboxes
     set(st.nmt.gui.t1,'String',num2str(st.nmt.time(st.nmt.cfg.time_idx(1))));
     set(st.nmt.gui.t2,'String',num2str(st.nmt.time(st.nmt.cfg.time_idx(2))));
 
-    set(st.nmt.gui.f1,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(1),1)));
-    set(st.nmt.gui.f2,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(2),2)));
-    
+    if(1)
+        set(st.nmt.gui.f1,'Value',st.nmt.cfg.freq_idx(1));
+        set(st.nmt.gui.f2,'Value',st.nmt.cfg.freq_idx(2));
+    else
+        set(st.nmt.gui.f1,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(1),1)));
+        set(st.nmt.gui.f2,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(2),2)));
+    end
+        
     set(st.nmt.gui.ax_ts,'ButtonDownFcn',@nmt_repos_start);
     
     %% optionally add topoplot
