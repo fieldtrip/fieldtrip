@@ -783,6 +783,9 @@ if ~isempty(cfg.funparameter)
             cfg.time_idx = [1 1]; % no time dimension in this case, e.g., 'pow'
             cfg.freq_idx = [1 1]; % frequency dimension is singleton in this case
         end
+        
+        set(st.nmt.gui.f1,'String',num2str(st.nmt.freq(:,1)));
+        set(st.nmt.gui.f2,'String',num2str(st.nmt.freq(:,2)));
 
         st.nmt.cfg = cfg;
         st.nmt.msk = reshape(msk,size(st.nmt.fun));
