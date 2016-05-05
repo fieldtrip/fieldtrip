@@ -1601,9 +1601,13 @@ end
 % for some unknown god-awful reason, the line command 'disables' all transparency
 % the below command resets it (it was the only axes property changed after adding the crosshair
 % I could find, and putting it back to 'childorder' instead of 'depth' fixes the problem. Lucky find -roevdmei
-set(h1,'sortMethod','childorder')
-set(h2,'sortMethod','childorder')
-set(h3,'sortMethod','childorder')
+% -update, the line command only 'disables' in the new graphics system introduced in 2014b (any version below is fine,
+% and does not contain the sortmethod property --> crash) - roevdmei
+if ~verLessThan('matlab','8.4') % 8.4 = 2014b
+  set(h1,'sortMethod','childorder')
+  set(h2,'sortMethod','childorder')
+  set(h3,'sortMethod','childorder')
+end
 
 if opt.showcrosshair
   set(opt.handlescross,'Visible','on');
