@@ -415,13 +415,19 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         elseif isfield(data, 'powspctrm')
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
-        tmpcfg = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
-        optarg = ft_cfg2keyval(tmpcfg.granger);
-        data   = ft_connectivity_csd2transfer(data, optarg{:});
-        % convert the inparam back to cell array in the case of granger
+        
+       % convert the inparam back to cell array in the case of granger
         if strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
+          tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
+          optarg  = ft_cfg2keyval(tmpcfg.granger);
+        else
+          tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {cfg.method});
+          optarg  = ft_cfg2keyval(tmpcfg.(cfg.method));
         end
+        
+        % compute the transfer matrix
+        data   = ft_connectivity_csd2transfer(data, optarg{:});
       end
       
     case 'source'
