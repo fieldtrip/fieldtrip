@@ -650,10 +650,6 @@ opt.changedchanflg = true; % trigger for redrawing channel labels and preparing 
 % create fig
 h = figure;
 
-% set opt.figheightatdraw as current size (used in plotting channel labels), which can only be done now
-figpos = get(h,'position');
-opt.figheightatdraw = figpos(4);
-
 % put appdata in figure
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
@@ -695,7 +691,9 @@ set(h, 'KeyPressFcn',           @keyboard_cb);
 set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
 set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
 set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
-
+if any(strcmp(cfg.viewmode, {'component', 'vertical'}))
+  set(h, 'ReSizeFcn',           @redraw_cb); % resize will now trigger redraw and replotting of labels
+end
 
 % make the user interface elements for the data view
 uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', opt.trialviewtype, 'userdata', 't')
@@ -1550,18 +1548,10 @@ offset    = opt.trlvis(opt.trlop, 3);
 chanindx  = match_str(opt.hdr.label, cfg.channel);
 
 % parse opt.changedchanflg, and reset
-changedchanflg = true;
-if opt.changedchanflg
+changedchanflg = false;
+if opt.changedchanflg || strcmp(eventdata.EventName,'SizeChanged') % also plot channel labels again if figure height has changed
   changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
   opt.changedchanflg = false;
-end
-% also plot channel labels again if figure height has changed
-figpos = get(h,'position');
-currfigheight = figpos(4);
-if currfigheight ~= opt.figheightatdraw;
-  changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-  opt.changedchanflg  = false;
-  opt.figheightatdraw = currfigheight;
 end
 
 
@@ -1826,7 +1816,8 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
         if opt.plotLabelFlag == 2 && strcmp(cfg.fontunits,'points')
           % determine number of labels to plot by estimating overlap using current figure size
           % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
-          figheight = opt.figheightatdraw;
+          figheight = get(h,'Position');
+          figheight = figheight(4);
           labdiscfac = ceil(numel(chanindx) ./ (figheight ./ (cfg.fontsize+4))); % 4 added, so that labels are not too close together (i.e. overlap if font was 2 points bigger)
         else
           labdiscfac = 10;
@@ -1856,7 +1847,8 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       if opt.plotLabelFlag == 2 && strcmp(cfg.fontunits,'points')
         % determine number of labels to plot by estimating overlap using current figure size
         % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
-        figheight = opt.figheightatdraw;
+        figheight = get(h,'Position');
+        figheight = figheight(4);
         labdiscfac = ceil(numel(chanindx) ./ (figheight ./ (cfg.fontsize+2))); % 2 added, so that labels are not too close together (i.e. overlap if font was 2 points bigger)
       else
         labdiscfac = 10;
