@@ -89,3 +89,4 @@ for k=1:N,
     ri(k,1)=mean(s.internal.avg'./min(s.between.avg)); 
   end
 end
+
