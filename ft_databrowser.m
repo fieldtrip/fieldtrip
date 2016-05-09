@@ -654,6 +654,9 @@ if ~isempty(cfg.renderer)
   set(h, 'renderer', cfg.renderer);
 end
 
+% set interruptible to off, see bug 3123
+set(h,'Interruptible','off','BusyAction', 'queue'); % enforce busyaction to queue to be sure
+
 % enable custom data cursor text
 dcm = datacursormode(h);
 set(dcm, 'updatefcn', @datacursortext);
