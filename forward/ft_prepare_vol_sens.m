@@ -497,8 +497,9 @@ elseif iseeg
         sens.elecpos(j,:) = bnd.pos(i,:);
       end
       
-      headmodel.transfer = sb_transfer(headmodel,sens);
-      
+      if ~isfield(headmodel,'transfer')
+        headmodel.transfer = sb_transfer(headmodel,sens);
+      end
     case 'interpolate'
       % this is to allow moving leadfield files
       if ~exist(headmodel.filename{1}, 'file')
