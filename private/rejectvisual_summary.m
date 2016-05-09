@@ -313,7 +313,8 @@ end % switch
 if any(info.chansel) && any(info.trlsel)
   % don't try to rescale the axes if they are empty
   % the 0.8-1.2 is needed to deal with the single trial case
-  axis([0.5 xmax+0.5 0.8*ymin 1.2*ymax]);
+  % note that both ymin and ymax can be negative
+  axis([0.5 xmax+0.5 (1-sign(ymin)*0.2)*ymin (1+sign(ymax)*0.2)*ymax]);
 end
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
