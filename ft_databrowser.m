@@ -1549,7 +1549,7 @@ chanindx  = match_str(opt.hdr.label, cfg.channel);
 
 % parse opt.changedchanflg, and reset
 changedchanflg = false;
-if opt.changedchanflg || strcmp(eventdata.EventName,'SizeChanged') % also plot channel labels again if figure height has changed
+if opt.changedchanflg || (exist('eventdata','var') && isa(eventdata,'matlab.ui.eventdata.SizeChangedData')) % also plot channel labels again if figure height has changed
   changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
   opt.changedchanflg = false;
 end
