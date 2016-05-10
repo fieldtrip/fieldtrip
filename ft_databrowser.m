@@ -718,10 +718,16 @@ for iArt = 1:length(artlabel)
   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
 end
+if length(artlabel)>1 % highlight the first one as active
+  arth = findobj(h,'tag','artifactui');
+  arth = arth(end:-1:1); % order is reversed so reverse it again
+  hsel = [1 2 3] + (opt.ftsel-1) .*3;
+  set(arth(hsel),'fontweight','bold')
+end
 
 if true % strcmp(cfg.viewmode, 'butterfly')
   % button to find label of nearest channel to datapoint
-  uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1])
+  uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1])
 end
 
 % 'edit preproc'-button
@@ -1246,6 +1252,14 @@ switch key
     if opt.ftsel > numart
       fprintf('data has no artifact type %i \n', opt.ftsel)
     else
+      % bold the active one
+      arth = findobj(h,'tag','artifactui');
+      arth = arth(end:-1:1); % order is reversed so reverse it again
+      hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+      set(arth(hsel),'fontweight','bold')
+      % unbold the passive ones
+      set(arth(setdiff(1:numel(arth),hsel)),'fontweight','normal')
+      % redraw
       setappdata(h, 'opt', opt);
       setappdata(h, 'cfg', cfg);
       fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.ftsel});
@@ -1693,7 +1707,7 @@ for j = ordervec
 
   for k=1:numel(artbeg)
     xpos = [tim(artbeg(k)) tim(artend(k))] + ([-.5 +.5]./opt.fsample);
-    h_artifact = ft_plot_box([xpos -1 1], 'facecolor', opt.artcolors(j,:), 'edgecolor', 'none', 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+    h_artifact = ft_plot_box([xpos -1 1], 'facecolor', opt.artcolors(j,:), 'facealpha', .7, 'edgecolor', 'none', 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
   end
 end % for each of the artifact channels
 
