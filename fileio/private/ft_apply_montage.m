@@ -242,8 +242,9 @@ if k > 0 && isfield(input, 'trial') % check for raw data now only
   cfg = [];
   cfg.channel = addlabel;
   data_unused = ft_selectdata(cfg, input);
-  tmp = cat(1, data_unused.trial{:});
-  if any(isnan(tmp(:)))
+  % use an anonymous function to test for the presence of NaNs in the input data
+  hasnan = @(x) any(isnan(x(:)));
+  if any(cellfun(hasnan, data_unused.trial))
     error('FieldTrip:NaNsinInputData', ['Your input data contains NaNs in channels that are unused '...
       'in the supplied montage. This would result in undesired NaNs in the '...
       'output data. Please remove these channels from the input data (using '...
