@@ -86,8 +86,7 @@ projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  p
 projectmom     = keyval('projectmom',    varargin); if isempty(projectmom),    projectmom = 'no';            end
 fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
 computekurt    = keyval('kurtosis',      varargin); if isempty(computekurt),   computekurt = 'no';           end
-weightnorm     = keyval('weightnorm',    varargin); if isempty(weightnorm),      weightnorm = 'no';            end
-NAI     = keyval('NAI',    varargin); if isempty(NAI),      NAI = 'no';            end
+weightnorm     = keyval('weightnorm',    varargin); if isempty(weightnorm),    weightnorm = 'no';            end
 
 % convert the yes/no arguments to the corresponding logical values
 keepfilter     = istrue(keepfilter);
@@ -98,8 +97,6 @@ projectnoise   = istrue(projectnoise);
 projectmom     = istrue(projectmom);
 fixedori       = istrue(fixedori);
 computekurt    = istrue(computekurt);
-weightnorm    = istrue(weightnorm);
-NAI    = istrue(NAI);
 
 % default is to use the trace of the covariance matrix, see Van Veen 1997
 if isempty(powmethod)
@@ -253,10 +250,10 @@ for i=1:size(dip.pos,1)
   end
   
   G = lf * lf'; % Gram matrix
-  invG = pinv(G + lambda * eye(size(G))); % regularized G^-1
+  invG = inv(G + lambda * eye(size(G))); % regularized G^-1
   
   if fixedori
-      [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * Cy * invG * lf);  % eqn 13.22 from Sekihara & Nagarajan 2008
+      [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * Cy * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
       [~,maxeig]=max(diag(dd));
       eta = vv(:,maxeig);
       lf  = lf * eta;
@@ -269,7 +266,7 @@ for i=1:size(dip.pos,1)
     filt = dip.filter{i};
   else
     % construct the spatial filter
-    filt = pinv(sqrt(lf' * invG * lf)) * lf' * invG;
+    filt = pinv(sqrt(lf' * invG * lf)) * lf' * invG;  % sLORETA
   end
   if projectmom
     [u, s, v] = svd(filt * Cy * ctranspose(filt));
