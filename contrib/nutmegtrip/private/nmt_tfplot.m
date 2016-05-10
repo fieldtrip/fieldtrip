@@ -33,7 +33,7 @@ set(st.nmt.gui.h_tf,'LineWidth',1); % seems to prevent faint lines around each T
 % limit labels to defined frequencies
 ytick = unique(f);
 if(length(ytick)<20) % but only if there aren't too many frequency bands!
-    set(st.nmt.gui.ax_ts,'YTick',unique(f));
+    set(axh,'YTick',unique(f));
 end
 axis(axh,'tight');
 %set(axh,'YScale','log');

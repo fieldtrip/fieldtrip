@@ -5,10 +5,13 @@ if(~exist('op','var'))
     op = '';
 end
 
+% TODO: how do we determine which axis was clicked? compare with gca??
+axsel = st.nmt.gui.ax_ts(1)
+
 switch(op)
     case 'ts'
         % if this was an interactive button-press in time series
-        currpt = get(st.nmt.gui.ax_ts,'CurrentPoint');
+        currpt = get(axsel,'CurrentPoint');
         currtimept = currpt(1,1);
         currfreqpt = currpt(1,2);
         
@@ -24,7 +27,7 @@ switch(op)
             else
                 st.nmt.cfg.freq_idx(2) = st.nmt.cfg.freq_idx;
                 
-                set(st.nmt.gui.ax_ts,'YTick');
+                set(axsel,'YTick');
             end
         end
     case 'textbox'
