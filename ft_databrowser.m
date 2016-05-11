@@ -2102,6 +2102,11 @@ end % function datacursortext
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function winresize_cb(h,eventdata)
 
+% check whether the current figure is the browser
+if get(0,'currentFigure') ~= h
+  return
+end
+
 % get opt, set flg for redrawing channels, redraw
 h = getparent(h);
 opt = getappdata(h, 'opt');
