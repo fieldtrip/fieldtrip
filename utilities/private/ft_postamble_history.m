@@ -1,13 +1,12 @@
 % FT_POSTAMBLE_HISTORY stores the configuration structure that is present in the
-% present workspace in the output variable. Furthermore, this function computes the
-% MD5 hash of the output data structures for provenance.
+% present workspace in the output variable.
 %
 % Use as
 %   ft_postamble history outputvar
 %
 % See also FT_POSTAMBLE_PROVENANCE
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -28,6 +27,9 @@
 % $Id$
 
 global ft_default
+
+% some fields are for internal use only and should not be stored
+cfg = removefields(cfg, ignorefields);
 
 for tmpindx=1:length(ft_default.postamble)
   if isequal(ft_default.postamble, {'varargout'})

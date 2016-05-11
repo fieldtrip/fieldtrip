@@ -17,6 +17,7 @@ function mri = ft_defacevolume(cfg, mri)
 %   cfg.translate  = initial rotation of the box (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
+%   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'yes')
 %
 % If you specify no smoothing, the selected area will be zero-masked. If you
 % specify a certain amount of smoothing (in voxels FWHM), the selected area will
@@ -68,6 +69,8 @@ cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined f
 cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
 cfg.selection = ft_getopt(cfg, 'selection', 'outside');
 cfg.smooth    = ft_getopt(cfg, 'smooth', 'no');
+cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'yes');
+cfg.feedback  = ft_getopt(cfg, 'feedback', 'yes');
 
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
@@ -107,7 +110,7 @@ clim(1) = dum(round(0.05*numel(dum)));
 clim(2) = dum(round(0.95*numel(dum)));
 anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
 
-ft_plot_ortho(anatomy, 'transform', mri.transform, 'resolution', resolution, 'style', 'intersect');
+ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
 axis vis3d
 view([110 36]);
 
@@ -158,16 +161,17 @@ delete(figHandle);
 drawnow
 fprintf('keeping all voxels from MRI that are %s the box\n', cfg.selection)
 
-R = cfg.R;
+% the order of application is scale, rotate, translate
 S = cfg.S;
+R = cfg.R;
 T = cfg.T;
 
 % it is possible to convert the box to headcoordinates, but it is more efficient the other way around
 [X, Y, Z] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
 voxpos = ft_warp_apply(mri.transform, [X(:) Y(:) Z(:)]);  % voxel positions in head coordinates
-voxpos = ft_warp_apply(inv(T*S*R), voxpos);               % voxel positions in box coordinates
+voxpos = ft_warp_apply(inv(T*R*S), voxpos);               % voxel positions in box coordinates
 
-keep = ...
+remove = ...
   voxpos(:,1) > -0.5 & ...
   voxpos(:,1) < +0.5 & ...
   voxpos(:,2) > -0.5 & ...
@@ -177,18 +181,36 @@ keep = ...
 
 if strcmp(cfg.selection, 'inside')
   % invert the selection, i.e. keep the voxels inside the box
-  keep = ~keep;
+  remove = ~remove;
 end
 
+if istrue(cfg.keepbrain)
+  tmpcfg = [];
+  tmpcfg.output = {'brain'};
+  seg = ft_volumesegment(tmpcfg, mri);
+  fprintf('keeping voxels in brain segmentation\n');
+  % keep the tissue of the brain
+  remove(seg.brain) = 0;
+  clear seg
+end
+
+if istrue(cfg.feedback)
+  tmpmri = keepfields(mri, {'anatomy', 'transform', 'coordsys', 'units', 'dim'});
+  tmpmri.remove = remove;
+  tmpcfg = [];
+  tmpcfg.funparameter = 'remove';
+  ft_sourceplot(tmpcfg, tmpmri);
+end  
+
 if isequal(cfg.smooth, 'no')
-  fprintf('zero-filling %.0f%% of the volume\n', 100*mean(keep));
-  mri.anatomy(keep) = 0;
+  fprintf('zero-filling %.0f%% of the volume\n', 100*mean(remove));
+  mri.anatomy(remove) = 0;
 else
   tmp = mri.anatomy;
   tmp = (1 + 0.5.*randn(size(tmp))).*tmp; % add 50% noise to each voxel
   tmp = volumesmooth(tmp, cfg.smooth, 'anatomy');
-  fprintf('smoothing %.0f%% of the volume\n', 100*mean(keep));
-  mri.anatomy(keep) = tmp(keep);
+  fprintf('smoothing %.0f%% of the volume\n', 100*mean(remove));
+  mri.anatomy(remove) = tmp(remove);
 end
 
 % remove the temporary fields from the configuration, keep the rest for provenance
