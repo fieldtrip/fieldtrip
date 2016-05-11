@@ -49,9 +49,9 @@ if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo))
   return
 end
 
-% add the user-specified cfg (before any defaults handling etc.) to the
-% callinfo
-cfg.callinfo.usercfg = cfg;
+% add the user-specified cfg (before any defaults handling etc.) to the callinfo
+% some fields are for internal use only and should not be stored
+cfg.callinfo.usercfg = removefields(cfg, ignorefields);
 
 if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
   % compute the MD5 hash of each of the input arguments

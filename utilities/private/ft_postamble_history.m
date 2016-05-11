@@ -28,18 +28,8 @@
 
 global ft_default
 
-try
-  % these fields are for internal use only and should not be stored in the data structure
-  cfg = removefields(cfg, {
-    'trackconfig'
-    'trackusage'
-    'trackdatainfo'
-    'trackcallinfo'
-    'showcallinfo'
-    'warning'
-    'progress'
-    });
-end
+% some fields are for internal use only and should not be stored
+cfg = removefields(cfg, ignorefields);
 
 for tmpindx=1:length(ft_default.postamble)
   if isequal(ft_default.postamble, {'varargout'})
