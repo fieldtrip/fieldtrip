@@ -96,7 +96,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % cfg.selfun and cfg.selcfg. You can use multiple functions by giving the names/cfgs
 % as a cell-array.
 %
-% In butterfly mode, you can use the "identify" button to reveal the name of a
+% In butterfly and vertical mode, you can use the "identify" button to reveal the name of a
 % channel. Please be aware that it searches only vertically. This means that it will
 % return the channel with the amplitude closest to the point you have clicked at the
 % specific time point. This might be counterintuitive at first.
@@ -718,10 +718,16 @@ for iArt = 1:length(artlabel)
   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', ['shift+' num2str(iArt)], 'position', [0.91, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
   uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', ['control+' num2str(iArt)], 'position', [0.96, 0.855 - ((iArt-1)*0.09), 0.03, 0.04], 'backgroundcolor', opt.artcolors(iArt,:))
 end
+if length(artlabel)>1 % highlight the first one as active
+  arth = findobj(h,'tag','artifactui');
+  arth = arth(end:-1:1); % order is reversed so reverse it again
+  hsel = [1 2 3] + (opt.ftsel-1) .*3;
+  set(arth(hsel),'fontweight','bold')
+end
 
 if true % strcmp(cfg.viewmode, 'butterfly')
   % button to find label of nearest channel to datapoint
-  uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1])
+  uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.1, 0.08, 0.05], 'backgroundcolor', [1 1 1])
 end
 
 % 'edit preproc'-button
@@ -1246,6 +1252,14 @@ switch key
     if opt.ftsel > numart
       fprintf('data has no artifact type %i \n', opt.ftsel)
     else
+      % bold the active one
+      arth = findobj(h,'tag','artifactui');
+      arth = arth(end:-1:1); % order is reversed so reverse it again
+      hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+      set(arth(hsel),'fontweight','bold')
+      % unbold the passive ones
+      set(arth(setdiff(1:numel(arth),hsel)),'fontweight','normal')
+      % redraw
       setappdata(h, 'opt', opt);
       setappdata(h, 'cfg', cfg);
       fprintf('switching to the "%s" artifact\n', opt.artdata.label{opt.ftsel});
@@ -1427,29 +1441,49 @@ switch key
     delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
     redraw_cb(h, eventdata);
   case 'i'
-    if strcmp(cfg.viewmode, 'butterfly')
-      delete(findobj(h, 'tag', 'identify'));
-      % click in data and get name of nearest channel
-      fprintf('click in the figure to identify the name of the closest channel\n');
-      val = ginput(1);
-      pos = val(1);
-      % transform 'val' to match data
-      val(1) = val(1) * range(opt.hlim) + opt.hlim(1);
-      val(2) = val(2) * range(opt.vlim) + opt.vlim(1);
-      channame = val2nearestchan(opt.curdata,val);
-      channb = match_str(opt.curdata.label,channame);
+    delete(findobj(h, 'tag', 'identify'));
+    % click in data and get name of nearest channel
+    fprintf('click in the figure to identify the name of the closest channel\n');
+    val = ginput(1);
+    pos = val(1);
+    if strcmp(cfg.viewmode, 'butterfly') || strcmp(cfg.viewmode, 'vertical')
+      switch cfg.viewmode
+        case 'butterfly'
+          % transform 'val' to match data
+          val(1) = val(1) * range(opt.hlim) + opt.hlim(1);
+          val(2) = val(2) * range(opt.vlim) + opt.vlim(1);
+          channame = val2nearestchan(opt.curdata,val);
+          channb   = match_str(opt.curdata.label,channame);
+          % set chanposind
+          chanposind = 1; % butterfly mode, pos is the first for all channels
+        case 'vertical'
+          % find channel identity by extracting timecourse objects and finding the time course closest to the cursor
+          % this is a lot easier than the reverse, determining the y value of each time course scaled by the layout and vlim
+          tcobj   = findobj(h,'tag','timecourse');
+          tmpydat = get(tcobj,'ydata');
+          tmpydat = cat(1,tmpydat{:});
+          tmpydat = tmpydat(end:-1:1,:); % order of timecourse objects is reverse of channel order
+          tmpxdat = get(tcobj(1),'xdata');
+          % first find closest sample on x
+          xsmp = nearest(tmpxdat,val(1));
+          % then find closes y sample, being the channel number
+          channb   = nearest(tmpydat(:,xsmp),val(2));
+          channame = opt.curdata.label{channb};
+          % set chanposind
+          chanposind = match_str(opt.laytime.label,channame);
+      end
       fprintf('channel name: %s\n',channame);
       redraw_cb(h, eventdata);
       ft_plot_text(pos, 0.9, channame, 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'tag', 'identify', 'interpreter', 'none', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
       if ~ishold
         hold on
-        ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
+        ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(chanposind,1), 'vpos', opt.laytime.pos(chanposind,2), 'width', opt.laytime.width(chanposind), 'height', opt.laytime.height(chanposind), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
         hold off
       else
-        ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(1,1), 'vpos', opt.laytime.pos(1,2), 'width', opt.laytime.width(1), 'height', opt.laytime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
+        ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(chanposind,1), 'vpos', opt.laytime.pos(chanposind,2), 'width', opt.laytime.width(chanposind), 'height', opt.laytime.height(chanposind), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
       end
     else
-      warning('only supported with cfg.viewmode=''butterfly''');
+      warning('only supported with cfg.viewmode=''butterfly/vertical''');
     end
   case 's'
     % toggle between selectmode options: switch from 'markartifact', to 'markpeakevent' to 'marktroughevent' and back with on screen feedback
@@ -1673,7 +1707,7 @@ for j = ordervec
 
   for k=1:numel(artbeg)
     xpos = [tim(artbeg(k)) tim(artend(k))] + ([-.5 +.5]./opt.fsample);
-    h_artifact = ft_plot_box([xpos -1 1], 'facecolor', opt.artcolors(j,:), 'edgecolor', 'none', 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
+    h_artifact = ft_plot_box([xpos -1 1], 'facecolor', opt.artcolors(j,:), 'facealpha', .7, 'edgecolor', 'none', 'tag', 'artifact', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1]);
   end
 end % for each of the artifact channels
 

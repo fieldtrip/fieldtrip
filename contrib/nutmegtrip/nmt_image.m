@@ -34,7 +34,7 @@ switch(op)
                 if(all(blobidx <= blobdim & blobidx > 0))
                     %                blobintensity = st.vols{1}.blobs{1}.vol(blobidx(1),blobidx(2),blobidx(3));
                     st.nmt.cfg.vox_idx  = sub2ind(size(st.vols{1}.blobs{1}.vol),blobidx(1),blobidx(2),blobidx(3));
-                    blobintensity = st.nmt.fun(st.nmt.cfg.vox_idx);
+                    blobintensity = st.nmt.fun{1}(st.nmt.cfg.vox_idx);
                 else % if out of blob's bounds
                     blobintensity = NaN;
                     st.nmt.cfg.vox_idx = NaN;
@@ -46,7 +46,7 @@ switch(op)
                     % st.vols{1}.blobs{1}.mat is the functional voxelsize
                     % if selected voxel is farther than sqrt(1/2)*voxelsize from
                     % nearest functional voxel, then we must be outside the VOI
-                    blobintensity = st.nmt.fun(st.nmt.cfg.vox_idx);
+                    blobintensity = st.nmt.fun{1}(st.nmt.cfg.vox_idx);
                 else
                     blobintensity = NaN;
                 end
@@ -60,7 +60,7 @@ switch(op)
             end
 
             
-            if(size(st.nmt.fun,2)>1)
+            if(size(st.nmt.fun{1},2)>1)
                 nmt_timeselect;
             end
         else
