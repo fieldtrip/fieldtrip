@@ -434,9 +434,8 @@ switch cfg.method
     
   case 'project'
         elec = cfg.elec;
-        [~, prj] = project_elec(elec.chanpos, headshape.pos, headshape.tri);
+        [~, prj] = project_elec(elec.elecpos, headshape.pos, headshape.tri);
         % update electrodes
-        elec.chanpos = prj;
         elec.elecpos = prj;
 end % switch method
 
