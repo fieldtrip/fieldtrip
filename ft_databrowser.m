@@ -1281,6 +1281,14 @@ switch key
       else
         fprintf('going to previous %s with "%s" artifact\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
         opt.trlop = newtrlop;
+        % other artifact type potentially selected, bold the active one
+        arth = findobj(h,'tag','artifactui');
+        arth = arth(end:-1:1); % order is reversed so reverse it again
+        hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+        set(arth(hsel),'fontweight','bold')
+        % unbold the passive ones
+        set(arth(setdiff(1:numel(arth),hsel)),'fontweight','normal')
+        % export into fig and continue
         setappdata(h, 'opt', opt);
         setappdata(h, 'cfg', cfg);
         redraw_cb(h, eventdata);
@@ -1316,6 +1324,14 @@ switch key
       else
         fprintf('going to next %s with "%s" artifact\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
         opt.trlop = newtrlop;
+        % other artifact type potentially selected, bold the active one
+        arth = findobj(h,'tag','artifactui');
+        arth = arth(end:-1:1); % order is reversed so reverse it again
+        hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+        set(arth(hsel),'fontweight','bold')
+        % unbold the passive ones
+        set(arth(setdiff(1:numel(arth),hsel)),'fontweight','normal')
+        % export into fig and continue
         setappdata(h, 'opt', opt);
         setappdata(h, 'cfg', cfg);
         redraw_cb(h, eventdata);
