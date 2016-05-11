@@ -69,10 +69,14 @@ persistent closing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
-  a = 0;
-  p = 0;
-  h = 0;
-  c = 0;
+  % reset these to the defaults
+  a  = 0;
+  h  = 0;
+  p  = 0;
+  t  = 'none';
+  s  = '';
+  t0 = [];
+  p0 = [];
   strlen = 0;
   tprev = tic();
   lastArgin = [];
