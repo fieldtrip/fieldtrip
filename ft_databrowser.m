@@ -1258,6 +1258,14 @@ switch key
     if opt.ftsel > numart
       fprintf('data has no artifact type %i \n', opt.ftsel)
     else
+      % bold the active artifact type 
+      arth = findobj(h,'tag','artifactui');
+      arth = arth(end:-1:1); % order is reversed so reverse it again
+      hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+      set(arth(hsel),'fontweight','bold')
+      % unbold the passive ones
+      set(arth(setdiff(1:numel(arth),hsel)),'fontweight','normal')
+      
       % find the previous occuring artifact, keeping in mind that:
       % 1) artifacts can cross trial boundaries
       % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
@@ -1293,6 +1301,14 @@ switch key
     if opt.ftsel > numart
       fprintf('data has no artifact type %i \n', opt.ftsel)
     else
+      % bold the active artifact type
+      arth = findobj(h,'tag','artifactui');
+      arth = arth(end:-1:1); % order is reversed so reverse it again
+      hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+      set(arth(hsel),'fontweight','bold')
+      % unbold the passive ones
+      set(arth(setdiff(1:numel(arth),hsel)),'fontweight','normal')
+      
       % find the next occuring artifact, keeping in mind that:
       % 1) artifacts can cross trial boundaries
       % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
