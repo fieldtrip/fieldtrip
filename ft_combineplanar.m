@@ -112,12 +112,13 @@ end
 
 % find the combination of horizontal and vertical channels that should be combined
 planar = ft_senslabel(ft_senstype(data), 'output', 'planarcombined');
-[dum, sel_dH]    = match_str(planar(:,1), data.label);  % indices of the horizontal channels
-[dum, sel_dV]    = match_str(planar(:,2), data.label);  % indices of the vertical   channels
+[sel_pH, sel_dH]    = match_str(planar(:,1), data.label);  % indices of the horizontal channels
+[sel_pV, sel_dV]    = match_str(planar(:,2), data.label);  % indices of the vertical   channels
 
-if length(sel_dH)~=length(sel_dV)
-  error('not all planar channel combinations are complete')
-end
+% identify and remove unnpaired channels
+[dum,iH,iV]     = intersect(sel_pH,sel_pV);
+sel_dH=sel_dH(iH);
+sel_dV=sel_dV(iV);
 
 % find the other channels that are present in the data
 sel_other = setdiff(1:length(data.label), [sel_dH(:)' sel_dV(:)']);
