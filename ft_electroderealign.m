@@ -5,7 +5,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % which only the coordinate system is changed. With the right settings if can apply
 % additional deformations to the input sensors (e.g. scale them to better fit the
 % skin surface). The different methods are described in detail below.
-
+%
 % INTERACTIVE - You can display the skin surface together with the
 % electrode or gradiometer positions, and manually (using the graphical
 % user interface) adjust the rotation, translation and scaling parameters,
