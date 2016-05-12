@@ -161,7 +161,7 @@ switch dtype
     resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
 
     clear ft_plot_slice
-    ft_plot_ortho(funparam, 'transform', data.transform, 'resolution', resolution, 'style', 'intersect');
+    ft_plot_ortho(funparam, 'transform', data.transform, 'unit', data.unit, 'resolution', resolution, 'style', 'intersect');
     axis vis3d
     view([110 36]);
 
