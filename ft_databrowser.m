@@ -1275,18 +1275,37 @@ switch key
     if opt.ftsel > numart
       fprintf('data has no artifact type %i \n', opt.ftsel)
     else
-      cursam = opt.trlvis(opt.trlop,1);
-      artsam = find(opt.artdata.trial{1}(opt.ftsel,1:cursam-1), 1, 'last');
-      if isempty(artsam)
-        fprintf('no earlier "%s" artifact found\n', opt.artdata.label{opt.ftsel});
-      else
-        fprintf('going to previous "%s" artifact\n', opt.artdata.label{opt.ftsel});
-        if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
-          arttrl = nearest(opt.trlvis(:,1),artsam);
-        else
-          arttrl = nearest(opt.trlvis(:,1),artsam)-1;
+      % find the previous occuring artifact, keeping in mind that:
+      % 1) artifacts can cross trial boundaries
+      % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
+      % fetch trl representation of current artifact type
+      arttrl = convert_event(opt.artdata.trial{1}(opt.ftsel,:),'trl');
+      % discard artifacts in the future
+      curvisend = opt.trlvis(opt.trlop,2);
+      arttrl(arttrl(:,1) > curvisend,:) = [];
+      % find nearest artifact by searching in each trl (we have to do this here everytime, because trlvis can change on the fly because of x-zooming)
+      newtrlop = [];
+      for itrlvis = opt.trlop-1:-1:1
+        % is either the start or the end of any artifact present?
+        if any(any(opt.trlvis(itrlvis,1)<=arttrl(:,1:2) & opt.trlvis(itrlvis,2)>=arttrl(:,1:2)))
+          % if so, we're done
+          newtrlop = itrlvis;
+          break
         end
-        opt.trlop = arttrl;
+      end
+      if isempty(newtrlop)
+        fprintf('no earlier %s with "%s" artifact found\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
+      else
+        fprintf('going to previous %s with "%s" artifact\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
+        opt.trlop = newtrlop;
+        % other artifact type potentially selected, bold the active one
+        arth = findobj(h,'tag','artifactui');
+        arth = arth(end:-1:1); % order is reversed so reverse it again
+        hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+        set(arth(hsel),'fontweight','bold')
+        % unbold the passive ones
+        set(arth(setdiff(1:numel(arth),hsel)),'fontweight','normal')
+        % export into fig and continue
         setappdata(h, 'opt', opt);
         setappdata(h, 'cfg', cfg);
         redraw_cb(h, eventdata);
@@ -1299,18 +1318,37 @@ switch key
     if opt.ftsel > numart
       fprintf('data has no artifact type %i \n', opt.ftsel)
     else
-      cursam = opt.trlvis(opt.trlop,2);
-      artsam = find(opt.artdata.trial{1}(opt.ftsel,cursam+1:end), 1, 'first') + cursam;
-      if isempty(artsam)
-        fprintf('no later "%s" artifact found\n', opt.artdata.label{opt.ftsel});
-      else
-        fprintf('going to next "%s" artifact\n', opt.artdata.label{opt.ftsel});
-        if opt.trlvis(nearest(opt.trlvis(:,1),artsam),1) < artsam
-          arttrl = nearest(opt.trlvis(:,1),artsam);
-        else
-          arttrl = nearest(opt.trlvis(:,1),artsam)-1;
+      % find the next occuring artifact, keeping in mind that:
+      % 1) artifacts can cross trial boundaries
+      % 2) artifacts might not occur inside a trial boundary (when data is segmented differently than during artifact detection)
+      % fetch trl representation of current artifact type
+      arttrl = convert_event(opt.artdata.trial{1}(opt.ftsel,:),'trl');
+      % discard artifacts in the past
+      curvisbeg = opt.trlvis(opt.trlop,1);
+      arttrl(arttrl(:,2) < curvisbeg,:) = [];
+      % find nearest artifact by searching in each trl (we have to do this here everytime, because trlvis can change on the fly because of x-zooming)
+      newtrlop = [];
+      for itrlvis = opt.trlop+1:size(opt.trlvis,1)
+        % is either the start or the end of any artifact present?
+        if any(any(opt.trlvis(itrlvis,1)<=arttrl(:,1:2) & opt.trlvis(itrlvis,2)>=arttrl(:,1:2)))
+          % if so, we're done
+          newtrlop = itrlvis;
+          break
         end
-        opt.trlop = arttrl;
+      end
+      if isempty(newtrlop)
+        fprintf('no later %s with "%s" artifact found\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
+      else
+        fprintf('going to next %s with "%s" artifact\n', opt.trialviewtype, opt.artdata.label{opt.ftsel});
+        opt.trlop = newtrlop;
+        % other artifact type potentially selected, bold the active one
+        arth = findobj(h,'tag','artifactui');
+        arth = arth(end:-1:1); % order is reversed so reverse it again
+        hsel = [1 2 3] + (opt.ftsel-1) .*3 ;
+        set(arth(hsel),'fontweight','bold')
+        % unbold the passive ones
+        set(arth(setdiff(1:numel(arth),hsel)),'fontweight','normal')
+        % export into fig and continue
         setappdata(h, 'opt', opt);
         setappdata(h, 'cfg', cfg);
         redraw_cb(h, eventdata);
