@@ -260,6 +260,8 @@ if isempty(cfg.coordsys)
     cfg.coordsys = 'spm';
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
+  else
+    error('you should specify the desired head coordinate system in cfg.coordsys')
   end
   warning('defaulting to %s coordinate system', cfg.coordsys);
 end
@@ -741,20 +743,21 @@ switch cfg.method
       target.pos    = target.pos;
       target.inside = (1:size(target.pos,1))';
 
-      functional     = rmfield(shape,'pos');
-      functional.pow = info.distanceout(:);
-      functional.pos = info.qout';
+      functional          = rmfield(shape,'pos');
+      functional.distance = info.distanceout(:);
+      functional.pos      = info.qout';
 
       tmpcfg              = [];
-      tmpcfg.parameter    = 'pow';
+      tmpcfg.parameter    = 'distance';
       tmpcfg.interpmethod = 'sphere_avg';
       tmpcfg.sphereradius = 10;
+      tmpcfg.feedback     = 'none';
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
-      scalp.distance      = smoothdist.pow(:);
+      scalp.distance      = smoothdist.distance(:);
 
       functional.pow      = info.distancein(:);
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
-      scalp.distancein    = smoothdist.pow(:);
+      scalp.distancein    = smoothdist.distance(:);
 
       cfg.icpinfo = info;
       cfg.transform_icp = M2;

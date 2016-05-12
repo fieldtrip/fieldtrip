@@ -179,8 +179,13 @@ corner_vc = [
 corner_hc = ft_warp_apply(transform, corner_vc);
 
 if isempty(unit)
-  % estimate the geometrical units we are dealing with
-  unit = ft_estimate_units(norm(range(corner_hc)));
+  if ~isequal(transform, eye(4))
+    % estimate the geometrical units we are dealing with
+    unit = ft_estimate_units(norm(range(corner_hc)));
+  else
+    % units are in voxels, these are assumed to be close to mm
+    unit = 'mm';
+  end
 end
 if isempty(resolution)
   % the default resolution is 1 mm

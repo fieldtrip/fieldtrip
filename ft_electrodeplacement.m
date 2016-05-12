@@ -115,7 +115,7 @@ end
 switch cfg.method
   case 'volume'
     mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes');
-  case 'headshape'
+  case  {'headshape'}
     headshape = fixpos(varargin{1});
     headshape = ft_determine_coordsys(headshape);
 end
@@ -430,7 +430,7 @@ switch cfg.method
     if isfield(mri, 'coordsys')
       elec.coordsys = mri.coordsys;
     end
-
+    
 end % switch method
 
 % do the general cleanup and bookkeeping at the end of the function
