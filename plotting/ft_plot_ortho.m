@@ -10,15 +10,19 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'style'        = string, 'subplot' or 'intersect' (default = 'subplot')
+%   'orientation'  = 3x3 matrix specifying the directions orthogonal through the planes which will be plotted
 %   'parents'      = (optional) 3-element vector containing the handles of the axes for the subplots (when style = 'subplot')
 %   'surfhandle'   = (optional) 3-element vector containing the handles of the surfaces for each of the sublots (when style = 'subplot'). Parents and surfhandle are mutually exclusive
+%   'update'       = (optional) 3-element boolean vector with the axes that should be updated (default = [true true true])
+%
+% The following options are supported and passed on to FT_PLOT_SLICE
+%   'clim'         = [min max], lower and upper color limits
 %   'transform'    = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted
 %   'location'     = 1x3 vector specifying a point on the plane which will be plotted the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
-%   'orientation'  = 3x3 matrix specifying the directions orthogonal through the planes which will be plotted
 %   'datmask'      = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'     = string, see COLORMAP
-%   'clim'         = [min max], lower and upper color limits
+%   'unit'         = string, can be 'm', 'cm' or 'mm (default is automatic)
 %
 % See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 
@@ -59,12 +63,11 @@ end
 % other options such as location and transform are passed along to ft_plot_slice
 style     = ft_getopt(varargin(sellist), 'style', 'subplot');
 ori       = ft_getopt(varargin(sellist), 'orientation', eye(3));
-clim      = ft_getopt(varargin(sellist), 'clim', []);
 
 if strcmp(style, 'subplot')
   parents    = ft_getopt(varargin(sellist), 'parents');
   surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
-  update     = ft_getopt(varargin(sellist), 'update', [1 1 1]);
+  update     = ft_getopt(varargin(sellist), 'update', [true true true]);
   if ~isempty(surfhandle) && ~isempty(parents)
     error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
   end
@@ -73,7 +76,6 @@ end
 if ~isa(dat, 'double')
   dat = cast(dat, 'double');
 end
-
 
 % determine the orientation key-value pair
 keys = varargin(sellist(1:2:end));

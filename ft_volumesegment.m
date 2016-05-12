@@ -632,7 +632,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
   end % while createoutputs
 
 else
-  error('unknown output %s requested', cfg.output);
+  error('unknown output %s requested\n', cfg.output{:});
 end
 
 % remove unnecessary fields

@@ -449,6 +449,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_view(h, eventdata)
 
+% FIXME this is hardcoded for a particular (probably MNI/SPM) coordinate system
 val = get(h, 'value');
 switch val
   case 1
@@ -463,7 +464,6 @@ switch val
     view([-180 0]);
   case 6
     view([0 0]);
-
   otherwise
 end
 uiresume;
