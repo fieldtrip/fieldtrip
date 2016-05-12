@@ -191,7 +191,7 @@ cfg.gradscale       = ft_getopt(cfg, 'gradscale');
 cfg.chanscale       = ft_getopt(cfg, 'chanscale');
 cfg.mychanscale     = ft_getopt(cfg, 'mychanscale');
 cfg.layout          = ft_getopt(cfg, 'layout');
-cfg.plotlabels      = ft_getopt(cfg, 'plotlabels', 'yes');
+cfg.plotlabels      = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event           = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
 cfg.continuous      = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
 cfg.ploteventlabels = ft_getopt(cfg, 'ploteventlabels', 'type=value');
@@ -199,8 +199,8 @@ cfg.precision       = ft_getopt(cfg, 'precision', 'double');
 cfg.zlim            = ft_getopt(cfg, 'zlim', 'maxmin');
 cfg.compscale       = ft_getopt(cfg, 'compscale', 'global');
 cfg.renderer        = ft_getopt(cfg, 'renderer');
-cfg.fontsize        = ft_getopt(cfg, 'fontsize', 0.03);
-cfg.fontunits       = ft_getopt(cfg, 'fontunits', 'normalized');     % inches, centimeters, normalized, points, pixels
+cfg.fontsize        = ft_getopt(cfg, 'fontsize', 12);
+cfg.fontunits       = ft_getopt(cfg, 'fontunits', 'points');     % inches, centimeters, normalized, points, pixels
 cfg.editfontsize    = ft_getopt(cfg, 'editfontsize', 12);
 cfg.editfontunits   = ft_getopt(cfg, 'editfontunits', 'points');     % inches, centimeters, normalized, points, pixels
 cfg.axisfontsize    = ft_getopt(cfg, 'axisfontsize', 10);
@@ -647,7 +647,10 @@ end
 % set changedchanflg as true for initialization
 opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
 
+% create fig
 h = figure;
+
+% put appdata in figure
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
 if ~isempty(cfg.renderer)
@@ -691,7 +694,9 @@ set(h, 'KeyPressFcn',           @keyboard_cb);
 set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
 set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
 set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
-
+if any(strcmp(cfg.viewmode, {'component', 'vertical'}))
+  set(h, 'ReSizeFcn',           @winresize_cb); % resize will now trigger redraw and replotting of labels
+end
 
 % make the user interface elements for the data view
 uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', opt.trialviewtype, 'userdata', 't')
@@ -1605,12 +1610,13 @@ endsample = opt.trlvis(opt.trlop, 2);
 offset    = opt.trlvis(opt.trlop, 3);
 chanindx  = match_str(opt.hdr.label, cfg.channel);
 
-% parse opt.changedchanflg, and reset
-changedchanflg = true;
-if opt.changedchanflg
+% parse opt.changedchanflg, and rese
+changedchanflg = false;
+if opt.changedchanflg 
   changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
   opt.changedchanflg = false;
 end
+
 
 if ~isempty(opt.event) && isstruct(opt.event)
   % select only the events in the current time window
@@ -1869,7 +1875,17 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
     if ~isempty(datsel) && ~isempty(laysel)
       % only plot chanlabels when necessary
       if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-        if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,10)==0)
+        % determine how many labels to skip in case of 'some'
+        if opt.plotLabelFlag == 2 && strcmp(cfg.fontunits,'points')
+          % determine number of labels to plot by estimating overlap using current figure size
+          % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
+          figheight = get(h,'Position');
+          figheight = figheight(4);
+          labdiscfac = ceil(numel(chanindx) ./ (figheight ./ (cfg.fontsize+6))); % 6 added, so that labels are not too close together (i.e. overlap if font was 6 points bigger)
+        else
+          labdiscfac = 10;
+        end
+        if opt.plotLabelFlag == 1 || (opt.plotLabelFlag == 2 && mod(i,labdiscfac)==0)
           ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right', 'interpreter', 'none', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'linewidth', cfg.linewidth);
           set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
         end
@@ -1885,18 +1901,37 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       setappdata(lh, 'ft_databrowser_yaxis', dat(datsel,:));
     end
   end
-
-  if length(chanindx)>19
-    % no space for yticks
-    yTick = [];
-    yTickLabel = [];
-  elseif length(chanindx)> 6
-    % one tick per channel
-    yTick = sort([
-      opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4)
-      opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)
-      ]);
-    yTickLabel = {[.25 .75] .* range(opt.vlim) + opt.vlim(1)};
+  
+  % plot yticks
+  if length(chanindx)> 6
+    % plot yticks at each label in case adaptive labeling is used (cfg.plotlabels = 'some')
+    % otherwise, use the old ytick plotting based on hard-coded number of channels
+    if opt.plotLabelFlag == 2
+      if opt.plotLabelFlag == 2 && strcmp(cfg.fontunits,'points')
+        % determine number of labels to plot by estimating overlap using current figure size
+        % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
+        figheight = get(h,'Position');
+        figheight = figheight(4);
+        labdiscfac = ceil(numel(chanindx) ./ (figheight ./ (cfg.fontsize+2))); % 2 added, so that labels are not too close together (i.e. overlap if font was 2 points bigger)
+      else
+        labdiscfac = 10;
+      end
+      yTick = sort(labely(mod(chanindx,labdiscfac)==0),'ascend'); % sort is required, yticks should be increasing in value
+      yTickLabel = [];
+    else
+      if length(chanindx)>19
+        % no space for yticks
+        yTick = [];
+        yTickLabel = [];
+      elseif length(chanindx)> 6
+        % one tick per channel
+        yTick = sort([
+          opt.laytime.pos(:,2)+(opt.laytime.height(laysel)/4)
+          opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/4)
+          ]);
+        yTickLabel = {[.25 .75] .* range(opt.vlim) + opt.vlim(1)};
+      end
+    end
   else
     % two ticks per channel
     yTick = sort([
@@ -1907,7 +1942,6 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       ]); % sort
     yTickLabel = {[.0 .25 .75 1] .* range(opt.vlim) + opt.vlim(1)};
   end
-
   yTickLabel = repmat(yTickLabel, 1, length(chanindx));
   set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel);
 
@@ -2104,16 +2138,16 @@ if strcmp(linetype, 'event')
 elseif strcmp(linetype, 'channel')
   % get plotted x axis
   plottedX = get(event_obj.Target, 'xdata');
-
+  
   % determine values of data at real x axis
   timeAxis = getappdata(event_obj.Target, 'ft_databrowser_xaxis');
   dataAxis = getappdata(event_obj.Target, 'ft_databrowser_yaxis');
   tInd = nearest(plottedX, pos(1));
-
+  
   % get label
   chanLabel = getappdata(event_obj.Target, 'ft_databrowser_label');
   chanLabel = chanLabel{1};
-
+  
   cursortext = sprintf('t = %g\n%s = %g', timeAxis(tInd), chanLabel, dataAxis(tInd));
 else
   cursortext = '<no cursor available>';
@@ -2122,3 +2156,26 @@ else
   % 1 always)
 end
 end % function datacursortext
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function winresize_cb(h,eventdata)
+
+% check whether the current figure is the browser
+if get(0,'currentFigure') ~= h
+  return
+end
+
+% get opt, set flg for redrawing channels, redraw
+h = getparent(h);
+opt = getappdata(h, 'opt');
+opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
+setappdata(h, 'opt', opt);
+redraw_cb(h,eventdata);
+
+end  % function datacursortext
+
