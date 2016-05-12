@@ -10,8 +10,6 @@ function om_save_sym(data,filename,format)
 %       FORMAT : can be 'ascii' or 'binary' or 'matlab' (default)
 %
 
-% $Id$
-
 me = 'OM_SAVE_SYM';
 
 if nargin == 0
@@ -53,4 +51,3 @@ switch format
     otherwise
         error([me,' : Unknown file format'])
 end
-
