@@ -31,7 +31,6 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %   cfg.method         = string representing the method for aligning or placing the electrodes
 %                        'mri'             place electrodes in a brain volume
 %                        'headshape'       place electrodes on the head surface
-%                        'project'         projects electrodes onto the head surface
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = '1','2', ...)
 %   cfg.elec           = struct containing previously placed electrodes (this overwrites cfg.channel)
@@ -87,7 +86,7 @@ end
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
 % set the defaults
-cfg.method        = ft_getopt(cfg, 'method');                 % volume, headshape, project
+cfg.method        = ft_getopt(cfg, 'method');                 % volume, headshape
 cfg.parameter     = ft_getopt(cfg, 'parameter',    'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',             []); % default will be determined further down {'1', '2', ...}
 cfg.elec          = ft_getopt(cfg, 'elec',                []); % use previously placed electrodes
@@ -116,7 +115,7 @@ end
 switch cfg.method
   case 'volume'
     mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes');
-  case  {'headshape','project'}
+  case  {'headshape'}
     headshape = fixpos(varargin{1});
     headshape = ft_determine_coordsys(headshape);
 end
@@ -432,11 +431,6 @@ switch cfg.method
       elec.coordsys = mri.coordsys;
     end
     
-  case 'project'
-        elec = cfg.elec;
-        [~, prj] = project_elec(elec.elecpos, headshape.pos, headshape.tri);
-        % update electrodes
-        elec.elecpos = prj;
 end % switch method
 
 % do the general cleanup and bookkeeping at the end of the function
