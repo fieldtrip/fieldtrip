@@ -62,7 +62,7 @@ vol = fixpos(vol); % renames old subfield 'pnt' to 'pos', if necessary
 
 % Variable declarations
 CPU_LIM = feature('numCores');
-VOXCHUNKSIZE = 30000;
+VOXCHUNKSIZE = 30000; % if OpenMEEG uses too much memory for a given computer, try reducing VOXCHUNKSIZE
 om_format = 'binary'; % note that OpenMEEG's mat-file supported is limited in file size (2GB?)
 switch(om_format)
     case 'matlab'
@@ -327,9 +327,6 @@ end
 [g, voxels_in] = import_gain(path, basefile, ft_senstype(sens, 'eeg'));
 if (voxels_in ~= voxels) & (nargout == 1); warning('Imported voxels from OpenMEEG process not the same as function input.'); end;
 
-% TODO: confirm that 'computeLead' is no longer necessary even when MEG
-% reference channels are included, or with CTF synthetic 3rd gradient
-% lp = computeLead(g, sens);
 lp = sens.tra*g; % Mchannels x (3 orientations x Nvoxels)
 
 % Cleanup
@@ -390,24 +387,6 @@ for ii = 1:length(vol.cond)
         om_save_tri(fullfile(path, [basefile tissues{ii} '.tri']),vol.bnd(ii).pos,vol.bnd(ii).tri);
         %savemesh([path basefile tissues{ii} '.mesh'],vol.bnd(ii).vertices/1000,vol.bnd(ii).faces-1,-vol.bnd(ii).normals);
     end
-end
-
-
-function Lp = computeLead(g, sens)
-if isfield(sens,'tra') && ~isempty(sens.tra)
-    Lp = sens.tra*g;                 % Mchannels x (3 orientations x Nvoxels)
-    
-
-    % check whether MEG reference channels are found
-    % SSD 18.Aug.2015: If so we still need to decide what to do, if anything
-    refgradchan_idx = find(strcmp('refgrad',sens.chantype));
-    refmagchan_idx = find(strcmp('refmag',sens.chantype));
-    refchan_idx = union(refmagchan_idx,refgradchan_idx);
-    if ~isempty(refchan_idx)
-        warning('There are still reference channels in the lead field calculation. Verify that this is desired!')
-    end
-else
-    Lp = g;
 end
 
 
