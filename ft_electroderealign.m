@@ -28,6 +28,9 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % distance between the input sensor positions and the projection of the
 % electrodes on the head surface.
 %
+% PROJECT - This projects all electrodes to the nearest point on the
+% head surface mesh.
+%
 % Use as
 %   [elec_realigned] = ft_sensorrealign(cfg)
 % with the electrode or gradiometer details in the configuration, or as
