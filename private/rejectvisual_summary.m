@@ -611,16 +611,12 @@ cfg_mp = [];
 cfg_mp.trackcallinfo = 'no';
 cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
+cfg_mp.interactive = 'yes';
 currfig = gcf;
 for n = 1:length(trls)
-  %Only single tiral data is needed
-  info.cfg.trials=trls(n);
-  tmp_single_trl=ft_selectdata(info.cfg,info.data);
-  tmp_single_trl.sampleinfo=info.data.sampleinfo(n,:);
   figure()
   cfg_mp.trials = trls(n);
-  cfg_mp.interactive = 'yes';
-  ft_multiplotER(cfg_mp, tmp_single_trl);
+  ft_multiplotER(cfg_mp, info.data);
   title(sprintf('Trial %i', trls(n)));
 end
 figure(currfig);
