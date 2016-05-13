@@ -127,10 +127,8 @@ cfg.preproc      = ft_getopt(cfg, 'preproc',      []);
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 
-% select trials of interest
-tmpcfg = [];
-tmpcfg.trials = cfg.trials;
-tmpcfg.channel = cfg.channel;
+% select channels and trials of interest
+tmpcfg = keepfields(cfg, {'channel', 'trials'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
