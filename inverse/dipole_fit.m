@@ -14,7 +14,6 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   'metric'      = Error measure to be minimised [ rv | var | abs ]
 %   'checkinside' = Boolean flag to check whether dipole is inside source compartment [ 0 | 1 ]
 %   'weight'      = weight matrix for maximum likelihood estimation, e.g. inverse noise covariance
-
 %
 % The following optional input arguments relate to the computation of the leadfields
 %   'reducerank'      = 'no' or number

@@ -58,7 +58,7 @@ function [type] = ft_voltype(headmodel, desired)
 persistent previous_argin previous_argout
 
 if iscell(headmodel) && numel(headmodel)<4
-  % this might represent combined EEG, ECoG and/or MEG
+  % this represents combined EEG, ECoG and/or MEG
   type = cell(size(headmodel));
   if nargin<2
     desired = cell(size(headmodel)); % empty elements
