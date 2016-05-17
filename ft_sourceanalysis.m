@@ -23,9 +23,9 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %                    'music'   multiple signal classification
 %                    'sloreta' standardized low-resolution electromagnetic tomography
 %                    'eloreta' exact low-resolution electromagnetic tomography
-% The DICS and PCC methods are for frequency domain data, all other methods
-% are for time domain data. ELORETA can be used both for frequency and time
-% domain data.
+% The DICS and PCC methods are for frequency or time-frequency domain data, all other
+% methods are for time domain data. ELORETA can be used both for time, frequency and
+% time-frequency domain data.
 %
 % The source model to use in the reconstruction should be specified as
 %   cfg.grid            = structure, see FT_PREPARE_SOURCEMODEL or FT_PREPARE_LEADFIELD
@@ -171,7 +171,9 @@ if hasbaseline
   baseline = ft_checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 end
 
-% check if the input cfg is valid for this function
+% check that the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed',     {'toilim', 'latency'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'foilim', 'frequency'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'jacknife',   'jackknife'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'refchannel', 'refchan'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'power',           'dics'});
@@ -180,6 +182,7 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'coh_refdip',      'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefchan', 'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'dics_cohrefdip',  'dics'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'parallel', 'trials'});
+cfg = ft_checkconfig(cfg, 'forbidden', {'foi', 'toi'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'vol',     'headmodel'});
 
@@ -192,9 +195,6 @@ if all(~[isfreq iscomp istimelock])
 end
 
 % set the defaults
-if ~isfield(cfg, 'method') && istimelock, cfg.method = 'lcmv';      end
-if ~isfield(cfg, 'method') && isfreq,     cfg.method = 'dics';      end
-if ~isfield(cfg, cfg.method),             cfg.(cfg.method) = [];    end
 cfg.keeptrials       = ft_getopt(cfg, 'keeptrials', 'no');
 cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', 'no');
 cfg.trialweight      = ft_getopt(cfg, 'trialweight', 'equal');
@@ -214,12 +214,20 @@ cfg.supdip           = ft_getopt(cfg, 'supdip',        []);
 cfg.latency          = ft_getopt(cfg, 'latency',   'all');
 cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
 
+if istimelock
+  cfg.method = ft_getopt(cfg, 'method', 'lcmv');
+elseif isfreq
+  cfg.method = ft_getopt(cfg, 'method', 'dics');
+else
+  cfg.method = ft_getopt(cfg, 'method', []);
+end
+
 % put the low-level options pertaining to the source reconstruction method in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg',  cfg.method);
 
 % put the low-level options pertaining to the dipole grid in their own field
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.grid.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.grid.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.grid.unit  by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'createsubcfg', 'grid');
 
 cfg.(cfg.method).keepfilter    = ft_getopt(cfg.(cfg.method), 'keepfilter',    'no');
