@@ -57,8 +57,9 @@ function [type] = ft_voltype(headmodel, desired)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
-if iscell(headmodel) && numel(headmodel)<4
+if iscell(headmodel)
   % this represents combined EEG, ECoG and/or MEG
+  % use recursion to determine the type of each input
   type = cell(size(headmodel));
   if nargin<2
     desired = cell(size(headmodel)); % empty elements

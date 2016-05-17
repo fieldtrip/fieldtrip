@@ -993,10 +993,12 @@ elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
     data.crsspctrm = cat(catdim, data.powspctrm, data.crsspctrm);
     data.labelcmb  = [data.label(:) data.label(:); data.labelcmb];
     data           = rmfield(data, 'powspctrm');
+    data.dimord    = strrep(data.dimord, 'chan_', 'chancmb_');
   else
     data.crsspctrm = data.powspctrm;
     data.labelcmb  = [data.label(:) data.label(:)];
     data           = rmfield(data, 'powspctrm');
+    data.dimord    = strrep(data.dimord, 'chan_', 'chancmb_');
   end
   data = rmfield(data, 'label');
   

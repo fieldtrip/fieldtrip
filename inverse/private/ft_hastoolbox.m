@@ -259,7 +259,7 @@ switch toolbox
     dependency = {'MatlabNetComClient', 'NlxConnectToServer', ...
                     'NlxGetNewCSCData'};
   case 'DIPOLI'
-    dependency = {'dipoli.maci', 'file'};
+    dependency = {'dipoli.maci'};
   case 'MNE'
     dependency = {'fiff_read_meas_info', 'fiff_setup_read_raw'};
   case 'TCP_UDP_IP'
