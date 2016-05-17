@@ -312,26 +312,48 @@ if trial2avg
 else
   dimord = getdimord(varargin{1}, cfg.parameter);
 end
-dimtok = tokenize(dimord);
+dimtok = tokenize(dimord, '_');
 
-% perform channel and trial selection, unless in the other plotting
-% functions this can always be done because ft_multiplotER is the entry
-% point into the interactive stream, but will not be revisited
+% Unlike in the other plotting functions, the data selection can always be done here,
+% because ft_multiplotER is the entry point into the interactive stream, but will not
+% be revisited
 
 if any(strcmp(dimtok, 'rpt')) || any(strcmp(dimtok, 'subj'))
   % there are repetitions
-  tmpcfg = keepfields(cfg, {'channel', 'trials'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'trials'});
   tmpcfg.avgoverrpt = 'yes';
   tmpcfg.keeprptdim = 'no';
 else
   % there are no repetitions
-  tmpcfg = keepfields(cfg, {'channel'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency'});
 end
 
+% for time-frequency data
+if strcmp('freq', dtype)
+  if strcmp('freq', yparam)
+    tmpcfg.avgoverfreq = 'yes';
+  elseif strcmp('time', yparam)
+    tmpcfg.avgovertime = 'yes';
+  end
+end
+
+% keep a copy of the first input data argument, it might contain the mask parameter
 tmpvar = varargin{1};
+
+% perform the data selection
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+
+if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
+  % the mask parameter may not be present after ft_selectdata, because it
+  % is not required in all input arguments. Make the same selection and
+  % copy it back into the first input data structure.
+  tmpvar = ft_selectdata(tmpcfg, tmpvar);
+  varargin{1}.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
+end
+
+clear tmpvar tmpcfg
 
 if trial2avg
   % rename the trial field (after averaging) into avg
@@ -341,16 +363,6 @@ if trial2avg
   end
 end
 
-if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
-  % the mask parameter may not be present after ft_selectdata, because it
-  % is not required in all input arguments. Make the same selection and
-  % copy it over
-  tmpvar = ft_selectdata(tmpcfg, tmpvar);
-  varargin{1}.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
-end
-
-clear tmpvar tmpcfg
-
 if isfield(varargin{1}, 'label')
   selchannel = ft_channelselection(cfg.channel, varargin{1}.label);
 elseif isfield(varargin{1}, 'labelcmb')
@@ -358,14 +370,14 @@ elseif isfield(varargin{1}, 'labelcmb')
 end
 
 % Read or create the layout that will be used for plotting
-cfg.layout = ft_prepare_layout(cfg, varargin{1});
+lay = ft_prepare_layout(cfg, varargin{1});
 
 % plot layout
 boxflg     = istrue(cfg.box);
 labelflg   = false; % channel labels are plotted further down using ft_plot_vector
 outlineflg = istrue(cfg.showoutline);
 cla
-ft_plot_lay(cfg.layout, 'box', boxflg, 'label', labelflg, 'outline', outlineflg, 'point', 'no', 'mask', 'no');
+ft_plot_lay(lay, 'box', boxflg, 'label', labelflg, 'outline', outlineflg, 'point', 'no', 'mask', 'no');
 
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
@@ -397,7 +409,7 @@ if (isfull || issparse) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.p
     % Interactively select the reference channel
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
-    ft_plot_lay(cfg.layout, 'box', false);
+    ft_plot_lay(lay, 'box', false);
     title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
     % add the channel information to the figure
     info       = guidata(gcf);
@@ -492,22 +504,6 @@ for i=1:Ndata
   xidmax(i, 1) = nearest(varargin{i}.(xparam), xmax);
 end
 
-if strcmp('freq',yparam) && strcmp('freq',dtype)
-  tmpcfg = keepfields(cfg, {'parameter'});
-  tmpcfg.avgoverfreq = 'yes';
-  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
-  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
-  % restore the provenance information
-  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
-elseif strcmp('time',yparam) && strcmp('freq',dtype)
-  tmpcfg = keepfields(cfg, {'parameter'});
-  tmpcfg.avgovertime = 'yes';
-  tmpcfg.latency     = cfg.latency;%cfg.zlim;
-  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
-  % restore the provenance information
-  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
-end
-
 % Get physical y-axis range (vlim / parameter):
 if strcmp(cfg.vlim, 'maxmin') || strcmp(cfg.vlim, 'maxabs')
   % Find maxmin throughout all varargins:
@@ -592,7 +588,7 @@ for i=1:Ndata
   xval = xval(xidmin(i):xidmax(i));
   
   % Select the channels in the data that match with the layout:
-  [seldat, sellay] = match_str(label, cfg.layout.label);
+  [seldat, sellay] = match_str(label, lay.label);
   if isempty(seldat)
     error('labels in data and labels in layout do not match');
   end
@@ -601,9 +597,9 @@ for i=1:Ndata
   datamatrix{i} = dat(seldat, :);
   
   % Select x and y coordinates and labels of the channels in the data
-  layX = cfg.layout.pos(sellay, 1);
-  layY = cfg.layout.pos(sellay, 2);
-  layLabels = cfg.layout.label(sellay);
+  layX = lay.pos(sellay, 1);
+  layY = lay.pos(sellay, 2);
+  layLabels = lay.label(sellay);
   
   if ~isempty(cfg.maskparameter)
     % one value for each channel, or one value for each channel-time point
