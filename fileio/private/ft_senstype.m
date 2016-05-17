@@ -28,7 +28,7 @@ function [type] = ft_senstype(input, desired)
 %   'yokogawa160'
 %   'yokogawa160_planar'
 %   'yokogawa440'
-%   'ext1020'       this includes eeg1020, eeg1010 and eeg1005)
+%   'ext1020'       this includes eeg1020, eeg1010 and eeg1005
 %   'neuromag122'
 %   'neuromag306'
 %   'babysquid74'   this is a BabySQUID system from Tristan Technologies
@@ -51,6 +51,9 @@ function [type] = ft_senstype(input, desired)
 % The optional input argument for the desired type can be any of the above,
 % or any of the following generic classes of acquisition systems
 %   'eeg'
+%   'ext1020'
+%   'biosemi'
+%   'egi'
 %   'meg'
 %   'meg_planar'
 %   'meg_axial'
@@ -58,6 +61,7 @@ function [type] = ft_senstype(input, desired)
 %   'bti'
 %   'neuromag'
 %   'yokogawa'
+%   'itab'
 %   'babysquid'
 % If you specify the desired type, this function will return a boolean
 % true/false depending on the input data.
@@ -104,14 +108,18 @@ if isempty(recursion)
   recursion = false;
 end
 
-if iscell(input) && numel(input)<4 && ~all(cellfun(@ischar, input))
-  % this might represent combined EEG, ECoG and/or MEG
+if iscell(input) && ~all(cellfun(@ischar, input))
+  % this represents combined EEG, ECoG and/or MEG
+  % use recursion to determine the type of each input
   type = cell(size(input));
   if nargin<2
-    desired = cell(size(input)); % empty elements
-  end
-  for i=1:numel(input)
-    type{i} = ft_senstype(input{i}, desired{i});
+    for i=1:numel(input)
+      type{i} = ft_senstype(input{i});
+    end
+  else
+    for i=1:numel(input)
+      type{i} = ft_senstype(input{i}, desired{i});
+    end
   end
   return
 end

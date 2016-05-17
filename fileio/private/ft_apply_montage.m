@@ -3,7 +3,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 % FT_APPLY_MONTAGE changes the montage of an electrode or gradiometer array. A
 % montage can be used for EEG rereferencing, MEG synthetic gradients, MEG
 % planar gradients or unmixing using ICA. This function applies the montage
-% to the inputor array. The inputor array can subsequently be used for
+% to the input EEG or MEG sensor array, which can subsequently be used for
 % forward computation and source reconstruction of the data.
 %
 % Use as
@@ -66,6 +66,14 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % $Id$
 
+if iscell(input) && iscell(input)
+  % this represents combined EEG, ECoG and/or MEG
+  for i=1:numel(input)
+    input{i} = ft_apply_montage(input{i}, montage, varargin{:});
+  end
+  return
+end
+
 % get optional input arguments
 keepunused  = ft_getopt(varargin, 'keepunused',  'no');
 inverse     = ft_getopt(varargin, 'inverse',     'no');
@@ -79,8 +87,7 @@ else
   warningfun = @nowarning;
 end
 
-% these are optional, at the end we will clean up the output in case they did not
-% exist
+% these are optional, at the end we will clean up the output in case they did not exist
 haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeorg', 'chantypenew'}));
 haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitorg', 'chanunitnew'}));
 
@@ -245,9 +252,8 @@ if k > 0 && isfield(input, 'trial') % check for raw data now only
   cfg = [];
   cfg.channel = addlabel;
   data_unused = ft_selectdata(cfg, input);
-  % use an anonymous function to test for the presence of NaNs in the input data
-  hasnan = @(x) any(isnan(x(:)));
-  if any(cellfun(hasnan, data_unused.trial))
+  tmp = cat(1, data_unused.trial{:});
+  if any(isnan(tmp(:)))
     error('FieldTrip:NaNsinInputData', ['Your input data contains NaNs in channels that are unused '...
       'in the supplied montage. This would result in undesired NaNs in the '...
       'output data. Please remove these channels from the input data (using '...
