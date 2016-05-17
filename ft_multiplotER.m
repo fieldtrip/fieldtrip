@@ -346,9 +346,9 @@ tmpvar = varargin{1};
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
-  % the mask parameter may not be present after ft_selectdata, because it
-  % is not required in all input arguments. Make the same selection and
-  % copy it back into the first input data structure.
+  % The mask parameter may not be present after ft_selectdata, because it is not
+  % required in all input arguments. Make the same selection on the mask parameter
+  % and copy it back into the first input data structure.
   tmpvar = ft_selectdata(tmpcfg, tmpvar);
   varargin{1}.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
 end
@@ -369,7 +369,7 @@ elseif isfield(varargin{1}, 'labelcmb')
   selchannel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
-% Read or create the layout that will be used for plotting
+% read or create the layout that will be used for plotting
 lay = ft_prepare_layout(cfg, varargin{1});
 
 % plot layout
@@ -379,7 +379,7 @@ outlineflg = istrue(cfg.showoutline);
 cla
 ft_plot_lay(lay, 'box', boxflg, 'label', labelflg, 'outline', outlineflg, 'point', 'no', 'mask', 'no');
 
-% Apply baseline correction
+% apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
   for i=1:Ndata
     if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
@@ -394,10 +394,10 @@ if ~strcmp(cfg.baseline, 'no')
   end
 end
 
-% Check for bivariate metric with a full representation
+% check for bivariate metric with a full representation
 chandim = find(strcmp(dimtok, 'chan'));
 isfull  = length(chandim)>1;
-% Check for bivariate metric with a sparse representation
+% check for bivariate metric with a sparse representation
 issparse = isfield(varargin{1}, 'labelcmb');
 
 if (isfull || issparse) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
@@ -479,10 +479,10 @@ if (isfull || issparse) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.p
         error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotER');
       elseif strcmp(cfg.directionality, 'fd-ff')
         error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotER');
-      end %if directionality
-    end %if ~isfull
-  end %for i
-end %handle the bivariate data
+      end % if directionality
+    end % if ~isfull
+  end % for i
+end % handle the bivariate data
 
 % Get physical min/max range of x
 if strcmp(cfg.hlim, 'maxmin')
@@ -611,8 +611,10 @@ for i=1:Ndata
   end
   
   if Ndata > 1
-    if ischar(GRAPHCOLOR);        colorLabels = [colorLabels iname{i+1} '=' GRAPHCOLOR(i+1) '\n'];
-    elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1, :)) '\n'];
+    if ischar(GRAPHCOLOR)
+      colorLabels = [colorLabels iname{i+1} '=' GRAPHCOLOR(i+1) '\n'];
+    elseif isnumeric(GRAPHCOLOR)
+      colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1, :)) '\n'];
     end
   end
 end % for number of input data
@@ -620,8 +622,10 @@ end % for number of input data
 for m=1:length(layLabels)
   % Plot ER
   
-  if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(2:end);
-  elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(2:end, :);
+  if ischar(GRAPHCOLOR)
+    color = GRAPHCOLOR(2:end);
+  elseif isnumeric(GRAPHCOLOR)
+    color = GRAPHCOLOR(2:end, :);
   end
   
   mask = maskmatrix(m, :);
