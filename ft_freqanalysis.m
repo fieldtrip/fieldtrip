@@ -128,7 +128,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                    >= 3; (default = 3)
 %
 %
-%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
@@ -137,7 +136,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also
+% See also FT_DATATYPE_FREQ, FT_FREQDESCRIPTIVES, FT_FREQBASELINE, FT_FREQSTATISTICS,
+% FT_CONNECTIVITYANALYSIS
 
 % Guidelines for use in an analysis pipeline:
 % after FT_FREQANALYSIS you will have frequency or time-frequency

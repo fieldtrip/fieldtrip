@@ -1,17 +1,17 @@
 function [freq] = ft_freqdescriptives(cfg, freq)
 
-% FT_FREQDESCRIPTIVES computes descriptive univariate statistics of
-% the frequency or time-frequency decomposition of the EEG/MEG signal,
-% thus the powerspectrum and its standard error.
+% FT_FREQDESCRIPTIVES computes descriptive univariate statistics of the frequency or
+% time-frequency decomposition of the EEG/MEG signal, thus the powerspectrum and its
+% standard error.
 %
 % Use as
 %   [freq] = ft_freqdescriptives(cfg, freq)
+% or
 %   [freq] = ft_freqdescriptives(cfg, freqmvar)
 %
-% The data in freq should be organised in a structure as obtained from
-% from the FT_FREQANALYSIS or FT_MVARANALYSIS function. The output structure is comparable
-% to the input structure and can be used in most functions that require
-% a freq input.
+% The data in freq should be organised in a structure as obtained from from the
+% FT_FREQANALYSIS or FT_MVARANALYSIS function. The output structure is comparable to
+% the input structure and can be used in most functions that require a freq input.
 %
 % The configuration options are
 %   cfg.variance      = 'yes' or 'no', estimate standard error in the standard way (default = 'no')
@@ -23,11 +23,11 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 %   cfg.frequency     = [fmin fmax] or 'all', to specify a subset of frequencies (default = 'all')
 %   cfg.latency       = [tmin tmax] or 'all', to specify a subset of latencies (default = 'all')
 %
-% A variance estimate can only be computed if results from trials and/or
-% tapers have been kept.
+% A variance estimate can only be computed if results from trials and/or tapers have
+% been kept.
 %
-% Descriptive statistics of bivariate metrics is not computed by this function anymore. To this end you
-% should use FT_CONNECTIVITYANALYSIS.
+% Descriptive statistics of bivariate metrics is not computed by this function
+% anymore. To this end you should use FT_CONNECTIVITYANALYSIS.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -37,7 +37,8 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_FREQANALYSIS, FT_FREQSTATISTICS, FT_FREQBASELINE, FT_CONNECTIVITYANALYSIS
+% See also FT_DATATYPE_FREQ, FT_FREQANALYSIS, FT_FREQSTATISTICS, FT_FREQBASELINE,
+% FT_CONNECTIVITYANALYSIS
 
 % Undocumented local options:
 % cfg.feedback
