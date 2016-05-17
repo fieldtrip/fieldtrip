@@ -365,7 +365,7 @@ boxflg     = istrue(cfg.box);
 labelflg   = false; % channel labels are plotted further down using ft_plot_vector
 outlineflg = istrue(cfg.showoutline);
 cla
-ft_plot_lay(lay, 'box', boxflg, 'label', labelflg, 'outline', outlineflg, 'point', 'no', 'mask', 'no');
+ft_plot_lay(cfg.layout, 'box', boxflg, 'label', labelflg, 'outline', outlineflg, 'point', 'no', 'mask', 'no');
 
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
@@ -397,7 +397,7 @@ if (isfull || issparse) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.p
     % Interactively select the reference channel
     % Open a single figure with the channel layout, the user can click on a reference channel
     h = clf;
-    ft_plot_lay(lay, 'box', false);
+    ft_plot_lay(cfg.layout, 'box', false);
     title('Select the reference channel by dragging a selection window, more than 1 channel can be selected...');
     % add the channel information to the figure
     info       = guidata(gcf);
