@@ -120,7 +120,11 @@ switch cfg.method
     headshape = ft_determine_coordsys(headshape);
 end
 
-hascolor = isfield(headshape, 'color'); % color code for vertices
+%check if the data has certain fields
+switch cfg.method
+  case  {'headshape'}
+    hascolor = isfield(headshape, 'color'); 
+end
 
 switch cfg.method
   case 'headshape'
