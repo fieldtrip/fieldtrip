@@ -120,12 +120,6 @@ switch cfg.method
     headshape = ft_determine_coordsys(headshape);
 end
 
-%check if the data has certain fields
-switch cfg.method
-  case  {'headshape'}
-    hascolor = isfield(headshape, 'color'); 
-end
-
 switch cfg.method
   case 'headshape'
     % give the user instructions
@@ -139,7 +133,7 @@ switch cfg.method
     figure;
     % plot the faces of the 2D or 3D triangulation
     
-    if hascolor
+    if isfield(headshape, 'color');
       skin = 'none';
       ft_plot_mesh(headshape);
     else
