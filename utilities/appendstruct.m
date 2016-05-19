@@ -35,6 +35,6 @@ assert(isstruct(s2), 'input argument 2 should be a structure');
 
 if isempty(s1)
   s1 = s2;
-elseif isstruc
+elseif isstruct(s1)
   s1(end+1) = s2;
 end
