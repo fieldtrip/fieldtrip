@@ -151,13 +151,19 @@ elseif hasdataelec
   
 elseif hasoptofile
   display('reading optodes from file ''%s''\n', cfg.optofile);
-  sens = ft_read_sens(cfg.elecfile);
+  sens = ft_read_sens(cfg.optofile);
+  % only keep known fields in case of NIRS optodes
+  sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
 elseif hascfgopto
   display('using optodes specified in the configuration\n');
   sens = cfg.opto;
+  % only keep known fields in case of NIRS optodes
+  sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
 elseif hasdataopto
   display('using optodes specified in the data\n');
   sens = data.opto;
+  % only keep known fields in case of NIRS optodes
+  sens = keepfields(sens, {'optopos', 'optotype', 'chanpos', 'unit', 'coordsys', 'label', 'transceiver', 'wavelength', 'transmits', 'laserstrength'});
   
 elseif haslayout
   display('Using the 2-D layout to determine the sensor position\n');
