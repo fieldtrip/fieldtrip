@@ -266,7 +266,14 @@ for i=1:size(dip.pos,1)
     filt = dip.filter{i};
   else
     % construct the spatial filter
-    filt = pinv(sqrt(lf' * invG * lf)) * lf' * invG;  % sLORETA
+    % sLORETA: if orthogonal components are retained (i.e., fixedori = 'no')
+    %          then weight for each lead field column must be calculated separately
+    for ii=1:size(lf,2)
+        filt(ii,:) = pinv(sqrt(lf(:,ii)' * invG * lf(:,ii))) * lf(:,ii)' * invG;  
+    end
+  end
+  if(any(~isreal(filt)))
+      error('spatial filter has complex values -- did you set lambda properly?');
   end
   if projectmom
     [u, s, v] = svd(filt * Cy * ctranspose(filt));
