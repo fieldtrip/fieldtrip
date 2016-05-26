@@ -85,9 +85,6 @@ fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
 image          = ft_getopt(varargin, 'image',[100, 100 ,100]);               % path to .jpeg file
 
-
-
-
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
 if iscell(filename)
