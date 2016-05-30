@@ -159,6 +159,11 @@ function nmt_sourceplot_spm8(cfg,functional)
 
 revision = '$Id$';
 
+%% SPM check
+if(~exist('spm_image','file'))
+    error('Nutmegtrip requires a full version of SPM8 in your MATLAB path (fieldtrip/external/spm8 does not suffice). It may be downloaded from http://www.fil.ion.ucl.ac.uk/spm')
+end
+
 %%
 % do the general setup of the function
 ft_defaults
