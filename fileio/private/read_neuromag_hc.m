@@ -44,7 +44,7 @@ function [hc] = read_neuromag_hc(filename)
 % $Id$
 
 % read neuromag fif file
-hdr = ft_read_header(filename);
+hdr = ft_read_header(filename, 'checkmaxfilter', false);
 
 % determine number of digitized points
 nFid = size(hdr.orig.dig,2);
