@@ -296,7 +296,7 @@ function [h,p,ci,stats]=ttest_wrapper(x,y,alpha)
 % - old Matlab, with syntax:                   ttest(x,y,alpha,tail,dim)
 % - new Matlab and GNU Octave, with syntax:    ttest(x,y,'alpha',alpha,...)
 
-    if nargin(ttest)>0
+    if nargin('ttest')>0
         [h,p,ci,stats]=ttest(x,y,alpha);
     else
         [h,p,ci,stats]=ttest(x,y,'alpha',alpha);
