@@ -1,5 +1,11 @@
 function test_bug3119
 
+% WALLTIME 00:20:00
+% MEM 2gb
+
+% TEST test_bug3119
+% TEST ft_dipolefitting dipole_fit
+
 %% load template mri
 ftdir = fileparts(which('ft_defaults'));
 mri = ft_read_mri(fullfile(ftdir,'template','headmodel','standard_mri.mat'));
@@ -83,17 +89,18 @@ figure
 semilogy(svd(datat1.avg), '.') % this shows two sources in the data
 
 %%
+% the following was the original, which is not a correct specification of the cfg
+
 cfg            = [];
 cfg.channel    = 'all';
 cfg.elec       = ft_convert_units(elec,'cm');
+cfg.grid       = ft_convert_units(grid,'cm'); % note that this grid is incorrect, since Npos*3
+cfg.headmodel  = ft_convert_units(vol,'cm');
 cfg.senstype   = 'eeg';
 cfg.latency    = [0.2 0.3];
 cfg.reducerank = 3;
-cfg.numdipoles = 1;
-cfg.grid       = ft_convert_units(grid,'cm');
 cfg.gridsearch = 'yes';
 cfg.nonlinear  = 'yes';
-cfg.headmodel  = ft_convert_units(vol,'cm');
 cfg.model      = 'moving';
 cfg.numdipoles = 2;
 cfg.symmetry   = 'x';
@@ -107,6 +114,52 @@ catch
 end
 assert(errorthrown, 'the expected error was not thrown');
 
+%% 
+% let's try some other configurations that should work
+
+cfg                 = [];
+cfg.elec            = ft_convert_units(elec,'cm');
+cfg.headmodel       = ft_convert_units(vol,'cm');
+cfg.reducerank      = 3;
+cfg.channel         = 'all';
+cfg.grid.resolution = 1;
+cfg.grid.unit       = 'cm';
+cfg.symmetry        = 'x';
+grid2 = ft_prepare_leadfield(cfg);
+
+cfg            = [];
+cfg.channel    = 'all';
+cfg.elec       = ft_convert_units(elec,'cm');
+cfg.grid       = ft_convert_units(grid2,'cm');
+cfg.headmodel  = ft_convert_units(vol,'cm');
+cfg.senstype   = 'eeg';
+cfg.latency    = [0.2 0.3];
+cfg.reducerank = 3;
+cfg.gridsearch = 'yes';
+cfg.nonlinear  = 'yes';
+cfg.model      = 'moving';
+cfg.numdipoles = 2;
+cfg.symmetry   = 'x';
+
+dipole = ft_dipolefitting(cfg, datat1);
+  
+%%
+
+cfg            = [];
+cfg.channel    = 'all';
+cfg.elec       = ft_convert_units(elec,'cm');
+cfg.grid       = ft_convert_units(grid,'cm');
+cfg.headmodel  = ft_convert_units(vol,'cm');
+cfg.senstype   = 'eeg';
+cfg.latency    = [0.2 0.3];
+cfg.reducerank = 3;
+cfg.gridsearch = 'yes';
+cfg.nonlinear  = 'yes';
+cfg.model      = 'moving';
+
+dipole = ft_dipolefitting(cfg, datat1);
+
+
 %%
 % figure;
 % ft_plot_slice(mris.anatomy, 'transform', mris.transform, 'location',  [-3.1   -4.6    -1.4], 'orientation', [0 1 0], 'resolution', 0.1);
@@ -114,7 +167,7 @@ assert(errorthrown, 'the expected error was not thrown');
 % ft_plot_slice(mris.anatomy, 'transform', mris.transform, 'location',  [-3.1   -4.6    -1.4], 'orientation', [0 0 1], 'resolution', 0.1);
 % axis tight;
 % axis off;
-% 
+%
 % for frame=1:17;
 %   ft_plot_dipole(dipole.dip(frame).pos(1,:), dipole.dip(frame).mom(1:3,:),'color','r');
 %   ft_plot_dipole(dipole.dip(frame).pos(2,:), dipole.dip(frame).mom(4:6,:),'color','b');
