@@ -27,7 +27,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   constr.mirror     = vector, used for symmetric dipole models
 %   constr.reduce     = vector, used for symmetric dipole models
 %   constr.expand     = vector, used for symmetric dipole models
-%   consrt.sequential = boolean, fit different dipoles to sequential slices of the data
+%   constr.sequential = boolean, fit different dipoles to sequential slices of the data
 %
 % The maximum likelihood estimation implements
 %   Lutkenhoner B. "Dipole source localization by means of maximum
@@ -320,6 +320,9 @@ else
     % so the data can be nchan*ndip or nchan*(ndip*nframe)
     numdip   = numel(pos)/3;
     numframe = size(dat,2)/numdip;
+    
+    % do a sainty check on the number of frames, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+    assert(numframe>0 && numframe==round(numframe), 'the number of frames should be a positive integer');
     
     mom = zeros(3*numdip, numdip*numframe);
     for i=1:numdip
