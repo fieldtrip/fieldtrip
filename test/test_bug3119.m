@@ -159,6 +159,37 @@ cfg.model      = 'moving';
 
 dipole = ft_dipolefitting(cfg, datat1);
 
+%% 
+
+cfg            = [];
+cfg.channel    = 'all';
+cfg.elec       = ft_convert_units(elec,'cm');
+cfg.grid       = ft_convert_units(grid,'cm');
+cfg.headmodel  = ft_convert_units(vol,'cm');
+cfg.senstype   = 'eeg';
+cfg.latency    = [0.2 0.3];
+cfg.reducerank = 3;
+cfg.gridsearch = 'yes';
+cfg.nonlinear  = 'yes';
+cfg.model      = 'regional';
+cfg.numdipoles = 2;
+cfg.symmetry   = 'x';
+
+dipole = ft_dipolefitting(cfg, datat1);
+
+%%
+
+original = rmfield(dipole, 'dip');
+original.avg = dipole.Vdata;
+
+fitted = rmfield(dipole, 'dip');
+fitted.avg = dipole.Vmodel;
+
+cfg = [];
+cfg.layout = 'elec1005.lay';
+ft_multiplotER(cfg, original, fitted);
+
+
 
 %%
 % figure;
