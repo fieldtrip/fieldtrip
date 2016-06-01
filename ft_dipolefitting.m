@@ -219,6 +219,11 @@ elseif ~isfield(cfg, 'dipfit') || ~isfield(cfg.dipfit, 'constr')
   cfg.dipfit.constr = [];
 end
 
+if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'moving')
+  error('the moving dipole model does not combine with the sequential constraint')
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+end
+
 if isfield(data, 'topolabel')
   % this looks like a component analysis
   iscomp = 1;
