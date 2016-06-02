@@ -233,8 +233,9 @@ elseif ~isfield(cfg, 'spmparams') && strcmp(cfg.nonlinear, 'no'),
   flags.nits = 0; %put number of non-linear iterations to zero
   params     = spm_normalise(VG,VF,[],[],[],flags);
 else
-  fprintf('using the parameters specified in the configuration\n');
+  fprintf('using the parameters specified in the configuration, skipping the parameter estimation\n');
   % use the externally specified parameters
+  VF     = spm_vol([cfg.intermediatename,'_anatomy.img']);
   params = cfg.spmparams;
 end
 flags.vox = [cfg.downsample,cfg.downsample,cfg.downsample];
