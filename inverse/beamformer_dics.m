@@ -71,24 +71,24 @@ if mod(nargin-5,2)
 end
 
 % these optional settings do not have defaults
-Pr             = keyval('Pr',            varargin);
-Cr             = keyval('Cr',            varargin);
-refdip         = keyval('refdip',        varargin);
-powmethod      = keyval('powmethod',     varargin); % the default for this is set below
-realfilter     = keyval('realfilter',    varargin); % the default for this is set below
+Pr             = ft_getopt(varargin, 'Pr');
+Cr             = ft_getopt(varargin, 'Cr');
+refdip         = ft_getopt(varargin, 'refdip');
+powmethod      = ft_getopt(varargin, 'powmethod');  % the default for this is set below
+realfilter     = ft_getopt(varargin, 'realfilter'); % the default for this is set below
+subspace       = ft_getopt(varargin, 'subspace');
 % these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = keyval('reducerank',     varargin);
-normalize      = keyval('normalize',      varargin);
-normalizeparam = keyval('normalizeparam', varargin);
+reducerank     = ft_getopt(varargin, 'reducerank');
+normalize      = ft_getopt(varargin, 'normalize');
+normalizeparam = ft_getopt(varargin, 'normalizeparam');
 % these optional settings have defaults
-feedback       = keyval('feedback',      varargin); if isempty(feedback),      feedback = 'text';            end
-keepcsd        = keyval('keepcsd',       varargin); if isempty(keepcsd),       keepcsd = 'no';               end
-keepfilter     = keyval('keepfilter',    varargin); if isempty(keepfilter),    keepfilter = 'no';            end
-keepleadfield  = keyval('keepleadfield', varargin); if isempty(keepleadfield), keepleadfield = 'no';         end
-lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      lambda = 0;                   end
-projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
-fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
-subspace       = keyval('subspace',      varargin);
+feedback       = ft_getopt(varargin, 'feedback', 'text');
+keepcsd        = ft_getopt(varargin, 'keepcsd', 'no');
+keepfilter     = ft_getopt(varargin, 'keepfilter', 'no');
+keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
+lambda         = ft_getopt(varargin, 'lambda', 0);
+projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
+fixedori       = ft_getopt(varargin, 'fixedori', 'no');
 
 % convert the yes/no arguments to the corresponding logical values
 keepcsd        = strcmp(keepcsd,       'yes');
