@@ -272,7 +272,7 @@ if needhdr
     hdr.label        = cellstr(EDF.Label);
     hdr.label        = hdr.label(chansel); 
     % it is continuous data, therefore append all records in one trial
-    hdr.nSamples     = EDF.NRec * EDF.Dur * EDF.SampleRate(chansel(1)); 
+    hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1)); 
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = 1;
     hdr.orig         = EDF;
@@ -296,7 +296,7 @@ if needhdr
     hdr.label        = cellstr(EDF.Label);
     hdr.label        = hdr.label(chansel);
     % it is continuous data, therefore append all records in one trial
-    hdr.nSamples     = EDF.NRec * EDF.Dur * EDF.SampleRate(chansel(1));
+    hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = 1;
     hdr.orig         = EDF;
@@ -319,7 +319,7 @@ if needhdr
     hdr.label        = cellstr(EDF.Label);
     hdr.label        = hdr.label(chansel);
     % it is continuous data, therefore append all records in one trial
-    hdr.nSamples     = EDF.NRec * EDF.Dur * EDF.SampleRate(chansel(1));
+    hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = 1;
     hdr.orig         = EDF;
@@ -377,19 +377,19 @@ elseif needdat || needevt
     % read the annotation channel, not the data channels
     chanindx = EDF.annotation;
     begsample = 1;
-    endsample = EDF.SampleRate(end)*EDF.NRec*EDF.Dur;
+    endsample = EDF.SPR(end)*EDF.NRec;
   end
   
   if chanSel
-    epochlength = round(EDF.Dur * EDF.SampleRate(chanindx(1)));   % in samples for the selected channel
-    blocksize   = round(sum(EDF.Dur * EDF.SampleRate));           % in samples for all channels
-    chanoffset  = EDF.Dur * EDF.SampleRate;
+    epochlength = EDF.SPR(chanindx(1));   % in samples for the selected channel
+    blocksize   = sum(EDF.SPR);           % in samples for all channels
+    chanoffset  = EDF.SPR;
     chanoffset  = round(cumsum([0; chanoffset(1:end-1)]));
     % get the selection from the subset of channels
     nchans   = length(chanindx);
   else  
-    epochlength = round(EDF.Dur * EDF.SampleRate(1));             % in samples for a single channel
-    blocksize   = round(sum(EDF.Dur * EDF.SampleRate));           % in samples for all channels
+    epochlength = EDF.SPR(1);             % in samples for a single channel
+    blocksize   = sum(EDF.SPR);           % in samples for all channels
     % use all channels
     nchans = EDF.NS;
   end
