@@ -1736,7 +1736,16 @@ ax(1) = min(opt.laytime.pos(:,1) - opt.laytime.width/2);
 ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
 ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
 ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
+% add white space to bottom and top so channels are not out-of-axis for the majority
+if strcmp(cfg.viewmode,'vertical') % might also be use for viewmode = component!
+  nchan = numel(cfg.channel);
+  % add an equivalent of 2.5% of channel space to top, and to bottom
+  wsfac = (nchan*0.025) * abs(mean(diff(opt.laytime.pos(:,2))));
+  ax(3) = ax(3) - wsfac;
+  ax(4) = ax(4) + wsfac;
+end
 axis(ax)
+
 
 % determine a single local axis that encompasses all channels
 % this is in relative figure units
