@@ -1740,16 +1740,17 @@ ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
 ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
 ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
 % add white space to bottom and top so channels are not out-of-axis for the majority
-if any(strcmp(cfg.viewmode,{'vertical','component'})) % might also be use for viewmode = component!
+% NOTE: there is a second spot where this is done below, specifically for viewmode = component (also need to be here), which should be kept the same as this
+if any(strcmp(cfg.viewmode,{'vertical','component'})) 
   % determine amount of vertical padding using cfg.verticalpadding
   if ~isnumeric(cfg.verticalpadding) && strcmp(cfg.verticalpadding,'auto')
     % determine amount of padding using the number of channels
     if numel(cfg.channel)<=6
       wsfac = 0;
-    elseif numel(cfg.channel)>6 && numel(cfg.channel)<=20
-      wsfac = 0.01 * (ax(4)-ax(3));
+    elseif numel(cfg.channel)>6 && numel(cfg.channel)<=10
+      wsfac = 0.01 *  (ax(4)-ax(3));
     else
-      wsfac = 0.02 * (ax(4)-ax(3));
+      wsfac = 0.02 *  (ax(4)-ax(3));
     end
   else
     wsfac = cfg.verticalpadding * (ax(4)-ax(3));
@@ -2094,15 +2095,16 @@ if strcmp(cfg.viewmode, 'component')
   ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
   ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
   % add white space to bottom and top so channels are not out-of-axis for the majority
+  % NOTE: there is another spot above with the same code, which should be kept the same as this
   % determine amount of vertical padding using cfg.verticalpadding
   if ~isnumeric(cfg.verticalpadding) && strcmp(cfg.verticalpadding,'auto')
     % determine amount of padding using the number of channels
     if numel(cfg.channel)<=6
       wsfac = 0;
-    elseif numel(cfg.channel)>6 && numel(cfg.channel)<=20
-      wsfac = 0.01 * (ax(4)-ax(3));
+    elseif numel(cfg.channel)>6 && numel(cfg.channel)<=10
+      wsfac = 0.01 *  (ax(4)-ax(3));
     else
-      wsfac = 0.02 * (ax(4)-ax(3));
+      wsfac = 0.02 *  (ax(4)-ax(3));
     end
   else
     wsfac = cfg.verticalpadding * (ax(4)-ax(3));
