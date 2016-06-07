@@ -39,6 +39,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential')
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
+%   cfg.verticalpadding         = number or 'auto', padding to be added to top and bottom of plot to avoid channels largely dissappearing when viewmode = 'vertical'/'component'  (default = 0)
+%                                 padding is expressed as a proportion of the total height added to the top, and bottom) ('auto' adds padding depending on the number of channels)
 %   cfg.selfun                  = string, name of function which is evaluated using the right-click context menu
 %                                  The selected data and cfg.selcfg are passed on to this function.
 %   cfg.selcfg                  = configuration options for function in cfg.selfun
@@ -206,6 +208,7 @@ cfg.editfontunits   = ft_getopt(cfg, 'editfontunits', 'points');     % inches, c
 cfg.axisfontsize    = ft_getopt(cfg, 'axisfontsize', 10);
 cfg.axisfontunits   = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, centimeters, normalized, points, pixels
 cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
+cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 0);
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -1737,10 +1740,20 @@ ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
 ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
 ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
 % add white space to bottom and top so channels are not out-of-axis for the majority
-if strcmp(cfg.viewmode,'vertical') % might also be use for viewmode = component!
-  nchan = numel(cfg.channel);
-  % add an equivalent of 2.5% of channel space to top, and to bottom
-  wsfac = (nchan*0.025) * abs(mean(diff(opt.laytime.pos(:,2))));
+if any(strcmp(cfg.viewmode,{'vertical','component'})) % might also be use for viewmode = component!
+  % determine amount of vertical padding using cfg.verticalpadding
+  if ~isnumeric(cfg.verticalpadding) && strcmp(cfg.verticalpadding,'auto')
+    % determine amount of padding using the number of channels
+    if numel(cfg.channel)<=6
+      wsfac = 0;
+    elseif numel(cfg.channel)>6 && numel(cfg.channel)<=20
+      wsfac = 0.01 * (ax(4)-ax(3));
+    else
+      wsfac = 0.02 * (ax(4)-ax(3));
+    end
+  else
+    wsfac = cfg.verticalpadding * (ax(4)-ax(3));
+  end
   ax(3) = ax(3) - wsfac;
   ax(4) = ax(4) + wsfac;
 end
@@ -2080,6 +2093,22 @@ if strcmp(cfg.viewmode, 'component')
   ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
   ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
   ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
+  % add white space to bottom and top so channels are not out-of-axis for the majority
+  % determine amount of vertical padding using cfg.verticalpadding
+  if ~isnumeric(cfg.verticalpadding) && strcmp(cfg.verticalpadding,'auto')
+    % determine amount of padding using the number of channels
+    if numel(cfg.channel)<=6
+      wsfac = 0;
+    elseif numel(cfg.channel)>6 && numel(cfg.channel)<=20
+      wsfac = 0.01 * (ax(4)-ax(3));
+    else
+      wsfac = 0.02 * (ax(4)-ax(3));
+    end
+  else
+    wsfac = cfg.verticalpadding * (ax(4)-ax(3));
+  end
+  ax(3) = ax(3) - wsfac;
+  ax(4) = ax(4) + wsfac;
   axis(ax)
 end % plotting topographies
 
