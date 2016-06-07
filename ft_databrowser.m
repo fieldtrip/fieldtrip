@@ -39,8 +39,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.colorgroups             = 'sequential' 'allblack' 'labelcharx' (x = xth character in label), 'chantype' or
 %                                  vector with length(data/hdr.label) defining groups (default = 'sequential')
 %   cfg.channelcolormap         = COLORMAP (default = customized lines map with 15 colors)
-%   cfg.verticalpadding         = number or 'auto', padding to be added to top and bottom of plot to avoid channels largely dissappearing when viewmode = 'vertical'/'component'  (default = 0)
-%                                 padding is expressed as a proportion of the total height added to the top, and bottom) ('auto' adds padding depending on the number of channels)
+%   cfg.verticalpadding         = number or 'auto', padding to be added to top and bottom of plot to avoid channels largely dissappearing when viewmode = 'vertical'/'component'  (default = 'auto')
+%                                 padding is expressed as a proportion of the total height added to the top, and bottom) ('auto' adds padding depending on the number of channels being plotted)
 %   cfg.selfun                  = string, name of function which is evaluated using the right-click context menu
 %                                  The selected data and cfg.selcfg are passed on to this function.
 %   cfg.selcfg                  = configuration options for function in cfg.selfun
@@ -208,7 +208,7 @@ cfg.editfontunits   = ft_getopt(cfg, 'editfontunits', 'points');     % inches, c
 cfg.axisfontsize    = ft_getopt(cfg, 'axisfontsize', 10);
 cfg.axisfontunits   = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, centimeters, normalized, points, pixels
 cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
-cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 0);
+cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 'auto');
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
