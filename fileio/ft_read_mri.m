@@ -319,6 +319,19 @@ case 'dicom_old'
   filename = filename(1:end-1);       % remove the last '.'
   dirlist  = dir(fullfile(p, filename));
   dirlist  = {dirlist.name};
+  
+  if isempty(dirlist)
+    % this is for the Philips data acquired at KI
+    warning('could not determine list of dicom files, trying with *.dcm');
+    dirlist  = dir(fullfile(p, '*.dcm'));
+    dirlist  = {dirlist.name};
+  end
+  
+  if isempty(dirlist)
+    warning('could not determine list of dicom files, trying with *.ima');
+    dirlist  = dir(fullfile(p, '*.ima'));
+    dirlist  = {dirlist.name};
+  end
 
   if length(dirlist)==1
     % try something else to get a list of all the slices
@@ -329,7 +342,7 @@ case 'dicom_old'
   keep = false(1, length(dirlist));
   for i=1:length(dirlist)
     filename = char(fullfile(p, dirlist{i}));
-    if ~strcmp(dataformat, 'dicom')
+    if ~strcmp(dataformat, 'dicom_old')
       keep(i) = false;
       fprintf('skipping ''%s'' because of incorrect filetype\n', filename);
     end

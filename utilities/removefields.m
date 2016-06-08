@@ -1,4 +1,4 @@
-function [s] = removefields(s, fields)
+function [s] = removefields(s, fields, varargin)
 
 % REMOVEFIELDS makes a selection of the fields in a structure
 %
@@ -28,9 +28,12 @@ function [s] = removefields(s, fields)
 % $Id$
 
 if isempty(s)
-   % this prevents problems if s is an empty double, i.e. []
+  % this prevents problems if s is an empty double, i.e. []
   return
 end
+
+% get the optional arguments
+recursive = ft_getopt(varargin, 'recursive', false);
 
 if ischar(fields)
   fields = {fields};
@@ -38,7 +41,16 @@ elseif ~iscell(fields)
   error('fields input argument must be a cell array of strings or a single string');
 end
 
-fields = intersect(fieldnames(s), fields);
-for i=1:numel(fields)
-  s = rmfield(s, fields{i});
+remove = intersect(fieldnames(s), fields);
+for i=1:numel(remove)
+  s = rmfield(s, remove{i});
+end
+
+if recursive
+  fn = fieldnames(s);
+  for i=1:numel(fn)
+    if isstruct(s.(fn{i}))
+      s.(fn{i}) = removefields(s.(fn{i}), fields, varargin{:});
+    end
+  end
 end

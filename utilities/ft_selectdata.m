@@ -100,16 +100,19 @@ for i=2:length(varargin)
   if ~ok, error('input data should be of the same datatype'); end
 end
 
-cfg = ft_checkconfig(cfg, 'renamed', {'selmode',  'select'});
-cfg = ft_checkconfig(cfg, 'renamed', {'toilim' 'latency'});
-cfg = ft_checkconfig(cfg, 'renamed', {'foilim' 'frequency'});
-cfg = ft_checkconfig(cfg, 'renamed', {'avgoverroi' 'avgoverpos'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.pow' 'pow'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.mom' 'mom'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'avg.nai' 'nai'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'trial.pow' 'pow'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'trial.mom' 'mom'});
-cfg = ft_checkconfig(cfg, 'renamedval', {'parameter' 'trial.nai' 'nai'});
+% ensure that the user does not give invalid selection options
+cfg = ft_checkconfig(cfg, 'forbidden', {'foi', 'toi'});
+
+cfg = ft_checkconfig(cfg, 'renamed',    {'selmode',    'select'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'toilim',     'latency'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'foilim',     'frequency'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'avgoverroi', 'avgoverpos'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.pow', 'pow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.mom', 'mom'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.nai', 'nai'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'trial.pow', 'pow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'trial.mom', 'mom'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'trial.nai', 'nai'});
 
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
 cfg.select    = ft_getopt(cfg, 'select',   'intersect');  % default is to take intersection, alternative 'union'

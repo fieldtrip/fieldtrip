@@ -536,7 +536,7 @@ function status = is_subdir_in_fieldtrip_path(toolbox_name)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = has_mex(name)
   full_name=[name '.' mexext];
-  status = exist(full_name, 'file');
+  status = (exist(full_name, 'file')==3);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function

@@ -259,7 +259,7 @@ switch toolbox
     dependency = {'MatlabNetComClient', 'NlxConnectToServer', ...
                     'NlxGetNewCSCData'};
   case 'DIPOLI'
-    dependency = {'dipoli.maci'};
+    dependency = {'dipoli.maci', 'file'};
   case 'MNE'
     dependency = {'fiff_read_meas_info', 'fiff_setup_read_raw'};
   case 'TCP_UDP_IP'
@@ -536,7 +536,7 @@ function status = is_subdir_in_fieldtrip_path(toolbox_name)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = has_mex(name)
   full_name=[name '.' mexext];
-  status = exist(full_name, 'file');
+  status = (exist(full_name, 'file')==3);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function

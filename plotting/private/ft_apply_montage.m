@@ -3,7 +3,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 % FT_APPLY_MONTAGE changes the montage of an electrode or gradiometer array. A
 % montage can be used for EEG rereferencing, MEG synthetic gradients, MEG
 % planar gradients or unmixing using ICA. This function applies the montage
-% to the inputor array. The inputor array can subsequently be used for
+% to the input EEG or MEG sensor array, which can subsequently be used for
 % forward computation and source reconstruction of the data.
 %
 % Use as
@@ -36,6 +36,9 @@ function [input] = ft_apply_montage(input, montage, varargin)
 % Additional options should be specified in key-value pairs and can be
 %   'keepunused'    string, 'yes' or 'no' (default = 'no')
 %   'inverse'       string, 'yes' or 'no' (default = 'no')
+%   'balancename'   string, name of the montage (default = '')
+%   'feedback'      string, see FT_PROGRESS (default = 'text')
+%   'warning'       boolean, whether to show warnings (default = true)
 %
 % If the first input is a montage, then the second input montage will be
 % applied to the first. In effect, the output montage will first do
@@ -43,7 +46,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % See also FT_READ_SENS, FT_TRANSFORM_SENS
 
-% Copyright (C) 2008-2014, Robert Oostenveld
+% Copyright (C) 2008-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -63,11 +66,19 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % $Id$
 
+if iscell(input) && iscell(input)
+  % this represents combined EEG, ECoG and/or MEG
+  for i=1:numel(input)
+    input{i} = ft_apply_montage(input{i}, montage, varargin{:});
+  end
+  return
+end
+
 % get optional input arguments
 keepunused  = ft_getopt(varargin, 'keepunused',  'no');
 inverse     = ft_getopt(varargin, 'inverse',     'no');
 feedback    = ft_getopt(varargin, 'feedback',    'text');
-showwarning = ft_getopt(varargin, 'warning',     'yes');
+showwarning = ft_getopt(varargin, 'warning',     true);
 bname       = ft_getopt(varargin, 'balancename', '');
 
 if istrue(showwarning)
@@ -76,8 +87,7 @@ else
   warningfun = @nowarning;
 end
 
-% these are optional, at the end we will clean up the output in case they did not
-% exist
+% these are optional, at the end we will clean up the output in case they did not exist
 haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeorg', 'chantypenew'}));
 haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitorg', 'chanunitnew'}));
 

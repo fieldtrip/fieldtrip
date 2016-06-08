@@ -69,24 +69,24 @@ if mod(nargin-5,2)
 end
 
 % these optional settings do not have defaults
-powmethod      = keyval('powmethod',     varargin); % the default for this is set below
-subspace       = keyval('subspace',      varargin); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
+powmethod      = ft_getopt(varargin, 'powmethod'); % the default for this is set below
+subspace       = ft_getopt(varargin, 'subspace'); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
 % these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = keyval('reducerank',     varargin);
-normalize      = keyval('normalize',      varargin);
-normalizeparam = keyval('normalizeparam', varargin);
+reducerank     = ft_getopt(varargin, 'reducerank');
+normalize      = ft_getopt(varargin, 'normalize');
+normalizeparam = ft_getopt(varargin, 'normalizeparam');
 % these optional settings have defaults
-feedback       = keyval('feedback',      varargin); if isempty(feedback),      feedback = 'text';            end
-keepfilter     = keyval('keepfilter',    varargin); if isempty(keepfilter),    keepfilter = 'no';            end
-keepleadfield  = keyval('keepleadfield', varargin); if isempty(keepleadfield), keepleadfield = 'no';         end
-keepcov        = keyval('keepcov',       varargin); if isempty(keepcov),       keepcov = 'no';               end
-keepmom        = keyval('keepmom',       varargin); if isempty(keepmom),       keepmom = 'yes';              end
-lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      lambda = 0;                   end
-projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
-projectmom     = keyval('projectmom',    varargin); if isempty(projectmom),    projectmom = 'no';            end
-fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
-computekurt    = keyval('kurtosis',      varargin); if isempty(computekurt),   computekurt = 'no';           end
-weightnorm     = keyval('weightnorm',    varargin); if isempty(weightnorm),    weightnorm = 'no';         end
+feedback       = ft_getopt(varargin, 'feedback', 'text');
+keepfilter     = ft_getopt(varargin, 'keepfilter', 'no');
+keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
+keepcov        = ft_getopt(varargin, 'keepcov', 'no');
+keepmom        = ft_getopt(varargin, 'keepmom', 'yes');
+lambda         = ft_getopt(varargin, 'lambda', 0);
+projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
+projectmom     = ft_getopt(varargin, 'projectmom', 'no');
+fixedori       = ft_getopt(varargin, 'fixedori', 'no');
+computekurt    = ft_getopt(varargin, 'kurtosis', 'no');
+weightnorm     = ft_getopt(varargin, 'weightnorm', 'no');
 
 % convert the yes/no arguments to the corresponding logical values
 keepfilter     = istrue(keepfilter);

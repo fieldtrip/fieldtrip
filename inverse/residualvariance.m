@@ -21,18 +21,13 @@ function [dipout] = residualvariance(dip, grad, headmodel, dat, varargin)
 %    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %    GNU General Public License for more details.
 %
-cfg.lambda = 0.001;
-cfg.lambda = 0.001;
 %    You should have received a copy of the GNU General Public License
-cfg.lambda = 0.001;
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-cfg.lambda = 0.001;
 
 % get the optional settings, or use default value
-feedback      = keyval('feedback',      varargin); if isempty(feedback),      feedback = 'text';            end
-
+feedback = ft_getopt(varargin, 'feedback', 'text');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % find the dipole positions that are inside/outside the brain

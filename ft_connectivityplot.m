@@ -57,26 +57,67 @@ if ft_abort
   return
 end
 
-% check if the input data is valid for this function
-for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i});
-end
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed', {'color',  'graphcolor'}); % to make it consistent with ft_singleplotER
 
 % set the defaults
 cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'cohspctrm');
 cfg.zlim      = ft_getopt(cfg, 'zlim',      'maxmin');
 cfg.xlim      = ft_getopt(cfg, 'xlim',      'maxmin');
-cfg.color     = ft_getopt(cfg, 'color',     'brgkywrgbkywrgbkywrgbkyw');
+cfg.graphcolor = ft_getopt(cfg, 'graphcolor', 'brgkywrgbkywrgbkywrgbkyw');
+
+% check if the input data is valid for this function
+% ensure that the input is correct
+Ndata = numel(varargin);
+dtype = cell(Ndata, 1);
+iname = cell(Ndata+1, 1);
+for k = 1:Ndata
+  % check if the input data is valid for this function
+  varargin{k} = ft_checkdata(varargin{k}, 'datatype', {'timelock', 'freq'});
+  dtype{k}    = ft_datatype(varargin{k});
+
+  % convert into the the supported dimord
+  if strcmp(varargin{k}.dimord, 'chan_chan_freq')
+    % that's ok
+  elseif strcmp(varargin{k}.dimord, 'chancmb_freq')
+    % convert into 'chan_chan_freq'
+    varargin{k} = ft_checkdata(varargin{k}, 'cmbrepresentation', 'full');
+  else
+    error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
+  end
+  
+  % this is needed for correct treatment of graphcolor later on
+  if nargin>1,
+    if ~isempty(inputname(k+1))
+      iname{k+1} = inputname(k+1);
+    else
+      iname{k+1} = ['input',num2str(k,'%02d')];
+    end
+  else
+    % not yet supported
+    iname{k+1} = cfg.inputfile{k};
+  end
+end
+
+if Ndata >1,
+  if ~all(strcmp(dtype{1}, dtype))
+    error('input data are of different type; this is not supported');
+  end
+end
+
+% ensure that the data in all inputs has the same channels, time-axis, etc.
+tmpcfg = keepfields(cfg, {'channel'});
+[varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+% restore the provenance information
+[cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 % Get physical min/max range of x:
 if ischar(cfg.xlim) && strcmp(cfg.xlim,'maxmin')
   xmin = inf;
   xmax = -inf;
-  for k = 1:numel(varargin)
+  for k = 1:Ndata
     xmin = min(xmin,varargin{k}.freq(1));
     xmax = max(xmax,varargin{k}.freq(end));
   end
@@ -90,13 +131,13 @@ cfg.xlim = [xmin xmax];
 if ischar(cfg.zlim) && strcmp(cfg.zlim,'maxmin')
   zmin = inf;
   zmax = -inf;
-  for k = 1:numel(varargin)
+  for k = 1:Ndata
     zmin = min(zmin,min(varargin{k}.(cfg.parameter)(:)));
     zmax = max(zmax,max(varargin{k}.(cfg.parameter)(:)));
   end
 elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
   zmax = -inf;
-  for k = 1:numel(varargin)
+  for k = 1:Ndata
     zmax = max(zmax,max(abs(varargin{k}.(parameter)(:))));
   end
   zmin = -zmax;
@@ -106,9 +147,8 @@ else
 end
 cfg.zlim = [zmin zmax];
 
-% make the function recursive if numel(varargin)>1
-% FIXME check explicitly which channels belong together
-if numel(varargin)>1
+% make the function recursive if Ndata>1
+if Ndata>1
   data = varargin{1};
   tmpcfg = cfg;
   if ischar(cfg.parameter)
@@ -118,10 +158,16 @@ if numel(varargin)>1
   end
   ft_connectivityplot(tmpcfg, data);
   tmpcfg = cfg;
-
-  % FIXME also set the zlim scale to be consistent across inputs
-  for k = 2:numel(varargin)
-    tmpcfg.color   = tmpcfg.color(2:end);
+   
+  if ischar(cfg.graphcolor),        colorLabels = [iname{2} '=' tmpcfg.graphcolor(1) '\n'];
+  elseif isnumeric(cfg.graphcolor), colorLabels = [iname{2} '=' num2str(tmpcfg.graphcolor(1, :)) '\n'];
+  end
+    
+  for k = 2:Ndata
+    if ischar(cfg.graphcolor),     tmpcfg.graphcolor = tmpcfg.graphcolor(2:end);
+    else isnumeric(cfg.graphcolor),tmpcfg.graphcolor = tmpcfg.graphcolor(2:end,:);
+    end
+    
     tmpcfg.holdfig = 1;
     if ischar(cfg.parameter)
       % do nothing
@@ -129,19 +175,17 @@ if numel(varargin)>1
       tmpcfg.parameter = cfg.parameter{k};
     end
     ft_connectivityplot(tmpcfg, varargin{k});
+    
+    if ischar(cfg.graphcolor);        colorLabels = [colorLabels iname{k+1} '=' tmpcfg.graphcolor(1) '\n'];
+    elseif isnumeric(cfg.graphcolor); colorLabels = [colorLabels iname{k+1} '=' num2str(tmpcfg.graphcolor(1, :)) '\n'];
+    end
   end
+  
+  ft_plot_text(0.5, (numel(varargin{k}.label)+1).*1.2-0.5, sprintf(colorLabels), 'interpreter', 'none', 'horizontalalignment', 'right');
+
   return;
 else
   data = varargin{1};
-end
-
-if strcmp(data.dimord, 'chan_chan_freq')
-  % that's ok
-elseif strcmp(data.dimord, 'chancmb_freq')
-  % convert into 'chan_chan_freq'
-  data = ft_checkdata(data, 'cmbrepresentation', 'full');
-else
-  error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
 end
 
 if ~isfield(data, cfg.parameter)
@@ -150,7 +194,6 @@ end
 
 % get the selection of the data
 tmpcfg           = [];
-tmpcfg.channel   = cfg.channel;
 tmpcfg.frequency = cfg.xlim;
 data             = ft_selectdata(tmpcfg, data);
 % restore the provenance information
@@ -172,7 +215,7 @@ for k = 1:nchan
       iy  = nchan - m + 1;
       % use the convention of the row-channel causing the column-channel
       tmp = reshape(dat(m,k,:), [nfreq 1]);
-      ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.color(1));
+      ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.graphcolor(1));
       if k==1,
         % first column, plot scale on y axis
         fontsize = 10;
@@ -191,8 +234,8 @@ end
 
 % add channel labels on grand X and Y axes
 for k = 1:nchan
-  ft_plot_text(0,       (nchan + 1 - k).*1.2, data.label{k}, 'Interpreter', 'none', 'horizontalalignment', 'right');
-  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2, data.label{k}, 'Interpreter', 'none', 'horizontalalignment', 'left', 'rotation', 90);
+  ft_plot_text(0.5,     (nchan + 1 - k).*1.2,     data.label{k}, 'Interpreter', 'none', 'horizontalalignment', 'right');
+  ft_plot_text(k.*1.2,  (nchan + 1)    .*1.2-0.5, data.label{k}, 'Interpreter', 'none', 'horizontalalignment', 'left', 'rotation', 90);
 end
 
 % add 'from' and 'to' labels

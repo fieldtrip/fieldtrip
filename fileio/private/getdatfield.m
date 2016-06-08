@@ -15,7 +15,15 @@ datfield  = fieldnames(data);
 xtrafield =  {'label' 'labelcmb'};
 datfield  = setdiff(datfield, xtrafield);
 
-xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'dim' 'unit' 'coordsys' 'tri' 'tet' 'hex'};
+xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'transformorig' 'dim' 'unit' 'coordsys' 'tri' 'tet' 'hex'};
+datfield  = setdiff(datfield, xtrafield);
+
+xtrafield = {};
+for i=1:numel(datfield)
+  if isstruct(data.(datfield{i}))
+    xtrafield(end+1) = datfield(i);
+  end
+end
 datfield  = setdiff(datfield, xtrafield);
 
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$'))); % xxxlabel

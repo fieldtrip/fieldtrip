@@ -219,6 +219,11 @@ elseif ~isfield(cfg, 'dipfit') || ~isfield(cfg.dipfit, 'constr')
   cfg.dipfit.constr = [];
 end
 
+if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'moving')
+  error('the moving dipole model does not combine with the sequential constraint')
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+end
+
 if isfield(data, 'topolabel')
   % this looks like a component analysis
   iscomp = 1;
@@ -343,11 +348,13 @@ if strcmp(cfg.gridsearch, 'yes')
     % this is ok
   elseif cfg.numdipoles==2 && ~isempty(cfg.dipfit.constr)
     % this is also ok
+  elseif isfield(cfg.grid, 'pos') && size(cfg.grid.pos,2)==cfg.numdipoles*3
+    % this is also ok
   else
     error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
   end
 
-  % construct the dipole grid on which the gridsearch will be done
+  % copy all options that are potentially used in ft_prepare_sourcemodel
   tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
@@ -355,8 +362,7 @@ if strcmp(cfg.gridsearch, 'yes')
   else
     tmpcfg.grad = sens;
   end
-  
-  % copy all options that are potentially used in ft_prepare_sourcemodel
+  % construct the dipole grid on which the gridsearch will be done
   grid = ft_prepare_sourcemodel(tmpcfg);
 
   ngrid = size(grid.pos,1);

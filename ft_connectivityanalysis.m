@@ -920,6 +920,9 @@ switch dtype
     end
     if isfield(data, 'labelcmb'),
       stat.labelcmb = data.labelcmb;
+      
+      % ensure the correct dimord in case the input was 'powandcsd'
+      data.dimord = strrep(data.dimord, 'chan_', 'chancmb_');
     end
     tok = tokenize(data.dimord, '_');
     dimord = '';
