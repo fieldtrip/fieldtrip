@@ -239,7 +239,7 @@ switch toolbox
   case {'SPLINES', 'CURVE_FITTING'}
     dependency = has_license('curve_fitting_toolbox');      % check the availability of a toolbox license
   case 'COMM'
-    dependency = {has_license('comm_toolbox'), 'de2bi'};    % also check the availability of a toolbox license
+    dependency = {has_license('communication_toolbox'), 'de2bi'}; % also check the availability of a toolbox license
   case 'SIGNAL'
     dependency = {has_license('signal_toolbox'), 'window'}; % also check the availability of a toolbox license
   case 'IMAGE'
