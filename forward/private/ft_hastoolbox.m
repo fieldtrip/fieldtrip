@@ -83,6 +83,7 @@ url = {
   'MENTAT'     'see http://robertoostenveld.nl, or contact Robert Oostenveld'
   'SON2'       'see http://www.kcl.ac.uk/depsta/biomedical/cfnr/lidierth.html, or contact Malcolm Lidierth'
   '4D-VERSION' 'contact Christian Wienbruch'
+  'COMM'       'see http://www.mathworks.com/products/communications'
   'SIGNAL'     'see http://www.mathworks.com/products/signal'
   'OPTIM'      'see http://www.mathworks.com/products/optim'
   'IMAGE'      'see http://www.mathworks.com/products/image'  % Mathworks refers to this as IMAGES
@@ -232,19 +233,21 @@ switch toolbox
   case '4D-VERSION'
     dependency  = {'read4d', 'read4dhdr'};
   case {'STATS', 'STATISTICS'}
-    dependency = has_license('statistics_toolbox');         % also check the availability of a toolbox license
+    dependency = has_license('statistics_toolbox');         % check the availability of a toolbox license
   case {'OPTIM', 'OPTIMIZATION'}
-    dependency = has_license('optimization_toolbox');       % also check the availability of a toolbox license
+    dependency = has_license('optimization_toolbox');       % check the availability of a toolbox license
   case {'SPLINES', 'CURVE_FITTING'}
-    dependency = has_license('curve_fitting_toolbox');      % also check the availability of a toolbox license
+    dependency = has_license('curve_fitting_toolbox');      % check the availability of a toolbox license
+  case 'COMM'
+    dependency = {has_license('communication_toolbox'), 'de2bi'}; % also check the availability of a toolbox license
   case 'SIGNAL'
     dependency = {has_license('signal_toolbox'), 'window'}; % also check the availability of a toolbox license
   case 'IMAGE'
-    dependency = has_license('image_toolbox');              % also check the availability of a toolbox license
+    dependency = has_license('image_toolbox');              % check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
-    dependency = has_license('distrib_computing_toolbox');  % also check the availability of a toolbox license
+    dependency = has_license('distrib_computing_toolbox');  % check the availability of a toolbox license
   case 'COMPILER'
-    dependency = has_license('compiler');                   % also check the availability of a toolbox license
+    dependency = has_license('compiler');                   % check the availability of a toolbox license
   case 'FASTICA'
     dependency = 'fpica';
   case 'BRAINSTORM'
