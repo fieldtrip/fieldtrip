@@ -138,7 +138,14 @@ switch dimord
       stat = rmfield(stat, 'freq');
       stat.dimord = 'chan_time';
       % remove the singleton dimension in the middle
-      stat.(cfg.parameter) = squeeze(stat.(cfg.parameter));
+      stat.(cfg.parameter) = reshape(stat.(cfg.parameter),dimsiz([1 3]));
+      if isfield(stat, 'posclusterslabelmat')
+        stat.posclusterslabelmat = reshape(stat.posclusterslabelmat, dimsiz([1 3]));
+      end
+      if isfield(stat, 'negclusterslabelmat')
+        stat.negclusterslabelmat = reshape(stat.negclusterslabelmat, dimsiz([1 3]));
+      end
+
     elseif dimsiz(3)==1
       stat = rmfield(stat, 'time');
       stat.dimord = 'chan_freq';
@@ -202,7 +209,7 @@ else
 
   % make clusterslabel matrix per significant cluster
   if haspos
-    posCLM = squeeze(stat.posclusterslabelmat);
+    posCLM = stat.posclusterslabelmat;
     sigposCLM = zeros(size(posCLM));
     probpos = [];
     for iPos = 1:length(sigpos)
@@ -217,7 +224,7 @@ else
   end
 
   if hasneg
-    negCLM = squeeze(stat.negclusterslabelmat);
+    negCLM = stat.negclusterslabelmat;
     signegCLM = zeros(size(negCLM));
     probneg = [];
     for iNeg = 1:length(signeg)

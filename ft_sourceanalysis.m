@@ -661,6 +661,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   end
   
   for i=1:Nrepetitions
+    size_Cf    = size(Cf);
+    squeeze_Cf = reshape(Cf(i,:,:), size_Cf(2:end));    
     
     if Nrepetitions > 1
       ft_progress(i/Nrepetitions, 'scanning repetition %d of %d', i, Nrepetitions);
@@ -669,11 +671,11 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     switch cfg.method
       case 'dics'
         if strcmp(submethod, 'dics_power')
-          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze(Cf(i,:,:)), optarg{:});
+          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:});
         elseif strcmp(submethod, 'dics_refchan')
-          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze(Cf(i,:,:)), optarg{:}, 'Cr', Cr(i,:), 'Pr', Pr(i));
+          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:}, 'Cr', Cr(i,:), 'Pr', Pr(i));
         elseif strcmp(submethod, 'dics_refdip')
-          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip);
+          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:}, 'refdip', cfg.refdip);
         end
       case 'pcc'
         if ~isempty(avg) && istrue(cfg.rawtrial)
@@ -682,10 +684,10 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
           % repetition
           error('rawtrial in combination with pcc has been temporarily disabled');
         else
-          dip(i) = beamformer_pcc(grid, sens, headmodel, avg, squeeze(Cf(i,:,:)), optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
+          dip(i) = beamformer_pcc(grid, sens, headmodel, avg, squeeze_Cf, optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
         end
       case 'eloreta'
-        dip(i) = ft_eloreta(grid, sens, headmodel, avg, squeeze(Cf(i,:,:)), optarg{:});
+        dip(i) = ft_eloreta(grid, sens, headmodel, avg, squeeze_Cf, optarg{:});
       case 'mne'
         dip(i) = minimumnormestimate(grid, sens, headmodel, avg, optarg{:});
       case 'harmony'
@@ -938,12 +940,14 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     end
   end
   
-  siz=[size(avg) 1];
+  size_avg = [size(avg) 1];
+  size_Cy  = [size(Cy) 1];
   if strcmp(cfg.method, 'lcmv')% && ~isfield(grid, 'filter'),
-    for i=1:Nrepetitions
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+    for i = 1:Nrepetitions
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
+      squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       fprintf('scanning repetition %d\n', i);
-      dip(i) = beamformer_lcmv(grid, sens, headmodel, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:});
+      dip(i) = beamformer_lcmv(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:});
     end
     
     % the following has been disabled since it turns out to be wrong (see
@@ -998,34 +1002,42 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     
   elseif strcmp(cfg.method, 'sloreta')
     for i=1:Nrepetitions
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
+      squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       fprintf('scanning repetition %d\n', i);
-      dip(i) = ft_sloreta(grid, sens, headmodel, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:});
+      dip(i) = ft_sloreta(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:});
     end
     
   elseif strcmp(cfg.method, 'eloreta'),
     for i=1:Nrepetitions
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
+      squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       fprintf('scanning repetition %d\n', i);
-      dip(i) = ft_eloreta(grid, sens, headmodel, squeeze(avg(i,:,:)), squeeze(Cy(i,:,:)), optarg{:});
+      dip(i) = ft_eloreta(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:});
     end
   elseif strcmp(cfg.method, 'sam')
     for i=1:Nrepetitions
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
+      squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       fprintf('scanning repetition %d\n', i);
       squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
-      dip(i) = beamformer_sam(grid, sens, headmodel, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:});
+      dip(i) = beamformer_sam(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:});
     end
   elseif strcmp(cfg.method, 'pcc')
     for i=1:Nrepetitions
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
+      squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       fprintf('scanning repetition %d\n', i);
       squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
-      dip(i) = beamformer_pcc(grid, sens, headmodel, squeeze_avg, squeeze(Cy(i,:,:)), optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supchan', supchanindx);
+      dip(i) = beamformer_pcc(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supchan', supchanindx);
     end
   elseif strcmp(cfg.method, 'mne')
     for i=1:Nrepetitions
       fprintf('estimating current density distribution for repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       if hascovariance
-        dip(i) = minimumnormestimate(grid, sens, headmodel, squeeze_avg, optarg{:}, 'noisecov', squeeze(Cy(i,:,:)));
+        squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
+        dip(i) = minimumnormestimate(grid, sens, headmodel, squeeze_avg, optarg{:}, 'noisecov', squeeze_Cy);
       else
         dip(i) = minimumnormestimate(grid, sens, headmodel, squeeze_avg, optarg{:});
       end
@@ -1033,9 +1045,10 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   elseif strcmp(cfg.method, 'harmony')
     for i=1:Nrepetitions
       fprintf('estimating current density distribution for repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       if hascovariance
-        dip(i) = harmony(grid, sens, headmodel, squeeze_avg, optarg{:}, 'noisecov', squeeze(Cy(i,:,:)));
+        squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
+        dip(i) = harmony(grid, sens, headmodel, squeeze_avg, optarg{:}, 'noisecov', squeeze_Cy);
       else
         dip(i) = harmony(grid, sens, headmodel, squeeze_avg, optarg{:});
       end
@@ -1043,17 +1056,18 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   elseif strcmp(cfg.method, 'rv')
     for i=1:Nrepetitions
       fprintf('estimating residual variance at each grid point for repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       dip(i) = residualvariance(grid, sens, headmodel, squeeze_avg,      optarg{:});
     end
   elseif strcmp(cfg.method, 'music')
     for i=1:Nrepetitions
       fprintf('computing multiple signal classification for repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       if hascovariance
-        dip(i) = music(grid, sens, headmodel, squeeze_avg, 'cov', squeeze(Cy(i,:,:)), optarg{:});
+        squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
+        dip(i) = music(grid, sens, headmodel, squeeze_avg, 'cov', squeeze_Cy, optarg{:});
       else
-        dip(i) = music(grid, sens, headmodel, squeeze_avg,                            optarg{:});
+        dip(i) = music(grid, sens, headmodel, squeeze_avg,                    optarg{:});
       end
     end
   elseif strcmp(cfg.method, 'mvl')
@@ -1067,7 +1081,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
         optarg{n+1} = cfg.(fns{c});
         n=n+2;
       end
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       dip(i) = mvlestimate(grid, sens, headmodel, squeeze_avg, optarg{:});
     end
   else
