@@ -18,11 +18,11 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.coilori  = Nx3 matrix with coil orientations
 %    sens.balance  = structure containing info about the balancing, See FT_APPLY_MONTAGE
 % and optionally
-%    sens.chanposorg = Mx3 matrix with original channel positions (in case
+%    sens.chanposold = Mx3 matrix with original channel positions (in case
 %                      sens.chanpos has been updated to contain NaNs, e.g.
 %                      after ft_componentanalysis)
-%    sens.chanoriorg = Mx3 matrix with original channel orientations
-%    sens.labelorg   = Mx1 cell-array with original channel labels
+%    sens.chanoriold = Mx3 matrix with original channel orientations
+%    sens.labelold   = Mx1 cell-array with original channel labels
 %
 % The structure for EEG or ECoG channels contains
 %    sens.label    = Mx1 cell-array with channel labels
@@ -53,10 +53,11 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    pnt, pos, ori, pnt1, pnt2
 %
 % Revision history:
-% (upcoming) The chantype and chanunit have become required fields. It is possible
-%  to convert the amplitude and distance units (e.g. from T to fT and from m to mm)
-%  and it is possible to express planar and axial gradiometer channels either in
-%  units of amplitude or in units of amplitude/distance (i.e. proper gradient).
+% (2016/latest) The chantype and chanunit have become required fields. It is possible to
+%  convert the amplitude and distance units (e.g. from T to fT and from m to mm) and it is
+%  possible to express planar and axial gradiometer channels either in units of amplitude or
+%  in units of amplitude/distance (i.e. proper gradient).
+%  Original channel details are specified with the suffix "old" rather than "org".
 %  All numeric values are represented in double precision.
 %
 % (2011v2/latest) The chantype and chanunit have been added for MEG.
@@ -135,7 +136,7 @@ if ~isempty(distance) && ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
 end
 
 if strcmp(version, 'latest')
-  version = '2011v2';
+  version = '2016';
 end
 
 if isempty(sens)
@@ -150,13 +151,35 @@ ismeg = ft_senstype(sens, 'meg');
 
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  case 'upcoming' % this is under development and expected to become the standard in 2013
+  case '2016'
 
     % update it to the previous standard version
     sens = ft_datatype_sens(sens, 'version', '2011v2');
 
     % ensure that all numbers are represented in double precision
     sens = ft_struct2double(sens);
+
+    % use "old/new" rather than "org/new"
+    if isfield(sens, 'labelorg')
+      sens.labelold = sens.labelorg;
+      sens = rmfield(sens, 'labelorg');
+    end
+    if isfield(sens, 'chantypeorg')
+      sens.chantypeold = sens.chantypeorg;
+      sens = rmfield(sens, 'chantypeorg');
+    end
+    if isfield(sens, 'chanuniteorg')
+      sens.chanunitold = sens.chanunitorg;
+      sens = rmfield(sens, 'chanunitorg');
+    end
+    if isfield(sens, 'chanposorg')
+      sens.chanposold = sens.chanposorg;
+      sens = rmfield(sens, 'chanposorg');
+    end
+    if isfield(sens, 'chanoriorg')
+      sens.chanoriold = sens.chanoriorg;
+      sens = rmfield(sens, 'chanoriorg');
+    end
 
     % in version 2011v2 this was optional, now it is required
     if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
@@ -463,3 +486,5 @@ fn = sort(fieldnames(a));
 for i=1:numel(fn)
   b.(fn{i}) = a.(fn{i});
 end
+
+
