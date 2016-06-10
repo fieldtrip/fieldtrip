@@ -26,7 +26,7 @@ elseif strcmp(required, 'identical')
     % and assuming the same order of the positions
     pos     = reshape(pos, [Npos(1), Ndata 3]);
     boolval = all(all(all(abs(pos - repmat(pos(:,1,:), [1, Ndata, 1]))<tol)==1));
-    pos     = squeeze(pos(:,1,:));
+    pos     = reshape(pos(:,1,:), [Npos(1) 3]);
   end
 end
 
