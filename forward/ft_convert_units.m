@@ -19,9 +19,9 @@ function [obj] = ft_convert_units(obj, target, varargin)
 % are specified, this function will only determine the native geometrical
 % units of the object.
 %
-% See FT_ESTIMATE_UNITS, FT_READ_VOL, FT_READ_SENS
+% See also FT_ESTIMATE_UNITS, FT_READ_VOL, FT_READ_SENS
 
-% Copyright (C) 2005-2013, Robert Oostenveld
+% Copyright (C) 2005-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,6 +58,13 @@ if isstruct(obj) && numel(obj)>1
     end
   end
   obj = tmp;
+  return
+elseif iscell(obj) && numel(obj)>1
+  % deal with a cell array
+  % this might represent combined EEG, ECoG and/or MEG
+  for i=1:numel(obj)
+    obj{i} = ft_convert_units(obj{i}, target, varargin{:});
+  end
   return
 end
 
