@@ -372,7 +372,7 @@ if ~hasyparam
   end
 
 else
-  tline = imagesc(opt.xparam, opt.yparam, squeeze(mean(opt.dat(opt.vindx,:,:)))'); axis xy; hold on;
+  tline = imagesc(opt.xparam, opt.yparam, shiftdim(mean(opt.dat(opt.vindx,:,:)),1)'); axis xy; hold on;
   abc   = [opt.xparam([1 end]) opt.yparam([1 end])];
   vline = plot(opt.xparam(ceil(siz(2)/2)).*[1 1], abc(3:4));
   hline = plot(abc(1:2), opt.yparam(ceil(siz(3)/2)).*[1 1]);
@@ -465,7 +465,7 @@ valy = round(valy*(size(opt.dat,3)-1))+1;
 valy = min(valy, size(opt.dat,3));
 valy = max(valy, 1);
 
-mask = squeeze(opt.mask(:,valx,valy));
+mask = opt.mask(:,valx,valy);
 mask(opt.dat(:,valx,valy)<opt.threshold) = 0;
 
 % update stuff
@@ -475,7 +475,7 @@ if previous_valx~=valx || previous_valy~=valy
   set(opt.stringy, 'string', sprintf('%s = %3.3f\n', opt.cfg.yparam, opt.yparam(valy)));
 
   % update data in mesh
-  set(opt.hs, 'FaceVertexCData',     squeeze(opt.dat(:,valx,valy)));
+  set(opt.hs, 'FaceVertexCData',     opt.dat(:,valx,valy));
   set(opt.hs, 'FaceVertexAlphaData', mask);
 
   set(opt.vline, 'xdata', [1 1]*opt.xparam(valx));
