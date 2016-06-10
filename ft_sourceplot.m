@@ -757,16 +757,16 @@ switch cfg.method
       xbeg = floor((iSlice-1)./M);
       ybeg = mod(iSlice-1, M);
       if hasana
-        quilt_ana(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(ana(:,:,iSlice));
+        quilt_ana(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=ana(:,:,iSlice);
       end
       if hasfun
-        quilt_fun(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(fun(:,:,iSlice));
+        quilt_fun(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=fun(:,:,iSlice);
       end
       if hasmsk
-        quilt_msk(ybeg.*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(msk(:,:,iSlice));
+        quilt_msk(ybeg.*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=msk(:,:,iSlice);
       end
       %     if hasmskana
-      %       quilt_mskana(ybeg.*m+1:(ybeg+1).*m, xbeg.*n+1:(xbeg+1).*n)=squeeze(mskana(:,:,iSlice));
+      %       quilt_mskana(ybeg.*m+1:(ybeg+1).*m, xbeg.*n+1:(xbeg+1).*n)=mskana(:,:,iSlice);
       %     end
     end
     % make vols and scales, containes volumes to be plotted (fun, ana, msk), added by ingnie
@@ -1216,13 +1216,13 @@ switch cfg.method
       msk = getsubfield(functional, 'inside');
       msk = reshape(msk, dim);
       if hasana
-        msk(1,:,:) = squeeze(fun(1,:,:))>0 & imfill(abs(squeeze(ana(1,:,:))-1))>0;
-        msk(:,1,:) = squeeze(fun(:,1,:))>0 & imfill(abs(squeeze(ana(:,1,:))-1))>0;
-        msk(:,:,1) = squeeze(fun(:,:,1))>0 & imfill(abs(ana(:,:,1)-1))>0;
+        msk(1,:,:) = fun(1,:,:)>0 & imfill(abs(ana(1,:,:)-1))>0;
+        msk(:,1,:) = fun(:,1,:)>0 & imfill(abs(ana(:,1,:)-1))>0;
+        msk(:,:,1) = fun(:,:,1)>0 & imfill(abs(ana(:,:,1)-1))>0;
       else
-        msk(1,:,:) = squeeze(fun(1,:,:))>0;
-        msk(:,1,:) = squeeze(fun(:,1,:))>0;
-        msk(:,:,1) = squeeze(fun(:,:,1))>0;
+        msk(1,:,:) = fun(1,:,:)>0;
+        msk(:,1,:) = fun(:,1,:)>0;
+        msk(:,:,1) = fun(:,:,1)>0;
       end
       functional = setsubfield(functional, 'inside', msk);
     end
@@ -1452,19 +1452,19 @@ set(opt.handlesaxes(3), 'Visible',opt.axis);
 
 if opt.hasfreq && opt.hastime && opt.hasfun,
   h4 = subplot(2,2,4);
-  tmpdat = double(squeeze(opt.fun(xi,yi,zi,:,:)));
+  tmpdat = double(shiftdim(opt.fun(xi,yi,zi,:,:),3));
   uimagesc(double(functional.time), double(functional.freq), tmpdat); axis xy;
   xlabel('time'); ylabel('freq');
   set(h4, 'tag', 'TF1');
   caxis([opt.fcolmin opt.fcolmax]);
 elseif opt.hasfreq && opt.hasfun,
   h4 = subplot(2,2,4);
-  plot(functional.freq, squeeze(opt.fun(xi,yi,zi,:))); xlabel('freq');
+  plot(functional.freq, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('freq');
   axis([functional.freq(1) functional.freq(end) opt.fcolmin opt.fcolmax]);
   set(h4, 'tag', 'TF2');
 elseif opt.hastime && opt.hasfun,
   h4 = subplot(2,2,4);
-  plot(functional.time, squeeze(opt.fun(xi,yi,zi,:))); xlabel('time');
+  plot(functional.time, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('time');
   set(h4, 'tag', 'TF3', 'xlim',functional.time([1 end]), 'ylim',[opt.fcolmin opt.fcolmax], 'layer', 'top');
 elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc'),
   if opt.hasfun
