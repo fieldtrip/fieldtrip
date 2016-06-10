@@ -353,7 +353,7 @@ else
       indx = cfg.movietime;
       for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)
         indy = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
-        datavector = squeeze(mean(parameter(:, indy,indx), 2));
+        datavector = reshape(mean(parameter(:, indy,indx), 2), [size(parameter,1) 1]);
         datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'v4');
         set(hs, 'cdata',  datamatrix + nanmask);
         F(iFrame) = getframe;
@@ -362,7 +362,7 @@ else
       indy = cfg.moviefreq;
       for iFrame = 1:floor(size(parameter, 3)/cfg.samperframe)
         indx = ((iFrame-1)*cfg.samperframe+1):iFrame*cfg.samperframe;
-        datavector = squeeze(mean(parameter(:, indy,indx), 3));
+        datavector = reshape(mean(parameter(:, indy,indx), 3), [size(parameter,1) 1]);
         datamatrix = griddata(chanx, chany, datavector, xdata, ydata, 'v4');
         set(hs, 'cdata',  datamatrix + nanmask);
         F(iFrame) = getframe;
