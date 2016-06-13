@@ -68,7 +68,8 @@ mri.coordsys      = 'spm';
 % case SPM will throw an error
 if opt==1
   % use spm_affreg
-  
+  ft_hastoolbox('spm', 1);
+ 
   switch spm('ver')
     case 'SPM8'
       if isdeployed
