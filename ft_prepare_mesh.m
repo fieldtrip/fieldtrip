@@ -13,7 +13,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %
 % Configuration options:
 %   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
-%                     'headshape', 'hexahedral', 'tetrahedral'
+%                     'headshape', 'hexahedral', 'tetrahedral', 'cortexhull'
 %   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
 %   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
@@ -174,6 +174,9 @@ switch cfg.method
       bnd(i).tri = tri;
     end
 
+  case 'cortexhull'
+    bnd = prepare_cortexhull(cfg);      
+      
   otherwise
     error('unsupported cfg.method')
 end
