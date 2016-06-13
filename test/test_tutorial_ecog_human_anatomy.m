@@ -33,18 +33,13 @@ camlight
 hs = ft_plot_sens(elec, 'style', 'ko');
 set(hs, 'MarkerFaceColor', 'k', 'MarkerSize', 6);
 
-%% smooth outer surface
+% smooth outer surface
 cfg = [];
 cfg.headshape = 'SubjectUCI29_lh.pial';
 cfg.method = 'cortexhull';
-mesh = ft_prepare_mesh(cfg);
+smooth_mesh = ft_prepare_mesh(cfg);  % this function uses Freesurfer!
 
-
-cfg.tmp_dir = [tempdir 'snap_to_pial'];  % temporary directory to store temporary files
-
-smooth_mesh = smooth_surf(cfg);  % this function uses Freesurfer!
-
-%% plot smoothed mesh
+% plot smoothed mesh
 ft_plot_mesh(smooth_mesh, 'facecolor', [0.781 0.762 0.664], 'EdgeColor', 'none')
 view([-90 25])
 lighting gouraud
