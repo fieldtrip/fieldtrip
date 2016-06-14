@@ -768,7 +768,7 @@ elseif isempty(mixing) && ~isempty(unmixing)
   end
 elseif isempty(mixing) && isempty(unmixing)
   % this sanity check is needed to catch convergence problems in fastica
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1519
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1519
   error('the component unmixing failed');
 end
 
@@ -845,7 +845,7 @@ if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
   comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
   % The output sensor array cannot simply be interpreted as the input
   % sensor array, hence the type should be removed to allow autodetection
-  % See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1806
+  % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
   if isfield(comp.(sensfield), 'type')
     comp.(sensfield) = rmfield(comp.(sensfield), 'type');
   end

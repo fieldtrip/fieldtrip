@@ -6,7 +6,7 @@ function test_tutorial_eventrelatedaveraging(dataset)
 % TEST test_tutorial_eventrelatedaveraging
 % TEST ft_preprocessing ft_timelockanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_megplanar ft_combineplanar
 
-% see http://fieldtrip.fcdonders.nl/tutorial/eventrelatedaveraging
+% see http://www.fieldtriptoolbox.org/tutorial/eventrelatedaveraging
 % this testscript corresponds to the version on the wiki at 23 December 2012
 
 if nargin<1

@@ -8,7 +8,7 @@ function test_tutorial_multivariateanalysis(datadir, dmltdir)
 
 % this is a test script that I made following the report of Matt on
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1585 and realizing that the
-% wiki page http://fieldtrip.fcdonders.nl/tutorial/multivariateanalysis was
+% wiki page http://www.fieldtriptoolbox.org/tutorial/multivariateanalysis was
 % not included in a test script.
 
 % This test script corresponds to the documentation on the wiki from 3 July 2012

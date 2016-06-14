@@ -51,7 +51,7 @@ function data = ft_removetmsartifact(cfg, data)
 % $Id$
 
 % DEPRECATED by jimher on 19 September 2013
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1791 for more details
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1791 for more details
 warning('FT_REMOVETMSARTIFACT is deprecated, please follow TMS-EEG tutorial instead (http://www.fieldtriptoolbox.org/tutorial/tms-eeg).')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

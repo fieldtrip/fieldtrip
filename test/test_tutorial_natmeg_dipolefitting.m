@@ -4,7 +4,7 @@ function test_tutorial_natmeg_dipolefitting
 % MEM 10gb
 
 % this script executes the MATLAB content from
-% http://fieldtrip.fcdonders.nl/tutorial/natmeg/dipolefitting
+% http://www.fieldtriptoolbox.org/tutorial/natmeg/dipolefitting
 %
 % it corresponds to the wiki version of 7 October 2014
 
