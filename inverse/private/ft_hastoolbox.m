@@ -115,7 +115,7 @@ url = {
   'PRTOOLS'       'see http://www.prtools.org'
   'ITAB'          'contact Stefania Della Penna'
   'BSMART'        'see http://www.brain-smart.org'
-  'PEER'          'see http://fieldtrip.fcdonders.nl/development/peer'
+  'PEER'          'see http://www.fieldtriptoolbox.org/development/peer'
   'FREESURFER'    'see http://surfer.nmr.mgh.harvard.edu/fswiki'
   'SIMBIO'        'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
   'VGRID'         'see http://www.rheinahrcampus.de/~medsim/vgrid/manual.html'
