@@ -42,7 +42,7 @@ switch datatype
       % The file name where data should be written.
       file_name = sprintf('%s%03d.avr', filename, iTr);
       % Multiply by 1e15 to get the data in femtoTesla.
-      data_matrix = squeeze(data.trial(iTr, :, :)).*1e15; % FIXME
+      data_matrix = data.trial{iTr}.*1e15; %FIXME
       % Save the data
       besa_save2Avr(custom_path, file_name, data_matrix, time_samples, channel_labels, data_scale_factor, time_scale_factor);
     end
@@ -52,7 +52,8 @@ switch datatype
     assert(isempty(channel), 'channel selection and reordering is not yet supported');
 
     if isfield(data, 'trial') && strcmp(getdimord(data, 'trial'), 'rpt_chan_time')
-      NumTrials = size(data.trial, 1);
+      [NumTrials, NumChans, NumSamp] = size(data.trial);
+      
       % Multiply by 1000 to get the time in milliseconds.
       time_samples = data.time.*1000;
       channel_labels = data.label;
@@ -62,12 +63,12 @@ switch datatype
         % The file name where data should be written.
         file_name = sprintf('%s%03d.avr', filename, iTr);
         % Multiply by 1e15 to get the data in femtoTesla.
-        data_matrix = squeeze(data.trial(iTr, :, :)).*1e15; % FIXME
+        data_matrix = reshape(data.trial(iTr, :, :), [NumChans NumSamp]).*1e15; % FIXME
         % Save the data
         besa_save2Avr(custom_path, file_name, data_matrix, time_samples, channel_labels, data_scale_factor, time_scale_factor);
       end
 
-    elseif isfield(data, 'avg') && strcmp(getdimord(data, 'agv'), 'chan_time')
+    elseif isfield(data, 'avg') && strcmp(getdimord(data, 'avg'), 'chan_time')
       % Multiply by 1000 to get the time in milliseconds.
       time_samples = data.time.*1000;
       channel_labels = data.label;
@@ -76,7 +77,7 @@ switch datatype
       % The file name where data should be written.
       file_name = sprintf('%s.avr', filename);
       % Multiply by 1e15 to get the data in femtoTesla.
-      data_matrix = squeeze(data.avg(:, :)).*1e15; % FIXME
+      data_matrix = data.avg.*1e15; % FIXME
       % Save the data
       besa_save2Avr(custom_path, file_name, data_matrix, time_samples, channel_labels, data_scale_factor, time_scale_factor);
 

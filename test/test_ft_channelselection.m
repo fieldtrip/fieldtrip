@@ -50,3 +50,13 @@ for i=1:size(datasets,2);
         end
     end
 end
+
+%% test http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3135
+desired = {'Cz','C3'};
+label = {'Cz','FCz','FC3'};
+sel = ft_channelselection(desired, label);
+
+assert(all(ismember(sel, desired)), 'not all selected channels were desired');
+  
+  
+

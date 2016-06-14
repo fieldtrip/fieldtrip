@@ -176,9 +176,13 @@ elseif hasdataopto
 elseif haslayout
   display('Using the 2-D layout to determine the sensor position\n');
   lay = ft_prepare_layout(cfg);
+
+  % remove the COMNT and SCALE labels
+  sel = ~ismember(lay.label, {'COMNT' 'SCALE'});  
+
   sens = [];
-  sens.label = lay.label;
-  sens.chanpos = lay.pos;
+  sens.label = lay.label(sel);
+  sens.chanpos = lay.pos(sel,:);
   sens.chanpos(:,3) = 0;
   
 elseif iscfgsens
