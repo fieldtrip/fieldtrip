@@ -1,4 +1,5 @@
 function moviefunction(cfg, varargin)
+
 % we need cfg.plotfun to plot the data
 % data needs to be 3D, N x time x freq (last can be singleton)
 %   N needs to correspond to number of vertices (channels, gridpoints, etc)
@@ -39,12 +40,6 @@ function moviefunction(cfg, varargin)
 %   new figure for zooming and and rotation timing options during playback
 %   add an intro a la Jan-Mathijs for source, similar for normal topos
 %   make panels foldable (like on mobile devices)
-
-ft_defaults
-ft_preamble init
-ft_preamble callinfo
-ft_preamble trackconfig
-ft_preamble loadvar data
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',         'absmax',  'maxabs'});
