@@ -3,13 +3,16 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % FT_PREPARE_MESH creates a triangulated surface mesh for the volume
 % conduction model. The mesh can either be selected manually from raw
 % mri data or can be generated starting from a segmented volume
-% information stored in the mri structure. The result is a bnd
-% structure which contains the information about all segmented surfaces
-% related to mri and are expressed in world coordinates.
+% information stored in the mri structure. FT_PREPARE_MESH can be used
+% to create a cortex hull, i.e. the smoothed envelope around the pial
+% surface created by freesurfer. The result is a bnd structure which
+% contains the information about all segmented surfaces related to mri
+% sand are expressed in world coordinates.
 %
 % Use as
 %   bnd = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, seg)
+%   bnd = ft_prepare_mesh(cfg)  # for cortexhull
 %
 % Configuration options:
 %   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
@@ -19,6 +22,12 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
 %   cfg.headshape   = (optional) a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
+%
+% Method 'cortexhull' has its own specific configuration options:
+%   cfg.headshape   = a filename containing the pial surface computed by
+%                     freesurfer recon-all ('/path/to/surf/lh.pial')
+%   cfg.
+%
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -39,6 +48,11 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.tissue      = {'scalp', 'skull', 'brain'};
 %   cfg.numvertices = [800, 1600, 2400];
 %   bnd             = ft_prepare_mesh(cfg, segmentation);
+%
+%   cfg             = [];
+%   cfg.method      = 'cortexhull';
+%   cfg.headshape   = '/path/to/surf/lh.pial';
+%   cortex_hull     = ft_prepare_mesh(cfg);
 %
 % See also FT_VOLUMESEGMENT, FT_PREPARE_HEADMODEL, FT_PLOT_MESH
 
@@ -175,8 +189,8 @@ switch cfg.method
     end
 
   case 'cortexhull'
-    bnd = prepare_cortexhull(cfg);      
-      
+    bnd = prepare_cortexhull(cfg);
+
   otherwise
     error('unsupported cfg.method')
 end

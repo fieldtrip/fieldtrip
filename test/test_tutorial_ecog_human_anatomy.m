@@ -1,10 +1,10 @@
 function test_tutorial_ecog_human_anatomy
 
 % MEM 5gb
-% WALLTIME 00:30:00
+% WALLTIME 00:10:00
 
 % TEST test_tutorial_ecog_human_anatomy
-% TEST 
+% TEST
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog');
 subj = 'SubjectUCI29';
@@ -55,7 +55,7 @@ cfg.channel = {'POL *G*'};
 cfg.elec = elec;
 cfg.headshape = smooth_mesh;
 cfg.feedback = 'yes';
-    
+
 % snap to pial
 elec_snapped = ft_electroderealign(cfg);
 
