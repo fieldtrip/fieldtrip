@@ -360,14 +360,18 @@ elseif strcmp(cfg.method, 'headshape')
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label   = elec.label(datsel);
   elec.elecpos = elec.elecpos(datsel,:);
-  
-  fprintf('warping electrodes to skin surface... '); % the newline comes later
-  [norm.elecpos, norm.m] = ft_warp_optim(elec.elecpos, headshape, cfg.warp);
+
   norm.label = elec.label;
-  
-  dpre  = ft_warp_error([],     elec.elecpos, headshape, cfg.warp);
-  dpost = ft_warp_error(norm.m, elec.elecpos, headshape, cfg.warp);
-  fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
+  if strcmp(lower(cfg.warp), 'dykstra2012')
+    norm.elecpos = ft_warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
+  else
+    fprintf('warping electrodes to skin surface... '); % the newline comes later
+    [norm.elecpos, norm.m] = ft_warp_optim(elec.elecpos, headshape, cfg.warp);
+
+    dpre  = ft_warp_error([],     elec.elecpos, headshape, cfg.warp);
+    dpost = ft_warp_error(norm.m, elec.elecpos, headshape, cfg.warp);
+    fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
+  end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'fiducial')
@@ -553,18 +557,25 @@ end % if method
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template', 'headshape'}
-    % the transformation is a linear or non-linear warp, i.e. a vector
-    try
-      % convert the vector with fitted parameters into a 4x4 homogenous transformation
-      % apply the transformation to the original complete set of sensors
-      elec_realigned = ft_transform_sens(feval(cfg.warp, norm.m), elec_original);
-    catch
-      % the previous section will fail for nonlinear transformations
-      elec_realigned.label   = elec_original.label;
-      try, elec_realigned.elecpos = ft_warp_apply(norm.m, elec_original.elecpos, cfg.warp); end
+    if strcmp(lower(cfg.warp), 'dykstra2012')
+      elec_realigned = norm;
+      elec_realigned.unit = elec_original.unit;
+      
+    else
+      % the transformation is a linear or non-linear warp, i.e. a vector
+      try
+        % convert the vector with fitted parameters into a 4x4 homogenous transformation
+        % apply the transformation to the original complete set of sensors
+        elec_realigned = ft_transform_sens(feval(cfg.warp, norm.m), elec_original);
+      catch
+        % the previous section will fail for nonlinear transformations
+        elec_realigned.label   = elec_original.label;
+        try, elec_realigned.elecpos = ft_warp_apply(norm.m, elec_original.elecpos, cfg.warp); end
+      end
+      % remember the transformation
+      elec_realigned.(cfg.warp) = norm.m;
+      
     end
-    % remember the transformation
-    elec_realigned.(cfg.warp) = norm.m;
     
   case  {'fiducial' 'interactive'}
     % the transformation is a 4x4 homogenous matrix

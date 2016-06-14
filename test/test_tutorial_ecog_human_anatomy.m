@@ -46,30 +46,20 @@ lighting gouraud
 material shiny
 camlight
 
-%% snap to surf
-
-% first select only the channels on the pial surface
-% maybe there is a cleaner way in FieldTrip
-good_elec = false(size(elec.label));
-
-for i = 1:size(elec.label, 1)
-  one_label = elec.label{i};
-  if one_label(7) == 'G'
-    good_elec(i) = true;
-  end
-end
-
-pos = elec.chanpos(good_elec, :);
-snapped = [];
-snapped.unit = elec.unit;
-snapped.label = elec.label(good_elec);
-
 % snap to pial
-elec_pos = optimization_snap(pos, smooth_mesh);
-snapped.chanpos = elec_pos;
 
+cfg = [];
+cfg.method = 'headshape';
+cfg.warp = 'dykstra2012';
+cfg.channel = {'POL *G*'};
+cfg.elec = elec;
+cfg.headshape = smooth_mesh;
+cfg.feedback = 'yes';
+    
+% snap to pial
+elec_snapped = ft_electroderealign(cfg);
 
-%% plot snapped elec
+% plot snapped elec
 ft_plot_mesh(mesh, 'facecolor', [0.781 0.762 0.664], 'EdgeColor', 'none')
 view([-90 25])
 lighting gouraud
@@ -77,5 +67,5 @@ material shiny
 camlight
 
 % plot electrodes
-hs = ft_plot_sens(snapped, 'style', 'ko');
+hs = ft_plot_sens(elec_snapped, 'style', 'ko');
 set(hs, 'MarkerFaceColor', 'k', 'MarkerSize', 6);
