@@ -150,6 +150,7 @@ headmodel = [];
 headmodel.tissue     = tissue;
 headmodel.tissueval  = tissueval;
 headmodel.transform  = transform;
+headmodel.unit       = unit;
 headmodel.segdim     = size(seg);
 headmodel.type       = 'fns';
 headmodel.transfer   = transfer;
