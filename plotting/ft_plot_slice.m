@@ -133,6 +133,11 @@ else
   mesh = {};
 end
 
+% replace pnt by pos
+for k = 1:numel(mesh)
+  mesh{k} = fixpos(mesh{k});
+end
+
 dointersect = ~isempty(mesh);
 if dointersect
   for k = 1:numel(mesh)
