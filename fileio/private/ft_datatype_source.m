@@ -128,6 +128,12 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
+
+    if isfield(source, 'avg') && isstruct(source.avg) && isfield(source, 'trial') && isstruct(source.trial) && ~isempty(intersect(fieldnames(source.avg), fieldnames(source.trial)))
+      % it is not possible to convert both since they have the same field names
+      ft_warning('removing ''avg'', keeping ''trial''');
+      source = rmfield(source, 'avg');
+    end
     
     if isfield(source, 'avg') && isstruct(source.avg)
       % move the average fields to the main structure

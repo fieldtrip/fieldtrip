@@ -136,12 +136,20 @@ else
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     end
   else
-      
+    
     for i=1:size(dip.pos,1)
       % compute the leadfield
       dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
     end
   end
+end
+
+if size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
+  % the data is a COV or CSD matrix, compute source power
+  regulardata = false;
+else
+  % it is regular data, compute dipole moment time-series or Fourier coefficients
+  regulardata = true;
 end
 
 %% compute the spatial filter
@@ -166,8 +174,8 @@ if ~hasfilter
   
   % Take the rieal part of the noise cross-spectral density matrix
   if isreal(noisecov) == 0
-      fprintf('Taking the real part of the noise cross-spectral density matrix\n');
-      noisecov = real(noisecov);
+    fprintf('Taking the real part of the noise cross-spectral density matrix\n');
+    noisecov = real(noisecov);
   end
   
   % compute the inverse of the forward model, this is where prior information
@@ -176,6 +184,7 @@ if ~hasfilter
     % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
     warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
     w = pinv(lf);
+    
   elseif ~isempty(noisecov)
     fprintf('computing the solution where the noise covariance is used for regularisation\n');
     % the noise covariance has been given and can be used to regularise the solution
@@ -233,10 +242,10 @@ if ~hasfilter
       s  = diag(S);
       ss = s ./ (s.^2 + lambda);
       w  = Rc * V * diag(ss) * U';
-   
+      
       % unwhiten the filters to bring them back into signal subspace
       w = w*P;
-   
+      
     else
       %% equation 5 from Lin et al 2004 (this implements Dale et al 2000, and Liu et al. 2002)
       denom = (A*R*A'+(lambda^2)*C);
@@ -254,19 +263,16 @@ if ~hasfilter
   if isreal(dat) == 1
     fprintf('The input are sensors time-series: Computing the dipole moments\n')
     mom = w * dat;
-    mom_ind = 1;
   elseif size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
     fprintf('The input is a sensor level cross-spectral density: Computing source level power\n')
     pow = real(sum((w*dat).*w,2));
-    mom_ind = 0;
   else
     fprintf('The input is are sensor level Fourier-coefficients: Computing source level Fourier coefficients\n')
     mom = w * dat;
-    mom_ind = 1;
   end
   
   % assign the estimated source strength to each dipole
-  if mom_ind == 1
+  if regulardata == 1
     n = 1;
     for i=1:size(dip.pos,1)
       cbeg = n;
@@ -278,7 +284,7 @@ if ~hasfilter
   
 elseif hasfilter
   if isreal(dat) == 0
-      error('Using premade filters is currenly not supported for frequency domain analysis\n')
+    error('Using precomputed filters is currenly not supported for frequency domain analysis\n')
   end
   % use the spatial filters from the data
   dipout.mom = cell(size(dip.pos,1),1);
@@ -289,21 +295,20 @@ elseif hasfilter
 end % if hasfilter
 
 % for convenience also compute power (over the three orientations) at each location and for each time
-
-if mom_ind == 1
+if regulardata == 1
   dipout.pow = nan(size(dip.pos,1), size(dat,2));
   for i=1:size(dip.pos,1)
     dipout.pow(i,:) = sum(abs(dipout.mom{i}).^2, 1);
   end
 else
-    dipout.pow = nan(size(dip.pos,1), 1);
-    n = 1;
-    for i=1:size(dip.pos,1)
-      cbeg = n;
-      cend = n + size(dip.leadfield{i}, 2) - 1;
-      dipout.pow(i,:) = sum(pow(cbeg:cend),1);
-      n = n + size(dip.leadfield{i}, 2);
-    end
+  dipout.pow = nan(size(dip.pos,1), 1);
+  n = 1;
+  for i=1:size(dip.pos,1)
+    cbeg = n;
+    cend = n + size(dip.leadfield{i}, 2) - 1;
+    dipout.pow(i,:) = sum(pow(cbeg:cend),1);
+    n = n + size(dip.leadfield{i}, 2);
+  end
 end
 
 % deal with keepfilter option

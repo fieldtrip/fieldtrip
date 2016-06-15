@@ -204,7 +204,11 @@ if ~isequal(feedback, 'no')
     end
   end
 elseif ismesh
-  fprintf('the input is mesh data with %d vertices and %d triangles\n', size(mesh.pos,1), size(mesh.tri,1));
+  if numel(data)==1
+    fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
+  else
+    fprintf('the input is mesh data multiple surfaces\n');
+  end
 end % give feedback
 
 if issource && isvolume
