@@ -1400,7 +1400,12 @@ end
 
 if inflated
   % compressed file has been unzipped on the fly, clean up
-  delete(filename);
+  if strcmp(dataformat, 'brainvision_eeg')
+    % delete the complete directory, including the header and marker file
+    delete(fileparts(filename));
+  else
+    delete(filename);
+  end
 end
 
 if strcmp(dataformat, 'bci2000_dat') || strcmp(dataformat, 'eyelink_asc') || strcmp(dataformat, 'gtec_mat')
