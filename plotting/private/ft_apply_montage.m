@@ -76,6 +76,7 @@ end
 
 % use "old/new" instead of "org/new"
 montage = fixmontage(montage);
+input   = fixmontage(input); % the input might also be a montage
 
 % get optional input arguments
 keepunused  = ft_getopt(varargin, 'keepunused',  'no');
@@ -583,7 +584,7 @@ if isfield(montage, 'chantypeorg')
   montage.chantypeold = montage.chantypeorg;
   montage = rmfield(montage, 'chantypeorg');
 end
-if isfield(montage, 'chanuniteorg')
+if isfield(montage, 'chanunitorg')
   montage.chanunitold = montage.chanunitorg;
   montage = rmfield(montage, 'chanunitorg');
 end

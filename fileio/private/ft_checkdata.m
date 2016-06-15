@@ -204,6 +204,7 @@ if ~isequal(feedback, 'no')
     end
   end
 elseif ismesh
+  data = fixpos(data);
   if numel(data)==1
     fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
   else
