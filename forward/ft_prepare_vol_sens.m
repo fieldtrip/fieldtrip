@@ -58,6 +58,14 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 %
 % $Id$
 
+if iscell(headmodel) && iscell(sens)
+  % this represents combined EEG, ECoG and/or MEG
+  for i=1:numel(headmodel)
+    [headmodel{i}, sens{i}] = ft_prepare_vol_sens(headmodel{i}, sens{i}, varargin{:});
+  end
+  return
+end
+
 % get the optional input arguments
 % fileformat = ft_getopt(varargin, 'fileformat');
 channel = ft_getopt(varargin, 'channel', sens.label);   % cell-array with channel labels, default is all
@@ -357,9 +365,9 @@ elseif iseeg
       
     case {'slab_monopole'}
       % electrodes' all-to-all distances
-      numel  = size(sens.elecpos,1);
-      ref_el = sens.elecpos(1,:);
-      md  = dist( (sens.elecpos-repmat(ref_el,[numel 1]))' );
+      numelc  = size(sens.elecpos,1);
+      ref_elc = sens.elecpos(1,:);
+      md  = dist( (sens.elecpos-repmat(ref_elc,[numelc 1]))' );
       % choose min distance between electrodes
       md  = min(md(1,2:end));
       pos = sens.elecpos;

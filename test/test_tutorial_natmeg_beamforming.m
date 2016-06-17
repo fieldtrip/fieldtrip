@@ -4,7 +4,7 @@ function test_tutorial_natmeg_beamforming
 % MEM 8gb
 
 % this script executes the MATLAB content from
-% http://fieldtrip.fcdonders.nl/tutorial/natmeg/beamforming
+% http://www.fieldtriptoolbox.org/tutorial/natmeg/beamforming
 %
 % it corresponds to the wiki version of 7 October 2014
 

@@ -30,7 +30,7 @@ function [sens] = ft_fetch_sens(cfg, data)
 %
 % See also FT_READ_SENS, FT_PREPARE_LAYOUT, FT_FETCH_DATA
 
-% Copyright (C) 2011, J?rn M. Horschig
+% Copyright (C) 2011-2016, Jorn M. Horschig
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -79,11 +79,20 @@ iscfgsens   = isfield(cfg, 'pnt')  || isfield(cfg, 'chanpos');
 isdatasens  = isfield(data, 'pnt') || isfield(data, 'chanpos');
 hassenstype = isfield(cfg, 'senstype');
 
-if ~hassenstype && ...
-    (hasgradfile || hascfggrad || hasdatagrad) && ...
-    (haselecfile || hascfgelec || hasdataelec) && ...
-    (hasoptofile || hascfgopto || hasdataopto)
+if (hasgradfile || hascfggrad || hasdatagrad) && (haselecfile || hascfgelec || hasdataelec) && ~hassenstype
   error('Cannot determine whether you need gradiometer or electrode sensor definition. Specify cfg.senstype as ''MEG'' or ''EEG''');
+  
+elseif hassenstype && iscell(cfg.senstype)
+  % this represents combined EEG and MEG sensors, where each modality has its own sensor definition
+  % use recursion to fetch all sensor descriptions
+  sens = cell(size(cfg.senstype));
+  for i=1:numel(cfg.senstype)
+    tmpcfg = cfg;
+    tmpcfg.senstype = cfg.senstype{i};
+    sens{i} = ft_fetch_sens(tmpcfg, data);
+  end
+  return
+  
 elseif hassenstype
   switch lower(cfg.senstype)
     case 'meg'
@@ -116,13 +125,12 @@ if (hasgradfile + hascfggrad + hasdatagrad + ...
     haselecfile + hascfgelec + hasdataelec + ...
     hasoptofile + hascfgopto + hasdataopto + ...
     haslayout + iscfgsens + isdatasens) > 1
-  display = @warning;
   fprintf('Your data and configuration allow for multiple sensor definitions.\n');
+  display = @warning;
 else
   display = @fprintf;
 end
 
-% get the gradiometer or electrode definition
 if hasgradfile
   display('reading gradiometers from file ''%s''\n', cfg.gradfile);
   sens = ft_read_sens(cfg.gradfile);
@@ -168,21 +176,34 @@ elseif hasdataopto
 elseif haslayout
   display('Using the 2-D layout to determine the sensor position\n');
   lay = ft_prepare_layout(cfg);
+  
+  % remove the COMNT and SCALE labels
+  sel = ~ismember(lay.label, {'COMNT' 'SCALE'});
+  
   sens = [];
-  sens.label = lay.label;
-  sens.chanpos = lay.pos;
+  sens.label = lay.label(sel);
+  sens.chanpos = lay.pos(sel,:);
   sens.chanpos(:,3) = 0;
+  
 elseif iscfgsens
   % could be a sensor description
   display('The configuration input might already be a sensor description.\n');
   sens = cfg;
+  
 elseif isdatasens
   % could be a sensor description
   display('The data input might already be a sensor description.\n');
   sens = data;
+  
 else
   error('no electrodes, gradiometers or optodes specified.');
 end
 
 % ensure that the sensor description is up-to-date
-sens = ft_datatype_sens(sens);
+if (hasgradfile + hascfggrad + hasdatagrad + ...
+    haselecfile + hascfgelec + hasdataelec + ...
+    hasoptofile + hascfgopto + hasdataopto)
+  % this should only be called if the sensor definition is a complete one, and not constructed from a layout
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3143#c9
+  sens = ft_datatype_sens(sens);
+end

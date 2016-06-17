@@ -95,7 +95,7 @@ for i=1:length(stat.model)
 
   for k=1:length(fn)
     if numel(stat.model{i}.(fn{k}))==prod(cfg.dim)
-      stat.model{i}.(fn{k}) = squeeze(reshape(stat.model{i}.(fn{k}),cfg.dim));
+      stat.model{i}.(fn{k}) = reshape(stat.model{i}.(fn{k}),cfg.dim);
     end
   end
 

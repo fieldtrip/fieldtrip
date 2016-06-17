@@ -197,7 +197,7 @@ else
   fallback       = ft_getopt(varargin, 'fallback');
   checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
-  if isempty(cache),
+  if isempty(cache)
     if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc')  || strcmp(headerformat, 'smi_txt') || strcmp(headerformat, 'gtec_mat') || strcmp(headerformat, 'biosig')
       cache = true;
     else
@@ -2275,7 +2275,12 @@ hdr.nChans      = double(hdr.nChans);
 
 if inflated
   % compressed file has been unzipped on the fly, clean up
-  delete(filename);
+  if strcmp(headerformat, 'brainvision_vhdr')
+    % don't delete the header file yet, ft_read_data might still need it
+    % the files will be cleaned up by ft_read_data
+  else
+    delete(filename);
+  end
 end
 
 if cache && exist(headerfile, 'file')

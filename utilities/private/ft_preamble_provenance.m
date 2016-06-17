@@ -44,7 +44,7 @@
 % the name of the variables are passed in the preamble field
 global ft_default
 
-if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)) 
+if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo))
   % do not track the call information
   return
 end
@@ -122,4 +122,3 @@ end
 
 ftohDiW7th_FuncTimer = tic();
 ftohDiW7th_FuncMem   = memtic();
-

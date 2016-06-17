@@ -44,8 +44,14 @@ function y = base64encode(x, eol)
 %   URL:         http://home.online.no/~pjacklam
 
    % check number of input arguments
-   error(nargchk(1, 2, nargin));
-
+   try
+     % this is available from MATLAB 2011b onwards
+     narginchk(1, 2);
+   catch
+     % this is available in older versions
+     error(nargchk(1, 2, nargin));
+   end
+   
    % make sure we have the EOL value
    if nargin < 2
       eol = ''; %sprintf('\n');
@@ -157,3 +163,6 @@ function y = base64encode(x, eol)
 
    % output is a character array
    y = char(y);
+   
+
+

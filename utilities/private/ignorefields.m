@@ -45,7 +45,6 @@ switch purpose
       'trackdatainfo'
       'trackcallinfo'
       'showcallinfo'
-      'callinfo'
       'warning'
       'debug'
       'progress'

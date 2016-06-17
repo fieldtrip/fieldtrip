@@ -10,7 +10,7 @@ function [headmodel] = ft_fetch_vol(cfg, data)
 %
 % See also FT_READ_VOL, FT_FETCH_DATA
 
-% Copyright (C) 2011, Jörn M. Horschig
+% Copyright (C) 2011, J?rn M. Horschig
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -40,6 +40,9 @@ if isfield(cfg, 'headmodel') && ischar(cfg.headmodel)
   fprintf('reading headmodel from file ''%s''\n', cfg.headmodel);
   headmodel = ft_read_vol(cfg.headmodel);
 elseif isfield(cfg, 'headmodel') && (isstruct(cfg.headmodel) || isa(cfg.headmodel, 'config'))
+  headmodel = cfg.headmodel;
+elseif isfield(cfg, 'headmodel') && iscell(cfg.headmodel) 
+  % this might represent combined EEG, ECoG and/or MEG
   headmodel = cfg.headmodel;
 else
   error('no headmodel specified');

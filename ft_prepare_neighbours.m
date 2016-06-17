@@ -142,7 +142,7 @@ if strcmp(cfg.method, 'template')
   end
   % check for existence
   if ~exist(cfg.template, 'file')
-    error('Template file could not be found - please check spelling or see http://fieldtrip.fcdonders.nl/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
+    error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
@@ -153,27 +153,27 @@ else
   else
     sens = ft_fetch_sens(cfg);
   end
-
+  
   if strcmp(ft_senstype(sens), 'neuromag306')
-      warning('Neuromagr06 system detected - be aware of different sensor types, see http://fieldtrip.fcdonders.nl/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
+    warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
   end
   chanpos = sens.chanpos;
   label   = sens.label;
-
+  
   if nargin > 1
     % remove channels that are not in data
-    [dataidx sensidx] = match_str(data.label, label);
+    [dataidx, sensidx] = match_str(data.label, label);
     chanpos = chanpos(sensidx, :);
     label   = label(sensidx);
   end
-
+  
   if ~strcmp(cfg.channel, 'all')
     desired = ft_channelselection(cfg.channel, label);
     [sensidx] = match_str(label, desired);
     chanpos = chanpos(sensidx, :);
     label   = label(sensidx);
   end
-
+  
   switch lower(cfg.method)
     case 'distance'
       % use a smart default for the distance
@@ -193,7 +193,7 @@ else
         end
         fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
       end
-
+      
       neighbours = compneighbstructfromgradelec(chanpos, label, cfg.neighbourdist);
     case {'triangulation', 'tri'} % the latter for reasons of simplicity
       if size(chanpos, 2)==2 || all(chanpos(:,3)==0)
@@ -244,17 +244,20 @@ k = 0;
 for i=1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
     warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
-  % JMH: I removed this in Feb 2013 - this is handled above now
-  % note however that in case of using a template, this function behaves
-  % differently now (neighbourschans can still be channels not in
-  % cfg.channel)
-  %else % only selected desired channels
-  %  neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
+    % JMH: I removed this in Feb 2013 - this is handled above now
+    % note however that in case of using a template, this function behaves
+    % differently now (neighbourschans can still be channels not in
+    % cfg.channel)
+    %else % only selected desired channels
+    %  neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
   end
   k = k + length(neighbours(i).neighblabel);
 end
 
-if k==0, error('No neighbours were found!'); end;
+if k==0
+  error('No neighbours were found!');
+end
+
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
 if strcmp(cfg.feedback, 'yes')
@@ -307,7 +310,7 @@ end
 % SUBFUNCTION that computes the neighbourhood geometry from the
 % triangulation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [neighbours]=compneighbstructfromtri(chanpos, label, tri)
+function [neighbours] = compneighbstructfromtri(chanpos, label, tri)
 
 nsensors = length(label);
 
@@ -323,7 +326,7 @@ for i=1:size(tri, 1)
 end
 
 % construct a structured cell array with all neighbours
-neighbours=struct;
+neighbours = struct;
 alldist = [];
 for i=1:nsensors
   neighbours(i).label       = label{i};

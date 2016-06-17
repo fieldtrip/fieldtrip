@@ -216,7 +216,7 @@ if ~isempty(cfg.marker)
   fprintf('placing markers ...');
   [x,y,z] = ndgrid([1:size(interp.anatomy,1)],[1:size(interp.anatomy,2)],[1:size(interp.anatomy,3)]);
   for imarker = 1:size(cfg.marker,1)
-    marker(find(sqrt((x-cfg.marker(imarker,1)).^2 + (y-cfg.marker(imarker,2)).^2 + (z-cfg.marker(imarker,3)).^2)<=cfg.markersize)) = 1;
+    marker(find(sqrt((x-cfg.marker(iarker,1)).^2 + (y-cfg.marker(imarker,2)).^2 + (z-cfg.marker(imarker,3)).^2)<=cfg.markersize)) = 1;
   end
   fprintf('done\n');
 end
@@ -386,12 +386,15 @@ if mod(cfg.rotate,2)
 end
 out = zeros(nvox1,nvox2,3,cfg.nslices);
 for islice = 1:cfg.nslices
-  dummy1 = squeeze(interp.anatomy(indslice(islice),1:cfg.resample:end,1:cfg.resample:end));
-  dummy2 = squeeze(interp.source(indslice(islice),1:cfg.resample:end,1:cfg.resample:end));
-  indmarker = find(squeeze(marker(indslice(islice),1:cfg.resample:end,1:cfg.resample:end)));
+  sel1 = 1:cfg.resample:size(interp.anatomy,2);
+  sel2 = 1:cfg.resample:size(interp.anatomy,3);
+  
+  dummy1 = reshape(interp.anatomy(indslice(islice),sel1,sel2), [numel(sel1) numel(sel2)]);
+  dummy2 = reshape(interp.source(indslice(islice),sel1,sel2),  [numel(sel1) numel(sel2)]);
+  indmarker = find(reshape(marker(indslice(islice),sel1,sel2), [numel(sel1) numel(sel2)]));
   indsource = find(~isnan(dummy2));
   if maskdat
-    dummymask = squeeze(interp.mask(indslice(islice),1:cfg.resample:end,1:cfg.resample:end));
+    dummymask = reshape(interp.mask(indslice(islice),sel1,sel2), [numel(sel1) numel(sel2)]);
     indsource = find(~isnan(dummy2) & ~isnan(dummymask));
   end
   for icol = 1:3

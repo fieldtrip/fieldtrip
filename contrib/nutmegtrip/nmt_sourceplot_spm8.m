@@ -827,4 +827,7 @@ end
 cfg.axsel = 1;
 nmt_spm8_plot(cfg);
 nmt_image;
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master

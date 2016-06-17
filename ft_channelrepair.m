@@ -140,7 +140,7 @@ cfg.missingchannel = [cfg.missingchannel cfg.badchannel(~ismember(cfg.badchannel
 % get the selection of channels that are bad
 cfg.badchannel = channels;
 
-% warn if weighted neighbour approach (see http://bugzilla.fcdonders.nl/show_bug.cgi?id=634)
+% warn if weighted neighbour approach (see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=634)
 if ~isempty(cfg.missingchannel) && strcmp(cfg.method, 'weighted')
   warning('Reconstructing missing channels using the weighted neighbour approach is not recommended!');
 end

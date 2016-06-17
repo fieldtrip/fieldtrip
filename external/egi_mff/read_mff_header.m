@@ -5,7 +5,7 @@
 %  Copyright 2012, 2014 EGI. All rights reserved.
 % 
 %  Takes the path to the data and returns the header in the structure
-%  described at http://fieldtrip.fcdonders.nl/reference/ft_read_header.
+%  described at http://www.fieldtriptoolbox.org/reference/ft_read_header.
 %
 %  filePath ? The path to the .mff file. 
 %

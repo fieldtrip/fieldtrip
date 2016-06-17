@@ -666,7 +666,7 @@ for i=1:length(pipeline)
     label = sprintf('%s\\n', label{:});
     label = label(1:end-2);
   end
-  fprintf(fid, '%d [label="%s",shape=box,fontsize=%d,URL="http://fieldtrip.fcdonders.nl/reference/%s"]\n', i, label, cfg.fontsize, pipeline(i).name);
+  fprintf(fid, '%d [label="%s",shape=box,fontsize=%d,URL="http://www.fieldtriptoolbox.org/reference/%s"]\n', i, label, cfg.fontsize, pipeline(i).name);
 end
 
 fprintf(fid, '}\n');

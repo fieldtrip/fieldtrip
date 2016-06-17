@@ -3,19 +3,19 @@ function [lf] = eeg_leadfieldb(dippos, elc, vol)
 % EEG_LEADFIELDB computes the electric leadfield for a dipole in a volume
 % using the boundary element method
 %
-% [lf] = eeg_leadfieldb(dippos, elc, vol)
-%
+% Use as
+%   [lf] = eeg_leadfieldb(dippos, elc, vol)
 % with the input arguments
-%   dippos     position dipole (1x3 or Nx3)
-%   elc     position electrodes (optional, can be empty)
-%   vol     volume conductor model
+%   dippos     = position dipole, 1x3 or Nx3
+%   elc        = electrode positions, Nx3 (optional, can be empty)
+%   vol        = volume conductor model
 %
-% the volume conductor model is a structure and should have the fields
-%   vol.bnd structure array with vertices and triangles of each boundary
-%   vol.cond    conductivity of all compartments
-%   vol.mat     system matrix, which can include the electrode interpolation
+% The volume conductor model is a structure and should have the fields
+%   vol.bnd    = structure array with vertices and triangles of each boundary
+%   vol.cond   = conductivity for each compartment
+%   vol.mat    = system matrix, which can include the electrode interpolation
 %
-% the compartment boundaries are described by a structure array with
+% The compartment boundaries are described by a structure array with
 %   vol.bnd(i).pos
 %   vol.bnd(i).pos
 
@@ -39,18 +39,17 @@ function [lf] = eeg_leadfieldb(dippos, elc, vol)
 %
 % $Id$
 
-
 % do some sanity checks
 if ~isfield(vol, 'bnd')
   error('there are no compartment boundaries present');
 end
 
 if length(vol.bnd)~=length(vol.cond)
-  error('the number of compartments in the volume in ambiguous');
+  error('the number of compartments in the volume is inconsistent');
 end
 
 if ~isfield(vol, 'mat')
-  error('there is no BEM system matrix present');
+  error('there is no system matrix present');
 end
 
 % determine the number of compartments
@@ -71,10 +70,10 @@ elseif size(vol.mat,1)==nskin
   % the output leadfield corresponds to the number skin vertices
 elseif size(vol.mat,1)==nall
   % the output leadfield corresponds to the total number of vertices
-elseif strcmp(ft_voltype(vol),'openmeeg')
+elseif strcmp(ft_voltype(vol), 'openmeeg')
   % this is handled differently, although at the moment I don't know why
 else
-  error('unexpected size of vol.mat')
+  error('unexpected size of system matrix')
 end
 
 % determine the conductivity of the source compartment
@@ -119,7 +118,6 @@ switch ft_voltype(vol)
 end % switch ft_voltype
 
 if isfield(vol, 'mat') && ~ft_voltype(vol, 'openmeeg')
-  
   % compute the bounded medium potential on all vertices
   % this may include the bilinear interpolation from vertices towards electrodes
   lf = vol.mat * lf;

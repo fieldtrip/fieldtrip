@@ -235,7 +235,7 @@ if isfield(grid, 'leadfield')
     if exist('spm_bsplinc', 'file')
       dat = cat(4, dat, 0*dat);
       for k = 1:3
-        dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
+        dat(:, :, :, k+3) = spm_bsplinc(dat(:, :, :, k), [4 4 4 0 0 0]);
       end
     end
     
@@ -339,7 +339,7 @@ elseif isfield(grid, 'filename')
     if exist('spm_bsplinc', 'file')
       dat = cat(4, dat, 0*dat);
       for k = 1:3
-        dat(:, :, :, k+3) = spm_bsplinc(squeeze(dat(:, :, :, k)), [4 4 4 0 0 0]);
+        dat(:, :, :, k+3) = spm_bsplinc(dat(:, :, :, k), [4 4 4 0 0 0]);
       end
     end
     outputvol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});

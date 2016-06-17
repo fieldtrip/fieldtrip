@@ -85,7 +85,7 @@ end
 cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'});    % trial selection is not implented here, you may want to consider ft_selectdata
 
 % DEPRECATED by roboos on 13 June 2013
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2199 for more details
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2199 for more details
 % support for this functionality can be removed at the end of 2013
 cfg = ft_checkconfig(cfg, 'deprecated',  {'transform'}); % please use ft_math instead
 
