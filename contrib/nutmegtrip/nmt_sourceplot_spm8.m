@@ -1,4 +1,5 @@
 function nmt_sourceplot_spm8(cfg,functional)
+
 % NMT_SOURCEPLOT_SPM8
 % plots functional source reconstruction data on slices or on
 % a surface, optionally as an overlay on anatomical MRI data, where
@@ -157,14 +158,17 @@ function nmt_sourceplot_spm8(cfg,functional)
 %
 % $Id$
 
-revision = '$Id$';
-
 %% SPM check
 if(~exist('spm_image','file'))
     error('Nutmegtrip requires a full version of SPM8 in your MATLAB path (fieldtrip/external/spm8 does not suffice). It may be downloaded from http://www.fil.ion.ucl.ac.uk/spm')
 end
 
 %%
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
+
 % do the general setup of the function
 ft_defaults
 ft_preamble init
@@ -823,3 +827,4 @@ end
 cfg.axsel = 1;
 nmt_spm8_plot(cfg);
 nmt_image;
+
