@@ -29,7 +29,7 @@ st.nmt.gui.h_tf = mesh(axh,t,ffin,z);
 view(axh,2); % '2-D view' of spectrogram
 %set(st.nmt.gui.h_tf,'LineStyle','none'); % useful if plot made with 'surf'
 set(st.nmt.gui.h_tf,'ButtonDownFcn',ButtonDownFcn); % click on TF plot triggers CallbackFcn
-set(st.nmt.gui.h_tf,'LineWidth',1); % seems to prevent faint lines around each TF datapoint
+set(st.nmt.gui.h_tf,'LineWidth',2); % seems to prevent faint lines around each TF datapoint
 
 % limit labels to defined frequencies
 ytick = unique(f);

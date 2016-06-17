@@ -115,7 +115,11 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     switch(st.nmt.cfg.plottype)
         case 'tf'
             set(st.nmt.gui.freqguih,'Visible','On'); % ensure plot is visible
-            nmt_tfplot(st.nmt.gui.ax_ts(cfg.axsel),st.nmt.time,st.nmt.freq(2:end,:),squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,2:end)),@nmt_repos_start);
+            if(all(st.nmt.freq(1,:) == [0 0])) % if the first row contains evoked data
+                nmt_tfplot(st.nmt.gui.ax_ts(cfg.axsel),st.nmt.time,st.nmt.freq(2:end,:),squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,2:end)),@nmt_repos_start);
+            else
+                nmt_tfplot(st.nmt.gui.ax_ts(cfg.axsel),st.nmt.time,st.nmt.freq,squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,:)),@nmt_repos_start);
+            end
         case 'ts'
             if(isfinite(st.nmt.cfg.vox_idx))
                 plot(st.nmt.gui.ax_ts(cfg.axsel),st.nmt.time,squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,:)));
@@ -153,15 +157,22 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
 
     set(st.nmt.gui.ax_ts(cfg.axsel),'ButtonDownFcn',@nmt_repos_start);
     
-
-    % trick to overlay time series taken from plotyy.m
-    ts=squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,1));
     
-    axes(st.nmt.gui.ax_ts(cfg.axsel,2));
-    plot(st.nmt.gui.ax_ts(cfg.axsel,2),st.nmt.time,ts);
-    set(st.nmt.gui.ax_ts(cfg.axsel,2),'YAxisLocation','right','Color','none', ...
-        'XGrid','off','YGrid','off','Box','off', ...
-        'HitTest','off','Visible','on');
+    switch('disabled')  % TODO: hook for overlaying time series on TF plot;
+        %       perhaps better solution is independent nmt_spm8_plot call for each funparameter
+        case 'tf'
+            if(st.nmt.cfg.evokedoverlay)
+                % trick to overlay time series taken from plotyy.m
+                ylim=get(st.nmt.gui.ax_ts(cfg.axsel,2),'YLim');
+                ts=squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,1));
+                
+                axes(st.nmt.gui.ax_ts(cfg.axsel,2));
+                plot(st.nmt.gui.ax_ts(cfg.axsel,2),st.nmt.time,ts);
+                set(st.nmt.gui.ax_ts(cfg.axsel,2),'YAxisLocation','right','Color','none', ...
+                    'XGrid','off','YGrid','off','Box','off', ...
+                    'HitTest','off','Visible','on');
+            end
+    end
 
     %% update GUI textboxes
     set(st.nmt.gui.t1,'String',num2str(st.nmt.time(st.nmt.cfg.time_idx(1))));

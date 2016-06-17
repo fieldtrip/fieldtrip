@@ -793,6 +793,8 @@ if ~isempty(cfg.funparameter)
         else
             cfg.time_idx = [1 1]; % no time dimension in this case, e.g., 'pow'
             cfg.freq_idx = [1 1]; % frequency dimension is singleton in this case
+            
+            st.nmt.freq = [0 inf]; % dummy frequencies to make later functions happy
         end
         
         set(st.nmt.gui.f1,'String',num2str(st.nmt.freq(:,1)));
