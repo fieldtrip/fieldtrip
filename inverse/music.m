@@ -43,13 +43,13 @@ function [dipout] = music(dip, grad, headmodel, dat, varargin)
 % $Id$
 
 % get the optional settings, or use the default value
-cov            = keyval('cov',            varargin);
-numcomponent   = keyval('numcomponent',   varargin); % this is required, see below
-feedback       = keyval('feedback',       varargin); if isempty(feedback), feedback = 'text'; end
+cov            = ft_getopt(varargin, 'cov');
+numcomponent   = ft_getopt(varargin, 'numcomponent');     % this is required, see below
+feedback       = ft_getopt(varargin, 'feedback', 'text');
 % these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = keyval('reducerank',     varargin);
-normalize      = keyval('normalize',      varargin);
-normalizeparam = keyval('normalizeparam', varargin);
+reducerank     = ft_getopt(varargin, 'reducerank');
+normalize      = ft_getopt(varargin, 'normalize');
+normalizeparam = ft_getopt(varargin, 'normalizeparam');
 
 if isempty(numcomponent)
   error('you must specify the number of signal components');
@@ -125,3 +125,4 @@ if isfield(dipout, 'jr')
   dipout.jr( originside) = dipout.jr;
   dipout.jr(~originside) = nan;
 end
+

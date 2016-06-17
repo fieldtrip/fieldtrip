@@ -84,7 +84,8 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % $Id$
 
 if iscell(sens) && iscell(headmodel) && numel(sens)==numel(headmodel)
-  % this represents combined EEG and MEG sensors, where each modality has its own volume conduction model
+  % this represents combined EEG, ECoG and/or MEG
+  % use recursion to compute all leadfields
   lf = cell(1, numel(sens));
   for i=1:length(sens)
     lf{i} = ft_compute_leadfield(dippos, sens{i}, headmodel{i}, varargin{:});

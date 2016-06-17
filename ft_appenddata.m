@@ -167,14 +167,16 @@ hasgrad = 1;
 for j=1:Ndata
   haselec = isfield(varargin{j}, 'elec') && haselec;
   hasgrad = isfield(varargin{j}, 'grad') && hasgrad;
+  hasopto = isfield(varargin{j}, 'opto') && hasopto;
 end
 
 removesens = 0;
-if haselec || hasgrad,
+if haselec || hasgrad || hasopto
   sens = cell(1, Ndata);
   for j=1:Ndata
     if haselec, sens{j} = varargin{j}.elec; end
     if hasgrad, sens{j} = varargin{j}.grad; end
+    if hasopto, sens{j} = varargin{j}.opto; end
     if j>1,
       if ~isequaln(sens{j}, sens{1})
         removesens = 1;

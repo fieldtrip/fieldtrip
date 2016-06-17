@@ -247,8 +247,13 @@ end
 
 % sourcemodel obtained through mne also has a orig-field with the high
 % number of vertices
-if isfield(obj, 'orig') && (isfield(obj.orig, 'pnt') || isfield(obj.orig, 'pos'))
-  obj.orig.pnt = scale * obj.orig.pnt; 
+if isfield(obj, 'orig')
+  if isfield(obj.orig, 'pnt')
+    obj.orig.pnt = scale * obj.orig.pnt;
+  end
+  if isfield(obj.orig, 'pos')
+    obj.orig.pos = scale * obj.orig.pos;
+  end
 end
 
 % remember the unit

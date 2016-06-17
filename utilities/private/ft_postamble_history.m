@@ -29,7 +29,7 @@
 global ft_default
 
 % some fields are for internal use only and should not be stored
-cfg = removefields(cfg, ignorefields);
+cfg = removefields(cfg, ignorefields('history'));
 
 for tmpindx=1:length(ft_default.postamble)
   if isequal(ft_default.postamble, {'varargout'})

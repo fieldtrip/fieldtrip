@@ -186,23 +186,8 @@ end
 % check for required fields, give error when missing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(allowed)
-  % there are some general options that should always be allowed
-  allowed = union(allowed, {
-    'trackconfig'
-    'checkconfig'
-    'checksize'
-    'trackusage'
-    'trackdatainfo'
-    'trackcallinfo'
-    'showcallinfo'
-    'callinfo'
-    'version'
-    'warning'
-    'debug'
-    'previous'
-    'progress'
-    'outputfilepresent'
-    });
+  % there are some fields that are always be allowed
+  allowed = union(allowed, ignorefields('allowed'));
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
   if ~isempty(c)
@@ -254,8 +239,8 @@ end
 % backward compatibility for old neighbourstructures
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'neighbours') && iscell(cfg.neighbours)
-  warning('Neighbourstructure is in old format - converting to structure array');
-  cfg.neighbours= fixneighbours(cfg.neighbours);
+  warning('cfg.neighbours is in the old format - converting it to a structure array');
+  cfg.neighbours = fixneighbours(cfg.neighbours);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -273,7 +258,7 @@ if ~isempty(createsubcfg)
 
     if isfield(cfg, subname)
       % get the options that are already specified in the substructure
-      subcfg = getfield(cfg, subname);
+      subcfg = cfg.(subname);
     else
       % start with an empty substructure
       subcfg = [];
@@ -417,7 +402,7 @@ if ~isempty(createsubcfg)
           'fixedori'
           };
 
-      case {'rv'}
+      case 'rv'
         fieldname = {
           'feedback'
           'lambda'
@@ -432,6 +417,7 @@ if ~isempty(createsubcfg)
           'snr'
           'scalesourcecov'
           };
+        
       case 'harmony'
         fieldname = {
           'feedback'
@@ -445,6 +431,7 @@ if ~isempty(createsubcfg)
           'connected_components'
           'number_harmonics'
           };
+
       case 'music'
         fieldname = {
           'feedback'
@@ -627,32 +614,10 @@ if ~isempty(trackconfig)
           r = access(cfg, 'reference');
           o = access(cfg, 'original');
 
-          key = fieldnames(cfg);
-          key = key(:)';
-
-          ignorefields = {
-             % these fields from the user should never be removed
-             'trl'
-             'trlold'
-             'event'
-             'artifact'
-             'artfctdef'
-             % these fields are for internal usage
-             'trackconfig'
-             'checkconfig'
-             'checksize'
-             'trackusage'
-             'trackdatainfo'
-             'trackcallinfo'
-             'showcallinfo'
-             'callinfo'
-             'version'
-             'warning'
-             'debug'
-             'previous'
-           };
-
-          skipsel      = match_str(key, ignorefields);
+          % this uses a helper function to identify the fields that should be ignored
+          key          = fieldnames(cfg);
+          key          = key(:)';
+          skipsel      = match_str(key, ignorefields('trackconfig'));
           key(skipsel) = [];
 
           used     = zeros(size(key));
@@ -737,14 +702,14 @@ if (s.bytes <= max_size)
   return;
 end
 
-ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous'}; % these fields should never be removed
-norecursion  = {'event'}; % these fields should not be handled recursively
+% these fields should not be handled recursively
+norecursion = {'event', 'headmodel', 'leadfield'}; 
 
 fieldsorig = fieldnames(cfg);
 for i=1:numel(fieldsorig)
   for k=1:numel(cfg)  % process each structure in a struct-array
 
-    if any(strcmp(fieldsorig{i}, ignorefields))
+    if any(strcmp(fieldsorig{i}, ignorefields('checksize')))
       % keep this field, regardless of its size
       continue
 

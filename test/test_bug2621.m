@@ -1,7 +1,7 @@
 function test_bug2621
 
 % MEM 2gb
-% WALLTIME 00:20:00
+% WALLTIME 00:30:00
 
 % TEST test_bug2621
 % TEST ft_volumesegment
