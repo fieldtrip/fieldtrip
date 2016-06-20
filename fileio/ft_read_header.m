@@ -1439,7 +1439,12 @@ switch headerformat
       end
     end
     hdr.orig = orig;
-    
+
+  case 'mega_neurone'
+    % ensure that this external toolbox is on the path
+    ft_hastoolbox('neurone', 1);
+    keyboard
+  
   case 'micromed_trc'
     orig = read_micromed_trc(filename);
     hdr             = [];
@@ -1752,7 +1757,7 @@ switch headerformat
     hdr.grad = fif2grad(filename);
     % remember the original header details
     hdr.orig = orig;
-    
+
   case 'neuroprax_eeg'
     orig = np_readfileinfo(filename);
     

@@ -1240,6 +1240,11 @@ switch eventformat
       end
     end
     
+  case 'mega_neurone'
+    % ensure that this external toolbox is on the path
+    ft_hastoolbox('neurone', 1);
+    keyboard
+    
   case 'micromed_trc'
     if isempty(hdr)
       hdr = ft_read_header(filename);

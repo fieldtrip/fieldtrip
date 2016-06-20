@@ -897,18 +897,7 @@ switch dataformat
     calib  = 0.2;
     dat    = calib * packet.dat;
     dimord = 'chans_samples';
-    
-  case 'micromed_trc'
-    dat = read_micromed_trc(filename, begsample, endsample);
-    if ~isequal(chanindx(:)', 1:hdr.nChans)
-      dat = dat(chanindx,:);  % select the desired channels
-    end
-    dimord = 'chans_samples';
-    
-  case {'mpi_ds', 'mpi_dap'}
-    [hdr, dat] = read_mpi_ds(filename);
-    dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
-    
+
   case {'manscan_mb2', 'manscan_mbi'}
     [p, f, x] = fileparts(filename);
     filename  = fullfile(p, [f, '.mb2']);
@@ -934,6 +923,22 @@ switch dataformat
         sum(trlind==iEpoch(i) & (1:length(trlind))<=endsample)-1]);
     end
     dat = dat(chanindx, :);
+    
+  case 'mega_neurone'
+    % ensure that this external toolbox is on the path
+    ft_hastoolbox('neurone', 1);
+    keyboard
+    
+  case 'micromed_trc'
+    dat = read_micromed_trc(filename, begsample, endsample);
+    if ~isequal(chanindx(:)', 1:hdr.nChans)
+      dat = dat(chanindx,:);  % select the desired channels
+    end
+    dimord = 'chans_samples';
+    
+  case {'mpi_ds', 'mpi_dap'}
+    [hdr, dat] = read_mpi_ds(filename);
+    dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
     
   case 'neuroscope_bin'
     switch hdr.orig.nBits

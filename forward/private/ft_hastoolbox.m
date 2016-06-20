@@ -148,6 +148,7 @@ url = {
   'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
   'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
+  'NEURONE'       'see http://www.megaemg.com/support/unrestricted-downloads'
   };
 
 if nargin<2
@@ -349,6 +350,8 @@ switch toolbox
     dependency = {'comp_tstamps' 'load_audio0123', 'load_video123'};
   case 'WAVEFRONT'
     dependency = {'write_wobj' 'read_wobj'};
+  case 'NEURONE'
+    dependency = {'readneurone' 'readneuronedata' 'readneuroneevents'};
 
     % the following are fieldtrip modules/toolboxes
   case 'FILEIO'
