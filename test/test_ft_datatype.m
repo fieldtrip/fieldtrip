@@ -46,9 +46,9 @@ for j=1:length(dirlist)
     try
       fprintf('processing data structure %d from %d\n', i, length(filelist));
       var = loadvar(filelist{i});
-      disp(var)
     catch
       % some of the mat files are corrupt, this should not spoil the test
+      disp(var);
       disp(lasterr);
       continue
     end
