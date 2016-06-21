@@ -21,7 +21,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'threshold'      threshold for analog trigger channels (default is system specific)
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
-%   'tolerance'      tolerance in samples when merging analogue trigger channels, only for Neuromag (default = 1, meaning 
+%   'tolerance'      tolerance in samples when merging analogue trigger channels, only for Neuromag (default = 1, meaning
 %                    that an offset of one sample in both directions is compensated for)
 %
 % Furthermore, you can specify optional arguments as key-value pairs
@@ -1240,6 +1240,36 @@ switch eventformat
       end
     end
     
+  case 'mega_neurone'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    % this is fast but memory inefficient, since the header contains all data and events
+    if isfield(hdr.orig, 'event')
+      NEURONE = hdr.orig;
+    else
+      % ensure that this external toolbox is on the path
+      ft_hastoolbox('neurone', 1);
+      if filename(end)~=filesep
+        % it should end with a slash
+        filename = [filename filesep];
+      end
+      NEURONE = readneurone(filename);
+    end
+    for i=1:numel(NEURONE.event)
+      if isnan(str2double(NEURONE.event(i).type))
+        % there are a number of event "Types" that can happen on different "SourcePorts"
+        event(i).type     = NEURONE.event(i).type;
+        event(i).sample   = round(NEURONE.event(i).latency * 0.001 * NEURONE.srate + 1);
+        event(i).value    = [];
+      else
+        % this seems to correspond with an external trigger code, which is best represented numerically
+        event(i).type     = 'trigger';
+        event(i).sample   = round(NEURONE.event(i).latency * 0.001 * NEURONE.srate + 1);
+        event(i).value    = str2double(NEURONE.event(i).type);
+      end
+    end
+    
   case 'micromed_trc'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1850,7 +1880,7 @@ switch eventformat
     
   case 'oxy3'
     ft_hastoolbox('artinis', 1);
-
+    
     event = read_artinis_oxy3(filename, true);
     if isempty(hdr)
       hdr = read_artinis_oxy3(filename);

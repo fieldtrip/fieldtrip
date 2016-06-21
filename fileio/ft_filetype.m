@@ -1263,6 +1263,10 @@ elseif (isdir(filename) && exist(fullfile(p, [d '.EEG.Poly5']), 'file')) || file
     type = 'tmsi_poly5';
     manufacturer = 'TMSi PolyBench';
     content = 'EEG';
+elseif (isdir(filename) && exist(fullfile(filename, 'DataSetSession.xml'), 'file') && exist(fullfile(filename, 'DataSetProtocol.xml'), 'file'))
+    type = 'mega_neurone';
+    manufacturer = 'Mega - http://www.megaemg.com';
+    content = 'EEG';
 end
 
 
