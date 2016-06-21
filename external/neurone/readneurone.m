@@ -181,7 +181,8 @@ channelNames = channelNames(chans);
 
 fprintf('Looking up channel locations...\n')
 chanlocs=struct('labels', channelNames');
-NEURONE.chanlocs = pop_chanedit(chanlocs);
+% NEURONE.chanlocs = pop_chanedit(chanlocs);
+NEURONE.chanlocs = chanlocs;
 
 %% Obtain additional information about the dataset
 
