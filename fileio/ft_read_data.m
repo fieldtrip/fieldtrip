@@ -194,7 +194,7 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-  hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx);
+  hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx, 'checkmaxfilter', checkmaxfilter);
   if isempty(chanindx)
     chanindx = 1:hdr.nChans;
   end
@@ -268,8 +268,8 @@ if checkboundary && hdr.nTrials>1
   end
 end
 
-if strcmp(dataformat, 'bci2000_dat') || strcmp(dataformat, 'eyelink_asc') || strcmp(dataformat, 'gtec_mat')
-  % caching for these formats is handled in the main section and in read_header
+if any(strcmp(dataformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'mega_neurone'}))
+  % caching for these formats is handled in the main section and in ft_read_header
 else
   % implement the caching in a data-format independent way
   if cache && (isempty(cachedata) || ~isequal(cachedata.label,hdr.label(chanindx)))
@@ -299,7 +299,7 @@ end
 switch dataformat
   
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
-    [fid,message] = fopen(datafile,'rb','ieee-be');
+    [fid, message] = fopen(datafile,'rb','ieee-be');
     % determine the type and size of the samples
     sampletype = lower(hdr.orig.Format);
     switch sampletype
@@ -897,7 +897,7 @@ switch dataformat
     calib  = 0.2;
     dat    = calib * packet.dat;
     dimord = 'chans_samples';
-
+    
   case {'manscan_mb2', 'manscan_mbi'}
     [p, f, x] = fileparts(filename);
     filename  = fullfile(p, [f, '.mb2']);
@@ -925,9 +925,20 @@ switch dataformat
     dat = dat(chanindx, :);
     
   case 'mega_neurone'
-    % ensure that this external toolbox is on the path
-    ft_hastoolbox('neurone', 1);
-    keyboard
+    % this is fast but memory inefficient, since the header contains all data and events
+    if isfield(hdr.orig, 'data')
+      NEURONE = hdr.orig;
+    else
+      % ensure that this external toolbox is on the path
+      ft_hastoolbox('neurone', 1);
+      if filename(end)~=filesep
+        % it should end with a slash
+        filename = [filename filesep];
+      end
+      NEURONE = readneurone(filename);
+    end
+    dat = NEURONE.data(chanindx, begsample:endsample);
+    dimord = 'chans_samples';
     
   case 'micromed_trc'
     dat = read_micromed_trc(filename, begsample, endsample);
@@ -1289,7 +1300,7 @@ switch dataformat
     begtrial = floor((begsample-1)/blocksize) + 1;
     endtrial = floor((endsample-1)/blocksize) + 1;
     dat = read_tmsi_poly5(filename, hdr.orig, begtrial, endtrial);
-    offset = (begtrial-1)*blocksize; 
+    offset = (begtrial-1)*blocksize;
     % select the desired samples and channels
     dat = dat(chanindx, (begsample-offset):(endsample-offset));
     

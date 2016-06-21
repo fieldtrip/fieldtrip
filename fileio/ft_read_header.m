@@ -198,7 +198,7 @@ else
   checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
   if isempty(cache)
-    if strcmp(headerformat, 'bci2000_dat') || strcmp(headerformat, 'eyelink_asc')  || strcmp(headerformat, 'smi_txt') || strcmp(headerformat, 'gtec_mat') || strcmp(headerformat, 'biosig')
+    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'mega_neurone', 'smi_txt', 'biosig'}))
       cache = true;
     else
       cache = false;
@@ -224,7 +224,7 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
     
     switch ft_filetype(datafile)
       case {'ctf_ds' 'ctf_meg4' 'ctf_old' 'read_ctf_res4'}
-        % for realtime analysis EOF chasing the res4 does not correctly
+        % for realtime analysis end-of-file-chasing the res4 does not correctly
         % estimate the number of samples, so we compute it on the fly
         sz = 0;
         files = dir([filename '/*.*meg4']);
@@ -234,7 +234,7 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
         hdr.nTrials = floor((sz - 8) / (hdr.nChans*4) / hdr.nSamples);
     end
     
-    return;
+    return
   end % if the details correspond
 end % if cache
 
@@ -1439,12 +1439,50 @@ switch headerformat
       end
     end
     hdr.orig = orig;
-
+    
   case 'mega_neurone'
     % ensure that this external toolbox is on the path
     ft_hastoolbox('neurone', 1);
-    keyboard
-  
+    if filename(end)~=filesep
+      % it should end with a slash
+      filename = [filename filesep];
+    end
+    % this is like the EEGLAB data structure
+    EEG = readneurone(filename);
+    
+    hdr.Fs          = EEG.srate;
+    hdr.nChans      = EEG.nbchan;
+    hdr.nSamples    = EEG.pnts;
+    hdr.nSamplesPre = -EEG.xmin*EEG.srate;
+    hdr.nTrials     = EEG.trials;
+    try
+      hdr.label       = { EEG.chanlocs.labels }';
+    catch
+      warning('creating default channel names');
+      for i=1:hdr.nChans
+        hdr.label{i} = sprintf('chan%03d', i);
+      end
+    end
+    ind = 1;
+    for i = 1:length( EEG.chanlocs )
+      if isfield(EEG.chanlocs(i), 'X') && ~isempty(EEG.chanlocs(i).X)
+        hdr.elec.label{ind, 1} = EEG.chanlocs(i).labels;
+        % this channel has a position
+        hdr.elec.elecpos(ind,1) = EEG.chanlocs(i).X;
+        hdr.elec.elecpos(ind,2) = EEG.chanlocs(i).Y;
+        hdr.elec.elecpos(ind,3) = EEG.chanlocs(i).Z;
+        ind = ind+1;
+      end
+    end
+    
+    if cache
+      % also remember the data and events
+      hdr.orig = EEG;
+    else
+      % remember only the header details
+      hdr.orig = removefields(EEG, {'data', 'event'});
+    end
+    
   case 'micromed_trc'
     orig = read_micromed_trc(filename);
     hdr             = [];
@@ -1757,7 +1795,7 @@ switch headerformat
     hdr.grad = fif2grad(filename);
     % remember the original header details
     hdr.orig = orig;
-
+    
   case 'neuroprax_eeg'
     orig = np_readfileinfo(filename);
     
@@ -1837,8 +1875,8 @@ switch headerformat
     hdr = read_neurosim_signals(filename);
     
   case 'neurosim_spikes'
-    headerOnly=true;
-    hdr= read_neurosim_spikes(filename,headerOnly);
+    headerOnly = true;
+    hdr = read_neurosim_spikes(filename, headerOnly);
     
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
@@ -2116,7 +2154,7 @@ switch headerformat
     hdr.chantype(istrg) = {'trigger'};
     % remember the original header details
     hdr.orig = orig;
-        
+    
   case 'tobii_tsv'
     tsv = read_tobii_tsv(filename);
     % keyboard
