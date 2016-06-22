@@ -65,12 +65,17 @@ if ~logicalfmt && strcmp(opt, 'logical')
   if ~isfield(source, 'outside')
     source.outside = [];
   end
-  inside(source.inside)  = (1==1);  % true
-  inside(source.outside) = (1==0);  % false
-  source.inside = inside(:);
+  if isfield(source, 'pos')
+    tmp  = false(size(source.pos,1),1);
+  elseif isfield(source, 'dim')
+    tmp  = false(prod(source.dim),1);
+  end
+  tmp(source.inside) = true;
   if isfield(source, 'outside')
+    tmp(source.outside) = false;
     source = rmfield(source, 'outside');
   end
+  source.inside = tmp(:);
 elseif logicalfmt && strcmp(opt, 'index')
   % convert to a vectors with indices
   tmp = source.inside;
