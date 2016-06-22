@@ -1,4 +1,4 @@
-function [tanu, tanv] = calctangent(RDip);
+function [tanu, tanv] = calctangent(RDip)
 
 %% Based on calcrads.m, only difference is that RDip is alread
 %% with respect to the sphere origin in calctangent.m

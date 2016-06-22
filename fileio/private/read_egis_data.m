@@ -1,4 +1,4 @@
-function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
+function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx)
 
 % READ_EGIS_DATA reads the data from an EGI EGIS format file
 %

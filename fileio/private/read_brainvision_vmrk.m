@@ -1,4 +1,4 @@
-function [stimulus, response, segment, timezero] = read_brainvision_vmrk(filename);
+function [stimulus, response, segment, timezero] = read_brainvision_vmrk(filename)
 
 % READ_BRAINVISION_VMRK reads the markers and latencies
 % it returns the stimulus/response code and latency in ms.

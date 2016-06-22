@@ -1,4 +1,4 @@
-function data = read_asa_msr(fn);
+function data = read_asa_msr(fn)
 
 % READ_ASA_MSR reads EEG or MEG data from an ASA data file
 % converting the units to uV or fT

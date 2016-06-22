@@ -1,4 +1,4 @@
-function [file] = read_ctf_ascii(filename);
+function [file] = read_ctf_ascii(filename)
 
 % READ_CTF_ASCII reads general data from an CTF configuration file
 %

@@ -1,4 +1,4 @@
-function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
+function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx)
 
 % READ_BIOSEMI_BDF reads specified samples from a BDF continous datafile
 % It neglects all trial boundaries as if the data was acquired in
@@ -268,7 +268,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for reading the 24 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function buf = readLowLevel(filename, offset, numwords);
+function buf = readLowLevel(filename, offset, numwords)
 if offset < 2*1024^3
   % use the external mex file, only works for <2GB
   buf = read_24bit(filename, offset, numwords);

@@ -140,15 +140,15 @@ return
     buf1 = padstr('$Id$', 256);
     buf2 = char(zeros(1, 256));
     % write the stuff to the file
-    fwrite(fid, 'NEX1' , 'char');           % NexFileHeader  = string NEX1
-    fwrite(fid, 100    , 'int32');          % Version        = version
-    fwrite(fid, buf1   , 'char');           % Comment        = comment, 256 bytes
-    fwrite(fid, hdr.FileHeader.Frequency, 'double'); % Frequency      = timestamped freq. - tics per second
-    fwrite(fid, ts_beg, 'int32');          % Beg            = usually 0, minimum of all the timestamps in the file
-    fwrite(fid, ts_end, 'int32');          % End            = maximum timestamp + 1
-    fwrite(fid, nchans, 'int32');          % NumVars        = number of variables in the first batch
-    fwrite(fid, 0     , 'int32');          % NextFileHeader = position of the next file header in the file, not implemented yet
-    fwrite(fid, buf2  , 'char');           % Padding        = future expansion
+    fwrite(fid, 'NEX1' , 'char');                     % NexFileHeader  = string NEX1
+    fwrite(fid, 100    , 'int32');                    % Version        = version
+    fwrite(fid, buf1   , 'char');                     % Comment        = comment, 256 bytes
+    fwrite(fid, hdr.FileHeader.Frequency, 'double');  % Frequency      = timestamped freq. - tics per second
+    fwrite(fid, ts_beg, 'int32');                     % Beg            = usually 0, minimum of all the timestamps in the file
+    fwrite(fid, ts_end, 'int32');                     % End            = maximum timestamp + 1
+    fwrite(fid, nchans, 'int32');                     % NumVars        = number of variables in the first batch
+    fwrite(fid, 0     , 'int32');                     % NextFileHeader = position of the next file header in the file, not implemented yet
+    fwrite(fid, buf2  , 'char');                      % Padding        = future expansion
   end % of the nested function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,11 +175,11 @@ return
     fwrite(fid, 0,                  'double');       % XPos         = neuron only, electrode position in (0,100) range, used in 3D
     fwrite(fid, 0,                  'double');       % YPos         = neuron only, electrode position in (0,100) range, used in 3D
     fwrite(fid, hdr.VarHeader.WFrequency, 'double'); % WFrequency   = waveform and continuous vars only, w/f sampling frequency
-    fwrite(fid, calib,     'double');       % ADtoMV       = waveform continuous vars only, coeff. to convert from A/D values to Millivolts
-    fwrite(fid, nsamples,  'int32');        % NPointsWave  = waveform only, number of points in each wave
-    fwrite(fid, 0,         'int32');        % NMarkers     = how many values are associated with each marker
-    fwrite(fid, 0,         'int32');        % MarkerLength = how many characters are in each marker value
-    fwrite(fid, buf2,      'char');         % Padding, 1x68 char
+    fwrite(fid, calib,     'double');                % ADtoMV       = waveform continuous vars only, coeff. to convert from A/D values to Millivolts
+    fwrite(fid, nsamples,  'int32');                 % NPointsWave  = waveform only, number of points in each wave
+    fwrite(fid, 0,         'int32');                 % NMarkers     = how many values are associated with each marker
+    fwrite(fid, 0,         'int32');                 % MarkerLength = how many characters are in each marker value
+    fwrite(fid, buf2,      'char');                  % Padding, 1x68 char
   end % of the nested function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -206,7 +206,7 @@ end % of the primary function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunction for zero padding a char array to fixed length
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = padstr(str, num);
+function str = padstr(str, num)
 if length(str)>num
   str = str(1:num);
 else

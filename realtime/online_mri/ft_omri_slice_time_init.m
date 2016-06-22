@@ -1,4 +1,4 @@
-function STM = ft_omri_slice_time_init(X0, TR, deltaT);
+function STM = ft_omri_slice_time_init(X0, TR, deltaT)
 
 % function STM = ft_omri_slice_time_init(X0, TR, deltaT);
 %

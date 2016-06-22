@@ -1,4 +1,4 @@
-function write_neuralynx_nts(filename, nts);
+function write_neuralynx_nts(filename, nts)
 
 % WRITE_NEURALYNX_NTS writes spike timestamps to a NTS file
 %

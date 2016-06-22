@@ -69,7 +69,7 @@ fclose(fid);                        % close file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION read_biff_chunk
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function this = read_biff_chunk(fid, id, siz, chunk);
+function this = read_biff_chunk(fid, id, siz, chunk)
 
 % start with empty structure
 this = [];
@@ -138,7 +138,7 @@ end                     % else
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION subtree
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function child = subtree(parent, id);
+function child = subtree(parent, id)
   blank = findstr(id, ' ');
   while ~isempty(blank)
     id(blank) = '_';
@@ -155,7 +155,7 @@ function child = subtree(parent, id);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION chunk_header
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [id, siz] = chunk_header(fid);
+function [id, siz] = chunk_header(fid)
   id  = char(fread(fid, 4, 'uchar')');          % read chunk ID
   siz = fread(fid, 1, 'uint32');            % read chunk size
   if strcmp(id, 'GRP ') | strcmp(id, 'BIFF')

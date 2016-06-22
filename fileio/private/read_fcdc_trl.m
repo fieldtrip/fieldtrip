@@ -1,4 +1,4 @@
-function [trl] = read_fcdc_trl(fn);
+function [trl] = read_fcdc_trl(fn)
 
 % READ_FCDC_TRL reads trial definitions from a file
 %
