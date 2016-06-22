@@ -139,11 +139,17 @@ elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysqui
       % it is scaled with distance
       if isfield(input, 'unit')
         assumption = sprintf('T/%s', input.unit);
-        chanunit(strcmp('megplanar',        input.chantype)) = {assumption};
-        warning('assuming that planar channel units are %s', assumption);
+        sel = strcmp('megplanar', input.chantype);
+        if any(sel)
+          chanunit(sel) = {assumption};
+          warning('assuming that planar MEG channel units are %s', assumption);
+        end
       else
-        chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
-        warning('cannot determine the units for the planar MEG channels');
+        sel = strcmp('megplanar', input.chantype);
+        if any(sel)
+          chanunit(sel) = {'unknown'};
+          warning('cannot determine the units for the planar MEG channels');
+        end
       end
     end
   end
@@ -159,11 +165,17 @@ elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && 
   
   if isfield(input, 'unit')
     assumption = sprintf('T/%s', input.unit);
-    chanunit(strcmp('megplanar',        input.chantype)) = {assumption};
-    warning('assuming that planar channel units are %s, consistent with the geometrical units', assumption);
+    sel = strcmp('megplanar', input.chantype);
+    if any(sel)
+      chanunit(sel) = {assumption};
+      warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
+    end
   else
-    chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
-    warning('cannot determine the units for the planar MEG channels');
+    sel = strcmp('megplanar', input.chantype);
+    if any(sel)
+      chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
+      warning('cannot determine the units for the planar MEG channels');
+    end
   end
   
 elseif ft_senstype(input, 'ctf') && isfield(input, 'chantype')

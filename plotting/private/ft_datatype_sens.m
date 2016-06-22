@@ -266,7 +266,7 @@ switch version
       end
       
       % update the gradiometer scaling
-      if strcmp(scaling, 'amplitude')
+      if strcmp(scaling, 'amplitude') && isfield(sens, 'tra')
         for i=1:nchan
           if strcmp(sens.chanunit{i}, [amplitude '/' distance])
             % this channel is expressed as amplitude per distance
@@ -285,7 +285,7 @@ switch version
           end % if
         end % for
         
-      elseif strcmp(scaling, 'amplitude/distance')
+      elseif strcmp(scaling, 'amplitude/distance') && isfield(sens, 'tra')
         for i=1:nchan
           if strcmp(sens.chanunit{i}, amplitude)
             % this channel is expressed as amplitude
