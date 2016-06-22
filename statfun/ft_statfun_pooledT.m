@@ -71,7 +71,5 @@ if (dfA+dfB)<size(design, 2)
 end
 sumA = sum(dat(:,selA), 2);
 sumB = sum(dat(:,selB), 2);
-s = (sumA - sumB)./sqrt(dfA);
-
-s.stat = s;
+s.stat = (sumA - sumB)./sqrt(dfA);
 

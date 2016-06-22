@@ -173,3 +173,4 @@ cmbindx1 = repmat((1:nchan)', [1 nchan]);
 cmbindx2 = repmat((1:nchan),  [nchan 1]);
 cfg.chancmbindx(:,1) = cmbindx1(chanindx);
 cfg.chancmbindx(:,2) = cmbindx2(chanindx);
+
