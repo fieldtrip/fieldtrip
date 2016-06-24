@@ -252,7 +252,7 @@ switch version
         error('inconsistent units in input gradiometer');
       end
 
-      % the default should be amplitude/distance for neuromag and aplitude for all others
+      % the default should be amplitude/distance for neuromag and amplitude for all others
       if isempty(scaling)
         if ft_senstype(sens, 'neuromag')
           scaling = 'amplitude/distance';
@@ -279,7 +279,7 @@ switch version
           elseif strcmp(sens.chanunit{i}, amplitude)
             % no conversion needed
           else
-            error('unexpected channel unit "%s" in channel %d', i, sens.chanunit{i});
+            error('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
           end % if
         end % for
 
