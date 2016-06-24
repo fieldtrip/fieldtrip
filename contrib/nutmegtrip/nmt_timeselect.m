@@ -60,5 +60,5 @@ if(st.nmt.cfg.time_idx(2) < st.nmt.cfg.time_idx(1))
 end
 
 
-nmt_spm8_plot
+nmt_spm_plot
 

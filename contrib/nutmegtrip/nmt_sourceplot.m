@@ -1,6 +1,6 @@
-function nmt_sourceplot_spm8(cfg,functional)
+function nmt_sourceplot(cfg,functional)
 
-% NMT_SOURCEPLOT_SPM8
+% NMT_SOURCEPLOT
 % plots functional source reconstruction data on slices or on
 % a surface, optionally as an overlay on anatomical MRI data, where
 % statistical data can be used to determine the opacity of the mask. Input
@@ -8,7 +8,7 @@ function nmt_sourceplot_spm8(cfg,functional)
 % values from FT_SOURCESTATISTICS.
 %
 % Use as
-%   ft_sourceplot_spm8(cfg, data)
+%   ft_sourceplot(cfg, data)
 % where the input data can contain an anatomical MRI, functional source
 % reconstruction results and/or statistical data. Interpolation is not
 % necessary for this function; performance is best [no "gaps" or overlaps
@@ -160,7 +160,7 @@ function nmt_sourceplot_spm8(cfg,functional)
 
 %% SPM check
 if(~exist('spm_image','file'))
-    error('Nutmegtrip requires a full version of SPM8 in your MATLAB path (fieldtrip/external/spm8 does not suffice). It may be downloaded from http://www.fil.ion.ucl.ac.uk/spm')
+    error('Nutmegtrip requires a full version of SPM12 or SPM8 in your MATLAB path (fieldtrip/external/spm8 does not suffice). It may be downloaded from http://www.fil.ion.ucl.ac.uk/spm')
 end
 
 %%
@@ -176,12 +176,6 @@ ft_preamble provenance
 ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar functional
-
-if(~exist('spm','file'))
-    error('Nutmegtrip requires SPM8 in your MATLAB path. It can be downloaded from http://www.fil.ion.ucl.ac.uk/spm')
-    return
-end
-
 
 % the abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -825,5 +819,5 @@ switch(cfg.topoplot)
 end
 
 cfg.axsel = 1;
-nmt_spm8_plot(cfg);
+nmt_spm_plot(cfg);
 nmt_image;

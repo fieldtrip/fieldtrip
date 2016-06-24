@@ -25,7 +25,10 @@ inlabel = findobj('String','Intensity:','HorizontalAlignment','center');
 delete(findobj('String','Crosshair Position'));
 delete(findobj('ToolTipString','move crosshairs to origin'));
 delete(inlabel);
-set(st.in,'Visible','off');
+switch(spm('ver'))
+    case 'SPM8'
+        set(st.in,'Visible','off');
+end
 
 beaminlabel = uicontrol(fg,'Style','Text','Position',[60 350 120 020].*WS,'String','Functional:','HorizontalAlignment','left');
 st.nmt.gui.beamin = uicontrol(fg,'Style','edit', 'Position',[130 350  120 020].*WS,'String','','HorizontalAlignment','left','BackgroundColor',nmt_textboxcolor);
@@ -37,8 +40,13 @@ uicontrol(fg,'Style','Text', 'Position',[75 315 35 020].*WS,'String','MEG:');
 %st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String',sprintf('%.1f %.1f %.1f',(spm_orthviews('pos')')),'Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
 st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String','','Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
 
-set(st.mp,'Callback','spm_image(''setposmm''); nmt_image(''shopos'');');
-set(st.vp,'Callback','spm_image(''setposvx''); nmt_image(''shopos'');');
+switch(spm('ver'))
+    case 'SPM8'
+        set(st.mp,'Callback','spm_image(''setposmm''); nmt_image(''shopos'');');
+        set(st.vp,'Callback','spm_image(''setposvx''); nmt_image(''shopos'');');
+    case 'SPM12'
+        st.callback = 'spm_image(''shopos'');';
+end
 
 for ii=1:7
    spmUIhL = findobj('Callback',['spm_image(''repos'',' num2str(ii) ')']);
@@ -60,7 +68,8 @@ set([textboxUIh;buttonUIh;button2UIh;popupmenuUIh],'BackgroundColor',nmt_textbox
 
 textUIh = findobj('Style','text');
 frameUIh = findobj('Style','frame');
-set([textUIh;frameUIh],'BackgroundColor',nmt_bgcolor);
+spm12UIh = findobj('Type','uipanel'); % needed for SPM12, but shouldn't bother SPM8
+set([textUIh;frameUIh;spm12UIh],'BackgroundColor',nmt_bgcolor);
 
 
 

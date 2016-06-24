@@ -1,7 +1,7 @@
-function nmt_spm8_plot(cfg)
-% nmt_spm8_plot(cfg)
+function nmt_spm_plot(cfg)
+% nmt_spm_plot(cfg)
 % plots desired activation on SPM8 viewer
-% designed for use via nmt_sourceplot_spm8, but possibly usable independently
+% designed for use via nmt_sourceplot, but possibly usable independently
 
 global st
 
@@ -159,7 +159,7 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     
     
     switch('disabled')  % TODO: hook for overlaying time series on TF plot;
-        %       perhaps better solution is independent nmt_spm8_plot call for each funparameter
+        %       perhaps better solution is independent nmt_spm_plot call for each funparameter
         case 'tf'
             if(st.nmt.cfg.evokedoverlay)
                 % trick to overlay time series taken from plotyy.m
