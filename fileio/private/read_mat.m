@@ -1,4 +1,4 @@
-function [matrix, extra] = read_mat(fn);
+function [matrix, extra] = read_mat(fn)
 
 % READ_MAT reads a matrix from an ascii or binary MBF format file
 %

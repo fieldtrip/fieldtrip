@@ -1,4 +1,4 @@
-function [hdr] = read_brainvision_vhdr(filename);
+function [hdr] = read_brainvision_vhdr(filename)
 
 % READ_BRAINVISION_VHDR reads the known items from the BrainVision EEG
 % header file and returns them in a structure

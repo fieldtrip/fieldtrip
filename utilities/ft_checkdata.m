@@ -1348,6 +1348,8 @@ else
   % concatenate all trials
   tmptrial = nan(ntrial, nchan, length(time));
   
+  begsmp = nan(ntrial, 1);
+  endsmp = nan(ntrial, 1);
   for i=1:ntrial
     begsmp(i) = nearest(time, data.time{i}(1));
     endsmp(i) = nearest(time, data.time{i}(end));

@@ -1,4 +1,4 @@
-function vol = read_asa_vol(fn);
+function vol = read_asa_vol(fn)
 
 % READ_ASA_VOL reads an ASA volume conductor file
 %

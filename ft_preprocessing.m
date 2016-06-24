@@ -608,6 +608,16 @@ else
     end % for all trials
     ft_progress('close');
     
+    % don't keep hdr.orig in the output data if it is too large
+    % hdr.orig can be large when caching data from specific file formats, such as bci2000_dat and mega_neurone
+    if isfield(hdr, 'orig')
+      s = hdr.orig;
+      s = whos('s');
+      if s.bytes>10240
+        hdr = rmfield(hdr, 'orig');
+      end
+    end
+    
     dataout                    = [];
     dataout.hdr                = hdr;                  % header details of the datafile
     dataout.label              = label;                % labels of channels that have been read, can be different from labels in file due to montage

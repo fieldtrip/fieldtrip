@@ -1,5 +1,7 @@
-function write_gdf(filename, hdr, data);
+function write_gdf(filename, hdr, data)
+
 % WRITE_GDF(filename, header, data)
+%
 % Writes a GDF file from the given header (only label, Fs, nChans are of interest)
 % and the data (unmodified). Digital and physical limits are derived from the data
 % via min and max operators. The GDF file will contain N records of 1 sample each,

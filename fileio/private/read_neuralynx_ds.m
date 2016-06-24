@@ -1,4 +1,4 @@
-function [dat] = read_neuralynx_ds(dirname, hdr, begsample, endsample, chanindx);
+function [dat] = read_neuralynx_ds(dirname, hdr, begsample, endsample, chanindx)
 
 % READ_NEURALYNX_DS reads multiple single-channel Neuralynx files that are
 % all contained in a single directory. Each file is treated as a single

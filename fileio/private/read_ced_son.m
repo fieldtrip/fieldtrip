@@ -1,4 +1,4 @@
-function [out] = read_ced_son(datafile,varargin);
+function [out] = read_ced_son(datafile,varargin)
 
 % READ_CED_SON
 %

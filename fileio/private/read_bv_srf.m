@@ -1,4 +1,4 @@
-function [pnt, tri, srf] = read_bv_srf(filename);
+function [pnt, tri, srf] = read_bv_srf(filename)
 
 % READ_BV_SRF reads a triangulated surface from a BrainVoyager *.srf file
 %

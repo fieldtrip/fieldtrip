@@ -1,4 +1,4 @@
-function [X,Y,Width,Height,Lbl] = read_lay(layoutname);
+function [X,Y,Width,Height,Lbl] = read_lay(layoutname)
 
 % READ_LAY reads an electrode or gradiometer layout file
 % Layout files are used for topoplotting and multiplotting.

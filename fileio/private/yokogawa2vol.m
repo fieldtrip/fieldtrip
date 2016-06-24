@@ -1,4 +1,4 @@
-function [vol] = yokogawa2vol(hdr);
+function [vol] = yokogawa2vol(hdr)
 
 % YOKOGAWA2VOL converts a spherical volume conductor model that can
 % be present in the header of a datafile into a structure that can

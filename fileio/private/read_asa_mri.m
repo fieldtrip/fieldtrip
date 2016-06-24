@@ -1,4 +1,4 @@
-function [mri, seg, hdr] = read_asa_mri(fn);
+function [mri, seg, hdr] = read_asa_mri(fn)
 
 % READ_ASA_MRI reads an ASA format MRI file
 %

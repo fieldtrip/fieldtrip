@@ -55,7 +55,7 @@ switch what
     
   case 'onCleanup'
     tf = is_octave() || matlabversion(7.8, Inf);
-
+    
   case 'alim'
     tf = is_matlab();
     
@@ -76,15 +76,15 @@ switch what
   case 'stats'
     root_dir=fileparts(which('ft_defaults'));
     external_stats_dir=fullfile(root_dir,'external','stats');
-
+    
     % these files are only used by other functions in the external/stats
     % directory
     exclude_mfiles={'common_size.m',...
-                    'iscomplex.m',...
-                    'lgamma.m'};
-
+      'iscomplex.m',...
+      'lgamma.m'};
+    
     tf = has_all_functions_in_dir(external_stats_dir,exclude_mfiles);
-
+    
   case 'program_invocation_name'
     % Octave supports program_invocation_name, which returns the path
     % of the binary that was run to start Octave
@@ -120,16 +120,16 @@ switch what
     
   case 'urlread-timeout'
     tf = is_matlab() && matlabversion('2012b',Inf);
-
+    
   case 'griddata-vector-input'
     tf = is_matlab();
-
+    
   case 'griddata-v4'
     tf = is_matlab() && matlabversion('2009a',Inf);
     
   case 'uimenu'
     tf = is_matlab();
-
+    
   otherwise
     error('unsupported value for first argument: %s', what);
     
@@ -163,19 +163,19 @@ end % function
 function tf = has_all_functions_in_dir(in_dir, exclude_mfiles)
 % returns true if all functions in in_dir are already provided by the
 % platform
-  m_files=dir(fullfile(in_dir,'*.m'));
-  n=numel(m_files);
+m_files=dir(fullfile(in_dir,'*.m'));
+n=numel(m_files);
 
-  for k=1:n
-    m_filename=m_files(k).name;
-    if isempty(which(m_filename)) && ...
-                isempty(strmatch(m_filename,exclude_mfiles))
-      tf=false;
-      return;
-    end
+for k=1:n
+  m_filename=m_files(k).name;
+  if isempty(which(m_filename)) && ...
+      isempty(strmatch(m_filename,exclude_mfiles))
+    tf=false;
+    return;
   end
+end
 
-  tf=true;
+tf=true;
 
 end % function
 
@@ -253,46 +253,47 @@ else % perform comparison with respect to version number
   inInterval = orderedComparison(minMajor, minMinor, maxMajor, maxMinor, major, minor);
 end
 
-  function [year, ab] = parseMatlabRelease(str)
-    if (str == Inf)
-      year = Inf; ab = Inf;
-    elseif (str == -Inf)
-      year = -Inf; ab = -Inf;
-    else
-      year = str2num(str(1:4));
-      ab = str(5);
-    end
-  end
+end % function
 
-  function [major, minor] = parseMatlabVersion(ver)
-    if (ver == Inf)
-      major = Inf; minor = Inf;
-    elseif (ver == -Inf)
-      major = -Inf; minor = -Inf;
-    elseif (isnumeric(ver))
-      major = floor(ver);
-      minor = int8((ver - floor(ver)) * 10);
-    else % ver is string (e.g. '7.10'), parse accordingly
-      [major, rest] = strtok(ver, '.');
-      major = str2num(major);
-      minor = str2num(strtok(rest, '.'));
-    end
-  end
+function [year, ab] = parseMatlabRelease(str)
+if (str == Inf)
+  year = Inf; ab = Inf;
+elseif (str == -Inf)
+  year = -Inf; ab = -Inf;
+else
+  year = str2num(str(1:4));
+  ab = str(5);
+end
+end % function
+
+function [major, minor] = parseMatlabVersion(ver)
+if (ver == Inf)
+  major = Inf; minor = Inf;
+elseif (ver == -Inf)
+  major = -Inf; minor = -Inf;
+elseif (isnumeric(ver))
+  major = floor(ver);
+  minor = int8((ver - floor(ver)) * 10);
+else % ver is string (e.g. '7.10'), parse accordingly
+  [major, rest] = strtok(ver, '.');
+  major = str2num(major);
+  minor = str2num(strtok(rest, '.'));
+end
+end  % function
 
 % checks if testA is in interval (lowerA,upperA); if at edges, checks if testB is in interval (lowerB,upperB).
-  function inInterval = orderedComparison(lowerA, lowerB, upperA, upperB, testA, testB)
-    if (testA < lowerA || testA > upperA)
-      inInterval = false;
-    else
-      inInterval = true;
-      if (testA == lowerA)
-        inInterval = inInterval && (testB >= lowerB);
-      end
-      
-      if (testA == upperA)
-        inInterval = inInterval && (testB <= upperB);
-      end
-    end
+function inInterval = orderedComparison(lowerA, lowerB, upperA, upperB, testA, testB)
+if (testA < lowerA || testA > upperA)
+  inInterval = false;
+else
+  inInterval = true;
+  if (testA == lowerA)
+    inInterval = inInterval && (testB >= lowerB);
   end
+  
+  if (testA == upperA)
+    inInterval = inInterval && (testB <= upperB);
+  end
+end
+end  % function
 
-end % function

@@ -1,4 +1,4 @@
-function [ama] = loadama(filename);
+function [ama] = loadama(filename)
 
 % LOADAMA read an inverted A-matrix and associated geometry information
 % from an ama file that was written by Tom Oostendorp's DIPOLI

@@ -1,7 +1,7 @@
 function test_ft_checkdata
 
 % MEM 1500mb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
 % TEST test_ft_checkdata
 % TEST ft_checkdata
