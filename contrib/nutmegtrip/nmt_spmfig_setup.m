@@ -1,6 +1,7 @@
 function nmt_spmfig_setup(cfg)
 % adds custom features to SPM MRI display window
-% e.g., head coords, MNI coords, activation intensity
+% e.g., head coords, MNI coords, activation intensity,
+%       additional axes and associated GUI controls
 % Author: Sarang S. Dalal, NEMOlab
 
 global st
@@ -9,7 +10,7 @@ if(isempty(cfg.title))
     cfg.title = 'nutmegtrip';
 end
 set(st.fig,'Name',cfg.title);
-
+set(st.fig,'CloseRequestFcn','nmt_close');
 
 nmt_textboxcolor = [0.93 0.81 0.63];
 nmt_bgcolor = [0.8 0.7 0.54];
@@ -24,7 +25,10 @@ inlabel = findobj('String','Intensity:','HorizontalAlignment','center');
 delete(findobj('String','Crosshair Position'));
 delete(findobj('ToolTipString','move crosshairs to origin'));
 delete(inlabel);
-set(st.in,'Visible','off');
+switch(spm('ver'))
+    case 'SPM8'
+        set(st.in,'Visible','off');
+end
 
 beaminlabel = uicontrol(fg,'Style','Text','Position',[60 350 120 020].*WS,'String','Functional:','HorizontalAlignment','left');
 st.nmt.gui.beamin = uicontrol(fg,'Style','edit', 'Position',[130 350  120 020].*WS,'String','','HorizontalAlignment','left','BackgroundColor',nmt_textboxcolor);
@@ -36,8 +40,13 @@ uicontrol(fg,'Style','Text', 'Position',[75 315 35 020].*WS,'String','MEG:');
 %st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String',sprintf('%.1f %.1f %.1f',(spm_orthviews('pos')')),'Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
 st.nmt.gui.megp = uicontrol(fg,'Style','edit', 'Position',[110 315 135 020].*WS,'String','','Callback','','ToolTipString','move crosshairs to MEG mm coordinates');
 
-set(st.mp,'Callback','spm_image(''setposmm''); nmt_image(''shopos'');');
-set(st.vp,'Callback','spm_image(''setposvx''); nmt_image(''shopos'');');
+switch(spm('ver'))
+    case 'SPM8'
+        set(st.mp,'Callback','spm_image(''setposmm''); nmt_image(''shopos'');');
+        set(st.vp,'Callback','spm_image(''setposvx''); nmt_image(''shopos'');');
+    case 'SPM12'
+        st.callback = 'spm_image(''shopos'');';
+end
 
 for ii=1:7
    spmUIhL = findobj('Callback',['spm_image(''repos'',' num2str(ii) ')']);
@@ -59,7 +68,8 @@ set([textboxUIh;buttonUIh;button2UIh;popupmenuUIh],'BackgroundColor',nmt_textbox
 
 textUIh = findobj('Style','text');
 frameUIh = findobj('Style','frame');
-set([textUIh;frameUIh],'BackgroundColor',nmt_bgcolor);
+spm12UIh = findobj('Type','uipanel'); % needed for SPM12, but shouldn't bother SPM8
+set([textUIh;frameUIh;spm12UIh],'BackgroundColor',nmt_bgcolor);
 
 
 
@@ -173,42 +183,49 @@ end
 
         %%
         for ii=1:3
-            st.nmt.gui.ax_ts(ii) = axes('Visible','off','DrawMode','fast','Parent',st.fig,...
+            st.nmt.gui.ax_ts(ii,1) = axes('Visible','off','Parent',st.fig,...
                 'YDir','normal');
-            set(st.nmt.gui.ax_ts(ii),'Units','pixels', ...
+            set(st.nmt.gui.ax_ts(ii,1),'Units','pixels', ...
                 'Position',[offx+s*Dims(1)+4*skx sz(2)+40-s*Dims(2)*ii sz(1)-20-(offx+s*Dims(1)+4*skx) s*(Dims(2))*0.8]);
-%                'Position',[offx+s*Dims(1)+4*skx sz(2)-s*Dims(2)*ii s*(Dims(1)+Dims(2)) s*(Dims(2))*0.8]);
+            
+            % allow second time series with superimposed axes (trick inspired by plotyy.m)
+            axh = st.nmt.gui.ax_ts(ii,1);
+            st.nmt.gui.ax_ts(ii,2) = axes('HandleVisibility',get(axh,'HandleVisibility'),'Units',get(axh,'Units'), ...
+                'Position',get(axh,'Position'),'Parent',get(axh,'Parent'),'Visible','off');
         end
         st.nmt.gui.timeguih(1) = st.nmt.gui.ax_ts(1);
         
         st.nmt.gui.timeguih(2) = uicontrol(fg,'Style','Text','String','Time:','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-            'Position',[offx+s*Dims(1)+4*skx sz(2)-5 150 25],'Visible','off');
+            'Position',[sz(1)-335 sz(2)-5 150 25],'Visible','off');
 %            'Position',[offx+s*Dims(1)+4*skx offy+s*Dims(2)-75 150 25],'Visible','off');
 
         st.nmt.gui.t1 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig);
 %        set(st.nmt.gui.t1,'Position',[offx+s*Dims(1)+4*skx+100 offy+s*Dims(2)-70 80 25],...
-        set(st.nmt.gui.t1,'Position',[sz(1)-280 sz(2) 80 25],...
+        set(st.nmt.gui.t1,'Position',[sz(1)-300 sz(2) 80 25],...
             'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
         st.nmt.gui.timeguih(3) = st.nmt.gui.t1;
  
         st.nmt.gui.timeguih(4) = uicontrol(fg,'Style','Text','String','to','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
-                    'Position',[sz(1)-190 sz(2)-5 50 25],'Visible','off');
+                    'Position',[sz(1)-215 sz(2)-5 50 25],'Visible','off');
 %                    'Position',[offx+s*Dims(1)+4*skx+185 offy+s*Dims(2)-75 50 25],'Visible','off');
-
         
         st.nmt.gui.t2 = uicontrol('Style','edit','String',num2str(0),'BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
-            'Position',[sz(1)-190 sz(2) 80 25],...
+            'Position',[sz(1)-200 sz(2) 80 25],...
             'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
 %            'Position',[offx+s*Dims(1)+4*skx+205 offy+s*Dims(2)-70 80 25],...
 %            'HorizontalAlignment','right','Visible','off','Callback','nmt_timeselect(''textbox'')');
         st.nmt.gui.timeguih(5) = st.nmt.gui.t2;
+
+        st.nmt.gui.timeguih(6) = uicontrol(fg,'Style','Text','String','s','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
+            'Position',[sz(1)-115 sz(2)-5 50 25],'Visible','off');
+
         
         st.nmt.gui.animate = uicontrol('Style','pushbutton','String','Animate','BackgroundColor',nmt_textboxcolor,'Parent',st.fig,...
             'Position',[sz(1)-100 sz(2) 80 25],...
             'HorizontalAlignment','right','Visible','off','Callback','nmt_animate');
 %             'Position',[offx+s*Dims(1)+4*skx+300 offy+s*Dims(2)-70 80 25],...
 %             'HorizontalAlignment','right','Visible','off','Callback','nmt_animate');
-        st.nmt.gui.timeguih(6) = st.nmt.gui.animate;
+        st.nmt.gui.timeguih(7) = st.nmt.gui.animate;
         
         
         st.nmt.gui.freqguih(1) = uicontrol(fg,'Style','Text','String','Freq:','BackgroundColor',[1 1 1],'HorizontalAlignment','left','Parent',st.fig,...
