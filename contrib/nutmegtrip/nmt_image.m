@@ -19,7 +19,6 @@ end
 
 switch(op)
     case 'shopos'
-        if isfield(st,'mp'),
             fg  = spm_figure('Findwin','Graphics');
             
             %%
@@ -63,9 +62,6 @@ switch(op)
             if(size(st.nmt.fun{1},2)>1)
                 nmt_timeselect;
             end
-        else
-            st.Callback = ';';
-        end
         return
     case 'setposmeg'
         warning('TODO: not yet fully implemented');
