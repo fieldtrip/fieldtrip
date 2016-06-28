@@ -1,7 +1,7 @@
-function nmt_spm8_plot(cfg)
-% nmt_spm8_plot(cfg)
+function nmt_spm_plot(cfg)
+% nmt_spm_plot(cfg)
 % plots desired activation on SPM8 viewer
-% designed for use via nmt_sourceplot_spm8, but possibly usable independently
+% designed for use via nmt_sourceplot, but possibly usable independently
 
 global st
 
@@ -115,7 +115,11 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     switch(st.nmt.cfg.plottype)
         case 'tf'
             set(st.nmt.gui.freqguih,'Visible','On'); % ensure plot is visible
-            nmt_tfplot(st.nmt.gui.ax_ts(cfg.axsel),st.nmt.time,st.nmt.freq,squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,:)),@nmt_repos_start);
+            if(all(st.nmt.freq(1,:) == [0 0])) % if the first row contains evoked data
+                nmt_tfplot(st.nmt.gui.ax_ts(cfg.axsel),st.nmt.time,st.nmt.freq(2:end,:),squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,2:end)),@nmt_repos_start);
+            else
+                nmt_tfplot(st.nmt.gui.ax_ts(cfg.axsel),st.nmt.time,st.nmt.freq,squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,:)),@nmt_repos_start);
+            end
         case 'ts'
             if(isfinite(st.nmt.cfg.vox_idx))
                 plot(st.nmt.gui.ax_ts(cfg.axsel),st.nmt.time,squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,:)));
@@ -141,20 +145,34 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     
     
     %% plot vertical line indicating selected time point
-    axisvalues = axis(st.nmt.gui.ax_ts(cfg.axsel));
-    line_max=axisvalues(4);
-    line_min=axisvalues(3);
-    ts_xhair_color = 'red';
-    ts_xhair_width = 1;
-    
     switch(st.nmt.cfg.plottype)
         case 'ts'
             ylim=get(st.nmt.gui.ax_ts(cfg.axsel),'YLim');
         case 'tf'
-            ylim = [st.nmt.freq(st.nmt.cfg.freq_idx(1),1) st.nmt.freq(st.nmt.cfg.freq_idx(2),2)]
+            ylim = [st.nmt.freq(st.nmt.cfg.freq_idx(1),1) st.nmt.freq(st.nmt.cfg.freq_idx(2),2)];
     end
     axes(st.nmt.gui.ax_ts(cfg.axsel));
-    h=patch([st.nmt.time(st.nmt.cfg.time_idx(1)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[400 400 400 400],[1 0.4 0.4],'EdgeColor','red');
+    zlim = get(st.nmt.gui.ax_ts(cfg.axsel),'ZLim'); % selection patch needs to have a Z higher than the TF range so that it's not hidden by the TF plot
+    h=patch([st.nmt.time(st.nmt.cfg.time_idx(1)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[zlim(2) zlim(2) zlim(2) zlim(2)],[1 0.4 0.4],'EdgeColor','red');
+
+    set(st.nmt.gui.ax_ts(cfg.axsel),'ButtonDownFcn',@nmt_repos_start);
+    
+    
+    switch('disabled')  % TODO: hook for overlaying time series on TF plot;
+        %       perhaps better solution is independent nmt_spm_plot call for each funparameter
+        case 'tf'
+            if(st.nmt.cfg.evokedoverlay)
+                % trick to overlay time series taken from plotyy.m
+                ylim=get(st.nmt.gui.ax_ts(cfg.axsel,2),'YLim');
+                ts=squeeze(st.nmt.fun{cfg.axsel}(st.nmt.cfg.vox_idx,:,1));
+                
+                axes(st.nmt.gui.ax_ts(cfg.axsel,2));
+                plot(st.nmt.gui.ax_ts(cfg.axsel,2),st.nmt.time,ts);
+                set(st.nmt.gui.ax_ts(cfg.axsel,2),'YAxisLocation','right','Color','none', ...
+                    'XGrid','off','YGrid','off','Box','off', ...
+                    'HitTest','off','Visible','on');
+            end
+    end
 
     %% update GUI textboxes
     set(st.nmt.gui.t1,'String',num2str(st.nmt.time(st.nmt.cfg.time_idx(1))));
@@ -168,8 +186,6 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
         set(st.nmt.gui.f2,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(2),2)));
     end
         
-    set(st.nmt.gui.ax_ts(cfg.axsel),'ButtonDownFcn',@nmt_repos_start);
-    
     %% optionally add topoplot
     switch(st.nmt.cfg.topoplot)
         case 'timelock'

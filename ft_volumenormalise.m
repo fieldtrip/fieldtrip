@@ -222,12 +222,12 @@ fprintf('performing the normalisation\n');
 % step 3: write the results to a file with prefix 'w'
 
 if ~isfield(cfg, 'spmparams') && strcmp(cfg.nonlinear, 'yes'),
-  fprintf('warping the invdividual anatomy to the template anatomy\n');
+  fprintf('warping the individual anatomy to the template anatomy\n');
   % compute the parameters by warping the individual anatomy
   VF        = spm_vol([cfg.intermediatename,'_anatomy.img']);
   params    = spm_normalise(VG,VF);
 elseif ~isfield(cfg, 'spmparams') && strcmp(cfg.nonlinear, 'no'),
-  fprintf('warping the invdividual anatomy to the template anatomy, using only linear transformations\n');
+  fprintf('warping the individual anatomy to the template anatomy, using only linear transformations\n');
   % compute the parameters by warping the individual anatomy
   VF         = spm_vol([cfg.intermediatename,'_anatomy.img']);
   flags.nits = 0; %put number of non-linear iterations to zero
@@ -255,6 +255,9 @@ for parlop=1:length(cfg.parameter)
   wfiles{parlop} = fullfile(p, ['w' f x]);
 end
 spm_write_sn(char(files),params,flags);  % this creates the 'w' prefixed files
+
+% spm_figure('Create','Graphics');
+% spm_normalise_disp(params,VF);
 
 normalised = [];
 

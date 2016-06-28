@@ -252,8 +252,8 @@ switch version
       elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
         error('inconsistent units in input gradiometer');
       end
-      
-      % the default should be amplitude/distance for neuromag and aplitude for all others
+
+      % the default should be amplitude/distance for neuromag and amplitude for all others
       if isempty(scaling)
         if ft_senstype(sens, 'neuromag')
           scaling = 'amplitude/distance';
