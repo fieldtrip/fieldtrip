@@ -52,13 +52,14 @@ if nargin<2
 end
 
 % determine the type of input, this is handled similarly as in FT_CHANTYPE
-isheader =  isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
-islabel  =  isa(input, 'cell')   && isa(input{1}, 'char');
-isgrad   =  isa(input, 'struct') && isfield(input, 'pnt') && isfield(input, 'ori');
-isgrad   = (isa(input, 'struct') && isfield(input, 'coilpos')) || isgrad;
-isgrad   = (isa(input, 'struct') && isfield(input, 'coilori')) || isgrad;
-iselec   =  isa(input, 'struct') && isfield(input, 'pnt') && ~isfield(input, 'ori');
-iselec   = (isa(input, 'struct') && isfield(input, 'elecpos')) || iselec;
+isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'Fs');
+isdata   = isa(input, 'struct')  && ~isheader && (isfield(input, 'hdr') || isfield(input, 'grad') || isfield(input, 'elec') || isfield(input, 'opto'));
+isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
+iselec   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  && ~isfield(input, 'ori'); % old style
+isgrad   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'coilpos')) || isgrad;             % new style 
+iselec   = (isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'elecpos')) || iselec;             % new style 
+isopto   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'transceiver');
+islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
 
 if isheader
   % this speeds up the caching in real-time applications
@@ -70,6 +71,28 @@ if isequal(current_argin, previous_argin)
   % don't do the type detection again, but return the previous output from cache
   chanunit = previous_argout{1};
   return
+end
+
+if isdata
+  % the hdr, grad, elec or opto structure might have a different set of channels
+  origlabel = input.label;
+
+  if isfield(input, 'hdr')
+    input = input.hdr;
+    isheader = true;
+  elseif isfield(input, 'grad')
+    input = input.grad;
+    isgrad = true;
+  elseif isfield(input, 'grad')
+    input = input.elec;
+    iselec = true;
+  elseif isfield(input, 'grad')
+    input = input.opto;
+    isopto = true;
+  else
+    % at least it contains channel labels
+    islabel = true;
+  end
 end
 
 if isheader
@@ -92,8 +115,13 @@ else
   error('the input that was provided to this function cannot be deciphered');
 end
 
-% start with unknown unit for all channels
-chanunit = repmat({'unknown'}, size(input.label));
+if isfield(input, 'chanunit')
+  % start with the provided channel units
+  chanunit = input.chanunit(:);
+else
+  % start with unknown unit for all channels
+  chanunit = repmat({'unknown'}, size(input.label));
+end
 
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
@@ -208,6 +236,15 @@ end % if senstype
 
 % ensure that it is a column vector
 chanunit = chanunit(:);
+
+if isdata
+  % the input was replaced by one of hdr, grad, elec, opto
+  [sel1, sel2] = match_str(origlabel, input.label);
+  origunit = repmat({'unknown'}, size(sel1));
+  origunit(sel1) = chanunit(sel2);
+  % the hdr, grad, elec or opto structure might have a different set of channels
+  chanunit = origunit;
+end
 
 if nargin>1
   chanunit = strcmp(desired, chanunit);

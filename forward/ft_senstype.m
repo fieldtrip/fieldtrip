@@ -353,14 +353,14 @@ else
     elseif all(ismember(ft_senslabel('yokogawa9'),            sens.label))
       type = 'yokogawa9';
       
-      % there are two possibilities for the neuromag channel labels: with and without a space
-    elseif any(mean(ismember(ft_senslabel('neuromag306_combined'), sens.label)) > 0.4)
+      % there are two possibilities for the neuromag channel labels: with and without a space, hence the 0.4
+    elseif all(mean(ismember(ft_senslabel('neuromag306_combined'), sens.label)) > 0.4)
       type = 'neuromag306_combined';
-    elseif any(mean(ismember(ft_senslabel('neuromag306'),          sens.label)) > 0.4)
+    elseif all(mean(ismember(ft_senslabel('neuromag306'),          sens.label)) > 0.4)
       type = 'neuromag306';
-    elseif any(mean(ismember(ft_senslabel('neuromag122_combined'), sens.label)) > 0.4)
+    elseif all(mean(ismember(ft_senslabel('neuromag122_combined'), sens.label)) > 0.4)
       type = 'neuromag122_combined';
-    elseif any(mean(ismember(ft_senslabel('neuromag122'),          sens.label)) > 0.4)
+    elseif all(mean(ismember(ft_senslabel('neuromag122'),          sens.label)) > 0.4)
       type = 'neuromag122';
       
     elseif (mean(ismember(ft_senslabel('biosemi256'),         sens.label)) > 0.8)
