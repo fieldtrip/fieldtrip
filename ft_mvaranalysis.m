@@ -182,7 +182,7 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
 elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
   % do sliding window approach
   for k = 1:numel(cfg.toi)
-		latency(k,:) = cfg.toi + cfg.t_ftimwin.*[-0.5 0.5];
+		latency(k,:) = cfg.toi(k) + cfg.t_ftimwin.*[-0.5 0.5] + [0 -1./data.fsample]; % correct for the last sample
 	end
 else
   error('cfg should contain both cfg.toi and cfg.t_ftimwin');
@@ -323,8 +323,8 @@ if dobvar && (keeprpt || dojack)
   % not yet implemented
   error('doing bivariate model fits in combination with multiple replicates is not yet possible');
 elseif dobvar
-  coeffs   = zeros(1, size(cmbindx,1), 2*nchan,  cfg.order, ntoi, ntap);
-  noisecov = zeros(1, size(cmbindx,1), 2*nchan,             ntoi, ntap);
+  coeffs   = zeros(1, 4, size(cmbindx,1), cfg.order, ntoi, ntap);
+  noisecov = zeros(1, 4, size(cmbindx,1),            ntoi, ntap);
 elseif dounivariate && (keeprpt || dojack)
 	error('doing univariate model fits in combination with multiple replicates is not yet possible');
 elseif dounivariate
@@ -400,13 +400,13 @@ for j = 1:ntoi
 							%FIXME check which is which: X(t) = A1*X(t-1) + ... + An*X(t-n) + E
 							%the other is then X(t) + A1*X(t-1) + ... + An*X(t-n) = E
 					end
-					coeffs(rlop,k,:,:,j,m) = reshape(ar, [nchan*2 cfg.order]);
+					coeffs(rlop,:,k,:,j,m) = reshape(ar, [4 cfg.order]);
 					
 					%---rescale noisecov if necessary
 					if dozscore, % FIX ME for bvar
-						noisecov(rlop,k,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
+						noisecov(rlop,:,k,j,m) = reshape(diag(datstd(cmbindx(k,:)))*tmpnoisecov*diag(datstd(cmbindx(k,:))),[1 4]);
 					else
-						noisecov(rlop,k,:,j,m) = reshape(tmpnoisecov,[1 4]);
+						noisecov(rlop,:,k,j,m) = reshape(tmpnoisecov,[1 4]);
 					end
 					dof(rlop,:,j) = numel(rpt{rlop});
 				end
