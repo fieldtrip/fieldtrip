@@ -187,7 +187,7 @@ if ismri
     voxpos(:,3) > -0.5 & ...
     voxpos(:,3) < +0.5;
   
-elseif ismesh
+elseif ismesh || ispointcloud
   meshpos = ft_warp_apply(inv(T*R*S), mri.pos);               % mesh vertex positions in box coordinates
   
   remove = ...
@@ -234,12 +234,15 @@ if ismri
     mri.anatomy(remove) = tmp(remove);
   end
   
-elseif ismesh
+elseif ismesh 
   fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
   [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
   if isfield(mri, 'color')
     mri.color = mri.color(~remove,:);
   end
+elseif ispointcloud  
+  fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
+  mri.pos = mri.pos(remove,1:3);
 end
 
 % remove the temporary fields from the configuration, keep the rest for provenance
