@@ -889,7 +889,7 @@ end
 % to write the layout to a .mat or text file, you can use this code snippet
 if ~isempty(cfg.output) && strcmpi(cfg.style, '2d')
   fprintf('writing layout to ''%s''\n', cfg.output);
-  if filetype_check_extension(cfg.output, '.mat')
+  if strcmpi(cfg.output((end-3):end), '.mat')
     save(cfg.output,'layout');
   else
     fid = fopen(cfg.output, 'wt');
