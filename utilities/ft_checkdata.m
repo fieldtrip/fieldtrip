@@ -214,13 +214,14 @@ elseif ismesh
 elseif ispointcloud
   data = fixpos(data);
     fprintf('the input is point cloud data with %d vertices ', size(data.pos,1));
+end % give feedback    
+
 if issource && isvolume
   % it should be either one or the other: the choice here is to represent it as volume description since that is simpler to handle
   % the conversion is done by removing the grid positions
   data = rmfield(data, 'pos');
   issource = false;
 end
-end % give feedback
 % the ft_datatype_XXX functions ensures the consistency of the XXX datatype
 % and provides a detailed description of the dataformat and its history
 if iscomp % this should go before israw/istimelock/isfreq
