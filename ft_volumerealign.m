@@ -650,8 +650,8 @@ switch cfg.method
     else
       shape = cfg.headshape.headshape;
     end
-    shape = ft_convert_units(shape, 'mm');
-
+    shape = ft_convert_units(shape, mri.unit); % make the units of the headshape consistent with the MRI
+    
     cfg.headshape.interactive    = ft_getopt(cfg.headshape, 'interactive', true);
     cfg.headshape.icp            = ft_getopt(cfg.headshape, 'icp',         true);
     cfg.headshape.scalpsmooth    = ft_getopt(cfg.headshape, 'scalpsmooth',    2, 1); % empty is OK
@@ -680,8 +680,7 @@ switch cfg.method
     tmpcfg.method      = 'projectmesh';%'isosurface';
     tmpcfg.numvertices = 20000;
     scalp              = ft_prepare_mesh(tmpcfg, seg);
-    scalp              = ft_convert_units(scalp, 'mm');
-
+    
     if dointeractive,
       fprintf('doing interactive realignment with headshape\n');
       tmpcfg                       = [];
