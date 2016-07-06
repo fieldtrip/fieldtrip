@@ -1,9 +1,9 @@
 function [layout, cfg] = ft_prepare_layout(cfg, data)
 
-% FT_PREPARE_LAYOUT loads or creates a 2-D layout of the channel locations. This layout
-% is required for plotting the topographical distribution of the potential
-% or field distribution, or for plotting timecourses in a topographical
-% arrangement.
+% FT_PREPARE_LAYOUT loads or creates a 2-D layout of the channel locations.
+% This layout is required for plotting the topographical distribution of
+% the potential or field distribution, or for plotting timecourses in a
+% topographical arrangement.
 %
 % Use as
 %   layout = ft_prepare_layout(cfg, data)
@@ -11,32 +11,35 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % There are several ways in which a 2-D layout can be made: it can be read
 % directly from a *.mat file containing a variable 'lay', it can be created
 % based on 3-D electrode or gradiometer positions in the configuration or
-% in the data, or it can be created based on the specification of an electrode
-% or gradiometer file. Layouts can also come from an ASCII *.lay file, but
-% this type of layout is no longer recommended.
+% in the data, or it can be created based on the specification of an
+% electrode or gradiometer file. Layouts can also come from an ASCII *.lay
+% file, but this type of layout is no longer recommended.
 %
 % You can specify any one of the following configuration options
 %   cfg.layout      filename containg the layout (.mat or .lay file)
-%                   can also be a layout structure, which is simply returned
-%                   as-is (see below for details)
+%                   can also be a layout structure, which is simply
+%                   returned as-is (see below for details)
 %   cfg.rotate      number, rotation around the z-axis in degrees (default = [], which means automatic)
-%   cfg.projection  string, 2D projection method can be 'stereographic', 'orthographic', 'polar', 'gnomic' or 'inverse' (default = 'polar')
+%   cfg.projection  string, 2D projection method can be 'stereographic', 'orthographic',
+%                   'polar', 'gnomic' or 'inverse' (default = 'polar')
 %   cfg.elec        structure with electrode definition, or
 %   cfg.elecfile    filename containing electrode definition
 %   cfg.grad        structure with gradiometer definition, or
 %   cfg.gradfile    filename containing gradiometer definition
 %   cfg.opto        structure with optode structure definition, or
 %   cfg.optofile    filename containing optode structure definition
-%   cfg.output      filename to which the layout will be written (default = [])
+%   cfg.output      filename (ending in .mat or .lay) to which the layout
+%                   will be written (default = [])
 %   cfg.montage     'no' or a montage structure (default = 'no')
-%   cfg.image       filename, use an image to construct a layout (e.g. usefull for ECoG grids)
-%   cfg.bw          if an image is used and bw = 1 transforms the image in black and white (default = 0, do not transform)
+%   cfg.image       filename, use an image to construct a layout (e.g. useful for ECoG grids)
+%   cfg.bw          if an image is used and bw = 1 transforms the image in
+%                   black and white (default = 0, do not transform)
 %   cfg.overlap     string, how to deal with overlapping channels when
 %                   layout is constructed from a sensor configuration
 %                   structure (can be 'shift' (shift the positions in 2D
-%                   space to remove the overlap (default)), 'keep' (don't shift,
-%                   retain the overlap), 'no' (throw error when overlap is
-%                   present))
+%                   space to remove the overlap (default)), 'keep' (don't
+%                   shift, retain the overlap), 'no' (throw error when
+%                   overlap is present))
 %  cfg.skipscale    'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %  cfg.skipcomnt    'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
@@ -59,7 +62,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.width   = Nx1 vector with the width of each box for multiplotting
 %   layout.height  = Nx1 matrix with the height of each box for multiplotting
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
-%   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
+%   layout.outline = optional cell-array with line segments that represent
+%                  the head, nose, ears, sulci or other anatomical features
 %
 % See also FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_PLOT_LAY
 
@@ -376,7 +380,7 @@ elseif ischar(cfg.layout)
     if ~exist(cfg.layout, 'file')
       error('the specified layout file %s was not found', cfg.layout);
     end
-    tmp = load(cfg.layout, 'lay');
+    tmp = load(cfg.layout, 'lay*');
     if isfield(tmp, 'layout')
       layout = tmp.layout;
     elseif isfield(tmp, 'lay')
@@ -872,6 +876,9 @@ elseif any(strcmp('SCALE', layout.label)) && skipscale
   layout.height(sel) = [];
 end
 
+% ensure proper format of some of label (see bug 1909 -roevdmei)
+layout.label  = layout.label(:);
+
 % to plot the layout for debugging, you can use this code snippet
 if strcmp(cfg.feedback, 'yes') && strcmpi(cfg.style, '2d')
   tmpcfg = [];
@@ -879,22 +886,24 @@ if strcmp(cfg.feedback, 'yes') && strcmpi(cfg.style, '2d')
   ft_layoutplot(tmpcfg);
 end
 
-% to write the layout to a text file, you can use this code snippet
+% to write the layout to a .mat or text file, you can use this code snippet
 if ~isempty(cfg.output) && strcmpi(cfg.style, '2d')
   fprintf('writing layout to ''%s''\n', cfg.output);
-  fid = fopen(cfg.output, 'wt');
-  for i=1:numel(layout.label)
-    fprintf(fid, '%d %f %f %f %f %s\n', i, layout.pos(i,1), layout.pos(i,2), layout.width(i), layout.height(i), layout.label{i});
+  if strcmpi(cfg.output((end-3):end), '.mat')
+    save(cfg.output,'layout');
+  else
+    fid = fopen(cfg.output, 'wt');
+    for i=1:numel(layout.label)
+      fprintf(fid, '%d %f %f %f %f %s\n', i, layout.pos(i,1), layout.pos(i,2), ...
+        layout.width(i), layout.height(i), layout.label{i});
+    end
+    fclose(fid);
   end
-  fclose(fid);
 elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
   % the layout file format does not support 3D positions, furthermore for
   % a 3D layout the width and height are currently set to NaN
   error('writing a 3D layout to an output file is not supported');
 end
-
-% ensure proper format of some of label (see bug 1909 -roevdmei)
-layout.label  = layout.label(:);
 
 
 % do the general cleanup and bookkeeping at the end of the function
