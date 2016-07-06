@@ -71,10 +71,11 @@ cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'yes');
 cfg.feedback  = ft_getopt(cfg, 'feedback', 'yes');
 
 % check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', {'volume', 'mesh'}, 'feedback', 'yes');
+mri = ft_checkdata(mri, 'datatype', {'volume', 'mesh', 'pointcloud'}, 'feedback', 'yes');
 
 ismri  = ft_datatype(mri, 'mri');
 ismesh = ft_datatype(mri, 'mesh');
+ispointcloud = ft_datatype(mri,'pointcloud');
 
 % determine the size of the "unit" sphere in the origin and the length of the axes
 switch mri.unit
@@ -113,7 +114,7 @@ if ismri
   anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
   
   ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
-elseif ismesh
+elseif ismesh || ispointcloud
   ft_plot_mesh(mri);
 end
 
@@ -186,7 +187,7 @@ if ismri
     voxpos(:,3) > -0.5 & ...
     voxpos(:,3) < +0.5;
   
-elseif ismesh
+elseif ismesh || ispointcloud
   meshpos = ft_warp_apply(inv(T*R*S), mri.pos);               % mesh vertex positions in box coordinates
   
   remove = ...
@@ -233,12 +234,15 @@ if ismri
     mri.anatomy(remove) = tmp(remove);
   end
   
-elseif ismesh
+elseif ismesh 
   fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
   [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
   if isfield(mri, 'color')
     mri.color = mri.color(~remove,:);
   end
+elseif ispointcloud  
+  fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
+  mri.pos = mri.pos(remove,1:3);
 end
 
 % remove the temporary fields from the configuration, keep the rest for provenance
