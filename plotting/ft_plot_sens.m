@@ -61,8 +61,8 @@ label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
 coil            = ft_getopt(varargin, 'coil', false);
-coilsize        = ft_getopt(varargin, 'coilsize', 0);
-coilshape       = ft_getopt(varargin, 'coilshape', 'circle');
+coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the input, see below
+coilshape       = ft_getopt(varargin, 'coilshape'); % default depends on the input, see below
 coilorientation = ft_getopt(varargin, 'coilorientation', false);
 % this is simply passed to plot3
 style           = ft_getopt(varargin, 'style', 'k.');
@@ -79,8 +79,35 @@ if ~isempty(ft_getopt(varargin, 'coildiameter'))
 end
 
 if ~isempty(unit)
+  % convert the sensor description to the specified units
   sens = ft_convert_units(sens, unit);
 end
+
+if isempty(coilshape)
+  if ft_senstype(sens, 'neuromag')
+    coilshape = 'square';
+  else
+    coilshape = 'circle';
+  end
+end
+
+if isempty(coilsize)
+  switch ft_senstype(sens)
+    case 'neuromag306'
+      coilsize = 30; % FIXME this is only an estimate
+    case 'neuromag122'
+      coilsize = 35; % FIXME this is only an estimate
+    case 'ctf151'
+      coilsize = 15; % FIXME this is only an estimate
+    case 'ctf275'
+      coilsize = 15; % FIXME this is only an estimate
+    otherwise
+      coilsize = 10;
+  end
+  % convert from mm to the units of the sensor array
+  coilsize = coilsize/ft_scalingfactor(sens.unit, 'mm');
+end
+
 
 % select a subset of channels to be plotted
 if ~isempty(chantype)
