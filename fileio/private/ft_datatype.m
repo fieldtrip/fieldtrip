@@ -45,6 +45,7 @@ iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(dat
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
 issource       = (isfield(data, 'pos') || isfield(data, 'pnt')) && isstruct(data) && numel(data)==1; % pnt is deprecated, this does not apply to a mesh array
 ismesh         = (isfield(data, 'pos') || isfield(data, 'pnt')) && (isfield(data, 'tri') || isfield(data, 'tet') || isfield(data, 'hex')); % pnt is deprecated
+ispointcloud   = (isfield(data, 'pos') || isfield(data, 'pnt')) && ~(isfield(data, 'tri') || isfield(data, 'tet') || isfield(data, 'hex')); % pnt is deprecated
 isdip          =  isfield(data, 'dip');
 ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
@@ -107,6 +108,8 @@ elseif ismesh && isparcellation
   type = 'mesh+label';
 elseif ismesh
   type = 'mesh';
+elseif ispointcloud
+  type = 'pointcloud';
 elseif issource && isparcellation
   type = 'source+label';
 elseif issource
