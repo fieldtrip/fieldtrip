@@ -130,6 +130,7 @@ ismvar          = ft_datatype(data, 'mvar');
 isfreqmvar      = ft_datatype(data, 'freqmvar');
 ischan          = ft_datatype(data, 'chan');
 ismesh          = ft_datatype(data, 'mesh');
+ispointcloud    = ft_datatype(data, 'pointcloud');
 % FIXME use the istrue function on ismeg and hasxxx options
 
 if ~isequal(feedback, 'no')
@@ -210,7 +211,10 @@ elseif ismesh
   else
     fprintf('the input is mesh data multiple surfaces\n');
   end
-end % give feedback
+elseif ispointcloud
+  data = fixpos(data);
+    fprintf('the input is point cloud data with %d vertices ', size(data.pos,1));
+end % give feedback    
 
 if issource && isvolume
   % it should be either one or the other: the choice here is to represent it as volume description since that is simpler to handle
@@ -218,7 +222,6 @@ if issource && isvolume
   data = rmfield(data, 'pos');
   issource = false;
 end
-
 % the ft_datatype_XXX functions ensures the consistency of the XXX datatype
 % and provides a detailed description of the dataformat and its history
 if iscomp % this should go before israw/istimelock/isfreq
@@ -288,6 +291,8 @@ if ~isempty(dtype)
         okflag = okflag + isparcellation;
       case 'mesh'
         okflag = okflag + ismesh;
+      case 'pointcloud'
+        okflag = okflag + ispointcloud;
     end % switch dtype
   end % for dtype
   
