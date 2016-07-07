@@ -3,7 +3,7 @@ function [event] = ft_read_event(filename, varargin)
 % FT_READ_EVENT reads all events from an EEG/MEG dataset and returns
 % them in a well defined structure. It is a wrapper around different
 % EEG/MEG file importers, directly supported formats are CTF, Neuromag,
-% EEP, BrainVision, Neuroscan and Neuralynx.
+% EEP, BrainVision, Neuroscan, Neuralynx and Nervus/Nicolet.
 %
 % Use as
 %   [event] = ft_read_event(filename, ...)
@@ -71,7 +71,7 @@ function [event] = ft_read_event(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2016 Robert Oostenveld
+% Copyright (C) 2004-2016 Robert Oostenveld (Nervus by Jan Brogger)
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1321,6 +1321,39 @@ switch eventformat
       event(i).offset   = 0;                      % expressed in samples
       event(i).duration = hdr.nSamples;           % expressed in samples
     end
+  
+  case 'nervus_eeg'
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    % construct a event structure from data in the header
+    maxSampleRate = max([hdr.orig.Segments.samplingRate]);
+    earliestDateTime = min([hdr.orig.Segments.dateOLE]);
+    for i=1:length(hdr.orig.Events)
+      event(i).type     = hdr.orig.Events(i).IDStr;   % string
+      event(i).value    = hdr.orig.Events(i).label;  % number or string
+      event(i).offset   = 0;                         % expressed in samples      
+      % calculate the sample value of the event, based on the highest
+      % sample rate
+      event(i).sample   = (hdr.orig.Events(i).dateOLE-earliestDateTime)*3600*24*maxSampleRate;
+      if event(i).sample == 0
+          event(i).sample = 1;
+      elseif event(i).sample > hdr.nSamples
+          event(i).sample = hdr.nSamples;
+      end
+      event(i).duration = hdr.orig.Events(i).duration*maxSampleRate;
+    end
+	%Add boundary events to indicate segments
+	originalEventCount = length(hdr.orig.Events);
+    boundaryEventCount = 1;
+	for i=2:length(hdr.orig.Segments)
+		event(originalEventCount+boundaryEventCount).type = 'boundary';
+		event(originalEventCount+boundaryEventCount).value = 'boundary';
+		event(originalEventCount+boundaryEventCount).offset = 0;
+		event(originalEventCount+boundaryEventCount).duration = 0;
+		event(originalEventCount+boundaryEventCount).sample = sum([hdr.orig.Segments(1:(i-1)).sampleCount]);
+        boundaryEventCount = boundaryEventCount+1;
+	end
     
   case {'neuromag_eve'}
     % previously this was called babysquid_eve, now it is neuromag_eve

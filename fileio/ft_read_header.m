@@ -59,6 +59,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Nexstim (*.nxe)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
+%   Natus/Nicolet/Nervus (.e files)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -1569,6 +1570,11 @@ switch headerformat
     % construct the gradiometer structure from the complete header information
     hdr.grad = netmeg2grad(hdr);
     
+  
+  case 'nervus_eeg'
+    hdr = read_nervus_header(filename);
+    checkUniqueLabels = false;
+    
   case 'neuralynx_dma'
     hdr = read_neuralynx_dma(filename);
     
@@ -2237,6 +2243,7 @@ switch headerformat
     else
       error('unsupported header format "%s"', headerformat);
     end
+    
 end % switch headerformat
 
 

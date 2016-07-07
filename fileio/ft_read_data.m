@@ -950,7 +950,19 @@ switch dataformat
   case {'mpi_ds', 'mpi_dap'}
     [hdr, dat] = read_mpi_ds(filename);
     dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
-    
+  case 'nervus_eeg'     
+    hdr = read_nervus_header(filename);        
+    %Nervus usually has discontinuous EEGs, e.g. pauses in clinical
+    %recordings. The code currently concatenates these trials.
+    %We could set this up as separate "trials" later.
+    %We could probably add "boundary events" in EEGLAB later    
+    dat = zeros(0,size(hdr.orig.Segments(1).chName,2));
+    for segment=1:size(hdr.orig.Segments,2);
+        range = [1 hdr.orig.Segments(segment).sampleCount];
+        datseg = read_nervus_data(hdr.orig,segment, range, chanindx);        
+        dat = cat(1,dat,datseg);
+    end    
+    dimord = 'samples_chans';
   case 'neuroscope_bin'
     switch hdr.orig.nBits
       case 16
