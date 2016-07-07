@@ -475,7 +475,7 @@ elseif ft_senstype(input, 'yokogawa') && isheader
   if ft_hastoolbox('yokogawa_meg_reader')
     % shorten names
     ch_info = input.orig.channel_info.channel;
-    type_orig = [ch_info.chantype];
+    type_orig = [ch_info.type];
     
     sel = (type_orig == NullChannel);
     chantype(sel) = {'null'};
@@ -499,6 +499,7 @@ elseif ft_senstype(input, 'yokogawa') && isheader
     chantype(sel) = {'ecg'};
     sel = (type_orig == EtcChannel);
     chantype(sel) = {'etc'};
+    
   elseif ft_hastoolbox('yokogawa')
     sel = (input.orig.channel_info(:, 2) == NullChannel);
     chantype(sel) = {'null'};
