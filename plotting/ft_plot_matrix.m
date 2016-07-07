@@ -190,7 +190,11 @@ end
 
 if isempty(width),
   width = hlim(2)-hlim(1);
-  width = width * length(hdat)/(length(hdat)-1);
+  if length(hdat)>1
+    width = width * length(hdat)/(length(hdat)-1);
+  else
+    width = 1;
+  end
   autowidth = true;
 else
   autowidth = false;
@@ -198,7 +202,11 @@ end
 
 if isempty(height),
   height = vlim(2)-vlim(1);
-  height = height * length(vdat)/(length(vdat)-1);
+  if length(vdat)>1
+    height = height * length(vdat)/(length(vdat)-1);
+  else
+    height = 1;
+  end
   autoheight = true;
 else
   autoheight = false;
@@ -250,7 +258,7 @@ if ~isempty(highlight)
         set(h, 'AlphaDataMapping', 'scaled');
         alim([0 1]);
       end
-    
+      
     case 'saturation'
       % This approach changes the color of pixels to white, regardless of colormap, without using opengl
       % It does by converting by:
@@ -259,7 +267,7 @@ if ~isempty(highlight)
       % 3) for to-be-masked-pixels, set saturation to 0 and value to 1 (hue is irrelevant when they are)
       % 4) convert the hsv values back to rgb values
       % 5) plot these values
-     
+      
       % enforce mask properties (satmask is 0 when a pixel needs to be masked, 1 if otherwise)
       satmask = round(double(highlight));   % enforce binary white-masking, the hsv approach cannot be used for 'white-shading'
       satmask(isnan(cdat)) = false;         % make sure NaNs are plotted as white pixels, even when using non-integer mask values
@@ -282,7 +290,7 @@ if ~isempty(highlight)
       % do 5
       h = imagesc(hdat, vdat, rgbcdat,clim);
       set(h,'tag',tag);
-
+      
     case 'outline'
       % the significant voxels could be outlined with a black contour
       % plot outline
@@ -317,4 +325,4 @@ if box
   ft_plot_box(boxposition);
 end
 
-warning(ws); %revert to original state
+warning(ws); % revert to original state
