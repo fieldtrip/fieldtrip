@@ -10,9 +10,9 @@ function status = ft_test(varargin)
 %   ft_test('functionname')
 %
 % When using the functional form, you can specify additional arguments as key-value pairs
-%   dependson   = string
-%   maxmem      = string
-%   maxwalltime = string
+%   dependency   = string
+%   maxmem       = string
+%   maxwalltime  = string
 %
 % Test functions should not require any input arguments.
 % Output arguments of the test function will not be considered.
@@ -39,9 +39,7 @@ function status = ft_test(varargin)
 %
 % $Id$
 
-% get the optional input arguments
-
-optbeg = find(ismember(varargin, {'dependson', 'maxmem', 'maxwalltime'}));
+optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime'}));
 if ~isempty(optbeg)
   optarg = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -49,30 +47,32 @@ else
   optarg = {};
 end
 
-dependson   = ft_getopt(optarg, 'dependson', {});
+% get the optional input arguments
+dependency  = ft_getopt(optarg, 'dependency', {});
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
 
-if ischar(dependson)
-  dependson = {dependson};
+if ischar(dependency)
+  % this should be a cell-array
+  dependency = {dependency};
 end
 
 if ischar(maxwalltime)
-  % formatted as HH:MM:SS
+  % it is probably formatted as HH:MM:SS
   maxwalltime = str2walltime(maxwalltime);
 end
 
 if ischar(maxmem)
-  % formatted as XXmb, or gb, ...
+  % it is probably formatted as XXmb, or XXgb, ...
   maxmem = str2mem(maxmem);
 end
 
+[ftver, ftpath] = ft_version;
 
 %% determine the list of functions to test
 if ~isempty(varargin) && exist(varargin{1}, 'file')
   functionlist = varargin;
 else
-  [ftver, ftpath] = ft_version;
   d = dir(fullfile(ftpath, 'test', 'test_*.m'));
   functionlist = {d.name}';
   for i=1:numel(functionlist)
@@ -94,15 +94,15 @@ for i=1:numel(filelist)
   fclose(fid);
   line = tokenize(str, 10);
   
-  if ~isempty(dependson)
+  if ~isempty(dependency)
     sel(i) = false;
   else
     sel(i) = true;
   end
   
   for k=1:numel(line)
-    for j=1:numel(dependson)
-      [s, e] = regexp(line{k}, sprintf('%% TEST.*%s.*', dependson{j}), 'once', 'start', 'end');
+    for j=1:numel(dependency)
+      [s, e] = regexp(line{k}, sprintf('%% TEST.*%s.*', dependency{j}), 'once', 'start', 'end');
       if ~isempty(s)
         sel(i) = true;
       end
@@ -134,19 +134,34 @@ functionlist = functionlist(sel);
 
 %% run over all tests
 for i=1:numel(functionlist)
+  
   close all
   fprintf('================================================================================\n');;
   fprintf('=== evaluating %s\n', functionlist{i});
   try
     stopwatch = tic;
     eval(functionlist{i});
-    fprintf('=== %s PASSED in %d seconds\n', functionlist{i}, round(toc(stopwatch)));
     status = true;
+    runtime = round(toc(stopwatch));
+    fprintf('=== %s PASSED in %d seconds\n', functionlist{i}, runtime);
   catch
-    fprintf('=== %s FAILED in %d seconds\n', functionlist{i}, round(toc(stopwatch)));
     status = false;
+    runtime = round(toc(stopwatch));
+    fprintf('=== %s FAILED in %d seconds\n', functionlist{i}, runtime);
   end
   close all
+  
+  result = [];
+  result.matlabVersion    = version('-release');
+  result.fieldtripVersion = ftver;
+  result.hostname         = gethostname;
+  result.user             = getusername;
+  result.result           = status;
+  result.runTime          = runtime;
+  result.functionName     = functionlist{i};
+  
+  options = weboptions('MediaType','application/json');
+  webwrite('http://dashboard.fieldtriptoolbox.org/test', result, options);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
