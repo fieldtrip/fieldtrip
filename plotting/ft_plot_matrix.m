@@ -115,6 +115,17 @@ if ischar(hlim)
   end % switch
 end % if ischar
 
+if hlim(1)==hlim(2)
+  if hlim(1)==0
+    % automatic scaling not possible
+    hlim = [-1 1];
+  else
+    % adjust the scaling a bit
+    hlim(1) = 0.8*hlim(1);
+    hlim(2) = 1.2*hlim(2);
+  end
+end
+
 if ischar(vlim)
   switch vlim
     case 'maxmin'
@@ -127,6 +138,17 @@ if ischar(vlim)
   end % switch
 end % if ischar
 
+if vlim(1)==vlim(2)
+  if vlim(1)==0
+    % automatic scaling not possible
+    vlim = [-1 1];
+  else
+    % adjust the scaling a bit
+    vlim(1) = 0.8*vlim(1);
+    vlim(2) = 1.2*vlim(2);
+  end
+end
+
 if ischar(clim)
   switch clim
     case 'maxmin'
@@ -138,6 +160,17 @@ if ischar(clim)
       error('unsupported option for clim')
   end % switch
 end % if ischar
+
+if clim(1)==clim(2)
+  if clim(1)==0
+    % automatic scaling not possible
+    clim = [-1 1];
+  else
+    % adjust the scaling a bit
+    clim(1) = 0.8*clim(1);
+    clim(2) = 1.2*clim(2);
+  end
+end
 
 % these must be floating point values and not integers, otherwise the scaling fails
 hdat = double(hdat);
