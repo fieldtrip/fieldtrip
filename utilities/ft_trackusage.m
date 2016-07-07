@@ -144,12 +144,12 @@ for i=1:2:numel(varargin)
 end
 
 % construct the HTTP request for Mixpanel, see https://mixpanel.com/help/reference/http
-event_json   = sprintf('{"event": "%s", "properties": {%s}}', event, struct2json(properties));
+event_json   = sprintf('{"event": "%s", "properties": {%s}}', event, ft_struct2json(properties));
 event_base64 = base64encode(event_json);
 event_http   = sprintf('http://api.mixpanel.com/track/?data=%s', event_base64);
 
 
-[output, status] = my_urlread(event_http);
+[output, status] = ft_urlread(event_http);
 if ~status
   disp(output);
   warning('could not send tracker information for "%s"', event);
@@ -161,7 +161,7 @@ if ~initialized
   user_base64 = base64encode(user_json);
   user_http   = sprintf('http://api.mixpanel.com/engage/?data=%s', user_base64);
 
-  [output, status] = my_urlread(user_http);
+  [output, status] = ft_urlread(user_http);
   if ~status
     disp(output);
     warning('could not send tracker information for "%s"', event);
@@ -170,35 +170,4 @@ if ~initialized
   initialized = true;
 end % if initialized
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function j = struct2json(s)
-fn = fieldnames(s);
-fv = cell(size(fn));
-for i=1:numel(fn)
-  val = s.(fn{i});
-  switch class(val)
-    case 'char'
-      fv{i} = val;
-    case 'double'
-      fv{i} = num2str(val);
-    otherwise
-      error('class %s is not supported\n', type(val));
-  end
-end
-f = cat(1, fn', fv');
-j = sprintf('"%s": "%s", ', f{:});
-j = j(1:end-2); % remove the last comma and space
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [output, status] = my_urlread(event_http)
-% the timeout option is only available from MATLAB 2012b onward
-if ft_platform_supports('urlread-timeout')
-  [output, status] = urlread(event_http, 'TimeOut', 15);
-else
-  [output, status] = urlread(event_http);
-end

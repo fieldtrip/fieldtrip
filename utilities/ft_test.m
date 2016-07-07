@@ -153,23 +153,30 @@ end
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function walltime = str2walltime(str)
-str = strtrim(str);
-hms = sscanf(str, '%d:%d:%d'); % hours, minutes, seconds
-walltime = 60*60*hms(1) + 60*hms(2) + hms(3);
+str = lower(strtrim(str));
+walltime = str2double(str);
+if isnan(walltime)
+  str = strtrim(str);
+  hms = sscanf(str, '%d:%d:%d'); % hours, minutes, seconds
+  walltime = 60*60*hms(1) + 60*hms(2) + hms(3);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function mem = str2mem(str)
 str = lower(strtrim(str));
-if ~isempty(regexp(str, '[0-9]*kb', 'once'))
-  mem = str2double(str(1:end-2)) * 2^10;
-elseif ~isempty(regexp(str, '[0-9]*mb', 'once'))
-  mem = str2double(str(1:end-2)) * 2^20;
-elseif ~isempty(regexp(str, '[0-9]*gb', 'once'))
-  mem = str2double(str(1:end-2)) * 2^30;
-elseif ~isempty(regexp(str, '[0-9]*tb', 'once'))
-  mem = str2double(str(1:end-2)) * 2^40;
-else
-  mem = str2double(str);
+mem = str2double(str);
+if isnan(mem)
+  if ~isempty(regexp(str, '[0-9]*kb', 'once'))
+    mem = str2double(str(1:end-2)) * 2^10;
+  elseif ~isempty(regexp(str, '[0-9]*mb', 'once'))
+    mem = str2double(str(1:end-2)) * 2^20;
+  elseif ~isempty(regexp(str, '[0-9]*gb', 'once'))
+    mem = str2double(str(1:end-2)) * 2^30;
+  elseif ~isempty(regexp(str, '[0-9]*tb', 'once'))
+    mem = str2double(str(1:end-2)) * 2^40;
+  else
+    mem = str2double(str);
+  end
 end
