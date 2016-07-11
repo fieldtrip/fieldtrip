@@ -63,7 +63,7 @@ end
 %% Since the functionality is still in beta testing, only enable the tracking for some developpers
 knownuser = false;
 knownuser = knownuser || (strcmp(getusername, 'roboos')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^mac011', 'once'))));
-knownuser = knownuser || (strcmp(getusername, 'jansch')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+%knownuser = knownuser || (strcmp(getusername, 'jansch')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
 knownuser = knownuser || (strcmp(getusername, 'jimher')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
 %knownuser = knownuser || (strcmp(getusername, 'nielam')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
 knownuser = knownuser || (strcmp(getusername, 'tzvpop')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
