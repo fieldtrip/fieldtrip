@@ -72,10 +72,11 @@ cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'no');
 cfg.feedback  = ft_getopt(cfg, 'feedback', 'no');
 
 % check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', {'volume', 'mesh'}, 'feedback', 'yes');
+mri = ft_checkdata(mri, 'datatype', {'volume', 'source'}, 'feedback', 'yes');
 
-isvolume = ft_datatype(mri, 'volume');
-ismesh   = ft_datatype(mri, 'mesh') || ft_datatype(mri, 'source');
+ismri    = ft_datatype(mri, 'volume') && isfield(mri, 'anatomy');
+ismesh   = ft_datatype(mri, 'mesh');
+issource = ft_datatype(mri, 'source');
 
 % determine the size of the "unit" sphere in the origin and the length of the axes
 switch mri.unit
@@ -98,7 +99,7 @@ set(figHandle, 'CloseRequestFcn', @cb_close);
 % clear persistent variables to ensure fresh figure
 clear ft_plot_slice
 
-if isvolume
+if ismri
   % the volumetric data needs to be interpolated onto three orthogonal planes
   % determine a resolution that is close to, or identical to the original resolution
   [corner_vox, corner_head] = cornerpoints(mri.dim, mri.transform);
@@ -114,7 +115,7 @@ if isvolume
   anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
   
   ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
-elseif ismesh
+elseif ismesh || issource
   ft_plot_mesh(mri);
 end
 
@@ -173,7 +174,7 @@ S = cfg.S;
 R = cfg.R;
 T = cfg.T;
 
-if isvolume
+if ismri
   % it is possible to convert the box to headcoordinates, but it is more efficient the other way around
   [X, Y, Z] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
   voxpos = ft_warp_apply(mri.transform, [X(:) Y(:) Z(:)]);  % voxel positions in head coordinates
@@ -187,7 +188,7 @@ if isvolume
     voxpos(:,3) > -0.5 & ...
     voxpos(:,3) < +0.5;
   
-elseif ismesh
+elseif ismesh || issource
   meshpos = ft_warp_apply(inv(T*R*S), mri.pos);               % mesh vertex positions in box coordinates
   
   remove = ...
@@ -204,7 +205,7 @@ if strcmp(cfg.selection, 'inside')
   remove = ~remove;
 end
 
-if isvolume
+if ismri
   if istrue(cfg.keepbrain)
     tmpcfg = [];
     tmpcfg.output = {'brain'};
@@ -243,6 +244,16 @@ elseif ismesh
   end
   if isfield(mri, 'color')
     mri.color = mri.color(~remove,:);
+  end
+  
+elseif issource
+  fprintf('keeping %d and removing %d source positions\n', sum(remove==0), sum(remove==1));
+  if isfield(mri, 'inside')
+    % mark them as not inside
+    mri.inside(remove) = false;
+  else
+    % remove them from the mesh
+    mri.pos = mri.pos(remove,1:3);
   end
 end
 
