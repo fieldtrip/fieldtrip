@@ -15,7 +15,8 @@ function mri = ft_defacevolume(cfg, mri)
 %   cfg.translate  = initial rotation of the box (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
-%   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'yes')
+%   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'no')
+%   cfg.feedback   = 'no' or 'yes', whether to provide graphical feedback (default = 'no')
 %
 % If you specify no smoothing, the selected area will be zero-masked. If you
 % specify a certain amount of smoothing (in voxels FWHM), the selected area will
@@ -67,8 +68,8 @@ cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined f
 cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
 cfg.selection = ft_getopt(cfg, 'selection', 'outside');
 cfg.smooth    = ft_getopt(cfg, 'smooth', 'no');
-cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'yes');
-cfg.feedback  = ft_getopt(cfg, 'feedback', 'yes');
+cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'no');
+cfg.feedback  = ft_getopt(cfg, 'feedback', 'no');
 
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', {'volume', 'mesh'}, 'feedback', 'yes');
@@ -233,7 +234,7 @@ if isvolume
     mri.anatomy(remove) = tmp(remove);
   end
   
-elseif ismesh 
+elseif ismesh
   fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
   if isfield(mri, 'tri')
     [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
