@@ -73,8 +73,8 @@ cfg.feedback  = ft_getopt(cfg, 'feedback', 'yes');
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', {'volume', 'mesh'}, 'feedback', 'yes');
 
-ismri  = ft_datatype(mri, 'mri');
-ismesh = ft_datatype(mri, 'mesh');
+isvolume = ft_datatype(mri, 'volume');
+ismesh   = ft_datatype(mri, 'mesh') || ft_datatype(mri, 'source');
 
 % determine the size of the "unit" sphere in the origin and the length of the axes
 switch mri.unit
@@ -97,7 +97,7 @@ set(figHandle, 'CloseRequestFcn', @cb_close);
 % clear persistent variables to ensure fresh figure
 clear ft_plot_slice
 
-if ismri
+if isvolume
   % the volumetric data needs to be interpolated onto three orthogonal planes
   % determine a resolution that is close to, or identical to the original resolution
   [corner_vox, corner_head] = cornerpoints(mri.dim, mri.transform);
@@ -172,7 +172,7 @@ S = cfg.S;
 R = cfg.R;
 T = cfg.T;
 
-if ismri
+if isvolume
   % it is possible to convert the box to headcoordinates, but it is more efficient the other way around
   [X, Y, Z] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
   voxpos = ft_warp_apply(mri.transform, [X(:) Y(:) Z(:)]);  % voxel positions in head coordinates
@@ -203,7 +203,7 @@ if strcmp(cfg.selection, 'inside')
   remove = ~remove;
 end
 
-if ismri
+if isvolume
   if istrue(cfg.keepbrain)
     tmpcfg = [];
     tmpcfg.output = {'brain'};
