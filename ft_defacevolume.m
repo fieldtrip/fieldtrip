@@ -71,12 +71,13 @@ cfg.smooth    = ft_getopt(cfg, 'smooth', 'no');
 cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'no');
 cfg.feedback  = ft_getopt(cfg, 'feedback', 'no');
 
-% check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', {'volume', 'source'}, 'feedback', 'yes');
-
 ismri    = ft_datatype(mri, 'volume') && isfield(mri, 'anatomy');
-ismesh   = ft_datatype(mri, 'mesh');
-issource = ft_datatype(mri, 'source');
+ismesh   = isfield(mri, 'pos'); % triangles are optional
+
+if ismri
+  % check if the input data is valid for this function
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+end
 
 % determine the size of the "unit" sphere in the origin and the length of the axes
 switch mri.unit
@@ -115,7 +116,7 @@ if ismri
   anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
   
   ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
-elseif ismesh || issource
+elseif ismesh
   ft_plot_mesh(mri);
 end
 
@@ -236,26 +237,51 @@ if ismri
   end
   
 elseif ismesh
+  % determine all fields that might need to be defaced
+  fn = setdiff(fieldnames(mri), ignorefields('deface'));
+  dimord = cell(size(fn));
+  for i=1:numel(fn)
+    dimord{i} = getdimord(mri, fn{i});
+  end
+  % this applies to headshapes and meshes in general
   fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
   if isfield(mri, 'tri')
     [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
+  elseif isfield(mri, 'tet')
+    [mri.pos, mri.tet] = remove_vertices(mri.pos, mri.tet, remove);
+  elseif isfield(mri, 'hex')
+    [mri.pos, mri.hex] = remove_vertices(mri.pos, mri.hex, remove);
   else
-    mri.pos = mri.pos(remove,1:3);
+    mri.pos = mri.pos(~remove,1:3);
   end
-  if isfield(mri, 'color')
-    mri.color = mri.color(~remove,:);
-  end
-  
-elseif issource
-  fprintf('keeping %d and removing %d source positions\n', sum(remove==0), sum(remove==1));
-  if isfield(mri, 'inside')
-    % mark them as not inside
-    mri.inside(remove) = false;
-  else
-    % remove them from the mesh
-    mri.pos = mri.pos(remove,1:3);
-  end
-end
+  for i=1:numel(fn)
+    dimtok = tokenize(dimord{i}, '_');
+    % do some sanity checks
+    if any(strcmp(dimtok, '{pos}'))
+      error('not supported');
+    end
+    if numel(dimtok)>5
+      error('too many dimensions');
+    end
+    % remove the same positions from each matching dimension
+    if numel(dimtok)>0 && strcmp(dimtok{1}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(~remove,:,:,:,:);
+    end
+    if numel(dimtok)>1 && strcmp(dimtok{2}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,~remove,:,:,:);
+    end
+    if numel(dimtok)>2 && strcmp(dimtok{3}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,~remove,:,:);
+    end
+    if numel(dimtok)>3 && strcmp(dimtok{4}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,:,~remove,:);
+    end
+    if numel(dimtok)>4 && strcmp(dimtok{5}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,:,:,~remove);
+    end
+  end % for fn
+  mri = removefields(mri, {'dim', 'transform'}); % these fields don't apply any more
+end % ismesh
 
 % remove the temporary fields from the configuration, keep the rest for provenance
 cfg = removefields(cfg, {'R', 'S', 'T'});
