@@ -86,8 +86,13 @@ for i=1:numel(functionlist)
   filelist{i} = which(functionlist{i});
 end
 
+fprintf('considering %d test scripts for execution\n', numel(filelist));
+
 %% make a subselection based on the filters
 sel = true(size(filelist));
+mem = zeros(size(filelist));
+tim = zeros(size(filelist));
+
 for i=1:numel(filelist)
   fid = fopen(filelist{i}, 'rt');
   str = fread(fid, [1 inf], 'char=>char');
@@ -111,26 +116,30 @@ for i=1:numel(filelist)
     [s, e] = regexp(line{k}, '% WALLTIME.*', 'once', 'start', 'end');
     if ~isempty(s)
       s = s + length('% WALLTIME'); % strip this part
-      walltime = str2walltime(line{k}(s:e));
-      if walltime>maxwalltime
-        sel(i) = false;
-      end
+      tim(i) = str2walltime(line{k}(s:e));
     end
     
     [s, e] = regexp(line{k}, '% MEM.*', 'once', 'start', 'end');
     if ~isempty(s)
       s = s + length('% MEM'); % strip this part
-      mem = str2mem(line{k}(s:e));
-      if mem>maxmem
-        sel(i) = false;
-      end
+      mem(i) = str2mem(line{k}(s:e));
     end
   end % for each line
   
 end % for each function/file
 
+fprintf('%3d scripts do not meet the requirements for dependencies\n', sum(~sel));
+fprintf('%3d scripts do not meet the requirements for memory\n',       sum(mem>maxmem));
+fprintf('%3d scripts do not meet the requirements for walltime \n',    sum(tim>maxwalltime));
+
+% remove test scripts that exceed walltime or memory
+sel(tim>maxwalltime) = false;
+sel(mem>maxmem)      = false;
+
 % make the subselection of functions to test
 functionlist = functionlist(sel);
+
+fprintf('executing %d test scripts\n', numel(functionlist));
 
 %% run over all tests
 for i=1:numel(functionlist)
