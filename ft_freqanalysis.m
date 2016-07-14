@@ -39,18 +39,17 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrials = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.keeptapers = 'yes' or 'no', return individual tapers or average (default = 'no')
-%   cfg.pad        = number, 'maxperlen', or 'nextpow2' (default), length
+%   cfg.pad        = number, 'nextpow2', or 'maxperlen' (default), length
 %                   in seconds to which the data can be padded out. The
 %                   padding will determine your spectral resolution. If you
 %                   want to compare spectra from data pieces of different
 %                   lengths, you should use the same cfg.pad for both, in
 %                   order to spectrally interpolate them to the same
-%                   spectral resolution.  The new default option,
-%                   'nextpow2' uses the built-in Matlab function of the
-%                   same name to round the maximum trial length up to the
-%                   next power of 2.  By using that amount of padding, the
-%                   FFT can be computed more efficiently in case
-%                   'maxperlen' has a large prime factor sum.
+%                   spectral resolution.  The new option 'nextpow2' rounds
+%                   the maximum trial length up to the next power of 2.  By
+%                   using that amount of padding, the FFT can be computed
+%                   more efficiently in case 'maxperlen' has a large prime
+%                   factor sum.
 %   cfg.padtype     = string, type of padding (default 'zero', see
 %                      ft_preproc_padding)
 %   cfg.polyremoval = number (default = 0), specifying the order of the
@@ -94,7 +93,12 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                     you should specify only the channels in cfg.channel.
 %   cfg.t_ftimwin  = vector 1 x numfoi, length of time window (in seconds)
 %   cfg.toi        = vector 1 x numtoi, the times on which the analysis
-%                    windows should be centered (in seconds)
+%                    windows should be centered (in seconds), or a string
+%                    such as '50%' or 'all' (default).  Both string options
+%                    use all timepoints available in the data, but 'all'
+%                    centers a spectral estimate on each sample, whereas
+%                    the percentage specifies the degree of overlap between
+%                    the shortest time windows from cfg.t_ftimwin.
 %
 %  WAVELET
 %   WAVELET performs time-frequency analysis on any time series trial data
@@ -257,19 +261,20 @@ switch cfg.method
         error('you must specify a smoothing parameter with taper = dpss');
       end
     end
-    cfg = ft_checkconfig(cfg, 'required', 'toi');
-    if ischar(cfg.toi) && strcmp(cfg.toi, 'all')
-      % do an educated guess with respect to the requested time bins
+    cfg = ft_checkconfig(cfg, 'required', {'toi','t_ftimwin'});
+    if ischar(cfg.toi)
       begtim  = min(cellfun(@min,data.time));
       endtim  = max(cellfun(@max,data.time));
-      if isfield(cfg,'t_ftimwin') && ~isempty(cfg.t_ftimwin)
-        % time shift = minimum time window length
-        cfg.toi = linspace(begtim,endtim,round((endtim-begtim)./min(cfg.t_ftimwin))+1);
-      else % old default:  time shift = minimum time between samples (i.e., 1 / sampling frequency)
-        cfg.toi = linspace(begtim,endtim,round((endtim-begtim)./mean(diff(data.time{1})))+1);
+      if strcmp(cfg.toi, 'all') % each data sample gets a time window
+        cfg.toi = linspace(begtim, endtim, round((endtim-begtim) ./ ...
+          mean(diff(data.time{1})))+1);
+      elseif strcmp(cfg.toi(end), '%') % percent overlap between smallest time windows
+        overlap = str2double(cfg.toi(1:(end-1)))/100;
+        cfg.toi = linspace(begtim, endtim, round((endtim-begtim) ./ ...
+          (overlap * min(cfg.t_ftimwin))) + 1);
+      else
+        error('cfg.toi should be either a numeric vector or a string: can be ''all'' or a percentage (e.g., ''50%'')');
       end
-    elseif ischar(cfg.toi)
-      error('cfg.toi should be either a numeric vector, or can be ''all''');
     end
 
   case 'mtmfft'
@@ -317,7 +322,12 @@ switch cfg.method
 end
 
 % set all the defaults
-cfg.pad       = ft_getopt(cfg, 'pad',       'nextpow2');
+cfg.pad       = ft_getopt(cfg, 'pad',       []);
+if isempty(cfg.pad)
+  warning('Default cfg.pad = ''maxperlen'' can run slowly.')
+  disp('Consider using cfg.pad = ''nextpow2'' for more efficient FFT computation.')
+  cfg.pad = 'maxperlen';
+end
 cfg.padtype   = ft_getopt(cfg, 'padtype',   'zero');
 cfg.output    = ft_getopt(cfg, 'output',    'pow');
 cfg.calcdof   = ft_getopt(cfg, 'calcdof',   'no');
