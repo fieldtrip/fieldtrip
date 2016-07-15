@@ -54,5 +54,4 @@ if ischar(fieldtripversion)
 end
 
 options = weboptions('ContentType','json'); % this returns the results as MATLAB structure
-results = webread('http://dashboard.fieldtriptoolbox.org/test', options);
-
+results = webread('http://dashboard.fieldtriptoolbox.org/api', options);
