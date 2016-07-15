@@ -7,7 +7,7 @@ function status = ft_test_run(varargin)
 % Use as
 %   ft_test_run functionname
 %
-% Additional arguments are specified as key-value pairs and can include
+% Additional optional arguments are specified as key-value pairs and can include
 %   dependency   = string
 %   maxmem       = string
 %   maxwalltime  = string
