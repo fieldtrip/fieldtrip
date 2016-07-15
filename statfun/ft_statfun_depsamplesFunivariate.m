@@ -84,7 +84,7 @@ end
 % perform some checks on the design
 nuospercond=zeros(nconds,1);
 for condindx=1:nconds
-  nuospercond(condindx)=length(find(design(cfg.ivar,:)==condindx));
+  nuospercond(condindx)=sum(design(cfg.ivar,:)==condindx);
 end;
 if sum(nuospercond)<size(design,2) | nuospercond~=(nuospercond(1)*ones(nconds,1))
   error('Invalid specification of the design array.');
@@ -114,28 +114,47 @@ if strcmp(cfg.computestat,'yes')
   % the replications of the second condition on the second nunits
   % positions, etc.
   poslabelsperunit=reshape(poslabelsperunit,1,nrepl);
-  s.stat=zeros(nsmpls,1);
-  for smplindx=1:nsmpls
-    datonesmpl=reshape(dat(smplindx,poslabelsperunit),nunits,nconds);
+  %s.stat=zeros(nsmpls,1);
+  %for smplindx=1:nsmpls
+  %  datonesmpl=reshape(dat(smplindx,poslabelsperunit),nunits,nconds);
+  %  
+  %  Ysub = mean(datonesmpl,2);
+  %  Yfac = mean(datonesmpl,1);
+  %  
+  %  % computing sums of squares
+  %  meanYsub = mean(Ysub);
+  %  SStot = sum((datonesmpl(:)-meanYsub).^2);
+  %  SSsub = nconds * sum(sum((Ysub-meanYsub).^2));
+  %  SSfac = nunits * sum(sum((Yfac-meanYsub).^2));
+  %  SSerr = SStot - SSsub - SSfac;
+  %  
+  %  % mean sum of squares for factor levels
+  %  df  = nconds - 1;
+  %  dfe = size(datonesmpl(:),1)  - nunits - df;
+  %  
+  %  MSfac = SSfac/df;
+  %  MSerr = SSerr/dfe;
+  %  
+  %  s.stat(smplindx) = MSfac/MSerr;% F-statistic
+  %end
+  dat  = reshape(dat(:,poslabelsperunit),[nsmpls nunits nconds]);
+  Ysub = mean(dat,3);
+  Yfac = mean(dat,2);
+  
+  meanYsub = mean(Ysub,2);
+  SStot    = sum(sum((dat-meanYsub(:,ones(1,nunits),ones(1,nconds))).^2,3),2);
+  SSsub    = nconds * sum((Ysub-meanYsub(:,ones(1,nunits))).^2,2);
+  SSfac    = nunits * sum((Yfac-meanYsub(:,1,ones(1,nconds))).^2,3);
+  SSerr    = SStot - SSsub - SSfac;
+
+  % mean sum of squares for factor levels
+  df  = nconds - 1;
+  dfe = numel(dat(1,:,:)) - nunits - df;
     
-    Ysub = mean(datonesmpl,2);
-    Yfac = mean(datonesmpl,1);
-    
-    % computing sums of squeares
-    SStot = sum(sum((datonesmpl-mean(Ysub)).^2));
-    SSsub = nconds * sum(sum((Ysub-mean(Ysub)).^2));
-    SSfac = nunits * sum(sum((Yfac-mean(Ysub)).^2));
-    SSerr = SStot - SSsub - SSfac;
-    
-    % mean sum of squares for factor levels
-    df  = nconds - 1;
-    dfe = size(datonesmpl(:),1)  - nunits - df;
-    
-    MSfac = SSfac/df;
-    MSerr = SSerr/dfe;
-    
-    s.stat(smplindx) = MSfac/MSerr;% F-statistic
-  end
+  MSfac = SSfac/df;
+  MSerr = SSerr/dfe;
+  
+  s.stat = MSfac./MSerr; % F-statistic;
 end;
 
 if strcmp(cfg.computecritval,'yes')
