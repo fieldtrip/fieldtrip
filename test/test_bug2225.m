@@ -1,7 +1,11 @@
 function test_bug2225
+
+% WALLTIME 00:10:00
+% MEM 1gb
+
 tic
 for i=1:10000
-issue_warning
+  issue_warning
 end % for
 toc
 

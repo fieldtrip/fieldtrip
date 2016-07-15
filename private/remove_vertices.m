@@ -21,9 +21,10 @@ numb(keeppos) = 1:length(keeppos);
 
 % look for triangles referring to removed vertices
 removetri = false(ntri,1);
-removetri(ismember(tri(:,1), removepos)) = true;
-removetri(ismember(tri(:,2), removepos)) = true;
-removetri(ismember(tri(:,3), removepos)) = true;
+for i=1:size(tri,2)
+  % loop over all columns of tri, this also works for tet and hex
+  removetri(ismember(tri(:,i), removepos)) = true;
+end
 
 % remove the vertices and triangles
 posR = pos(keeppos, :);

@@ -1,15 +1,13 @@
-function status = ft_test(varargin)
+function status = ft_test_run(varargin)
 
-% FT_TEST tests whether a FieldTrip function runs without problems as indicated by an
-% explicit error and posts the results on the FieldTrip dashboard.
+% FT_TEST_RUN executes selected FieldTrip test scripts. It checks whether each test
+% script runs without problems as indicated by an explicit error and posts the
+% results on the FieldTrip dashboard.
 %
 % Use as
-%   ft_test functionname
-% where the function to be tested is passed as string. You can also use the
-% functional form and call it like this
-%   ft_test('functionname')
+%   ft_test_run functionname
 %
-% When using the functional form, you can specify additional arguments as key-value pairs
+% Additional arguments are specified as key-value pairs and can include
 %   dependency   = string
 %   maxmem       = string
 %   maxwalltime  = string
@@ -17,7 +15,7 @@ function status = ft_test(varargin)
 % Test functions should not require any input arguments.
 % Output arguments of the test function will not be considered.
 %
-% See also FT_VERSION, FT_TRACKUSAGE
+% See also FT_TEST_RESULT, FT_VERSION
 
 % Copyright (C) 2016, Robert oostenveld
 %
@@ -86,8 +84,13 @@ for i=1:numel(functionlist)
   filelist{i} = which(functionlist{i});
 end
 
+fprintf('considering %d test scripts for execution\n', numel(filelist));
+
 %% make a subselection based on the filters
 sel = true(size(filelist));
+mem = zeros(size(filelist));
+tim = zeros(size(filelist));
+
 for i=1:numel(filelist)
   fid = fopen(filelist{i}, 'rt');
   str = fread(fid, [1 inf], 'char=>char');
@@ -111,26 +114,30 @@ for i=1:numel(filelist)
     [s, e] = regexp(line{k}, '% WALLTIME.*', 'once', 'start', 'end');
     if ~isempty(s)
       s = s + length('% WALLTIME'); % strip this part
-      walltime = str2walltime(line{k}(s:e));
-      if walltime>maxwalltime
-        sel(i) = false;
-      end
+      tim(i) = str2walltime(line{k}(s:e));
     end
     
     [s, e] = regexp(line{k}, '% MEM.*', 'once', 'start', 'end');
     if ~isempty(s)
       s = s + length('% MEM'); % strip this part
-      mem = str2mem(line{k}(s:e));
-      if mem>maxmem
-        sel(i) = false;
-      end
+      mem(i) = str2mem(line{k}(s:e));
     end
   end % for each line
   
 end % for each function/file
 
+fprintf('%3d scripts do not meet the requirements for dependencies\n', sum(~sel));
+fprintf('%3d scripts do not meet the requirements for memory\n',       sum(mem>maxmem));
+fprintf('%3d scripts do not meet the requirements for walltime \n',    sum(tim>maxwalltime));
+
+% remove test scripts that exceed walltime or memory
+sel(tim>maxwalltime) = false;
+sel(mem>maxmem)      = false;
+
 % make the subselection of functions to test
 functionlist = functionlist(sel);
+
+fprintf('executing %d test scripts\n', numel(functionlist));
 
 %% run over all tests
 for i=1:numel(functionlist)
@@ -152,13 +159,13 @@ for i=1:numel(functionlist)
   close all
   
   result = [];
-  result.matlabVersion    = version('-release');
-  result.fieldtripVersion = ftver;
+  result.matlabversion    = version('-release');
+  result.fieldtripversion = ftver;
   result.hostname         = gethostname;
   result.user             = getusername;
   result.result           = status;
-  result.runTime          = runtime;
-  result.functionName     = functionlist{i};
+  result.runtime          = runtime;
+  result.functionname     = functionlist{i};
   
   options = weboptions('MediaType','application/json');
   webwrite('http://dashboard.fieldtriptoolbox.org/test', result, options);
