@@ -56,7 +56,7 @@ function [channel] = ft_channelselection(desired, datachannel, senstype)
 
 % Copyright (C) 2003-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -170,7 +170,7 @@ labelnirs   = datachannel(~cellfun(@isempty, regexp(datachannel, sprintf('%s%s',
 
 % use regular expressions to deal with the wildcards
 labelreg = false(size(datachannel));
-findreg = [];
+findreg  = [];
 for i=1:length(channel)
   if length(channel{i}) < 1
       continue;
@@ -185,9 +185,8 @@ for i=1:length(channel)
   lreg = ~cellfun(@isempty, regexp(datachannel, rexp));
   if any(lreg)
     labelreg = labelreg | lreg;  
-    findreg  = [findreg i];
-  end
-  
+    findreg  = [findreg; i];
+  end  
 end
 
 if ~isempty(findreg)
@@ -292,7 +291,7 @@ switch senstype
     % use an external helper function to define the list with EEG channel names
     labeleeg = ft_senslabel(ft_senstype(datachannel));
   
-  case {'itab153'}
+  case {'itab153' 'itab28' 'itab28_old'}
     % all itab MEG channels start with MAG
     labelmeg = datachannel(strncmp('MAG', datachannel, length('MAG')));
 

@@ -37,25 +37,25 @@ for i=1:size(optarg,1)
   vol{1} = ft_headmodel_concentricspheres(geom.bnd,arg{:});
 
   % old way:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.headshape = geom.bnd;
   vol{2} = ft_prepare_concentricspheres(tmpcfg);
   vol{2} = rmfield(vol{2},'unit');
   
   % new way - high level:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'concentricspheres';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd);
   vol{3} = rmfield(vol{3},'unit');
   
   % old way, one sphere:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.headshape = geom.bnd;
   vol{4} = ft_prepare_concentricspheres(tmpcfg);
   vol{4} = rmfield(vol{4},'unit');
   
   % new way - high level, one sphere:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'concentricspheres';
   vol{5} = ft_prepare_headmodel(tmpcfg,geom.bnd);
   vol{5} = rmfield(vol{5},'unit');

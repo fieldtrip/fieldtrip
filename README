@@ -1,4 +1,4 @@
-FieldTrip is a MATLAB toolbox for MEG and EEG analysis that is being
+FieldTrip is the MATLAB toolbox for MEG and EEG analysis that is being
 developed at the Donders Institute for Brain, Cognition and Behaviour
 together with collaborating institutes.
 
@@ -12,7 +12,7 @@ high-level functions that you can use to construct your own analysis
 protocol in MATLAB. Furthermore, it easily allows developers to
 incorporate low-level algorithms for new EEG/MEG analysis methods.
 
-For more information please visit http://fieldtriptoolbox.org
+For more information please visit http://www.fieldtriptoolbox.org
 
 The FieldTrip software is free but copyrighted software, distributed
 under the terms of the GNU General Public Licence as published by

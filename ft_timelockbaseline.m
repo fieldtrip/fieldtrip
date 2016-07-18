@@ -28,7 +28,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -46,18 +46,21 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar timelock
+ft_preamble provenance timelock
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -128,10 +131,10 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
   % update the configuration
   cfg.baseline(1) = timelock.time(tbeg);
   cfg.baseline(2) = timelock.time(tend);
-  
+
    for k = 1:numel(cfg.parameter)
     par = cfg.parameter{k};
-  
+
     % this if-statement is just there to give more specific text output
     if isequal(par, 'trial')
       fprintf('applying baseline correction on each individual trial\n');
@@ -170,7 +173,7 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
       timelock = rmfield(timelock, 'cov');
     end
    end
-  
+
 end % ~strcmp(cfg.baseline, 'no')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -185,8 +188,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous timelock
-ft_postamble history timelock
-ft_postamble savevar timelock
-
+ft_postamble previous   timelock
+ft_postamble provenance timelock
+ft_postamble history    timelock
+ft_postamble savevar    timelock

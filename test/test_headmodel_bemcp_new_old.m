@@ -38,12 +38,12 @@ for i=1:size(optarg,1)
   vol{1} = ft_headmodel_bemcp(geom.bnd,arg{:});
 
   % old way:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'bemcp';
   vol{2} = ft_prepare_bemmodel(tmpcfg,geom);
   
   % new way - high level:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'bem_cp';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd);
 

@@ -21,16 +21,16 @@ function [cfg] = ft_layoutplot(cfg, data)
 % created based on the specification of an electrode of gradiometer file.
 %
 % You can specify either one of the following configuration options
-%   cfg.layout      filename containg the layout
-%   cfg.rotate      number, rotation around the z-axis in degrees (default = [], which means automatic)
-%   cfg.projection  string, 2D projection method can be 'stereographic', 'ortographic', 'polar', 'gnomic' or 'inverse' (default = 'orthographic')
-%   cfg.elec        structure with electrode positions, or
-%   cfg.elecfile    filename containing electrode positions
-%   cfg.grad        structure with gradiometer definition, or
-%   cfg.gradfile    filename containing gradiometer definition
-%   cfg.output      filename to which the layout will be written (default = [])
-%   cfg.montage     'no' or a montage structure (default = 'no')
-%   cfg.image       filename, use an image to construct a layout (e.g. usefull for ECoG grids)
+%   cfg.layout      = filename containg the layout
+%   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
+%   cfg.projection  = string, 2D projection method can be 'stereographic', 'ortographic', 'polar', 'gnomic' or 'inverse' (default = 'orthographic')
+%   cfg.elec        = structure with electrode definition
+%   cfg.grad        = structure with gradiometer definition
+%   cfg.elecfile    = filename containing electrode definition
+%   cfg.gradfile    = filename containing gradiometer definition
+%   cfg.output      = filename to which the layout will be written (default = [])
+%   cfg.montage     = 'no' or a montage structure (default = 'no')
+%   cfg.image       = filename, use an image to construct a layout (e.g. usefull for ECoG grids)
 %
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
@@ -54,7 +54,7 @@ function [cfg] = ft_layoutplot(cfg, data)
 
 % Copyright (C) 2006-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -72,18 +72,21 @@ function [cfg] = ft_layoutplot(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -104,10 +107,10 @@ end
 
 % otherwise create the layout structure
 if isempty(lay)
-  if nargin < 2
-    lay = ft_prepare_layout(cfg);
-  else
+  if hasdata
     lay = ft_prepare_layout(cfg, data);
+  else
+    lay = ft_prepare_layout(cfg);
   end
 end
 
@@ -118,14 +121,14 @@ figure;
 
 % set the figure window title
 funcname = mfilename();
-if nargin < 2
-  if isfield(cfg, 'inputfile')
+if hasdata
+  if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
     dataname = cfg.inputfile;
   else
-    dataname = [];
+    dataname = inputname(2);
   end
 else
-  dataname = inputname(2);
+  dataname = [];
 end
 
 if ~isempty(dataname)
@@ -160,7 +163,7 @@ end
 ft_plot_lay(lay, 'point', true, 'box', true, 'label', true, 'mask', true, 'outline', true);
 
 % the following code can be used to verify a bipolar montage, given the
-% layout of the monopolar channels 
+% layout of the monopolar channels
 if isfield(cfg, 'montage') && ~isempty(cfg.montage)
   fprintf('plotting an arrow for each of the bipolar electrode pairs\n');
   % the arrow begins at the +1 electrode
@@ -198,4 +201,3 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
-

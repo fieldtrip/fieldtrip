@@ -1,9 +1,8 @@
 function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 
 % FT_SPIKETRIGGEREDSPECTRUM_STAT computes phase-locking statistics for spike-LFP
-% phases. These contain the PPC statistics published in Vinck et al. 2010
-% (Neuroimage) and Vinck et al. 2011 (Journal of Computational
-% Neuroscience).
+% phases. These contain the PPC statistics according to Vinck et al. 2010 (Neuroimage)
+% and Vinck et al. 2011 (Journal of Computational Neuroscience).
 %
 % Use as:
 %   [stat] = ft_spiketriggeredspectrum_stat(cfg, spike)
@@ -68,18 +67,34 @@ function [freq] = ft_spiketriggeredspectrum_stat(cfg,spike)
 %                   'all' (default)
 %
 % Main outputs:
-%     freq.nspikes                    =  nChancmb-by-nFreqs-nTimepoints number
-%                                        of spikes used to compute stat
-%     freq.dimord                     = 'chan_freq_time'
-%     freq.labelcmb                   =  nChancmbs cell array with spike vs
-%                                        LFP labels
-%     freq.(cfg.method)               =  nChancmb-by-nFreqs-nTimepoints  statistic
-%     freq.freq                       =  1xnFreqs array of frequencies
-%     freq.nspikes                    =  number of spikes used to compute
+%   stat.nspikes                    =  nChancmb-by-nFreqs-nTimepoints number
+%                                      of spikes used to compute stat
+%   stat.dimord                     = 'chan_freq_time'
+%   stat.labelcmb                   =  nChancmbs cell array with spike vs
+%                                      LFP labels
+%   stat.(cfg.method)               =  nChancmb-by-nFreqs-nTimepoints  statistic
+%   stat.freq                       =  1xnFreqs array of frequencies
+%   stat.nspikes                    =  number of spikes used to compute
 %
-% Freq can be plotted using ft_singleplotTFR or ft_multiplotTFR
+% The output stat structure can be plotted using ft_singleplotTFR or ft_multiplotTFR.
 
-%   Copyright (c) Martin Vinck (2012)
+% Copyright (C) 2012, Martin Vinck
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
@@ -118,7 +133,7 @@ cfg = ft_checkopt(cfg, 'trials', {'char', 'double', 'logical'});
 cfg = ft_checkopt(cfg, 'timwin', {'double', 'char'}); 
 cfg = ft_checkopt(cfg, 'winstepsize', {'double'}); 
 
-cfg = ft_checkconfig(cfg, 'allowed', {'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'avgoverchan', 'foi', 'trials', 'timwin', 'winstepsize', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'method', 'channel', 'spikechannel', 'latency', 'spikesel', 'avgoverchan', 'foi', 'trials', 'timwin', 'winstepsize'});
 
 % collect channel information
 cfg.channel        = ft_channelselection(cfg.channel, spike.lfplabel);

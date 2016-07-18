@@ -10,10 +10,12 @@ function [event] = read_bucn_nirsevent(filename)
 %
 % Use as
 %   [event] = read_bucn_nirshdr(filename)
+%
+% See also READ_BUCN_NIRSHDR, READ_BUCN_NIRSDATA
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

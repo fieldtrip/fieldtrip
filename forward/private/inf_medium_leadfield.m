@@ -1,4 +1,4 @@
-function [lf] = inf_medium_leadfield(rd, pnt, cond);
+function [lf] = inf_medium_leadfield(rd, pnt, cond)
 
 % INF_MEDIUM_LEADFIELD calculate the infinite medium leadfield
 % on positions pnt for dipole position R and conductivity cond
@@ -7,7 +7,7 @@ function [lf] = inf_medium_leadfield(rd, pnt, cond);
 
 % Copyright (C) 1998, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

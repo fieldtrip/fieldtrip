@@ -48,7 +48,7 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 % Copyright (C) 2004-2006, Pascal Fries & Jan-Mathijs Schoffelen, F.C. Donders Centre
 % Copyright (C) 2010, Jan-Mathijs Schoffelen, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -64,18 +64,21 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar freq
+ft_preamble provenance freq
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -130,9 +133,19 @@ freq = ft_selectdata(tmpcfg, freq);
 % restore the provenance information
 [cfg, freq] = rollback_provenance(cfg, freq);
 
-% FIXME this is using the old selectdata implementation
 if jckflg,
-  freq = ft_selectdata(freq, 'jackknife', 1);
+  % the data is 'sparsewithpow', so it contains a powspctrm and optionally a crsspctrm
+  % the checking of a 'rpt' is handled above, so it can be assumed that the 'rpt' is the
+  % first dimension
+  nrpt           = size(freq.powspctrm,1);
+  sumpowspctrm   = sum(freq.powspctrm,1);
+  freq.powspctrm = (sumpowspctrm(ones(nrpt,1),:,:,:,:) - freq.powspctrm)./(nrpt-1);
+  clear sumpowspctrm;
+  if isfield(freq, 'crsspctrm')
+    sumcrsspctrm   = sum(freq.crsspctrm,1);
+    freq.crsspctrm = (sumcrsspctrm(ones(nrpt,1),:,:,:,:) - freq.crsspctrm)./(nrpt-1);
+    clear sumcrsspctrm;
+  end
 end
 
 if varflg,
@@ -150,13 +163,13 @@ if varflg,
     outssq = outssq + tmp.^2;
   end
   ft_progress('close');
-  
+
   if jckflg,
     bias = (n-1).^2;
   else
     bias = 1;
   end
-  
+
   powspctrm    = outsum./n;
   powspctrmsem = sqrt(bias.*(outssq - (outsum.^2)./n)./(n - 1)./n);
 elseif keepflg
@@ -201,11 +214,11 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous freq
 
 % rename the output variable to accomodate the savevar postamble
 freq = output;
 
-ft_postamble history freq
-ft_postamble savevar freq
+ft_postamble provenance freq
+ft_postamble history    freq
+ft_postamble savevar    freq

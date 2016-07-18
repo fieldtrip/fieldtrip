@@ -3,7 +3,7 @@ function test_warning_once
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-warning_once('-clear');
+ft_warning('-clear');
 
 warning1 = 'hululu';
 warning2 = 'aloah hey';
@@ -15,7 +15,7 @@ for i=1:2
   if numel(w1size)~=2 ||  numel(w2size)~=2
     error('too few warnings thrown at iteration %d', i);
   end
-  warning_once('-clear');
+  ft_warning('-clear');
 end
 
 [output] = evalc(['warning_caller(warning1, warning2)']);
@@ -48,14 +48,14 @@ end
 function warning_caller(warning1, warning2)
 
 for i=1:10
-  warning_once(warning1);
-  warning_once('FieldTrip:TEST', warning2);
+  ft_warning(warning1);
+  ft_warning('FieldTrip:TEST', warning2);
 end
 
 % these warnings should be thrown now !again!
 for i=1:10
-  warning_once(warning1);
-  warning_once('FieldTrip:TEST', warning2);
+  ft_warning(warning1);
+  ft_warning('FieldTrip:TEST', warning2);
 end
 
 end

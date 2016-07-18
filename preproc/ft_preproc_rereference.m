@@ -1,4 +1,4 @@
-function [dat, ref] = ft_preproc_rereference(dat, refchan)
+function [dat, ref] = ft_preproc_rereference(dat, refchan, method)
 
 % FT_PREPROC_REREFERENCE computes the average reference over all EEG channels
 % or rereferences the data to the selected channels
@@ -8,6 +8,7 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   refchan    vector with indices of the new reference channels
+%   method     string, can be 'avg' or 'median'
 %
 % If the new reference channel is not specified, the data will be
 % rereferenced to the average of all channels.
@@ -16,7 +17,7 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan)
 
 % Copyright (C) 1998-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,9 +42,16 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan)
 if nargin<2 || isempty(refchan) || (ischar(refchan) && strcmp(refchan, 'all'))
   refchan = 1:Nchans;
 end
+if nargin<3 || isempty(method)
+  method = 'avg';
+end
 
 % compute the average value over the reference channels
-ref = mean(dat(refchan,:), 1);
+if strcmp(method, 'avg')
+    ref = mean(dat(refchan,:), 1);
+elseif strcmp(method, 'median')
+    ref = median(dat(refchan,:), 1);
+end
 
 % apply the new reference to the data
 for chan=1:Nchans

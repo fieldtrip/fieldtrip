@@ -46,7 +46,7 @@ function [granger, v, n] = ft_connectivity_granger(H, Z, S, varargin)
 %
 % Copyright (C) 2009-2013, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -288,7 +288,7 @@ case 'instantaneous'
         outssq(icross2,:,:) = outssq(icross2,:,:) + reshape((log(numer./denom)).^2, [1 siz(3:end)]);
       end
     end
-  elseif iscell(powindx)
+  elseif issquare && iscell(powindx)
     % blockwise granger
     % H = transfer function nchan x nchan x nfreq
     % Z = noise covariance  nchan x nchan
@@ -299,6 +299,8 @@ case 'instantaneous'
   elseif isstruct(powindx)
     %blockwise conditional
     error('blockwise conditional instantaneous causality is not implemented'); 
+  else
+    error('not implemented');
   end
   
 case 'total'
@@ -345,8 +347,45 @@ case 'total'
       end
     end
   elseif issquare && iscell(powindx)
-    % blockwise granger
-    error('total interdependence is not implemented for blockwise factorizations');
+    % blockwise total interdependence
+    
+    % S = crosspectrum      nchan x nchan x nfreq
+    % powindx{k} is a list of indices for block k
+    
+    nblock = numel(powindx);
+    n      = size(S,1);
+    nfreq  = size(S,4);
+    
+    outsum = zeros(nblock,nblock,nfreq);
+    outssq = zeros(nblock,nblock,nfreq);
+    
+    for k = 1:nblock
+      for m = (k+1):nblock
+        indx  = [powindx{k}(:);powindx{m}(:)];
+        n1    = numel(powindx{k});
+        n2    = numel(powindx{m});
+        ntot  = n1+n2;
+        indx1 = 1:n1;
+        indx2 = (n1+1):ntot;
+         
+        for kk = 1:n
+          for jj = 1:nfreq
+            Sj = reshape(S(kk,indx,indx,jj), [ntot ntot]);
+            num1 = abs(det(Sj(indx1,indx1))); % numerical round off leads to tiny imaginary components
+            num2 = abs(det(Sj(indx2,indx2))); % numerical round off leads to tiny imaginary components
+            num  = num1.*num2;
+            denom = abs(det(Sj));
+                    
+            outsum(m,k,jj) = log( num./denom )    + outsum(m,k,jj);
+            outsum(k,m,jj) = log( num./denom )    + outsum(k,m,jj);
+            outssq(m,k,jj) = log( num./denom ).^2 + outssq(m,k,jj);
+            outssq(k,m,jj) = log( num./denom ).^2 + outssq(k,m,jj);
+          end
+        end
+        
+      end
+    end
+    
   elseif issquare && isstruct(powindx)
     %blockwise conditional
     error('blockwise conditional total interdependence is not implemented'); 

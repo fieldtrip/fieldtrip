@@ -1,4 +1,4 @@
-function [data, mri, grid]=nutmeg2fieldtrip(cfg,fileorstruct)
+function [data, mri, grid] = nutmeg2fieldtrip(cfg,fileorstruct)
 
 % NUTMEG2FIELDTRIP converts from NUTMEG either a sensor data structure
 % ('nuts') to a valid FieldTrip 'raw' structure (plus 'grid' and 'mri' if
@@ -30,7 +30,7 @@ function [data, mri, grid]=nutmeg2fieldtrip(cfg,fileorstruct)
 
 % Copyright (C) 2011, Johanna Zumer
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,14 +48,17 @@ function [data, mri, grid]=nutmeg2fieldtrip(cfg,fileorstruct)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
-ft_preamble callinfo
-ft_preamble trackconfig
+ft_preamble init
 ft_preamble debug
+ft_preamble provenance
+ft_preamble trackconfig
 
 if ~isstruct(fileorstruct) && exist(fileorstruct,'file')
   structin=load(fileorstruct);
@@ -120,16 +123,16 @@ if nutsorbeam==1
   raw.label=structin.meg.sensor_labels;
   raw.grad.label=structin.meg.sensor_labels;
   if isfield(structin.meg,'refSensorOrient')
-    raw.grad.ori=[structin.meg.sensorOrient; structin.meg.refSensorOrient];
-    raw.grad.pnt=[structin.meg.sensorCoord; structin.meg.refSensorCoord];
+    raw.grad.coilori=[structin.meg.sensorOrient; structin.meg.refSensorOrient];
+    raw.grad.coilpos=[structin.meg.sensorCoord; structin.meg.refSensorCoord];
   else
-    raw.grad.ori=[structin.meg.sensorOrient];
-    raw.grad.pnt=[structin.meg.sensorCoord];
+    raw.grad.coilori=[structin.meg.sensorOrient];
+    raw.grad.coilpos=[structin.meg.sensorCoord];
   end
-  if size(raw.grad.ori,1)<2*size(structin.meg.data,2)
-    raw.grad.ori=cat(1,raw.grad.ori,raw.grad.ori);
+  if size(raw.grad.coilori,1)<2*size(structin.meg.data,2)
+    raw.grad.coilori=cat(1,raw.grad.coilori,raw.grad.coilori);
   end
-  raw.grad.pnt=reshape(permute(raw.grad.pnt,[1 3 2]),size(raw.grad.pnt,1)*size(raw.grad.pnt,3),size(raw.grad.pnt,2));
+  raw.grad.coilpos=reshape(permute(raw.grad.coilpos,[1 3 2]),size(raw.grad.coilpos,1)*size(raw.grad.coilpos,3),size(raw.grad.coilpos,2));
   if isfield(structin.meg,'chanmixMtx')
     raw.grad.tra=structin.meg.chanmixMtx{1};
   else
@@ -139,7 +142,7 @@ if nutsorbeam==1
     raw.grad.tra(:,2*size(structin.meg.data,2)+1:end)=structin.meg.Gcoef;
     warning('FIXME: should Gcoef be added regardless of structin.meg.grad_order?')
   end
-  
+
   if structin.meg.grad_order==0
     raw.grad.balance.current='none';
   elseif structin.meg.grad_order==1
@@ -149,11 +152,11 @@ if nutsorbeam==1
   elseif structin.meg.grad_order==3
     raw.grad.balance.current='G3BR';
   end
-  
-  raw.vol.o=structin.meg.lsc; % note this may include reference channels. may need to do str_match of lsc_sensor_labels with sensor_labels?
+
+  raw.headmodel.o = structin.meg.lsc; % note this may include reference channels. may need to do str_match of lsc_sensor_labels with sensor_labels?
   data=raw;
   clear raw
-  
+
 elseif nutsorbeam==2
   cfg.ftsource='old'; % 'old' way of source structure in FT
   tmp.pos=0.1*structin.voxels; % NM in CTF mm, FT in cm
@@ -238,6 +241,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble history data
-
+ft_postamble provenance
+% save the output cfg in all three output data structures
+ft_postamble history    data
+ft_postamble history    mri
+ft_postamble history    grid

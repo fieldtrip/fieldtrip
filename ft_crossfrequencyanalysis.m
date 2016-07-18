@@ -1,7 +1,6 @@
 function crossfreq = ft_crossfrequencyanalysis(cfg,freqlow,freqhigh)
 
-% FT_CROSSFREQUENCYANALYSIS performs cross-frequency analysis using various
-% algorithms
+% FT_CROSSFREQUENCYANALYSIS performs cross-frequency analysis using various algorithms
 %
 % Use as
 %   crossfreq = ft_crossfrequencyanalysis(cfg, freqlo, freqhi)
@@ -14,7 +13,7 @@ function crossfreq = ft_crossfrequencyanalysis(cfg,freqlow,freqhigh)
 %   cfg.chanhigh    selection of channels for the high frequency, see FT_CHANNELSELECTION
 %   cfg.method      'plv' - phase locking value
 %                   'mvl' - mean vector length
-%                   'mi'  - modulaiton index
+%                   'mi'  - modulation index
 %   cfg.keeptrials  string, can be 'yes' or 'no'
 %
 % To facilitate data-handling and distributed computing you can use
@@ -29,7 +28,7 @@ function crossfreq = ft_crossfrequencyanalysis(cfg,freqlow,freqhigh)
 
 % Copyright (C) 2014, Donders Centre for Cognitive Neuroimaging
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,18 +46,21 @@ function crossfreq = ft_crossfrequencyanalysis(cfg,freqlow,freqhigh)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar freqlow freqhigh
+ft_preamble provenance freqlow freqhi
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
   return
 end
@@ -69,21 +71,28 @@ end
 freqlow  = ft_checkdata(freqlow,  'datatype', 'freq', 'feedback', 'yes');
 freqhigh = ft_checkdata(freqhigh, 'datatype', 'freq', 'feedback', 'yes');
 
-cfg.chanlow    = ft_getopt(cfg, 'chanlow');
-cfg.chanhigh   = ft_getopt(cfg, 'chanlow');
-cfg.freqlow    = ft_getopt(cfg, 'chanlow');
-cfg.freqhigh   = ft_getopt(cfg, 'chanlow');
+cfg.chanlow    = ft_getopt(cfg, 'chanlow', 'all');
+cfg.chanhigh   = ft_getopt(cfg, 'chanhigh', 'all');
+cfg.freqlow    = ft_getopt(cfg, 'freqlow');
+cfg.freqhigh   = ft_getopt(cfg, 'freqhigh');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials');
 
 % make selection of frequencies and channels
-tmpcfg = keepfields(cfg, {'freqlow', 'chanlow'});
+tmpcfg = [];
+tmpcfg.channel   = cfg.chanlow;
+tmpcfg.frequency = cfg.freqlow;
 freqlow = ft_selectdata(tmpcfg, freqlow);
-[cfg, freqlow] = rollback_provenance(cfg, freqlow);
+[tmpcfg, freqlow] = rollback_provenance(cfg, freqlow);
+try, cfg.chanlow = tmpcfg.channel;   end
+try, cfg.freqlow = tmpcfg.frequency; end
 
-tmpcfg = keepfields(cfg, {'freqhigh', 'chanhigh'});
+tmpcfg = [];
+tmpcfg.channel = cfg.chanhigh;
+tmpcfg.foi     = cfg.freqhigh;
 freqhigh = ft_selectdata(tmpcfg, freqhigh);
-[cfg, freqhigh] = rollback_provenance(cfg, freqhigh);
-
+[tmpcfg, freqhigh] = rollback_provenance(cfg, freqhigh);
+try, cfg.chanhigh = tmpcfg.channel;   end
+try, cfg.freqhigh = tmpcfg.frequency; end
 
 LF = freqlow.freq;
 HF = freqhigh.freq;
@@ -94,7 +103,7 @@ nchan  = size(freqlow.fourierspctrm,2); % FIXME the dimord might be different
 % prepare the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch cfg.method
-  
+
   case 'plv'         % phase locking value
     plvdatas = zeros(ntrial,nchan,numel(LF),numel(HF)) ;
     for  i =1:nchan
@@ -105,7 +114,7 @@ switch cfg.method
       end
     end
     cfcdata  = plvdatas;
-    
+
   case  'mvl'  % mean vector length
     mvldatas = zeros(ntrial,nchan,numel(LF),numel(HF));
     for  i =1:nchan
@@ -116,7 +125,7 @@ switch cfg.method
       end
     end
     cfcdata  = mvldatas;
-    
+
   case  'mi'  %  modulation index
     nbin        = 20;                      % number of phase bin
     pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),nbin) ;
@@ -128,7 +137,7 @@ switch cfg.method
       end
     end
     cfcdata  = pacdatas;
-    
+
 end % switch method for data preparation
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,9 +145,9 @@ end % switch method for data preparation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch cfg.method
-  
+
   case 'plv'
-    
+
     if strcmp(cfg.keeptrials,'no')
       crsspctrm   = squeeze(abs(mean(cfcdata,1)));
       dimord = 'chan_freqlow_freqhigh' ;
@@ -146,9 +155,9 @@ switch cfg.method
       crsspctrm   = abs(cfcdata);
       dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
-    
+
   case  'mvl'
-    
+
     if strcmp(cfg.keeptrials,'no')
       crsspctrm   = squeeze(abs(mean(cfcdata,1)));
       dimord = 'chan_freqlow_freqhigh' ;
@@ -156,11 +165,11 @@ switch cfg.method
       crsspctrm   = abs(cfcdata);
       dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
-    
+
   case  'mi'
-    
+
     [ntrial,nchan,nlf,nhf,nbin] = size(cfcdata);
-    
+
     if strcmp(cfg.keeptrials,'yes')
       dimord = 'rpt_chan_freqlow_freqhigh' ;
       crsspctrm = zeros(ntrial,nchan,nlf,nhf);
@@ -169,7 +178,7 @@ switch cfg.method
           pac = squeeze(cfcdata(k,n,:,:,:));
           Q =ones(nbin,1)/nbin;  % uniform distribution
           mi = zeros(nlf,nhf);
-          
+
           for i=1:nlf
             for j=1:nhf
               P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));   % normalized distribution
@@ -178,20 +187,20 @@ switch cfg.method
             end
           end
           crsspctrm(k,n,:,:) = mi;
-          
+
         end
       end
-      
+
     else
       dimord = 'chan_freqlow_freqhigh' ;
       crsspctrm = zeros(nchan,nlf,nhf);
       cfcdatamean = squeeze(mean(cfcdata,1));
-      
+
       for k =1:nchan
         pac = squeeze(cfcdatamean(k,:,:,:));
         Q =ones(nbin,1)/nbin;                      % uniform distribution
         mi = zeros(nlf,nhf);
-        
+
         for i=1:nlf
           for j=1:nhf
             P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));   % normalized distribution
@@ -201,9 +210,9 @@ switch cfg.method
         end
         crsspctrm(k,:,:) = mi;
       end
-      
+
     end % if keeptrials
-    
+
 end % switch method for actual computation
 
 crossfreq.crsspctrm  = crsspctrm;
@@ -213,10 +222,10 @@ crossfreq.freqhigh   = HF;
 
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous freqlow freqhigh
-ft_postamble history crossfreq
-ft_postamble savevar crossfreq
+ft_postamble previous   freqlow freqhigh
+ft_postamble provenance crossfreq
+ft_postamble history    crossfreq
+ft_postamble savevar    crossfreq
 
 end % function
 

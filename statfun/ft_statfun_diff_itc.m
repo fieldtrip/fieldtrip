@@ -1,4 +1,4 @@
-function [s] = ft_statfun_diff_itc(cfg, dat, design)
+function [s, cfg] = ft_statfun_diff_itc(cfg, dat, design)
 
 % FT_STATFUN_DIFF_ITC computes the difference in the inter-trial
 % coherence between two conditions. The input data for this test
@@ -34,7 +34,7 @@ function [s] = ft_statfun_diff_itc(cfg, dat, design)
 
 % Copyright (C) 2008-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

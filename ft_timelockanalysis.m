@@ -18,7 +18,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %   cfg.removemean         = 'no' or 'yes' for covariance computation (default = 'yes')
 %   cfg.vartrllength       = 0, 1 or 2 (see below)
 %
-% Depending on cfg.vartrllength, variable length trials and trials with 
+% Depending on cfg.vartrllength, variable length trials and trials with
 % differences in their time axes (so even if they are of the same length, e.g. 1
 % second snippets of data cut from a single long recording) are treated differently:
 %   0 - do not accept variable length trials [default]
@@ -69,7 +69,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % Copyright (C) 2003-2006, Markus Bauer
 % Copyright (C) 2003-2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -87,18 +87,21 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble loadvar    data
+ft_preamble debug
+ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
-ft_preamble debug
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -232,7 +235,7 @@ ft_progress('init', cfg.feedback, 'averaging trials');
 for i=1:ntrial
   % fprintf('averaging trial %d of %d\n', i, ntrial);
   ft_progress(i/ntrial, 'averaging trial %d of %d\n', i, ntrial);
-  
+
   % determine whether the data in this trial can be used for all the requested computations
   switch cfg.vartrllength
     case 0
@@ -253,11 +256,11 @@ for i=1:ntrial
       % this is handled automatically by the code below
       usetrial = 1;
   end
-  
+
   if ~usetrial
     continue;
   end
-  
+
   % for average and variance
   if (begsamplatency(i) <= latency(2)) && (endsamplatency(i) >= latency(1))
     begsampl = nearest(data.time{i}, latency(1));
@@ -280,7 +283,7 @@ for i=1:ntrial
     dof(windowsel) = dof(windowsel) + 1;
     usetrial = 1; % to indicate that this trial could be used
   end
-  
+
   if strcmp(cfg.covariance, 'yes')
     begsampl = nearest(data.time{i}, cfg.covariancewindow(1));
     endsampl = nearest(data.time{i}, cfg.covariancewindow(2));
@@ -294,7 +297,7 @@ for i=1:ntrial
       covsig(i,:,:) = dat * dat';
     end
   end
-  
+
 end % for ntrial
 ft_progress('close');
 
@@ -329,9 +332,9 @@ if strcmp(cfg.covariance, 'yes')
     end
   else
     if strcmp(cfg.removemean, 'yes')
-      covsig = squeeze(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
+      covsig = shiftdim(nansum(covsig, 1)) / (sum(numcovsigsamples)-ntrial);
     else
-      covsig = squeeze(nansum(covsig, 1)) / sum(numcovsigsamples);
+      covsig = shiftdim(nansum(covsig, 1)) / sum(numcovsigsamples);
     end
   end
 end
@@ -357,12 +360,7 @@ if strcmp(cfg.covariance, 'yes')
 end
 
 % some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'};
-for i=1:length(copyfield)
-  if isfield(data, copyfield{i})
-    timelock.(copyfield{i}) = data.(copyfield{i});
-  end
-end
+timelock = copyfields(data, timelock, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
   % copy the trialinfo into the output, but not the sampleinfo
@@ -370,9 +368,9 @@ if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance timelock
 ft_postamble history    timelock
 ft_postamble savevar    timelock
-ft_postamble debug

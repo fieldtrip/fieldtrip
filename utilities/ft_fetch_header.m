@@ -4,13 +4,13 @@ function [hdr] = ft_fetch_header(data)
 % raw data structure instead of a file on disk.
 %
 % Use as
-%   [hdr] = ft_fetch_header(data)
+%   hdr = ft_fetch_header(data)
 %
 % See also FT_READ_HEADER, FT_FETCH_DATA, FT_FETCH_EVENT
 
 % Copyright (C) 2008, Esther Meeuwissen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -44,10 +44,10 @@ else
   trl = [1 sum(trllen)];
 end
 
-% fill in hdr.nChans 
+% fill in hdr.nChans
 hdr.nChans = length(data.label);
 
-% fill in hdr.label 
+% fill in hdr.label
 hdr.label = data.label;
 
 % fill in hdr.Fs (sample frequency)
@@ -61,13 +61,20 @@ hdr.nTrials     = 1;
 
 % retrieve the gradiometer and/or electrode information
 if isfield(data, 'grad')
-  hdr.grad = data.grad;  
+  hdr.grad = data.grad;
 elseif isfield(data, 'hdr') && isfield(data.hdr, 'grad')
-  hdr.grad = data.hdr.grad;  
+  hdr.grad = data.hdr.grad;
 end
 if isfield(data, 'elec')
   hdr.elec = data.elec;
 elseif isfield(data, 'hdr') && isfield(data.hdr, 'elec')
-  hdr.elec = data.hdr.elec;  
+  hdr.elec = data.hdr.elec;
 end
-    
+
+% retrieve the synchronization information
+if isfield(data, 'hdr') && isfield(data.hdr, 'FirstTimeStamp')
+  hdr.FirstTimeStamp = data.hdr.FirstTimeStamp;
+end
+if isfield(data, 'hdr') && isfield(data.hdr, 'TimeStampPerSample')
+  hdr.TimeStampPerSample = data.hdr.TimeStampPerSample;
+end

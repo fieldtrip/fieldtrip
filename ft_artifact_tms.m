@@ -6,9 +6,10 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 % Use as
 %   [cfg, artifact] = ft_artifact_tms(cfg)
 % with the configuration options
-%   cfg.dataset
-%   cfg.headerfile
-%   cfg.datafile
+%   cfg.dataset     = string with the filename
+% or
+%   cfg.headerfile  = string with the filename
+%   cfg.datafile    = string with the filename
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_tms(cfg, data)
@@ -30,7 +31,8 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 %
 % DETECT
 % The data is preprocessed (again) with the following configuration parameters,
-% which are optimal for identifying tms artifacts.
+% which are optimal for identifying tms artifacts. This acts as a wrapper
+% around ft_artifact_zvalue
 %   cfg.artfctdef.tms.derivative  = 'yes'
 %
 % Artifacts are identified by means of thresholding the z-transformed value
@@ -77,7 +79,7 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 
 % Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -95,11 +97,14 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
-ft_preamble help
+ft_preamble init
 % ft_preamble provenance is not needed because just a call to ft_artifact_zvalue
 % ft_preamble loadvar data is not needed because ft_artifact_zvalue will do this
 
@@ -113,9 +118,8 @@ cfg = ft_checkconfig(cfg, 'allowedval',{'method','detect','marker'});
 if ~isfield(cfg,'artfctdef'),                       cfg.artfctdef                   = [];        end
 if ~isfield(cfg,'method'),                          cfg.method                      = 'detect';  end
 if ~isfield(cfg.artfctdef,'tms'),                   cfg.artfctdef.tms               = [];        end
-if ~isfield(cfg.artfctdef.tms,'method'),            cfg.artfctdef.tms.method        = 'zvalue';  end
-if ~isfield(cfg,'prestim'),                         cfg.prestim                     = 0.005;  end
-if ~isfield(cfg,'poststim'),                        cfg.poststim                    = 0.010;  end
+if ~isfield(cfg,'prestim'),                         cfg.prestim                     = 0.005;     end
+if ~isfield(cfg,'poststim'),                        cfg.poststim                    = 0.010;     end
 
 if isfield(cfg.artfctdef.tms, 'artifact')
   fprintf('tms artifact detection has already been done, retaining artifacts\n');
@@ -126,13 +130,14 @@ end
 switch cfg.method
   case 'detect'
     % settings for preprocessing
-    if ~isfield(cfg.artfctdef.tms,'derivative'),   cfg.artfctdef.tms.derivative   = 'yes';     end
+    if ~isfield(cfg.artfctdef.tms,'derivative'),   cfg.artfctdef.tms.derivative   = 'yes';    end
     % settings for the zvalue subfunction
-    if ~isfield(cfg.artfctdef.tms,'channel'),    cfg.artfctdef.tms.channel     = 'all';     end
-    if ~isfield(cfg.artfctdef.tms,'trlpadding'), cfg.artfctdef.tms.trlpadding  = 0.1;       end
-    if ~isfield(cfg.artfctdef.tms,'fltpadding'), cfg.artfctdef.tms.fltpadding  = 0.1;       end
-    if ~isfield(cfg.artfctdef.tms,'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;       end
-    if ~isfield(cfg.artfctdef.tms,'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;         end
+    if ~isfield(cfg.artfctdef.tms,'method'),     cfg.artfctdef.tms.method      = 'zvalue';    end
+    if ~isfield(cfg.artfctdef.tms,'channel'),    cfg.artfctdef.tms.channel     = 'all';       end
+    if ~isfield(cfg.artfctdef.tms,'trlpadding'), cfg.artfctdef.tms.trlpadding  = 0.1;         end
+    if ~isfield(cfg.artfctdef.tms,'fltpadding'), cfg.artfctdef.tms.fltpadding  = 0.1;         end
+    if ~isfield(cfg.artfctdef.tms,'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;        end
+    if ~isfield(cfg.artfctdef.tms,'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;           end
     % construct a temporary configuration that can be passed onto artifact_zvalue
     tmpcfg                  = [];
     tmpcfg.trl              = cfg.trl;
@@ -141,10 +146,10 @@ switch cfg.method
     if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
     if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
     % call the zvalue artifact detection function
-    
+
     % the data is either passed into the function by the user or read from file with cfg.inputfile
     hasdata = exist('data', 'var');
-    
+
     if hasdata
       % read the header
       cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
@@ -160,24 +165,24 @@ switch cfg.method
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
     end
     cfg.artfctdef.tms = tmpcfg.artfctdef.zvalue;
-    
+
     % adjust artifact definition so that Nx2 matrix contains detected TMS
     % events with user-specified pre- and post stimulus period included.
     % The reason for this is that ft_artifact_zvalue centers the period
     % marked as artifactual around the detected event. In the case of a TMS
     % pulse the window you would like to mark as artifactual is not
     % symmetrical around the onset of the pulse.
-    
+
     % get values and express in samples
     prestim = round(cfg.prestim * fsample);
     poststim = round(cfg.poststim * fsample);
-    
+
     % adjust Nx2 artifact matrix to be centered non-symmetrically around
     % detected TMS-pulse
     artifact(:,1) = (artifact(:,1)+artifact(:,2))./2 - prestim;
     artifact(:,2) = artifact(:,1) + poststim;
     cfg.artfctdef.tms.artifact = artifact;
-    
+
   case 'marker'
     % Check if the cfg is correct for this method
     cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -187,14 +192,14 @@ switch cfg.method
     trialdef.prestim = cfg.prestim;
     trialdef.poststim = cfg.poststim;
     cfg.trialdef = ft_checkconfig(trialdef,'required',{'eventvalue','eventtype'});
-    
+
     % Get the trialfun
     cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
-    
+
     % Evaluate the trialfun
     fprintf('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
     trl   = feval(cfg.trialfun, cfg);
-    
+
     % Prepare the found events for output
     artifact = trl(:,1:2);
     cfg.artfctdef.tms.artifact = artifact;
@@ -204,4 +209,3 @@ switch cfg.method
 end
 
 cfg = rmfield(cfg, 'method'); % FIXME - not removing this causes problems when passing to ft_preprocessing
-

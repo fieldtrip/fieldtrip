@@ -1,4 +1,4 @@
-function [s,cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
+function [s, cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 
 % FT_STATFUN_DEPSAMPLESFUNIIVARIATE calculates the univariate repeated-mesures
 % ANOVA on the biological data in dat (the dependent variable), using the
@@ -44,7 +44,7 @@ function [s,cfg] = ft_statfun_depsamplesFunivariate(cfg, dat, design)
 
 % Copyright (C) 2014, Diego Lozano-Soldevilla
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

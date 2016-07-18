@@ -13,7 +13,7 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 %
 % If the key is present as field in the structure, or as key-value
 % pair in the cell-array, the corresponding value will be returned.
-% 
+%
 % If the key is not present, ft_getopt will return an empty array.
 %
 % If the key is present but has an empty value, then the emptymeaningful
@@ -26,7 +26,7 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -60,27 +60,27 @@ if isa(opt, 'struct') || isa(opt, 'config')
   else
     val = opt.(key);
   end
-  
+
 elseif isa(opt, 'cell')
   % get the key-value from the cell-array
   if mod(length(opt),2)
     error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
   end
-  
+
   % the 1st, 3rd, etc. contain the keys, the 2nd, 4th, etc. contain the values
   keys = opt(1:2:end);
   vals = opt(2:2:end);
-  
+
   % the following may be faster than cellfun(@ischar, keys)
   valid = false(size(keys));
   for i=1:numel(keys)
     valid(i) = ischar(keys{i});
   end
-  
+
   if ~all(valid)
     error('optional input arguments should come in key-value pairs, the optional input argument %d is invalid (should be a string)', i);
   end
-  
+
   hit = find(strcmpi(key, keys));
   if isempty(hit)
     % the requested key was not found
@@ -104,4 +104,3 @@ if isempty(val) && ~isempty(default) && ~emptymeaningful
   % what the value is
   val = default;
 end
-

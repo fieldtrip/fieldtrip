@@ -30,7 +30,7 @@ function ft_realtime_ouunpod(cfg)
 % Copyright (C) 2008-2012, Robert Oostenveld
 % Copyright (C) 2012-2014, Stephen Whitmarsh
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -192,8 +192,9 @@ while true
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % apply some preprocessing to the data
-    dat = ft_preproc_baselinecorrect(dat);
-    dat = ft_preproc_highpassfilter(dat, hdr.Fs, 5, 1, 'but', 'twopass');
+    dat = ft_preproc_polyremoval(dat, 1);
+    dat = ft_preproc_highpassfilter(dat, hdr.Fs,  3, 1, 'but', 'twopass');
+    dat = ft_preproc_lowpassfilter (dat, hdr.Fs, 35, 3, 'but', 'twopass');
     
     if hdr.Fs<11025
       % sampling range is low, assume it is EEG

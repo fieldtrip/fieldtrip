@@ -1,14 +1,16 @@
 function [newbnd] = mesh2edge(bnd)
 
-% MESH2EDGE finds the edge lines from a triangulated mesh or the edge surfaces
-% from a tetrahedral or hexahedral mesh.
+% MESH2EDGE finds the edge lines from a triangulated mesh or the edge
+% surfaces from a tetrahedral or hexahedral mesh. An edge is defined as an
+% element that does not border any other element. This also implies that a
+% closed triangulated surface has no edges.
 %
 % Use as
-%   [bnd] = mesh2edge(bnd)
+%   [edge] = mesh2edge(mesh)
 
-% Copyright (C) 2013, Robert Oostenveld
+% Copyright (C) 2013-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -78,17 +80,19 @@ sedge = sort(edge, 2);
 indx = findsingleoccurringrows(sedge);
 edge = edge(indx, :);
 
-if ~isfield(bnd, 'pnt') && isfield(bnd, 'pos')
-  bnd.pnt = bnd.pos;
-end
+% replace pnt by pos
+bnd = fixpos(bnd);
 
 % the naming of the output edges depends on what they represent
-newbnd.pnt  = bnd.pnt;
+newbnd.pos  = bnd.pos;
 if isfield(bnd, 'tri')
+  % these have two vertices in each edge element
   newbnd.line = edge;
 elseif isfield(bnd, 'tet')
+  % these have three vertices in each edge element
   newbnd.tri = edge;
 elseif isfield(bnd, 'hex')
+  % these have four vertices in each edge element
   newbnd.poly = edge;
 end
 

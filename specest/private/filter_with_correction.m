@@ -1,7 +1,8 @@
-function filt = filter_with_correction(B,A,dat,dir)
+function filt = filter_with_correction(B,A,dat,dir,usefftfilt)
+
 % FILTER_WITH_CORRECTION applies a to the data and corrects
 % edge-artifacts for one-pass filtering.
-% 
+%
 % Use as
 %   [filt] = filter_with_correction(B,A,dat,dir);
 % where
@@ -11,6 +12,8 @@ function filt = filter_with_correction(B,A,dat,dir)
 %                'onepass'         forward filter only
 %                'onepass-reverse' reverse filter only, i.e. backward in time
 %                'twopass'         zero-phase forward and reverse filter (default)
+%                'twopass-reverse' zero-phase reverse and forward filter
+%                'twopass-average' average of the twopass and the twopass-reverse
 %
 % Note that a one- or two-pass filter has consequences for the
 % strength of the filter, i.e. a two-pass filter with the same filter
@@ -18,7 +21,7 @@ function filt = filter_with_correction(B,A,dat,dir)
 
 % Copyright (c) 2010, Stefan Klanke
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -36,12 +39,16 @@ function filt = filter_with_correction(B,A,dat,dir)
 %
 % $Id$
 
+% convert the data to double precision
+% see  http://bugzilla.fcdonders.nl/show_bug.cgi?id=2653
+inputclass = class(dat);
+B = double(B);
+A = double(A);
+dat = double(dat);
+
 poles = roots(A);
 if any(abs(poles) >= 1)
-  poles
-  error(['Calculated filter coefficients have poles on or outside ' ...
-        'the unit circle and will not be stable. Try a higher cutoff ' ...
-        'frequency or a different type/order of filter.']);
+  error('Calculated filter coefficients have poles on or outside the unit circle and will not be stable. Try a higher cutoff frequency or a different type/order of filter.');
 end
 
 dcGain = sum(B)/sum(A);
@@ -50,15 +57,32 @@ dcGain = sum(B)/sum(A);
 
 switch dir
   case 'onepass'
-	offset = dat(:,1);
-	dat = dat - repmat(offset,1,N);
+    offset = dat(:,1);
+    dat = dat - repmat(offset,1,N);
     filt = filter(B, A, dat')' + repmat(dcGain*offset, 1, N);
   case 'onepass-reverse'
-  	offset = dat(:,end);
+    offset = dat(:,end);
     dat  = fliplr(dat) - repmat(offset,1,N);
     filt = filter(B, A, dat')';
     filt = fliplr(filt) + repmat(dcGain*offset, 1, N);
   case 'twopass'
-	% filtfilt does the correction for us
+    % filtfilt does the correction for us
     filt = filtfilt(B, A, dat')';
+  case 'twopass-reverse'
+    % filtfilt does the correction for us
+    filt = fliplr(filtfilt(B, A, fliplr(dat)')');
+  case 'twopass-average'
+    % take the average from the twopass and the twopass-reverse
+    filt1 = filtfilt(B, A, dat')';
+    filt2 = fliplr(filtfilt(B, A, fliplr(dat)')');
+    filt  = (filt1 + filt2)/2;
+  case 'onepass-zerophase'
+    filt = fir_filterdcpadded(B, A, dat', 0, usefftfilt)';
+  case 'onepass-minphase'
+    filt = fir_filterdcpadded(B, A, dat', 1, usefftfilt)';
+  otherwise
+    error('unsupported filter direction "%s"', dir);
 end
+
+% cast it back into the type of the input data, which can e.g. be single or int32
+filt = cast(filt, inputclass);

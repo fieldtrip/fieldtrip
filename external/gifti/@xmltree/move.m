@@ -7,12 +7,12 @@ function tree = move(tree,uida, uidb)
 %__________________________________________________________________________
 %
 % Move a subtree inside a tree from A to B.
-% The tree parameter must be in input AND in output
+% The tree parameter must be in input AND in output.
 %__________________________________________________________________________
-% Copyright (C) 2002-2011  http://www.artefact.tk/
+% Copyright (C) 2002-2015  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: move.m 6480 2015-06-13 01:08:30Z guillaume $
 
 
 %error(nargchk(3,3,nargin));

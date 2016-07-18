@@ -276,7 +276,11 @@ switch info.cfg.viewmode
       set(info.axes(2), 'Ytick', []);
     end
 end % switch
-axis([xmin xmax 0.5 ymax+0.5]); % have to use 0 as lower limit because ylim([1 1]) (i.e. the single-channel case) is invalid
+if any(info.chansel) && any(info.trlsel)
+  % don't try to rescale the axes if they are empty
+  % have to use 0 as lower limit because in the single channel case ylim([1 1]) will be invalid
+  axis([0.8*xmin 1.2*xmax 0.5 ymax+0.5]);
+end
 axis ij;
 set(info.axes(2), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 ylabel('channel number');
@@ -306,7 +310,12 @@ switch info.cfg.viewmode
       set(info.axes(3), 'Xtick', []);
     end
 end % switch
-axis([0.5 xmax+0.5 ymin ymax]);
+if any(info.chansel) && any(info.trlsel)
+  % don't try to rescale the axes if they are empty
+  % the 0.8-1.2 is needed to deal with the single trial case
+  % note that both ymin and ymax can be negative
+  axis([0.5 xmax+0.5 (1-sign(ymin)*0.2)*ymin (1+sign(ymax)*0.2)*ymax]);
+end
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
 

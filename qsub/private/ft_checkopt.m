@@ -43,7 +43,7 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -159,7 +159,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function s = printcell(c)
+function [s] = printcell(c)
 if ~isempty(c)
   s = sprintf('%s, ', c{:});
   s = sprintf('{%s}', s(1:end-2));

@@ -22,7 +22,7 @@ function [H, Z, S, psi] = sfactorization_wilson(S,freq,Niterations,tol,fb,init,c
 
 % Copyright (C) 2009-2013, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -52,7 +52,7 @@ if ~all(dfreq==dfreq(1))
 end
 
 if freq(1)~=0
-  warning_once('FieldTrip:connectivity:sfactorization_wilson', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  ft_warning('FieldTrip:connectivity:sfactorization_wilson', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   

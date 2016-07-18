@@ -26,7 +26,7 @@ function chanunit = ft_chanunit(input, desired)
 
 % Copyright (C) 2011-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -44,6 +44,13 @@ function chanunit = ft_chanunit(input, desired)
 %
 % $Id$
 
+% these are for remembering the type on subsequent calls with the same input arguments
+persistent previous_argin previous_argout
+
+if nargin<2
+  desired = [];
+end
+
 % determine the type of input, this is handled similarly as in FT_CHANTYPE
 isheader =  isa(input, 'struct') && isfield(input, 'label') && isfield(input, 'Fs');
 islabel  =  isa(input, 'cell')   && isa(input{1}, 'char');
@@ -52,6 +59,18 @@ isgrad   = (isa(input, 'struct') && isfield(input, 'coilpos')) || isgrad;
 isgrad   = (isa(input, 'struct') && isfield(input, 'coilori')) || isgrad;
 iselec   =  isa(input, 'struct') && isfield(input, 'pnt') && ~isfield(input, 'ori');
 iselec   = (isa(input, 'struct') && isfield(input, 'elecpos')) || iselec;
+
+if isheader
+  % this speeds up the caching in real-time applications
+  input.nSamples = 0;
+end
+
+current_argin = {input, desired};
+if isequal(current_argin, previous_argin)
+  % don't do the type detection again, but return the previous output from cache
+  chanunit = previous_argout{1};
+  return
+end
 
 if isheader
   label = input.label;
@@ -181,3 +200,9 @@ chanunit = chanunit(:);
 if nargin>1
   chanunit = strcmp(desired, chanunit);
 end
+
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+current_argout = {chanunit};
+previous_argin  = current_argin;
+previous_argout = current_argout;

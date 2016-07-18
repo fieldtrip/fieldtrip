@@ -7,27 +7,40 @@ function om_save_full(data,filename,format)
 %   SYNTAX
 %       OM_SAVE_FULL(DATA,FILENAME,FORMAT)
 %
-%       FORMAT : can be 'ascii' or 'binary' (default)
+%       FORMAT : can be 'ascii' or 'binary' or 'matlab' (default)
 %
-%   Created by Alexandre Gramfort on 2007-11-27.
-%   Copyright (c) 2007 Alexandre Gramfort. All rights reserved.
+
+% $Id$
+
+me = 'OM_SAVE_FULL';
+
+if nargin == 0
+    eval(['help ',lower(me)])
+    return
+end
 
 if nargin < 3
-    format = 'binary';
+    format = 'matlab';
 end
 
 switch format
-case 'binary'
-    % disp(['Saving file ',filename])
-    file = fopen(filename,'w');
-    dims = size(data);
-    fwrite(file,dims,'uint32','ieee-le');
-    fwrite(file,data(:),'double','ieee-le');
-    fclose(file);
-case 'ascii'
-    data = double(data);
-    save(filename,'data','-ASCII','-double','-v6')
-otherwise
-    error([me,' : Unknown file format'])
+    case 'matlab'
+        file = fopen(filename,'w');
+        data_raw=struct('linop',data);
+        save(filename,'-mat','-struct','data_raw','-v7')
+        fclose(file);
+        clear data_raw;
+    case 'binary'
+        disp(['Saving file ',filename])
+        file = fopen(filename,'w');
+        dims = size(data);
+        fwrite(file,dims,'uint32','ieee-le');
+        fwrite(file,data(:),'double','ieee-le');
+        fclose(file);
+    case 'ascii'
+        data = double(data);
+        save(filename,'data','-ascii','-double')
+    otherwise
+        error([me,' : Unknown file format'])
 end
 

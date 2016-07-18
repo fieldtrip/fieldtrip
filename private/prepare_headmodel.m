@@ -1,8 +1,8 @@
-function [vol, sens, cfg] = prepare_headmodel(cfg, data)
+function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that helps to prepare the electrodes/gradiometers and the volume
-% this is used in sourceanalysis and dipolefitting
+% SUBFUNCTION that helps to prepare the electrodes/gradiometers and the
+% volume conduction model. This is used in sourceanalysis and dipolefitting.
 %
 % This function will get the gradiometer/electrode definition using
 % FT_FETCH_SENS and the volume conductor definition using FT_FETCH_VOL
@@ -20,7 +20,7 @@ function [vol, sens, cfg] = prepare_headmodel(cfg, data)
 
 % Copyright (C) 2004-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,15 +48,15 @@ if nargin<2
 end
 
 % get the volume conduction model
-vol = ft_fetch_vol(cfg, data);
+headmodel = ft_fetch_vol(cfg);
 
-% get the gradiometer or electrode definition
+% get the gradiometer or electrode definition, these can be in the cfg or in the data
 sens = ft_fetch_sens(cfg, data);
 
 if istrue(cfg.siunits)
   % ensure that the geometrical units are in SI units
-  sens = ft_convert_units(sens, 'm', 'feedback', true);
-  vol  = ft_convert_units(vol,  'm', 'feedback', true);
+  sens       = ft_convert_units(sens,       'm', 'feedback', true);
+  headmodel  = ft_convert_units(headmodel,  'm', 'feedback', true);
   if isfield(cfg, 'grid')
     cfg.grid = ft_convert_units(cfg.grid,  'm', 'feedback', true);
   end
@@ -64,11 +64,11 @@ else
   % ensure that the geometrical units are the same
   if isfield(cfg, 'grid') && isfield(cfg.grid, 'unit')
     % convert it to the units of the source model
-    sens = ft_convert_units(sens, cfg.grid.unit, 'feedback', true);
-    vol  = ft_convert_units(vol,  cfg.grid.unit, 'feedback', true);
+    sens       = ft_convert_units(sens,       cfg.grid.unit, 'feedback', true);
+    headmodel  = ft_convert_units(headmodel,  cfg.grid.unit, 'feedback', true);
   else
     % convert it to the units of the head model
-    sens = ft_convert_units(sens, vol.unit, 'feedback', true);
+    sens = ft_convert_units(sens, headmodel.unit, 'feedback', true);
   end
 end
 
@@ -87,11 +87,11 @@ else
 end
 
 % ensure that these are a struct, which may be required in case configuration tracking is used
-vol  = struct(vol);
+headmodel  = struct(headmodel);
 sens = struct(sens);
 
 % the prepare_vol_sens function from the forwinv module does most of the actual work
-[vol, sens] = ft_prepare_vol_sens(vol, sens, 'channel', cfg.channel, 'order', cfg.order);
+[headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel, 'order', cfg.order);
 
 % update the selected channels in the configuration
 cfg.channel = sens.label;

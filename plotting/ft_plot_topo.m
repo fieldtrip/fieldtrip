@@ -30,7 +30,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 
 % Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -131,7 +131,7 @@ chanY = chanY(:) * yScaling + vpos;
 if strcmp(interplim, 'electrodes'),
   hlim = [min(chanX) max(chanX)];
   vlim = [min(chanY) max(chanY)];
-elseif strcmp(interplim, 'mask') && ~isempty(mask),
+elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~isempty(mask),
   hlim = [inf -inf];
   vlim = [inf -inf];
   for i=1:length(mask)
@@ -161,7 +161,7 @@ if isequal(current_argin, previous_argin)
   maskimage = previous_maskimage;
 elseif ~isempty(mask)
   % convert the mask into a binary image
-  maskimage = false(gridscale);
+  maskimage = zeros(gridscale);%false(gridscale);
   %hlim      = [min(chanX) max(chanX)];
   %vlim      = [min(chanY) max(chanY)];
   xi        = linspace(hlim(1), hlim(2), gridscale);   % x-axis for interpolation (row vector)
@@ -180,7 +180,7 @@ elseif ~isempty(mask)
     mask{i}(:, 1) = mask{i}(:, 1)*xScaling+hpos;
     mask{i}(:, 2) = mask{i}(:, 2)*yScaling+vpos;
     mask{i}(end+1, :) = mask{i}(1, :);                   % force them to be closed
-    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = true;
+    maskimage(inside_contour([Xi(:) Yi(:)], mask{i})) = i;%true;
   end
   
 else
@@ -200,7 +200,7 @@ if ~isempty(datmask)
 end
 
 % take out NaN channels if interpmethod does not work with NaNs
-if flagNaN && strcmp(interpmethod, 'v4')
+if flagNaN && strcmp(interpmethod, default_interpmethod)
   dat(NaNind) = [];
   chanX(NaNind) = [];
   chanY(NaNind) = [];
@@ -214,9 +214,30 @@ chanY = double(chanY);
 %interpolate data
 xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
 yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
-[Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
+
+if ~ft_platform_supports('griddata-vector-input')
+  % in GNU Octave, griddata does not support vector
+  % positions; make a grid to get the locations in vector form
+  [xi,yi]=meshgrid(xi,yi);
+  xi=xi';
+end
+
+if ~isempty(maskimage) && strcmp(interplim, 'mask_individual')
+  % do the interpolation for each set of electrodes within a mask, useful
+  % for ECoG data with multiple grids, to avoid cross talk
+  Zi = zeros(size(maskimage));
+  for i=1:max(maskimage(:))
+    chansel = inside_contour([chanX chanY], mask{i});
+    [Xi, Yi, tmpZi]  = griddata(chanX(chansel)', chanY(chansel), dat(chansel), xi', yi, interpmethod);
+    Zi(maskimage==i) = tmpZi(maskimage==i);
+  end
+else
+  [Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
+end
 
 if ~isempty(maskimage)
+  % make boolean  
+  maskimage      = maskimage~=0;
   % apply mask to the data to hide parts of the interpolated data (outside the circle) and channels that were specified to be masked
   % this combines the input options mask and maskdat
   Zi(~maskimage) = NaN;
@@ -243,33 +264,47 @@ if strcmp(style, 'surf') || strcmp(style, 'surfiso')
   
 elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   % Plot the surface in an alternate style (using imagesc and saturation masking) so that it can be nicely saved to a vectorized format
-  
-  % set mask and check for clim
+ 
+  % set mask and cdat, and check for clim
   if isempty(clim)
     error('clim is required for style = ''imsat'' or style = ''imsatiso''')
   end
   satmask = maskimage;
-  
+  cdat = Zi;
   % below code is shared with ft_plot_matrix
-  tmpcdat = Zi;
   
-  % Transform cdat-values to have a 0-64 range, dependent on clim
-  % (think of it as the data having an exact range of min=clim(1) to max=(clim2), convert this range to 0-64)
-  tmpcdat = (tmpcdat + -clim(1)) * (64 / (-clim(1) + clim(2)));
-  %tmpcdat = (tmpcdat + -min(min(tmpcdat))) * (64 / max(max((tmpcdat + -min(min(tmpcdat))))))
   
-  % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
-  satmask(isnan(tmpcdat)) = 0;
-  tmpcdat(isnan(tmpcdat)) = 32;
-  % ind->rgb->hsv ||change saturation values||  hsv->rgb ->  plot
-  rgbcdat = ind2rgb(uint8(floor(tmpcdat)), colormap);
+  % This approach changes the color of pixels to white, regardless of colormap, without using opengl
+  % It does by converting by:
+  % 1) convert the to-be-plotted data to their respective rgb color values (determined by colormap)
+  % 2) convert these rgb color values to hsv values, hue-saturation-value
+  % 3) for to-be-masked-pixels, set saturation to 0 and value to 1 (hue is irrelevant when they are)
+  % 4) convert the hsv values back to rgb values
+  % 5) plot these values
+  
+  % enforce mask properties (satmask is 0 when a pixel needs to be masked, 1 if otherwise)
+  satmask = round(satmask); % enforce binary white-masking, the hsv approach cannot be used for 'white-shading'
+  satmask(isnan(cdat)) = false; % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
+  
+  % do 1, by converting the data-values to zero-based indices of the colormap
+  ncolors = size(get(gcf,'colormap'),1); % determines range of index, if a figure has been created by the caller function, gcf changes nothing, if not, a figure is created (which the below would do otherwise)
+  indcdat = (cdat + -clim(1)) * (ncolors / (-clim(1) + clim(2))); % transform cdat-values to have a 0-(ncolors-1) range (range depends on colormap used, and thus also on clim)
+  rgbcdat = ind2rgb(uint8(floor(indcdat)), colormap);
+  % do 2
   hsvcdat = rgb2hsv(rgbcdat);
-  hsvcdat(:, :, 2) = hsvcdat(:, :, 2) .* satmask;
-  hsvcdat(:, :, 2) = hsvcdat(:, :, 2);
-  rgbcdatsat = hsv2rgb(hsvcdat);
-  h = imagesc(xi, yi, rgbcdatsat, clim);
-  set(h, 'tag', tag);
-  
+  % do 3
+  hsvs = hsvcdat(:,:,2);
+  hsvs(~satmask) = 0;
+  hsvv = hsvcdat(:,:,3);
+  hsvv(~satmask) = 1;
+  hsvcdat(:,:,2) = hsvs;
+  hsvcdat(:,:,3) = hsvv;
+  % do 4
+  rgbcdat = hsv2rgb(hsvcdat);
+  % do 5
+  h = imagesc(xi, yi, rgbcdat,clim);
+  set(h,'tag',tag);
+
 end
 
 % Plot the outline of the head, ears and nose

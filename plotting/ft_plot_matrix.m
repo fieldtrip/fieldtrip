@@ -26,14 +26,14 @@ function ft_plot_matrix(varargin)
 %   'hlim'            = horizontal scaling limits within the local axes
 %   'vlim'            = vertical scaling limits within the local axes
 %
-% Example use
+% Example
 %   ft_plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 %
-% See also T_PLOT_VECTOR
+% See also FT_PLOT_VECTOR
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -212,26 +212,42 @@ if ~isempty(highlight)
       delete(h); % this is needed because "hold on" might have been called previously, e.g. in ft_multiplotTFR
       h = uimagesc(hdat, vdat, cdat, clim);
       set(h,'tag',tag);
-      set(h,'AlphaData',highlight);
-      set(h, 'AlphaDataMapping', 'scaled');
-      alim([0 1]);
+      if ft_platform_supports('alim')
+        set(h,'AlphaData',highlight);
+        set(h, 'AlphaDataMapping', 'scaled');
+        alim([0 1]);
+      end
     
     case 'saturation'
-      satmask = highlight;
-      tmpcdat = cdat;
-      % Transform cdat-values to have a 0-64 range, dependent on clim
-      % (think of it as the data having an exact range of min=clim(1) to max=(clim2), convert this range to 0-64)
-      tmpcdat = (tmpcdat + -clim(1)) * (64 / (-clim(1) + clim(2)));
-      %tmpcdat = (tmpcdat + -min(min(tmpcdat))) * (64 / max(max((tmpcdat + -min(min(tmpcdat))))))
-      % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
-      satmask(isnan(tmpcdat)) = 0;
-      tmpcdat(isnan(tmpcdat)) = 32;
-      % ind->rgb->hsv ||change saturation values||  hsv->rgb ->  plot
-      rgbcdat = ind2rgb(uint8(floor(tmpcdat)), colormap);
+      % This approach changes the color of pixels to white, regardless of colormap, without using opengl
+      % It does by converting by:
+      % 1) convert the to-be-plotted data to their respective rgb color values (determined by colormap)
+      % 2) convert these rgb color values to hsv values, hue-saturation-value
+      % 3) for to-be-masked-pixels, set saturation to 0 and value to 1 (hue is irrelevant when they are)
+      % 4) convert the hsv values back to rgb values
+      % 5) plot these values
+     
+      % enforce mask properties (satmask is 0 when a pixel needs to be masked, 1 if otherwise)
+      satmask = round(highlight); % enforce binary white-masking, the hsv approach cannot be used for 'white-shading'
+      satmask(isnan(cdat)) = false; % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
+      
+      % do 1, by converting the data-values to zero-based indices of the colormap
+      ncolors = size(get(gcf,'colormap'),1); % determines range of index, if a figure has been created by the caller function, gcf changes nothing, if not, a figure is created (which the below would do otherwise)
+      indcdat = (cdat + -clim(1)) * (ncolors / (-clim(1) + clim(2))); % transform cdat-values to have a 0-(ncolors-1) range (range depends on colormap used, and thus also on clim)
+      rgbcdat = ind2rgb(uint8(floor(indcdat)), colormap);
+      % do 2
       hsvcdat = rgb2hsv(rgbcdat);
-      hsvcdat(:,:,2) = hsvcdat(:,:,2) .* satmask;
-      rgbcdatsat = hsv2rgb(hsvcdat);
-      h = imagesc(hdat, vdat, rgbcdatsat,clim);
+      % do 3
+      hsvs = hsvcdat(:,:,2);
+      hsvs(~satmask) = 0;
+      hsvv = hsvcdat(:,:,3);
+      hsvv(~satmask) = 1;
+      hsvcdat(:,:,2) = hsvs;
+      hsvcdat(:,:,3) = hsvv;
+      % do 4
+      rgbcdat = hsv2rgb(hsvcdat);
+      % do 5
+      h = imagesc(hdat, vdat, rgbcdat,clim);
       set(h,'tag',tag);
 
     case 'outline'

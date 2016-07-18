@@ -41,9 +41,9 @@ function [simulated] = ft_connectivitysimulation(cfg)
 %   cfg.bpfreq    = [bplow bphigh] (default: [15 25])
 %   cfg.demean    = 'yes' (or 'no')
 %   cfg.baselinewindow = [begin end] in seconds, the default is the complete trial
-%   cfg.absnoise  = scalar (default: 1), specifying the standard
-%                   deviation of white noise superimposed on top
-%                   of the simulated signals
+%   cfg.absnoise  = scalar (default: 1), specifying the standard deviation of
+%                   white noise superimposed on top of the simulated signals
+%   cfg.randomseed = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % Method 'mvnrnd' implements a linear mixing with optional timeshifts in
 % where the number of unobserved signals is equal to the number of observed
@@ -81,9 +81,9 @@ function [simulated] = ft_connectivitysimulation(cfg)
 % See also FT_FREQSIMULATION, FT_DIPOLESIMULATION, FT_SPIKESIMULATION,
 % FT_CONNECTIVITYANALYSIS
 
-% Copyright (C) 2009, Donders Institute for Brain, Cognition and Behaviour
+% Copyright (C) 2009-2015, Donders Institute for Brain, Cognition and Behaviour
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -101,17 +101,21 @@ function [simulated] = ft_connectivitysimulation(cfg)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance
+ft_preamble randomseed
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -122,20 +126,20 @@ cfg = ft_checkconfig(cfg, 'rename',   {'blc', 'demean'});
 % method specific defaults
 switch cfg.method
   case {'ar'}
-    %method specific defaults
-    cfg = ft_checkconfig(cfg, 'required', {'params' 'noisecov'});
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', zeros(cfg.nsignal,1));
+    cfg          = ft_checkconfig(cfg, 'required', {'params' 'noisecov'});
   case {'linear_mix'}
-    if ~isfield(cfg, 'bpfilter'), cfg.bpfilter = 'yes';   end
-    if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
-    if ~isfield(cfg, 'demean'),   cfg.demean   = 'yes';   end
-    if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
-    cfg = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
+    cfg.bpfilter = ft_getopt(cfg, 'bpfilter', 'yes');
+    cfg.bpfreq   = ft_getopt(cfg, 'bpfreq',   [15 25]);
+    cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
+    cfg          = ft_checkconfig(cfg, 'required', {'mix' 'delay'});
   case {'mvnrnd'}
-    if ~isfield(cfg, 'bpfilter'), cfg.bpfilter = 'yes';   end
-    if ~isfield(cfg, 'bpfreq'),   cfg.bpfreq   = [15 25]; end
-    if ~isfield(cfg, 'demean'),   cfg.demean   = 'yes';   end
-    if ~isfield(cfg, 'absnoise'), cfg.absnoise = 1;       end
-    cfg = ft_checkconfig(cfg, 'required', {'covmat' 'delay'});
+    cfg.bpfilter = ft_getopt(cfg, 'bpfilter', 'yes');
+    cfg.bpfreq   = ft_getopt(cfg, 'bpfreq',   [15 25]);
+    cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
+    cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
+    cfg          = ft_checkconfig(cfg, 'required', {'covmat' 'delay'});
   otherwise
 end
 
@@ -151,7 +155,7 @@ end
 
 switch cfg.method
   case {'ar'}
-    
+
     nlag    = size(cfg.params,3);
     nsignal = cfg.nsignal;
     params  = zeros(nlag*nsignal, nsignal);
@@ -171,22 +175,26 @@ switch cfg.method
         state0(indx) = params(indx,:)'*noise(:,m);
       end
       tmp(:,1:nlag) = fliplr(reshape(state0, [nsignal nlag]));
-      
+
       for m = (nlag+1):(nsmp+nlag)
         state0    = reshape(fliplr(tmp(:,(m-nlag):(m-1))), [nlag*nsignal 1]);
         tmp(:, m) = params'*state0 + noise(:,m);
       end
+
       trial{k} = tmp(:,nlag+1:end);
+      if any(cfg.absnoise>0)
+        trial{k} = trial{k} + diag(cfg.absnoise)*randn(size(trial{k}));
+      end
       time{k}  = tim;
     end
-    
+
   case {'linear_mix'}
-    
+
     fltpad = 50; %hard coded to avoid filtering artifacts
     delay  = cfg.delay;
     delay  = delay - min(delay(:)); %make explicitly >= 0
     maxdelay = max(delay(:));
-    
+
     if iscell(cfg.mix),
       %each trial has different mix
       mix = cfg.mix;
@@ -198,10 +206,10 @@ switch cfg.method
         mix{1,tr} = tmpmix;
       end
     end
-    
+
     nmixsignal = size(mix{1}, 2); %number of "mixing signals"
     nsignal    = size(mix{1}, 1);
-    
+
     if numel(size(mix{1}))==2,
       %mix is static, no function of time
       for tr = 1:cfg.ntrials
@@ -215,7 +223,7 @@ switch cfg.method
       %FIXME think about this
       %due to the delay the mix cannot be defined instantaneously with respect to all signals
     end
-    
+
     for tr = 1:cfg.ntrials
       mixsignal = randn(nmixsignal,  nsmp + 2*fltpad + maxdelay);
       mixsignal = preproc(mixsignal, label, offset2time(-fltpad, cfg.fsample, size(mixsignal,2)), cfg, fltpad, fltpad);
@@ -229,22 +237,22 @@ switch cfg.method
         end
       end
       trial{tr} = tmp;
-      
+
       % add some noise
       trial{tr} = ft_preproc_baselinecorrect(trial{tr} + cfg.absnoise*randn(size(trial{tr})));
-      
+
       % define time axis for this trial
       time{tr}  = tim;
     end
-    
+
   case {'mvnrnd'}
     fltpad = 100; %hard coded
-    
+
     shift = max(cfg.delay(:,1)) - cfg.delay(:,1);
     for k = 1:cfg.ntrials
       % create the multivariate time series plus some padding
       tmp = mvnrnd(zeros(1,cfg.nsignal), cfg.covmat, nsmp+2*fltpad+max(shift))';
-      
+
       % add the delays
       newtmp = zeros(cfg.nsignal, nsmp+2*fltpad);
       for kk = 1:cfg.nsignal
@@ -252,19 +260,19 @@ switch cfg.method
         endsmp = nsmp + 2*fltpad + shift(kk);
         newtmp(kk,:) = ft_preproc_baselinecorrect(tmp(kk,begsmp:endsmp));
       end
-      
+
       % apply preproc
       newtmp = preproc(newtmp, label, offset2time(-fltpad, cfg.fsample, size(newtmp,2)), cfg, fltpad, fltpad);
-      
+
       trial{k} = newtmp;
-      
+
       % add some noise
       trial{k} = ft_preproc_baselinecorrect(trial{k} + cfg.absnoise*randn(size(trial{k})));
-      
+
       % define time axis for this trial
       time{k}  = tim;
     end
-    
+
   otherwise
     error('unknown method');
 end
@@ -279,7 +287,7 @@ simulated.label   = label;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
+ft_postamble randomseed
 ft_postamble provenance
 ft_postamble history simulated
 ft_postamble savevar simulated
-

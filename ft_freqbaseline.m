@@ -7,7 +7,7 @@ function [freq] = ft_freqbaseline(cfg, freq)
 % where the freq data comes from FT_FREQANALYSIS and the configuration
 % should contain
 %   cfg.baseline     = [begin end] (default = 'no')
-%   cfg.baselinetype = 'absolute', 'relchange', 'relative', or 'db' (default = 'absolute')
+%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange' or 'db' (default = 'absolute')
 %   cfg.parameter    = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
 %                      (default = 'powspctrm')
@@ -23,7 +23,7 @@ function [freq] = ft_freqbaseline(cfg, freq)
 % Copyright (C) 2005-2006, Robert Oostenveld
 % Copyright (C) 2011, Eelke Spaak
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,18 +41,21 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar freq
+ft_preamble provenance freq
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -113,16 +116,16 @@ freqOut = copyfields(freq, freqOut,...
 % loop over all fields that should be normalized
 for k = 1:numel(cfg.parameter)
   par = cfg.parameter{k};
-  
+
   if strcmp(freq.dimord, 'chan_freq_time')
-    
+
     freqOut.(par) = ...
       performNormalization(freq.time, freq.(par), cfg.baseline, cfg.baselinetype);
-    
+
   elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'chan_chan_freq_time') || strcmp(freq.dimord, 'subj_chan_freq_time')
-    
+
     freqOut.(par) = zeros(size(freq.(par)));
-    
+
     % loop over trials, perform normalization per trial
     for l = 1:size(freq.(par), 1)
       tfdata = freq.(par)(l,:,:,:);
@@ -131,7 +134,7 @@ for k = 1:numel(cfg.parameter)
       freqOut.(par)(l,:,:,:) = ...
         performNormalization(freq.time, tfdata, cfg.baseline, cfg.baselinetype);
     end
-    
+
   else
     error('unsupported data dimensions: %s', freq.dimord);
   end
@@ -150,14 +153,14 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous freq
+ft_postamble previous   freq
 
 % rename the output variable to accomodate the savevar postamble
 freq = freqOut;
 
-ft_postamble history freq
-ft_postamble savevar freq
+ft_postamble provenance freq
+ft_postamble history    freq
+ft_postamble savevar    freq
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that actually performs the normalization on an arbitrary quantity
@@ -180,11 +183,10 @@ elseif (strcmp(baselinetype, 'relative'))
   data = data ./ meanVals;
 elseif (strcmp(baselinetype, 'relchange'))
   data = (data - meanVals) ./ meanVals;
-elseif (strcmp(baselinetype, 'vssum'))
+elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
   data = (data - meanVals) ./ (data + meanVals);
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
 else
   error('unsupported method for baseline normalization: %s', baselinetype);
 end
-

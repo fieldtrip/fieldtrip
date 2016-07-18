@@ -6,7 +6,7 @@ function [val] = filetype_check_header(filename, head, offset)
 
 % Copyright (C) 2003-2006 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -61,7 +61,7 @@ else
   % read the first few bytes from the file and compare them to the desired header
   fid = fopen(filename, 'rb');
   if fid<0
-    warning_once(sprintf('could not open %s', filename));
+    ft_warning(sprintf('could not open %s', filename));
     val = false;
   else
     fseek(fid, offset, 'cof');
@@ -81,7 +81,7 @@ else
       [str, siz] = fread(fid, length(head), 'uint8=>char');
       fclose(fid);
       if siz~=length(head)
-        warning_once(sprintf('could not read the header from %s', filename));
+        ft_warning(sprintf('could not read the header from %s', filename));
         val = false;
       else
         val = all(str(:)==head(:));

@@ -1,4 +1,4 @@
-function [stat] = ft_statfun_mean(cfg, dat, design)
+function [s, cfg] = ft_statfun_mean(cfg, dat, design)
 
 % FT_STATFUN_MEAN computes the mean over all replications for each of
 % the observations (i.e. channel-time-frequency points or voxels).
@@ -16,7 +16,7 @@ function [stat] = ft_statfun_mean(cfg, dat, design)
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -34,5 +34,5 @@ function [stat] = ft_statfun_mean(cfg, dat, design)
 %
 % $Id$
 
-stat = mean(dat,2);
+s = mean(dat,2);
 

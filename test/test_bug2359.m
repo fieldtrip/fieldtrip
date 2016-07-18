@@ -1,11 +1,13 @@
 function test_bug2359
 
-% WALLTIME 00:10:00
-% MEM 1500mb
+% MEM 2000mb
+% WALLTIME 00:30:00
 
 % TEST test_bug2359
 % TEST ft_prepare_mesh ft_prepare_sourcemodel
 
+global ft_default
+ft_default.checkconfig = 'loose'; % cfg.grid.pnt needs to be renamed to cfg.grid.pos
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2359'));
 
@@ -27,9 +29,6 @@ ft_plot_mesh(iskull, 'facecolor', [0.5 0.5 0.5], 'edgecolor', 'none', 'facealpha
 cfg = [];
 cfg.method = 'singleshell';
 vol = ft_prepare_headmodel(cfg, iskull);
-
-global ft_default
-ft_default.checkconfig = 'loose'; % cfg.grid.pnt needs to be renamed to cfg.grid.pos
 
 cfg = [];
 cfg.vol = vol;

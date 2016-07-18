@@ -62,7 +62,7 @@ function ft_volumewrite(cfg, volume)
 % Copyright (C) 2003-2006, Robert Oostenveld, Markus Siegel
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -80,18 +80,21 @@ function ft_volumewrite(cfg, volume)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar volume
+ft_preamble provenance volume
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -132,6 +135,7 @@ if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
   tmpcfg = keepfields(cfg, {'downsample', 'parameter'});
   volume = ft_volumedownsample(tmpcfg, volume);
+  % restore the provenance information
   [cfg, volume] = rollback_provenance(cfg, volume);
 end
 
@@ -267,7 +271,7 @@ switch cfg.filetype
     if fid < 0,
       error('Cannot write to file %s.vmp\n',cfg.filename);
     end
-    
+
     switch cfg.vmpversion
       case 1
         % write the header
@@ -275,14 +279,14 @@ switch cfg.filetype
         fwrite(fid, 1, 'short');      % number of maps
         fwrite(fid, 1, 'short');      % map type
         fwrite(fid, 0, 'short');      % lag
-        
+
         fwrite(fid, 0, 'short');      % cluster size
         fwrite(fid, 1, 'float');      % thresh min
         fwrite(fid, maxval, 'float'); % thresh max
         fwrite(fid, 0, 'short');      % df1
         fwrite(fid, 0, 'short');      % df2
         fwrite(fid, 0, 'char');       % name
-        
+
         fwrite(fid, siz, 'short');    % size
         fwrite(fid, 0, 'short');
         fwrite(fid, siz(1)-1, 'short');
@@ -291,7 +295,7 @@ switch cfg.filetype
         fwrite(fid, 0, 'short');
         fwrite(fid, siz(3)-1, 'short');
         fwrite(fid, 1, 'short');      % resolution
-        
+
         % write the data
         fwrite(fid, data, 'float');
       case 2
@@ -303,13 +307,13 @@ switch cfg.filetype
         maxy = max(find(~isnan(max(max(data,[],3),[],1))));
         minz = min(find(~isnan(max(max(data,[],1),[],2))));
         maxz = max(find(~isnan(max(max(data,[],1),[],2))));
-        
+
         % write the header
         fwrite(fid, 2, 'short');      % version
         fwrite(fid, 1, 'int');        % number of maps
         fwrite(fid, 1, 'int');        % map type
         fwrite(fid, 0, 'int');        % lag
-        
+
         fwrite(fid, 0, 'int');        % cluster size
         fwrite(fid, 0, 'char');       % cluster enable
         fwrite(fid, 1, 'float');      % thresh
@@ -322,7 +326,7 @@ switch cfg.filetype
         fwrite(fid, 1, 'char');       % enable SMP
         fwrite(fid, 1, 'float');      % transparency
         fwrite(fid, 0, 'char');       % name
-        
+
         fwrite(fid, siz, 'int');      % original size
         fwrite(fid, minx-1, 'int');
         fwrite(fid, maxx-1, 'int');
@@ -331,12 +335,12 @@ switch cfg.filetype
         fwrite(fid, minz-1, 'int');
         fwrite(fid, maxz-1, 'int');
         fwrite(fid, 1, 'int');        % resolution
-        
+
         % write the data
         fwrite(fid, data(minx:maxx,miny:maxy,minz:maxz), 'float');
     end
     fclose(fid);
-    
+
   case 'vmr'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in BrainVoyager VMR format
@@ -345,11 +349,11 @@ switch cfg.filetype
     if fid < 0,
       error('Cannot write to file %s.vmr\n',cfg.filename);
     end
-    
+
     % data should be scaled between 0 and 225
     data = data - min(data(:));
     data = round(225*data./max(data(:)));
-    
+
     % write the header
     fwrite(fid, siz, 'ushort');
     % write the data
@@ -360,17 +364,17 @@ switch cfg.filetype
     % write in Analyze format, using some functions from Darren Webbers toolbox
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     avw = avw_hdr_make;
-    
+
     % specify the image data and dimensions
     avw.hdr.dime.dim(2:4) = siz;
     avw.img = data;
-    
+
     % orientation 0 means transverse unflipped (axial, radiological)
     % X direction first,  ft_progressing from patient right to left,
     % Y direction second, ft_progressing from patient posterior to anterior,
     % Z direction third,  ft_progressing from patient inferior to superior.
     avw.hdr.hist.orient = 0;
-    
+
     % specify voxel size
     avw.hdr.dime.pixdim(2:4) = [1 1 1];
     % FIXME, this currently does not work due to all flipping and permuting
@@ -378,7 +382,7 @@ switch cfg.filetype
     % resy = y(2)-y(1);
     % resz = z(2)-z(1);
     % avw.hdr.dime.pixdim(2:4) = [resy resx resz];
-    
+
     % specify the data type
     switch lower(cfg.datatype)
       case 'bit1'
@@ -402,10 +406,10 @@ switch cfg.filetype
       otherwise
         error('unknown datatype');
     end
-    
+
     % write the header and image data
     avw_img_write(avw, cfg.filename, [], 'ieee-le');
-    
+
   case 'nifti'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in nifti format, using functions from  the SPM8 toolbox
@@ -416,7 +420,7 @@ switch cfg.filetype
       cfg.filename = [cfg.filename,'.nii'];
     end
     ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
-    
+
   case 'nifti_img'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in nifti dual file format, using functions from  the SPM8 toolbox
@@ -427,7 +431,7 @@ switch cfg.filetype
       cfg.filename = [cfg.filename,'.img'];
     end
     ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
-    
+
   case 'analyze_spm'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in analyze format, using functions from  the SPM8 toolbox
@@ -438,7 +442,7 @@ switch cfg.filetype
       cfg.filename = [cfg.filename,'.img'];
     end
     ft_write_mri(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform, 'spmversion', 'SPM2');
-    
+
   case {'mgz' 'mgh'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in freesurfer_mgz format, using functions from  the freesurfer toolbox
@@ -453,8 +457,8 @@ switch cfg.filetype
       cfg.filename = [cfg.filename,'.',cfg.filetype];
     end
     ft_write_mri(cfg.filename, data, 'dataformat', cfg.filetype, 'transform', transform);
-    
-    
+
+
   otherwise
     fprintf('unknown fileformat\n');
 end
@@ -462,5 +466,5 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
+ft_postamble previous volume
 ft_postamble provenance
-

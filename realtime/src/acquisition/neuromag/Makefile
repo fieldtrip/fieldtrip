@@ -27,7 +27,7 @@ HEADER   = neuromag2ft.h
 CFLAGS   = -g -Wall -I ../../buffer/src -I ./include $(CFLAGS_PLATFORM)
 LDFLAGS  = -L ../../buffer/src -L ./lib/$(ARCH)
 USERLIBS = -lbuffer $(LIBS_PLATFORM) -ldacqcomm -lfiff -lerr-2.1
-SYSLIBS  = -lpthread -lm
+SYSLIBS  = -lpthread -lm -lrt
 
 ##############################################################################
 all : $(OBJECTS) ../../buffer/src/libbuffer.a

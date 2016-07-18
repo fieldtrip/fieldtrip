@@ -7,8 +7,7 @@ function test_bug1351
 % TEST ft_topoplotER ft_topoplotTFR ft_checksize ft_checkconfig
 
 % load the test data of just two subjects
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
-load bug1351.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1351.mat'));
 
 % plot topographically - note: plot will look strange
 cfg = [];

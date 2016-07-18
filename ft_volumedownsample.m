@@ -29,7 +29,7 @@ function [downsample] = ft_volumedownsample(cfg, source)
 
 % Copyright (C) 2004-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,18 +47,21 @@ function [downsample] = ft_volumedownsample(cfg, source)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -121,15 +124,14 @@ if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
   elseif strcmpi(cfg.spmversion, 'spm12'),
     ft_hastoolbox('SPM12',1);
   end
-  
+
   for j = 1:length(cfg.parameter)
     if strcmp(cfg.parameter{j}, 'inside')
       fprintf('not smoothing %s\n', cfg.parameter{j});
     elseif strcmp(cfg.parameter{j}, 'anatomy')
       fprintf('not smoothing %s\n', cfg.parameter{j});
     else
-      fprintf('smoothing %s with a kernel of %d voxels\n', cfg.parameter{j}, cfg.smooth);
-      tmp = volumesmooth(getsubfield(source, cfg.parameter{j}));
+      tmp = volumesmooth(getsubfield(source, cfg.parameter{j}), cfg.smooth, cfg.parameter{j});
       setsubfield(source, cfg.parameter{j}, tmp);
     end
   end
@@ -152,7 +154,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous source
-ft_postamble history downsample
-ft_postamble savevar downsample
+ft_postamble previous   source
+ft_postamble provenance downsample
+ft_postamble history    downsample
+ft_postamble savevar    downsample

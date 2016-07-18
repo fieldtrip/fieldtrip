@@ -1,4 +1,4 @@
-function [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
+function [s, cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 
 % FT_STATFUN_INDEPSAMPLESREGRT calculates independent samples regression
 % coefficient T-statistics on the biological data in dat (the dependent
@@ -17,7 +17,7 @@ function [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 %   [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design);
 % where
 %   dat    contains the biological data,  Nsamples x Nreplications
-%   design contains the independent variable,  Nreplications x Nvar
+%   design contains the independent variable,  Nvar X Nreplications
 %
 % Configuration options
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
@@ -39,7 +39,7 @@ function [s,cfg] = ft_statfun_indepsamplesregrT(cfg, dat, design)
 
 % Copyright (C) 2006, Eric Maris
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -65,7 +65,7 @@ if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
 if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
 
 % perform some checks on the configuration
-if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
+if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
     error('P-values can only be calculated if the test statistics are calculated.');
 end;
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)

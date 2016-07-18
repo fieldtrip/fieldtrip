@@ -10,9 +10,10 @@ function test_old_ft_topoplotTFR
 % with the ctf275 layout showing power decreases at the parietal lobes
 
 % load time-frequency data
-addpath /home/common/matlab/fieldtrip/testdata/
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/');
 fprintf('loading data\n');
-load observe_comm_moves_freqmtmconvol.mat
+%load observe_comm_moves_freqmtmconvol.mat
+load(fullfile(datadir,'observe_comm_moves_freqmtmconvol.mat'));
 
 % topoplot a low frequency band
 figure;

@@ -1,12 +1,12 @@
-function [lf] = eeg_leadfieldb(pos, elc, vol)
+function [lf] = eeg_leadfieldb(dippos, elc, vol)
 
 % EEG_LEADFIELDB computes the electric leadfield for a dipole in a volume
 % using the boundary element method
 %
-% [lf] = eeg_leadfieldb(pos, elc, vol)
+% [lf] = eeg_leadfieldb(dippos, elc, vol)
 %
 % with the input arguments
-%   pos     position dipole (1x3 or Nx3)
+%   dippos     position dipole (1x3 or Nx3)
 %   elc     position electrodes (optional, can be empty)
 %   vol     volume conductor model
 %
@@ -16,12 +16,12 @@ function [lf] = eeg_leadfieldb(pos, elc, vol)
 %   vol.mat     system matrix, which can include the electrode interpolation
 %
 % the compartment boundaries are described by a structure array with
-%   vol.bnd(i).pnt
-%   vol.bnd(i).pnt
+%   vol.bnd(i).pos
+%   vol.bnd(i).pos
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -60,10 +60,10 @@ ncmp = length(vol.bnd);
 % the number of electrodes, to the number of vertices of the skin
 % compartment or to the total number of vertices
 nelc  = size(elc, 1);
-nskin = size(vol.bnd(vol.skin_surface).pnt,1);
+nskin = size(vol.bnd(vol.skin_surface).pos,1);
 nall  = 0;
 for i=1:ncmp
-  nall = nall + size(vol.bnd(i).pnt,1);
+  nall = nall + size(vol.bnd(i).pos,1);
 end
 if size(vol.mat,1)==nelc
   % the output leadfield corresponds to the number of electrodes
@@ -85,23 +85,23 @@ switch ft_voltype(vol)
   case 'dipoli'
     % the system matrix was computed using Thom Oostendorp's DIPOLI
     % concatenate the vertices of all compartment boundaries in a single Nx3 matrix
-    pnt = [];
+    pos = [];
     for i=1:ncmp
-      pnt = [pnt; vol.bnd(i).pnt];
+      pos = [pos; vol.bnd(i).pos];
     end
     % dipoli incorporates the conductivity into the system matrix
-    lf = inf_medium_leadfield(pos, pnt, 1);
-
+    lf = inf_medium_leadfield(dippos, pos, 1);
+    
   case 'asa'
     % the system matrix was computed using ASA from www.ant-neuro.com
     % concatenate the vertices of all compartment boundaries in a single Nx3 matrix
-    pnt = [];
+    pos = [];
     for i=1:ncmp
-      pnt = [pnt; vol.bnd(i).pnt];
+      pos = [pos; vol.bnd(i).pos];
     end
     % assume that isolated potential approach was used
-    lf = inf_medium_leadfield(pos, pnt, cond);
-
+    lf = inf_medium_leadfield(dippos, pos, cond);
+    
   case 'bemcp'
     % the system matrix was computed using code from Christopher Phillips
     cond = [vol.cond 0]; % add the conductivity of air for simplicity
@@ -109,11 +109,11 @@ switch ft_voltype(vol)
     % loop over boundaries and compute the leadfield for each
     for i=1:ncmp
       co = (cond(i)+cond(i+1))/2 ;
-      lf{i} = inf_medium_leadfield(pos, vol.bnd(i).pnt, co);
+      lf{i} = inf_medium_leadfield(dippos, vol.bnd(i).pos, co);
     end
     % concatenate the leadfields
     lf = cat(1, lf{:});
-  
+    
   otherwise
     error('unsupported type of volume conductor (%s)\n', ft_voltype(vol));
 end % switch ft_voltype

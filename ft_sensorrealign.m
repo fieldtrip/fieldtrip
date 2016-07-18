@@ -71,9 +71,9 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %
 % To realign the sensors using the fiducials, the target has to contain the
 % three template fiducials, e.g.
-%   cfg.target.pnt(1,:) = [110 0 0]     % location of the nose
-%   cfg.target.pnt(2,:) = [0  90 0]     % location of the left ear
-%   cfg.target.pnt(3,:) = [0 -90 0]     % location of the right ear
+%   cfg.target.pos(1,:) = [110 0 0]     % location of the nose
+%   cfg.target.pos(2,:) = [0  90 0]     % location of the left ear
+%   cfg.target.pos(3,:) = [0 -90 0]     % location of the right ear
 %   cfg.target.label    = {'NAS', 'LPA', 'RPA'}
 %
 % To align the sensors to a single template set or to multiple electrode
@@ -94,7 +94,7 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 
 % Copyright (C) 2005-2011, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -112,17 +112,25 @@ function [elec_realigned] = ft_sensorrealign(cfg, elec_original)
 %
 % $Id$
 
-revision = '$Id$';
+% DEPRECATED by roboos on 11 November 2015
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1830
+% support for this functionality can be removed mid 2016
+warning('FT_SENSORREALIGN is deprecated, please use FT_ELECTRODEREALIGN instead.')
+
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble provenance elec_original
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -152,9 +160,9 @@ if ~isempty(cfg.coordsys)
   switch lower(cfg.coordsys)
     case 'ctf'
       cfg.target = [];
-      cfg.target.pnt(1,:) = [100  0 0];
-      cfg.target.pnt(2,:) = [0   80 0];
-      cfg.target.pnt(3,:) = [0  -80 0];
+      cfg.target.pos(1,:) = [100  0 0];
+      cfg.target.pos(2,:) = [0   80 0];
+      cfg.target.pos(3,:) = [0  -80 0];
       cfg.target.label{1} = 'NAS';
       cfg.target.label{2} = 'LPA';
       cfg.target.label{3} = 'RPA';
@@ -177,8 +185,11 @@ switch cfg.method
     cfg = ft_checkconfig(cfg, 'required', 'headshape', 'forbidden', 'target');
 end % switch cfg.method
 
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
 % get the electrode definition that should be warped
-if nargin==1
+if ~hasdata
   try % try to get the description from the cfg
     elec_original = ft_fetch_sens(cfg);
   catch
@@ -186,13 +197,14 @@ if nargin==1
     me = lasterror;
     % start with an empty set of electrodes, this is useful for manual positioning
     elec_original = [];
-    elec_original.pnt    = zeros(0,3);
+    elec_original.pos    = zeros(0,3);
     elec_original.label  = cell(0,1);
     elec_original.unit   = 'mm';
     warning(me.message, me.identifier);
   end
-elseif nargin>1
+else
   % the input electrodes were specified as second input argument
+  % or read from cfg.inputfile
 end
 
 % ensure that the units are specified
@@ -228,7 +240,7 @@ if usetemplate
       template(i) = ft_read_sens(cfg.target{i});
     end
   end
-  
+
   clear tmp
   for i=1:Ntemplate
     tmp(i) = ft_datatype_sens(template(i));            % ensure up-to-date sensor description
@@ -239,12 +251,12 @@ end
 
 if useheadshape
   % get the surface describing the head shape
-  if isstruct(cfg.headshape) && isfield(cfg.headshape, 'pnt')
+  if isstruct(cfg.headshape)
     % use the headshape surface specified in the configuration
-    headshape = cfg.headshape;
+    headshape = fixpos(cfg.headshape);
   elseif isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
     % use the headshape points specified in the configuration
-    headshape.pnt = cfg.headshape;
+    headshape.pos = cfg.headshape;
   elseif ischar(cfg.headshape)
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
@@ -253,8 +265,8 @@ if useheadshape
   end
   if ~isfield(headshape, 'tri')
     % generate a closed triangulation from the surface points
-    headshape.pnt = unique(headshape.pnt, 'rows');
-    headshape.tri = projecttri(headshape.pnt);
+    headshape.pos = unique(headshape.pos, 'rows');
+    headshape.tri = projecttri(headshape.pos);
   end
   headshape = ft_convert_units(headshape, elec.unit); % ensure that the units are consistent with the electrodes
 end
@@ -289,13 +301,13 @@ norm = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(cfg.method, 'template')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % determine electrode selection and overlapping subset for warping
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
   for i=1:Ntemplate
     cfg.channel = ft_channelselection(cfg.channel, template(i).label);
   end
-  
+
   % make consistent subselection of electrodes
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label = elec.label(datsel);
@@ -303,62 +315,62 @@ if strcmp(cfg.method, 'template')
   for i=1:Ntemplate
     [cfgsel, datsel] = match_str(cfg.channel, template(i).label);
     template(i).label = template(i).label(datsel);
-    template(i).pnt   = template(i).pnt(datsel,:);
+    template(i).pos   = template(i).pos(datsel,:);
   end
-  
+
   % compute the average of the template electrode positions
   average = ft_average_sens(template);
-  
+
   fprintf('warping electrodes to average template... '); % the newline comes later
   [norm.chanpos, norm.m] = ft_warp_optim(elec.chanpos, average.chanpos, cfg.warp);
   norm.label = elec.label;
-  
+
   dpre  = mean(sqrt(sum((average.chanpos - elec.chanpos).^2, 2)));
   dpost = mean(sqrt(sum((average.chanpos - norm.chanpos).^2, 2)));
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
-  
+
   if strcmp(cfg.feedback, 'yes')
     % plot all electrodes before warping
     ft_plot_sens(elec, 'r*');
-    
+
     % plot all electrodes after warping
     ft_plot_sens(norm, 'm.', 'label', 'label');
-    
+
     % plot the template electrode locations
     ft_plot_sens(average, 'b.');
-    
+
     % plot lines connecting the input and the realigned electrode locations with the template locations
     my_line3(elec.chanpos, average.chanpos, 'color', 'r');
     my_line3(norm.chanpos, average.chanpos, 'color', 'm');
   end
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'headshape')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % determine electrode selection and overlapping subset for warping
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
-  
+
   % make subselection of electrodes
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label   = elec.label(datsel);
   elec.chanpos = elec.chanpos(datsel,:);
-  
+
   fprintf('warping electrodes to skin surface... '); % the newline comes later
   [norm.chanpos, norm.m] = ft_warp_optim(elec.chanpos, headshape, cfg.warp);
   norm.label = elec.label;
-  
+
   dpre  = ft_warp_error([],     elec.chanpos, headshape, cfg.warp);
   dpost = ft_warp_error(norm.m, elec.chanpos, headshape, cfg.warp);
   fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'fiducial')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % the fiducials have to be present in the electrodes and in the template set
   label = intersect(lower(elec.label), lower(template.label));
-  
+
   if ~isfield(cfg, 'fiducial') || isempty(cfg.fiducial)
     % try to determine the names of the fiducials automatically
     option1 = {'nasion' 'left' 'right'};
@@ -384,17 +396,17 @@ elseif strcmp(cfg.method, 'fiducial')
     end
   end
   fprintf('matching fiducials {''%s'', ''%s'', ''%s''}\n', cfg.fiducial{1}, cfg.fiducial{2}, cfg.fiducial{3});
-  
+
   % determine electrode selection
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
   [cfgsel, datsel] = match_str(cfg.channel, elec.label);
   elec.label = elec.label(datsel);
   elec.chanpos   = elec.chanpos(datsel,:);
-  
+
   if length(cfg.fiducial)~=3
     error('you must specify three fiducials');
   end
-  
+
   % do case-insensitive search for fiducial locations
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
@@ -405,11 +417,11 @@ elseif strcmp(cfg.method, 'fiducial')
   elec_nas = elec.chanpos(nas_indx,:);
   elec_lpa = elec.chanpos(lpa_indx,:);
   elec_rpa = elec.chanpos(rpa_indx,:);
-  
+
   % FIXME change the flow in the remainder
   % if one or more template electrode sets are specified, then align to the average of those
   % if no template is specified, then align so that the fiducials are along the axis
-  
+
   % find the matching fiducials in the template and average them
   templ_nas = nan(Ntemplate,3);
   templ_lpa = nan(Ntemplate,3);
@@ -421,24 +433,24 @@ elseif strcmp(cfg.method, 'fiducial')
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
       error(sprintf('not all fiducials were found in template %d', i));
     end
-    templ_nas(i,:) = template(i).pnt(nas_indx,:);
-    templ_lpa(i,:) = template(i).pnt(lpa_indx,:);
-    templ_rpa(i,:) = template(i).pnt(rpa_indx,:);
+    templ_nas(i,:) = template(i).pos(nas_indx,:);
+    templ_lpa(i,:) = template(i).pos(lpa_indx,:);
+    templ_rpa(i,:) = template(i).pos(rpa_indx,:);
   end
   templ_nas = mean(templ_nas,1);
   templ_lpa = mean(templ_lpa,1);
   templ_rpa = mean(templ_rpa,1);
-  
+
   % realign both to a common coordinate system
   elec2common  = ft_headcoordinates(elec_nas, elec_lpa, elec_rpa);
   templ2common = ft_headcoordinates(templ_nas, templ_lpa, templ_rpa);
-  
+
   % compute the combined transform and realign the electrodes to the template
   norm         = [];
   norm.m       = elec2common * inv(templ2common);
   norm.chanpos = ft_warp_apply(norm.m, elec.chanpos, 'homogeneous');
   norm.label   = elec.label;
-  
+
   nas_indx = match_str(lower(elec.label), lower(cfg.fiducial{1}));
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
   rpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{3}));
@@ -448,7 +460,7 @@ elseif strcmp(cfg.method, 'fiducial')
   rpa_indx = match_str(lower(norm.label), lower(cfg.fiducial{3}));
   dpost = mean(sqrt(sum((norm.chanpos([nas_indx lpa_indx rpa_indx],:) - [templ_nas; templ_lpa; templ_rpa]).^2, 2)));
   fprintf('mean distance between fiducials prior to realignment %f, after realignment %f\n', dpre, dpost);
-  
+
   if strcmp(cfg.feedback, 'yes')
     % plot the first three electrodes before transformation
     my_plot3(elec.chanpos(1,:), 'r*');
@@ -457,7 +469,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(elec.chanpos(1,:), elec.label{1}, 'color', 'r');
     my_text3(elec.chanpos(2,:), elec.label{2}, 'color', 'r');
     my_text3(elec.chanpos(3,:), elec.label{3}, 'color', 'r');
-    
+
     % plot the template fiducials
     my_plot3(templ_nas, 'b*');
     my_plot3(templ_lpa, 'b*');
@@ -465,7 +477,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(templ_nas, ' nas', 'color', 'b');
     my_text3(templ_lpa, ' lpa', 'color', 'b');
     my_text3(templ_rpa, ' rpa', 'color', 'b');
-    
+
     % plot all electrodes after transformation
     my_plot3(norm.chanpos, 'm.');
     my_plot3(norm.chanpos(1,:), 'm*');
@@ -475,7 +487,7 @@ elseif strcmp(cfg.method, 'fiducial')
     my_text3(norm.chanpos(2,:), norm.label{2}, 'color', 'm');
     my_text3(norm.chanpos(3,:), norm.label{3}, 'color', 'm');
   end
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'interactive')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -506,7 +518,7 @@ elseif strcmp(cfg.method, 'interactive')
   clear global norm
   norm = tmp;
   clear tmp
-  
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'manual')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -528,7 +540,7 @@ elseif strcmp(cfg.method, 'manual')
   for i=1:size(norm.chanpos,1)
     norm.label{i,1} = sprintf('%d', i);
   end
-  
+
 else
   error('unknown method');
 end
@@ -565,9 +577,9 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous elec_original
-ft_postamble history elec_realigned
+ft_postamble previous   elec_original
+ft_postamble provenance elec_realigned
+ft_postamble history    elec_realigned
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -588,7 +600,7 @@ function cb_creategui(hObject, eventdata, handles)
 fig = get(hObject, 'parent');
 % constants
 CONTROL_WIDTH  = 0.05;
-CONTROL_HEIGHT = 0.06; 
+CONTROL_HEIGHT = 0.06;
 CONTROL_HOFFSET = 0.7;
 CONTROL_VOFFSET = 0.5;
 % rotateui
@@ -681,7 +693,7 @@ if ~isempty(headshape)
   camlight
 end
 
-if isfield(elec, 'fid') && ~isempty(elec.fid.pnt)
+if isfield(elec, 'fid') && ~isempty(elec.fid.pos)
   disp('Plotting the fiducials in red');
   ft_plot_sens(elec.fid,'style', 'r*');
 end
@@ -747,4 +759,3 @@ norm   = getappdata(fig, 'elec');
 norm.m = getappdata(fig, 'transform');
 set(fig, 'CloseRequestFcn', @delete);
 delete(fig);
-

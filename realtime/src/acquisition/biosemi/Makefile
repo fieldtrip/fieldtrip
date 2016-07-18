@@ -35,22 +35,20 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(UNAME)" "Linux"
-    LDLIBS += -lpthread -ldl
+		LDLIBS += -lbuffer -lpthread -ldl -lrt
+		LDFLAGS += -L$(FTBUFFER)/src
     fixpath = $1
     ifeq "$(MACHINE)" "i686"
+		    BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
     endif
     ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-		LDFLAGS += -L$(FTBUFFER)/src
-		LDLIBS += -lbuffer -lpthread -ldl
+		    BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
     endif
     ifeq "$(MACHINE)" "armv6l"
-		# This is Debian 6.0.5 running on the Raspberry Pi. I have not yet been
-		# able to test whether the binary actually works, that requires having
-		# the amplifier hooked up to the R-Pi.
-		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-		LDFLAGS += -L$(FTBUFFER)/src
-		LDLIBS += -lbuffer -lpthread -ldl
+		    # This is Debian 6.0.5 running on the Raspberry Pi. I have not yet been
+		    # able to test whether the binary actually works, that requires having
+		    # the amplifier hooked up to the R-Pi.
+		    BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
     endif
 endif
 

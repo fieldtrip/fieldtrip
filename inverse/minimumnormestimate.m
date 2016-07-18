@@ -1,30 +1,23 @@
-function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
+function [dipout] = minimumnormestimate(dip, grad, headmodel, dat, varargin)
 
 % MINIMUMNORMESTIMATE computes a linear estimate of the current in a
 % distributed source model.
 %
 % Use as
-%   [dipout] = minimumnormestimate(dip, grad, vol, dat, ...)
+%   [dipout] = minimumnormestimate(dip, grad, headmodel, dat, ...)
 %
 % Optional input arguments should come in key-value pairs and can include
 %   'noisecov'         = Nchan x Nchan matrix with noise covariance
-%   'noiselambda'      = scalar value, regularisation parameter for the noise
-%                        covariance matrix. (default=0)
-%   'sourcecov'        = Nsource x Nsource matrix with source covariance
-%                        (can be empty, the default will then be identity)
-%   'lambda'           = scalar, regularisation parameter (can be empty,
-%                        it will then be estimated from snr)
-%  'snr'               = scalar, signal to noise ratio
-%  'reducerank'        = reduce the leadfield rank, can be 'no' or a number
-%                        (e.g. 2)
-%  'normalize'         = normalize the leadfield
-%  'normalizeparam'    = parameter for depth normalization (default = 0.5)
-%  'keepfilter'        = 'no' or 'yes', keep the spatial filter in the
-%                        output
-%  'prewhiten'         = 'no' or 'yes', prewhiten the leadfield matrix with
-%                        the noise covariance matrix C.
-%  'scalesourcecov'    = 'no' or 'yes', scale the source covariance matrix R
-%                        such that trace(leadfield*R*leadfield')/trace(C)=1
+%   'noiselambda'      = scalar value, regularisation parameter for the noise covariance matrix (default = 0)
+%   'sourcecov'        = Nsource x Nsource matrix with source covariance (can be empty, the default will then be identity)
+%   'lambda'           = scalar, regularisation parameter (can be empty, it will then be estimated from snr)
+%   'snr'              = scalar, signal to noise ratio
+%   'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
+%   'normalize'        = normalize the leadfield
+%   'normalizeparam'   = parameter for depth normalization (default = 0.5)
+%   'keepfilter'       = 'no' or 'yes', keep the spatial filter in the output
+%   'prewhiten'        = 'no' or 'yes', prewhiten the leadfield matrix with the noise covariance matrix C
+%   'scalesourcecov'   = 'no' or 'yes', scale the source covariance matrix R such that trace(leadfield*R*leadfield')/trace(C)=1
 %
 % Note that leadfield normalization (depth regularisation) should be done
 % by scaling the leadfields outside this function, e.g. in
@@ -49,7 +42,7 @@ function [dipout] = minimumnormestimate(dip, grad, vol, dat, varargin)
 
 % Copyright (C) 2004-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -95,7 +88,7 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
 if any(dip.inside>1)
@@ -140,18 +133,18 @@ else
   if isfield(dip, 'mom')
     for i=size(dip.pos,1)
       % compute the leadfield for a fixed dipole orientation
-      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
+      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam) * dip.mom(:,i);
     end
   else
       
     for i=1:size(dip.pos,1)
       % compute the leadfield
-      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+      dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
     end
   end
 end
 
-% compute the spatial filter
+%% compute the spatial filter
 if ~hasfilter
   
   % count the number of channels and leadfield components
@@ -169,6 +162,12 @@ if ~hasfilter
     cend = n + size(dip.leadfield{i}, 2) - 1;
     lf(:,cbeg:cend) = dip.leadfield{i};
     n = n + size(dip.leadfield{i}, 2);
+  end
+  
+  % Take the rieal part of the noise cross-spectral density matrix
+  if isreal(noisecov) == 0
+      fprintf('Taking the real part of the noise cross-spectral density matrix\n');
+      noisecov = real(noisecov);
   end
   
   % compute the inverse of the forward model, this is where prior information
@@ -251,20 +250,36 @@ if ~hasfilter
     
   end % if empty noisecov
   
-  % for each of the timebins, estimate the source strength
-  mom = w * dat;
+  %% for each of the timebins, estimate the source strength
+  if isreal(dat) == 1
+    fprintf('The input are sensors time-series: Computing the dipole moments\n')
+    mom = w * dat;
+    mom_ind = 1;
+  elseif size(dat,1)==size(dat,2)&&sum(sum(dat-dat'))<10^-5*sum(diag(dat))
+    fprintf('The input is a sensor level cross-spectral density: Computing source level power\n')
+    pow = real(sum((w*dat).*w,2));
+    mom_ind = 0;
+  else
+    fprintf('The input is are sensor level Fourier-coefficients: Computing source level Fourier coefficients\n')
+    mom = w * dat;
+    mom_ind = 1;
+  end
   
   % assign the estimated source strength to each dipole
-  n = 1;
-  for i=1:size(dip.pos,1)
-    cbeg = n;
-    cend = n + size(dip.leadfield{i}, 2) - 1;
-    dipout.mom{i} = mom(cbeg:cend,:);
-    n = n + size(dip.leadfield{i}, 2);
+  if mom_ind == 1
+    n = 1;
+    for i=1:size(dip.pos,1)
+      cbeg = n;
+      cend = n + size(dip.leadfield{i}, 2) - 1;
+      dipout.mom{i} = mom(cbeg:cend,:);
+      n = n + size(dip.leadfield{i}, 2);
+    end
   end
   
 elseif hasfilter
-  
+  if isreal(dat) == 0
+      error('Using premade filters is currenly not supported for frequency domain analysis\n')
+  end
   % use the spatial filters from the data
   dipout.mom = cell(size(dip.pos,1),1);
   for i=1:size(dip.pos,1)
@@ -274,9 +289,21 @@ elseif hasfilter
 end % if hasfilter
 
 % for convenience also compute power (over the three orientations) at each location and for each time
-dipout.pow = nan(size(dip.pos,1), size(dat,2));
-for i=1:size(dip.pos,1)
-  dipout.pow(i,:) = sum(dipout.mom{i}.^2, 1);
+
+if mom_ind == 1
+  dipout.pow = nan(size(dip.pos,1), size(dat,2));
+  for i=1:size(dip.pos,1)
+    dipout.pow(i,:) = sum(abs(dipout.mom{i}).^2, 1);
+  end
+else
+    dipout.pow = nan(size(dip.pos,1), 1);
+    n = 1;
+    for i=1:size(dip.pos,1)
+      cbeg = n;
+      cend = n + size(dip.leadfield{i}, 2) - 1;
+      dipout.pow(i,:) = sum(pow(cbeg:cend),1);
+      n = n + size(dip.leadfield{i}, 2);
+    end
 end
 
 % deal with keepfilter option

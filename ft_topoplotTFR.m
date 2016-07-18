@@ -14,7 +14,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %   cfg.parameter          = field that contains the data to be plotted as color
 %                           'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
 %   cfg.maskparameter      = field in the data to be used for masking of
-%                            data. Values between 0 and 1, 0 = transparent 
+%                            data. Values between 0 and 1, 0 = transparent
 %   cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
 %                            'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
@@ -79,7 +79,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %   cfg.layout             = specify the channel layout for plotting using one of
 %                            the supported ways (see below).
 %   cfg.interpolatenan     = string 'yes', 'no' (default = 'yes')
-%                            interpolate over channels containing NaNs 
+%                            interpolate over channels containing NaNs
 %
 % For the plotting of directional connectivity data the cfg.directionality
 % option determines what is plotted. The default value and the supported
@@ -120,7 +120,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % See also FT_TOPOPLOTER, FT_TOPOPLOTIC, FT_SINGLEPLOTTFR, FT_MULTIPLOTTFR, FT_PREPARE_LAYOUT
 
-% Undocumented options: 
+% Undocumented options:
 %
 % It is possible to use multiple highlight-selections (e.g.: multiple
 % statistical clusters of channels) To do this, all the content of
@@ -128,7 +128,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % in a cell-array (even if the normal content was already in a
 % cell-array). Specific marker settings (e.g. color, size) are defaulted
 % when not present.
-% 
+%
 % Example (3 selections):
 % cfg.highlight          = {'labels', 'labels', 'numbers'}
 % cfg.highlightchannel   = {{'MZF03','MZC01','MRT54'}, [1:5], 'C*'}
@@ -141,7 +141,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -159,18 +159,21 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble loadvar    varargin
+ft_preamble debug
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
-ft_preamble debug
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -196,12 +199,11 @@ cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
 % this will replace the ft_topoplotTFR callinfo with that of ft_topoplotER
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
-ft_postamble debug
 
 if ~nargout
   clear cfg
 end
-

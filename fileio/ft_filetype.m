@@ -52,6 +52,8 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Neuroscan
 %  - Plexon
 %  - SR Research Eyelink
+%  - SensoMotoric Instruments (SMI) *.txt
+%  - Tobii *.tsv
 %  - Stanford *.ply
 %  - Tucker Davis Technology
 %  - VSM-Medtech/CTF
@@ -60,7 +62,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 
 % Copyright (C) 2003-2013 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -147,7 +149,15 @@ if isempty(filename)
 end
 
 % the parts of the filename are used further down
-[p, f, x] = fileparts(filename);
+if isdir(filename)
+  [p, f, x] = fileparts(filename);
+  p = filename;  % the full path to the directory name
+  d = f;         % the last part of the directory name
+  f = '';
+  x = '';
+else
+  [p, f, x] = fileparts(filename);
+end
 
 % prevent this test if the filename resembles an URI, i.e. like "scheme://"
 if isempty(strfind(filename , '://')) && isdir(filename)
@@ -219,7 +229,7 @@ elseif filetype_check_uri(filename, 'empty')
   content      = '/dev/null';
   
   % known CTF file types
-elseif isdir(filename) && filetype_check_extension(filename, '.ds') && exist(fullfile(filename, [f '.res4']))
+elseif isdir(filename) && filetype_check_extension(filename, '.ds') && exist(fullfile(filename, [f '.res4']), 'file')
   type = 'ctf_ds';
   manufacturer = 'CTF';
   content = 'MEG dataset';
@@ -557,6 +567,16 @@ elseif filetype_check_extension(filename, '.pos')
   manufacturer = 'BrainProducts/CTF/Polhemus?'; % actually I don't know whose software it is
   content = 'electrode positions';
   
+  % known Blackrock Microsystems file types
+elseif strncmp(x,'.ns',3) && (filetype_check_header(filename, 'NEURALCD') || filetype_check_header(filename, 'NEURALSG'))
+  type = 'blackrock_nsx';
+  manufacturer = 'Blackrock Microsystems';
+  content = 'conintuously sampled data';
+elseif filetype_check_extension(filename, '.nev') && filetype_check_header(filename, 'NEURALEV')
+  type = 'blackrock_nev';
+  manufacturer = 'Blackrock Microsystems';
+  contenct = 'extracellular electrode spike information';
+  
   % known Neuralynx file types
 elseif filetype_check_extension(filename, '.nev') || filetype_check_extension(filename, '.Nev')
   type = 'neuralynx_nev';
@@ -624,7 +644,7 @@ elseif isdir(filename) && most(filetype_check_extension({ls.name}, '.ntt'))
   manufacturer = 'Neuralynx';
   content = 'tetrode recordings ';
   
-elseif isdir(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'events'), 'file')
+elseif isdir(p) && exist(fullfile(p, 'header'), 'file') && exist(fullfile(p, 'samples'), 'file') && exist(fullfile(p, 'events'), 'file')
   type = 'fcdc_buffer_offline';
   manufacturer = 'Donders Centre for Cognitive Neuroimaging';
   content = 'FieldTrip buffer offline dataset';
@@ -752,6 +772,10 @@ elseif filetype_check_extension(filename, '.sfh') && filetype_check_header(filen
   type = 'besa_sfh';
   manufacturer = 'BESA';
   content = 'electrode and fiducial information';
+elseif filetype_check_extension(filename, '.besa')
+  type = 'besa_besa';
+  manufacturer = 'BESA';
+  content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.srf') && filetype_check_header(filename, [0 0 0 0], 4)
   type = 'brainvoyager_srf';
   manufacturer = 'BrainVoyager'; % see http://support.brainvoyager.com/installation-introduction/23-file-formats/375-users-guide-23-the-format-of-srf-files.html
@@ -833,6 +857,19 @@ elseif filetype_check_extension(filename, '.tev')
   manufacturer = 'Tucker-Davis-Technology';
   content = 'electrophysiological data';
   
+  % raw audio and video data from https://github.com/andreyzhd/VideoMEG
+  % the extension *.aud/*.vid is used at NatMEG and *.audio.dat/*.video.dat seems to be used in Helsinki
+elseif (filetype_check_extension(filename, '.aud') || filetype_check_extension(filename, '.audio.dat')) && filetype_check_header(filename, 'ELEKTA_AUDIO_FILE')
+  % this should go before curry_dat
+  type = 'videomeg_aud';
+  manufacturer = 'VideoMEG';
+  content = 'audio';
+elseif (filetype_check_extension(filename, '.vid') || filetype_check_extension(filename, '.video.dat')) && filetype_check_header(filename, 'ELEKTA_VIDEO_FILE')
+  % this should go before curry_dat
+  type = 'videomeg_vid';
+  manufacturer = 'VideoMEG';
+  content = 'video';
+
 elseif (filetype_check_extension(filename, '.dat') ||  filetype_check_extension(filename, '.Dat')) && (exist(fullfile(p, [f '.ini']), 'file') || exist(fullfile(p, [f '.Ini']), 'file'))
   % this should go before curry_dat
   type = 'deymed_dat';
@@ -883,6 +920,11 @@ elseif filetype_check_extension(filename, '.dig')
   manufacturer = 'Curry';
   content = 'digitizer file';
   
+elseif filetype_check_extension(filename, '.txt') && filetype_check_header(filename, '##')
+  type = 'smi_txt';
+  manufacturer = 'SensoMotoric Instruments (SMI)';
+  content = 'eyetracker data';
+  
   % known SR Research eyelink file formats
 elseif filetype_check_extension(filename, '.asc') && filetype_check_header(filename, '**')
   type = 'eyelink_asc';
@@ -892,6 +934,11 @@ elseif filetype_check_extension(filename, '.edf') && filetype_check_header(filen
   type = 'eyelink_edf';
   manufacturer = 'SR Research';
   content = 'eyetracker data (binary)';
+  
+elseif filetype_check_extension(filename, '.tsv') && (filetype_check_header(filename, 'Data Properties:') || filetype_check_header(filename, 'System Properties:'))
+  type = 'tobii_tsv';
+  manufacturer = 'Tobii';
+  content = 'eyetracker data (ascii)';
   
   % known Curry V2 file types
 elseif filetype_check_extension(filename, '.sp0') || filetype_check_extension(filename, '.sp1') || filetype_check_extension(filename, '.sp2') || filetype_check_extension(filename, '.sp3') || filetype_check_extension(filename, '.sp4') || filetype_check_extension(filename, '.sp5') || filetype_check_extension(filename, '.sp6') || filetype_check_extension(filename, '.sp7') || filetype_check_extension(filename, '.sp8') || filetype_check_extension(filename, '.sp9')
@@ -980,6 +1027,12 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nr
   manufacturer = 'BUCN';
   content = 'ascii formatted nirs data';
   
+  % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
+elseif filetype_check_extension(filename, '.nirs') && filetype_check_header(filename, 'MATLAB')
+  type = 'homer_nirs';
+  manufacturer = 'Homer';
+  content = '(f)NIRS data';
+  
   % known Artinis file format
 elseif filetype_check_extension(filename, '.oxy3')  
   type = 'oxy3';
@@ -1047,7 +1100,7 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   type = 'brainvisa_minf';
   manufacturer = 'BrainVISA';
   content = 'annotation/metadata';
-
+  
   % some other known file types
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files
@@ -1063,6 +1116,10 @@ elseif filetype_check_extension(filename, '.stl')
   type = 'stl';
   manufacturer = 'various';
   content = 'stereo litography file';
+elseif filetype_check_extension(filename, '.obj')
+  type = 'obj';
+  manufacturer = 'Wavefront Technologies';
+  content = 'Wavefront OBJ';
 elseif filetype_check_extension(filename, '.dcm') || filetype_check_extension(filename, '.ima') || filetype_check_header(filename, 'DICM', 128)
   type = 'dicom';
   manufacturer = 'Dicom';
@@ -1202,7 +1259,12 @@ elseif filetype_check_extension(filename, '.ah5')
     type = 'AnyWave';
     manufacturer = 'AnyWave, http://meg.univ-amu.fr/wiki/AnyWave';
     content = 'MEG/SEEG/EEG data';
+elseif (isdir(filename) && exist(fullfile(p, [d '.EEG.Poly5']), 'file')) || filetype_check_extension(filename, '.Poly5')
+    type = 'tmsi_poly5';
+    manufacturer = 'TMSi PolyBench';
+    content = 'EEG';
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % finished determining the filetype

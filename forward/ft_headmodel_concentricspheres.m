@@ -1,4 +1,4 @@
-function vol = ft_headmodel_concentricspheres(geometry, varargin)
+function headmodel = ft_headmodel_concentricspheres(mesh, varargin)
 
 % FT_HEADMODEL_CONCENTRICSPHERES creates a volume conduction model
 % of the head based on three or four concentric spheres. For a 3-sphere
@@ -16,7 +16,7 @@ function vol = ft_headmodel_concentricspheres(geometry, varargin)
 % to all individual surfaces.
 %
 % Use as
-%   vol = ft_headmodel_concentricspheres(geometry, ...)
+%   headmodel = ft_headmodel_concentricspheres(mesh, ...)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
@@ -27,7 +27,7 @@ function vol = ft_headmodel_concentricspheres(geometry, varargin)
 
 % Copyright (C) 2012-2013, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,81 +50,84 @@ conductivity = ft_getopt(varargin, 'conductivity'); % default is determined belo
 fitind       = ft_getopt(varargin, 'fitind', 'all');
 
 if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
-  % the geometrical units should be specified in the input geometry
+  % the geometrical units should be specified in the input mesh
   error('the ''unit'' option is not supported any more');
 end
 
-if isnumeric(geometry) && size(geometry,2)==3
+if isnumeric(mesh) && size(mesh,2)==3
   % assume that it is a Nx3 array with vertices
   % convert it to a structure, this is needed to determine the units further down
-  geometry = struct('pnt', geometry);
-elseif isstruct(geometry) && isfield(geometry,'bnd')
+  mesh = struct('pos', mesh);
+elseif isstruct(mesh) && isfield(mesh,'bnd')
   % take the triangulated surfaces from the input structure
-  geometry = geometry.bnd;
+  mesh = mesh.bnd;
 end
 
-if ~isstruct(geometry) || ~isfield(geometry, 'pnt')
-  error('the input geometry should be a set of points or a single triangulated surface')
+% replace pnt with pos
+mesh = fixpos(mesh);
+
+if ~isstruct(mesh) || ~isfield(mesh, 'pos')
+  error('the input mesh should be a set of points or a single triangulated surface')
 end
 
 % start with an empty volume conductor
-vol = [];
+headmodel = [];
 
-% ensure that the geometry has units, estimate them if needed
-geometry = ft_convert_units(geometry);
+% ensure that the mesh has units, estimate them if needed
+mesh = ft_convert_units(mesh);
 
 % copy the geometrical units into the volume conductor
-vol.unit = geometry(1).unit;
+headmodel.unit = mesh(1).unit;
 
 if isequal(fitind, 'all')
-  fitind = 1:numel(geometry);
+  fitind = 1:numel(mesh);
 end
 
 % concatenate the vertices of all surfaces
-pnt = {geometry.pnt};
-pnt = cat(1, pnt{:});
+pos = {mesh.pos};
+pos = cat(1, pos{:});
 
 % remove double vertices
-pnt  = unique(pnt, 'rows');
-npnt = size(pnt, 1);
+pos  = unique(pos, 'rows');
+npos = size(pos, 1);
 
 % fit a single sphere to all combined headshape points
-[single_o, single_r] = fitsphere(pnt);
-fprintf('initial sphere: number of unique surface points = %d\n', npnt);
+[single_o, single_r] = fitsphere(pos);
+fprintf('initial sphere: number of unique surface points = %d\n', npos);
 fprintf('initial sphere: center = [%.1f %.1f %.1f]\n', single_o(1), single_o(2), single_o(3));
 fprintf('initial sphere: radius = %.1f\n', single_r);
 
 % fit the radius of each concentric sphere to the corresponding surface points
-for i = 1:numel(geometry)
-  npnt     = size(geometry(i).pnt,1);
-  dist     = sqrt(sum(((geometry(i).pnt - repmat(single_o, npnt, 1)).^2), 2));
-  vol.r(i) = mean(dist);
+for i = 1:numel(mesh)
+  npos     = size(mesh(i).pos,1);
+  dist     = sqrt(sum(((mesh(i).pos - repmat(single_o, npos, 1)).^2), 2));
+  headmodel.r(i) = mean(dist);
 end
 
-vol.o    = single_o;              % specify the center of the spheres
-vol.cond = conductivity;          % specify the conductivity of the spheres, can be empty up to here
-vol.type = 'concentricspheres';
+headmodel.o    = single_o;              % specify the center of the spheres
+headmodel.cond = conductivity;          % specify the conductivity of the spheres, can be empty up to here
+headmodel.type = 'concentricspheres';
 
 % sort the spheres from the smallest to the largest
-[vol.r, indx] = sort(vol.r);
+[headmodel.r, indx] = sort(headmodel.r);
 
-if isempty(vol.cond)
+if isempty(headmodel.cond)
   % it being empty indicates that the user did not specify a conductivity, use a default instead
-  if length(vol.r)==1
-    vol.cond = 1;                        % brain
-  elseif length(vol.r)==3
-    vol.cond = [0.3300   0.0042 0.3300]; % brain,      skull, skin
-  elseif length(vol.r)==4
-    vol.cond = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
+  if length(headmodel.r)==1
+    headmodel.cond = 1;                        % brain
+  elseif length(headmodel.r)==3
+    headmodel.cond = [0.3300   0.0042 0.3300]; % brain,      skull, skin
+  elseif length(headmodel.r)==4
+    headmodel.cond = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
   else
     error('conductivity values should be specified for each tissue type');
   end
 else
   % the conductivity as specified by the user should be in the same order as the geometries
   % sort the spheres from the smallest to the largest ('insidefirst' order)
-  vol.cond = vol.cond(indx);
+  headmodel.cond = headmodel.cond(indx);
 end
 
-for i=1:numel(geometry)
-  fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, vol.r(i), vol.cond(i));
+for i=1:numel(mesh)
+  fprintf('concentric sphere %d: radius = %.1f, conductivity = %f\n', i, headmodel.r(i), headmodel.cond(i));
 end

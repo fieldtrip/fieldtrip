@@ -1,4 +1,4 @@
-function vol = ft_headmodel_openmeeg(geom, varargin)
+function headmodel = ft_headmodel_openmeeg(mesh, varargin)
 
 % FT_HEADMODEL_OPENMEEG creates a volume conduction model of the
 % head using the boundary element method (BEM). This function takes
@@ -21,11 +21,10 @@ function vol = ft_headmodel_openmeeg(geom, varargin)
 % and http://gforge.inria.fr/frs/?group_id=435.
 %
 % Use as
-%   vol = ft_headmodel_openmeeg(geom, ...)
+%   headmodel = ft_headmodel_openmeeg(mesh, ...)
 %
 % Optional input arguments should be specified in key-value pairs and can
 % include
-%   hdmfile          = string, filename with BEM headmodel
 %   conductivity     = vector, conductivity of each compartment
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
@@ -41,28 +40,28 @@ ft_hastoolbox('openmeeg', 1);
 % get the optional arguments
 conductivity    = ft_getopt(varargin, 'conductivity');
 
-% copy the boundaries from the geometry into the volume conduction model
-if isfield(geom,'bnd')
-  geom = geom.bnd;
+% copy the boundaries from the mesh into the volume conduction model
+if isfield(mesh,'bnd')
+  mesh = mesh.bnd;
 end
 
 % start with an empty volume conductor
-vol = [];
-vol.bnd = geom;
+headmodel = [];
+headmodel.bnd = mesh;
 
 % determine the number of compartments
-numboundaries = length(vol.bnd);
+numboundaries = length(headmodel.bnd);
 
 % determine the desired nesting of the compartments
-order = surface_nesting(vol.bnd, 'outsidefirst');
+order = surface_nesting(headmodel.bnd, 'outsidefirst');
 
 % rearrange boundaries and conductivities
-if numel(vol.bnd)>1
+if numel(headmodel.bnd)>1
   fprintf('reordering the boundaries to: ');
   fprintf('%d ', order);
   fprintf('\n');
   % update the order of the compartments
-  vol.bnd = vol.bnd(order);
+  headmodel.bnd = headmodel.bnd(order);
 end
 
 if isempty(conductivity)
@@ -75,17 +74,17 @@ if isempty(conductivity)
   else
     error('Conductivity values are required for 2 shells. More than 3 shells not allowed')
   end
-  vol.cond = conductivity;
+  headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
     error('a conductivity value should be specified for each compartment');
   end
   % update the order of the compartments
-  vol.cond = conductivity(order);
+  headmodel.cond = conductivity(order);
 end
 
-vol.skin_surface = 1;
-vol.source = numboundaries;
+headmodel.skin_surface = 1;
+headmodel.source = numboundaries;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this uses an implementation that was contributed by INRIA Odyssee Team
@@ -99,7 +98,7 @@ om_checkombin;
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
-bndom = vol.bnd;
+bndom = headmodel.bnd;
 
 try
   cd(tempdir)
@@ -117,10 +116,10 @@ try
     end
   end
    
-  for ii=1:length(vol.bnd)
+  for ii=1:length(headmodel.bnd)
     [junk,tname] = fileparts(tempname);
     bndfile{ii} = [tname '.tri'];
-    om_save_tri(bndfile{ii}, bndom(ii).pnt, bndom(ii).tri);
+    om_save_tri(bndfile{ii}, bndom(ii).pos, bndom(ii).tri);
   end
   
   % these will hold the shell script and the inverted system matrix
@@ -134,15 +133,15 @@ try
   [tmp,tname] = fileparts(tempname);
   condfile  = [tname '.cond'];
   [tmp,tname] = fileparts(tempname);
-  geomfile  = [tname '.geom'];
+  geomfile  = [tname '.mesh'];
   [tmp,tname] = fileparts(tempname);
   hmfile    = [tname '.bin'];
   [tmp,tname] = fileparts(tempname);
   hminvfile = [tname '.bin'];
   
-  % write conductivity and geometry files
+  % write conductivity and mesh files
   om_write_geom(geomfile,bndfile);
-  om_write_cond(condfile,vol.cond);
+  om_write_cond(condfile,headmodel.cond);
   
   % Exe file
   efid = fopen(exefile, 'w');
@@ -179,26 +178,26 @@ try
       error('non suitable GCC compiler version (must be superior to gcc3)');
     end
   end
-  vol.mat = om_load_sym(hminvfile,'binary');
-  cleaner(vol,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
+  headmodel.mat = om_load_sym(hminvfile,'binary');
+  cleaner(headmodel,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
   cd(tmpfolder)
 catch
   warning('an error ocurred while running OpenMEEG');
   disp(lasterr);
-  cleaner(vol,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
+  cleaner(headmodel,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
   cd(tmpfolder)
 end
 
 % remember the type of volume conduction model
-vol.type = 'openmeeg';
+headmodel.type = 'openmeeg';
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cleaner(vol,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
+function cleaner(headmodel,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
 % delete the temporary files
-for i=1:length(vol.bnd)
+for i=1:length(headmodel.bnd)
   delete(bndfile{i})
 end
 delete(condfile);
@@ -210,15 +209,15 @@ delete(exefile);
 function ok = checknormals(bnd)
 % FIXME: this method is rigorous only for star shaped surfaces
 ok = 0;
-pnt = bnd.pnt;
+pos = bnd.pos;
 tri = bnd.tri;
 % translate to the center
-org = mean(pnt,1);
-pnt(:,1) = pnt(:,1) - org(1);
-pnt(:,2) = pnt(:,2) - org(2);
-pnt(:,3) = pnt(:,3) - org(3);
+org = mean(pos,1);
+pos(:,1) = pos(:,1) - org(1);
+pos(:,2) = pos(:,2) - org(2);
+pos(:,3) = pos(:,3) - org(3);
 
-w = sum(solid_angle(pnt, tri));
+w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   ok = 0;

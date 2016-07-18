@@ -21,7 +21,7 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 
 % Copyright (C) 2012, Jörn M. Horschig, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -99,7 +99,7 @@ switch(padtype)
   case 'localmean'
     prepad    = min(prepadlength, floor(size(dat, 2)/2));
     edgeleft  = mean(dat(:, 1:prepad), 2);
-    postpad   = min(prepadlength, floor(size(dat, 2)/2));
+    postpad   = min(postpadlength, floor(size(dat, 2)/2));
     edgeright = mean(dat(:, 1+end-postpad:end), 2);
     dat       = [edgeleft*ones(1,prepadlength) dat edgeright*ones(1,postpadlength)];
     return;

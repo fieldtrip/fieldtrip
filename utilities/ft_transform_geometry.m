@@ -1,14 +1,9 @@
 function [output] = ft_transform_geometry(transform, input)
 
 % FT_TRANSFORM_GEOMETRY applies a homogeneous coordinate transformation to
-% a structure with geometric information. These objects include:
-%  - volume conductor geometry, consisting of a mesh, a set of meshes, a
-%      single sphere, or multiple spheres.
-%  - gradiometer of electrode structure containing sensor positions and
-%      coil orientations (for MEG).
-%  - headshape description containing positions in 3D space.
-%  - sourcemodel description containing positions and optional orientations
-%      in 3D space.
+% a structure with geometric information, for example a volume conduction model
+% for the head, gradiometer of electrode structure containing EEG or MEG
+% sensor positions and MEG coil orientations, a head shape or a source model.
 %
 % The units in which the transformation matrix is expressed are assumed to
 % be the same units as the units in which the geometric object is
@@ -19,10 +14,12 @@ function [output] = ft_transform_geometry(transform, input)
 %
 % Use as
 %   output = ft_transform_geometry(transform, input)
+%
+% See also FT_WARP_APPLY, FT_HEADCOORDINATES
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -41,7 +38,7 @@ function [output] = ft_transform_geometry(transform, input)
 % $Id: ft_transform_geometry.m$
 
 % flg rescaling check
-allowscaling = ~ft_senstype(input, 'meg'); 
+allowscaling = ~ft_senstype(input, 'meg');
 
 % determine the rotation matrix
 rotation = eye(4);
@@ -62,10 +59,10 @@ end
 if allowscaling
   % FIXME build in a check for uniform rescaling probably do svd or so
   % FIXME insert check for nonuniform scaling, should give an error
-end 
+end
 
 tfields   = {'pos' 'pnt' 'o' 'chanpos' 'chanposorg' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
-rfields   = {'ori' 'nrm' 'coilori'}; % only apply rotation
+rfields   = {'ori' 'nrm' 'coilori' 'chanori'}; % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication
 recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume
@@ -99,4 +96,3 @@ function [new] = apply(transform, old)
 old(:,4) = 1;
 new = old * transform';
 new = new(:,1:3);
-

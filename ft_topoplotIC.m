@@ -81,7 +81,7 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 
 % Copyright (C) 2010, Donders Centre for Cognitive Neuroimaging, Arjen Stolk
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -99,18 +99,21 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble loadvar    comp
+ft_preamble debug
+ft_preamble loadvar comp
 ft_preamble provenance comp
 ft_preamble trackconfig
-ft_preamble debug
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -158,23 +161,23 @@ if nplots>1
   for i = 1:length(selcomp)
     subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
-    
+
     % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
     [cfg] = topoplot_common(cfg, comp);
-    
+
     if strcmp(cfg.title, 'auto')
       title(['component ' num2str(selcomp(i))]);
     elseif ~strcmp(cfg.title, 'off')
       title(cfg.title);
     end
   end % for all components
-  
+
 else
   cfg.component = selcomp;
-  
+
   % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
   [cfg] = topoplot_common(cfg, comp);
-  
+
   if strcmp(cfg.title, 'auto')
     title(['component ' num2str(selcomp)]);
   elseif ~strcmp(cfg.title, 'off')
@@ -189,13 +192,11 @@ cfg = removefields(cfg, 'funcname');
 cfg.showcallinfo = 'yes';
 
 % do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous comp
 ft_postamble provenance
-ft_postamble debug
 
 if ~nargout
   clear cfg
 end
-
-

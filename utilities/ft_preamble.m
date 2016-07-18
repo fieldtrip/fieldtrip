@@ -13,7 +13,7 @@ function ft_preamble(cmd, varargin)
 
 % Copyright (C) 2011-2012, Robert Oostenveld, DCCN
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,8 +50,27 @@ global ft_default
 % this is a trick to pass the input arguments into the ft_preamble_xxx script
 ft_default.preamble = varargin;
 
-if exist(['ft_preamble_' cmd], 'file')
-  evalin('caller', ['ft_preamble_' cmd]);
+if ft_platform_supports('exists-in-private-directory')
+  % Matlab can directly see the command, no trickery needed as in Octave.
+  if exist(['ft_preamble_' cmd], 'file')
+    evalin('caller', ['ft_preamble_' cmd]);
+  end
+else
+  % Octave does not find files by name, so the full filename must be specified.
+  if exist(['private/ft_preamble_' cmd '.m'], 'file')
+
+    % save the original working directory
+    orig_pwd=pwd();
+
+    % ensure original working directory is restored when exiting this function
+    cleaner=onCleanup(@()cd(orig_pwd));
+
+    % cd to private directory
+    cd([fileparts(which(mfilename)) '/private']);
+
+    % evaluate ft_preamble_* function
+    evalin('caller', ['ft_preamble_' cmd]);
+  end
 end
 
 if isfield(ft_default, 'preamble')

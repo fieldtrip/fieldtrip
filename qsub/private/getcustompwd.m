@@ -5,7 +5,7 @@ function p = getcustompwd
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ end
 % don't use the present directory if it contains the peer code
 % it will confuse the slave with a potentially different mex file
 if strcmp(pwd, fileparts(mfilename('fullpath')))
-  warning_once(sprintf('will not change directory to %s', t));    
+  ft_warning(sprintf('will not change directory to %s', t));    
   p = [];
 else
   p = t;

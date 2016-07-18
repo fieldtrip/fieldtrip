@@ -70,6 +70,22 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 
 % Copyright (C) 2010-2012, Martin Vinck
 %
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
 % $Id$
 
 revision = '$Id$';
@@ -107,12 +123,12 @@ cfg = ft_checkopt(cfg, 'maxlag', 'doublescalar');
 cfg = ft_checkopt(cfg, 'binsize', 'doublescalar');
 cfg = ft_checkopt(cfg, 'outputunit', 'char', {'proportion', 'center', 'raw'});
 
-cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method', 'channelcmb', 'vartriallen', 'debias', 'maxlag', 'binsize', 'outputunit'});
 
 doShiftPredictor  = strcmp(cfg.method, 'shiftpredictor'); % shift predictor
 
 % determine the corresponding indices of the requested channel combinations
-cfg.channelcmb = ft_channelcombination(cfg.channelcmb, spike.label,true);
+cfg.channelcmb = ft_channelcombination(cfg.channelcmb, spike.label(:), true);
 cmbindx        = zeros(size(cfg.channelcmb));
 for k=1:size(cfg.channelcmb,1)
   cmbindx(k,1) = strmatch(cfg.channelcmb(k,1), spike.label, 'exact');

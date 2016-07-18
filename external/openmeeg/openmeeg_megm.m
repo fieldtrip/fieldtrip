@@ -25,7 +25,7 @@ try
     for i=1:length(vol.bnd)
         [junk,tname] = fileparts(tempname);
         bndfile{i} = [tname '.tri'];
-        om_save_tri(bndfile{i}, vol.bnd(i).pnt, vol.bnd(i).tri);
+        om_save_tri(bndfile{i}, vol.bnd(i).pos, vol.bnd(i).tri);
     end
 
     % these will hold the shell script and the inverted system matrix
@@ -55,11 +55,11 @@ try
 
     % handle dipole file
     ndip = size(pos,1);
-    pos = [kron(pos,ones(3,1)) , kron(ones(ndip,1),eye(3))]; % save pos with each 3D orientation
+    pos = [kron(pos,ones(3,1)),kron(ones(ndip,1),eye(3))]; % save pos with each 3D orientation
     om_save_full(pos,dipfile,'ascii');
 
     % handle squids file
-    om_save_full([sens.chanpos,sens.chanori],sqdfile,'ascii');
+    om_save_full([sens.coilpos,sens.coilori],sqdfile,'ascii');
 
     % Exe file
     efid = fopen(exefile, 'w');

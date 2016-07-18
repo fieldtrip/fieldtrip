@@ -36,7 +36,7 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(UNAME)" "Linux"
-	$LDLIBS += -ldl -lstdc++
+	LDLIBS += -ldl -lstdc++ -lrt
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -72,7 +72,7 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), modeeg2ft modeeg2ft_2chn modeeg_setupbluesmirfi)
+TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), modeeg2ft modeeg2ft_2chn modeeg_setupbluesmirf)
 
 ##############################################################################
 all: $(TARGETS)
@@ -81,8 +81,6 @@ $(TARGETS): serial.o
 
 $(BINDIR)/%$(SUFFIX): %.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
-
-$(BINDIR)/modeeg_setupbluesmirf$(SUFFIX): LDLIBS=
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

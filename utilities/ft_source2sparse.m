@@ -14,7 +14,7 @@ function [source] = ft_source2sparse(source)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -37,6 +37,8 @@ ft_defaults
 if ~isfield(source, 'inside')
   warning('no gridpoints defined inside the brain');
   source.inside = [];
+elseif all(islogical(source.inside))
+  source = fixinside(source, 'index'); % in contrast to the new convention, this function still relies on an indexed inside
 end
 
 if ~isfield(source, 'outside')

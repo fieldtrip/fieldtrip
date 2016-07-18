@@ -7,10 +7,10 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %   ft_plot_text(X, Y, str, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%   'Color'               =
-%   'FontSize'            =
-%   'FontName'            =
-%   'HorizontalAlignment' =
+%   'color'               =
+%   'fontsize'            =
+%   'fontname'            =
+%   'horizontalalignment' =
 %   'tag'                 = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
@@ -23,7 +23,7 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,13 +50,13 @@ width               = ft_getopt(varargin, 'width');
 height              = ft_getopt(varargin, 'height');
 hlim                = ft_getopt(varargin, 'hlim');
 vlim                = ft_getopt(varargin, 'vlim');
-Color               = ft_getopt(varargin, 'Color', 'k');
-FontSize            = ft_getopt(varargin, 'FontSize');
-FontName            = ft_getopt(varargin, 'FontName');
-FontUnits           = ft_getopt(varargin, 'FontUnits');
-HorizontalAlignment = ft_getopt(varargin, 'HorizontalAlignment', 'center');
+color               = ft_getopt(varargin, 'color', 'k');
+fontsize            = ft_getopt(varargin, 'fontsize');
+fontname            = ft_getopt(varargin, 'fontname');
+fontunits           = ft_getopt(varargin, 'fontunits');
+horizontalalignment = ft_getopt(varargin, 'horizontalalignment', 'center');
 rotation            = ft_getopt(varargin, 'rotation', 0);
-VerticalAlignment   = ft_getopt(varargin, 'VerticalAlignment', 'middle');
+verticalalignment   = ft_getopt(varargin, 'verticalalignment', 'middle');
 tag                 = ft_getopt(varargin, 'tag', '');
 interpreter         = ft_getopt(varargin, 'interpreter', 'tex');
 
@@ -116,13 +116,13 @@ X = double(X);
 Y = double(Y);
 
 h = text(X, Y, str);
-set(h, 'HorizontalAlignment', HorizontalAlignment);
-set(h, 'Color', Color);
+set(h, 'horizontalalignment', horizontalalignment);
+set(h, 'color', color);
 set(h, 'rotation', rotation);
-set(h, 'VerticalAlignment',VerticalAlignment); 
-if ~isempty(FontUnits), set(h, 'FontUnits', FontUnits); end
-if ~isempty(FontSize),  set(h, 'FontSize', FontSize);  end
-if ~isempty(FontName),  set(h, 'FontName', FontName);  end
+set(h, 'verticalalignment',verticalalignment);
+if ~isempty(fontunits), set(h, 'fontunits', fontunits); end
+if ~isempty(fontsize),  set(h, 'fontsize', fontsize);  end
+if ~isempty(fontname),  set(h, 'fontname', fontname);  end
 set(h, 'tag', tag);
 set(h, 'interpreter', interpreter);
 
@@ -131,4 +131,4 @@ if nargout == 1;
   varargout{1} = h;
 end
 
-warning(ws); %revert to original state
+warning(ws); % revert to original state

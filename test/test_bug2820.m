@@ -1,10 +1,11 @@
 function test_bug2820
 
 % WALLTIME 00:10:00
-% MEM 1500mb
+% MEM 2gb
 
 % it should be is2Dana && ~is2Dfun, so start with a surface
-surffile = fullfile(fileparts(which('ft_defaults')), 'template', 'anatomy', 'surface_pial_both.mat');
+[ftver, ftpath] = ft_version;
+surffile = fullfile(ftpath, 'template', 'anatomy', 'surface_pial_both.mat');
 anatomical = ft_read_headshape(surffile);
 
 functional     = [];

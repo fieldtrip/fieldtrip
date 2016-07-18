@@ -6,20 +6,20 @@ function tree = xml_parser(xmlstr)
 % tree    - tree structure corresponding to the XML file
 %__________________________________________________________________________
 %
-% xml_parser.m is an XML 1.0 (http://www.w3.org/TR/REC-xml) parser
-% written in Matlab. It aims to be fully conforming. It is currently not
-% a validating XML processor.
+% xml_parser.m is an XML 1.0 (http://www.w3.org/TR/REC-xml) parser.
+% It aims to be fully conforming. It is currently not a validating 
+% XML processor.
 %
 % A description of the tree structure provided in output is detailed in 
 % the header of this m-file.
 %__________________________________________________________________________
-% Copyright (C) 2002-2011  http://www.artefact.tk/
+% Copyright (C) 2002-2015  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: xml_parser.m 6480 2015-06-13 01:08:30Z guillaume $
 
-% XML Processor for MATLAB (The Mathworks, Inc.).
-% Copyright (C) 2002-2011 Guillaume Flandin <Guillaume@artefact.tk>
+% XML Processor for GNU Octave and MATLAB (The Mathworks, Inc.)
+% Copyright (C) 2002-2015 Guillaume Flandin <Guillaume@artefact.tk>
 %
 % This program is free software; you can redistribute it and/or
 % modify it under the terms of the GNU General Public License
@@ -44,14 +44,14 @@ function tree = xml_parser(xmlstr)
 %--------------------------------------------------------------------------
 
 % The implementation of this XML parser is much inspired from a 
-% Javascript parser available at <http://www.jeremie.com/>
+% Javascript parser that used to be available at <http://www.jeremie.com/>
 
-% A mex-file xml_findstr.c is also required, to encompass some
-% limitations of the built-in findstr Matlab function.
+% A C-MEX file xml_findstr.c is also required, to encompass some
+% limitations of the built-in FINDSTR function.
 % Compile it on your architecture using 'mex -O xml_findstr.c' command
 % if the compiled version for your system is not provided.
-% If this function behaves badly (crash or wrong results), comment the
-% line '#define __HACK_MXCHAR__' in xml_findstr.c and compile it again.
+% If this function does not behave as expected, comment the line
+% '#define __HACK_MXCHAR__' in xml_findstr.c and compile it again.
 %--------------------------------------------------------------------------
 
 % Structure of the output tree:
@@ -155,6 +155,7 @@ function frag = compile(frag)
         if isempty(TagStart)
             %- Character data
             error('[XML] Unknown data at the end of the XML file.');
+            Xparse_count = Xparse_count + 1;
             xtree{Xparse_count} = chardata;
             xtree{Xparse_count}.value = erode(entity(xmlstring(frag.str:end)));
             xtree{Xparse_count}.parent = frag.parent;
@@ -166,6 +167,7 @@ function frag = compile(frag)
                 frag.str = TagStart;
             else
                 %- Character data
+                Xparse_count = Xparse_count + 1;
                 xtree{Xparse_count} = chardata;
                 xtree{Xparse_count}.value = erode(entity(xmlstring(frag.str:TagStart-1)));
                 xtree{Xparse_count}.parent = frag.parent;
@@ -224,6 +226,7 @@ function frag = tag_element(frag)
             name = starttag(1:nextspace-1);
             attribs = starttag(nextspace+1:end);
         end
+        Xparse_count = Xparse_count + 1;
         xtree{Xparse_count} = element;
         xtree{Xparse_count}.name = strip(name);
         if frag.parent
@@ -253,6 +256,7 @@ function frag = tag_pi(frag)
         warning('[XML] Tag <? opened but not closed.')
     else
         nextspace = xml_findstr(xmlstring,' ',frag.str,1);
+        Xparse_count = Xparse_count + 1;
         xtree{Xparse_count} = pri;
         if nextspace > close || nextspace == frag.str+2
             xtree{Xparse_count}.value = erode(xmlstring(frag.str+2:close-1));
@@ -274,6 +278,7 @@ function frag = tag_comment(frag)
     if isempty(close)
         warning('[XML] Tag <!-- opened but not closed.')
     else
+        Xparse_count = Xparse_count + 1;
         xtree{Xparse_count} = comment;
         xtree{Xparse_count}.value = erode(xmlstring(frag.str+4:close-1));
         if frag.parent
@@ -290,6 +295,7 @@ function frag = tag_cdata(frag)
     if isempty(close)
         warning('[XML] Tag <![CDATA[ opened but not closed.')
     else
+        Xparse_count = Xparse_count + 1;
         xtree{Xparse_count} = cdata;
         xtree{Xparse_count}.value = xmlstring(frag.str+9:close-1);
         if frag.parent
@@ -319,31 +325,26 @@ function all = attribution(str)
 %--------------------------------------------------------------------------
 function elm = element
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     elm = struct('type','element','name','','attributes',[],'contents',[],'parent',[],'uid',Xparse_count);
    
 %--------------------------------------------------------------------------
 function cdat = chardata
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     cdat = struct('type','chardata','value','','parent',[],'uid',Xparse_count);
    
 %--------------------------------------------------------------------------
 function cdat = cdata
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     cdat = struct('type','cdata','value','','parent',[],'uid',Xparse_count);
    
 %--------------------------------------------------------------------------
 function proce = pri
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     proce = struct('type','pi','value','','target','','parent',[],'uid',Xparse_count);
 
 %--------------------------------------------------------------------------
 function commt = comment
     global Xparse_count;
-    Xparse_count = Xparse_count + 1;
     commt = struct('type','comment','value','','parent',[],'uid',Xparse_count);
 
 %--------------------------------------------------------------------------
@@ -392,9 +393,7 @@ function str = prolog(str)
 
 %--------------------------------------------------------------------------
 function str = strip(str)
-    a = isspace(str);
-    a = find(a==1);
-    str(a) = '';
+    str(isspace(str)) = '';
 
 %--------------------------------------------------------------------------
 function str = normalize(str)
@@ -405,8 +404,7 @@ function str = normalize(str)
     % replace several white characters by only one
     if ~isempty(i)
         j = i - [i(2:end) i(end)];
-        k = find(j == -1);
-        str(i(k)) = [];
+        str(i(j == -1)) = [];
     end
 
 %--------------------------------------------------------------------------

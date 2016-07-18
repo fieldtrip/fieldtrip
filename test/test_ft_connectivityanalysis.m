@@ -12,9 +12,6 @@ function test_ft_connectivityanalysis
 % apart from using FT_CONNECTIVITYANALYSIS, it also relies on
 % FT_CONNECTIVITYSIMULATION, FT_FREQANALYSIS, FT_MVARANALYSIS
 
-clear all;
-
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 
@@ -75,9 +72,9 @@ c4m            = ft_connectivityanalysis(cfgc, mfreq);
 cfgc.method    = 'granger';
 c5             = ft_connectivityanalysis(cfgc, freq);
 c5m            = ft_connectivityanalysis(cfgc, mfreq);
-cfgc.sfmethod  = 'bivariate';
+cfgc.granger.sfmethod  = 'bivariate';
 c5b            = ft_connectivityanalysis(cfgc, freq);
-cfgc           = rmfield(cfgc, 'sfmethod');
+cfgc.granger   = rmfield(cfgc.granger, 'sfmethod');
 cfgc.method    = 'pdc';
 c6             = ft_connectivityanalysis(cfgc, freq);
 c6m            = ft_connectivityanalysis(cfgc, mfreq);

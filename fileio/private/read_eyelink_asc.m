@@ -6,9 +6,9 @@ function asc = read_eyelink_asc(filename)
 % Use as
 %   asc = read_eyelink_asc(filename)
 
-% Copyright (C) 2010, Robert Oostenveld
+% Copyright (C) 2010-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -26,8 +26,6 @@ function asc = read_eyelink_asc(filename)
 %
 % $Id$
 
-fid = fopen(filename, 'rt');
-
 asc.header  = {};
 asc.msg     = {};
 asc.input   = [];
@@ -38,15 +36,24 @@ asc.esacc   = {};
 asc.dat     = [];
 current   = 0;
 
-while ~feof(fid)
-  tline = fgetl(fid);
+% read the whole file at once
+fid = fopen(filename, 'rt');
+aline = fread(fid, inf, 'char=>char');          % returns a single long string
+fclose(fid);
 
-  if regexp(tline, '^[0-9]');
-    tmp   = sscanf(tline, '%f');
-    nchan = numel(tmp);
+aline(aline==uint8(sprintf('\r'))) = [];        % remove cariage return
+aline = tokenize(aline, uint8(sprintf('\n')));  % split on newline
+
+for i=1:numel(aline)
+  tline = aline{i};
+
+  if numel(tline) && any(tline(1)=='0':'9')
+  % if regexp(tline, '^[0-9]')
+    tmp     = sscanf(tline, '%f');
+    nchan   = numel(tmp);
     current = current + 1;
 
-    if size(asc.dat,1)<nchan
+    if size(asc.dat, 1)<nchan
       % increase the allocated number of channels
       asc.dat(nchan,:) = 0;
     end
@@ -94,15 +101,12 @@ while ~feof(fid)
   elseif regexp(tline, '^ESACC')
     asc.esacc = cat(1, asc.esacc, {tline});
 
-
   else
     % all other lines are not parsed
   end
 
 end
 
-% close the file?
-fclose(fid);
-
 % remove the samples that were not filled with real data
 asc.dat = asc.dat(:,1:current);
+

@@ -23,7 +23,7 @@ function stat = ft_statistics_crossvalidate(cfg, dat, design)
 
 % Copyright (c) 2007-2011, Marcel van Gerven, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -42,7 +42,6 @@ function stat = ft_statistics_crossvalidate(cfg, dat, design)
 % $Id$
 
 % specify classification procedure
-  
 if ~isfield(cfg,'mva')
   cfg.mva = dml.analysis({ ...
     dml.standardizer('verbose',true) ...
@@ -84,18 +83,18 @@ for i=1:length(cfg.statistic)
 end
 
 % get the model averaged over folds
-stat.model = cv.model; 
+stat.model = cv.model;
 
 fn = fieldnames(stat.model{1});
 for i=1:length(stat.model)
-  
+
   for k=1:length(fn)
     if numel(stat.model{i}.(fn{k}))==prod(cfg.dim)
       stat.model{i}.(fn{k}) = squeeze(reshape(stat.model{i}.(fn{k}),cfg.dim));
     end
   end
-     
+
 end
-  
+
 % required
 stat.trial = [];

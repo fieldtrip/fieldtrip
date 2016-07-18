@@ -28,7 +28,7 @@ function [data] = fixdimord(data)
 
 % Copyright (C) 2009-2014, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -147,7 +147,7 @@ for i=1:length(dimtok)
       
     case {'voxel' 'vox' 'repl' 'wcond'}
       % these are used in some fieldtrip functions, but are not considered standard
-      warning_once('unexpected dimord "%s"', data.dimord);
+      ft_warning('unexpected dimord "%s"', data.dimord);
       
     case {'pos'}
       % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions

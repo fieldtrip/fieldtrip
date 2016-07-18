@@ -16,17 +16,17 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %                       flexibly add or remove edges between vertices
 % or one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
-%   cfg.elec          = structure with EEG electrode positions
-%   cfg.grad          = structure with MEG gradiometer positions
-%   cfg.elecfile      = filename containing EEG electrode positions
-%   cfg.gradfile      = filename containing MEG gradiometer positions
+%   cfg.elec          = structure with electrode definition
+%   cfg.grad          = structure with gradiometer definition
+%   cfg.elecfile      = filename containing electrode definition
+%   cfg.gradfile      = filename containing gradiometer definition
 %
 % If cfg.neighbours is not defined, this function will call
 % FT_PREPARE_NEIGHBOURS to determine the channel neighbours. The
 % following data fields may also be used by FT_PREPARE_NEIGHBOURS
 %   data.elec     = structure with EEG electrode positions
 %   data.grad     = structure with MEG gradiometer positions
-% If cfg.neighbours is empty, no neighbouring sensors are assumed. 
+% If cfg.neighbours is empty, no neighbouring sensors are assumed.
 %
 % Use cfg.enableedit to create or extend your own neighbourtemplate
 %
@@ -34,7 +34,7 @@ function [cfg] = ft_neighbourplot(cfg, data)
 
 % Copyright (C) 2011, J?rn M. Horschig, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,21 +50,26 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
+ft_preamble loadvar    data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
-hasdata = nargin>1;
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
 
 if hasdata
   % check if the input data is valid for this function
@@ -124,7 +129,7 @@ hold on;
 hl = [];
 for i=1:length(cfg.neighbours)
   this = cfg.neighbours(i);
-  
+
   sel1 = match_str(sens.label, this.label);
   sel2 = match_str(sens.label, this.neighblabel);
   % account for missing sensors
@@ -166,7 +171,7 @@ for i=1:length(cfg.neighbours)
       'MarkerSize',       .125*(2+numel(cfg.neighbours(i).neighblabel))^2, ...
       'UserData',         i,                                          ...
       'ButtonDownFcn',    @showLabelInTitle);
-    
+
   elseif size(proj, 2) == 3
     hs(i) = line(proj(sel1, 1), proj(sel1, 2), proj(sel1, 3),                                ...
       'MarkerEdgeColor',  'k',                                        ...
@@ -212,8 +217,8 @@ cfg.neighbours = cfg.neighbours(neighb_idx);
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
+ft_postamble provenance
 
 end % main function
 
@@ -230,13 +235,13 @@ hs          = userdata.hs;
 curSensId   = get(gcbo, 'UserData');
 
 if lastSensId == curSensId
-  
+
   title('[Click on a sensor to see its label]');
   set(hs(curSensId), 'MarkerFaceColor', 'k');
   userdata.lastSensId = [];
-  
+
 elseif isempty(lastSensId) || ~istrue(cfg.enableedit)
-  
+
   userdata.lastSensId = curSensId;
   if istrue(cfg.enableedit)
     title(['Selected channel: ' cfg.neighbours(curSensId).label ' click on another to (dis-)connect']);
@@ -256,7 +261,7 @@ elseif isempty(lastSensId) || ~istrue(cfg.enableedit)
   end
   set(hs(curSensId), 'MarkerFaceColor', 'g');
   set(hs(lastSensId), 'MarkerFaceColor', 'k');
-  
+
 elseif istrue(cfg.enableedit)
   hl    = userdata.hl;
   sens  = userdata.sens;
@@ -267,11 +272,11 @@ elseif istrue(cfg.enableedit)
     % use 3-dimensional data for plotting
     proj = sens.chanpos;
   end
-  
+
   % find out whether they are connected
   connected1 = ismember(cfg.neighbours(curSensId).neighblabel, cfg.neighbours(lastSensId).label);
   connected2 = ismember(cfg.neighbours(lastSensId).neighblabel, cfg.neighbours(curSensId).label);
-  
+
   if any(connected1) % then disconnect
     cfg.neighbours(curSensId).neighblabel(connected1) = [];
     cfg.neighbours(lastSensId).neighblabel(connected2) = [];
@@ -284,7 +289,7 @@ elseif istrue(cfg.enableedit)
     cfg.neighbours(curSensId).neighblabel{end+1} = cfg.neighbours(lastSensId).label;
     cfg.neighbours(lastSensId).neighblabel{end+1} = cfg.neighbours(curSensId).label;
     title(['Connected channels ' cfg.neighbours(curSensId).label ' and ' cfg.neighbours(lastSensId).label]);
-    
+
     % draw new edge
     x1 = proj(curSensId,1);
     y1 = proj(curSensId,2);
@@ -302,7 +307,7 @@ elseif istrue(cfg.enableedit)
       hl(curSensId, lastSensId) = line(X, Y, Z, 'color', 'r');
       hl(lastSensId, curSensId) = line(X, Y, Z, 'color', 'r');
     end
-    
+
   end
   % draw nodes on top again
   delete(hs(curSensId));
@@ -322,7 +327,7 @@ elseif istrue(cfg.enableedit)
       'MarkerSize',       .125*(2+numel(cfg.neighbours(lastSensId).neighblabel))^2, ...
       'UserData',         lastSensId,                                          ...
       'ButtonDownFcn',    @showLabelInTitle);
-    
+
   elseif size(proj, 2) == 3
     hs(curSensId) = line(proj(curSensId, 1), proj(curSensId, 2), proj(curSensId, 3),                                ...
       'MarkerEdgeColor',  'k',                                        ...
@@ -341,7 +346,7 @@ elseif istrue(cfg.enableedit)
   else
     error('Channel coordinates are too high dimensional');
   end
-  
+
   if cfg.verbose
     str = sprintf('%s, ', cfg.neighbours(curSensId).neighblabel{:});
     if length(str)>2

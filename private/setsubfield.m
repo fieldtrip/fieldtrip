@@ -1,7 +1,7 @@
-function [s] = setsubfield(s, f, v)
+function s = setsubfield(s, f, v)
 
 % SETSUBFIELD sets the contents of the specified field to a specified value
-% just like the standard SETFIELD function, except that you can also
+% just like the standard Matlab SETFIELD function, except that you can also
 % specify nested fields using a '.' in the fieldname. The nesting can be
 % arbitrary deep.
 %
@@ -17,7 +17,7 @@ function [s] = setsubfield(s, f, v)
 
 % Copyright (C) 2005-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -39,13 +39,16 @@ if ~ischar(f)
   error('incorrect input argument for fieldname');
 end
 
-t = {};
-while (1)
-  [t{end+1}, f] = strtok(f, '.');
-  if isempty(f)
-    break
-  end
-  
-end
+% t = {};
+% while (1)
+%   [t{end+1}, f] = strtok(f, '.');
+%   if isempty(f)
+%     break
+%   end
+%
+% end
+%
+%s = setfield(s, t{:}, v);
 
-s = setfield(s, t{:}, v);
+t = textscan(f,'%s','delimiter','.');
+s = setfield(s, t{1}{:}, v);

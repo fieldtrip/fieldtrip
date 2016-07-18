@@ -17,8 +17,8 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % The configuration structure has to contain
 %   cfg.method    = string, specifying the graph measure that will be
-%                   computed. See below for the list of supported measures. 
-%   cfg.parameter = string specifying the bivariate parameter in the data 
+%                   computed. See below for the list of supported measures.
+%   cfg.parameter = string specifying the bivariate parameter in the data
 %                   for which the graph measure will be computed.
 %
 % Supported methods are
@@ -34,7 +34,7 @@ function [stat] = ft_networkanalysis(cfg, data)
 %   transitivity
 %
 % To facilitate data-handling and distributed computing you can use
-%   cfg.inputfile   =  ... 
+%   cfg.inputfile   =  ...
 % 	cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a
 % *.mat file on disk and/or the output data will be written to a *.mat
@@ -45,7 +45,7 @@ function [stat] = ft_networkanalysis(cfg, data)
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -63,18 +63,21 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -182,12 +185,12 @@ binarywarning = 'weights are not taken into account and graph is converted to bi
 
 for k = 1:size(input, 3)
   for m = 1:size(input, 4)
-    
+
     % switch to the appropriate function from the BCT
     switch cfg.method
       case 'assortativity'
-        if ~isbinary, warning_once(binarywarning); end
-        
+        if ~isbinary, ft_warning(binarywarning); end
+
         if isdirected
           output(k,m) = assortativity(input(:,:,k,m), 1);
         elseif ~isdirected
@@ -216,8 +219,8 @@ for k = 1:size(input, 3)
           output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
         end
       case 'degrees'
-        if ~isbinary, warning_once(binarywarning); end
-        
+        if ~isbinary, ft_warning(binarywarning); end
+
         if isdirected
           [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
           % FIXME do something here
@@ -225,8 +228,8 @@ for k = 1:size(input, 3)
           output(:,k,m) = degrees_und(input(:,:,k,m));
         end
       case 'density'
-        if ~isbinary, warning_once(binarywarning); end
-      
+        if ~isbinary, ft_warning(binarywarning); end
+
         if isdirected
           output(k,m) = density_dir(input(:,:,k,m));
         elseif ~isdirected
@@ -263,7 +266,7 @@ for k = 1:size(input, 3)
       otherwise
         error('unsupported connectivity metric %s requested');
     end
-    
+
   end % for m
 end % for k
 
@@ -285,7 +288,7 @@ if exist('dof',  'var'),    stat.dof    = dof;         end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history stat
-ft_postamble savevar stat
+ft_postamble previous   data
+ft_postamble provenance stat
+ft_postamble history    stat
+ft_postamble savevar    stat

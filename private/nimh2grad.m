@@ -13,7 +13,7 @@ function [grad] = nimh2grad(hdr)
 
 % Copyright (C) 2005, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -39,19 +39,19 @@ else
 end
 
 % start with an empty structure
-grad.pnt = [];
-grad.ori = [];
+grad.coilpos = [];
+grad.coilori = [];
 grad.tra = [];
 grad.label = {};
 
 for i=1:length(sel)
-  pnt = hdr.sensor.info(sel(i)).location';
+  pos = hdr.sensor.info(sel(i)).location';
   ori = hdr.sensor.info(sel(i)).orientation';
-  numcoils(i) = size(pnt,1);
-  if size(ori,1)==1 && size(pnt,1)==1
+  numcoils(i) = size(pos,1);
+  if size(ori,1)==1 && size(pos,1)==1
     % one coil position with one orientation: magnetometer
     ori = ori;
-  elseif size(ori,1)==1 && size(pnt,1)==2
+  elseif size(ori,1)==1 && size(pos,1)==2
     % two coil positions with one orientation: first order gradiometer
     % assume that the orientation of the upper coil is opposite to the lower coil
     ori = [ori; -ori];
@@ -60,15 +60,15 @@ for i=1:length(sel)
   end
 
   % add this channels coil positions and orientations
-  grad.pnt = [grad.pnt; pnt];
+  grad.coilpos = [grad.coilpos; pos];
   grad.ori = [grad.ori; ori];
   grad.label{i} = hdr.sensor.info(sel(i)).label;
 
   % determine the contribution of each coil to each channel's output signal
-  if size(pnt,1)==1
+  if size(pos,1)==1
     % one coil, assume that the orientation is correct, i.e. the weight is +1
     grad.tra(i,end+1) = 1;
-  elseif size(pnt,1)==2
+  elseif size(pos,1)==2
     % two coils, assume that the orientation for each coil is correct, i.e. the weights are +1 and +1
     grad.tra(i,end+1) = 1;
     grad.tra(i,end+1) = 1;
@@ -86,7 +86,7 @@ grad.label = grad.label(:);
 if all(numcoils==2)
   bot = 1:2:sum(numcoils);
   top = 2:2:sum(numcoils);
-  grad.pnt = grad.pnt([bot top], :);
+  grad.coilpos = grad.coilpos([bot top], :);
   grad.ori = grad.ori([bot top], :);
   grad.tra = grad.tra(:, [bot top]);
 end

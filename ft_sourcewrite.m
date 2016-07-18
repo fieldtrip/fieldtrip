@@ -25,7 +25,7 @@ function ft_sourcewrite(cfg, source)
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 % Copyright (C) 2011-2014, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -43,17 +43,21 @@ function ft_sourcewrite(cfg, source)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
+% do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar source
+ft_preamble provenance source
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -71,7 +75,7 @@ cfg.precision      = ft_getopt(cfg, 'precision');       % is used for cifti
 
 % check if the input data is valid for this function
 if strcmp(cfg.filetype, 'cifti')
-  
+
   % keep the transformation matrix
   if isfield(source, 'transform')
     transform = source.transform;
@@ -80,27 +84,27 @@ if strcmp(cfg.filetype, 'cifti')
   else
     transform = [];
   end
-  
+
   if isfield(source, 'brainordinate')
     % it is a parcellated source representation, i.e. the main structure one channel for each parcel
     brainordinate = source.brainordinate;
     source = rmfield(source, 'brainordinate');
-    
+
     % split them and check individually
     source        = ft_checkdata(source, 'datatype', {'timelock', 'freq', 'chan'}, 'feedback', 'yes');
     brainordinate = ft_checkdata(brainordinate, 'datatype', 'parcellation', 'parcellationstyle', 'indexed', 'hasunit', 'yes');
-    
+
     % merge them again
     source = copyfields(brainordinate, source, setdiff(fieldnames(brainordinate), {'cfg'}));
   else
     source = ft_checkdata(source, 'datatype', 'source', 'hasunit', true, 'feedback', 'yes');
   end
-  
+
   % keep the transformation matrix
   if ~isempty(transform)
     source.transform = transform;
   end
-  
+
 end % if cifti
 
 
@@ -121,35 +125,36 @@ switch (cfg.filetype)
     if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.nii');
       cfg.filename = cat(2, cfg.filename, '.nii');
     end
-    
+
     % convert functional data into 4D
     dat = getsubfield(source, cfg.parameter);
     dat = reshape(dat, source.dim(1), source.dim(2), source.dim(3), []);
-    
+
     if ~isfield(source, 'transform')
       source.transform = pos2transform(source.pos);
     end
-    
+
     % this is a bit of a kludge, but ft_write_mri can write 3D and 4D nifti
     ft_write_mri(cfg.filename, dat, 'dataformat', 'nifti', 'transform', source.transform);
-    
+
   case 'gifti'
     if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.gii');
       cfg.filename = cat(2, cfg.filename, '.gii');
     end
-    
+
     % this is a bit of a kludge, but ft_write_headshape can write gifti including data
     ft_write_headshape(cfg.filename, source, 'data', getsubfield(source, cfg.parameter), 'format', 'gifti');
-    
+
   case 'cifti'
     % brainstructure should represent the global anatomical structure, such as CortexLeft, Thalamus, etc.
     % parcellation should represent the detailled parcellation, such as BA1, BA2, BA3, etc.
     ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'brainstructure', cfg.brainstructure, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
-    
+
   otherwise
     error('unsupported output format (%s)', cfg.filetype);
 end % switch filetype
 
 ft_postamble debug
 ft_postamble trackconfig
+ft_postamble previous source
 ft_postamble provenance

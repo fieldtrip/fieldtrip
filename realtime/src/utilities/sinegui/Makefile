@@ -20,39 +20,40 @@ CXXFLAGS = `fltk-config --cxxflags` -I../../buffer/src -I../../buffer/cpp -I. -W
 SUFFIX = 
 
 ifeq "$(PLATFORM)" "mingw32"
-   LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm -mwindows -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
-   CXXFLAGS = -IC:/msys/1.0/local/include -mwindows
-   SUFFIX = .exe
+	LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm -mwindows -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32
+	CXXFLAGS = -IC:/msys/1.0/local/include -mwindows
+	SUFFIX = .exe
 endif
 
 ifeq "$(UNAME)" "Linux"
-    ifeq "$(MACHINE)" "i686"
-        BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
-    endif
-    ifeq "$(MACHINE)" "x86_64"
-        BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-    endif
-    ifeq "$(MACHINE)" "armv6l"
-        BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
-    endif
+	LDLIBS += -lrt
+	ifeq "$(MACHINE)" "i686"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
 ifeq "$(UNAME)" "Darwin"
-    ifeq "$(MACHINE)" "i386"
-        BINDIR = $(FIELDTRIP)/realtime/bin/maci
-        CFLAGS += -m32
-        CXXFLAGS += -m32
-        LDFLAGS += -m32
-    endif
-    ifeq "$(MACHINE)" "x86_64"
-        BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-        CFLAGS += -m64
-        CXXFLAGS += -m64
-        LDFLAGS += -m64
-    endif
-    ifeq "$(MACHINE)" "Power Macintosh"
-        BINDIR = $(FIELDTRIP)/realtime/bin/mac
-    endif
+	ifeq "$(MACHINE)" "i386"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS += -m32
+		CXXFLAGS += -m32
+		LDFLAGS += -m32
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS += -m64
+		CXXFLAGS += -m64
+		LDFLAGS += -m64
+	endif
+	ifeq "$(MACHINE)" "Power Macintosh"
+		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+	endif
 endif
 
 ifndef BINDIR

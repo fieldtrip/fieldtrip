@@ -1,10 +1,10 @@
-function [pnt, tri] = icosahedron642()
+function [pos, tri] = icosahedron642()
 
 % ICOSAHEDRON642 creates a 3-fold refined icosahedron
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -22,9 +22,9 @@ function [pnt, tri] = icosahedron642()
 %
 % $Id$
 
-[pnt, tri] = icosahedron;
-[pnt, tri] = refine(pnt, tri);
-[pnt, tri] = refine(pnt, tri);
-[pnt, tri] = refine(pnt, tri);
+[pos, tri] = icosahedron;
+[pos, tri] = refine(pos, tri);
+[pos, tri] = refine(pos, tri);
+[pos, tri] = refine(pos, tri);
 
-pnt = pnt ./ repmat(sqrt(sum(pnt.^2,2)), 1,3);
+pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);

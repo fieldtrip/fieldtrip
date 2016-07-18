@@ -12,7 +12,6 @@ function inspect_ft_sourcemovie
 % NOT FINISHED YET, SEE BELOW
 return
 
-% disable verbose output
 global ft_default;
 ft_default.feedback = 'no';
 

@@ -6,7 +6,7 @@ function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanind
 %   [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanindx)
 % with
 %   filename       name of the input file
-%   hdr            header structure, see READ_HEADER
+%   hdr            header structure, see FT_READ_HEADER
 %   begtrial       first trial to read, mutually exclusive with begsample+endsample
 %   endtrial       last trial to read,  mutually exclusive with begsample+endsample
 %   chanindx       list with channel indices to read
@@ -18,7 +18,7 @@ function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanind
 % Modified from EGI's readEGLY.m with permission 2008-03-31 Joseph Dien
 %
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

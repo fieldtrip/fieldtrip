@@ -1,4 +1,4 @@
-function data = ft_datatype_raw(data, varargin)
+function [data] = ft_datatype_raw(data, varargin)
 
 % FT_DATATYPE_RAW describes the FieldTrip MATLAB structure for raw data
 %
@@ -57,7 +57,7 @@ function data = ft_datatype_raw(data, varargin)
 
 % Copyright (C) 2011, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -307,7 +307,7 @@ needfix = needfix || ~all(skew==0) && all(skew<0.01);
 
 % if the skew is less than 1% it will be corrected
 if needfix
-  warning_once('correcting numerical inaccuracy in the time axes');
+  ft_warning('correcting numerical inaccuracy in the time axes');
   for i=1:length(data.time)
     % reconstruct the time axis of each trial, using the begin latency of
     % the first trial and the integer offset in samples of each trial

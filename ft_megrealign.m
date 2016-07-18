@@ -25,7 +25,7 @@ function [data] = ft_megrealign(cfg, data)
 % model of the head and of a source model.
 %
 % A volume conduction model of the head should be specified with
-%   cfg.vol         = structure, see FT_PREPARE_HEADMODEL
+%   cfg.headmodel   = structure, see FT_PREPARE_HEADMODEL
 %
 % A source model (i.e. a superficial layer with distributed sources) can be
 % constructed from a headshape file, or from the volume conduction model
@@ -60,7 +60,7 @@ function [data] = ft_megrealign(cfg, data)
 % This implements the method described by T.R. Knosche, Transformation
 % of whole-head MEG recordings between different sensor positions.
 % Biomed Tech (Berl). 2002 Mar;47(3):59-62. For more information and
-% related methods, see Stolk et al., Online and offline tools for head 
+% related methods, see Stolk et al., Online and offline tools for head
 % movement compensation in MEG. NeuroImage, 2012.
 %
 % To facilitate data-handling and distributed computing you can use
@@ -75,7 +75,7 @@ function [data] = ft_megrealign(cfg, data)
 
 % Copyright (C) 2004-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -93,18 +93,21 @@ function [data] = ft_megrealign(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -112,6 +115,8 @@ end
 cfg = ft_checkconfig(cfg, 'renamed',     {'plot3d',      'feedback'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape',   'headmodel', []});
 cfg = ft_checkconfig(cfg, 'required',    {'inwardshift', 'template'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hdmfile',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'vol',         'headmodel'});
 
 % set the default configuration
 cfg.headshape  = ft_getopt(cfg, 'headshape', []);
@@ -142,49 +147,57 @@ if isstruct(cfg.template)
   cfg.template = {cfg.template};
 end
 
-% select trials of interest
+% retain only the MEG channels in the data and temporarily store
+% the rest, these will be added back to the transformed data later.
+
+% select trials and channels of interest
 tmpcfg = [];
-tmpcfg.trials = cfg.trials;
+tmpcfg.trials  = cfg.trials;
+tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label));
+rest = ft_selectdata(tmpcfg, data);
+
+tmpcfg.channel = ft_channelselection(cfg.channel, data.label);
 data = ft_selectdata(tmpcfg, data);
+
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
 Ntrials = length(data.trial);
 
-% retain only the MEG channels in the data and temporarily store
-% the rest, these will be added back to the transformed data later.
-cfg.channel = ft_channelselection(cfg.channel, data.label);
-dataindx = match_str(data.label, cfg.channel);
-restindx = setdiff(1:length(data.label),dataindx);
-if ~isempty(restindx)
-  fprintf('removing %d non-MEG channels from the data\n', length(restindx));
-  rest.label = data.label(restindx);    % first remember the rest
-  data.label = data.label(dataindx);    % then reduce the data
-  for i=1:Ntrials
-    rest.trial{i} = data.trial{i}(restindx,:);  % first remember the rest
-    data.trial{i} = data.trial{i}(dataindx,:);  % then reduce the data
-  end
-else
-  rest.label = {};
-  rest.trial = {};
-end
+% cfg.channel = ft_channelselection(cfg.channel, data.label);
+% dataindx = match_str(data.label, cfg.channel);
+% restindx = setdiff(1:length(data.label),dataindx);
+% if ~isempty(restindx)
+%   fprintf('removing %d non-MEG channels from the data\n', length(restindx));
+%   rest.label = data.label(restindx);    % first remember the rest
+%   data.label = data.label(dataindx);    % then reduce the data
+%   for i=1:Ntrials
+%     rest.trial{i} = data.trial{i}(restindx,:);  % first remember the rest
+%     data.trial{i} = data.trial{i}(dataindx,:);  % then reduce the data
+%   end
+% else
+%   rest.label = {};
+%   rest.trial = {};
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % construct the average template gradiometer array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Ntemplate = length(cfg.template);
-for i=1:Ntemplate
+template = struct([]); % initialize as empty structure
+for i=1:length(cfg.template)
   if ischar(cfg.template{i}),
     fprintf('reading template sensor position from %s\n', cfg.template{i});
-    template(i) = ft_read_sens(cfg.template{i});
+    tmp = ft_read_sens(cfg.template{i});
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra'),
-    template(i) = cfg.template{i};
+    tmp = cfg.template{i};
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra'),
     % it seems to be a pre-2011v1 type gradiometer structure, update it
-    template(i) = ft_datatype_sens(cfg.template{i});
+    tmp = ft_datatype_sens(cfg.template{i});
   else
     error('unrecognized template input');
   end
+  % prevent "Subscripted assignment between dissimilar structures" error
+  template = appendstruct(template, tmp); clear tmp
 end
 
 grad = ft_average_sens(template);
@@ -200,14 +213,10 @@ template.grad = grad;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 volcfg = [];
-if isfield(cfg, 'hdmfile')
-  volcfg.hdmfile = cfg.hdmfile;
-elseif isfield(cfg, 'vol')
-  volcfg.vol = cfg.vol;
-end
-volcfg.grad    = data.grad;
-volcfg.channel = data.label; % this might be a subset of the MEG channels
-gradorig       = data.grad; % this is needed later on for plotting. As of
+volcfg.headmodel = cfg.headmodel;
+volcfg.grad      = data.grad;
+volcfg.channel   = data.label; % this might be a subset of the MEG channels
+gradorig         = data.grad;  % this is needed later on for plotting. As of
 % yet the next step is not entirely correct, because it does not keep track
 % of the balancing of the gradiometer array. FIXME this may require some
 % thought because the leadfields are computed with low level functions and
@@ -232,19 +241,11 @@ else
   cfg.verify = 'no';
 end
 
-% create the dipole grid on which the data will be projected
-tmpcfg = [];
-tmpcfg.vol  = volold;
-tmpcfg.grad = data.grad;
 % copy all options that are potentially used in ft_prepare_sourcemodel
-try, tmpcfg.grid        = cfg.grid;         end
-try, tmpcfg.mri         = cfg.mri;          end
-try, tmpcfg.headshape   = cfg.headshape;    end
-try, tmpcfg.symmetry    = cfg.symmetry;     end
-try, tmpcfg.smooth      = cfg.smooth;       end
-try, tmpcfg.threshold   = cfg.threshold;    end
-try, tmpcfg.spheremesh  = cfg.spheremesh;   end
-try, tmpcfg.inwardshift = cfg.inwardshift;  end
+tmpcfg            = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+tmpcfg.headmodel  = volold;
+tmpcfg.grad       = data.grad;
+% create the dipole grid on which the data will be projected
 grid = ft_prepare_sourcemodel(tmpcfg);
 pos = grid.pos;
 
@@ -283,7 +284,7 @@ for i=1:Ntrials
       M    = ft_headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
       grad = ft_transform_sens(M, data.grad);
     end
-    
+
     volcfg.grad = grad;
     %compute volume conductor
     [volold, grad] = prepare_headmodel(volcfg);
@@ -309,15 +310,15 @@ end
 
 % plot the topography before and after the realignment
 if strcmp(cfg.feedback, 'yes')
-  
+
   warning('showing MEG topography (RMS value over time) in the first trial only');
   Nchan = length(data.grad.label);
   [id,it]   = match_str(data.grad.label, template.grad.label);
-  pnt1 = data.grad.chanpos(id,:);
-  pnt2 = template.grad.chanpos(it,:);
-  prj1 = elproj(pnt1); tri1 = delaunay(prj1(:,1), prj1(:,2));
-  prj2 = elproj(pnt2); tri2 = delaunay(prj2(:,1), prj2(:,2));
-  
+  pos1 = data.grad.chanpos(id,:);
+  pos2 = template.grad.chanpos(it,:);
+  prj1 = elproj(pos1); tri1 = delaunay(prj1(:,1), prj1(:,2));
+  prj2 = elproj(pos2); tri2 = delaunay(prj2(:,1), prj2(:,2));
+
   switch cfg.topoparam
     case 'rms'
       p1 = sqrt(mean(data.trial{1}(id,:).^2, 2));
@@ -328,44 +329,44 @@ if strcmp(cfg.feedback, 'yes')
     otherwise
       error('unsupported cfg.topoparam');
   end
-  
-  X = [pnt1(:,1) pnt2(:,1)]';
-  Y = [pnt1(:,2) pnt2(:,2)]';
-  Z = [pnt1(:,3) pnt2(:,3)]';
-  
+
+  X = [pos1(:,1) pos2(:,1)]';
+  Y = [pos1(:,2) pos2(:,2)]';
+  Z = [pos1(:,3) pos2(:,3)]';
+
   % show figure with old an new helmets, volume model and dipole grid
   figure
   hold on
   ft_plot_vol(volold);
   plot3(grid.pos(:,1),grid.pos(:,2),grid.pos(:,3),'b.');
-  plot3(pnt1(:,1), pnt1(:,2), pnt1(:,3), 'r.') % original positions
-  plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
+  plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
+  plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   view(-90, 90);
-  
+
   % show figure with data on old helmet location
   figure
   hold on
-  plot3(pnt1(:,1), pnt1(:,2), pnt1(:,3), 'r.') % original positions
-  plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
+  plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
+  plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   axis equal; axis vis3d
   bnd1 = [];
-  bnd1.pnt = pnt1;
+  bnd1.pos = pos1;
   bnd1.tri = tri1;
   ft_plot_mesh(bnd1,'vertexcolor',p1,'edgecolor','none')
   title('RMS, before realignment')
   view(-90, 90)
-  
+
   % show figure with data on new helmet location
   figure
   hold on
-  plot3(pnt1(:,1), pnt1(:,2), pnt1(:,3), 'r.') % original positions
-  plot3(pnt2(:,1), pnt2(:,2), pnt2(:,3), 'g.') % template positions
+  plot3(pos1(:,1), pos1(:,2), pos1(:,3), 'r.') % original positions
+  plot3(pos2(:,1), pos2(:,2), pos2(:,3), 'g.') % template positions
   line(X,Y,Z, 'color', 'black');
   axis equal; axis vis3d
   bnd2 = [];
-  bnd2.pnt = pnt2;
+  bnd2.pos = pos2;
   bnd2.tri = tri2;
   ft_plot_mesh(bnd2,'vertexcolor',p2,'edgecolor','none')
   title('RMS, after realignment')
@@ -411,14 +412,14 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous data
 
 % rename the output variable to accomodate the savevar postamble
 data = interp;
 
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

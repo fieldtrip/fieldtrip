@@ -10,7 +10,7 @@ function [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 % and the configuration should contain
 %   cfg.channelcmb = Nx2 cell array
 %
-% An example channelcombination containing the homologous channels 
+% An example channelcombination containing the homologous channels
 % in the 10-20 standard system is
 %    cfg.channelcmb = {'Fp1'   'Fp2'
 %                      'F7'    'F8'
@@ -50,7 +50,7 @@ function [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -68,18 +68,21 @@ function [lrp] = ft_lateralizedpotential(cfg, avgL, avgR)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar avgL avgR
+ft_preamble provenance avgL avgR
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -88,7 +91,7 @@ avgL = ft_checkdata(avgL, 'datatype', 'timelock');
 avgR = ft_checkdata(avgR, 'datatype', 'timelock');
 
 % set the defaults
-if ~isfield(cfg, 'channelcmb'), 
+if ~isfield(cfg, 'channelcmb'),
   cfg.channelcmb = {
     'Fp1'   'Fp2'
     'F7'    'F8'
@@ -111,10 +114,21 @@ lrp.plotlabel = {};
 lrp.avg       = [];
 lrp.time      = avgL.time;
 
+% add timelock signature
+if isfield(avgL, 'dimord') && isfield(avgR, 'dimord')
+    if ~strcmp(avgL.dimord, avgR.dimord)
+        error('The input data are of different dimord types');
+    else
+        lrp.dimord = avgL.dimord;
+    end
+else
+    error('''dimord'' not found. The function expects timelock data');
+end
+
 % compute the lateralized potentials
 Nchan = size(cfg.channelcmb);
 for i=1:Nchan
-  % here the channel names "C3" and "C4" are used to clarify the 
+  % here the channel names "C3" and "C4" are used to clarify the
   % computation of the lateralized potential on all channel pairs
   C3R = strcmp(cfg.channelcmb{i,1}, avgR.label);
   C4R = strcmp(cfg.channelcmb{i,2}, avgR.label);
@@ -134,7 +148,7 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous avgL avgR
-ft_postamble history lrp
-ft_postamble savevar lrp
+ft_postamble previous   avgL avgR
+ft_postamble provenance lrp
+ft_postamble history    lrp
+ft_postamble savevar    lrp

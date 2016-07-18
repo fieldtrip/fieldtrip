@@ -19,7 +19,7 @@ function [timelock] = ft_spiketriggeredaverage(cfg, data)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -69,7 +69,7 @@ cfg = ft_checkopt(cfg, 'feedback', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg, 'latency', {'char', 'ascendingdoublebivector'});
 cfg = ft_checkopt(cfg, 'trials', {'char', 'doublevector', 'logical'}); 
 
-cfg = ft_checkconfig(cfg, 'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials', 'warning', 'progress'});
+cfg = ft_checkconfig(cfg, 'allowed', {'timwin', 'spikechannel', 'channel', 'keeptrials', 'feedback', 'latency', 'trials'});
 
 % autodetect the spike channels
 ntrial = length(data.trial);

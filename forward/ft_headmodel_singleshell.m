@@ -1,4 +1,4 @@
-function vol = ft_headmodel_singleshell(geometry, varargin)
+function headmodel = ft_headmodel_singleshell(mesh, varargin)
 
 % FT_HEADMODEL_SINGLESHELL creates a volume conduction model of the
 % head for MEG based on a realistic shaped surface of the inside of
@@ -16,13 +16,13 @@ function vol = ft_headmodel_singleshell(geometry, varargin)
 %   in realistic volume conductors", Phys Med Biol. 2003 Nov 21;48(22):3637-52.
 % 
 % Use as
-%   vol = ft_headmodel_singleshell(geom, ...)
+%   headmodel = ft_headmodel_singleshell(mesh, ...)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -40,21 +40,28 @@ function vol = ft_headmodel_singleshell(geometry, varargin)
 %
 % $Id$
 
-% if it contains more than 1 shell it retunrs an error
-if isfield(geometry,'pnt')
-  if numel(geometry)>1
-    error('no more than 1 shell at a time is allowed')
-  end
-else
-  error('the input should be a boundary')
+if isnumeric(mesh) && size(mesh,2)==3
+  % assume that it is a Nx3 array with vertices
+  % convert it to a structure, this is needed to determine the units further down
+  mesh = struct('pos', mesh);
+elseif isstruct(mesh) && isfield(mesh,'bnd')
+  % take the triangulated surfaces from the input structure
+  mesh = mesh.bnd;
 end
 
-% represent the geometry in a headmodel strucure
+% replace pnt with pos
+mesh = fixpos(mesh);
+
+if ~isstruct(mesh) || ~isfield(mesh, 'pos')
+  error('the input mesh should be a set of points or a single triangulated surface')
+end
+
+% represent the mesh in a headmodel strucure
 % the computational parameters will be added later on by ft_prepare_vol_sens
-vol      = [];
-vol.bnd  = geometry;
-vol.type = 'singleshell';
-if ~isfield(vol, 'unit')
-  vol = ft_convert_units(vol);
+headmodel      = [];
+headmodel.bnd  = mesh;
+headmodel.type = 'singleshell';
+if ~isfield(headmodel, 'unit')
+  headmodel = ft_convert_units(headmodel);
 end
 

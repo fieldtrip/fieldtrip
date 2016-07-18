@@ -25,7 +25,7 @@ function [hc] = read_neuromag_hc(filename)
 
 % Copyright (C) 2013, Arjen Stolk
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -50,7 +50,7 @@ hdr = ft_read_header(filename);
 nFid = size(hdr.orig.dig,2);
 
 % extract the positions in head coordinates (default in header)
-pntN=1;
+posN=1;
 for i=1:nFid % loop over fiducials
   
   % 0 is unknown
@@ -63,33 +63,33 @@ for i=1:nFid % loop over fiducials
   switch hdr.orig.dig(i).kind % constants defined in MNE - see p.215 of MNE manual
     case 1 % Cardinal point (Nasion, LPA or RPA)
       % get location of fiducial:
-      hc.head.pnt(pntN,1:3) = hdr.orig.dig(i).r*100; % multiply by 100 to convert to cm
+      hc.head.pos(posN,1:3) = hdr.orig.dig(i).r*100; % multiply by 100 to convert to cm
       switch hdr.orig.dig(i).ident
         case 1 % LPA
-          hc.head.label{pntN} = 'LPA';
+          hc.head.label{posN} = 'LPA';
         case 2 % nasion
-          hc.head.label{pntN} = 'Nasion';
+          hc.head.label{posN} = 'Nasion';
         case 3 % RPA
-          hc.head.label{pntN} = 'RPA';
+          hc.head.label{posN} = 'RPA';
         otherwise
           error('Unidentified cardinal point in file');
       end
-      pntN = pntN + 1;
+      posN = posN + 1;
       
     case 2 % HPI coil (up to 5)
-      hc.head.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-      hc.head.label{pntN} = strcat('hpi_', num2str(hdr.orig.dig(i).ident));
-      pntN = pntN + 1;
+      hc.head.pos(posN,1:3) = hdr.orig.dig(i).r*100;
+      hc.head.label{posN} = strcat('hpi_', num2str(hdr.orig.dig(i).ident));
+      posN = posN + 1;
       
     case 3 % EEG electrode location (or ECG)
-      hc.head.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-      hc.head.label{pntN} = strcat('eeg_', num2str(hdr.orig.dig(i).ident));
-      pntN = pntN + 1;
+      hc.head.pos(posN,1:3) = hdr.orig.dig(i).r*100;
+      hc.head.label{posN} = strcat('eeg_', num2str(hdr.orig.dig(i).ident));
+      posN = posN + 1;
       
     case 4 % Additional head point
-      hc.head.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-      hc.head.label{pntN} = strcat('extra_', num2str(hdr.orig.dig(i).ident));
-      pntN = pntN + 1;
+      hc.head.pos(posN,1:3) = hdr.orig.dig(i).r*100;
+      hc.head.label{posN} = strcat('extra_', num2str(hdr.orig.dig(i).ident));
+      posN = posN + 1;
       
     otherwise
       warning('Unidentified digitiser point in file!');
@@ -116,7 +116,7 @@ else
   return
 end
 
-pntN=1;
+posN=1;
 for i=1:nFid % loop over fiducials
   
   % 0 is unknown
@@ -129,33 +129,33 @@ for i=1:nFid % loop over fiducials
   switch hdr.orig.dig(i).kind % constants defined in MNE - see p.215 of MNE manual
     case 1 % Cardinal point (Nasion, LPA or RPA)
       % get location of fiducial:
-      hc.dewar.pnt(pntN,1:3) = hdr.orig.dig(i).r*100; % multiply by 100 to convert to cm
+      hc.dewar.pos(posN,1:3) = hdr.orig.dig(i).r*100; % multiply by 100 to convert to cm
       switch hdr.orig.dig(i).ident
         case 1 % LPA
-          hc.dewar.label{pntN} = 'LPA';
+          hc.dewar.label{posN} = 'LPA';
         case 2 % nasion
-          hc.dewar.label{pntN} = 'Nasion';
+          hc.dewar.label{posN} = 'Nasion';
         case 3 % RPA
-          hc.dewar.label{pntN} = 'RPA';
+          hc.dewar.label{posN} = 'RPA';
         otherwise
           error('Unidentified cardinal point in file');
       end
-      pntN = pntN + 1;
+      posN = posN + 1;
       
     case 2 % HPI coil (up to 5)
-      hc.dewar.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-      hc.dewar.label{pntN} = strcat('hpi_', num2str(hdr.orig.dig(i).ident));
-      pntN = pntN + 1;
+      hc.dewar.pos(posN,1:3) = hdr.orig.dig(i).r*100;
+      hc.dewar.label{posN} = strcat('hpi_', num2str(hdr.orig.dig(i).ident));
+      posN = posN + 1;
       
     case 3 % EEG electrode location (or ECG)
-      hc.dewar.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-      hc.dewar.label{pntN} = strcat('eeg_', num2str(hdr.orig.dig(i).ident));
-      pntN = pntN + 1;
+      hc.dewar.pos(posN,1:3) = hdr.orig.dig(i).r*100;
+      hc.dewar.label{posN} = strcat('eeg_', num2str(hdr.orig.dig(i).ident));
+      posN = posN + 1;
       
     case 4 % Additional head point
-      hc.dewar.pnt(pntN,1:3) = hdr.orig.dig(i).r*100;
-      hc.dewar.label{pntN} = strcat('extra_', num2str(hdr.orig.dig(i).ident));
-      pntN = pntN + 1;
+      hc.dewar.pos(posN,1:3) = hdr.orig.dig(i).r*100;
+      hc.dewar.label{posN} = strcat('extra_', num2str(hdr.orig.dig(i).ident));
+      posN = posN + 1;
       
     otherwise
       warning('Unidentified digitiser point in file!');

@@ -30,7 +30,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 
 % Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,25 +48,26 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar stat
+ft_preamble provenance stat
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
-% check if the given data is appropriate
-if isfield(stat,'freq') && length(stat.freq) > 1 && isfield(stat, 'time') && length(stat.time) > 1
-  error('stat contains multiple frequencies and time, which is not allowed because it should be averaged over frequencies or over time')
-end
+% check if the input data is valid for this function
+stat = ft_checkdata(stat, 'datatype', {'timelock', 'freq'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkerseries',       'highlightsymbolseries'});
@@ -89,72 +90,80 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight', ...
   'commentpos'});
 
 % set the defaults
-if ~isfield(cfg,'alpha'),                  cfg.alpha = 0.05;                                    end;
-if ~isfield(cfg,'highlightseries'),        cfg.highlightseries = {'on','on','on','on','on'};    end;
-if ~isfield(cfg,'highlightsymbolseries'),  cfg.highlightsymbolseries = ['*','x','+','o','.'];   end;
-if ~isfield(cfg,'highlightsizeseries'),    cfg.highlightsizeseries = [6 6 6 6 6];               end;
-if ~isfield(cfg,'hllinewidthseries'),      cfg.hllinewidthseries = [1 1 1 1 1];                 end;
-if ~isfield(cfg,'highlightcolorpos'),      cfg.highlightcolorpos = [0 0 0];                     end;
-if ~isfield(cfg,'highlightcolorneg'),      cfg.highlightcolorneg = [0 0 0];                     end;
-if ~isfield(cfg,'parameter'),              cfg.parameter = 'stat';                              end;
-if ~isfield(cfg,'saveaspng'),              cfg.saveaspng = 'no';                                end;
-if ~isfield(cfg,'subplotsize'),            cfg.subplotsize = [3 5];                             end;
+cfg.marker                = ft_getopt(cfg, 'marker',                'off');
+cfg.alpha                 = ft_getopt(cfg, 'alpha',                 0.05);
+cfg.highlightseries       = ft_getopt(cfg, 'highlightseries',       {'on','on','on','on','on'});
+cfg.highlightsymbolseries = ft_getopt(cfg, 'highlightsymbolseries', ['*','x','+','o','.']);
+cfg.highlightsizeseries   = ft_getopt(cfg, 'highlightsizeseries',   [6 6 6 6 6]);
+cfg.hllinewidthseries     = ft_getopt(cfg, 'hllinewidthseries',     [1 1 1 1 1]);
+cfg.highlightcolorpos     = ft_getopt(cfg, 'highlightcolorpos',     [0 0 0]);
+cfg.highlightcolorneg     = ft_getopt(cfg, 'highlightcolorneg',     [0 0 0]);
+cfg.parameter             = ft_getopt(cfg, 'parameter',             'stat');
+cfg.saveaspng             = ft_getopt(cfg, 'saveaspng',             'no');
+cfg.subplotsize           = ft_getopt(cfg, 'subplotsize',           [3 5]);
+cfg.feedback              = ft_getopt(cfg, 'feedback',              'text');
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
   error('cfg.highlightseries should be a cell-array of strings')
 end
 
-% set additional options for topoplotting
-if isfield(cfg, 'marker'),                cfgtopo.marker         = cfg.marker ;         end
-if ~isfield(cfg,'marker'),                cfgtopo.marker         = 'off';               end
-if isfield(cfg, 'markersymbol'),          cfgtopo.markersymbol   = cfg.markersymbol;    end
-if isfield(cfg, 'markercolor'),           cfgtopo.markercolor    = cfg.markercolor;     end
-if isfield(cfg, 'markersize'),            cfgtopo.markersize     = cfg.markersize;      end
-if isfield(cfg, 'markerfontsize'),        cfgtopo.markerfontsize = cfg.markerfontsize;  end
-if isfield(cfg, 'style'),                 cfgtopo.style          = cfg.style ;          end
-if isfield(cfg, 'gridscale'),             cfgtopo.gridscale      = cfg.gridscale;       end
-if isfield(cfg, 'interplimits'),          cfgtopo.interplimits   = cfg.interplimits;    end
-if isfield(cfg, 'interpolation'),         cfgtopo.interpolation  = cfg.interpolation;   end
-if isfield(cfg, 'contournum'),            cfgtopo.contournum     = cfg.contournum;      end
-if isfield(cfg, 'colorbar'),              cfgtopo.colorbar       = cfg.colorbar;        end
-if isfield(cfg, 'shading'),               cfgtopo.shading        = cfg.shading';        end
-if isfield(cfg, 'zlim'),                  cfgtopo.zlim           = cfg.zlim;            end
-
-cfgtopo.parameter = cfg.parameter;
-
+% get the options that are specific for topoplotting
+cfgtopo = keepfields(cfg, {'parameter', 'marker', 'markersymbol', 'markercolor', 'markersize', 'markerfontsize', 'style', 'gridscale', 'interplimits', 'interpolation', 'contournum', 'colorbar', 'shading', 'zlim'});
 % prepare the layout, this only has to be done once
 cfgtopo.layout = ft_prepare_layout(cfg, stat);
+cfgtopo.showcallinfo = 'no';
+cfgtopo.feedback = 'no';
 
-% detect 2D or 1D
+% handle with the data, it should be 1D or 2D
+dimord = getdimord(stat, cfg.parameter);
+dimtok = tokenize(dimord, '_');
+dimsiz = getdimsiz(stat, cfg.parameter);
+dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton dimensions
+
+switch dimord
+  case 'chan'
+    is2D = false;
+
+  case 'chan_time'
+    is2D = true;
+
+  case 'chan_freq'
+    is2D = true;
+
+  case 'chan_freq_time'
+    % no more than two dimensions are supported, we can ignore singleton dimensions
+    is2D = true;
+    if dimsiz(2)==1
+      stat = rmfield(stat, 'freq');
+      stat.dimord = 'chan_time';
+      % remove the singleton dimension in the middle
+      stat.(cfg.parameter) = squeeze(stat.(cfg.parameter));
+    elseif dimsiz(3)==1
+      stat = rmfield(stat, 'time');
+      stat.dimord = 'chan_freq';
+      % no need to remove the singleton dimension at the end
+    else
+      error('this only works if either frequency or time is a singleton dimension');
+    end
+
+  otherwise
+    error('unsupported dimord %s', dimord);
+end % switch dimord
+
+% these are not valid any more
+clear dimord dimsiz
+
+% this determines the labels in the figure
 hastime = isfield(stat, 'time');
 hasfreq = isfield(stat, 'freq');
-% if hastime ==1 || numel(stat.time)==1 || hasfreq==1 
-%     stat= rmfield(stat,'time');
-% end;
 
-is1D = xor(hastime, hasfreq); % either one
-is2D = and(hastime, hasfreq); % both
-
-% deal with single latency
-if hastime ==1;
-    singlelatency = numel(stat.time);
-    if singlelatency == 1
-        stat=rmfield(stat,'time');
-        is1D=1;
-        stat.dimord = 'chan_freq';
-        hastime = 0;
-    end;
-end;
-
-if hasfreq && ~hastime
-  % make the subsequent code believe we are dealing with time instead of freq data
-  stat.time = stat.freq;
-  stat = rmfield(stat, 'freq');
-  stat.dimord = 'chan_freq';
-  is1D = 0;
-  is2D = 1;
-end;
+% use the vector time, even though the 2nd dimension might be freq
+if hastime
+  time = stat.time;
+elseif hasfreq
+  time = stat.freq;
+end
 
 if issubfield(stat, 'cfg.correcttail') && ((strcmp(stat.cfg.correcttail,'alpha') || strcmp(stat.cfg.correcttail,'prob')) && (stat.cfg.tail == 0));
   if ~(cfg.alpha >= stat.cfg.alpha);
@@ -181,16 +190,16 @@ else
       signeg(iNeg) = stat.negclusters(iNeg).prob < cfg.alpha;
     end
   end
-  sigpos = find(sigpos == 1);
-  signeg = find(signeg == 1);
+  sigpos  = find(sigpos == 1);
+  signeg  = find(signeg == 1);
   Nsigpos = length(sigpos);
   Nsigneg = length(signeg);
   Nsigall = Nsigpos + Nsigneg;
-  
+
   if Nsigall == 0
     error('no clusters present with a p-value lower than the specified alpha, nothing to plot')
   end
-  
+
   % make clusterslabel matrix per significant cluster
   if haspos
     posCLM = squeeze(stat.posclusterslabelmat);
@@ -206,7 +215,7 @@ else
     sigposCLM = [];
     probpos = [];
   end
-  
+
   if hasneg
     negCLM = squeeze(stat.negclusterslabelmat);
     signegCLM = zeros(size(negCLM));
@@ -221,16 +230,16 @@ else
     signegCLM = [];
     probneg = [];
   end
-  
+
   fprintf('%s%i%s%g%s\n','There are ',Nsigall,' clusters smaller than alpha (',cfg.alpha,')')
-  
+
   if is2D
     % define time or freq window per cluster
     for iPos = 1:length(sigpos)
       possum_perclus = sum(sigposCLM(:,:,iPos),1); %sum over chans for each time- or freq-point
       ind_min = min(find(possum_perclus~=0));
       ind_max = max(find(possum_perclus~=0));
-      time_perclus = [stat.time(ind_min) stat.time(ind_max)];
+      time_perclus = [time(ind_min) time(ind_max)];
       if hastime
         fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')',', t = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
       elseif hasfreq
@@ -241,21 +250,21 @@ else
       negsum_perclus = sum(signegCLM(:,:,iNeg),1);
       ind_min = min(find(negsum_perclus~=0));
       ind_max = max(find(negsum_perclus~=0));
-      time_perclus = [stat.time(ind_min) stat.time(ind_max)];
+      time_perclus = [time(ind_min) time(ind_max)];
       if hastime
-        time_perclus = [stat.time(ind_min) stat.time(ind_max)];
+        time_perclus = [time(ind_min) time(ind_max)];
         fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')',', t = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
       elseif hasfreq
         fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')',', f = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
       end
     end
-    
+
     % define time- or freq-window containing all significant clusters
     possum = sum(sigposCLM,3); %sum over Chans for timevector
     possum = sum(possum,1);
     negsum = sum(signegCLM,3);
     negsum = sum(negsum,1);
-    
+
     if haspos && hasneg
       allsum = possum + negsum;
     elseif haspos
@@ -263,11 +272,11 @@ else
     else
       allsum = negsum;
     end
-    
+
     ind_timewin_min = min(find(allsum~=0));
     ind_timewin_max = max(find(allsum~=0));
-    timewin = stat.time(ind_timewin_min:ind_timewin_max);
-    
+    timewin = time(ind_timewin_min:ind_timewin_max);
+
   else
     for iPos = 1:length(sigpos)
       fprintf('%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')')
@@ -276,7 +285,7 @@ else
       fprintf('%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')')
     end
   end
-  
+
   % setup highlight options for all clusters and make comment for 1D data
   compos = [];
   comneg = [];
@@ -305,7 +314,7 @@ else
     cfgtopo.highlightcolor{iPos}        = cfg.highlightcolorpos;
     compos = strcat(compos,cfgtopo.highlightsymbol{iPos}, 'p=',num2str(probpos(iPos)),' '); % make comment, only used for 1D data
   end
-  
+
   for iNeg = 1:length(signeg)
     if stat.negclusters(signeg(iNeg)).prob < 0.01
       cfgtopo.highlight{length(sigpos)+iNeg}         = cfg.highlightseries{1};
@@ -331,16 +340,16 @@ else
     cfgtopo.highlightcolor{length(sigpos)+iNeg}        = cfg.highlightcolorneg;
     comneg = strcat(comneg,cfgtopo.highlightsymbol{length(sigpos)+iNeg}, 'p=',num2str(probneg(iNeg)),' '); % make comment, only used for 1D data
   end
-  
+
   if is2D
     Npl = length(timewin);
   else
     Npl = 1;
   end
-  
+
   numSubplots = prod(cfg.subplotsize);
   Nfig = ceil(Npl/numSubplots);
-  
+
   % put channel indexes in list
   if is2D
     for iPl = 1:Npl
@@ -361,8 +370,13 @@ else
       end
     end
   end
-  
-  
+
+  % this does not work, because the progress tracker is also used inside ft_topoplotTFR
+  %  ft_progress('init', cfg.feedback, 'making subplots...');
+  %  ft_progress(count/Npl, 'making subplot %d from %d', count, Npl);
+  %  ft_progress('close');
+
+  count = 0;
   % make plots
   for iPl = 1:Nfig
     figure;
@@ -370,38 +384,42 @@ else
       if iPl < Nfig
         for iT = 1:numSubplots
           PlN = (iPl-1)*numSubplots + iT; %plotnumber
-          cfgtopo.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
+          cfgtopo.xlim = [time(ind_timewin_min+PlN-1) time(ind_timewin_min+PlN-1)];
           cfgtopo.highlightchannel = list{PlN};
           if hastime
-            cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
+            cfgtopo.comment = strcat('time: ',num2str(time(ind_timewin_min+PlN-1)), ' s');
           elseif hasfreq
-            cfgtopo.comment = strcat('freq: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' Hz');
+            cfgtopo.comment = strcat('freq: ',num2str(time(ind_timewin_min+PlN-1)), ' Hz');
           end
           cfgtopo.commentpos = 'title';
           subplot(cfg.subplotsize(1), cfg.subplotsize(2), iT);
+          count = count+1;
+          fprintf('making subplot %d from %d\n', count, Npl);
           ft_topoplotTFR(cfgtopo, stat);
         end
       elseif iPl == Nfig
         for iT = 1:Npl-(numSubplots*(Nfig-1))
           PlN = (iPl-1)*numSubplots + iT; %plotnumber
-          cfgtopo.xlim = [stat.time(ind_timewin_min+PlN-1) stat.time(ind_timewin_min+PlN-1)];
+          cfgtopo.xlim = [time(ind_timewin_min+PlN-1) time(ind_timewin_min+PlN-1)];
           cfgtopo.highlightchannel   = list{PlN};
           if hastime
-            cfgtopo.comment = strcat('time: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' s');
+            cfgtopo.comment = strcat('time: ',num2str(time(ind_timewin_min+PlN-1)), ' s');
           elseif hasfreq
-            cfgtopo.comment = strcat('freq: ',num2str(stat.time(ind_timewin_min+PlN-1)), ' Hz');
+            cfgtopo.comment = strcat('freq: ',num2str(time(ind_timewin_min+PlN-1)), ' Hz');
           end
           cfgtopo.commentpos = 'title';
           subplot(cfg.subplotsize(1), cfg.subplotsize(2), iT);
+          count = count+1;
+          fprintf('making subplot %d from %d\n', count, Npl);
           ft_topoplotTFR(cfgtopo, stat);
         end
       end
     else
       cfgtopo.highlightchannel = list{1};
-      cfgtopo.xparam = 'time';
-      cfgtopo.yparam = '';
       cfgtopo.comment = strcat(compos,comneg);
       cfgtopo.commentpos = 'title';
+      count = count+1;
+      fprintf('making subplot %d from %d\n', count, Npl);
       ft_topoplotTFR(cfgtopo, stat);
     end
     % save figure
@@ -416,8 +434,8 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble previous stat
+ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

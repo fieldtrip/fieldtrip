@@ -5,7 +5,7 @@ function cfg = topoplot_common(cfg, varargin)
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -109,6 +109,13 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'hllinewidth', ...
   'highlightfacecolor', ...
   'showlabels'});
 
+if ft_platform_supports('griddata-v4')
+  default_interpmethod='v4';
+else
+  % Octave does not support 'v4', and 'cubic' not yet implemented
+  default_interpmethod='linear';
+end
+
 % Set other config defaults
 cfg.xlim              = ft_getopt(cfg, 'xlim',          'maxmin');
 cfg.ylim              = ft_getopt(cfg, 'ylim',          'maxmin');
@@ -116,7 +123,7 @@ cfg.zlim              = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.style             = ft_getopt(cfg, 'style',         'both');
 cfg.gridscale         = ft_getopt(cfg, 'gridscale',     67);
 cfg.interplimits      = ft_getopt(cfg, 'interplimits',  'head');
-cfg.interpolation     = ft_getopt(cfg, 'interpolation', 'v4');
+cfg.interpolation     = ft_getopt(cfg, 'interpolation', default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',    6);
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',      'no');
 cfg.shading           = ft_getopt(cfg, 'shading',       'flat');
@@ -200,7 +207,10 @@ end
 if isfield(cfg,'colormap')
   if size(cfg.colormap,2)~=3, error('topoplot(): Colormap must be a n x 3 matrix'); end
   colormap(cfg.colormap);
-end;
+  ncolors = size(cfg.colormap,1);
+else
+  ncolors =[]; % let the low-level function deal with this
+end
 
 dtype  = ft_datatype(data);
 
@@ -764,7 +774,7 @@ if ~strcmp(cfg.style,'blank')
     'datmask', msk};
   if strcmp(style,'imsat') || strcmp(style,'imsatiso')
     % add clim to opt
-    opt = [opt {'clim',[zmin zmax]}];
+    opt = [opt {'clim',[zmin zmax],'ncolors',ncolors}];
   end
   ft_plot_topo(chanX,chanY,dat,opt{:});
 elseif ~strcmp(cfg.style,'blank')
@@ -832,6 +842,16 @@ if ~strcmp(cfg.marker,'off')
     'pointsize',cfg.markersize,...
     'labelsize',cfg.markerfontsize,...
     'labeloffset',cfg.labeloffset)
+end
+
+
+if(isfield(cfg,'vector'))
+    vecX = mean(real(data.(cfg.vector)(:,xmin:xmax)),2);
+    vecY = mean(imag(data.(cfg.vector)(:,xmin:xmax)),2);
+    
+    % scale quiver relative to largest gradiometer sample
+    k=0.15/max([max(abs(real(data.(cfg.vector)(:)))) max(abs(imag(data.(cfg.vector)(:))))]);
+    quiver(chanX, chanY, k*vecX, k*vecY,0,'red');
 end
 
 % Write comment
@@ -918,7 +938,9 @@ if isempty(get(gcf, 'Name'))
   end
   
   if isempty(cfg.figurename)
-    set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
+    dataname_str=join_str(', ', dataname);
+
+    set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, dataname_str));
     set(gcf, 'NumberTitle', 'off');
   else
     set(gcf, 'name', cfg.figurename);
@@ -935,8 +957,11 @@ axis equal
 delete(findobj(gcf, 'type', 'uimenu', 'label', 'FieldTrip'));
 if numel(findobj(gcf, 'type', 'axes')) <= 1
   ftmenu = uimenu(gcf, 'Label', 'FieldTrip');
-  uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
-  uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+  if ft_platform_supports('uimenu')
+    % not supported by Octave
+    uimenu(ftmenu, 'Label', 'Show pipeline',  'Callback', {@menu_pipeline, cfg});
+    uimenu(ftmenu, 'Label', 'About',  'Callback', @menu_about);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

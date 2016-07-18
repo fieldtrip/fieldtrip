@@ -102,7 +102,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -120,18 +120,21 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar    varargin
+ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -175,6 +178,9 @@ cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.preproc        = ft_getopt(cfg, 'preproc');
 cfg.tolerance      = ft_getopt(cfg, 'tolerance', 1e-5);
+cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
+cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
+
 if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive, 'yes')
   warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
   cfg.interactive = 'no';
@@ -310,13 +316,25 @@ end
 % perform channel selection, unless in the other plotting functions this
 % can always be done because ft_multiplotER is the entry point into the
 % interactive stream, but will not be revisited
-for i=1:Ndata
-  if isfield(varargin{i}, 'label')
-    % only do the channel selection when it can actually be done,
-    % i.e. when the data are bivariate ft_selectdata will crash, moreover
-    % the bivariate case is handled below
-    varargin{i} = ft_selectdata(varargin{i}, 'channel', cfg.channel);
+if isfield(varargin{1}, 'label')
+  % only do the channel selection when it can actually be done,
+  % i.e. when the data are bivariate ft_selectdata will crash, moreover
+  % the bivariate case is handled below
+  tmpcfg = keepfields(cfg, 'channel');
+  tmpvar = varargin{1};
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+  % restore the provenance information
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+
+  if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
+    % the mask parameter is not present after ft_selectdata, because it is
+    % not included in all input arguments. Make the same selection and copy
+    % it over
+    tmpvar = ft_selectdata(tmpcfg, tmpvar);
+    varargin{1}.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
   end
+
+  clear tmpvar tmpcfg
 end
 
 if isfield(varargin{1}, 'label') % && strcmp(cfg.interactive, 'no')
@@ -325,14 +343,15 @@ elseif isfield(varargin{1}, 'labelcmb') % && strcmp(cfg.interactive, 'no')
   selchannel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
-% check whether rpt/subj is present and remove if necessary and whether
+% check whether rpt/subj is present and remove if necessary
+% FIXME this should be implemented with avgoverpt in ft_selectdata
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
 if strcmp(dtype, 'timelock') && hasrpt,
-  tmpcfg        = [];
-  
+  tmpcfg = [];
+
   % disable hashing of input data (speeds up things)
   tmpcfg.trackcallinfo = 'no';
-  
+
   tmpcfg.trials = cfg.trials;
   for i=1:Ndata
     % save mask (timelockanalysis will remove it)
@@ -345,7 +364,7 @@ if strcmp(dtype, 'timelock') && hasrpt,
       varargin{i}.(cfg.parameter) = varargin{i}.avg;
       varargin{i} = rmfield(varargin{i}, 'avg');
     end
-    
+
     % put back mask
     if ~isempty(cfg.maskparameter)
       varargin{i}.(cfg.maskparameter) = tmpmask;
@@ -353,6 +372,7 @@ if strcmp(dtype, 'timelock') && hasrpt,
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
+
 elseif strcmp(dtype, 'freq') && hasrpt,
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
@@ -362,7 +382,7 @@ elseif strcmp(dtype, 'freq') && hasrpt,
       varargin{i} = rmfield(varargin{i}, 'crsspctrm');
     end
   end
-  
+
   tmpcfg           = [];
   tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
@@ -426,7 +446,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
   if ~isfield(cfg, 'refchannel')
     error('no reference channel is specified');
   end
-  
+
   % check for refchannel being part of selection
   if ~strcmp(cfg.refchannel, 'gui')
     if haslabelcmb
@@ -439,7 +459,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
       error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
-  
+
   % Interactively select the reference channel
   if strcmp(cfg.refchannel, 'gui')
     % Open a single figure with the channel layout, the user can click on a reference channel
@@ -458,7 +478,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonMotionFcn'});
     return
   end
-  
+
   for i=1:Ndata
     if ~isfull,
       % Convert 2-dimensional channel matrix to a single dimension:
@@ -497,7 +517,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
         sel1 = sel;
         sel2 = 1:siz(1);
         meandir = 1;
-        
+
       elseif strcmp(cfg.directionality, 'ff-fd')
         error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotER');
       elseif strcmp(cfg.directionality, 'fd-ff')
@@ -527,14 +547,20 @@ for i=1:Ndata
   xidmax(i, 1) = nearest(varargin{i}.(xparam), xmax);
 end
 
-if strcmp('freq', yparam) && strcmp('freq', dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i}, 'param', cfg.parameter, 'foilim', cfg.zlim, 'avgoverfreq', 'yes');
-  end
-elseif strcmp('time', yparam) && strcmp('freq', dtype)
-  for i=1:Ndata
-    varargin{i} = ft_selectdata(varargin{i}, 'param', cfg.parameter, 'toilim', cfg.zlim, 'avgovertime', 'yes');
-  end
+if strcmp('freq',yparam) && strcmp('freq',dtype)
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgoverfreq = 'yes';
+  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+  % restore the provenance information
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+elseif strcmp('time',yparam) && strcmp('freq',dtype)
+  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg.avgovertime = 'yes';
+  tmpcfg.latency     = cfg.latency;%cfg.zlim;
+  [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
+  % restore the provenance information
+  [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 end
 
 % Get physical y-axis range (vlim / parameter):
@@ -556,7 +582,7 @@ if strcmp(cfg.vlim, 'maxmin') || strcmp(cfg.vlim, 'maxabs')
     ymin = min([ymin min(min(min(data)))]);
     ymax = max([ymax max(max(max(data)))]);
   end
-  
+
   if strcmp(cfg.vlim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
     ymin = -ymax;
@@ -565,7 +591,7 @@ if strcmp(cfg.vlim, 'maxmin') || strcmp(cfg.vlim, 'maxabs')
   elseif strcmp(cfg.vlim, 'minzero')
     ymax = 0;
   end
-  
+
 else
   ymin = cfg.vlim(1);
   ymax = cfg.vlim(2);
@@ -598,9 +624,9 @@ for i=1:Ndata
   zdim = setdiff(1:ndims(dat), [ydim xdim]);
   % and permute
   dat = permute(dat, [zdim(:)' ydim xdim]);
-  
+
   xval = varargin{i}.(xparam);
-  
+
   % Take subselection of channels, this only works
   % in the non-interactive mode
   if exist('selchannel', 'var')
@@ -610,7 +636,7 @@ for i=1:Ndata
     sellab = 1:numel(varargin{i}.label);
     label  = varargin{i}.label;
   end
-  
+
   if isfull
     dat = dat(sel1, sel2, xidmin(i):xidmax(i));
     dat = nanmean(dat, meandir);
@@ -620,21 +646,21 @@ for i=1:Ndata
     dat = dat(sellab, xidmin(i):xidmax(i));
   end
   xval = xval(xidmin(i):xidmax(i));
-  
+
   % Select the channels in the data that match with the layout:
   [seldat, sellay] = match_str(label, cfg.layout.label);
   if isempty(seldat)
     error('labels in data and labels in layout do not match');
   end
-  
+
   % gather the data of multiple input arguments
   datamatrix{i} = dat(seldat, :);
-  
+
   % Select x and y coordinates and labels of the channels in the data
   layX = cfg.layout.pos(sellay, 1);
   layY = cfg.layout.pos(sellay, 2);
   layLabels = cfg.layout.label(sellay);
-  
+
   if ~isempty(cfg.maskparameter)
     % one value for each channel, or one value for each channel-time point
     maskmatrix = varargin{1}.(cfg.maskparameter)(seldat, :);
@@ -643,7 +669,7 @@ for i=1:Ndata
     % create an Nx0 matrix
     maskmatrix = zeros(length(seldat), 0);
   end
-  
+
   if Ndata > 1
     if ischar(GRAPHCOLOR);        colorLabels = [colorLabels iname{i+1} '=' GRAPHCOLOR(i+1) '\n'];
     elseif isnumeric(GRAPHCOLOR); colorLabels = [colorLabels iname{i+1} '=' num2str(GRAPHCOLOR(i+1, :)) '\n'];
@@ -653,30 +679,30 @@ end % for number of input data
 
 for m=1:length(layLabels)
   % Plot ER
-  
+
   if ischar(GRAPHCOLOR);        color = GRAPHCOLOR(2:end);
   elseif isnumeric(GRAPHCOLOR); color = GRAPHCOLOR(2:end, :);
   end
-  
+
   mask = maskmatrix(m, :);
-  
+
   for i=1:Ndata
     yval(i, :) = datamatrix{i}(m, :);
   end
-  
+
   % Clip out of bounds y values:
   yval(yval > ymax) = ymax;
   yval(yval < ymin) = ymin;
-  
+
   if strcmp(cfg.showlabels, 'yes')
     label = layLabels(m);
   else
     % don't show labels
     label = [];
   end
-  
+
   ft_plot_vector(xval, yval, 'width', width(m), 'height', height(m), 'hpos', layX(m), 'vpos', layY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'label', label, 'box', cfg.box, 'fontsize', cfg.fontsize);
-  
+
   if i==1,
     % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
     chanX(m) = X(m) + 0.5 * width(m);
@@ -711,7 +737,7 @@ if isempty(get(gcf, 'Name'))
   else % data provided through cfg.inputfile
     dataname = cfg.inputfile;
   end
-  
+
   if isempty(cfg.figurename)
     set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
     set(gcf, 'NumberTitle', 'off');
@@ -725,7 +751,7 @@ end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
-  
+
   % add the dataname and channel information to the figure
   % this is used in the callbacks
   info          = guidata(gcf);
@@ -734,7 +760,7 @@ if strcmp(cfg.interactive, 'yes')
   info.label    = lay.label;
   info.dataname = dataname;
   guidata(gcf, info);
-  
+
   set(gcf, 'WindowButtonUpFcn',  {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonUpFcn'});
   set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonDownFcn'});
   set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg, varargin{:}}, 'event', 'WindowButtonMotionFcn'});
@@ -759,10 +785,10 @@ if ~isempty(cfg.renderer)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
-ft_postamble provenance
 ft_postamble debug
+ft_postamble trackconfig
 ft_postamble previous varargin
+ft_postamble provenance
 
 % add a menu to the figure, but only if the current figure does not have subplots
 % also, delete any possibly existing previous menu, this is safe because delete([]) does nothing

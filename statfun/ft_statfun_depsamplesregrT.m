@@ -1,4 +1,4 @@
-function [s,cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
+function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 
 % FT_STATFUN_DEPSAMPLESREGRT calculates dependent samples regression T-statistic 
 % on the biological data in dat (the dependent variable), using the information on 
@@ -42,7 +42,7 @@ function [s,cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 
 % Copyright (C) 2006, Eric Maris
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

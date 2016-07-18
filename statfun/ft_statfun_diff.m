@@ -1,4 +1,4 @@
-function [s] = ft_statfun_diff(cfg, dat, design)
+function [s, cfg] = ft_statfun_diff(cfg, dat, design)
 
 % FT_STATFUN_DIFF computes the difference of the mean in two conditions.
 % Although it can be used for statistical testing, it is not very
@@ -15,7 +15,7 @@ function [s] = ft_statfun_diff(cfg, dat, design)
 
 % Copyright (C) 2006, Robert Oostenveld 
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -42,8 +42,8 @@ if (dfA+dfB)<size(design, 2)
   warning('inappropriate design, it should only contain 1''s and 2''s');
 end
 % compute the averages and the difference
-avgA = mean(dat(:,selA), 2);
-avgB = mean(dat(:,selB), 2);
+avgA = nanmean(dat(:,selA), 2);
+avgB = nanmean(dat(:,selB), 2);
 s = avgA - avgB;
 
 % the stat field is used in STATISTICS_MONTECARLO to make the

@@ -24,12 +24,13 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 %   'eig'       compute the largest eigenvector
 %   'min'       take the minimal value
 %   'max'       take the maximal value
+%   'maxabs'    take the signed maxabs value
 %
 % See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION
 
 % Copyright (C) 2012-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,17 +48,21 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
+% do the general setup of the function 
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
-ft_preamble loadvar source
+ft_preamble loadvar source parcellation
+ft_preamble provenance source parcellation
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -67,15 +72,18 @@ cfg.parameter    = ft_getopt(cfg, 'parameter', 'all');
 cfg.method       = ft_getopt(cfg, 'method', 'mean'); % can be mean, min, max, svd
 cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
 
+% the data can be passed as input argument or can be read from disk
+hasparcellation = exist('parcellation', 'var');
+
 if ischar(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
 
-if nargin<3
+if hasparcellation
+  % the parcellation is specified as separate structure
+else
   % the parcellation is represented in the source structure itself
   parcellation = source;
-else
-  % the parcellation is specified as separate structure
 end
 
 % keep the transformation matrix
@@ -94,7 +102,7 @@ if ~isempty(transform)
 end
 
 % ensure it is a source, not a volume
-source       = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'sourcerepresentation', 'new');
+source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
 
 % ensure that the source and the parcellation are anatomically consistent
 if ~isequalwithequalnans(source.pos, parcellation.pos)
@@ -180,7 +188,7 @@ end
 for i=1:numel(fn)
   % parcellate each of the desired parameters
   dat = source.(fn{i});
-  
+
   if strncmp('{pos_pos}', dimord{i}, 9)
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
     tmp = cell(nseg, nseg);
@@ -208,7 +216,7 @@ for i=1:numel(fn)
       end % for j2
     end % for j1
     ft_progress('close');
-    
+
   elseif strncmp('{pos}', dimord{i}, 5)
     fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
     tmp = cell(nseg, 1);
@@ -231,7 +239,7 @@ for i=1:numel(fn)
       end % switch
     end % for
     ft_progress('close');
-    
+
   elseif strncmp('pos_pos', dimord{i}, 7)
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
     siz     = size(dat);
@@ -256,13 +264,15 @@ for i=1:numel(fn)
             tmp(j1,j2,:) = arraymax2(dat(seg==j1,seg==j2,:));
           case 'eig'
             tmp(j1,j2,:) = arrayeig2(dat(seg==j1,seg==j2,:));
+          case 'maxabs'
+            tmp(j1,j2,:) = arraymaxabs2(dat(seg==j1,seg==j2,:));
           otherwise
             error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
       end % for j2
     end % for j1
     ft_progress('close');
-    
+
   elseif strncmp('pos', dimord{i}, 3)
     fprintf('creating %d parcels for %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
     siz     = size(dat);
@@ -292,6 +302,8 @@ for i=1:numel(fn)
           tmp(j,:) = arraymin1(dat(seg==j,:));
         case 'max'
           tmp(j,:) = arraymax1(dat(seg==j,:));
+        case 'maxabs'
+          tmp(j,:) = arraymaxabs1(dat(seg==j,:));
         case 'eig'
           tmp(j,:) = arrayeig1(dat(seg==j,:));
         otherwise
@@ -299,12 +311,12 @@ for i=1:numel(fn)
       end % switch
     end % for
     ft_progress('close');
-    
+
   else
     error('unsupported dimord %s', dimord{i})
-    
+
   end % if pos, pos_pos, {pos}, etc.
-  
+
   % update the dimord, use chan rather than pos
   % this makes it look just like timelock or freq data
   tok = tokenize(dimord{i}, '_');
@@ -314,11 +326,11 @@ for i=1:numel(fn)
   tok(strcmp(tok, 'pos}'))  = { 'chan}'}; % replace pos by chan
   tmpdimord = sprintf('%s_', tok{:});
   tmpdimord = tmpdimord(1:end-1);         % exclude the last _
-  
+
   % store the results in the output structure
   parcel.(fn{i})            = tmp;
   parcel.([fn{i} 'dimord']) = tmpdimord;
-  
+
   % to avoid confusion
   clear dat tmp tmpdimord j j1 j2
 end % for each of the fields that should be parcellated
@@ -336,10 +348,10 @@ end
 
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous source parcellation
-ft_postamble history parcel
-ft_postamble savevar parcel
+ft_postamble previous   source parcellation
+ft_postamble provenance parcel
+ft_postamble history    parcel
+ft_postamble savevar    parcel
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to complute something over the first dimension
@@ -379,6 +391,11 @@ x = reshape(x, siz(1), prod(siz(2:end)));
 y = s(1,1) * v(:,1);            % retain the largest eigenvector with appropriate scaling
 y = reshape(y, [siz(2:end) 1]); % size should have at least two elements
 
+function y = arraymaxabs1(x)
+% take the value that is at max(abs(x))
+[dum,ix] = max(abs(x), [], 1);
+y        = x(ix);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -406,6 +423,13 @@ function y = arrayeig2(x)
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
 y = arrayeig1(x);
+
+function y = arraymaxabs2(x)
+% take the value that is at max(abs(x))
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+[dum,ix] = max(abs(x), [], 1);
+y        = x(ix);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS for doing something over the first dimension of a cell array

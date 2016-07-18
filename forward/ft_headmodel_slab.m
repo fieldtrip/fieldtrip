@@ -1,4 +1,4 @@
-function vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
+function headmodel = ft_headmodel_slab(mesh1, mesh2, Pc, varargin)
 
 % FT_HEADMODEL_SLAB creates an EEG volume conduction model that
 % is described with an infinite conductive slab. You can think
@@ -7,10 +7,10 @@ function vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
 % (e.g. air).
 %
 % Use as
-%   vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
+%   headmodel = ft_headmodel_slab(mesh1, mesh2, Pc, varargin)
 % where
-%   geom1.pnt = Nx3 vector specifying N points through which the 'upper' plane is fitted 
-%   geom2.pnt = Nx3 vector specifying N points through which the 'lower' plane is fitted 
+%   mesh1.pos = Nx3 vector specifying N points through which the 'upper' plane is fitted 
+%   mesh2.pos = Nx3 vector specifying N points through which the 'lower' plane is fitted 
 %   Pc        = 1x3 vector specifying the spatial position of a point lying in the conductive slab 
 %              (this determines the plane's normal's direction)
 % 
@@ -22,7 +22,7 @@ function vol = ft_headmodel_slab(geom1, geom2, Pc, varargin)
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -51,19 +51,23 @@ end
 % the description of this volume conduction model consists of the
 % description of the plane, and a point in the void halfspace
 
-if isstruct(geom1) && isfield(geom1,'pnt')
-  pnt1 = geom1.pnt;
-  pnt2 = geom2.pnt;
-elseif size(geom1,2)==3
-  pnt1 = geom1;
-  pnt2 = geom2;
+% replace pnt with pos
+mesh1 = fixpos(mesh1);
+mesh2 = fixpos(mesh2);
+
+if isstruct(mesh1) && isfield(mesh1,'pos')
+  pos1 = mesh1.pos;
+  pos2 = mesh2.pos;
+elseif size(mesh1,2)==3
+  pos1 = mesh1;
+  pos2 = mesh2;
 else
   error('incorrect specification of the geometry');
 end
 
 % fit a plane to the points
-[N1,P1] = fit_plane(pnt1);
-[N2,P2] = fit_plane(pnt2);
+[N1,P1] = fit_plane(pos1);
+[N2,P2] = fit_plane(pos2);
 
 % checks if Pc is in the conductive part. If not, flip
 incond = acos(dot(N1,(Pc-P1)./norm(Pc-P1))) > pi/2;
@@ -75,17 +79,17 @@ if ~incond
   N2 = -N2;
 end
 
-vol       = [];
-vol.cond  = cond;
-vol.pnt1   = P1(:)'; % a point that lies on the plane that separates the conductive tissue from the air
-vol.ori1   = N1(:)'; % a unit vector pointing towards the air
-vol.ori1   = vol.ori1/norm(vol.ori1);
-vol.pnt2   = P2(:)'; 
-vol.ori2   = N2(:)'; 
-vol.ori2   = vol.ori2/norm(vol.ori2);
+headmodel       = [];
+headmodel.cond  = cond;
+headmodel.pos1   = P1(:)'; % a point that lies on the plane that separates the conductive tissue from the air
+headmodel.ori1   = N1(:)'; % a unit vector pointing towards the air
+headmodel.ori1   = headmodel.ori1/norm(headmodel.ori1);
+headmodel.pos2   = P2(:)'; 
+headmodel.ori2   = N2(:)'; 
+headmodel.ori2   = headmodel.ori2/norm(headmodel.ori2);
 
 if strcmpi(model,'monopole')
-  vol.type  = 'slab_monopole';    
+  headmodel.type  = 'slab_monopole';    
 else
   error('unknow method')
 end

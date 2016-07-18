@@ -13,10 +13,10 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl)
 %   Fsample    sampling frequency in Hz
 %   Fline      line noise frequency
 %
-% The line frequency should be specified as a single number. 
+% The line frequency should be specified as a single number.
 % If omitted, a European default of 50Hz will be assumed.
 %
-% Preferaby the data should have a length that is a multiple of the 
+% Preferaby the data should have a length that is a multiple of the
 % oscillation period of the line noise (i.e. 20ms for 50Hz noise). If the
 % data is of different lenght, then only the first N complete periods are
 % used to estimate the line noise. The estimate is subtracted from the
@@ -28,11 +28,11 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl)
 %   Fline can be a vector, in which case the regression is done for all
 %   frequencies in a single shot. Prerequisite is that the requested
 %   frequencies all fit with an integer number of cycles in the data.
-% 
-% Copyright (C) 2003, Pascal Fries
-% Copyright (C) 2003-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% Copyright (C) 2003, Pascal Fries
+% Copyright (C) 2003-2015, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -62,13 +62,19 @@ end
 Fl = Fl(:);
 
 % determine the largest integer number of line-noise cycles that fits in the data
-n   = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
-if all(n==n(1)),
-  sel = 1:n;
+n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
+if all(n==n(1))
+  % make a selection of samples such that the line-noise fits the data
+  sel = 1:n(1);
 else
-  error('when multiple frequencies are in the input, the oscillations should all fit an integer number of cycles in the data provided'); 
+  % the different frequencies require different numbers of samples, apply the filters sequentially
+  for i=1:numel(Fl)
+    filt = dat;
+    filt = ft_preproc_dftfilter(filt, Fs, Fl(i));
+  end
+  return
 end
-  
+
 % temporarily remove mean to avoid leakage
 meandat = mean(dat(:,sel),2);
 for i=1:nsamples
@@ -79,7 +85,6 @@ end
 % fit a sine and cosine to each channel in the data and subtract them
 time = (0:nsamples-1)/Fs;
 tmp  = exp(1i*2*pi*Fl*time);                   % complex sin and cos
-% ampl = 2*dat*tmp'/Nsamples;                  % estimated amplitude of complex sin and cos
 ampl = 2*dat(:,sel)/tmp(:,sel);                % estimated amplitude of complex sin and cos on integer number of cycles
 est  = ampl*tmp;                               % estimated signal at this frequency
 filt = dat - est;                              % subtract estimated signal

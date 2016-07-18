@@ -13,7 +13,7 @@ function F = isfield(tree,uid,parameter)
 % Copyright (C) 2002-2011  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: isfield.m 4460 2011-09-05 14:52:16Z guillaume $
 
 
 %error(nargchk(3,3,nargin));

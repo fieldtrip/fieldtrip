@@ -6,11 +6,10 @@ function test_bug1742
 % TEST test_bug1742
 % TEST qsubcellfun fexec
 
-% this initially failed due to bug 1742
-tmp = which('ft_preprocessing');
-[ftroot,n,e] = fileparts(tmp);
+[ftver, ftpath] = ft_version;
+addpath(fullfile(ftpath,'qsub'));
 
-addpath([ftroot,filesep,'qsub']);
+% this initially failed due to bug 1742
 qsubcellfun(@rand, {1, 2, 3}, 'memreq', 1e9, 'timreq', 600, 'backend', 'system');
 % whereas this worked
 a = qsubcellfun(@rand, {1, 2, 3}, 'memreq', 1e9, 'timreq', 600, 'backend', 'system');

@@ -1,4 +1,4 @@
-function vol = ft_headmodel_localspheres(geometry, grad, varargin)
+function headmodel = ft_headmodel_localspheres(mesh, grad, varargin)
 
 % FT_HEADMODEL_LOCALSPHERES constructs a MEG volume conduction model in
 % with a local sphere fitted to the head or brain surface for each separate
@@ -10,7 +10,7 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 %   Biol. 1999 Feb;44(2):423-40
 %
 % Use as
-%   vol = ft_headmodel_localspheres(geom, grad, ...)
+%   headmodel = ft_headmodel_localspheres(mesh, grad, ...)
 %
 % Optional arguments should be specified in key-value pairs and can include
 %   radius    = number, radius of sphere within which headshape points will
@@ -25,7 +25,7 @@ function vol = ft_headmodel_localspheres(geometry, grad, varargin)
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -49,49 +49,54 @@ feedback      = ft_getopt(varargin, 'feedback', true);
 singlesphere  = ft_getopt(varargin, 'singlesphere', 'no');
 
 if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
-  % the geometrical units should be specified in the input geometry
+  % the geometrical units should be specified in the input mesh
   error('the ''unit'' option is not supported any more');
 end
 
 % convert from 'yes'/'no' string into boolean value
 feedback = istrue(feedback);
 
-if isnumeric(geometry) && size(geometry,2)==3
+if isnumeric(mesh) && size(mesh,2)==3
   % assume that it is a Nx3 array with vertices
   % convert it to a structure, this is needed to determine the units further down
-  geometry = struct('pnt', geometry);
-elseif isstruct(geometry) && isfield(geometry,'bnd')
+  mesh = struct('pos', mesh);
+elseif isstruct(mesh) && isfield(mesh, 'bnd')
   % take the triangulated surfaces from the input structure
-  geometry = geometry.bnd;
-elseif ~(isstruct(geometry) && isfield(geometry,'pnt'))
-  error('the input geometry should be a set of points or a single triangulated surface')
+  mesh = mesh.bnd;
 end
 
-if isstruct(geometry) && numel(geometry)>1
-  error('There must be only 1 geometry given as input');
+% replace pnt with pos
+mesh = fixpos(mesh);
+
+if ~isstruct(mesh) || ~isfield(mesh, 'pos')
+  error('the input mesh should be a set of points or a single triangulated surface')
+end
+
+if isstruct(mesh) && numel(mesh)>1
+  error('There must be only 1 mesh given as input');
 end
 
 % start with an empty volume conductor
-vol = [];
+headmodel = [];
 
-% ensure that the geometry has units, estimate them if needed
-geometry = ft_convert_units(geometry);
+% ensure that the mesh has units, estimate them if needed
+mesh = ft_convert_units(mesh);
 
 % ensure that it has consistent units
-grad = ft_convert_units(grad, geometry.unit);
+grad = ft_convert_units(grad, mesh.unit);
 
 % copy the geometrical units into the volume conductor
-vol.unit = geometry.unit;
+headmodel.unit = mesh.unit;
 
 % ensure that all defaults have the same user-defined units
-radius    = ft_getopt(varargin, 'radius',    scalingfactor('cm', vol.unit) * 8.5);
-maxradius = ft_getopt(varargin, 'maxradius', scalingfactor('cm', vol.unit) * 20);
-baseline  = ft_getopt(varargin, 'baseline',  scalingfactor('cm', vol.unit) * 5);
+radius    = ft_getopt(varargin, 'radius',    ft_scalingfactor('cm', headmodel.unit) * 8.5);
+maxradius = ft_getopt(varargin, 'maxradius', ft_scalingfactor('cm', headmodel.unit) * 20);
+baseline  = ft_getopt(varargin, 'baseline',  ft_scalingfactor('cm', headmodel.unit) * 5);
 
 % get the points from the triangulated surface
-geometry = geometry.pnt;
+mesh = mesh.pos;
 
-Nshape = size(geometry,1);
+Nshape = size(mesh,1);
 Nchan  = numel(grad.label);
 
 % set up an empty figure
@@ -108,43 +113,43 @@ end
 if istrue(feedback)
   cla
   ft_plot_sens(grad);
-  ft_plot_mesh(geometry, 'vertexcolor', 'g', 'facecolor', 'none', 'edgecolor', 'none');
+  ft_plot_mesh(mesh, 'vertexcolor', 'g', 'facecolor', 'none', 'edgecolor', 'none');
   drawnow
 end
 
 % fit a single sphere to all headshape points
-[single_o, single_r] = fitsphere(geometry);
+[single_o, single_r] = fitsphere(mesh);
 fprintf('single sphere,   %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', Nshape, single_o(1), single_o(2), single_o(3), single_r);
 
-vol = [];
+headmodel = [];
 if strcmp(singlesphere, 'yes')
   % only return a single sphere
-  vol.r = single_r;
-  vol.o = single_o;
+  headmodel.r = single_r;
+  headmodel.o = single_o;
   return;
 end
 
 % allocate empty matrices that will hold the results
-vol.r = zeros(Nchan,1);    % radius of every sphere
-vol.o = zeros(Nchan,3);    % origin of every sphere
-vol.label = cell(Nchan,1); % corresponding gradiometer channel label for every sphere
+headmodel.r = zeros(Nchan,1);    % radius of every sphere
+headmodel.o = zeros(Nchan,3);    % origin of every sphere
+headmodel.label = cell(Nchan,1); % corresponding gradiometer channel label for every sphere
 
 for chan=1:Nchan
   coilsel = find(grad.tra(chan,:)~=0);
-  allpnt  = grad.coilpos(coilsel, :);   % position of all coils belonging to this channel
+  allpos  = grad.coilpos(coilsel, :);   % position of all coils belonging to this channel
   allori  = grad.coilori(coilsel, :);   % orientation of all coils belonging to this channel
   
   if istrue(feedback)
     cla
     plot3(grad.coilpos(:,1), grad.coilpos(:,2), grad.coilpos(:,3), 'b.');   % all coils
-    plot3(      allpnt(:,1),       allpnt(:,2),       allpnt(:,3), 'r*');     % this channel in red
+    plot3(      allpos(:,1),       allpos(:,2),       allpos(:,3), 'r*');     % this channel in red
   end
   
   % determine the average position and orientation of this channel
-  thispnt = mean(allpnt,1);
+  thispos = mean(allpos,1);
   [u, s, v] = svd(allori);
   thisori = v(:,1)';
-  if dot(thispnt,thisori)<0
+  if dot(thispos,thisori)<0
     % the orientation should be outwards pointing
     thisori = -thisori;
   end
@@ -152,7 +157,7 @@ for chan=1:Nchan
   % compute the distance from every coil along this channels orientation
   dist = zeros(size(coilsel));
   for i=1:length(coilsel)
-    dist(i) = dot((allpnt(i,:)-thispnt), thisori);
+    dist(i) = dot((allpos(i,:)-thispos), thisori);
   end
   
   [m, i] = min(dist);
@@ -160,20 +165,20 @@ for chan=1:Nchan
   if abs(m)>(baseline/4)
     % replace the position of this channel by the coil that is the closest to the head (axial gradiometer)
     % except when the center of the channel is approximately just as good (planar gradiometer)
-    thispnt = allpnt(i,:);
+    thispos = allpos(i,:);
   end
   
   % find the headshape points that are close to this channel
-  dist = sqrt(sum((geometry-repmat(thispnt,Nshape,1)).^2, 2));
+  dist = sqrt(sum((mesh-repmat(thispos,Nshape,1)).^2, 2));
   shapesel = find(dist<radius);
   if feedback
-    ft_plot_mesh(geometry(shapesel,:), 'vertexcolor', 'g');
+    ft_plot_mesh(mesh(shapesel,:), 'vertexcolor', 'g');
     drawnow
   end
   
   % fit a sphere to these headshape points
   if length(shapesel)>10
-    [o, r] = fitsphere(geometry(shapesel,:));
+    [o, r] = fitsphere(mesh(shapesel,:));
     fprintf('channel = %s, %5d surface points, center = [%4.1f %4.1f %4.1f], radius = %4.1f\n', grad.label{chan}, length(shapesel), o(1), o(2), o(3), r);
   else
     fprintf('channel = %s, not enough surface points, using all points\n', grad.label{chan});
@@ -188,9 +193,9 @@ for chan=1:Nchan
   end
   
   % add this sphere to the volume conductor
-  vol.o(chan,:)   = o;
-  vol.r(chan)     = r;
-  vol.label{chan} = grad.label{chan};
+  headmodel.o(chan,:)   = o;
+  headmodel.r(chan)     = r;
+  headmodel.label{chan} = grad.label{chan};
 end % for all channels
 
-vol.type = 'localspheres';
+headmodel.type = 'localspheres';

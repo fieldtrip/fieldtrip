@@ -1,4 +1,4 @@
-function [s] = ft_statfun_pooledT(cfg, dat, design)
+function [s, cfg] = ft_statfun_pooledT(cfg, dat, design)
 
 % FT_STATFUN_POOLEDT computes the pooled t-value over a number of
 % replications. The idea is that you compute a contrast between two
@@ -43,7 +43,7 @@ function [s] = ft_statfun_pooledT(cfg, dat, design)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

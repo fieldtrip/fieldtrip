@@ -1,7 +1,10 @@
 function [sts] = ft_spiketriggeredspectrum(cfg, data, spike)
 
-% FT_SPIKETRIGGEREDSPECTRUM computes the Fourier spectrup of the LFP around
-% the spikes.
+% FT_SPIKETRIGGEREDSPECTRUM computes the Fourier spectrup (amplitude and phase) of
+% the LFP around the spikes. A phase of zero corresponds to the spike being on the
+% peak of the LFP oscillation. A phase of 180 degree corresponds to the spike being in
+% the through of the oscillation. A phase of 45 degrees corresponds to the spike being
+% just after the peak in the LFP.
 %
 % Use as
 %   [sts] = ft_spiketriggeredspectrum(cfg, data)
@@ -9,22 +12,25 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data, spike)
 %   [sts] = ft_spiketriggeredspectrum(cfg, data, spike) 
 %
 % Configurations:
-%    cfg.method = 'mtmfft' or 'mtmconvol'. If 'mtmconvol', FT_SPIKETRIGGEREDSPECTRUM_CONVOL is used
-%                 If 'mtmfft', FT_SPIKETRIGGEREDSPECTRUM_FFT is used (the old
-%                 FT_SPIKETRIGGEREDSPECTRUM).
+%    cfg.method = 'mtmfft' or 'mtmconvol' (see below)
+%
+% If you specify the method 'mtmconvol', FT_SPIKETRIGGEREDSPECTRUM_CONVOL is used. If
+% you specify 'mtmfft', FT_SPIKETRIGGEREDSPECTRUM_FFT is used (which corresponds to the
+% old FT_SPIKETRIGGEREDSPECTRUM).
 %
 %%%%%%%%%%%%%%%
+%
 % FT_SPIKETRIGGEREDSPECTRUM_FFT determines the spike phases by taking the
 % FFT locally around every spike, for one unit. This is an efficient
 % algorithm when we have few neurons recorded simultaneously with low
 % firing rates. All frequencies are computed using the same time-window.
 %
-% The function must then be called as [sts] = ft_spiketriggeredspectrum(cfg, data)
+% The function must then be called as
+%   [sts] = ft_spiketriggeredspectrum(cfg, data)
 % where some channels of DATA are spike channels, and data is in the raw
 % format.
 %
 % For configuration options see FT_SPIKETRIGGEREDSPECTRUM_FFT.
-%
 %
 %%%%%%%%%%%%%%%
 %
@@ -38,27 +44,22 @@ function [sts] = ft_spiketriggeredspectrum(cfg, data, spike)
 % Finally, the function can be called by adding a third input (SPIKE) which
 % has the same trial definitions as DATA.
 %
-% Use as
+% The function must then be called as
 %   [sts] = ft_spiketriggeredspectrum(cfg, data)
 % or
-%   [sts] = ft_spiketriggeredspectrum(cfg, data, spike) % The spike data can either be contained in the data input or in the spike
-% input.
+%   [sts] = ft_spiketriggeredspectrum(cfg, data, spike)
+% where the spiking information can either be represented  in the first data
+% input or in the second spike input structure.
 %
 % For configurations options see FT_SPIKETRIGGEREDSPECTRUM_CONVOL
 %
 %%%%%%%%%%%%%%%
-% A phase of zero corresponds to the spike being on the peak of the LFP
-% oscillation.
-% A phase of 180 degree corresponds to the spike being in the through of the
-% oscillation.
-% A phase of 45 degrees corresponds to the spike being just after the
-% peak in the LFP.
 %
-% Output sts can be input to FT_SPIKETRIGGEREDSPECTRUM_STAT
+% The output STS data structure can be further analyzed using FT_SPIKETRIGGEREDSPECTRUM_STAT
 
 % Copyright (C) 2012, Martin Vinck, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

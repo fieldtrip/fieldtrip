@@ -1,7 +1,7 @@
 function test_bug1967a
 
 % MEM 2gb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
 % with the inititial version of this test script I had merge conflicts that I was not able to resolve, hence now the name with an "a'
 

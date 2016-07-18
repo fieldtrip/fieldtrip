@@ -12,11 +12,11 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 %   [freq] = ft_freqanalysis(cfg, data), with cfg.method = 'mvar'
 %
 % or
-% 
+%
 %   [freq] = ft_freqanalysis_mvar(cfg, data)
 %
 % The input data structure should be a data structure created by
-% FT_MVARANALYSIS, i.e. a data-structure of type 'mvar'. 
+% FT_MVARANALYSIS, i.e. a data-structure of type 'mvar'.
 %
 % The configuration can contain:
 %   cfg.foi = vector with the frequencies at which the spectral quantities
@@ -37,7 +37,7 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -55,18 +55,21 @@ function [freq] = ft_freqanalysis_mvar(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble provenance
-ft_preamble trackconfig
 ft_preamble debug
 ft_preamble loadvar data
+ft_preamble provenance data
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -81,13 +84,16 @@ if strcmp(cfg.foi, 'all'),
   cfg.foi = (0:1:data.fsampleorig/2);
 end
 
-isfull = isfield(data, 'label');
+dimtok = tokenize(data.dimord, '_');
+isfull = isfield(data, 'label') && sum(strcmp(dimtok,'chan'))==2;
+isuvar = isfield(data, 'label') && sum(strcmp(dimtok,'chan'))==1;
 isbvar = isfield(data, 'labelcmb');
-if isfull && isbvar
+
+if (isfull||isuvar) && isbvar
   error('data representaion is ambiguous');
 end
-if ~isfull && ~isbvar
-  error('data representation is ambiguous');
+if ~isfull && ~isbvar && ~isuvar
+  error('data representation is unsupported');
 end
 
 %keeprpt  = strcmp(cfg.keeptrials, 'yes');
@@ -105,14 +111,14 @@ else
   ntoi = 1;
 end
 
-if isfull
+if isfull || isuvar
   cfg.channel = ft_channelselection('all', data.label);
   %cfg.channel    = ft_channelselection(cfg.channel,      data.label);
   chanindx = match_str(data.label, cfg.channel);
   nchan    = length(chanindx);
   label    = data.label(chanindx);
   nlag     = size(data.coeffs,3); %change in due course
-
+  
   %---allocate memory
   h         = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
   a         = complex(zeros(nchan, nchan,  nfoi, ntoi), zeros(nchan, nchan,  nfoi, ntoi));
@@ -133,7 +139,7 @@ end
 ft_progress('init', cfg.feedback, 'computing MAR-model based TFR');
 for j = 1:ntoi
   ft_progress(j/ntoi, 'processing timewindow %d from %d\n', j, ntoi);
- 
+  
   if isfull
     %---compute transfer function
     ar = reshape(data.coeffs(:,:,:,j), [nchan nchan*nlag]);
@@ -144,6 +150,19 @@ for j = 1:ntoi
     for k = 1:nfoi
       tmph               = h(:,:,k,j);
       crsspctrm(:,:,k,j) = tmph*nc*tmph';
+    end
+  elseif isuvar
+    %---compute transfer function
+    for m = 1:nchan
+      ar = reshape(data.coeffs(m,:,j), [1 nlag]);
+      [h(m,m,:,j), a(m,m,:,j)] = ar2h(ar, cfg.foi, data.fsampleorig);
+      
+      %---compute cross-spectra
+      nc = data.noisecov(m,j);
+      for k = 1:nfoi
+        tmph               = h(m,m,k,j);
+        crsspctrm(m,m,k,j) = tmph*nc*tmph';
+      end
     end
   elseif isbvar
     for kk = 1:ncmb
@@ -160,7 +179,7 @@ for j = 1:ntoi
       end
     end
   end
-end  
+end
 ft_progress('close');
 
 %---create output-structure
@@ -195,10 +214,10 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance
-ft_postamble previous data
-ft_postamble history freq
-ft_postamble savevar freq
+ft_postamble previous   data
+ft_postamble provenance freq
+ft_postamble history    freq
+ft_postamble savevar    freq
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to compute transfer-function from ar-parameters
@@ -223,7 +242,7 @@ end
 zar = reshape(zar, [nchan nchan nfoi]);
 h   = zeros(size(zar));
 for k = 1:nfoi
-  h(:,:,k) = inv(zar(:,:,k)); 
+  h(:,:,k) = inv(zar(:,:,k));
 end
 h   = sqrt(2).*h; %account for the negative frequencies, normalization necessary for
 %comparison with non-parametric (fft based) results in fieldtrip

@@ -1,11 +1,11 @@
-function [dipout] = ft_eloreta(dip, grad, vol, dat, Cf, varargin)
+function [dipout] = ft_eloreta(dip, grad, headmodel, dat, Cf, varargin)
 %
 % Use as
-%   [dipout] = ft_eloreta(dipin, grad, vol, dat, cov, varargin)
+%   [dipout] = ft_eloreta(dipin, grad, headmodel, dat, cov, varargin)
 % where
 %   dipin       is the input dipole model
 %   grad        is the gradiometer definition
-%   vol         is the volume conductor definition
+%   headmodel   is the volume conductor definition
 %   dat         is the data matrix with the ERP or ERF
 %   cov         is the data covariance or cross-spectral density matrix
 % and
@@ -27,7 +27,7 @@ function [dipout] = ft_eloreta(dip, grad, vol, dat, Cf, varargin)
 %  'reducerank'       = reduce the leadfield rank, can be 'no' or a number (e.g. 2)
 %  'normalize'        = normalize the leadfield
 %  'normalizeparam'   = parameter for depth normalization (default = 0.5)
-
+%
 % If the dipole definition only specifies the dipole location, a rotating
 % dipole (regional source) is assumed on each location. If a dipole moment
 % is specified, its orientation will be used and only the strength will
@@ -40,7 +40,7 @@ function [dipout] = ft_eloreta(dip, grad, vol, dat, Cf, varargin)
 % Copyright (C) 2013, Marlene Boenstrup, Jan-Mathijs Schoffelen and Guido
 % Nolte
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -81,15 +81,11 @@ keepleadfield  = istrue(keepleadfield);
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(dip, 'inside')
-  dip.inside = ft_inside_vol(dip.pos, vol);
+  dip.inside = ft_inside_vol(dip.pos, headmodel);
 end
 
-if any(dip.inside>1)
-  % convert to logical representation
-  tmp = false(size(dip.pos,1),1);
-  tmp(dip.inside) = true;
-  dip.inside = tmp;
-end
+% ensure logical representation
+dip.inside = logical(dip.inside);
 
 % keep the original details on inside and outside positions
 originside = dip.inside;
@@ -116,7 +112,7 @@ if ~isfield(dip, 'leadfield')
   % compute the leadfield
   fprintf('computing leadfields\n');
   for i=1:size(dip.pos,1)
-    dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, vol, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
+    dip.leadfield{i} = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
 end
 

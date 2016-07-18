@@ -11,7 +11,7 @@ function [dat] = ft_fetch_data(data, varargin)
 % Copyright (C) 2009-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
 % Copyright (C) 2008, Esther Meeuwissen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -114,9 +114,15 @@ if trlnum>1,
   % samplenum(count>1) = NaN;
   
   % make a subselection for the desired samples
-  count     = count    (begsample:endsample);
-  trialnum  = trialnum (begsample:endsample);
-  samplenum = samplenum(begsample:endsample);
+  if begsample<1
+    count     = count    (1:endsample);
+    trialnum  = trialnum (1:endsample);
+    samplenum = samplenum(1:endsample);
+  else
+    count     = count    (begsample:endsample);
+    trialnum  = trialnum (begsample:endsample);
+    samplenum = samplenum(begsample:endsample);
+  end
   
   % check if all samples are present and are not present twice or more
   if any(count>1)
@@ -190,13 +196,18 @@ else
   %   end
   
   if begsample >= trl(1) && begsample <= trl(2)
+    % the begin sample can be found in the available data
     if endsample >= trl(1) && endsample <= trl(2)
       dat(:,datbegindx:datendindx) = data.trial{1}(chanindx,begindx:endindx);
     else
       dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,begindx:tmptrl(2));
     end
   elseif endsample >= trl(1) && endsample <= trl(2)
+    % the end sample can be found in the available data
     dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,tmptrl(1):endindx);
+  else
+    % neither the begin, nor the end sample are in the available data
+    dat(:, datbegindx:datendindx) = data.trial{1}(chanindx,tmptrl(1):tmptrl(2));
   end
   
 end % if trlnum is multiple or one

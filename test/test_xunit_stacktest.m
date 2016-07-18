@@ -4,7 +4,7 @@ function test_xunit_stacktest
 % WALLTIME 00:10:00
 
 % TEST test_xunit_stacktest
-% TEST ft_defaults warning_once
+% TEST ft_defaults ft_warning
 
 ft_defaults
 
@@ -26,57 +26,57 @@ tmpstrct2 = [];
 eval(['tmpstrct2.' fname ' =[]'])
 
 for i=1:10
-    warning_once('Tthis is a test');
+    ft_warning('Tthis is a test');
 end
-warning_once('Tthis is another test');
+ft_warning('Tthis is another test');
 
-warning_once('-clear');
+ft_warning('-clear');
 
 fprintf('Completed!\n');
 
 end
 
 
-function [ws warned] = warning_once(varargin)
+function [ws warned] = ft_warning(varargin)
 %
 % WARNING_ONCE will throw a warning for every unique point in the
 % stacktrace only, e.g. in a for-loop a warning is thrown only once.
 %
 % Use as one of the following
-%   warning_once(string)
-%   warning_once(id, string)
-% Alternatively, you can use warning_once using a timeout
-%   warning_once(string, timeout)
-%   warning_once(id, string, timeout)
+%   ft_warning(string)
+%   ft_warning(id, string)
+% Alternatively, you can use ft_warning using a timeout
+%   ft_warning(string, timeout)
+%   ft_warning(id, string, timeout)
 % where timeout should be inf if you don't want to see the warning ever
 % again.
 %
-% Use as warning_once('-clear') to clear old warnings from the current
+% Use as ft_warning('-clear') to clear old warnings from the current
 % stack
 %
 % It can be used instead of the MATLAB built-in function WARNING, thus as
-%   s = warning_once(...)
+%   s = ft_warning(...)
 % or as
-%   warning_once(s)
+%   ft_warning(s)
 % where s is a structure with fields 'identifier' and 'state', storing the
-% state information. In other words, warning_once accepts as an input the
+% state information. In other words, ft_warning accepts as an input the
 % same structure it returns as an output. This returns or restores the
 % states of warnings to their previous values.
 %
 % It can also be used as
-%    [s w] = warning_once(...)
+%    [s w] = ft_warning(...)
 % where w is a boolean that indicates whether a warning as been thrown or not.
 %
 % Please note that you can NOT use it like this
-%   warning_once('the value is %d', 10)
+%   ft_warning('the value is %d', 10)
 % instead you should do
-%   warning_once(sprintf('the value is %d', 10))
+%   ft_warning(sprintf('the value is %d', 10))
 %
 
 % Copyright (C) 2012, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -96,7 +96,7 @@ function [ws warned] = warning_once(varargin)
 
 global ft_default
 
-fprintf('Dummy warning_once output - this is the new function\n');
+fprintf('Dummy ft_warning output - this is the new function\n');
 
 if nargin < 1
   error('You need to specify at least a warning message');
@@ -214,7 +214,7 @@ name(name==',')=[];
 end % function
 
 function [fname ft_previous_warnings line] = fieldnameFromStack(ft_previous_warnings)
-% stack(1) is this function, stack(2) is warning_once
+% stack(1) is this function, stack(2) is ft_warning
 stack = dbstack('-completenames');
 if size(stack) < 3
   fname = [];

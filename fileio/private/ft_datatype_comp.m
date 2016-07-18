@@ -1,4 +1,4 @@
-function comp = ft_datatype_comp(comp, varargin)
+function [comp] = ft_datatype_comp(comp, varargin)
 
 % FT_DATATYPE_COMP describes the FieldTrip MATLAB structure for comp data
 %
@@ -48,7 +48,7 @@ function comp = ft_datatype_comp(comp, varargin)
 
 % Copyright (C) 2011-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

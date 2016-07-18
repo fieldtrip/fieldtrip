@@ -22,7 +22,7 @@ function ft_select_range(handle, eventdata, varargin)
 %   'yrange'      = boolean, yrange variable or not
 %   'clear'       = boolean
 %
-% Example use:
+% Example
 %   x = randn(10,1);
 %   y = randn(10,1);
 %   figure; plot(x, y, '.');
@@ -44,7 +44,7 @@ function ft_select_range(handle, eventdata, varargin)
 
 % Copyright (C) 2009-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -78,7 +78,7 @@ yrange    = istrue(yrange);
 clear     = istrue(clear);
 
 % get the figure handle, dependent on MATLAB version
-if matlabversion('2014b', Inf) % >= 2014b?
+if ft_platform_supports('graphics_objects')
  while ~isa(handle, 'matlab.ui.Figure')
     handle = p;
     p = get(handle, 'parent');
@@ -353,14 +353,14 @@ if ~isempty(callback)
     callback  = {funhandle, val};
   end
   for icmenu = 1:numel(hcmenuopt)
-    set(hcmenuopt(icmenu),'callback',{@evalContextCallback, callback{:}})
+    set(hcmenuopt(icmenu),'callback',{@evalcontextcallback, callback{:}})
   end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function evalContextCallback(hcmenuopt, eventdata, varargin)
+function evalcontextcallback(hcmenuopt, eventdata, varargin)
 
 % delete selection box if present
 % get parent (uimenu -> uicontextmenu -> parent)

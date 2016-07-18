@@ -5,9 +5,9 @@ function test_bug168
 
 % TEST test_bug168
 % TEST ft_realtime_topography
-
-[p, f, x] = fileparts(which('ft_defaults'));
-cd(p);
+ 
+[ftver, ftpath] = ft_version;
+cd(ftpath);
 
 % ensure that these compat folders are presaent on the path
 % although they should not be used

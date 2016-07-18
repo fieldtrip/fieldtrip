@@ -1,11 +1,16 @@
-function [x,mx,sx] = standardise(x,dim,lim)
+function [x, mx, sx] = standardise(x, dim, lim)
 
-% X = STANDARDISE(X, DIM) computes the zscore of a matrix along dimension dim
+% STANDARDISE computes the zscore of a matrix along dimension dim
 % has similar functionality as the stats-toolbox's zscore function
+%
+% Use as
+%   x = standardise(x, dim)
+%
+% See also ZSCORE
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -23,7 +28,7 @@ function [x,mx,sx] = standardise(x,dim,lim)
 %
 % $Id$
 
-if nargin == 1, 
+if nargin == 1,
   dim = find(size(x)>1,1,'first');
 end
 

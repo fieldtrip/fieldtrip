@@ -21,7 +21,7 @@ function [hdr] = read_nifti2_hdr(filename)
 
 % Copyright (C) 2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -58,7 +58,7 @@ else
   % the file is now open with the appropriate little or big-endianness
 end
 
-if hdr.sizeof_hdr==384
+if hdr.sizeof_hdr==348
   % the remainder of the code is for nifti-2 files
   error('%s seems to be a nifti-1 file', filename)
 end

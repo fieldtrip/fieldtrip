@@ -1,16 +1,17 @@
-function [b] = copyfields(a, b, fields)
+function b = copyfields(a, b, fields)
 
 % COPYFIELDS copies a selection of the fields from one structure to another
 %
 % Use as
 %   b = copyfields(a, b, fields);
-% which copies the specified fields over from structure a to structure b.
+% which copies the specified fields over from structure a to structure b. Fields that
+% are specified but not present will be silently ignored.
 %
-% See also KEEPFIELDS, REMOVEFIELDS
+% See also KEEPFIELDS, REMOVEFIELDS, RENAMEFIELDS
 
 % Copyright (C) 2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

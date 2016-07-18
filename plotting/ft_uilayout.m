@@ -59,7 +59,7 @@ function ft_uilayout(h, varargin)
 
 % Copyright (C) 2009-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -81,7 +81,7 @@ function ft_uilayout(h, varargin)
 tag    = ft_getopt(varargin, 'tag');
 style  = ft_getopt(varargin, 'style');
 
-if any(ismember(tag, '.*?^$'))
+if any(tag=='.' | tag=='*' | tag=='?' | tag=='^' | tag=='$')
   % use regular expressions
   tagopt = {'-regexp'};
 else

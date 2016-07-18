@@ -1,4 +1,4 @@
-function [vol] = ft_transform_vol(transform, vol)
+function [headmodel] = ft_transform_vol(transform, headmodel)
 
 % FT_TRANSFORM_VOL applies a homogenous coordinate transformation to
 % a structure with an EEG or MEG colume conduction model. The homogenous
@@ -6,13 +6,13 @@ function [vol] = ft_transform_vol(transform, vol)
 % plus rotation and a global rescaling.
 %
 % Use as
-%   vol = ft_transform_vol(transform, vol)
+%   headmodel = ft_transform_vol(transform, headmodel)
 %
 % See also FT_READ_VOL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -30,4 +30,4 @@ function [vol] = ft_transform_vol(transform, vol)
 %
 % $Id$
 
-vol = ft_transform_geometry(transform, vol);
+headmodel = ft_transform_geometry(transform, headmodel);

@@ -1,4 +1,4 @@
-function vol = ft_headmodel_infinite(varargin)
+function headmodel = ft_headmodel_infinite(varargin)
 
 % FT_HEADMODEL_INFINITE returns an infinitely large homogenous
 % volume conduction model. For EEG the volume conductor can be used
@@ -6,13 +6,13 @@ function vol = ft_headmodel_infinite(varargin)
 % can be used for computing the leadfield of magnmetic dipoles.
 %
 % Use as
-%   vol = ft_headmodel_infinite;
+%   headmodel = ft_headmodel_infinite;
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -33,17 +33,17 @@ function vol = ft_headmodel_infinite(varargin)
 sourcemodel = ft_getopt(varargin, 'sourcemodel', 'default');
 
 % this is an easy one
-vol = [];
+headmodel = [];
 
 switch sourcemodel
   case 'monopole'
-    vol.type = 'infinite_monopole';
+    headmodel.type = 'infinite_monopole';
   case 'magneticdipole'
-    vol.type = 'infinite_magneticdipole';
+    headmodel.type = 'infinite_magneticdipole';
   case 'currentdipole'
-    vol.type = 'infinite_currentdipole';
+    headmodel.type = 'infinite_currentdipole';
   case 'default'
     % let the EEG or MEG leadfield code decide
-    vol.type = 'infinite';
+    headmodel.type = 'infinite';
 end % switch
 

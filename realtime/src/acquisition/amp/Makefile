@@ -18,8 +18,6 @@
  # You should have received a copy of the GNU General Public License
  # along with Amp2ft.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
 FIELDTRIP = ../../../..
 
 
@@ -36,7 +34,7 @@ LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer $(CPPOBJS)
 CXXFLAGS = -Wunused -Wall -pedantic -O3 -g
 CXXFLAGS += -I$(FTBUFFER)/src -I. -I$(CPPDIR) -DDEBUG
-CXX=/usr/bin/g++
+CXX = /usr/bin/g++
 
 ifeq "$(UNAME)" "Darwin"
 	LDLIBS += -lpthread
@@ -56,15 +54,13 @@ ifeq "$(UNAME)" "Darwin"
 endif
 
 ifeq "$(UNAME)" "Linux"
-	ifeq "$(MACHINE)" "i686"
-		LDFLAGS += -L$(FTBUFFER)/src
-		LDLIBS += -lbuffer -lpthread -ldl
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+    LDLIBS += -lbuffer -lpthread -ldl -lrt
+    LDFLAGS += -L$(FTBUFFER)/src
+    ifeq "$(MACHINE)" "i686"
+        BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
     endif
     ifeq "$(MACHINE)" "x86_64"
-		LDFLAGS += -L$(FTBUFFER)/src
-		LDLIBS += -lbuffer -lpthread -ldl
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+        BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
     endif
 endif
 

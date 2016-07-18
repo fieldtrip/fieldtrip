@@ -9,11 +9,11 @@ function [grid] = ft_source2grid(source)
 % The resulting grid can be used in the configuration of another
 % run of FT_SOURCEANALYSIS.
 %
-% See also SOURCE2SPARSE, SOURCE2FULL
+% See also FTSOURCE2SPARSE, FT_SOURCE2FULL
 
 % Copyright (C) 2004, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ try, grid.zgrid   = source.zgrid; end
 try, grid.dim     = source.dim;   end
 try, grid.tri     = source.tri;   end % only in case of a tesselated/triangulated cortical sheet source model
 
-if ~isfield(grid, 'dim') && isfield(grid, 'xgrid') && isfield(grid, 'ygrid') && isfield(grid, 'zgrid') 
+if ~isfield(grid, 'dim') && isfield(grid, 'xgrid') && isfield(grid, 'ygrid') && isfield(grid, 'zgrid')
   grid.dim = [length(grid.xgrid) length(grid.ygrid) length(grid.zgrid)];
 end
 

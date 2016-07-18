@@ -12,7 +12,7 @@ function test_old_besa2fieldtrip
 % as well as on MATLAB files containing a particular structure (for the
 % direct besa->matlab interface).
 
-basedir = '/home/common/matlab/fieldtrip/testdata/original/besa/file';
+basedir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/besa/file');
 
 filename = {
   'besa_avr/Rolandic-Segment.avr'

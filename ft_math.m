@@ -5,16 +5,21 @@ function data = ft_math(cfg, varargin)
 %
 % Use as
 %   data = ft_math(cfg, data1, data2, ...)
-% with one or multiple FieldTrip data structures as input and where cfg is a
-% configuration structure that should contain
-%
-%  cfg.operation  = string, can be 'add', 'subtract', 'divide', 'multiply',
-%                   'log10', 'abs' or a functional specification of the operation (see below)
-%  cfg.parameter  = string, field from the input data on which the operation is
+% with one or multiple FieldTrip data structures as the input and the configuration
+% structure cfg in which you specify the mathematical operation that is to be
+% executed on the desired parameter from the data
+%   cfg.parameter = string, field from the input data on which the operation is
 %                   performed, e.g. 'pow' or 'avg'
+%   cfg.operation = string, for example '(x1-x2)/(x1+x2)' or 'x1/6'
 %
-% Optionally, if you specify only a single input data structure and the operation
-% 'add', 'subtract', 'divide' or 'multiply', the configuration should also contain
+% In the specification of the mathematical operation, x1 is the parameter obtained
+% from the first input data structure, x2 from the second, etc.
+%
+% Rather than specifying the operation as a string that is evaluated, you can also
+% specify it as a single operation. The advantage is that it is computed faster.
+%    cfg.operation = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10', 'abs'
+% If you specify only a single input data structure and the operation is 'add',
+% 'subtract', 'divide' or 'multiply', the configuration should also contain:
 %   cfg.scalar    = scalar value to be used in the operation
 %
 % The operation 'add' is implemented as follows
@@ -41,11 +46,6 @@ function data = ft_math(cfg, varargin)
 %   y = x1 * s
 % if you specify one input argument and a scalar value.
 %
-% It is also possible to specify your own operation as a string, like this
-%   cfg.operation = '(x1-x2)/(x1+x2)'
-% or using 's' for the scalar value like this
-%   cfg.operation = '(x1-x2)^s'
-%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
@@ -64,9 +64,9 @@ function data = ft_math(cfg, varargin)
 %                involve element-wise combination of the data and the
 %                matrix.
 
-% Copyright (C) 2012-2014, Robert Oostenveld
+% Copyright (C) 2012-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -88,17 +88,21 @@ function data = ft_math(cfg, varargin)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
-ft_defaults                   % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init              % this will show the function help if nargin==0 and return an error
-ft_preamble provenance        % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
+% do teh general setup of the function
+ft_defaults
+ft_preamble init
 ft_preamble debug
-ft_preamble loadvar varargin  % this reads the input data in case the user specified the cfg.inputfile option
+ft_preamble loadvar varargin
+ft_preamble provenance varargin
+ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -148,7 +152,7 @@ tmpcfg.parameter = cfg.parameter;
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
-
+% restore the user-specified parameter option
 cfg.parameter = tmpcfg.parameter;
 
 for p = 1:length(cfg.parameter)
@@ -202,11 +206,11 @@ for p = 1:length(cfg.parameter)
   for i=1:length(varargin)
     assign(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter{p}));
   end
-  
+
   % create the local variables s and m
   s = ft_getopt(cfg, 'scalar');
   m = ft_getopt(cfg, 'matrix');
-  
+
   % check the dimensionality of m against the input data
   if ~isempty(m),
     for i=1:length(varargin)
@@ -217,22 +221,22 @@ for p = 1:length(cfg.parameter)
       error('the dimensions of cfg.matrix do not allow for element-wise operations');
     end
   end
-  
+
   % only one of these can be defined at the moment (i.e. not allowing for
   % operations such as (x1+m)^s for now
   if ~isempty(m) && ~isempty(s),
     error('you can either specify a cfg.matrix or a cfg.scalar, not both');
   end
-  
+
   % touch it to keep track of it in the output cfg
   if ~isempty(s), cfg.scalar; end
   if ~isempty(m), cfg.matrix; end
-  
+
   % replace s with m, so that the code below is more transparent
   if ~isempty(m),
     s = m; clear m;
   end
-  
+
   if length(varargin)==1
     switch cfg.operation
       case 'add'
@@ -246,7 +250,7 @@ for p = 1:length(cfg.parameter)
         else
           y = x1 + s;
         end
-        
+
       case 'subtract'
         if isscalar(s),
           fprintf('subtracting %f from the %s\n', s, cfg.parameter{p});
@@ -258,7 +262,7 @@ for p = 1:length(cfg.parameter)
         else
           y = x1 - s;
         end
-        
+
       case 'multiply'
         if isscalar(s),
           fprintf('multiplying %s with %f\n', cfg.parameter{p}, s);
@@ -271,7 +275,7 @@ for p = 1:length(cfg.parameter)
         else
           y = x1 .* s;
         end
-        
+
       case 'divide'
         if isscalar(s),
           fprintf('dividing %s by %f\n', cfg.parameter{p}, s);
@@ -283,7 +287,7 @@ for p = 1:length(cfg.parameter)
         else
           y = x1 ./ s;
         end
-        
+
       case 'log10'
         fprintf('taking the log10 of %s\n', cfg.parameter{p});
         if iscell(x1)
@@ -291,7 +295,7 @@ for p = 1:length(cfg.parameter)
         else
           y = log10(x1);
         end
-        
+
       case 'abs'
         fprintf('taking the abs of %s\n', cfg.parameter{p});
         if iscell(x1)
@@ -299,15 +303,15 @@ for p = 1:length(cfg.parameter)
         else
           y = abs(x1);
         end
-        
+
       otherwise
         % assume that the operation is descibed as a string, e.g. x1^s
         % where x1 is the first argument and s is obtained from cfg.scalar
-        
+
         arginstr = sprintf('x%i,', 1:length(varargin));
         arginstr = arginstr(1:end-1); % remove the trailing ','
         eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-        
+
         if ~iscell(varargin{1}.(cfg.parameter{p}))
           % gather x1, x2, ... into a cell-array
           arginval = eval(sprintf('{%s}', arginstr));
@@ -326,7 +330,7 @@ for p = 1:length(cfg.parameter)
               % xx1 is one element of the x1 cell-array
               assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
             end
-            
+
             % gather xx1, xx2, ... into a cell-array
             arginstr = sprintf('xx%i,', 1:length(varargin));
             arginstr = arginstr(1:end-1); % remove the trailing ','
@@ -338,12 +342,12 @@ for p = 1:length(cfg.parameter)
             end
           end % for each element
         end % iscell or not
-        
+
     end % switch
-    
-    
+
+
   else
-    
+
     switch cfg.operation
       case 'add'
         for i=2:length(varargin)
@@ -354,7 +358,7 @@ for p = 1:length(cfg.parameter)
             y = x1 + varargin{i}.(cfg.parameter{p});
           end
         end
-        
+
       case 'multiply'
         for i=2:length(varargin)
           fprintf('multiplying with the %s input argument\n', nth(i));
@@ -364,7 +368,7 @@ for p = 1:length(cfg.parameter)
             y = x1 .* varargin{i}.(cfg.parameter{p});
           end
         end
-        
+
       case 'subtract'
         if length(varargin)>2
           error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
@@ -375,7 +379,7 @@ for p = 1:length(cfg.parameter)
         else
           y = x1 - varargin{2}.(cfg.parameter{p});
         end
-        
+
       case 'divide'
         if length(varargin)>2
           error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
@@ -386,26 +390,26 @@ for p = 1:length(cfg.parameter)
         else
           y = x1 ./ varargin{2}.(cfg.parameter{p});
         end
-        
+
       case 'log10'
         if length(varargin)>2
           error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
         end
         fprintf('taking the log difference between the 2nd input argument and the 1st\n');
         y = log10(x1 ./ varargin{2}.(cfg.parameter{p}));
-        
+
       otherwise
         % assume that the operation is descibed as a string, e.g. (x1-x2)/(x1+x2)
-        
+
         % ensure that all input arguments are being used
         for i=1:length(varargin)
           assert(~isempty(regexp(cfg.operation, sprintf('x%i', i), 'once')), 'not all input arguments are assigned in the operation')
         end
-        
+
         arginstr = sprintf('x%i,', 1:length(varargin));
         arginstr = arginstr(1:end-1); % remove the trailing ','
         eval(sprintf('operation = @(%s) %s;', arginstr, cfg.operation));
-        
+
         if ~iscell(varargin{1}.(cfg.parameter{p}))
           % gather x1, x2, ... into a cell-array
           arginval = eval(sprintf('{%s}', arginstr));
@@ -424,7 +428,7 @@ for p = 1:length(cfg.parameter)
               % xx1 is one element of the x1 cell-array
               assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
             end
-            
+
             % gather xx1, xx2, ... into a cell-array
             arginstr = sprintf('xx%i,', 1:length(varargin));
             arginstr = arginstr(1:end-1); % remove the trailing ','
@@ -436,17 +440,17 @@ for p = 1:length(cfg.parameter)
             end
           end % for each element
         end % iscell or not
-        
+
     end % switch
   end % one or multiple input data structures
-  
+
   % store the result of the operation in the output structure
   data = setsubfield(data, cfg.parameter{p}, y);
 end % p over length(cfg.parameter)
 data.dimord = dimord;
 
 % certain fields should remain in the output, but only if they are identical in all inputs
-keepfield = {'grad', 'elec'};
+keepfield = {'grad', 'elec', 'inside'};
 for j=1:numel(keepfield)
   if isfield(varargin{1}, keepfield{j})
     tmp  = varargin{i}.(keepfield{j});
@@ -470,11 +474,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ft_postamble debug
-ft_postamble trackconfig        % this converts the config object back into a struct and can report on the unused fields
-ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
-ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble history data       % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-ft_postamble savevar data       % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+ft_postamble trackconfig
+ft_postamble previous   varargin
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
