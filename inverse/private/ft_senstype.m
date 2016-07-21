@@ -358,9 +358,9 @@ else
       type = 'neuromag306_combined';
     elseif any(mean(ismember(ft_senslabel('neuromag306'),          sens.label)) > 0.4)
       type = 'neuromag306';
-    elseif any(mean(ismember(ft_senslabel('neuromag122_combined'), sens.label)) > 0.4)
+    elseif all(mean(ismember(ft_senslabel('neuromag122_combined'), sens.label)) > 0.4)
       type = 'neuromag122_combined';
-    elseif any(mean(ismember(ft_senslabel('neuromag122'),          sens.label)) > 0.4)
+    elseif all(mean(ismember(ft_senslabel('neuromag122'),          sens.label)) > 0.4)
       type = 'neuromag122';
       
     elseif (mean(ismember(ft_senslabel('biosemi256'),         sens.label)) > 0.8)
