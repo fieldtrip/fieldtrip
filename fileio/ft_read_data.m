@@ -1050,6 +1050,17 @@ switch dataformat
   case 'nexstim_nxe'
     dat = read_nexstim_nxe(filename, begsample, endsample, chanindx);
     
+  case 'nihonkohden_m00'
+    if isfield(hdr, 'dat')
+      % this is inefficient, since it keeps the complete data in memory
+      % but it does speed up subsequent read operations without the user
+      % having to care about it
+      dat = hdr.dat;
+    else
+      dat = read_nihonkohden_m00(filename, begsample, endsample);
+    end
+    dat = dat(chanindx,begsample:endsample);
+    
   case 'ns_avg'
     % NeuroScan average data
     orig = read_ns_avg(filename);
