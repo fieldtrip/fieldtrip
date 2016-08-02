@@ -66,9 +66,9 @@ mri.coordsys      = 'spm';
 % different conventions defining LPA and RPA. The affine registration may
 % fail however, e.g. if the initial alignment is not close enough. In that
 % case SPM will throw an error
+ft_hastoolbox('spm', 1);
 if opt==1
   % use spm_affreg
-  ft_hastoolbox('spm', 1);
  
   switch spm('ver')
     case 'SPM8'
