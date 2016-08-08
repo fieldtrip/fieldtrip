@@ -221,6 +221,7 @@ else
   if coilsize==0
     hs = plot3(sens.chanpos(:,1), sens.chanpos(:,2), sens.chanpos(:,3), style);
   else
+    hs = gca;
     plotcoil(sens.chanpos, sens.chanori, chandir, coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
   end
   
