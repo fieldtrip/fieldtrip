@@ -221,6 +221,7 @@ else
   if coilsize==0
     hs = plot3(sens.chanpos(:,1), sens.chanpos(:,2), sens.chanpos(:,3), style);
   else
+    hs = gca;
     plotcoil(sens.chanpos, sens.chanori, chandir, coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
   end
   
@@ -278,7 +279,7 @@ for i=1:size(coilpos,1)
   r2 = rotate([0 0 ph]);
   t  = translate(coilpos(i,:));
   
-  if ~isempty(coildir)
+  if ~isempty(coildir) && all(isfinite(coildir(i,:)))
     % express the direction of sensitivity of the planar channel relative to the orientation of the channel
     dir = ft_warp_apply(inv(r2*r1), coildir(i,:));
     x = dir(1);
