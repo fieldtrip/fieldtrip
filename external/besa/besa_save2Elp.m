@@ -29,8 +29,8 @@ function status = besa_save2Elp(file_path, file_name, ...
 % 
 % Return:
 %     [status] 
-%         The status of the writing process: 0 if the process was 
-%         successful and less than 0 if not.
+%         The status of the writing process: 1 if the process was 
+%         successful and less than 1 if not.
 % 
 
 % Copyright (C) 2015, BESA GmbH
@@ -55,7 +55,7 @@ function status = besa_save2Elp(file_path, file_name, ...
 % Author: Todor Jordanov
 % Created: 2015-07-29
 
-status = 0;
+status = 1;
 
 NumChannels = size(spherical_coordinates, 1);
 
