@@ -929,7 +929,7 @@ fclose(fid);
 integer='(\d+)';
 float='([\d\.-]+)';
 space='\s+';
-channel_label='([\w \t\r\f\v\+]+)';
+channel_label='([\w \t\r\f\v\-\+]+)';
 single_newline='\n';
 
 pat=[integer, space, ...
