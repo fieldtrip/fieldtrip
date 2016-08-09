@@ -838,7 +838,7 @@ switch eventformat
     end;
     for i = 1:numel(xmlfiles)
       if strcmpi(xmlfiles(i).name(1:6), 'Events')
-        fieldname       = xmlfiles(i).name(1:end-4);
+        fieldname       = strrep(xmlfiles(i).name(1:end-4), ' ', '_');
         filename_xml    = fullfile(filename, xmlfiles(i).name);
         xml.(fieldname) = xml2struct(filename_xml);
       end
