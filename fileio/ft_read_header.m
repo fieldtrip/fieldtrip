@@ -60,6 +60,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
+%   Nihon Kohden (*.m00) 
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -1884,7 +1885,10 @@ switch headerformat
   case 'neurosim_spikes'
     headerOnly = true;
     hdr = read_neurosim_spikes(filename, headerOnly);
-    
+   
+  case 'nihonkohden_m00'
+    hdr = read_nihonkohden_hdr(filename); 
+  
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
     % look at the first trial to determine whether it contains data in the EPP and EOG channels
