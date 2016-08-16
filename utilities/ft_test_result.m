@@ -8,6 +8,8 @@ function results = ft_test_result(varargin)
 % To print a table with the results on screen, you would do
 %   ft_test_result comparerevision ea3c2b9 314d186
 %   ft_test_result comparematlab   2015b   2016b
+%   ft_test_result comparemexext   mexw32  mexw64
+%   ft_test_result compareos       osx     windows
 %
 % Additional query arguments are specified as key-value pairs and can include
 %   matlabversion    = string
