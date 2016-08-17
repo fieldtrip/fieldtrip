@@ -1,5 +1,8 @@
 function test_bug1667
 
+% WALLTIME 00:20:00
+% MEM 4gb
+
 % TEST test_bug1667
 % TEST ft_read_data
 % TEST ft_fetch_data
