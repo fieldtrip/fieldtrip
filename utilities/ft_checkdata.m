@@ -211,7 +211,7 @@ elseif ismesh
     elseif isfield(data,'hex')    
       fprintf('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
     else
-      fprintf('the input is mesh data with %d vertices', size(data.pos,1), size(data.tri,1));  
+      fprintf('the input is mesh data with %d vertices', size(data.pos,1));  
     end  
   else
     fprintf('the input is mesh data multiple surfaces\n');
