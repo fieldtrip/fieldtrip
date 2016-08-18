@@ -206,7 +206,15 @@ if ~isequal(feedback, 'no')
 elseif ismesh
   data = fixpos(data);
   if numel(data)==1
-    fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
+    if isfield(data,'tri')  
+      fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
+    elseif isfield(data,'hex')    
+      fprintf('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
+    elseif isfield(data,'tet')    
+      fprintf('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));  
+    else
+      fprintf('the input is mesh data with %d vertices', size(data.pos,1));  
+    end  
   else
     fprintf('the input is mesh data multiple surfaces\n');
   end
