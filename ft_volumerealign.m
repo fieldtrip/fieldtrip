@@ -233,7 +233,7 @@ cfg.parameter     = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim          = ft_getopt(cfg, 'clim',      []);
 cfg.viewmode      = ft_getopt(cfg, 'viewmode',  'ortho'); % for method=interactive
 cfg.snapshot      = ft_getopt(cfg, 'snapshot',  false);
-cfg.snapshotfile  = ft_getopt(cfg, 'snapshotfile', fullfile(pwd,'ft_volumerealign_snapshot'));
+cfg.snapshotfile  = ft_getopt(cfg, 'snapshotfile', fullfile(pwd, 'ft_volumerealign_snapshot'));
 cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio', 'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',  'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
@@ -388,9 +388,9 @@ switch cfg.method
         set(h, 'CloseRequestFcn',     @cb_cleanup);
         
         % axis handles will hold the anatomical functional if present, along with labels etc.
-        h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
-        h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
-        h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
+        h1 = axes('position', [0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
+        h2 = axes('position', [0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
+        h3 = axes('position', [0.06                0.06                h3size(1) h3size(2)]);
         
         set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
         set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
@@ -438,22 +438,22 @@ switch cfg.method
         
         % intensity range sliders
         h45text = uicontrol('Style', 'text',...
-          'String','Intensity',...
+          'String', 'Intensity',...
           'Units', 'normalized', ...
           'Position',posh45text,... % text is centered, so height adjust vertical position
-          'HandleVisibility','on');
+          'HandleVisibility', 'on');
         
         h4text = uicontrol('Style', 'text',...
-          'String','Min',...
+          'String', 'Min',...
           'Units', 'normalized', ...
           'Position',posh4text,...
-          'HandleVisibility','on');
+          'HandleVisibility', 'on');
         
         h5text = uicontrol('Style', 'text',...
-          'String','Max',...
+          'String', 'Max',...
           'Units', 'normalized', ...
           'Position',posh5text,...
-          'HandleVisibility','on');
+          'HandleVisibility', 'on');
         
         h4 = uicontrol('Style', 'slider', ...
           'Parent', h, ...
@@ -741,7 +741,7 @@ switch cfg.method
       target.pos    = target.pos;
       target.inside = (1:size(target.pos,1))';
       
-      functional          = rmfield(shape,'pos');
+      functional          = rmfield(shape, 'pos');
       functional.distance = info.distanceout(:);
       functional.pos      = info.qout';
       
@@ -773,7 +773,7 @@ switch cfg.method
       target.pos    = target.pos;
       target.inside = (1:size(target.pos,1))';
       
-      functional     = rmfield(shape,'pos');
+      functional     = rmfield(shape, 'pos');
       functional.pow = info.distancein(:);
       functional.pos = info.qout';
       
@@ -831,10 +831,10 @@ switch cfg.method
     tmpcfg.parameter = 'anatomy';
     tmpcfg.filename  = tmpname1;
     tmpcfg.filetype  = 'nifti';
-    fprintf('writing the input volume to a temporary file: %s\n', [tmpname1,'.nii']);
+    fprintf('writing the input volume to a temporary file: %s\n', [tmpname1, '.nii']);
     ft_volumewrite(tmpcfg, mri);
     tmpcfg.filename  = tmpname2;
-    fprintf('writing the  target volume to a temporary file: %s\n', [tmpname2,'.nii']);
+    fprintf('writing the  target volume to a temporary file: %s\n', [tmpname2, '.nii']);
     ft_volumewrite(tmpcfg, target);
     
     % create the command to call flirt
@@ -904,9 +904,9 @@ switch cfg.method
         coordsys = 'unknown';
       end
     end
-    delete([tmpname1,'.nii']);
-    delete([tmpname2,'.nii']);
-    delete([tmpname3,'.nii.gz']);
+    delete([tmpname1, '.nii']);
+    delete([tmpname2, '.nii']);
+    delete([tmpname3, '.nii.gz']);
     delete(tmpname4);
     
   case 'spm'
@@ -960,7 +960,7 @@ switch cfg.method
       
       flags         = cfg.spm;
       flags.nits    = 0; %set number of non-linear iterations to zero
-      params        = spm_normalise(V2,V1,[],[],[],flags);
+      params        = spm_normalise(V2,V1, [], [], [],flags);
       %mri.transform = (target.transform/params.Affine)/T;
       transform     = (target.transform/params.Affine)/T/mri.transform;
       % transform     = eye(4);
@@ -1048,7 +1048,7 @@ if viewresult
   
   % input was a single vol
   % start building the figure
-  h = figure('numbertitle','off','name','realignment result');
+  h = figure('numbertitle', 'off', 'name', 'realignment result');
   set(h, 'visible', 'on');
   
   % axes settings
@@ -1097,9 +1097,9 @@ if viewresult
   set(h, 'CloseRequestFcn',     @cb_cleanup);
   
   % axis handles will hold the anatomical functional if present, along with labels etc.
-  h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
-  h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
-  h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
+  h1 = axes('position', [0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
+  h2 = axes('position', [0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
+  h3 = axes('position', [0.06                0.06                h3size(1) h3size(2)]);
   
   set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
   set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
@@ -1156,22 +1156,22 @@ if viewresult
   % intensity range sliders
   if twovol
     h45texttar = uicontrol('Style', 'text',...
-      'String','Intensity target volume (red)',...
+      'String', 'Intensity target volume (red)',...
       'Units', 'normalized', ...
       'Position',posh45text,...
-      'HandleVisibility','on');
+      'HandleVisibility', 'on');
     
     h4texttar = uicontrol('Style', 'text',...
-      'String','Min',...
+      'String', 'Min',...
       'Units', 'normalized', ...
       'Position',posh4text,...
-      'HandleVisibility','on');
+      'HandleVisibility', 'on');
     
     h5texttar = uicontrol('Style', 'text',...
-      'String','Max',...
+      'String', 'Max',...
       'Units', 'normalized', ...
       'Position',posh5text,...
-      'HandleVisibility','on');
+      'HandleVisibility', 'on');
     
     h4tar = uicontrol('Style', 'slider', ...
       'Parent', h, ...
@@ -1180,7 +1180,7 @@ if viewresult
       'Units', 'normalized', ...
       'Position', posh4slid, ...
       'Callback', @cb_minslider,...
-      'tag','tar');
+      'tag', 'tar');
     
     h5tar = uicontrol('Style', 'slider', ...
       'Parent', h, ...
@@ -1189,7 +1189,7 @@ if viewresult
       'Units', 'normalized', ...
       'Position', posh5slid, ...
       'Callback', @cb_maxslider,...
-      'tag','tar');
+      'tag', 'tar');
   end
   
   % intensity range sliders
@@ -1202,19 +1202,19 @@ if viewresult
     'String',str,...
     'Units', 'normalized', ...
     'Position',posh45text,...
-    'HandleVisibility','on');
+    'HandleVisibility', 'on');
   
   h4textrel = uicontrol('Style', 'text',...
-    'String','Min',...
+    'String', 'Min',...
     'Units', 'normalized', ...
     'Position',posh4text,...
-    'HandleVisibility','on');
+    'HandleVisibility', 'on');
   
   h5textrel = uicontrol('Style', 'text',...
-    'String','Max',...
+    'String', 'Max',...
     'Units', 'normalized', ...
     'Position',posh5text,...
-    'HandleVisibility','on');
+    'HandleVisibility', 'on');
   
   h4rel = uicontrol('Style', 'slider', ...
     'Parent', h, ...
@@ -1223,7 +1223,7 @@ if viewresult
     'Units', 'normalized', ...
     'Position', posh4slid, ...
     'Callback', @cb_minslider,...
-    'tag','rel');
+    'tag', 'rel');
   
   h5rel = uicontrol('Style', 'slider', ...
     'Parent', h, ...
@@ -1232,7 +1232,7 @@ if viewresult
     'Units', 'normalized', ...
     'Position', posh5slid, ...
     'Callback', @cb_maxslider,...
-    'tag','rel');
+    'tag', 'rel');
   
   % create structure to be passed to gui
   opt               = [];
@@ -1429,7 +1429,7 @@ end
 % the code were this transform will impact fiducial/etc coordinates is unaffected, as it is switched off
 % (note: fiducial/etc coordinates are transformed into coordinate space in the code dealing with realignment)
 if opt.viewresult
-  tmp = ft_warp_apply(mri.transform,[xi yi zi]);
+  tmp = ft_warp_apply(mri.transform, [xi yi zi]);
   xi = tmp(1);
   yi = tmp(2);
   zi = tmp(3);
@@ -1449,19 +1449,19 @@ if opt.init
       % two vol case
       % base volume, with color red
       hbase = []; % need the handle for the individual surfs
-      [hbase(1), hbase(2), hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'unit', mri.unit, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.targetclim,'datmask',opt.targetmask, 'opacitylim',[0 1]);
+      [hbase(1), hbase(2), hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'unit', mri.unit, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.targetclim, 'datmask',opt.targetmask, 'opacitylim', [0 1]);
       for ih = 1:3
-        col = get(hbase(ih),'CData');
+        col = get(hbase(ih), 'CData');
         col(:,:,2:3) = 0;
-        set(hbase(ih),'CData',col);
+        set(hbase(ih), 'CData',col);
       end
       % aligned volume, with color blue
       hreal = []; % need the handle for the individual surfs
-      [hreal(1), hreal(2), hreal(3)] = ft_plot_ortho(opt.realignana, 'transform', opt.realignvol.transform, 'unit', opt.realignvol.unit, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.realignclim,'datmask',opt.realignmask, 'opacitylim',[0 1]);
+      [hreal(1), hreal(2), hreal(3)] = ft_plot_ortho(opt.realignana, 'transform', opt.realignvol.transform, 'unit', opt.realignvol.unit, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.realignclim, 'datmask',opt.realignmask, 'opacitylim', [0 1]);
       for ih = 1:3
-        col = get(hreal(ih),'CData');
+        col = get(hreal(ih), 'CData');
         col(:,:,1:2) = 0;
-        set(hreal(ih),'CData',col);
+        set(hreal(ih), 'CData',col);
       end
     end
   end % if ~opt.viewresult
@@ -1497,7 +1497,7 @@ else
       % two vol case
       % base volume, with color red
       hbase = []; % need the handle for the individual surfs
-      [hbase(1), hbase(2), hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'unit', mri.unit, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{1}, 'update', opt.update, 'doscale', false, 'clim', opt.targetclim,'datmask', opt.targetmask, 'opacitylim', [0 1]);
+      [hbase(1), hbase(2), hbase(3)] = ft_plot_ortho(opt.ana, 'transform', mri.transform, 'unit', mri.unit, 'location', [xi yi zi], 'style', 'subplot', 'surfhandle', opt.anahandles{1}, 'update', opt.update, 'doscale', false, 'clim', opt.targetclim, 'datmask', opt.targetmask, 'opacitylim', [0 1]);
       for ih = 1:3
         col = get(hbase(ih), 'CData');
         col(:,:,2:3) = 0;
@@ -1571,18 +1571,18 @@ else
   
 end % if opt.init
 
-set(opt.handlesaxes(1),'Visible','on');
-set(opt.handlesaxes(2),'Visible','on');
-set(opt.handlesaxes(3),'Visible','on');
+set(opt.handlesaxes(1), 'Visible', 'on');
+set(opt.handlesaxes(2), 'Visible', 'on');
+set(opt.handlesaxes(3), 'Visible', 'on');
 if opt.viewresult
-  set(opt.handlesaxes(1),'color',[.94 .94 .94]);
-  set(opt.handlesaxes(2),'color',[.94 .94 .94]);
-  set(opt.handlesaxes(3),'color',[.94 .94 .94]);
+  set(opt.handlesaxes(1), 'color', [.94 .94 .94]);
+  set(opt.handlesaxes(2), 'color', [.94 .94 .94]);
+  set(opt.handlesaxes(3), 'color', [.94 .94 .94]);
 end
 
 
 % make the last current axes current again
-sel = findobj('type','axes','tag',tag);
+sel = findobj('type', 'axes', 'tag',tag);
 if ~isempty(sel)
   set(opt.handlesfigure, 'currentaxes', sel(1));
 end
@@ -1601,7 +1601,7 @@ else
   % h2 +to-
   % h3 -to+
   % use this to create the offset for viewing the crosshair
-  mincoordstep = abs(ft_warp_apply(mri.transform,[1 1 1]) - ft_warp_apply(mri.transform,[2 2 2]));
+  mincoordstep = abs(ft_warp_apply(mri.transform, [1 1 1]) - ft_warp_apply(mri.transform, [2 2 2]));
   crossoffs = [xi yi zi] + [1 -1 1].*mincoordstep;
 end
 
@@ -1624,16 +1624,16 @@ end
 % instead of 'depth' fixes the problem. Lucky, the line command only 'disables' in
 % the new graphics system introduced in 2014b (any version below is fine, and does
 % not contain the sortmethod property --> crash)
-if ~verLessThan('matlab','8.4') % 8.4 = 2014b
-  set(h1,'sortMethod','childorder')
-  set(h2,'sortMethod','childorder')
-  set(h3,'sortMethod','childorder')
+if ~verLessThan('matlab', '8.4') % 8.4 = 2014b
+  set(h1, 'sortMethod', 'childorder')
+  set(h2, 'sortMethod', 'childorder')
+  set(h3, 'sortMethod', 'childorder')
 end
 
 if opt.showcrosshair
-  set(opt.handlescross,'Visible','on');
+  set(opt.handlescross, 'Visible', 'on');
 else
-  set(opt.handlescross,'Visible','off');
+  set(opt.handlescross, 'Visible', 'off');
 end
 
 markercolor = {'r', 'g', 'b', 'y'};
@@ -1670,9 +1670,9 @@ if ~opt.viewresult
 end
 
 if opt.showmarkers
-  set(opt.handlesmarker,'Visible','on');
+  set(opt.handlesmarker, 'Visible', 'on');
 else
-  set(opt.handlesmarker,'Visible','off');
+  set(opt.handlesmarker, 'Visible', 'off');
 end
 
 opt.init = false;
@@ -1981,22 +1981,22 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_minslider(h4, eventdata)
 
-tag = get(h4,'tag');
+tag = get(h4, 'tag');
 newlim = get(h4, 'value');
 h = getparent(h4);
 opt = getappdata(h, 'opt');
 if isempty(tag)
   opt.clim(1) = newlim;
-elseif strcmp(tag,'rel')
+elseif strcmp(tag, 'rel')
   opt.realignclim(1) = newlim;
-elseif strcmp(tag,'tar')
+elseif strcmp(tag, 'tar')
   opt.targetclim(1) = newlim;
 end
 if isempty(tag)
   fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
-elseif strcmp(tag,'rel')
+elseif strcmp(tag, 'rel')
   fprintf('realigned contrast limits updated to [%.03f %.03f]\n', opt.realignclim);
-elseif strcmp(tag,'tar')
+elseif strcmp(tag, 'tar')
   fprintf('target cfontrast limits updated to [%.03f %.03f]\n', opt.targetclim);
 end
 setappdata(h, 'opt', opt);
@@ -2007,22 +2007,22 @@ cb_redraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_maxslider(h5, eventdata)
 
-tag = get(h5,'tag');
+tag = get(h5, 'tag');
 newlim = get(h5, 'value');
 h = getparent(h5);
 opt = getappdata(h, 'opt');
 if isempty(tag)
   opt.clim(2) = newlim;
-elseif strcmp(tag,'rel')
+elseif strcmp(tag, 'rel')
   opt.realignclim(2) = newlim;
-elseif strcmp(tag,'tar')
+elseif strcmp(tag, 'tar')
   opt.targetclim(2) = newlim;
 end
 if isempty(tag)
   fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
-elseif strcmp(tag,'rel')
+elseif strcmp(tag, 'rel')
   fprintf('realigned contrast limits updated to [%.03f %.03f]\n', opt.realignclim);
-elseif strcmp(tag,'tar')
+elseif strcmp(tag, 'tar')
   fprintf('target contrast limits updated to [%.03f %.03f]\n', opt.targetclim);
 end
 setappdata(h, 'opt', opt);
