@@ -32,6 +32,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %                                 viewmode ('some' plots one in every ten labels; useful when plotting a
 %                                 large number of channels at a time)
 %   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value');
+%   cfg.plotevents              = 'no' or 'yes', whether to plot event markers. (default is 'yes')
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing components e.g. from an ICA (default is 'butterfly')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
@@ -197,6 +198,7 @@ cfg.plotlabels      = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event           = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
 cfg.continuous      = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
 cfg.ploteventlabels = ft_getopt(cfg, 'ploteventlabels', 'type=value');
+cfg.plotevents      = ft_getopt(cfg, 'plotevents', 'yes');
 cfg.precision       = ft_getopt(cfg, 'precision', 'double');
 cfg.zlim            = ft_getopt(cfg, 'zlim', 'maxmin');
 cfg.compscale       = ft_getopt(cfg, 'compscale', 'global');
@@ -1794,6 +1796,7 @@ end % for each of the artifact channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 delete(findobj(h, 'tag', 'event'));
 
+if strcmp(cfg.plotevents, 'yes')
 if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
 
   if strcmp(cfg.ploteventlabels , 'colorvalue') && ~isempty(opt.event)
@@ -1849,6 +1852,7 @@ if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
   end
 
 end % if viewmode appropriate for events
+end % if user wants to see event marks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %fprintf('plotting data...\n');
