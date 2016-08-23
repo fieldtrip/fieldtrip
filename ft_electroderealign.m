@@ -561,6 +561,10 @@ elseif strcmp(cfg.method, 'interactive')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'project')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if ~isfield(headshape, 'tri')
+      headshape.pos = unique(headshape.pos, 'rows');
+      headshape.tri = projecttri(headshape.pos);
+  end
   [dum, prj] = project_elec(elec.elecpos, headshape.pos, headshape.tri);
   % replace the electrodes with the projected version
   elec.elecpos = prj;
