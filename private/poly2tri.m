@@ -1,8 +1,14 @@
 function mesh = poly2tri(mesh)
 
-% POLY2TRI converts the polygons in a mesh to triangles by splitting them in half
+% POLY2TRI converts the polygons in a mesh to triangles by splitting
+% them in half. The input polygons should consist of 4 vertices.
+% Curvature is not considered and the resulting split will only be
+% optimal for flat polygons.
 %
-% See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3177
+% Use as
+%  mesh = poly2tri(mesh)
+%
+% See also MESH2EDGE
 
 if ~isfield(mesh, 'poly')
   error('the mesh does not contain polygons')
