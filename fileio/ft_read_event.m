@@ -1967,25 +1967,27 @@ switch eventformat
     trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
     
     % remove consecutive triggers
-    i = 1;
-    last_trigger_sample = trigger(i).sample;
-    while i<numel(trigger)
-      if strcmp(trigger(i).type, trigger(i+1).type) && trigger(i+1).sample-last_trigger_sample <= tolerance
-        [trigger(i).value, idx] = max([trigger(i).value, trigger(i+1).value]);
-        fprintf('Merging triggers at sample %d and %d\n', trigger(i).sample, trigger(i+1).sample);
-        last_trigger_sample =  trigger(i+1).sample;
-        if (idx==2)
-          trigger(i).sample = trigger(i+1).sample;
+    if ~isempty(trigger)
+      i = 1;
+      last_trigger_sample = trigger(i).sample;
+      while i<numel(trigger)
+        if strcmp(trigger(i).type, trigger(i+1).type) && trigger(i+1).sample-last_trigger_sample <= tolerance
+          [trigger(i).value, idx] = max([trigger(i).value, trigger(i+1).value]);
+          fprintf('Merging triggers at sample %d and %d\n', trigger(i).sample, trigger(i+1).sample);
+          last_trigger_sample =  trigger(i+1).sample;
+          if (idx==2)
+            trigger(i).sample = trigger(i+1).sample;
+          end
+
+          trigger(i+1) = [];
+        else
+          i=i+1;
+          last_trigger_sample = trigger(i).sample;
         end
-        
-        trigger(i+1) = [];
-      else
-        i=i+1;
-        last_trigger_sample = trigger(i).sample;
       end
+
+      event = appendevent(event, trigger);
     end
-    
-    event = appendevent(event, trigger);
     
   case 'spmeeg_mat'
     if isempty(hdr)
