@@ -609,11 +609,11 @@ cfg_mp = [];
 cfg_mp.trackcallinfo = 'no';
 cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
+cfg_mp.interactive = 'yes';
 currfig = gcf;
 for n = 1:length(trls)
   figure()
   cfg_mp.trials = trls(n);
-  cfg_mp.interactive = 'yes';
   ft_multiplotER(cfg_mp, info.data);
   title(sprintf('Trial %i', trls(n)));
 end
