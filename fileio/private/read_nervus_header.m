@@ -480,12 +480,16 @@ end
 function [TSInfo] = read_nervus_header_TSInfo(h, DynamicPackets, Index, ITEMNAMESIZE, TSLABELSIZE, LABELSIZE)
 tsPackets = DynamicPackets(strcmp({DynamicPackets.IDStr},'TSGUID'));
 
+if isempty(tsPackets)
+    error(['No TSINFO found']);
+end    
+
 if length(tsPackets) > 1
     warning(['Multiple TSinfo packets detected; using first instance ' ...
-        ' ac for all segments. See documentation for info.']);
-elseif isempty(tsPackets)
-    warning(['No TSINFO found']);
-else
+        ' ac for all segments. See documentation for info.']);    
+end
+
+
     tsPacket = tsPackets(1);
     
     TSInfo = struct();
@@ -518,7 +522,7 @@ else
         offset = offset + 552;
         %disp([num2str(i) ' : ' TSInfo(i).label ' : ' TSInfo(i).activeSensor ' : ' TSInfo(i).refSensor ' : ' num2str(TSInfo(i).samplingRate)]);
     end
-end
+
 end
 
 function [segments] = read_nervus_header_Segments(h, StaticPackets, Index, TSInfo)
