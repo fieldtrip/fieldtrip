@@ -54,7 +54,7 @@ nrvHdr.DynamicPackets = read_nervus_header_dynamicpackets(h, nrvHdr.StaticPacket
 nrvHdr.PatientInfo = read_nervus_header_patient(h, nrvHdr.StaticPackets, nrvHdr.MainIndex);
 nrvHdr.SigInfo = read_nervus_header_SignalInfo(h, nrvHdr.StaticPackets, nrvHdr.MainIndex, ITEMNAMESIZE, LABELSIZE, UNITSIZE);
 nrvHdr.ChannelInfo = read_nervus_header_ChannelInfo(h, nrvHdr.StaticPackets, nrvHdr.MainIndex, ITEMNAMESIZE, LABELSIZE);
-nrvHdr.TSInfo = read_nervus_header_TSInfo(h, nrvHdr.DynamicPackets, nrvHdr.MainIndex, ITEMNAMESIZE, TSLABELSIZE, LABELSIZE);
+nrvHdr.TSInfo = read_nervus_header_TSInfo(nrvHdr.DynamicPackets, TSLABELSIZE, LABELSIZE);
 nrvHdr.Segments = read_nervus_header_Segments(h, nrvHdr.StaticPackets, nrvHdr.MainIndex, nrvHdr.TSInfo);
 nrvHdr.Events = read_nervus_header_events(h, nrvHdr.StaticPackets, nrvHdr.MainIndex);
 nrvHdr.MontageInfo = read_nervus_header_montage(h, nrvHdr.StaticPackets, nrvHdr.MainIndex);
@@ -477,24 +477,37 @@ for i = 1: length(channelInfo)
 end
 end
 
-function [TSInfo] = read_nervus_header_TSInfo(h, DynamicPackets, Index, ITEMNAMESIZE, TSLABELSIZE, LABELSIZE)
+function [TSInfo] = read_nervus_header_TSInfo(DynamicPackets, TSLABELSIZE, LABELSIZE)
 tsPackets = DynamicPackets(strcmp({DynamicPackets.IDStr},'TSGUID'));
 
 if isempty(tsPackets)
     error(['No TSINFO found']);
 end    
 
+tsPacket = tsPackets(1);
+TSInfo = read_nervus_header_one_TSInfo(tsPacket, TSLABELSIZE, LABELSIZE);
+
 if length(tsPackets) > 1
-    warning(['Multiple TSinfo packets detected; using first instance ' ...
-        ' ac for all segments. See documentation for info.']);    
+    allEqual = 1;
+    for i = 2: size(tsPackets,2)
+        nextTsPacket = tsPackets(i);
+        nextTSInfo = read_nervus_header_one_TSInfo(nextTsPacket, TSLABELSIZE, LABELSIZE);       
+        areEqual = compareTsInfoPackets(TSInfo, nextTSInfo);
+        if (areEqual == 0)
+            allEqual = 0;
+            break;
+        end
+    end    
+    if (allEqual == 0)            
+        error('Multiple TSInfo packets found and they are not the same.');
+    end
+end
 end
 
-
-    tsPacket = tsPackets(1);
-    
+function [TSInfo] = read_nervus_header_one_TSInfo(tsPacket, TSLABELSIZE, LABELSIZE)    
     TSInfo = struct();
     elems = typecast(tsPacket.data(753:756),'uint32');
-    alloc = typecast(tsPacket.data(757:760),'uint32');
+    %alloc = typecast(tsPacket.data(757:760),'uint32');
     
     offset = 761;
     for i = 1:elems
@@ -523,6 +536,57 @@ end
         %disp([num2str(i) ' : ' TSInfo(i).label ' : ' TSInfo(i).activeSensor ' : ' TSInfo(i).refSensor ' : ' num2str(TSInfo(i).samplingRate)]);
     end
 
+end
+
+function areEqual = compareTsInfoPackets(TSInfo1, TSInfo2)    
+    areEqual = 1;
+    if (size(TSInfo1,2) ~= size(TSInfo2,2))
+        areEqual = 0;
+    else
+        for i = 1:size(TSInfo1,2)
+            if (~strcmp(TSInfo1(i).label,TSInfo2(i).label))
+                areEqual = 0;
+                break;
+            end
+            if (~strcmp(TSInfo1(i).activeSensor,TSInfo2(i).activeSensor))
+                areEqual = 0;
+                break;
+            end
+            if (~strcmp(TSInfo1(i).refSensor,TSInfo2(i).refSensor))
+                areEqual = 0;
+                break;
+            end
+            if (TSInfo1(i).lowcut ~= TSInfo2(i).lowcut)
+                areEqual = 0;
+                break;
+            end
+            if (TSInfo1(i).hiCut ~= TSInfo2(i).hiCut)
+                areEqual = 0;
+                break;
+            end
+            if (TSInfo1(i).samplingRate ~= TSInfo2(i).samplingRate)
+                areEqual = 0;
+                break;
+            end
+            if (TSInfo1(i).resolution ~= TSInfo2(i).resolution)
+                areEqual = 0;
+                break;
+            end
+            if (TSInfo1(i).specialMark ~= TSInfo2(i).specialMark)
+                areEqual = 0;
+                break;
+            end
+            if (TSInfo1(i).notch ~= TSInfo2(i).notch)
+                areEqual = 0;
+                break;
+            end
+            if (TSInfo1(i).eeg_offset ~= TSInfo2(i).eeg_offset)
+                areEqual = 0;
+                break;
+            end
+        end
+    end
+        
 end
 
 function [segments] = read_nervus_header_Segments(h, StaticPackets, Index, TSInfo)
