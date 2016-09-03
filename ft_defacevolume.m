@@ -15,7 +15,8 @@ function mri = ft_defacevolume(cfg, mri)
 %   cfg.translate  = initial rotation of the box (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
-%   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'yes')
+%   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'no')
+%   cfg.feedback   = 'no' or 'yes', whether to provide graphical feedback (default = 'no')
 %
 % If you specify no smoothing, the selected area will be zero-masked. If you
 % specify a certain amount of smoothing (in voxels FWHM), the selected area will
@@ -67,14 +68,16 @@ cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined f
 cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
 cfg.selection = ft_getopt(cfg, 'selection', 'outside');
 cfg.smooth    = ft_getopt(cfg, 'smooth', 'no');
-cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'yes');
-cfg.feedback  = ft_getopt(cfg, 'feedback', 'yes');
+cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'no');
+cfg.feedback  = ft_getopt(cfg, 'feedback', 'no');
 
-% check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', {'volume', 'mesh'}, 'feedback', 'yes');
+ismri    = ft_datatype(mri, 'volume') && isfield(mri, 'anatomy');
+ismesh   = isfield(mri, 'pos'); % triangles are optional
 
-ismri  = ft_datatype(mri, 'mri');
-ismesh = ft_datatype(mri, 'mesh');
+if ismri
+  % check if the input data is valid for this function
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+end
 
 % determine the size of the "unit" sphere in the origin and the length of the axes
 switch mri.unit
@@ -186,7 +189,7 @@ if ismri
     voxpos(:,3) > -0.5 & ...
     voxpos(:,3) < +0.5;
   
-elseif ismesh
+elseif ismesh || issource
   meshpos = ft_warp_apply(inv(T*R*S), mri.pos);               % mesh vertex positions in box coordinates
   
   remove = ...
@@ -234,12 +237,51 @@ if ismri
   end
   
 elseif ismesh
-  fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
-  [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
-  if isfield(mri, 'color')
-    mri.color = mri.color(~remove,:);
+  % determine all fields that might need to be defaced
+  fn = setdiff(fieldnames(mri), ignorefields('deface'));
+  dimord = cell(size(fn));
+  for i=1:numel(fn)
+    dimord{i} = getdimord(mri, fn{i});
   end
-end
+  % this applies to headshapes and meshes in general
+  fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
+  if isfield(mri, 'tri')
+    [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
+  elseif isfield(mri, 'tet')
+    [mri.pos, mri.tet] = remove_vertices(mri.pos, mri.tet, remove);
+  elseif isfield(mri, 'hex')
+    [mri.pos, mri.hex] = remove_vertices(mri.pos, mri.hex, remove);
+  else
+    mri.pos = mri.pos(~remove,1:3);
+  end
+  for i=1:numel(fn)
+    dimtok = tokenize(dimord{i}, '_');
+    % do some sanity checks
+    if any(strcmp(dimtok, '{pos}'))
+      error('not supported');
+    end
+    if numel(dimtok)>5
+      error('too many dimensions');
+    end
+    % remove the same positions from each matching dimension
+    if numel(dimtok)>0 && strcmp(dimtok{1}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(~remove,:,:,:,:);
+    end
+    if numel(dimtok)>1 && strcmp(dimtok{2}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,~remove,:,:,:);
+    end
+    if numel(dimtok)>2 && strcmp(dimtok{3}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,~remove,:,:);
+    end
+    if numel(dimtok)>3 && strcmp(dimtok{4}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,:,~remove,:);
+    end
+    if numel(dimtok)>4 && strcmp(dimtok{5}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,:,:,~remove);
+    end
+  end % for fn
+  mri = removefields(mri, {'dim', 'transform'}); % these fields don't apply any more
+end % ismesh
 
 % remove the temporary fields from the configuration, keep the rest for provenance
 cfg = removefields(cfg, {'R', 'S', 'T'});

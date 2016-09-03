@@ -50,6 +50,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - MINC
 %  - Neuralynx
 %  - Neuroscan
+%  - Nihon Koden (*.m00)
 %  - Plexon
 %  - SR Research Eyelink
 %  - SensoMotoric Instruments (SMI) *.txt
@@ -1274,7 +1275,11 @@ elseif filetype_check_extension(filename, '.e')
   type = 'nervus_eeg';  % Nervus/Nicolet EEG files
   manufacturer = 'Natus';
   content = 'EEG';
-   
+elseif filetype_check_extension(filename, '.m00')
+  type = 'nihonkohden_m00';
+  manufacturer = 'Nihon Kohden';
+  content = 'continuous EEG';
+  
 end
 
 

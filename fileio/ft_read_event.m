@@ -838,7 +838,7 @@ switch eventformat
     end;
     for i = 1:numel(xmlfiles)
       if strcmpi(xmlfiles(i).name(1:6), 'Events')
-        fieldname       = xmlfiles(i).name(1:end-4);
+        fieldname       = strrep(xmlfiles(i).name(1:end-4), ' ', '_');
         filename_xml    = fullfile(filename, xmlfiles(i).name);
         xml.(fieldname) = xml2struct(filename_xml);
       end
@@ -1777,6 +1777,45 @@ switch eventformat
     
   case 'nexstim_nxe'
     event = read_nexstim_event(filename);
+  
+  case 'nihonkohden_m00'
+    % in the data I tested the triggers are marked as DC offsets (deactivation of the DC channel)
+    begsample = 1;
+    if isempty(hdr)
+      hdr = read_nihonkohden_hdr(filename);
+    end
+    
+    if isfield(hdr, 'dat')
+      % this is inefficient, since it keeps the complete data in memory
+      % but it does speed up subsequent read operations without the user
+      % having to care about it
+      dat = hdr.dat;
+    else
+      dat = read_nihonkohden_m00(filename, begsample, hdr.nSamples);
+    end
+    
+    % read the trigger channel and do flank detection
+    event_chan = {'DC09','DC10','DC11','DC12'};
+    
+    trgindx = match_str(hdr.label, event_chan);
+    trig = dat(trgindx,:);
+    clear dat;
+    begsample = 1;
+    
+    % marking offset trigger latencies
+    %     onlat  = (diff([trig(:,1) trig],1,2)>0);
+    offlat = (diff([trig trig(:,1)],1,2)<0);
+    
+    %     onset  = find(sum(double(onlat), 1)>0);
+    offset = find(sum(double(offlat),1)>0);
+    
+    event = [];
+    for j=1:size(offset,2);
+      value = bin2dec(num2str(flipud(offlat(:,offset(j)))')); % flipup is needed to code bin2dec properly: DC09 = +1, DC10 = +2, DC11 = +4, DC12 = +8
+      event(end+1).type   = 'down_flank';                     % distinguish between up and down flank
+      event(end  ).sample = offset(j) + begsample - 1;        % assign the sample at which the trigger has gone down
+      event(end  ).value  = value;                            % assign the trigger value just _before_ going down
+    end
     
   case 'nimh_cortex'
     if isempty(hdr)
@@ -1928,25 +1967,27 @@ switch eventformat
     trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'threshold', threshold, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixartinis', true);
     
     % remove consecutive triggers
-    i = 1;
-    last_trigger_sample = trigger(i).sample;
-    while i<numel(trigger)
-      if strcmp(trigger(i).type, trigger(i+1).type) && trigger(i+1).sample-last_trigger_sample <= tolerance
-        [trigger(i).value, idx] = max([trigger(i).value, trigger(i+1).value]);
-        fprintf('Merging triggers at sample %d and %d\n', trigger(i).sample, trigger(i+1).sample);
-        last_trigger_sample =  trigger(i+1).sample;
-        if (idx==2)
-          trigger(i).sample = trigger(i+1).sample;
+    if ~isempty(trigger)
+      i = 1;
+      last_trigger_sample = trigger(i).sample;
+      while i<numel(trigger)
+        if strcmp(trigger(i).type, trigger(i+1).type) && trigger(i+1).sample-last_trigger_sample <= tolerance
+          [trigger(i).value, idx] = max([trigger(i).value, trigger(i+1).value]);
+          fprintf('Merging triggers at sample %d and %d\n', trigger(i).sample, trigger(i+1).sample);
+          last_trigger_sample =  trigger(i+1).sample;
+          if (idx==2)
+            trigger(i).sample = trigger(i+1).sample;
+          end
+
+          trigger(i+1) = [];
+        else
+          i=i+1;
+          last_trigger_sample = trigger(i).sample;
         end
-        
-        trigger(i+1) = [];
-      else
-        i=i+1;
-        last_trigger_sample = trigger(i).sample;
       end
+
+      event = appendevent(event, trigger);
     end
-    
-    event = appendevent(event, trigger);
     
   case 'spmeeg_mat'
     if isempty(hdr)

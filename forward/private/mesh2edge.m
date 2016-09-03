@@ -7,6 +7,8 @@ function [newbnd] = mesh2edge(bnd)
 %
 % Use as
 %   [edge] = mesh2edge(mesh)
+%
+% See also POLY2TRI
 
 % Copyright (C) 2013-2015, Robert Oostenveld
 %

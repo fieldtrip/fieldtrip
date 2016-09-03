@@ -1,5 +1,8 @@
 function test_ft_connectivity_corr
 
+% WALLTIME 00:20:00
+% MEM 3gb
+
 tmp.powspctrm = rand(10,3,1);
 tmp.freq = 1;
 tmp.label = {'1';'2';'3'};

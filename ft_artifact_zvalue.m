@@ -43,33 +43,43 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.fltpadding
 %   cfg.artfctdef.zvalue.artpadding
 %
-% If you specify
-%   cfg.artfctdef.zvalue.interactive = 'yes', a GUI will be started and you
-%     can manually accept/reject detected artifacts, and/or change the threshold
-%     To control the plot via keyboard, use the following keys:
-%     left- & rightarrow: Step one trial back- or forward
-%     x & c             : Step 10 trials back- or forward
-%     comma & period    : Step to the previous or next artifact
-%     a                 : Specify artifact
-%     t                 : Specify trial
+% The optional configuration settings (see below) are:
+%   cfg.artfctdef.zvalue.artfctpeak  = 'yes' or 'no'
+%   cfg.artfctdef.zvalue.interactive = 'yes' or 'no'
+%
+% If you specify artfctpeak='yes', the maximum value of the artifact within its range
+% will be found and saved into cfg.artfctdef.zvalue.peaks.
+%
+% If you specify interactive='yes', a GUI will be started and you can manually
+% accept/reject detected artifacts, and/or change the threshold. To control the
+% graphical interface via keyboard, use the following keys:
+%
+%     q                 : Stop
+%
+%     comma             : Step to the previous artifact trial
+%     a                 : Specify artifact trial to display
+%     period            : Step to the next artifact trial
+%
+%     x                 : Step 10 trials back
+%     leftarrow         : Step to the previous trial
+%     t                 : Specify trial to display
+%     rightarrow        : Step to the next trial
+%     c                 : Step 10 trials forward
+%
 %     k                 : Keep trial
 %     space             : Mark complete trial as artifact
 %     r                 : Mark part of trial as artifact
-%     q                 : Stop
-%     z                 : Specify z-threshold
-%     down- & uparrow   : Shift the z-threshold down or up
 %
+%     downarrow         : Shift the z-threshold down
+%     z                 : Specify the z-threshold
+%     uparrow           : Shift the z-threshold down
 %
-%
-% If you specify
-%   cfg.artfctdef.zvalue.artfctpeak='yes', the maximum value of the artifact
-%       within its range will be found; saved into cfg.artfctdef.zvalue.peaks
-% Use also, e.g. as input to DSS option of ft_componentanalysis:
-%   cfg.artfctdef.zvalue.artfctpeakrange= [-0.25 0.25]; (in seconds), (for example)
-%       to indicate range around peak to include, saved into cfg.artfctdef.zvalue.dssartifact
-%       Default values: [0 0]
-%       Range will respect trial boundaries (i.e. be shorter if peak is near beginning or end of trial)
-%       Samples between trials will be removed; thus this won't match .sampleinfo of the data structure
+% Use also, e.g. as input to DSS option of ft_componentanalysis
+% cfg.artfctdef.zvalue.artfctpeakrange=[-0.25 0.25], for example to indicate range
+% around peak to include, saved into cfg.artfctdef.zvalue.dssartifact. The default is
+% [0 0]. Range will respect trial boundaries (i.e. be shorter if peak is near
+% beginning or end of trial). Samples between trials will be removed; thus this won't
+% match .sampleinfo of the data structure.
 %
 % Configuration settings related to the preprocessing of the data are
 %   cfg.artfctdef.zvalue.lpfilter      = 'no' or 'yes'  lowpass filter
@@ -194,7 +204,7 @@ if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
   trl = cfg.trl;
-
+  
 else
   % check whether the value for trlpadding makes sense
   if cfg.artfctdef.zvalue.trlpadding > 0
@@ -254,7 +264,7 @@ numsmp = zeros(numsgn, 1);
 ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(numsgn) ' channels']);
 for trlop = 1:numtrl
   ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
-
+  
   if strcmp(cfg.memory, 'low') % store nothing in memory
     if hasdata
       dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
@@ -262,7 +272,7 @@ for trlop = 1:numtrl
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
-
+    
     if trlop==1 && ~pertrial
       sumval = zeros(size(dat,1), 1);
       sumsqr = zeros(size(dat,1), 1);
@@ -274,7 +284,7 @@ for trlop = 1:numtrl
       numsmp = zeros(size(dat,1), numtrl);
       numsgn = size(dat,1);
     end
-
+    
     if ~pertrial
       % accumulate the sum and the sum-of-squares
       sumval = sumval + sum(dat,2);
@@ -293,7 +303,7 @@ for trlop = 1:numtrl
       dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
     end
     dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat{trlop},2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
-
+    
     if trlop==1 && ~pertrial
       sumval = zeros(size(dat{1},1), 1);
       sumsqr = zeros(size(dat{1},1), 1);
@@ -305,7 +315,7 @@ for trlop = 1:numtrl
       numsmp = zeros(size(dat{1},1), numtrl);
       numsgn = size(dat{1},1);
     end
-
+    
     if ~pertrial
       % accumulate the sum and the sum-of-squares
       sumval = sumval + sum(dat{trlop},2);
@@ -359,7 +369,7 @@ for trlop = 1:numtrl
     zmax{trlop}  = -inf + zeros(1,size(dat,2));
     zsum{trlop}  = zeros(1,size(dat,2));
     zindx{trlop} = zeros(1,size(dat,2));
-
+    
     nsmp          = size(dat,2);
     zdata         = (dat - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
     zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
@@ -370,7 +380,7 @@ for trlop = 1:numtrl
     zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
     zsum{trlop}  = zeros(1,size(dat{trlop},2));
     zindx{trlop} = zeros(1,size(dat{trlop},2));
-
+    
     nsmp          = size(dat{trlop},2);
     zdata         = (dat{trlop} - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
     zsum{trlop}   = nansum(zdata,1);                   % accumulate the z-values over channels
@@ -492,51 +502,55 @@ if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
   opt.h1           = h1;
   opt.h2           = h2;
   opt.h3           = h3;
-
+  
   setappdata(h, 'opt', opt);
   artval_cb(h);
   redraw_cb(h);
-
-  % make the user interface elements for the data view
-  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'stop', 'userdata', 'q')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 'z')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'uparrow')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'comma')
-  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'artifact','userdata', 'a')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'period')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'keep trial',   'userdata', 'k')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject part', 'userdata', 'r')
-  uicontrol('tag', 'group3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject full', 'userdata', 'space')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<<', 'userdata', 'x')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow');
-  uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'trial', 'userdata', 't')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow')
-  uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>>', 'userdata', 'c')
-  %uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'ctrl+uparrow')
-  %uicontrol('tag', 'group1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel','userdata', 'c')
-  %uicontrol('tag', 'group2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'ctrl+downarrow')
-
-
-
-  ft_uilayout(h, 'tag', 'group1', 'width', 0.10, 'height', 0.05);
-  ft_uilayout(h, 'tag', 'group2', 'width', 0.05, 'height', 0.05);
-  ft_uilayout(h, 'tag', 'group3', 'width', 0.12, 'height', 0.05);
-
-  ft_uilayout(h, 'tag', 'group1', 'style', 'pushbutton', 'callback', @keyboard_cb);
-  ft_uilayout(h, 'tag', 'group2', 'style', 'pushbutton', 'callback', @keyboard_cb);
-  ft_uilayout(h, 'tag', 'group3', 'style', 'pushbutton', 'callback', @keyboard_cb);
-
-  ft_uilayout(h, 'tag', 'group1', 'retag', 'viewui');
-  ft_uilayout(h, 'tag', 'group2', 'retag', 'viewui');
-  ft_uilayout(h, 'tag', 'group3', 'retag', 'viewui');
+  
+  % make the user interface elements for the data view, the order of the elements
+  % here is from left to right and should match the order in the documentation
+  uicontrol('tag', 'width1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'stop',    'userdata', 'q');
+  
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<',        'userdata', 'comma');
+  uicontrol('tag', 'width1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'artifact', 'userdata', 'a');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>',        'userdata', 'period');
+  
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<<',    'userdata', 'x');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<',     'userdata', 'leftarrow');
+  uicontrol('tag', 'width1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'trial', 'userdata', 't');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>',     'userdata', 'rightarrow');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>>',    'userdata', 'c');
+  
+  uicontrol('tag', 'width3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'keep trial',  'userdata', 'k');
+  uicontrol('tag', 'width3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject full', 'userdata', 'space');
+  uicontrol('tag', 'width3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'reject part', 'userdata', 'r');
+  
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<',           'userdata', 'downarrow');
+  uicontrol('tag', 'width3', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold',   'userdata', 'z');
+  uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>',           'userdata', 'uparrow');
+  
+  %uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<',       'userdata', 'control+uparrow')
+  %uicontrol('tag', 'width1', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'channel', 'userdata', 'c')
+  %uicontrol('tag', 'width2', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>',       'userdata', 'control+downarrow')
+  
+  ft_uilayout(h, 'tag', 'width1', 'width', 0.10, 'height', 0.05);
+  ft_uilayout(h, 'tag', 'width2', 'width', 0.05, 'height', 0.05);
+  ft_uilayout(h, 'tag', 'width3', 'width', 0.12, 'height', 0.05);
+  
+  ft_uilayout(h, 'tag', 'width1', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  ft_uilayout(h, 'tag', 'width2', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  ft_uilayout(h, 'tag', 'width3', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  
+  ft_uilayout(h, 'tag', 'width1', 'retag', 'viewui');
+  ft_uilayout(h, 'tag', 'width2', 'retag', 'viewui');
+  ft_uilayout(h, 'tag', 'width3', 'retag', 'viewui');
   ft_uilayout(h, 'tag', 'viewui', 'BackgroundColor', [0.8 0.8 0.8], 'hpos', 'auto', 'vpos', 0.005);
-
+  
   while opt.quit==0
     uiwait(h);
     opt = getappdata(h, 'opt');
   end
-
+  
 else
   % compute the artifacts given the settings in the cfg
   setappdata(h, 'opt', opt);
@@ -694,20 +708,34 @@ uiresume;
 
 function keyboard_cb(h, eventdata)
 
-clear tmpKey
+% If a mouseclick was made, use that value. If not, determine the key that
+% corresponds to the uicontrol element that was activated.
 
-tmpKey = get(h, 'userdata');
-if ~isempty(tmpKey)
-  h = getparent(h); % otherwise h is empty if isa [...].ActionData
-  curKey = tmpKey;
-else
+if isa(eventdata,'matlab.ui.eventdata.ActionData') % only the case when clicked with mouse
+  curKey = get(h, 'userdata');
+elseif isa(eventdata, 'matlab.ui.eventdata.KeyData') % only when key was pressed
+  if isempty(eventdata.Character) && any(strcmp(eventdata.Key, {'control', 'shift', 'alt', '0'}))
+    % only a modifier key was pressed
+    return
+  end
+  if isempty(eventdata.Modifier)
+    curKey = eventdata.Key;
+  else
+    curKey = [sprintf('%s+', eventdata.Modifier{:}) eventdata.Key];
+  end  
+elseif isfield(eventdata, 'Key')  % only when key was pressed
   curKey = eventdata.Key;
+elseif isempty(eventdata) % matlab2012b returns an empty double upon a mouse click
+  curKey = get(h, 'userdata');
+else
+  error('cannot process user input, please report this on http://bugzilla.fieldtriptoolbox.org including your MATLAB version');
 end
 
+h = getparent(h); % otherwise h is empty if isa [...].ActionData
 opt = getappdata(h, 'opt');
 
-disp(strcat('Pressed Key (or the key corresponding to the pressed button) is: ', curKey))
-switch curKey
+disp(strcat('Key = ', curKey))
+switch strtrim(curKey)
   case 'leftarrow' % change trials
     opt.trlop = max(opt.trlop - 1, 1); % should not be smaller than 1
     setappdata(h, 'opt', opt);
@@ -758,33 +786,38 @@ switch curKey
     end
     setappdata(h, 'opt', opt);
     redraw_cb(h, eventdata);
-  case 'ctrl+uparrow' % change channel
-    if strcmp(opt.channel, 'artifact')
-      [dum, indx] = max(opt.zval);
-      sgnind      = opt.zindx(indx);
-    else
-      if ~isempty(opt.data)
-        sgnind  = match_str(opt.channel, opt.data.label);
-        selchan = match_str(opt.artcfg.channel, opt.channel);
-      else
-        sgnind  = match_str(opt.channel,   opt.hdr.label);
-        selchan = match_str(opt.artcfg.channel, opt.channel);
-      end
-    end
-    numchan = numel(opt.artcfg.channel);
-    chansel = min(selchan+1, numchan);
-    % convert numeric array into cell-array with channel labels
-    opt.channel = tmpchan(chansel);
-    setappdata(h, 'opt', opt);
-    redraw_cb(h, eventdata);
-  case 'ctrl+downarrow'
-    tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
-    chansel = match_str(tmpchan, opt.channel);
-    chansel = max(chansel-1, 1);
-    % convert numeric array into cell-array with channel labels
-    opt.channel = tmpchan(chansel);
-    setappdata(h, 'opt', opt);
-    redraw_cb(h, eventdata);
+%   case 'control+uparrow' % change channel
+%     if strcmp(opt.channel, 'artifact')
+%       [dum, indx] = max(opt.zval);
+%       sgnind      = opt.zindx(indx);
+%     else
+%       if ~isempty(opt.data)
+%         sgnind  = match_str(opt.channel, opt.data.label);
+%         selchan = match_str(opt.artcfg.channel, opt.channel);
+%       else
+%         sgnind  = match_str(opt.channel,   opt.hdr.label);
+%         selchan = match_str(opt.artcfg.channel, opt.channel);
+%       end
+%     end
+%     numchan = numel(opt.artcfg.channel);
+%     chansel = min(selchan+1, numchan);
+%     % convert numeric array into cell-array with channel labels
+%     opt.channel = tmpchan(chansel);
+%     setappdata(h, 'opt', opt);
+%     redraw_cb(h, eventdata);
+%   case 'c' % select channel
+%     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
+%     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
+%     setappdata(h, 'opt', opt);
+%     redraw_cb(h, eventdata);
+%   case 'control+downarrow'
+%     tmpchan = [opt.artcfg.channel;{'artifact'}]; % append the 'artifact' channel
+%     chansel = match_str(tmpchan, opt.channel);
+%     chansel = max(chansel-1, 1);
+%     % convert numeric array into cell-array with channel labels
+%     opt.channel = tmpchan(chansel);
+%     setappdata(h, 'opt', opt);
+%     redraw_cb(h, eventdata);
   case 'a'
     % select the artifact to display
     response = inputdlg(sprintf('artifact trial to display'), 'specify', 1, {num2str(opt.trlop)});
@@ -797,12 +830,6 @@ switch curKey
       setappdata(h, 'opt', opt);
       redraw_cb(h, eventdata);
     end
-  case 'c'
-    % select channels
-    %     select = match_str([opt.artcfg.channel;{'artifact'}], opt.channel);
-    %     opt.channel = select_channel_list([opt.artcfg.channel;{'artifact'}], select);
-    %     setappdata(h, 'opt', opt);
-    %     redraw_cb(h, eventdata);
   case 'q'
     setappdata(h, 'opt', opt);
     cleanup_cb(h);
@@ -834,7 +861,6 @@ switch curKey
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
-    opt = getappdata(h, 'opt');
   case 'r'
     % only of the trial contains a partial artifact
     if opt.trialok(opt.trlop) == 0
@@ -843,13 +869,11 @@ switch curKey
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
-    opt = getappdata(h, 'opt');
   case 'space'
     opt.keep(opt.trlop) = -2;
     setappdata(h, 'opt', opt);
     artval_cb(h);
     redraw_cb(h);
-    opt = getappdata(h, 'opt');
   case 'control+control'
     % do nothing
   case 'shift+shift'
@@ -858,7 +882,28 @@ switch curKey
     % do nothing
   otherwise
     setappdata(h, 'opt', opt);
-    help_cb(h);
+    % this should be consistent with the help of the function
+    fprintf('----------------------------------------------------------------------\n');
+    fprintf('     q                 : Stop\n');
+    fprintf('\n');
+    fprintf('     comma             : Step to the previous artifact trial\n');
+    fprintf('     a                 : Specify artifact trial to display\n');
+    fprintf('     period            : Step to the next artifact trial\n');
+    fprintf('\n');
+    fprintf('     x                 : Step 10 trials back\n');
+    fprintf('     leftarrow         : Step to the previous trial\n');
+    fprintf('     t                 : Specify trial to display\n');
+    fprintf('     rightarrow        : Step to the next trial\n');
+    fprintf('     c                 : Step 10 trials forward\n');
+    fprintf('\n');
+    fprintf('     k                 : Keep trial\n');
+    fprintf('     space             : Mark complete trial as artifact\n');
+    fprintf('     r                 : Mark part of trial as artifact\n');
+    fprintf('\n');
+    fprintf('     downarrow         : Shift the z-threshold down\n');
+    fprintf('     z                 : Specify the z-threshold\n');
+    fprintf('     uparrow           : Shift the z-threshold down\n');
+    fprintf('----------------------------------------------------------------------\n');
 end
 clear curKey;
 uiresume(h);
