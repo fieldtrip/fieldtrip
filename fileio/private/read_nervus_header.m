@@ -58,6 +58,7 @@ nrvHdr.TSInfo = read_nervus_header_TSInfo(nrvHdr.DynamicPackets, TSLABELSIZE, LA
 nrvHdr.Segments = read_nervus_header_Segments(h, nrvHdr.StaticPackets, nrvHdr.MainIndex, nrvHdr.TSInfo);
 nrvHdr.Events = read_nervus_header_events(h, nrvHdr.StaticPackets, nrvHdr.MainIndex);
 nrvHdr.MontageInfo = read_nervus_header_montage(h, nrvHdr.StaticPackets, nrvHdr.MainIndex);
+nrvHdr.MontageInfo2 = read_nervus_header_dynamic_montages(nrvHdr.DynamicPackets);
 
 reference = unique(nrvHdr.Segments(1).refName(cellfun(@length, [nrvHdr.Segments(1).refName])>0));
 if strcmp(reference, 'REF')
@@ -747,3 +748,50 @@ else
 end
 end
 
+
+function [montages] = read_nervus_header_dynamic_montages(DynamicPackets)
+%% Get montages from the dynamic packets  - Jan Brogger - September 2016
+
+montagePackets = DynamicPackets(strcmp({DynamicPackets.IDStr},'DERIVATIONGUID'));
+montages = struct();
+for numMontage = 1:size(montagePackets,2)
+    montagePacket = montagePackets(numMontage);
+    
+    guidmixed = montagePacket.data(1:16);
+    guidnonmixed = [guidmixed(04), guidmixed(03), guidmixed(02), guidmixed(01), ...
+        guidmixed(06), guidmixed(05), guidmixed(08), guidmixed(07), ...
+        guidmixed(09), guidmixed(10), guidmixed(11), guidmixed(12), ...
+        guidmixed(13), guidmixed(15), guidmixed(15), guidmixed(16)];
+    montages(numMontage).guid1 = num2str(guidnonmixed,'%02X');
+        
+    montages(numMontage).packetSize = typecast(montagePacket.data(17:24),'uint64');
+    
+    guidmixed2 = montagePacket.data(25:40);
+    guidnonmixed2 = [guidmixed2(04), guidmixed2(03), guidmixed2(02), guidmixed2(01), ...
+        guidmixed2(06), guidmixed2(05), guidmixed2(08), guidmixed2(07), ...
+        guidmixed2(09), guidmixed2(10), guidmixed2(11), guidmixed2(12), ...
+        guidmixed2(13), guidmixed2(15), guidmixed2(15), guidmixed2(16)];
+    montages(numMontage).guid2 = num2str(guidnonmixed2,'%02X');
+    
+    montages(numMontage).itemName = deblank(cast(montagePacket.data(41:104),'char')');    
+    montages(numMontage).elements = typecast(montagePacket.data(745:748),'uint32');
+    montages(numMontage).alloc = typecast(montagePacket.data(749:752),'uint32');
+    
+    offset = 753;
+    for i=1:montages(numMontage).elements        
+        montages(numMontage).channel(i).name = deblank(cast(montagePacket.data(offset:(offset+127)),'char')');
+        offset = offset + 128;
+        montages(numMontage).channel(i).active = deblank(cast(montagePacket.data(offset:(offset+63)),'char')');
+        offset = offset + 64;
+        montages(numMontage).channel(i).reference = deblank(cast(montagePacket.data(offset:(offset+63)),'char')');
+        offset = offset + 64;
+        montages(numMontage).channel(i).isDerived = montagePacket.data(offset);
+        offset = offset + 1;
+        montages(numMontage).channel(i).isSpecial = montagePacket.data(offset);
+        offset = offset + 1;
+        offset = offset + 256;        
+        offset = offset + 6;
+    end        
+end
+
+end
