@@ -236,7 +236,7 @@ end
 
 % running a compiled version in parallel takes no MATLAB licenses
 % auto compilation will be attempted if the total batch takes more than 30 minutes
-if istrue(compile) || (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5)
+if (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5) || istrue(compile)
   try
     % try to compile into a stand-allone application
     fcomp = qsubcompile(fname, 'batch', batch, 'batchid', batchid);
