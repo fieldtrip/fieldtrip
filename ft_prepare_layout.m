@@ -126,8 +126,10 @@ cfg.projection = ft_getopt(cfg, 'projection', 'polar');
 cfg.layout     = ft_getopt(cfg, 'layout',     []);
 cfg.grad       = ft_getopt(cfg, 'grad',       []);
 cfg.elec       = ft_getopt(cfg, 'elec',       []);
+cfg.opto       = ft_getopt(cfg, 'opto',       []);
 cfg.gradfile   = ft_getopt(cfg, 'gradfile',   []);
 cfg.elecfile   = ft_getopt(cfg, 'elecfile',   []);
+cfg.optofile   = ft_getopt(cfg, 'optofile',   []);
 cfg.output     = ft_getopt(cfg, 'output',     []);
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'no');
 cfg.montage    = ft_getopt(cfg, 'montage',    'no');
@@ -432,11 +434,35 @@ elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
   data = ft_checkdata(data);
   layout = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  
+elseif ischar(cfg.optofile)
+  fprintf('creating layout from optode file %s\n', cfg.optofile);
+  opto = ft_read_sens(cfg.optofile);
+  if (hasdata)
+    layout = opto2lay(opto, data.label);
+  else
+    layout = opto2lay(opto, opto.label);
+  end
 
+  
+elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
+  fprintf('creating layout from cfg.opto\n');
+  opto = cfg.opto;
+  if (hasdata)
+    layout = opto2lay(opto, data.label);
+  else
+    layout = opto2lay(opto, opto.label);
+  end;
+
+  
 elseif isfield(data, 'opto') && isstruct(data.opto)
-  fprintf('creating layout from data.hdr.opto\n');
-  data = ft_checkdata(data);
-  layout = sens2lay(data.opto, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  fprintf('creating layout from data.opto\n');
+  opto = data.opto;
+  if (hasdata)
+    layout = opto2lay(opto, data.label);
+  else
+    layout = opto2lay(opto, opto.label);
+  end;
 
 elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   % deal with image file
@@ -1075,6 +1101,31 @@ else
   layout.width  = Width;
   layout.height = Height;
   layout.label  = label;
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+% convert 2D optode positions into 2D layout
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function layout = opto2lay(opto, label)
+layout = [];
+layout.pos = [];
+layout.label = {};
+layout.width = [];
+layout.height = [];
+
+[rxnames, rem] = strtok(label, {'-', ' '});
+[txnames, rem] = strtok(rem, {'-', ' '});
+
+for i=1:numel(label)  
+  % create average positions
+  rxid = ismember(opto.fiberlabel, rxnames(i));
+  txid = ismember(opto.fiberlabel, txnames(i));
+  layout.pos(i, :) = opto.fiberpos(rxid, :)/2 + opto.fiberpos(txid, :)/2;
+  layout.label(end+1)  = label(i);
+  layout.width(end+1)  = 1;
+  layout.height(end+1) = 1;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
