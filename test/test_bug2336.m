@@ -58,7 +58,7 @@ cfg_brain = readBESAsrf(strPath__BrainSurface);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% The second part of the test script pertains to the high-level fieldtrip implementation
+%% The second part of the test script pertains to the high-level FieldTrip implementation
 
 cfg = [];
 cfg.method = 'besa';

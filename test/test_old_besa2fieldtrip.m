@@ -6,7 +6,7 @@ function test_old_besa2fieldtrip
 % TEST test_old_besa2fieldtrip
 
 % Test the besa2fieldtrip function, which reads an object from a BESA file
-% and returns it as fieldtrip object (e.g. timelocked, freq, source).
+% and returns it as FieldTrip object (e.g. timelocked, freq, source).
 %
 % The besa2fieldtrip function both should work on original besa files,
 % as well as on MATLAB files containing a particular structure (for the
@@ -92,7 +92,7 @@ for i=1:length(filename)
     content = load(fname);
     % determine the content of the mat file
     fn = fieldnames(content);
-    % get the besa struct and convert to fieldtrip struct
+    % get the besa struct and convert to FieldTrip struct
     besa_struct = getfield(content, fn{i});
     ft_struct = besa2fieldtrip(besa_struct);
     % FIXME a call to checkdata should be inserted here

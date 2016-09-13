@@ -1,6 +1,6 @@
 function inspect_historical
 
-% this function creates the datafiles for the historical fieldtrip versions
+% this function creates the datafiles for the historical FieldTrip versions
 % it should not run unattended
 return
 
