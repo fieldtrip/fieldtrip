@@ -54,19 +54,15 @@ fid=fopen(filename,'r','ieee-le');
 event = struct('sample',{},'value',{},'timestamp',{},'type',{}, ...
   'duration',{},'offset',{});
 
-% find the channel with the strobed trigger ("marker")
+% find any channels with strobed triggers ("markers")
 mrkvarnum = find([hdr.varheader.typ] == 6);
 
-if ~isempty(mrkvarnum)  % both of these cases would have produced errors
-  if numel(mrkvarnum) > 1
-    warning('file contains >1 "marker" variable, reading only the first');
-    mrkvarnum = mrkvarnum(1);
-  end
-  status = fseek(fid,hdr.varheader(mrkvarnum).offset,'bof');
+for mrkn = 1:numel(mrkvarnum)
+  status = fseek(fid,hdr.varheader(mrkvarnum(mrkn)).offset,'bof');
   if status < 0;  error('error with fseek');  end
   
   % read the time of the triggers
-  dum = fread(fid,hdr.varheader(mrkvarnum).cnt,'int32');
+  dum = fread(fid,hdr.varheader(mrkvarnum(mrkn)).cnt,'int32');
   timestamp = dum;
   dum = dum ./(hdr.filheader.frequency./smpfrq);
   mrk.tim = round(dum);
@@ -74,20 +70,26 @@ if ~isempty(mrkvarnum)  % both of these cases would have produced errors
   % read the value of the triggers
   status = fseek(fid,64,'cof');
   if status < 0;  error('error with fseek');  end
-  dum = fread(fid, [hdr.varheader(mrkvarnum).mrklen, ...
-    hdr.varheader(mrkvarnum).cnt], 'uchar');
+  dum = fread(fid, [hdr.varheader(mrkvarnum(mrkn)).mrklen, ...
+    hdr.varheader(mrkvarnum(mrkn)).cnt], 'uchar');
   mrk.val = str2num(char(dum(1:5,:)')); %#ok<ST2NM> non-scalar
   
   % translate into an FCDC event structure
   Nevent = length(mrk.tim);
-  for i=1:Nevent
-    event(i).sample         = mrk.tim(i);
-    event(i).value          = mrk.val(i);
-    event(i).timestamp      = timestamp(i);
-    event(i).type           = hdr.varheader(mrkvarnum).nam;
-    event(i).duration       = 1;
-    event(i).offset         = 0;
-  end
+  tmp = struct('sample',num2cell(mrk.tim), 'value',num2cell(mrk.val), ...
+    'timestamp',num2cell(timestamp), ...
+    'type',repmat({hdr.varheader(mrkvarnum(mrkn)).nam},[Nevent,1]), ...
+    'duration',num2cell(ones(Nevent,1)), ...
+    'offset',num2cell(zeros(Nevent,1)));
+  event = [event; tmp]; %#ok<*AGROW> way faster than adding them 1-by-1
+%   for i=1:Nevent
+%     event(Nold+i,1).sample         = mrk.tim(i);
+%     event(Nold+i,1).value          = mrk.val(i);
+%     event(Nold+i,1).timestamp      = timestamp(i);
+%     event(Nold+i,1).type           = hdr.varheader(mrkvarnum(mrkn)).nam;
+%     event(Nold+i,1).duration       = 1;
+%     event(Nold+i,1).offset         = 0;
+%   end
 end
 
 % find interval channels
@@ -103,20 +105,25 @@ for int = 1:numel(intvarnum)
   timestamp = dum1;
   dum1 = dum1 ./(hdr.filheader.frequency./smpfrq);
   dum2 = dum2 ./(hdr.filheader.frequency./smpfrq);
-  evt.tim = round(dum1);
-  evt.dur = round(dum2-dum1);
+  intevt.tim = round(dum1);
+  intevt.dur = round(dum2-dum1);
   
   % translate into an FCDC event structure
-  Nold = length(event);
-  Nevent = length(evt.tim);
-  for i=1:Nevent
-    event(Nold+i).sample        = evt.tim(i);
-    event(Nold+i).value         = [];
-    event(Nold+i).timestamp     = timestamp(i);
-    event(Nold+i).type          = hdr.varheader(intvarnum(int)).nam;
-    event(Nold+i).duration      = evt.dur(i);
-    event(Nold+i).offset        = 0;
-  end
+%   Nold = length(event);
+  Nevent = length(intevt.tim);
+  tmp = struct('sample',num2cell(intevt.tim), 'value',cell(Nevent,1), ...
+    'timestamp',num2cell(timestamp), ...
+    'type',repmat({hdr.varheader(intvarnum(int)).nam},[Nevent,1]), ...
+    'duration',num2cell(intevt.dur), 'offset',num2cell(zeros(Nevent,1)));
+  event = [event; tmp];
+%   for i=1:Nevent
+%     event(Nold+i,1).sample        = intevt.tim(i,1);
+%     event(Nold+i,1).value         = [];
+%     event(Nold+i,1).timestamp     = timestamp(i,1);
+%     event(Nold+i,1).type          = hdr.varheader(intvarnum(int)).nam;
+%     event(Nold+i,1).duration      = intevt.dur(i,1);
+%     event(Nold+i,1).offset        = 0;
+%   end
 end
 
 % find event channels
@@ -133,16 +140,22 @@ for ev = 1:numel(evtvarnum)
   evt.tim = round(dum);
   
   % translate into an FCDC event structure
-  Nold = length(event);
+  %   Nold = length(event);
   Nevent = length(evt.tim);
-  for i=1:Nevent
-    event(Nold+i).sample        = evt.tim(i);
-    event(Nold+i).value         = [];
-    event(Nold+i).timestamp     = timestamp(i);
-    event(Nold+i).type          = hdr.varheader(evtvarnum(ev)).nam;
-    event(Nold+i).duration      = 1;
-    event(Nold+i).offset        = 0;
-  end
+  tmp = struct('sample',num2cell(evt.tim), 'value',cell(Nevent,1), ...
+    'timestamp',num2cell(timestamp), ...
+    'type',repmat({hdr.varheader(evtvarnum(ev)).nam},[Nevent,1]), ...
+    'duration',num2cell(ones(Nevent,1)), ...
+    'offset',num2cell(zeros(Nevent,1)));
+  event = [event; tmp];
+%   for i=1:Nevent
+%     event(Nold+i,1).sample        = evt.tim(i,1);
+%     event(Nold+i,1).value         = [];
+%     event(Nold+i,1).timestamp     = timestamp(i,1);
+%     event(Nold+i,1).type          = hdr.varheader(evtvarnum(ev)).nam;
+%     event(Nold+i,1).duration      = 1;
+%     event(Nold+i,1).offset        = 0;
+%   end
 end
 
 status = fclose(fid);
