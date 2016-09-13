@@ -46,7 +46,7 @@ ylabel('Power/Frequency (au^2/Hz)')
 figure
 periodogram(x,rectwin(length(x)),length(x))
 
-%% fieldtrip style
+%% FieldTrip style
 
 data = [];
 data.time{1}  = t;

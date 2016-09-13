@@ -81,7 +81,7 @@ if writeflag
 end
 
 if ~strcmp(version, 'latest') && str2double(version)<20100000
-  % -- HISTORICAL --- older fieldtrip versions don't support inputfile and outputfile
+  % -- HISTORICAL --- older FieldTrip versions don't support inputfile and outputfile
   try
     % use the previous random seed
     load(outputfile, 'comp');

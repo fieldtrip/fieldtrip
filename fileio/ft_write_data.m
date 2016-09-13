@@ -193,13 +193,13 @@ switch dataformat
       catch
         if ~isempty(strfind(lasterr, 'Buffer size N must be an integer-valued scalar double.'))
           % this happens if the MATLAB75/toolbox/signal/signal/buffer
-          % function is used instead of the fieldtrip buffer
+          % function is used instead of the FieldTrip buffer
           error('the FieldTrip buffer mex file was not found on your path, it should be in fieldtrip/fileio/private');
           
         elseif ~isempty(strfind(lasterr, 'failed to create socket')) && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
           
           % start a local instance of the TCP server
-          warning('starting fieldtrip buffer on %s:%d', host, port);
+          warning('starting FieldTrip buffer on %s:%d', host, port);
           buffer('tcpserver', 'init', host, port);
           pause(1);
           
