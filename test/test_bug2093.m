@@ -4,8 +4,9 @@ function test_bug2093
 % (nexhandling branch) versions of the FieldTrip code
 
 testnexfile = 'S:\Teresa\Analyses\FieldTrip\test files\p213parall.nex';
+testmatfile = 'S:\Teresa\Analyses\FieldTrip\test files\bug2093.mat';
 
-if ~exist(['data_bug2093' filesep 'bug2093.mat'], 'file')
+if ~exist(testmatfile, 'file')
   % run only once, using old fieldtrip code
   git checkout master
   
@@ -14,10 +15,10 @@ if ~exist(['data_bug2093' filesep 'bug2093.mat'], 'file')
   old.evt = ft_read_event(testnexfile);
   
   git checkout nexhandling
-  save(['data_bug2093' filesep 'bug2093.mat'], 'old')
+  save(testmatfile, 'old')
 else
   % all future test executions with newer FT code
-  load(['data_bug2093' filesep 'bug2093.mat'])
+  load(testmatfile)
 end
 
 % new.hdr = ft_read_header(testnexfile);
