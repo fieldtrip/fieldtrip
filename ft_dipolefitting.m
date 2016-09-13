@@ -45,7 +45,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dip.pos     = initial dipole position, matrix of Ndipoles x 3
 %
 % The conventional approach is to fit dipoles to event-related averages, which
-% within fieldtrip can be obtained from the FT_TIMELOCKANALYSIS or from
+% within FieldTrip can be obtained from the FT_TIMELOCKANALYSIS or from
 % the FT_TIMELOCKGRANDAVERAGE function. This has the additional options
 %   cfg.latency     = [begin end] in seconds or 'all' (default = 'all')
 %   cfg.model       = 'moving' or 'regional'

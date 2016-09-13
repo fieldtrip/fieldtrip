@@ -19,8 +19,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       'avg', 'powspctrm' or 'cohspctrm'
 %   cfg.maskparameter = field in the first dataset to be used for marking significant data
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
-%   cfg.hlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.vlim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
+%   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline      = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
@@ -95,7 +95,6 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 
 % Undocumented local options:
 % cfg.layoutname
-% cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
 % cfg.preproc
 % cfg.orient = landscape/portrait
 
@@ -144,21 +143,22 @@ for i=1:length(varargin)
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'});
 cfg = ft_checkconfig(cfg, 'renamed', {'matrixside',  'directionality'});
 cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed', {'hlim', 'xlim'});
+cfg = ft_checkconfig(cfg, 'renamed', {'vlim', 'ylim'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
+cfg = ft_checkconfig(cfg, 'unused',  {'cohtargetchannel'});
 
 % set the defaults
 cfg.baseline       = ft_getopt(cfg, 'baseline', 'no');
 cfg.trials         = ft_getopt(cfg, 'trials', 'all', 1);
-cfg.hlim           = ft_getopt(cfg, 'hlim', 'maxmin');
-cfg.vlim           = ft_getopt(cfg, 'vlim', 'maxmin');
-cfg.zlim           = ft_getopt(cfg, 'zlim', 'maxmin');
+cfg.xlim           = ft_getopt(cfg, 'xlim', 'maxmin');
+cfg.ylim           = ft_getopt(cfg, 'ylim', 'maxmin');
 cfg.comment        = ft_getopt(cfg, 'comment', strcat([date '\n']));
 cfg.axes           = ft_getopt(cfg, 'axes', 'yes');
 cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
@@ -528,7 +528,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
 end %handle the bivariate data
 
 % Get physical min/max range of x
-if strcmp(cfg.hlim, 'maxmin')
+if strcmp(cfg.xlim, 'maxmin')
   % Find maxmin throughout all varargins:
   xmin = [];
   xmax = [];
@@ -537,8 +537,8 @@ if strcmp(cfg.hlim, 'maxmin')
     xmax = max([xmax varargin{i}.(xparam)]);
   end
 else
-  xmin = cfg.hlim(1);
-  xmax = cfg.hlim(2);
+  xmin = cfg.xlim(1);
+  xmax = cfg.xlim(2);
 end
 
 % Get the index of the nearest bin
@@ -550,21 +550,21 @@ end
 if strcmp('freq',yparam) && strcmp('freq',dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgoverfreq = 'yes';
-  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
+  tmpcfg.frequency   = cfg.frequency;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
   tmpcfg = keepfields(cfg, {'parameter'});
   tmpcfg.avgovertime = 'yes';
-  tmpcfg.latency     = cfg.latency;%cfg.zlim;
+  tmpcfg.latency     = cfg.latency;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 end
 
-% Get physical y-axis range (vlim / parameter):
-if strcmp(cfg.vlim, 'maxmin') || strcmp(cfg.vlim, 'maxabs')
+% Get physical y-axis range (ylim / parameter):
+if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
   % Find maxmin throughout all varargins:
   ymin = [];
   ymax = [];
@@ -583,18 +583,18 @@ if strcmp(cfg.vlim, 'maxmin') || strcmp(cfg.vlim, 'maxabs')
     ymax = max([ymax max(max(max(data)))]);
   end
 
-  if strcmp(cfg.vlim, 'maxabs') % handle maxabs, make y-axis center on 0
+  if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
     ymin = -ymax;
-  elseif strcmp(cfg.vlim, 'zeromax')
+  elseif strcmp(cfg.ylim, 'zeromax')
     ymin = 0;
-  elseif strcmp(cfg.vlim, 'minzero')
+  elseif strcmp(cfg.ylim, 'minzero')
     ymax = 0;
   end
 
 else
-  ymin = cfg.vlim(1);
-  ymax = cfg.vlim(2);
+  ymin = cfg.ylim(1);
+  ymax = cfg.ylim(2);
 end
 
 % convert the layout to Ole's style of variable names

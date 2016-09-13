@@ -311,7 +311,7 @@ elseif isfreq
 elseif iscomp
   % FIXME, select the components here
   % FIXME, add the component numbers to the output
-  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the fieldtrip development team');
+  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
 end
 
 convertcomp = false;
@@ -1089,7 +1089,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   end
   
 elseif iscomp
-  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the fieldtrip development team');
+  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
 else
   error('the specified method ''%s'' combined with the input data of type ''%s'' are not supported', cfg.method, ft_datatype(data));
 end % if freq or timelock or comp data

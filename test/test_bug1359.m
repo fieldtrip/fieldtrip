@@ -14,7 +14,7 @@ dat = ft_read_data(filename);
 
 % The report is that the data looks weird and does not contain any
 % negative values. I have not checked with old reading functions, but
-% with fieldtrip revision 5913 (just after fixing the related bug 1490)
+% with FieldTrip revision 5913 (just after fixing the related bug 1490)
 % the data looks meaningful. The channels have large offsets, some appear
 % to have clipped, but there are channels that show a physiological signal
 % with electrode drift. So it seems that the problem has disappeared.

@@ -49,12 +49,12 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 % this file is part of fieldtrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
-%    fieldtrip is free software: you can redistribute it and/or modify
+%    FieldTrip is free software: you can redistribute it and/or modify
 %    it under the terms of the gnu general public license as published by
 %    the free software foundation, either version 3 of the license, or
 %    (at your option) any later version.
 %
-%    fieldtrip is distributed in the hope that it will be useful,
+%    FieldTrip is distributed in the hope that it will be useful,
 %    but without any warranty; without even the implied warranty of
 %    merchantability or fitness for a particular purpose.  see the
 %    gnu general public license for more details.

@@ -1074,7 +1074,7 @@ switch dataformat
     if sample1<0
       error('begin sample cannot be for the beginning of the file');
     end
-    % the hdr.nsdf was the initial fieldtrip hack to get 32 bit support, now it is realized using a extended dataformat string
+    % the hdr.nsdf was the initial FieldTrip hack to get 32 bit support, now it is realized using a extended dataformat string
     if     isfield(hdr, 'nsdf') && hdr.nsdf==16
       dataformat = 'ns_cnt16';
     elseif isfield(hdr, 'nsdf') && hdr.nsdf==32
