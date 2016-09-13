@@ -6,6 +6,7 @@ function test_bug2093
 testnexfile = 'S:\Teresa\Analyses\FieldTrip\test files\p213parall.nex';
 testmatfile = 'S:\Teresa\Analyses\FieldTrip\test files\bug2093.mat';
 
+%% first get output of old code
 if ~exist(testmatfile, 'file')
   % run only once, using old fieldtrip code
   git checkout master
@@ -21,10 +22,12 @@ else
   load(testmatfile)
 end
 
+%% then get output of new code
 % new.hdr = ft_read_header(testnexfile);
 % new.dat = ft_read_data(testnexfile);
 new.evt = ft_read_event(testnexfile);
 
+%% then compare the 2
 % make sure the old header and data are identical, since I haven't changed
 % them yet
 % assert(isequal(old.hdr,new.hdr))
@@ -68,7 +71,7 @@ oldevttable = struct2table(old.evt);
 % when verifying that all old event rows are contained in the new event
 % data.
 newrows = ~any(mtnew,2);
-newevttable = table;
+newevttable = table; %#ok<*AGROW>
 for fieldn = 1:numel(fnames)
   if isequal(size(newcell{fieldn},1), numel(newrows))
     newevttable = [newevttable table(newcell{fieldn}(newrows,:), ...
