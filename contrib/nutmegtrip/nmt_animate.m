@@ -15,7 +15,7 @@ switch(get(st.nmt.gui.animate,'String'))
         
         Fs = 1/(st.nmt.time(2)-st.nmt.time(1));
         
-        cfg.stepsize = ft_getopt(cfg, 'stepsize', round(10e-3 * Fs)); % default is 10ms step
+        cfg.stepsize = ft_getopt(cfg, 'stepsize', round(5e-3 * Fs)); % default is 5ms step
         cfg.winsize = ft_getopt(cfg,'winsize',1);
         
         cfg.winsize = cfg.winsize - 1; % simplifies index tracking
