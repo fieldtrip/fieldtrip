@@ -54,7 +54,7 @@ function [fcomp] = qsubcompile(fname, varargin)
 % arguments, you only have to compile it once. The name of the executable can be
 % specified as input parameter, and the specified function within the executable
 % can be re-execured. An example is specyfying the executable as run_fieldtrip.sh,
-% which is a compiled version of the complete fieldtrip toolbox.
+% which is a compiled version of the complete FieldTrip toolbox.
 %
 % See also QSUBCELLFUN, QSUBFEVAL, MCC, ISDEPLOYED
 

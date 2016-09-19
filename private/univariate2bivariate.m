@@ -5,7 +5,7 @@ function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam,
 % Use as
 %   [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam, dtype, ...)
 % where
-%   data        = fieldtrip structure according to dtype (see below)
+%   data        = FieldTrip structure according to dtype (see below)
 %   inparam     = string
 %   inparam     = string
 %   dtype       = string, can be 'freq', 'source', 'raw'

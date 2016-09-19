@@ -341,7 +341,7 @@ switch field
       dimord = 'rpt_pos_freq';
     end
     
-  case {'mom'}
+  case {'mom','itc','aa','stat','pval','statitc','pitc'}
     if isequal(datsiz, [npos nori nrpt])
       dimord = 'pos_ori_rpt';
     elseif isequal(datsiz, [npos nori ntime])
@@ -378,6 +378,8 @@ switch field
       dimord = 'pos_rpt_ori_time';
     elseif isequalwithoutnans(datsiz, [npos nrpt 1 ntime])
       dimord = 'pos_rpt_ori_time';
+    elseif isequal(datsiz, [npos nfreq ntime])
+      dimord = 'pos_freq_time';
     end
     
   case {'filter'}

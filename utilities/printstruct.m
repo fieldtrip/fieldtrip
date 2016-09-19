@@ -49,7 +49,7 @@ if nargin==1
 end
 
 if isa(val, 'config')
-  % this is fieldtrip specific: the @config object resembles a structure but tracks the
+  % this is FieldTrip specific: the @config object resembles a structure but tracks the
   % access to each field.  In this case it is to be treated as a normal structure.
   val = struct(val);
 end
