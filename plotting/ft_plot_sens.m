@@ -256,7 +256,7 @@ end % if istrue(coil)
 
 switch coilshape
   case 'point'
-    hs = plot3(pos(:,1), pos(:,2), pos(:,3), style);
+    hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', 30, 'Color', edgecolor);
   case 'circle'
     plotcoil(pos, ori, [],      coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
   case 'square'
