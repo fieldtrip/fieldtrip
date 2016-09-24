@@ -28,6 +28,7 @@ function varargout = qsubcellfun(fname, varargin)
 %   display        = 'yes' or 'no', whether the nodisplay option should be passed to MATLAB (default = 'no', meaning nodisplay)
 %   jvm            = 'yes' or 'no', whether the nojvm option should be passed to MATLAB (default = 'yes', meaning with jvm)
 %   rerunable      = 'yes' or 'no', whether the job can be restarted on a torque/maui/moab cluster (default = 'no')
+%   sleep          = number, time in seconds to wait between checks for job completion (default = 0.1s)
 %
 % It is required to give an estimate of the time and memory requirements of
 % the individual jobs. The memory requirement of the MATLAB executable
@@ -125,6 +126,7 @@ matlabcmd     = ft_getopt(optarg, 'matlabcmd', []);
 jvm           = ft_getopt(optarg, 'jvm', 'yes');
 whichfunction = ft_getopt(optarg, 'whichfunction');   % the complete filename to the function, including path
 rerunable     = ft_getopt(optarg, 'rerunable');       % the default is determined in qsubfeval
+sleep         = ft_getopt(optarg, 'sleep',0.1);       
 
 % skip the optional key-value arguments
 if ~isempty(optbeg)
@@ -404,7 +406,7 @@ while (~all(collected))
     end  % if
   end % for
   
-  pausejava(0.1);
+  pausejava(sleep);
 end % while
 
 % ensure the output to have the same size/dimensions as the input
