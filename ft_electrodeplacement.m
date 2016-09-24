@@ -394,7 +394,7 @@ switch cfg.method
     opt.showmarkers   = true;
     opt.global        = get(h9, 'Value'); % show all markers in the current slices
     opt.scatter       = get(hscatter, 'Value'); % additional scatterplot
-    opt.slim          = [.5 1]; % 50% - maximum
+    opt.slim          = [.8 1]; % 80% - maximum
     opt.markerlab     = markerlab;
     opt.markerpos     = markerpos;
     opt.markerdist    = cfg.markerdist; % hidden option
