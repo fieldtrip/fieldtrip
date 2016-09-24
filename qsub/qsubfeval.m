@@ -34,7 +34,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 % See also QSUBCELLFUN, QSUBGET, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011-2012, Robert Oostenveld
+% Copyright (C) 2011-2016, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
