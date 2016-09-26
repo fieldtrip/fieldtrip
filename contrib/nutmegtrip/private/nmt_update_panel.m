@@ -41,12 +41,14 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     switch(st.nmt.cfg.plottype)
         case 'ts'
             ylim=get(st.nmt.gui.ax_ts(axsel),'YLim');
+            facealpha = 1; % make patch opaque
         case 'tf'
             ylim = [st.nmt.freq(st.nmt.cfg.freq_idx(1),1) st.nmt.freq(st.nmt.cfg.freq_idx(2),2)];
+            facealpha = 0; % make patch see-through
     end
     axes(st.nmt.gui.ax_ts(axsel));
     zlim = get(st.nmt.gui.ax_ts(axsel),'ZLim'); % selection patch needs to have a Z higher than the TF range so that it's not hidden by the TF plot
-    h=patch([st.nmt.time(st.nmt.cfg.time_idx(1)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[zlim(2) zlim(2) zlim(2) zlim(2)],[1 0.4 0.4],'EdgeColor','red');
+    h=patch([st.nmt.time(st.nmt.cfg.time_idx(1)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(2)) st.nmt.time(st.nmt.cfg.time_idx(1))]',[ylim(1) ylim(1) ylim(2) ylim(2)]',[zlim(2) zlim(2) zlim(2) zlim(2)],[1 0.4 0.4],'EdgeColor','red','FaceAlpha',facealpha);
 
     set(st.nmt.gui.ax_ts(axsel),'ButtonDownFcn',@nmt_repos_start);
     
@@ -71,10 +73,10 @@ if(isfield(st.nmt,'time')) %& ~isfield(st.nmt,'freq'))
     set(st.nmt.gui.t1,'String',num2str(st.nmt.time(st.nmt.cfg.time_idx(1))));
     set(st.nmt.gui.t2,'String',num2str(st.nmt.time(st.nmt.cfg.time_idx(2))));
 
-    if(1)
+    if(1) % this method could theoretically allow selection of multiple bands
         set(st.nmt.gui.f1,'Value',st.nmt.cfg.freq_idx(1));
         set(st.nmt.gui.f2,'Value',st.nmt.cfg.freq_idx(2));
-    else
+    else % this method allows only single bands
         set(st.nmt.gui.f1,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(1),1)));
         set(st.nmt.gui.f2,'String',num2str(st.nmt.freq(st.nmt.cfg.freq_idx(2),2)));
     end

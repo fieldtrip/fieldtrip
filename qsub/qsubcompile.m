@@ -59,7 +59,7 @@ function [fcomp] = qsubcompile(fname, varargin)
 % See also QSUBCELLFUN, QSUBFEVAL, MCC, ISDEPLOYED
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2012-2013, Robert Oostenveld
+% Copyright (C) 2012-2016, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
