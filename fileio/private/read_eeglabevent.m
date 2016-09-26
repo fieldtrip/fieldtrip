@@ -86,7 +86,7 @@ for index = 1:length(oldevent)
     duration = 0;
   end;
 
-  % add the current event in fieldtrip format
+  % add the current event in FieldTrip format
   event(index).type     = type;     % this is usually a string, e.g. 'trigger' or 'trial'
   event(index).value    = value;    % in case of a trigger, this is the value
   event(index).sample   = sample;   % this is the sample in the datafile at which the event happens

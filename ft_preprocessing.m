@@ -320,7 +320,7 @@ if hasdata
   
   % this will contain the newly processed data
   % some fields from the input should be copied over in the output
-  dataout = keepfields(data, {'hdr', 'fsample', 'grad', 'elec', 'sampleinfo', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
+  dataout = keepfields(data, {'hdr', 'fsample', 'grad', 'elec', 'opto', 'sampleinfo', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
   
   ft_progress('init', cfg.feedback, 'preprocessing');
   ntrl = length(data.trial);

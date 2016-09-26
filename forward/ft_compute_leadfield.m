@@ -19,11 +19,11 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %
 % It is possible to compute a simultaneous forward solution for EEG and MEG
 % by specifying sens and grad as two cell-arrays, e.g.
-%   sens = {senseeg, sensmeg}
+%   sens       = {senseeg, sensmeg}
 %   headmodel  = {voleeg,  volmeg}
 % This results in the computation of the leadfield of the first element of
 % sens and headmodel, followed by the second, etc. The leadfields of the
-% different imaging modalities are concatenated.
+% different imaging modalities are subsequently concatenated.
 %
 % Additional input arguments can be specified as key-value pairs, supported
 % optional arguments are

@@ -7,7 +7,7 @@ function status = ft_test_run(varargin)
 % Use as
 %   ft_test_run functionname
 %
-% Additional arguments are specified as key-value pairs and can include
+% Additional optional arguments are specified as key-value pairs and can include
 %   dependency   = string
 %   maxmem       = string
 %   maxwalltime  = string
@@ -65,7 +65,11 @@ if ischar(maxmem)
   maxmem = str2mem(maxmem);
 end
 
-[ftver, ftpath] = ft_version;
+% get the version and the path
+[revision, ftpath] = ft_version;
+
+% testing a work-in-progress version is not supported
+assert(istrue(ft_version('clean')), 'this requires all local changes to be committed');
 
 %% determine the list of functions to test
 if ~isempty(varargin) && exist(varargin{1}, 'file')
@@ -160,7 +164,8 @@ for i=1:numel(functionlist)
   
   result = [];
   result.matlabversion    = version('-release');
-  result.fieldtripversion = ftver;
+  result.fieldtripversion = revision;
+  result.branch           = ft_version('branch');
   result.hostname         = gethostname;
   result.user             = getusername;
   result.result           = status;
@@ -168,7 +173,7 @@ for i=1:numel(functionlist)
   result.functionname     = functionlist{i};
   
   options = weboptions('MediaType','application/json');
-  webwrite('http://dashboard.fieldtriptoolbox.org/test', result, options);
+  webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

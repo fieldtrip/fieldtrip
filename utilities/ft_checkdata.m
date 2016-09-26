@@ -20,6 +20,7 @@ function [data] = ft_checkdata(data, varargin)
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
 %   ismeg              = yes, no
+%   isnirs             = yes, no
 %   hasunit            = yes, no
 %   hascoordsys        = yes, no
 %   hassampleinfo      = yes, no, ifmakessense (only applies to raw data)
@@ -92,6 +93,7 @@ dtype                = ft_getopt(varargin, 'datatype'); % should not conflict wi
 dimord               = ft_getopt(varargin, 'dimord');
 stype                = ft_getopt(varargin, 'senstype'); % senstype is a function name which should not be masked
 ismeg                = ft_getopt(varargin, 'ismeg');
+isnirs               = ft_getopt(varargin, 'isnirs');
 inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'index'
 hastrials            = ft_getopt(varargin, 'hastrials');
 hasunit              = ft_getopt(varargin, 'hasunit', 'no');
@@ -206,7 +208,15 @@ if ~isequal(feedback, 'no')
 elseif ismesh
   data = fixpos(data);
   if numel(data)==1
-    fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
+    if isfield(data,'tri')  
+      fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
+    elseif isfield(data,'hex')    
+      fprintf('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
+    elseif isfield(data,'tet')    
+      fprintf('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));  
+    else
+      fprintf('the input is mesh data with %d vertices', size(data.pos,1));  
+    end  
   else
     fprintf('the input is mesh data multiple surfaces\n');
   end
@@ -497,7 +507,7 @@ if ~isempty(stype)
     stype = {stype};
   end
   
-  if isfield(data, 'grad') || isfield(data, 'elec')
+  if isfield(data, 'grad') || isfield(data, 'elec') || isfield(data, 'opto')
     if any(strcmp(ft_senstype(data), stype))
       okflag = 1;
     elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
@@ -531,6 +541,20 @@ if ~isempty(ismeg)
     error('This function requires MEG data with a ''grad'' field');
   elseif ~okflag && isequal(ismeg, 'no')
     error('This function should not be given MEG data with a ''grad'' field');
+  end % if okflag
+end
+
+if ~isempty(isnirs)
+  if isequal(isnirs, 'yes')
+    okflag = isfield(data, 'opto');
+  elseif isequal(isnirs, 'no')
+    okflag = ~isfield(data, 'opto');
+  end
+  
+  if ~okflag && isequal(isnirs, 'yes')
+    error('This function requires NIRS data with an ''opto'' field');
+  elseif ~okflag && isequal(isnirs, 'no')
+    error('This function should not be given NIRS data with an ''opto'' field');
   end % if okflag
 end
 

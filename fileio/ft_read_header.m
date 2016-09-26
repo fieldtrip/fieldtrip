@@ -60,6 +60,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
+%   Nihon Kohden (*.m00) 
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -1144,7 +1145,7 @@ switch headerformat
         cachechunk = decode_fif(orig);
       end
       
-      % convert to fieldtrip format header
+      % convert to FieldTrip format header
       hdr.label       = cachechunk.ch_names(:);
       hdr.nChans      = cachechunk.nchan;
       hdr.Fs          = cachechunk.sfreq;
@@ -1356,7 +1357,7 @@ switch headerformat
     % these are the channels that are visible to fieldtrip
     chansel = 1:header_info.nchan;
     
-    % convert the header information into a fieldtrip compatible format
+    % convert the header information into a FieldTrip compatible format
     hdr.nChans      = length(chansel);
     hdr.label       = {header_info.ch(chansel).label};
     hdr.label       = hdr.label(:);  % should be column vector
@@ -1637,7 +1638,7 @@ switch headerformat
     
     info = fiff_read_meas_info(filename);
     
-    % convert to fieldtrip format header
+    % convert to FieldTrip format header
     hdr.label       = info.ch_names(:);
     hdr.nChans      = info.nchan;
     hdr.Fs          = info.sfreq;
@@ -1791,7 +1792,7 @@ switch headerformat
       clear tmpvar tmpchannel;
     end
     
-    % convert to fieldtrip format header
+    % convert to FieldTrip format header
     hdr.label       = orig.channames.NA;
     hdr.Fs          = orig.rawdata.sf;
     hdr.nSamplesPre = 0; % I don't know how to get this out of the file
@@ -1884,7 +1885,10 @@ switch headerformat
   case 'neurosim_spikes'
     headerOnly = true;
     hdr = read_neurosim_spikes(filename, headerOnly);
-    
+   
+  case 'nihonkohden_m00'
+    hdr = read_nihonkohden_hdr(filename); 
+  
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
     % look at the first trial to determine whether it contains data in the EPP and EOG channels

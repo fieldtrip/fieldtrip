@@ -354,9 +354,9 @@ else
       type = 'yokogawa9';
       
       % there are two possibilities for the neuromag channel labels: with and without a space, hence the 0.4
-    elseif all(mean(ismember(ft_senslabel('neuromag306_combined'), sens.label)) > 0.4)
+    elseif sum(sum(ismember(ft_senslabel('neuromag306_combined'), sens.label)))/204 > 0.8
       type = 'neuromag306_combined';
-    elseif all(mean(ismember(ft_senslabel('neuromag306'),          sens.label)) > 0.4)
+    elseif sum(sum(ismember(ft_senslabel('neuromag306'),          sens.label)))/306 > 0.8
       type = 'neuromag306';
     elseif all(mean(ismember(ft_senslabel('neuromag122_combined'), sens.label)) > 0.4)
       type = 'neuromag122_combined';
@@ -437,7 +437,7 @@ if ~isempty(desired)
     case 'egi'
       type = any(strcmp(type, {'egi32' 'egi64' 'egi128' 'egi256'}));
     case 'meg'
-      type = any(strcmp(type, {'meg' 'magnetometer' 'ctf' 'bti' 'ctf64' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar' 'neuromag122' 'neuromag306' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'bti248grad' 'bti248grad_planar' 'yokogawa9' 'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar' 'yokogawa440' 'itab' 'itab28' 'itab153' 'itab153_planar'}));
+      type = any(strcmp(type, {'meg' 'magnetometer' 'ctf' 'bti' 'ctf64' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar' 'neuromag122' 'neuromag306' 'neuromag306_combined' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'bti248grad' 'bti248grad_planar' 'yokogawa9' 'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar' 'yokogawa440' 'itab' 'itab28' 'itab153' 'itab153_planar'}));
     case 'ctf'
       type = any(strcmp(type, {'ctf' 'ctf64' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar'}));
     case 'bti'
