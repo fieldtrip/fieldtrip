@@ -254,28 +254,28 @@ for i=1:size(dip.pos,1)
   end
   
   if fixedori
-      switch(weightnorm)
-          case {'unitnoisegain','nai'};
-              % optimal orientation calculation for unit-noise gain beamformer,
-              % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
-              [vv, dd] = eig(pinv(lf' * invCy *lf)*(lf' * invCy^2 *lf));
-              [~,maxeig]=max(diag(dd));
-              eta = vv(:,maxeig);
-              lf  = lf * eta;
-              if ~isempty(subspace), lforig = lforig * eta; end
-              dipout.ori{i} = eta;
-          otherwise
-              % compute the leadfield for the optimal dipole orientation
-              % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
-              % filt = pinv(lf' * invCy * lf) * lf' * invCy;
-              % [u, s, v] = svd(real(filt * Cy * ctranspose(filt)));
-              % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
-              [u, s, v] = svd(real(pinv(lf' * invCy *lf)));
-              eta = u(:,1);
-              lf  = lf * eta;
-              if ~isempty(subspace), lforig = lforig * eta; end
-              dipout.ori{i} = eta;
-      end
+    switch(weightnorm)
+      case {'unitnoisegain','nai'};
+        % optimal orientation calculation for unit-noise gain beamformer,
+        % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
+        [vv, dd] = eig(pinv(lf' * invCy *lf)*(lf' * invCy^2 *lf));
+        [~,maxeig]=max(diag(dd));
+        eta = vv(:,maxeig);
+        lf  = lf * eta;
+        if ~isempty(subspace), lforig = lforig * eta; end
+        dipout.ori{i} = eta;
+      otherwise
+        % compute the leadfield for the optimal dipole orientation
+        % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
+        % filt = pinv(lf' * invCy * lf) * lf' * invCy;
+        % [u, s, v] = svd(real(filt * Cy * ctranspose(filt)));
+        % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
+        [u, s, v] = svd(real(pinv(lf' * invCy *lf)));
+        eta = u(:,1);
+        lf  = lf * eta;
+        if ~isempty(subspace), lforig = lforig * eta; end
+        dipout.ori{i} = eta;
+    end
   end
   
   if isfield(dip, 'filter')
