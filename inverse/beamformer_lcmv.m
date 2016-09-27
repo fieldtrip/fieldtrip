@@ -177,7 +177,6 @@ if projectnoise
 end
 
 % the inverse only has to be computed once for all dipoles
-invCy = pinv(Cy + lambda * eye(size(Cy)));
 if isfield(dip, 'subspace')
   fprintf('using source-specific subspace projection\n');
   % remember the original data prior to the voxel dependent subspace projection
@@ -210,7 +209,12 @@ elseif ~isempty(subspace)
     invCy = pinv(Cy + lambda * eye(size(Cy)));
     dat   = subspace*dat;
   end
+else
+  invCy = pinv(Cy + lambda * eye(size(Cy)));
 end
+
+% compute the square of invCy, which might be needed
+invCy_squared = invCy^2;
 
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
@@ -258,7 +262,7 @@ for i=1:size(dip.pos,1)
       case {'unitnoisegain','nai'};
         % optimal orientation calculation for unit-noise gain beamformer,
         % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
-        [vv, dd] = eig(pinv(lf' * invCy *lf)*(lf' * invCy^2 *lf));
+        [vv, dd] = eig(pinv(lf' * invCy *lf)*(lf' * invCy_squared *lf));
         [~,maxeig]=max(diag(dd));
         eta = vv(:,maxeig);
         lf  = lf * eta;
@@ -286,13 +290,13 @@ for i=1:size(dip.pos,1)
     % below equation is equivalent to following:  
     % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
     % filt = filt/sqrt(noise*filt*filt');
-    filt = pinv(sqrt(noise * lf' * invCy^2 * lf)) * lf' *invCy; % based on Sekihara & Nagarajan 2008 eqn. 4.15
+    filt = pinv(sqrt(noise * lf' * invCy_squared * lf)) * lf' *invCy; % based on Sekihara & Nagarajan 2008 eqn. 4.15
   elseif strcmp(weightnorm,'unitnoisegain')
     % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
     % below equation is equivalent to following:  
     % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
     % filt = filt/sqrt(filt*filt');
-    filt = pinv(sqrt(lf' * invCy^2 * lf)) * lf' *invCy;     % Sekihara & Nagarajan 2008 eqn. 4.15
+    filt = pinv(sqrt(lf' * invCy_squared * lf)) * lf' *invCy;     % Sekihara & Nagarajan 2008 eqn. 4.15
   else
     % construct the spatial filter
     filt = pinv(lf' * invCy * lf) * lf' * invCy;              % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
