@@ -197,7 +197,11 @@ isrankdeficient = (rank(Cf)<size(Cf,1));
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio = sscanf(lambda, '%f%%');
   ratio = ratio/100;
-  lambda = ratio * trace(Cf)/size(Cf,1);
+  if ~isempty(subspace) && numel(subspace)>1,
+    lambda = ratio * trace(subspace*Cf*subspace')./size(subspace,1);
+  else
+    lambda = ratio * trace(Cf)/size(Cf,1);
+  end
 end
 
 if projectnoise
@@ -254,7 +258,7 @@ elseif ~isempty(subspace)
     Cf       = s(1:subspace,1:subspace);
     % this is equivalent to subspace*Cf*subspace' but behaves well numerically
     % by construction.
-    invCf    = diag(1./diag(Cf));
+    invCf    = diag(1./diag(Cf + lambda * eye(size(Cf))));
     subspace = u(:,1:subspace)';
     if ~isempty(dat), dat = subspace*dat; end
     
@@ -268,9 +272,9 @@ elseif ~isempty(subspace)
     % the singular vectors of Cy, so we have to do the sandwiching as opposed
     % to line 216
     if strcmp(realfilter, 'yes')
-      invCf = pinv(real(Cf));
+      invCf = pinv(real(Cf) + lambda * eye(size(Cf)));
     else
-      invCf = pinv(Cf);
+      invCf = pinv(Cf + lambda * eye(size(Cf)));
     end
     
     if strcmp(submethod, 'dics_refchan')
