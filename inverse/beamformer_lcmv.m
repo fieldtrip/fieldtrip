@@ -208,7 +208,7 @@ elseif ~isempty(subspace)
     % here the subspace can be different from the singular vectors of Cy, so we
     % have to do the sandwiching as opposed to line 216
     invCy = pinv(Cy + lambda * eye(size(Cy)));
-    dat   = subspace*dat;
+    dat   = subspace*dat; 
   end
 end
 
