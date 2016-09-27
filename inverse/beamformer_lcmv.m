@@ -155,7 +155,11 @@ isrankdeficient = (rank(Cy)<size(Cy,1));
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio = sscanf(lambda, '%f%%');
   ratio = ratio/100;
-  lambda = ratio * trace(Cy)/size(Cy,1);
+  if ~isempty(subspace) && numel(subspace)>1,
+    lambda = ratio * trace(subspace*Cy*subspace')/size(subspace,1);
+  else
+    lambda = ratio * trace(Cy)/size(Cy,1);
+  end
 end
 
 if projectnoise
@@ -203,7 +207,7 @@ elseif ~isempty(subspace)
     Cy    = subspace*Cy*subspace'; 
     % here the subspace can be different from the singular vectors of Cy, so we
     % have to do the sandwiching as opposed to line 216
-    invCy = pinv(Cy);
+    invCy = pinv(Cy + lambda * eye(size(Cy)));
     dat   = subspace*dat;
   end
 end
@@ -234,7 +238,7 @@ for i=1:size(dip.pos,1)
     lf    = dip.subspace{i} * lf;
     % the data and the covariance become voxel dependent due to the projection
     dat   =      dip.subspace{i} * dat_pre_subspace;
-    Cy    =      dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}';
+    Cy    =      dip.subspace{i} *  Cy_pre_subspace * dip.subspace{i}';
     invCy = pinv(dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}');
   elseif ~isempty(subspace)
     % do subspace projection of the forward model only
