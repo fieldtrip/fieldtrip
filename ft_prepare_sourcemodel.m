@@ -722,9 +722,13 @@ if strcmp(cfg.grid.tight, 'yes')
 end
 fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(grid.inside), sum(~grid.inside));
 
-% apply the symmetry constraint, i.e. add a symmetric dipole for each location defined sofar
-% set up the symmetry constraints
+% apply the symmetry constraint, i.e. add a symmetric dipole for each location that was defined sofar
 if ~isempty(cfg.symmetry)
+  if size(grid.pos,2)>3
+    % sanity check, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+    warning('the construction of a symmetric dipole model requires to start with a Nx3 description of the dipole positions, discarding subsequent columns');
+    grid.pos = grid.pos(:,1:3);
+  end
   if strcmp(cfg.symmetry, 'x')
     reduce = [1 2 3];         % select the parameters [x1 y1 z1]
     expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]

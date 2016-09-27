@@ -85,9 +85,6 @@ fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
 image          = ft_getopt(varargin, 'image',[100, 100 ,100]);               % path to .jpeg file
 
-
-
-
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
 if iscell(filename)
@@ -103,7 +100,7 @@ if iscell(filename)
   end
   
   % Concatenate the bnds (only if 'concatenate' = 'yes' ) and if all
-  % structures have non-empty pnts and tris. If not, the input filenames
+  % structures have non-empty vertices and triangles. If not, the input filenames
   % may have been caret-style coord and topo, which needs combination of
   % the pos and tri.
   
@@ -467,31 +464,31 @@ switch fileformat
     switch coordsys
       case 'head'
         fidN=1;
-        pntN=1;
+        posN=1;
         for i=1:size(orig.head.pos,1)
           if strcmp(orig.head.label{i}, 'LPA') || strcmp(orig.head.label{i}, 'Nasion') || strcmp(orig.head.label{i}, 'RPA')
             shape.fid.pos(fidN,1:3) = orig.head.pos(i,:);
             shape.fid.label{fidN} = orig.head.label{i};
             fidN = fidN + 1;
           else
-            shape.pos(pntN,1:3) = orig.head.pos(i,:);
-            shape.label{pntN} = orig.head.label{i};
-            pntN = pntN + 1;
+            shape.pos(posN,1:3) = orig.head.pos(i,:);
+            shape.label{posN} = orig.head.label{i};
+            posN = posN + 1;
           end
         end
         shape.coordsys = orig.head.coordsys;
       case 'dewar'
         fidN=1;
-        pntN=1;
+        posN=1;
         for i=1:size(orig.dewar.pos,1)
           if strcmp(orig.dewar.label{i}, 'LPA') || strcmp(orig.dewar.label{i}, 'Nasion') || strcmp(orig.dewar.label{i}, 'RPA')
             shape.fid.pos(fidN,1:3) = orig.dewar.pos(i,:);
             shape.fid.label{fidN} = orig.dewar.label{i};
             fidN = fidN + 1;
           else
-            shape.pos(pntN,1:3) = orig.dewar.pos(i,:);
-            shape.label{pntN} = orig.dewar.label{i};
-            pntN = pntN + 1;
+            shape.pos(posN,1:3) = orig.dewar.pos(i,:);
+            shape.label{posN} = orig.dewar.label{i};
+            posN = posN + 1;
           end
         end
         shape.coordsys = orig.dewar.coordsys;

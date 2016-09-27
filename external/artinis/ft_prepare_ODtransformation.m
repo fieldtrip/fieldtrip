@@ -109,11 +109,16 @@ cfg.dpf     = ft_getopt(cfg, 'dpf', []);
 
 % get the optode definition
 %sens = ft_fetch_sens(cfg, data);
+sens = [];
 if ~isfield(data, 'opto')
-  error('no optode structure found in the data');
+  if ~isfield(data, 'hdr') && ~isfield(data.hdr, 'opto')
+    error('no optode structure found in the data');
+  else
+    sens = data.hdr.opto;
+  end
+else
+  sens = data.opto;
 end
-
-sens = data.opto;
 
 % select the appropriate channels
 if isfield(data, 'topolabel')

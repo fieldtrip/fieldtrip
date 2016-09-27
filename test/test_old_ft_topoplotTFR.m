@@ -1,7 +1,7 @@
 function test_old_ft_topoplotTFR
 
 % MEM 1gb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
 % TEST test_old_ft_topoplotTFR
 

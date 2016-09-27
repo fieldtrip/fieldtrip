@@ -1,4 +1,4 @@
-function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
+function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx)
 
 % READ_EGIS_DATA reads the data from an EGI EGIS format file
 %
@@ -6,7 +6,7 @@ function dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
 %   dat = read_egis_data(filename, hdr, begtrial, endtrial, chanindx);
 % where
 %   filename       name of the input file
-%   hdr            header structure, see READ_HEADER
+%   hdr            header structure, see FT_READ_HEADER
 %   begtrial       first trial to read, mutually exclusive with begsample+endsample
 %   endtrial       last trial to read,  mutually exclusive with begsample+endsample
 %   chanindx       list with channel indices to read

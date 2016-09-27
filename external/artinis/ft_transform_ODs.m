@@ -56,7 +56,7 @@ function [data] = ft_transform_ODs(cfg, data)
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by 
 % Artinis Medical Systems (http://www.artinis.com). For more information
-% on FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% on FieldTrip, see http://www.fieldtriptoolbox.org
 % 
 % This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 
 % International License. To view a copy of this license, visit 
@@ -100,8 +100,10 @@ function [data] = ft_transform_ODs(cfg, data)
 % Main programmer: Jörn M. Horschig
 % $Id: ft_transform_ODs.m 10169 2015-02-05 12:56:47Z jorhor $
 
-revision = '$Id: ft_transform_ODs.m 10169 2015-02-05 12:56:47Z jorhor $';
-
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults

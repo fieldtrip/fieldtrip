@@ -1623,9 +1623,8 @@ elseif isempty(eval(type))
         'MEG2632'  'MEG2633'  'MEG2631'  'MEG2632+2633'
         'MEG2642'  'MEG2643'  'MEG2641'  'MEG2642+2643'
         };
-      neuromag306_combined = label(:,4);
-      neuromag306alt_combined = label(:,4);
-      label = label(:,1:3);
+      neuromag306_combined = label(:,[3 4]);
+      label                = label(:,1:3);
       
     case 'eeg1020'
       label = {
@@ -3660,6 +3659,14 @@ elseif isempty(eval(type))
       % there is no default set of electrode labels for all possible EEG systems
       % but nevertheless the requested input type should not result in an error
       label = {};
+      
+    case {'neuromag122_combined' 'neuromag122alt_combined'}
+      tmp   = ft_senslabel('neuromag122'); % this is required to generate the combined version
+      label = ft_senslabel(type);
+      
+    case {'neuromag306_combined' 'neuromag306alt_combined'}
+      tmp   = ft_senslabel('neuromag306'); % this is required to generate the combined version
+      label = ft_senslabel(type);
       
     otherwise
       error('the requested sensor type "%s" is not supported', type);

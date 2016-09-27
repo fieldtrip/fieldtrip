@@ -1,5 +1,8 @@
 function test_headmodel_interpolate
 
+% WALLTIME 00:45:00
+% MEM 6gb
+
 % TEST test_headmodel_interpolate
 % TEST icosahedron162 ft_voltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate
 

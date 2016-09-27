@@ -96,6 +96,15 @@ if isempty(headmodel)
   return;
 end
 
+if iscell(headmodel)
+  % this might represent combined EEG, ECoG and/or MEG
+  for i=1:numel(headmodel)
+    % call recursively
+    headmodel{i} = ft_datatype_headmodel(headmodel{i}, varargin{:});
+  end
+  return
+end
+
 switch version
 
   case '2015'

@@ -1059,6 +1059,14 @@ ARRAY+=(test/private/icosahedron642.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ignnorefields.m
+
+ARRAY=()
+ARRAY+=(private/ignorefields.m)
+ARRAY+=(utilities/private/ignorefields.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # inside_contour.m
 
 ARRAY=()
@@ -1508,6 +1516,7 @@ sync ${ARRAY[*]}
 # mesh2edge.m
 
 ARRAY=()
+ARRAY+=(private/mesh2edge.m)
 ARRAY+=(forward/private/mesh2edge.m)
 ARRAY+=(plotting/private/mesh2edge.m)
 sync ${ARRAY[*]}

@@ -1,4 +1,4 @@
-function [nev] = read_neuralynx_nev(filename, varargin);
+function [nev] = read_neuralynx_nev(filename, varargin)
 
 % READ_NEURALYNX_NEV reads the event information from the *.nev file in a
 % Neuralynx dataset directory

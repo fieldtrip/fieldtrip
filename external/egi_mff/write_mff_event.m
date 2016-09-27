@@ -5,7 +5,7 @@
 %  Copyright 2012, 2014 EGI. All rights reserved.
 % 
 %  Writes an events structure (as described at
-%  http://fieldtrip.fcdonders.nl/reference/ft_read_event) to an event-track
+%  http://www.fieldtriptoolbox.org/reference/ft_read_event) to an event-track
 %  file in an existing MFF file (filePath).
 % 
 %  filePath ? The path to the .mff file. 

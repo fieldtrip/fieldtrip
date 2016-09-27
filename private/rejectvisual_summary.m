@@ -209,20 +209,7 @@ info  = guidata(h);
 % work with a copy of the data
 level = info.level;
 
-% we need a workaround when finding the max of the minima
-if strcmp(info.metric, 'min')
-  level = level * -1;
-end
-
-[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, info.chansel, info.trlsel);
-
-if strcmp(info.metric, 'min')
-  maxperchan     = maxperchan * -1;
-  maxpertrl      = maxpertrl * -1;
-  maxperchan_all = maxperchan_all * -1;
-  maxpertrl_all  = maxpertrl_all * -1;
-  level = level * -1;  % see point below
-end
+[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, info.chansel, info.trlsel, strcmp(info.metric, 'min'));
 
 % make the three figures
 if gcf~=h, figure(h); end
@@ -313,7 +300,8 @@ end % switch
 if any(info.chansel) && any(info.trlsel)
   % don't try to rescale the axes if they are empty
   % the 0.8-1.2 is needed to deal with the single trial case
-  axis([0.5 xmax+0.5 0.8*ymin 1.2*ymax]);
+  % note that both ymin and ymax can be negative
+  axis([0.5 xmax+0.5 (1-sign(ymin)*0.2)*ymin (1+sign(ymax)*0.2)*ymax]);
 end
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
@@ -431,7 +419,7 @@ y = sort([point1(2) point2(2)]);
 g     = get(gca, 'Parent');
 info  = guidata(g);
 
-[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(info.level, info.chansel, info.trlsel);
+[maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(info.level, info.chansel, info.trlsel, strcmp(info.metric, 'min'));
 
 switch gca
   case info.axes(1)
@@ -448,7 +436,7 @@ switch gca
           maxperchan_all(chanlabels)' >= x(1) & ...
           maxperchan_all(chanlabels)' <= x(2);
         info.chansel(toggle) = ~info.chansel(toggle);
-
+        
       case 'remove'
         chanlabels     = 1:info.nchan;
         toggle = ...
@@ -500,7 +488,7 @@ switch gca
           maxpertrl(origtrllabels) <= y(2);
         info.trlsel(origtrllabels(toggle)) = false;
     end
-
+    
     
 end % switch gca
 
@@ -582,7 +570,11 @@ end
 set(h, 'String', [new_text; curr_text]);
 drawnow;
 
-function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel)
+function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel, minflag)
+if minflag
+  % take the negative maximum, i.e. the minimum
+  level = -1 * level;
+end
 % determine the maximum value
 maxperchan_all = max(level, [], 2);
 maxpertrl_all  = max(level, [], 1);
@@ -591,6 +583,13 @@ level(~chansel, :) = nan;
 level(:, ~trlsel)  = nan;
 maxperchan     = max(level, [], 2);
 maxpertrl      = max(level, [], 1);
+if minflag
+  maxperchan     = -1 * maxperchan;
+  maxpertrl      = -1 * maxpertrl;
+  maxperchan_all = -1 * maxperchan_all;
+  maxpertrl_all  = -1 * maxpertrl_all;
+  level          = -1 * level;
+end
 
 function display_trial(h, eventdata)
 info = guidata(h);

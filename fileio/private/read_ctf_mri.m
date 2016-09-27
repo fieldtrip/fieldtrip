@@ -1,4 +1,4 @@
-function [mri, hdr] = read_ctf_mri(filename);
+function [mri, hdr] = read_ctf_mri(filename)
 
 
 % READ_CTF_MRI reads header and image data from a CTF version 2.2 MRI file

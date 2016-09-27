@@ -115,12 +115,10 @@ end
 switch cfg.method
   case 'volume'
     mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes');
-  case 'headshape'
+  case  {'headshape'}
     headshape = fixpos(varargin{1});
     headshape = ft_determine_coordsys(headshape);
 end
-
-hascolor = isfield(headshape, 'color'); % color code for vertices
 
 switch cfg.method
   case 'headshape'
@@ -135,7 +133,7 @@ switch cfg.method
     figure;
     % plot the faces of the 2D or 3D triangulation
     
-    if hascolor
+    if isfield(headshape, 'color');
       skin = 'none';
       ft_plot_mesh(headshape);
     else
@@ -146,9 +144,6 @@ switch cfg.method
       camlight
     end
     
-
-    
-
     % rotate3d on
     xyz = ft_select_point3d(headshape, 'nearest', false, 'multiple', true, 'marker', '*');
     numelec = size(xyz, 1);
@@ -165,6 +160,7 @@ switch cfg.method
     end
 
   case 'volume'
+    
     % start building the figure
     h = figure(...
       'MenuBar', 'none',...
@@ -172,6 +168,11 @@ switch cfg.method
       'Units', 'normalized', ...
       'Color', [1 1 1], ...
       'Visible', 'on');
+    set(h, 'windowbuttondownfcn', @cb_buttonpress);
+    set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
+    set(h, 'windowkeypressfcn',   @cb_keyboard);
+    set(h, 'CloseRequestFcn',     @cb_cleanup);
+    set(h, 'renderer', cfg.renderer);
 
     % axes settings
     if strcmp(cfg.axisratio, 'voxel')
@@ -212,15 +213,6 @@ switch cfg.method
       voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
     end
 
-    %% the figure is interactive, add callbacks
-    set(h, 'windowbuttondownfcn', @cb_buttonpress);
-    set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
-    set(h, 'windowkeypressfcn',   @cb_keyboard);
-    set(h, 'CloseRequestFcn',     @cb_cleanup);
-
-    % ensure that this is done in interactive mode
-    set(h, 'renderer', cfg.renderer);
-
     % axis handles will hold the anatomical functional if present, along with labels etc.
     h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
     h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
@@ -256,7 +248,7 @@ switch cfg.method
       'Min', 0, 'Max', 1, ...
       'Value', cfg.clim(1), ...
       'Units', 'normalized', ...
-      'Position', [2*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+      'Position', [2*h1size(1)+0.02 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
       'Callback', @cb_minslider);
 
     h5 = uicontrol('Style', 'slider', ...
@@ -264,7 +256,7 @@ switch cfg.method
       'Min', 0, 'Max', 1, ...
       'Value', cfg.clim(2), ...
       'Units', 'normalized', ...
-      'Position', [2*h1size(1)+0.07 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+      'Position', [2*h1size(1)+0.07 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
       'Callback', @cb_maxslider);
 
     % java intensity range slider (dual-knob slider): the java component gives issues when wanting to
@@ -313,7 +305,7 @@ switch cfg.method
       'Value', 1, ...
       'String','Magnet',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1) 0.17 h1size(1)/3 0.05],...
+      'Position',[2*h1size(1) 0.22 h1size(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_magnetbutton);
@@ -323,7 +315,7 @@ switch cfg.method
       'Value', 0, ...
       'String','Labels',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1) 0.12 h1size(1)/3 0.05],...
+      'Position',[2*h1size(1) 0.17 h1size(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_labelsbutton);
@@ -333,11 +325,21 @@ switch cfg.method
       'Value', 0, ...
       'String','Global',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1) 0.07 h1size(1)/3 0.05],...
+      'Position',[2*h1size(1) 0.12 h1size(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_globalbutton);
 
+    hscatter = uicontrol('Style', 'radiobutton',...
+      'Parent', h, ...
+      'Value', 0, ...
+      'String','Scatter',...
+      'Units', 'normalized', ...
+      'Position',[2*h1size(1) 0.07 h1size(1)/3 0.05],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility','on', ...
+      'Callback', @cb_scatterbutton);
+    
     % zoom slider
     h10text = uicontrol('Style', 'text',...
       'String','Zoom',...
@@ -351,7 +353,7 @@ switch cfg.method
       'Min', 0, 'Max', 0.9, ...
       'Value', 0, ...
       'Units', 'normalized', ...
-      'Position', [1.8*h1size(1)+0.02 0.10+h3size(2)/3 0.05 h3size(2)/2], ...
+      'Position', [1.8*h1size(1)+0.02 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
       'SliderStep', [.1 .1], ...
       'Callback', @cb_zoomslider);
 
@@ -372,7 +374,7 @@ switch cfg.method
     opt.h1size        = h1size;
     opt.h2size        = h2size;
     opt.h3size        = h3size;
-    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10];
+    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 hscatter];
     opt.handlesfigure = h;
     opt.handlesmarker = [];
     opt.quit          = false;
@@ -391,6 +393,8 @@ switch cfg.method
     opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
     opt.global        = get(h9, 'Value'); % show all markers in the current slices
+    opt.scatter       = get(hscatter, 'Value'); % additional scatterplot
+    opt.slim          = [.8 1]; % 80% - maximum
     opt.markerlab     = markerlab;
     opt.markerpos     = markerpos;
     opt.markerdist    = cfg.markerdist; % hidden option
@@ -430,7 +434,7 @@ switch cfg.method
     if isfield(mri, 'coordsys')
       elec.coordsys = mri.coordsys;
     end
-
+    
 end % switch method
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -563,10 +567,10 @@ if ~isempty(idx)
     markerpos(i,:) = opt.markerpos{idx(i),1};
   end
 
-  pos = round(ft_warp_apply(inv(mri.transform), markerpos)); % head to vox
-  tmp1 = pos(:,1);
-  tmp2 = pos(:,2);
-  tmp3 = pos(:,3);
+  opt.vox2 = round(ft_warp_apply(inv(mri.transform), markerpos)); % head to vox
+  tmp1 = opt.vox2(:,1);
+  tmp2 = opt.vox2(:,2);
+  tmp3 = opt.vox2(:,3);
 
   subplot(h1);
   if ~opt.global % filter markers distant to the current slice (N units and further)
@@ -638,11 +642,93 @@ if ~isempty(idx)
   end
 end % for all markers
 
+if isfield(opt, 'scatterfig')
+  cb_scatterredraw(h); % also update the appendix
+  figure(h); % FIXME: ugly as it switches forth and back to mainfig
+end
+
 % do not initialize on the next call
 opt.init = false;
 setappdata(h, 'opt', opt);
 set(h, 'currentaxes', curr_ax);
 toc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_scatterredraw(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+if opt.scatter % radiobutton on
+  if ~isfield(opt, 'scatterfig') % if the figure does not yet exist, initiate
+    opt.scatterfig = figure(...
+      'Name', [mfilename ' appendix'],...
+      'Units', 'normalized', ...
+      'Color', [1 1 1], ...
+      'Visible', 'on');
+    set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
+    opt.scatterfig_h1 = axes('position',[0.06 0.06 0.74 0.88]);
+    set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.handlesaxes(1), 'DataAspectRatio'));
+    axis image;
+    xlabel('x'); ylabel('y'); zlabel('z');
+    
+    % scatter range sliders
+    opt.scatterfig_h23text = uicontrol('Style', 'text',...
+      'String','Treshold',...
+      'Units', 'normalized', ...
+      'Position',[.85+0.03 .26 .1 0.04],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility','on');
+    
+    opt.scatterfig_h2 = uicontrol('Style', 'slider', ...
+      'Parent', opt.scatterfig, ...
+      'Min', 0, 'Max', 1, ...
+      'Value', opt.slim(1), ...
+      'Units', 'normalized', ...
+      'Position', [.85+.02 .06 .05 .2], ...
+      'Callback', @cb_scatterminslider);
+    
+    opt.scatterfig_h3 = uicontrol('Style', 'slider', ...
+      'Parent', opt.scatterfig, ...
+      'Min', 0, 'Max', 1, ...
+      'Value', opt.slim(2), ...
+      'Units', 'normalized', ...
+      'Position', [.85+.07 .06 .05 .2], ...
+      'Callback', @cb_scattermaxslider);
+    
+    msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
+    inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
+    for r = 1:4 % 4 color layers to encode peaks
+      lim1 = opt.slim(1) + r*inc - inc;
+      lim2 = opt.slim(1) + r*inc;
+      voxind = find(opt.ana>lim1 & opt.ana<lim2);
+      [x,y,z] = ind2sub(opt.mri.dim, voxind);
+      hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
+    end
+    
+    % draw the crosshair for the first time
+    opt.handlescross2 = crosshair([opt.ijk], 'parent', opt.scatterfig_h1, 'color', 'blue');
+  end
+  
+  figure(opt.scatterfig);
+  
+  % update the existing crosshairs, don't change the handles
+  crosshair([opt.ijk], 'handle', opt.handlescross2);
+  if opt.showcrosshair
+    set(opt.handlescross,'Visible','on');
+  else
+    set(opt.handlescross,'Visible','off');
+  end
+  
+  % plot the markers
+  if isfield(opt, 'vox2')
+    delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
+    plot3(opt.vox2(:,1),opt.vox2(:,2),opt.vox2(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r');
+  end
+end
+setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -923,6 +1009,9 @@ setappdata(h, 'opt', opt);
 function cb_cleanup(h, eventdata)
 
 opt = getappdata(h, 'opt');
+if isfield(opt, 'scatterfig')
+  cb_scattercleanup(opt.scatterfig);
+end
 opt.quit = true;
 setappdata(h, 'opt', opt);
 uiresume
@@ -1089,3 +1178,78 @@ opt = getappdata(h, 'opt');
 opt.zoom = round(get(h10, 'value')*10)/10;
 setappdata(h, 'opt', opt);
 cb_redraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_scatterbutton(hscatter, eventdata)
+
+h = getparent(hscatter);
+opt = getappdata(h, 'opt');
+opt.scatter = get(hscatter, 'value'); % update value
+setappdata(h, 'opt', opt);
+if isfield(opt, 'scatterfig') && ~opt.scatter % if already open but shouldn't, close it
+  cb_scattercleanup(opt.scatterfig);
+end
+if opt.scatter
+  cb_scatterredraw(h);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_scattercleanup(hObject, eventdata)
+
+h = findobj('type','figure','name',mfilename);
+opt = getappdata(h, 'opt');
+opt.scatter = 0;
+set(opt.handlesaxes(11), 'Value', 0);
+opt = rmfield(opt, 'scatterfig');
+setappdata(h, 'opt', opt);
+delete(hObject);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_scatterminslider(h2, eventdata)
+
+h = findobj('type','figure','name',mfilename);
+opt = getappdata(h, 'opt');
+opt.slim(1) = get(h2, 'value');
+fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
+setappdata(h, 'opt', opt);
+
+delete(findobj('type','scatter')); % remove previous scatters
+msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
+inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
+for r = 1:4 % 4 color layers to encode peaks
+  lim1 = opt.slim(1) + r*inc - inc;
+  lim2 = opt.slim(1) + r*inc;
+  voxind = find(opt.ana>lim1 & opt.ana<lim2);
+  [x,y,z] = ind2sub(opt.mri.dim, voxind);
+  hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
+end
+cb_scatterredraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_scattermaxslider(h3, eventdata)
+
+h = findobj('type','figure','name',mfilename);
+opt = getappdata(h, 'opt');
+opt.slim(2) = get(h3, 'value');
+fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
+setappdata(h, 'opt', opt);
+
+delete(findobj('type','scatter')); % remove previous scatters
+msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
+inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
+for r = 1:4 % 4 color layers to encode peaks
+  lim1 = opt.slim(1) + r*inc - inc;
+  lim2 = opt.slim(1) + r*inc;
+  voxind = find(opt.ana>lim1 & opt.ana<lim2);
+  [x,y,z] = ind2sub(opt.mri.dim, voxind);
+  hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
+end
+cb_scatterredraw(h);

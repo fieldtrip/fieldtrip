@@ -1,4 +1,4 @@
-function val = littleendian;
+function val = littleendian
 
 % LITTLEENDIAN returns 1 (true) on a little endian machine, e.g. with an
 % Intel or AMD, or 0 (false) otherwise

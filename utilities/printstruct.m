@@ -49,7 +49,7 @@ if nargin==1
 end
 
 if isa(val, 'config')
-  % this is fieldtrip specific: the @config object resembles a structure but tracks the
+  % this is FieldTrip specific: the @config object resembles a structure but tracks the
   % access to each field.  In this case it is to be treated as a normal structure.
   val = struct(val);
 end
@@ -99,7 +99,12 @@ elseif isstruct(val)
         otherwise
           error('unsupported');
       end
-      str  = [str line];
+      if numel(line)>1 && line(end)==10 && line(end-1)==10
+        % do not repeat the end-of-line
+        str = [str line(1:end-1)];
+      else
+        str = [str line];
+      end
     end
   end
 elseif ~isstruct(val)

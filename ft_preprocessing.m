@@ -249,7 +249,7 @@ end
 if isfield(cfg, 'nsdf'),
   % FIXME this should be handled by ft_checkconfig, but ft_checkconfig does not allow yet for
   % specific errors in the case of forbidden fields
-  error('The use of cfg.nsdf is deprecated. FieldTrip tries to determine the bit resolution automatically. You can overrule this by specifying cfg.dataformat and cfg.headerformat. See: http://fieldtrip.fcdonders.nl/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
+  error('The use of cfg.nsdf is deprecated. FieldTrip tries to determine the bit resolution automatically. You can overrule this by specifying cfg.dataformat and cfg.headerformat. See: http://www.fieldtriptoolbox.org/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
 end
 
 if isfield(cfg, 'export') && ~isempty(cfg.export)
@@ -320,7 +320,7 @@ if hasdata
   
   % this will contain the newly processed data
   % some fields from the input should be copied over in the output
-  dataout = keepfields(data, {'hdr', 'fsample', 'grad', 'elec', 'sampleinfo', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
+  dataout = keepfields(data, {'hdr', 'fsample', 'grad', 'elec', 'opto', 'sampleinfo', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
   
   ft_progress('init', cfg.feedback, 'preprocessing');
   ntrl = length(data.trial);
@@ -607,6 +607,16 @@ else
       
     end % for all trials
     ft_progress('close');
+    
+    % don't keep hdr.orig in the output data if it is too large
+    % hdr.orig can be large when caching data from specific file formats, such as bci2000_dat and mega_neurone
+    if isfield(hdr, 'orig')
+      s = hdr.orig;
+      s = whos('s');
+      if s.bytes>10240
+        hdr = rmfield(hdr, 'orig');
+      end
+    end
     
     dataout                    = [];
     dataout.hdr                = hdr;                  % header details of the datafile

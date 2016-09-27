@@ -146,7 +146,7 @@ for i=1:length(dimtok)
       % don't change, it is ok
       
     case {'voxel' 'vox' 'repl' 'wcond'}
-      % these are used in some fieldtrip functions, but are not considered standard
+      % these are used in some FieldTrip functions, but are not considered standard
       ft_warning('unexpected dimord "%s"', data.dimord);
       
     case {'pos'}

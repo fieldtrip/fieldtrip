@@ -1,4 +1,4 @@
-function [dat] = read_neuralynx_cds(filename, hdr, begsample, endsample, chanindx);
+function [dat] = read_neuralynx_cds(filename, hdr, begsample, endsample, chanindx)
 
 % READ_NEURALYNX_CDS reads selected samples and channels from a  combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
 %

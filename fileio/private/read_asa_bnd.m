@@ -1,4 +1,4 @@
-function bnd = read_asa_bnd(fn);
+function bnd = read_asa_bnd(fn)
 
 % READ_ASA_BND reads an ASA boundary triangulation file
 % converting the units of the vertices to mm

@@ -268,7 +268,7 @@ else % otherwise process per colum set as defined by the nan distribution
       beta_temp(n,:,colidx) = regr(rowidx,:)\dat(rowidx,colidx);         % B = X\Y
     end
   end
-  beta = squeeze(nansum(beta_temp,1)); % sum the betas
+  beta = reshape(nansum(beta_temp,1),[nconf size(dat,2)]); % sum the betas
   clear beta_temp;
 
 end

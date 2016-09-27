@@ -1,5 +1,5 @@
 function data = read_artinis_oxy3(filename, header, begsample, endsample, chanindx)
-% reads Artinix oxy3-files into fieldtrip format
+% reads Artinix oxy3-files into FieldTrip format
 % use as
 %   header = read_artinis_oxy3(filename)
 % or 

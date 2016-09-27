@@ -105,7 +105,7 @@ return;
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function hdr = readheader(fid);
+function hdr = readheader(fid)
 % determine the header type, header size and data size
 hdr.headertype = fread(fid, 1, 'uchar');
 dummy          = fread(fid, 1, 'uchar');

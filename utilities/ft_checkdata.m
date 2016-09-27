@@ -20,6 +20,7 @@ function [data] = ft_checkdata(data, varargin)
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
 %   ismeg              = yes, no
+%   isnirs             = yes, no
 %   hasunit            = yes, no
 %   hascoordsys        = yes, no
 %   hassampleinfo      = yes, no, ifmakessense (only applies to raw data)
@@ -92,6 +93,7 @@ dtype                = ft_getopt(varargin, 'datatype'); % should not conflict wi
 dimord               = ft_getopt(varargin, 'dimord');
 stype                = ft_getopt(varargin, 'senstype'); % senstype is a function name which should not be masked
 ismeg                = ft_getopt(varargin, 'ismeg');
+isnirs               = ft_getopt(varargin, 'isnirs');
 inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'index'
 hastrials            = ft_getopt(varargin, 'hastrials');
 hasunit              = ft_getopt(varargin, 'hasunit', 'no');
@@ -129,6 +131,7 @@ isdip           = ft_datatype(data, 'dip');
 ismvar          = ft_datatype(data, 'mvar');
 isfreqmvar      = ft_datatype(data, 'freqmvar');
 ischan          = ft_datatype(data, 'chan');
+ismesh          = ft_datatype(data, 'mesh');
 % FIXME use the istrue function on ismeg and hasxxx options
 
 if ~isequal(feedback, 'no')
@@ -202,7 +205,22 @@ if ~isequal(feedback, 'no')
       fprintf('the input is chan data with %d channels\n', nchan);
     end
   end
-end % give feedback
+elseif ismesh
+  data = fixpos(data);
+  if numel(data)==1
+    if isfield(data,'tri')  
+      fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
+    elseif isfield(data,'hex')    
+      fprintf('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
+    elseif isfield(data,'tet')    
+      fprintf('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));  
+    else
+      fprintf('the input is mesh data with %d vertices', size(data.pos,1));  
+    end  
+  else
+    fprintf('the input is mesh data multiple surfaces\n');
+  end
+end % give feedback    
 
 if issource && isvolume
   % it should be either one or the other: the choice here is to represent it as volume description since that is simpler to handle
@@ -278,6 +296,8 @@ if ~isempty(dtype)
         okflag = okflag + issegmentation;
       case 'parcellation'
         okflag = okflag + isparcellation;
+      case 'mesh'
+        okflag = okflag + ismesh;
     end % switch dtype
   end % for dtype
   
@@ -487,7 +507,7 @@ if ~isempty(stype)
     stype = {stype};
   end
   
-  if isfield(data, 'grad') || isfield(data, 'elec')
+  if isfield(data, 'grad') || isfield(data, 'elec') || isfield(data, 'opto')
     if any(strcmp(ft_senstype(data), stype))
       okflag = 1;
     elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
@@ -521,6 +541,20 @@ if ~isempty(ismeg)
     error('This function requires MEG data with a ''grad'' field');
   elseif ~okflag && isequal(ismeg, 'no')
     error('This function should not be given MEG data with a ''grad'' field');
+  end % if okflag
+end
+
+if ~isempty(isnirs)
+  if isequal(isnirs, 'yes')
+    okflag = isfield(data, 'opto');
+  elseif isequal(isnirs, 'no')
+    okflag = ~isfield(data, 'opto');
+  end
+  
+  if ~okflag && isequal(isnirs, 'yes')
+    error('This function requires NIRS data with an ''opto'' field');
+  elseif ~okflag && isequal(isnirs, 'no')
+    error('This function should not be given NIRS data with an ''opto'' field');
   end % if okflag
 end
 
@@ -993,10 +1027,12 @@ elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
     data.crsspctrm = cat(catdim, data.powspctrm, data.crsspctrm);
     data.labelcmb  = [data.label(:) data.label(:); data.labelcmb];
     data           = rmfield(data, 'powspctrm');
+    data.dimord    = strrep(data.dimord, 'chan_', 'chancmb_');
   else
     data.crsspctrm = data.powspctrm;
     data.labelcmb  = [data.label(:) data.label(:)];
     data           = rmfield(data, 'powspctrm');
+    data.dimord    = strrep(data.dimord, 'chan_', 'chancmb_');
   end
   data = rmfield(data, 'label');
   
@@ -1336,6 +1372,8 @@ else
   % concatenate all trials
   tmptrial = nan(ntrial, nchan, length(time));
   
+  begsmp = nan(ntrial, 1);
+  endsmp = nan(ntrial, 1);
   for i=1:ntrial
     begsmp(i) = nearest(time, data.time{i}(1));
     endsmp(i) = nearest(time, data.time{i}(end));

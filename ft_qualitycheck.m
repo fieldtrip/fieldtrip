@@ -695,7 +695,7 @@ h.SpectrumAxes = axes(...
   'Position',[.15 .2 .8 .7]);
 
 % plot powerspectrum
-loglog(h.SpectrumAxes, freq.freq, squeeze(mean(mean(freq.powspctrm,1),3))*powscaling,'r','LineWidth',2);
+loglog(h.SpectrumAxes, freq.freq, mean(mean(freq.powspctrm,1),3)*powscaling,'r','LineWidth',2);
 xlabel(h.SpectrumAxes, 'Frequency [Hz]');
 ylabel(h.SpectrumAxes, ['Power [' ylab '^2/Hz]']);
 

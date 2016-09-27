@@ -1,4 +1,4 @@
-function write_stl(filename, pnt, tri, nrm);
+function write_stl(filename, pnt, tri, nrm)
 
 % WRITE_STL writes a triangulation to an ascii *.stl file, which is a file
 % format native to the stereolithography CAD software created by 3D Systems.

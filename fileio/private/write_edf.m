@@ -1,5 +1,7 @@
-function write_edf(filename, hdr, data);
+function write_edf(filename, hdr, data)
+
 % WRITE_EDF(filename, header, data)
+%
 % Writes a EDF file from the given header (only label, Fs, nChans are of interest)
 % and the data (unmodified). Digital and physical limits are derived from the data
 % via min and max operators. The EDF file will contain N records of 1 sample each,

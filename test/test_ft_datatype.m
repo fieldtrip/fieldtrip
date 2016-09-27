@@ -1,6 +1,6 @@
 function test_ft_datatype
 
-% MEM 3gb
+% MEM 8gb
 % WALLTIME 01:30:00
 
 % TEST test_ft_datatype
@@ -46,9 +46,9 @@ for j=1:length(dirlist)
     try
       fprintf('processing data structure %d from %d\n', i, length(filelist));
       var = loadvar(filelist{i});
-      disp(var)
     catch
       % some of the mat files are corrupt, this should not spoil the test
+      disp(var);
       disp(lasterr);
       continue
     end
@@ -88,6 +88,7 @@ for j=1:length(dirlist)
         warning('not testing %s', filelist{i});
         % do nothing
     end % switch
+    clear var type
     
   end % for filelist
 end % for dirlist
@@ -151,3 +152,4 @@ assert(ft_datatype(freqc,      'comp'), 'incorrect datatype');
 assert(strcmp(ft_datatype(rawc       ), 'raw+comp'),      'raw+comp datatype was expected');
 assert(strcmp(ft_datatype(timelockc  ), 'timelock+comp'), 'timelock+comp datatype was expected');
 assert(strcmp(ft_datatype(freqc      ), 'freq+comp'),     'freq+comp datatype was expected');
+

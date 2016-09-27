@@ -268,13 +268,13 @@ switch senstype
     labelmegrefr = datachannel(strncmp('MR', datachannel, 2));
     labelmegrefm = datachannel(myregexp('^M[xyz][aA]*$', datachannel));
 
-  case {'neuromag122' 'neuromag122alt'}
+  case {'neuromag122' 'neuromag122alt', 'neuromag122_combined'}
     % all neuromag MEG channels start with MEG
     % all neuromag EEG channels start with EEG
     labelmeg = datachannel(strncmp('MEG', datachannel, length('MEG')));
     labeleeg = datachannel(strncmp('EEG', datachannel, length('EEG')));
 
-  case {'neuromag306' 'neuromag306alt'}
+  case {'neuromag306' 'neuromag306alt', 'neuromag306_combined'}
     % all neuromag MEG channels start with MEG
     % all neuromag EEG channels start with EEG
     % all neuromag-306 gradiometers follow pattern MEG*2,MEG*3

@@ -89,13 +89,13 @@ end
 
 % ensure consistent input data
 for i=2:Ndata
-  if isfield(varargin{1}, 'topo'),
+  if isfield(varargin{1}, 'topo')
     assert(isequaln(varargin{1}.topo, varargin{i}.topo), 'the input has inconsistent topo fields')
   end
-  if isfield(varargin{1}, 'topolabel'),
+  if isfield(varargin{1}, 'topolabel')
     assert(isequaln(varargin{1}.topolabel, varargin{i}.topolabel), 'the input has inconsistent topolabel fields')
   end
-  if isfield(varargin{1}, 'unmixing'),
+  if isfield(varargin{1}, 'unmixing')
     assert(isequaln(varargin{1}.unmixing, varargin{i}.unmixing), 'the input has inconsistent unmixing fields')
   end
 end
@@ -167,15 +167,17 @@ hasgrad = 1;
 for j=1:Ndata
   haselec = isfield(varargin{j}, 'elec') && haselec;
   hasgrad = isfield(varargin{j}, 'grad') && hasgrad;
+  hasopto = isfield(varargin{j}, 'opto') && hasopto;
 end
 
 removesens = 0;
-if haselec || hasgrad,
+if haselec || hasgrad || hasopto
   sens = cell(1, Ndata);
   for j=1:Ndata
     if haselec, sens{j} = varargin{j}.elec; end
     if hasgrad, sens{j} = varargin{j}.grad; end
-    if j>1,
+    if hasopto, sens{j} = varargin{j}.opto; end
+    if j>1
       if ~isequaln(sens{j}, sens{1})
         removesens = 1;
         warning('sensor information does not seem to be consistent across the input arguments');
@@ -220,9 +222,9 @@ cattrial   = any(sum(order~=0,2)==Ndata);
 shuflabel  = cattrial && ~all(all(order-repmat(order(:,1),[1 Ndata])==0));
 prunelabel = cattrial && sum(sum(order~=0,2)==Ndata)<length(alllabel);
 
-if shuflabel,
+if shuflabel
   fprintf('the channel order in the input-structures is not consistent, reordering\n');
-  if prunelabel,
+  if prunelabel
     fprintf('not all input-structures contain the same channels, pruning the input prior to concatenating over trials\n');
     selall    = find(sum(order~=0,2)==Ndata);
     alllabel  = alllabel(selall);

@@ -1,4 +1,4 @@
-function [MDip] = settang(theta, tanu, tanv);
+function [MDip] = settang(theta, tanu, tanv)
 
 % set the dipole cartesian direction, given:
 % 1) the instantenious decomposition vectors tanu and tanv

@@ -4,7 +4,7 @@ function test_bug367
 % WALLTIME 00:10:00
 
 % this test script is for http://bugzilla.fcdonders.nl/show_bug.cgi?id=367
-% and was constructed from http://fieldtrip.fcdonders.nl/example/megrealign
+% and was constructed from http://www.fieldtriptoolbox.org/example/megrealign
 
 % TEST test_bug367
 % TEST ft_megrealign ft_read_sens ft_dipolesimulation ft_timelockanalysis ft_multiplotER
