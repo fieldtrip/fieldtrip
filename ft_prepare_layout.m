@@ -508,7 +508,8 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   axis equal
   axis off
   axis xy
-
+ 
+ 
   % get the electrode positions
   pos = zeros(0,2);
   electrodehelp = [ ...
