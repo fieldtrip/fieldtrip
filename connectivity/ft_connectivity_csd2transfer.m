@@ -27,8 +27,8 @@ function [output] = ft_connectivity_csd2transfer(freq, varargin)
 %
 % If you use this code for studying directed interactions, please cite from
 % the following references:
-% -M.Dhamala, G.Rangarajan, M.Ding, Physical Review Letters 100, 018701 (2008)
-% -M.Dhamala, G.rangarajan, M.Ding, Neuroimage 41, 354 (2008)
+% -M.Dhamala, R.Rangarajan, M.Ding, Physical Review Letters 100, 018701 (2008)
+% -M.Dhamala, R.Rangarajan, M.Ding, Neuroimage 41, 354 (2008)
 
 % Undocumented options:
 %
