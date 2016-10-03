@@ -222,7 +222,7 @@ switch cfg.method
         end
       end
     else
-      data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+      data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source' 'source+mesh'});
       inparam = 'crsspctrm';
     end
     
@@ -430,7 +430,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         data   = ft_connectivity_csd2transfer(data, optarg{:});
       end
       
-    case 'source'
+    case {'source' 'source+mesh'}
       if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
         cfg.refindx = 1:size(data.pos,1);
       elseif ischar(cfg.refindx)
@@ -966,8 +966,8 @@ switch dtype
       stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
     end
     
-  case 'source'
-    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside'});
+  case {'source' 'source+mesh'}
+    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside' 'tri'});
     stat.(outparam) = datout;
     if ~isempty(varout),
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
