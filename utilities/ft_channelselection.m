@@ -181,6 +181,10 @@ for i=1:length(channel)
   end
 
   rexp = sprintf('%s%s', regexptranslate('wildcard',channel{i}), '$');
+  % ensure ^ prefix without blackslash 
+  if strcmp((channel{i}(1)), '^')
+    rexp = rexp(2:end);
+  end
   lreg = ~cellfun(@isempty, regexp(datachannel, rexp));
   if any(lreg)
     labelreg = labelreg | lreg;
