@@ -1,4 +1,5 @@
 function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
+
 % FT_NIRS_PREPARE_ODTRANSFORMATION returns the transformation matrix from 
 % optical densities (OD) to chromophore concentrations such as (de-)
 % oxygenated hemoglobin.

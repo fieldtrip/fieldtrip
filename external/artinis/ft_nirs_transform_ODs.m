@@ -1,4 +1,5 @@
 function [data] = ft_nirs_transform_ODs(cfg, data)
+
 % FT_NIRS_TRANSFORM_ODs computes the transformation from
 % optical densities (OD) to chromophore concentrations such as (de-)
 % oxygenated hemoglobin, or the other way around.

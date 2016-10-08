@@ -1,4 +1,5 @@
 function dataout = ft_nirs_scalpcouplingindex(cfg, datain)
+
 % FT_NIRS_SCALPCOUPLINGINDEX computes the zero-lag cross-correlation 
 % between pairs of raw NIRS-channels to identify bad channels. 
 %

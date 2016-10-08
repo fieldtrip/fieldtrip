@@ -1,5 +1,6 @@
 function data_rcs = ft_nirs_referencechannelsubtraction(cfg, datain)
-% FT_EXAMPLEFUNCTION demonstrates to new developers how a FieldTrip function should look like
+
+% FT_NIRS_REFERENCECHANNELSUBTRACTION performs reference channel subtraction for NIRS data
 %
 % Use as
 %   outdata = ft_nirs_referencechannelsubtraction(cfg, indata)
