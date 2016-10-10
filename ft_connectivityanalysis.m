@@ -973,6 +973,21 @@ switch dtype
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
     end
     
+    % deal with the dimord
+    if exist('outdimord', 'var'),
+      stat.dimord = outdimord;
+    else
+      % guess
+      tok = tokenize(getdimord(data, inparam), '_');
+      dimord = '';
+      for k = 1:numel(tok)
+        if isempty(strfind(tok{k}, 'rpt'))
+          dimord = [dimord, '_', tok{k}];
+        end
+      end
+      stat.dimord = dimord(2:end);
+    end
+  
   case 'raw'
     stat = [];
     stat.label = data.label;

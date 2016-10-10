@@ -214,10 +214,10 @@ cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys
-  functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+  functional     = ft_checkdata(functional, 'datatype', {'source', 'volume'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 else
   % check if the input functional is valid for this function, a coordsys is not directly needed
-  functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
+  functional     = ft_checkdata(functional, 'datatype', {'source', 'volume'}, 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 % set the defaults for all methods
