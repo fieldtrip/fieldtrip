@@ -72,7 +72,7 @@ cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 
 % check validity of input options
 cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector'});
-cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db', 'vssum'});
+cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
 % make sure cfg.parameter is a cell array of strings
