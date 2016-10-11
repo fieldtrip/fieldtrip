@@ -282,12 +282,12 @@ switch cfg.method
     inparam = 'cov';
     outparam = cfg.method;
   case {'amplcorr' 'powcorr'}
-    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source' 'source+mesh'});
     dtype = ft_datatype(data);
     switch dtype
       case {'freq' 'freqmvar'}
         inparam = 'powcovspctrm';
-      case 'source'
+      case {'source' 'source+mesh'}
         inparam = 'powcov';
         if isempty(cfg.refindx), error('indices of reference voxels need to be specified'); end
         % if numel(cfg.refindx)>1, error('more than one reference voxel is not yet supported'); end
