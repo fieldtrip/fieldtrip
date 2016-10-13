@@ -6,10 +6,6 @@ function test_bug3184
 % TEST test_bug3184
 % TEST getdimord ft_datatype_source ft_selectdata
 
-load(dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test' , 'bug3184')));
-
-inside = find(source_mtmfft.inside);
-
 % it seems it already goes wrong at an earlier stage, since the data lacks
 % a csdlabel field. This seems the consequence of an intermediate call to
 % ft_selectdata, subselecting trials, which loses the csdlabel along the
@@ -54,4 +50,15 @@ source4 = ft_datatype_source(source);
 assert(isequal(getdimord(source4, 'mom'),'{pos}_ori_rpttap'));
 assert(isequal(getdimord(source4, 'csd'),'{pos}_ori_ori'));
 assert(isequal(getdimord(source4, 'filter'),'{pos}_ori_chan'));
+
+% load the data that has been submitted with the bug report.
+load(dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test' , 'bug3184')));
+
+%getdimord(ft_datatype_source(source_wvlt),'mom')
+
+source_wvlt.avg.csdlabel = {'scandip'};
+assert(isequal(getdimord(ft_datatype_source(source_wvlt),'mom'), '{pos}_ori_rpt'));
+
+
+
 
