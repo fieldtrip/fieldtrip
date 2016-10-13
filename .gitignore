@@ -1,3 +1,6 @@
 *.asv
 *.swp
 *.m~
+*.o
+*.a
+odmTest
