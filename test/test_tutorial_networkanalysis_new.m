@@ -6,7 +6,7 @@ function test_tutorial_networkanalysis_new
 % TEST test_tutorial_networkanalysis
 % TEST ft_networkanalysis
 
-%% read the continuous data and segment into 2 seconds epochs
+%% read the continuous data and segment into 2 seconds epochs, with 50% overlap
 cfg            = [];
 cfg.dataset    = dccnpath(fullfile('/home/common/matlab/fieldtrip/data','SubjectRest.ds')); 
 cfg.continuous = 'yes';
@@ -16,12 +16,12 @@ data = ft_preprocessing(cfg);
 cfg         = [];
 cfg.length  = 2;
 cfg.overlap = 0.5;
-data = ft_redefinetrial(cfg, data);
+data        = ft_redefinetrial(cfg, data);
 
-cfg = [];
+cfg        = [];
 cfg.demean = 'yes';
 cfg.trials = 1:(numel(data.trial)-6);
-data = ft_preprocessing(cfg, data);
+data       = ft_preprocessing(cfg, data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BYPASS THE INTERACTIVE PART, DECLARE TRIALS 38 91 153 AS BAD
@@ -39,28 +39,29 @@ data = ft_preprocessing(cfg, data);
 % end;
 % disp(trlind);
 
-cfg = [];
-cfg.trials = setdiff(1:numel(data.trial), [18 19 21 72 73 74 75 76 93 94 109 110 126 127 128 140 172 173 179 180 181 182 196 197 198 227 228 233 243 244 250 251 265 266 286]);
+badtrials  = [18 19 21 72 73 74 75 76 93 94 109 110 126 127 128 140 172 173 179 180 181 182 196 197 198 227 228 233 243 244 250 251 265 266 286];
+cfg        = [];
+cfg.trials = setdiff(1:numel(data.trial), badtrials);
 dataclean  = ft_selectdata(cfg, data);
 
 %% downsample the data to speed up component analysis
 dataclean.time(1:end) = dataclean.time(1);
 
-cfg = [];
+cfg            = [];
 cfg.resamplefs = 100;
 cfg.detrend    = 'yes';
-datads = ft_resampledata(cfg, dataclean);
+datads         = ft_resampledata(cfg, dataclean);
 
 %% use ICA in order to identify cardiac and blink components
-cfg = [];
+cfg                 = [];
 cfg.method          = 'runica'; 
 cfg.runica.maxsteps = 50;
 cfg.randomseed      = 0;
-comp = ft_componentanalysis(cfg, datads);
+comp                = ft_componentanalysis(cfg, datads);
 
 %% visualize components
 
-% these were the indices of the bad components that were identified 
+% these were the indices of the bad comp**[[reference:ft_definetrial|ft_definetrial]]** and onents that were identified 
 % they may be different if you re-run the ICA decomposition
 badcomp = [2 3 7 16]; 
  
@@ -70,11 +71,10 @@ cfg.layout     = 'CTF275_helmet.mat';
 cfg.compscale  = 'local';
 cfg.continuous = 'yes';
 ft_databrowser(cfg, comp);
-%figure;ft_topoplotIC(cfg, comp);
 
-cfg = [];
+cfg           = [];
 cfg.component = badcomp;
-dataica = ft_rejectcomponent(cfg, comp);
+dataica       = ft_rejectcomponent(cfg, comp);
 
 %% compute the power spectrum
 cfg              = [];
@@ -83,18 +83,18 @@ cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
 cfg.tapsmofrq    = 1;             
 cfg.keeptrials   = 'no';
-datapow = ft_freqanalysis(cfg, dataica);
+datapow          = ft_freqanalysis(cfg, dataica);
 
-%% compute the planar transformation
+%% compute the planar transformation, this is not really necessary, but instructive anyhow
 load ctf275_neighb; % loads the neighbourhood structure for the channels
 
-dataicatmp = dataica;
-dataicatmp.grad = data.grad;
+dataicatmp      = dataica;
+dataicatmp.grad = datads.grad;
 
-cfg = [];
+cfg               = [];
 cfg.neighbours    = neighbours;
 cfg.planarmethod  = 'sincos';
-planar = ft_megplanar(cfg, dataicatmp);
+planar            = ft_megplanar(cfg, dataicatmp);
 clear dataicatmp;
 
 %% compute the power spectrum
@@ -104,19 +104,21 @@ cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
 cfg.tapsmofrq    = 1;             
 cfg.keeptrials   = 'no';
-datapow_planar = ft_freqanalysis(cfg, planar);
+datapow_planar   = ft_freqanalysis(cfg, planar);
 
 %% plot the topography and the spectrum
 figure;
 
-cfg = [];
+cfg        = [];
 cfg.layout = 'CTF275_helmet.mat';
 cfg.xlim   = [9 11];
-subplot(2,1,1); ft_topoplotER(cfg, datapow);
+subplot(2,2,1); ft_topoplotER(cfg, datapow);
+subplot(2,2,2); ft_topoplotER(cfg, datapow_planar);
 
-cfg = [];
+cfg         = [];
 cfg.channel = {'MRO22', 'MRO32', 'MRO33'};
-subplot(2,1,2); ft_singleplotER(cfg, datapow);
+subplot(2,2,3); ft_singleplotER(cfg, datapow);
+
 
 %% load the required geometrical information
 
@@ -124,18 +126,15 @@ subplot(2,1,2); ft_singleplotER(cfg, datapow);
 load hdm
 load sourcemodel_4k
 
-%% check for the correct alignment of sensors (green) headmodel(transparent) and sourcemodel(blue)
+%% check for the correct alignment of sensors, headmodel, and sourcemodel.
 figure;
 
 % make the headmodel surface transparent
-ft_plot_vol(hdm, 'edgecolor', 'none');
-alpha 0.4           
-
-% add the source model positions and sensors
+ft_plot_vol(hdm, 'edgecolor', 'none'); alpha 0.4           
 ft_plot_mesh(ft_convert_units(sourcemodel, 'cm'),'vertexcolor',sourcemodel.sulc);
 ft_plot_sens(dataclean.grad);
-
 view([0 -90 0])
+
 
 %% compute sensor level Fourier spectra
 cfg            = [];
