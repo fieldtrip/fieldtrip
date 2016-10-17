@@ -121,12 +121,10 @@ subplot(2,2,3); ft_singleplotER(cfg, datapow);
 
 
 %% load the required geometrical information
-
-%% load the template source model, which is in MNI coordinates
 load hdm
 load sourcemodel_4k
 
-%% check for the correct alignment of sensors, headmodel, and sourcemodel.
+%% visualize the coregistration of sensors, headmodel, and sourcemodel.
 figure;
 
 % make the headmodel surface transparent
@@ -135,6 +133,12 @@ ft_plot_mesh(ft_convert_units(sourcemodel, 'cm'),'vertexcolor',sourcemodel.sulc)
 ft_plot_sens(dataclean.grad);
 view([0 -90 0])
 
+%% compute the leadfield
+cfg             = [];
+cfg.grid        = sourcemodel;
+cfg.headmodel   = hdm;
+cfg.channel     = {'MEG'};
+lf              = ft_prepare_leadfield(cfg, dataica);
 
 %% compute sensor level Fourier spectra
 cfg            = [];
@@ -145,17 +149,10 @@ cfg.tapsmofrq  = 1;
 cfg.foi        = 10;
 freq           = ft_freqanalysis(cfg, dataica);
 
-%% compute the leadfield
-cfg             = [];
-cfg.grid        = sourcemodel;
-cfg.headmodel   = hdm;
-cfg.channel     = {'MEG'};
-lf              = ft_prepare_leadfield(cfg, freq);
 
 %% compute the actual source reconstruction
 cfg                   = [];
 cfg.frequency         = freq.freq;
-cfg.grad              = freq.grad;
 cfg.method            = 'pcc';
 cfg.grid              = lf;
 cfg.headmodel         = hdm;
@@ -171,43 +168,40 @@ cfg               = [];
 cfg.method        = 'surface';
 cfg.funparameter  = 'nai';
 cfg.maskparameter = cfg.funparameter;
-cfg.funcolorlim   = [0.0 10];
-cfg.opacitylim    = [3 10]; 
+cfg.funcolorlim   = [0.0 8];
+cfg.opacitylim    = [3 8]; 
 cfg.opacitymap    = 'rampup';  
 cfg.funcolormap   = 'jet';
 cfg.colorbar      = 'no';
 ft_sourceplot(cfg, source);
+view([-90 30]);
+light;
 
 %% compute the power spectrum again but keep the individual trials
 cfg              = [];
 cfg.output       = 'pow';
 cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
-cfg.foilim       = [9 11];                          
+cfg.foilim       = [0 30];                          
 cfg.tapsmofrq    = 1;             
 cfg.keeptrials   = 'yes';
 datapow = ft_freqanalysis(cfg, dataica);
 
 
 %% identify the indices of trials with high and low alpha power
-tmp     = mean(datapow.powspctrm,3);           % mean over frequencies between 9-11Hz
-ind     = find(mean(tmp,1)==max(mean(tmp,1)));  % find the sensor where power is max
-indlow  = find(tmp(:,ind)<=median(tmp(:,ind)));
-indhigh = find(tmp(:,ind)>=median(tmp(:,ind)));
+freqind = nearest(datapow.freq, 10);
+tmp     = datapow.powspctrm(:,:,freqind);    
+chanind = find(mean(tmp,1)==max(mean(tmp,1)));  % find the sensor where power is max
+indlow  = find(tmp(:,chanind)<=median(tmp(:,chanind)));
+indhigh = find(tmp(:,chanind)>=median(tmp(:,chanind)));
 
 %% compute the power spectrum for the median splitted data
 cfg              = [];
-cfg.output       = 'pow';
-cfg.method       = 'mtmfft';
-cfg.taper        = 'dpss';
-cfg.tapsmofrq    = 1;             
-cfg.keeptrials   = 'no';
+cfg.trials       = indlow; 
+datapow_low      = ft_freqdescriptives(cfg, datapow);
 
-cfg.trials   = indlow; 
-datapow_low = ft_freqanalysis(cfg, dataica);
-
-cfg.trials    = indhigh; 
-datapow_high = ft_freqanalysis(cfg, dataica);
+cfg.trials       = indhigh; 
+datapow_high     = ft_freqdescriptives(cfg, datapow);
 
 %% compute the difference between high and low
 cfg = [];
@@ -216,13 +210,12 @@ cfg.operation = 'divide';
 powratio      = ft_math(cfg, datapow_high, datapow_low);
 
 %% plot the topography of the difference along with the spectra
-cfg = [];
+cfg        = [];
 cfg.layout = 'CTF275_helmet.mat';
-cfg.xlim   = [9.777650 11.309908];
-
+cfg.xlim   = [9.9 10.1];
 figure; ft_topoplotER(cfg, powratio);
 
-cfg = [];
+cfg         = [];
 cfg.channel = {'MRO33'};
 figure; ft_singleplotER(cfg, datapow_high, datapow_low);
 
@@ -243,12 +236,11 @@ freq_high  = ft_freqanalysis(cfg, dataica);
 %% compute the beamformer filters based on the entire data
 cfg                   = [];
 cfg.frequency         = freq.freq;
-cfg.grad              = freq.grad;
 cfg.method            = 'pcc';
 cfg.grid              = lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
-cfg.pcc.lambda        = '5%';
+cfg.pcc.lambda        = '10%';
 cfg.pcc.projectnoise  = 'yes';
 cfg.pcc.keepfilter    = 'yes';
 cfg.pcc.fixedori      = 'yes';
@@ -257,21 +249,20 @@ source = ft_sourceanalysis(cfg, freq);
 % use the precomputed filters 
 cfg                   = [];
 cfg.frequency         = freq.freq;
-cfg.grad              = freq.grad;
 cfg.method            = 'pcc';
 cfg.grid              = lf;
 cfg.grid.filter       = source.avg.filter;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
-cfg.pcc.lambda        = '5%';
+cfg.pcc.lambda        = '10%';
 cfg.pcc.projectnoise  = 'yes';
 source_low  = ft_sourcedescriptives([], ft_sourceanalysis(cfg, freq_low));
 source_high = ft_sourcedescriptives([], ft_sourceanalysis(cfg, freq_high));
 
-cfg  = [];
-cfg.operation = '(x1-x2)/x2';
+cfg           = [];
+cfg.operation = 'log10(x1)-log10(x2)';
 cfg.parameter = 'pow';
-source_ratio = ft_math(cfg, source_high, source_low);
+source_ratio  = ft_math(cfg, source_high, source_low);
 
 % up to 50 percent of maximum
 source_ratio.mask = (1+tanh(2.*(source_ratio.pow./max(source_ratio.pow(:))-0.5)))./2; 
@@ -280,7 +271,7 @@ cfg = [];
 cfg.method        = 'surface';
 cfg.funparameter  = 'pow';
 cfg.maskparameter = 'mask';
-cfg.funcolorlim   = [-1 1];
+cfg.funcolorlim   = [-.3 .3];
 cfg.funcolormap   = 'jet';
 cfg.colorbar      = 'no';
 ft_sourceplot(cfg, source_ratio);
