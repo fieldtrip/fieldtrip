@@ -219,7 +219,8 @@ cfg         = [];
 cfg.channel = {'MRO33'};
 figure; ft_singleplotER(cfg, datapow_high, datapow_low);
 
-%% compute fourier spectra for frequency of interest
+
+%% compute fourier spectra for frequency of interest according to the trial split
 cfg            = [];
 cfg.method     = 'mtmfft';
 cfg.output     = 'fourier';
@@ -264,7 +265,7 @@ cfg.operation = 'log10(x1)-log10(x2)';
 cfg.parameter = 'pow';
 source_ratio  = ft_math(cfg, source_high, source_low);
 
-% up to 50 percent of maximum
+% create a fancy mask
 source_ratio.mask = (1+tanh(2.*(source_ratio.pow./max(source_ratio.pow(:))-0.5)))./2; 
 
 cfg = [];
@@ -278,10 +279,8 @@ ft_sourceplot(cfg, source_ratio);
 view([-90 30]);
 light('style','infinite','position',[0 -200 200]);
 
-% then compute connectivity
-source.avg = rmfield(source.avg, 'label'); % this hack is needed because otherwise the data bookkeeping fails.
-
-cfg=[];
+% compute connectivity
+cfg         = [];
 cfg.method  ='coh';
 cfg.complex = 'absimag';
 source_conn = ft_connectivityanalysis(cfg, source);
