@@ -23,6 +23,9 @@ cfg.demean = 'yes';
 cfg.trials = 1:(numel(data.trial)-6);
 data       = ft_preprocessing(cfg, data);
 
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+cd(datadir);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BYPASS THE INTERACTIVE PART, DECLARE TRIALS 38 91 153 AS BAD
 %% make a visual inspection and reject bad trials/sensors
@@ -386,28 +389,3 @@ figure; ft_sourceplot(cfg, network_parc_high);
 view([-150 30]);
 figure; ft_sourceplot(cfg, network_parc_low);
 view([-150 30]);
-
-
-
-
-cfg = [];
-cfg.method = 'plv';
-source_conn = ft_connectivityanalysis(cfg, source_sparse);
-
-%% then compute graph metric
-source_conn.dim     = source_sparse.dim;
-source_conn.outside = source_proj.outside;
-
-% then go to the 'full' representation again
-source_conn_full = ft_source2full(source_conn);
-source_conn_full.dimord='pos_pos';
-
-%%
-fn=fieldnames(source_conn_full);
-cfg = [];
-cfg.method = 'degrees';
-cfg.parameter = fn{4};
-cfg.threshold = .5;
-deg = ft_networkanalysis(cfg,source_conn_full);
-
-
