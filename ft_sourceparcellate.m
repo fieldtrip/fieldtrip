@@ -176,14 +176,8 @@ if isfield(source, 'inside')
 end
 
 % start preparing the output data structure
-parcel       = [];
+parcel       = keepfields(source, {'freq','time','cumtapcnt'});
 parcel.label = seglabel;
-if isfield(source, 'time')
-  parcel.time = source.time;
-end
-if isfield(source, 'freq')
-  parcel.freq = source.freq;
-end
 
 for i=1:numel(fn)
   % parcellate each of the desired parameters
@@ -232,8 +226,8 @@ for i=1:numel(fn)
           tmp{j} = cellmin1(dat(seg==j));
         case 'max'
           tmp{j} = cellmax1(dat(seg==j));
-          % case 'eig'
-          %   tmp{j} = celleig1(dat(seg==j));
+        case 'eig'
+          tmp{j} = celleig1(dat(seg==j));
         otherwise
           error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
@@ -469,6 +463,15 @@ y = x{1};
 for i=2:siz(1)
   y = max(x{i}, y);
 end
+
+function y = celleig1(x)
+siz = size(x{1});
+x   = cat(1,x{:});
+siz = [size(x,1) siz];
+[u, s, v] = svds(real(x), 1);         % x = u * s * v'
+%y = s(1,1) * v(:,1);            % retain the largest eigenvector with appropriate scaling
+y = u(:,1)'*x; % computationally less efficient than above, but retains complex-valued data, with a real valued svd
+y = reshape(y, [siz(2:end) 1]); % size should have at least two elements
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions of a cell array

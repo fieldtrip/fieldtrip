@@ -222,7 +222,7 @@ switch cfg.method
         end
       end
     else
-      data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+      data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source' 'source+mesh'});
       inparam = 'crsspctrm';
     end
     
@@ -282,12 +282,12 @@ switch cfg.method
     inparam = 'cov';
     outparam = cfg.method;
   case {'amplcorr' 'powcorr'}
-    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source' 'source+mesh'});
     dtype = ft_datatype(data);
     switch dtype
       case {'freq' 'freqmvar'}
         inparam = 'powcovspctrm';
-      case 'source'
+      case {'source' 'source+mesh'}
         inparam = 'powcov';
         if isempty(cfg.refindx), error('indices of reference voxels need to be specified'); end
         % if numel(cfg.refindx)>1, error('more than one reference voxel is not yet supported'); end
@@ -430,7 +430,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         data   = ft_connectivity_csd2transfer(data, optarg{:});
       end
       
-    case 'source'
+    case {'source' 'source+mesh'}
       if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
         cfg.refindx = 1:size(data.pos,1);
       elseif ischar(cfg.refindx)
@@ -966,13 +966,28 @@ switch dtype
       stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
     end
     
-  case 'source'
-    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside'});
+  case {'source' 'source+mesh'}
+    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside' 'tri'});
     stat.(outparam) = datout;
     if ~isempty(varout),
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
     end
     
+    % deal with the dimord
+    if exist('outdimord', 'var'),
+      stat.dimord = outdimord;
+    else
+      % guess
+      tok = tokenize(getdimord(data, inparam), '_');
+      dimord = '';
+      for k = 1:numel(tok)
+        if isempty(strfind(tok{k}, 'rpt'))
+          dimord = [dimord, '_', tok{k}];
+        end
+      end
+      stat.dimord = dimord(2:end);
+    end
+  
   case 'raw'
     stat = [];
     stat.label = data.label;

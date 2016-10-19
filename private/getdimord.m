@@ -360,6 +360,8 @@ switch field
       dimord = 'pos_rpt';
     elseif isequalwithoutnans(datsiz, [npos nori nrpt])
       dimord = 'pos_ori_rpt';
+    elseif isequalwithoutnans(datsiz, [npos nori nrpttap])
+      dimord = 'pos_ori_rpttap';
     elseif isequalwithoutnans(datsiz, [npos nori ntime])
       dimord = 'pos_ori_time';
     elseif isequalwithoutnans(datsiz, [npos nori nfreq])

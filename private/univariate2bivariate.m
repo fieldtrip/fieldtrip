@@ -132,7 +132,7 @@ switch dtype
       powindx = [];
     end
     
-  case 'source'
+  case {'source' 'source+mesh'}
     ncmb = numel(cmb);
     
     % the code further down requires this to be a vector with indices

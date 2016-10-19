@@ -270,6 +270,8 @@ if ~isempty(dtype)
         okflag = okflag + (isfreq & iscomp);
       case 'timelock+comp'
         okflag = okflag + (istimelock & iscomp);
+      case 'source+mesh'
+        okflag = okflag + (issource & ismesh);
       case 'raw'
         okflag = okflag + (israw & ~iscomp);
       case 'freq'
