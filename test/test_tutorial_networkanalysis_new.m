@@ -285,8 +285,10 @@ cfg.method  ='coh';
 cfg.complex = 'absimag';
 source_conn = ft_connectivityanalysis(cfg, source);
 
+figure;imagesc(source_conn.cohspctrm);
+
 % parcellate
-load atlas_MSMAll_4k
+load atlas_MMP1.0_4k
 atlas.pos = source_conn.pos; % otherwise the parcellation won't work
 
 cfg = [];
@@ -294,40 +296,99 @@ cfg.parcellation = 'parcellation';
 cfg.parameter    = 'cohspctrm';
 parc_conn = ft_sourceparcellate(cfg, source_conn, atlas);
 
+figure;imagesc(parc_conn.cohspctrm);
 
-%% compute some graph metric
-cfg = [];
+
+%% compute node degree
+cfg           = [];
 cfg.method    = 'degrees';
 cfg.parameter = 'cohspctrm';
 cfg.threshold = .1;
 network_full = ft_networkanalysis(cfg,source_conn);
 network_parc = ft_networkanalysis(cfg,parc_conn);
 
-%%
+%% visualize
 cfg               = [];
-cfg.method        = 'ortho';
-cfg.funparameter  = 'avg.degrees';
+cfg.method        = 'surface';
+cfg.funparameter  = 'degrees';
 cfg.funcolormap   = 'jet';
 cfg.location      = 'max';
 cfg.funparameter  = 'degrees';
-ft_sourceplot(cfg, network_int);
+figure; ft_sourceplot(cfg, network_full);
+view([-150 30]);
 
-% we increase the threshold here to highlight the dominant links
-edge = source_conn.cohspctrm >.15;
-dlmwrite('edge.edge',edge,'\t');
+figure; ft_sourceplot(cfg, network_parc);
+view([-150 30]);
 
-load standard_sourcemodel3d2cm.mat
+%% now inspect some (averages of) columns of the connectivity matrix
+load atlas_MMP1.0_4k;
+load sourcemodel_4k_inflated;
 
-node = zeros(372,6)
-node(:,1:3) = sourcemodel.pos(sourcemodel.inside,:)
-node(:,4)   = 4; 
-node(:,5)   = network.degrees(network.inside);
-node(:,6)   = 0;
-node(:,1:3) = node(:,1:3)*10
-dlmwrite('node.node',node,' ');
 
-BrainNet_MapCfg('/yourpath/mesh.nv','/yourpath/node.node','/yourpath/edge.edge');
-view([0 -90 0])
+%% alpha power dependent connectivity
+freqind = nearest(datapow.freq, 10);
+tmp     = datapow.powspctrm(:,:,freqind);    
+chanind = find(mean(tmp,1)==max(mean(tmp,1)));  % find the sensor where power is max
+[sortpow, ix] = sort(tmp(:,chanind));
+
+% use the precomputed filters 
+cfg                   = [];
+cfg.frequency         = freq.freq;
+cfg.method            = 'pcc';
+cfg.grid              = lf;
+cfg.grid.filter       = source.avg.filter;
+cfg.headmodel         = hdm;
+cfg.keeptrials        = 'yes';
+cfg.pcc.lambda        = '10%';
+cfg.pcc.projectnoise  = 'yes';
+
+tmpcfg      = [];
+tmpcfg.trials  = ix(1:60);
+source_low  = ft_sourcedescriptives([], ft_sourceanalysis(cfg, ft_selectdata(tmpcfg, freq)));
+tmpcfg.trials  = ix(end-60:end);
+source_high = ft_sourcedescriptives([], ft_sourceanalysis(cfg, ft_selectdata(tmpcfg, freq)));
+
+
+cfg              = [];
+cfg.method       = 'coh';
+%cfg.complex      = 'absimag';
+source_conn_low  = ft_connectivityanalysis(cfg, source_low);
+source_conn_high = ft_connectivityanalysis(cfg, source_high);
+
+
+cfg = [];
+cfg.parcellation = 'parcellation';
+cfg.parameter    = 'cohspctrm';
+parc_conn_low    = ft_sourceparcellate(cfg, source_conn_low,  atlas);
+parc_conn_high   = ft_sourceparcellate(cfg, source_conn_high, atlas); 
+
+cfg           = [];
+cfg.method    = 'degrees';
+cfg.parameter = 'cohspctrm';
+cfg.threshold = .1;
+network_full_high = ft_networkanalysis(cfg,source_conn_high);
+network_full_low  = ft_networkanalysis(cfg,source_conn_low);
+network_parc_high = ft_networkanalysis(cfg,parc_conn_high);
+network_parc_low  = ft_networkanalysis(cfg,parc_conn_low);
+
+cfg               = [];
+cfg.method        = 'surface';
+cfg.funparameter  = 'degrees';
+cfg.funcolormap   = 'jet';
+cfg.location      = 'max';
+cfg.funparameter  = 'degrees';
+figure; ft_sourceplot(cfg, network_full_high);
+view([-150 30]);
+figure; ft_sourceplot(cfg, network_full_low);
+view([-150 30]);
+
+figure; ft_sourceplot(cfg, network_parc_high);
+view([-150 30]);
+figure; ft_sourceplot(cfg, network_parc_low);
+view([-150 30]);
+
+
+
 
 cfg = [];
 cfg.method = 'plv';
