@@ -3,7 +3,7 @@ function test_tutorial_networkanalysis_new
 % MEM 3000mb
 % WALLTIME 00:30:00
 
-% TEST test_tutorial_networkanalysis
+% TEST test_tutorial_networkanalysis_new
 % TEST ft_networkanalysis
 
 %% read the continuous data and segment into 2 seconds epochs, with 50% overlap
@@ -116,7 +116,7 @@ cfg        = [];
 cfg.layout = 'CTF275_helmet.mat';
 cfg.xlim   = [9 11];
 subplot(2,2,1); ft_topoplotER(cfg, datapow);
-subplot(2,2,2); ft_topoplotER(cfg, datapow_planar);
+subplot(2,2,2); ft_topoplotER(cfg, ft_combineplanar([], datapow_planar));
 
 cfg         = [];
 cfg.channel = {'MRO22', 'MRO32', 'MRO33'};
@@ -291,7 +291,7 @@ source_conn = ft_connectivityanalysis(cfg, source);
 figure;imagesc(source_conn.cohspctrm);
 
 % parcellate
-load atlas_MMP1.0_4k
+load atlas_MMP1.0_4k.mat
 atlas.pos = source_conn.pos; % otherwise the parcellation won't work
 
 cfg = [];
@@ -324,7 +324,7 @@ figure; ft_sourceplot(cfg, network_parc);
 view([-150 30]);
 
 %% now inspect some (averages of) columns of the connectivity matrix
-load atlas_MMP1.0_4k;
+load atlas_MMP1.0_4k.mat;
 load sourcemodel_4k_inflated;
 
 

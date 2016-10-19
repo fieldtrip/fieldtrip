@@ -176,9 +176,8 @@ if isfield(source, 'inside')
 end
 
 % start preparing the output data structure
-parcel       = [];
-parcel.label = seglabel;
 parcel       = keepfields(source, {'freq','time','cumtapcnt'});
+parcel.label = seglabel;
 
 for i=1:numel(fn)
   % parcellate each of the desired parameters
