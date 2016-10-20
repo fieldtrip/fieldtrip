@@ -236,8 +236,7 @@ for i=1:size(dip.pos,1)
   
 
   if fixedori
-  %    [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * Cy * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
-      [vv, dd] = eig(pinv(lf' * invG * Cy * invG * lf) * lf' * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
+      [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * Cy * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
       [~,maxeig]=max(diag(dd));
       eta = vv(:,maxeig);
       lf  = lf * eta;
