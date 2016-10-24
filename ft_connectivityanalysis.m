@@ -762,6 +762,26 @@ switch cfg.method
       dat    = permute(dat,[posdim rptdim setdiff(1:ndims(dat),[posdim rptdim])]);
       
       datout = ft_connectivity_powcorr_ortho(dat, optarg{:});
+      
+      % HACK continued: format the output according to the inside and
+      % refindx specifications
+      if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all'),
+        % create all-to-all output
+        tmp = zeros(numel(data.inside));
+        tmp(data.inside,data.inside) = datout;
+        datout = tmp;
+        clear tmp;
+        
+        outdimord = 'pos_pos_freq';
+      else
+        % create all-to-few output
+        tmp = zeros(numel(data.inside), numel(cfg.refindx));
+        tmp(data.inside, :) = datout;
+        datout = tmp;
+        clear tmp;
+        
+        outdimord = 'pos_pos_freq';
+      end
     elseif strcmp(data.dimord, 'rpttap_chan_freq')
       % loop over all frequencies
       [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
@@ -903,8 +923,8 @@ if exist('powindx', 'var') && ~isempty(powindx),
       inside = false(zeros(1, size(data.pos, 1)));
       inside(data.inside) = true;
       inside = inside(keepchn);
-      data.inside = find(inside)';
-      data.outside = find(inside==0)';
+%       data.inside = find(inside)';
+%       data.outside = find(inside==0)';
       data.pos = data.pos(keepchn, :);
   end % switch dtype
 end

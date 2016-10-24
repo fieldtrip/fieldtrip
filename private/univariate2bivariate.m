@@ -326,6 +326,9 @@ switch dtype
       error('unknown conversion from univariate to bivariate representation');
     end
     
+    % the code in the caller function requires this to be a boolean vector
+    data = fixinside(data, 'logical');
+    
   case 'raw'
     % construct a timelock-like structure that only contains the covariance, see ft_datatype_timelock
     timelock = [];
