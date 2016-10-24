@@ -358,6 +358,7 @@ cfg.method       = 'coh';
 source_conn_low  = ft_connectivityanalysis(cfg, source_low);
 source_conn_high = ft_connectivityanalysis(cfg, source_high);
 
+atlas.pos = source_conn_low.pos;
 
 cfg = [];
 cfg.parcellation = 'parcellation';
