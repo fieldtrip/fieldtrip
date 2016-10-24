@@ -147,9 +147,9 @@ if nargin>1
     case 'mesh'
       type = any(strcmp(type, {'mesh', 'mesh+label' 'source+mesh'}));
     case 'segmentation'
-      type = strcmp(type, 'volume+label');
+      type = any(strcmp(type, {'segmentation', 'volume+label'}));
     case 'parcellation'
-      type = any(strcmp(type, {'source+label' 'mesh+label'}));
+      type = any(strcmp(type, {'parcellation', 'source+label' 'mesh+label'}));
     case 'sens'
       type = any(strcmp(type, {'elec', 'grad'}));
     otherwise
