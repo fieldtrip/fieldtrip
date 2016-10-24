@@ -116,16 +116,16 @@ subplot(2,1,2); ft_singleplotER(cfg, fft_data);
 
 %% load the template source model, which is in MNI coordinates
 %template = load('standard_sourcemodel3d2cm.mat'); 
-%load mri % individual mri
-%load hdm % individual volume model
-%
-%%% compute the source model 
-%cfg = [];
-%cfg.grid.warpmni   = 'yes';
-%cfg.grid.template  = template.sourcemodel;
-%cfg.grid.nonlinear = 'yes'; % use non-linear normalization
-%cfg.mri            = mri;
-%sourcemodel        = ft_prepare_sourcemodel(cfg);
+% load mri % individual mri
+% load hdm % individual volume model
+% 
+% %% compute the source model 
+% cfg = [];
+% cfg.grid.warpmni   = 'yes';
+% cfg.grid.template  = template.sourcemodel;
+% cfg.grid.nonlinear = 'yes'; % use non-linear normalization
+% cfg.mri            = mri;
+% sourcemodel        = ft_prepare_sourcemodel(cfg);
 
 load hdm
 load sourcemodel_4k
@@ -169,7 +169,7 @@ cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.pcc.lambda        = '10%';
 cfg.pcc.projectnoise  = 'yes';
-cfg.pcc.fixedorid     = 'yes';
+cfg.pcc.fixedori     = 'yes';
 source = ft_sourceanalysis(cfg, freq);
 
 %% reduce the source reconstructed data to the dominant orientation
