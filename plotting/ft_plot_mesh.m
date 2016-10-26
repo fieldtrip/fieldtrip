@@ -11,8 +11,8 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   ft_plot_mesh(pos, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
-%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
+%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 / Nx3 array where N is the number of faces
+%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 / Nx3 array where N is the number of vertices
 %   'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %   'faceindex'    = true or false
 %   'vertexindex'  = true or false
@@ -139,11 +139,14 @@ if isequal(edgecolor, 'false') || isequal(edgecolor, 'no') || isequal(edgecolor,
 end
 
 % new colors management
-if strcmpi(vertexcolor,'skin') || strcmpi(vertexcolor,'brain') || strcmpi(vertexcolor,'cortex')
-  vertexcolor = eval(vertexcolor);
+if ischar(vertexcolor) && numel(vertexcolor) <= 63 % 63 is the max evaluable string length
+	try vertexcolor = eval(vertexcolor); catch, end
 end
-if strcmpi(facecolor,'skin') || strcmpi(facecolor,'brain') || strcmpi(facecolor,'cortex')
-  facecolor = eval(facecolor);
+if ischar(edgecolor) && numel(edgecolor) <= 63
+	try edgecolor = eval(edgecolor); catch, end
+end
+if ischar(facecolor) && numel(facecolor) <= 63
+	try facecolor = eval(facecolor); catch, end
 end
 
 % everything is added to the current figure
