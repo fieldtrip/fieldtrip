@@ -11,8 +11,8 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   ft_plot_mesh(pos, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
-%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
+%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
 %   'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %   'faceindex'    = true or false
 %   'vertexindex'  = true or false
@@ -138,12 +138,15 @@ if isequal(edgecolor, 'false') || isequal(edgecolor, 'no') || isequal(edgecolor,
   edgecolor = 'none';
 end
 
-% new colors management
-if strcmpi(vertexcolor,'skin') || strcmpi(vertexcolor,'brain') || strcmpi(vertexcolor,'cortex')
-  vertexcolor = eval(vertexcolor);
+% color management
+if ischar(vertexcolor) && exist([vertexcolor '.m'], 'file')
+	vertexcolor = eval(vertexcolor);
 end
-if strcmpi(facecolor,'skin') || strcmpi(facecolor,'brain') || strcmpi(facecolor,'cortex')
-  facecolor = eval(facecolor);
+if ischar(facecolor) && exist([facecolor '.m'], 'file')
+	facecolor = eval(facecolor);
+end
+if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
+	edgecolor = eval(edgecolor);
 end
 
 % everything is added to the current figure
