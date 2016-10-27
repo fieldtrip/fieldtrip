@@ -92,8 +92,8 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters
-cfg.artfctdef               = ft_getopt(cfg,                  'artfctdef', []);
-cfg.artfctdef.eog        = ft_getopt(cfg.artfctdef,        'eog',    []);
+cfg.artfctdef            = ft_getopt(cfg,               'artfctdef', []);
+cfg.artfctdef.eog        = ft_getopt(cfg.artfctdef,     'eog',       []);
 cfg.artfctdef.eog.method = ft_getopt(cfg.artfctdef.eog, 'method',    'zvalue');
 
 if isfield(cfg.artfctdef.eog, 'artifact')
@@ -113,7 +113,7 @@ cfg.artfctdef.eog = ft_checkconfig(cfg.artfctdef.eog, 'renamed', {'padding', 'tr
 artpadding_oldstyle  = max(ft_getopt(cfg.artfctdef.eog, 'pretim', 0), ft_getopt(cfg.artfctdef.eog, 'psttim', 0));
 
 % settings for preprocessing
-cfg.artfctdef.eog.bpfilter    = ft_getopt(cfg.artcftdef.eog, 'bpfilter',   'yes');
+cfg.artfctdef.eog.bpfilter    = ft_getopt(cfg.artfctdef.eog, 'bpfilter',   'yes');
 cfg.artfctdef.eog.bpfreq      = ft_getopt(cfg.artfctdef.eog, 'bpfreq',     [1 15]);
 cfg.artfctdef.eog.bpfiltord   = ft_getopt(cfg.artfctdef.eog, 'bpfiltor',   4);
 cfg.artfctdef.eog.bpfilttype  = ft_getopt(cfg.artfctdef.eog, 'bpfilttype', 'but');

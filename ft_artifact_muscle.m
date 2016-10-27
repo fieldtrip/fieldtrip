@@ -114,7 +114,7 @@ cfg.artfctdef.muscle = ft_checkconfig(cfg.artfctdef.muscle, 'renamed', {'padding
 artpadding_oldstyle  = max(ft_getopt(cfg.artfctdef.muscle, 'pretim', 0), ft_getopt(cfg.artfctdef.muscle, 'psttim', 0));
 
 % settings for preprocessing
-cfg.artfctdef.muscle.bpfilter    = ft_getopt(cfg.artcftdef.muscle, 'bpfilter',   'yes');
+cfg.artfctdef.muscle.bpfilter    = ft_getopt(cfg.artfctdef.muscle, 'bpfilter',   'yes');
 cfg.artfctdef.muscle.bpfreq      = ft_getopt(cfg.artfctdef.muscle, 'bpfreq',     [110 140]);
 cfg.artfctdef.muscle.bpfiltord   = ft_getopt(cfg.artfctdef.muscle, 'bpfiltor',   8);
 cfg.artfctdef.muscle.bpfilttype  = ft_getopt(cfg.artfctdef.muscle, 'bpfilttype', 'but');
