@@ -117,7 +117,11 @@ if ismri
   
   ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
 elseif ismesh
-  ft_plot_mesh(mri);
+  if isfield(mri, 'hex')  
+    ft_plot_mesh(mri,'surfaceonly','yes');
+  else
+    ft_plot_mesh(mri);
+  end  
 end
 
 axis vis3d

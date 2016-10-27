@@ -150,10 +150,10 @@ mesh = build_mesh_hexahedral(cfg, seg_build);
 % converting position of meshpoints to the head coordinate system
 
 if (cfg.resolution ~= 1)
-  mesh.pnt = cfg.resolution * mesh.pnt;
+  mesh.pos = cfg.resolution * mesh.pos;
 end
 
-mesh.pnt = ft_warp_apply(mri.transform, mesh.pnt, 'homogeneous');
+mesh.pos = ft_warp_apply(mri.transform, mesh.pos, 'homogeneous');
 
 labels = mesh.labels;
 
@@ -205,7 +205,7 @@ fprintf('Created elements...\n' )
 
 % create nodes
 
-mesh.pnt = create_nodes(x_dim, y_dim, z_dim);
+mesh.pos = create_nodes(x_dim, y_dim, z_dim);
 fprintf('Created nodes...\n' )
 
 
@@ -213,7 +213,7 @@ if(shift < 0 | shift > 0.3)
   error('Please choose a shift parameter between 0 and 0.3!');
 elseif(shift > 0)
   
-  mesh.pnt = shift_nodes(mesh.pnt, mesh.hex, labels, shift, x_dim, y_dim, z_dim);
+  mesh.pos = shift_nodes(mesh.pos, mesh.hex, labels, shift, x_dim, y_dim, z_dim);
   
 end
 
@@ -229,8 +229,8 @@ end
 
 % delete unused nodes
 [C, ia, ic] = unique(mesh.hex(:));
-mesh.pnt = mesh.pnt(C, :, :, :);
-mesh.pnt = mesh.pnt + repmat(shift_coord, size(mesh.pnt, 1), 1);
+mesh.pos = mesh.pos(C, :, :, :);
+mesh.pos = mesh.pos + repmat(shift_coord, size(mesh.pos, 1), 1);
 mesh.hex(:) = ic;
 
 end % subfunction

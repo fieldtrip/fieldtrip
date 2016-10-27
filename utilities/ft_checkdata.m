@@ -1404,10 +1404,17 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = timelock2raw(data)
 fn = getdatfield(data);
+if any(ismember(fn, {'trial', 'individual', 'avg'}))
+  % trial, individual and avg (in that order) should be preferred over all other data fields
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2965#c12
+  fn = fn(ismember(fn, {'trial', 'individual', 'avg'}));
+end
 dimord = cell(size(fn));
 for i=1:numel(fn)
+  % determine the dimensions of each of the data fields
   dimord{i} = getdimord(data, fn{i});
 end
+% the fields trial, individual and avg (with their corresponding default dimord) are preferred
 if sum(strcmp(dimord, 'rpt_chan_time'))==1
   fn = fn{strcmp(dimord, 'rpt_chan_time')};
   fprintf('constructing trials from "%s"\n', fn);
