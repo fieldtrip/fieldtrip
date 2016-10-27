@@ -1,7 +1,7 @@
 function test_ft_qualitycheck
 
 % MEM 1500mb
-% WALLTIME 00:11:23
+% WALLTIME 00:30:00
 
 % TEST test_ft_qualitycheck ft_qualitycheck
 

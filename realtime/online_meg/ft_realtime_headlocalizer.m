@@ -98,9 +98,9 @@ if isctf
     [p, f, x]=fileparts(cfg.template);
     if strcmp(x, '.ds')
       shape = ft_read_headshape(cfg.template, 'coordsys', 'dewar', 'format', 'ctf_ds');
-      template(1,:) = [shape.fid.pnt(1,1), shape.fid.pnt(1,2), shape.fid.pnt(1,3)]; % chan X pos
-      template(2,:) = [shape.fid.pnt(2,1), shape.fid.pnt(2,2), shape.fid.pnt(2,3)];
-      template(3,:) = [shape.fid.pnt(3,1), shape.fid.pnt(3,2), shape.fid.pnt(3,3)];
+      template(1,:) = [shape.fid.pos(1,1), shape.fid.pos(1,2), shape.fid.pos(1,3)]; % chan X pos
+      template(2,:) = [shape.fid.pos(2,1), shape.fid.pos(2,2), shape.fid.pos(2,3)];
+      template(3,:) = [shape.fid.pos(3,1), shape.fid.pos(3,2), shape.fid.pos(3,3)];
     elseif strcmp(x, '.txt')
       template = dlmread(cfg.template);
     else
@@ -141,9 +141,9 @@ if isctf
   coilsignal = [];
 elseif isneuromag
     shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif','unit','m'); % ensure SI units
-  for i = 1:min(size(shape.pnt,1),length(cfg.coilfreq)) % for as many digitized or specified coils
+  for i = 1:min(size(shape.pos,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
-      dip(i).pos = shape.pnt(i,:); % chan X pos, initial guess for each of the dipole/coil positions
+      dip(i).pos = shape.pos(i,:); % chan X pos, initial guess for each of the dipole/coil positions
       dip(i).mom = [0 0 0]';
     end
   end

@@ -1,17 +1,17 @@
-function varargout = interp_ungridded(pntin, pntout, varargin)
+function varargout = interp_ungridded(pos_from, pos_to, varargin)
 
 % INTERP_UNGRIDDED computes an interpolation matrix for two
 % clouds of 3-D points
 %
 % Use as
-%   [val] = interp_ungridded(pntin, pntout, 'data', valin, ...)
+%   [val] = interp_ungridded(pos_from, pos_to, 'data', valin, ...)
 % where
-%   pntin   Nx3 matrix with the vertex positions
-%   pntout  Mx3 matrix with the vertex positions onto which the data should
-%           be interpolated
+%   pos_from  Nx3 matrix with the vertex positions
+%   pos_to    Mx3 matrix with the vertex positions onto which the data should
+%             be interpolated
 %
 % Alternatively to get the interpolation matrix itself, you can use it as
-%   [interpmat, distmat] = interp_ungridded(pntin, pntout, ...)
+%   [interpmat, distmat] = interp_ungridded(pos_from, pos_to, ...)
 % 
 %
 % Optional arguments are specified in key-value pairs and can be
@@ -56,24 +56,24 @@ sphereradius = ft_getopt(varargin, 'sphereradius');   % required for some projec
 powerparam   = ft_getopt(varargin, 'power', 1);
 distmat      = ft_getopt(varargin, 'distmat');        % will be computed if needed and not present
 triout       = ft_getopt(varargin, 'triout');   
-dat          = ft_getopt(varargin, 'data');           % functional data defined at pntin
+dat          = ft_getopt(varargin, 'data');           % functional data defined at pos_from
 inside       = ft_getopt(varargin, 'inside');
 
 hasdat    = ~isempty(dat);
 hasinside = ~isempty(inside);
-npntin    = size(pntin, 1);
-npntout   = size(pntout, 1);
+npos_from = size(pos_from, 1);
+npos_to   = size(pos_to, 1);
 
-dimres  = sqrt(sum((pntout(2,:)-pntout(1,:)).^2,2));
+dimres  = sqrt(sum((pos_to(2,:)-pos_to(1,:)).^2,2));
 
 if hasinside,
   % convert to boolean vector
-  tmp         = false(npntin,1);
+  tmp         = false(npos_from,1);
   tmp(inside) = true;
   inside      = tmp;
   clear tmp;
 else
-  inside      = true(npntin,1);
+  inside      = true(npos_from,1);
 end
 
 if isempty(distmat)
@@ -84,33 +84,33 @@ if isempty(distmat)
         warning('sphereradius is not used for projmethod ''nearest''');
       end
       % determine the nearest voxel for each surface point
-      ind     = find_nearest(pntout, pntin, 5);
+      ind     = find_nearest(pos_to, pos_from, 5);
       sel     = ind>0;
-      indx    = 1:npntout;
-      distmat = sparse(indx(sel), ind(sel), ones(size(ind(sel))), npntout, npntin);
+      indx    = 1:npos_to;
+      distmat = sparse(indx(sel), ind(sel), ones(size(ind(sel))), npos_to, npos_from);
 
     case {'sphere_avg', 'sphere_weighteddistance'}
       if isempty(sphereradius)
         error('sphereradius should be specified');
       end
       % compute the distance between voxels and each surface point
-      dpntinsq  = sum(pntin.^2,2); % squared distance to origin
-      dpntoutsq  = sum(pntout.^2,2); % squared distance to origin
-      maxnpnt = double(npntout*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
-      maxnpnt = min(maxnpnt, npntout*npntin);
+      dpos_fromsq = sum(pos_from.^2,2); % squared distance to origin
+      dpos_tosq   = sum(pos_to.^2,2); % squared distance to origin
+      maxnpnt = double(npos_to*ceil(4/3*pi*(sphereradius/max(dimres))^3)); % initial estimate of nonzero entries
+      maxnpnt = min(maxnpnt, npos_to*npos_from);
       %ft_progress('init', 'none', 'computing distance matrix');
-      val = nan(maxnpnt, 1);
+      val   = nan(maxnpnt, 1);
       indx1 = nan(maxnpnt, 1);
       indx2 = nan(maxnpnt, 1);
       cnt = 1;
-      for j = 1:npntout
-        %ft_progress(j/npntout);
-        %d   = dpntoutsq(j) + dpntinsq - 2 * pntin * pntout(j,:)';
+      for j = 1:npos_to
+        %ft_progress(j/npos_to);
+        %d   = dpos_tosq(j) + dpos_fromsq - 2 * pos_from * pos_to(j,:)';
         %sel = find(d<sphereradius.^2);
         
         % the following lines are equivalent to the previous 2 but use
         % fewer flops
-        d    = sqrt(dpntinsq - 2 * pntin * pntout(j,:)' + dpntoutsq(j));
+        d    = sqrt(dpos_fromsq - 2 * pos_from * pos_to(j,:)' + dpos_tosq(j));
         sel  = find(d < sphereradius & inside);
         
         nsel = numel(sel);
@@ -124,18 +124,18 @@ if isempty(distmat)
       indx1(isnan(indx1)) = [];
       indx2(isnan(indx2)) = [];
       val(isnan(val))     = [];
-      distmat = sparse(indx1, indx2, val, npntout, npntin);
+      distmat = sparse(indx1, indx2, val, npos_to, npos_from);
       %ft_progress('close');
 
     case 'smudge'
       if isempty(triout),
         error('the ''smudge'' method needs a triangle definition');
       end
-      [datin, loc] = ismember(pntout, pntin, 'rows');
+      [datin, loc] = ismember(pos_to, pos_from, 'rows');
       [datout, S1] = smudge(datin, triout, 6); %FIXME 6 is number of iterations, improve here
     
       sel = find(datin);
-      S2  = sparse(sel(:), loc(datin), ones(npntin,1), npntout, npntin);
+      S2  = sparse(sel(:), loc(datin), ones(npos_from,1), npos_to, npos_from);
       distmat = S1 * S2;
     
     otherwise
@@ -159,10 +159,10 @@ switch projmethod
   case 'sphere_weighteddistance'
     projmat         = distmat;
     [ind1, ind2, d] = find(projmat);
-    projmat         = sparse(ind1, ind2, d.^-powerparam, npntout, npntin);
+    projmat         = sparse(ind1, ind2, d.^-powerparam, npos_to, npos_from);
     [ind1, ind2, d] = find(projmat);
     normnz          = full(sum(projmat, 2));
-    projmat         = sparse(ind1, ind2, d./normnz(ind1), npntout, npntin);
+    projmat         = sparse(ind1, ind2, d./normnz(ind1), npos_to, npos_from);
 
   case 'smudge'
     projmat = distmat;

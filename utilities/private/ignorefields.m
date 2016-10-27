@@ -5,8 +5,24 @@ function ignore = ignorefields(purpose)
 % size-checking, etc.
 
 switch purpose
+  
+  case 'deface'
+    ignore = {
+      % some fields should be dealt with explicitly
+      'pos'
+      'tri'
+      'tet'
+      'hex'
+      'dim'
+      'transform'
+      % some fields are irrelevant
+      'unit'
+      'coordsys'
+      'fid'
+      'cfg'
+      };
 
-    case 'pipeline'
+  case 'pipeline'
     ignore = {
       % some fields that are always allowed to be present in the configuration
       'leadfield'
@@ -45,7 +61,6 @@ switch purpose
       'trackdatainfo'
       'trackcallinfo'
       'showcallinfo'
-      'callinfo'
       'warning'
       'debug'
       'progress'

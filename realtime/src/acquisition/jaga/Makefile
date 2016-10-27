@@ -44,7 +44,13 @@ ifeq "$(UNAME)" "Linux"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 	endif
 	ifeq "$(MACHINE)" "armv6l"
-		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi1
+	endif
+	ifeq "$(MACHINE)" "armv7l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi2
+	endif
+	ifeq "$(MACHINE)" "armv8l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi3
 	endif
 endif
 

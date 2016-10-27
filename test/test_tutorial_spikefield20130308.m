@@ -86,7 +86,7 @@ cfg.dftfilter = 'yes';
 %            cfg: [1x1 struct]
 % Here, every cell of data_lfp.trial contains a chan x time data matrix for one trial (# trials = 600).
 %
-% It is important to note that we assume that there are no gaps in the recording, i.e. that the LFP recording is continuous. It may occasionally occur that (at least for Neuralynx software this is known) there are gaps in the LFP recording because the recording software has been turned on and off, such that there is one Ncs file with a large gap. In that case, one must take care of linking timestamps and samples as there will not be a linear relationship anymore. We refer to http://fieldtrip.fcdonders.nl/getting_started/neuralynx for potential solutions.
+% It is important to note that we assume that there are no gaps in the recording, i.e. that the LFP recording is continuous. It may occasionally occur that (at least for Neuralynx software this is known) there are gaps in the LFP recording because the recording software has been turned on and off, such that there is one Ncs file with a large gap. In that case, one must take care of linking timestamps and samples as there will not be a linear relationship anymore. We refer to http://www.fieldtriptoolbox.org/getting_started/neuralynx for potential solutions.
 %
 % The critical pieces of information needed to link LFPs to spikes are the number of timestamps per LFP sample, the LFP sampling rate and the first timestamp of the recording. If one reads out the LFP files using ft_read_spike then this information is represented in data.hdr.Fs, data.hdr.TimeStampPerSample and data.hdr.FirstTimeStamp. In this case,
 %

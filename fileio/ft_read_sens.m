@@ -328,7 +328,7 @@ switch fileformat
       % coordinate information into sens structure of channels that are
       % set.
       for i=1:numel(tmp)
-        if strcmp(tmp(i).Marker.set,'true')
+        if strcmp(tmp(i).Marker.set, 'true')
           sens.elecpos(i,1) = str2double(tmp(i).Marker.ColVec3D.data0);
           sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
           sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
@@ -356,7 +356,7 @@ switch fileformat
       x = 85*cos(radians(phi)).*sin(radians(theta));
       y = 85*sin(radians(theta)).*sin(radians(phi));
       z = 85*cos(radians(theta));
-      sens.unit = 'cm';
+      sens.unit = 'mm';
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
     else

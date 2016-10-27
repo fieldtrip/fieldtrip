@@ -10,16 +10,32 @@ if(verLessThan('matlab','8.4')) % necessary to preserve colormap on functional i
     end
 end
 
-if(isfield(st.nmt.gui,'ax_topo'))
-    delete(st.nmt.gui.ax_topo);
-end
-topofig = figure('Visible','off');
-cfgplot.interactive = 'no';
-% cfgplot.colorbar = 'yes';  % how can we transfer colorbar over?
-cfgplot.comment = 'no';
-ft_topoplotER(cfgplot,erp);
-st.nmt.gui.ax_topo = copyobj(gca,st.fig);
-delete(topofig);
+newway = true
+if(newway)
+    axes(st.nmt.gui.ax_ts(2,1));
+    set(st.nmt.gui.ax_ts(2,1),'Visible');
+    cfgplot.interactive = 'no';
+    % cfgplot.colorbar = 'yes';  % how can we transfer colorbar over?
+    cfgplot.comment = 'no';
+    ft_topoplotER(cfgplot,erp);
+    
+    set(st.nmt.gui.ax_ts(2,1),'Units','pixels','Position',st.nmt.gui.ax_topo_pos);
+    colormap(st.nmt.gui.ax_ts(2,1),jet)
 
-set(st.nmt.gui.ax_topo,'Units','pixels','Position',st.nmt.gui.ax_topo_pos);
-colormap(st.nmt.gui.ax_topo,jet)
+else
+    if(isfield(st.nmt.gui,'ax_topo'))
+        delete(st.nmt.gui.ax_topo);
+    end
+    topofig = figure('Visible','off');
+    cfgplot.interactive = 'no';
+    % cfgplot.colorbar = 'yes';  % how can we transfer colorbar over?
+    cfgplot.comment = 'no';
+    ft_topoplotER(cfgplot,erp);
+    
+    st.nmt.gui.ax_topo = copyobj(gca,st.fig);
+    delete(topofig);
+    
+    set(st.nmt.gui.ax_topo,'Units','pixels','Position',st.nmt.gui.ax_topo_pos);
+    colormap(st.nmt.gui.ax_topo,jet)
+end
+end

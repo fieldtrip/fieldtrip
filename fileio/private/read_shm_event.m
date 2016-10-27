@@ -1,4 +1,4 @@
-function [event] = read_shm_event(filename, varargin);
+function [event] = read_shm_event(filename, varargin)
 
 % READ_SHM_EVENT reads the events in real-time from shared memory
 % this is a helper function for READ_EVENT

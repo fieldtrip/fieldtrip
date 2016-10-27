@@ -1,4 +1,4 @@
-function ft_plot_crosshair(pos, varargin);
+function ft_plot_crosshair(pos, varargin)
 
 % FT_PLOT_CROSSHAIR plots a crosshair in two or three dimensions
 %

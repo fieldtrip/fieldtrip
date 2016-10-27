@@ -6,7 +6,7 @@ function test_tutorial_eventrelatedaveraging20130308
 % TEST test_tutorial_eventrelatedaveraging20130308
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% this reflects  http://fieldtrip.fcdonders.nl/tutorial/eventrelatedaveraging
+% this reflects  http://www.fieldtriptoolbox.org/tutorial/eventrelatedaveraging
 % downloaded on 6 March 2013
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -4,7 +4,7 @@ function test_tutorial_preprocessing_erp
 % WALLTIME 00:10:00
 
 % This is a test script for the EEG preprocessing example page that Irina made for the Cracow workshop.
-% See http://fieldtrip.fcdonders.nl/tutorial/preprocessing_erp
+% See http://www.fieldtriptoolbox.org/tutorial/preprocessing_erp
 %
 % This version corresponds to the wiki on 24 June 2012
 

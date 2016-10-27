@@ -1,12 +1,10 @@
 function mri = ft_defacevolume(cfg, mri)
 
-% FT_DEFACEVOLUME allows you to de-identify an anatomical MRI by erasing specific
-% regions from an anatomical MRI, such as the face and ears. The graphical user
-% interface allows you to position a box over the anatomical MRI inside which all
-% anatomical voxel values will be replaced by zero. Depending on the alignment of the
-% anatomical MRI and whether both face and ears need to be removed, you might have to
-% call this function multiple times in succession. Following defacing, you should
-% check the result with FT_SOURCEPLOT.
+% FT_DEFACEVOLUME allows you to de-identify an anatomical MRI by erasing specific regions, such as the face and ears. The graphical
+% user interface allows you to position a box over the anatomical data inside which
+% all anatomical voxel values will be replaced by zero. You might have to call this
+% function multiple times when both face and ears need to be removed. Following
+% defacing, you should check the result with FT_SOURCEPLOT.
 %
 % Use as
 %   mri = ft_defacevolume(cfg, mri)
@@ -17,15 +15,16 @@ function mri = ft_defacevolume(cfg, mri)
 %   cfg.translate  = initial rotation of the box (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
-%   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'yes')
+%   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'no')
+%   cfg.feedback   = 'no' or 'yes', whether to provide graphical feedback (default = 'no')
 %
 % If you specify no smoothing, the selected area will be zero-masked. If you
 % specify a certain amount of smoothing (in voxels FWHM), the selected area will
 % be replaced by a smoothed version of the data.
 %
-% See also FT_ANONIMIZEDATA, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
+% See also FT_ANONIMIZEDATA, FT_DEFACEMESH, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
 
-% Copyright (C) 2015, Robert Oostenveld
+% Copyright (C) 2015-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -69,11 +68,16 @@ cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined f
 cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
 cfg.selection = ft_getopt(cfg, 'selection', 'outside');
 cfg.smooth    = ft_getopt(cfg, 'smooth', 'no');
-cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'yes');
-cfg.feedback  = ft_getopt(cfg, 'feedback', 'yes');
+cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'no');
+cfg.feedback  = ft_getopt(cfg, 'feedback', 'no');
 
-% check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+ismri    = ft_datatype(mri, 'volume') && isfield(mri, 'anatomy');
+ismesh   = isfield(mri, 'pos'); % triangles are optional
+
+if ismri
+  % check if the input data is valid for this function
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
+end
 
 % determine the size of the "unit" sphere in the origin and the length of the axes
 switch mri.unit
@@ -90,27 +94,36 @@ switch mri.unit
     error('unknown units (%s)', unit);
 end
 
-% the volumetric data needs to be interpolated onto three orthogonal planes
-% determine a resolution that is close to, or identical to the original resolution
-[corner_vox, corner_head] = cornerpoints(mri.dim, mri.transform);
-diagonal_head = norm(range(corner_head));
-diagonal_vox  = norm(range(corner_vox));
-resolution    = diagonal_head/diagonal_vox; % this is in units of "mri.unit"
-
 figHandle = figure;
 set(figHandle, 'CloseRequestFcn', @cb_close);
 
 % clear persistent variables to ensure fresh figure
 clear ft_plot_slice
 
-% create a contrast enhanced version of the anatomy
-mri.anatomy = double(mri.anatomy);
-dum = unique(mri.anatomy(:));
-clim(1) = dum(round(0.05*numel(dum)));
-clim(2) = dum(round(0.95*numel(dum)));
-anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
+if ismri
+  % the volumetric data needs to be interpolated onto three orthogonal planes
+  % determine a resolution that is close to, or identical to the original resolution
+  [corner_vox, corner_head] = cornerpoints(mri.dim, mri.transform);
+  diagonal_head = norm(range(corner_head));
+  diagonal_vox  = norm(range(corner_vox));
+  resolution    = diagonal_head/diagonal_vox; % this is in units of "mri.unit"
+  
+  % create a contrast enhanced version of the anatomy
+  mri.anatomy = double(mri.anatomy);
+  dum = unique(mri.anatomy(:));
+  clim(1) = dum(round(0.05*numel(dum)));
+  clim(2) = dum(round(0.95*numel(dum)));
+  anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
+  
+  ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
+elseif ismesh
+  if isfield(mri, 'hex')  
+    ft_plot_mesh(mri,'surfaceonly','yes');
+  else
+    ft_plot_mesh(mri);
+  end  
+end
 
-ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
 axis vis3d
 view([110 36]);
 
@@ -166,52 +179,113 @@ S = cfg.S;
 R = cfg.R;
 T = cfg.T;
 
-% it is possible to convert the box to headcoordinates, but it is more efficient the other way around
-[X, Y, Z] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
-voxpos = ft_warp_apply(mri.transform, [X(:) Y(:) Z(:)]);  % voxel positions in head coordinates
-voxpos = ft_warp_apply(inv(T*R*S), voxpos);               % voxel positions in box coordinates
-
-remove = ...
-  voxpos(:,1) > -0.5 & ...
-  voxpos(:,1) < +0.5 & ...
-  voxpos(:,2) > -0.5 & ...
-  voxpos(:,2) < +0.5 & ...
-  voxpos(:,3) > -0.5 & ...
-  voxpos(:,3) < +0.5;
+if ismri
+  % it is possible to convert the box to headcoordinates, but it is more efficient the other way around
+  [X, Y, Z] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
+  voxpos = ft_warp_apply(mri.transform, [X(:) Y(:) Z(:)]);  % voxel positions in head coordinates
+  voxpos = ft_warp_apply(inv(T*R*S), voxpos);               % voxel positions in box coordinates
+  
+  remove = ...
+    voxpos(:,1) > -0.5 & ...
+    voxpos(:,1) < +0.5 & ...
+    voxpos(:,2) > -0.5 & ...
+    voxpos(:,2) < +0.5 & ...
+    voxpos(:,3) > -0.5 & ...
+    voxpos(:,3) < +0.5;
+  
+elseif ismesh || issource
+  meshpos = ft_warp_apply(inv(T*R*S), mri.pos);               % mesh vertex positions in box coordinates
+  
+  remove = ...
+    meshpos(:,1) > -0.5 & ...
+    meshpos(:,1) < +0.5 & ...
+    meshpos(:,2) > -0.5 & ...
+    meshpos(:,2) < +0.5 & ...
+    meshpos(:,3) > -0.5 & ...
+    meshpos(:,3) < +0.5;
+end
 
 if strcmp(cfg.selection, 'inside')
   % invert the selection, i.e. keep the voxels inside the box
   remove = ~remove;
 end
 
-if istrue(cfg.keepbrain)
-  tmpcfg = [];
-  tmpcfg.output = {'brain'};
-  seg = ft_volumesegment(tmpcfg, mri);
-  fprintf('keeping voxels in brain segmentation\n');
-  % keep the tissue of the brain
-  remove(seg.brain) = 0;
-  clear seg
-end
-
-if istrue(cfg.feedback)
-  tmpmri = keepfields(mri, {'anatomy', 'transform', 'coordsys', 'units', 'dim'});
-  tmpmri.remove = remove;
-  tmpcfg = [];
-  tmpcfg.funparameter = 'remove';
-  ft_sourceplot(tmpcfg, tmpmri);
-end  
-
-if isequal(cfg.smooth, 'no')
-  fprintf('zero-filling %.0f%% of the volume\n', 100*mean(remove));
-  mri.anatomy(remove) = 0;
-else
-  tmp = mri.anatomy;
-  tmp = (1 + 0.5.*randn(size(tmp))).*tmp; % add 50% noise to each voxel
-  tmp = volumesmooth(tmp, cfg.smooth, 'anatomy');
-  fprintf('smoothing %.0f%% of the volume\n', 100*mean(remove));
-  mri.anatomy(remove) = tmp(remove);
-end
+if ismri
+  if istrue(cfg.keepbrain)
+    tmpcfg = [];
+    tmpcfg.output = {'brain'};
+    seg = ft_volumesegment(tmpcfg, mri);
+    fprintf('keeping voxels in brain segmentation\n');
+    % keep the tissue of the brain
+    remove(seg.brain) = 0;
+    clear seg
+  end
+  
+  if istrue(cfg.feedback)
+    tmpmri = keepfields(mri, {'anatomy', 'transform', 'coordsys', 'units', 'dim'});
+    tmpmri.remove = remove;
+    tmpcfg = [];
+    tmpcfg.funparameter = 'remove';
+    ft_sourceplot(tmpcfg, tmpmri);
+  end
+  
+  if isequal(cfg.smooth, 'no')
+    fprintf('zero-filling %.0f%% of the volume\n', 100*mean(remove));
+    mri.anatomy(remove) = 0;
+  else
+    tmp = mri.anatomy;
+    tmp = (1 + 0.5.*randn(size(tmp))).*tmp; % add 50% noise to each voxel
+    tmp = volumesmooth(tmp, cfg.smooth, 'anatomy');
+    fprintf('smoothing %.0f%% of the volume\n', 100*mean(remove));
+    mri.anatomy(remove) = tmp(remove);
+  end
+  
+elseif ismesh
+  % determine all fields that might need to be defaced
+  fn = setdiff(fieldnames(mri), ignorefields('deface'));
+  dimord = cell(size(fn));
+  for i=1:numel(fn)
+    dimord{i} = getdimord(mri, fn{i});
+  end
+  % this applies to headshapes and meshes in general
+  fprintf('keeping %d and removing %d vertices in the mesh\n', sum(remove==0), sum(remove==1));
+  if isfield(mri, 'tri')
+    [mri.pos, mri.tri] = remove_vertices(mri.pos, mri.tri, remove);
+  elseif isfield(mri, 'tet')
+    [mri.pos, mri.tet] = remove_vertices(mri.pos, mri.tet, remove);
+  elseif isfield(mri, 'hex')
+    [mri.pos, mri.hex] = remove_vertices(mri.pos, mri.hex, remove);
+  else
+    mri.pos = mri.pos(~remove,1:3);
+  end
+  for i=1:numel(fn)
+    dimtok = tokenize(dimord{i}, '_');
+    % do some sanity checks
+    if any(strcmp(dimtok, '{pos}'))
+      error('not supported');
+    end
+    if numel(dimtok)>5
+      error('too many dimensions');
+    end
+    % remove the same positions from each matching dimension
+    if numel(dimtok)>0 && strcmp(dimtok{1}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(~remove,:,:,:,:);
+    end
+    if numel(dimtok)>1 && strcmp(dimtok{2}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,~remove,:,:,:);
+    end
+    if numel(dimtok)>2 && strcmp(dimtok{3}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,~remove,:,:);
+    end
+    if numel(dimtok)>3 && strcmp(dimtok{4}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,:,~remove,:);
+    end
+    if numel(dimtok)>4 && strcmp(dimtok{5}, 'pos')
+      mri.(fn{i}) = mri.(fn{i})(:,:,:,:,~remove);
+    end
+  end % for fn
+  mri = removefields(mri, {'dim', 'transform'}); % these fields don't apply any more
+end % ismesh
 
 % remove the temporary fields from the configuration, keep the rest for provenance
 cfg = removefields(cfg, {'R', 'S', 'T'});

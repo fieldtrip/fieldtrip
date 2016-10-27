@@ -74,16 +74,14 @@ case 'diffabs'
   % this is not sensitive to phase differences
   itcA = abs(mean(dat(:,selA), 2)); % ITC is the length of the average complex numbers
   itcB = abs(mean(dat(:,selB), 2)); % ITC is the length of the average complex numbers
-  s = itcA - itcB;
+  s.stat = itcA - itcB;
 case 'absdiff'
   % first compute the difference, then take the absolute
   % this is sensitive to phase differences
   itcA = mean(dat(:,selA), 2); % ITC is here the average complex number
   itcB = mean(dat(:,selB), 2); % ITC is here the average complex number
-  s = abs(itcA - itcB);
+  s.stat = abs(itcA - itcB);
 otherwise
   error('incorrect specification of cfg.complex');
 end
-
-s.stat = s;
 

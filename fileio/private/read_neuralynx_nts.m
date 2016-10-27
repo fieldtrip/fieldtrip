@@ -1,4 +1,4 @@
-function [nts] = read_neuralynx_nts(filename, begrecord, endrecord);
+function [nts] = read_neuralynx_nts(filename, begrecord, endrecord)
 
 % READ_NEURALYNX_NTS reads spike timestamps
 %

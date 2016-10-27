@@ -127,7 +127,7 @@ lab_other = data.label(sel_other);
 % define the channel names after combining the planar combinations
 % they should be sorted according to the order of the planar channels in the data
 [dum, sel_planar] = match_str(data.label(sel_dH),planar(:,1));
-lab_comb          = planar(sel_planar,3);
+lab_comb          = planar(sel_planar,end);
 
 % perform baseline correction
 if strcmp(cfg.demean, 'yes')
@@ -201,7 +201,7 @@ if isfreq
         end
         ft_progress('close');
         other              = data.fourierspctrm(:,sel_other,fbin,:);
-        data               = rmfield(data,'fourierspctrm');
+        data               = rmfield(data, 'fourierspctrm');
         data.fourierspctrm = cat(2, fourier, other);
         data.label         = cat(1, lab_comb(:), lab_other(:));
         data.freq          = data.freq(fbin);
@@ -286,29 +286,49 @@ else
 end % which ft_datatype
 
 % remove the fields for which the planar gradient could not be combined
-try, data = rmfield(data, 'crsspctrm');   end
-try, data = rmfield(data, 'labelcmb');    end
+data = removefields(data, {'crsspctrm', 'labelcmb'});
 
 if isfield(data, 'grad')
   % update the grad and only retain the channel related info
   [sel_dH, sel_comb] = match_str(data.grad.label, planar(:,1));  % indices of the horizontal channels
-  sel_dV    = match_str(data.grad.label, planar(:,2));  % indices of the vertical   channels
-
+  [sel_dV          ] = match_str(data.grad.label, planar(:,2));  % indices of the vertical   channels
+  
   % find the other channels that are present in the data
   sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
   lab_other = data.grad.label(sel_other);
-  lab_comb  = planar(sel_comb,3);
-
-  sel      = [sel_dH(:);sel_other(:)];
-  newlabel = [lab_comb;lab_other];
-
-  newgrad.chanpos  = data.grad.chanpos(sel,:);
-  newgrad.chanori  = data.grad.chanori(sel,:);
-  newgrad.chantype = data.grad.chantype(sel);
-  newgrad.chanunit = data.grad.chanunit(sel);
+  lab_comb  = planar(sel_comb,end);
+  
+  % compute the average position
+  newpos   = [
+    (data.grad.chanpos(sel_dH,:)+data.grad.chanpos(sel_dV,:))/2
+    data.grad.chanpos(sel_other,:)
+    ];
+  % compute the average orientation
+  newori   = [
+    (data.grad.chanori(sel_dH,:)+data.grad.chanori(sel_dV,:))/2
+    data.grad.chanori(sel_other,:)
+    ];
+  newlabel = [
+    lab_comb
+    lab_other
+    ];
+  newtype = [
+    repmat({'unknown'}, numel(sel_comb), 1) % combined planar 
+    data.grad.chantype(sel_other(:))        % keep the known channel details
+    ];
+  newunit = [
+    repmat({'unknown'}, numel(sel_comb), 1) % combined planar
+    data.grad.chanunit(sel_other(:))        % keep the known channel details
+    ];
+  
+  newgrad.chanpos  = newpos;
+  newgrad.chanori  = newori;
   newgrad.label    = newlabel;
+  newgrad.newtype  = newtype;
+  newgrad.newunit  = newunit;
   newgrad.unit     = data.grad.unit;
-
+  newgrad.type     = [data.grad.type '_combined'];
+  
   data.grad = newgrad;
 end
 

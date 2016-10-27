@@ -26,7 +26,7 @@ phi(index) = [];
 pnt = [R*cos(theta(:)).*cos(phi(:)) R*cos(theta(:)).*sin(phi(:)) R*sin(theta(:))];
 vol = ft_headmodel_singlesphere(pnt);
 
-%% a few sensors in old fieldtrip style for magnetometer
+%% a few sensors in old FieldTrip style for magnetometer
 N_phi = 15;
 N_theta = 15;
 R = 12;
@@ -61,7 +61,7 @@ for r = linspace(1,9,N_R)
 end
 pos = [R(:).*cos(theta(:)).*cos(phi(:)) R(:).*cos(theta(:)).*sin(phi(:)) R(:).*sin(theta(:))];
 
-%% fieldtrip - lead field
+%% leadfield
 lf = ft_compute_leadfield(pos, sens, vol, 'normalizeparam', 0);
 
 %% forward

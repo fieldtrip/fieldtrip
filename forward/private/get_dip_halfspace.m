@@ -1,4 +1,4 @@
-function is_in_empty = get_dip_halfspace(P,vol);
+function is_in_empty = get_dip_halfspace(P,vol)
 
 % GET_DIP_HALFSPACE checks if the dipole is in the empty halfspace and
 % returns true if this happens. The normal of the plane points by

@@ -5,8 +5,8 @@ if(~exist('op','var'))
     op = '';
 end
 
-% TODO: how do we determine which axis was clicked? compare with gca??
-axsel = st.nmt.gui.ax_ts(1)
+%axsel = st.nmt.gui.ax_ts(1);
+axsel = gca; % for multi panel support
 
 switch(op)
     case 'ts'
@@ -26,8 +26,6 @@ switch(op)
                 st.nmt.cfg.freq_idx = [1 1];
             else
                 st.nmt.cfg.freq_idx(2) = st.nmt.cfg.freq_idx;
-                
-                set(axsel,'YTick');
             end
         end
     case 'textbox'
@@ -61,6 +59,7 @@ if(st.nmt.cfg.time_idx(2) < st.nmt.cfg.time_idx(1))
     st.nmt.cfg.time_idx = st.nmt.cfg.time_idx([2 1]);
 end
 
-
-nmt_spm8_plot
-
+nmt_spm_plot
+for funidx=1:length(st.nmt.fun);
+    nmt_update_panel(funidx)
+end

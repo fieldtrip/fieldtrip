@@ -214,10 +214,10 @@ cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys
-  functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+  functional     = ft_checkdata(functional, 'datatype', {'source', 'volume'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 else
   % check if the input functional is valid for this function, a coordsys is not directly needed
-  functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
+  functional     = ft_checkdata(functional, 'datatype', {'source', 'volume'}, 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 % set the defaults for all methods
@@ -1146,29 +1146,27 @@ switch cfg.method
     else
       color = repmat(cortex_light, size(surf.pos,1), 1);
     end
-
-    h1 = patch('Vertices', surf.pos, 'Faces', surf.tri, 'FaceVertexCData', color, 'FaceColor', 'interp');
-    set(h1, 'EdgeColor', 'none');
+    
+    ft_plot_mesh(surf,'edgecolor', 'none', 'vertexcolor', color);
     axis   off;
     axis vis3d;
     axis equal;
 
     if hasfun
-      h2 = patch('Vertices', surf.pos, 'Faces', surf.tri, 'FaceVertexCData', val, 'FaceColor', 'interp');
-      set(h2, 'EdgeColor', 'none');
-      try
-        caxis(gca,[fcolmin fcolmax]);
-      end
-      colormap(cfg.funcolormap);
-      if hasmsk
-        set(h2, 'FaceVertexAlphaData', maskval);
-        set(h2, 'FaceAlpha',          'interp');
-        set(h2, 'AlphaDataMapping',   'scaled');
+      if ~hasmsk || all(maskval(:)==1)
+        ft_plot_mesh(surf, 'edgecolor', 'none', 'vertexcolor', val);
+      elseif hasmsk
+        ft_plot_mesh(surf, 'edgecolor', 'none', 'vertexcolor', val, 'facealpha', maskval);
         try
           alim(gca, [opacmin opacmax]);
         end
         alphamap(cfg.opacitymap);
       end
+      
+      try,
+        caxis(gca,[fcolmin fcolmax]);
+      end
+      colormap(cfg.funcolormap);
     end
 
     lighting gouraud

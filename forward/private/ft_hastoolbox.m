@@ -115,7 +115,7 @@ url = {
   'PRTOOLS'       'see http://www.prtools.org'
   'ITAB'          'contact Stefania Della Penna'
   'BSMART'        'see http://www.brain-smart.org'
-  'PEER'          'see http://fieldtrip.fcdonders.nl/development/peer'
+  'PEER'          'see http://www.fieldtriptoolbox.org/development/peer'
   'FREESURFER'    'see http://surfer.nmr.mgh.harvard.edu/fswiki'
   'SIMBIO'        'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
   'VGRID'         'see http://www.rheinahrcampus.de/~medsim/vgrid/manual.html'
@@ -148,6 +148,7 @@ url = {
   'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
   'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
+  'NEURONE'       'see http://www.megaemg.com/support/unrestricted-downloads'
   };
 
 if nargin<2
@@ -349,8 +350,10 @@ switch toolbox
     dependency = {'comp_tstamps' 'load_audio0123', 'load_video123'};
   case 'WAVEFRONT'
     dependency = {'write_wobj' 'read_wobj'};
+  case 'NEURONE'
+    dependency = {'readneurone' 'readneuronedata' 'readneuroneevents'};
 
-    % the following are fieldtrip modules/toolboxes
+    % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', ...
                     'ft_read_event', 'ft_read_sens'};
@@ -387,13 +390,13 @@ end
 % try to determine the path of the requested toolbox
 if autoadd>0 && ~status
 
-  % for core fieldtrip modules
+  % for core FieldTrip modules
   prefix = fileparts(which('ft_defaults'));
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
 
-  % for external fieldtrip modules
+  % for external FieldTrip modules
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
@@ -405,7 +408,7 @@ if autoadd>0 && ~status
     end
   end
 
-  % for contributed fieldtrip extensions
+  % for contributed FieldTrip extensions
   prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);

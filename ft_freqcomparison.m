@@ -25,7 +25,7 @@ function [freq] = ft_freqcomparison(cfg, varargin)
 % $Id$
 
 % DEPRECATED by roboos on 30 July 2013
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2222 for more details
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2222 for more details
 % support for this functionality can be removed at the end of 2013
 warning('FT_FREQCOMPARISON is deprecated, please use FT_MATH instead.')
 

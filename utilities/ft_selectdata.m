@@ -85,6 +85,11 @@ end
 cfg = varargin{1};
 varargin = varargin(2:end);
 
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
+
 ft_defaults                   % this ensures that the path is correct and that the ft_defaults global variable is available
 ft_preamble init              % this will reset ft_warning and show the function help if nargin==0 and return an error
 ft_preamble provenance        % this records the time and memory usage at teh beginning of the function
@@ -166,7 +171,7 @@ datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used
 datfield  = setdiff(datfield, {'dim'});              % not used for selection, also not treated as data field
 xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit' 'topolabel'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
-orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$'))); % xxxlabel
+orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$'))&cellfun(@isempty, regexp(datfield, '^csd'))); % xxxlabel, with the exception of csdlabel
 datfield  = setdiff(datfield, orgdim1);
 datfield  = datfield(:)';
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$'))); % xxxdimord

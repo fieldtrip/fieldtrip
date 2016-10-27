@@ -133,6 +133,11 @@ else
   mesh = {};
 end
 
+% replace pnt by pos
+for k = 1:numel(mesh)
+  mesh{k} = fixpos(mesh{k});
+end
+
 dointersect = ~isempty(mesh);
 if dointersect
   for k = 1:numel(mesh)
@@ -404,12 +409,14 @@ if ~isempty(plotmarker)
   v1 = loc + inplane(1,:);
   v2 = loc + inplane(2,:);
   v3 = loc + inplane(3,:);
+  pr = nan(size(plotmarker,1), 3);
+  d  = nan(size(plotmarker,1), 1);
   for k = 1:size(plotmarker,1)
-    [pr(k,:),d(k,:)] = ptriprojn(v1,v2,v3,plotmarker(k,:));
+    [pr(k,:), d(k,:)] = ptriprojn(v1, v2, v3, plotmarker(k,:));
   end
   sel = d<eps*1e8;
-  if sum(sel)>0,
-    ft_plot_dipole(pr(sel,:),repmat([0;0;1],1,size(pr,1)),'length',0,'color',markercolor,'diameter',markersize);
+  if sum(sel)>0
+    ft_plot_dipole(pr(sel,:), repmat([0;0;1], 1, size(pr,1)), 'length', 0, 'color', markercolor, 'diameter', markersize);
   end
 end
 
@@ -418,7 +425,7 @@ ax = [min(corner_hc) max(corner_hc)];
 axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
 
 st = dbstack;
-if numel(st)>1,
+if numel(st)>1
   % ft_plot_slice has been called from another function
   % assume the remainder of the axis settings to be handled there
 else

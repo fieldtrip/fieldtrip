@@ -1,4 +1,4 @@
-function [pnt, tri] = read_off(fn);
+function [pnt, tri] = read_off(fn)
 
 % READ_OFF reads vertices and triangles from a OFF format triangulation file
 %

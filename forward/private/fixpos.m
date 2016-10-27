@@ -44,7 +44,7 @@ if isfield(mesh, 'Points') && isfield(mesh, 'ConnectivityList')
     otherwise
       error('unsupported ConnectivityList')
   end % switch
-  mesh = rmfield(mesh, {'Points', 'ConnectivityList', 'Constraints'});
+  mesh = removefields(mesh, {'Points', 'ConnectivityList', 'Constraints', 'UnderlyingObj'});
 end
 
 % convert from BrainStorm/MNE to FieldTrip convention

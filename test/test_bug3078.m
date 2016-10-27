@@ -1,7 +1,7 @@
 function test_bug3078
 
-% MEM=500mb
-% WALLTIME=00:15:00
+% MEM 500mb
+% WALLTIME 00:15:00
 
 % TEST test_bug3078
 % TEST ft_sourceanalysis

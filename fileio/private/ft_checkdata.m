@@ -20,6 +20,7 @@ function [data] = ft_checkdata(data, varargin)
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
 %   ismeg              = yes, no
+%   isnirs             = yes, no
 %   hasunit            = yes, no
 %   hascoordsys        = yes, no
 %   hassampleinfo      = yes, no, ifmakessense (only applies to raw data)
@@ -92,6 +93,7 @@ dtype                = ft_getopt(varargin, 'datatype'); % should not conflict wi
 dimord               = ft_getopt(varargin, 'dimord');
 stype                = ft_getopt(varargin, 'senstype'); % senstype is a function name which should not be masked
 ismeg                = ft_getopt(varargin, 'ismeg');
+isnirs               = ft_getopt(varargin, 'isnirs');
 inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'index'
 hastrials            = ft_getopt(varargin, 'hastrials');
 hasunit              = ft_getopt(varargin, 'hasunit', 'no');
@@ -129,6 +131,7 @@ isdip           = ft_datatype(data, 'dip');
 ismvar          = ft_datatype(data, 'mvar');
 isfreqmvar      = ft_datatype(data, 'freqmvar');
 ischan          = ft_datatype(data, 'chan');
+ismesh          = ft_datatype(data, 'mesh');
 % FIXME use the istrue function on ismeg and hasxxx options
 
 if ~isequal(feedback, 'no')
@@ -202,6 +205,21 @@ if ~isequal(feedback, 'no')
       fprintf('the input is chan data with %d channels\n', nchan);
     end
   end
+elseif ismesh
+  data = fixpos(data);
+  if numel(data)==1
+    if isfield(data,'tri')
+      fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
+    elseif isfield(data,'hex')
+      fprintf('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
+    elseif isfield(data,'tet')
+      fprintf('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));
+    else
+      fprintf('the input is mesh data with %d vertices', size(data.pos,1));
+    end
+  else
+    fprintf('the input is mesh data multiple surfaces\n');
+  end
 end % give feedback
 
 if issource && isvolume
@@ -252,6 +270,8 @@ if ~isempty(dtype)
         okflag = okflag + (isfreq & iscomp);
       case 'timelock+comp'
         okflag = okflag + (istimelock & iscomp);
+      case 'source+mesh'
+        okflag = okflag + (issource & ismesh);
       case 'raw'
         okflag = okflag + (israw & ~iscomp);
       case 'freq'
@@ -278,6 +298,8 @@ if ~isempty(dtype)
         okflag = okflag + issegmentation;
       case 'parcellation'
         okflag = okflag + isparcellation;
+      case 'mesh'
+        okflag = okflag + ismesh;
     end % switch dtype
   end % for dtype
   
@@ -487,7 +509,7 @@ if ~isempty(stype)
     stype = {stype};
   end
   
-  if isfield(data, 'grad') || isfield(data, 'elec')
+  if isfield(data, 'grad') || isfield(data, 'elec') || isfield(data, 'opto')
     if any(strcmp(ft_senstype(data), stype))
       okflag = 1;
     elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
@@ -521,6 +543,20 @@ if ~isempty(ismeg)
     error('This function requires MEG data with a ''grad'' field');
   elseif ~okflag && isequal(ismeg, 'no')
     error('This function should not be given MEG data with a ''grad'' field');
+  end % if okflag
+end
+
+if ~isempty(isnirs)
+  if isequal(isnirs, 'yes')
+    okflag = isfield(data, 'opto');
+  elseif isequal(isnirs, 'no')
+    okflag = ~isfield(data, 'opto');
+  end
+  
+  if ~okflag && isequal(isnirs, 'yes')
+    error('This function requires NIRS data with an ''opto'' field');
+  elseif ~okflag && isequal(isnirs, 'no')
+    error('This function should not be given NIRS data with an ''opto'' field');
   end % if okflag
 end
 
@@ -1338,6 +1374,8 @@ else
   % concatenate all trials
   tmptrial = nan(ntrial, nchan, length(time));
   
+  begsmp = nan(ntrial, 1);
+  endsmp = nan(ntrial, 1);
   for i=1:ntrial
     begsmp(i) = nearest(time, data.time{i}(1));
     endsmp(i) = nearest(time, data.time{i}(end));
@@ -1365,47 +1403,61 @@ end
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = timelock2raw(data)
-switch data.dimord
-  case 'chan_time'
-    data.trial{1} = data.avg;
-    data.time     = {data.time};
-    data          = rmfield(data, 'avg');
-  case 'rpt_chan_time'
-    tmptrial = {};
-    tmptime  = {};
-    ntrial = size(data.trial,1);
-    nchan  = size(data.trial,2);
-    ntime  = size(data.trial,3);
-    for i=1:ntrial
-      tmptrial{i} = reshape(data.trial(i,:,:), [nchan, ntime]);
-      tmptime{i}  = data.time;
-    end
-    data       = rmfield(data, 'trial');
-    data.trial = tmptrial;
-    data.time  = tmptime;
-  case 'subj_chan_time'
-    tmptrial = {};
-    tmptime  = {};
-    ntrial = size(data.individual,1);
-    nchan  = size(data.individual,2);
-    ntime  = size(data.individual,3);
-    for i=1:ntrial
-      tmptrial{i} = reshape(data.individual(i,:,:), [nchan, ntime]);
-      tmptime{i}  = data.time;
-    end
-    data       = rmfield(data, 'individual');
-    data.trial = tmptrial;
-    data.time  = tmptime;
-  otherwise
-    error('unsupported dimord');
+fn = getdatfield(data);
+if any(ismember(fn, {'trial', 'individual', 'avg'}))
+  % trial, individual and avg (in that order) should be preferred over all other data fields
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2965#c12
+  fn = fn(ismember(fn, {'trial', 'individual', 'avg'}));
 end
-% remove the unwanted fields
-if isfield(data, 'avg'),        data = rmfield(data, 'avg'); end
-if isfield(data, 'var'),        data = rmfield(data, 'var'); end
-if isfield(data, 'cov'),        data = rmfield(data, 'cov'); end
-if isfield(data, 'dimord'),     data = rmfield(data, 'dimord'); end
-if isfield(data, 'numsamples'), data = rmfield(data, 'numsamples'); end
-if isfield(data, 'dof'),        data = rmfield(data, 'dof'); end
+dimord = cell(size(fn));
+for i=1:numel(fn)
+  % determine the dimensions of each of the data fields
+  dimord{i} = getdimord(data, fn{i});
+end
+% the fields trial, individual and avg (with their corresponding default dimord) are preferred
+if sum(strcmp(dimord, 'rpt_chan_time'))==1
+  fn = fn{strcmp(dimord, 'rpt_chan_time')};
+  fprintf('constructing trials from "%s"\n', fn);
+  dimsiz = getdimsiz(data, fn);
+  ntrial = dimsiz(1);
+  nchan  = dimsiz(2);
+  ntime  = dimsiz(3);
+  tmptrial = {};
+  tmptime  = {};
+  for j=1:ntrial
+    tmptrial{j} = reshape(data.(fn)(j,:,:), [nchan, ntime]);
+    tmptime{j}  = data.time;
+  end
+  data       = rmfield(data, fn);
+  data.trial = tmptrial;
+  data.time  = tmptime;
+elseif sum(strcmp(dimord, 'subj_chan_time'))==1
+  fn = fn{strcmp(dimord, 'subj_chan_time')};
+  fprintf('constructing trials from "%s"\n', fn);
+  dimsiz = getdimsiz(data, fn);
+  nsubj = dimsiz(1);
+  nchan  = dimsiz(2);
+  ntime  = dimsiz(3);
+  tmptrial = {};
+  tmptime  = {};
+  for j=1:nsubj
+    tmptrial{j} = reshape(data.(fn)(j,:,:), [nchan, ntime]);
+    tmptime{j}  = data.time;
+  end
+  data       = rmfield(data, fn);
+  data.trial = tmptrial;
+  data.time  = tmptime;
+elseif sum(strcmp(dimord, 'chan_time'))==1
+  fn = fn{strcmp(dimord, 'chan_time')};
+  fprintf('constructing single trial from "%s"\n', fn);
+  data.time  = {data.time};
+  data.trial = {data.(fn)};
+  data = rmfield(data, fn);
+else
+  error('unsupported data structure');
+end
+% remove unwanted fields
+data = removefields(data, {'avg', 'var', 'cov', 'dimord', 'numsamples' ,'dof'});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes

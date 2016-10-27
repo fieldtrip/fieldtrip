@@ -283,8 +283,8 @@ elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   % 5) plot these values
   
   % enforce mask properties (satmask is 0 when a pixel needs to be masked, 1 if otherwise)
-  satmask = round(satmask); % enforce binary white-masking, the hsv approach cannot be used for 'white-shading'
-  satmask(isnan(cdat)) = false; % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
+  satmask = round(double(satmask));   % enforce binary white-masking, the hsv approach cannot be used for 'white-shading'
+  satmask(isnan(cdat)) = false;       % make sure NaNs are plotted as white pixels, even when using non-integer mask values
   
   % do 1, by converting the data-values to zero-based indices of the colormap
   ncolors = size(get(gcf,'colormap'),1); % determines range of index, if a figure has been created by the caller function, gcf changes nothing, if not, a figure is created (which the below would do otherwise)

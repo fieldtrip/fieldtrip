@@ -176,10 +176,10 @@ elseif hasdataopto
 elseif haslayout
   display('Using the 2-D layout to determine the sensor position\n');
   lay = ft_prepare_layout(cfg);
-
+  
   % remove the COMNT and SCALE labels
-  sel = ~ismember(lay.label, {'COMNT' 'SCALE'});  
-
+  sel = ~ismember(lay.label, {'COMNT' 'SCALE'});
+  
   sens = [];
   sens.label = lay.label(sel);
   sens.chanpos = lay.pos(sel,:);
@@ -200,4 +200,10 @@ else
 end
 
 % ensure that the sensor description is up-to-date
-sens = ft_datatype_sens(sens);
+if (hasgradfile + hascfggrad + hasdatagrad + ...
+    haselecfile + hascfgelec + hasdataelec + ...
+    hasoptofile + hascfgopto + hasdataopto)
+  % this should only be called if the sensor definition is a complete one, and not constructed from a layout
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3143#c9
+  sens = ft_datatype_sens(sens);
+end
