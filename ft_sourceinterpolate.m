@@ -119,9 +119,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.mom', 'mom'});
 
 % set the defaults
-cfg.downsample = ft_getopt(cfg, 'downsample', 1);
-cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
-% cfg.interpmethod depends on how the interpolation should be done and will be specified below
+cfg.downsample   = ft_getopt(cfg, 'downsample', 1);
+cfg.feedback     = ft_getopt(cfg, 'feedback',   'text');
+cfg.interpmethod = ft_getopt(cfg, 'interpmethod', []);   % cfg.interpmethod depends on how the interpolation should be done and actual defaults will be specified below
 
 % replace pnt by pos
 anatomical = fixpos(anatomical);

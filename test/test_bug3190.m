@@ -31,3 +31,11 @@ cfg.parameter   = 'powcorrspctrm';
 source_pco_parc   = ft_sourceparcellate(cfg, source_pco, atlas_templ);
 imagesc(source_pco_parc.powcorrspctrm)
 
+%% This subsequently failed
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3190#c6
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/template/anatomy/single_subj_T1_1mm.nii'));
+
+cfg            = [];
+cfg.resolution = 1;
+cfg.dim        = [256 256 256];
+mrirs          = ft_volumereslice(cfg, mri);
