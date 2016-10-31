@@ -121,10 +121,13 @@ switch ft_voltype(headmodel)
     
   case {'simbio'}
     
+    % FIXME we have to rethink which tissue types should be flagged as inside
+    tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
     brain = false(size(headmodel.tissue));
-    brain = brain | headmodel.tissue == find(strcmp(headmodel.tissuelabel, 'gray'));
-    brain = brain | headmodel.tissue == find(strcmp(headmodel.tissuelabel, 'white'));
-    brain = brain | headmodel.tissue == find(strcmp(headmodel.tissuelabel, 'csf'));
+    for i=1:numel(tissue)
+      fprintf('selecting source positions inside "%s"\n', tissue{i});
+      brain = brain | (headmodel.tissue == find(strcmp(headmodel.tissuelabel, tissue{i})));
+    end
     
     minbrain = min(headmodel.pos(headmodel.hex(brain(:)), :), [], 1);
     maxbrain = max(headmodel.pos(headmodel.hex(brain(:)), :), [], 1);
@@ -158,13 +161,15 @@ switch ft_voltype(headmodel)
     elementpos = elementpos/8;
     
     stopwatch = tic;
-    k = dsearchn(elementpos, dippos(1,:));
+    subindx = dsearchn(elementpos, dippos(1,:));
     t = toc(stopwatch);
     fprintf('determining inside points, this takes about %d seconds\n', round(size(dippos,1)*t));
-    k = dsearchn(elementpos, dippos);
+    subindx = dsearchn(elementpos, dippos);
     
     % select the source positions that are inside the brain
-    inside = brain(k);
+    % the positions were selected in a subset and need to be mapped back to the full mesh
+    fullindx = find(~discard);
+    inside = brain(fullindx(subindx));
     
   otherwise
     error('unrecognized volume conductor model');
