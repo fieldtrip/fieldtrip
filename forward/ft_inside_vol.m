@@ -128,49 +128,42 @@ switch ft_voltype(headmodel)
       fprintf('selecting source positions inside "%s"\n', tissue{i});
       brain = brain | (headmodel.tissue == find(strcmp(headmodel.tissuelabel, tissue{i})));
     end
+     
+    % prune the mesh, i.e. only retain hexaheders that are part of the brain
+    discard = ~brain;
     
-    minbrain = min(headmodel.pos(headmodel.hex(brain(:)), :), [], 1);
-    maxbrain = max(headmodel.pos(headmodel.hex(brain(:)), :), [], 1);
+    fprintf('pruning mesh from %d to %d elements (%d%%)\n', length(discard), sum(discard), round(100*sum(~discard)/length(discard)));
     
-    mindippos = min(dippos, [], 1);
-    maxdippos = max(dippos, [], 1);
-    
-    % combine the two bounding boxes
-    minbox = max([minbrain; mindippos], [], 1);
-    maxbox = min([maxbrain; maxdippos], [], 1);
-    
-    % prune the mesh to the bounding box
-    discard1 = true(size(headmodel.hex,1),1);
-    discard2 = true(size(headmodel.hex,1),1);
-    for i=1:8
-      discard1 = discard1 & any(bsxfun(@minus, headmodel.pos(headmodel.hex(:,i),:), minbox)<0,2);
-      discard2 = discard2 & any(bsxfun(@minus, headmodel.pos(headmodel.hex(:,i),:), maxbox)>0,2);
-    end
-    discard = discard1 | discard2;
-    
-    fprintf('pruning mesh from %d to %d elements (%d%%)\n', length(discard), sum(discard), round(100*sum(discard)/length(discard)));
-    
-    headmodel.hex    = headmodel.hex(~discard,:);
-    headmodel.tissue = headmodel.tissue(~discard);
+    subhex = headmodel.hex(~discard,:);
     
     % determine the center of each volume element
-    elementpos = zeros(size(headmodel.hex,1),3);
+    elementpos = zeros(size(subhex,1),3);
     for i=1:8
-      elementpos = elementpos + headmodel.pos(headmodel.hex(:,i),:);
+      elementpos = elementpos + headmodel.pos(subhex(:,i),:);
     end
     elementpos = elementpos/8;
     
+    % find the nearest hexaheder for each of the source points
+    % FIXME this is only guaranteed to work for regular hexahedral meshes
     stopwatch = tic;
     subindx = dsearchn(elementpos, dippos(1,:));
     t = toc(stopwatch);
     fprintf('determining inside points, this takes about %d seconds\n', round(size(dippos,1)*t));
     subindx = dsearchn(elementpos, dippos);
     
-    % select the source positions that are inside the brain
-    % the positions were selected in a subset and need to be mapped back to the full mesh
-    fullindx = find(~discard);
-    inside = brain(fullindx(subindx));
-    
+    % The following code is only guaranteed to work with convex elements. Regular
+    % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
+    % SIMBIO must also be convex.
+    inside = false(size(subindx));
+    for i=1:numel(subindx)
+      % determine for each source position whether it is actually inside the nearest hexaheder
+      posx = headmodel.pos(subhex(subindx(i),:),1);
+      posy = headmodel.pos(subhex(subindx(i),:),2);
+      posz = headmodel.pos(subhex(subindx(i),:),3);
+      pos = [posx posy posz];
+      inside(i) = isequal(convhull(pos), convhull([pos; dippos(i,:)]));
+    end
+        
   otherwise
     error('unrecognized volume conductor model');
 end
