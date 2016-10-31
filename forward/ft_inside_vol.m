@@ -121,49 +121,63 @@ switch ft_voltype(headmodel)
     
   case {'simbio'}
     
+    numhex = size(headmodel.hex,1);
+    numpos = size(headmodel.pos,1);
+    numdip = size(dippos,1);
+    
     % FIXME we have to rethink which tissue types should be flagged as inside
     tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
-    brain = false(size(headmodel.tissue));
+
+    % determine all hexaheders that are labeled as "brain"
+    insidehex = false(size(headmodel.tissue));
     for i=1:numel(tissue)
-      fprintf('selecting source positions inside "%s"\n', tissue{i});
-      brain = brain | (headmodel.tissue == find(strcmp(headmodel.tissuelabel, tissue{i})));
+      fprintf('selecting dipole positions inside "%s"\n', tissue{i});
+      insidehex = insidehex | (headmodel.tissue == find(strcmp(headmodel.tissuelabel, tissue{i})));
     end
-     
-    % prune the mesh, i.e. only retain hexaheders that are part of the brain
-    discard = ~brain;
     
-    fprintf('pruning mesh from %d to %d elements (%d%%)\n', length(discard), sum(discard), round(100*sum(~discard)/length(discard)));
+    % determine all vertices that are part of a brain hexaheder
+    insidepos = false(numpos,1);
+    insidepos(headmodel.hex(insidehex,:)) = true;
     
-    subhex = headmodel.hex(~discard,:);
+    i = repmat(transpose(1:numhex), 1, 8);
+    j = headmodel.hex;
+    s = ones(size(i));
+    hex2pos = sparse(i(:),j(:),s(:),numhex,numpos);
     
-    % determine the center of each volume element
-    elementpos = zeros(size(subhex,1),3);
-    for i=1:8
-      elementpos = elementpos + headmodel.pos(subhex(:,i),:);
-    end
-    elementpos = elementpos/8;
+    % prune the mesh, i.e. only retain vertices that are part of a brain hexaheder
+    fullindx = find(insidepos);
+    fprintf('pruning mesh from %d to %d vertices (%d%%)\n', numel(insidepos), sum(insidepos), round(100*sum(insidepos)/numel(insidepos)));
+    meshpos = headmodel.pos(fullindx,:);
     
-    % find the nearest hexaheder for each of the source points
-    % FIXME this is only guaranteed to work for regular hexahedral meshes
+    % find the nearest vertex for each of the dipole positions
+    dsearchn(meshpos, dippos(1,:)); % call it once to precompile
     stopwatch = tic;
-    subindx = dsearchn(elementpos, dippos(1,:));
+    dsearchn(meshpos, dippos(1,:)); % call it once to determine the time
     t = toc(stopwatch);
     fprintf('determining inside points, this takes about %d seconds\n', round(size(dippos,1)*t));
-    subindx = dsearchn(elementpos, dippos);
+    subindx = dsearchn(meshpos, dippos);
     
     % The following code is only guaranteed to work with convex elements. Regular
     % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
-    % SIMBIO must also be convex.
-    inside = false(size(subindx));
-    for i=1:numel(subindx)
-      % determine for each source position whether it is actually inside the nearest hexaheder
-      posx = headmodel.pos(subhex(subindx(i),:),1);
-      posy = headmodel.pos(subhex(subindx(i),:),2);
-      posz = headmodel.pos(subhex(subindx(i),:),3);
-      pos = [posx posy posz];
-      inside(i) = isequal(convhull(pos), convhull([pos; dippos(i,:)]));
-    end
-        
+    % SIMBIO have to be convex.
+    
+    inside = false(1, numdip);
+    % for each dipole determine whether it is inside one of the neighbouring hexaheders
+    % this will be the case for all vertices that are inside the middle, but not at the edges
+    for i=1:numdip
+      hexindx = find(hex2pos(:,fullindx(subindx(i))));
+      for j=1:numel(hexindx)
+        posx = headmodel.pos(headmodel.hex(hexindx(j),:),1);
+        posy = headmodel.pos(headmodel.hex(hexindx(j),:),2);
+        posz = headmodel.pos(headmodel.hex(hexindx(j),:),3);
+        pos = [posx posy posz];
+        if isequal(convhull(pos), convhull([pos; dippos(i,:)]))
+          inside(i) = true;
+          break % out of the for-loop
+        end % if
+      end % for each hexaheder
+    end % for each of the dipole positions
+    
   otherwise
     error('unrecognized volume conductor model');
 end
