@@ -82,8 +82,6 @@ end
 if numel(cfg.tissue)>1 && numel(cfg.numvertices)==1
   % use the same number of vertices for each tissue
   cfg.numvertices = repmat(cfg.numvertices, size(cfg.tissue));
-elseif numel(cfg.tissue)~=numel(cfg.numvertices)
-  error('you should specify the number of vertices for each tissue type');
 end
 
 if iscell(cfg.tissue)
@@ -144,7 +142,12 @@ for i =1:numel(cfg.tissue)
   
   switch cfg.method
     case 'isosurface'
-      [tri, pos] = isosurface(seg, 0.5);
+      [tri, pos] = isosurface(seg);
+      if ~isempty(cfg.numvertices)
+        npos = cfg.numvertices(i);
+        ntri = 2*(npos-2);
+        [tri, pos] = reducepatch(tri, pos, ntri);
+      end
       pos = pos(:,[2 1 3]); % Mathworks isosurface indexes differently
       
     case 'iso2mesh'
@@ -175,7 +178,6 @@ for i =1:numel(cfg.tissue)
   bnd(i).pos = ft_warp_apply(mri.transform, pos);
   bnd(i).tri = tri;
   bnd(i).unit = mri.unit;
-  
   
 end % for each tissue
 
