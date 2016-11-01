@@ -4,7 +4,7 @@ function savestl(node,elem,fname,solidname)
 %
 % save a tetrahedral mesh to an STL (Standard Tessellation Language) file
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2012/02/14
 %
 % input:

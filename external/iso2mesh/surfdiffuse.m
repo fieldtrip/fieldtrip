@@ -4,7 +4,7 @@ function valnew=surfdiffuse(node,tri,val,ddt,iter,type1,opt)
 %
 % apply a smoothing/diffusion process on a surface
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %     node: list of nodes of the surface mesh

@@ -4,7 +4,7 @@ function p=smoothsurf(node,mask,conn,iter,useralpha,usermethod,userbeta)
 %
 % smoothing a surface mesh
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2007/11/21
 %
 % input:
