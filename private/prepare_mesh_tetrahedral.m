@@ -1,5 +1,30 @@
 function mesh = prepare_mesh_tetrahedral(cfg, mri)
 
+% PREPARE_MESH_TETRAHEDRAL
+%
+% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
+% PREPARE_MESH_HEXAHEDRAL, PREPARE_MESH_SEGMENTATION
+
+% Copyrights (C) 2016, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
 % ensure that the input is consistent with what this function expects
 mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
@@ -41,8 +66,10 @@ else
   seg = (mri.seg>0);
 end
 
-isovalue = 0.5;
+% this requires the external iso2mesh toolbox
+ft_hastoolbox('iso2mesh', 1);
 
+isovalue = 0.5;
 [node, elem, face] = vol2mesh(seg, 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 2, 2, isovalue);
 
 mesh = keepfields(mri, {'coordsys', 'unit'});

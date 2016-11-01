@@ -2,7 +2,8 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % PREPARE_MESH_SEGMENTATION
 %
-% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE, PREPARE_MESH_HEXAHEDRAL
+% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
+% PREPARE_MESH_HEXAHEDRAL, PREPARE_MESH_TETRAHEDRAL
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
@@ -150,6 +151,7 @@ for i =1:numel(cfg.tissue)
       pos = pos(:,[2 1 3]); % Mathworks isosurface indexes differently
       
     case 'iso2mesh'
+      % this requires the external iso2mesh toolbox
       ft_hastoolbox('iso2mesh', 1);
       
       opt = [];
@@ -157,7 +159,11 @@ for i =1:numel(cfg.tissue)
       opt.maxnode = cfg.numvertices(i);
       opt.maxsurf = 1;
       
-      [pos, tri] = v2s(seg, 1, opt, 'cgalsurf');
+      method = 'cgalsurf';
+      isovalues = 0.5;
+      
+      [pos, tri, regions, holes] = v2s(seg, isovalues, opt, method);
+      
       tri = tri(:,1:3);
       
     case 'projectmesh'

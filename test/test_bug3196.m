@@ -35,10 +35,12 @@ mri.tissue(skull) = 2;
 mri.tissue(brain) = 3;
 mri.tissuelabel = {'skin', 'skull', 'brain'};
 
+% mri.tissue(brain) = 1;
+% mri.tissuelabel = {'brain'};
+
 cfg = [];
 cfg.funparameter = 'tissue';
 ft_sourceplot(cfg, mri);
-
 
 %%
 
@@ -51,16 +53,15 @@ mesh1 = ft_prepare_mesh(cfg, mri);
 figure
 ft_plot_mesh(mesh1, 'facecolor', 'none', 'edgecolor', 'k')
 
-
 %%
-% cfg = [];
-% cfg.method = 'iso2mesh';
-% cfg.tissue = {'skin', 'skull', 'brain'};
-% cfg.numvertices = [100 200 300];
-% mesh2 = ft_prepare_mesh(cfg, mri);
-%
-% figure
-% ft_plot_mesh(mesh2, 'facecolor', 'none')
+cfg = [];
+cfg.method = 'iso2mesh';
+cfg.tissue = {'skin', 'skull', 'brain'};
+cfg.numvertices = [100 200 300];
+mesh2 = ft_prepare_mesh(cfg, mri);
+
+figure
+ft_plot_mesh(mesh2, 'facecolor', 'none')
 
 %%
 cfg = [];
