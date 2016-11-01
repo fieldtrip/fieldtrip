@@ -4,7 +4,7 @@ function savejmesh(node,face,elem,fname,varargin)
 %
 % export a mesh to the JMesh format
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2011/10/06
 %
 % input:

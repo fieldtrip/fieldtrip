@@ -72,8 +72,13 @@ if(ischar(cutat) || (iscell(cutat) && length(cutat)==2 && ischar(cutat{1})))
     else
         dist=eval(cutat{1})-cutat{2};
     end
-    asign=double(dist>0);
-    asign(asign==0)=-1;
+    if(all(dist<=0))
+        asign=-double(dist<0);
+        asign(asign==0)=1;
+    else
+        asign=double(dist>0);
+        asign(asign==0)=-1;
+    end
 elseif(numel(cutat)==9 || numel(cutat)==4)
     if(numel(cutat)==9)
         [a,b,c,d]=getplanefrom3pt(cutat);
@@ -92,8 +97,13 @@ else
         error('must use nodal value list when cutting mesh at an isovalue');
     end
     dist=value-cutat;
-    asign=double(dist>0);
-    asign(asign==0)=-1;
+    if(all(dist<=0))
+        asign=-double(dist<0);
+        asign(asign==0)=1;
+    else
+        asign=double(dist>0);
+        asign(asign==0)=-1;
+    end
 end
 
 % get all the edges of the mesh
@@ -176,7 +186,7 @@ end
 tripatch=emap(tricut,:)';
 tripatch=reshape(tripatch(find(tripatch)),[3,length(tricut)])';
 
-% fast wall to get all quadrilaterals in convexhull form (avoid using
+% fast way to get all quadrilaterals in convexhull form (avoid using
 % convhulln)
 
 quadpatch=emap(quadcut,:)';

@@ -4,3 +4,4 @@
 *.o
 *.a
 odmTest
+external/iso2mesh/sample

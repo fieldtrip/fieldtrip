@@ -4,7 +4,7 @@ function exesuff=fallbackexeext(exesuffix, exename)
 %
 % get the fallback external tool extension names for the current platform
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %     exesuffix: the output executable suffix from getexeext

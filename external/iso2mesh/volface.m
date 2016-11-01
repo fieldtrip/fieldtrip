@@ -4,7 +4,7 @@ function openface=volface(t)
 %
 % find the surface patches of a volume
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2009/10/13
 %
 % input:

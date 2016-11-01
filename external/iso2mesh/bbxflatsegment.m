@@ -5,7 +5,7 @@ function seg=bbxflatsegment(node,loop)
 % decompose edge loops into flat segments along the x/y/z 
 % planes of the bounding box
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2008/04/08
 %
 % input:   
@@ -80,7 +80,7 @@ end
 % remove pattern [ ... nan nan ...] in the result
 
 if(length(seg) & any(isnan(seg)))
-    id=regexp(sprintf('%d',isnan(seg)),'11')
+    id=regexp(sprintf('%d',isnan(seg)),'11');
     if(length(id))
         seg(id+1)=[];
     end

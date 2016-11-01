@@ -1,17 +1,17 @@
-function snorm=surfnorm(node,face,varargin)
+function snorm=surfacenorm(node,face,varargin)
 %
-% snorm=surfnorm(node,face)
+% snorm=surfacenorm(node,face)
 %    or
-% snorm=surfnorm(node,face,'Normalize',0)
+% snorm=surfacenorm(node,face,'Normalize',0)
 %
 % compute the normal vectors for a triangular surface
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %   node: a list of node coordinates (nn x 3)
 %   face: a surface mesh triangle list (ne x 3)
-%   opt: a list of optional parameters, currently surfnorm supports:
+%   opt: a list of optional parameters, currently surfacenorm supports:
 %        'Normalize': [1|0] if set to 1, the normal vectors will be 
 %                           unitary (default)
 %
