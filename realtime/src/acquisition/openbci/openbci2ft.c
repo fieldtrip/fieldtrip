@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015, Robert Oostenveld
+ * Copyright (C) 2015-2016, Robert Oostenveld
  *
  * Donders Institute for Brain, Cognition and Behaviour,
  * Centre for Cognitive Neuroimaging, Radboud University,
@@ -50,6 +50,7 @@ typedef struct {
     const char *enable_chan9;
     const char *enable_chan10;
     const char *enable_chan11;
+
     const char *label_chan1;
     const char *label_chan2;
     const char *label_chan3;
@@ -62,6 +63,7 @@ typedef struct {
     const char *label_chan10;
     const char *label_chan11;
     const char *label_chan12; /* this is for the timestamp */
+
     const char *setting_chan1;
     const char *setting_chan2;
     const char *setting_chan3;
@@ -70,6 +72,7 @@ typedef struct {
     const char *setting_chan6;
     const char *setting_chan7;
     const char *setting_chan8;
+
     const char *impedance_chan1;
     const char *impedance_chan2;
     const char *impedance_chan3;
@@ -96,7 +99,7 @@ static char usage[] =
         "Example use:\n" \
         "   openbci2ft COM3:                 # start a local buffer on port 1972\n" \
         "   openbci2ft COM3: - 1234          # start a local buffer on port 1234\n" \
-        "   openbci2ft COM3: mentat002 1234  # connect to remote buffer\n" \
+        "   openbci2ft COM3: serverpc 1234   # connect to remote buffer running on server PC\n" \
         "\n" \
         ;
 #else
@@ -115,13 +118,13 @@ static char usage[] =
         "Example use:\n" \
         "   openbci2ft /dev/tty.usbserial-DN0094FY                 # start a local buffer on port 1972\n" \
         "   openbci2ft /dev/tty.usbserial-DN0094FY - 1234          # start a local buffer on port 1234\n" \
-        "   openbci2ft /dev/tty.usbserial-DN0094FY mentat002 1234  # connect to remote buffer\n" \
+        "   openbci2ft /dev/tty.usbserial-DN0094FY serverpc 1234   # connect to remote buffer running on server PC\n" \
         "\n" \
         ;
 #endif
 
 int serialWriteSlow(SerialPort *SP, int size, void *buffer) {
-    int i, retval = 0; 
+    int i, retval = 0;
     for (i=0; i<size; i++) {
         retval += serialWrite(SP, 1, buffer+i);
         usleep(100000);
@@ -268,7 +271,7 @@ int main(int argc, char *argv[]) {
     data_t        *data     = NULL;
     ft_chunkdef_t *label    = NULL;
 
-    /* this contains the configuration details */
+    /* this structure contains the configuration details */
     configuration config;
 
     /* configure the default settings */
@@ -326,7 +329,7 @@ int main(int argc, char *argv[]) {
     config.impedance_chan8  = strdup("z800Z");
 
     if (argc<2) {
-        printf(usage);
+        printf("%s", usage);
         exit(0);
     }
 
@@ -356,7 +359,8 @@ int main(int argc, char *argv[]) {
         host.port = config.port;
     }
 
-#define ISTRUE(s) strcasecmp(s, "on")==0
+    /* count the number of channels that should be sent */
+   #define ISTRUE(s) strcasecmp(s, "on")==0
     nchans = 0;
     if (ISTRUE(config.enable_chan1))
         nchans++;
@@ -435,7 +439,6 @@ int main(int argc, char *argv[]) {
     header->def->data_type = DATATYPE_FLOAT32;
     header->def->bufsize   = 0;
 
-    /* FIXME add the channel names */
     labelSize = 0; /* count the number of bytes required */
     if (ISTRUE (config.enable_chan1))
         labelSize += strlen (config.label_chan1) + 1;
@@ -467,7 +470,7 @@ int main(int argc, char *argv[]) {
 
     /* go over all channels for a 2nd time, now copying the strings to the destination */
     labelString = (char *) malloc (labelSize * sizeof(char));
-    labelSize   = 0; 
+    labelSize   = 0;
     if (ISTRUE (config.enable_chan1)) {
         strcpy (labelString+labelSize, config.label_chan1);
         labelSize += strlen (config.label_chan1) + 1;
@@ -544,14 +547,12 @@ int main(int argc, char *argv[]) {
     status = clientrequest (ftSocket, request, &response);
     if (verbose > 0)
         fprintf (stderr, "openbci2ft: clientrequest returned %d\n", status);
-    if (status)
-    {
+    if (status) {
         fprintf (stderr, "openbci2ft: could not send request to buffer\n");
         exit (1);
     }
 
-    if (status || response == NULL || response->def == NULL)
-    {
+    if (status || response == NULL || response->def == NULL) {
         fprintf (stderr, "openbci2ft: error in %s on line %d\n", __FILE__,
                 __LINE__);
         exit (1);
@@ -559,8 +560,7 @@ int main(int argc, char *argv[]) {
 
     cleanup_message (&request);
 
-    if (response->def->command != PUT_OK)
-    {
+    if (response->def->command != PUT_OK) {
         fprintf (stderr, "openbci2ft: error in 'put header' request.\n");
         exit (1);
     }
@@ -569,14 +569,13 @@ int main(int argc, char *argv[]) {
 
     /* open the serial port */
     fprintf (stderr, "openbci2ft: opening serial port ...\n");
-    if (!serialOpenByName (&SP, config.serial))
-    {
+    if (!serialOpenByName (&SP, config.serial)) {
+
         fprintf (stderr, "Could not open serial port %s\n", config.serial);
         return 1;
     }
 
-    if (!serialSetParameters (&SP, 115200, 8, 0, 0, 0))
-    {
+    if (!serialSetParameters (&SP, 115200, 8, 0, 0, 0)) {
         fprintf (stderr, "Could not modify serial port parameters\n");
         return 1;
     }
@@ -596,12 +595,10 @@ int main(int argc, char *argv[]) {
 
     /* wait for '$$$' which indicates that the OpenBCI has been initialized */
     c = 0;
-    while (c != 3)
-    {
+    while (c != 3) {
         usleep (1000);
         n = serialRead (&SP, 1, &byte);
-        if (n == 1)
-        {
+        if (n == 1) {
             if (byte == '$')
                 c++;
             else
@@ -627,8 +624,7 @@ int main(int argc, char *argv[]) {
         serialWrite (&SP, 1, "K");
     else if (strcasecmp (config.datalog, "24hr") == 0)
         serialWrite (&SP, 1, "L");
-    else if (strcasecmp (config.datalog, "off") != 0)
-    {
+    else if (strcasecmp (config.datalog, "off") != 0) {
         fprintf (stderr, "Incorrect specification of datalog\n");
         return 1;
     }
@@ -654,8 +650,7 @@ int main(int argc, char *argv[]) {
         serialWrite (&SP, 1, "[");
     else if (strcasecmp (config.testsignal, "2xFast") == 0)
         serialWrite (&SP, 1, "]");
-    else if (strcasecmp (config.testsignal, "off") != 0)
-    {
+    else if (strcasecmp (config.testsignal, "off") != 0) {
         fprintf (stderr, "Incorrect specification of testsignal\n");
         return 1;
     }
@@ -671,40 +666,32 @@ int main(int argc, char *argv[]) {
     serialWrite (&SP, 1, "b");
 
     /* determine the reference time for the timestamps */
-    if (strcasecmp (config.timeref, "start") == 0)
-    {
+    if (strcasecmp (config.timeref, "start") == 0) {
         /* since the start of the acquisition */
         get_monotonic_time (&tic, TIMESTAMP_REF_BOOT);
     }
-    else if (strcasecmp (config.timeref, "boot") == 0)
-    {
+    else if (strcasecmp (config.timeref, "boot") == 0) {
         /* since the start of the day */
         tic.tv_sec = 0;
         tic.tv_nsec = 0;
     }
-    else if (strcasecmp (config.timeref, "epoch") == 0)
-    {
+    else if (strcasecmp (config.timeref, "epoch") == 0) {
         /* since the start of the epoch, i.e. 1-1-1970 */
         tic.tv_sec = 0;
         tic.tv_nsec = 0;
     }
-    else
-    {
-        fprintf (stderr,
-                "Incorrect specification of timeref, should be 'start', 'day' or 'epoch'\n");
+    else {
+        fprintf (stderr, "Incorrect specification of timeref, should be 'start', 'day' or 'epoch'\n");
         return 1;
     }
 
-    while (keepRunning)
-    {
+    while (keepRunning) {
 
         sample = 0;
-        while (sample < config.blocksize)
-        {
+        while (sample < config.blocksize) {
             /* wait for the first byte of the following packet */
             buf[0] = 0;
-            while (buf[0] != 0xA0)
-            {
+            while (buf[0] != 0xA0) {
                 if (serialInputPending (&SP))
                     n = serialRead (&SP, 1, buf);
                 else
@@ -744,8 +731,7 @@ int main(int argc, char *argv[]) {
                 else
                     usleep (1000);
 
-            if (verbose > 1)
-            {
+            if (verbose > 1) {
                 for (i = 0; i < OPENBCI_BUFLEN; i++)
                     printf ("%02x ", buf[i]);
                 printf ("\n");
@@ -795,8 +781,7 @@ int main(int argc, char *argv[]) {
                 ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
                     OPENBCI_CALIB2 * (buf[28] << 24 | buf[31] << 16) / 32767;
 
-            if (ISTRUE (config.timestamp))
-            {
+            if (ISTRUE (config.timestamp)) {
                 if (strcasecmp (config.timeref, "start") == 0)
                     get_monotonic_time (&toc, TIMESTAMP_REF_BOOT);
                 else if (strcasecmp (config.timeref, "boot") == 0)
@@ -827,15 +812,13 @@ int main(int argc, char *argv[]) {
         status = clientrequest (ftSocket, request, &response);
         if (verbose > 0)
             fprintf (stderr, "openbci2ft: clientrequest returned %d\n", status);
-        if (status)
-        {
+        if (status) {
             fprintf (stderr, "openbci2ft: error in %s on line %d\n", __FILE__,
                     __LINE__);
             exit (1);
         }
 
-        if (status)
-        {
+        if (status) {
             fprintf (stderr, "openbci2ft: error in %s on line %d\n", __FILE__,
                     __LINE__);
             exit (1);
@@ -844,9 +827,7 @@ int main(int argc, char *argv[]) {
         /* FIXME do someting with the response, i.e. check that it is OK */
         cleanup_message (&request);
 
-        if (response == NULL || response->def == NULL
-                || response->def->command != PUT_OK)
-        {
+        if (response == NULL || response->def == NULL || response->def->command != PUT_OK) {
             fprintf (stderr, "Error when writing samples.\n");
         }
         cleanup_message (&response);
@@ -859,13 +840,9 @@ int main(int argc, char *argv[]) {
     cleanup_data (&data);
 
     if (ftSocket > 0)
-    {
         close_connection (ftSocket);
-    }
     else
-    {
         ft_stop_buffer_server (ftServer);
-    }
 
     return 0;
 }				/* main */

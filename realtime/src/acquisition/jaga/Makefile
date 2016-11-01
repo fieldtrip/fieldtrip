@@ -17,7 +17,7 @@ CPPDIR = $(FTBUFFER)/cpp
 CPPOBJ = 
 
 # defaults, might be overwritten further down
-CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR)
+CFLAGS = -I. -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/inih/ -I$(CPPDIR)
 CFLAGS += -Wunused -Wall -pedantic -O3 -g 
 CXXFLAGS = $(CFLAGS)
 LDFLAGS = -L$(FTBUFFER)/src
@@ -84,10 +84,11 @@ all: $(TARGETS)
 
 $(TARGETS):
 
-$(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+$(BINDIR)/%$(SUFFIX): ini.o %.o
+	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-$(BINDIR)/modeeg_setupbluesmirf$(SUFFIX): LDLIBS=
+ini.o: $(FIELDTRIP)/realtime/src/external/inih/ini.c
+	$(CC) $(CFLAGS) -c -o $@ $^ 
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

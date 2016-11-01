@@ -1,8 +1,8 @@
-/*  
+/*
  * This is derived from
  *  http://stackoverflow.com/questions/21665641/ns-precision-monotonic-clock-in-c-on-linux-and-os-x/21665642#21665642
  *  https://gist.github.com/jbenet/1087739
- * 
+ *
  * OS X
  *   compile with gcc get_monotonic_time.c
  *   from http://stackoverflow.com/questions/11680461/monotonic-clock-on-osx
@@ -46,7 +46,7 @@
 struct timespec { long tv_sec; long tv_nsec; };    //header part
 
 int clock_gettime(int unused, struct timespec *spec)      //C-file part
-{ 
+{
   __int64 wintime;
   GetSystemTimeAsFileTime((FILETIME*)&wintime);
   wintime      -=116444736000000000;           //1jan1601 to 1jan1970
@@ -117,4 +117,3 @@ int main(){
   }
 }
 */
-
