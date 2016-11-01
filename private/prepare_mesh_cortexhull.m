@@ -1,14 +1,15 @@
-function headshape = prepare_cortexhull(cfg)
+function headshape = prepare_mesh_cortexhull(cfg)
 
-% PREPARE_CORTEXHULL creates a mesh representing the cortex hull, i.e. the
-% smoothed envelope around the pial surface created by freesurfer.
-% PREPARE_CORTEXHULL relies on freesurfer's command line functions and
-% 'make_outer_surface' in the freesurfer/matlab folder
+% PREPARE_MESH_CORTEXHULL creates a mesh representing the cortex hull, i.e. the
+% smoothed envelope around the pial surface created by FreeSurfer.
+%
+% This function relies on FreeSurfer's command line functions and
+% 'make_outer_surface' in the FreeSurfer/matlab folder
 %
 % Configuration options:
 %   cfg.method      = 'cortexhull'
 %   cfg.headshape   = a filename containing the pial surface computed by
-%                     freesurfer recon-all ('/path/to/surf/lh.pial')
+%                     FreeSurfer recon-all ('/path/to/surf/lh.pial')
 %   cfg.resolution  = (optional, default: 1) resolution of the volume
 %                     delimited by headshape being floodfilled by mris_fill
 %   cfg.outer_surface_sphere = (optional, default: 15) diameter of the sphere
@@ -17,7 +18,8 @@ function headshape = prepare_cortexhull(cfg)
 %   cfg.smooth_steps = (optional, default: 60) number of smoothing iterations
 %                     performed by mris_smooth
 %
-% Error that 'mris_fill' was not found means that freesurfer is not installed.
+% Error that 'mris_fill' was not found means that FreeSurfer is not installed.
+%
 % Error that 'make_outer_surface' is not in matlab, means that you need to add
 % 'freesurfer/matlab' to your path.
 %

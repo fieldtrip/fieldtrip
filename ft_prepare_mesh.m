@@ -188,7 +188,7 @@ switch cfg.method
     end
     
   case 'cortexhull'
-    bnd = prepare_cortexhull(cfg);
+    bnd = prepare_mesh_cortexhull(cfg);
     
   otherwise
     error('unsupported cfg.method')
