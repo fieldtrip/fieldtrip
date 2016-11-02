@@ -15,11 +15,11 @@ function hs = ft_plot_sens(sens, varargin)
 %   'coil'            = true/false, plot each individual coil (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each coil (default = false)
 %
-% The following option only applies when individual coils are being plotted
+% The following option only applies when individual channels or coils are being plotted
 %   'coilsize'        = diameter or edge length of the coils (default is automatic)
 %   'coilshape'       = 'point', 'circle' or 'square' (default is automatic)
-%   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces (default = 'none')
-%   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'k')
+%   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces (default = 'none')
+%   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', color of channels or coils (default = 'k')
 %   'facealpha'       = transparency, between 0 and 1 (default = 1)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
