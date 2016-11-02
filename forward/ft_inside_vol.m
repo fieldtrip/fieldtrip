@@ -17,7 +17,7 @@ function [inside] = ft_inside_vol(dippos, headmodel, varargin)
 %   grad        = structure with gradiometer information, used for localspheres
 %   headshape   = structure with headshape, used for old CTF localspheres strategy
 
-% Copyright (C) 2003-2013, Robert Oostenveld
+% Copyright (C) 2003-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -142,35 +142,47 @@ switch ft_voltype(headmodel)
       insidehex = insidehex | (headmodel.tissue == find(strcmp(headmodel.tissuelabel, tissue{i})));
     end
     
+    % prune the mesh, i.e. only retain hexaheders labeled as brain
+    fprintf('pruning headmodel volume elements from %d to %d (%d%%)\n', numhex, sum(insidehex), round(100*sum(insidehex)/numhex));
+    headmodel.hex    = headmodel.hex(insidehex,:);
+    headmodel.tissue = headmodel.tissue(insidehex); 
+    numhex = sum(insidehex);
+    clear insidehex
+    
+    % determine all vertices that are part of a hexaheder
+    insidepos = false(numpos,1);
+    insidepos(headmodel.hex) = true;
+
+    % prune the mesh, i.e. only retain vertices that are part of a  hexaheder
+    fprintf('pruning headmodel vertices from %d to %d (%d%%)\n', numpos, sum(insidepos), round(100*sum(insidepos)/numpos));
+    headmodel.pos = headmodel.pos(insidepos,:);
+    numpos = sum(insidepos);
+    renumber = zeros(size(insidepos));
+    renumber(insidepos) = 1:numpos;          % determine the mapping from original to pruned vertex indices
+    headmodel.hex = renumber(headmodel.hex); % renumber the vertex indices
+    clear insidepos renumber
+
     % construct a sparse matrix with the mapping between all hexaheders and vertices
     i = repmat(transpose(1:numhex), 1, 8);
     j = headmodel.hex;
     s = ones(size(i));
     hex2pos = sparse(i(:),j(:),s(:),numhex,numpos);
     
-    % determine all vertices that are part of a brain hexaheder
-    insidepos = false(numpos,1);
-    insidepos(headmodel.hex(insidehex,:)) = true;
-    % prune the mesh, i.e. only retain vertices that are part of a brain hexaheder
-    fprintf('pruning headmodel vertices from %d to %d (%d%%)\n', numpos, sum(insidepos), round(100*sum(insidepos)/numpos));
-    insidepos  = find( insidepos);
-    meshpos = headmodel.pos(insidepos,:);
-
     % determine the bounding box
-    minpos = min(meshpos,[],1);
-    maxpos = max(meshpos,[],1);
+    minpos = min(headmodel.pos,[],1);
+    maxpos = max(headmodel.pos,[],1);
     insidedip = all(bsxfun(@ge, dippos, minpos),2) & all(bsxfun(@le, dippos, maxpos),2);
     fprintf('pruning dipole positions from %d to %d (%d%%)\n', numdip, sum(insidedip), round(100*sum(insidedip)/numdip));
     insidedip  = find( insidedip);
     dippos = dippos(insidedip,:);
     
     % find the nearest vertex for each of the dipoles
-    dsearchn(meshpos, dippos(1,:)); % call it once to precompile
+    dsearchn(headmodel.pos, dippos(1,:)); % call it once to precompile
     stopwatch = tic;
-    dsearchn(meshpos, dippos(1,:)); % call it once to estimate the time
+    dsearchn(headmodel.pos, dippos(1,:)); % call it once to estimate the time
     t = toc(stopwatch);
     fprintf('determining inside points, this takes about %d seconds\n', round(numdip*t));
-    subindx = dsearchn(meshpos, dippos);
+    posindx = dsearchn(headmodel.pos, dippos);
     
     % The following code is only guaranteed to work with convex elements. Regular
     % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
@@ -180,7 +192,7 @@ switch ft_voltype(headmodel)
     % for each dipole determine whether it is inside one of the neighbouring hexaheders
     % this will be the case for all vertices that are inside the middle, but not at the edges
     for i=1:numel(insidedip)
-      hexindx = find(hex2pos(:,insidepos(subindx(i))));
+      hexindx = find(hex2pos(:,posindx(i)));
       for j=1:numel(hexindx)
         posx = headmodel.pos(headmodel.hex(hexindx(j),:),1);
         posy = headmodel.pos(headmodel.hex(hexindx(j),:),2);
