@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
     config.label_chan9  = strdup("AccelerationX");
     config.label_chan10 = strdup("AccelerationY");
     config.label_chan11 = strdup("AccelerationZ");
-    config.label_chan12 = strdup("TimeStamp");
+    config.label_chan12 = strdup("timestamp");
 
     config.setting_chan1  = strdup("x1060110X");
     config.setting_chan2  = strdup("x2060110X");
