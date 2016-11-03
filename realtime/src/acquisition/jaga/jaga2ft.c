@@ -293,7 +293,7 @@ int main(int argc, char *argv[]) {
   config.label_chan14 = strdup("14");
   config.label_chan15 = strdup("15");
   config.label_chan16 = strdup("16");
-  config.label_chan17 = strdup("timestamp");
+  config.label_chan17 = strdup("TimeStamp");
 
   /* parse the command line arguments */
   if (argc==1) {
