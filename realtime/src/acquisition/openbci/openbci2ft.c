@@ -36,6 +36,8 @@ typedef struct {
     const char *reset;
     const char *datalog;
     const char *testsignal;
+    const char *sample;
+    const char *unwrap;
     const char *timestamp;
     const char *timeref;
 
@@ -62,7 +64,8 @@ typedef struct {
     const char *label_chan9;
     const char *label_chan10;
     const char *label_chan11;
-    const char *label_chan12; /* this is for the timestamp */
+    const char *label_chan12; /* this is for the sample    */
+    const char *label_chan13; /* this is for the timestamp */
 
     const char *setting_chan1;
     const char *setting_chan2;
@@ -150,6 +153,10 @@ static int iniHandler(void* external, const char* section, const char* name, con
         local->datalog = strdup(value);
     } else if (MATCH("General", "testsignal")) {
         local->testsignal = strdup(value);
+    } else if (MATCH("General", "sample")) {
+        local->sample = strdup(value);
+    } else if (MATCH("General", "unwrap")) {
+        local->unwrap = strdup(value);
     } else if (MATCH("General", "timestamp")) {
         local->timestamp = strdup(value);
     } else if (MATCH("General", "timeref")) {
@@ -202,6 +209,8 @@ static int iniHandler(void* external, const char* section, const char* name, con
         local->label_chan11 = strdup(value);
     } else if (MATCH("ChannelLabel", "chan12")) {
         local->label_chan12 = strdup(value);
+    } else if (MATCH("ChannelLabel", "chan13")) {
+        local->label_chan13 = strdup(value);
 
         /* only for channel 1-8, not for accelerometers */
     } else if (MATCH("ChannelSetting", "chan1")) {
@@ -251,7 +260,7 @@ void abortHandler(int sig) {
 }
 
 int main(int argc, char *argv[]) {
-    int n, i, c, count = 0, sample = 0, chan = 0, status = 0, verbose = 0, labelSize;
+    int n, i, c, prevsample = 0, thissample = 0, count = 0, sample = 0, chan = 0, status = 0, verbose = 0, labelSize;
     unsigned char buf[OPENBCI_BUFLEN], byte;
     char *labelString;
     SerialPort SP;
@@ -282,7 +291,9 @@ int main(int argc, char *argv[]) {
     config.reset         = strdup("on");
     config.datalog       = strdup("off");
     config.testsignal    = strdup("off");
-    config.timestamp     = strdup("on");
+    config.sample        = strdup("on");
+    config.unwrap        = strdup("off");
+    config.timestamp     = strdup("off");
     config.timeref       = strdup("start");
 
     config.enable_chan1  = strdup("on");
@@ -308,7 +319,8 @@ int main(int argc, char *argv[]) {
     config.label_chan9  = strdup("AccelerationX");
     config.label_chan10 = strdup("AccelerationY");
     config.label_chan11 = strdup("AccelerationZ");
-    config.label_chan12 = strdup("timestamp");
+    config.label_chan12 = strdup("Sample");
+    config.label_chan13 = strdup("TimeStamp");
 
     config.setting_chan1  = strdup("x1060110X");
     config.setting_chan2  = strdup("x2060110X");
@@ -384,6 +396,8 @@ int main(int argc, char *argv[]) {
         nchans++;
     if (ISTRUE(config.enable_chan11))
         nchans++;
+    if (ISTRUE(config.sample))
+        nchans++;
     if (ISTRUE(config.timestamp))
         nchans++;
 
@@ -393,6 +407,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "openbci2ft: blocksize    =  %d\n", config.blocksize);
     fprintf(stderr, "openbci2ft: reset        =  %s\n", config.reset);
     fprintf(stderr, "openbci2ft: datalog      =  %s\n", config.datalog);
+    fprintf(stderr, "openbci2ft: sample       =  %s\n", config.sample);
     fprintf(stderr, "openbci2ft: timestamp    =  %s\n", config.timestamp);
     fprintf(stderr, "openbci2ft: testsignal   =  %s\n", config.testsignal);
 
@@ -462,8 +477,10 @@ int main(int argc, char *argv[]) {
         labelSize += strlen (config.label_chan10) + 1;
     if (ISTRUE (config.enable_chan11))
         labelSize += strlen (config.label_chan11) + 1;
-    if (ISTRUE (config.timestamp))
+    if (ISTRUE (config.sample))
         labelSize += strlen (config.label_chan12) + 1;
+    if (ISTRUE (config.timestamp))
+        labelSize += strlen (config.label_chan13) + 1;
 
     if (verbose > 0)
         fprintf (stderr, "openbci2ft: labelSize = %d\n", labelSize);
@@ -515,9 +532,13 @@ int main(int argc, char *argv[]) {
         strcpy (labelString+labelSize, config.label_chan11);
         labelSize += strlen (config.label_chan11) + 1;
     }
-    if (ISTRUE (config.timestamp)) {
+    if (ISTRUE (config.sample)) {
         strcpy (labelString+labelSize, config.label_chan12);
         labelSize += strlen (config.label_chan12) + 1;
+    }
+    if (ISTRUE (config.timestamp)) {
+        strcpy (labelString+labelSize, config.label_chan13);
+        labelSize += strlen (config.label_chan13) + 1;
     }
 
     /* add the channel label chunk to the header */
@@ -780,6 +801,17 @@ int main(int argc, char *argv[]) {
             if (ISTRUE (config.enable_chan11))
                 ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
                     OPENBCI_CALIB2 * (buf[28] << 24 | buf[31] << 16) / 32767;
+
+            if (ISTRUE (config.sample)) {
+                if (ISTRUE (config.unwrap)) {
+                     thissample += (buf[1] < prevsample ? 255 + buf[1]-prevsample : buf[1]-prevsample);
+                     prevsample  = buf[1];
+                }
+                else {
+                  thissample = buf[1];
+                }
+                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] = thissample;
+            } 
 
             if (ISTRUE (config.timestamp)) {
                 if (strcasecmp (config.timeref, "start") == 0)
