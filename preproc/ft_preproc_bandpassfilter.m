@@ -136,6 +136,12 @@ if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
   dat = cast(dat, 'double');
 end
 
+% Filtering fails on channels that contain NaN
+if any(isnan(dat(:)))
+  warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
+
 % Nyquist frequency
 Fn = Fs/2;
 
