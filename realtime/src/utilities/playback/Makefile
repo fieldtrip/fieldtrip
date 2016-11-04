@@ -78,13 +78,13 @@ playback.o: playback.c
 recording.o: recording.c
 	$(CC) -c $^ $(CFLAGS)
 	
-ft_offline.o: ft_offline.c
+ft_storage.o: ft_storage.c
 	$(CC) -c $^ $(CFLAGS)
 			
 $(BINDIR)/playback$(SUFFIX): playback.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 		
-$(BINDIR)/recording$(SUFFIX): recording.o ft_offline.o ../../buffer/src/socketserver.o
+$(BINDIR)/recording$(SUFFIX): recording.o ft_storage.o ../../buffer/src/socketserver.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 clean:

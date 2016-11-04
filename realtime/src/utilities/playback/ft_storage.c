@@ -1,8 +1,10 @@
-/* Collection of routines for saving FieldTrip buffer data to disk.
-** (C) 2010 S. Klanke
-*/
-#include <ft_offline.h>
+/*
+ * Collection of routines for saving FieldTrip buffer data to disk.
+ *
+ * (C) 2010 S. Klanke
+ */
 
+#include <ft_storage.h>
 
 #ifdef WIN32
 #include <direct.h>
