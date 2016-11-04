@@ -3,7 +3,7 @@ function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 % MNE2GRAD converts a header from a fif file that was read using the MNE toolbox into
 % a gradiometer structure that can be understood by the FieldTrip low-level forward
 % and inverse routines.
-e
+%
 % Use as
 %   [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 % where
