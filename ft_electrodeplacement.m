@@ -667,7 +667,7 @@ if opt.scatter % radiobutton on
     set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
     opt.scatterfig_h1 = axes('position',[0.06 0.06 0.74 0.88]);
     set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.handlesaxes(1), 'DataAspectRatio'));
-    axis image;
+    axis square;
     xlabel('x'); ylabel('y'); zlabel('z');
     
     % scatter range sliders
