@@ -1,5 +1,5 @@
 /*
- * BufferViewer for displaying online data
+ * Graphical viewer for displaying online data that is streamed to the buffer.
  *
  * Copyright (C) 2010, Stefan Klanke
  * Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
@@ -7,17 +7,18 @@
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
 
-#include <FL/Fl.h>
-#include <FL/Fl_Double_Window.h>
-//#include <FL/Fl_Menu.h>
-#include <FL/Fl_Multi_Browser.h>
-#include <FL/Fl_Slider.h>
-#include <FL/Fl_Scrollbar.h>
-#include <FL/Fl_Check_Button.h>
-#include <FL/Fl_Input.h>
-#include <FL/Fl_Box.h>
-#include <FL/fl_draw.h>
-#include <FL/fl_ask.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Double_Window.H>
+//#include <FL/Fl_Menu.H>
+#include <FL/Fl_Multi_Browser.H>
+#include <FL/Fl_Slider.H>
+#include <FL/Fl_Scrollbar.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Box.H>
+#include <FL/fl_draw.H>
+#include <FL/fl_ask.H>
+
 #include <stdlib.h>
 #include <math.h>
 //#include <sys/time.h>

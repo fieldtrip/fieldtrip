@@ -36,13 +36,10 @@ ifeq "$(UNAME)" "Linux"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 	endif
 	ifeq "$(MACHINE)" "armv6l"
-		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi1
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 	endif
 	ifeq "$(MACHINE)" "armv7l"
-		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi2
-	endif
-	ifeq "$(MACHINE)" "armv8l"
-		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi3
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 	endif
 endif
 
@@ -68,7 +65,7 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/serial_event$(SUFFIX)
+TARGETS = $(BINDIR)/serial2event$(SUFFIX)
 
 ###############################################################################
 all: $(TARGETS)
@@ -76,11 +73,11 @@ all: $(TARGETS)
 serial.o: serial.c serial.h
 	$(CC) $(CFLAGS) -c serial.c -I.
 		
-serial_event.o: serial_event.c serial.h
-	$(CC) $(CFLAGS) -c serial_event.c $(CFLAGS)
+serial2event.o: serial2event.c serial.h
+	$(CC) $(CFLAGS) -c serial2event.c $(CFLAGS)
 	
-$(BINDIR)/serial_event$(SUFFIX): serial_event.o serial.o
-	$(CC) $(CFLAGS) -o $@ serial_event.o serial.o $(LDFLAGS) $(LDLIBS)
+$(BINDIR)/serial2event$(SUFFIX): serial2event.o serial.o
+	$(CC) $(CFLAGS) -o $@ serial2event.o serial.o $(LDFLAGS) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

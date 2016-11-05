@@ -17,7 +17,7 @@ function [inside] = ft_inside_vol(dippos, headmodel, varargin)
 %   grad        = structure with gradiometer information, used for localspheres
 %   headshape   = structure with headshape, used for old CTF localspheres strategy
 
-% Copyright (C) 2003-2016, Robert Oostenveld
+% Copyright (C) 2003-2013, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -97,7 +97,7 @@ switch ft_voltype(headmodel)
     
   case {'halfspace', 'halfspace_monopole'}
     inside = false(1,size(dippos,1));
-    for i = 1:size(dippos,1)
+    for i = 1:size(dippos,1);
       pol = dippos(i,:);
       % condition of dipoles/monopoles falling in the non conductive halfspace
       inside(i) = acos(dot(headmodel.ori,(pol-headmodel.pos)./norm(pol-headmodel.pos))) >= pi/2;
@@ -105,7 +105,7 @@ switch ft_voltype(headmodel)
     
   case 'slab_monopole'
     inside = false(1,size(dippos,1));
-    for i=1:size(dippos,1)
+    for i=1:size(dippos,1);
       pol = dippos(i,:);
       % condition of dipoles/monopoles falling in the non conductive halfspace
       % Attention: voxels on the boundary are automatically considered outside the strip
@@ -120,90 +120,51 @@ switch ft_voltype(headmodel)
     inside = bounding_mesh(dippos, pos, tri);
     
   case {'simbio'}
-    % this is a model with hexaheders or tetraheders
-    if isfield(headmodel, 'tet')
-      % the subsequent code works both for tetraheders or hexaheders, but assumes the volume elements to be called "hex"
-      headmodel.hex = headmodel.tet;
-      headmodel = rmfield(headmodel, 'tet');
+    
+    brain = false(size(headmodel.tissue));
+    brain = brain | headmodel.tissue == find(strcmp(headmodel.tissuelabel, 'gray'));
+    brain = brain | headmodel.tissue == find(strcmp(headmodel.tissuelabel, 'white'));
+    brain = brain | headmodel.tissue == find(strcmp(headmodel.tissuelabel, 'csf'));
+    
+    minbrain = min(headmodel.pos(headmodel.hex(brain(:)), :), [], 1);
+    maxbrain = max(headmodel.pos(headmodel.hex(brain(:)), :), [], 1);
+    
+    mindippos = min(dippos, [], 1);
+    maxdippos = max(dippos, [], 1);
+    
+    % combine the two bounding boxes
+    minbox = max([minbrain; mindippos], [], 1);
+    maxbox = min([maxbrain; maxdippos], [], 1);
+    
+    % prune the mesh to the bounding box
+    discard1 = true(size(headmodel.hex,1),1);
+    discard2 = true(size(headmodel.hex,1),1);
+    for i=1:8
+      discard1 = discard1 & any(bsxfun(@minus, headmodel.pos(headmodel.hex(:,i),:), minbox)<0,2);
+      discard2 = discard2 & any(bsxfun(@minus, headmodel.pos(headmodel.hex(:,i),:), maxbox)>0,2);
     end
+    discard = discard1 | discard2;
     
-    % determine the size of the relevant elements
-    numhex = size(headmodel.hex,1);
-    numpos = size(headmodel.pos,1);
-    numdip = size(dippos,1);
+    fprintf('pruning mesh from %d to %d elements (%d%%)\n', length(discard), sum(discard), round(100*sum(discard)/length(discard)));
     
-    % FIXME we have to rethink which tissue types should be flagged as inside
-    tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
-
-    % determine all hexaheders that are labeled as brain
-    insidehex = false(size(headmodel.tissue));
-    for i=1:numel(tissue)
-      fprintf('selecting dipole positions inside the ''%s'' tissue\n', tissue{i});
-      insidehex = insidehex | (headmodel.tissue == find(strcmp(headmodel.tissuelabel, tissue{i})));
+    headmodel.hex    = headmodel.hex(~discard,:);
+    headmodel.tissue = headmodel.tissue(~discard);
+    
+    % determine the center of each volume element
+    elementpos = zeros(size(headmodel.hex,1),3);
+    for i=1:8
+      elementpos = elementpos + headmodel.pos(headmodel.hex(:,i),:);
     end
+    elementpos = elementpos/8;
     
-    % prune the mesh, i.e. only retain hexaheders labeled as brain
-    fprintf('pruning headmodel volume elements from %d to %d (%d%%)\n', numhex, sum(insidehex), round(100*sum(insidehex)/numhex));
-    headmodel.hex    = headmodel.hex(insidehex,:);
-    headmodel.tissue = headmodel.tissue(insidehex); 
-    numhex = sum(insidehex);
-    clear insidehex
-    
-    % determine all vertices that are part of a hexaheder
-    insidepos = false(numpos,1);
-    insidepos(headmodel.hex) = true;
-
-    % prune the mesh, i.e. only retain vertices that are part of a  hexaheder
-    fprintf('pruning headmodel vertices from %d to %d (%d%%)\n', numpos, sum(insidepos), round(100*sum(insidepos)/numpos));
-    headmodel.pos = headmodel.pos(insidepos,:);
-    numpos = sum(insidepos);
-    renumber = zeros(size(insidepos));
-    renumber(insidepos) = 1:numpos;          % determine the mapping from original to pruned vertex indices
-    headmodel.hex = renumber(headmodel.hex); % renumber the vertex indices
-    clear insidepos renumber
-
-    % construct a sparse matrix with the mapping between all hexaheders and vertices
-    i = repmat(transpose(1:numhex), 1, 8);
-    j = headmodel.hex;
-    s = ones(size(i));
-    hex2pos = sparse(i(:),j(:),s(:),numhex,numpos);
-    
-    % determine the bounding box
-    minpos = min(headmodel.pos,[],1);
-    maxpos = max(headmodel.pos,[],1);
-    insidedip = all(bsxfun(@ge, dippos, minpos),2) & all(bsxfun(@le, dippos, maxpos),2);
-    fprintf('pruning dipole positions from %d to %d (%d%%)\n', numdip, sum(insidedip), round(100*sum(insidedip)/numdip));
-    insidedip  = find( insidedip);
-    dippos = dippos(insidedip,:);
-    
-    % find the nearest vertex for each of the dipoles
-    dsearchn(headmodel.pos, dippos(1,:)); % call it once to precompile
     stopwatch = tic;
-    dsearchn(headmodel.pos, dippos(1,:)); % call it once to estimate the time
+    k = dsearchn(elementpos, dippos(1,:));
     t = toc(stopwatch);
-    fprintf('determining inside points, this takes about %d seconds\n', round(numdip*t));
-    posindx = dsearchn(headmodel.pos, dippos);
+    fprintf('determining inside points, this takes about %d seconds\n', round(size(dippos,1)*t));
+    k = dsearchn(elementpos, dippos);
     
-    % The following code is only guaranteed to work with convex elements. Regular
-    % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
-    % SIMBIO have to be convex as well.
-    
-    inside = false(1, numdip);
-    % for each dipole determine whether it is inside one of the neighbouring hexaheders
-    % this will be the case for all vertices that are inside the middle, but not at the edges
-    for i=1:numel(insidedip)
-      hexindx = find(hex2pos(:,posindx(i)));
-      for j=1:numel(hexindx)
-        posx = headmodel.pos(headmodel.hex(hexindx(j),:),1);
-        posy = headmodel.pos(headmodel.hex(hexindx(j),:),2);
-        posz = headmodel.pos(headmodel.hex(hexindx(j),:),3);
-        pos = [posx posy posz];
-        if isequal(convhull(pos), convhull([pos; dippos(i,:)]))
-          inside(insidedip(i)) = true;
-          break % out of the for-loop
-        end % if
-      end % for each hexaheder
-    end % for each of the dipole positions
+    % select the source positions that are inside the brain
+    inside = brain(k);
     
   otherwise
     error('unrecognized volume conductor model');

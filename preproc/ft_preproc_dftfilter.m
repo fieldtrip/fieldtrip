@@ -61,6 +61,11 @@ end
 % ensure to be a column  vector
 Fl = Fl(:);
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % determine the largest integer number of line-noise cycles that fits in the data
 n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
 if all(n==n(1))
