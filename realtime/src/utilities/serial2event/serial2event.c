@@ -1,6 +1,6 @@
 /* Convert incoming characters on a serial port to an event in a remote FieldTrip buffer.
  * Errors when writing to the buffer will be printed, but otherwise ignored.
- * Please look at serial_event.conf for an example of how to set up the tool,
+ * Please look at serial2event.conf for an example of how to set up the tool,
  * e.g., which port to listen on, and how to write events.
  * (C) 2010 Stefan Klanke
  */
@@ -45,7 +45,7 @@ pthread_mutex_t sampleMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t udpThread;
 
 
-/* The following function is used for turning a configuration file (see serial_event.conf)
+/* The following function is used for turning a configuration file (see serial2event.conf)
    into a SerialEventConfig struct as defined above.
    Returns 
 	 0 if ok, 
@@ -470,7 +470,7 @@ int main(int argc, char **argv) {
 	char *confname;
 	
 	if (argc < 2) {
-		confname = "serial_event.conf";
+		confname = "serial2event.conf";
 	} else {
 		confname = argv[1];
 	}
