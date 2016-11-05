@@ -58,16 +58,9 @@ if nargin<5 || isempty(order)
   flag = 0;
 end
 
-% This does not work on integer data
+% this does not work on integer data
 typ = class(dat);
-if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
-  dat = cast(dat, 'double');
-end
-
-% preprocessing fails on channels that contain NaN
-if any(isnan(dat(:)))
-  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
-end
+dat = cast(dat, 'double');
 
 % construct a "time" axis
 nsamples = size(dat,2);
