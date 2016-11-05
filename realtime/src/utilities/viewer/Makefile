@@ -71,15 +71,15 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/bufferViewer$(SUFFIX)
+TARGETS = $(BINDIR)/viewer$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
 
-bufferViewer.o: bufferViewer.cc
-	g++ -c bufferViewer.cc $(CXXFLAGS)
+viewer.o: viewer.cc
+	g++ -c viewer.cc $(CXXFLAGS)
 
-$(BINDIR)/bufferViewer$(SUFFIX): bufferViewer.o ../../buffer/cpp/FtConnection.o
+$(BINDIR)/viewer$(SUFFIX): viewer.o ../../buffer/cpp/FtConnection.o
 	g++ -o $@ $^ $(LDFLAGS)
 
 clean:
