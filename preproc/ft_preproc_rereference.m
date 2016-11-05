@@ -42,15 +42,21 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan, method)
 if nargin<2 || isempty(refchan) || (ischar(refchan) && strcmp(refchan, 'all'))
   refchan = 1:Nchans;
 end
+
 if nargin<3 || isempty(method)
   method = 'avg';
 end
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % compute the average value over the reference channels
 if strcmp(method, 'avg')
-    ref = mean(dat(refchan,:), 1);
+  ref = mean(dat(refchan,:), 1);
 elseif strcmp(method, 'median')
-    ref = median(dat(refchan,:), 1);
+  ref = median(dat(refchan,:), 1);
 end
 
 % apply the new reference to the data
