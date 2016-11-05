@@ -667,7 +667,7 @@ if opt.scatter % radiobutton on
     set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
     opt.scatterfig_h1 = axes('position',[0.06 0.06 0.74 0.88]);
     set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.handlesaxes(1), 'DataAspectRatio'));
-    axis square;
+    axis square; axis tight;
     xlabel('x'); ylabel('y'); zlabel('z');
     
     % scatter range sliders
@@ -694,7 +694,7 @@ if opt.scatter % radiobutton on
       'Position', [.85+.07 .06 .05 .2], ...
       'Callback', @cb_scattermaxslider);
     
-    msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
+    msize = round(2000/opt.mri.dim(3)); % headsize (20 cm) / z slices
     inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
     for r = 1:4 % 4 color layers to encode peaks
       lim1 = opt.slim(1) + r*inc - inc;
