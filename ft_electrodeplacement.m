@@ -719,12 +719,21 @@ if opt.scatter % radiobutton on
       '4. Scatterplot viewing options:\n',...
       '   a. use the Data Cursor, Rotate 3D, Pan, and Zoom tools to navigate to electrodes in 3D space\n'));
     
-    opt.drawscatter = 1;
+    opt.redrawscatter = 1;
+    opt.redrawmarker = 1;
   end
   
   figure(opt.scatterfig); % make current figure
   
-  if opt.drawscatter
+  % update the existing crosshairs, don't change the handles
+  crosshair([opt.ijk], 'handle', opt.handlescross2);
+  if opt.showcrosshair
+    set(opt.handlescross2,'Visible','on');
+  else
+    set(opt.handlescross2,'Visible','off');
+  end
+  
+  if opt.redrawscatter
     delete(findobj('type','scatter')); % remove previous scatters
     msize = round(2000/opt.mri.dim(3)); % headsize (20 cm) / z slices
     inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
@@ -735,27 +744,21 @@ if opt.scatter % radiobutton on
       [x,y,z] = ind2sub(opt.mri.dim, voxind);
       hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
     end
-    opt.drawscatter = 0;
+    opt.redrawscatter = 0;
   end
   
-  % update the existing crosshairs, don't change the handles
-  crosshair([opt.ijk], 'handle', opt.handlescross2);
-  if opt.showcrosshair
-    set(opt.handlescross2,'Visible','on');
-  else
-    set(opt.handlescross2,'Visible','off');
-  end
-  
-  % plot the markers
-  if isfield(opt, 'vox2')
-    delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
-    plot3(opt.vox2(:,1),opt.vox2(:,2),opt.vox2(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r');
-    if opt.showlabels
-      delete(findobj(opt.scatterfig,'Type','text')); % remove previous labels
-      for i=1:size(opt.vox2,1)
-        opt.handlesmarker(i,7) = text(opt.vox2(i,1), opt.vox2(i,2), opt.vox2(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
+  if opt.redrawmarker
+    if isfield(opt, 'vox2') % plot the markers
+      delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
+      plot3(opt.vox2(:,1),opt.vox2(:,2),opt.vox2(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
+      if opt.showlabels
+        delete(findobj(opt.scatterfig,'Type','text')); % remove previous labels
+        for i=1:size(opt.vox2,1)
+          text(opt.vox2(i,1), opt.vox2(i,2), opt.vox2(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
+        end
       end
     end
+    opt.redrawmarker = 0;
   end
   
 end
@@ -828,6 +831,7 @@ switch key
       opt.showlabels = 0;
       set(opt.handlesaxes(8), 'Value', 0);
     end
+    opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -892,6 +896,7 @@ switch key
     
   case 102 % 'f'
     opt.showmarkers = ~opt.showmarkers;
+    opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -1131,6 +1136,7 @@ if ~isempty(elecidx)
   eleclis{elecidx} = eleclab;
   set(h6, 'String', eleclis);
   set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
+  opt.redrawmarker = 1;
   setappdata(h, 'opt', opt);
   cb_redraw(h);
 end
@@ -1191,6 +1197,7 @@ function cb_labelsbutton(h8, eventdata)
 h = getparent(h8);
 opt = getappdata(h, 'opt');
 opt.showlabels = get(h8, 'value');
+opt.redrawmarker = 1;
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -1254,7 +1261,7 @@ h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(1) = get(h2, 'value');
 fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
-opt.drawscatter = 1;
+opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 cb_scatterredraw(h);
 
@@ -1267,7 +1274,7 @@ h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(2) = get(h3, 'value');
 fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
-opt.drawscatter = 1;
+opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 cb_scatterredraw(h);
 
@@ -1311,7 +1318,7 @@ elseif ~get(hObject, 'value') && isfield(opt, 'ana_strip') % use original again
 elseif get(hObject, 'value') && isfield(opt, 'ana_strip') % use skullstrip again
   opt.ana = opt.ana_strip;
 end
-opt.drawscatter = 1;
+opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 figure(h);
 cb_redraw(h);
