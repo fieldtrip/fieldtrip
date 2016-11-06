@@ -233,7 +233,7 @@ switch cfg.method
     dat = double(mri.(cfg.parameter));
     dmin = min(dat(:));
     dmax = max(dat(:));
-    dat  = (dat-dmin)./(dmax-dmin); % range between 0 and 1
+    dat = (dat-dmin)./(dmax-dmin); % range between 0 and 1
     
     % intensity range sliders
     h45text = uicontrol('Style', 'text',...
@@ -378,10 +378,10 @@ switch cfg.method
     opt.handlesfigure = h;
     opt.handlesmarker = [];
     opt.quit          = false;
-    opt.ana           = dat;
     opt.update        = [1 1 1];
     opt.init          = true;
     opt.tag           = 'ik';
+    opt.ana           = dat;
     opt.mri           = mri;
     opt.showcrosshair = true;
     opt.vox           = [opt.ijk]; % voxel coordinates (physical units)
@@ -672,7 +672,7 @@ if opt.scatter % radiobutton on
     
     % scatter range sliders
     opt.scatterfig_h23text = uicontrol('Style', 'text',...
-      'String','Treshold',...
+      'String','Intensity',...
       'Units', 'normalized', ...
       'Position',[.85+0.03 .26 .1 0.04],...
       'BackgroundColor', [1 1 1], ...
@@ -694,15 +694,14 @@ if opt.scatter % radiobutton on
       'Position', [.85+.07 .06 .05 .2], ...
       'Callback', @cb_scattermaxslider);
     
-    msize = round(2000/opt.mri.dim(3)); % headsize (20 cm) / z slices
-    inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
-    for r = 1:4 % 4 color layers to encode peaks
-      lim1 = opt.slim(1) + r*inc - inc;
-      lim2 = opt.slim(1) + r*inc;
-      voxind = find(opt.ana>lim1 & opt.ana<lim2);
-      [x,y,z] = ind2sub(opt.mri.dim, voxind);
-      hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
-    end
+    hskullstrip = uicontrol('Style', 'togglebutton', ...
+      'Parent', opt.scatterfig, ...
+      'String', 'Skullstrip', ...
+      'Value', 0, ...
+      'Units', 'normalized', ...
+      'Position', [.88 .88 .1 .1], ...
+      'HandleVisibility', 'on', ...
+      'Callback', @cb_skullstrip);
     
     % datacursor mode options
     opt.scatterfig_dcm = datacursormode(opt.scatterfig);
@@ -720,9 +719,24 @@ if opt.scatter % radiobutton on
       '4. Scatterplot viewing options:\n',...
       '   a. use the Data Cursor, Rotate 3D, Pan, and Zoom tools to navigate to electrodes in 3D space\n'));
     
+    opt.drawscatter = 1;
   end
   
   figure(opt.scatterfig); % make current figure
+  
+  if opt.drawscatter
+    delete(findobj('type','scatter')); % remove previous scatters
+    msize = round(2000/opt.mri.dim(3)); % headsize (20 cm) / z slices
+    inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
+    for r = 1:4 % 4 color layers to encode peaks
+      lim1 = opt.slim(1) + r*inc - inc;
+      lim2 = opt.slim(1) + r*inc;
+      voxind = find(opt.ana>lim1 & opt.ana<lim2);
+      [x,y,z] = ind2sub(opt.mri.dim, voxind);
+      hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
+    end
+    opt.drawscatter = 0;
+  end
   
   % update the existing crosshairs, don't change the handles
   crosshair([opt.ijk], 'handle', opt.handlescross2);
@@ -1134,6 +1148,44 @@ setappdata(h, 'opt', opt);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function opt = magnetize(opt)
+
+try
+  center = opt.ijk;
+  radius = opt.magradius;
+  % FIXME here it would be possible to adjust the selection at the edges of the volume
+  xsel = center(1)+(-radius:radius);
+  ysel = center(2)+(-radius:radius);
+  zsel = center(3)+(-radius:radius);
+  cubic  = opt.ana(xsel, ysel, zsel);
+  if strcmp(opt.magtype, 'peak')
+    % find the peak intensity voxel within the cube
+    [val, idx] = max(cubic(:));
+    [ix, iy, iz] = ind2sub(size(cubic), idx);
+  elseif strcmp(opt.magtype, 'trough')
+    % find the trough intensity voxel within the cube
+    [val, idx] = min(cubic(:));
+    [ix, iy, iz] = ind2sub(size(cubic), idx);
+  elseif strcmp(opt.magtype, 'weighted')
+    % find the weighted center of mass in the cube
+    dim = size(cubic);
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    cubic = cubic./sum(cubic(:));
+    ix = round(X(:)' * cubic(:));
+    iy = round(Y(:)' * cubic(:));
+    iz = round(Z(:)' * cubic(:));
+  end
+  % adjust the indices for the selection
+  opt.ijk = [ix, iy, iz] + center - radius - 1;
+  fprintf('==================================================================================\n');
+  fprintf(' clicked at [%d %d %d], %s magnetized adjustment [%d %d %d]\n', center, opt.magtype, opt.ijk-center);
+catch
+  % this fails if the selection is at the edge of the volume
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_labelsbutton(h8, eventdata)
 
 h = getparent(h8);
@@ -1202,18 +1254,8 @@ h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(1) = get(h2, 'value');
 fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
+opt.drawscatter = 1;
 setappdata(h, 'opt', opt);
-
-delete(findobj('type','scatter')); % remove previous scatters
-msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
-inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
-for r = 1:4 % 4 color layers to encode peaks
-  lim1 = opt.slim(1) + r*inc - inc;
-  lim2 = opt.slim(1) + r*inc;
-  voxind = find(opt.ana>lim1 & opt.ana<lim2);
-  [x,y,z] = ind2sub(opt.mri.dim, voxind);
-  hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
-end
 cb_scatterredraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1225,18 +1267,8 @@ h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(2) = get(h3, 'value');
 fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
+opt.drawscatter = 1;
 setappdata(h, 'opt', opt);
-
-delete(findobj('type','scatter')); % remove previous scatters
-msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
-inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
-for r = 1:4 % 4 color layers to encode peaks
-  lim1 = opt.slim(1) + r*inc - inc;
-  lim2 = opt.slim(1) + r*inc;
-  voxind = find(opt.ana>lim1 & opt.ana<lim2);
-  [x,y,z] = ind2sub(opt.mri.dim, voxind);
-  hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
-end
 cb_scatterredraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1258,37 +1290,28 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function opt = magnetize(opt)
+function cb_skullstrip(hObject, eventdata)
 
-try
-  center = opt.ijk;
-  radius = opt.magradius;
-  % FIXME here it would be possible to adjust the selection at the edges of the volume
-  xsel = center(1)+(-radius:radius);
-  ysel = center(2)+(-radius:radius);
-  zsel = center(3)+(-radius:radius);
-  cubic  = opt.ana(xsel, ysel, zsel);
-  if strcmp(opt.magtype, 'peak')
-    % find the peak intensity voxel within the cube
-    [val, idx] = max(cubic(:));
-    [ix, iy, iz] = ind2sub(size(cubic), idx);
-  elseif strcmp(opt.magtype, 'trough')
-    % find the trough intensity voxel within the cube
-    [val, idx] = min(cubic(:));
-    [ix, iy, iz] = ind2sub(size(cubic), idx);
-  elseif strcmp(opt.magtype, 'weighted')
-    % find the weighted center of mass in the cube
-    dim = size(cubic);
-    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-    cubic = cubic./sum(cubic(:));
-    ix = round(X(:)' * cubic(:));
-    iy = round(Y(:)' * cubic(:));
-    iz = round(Z(:)' * cubic(:));
-  end
-  % adjust the indices for the selection
-  opt.ijk = [ix, iy, iz] + center - radius - 1;
-  fprintf('==================================================================================\n');
-  fprintf(' clicked at [%d %d %d], %s magnetized adjustment [%d %d %d]\n', center, opt.magtype, opt.ijk-center);
-catch
-  % this fails if the selection is at the edge of the volume
+h = findobj('type','figure','name',mfilename);
+opt = getappdata(h, 'opt');
+if get(hObject, 'value') && ~isfield(opt, 'ana_strip') % skullstrip
+  fprintf('stripping the skull - this could take a few minutes\n')
+  tmp.anatomy = opt.ana;
+  tmp.dim = size(opt.ana);
+  tmp.coordsys = 'tal'; % assumption
+  tmp.unit = 'mm'; % assumption
+  tmp.transform = opt.mri.transform;
+  cfg.output = 'skullstrip';
+  seg = ft_volumesegment(cfg, tmp);
+  opt.ana_strip = seg.anatomy; clear seg tmp
+  opt.ana_orig = opt.ana; % back up original
+  opt.ana = opt.ana_strip; % overwrite with skullstrip
+elseif ~get(hObject, 'value') && isfield(opt, 'ana_strip') % use original again
+  opt.ana = opt.ana_orig;
+elseif get(hObject, 'value') && isfield(opt, 'ana_strip') % use skullstrip again
+  opt.ana = opt.ana_strip;
 end
+opt.drawscatter = 1;
+setappdata(h, 'opt', opt);
+figure(h);
+cb_redraw(h);
