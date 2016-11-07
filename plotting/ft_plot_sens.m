@@ -74,6 +74,14 @@ facecolor       = ft_getopt(varargin, 'facecolor', 'none');
 facealpha       = ft_getopt(varargin, 'facealpha',   1);
 edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
 
+% color management
+if ischar(facecolor) && exist([facecolor '.m'], 'file')
+  facecolor = eval(facecolor);
+end
+if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
+  edgecolor = eval(edgecolor);
+end
+
 if ischar(chantype)
   % should be a cell array
   chantype = {chantype};
@@ -308,7 +316,7 @@ end
 ncoil = size(coilpos,1);
 npos  = size(pos,1);
 mesh.pos  = nan(ncoil*npos,3);
-mesh.poly = nan(ncoil,npos);
+mesh.poly = nan(ncoil, npos);
 
 % determine the scaling of the coil as homogenous transformation matrix
 s  = scale([coilsize coilsize coilsize]);

@@ -32,8 +32,16 @@ function ft_plot_crosshair(pos, varargin)
 %
 % $Id$
 
-ax  = axis;
+% color management
+color = ft_getopt(varargin, 'color');
+if ~isempty(color)
+  if ischar(color) && exist([color '.m'], 'file')
+    color = eval(color);
+  end
+  varargin = ft_setopt(varargin, 'color', color);
+end
 
+ax   = axis;
 minx = ax(1);
 maxx = ax(2);
 miny = ax(3);

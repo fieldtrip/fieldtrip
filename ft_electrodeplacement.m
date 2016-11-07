@@ -1,7 +1,7 @@
 function [elec] = ft_electrodeplacement(cfg, varargin)
 
-% FT_ELECTRODEPLACEMENT allows placing electrodes on a volume or headshape.
-% The different methods are described in detail below.
+% FT_ELECTRODEPLACEMENT allows manual p[lacement of electrodes on a MRI scan, CT scan
+% or on a triangulated surface of the head.
 %
 % VOLUME - Navigate an orthographic display of a volume (e.g. CT or
 % MR scan), and assign an electrode label to the current crosshair location
@@ -28,7 +28,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % where the input headshape should be a surface triangulation
 %
 % The configuration can contain the following options
-%   cfg.method         = string representing the method for aligning or placing the electrodes
+%   cfg.method         = string representing the method for placing the electrodes
 %                        'mri'             place electrodes in a brain volume
 %                        'headshape'       place electrodes on the head surface
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
@@ -84,6 +84,7 @@ end
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
 
 % set the defaults
 cfg.method        = ft_getopt(cfg, 'method');                 % volume, headshape
@@ -100,7 +101,6 @@ cfg.magradius     = ft_getopt(cfg, 'magradius',            2); % specify the phy
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',      'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',       'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 
-
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
   switch ft_datatype(varargin{1})
@@ -115,9 +115,9 @@ end
 switch cfg.method
   case 'volume'
     mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes');
-  case  {'headshape'}
+  case  {'headshape', '1020'}
     headshape = fixpos(varargin{1});
-    headshape = ft_determine_coordsys(headshape);
+    headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');
 end
 
 switch cfg.method
@@ -160,7 +160,6 @@ switch cfg.method
     end
     
   case 'volume'
-    
     % start building the figure
     h = figure(...
       'MenuBar', 'none',...
@@ -415,24 +414,53 @@ switch cfg.method
     delete(h);
     
     % collect the results
-    elec.label  = {};
+    elec = keepfields(mri, {'unit', 'coordsys'});
+    elec.label   = {};
     elec.elecpos = [];
     elec.chanpos = [];
-    elec.tra = [];
     for i=1:length(opt.markerlab)
       if ~isempty(opt.markerlab{i,1})
         elec.label = [elec.label; opt.markerlab{i,1}];
         elec.elecpos = [elec.elecpos; opt.markerpos{i,1}];
       end
     end
-    elec.chanpos  = elec.elecpos; % identicial to elecpos
+    elec.chanpos = elec.elecpos;
     elec.tra = eye(size(elec.elecpos,1));
-    if isfield(mri, 'unit')
-      elec.unit  = mri.unit;
+    
+  case '1020'
+    % the placement procedure fails if the fiducials coincide with vertices
+    dist = @(x, y) sqrt(sum(bsxfun(@minus, x, y).^2,2));
+    tolerance = 1 * ft_scalingfactor('mm', headshape.unit);  % 1 mm
+    nas = cfg.fiducial.nas;
+    ini = cfg.fiducial.ini;
+    lpa = cfg.fiducial.lpa;
+    rpa = cfg.fiducial.rpa;
+    if any(dist(headshape.pos, nas)<tolerance)
+      warning('nasion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      nas = nas + tolerance*randn(1,3);
     end
-    if isfield(mri, 'coordsys')
-      elec.coordsys = mri.coordsys;
+    if any(dist(headshape.pos, ini)<tolerance)
+      warning('inion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ini = ini + tolerance*randn(1,3);
     end
+    if any(dist(headshape.pos, lpa)<tolerance)
+      warning('LPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      lpa = lpa + tolerance*randn(1,3);
+    end
+    if any(dist(headshape.pos, rpa)<tolerance)
+      warning('RPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      rpa = rpa + tolerance*randn(1,3);
+    end
+    
+    % place the electrodes automatically according to the fiducials
+    [pos, lab] = elec1020_locate(headshape.pos, headshape.tri, nas, ini, lpa, rpa);
+    % construct the output
+    elec = keepfields(headshape, {'unit', 'coordsys'});
+    elec.elecpos = pos;
+    elec.label   = lab(:);
+    
+  otherwise
+    error('unsupported method ''%s''', cfg.method);
     
 end % switch method
 

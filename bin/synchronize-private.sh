@@ -1338,6 +1338,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexa64)
+ARRAY+=(private/ltrisect.mexa64)
 ARRAY+=(src/ltrisect.mexa64)
 sync ${ARRAY[*]}
 
@@ -1346,6 +1347,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexglx)
+ARRAY+=(private/ltrisect.mexglx)
 ARRAY+=(src/ltrisect.mexglx)
 sync ${ARRAY[*]}
 
@@ -1354,6 +1356,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmac)
+ARRAY+=(private/ltrisect.mexmac)
 ARRAY+=(src/ltrisect.mexmac)
 sync ${ARRAY[*]}
 
@@ -1362,6 +1365,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmaci)
+ARRAY+=(private/ltrisect.mexmaci)
 ARRAY+=(src/ltrisect.mexmaci)
 sync ${ARRAY[*]}
 
@@ -1370,6 +1374,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmaci64)
+ARRAY+=(private/ltrisect.mexmaci64)
 ARRAY+=(src/ltrisect.mexmaci64)
 sync ${ARRAY[*]}
 
@@ -1378,6 +1383,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexw32)
+ARRAY+=(private/ltrisect.mexw32)
 ARRAY+=(src/ltrisect.mexw32)
 sync ${ARRAY[*]}
 
@@ -1386,6 +1392,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexw64)
+ARRAY+=(private/ltrisect.mexw64)
 ARRAY+=(src/ltrisect.mexw64)
 sync ${ARRAY[*]}
 

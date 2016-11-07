@@ -54,6 +54,11 @@ linestyle   = ft_getopt(varargin, 'linestyle',  '-');
 linewidth   = ft_getopt(varargin, 'linewidth',  0.5);
 tag         = ft_getopt(varargin, 'tag',        '');
 
+% color management
+if ischar(color) && exist([color '.m'], 'file')
+  color = eval(color);
+end
+
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
   % use a shortcut to speed up the plotting
