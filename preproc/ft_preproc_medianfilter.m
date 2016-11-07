@@ -37,6 +37,11 @@ if nargin<2 || isempty(order)
   error('the order of the median filter is not specified');
 end
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % deal with padding
 pad = ceil(order/2);
 dat = ft_preproc_padding(dat, 'localmean', pad);

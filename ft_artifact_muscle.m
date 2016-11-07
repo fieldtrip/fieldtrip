@@ -93,15 +93,9 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters
-if ~isfield(cfg,'artfctdef'),                     cfg.artfctdef                    = [];        end
-if ~isfield(cfg.artfctdef,'muscle'),              cfg.artfctdef.muscle             = [];        end
-if ~isfield(cfg.artfctdef.muscle,'method'),       cfg.artfctdef.muscle.method      = 'zvalue';  end
-
-% for backward compatibility
-if isfield(cfg.artfctdef.muscle,'sgn')
-  cfg.artfctdef.muscle.channel = cfg.artfctdef.muscle.sgn;
-  cfg.artfctdef.muscle         = rmfield(cfg.artfctdef.muscle, 'sgn');
-end
+cfg.artfctdef               = ft_getopt(cfg,                  'artfctdef', []);
+cfg.artfctdef.muscle        = ft_getopt(cfg.artfctdef,        'muscle',    []);
+cfg.artfctdef.muscle.method = ft_getopt(cfg.artfctdef.muscle, 'method',    'zvalue');
 
 if isfield(cfg.artfctdef.muscle, 'artifact')
   fprintf('muscle artifact detection has already been done, retaining artifacts\n');
@@ -113,62 +107,43 @@ if ~strcmp(cfg.artfctdef.muscle.method, 'zvalue')
   error(sprintf('muscle artifact detection only works with cfg.method=''zvalue'''));
 end
 
-% the following settings should be supported for backward compatibility
-if isfield(cfg.artfctdef.muscle,'pssbnd'),
-  cfg.artfctdef.muscle.bpfreq   = cfg.artfctdef.muscle.pssbnd;
-  cfg.artfctdef.muscle.bpfilter = 'yes';
-  cfg.artfctdef.muscle = rmfield(cfg.artfctdef.muscle,'pssbnd');
-end;
-dum = 0;
-if isfield(cfg.artfctdef.muscle,'pretim'),
-  dum = max(dum, cfg.artfctdef.muscle.pretim);
-  cfg.artfctdef.muscle = rmfield(cfg.artfctdef.muscle,'pretim');
-end
-if isfield(cfg.artfctdef.muscle,'psttim'),
-  dum = max(dum, cfg.artfctdef.muscle.psttim);
-  cfg.artfctdef.muscle = rmfield(cfg.artfctdef.muscle,'psttim');
-end
-if dum
-  cfg.artfctdef.muscle.artpadding = max(dum);
-end
-if isfield(cfg.artfctdef.muscle,'padding'),
-  cfg.artfctdef.muscle.trlpadding   = cfg.artfctdef.muscle.padding;
-  cfg.artfctdef.muscle = rmfield(cfg.artfctdef.muscle,'padding');
-end
+% for backward compatibility
+cfg.artfctdef.muscle = ft_checkconfig(cfg.artfctdef.muscle, 'renamed', {'sgn',     'channel'});
+cfg.artfctdef.muscle = ft_checkconfig(cfg.artfctdef.muscle, 'renamed', {'passbnd', 'bpfreq'});
+cfg.artfctdef.muscle = ft_checkconfig(cfg.artfctdef.muscle, 'renamed', {'padding', 'trlpadding'});
+artpadding_oldstyle  = max(ft_getopt(cfg.artfctdef.muscle, 'pretim', 0), ft_getopt(cfg.artfctdef.muscle, 'psttim', 0));
 
 % settings for preprocessing
-if ~isfield(cfg.artfctdef.muscle,'bpfilter'),   cfg.artfctdef.muscle.bpfilter    = 'yes';     end
-if ~isfield(cfg.artfctdef.muscle,'bpfreq'),     cfg.artfctdef.muscle.bpfreq      = [110 140]; end
-if ~isfield(cfg.artfctdef.muscle,'bpfiltord'),  cfg.artfctdef.muscle.bpfiltord   = 8;         end
-if ~isfield(cfg.artfctdef.muscle,'bpfilttype'), cfg.artfctdef.muscle.bpfilttype  = 'but';     end
-if ~isfield(cfg.artfctdef.muscle,'hilbert'),    cfg.artfctdef.muscle.hilbert     = 'yes';     end
-if ~isfield(cfg.artfctdef.muscle,'boxcar'),     cfg.artfctdef.muscle.boxcar      = 0.2;       end
+cfg.artfctdef.muscle.bpfilter    = ft_getopt(cfg.artfctdef.muscle, 'bpfilter',   'yes');
+cfg.artfctdef.muscle.bpfreq      = ft_getopt(cfg.artfctdef.muscle, 'bpfreq',     [110 140]);
+cfg.artfctdef.muscle.bpfiltord   = ft_getopt(cfg.artfctdef.muscle, 'bpfiltor',   8);
+cfg.artfctdef.muscle.bpfilttype  = ft_getopt(cfg.artfctdef.muscle, 'bpfilttype', 'but');
+cfg.artfctdef.muscle.hilbert     = ft_getopt(cfg.artfctdef.muscle, 'hilbert',    'yes');
+cfg.artfctdef.muscle.boxcar      = ft_getopt(cfg.artfctdef.muscle, 'boxcar',     0.2);
+
 % settings for the zvalue subfunction
-if ~isfield(cfg.artfctdef.muscle,'channel'),    cfg.artfctdef.muscle.channel     = 'MEG';     end
-if ~isfield(cfg.artfctdef.muscle,'trlpadding'), cfg.artfctdef.muscle.trlpadding  = 0.1;       end
-if ~isfield(cfg.artfctdef.muscle,'fltpadding'), cfg.artfctdef.muscle.fltpadding  = 0.1;       end
-if ~isfield(cfg.artfctdef.muscle,'artpadding'), cfg.artfctdef.muscle.artpadding  = 0.1;       end
-if ~isfield(cfg.artfctdef.muscle,'cutoff'),     cfg.artfctdef.muscle.cutoff      = 4;         end
+cfg.artfctdef.muscle.channel    = ft_getopt(cfg.artfctdef.muscle, 'channel',    'MEG');
+cfg.artfctdef.muscle.trlpadding = ft_getopt(cfg.artfctdef.muscle, 'trlpadding', 0.1);
+cfg.artfctdef.muscle.fltpadding = ft_getopt(cfg.artfctdef.muscle, 'fltpadding', 0.1);
+cfg.artfctdef.muscle.artpadding = max(ft_getopt(cfg.artfctdef.muscle, 'artpadding', 0.1), artpadding_oldstyle);
+cfg.artfctdef.muscle.cutoff     = ft_getopt(cfg.artfctdef.muscle, 'cutoff',     4);
+
 % construct a temporary configuration that can be passed onto artifact_zvalue
-tmpcfg                  = [];
-tmpcfg.trl              = cfg.trl;
+tmpcfg                  = cfg;
 tmpcfg.artfctdef.zvalue = cfg.artfctdef.muscle;
-if isfield(cfg, 'continuous'),   tmpcfg.continuous       = cfg.continuous;    end
-if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
-if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
-% call the zvalue artifact detection function
+tmpcfg.artfctdef        = rmfield(tmpcfg.artfctdef, 'muscle');
 
-% the data is either passed into the function by the user or read from file with cfg.inputfile
+% call the zvalue artifact detection function, where the data is either passed
+% into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
-
 if ~hasdata
-  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
-  cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  tmpcfg.datafile    = cfg.datafile;
-  tmpcfg.headerfile  = cfg.headerfile;
+  tmpcfg             = ft_checkconfig(tmpcfg, 'dataset2files', 'yes');
+  tmpcfg             = ft_checkconfig(tmpcfg, 'required',      {'headerfile', 'datafile'});
   [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
 else
+  tmpcfg.artfctdef.zvalue.trlpadding = 0;
+  tmpcfg.artfctdef.zvalue.fltpadding = 0;
+  warning('trlpadding and fltpadding are set to zero to avoid filter problems with NaN, see bug3193 for details');
   [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
 end
-
 cfg.artfctdef.muscle = tmpcfg.artfctdef.zvalue;

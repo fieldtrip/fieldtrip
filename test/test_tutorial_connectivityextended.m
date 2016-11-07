@@ -1,10 +1,13 @@
 function test_tutorial_connectivityextended
 
+% WALLTIME 00:45:00
+% MEM 3gb
+
 % TEST test_tutorial_connectivity
 % TEST ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 
 % This is the first section of the connectivity tutorial, which
-% starts with an MVAR model and then uses parametric and nonparametric 
+% starts with an MVAR model and then uses parametric and nonparametric
 % spectral decomposition for coherence and granger
 
 % See also test_tutorial_connectivity2 and test_tutorial_connectivity3
@@ -33,7 +36,7 @@ cfg.noisecov      = [ 0.3    0    0 ;
 data              = ft_connectivitysimulation(cfg);
 
 figure
-plot(data.time{1}, data.trial{1}) 
+plot(data.time{1}, data.trial{1})
 legend(data.label)
 xlabel('time (s)')
 
@@ -110,7 +113,7 @@ tlock                 = ft_timelockanalysis(cfg, data_cmb);
 
 cfg              = [];
 cfg.method       = 'lcmv';
-cfg.vol          = hdm;
+cfg.headmodel    = hdm;
 cfg.grid.pos     = sourcemodel.pos([maxcohindx maxpowindx], :);
 cfg.grid.inside  = true(2,1);
 cfg.grid.unit    = sourcemodel.unit;
@@ -141,7 +144,7 @@ cfg.viewmode = 'vertical';  % you can also specify 'butterfly'
 visualTimeseries = cat(2, gam_pow_data.trial{:});
 motorTimeseries = cat(2, coh_lft_data.trial{:});
 [u1, s1, v1] = svd(visualTimeseries, 'econ');
-[u2, s2, v2] = svd(motorTimeseries, 'econ');     
+[u2, s2, v2] = svd(motorTimeseries, 'econ');
 
 virtualchanneldata = [];
 virtualchanneldata.label = {'visual', 'motor'};

@@ -20,14 +20,13 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
 %   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
-%   cfg.headshape   = (optional) a filename containing headshape, a Nx3 matrix with surface
+%
+% For method 'headshape you should specify
+%   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
 %
-% Method 'cortexhull' has its own specific configuration options:
-%   cfg.headshape   = a filename containing the pial surface computed by
-%                     freesurfer recon-all ('/path/to/surf/lh.pial')
-%   cfg.
-%
+% For method 'cortexhull' you should specify
+%   cfg.headshape   = sting, filename containing the pial surface computed by freesurfer recon-all
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -154,26 +153,26 @@ switch cfg.method
     % this makes sense with a non-segmented MRI as input
     % call the corresponding helper function
     bnd = prepare_mesh_manual(cfg, mri);
-
+    
   case {'projectmesh', 'iso2mesh', 'isosurface'}
     % this makes sense with a segmented MRI as input
     % call the corresponding helper function
     bnd = prepare_mesh_segmentation(cfg, mri);
-
+    
   case 'headshape'
     % call the corresponding helper function
     bnd = prepare_mesh_headshape(cfg);
-
+    
   case 'hexahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
     bnd = prepare_mesh_hexahedral(cfg, mri);
-
+    
   case 'tetrahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
     bnd = prepare_mesh_tetrahedral(cfg, mri);
-
+    
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
@@ -187,10 +186,10 @@ switch cfg.method
       bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
       bnd(i).tri = tri;
     end
-
+    
   case 'cortexhull'
-    bnd = prepare_cortexhull(cfg);
-
+    bnd = prepare_mesh_cortexhull(cfg);
+    
   otherwise
     error('unsupported cfg.method')
 end

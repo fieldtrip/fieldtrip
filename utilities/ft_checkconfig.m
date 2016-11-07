@@ -23,7 +23,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   [cfg] = ft_checkconfig(cfg, ...)
 %
 % The behaviour of checkconfig can be controlled by the following cfg options,
-% which can be set as global fieldtrip defaults (see FT_DEFAULTS)
+% which can be set as global FieldTrip defaults (see FT_DEFAULTS)
 %   cfg.checkconfig = 'pedantic', 'loose' or 'silent' (control the feedback behaviour of checkconfig)
 %   cfg.trackconfig = 'cleanup', 'report' or 'off'
 %   cfg.checksize   = number in bytes, can be inf (set max size allowed for output cfg fields)
@@ -248,7 +248,7 @@ end
 %
 % This collects the optional arguments for some of the low-level
 % functions and puts them in a separate substructure. This function is to
-% ensure backward compatibility of end-user scripts, fieldtrip functions
+% ensure backward compatibility of end-user scripts, FieldTrip functions
 % and documentation that do not use the nested detailled configuration
 % but that use a flat configuration.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

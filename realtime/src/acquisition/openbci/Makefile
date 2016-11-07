@@ -46,6 +46,9 @@ ifeq "$(UNAME)" "Linux"
 	ifeq "$(MACHINE)" "armv6l"
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 	endif
+	ifeq "$(MACHINE)" "armv7l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
 ifeq "$(UNAME)" "Darwin"
@@ -76,7 +79,7 @@ all: $(TARGETS)
 
 $(TARGETS):
 
-$(BINDIR)/%$(SUFFIX): ini.o timestamp.o serial.o %.o
+$(BINDIR)/%$(SUFFIX): ini.o serial.o %.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 ini.o: $(FIELDTRIP)/realtime/src/external/inih/ini.c

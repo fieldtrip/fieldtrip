@@ -232,7 +232,7 @@ end
 
 % do a sanity check on the hilbert transform configuration
 if strcmp(cfg.hilbert, 'yes') && ~strcmp(cfg.bpfilter, 'yes')
-  error('hilbert transform should be applied in conjunction with bandpass filter')
+  warning('hilbert transform should be applied in conjunction with bandpass filter')
 end
 
 % do a sanity check on hilbert and rectification

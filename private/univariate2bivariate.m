@@ -5,7 +5,7 @@ function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam,
 % Use as
 %   [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam, dtype, ...)
 % where
-%   data        = fieldtrip structure according to dtype (see below)
+%   data        = FieldTrip structure according to dtype (see below)
 %   inparam     = string
 %   inparam     = string
 %   dtype       = string, can be 'freq', 'source', 'raw'
@@ -132,7 +132,7 @@ switch dtype
       powindx = [];
     end
     
-  case 'source'
+  case {'source' 'source+mesh'}
     ncmb = numel(cmb);
     
     % the code further down requires this to be a vector with indices
@@ -325,6 +325,9 @@ switch dtype
     else
       error('unknown conversion from univariate to bivariate representation');
     end
+    
+    % the code in the caller function requires this to be a boolean vector
+    data = fixinside(data, 'logical');
     
   case 'raw'
     % construct a timelock-like structure that only contains the covariance, see ft_datatype_timelock

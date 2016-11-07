@@ -362,7 +362,7 @@ elseif ft_senstype(input, 'ctf') && islabel
 elseif ft_senstype(input, 'bti')
   if isfield(input, 'orig') && isfield(input.orig, 'config')
     configname = {input.orig.config.channel_data.name};
-    configtype = [input.orig.config.channel_data.chantype];
+    configtype = [input.orig.config.channel_data.type];
     
     if ~isequal(configname(:), input.label(:))
       % reorder the channels according to the order in input.label
@@ -443,7 +443,7 @@ elseif ft_senstype(input, 'bti')
   end
   
 elseif ft_senstype(input, 'itab') && isheader
-  origtype = [input.orig.ch.chantype];
+  origtype = [input.orig.ch.type];
   chantype(origtype==0) = {'unknown'};
   chantype(origtype==1) = {'ele'};
   chantype(origtype==2) = {'mag'}; % might be magnetometer or gradiometer, look at the number of coils
@@ -475,7 +475,7 @@ elseif ft_senstype(input, 'yokogawa') && isheader
   if ft_hastoolbox('yokogawa_meg_reader')
     % shorten names
     ch_info = input.orig.channel_info.channel;
-    type_orig = [ch_info.chantype];
+    type_orig = [ch_info.type];
     
     sel = (type_orig == NullChannel);
     chantype(sel) = {'null'};
@@ -499,6 +499,7 @@ elseif ft_senstype(input, 'yokogawa') && isheader
     chantype(sel) = {'ecg'};
     sel = (type_orig == EtcChannel);
     chantype(sel) = {'etc'};
+    
   elseif ft_hastoolbox('yokogawa')
     sel = (input.orig.channel_info(:, 2) == NullChannel);
     chantype(sel) = {'null'};
@@ -568,17 +569,17 @@ elseif ft_senstype(input, 'yokogawa') && islabel
   chantype(sel) = {'etc'};
   
 elseif ft_senstype(input, 'itab') && isheader
-  sel = ([input.orig.ch.chantype]==0);
+  sel = ([input.orig.ch.type]==0);
   chantype(sel) = {'unknown'};
-  sel = ([input.orig.ch.chantype]==1);
+  sel = ([input.orig.ch.type]==1);
   chantype(sel) = {'unknown'};
-  sel = ([input.orig.ch.chantype]==2);
+  sel = ([input.orig.ch.type]==2);
   chantype(sel) = {'megmag'};
-  sel = ([input.orig.ch.chantype]==8);
+  sel = ([input.orig.ch.type]==8);
   chantype(sel) = {'megref'};
-  sel = ([input.orig.ch.chantype]==16);
+  sel = ([input.orig.ch.type]==16);
   chantype(sel) = {'aux'};
-  sel = ([input.orig.ch.chantype]==64);
+  sel = ([input.orig.ch.type]==64);
   chantype(sel) = {'digital'};
   % not all channels are actually processed by fieldtrip, so only return
   % the types fopr the ones that read_header and read_data return

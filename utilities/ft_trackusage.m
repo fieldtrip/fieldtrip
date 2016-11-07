@@ -28,6 +28,26 @@ function ft_trackusage(event, varargin)
 %
 % See also FT_DEFAULTS
 
+% Copyright (C) 2015, Robert oostenveld
+%
+% This file is part of FieldTrip, see http://www.ru.nl/donders/fieldtrip
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
 global ft_default
 persistent initialized
 
@@ -43,9 +63,9 @@ end
 %% Since the functionality is still in beta testing, only enable the tracking for some developpers
 knownuser = false;
 knownuser = knownuser || (strcmp(getusername, 'roboos')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^mac011', 'once'))));
-knownuser = knownuser || (strcmp(getusername, 'jansch')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+%knownuser = knownuser || (strcmp(getusername, 'jansch')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
 knownuser = knownuser || (strcmp(getusername, 'jimher')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
-knownuser = knownuser || (strcmp(getusername, 'nielam')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+%knownuser = knownuser || (strcmp(getusername, 'nielam')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
 knownuser = knownuser || (strcmp(getusername, 'tzvpop')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
 knownuser = knownuser || (strcmp(getusername, 'lucamb')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
 knownuser = knownuser || (strcmp(getusername, 'elivzan') && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
@@ -124,12 +144,12 @@ for i=1:2:numel(varargin)
 end
 
 % construct the HTTP request for Mixpanel, see https://mixpanel.com/help/reference/http
-event_json   = sprintf('{"event": "%s", "properties": {%s}}', event, struct2json(properties));
+event_json   = sprintf('{"event": "%s", "properties": {%s}}', event, ft_struct2json(properties));
 event_base64 = base64encode(event_json);
 event_http   = sprintf('http://api.mixpanel.com/track/?data=%s', event_base64);
 
 
-[output, status] = my_urlread(event_http);
+[output, status] = ft_urlread(event_http);
 if ~status
   disp(output);
   warning('could not send tracker information for "%s"', event);
@@ -141,7 +161,7 @@ if ~initialized
   user_base64 = base64encode(user_json);
   user_http   = sprintf('http://api.mixpanel.com/engage/?data=%s', user_base64);
 
-  [output, status] = my_urlread(user_http);
+  [output, status] = ft_urlread(user_http);
   if ~status
     disp(output);
     warning('could not send tracker information for "%s"', event);
@@ -150,35 +170,4 @@ if ~initialized
   initialized = true;
 end % if initialized
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function j = struct2json(s)
-fn = fieldnames(s);
-fv = cell(size(fn));
-for i=1:numel(fn)
-  val = s.(fn{i});
-  switch class(val)
-    case 'char'
-      fv{i} = val;
-    case 'double'
-      fv{i} = num2str(val);
-    otherwise
-      error('class %s is not supported\n', type(val));
-  end
-end
-f = cat(1, fn', fv');
-j = sprintf('"%s": "%s", ', f{:});
-j = j(1:end-2); % remove the last comma and space
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [output, status] = my_urlread(event_http)
-% the timeout option is only available from MATLAB 2012b onward
-if ft_platform_supports('urlread-timeout')
-  [output, status] = urlread(event_http, 'TimeOut', 15);
-else
-  [output, status] = urlread(event_http);
-end

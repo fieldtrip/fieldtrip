@@ -33,7 +33,7 @@ function retval = qsublist(cmd, jobid, pbsid)
 % See also QSUBCELLFUN, QSUBFEVAL, QSUBGET
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011-2015, Robert Oostenveld
+% Copyright (C) 2011-2016, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by

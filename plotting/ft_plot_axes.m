@@ -13,6 +13,7 @@ function ft_plot_axes(object, varargin)
 % and can include
 %   axisscale    = scaling factor for the reference axes and sphere (default = 1)
 %   fontcolor    = string (default = 'y')
+%   'unit'       = string, convert the data to the specified geometrical units (default = [])
 %
 % See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_VOL
 
@@ -38,6 +39,12 @@ function ft_plot_axes(object, varargin)
 
 axisscale = ft_getopt(varargin, 'axisscale', 1);   % this is used to scale the axmax and rbol
 fontcolor = ft_getopt(varargin, 'fontcolor', 'y'); % default is yellow
+unit      = ft_getopt(varargin, 'unit');
+
+if ~isempty(unit)
+  % convert the sensor description to the specified units
+  object = ft_convert_units(object, unit);
+end
 
 if isfield(object, 'unit')
   unit = object.unit;

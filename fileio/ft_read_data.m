@@ -950,7 +950,19 @@ switch dataformat
   case {'mpi_ds', 'mpi_dap'}
     [hdr, dat] = read_mpi_ds(filename);
     dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
-    
+  case 'nervus_eeg'     
+    hdr = read_nervus_header(filename);        
+    %Nervus usually has discontinuous EEGs, e.g. pauses in clinical
+    %recordings. The code currently concatenates these trials.
+    %We could set this up as separate "trials" later.
+    %We could probably add "boundary events" in EEGLAB later    
+    dat = zeros(0,size(hdr.orig.Segments(1).chName,2));
+    for segment=1:size(hdr.orig.Segments,2);
+        range = [1 hdr.orig.Segments(segment).sampleCount];
+        datseg = read_nervus_data(hdr.orig,segment, range, chanindx);        
+        dat = cat(1,dat,datseg);
+    end    
+    dimord = 'samples_chans';
   case 'neuroscope_bin'
     switch hdr.orig.nBits
       case 16
@@ -1038,6 +1050,17 @@ switch dataformat
   case 'nexstim_nxe'
     dat = read_nexstim_nxe(filename, begsample, endsample, chanindx);
     
+  case 'nihonkohden_m00'
+    if isfield(hdr, 'dat')
+      % this is inefficient, since it keeps the complete data in memory
+      % but it does speed up subsequent read operations without the user
+      % having to care about it
+      dat = hdr.dat;
+    else
+      dat = read_nihonkohden_m00(filename, begsample, endsample);
+    end
+    dat = dat(chanindx,begsample:endsample);
+    
   case 'ns_avg'
     % NeuroScan average data
     orig = read_ns_avg(filename);
@@ -1051,7 +1074,7 @@ switch dataformat
     if sample1<0
       error('begin sample cannot be for the beginning of the file');
     end
-    % the hdr.nsdf was the initial fieldtrip hack to get 32 bit support, now it is realized using a extended dataformat string
+    % the hdr.nsdf was the initial FieldTrip hack to get 32 bit support, now it is realized using a extended dataformat string
     if     isfield(hdr, 'nsdf') && hdr.nsdf==16
       dataformat = 'ns_cnt16';
     elseif isfield(hdr, 'nsdf') && hdr.nsdf==32

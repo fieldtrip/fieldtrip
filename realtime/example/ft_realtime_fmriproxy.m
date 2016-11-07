@@ -72,7 +72,7 @@ nifti.pixdim = [3.5 3.5 3.5]; % size of voxel in mm
 nifti.slice_duration = Tslice;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create a fieldtrip compatible header structure
+% create a FieldTrip compatible header structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hdr = [];
 hdr.nChans = prod(voxels);

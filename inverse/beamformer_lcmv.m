@@ -155,7 +155,11 @@ isrankdeficient = (rank(Cy)<size(Cy,1));
 if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio = sscanf(lambda, '%f%%');
   ratio = ratio/100;
-  lambda = ratio * trace(Cy)/size(Cy,1);
+  if ~isempty(subspace) && numel(subspace)>1,
+    lambda = ratio * trace(subspace*Cy*subspace')/size(subspace,1);
+  else
+    lambda = ratio * trace(Cy)/size(Cy,1);
+  end
 end
 
 if projectnoise
@@ -173,7 +177,6 @@ if projectnoise
 end
 
 % the inverse only has to be computed once for all dipoles
-invCy = pinv(Cy + lambda * eye(size(Cy)));
 if isfield(dip, 'subspace')
   fprintf('using source-specific subspace projection\n');
   % remember the original data prior to the voxel dependent subspace projection
@@ -203,10 +206,15 @@ elseif ~isempty(subspace)
     Cy    = subspace*Cy*subspace'; 
     % here the subspace can be different from the singular vectors of Cy, so we
     % have to do the sandwiching as opposed to line 216
-    invCy = pinv(Cy);
+    invCy = pinv(Cy + lambda * eye(size(Cy)));
     dat   = subspace*dat;
   end
+else
+  invCy = pinv(Cy + lambda * eye(size(Cy)));
 end
+
+% compute the square of invCy, which might be needed
+invCy_squared = invCy^2;
 
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
@@ -234,7 +242,7 @@ for i=1:size(dip.pos,1)
     lf    = dip.subspace{i} * lf;
     % the data and the covariance become voxel dependent due to the projection
     dat   =      dip.subspace{i} * dat_pre_subspace;
-    Cy    =      dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}';
+    Cy    =      dip.subspace{i} *  Cy_pre_subspace * dip.subspace{i}';
     invCy = pinv(dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}');
   elseif ~isempty(subspace)
     % do subspace projection of the forward model only
@@ -250,28 +258,28 @@ for i=1:size(dip.pos,1)
   end
   
   if fixedori
-      switch(weightnorm)
-          case {'unitnoisegain','nai'};
-              % optimal orientation calculation for unit-noise gain beamformer,
-              % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
-              [vv, dd] = eig(pinv(lf' * invCy^2 *lf)*(lf' * invCy *lf));
-              [~,maxeig]=max(diag(dd));
-              eta = vv(:,maxeig);
-              lf  = lf * eta;
-              if ~isempty(subspace), lforig = lforig * eta; end
-              dipout.ori{i} = eta;
-          otherwise
-              % compute the leadfield for the optimal dipole orientation
-              % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
-              % filt = pinv(lf' * invCy * lf) * lf' * invCy;
-              % [u, s, v] = svd(real(filt * Cy * ctranspose(filt)));
-              % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
-              [u, s, v] = svd(real(pinv(lf' * invCy *lf)));
-              eta = u(:,1);
-              lf  = lf * eta;
-              if ~isempty(subspace), lforig = lforig * eta; end
-              dipout.ori{i} = eta;
-      end
+    switch(weightnorm)
+      case {'unitnoisegain','nai'};
+        % optimal orientation calculation for unit-noise gain beamformer,
+        % (also applies to similar NAI), based on equation 4.47 from Sekihara & Nagarajan (2008)
+        [vv, dd] = eig(pinv(lf' * invCy *lf)*(lf' * invCy_squared *lf));
+        [~,maxeig]=max(diag(dd));
+        eta = vv(:,maxeig);
+        lf  = lf * eta;
+        if ~isempty(subspace), lforig = lforig * eta; end
+        dipout.ori{i} = eta;
+      otherwise
+        % compute the leadfield for the optimal dipole orientation
+        % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
+        % filt = pinv(lf' * invCy * lf) * lf' * invCy;
+        % [u, s, v] = svd(real(filt * Cy * ctranspose(filt)));
+        % in this step the filter computation is not necessary, use the quick way to compute the voxel level covariance (cf. van Veen 1997)
+        [u, s, v] = svd(real(pinv(lf' * invCy *lf)));
+        eta = u(:,1);
+        lf  = lf * eta;
+        if ~isempty(subspace), lforig = lforig * eta; end
+        dipout.ori{i} = eta;
+    end
   end
   
   if isfield(dip, 'filter')
@@ -282,13 +290,13 @@ for i=1:size(dip.pos,1)
     % below equation is equivalent to following:  
     % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
     % filt = filt/sqrt(noise*filt*filt');
-    filt = pinv(sqrt(noise * lf' * invCy^2 * lf)) * lf' *invCy; % based on Sekihara & Nagarajan 2008 eqn. 4.15
+    filt = pinv(sqrt(noise * lf' * invCy_squared * lf)) * lf' *invCy; % based on Sekihara & Nagarajan 2008 eqn. 4.15
   elseif strcmp(weightnorm,'unitnoisegain')
     % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
     % below equation is equivalent to following:  
     % filt = pinv(lf' * invCy * lf) * lf' * invCy; 
     % filt = filt/sqrt(filt*filt');
-    filt = pinv(sqrt(lf' * invCy^2 * lf)) * lf' *invCy;     % Sekihara & Nagarajan 2008 eqn. 4.15
+    filt = pinv(sqrt(lf' * invCy_squared * lf)) * lf' *invCy;     % Sekihara & Nagarajan 2008 eqn. 4.15
   else
     % construct the spatial filter
     filt = pinv(lf' * invCy * lf) * lf' * invCy;              % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield

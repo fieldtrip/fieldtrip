@@ -127,7 +127,7 @@ lab_other = data.label(sel_other);
 % define the channel names after combining the planar combinations
 % they should be sorted according to the order of the planar channels in the data
 [dum, sel_planar] = match_str(data.label(sel_dH),planar(:,1));
-lab_comb          = planar(sel_planar,3);
+lab_comb          = planar(sel_planar,end);
 
 % perform baseline correction
 if strcmp(cfg.demean, 'yes')
@@ -296,7 +296,7 @@ if isfield(data, 'grad')
   % find the other channels that are present in the data
   sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
   lab_other = data.grad.label(sel_other);
-  lab_comb  = planar(sel_comb,3);
+  lab_comb  = planar(sel_comb,end);
   
   % compute the average position
   newpos   = [

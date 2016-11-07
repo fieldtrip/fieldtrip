@@ -143,6 +143,9 @@ for k = 1:meas_info.nent
             elseif cand.from == FIFF.FIFFV_MNE_COORD_CTF_HEAD && ...
                     cand.to == FIFF.FIFFV_COORD_HEAD
                 ctf_head_t = cand;
+            elseif cand.from == FIFF.FIFFV_COORD_HEAD && ...
+                    cand.to == FIFF.FIFFV_COORD_DEVICE
+                dev_head_t = fiff_invert_transform(cand);
             end
     end
 end
