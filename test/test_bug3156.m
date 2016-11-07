@@ -1,4 +1,4 @@
-function test_bug3158
+function test_bug3156
 
 % WALLTIME = 00:10:00
 % MEM 2gb
@@ -496,6 +496,9 @@ headshape.tri = [
   161   162   160
   ];
 
+headshape.unit = 'dm';
+headshape.coordsys = 'ctf';
+
 %%
 
 nas = [ 1  0 0];
@@ -503,18 +506,21 @@ ini = [-1  0 0];
 lpa = [ 0  1 0];
 rpa = [ 0 -1 0];
 
-%% 
+%%
 
 cfg = [];
 cfg.method = '1020';
-cfg.headshape = headshape;
 cfg.fiducial.nas = nas;
 cfg.fiducial.ini = ini;
 cfg.fiducial.lpa = lpa;
 cfg.fiducial.rpa = rpa;
 
-
-elec = ft_electrodeplacement(cfg);
+elec = ft_electrodeplacement(cfg, headshape);
 
 %% ensure that the output is as expected
-% FIXME
+
+figure
+ft_plot_mesh(headshape)
+ft_plot_sens(elec)
+ft_plot_axes(elec)
+

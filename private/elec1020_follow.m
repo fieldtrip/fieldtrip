@@ -1,9 +1,27 @@
-function [cnt1, cnt2] = contour_follow(pnt, dhk, v1, v2, v3)
+function [cnt1, cnt2] = elec1020_follow(pnt, dhk, v1, v2, v3);
 
-% CONTOUR_FOLLOW
+% ELEC1020_FOLLOW
 
-tolerance       = 1e-9;
-tolerance_limit = 1e-2;
+% Copyright (C) 2003, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+
+tolerance       = 1e-5;
+tolerance_limit = 1e-6;
 
 npnt = size(pnt,1);
 ndhk = size(dhk,1);
@@ -60,7 +78,7 @@ for i=1:ndhk
     else
       neighb(i,j) = 0;
     end
-      neighb(j,i) = neighb(i,j);
+    neighb(j,i) = neighb(i,j);
   end
 end
 
@@ -77,7 +95,7 @@ for i=1:ndhk
     v1_proj = proj;
     v1_proj = ptriproj(pnt(dhk(i,1),:), pnt(dhk(i,2),:), pnt(dhk(i,3),:), v1, 1);
   end
-end    
+end
 
 % find the nearest triangle on which point v3 projects
 v3_dist = inf;
@@ -88,7 +106,7 @@ for i=1:ndhk
     v3_indx = i;
     v3_proj = proj;
   end
-end    
+end
 
 % intersect the triangle containing the projection of v1 with the plane
 [l1, l2] = tritrisect(v1, v2, v3, pnt(dhk(v1_indx,1),:), pnt(dhk(v1_indx,2),:), pnt(dhk(v1_indx,3),:));
@@ -110,25 +128,25 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 while(1)
-
+  
   for i=find(neighb(prev_indx,:))
-
+    
     ncnt = size(cnt1,1);
     c1 = pnt(dhk(i,1),:);
     c2 = pnt(dhk(i,2),:);
     c3 = pnt(dhk(i,3),:);
-
+    
     [proj, dist] = ptriproj(c1, c2, c3, prev_proj, 1);
     
     if dist<tolerance
       [l1, l2] = tritrisect(v1, v2, v3, c1, c2, c3);
-
+      
       if pntdist(l1, cnt1(ncnt,:))<tolerance & pntdist(l2, cnt2(ncnt,:))<tolerance
-         continue
+        continue
       elseif pntdist(l1, cnt2(ncnt,:))<tolerance & pntdist(l2, cnt1(ncnt,:))<tolerance
-         continue
+        continue
       end
-
+      
       if pntdist(l1, prev_proj) < pntdist(l2, prev_proj)
         cnt1 = [cnt1; l1];
         cnt2 = [cnt2; l2];
@@ -143,32 +161,35 @@ while(1)
         break
       end
     end
-
+    
   end
-
+  
   % stop if no new segment was added
   if ~(size(cnt1,1)>ncnt)
     tolerance = 2*tolerance;
     if tolerance>=tolerance_limit
-       warning('premature end of contour')
-       break
+      warning('premature end of contour')
+      break
     else
       warning('increasing tolerance');
     end
   end
-
+  
   % stop if we arrive on the triangle with the endpoint
   if pntdist(prev_proj, v3_proj)<tolerance
     % replace the current endpoint with the projection of v3
     cnt2(size(cnt2,1),:) = v3_proj;
     break
   end
-
+  
   % stop if we arrive on the triangle with the endpoint
   if prev_indx==v3_indx
     % replace the current endpoint with the projection of v3
     cnt2(size(cnt2,1),:) = v3_proj;
     break
   end
+  
+end % while
 
-end 
+end % function
+
