@@ -51,13 +51,13 @@ CXXFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
 ##############################################################################
 all: libbuffer.a rdaserver.o
 
-libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o clock_gettime.o gettimeofday.o util.o printstruct.o swapbytes.o extern.o endianutil.o socketserver.o
+libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o clock_gettime.o gettimeofday.o timestamp.o util.o printstruct.o swapbytes.o extern.o endianutil.o socketserver.o
 	 ar rv $@ $^
 
 libclient.a: tcprequest.o util.o
 	 ar rv $@ $^
 
-%.o: %.c buffer.h message.h extern.h swapbytes.h socket_includes.h unix_includes.h
+%.o: %.c buffer.h message.h extern.h timestamp.h swapbytes.h socket_includes.h unix_includes.h
 	$(CC) $(CFLAGS) -c $*.c
 
 clean:

@@ -4,7 +4,7 @@ function savedxf(node,face,elem,fname)
 %
 % save a surface mesh to DXF format
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2010/04/25
 %
 % input:
@@ -40,7 +40,7 @@ end
 
 if(~isempty(node))
   node=node(:,1:3);
-  fprintf(fid,'0\nVERTEX\n8\nI2M\n10\n%f\n20\n%f\n30\n%f\n70\n192\n',node');
+  fprintf(fid,'0\nVERTEX\n8\nI2M\n10\n%.16f\n20\n%.16f\n30\n%.16f\n70\n192\n',node');
 end
 
 if(~isempty(face))

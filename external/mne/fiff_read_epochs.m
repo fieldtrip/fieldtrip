@@ -40,7 +40,7 @@ if length(processed) == 0
     error(me,'Could not find epochs data');
 end
 
-ep = fiff_dir_tree_find(meas, FIFF.FIFFB_EPOCHS);
+ep = fiff_dir_tree_find(meas, FIFF.FIFFB_MNE_EPOCHS);
 if length(ep) == 0
         fclose(fid);
     error(me,'Could not find epochs data');

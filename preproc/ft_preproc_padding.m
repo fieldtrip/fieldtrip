@@ -10,16 +10,16 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 % where
 %   dat           data matrix (Nchan x Ntime)
 %   padtype       'zero', 'mean', 'localmean', 'edge', 'mirror', 'nan' or 'remove'
-%   padlength     scalar, number of samples that will be padded 
+%   padlength     scalar, number of samples that will be padded
 %   prepadlength  scalar, number of samples that will be padded before the data
 %   postpadlength scalar, number of samples that will be padded after the data
 %
 % If padlength is used instead of prepadlength and postpadlength, padding
 % will be symmetrical (i.e. padlength = prepadlength = postpadlength)
-% 
+%
 % See also FT_PREPROCESSING
 
-% Copyright (C) 2012, Jörn M. Horschig, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2012, J?rn M. Horschig, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -50,10 +50,10 @@ end
 nchans = size(dat, 1);
 nsamples = size(dat, 2);
 
-switch(padtype)  
+switch(padtype)
   case 'remove'
     dat = dat(:, prepadlength+1:end-postpadlength);
-    return;
+    
   case 'mirror'
     padbeg = 1:prepadlength;
     padend = 1:postpadlength;
@@ -89,26 +89,27 @@ switch(padtype)
     end
     
     dat       = [dat(:, padbeg) dat dat(:, padend)];
-    return;
+    
   case 'edge'
     dat       = [dat(:,1)*ones(1,prepadlength) dat dat(:,end)*ones(1,postpadlength)];
-    return;
+    
   case 'mean'
     mu        = mean(dat, 2);
     dat       = [mu*ones(1,prepadlength) dat mu*ones(1,postpadlength)];
+    
   case 'localmean'
     prepad    = min(prepadlength, floor(size(dat, 2)/2));
     edgeleft  = mean(dat(:, 1:prepad), 2);
     postpad   = min(postpadlength, floor(size(dat, 2)/2));
     edgeright = mean(dat(:, 1+end-postpad:end), 2);
     dat       = [edgeleft*ones(1,prepadlength) dat edgeright*ones(1,postpadlength)];
-    return;
+    
   case 'zero'
     dat       = [zeros(nchans,prepadlength) dat zeros(nchans,postpadlength)];
-    return;
+    
   case 'nan'
     dat       = [nan(nchans,prepadlength) dat nan(nchans,postpadlength)];
-    return;
+    
   otherwise
     error('unknown padding option');
 end

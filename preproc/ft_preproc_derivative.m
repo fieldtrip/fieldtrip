@@ -36,7 +36,12 @@ if nargin<2 || isempty(order)
   order = 1;
 end
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % compute the derivative
 for i=1:order
-    dat = gradient(dat);
+  dat = gradient(dat);
 end
