@@ -13,7 +13,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % The magnet feature transports the crosshair to the nearest peak intensity
 % voxel, within a certain voxel radius of the selected location.
 % The labels feature displays the labels of the selected electrodes within
-% the orthoplot. The global feature allows toggling the view between all
+% the orthoplot. The local feature allows toggling the view between all
 % and near-crosshair markers.
 %
 % HEADSHAPE - Navigate a triangulated head/brain surface, and assign
@@ -323,12 +323,12 @@ switch cfg.method
     h9 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
       'Value', 0, ...
-      'String','Global',...
+      'String','Local',...
       'Units', 'normalized', ...
       'Position',[2*h1size(1) 0.12 h1size(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
-      'Callback', @cb_globalbutton);
+      'Callback', @cb_localbutton);
     
     hscatter = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
@@ -376,7 +376,6 @@ switch cfg.method
     opt.h3size        = h3size;
     opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 hscatter];
     opt.handlesfigure = h;
-    opt.handlesmarker = [];
     opt.quit          = false;
     opt.update        = [1 1 1];
     opt.init          = true;
@@ -392,7 +391,7 @@ switch cfg.method
     opt.magradius     = cfg.magradius;
     opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
-    opt.global        = get(h9, 'Value'); % show all markers in the current slices
+    opt.local        = get(h9, 'Value'); % show all markers in the current slices
     opt.scatter       = get(hscatter, 'Value'); % additional scatterplot
     opt.slim          = [.8 1]; % 80% - maximum
     opt.markerlab     = markerlab;
@@ -537,7 +536,7 @@ if opt.init
   hch2 = crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
   hch3 = crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
-  opt.handlesmarker = [];
+  opt.redrawmarker = 1;
 else
   % update the existing crosshairs, don't change the handles
   crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
@@ -551,10 +550,9 @@ else
   set(opt.handlescross,'Visible','off');
 end
 
-delete(opt.handlesmarker(opt.handlesmarker(:)>0));
-opt.handlesmarker = [];
-
 % draw markers
+delete(findobj(h,'Type','line','Marker','+')); % remove previous markers
+delete(findobj(h,'Type','text')); % remove previous labels
 idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
 if ~isempty(idx)
   for i=1:numel(idx)
@@ -568,7 +566,7 @@ if ~isempty(idx)
   tmp3 = opt.vox2(:,3);
   
   subplot(h1);
-  if ~opt.global % filter markers distant to the current slice (N units and further)
+  if opt.local % filter markers distant to the current slice (N units and further)
     posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
     posi = tmp1(posj_idx);
     posj = tmp2(posj_idx);
@@ -581,17 +579,17 @@ if ~isempty(idx)
   end
   if ~isempty(posi)
     hold on
-    opt.handlesmarker(:,1) = plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
+    plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
     if opt.showlabels
       for i=1:numel(posj_idx)
-        opt.handlesmarker(i,4) = text(posi(i), yi-yloadj, posk(i), opt.markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0]);
+        text(posi(i), yi-yloadj, posk(i), opt.markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0]);
       end
     end
     hold off
   end
   
   subplot(h2);
-  if ~opt.global % filter markers distant to the current slice (N units and further)
+  if opt.local % filter markers distant to the current slice (N units and further)
     posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
     posi = tmp1(posi_idx);
     posj = tmp2(posi_idx);
@@ -604,17 +602,17 @@ if ~isempty(idx)
   end
   if ~isempty(posj)
     hold on
-    opt.handlesmarker(:,2) = plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
+    plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
     if opt.showlabels
       for i=1:numel(posi_idx)
-        opt.handlesmarker(i,5) = text(posi(i)+xhiadj, posj(i), posk(i), opt.markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0]);
+        text(posi(i)+xhiadj, posj(i), posk(i), opt.markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0]);
       end
     end
     hold off
   end
   
   subplot(h3);
-  if ~opt.global % filter markers distant to the current slice (N units and further)
+  if opt.local % filter markers distant to the current slice (N units and further)
     posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
     posi = tmp1(posk_idx);
     posj = tmp2(posk_idx);
@@ -627,10 +625,10 @@ if ~isempty(idx)
   end
   if ~isempty(posk)
     hold on
-    opt.handlesmarker(:,3) = plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
+    plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
     if opt.showlabels
       for i=1:numel(posk_idx)
-        opt.handlesmarker(i,6) = text(posi(i), posj(i), zi, opt.markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0]);
+        text(posi(i), posj(i), zi, opt.markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0]);
       end
     end
     hold off
@@ -719,12 +717,13 @@ if opt.scatter % radiobutton on
       '4. Scatterplot viewing options:\n',...
       '   a. use the Data Cursor, Rotate 3D, Pan, and Zoom tools to navigate to electrodes in 3D space\n'));
     
-    opt.drawscatter = 1;
+    opt.redrawscatter = 1;
+    opt.redrawmarker = 1;
   end
   
   figure(opt.scatterfig); % make current figure
   
-  if opt.drawscatter
+  if opt.redrawscatter
     delete(findobj('type','scatter')); % remove previous scatters
     msize = round(2000/opt.mri.dim(3)); % headsize (20 cm) / z slices
     inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
@@ -735,7 +734,21 @@ if opt.scatter % radiobutton on
       [x,y,z] = ind2sub(opt.mri.dim, voxind);
       hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
     end
-    opt.drawscatter = 0;
+    opt.redrawscatter = 0;
+  end
+  
+  if opt.redrawmarker
+    if isfield(opt, 'vox2') % plot the markers
+      delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
+      plot3(opt.vox2(:,1),opt.vox2(:,2),opt.vox2(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
+      if opt.showlabels
+        delete(findobj(opt.scatterfig,'Type','text')); % remove previous labels
+        for i=1:size(opt.vox2,1)
+          text(opt.vox2(i,1), opt.vox2(i,2), opt.vox2(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
+        end
+      end
+    end
+    opt.redrawmarker = 0;
   end
   
   % update the existing crosshairs, don't change the handles
@@ -744,18 +757,6 @@ if opt.scatter % radiobutton on
     set(opt.handlescross2,'Visible','on');
   else
     set(opt.handlescross2,'Visible','off');
-  end
-  
-  % plot the markers
-  if isfield(opt, 'vox2')
-    delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
-    plot3(opt.vox2(:,1),opt.vox2(:,2),opt.vox2(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r');
-    if opt.showlabels
-      delete(findobj(opt.scatterfig,'Type','text')); % remove previous labels
-      for i=1:size(opt.vox2,1)
-        opt.handlesmarker(i,7) = text(opt.vox2(i,1), opt.vox2(i,2), opt.vox2(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
-      end
-    end
   end
   
 end
@@ -810,11 +811,11 @@ switch key
     cb_cleanup(h);
     
   case 'g' % global/local elec view (h9) toggle
-    if isequal(opt.global, 0)
-      opt.global = 1;
+    if isequal(opt.local, 0)
+      opt.local = 1;
       set(opt.handlesaxes(9), 'Value', 1);
-    elseif isequal(opt.global, 1)
-      opt.global = 0;
+    elseif isequal(opt.local, 1)
+      opt.local = 0;
       set(opt.handlesaxes(9), 'Value', 0);
     end
     setappdata(h, 'opt', opt);
@@ -828,6 +829,7 @@ switch key
       opt.showlabels = 0;
       set(opt.handlesaxes(8), 'Value', 0);
     end
+    opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -892,6 +894,7 @@ switch key
     
   case 102 % 'f'
     opt.showmarkers = ~opt.showmarkers;
+    opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -1131,6 +1134,7 @@ if ~isempty(elecidx)
   eleclis{elecidx} = eleclab;
   set(h6, 'String', eleclis);
   set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
+  opt.redrawmarker = 1;
   setappdata(h, 'opt', opt);
   cb_redraw(h);
 end
@@ -1191,17 +1195,18 @@ function cb_labelsbutton(h8, eventdata)
 h = getparent(h8);
 opt = getappdata(h, 'opt');
 opt.showlabels = get(h8, 'value');
+opt.redrawmarker = 1;
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_globalbutton(h9, eventdata)
+function cb_localbutton(h9, eventdata)
 
 h = getparent(h9);
 opt = getappdata(h, 'opt');
-opt.global = get(h9, 'value');
+opt.local = get(h9, 'value');
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -1254,7 +1259,7 @@ h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(1) = get(h2, 'value');
 fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
-opt.drawscatter = 1;
+opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 cb_scatterredraw(h);
 
@@ -1267,7 +1272,7 @@ h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(2) = get(h3, 'value');
 fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
-opt.drawscatter = 1;
+opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 cb_scatterredraw(h);
 
@@ -1311,7 +1316,7 @@ elseif ~get(hObject, 'value') && isfield(opt, 'ana_strip') % use original again
 elseif get(hObject, 'value') && isfield(opt, 'ana_strip') % use skullstrip again
   opt.ana = opt.ana_strip;
 end
-opt.drawscatter = 1;
+opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 figure(h);
 cb_redraw(h);
