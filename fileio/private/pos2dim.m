@@ -5,7 +5,7 @@ function [dim] = pos2dim(pos)
 %
 % Use as
 %   [dim] = pos2dim(pos)
-% where pos is an ordered list of positions
+% where pos is an ordered list of positions.
 %
 % The output dim is a 3-element vector which correspond to the 3D 
 % volumetric dimensions
@@ -15,6 +15,7 @@ function [dim] = pos2dim(pos)
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 
 if isstruct(pos)
+  % the input is a FieldTrip data structure
   pos = pos.pos;
 end
 

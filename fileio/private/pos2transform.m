@@ -4,8 +4,8 @@ function [transform] = pos2transform(pos, dim)
 % of positions.
 %
 % Use as
-%  [transform] = pos2transform(pos, dim) where pos is an ordered list of positions
-%  and should specify a full 3D volume 
+%   [transform] = pos2transform(pos, dim)
+% where pos is an ordered list of positions that should specify a full 3D volume.
 %
 % The output transform is a 4x4 homogenous transformation matrix which transforms
 % from 'voxelspace' into the positions provided in the input
