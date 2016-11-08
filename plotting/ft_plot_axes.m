@@ -40,6 +40,7 @@ function ft_plot_axes(object, varargin)
 axisscale = ft_getopt(varargin, 'axisscale', 1);   % this is used to scale the axmax and rbol
 fontcolor = ft_getopt(varargin, 'fontcolor', 'y'); % default is yellow
 unit      = ft_getopt(varargin, 'unit');
+coordsys  = ft_getopt(varargin, 'coordsys');
 
 % color management
 if ischar(fontcolor) && exist([fontcolor '.m'], 'file')
@@ -57,11 +58,20 @@ else
   unit = object.unit;
 end
 
-if isfield(object, 'coordsys')
-  coordsys = object.coordsys;
+if ~isempty(coordsys)
+  % the user specified the coordinate system
+  if isfield(object, 'coordsys') && ~strcmp(coordsys, unit.coordsys)
+    error('coordsys is inconsistent with object')
+  end
 else
-  % this is not a problem per see
-  coordsys = 'unknown';
+  % the user did not specify the coordinate system
+  if isfield(object, 'coordsys')
+    % use the one from the object
+    coordsys = object.coordsys;
+  else
+    % this is not a problem per see
+    coordsys = 'unknown';
+  end
 end
 
 axmax = 150 * ft_scalingfactor('mm', unit);
