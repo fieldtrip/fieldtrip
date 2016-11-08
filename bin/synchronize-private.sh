@@ -2336,6 +2336,14 @@ ARRAY+=(utilities/private/ptriprojn.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ptriside.m
+
+ARRAY=()
+ARRAY+=(plotting/private/ptriside.m)
+ARRAY+=(private/ptriside.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # quaternion.m
 
 ARRAY=()
