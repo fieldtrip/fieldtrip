@@ -820,7 +820,7 @@ lab = {
 % remove trailing blanks from the electrode labels
 nlab = length(lab);
 for i=1:nlab
-  lab(i) = deblank2(lab(i));
+  lab(i) = strtrim(lab(i));
 end
 
 % do not forget these
