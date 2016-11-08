@@ -57,7 +57,7 @@ end
 
 if isempty(isgit)
   % are we dealing with an GIT working copy of fieldtrip?
-  isgit = isdir(fullfile(ftpath, '.git'));
+  isgit = exist(fullfile(ftpath, '.git'), 'file');
 end
 
 if ispc
