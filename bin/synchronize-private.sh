@@ -1309,8 +1309,9 @@ sync ${ARRAY[*]}
 # lmoutrn.m
 
 ARRAY=()
-ARRAY+=(forward/private/lmoutrn.m)
 ARRAY+=(private/lmoutrn.m)
+ARRAY+=(plotting/private/lmoutrn.m)
+ARRAY+=(forward/private/lmoutrn.m)
 ARRAY+=(utilities/private/lmoutrn.m)
 sync ${ARRAY[*]}
 
@@ -2064,8 +2065,9 @@ sync ${ARRAY[*]}
 # pinvNx2.m
 
 ARRAY=()
-ARRAY+=(forward/private/pinvNx2.m)
 ARRAY+=(private/pinvNx2.m)
+ARRAY+=(plotting/private/pinvNx2.m)
+ARRAY+=(forward/private/pinvNx2.m)
 ARRAY+=(utilities/private/pinvNx2.m)
 sync ${ARRAY[*]}
 

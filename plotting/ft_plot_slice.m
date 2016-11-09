@@ -1,9 +1,10 @@
 function [h, T2] = ft_plot_slice(dat, varargin)
 
-% FT_PLOT_SLICE cuts a 2-D slice from a 3-D volume and interpolates if needed
+% FT_PLOT_SLICE plots a 2-D cut through a 3-D volume and interpolates if needed
 %
 % Use as
 %   ft_plot_slice(dat, ...)
+% or
 %   ft_plot_slice(dat, mask, ...)
 % where dat and mask are equal-sized 3-D arrays.
 %
@@ -26,15 +27,22 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'colormap'     = string, see COLORMAP
 %   'clim'         = 1x2 vector specifying the min and max for the colorscale
 %
+% You can plot the slices from the volume together with an intersection of the slices
+% with a triangulated surface mesh (e.g. a cortical sheet) using
+%   'intersectmesh'       = triangulated mesh, see FT_PREPARE_MESH
+%   'intersectcolor'      = string, color specification
+%   'intersectlinestyle'  = string, line specification 
+%   'intersectlinewidth'  = number
+%
 % See also FT_PLOT_ORTHO, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 
-% undocumented
-%   'intersectmesh'  = triangulated mesh through which the intersection of the plane will be plotted (e.g. cortical sheet)
-%   'intersectcolor' = color for the intersection
+% Undocumented options
 %   'plotmarker'     = Nx3 matrix with points to be plotted as markers, e.g. dipole positions
+%   'markersize'
+%   'markercolor'
 
 % Copyrights (C) 2010-2014, Jan-Mathijs Schoffelen
-% Copyrights (C) 2014, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyrights (C) 2014-2016, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
