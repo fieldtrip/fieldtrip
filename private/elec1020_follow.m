@@ -1,4 +1,4 @@
-function [cnt1, cnt2] = elec1020_follow(pnt, dhk, v1, v2, v3);
+function [cnt1, cnt2] = elec1020_follow(pnt, dhk, v1, v2, v3, feedback)
 
 % ELEC1020_FOLLOW
 
@@ -19,6 +19,11 @@ function [cnt1, cnt2] = elec1020_follow(pnt, dhk, v1, v2, v3);
 %
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+
+
+if nargin<6
+  feedback = false;
+end
 
 tolerance       = 1e-5;
 tolerance_limit = 1e-6;
@@ -190,5 +195,13 @@ while(1)
   end
   
 end % while
+
+if feedback
+  X = [cnt1(:,1) cnt2(:,1)];
+  Y = [cnt1(:,2) cnt2(:,2)];
+  Z = [cnt1(:,3) cnt2(:,3)];
+  line(X, Y, Z, 'color', 'k')
+  drawnow
+end
 
 end % function

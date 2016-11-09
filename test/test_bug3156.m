@@ -508,6 +508,12 @@ rpa = [ 0 -1 0];
 
 %%
 
+% cfg = [];
+% cfg.method = 'headshape';
+% elec = ft_electrodeplacement(cfg, headshape);
+
+%%
+
 cfg = [];
 cfg.method = '1020';
 cfg.fiducial.nas = nas;
