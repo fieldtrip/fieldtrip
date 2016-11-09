@@ -48,7 +48,6 @@ length         = ft_getopt(varargin, 'length',   'auto');
 unit           = ft_getopt(varargin, 'unit',     'cm');
 alpha          = ft_getopt(varargin, 'alpha',     1);
 
-
 % for backward compatibility, this can be changed into an error at the end of 2016
 units = ft_getopt(varargin, 'units');
 if ~isempty(units)
@@ -57,7 +56,6 @@ if ~isempty(units)
   clear units
 end
   
-
 if isequal(diameter, 'auto')
   % the default is a 5 mm sphere
   switch unit

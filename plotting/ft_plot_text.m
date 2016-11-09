@@ -60,6 +60,11 @@ verticalalignment   = ft_getopt(varargin, 'verticalalignment', 'middle');
 tag                 = ft_getopt(varargin, 'tag', '');
 interpreter         = ft_getopt(varargin, 'interpreter', 'tex');
 
+% color management
+if ischar(color) && exist([color '.m'], 'file')
+  color = eval(color);
+end
+
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
   % use a shortcut to speed up the plotting

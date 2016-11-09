@@ -182,7 +182,7 @@ switch dtype
     ft_plot_headshape(data);
     camlight;
 
-  case 'mesh'
+  case {'mesh', 'source+mesh'}
     ft_plot_mesh(data);
     camlight;
 

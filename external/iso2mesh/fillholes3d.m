@@ -4,7 +4,7 @@ function resimg=fillholes3d(img,maxgap)
 %
 % close a 3D image with the speicified gap size and then fill the holes
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % 
 % input:
 %    img: a 3D binary image

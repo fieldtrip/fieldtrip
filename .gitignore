@@ -4,3 +4,5 @@
 *.o
 *.a
 odmTest
+external/iso2mesh/sample
+.DS_Store
