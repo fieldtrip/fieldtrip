@@ -293,8 +293,7 @@ if needhdr
     hdr.Fs           = EDF.SampleRate(chansel(1));
     hdr.nChans       = length(chansel);
     warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
-    hdr.label        = cellstr(EDF.Label);
-    hdr.label        = hdr.label(chansel);
+    hdr.label        = cellstr(EDF.Label(chansel,:));
     % it is continuous data, therefore append all records in one trial
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
     hdr.nSamplesPre  = 0;
@@ -377,7 +376,7 @@ elseif needdat || needevt
     % read the annotation channel, not the data channels
     chanindx = EDF.annotation;
     begsample = 1;
-    endsample = EDF.SPR(end)*EDF.NRec;
+    endsample = EDF.SPR(EDF.annotation)*EDF.NRec;
   end
   
   if chanSel
