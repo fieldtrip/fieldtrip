@@ -56,6 +56,8 @@ if isempty(meansphereorigin)
       meansphereorigin = headmodel.o;
     case 'localspheres'
       meansphereorigin = mean(headmodel.o, 1);
+    case 'singleshell'
+      meansphereorigin = mean(headmodel.bnd.pos,1);
     otherwise
       error('unsupported voltype for determining the mean sphere origin')
   end
