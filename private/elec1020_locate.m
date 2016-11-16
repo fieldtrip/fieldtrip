@@ -25,16 +25,28 @@ if nargin<7
   feedback = false;
 end
 
+
+% determine the approximate location of the vertex
+ori = (lpa+rpa+nas+ini)/4;      % center of head
+ver =  cross(rpa-lpa, nas-ini); % orientation
+ver = ver /sqrt(norm(ver));     % make correct length
+ver = ori + 0.7*ver;            % location from center of head
+
 if feedback
   figure
+  ft_plot_mesh(struct('pos', pnt, 'tri', dhk), 'edgecolor', 'none', 'facecolor', 'skin')
+  alpha 0.5
+  ft_plot_mesh(nas, 'vertexsize', 30)
+  ft_plot_mesh(lpa, 'vertexsize', 30)
+  ft_plot_mesh(ini, 'vertexsize', 30)
+  ft_plot_mesh(rpa, 'vertexsize', 30)
+  ft_plot_mesh(ver, 'vertexsize', 30)
   axis equal
   axis vis3d
   grid on
   hold on
 end
 
-% determine the direction where the vertex is
-ver = (lpa+rpa+nas+ini)/4 + cross(rpa-lpa, nas-ini)/4;
 
 % point near LPA that is at 50% of left lower contour
 [cnt1, cnt2] = elec1020_follow(pnt, dhk, nas, lpa, ini, feedback);
@@ -860,3 +872,7 @@ end
 sel = ~isnan(elc(:,1));
 elc = elc(sel, :);
 lab = lab(sel);
+
+if feedback
+  ft_plot_mesh(elc, 'vertexsize', 10, 'vertexcolor', 'b')
+end

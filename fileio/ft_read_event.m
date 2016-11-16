@@ -138,17 +138,16 @@ filename = fetch_url(filename);
 
 % get the options
 hdr              = ft_getopt(varargin, 'header');
-detectflank      = ft_getopt(varargin, 'detectflank', 'up');   % up, down or both
-trigshift        = ft_getopt(varargin, 'trigshift');           % default is assigned in subfunction
-trigindx         = ft_getopt(varargin, 'trigindx');            % this allows to override the automatic trigger channel detection (e.g., useful for Yokogawa)
-triglabel        = ft_getopt(varargin, 'triglabel');           % this allows to override the automatic trigger channel detection
+detectflank      = ft_getopt(varargin, 'detectflank', 'up', true);   % note that emptymeaningful=true
+trigshift        = ft_getopt(varargin, 'trigshift');                 % default is assigned in subfunction
+trigindx         = ft_getopt(varargin, 'trigindx');                  % this allows to override the automatic trigger channel detection (e.g., useful for Yokogawa)
 headerformat     = ft_getopt(varargin, 'headerformat');
 dataformat       = ft_getopt(varargin, 'dataformat');
-threshold        = ft_getopt(varargin, 'threshold');           % this is used for analog channels
+threshold        = ft_getopt(varargin, 'threshold');                 % this is used for analog channels
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
-checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');      % will be passed to ft_read_header
+checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');            % will be passed to ft_read_header
 eventformat      = ft_getopt(varargin, 'eventformat');
-chanindx         = ft_getopt(varargin, 'chanindx');            % used for EDF files with variable sampling rate
+chanindx         = ft_getopt(varargin, 'chanindx');                  % used for EDF files with variable sampling rate
 
 if isempty(eventformat)
   % only do the autodetection if the format was not specified
@@ -639,11 +638,12 @@ switch eventformat
         for j=2:length(tok)-1
           anot = char(tok{j});
           % represent the annotation as event
-          event(end+1).type    = 'annotation';
-          event(end ).value    = anot;
-          event(end ).sample   = round(time*hdr.Fs) + 1; % expressed in samples, first sample in the file is 1
-          event(end ).duration = round(duration*hdr.Fs); % expressed in samples
-          event(end ).offset   = 0;
+          event(end+1).type     = 'annotation';
+          event(end ).value     = anot;
+          event(end ).sample    = round(time*hdr.Fs + 1); % expressed in samples, first sample in the file is 1
+          event(end ).duration  = round(duration*hdr.Fs); % expressed in samples
+          event(end ).timestamp = time; % in seconds, relative to the start of the recording
+          event(end ).offset    = 0;
         end
       end
     else
