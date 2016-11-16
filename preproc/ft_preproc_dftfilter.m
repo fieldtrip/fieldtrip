@@ -1,26 +1,54 @@
-function [filt] = ft_preproc_dftfilter(dat, Fs, Fl)
+function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth,  Neighbourwidth)
 
-% FT_PREPROC_DFTFILTER applies a notch filter to the data to remove the 50Hz
-% or 60Hz line noise components. This is done by fitting a sine and cosine
-% at the specified frequency to the data and subsequently subtracting the
-% estimated components. The longer the data is, the sharper the spectral
-% notch will be that is removed from the data.
+% FT_PREPROC_DFTFILTER reduces power line noise (50 or 60Hz) via two 
+% alternative methods:
+% (A) DFT filter (Flreplace = 'zero') or
+% (B) Spectrum Interpolation (Flreplace = 'neighbour').
 %
-% Use as
-%   [filt] = ft_preproc_dftfilter(dat, Fsample, Fline)
-% where
-%   dat        data matrix (Nchans X Ntime)
-%   Fsample    sampling frequency in Hz
-%   Fline      line noise frequency
-%
-% The line frequency should be specified as a single number.
-% If omitted, a European default of 50Hz will be assumed.
-%
-% Preferaby the data should have a length that is a multiple of the
+% (A) The DFT filter applies a notch filter to the data to remove the 50Hz
+% or 60Hz line noise components ('zeroing'). This is done by fitting a sine 
+% and cosine at the specified frequency to the data and subsequently 
+% subtracting the estimated components. The longer the data is, the sharper 
+% the spectral notch will be that is removed from the data.
+% Preferably the data should have a length that is a multiple of the
 % oscillation period of the line noise (i.e. 20ms for 50Hz noise). If the
 % data is of different lenght, then only the first N complete periods are
 % used to estimate the line noise. The estimate is subtracted from the
 % complete data.
+
+%
+% (B) Alternatively line noise is reduced via spectrum interpolation 
+% (Mewett et al., 2004, Med. Biol. Eng. Comput. 42, doi:10.1007/BF02350994). 
+% The signal is:
+% (I)   transformed into the frequency domain via a discrete Fourier 
+%       transform (DFT), 
+% (II)  the line noise component (e.g. 50Hz, Flwidth = 1 (±1Hz): 49-51Hz) is 
+%       interpolated in the amplitude spectrum by replacing the amplitude 
+%       of this frequency bin by the mean of the adjacent frequency bins 
+%       ('neighbours', e.g. 49Hz and 51Hz). 
+%       Neighbourwidth defines frequencies considered for the mean (e.g. 
+%       Neighbourwidth = 2 (±2Hz) implies 47-49 Hz and 51-53 Hz). 
+%       The original phase information of the noise frequency bin is
+%       retained.
+% (III) the signal is transformed back into the time domain via inverse DFT
+%       (iDFT).
+% If Fline is a vector (e.g. [50 100 150]), harmonics are also considered. 
+% Preferably the data should be continuous or consist of long data segments
+% (several seconds) to avoid edge effects.
+%
+%
+% Use as
+%   [filt] = ft_preproc_dftfilter(dat, Fsample, Fline, Flreplace, Flwidth, Neighbourwidth)
+% where
+%   dat             data matrix (Nchans X Ntime)
+%   Fsample         sampling frequency in Hz
+%   Fline           line noise frequency (and harmonics)
+%   Flreplace       'zero' or 'neighbour', method used to reduce line noise, 'zero' implies DFT filter, 'neighbour' implies spectrum interpolation  
+%   Flwidth         bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz
+%   Neighbourwidth  width of frequencies neighbouring line noise frequencies, applies to spectrum interpolation (Flreplace = 'neighbour'), in Hz 
+%
+% The line frequency should be specified as a single number for the DFT filter.
+% If omitted, a European default of 50Hz will be assumed
 %
 % See also PREPROC
 
@@ -66,37 +94,42 @@ if any(isnan(dat(:)))
   ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
-% determine the largest integer number of line-noise cycles that fits in the data
-n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
-if all(n==n(1))
-  % make a selection of samples such that the line-noise fits the data
-  sel = 1:n(1);
-else
-  % the different frequencies require different numbers of samples, apply the filters sequentially
-  for i=1:numel(Fl)
-    filt = dat;
-    filt = ft_preproc_dftfilter(filt, Fs, Fl(i));
-  end
-  return
-end
-
-% temporarily remove mean to avoid leakage
-meandat = mean(dat(:,sel),2);
-for i=1:nsamples
-  % demean the data
-  dat(:,i) = dat(:,i) - meandat;
-end
-
-% fit a sine and cosine to each channel in the data and subtract them
-time = (0:nsamples-1)/Fs;
-tmp  = exp(1i*2*pi*Fl*time);                   % complex sin and cos
-ampl = 2*dat(:,sel)/tmp(:,sel);                % estimated amplitude of complex sin and cos on integer number of cycles
-est  = ampl*tmp;                               % estimated signal at this frequency
-filt = dat - est;                              % subtract estimated signal
-filt = real(filt);
-
-for i=1:nsamples
-  % add the mean back to the filtered data
-  filt(:,i) = filt(:,i) + meandat;
+% Method (A): DFT filter
+if strcmp(Flreplace,'zero')
+    % determine the largest integer number of line-noise cycles that fits in the data
+    n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
+    if all(n==n(1))
+        % make a selection of samples such that the line-noise fits the data
+        sel = 1:n(1);
+    else
+        % the different frequencies require different numbers of samples, apply the filters sequentially
+        for i=1:numel(Fl)
+            filt = dat;
+            filt = ft_preproc_dftfilter(filt, Fs, Fl(i));
+        end
+        return
+    end
+    
+    % temporarily remove mean to avoid leakage
+    meandat = mean(dat(:,sel),2);
+    for i=1:nsamples
+        % demean the data
+        dat(:,i) = dat(:,i) - meandat;
+    end
+    
+    % fit a sine and cosine to each channel in the data and subtract them
+    time = (0:nsamples-1)/Fs;
+    tmp  = exp(1i*2*pi*Fl*time);                   % complex sin and cos
+    ampl = 2*dat(:,sel)/tmp(:,sel);                % estimated amplitude of complex sin and cos on integer number of cycles
+    est  = ampl*tmp;                               % estimated signal at this frequency
+    filt = dat - est;                              % subtract estimated signal
+    filt = real(filt);
+    
+    for i=1:nsamples
+        % add the mean back to the filtered data
+        filt(:,i) = filt(:,i) + meandat;
+    end
+elseif strcmp(Flreplace,'neighbour')
+    % Method (B): Spectrum Interpolation - will be inserted here
 end
 
