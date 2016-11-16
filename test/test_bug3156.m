@@ -530,3 +530,16 @@ ft_plot_mesh(headshape)
 ft_plot_sens(elec)
 ft_plot_axes(elec)
 
+%% try a real head surface
+
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
+load bug3156.mat
+
+elec = ft_electrodeplacement(cfg, headshape);
+
+figure
+ft_plot_mesh(headshape)
+ft_plot_sens(elec)
+ft_plot_axes(elec)
+
+
