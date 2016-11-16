@@ -59,8 +59,11 @@ ft_databrowser(cfg, data);
 
 %% do a full analysis on the EDF data
 
+% this contains the data and the trialfun
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3207/'));
+
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3207/ecog_mumc_anon.edf');
+cfg.dataset = 'ecog_mumc_anon.edf';
 cfg.trialfun = 'trialfun_edf';
 cfg = ft_definetrial(cfg);
 
@@ -78,7 +81,6 @@ timelock = ft_timelockanalysis(cfg, data);
 cfg = [];
 cfg.layout = 'ordered';
 ft_multiplotER(cfg, timelock);
-
 
 cfg = [];
 cfg.method = 'wavelet';
