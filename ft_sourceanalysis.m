@@ -304,7 +304,7 @@ elseif isfreq
   
   % HACK the remainder of the code expects a single number
   cfg.frequency = mean(cfg.frequency);
-  if isfield(data, 'time')s
+  if isfield(data, 'time')
     cfg.latency   = mean(cfg.latency);
   end
   
