@@ -9,7 +9,7 @@ if ori==1
   % the normals are outward oriented
 elseif ori==-1
   % the normals are inward oriented
-  ori = -ori;
+  nor = -nor;
 else
   warning('cannot determine the orientation of the vertex normals');
 end
