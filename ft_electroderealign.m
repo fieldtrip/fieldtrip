@@ -31,6 +31,9 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % PROJECT - This projects all electrodes to the nearest point on the
 % head surface mesh.
 %
+% MOVEINWARD - This moves all electrodes inward according to their normals
+% 
+%
 % Use as
 %   [elec_realigned] = ft_sensorrealign(cfg)
 % with the electrode or gradiometer details in the configuration, or as
@@ -44,6 +47,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'template'        realign the electrodes to match a template set
 %                        'headshape'       realign the electrodes to fit the head surface
 %                        'project'         projects electrodes onto the head surface
+%                        'moveinward'      moves electrodes inward along their normals
 %   cfg.warp          = string describing the spatial transformation for the template and headshape methods
 %                        'rigidbody'       apply a rigid-body warp (default)
 %                        'globalrescale'   apply a rigid-body warp with global rescaling
@@ -102,8 +106,13 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %   cfg.feedback       = 'yes' or 'no' (feedback includes the output of the iteration
 %                        procedure.
 %
+% If you want to move the electrodes inward, you should specify
+%   cfg.moveinward     = number, the number of units the eletrode should
+%                        move inward (negative numbers refer to move
+%                        outward.
+%
 % See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_PREPARE_MESH
-
+%
 % Copyright (C) 2005-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -187,6 +196,8 @@ switch cfg.method
     cfg = ft_checkconfig(cfg, 'required', 'headshape', 'forbidden', 'target');
   case 'fiducial'        % realign using the NAS, LPA and RPA fiducials
     cfg = ft_checkconfig(cfg, 'required', 'target', 'forbidden', 'headshape');
+  case 'moveinward'    %moves eletrodes inward
+    cfg = ft_checkconfig(cfg, 'required', 'moveinward');
 end % switch cfg.method
 
 if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 'rigidbody')
@@ -568,6 +579,10 @@ elseif strcmp(cfg.method, 'project')
   % replace the electrodes with the projected version
   elec.elecpos = prj;
   
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif strcmp(cfg.method, 'moveinward')
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  elec.elecpos = moveinward(elec.elecpos, cfg.moveinward);
 else
   error('unknown method');
 end % if method
@@ -604,7 +619,7 @@ switch cfg.method
     % remember the transformation
     elec_realigned.homogeneous = norm.m;
     
-  case 'project'
+  case {'project','moveinward'}
     % nothing to be done
     elec_realigned = elec;
     
@@ -633,7 +648,7 @@ switch cfg.method
     end
   case 'interactive'
     % the coordinate system is not known
-  case 'project'
+  case {'project','moveinward'}
     % the coordinate system remains the same
     if isfield(elec_original, 'coordsys')
       elec_realigned.coordsys = elec_original.coordsys;
