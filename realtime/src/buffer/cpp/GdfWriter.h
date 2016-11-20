@@ -1,7 +1,9 @@
-/** Simple C++ class for writing GDF 2.20 files. 
+/** Simple C++ class for writing GDF 2.20 files.
 	WARNING: This will only work on little-endian machines!
+	
 	(C) 2010 S. Klanke
 */
+
 #ifndef __GdfWriter_h
 #define __GdfWriter_h
 
@@ -97,10 +99,10 @@ struct GDF_Header {
 	uint32_t durDataRecord[2];
 	uint16_t numChannels;
 	uint16_t reserved3;
-		
+
 	// compiling this function will always yield an error, which is what we want!
-	template<typename T> static GDF_Type getType(T dummy) { 
-		return (GDF_Type)0; 
+	template<typename T> static GDF_Type getType(T dummy) {
+		return (GDF_Type)0;
 	}
 
 	// "specialised versions" of the above template function, returning the
@@ -115,14 +117,14 @@ struct GDF_Header {
 	static GDF_Type getType(uint64_t dummy) { return GDF_UINT64; }
 	static GDF_Type getType(float dummy)    { return GDF_FLOAT32; }
 	static GDF_Type getType(double dummy)   { return GDF_FLOAT64; }
-	
+
 };
 
 #pragma pack(pop)
 
 class GDF_Writer {
 	public:
-	
+
 	/** Create a GDF_Write object by specifying number of channels, samplerate, and data type.
 		Data will always be written in a continuous fashion, that is, record length = 1.
 		Reasonable defaults will be set up for all the Phys/Dig-Min/Max values etc.
@@ -130,10 +132,10 @@ class GDF_Writer {
 	*/
 	GDF_Writer(int nChans, int sampleRate, GDF_Type gdfType);
 	~GDF_Writer();
-	
+
 	/** Creates the specified file and writes the header */
 	int createAndWriteHeader(const char *filename);
-	
+
 	/** Add samples (pointed to by 'data') to the file. Example: 4 channels have been specified,
 		the data type is int32, and you want to write 3 samples, then data needs to point to an array of
 		12 integers, in this channel/sample order: 1/1 2/1 3/1 4/1 1/2 2/2 3/2 4/2 1/3 2/3 3/3 4/3
@@ -141,27 +143,27 @@ class GDF_Writer {
 		Note that this memory layout corresponds to a record length of 1 sample in the GDF way of thinking.
 	*/
 	int addSamples(int nSamples, const void *data);
-	
+
 	/** Update the sample counter (=number of records) and close the file */
 	int close();
-		
+
 	void setPhysicalLimits(int channel, double minV, double maxV) {
 		mPhysMin[channel] = minV;
 		mPhysMax[channel] = maxV;
 	}
-	
+
 	void setDigitalLimits(int channel, double minV, double maxV) {
 		mDigMin[channel] = minV;
 		mDigMax[channel] = maxV;
 	}
-	
+
 	/** Call this to set filter information for the specific channel */
 	void setFilters(int channel, float lowpass, float highpass, float notch) {
 		mLowpass[channel]=lowpass;
 		mHighpass[channel]=highpass;
 		mNotch[channel]=notch;
 	}
-	
+
 	/** Call this to set the dimension code of a particular channel (0..N-1).
 		Use a value from GDF_Dimension and optionally and one from GDF_Scale,
 		Example:  setPhysDimCode(0, GDF_MILLI + GDF_VOLT)
@@ -170,7 +172,7 @@ class GDF_Writer {
 	void setPhysDimCode(int channel, int code) {
 		mPhysDimCode[channel] = code;
 	}
-	
+
 	/** Call this to set the label of the specified channel (0..N-1).
 		Only the first 16 characters will be considered.
 	*/
@@ -178,20 +180,20 @@ class GDF_Writer {
 		if (channel<0 || channel>=nChans) return;
 		strncpy(mLabels + 16*channel, label, 16);
 	}
-	
+
 	static int getSizeAndRangeByType(GDF_Type gdfType, double& minV, double& maxV);
-	
+
 	GDF_Header hdr;
 
 	protected:
-	
+
 	union {
 		float asFloat;
 		int32_t asInt;
 	} nanValue;
 	int nChans, bytesPerSample;
 	FILE *fp;
-	
+
 	char *mLabels; // 16 bytes each
 	char *mTypes;  // 80 bytes each
 	char *mPhysDim; // 6 bytes each
@@ -208,7 +210,7 @@ class GDF_Writer {
 	uint32_t *mGdfType;
 	float *mSensorPosition; // 3 floats each
 	GDF_SensorDescription *mSensorDescr;
-	
+
 	int64_t nSamplesWritten;
 };
 
