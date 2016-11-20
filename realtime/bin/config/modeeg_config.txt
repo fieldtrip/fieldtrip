@@ -13,6 +13,25 @@
 # selection for both saving and streaming.
 
 [select]
-1=Left
-2=Right
+# 1=1
+# 2=2
+# 3=3
+# 4=4
+# 5=5
+# 6=6
 
+[stream]
+1=Signal
+2=TTL
+3=BPM
+4=IBI
+5=Time
+# 6=6
+
+[save]
+# 1=1
+# 2=2
+# 3=3
+# 4=4
+# 5=5
+# 6=6
