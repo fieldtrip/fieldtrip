@@ -53,7 +53,7 @@ int
 clock_gettime(int ignore, struct timeval *tv)
 {
     LARGE_INTEGER           t;
-    FILETIME            f;
+    FILETIME                f;
     double                  microseconds;
     static LARGE_INTEGER    offset;
     static double           frequencyToMicroseconds;

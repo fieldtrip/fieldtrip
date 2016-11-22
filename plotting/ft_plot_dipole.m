@@ -13,9 +13,10 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %   'color'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'r')
 %   'unit'     = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
 %   'scale'    = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
+%   'alpha'    = alpha value of the plotted dipole
 %
 % Example
-%   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r')
+%   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r', 'alpha', 1)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
@@ -45,7 +46,7 @@ color          = ft_getopt(varargin, 'color',    'r'); % can also be a RGB tripl
 diameter       = ft_getopt(varargin, 'diameter', 'auto');
 length         = ft_getopt(varargin, 'length',   'auto');
 unit           = ft_getopt(varargin, 'unit',     'cm');
-
+alpha          = ft_getopt(varargin, 'alpha',     1);
 
 % for backward compatibility, this can be changed into an error at the end of 2016
 units = ft_getopt(varargin, 'units');
@@ -55,7 +56,6 @@ if ~isempty(units)
   clear units
 end
   
-
 if isequal(diameter, 'auto')
   % the default is a 5 mm sphere
   switch unit
@@ -157,11 +157,11 @@ for i=1:size(pos,1)
   stick.pos = ft_warp_apply(translate([tx ty tz]), stick.pos, 'homogeneous');
   
   % plot the sphere and the stick
-  p1 = ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
+  p1 = ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color, 'facealpha', alpha);
   h = cat(2, h(:)', p1(:)');
   clear p1;
   
-  p2 = ft_plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
+  p2 = ft_plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color, 'facealpha', alpha);
   h = cat(2, h(:)', p2(:)');
   clear p2;
 end % for each dipole

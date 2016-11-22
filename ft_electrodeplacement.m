@@ -1,36 +1,44 @@
 function [elec] = ft_electrodeplacement(cfg, varargin)
 
-% FT_ELECTRODEPLACEMENT allows placing electrodes on a volume or headshape.
-% The different methods are described in detail below.
+% FT_ELECTRODEPLACEMENT allows manual placement of electrodes on a MRI scan, CT scan
+% or on a triangulated surface of the head. This function supports different methods.
 %
-% VOLUME - Navigate an orthographic display of a volume (e.g. CT or
-% MR scan), and assign an electrode label to the current crosshair location
-% by clicking on a label in the eletrode list. You can undo the selection by
-% clicking on the same label again. The electrode labels shown in the list
-% can be prespecified using cfg.channel when calling ft_electrodeplacement.
-% The zoom slider allows zooming in at the location of the crosshair.
-% The intensity sliders allow thresholding the image's low and high values.
-% The magnet feature transports the crosshair to the nearest peak intensity
-% voxel, within a certain voxel radius of the selected location.
-% The labels feature displays the labels of the selected electrodes within
-% the orthoplot. The global feature allows toggling the view between all
-% and near-crosshair markers.
+% VOLUME - Navigate an orthographic display of a volume (e.g. CT or MRI scan), and
+% assign an electrode label to the current crosshair location by clicking on a label
+% in the eletrode list. You can undo the selection by clicking on the same label
+% again. The electrode labels shown in the list can be prespecified using cfg.channel
+% when calling ft_electrodeplacement. The zoom slider allows zooming in at the
+% location of the crosshair. The intensity sliders allow thresholding the image's low
+% and high values. The magnet feature transports the crosshair to the nearest peak
+% intensity voxel, within a certain voxel radius of the selected location. The labels
+% feature displays the labels of the selected electrodes within the orthoplot. The
+% local feature allows toggling the view between all and near-crosshair markers.
 %
-% HEADSHAPE - Navigate a triangulated head/brain surface, and assign
-% an electrode location by clicking on the brain. The electrode
-% is placed on the triangulation itself. FIXME: this needs updating
+% HEADSHAPE - Navigate a triangulated scalp (for EEG) or brain (for ECoG) surface,
+% and assign an electrode location by clicking on the surface. The electrode is
+% placed on the triangulation itself.
+%
+% 1020 - Starting from a triangulated scalp surface and the nasion, inion, left and
+% right pre-auricular points, this automatically constructs and follows contours over
+% the surface according to the 5% system. Electrodes are placed at certain relative
+% distances along these countours. This is an extension of the 10-20 standard
+% electrode placement system and includes the 20%, 10% and 5% locations. See
+% "Oostenveld R, Praamstra P. The five percent electrode system for high-resolution
+% EEG and ERP measurements. Clin Neurophysiol. 2001 Apr;112(4):713-9" for details.
 %
 % Use as
 %   [elec] = ft_electrodeplacement(cfg, mri)
-% where the input mri should be an anatomical CT or MRI volume
-% Use as
+% where the input mri should be an anatomical CT or MRI volume, or
 %   [elec] = ft_electrodeplacement(cfg, headshape)
-% where the input headshape should be a surface triangulation
+% where the input headshape should be a surface triangulation.
 %
 % The configuration can contain the following options
-%   cfg.method         = string representing the method for aligning or placing the electrodes
-%                        'mri'             place electrodes in a brain volume
-%                        'headshape'       place electrodes on the head surface
+%   cfg.method         = string representing the method for placing the electrodes
+%                        'mri'             interactively locate electrodes in a MRI or CT scan
+%                        'headshape'       interactively locate electrodes on a head surface
+%                        '1020'            automatically place electrodes on a head surface
+%
+% The following options apply to the mri method
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = '1','2', ...)
 %   cfg.elec           = struct containing previously placed electrodes (this overwrites cfg.channel)
@@ -41,9 +49,16 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %                        'weighted'        place electrodes at center-of-mass
 %   cfg.magradius      = number representing the radius for the cfg.magtype based search (default = 2)
 %
-% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
+% The following options apply to the 1020 method
+%   cfg.fiducial.nas   = 1x3 vector with coordinates
+%   cfg.fiducial.ini   = 1x3 vector with coordinates
+%   cfg.fiducial.lpa   = 1x3 vector with coordinates
+%   cfg.fiducial.rpa   = 1x3 vector with coordinates
+%   cfg.feedback       = string, can be 'yes' or 'no' for detailled feedback (default = 'yes')
+%
+% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_VOLUMESEGMENT, FT_PREPARE_MESH
 
-% Copyright (C) 2015, Arjen Stolk & Robert Oostenveld
+% Copyright (C) 2015-2016, Arjen Stolk & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -84,9 +99,11 @@ end
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
 
 % set the defaults
-cfg.method        = ft_getopt(cfg, 'method');                 % volume, headshape
+cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020
+cfg.feedback      = ft_getopt(cfg, 'feedback',         'yes');
 cfg.parameter     = ft_getopt(cfg, 'parameter',    'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',             []); % default will be determined further down {'1', '2', ...}
 cfg.elec          = ft_getopt(cfg, 'elec',                []); % use previously placed electrodes
@@ -99,7 +116,6 @@ cfg.magtype       = ft_getopt(cfg, 'magtype',         'peak'); % detect peaks or
 cfg.magradius     = ft_getopt(cfg, 'magradius',            2); % specify the physical unit radius
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',      'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',       'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
-
 
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
@@ -115,9 +131,9 @@ end
 switch cfg.method
   case 'volume'
     mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes');
-  case  {'headshape'}
+  case  {'headshape', '1020'}
     headshape = fixpos(varargin{1});
-    headshape = ft_determine_coordsys(headshape);
+    headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');
 end
 
 switch cfg.method
@@ -147,7 +163,7 @@ switch cfg.method
     % rotate3d on
     xyz = ft_select_point3d(headshape, 'nearest', false, 'multiple', true, 'marker', '*');
     numelec = size(xyz, 1);
-
+    
     % construct the output electrode structure
     elec = keepfields(headshape, {'unit', 'coordsys'});
     elec.elecpos = xyz;
@@ -158,9 +174,8 @@ switch cfg.method
         elec.label{i} = sprintf('%d', i);
       end
     end
-
-  case 'volume'
     
+  case 'volume'
     % start building the figure
     h = figure(...
       'MenuBar', 'none',...
@@ -173,7 +188,7 @@ switch cfg.method
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_cleanup);
     set(h, 'renderer', cfg.renderer);
-
+    
     % axes settings
     if strcmp(cfg.axisratio, 'voxel')
       % determine the number of voxels to be plotted along each axis
@@ -192,7 +207,7 @@ switch cfg.method
       axlen2 = 1;
       axlen3 = 1;
     end
-
+    
     % this is the size reserved for subplot h1, h2 and h3
     h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
     h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
@@ -200,7 +215,7 @@ switch cfg.method
     h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
     h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
     h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
-
+    
     if strcmp(cfg.voxelratio, 'square')
       voxlen1 = 1;
       voxlen2 = 1;
@@ -212,29 +227,29 @@ switch cfg.method
       voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
       voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
     end
-
+    
     % axis handles will hold the anatomical functional if present, along with labels etc.
     h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
     h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
     h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
-
+    
     set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
     set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
     set(h3, 'Tag', 'ij', 'Visible', 'off');
-
+    
     set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
     set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
     set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-
+    
     xc = round(mri.dim(1)/2); % start with center view
     yc = round(mri.dim(2)/2);
     zc = round(mri.dim(3)/2);
-
+    
     dat = double(mri.(cfg.parameter));
     dmin = min(dat(:));
     dmax = max(dat(:));
-    dat  = (dat-dmin)./(dmax-dmin); % range between 0 and 1
-
+    dat = (dat-dmin)./(dmax-dmin); % range between 0 and 1
+    
     % intensity range sliders
     h45text = uicontrol('Style', 'text',...
       'String','Intensity',...
@@ -242,7 +257,7 @@ switch cfg.method
       'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
-
+    
     h4 = uicontrol('Style', 'slider', ...
       'Parent', h, ...
       'Min', 0, 'Max', 1, ...
@@ -250,7 +265,7 @@ switch cfg.method
       'Units', 'normalized', ...
       'Position', [2*h1size(1)+0.02 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
       'Callback', @cb_minslider);
-
+    
     h5 = uicontrol('Style', 'slider', ...
       'Parent', h, ...
       'Min', 0, 'Max', 1, ...
@@ -258,7 +273,7 @@ switch cfg.method
       'Units', 'normalized', ...
       'Position', [2*h1size(1)+0.07 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
       'Callback', @cb_maxslider);
-
+    
     % java intensity range slider (dual-knob slider): the java component gives issues when wanting to
     % access the opt structure
     % [jRangeSlider] = com.jidesoft.swing.RangeSlider(0,1,cfg.clim(1),cfg.clim(2));  % min,max,low,high
@@ -266,14 +281,14 @@ switch cfg.method
     % set(h4, 'Units', 'normalized', 'Position', [0.05+h1size(1) 0.07 0.07 h3size(2)], 'Parent', h);
     % set(jRangeSlider, 'Orientation', 1, 'PaintTicks', true, 'PaintLabels', true, ...
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
-
+    
     % electrode listbox
     if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
       cfg.channel = []; % ensure cfg.channel is empty, for filling it up
       for e = 1:numel(cfg.elec.label)
         cfg.channel{e,1} = cfg.elec.label{e};
         chanstring{e} = ['<HTML><FONT color="black">' cfg.channel{e,1} '</FONT></HTML>']; % hmtl'ize
-
+        
         markerlab{e,1} = cfg.elec.label{e};
         markerpos{e,1} = cfg.elec.elecpos(e,:);
       end
@@ -285,12 +300,12 @@ switch cfg.method
       end
       for c = 1:numel(cfg.channel)
         chanstring{c} = ['<HTML><FONT color="silver">' cfg.channel{c,1} '</FONT></HTML>']; % hmtl'ize
-
+        
         markerlab{c,1} = {};
         markerpos{c,1} = zeros(0,3);
       end
     end
-
+    
     h6 = uicontrol('Style', 'listbox', ...
       'Parent', h, ...
       'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
@@ -298,7 +313,7 @@ switch cfg.method
       'Position', [0.07+h1size(1)+0.05 0.07 h1size(1)/2 h3size(2)], ...
       'Callback', @cb_eleclistbox, ...
       'String', chanstring);
-
+    
     % switches / radio buttons
     h7 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
@@ -309,7 +324,7 @@ switch cfg.method
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_magnetbutton);
-
+    
     h8 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
       'Value', 0, ...
@@ -319,17 +334,17 @@ switch cfg.method
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_labelsbutton);
-
+    
     h9 = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
       'Value', 0, ...
-      'String','Global',...
+      'String','Local',...
       'Units', 'normalized', ...
       'Position',[2*h1size(1) 0.12 h1size(1)/3 0.05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
-      'Callback', @cb_globalbutton);
-
+      'Callback', @cb_localbutton);
+    
     hscatter = uicontrol('Style', 'radiobutton',...
       'Parent', h, ...
       'Value', 0, ...
@@ -347,7 +362,7 @@ switch cfg.method
       'Position',[1.8*h1size(1)+0.01 h3size(2)+0.03 h1size(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
-
+    
     h10 = uicontrol('Style', 'slider', ...
       'Parent', h, ...
       'Min', 0, 'Max', 0.9, ...
@@ -356,17 +371,17 @@ switch cfg.method
       'Position', [1.8*h1size(1)+0.02 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
       'SliderStep', [.1 .1], ...
       'Callback', @cb_zoomslider);
-
+    
     % instructions to the user
     fprintf(strcat(...
-      '1. Viewing options:\n',...
+      '1. Orthoplot viewing options:\n',...
       '   a. use the left mouse button to navigate the image, or\n',...
       '   b. use the arrow keys to increase or decrease the slice number by one\n',...
-      '2. Placement options:\n',...
-      '   a. click an electrode label in the list to assign the crosshair location, or\n',...
+      '2. Orthoplot placement options:\n',...
+      '   a. click an electrode label in the list to assign it to the crosshair location, or\n',...
       '   b. doubleclick a previously assigned electrode label to remove its marker\n',...
       '3. To finalize, close the window or press q on the keyboard\n'));
-
+    
     % create structure to be passed to gui
     opt               = [];
     opt.dim           = mri.dim;
@@ -376,12 +391,11 @@ switch cfg.method
     opt.h3size        = h3size;
     opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 hscatter];
     opt.handlesfigure = h;
-    opt.handlesmarker = [];
     opt.quit          = false;
-    opt.ana           = dat;
     opt.update        = [1 1 1];
     opt.init          = true;
     opt.tag           = 'ik';
+    opt.ana           = dat;
     opt.mri           = mri;
     opt.showcrosshair = true;
     opt.vox           = [opt.ijk]; % voxel coordinates (physical units)
@@ -392,9 +406,9 @@ switch cfg.method
     opt.magradius     = cfg.magradius;
     opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
-    opt.global        = get(h9, 'Value'); % show all markers in the current slices
+    opt.local        = get(h9, 'Value'); % show all markers in the current slices
     opt.scatter       = get(hscatter, 'Value'); % additional scatterplot
-    opt.slim          = [.5 1]; % 50% - maximum
+    opt.slim          = [.8 1]; % 80% - maximum
     opt.markerlab     = markerlab;
     opt.markerpos     = markerpos;
     opt.markerdist    = cfg.markerdist; % hidden option
@@ -405,35 +419,64 @@ switch cfg.method
     else
       opt.unit = '';        % this is not shown
     end
-
+    
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-
+    
     while(opt.quit==0)
       uiwait(h);
       opt = getappdata(h, 'opt');
     end
     delete(h);
-
+    
     % collect the results
-    elec.label  = {};
+    elec = keepfields(mri, {'unit', 'coordsys'});
+    elec.label   = {};
     elec.elecpos = [];
     elec.chanpos = [];
-    elec.tra = [];
     for i=1:length(opt.markerlab)
       if ~isempty(opt.markerlab{i,1})
         elec.label = [elec.label; opt.markerlab{i,1}];
         elec.elecpos = [elec.elecpos; opt.markerpos{i,1}];
       end
     end
-    elec.chanpos  = elec.elecpos; % identicial to elecpos
+    elec.chanpos = elec.elecpos;
     elec.tra = eye(size(elec.elecpos,1));
-    if isfield(mri, 'unit')
-      elec.unit  = mri.unit;
+    
+  case '1020'
+    % the placement procedure fails if the fiducials coincide with vertices
+    dist = @(x, y) sqrt(sum(bsxfun(@minus, x, y).^2,2));
+    tolerance = 0.1 * ft_scalingfactor('mm', headshape.unit);  % 0.1 mm
+    nas = cfg.fiducial.nas;
+    ini = cfg.fiducial.ini;
+    lpa = cfg.fiducial.lpa;
+    rpa = cfg.fiducial.rpa;
+    if any(dist(headshape.pos, nas)<tolerance)
+      warning('Nasion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      nas = nas + tolerance*randn(1,3);
     end
-    if isfield(mri, 'coordsys')
-      elec.coordsys = mri.coordsys;
+    if any(dist(headshape.pos, ini)<tolerance)
+      warning('Inion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ini = ini + tolerance*randn(1,3);
     end
+    if any(dist(headshape.pos, lpa)<tolerance)
+      warning('LPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      lpa = lpa + tolerance*randn(1,3);
+    end
+    if any(dist(headshape.pos, rpa)<tolerance)
+      warning('RPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      rpa = rpa + tolerance*randn(1,3);
+    end
+    
+    % place the electrodes automatically according to the fiducials
+    [pos, lab] = elec1020_locate(headshape.pos, headshape.tri, nas, ini, lpa, rpa, istrue(cfg.feedback));
+    % construct the output
+    elec = keepfields(headshape, {'unit', 'coordsys'});
+    elec.elecpos = pos;
+    elec.label   = lab(:);
+    
+  otherwise
+    error('unsupported method ''%s''', cfg.method);
     
 end % switch method
 
@@ -471,15 +514,11 @@ if any([xi yi zi] > mri.dim) || any([xi yi zi] <= 0)
   return;
 end
 
-opt.ijk = [xi yi zi 1]';
-opt.ijk = opt.ijk(1:3)';
-
 % construct a string with user feedback
 str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), xi, yi, zi), opt.ijk);
 
 if opt.init
   ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false,'clim', opt.clim);
-
   opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
   parenttag = get(opt.anahandles,'parent');
   parenttag{1} = get(parenttag{1}, 'tag');
@@ -489,18 +528,17 @@ if opt.init
   opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
   opt.anahandles = opt.anahandles(:)';
   set(opt.anahandles, 'tag', 'ana');
-
+  
   % for zooming purposes
   opt.axis = zeros(1,6);
   opt.axis([1 3 5]) = 0.5;
   opt.axis([2 4 6]) = size(opt.ana) + 0.5;
 else
   ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false,'clim', opt.clim);
-
   if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
     fprintf('==================================================================================\n');
     str = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
-
+    
     lab = 'crosshair';
     opt.vox = [xi yi zi];
     ind = sub2ind(mri.dim(1:3), round(opt.vox(1)), round(opt.vox(2)), round(opt.vox(3)));
@@ -516,7 +554,7 @@ else
         fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
     end
   end
-
+  
 end
 
 % make the last current axes current again
@@ -542,7 +580,7 @@ if opt.init
   hch2 = crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
   hch3 = crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
-  opt.handlesmarker = [];
+  opt.redrawmarker = 1;
 else
   % update the existing crosshairs, don't change the handles
   crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
@@ -556,24 +594,23 @@ else
   set(opt.handlescross,'Visible','off');
 end
 
-delete(opt.handlesmarker(opt.handlesmarker(:)>0));
-opt.handlesmarker = [];
-
 % draw markers
+delete(findobj(h,'Type','line','Marker','+')); % remove previous markers
+delete(findobj(h,'Type','text')); % remove previous labels
 idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
 if ~isempty(idx)
   for i=1:numel(idx)
-    markerlab{i,1} = opt.markerlab{idx(i),1};
-    markerpos(i,:) = opt.markerpos{idx(i),1};
+    opt.markerlab_sel{i,1} = opt.markerlab{idx(i),1};
+    opt.markerpos_sel(i,:) = opt.markerpos{idx(i),1};
   end
-
-  opt.vox2 = round(ft_warp_apply(inv(mri.transform), markerpos)); % head to vox
+  
+  opt.vox2 = round(ft_warp_apply(inv(mri.transform), opt.markerpos_sel)); % head to vox
   tmp1 = opt.vox2(:,1);
   tmp2 = opt.vox2(:,2);
   tmp3 = opt.vox2(:,3);
-
+  
   subplot(h1);
-  if ~opt.global % filter markers distant to the current slice (N units and further)
+  if opt.local % filter markers distant to the current slice (N units and further)
     posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
     posi = tmp1(posj_idx);
     posj = tmp2(posj_idx);
@@ -586,17 +623,17 @@ if ~isempty(idx)
   end
   if ~isempty(posi)
     hold on
-    opt.handlesmarker(:,1) = plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
+    plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
     if opt.showlabels
       for i=1:numel(posj_idx)
-        opt.handlesmarker(i,4) = text(posi(i), yi-yloadj, posk(i), markerlab{posj_idx(i),1}, 'color', 'b');
+        text(posi(i), yi-yloadj, posk(i), opt.markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0]);
       end
     end
     hold off
   end
-
+  
   subplot(h2);
-  if ~opt.global % filter markers distant to the current slice (N units and further)
+  if opt.local % filter markers distant to the current slice (N units and further)
     posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
     posi = tmp1(posi_idx);
     posj = tmp2(posi_idx);
@@ -609,17 +646,17 @@ if ~isempty(idx)
   end
   if ~isempty(posj)
     hold on
-    opt.handlesmarker(:,2) = plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
+    plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
     if opt.showlabels
       for i=1:numel(posi_idx)
-        opt.handlesmarker(i,5) = text(posi(i)+xhiadj, posj(i), posk(i), markerlab{posi_idx(i),1}, 'color', 'b');
+        text(posi(i)+xhiadj, posj(i), posk(i), opt.markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0]);
       end
     end
     hold off
   end
-
+  
   subplot(h3);
-  if ~opt.global % filter markers distant to the current slice (N units and further)
+  if opt.local % filter markers distant to the current slice (N units and further)
     posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
     posi = tmp1(posk_idx);
     posj = tmp2(posk_idx);
@@ -632,25 +669,26 @@ if ~isempty(idx)
   end
   if ~isempty(posk)
     hold on
-    opt.handlesmarker(:,3) = plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
+    plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
     if opt.showlabels
       for i=1:numel(posk_idx)
-        opt.handlesmarker(i,6) = text(posi(i), posj(i), zi, markerlab{posk_idx(i),1}, 'color', 'b');
+        text(posi(i), posj(i), zi, opt.markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0]);
       end
     end
     hold off
   end
 end % for all markers
 
-if isfield(opt, 'scatterfig')
-  cb_scatterredraw(h); % also update the appendix
-  figure(h); % FIXME: ugly as it switches forth and back to mainfig
-end
-
 % do not initialize on the next call
 opt.init = false;
 setappdata(h, 'opt', opt);
 set(h, 'currentaxes', curr_ax);
+
+% also update the appendix
+if isfield(opt, 'scatterfig')
+  cb_scatterredraw(h);
+  figure(h); % FIXME: ugly as it switches forth and back to mainfig
+end
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -671,12 +709,12 @@ if opt.scatter % radiobutton on
     set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
     opt.scatterfig_h1 = axes('position',[0.06 0.06 0.74 0.88]);
     set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.handlesaxes(1), 'DataAspectRatio'));
-    axis image;
+    axis square; axis tight;
     xlabel('x'); ylabel('y'); zlabel('z');
     
     % scatter range sliders
     opt.scatterfig_h23text = uicontrol('Style', 'text',...
-      'String','Treshold',...
+      'String','Intensity',...
       'Units', 'normalized', ...
       'Position',[.85+0.03 .26 .1 0.04],...
       'BackgroundColor', [1 1 1], ...
@@ -698,7 +736,40 @@ if opt.scatter % radiobutton on
       'Position', [.85+.07 .06 .05 .2], ...
       'Callback', @cb_scattermaxslider);
     
-    msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
+    hskullstrip = uicontrol('Style', 'togglebutton', ...
+      'Parent', opt.scatterfig, ...
+      'String', 'Skullstrip', ...
+      'Value', 0, ...
+      'Units', 'normalized', ...
+      'Position', [.88 .88 .1 .1], ...
+      'HandleVisibility', 'on', ...
+      'Callback', @cb_skullstrip);
+    
+    % datacursor mode options
+    opt.scatterfig_dcm = datacursormode(opt.scatterfig);
+    set(opt.scatterfig_dcm, ...
+      'DisplayStyle', 'datatip', ...
+      'SnapToDataVertex', 'off', ...
+      'Enable', 'off', ...
+      'UpdateFcn', @cb_scatter_dcm);
+    
+    % draw the crosshair for the first time
+    opt.handlescross2 = crosshair([opt.ijk], 'parent', opt.scatterfig_h1, 'color', 'blue');
+    
+    % instructions to the user
+    fprintf(strcat(...
+      '4. Scatterplot viewing options:\n',...
+      '   a. use the Data Cursor, Rotate 3D, Pan, and Zoom tools to navigate to electrodes in 3D space\n'));
+    
+    opt.redrawscatter = 1;
+    opt.redrawmarker = 1;
+  end
+  
+  figure(opt.scatterfig); % make current figure
+  
+  if opt.redrawscatter
+    delete(findobj('type','scatter')); % remove previous scatters
+    msize = round(2000/opt.mri.dim(3)); % headsize (20 cm) / z slices
     inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
     for r = 1:4 % 4 color layers to encode peaks
       lim1 = opt.slim(1) + r*inc - inc;
@@ -707,26 +778,31 @@ if opt.scatter % radiobutton on
       [x,y,z] = ind2sub(opt.mri.dim, voxind);
       hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
     end
-    
-    % draw the crosshair for the first time
-    opt.handlescross2 = crosshair([opt.ijk], 'parent', opt.scatterfig_h1, 'color', 'blue');
+    opt.redrawscatter = 0;
   end
   
-  figure(opt.scatterfig);
+  if opt.redrawmarker
+    if isfield(opt, 'vox2') % plot the markers
+      delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
+      plot3(opt.vox2(:,1),opt.vox2(:,2),opt.vox2(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
+      if opt.showlabels
+        delete(findobj(opt.scatterfig,'Type','text')); % remove previous labels
+        for i=1:size(opt.vox2,1)
+          text(opt.vox2(i,1), opt.vox2(i,2), opt.vox2(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
+        end
+      end
+    end
+    opt.redrawmarker = 0;
+  end
   
   % update the existing crosshairs, don't change the handles
   crosshair([opt.ijk], 'handle', opt.handlescross2);
   if opt.showcrosshair
-    set(opt.handlescross,'Visible','on');
+    set(opt.handlescross2,'Visible','on');
   else
-    set(opt.handlescross,'Visible','off');
+    set(opt.handlescross2,'Visible','off');
   end
   
-  % plot the markers
-  if isfield(opt, 'vox2')
-    delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
-    plot3(opt.vox2(:,1),opt.vox2(:,2),opt.vox2(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r');
-  end
 end
 setappdata(h, 'opt', opt);
 
@@ -764,31 +840,31 @@ end
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
-
+    
   case '1'
     subplot(opt.handlesaxes(1));
-
+    
   case '2'
     subplot(opt.handlesaxes(2));
-
+    
   case '3'
     subplot(opt.handlesaxes(3));
-
+    
   case 'q'
     setappdata(h, 'opt', opt);
     cb_cleanup(h);
-
+    
   case 'g' % global/local elec view (h9) toggle
-    if isequal(opt.global, 0)
-      opt.global = 1;
+    if isequal(opt.local, 0)
+      opt.local = 1;
       set(opt.handlesaxes(9), 'Value', 1);
-    elseif isequal(opt.global, 1)
-      opt.global = 0;
+    elseif isequal(opt.local, 1)
+      opt.local = 0;
       set(opt.handlesaxes(9), 'Value', 0);
     end
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-
+    
   case 'l' % elec label view (h8) toggle
     if isequal(opt.showlabels, 0)
       opt.showlabels = 1;
@@ -797,9 +873,10 @@ switch key
       opt.showlabels = 0;
       set(opt.handlesaxes(8), 'Value', 0);
     end
+    opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-
+    
   case 'm' % magnet (h7) toggle
     if isequal(opt.magnet, 0)
       opt.magnet = 1;
@@ -809,7 +886,7 @@ switch key
       set(opt.handlesaxes(7), 'Value', 0);
     end
     setappdata(h, 'opt', opt);
-
+    
   case {28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'}
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -827,10 +904,10 @@ switch key
     else
       % do nothing
     end;
-
+    
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-
+    
     % contrast scaling
   case {43 'shift+equal'}  % numpad +
     if isempty(opt.clim)
@@ -842,7 +919,7 @@ switch key
     opt.clim(2) = opt.clim(2)-cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-
+    
   case {45 'shift+hyphen'} % numpad -
     if isempty(opt.clim)
       opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
@@ -853,17 +930,18 @@ switch key
     opt.clim(2) = opt.clim(2)+cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-
+    
   case 99  % 'c'
     opt.showcrosshair = ~opt.showcrosshair;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-
+    
   case 102 % 'f'
     opt.showmarkers = ~opt.showmarkers;
+    opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-
+    
   case 3 % right mouse click
     % add point to a list
     l1 = get(get(gca, 'xlabel'), 'string');
@@ -885,16 +963,16 @@ switch key
         zc = d2;
     end
     pnt = [pnt; xc yc zc];
-
+    
   case 2 % middle mouse click
     l1 = get(get(gca, 'xlabel'), 'string');
     l2 = get(get(gca, 'ylabel'), 'string');
-
+    
     % remove the previous point
     if size(pnt,1)>0
       pnt(end,:) = [];
     end
-
+    
     if l1=='i' && l2=='j'
       updatepanel = [1 2 3];
     elseif l1=='i' && l2=='k'
@@ -902,10 +980,10 @@ switch key
     elseif l1=='j' && l2=='k'
       updatepanel = [3 1 2];
     end
-
+    
   otherwise
     % do nothing
-
+    
 end % switch key
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -967,40 +1045,8 @@ opt.ijk = min(opt.ijk(:)', opt.dim);
 opt.ijk = max(opt.ijk(:)', [1 1 1]);
 
 if opt.magnet % magnetize
-  try
-    center = opt.ijk;
-    radius = opt.magradius;
-    % FIXME here it would be possible to adjust the selection at the edges of the volume
-    xsel = center(1)+(-radius:radius);
-    ysel = center(2)+(-radius:radius);
-    zsel = center(3)+(-radius:radius);
-    cubic  = opt.ana(xsel, ysel, zsel);
-    if strcmp(opt.magtype, 'peak')
-      % find the peak intensity voxel within the cube
-      [val, idx] = max(cubic(:));
-      [ix, iy, iz] = ind2sub(size(cubic), idx);
-    elseif strcmp(opt.magtype, 'trough')
-      % find the trough intensity voxel within the cube
-      [val, idx] = min(cubic(:));
-      [ix, iy, iz] = ind2sub(size(cubic), idx);
-    elseif strcmp(opt.magtype, 'weighted')
-      % find the weighted center of mass in the cube
-      dim = size(cubic);
-      [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
-      cubic = cubic./sum(cubic(:));
-      ix = round(X(:)' * cubic(:));
-      iy = round(Y(:)' * cubic(:));
-      iz = round(Z(:)' * cubic(:));
-    end
-    % adjust the indices for the selection
-    opt.ijk = [ix, iy, iz] + center - radius - 1;
-    fprintf('==================================================================================\n');
-    fprintf(' clicked at [%d %d %d], %s magnetized adjustment [%d %d %d]\n', center, opt.magtype, opt.ijk-center);
-  catch
-    % this fails if the selection is at the edge of the volume
-    warning('cannot magnetize at the edge of the volume');
-  end
-end % if magnetize
+  opt = magnetize(opt);
+end
 setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1106,10 +1152,10 @@ if ~isempty(elecidx)
   end
   eleclis = cellstr(get(h6, 'String')); % all labels
   eleclab = eleclis{elecidx}; % this elec's label
-
+  
   h = getparent(h6);
   opt = getappdata(h, 'opt');
-
+  
   % toggle electrode status and assign markers
   if strfind(eleclab, 'silver') % not yet, check
     fprintf('assigning marker %s\n', opt.label{elecidx,1});
@@ -1127,11 +1173,12 @@ if ~isempty(elecidx)
       opt.markerpos{elecidx,1} = zeros(0,3); % assign marker position
     end
   end
-
+  
   % update plot
   eleclis{elecidx} = eleclab;
   set(h6, 'String', eleclis);
   set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
+  opt.redrawmarker = 1;
   setappdata(h, 'opt', opt);
   cb_redraw(h);
 end
@@ -1149,22 +1196,61 @@ setappdata(h, 'opt', opt);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function opt = magnetize(opt)
+
+try
+  center = opt.ijk;
+  radius = opt.magradius;
+  % FIXME here it would be possible to adjust the selection at the edges of the volume
+  xsel = center(1)+(-radius:radius);
+  ysel = center(2)+(-radius:radius);
+  zsel = center(3)+(-radius:radius);
+  cubic  = opt.ana(xsel, ysel, zsel);
+  if strcmp(opt.magtype, 'peak')
+    % find the peak intensity voxel within the cube
+    [val, idx] = max(cubic(:));
+    [ix, iy, iz] = ind2sub(size(cubic), idx);
+  elseif strcmp(opt.magtype, 'trough')
+    % find the trough intensity voxel within the cube
+    [val, idx] = min(cubic(:));
+    [ix, iy, iz] = ind2sub(size(cubic), idx);
+  elseif strcmp(opt.magtype, 'weighted')
+    % find the weighted center of mass in the cube
+    dim = size(cubic);
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    cubic = cubic./sum(cubic(:));
+    ix = round(X(:)' * cubic(:));
+    iy = round(Y(:)' * cubic(:));
+    iz = round(Z(:)' * cubic(:));
+  end
+  % adjust the indices for the selection
+  opt.ijk = [ix, iy, iz] + center - radius - 1;
+  fprintf('==================================================================================\n');
+  fprintf(' clicked at [%d %d %d], %s magnetized adjustment [%d %d %d]\n', center, opt.magtype, opt.ijk-center);
+catch
+  % this fails if the selection is at the edge of the volume
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_labelsbutton(h8, eventdata)
 
 h = getparent(h8);
 opt = getappdata(h, 'opt');
 opt.showlabels = get(h8, 'value');
+opt.redrawmarker = 1;
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_globalbutton(h9, eventdata)
+function cb_localbutton(h9, eventdata)
 
 h = getparent(h9);
 opt = getappdata(h, 'opt');
-opt.global = get(h9, 'value');
+opt.local = get(h9, 'value');
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -1217,18 +1303,8 @@ h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(1) = get(h2, 'value');
 fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
+opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
-
-delete(findobj('type','scatter')); % remove previous scatters
-msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
-inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
-for r = 1:4 % 4 color layers to encode peaks
-  lim1 = opt.slim(1) + r*inc - inc;
-  lim2 = opt.slim(1) + r*inc;
-  voxind = find(opt.ana>lim1 & opt.ana<lim2);
-  [x,y,z] = ind2sub(opt.mri.dim, voxind);
-  hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
-end
 cb_scatterredraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1240,16 +1316,51 @@ h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(2) = get(h3, 'value');
 fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
+opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
-
-delete(findobj('type','scatter')); % remove previous scatters
-msize = round(2500/opt.mri.dim(3)); % headsize (25 cm) / z slices
-inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
-for r = 1:4 % 4 color layers to encode peaks
-  lim1 = opt.slim(1) + r*inc - inc;
-  lim2 = opt.slim(1) + r*inc;
-  voxind = find(opt.ana>lim1 & opt.ana<lim2);
-  [x,y,z] = ind2sub(opt.mri.dim, voxind);
-  hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
-end
 cb_scatterredraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function dcm_txt = cb_scatter_dcm(hObject, eventdata)
+
+h = findobj('type','figure','name',mfilename);
+opt = getappdata(h, 'opt');
+opt.ijk = get(eventdata, 'Position'); % current datamarker position
+dcm_txt = ['']; % ['index = [' num2str(opt.ijk) ']'];
+
+if strcmp(get(opt.scatterfig_dcm, 'Enable'), 'on') % update appl and figures
+  setappdata(h, 'opt', opt);
+  figure(h);
+  cb_redraw(h);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_skullstrip(hObject, eventdata)
+
+h = findobj('type','figure','name',mfilename);
+opt = getappdata(h, 'opt');
+if get(hObject, 'value') && ~isfield(opt, 'ana_strip') % skullstrip
+  fprintf('stripping the skull - this could take a few minutes\n')
+  tmp.anatomy = opt.ana;
+  tmp.dim = size(opt.ana);
+  tmp.coordsys = 'tal'; % assumption
+  tmp.unit = 'mm'; % assumption
+  tmp.transform = opt.mri.transform;
+  cfg.output = 'skullstrip';
+  seg = ft_volumesegment(cfg, tmp);
+  opt.ana_strip = seg.anatomy; clear seg tmp
+  opt.ana_orig = opt.ana; % back up original
+  opt.ana = opt.ana_strip; % overwrite with skullstrip
+elseif ~get(hObject, 'value') && isfield(opt, 'ana_strip') % use original again
+  opt.ana = opt.ana_orig;
+elseif get(hObject, 'value') && isfield(opt, 'ana_strip') % use skullstrip again
+  opt.ana = opt.ana_strip;
+end
+opt.redrawscatter = 1;
+setappdata(h, 'opt', opt);
+figure(h);
+cb_redraw(h);

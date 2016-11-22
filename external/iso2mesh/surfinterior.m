@@ -4,7 +4,7 @@ function [pt,p0,v0,t,idx]=surfinterior(node,face)
 %
 % identify a point that is enclosed by the (closed) surface
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %   node: a list of node coordinates (nn x 3)

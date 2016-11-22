@@ -33,6 +33,11 @@ function y = ft_preproc_slidingrange(dat, width, varargin)
 
 normalize = ft_getopt(varargin, 'normalize', false);
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 if mod(width+1, 2)
   error('width should be an odd number');
 end

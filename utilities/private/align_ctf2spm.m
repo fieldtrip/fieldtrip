@@ -69,7 +69,7 @@ mri.coordsys      = 'spm';
 
 if opt==1
   % use spm_affreg
-  ft_hastoolbox('spm', 1);
+  ft_hastoolbox('spm8', 1);
   
   switch spm('ver')
     case 'SPM8'
@@ -119,7 +119,7 @@ if opt==1
   
 elseif opt==2
   % use spm_normalise
-  ft_hastoolbox('spm', 1);
+  ft_hastoolbox('spm8', 1);
   
   switch spm('ver')
     case 'SPM8'

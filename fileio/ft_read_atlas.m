@@ -2066,12 +2066,19 @@ switch fileformat
     ft_hastoolbox('gifti', 1);
     g = gifti(filename);
     
+    rgba = [];
     if isfield(g, 'labels'),
       label = g.labels.name(:);
       key   = g.labels.key(:);
+      if isfield(g.labels, 'rgba'),
+        rgba = g.labels.rgba; % I'm not sure whether this always exists
+      end
     else
       label = g.private.label.name(:);
       key   = g.private.label.key(:);
+      if isfield(g.private.label, 'rgba')
+        rgba = g.private.label.rgba; % I'm not sure whether this always exists
+      end
     end
     
     %label = g.private.label.name; % provides the name of the parcel
@@ -2085,6 +2092,7 @@ switch fileformat
       tmporig  = g.cdata(:,k);
       tmpnew   = nan(size(tmporig));
       tmplabel = cell(0,1);
+      tmprgba  = zeros(0,4);
       cnt = 0;
       for m = 1:numel(label)
         sel = find(tmporig==key(m));
@@ -2098,6 +2106,7 @@ switch fileformat
           else
             % add as a new label
             tmplabel{end+1,1} = label{m};
+            if ~isempty(rgba), tmprgba(end+1,:)  = rgba(m,:); end
             val = cnt;
           end
           tmpnew(tmporig==key(m)) = val;
@@ -2121,6 +2130,7 @@ switch fileformat
       
       atlas.(parcelfield)           = tmpnew;
       atlas.([parcelfield 'label']) = tmplabel;
+      if ~isempty(tmprgba), atlas.rgba = tmprgba; end
     end
     
     if exist('filenamemesh', 'var')

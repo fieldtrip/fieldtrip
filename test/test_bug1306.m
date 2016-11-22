@@ -92,7 +92,7 @@ cfg.trl   = cfg.trl(sel,:);
 cfg.continuous = 'yes';
 data           = ft_preprocessing(cfg);
 if ~strcmp(version, 'latest') && str2num(version)<20100000
-  % -- HISTORICAL --- older fieldtrip versions don't support outputfile
+  % -- HISTORICAL --- older FieldTrip versions don't support outputfile
   save(cfg.outputfile, 'data');
 end
 

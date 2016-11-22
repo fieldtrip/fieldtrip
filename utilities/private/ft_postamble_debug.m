@@ -35,7 +35,7 @@ switch cfg.debug
       Ce9dei2ZOo_funname = [];
       Ce9dei2ZOo_argin   = [];
     else
-      % this happens for nested fieldtrip functions, e.g. when
+      % this happens for nested FieldTrip functions, e.g. when
       % ft_selectdata is called by another high-level function
     end
 end

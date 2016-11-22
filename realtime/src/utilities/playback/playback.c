@@ -1,8 +1,10 @@
 /*
  * Simple application for playing back an online experiment through the FieldTrip buffer.
- * Opposite functionality of 'saving_buffer'
+ * This is the opposite functionality of the 'recording' application.
+ *
  * (C) 2010 Stefan Klanke
  */
+
 #include <buffer.h>
 #include <rdadefs.h>
 #include <signal.h>

@@ -81,7 +81,7 @@ end
 
 fclose(fid);
 
-% convert the header into fieldtrip style
+% convert the header into FieldTrip style
 hdr.label       = label(:);
 hdr.nChans      = length(label);
 % represent it as a single continuous recording

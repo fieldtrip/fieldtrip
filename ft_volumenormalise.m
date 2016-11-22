@@ -128,7 +128,7 @@ end
 initial = mri.transform / orig;
 
 if isdeployed
-  % in deployed mode, fieldtrip cannot use the template in the release version, because these are not compiled
+  % in deployed mode, FieldTrip cannot use the template in the release version, because these are not compiled
   cfg = ft_checkconfig(cfg, 'required', 'template');
 else
   if ~isfield(cfg, 'template'),

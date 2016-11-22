@@ -311,7 +311,7 @@ elseif isfreq
 elseif iscomp
   % FIXME, select the components here
   % FIXME, add the component numbers to the output
-  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the fieldtrip development team');
+  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
 end
 
 convertcomp = false;
@@ -955,14 +955,14 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     %   elseif 0 && strcmp(cfg.method, 'lcmv')
     %     %don't loop over repetitions (slow), but reshape the input data to obtain single trial timecourses efficiently
     %     %in the presence of filters pre-computed on the average (or whatever)
-    %     tmpdat = reshape(permute(avg,[2 3 1]),[siz(2) siz(3)*siz(1)]);
+    %     tmpdat = reshape(permute(avg,[2 3 1]),[size_avg(2) size_avg(3)*size_avg(1)]);
     %     tmpdip = beamformer_lcmv(grid, sens, headmodel, tmpdat, squeeze(mean(Cy,1)), optarg{:});
     %     tmpmom = tmpdip.mom{tmpdip.inside(1)};
     %     sizmom = size(tmpmom);
     %
     %     for i=1:length(tmpdip.inside)
     %       indx = tmpdip.inside(i);
-    %       tmpdip.mom{indx} = permute(reshape(tmpdip.mom{indx}, [sizmom(1) siz(3) siz(1)]), [3 1 2]);
+    %       tmpdip.mom{indx} = permute(reshape(tmpdip.mom{indx}, [sizmom(1) size_avg(3) size_avg(1)]), [3 1 2]);
     %     end
     %     try, tmpdip = rmfield(tmpdip, 'pow'); end
     %     try, tmpdip = rmfield(tmpdip, 'cov'); end
@@ -979,7 +979,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     %       dip(i).pow     = nan(size(tmpdip.pos,1),1);
     %       for ii=1:length(tmpdip.inside)
     %         indx             = tmpdip.inside(ii);
-    %         tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) siz(3)]);
+    %         tmpmom           = reshape(tmpdip.mom{indx}(i,:,:),[sizmom(1) size_avg(3)]);
     %         dip(i).mom{indx} = tmpmom;
     %         if isfield(tmpdip, 'ori')
     %           dip(i).ori{indx} = tmpdip.ori{indx};
@@ -990,7 +990,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     %         % latency of the event-related field in the input and not the
     %         % latency of the covariance window, which can differ from the
     %         % former
-    %         dip(i).cov{indx} = (tmpmom*tmpmom')./siz(3);
+    %         dip(i).cov{indx} = (tmpmom*tmpmom')./size_avg(3);
     %         if isempty(cfg.lcmv.powmethod) || strcmp(cfg.lcmv.powmethod, 'trace')
     %           dip(i).pow(indx) = trace(dip(i).cov{indx});
     %         else
@@ -1020,7 +1020,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       fprintf('scanning repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      squeeze_avg=reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       dip(i) = beamformer_sam(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:});
     end
   elseif strcmp(cfg.method, 'pcc')
@@ -1028,7 +1028,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       fprintf('scanning repetition %d\n', i);
-      squeeze_avg=reshape(avg(i,:,:),[siz(2) siz(3)]);
+      squeeze_avg=reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       dip(i) = beamformer_pcc(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supchan', supchanindx);
     end
   elseif strcmp(cfg.method, 'mne')
@@ -1089,7 +1089,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   end
   
 elseif iscomp
-  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the fieldtrip development team');
+  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
 else
   error('the specified method ''%s'' combined with the input data of type ''%s'' are not supported', cfg.method, ft_datatype(data));
 end % if freq or timelock or comp data

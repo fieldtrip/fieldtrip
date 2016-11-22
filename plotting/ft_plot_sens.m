@@ -15,11 +15,11 @@ function hs = ft_plot_sens(sens, varargin)
 %   'coil'            = true/false, plot each individual coil (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each coil (default = false)
 %
-% The following option only applies when individual coils are being plotted
+% The following option only applies when individual channels or coils are being plotted
 %   'coilsize'        = diameter or edge length of the coils (default is automatic)
 %   'coilshape'       = 'point', 'circle' or 'square' (default is automatic)
-%   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces (default = 'none')
-%   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'k')
+%   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces (default = 'none')
+%   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', color of channels or coils (default = 'k')
 %   'facealpha'       = transparency, between 0 and 1 (default = 1)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
@@ -73,6 +73,14 @@ edgecolor       = ft_getopt(varargin, 'edgecolor', 'k');
 facecolor       = ft_getopt(varargin, 'facecolor', 'none');
 facealpha       = ft_getopt(varargin, 'facealpha',   1);
 edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
+
+% color management
+if ischar(facecolor) && exist([facecolor '.m'], 'file')
+  facecolor = eval(facecolor);
+end
+if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
+  edgecolor = eval(edgecolor);
+end
 
 if ischar(chantype)
   % should be a cell array
@@ -256,7 +264,7 @@ end % if istrue(coil)
 
 switch coilshape
   case 'point'
-    hs = plot3(pos(:,1), pos(:,2), pos(:,3), style);
+    hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', 30, 'Color', edgecolor);
   case 'circle'
     plotcoil(pos, ori, [],      coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
   case 'square'
@@ -308,7 +316,7 @@ end
 ncoil = size(coilpos,1);
 npos  = size(pos,1);
 mesh.pos  = nan(ncoil*npos,3);
-mesh.poly = nan(ncoil,npos);
+mesh.poly = nan(ncoil, npos);
 
 % determine the scaling of the coil as homogenous transformation matrix
 s  = scale([coilsize coilsize coilsize]);

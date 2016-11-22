@@ -1138,14 +1138,14 @@ switch headerformat
     hdr.nTrials     = 1;  % since continuous
     hdr.orig        = []; % this will contain the chunks (if present)
     
-    % add the contents of attached FIF_header chunk after decoding to MATLAB structure
+    % add the contents of attached NEUROMAG_HEADER chunk after decoding to MATLAB structure
     if isfield(orig, 'neuromag_header')
       if isempty(cachechunk)
         % this only needs to be decoded once
         cachechunk = decode_fif(orig);
       end
       
-      % convert to fieldtrip format header
+      % convert to FieldTrip format header
       hdr.label       = cachechunk.ch_names(:);
       hdr.nChans      = cachechunk.nchan;
       hdr.Fs          = cachechunk.sfreq;
@@ -1167,7 +1167,7 @@ switch headerformat
       hdr.orig = cachechunk;
     end
     
-    % add the contents of attached RES4 chunk after decoding to MATLAB structure
+    % add the contents of attached CTF_RES4 chunk after decoding to MATLAB structure
     if isfield(orig, 'ctf_res4')
       if isempty(cachechunk)
         % this only needs to be decoded once
@@ -1193,7 +1193,7 @@ switch headerformat
       hdr.orig.ctf_res4 = orig.ctf_res4;
     end
     
-    % add the contents of attached NIFTI-1 chunk after decoding to MATLAB structure
+    % add the contents of attached NIFTI_1 chunk after decoding to MATLAB structure
     if isfield(orig, 'nifti_1')
       hdr.nifti_1 = decode_nifti1(orig.nifti_1);
       % add the raw chunk as well
@@ -1357,7 +1357,7 @@ switch headerformat
     % these are the channels that are visible to fieldtrip
     chansel = 1:header_info.nchan;
     
-    % convert the header information into a fieldtrip compatible format
+    % convert the header information into a FieldTrip compatible format
     hdr.nChans      = length(chansel);
     hdr.label       = {header_info.ch(chansel).label};
     hdr.label       = hdr.label(:);  % should be column vector
@@ -1638,7 +1638,7 @@ switch headerformat
     
     info = fiff_read_meas_info(filename);
     
-    % convert to fieldtrip format header
+    % convert to FieldTrip format header
     hdr.label       = info.ch_names(:);
     hdr.nChans      = info.nchan;
     hdr.Fs          = info.sfreq;
@@ -1792,7 +1792,7 @@ switch headerformat
       clear tmpvar tmpchannel;
     end
     
-    % convert to fieldtrip format header
+    % convert to FieldTrip format header
     hdr.label       = orig.channames.NA;
     hdr.Fs          = orig.rawdata.sf;
     hdr.nSamplesPre = 0; % I don't know how to get this out of the file

@@ -98,7 +98,7 @@ figure; ft_plot_ortho(T2.anatomy); title('T2 before aligning')
 figure; ft_plot_ortho(DTI.anatomy(:,:,:,1));title('DTI before aligning')
 
 % they are now in memory, which would be the normal `starting point in a
-% fieldtrip analysis pipeline
+% FieldTrip analysis pipeline
 
 % INSERT THE NEW CODE HERE, THIS PROBABLY INVOLVES
 % step 1) write them to disk, perhaps using ft_write_mri
@@ -318,7 +318,7 @@ end
 %
 %%
 % they are now again in memory, but realigned to each other. This is where
-% a normal fieldtrip analysis pipeline would continue.
+% a normal FieldTrip analysis pipeline would continue.
 %figure; ft_plot_ortho(T1.anatomy); title('T1 image')
 %figure; ft_plot_ortho(T2_aligned.anatomy); title('T2 after aligning')
 % figure; ft_plot_ortho(DTI_aligned.anatomy(:,:,:,1));title('DTI after aligning')
