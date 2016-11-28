@@ -1,11 +1,11 @@
-function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth,  Neighbourwidth)
+function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth, Neighwidth)
 
 % FT_PREPROC_DFTFILTER reduces power line noise (50 or 60Hz) via two 
 % alternative methods:
-% (A) DFT filter (Flreplace = 'zero') or
-% (B) Spectrum Interpolation (Flreplace = 'neighbour').
+% A) DFT filter (Flreplace = 'zero') or
+% B) Spectrum Interpolation (Flreplace = 'neighbour').
 %
-% (A) The DFT filter applies a notch filter to the data to remove the 50Hz
+% A) The DFT filter applies a notch filter to the data to remove the 50Hz
 % or 60Hz line noise components ('zeroing'). This is done by fitting a sine 
 % and cosine at the specified frequency to the data and subsequently 
 % subtracting the estimated components. The longer the data is, the sharper 
@@ -15,22 +15,22 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth,  Neighbo
 % data is of different lenght, then only the first N complete periods are
 % used to estimate the line noise. The estimate is subtracted from the
 % complete data.
-
 %
-% (B) Alternatively line noise is reduced via spectrum interpolation 
-% (Mewett et al., 2004, Med. Biol. Eng. Comput. 42, doi:10.1007/BF02350994). 
+% B) Alternatively line noise is reduced via spectrum interpolation 
+% (introduced by Mewett et al., 2004, Med. Biol. Eng. Comput. 42, 
+% doi:10.1007/BF02350994). 
 % The signal is:
-% (I)   transformed into the frequency domain via a discrete Fourier 
+% I)   transformed into the frequency domain via a discrete Fourier 
 %       transform (DFT), 
-% (II)  the line noise component (e.g. 50Hz, Flwidth = 1 (±1Hz): 49-51Hz) is 
+% II)  the line noise component (e.g. 50Hz, Flwidth = 1 (±1Hz): 49-51Hz) is 
 %       interpolated in the amplitude spectrum by replacing the amplitude 
 %       of this frequency bin by the mean of the adjacent frequency bins 
 %       ('neighbours', e.g. 49Hz and 51Hz). 
-%       Neighbourwidth defines frequencies considered for the mean (e.g. 
-%       Neighbourwidth = 2 (±2Hz) implies 47-49 Hz and 51-53 Hz). 
+%       Neighwidth defines frequencies considered for the mean (e.g. 
+%       Neighwidth = 2 (±2Hz) implies 47-49 Hz and 51-53 Hz). 
 %       The original phase information of the noise frequency bin is
 %       retained.
-% (III) the signal is transformed back into the time domain via inverse DFT
+% III) the signal is transformed back into the time domain via inverse DFT
 %       (iDFT).
 % If Fline is a vector (e.g. [50 100 150]), harmonics are also considered. 
 % Preferably the data should be continuous or consist of long data segments
@@ -38,14 +38,14 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth,  Neighbo
 %
 %
 % Use as
-%   [filt] = ft_preproc_dftfilter(dat, Fsample, Fline, Flreplace, Flwidth, Neighbourwidth)
+%   [filt] = ft_preproc_dftfilter(dat, Fsample, Fline, Flreplace, Flwidth, Neighwidth)
 % where
 %   dat             data matrix (Nchans X Ntime)
 %   Fsample         sampling frequency in Hz
 %   Fline           line noise frequency (and harmonics)
 %   Flreplace       'zero' or 'neighbour', method used to reduce line noise, 'zero' implies DFT filter, 'neighbour' implies spectrum interpolation  
 %   Flwidth         bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz
-%   Neighbourwidth  width of frequencies neighbouring line noise frequencies, applies to spectrum interpolation (Flreplace = 'neighbour'), in Hz 
+%   Neighwidth      width of frequencies neighbouring line noise frequencies, applies to spectrum interpolation (Flreplace = 'neighbour'), in Hz 
 %
 % The line frequency should be specified as a single number for the DFT filter.
 % If omitted, a European default of 50Hz will be assumed
@@ -59,6 +59,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth,  Neighbo
 %
 % Copyright (C) 2003, Pascal Fries
 % Copyright (C) 2003-2015, Robert Oostenveld
+% Copyright (C) 2016, Sabine Leske 
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -88,13 +89,15 @@ end
 
 % ensure to be a column  vector
 Fl = Fl(:);
+Flwidth = Flwidth(:);
+Neighwidth = Neighwidth(:);
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
   ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
-% Method (A): DFT filter
+% Method A): DFT filter
 if strcmp(Flreplace,'zero')
     % determine the largest integer number of line-noise cycles that fits in the data
     n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
@@ -129,7 +132,37 @@ if strcmp(Flreplace,'zero')
         % add the mean back to the filtered data
         filt(:,i) = filt(:,i) + meandat;
     end
+
+% Method B): Spectrum Interpolation
 elseif strcmp(Flreplace,'neighbour')
-    % Method (B): Spectrum Interpolation - will be inserted here
+    
+    % frequencies to interpolate
+    for i = 1:length(Fl)
+        f2int(i,:) = [Fl(i)-Flwidth(i) Fl(i)+Flwidth(i)];
+    end
+    % frequencies used for interpolation
+    for i = 1:length(Neighwidth)
+        f4int(i,:) = [f2int(i,1)-Neighwidth(i) f2int(i,:) f2int(i,2)+Neighwidth(i)];
+    end
+    
+    data_fft = fft(dat,nsamples,2); % calculate fft to obtain spectrum that will be interpolated
+    frq = Fs*linspace(0,1,nsamples+1);
+    
+    % interpolate 50Hz (and harmonics) amplitude in spectrum
+    for i = 1:length(f2int)
+        smpl2int = nearest(frq,f2int(i,1)):nearest(frq,f2int(i,2));                                                   % samples of frequencies that will be interpolated
+        smpl4int = [(nearest(frq,f4int(i,1)):nearest(frq,f4int(i,2))-1),(nearest(frq,f4int(i,3))+1:nearest(frq,f4int(i,4)))]; % samples of neighbouring frequencies used to calculate the mean
+        
+        % new amplitude is calculated as the mean of the neighbouring frequencies
+        mns4int= bsxfun(@times, ones(size(data_fft(:,smpl2int))), mean(abs(data_fft(:,smpl4int)),2));
+        
+        % Eulers formula: replace noise components with new mean amplitude combined with phase, that is retained from the original data
+        data_fft(:,smpl2int) = bsxfun(@times, exp(bsxfun(@times,angle(data_fft(:,smpl2int)),1i)), mns4int); 
+    end
+    
+    % complex fourier coefficients are transformed back into time domin, fourier coefficients are treated as conjugate 'symmetric'
+    % to ensure a real valued signal after iFFT
+    filt = ifft(data_fft,[],2,'symmetric');
+   
 end
 
