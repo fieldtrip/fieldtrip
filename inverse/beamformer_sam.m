@@ -56,6 +56,8 @@ if isempty(meansphereorigin)
       meansphereorigin = headmodel.o;
     case 'localspheres'
       meansphereorigin = mean(headmodel.o, 1);
+    case 'singleshell'
+      meansphereorigin = mean(headmodel.bnd.pos,1);
     otherwise
       error('unsupported voltype for determining the mean sphere origin')
   end
@@ -81,7 +83,7 @@ origpos    = dip.pos;
 
 % select only the dipole positions inside the brain for scanning
 dip.pos    = dip.pos(originside,:);
-dip.inside = true(size(dip.pos,1),1);
+
 if isfield(dip, 'mom')
   dip.mom = dip.mom(:, dip.inside);
 end
@@ -93,6 +95,7 @@ if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
   dip.filter = dip.filter(dip.inside);
 end
+dip.inside = true(size(dip.pos,1),1);
 
 isrankdeficient = (rank(all_cov)<size(all_cov,1));
 
