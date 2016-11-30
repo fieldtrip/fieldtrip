@@ -23,9 +23,9 @@ function [reconstructed, residual] = ft_singletrialanalysis(cfg, data)
 %  METHOD SPECIFIC OPTIONS AND DESCRIPTIONS
 %
 % ASEO
-%  ASEO iteratively estimates single-trial event-related activity and
+%  ASEO iteratively models single-trial event-related activity and
 %  ongoing activity and gives an estimate of single-trial latency shift and
-%  amplitude scaling of event-related activity.
+%  amplitude scaling of event-related components.
 %  cfg.unit                 = 'ms' or 'sample', specify jitter and comlatency
 %                              in ms or in samples (default = 'ms')
 %  cfg.aseo.jitter          = value, time jitter in initial timewindow estimate
