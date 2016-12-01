@@ -102,6 +102,10 @@ if ~holdflag
   hold on
 end
 
+% these are reused
+[unitsphere.pos, unitsphere.tri] = icosahedron642;
+[unitcylinder.pos, unitcylinder.tri] = cylinder(36, 2);
+
 for i=1:size(pos,1)
   amplitude = norm(ori(:,i));
   ori(:,i) = ori(:,i) ./ amplitude;
@@ -118,10 +122,10 @@ for i=1:size(pos,1)
     this_diameter = diameter;
   end
   
-  % create a unit sphere and cylinder
-  [sphere.pos, sphere.tri] = icosahedron642;
+  % start with a unit sphere and cylinder
+  sphere  = unitsphere;
+  stick   = unitcylinder;
   sphere.pos = ft_warp_apply(scale([0.5 0.5 0.5]), sphere.pos, 'homogeneous'); % the diameter should be 1
-  [stick.pos, stick.tri]   = cylinder(36, 2);
   stick.pos = ft_warp_apply(scale([0.5 0.5 0.5]), stick.pos, 'homogeneous'); % the length should be 1
   stick.pos = ft_warp_apply(translate([0 0 0.5]), stick.pos, 'homogeneous'); % it should start in the origin
   
