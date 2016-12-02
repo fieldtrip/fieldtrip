@@ -109,8 +109,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 % Note that the coordinate system in which the surface is defined should be the same
 % as the coordinate system that is represented in source.pos.
 %
-% The following parameters apply to surface-plotting when an interpolation
-% is required
+% The following parameters apply to surface-plotting when an interpolation is required
 %   cfg.surffile       = string, file that contains the surface (default = 'surface_white_both.mat')
 %                        'surface_white_both.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
@@ -129,8 +128,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        included in the sphere projection methods, expressed in mm
 %   cfg.distmat        = precomputed distance matrix (default = [])
 %
-% The following parameters apply to surface-plotting independent of whether
-% an interpolation is required
+% The following parameters apply to surface-plotting independent of whether an interpolation is required
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer', ' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
@@ -207,7 +205,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'location', 'interactive', 'auto'});
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates', 'TTlookup'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
@@ -251,10 +249,6 @@ cfg.funcolorlim   = ft_getopt(cfg, 'funcolorlim',   'auto');
 cfg.opacitymap    = ft_getopt(cfg, 'opacitymap',    'auto');
 cfg.opacitylim    = ft_getopt(cfg, 'opacitylim',    'auto');
 cfg.roi           = ft_getopt(cfg, 'roi',           []);
-
-if isfield(cfg, 'TTlookup'),
-  error('TTlookup is old; now specify cfg.atlas, see help!');
-end
 
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, functional);
@@ -1163,7 +1157,7 @@ switch cfg.method
         alphamap(cfg.opacitymap);
       end
       
-      try,
+      try
         caxis(gca,[fcolmin fcolmax]);
       end
       colormap(cfg.funcolormap);
@@ -1399,7 +1393,6 @@ if opt.hasfun
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
 
-
     else
       tmpqi = [opt.qi 1];
       tmph  = [h1 h2 h3];
@@ -1407,9 +1400,8 @@ if opt.hasfun
         'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
     end
-    % after the first call, the handles to the functional surfaces
-    % exist. create a variable containing this, and sort according to
-    % the parents
+    % After the first call, the handles to the functional surfaces exist. 
+    % Create a variable containing these, and sort according to the parents.
     opt.funhandles = findobj(opt.handlesfigure, 'type', 'surface');
     opt.funtag     = get(opt.funhandles, 'tag');
     opt.funhandles = opt.funhandles(~strcmp('ana', opt.funtag));

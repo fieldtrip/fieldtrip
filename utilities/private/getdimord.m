@@ -419,7 +419,11 @@ switch field
     end
     
   case {'cumtapcnt' 'cumsumcnt'}
-    if isequalwithoutnans(datsiz, [nrpt nan])
+    if isequalwithoutnans(datsiz, [nrpt 1])
+      dimord = 'rpt';
+    elseif isequalwithoutnans(datsiz, [nrpt nfreq])
+      dimord = 'rpt_freq';
+    elseif isequalwithoutnans(datsiz, [nrpt nan])
       dimord = 'rpt_other';
     end
     

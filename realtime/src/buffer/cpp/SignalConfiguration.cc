@@ -1,13 +1,20 @@
-#include <SignalConfiguration.h>
+/** Two small classes for handling configurations for channel selection,
+    downsampling, and similar purposes.
+
+    (C) 2010 Stefan Klanke
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 
+#include <SignalConfiguration.h>
+
 struct TokenAndSep {
 	TokenAndSep() : text(), separator(-1) {};
 	TokenAndSep(int len, const char *str, int sep=0) : text(str, len), separator(sep) {};
-	
+
 	bool equals(const char *str) {
 		unsigned int i = 0;
 		for (i=0;i<text.size();i++) {
@@ -16,12 +23,12 @@ struct TokenAndSep {
 		if (str[i]!=0) return false;
 		return true;
 	}
-	
+
 	bool isNumber() {
 		if (text.size()==0) return false;
 		return isdigit(text[0]);
 	}
-		
+
 	std::string text;
 	int separator;
 };
@@ -38,7 +45,7 @@ bool convertToInt(const std::string& in, int& value) {
 	if (*end!=0) return false;
 	value = (int) v;
 	return true;
-} 
+}
 
 /** Simple C++ style wrapper around strtod, converts a string to a double precision number.
 	Returns true on success, false on error. The second parameter value receives
@@ -52,22 +59,22 @@ bool convertToDouble(const std::string& in, double& value) {
 	if (*end!=0) return false;
 	value = v;
 	return true;
-} 
+}
 
 bool tokenizeString(int len, const char *str, std::vector<TokenAndSep>& S) {
 	TokenAndSep ts;
-	
+
 	int pos = 0;
 	int state = 0; // 0=whitespace, 1=in token, 2=in quotes (also in token), 3=find separator
 	int startIdx = 0, endIdx = 0; // start and end of the current token
-	
-	S.clear();	
-	
+
+	S.clear();
+
 	for (pos=0;pos<len;pos++) {
 		int sp = str[pos];
-		
+
 		if (sp==0 || sp == '\n') break;
-		
+
 		switch (state) {
 			case 0: // whitespace
 				// continue if this one still is whitespace
@@ -79,7 +86,7 @@ bool tokenizeString(int len, const char *str, std::vector<TokenAndSep>& S) {
 					state = 2;
 				} else {
 					startIdx = pos;
-					state = 1;					
+					state = 1;
 				}
 				break;
 			case 1: // token, but not in quotes
@@ -91,7 +98,7 @@ bool tokenizeString(int len, const char *str, std::vector<TokenAndSep>& S) {
 					S.push_back(TokenAndSep(endIdx - startIdx, str + startIdx, sp));
 					state  = 0;
 				}
-				// whitespace ends the token, look for separator	
+				// whitespace ends the token, look for separator
 				if (isspace(sp)) {
 					endIdx = pos;
 					state = 3;
@@ -123,7 +130,7 @@ bool tokenizeString(int len, const char *str, std::vector<TokenAndSep>& S) {
 				break;
 		}
 	}
-		
+
 	// end of loop
 	switch(state) {
 		case 0:
@@ -149,40 +156,40 @@ bool ChannelSelection::parseString(int len, const char *str) {
 	int pos = 0;
 	index.clear();
 	label.clear();
-	
+
 	while (pos < len) {
 		int idx;
 		int start;
-		
+
 		// skip white space
 		while (isspace(str[pos])) {
 			if (++pos == len) return true;
 		}
-		
+
 		// next character should be 0-9
 		if (!isdigit(str[pos])) return false;
 		idx = str[pos] - '0';
 		if (++pos == len) return false;
-		
+
 		while (isdigit(str[pos])) {
 			idx = 10*idx + (str[pos] - '0');
 			if (++pos == len) return false;
 		}
-		
+
 		if (idx==0) return false;
-		
+
 		// next character should be =
 		if (str[pos] != '=') return false;
 		if (++pos == len) return false;
-				
+
 		if (str[pos] == '"') {
 			start = ++pos;
-			
+
 			// search next white space
 			while (pos < len && str[pos]!='"') pos++;
 			// check for empty "" or unterminated "....
 			if (pos == len || pos == start) return false;
-			
+
 			// got a label "like this"
 			index.push_back(idx-1);
 			label.push_back(std::string(str + start, pos-start));
@@ -190,16 +197,16 @@ bool ChannelSelection::parseString(int len, const char *str) {
 		} else {
 			// mark label start
 			start = pos;
-		
+
 			// search next white space
 			while (!isspace(str[pos]) && pos < len) pos++;
 			if (start == pos) return false;
-			
+
 			// got a plain label
 			index.push_back(idx-1);
 			label.push_back(std::string(str + start, pos-start));
 		}
-	} 
+	}
 	return true;
 }
 
@@ -220,23 +227,23 @@ int SignalConfiguration::parseFile(const char *filename) {
 
 	fp = fopen(filename, "r");
 	if (fp==NULL) return -1;
-	
+
 	while (!feof(fp)) {
 		if (fgets(line, sizeof(line), fp) == NULL) break;
 		lineCount++;
-		
+
 		char *lp = line;
 		while (isspace(*lp)) lp++;
 		// ignore comments starting by ; or # as well as empty lines
 		if (*lp == ';' || *lp == '#' || *lp==0) continue;
-		
+
 		if (!tokenizeString(sizeof(line), line, TS)) goto reportError;
-		
+
 		numTok = TS.size();
-		
+
 		if (numTok == 0) goto reportError;
 		if (TS[numTok-1].separator != 0) goto reportError;
-		
+
 		/*
 		for (unsigned int i=0;i<TS.size();i++) {
 			printf("(%s)%c", TS[i].text.c_str(), TS[i].separator);
@@ -265,7 +272,7 @@ int SignalConfiguration::parseFile(const char *filename) {
 			if (TS[0].isNumber()) {
 				if (TS[0].separator != '=') goto reportError;
 				int chn;
-				
+
 				if (!convertToInt(TS[0].text, chn) || chn <= 0) goto reportError;
 				if (addSave) {
 					if (chn>maxChanSave) maxChanSave = chn;
@@ -301,7 +308,7 @@ int SignalConfiguration::parseFile(const char *filename) {
 				if (!convertToDouble(TS[1].text, sr) || sr < 0) goto reportError;
 				sampleRate = sr;
 				continue;
-			}			
+			}
 			if (TS[0].equals("batteryrefresh")) {
 				int br;
 				if (!convertToInt(TS[1].text, br) || br<0) goto reportError;
@@ -326,13 +333,12 @@ int SignalConfiguration::parseFile(const char *filename) {
 			}
 			// no other 3-token lines are valid
 			goto reportError;
-		}	
+		}
 		reportError:
-		
+
 		fprintf(stderr, "Could not parse line %i:\n%s\n", lineCount, line);
 		errorCount++;
 	}
 	fclose(fp);
 	return errorCount;
 }
-

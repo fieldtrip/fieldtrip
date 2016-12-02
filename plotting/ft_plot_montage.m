@@ -41,16 +41,17 @@ function ft_plot_montage(dat, varargin)
 %
 % $Id$
 
-transform = ft_getopt(varargin, 'transform', eye(4));
-loc       = ft_getopt(varargin, 'location');
-ori       = ft_getopt(varargin, 'orientation');
-srange    = ft_getopt(varargin, 'slicerange');
-slicesize = ft_getopt(varargin, 'slicesize');
-nslice    = ft_getopt(varargin, 'nslice');
+transform       = ft_getopt(varargin, 'transform', eye(4));
+loc             = ft_getopt(varargin, 'location');
+ori             = ft_getopt(varargin, 'orientation');
+srange          = ft_getopt(varargin, 'slicerange');
+slicesize       = ft_getopt(varargin, 'slicesize');
+nslice          = ft_getopt(varargin, 'nslice');
 backgroundcolor = ft_getopt(varargin, 'backgroundcolor', [0 0 0]);
 
-% the intersectmesh and intersectcolor options are passed on to FT_PLOT_SLICE
-dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh')) || ~isempty(ft_getopt(varargin, 'plotmarker'));
+% the intersectmesh and plotmarker options are passed on to FT_PLOT_SLICE
+dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh'));
+domarker    = ~isempty(ft_getopt(varargin, 'plotmarker'));
 
 % set the location if empty
 if isempty(loc) && (isempty(transform) || all(all(transform-eye(4)==0)==1))
@@ -76,7 +77,7 @@ elseif size(loc, 1) > 1 && ~isempty(nslice)
 end
 
 % set the orientation if empty
-if isempty(ori),
+if isempty(ori)
   ori = [0 0 1];
 end
 
@@ -152,7 +153,7 @@ for k = 1:nslice
   set(h(k), 'xdata', offset(2) + ytmp);
   set(h(k), 'zdata',         0 * ztmp);
   
-  if dointersect,
+  if dointersect || domarker
     if ~exist('pprevious', 'var'), pprevious = []; end
     p = setdiff(findobj(gcf, 'type', 'patch'), pprevious);
     for kk = 1:numel(p)

@@ -1,36 +1,44 @@
 function [elec] = ft_electrodeplacement(cfg, varargin)
 
-% FT_ELECTRODEPLACEMENT allows placing electrodes on a volume or headshape.
-% The different methods are described in detail below.
+% FT_ELECTRODEPLACEMENT allows manual placement of electrodes on a MRI scan, CT scan
+% or on a triangulated surface of the head. This function supports different methods.
 %
-% VOLUME - Navigate an orthographic display of a volume (e.g. CT or
-% MR scan), and assign an electrode label to the current crosshair location
-% by clicking on a label in the eletrode list. You can undo the selection by
-% clicking on the same label again. The electrode labels shown in the list
-% can be prespecified using cfg.channel when calling ft_electrodeplacement.
-% The zoom slider allows zooming in at the location of the crosshair.
-% The intensity sliders allow thresholding the image's low and high values.
-% The magnet feature transports the crosshair to the nearest peak intensity
-% voxel, within a certain voxel radius of the selected location.
-% The labels feature displays the labels of the selected electrodes within
-% the orthoplot. The local feature allows toggling the view between all
-% and near-crosshair markers.
+% VOLUME - Navigate an orthographic display of a volume (e.g. CT or MRI scan), and
+% assign an electrode label to the current crosshair location by clicking on a label
+% in the eletrode list. You can undo the selection by clicking on the same label
+% again. The electrode labels shown in the list can be prespecified using cfg.channel
+% when calling ft_electrodeplacement. The zoom slider allows zooming in at the
+% location of the crosshair. The intensity sliders allow thresholding the image's low
+% and high values. The magnet feature transports the crosshair to the nearest peak
+% intensity voxel, within a certain voxel radius of the selected location. The labels
+% feature displays the labels of the selected electrodes within the orthoplot. The
+% local feature allows toggling the view between all and near-crosshair markers.
 %
-% HEADSHAPE - Navigate a triangulated head/brain surface, and assign
-% an electrode location by clicking on the brain. The electrode
-% is placed on the triangulation itself. FIXME: this needs updating
+% HEADSHAPE - Navigate a triangulated scalp (for EEG) or brain (for ECoG) surface,
+% and assign an electrode location by clicking on the surface. The electrode is
+% placed on the triangulation itself.
+%
+% 1020 - Starting from a triangulated scalp surface and the nasion, inion, left and
+% right pre-auricular points, this automatically constructs and follows contours over
+% the surface according to the 5% system. Electrodes are placed at certain relative
+% distances along these countours. This is an extension of the 10-20 standard
+% electrode placement system and includes the 20%, 10% and 5% locations. See
+% "Oostenveld R, Praamstra P. The five percent electrode system for high-resolution
+% EEG and ERP measurements. Clin Neurophysiol. 2001 Apr;112(4):713-9" for details.
 %
 % Use as
 %   [elec] = ft_electrodeplacement(cfg, mri)
-% where the input mri should be an anatomical CT or MRI volume
-% Use as
+% where the input mri should be an anatomical CT or MRI volume, or
 %   [elec] = ft_electrodeplacement(cfg, headshape)
-% where the input headshape should be a surface triangulation
+% where the input headshape should be a surface triangulation.
 %
 % The configuration can contain the following options
-%   cfg.method         = string representing the method for aligning or placing the electrodes
-%                        'mri'             place electrodes in a brain volume
-%                        'headshape'       place electrodes on the head surface
+%   cfg.method         = string representing the method for placing the electrodes
+%                        'mri'             interactively locate electrodes in a MRI or CT scan
+%                        'headshape'       interactively locate electrodes on a head surface
+%                        '1020'            automatically place electrodes on a head surface
+%
+% The following options apply to the mri method
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = '1','2', ...)
 %   cfg.elec           = struct containing previously placed electrodes (this overwrites cfg.channel)
@@ -41,9 +49,16 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %                        'weighted'        place electrodes at center-of-mass
 %   cfg.magradius      = number representing the radius for the cfg.magtype based search (default = 2)
 %
-% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
+% The following options apply to the 1020 method
+%   cfg.fiducial.nas   = 1x3 vector with coordinates
+%   cfg.fiducial.ini   = 1x3 vector with coordinates
+%   cfg.fiducial.lpa   = 1x3 vector with coordinates
+%   cfg.fiducial.rpa   = 1x3 vector with coordinates
+%   cfg.feedback       = string, can be 'yes' or 'no' for detailled feedback (default = 'yes')
+%
+% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_VOLUMESEGMENT, FT_PREPARE_MESH
 
-% Copyright (C) 2015, Arjen Stolk & Robert Oostenveld
+% Copyright (C) 2015-2016, Arjen Stolk & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -84,9 +99,11 @@ end
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
 
 % set the defaults
-cfg.method        = ft_getopt(cfg, 'method');                 % volume, headshape
+cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020
+cfg.feedback      = ft_getopt(cfg, 'feedback',         'yes');
 cfg.parameter     = ft_getopt(cfg, 'parameter',    'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',             []); % default will be determined further down {'1', '2', ...}
 cfg.elec          = ft_getopt(cfg, 'elec',                []); % use previously placed electrodes
@@ -99,7 +116,6 @@ cfg.magtype       = ft_getopt(cfg, 'magtype',         'peak'); % detect peaks or
 cfg.magradius     = ft_getopt(cfg, 'magradius',            2); % specify the physical unit radius
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',      'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',       'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
-
 
 if isempty(cfg.method) && ~isempty(varargin)
   % the default determines on the input data
@@ -115,9 +131,9 @@ end
 switch cfg.method
   case 'volume'
     mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes');
-  case  {'headshape'}
+  case  {'headshape', '1020'}
     headshape = fixpos(varargin{1});
-    headshape = ft_determine_coordsys(headshape);
+    headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');
 end
 
 switch cfg.method
@@ -160,7 +176,6 @@ switch cfg.method
     end
     
   case 'volume'
-    
     % start building the figure
     h = figure(...
       'MenuBar', 'none',...
@@ -415,24 +430,53 @@ switch cfg.method
     delete(h);
     
     % collect the results
-    elec.label  = {};
+    elec = keepfields(mri, {'unit', 'coordsys'});
+    elec.label   = {};
     elec.elecpos = [];
     elec.chanpos = [];
-    elec.tra = [];
     for i=1:length(opt.markerlab)
       if ~isempty(opt.markerlab{i,1})
         elec.label = [elec.label; opt.markerlab{i,1}];
         elec.elecpos = [elec.elecpos; opt.markerpos{i,1}];
       end
     end
-    elec.chanpos  = elec.elecpos; % identicial to elecpos
+    elec.chanpos = elec.elecpos;
     elec.tra = eye(size(elec.elecpos,1));
-    if isfield(mri, 'unit')
-      elec.unit  = mri.unit;
+    
+  case '1020'
+    % the placement procedure fails if the fiducials coincide with vertices
+    dist = @(x, y) sqrt(sum(bsxfun(@minus, x, y).^2,2));
+    tolerance = 0.1 * ft_scalingfactor('mm', headshape.unit);  % 0.1 mm
+    nas = cfg.fiducial.nas;
+    ini = cfg.fiducial.ini;
+    lpa = cfg.fiducial.lpa;
+    rpa = cfg.fiducial.rpa;
+    if any(dist(headshape.pos, nas)<tolerance)
+      warning('Nasion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      nas = nas + tolerance*randn(1,3);
     end
-    if isfield(mri, 'coordsys')
-      elec.coordsys = mri.coordsys;
+    if any(dist(headshape.pos, ini)<tolerance)
+      warning('Inion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ini = ini + tolerance*randn(1,3);
     end
+    if any(dist(headshape.pos, lpa)<tolerance)
+      warning('LPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      lpa = lpa + tolerance*randn(1,3);
+    end
+    if any(dist(headshape.pos, rpa)<tolerance)
+      warning('RPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      rpa = rpa + tolerance*randn(1,3);
+    end
+    
+    % place the electrodes automatically according to the fiducials
+    [pos, lab] = elec1020_locate(headshape.pos, headshape.tri, nas, ini, lpa, rpa, istrue(cfg.feedback));
+    % construct the output
+    elec = keepfields(headshape, {'unit', 'coordsys'});
+    elec.elecpos = pos;
+    elec.label   = lab(:);
+    
+  otherwise
+    error('unsupported method ''%s''', cfg.method);
     
 end % switch method
 
