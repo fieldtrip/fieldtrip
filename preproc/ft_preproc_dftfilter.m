@@ -89,15 +89,13 @@ end
 
 % ensure to be a column  vector
 Fl = Fl(:);
-Flwidth = Flwidth(:);
-Neighwidth = Neighwidth(:);
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
   ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
-% Method A): DFT filter
+% Method A): DFT filter 
 if strcmp(Flreplace,'zero')
     % determine the largest integer number of line-noise cycles that fits in the data
     n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
@@ -108,7 +106,7 @@ if strcmp(Flreplace,'zero')
         % the different frequencies require different numbers of samples, apply the filters sequentially
         for i=1:numel(Fl)
             filt = dat;
-            filt = ft_preproc_dftfilter(filt, Fs, Fl(i));
+            filt = ft_preproc_dftfilter(filt, Fs, Fl(i), Flreplace, Flwidth, Neighwidth);
         end
         return
     end
@@ -135,7 +133,9 @@ if strcmp(Flreplace,'zero')
 
 % Method B): Spectrum Interpolation
 elseif strcmp(Flreplace,'neighbour')
-    
+   Flwidth = Flwidth(:);
+   Neighwidth = Neighwidth(:);
+
     % frequencies to interpolate
     for i = 1:length(Fl)
         f2int(i,:) = [Fl(i)-Flwidth(i) Fl(i)+Flwidth(i)];

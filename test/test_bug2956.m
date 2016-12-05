@@ -65,8 +65,6 @@ cfg= [];
 cfg.dftfilter = 'yes';
 cfg.dftfreq = [50 100 150]; %
 cfg.dftreplace = 'zero'; % implies dft filter (formerly the only option)
-cfg.dftbandwidth = [2 2 2];
-cfg.dftneighbourwidth = [2 2 2];
 data_dftfilt = ft_preprocessing(cfg, data);
 
 % plot simulated data after dft filtering
