@@ -328,6 +328,8 @@ if basedonresolution
       pos = cat(1, headmodel.bnd(:).pnt);
     elseif isfield(headmodel, 'pos')
       pos = headmodel.pos;
+    elseif ft_voltype(headmodel, 'localspheres')
+      pos = headsurface(headmodel, sens);
     end
     minpos = min(pos,[],1);
     maxpos = max(pos,[],1);
