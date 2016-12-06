@@ -37,9 +37,11 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.colormap         = any sized colormap, see COLORMAP
 %   cfg.comment          = string of text (default = date + zlimits)
 %                          Add 'comment' to graph (according to COMNT in the layout)
+%   cfg.limittext        = add user-defined text instead of cfg.comment, (default = cfg.comment)
 %   cfg.showlabels       = 'yes', 'no' (default = 'no')
 %   cfg.showoutline      = 'yes', 'no' (default = 'no')
 %   cfg.fontsize         = font size of comment and labels (if present) (default = 8)
+%   cfg.fontweight       = font weight of comment and labels (if present)
 %   cfg.interactive      = Interactive plot 'yes' or 'no' (default = 'yes')
 %                          In a interactive plot you can select areas and produce a new
 %                          interactive plot when a selected area is clicked. Multiple areas
@@ -163,10 +165,12 @@ cfg.magscale       = ft_getopt(cfg, 'magscale', 1);
 cfg.gradscale      = ft_getopt(cfg, 'gradscale', 1);
 cfg.colorbar       = ft_getopt(cfg, 'colorbar', 'no');
 cfg.comment        = ft_getopt(cfg, 'comment', date);
+cfg.limittext      = ft_getopt(cfg, 'limittext', 'default');
 cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
 cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
 cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
+cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'no');
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on default
@@ -562,11 +566,16 @@ end % for chanseldat
 % write comment:
 k = cellstrmatch('COMNT', lay.label);
 if ~isempty(k)
-  comment = cfg.comment;
-  comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(xparam)(xmin), data.(xparam)(xmax));
-  comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(yparam)(ymin), data.(yparam)(ymax));
-  comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
-  ft_plot_text(lay.pos(k, 1), lay.pos(k, 2), sprintf(comment), 'Fontsize', cfg.fontsize);
+  limittext = cfg.limittext;
+  if ~strcmp(limittext, 'default')
+    comment = limittext;
+  else
+    comment = cfg.comment;
+    comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(xparam)(xmin), data.(xparam)(xmax));
+    comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(yparam)(ymin), data.(yparam)(ymax));
+    comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
+  end
+  ft_plot_text(lay.pos(k, 1), lay.pos(k, 2), sprintf(comment), 'Fontsize', cfg.fontsize, 'Fontweight', cfg.fontweight);
 end
 
 % plot scale:
