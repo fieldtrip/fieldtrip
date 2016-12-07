@@ -104,8 +104,9 @@ if strcmp(Flreplace,'zero')
         sel = 1:n(1);
     else
         % the different frequencies require different numbers of samples, apply the filters sequentially
+        filt = dat;
         for i=1:numel(Fl)
-            filt = dat;
+          
             filt = ft_preproc_dftfilter(filt, Fs, Fl(i), Flreplace, Flwidth, Neighwidth);
         end
         return
