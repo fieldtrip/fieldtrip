@@ -729,8 +729,8 @@ elseif isnumeric(cfg.commentpos)
   y_comment = cfg.commentpos(2);
   HorAlign = 'left';
   VerAlign = 'middle';
-  x_comment = 0.9*((x_comment-min(x))/(max(x)-min(x))-0.5);
-  y_comment = 0.9*((y_comment-min(y))/(max(y)-min(y))-0.5);
+  x_comment = 0.9*((x_comment-min(cfg.xlim))/(max(cfg.xlim)-min(cfg.xlim))-0.5);
+  y_comment = 0.9*((y_comment-min(cfg.ylim))/(max(cfg.ylim)-min(cfg.ylim))-0.5);
 end
 
 % Draw topoplot
