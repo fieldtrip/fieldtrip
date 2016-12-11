@@ -1350,7 +1350,7 @@ switch eventformat
 		event(originalEventCount+boundaryEventCount).type = 'boundary';
 		event(originalEventCount+boundaryEventCount).value = 'boundary';
 		event(originalEventCount+boundaryEventCount).offset = 0;
-		event(originalEventCount+boundaryEventCount).duration = 0;
+		event(originalEventCount+boundaryEventCount).duration = hdr.orig.Segments(i-1).duration;
 		event(originalEventCount+boundaryEventCount).sample = sum([hdr.orig.Segments(1:(i-1)).sampleCount]);
         boundaryEventCount = boundaryEventCount+1;
 	end
