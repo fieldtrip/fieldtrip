@@ -4,7 +4,7 @@ function savevrml(node,face,elem,fname)
 %
 % save a surface mesh to VRML 1.0 format
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2010/04/25
 %
 % input:
@@ -38,7 +38,7 @@ fprintf(fid,'Separator {\nSwitch {\n\tDEF %s\n\tSeparator {\n',fname);
 if(~isempty(node))
   node=node(:,1:3);
   fprintf(fid,'\t\tCoordinate3 {\n\t\t\tpoint [\n');
-  fprintf(fid,'%f %f %f,\n',node');
+  fprintf(fid,'%.16f %.16f %.16f,\n',node');
   fprintf(fid,'\t\t\t]\n\t\t}\n');
 end
 

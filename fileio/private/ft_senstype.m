@@ -358,6 +358,10 @@ else
       type = 'neuromag306_combined';
     elseif sum(sum(ismember(ft_senslabel('neuromag306'),          sens.label)))/306 > 0.8
       type = 'neuromag306';
+    elseif sum(sum(ismember(ft_senslabel('neuromag306_planar'),   sens.label)))/204 > 0.8
+      type = 'neuromag306'; % although it is only a subset
+    elseif sum(sum(ismember(ft_senslabel('neuromag306_mag'),      sens.label)))/102 > 0.8
+      type = 'neuromag306'; % although it is only a subset
     elseif all(mean(ismember(ft_senslabel('neuromag122_combined'), sens.label)) > 0.4)
       type = 'neuromag122_combined';
     elseif all(mean(ismember(ft_senslabel('neuromag122'),          sens.label)) > 0.4)

@@ -10,6 +10,7 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %   'color'               =
 %   'fontsize'            =
 %   'fontname'            =
+%   'fontweight'          =
 %   'horizontalalignment' =
 %   'tag'                 = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
@@ -53,12 +54,18 @@ vlim                = ft_getopt(varargin, 'vlim');
 color               = ft_getopt(varargin, 'color', 'k');
 fontsize            = ft_getopt(varargin, 'fontsize');
 fontname            = ft_getopt(varargin, 'fontname');
+fontweight          = ft_getopt(varargin, 'fontweight');
 fontunits           = ft_getopt(varargin, 'fontunits');
 horizontalalignment = ft_getopt(varargin, 'horizontalalignment', 'center');
 rotation            = ft_getopt(varargin, 'rotation', 0);
 verticalalignment   = ft_getopt(varargin, 'verticalalignment', 'middle');
 tag                 = ft_getopt(varargin, 'tag', '');
 interpreter         = ft_getopt(varargin, 'interpreter', 'tex');
+
+% color management
+if ischar(color) && exist([color '.m'], 'file')
+  color = eval(color);
+end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
@@ -123,6 +130,7 @@ set(h, 'verticalalignment',verticalalignment);
 if ~isempty(fontunits), set(h, 'fontunits', fontunits); end
 if ~isempty(fontsize),  set(h, 'fontsize', fontsize);  end
 if ~isempty(fontname),  set(h, 'fontname', fontname);  end
+if ~isempty(fontweight), set(h, 'fontweight', fontweight); end
 set(h, 'tag', tag);
 set(h, 'interpreter', interpreter);
 

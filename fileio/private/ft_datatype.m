@@ -39,7 +39,7 @@ end
 
 % determine the type of input data
 israw          =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
-isfreq         = (isfield(data, 'label') || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
+isfreq         = ((isfield(data, 'label') && ~isfield(data, 'pos')) || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
 istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)) && ~isfield(data, 'pos'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
 iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
@@ -103,14 +103,16 @@ elseif isvolume && issegmentation
   type = 'volume+label';
 elseif isvolume
   type = 'volume';
+elseif issource && isparcellation
+  type = 'source+label';
+elseif issource && ismesh
+  type = 'source+mesh';
+elseif issource
+  type = 'source';
 elseif ismesh && isparcellation
   type = 'mesh+label';
 elseif ismesh
   type = 'mesh';
-elseif issource && isparcellation
-  type = 'source+label';
-elseif issource
-  type = 'source';
 elseif ischan
   % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
   type = 'chan';
@@ -140,14 +142,14 @@ if nargin>1
     case 'volume'
       type = any(strcmp(type, {'volume', 'volume+label'}));
     case 'source'
-      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label'})); % a single mesh qualifies as source structure
+      type = any(strcmp(type, {'source', 'source+label', 'source+mesh' 'mesh', 'mesh+label'})); % a single mesh qualifies as source structure
       type = type && isstruct(data) && numel(data)==1;                            % an array of meshes does not qualify
     case 'mesh'
-      type = any(strcmp(type, {'mesh', 'mesh+label'}));
+      type = any(strcmp(type, {'mesh', 'mesh+label' 'source+mesh'}));
     case 'segmentation'
-      type = strcmp(type, 'volume+label');
+      type = any(strcmp(type, {'segmentation', 'volume+label'}));
     case 'parcellation'
-      type = any(strcmp(type, {'source+label' 'mesh+label'}));
+      type = any(strcmp(type, {'parcellation', 'source+label' 'mesh+label'}));
     case 'sens'
       type = any(strcmp(type, {'elec', 'grad'}));
     otherwise
