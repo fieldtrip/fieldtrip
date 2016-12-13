@@ -149,6 +149,7 @@ if isfield(dip, 'subspace')
 end
 
 isrankdeficient = (rank(Cy)<size(Cy,1));
+rankCy = rank(Cy);
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
@@ -163,17 +164,11 @@ if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
 end
 
 if projectnoise
-  % estimate the noise power, which is further assumed to be equal and uncorrelated over channels
-  if isrankdeficient
-    % estimated noise floor is equal to or higher than lambda
-    noise = lambda;
-  else
-    % estimate the noise level in the covariance matrix by the smallest singular value
+    % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
     noise = svd(Cy);
-    noise = noise(end);
+    noise = noise(rankCy);
     % estimated noise floor is equal to or higher than lambda
     noise = max(noise, lambda);
-  end
 end
 
 % the inverse only has to be computed once for all dipoles
