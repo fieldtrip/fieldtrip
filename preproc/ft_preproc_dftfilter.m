@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth, Neighwidth)
+function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 
 % FT_PREPROC_DFTFILTER reduces power line noise (50 or 60Hz) via two 
 % alternative methods:
@@ -38,11 +38,14 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth, Neighwid
 %
 %
 % Use as
-%   [filt] = ft_preproc_dftfilter(dat, Fsample, Fline, Flreplace, Flwidth, Neighwidth)
+%   [filt] = ft_preproc_dftfilter(dat, Fsample, Fline, varargin)
 % where
 %   dat             data matrix (Nchans X Ntime)
 %   Fsample         sampling frequency in Hz
 %   Fline           line noise frequency (and harmonics)
+%
+% Additional input arguments come as key-value pairs:
+%
 %   Flreplace       'zero' or 'neighbour', method used to reduce line noise, 'zero' implies DFT filter, 'neighbour' implies spectrum interpolation  
 %   Flwidth         bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz
 %   Neighwidth      width of frequencies neighbouring line noise frequencies, applies to spectrum interpolation (Flreplace = 'neighbour'), in Hz 
@@ -79,6 +82,11 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, Flreplace, Flwidth, Neighwid
 %
 % $Id$
 
+% defaults
+Flreplace = ft_getopt(varargin,'dftreplace','zero');
+Flwidth = ft_getopt(varargin, 'dftbandwidth', [1 2 3]);
+Neighwidth = ft_getopt(varargin, 'dftneighbourwidth', [2 2 2]);
+
 % determine the size of the data
 [nchans, nsamples] = size(dat);
 
@@ -106,8 +114,8 @@ if strcmp(Flreplace,'zero')
         % the different frequencies require different numbers of samples, apply the filters sequentially
         filt = dat;
         for i=1:numel(Fl)
-          
-            filt = ft_preproc_dftfilter(filt, Fs, Fl(i), Flreplace, Flwidth, Neighwidth);
+            optarg = varargin;
+            filt = ft_preproc_dftfilter(filt, Fs, Fl(i), optarg{:});
         end
         return
     end
@@ -136,6 +144,10 @@ if strcmp(Flreplace,'zero')
 elseif strcmp(Flreplace,'neighbour')
    Flwidth = Flwidth(:);
    Neighwidth = Neighwidth(:);
+   
+   if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
+       error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
+   end
 
     % frequencies to interpolate
     for i = 1:length(Fl)

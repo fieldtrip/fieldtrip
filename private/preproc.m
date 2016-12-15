@@ -207,9 +207,6 @@ if ~isfield(cfg, 'usefftfilt'),   cfg.usefftfilt = 'no';        end
 if ~isfield(cfg, 'medianfilter'), cfg.medianfilter  = 'no';     end
 if ~isfield(cfg, 'medianfiltord'),cfg.medianfiltord = 9;        end
 if ~isfield(cfg, 'dftfreq'),      cfg.dftfreq = [50 100 150];   end
-if ~isfield(cfg, 'dftreplace'),   cfg.dftreplace = 'zero';      end
-if ~isfield(cfg, 'dftbandwidth'), cfg.dftbandwidth = [1 2 3];   end
-if ~isfield(cfg, 'dftneighbourwidth'),  cfg.dftneighbourwidth = [2 2 2];    end
 if ~isfield(cfg, 'hilbert'),      cfg.hilbert = 'no';           end
 if ~isfield(cfg, 'derivative'),   cfg.derivative = 'no';        end
 if ~isfield(cfg, 'rectify'),      cfg.rectify = 'no';           end
@@ -364,7 +361,17 @@ else
   end
   if strcmp(cfg.dftfilter, 'yes')
     datorig = dat;
-    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq, cfg.dftreplace, cfg.dftbandwidth, cfg.dftneighbourwidth);
+    optarg = {};
+    if isfield(cfg, 'dftreplace') 
+        optarg = cat(2, optarg, {'dftreplace', cfg.dftreplace}); 
+    end
+    if isfield(cfg, 'dftbandwidth')
+        optarg = cat(2, optarg, {'dftbandwidth', cfg.dftbandwidth});
+    end
+    if isfield(cfg, 'dftneighbourwidth') 
+        optarg = cat(2, optarg, {'dftneighbourwidth', cfg.dftneighbourwidth});
+    end
+    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq, optarg{:}); 
     if strcmp(cfg.dftinvert, 'yes'),
       dat = datorig - dat;
     end
