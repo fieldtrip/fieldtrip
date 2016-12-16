@@ -229,10 +229,10 @@ end
 % backward compatibility for the gradiometer and electrode definition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'grad') && ~isempty(cfg.grad)
-  cfg.grad = ft_datatype_sens(cfg.grad);
+  cfg.grad = ft_datatype_sens(struct(cfg.grad));
 end
 if isfield(cfg, 'elec')&& ~isempty(cfg.elec)
-  cfg.elec = ft_datatype_sens(cfg.elec);
+  cfg.elec = ft_datatype_sens(struct(cfg.elec));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
