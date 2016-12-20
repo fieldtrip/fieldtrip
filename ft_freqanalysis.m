@@ -15,16 +15,16 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                    'mtmfft', analyses an entire spectrum for the entire data
 %                      length, implements multitaper frequency transformation
 %                    'mtmconvol', implements multitaper time-frequency
-%                      transformation based on multiplication in the frequency
-%                      domain.
+%                      transformation based on multiplication in the
+%                      frequency domain.
 %                    'wavelet', implements wavelet time frequency
 %                      transformation (using Morlet wavelets) based on
 %                      multiplication in the frequency domain.
-%                    'tfr', implements wavelet time frequency transformation
-%                        (using Morlet wavelets) based on convolution in the
-%                        time domain.
-%                    'mvar', does a fourier transform on the coefficients of
-%                        an estimated multivariate autoregressive model,
+%                    'tfr', implements wavelet time frequency
+%                        transformation (using Morlet wavelets) based on
+%                        convolution in the time domain.
+%                    'mvar', does a fourier transform on the coefficients
+%                        of an estimated multivariate autoregressive model,
 %                        obtained with FT_MVARANALYSIS. In this case, the
 %                        output will contain a spectral transfer matrix,
 %                        the cross-spectral density matrix, and the
@@ -39,25 +39,25 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrials = 'yes' or 'no', return individual trials or average (default = 'no')
 %   cfg.keeptapers = 'yes' or 'no', return individual tapers or average (default = 'no')
-%   cfg.pad        = number or 'maxperlen', length in seconds to which the
-%                      data can be padded out (default = 'maxperlen') The
-%                      padding will determine your spectral resolution. If
-%                      you want to compare spectra from data pieces of
-%                      different lengths, you should use the same cfg.pad
-%                      for both, in order to spectrally interpolate them to
-%                      the same spectral resolution.  Note that this will
-%                      run very slow if you specify cfg.pad as maxperlen
-%                      AND the number of samples turns out to have a large
-%                      prime factor sum. This is because the FFTs will then
-%                      be computed very inefficiently.
+%   cfg.pad        = number, 'nextpow2', or 'maxperlen' (default), length
+%                   in seconds to which the data can be padded out. The
+%                   padding will determine your spectral resolution. If you
+%                   want to compare spectra from data pieces of different
+%                   lengths, you should use the same cfg.pad for both, in
+%                   order to spectrally interpolate them to the same
+%                   spectral resolution.  The new option 'nextpow2' rounds
+%                   the maximum trial length up to the next power of 2.  By
+%                   using that amount of padding, the FFT can be computed
+%                   more efficiently in case 'maxperlen' has a large prime
+%                   factor sum.
 %   cfg.padtype     = string, type of padding (default 'zero', see
 %                      ft_preproc_padding)
 %   cfg.polyremoval = number (default = 0), specifying the order of the
-%                      polynome which is fitted and subtracted from the
-%                      time domain data prior to the spectral analysis. For example, a
-%                      value of 1 corresponds to a linear trend. The default is a mean
-%                      subtraction, thus a value of 0. If no removal is requested,
-%                      specify -1.
+%                     polynome which is fitted and subtracted from the time
+%                     domain data prior to the spectral analysis. For
+%                     example, a value of 1 corresponds to a linear trend.
+%                     The default is a mean subtraction, thus a value of 0.
+%                     If no removal is requested, specify -1.
 %                      see FT_PREPROC_POLYREMOVAL for details
 %
 %
@@ -66,8 +66,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %  MTMFFT
 %   MTMFFT performs frequency analysis on any time series
 %   trial data using the 'multitaper method' (MTM) based on discrete
-%   prolate spheroidal sequences (Slepian sequences) as tapers. Alternatively,
-%   you can use conventional tapers (e.g. Hanning).
+%   prolate spheroidal sequences (Slepian sequences) as tapers.
+%   Alternatively, you can use conventional tapers (e.g. Hanning).
 %   cfg.foilim     = [begin end], frequency band of interest
 %       OR
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
@@ -80,11 +80,11 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                     you should specify only the channels in cfg.channel.
 %
 %  MTMCONVOL
-%   MTMCONVOL performs time-frequency analysis on any time series trial data
-%   using the 'multitaper method' (MTM) based on Slepian sequences as tapers. Alternatively,
-%   you can use conventional tapers (e.g. Hanning).
-%   cfg.tapsmofrq  = vector 1 x numfoi, the amount of spectral smoothing through
-%                    multi-tapering. Note that 4 Hz smoothing means
+%   MTMCONVOL performs time-frequency analysis on any time series trial
+%   data using the 'multitaper method' (MTM) based on Slepian sequences as
+%   tapers. Alternatively, you can use conventional tapers (e.g. Hanning).
+%   cfg.tapsmofrq  = vector 1 x numfoi, the amount of spectral smoothing
+%                    through multi-tapering. Note that 4 Hz smoothing means
 %                    plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %   cfg.taper      = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
@@ -92,8 +92,13 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                     between which to compute the cross-spectra as cfg.channelcmb. Otherwise
 %                     you should specify only the channels in cfg.channel.
 %   cfg.t_ftimwin  = vector 1 x numfoi, length of time window (in seconds)
-%   cfg.toi        = vector 1 x numtoi, the times on which the analysis windows
-%                    should be centered (in seconds)
+%   cfg.toi        = vector 1 x numtoi, the times on which the analysis
+%                    windows should be centered (in seconds), or a string
+%                    such as '50%' or 'all' (default).  Both string options
+%                    use all timepoints available in the data, but 'all'
+%                    centers a spectral estimate on each sample, whereas
+%                    the percentage specifies the degree of overlap between
+%                    the shortest time windows from cfg.t_ftimwin.
 %
 %  WAVELET
 %   WAVELET performs time-frequency analysis on any time series trial data
@@ -102,12 +107,12 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.foi        = vector 1 x numfoi, frequencies of interest
 %       OR
 %   cfg.foilim     = [begin end], frequency band of interest
-%   cfg.toi        = vector 1 x numtoi, the times on which the analysis windows
-%                    should be centered (in seconds)
+%   cfg.toi        = vector 1 x numtoi, the times on which the analysis
+%                    windows should be centered (in seconds)
 %   cfg.width      = 'width', or number of cycles, of the wavelet (default = 7)
-%   cfg.gwidth     = determines the length of the used wavelets in standard deviations
-%                    of the implicit Gaussian kernel and should be choosen
-%                    >= 3; (default = 3)
+%   cfg.gwidth     = determines the length of the used wavelets in standard
+%                    deviations of the implicit Gaussian kernel and should
+%                    be choosen >= 3; (default = 3)
 %
 % The standard deviation in the frequency domain (sf) at frequency f0 is
 % defined as: sf = f0/width
@@ -123,19 +128,19 @@ function [freq] = ft_freqanalysis(cfg, data)
 %       OR
 %   cfg.foilim     = [begin end], frequency band of interest
 %   cfg.width      = 'width', or number of cycles, of the wavelet (default = 7)
-%   cfg.gwidth     = determines the length of the used wavelets in standard deviations
-%                    of the implicit Gaussian kernel and should be choosen
-%                    >= 3; (default = 3)
+%   cfg.gwidth     = determines the length of the used wavelets in standard
+%                    deviations of the implicit Gaussian kernel and should
+%                    be choosen >= 3; (default = 3)
 %
 %
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
+% If you specify one of these (or both) the input data will be read from a
+% *.mat file on disk and/or the output data will be written to a *.mat
+% file. These mat files should contain only a single variable,
+% corresponding with the input/output structure.
 %
 % See also
 
@@ -157,11 +162,11 @@ function [freq] = ft_freqanalysis(cfg, data)
 %    * FT_MULTIPLOTTFR      to plot TFRs in a topographical layout
 
 % Undocumented local options:
-% cfg.method = 'hilbert'. Keeping this as undocumented as it does not make sense to use
-%              in ft_freqanalysis unless the user is doing his own filter-padding
-%              to remove edge-artifacts
+% cfg.method = 'hilbert'. Keeping this as undocumented as it does not make
+%              sense to use in ft_freqanalysis unless the user is doing his
+%              own filter-padding to remove edge-artifacts
 % cfg.correctt_ftimwin (set to yes to try to determine new t_ftimwins based
-% on correct cfg.foi)
+%                       on correct cfg.foi)
 
 % Copyright (C) 2003-2006, F.C. Donders Centre, Pascal Fries
 % Copyright (C) 2004-2006, F.C. Donders Centre, Markus Siegel
@@ -256,15 +261,20 @@ switch cfg.method
         error('you must specify a smoothing parameter with taper = dpss');
       end
     end
-    cfg = ft_checkconfig(cfg, 'required', 'toi');
-    if ischar(cfg.toi) && strcmp(cfg.toi, 'all')
-      % do an educated guess with respect to the requested time bins
+    cfg = ft_checkconfig(cfg, 'required', {'toi','t_ftimwin'});
+    if ischar(cfg.toi)
       begtim  = min(cellfun(@min,data.time));
       endtim  = max(cellfun(@max,data.time));
-      cfg.toi = linspace(begtim,endtim,round((endtim-begtim)./mean(diff(data.time{1})))+1);
-
-    elseif ischar(cfg.toi)
-      error('cfg.toi should be either a numeric vector, or can be ''all''');
+      if strcmp(cfg.toi, 'all') % each data sample gets a time window
+        cfg.toi = linspace(begtim, endtim, round((endtim-begtim) ./ ...
+          mean(diff(data.time{1})))+1);
+      elseif strcmp(cfg.toi(end), '%') % percent overlap between smallest time windows
+        overlap = str2double(cfg.toi(1:(end-1)))/100;
+        cfg.toi = linspace(begtim, endtim, round((endtim-begtim) ./ ...
+          (overlap * min(cfg.t_ftimwin))) + 1);
+      else
+        error('cfg.toi should be either a numeric vector or a string: can be ''all'' or a percentage (e.g., ''50%'')');
+      end
     end
 
   case 'mtmfft'
@@ -307,12 +317,20 @@ switch cfg.method
     end
     return
 
+  case 'neuvar'
+     cfg.order  = ft_getopt(cfg, 'order',  1); % order of differentiation
+     
   otherwise
     error('specified cfg.method is not supported')
 end
 
 % set all the defaults
-cfg.pad       = ft_getopt(cfg, 'pad',       'maxperlen');
+cfg.pad       = ft_getopt(cfg, 'pad',       []);
+if isempty(cfg.pad)
+  warning('Default cfg.pad = ''maxperlen'' can run slowly.')
+  disp('Consider using cfg.pad = ''nextpow2'' for more efficient FFT computation.')
+  cfg.pad = 'maxperlen';
+end
 cfg.padtype   = ft_getopt(cfg, 'padtype',   'zero');
 cfg.output    = ft_getopt(cfg, 'output',    'pow');
 cfg.calcdof   = ft_getopt(cfg, 'calcdof',   'no');
@@ -409,6 +427,9 @@ for itrial = 1:ntrials
 end
 if strcmp(cfg.pad, 'maxperlen')
   padding = max(trllength);
+  cfg.pad = padding/data.fsample;
+elseif strcmp(cfg.pad, 'nextpow2')
+  padding = 2^nextpow2(max(trllength));
   cfg.pad = padding/data.fsample;
 else
   padding = cfg.pad*data.fsample;
@@ -532,6 +553,13 @@ for itrial = 1:ntrials
       ntaper = ones(1,numel(foi));
       % modify spectrum for same reason as fake ntaper
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+      
+    case 'neuvar'
+      [spectrum,foi] = ft_specest_neuvar(dat, time, options{:}, 'feedback', fbopt);
+      hastime = false;
+      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+      ntaper = ones(1,numel(foi));
+      
   end % switch
 
   % Set n's

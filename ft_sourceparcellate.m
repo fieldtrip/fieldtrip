@@ -53,7 +53,7 @@ ft_revision = '$Id$';
 ft_nargin   = nargin;
 ft_nargout  = nargout;
 
-% do the general setup of the function 
+% do the general setup of the function
 ft_defaults
 ft_preamble init
 ft_preamble debug
@@ -176,19 +176,13 @@ if isfield(source, 'inside')
 end
 
 % start preparing the output data structure
-parcel       = [];
+parcel       = keepfields(source, {'freq','time','cumtapcnt'});
 parcel.label = seglabel;
-if isfield(source, 'time')
-  parcel.time = source.time;
-end
-if isfield(source, 'freq')
-  parcel.freq = source.freq;
-end
 
 for i=1:numel(fn)
   % parcellate each of the desired parameters
   dat = source.(fn{i});
-
+  
   if strncmp('{pos_pos}', dimord{i}, 9)
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
     tmp = cell(nseg, nseg);
@@ -203,20 +197,20 @@ for i=1:numel(fn)
           case 'mean'
             tmp{j1,j2} = cellmean2(dat(seg==j1,seg==j2,:));
           case 'median'
-            error('taking the median from data in a cell-array is not yet implemented');
+            tmp{j1,j2} = cellmedian2(dat(seg==j1,seg==j2,:));
           case 'min'
             tmp{j1,j2} = cellmin2(dat(seg==j1,seg==j2,:));
           case 'max'
             tmp{j1,j2} = cellmax2(dat(seg==j1,seg==j2,:));
-            % case 'eig'
-            %   tmp{j1,j2} = celleig2(dat(seg==j1,seg==j2,:));
+          case 'eig'
+            tmp{j1,j2} = celleig2(dat(seg==j1,seg==j2,:));
           otherwise
             error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
       end % for j2
     end % for j1
     ft_progress('close');
-
+    
   elseif strncmp('{pos}', dimord{i}, 5)
     fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
     tmp = cell(nseg, 1);
@@ -227,19 +221,19 @@ for i=1:numel(fn)
         case 'mean'
           tmp{j} = cellmean1(dat(seg==j));
         case 'median'
-          error('taking the median from data in a cell-array is not yet implemented');
+          tmp{j} = cellmedian1(dat(seg==j));
         case 'min'
           tmp{j} = cellmin1(dat(seg==j));
         case 'max'
           tmp{j} = cellmax1(dat(seg==j));
-          % case 'eig'
-          %   tmp{j} = celleig1(dat(seg==j));
+        case 'eig'
+          tmp{j} = celleig1(dat(seg==j));
         otherwise
           error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
     end % for
     ft_progress('close');
-
+    
   elseif strncmp('pos_pos', dimord{i}, 7)
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
     siz     = size(dat);
@@ -272,7 +266,7 @@ for i=1:numel(fn)
       end % for j2
     end % for j1
     ft_progress('close');
-
+    
   elseif strncmp('pos', dimord{i}, 3)
     fprintf('creating %d parcels for %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
     siz     = size(dat);
@@ -286,7 +280,7 @@ for i=1:numel(fn)
           tmp(j,:) = arraymean1(dat(seg==j,:));
         case 'mean_thresholded'
           cfg.mean = ft_getopt(cfg, 'mean', struct('threshold', []));
-          if isempty(cfg.mean.threshold),
+          if isempty(cfg.mean.threshold)
             error('when cfg.method = ''mean_thresholded'', you should specify a cfg.mean.threshold');
           end
           if numel(cfg.mean.threshold)==size(dat,1)
@@ -311,12 +305,12 @@ for i=1:numel(fn)
       end % switch
     end % for
     ft_progress('close');
-
+    
   else
     error('unsupported dimord %s', dimord{i})
-
+    
   end % if pos, pos_pos, {pos}, etc.
-
+  
   % update the dimord, use chan rather than pos
   % this makes it look just like timelock or freq data
   tok = tokenize(dimord{i}, '_');
@@ -326,11 +320,11 @@ for i=1:numel(fn)
   tok(strcmp(tok, 'pos}'))  = { 'chan}'}; % replace pos by chan
   tmpdimord = sprintf('%s_', tok{:});
   tmpdimord = tmpdimord(1:end-1);         % exclude the last _
-
+  
   % store the results in the output structure
   parcel.(fn{i})            = tmp;
   parcel.([fn{i} 'dimord']) = tmpdimord;
-
+  
   % to avoid confusion
   clear dat tmp tmpdimord j j1 j2
 end % for each of the fields that should be parcellated
@@ -448,6 +442,15 @@ for i=2:siz(1)
 end
 y = y/n;
 
+function y = cellmedian1(x)
+siz = size(x);
+if siz(1)==1 && siz(2)>1
+  siz([2 1]) = siz([1 2]);
+  x = reshape(x, siz);
+end
+x = cat(1,x{:});
+y = median(x, 1);
+
 function y = cellmin1(x)
 siz = size(x);
 if siz(1)==1 && siz(2)>1
@@ -470,20 +473,45 @@ for i=2:siz(1)
   y = max(x{i}, y);
 end
 
+function y = celleig1(x)
+% FIXME this does not work for TFR representations
+siz = size(x);
+if siz(1)==1 && siz(2)>1
+  siz([2 1]) = siz([1 2]);
+  x = reshape(x, siz);
+end
+x = cat(1,x{:});
+% [u, s, v] = svds(real(x), 1);  % x = u * s * v'
+% y = s(1,1) * v(:,1);           % retain the largest eigenvector with appropriate scaling
+
+% this is computationally more efficient and returns a complex-valued output, following a real valued svd
+[u, s] = svds(real(x*x'), 1);
+y = u(:,1)'*x;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions of a cell array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = cellmean2(x)
 siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
 y = cellmean1(x);
+
+function y = cellmedian2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
+y = cellmedian1(x);
 
 function y = cellmin2(x)
 siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
 y = cellmin1(x);
 
 function y = cellmax2(x)
 siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
 y = cellmax1(x);
+
+function y = celleig2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
+y = celleig1(x);

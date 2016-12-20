@@ -1059,6 +1059,14 @@ ARRAY+=(test/private/icosahedron642.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ignnorefields.m
+
+ARRAY=()
+ARRAY+=(private/ignorefields.m)
+ARRAY+=(utilities/private/ignorefields.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # inside_contour.m
 
 ARRAY=()
@@ -1301,8 +1309,9 @@ sync ${ARRAY[*]}
 # lmoutrn.m
 
 ARRAY=()
-ARRAY+=(forward/private/lmoutrn.m)
 ARRAY+=(private/lmoutrn.m)
+ARRAY+=(plotting/private/lmoutrn.m)
+ARRAY+=(forward/private/lmoutrn.m)
 ARRAY+=(utilities/private/lmoutrn.m)
 sync ${ARRAY[*]}
 
@@ -1330,6 +1339,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexa64)
+ARRAY+=(private/ltrisect.mexa64)
 ARRAY+=(src/ltrisect.mexa64)
 sync ${ARRAY[*]}
 
@@ -1338,6 +1348,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexglx)
+ARRAY+=(private/ltrisect.mexglx)
 ARRAY+=(src/ltrisect.mexglx)
 sync ${ARRAY[*]}
 
@@ -1346,6 +1357,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmac)
+ARRAY+=(private/ltrisect.mexmac)
 ARRAY+=(src/ltrisect.mexmac)
 sync ${ARRAY[*]}
 
@@ -1354,6 +1366,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmaci)
+ARRAY+=(private/ltrisect.mexmaci)
 ARRAY+=(src/ltrisect.mexmaci)
 sync ${ARRAY[*]}
 
@@ -1362,6 +1375,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmaci64)
+ARRAY+=(private/ltrisect.mexmaci64)
 ARRAY+=(src/ltrisect.mexmaci64)
 sync ${ARRAY[*]}
 
@@ -1370,6 +1384,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexw32)
+ARRAY+=(private/ltrisect.mexw32)
 ARRAY+=(src/ltrisect.mexw32)
 sync ${ARRAY[*]}
 
@@ -1378,6 +1393,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexw64)
+ARRAY+=(private/ltrisect.mexw64)
 ARRAY+=(src/ltrisect.mexw64)
 sync ${ARRAY[*]}
 
@@ -1508,6 +1524,7 @@ sync ${ARRAY[*]}
 # mesh2edge.m
 
 ARRAY=()
+ARRAY+=(private/mesh2edge.m)
 ARRAY+=(forward/private/mesh2edge.m)
 ARRAY+=(plotting/private/mesh2edge.m)
 sync ${ARRAY[*]}
@@ -2048,8 +2065,9 @@ sync ${ARRAY[*]}
 # pinvNx2.m
 
 ARRAY=()
-ARRAY+=(forward/private/pinvNx2.m)
 ARRAY+=(private/pinvNx2.m)
+ARRAY+=(plotting/private/pinvNx2.m)
+ARRAY+=(forward/private/pinvNx2.m)
 ARRAY+=(utilities/private/pinvNx2.m)
 sync ${ARRAY[*]}
 
@@ -2317,6 +2335,14 @@ ARRAY=()
 ARRAY+=(forward/private/ptriprojn.m)
 ARRAY+=(private/ptriprojn.m)
 ARRAY+=(utilities/private/ptriprojn.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# ptriside.m
+
+ARRAY=()
+ARRAY+=(plotting/private/ptriside.m)
+ARRAY+=(private/ptriside.m)
 sync ${ARRAY[*]}
 
 ################################################################################

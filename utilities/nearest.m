@@ -54,18 +54,17 @@ assert(all(~isnan(val)), 'incorrect value (NaN)');
 if numel(val)==2
   % interpret this as a range specification like [minval maxval]
   % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1431
-  intervaltol=eps;
+  intervaltol = eps;
   sel = find(array>=val(1) & array<=val(2));
   if isempty(sel)
     error('The limits you selected are outside the range available in the data');
   end
-  indx(1) = sel(1);
-  indx(2) = sel(end);
+  indx = sel([1 end]);
   if indx(1)>1 && abs(array(indx(1)-1)-val(1))<=intervaltol
-    indx(1)=indx(1)-1;
+    indx(1) = indx(1)-1;
   end
   if indx(2)<length(array) && abs(array(indx(2)+1)-val(2))<=intervaltol
-    indx(2)=indx(2)+1;
+    indx(2) = indx(2)+1;
   end
   return
 end

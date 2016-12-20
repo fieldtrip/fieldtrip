@@ -192,7 +192,7 @@ else % ~strcmp(cfg.keepindividual, 'yes')
   % if strcmp(cfg.method, 'across')
   ResultVar      = reshape(sum(avgvar,1), datsiz)-reshape(sum(avgmat,1), datsiz).^2./ResultDOF;
   % else  % cfg.method = 'within'
-  % ResultVar      = squeeze(sum(avgvar,1)); % subtraction of means was done for each block already
+  % ResultVar      = reshape(sum(avgvar, 1), datsiz); % subtraction of means was done for each block already
   % end
   switch cfg.normalizevar
     case 'N-1'

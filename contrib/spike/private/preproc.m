@@ -232,7 +232,7 @@ end
 
 % do a sanity check on the hilbert transform configuration
 if strcmp(cfg.hilbert, 'yes') && ~strcmp(cfg.bpfilter, 'yes')
-  error('hilbert transform should be applied in conjunction with bandpass filter')
+  warning('hilbert transform should be applied in conjunction with bandpass filter')
 end
 
 % do a sanity check on hilbert and rectification
@@ -270,10 +270,11 @@ end
 if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
   % this is an alternative approach for rereferencing, with arbitrary complex linear combinations of channels
   tmp.trial = {dat};
+  tmp.time  = {time};
   tmp.label = label;
-  tmp = ft_apply_montage(tmp, cfg.montage, 'feedback', 'none');
-  dat = tmp.trial{1};
-  label = tmp.label;
+  tmp   = ft_apply_montage(tmp, cfg.montage, 'feedback', 'none');
+  dat   = tmp.trial{1}; % the number of channels can have changed
+  label = tmp.label;    % the channels can be different than the input channel labels
   clear tmp
 end
 

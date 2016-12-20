@@ -189,7 +189,7 @@ grad.unit = 'cm';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this defines some usefull constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function handles = definehandles;
+function handles = definehandles
 handles.output = [];
 handles.sqd_load_flag = false;
 handles.mri_load_flag = false;

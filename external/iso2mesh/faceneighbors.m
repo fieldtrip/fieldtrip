@@ -4,7 +4,7 @@ function facenb=faceneighbors(t,opt)
 %
 % to find 4 face-neighboring elements of a tetrahedron
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %     t: tetrahedron element list, 4 columns of integers

@@ -27,21 +27,21 @@ else
   switch along
     case 1
       for i=1:dim(1)
-        slice=squeeze(input(i,:,:));
+        slice=reshape(input(i,:,:),dim([2 3]));
         im = imfill(slice,8,'holes');
         output(i,:,:) = im;
       end
       
     case 2
       for i=1:dim(2)
-        slice=squeeze(input(:,i,:));
+        slice=reshape(input(:,i,:),dim([1 3]));
         im = imfill(slice,8,'holes');
         output(:,i,:) = im;
       end
       
     case 3
       for i=1:dim(3)
-        slice=squeeze(input(:,:,i));
+        slice=reshape(input(:,:,i),dim([1 2]));
         im = imfill(slice,8,'holes');
         output(:,:,3) = im;
       end

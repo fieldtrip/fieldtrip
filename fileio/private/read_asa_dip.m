@@ -1,4 +1,4 @@
-function [pos, mom, ampl, time] = read_asa_dip(fn);
+function [pos, mom, ampl, time] = read_asa_dip(fn)
 
 % READ_ASA_DIP reads the dipole position, moment and amplitude
 % This importer is designed for fixed-dipole models and only supports 

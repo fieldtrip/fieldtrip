@@ -2,9 +2,9 @@ function data = ft_removetmsartifact(cfg, data)
 
 % FT_REMOVETMSARTIFACT removes TMS artifacts from EEG data
 %
-% %% NOTE: Please be aware that this function is deprecated. Please follow
-%          the TMS-EEG tutorial instead
-%          (http://fieldtrip.fcdonders.nl/tutorial/tms-eeg).
+% %%
+% NOTE: Please be aware that this function is deprecated. Please follow the
+% TMS-EEG tutorial instead at http://www.fieldtriptoolbox.org/tutorial/tms-eeg
 % %%
 %
 % Use as
@@ -51,8 +51,8 @@ function data = ft_removetmsartifact(cfg, data)
 % $Id$
 
 % DEPRECATED by jimher on 19 September 2013
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1791 for more details
-warning('FT_REMOVETMSARTIFACT is deprecated, please follow TMS-EEG tutorial instead (http://fieldtrip.fcdonders.nl/tutorial/tms-eeg).')
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1791 for more details
+warning('FT_REMOVETMSARTIFACT is deprecated, please follow TMS-EEG tutorial instead (http://www.fieldtriptoolbox.org/tutorial/tms-eeg).')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the initial part deals with parsing the input options and data

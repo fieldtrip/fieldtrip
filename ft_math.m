@@ -450,7 +450,7 @@ end % p over length(cfg.parameter)
 data.dimord = dimord;
 
 % certain fields should remain in the output, but only if they are identical in all inputs
-keepfield = {'grad', 'elec', 'inside'};
+keepfield = {'grad', 'elec', 'inside', 'trialinfo', 'sampleinfo', 'tri'};
 for j=1:numel(keepfield)
   if isfield(varargin{1}, keepfield{j})
     tmp  = varargin{i}.(keepfield{j});

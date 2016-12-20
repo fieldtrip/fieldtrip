@@ -44,14 +44,14 @@
 % the name of the variables are passed in the preamble field
 global ft_default
 
-if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)) 
+if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo))
   % do not track the call information
   return
 end
 
 % add the user-specified cfg (before any defaults handling etc.) to the callinfo
 % some fields are for internal use only and should not be stored
-cfg.callinfo.usercfg = removefields(cfg, ignorefields);
+cfg.callinfo.usercfg = removefields(cfg, ignorefields('provenance'));
 
 if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
   % compute the MD5 hash of each of the input arguments
@@ -122,4 +122,3 @@ end
 
 ftohDiW7th_FuncTimer = tic();
 ftohDiW7th_FuncMem   = memtic();
-

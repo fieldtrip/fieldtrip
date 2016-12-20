@@ -4,7 +4,7 @@ function nedge=savegts(v,f,fname,edges)
 %
 % save a surface mesh to GNU Triangulated Surface Format (GTS)
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2011/02/23
 %
 % input:
@@ -29,7 +29,7 @@ f=f(:,1:3);
 nedge=size(edges,1);
 
 fprintf(fid,'%d %d %d\n',size(v,1),nedge,size(f,1));
-fprintf(fid,'%f %f %f\n',v');
+fprintf(fid,'%.16f %.16f %.16f\n',v');
 fprintf(fid,'%d %d\n',edges');
 fprintf(fid,'%d %d %d\n',edgemap');
 fclose(fid);

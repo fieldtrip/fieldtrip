@@ -291,7 +291,7 @@ if ft_senstype(sens, 'meg')
     end
 end
 
-disp('Putting it all together. Creating the BEM might take a while')
+disp('Putting it all together.')
 bemFile = cell(chunks,1);
 for ii = 1:chunks
     if ft_senstype(sens, 'eeg')

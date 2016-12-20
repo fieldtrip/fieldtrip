@@ -55,6 +55,7 @@ tissue       = ft_getopt(varargin, 'tissue', []);
 tissueval    = ft_getopt(varargin, 'tissueval', []);
 tissuecond   = ft_getopt(varargin, 'tissuecond', []);
 transform    = ft_getopt(varargin, 'transform', eye(4));
+unit         = ft_getopt(varargin, 'unit', 'mm');
 sens         = ft_getopt(varargin, 'sens', []);
 deepelec     = ft_getopt(varargin, 'deepelec', []); % used in the case of deep voxel solution
 tolerance    = ft_getopt(varargin, 'tolerance', 1e-8);
@@ -64,12 +65,7 @@ if isempty(sens)
 end
 
 if ispc
-  error('FNS only works on Linux and OSX')
-end
-
-if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
-  % the geometrical units should be specified in the input geometry
-  error('the ''unit'' option is not supported any more');
+  error('FNS only works on Linux and OS X')
 end
 
 % check the consistency between tissue values and the segmentation
@@ -154,6 +150,7 @@ headmodel = [];
 headmodel.tissue     = tissue;
 headmodel.tissueval  = tissueval;
 headmodel.transform  = transform;
+headmodel.unit       = unit;
 headmodel.segdim     = size(seg);
 headmodel.type       = 'fns';
 headmodel.transfer   = transfer;

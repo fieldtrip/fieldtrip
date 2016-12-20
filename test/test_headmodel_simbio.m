@@ -1,5 +1,8 @@
 function test_headmodel_simbio
 
+% WALLTIME 00:45:00
+% MEM 16gb
+
 % TEST test_headmodel_simbio
 % TEST ft_prepare_headmodel ft_prepare_mesh ft_prepare_leadfield ft_prepare_sourcemodel 
 

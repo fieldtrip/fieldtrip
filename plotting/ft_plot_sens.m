@@ -1,26 +1,38 @@
 function hs = ft_plot_sens(sens, varargin)
 
-% FT_PLOT_SENS plots the position of the channels in the EEG or MEG sensor array
+% FT_PLOT_SENS plots the position of all channels or coils that comprise the EEG or
+% MEG sensor array description
 %
 % Use as
 %   ft_plot_sens(sens, ...)
-% where the first argument is the sensor array as returned by FT_READ_SENS
-% or FT_PREPARE_VOL_SENS.
+% where the first argument is the sensor array as returned by FT_READ_SENS or
+% by FT_PREPARE_VOL_SENS.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   'style'           = plotting style for the points representing the channels, see plot3 (default = 'k.')
-%   'coil'            = true/false, plot each individual coil or the channelposition (default = false)
-%   'coildiameter'    = diameter of the MEG gradiometer coils (default = 0)
-%   'coilorientation' = true/false, plot the orientation of each coil (default = false)
-%   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
 %   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
-%   'unit'            = string, convert to the specified geometrical units (default = [])
+%   'unit'            = string, convert the data to the specified geometrical units (default = [])
+%   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
+%   'coil'            = true/false, plot each individual coil (default = false)
+%   'orientation'     = true/false, plot a line for the orientation of each coil (default = false)
+%
+% The following option only applies when individual channels or coils are being plotted
+%   'coilsize'        = diameter or edge length of the coils (default is automatic)
+%   'coilshape'       = 'point', 'circle' or 'square' (default is automatic)
+%   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces (default = 'none')
+%   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', color of channels or coils (default = 'k')
+%   'facealpha'       = transparency, between 0 and 1 (default = 1)
+%   'edgealpha'       = transparency, between 0 and 1 (default = 1)
+%
+% The following option only applies when individual coils are NOT being plotted
+%   'style'           = plotting style for the points representing the channels, see plot3 (default = 'k.')
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');
 %   ft_plot_sens(sens, 'style', 'r*')
+%
+% See also FT_READ_SENS, FT_DATATYPE_SENS, FT_PLOT_HEADSHAPE, FT_PREPARE_VOL_SENS
 
-% Copyright (C) 2009-2014, Robert Oostenveld
+% Copyright (C) 2009-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -46,33 +58,100 @@ ws = warning('on', 'MATLAB:divideByZero');
 sens = ft_datatype_sens(sens);
 
 % get the optional input arguments
-style           = ft_getopt(varargin, 'style', 'k.');
-coil            = ft_getopt(varargin, 'coil', false);
 label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
-coildiameter    = ft_getopt(varargin, 'coildiameter', 0);
-coilorientation = ft_getopt(varargin, 'coilorientation', false);
 unit            = ft_getopt(varargin, 'unit');
+orientation     = ft_getopt(varargin, 'orientation', false);
+% this is for MEG magnetometer and/or gradiometer arrays
+coil            = ft_getopt(varargin, 'coil', false);
+coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the input, see below
+coilshape       = ft_getopt(varargin, 'coilshape'); % default depends on the input, see below
+% this is simply passed to plot3
+style           = ft_getopt(varargin, 'style', 'k.');
+% this is simply passed to ft_plot_mesh
+edgecolor       = ft_getopt(varargin, 'edgecolor', 'k');
+facecolor       = ft_getopt(varargin, 'facecolor', 'none');
+facealpha       = ft_getopt(varargin, 'facealpha',   1);
+edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
+
+% color management
+if ischar(facecolor) && exist([facecolor '.m'], 'file')
+  facecolor = eval(facecolor);
+end
+if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
+  edgecolor = eval(edgecolor);
+end
+
+if ischar(chantype)
+  % should be a cell array
+  chantype = {chantype};
+end
+
+if ~isempty(ft_getopt(varargin, 'coilorientation'))
+  % for backward compatibility, added on 17 Aug 2016
+  warning('the coilorientation option is deprecated, please use orientation instead')
+  orientation = ft_getopt(varargin, 'coilorientation');
+end
+
+if ~isempty(ft_getopt(varargin, 'coildiameter'))
+  % for backward compatibility, added on 6 July 2016
+  % the size is the diameter for a circle, or the edge length for a square
+  warning('the coildiameter option is deprecated, please use coilsize instead')
+  coilsize = ft_getopt(varargin, 'coilsize');
+end
 
 if ~isempty(unit)
+  % convert the sensor description to the specified units
   sens = ft_convert_units(sens, unit);
 end
 
-% select a subset of channels to be plotted
-if ~isempty(chantype)
-  
-  if ischar(chantype)
-    chantype = {chantype};
+if isempty(coilshape)
+  if ft_senstype(sens, 'neuromag')
+    if strcmp(chantype, 'megmag')
+      coilshape = 'point'; % these cannot be plotted as squares
+    else
+      coilshape = 'square';
+    end
+  elseif ft_senstype(sens, 'meg')
+    coilshape = 'circle';
+  else
+    coilshape = 'point';
   end
-  
+end
+
+if isempty(coilsize)
+  switch ft_senstype(sens)
+    case 'neuromag306'
+      coilsize = 30; % FIXME this is only an estimate
+    case 'neuromag122'
+      coilsize = 35; % FIXME this is only an estimate
+    case 'ctf151'
+      coilsize = 15; % FIXME this is only an estimate
+    case 'ctf275'
+      coilsize = 15; % FIXME this is only an estimate
+    otherwise
+      coilsize = 10;
+  end
+  % convert from mm to the units of the sensor array
+  coilsize = coilsize/ft_scalingfactor(sens.unit, 'mm');
+end
+
+% select a subset of channels and coils to be plotted
+if ~isempty(chantype)
   % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
   sens = undobalancing(sens);
   
   chansel = match_str(sens.chantype, chantype);
   
   % remove the channels that are not selected
-  sens.chanpos = sens.chanpos(chansel,:);
-  sens.label   = sens.label(chansel);
+  sens.label    = sens.label(chansel);
+  sens.chanpos  = sens.chanpos(chansel,:);
+  sens.chantype = sens.chantype(chansel);
+  sens.chanunit = sens.chanunit(chansel);
+  if isfield(sens, 'chanori')
+    % this is only present for MEG sensor descriptions
+    sens.chanori  = sens.chanori(chansel,:);
+  end
   
   % remove the magnetometer and gradiometer coils that are not in one of the selected channels
   if isfield(sens, 'tra') && isfield(sens, 'coilpos')
@@ -100,13 +179,27 @@ if ~holdflag
   hold on
 end
 
-if all(any(isnan(sens.chanpos), 2))
-  coil = true;
-end
-
-if istrue(coilorientation) && isfield(sens, 'coilori')
-  pos = sens.coilpos;
-  ori = sens.coilori;
+if istrue(orientation)
+  if istrue(coil)
+    if isfield(sens, 'coilori')
+      pos = sens.coilpos;
+      ori = sens.coilori;
+    elseif isfield(sens, 'elecori')
+      pos = sens.elecpos;
+      ori = sens.elecori;
+    else
+      pos = [];
+      ori = [];
+    end
+  else
+    if isfield(sens, 'chanori')
+      pos = sens.chanpos;
+      ori = sens.chanori;
+    else
+      pos = [];
+      ori = [];
+    end
+  end
   scale = ft_scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
   for i=1:size(pos,1)
     x = [pos(i,1) pos(i,1)+ori(i,1)*scale];
@@ -116,8 +209,29 @@ if istrue(coilorientation) && isfield(sens, 'coilori')
   end
 end
 
+% determine the rotation-around-the-axis of each sensor
+% only applicable for neuromag planar gradiometers
+if ft_senstype(sens, 'neuromag')
+  [nchan, ncoil] = size(sens.tra);
+  chandir = nan(nchan,3);
+  for i=1:nchan
+    poscoil = find(sens.tra(i,:)>0);
+    negcoil = find(sens.tra(i,:)<0);
+    if numel(poscoil)==1 && numel(negcoil)==1
+      % planar gradiometer
+      direction = sens.coilpos(poscoil,:)-sens.coilpos(negcoil,:);
+      direction = direction/norm(direction);
+      chandir(i,:) = direction;
+    elseif (numel([poscoil negcoil]))==1
+      % magnetometer
+    elseif numel(poscoil)>1 || numel(negcoil)>1
+      error('cannot work with balanced gradiometer definition')
+    end
+  end
+end
+
 if istrue(coil)
-  % simply plot the position of all coils or electrodes
+  % simply get the position of all coils or electrodes
   if isfield(sens, 'coilpos')
     pos = sens.coilpos;
   elseif isfield(sens, 'elecpos')
@@ -125,25 +239,39 @@ if istrue(coil)
   end
   if isfield(sens, 'coilori')
     ori = sens.coilori;
-  end
-  
-  if coildiameter==0
-    hs = plot3(pos(:,1), pos(:,2), pos(:,3), style);
+  elseif isfield(sens, 'elecori')
+    ori = sens.elecori;
   else
-    plotcoil(pos, ori, coildiameter, style);
+    ori = [];
   end
   
 else
   % determine the position of each channel, which is for example the mean of
-  % two bipolar electrodes, or the bottom coil of a axial gradiometer
-  
-  if coildiameter==0
-    hs = plot3(sens.chanpos(:,1), sens.chanpos(:,2), sens.chanpos(:,3), style);
+  % two bipolar electrodes, or the bottom coil of a axial gradiometer, or
+  % the center between two coils of a planar gradiometer
+  if isfield(sens, 'chanpos')
+    pos = sens.chanpos;
   else
-    plotcoil(sens.chanpos, sens.chanori, coildiameter, style);
+    pos = [];
+  end
+  if isfield(sens, 'chanori')
+    ori = sens.chanori;
+  else
+    ori = [];
   end
   
 end % if istrue(coil)
+
+switch coilshape
+  case 'point'
+    hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', 30, 'Color', edgecolor);
+  case 'circle'
+    plotcoil(pos, ori, [],      coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+  case 'square'
+    plotcoil(pos, ori, chandir, coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+  otherwise
+    error('incorrect coilshape');
+end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
   for i=1:length(sens.label)
@@ -174,41 +302,80 @@ end
 warning(ws); % revert to original state
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% SUBFUNCTION all optional inputs are passed to ft_plot_mesh
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'%%%%%%%%%%%%%%%%%%
-function plotcoil(coilpos, coilori, coildiameter, style)
-% construct a template coil at [0 0 0], oriented towards [0 0 1]
-pos = circle(24);
-s   = scale([coildiameter coildiameter coildiameter]/2);
-for i=1:size(coilpos,1)
+function plotcoil(coilpos, coilori, chandir, coilsize, coilshape, varargin)
+
+% start with a single template coil at [0 0 0], oriented towards [0 0 1]
+switch coilshape
+  case 'circle'
+    pos = circle(24);
+  case 'square'
+    pos = square;
+end
+ncoil = size(coilpos,1);
+npos  = size(pos,1);
+mesh.pos  = nan(ncoil*npos,3);
+mesh.poly = nan(ncoil, npos);
+
+% determine the scaling of the coil as homogenous transformation matrix
+s  = scale([coilsize coilsize coilsize]);
+
+for i=1:ncoil
   x  = coilori(i,1);
   y  = coilori(i,2);
   z  = coilori(i,3);
   ph = atan2(y, x)*180/pi;
   th = atan2(sqrt(x^2+y^2), z)*180/pi;
+  % determine the rotation and translation of the coil as homogenous transformation matrix
   r1 = rotate([0 th 0]);
   r2 = rotate([0 0 ph]);
   t  = translate(coilpos(i,:));
-  rim = ft_warp_apply(t*r2*r1*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
-  rim(1,:) = rim(end,:);               % replace the first (central) point with the last, this closes the circle
-  h = line(rim(:,1), rim(:,2), rim(:,3));
-  set(h, 'color', style(1));
+  
+  % determine the initial rotation of the coil as homogenous transformation matrix
+  if isempty(chandir)
+    % none of the coils needs to be rotated around their axis, this applies to circular coils
+    r0 = eye(4);
+  elseif ~all(isfinite(chandir(i,:)))
+    % the rotation around the axis of this coil is not known
+    r0 = nan(4);
+  else
+    % express the direction of sensitivity of the planar channel relative to the orientation of the channel
+    dir = ft_warp_apply(inv(r2*r1), chandir(i,:));
+    x = dir(1);
+    y = dir(2);
+    % determine the rotation
+    rh = atan2(y, x)*180/pi;
+    r0 = rotate([0 0 rh]);
+  end
+  
+  % construct a single mesh with separate polygons for all coils
+  sel = ((i-1)*npos+1):(i*npos);
+  mesh.pos(sel,:) = ft_warp_apply(t*r2*r1*r0*s, pos); % scale, rotate and translate the template coil vertices, skip the central vertex
+  mesh.poly(i,:)  = sel;                              % this is a polygon connecting all edge points
+  
 end
+% plot all polygons together
+ft_plot_mesh(mesh, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% SUBFUNCTION return a circle with unit diameter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [pos, tri] = circle(n)
-phi = linspace(0, 2*pi, n+1);
-phi = phi(1:end-1)';
+function [pos] = circle(n)
+phi = linspace(0, 2*pi, n+1)';
 x = cos(phi);
 y = sin(phi);
 z = zeros(size(phi));
-pos = [0 0 0; x y z];
-if nargout>1
-  tri = zeros(n,3);
-  for i=1:n-1
-    tri(i,:) = [1 i+1 i+2];
-  end
-  tri(end,:) = [1 n+1 2];
-end
+pos = [x y z]/2;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION return a square with unit edges
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [pos] = square
+pos = [
+  0.5  0.5 0
+  -0.5  0.5 0
+  -0.5 -0.5 0
+  0.5 -0.5 0
+  0.5  0.5 0 % this closes the square
+  ];

@@ -1,4 +1,4 @@
-function [meg] = read_ctf_dat(filename);
+function [meg] = read_ctf_dat(filename)
 
 % READ_CTF_DAT reads MEG data from an ascii format CTF file
 %

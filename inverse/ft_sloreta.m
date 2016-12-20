@@ -69,24 +69,24 @@ if mod(nargin-5,2)
 end
 
 % these optional settings do not have defaults
-powmethod      = keyval('powmethod',     varargin); % the default for this is set below
-subspace       = keyval('subspace',      varargin); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
+powmethod      = ft_getopt(varargin, 'powmethod'); % the default for this is set below
+subspace       = ft_getopt(varargin, 'subspace'); % used to implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
 % these settings pertain to the forward model, the defaults are set in compute_leadfield
-reducerank     = keyval('reducerank',     varargin);
-normalize      = keyval('normalize',      varargin);
-normalizeparam = keyval('normalizeparam', varargin);
+reducerank     = ft_getopt(varargin, 'reducerank');
+normalize      = ft_getopt(varargin, 'normalize');
+normalizeparam = ft_getopt(varargin, 'normalizeparam');
 % these optional settings have defaults
-feedback       = keyval('feedback',      varargin); if isempty(feedback),      feedback = 'text';            end
-keepfilter     = keyval('keepfilter',    varargin); if isempty(keepfilter),    keepfilter = 'no';            end
-keepleadfield  = keyval('keepleadfield', varargin); if isempty(keepleadfield), keepleadfield = 'no';         end
-keepcov        = keyval('keepcov',       varargin); if isempty(keepcov),       keepcov = 'no';               end
-keepmom        = keyval('keepmom',       varargin); if isempty(keepmom),       keepmom = 'yes';              end
-lambda         = keyval('lambda',        varargin); if isempty(lambda  ),      lambda = 0;                   end
-projectnoise   = keyval('projectnoise',  varargin); if isempty(projectnoise),  projectnoise = 'yes';         end
-projectmom     = keyval('projectmom',    varargin); if isempty(projectmom),    projectmom = 'no';            end
-fixedori       = keyval('fixedori',      varargin); if isempty(fixedori),      fixedori = 'no';              end
-computekurt    = keyval('kurtosis',      varargin); if isempty(computekurt),   computekurt = 'no';           end
-weightnorm     = keyval('weightnorm',    varargin); if isempty(weightnorm),    weightnorm = 'no';            end
+feedback       = ft_getopt(varargin, 'feedback', 'text');
+keepfilter     = ft_getopt(varargin, 'keepfilter', 'no');
+keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
+keepcov        = ft_getopt(varargin, 'keepcov', 'no');
+keepmom        = ft_getopt(varargin, 'keepmom', 'yes');
+lambda         = ft_getopt(varargin, 'lambda', 0);
+projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
+projectmom     = ft_getopt(varargin, 'projectmom', 'no');
+fixedori       = ft_getopt(varargin, 'fixedori', 'no');
+computekurt    = ft_getopt(varargin, 'kurtosis', 'no');
+weightnorm     = ft_getopt(varargin, 'weightnorm', 'no');
 
 % convert the yes/no arguments to the corresponding logical values
 keepfilter     = istrue(keepfilter);
@@ -208,6 +208,10 @@ elseif ~isempty(subspace)
   end
 end
 
+L = cell2mat(dip.leadfield);
+G = L*L'; % Gram matrix
+invG = inv(G + lambda * eye(size(G))); % regularized G^-1
+
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
 
@@ -229,29 +233,8 @@ for i=1:size(dip.pos,1)
     lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
-  if isfield(dip, 'subspace')
-    % do subspace projection of the forward model
-    lf    = dip.subspace{i} * lf;
-    % the data and the covariance become voxel dependent due to the projection
-    dat   =      dip.subspace{i} * dat_pre_subspace;
-    Cy    =      dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}';
-    invCy = pinv(dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}');
-  elseif ~isempty(subspace)
-    % do subspace projection of the forward model only
-    lforig = lf;
-    lf     = subspace * lf;
-    
-    % according to Kensuke's paper, the eigenspace bf boils down to projecting
-    % the 'traditional' filter onto the subspace
-    % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
-    % ESES = u(:,1:k)*u(:,1:k)';
-    % however, even though it seems that the shape of the filter is identical to
-    % the shape it is obtained with the following code, the w*lf=I does not hold.
-  end
   
-  G = lf * lf'; % Gram matrix
-  invG = inv(G + lambda * eye(size(G))); % regularized G^-1
-  
+
   if fixedori
       [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * Cy * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
       [~,maxeig]=max(diag(dd));
@@ -266,7 +249,14 @@ for i=1:size(dip.pos,1)
     filt = dip.filter{i};
   else
     % construct the spatial filter
-    filt = pinv(sqrt(lf' * invG * lf)) * lf' * invG;  % sLORETA
+    % sLORETA: if orthogonal components are retained (i.e., fixedori = 'no')
+    %          then weight for each lead field column must be calculated separately
+    for ii=1:size(lf,2)
+        filt(ii,:) = pinv(sqrt(lf(:,ii)' * invG * lf(:,ii))) * lf(:,ii)' * invG;  
+    end
+  end
+  if(any(~isreal(filt)))
+      error('spatial filter has complex values -- did you set lambda properly?');
   end
   if projectmom
     [u, s, v] = svd(filt * Cy * ctranspose(filt));

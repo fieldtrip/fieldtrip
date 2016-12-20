@@ -26,7 +26,7 @@ comp = ft_componentanalysis(cfg, data);
 
 %% verify grad has been updated successfully
 
-assert(isequal(comp.grad.chanposorg, data.grad.chanpos));
+assert(isequal(comp.grad.chanposold, data.grad.chanpos));
 assert(all(isnan(comp.grad.chanpos(:))));
 
 %% rejectcomponent
@@ -50,10 +50,10 @@ datplan = ft_megplanar(cfg, reject);
 %% verify again that grad was updated successfully
 
 assert(all(isnan(datplan.grad.chanpos(:))));
-assert(~any(isnan(datplan.grad.chanposorg(:))));
+assert(~any(isnan(datplan.grad.chanposold(:))));
 
-% *org fields should still reflect the original physical positions
-assert(isequal(datplan.grad.chanposorg, data.grad.chanpos));
+% *old fields should still reflect the original physical positions
+assert(isequal(datplan.grad.chanposold, data.grad.chanpos));
 
 %% simple check that combineplanar still works
 
@@ -61,7 +61,7 @@ datcmb = ft_combineplanar([], datplan);
 
 % now chanpos should be nans
 assert(all(isnan(datcmb.grad.chanpos(:))));
-% FIXME do we want a chanposorg on combined planar data as well?
+% FIXME do we want a chanposold on combined planar data as well?
 
 %% move back to original working dir
 

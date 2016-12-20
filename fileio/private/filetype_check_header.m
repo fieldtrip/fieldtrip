@@ -66,6 +66,7 @@ else
   else
     fseek(fid, offset, 'cof');
     if iscell(head)
+      len = zeros(size(head));
       for i=1:length(head)
         len(i) = length(head{i});
       end

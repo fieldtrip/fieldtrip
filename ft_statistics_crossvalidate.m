@@ -1,4 +1,4 @@
-function stat = ft_statistics_crossvalidate(cfg, dat, design)
+function [stat, cfg] = ft_statistics_crossvalidate(cfg, dat, design)
 
 % FT_STATISTICS_CROSSVALIDATE performs cross-validation using a prespecified
 % multivariate analysis given by cfg.mva
@@ -41,24 +41,18 @@ function stat = ft_statistics_crossvalidate(cfg, dat, design)
 %
 % $Id$
 
-% specify classification procedure
-if ~isfield(cfg,'mva')
-  cfg.mva = dml.analysis({ ...
-    dml.standardizer('verbose',true) ...
-    dml.svm('verbose',true) ...
-    });
-else
-  if ~isa(cfg.mva,'dml.analysis')
-    cfg.mva = dml.analysis(cfg.mva);
-  end
-end
+cfg.mva       = ft_getopt(cfg, 'mva');
+cfg.statistic = ft_getopt(cfg, 'statistic', {'accuracy', 'binomial'});
+cfg.nfolds    = ft_getopt(cfg, 'nfolds',   5);
+cfg.resample  = ft_getopt(cfg, 'resample', false);
 
-if ~isfield(cfg,'statistic'),
-  cfg.statistic = {'accuracy' 'binomial'};
+% specify classification procedure or ensure it's the correct object
+if isempty(cfg.mva)
+  cfg.mva = dml.analysis({ dml.standardizer('verbose',true) ...
+                           dml.svm('verbose',true)});
+elseif ~isa(cfg.mva,'dml.analysis')
+  cfg.mva = dml.analysis(cfg.mva);
 end
-
-if ~isfield(cfg,'nfolds'), cfg.nfolds = 5; end
-if ~isfield(cfg,'resample'), cfg.resample = false; end
 
 cv = dml.crossvalidator('mva', cfg.mva, 'type', 'nfold', 'folds', cfg.nfolds,...
   'resample', cfg.resample, 'compact', true, 'verbose', true);
@@ -73,10 +67,10 @@ if any(isnan(dat(:)))
   dat(isnan(dat(:))) = 0;
 end
 
-% perform everything!
+% perform everything
 cv = cv.train(dat',design');
 
-% the statistic of interest
+% extract the statistic of interest
 s = cv.statistic(cfg.statistic);
 for i=1:length(cfg.statistic)
  stat.statistic.(cfg.statistic{i}) = s{i};
@@ -86,11 +80,22 @@ end
 stat.model = cv.model;
 
 fn = fieldnames(stat.model{1});
+if any(strcmp(fn, 'weights')),
+  % create the 'encoding' matrix from the weights, as per Haufe 2014.
+  covdat = cov(dat');
+  for i=1:length(stat.model)
+    W = stat.model{i}.weights;
+    M = dat'*W;
+    covM = cov(M);
+    stat.model{i}.weightsinv = covdat*W*inv(covM);
+  end
+end
+
 for i=1:length(stat.model)
 
   for k=1:length(fn)
     if numel(stat.model{i}.(fn{k}))==prod(cfg.dim)
-      stat.model{i}.(fn{k}) = squeeze(reshape(stat.model{i}.(fn{k}),cfg.dim));
+      stat.model{i}.(fn{k}) = reshape(stat.model{i}.(fn{k}),cfg.dim);
     end
   end
 
@@ -98,3 +103,6 @@ end
 
 % required
 stat.trial = [];
+
+% add some stuff to the cfg
+cfg.cv = cv;

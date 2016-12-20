@@ -1,4 +1,4 @@
-function [el, lab] = read_elec(fn);
+function [el, lab] = read_elec(fn)
 
 % READ_ELEC reads "la/mu" electrode parameters from a MBF electrode file
 % which are used to position them on a triangulated surface

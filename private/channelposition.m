@@ -165,14 +165,16 @@ switch ft_senstype(sens)
     end
     chan = unique(chan);
     % find the matching channel-duplets
-    ind = [];
-    lab = {};
+    ind = false(size(chan));
+    lab = cell(length(chan),2);
+    pnt = nan(length(chan),3);
+    ori = nan(length(chan),3);
     for i=1:length(chan)
       ch1 =  [chan{i} '_dH'];
       ch2 =  [chan{i} '_dV'];
       sel = match_str(sens.label, {ch1, ch2});
       if length(sel)==2
-        ind = [ind; i];
+        ind(i)   = true;
         lab(i,:) = {ch1, ch2};
         meanpnt1 = mean(sens.coilpos(abs(sens.tra(sel(1),:))>0.5, :), 1);
         meanpnt2 = mean(sens.coilpos(abs(sens.tra(sel(2),:))>0.5, :), 1);

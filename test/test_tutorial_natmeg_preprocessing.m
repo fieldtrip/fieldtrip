@@ -4,7 +4,7 @@ function test_tutorial_natmeg_preprocessing
 % MEM 4gb
 
 % this script executes the MATLAB content from
-% http://fieldtrip.fcdonders.nl/tutorial/natmeg/timefrequency
+% http://www.fieldtriptoolbox.org/tutorial/natmeg/timefrequency
 %
 % it corresponds to the wiki version of 7 October 2014
 

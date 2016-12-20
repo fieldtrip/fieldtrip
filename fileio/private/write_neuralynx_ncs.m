@@ -1,10 +1,11 @@
-function write_neuralynx_ncs(filename, ncs);
+function write_neuralynx_ncs(filename, ncs)
 
 % WRITE_NEURALYNX_NCS writes continuous data to a NCS file
-% The input data should be scaled in uV.
 %
 % Use as
 %   write_neuralynx_ncs(filename, ncs)
+%
+% The input data should be scaled in uV.
 %
 % See also READ_NEURALYNX_NCS
 

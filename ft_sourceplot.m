@@ -109,8 +109,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 % Note that the coordinate system in which the surface is defined should be the same
 % as the coordinate system that is represented in source.pos.
 %
-% The following parameters apply to surface-plotting when an interpolation
-% is required
+% The following parameters apply to surface-plotting when an interpolation is required
 %   cfg.surffile       = string, file that contains the surface (default = 'surface_white_both.mat')
 %                        'surface_white_both.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
@@ -129,8 +128,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        included in the sphere projection methods, expressed in mm
 %   cfg.distmat        = precomputed distance matrix (default = [])
 %
-% The following parameters apply to surface-plotting independent of whether
-% an interpolation is required
+% The following parameters apply to surface-plotting independent of whether an interpolation is required
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer', ' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
@@ -207,17 +205,17 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'location', 'interactive', 'auto'});
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates', 'TTlookup'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys
-  functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+  functional     = ft_checkdata(functional, 'datatype', {'source', 'volume'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 else
   % check if the input functional is valid for this function, a coordsys is not directly needed
-  functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
+  functional     = ft_checkdata(functional, 'datatype', {'source', 'volume'}, 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 % set the defaults for all methods
@@ -251,10 +249,6 @@ cfg.funcolorlim   = ft_getopt(cfg, 'funcolorlim',   'auto');
 cfg.opacitymap    = ft_getopt(cfg, 'opacitymap',    'auto');
 cfg.opacitylim    = ft_getopt(cfg, 'opacitylim',    'auto');
 cfg.roi           = ft_getopt(cfg, 'roi',           []);
-
-if isfield(cfg, 'TTlookup'),
-  error('TTlookup is old; now specify cfg.atlas, see help!');
-end
 
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, functional);
@@ -757,16 +751,16 @@ switch cfg.method
       xbeg = floor((iSlice-1)./M);
       ybeg = mod(iSlice-1, M);
       if hasana
-        quilt_ana(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(ana(:,:,iSlice));
+        quilt_ana(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=ana(:,:,iSlice);
       end
       if hasfun
-        quilt_fun(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(fun(:,:,iSlice));
+        quilt_fun(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=fun(:,:,iSlice);
       end
       if hasmsk
-        quilt_msk(ybeg.*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(msk(:,:,iSlice));
+        quilt_msk(ybeg.*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=msk(:,:,iSlice);
       end
       %     if hasmskana
-      %       quilt_mskana(ybeg.*m+1:(ybeg+1).*m, xbeg.*n+1:(xbeg+1).*n)=squeeze(mskana(:,:,iSlice));
+      %       quilt_mskana(ybeg.*m+1:(ybeg+1).*m, xbeg.*n+1:(xbeg+1).*n)=mskana(:,:,iSlice);
       %     end
     end
     % make vols and scales, containes volumes to be plotted (fun, ana, msk), added by ingnie
@@ -1146,29 +1140,27 @@ switch cfg.method
     else
       color = repmat(cortex_light, size(surf.pos,1), 1);
     end
-
-    h1 = patch('Vertices', surf.pos, 'Faces', surf.tri, 'FaceVertexCData', color, 'FaceColor', 'interp');
-    set(h1, 'EdgeColor', 'none');
+    
+    ft_plot_mesh(surf,'edgecolor', 'none', 'vertexcolor', color);
     axis   off;
     axis vis3d;
     axis equal;
 
     if hasfun
-      h2 = patch('Vertices', surf.pos, 'Faces', surf.tri, 'FaceVertexCData', val, 'FaceColor', 'interp');
-      set(h2, 'EdgeColor', 'none');
-      try
-        caxis(gca,[fcolmin fcolmax]);
-      end
-      colormap(cfg.funcolormap);
-      if hasmsk
-        set(h2, 'FaceVertexAlphaData', maskval);
-        set(h2, 'FaceAlpha',          'interp');
-        set(h2, 'AlphaDataMapping',   'scaled');
+      if ~hasmsk || all(maskval(:)==1)
+        ft_plot_mesh(surf, 'edgecolor', 'none', 'vertexcolor', val);
+      elseif hasmsk
+        ft_plot_mesh(surf, 'edgecolor', 'none', 'vertexcolor', val, 'facealpha', maskval);
         try
           alim(gca, [opacmin opacmax]);
         end
         alphamap(cfg.opacitymap);
       end
+      
+      try
+        caxis(gca,[fcolmin fcolmax]);
+      end
+      colormap(cfg.funcolormap);
     end
 
     lighting gouraud
@@ -1216,13 +1208,13 @@ switch cfg.method
       msk = getsubfield(functional, 'inside');
       msk = reshape(msk, dim);
       if hasana
-        msk(1,:,:) = squeeze(fun(1,:,:))>0 & imfill(abs(squeeze(ana(1,:,:))-1))>0;
-        msk(:,1,:) = squeeze(fun(:,1,:))>0 & imfill(abs(squeeze(ana(:,1,:))-1))>0;
-        msk(:,:,1) = squeeze(fun(:,:,1))>0 & imfill(abs(ana(:,:,1)-1))>0;
+        msk(1,:,:) = fun(1,:,:)>0 & imfill(abs(ana(1,:,:)-1))>0;
+        msk(:,1,:) = fun(:,1,:)>0 & imfill(abs(ana(:,1,:)-1))>0;
+        msk(:,:,1) = fun(:,:,1)>0 & imfill(abs(ana(:,:,1)-1))>0;
       else
-        msk(1,:,:) = squeeze(fun(1,:,:))>0;
-        msk(:,1,:) = squeeze(fun(:,1,:))>0;
-        msk(:,:,1) = squeeze(fun(:,:,1))>0;
+        msk(1,:,:) = fun(1,:,:)>0;
+        msk(:,1,:) = fun(:,1,:)>0;
+        msk(:,:,1) = fun(:,:,1)>0;
       end
       functional = setsubfield(functional, 'inside', msk);
     end
@@ -1401,7 +1393,6 @@ if opt.hasfun
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
 
-
     else
       tmpqi = [opt.qi 1];
       tmph  = [h1 h2 h3];
@@ -1409,9 +1400,8 @@ if opt.hasfun
         'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
     end
-    % after the first call, the handles to the functional surfaces
-    % exist. create a variable containing this, and sort according to
-    % the parents
+    % After the first call, the handles to the functional surfaces exist. 
+    % Create a variable containing these, and sort according to the parents.
     opt.funhandles = findobj(opt.handlesfigure, 'type', 'surface');
     opt.funtag     = get(opt.funhandles, 'tag');
     opt.funhandles = opt.funhandles(~strcmp('ana', opt.funtag));
@@ -1452,19 +1442,19 @@ set(opt.handlesaxes(3), 'Visible',opt.axis);
 
 if opt.hasfreq && opt.hastime && opt.hasfun,
   h4 = subplot(2,2,4);
-  tmpdat = double(squeeze(opt.fun(xi,yi,zi,:,:)));
+  tmpdat = double(shiftdim(opt.fun(xi,yi,zi,:,:),3));
   uimagesc(double(functional.time), double(functional.freq), tmpdat); axis xy;
   xlabel('time'); ylabel('freq');
   set(h4, 'tag', 'TF1');
   caxis([opt.fcolmin opt.fcolmax]);
 elseif opt.hasfreq && opt.hasfun,
   h4 = subplot(2,2,4);
-  plot(functional.freq, squeeze(opt.fun(xi,yi,zi,:))); xlabel('freq');
+  plot(functional.freq, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('freq');
   axis([functional.freq(1) functional.freq(end) opt.fcolmin opt.fcolmax]);
   set(h4, 'tag', 'TF2');
 elseif opt.hastime && opt.hasfun,
   h4 = subplot(2,2,4);
-  plot(functional.time, squeeze(opt.fun(xi,yi,zi,:))); xlabel('time');
+  plot(functional.time, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('time');
   set(h4, 'tag', 'TF3', 'xlim',functional.time([1 end]), 'ylim',[opt.fcolmin opt.fcolmax], 'layer', 'top');
 elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc'),
   if opt.hasfun

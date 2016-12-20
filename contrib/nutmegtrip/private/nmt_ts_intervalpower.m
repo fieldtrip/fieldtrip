@@ -1,4 +1,4 @@
-function fun = nmt_ts_intervalpower(fun,meantype);
+function fun = nmt_ts_intervalpower(fun,meantype)
 % when time interval is selected, calculate desired representation of interval power
 switch(meantype)
     case 'msq' % mean power

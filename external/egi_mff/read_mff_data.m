@@ -6,7 +6,7 @@
 % 
 %  Takes the path to the data and returns the 2-D matrix of size
 %  Nchans*Nsamples as described at
-%  http://fieldtrip.fcdonders.nl/reference/ft_read_data.
+%  http://www.fieldtriptoolbox.org/reference/ft_read_data.
 % 
 %  filePath ? The path to the .mff file. 
 %

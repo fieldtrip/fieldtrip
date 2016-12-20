@@ -1,7 +1,7 @@
 function test_bug1856
 
 % MEM 1500mb
-% WALLTIME 00:10:00
+% WALLTIME 00:20:00
 
 % TEST test_bug1856
 % TEST ft_read_header ft_read_sens ft_chanunits

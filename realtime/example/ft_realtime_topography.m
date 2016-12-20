@@ -189,7 +189,7 @@ end % while true
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function time = offset2time(offset, fsample, nsamples);
+function time = offset2time(offset, fsample, nsamples)
 time = (offset + (0:(nsamples-1)))/fsample;
 
 

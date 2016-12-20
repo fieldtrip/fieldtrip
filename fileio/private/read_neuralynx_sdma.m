@@ -1,4 +1,4 @@
-function [dat] = read_neuralynx_sdma(dataset, begsample, endsample, chanindx);
+function [dat] = read_neuralynx_sdma(dataset, begsample, endsample, chanindx)
 
 % READ_NEURALYNX_SDMA read specified channels and samples from a Neuralynx splitted DMA dataset
 %

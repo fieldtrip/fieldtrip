@@ -83,6 +83,7 @@ url = {
   'MENTAT'     'see http://robertoostenveld.nl, or contact Robert Oostenveld'
   'SON2'       'see http://www.kcl.ac.uk/depsta/biomedical/cfnr/lidierth.html, or contact Malcolm Lidierth'
   '4D-VERSION' 'contact Christian Wienbruch'
+  'COMM'       'see http://www.mathworks.com/products/communications'
   'SIGNAL'     'see http://www.mathworks.com/products/signal'
   'OPTIM'      'see http://www.mathworks.com/products/optim'
   'IMAGE'      'see http://www.mathworks.com/products/image'  % Mathworks refers to this as IMAGES
@@ -114,7 +115,7 @@ url = {
   'PRTOOLS'       'see http://www.prtools.org'
   'ITAB'          'contact Stefania Della Penna'
   'BSMART'        'see http://www.brain-smart.org'
-  'PEER'          'see http://fieldtrip.fcdonders.nl/development/peer'
+  'PEER'          'see http://www.fieldtriptoolbox.org/development/peer'
   'FREESURFER'    'see http://surfer.nmr.mgh.harvard.edu/fswiki'
   'SIMBIO'        'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
   'VGRID'         'see http://www.rheinahrcampus.de/~medsim/vgrid/manual.html'
@@ -147,6 +148,7 @@ url = {
   'NPMK'          'see https://github.com/BlackrockMicrosystems/NPMK'
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
   'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
+  'NEURONE'       'see http://www.megaemg.com/support/unrestricted-downloads'
   };
 
 if nargin<2
@@ -232,19 +234,21 @@ switch toolbox
   case '4D-VERSION'
     dependency  = {'read4d', 'read4dhdr'};
   case {'STATS', 'STATISTICS'}
-    dependency = has_license('statistics_toolbox');         % also check the availability of a toolbox license
+    dependency = has_license('statistics_toolbox');         % check the availability of a toolbox license
   case {'OPTIM', 'OPTIMIZATION'}
-    dependency = has_license('optimization_toolbox');       % also check the availability of a toolbox license
+    dependency = has_license('optimization_toolbox');       % check the availability of a toolbox license
   case {'SPLINES', 'CURVE_FITTING'}
-    dependency = has_license('curve_fitting_toolbox');      % also check the availability of a toolbox license
+    dependency = has_license('curve_fitting_toolbox');      % check the availability of a toolbox license
+  case 'COMM'
+    dependency = {has_license('communication_toolbox'), 'de2bi'}; % also check the availability of a toolbox license
   case 'SIGNAL'
     dependency = {has_license('signal_toolbox'), 'window'}; % also check the availability of a toolbox license
   case 'IMAGE'
-    dependency = has_license('image_toolbox');              % also check the availability of a toolbox license
+    dependency = has_license('image_toolbox');              % check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
-    dependency = has_license('distrib_computing_toolbox');  % also check the availability of a toolbox license
+    dependency = has_license('distrib_computing_toolbox');  % check the availability of a toolbox license
   case 'COMPILER'
-    dependency = has_license('compiler');                   % also check the availability of a toolbox license
+    dependency = has_license('compiler');                   % check the availability of a toolbox license
   case 'FASTICA'
     dependency = 'fpica';
   case 'BRAINSTORM'
@@ -346,8 +350,10 @@ switch toolbox
     dependency = {'comp_tstamps' 'load_audio0123', 'load_video123'};
   case 'WAVEFRONT'
     dependency = {'write_wobj' 'read_wobj'};
+  case 'NEURONE'
+    dependency = {'readneurone' 'readneuronedata' 'readneuroneevents'};
 
-    % the following are fieldtrip modules/toolboxes
+    % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', ...
                     'ft_read_event', 'ft_read_sens'};
@@ -384,13 +390,13 @@ end
 % try to determine the path of the requested toolbox
 if autoadd>0 && ~status
 
-  % for core fieldtrip modules
+  % for core FieldTrip modules
   prefix = fileparts(which('ft_defaults'));
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
 
-  % for external fieldtrip modules
+  % for external FieldTrip modules
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
@@ -402,7 +408,7 @@ if autoadd>0 && ~status
     end
   end
 
-  % for contributed fieldtrip extensions
+  % for contributed FieldTrip extensions
   prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
@@ -536,7 +542,7 @@ function status = is_subdir_in_fieldtrip_path(toolbox_name)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = has_mex(name)
   full_name=[name '.' mexext];
-  status = exist(full_name, 'file');
+  status = (exist(full_name, 'file')==3);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function

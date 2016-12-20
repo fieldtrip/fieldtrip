@@ -34,5 +34,9 @@ function [s, cfg] = ft_statfun_mean(cfg, dat, design)
 %
 % $Id$
 
-s = mean(dat,2);
+% the stat field is used in STATISTICS_MONTECARLO to make the
+% randomization distribution, but you can also return other fields
+% which will be passed on to the command line in the end.
+
+s.stat = mean(dat,2);
 

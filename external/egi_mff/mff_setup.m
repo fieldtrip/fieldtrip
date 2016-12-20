@@ -5,7 +5,7 @@ function mff_setup
 
 % this toolbox requires JAVA to be running and properly configured
 if ~usejava('jvm')
-  error('the EGI_MFF format requires that the java virtual machine is available, see http://fieldtrip.fcdonders.nl/getting_started/egi')
+  error('the EGI_MFF format requires that the java virtual machine is available, see http://www.fieldtriptoolbox.org/getting_started/egi')
 end
 
 % check that the java archive (jar file) is on the path
@@ -45,11 +45,11 @@ if ~(exist('com.egi.services.mff.api.MFFFactory', 'class')==8)
         clear localcopy
 
     else
-        error('the EGI_MFF format requires one MFF .jar file on your classpath, see http://fieldtrip.fcdonders.nl/getting_started/egi')
+        error('the EGI_MFF format requires one MFF .jar file on your classpath, see http://www.fieldtriptoolbox.org//getting_started/egi')
     end
 end
 
 % check once more, give an error if it still does not exist
 if ~(exist('com.egi.services.mff.api.MFFFactory', 'class')==8)
-  error('the EGI_MFF format requires one MFF .jar file on your classpath, see http://fieldtrip.fcdonders.nl/getting_started/egi')
+  error('the EGI_MFF format requires one MFF .jar file on your classpath, see http://www.fieldtriptoolbox.org/getting_started/egi')
 end

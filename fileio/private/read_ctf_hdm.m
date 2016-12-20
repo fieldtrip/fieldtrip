@@ -1,4 +1,4 @@
-function [vol] = read_ctf_hdm(filename);
+function [vol] = read_ctf_hdm(filename)
 
 % READ_CTF_HDM reads the head volume conductor model from a *.hdm file
 %

@@ -1,4 +1,4 @@
-function [elec] = read_brainvision_pos(filename);
+function [elec] = read_brainvision_pos(filename)
 
 % READ_BRAINVISION_POS reads electrode positions measured with the Polhemus
 % tracker in one of the F.C. Donders EEG labs. The polhemus software is actually 

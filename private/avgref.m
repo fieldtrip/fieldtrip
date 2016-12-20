@@ -48,8 +48,8 @@ end
 if dim==3
   % the data contains multiple epochs
   for epoch=1:size(data,1)
-    reference = mean(squeeze(data(epoch,sel,:)), 1);
-    data(epoch,:,:) = squeeze(data(epoch,:,:)) - repmat(reference, size(data,2), 1);
+    reference = mean(data(epoch,sel,:), 2);
+    data(epoch,:,:) = data(epoch,:,:) - repmat(reference, [1 size(data,2) 1]);
   end
 else
   % the data contains a single epoch

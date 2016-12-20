@@ -25,18 +25,9 @@ tools via pipes and disk files. Thus, iso2mesh and these tools
 are considered as "aggregate" and they can be distributed independently
 under different licenses.
 
-Nonetheless, all of the above tools except tetgen and 
-tetview are free-software (free as in free-beer and 
-freedom). They are distributed under one of the 
-OSI-approved open-source licenses. In the case of 
-tetgen/tetview, unfortunately the license is non-free 
-(based on FSF and Debian Free Software Guidelines). The 
-author of tetgen/tetview permits free of use for academic 
-research, but commercial use are only possible with 
-explicit permission from upstream author (Hang Si).
-In the event where all free-software is desired, we
-recommend you choosing the "cgalmesh/cgalsurf/cgalpoly"
-options provided by iso2mesh.
+Nonetheless, all of the above tools are free-software 
+(free as in free-beer and freedom). They are distributed under 
+one of the OSI-approved open-source licenses. 
 
 For other utilities, cgalsurf, cgalmesh, cgalpoly and 
 cgalsimp2 were modified from CGAL 3.x and the binary are
@@ -47,8 +38,8 @@ GPL v2 or later. The modified source codes of these utilities
 are provided on the iso2mesh project management website
 (gforge server) and subversion source code repository.
 It is COMPLETELY the user's responsibility to use all 
-external utilities (including tetgen/tetview) within the 
-permissions outlined by the upstream licenses.
+external utilities within the permissions outlined by 
+the upstream licenses.
 
 More detailed information regarding these tools can be found
 in the last section of the README.txt file under the iso2mesh

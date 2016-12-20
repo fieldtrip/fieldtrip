@@ -31,7 +31,7 @@
 % disabled for now, see further down
 global ft_default
 
-if nargin==0
+if ft_nargin==0
   stack = dbstack('-completenames');
   % stack(1) is this script
   % stack(2) is the calling ft_postamble function

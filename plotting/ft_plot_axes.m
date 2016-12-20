@@ -11,8 +11,9 @@ function ft_plot_axes(object, varargin)
 %
 % Additional optional input arguments should be specified as key-value pairs
 % and can include
-%   axisscale    = scaling factor for the reference axes and sphere (default = 1)
-%   fontcolor    = string (default = 'y')
+%   'axisscale'    = scaling factor for the reference axes and sphere (default = 1)
+%   'fontcolor'    = string, color specification (default = 'y')
+%   'unit'         = string, convert the data to the specified geometrical units (default = [])
 %
 % See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_VOL
 
@@ -38,19 +39,39 @@ function ft_plot_axes(object, varargin)
 
 axisscale = ft_getopt(varargin, 'axisscale', 1);   % this is used to scale the axmax and rbol
 fontcolor = ft_getopt(varargin, 'fontcolor', 'y'); % default is yellow
+unit      = ft_getopt(varargin, 'unit');
+coordsys  = ft_getopt(varargin, 'coordsys');
 
-if isfield(object, 'unit')
-  unit = object.unit;
-else
-  warning('units are not known, not plotting axes')
-  return
+% color management
+if ischar(fontcolor) && exist([fontcolor '.m'], 'file')
+  fontcolor = eval(fontcolor);
 end
 
-if isfield(object, 'coordsys')
-  coordsys = object.coordsys;
+if ~isempty(unit)
+  % convert the sensor description to the specified units
+  object = ft_convert_units(object, unit);
+elseif ~isfield(object, 'unit')
+  warning('units are not known, not plotting axes')
+  return
 else
-  % this is not a problem per see
-  coordsys = 'unknown';
+  % take the units of the object
+  unit = object.unit;
+end
+
+if ~isempty(coordsys)
+  % the user specified the coordinate system
+  if isfield(object, 'coordsys') && ~strcmp(coordsys, unit.coordsys)
+    error('coordsys is inconsistent with object')
+  end
+else
+  % the user did not specify the coordinate system
+  if isfield(object, 'coordsys')
+    % use the one from the object
+    coordsys = object.coordsys;
+  else
+    % this is not a problem per see
+    coordsys = 'unknown';
+  end
 end
 
 axmax = 150 * ft_scalingfactor('mm', unit);

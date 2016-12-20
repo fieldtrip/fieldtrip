@@ -45,7 +45,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dip.pos     = initial dipole position, matrix of Ndipoles x 3
 %
 % The conventional approach is to fit dipoles to event-related averages, which
-% within fieldtrip can be obtained from the FT_TIMELOCKANALYSIS or from
+% within FieldTrip can be obtained from the FT_TIMELOCKANALYSIS or from
 % the FT_TIMELOCKGRANDAVERAGE function. This has the additional options
 %   cfg.latency     = [begin end] in seconds or 'all' (default = 'all')
 %   cfg.model       = 'moving' or 'regional'
@@ -219,6 +219,11 @@ elseif ~isfield(cfg, 'dipfit') || ~isfield(cfg.dipfit, 'constr')
   cfg.dipfit.constr = [];
 end
 
+if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'moving')
+  error('the moving dipole model does not combine with the sequential constraint')
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+end
+
 if isfield(data, 'topolabel')
   % this looks like a component analysis
   iscomp = 1;
@@ -253,9 +258,9 @@ if isempty(cfg.reducerank)
 end
 
 % select the desired channels, the order should be the same as in the sensor structure
-[selsens, seldata] = match_str(sens.label, data.label);
+[selcfg, seldata] = match_str(cfg.channel, data.label);
 % take the selected channels
-Vdata = data.avg(seldata, :);
+Vdata = data.avg(selcfg, :);
 
 % sphere the date using the noise covariance matrix supplied, if any
 % this affects both the gridsearch and the nonlinear optimization
@@ -270,8 +275,12 @@ if ~isempty(noisecov)
   sphere = diag(s) * u';
   % apply the sphering to the data
   Vdata = sphere * Vdata;
-  % apply the sphering to the forward model as a pre-multiplication
-  sens.tra = sphere * sens.tra;
+  % apply the sphering as a pre-multiplication to the sensor definition
+  montage = [];
+  montage.labelold = cfg.channel;
+  montage.labelnew = cfg.channel;
+  montage.tra = sphere;
+  sens = ft_apply_montage(sens, montage, 'balancename', 'sphering');
 end
 
 if iscomp
@@ -343,11 +352,13 @@ if strcmp(cfg.gridsearch, 'yes')
     % this is ok
   elseif cfg.numdipoles==2 && ~isempty(cfg.dipfit.constr)
     % this is also ok
+  elseif isfield(cfg.grid, 'pos') && size(cfg.grid.pos,2)==cfg.numdipoles*3
+    % this is also ok
   else
     error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
   end
 
-  % construct the dipole grid on which the gridsearch will be done
+  % copy all options that are potentially used in ft_prepare_sourcemodel
   tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
@@ -355,8 +366,7 @@ if strcmp(cfg.gridsearch, 'yes')
   else
     tmpcfg.grad = sens;
   end
-  
-  % copy all options that are potentially used in ft_prepare_sourcemodel
+  % construct the dipole grid on which the gridsearch will be done
   grid = ft_prepare_sourcemodel(tmpcfg);
 
   ngrid = size(grid.pos,1);

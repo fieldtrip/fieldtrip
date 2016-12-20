@@ -128,7 +128,7 @@ end
 initial = mri.transform / orig;
 
 if isdeployed
-  % in deployed mode, fieldtrip cannot use the template in the release version, because these are not compiled
+  % in deployed mode, FieldTrip cannot use the template in the release version, because these are not compiled
   cfg = ft_checkconfig(cfg, 'required', 'template');
 else
   if ~isfield(cfg, 'template'),
@@ -222,19 +222,20 @@ fprintf('performing the normalisation\n');
 % step 3: write the results to a file with prefix 'w'
 
 if ~isfield(cfg, 'spmparams') && strcmp(cfg.nonlinear, 'yes'),
-  fprintf('warping the invdividual anatomy to the template anatomy\n');
+  fprintf('warping the individual anatomy to the template anatomy\n');
   % compute the parameters by warping the individual anatomy
   VF        = spm_vol([cfg.intermediatename,'_anatomy.img']);
   params    = spm_normalise(VG,VF);
 elseif ~isfield(cfg, 'spmparams') && strcmp(cfg.nonlinear, 'no'),
-  fprintf('warping the invdividual anatomy to the template anatomy, using only linear transformations\n');
+  fprintf('warping the individual anatomy to the template anatomy, using only linear transformations\n');
   % compute the parameters by warping the individual anatomy
   VF         = spm_vol([cfg.intermediatename,'_anatomy.img']);
   flags.nits = 0; %put number of non-linear iterations to zero
   params     = spm_normalise(VG,VF,[],[],[],flags);
 else
-  fprintf('using the parameters specified in the configuration\n');
+  fprintf('using the parameters specified in the configuration, skipping the parameter estimation\n');
   % use the externally specified parameters
+  VF     = spm_vol([cfg.intermediatename,'_anatomy.img']);
   params = cfg.spmparams;
 end
 flags.vox = [cfg.downsample,cfg.downsample,cfg.downsample];
@@ -254,6 +255,9 @@ for parlop=1:length(cfg.parameter)
   wfiles{parlop} = fullfile(p, ['w' f x]);
 end
 spm_write_sn(char(files),params,flags);  % this creates the 'w' prefixed files
+
+% spm_figure('Create','Graphics');
+% spm_normalise_disp(params,VF);
 
 normalised = [];
 

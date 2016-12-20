@@ -1,4 +1,4 @@
-function [inside, outside] = find_inside_vol(pos, vol);
+function [inside, outside] = find_inside_vol(pos, vol)
 
 % FIND_INSIDE_VOL locates dipole locations inside/outside the source
 % compartment of a volume conductor model.
