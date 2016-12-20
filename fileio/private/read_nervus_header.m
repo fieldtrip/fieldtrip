@@ -679,25 +679,34 @@ while (pktGUID == evtPktGUID)
             fseek(h,32,'cof');    % Skip Reserved5 array
             evtAnnotation = fread(h,evtTextLen,'uint16');
             eventMarkers(i).annotation = deblank(char(evtAnnotation).');
+            eventMarkers(i).label = [eventMarkers(i).label ' ' eventMarkers(i).annotation];
             %disp(sprintf(' Annotation:%s',evtAnnotation));
         case HCEVENT_FORMATCHANGE
             eventMarkers(i).IDStr = 'Format change';
+            eventMarkers(i).label = 'Format change';
         case HCEVENT_PHOTIC
             eventMarkers(i).IDStr = 'Photic';
+            eventMarkers(i).label = 'Photic';
         case HCEVENT_POSTHYPERVENT
             eventMarkers(i).IDStr = 'Posthyperventilation';
+            eventMarkers(i).label = 'Posthyperventilation';
         case HCEVENT_REVIEWPROGRESS 
             eventMarkers(i).IDStr = 'Review progress';
+            eventMarkers(i).label = 'Review progress';
         case HCEVENT_EXAMSTART
             eventMarkers(i).IDStr = 'Exam start';
+            eventMarkers(i).label = 'Exam start';
         case HCEVENT_HYPERVENTILATION
             eventMarkers(i).IDStr = 'Hyperventilation';
+            eventMarkers(i).label = 'Hyperventilation';
         case HCEVENT_IMPEDANCE
             eventMarkers(i).IDStr = 'Impedance';
+            eventMarkers(i).label = 'Impedance';
         otherwise
             eventMarkers(i).IDStr = 'UNKNOWN';
+            eventMarkers(i).label = [eventMarkers(i).GUID(2:37) ' U:' eventMarkers(i).user];
     end
-    
+           
     % Next packet
     offset = offset + pktLen;
     fseek(h,offset,'bof');
