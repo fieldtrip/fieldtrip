@@ -45,6 +45,6 @@ elseif isfunction(['ft_' prefix '_' func])
   func = str2func(['ft_' prefix '_' func]);
 else
   warning(['no function by the name ''' func ''', ''' prefix '_' func...
-    ''', or ''ft_' prefix '_' func ''' could not be found']);
+    ''', or ''ft_' prefix '_' func ''' could be found']);
   func = [];
 end

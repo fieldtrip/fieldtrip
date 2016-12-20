@@ -297,6 +297,10 @@ elseif filetype_check_extension(filename, '.fif')
   type = 'neuromag_fif';
   manufacturer = 'Neuromag';
   content = 'MEG header and data';
+elseif filetype_check_extension(filename, '.mesh')
+  type = 'neuromag_mesh';
+  manufacturer = 'Neuromag';
+  content = 'triangulated surface mesh';
 elseif filetype_check_extension(filename, '.bdip')
   type = 'neuromag_bdip';
   manufacturer = 'Neuromag';
