@@ -45,6 +45,9 @@ function [mri] = ft_read_mri(filename, varargin)
 %   ANT - Advanced Neuro Technology (*.mri)
 %   Yokogawa (*.mrk, incomplete)
 %
+% If you have a series of DICOM files, please provide the name of any of the files 
+% in the series (e.g. the first one). The other files will be found automatically.
+%
 % The output MRI may have a homogenous transformation matrix that converts
 % the coordinates of each voxel (in xgrid/ygrid/zgrid) into head
 % coordinates.
@@ -53,7 +56,7 @@ function [mri] = ft_read_mri(filename, varargin)
 
 % Copyright (C) 2008-2013, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -316,6 +319,19 @@ case 'dicom_old'
   filename = filename(1:end-1);       % remove the last '.'
   dirlist  = dir(fullfile(p, filename));
   dirlist  = {dirlist.name};
+  
+  if isempty(dirlist)
+    % this is for the Philips data acquired at KI
+    warning('could not determine list of dicom files, trying with *.dcm');
+    dirlist  = dir(fullfile(p, '*.dcm'));
+    dirlist  = {dirlist.name};
+  end
+  
+  if isempty(dirlist)
+    warning('could not determine list of dicom files, trying with *.ima');
+    dirlist  = dir(fullfile(p, '*.ima'));
+    dirlist  = {dirlist.name};
+  end
 
   if length(dirlist)==1
     % try something else to get a list of all the slices
@@ -326,7 +342,7 @@ case 'dicom_old'
   keep = false(1, length(dirlist));
   for i=1:length(dirlist)
     filename = char(fullfile(p, dirlist{i}));
-    if ~strcmp(dataformat, 'dicom')
+    if ~strcmp(dataformat, 'dicom_old')
       keep(i) = false;
       fprintf('skipping ''%s'' because of incorrect filetype\n', filename);
     end

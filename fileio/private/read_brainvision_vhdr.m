@@ -1,4 +1,4 @@
-function [hdr] = read_brainvision_vhdr(filename);
+function [hdr] = read_brainvision_vhdr(filename)
 
 % READ_BRAINVISION_VHDR reads the known items from the BrainVision EEG
 % header file and returns them in a structure
@@ -10,7 +10,7 @@ function [hdr] = read_brainvision_vhdr(filename);
 
 % Copyright (C) 2003, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

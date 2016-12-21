@@ -8,7 +8,7 @@ function [filename, headerfile, datafile] = dataset2files(filename, format)
 
 % Copyright (C) 2007-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -164,6 +164,19 @@ switch format
     filename = fullfile(filename, 'signals'); % this is the only one we care about for the continuous signals
     headerfile = filename;
     datafile   = filename;
+  case 'tmsi_poly5'
+    [p, f, x] = fileparts(filename);
+    if strcmpi(x, '.poly5')
+      headerfile = filename;
+      datafile = filename;
+    else
+      filename = fullfile(p, f, [f '.eeg.poly5']);
+      if ~exist(filename , 'file')
+        filename  = fullfile(p, f, [f '.EEG.Poly5']);
+      end
+      headerfile = filename;
+      datafile = filename;
+    end
   otherwise
     % convert filename into filenames, assume that the header and data are the same
     datafile   = filename;

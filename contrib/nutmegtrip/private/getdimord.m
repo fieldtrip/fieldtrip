@@ -176,7 +176,7 @@ if isfield(data, 'dimord')
     % add the trailing singleton dimensions to datsiz, if needed
     datsiz  = [datsiz ones(1,max(0,length(dimtok)-length(datsiz)))];
   end
-  if length(dimtok)==length(datsiz)
+  if length(dimtok)==length(datsiz) || (length(dimtok)==(length(datsiz)-1) && datsiz(end)==1)
     success = false(size(dimtok));
     for i=1:length(dimtok)
       sel = strcmp(tok, dimtok{i});
@@ -312,6 +312,10 @@ switch field
       dimord = 'pos_rpt_ori_ori';
     end
     
+  case {'tf'}
+    if isequal(datsiz, [npos nfreq ntime])
+      dimord = 'pos_freq_time';
+    end
   case {'pow'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
@@ -337,7 +341,7 @@ switch field
       dimord = 'rpt_pos_freq';
     end
     
-  case {'mom'}
+  case {'mom','itc','aa','stat','pval','statitc','pitc'}
     if isequal(datsiz, [npos nori nrpt])
       dimord = 'pos_ori_rpt';
     elseif isequal(datsiz, [npos nori ntime])
@@ -356,6 +360,8 @@ switch field
       dimord = 'pos_rpt';
     elseif isequalwithoutnans(datsiz, [npos nori nrpt])
       dimord = 'pos_ori_rpt';
+    elseif isequalwithoutnans(datsiz, [npos nori nrpttap])
+      dimord = 'pos_ori_rpttap';
     elseif isequalwithoutnans(datsiz, [npos nori ntime])
       dimord = 'pos_ori_time';
     elseif isequalwithoutnans(datsiz, [npos nori nfreq])
@@ -374,6 +380,8 @@ switch field
       dimord = 'pos_rpt_ori_time';
     elseif isequalwithoutnans(datsiz, [npos nrpt 1 ntime])
       dimord = 'pos_rpt_ori_time';
+    elseif isequal(datsiz, [npos nfreq ntime])
+      dimord = 'pos_freq_time';
     end
     
   case {'filter'}
@@ -411,7 +419,11 @@ switch field
     end
     
   case {'cumtapcnt' 'cumsumcnt'}
-    if isequalwithoutnans(datsiz, [nrpt nan])
+    if isequalwithoutnans(datsiz, [nrpt 1])
+      dimord = 'rpt';
+    elseif isequalwithoutnans(datsiz, [nrpt nfreq])
+      dimord = 'rpt_freq';
+    elseif isequalwithoutnans(datsiz, [nrpt nan])
       dimord = 'rpt_other';
     end
     

@@ -18,7 +18,7 @@ function [cfg] = ft_multiplotCC(cfg, data)
 
 % Copyright (C) 2005-2006, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -36,7 +36,10 @@ function [cfg] = ft_multiplotCC(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -45,8 +48,8 @@ ft_preamble debug
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -116,13 +119,15 @@ Ypos = 0.9*yScaleFac*(Y-min(Y));
 
 for k=1:length(chNum) - 2
   subplotOL('position',[Xpos(k) Ypos(k)+(Height(k)*yScaleFac) Width(k)*xScaleFac*2 Height(k)*yScaleFac*2])
-  config.layout     = cfg.layout;
-  if exist('tmpdata'),
-
+  config.layout = cfg.layout;
+  if exist('tmpdata', 'var')
     config.style      = 'straight';
     config.marker     = 'off';
-    try, config.refmarker = strmatch(Lbl(k), data.reflabel);
-    catch, config.refmarker  = strmatch(Lbl(k), data.label); end
+    try
+        config.refmarker = strmatch(Lbl(k), data.reflabel);
+    catch
+        config.refmarker = strmatch(Lbl(k), data.label);
+    end
     config.interplimits = 'electrodes';
     if isfield(cfg, 'xparam'),
       config.xparam = cfg.xparam;
@@ -131,10 +136,10 @@ for k=1:length(chNum) - 2
       config.xparam = 'freq';
       config.xlim   = [k-0.5 k+0.5];
     end
-    config.parameter = cfg.parameter;
+    config.parameter  = cfg.parameter;
     config.refchannel = Lbl(k);
-    config.colorbar = 'no';
-    config.zlim     = scale;
+    config.colorbar   = 'no';
+    config.zlim       = scale;
     config.grid_scale = 30;
     ft_topoplotTFR(config, data);
     drawnow;

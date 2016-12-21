@@ -1,7 +1,7 @@
 function [source] = ft_appendsource(cfg, varargin)
 
 % FT_APPENDSOURCE concatenates multiple volumetric source reconstruction
-% data structures that have been processed seperately. 
+% data structures that have been processed seperately.
 %
 % If the source reconstructions were computed for different ROIs or
 % different slabs of a regular 3D grid (as indicated by the source
@@ -19,7 +19,7 @@ function [source] = ft_appendsource(cfg, varargin)
 
 % Copyright (C) 2011, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -37,7 +37,10 @@ function [source] = ft_appendsource(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -47,8 +50,8 @@ ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -83,7 +86,7 @@ tol    = cfg.tolerance;
 dimtok = tokenize(dimord{1}, '_');
 switch cfg.appenddim
   case 'auto'
-    
+
     % only allow to append across observations if these are present in the data
     if any(strcmp(dimtok, 'rpt'))
       cfg.appenddim = 'rpt';
@@ -100,7 +103,7 @@ switch cfg.appenddim
       else
         boolval2 = true;
       end
-      
+
       if isfield(varargin{1}, 'time'),
         boolval3 = checktime(varargin{:}, 'identical', tol);
         if boolval1 && boolval2 && boolval3
@@ -125,7 +128,7 @@ switch cfg.appenddim
           cfg.appenddim = 'freq';
         end
       end
-      
+
     end % determine the dimension for appending
 end
 
@@ -139,10 +142,10 @@ switch cfg.appenddim
     elseif numel(catdim)>1
       error('ambiguous dimord for concatenation');
     end
-    
+
     % if any of these are present, concatenate
     % if not prepend the dimord with rpt (and thus shift the dimensions)
-    
+
     % here we need to check whether the other dimensions are the same. if
     % not, consider some tolerance.
     boolval1 = checkpos(varargin{:}, 'identical', tol);
@@ -151,17 +154,17 @@ switch cfg.appenddim
     else
       boolval2 = true;
     end
-    
+
     if isfield(varargin{1}, 'time'),
       boolval3 = checktime(varargin{:}, 'identical', tol);
     else
       boolval3 = true;
     end
-    
+
     if any([boolval1 boolval2 boolval3]==false)
       error('appending across observations is not possible, because the spatial, spectral and/or temporal dimensions are incompatible');
     end
-    
+
     % select and reorder the channels that are in every dataset
     tmpcfg           = [];
     %tmpcfg.channel   = cfg.channel;
@@ -171,7 +174,7 @@ switch cfg.appenddim
       [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
     end
     cfg = cfg_rolledback;
-    
+
     % update the dimord
     if catdim==0
       source.dimord = ['rpt_',dimord{1}];
@@ -201,7 +204,7 @@ switch cfg.appenddim
           hastrialinfo(end+1) = 0;
         end
       end
-      
+
       % screen concatenable fields
       if ~checkfreq(varargin{:}, 'identical', tol)
         error('the freq fields of the input data structures are not equal');
@@ -223,7 +226,7 @@ switch cfg.appenddim
       else
         istrialinfo=unique(hastrialinfo);
       end
-      
+
       % concatenating fields
       for i=1:Ndata;
         if iscumsumcnt;
@@ -236,7 +239,7 @@ switch cfg.appenddim
           trialinfo{i}=varargin{i}.trialinfo;
         end
       end
-      
+
       % fill in the rest of the descriptive fields
       if iscumsumcnt;
         source.cumsumcnt = cat(catdim,cumsumcnt{:});
@@ -251,27 +254,27 @@ switch cfg.appenddim
         clear trialinfo;
       end
     end
-    
+
     source.pos   = varargin{1}.pos;
     if isfield(varargin{1}, 'freq'), source.freq = varargin{1}.freq; end
     if isfield(varargin{1}, 'time'), source.time = varargin{1}.time; end
     if isfield(varargin{1}, 'tri'),  source.tri  = varargin{1}.tri;  end
-    
+
   case 'pos'
-    % FIXME 
+    % FIXME
     error('this functionality does not work.....yet');
-    
-    
+
+
   case 'freq'
-    % FIXME 
+    % FIXME
     error('this functionality does not work.....yet');
-    
+
   case 'time'
-    % FIXME 
+    % FIXME
     error('this functionality does not work.....yet');
-    
+
   otherwise
-    error('it is not allowed to concatenate across dimension %s',cfg.appenddim);   
+    error('it is not allowed to concatenate across dimension %s',cfg.appenddim);
 end
 
 param = cfg.parameter;
@@ -286,12 +289,12 @@ tmp = cell(1,Ndata);
 
 % get the numeric data 'param{k}' if present
 for m = 1:Ndata
-  
+
   if ~isfield(varargin{m}, param)
     error('parameter %s is not present in all data sets', param);
   end
   tmp{m} = varargin{m}.(param);
-  
+
 end
 
 if catdim==0,
@@ -309,4 +312,3 @@ ft_postamble previous varargin
 ft_postamble provenance source
 ft_postamble history source
 ft_postamble savevar source
-

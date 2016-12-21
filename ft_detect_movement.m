@@ -61,7 +61,10 @@ function [cfg movement] = ft_detect_movement(cfg, data)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -71,8 +74,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% ensure that the input data is valid for this function, this will also do 
-% backward-compatibility conversions of old data that for example was 
+% ensure that the input data is valid for this function, this will also do
+% backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
@@ -88,12 +91,12 @@ cfg.feedback = ft_getopt(cfg, 'feedback', 'yes');
 
 % set the defaults for the various microsaccade detection methods
 switch cfg.method
-  case 'velocity2D' 
+  case 'velocity2D'
     % Engbert R, Kliegl R (2003) Microsaccades uncover the orientation of
     % covert attention. Vision Res 43:1035-1045.
     kernel = [1 1 0 -1 -1].*(fsample/6); % this is equivalent to Engbert et al (2003) Vis Res, eqn. (1)
     if ~isfield(cfg.velocity2D, 'kernel'),   cfg.velocity2D.kernel  = kernel; end
-    if ~isfield(cfg.velocity2D, 'demean'),   cfg.velocity2D.demean  = 'yes';  end    
+    if ~isfield(cfg.velocity2D, 'demean'),   cfg.velocity2D.demean  = 'yes';  end
     if ~isfield(cfg.velocity2D, 'mindur'),   cfg.velocity2D.mindur  =  3;     end % minimum microsaccade duration in samples
     if ~isfield(cfg.velocity2D, 'velthres'), cfg.velocity2D.velthres = 6;     end
   case 'clustering'
@@ -125,23 +128,23 @@ for i=1:ntrial
 
   dat = data.trial{i};
   time = data.time{i};
-  
+
   ndatsample = size(dat,2);
-  
+
   switch cfg.method
-    case 'velocity2D' 
-    
+    case 'velocity2D'
+
       % demean horizontal and vertical time courses
       if strcmp(cfg.velocity2D.demean,'yes');
         dat = ft_preproc_polyremoval(dat, 0, 1, ndatsample);
       end
-      
+
       %% eye velocity computation
       % deal with padding
       n = size(cfg.velocity2D.kernel,2);
       pad = ceil(n/2);
       dat = ft_preproc_padding(dat, 'localmean', pad);
-      
+
       % convolution. See Engbert et al (2003) Vis Res, eqn. (1)
       if n<100
         % heuristic: for large kernel the convolution is faster when done along
@@ -153,18 +156,18 @@ for i=1:ntrial
       end
       % cut the eges
       vel = ft_preproc_padding(vel, 'remove', pad);
-      
+
       %% microsaccade detection
       % compute velocity thresholds as in Engbert et al (2003) Vis Res, eqn. (2)
-      medianstd = sqrt( median(vel.^2,2) - (median(vel,2)).^2 ); 
-      
+      medianstd = sqrt( median(vel.^2,2) - (median(vel,2)).^2 );
+
       % Engbert et al (2003) Vis Res, eqn. (3)
       radius = cfg.velocity2D.velthres*medianstd;
-      
+
       % compute test criterion: ellipse equation
       test = sum((vel./radius(:,ones(1,ndatsample))).^2,1);
       sacsmp = find(test>1);% microsaccade's indexing
-      
+
       %% determine microsaccades per trial
       % first find eye movements of n-consecutive time points
       j = find(diff(sacsmp)==1);
@@ -172,17 +175,17 @@ for i=1:ntrial
       com = intersect(j,j+1);
       cut = ~ismember(j1,com);
       sacidx = reshape(j1(cut),2,[]);
-      
+
       for k=1:size(sacidx,2);
         duration = sacidx(1,k):sacidx(2,k);
         if size(duration,2) >= cfg.velocity2D.mindur;
           % finding peak velocity by Pitagoras
           begtrl = sacsmp(duration(1,1));
           endtrl = sacsmp(duration(1,end));
-          
+
           [peakvel smptrl] = max(sqrt(sum(vel(:,begtrl:endtrl).^2,1)));
           veltrl = sacsmp(duration(1,smptrl));% peak velocity microsaccade sample -> important for spike conversion
-          
+
           trlsmp = data.sampleinfo(i,1):data.sampleinfo(i,2);
           begsample = trlsmp(1, begtrl); % begining microsaccade sample
           endsample = trlsmp(1, endtrl); % end microsaccade sample

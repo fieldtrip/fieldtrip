@@ -35,7 +35,7 @@ function ft_realtime_pooraudioproxy(cfg)
 
 % Copyright (C) 2010, Stefan Klanke & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -77,7 +77,7 @@ end
 
 hdr = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create a fieldtrip compatible header structure
+% create a FieldTrip compatible header structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hdr.Fs                 = cfg.fsample;								  
 hdr.nChans             = cfg.channel;					                  

@@ -5,8 +5,8 @@ function [spike] = read_neurosim_spikes(filename,headerOnly)
 % structure that is consistent with the FieldTrip spike representation.
 %
 % OUTPUT
-% spike: A fieldtrip raw spike structure (including header information in
-% spike.hdr
+% spike: A FieldTrip raw spike structure (including header information
+% in spike.hdr
 % 
 % INPUT
 % filename: name of spike files or directory (this will default to using
@@ -21,7 +21,7 @@ function [spike] = read_neurosim_spikes(filename,headerOnly)
 
 % Copyright (C) 2012 Robert Oostenveld, Bart Gips
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

@@ -1,4 +1,4 @@
-function A=mkfilt_eloreta_v2(L,regu);
+function A=mkfilt_eloreta_v2(L,regu)
 % makes spatial filter according to eLoreta 
 % usage  A=mkfilt_eloreta_v2(L); or  A=mkfilt_eloreta_v2(L,regu);
 %

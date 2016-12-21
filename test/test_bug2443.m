@@ -1,5 +1,8 @@
 function test_bug2443
 
+% WALLTIME 00:20:00
+% MEM 4gb
+
 % TEST test_bug2443
 % TEST ft_multiplotER
 

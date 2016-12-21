@@ -13,8 +13,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   'maxiter'     = Maximum number of function evaluations allowed [ positive integer ]
 %   'metric'      = Error measure to be minimised [ rv | var | abs ]
 %   'checkinside' = Boolean flag to check whether dipole is inside source compartment [ 0 | 1 ]
-%   'weight'      = weight matrix for maximum likelihood estimation, e.g. sqrt inverse noise covariance
-%   'noisecov'    = noise covariance matrix
+%   'weight'      = weight matrix for maximum likelihood estimation, e.g. inverse noise covariance
 %
 % The following optional input arguments relate to the computation of the leadfields
 %   'reducerank'      = 'no' or number
@@ -28,7 +27,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   constr.mirror     = vector, used for symmetric dipole models
 %   constr.reduce     = vector, used for symmetric dipole models
 %   constr.expand     = vector, used for symmetric dipole models
-%   consrt.sequential = boolean, fit different dipoles to sequential slices of the data
+%   constr.sequential = boolean, fit different dipoles to sequential slices of the data
 %
 % The maximum likelihood estimation implements
 %   Lutkenhoner B. "Dipole source localization by means of maximum
@@ -37,7 +36,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 
 % Copyright (C) 2003-2016, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -94,26 +93,6 @@ reducerank     = ft_getopt(varargin, 'reducerank'     ); % for leadfield computa
 normalize      = ft_getopt(varargin, 'normalize'      ); % for leadfield computation
 normalizeparam = ft_getopt(varargin, 'normalizeparam' ); % for leadfield computation
 weight         = ft_getopt(varargin, 'weight'         ); % for maximum likelihood estimation
-noisecov       = ft_getopt(varargin, 'noisecov'       ); % for sphering
-
-if ~isempty(noisecov) && ~isempty(weigth)
-  error('you cannot specify both weight and noisecov');
-elseif ~isempty(noisecov)
-  [u, s] = svd(noisecov);
-  tol = max(size(noisecov)) * eps(norm(s,inf));
-  s = diag(s);
-  r1 = sum(s > tol)+1;
-  s(1:(r1-1)) = 1./sqrt(s(1:(r1-1)));
-  s(r1:end)   = 0;
-  sphere = diag(s) * u';
-  % apply the sphering to the data
-  dat = sphere*dat;
-  % apply the sphering to the forward model, specify it as a montage
-  montage.labelorg = sens.label;
-  montage.labelnew = sens.label;
-  montage.tra = sphere;
-  sens = ft_apply_montage(sens, montage);
-end
 
 if isfield(constr, 'mirror')
   % for backward compatibility
@@ -328,7 +307,7 @@ if ~isempty(weight)
       denom = dat' * weight * dat;
       err   = sum(num(:)) ./ sum(denom(:)); % Lutkenhonner equation 7, except for the gof=1-rv
     case 'var' % residual variance
-      num   = dif' * weight * dif';
+      num   = dif' * weight * dif;
       err   = sum(num(:));
     otherwise
       error('Unsupported error metric for maximum likelihood dipole fitting');
@@ -341,6 +320,9 @@ else
     % so the data can be nchan*ndip or nchan*(ndip*nframe)
     numdip   = numel(pos)/3;
     numframe = size(dat,2)/numdip;
+    
+    % do a sainty check on the number of frames, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+    assert(numframe>0 && numframe==round(numframe), 'the number of frames should be a positive integer');
     
     mom = zeros(3*numdip, numdip*numframe);
     for i=1:numdip

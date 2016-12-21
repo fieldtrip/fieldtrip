@@ -7,8 +7,8 @@ function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 % Use as
 %   [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 % where
-%   dewar        = boolean, whether to return it in dewar or head coordinates (default is head coordinates)
-%   coilaccuracy = empty or a number (default is empty)
+%   dewar        = boolean, whether to return it in dewar or head coordinates (default = false, i.e. head coordinates)
+%   coilaccuracy = empty or a number (default = [])
 %
 % See also CTF2GRAD, BTI2GRAD
 
@@ -33,7 +33,7 @@ function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 % Copyrights (C) 2008, Laurence Hunt
 % Copyrights (C) 2005, Joachim Gross
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 % FieldTrip is free software: you can redistribute it and/or modify
@@ -260,19 +260,19 @@ else
   
   % how many Planar gradiometers?
   nPlaGrad = 0;
-  for i = 1:orig.nchan;
+  for i = 1:orig.nchan
     nPlaGrad = nPlaGrad +(orig.chs(i).coil_type==3012 | orig.chs(i).coil_type==3013 | orig.chs(i).coil_type==3014 | orig.chs(i).coil_type==2) ;
   end
   
   % how many Magnetometers?
   nMag = 0;
-  for i = 1:orig.nchan;
+  for i = 1:orig.nchan
     nMag = nMag +(orig.chs(i).coil_type==3022 | orig.chs(i).coil_type==3023 | orig.chs(i).coil_type==3024);
   end
   
   % how many Axial gradiometers?
   nAxGrad = 0;
-  for i = 1:orig.nchan;
+  for i = 1:orig.nchan
     nAxGrad = nAxGrad +(orig.chs(i).coil_type==7001); % babySQUID
   end
   
@@ -394,7 +394,7 @@ end
 
 % how many EEG channels?
 nEEG = 0;
-for i = 1:orig.nchan;
+for i = 1:orig.nchan
   nEEG = nEEG +(orig.chs(i).kind==2);
 end
 

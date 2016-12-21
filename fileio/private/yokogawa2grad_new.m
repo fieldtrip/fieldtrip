@@ -10,7 +10,7 @@ function grad = yokogawa2grad_new(hdr)
 % Copyright (C) 2005-2012, Robert Oostenveld 
 % Copyright (C) 2010, Tilmann Sander-Thoemmes
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -189,7 +189,7 @@ grad.unit = 'cm';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this defines some usefull constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function handles = definehandles;
+function handles = definehandles
 handles.output = [];
 handles.sqd_load_flag = false;
 handles.mri_load_flag = false;

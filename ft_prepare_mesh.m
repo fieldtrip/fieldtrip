@@ -3,22 +3,30 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % FT_PREPARE_MESH creates a triangulated surface mesh for the volume
 % conduction model. The mesh can either be selected manually from raw
 % mri data or can be generated starting from a segmented volume
-% information stored in the mri structure. The result is a bnd
-% structure which contains the information about all segmented surfaces
-% related to mri and are expressed in world coordinates.
+% information stored in the mri structure. FT_PREPARE_MESH can be used
+% to create a cortex hull, i.e. the smoothed envelope around the pial
+% surface created by freesurfer. The result is a bnd structure which
+% contains the information about all segmented surfaces related to mri
+% sand are expressed in world coordinates.
 %
 % Use as
 %   bnd = ft_prepare_mesh(cfg, mri)
 %   bnd = ft_prepare_mesh(cfg, seg)
+%   bnd = ft_prepare_mesh(cfg)  # for cortexhull
 %
 % Configuration options:
 %   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
-%                     'headshape', 'hexahedral', 'tetrahedral'
+%                     'headshape', 'hexahedral', 'tetrahedral', 'cortexhull'
 %   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
 %   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
-%   cfg.headshape   = (optional) a filename containing headshape, a Nx3 matrix with surface
+%
+% For method 'headshape you should specify
+%   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
+%
+% For method 'cortexhull' you should specify
+%   cfg.headshape   = sting, filename containing the pial surface computed by freesurfer recon-all
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -40,6 +48,11 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.numvertices = [800, 1600, 2400];
 %   bnd             = ft_prepare_mesh(cfg, segmentation);
 %
+%   cfg             = [];
+%   cfg.method      = 'cortexhull';
+%   cfg.headshape   = '/path/to/surf/lh.pial';
+%   cortex_hull     = ft_prepare_mesh(cfg);
+%
 % See also FT_VOLUMESEGMENT, FT_PREPARE_HEADMODEL, FT_PLOT_MESH
 
 % Undocumented functionality: at this moment it allows for either
@@ -55,7 +68,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 % Copyrights (C) 2009-2012, Robert Oostenveld & Cristiano Micheli
 % Copyrights (C) 2012-2013, Robert Oostenveld & Lilla Magyari
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -73,7 +86,10 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -83,8 +99,8 @@ ft_preamble loadvar mri
 ft_preamble provenance mri
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -128,6 +144,7 @@ if hasdata && cfg.downsample~=1
   % optionally downsample the anatomical volume and/or tissue segmentations
   tmpcfg = keepfields(cfg, {'downsample'});
   mri = ft_volumedownsample(tmpcfg, mri);
+  % restore the provenance information
   [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
@@ -159,16 +176,19 @@ switch cfg.method
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
-    [pnt, tri] = makesphere(cfg.numvertices);
+    [pos, tri] = makesphere(cfg.numvertices);
     bnd = [];
     mri = ft_convert_units(mri);      % ensure that it has units
     headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
     for i=1:length(headmodel.r)
-      bnd(i).pnt(:,1) = pnt(:,1)*headmodel.r(i) + headmodel.o(1);
-      bnd(i).pnt(:,2) = pnt(:,2)*headmodel.r(i) + headmodel.o(2);
-      bnd(i).pnt(:,3) = pnt(:,3)*headmodel.r(i) + headmodel.o(3);
+      bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
+      bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(2);
+      bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
       bnd(i).tri = tri;
     end
+    
+  case 'cortexhull'
+    bnd = prepare_mesh_cortexhull(cfg);
     
   otherwise
     error('unsupported cfg.method')
@@ -193,24 +213,24 @@ ft_postamble history    bnd
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HELPER FUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [pnt, tri] = makesphere(numvertices)
+function [pos, tri] = makesphere(numvertices)
 
 if isempty(numvertices)
-  [pnt,tri] = icosahedron162;
+  [pos,tri] = icosahedron162;
   fprintf('using the mesh specified by icosaedron162\n');
 elseif numvertices==42
-  [pnt,tri] = icosahedron42;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+  [pos,tri] = icosahedron42;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
 elseif numvertices==162
-  [pnt,tri] = icosahedron162;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+  [pos,tri] = icosahedron162;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
 elseif numvertices==642
-  [pnt,tri] = icosahedron642;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+  [pos,tri] = icosahedron642;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
 elseif numvertices==2562
-  [pnt,tri] = icosahedron2562;
-  fprintf('using the mesh specified by icosaedron%d\n',size(pnt,1));
+  [pos,tri] = icosahedron2562;
+  fprintf('using the mesh specified by icosaedron%d\n',size(pos,1));
 else
-  [pnt, tri] = msphere(numvertices);
-  fprintf('using the mesh specified by msphere with %d vertices\n',size(pnt,1));
+  [pos, tri] = msphere(numvertices);
+  fprintf('using the mesh specified by msphere with %d vertices\n',size(pos,1));
 end

@@ -17,8 +17,8 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % The configuration structure has to contain
 %   cfg.method    = string, specifying the graph measure that will be
-%                   computed. See below for the list of supported measures. 
-%   cfg.parameter = string specifying the bivariate parameter in the data 
+%                   computed. See below for the list of supported measures.
+%   cfg.parameter = string specifying the bivariate parameter in the data
 %                   for which the graph measure will be computed.
 %
 % Supported methods are
@@ -34,7 +34,7 @@ function [stat] = ft_networkanalysis(cfg, data)
 %   transitivity
 %
 % To facilitate data-handling and distributed computing you can use
-%   cfg.inputfile   =  ... 
+%   cfg.inputfile   =  ...
 % 	cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a
 % *.mat file on disk and/or the output data will be written to a *.mat
@@ -45,7 +45,7 @@ function [stat] = ft_networkanalysis(cfg, data)
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -63,7 +63,10 @@ function [stat] = ft_networkanalysis(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -73,8 +76,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -86,7 +89,15 @@ cfg.threshold = ft_getopt(cfg, 'threshold', []);
 ft_hastoolbox('BCT', 1);
 
 % check the data for the correct dimord and for the presence of the requested parameter
-if ~strcmp(data.dimord(1:7), 'pos_pos') && ~strcmp(data.dimord(1:9), 'chan_chan'),
+if isfield(data, [cfg.parameter,'dimord']),
+  dimord = data.([cfg.parameter,'dimord']);
+elseif isfield(data, 'dimord')
+  dimord = data.dimord;
+else
+  error('input data needs a ''dimord'' field');
+end
+
+if ~strcmp(dimord(1:7), 'pos_pos') && ~strcmp(dimord(1:9), 'chan_chan'),
   error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
 end
 
@@ -155,10 +166,10 @@ switch cfg.method
     outsiz = [size(input) 1];
     outsiz(1:2) = [];
     output = zeros(outsiz);
-    if strcmp(data.dimord(1:3), 'pos')
-      dimord = data.dimord(9:end);
-    elseif strcmp(data.dimord(1:4), 'chan')
-      dimord = data.dimord(11:end);
+    if strcmp(dimord(1:3), 'pos')
+      dimord = dimord(9:end);
+    elseif strcmp(dimord(1:4), 'chan')
+      dimord = dimord(11:end);
     end
     needlabel = false;
   case {'betweenness' 'clustering_coef' 'degrees'}
@@ -166,28 +177,28 @@ switch cfg.method
     outsiz = [size(input) 1];
     outsiz(1) = [];
     output = zeros(outsiz);
-    if strcmp(data.dimord(1:3), 'pos')
-      dimord = data.dimord(5:end);
-    elseif strcmp(data.dimord(1:4), 'chan')
-      dimord = data.dimord(6:end);
+    if strcmp(dimord(1:3), 'pos')
+      dimord = dimord(5:end);
+    elseif strcmp(dimord(1:4), 'chan')
+      dimord = dimord(6:end);
     end
   case {'distance' 'edge_betweenness'}
     % 1 value per node pair
     outsiz = [size(input) 1];
     output = zeros(outsiz);
-    dimord = data.dimord;
+    dimord = dimord;
 end
 
 binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
 
 for k = 1:size(input, 3)
   for m = 1:size(input, 4)
-    
+
     % switch to the appropriate function from the BCT
     switch cfg.method
       case 'assortativity'
         if ~isbinary, ft_warning(binarywarning); end
-        
+
         if isdirected
           output(k,m) = assortativity(input(:,:,k,m), 1);
         elseif ~isdirected
@@ -217,7 +228,7 @@ for k = 1:size(input, 3)
         end
       case 'degrees'
         if ~isbinary, ft_warning(binarywarning); end
-        
+
         if isdirected
           [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
           % FIXME do something here
@@ -226,7 +237,7 @@ for k = 1:size(input, 3)
         end
       case 'density'
         if ~isbinary, ft_warning(binarywarning); end
-      
+
         if isdirected
           output(k,m) = density_dir(input(:,:,k,m));
         elseif ~isdirected
@@ -263,7 +274,7 @@ for k = 1:size(input, 3)
       otherwise
         error('unsupported connectivity metric %s requested');
     end
-    
+
   end % for m
 end % for k
 
@@ -272,15 +283,9 @@ end % for k
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 stat              = [];
+stat = keepfields(data, {'label', 'freq', 'time', 'grad', 'elec', 'dof', 'pos', 'tri', 'inside', 'brainordinate'});
 stat.(cfg.method) = output;
 stat.dimord       = dimord;
-if isfield(data, 'label') && needlabel,  stat.label  = data.label;  end
-if isfield(data, 'freq'),   stat.freq   = data.freq;   end
-if isfield(data, 'time'),   stat.time   = data.time;   end
-if isfield(data, 'grad'),   stat.grad   = data.grad;   end
-if isfield(data, 'elec'),   stat.elec   = data.elec;   end
-if exist('dof',  'var'),    stat.dof    = dof;         end
-% FIXME this needs to be implemented still
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

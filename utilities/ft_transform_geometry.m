@@ -19,7 +19,7 @@ function [output] = ft_transform_geometry(transform, input)
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -61,8 +61,8 @@ if allowscaling
   % FIXME insert check for nonuniform scaling, should give an error
 end
 
-tfields   = {'pos' 'pnt' 'o' 'chanpos' 'chanposorg' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
-rfields   = {'ori' 'nrm' 'coilori' 'chanori'}; % only apply rotation
+tfields   = {'pos' 'pnt' 'o' 'coilpos' 'chanpos' 'chanposold' 'chanposorg' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
+rfields   = {'ori' 'nrm'     'coilori' 'chanori' 'chanoriold' 'chanoriorg'};                                          % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication
 recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume

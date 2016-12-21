@@ -151,7 +151,7 @@ if writeflag,
 end
 
 if ~strcmp(version, 'latest') && str2num(version)<20100000
-  % -- HISTORICAL --- older fieldtrip versions don't support inputfile and outputfile
+  % -- HISTORICAL --- older FieldTrip versions don't support inputfile and outputfile
   load(cfg.inputfile, 'data');
   freq = ft_freqanalysis(cfg, data);
   save(cfg.outputfile, 'freq');
@@ -219,7 +219,7 @@ if writeflag,
 end
 
 if ~strcmp(version, 'latest') && str2num(version)<20100000
-  % -- HISTORICAL --- older fieldtrip versions don't support inputfile and outputfile
+  % -- HISTORICAL --- older FieldTrip versions don't support inputfile and outputfile
   load(cfg.inputfile, 'data');
   freq = ft_freqanalysis(cfg, data);
   save(cfg.outputfile, 'freq');

@@ -15,7 +15,7 @@ function [datsmooth] = ft_preproc_smooth(dat, n)
 %
 % Copyright (C) 2010, Stefan Klanke
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -33,6 +33,11 @@ function [datsmooth] = ft_preproc_smooth(dat, n)
 %
 % $Id$
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % create smoothing kernel
 if isscalar(n)
   krn = ones(1,n)/n;
@@ -43,7 +48,6 @@ end
 
 % deal with padding
 dat = ft_preproc_padding(dat, 'localmean', ceil(n/2));
-
 
 % do the smoothing
 if n<100

@@ -1,4 +1,4 @@
-function [dat] = read_neuralynx_ds(dirname, hdr, begsample, endsample, chanindx);
+function [dat] = read_neuralynx_ds(dirname, hdr, begsample, endsample, chanindx)
 
 % READ_NEURALYNX_DS reads multiple single-channel Neuralynx files that are
 % all contained in a single directory. Each file is treated as a single
@@ -25,7 +25,7 @@ function [dat] = read_neuralynx_ds(dirname, hdr, begsample, endsample, chanindx)
 
 % Copyright (C) 2006-2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

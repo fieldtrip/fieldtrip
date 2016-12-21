@@ -4,7 +4,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % second-order derivative (the surface Laplacian) of the EEG potential
 % distribution
 %
-% The relation between the surface Laplacian and the SCD is explained 
+% The relation between the surface Laplacian and the SCD is explained
 % in more detail on http://tinyurl.com/ptovowl.
 %
 % Use as
@@ -31,8 +31,8 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
 %   cfg.lambda       = regularization parameter (default = 1e-05)
 %   cfg.order        = order of the splines (default = 4)
-%   cfg.degree       = degree of legendre polynomials (default for 
-%                       <=32 electrodes = 9, 
+%   cfg.degree       = degree of legendre polynomials (default for
+%                       <=32 electrodes = 9,
 %                       <=64 electrodes = 14,
 %                       <=128 electrodes = 20,
 %                       else            = 32
@@ -78,7 +78,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 
 % Copyright (C) 2004-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -96,7 +96,10 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -106,8 +109,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -120,10 +123,10 @@ switch cfg.method
   case 'hjorth'
     cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
   case 'spline'
-    cfg.lambda  = ft_getopt(cfg, 'lambda', 1e-5); 
-    cfg.order   = ft_getopt(cfg, 'order', 4); 
-    cfg.degree  = ft_getopt(cfg, 'degree', []); 
-    
+    cfg.lambda  = ft_getopt(cfg, 'lambda', 1e-5);
+    cfg.order   = ft_getopt(cfg, 'order', 4);
+    cfg.degree  = ft_getopt(cfg, 'degree', []);
+
     if isempty(cfg.degree) % determines degree of Legendre polynomials bases on number of electrodes
       nchan = numel(data.label);
       if nchan<=32
@@ -144,7 +147,7 @@ end
 dtype = ft_datatype(data);
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'iseeg','yes','ismeg',[]); 
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'iseeg','yes','ismeg',[]);
 
 % select trials of interest
 tmpcfg = keepfields(cfg, 'trials');
@@ -179,21 +182,21 @@ end
 
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
-  
+
   ft_progress('init', 'text');
-  
+
   for trlop=1:Ntrials
     % do not compute interpolation, but only one value at [0 0 1]
     % this also gives L1, the laplacian of the original data in which we
     % are interested here
-    
+
     ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
     [V2, L2, L1] = splint(elec.chanpos, data.trial{trlop}, [0 0 1], cfg.order, cfg.degree, cfg.lambda);
     scd.trial{trlop} = L1;
   end
-  
+
   ft_progress('close');
-  
+
 elseif strcmp(cfg.method, 'finite')
   % the finite difference approach requires a triangulation
   prj = elproj(elec.chanpos);
@@ -205,7 +208,7 @@ elseif strcmp(cfg.method, 'finite')
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
-  
+
 elseif strcmp(cfg.method, 'hjorth')
   % convert the neighbourhood structure into a montage
   labelnew = {};
@@ -230,7 +233,7 @@ elseif strcmp(cfg.method, 'hjorth')
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
-  
+
 else
   error('unknown method for SCD computation');
 end

@@ -16,7 +16,7 @@ function tree = xml_parser(xmlstr)
 % Copyright (C) 2002-2015  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: xml_parser.m 6480 2015-06-13 01:08:30Z guillaume $
 
 % XML Processor for GNU Octave and MATLAB (The Mathworks, Inc.)
 % Copyright (C) 2002-2015 Guillaume Flandin <Guillaume@artefact.tk>

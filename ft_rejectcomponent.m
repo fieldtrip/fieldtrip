@@ -37,7 +37,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 
 % Copyright (C) 2005-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -55,7 +55,10 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -65,24 +68,22 @@ ft_preamble loadvar comp data
 ft_preamble provenance comp data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
 % set the defaults
 cfg.component       = ft_getopt(cfg, 'component',  []);
-cfg.demean          = ft_getopt(cfg, 'demean',    'yes');
-cfg.feedback        = ft_getopt(cfg, 'feedback',  'text');
-cfg.updatesens      = ft_getopt(cfg, 'updatesens',  'yes');
+cfg.demean          = ft_getopt(cfg, 'demean',     'yes');
+cfg.feedback        = ft_getopt(cfg, 'feedback',   'text');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens', 'yes');
 
 % the data can be passed as input arguments or can be read from disk
-nargin = 1;
-nargin = nargin + exist('comp', 'var');
-nargin = nargin + exist('data', 'var');
+hascomp = exist('comp', 'var');
+hasdata = exist('data', 'var');
 
-
-if nargin==3
+if hascomp && hasdata
   % check if the input data is valid for this function
   istlck  = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
   data    = ft_checkdata(data, 'datatype', 'raw');
@@ -90,14 +91,12 @@ if nargin==3
   label   = data.label;
   nchans  = length(data.label);
   ncomps  = length(comp.label);
-  hasdata = 1;
-elseif nargin==2
+elseif hascomp
   % check if the input data is valid for this function
   istlck  = ft_datatype(comp, 'timelock');  % this will be temporary converted into raw
   comp    = ft_checkdata(comp, 'datatype', 'raw+comp');
   label   = comp.topolabel;
   ncomps  = length(comp.label);
-  hasdata = 0;
 else
   error('incorrect number of input arguments');
 end
@@ -118,7 +117,7 @@ if max(reject)>ncomps
   error('you cannot remove components that are not present in the data');
 end
 
-if nargin==3 && strcmp(cfg.demean, 'yes')
+if hasdata && strcmp(cfg.demean, 'yes')
   % optionally perform baseline correction on each trial
   fprintf('baseline correcting data \n');
   for trial=1:numel(data.trial)
@@ -138,37 +137,37 @@ end
 % topographies of the to-be-removed components from identity
 [seldat, selcomp] = match_str(label, comp.topolabel);
 
-if length(seldat)~=length(label) && nargin==3,
+if hasdata && length(seldat)~=length(label)
   warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
 end
 
 if hasdata
   mixing   = comp.topo(selcomp,:);
   unmixing = comp.unmixing(:,selcomp);
-  
+
   % I am not sure about this, but it gives comparable results to the ~hasdata case
   % when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
-  
+
   montage     = [];
   montage.tra = eye(length(selcomp)) - mixing(:, reject)*unmixing(reject, :);
   % we are going from data to components, and back again
   montage.labelorg = comp.topolabel(selcomp);
   montage.labelnew = comp.topolabel(selcomp);
-  
+
   keepunused = 'yes'; % keep the original data which are not present in the mixing provided
-  
+
 else
   mixing = comp.topo(selcomp, :);
   mixing(:, reject) = 0;
-  
+
   montage     = [];
   montage.tra = mixing;
   % we are going from components to data
   montage.labelorg = comp.label;
   montage.labelnew = comp.topolabel(selcomp);
-  
+
   keepunused = 'no'; % don't need to keep the original rejected components
-  
+
   % create data structure
   data         = [];
   data.trial   = comp.trial;
@@ -209,7 +208,7 @@ if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
   % unused sensors in the sensor description. the unused components need to
   % be removed in a second step
   sens = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp', 'feedback', cfg.feedback);
-  
+
   % there could have been sequential subspace projections, so the
   % invcomp-field may have been renamed into invcompX. If this it the case,
   % take the one with the highest suffix
@@ -222,7 +221,7 @@ if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
       end
     end
   end
-  
+
   % remove the unused channels from the grad/elec
   [junk, remove]    = match_str(comp.label, sens.label);
   sens.tra(remove,:) = [];
@@ -231,7 +230,7 @@ if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
   if isfield(sens, 'chanori')
     sens.chanori(remove,:) = [];
   end
-  
+
   % remove the unused components from the balancing and from the tra
   [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
   sens.balance.(invcompfield).tra(remove, :)   = [];

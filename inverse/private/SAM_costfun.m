@@ -1,4 +1,4 @@
-function inv_pseudo_Z = SAM_costfun(angle, position, tanu, tanv, lf, covariance, inv_covariance, noise_covariance);
+function inv_pseudo_Z = SAM_costfun(angle, position, tanu, tanv, lf, covariance, inv_covariance, noise_covariance)
         
 % costfunction for non-linear beamformer. Use this cost-function to
 % find the optimum orientation (in the tangential plane formed by

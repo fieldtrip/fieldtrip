@@ -17,7 +17,7 @@ function varargout = qsubget(jobid, varargin)
 % See also QSUBFEVAL, QSUBCELLFUN
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2010-2014, Robert Oostenveld
+% Copyright (C) 2010-2016, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by

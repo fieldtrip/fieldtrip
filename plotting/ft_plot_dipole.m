@@ -1,4 +1,4 @@
-function ft_plot_dipole(pos, ori, varargin)
+function h = ft_plot_dipole(pos, ori, varargin)
 
 % FT_PLOT_DIPOLE makes a 3-D representation of a dipole using a sphere and a stick
 % pointing along the dipole orientation
@@ -13,13 +13,14 @@ function ft_plot_dipole(pos, ori, varargin)
 %   'color'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'r')
 %   'unit'     = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
 %   'scale'    = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
+%   'alpha'    = alpha value of the plotted dipole
 %
 % Example
-%   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r')
+%   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r', 'alpha', 1)
 
 % Copyright (C) 2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -45,7 +46,7 @@ color          = ft_getopt(varargin, 'color',    'r'); % can also be a RGB tripl
 diameter       = ft_getopt(varargin, 'diameter', 'auto');
 length         = ft_getopt(varargin, 'length',   'auto');
 unit           = ft_getopt(varargin, 'unit',     'cm');
-
+alpha          = ft_getopt(varargin, 'alpha',     1);
 
 % for backward compatibility, this can be changed into an error at the end of 2016
 units = ft_getopt(varargin, 'units');
@@ -55,7 +56,6 @@ if ~isempty(units)
   clear units
 end
   
-
 if isequal(diameter, 'auto')
   % the default is a 5 mm sphere
   switch unit
@@ -94,11 +94,17 @@ if all(size(ori) == [1 3])
   ori = ori';
 end
 
+h = [];
+
 % everything is added to the current figure
 holdflag = ishold;
 if ~holdflag
   hold on
 end
+
+% these are reused
+[unitsphere.pos, unitsphere.tri] = icosahedron642;
+[unitcylinder.pos, unitcylinder.tri] = cylinder(36, 2);
 
 for i=1:size(pos,1)
   amplitude = norm(ori(:,i));
@@ -116,10 +122,10 @@ for i=1:size(pos,1)
     this_diameter = diameter;
   end
   
-  % create a unit sphere and cylinder
-  [sphere.pos, sphere.tri] = icosahedron642;
+  % start with a unit sphere and cylinder
+  sphere  = unitsphere;
+  stick   = unitcylinder;
   sphere.pos = ft_warp_apply(scale([0.5 0.5 0.5]), sphere.pos, 'homogeneous'); % the diameter should be 1
-  [stick.pos, stick.tri]   = cylinder(36, 2);
   stick.pos = ft_warp_apply(scale([0.5 0.5 0.5]), stick.pos, 'homogeneous'); % the length should be 1
   stick.pos = ft_warp_apply(translate([0 0 0.5]), stick.pos, 'homogeneous'); % it should start in the origin
   
@@ -155,9 +161,13 @@ for i=1:size(pos,1)
   stick.pos = ft_warp_apply(translate([tx ty tz]), stick.pos, 'homogeneous');
   
   % plot the sphere and the stick
-  ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
-  ft_plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color);
+  p1 = ft_plot_mesh(sphere, 'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color, 'facealpha', alpha);
+  h = cat(2, h(:)', p1(:)');
+  clear p1;
   
+  p2 = ft_plot_mesh(stick,  'vertexcolor', 'none', 'edgecolor', false, 'facecolor', color, 'facealpha', alpha);
+  h = cat(2, h(:)', p2(:)');
+  clear p2;
 end % for each dipole
 
 axis off
@@ -166,6 +176,10 @@ axis equal
 
 if ~holdflag
   hold off
+end
+
+if ~nargout
+  clear h
 end
 
 warning(ws); %revert to original state

@@ -79,7 +79,7 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 
 % Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -97,7 +97,10 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -143,10 +146,10 @@ switch cfg.method
     if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
     if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
     % call the zvalue artifact detection function
-    
+
     % the data is either passed into the function by the user or read from file with cfg.inputfile
     hasdata = exist('data', 'var');
-    
+
     if hasdata
       % read the header
       cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
@@ -162,24 +165,24 @@ switch cfg.method
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
     end
     cfg.artfctdef.tms = tmpcfg.artfctdef.zvalue;
-    
+
     % adjust artifact definition so that Nx2 matrix contains detected TMS
     % events with user-specified pre- and post stimulus period included.
     % The reason for this is that ft_artifact_zvalue centers the period
     % marked as artifactual around the detected event. In the case of a TMS
     % pulse the window you would like to mark as artifactual is not
     % symmetrical around the onset of the pulse.
-    
+
     % get values and express in samples
     prestim = round(cfg.prestim * fsample);
     poststim = round(cfg.poststim * fsample);
-    
+
     % adjust Nx2 artifact matrix to be centered non-symmetrically around
     % detected TMS-pulse
     artifact(:,1) = (artifact(:,1)+artifact(:,2))./2 - prestim;
     artifact(:,2) = artifact(:,1) + poststim;
     cfg.artfctdef.tms.artifact = artifact;
-    
+
   case 'marker'
     % Check if the cfg is correct for this method
     cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -189,14 +192,14 @@ switch cfg.method
     trialdef.prestim = cfg.prestim;
     trialdef.poststim = cfg.poststim;
     cfg.trialdef = ft_checkconfig(trialdef,'required',{'eventvalue','eventtype'});
-    
+
     % Get the trialfun
     cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
-    
+
     % Evaluate the trialfun
     fprintf('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
     trl   = feval(cfg.trialfun, cfg);
-    
+
     % Prepare the found events for output
     artifact = trl(:,1:2);
     cfg.artfctdef.tms.artifact = artifact;
@@ -206,4 +209,3 @@ switch cfg.method
 end
 
 cfg = rmfield(cfg, 'method'); % FIXME - not removing this causes problems when passing to ft_preprocessing
-

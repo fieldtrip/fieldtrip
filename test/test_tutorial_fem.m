@@ -4,7 +4,7 @@
 % MEM 4gb
 
 % this test script is based on the tutorial under development at
-% http://fieldtrip.fcdonders.nl/development/simbio
+% http://www.fieldtriptoolbox.org/development/simbio
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data'))
 

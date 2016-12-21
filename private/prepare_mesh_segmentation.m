@@ -2,11 +2,12 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % PREPARE_MESH_SEGMENTATION
 %
-% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE, PREPARE_MESH_HEXAHEDRAL
+% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
+% PREPARE_MESH_HEXAHEDRAL, PREPARE_MESH_TETRAHEDRAL
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -23,7 +24,6 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
 
 % ensure that the input is consistent with what this function expects
 mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
@@ -82,8 +82,6 @@ end
 if numel(cfg.tissue)>1 && numel(cfg.numvertices)==1
   % use the same number of vertices for each tissue
   cfg.numvertices = repmat(cfg.numvertices, size(cfg.tissue));
-elseif numel(cfg.tissue)~=numel(cfg.numvertices)
-  error('you should specify the number of vertices for each tissue type');
 end
 
 if iscell(cfg.tissue)
@@ -144,10 +142,16 @@ for i =1:numel(cfg.tissue)
   
   switch cfg.method
     case 'isosurface'
-      [tri, pnt] = isosurface(seg, 0.5);
-      pnt = pnt(:,[2 1 3]); % Mathworks isosurface indexes differently
+      [tri, pos] = isosurface(seg);
+      if ~isempty(cfg.numvertices)
+        npos = cfg.numvertices(i);
+        ntri = 2*(npos-2);
+        [tri, pos] = reducepatch(tri, pos, ntri);
+      end
+      pos = pos(:,[2 1 3]); % Mathworks isosurface indexes differently
       
     case 'iso2mesh'
+      % this requires the external iso2mesh toolbox
       ft_hastoolbox('iso2mesh', 1);
       
       opt = [];
@@ -155,7 +159,11 @@ for i =1:numel(cfg.tissue)
       opt.maxnode = cfg.numvertices(i);
       opt.maxsurf = 1;
       
-      [pnt, tri] = v2s(seg, 1, opt, 'cgalsurf');
+      method = 'cgalsurf';
+      isovalues = 0.5;
+      
+      [pos, tri, regions, holes] = v2s(seg, isovalues, opt, method);
+      
       tri = tri(:,1:3);
       
     case 'projectmesh'
@@ -164,7 +172,7 @@ for i =1:numel(cfg.tissue)
       ori(2) = mean(mriy(seg(:)));
       ori(3) = mean(mriz(seg(:)));
       
-      [pnt, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
+      [pos, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
       
     otherwise
       error('unsupported method "%s"', cfg.method);
@@ -172,10 +180,9 @@ for i =1:numel(cfg.tissue)
   
   numvoxels(i) = sum(find(seg(:))); % the number of voxels in this tissue
   
-  bnd(i).pnt = ft_warp_apply(mri.transform, pnt);
+  bnd(i).pos = ft_warp_apply(mri.transform, pos);
   bnd(i).tri = tri;
   bnd(i).unit = mri.unit;
-  
   
 end % for each tissue
 
@@ -198,10 +205,9 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function bnd = decouplesurf(bnd)
 for ii = 1:length(bnd)-1
-  % Despite what the instructions for surfboolean says, surfaces should
-  % be ordered from inside-out!!
-  [newnode, newelem] = surfboolean(bnd(ii+1).pnt,bnd(ii+1).tri,'decouple',bnd(ii).pnt,bnd(ii).tri);
-  bnd(ii+1).tri = newelem(newelem(:,4)==2,1:3) - size(bnd(ii+1).pnt,1);
-  bnd(ii+1).pnt = newnode(newnode(:,4)==2,1:3);
+  % Despite what the instructions for surfboolean says, surfaces should be ordered from inside-out!!
+  [newnode, newelem] = surfboolean(bnd(ii+1).pos,bnd(ii+1).tri,'decouple',bnd(ii).pos,bnd(ii).tri);
+  bnd(ii+1).tri = newelem(newelem(:,4)==2,1:3) - size(bnd(ii+1).pos,1);
+  bnd(ii+1).pos = newnode(newnode(:,4)==2,1:3);
 end % for
-end %function
+end % function

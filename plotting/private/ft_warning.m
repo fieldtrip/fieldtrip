@@ -33,10 +33,9 @@ function [ws, warned] = ft_warning(varargin)
 % instead you should do
 %   ft_warning(sprintf('the value is %d', 10))
 
-% Copyright (C) 2012, Robert Oostenveld
-% Copyright (C) 2013, Robert Oostenveld, J?rn M. Horschig
+% Copyright (C) 2012-2016, Robert Oostenveld, J?rn M. Horschig
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -55,12 +54,19 @@ function [ws, warned] = ft_warning(varargin)
 % $Id$
 
 global ft_default
+warned = false;
+ws = [];
+
+stack = dbstack;
+if any(strcmp({stack(2:end).file}, 'ft_warning.m'))
+  % don't call FT_WARNING recursively, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3068
+  return;
+end
 
 if nargin < 1
   error('You need to specify at least a warning message');
 end
 
-warned = false;
 if isstruct(varargin{1})
   warning(varargin{1});
   return;

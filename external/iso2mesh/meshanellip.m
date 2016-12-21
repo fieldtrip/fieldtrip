@@ -4,7 +4,7 @@ function [node,face,elem]=meshanellip(c0,rr,tsize,maxvol)
 %
 % create the surface and tetrahedral mesh of an ellipsoid
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %   c0:  center coordinates (x0,y0,z0) of the ellipsoid

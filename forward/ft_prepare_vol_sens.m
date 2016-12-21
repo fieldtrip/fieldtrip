@@ -40,7 +40,7 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 
 % Copyright (C) 2004-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -57,6 +57,14 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if iscell(headmodel) && iscell(sens)
+  % this represents combined EEG, ECoG and/or MEG
+  for i=1:numel(headmodel)
+    [headmodel{i}, sens{i}] = ft_prepare_vol_sens(headmodel{i}, sens{i}, varargin{:});
+  end
+  return
+end
 
 % get the optional input arguments
 % fileformat = ft_getopt(varargin, 'fileformat');
@@ -357,9 +365,9 @@ elseif iseeg
       
     case {'slab_monopole'}
       % electrodes' all-to-all distances
-      numel  = size(sens.elecpos,1);
-      ref_el = sens.elecpos(1,:);
-      md  = dist( (sens.elecpos-repmat(ref_el,[numel 1]))' );
+      numelc  = size(sens.elecpos,1);
+      ref_elc = sens.elecpos(1,:);
+      md  = dist( (sens.elecpos-repmat(ref_elc,[numelc 1]))' );
       % choose min distance between electrodes
       md  = min(md(1,2:end));
       pos = sens.elecpos;

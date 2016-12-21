@@ -1,5 +1,5 @@
 function [ws warned] = print_once(varargin)
-%
+
 % PRINT_ONCE will print a message for every unique point in the
 % stacktrace only, e.g. in a for-loop a warning is thrown only once.
 %
@@ -19,11 +19,13 @@ function [ws warned] = print_once(varargin)
 %   print_once('the value is %d', 10)
 % instead you should do
 %   print_once(sprintf('the value is %d', 10))
+%
+% See also FT_WARNING
 
 % Copyright (C) 2012, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

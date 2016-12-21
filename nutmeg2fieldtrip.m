@@ -30,7 +30,7 @@ function [data, mri, grid] = nutmeg2fieldtrip(cfg,fileorstruct)
 
 % Copyright (C) 2011, Johanna Zumer
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,7 +48,10 @@ function [data, mri, grid] = nutmeg2fieldtrip(cfg,fileorstruct)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -139,7 +142,7 @@ if nutsorbeam==1
     raw.grad.tra(:,2*size(structin.meg.data,2)+1:end)=structin.meg.Gcoef;
     warning('FIXME: should Gcoef be added regardless of structin.meg.grad_order?')
   end
-  
+
   if structin.meg.grad_order==0
     raw.grad.balance.current='none';
   elseif structin.meg.grad_order==1
@@ -149,11 +152,11 @@ if nutsorbeam==1
   elseif structin.meg.grad_order==3
     raw.grad.balance.current='G3BR';
   end
-  
+
   raw.headmodel.o = structin.meg.lsc; % note this may include reference channels. may need to do str_match of lsc_sensor_labels with sensor_labels?
   data=raw;
   clear raw
-  
+
 elseif nutsorbeam==2
   cfg.ftsource='old'; % 'old' way of source structure in FT
   tmp.pos=0.1*structin.voxels; % NM in CTF mm, FT in cm
@@ -243,4 +246,3 @@ ft_postamble provenance
 ft_postamble history    data
 ft_postamble history    mri
 ft_postamble history    grid
-

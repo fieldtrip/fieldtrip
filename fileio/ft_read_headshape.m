@@ -25,6 +25,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'coordsys'    = string, e.g. 'head' or 'dewar' (only supported for CTF)
 %   'unit'        = string, e.g. 'mm' (default is the native units of the file)
 %   'concatenate' = 'no' or 'yes' (default = 'yes')
+%   'image'       = path to .jpeg file
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
@@ -52,12 +53,13 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'caret_spec'
 %   'brainvisa_mesh'
 %   'brainsuite_dfs'
+%   'obj'           Wavefront .obj file obtained with the structure.io
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
 % Copyright (C) 2008-2016 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -81,7 +83,7 @@ concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
-
+image          = ft_getopt(varargin, 'image',[100, 100 ,100]);               % path to .jpeg file
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -98,7 +100,7 @@ if iscell(filename)
   end
   
   % Concatenate the bnds (only if 'concatenate' = 'yes' ) and if all
-  % structures have non-empty pnts and tris. If not, the input filenames
+  % structures have non-empty vertices and triangles. If not, the input filenames
   % may have been caret-style coord and topo, which needs combination of
   % the pos and tri.
   
@@ -121,7 +123,7 @@ if iscell(filename)
       end
       
       % concatenate any other fields
-      fnames = {'sulc' 'curv' 'area' 'thickness'};
+      fnames = {'sulc' 'curv' 'area' 'thickness' 'atlasroi'};
       for k = 1:numel(fnames)
         if isfield(bnd(1), fnames{k}) && isfield(bnd(2), fnames{k})
           shape.(fnames{k}) = cat(1, bnd.(fnames{k}));
@@ -190,6 +192,14 @@ if iscell(filename)
   
   return
 end % if iscell
+
+% checks if there exists a .jpg file of 'filename'
+[pathstr,name]  = fileparts(filename);
+if exist(fullfile(pathstr,[name,'.jpg']))
+  image    = fullfile(pathstr,[name,'.jpg']);
+  hasimage = 1;
+end
+
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -328,6 +338,7 @@ switch fileformat
       if exist(tmpfilename, 'file'), g = gifti(tmpfilename); shape.sulc = g.cdata; end
       if exist(strrep(tmpfilename, 'sulc', 'curvature'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'curvature')); shape.curv = g.cdata; end
       if exist(strrep(tmpfilename, 'sulc', 'thickness'), 'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'thickness')); shape.thickness = g.cdata; end
+      if exist(strrep(tmpfilename, 'sulc', 'atlasroi'),  'file'),  g = gifti(strrep(tmpfilename, 'sulc', 'atlasroi'));  shape.atlasroi  = g.cdata; end
     end
     
   case 'caret_spec'
@@ -453,31 +464,31 @@ switch fileformat
     switch coordsys
       case 'head'
         fidN=1;
-        pntN=1;
+        posN=1;
         for i=1:size(orig.head.pos,1)
           if strcmp(orig.head.label{i}, 'LPA') || strcmp(orig.head.label{i}, 'Nasion') || strcmp(orig.head.label{i}, 'RPA')
             shape.fid.pos(fidN,1:3) = orig.head.pos(i,:);
             shape.fid.label{fidN} = orig.head.label{i};
             fidN = fidN + 1;
           else
-            shape.pos(pntN,1:3) = orig.head.pos(i,:);
-            shape.label{pntN} = orig.head.label{i};
-            pntN = pntN + 1;
+            shape.pos(posN,1:3) = orig.head.pos(i,:);
+            shape.label{posN} = orig.head.label{i};
+            posN = posN + 1;
           end
         end
         shape.coordsys = orig.head.coordsys;
       case 'dewar'
         fidN=1;
-        pntN=1;
+        posN=1;
         for i=1:size(orig.dewar.pos,1)
           if strcmp(orig.dewar.label{i}, 'LPA') || strcmp(orig.dewar.label{i}, 'Nasion') || strcmp(orig.dewar.label{i}, 'RPA')
             shape.fid.pos(fidN,1:3) = orig.dewar.pos(i,:);
             shape.fid.label{fidN} = orig.dewar.label{i};
             fidN = fidN + 1;
           else
-            shape.pos(pntN,1:3) = orig.dewar.pos(i,:);
-            shape.label{pntN} = orig.dewar.label{i};
-            pntN = pntN + 1;
+            shape.pos(posN,1:3) = orig.dewar.pos(i,:);
+            shape.label{posN} = orig.dewar.label{i};
+            posN = posN + 1;
           end
         end
         shape.coordsys = orig.dewar.coordsys;
@@ -699,6 +710,28 @@ switch fileformat
     shape.pos = pos;
     shape.tri = tri;
     
+  case 'obj'
+    ft_hastoolbox('wavefront', 1);
+    % Implemented for structure.io .obj thus far
+    obj = read_wobj(filename);
+    shape.pos     = obj.vertices;
+    shape.pos     = shape.pos - repmat(sum(shape.pos)/length(shape.pos),[length(shape.pos),1]); %centering vertices
+    shape.tri     = obj.objects(2).data.vertices;
+    if (~isempty(image) && exist('hasimage','var'))
+      texture = obj.vertices_texture;
+      
+      %Refines the mesh and textures to increase resolution of the
+      %colormapping
+      for i = 1:1
+        [shape.pos, shape.tri,texture] = refine(shape.pos,shape.tri,'banks',texture);
+      end
+      picture     = imread(image);
+      color = uint8(zeros(length(shape.pos),3));
+      for i=1:length(shape.pos)
+        color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),1+floor(texture(i,1)*length(picture)),1:3);
+      end
+    end
+    
   case 'vtk'
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
@@ -869,6 +902,17 @@ switch fileformat
     % FIXME remove vertices that are not in a triangle
     % FIXME add unit
     
+  case 'besa_sfp'
+    [lab, pos] = read_besa_sfp(filename, 0);
+    shape.pos = pos;
+    
+    % assume that all non-'headshape' points are fiducial markers
+    hs = strmatch('headshape', lab);
+    lab(hs) = [];
+    pos(hs, :) = [];
+    shape.fid.label = lab;
+    shape.fid.pos = pos;
+    
   case 'asa_elc'
     elec = ft_read_sens(filename);
     
@@ -884,6 +928,18 @@ switch fileformat
       
       shape.pos = pos;
     end
+    
+  case 'neuromag_mesh'
+    fid = fopen(filename, 'rt');
+    npos = fscanf(fid, '%d', 1);
+    pos = fscanf(fid, '%f', [6 npos])';
+    ntri = fscanf(fid, '%d', 1);
+    tri = fscanf(fid, '%d', [3 ntri])';
+    fclose(fid);
+    
+    shape.pos = pos(:,1:3); % vertex positions
+    shape.nrm = pos(:,4:6); % vertex normals
+    shape.tri = tri;
     
   otherwise
     % try reading it from an electrode of volume conduction model file
@@ -952,5 +1008,11 @@ else
   end
 end
 
+% ensure that vertex positions are given in pos, not in pnt
+shape = fixpos(shape);
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
+
+if (~isempty(image) && exist('hasimage','var'))
+  shape.color = color;
+end

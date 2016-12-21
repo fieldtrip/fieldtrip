@@ -28,7 +28,7 @@ function ft_realtime_fmriproxy(cfg)
 
 % Copyright (C) 2010, Stefan Klanke / Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -72,7 +72,7 @@ nifti.pixdim = [3.5 3.5 3.5]; % size of voxel in mm
 nifti.slice_duration = Tslice;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% create a fieldtrip compatible header structure
+% create a FieldTrip compatible header structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hdr = [];
 hdr.nChans = prod(voxels);

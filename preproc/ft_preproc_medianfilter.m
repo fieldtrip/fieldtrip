@@ -14,7 +14,7 @@ function dat = ft_preproc_medianfilter(dat, order)
 
 % Copyright (C) 2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -37,11 +37,16 @@ if nargin<2 || isempty(order)
   error('the order of the median filter is not specified');
 end
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % deal with padding
 pad = ceil(order/2);
 dat = ft_preproc_padding(dat, 'localmean', pad);
 
-hasfast = exist('fastmedfilt1d');
+hasfast = exist('fastmedfilt1d', 'file');
 if hasfast == 2 || hasfast == 3
   % use fast median filter mex file
   for k = 1:size(dat,1)

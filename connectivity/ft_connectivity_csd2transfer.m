@@ -27,8 +27,8 @@ function [output] = ft_connectivity_csd2transfer(freq, varargin)
 %
 % If you use this code for studying directed interactions, please cite from
 % the following references:
-% -M.Dhamala, G.Rangarajan, M.Ding, Physical Review Letters 100, 018701 (2008)
-% -M.Dhamala, G.rangarajan, M.Ding, Neuroimage 41, 354 (2008)
+% -M.Dhamala, R.Rangarajan, M.Ding, Physical Review Letters 100, 018701 (2008)
+% -M.Dhamala, R.Rangarajan, M.Ding, Neuroimage 41, 354 (2008)
 
 % Undocumented options:
 %
@@ -38,7 +38,7 @@ function [output] = ft_connectivity_csd2transfer(freq, varargin)
 %
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

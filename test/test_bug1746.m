@@ -14,11 +14,11 @@ sourcemodel.inside = sourcemodel.inside(1:10);
 sourcemodel.outside = setdiff(1:prod(sourcemodel.dim),sourcemodel.inside);
 meglabel    = ft_channelselection('MEG', freq.label);
 
-cfg         = [];
-cfg.vol     = vol;
-cfg.grid    = sourcemodel;
-cfg.channel = meglabel;
-leadfield1  = ft_prepare_leadfield(cfg, freq);
+cfg           = [];
+cfg.headmodel = vol;
+cfg.grid      = sourcemodel;
+cfg.channel   = meglabel;
+leadfield1    = ft_prepare_leadfield(cfg, freq);
 assert(isfield(leadfield1, 'label'));
 
 shuffle     = randperm(numel(meglabel));
@@ -33,12 +33,12 @@ assert(norm(leadfield1.leadfield{4}(:)-leadfield2.leadfield{4}(:))./norm(leadfie
 % leadfield.leadfield.
 
 cfg = [];
-cfg.method = 'dics';
-cfg.vol    = vol;
-cfg.grid   = leadfield1;
-cfg.frequency = 5;
+cfg.method      = 'dics';
+cfg.headmodel   = vol;
+cfg.grid        = leadfield1;
+cfg.frequency   = 5;
 cfg.dics.lambda = '10%';
-cfg.channel = meglabel;
+cfg.channel     = meglabel;
 source1 = ft_sourceanalysis(cfg, freq);
 
 cfg.channel = meglabel(1:2:end);

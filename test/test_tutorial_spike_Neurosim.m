@@ -5,7 +5,7 @@ function test_tutorial_spike_Neurosim
 
 % TEST test_tutorial_spike_sim
 % performs all the operations mentioned int the spike tutorial
-% (http://fieldtrip.fcdonders.nl/tutorial/spike), but only plots figures
+% (http://www.fieldtriptoolbox.org/tutorial/spike), but only plots figures
 % that are called by external functions (e.g. ft_spike_plot_isireturn).
 % 
 % This corresponds to the tutorial around 25 Sept 2012

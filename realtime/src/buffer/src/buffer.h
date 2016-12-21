@@ -35,6 +35,7 @@
 #define BACKLOG           16
 #define DEFAULT_HOSTNAME "localhost"
 #define DEFAULT_PORT      1972
+#define HOSTNAME_LENGTH   256
 
 #define SO_RCVBUF_SIZE 16384
 #define SO_SNDBUF_SIZE 16384
@@ -104,9 +105,11 @@ int ft_convert_chunks_from_native(UINT32_T size, UINT32_T nchans, void *buf);
 int ft_swap_from_native(UINT16_T orgCommand, message_t *msg);
 
 typedef struct {
-    char name[256];
+    char name[HOSTNAME_LENGTH];
     int  port;
 } host_t;
+
+#define DIE_BAD_MALLOC(ptr) if ((ptr)==NULL) { fprintf(stderr, "Out of memory in line %d", __LINE__); exit(1); }
 
 #ifdef __cplusplus
 }

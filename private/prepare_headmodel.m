@@ -20,7 +20,7 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 
 % Copyright (C) 2004-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -87,11 +87,20 @@ else
 end
 
 % ensure that these are a struct, which may be required in case configuration tracking is used
-headmodel  = struct(headmodel);
-sens = struct(sens);
+% FIXME this fails for combined EEG+MEG
+% headmodel = struct(headmodel);
+% sens      = struct(sens);
 
 % the prepare_vol_sens function from the forwinv module does most of the actual work
 [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel, 'order', cfg.order);
 
 % update the selected channels in the configuration
-cfg.channel = sens.label;
+if iscell(sens)
+  % this represents combined EEG, ECoG and/or MEG
+  cfg.channel = {};
+  for i=1:numel(sens)
+    cfg.channel = cat(1, cfg.channel, sens{i}.label(:));
+  end
+else
+  cfg.channel = sens.label;
+end

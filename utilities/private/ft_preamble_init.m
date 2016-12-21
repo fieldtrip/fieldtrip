@@ -8,9 +8,9 @@
 %
 % See also FT_TRACKUSAGE
 
-% Copyright (C) 2011-2012, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2016, Robert Oostenveld, DCCN
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@
 % disabled for now, see further down
 global ft_default
 
-if nargin==0
+if ft_nargin==0
   stack = dbstack('-completenames');
   % stack(1) is this script
   % stack(2) is the calling ft_postamble function
@@ -44,6 +44,11 @@ if nargin==0
   msg.stack       = stack;
   error(msg);
 end % if nargin
+
+% convert automatically from cell-array to structure
+if iscell(cfg)
+  cfg = ft_keyval2cfg(cfg);
+end
 
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
 % merge the default options into the configuration, except the preamble field which is used for passing arguments
@@ -62,7 +67,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     outputfile = cfg.outputfile;
   end
   if ~exist(outputfile, 'file')
-    abort = false;
+    ft_abort = false;
   else
     % the output file exists, determine how to deal with it
     switch cfg.outputfilepresent
@@ -70,15 +75,15 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
         if nargout>0
           % continue executing the parent function
           warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
-          abort = false;
+          ft_abort = false;
         else
           % stop executing the parent function
           warning('output file %s is already present: aborting function execution', cfg.outputfile);
-          abort = true;
+          ft_abort = true;
         end
       case 'overwrite'
         warning('output file %s is already present: it will be overwritten', cfg.outputfile);
-        abort = false;
+        ft_abort = false;
       case 'error'
         error('output file %s is already present', cfg.outputfile);
       otherwise
@@ -87,7 +92,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
   end
 else
   % there is no reason to abort execution
-  abort = false;
+  ft_abort = false;
 end % if outputfile
 
 if false

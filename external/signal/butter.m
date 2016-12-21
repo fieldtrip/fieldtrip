@@ -49,7 +49,7 @@
 function [a, b, c, d] = butter (n, W, varargin)
 
 if (nargin>4 || nargin<2) || (nargout>4 || nargout<2)
-  usage ('[b, a] or [z, p, g] or [a,b,c,d] = butter (n, W [, "ftype"][,"s"])');
+  error ('usage: [b, a] or [z, p, g] or [a,b,c,d] = butter (n, W [, "ftype"][,"s"])');
 end
 
 % interpret the input parameters
@@ -64,7 +64,7 @@ for i=1:length(varargin)
     case 's', digital = 0;
     case 'z', digital = 1;
     case { 'high', 'stop' }, stop = 1;
-    case { 'low',  'pass' }, stop = 0;
+    case { 'low',  'pass', 'bandpass' }, stop = 0;
     otherwise,  error ('butter: expected [high|stop] or [s|z]');
   end
 end

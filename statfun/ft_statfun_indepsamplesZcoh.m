@@ -50,7 +50,7 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 
 % Copyright (C) 2006, Eric Maris
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -173,3 +173,4 @@ cmbindx1 = repmat((1:nchan)', [1 nchan]);
 cmbindx2 = repmat((1:nchan),  [nchan 1]);
 cfg.chancmbindx(:,1) = cmbindx1(chanindx);
 cfg.chancmbindx(:,2) = cmbindx2(chanindx);
+

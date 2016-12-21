@@ -5,7 +5,7 @@ function cfg = topoplot_common(cfg, varargin)
 
 % Copyright (C) 2005-2011, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -130,6 +130,7 @@ cfg.shading           = ft_getopt(cfg, 'shading',       'flat');
 cfg.comment           = ft_getopt(cfg, 'comment',       'auto');
 cfg.commentpos        = ft_getopt(cfg, 'commentpos',    'leftbottom');
 cfg.fontsize          = ft_getopt(cfg, 'fontsize',      8);
+cfg.fontweight        = ft_getopt(cfg, 'fontweight',    'normal');
 cfg.baseline          = ft_getopt(cfg, 'baseline',      'no'); %to avoid warning in timelock/freqbaseline
 cfg.trials            = ft_getopt(cfg, 'trials',        'all', 1);
 cfg.interactive       = ft_getopt(cfg, 'interactive',   'yes');
@@ -728,8 +729,8 @@ elseif isnumeric(cfg.commentpos)
   y_comment = cfg.commentpos(2);
   HorAlign = 'left';
   VerAlign = 'middle';
-  x_comment = 0.9*((x_comment-min(x))/(max(x)-min(x))-0.5);
-  y_comment = 0.9*((y_comment-min(y))/(max(y)-min(y))-0.5);
+  x_comment = 0.9*((x_comment-min(cfg.xlim))/(max(cfg.xlim)-min(cfg.xlim))-0.5);
+  y_comment = 0.9*((y_comment-min(cfg.ylim))/(max(cfg.ylim)-min(cfg.ylim))-0.5);
 end
 
 % Draw topoplot
@@ -844,12 +845,22 @@ if ~strcmp(cfg.marker,'off')
     'labeloffset',cfg.labeloffset)
 end
 
+
+if(isfield(cfg,'vector'))
+    vecX = mean(real(data.(cfg.vector)(:,xmin:xmax)),2);
+    vecY = mean(imag(data.(cfg.vector)(:,xmin:xmax)),2);
+    
+    % scale quiver relative to largest gradiometer sample
+    k=0.15/max([max(abs(real(data.(cfg.vector)(:)))) max(abs(imag(data.(cfg.vector)(:))))]);
+    quiver(chanX, chanY, k*vecX, k*vecY,0,'red');
+end
+
 % Write comment
 if ~strcmp(cfg.comment,'no')
   if strcmp(cfg.commentpos, 'title')
     title(cfg.comment, 'Fontsize', cfg.fontsize);
   else
-    ft_plot_text(x_comment,y_comment, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
+    ft_plot_text(x_comment,y_comment, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Fontweight', cfg.fontweight);
   end
 end
 

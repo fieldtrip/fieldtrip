@@ -76,7 +76,7 @@ chansel = select_channel_list(fftopt.freqdata.label, fftopt.chansel, 'select cha
 % output data
 fftopt.chansel = chansel;
 setappdata(ffth, 'fftopt', fftopt);
-draw_simple_fft_cb(fftopt.butth)
+draw_simple_fft_cb(h)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

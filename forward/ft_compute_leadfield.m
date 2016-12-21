@@ -19,11 +19,11 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %
 % It is possible to compute a simultaneous forward solution for EEG and MEG
 % by specifying sens and grad as two cell-arrays, e.g.
-%   sens = {senseeg, sensmeg}
+%   sens       = {senseeg, sensmeg}
 %   headmodel  = {voleeg,  volmeg}
 % This results in the computation of the leadfield of the first element of
 % sens and headmodel, followed by the second, etc. The leadfields of the
-% different imaging modalities are concatenated.
+% different imaging modalities are subsequently concatenated.
 %
 % Additional input arguments can be specified as key-value pairs, supported
 % optional arguments are
@@ -63,9 +63,9 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE,
 % FT_HEADMODEL_HALFSPACE
 
-% Copyright (C) 2004-2013, Robert Oostenveld
+% Copyright (C) 2004-2016, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -84,7 +84,8 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % $Id$
 
 if iscell(sens) && iscell(headmodel) && numel(sens)==numel(headmodel)
-  % this represents combined EEG and MEG sensors, where each modality has its own volume conduction model
+  % this represents combined EEG, ECoG and/or MEG
+  % use recursion to compute all leadfields
   lf = cell(1, numel(sens));
   for i=1:length(sens)
     lf{i} = ft_compute_leadfield(dippos, sens{i}, headmodel{i}, varargin{:});
@@ -94,7 +95,7 @@ if iscell(sens) && iscell(headmodel) && numel(sens)==numel(headmodel)
 end
 
 % get the optional input arguments
-reducerank      = ft_getopt(varargin, 'reducerank', 'no');
+reducerank      = ft_getopt(varargin, 'reducerank'); % default is handled below
 backproject     = ft_getopt(varargin, 'backproject', 'yes');
 normalize       = ft_getopt(varargin, 'normalize' , 'no');
 normalizeparam  = ft_getopt(varargin, 'normalizeparam', 0.5);
@@ -123,6 +124,17 @@ end
 % determine whether it is EEG or MEG
 iseeg = ft_senstype(sens, 'eeg');
 ismeg = ft_senstype(sens, 'meg');
+
+% determine the default for this option
+if isempty(reducerank)
+  if iseeg
+    reducerank = 'no';    % for EEG
+  elseif ismeg && ft_voltype(headmodel, 'infinite')
+    reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
+  else
+    reducerank = 'yes';   % for MEG with a current dipole in a volume conductor 
+  end
+end
 
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a
 % as a Nx3 matrix, i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
@@ -514,11 +526,16 @@ elseif iseeg
 end % iseeg or ismeg
 
 % optionally apply leadfield rank reduction
-if strcmpi(reducerank, 'yes')
-  reducerank = size(lf(:, 1:3), 2) - 1;
+switch reducerank
+  case 'yes'
+    reducerank = 2;
+  case 'no'
+    reducerank = 3;
+  otherwise
+    % assume that it is specified as a number, keep it like this
 end
 
-if ~strcmp(reducerank, 'no') && reducerank<3
+if reducerank<size(lf,2)
   % decompose the leadfield
   for ii=1:Ndipoles
     tmplfd=lf(:, (3*ii-2):(3*ii));

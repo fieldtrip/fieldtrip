@@ -1,4 +1,4 @@
-function [matrix, extra] = read_mat(fn);
+function [matrix, extra] = read_mat(fn)
 
 % READ_MAT reads a matrix from an ascii or binary MBF format file
 %
@@ -13,7 +13,7 @@ function [matrix, extra] = read_mat(fn);
 
 % Copyright (C) 1998, Thom Oostendorp 
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

@@ -40,7 +40,7 @@ function [cfg, artifact] = ft_artifact_clip(cfg, data)
 
 % Copyright (C) 2005-2011, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -58,7 +58,10 @@ function [cfg, artifact] = ft_artifact_clip(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -66,8 +69,8 @@ ft_preamble init
 ft_preamble provenance
 ft_preamble loadvar data
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -108,14 +111,14 @@ else
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
-  if isfield(data, 'sampleinfo'), 
+  if isfield(data, 'sampleinfo'),
     trl = data.sampleinfo;
     for k = 1:numel(data.trial)
       trl(k,3) = time2offset(data.time{k}, data.fsample);
     end
   else
     error('the input data does not contain a valid description of the sampleinfo');
-  end  
+  end
 end
 
 % set default cfg.continuous
@@ -151,7 +154,7 @@ for trlop=1:ntrl
     time = data.time{trlop};
   end
   datflt = preproc(dat, label, time, artfctdef);
-  
+
   %check if cfg.artfctdef.clip.amplthreshold is an string indicating percentage (e.g. '10%')
   if ~isempty(cfg.artfctdef.clip.amplthreshold) && ischar(cfg.artfctdef.clip.amplthreshold) && cfg.artfctdef.clip.amplthreshold(end)=='%'
     ratio = sscanf(cfg.artfctdef.clip.amplthreshold, '%f%%');
@@ -166,10 +169,10 @@ for trlop=1:ntrl
     % detect all samples that have the same value as the previous sample
     identical = abs(datflt(:,1:(end-1))-datflt(:,2:end))<=cfg.artfctdef.clip.amplthreshold;
   end
-  
+
   % ensure that the number of samples does not change
   identical = [identical zeros(nsgn,1)];
-  
+
   % determine the number of consecutively identical samples
   clip = zeros(size(dat));
   for sgnlop=1:length(sgnindx)
@@ -181,11 +184,11 @@ for trlop=1:ntrl
   end
   % collapse over cannels
   clip = max(clip,[],1);
-  
+
   % detect whether there are intervals in which the number of consecutive
   % identical samples is larger than the threshold
   thresh = (clip>=artfctdef.timethreshold*hdr.Fs);
-  
+
   % remember the thresholded parts as artifacts
   artup = find(diff([0 thresh])== 1) + trl(trlop,1) - 1;
   artdw = find(diff([thresh 0])==-1) + trl(trlop,1) - 1;
@@ -209,4 +212,3 @@ cfg.artfctdef.clip.artifact = artifact;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
-

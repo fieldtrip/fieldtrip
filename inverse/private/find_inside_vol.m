@@ -1,4 +1,4 @@
-function [inside, outside] = find_inside_vol(pos, vol);
+function [inside, outside] = find_inside_vol(pos, vol)
 
 % FIND_INSIDE_VOL locates dipole locations inside/outside the source
 % compartment of a volume conductor model.
@@ -10,7 +10,7 @@ function [inside, outside] = find_inside_vol(pos, vol);
 
 % Copyright (C) 2003-2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

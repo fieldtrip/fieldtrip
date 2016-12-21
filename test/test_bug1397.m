@@ -6,7 +6,7 @@ function test_bug1397
 % TEST test_bug1397
 % TEST ft_preprocessing ft_appenddata
 
-% the following code was obtained from http://fieldtrip.fcdonders.nl/tutorial/coherence
+% the following code was obtained from http://www.fieldtriptoolbox.org/tutorial/coherence
 % on Wed Mar 28 15:36:40 CEST 2012
 
 % find the interesting epochs of data

@@ -32,7 +32,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl)
 % Copyright (C) 2003, Pascal Fries
 % Copyright (C) 2003-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -60,6 +60,11 @@ end
 
 % ensure to be a column  vector
 Fl = Fl(:);
+
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
 
 % determine the largest integer number of line-noise cycles that fits in the data
 n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);

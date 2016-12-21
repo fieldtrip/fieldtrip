@@ -1,0 +1,37 @@
+NeurOne to EEGLAB data import plugin
+Mega Electronics
+
+Version 1.0.3.4 (2016-06-17)
+- Bug fix in readneuroneevents.m: wrong file ID "fileIdEvents" fixed.
+- New feature: Support for events.bin revisions up to 6.
+
+Version 1.0.3.3 (2015-05-28)
+- New feature: Support for events.bin revisions up to 4.
+
+Version 1.0.3.2 (2013-04-04)
+- New feature: A warning is displayed instead of an error when an unknown filetype revision is found.
+
+Version 1.0.3.1 (2012-06-18)
+- New feature: The reader is now able to read measurements with events.bin revision up to 2.
+
+Version 1.0.3.0 (2012-01-13)
+- First release
+
+Version 1.0.2.0 (2011-12-22)
+- Modifications in 'readneuronedata.m'. When all channels are to be read, the function
+  will read the binary data without a loop to shorten the processing time.
+- The numerical data is stored as double-precision floating point (double) by default.
+
+Version 1.0.1.2 (2011-12-21)
+- Fixed an error which occurred when the numerical data was divided into 
+  multiple binary files.
+- Added a progress indicator in the readneuronedata function.
+
+Version 1.0.1.1 (2011-12-11)
+- Improved event readability. See help readneuroneevents for the new event structure.
+- readneuronedata.m re-created so that one channel will be read at a time.
+- Updated all m-file headers.
+- Fixed some other minor errors.
+
+Version 1.0.1.0 (2011-11-28)
+- First version of the plugin.

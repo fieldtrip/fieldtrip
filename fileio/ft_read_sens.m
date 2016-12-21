@@ -42,7 +42,7 @@ function [sens] = ft_read_sens(filename, varargin)
 
 % Copyright (C) 2005-2016 Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -154,12 +154,11 @@ switch fileformat
     sens.elecpos = sens.elecpos(sel,:);
     
   case 'besa_sfp'
-    fid = fopen(filename);
-    tmp = textscan(fid, ' %[^ \t]%n%n%n');
-    fclose(fid);
-    sens.label   = tmp{1};
-    sens.elecpos = [tmp{2:4}];
-    
+    [lab, pos] = read_besa_sfp(filename);
+	
+    sens.label   = lab;
+    sens.elecpos = pos;
+		
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
@@ -329,7 +328,7 @@ switch fileformat
       % coordinate information into sens structure of channels that are
       % set.
       for i=1:numel(tmp)
-        if strcmp(tmp(i).Marker.set,'true')
+        if strcmp(tmp(i).Marker.set, 'true')
           sens.elecpos(i,1) = str2double(tmp(i).Marker.ColVec3D.data0);
           sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
           sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
@@ -357,7 +356,7 @@ switch fileformat
       x = 85*cos(radians(phi)).*sin(radians(theta));
       y = 85*sin(radians(theta)).*sin(radians(phi));
       z = 85*cos(radians(theta));
-      sens.unit = 'cm';
+      sens.unit = 'mm';
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
     else

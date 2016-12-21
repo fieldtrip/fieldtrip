@@ -7,10 +7,10 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % Use as
 %   [data] = ft_combineplanar(cfg, data)
-% where data contains an averaged planar gradient ERF or single-trial/avegared TFR.
+% where data contains an averaged planar gradient ERF or single-trial/averaged TFR.
 %
 % The configuration can contain
-%   cfg.method         = 'sum', 'svd' or 'abssvd' (default = 'sum')
+%   cfg.method         = 'sum', 'svd', 'abssvd', or 'complex' (default = 'sum')
 %
 % In the case of ERFs, the configuration can contain
 %   cfg.demean         = 'yes' or 'no' (default = 'no')
@@ -38,7 +38,7 @@ function [data] = ft_combineplanar(cfg, data)
 % Copyright (C) 2004, Ole Jensen
 % Copyright (C) 2004-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -56,7 +56,10 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -66,8 +69,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -109,12 +112,13 @@ end
 
 % find the combination of horizontal and vertical channels that should be combined
 planar = ft_senslabel(ft_senstype(data), 'output', 'planarcombined');
-[dum, sel_dH]    = match_str(planar(:,1), data.label);  % indices of the horizontal channels
-[dum, sel_dV]    = match_str(planar(:,2), data.label);  % indices of the vertical   channels
+[sel_pH, sel_dH]    = match_str(planar(:,1), data.label);  % indices of the horizontal channels
+[sel_pV, sel_dV]    = match_str(planar(:,2), data.label);  % indices of the vertical   channels
 
-if length(sel_dH)~=length(sel_dV)
-  error('not all planar channel combinations are complete')
-end
+% identify and remove unnpaired channels
+[dum,iH,iV]     = intersect(sel_pH,sel_pV);
+sel_dH=sel_dH(iH);
+sel_dV=sel_dV(iV);
 
 % find the other channels that are present in the data
 sel_other = setdiff(1:length(data.label), [sel_dH(:)' sel_dV(:)']);
@@ -123,7 +127,7 @@ lab_other = data.label(sel_other);
 % define the channel names after combining the planar combinations
 % they should be sorted according to the order of the planar channels in the data
 [dum, sel_planar] = match_str(data.label(sel_dH),planar(:,1));
-lab_comb          = planar(sel_planar,3);
+lab_comb          = planar(sel_planar,end);
 
 % perform baseline correction
 if strcmp(cfg.demean, 'yes')
@@ -142,7 +146,7 @@ if strcmp(cfg.demean, 'yes')
 end
 
 if isfreq
-  
+
   switch cfg.method
     case 'sum'
       if isfield(data, 'powspctrm'),
@@ -187,7 +191,7 @@ if isfreq
             fourier(:,j,k,:) = transpose(dum);
             data.ori{k} = ori; % to change into a cell
             data.eta{k} = sin_val(1)/sum(sin_val(2:end)); % to change into a cell
-            
+
             %for m = 1:Ntim
             %  dum                     = data.fourierspctrm(:,[sel_dH(j) sel_dV(j)],fbin(k),m);
             %  timbin                  = find(~isnan(dum(:,1)));
@@ -197,7 +201,7 @@ if isfreq
         end
         ft_progress('close');
         other              = data.fourierspctrm(:,sel_other,fbin,:);
-        data               = rmfield(data,'fourierspctrm');
+        data               = rmfield(data, 'fourierspctrm');
         data.fourierspctrm = cat(2, fourier, other);
         data.label         = cat(1, lab_comb(:), lab_other(:));
         data.freq          = data.freq(fbin);
@@ -207,13 +211,13 @@ if isfreq
     otherwise
       error('cfg.method = ''%s'' is not supported for frequency data', cfg.method);
   end % switch method
-  
+
 elseif (israw || istimelock)
   if istimelock,
     % convert timelock to raw
     data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
   end
-  
+
   switch cfg.method
     case 'sum'
       Nrpt = length(data.trial);
@@ -223,7 +227,16 @@ elseif (israw || istimelock)
         data.trial{k} = [combined; other];
       end
       data.label = cat(1, lab_comb(:), lab_other(:));
-      
+
+    case 'complex'
+      Nrpt = length(data.trial);
+      for k = 1:Nrpt
+        combined = data.trial{1}(sel_dH,:)*i + data.trial{1}(sel_dV,:);
+        other    = data.trial{k}(sel_other,:);
+        data.trial{k} = [combined; other];
+      end
+      data.label = cat(1, lab_comb(:), lab_other(:));
+
     case {'svd' 'abssvd'}
       Nrpt = length(data.trial);
       Nsgn = length(sel_dH);
@@ -243,7 +256,7 @@ elseif (israw || istimelock)
           if strcmp(cfg.method, 'abssvd')
             tmpdat2 = abs(loading(1,:));
           else
-            tmpdat2 = loading(1,:); 
+            tmpdat2 = loading(1,:);
           end
         end
         tmpdat2 = mat2cell(tmpdat2, 1, Nsmp);
@@ -258,43 +271,63 @@ elseif (israw || istimelock)
       end
       data.trial = trial;
       data.label = cat(1, lab_comb(:), lab_other(:));
-      
+
     otherwise
       error('cfg.method = ''%s'' is not supported for timelocked or raw data', cfg.method);
   end % switch method
-  
+
   if istimelock,
     % convert raw to timelock
     data = ft_checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
   end
-  
+
 else
   error('unsupported input data');
 end % which ft_datatype
 
 % remove the fields for which the planar gradient could not be combined
-try, data = rmfield(data, 'crsspctrm');   end
-try, data = rmfield(data, 'labelcmb');    end
+data = removefields(data, {'crsspctrm', 'labelcmb'});
 
 if isfield(data, 'grad')
   % update the grad and only retain the channel related info
   [sel_dH, sel_comb] = match_str(data.grad.label, planar(:,1));  % indices of the horizontal channels
-  sel_dV    = match_str(data.grad.label, planar(:,2));  % indices of the vertical   channels
+  [sel_dV          ] = match_str(data.grad.label, planar(:,2));  % indices of the vertical   channels
   
   % find the other channels that are present in the data
   sel_other = setdiff(1:length(data.grad.label), [sel_dH(:)' sel_dV(:)']);
   lab_other = data.grad.label(sel_other);
-  lab_comb  = planar(sel_comb,3);
+  lab_comb  = planar(sel_comb,end);
   
-  sel      = [sel_dH(:);sel_other(:)];
-  newlabel = [lab_comb;lab_other];
+  % compute the average position
+  newpos   = [
+    (data.grad.chanpos(sel_dH,:)+data.grad.chanpos(sel_dV,:))/2
+    data.grad.chanpos(sel_other,:)
+    ];
+  % compute the average orientation
+  newori   = [
+    (data.grad.chanori(sel_dH,:)+data.grad.chanori(sel_dV,:))/2
+    data.grad.chanori(sel_other,:)
+    ];
+  newlabel = [
+    lab_comb
+    lab_other
+    ];
+  newtype = [
+    repmat({'unknown'}, numel(sel_comb), 1) % combined planar 
+    data.grad.chantype(sel_other(:))        % keep the known channel details
+    ];
+  newunit = [
+    repmat({'unknown'}, numel(sel_comb), 1) % combined planar
+    data.grad.chanunit(sel_other(:))        % keep the known channel details
+    ];
   
-  newgrad.chanpos  = data.grad.chanpos(sel,:);
-  newgrad.chanori  = data.grad.chanori(sel,:);
-  newgrad.chantype = data.grad.chantype(sel);
-  newgrad.chanunit = data.grad.chanunit(sel);
+  newgrad.chanpos  = newpos;
+  newgrad.chanori  = newori;
   newgrad.label    = newlabel;
+  newgrad.newtype  = newtype;
+  newgrad.newunit  = newunit;
   newgrad.unit     = data.grad.unit;
+  newgrad.type     = [data.grad.type '_combined'];
   
   data.grad = newgrad;
 end

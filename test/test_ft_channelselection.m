@@ -50,3 +50,30 @@ for i=1:size(datasets,2);
         end
     end
 end
+
+%% test http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3135
+desired = {'Cz','C3'};
+label   = {'Cz','FCz','FC3'};
+
+sel = ft_channelselection(desired, label);
+assert(all(ismember(sel, desired)), 'not all selected channels were desired');
+  
+%% test http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3225#c7
+
+sel = ft_channelselection('Cz', label);
+assert(numel(sel)==1) % only Cz itself
+
+sel = ft_channelselection('*Cz', label);
+assert(numel(sel)==2) % anything that ends with Cz
+
+sel = ft_channelselection('F*', label);
+assert(numel(sel)==2) % anything that starts with F
+
+sel = ft_channelselection('*3*', label);
+assert(numel(sel)==1) % anything with a 3 in it
+
+sel = ft_channelselection('*C*', label);
+assert(numel(sel)==3) % anything with a C in it
+
+
+

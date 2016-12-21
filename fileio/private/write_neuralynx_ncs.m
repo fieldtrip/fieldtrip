@@ -1,16 +1,17 @@
-function write_neuralynx_ncs(filename, ncs);
+function write_neuralynx_ncs(filename, ncs)
 
 % WRITE_NEURALYNX_NCS writes continuous data to a NCS file
-% The input data should be scaled in uV.
 %
 % Use as
 %   write_neuralynx_ncs(filename, ncs)
+%
+% The input data should be scaled in uV.
 %
 % See also READ_NEURALYNX_NCS
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

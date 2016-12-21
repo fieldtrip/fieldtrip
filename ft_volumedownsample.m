@@ -29,7 +29,7 @@ function [downsample] = ft_volumedownsample(cfg, source)
 
 % Copyright (C) 2004-2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,7 +47,10 @@ function [downsample] = ft_volumedownsample(cfg, source)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -57,8 +60,8 @@ ft_preamble loadvar source
 ft_preamble provenance source
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -121,7 +124,7 @@ if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
   elseif strcmpi(cfg.spmversion, 'spm12'),
     ft_hastoolbox('SPM12',1);
   end
-  
+
   for j = 1:length(cfg.parameter)
     if strcmp(cfg.parameter{j}, 'inside')
       fprintf('not smoothing %s\n', cfg.parameter{j});

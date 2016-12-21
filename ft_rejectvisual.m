@@ -18,11 +18,12 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'trial'    show the data per trial, all channels at once
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
 %                     see FT_CHANNELSELECTION for details
-%   cfg.keepchannel = string, determines how to deal with channels that are
-%                     not selected, can be
-%                     'no'     completely remove deselected channels from the data (default)
-%                     'yes'    keep deselected channels in the output data
-%                     'nan'    fill the channels that are deselected with NaNs
+%   cfg.keepchannel = string, determines how to deal with channels that are not selected, can be
+%                     'no'          completely remove deselected channels from the data (default)
+%                     'yes'         keep deselected channels in the output data
+%                     'nan'         fill the channels that are deselected with NaNs
+%                     'repair'      repair the deselected channels using FT_CHANNELREPAIR
+%   cfg.neighbours  = neighbourhood structure, see also FT_PREPARE_NEIGHBOURS (required for repairing channels)
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrial   = string, determines how to deal with trials that are
 %                     not selected, can be
@@ -90,9 +91,9 @@ function [data] = ft_rejectvisual(cfg, data)
 % cfg.feedback
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2014, Robert Oostenveld
+% Copyright (C) 2006-2016, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -114,7 +115,10 @@ function [data] = ft_rejectvisual(cfg, data)
 % cfg.plotlayout = 'square' (default) or '1col', plotting every channel/trial under each other
 % cfg.viewmode   = 'remove', 'toggle' or 'hide', only applies to summary mode (default = 'remove')
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -124,8 +128,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -165,6 +169,11 @@ cfg.viewmode    = ft_getopt(cfg, 'viewmode'   , 'remove');
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
+
+% check required fields at the start, rather than further down in the code
+if strcmp(cfg.keepchannel, 'repair')
+  cfg = ft_checkconfig(cfg, 'required', 'neighbours');
+end
 
 % determine the duration of each trial
 for i=1:length(data.time)
@@ -257,7 +266,7 @@ switch cfg.method
       fprintf('showing the data per channel, all trials at once\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_channel(cfg, tmpdata);
-    
+
   case 'trial'
     if scaled
       fprintf('showing the scaled per trial, all channels at once\n');
@@ -265,7 +274,7 @@ switch cfg.method
       fprintf('showing the data per trial, all channels at once\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_trial(cfg, tmpdata);
-    
+
   case 'summary'
     if scaled
       fprintf('showing a summary of the scaled data for all channels and trials\n');
@@ -273,7 +282,7 @@ switch cfg.method
       fprintf('showing a summary of the data for all channels and trials\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_summary(cfg, tmpdata);
-    
+
   otherwise
     error('unsupported method %s', cfg.method);
 end % switch method
@@ -287,7 +296,7 @@ if ~all(chansel)
     case 'yes'
       % keep all channels, also when they are not selected
       fprintf('no channels were removed from the data\n');
-      
+
     case 'no'
       % show the user which channels are removed
       removed = find(~chansel);
@@ -296,7 +305,7 @@ if ~all(chansel)
         fprintf('%s, ', data.label{removed(i)});
       end
       fprintf('%s\n', data.label{removed(end)});
-      
+
     case 'nan'
       % show the user which channels are removed
       removed = find(~chansel);
@@ -309,18 +318,46 @@ if ~all(chansel)
       for i=1:length(data.trial)
         data.trial{i}(~chansel,:) = nan;
       end
-      
+
+    case 'repair'
+      % show which channels are to be repaired
+      removed = find(~chansel);
+      fprintf('the following channels were repaired using FT_CHANNELREPAIR: ');
+      for i=1:(length(removed)-1)
+        fprintf('%s, ', data.label{removed(i)});
+      end
+      fprintf('%s\n', data.label{removed(end)});
+
+      % create cfg struct for call to ft_channelrepair
+      orgcfg = cfg;
+      tmpcfg = [];
+      tmpcfg.trials = 'all';
+      tmpcfg.badchannel = data.label(~chansel);
+      tmpcfg.neighbours = cfg.neighbours;
+      if isfield(cfg, 'grad')
+          tmpcfg.grad = cfg.grad;
+      end
+      if isfield(cfg, 'elec')
+          tmpcfg.elec = cfg.elec;
+      end
+      % repair the channels that were selected as bad
+      data = ft_channelrepair(tmpcfg, data);
+      % restore the provenance information
+      [cfg, data] = rollback_provenance(cfg, data);
+      % restore the original trials parameter, it should not be 'all'
+      cfg = copyfields(orgcfg, cfg, {'trials'});
+
     otherwise
       error('invalid specification of cfg.keepchannel')
   end % case
-end
+end % if ~all(chansel)
 
 if ~all(trlsel)
   switch cfg.keeptrial
     case 'yes'
       % keep all trials, also when they are not selected
       fprintf('no trials were removed from the data\n');
-      
+
     case 'no'
       % show the user which channels are removed
       removed = find(~trlsel);
@@ -329,7 +366,7 @@ if ~all(trlsel)
         fprintf('%d, ', removed(i));
       end
       fprintf('%d\n', removed(end));
-      
+
     case 'nan'
       % show the user which trials are removed
       removed = find(~trlsel);
@@ -342,11 +379,11 @@ if ~all(trlsel)
       for i=removed
         data.trial{i}(:,:) = nan;
       end
-      
+
     otherwise
       error('invalid specification of cfg.keeptrial')
   end % case
-end
+end % if ~all(trlsel)
 
 if isfield(data, 'sampleinfo')
   % construct the matrix with sample numbers prior to making the selection
@@ -365,6 +402,7 @@ end
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
+% restore the original channels and trials parameters
 cfg = copyfields(orgcfg, cfg, {'channel', 'trials'});
 
 % convert back to input type if necessary

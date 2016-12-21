@@ -23,7 +23,7 @@ for k = 1:numel(subdir)
     for m = 1:numel(d)
       fprintf('reading %s\n',d(m).name);
       bnd = ft_read_headshape(fullfile(datadir, subdir{k}, d(m).name));
-      assert(isfield(bnd,'pnt')&&isfield(bnd,'tri'));
+      assert(isfield(bnd, 'pos') && isfield(bnd, 'tri'));
       
       hemi = strfind(d(m).name, '.L.');
       if ~isempty(hemi)
@@ -56,7 +56,7 @@ for k = 1:numel(subdir)
         for m = 1:numel(d)
           fprintf('reading %s\n',d(m).name);
           bnd = ft_read_headshape(fullfile(datadir, subdir{k}, subsubdir{p}, d(m).name));
-          assert(isfield(bnd,'pnt')&&isfield(bnd,'tri'));
+          assert(isfield(bnd, 'pos') && isfield(bnd, 'tri'));
           
           hemi = strfind(d(m).name, '.L.');
           if ~isempty(hemi)

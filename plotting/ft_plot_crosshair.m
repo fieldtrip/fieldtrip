@@ -1,4 +1,4 @@
-function ft_plot_crosshair(pos, varargin);
+function ft_plot_crosshair(pos, varargin)
 
 % FT_PLOT_CROSSHAIR plots a crosshair in two or three dimensions
 %
@@ -14,7 +14,7 @@ function ft_plot_crosshair(pos, varargin);
 
 % Copyright (C) 2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -32,8 +32,16 @@ function ft_plot_crosshair(pos, varargin);
 %
 % $Id$
 
-ax  = axis;
+% color management
+color = ft_getopt(varargin, 'color');
+if ~isempty(color)
+  if ischar(color) && exist([color '.m'], 'file')
+    color = eval(color);
+  end
+  varargin = ft_setopt(varargin, 'color', color);
+end
 
+ax   = axis;
 minx = ax(1);
 maxx = ax(2);
 miny = ax(3);

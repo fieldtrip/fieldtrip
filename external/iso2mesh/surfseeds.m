@@ -5,7 +5,7 @@ function seeds=surfseeds(node,face)
 % calculate a set of interior points with each enclosed by a closed
 % component of a surface
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %   node: a list of node coordinates (nn x 3)
