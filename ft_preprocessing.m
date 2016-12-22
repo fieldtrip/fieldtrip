@@ -211,8 +211,6 @@ cfg.coordsys       = ft_getopt(cfg, 'coordsys', 'head');    % is passed to low-l
 cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-level function
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 
-% ==== THIS LINE SHOULD BE REMOVED BY PIM, SEE http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3226 ====
-
 % these options relate to the actual preprocessing, it is neccessary to specify here because of padding
 cfg.dftfilter     = ft_getopt(cfg, 'dftfilter', 'no');
 cfg.lpfilter      = ft_getopt(cfg, 'lpfilter', 'no');
