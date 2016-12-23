@@ -145,7 +145,8 @@ for i = 1 : lChIdx
         % Final Partial Segment
         curSec = nrvHdr.MainIndex(useSections(end));
         fseek(h, curSec.offset,'bof');
-        out(curIdx : end,i) = fread(h, length(out)-curIdx + 1, 'int16') * mult;
+        lastData = fread(h, length(out)-curIdx + 1, 'int16') * mult;
+        out(curIdx : (curIdx+size(lastData,1)-1),i) = lastData;
     end
     
 end
