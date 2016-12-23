@@ -34,8 +34,12 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 %       (iDFT).
 % If Fline is a vector (e.g. [50 100 150]), harmonics are also considered. 
 % Preferably the data should be continuous or consist of long data segments
-% (several seconds) to avoid edge effects.
-%
+% (several seconds) to avoid edge effects. If the sampling rate and the
+% data length are such, that a full cycle of the line noise and the harmonics
+% fit in the data and if the line noise is stationary (e.g. no variations
+% in amplitude or frequency), then spectrum interpolation can also be 
+% applied to short trials. But it should be used with caution and checked 
+% for edge effects.
 %
 % Use as
 %   [filt] = ft_preproc_dftfilter(dat, Fsample, Fline, varargin)
@@ -162,7 +166,7 @@ elseif strcmp(Flreplace,'neighbour')
     frq = Fs*linspace(0,1,nsamples+1);
     
     % interpolate 50Hz (and harmonics) amplitude in spectrum
-    for i = 1:length(f2int)
+    for i = 1:length(Fl)
         smpl2int = nearest(frq,f2int(i,1)):nearest(frq,f2int(i,2));                                                   % samples of frequencies that will be interpolated
         smpl4int = [(nearest(frq,f4int(i,1)):nearest(frq,f4int(i,2))-1),(nearest(frq,f4int(i,3))+1:nearest(frq,f4int(i,4)))]; % samples of neighbouring frequencies used to calculate the mean
         
