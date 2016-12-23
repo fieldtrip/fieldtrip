@@ -364,6 +364,9 @@ else
     optarg = {};
     if isfield(cfg, 'dftreplace') 
         optarg = cat(2, optarg, {'dftreplace', cfg.dftreplace}); 
+        if strcmp(cfg.dftreplace, 'neighbour') && (begpadding>0 || endpadding>0)
+             error('Padding by data mirroring is not supported for spectrum interpolation.');
+        end
     end
     if isfield(cfg, 'dftbandwidth')
         optarg = cat(2, optarg, {'dftbandwidth', cfg.dftbandwidth});
