@@ -33,6 +33,9 @@ function [hdr] = ft_read_header(filename, varargin)
 %
 % For continuously recorded data, nSamplesPre=0 and nTrials=1.
 %
+% To use an external reading function, use key-value pair: 'headerformat', FUNCTION_NAME.
+% (Function needs to be on the path, and take as input: filename)
+%
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
 %
@@ -2242,10 +2245,17 @@ switch headerformat
     checkUniqueLabels = false;
     
   otherwise
-    if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
-      hdr = read_biosig_header(filename);
-    else
-      error('unsupported header format "%s"', headerformat);
+    % attempt to run headerformat as a function
+    % in case using an external read function was desired, this is where it is executed
+    % if it fails, the regular unsupported error message is thrown
+    try
+      hdr = feval(headerformat,filename);
+    catch
+      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+        hdr = read_biosig_header(filename);
+      else
+        error('unsupported header format "%s"', headerformat);
+      end
     end
     
 end % switch headerformat
