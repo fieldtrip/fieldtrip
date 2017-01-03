@@ -670,6 +670,13 @@ if strcmp(cfg.comment, 'auto')
   if ~isempty(cfg.parameter)
     comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
   end
+  if isfield(cfg,'refchannel')
+    if iscell(cfg.refchannel)
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
+    else
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
+    end
+  end
   cfg.comment = comment;
 elseif strcmp(cfg.comment, 'xlim')
   if strcmp(cfg.xlim,'maxmin')
@@ -677,17 +684,18 @@ elseif strcmp(cfg.comment, 'xlim')
   else
     comment = sprintf('%0s=[%.3g %.3g]', xparam, data.(xparam)(xmin), data.(xparam)(xmax));
   end
+  if isfield(cfg,'refchannel')
+    if iscell(cfg.refchannel)
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
+    else
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
+    end
+  end
   cfg.comment = comment;
 elseif ~ischar(cfg.comment)
   error('cfg.comment must be string');
 end
-if ~strcmp(cfg.comment, 'no') && isfield(cfg,'refchannel')
-  if iscell(cfg.refchannel)
-    cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
-  else
-    cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
-  end
-end
+
 
 % Specify the x and y coordinates of the comment
 if strcmp(cfg.commentpos,'layout')
