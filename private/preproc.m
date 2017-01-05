@@ -79,6 +79,9 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.hpfiltdev     = highpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
 %   cfg.bpfiltdev     = bandpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
 %   cfg.bsfiltdev     = bandstop max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
+%   cfg.dftreplace    = 'zero' or 'neighbour', method used to reduce line noise, 'zero' implies DFT filter, 'neighbour' implies spectrum interpolation (default = 'zero')
+%   cfg.dftbandwidth  = bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz (default = [1 2 3])
+%   cfg.dftneighbourwidth = bandwidth of frequencies neighbouring line noise frequencies, applies to spectrum interpolation, in Hz (default = [2 2 2])
 %   cfg.plotfiltresp  = 'no' or 'yes', plot filter responses (firws, default = 'no')
 %   cfg.usefftfilt    = 'no' or 'yes', use fftfilt instead of filter (firws, default = 'no')
 %   cfg.demean        = 'no' or 'yes'
@@ -204,6 +207,9 @@ if ~isfield(cfg, 'usefftfilt'),   cfg.usefftfilt = 'no';        end
 if ~isfield(cfg, 'medianfilter'), cfg.medianfilter  = 'no';     end
 if ~isfield(cfg, 'medianfiltord'),cfg.medianfiltord = 9;        end
 if ~isfield(cfg, 'dftfreq'),      cfg.dftfreq = [50 100 150];   end
+if ~isfield(cfg, 'dftreplace'),   cfg.dftreplace = 'zero';      end
+if ~isfield(cfg, 'dftbandwidth'), cfg.dftbandwidth = [1 2 3];   end
+if ~isfield(cfg, 'dftneighbourwidth'),  cfg.dftneighbourwidth = [2 2 2];    end
 if ~isfield(cfg, 'hilbert'),      cfg.hilbert = 'no';           end
 if ~isfield(cfg, 'derivative'),   cfg.derivative = 'no';        end
 if ~isfield(cfg, 'rectify'),      cfg.rectify = 'no';           end
@@ -358,7 +364,7 @@ else
   end
   if strcmp(cfg.dftfilter, 'yes')
     datorig = dat;
-    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq);
+    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq, cfg.dftreplace, cfg.dftbandwidth, cfg.dftneighbourwidth);
     if strcmp(cfg.dftinvert, 'yes'),
       dat = datorig - dat;
     end
