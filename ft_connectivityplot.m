@@ -23,7 +23,7 @@ function [cfg] = ft_connectivityplot(cfg, varargin)
 %
 % See also FT_CONNECTIVITYANALYSIS, FT_CONNECTIVITYSIMULATION, FT_MULTIPLOTCC, FT_TOPOPLOTCC
 
-% Copyright (C) 2011-2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
