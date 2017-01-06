@@ -56,6 +56,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'dykstra2012'     non-linear wrap only for headshape
 %                                          method useful for projecting ECoG onto
 %                                          cortex hull.
+%                        'fsaverage'       surface-based realignment with the freesurfer fsaverage brain
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
 %   cfg.fiducial       = cell-array with the name of three fiducials used for
@@ -101,6 +102,18 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        points
 %   cfg.feedback       = 'yes' or 'no' (feedback includes the output of the iteration
 %                        procedure.
+%
+% If you want to align ECoG electrodes to the freesurfer average brain, you 
+% should specify the path to your headshape (e.g., lh.pial), and ensure you
+% have the corresponding registration file (e.g., lh.sphere.reg) in the same directory. 
+% Moreover, the path to the local freesurfer home is required. Note that,
+% because the electrodes are being aligned to the fsaverage brain, the corresponding brain 
+% should be also used when plotting the data, i.e. use freesurfer/subjects/fsaverage/surf/lh.pial 
+% rather than surface_pial_left.mat.
+%   cfg.method         = 'headshape'
+%   cfg.warp           = 'fsaverage'
+%   cfg.headshape      = a filename containing headshape (e.g. <path to freesurfer/surf/lh.pial>)
+%   cfg.fshome         = <path to freesurfer directory> 
 %
 % See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_PREPARE_MESH
 
@@ -383,6 +396,31 @@ elseif strcmp(cfg.method, 'headshape')
   norm.label = elec.label;
   if strcmp(lower(cfg.warp), 'dykstra2012')
     norm.elecpos = ft_warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
+  elseif strcmp(lower(cfg.warp), 'fsaverage')
+    subj_pial = ft_read_headshape(cfg.headshape);
+    [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
+    subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
+    if ~isdir([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf'])
+      error(['freesurfer dir ' cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf cannot be found'])
+    end
+    fsavg_pial = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.pial']);
+    fsavg_reg = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.sphere.reg']);
+    
+    for e = 1:numel(elec.label)
+      % subject space (3D surface): electrode pos -> vertex index
+      dist = sqrt(sum(((subj_pial.pos - repmat(elec.elecpos(e,:), size(subj_pial.pos,1), 1)).^2),2));
+      [~, minidx] = min(dist);
+      
+      % intersubject space (2D sphere): vertex index -> vertex pos -> template vertex index
+      dist2 = sqrt(sum(((fsavg_reg.pos - repmat(subj_reg.pos(minidx,:), size(fsavg_reg.pos,1), 1)).^2),2));
+      [~, minidx2] = min(dist2);
+      clear minidx
+      
+      % template space (3D surface): template vertex index -> template electrode pos
+      norm.elecpos(e,:) = fsavg_pial.pos(minidx2,:);
+      clear minidx2
+    end
+    clear subj_pial subj_reg fsavg_pial fsavg_reg
   else
     fprintf('warping electrodes to skin surface... '); % the newline comes later
     [norm.elecpos, norm.m] = ft_warp_optim(elec.elecpos, headshape, cfg.warp);
@@ -581,10 +619,9 @@ end % if method
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template', 'headshape'}
-    if strcmp(lower(cfg.warp), 'dykstra2012')
+    if strcmp(lower(cfg.warp), 'dykstra2012') || strcmp(lower(cfg.warp), 'fsaverage')
       elec_realigned = norm;
       elec_realigned.label = label_original;
-      
     else
       % the transformation is a linear or non-linear warp, i.e. a vector
       try
@@ -597,8 +634,7 @@ switch cfg.method
         try, elec_realigned.elecpos = ft_warp_apply(norm.m, elec_original.elecpos, cfg.warp); end
       end
       % remember the transformation
-      elec_realigned.(cfg.warp) = norm.m;
-      
+      elec_realigned.(cfg.warp) = norm.m;  
     end
     
   case  {'fiducial' 'interactive'}
