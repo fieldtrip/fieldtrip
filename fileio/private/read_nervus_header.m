@@ -73,18 +73,28 @@ for i=1:size(nrvHdr.Segments,2)
     totalNSamples = totalNSamples + max(nrvHdr.Segments(i).samplingRate*nrvHdr.Segments(i).duration);
 end
 
+for i=2:size(nrvHdr.Segments,2)    
+    if size(nrvHdr.Segments(i).chName, 2) ~= size(nrvHdr.Segments(1).chName, 2)       
+        error(strcat(['Segment ' num2str(i) ' active sensor name is different from the first segment - cannot handle this file']));
+    end    
+    if size(nrvHdr.Segments(i).refName, 2) ~= size(nrvHdr.Segments(1).refName, 2) 
+        error(strcat(['Segment ' num2str(i) ' reference sensor name different from the first segment - cannot handle this file' ]));
+    end 
+    if size(nrvHdr.Segments(i).samplingRate, 2) ~= size(nrvHdr.Segments(1).samplingRate, 2)
+        error(strcat(['Segment ' num2str(i) '  sampling rate is different from the first segment - cannot handle this file' ]));
+    end 
+end
+
 output = struct();
 output.Fs          = max([nrvHdr.Segments.samplingRate]);
-output.nChans      = size([nrvHdr.Segments(1).chName],2);
+output.nChans      = size(nrvHdr.Segments(1).samplingRate, 2);
 output.label       = nrvHdr.Segments(1).chName;
-output.nSamples    = totalNSamples;
+output.nSamples    = totalNSamples+1;
 output.nSamplesPre = 0;
-output.nTrials     = 1; %size(nrvHdr.Segments,2);
+output.nTrials     = 1; 
 output.reference   = nrvHdr.reference;
 output.filename    = nrvHdr.filename;
 output.orig        = nrvHdr;
-
-
 end
 
 function [NrStaticPackets, StaticPackets] = read_nervus_header_staticpackets(h)
@@ -616,7 +626,7 @@ for iSeg = 1:length(segments)
     segments(iSeg).refName = {TSInfo.refSensor};
     segments(iSeg).samplingRate = [TSInfo.samplingRate];
     segments(iSeg).scale = [TSInfo.resolution];
-    segments(iSeg).sampleCount = max(segments(iSeg).samplingRate*segments(iSeg).duration);
+    segments(iSeg).sampleCount = segments(iSeg).samplingRate*segments(iSeg).duration;
 end
 end
 
