@@ -1024,11 +1024,18 @@ switch dataformat
             dataForChannel{i} = cat(1,dataForChannel{i},datseg);
         end                       
     end    
-    %Concatenate each data for channel, and ensure zero-padded at end
+    %Concatenate each data for channel, and stretch out lower sampling
+    %rates
     maxSampleCount = max(cellfun(@length,dataForChannel));
     dat = zeros(maxSampleCount,size(hdr.orig.Segments(1).chName,2));    
     for i=1:size(chanindx,2)
-        dat(1:size(dataForChannel{i},1), i) = dataForChannel{i};
+        %samplingFactor = rat(maxSampleCount/length(dataForChannel{i}));
+        %if samplingFactor > 1
+        %    upsampled = interp(dataForChannel{i},samplingFactor);
+        %    dat(1:maxSampleCount, i) = upsampled;
+        %else
+            dat(1:size(dataForChannel{i},1), i) = dataForChannel{i};
+        %end        
     end
     dimord = 'samples_chans';
 
