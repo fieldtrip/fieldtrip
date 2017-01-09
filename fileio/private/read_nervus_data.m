@@ -74,7 +74,7 @@ for i = 1 : lChIdx
     
     % Get sampling rate for current channel
     curSF = nrvHdr.Segments(segment).samplingRate(chIdx(i));
-    mult = nrvHdr.Segments(segment).scale(chIdx(i));
+    mult = nrvHdr.Segments(segment).scale(chIdx(i));        
     
     % Find all sections
     allSectionIdx = nrvHdr.allIndexIDs == sectionIdx(i);
@@ -128,6 +128,7 @@ for i = 1 : lChIdx
     lsec = lastOffset-firstOffset + 1;
     
     fseek(h, (firstOffset-1) * 2,'cof');
+        
     out(1 : lsec,i) = fread(h, lsec, 'int16') * mult;
     curIdx = curIdx +  lsec;
     
@@ -136,17 +137,15 @@ for i = 1 : lChIdx
         for j = 2: (length(useSections)-1)
             curSec = nrvHdr.MainIndex(useSections(j));
             fseek(h, curSec.offset,'bof');
-            
-            out(curIdx : (curIdx + useSectionL(j) - 1),i) = ...
-                fread(h, useSectionL(j), 'int16') * mult;
+                        
+            out(curIdx : (curIdx + useSectionL(j) - 1),i) = fread(h, useSectionL(j), 'int16') * mult;
             curIdx = curIdx +  useSectionL(j);
         end
         
         % Final Partial Segment
         curSec = nrvHdr.MainIndex(useSections(end));
         fseek(h, curSec.offset,'bof');
-        lastData = fread(h, length(out)-curIdx + 1, 'int16') * mult;
-        out(curIdx : (curIdx+size(lastData,1)-1),i) = lastData;
+        out(curIdx : end,i) = fread(h, length(out)-curIdx + 1, 'int16') * mult;
     end
     
 end
