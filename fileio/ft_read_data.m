@@ -1014,29 +1014,38 @@ switch dataformat
     %recordings. The code currently concatenates these trials.
     %We could set this up as separate "trials" later.
     %We have "boundary events" in EEGLAB that stores this information
-    dataForChannel = cell(size(chanindx));
-    for i=1:size(chanindx,2)            
-        dataForChannel{i} = zeros();
-        for segment=1:size(hdr.orig.Segments,2)                
-            thisChannel = chanindx(i);
-            range = [1 hdr.orig.Segments(segment).sampleCount(i)];            
-            datseg = read_nervus_data(hdr.orig,segment, range, thisChannel);            
-            dataForChannel{i} = cat(1,dataForChannel{i},datseg);
-        end                       
+    %
+    %Fieldtrip can't handle multiple sampling rates in a data block
+    %We will get only the data with the most frequent sampling rate
+    targetSamplingRate = mode(hdr.orig.Segments(1).samplingRate);    
+    matchingChannels = find(hdr.orig.Segments(1).samplingRate(:) == targetSamplingRate);
+    firstMatchingChannel = matchingChannels(1);
+    targetNumberOfChannels = length(matchingChannels);
+    
+    targetSampleCount = 0;
+    for i = 1:size(hdr.orig.Segments,2)
+        targetSampleCount = targetSampleCount + hdr.orig.Segments(i).sampleCount(firstMatchingChannel);
     end    
-    %Concatenate each data for channel, and stretch out lower sampling
-    %rates
-    maxSampleCount = max(cellfun(@length,dataForChannel));
-    dat = zeros(maxSampleCount,size(hdr.orig.Segments(1).chName,2));    
-    for i=1:size(chanindx,2)
-        %samplingFactor = rat(maxSampleCount/length(dataForChannel{i}));
-        %if samplingFactor > 1
-        %    upsampled = interp(dataForChannel{i},samplingFactor);
-        %    dat(1:maxSampleCount, i) = upsampled;
-        %else
-            dat(1:size(dataForChannel{i},1), i) = dataForChannel{i};
-        %end        
-    end
+    targetSampleCount = targetSampleCount +1;
+    
+    dat = zeros(targetSampleCount,targetNumberOfChannels);        
+    j = 1;
+    for i=1:size(chanindx,2)                    
+        if hdr.orig.Segments(1).samplingRate(i) == targetSamplingRate
+            dataForChannel = zeros();
+            thisChannel = chanindx(i);            
+            for segment=1:size(hdr.orig.Segments,2)                
+                range = [1 hdr.orig.Segments(segment).sampleCount(i)];            
+                datseg = read_nervus_data(hdr.orig, segment, range, thisChannel);                
+                dataForChannel = cat(1,dataForChannel,datseg);                                    
+            end                       
+            dat(1:targetSampleCount, j) = dataForChannel;
+            j = j+1;
+        end                                                                      
+    end    
+    if targetNumberOfChannels ~= size(hdr.orig.Segments(1).sampleCount, 2)
+        warning('Some channels ignored due to different sampling rates');
+    end    
     dimord = 'samples_chans';
 
   case 'neuroscope_bin'
