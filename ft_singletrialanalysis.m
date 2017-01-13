@@ -47,7 +47,7 @@ function [reconstructed, residual] = ft_singletrialanalysis(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also <<give a list of function names, all in capitals>>
+% See also FT_SINGLETRIALANALYSIS_ASEO
 
 % Here come the Copyrights
 %

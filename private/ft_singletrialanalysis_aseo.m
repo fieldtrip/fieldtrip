@@ -6,8 +6,7 @@ function [output] = ft_singletrialanalysis_aseo(cfg, data, erp_fft)
 % Use as:
 % [output] = ft_singletrialanalysis_aseo(cfg, data_fft, erp_fft)
 % where data_fft is the observed data in the frequency domain, erp_fft
-% contains the initial ERP components in the frequency domain. cfg is a
-% configuration structure according to
+% contains the initial ERP components in the frequency domain.
 %
 % OUTPUT----
 % amp_est    : Estimates of ERP components' amplitude
