@@ -69,6 +69,9 @@ function [event] = ft_read_event(filename, varargin)
 %
 % The list of supported file formats can be found in FT_READ_HEADER.
 %
+% To use an external reading function, use key-value pair: 'eventformat', FUNCTION_NAME.
+% (Function needs to be on the path, and take as input: filename)
+%
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
 % Copyright (C) 2004-2016 Robert Oostenveld (Nervus by Jan Brogger)
@@ -1996,8 +1999,15 @@ switch eventformat
     event = read_spmeeg_event(filename, 'header', hdr);
     
   otherwise
-    warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
-    event = [];
+    % attempt to run eventformat as a function
+    % in case using an external read function was desired, this is where it is executed
+    % if it fails, the regular unsupported warning message is thrown
+    try
+      event = feval(eventformat,filename);
+    catch
+      warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
+      event = [];
+    end
 end
 
 if ~isempty(hdr) && hdr.nTrials>1 && (isempty(event) || ~any(strcmp({event.type}, 'trial')))
