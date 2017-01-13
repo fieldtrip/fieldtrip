@@ -45,6 +45,8 @@ if nargout>1
 end
 
 if Fold==Fnew
+  ft_warning('requested sampling rate after resampling is the same as the sampling rate of the data, no resampling is performed');
+  datout = dat;
   return
 end
 
