@@ -208,6 +208,10 @@ elseif ~isempty(subspace)
   end
 end
 
+L = cell2mat(dip.leadfield);
+G = L*L'; % Gram matrix
+invG = inv(G + lambda * eye(size(G))); % regularized G^-1
+
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
 
@@ -229,29 +233,8 @@ for i=1:size(dip.pos,1)
     lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
-  if isfield(dip, 'subspace')
-    % do subspace projection of the forward model
-    lf    = dip.subspace{i} * lf;
-    % the data and the covariance become voxel dependent due to the projection
-    dat   =      dip.subspace{i} * dat_pre_subspace;
-    Cy    =      dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}';
-    invCy = pinv(dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}');
-  elseif ~isempty(subspace)
-    % do subspace projection of the forward model only
-    lforig = lf;
-    lf     = subspace * lf;
-    
-    % according to Kensuke's paper, the eigenspace bf boils down to projecting
-    % the 'traditional' filter onto the subspace
-    % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
-    % ESES = u(:,1:k)*u(:,1:k)';
-    % however, even though it seems that the shape of the filter is identical to
-    % the shape it is obtained with the following code, the w*lf=I does not hold.
-  end
   
-  G = lf * lf'; % Gram matrix
-  invG = inv(G + lambda * eye(size(G))); % regularized G^-1
-  
+
   if fixedori
       [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * Cy * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
       [~,maxeig]=max(diag(dd));

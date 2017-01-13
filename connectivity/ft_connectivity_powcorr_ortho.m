@@ -82,7 +82,7 @@ powmom = standardise(log10(powmom), 2);
 c = zeros(n, numel(refindx));%;*2);
 N = ones(n,1);
 %warning off;
-for k = 1:numel(refindx)      
+for k = 1:numel(refindx)
   indx     = refindx(k);
   ref      = mom(indx,:);
   crefnorm = conj(ref./abs(ref));

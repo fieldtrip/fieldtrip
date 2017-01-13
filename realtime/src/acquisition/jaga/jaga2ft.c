@@ -1,12 +1,8 @@
 /*
- * Use as
- *   jaga2ft
- *   jaga2ft <hostname>
- *   jaga2ft <hostname> <port>
+ * Copyright (C) 2015-2016, Robert Oostenveld
  *
- * Copyright (C) 2015 Robert Oostenveld
- * Donders Institute for Donders Institute for Brain, Cognition and Behaviour,
- * Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
+ * Donders Institute for Brain, Cognition and Behaviour,
+ * Centre for Cognitive Neuroimaging, Radboud University,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
 
@@ -21,48 +17,197 @@
 #include <math.h>
 #include <signal.h>
 
+#include "platform.h"
 #include "buffer.h"
 #include "socketserver.h"
+#include "ini.h"
+#include "timestamp.h"
 
-#define BUFLEN   1388
-#define JAGAPORT 55000
-#define FTHOST   "-"
-#define FTPORT   1972
+#define JAGA_PORT      55000
+#define JAGA_NCHAN     16
+#define JAGA_BLOCKSIZE 43
+#define JAGA_BUFLEN    1388
+#define JAGA_NBIT      16
+#define JAGA_FSAMPLE   1000
 
 static char usage[] =
 "\n" \
-    "Usage: jaga2ft [ftHost] [ftPort]\n" \
-    "\n" \
-    "When ftPort is omitted, it will default to 1972.\n" \
-    "When ftHost is omitted, it will default to '-'.\n" \
-    "Using '-' for the buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n" \
-    "\n" \
-    "Example use:\n" \
-    "   jaga2ft                 # start a local buffer on port 1972\n" \
-    "   jaga2ft - 1234          # start a local buffer on port 1234\n" \
-    "   jaga2ft mentat002 1234  # connect to remote buffer\n" \
-    "\n" \
-    ;  
+"Use as\n" \
+"   jaga2ft [ftHost] [ftPort]\n" \
+"with the parameters as specified below, or\n" \
+"   jaga2ft <config>\n" \
+"with the name of a configuration file for detailed setup.\n"
+"\n" \
+"When ftPort is omitted, it will default to 1972.\n" \
+"When ftHost is omitted, it will default to '-'.\n" \
+"Using '-' for the buffer hostname (ftHost) starts a local buffer on the given port (ftPort).\n" \
+"\n" \
+"Example use:\n" \
+"   jaga2ft                 # start a local buffer on port 1972\n" \
+"   jaga2ft - 1234          # start a local buffer on port 1234\n" \
+"   jaga2ft serverpc 1234   # connect to remote buffer running on server PC\n" \
+"\n" \
+;
+
+typedef struct {
+  int        port;
+  int        verbose;
+  const char *hostname;
+  const char *timestamp;
+  const char *timeref;
+
+  const char *enable_chan1;
+  const char *enable_chan2;
+  const char *enable_chan3;
+  const char *enable_chan4;
+  const char *enable_chan5;
+  const char *enable_chan6;
+  const char *enable_chan7;
+  const char *enable_chan8;
+  const char *enable_chan9;
+  const char *enable_chan10;
+  const char *enable_chan11;
+  const char *enable_chan12;
+  const char *enable_chan13;
+  const char *enable_chan14;
+  const char *enable_chan15;
+  const char *enable_chan16;
+
+  const char *label_chan1;
+  const char *label_chan2;
+  const char *label_chan3;
+  const char *label_chan4;
+  const char *label_chan5;
+  const char *label_chan6;
+  const char *label_chan7;
+  const char *label_chan8;
+  const char *label_chan9;
+  const char *label_chan10;
+  const char *label_chan11;
+  const char *label_chan12;
+  const char *label_chan13;
+  const char *label_chan14;
+  const char *label_chan15;
+  const char *label_chan16;
+  const char *label_chan17;  /* this is for the timestamp */
+} configuration;
 
 int keepRunning = 1;
+
+static int iniHandler(void* external, const char* section, const char* name, const char* value) {
+  configuration *local = (configuration*)external;
+
+#define MATCH(s, n) strcasecmp(section, s) == 0 && strcasecmp(name, n) == 0
+  if (MATCH("General", "port")) {
+    local->port = atoi(value);
+  } else if (MATCH("General", "verbose")) {
+    local->verbose = atoi(value);
+  } else if (MATCH("General", "hostname")) {
+    local->hostname = strdup(value);
+  } else if (MATCH("General", "timestamp")) {
+    local->timestamp = strdup(value);
+  } else if (MATCH("General", "timeref")) {
+    local->timeref = strdup(value);
+
+  } else if (MATCH("ChannelEnable", "chan1")) {
+    local->enable_chan1 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan2")) {
+    local->enable_chan2 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan3")) {
+    local->enable_chan3 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan4")) {
+    local->enable_chan4 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan5")) {
+    local->enable_chan5 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan6")) {
+    local->enable_chan6 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan7")) {
+    local->enable_chan7 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan8")) {
+    local->enable_chan8 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan9")) {
+    local->enable_chan9 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan10")) {
+    local->enable_chan10 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan11")) {
+    local->enable_chan11 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan12")) {
+    local->enable_chan12 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan13")) {
+    local->enable_chan13 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan14")) {
+    local->enable_chan14 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan15")) {
+    local->enable_chan15 = strdup(value);
+  } else if (MATCH("ChannelEnable", "chan16")) {
+    local->enable_chan16 = strdup(value);
+
+  } else if (MATCH("ChannelLabel", "chan1")) {
+    local->label_chan1 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan2")) {
+    local->label_chan2 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan3")) {
+    local->label_chan3 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan4")) {
+    local->label_chan4 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan5")) {
+    local->label_chan5 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan6")) {
+    local->label_chan6 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan7")) {
+    local->label_chan7 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan8")) {
+    local->label_chan8 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan9")) {
+    local->label_chan9 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan10")) {
+    local->label_chan10 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan11")) {
+    local->label_chan11 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan12")) {
+    local->label_chan12 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan13")) {
+    local->label_chan13 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan14")) {
+    local->label_chan14 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan15")) {
+    local->label_chan15 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan16")) {
+    local->label_chan16 = strdup(value);
+  } else if (MATCH("ChannelLabel", "chan17")) {
+    local->label_chan17 = strdup(value);
+
+  } else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
 
 void abortHandler(int sig) {
   printf("Ctrl-C pressed -- stopping...\n");
   keepRunning = 0;
 }
 
-void diep(char *s)
-{
+void diep(char *s) {
   perror(s);
   exit(1);
 }
 
-int main(int argc, char *argv[])
-{
+int file_exists(const char *fname) {
+  /* see http://stackoverflow.com/questions/230062/whats-the-best-way-to-check-if-a-file-exists-in-c-cross-platform */
+  if( access( fname, F_OK ) != -1 )
+    return 1;
+  else
+    return 0;
+}
+
+int main(int argc, char *argv[]) {
   struct sockaddr_in si_me, si_other;
   socklen_t slen = sizeof(struct sockaddr_in);
-  int udpsocket, n;
-  char buf[BUFLEN];
+  int udpsocket, n, count = 0, sample = 0, chan = 0, status = 0, labelSize;
+  char buf[JAGA_BUFLEN], *labelString;
+  host_t host;
+  struct timespec tic, toc;
 
   struct {
     uint16_t version;
@@ -91,39 +236,143 @@ int main(int argc, char *argv[])
     uint32_t smp;
   } packet;
 
-  int sample = 0, status = 0, verbose = 0;
-  host_t host;
-
   /* these represent the acquisition system properties */
-  int nchans         = 16;   /* will be updated later on */
-  int fsample        = 1000; /* will be updated later on */
-  int nbit           = 16;
-  int blocksize      = 43;
+  int nchans         = JAGA_NCHAN;     /* will be updated later on */
+  int fsample        = JAGA_FSAMPLE;   /* will be updated later on */
+  int blocksize      = JAGA_BLOCKSIZE;
 
   /* these are used in the communication with the FT buffer and represent statefull information */
-  int ftSocket           = -1;
+  int ftSocket            = -1;
   ft_buffer_server_t *ftServer;
-  message_t    *request  = NULL;
-  message_t    *response = NULL;
-  header_t     *header   = NULL;
-  data_t       *data     = NULL;
+  message_t     *request  = NULL;
+  message_t     *response = NULL;
+  header_t      *header   = NULL;
+  data_t        *data     = NULL;
+  ft_chunkdef_t *label    = NULL;
 
-  printf(usage);
+  /* this structure contains the configuration details */
+  configuration config;
 
-  if (argc>1)
+  /* configure the default settings */
+  config.port          = 1972;
+  config.verbose       = 1;
+  config.hostname      = strdup("-");
+  config.timestamp     = strdup("on");
+  config.timeref       = strdup("start");
+
+  config.enable_chan1  = strdup("on");
+  config.enable_chan2  = strdup("on");
+  config.enable_chan3  = strdup("on");
+  config.enable_chan4  = strdup("on");
+  config.enable_chan5  = strdup("on");
+  config.enable_chan6  = strdup("on");
+  config.enable_chan7  = strdup("on");
+  config.enable_chan8  = strdup("on");
+  config.enable_chan9  = strdup("on");
+  config.enable_chan10 = strdup("on");
+  config.enable_chan11 = strdup("on");
+  config.enable_chan12 = strdup("on");
+  config.enable_chan13 = strdup("on");
+  config.enable_chan14 = strdup("on");
+  config.enable_chan15 = strdup("on");
+  config.enable_chan16 = strdup("on");
+
+  config.label_chan1  = strdup("1");
+  config.label_chan2  = strdup("2");
+  config.label_chan3  = strdup("3");
+  config.label_chan4  = strdup("4");
+  config.label_chan5  = strdup("5");
+  config.label_chan6  = strdup("6");
+  config.label_chan7  = strdup("7");
+  config.label_chan8  = strdup("8");
+  config.label_chan9  = strdup("9");
+  config.label_chan10 = strdup("10");
+  config.label_chan11 = strdup("11");
+  config.label_chan12 = strdup("12");
+  config.label_chan13 = strdup("13");
+  config.label_chan14 = strdup("14");
+  config.label_chan15 = strdup("15");
+  config.label_chan16 = strdup("16");
+  config.label_chan17 = strdup("TimeStamp");
+
+  /* parse the command line arguments */
+  if (argc==1) {
+    /* use the defaults */
+    strcpy(host.name, config.hostname);
+    host.port = config.port;
+  }
+  else if (argc==2 && (strcasecmp(argv[1], "-h")==0 || strcasecmp(argv[1], "-?")==0)) {
+    /* show the help */
+    printf("%s", usage);
+    exit(0);
+  }
+  else if (argc==2 && (file_exists(argv[1]))) {
+    /* the second argument is the configuration file */
+    fprintf(stderr, "jaga2ft: loading configuration from '%s'\n", argv[1]);
+    if (ini_parse(argv[1], iniHandler, &config) < 0) {
+      fprintf(stderr, "Can't load '%s'\n", argv[1]);
+      return 1;
+    }
+    /* get the hostname and port from the configuration file */
+    strcpy(host.name, config.hostname);
+    host.port = config.port;
+  }
+  else if (argc==2) {
+    /* the second argument is the remote server */
     strcpy(host.name, argv[1]);
+  }
+  else if (argc==3) {
+    /* the second and third argument are the remote server and port */
+    strcpy(host.name, argv[1]);
+    host.port = atoi(argv[2]);
+  }
   else {
-    strcpy(host.name, FTHOST);
+    printf("%s", usage);
+    exit(0);
   }
 
-  if (argc>2)
-    host.port = atoi(argv[2]);
-  else {
-    host.port = FTPORT;
-  }
+  /* count the number of channels that should be sent */
+#define ISTRUE(s)  strcasecmp(s, "on")==0
+  nchans = 0;
+  if (ISTRUE(config.enable_chan1))
+    nchans++;
+  if (ISTRUE(config.enable_chan2))
+    nchans++;
+  if (ISTRUE(config.enable_chan3))
+    nchans++;
+  if (ISTRUE(config.enable_chan4))
+    nchans++;
+  if (ISTRUE(config.enable_chan5))
+    nchans++;
+  if (ISTRUE(config.enable_chan6))
+    nchans++;
+  if (ISTRUE(config.enable_chan7))
+    nchans++;
+  if (ISTRUE(config.enable_chan8))
+    nchans++;
+  if (ISTRUE(config.enable_chan9))
+    nchans++;
+  if (ISTRUE(config.enable_chan10))
+    nchans++;
+  if (ISTRUE(config.enable_chan11))
+    nchans++;
+  if (ISTRUE(config.enable_chan12))
+    nchans++;
+  if (ISTRUE(config.enable_chan13))
+    nchans++;
+  if (ISTRUE(config.enable_chan14))
+    nchans++;
+  if (ISTRUE(config.enable_chan15))
+    nchans++;
+  if (ISTRUE(config.enable_chan16))
+    nchans++;
+  if (ISTRUE(config.timestamp))
+    nchans++;
 
   fprintf(stderr, "jaga2ft: hostname     =  %s\n", host.name);
   fprintf(stderr, "jaga2ft: port         =  %d\n", host.port);
+  fprintf(stderr, "jaga2ft: timestamp    =  %s\n", config.timestamp);
+  fprintf(stderr, "jaga2ft: nchan        =  %d\n", nchans);
 
   /* Spawn tcpserver or connect to remote buffer */
   if (strcmp(host.name, "-") == 0) {
@@ -143,7 +392,7 @@ int main(int argc, char *argv[])
       return 1;
     }
     printf("jaga2ft: streaming to remote buffer at %s:%i\n", host.name, host.port);
-  }  
+  }
 
   /* open the UDP server */
   if ((udpsocket=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
@@ -153,7 +402,7 @@ int main(int argc, char *argv[])
     diep("setsockopt");
   memset((char *) &si_me, 0, sizeof(si_me));
   si_me.sin_family      = AF_INET;
-  si_me.sin_port        = htons(JAGAPORT);
+  si_me.sin_port        = htons(JAGA_PORT);
   si_me.sin_addr.s_addr = htonl(INADDR_ANY);
   if (bind(udpsocket, &si_me, sizeof(si_me))==-1)
     diep("bind udp");
@@ -174,9 +423,9 @@ int main(int argc, char *argv[])
   data->buf = NULL;
 
   /* read the first packet to get some information */
-  if ((n=recvfrom(udpsocket, buf, BUFLEN, 0, &si_other, &slen))==-1)
+  if ((n=recvfrom(udpsocket, buf, JAGA_BUFLEN, 0, &si_other, &slen))==-1)
     diep("recvfrom()");
-  if (verbose>0)
+  if (config.verbose>0)
     printf("jaga2ft: received %d byte packet from %s:%d\n", n, inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
 
   /* parse the UDP package */
@@ -214,7 +463,6 @@ int main(int argc, char *argv[])
   }
 
   /* update the defaults */
-  nchans  = packet.nchans;
   fsample = packet.fsample;
 
   /* define the header */
@@ -222,14 +470,132 @@ int main(int argc, char *argv[])
   header->def->nsamples  = 0;
   header->def->nevents   = 0;
   header->def->fsample   = fsample;
-  header->def->data_type = DATATYPE_UINT16;
+  header->def->data_type = DATATYPE_FLOAT32;
   header->def->bufsize   = 0;
+
+  labelSize = 0; /* count the number of bytes required */
+  if (ISTRUE (config.enable_chan1))
+    labelSize += strlen (config.label_chan1) + 1;
+  if (ISTRUE (config.enable_chan2))
+    labelSize += strlen (config.label_chan2) + 1;
+  if (ISTRUE (config.enable_chan3))
+    labelSize += strlen (config.label_chan3) + 1;
+  if (ISTRUE (config.enable_chan4))
+    labelSize += strlen (config.label_chan4) + 1;
+  if (ISTRUE (config.enable_chan5))
+    labelSize += strlen (config.label_chan5) + 1;
+  if (ISTRUE (config.enable_chan6))
+    labelSize += strlen (config.label_chan6) + 1;
+  if (ISTRUE (config.enable_chan7))
+    labelSize += strlen (config.label_chan7) + 1;
+  if (ISTRUE (config.enable_chan8))
+    labelSize += strlen (config.label_chan8) + 1;
+  if (ISTRUE (config.enable_chan9))
+    labelSize += strlen (config.label_chan9) + 1;
+  if (ISTRUE (config.enable_chan10))
+    labelSize += strlen (config.label_chan10) + 1;
+  if (ISTRUE (config.enable_chan11))
+    labelSize += strlen (config.label_chan11) + 1;
+  if (ISTRUE (config.enable_chan12))
+    labelSize += strlen (config.label_chan12) + 1;
+  if (ISTRUE (config.enable_chan13))
+    labelSize += strlen (config.label_chan13) + 1;
+  if (ISTRUE (config.enable_chan14))
+    labelSize += strlen (config.label_chan14) + 1;
+  if (ISTRUE (config.enable_chan15))
+    labelSize += strlen (config.label_chan15) + 1;
+  if (ISTRUE (config.enable_chan16))
+    labelSize += strlen (config.label_chan16) + 1;
+  if (ISTRUE (config.timestamp))
+    labelSize += strlen (config.label_chan17) + 1;
+
+  /* go over all channels for a 2nd time, now copying the strings to the destination */
+  labelString = (char *) malloc (labelSize * sizeof(char));
+  labelSize   = 0;
+  if (ISTRUE (config.enable_chan1)) {
+    strcpy (labelString+labelSize, config.label_chan1);
+    labelSize += strlen (config.label_chan1) + 1;
+  }
+  if (ISTRUE (config.enable_chan2)) {
+    strcpy (labelString+labelSize, config.label_chan2);
+    labelSize += strlen (config.label_chan2) + 1;
+  }
+  if (ISTRUE (config.enable_chan3)) {
+    strcpy (labelString+labelSize, config.label_chan3);
+    labelSize += strlen (config.label_chan3) + 1;
+  }
+  if (ISTRUE (config.enable_chan4)) {
+    strcpy (labelString+labelSize, config.label_chan4);
+    labelSize += strlen (config.label_chan4) + 1;
+  }
+  if (ISTRUE (config.enable_chan5)) {
+    strcpy (labelString+labelSize, config.label_chan5);
+    labelSize += strlen (config.label_chan5) + 1;
+  }
+  if (ISTRUE (config.enable_chan6)) {
+    strcpy (labelString+labelSize, config.label_chan6);
+    labelSize += strlen (config.label_chan6) + 1;
+  }
+  if (ISTRUE (config.enable_chan7)) {
+    strcpy (labelString+labelSize, config.label_chan7);
+    labelSize += strlen (config.label_chan7) + 1;
+  }
+  if (ISTRUE (config.enable_chan8)) {
+    strcpy (labelString+labelSize, config.label_chan8);
+    labelSize += strlen (config.label_chan8) + 1;
+  }
+  if (ISTRUE (config.enable_chan9)) {
+    strcpy (labelString+labelSize, config.label_chan9);
+    labelSize += strlen (config.label_chan9) + 1;
+  }
+  if (ISTRUE (config.enable_chan10)) {
+    strcpy (labelString+labelSize, config.label_chan10);
+    labelSize += strlen (config.label_chan10) + 1;
+  }
+  if (ISTRUE (config.enable_chan11)) {
+    strcpy (labelString+labelSize, config.label_chan11);
+    labelSize += strlen (config.label_chan11) + 1;
+  }
+  if (ISTRUE (config.enable_chan12)) {
+    strcpy (labelString+labelSize, config.label_chan12);
+    labelSize += strlen (config.label_chan12) + 1;
+  }
+  if (ISTRUE (config.enable_chan13)) {
+    strcpy (labelString+labelSize, config.label_chan13);
+    labelSize += strlen (config.label_chan13) + 1;
+  }
+  if (ISTRUE (config.enable_chan14)) {
+    strcpy (labelString+labelSize, config.label_chan14);
+    labelSize += strlen (config.label_chan14) + 1;
+  }
+  if (ISTRUE (config.enable_chan15)) {
+    strcpy (labelString+labelSize, config.label_chan15);
+    labelSize += strlen (config.label_chan15) + 1;
+  }
+  if (ISTRUE (config.enable_chan16)) {
+    strcpy (labelString+labelSize, config.label_chan16);
+    labelSize += strlen (config.label_chan16) + 1;
+  }
+  if (ISTRUE (config.timestamp)) {
+    strcpy (labelString+labelSize, config.label_chan17);
+    labelSize += strlen (config.label_chan17) + 1;
+  }
+
+  /* add the channel label chunk to the header */
+  label = (ft_chunkdef_t *) malloc (sizeof (ft_chunkdef_t));
+  label->type = FT_CHUNK_CHANNEL_NAMES;
+  label->size = labelSize;
+  header->def->bufsize = append (&header->buf, header->def->bufsize, label, sizeof (ft_chunkdef_t));
+  header->def->bufsize = append (&header->buf, header->def->bufsize, labelString, labelSize);
+  FREE (label);
+  FREE (labelString);
 
   /* define the constant part of the data and allocate space for the variable part */
   data->def->nchans    = nchans;
   data->def->nsamples  = blocksize;
-  data->def->data_type = DATATYPE_UINT16;
-  data->def->bufsize   = WORDSIZE_UINT16*nchans*blocksize;
+  data->def->data_type = DATATYPE_FLOAT32;
+  data->def->bufsize   = WORDSIZE_FLOAT32*nchans*blocksize;
+  data->buf = malloc (data->def->bufsize);
 
   /* initialization phase, send the header */
   request->def->command = PUT_HDR;
@@ -240,7 +606,7 @@ int main(int argc, char *argv[])
   cleanup_header(&header);
 
   status = clientrequest(ftSocket, request, &response);
-  if (verbose>0) fprintf(stderr, "jaga2ft: clientrequest returned %d\n", status);
+  if (config.verbose>1) fprintf(stderr, "jaga2ft: clientrequest returned %d\n", status);
   if (status) {
     fprintf(stderr, "jaga2ft: could not send request to buffer\n");
     exit(1);
@@ -268,12 +634,31 @@ int main(int argc, char *argv[])
   /* add a small pause between writing header + first data block */
   usleep(200000);
 
-  while (keepRunning) 
-  {
+  /* determine the reference time for the timestamps */
+  if (strcasecmp (config.timeref, "start") == 0) {
+      /* since the start of the acquisition */
+      get_monotonic_time (&tic, TIMESTAMP_REF_BOOT);
+  }
+  else if (strcasecmp (config.timeref, "boot") == 0) {
+      /* since the start of the day */
+      tic.tv_sec = 0;
+      tic.tv_nsec = 0;
+  }
+  else if (strcasecmp (config.timeref, "epoch") == 0) {
+      /* since the start of the epoch, i.e. 1-1-1970 */
+      tic.tv_sec = 0;
+      tic.tv_nsec = 0;
+  }
+  else {
+      fprintf (stderr, "Incorrect specification of timeref, should be 'start', 'day' or 'epoch'\n");
+      return 1;
+  }
 
-    if (verbose>1) 
-      for (n=0; n<12; n++) 
-	printf("buf[%2u] = %hhu\n", n, buf[n]);
+  while (keepRunning) {
+
+    if (config.verbose>2)
+      for (n=0; n<12; n++)
+	    printf("buf[%2u] = %hhu\n", n, buf[n]);
 
     /* parse the UDP package */
     if (buf[0]==0) {
@@ -309,21 +694,69 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
-    /* point to the data */
-    data->buf = (buf+12);
-
     /* do some sanity checks */
-    if (packet.nchans!=nchans) {
+    if (packet.nchans!=JAGA_NCHAN) {
       fprintf(stderr, "jaga2ft: inconsistent number of channels %hu\n", packet.nchans);
       exit(1);
     }
-    if (packet.nbit!=nbit) {
+    if (packet.nbit!=JAGA_NBIT) {
       fprintf(stderr, "jaga2ft: inconsistent number of bits %hu\n", packet.nbit);
       exit(1);
     }
     if (packet.fsample!=fsample) {
       fprintf(stderr, "jaga2ft: inconsistent sampling rate %hu\n", packet.fsample);
       exit(1);
+    }
+
+    /* loop over all channels and samples in the block, copy the values from enabled channels */
+    sample = 0;
+    while (sample<blocksize) {
+
+      chan = 0;
+      if (ISTRUE (config.enable_chan1))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 0];
+      if (ISTRUE (config.enable_chan2))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 1];
+      if (ISTRUE (config.enable_chan3))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 2];
+      if (ISTRUE (config.enable_chan4))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 3];
+      if (ISTRUE (config.enable_chan5))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 4];
+      if (ISTRUE (config.enable_chan6))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 5];
+      if (ISTRUE (config.enable_chan7))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 6];
+      if (ISTRUE (config.enable_chan8))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 7];
+      if (ISTRUE (config.enable_chan9))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 8];
+      if (ISTRUE (config.enable_chan10))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 9];
+      if (ISTRUE (config.enable_chan11))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 10];
+      if (ISTRUE (config.enable_chan12))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 11];
+      if (ISTRUE (config.enable_chan13))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 12];
+      if (ISTRUE (config.enable_chan14))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 13];
+      if (ISTRUE (config.enable_chan15))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 14];
+      if (ISTRUE (config.enable_chan16))
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 15];
+
+      if (ISTRUE (config.timestamp)) {
+	if (strcasecmp (config.timeref, "start") == 0)
+	  get_monotonic_time (&toc, TIMESTAMP_REF_BOOT);
+	else if (strcasecmp (config.timeref, "boot") == 0)
+	  get_monotonic_time (&toc, TIMESTAMP_REF_BOOT);
+	else if (strcasecmp (config.timeref, "epoch") == 0)
+	  get_monotonic_time (&toc, TIMESTAMP_REF_EPOCH);
+	((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] = get_elapsed_time (&tic, &toc);
+      }
+
+      sample++;
     }
 
     /* create the request */
@@ -337,7 +770,7 @@ int main(int argc, char *argv[])
     request->def->bufsize = append(&request->buf, request->def->bufsize, data->buf, data->def->bufsize);
 
     status = clientrequest(ftSocket, request, &response);
-    if (verbose>0) fprintf(stderr, "jaga2ft: clientrequest returned %d\n", status);
+    if (config.verbose>1) fprintf(stderr, "jaga2ft: clientrequest returned %d\n", status);
     if (status) {
       fprintf(stderr, "jaga2ft: err3\n");
       exit(1);
@@ -348,8 +781,8 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
-    sample += blocksize;
-    printf("jaga2ft: sample count = %i\n", sample);
+    count += sample;
+    printf("jaga2ft: sample count = %i\n", count);
 
     /* FIXME do someting with the response, i.e. check that it is OK */
     cleanup_message(&request);
@@ -360,21 +793,21 @@ int main(int argc, char *argv[])
     cleanup_message(&response);
 
     /* read the next packet */
-    if ((n=recvfrom(udpsocket, buf, BUFLEN, 0, &si_other, &slen))==-1)
+    if ((n=recvfrom(udpsocket, buf, JAGA_BUFLEN, 0, &si_other, &slen))==-1)
       diep("recvfrom()");
-    if (verbose>0)
+    if (config.verbose>1)
       printf("jaga2ft: received %d byte packet from %s:%d\n", n, inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
 
-  } /* while(1) */
+  }				/* while keepRunning */
 
-  data->buf = NULL; /* this is not allocated on the heap but pointing to somewhere on the stack */
   cleanup_data(&data);
   close(udpsocket);
 
-  if (ftSocket > 0) {
+  if (ftSocket > 0)
     close_connection(ftSocket);
-  } else {
+  else
     ft_stop_buffer_server(ftServer);
-  }
+
   return 0;
-}
+
+}				/* main */

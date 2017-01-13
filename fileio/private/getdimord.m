@@ -360,6 +360,8 @@ switch field
       dimord = 'pos_rpt';
     elseif isequalwithoutnans(datsiz, [npos nori nrpt])
       dimord = 'pos_ori_rpt';
+    elseif isequalwithoutnans(datsiz, [npos nori nrpttap])
+      dimord = 'pos_ori_rpttap';
     elseif isequalwithoutnans(datsiz, [npos nori ntime])
       dimord = 'pos_ori_time';
     elseif isequalwithoutnans(datsiz, [npos nori nfreq])
@@ -417,7 +419,11 @@ switch field
     end
     
   case {'cumtapcnt' 'cumsumcnt'}
-    if isequalwithoutnans(datsiz, [nrpt nan])
+    if isequalwithoutnans(datsiz, [nrpt 1])
+      dimord = 'rpt';
+    elseif isequalwithoutnans(datsiz, [nrpt nfreq])
+      dimord = 'rpt_freq';
+    elseif isequalwithoutnans(datsiz, [nrpt nan])
       dimord = 'rpt_other';
     end
     

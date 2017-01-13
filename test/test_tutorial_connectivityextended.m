@@ -113,7 +113,7 @@ tlock                 = ft_timelockanalysis(cfg, data_cmb);
 
 cfg              = [];
 cfg.method       = 'lcmv';
-cfg.vol          = hdm;
+cfg.headmodel    = hdm;
 cfg.grid.pos     = sourcemodel.pos([maxcohindx maxpowindx], :);
 cfg.grid.inside  = true(2,1);
 cfg.grid.unit    = sourcemodel.unit;

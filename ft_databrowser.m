@@ -412,8 +412,12 @@ end
 % determine the vertical scaling
 if ischar(cfg.ylim)
   if hasdata
+    sel = 1;
+    while all(isnan(reshape(data.trial{sel}(chansel,:),[],1))),
+      sel = sel+1;
+    end
     % the first trial is used to determine the vertical scaling
-    dat = data.trial{1}(chansel,:);
+    dat = data.trial{sel}(chansel,:);
   else
     % one second of data is read from file to determine the vertical scaling
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', round(hdr.Fs), 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, 'headerformat', cfg.headerformat);

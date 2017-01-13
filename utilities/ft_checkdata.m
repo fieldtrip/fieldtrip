@@ -208,19 +208,19 @@ if ~isequal(feedback, 'no')
 elseif ismesh
   data = fixpos(data);
   if numel(data)==1
-    if isfield(data,'tri')  
+    if isfield(data,'tri')
       fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
-    elseif isfield(data,'hex')    
+    elseif isfield(data,'hex')
       fprintf('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
-    elseif isfield(data,'tet')    
-      fprintf('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));  
+    elseif isfield(data,'tet')
+      fprintf('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));
     else
-      fprintf('the input is mesh data with %d vertices', size(data.pos,1));  
-    end  
+      fprintf('the input is mesh data with %d vertices', size(data.pos,1));
+    end
   else
     fprintf('the input is mesh data multiple surfaces\n');
   end
-end % give feedback    
+end % give feedback
 
 if issource && isvolume
   % it should be either one or the other: the choice here is to represent it as volume description since that is simpler to handle
@@ -270,6 +270,8 @@ if ~isempty(dtype)
         okflag = okflag + (isfreq & iscomp);
       case 'timelock+comp'
         okflag = okflag + (istimelock & iscomp);
+      case 'source+mesh'
+        okflag = okflag + (issource & ismesh);
       case 'raw'
         okflag = okflag + (israw & ~iscomp);
       case 'freq'
@@ -1401,47 +1403,61 @@ end
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [data] = timelock2raw(data)
-switch data.dimord
-  case 'chan_time'
-    data.trial{1} = data.avg;
-    data.time     = {data.time};
-    data          = rmfield(data, 'avg');
-  case 'rpt_chan_time'
-    tmptrial = {};
-    tmptime  = {};
-    ntrial = size(data.trial,1);
-    nchan  = size(data.trial,2);
-    ntime  = size(data.trial,3);
-    for i=1:ntrial
-      tmptrial{i} = reshape(data.trial(i,:,:), [nchan, ntime]);
-      tmptime{i}  = data.time;
-    end
-    data       = rmfield(data, 'trial');
-    data.trial = tmptrial;
-    data.time  = tmptime;
-  case 'subj_chan_time'
-    tmptrial = {};
-    tmptime  = {};
-    ntrial = size(data.individual,1);
-    nchan  = size(data.individual,2);
-    ntime  = size(data.individual,3);
-    for i=1:ntrial
-      tmptrial{i} = reshape(data.individual(i,:,:), [nchan, ntime]);
-      tmptime{i}  = data.time;
-    end
-    data       = rmfield(data, 'individual');
-    data.trial = tmptrial;
-    data.time  = tmptime;
-  otherwise
-    error('unsupported dimord');
+fn = getdatfield(data);
+if any(ismember(fn, {'trial', 'individual', 'avg'}))
+  % trial, individual and avg (in that order) should be preferred over all other data fields
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2965#c12
+  fn = fn(ismember(fn, {'trial', 'individual', 'avg'}));
 end
-% remove the unwanted fields
-if isfield(data, 'avg'),        data = rmfield(data, 'avg'); end
-if isfield(data, 'var'),        data = rmfield(data, 'var'); end
-if isfield(data, 'cov'),        data = rmfield(data, 'cov'); end
-if isfield(data, 'dimord'),     data = rmfield(data, 'dimord'); end
-if isfield(data, 'numsamples'), data = rmfield(data, 'numsamples'); end
-if isfield(data, 'dof'),        data = rmfield(data, 'dof'); end
+dimord = cell(size(fn));
+for i=1:numel(fn)
+  % determine the dimensions of each of the data fields
+  dimord{i} = getdimord(data, fn{i});
+end
+% the fields trial, individual and avg (with their corresponding default dimord) are preferred
+if sum(strcmp(dimord, 'rpt_chan_time'))==1
+  fn = fn{strcmp(dimord, 'rpt_chan_time')};
+  fprintf('constructing trials from "%s"\n', fn);
+  dimsiz = getdimsiz(data, fn);
+  ntrial = dimsiz(1);
+  nchan  = dimsiz(2);
+  ntime  = dimsiz(3);
+  tmptrial = {};
+  tmptime  = {};
+  for j=1:ntrial
+    tmptrial{j} = reshape(data.(fn)(j,:,:), [nchan, ntime]);
+    tmptime{j}  = data.time;
+  end
+  data       = rmfield(data, fn);
+  data.trial = tmptrial;
+  data.time  = tmptime;
+elseif sum(strcmp(dimord, 'subj_chan_time'))==1
+  fn = fn{strcmp(dimord, 'subj_chan_time')};
+  fprintf('constructing trials from "%s"\n', fn);
+  dimsiz = getdimsiz(data, fn);
+  nsubj = dimsiz(1);
+  nchan  = dimsiz(2);
+  ntime  = dimsiz(3);
+  tmptrial = {};
+  tmptime  = {};
+  for j=1:nsubj
+    tmptrial{j} = reshape(data.(fn)(j,:,:), [nchan, ntime]);
+    tmptime{j}  = data.time;
+  end
+  data       = rmfield(data, fn);
+  data.trial = tmptrial;
+  data.time  = tmptime;
+elseif sum(strcmp(dimord, 'chan_time'))==1
+  fn = fn{strcmp(dimord, 'chan_time')};
+  fprintf('constructing single trial from "%s"\n', fn);
+  data.time  = {data.time};
+  data.trial = {data.(fn)};
+  data = rmfield(data, fn);
+else
+  error('unsupported data structure');
+end
+% remove unwanted fields
+data = removefields(data, {'avg', 'var', 'cov', 'dimord', 'numsamples' ,'dof'});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes

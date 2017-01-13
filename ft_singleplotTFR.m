@@ -26,6 +26,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see FT_CHANNELSELECTION for details
+%   cfg.title          = string, title of plot
 %   cfg.refchannel     = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.fontsize       = font size of title (default = 8)
 %   cfg.hotkeys           = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
@@ -130,6 +131,7 @@ cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',     1);
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter', []);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',    'opacity');
 cfg.channel        = ft_getopt(cfg, 'channel',      'all');
+cfg.title          = ft_getopt(cfg, 'title',        []);
 cfg.masknans       = ft_getopt(cfg, 'masknans',     'yes');
 cfg.directionality = ft_getopt(cfg, 'directionality',[]);
 cfg.figurename     = ft_getopt(cfg, 'figurename',    []);
@@ -504,10 +506,14 @@ if strcmp(cfg.interactive, 'yes')
 end
 
 % Create title text containing channel name(s) and channel number(s):
-if length(sellab) == 1
-  t = [char(cfg.channel) ' / ' num2str(sellab) ];
+if ~isempty(cfg.title)
+  t = cfg.title;
 else
-  t = sprintf('mean(%0s)', join_str(',', cfg.channel));
+  if length(sellab) == 1
+    t = [char(cfg.channel) ' / ' num2str(sellab) ];
+  else
+    t = sprintf('mean(%0s)', join_str(',', cfg.channel));
+  end    
 end
 h = title(t,'fontsize', cfg.fontsize);
 

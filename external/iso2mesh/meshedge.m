@@ -4,7 +4,7 @@ function edges=meshedge(elem,varargin)
 %
 % return all edges in a surface or volumetric mesh
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2011/02/26
 %
 % input:
