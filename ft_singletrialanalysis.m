@@ -26,11 +26,10 @@ function [reconstructed, residual] = ft_singletrialanalysis(cfg, data)
 %  ASEO iteratively models single-trial event-related activity and
 %  ongoing activity and gives an estimate of single-trial latency shift and
 %  amplitude scaling of event-related components.
-%  cfg.unit                 = 'ms' or 'sample', specify jitter and comlatency
-%                              in ms or in samples (default = 'ms')
-%  cfg.aseo.jitter          = value, time jitter in initial timewindow estimate
+%  cfg.aseo.jitter          = value, time jitter in initial timewindow
+%                              estimate (in seconds)
 %  cfg.aseo.numiteration    = value, number of iteration (default = 1)
-%  cfg.aseo.searchWindowSet = 2xN matrix, initial set of latencies of event-
+%  cfg.aseo.searchWindowSet = 2xN matrix, initial set of latencies in seconds of event-
 %                             related components, give as [comp1start, comp1end;
 %                             comp2start, comp2end] (default not specified)
 %  OR
@@ -143,7 +142,6 @@ switch method
         
         % set defaults
         waveformInitSet  = ft_getopt(cfg.aseo, 'waveformInitSet', {});
-        unit             = ft_getopt(cfg.aseo, 'unit', 'ms');
         jitter           = ft_getopt(cfg.aseo, 'jitter', 50);
         numiteration     = ft_getopt(cfg.aseo, 'numiteration', 1);
         initcomp         = ft_getopt(cfg.aseo, 'initcomp', {});
@@ -165,11 +163,7 @@ switch method
         
         % if jitter universal, put it in the right format
         if length(jitter)==1
-            if strcmp(unit, 'ms')
-                jitter = jitter/1000*fsample; % convert jitter from ms to sample
-            elseif strcmp(unit, 's')
-                jitter = jitter*fsample; % convert jitter from sec to sample
-            end
+            jitter = jitter*fsample; % convert jitter from sec to sample
             jitter = repmat([-jitter jitter], [size(waveformInitSet,1) 1]);
         elseif size(jitter)<size(waveformInitSet) | size(jitter)>size(waveformInitSet)
             error('please specify cfg.aseo.jitter as a universal single value or as a matrix with size(cfg.aseo.searchWindowSet)')
@@ -179,15 +173,9 @@ switch method
         if ~isempty(waveformInitSet)
             waveformInitSet = waveformInitSet';
             waveformInitSet = waveformInitSet(:);
-            if strcmp(unit, 'ms')
-                for k = 1:length(waveformInitSet)
-                    waveformInitSet(k,1) = nearest(data.time{1}, waveformInitSet(k,1)/1000); % convert unit from msec to sample
-                end
-            elseif strcmp(unit, 's')
-                for k = 1:length(waveformInitSet)
-                    waveformInitSet(k,1) = nearest(data.time{1}, waveformInitSet(k,1)); % convert unit from msec to sample
-                end
-            end
+            for k = 1:length(waveformInitSet)
+                waveformInitSet(k,1) = nearest(data.time{1}, waveformInitSet(k,1)); % convert unit from msec to sample
+            end         
         end
         cfg.aseo.waveformInitSet = waveformInitSet;
         cfg.aseo.unit = 'sample';
