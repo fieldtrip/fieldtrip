@@ -1,25 +1,10 @@
 function status = ft_test_run(varargin)
 
-% FT_TEST_RUN executes selected FieldTrip test scripts. It checks whether each test
-% script runs without problems as indicated by an explicit error and posts the
-% results on the FieldTrip dashboard.
-%
-% Use as
-%   ft_test_run functionname
-%
-% Additional optional arguments are specified as key-value pairs and can include
-%   dependency   = string
-%   maxmem       = string
-%   maxwalltime  = string
-%
-% Test functions should not require any input arguments.
-% Output arguments of the test function will not be considered.
-%
-% See also FT_TEST_RESULT, FT_VERSION
+% FT_TEST_RUN
 
-% Copyright (C) 2016, Robert oostenveld
+% Copyright (C) 2017, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/donders/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -37,18 +22,27 @@ function status = ft_test_run(varargin)
 %
 % $Id$
 
-optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime'}));
+narginchk(1, inf);
+command = varargin{1};
+assert(isequal(command, 'run'));
+varargin = varargin(2:end);
+
+optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime', 'upload'}));
 if ~isempty(optbeg)
-  optarg = varargin(optbeg:end);
+  optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
 else
   optarg = {};
 end
 
+% varargin contains the file (or files) to test
+% optarg contains the command-specific options
+
 % get the optional input arguments
 dependency  = ft_getopt(optarg, 'dependency', {});
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
+upload      = ft_getopt(optarg, 'upload', 'yes');
 
 if ischar(dependency)
   % this should be a cell-array
@@ -56,12 +50,12 @@ if ischar(dependency)
 end
 
 if ischar(maxwalltime)
-  % it is probably formatted as HH:MM:SS
+  % it is probably formatted as HH:MM:SS, convert to seconds
   maxwalltime = str2walltime(maxwalltime);
 end
 
 if ischar(maxmem)
-  % it is probably formatted as XXmb, or XXgb, ...
+  % it is probably formatted as XXmb, or XXgb, convert to bytes
   maxmem = str2mem(maxmem);
 end
 
@@ -130,9 +124,9 @@ for i=1:numel(filelist)
   
 end % for each function/file
 
-fprintf('%3d scripts do not meet the requirements for dependencies\n', sum(~sel));
-fprintf('%3d scripts do not meet the requirements for memory\n',       sum(mem>maxmem));
-fprintf('%3d scripts do not meet the requirements for walltime \n',    sum(tim>maxwalltime));
+fprintf('%3d scripts are excluded due to the dependencies\n', sum(~sel));
+fprintf('%3d scripts are excluded due to the requirements for memory\n',       sum(mem>maxmem));
+fprintf('%3d scripts are excluded due to the requirements for walltime \n',    sum(tim>maxwalltime));
 
 % remove test scripts that exceed walltime or memory
 sel(tim>maxwalltime) = false;
@@ -166,14 +160,20 @@ for i=1:numel(functionlist)
   result.matlabversion    = version('-release');
   result.fieldtripversion = revision;
   result.branch           = ft_version('branch');
+  result.arch             = computer('arch');
   result.hostname         = gethostname;
   result.user             = getusername;
   result.result           = status;
   result.runtime          = runtime;
   result.functionname     = functionlist{i};
   
-  options = weboptions('MediaType','application/json');
-  webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
+  if istrue(upload)
+    options = weboptions('MediaType','application/json');
+    warning('uploading results to the FieldTrip dashboard')
+    webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
+  else
+    warning('not uploading results to the FieldTrip dashboard')
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
