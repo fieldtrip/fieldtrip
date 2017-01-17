@@ -458,7 +458,6 @@ switch eventformat
     end
     fclose(fid);
     
-    
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);
     
@@ -1194,6 +1193,23 @@ switch eventformat
     % pass all the other users options to the read_trigger function
     event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
     
+  case {'homer_nirs'}
+    % Homer files are MATLAB files in disguise
+    orig = load(filename, '-mat');
+    % each of the columns of orig.s represents an event type
+    % negative values have been editted in Homer and should be ignored
+    event = [];
+    for i=1:size(orig.s,2)
+      smp = find(orig.s(:,i)==1);
+      for j=1:numel(smp)
+        event(end+1).type     = 'trigger';
+        event(end  ).value    = i;
+        event(end  ).sample   = smp(j);
+        event(end  ).duration = [];
+        event(end  ).offset   = [];
+      end
+    end
+    
   case {'itab_raw' 'itab_mhd'}
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1321,7 +1337,7 @@ switch eventformat
       event(i).offset   = 0;                      % expressed in samples
       event(i).duration = hdr.nSamples;           % expressed in samples
     end
-  
+    
   case 'nervus_eeg'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1332,28 +1348,28 @@ switch eventformat
     for i=1:length(hdr.orig.Events)
       event(i).type     = hdr.orig.Events(i).IDStr;   % string
       event(i).value    = hdr.orig.Events(i).label;  % number or string
-      event(i).offset   = 0;                         % expressed in samples      
+      event(i).offset   = 0;                         % expressed in samples
       % calculate the sample value of the event, based on the highest
       % sample rate
       event(i).sample   = (hdr.orig.Events(i).dateOLE-earliestDateTime)*3600*24*maxSampleRate;
       if event(i).sample == 0
-          event(i).sample = 1;
+        event(i).sample = 1;
       elseif event(i).sample > hdr.nSamples
-          event(i).sample = hdr.nSamples;
+        event(i).sample = hdr.nSamples;
       end
       event(i).duration = hdr.orig.Events(i).duration*maxSampleRate;
     end
-	%Add boundary events to indicate segments
-	originalEventCount = length(hdr.orig.Events);
+    %Add boundary events to indicate segments
+    originalEventCount = length(hdr.orig.Events);
     boundaryEventCount = 1;
-	for i=2:length(hdr.orig.Segments)
-		event(originalEventCount+boundaryEventCount).type = 'boundary';
-		event(originalEventCount+boundaryEventCount).value = 'boundary';
-		event(originalEventCount+boundaryEventCount).offset = 0;
-		event(originalEventCount+boundaryEventCount).duration = 0;
-		event(originalEventCount+boundaryEventCount).sample = sum([hdr.orig.Segments(1:(i-1)).sampleCount]);
-        boundaryEventCount = boundaryEventCount+1;
-	end
+    for i=2:length(hdr.orig.Segments)
+      event(originalEventCount+boundaryEventCount).type = 'boundary';
+      event(originalEventCount+boundaryEventCount).value = 'boundary';
+      event(originalEventCount+boundaryEventCount).offset = 0;
+      event(originalEventCount+boundaryEventCount).duration = 0;
+      event(originalEventCount+boundaryEventCount).sample = sum([hdr.orig.Segments(1:(i-1)).sampleCount]);
+      boundaryEventCount = boundaryEventCount+1;
+    end
     
   case {'neuromag_eve'}
     % previously this was called babysquid_eve, now it is neuromag_eve
@@ -1777,7 +1793,7 @@ switch eventformat
     
   case 'nexstim_nxe'
     event = read_nexstim_event(filename);
-  
+    
   case 'nihonkohden_m00'
     % in the data I tested the triggers are marked as DC offsets (deactivation of the DC channel)
     begsample = 1;
@@ -1978,14 +1994,14 @@ switch eventformat
           if (idx==2)
             trigger(i).sample = trigger(i+1).sample;
           end
-
+          
           trigger(i+1) = [];
         else
           i=i+1;
           last_trigger_sample = trigger(i).sample;
         end
       end
-
+      
       event = appendevent(event, trigger);
     end
     

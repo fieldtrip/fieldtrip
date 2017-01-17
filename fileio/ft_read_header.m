@@ -60,7 +60,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
-%   Nihon Kohden (*.m00) 
+%   Nihon Kohden (*.m00)
 %
 % The following spike and LFP dataformats are supported
 %   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
@@ -1350,6 +1350,35 @@ switch headerformat
       hdr.nSamplesPre = 0;
     end % if single or multiple gdf files
     
+  case {'homer_nirs'}
+    % Homer files are MATLAB files in disguise
+    orig = load(filename, '-mat');
+    
+    hdr.label       = {};
+    hdr.nChans      = size(orig.d,2);
+    hdr.nSamples    = size(orig.d,1);
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1; % assume continuous data, not epoched
+    hdr.Fs          = 1/median(diff(orig.t));
+    
+    % number of wavelengths times sources times detectors
+    assert(numel(orig.SD.Lambda)*orig.SD.nSrcs*orig.SD.nDets >= hdr.nChans);
+    
+    for i=1:hdr.nChans
+      hdr.label{i} = num2str(i);
+    end
+    
+    hdr.chantype = repmat({'nirs'}, hdr.nChans, 1);
+    hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
+    
+    % convert the measurement configuration details to an optode structure
+    try
+    end
+      hdr.opto = homer2opto(orig.SD);
+    
+    % keep the header details
+    hdr.orig.SD = orig.SD;
+    
   case {'itab_raw' 'itab_mhd'}
     % read the full header information frtom the binary header structure
     header_info = read_itab_mhd(headerfile);
@@ -1571,7 +1600,7 @@ switch headerformat
     % construct the gradiometer structure from the complete header information
     hdr.grad = netmeg2grad(hdr);
     
-  
+    
   case 'nervus_eeg'
     hdr = read_nervus_header(filename);
     checkUniqueLabels = false;
@@ -1885,10 +1914,10 @@ switch headerformat
   case 'neurosim_spikes'
     headerOnly = true;
     hdr = read_neurosim_spikes(filename, headerOnly);
-   
+    
   case 'nihonkohden_m00'
-    hdr = read_nihonkohden_hdr(filename); 
-  
+    hdr = read_nihonkohden_hdr(filename);
+    
   case 'nimh_cortex'
     cortex = read_nimh_cortex(filename, 'epp', 'no', 'eog', 'no');
     % look at the first trial to determine whether it contains data in the EPP and EOG channels
@@ -2110,7 +2139,7 @@ switch headerformat
       hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
     end
     
-    if hdr.nChans ~= size(smi.label,1);
+    if hdr.nChans ~= size(smi.label,1)
       error('data and header have different number of channels');
     else
       hdr.label = smi.label;
@@ -2123,7 +2152,7 @@ switch headerformat
       hdr.orig = smi;
     end
     % add channel units when possible.
-    for i=1:hdr.nChans;
+    for i=1:hdr.nChans
       chanunit = regexp(hdr.label{i,1},'(?<=\[).+?(?=\])','match');
       if ~isempty(chanunit)
         hdr.chanunit{i,1} = chanunit{1};
@@ -2407,6 +2436,6 @@ hdr = tmp;
 % SUBFUNCTION to fill in empty labels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function labels = fix_empty(labels)
-for i = find(cellfun(@isempty, {labels{:}}));
+for i = find(cellfun(@isempty, {labels{:}}))
   labels{i} = sprintf('%d', i);
 end
