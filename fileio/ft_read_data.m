@@ -732,7 +732,7 @@ switch dataformat
     % multiplexed data in a *.bin file, accompanied by a MATLAB file containing the header
     offset        = begsample-1;
     numsamples    = endsample-begsample+1;
-    if isfield(hdr, 'precision'),
+    if isfield(hdr, 'precision')
       sampletype  = hdr.precision;
     else
       sampletype  = 'double'; %original format without precision info in hdr is always in double
@@ -846,6 +846,12 @@ switch dataformat
     dat = log(chanindx, begsample:endsample);
     dimord = 'chans_samples';
     
+  case {'homer_nirs'}
+    % Homer files are MATLAB files in disguise
+    orig = load(filename, '-mat');
+    dat = orig.d(begsample:endsample, chanindx);
+    dimord = 'samples_chans';
+
   case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
       % big endian
