@@ -9,7 +9,7 @@ function output = base64decode(input)
 %
 % See also base64encode
 
-error(nargchk(1, 1, nargin));
+narginchk(1, 1);
 error(javachk('jvm'));
 if ischar(input), input = uint8(input); end
 
