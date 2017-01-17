@@ -1,6 +1,6 @@
 function table = struct2table(s)
 
-% STRUCT2TABLE converts a struct-array to a string that contains a pretty-print table
+% STRUCT2TABLE converts a struct-array to a cell-array of strings that represents a table
 %
 % Example
 %   s(1).a = 1
@@ -34,17 +34,15 @@ for i=1:numel(s)
   end
 end
 
-
 for i=1:numel(fn)
   fl(i) = max(cellfun(@length, {s.(fn{i})}));
-  fl(i) = max(fl(i), length(fn{i}));
+  fl(i) = max(fl(i), length(fixname(fn{i})));
 end
 
 header = '|';
 for i=1:numel(fn)
-  header = [header pad(fn{i},fl(i)+1,'left',' '), ' |'];
+  header = [header pad(fixname(fn{i}), fl(i)+1, 'left', ' '), ' |'];
 end
-
 
 divider = repmat('-', size(header));
 
@@ -59,5 +57,12 @@ for i=1:numel(s)
   end
 end
 
-table = cat(1, {header, divider}', line);
+table = cat(1, header, divider, line);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function str = fixname(str)
+if strncmp(str, 'x_', 2)
+  str = str(3:end);
+end

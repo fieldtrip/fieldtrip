@@ -2,8 +2,11 @@ function ft_test_compare(varargin)
 
 % FT_TEST_COMPARE
 
-command  = varargin{1};
-varargin = varargin(2:end);
+assert(numel(varargin)>1, 'not enough input arguments')
+command = varargin{1};
+feature = varargin{2};
+assert(isequal(command, 'compare'));
+varargin = varargin(3:end);
 
 optbeg = find(ismember(varargin, {'matlabversion', 'fieldtripversion', 'user', 'hostname', 'branch'}));
 if ~isempty(optbeg)
@@ -16,7 +19,7 @@ end
 % varargin contains the file (or files) to test
 % optarg contains the command-specific options
 
-% construct the query string
+% construct the query string that will be passed in the URL
 query = '?';
 queryparam = {'matlabversion', 'fieldtripversion', 'hostname', 'user', 'branch'};
 for i=1:numel(queryparam)
@@ -28,56 +31,46 @@ end
 
 options = weboptions('ContentType','json'); % this returns the results as MATLAB structure
 
-arg1 = varargin{1};
-arg2 = varargin{2};
-
-switch command
-  case 'comparerevision'
-    functionname = {};
-    dashboard    = {};
-    for i=1:numel(varargin)
-      dashboard{i} = webread(['http://dashboard.fieldtriptoolbox.org/api/' query sprintf('&fieldtripversion=%s', varargin{i})], options);
-      assert(~isempty(dashboard{i}), 'no tests were returned for revision %d', i);
-      extraname    = {dashboard{i}.functionname};
-      functionname = cat(1, functionname(:), extraname(:));
-    end
-    functionname = unique(functionname);
-    
-    % represent a summary of the results in a struct-array
-    results = struct();
-    for i=1:numel(functionname)
-      results(i).function = functionname{i};
-      for j=1:numel(varargin)
-        sel = find(strcmp({dashboard{j}.functionname}, functionname{i}));
-        results(i).(['rev_' varargin{j}]) = getresult(dashboard{j}, sel);
-      end % for each functionname
-    end % for each revision
-    
-    % convert the struct-array to a table
-    table = struct2table(results);
-    fprintf('%s\n', table{:});
-    
-  otherwise
-    error('unsupported command "%s"', command);
-end % switch command
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = padto(str, n)
-if n>length(str)
-  str = [str repmat(' ', [1 n-length(str)])];
+results = cell(size(varargin));
+functionname = {};
+for i=1:numel(varargin)
+  results{i} = webread(['http://dashboard.fieldtriptoolbox.org/api/' query sprintf('&%s=%s', feature, varargin{i})], options);
+  assert(~isempty(results{i}), 'no results were returned for %s %s', feature, varargin{i});
+  functionname = cat(1, functionname(:), {results{i}.functionname}');
 end
 
+% find the joint set of all functions
+functionname = unique(functionname);
+
+% represent a summary of all results in a struct-array
+summary = struct();
+for i=1:numel(functionname)
+  summary(i).function = functionname{i};
+  for j=1:numel(varargin)
+    sel = find(strcmp({results{j}.functionname}, functionname{i}));
+    summary(i).(fixname(varargin{j})) = getresult(results{j}, sel);
+  end % for each functionname
+end % for each of the features
+
+% convert the struct-array to a table
+table = struct2table(summary);
+fprintf('%s\n', table{:});
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = getresult(dashboard, sel)
-if isempty(sel)
+function str = fixname(str)
+str = ['x_' str];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function str = getresult(result, index)
+if isempty(index)
   str = 'missing';
-elseif all(istrue([dashboard(sel).result]))
+elseif all(istrue([result(index).result]))
   str = 'passed';
-elseif all(~istrue([dashboard(sel).result]))
+elseif all(~istrue([result(index).result]))
   str = 'failed';
 else
   str = 'ambiguous';

@@ -1,4 +1,4 @@
-function status = ft_test(varargin)
+function ft_test(varargin)
 
 % FT_TEST performs selected FieldTrip test scripts or reports on previous test
 % results from the dashboard.
@@ -8,7 +8,7 @@ function status = ft_test(varargin)
 %   ft_test report  ...
 %   ft_test compare ...
 %
-% === Running tests ===
+% ========= Running tests =========
 %
 % To execute a test and submit the results to the database, you would do
 %   ft_test run test_bug46
@@ -21,32 +21,33 @@ function status = ft_test(varargin)
 %   maxmem           = number (in bytes) or string
 %   maxwalltime      = number (in seconds) string
 %
-% === Reporting on tests ===
+% ========= Reporting on tests =========
 %
 % To print a table with the results on screen, you would do
 %   ft_test result
 %
 % Additional query arguments are specified as key-value pairs and can include
-%   matlabversion    = string
+%   matlabversion    = string, for example 2016b
 %   fieldtripversion = string
+%   branch           = string
+%   arch             = string, can be glnxa64, maci64. win32 or win64 
 %   hostname         = string
 %   user             = string
-%   branch           = string
 %
-% === Comparing tests ===
+% ========= Comparing tests =========
 %
-% To print a table with the results on screen, you would do
-%   ft_test comparerevision ea3c2b9 314d186
-%   ft_test comparematlab   2015b   2016b
-%   ft_test comparemexext   mexw32  mexw64
-%   ft_test compareos       osx     windows
+% To print a table comparing different test results, you would do
+%   ft_test compare matlabversion     ea3c2b9  314d186
+%   ft_test compare fieldtripversion  2015b    2016b
+%   ft_test compare arch              glnxa64  win32
 %
 % Additional query arguments are specified as key-value pairs and can include
-%   matlabversion    = string
+%   matlabversion    = string, for example 2016b
 %   fieldtripversion = string
+%   branch           = string
+%   arch             = string, can be glnxa64, maci64. win32 or win64 
 %   hostname         = string
 %   user             = string
-%   branch           = string
 %
 % See also FT_VERSION
 
@@ -72,11 +73,11 @@ function status = ft_test(varargin)
 
 switch (varargin{1})
   case 'run'
-    ft_test_run(varargin{1:end});
+    ft_test_run(varargin{:});
   case 'report'
-    ft_test_report(varargin{1:end});
-  case {'comparerevision', 'comparematlab'}
-    ft_test_compare(varargin{1:end});
+    ft_test_report(varargin{:});
+  case 'compare'
+    ft_test_compare(varargin{:});
   otherwise
     error('unsupported command "%s"', varargin{1})
 end % switch

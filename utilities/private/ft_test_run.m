@@ -2,11 +2,12 @@ function status = ft_test_run(varargin)
 
 % FT_TEST_RUN
 
-command  = varargin{1};
-varargin = varargin(2:end);
+assert(numel(varargin)>0, 'not enough input arguments')
+command = varargin{1};
 assert(isequal(command, 'run'));
+varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime'}));
+optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime', 'upoad'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -21,6 +22,7 @@ end
 dependency  = ft_getopt(optarg, 'dependency', {});
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
+upoad       = ft_getopt(optarg, 'upoad', 'yes');
 
 if ischar(dependency)
   % this should be a cell-array
@@ -28,12 +30,12 @@ if ischar(dependency)
 end
 
 if ischar(maxwalltime)
-  % it is probably formatted as HH:MM:SS
+  % it is probably formatted as HH:MM:SS, convert to seconds
   maxwalltime = str2walltime(maxwalltime);
 end
 
 if ischar(maxmem)
-  % it is probably formatted as XXmb, or XXgb, ...
+  % it is probably formatted as XXmb, or XXgb, convert to bytes
   maxmem = str2mem(maxmem);
 end
 
@@ -138,14 +140,20 @@ for i=1:numel(functionlist)
   result.matlabversion    = version('-release');
   result.fieldtripversion = revision;
   result.branch           = ft_version('branch');
+  result.arch             = computer('arch');
   result.hostname         = gethostname;
   result.user             = getusername;
   result.result           = status;
   result.runtime          = runtime;
   result.functionname     = functionlist{i};
   
-  options = weboptions('MediaType','application/json');
-  webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
+  if istrue(upoad)
+    options = weboptions('MediaType','application/json');
+    fprintf('uploading results to the FieldTrip dashboard...\n')
+    % webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
+  else
+    warning('not uploading results to the FieldTrip dashboard')
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
