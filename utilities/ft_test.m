@@ -11,6 +11,8 @@ function ft_test(varargin)
 % ========= Running tests =========
 %
 % To execute a test and submit the results to the database, you would do
+%   ft_test run
+% to run all, or for a specific one
 %   ft_test run test_bug46
 %
 % Test functions should not require any input arguments. Any output arguments will
@@ -18,13 +20,16 @@ function ft_test(varargin)
 %
 % Additional optional arguments are specified as key-value pairs and can include
 %   dependency       = string
-%   maxmem           = number (in bytes) or string
-%   maxwalltime      = number (in seconds) string
+%   maxmem           = number (in bytes) or string such as 10GB
+%   maxwalltime      = number (in seconds) or string such as HH:MM:SS
+%   upload           = string, can be 'yes' or 'no' (default = 'yes')
 %
 % ========= Reporting on tests =========
 %
 % To print a table with the results on screen, you would do
 %   ft_test result
+% to show all, or for a specific one
+%   ft_test result test_bug46
 %
 % Additional query arguments are specified as key-value pairs and can include
 %   matlabversion    = string, for example 2016b

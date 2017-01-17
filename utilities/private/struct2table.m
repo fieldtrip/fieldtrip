@@ -10,7 +10,7 @@ function table = struct2table(s)
 %   disp(struct2table(s))
 
 fn = fieldnames(s);
-fl = zeros(size(fn));
+colwidth = zeros(size(fn));
 
 % first ensure that all fields are strings
 for i=1:numel(s)
@@ -35,13 +35,19 @@ for i=1:numel(s)
 end
 
 for i=1:numel(fn)
-  fl(i) = max(cellfun(@length, {s.(fn{i})}));
-  fl(i) = max(fl(i), length(fixname(fn{i})));
+  colwidth(i) = max(cellfun(@length, {s.(fn{i})}));
 end
 
 header = '|';
 for i=1:numel(fn)
-  header = [header pad(fixname(fn{i}), fl(i)+1, 'left', ' '), ' |'];
+  colname = fn{i};
+  if numel(colname)>1 && colname(1)=='X' && colname(end)=='X'
+    % the name of the column is base64 encoded
+    colname = fixname(fn{i});
+  end
+  % update the width of the column to the header
+  colwidth(i) = max(colwidth(i), length(colname));
+  header = [header pad(colname, colwidth(i)+1, 'left', ' '), ' |'];
 end
 
 divider = repmat('-', size(header));
@@ -53,7 +59,7 @@ line = cell(numel(s),1);
 for i=1:numel(s)
   line{i} = '|';
   for j=1:numel(fn)
-    line{i} = [line{i} pad(s(i).(fn{j}),fl(j)+1,'left',' '), ' |'];
+    line{i} = [line{i} pad(s(i).(fn{j}),colwidth(j)+1,'left',' '), ' |'];
   end
 end
 
@@ -61,8 +67,10 @@ table = cat(1, header, divider, line);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
+% it is possible that the column name is not valid as field name
+% in that case it is base64-encoded and padded with 'X'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function str = fixname(str)
-if strncmp(str, 'x_', 2)
-  str = str(3:end);
-end
+str = str(2:end-1);   % it starts and ends with 'X'
+str(str=='_') = '=';  % the '=' sign has been replaced with '_'
+str = char(base64decode(str));

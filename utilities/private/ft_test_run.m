@@ -2,12 +2,32 @@ function status = ft_test_run(varargin)
 
 % FT_TEST_RUN
 
-assert(numel(varargin)>0, 'not enough input arguments')
+% Copyright (C) 2017, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
+narginchk(1, inf);
 command = varargin{1};
 assert(isequal(command, 'run'));
 varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime', 'upoad'}));
+optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime', 'upload'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -22,7 +42,7 @@ end
 dependency  = ft_getopt(optarg, 'dependency', {});
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
-upoad       = ft_getopt(optarg, 'upoad', 'yes');
+upload      = ft_getopt(optarg, 'upload', 'yes');
 
 if ischar(dependency)
   % this should be a cell-array
@@ -104,9 +124,9 @@ for i=1:numel(filelist)
   
 end % for each function/file
 
-fprintf('%3d scripts do not meet the requirements for dependencies\n', sum(~sel));
-fprintf('%3d scripts do not meet the requirements for memory\n',       sum(mem>maxmem));
-fprintf('%3d scripts do not meet the requirements for walltime \n',    sum(tim>maxwalltime));
+fprintf('%3d scripts are excluded due to the dependencies\n', sum(~sel));
+fprintf('%3d scripts are excluded due to the requirements for memory\n',       sum(mem>maxmem));
+fprintf('%3d scripts are excluded due to the requirements for walltime \n',    sum(tim>maxwalltime));
 
 % remove test scripts that exceed walltime or memory
 sel(tim>maxwalltime) = false;
@@ -147,10 +167,10 @@ for i=1:numel(functionlist)
   result.runtime          = runtime;
   result.functionname     = functionlist{i};
   
-  if istrue(upoad)
+  if istrue(upload)
     options = weboptions('MediaType','application/json');
-    fprintf('uploading results to the FieldTrip dashboard...\n')
-    % webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
+    warning('uploading results to the FieldTrip dashboard')
+    webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
   else
     warning('not uploading results to the FieldTrip dashboard')
   end
