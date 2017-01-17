@@ -47,6 +47,30 @@ end
 dat2 = source2.pow(sel,:);
 assert(isequal(dat1,dat2));
 
-keyboard
+cfg = [];
+cfg.trials = [1 2 3 4];
+cfg.keeptrials = 'yes';
+source3 = ft_sourcedescriptives(cfg, source);
 
+sel = find(source.inside, 1, 'first');
+clear dat1 dat2;
 
+for k = 1:numel(cfg.trials)
+  dat1(k,:,:) = source.trial(cfg.trials(k)).csd{sel};
+  dat2(k,:,:) = source3.trial(cfg.trials(k)).csd{sel};
+end
+assert(isequal(dat1,dat2));
+clear dat1 dat2;
+
+for k = 1:numel(cfg.trials)
+  dat1(k) = source.trial(cfg.trials(k)).noise(sel);
+  dat2(k) = source3.trial(cfg.trials(k)).noise(sel);
+end
+assert(isequal(dat1,dat2));
+clear dat1 dat2
+
+for k = 1:numel(cfg.trials)
+  dat1(k) = source.trial(cfg.trials(k)).pow(sel);
+  dat2(k) = source3.trial(cfg.trials(k)).pow(sel);
+end
+assert(isequal(dat1,dat2));
