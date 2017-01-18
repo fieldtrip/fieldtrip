@@ -64,7 +64,5 @@ elseif isstruct(s1)
     s2(1).(missing2{i}) = [];
   end
   % concatenate the second structure to the first
-  b = numel(s1)+1;
-  e = numel(s1)+numel(s2);
-  s1(b:e) = s2;
+  s1 = cat(1,s1(:), s2(:));
 end
