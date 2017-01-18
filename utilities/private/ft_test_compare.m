@@ -74,7 +74,8 @@ for i=1:numel(functionname)
   summary(i).function = functionname{i};
   for j=1:numel(varargin)
     sel = find(strcmp({results{j}.functionname}, functionname{i}));
-    summary(i).(fixname(varargin{j})) = getresult(results{j}, sel);
+    fn = fixname(varargin{j}, 'X_base64encode_X');
+    summary(i).(fn) = haspassed(results{j}, sel);
   end % for each functionname
 end % for each of the features
 
@@ -83,25 +84,21 @@ table = struct2table(summary);
 fprintf('%s\n', table{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
+% SUBFUNCTION to convert the boolean result into a string
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = fixname(str)
-str = strtrim(base64encode(str));
-str(str=='=') = '_';  % replace the '=' sign with '_'
-str = ['X' str 'X'];  % start and end with an 'X'
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = getresult(result, index)
+function str = haspassed(result, index)
 if isempty(index)
   str = [];
-elseif all(istrue([result(index).result]))
+elseif isfield(result, 'passed') && all(istrue([result(index).passed]))
   str = 'passed';
-elseif all(~istrue([result(index).result]))
+elseif isfield(result, 'passed') && all(~istrue([result(index).passed]))
+  str = 'failed';
+elseif isfield(result, 'result') && all(istrue([result(index).result]))
+  str = 'passed';
+elseif isfield(result, 'result') && all(~istrue([result(index).result]))
   str = 'failed';
 else
-  % multiple representations of the same test are not consistent
+  % there appear to be multiple representations of the same test, but they are not consistent
   str = 'ambiguous';
 end
 

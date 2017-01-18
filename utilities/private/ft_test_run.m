@@ -1,4 +1,4 @@
-function status = ft_test_run(varargin)
+function passed = ft_test_run(varargin)
 
 % FT_TEST_RUN
 
@@ -146,11 +146,11 @@ for i=1:numel(functionlist)
   try
     stopwatch = tic;
     eval(functionlist{i});
-    status = true;
+    passed = true;
     runtime = round(toc(stopwatch));
     fprintf('=== %s PASSED in %d seconds\n', functionlist{i}, runtime);
   catch
-    status = false;
+    passed = false;
     runtime = round(toc(stopwatch));
     fprintf('=== %s FAILED in %d seconds\n', functionlist{i}, runtime);
   end
@@ -163,7 +163,7 @@ for i=1:numel(functionlist)
   result.arch             = computer('arch');
   result.hostname         = gethostname;
   result.user             = getusername;
-  result.result           = status;
+  result.passed           = passed;
   result.runtime          = runtime;
   result.functionname     = functionlist{i};
   

@@ -8,6 +8,28 @@ function table = struct2table(s)
 %   s(2).a = 3
 %   s(2).b = 4
 %   disp(struct2table(s))
+%
+% See also PRINTSTRUCT, APPENDSTRUCT
+
+% Copyright (C) 2017, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 fn = fieldnames(s);
 colwidth = zeros(size(fn));
@@ -42,8 +64,9 @@ header = '|';
 for i=1:numel(fn)
   colname = fn{i};
   if numel(colname)>1 && colname(1)=='X' && colname(end)=='X'
-    % the name of the column is base64 encoded
-    colname = fixname(fn{i});
+    % the name of the field has been base64 encoded
+    % we want to use the original name for the column header
+    colname = fixname(fn{i}, 'X_base64decode_X');
   end
   % update the width of the column to the header
   colwidth(i) = max(colwidth(i), length(colname));
@@ -64,13 +87,3 @@ for i=1:numel(s)
 end
 
 table = cat(1, header, divider, line);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-% it is possible that the column name is not valid as field name
-% in that case it is base64-encoded and padded with 'X'
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function str = fixname(str)
-str = str(2:end-1);   % it starts and ends with 'X'
-str(str=='_') = '=';  % the '=' sign has been replaced with '_'
-str = char(base64decode(str));
