@@ -8,6 +8,10 @@ function test_tutorial_natmeg_dipolefitting
 %
 % it corresponds to the wiki version of 7 October 2014
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 clear all
 close all
 
