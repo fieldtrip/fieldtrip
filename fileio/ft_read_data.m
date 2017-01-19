@@ -959,8 +959,8 @@ switch dataformat
     %
     %Fieldtrip can't handle multiple sampling rates in a data block
     %We will get only the data with the most frequent sampling rate
-    targetSamplingRate = mode(hdr.orig.Segments(1).samplingRate);    
-    matchingChannels = find(hdr.orig.Segments(1).samplingRate(:) == targetSamplingRate);
+    
+    matchingChannels = find(hdr.orig.Segments(1).samplingRate(:) == hdr.Fs);
     firstMatchingChannel = matchingChannels(1);
     targetNumberOfChannels = length(matchingChannels);
     
@@ -970,10 +970,10 @@ switch dataformat
     end    
     targetSampleCount = targetSampleCount +1;
     
-    dat = zeros(targetSampleCount,targetNumberOfChannels);        
+    dat = zeros(targetSampleCount,targetNumberOfChannels);    
     j = 1;
     for i=1:size(chanindx,2)                    
-        if hdr.orig.Segments(1).samplingRate(i) == targetSamplingRate
+        if hdr.orig.Segments(1).samplingRate(i) == hdr.Fs
             dataForChannel = zeros();
             thisChannel = chanindx(i);            
             for segment=1:size(hdr.orig.Segments,2)                
@@ -981,12 +981,12 @@ switch dataformat
                 datseg = read_nervus_data(hdr.orig, segment, range, thisChannel);                
                 dataForChannel = cat(1,dataForChannel,datseg);                                    
             end                       
-            dat(1:targetSampleCount, j) = dataForChannel;
+            dat(1:targetSampleCount, j) = dataForChannel;            
             j = j+1;
         end                                                                      
     end    
     if targetNumberOfChannels ~= size(hdr.orig.Segments(1).sampleCount, 2)
-        warning('Some channels ignored due to different sampling rates');
+        warning('Some channels ignored due to different sampling rates');        
     end    
     dimord = 'samples_chans';
   case 'neuroscope_bin'
