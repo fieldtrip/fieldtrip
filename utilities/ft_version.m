@@ -28,7 +28,7 @@ function [ftver, ftpath] = ft_version(command)
 %   ft_version branch
 %   ft_version clean
 %
-% See also VERSION, VER
+% See also FT_PLATFORM_SUPPORTS, VERSION, VER, VERLESSTHAN
 
 % Copyright (C) 2012-2016, Eelke Spaak
 %

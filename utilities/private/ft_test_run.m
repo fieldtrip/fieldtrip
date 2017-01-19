@@ -168,7 +168,10 @@ for i=1:numel(functionlist)
   result.functionname     = functionlist{i};
   
   if istrue(upload)
-    options = weboptions('MediaType','application/json');
+    try
+      options  = [];
+      options = weboptions('MediaType','application/json');
+    end
     warning('uploading results to the FieldTrip dashboard')
     webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
   else
