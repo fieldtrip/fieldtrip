@@ -85,11 +85,40 @@ for i=2:size(nrvHdr.Segments,2)
     end 
 end
 
+
+
+%Fieldtrip can't handle multiple sampling rates in a data block
+%We will return only the data for the most frequent sampling rate
+%TODO: make this a parameter to this function so that user can 
+%decide what data to get
+targetSamplingRate = mode(nrvHdr.Segments(1).samplingRate);    
+matchingChannels = find(nrvHdr.Segments(1).samplingRate(:) == targetSamplingRate);
+firstMatchingChannel = matchingChannels(1);
+targetNumberOfChannels = length(matchingChannels);
+
+targetSampleCount = 0;
+for i = 1:size(nrvHdr.Segments,2)
+    targetSampleCount = targetSampleCount + nrvHdr.Segments(i).sampleCount(firstMatchingChannel);
+end    
+targetSampleCount = targetSampleCount +1;
+
+newlabels = cell(targetNumberOfChannels, 1);
+j = 1;
+for i=1:size(nrvHdr.Segments(1).chName,2)
+    if nrvHdr.Segments(1).samplingRate(i) == targetSamplingRate
+        newlabels(j) = nrvHdr.Segments(1).chName(i);
+        j = j+1;
+    end                                                                      
+end    
+%if targetNumberOfChannels ~= size(nrvHdr.Segments(1).sampleCount, 2)
+%    warning('Some channels ignored due to different sampling rates');    
+%end    
+
 output = struct();
-output.Fs          = max([nrvHdr.Segments.samplingRate]);
-output.nChans      = size(nrvHdr.Segments(1).samplingRate, 2);
-output.label       = nrvHdr.Segments(1).chName;
-output.nSamples    = totalNSamples+1;
+output.Fs          = targetSamplingRate;
+output.nChans      = targetNumberOfChannels;
+output.label       = newlabels;
+output.nSamples    = targetSampleCount;
 output.nSamplesPre = 0;
 output.nTrials     = 1; 
 output.reference   = nrvHdr.reference;
