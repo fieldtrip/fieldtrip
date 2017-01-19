@@ -5,6 +5,10 @@ function test_bug950
 
 % TEST ft_megrealign test_bug950
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 % the issue explored here is a reputed crash in megrealign due to a problem
 % in the channelposition function.
 % in addition balancing is not properly taken into account when creating

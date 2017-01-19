@@ -6,6 +6,10 @@ function test_ft_timelockanalysis_new(datainfo,writeflag)
 % TEST test_ft_timelockanalysis_new
 % ft_timelockanalysis_new ft_timelockanalysis ref_datasets
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 % this is a function for testing ft_timelockanalysis_new, which is not official yet
 
 % the optional writeflag determines whether the output should be saved to

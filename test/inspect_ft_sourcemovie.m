@@ -12,7 +12,9 @@ function inspect_ft_sourcemovie
 % NOT FINISHED YET, SEE BELOW
 return
 
+% use FieldTrip defaults instead of personal defaults
 global ft_default;
+ft_default = [];
 ft_default.feedback = 'no';
 
 % qsub is necessary, add fieldtrip/qsub to path

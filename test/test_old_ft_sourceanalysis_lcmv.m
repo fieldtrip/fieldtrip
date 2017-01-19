@@ -5,6 +5,10 @@ function test_old_ft_sourceanalysis_lcmv
 
 % TEST test_old_ft_sourceanalysis_lcmv
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 %% Test script, by Johanna
 
 ft_defaults;

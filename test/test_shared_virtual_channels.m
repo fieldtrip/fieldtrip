@@ -6,7 +6,9 @@ function test_shared_virtual_channels
 % TEST test_shared_virtual_channels
 % TEST ft_timelockanalysis ft_sourceanalysis ft_channelselection ft_databrowser
 
+% use FieldTrip defaults instead of personal defaults
 global ft_default;
+ft_default = [];
 ft_default.feedback = 'no';
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/hdm.mat'));

@@ -3,10 +3,16 @@ function [ftver, ftpath] = ft_version(command)
 % FT_VERSION returns the version and installation directory of FieldTrip
 %
 % FieldTrip is not released with version numbers as "2.0", "2.1", etc. Instead, we
-% have a Subversion (SVN) development version and a daily FTP release version.
+% share our development version on http://github.com/fieldtrip. You can use git or
+% subversion (svn) to make a local version of the repository. Furthermore, we release
+% daily version as zip-file on our FTP server.
 %
-% The SVN development version is labeled with the revision number like "rXXXXX",
-% where XXXX is the revision number.
+% If you access the development version using git, it is labeled with the hash of the
+% latest commit like "128c693". You can access the specific version "XXXXXX" at
+% https://github.com/fieldtrip/fieldtrip/commit/XXXXXX.
+%
+% If you access the development version using svn, it is labeled with the revision
+% number like "rXXXXX", where XXXX is the revision number.
 %
 % The daily FTP release version is packaged as a zip file and its version is
 % indicated with "YYMMDD" (year, month, day).
@@ -17,7 +23,12 @@ function [ftver, ftpath] = ft_version(command)
 %   [ftver, ftpath] = ft_version
 % to get the version and the installation root directory.
 %
-% See also VERSION, VER
+% When using git for version control, you can also get additional information with
+%   ft_version revision
+%   ft_version branch
+%   ft_version clean
+%
+% See also FT_PLATFORM_SUPPORTS, VERSION, VER, VERLESSTHAN
 
 % Copyright (C) 2012-2016, Eelke Spaak
 %

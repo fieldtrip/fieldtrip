@@ -6,6 +6,10 @@ function test_bug2085
 % TEST test_bug2085
 % TEST ft_senstype ft_senslabel
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 %% create a volume conductor
 vol = [];
 vol.r = 10;
