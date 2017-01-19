@@ -63,7 +63,7 @@ end
 [revision, ftpath] = ft_version;
 
 % testing a work-in-progress version is not supported
-assert(istrue(ft_version('clean')), 'this requires all local changes to be committed');
+% assert(istrue(ft_version('clean')), 'this requires all local changes to be committed');
 
 %% determine the list of functions to test
 if ~isempty(varargin) && exist(varargin{1}, 'file')
@@ -168,12 +168,12 @@ for i=1:numel(functionlist)
   result.functionname     = functionlist{i};
   
   if istrue(upload)
-    try
-      options  = [];
+    if ft_platform_supports('webwrite')
       options = weboptions('MediaType','application/json');
+      webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
+    else
+      error('uploading is not supported with this MATLAB version ')
     end
-    warning('uploading results to the FieldTrip dashboard')
-    webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
   else
     warning('not uploading results to the FieldTrip dashboard')
   end

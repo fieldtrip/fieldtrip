@@ -129,8 +129,11 @@ switch what
   case 'uimenu'
     tf = is_matlab();
     
-  case 'weboptions'
+  case {'weboptions', 'webread', 'websave'}
     tf = is_matlab() && matlabversion('2014b', Inf);
+    
+  case 'webwrite'
+    tf = is_matlab() && matlabversion('2015a', Inf);
     
   otherwise
     error('unsupported value for first argument: %s', what);
