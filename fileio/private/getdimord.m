@@ -316,7 +316,7 @@ switch field
     if isequal(datsiz, [npos nfreq ntime])
       dimord = 'pos_freq_time';
     end
-  case {'pow'}
+  case {'pow' 'noise'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
     elseif isequal(datsiz, [npos nfreq])
