@@ -1030,13 +1030,12 @@ switch dataformat
     
     dat = zeros(targetSampleCount,targetNumberOfChannels);    
     j = 1;
-    for i=1:size(chanindx,2)                    
+    for i=1:size(hdr.orig.Segments(1).samplingRate,2)                    
         if hdr.orig.Segments(1).samplingRate(i) == hdr.Fs
-            dataForChannel = zeros();
-            thisChannel = chanindx(i);            
+            dataForChannel = zeros();            
             for segment=1:size(hdr.orig.Segments,2)                
                 range = [1 hdr.orig.Segments(segment).sampleCount(i)];            
-                datseg = read_nervus_data(hdr.orig, segment, range, thisChannel);                
+                datseg = read_nervus_data(hdr.orig, segment, range, i);
                 dataForChannel = cat(1,dataForChannel,datseg);                                    
             end                       
             dat(1:targetSampleCount, j) = dataForChannel;            
