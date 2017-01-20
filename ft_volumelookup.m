@@ -111,14 +111,13 @@ end
 % the checking of the input data is done further down
 
 cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange', 1);
+cfg.output             = ft_getopt(cfg,'output', []); % in future, cfg.output could be extended to support both 'label' and 'mask'
 
 roi2mask   = 0;
 mask2label = 0;
 roi2label = 0;
-if isfield(cfg, 'roi') && isfield(cfg, 'output')
-  if strcmp(cfg.output, 'label') % in future, cfg.output should be extended to support both 'label' and 'mask'
+if isfield(cfg, 'roi') && strcmp(cfg.output, 'label')
     roi2label = 1;   
-  end
 elseif isfield(cfg, 'roi');
   roi2mask = 1;
 elseif isfield(cfg, 'maskparameter')
