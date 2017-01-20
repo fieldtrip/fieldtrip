@@ -30,7 +30,7 @@ if iscell(s)
   
 else
   % this is where the actual work happens
-  assert(size(s,1)==1);
+  assert(size(s,1)<2);
   assert(ischar(s));
   assert(numel(c)==1);
   assert(ischar(c));
