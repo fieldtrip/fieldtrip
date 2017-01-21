@@ -14,7 +14,6 @@ eol = '\n';
 j = '';
 j = [j sprintf('{')];
 
-
 fn = fieldnames(s);
 for i=1:numel(fn)
   key = fn{i};
@@ -24,7 +23,7 @@ for i=1:numel(fn)
   
   if i<numel(fn)
     % all but the last elements are followed by a comma
-    eol = '\n';
+    eol = ',\n';
   else
     % the last element is not followed by a comma
     eol = '\n';
@@ -68,3 +67,7 @@ else
   % not yet at the top level, align the closing bracket with the opening variable
   j = [j sprintf(pad(1:end-4)) '}'];
 end
+
+
+
+

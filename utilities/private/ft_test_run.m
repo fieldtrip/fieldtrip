@@ -27,7 +27,7 @@ command = varargin{1};
 assert(isequal(command, 'run'));
 varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime', 'upload'}));
+optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime', 'upload', 'assertclean'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -43,6 +43,7 @@ dependency  = ft_getopt(optarg, 'dependency', {});
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
 upload      = ft_getopt(optarg, 'upload', 'yes');
+assertclean = ft_getopt(optarg, 'assertclean', 'yes');
 
 if ischar(dependency)
   % this should be a cell-array
@@ -63,7 +64,9 @@ end
 [revision, ftpath] = ft_version;
 
 % testing a work-in-progress version is not supported
-% assert(istrue(ft_version('clean')), 'this requires all local changes to be committed');
+if istrue(assertclean)
+  assert(istrue(ft_version('clean')), 'this requires all local changes to be committed');
+end
 
 %% determine the list of functions to test
 if ~isempty(varargin) && exist(varargin{1}, 'file')
@@ -168,12 +171,9 @@ for i=1:numel(functionlist)
   result.functionname     = functionlist{i};
   
   if istrue(upload)
-    if ft_platform_supports('webwrite')
-      options = weboptions('MediaType','application/json');
-      webwrite('http://dashboard.fieldtriptoolbox.org/api', result, options);
-    else
-      error('uploading is not supported with this MATLAB version ')
-    end
+    options = weboptions('MediaType','application/json');
+    url = 'http://dashboard.fieldtriptoolbox.org/api/';
+    webwrite(url, result, options);
   else
     warning('not uploading results to the FieldTrip dashboard')
   end

@@ -50,11 +50,12 @@ for i=1:numel(queryparam)
 end
 
 options = weboptions('ContentType','json'); % this returns the results as MATLAB structure
+url = 'http://dashboard.fieldtriptoolbox.org/api/';
 
 results = cell(size(varargin));
 functionname = {};
 for i=1:numel(varargin)
-  result = webread(['http://dashboard.fieldtriptoolbox.org/api/' query sprintf('&%s=%s', feature, varargin{i})], options);
+  result = webread([url query sprintf('&%s=%s', feature, varargin{i})], options);
   
   % the documents in the mongoDB database might not fully consistent, in which case they are returned as cell-array containing different structures
   % merge all stuctures into a single struct-array

@@ -49,15 +49,16 @@ for i=1:numel(queryparam)
 end
 
 options = weboptions('ContentType','json'); % this returns the result as MATLAB structure
+url = 'http://dashboard.fieldtriptoolbox.org/api/';
 
 if isempty(varargin)
-  result = webread(['http://dashboard.fieldtriptoolbox.org/api/' query], options);
+  result = webread([url query], options);
   assert(~isempty(result), 'no results were returned');
   result = mergecellstruct(result);
 else
   results = cell(size(varargin));
   for i=1:numel(varargin)
-    result = webread(['http://dashboard.fieldtriptoolbox.org/api/' query sprintf('&functionname=%s', varargin{i})], options);
+    result = webread([url query sprintf('&functionname=%s', varargin{i})], options);
     assert(~isempty(result), 'no results were returned for %s', varargin{i});
     results{i} = mergecellstruct(result);
   end
