@@ -10,7 +10,7 @@ function test_bug1166
 % read-in correctly
 
 % ASA headmodel
-filename = '/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol';
+filename = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol');
 cfg = [];
 cfg.method = 'asa';
 cfg.hdmfile = filename;

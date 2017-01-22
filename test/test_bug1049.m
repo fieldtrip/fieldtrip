@@ -63,7 +63,7 @@ cfg.foilim = [0 20];
 cfg.channel = 'MEG';
 freq = ft_freqanalysis(cfg, data);
 
-cd('/home/common/matlab/fieldtrip/data/test/latest/source/meg');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/source/meg'));
 
 % do LCMV beamforming
 cfg            = [];

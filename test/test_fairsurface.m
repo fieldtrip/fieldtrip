@@ -5,7 +5,7 @@ function test_fairsurface
 
 ft_defaults
 
-hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
 shape = ft_read_headshape(hdmfile);
 
 tmpcfg             = [];

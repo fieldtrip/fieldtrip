@@ -11,14 +11,14 @@ global ft_default;
 ft_default = [];
 ft_default.feedback = 'no';
 
-megraw = load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat');
+megraw = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat'));
 
 cfg = [];
 cfg.covariance = 'yes';
 cfg.keeptrials = 'yes';
 megtlock = ft_timelockanalysis(cfg,megraw.dataFIC);
 
-load /home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_localspheres.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_localspheres.mat'))
 
 cfg = [];
 cfg.vol = vol;

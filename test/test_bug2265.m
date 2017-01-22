@@ -13,10 +13,9 @@ ft_default = [];
 clear all
 close all
 
-load('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat')
-load('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat');
-elecs = ft_read_sens('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc');
-
+load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat'));
+elecs = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
 
 %% 
 CMMM = 'cm'; scale=1;

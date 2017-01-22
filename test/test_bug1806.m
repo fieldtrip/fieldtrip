@@ -10,11 +10,11 @@ function test_bug1806
 global ft_default;
 ft_default = [];
 
-ctf151_sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat');
-ctf275_sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat');
+ctf151_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat'));
+ctf275_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));
 
 cfg = [];
-cfg.dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 cfg.trl = [1 900 0];
 data = ft_preprocessing(cfg);
 % the following applies since 30 October 2012

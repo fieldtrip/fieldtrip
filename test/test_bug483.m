@@ -6,11 +6,8 @@ function test_bug483
 % TEST test_bug483
 % TEST ft_read_header ft_read_data ft_read_event
 
-filename = '/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif';
-
-if ~exist(filename)
-filename = '/Users/robert/Manzana/data/dataformat/testdata/neuromag/rik_henson_MRC-CBU/raw.fif';
-end
+% the original file location was /Users/robert/Manzana/data/dataformat/testdata/neuromag/rik_henson_MRC-CBU/raw.fif
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif');
 
 % open a new file and close it again
 fidold = fopen(tempname, 'wb')

@@ -99,7 +99,7 @@ end
 % end
 %
 % cfg = [];
-% cfg.dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
+% cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 % cfg.bufferdata = 'first';
 % cfg.layout = 'CTF151.lay';
 %

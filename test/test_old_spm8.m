@@ -30,7 +30,7 @@ function test_old_spm8
 %./private/volumewrite_spm.m
 
 
-mrifile = '/home/common/meg_mri/schoffelen_jm/schoffelen_jm.mri';
+mrifile = dccnpath('/home/common/meg_mri/schoffelen_jm/schoffelen_jm.mri');
 mri     = ft_read_mri(mrifile);
 
 %ft_volumenormalise
@@ -40,7 +40,7 @@ cfg.coordinates = 'ctf';
 
 restoredefaultpath
 clear global;
-addpath('/home/coherence/jansch/matlab/fieldtrip/');
+addpath(dccnpath('/home/coherence/jansch/matlab/fieldtrip/'));
 fieldtripdefs;
 
 clear fun;

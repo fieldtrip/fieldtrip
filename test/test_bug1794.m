@@ -51,7 +51,7 @@ cfgmix3.vol = ft_convert_units(cfg.vol,'mm');
 cfgmix3.grad = ft_convert_units(cfg.grad,'cm');
 
 % % first using current (today 20130123)
-% cd('/home/common/matlab/fieldtrip')
+% cd(dccnpath('/home/common/matlab/fieldtrip'))
 % restoredefaultpath;
 % ft_defaults;
 gridLFmmcur = ft_prepare_leadfield(cfgmm);
@@ -106,7 +106,7 @@ cfgmix3.vol = ft_convert_units(cfg.vol,'mm');
 cfgmix3.grad = ft_convert_units(cfg.grad,'cm');
 
 % % first using current (today 20130123)
-% cd('/home/common/matlab/fieldtrip')
+% cd(dccnpath('/home/common/matlab/fieldtrip'))
 % restoredefaultpath;
 % ft_defaults;
 gridLFmmcur = ft_prepare_leadfield(cfgmm);
@@ -128,7 +128,7 @@ assert(isequaln(rmfield(gridLFmix3,'cfg'),rmfield(gridLFcmcur,'cfg')))
 
 %% Testing different versions
 
-% cd('/home/common/matlab/fieldtrip-20120630')
+% cd(dccnpath('/home/common/matlab/fieldtrip-20120630'))
 % restoredefaultpath;
 % ft_defaults;
 % gridLFmmjune = ft_prepare_leadfield(cfgmm);
@@ -137,7 +137,7 @@ assert(isequaln(rmfield(gridLFmix3,'cfg'),rmfield(gridLFcmcur,'cfg')))
 % 
 % % Here Add fieltrip-20120426 directory
 % 
-% cd('/home/common/matlab/fieldtrip')
+% cd(dccnpath('/home/common/matlab/fieldtrip'))
 % restoredefaultpath;
 % clear ft_defaults
 % ft_defaults;

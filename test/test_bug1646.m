@@ -51,7 +51,7 @@ bnd = ft_prepare_mesh(cfg, headmodel);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg = [];
-cfg.headshape = '/home/common/matlab/fieldtrip/data/Subject01.shape';
+cfg.headshape = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
 bnd = ft_prepare_mesh(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -59,7 +59,7 @@ bnd = ft_prepare_mesh(cfg);
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1652
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cd /home/common/matlab/fieldtrip/data/test/bug1646
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646'));
 
 load seg1
 load seg2
@@ -69,7 +69,7 @@ load seg5
 load seg6
 
 atlas = ft_read_atlas('TTatlas+tlrc.BRIK');
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri'));
 
 assert(ft_datatype(seg1, 'segmentation'));
 assert(ft_datatype(seg2, 'segmentation'));
@@ -238,7 +238,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all
-load('/home/common/matlab/fieldtrip/data/test/bug1651.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1651.mat'));
 
 cfg = [];
 cfg.tissue = {'brain', 'skull', 'scalp'};
@@ -255,7 +255,7 @@ bnd = ft_prepare_mesh(cfg, seg2);
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load('/home/common/matlab/fieldtrip/data/test/bug937.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug937.mat'));
 
 mri = [];
 mri.anatomy = bkgrnd;

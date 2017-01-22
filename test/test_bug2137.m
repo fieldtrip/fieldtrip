@@ -9,13 +9,12 @@ function test_bug2137
 if false
   restoredefaultpath
   clear all
-  addpath /home/common/matlab/fieldtrip
+  addpath(dccnpath('/home/common/matlab/fieldtrip'));
   ft_defaults
 end
 
 cfg = [];
-cfg.dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
-% cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 data = ft_preprocessing(cfg);
 
 cfg            = [];

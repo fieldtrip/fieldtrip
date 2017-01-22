@@ -48,13 +48,13 @@ freqPost = ft_freqanalysis(cfg, dataPost);
 %% Compute (or load) the forward model)
 
 %try
-  %if ~exist('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat', 'file')
+  %if ~exist(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'), 'file')
   cfg = [];
   cfg.write        = 'no';
   [segmentedmri] = ft_volumesegment(cfg, mri);
 %catch
-%  mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
-%  load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat')
+%  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+%  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
 %end
 
 %% Prepare head model

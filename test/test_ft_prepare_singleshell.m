@@ -17,12 +17,12 @@ function test_ft_prepare_singleshell
 % get the data which is needed
 
 % read in the segmented mri
-cd('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer'));
 load segmentedmri
 mri = segmentedmri; clear segmentedmri;
 
 % specify the file for the headshape
-hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
 
 % read in the headshape
 shape = ft_read_headshape(hdmfile);

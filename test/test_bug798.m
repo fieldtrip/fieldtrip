@@ -8,7 +8,7 @@ function test_bug798
 
 % note that this bug is related to bug 921
 
-cd /home/common/matlab/fieldtrip/data/test/bug798
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug798'));
 load t2_subj1.mat
 load t2_subj1_null
 load t2_subj2

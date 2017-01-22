@@ -279,12 +279,12 @@ xlim([-10 10]);
 sens = data.grad;
 
 % load the original MRI
-mri_orig = ft_read_mri('/home/common/matlab/fieldtrip/data/test/original/rikhenson/Sub15/T1/mprage.nii');
+mri_orig = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/original/rikhenson/Sub15/T1/mprage.nii'));
 
 % load the positions of the anatomical fiducials (as provided by Rik)
-load('/home/common/matlab/fieldtrip/data/test/original/rikhenson/Sub15/T1/mri_fids.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/original/rikhenson/Sub15/T1/mri_fids.mat'));
 
-headshape = ft_read_headshape('/home/common/matlab/fieldtrip/data/test/original/rikhenson/Sub15/MEEG/run_01_raw.fif');
+headshape = ft_read_headshape(dccnpath('/home/common/matlab/fieldtrip/data/test/original/rikhenson/Sub15/MEEG/run_01_raw.fif'));
 headshape = ft_convert_units(headshape, 'mm');
 
 % the MRI is neither expressed in MNI, nor in Neuromag coordinates

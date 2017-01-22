@@ -6,7 +6,7 @@ function test_bug1652
 % TEST test_bug1652
 % TEST ft_datatype_segmentation
 
-cd /home/common/matlab/fieldtrip/data/test/bug1652
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1652'));
 
 load seg1.mat
 % this contains TPMs

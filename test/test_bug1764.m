@@ -13,7 +13,7 @@ function test_bug1764
 % meshing the complex gray, white and csf segmentations rather than the
 % simple brain.
 
-load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat')
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
 
 stopwatch = tic;
 

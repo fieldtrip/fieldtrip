@@ -6,7 +6,7 @@ function test_bug1481
 % TEST test_bug1481
 % TEST ft_rejectcomponent
 
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat'));
 
 elec = ft_read_sens('standard_1020.elc');
 data.elec = elec;

@@ -6,7 +6,7 @@ function test_bug932
 % TEST test_bug932
 % TEST ft_freqstatistics ft_selectdata ft_appendfreq ft_datatype_freq ft_datatype_sens
 
-cd /home/common/matlab/fieldtrip/data/test/bug932
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug932'));
 
 for tt=[4,6]
   load(strcat('LF_o_', num2str(tt)));

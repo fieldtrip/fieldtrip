@@ -8,7 +8,7 @@ function test_bug3035
 
 %% load the data
 
-load /home/common/matlab/fieldtrip/data/test/bug3035/bug.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3035/bug.mat'));
 
 % data consists of nan-free EEG data, plus some eye tracker channels that
 % contain nans. The comp structure was generated based only on the nan-free

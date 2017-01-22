@@ -6,10 +6,8 @@ function test_bug1403
 % TEST test_bug1403
 % TEST ft_read_header
 
-cd /home/common/matlab/fieldtrip/data/test/bug1403
-
 cfg=[];
-cfg.dataset = 'LauraPP1_SEM_MATCH_Average_AUT2.vhdr';
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1403/LauraPP1_SEM_MATCH_Average_AUT2.vhdr');
 data = ft_preprocessing(cfg);
 
 cfg=[];

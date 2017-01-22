@@ -6,7 +6,7 @@ function test_bug896
 % TEST test_bug896
 % TEST ft_multiplotTFR ft_prepare_layout ft_datatype ft_datatype_freq
 
-load /home/common/matlab/fieldtrip/data/test/bug896.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug896.mat'));
 
 ft_checkdata(stat_coh, 'datatype', 'freq');
 ft_checkdata(stat_coh_full, 'datatype', 'freq');

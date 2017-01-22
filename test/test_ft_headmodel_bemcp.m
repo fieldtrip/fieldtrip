@@ -9,18 +9,11 @@ function test_ft_headmodel_bemcp
 % to test actual numerical output of bemcp, rather than simply successful
 % running and correct inputs (which is what test_ft_prepare_headmodel tests).
 
-% flag for location where running code
-atdonders = true;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% method 1: segment MRI then compute bnd from it
 
 % read in the mri, this is already (non?)linearly aligned with MNI
-if atdonders
-  mri = ft_read_mri('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat');
-else
-  mri = ft_read_mri('~/home/fieldtrip_svn/template/headmodel/standard_mri.mat');
-end
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat'));
 
 cfg = [];
 cfg.output = {'brain', 'skull', 'scalp'};
@@ -56,11 +49,7 @@ end
 %% method 2: compute bnd from segmented MRI
 
 % read in the already-segmented mri (in case its segmentation is better than above)
-if atdonders
-  segmentedmri = ft_read_mri('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat');
-else
-  segmentedmri = ft_read_mri('~/home/fieldtrip_svn/template/headmodel/standard_seg.mat');
-end
+segmentedmri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat'));
 
 cfg = [];
 cfg.tissue = [3 2 1]; % brain, skull, scalp
@@ -122,11 +111,7 @@ vol_exist_bemcp = ft_prepare_headmodel(cfg, mesh_exist);
 load standard_sourcemodel3d8mm;
 sourcemodel = ft_convert_units(sourcemodel, 'mm');
 
-if atdonders
-  elec = ft_read_sens('/home/common/matlab/fieldtrip/template/electrode/standard_1005.elc');
-else
-  elec = ft_read_sens('~/home/fieldtrip_svn/template/electrode/standard_1005.elc');
-end
+elec = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1005.elc'));
 elec = ft_convert_units(elec, 'mm');
 
 % check for general spatial alignment

@@ -11,7 +11,7 @@ global ft_default;
 ft_default = [];
 ft_default.feedback = 'no';
 
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg = [];
 cfg.method = 'fastica';
