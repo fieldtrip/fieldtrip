@@ -33,8 +33,9 @@ function [resliced] = ft_volumereslice(cfg, mri)
 
 % Undocumented local options:
 %   cfg.downsample
+%   cfg.method = flip, or an option for cfg.interpmethod in ft_sourceinterpolate
 
-% Copyright (C) 2010-2013, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2010-2017, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,58 +81,65 @@ else
 end
 
 % set the defaults
-cfg.resolution = ft_getopt(cfg, 'resolution', 1 * ft_scalingfactor('mm', mri.unit)); % default is 1 mm, but the actual number depends on the units. See bug2906
-cfg.downsample = ft_getopt(cfg, 'downsample', 1);
-cfg.xrange     = ft_getopt(cfg, 'xrange', []);
-cfg.yrange     = ft_getopt(cfg, 'yrange', []);
-cfg.zrange     = ft_getopt(cfg, 'zrange', []);
-cfg.dim        = ft_getopt(cfg, 'dim', []); % alternatively use ceil(mri.dim./cfg.resolution)
 cfg.method     = ft_getopt(cfg, 'method');
-
-if isfield(mri, 'coordsys')
-  % use some prior knowledge to optimize the location of the bounding box
-  % with respect to the origin of the coordinate system
-  switch mri.coordsys
-    case {'ctf' '4d' 'bti'}
-      xshift = 30./cfg.resolution;
-      yshift = 0;
-      zshift = 40./cfg.resolution;
-    case {'itab' 'neuromag'}
-      xshift = 0;
-      yshift = 30./cfg.resolution;
-      zshift = 40./cfg.resolution;
-    otherwise
-      xshift = 0;
-      yshift = 0;
-      zshift = 0;
+cfg.downsample = ft_getopt(cfg, 'downsample', 1);
+if isequal(cfg.method, 'flip')
+  % these do not apply when flipping
+  cfg = ft_checkconfig(cfg, 'forbidden', {'resolution', 'xrange', 'yrange', 'zrange', 'dim'});
+else
+  % this only applies when interpolating
+  cfg.resolution = ft_getopt(cfg, 'resolution', 1 * ft_scalingfactor('mm', mri.unit)); % default is 1 mm, but the actual number depends on the units. See bug2906
+  cfg.xrange     = ft_getopt(cfg, 'xrange', []);
+  cfg.yrange     = ft_getopt(cfg, 'yrange', []);
+  cfg.zrange     = ft_getopt(cfg, 'zrange', []);
+  cfg.dim        = ft_getopt(cfg, 'dim', []); % alternatively use ceil(mri.dim./cfg.resolution)
+  
+  if isfield(mri, 'coordsys')
+    % use some prior knowledge to optimize the location of the bounding box
+    % with respect to the origin of the coordinate system
+    switch mri.coordsys
+      case {'ctf' '4d' 'bti'}
+        xshift = 30./cfg.resolution;
+        yshift = 0;
+        zshift = 40./cfg.resolution;
+      case {'itab' 'neuromag'}
+        xshift = 0;
+        yshift = 30./cfg.resolution;
+        zshift = 40./cfg.resolution;
+      otherwise
+        xshift = 0;
+        yshift = 0;
+        zshift = 0;
+    end
+  else % if no coordsys is present
+    xshift = 0;
+    yshift = 0;
+    zshift = 0;
   end
-else % if no coordsys is present
-  xshift = 0;
-  yshift = 0;
-  zshift = 0;
-end
-
-if ~isempty(cfg.dim)
-  xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
-  yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution + yshift;
-  zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
-else % if no cfg.dim is specified, use defaults
-  range = [-127.5 127.5] * cfg.resolution; % 255 mm^3 bounding box, assuming human brain
-  xrange = range + xshift;
-  yrange = range + yshift;
-  zrange = range + zshift;
-end
-
-% if ranges have not been specified by the user
-if isempty(cfg.xrange)
-  cfg.xrange = xrange;
-end
-if isempty(cfg.yrange)
-  cfg.yrange = yrange;
-end
-if isempty(cfg.zrange)
-  cfg.zrange = zrange;
-end
+  
+  if ~isempty(cfg.dim)
+    xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
+    yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution + yshift;
+    zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
+  else % if no cfg.dim is specified, use defaults
+    range = [-127.5 127.5] * cfg.resolution; % 255 mm^3 bounding box, assuming human brain
+    xrange = range + xshift;
+    yrange = range + yshift;
+    zrange = range + zshift;
+  end
+  
+  % if ranges have not been specified by the user
+  if isempty(cfg.xrange)
+    cfg.xrange = xrange;
+  end
+  if isempty(cfg.yrange)
+    cfg.yrange = yrange;
+  end
+  if isempty(cfg.zrange)
+    cfg.zrange = zrange;
+  end
+  
+end % if method~=fip
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
@@ -141,39 +149,46 @@ if cfg.downsample~=1
   [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
-% compute the desired grid positions
-xgrid = cfg.xrange(1):cfg.resolution:cfg.xrange(2);
-ygrid = cfg.yrange(1):cfg.resolution:cfg.yrange(2);
-zgrid = cfg.zrange(1):cfg.resolution:cfg.zrange(2);
-
-resliced           = [];
-resliced.dim       = [length(xgrid) length(ygrid) length(zgrid)];
-resliced.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
-resliced.anatomy   = zeros(resliced.dim, 'int8');
-resliced.unit      = mri.unit;
-
-clear xgrid ygrid zgrid
-
-% these are the same in the resliced as in the input anatomical MRI
-if isfield(mri, 'coordsys')
-  resliced.coordsys = mri.coordsys;
-end
-
-fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
-
 % determine the fields to reslice
 fn = fieldnames(mri);
-sel = false(size(fn));
+fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg', 'hdr'}); % remove fields that do not represent the data
+dimord = cell(size(fn));
 for i=1:numel(fn)
   dimord{i} = getdimord(mri, fn{i});
 end
 fn = fn(strcmp(dimord, 'dim1_dim2_dim3'));
 
 if strcmp(cfg.method, 'flip')
-  
-  keyboard
+  % this uses some private functions that change the volumes and the transform
+  resliced = volumepermute(mri); % this makes the transform approximately diagonal
+  flipvec = false(1,3);
+  flipvec(1) = resliced.transform(1,1)<0;
+  flipvec(2) = resliced.transform(2,2)<0;
+  flipvec(3) = resliced.transform(3,3)<0;
+  resliced = volumeflip(resliced, flipvec); % this flips along each of the dimensions
   
 else
+  % compute the desired grid positions
+  xgrid = cfg.xrange(1):cfg.resolution:cfg.xrange(2);
+  ygrid = cfg.yrange(1):cfg.resolution:cfg.yrange(2);
+  zgrid = cfg.zrange(1):cfg.resolution:cfg.zrange(2);
+  
+  resliced           = [];
+  resliced.dim       = [length(xgrid) length(ygrid) length(zgrid)];
+  resliced.transform = translate([cfg.xrange(1) cfg.yrange(1) cfg.zrange(1)]) * scale([cfg.resolution cfg.resolution cfg.resolution]) * translate([-1 -1 -1]);
+  resliced.anatomy   = zeros(resliced.dim, 'int8');
+  resliced.unit      = mri.unit;
+  
+  % these take a lot of memory
+  clear xgrid ygrid zgrid
+  
+  % these are the same in the resliced as in the input anatomical MRI
+  if isfield(mri, 'coordsys')
+    resliced.coordsys = mri.coordsys;
+  end
+  
+  fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
+  
   % the actual work is being done by ft_sourceinterpolate
   % this interpolates the real volume on the resolution that is defined for the resliced volume
   tmpcfg = [];
@@ -195,7 +210,6 @@ else
   end
   
 end % if method=flip or interpolate
-
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

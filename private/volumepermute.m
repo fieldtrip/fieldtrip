@@ -1,11 +1,12 @@
 function [volume, permutevec] = volumepermute(volume, permutevec)
 
+% VOLUMEPERMUTE
+%
+% See also VOLUMEFLIP
+
 % do a low-level check on the input data
 if ~isfield(volume, 'transform'), error('the input volume needs a transformation matrix'); end
 if ~isfield(volume, 'dim'),       error('the input volume needs a dim field');             end
-
-if isfield(volume, 'outside')
-end
 
 % define some variable locally
 T   = volume.transform;
@@ -31,7 +32,7 @@ if ischar(permutevec)
   [dum, m1]  = max(abs(T(1,1:3)));
   [dum, m2]  = max(abs(T(2,1:3)));
   [dum, m3]  = max(abs(T(3,1:3)));
-  permutevec = [m1 m2 m3]; 
+  permutevec = [m1 m2 m3];
 end
 
 if ~all(permutevec==[1 2 3])
