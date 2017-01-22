@@ -27,7 +27,7 @@ command = varargin{1};
 assert(isequal(command, 'run'));
 varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'dependency', 'maxmem', 'maxwalltime', 'upload', 'assertclean'}));
+optbeg = find(ismember(varargin, {'dependency', 'loadfile', 'maxmem', 'maxwalltime', 'upload', 'assertclean'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -40,6 +40,7 @@ end
 
 % get the optional input arguments
 dependency  = ft_getopt(optarg, 'dependency', {});
+loadfile    = ft_getopt(optarg, 'loadfile');  % default is handled below
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
 upload      = ft_getopt(optarg, 'upload', 'yes');
@@ -49,6 +50,11 @@ if ischar(dependency)
   % this should be a cell-array
   dependency = {dependency};
 end
+
+if isempty(loadfile)
+  % true when central storage is available, false otherwise
+  loadfile = exist(dccnpath('/home/common/matlab/fieldtrip/data/'), 'dir');
+end    
 
 if ischar(maxwalltime)
   % it is probably formatted as HH:MM:SS, convert to seconds
@@ -88,9 +94,10 @@ end
 fprintf('considering %d test scripts for execution\n', numel(filelist));
 
 %% make a subselection based on the filters
-sel = true(size(filelist));
-mem = zeros(size(filelist));
-tim = zeros(size(filelist));
+dep  = true(size(filelist));
+file = false(size(filelist)); % by default ignore file reads
+mem  = zeros(size(filelist));
+tim  = zeros(size(filelist));
 
 for i=1:numel(filelist)
   fid = fopen(filelist{i}, 'rt');
@@ -99,16 +106,23 @@ for i=1:numel(filelist)
   line = tokenize(str, 10);
   
   if ~isempty(dependency)
-    sel(i) = false;
+    dep(i) = false;
   else
-    sel(i) = true;
+    dep(i) = true;
   end
   
   for k=1:numel(line)
     for j=1:numel(dependency)
       [s, e] = regexp(line{k}, sprintf('%% TEST.*%s.*', dependency{j}), 'once', 'start', 'end');
       if ~isempty(s)
-        sel(i) = true;
+        dep(i) = true;
+      end
+    end
+    
+    if ~istrue(loadfile) && ~istrue(loadfile)
+      [s, e] = regexp(line{k}, 'dccnpath', 'once', 'start', 'end');
+      if ~isempty(s)
+        file(i) = true;
       end
     end
     
@@ -127,13 +141,17 @@ for i=1:numel(filelist)
   
 end % for each function/file
 
-fprintf('%3d scripts are excluded due to the dependencies\n', sum(~sel));
+fprintf('%3d scripts are excluded due to the dependencies\n', sum(~dep));
+fprintf('%3d scripts are excluded due to loading files\n', sum(file));
 fprintf('%3d scripts are excluded due to the requirements for memory\n',       sum(mem>maxmem));
 fprintf('%3d scripts are excluded due to the requirements for walltime \n',    sum(tim>maxwalltime));
 
-% remove test scripts that exceed walltime or memory
+% make selection of test scripts, remove scripts that exceed walltime or memory
+sel  = true(size(filelist));
 sel(tim>maxwalltime) = false;
 sel(mem>maxmem)      = false;
+sel(dep==false)      = false;
+sel(file==true)      = false;
 
 % make the subselection of functions to test
 functionlist = functionlist(sel);
