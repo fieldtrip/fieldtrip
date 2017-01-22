@@ -80,25 +80,13 @@ else
 end
 
 % set the defaults
-% set voxel resolution according to the input units- see bug2906
-unitcheckmm = strcmp(mri.unit,'mm');
-if unitcheckmm==1;
-    cfg.resolution = ft_getopt(cfg, 'resolution', 1);
-end;
-unitcheckcm = strcmp(mri.unit,'cm');
-if unitcheckcm==1;
-    cfg.resolution = ft_getopt(cfg, 'resolution', .1);
-end;
-unitcheckm = strcmp(mri.unit,'m');
-if unitcheckm==1;
-    cfg.resolution = ft_getopt(cfg, 'resolution', .001);
-end;
-%cfg.resolution = ft_getopt(cfg, 'resolution', 1);
+cfg.resolution = ft_getopt(cfg, 'resolution', 1 * ft_scalingfactor('mm', mri.unit)); % default is 1 mm, but the actual number depends on the units. See bug2906
 cfg.downsample = ft_getopt(cfg, 'downsample', 1);
 cfg.xrange     = ft_getopt(cfg, 'xrange', []);
 cfg.yrange     = ft_getopt(cfg, 'yrange', []);
 cfg.zrange     = ft_getopt(cfg, 'zrange', []);
 cfg.dim        = ft_getopt(cfg, 'dim', []); % alternatively use ceil(mri.dim./cfg.resolution)
+cfg.method     = ft_getopt(cfg, 'method');
 
 if isfield(mri, 'coordsys')
   % use some prior knowledge to optimize the location of the bounding box
@@ -173,18 +161,41 @@ end
 
 fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
 
-% the actual work is being done by ft_sourceinterpolate, which interpolates the real mri volume
-% on the resolution that is defined for the resliced volume
-tmpcfg = [];
-tmpcfg.parameter = 'anatomy';
-resliced = ft_sourceinterpolate(tmpcfg, mri, resliced);
+% determine the fields to reslice
+fn = fieldnames(mri);
+sel = false(size(fn));
+for i=1:numel(fn)
+  dimord{i} = getdimord(mri, fn{i});
+end
+fn = fn(strcmp(dimord, 'dim1_dim2_dim3'));
 
-% remove fields that were not present in the input, this applies specifically to
-% the 'inside' field that may have been added by ft_sourceinterpolate
-resliced = rmfield(resliced, setdiff(fieldnames(resliced), fieldnames(mri)));
+if strcmp(cfg.method, 'flip')
+  
+  keyboard
+  
+else
+  % the actual work is being done by ft_sourceinterpolate
+  % this interpolates the real volume on the resolution that is defined for the resliced volume
+  tmpcfg = [];
+  tmpcfg.parameter = fn;
+  tmpcfg.interpmethod = cfg.method;
+  resliced = ft_sourceinterpolate(tmpcfg, mri, resliced);
+  resliced.cfg.previous = resliced.cfg.previous{1}; % the 2nd input is a dummy variable
+  cfg.method = resliced.cfg.interpmethod; % remember the method that was used
+  % restore the provenance information
+  [cfg, resliced] = rollback_provenance(cfg, resliced);
+  
+  % remove fields that were not present in the input
+  % this applies specifically to the 'inside' field that may have been added by ft_sourceinterpolate
+  resliced = keepfields(resliced, fieldnames(mri));
+  
+  % convert any non-finite values to 0 to avoid problems later on
+  for i=1:numel(fn)
+    resliced.(fn{i})(~isfinite((fn{i}))) = 0;
+  end
+  
+end % if method=flip or interpolate
 
-% convert any non-finite values to 0 to avoid problems later on
-resliced.anatomy(~isfinite(resliced.anatomy)) = 0;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
