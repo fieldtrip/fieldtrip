@@ -44,7 +44,6 @@ function headmodel = ft_headmodel_localspheres(mesh, grad, varargin)
 % $Id$
 
 % get the additional inputs and set the defaults
-unit          = ft_getopt(varargin, 'unit');
 feedback      = ft_getopt(varargin, 'feedback', true);
 singlesphere  = ft_getopt(varargin, 'singlesphere', 'no');
 
@@ -82,7 +81,8 @@ headmodel = [];
 % ensure that the mesh has units, estimate them if needed
 mesh = ft_convert_units(mesh);
 
-% ensure that it has consistent units
+% ensure that it has a consistent representation and consistent units
+grad = ft_datatype_sens(grad);
 grad = ft_convert_units(grad, mesh.unit);
 
 % copy the geometrical units into the volume conductor
@@ -134,40 +134,34 @@ headmodel.r = zeros(Nchan,1);    % radius of every sphere
 headmodel.o = zeros(Nchan,3);    % origin of every sphere
 headmodel.label = cell(Nchan,1); % corresponding gradiometer channel label for every sphere
 
+allpos = grad.chanpos;
+allori = grad.chanori;
+if any(~isfinite(allpos(:)))
+  % probably the data has been backprojected from a component structure,
+  % use chanposold, if possible
+  if isfield(grad, 'chanposold')
+    allpos = grad.chanposold;
+    allori = grad.chanoriold;
+  else
+    error('cannot extract channel position information from sensor description');
+  end
+end
+
 for chan=1:Nchan
-  coilsel = find(grad.tra(chan,:)~=0);
-  allpos  = grad.coilpos(coilsel, :);   % position of all coils belonging to this channel
-  allori  = grad.coilori(coilsel, :);   % orientation of all coils belonging to this channel
-  
+  thispos  = allpos(chan,:);
+  thisori  = allori(chan,:);
+ 
   if istrue(feedback)
     cla
-    plot3(grad.coilpos(:,1), grad.coilpos(:,2), grad.coilpos(:,3), 'b.');   % all coils
-    plot3(      allpos(:,1),       allpos(:,2),       allpos(:,3), 'r*');     % this channel in red
+    plot3( allpos(:,1),  allpos(:,2),  allpos(:,3), 'b.');   % all channels
+    plot3(thispos(:,1), thispos(:,2), thispos(:,3), 'r*');     % this channel in red
   end
   
-  % determine the average position and orientation of this channel
-  thispos = mean(allpos,1);
-  [u, s, v] = svd(allori);
-  thisori = v(:,1)';
   if dot(thispos,thisori)<0
     % the orientation should be outwards pointing
     thisori = -thisori;
   end
-  
-  % compute the distance from every coil along this channels orientation
-  dist = zeros(size(coilsel));
-  for i=1:length(coilsel)
-    dist(i) = dot((allpos(i,:)-thispos), thisori);
-  end
-  
-  [m, i] = min(dist);
-  % check whether the minimum difference is larger than a typical distance
-  if abs(m)>(baseline/4)
-    % replace the position of this channel by the coil that is the closest to the head (axial gradiometer)
-    % except when the center of the channel is approximately just as good (planar gradiometer)
-    thispos = allpos(i,:);
-  end
-  
+    
   % find the headshape points that are close to this channel
   dist = sqrt(sum((mesh-repmat(thispos,Nshape,1)).^2, 2));
   shapesel = find(dist<radius);
