@@ -13,10 +13,10 @@ function test_spm12
 % - ft_read_mri (nifti_spm, default remains spm8) - based on function deps, not real data
 % - private/volumewrite_spm (default remains spm8) - based on function deps, not real data
 % - utilities/private/sn2individual (called by ft_warp_apply) - based on function deps, not real data
+% - utilities/private/individual2sn (called by ft_warp_apply) - forced use of spm8 since spm_invdef is missing in spm12 (in toolbox/OldSeg)
 % to do (function-specific intelligence required):
 % - ft_volumenormalise
 % - ft_volumesegment
-% - utilities/private/individual2sn (called by ft_warp_apply) - forced use of spm8 since spm_invdef is missing in spm12 (in toolbox/OldSeg)
 
 
 mrifile = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/freesurfer/T1.mgz');
