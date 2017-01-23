@@ -8,7 +8,7 @@ function outpoints = mni2tal(inpoints)
 % Matthew Brett 10/8/99
 
 % ensure that SPM8 (preferred) or SPM2 is available, needed for spm_matrix
-hasspm = ft_hastoolbox('SPM8', 3) || ft_hastoolbox('SPM2', 3);
+hasspm = ft_hastoolbox('SPM12', 3) || ft_hastoolbox('SPM8', 3) || ft_hastoolbox('SPM2', 3);
 if ~hasspm
   error('this function depends on the SPM toolbox, see see http://www.fil.ion.ucl.ac.uk/spm');
 end

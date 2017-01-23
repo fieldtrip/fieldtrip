@@ -15,7 +15,7 @@ function [downsample] = ft_volumedownsample(cfg, source)
 %   cfg.parameter  = string, data field to downsample (default = 'all')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %   cfg.keepinside = 'yes' or 'no', keep the inside/outside labeling (default = 'yes')
-%   cfg.spmversion = string, 'spm2' or 'spm8' (default = 'spm8')
+%   cfg.spmversion = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -71,7 +71,7 @@ source = ft_checkdata(source, 'datatype', 'volume', 'feedback', 'no');
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'unused',  {'voxelcoord'});
 
-if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm8'; end
+if ~isfield(cfg, 'spmversion'), cfg.spmversion = 'spm12'; end
 if ~isfield(cfg, 'downsample'), cfg.downsample = 1;      end
 if ~isfield(cfg, 'keepinside'), cfg.keepinside = 'yes';  end
 if ~isfield(cfg, 'parameter'),  cfg.parameter = 'all';   end
