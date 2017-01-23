@@ -16,7 +16,7 @@ function test_spm12
 % to do (function-specific intelligence required):
 % - ft_volumenormalise
 % - ft_volumesegment
-% - utilities/private/individual2sn (called by ft_warp_apply) - requires spm_invdef (not existent in spm12)
+% - utilities/private/individual2sn (called by ft_warp_apply) - forced use of spm8 since spm_invdef is missing in spm12 (in toolbox/OldSeg)
 
 
 mrifile = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/freesurfer/T1.mgz');
@@ -74,6 +74,9 @@ cfg.nonlinear  = 'no';
 cfg.coordinates = 'tal';
 cfg.spmversion = 'spm8';
 n8 = ft_volumenormalise(cfg, mri);
+
+%ft_warp_apply with spm12
+elecpos = ft_warp_apply(n8.params, [4 4 4; 1 1 1], 'individual2sn');
 
 rmpath(spm('dir'));
 

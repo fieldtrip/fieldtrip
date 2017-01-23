@@ -37,7 +37,7 @@ function [warped]= individual2sn(P, input)
 %
 % $Id$
 
-ft_hastoolbox('spm8up', 1);
+ft_hastoolbox('spm8', 1);
 
 % The following is a three-step procedure
 
