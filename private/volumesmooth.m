@@ -11,7 +11,7 @@ end
 % check for any version of SPM
 if ~ft_hastoolbox('spm')
   % add SPM8 to the path
-  ft_hastoolbox('spm8', 1);
+  ft_hastoolbox('spm12', 1);
 end
 
 % don't touch the input, make a deep copy
