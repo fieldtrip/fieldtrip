@@ -6,8 +6,8 @@ function [output] = volumethreshold(input, thresh, str)
 %
 % See also VOLUMEFILLHOLES, VOLUMESMOOTH
 
-% check for SPM8 or later, add to the path if not present
-ft_hastoolbox('spm8up', 1);
+% ensure that SPM is available (any version)
+ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
 
 % mask by taking the negative of the segmentation, thus ensuring
 % that no holes are within the compartment and do a two-pass

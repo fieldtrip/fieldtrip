@@ -181,17 +181,28 @@ switch toolbox
     dependency = {'spm', get_spm_version()==99};
   case 'SPM2'
     dependency = {'spm', get_spm_version()==2};
+  case 'SPM2UP' % version 2 or later, but not SPM 9X
+    dependency = {'spm', get_spm_version()>=2, get_spm_version()<95};
+    %This is to avoid crashes when trying to add SPM to the path
+    fallback_toolbox = 'SPM8';
   case 'SPM5'
     dependency = {'spm', get_spm_version()==5};
+  case 'SPM5UP' % version 5 or later, but not SPM 9X
+    dependency = {'spm', get_spm_version()>=5, get_spm_version()<95};
+    %This is to avoid crashes when trying to add SPM to the path
+    fallback_toolbox = 'SPM5';
   case 'SPM8'
     dependency = {'spm', get_spm_version()==8};
   case 'SPM8UP' % version 8 or later, but not SPM 9X
     dependency = {'spm', get_spm_version()>=8, get_spm_version()<95};
-
     %This is to avoid crashes when trying to add SPM to the path
     fallback_toolbox = 'SPM8';
   case 'SPM12'
     dependency = {'spm', get_spm_version()==12};
+  case 'SPM12UP' % version 12 or later, but not SPM 9X
+    dependency = {'spm', get_spm_version()>=12, get_spm_version()<95};
+    %This is to avoid crashes when trying to add SPM to the path
+    fallback_toolbox = 'SPM12';
   case 'MEG-PD'
     dependency = {'rawdata', 'channames'};
   case 'MEG-CALC'

@@ -179,7 +179,11 @@ if needpos,
     
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
-      ft_hastoolbox('spm8',1);
+      % ensure that SPM is available, needed for spm_bwlabeln
+      ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
+      if ~ft_hastoolbox('spm')
+        error('the spm_bwlabeln function from SPM is needed for clustering');
+      end
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
       [posclusobs, posnum] = spm_bwlabel(tmp, 2*numdims);
     else
@@ -211,7 +215,10 @@ if needneg,
     
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
-      ft_hastoolbox('spm8',1);
+      % ensure that SPM is available, needed for spm_bwlabeln
+      hasspm = ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
+      if ~hasspm
+        error('the spm_bwlabeln function from SPM is needed for clustering');
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
       [negclusobs, negnum] = spm_bwlabel(tmp, 2*numdims);
     else

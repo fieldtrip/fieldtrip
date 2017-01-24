@@ -171,4 +171,3 @@ elseif opt==2
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
   delete(tname2); delete(strrep(tname2, 'img', 'hdr'));
 end
-

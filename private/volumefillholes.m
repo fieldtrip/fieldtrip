@@ -5,10 +5,9 @@ function [output] = volumefillholes(input, along)
 % See also VOLUMETHRESHOLD, VOLUMESMOOTH
 
 % check for any version of SPM
-if ~ft_hastoolbox('spm')
-  % add SPM8 to the path
-  ft_hastoolbox('spm8', 1);
-end
+
+% ensure that SPM is available (any version)
+ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
 
 if nargin<2
   inflate = false(size(input)+2);                   % grow the edges along each dimension
