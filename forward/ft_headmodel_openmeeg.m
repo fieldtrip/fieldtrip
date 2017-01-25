@@ -41,9 +41,12 @@ ft_hastoolbox('openmeeg', 1);
 conductivity    = ft_getopt(varargin, 'conductivity');
 
 % copy the boundaries from the mesh into the volume conduction model
-if isfield(mesh,'bnd')
+if isfield(mesh, 'bnd')
   mesh = mesh.bnd;
 end
+
+% rename pnt into pos
+mesh = fixpos(mesh);
 
 % start with an empty volume conductor
 headmodel = [];
