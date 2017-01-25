@@ -166,6 +166,9 @@ if isfield(cfg, 'origdim'),
   cfg.dim = cfg.origdim;
 end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
 
+% ensure that SPM is available, needed for spm_bwlabeln
+ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
+
 % first do the clustering on the observed data
 spacereshapeable = numel(channeighbstructmat)==1&&~isfinite(channeighbstructmat);
 if needpos,
@@ -179,7 +182,6 @@ if needpos,
     
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
-      ft_hastoolbox('spm8',1);
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
       [posclusobs, posnum] = spm_bwlabel(tmp, 2*numdims);
     else
@@ -211,7 +213,6 @@ if needneg,
     
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
-      ft_hastoolbox('spm8',1);
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
       [negclusobs, negnum] = spm_bwlabel(tmp, 2*numdims);
     else
