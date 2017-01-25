@@ -19,7 +19,7 @@ function obj=filter(obj, varargin)
 % #   see the COPYING file distributed with MOxUnit_fieldtrip.           #
 
     % get filters based on exclusion criteria
-    filters=get_filter_struct(varargin{:});
+    filters=get_filter_cell(varargin{:});
 
     % apply the filter
     obj=apply_filter_to_test_suite(obj,filters);
@@ -57,11 +57,9 @@ function suite=apply_filter_to_test_suite(suite,filters)
 
 
 function [do_filter_out,reason]=apply_filters(filters,test_node)
-
-    keys=fieldnames(filters);
-    for k=1:numel(keys)
-        key=keys{k};
-        filter_func=filters.(key);
+    for k=1:2:numel(filters)
+        key=filters{k};
+        filter_func=filters{k+1};
 
         do_filter_out=filter_func(test_node);
 
@@ -77,11 +75,12 @@ function [do_filter_out,reason]=apply_filters(filters,test_node)
 
 
 
-function filters=get_filter_struct(varargin)
-    filters=struct();
+function filters=get_filter_cell(varargin)
+    narg=numel(varargin);
 
+    filters=cell(1,narg);
 
-    for k=1:2:numel(varargin)
+    for k=1:2:narg
         key=varargin{k};
         raw_value=varargin{k+1};
 
@@ -100,10 +99,11 @@ function filters=get_filter_struct(varargin)
                 exclude=@(tc) isequal(get(tc,'dccnpath'),true) && ~value;
 
             otherwise
-                error('unsupported key');
+                error('unsupported key %s', key);
         end
 
-        filters.(key)=exclude;
+        filters{k}=key;
+        filters{k+1}=exclude;
     end
 
 
