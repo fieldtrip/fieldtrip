@@ -4,9 +4,10 @@ function ft_test(varargin)
 % results from the dashboard.
 %
 % Use as
-%   ft_test run     ...
-%   ft_test report  ...
-%   ft_test compare ...
+%   ft_test run             ...
+%   ft_test moxunit_run     ...
+%   ft_test report          ...
+%   ft_test compare         ...
 %
 % ========= Running tests =========
 %
@@ -23,6 +24,14 @@ function ft_test(varargin)
 %   maxmem           = number (in bytes) or string such as 10GB
 %   maxwalltime      = number (in seconds) or string such as HH:MM:SS
 %   upload           = string, can be 'yes' or 'no' (default = 'yes')
+%
+% ========= Running MOxUnit tests =========
+%
+% To execute tests using MOxUNit, you would do
+%   ft_test moxunit_run
+%
+% This feature is currently experimental, but should support the same 
+% options as ft_test run (see above)
 %
 % ========= Reporting on tests =========
 %
@@ -79,6 +88,8 @@ function ft_test(varargin)
 switch (varargin{1})
   case 'run'
     ft_test_run(varargin{:});
+  case 'moxunit_run'
+    ft_test_moxunit_run(varargin{:});
   case 'report'
     ft_test_report(varargin{:});
   case 'compare'
