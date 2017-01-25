@@ -14,8 +14,8 @@ env:
  global:
     - OCTAVE=octave
  matrix:
-    - LIMITS=",'maxwalltime',1,'maxmem',1"
-    - LIMITS=",'maxwalltime',600,'maxmem','1gb'"
+    - LIMITS="'maxwalltime',1,'maxmem',1"
+    - LIMITS="'maxwalltime',600,'maxmem','1gb'"
 before_install:
     # to prevent IPv6 being used for APT
     - sudo bash -c "echo 'Acquire::ForceIPv4 \"true\";' > /etc/apt/apt.conf.d/99force-ipv4"
@@ -52,7 +52,7 @@ script:
     #  elif [[  "$SHIPPABLE" == "true"  ]]; then
     #      RESULT_ARGS=JUNIT_XML_FILE=shippable/testresults/test_results.xml;
     #  fi
-    - CMD="ft_defaults;succes=ft_test('moxunit_run'${LIMITS});exit(~succes);"
+    - CMD="ft_defaults;[unused,p]=ft_version();addpath(fullfile(p,'contrib/MOxUnit_fieldtrip'));succes=moxunit_fieldtrip_runtests(${LIMITS});exit(~succes);"
     - echo Test command $CMD
     - octave --eval "${CMD}"
     - $AFTER_SCRIPT
