@@ -691,7 +691,7 @@ if isequal(current, desired)
   
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpttap',   dimtok)),
+  if ~isempty(strmatch('rpttap',   dimtok))
     nrpt = size(data.cumtapcnt,1);
     flag = 0;
   else
@@ -715,7 +715,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
     powspctrm = powspctrm./ntap;
   else
     % different amount of tapers
-    powspctrm = zeros(nrpt,nchan,nfrq,ntim)+i.*zeros(nrpt,nchan,nfrq,ntim);
+    powspctrm = zeros(nrpt,nchan,nfrq,ntim) + zeros(nrpt,nchan,nfrq,ntim)*1i;
     sumtapcnt = [0;cumsum(data.cumtapcnt(:))];
     for p = 1:nrpt
       indx   = (sumtapcnt(p)+1):sumtapcnt(p+1);
@@ -725,14 +725,14 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   end
   
   %create cross-spectra
-  if ~isempty(channelcmb),
+  if ~isempty(channelcmb)
     ncmb      = size(channelcmb,1);
     cmbindx   = zeros(ncmb,2);
     labelcmb  = cell(ncmb,2);
     for k = 1:ncmb
       ch1 = find(strcmp(data.label, channelcmb(k,1)));
       ch2 = find(strcmp(data.label, channelcmb(k,2)));
-      if ~isempty(ch1) && ~isempty(ch2),
+      if ~isempty(ch1) && ~isempty(ch2)
         cmbindx(k,:)  = [ch1 ch2];
         labelcmb(k,:) = data.label([ch1 ch2])';
       end
@@ -759,17 +759,17 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   end
   data.powspctrm = powspctrm;
   data           = rmfield(data, 'fourierspctrm');
-  if ntim>1,
+  if ntim>1
     data.dimord = 'chan_freq_time';
   else
     data.dimord = 'chan_freq';
   end
   
-  if nrpt>1,
+  if nrpt>1
     data.dimord = ['rpt_',data.dimord];
   end
   
-  if flag,
+  if flag
     siz = size(data.powspctrm);
     data.powspctrm = reshape(data.powspctrm, [siz(2:end) 1]);
     if isfield(data, 'crsspctrm')
@@ -781,7 +781,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   
   if isempty(channelcmb), error('no channel combinations are specified'); end
   dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpttap',   dimtok)),
+  if ~isempty(strmatch('rpttap',   dimtok))
     nrpt = size(data.cumtapcnt,1);
     flag = 0;
   else
@@ -797,7 +797,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   for k = 1:ncmb
     ch1 = find(strcmp(data.label, channelcmb(k,1)));
     ch2 = find(strcmp(data.label, channelcmb(k,2)));
-    if ~isempty(ch1) && ~isempty(ch2),
+    if ~isempty(ch1) && ~isempty(ch2)
       cmbindx(k,:)  = [ch1 ch2];
       labelcmb(k,:) = data.label([ch1 ch2])';
     end
@@ -846,20 +846,22 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   data.labelcmb  = labelcmb;
   data           = rmfield(data, 'fourierspctrm');
   data           = rmfield(data, 'label');
-  if ntim>1,
+  if ntim>1
     data.dimord = 'chancmb_freq_time';
   else
     data.dimord = 'chancmb_freq';
   end
   
-  if nrpt>1,
+  if nrpt>1
     data.dimord = ['rpt_',data.dimord];
   end
   
-  if flag,
-    % deal with the singleton 'rpt', i.e. remove it
-    siz = size(data.powspctrm);
-    data.powspctrm = reshape(data.powspctrm, [siz(2:end) 1]);
+  if flag
+    if isfield(data,'powspctrm')
+      % deal with the singleton 'rpt', i.e. remove it
+      siz = size(data.powspctrm);
+      data.powspctrm = reshape(data.powspctrm, [siz(2:end) 1]);
+    end
     if isfield(data,'crsspctrm')
       % this conditional statement is needed in case there's a single channel
       siz            = size(data.crsspctrm);
@@ -870,7 +872,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   
   % this is how it is currently and the desired functionality of prepare_freq_matrices
   dimtok = tokenize(data.dimord, '_');
-  if ~isempty(strmatch('rpttap',   dimtok)),
+  if ~isempty(strmatch('rpttap',   dimtok))
     nrpt = size(data.cumtapcnt, 1);
     flag = 0;
   else
@@ -998,8 +1000,8 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   % reshape all possible fields
   fn = fieldnames(data);
   for ii=1:numel(fn)
-    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-      if nrpt>1,
+    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
+      if nrpt>1
         data.(fn{ii}) = reshape(data.(fn{ii}), nrpt, ncmb, nfrq, ntim);
       else
         data.(fn{ii}) = reshape(data.(fn{ii}), ncmb, nfrq, ntim);
@@ -1011,19 +1013,19 @@ elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   try data      = rmfield(data, 'dof'); end
   % replace updated fields
   data.labelcmb  = labelcmb;
-  if ntim>1,
+  if ntim>1
     data.dimord = 'chancmb_freq_time';
   else
     data.dimord = 'chancmb_freq';
   end
   
-  if nrpt>1,
+  if nrpt>1
     data.dimord = ['rpt_',data.dimord];
   end
   
 elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
   % this representation for sparse data contains autospectra as e.g. {'A' 'A'} in labelcmb
-  if isfield(data, 'crsspctrm'),
+  if isfield(data, 'crsspctrm')
     dimtok         = tokenize(data.dimord, '_');
     catdim         = match_str(dimtok, {'chan' 'chancmb'});
     data.crsspctrm = cat(catdim, data.powspctrm, data.crsspctrm);
@@ -1062,7 +1064,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   for k = 1:size(data.labelcmb,1)
     ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
     ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
-    if ~isempty(ch1) && ~isempty(ch2),
+    if ~isempty(ch1) && ~isempty(ch2)
       cmbindx(ch1,ch2) = k;
     end
   end
@@ -1076,8 +1078,8 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   
   fn = fieldnames(data);
   for ii=1:numel(fn)
-    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-      if nrpt==1,
+    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
+      if nrpt==1
         data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
       end
       
@@ -1101,7 +1103,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
       end % for j
       
       % replace the data in the old representation with the new representation
-      if nrpt>1,
+      if nrpt>1
         data.(fn{ii}) = tmpall;
       else
         data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
@@ -1109,13 +1111,13 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
     end % if numel
   end % for ii
   
-  if ntim>1,
+  if ntim>1
     data.dimord = 'chan_chan_freq_time';
   else
     data.dimord = 'chan_chan_freq';
   end
   
-  if nrpt>1,
+  if nrpt>1
     data.dimord = ['rpt_',data.dimord];
   end
   
@@ -1136,7 +1138,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
   for k = 1:size(data.labelcmb,1)
     ch1 = find(strcmp(data.label, data.labelcmb(k,1)));
     ch2 = find(strcmp(data.label, data.labelcmb(k,2)));
-    if ~isempty(ch1) && ~isempty(ch2),
+    if ~isempty(ch1) && ~isempty(ch2)
       cmbindx(ch1,ch2) = k;
     end
   end
@@ -1145,8 +1147,8 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
   
   fn = fieldnames(data);
   for ii=1:numel(fn)
-    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim;
-      if nrpt==1,
+    if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
+      if nrpt==1
         data.(fn{ii}) = reshape(data.(fn{ii}), [nrpt ncmb nfrq ntim]);
       end
       
@@ -1168,7 +1170,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
       end % for k
       
       % replace the data in the old representation with the new representation
-      if nrpt>1,
+      if nrpt>1
         data.(fn{ii}) = tmpall;
       else
         data.(fn{ii}) = reshape(tmpall, [nchan nchan nfrq ntim]);
@@ -1181,15 +1183,14 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
   try data      = rmfield(data, 'labelcmb');   end
   try data      = rmfield(data, 'dof');        end
   
-  if ntim>1,
+  if ntim>1
     data.dimord = 'chan_chan_freq_time';
   else
     data.dimord = 'chan_chan_freq';
   end
   
 elseif strcmp(current, 'sparsewithpow') && any(strcmp(desired, {'full', 'fullfast'}))
-  % recursively call ft_checkdata, but ensure channel order to be the same
-  % as the original input.
+  % recursively call ft_checkdata, but ensure channel order to be the same as the original input.
   origlabelorder = data.label; % keep track of the original order of the channels
   data       = ft_checkdata(data, 'cmbrepresentation', 'sparse');
   data.label = origlabelorder; % this avoids the labels to be alphabetized in the next call
@@ -1273,7 +1274,7 @@ if isfield(data, 'dimord')
   %an ordered way which allows for the extraction of a transformation matrix
   %i.e. slice by slice
   try
-    if isfield(data, 'dim'),
+    if isfield(data, 'dim')
       data.dim = pos2dim(data.pos, data.dim);
     else
       data.dim = pos2dim(data);
@@ -1282,7 +1283,7 @@ if isfield(data, 'dimord')
   end
 end
 
-if isfield(data, 'dim') && length(data.dim)>=3,
+if isfield(data, 'dim') && length(data.dim)>=3
   data.transform = pos2transform(data.pos, data.dim);
 end
 
@@ -1332,7 +1333,7 @@ end
 for i=1:nrpt
   data.time{i}  = freq.time;
   data.trial{i} = reshape(dat(i,:,:,:), nchan*nfreq, ntime);
-  if any(isnan(data.trial{i}(1,:))),
+  if any(isnan(data.trial{i}(1,:)))
     tmp = data.trial{i}(1,:);
     begsmp = find(isfinite(tmp),1, 'first');
     endsmp = find(isfinite(tmp),1, 'last' );
