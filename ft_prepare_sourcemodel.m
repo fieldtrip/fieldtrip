@@ -325,6 +325,16 @@ if basedonresolution
       pos = headmodel.pos;
     elseif ft_voltype(headmodel, 'localspheres')
       pos = headsurface(headmodel, sens);
+    elseif ft_voltype(headmodel, 'singlesphere')
+      pos = [
+        headmodel.o - headmodel.r
+        headmodel.o + headmodel.r
+        ];
+    elseif ft_voltype(headmodel, 'concentricspheres')
+      pos = [
+        headmodel.o - max(headmodel.r)
+        headmodel.o + max(headmodel.r)
+        ];
     end
     minpos = min(pos,[],1);
     maxpos = max(pos,[],1);
