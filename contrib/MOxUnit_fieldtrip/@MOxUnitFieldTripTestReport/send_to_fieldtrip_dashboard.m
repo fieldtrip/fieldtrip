@@ -47,7 +47,7 @@ function send_to_fieldtrip_dashboard(obj)
         end
 
         runtime=getDuration(test_outcome);
-        
+
         revision=ft_version();
 
         result=struct();
