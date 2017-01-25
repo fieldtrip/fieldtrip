@@ -35,8 +35,9 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   [mri] = ft_volumerealign(cfg, mri)
 % or
 %   [mri] = ft_volumerealign(cfg, mri, target)
-% where the input MRI should be an anatomical or functional MRI volume and the third
-% input argument is the the target anatomical MRI for SPM or FSL.
+% where the first input is the configuration structure, the second input should be an
+% anatomical or functional MRI volume and the third input is the the target anatomical MRI
+% for SPM or FSL.
 %
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning

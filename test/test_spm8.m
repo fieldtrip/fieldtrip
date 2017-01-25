@@ -5,13 +5,8 @@ function test_spm8
 
 % TEST test_spm8 ft_volumenormalise ft_volumesegment ft_volumedownsample mni2tal tal2mni
 
-try
-  mrifile = dccnpath('/home/common/matlab/fieldtrip/data/bauer_m.mri');
-  mri     = ft_read_mri(mrifile);
-catch
-  mri = ft_read_mri('/Users/arjsto/Projects/Ecog/data/IR29/IR29_MR_preproc.mgz');
-  mri.coordsys = 'tal';
-end
+mrifile = dccnpath('/home/common/matlab/fieldtrip/data/bauer_m.mri');
+mri     = ft_read_mri(mrifile);
 
 [ftver, ftpath] = ft_version;
 
@@ -55,7 +50,6 @@ rmpath(spm('dir'));
 clear fun;
 cfg               = [];
 cfg.method        = 'spm';
-cfg.coordsys      = 'tal'; % arjsto test mri is in tal
 cfg.spmversion    = 'spm2';
 r2 = ft_volumerealign(cfg, mri, mri);
 rmpath(spm('dir'));
