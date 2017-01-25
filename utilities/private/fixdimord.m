@@ -70,6 +70,7 @@ if ~isfield(data, 'dimord')
     return
   elseif ft_datatype(data, 'source') || ft_datatype(data, 'parcellation')
     % it is old-style source data -> this is ok
+    return
   else
     % find the XXXdimord fields
     fn = fieldnames(data);
