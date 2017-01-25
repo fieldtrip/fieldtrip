@@ -1,0 +1,59 @@
+# vim ft=yaml
+# travis-ci.org definition for Fieldtrip build (based on MOxUnit,
+# whcih is based on CoSMoMVPA, which is based on PyMVPA, which is 
+# based on nipype configuration, which in turn was based on nipy)
+#
+# We pretend to be java because we need GNU Octave which is not
+# available (as of January 2017)
+
+language: java
+
+cache:
+  - apt
+env:
+ global:
+    - OCTAVE=octave
+ matrix:
+    - LIMITS=",'maxwalltime',1,'maxmem',1"
+    - LIMITS=",'maxwalltime',600,'maxmem','1gb'"
+before_install:
+    # to prevent IPv6 being used for APT
+    - sudo bash -c "echo 'Acquire::ForceIPv4 \"true\";' > /etc/apt/apt.conf.d/99force-ipv4"
+    - travis_retry sudo apt-get -y -qq update
+    - travis_retry sudo apt-get install -y -qq software-properties-common python-software-properties
+    - travis_retry sudo apt-add-repository -y ppa:octave/stable
+    - travis_retry sudo apt-get -y -qq update
+    # get Octave 4.0
+    - travis_retry sudo apt-get -y -qq install octave
+    # install MOxUnit
+    - cd ..
+    - rm -rf MOxUnit
+    - git clone https://github.com/MOxUnit/MOxUnit.git
+    - make -C MOxUnit install
+    # go back to original directory
+    - cd fieldtrip
+    # prevent shippable from re-using old test results
+    - if [[  "$SHIPPABLE" == "true"  ]]; then
+          rm -f shippable/testresults/*.xml;
+      fi
+
+script:
+    # (For now coverage is disabled)
+    # if [[  "$WITH_COVERAGE" == "true" ]]; then
+    #      TEST_ARGS=WITH_COVERAGE=true;
+    #      COVER_ARGS=COVER=`pwd`/MOxUnit;
+    #
+    #      if [[  "$SHIPPABLE" == "true"  ]]; then
+    #          OUTPUT_ARGS=COVER_XML_FILE=shippable/codecoverage/coverage.xml;
+    #      elif [[  "$TRAVIS" == "true"  ]]; then
+    #          OUTPUT_ARGS=COVER_JSON_FILE=`pwd`/coveralls.json;
+    #          AFTER_SCRIPT="curl --verbose -F json_file=@`pwd`/coveralls.json https://coveralls.io/api/v1/jobs";
+    #      fi;
+    #  elif [[  "$SHIPPABLE" == "true"  ]]; then
+    #      RESULT_ARGS=JUNIT_XML_FILE=shippable/testresults/test_results.xml;
+    #  fi
+    - CMD="ft_defaults;succes=ft_test('moxunit_run'${LIMITS});exit(~succes);"
+    - echo Test command $CMD
+    - octave --eval "${CMD}"
+    - $AFTER_SCRIPT
+
