@@ -52,7 +52,7 @@ script:
     #  elif [[  "$SHIPPABLE" == "true"  ]]; then
     #      RESULT_ARGS=JUNIT_XML_FILE=shippable/testresults/test_results.xml;
     #  fi
-    - CMD="ft_defaults;[unused,p]=ft_version();addpath(fullfile(p,'contrib/MOxUnit_fieldtrip'));succes=moxunit_fieldtrip_runtests(${LIMITS});exit(~succes);"
+    - CMD="ft_defaults;[unused,p]=ft_version();addpath(fullfile(p,'contrib','MOxUnit_fieldtrip'));disp(path);succes=moxunit_fieldtrip_runtests(${LIMITS});exit(~succes);"
     - echo Test command $CMD
     - octave --eval "${CMD}"
     - $AFTER_SCRIPT
