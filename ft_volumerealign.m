@@ -133,12 +133,15 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                          resliced conform the target image (default = 'yes')
 %
 % When cfg.method = 'spm', a third input argument is required. The input volume is
-% coregistered to this target volume, using SPM. Additional options pertaining
-% to this method should be defined in the sub-structure cfg.spm and can include:
+% coregistered to this target volume, using SPM. You can specify the version of
+% the SPM toolbox to use with
+%   cfg.spmversion       = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+% Additional options pertaining to SPM2 and SPM8 should be defined in the
+% sub-structure cfg.spm and can include:
 %   cfg.spm.regtype      = 'subj', 'rigid'
 %   cfg.spm.smosrc       = scalar value
 %   cfg.spm.smoref       = scalar value
-% When cfg.spmversion is 'spm12', the following options apply:
+% Additional options pertaining to SPM12 are
 %   cfg.spm.sep          = optimisation sampling steps (mm), default: [4 2]
 %   cfg.spm.params       = starting estimates (6 elements), default: [0 0 0  0 0 0]
 %   cfg.spm.cost_fun     = cost function string:
@@ -910,14 +913,8 @@ switch cfg.method
     delete(tmpname4);
     
   case 'spm'
-    % ensure that SPM is on the path
-    if strcmpi(cfg.spmversion, 'spm2'),
-      ft_hastoolbox('SPM2',1);
-    elseif strcmpi(cfg.spmversion, 'spm8'),
-      ft_hastoolbox('SPM8',1);
-    elseif strcmpi(cfg.spmversion, 'spm12'),
-      ft_hastoolbox('SPM12',1);
-    end
+    % check that the preferred SPM version is on the path
+    ft_hastoolbox(upper(cfg.spmversion),1);
     
     if strcmpi(cfg.spmversion, 'spm2') || strcmpi(cfg.spmversion, 'spm8')
       
@@ -979,6 +976,7 @@ switch cfg.method
       transform     = inv(spm_matrix(x(:)')); % from V1 to V2, to be multiplied still with the original transform (mri.transform), see below
       
     end
+
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
     else

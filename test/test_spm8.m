@@ -1,14 +1,17 @@
-function test_old_spm8
+function test_spm8
 
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_spm8
+% TEST test_spm8 ft_volumenormalise ft_volumesegment ft_volumedownsample mni2tal tal2mni
 
-%mrifile = dccnpath('/home/common/matlab/fieldtrip/data/bauer_m.mri');
-%mri     = ft_read_mri(mrifile);
-mri = ft_read_mri('/Users/arjsto/Projects/Ecog/data/IR29/IR29_MR_preproc.mgz');
-mri.coordsys = 'tal';
+try
+  mrifile = dccnpath('/home/common/matlab/fieldtrip/data/bauer_m.mri');
+  mri     = ft_read_mri(mrifile);
+catch
+  mri = ft_read_mri('/Users/arjsto/Projects/Ecog/data/IR29/IR29_MR_preproc.mgz');
+  mri.coordsys = 'tal';
+end
 
 [ftver, ftpath] = ft_version;
 
@@ -32,10 +35,6 @@ cfg.spmversion = 'spm8';
 n8 = ft_volumenormalise(cfg, mri);
 rmpath(spm('dir'));
 
-clear fun;
-cfg.spmversion = 'spm12';
-n12 = ft_volumenormalise(cfg, mri);
-rmpath(spm('dir'));
 
 %% ft_volumesegment
 
@@ -50,10 +49,6 @@ cfg.spmversion  = 'spm8';
 s8 = ft_volumesegment(cfg, mri);
 rmpath(spm('dir'));
 
-clear fun;
-cfg.spmversion  = 'spm12';
-s12 = ft_volumesegment(cfg, mri);
-rmpath(spm('dir'));
 
 %% ft_volumerealign
 
@@ -70,10 +65,6 @@ cfg.spmversion    = 'spm8';
 r8 = ft_volumerealign(cfg, mri, mri);
 rmpath(spm('dir'));
 
-clear fun;
-cfg.spmversion    = 'spm12';
-r12 = ft_volumerealign(cfg, mri, mri);
-rmpath(spm('dir'));
 
 %% ft_volumedownsample
 tmp            = randn(256,256,256);
@@ -99,13 +90,6 @@ cfg.smooth     = 5;
 d8s            = ft_volumedownsample(cfg, mri);
 rmpath(spm('dir'));
 
-clear fun;
-cfg.spmversion = 'spm12';
-cfg.smooth     = 'no';
-d12            = ft_volumedownsample(cfg, mri);
-cfg.smooth     = 5;
-d12s           = ft_volumedownsample(cfg, mri);
-rmpath(spm('dir'));
 
 %% mni2tal and tal2mni
 

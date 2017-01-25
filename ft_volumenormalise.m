@@ -8,8 +8,8 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 % where the input mri should be a single anatomical volume that was for
 % example read with FT_READ_MRI.
 %
-% Configuration options are:
-%   cfg.spmversion  = string, 'spm2' or 'spm8' (default = 'spm8')
+% Configuration options are
+%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %   cfg.template    = string, filename of the template anatomical MRI (default = 'T1.mnc'
 %                     for spm2 or 'T1.nii' for spm8)
 %   cfg.parameter   = cell-array with the functional data to be normalised (default = 'all')
@@ -107,7 +107,7 @@ cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
 
-% check if the required spm is in your path:
+% check that the preferred SPM version is on the path
 ft_hastoolbox(upper(cfg.spmversion),1);
 
 % check whether the input has an anatomy
