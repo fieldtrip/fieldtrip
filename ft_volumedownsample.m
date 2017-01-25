@@ -118,7 +118,7 @@ downsample = grid2transform(downsample);
 % smooth functional parameters, excluding anatomy and inside
 if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
   % check that the preferred SPM version is on the path
-  ft_hastoolbox(upper(cfg.spmversion),1);
+  ft_hastoolbox(cfg.spmversion, 1);
 
   for j = 1:length(cfg.parameter)
     if strcmp(cfg.parameter{j}, 'inside')

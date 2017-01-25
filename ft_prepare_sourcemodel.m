@@ -259,7 +259,7 @@ end
 
 if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || basedonmni
   % check that the preferred SPM version is on the path
-  ft_hastoolbox(upper(cfg.spmversion),1);
+  ft_hastoolbox(cfg.spmversion, 1);
 end
 
 % start with an empty grid

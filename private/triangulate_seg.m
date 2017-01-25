@@ -66,10 +66,12 @@ end
 % ensure that the seg consists of only one filled blob.
 % if not filled: throw a warning and fill
 % if more than one blob: throw a warning and use the biggest
-ft_hastoolbox('SPM8', 1);
 
 % look for holes
 seg = volumefillholes(seg);
+
+% ensure that SPM is available, needed for spm_bwlabel
+ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
 % look for >1 blob
 [lab, num] = spm_bwlabel(double(seg), 26);

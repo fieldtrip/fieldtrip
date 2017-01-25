@@ -47,10 +47,7 @@ nfreq = size(onoff, 2);
 ntime = size(onoff, 3);
 
 % ensure that SPM is available, needed for spm_bwlabeln
-ft_hastoolbox('spm12', 3) || ft_hastoolbox('spm8', 3) || ft_hastoolbox('spm2', 3);
-if ~ft_hastoolbox('spm')
-  error('the spm_bwlabeln function from SPM is needed for clustering');
-end
+ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
 if length(size(spatdimneighbstructmat))~=2 || ~all(size(spatdimneighbstructmat)==spatdimlength)
   error('invalid dimension of spatdimneighbstructmat');

@@ -914,7 +914,7 @@ switch cfg.method
     
   case 'spm'
     % check that the preferred SPM version is on the path
-    ft_hastoolbox(upper(cfg.spmversion),1);
+    ft_hastoolbox(cfg.spmversion, 1);
     
     if strcmpi(cfg.spmversion, 'spm2') || strcmpi(cfg.spmversion, 'spm8')
       

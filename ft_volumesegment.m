@@ -209,7 +209,7 @@ cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold',   0.5);
 cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold',   0.1);
 
 % check that the preferred SPM version is on the path
-ft_hastoolbox(upper(cfg.spmversion),1);
+ft_hastoolbox(cfg.spmversion, 1);
 
 if ~isfield(cfg, 'name')
   if ~strcmp(cfg.write, 'yes')

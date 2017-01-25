@@ -108,7 +108,7 @@ cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
 
 % check that the preferred SPM version is on the path
-ft_hastoolbox(upper(cfg.spmversion),1);
+ft_hastoolbox(cfg.spmversion, 1);
 
 % check whether the input has an anatomy
 if ~isfield(mri, 'anatomy')
