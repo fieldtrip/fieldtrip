@@ -1,7 +1,7 @@
 function test_spm8
 
-% MEM 1gb
 % WALLTIME 00:10:00
+% MEM 3gb
 
 % TEST test_spm8 ft_volumenormalise ft_volumesegment ft_volumedownsample mni2tal tal2mni
 
