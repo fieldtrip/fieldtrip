@@ -89,7 +89,7 @@ end
 % 
 % After the raw spike data has been read in, we restructure it relative to event triggers, that is we add a trial dimension to it. This serves two functions. Firstly, it converts the spike times in timestamp units to spike times in units of seconds. Secondly, by making trials, we can proceed with further analyses that relate the spiking to the experimental manipulation in each trial, such as peri stimulus time histograms (PSTHs), raster plots etc.. To this end, we use the function ft_spike_maketrials. This function requires two (cfg) configurations. Firstly, the number of timestamps per second, which must be explicitly specified by the user. This information is usually available in spike.hdr. In this case, cfg.timestampspersecond = spike.hdr.FileHeader.Frequency = 40000. Secondly, an nTrials x 3 cfg.trl matrix containing start (:,1) (first column) and end (:,2) (second column) of the trials in timestamp units and the offset relative to the trigger (:,3) in timestamps units. This requires the event file to be read out. The event file is read out using
  
-event = ft_read_event('p029_sort_final_01.nex')
+event = ft_read_event('p029_sort_final_01.nex');
 
 % The structure event
 % 
@@ -182,7 +182,7 @@ spike_notrials   = ft_spike_maketrials(cfg,spike);
 % 
 % For some analyses, it may be desired to have the data in binary format. The spike structure can be converted to a continuous binary raw format (see ft_datatype_raw) by using
 % 
-dat = ft_checkdata(spikeTrials,'datatype', 'raw', 'fsample', 1000)
+dat = ft_checkdata(spikeTrials,'datatype', 'raw', 'fsample', 1000);
 % where fsample (in this case arbitrarily set at 1000 samples / sec) determines the desired spacing of samples. If fsample is too low compared to the spike firing rate, then the spike trains will not be binary (as multiple spikes can fall into one bin, resulting in integer values larger than one to keep track of the number of spikes in one sample) and the round-off errors will become larger. The structure data has the contents
 % 
 % dat = 
@@ -201,7 +201,7 @@ dat.trial{1}(:,4000:4004)
 %      0     0     1     0     0
 % We can also convert the data structure back to a spike structure by using
 
-spike_converted = ft_checkdata(dat,'datatype', 'spike')
+spike_converted = ft_checkdata(dat,'datatype', 'spike');
 % After the conversion, the waveform and timestamp information is lost. Note that these conversions are automatically performed in all the spike functions, such that data in both a spike or (continuous) raw representation can be entered.
 % 
 % 
@@ -242,10 +242,10 @@ end
 % We also read in an additional dataset consisting of an M-clust .t file, that can be found at ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/spike/tt6_7.t
 % 
 % read in the .t file
-filename    = 'tt6_7.t'
+filename    = 'tt6_7.t';
 cfg         = [];
 cfg.dataset = filename;
-spike2 = ft_read_spike(cfg.dataset)
+spike2 = ft_read_spike(cfg.dataset);
  
 % convert timestamps to seconds
 cfg                     = [];
@@ -379,7 +379,7 @@ rate = ft_spike_rate(cfg,spikeTrials);
 %        cfg: [1x1 struct]
 % An important question in neurophysiology is whether neurons are capable of transmitting information independent from each other, or whether neurons have shared trial-by-trial fluctuations (called 'noise correlations') in their firing rate (given an identical stimulus) that diminish the coding capacity of the population (e.g. see Ecker et al., 2010). One can compute noise correlations between units by doing
 
-[R,P] = corrcoef(rate.trial)
+[R,P] = corrcoef(rate.trial);
  
 % R = % Pearson's R
 %  
@@ -496,5 +496,5 @@ ft_spike_plot_jpsth(cfg,jpsthSubtr)
 % 
 % 
 % Logged in as: Robert Oostenveld (robert)
-% tutorial/spike.txt · Last modified: 2013/03/04 21:48 by martinvinck
+% tutorial/spike.txt  Last modified: 2013/03/04 21:48 by martinvinck
 
