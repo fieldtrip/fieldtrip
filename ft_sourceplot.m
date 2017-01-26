@@ -45,6 +45,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) see FT_READ_ATLAS
 %                        for ROI masking (see "masking" below) or in "ortho-plotting" mode (see "ortho-plotting" below)
+%   cfg.visible       = 'on' or 'off' (default = 'on'): whether figure will be visible or not
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -232,6 +233,7 @@ cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
+cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -627,7 +629,7 @@ end
 %% start building the figure
 h = figure;
 set(h, 'color', [1 1 1]);
-set(h, 'visible', 'on');
+set(h, 'visible', cfg.visible);
 set(h, 'renderer', cfg.renderer);
 if ~isempty(cfg.title)
   title(cfg.title);
