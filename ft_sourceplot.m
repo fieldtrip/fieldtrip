@@ -627,9 +627,8 @@ end
 
 
 %% start building the figure
-h = figure;
+h = figure('visible', cfg.visible);
 set(h, 'color', [1 1 1]);
-set(h, 'visible', cfg.visible);
 set(h, 'renderer', cfg.renderer);
 if ~isempty(cfg.title)
   title(cfg.title);
