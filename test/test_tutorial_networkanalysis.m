@@ -390,12 +390,12 @@ source_int_low   = ft_sourceinterpolate(cfg, source_proj_low,  template_mri);
 cfg  = [];
 cfg.operation = '(x1-x2)/x2';
 cfg.parameter = 'pow';
-source_int = ft_math(cfg, source_int_high, source_int_low)
+source_int = ft_math(cfg, source_int_high, source_int_low);
 
 cfg  = [];
 cfg.operation = '(x1-x2)/x2';
 cfg.parameter = 'pow';
-source_int = ft_math(cfg, source_int_high, source_int_low)
+source_int = ft_math(cfg, source_int_high, source_int_low);
 
 % up to 50 percent of maximum
 source_int.mask = source_int.pow > max(source_int.pow(:))*.5;
@@ -439,7 +439,7 @@ for i=1:size(source_conn.pos)
 end
 
 % then go to the 'full' representation again
-source_conn_full = []
+source_conn_full = [];
 source_conn_full.pos       = source_proj.pos;
 source_conn_full.dim       = source_proj.dim;
 source_conn_full.inside    = source_proj.inside;
@@ -478,12 +478,12 @@ dlmwrite('edge.edge',edge,'\t');
 
 load standard_sourcemodel3d2cm.mat
 
-node = zeros(372,6)
-node(:,1:3) = sourcemodel.pos(sourcemodel.inside,:)
+node = zeros(372,6);
+node(:,1:3) = sourcemodel.pos(sourcemodel.inside,:);
 node(:,4)   = 4; 
 node(:,5)   = network.degrees(network.inside);
 node(:,6)   = 0;
-node(:,1:3) = node(:,1:3)*10
+node(:,1:3) = node(:,1:3)*10;
 dlmwrite('node.node',node,' ');
 
 BrainNet_MapCfg('/yourpath/mesh.nv','/yourpath/node.node','/yourpath/edge.edge');

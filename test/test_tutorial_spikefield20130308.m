@@ -263,10 +263,10 @@ stsFFT  = ft_spiketriggeredspectrum(cfg, data_all);
 %               cfg: [1x1 struct]
 % This structure is a spike (ft_datatype_spike) formatted structure with the additional field sts.fourierspctrm. For every i-th unit, the field stsFFT.fourierspctrm{i} contains complex valued LFP fourierspectra taken around the occurrence of every spike. The spike phases for the unit 'sig001U_wf' are thus obtained by
 %
-ang = angle(stsFFT.fourierspctrm{1})
+ang = angle(stsFFT.fourierspctrm{1});
 % and the magnitude of the LFP is obtained by
 
-mag = abs(stsFFT.fourierspctrm{1})
+mag = abs(stsFFT.fourierspctrm{1});
 % The convolution algorithm (cfg.method = 'convol') accepts spikes both in binarized (raw) and spike format. Multiple spike channels can be selected at the same time. For every frequency, we can specify a different time window as well, such that for example the number of cycles per frequency can be kept constant. The algorithm allows for large speed-ups if the number of spikes and units is large, as the instantaneous LFP phase is determined (only once) for all possible time-points through convolution. However this method is not preferred if there are few spikes and very long LFP traces (in this case iteratively using the FFT method would be faster).
 
 cfg           = [];

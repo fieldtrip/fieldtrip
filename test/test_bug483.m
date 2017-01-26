@@ -10,7 +10,7 @@ function test_bug483
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif');
 
 % open a new file and close it again
-fidold = fopen(tempname, 'wb')
+fidold = fopen(tempname, 'wb');
 fclose(fidold);
 
 hdr = ft_read_header(filename);
@@ -26,7 +26,7 @@ event = ft_read_event(filename);
 event = ft_read_event(filename);
 
 % open a new file and close it again
-fidnew = fopen(tempname, 'wb')
+fidnew = fopen(tempname, 'wb');
 fclose(fidnew);
 
 % the file identifier for a new file should not have changed

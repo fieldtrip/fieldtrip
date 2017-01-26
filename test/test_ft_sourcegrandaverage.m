@@ -23,10 +23,10 @@ ft_checkdata(source, 'datatype', 'source')
 cfg = [];
 cfg.parameter = 'pow';
 cfg.keepindividual = 'no';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 
 cfg.keepindividual = 'yes';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 
 %% format 2
 
@@ -42,10 +42,10 @@ ft_checkdata(source, 'datatype', 'source')
 cfg = [];
 cfg.parameter = 'pow';
 cfg.keepindividual = 'no';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 
 cfg.keepindividual = 'yes';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 
 %% format 3
 
@@ -61,10 +61,10 @@ ft_checkdata(source, 'datatype', 'source')
 cfg = [];
 cfg.parameter = 'pow';
 cfg.keepindividual = 'no';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 
 cfg.keepindividual = 'yes';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 
 
 %% format 4
@@ -81,11 +81,11 @@ ft_checkdata(source, 'datatype', 'source')
 cfg = [];
 cfg.parameter = 'pow';
 cfg.keepindividual = 'no';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 assert(isfield(grandavg, 'time'), 'time field is missing');
 
 cfg.keepindividual = 'yes';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 assert(isfield(grandavg, 'time'), 'time field is missing');
 
 %% format 5
@@ -103,12 +103,12 @@ ft_checkdata(source, 'datatype', 'source')
 cfg = [];
 cfg.parameter = 'pow';
 cfg.keepindividual = 'no';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 assert(isfield(grandavg, 'freq'), 'freq field is missing');
 assert(isfield(grandavg, 'time'), 'time field is missing');
 
 cfg.keepindividual = 'yes';
-grandavg = ft_sourcegrandaverage(cfg, source, source)
+grandavg = ft_sourcegrandaverage(cfg, source, source);
 assert(isfield(grandavg, 'freq'), 'freq field is missing');
 assert(isfield(grandavg, 'time'), 'time field is missing');
 

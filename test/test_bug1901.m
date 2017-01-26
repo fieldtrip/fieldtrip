@@ -30,9 +30,9 @@ cfg.grid.unit = 'cm';
 grid = ft_prepare_leadfield(cfg);
 
 % display the structures
-grad
+grad;
 vol
-grid
+grid;
 
 % the grid is in cm, which corresponds to the units of the grad, not the vol
 % with a 5 cm grid, you can fit 10 sources in the head

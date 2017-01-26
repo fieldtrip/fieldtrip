@@ -206,10 +206,10 @@ hist([montecarlo.negdistribution' montecarlo.posdistribution'], 100)
 %% compare the observed statistical values to the distributions
 
 negdistribution = sort(montecarlo.negdistribution);
-negthreshold    = negdistribution(26)   % why not at 5%, i.e. 51
+negthreshold    = negdistribution(26)   % why not at 5%, i.e. 51;
 
 posdistribution = sort(montecarlo.posdistribution);
-posthreshold    = posdistribution(975)  % why not at 5%, i.e. 950
+posthreshold    = posdistribution(975)  % why not at 5%, i.e. 950;
 
 figure
 subplot(3,1,1)

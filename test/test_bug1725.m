@@ -49,7 +49,7 @@ for i=1:length(filename)%14:length(filename)
   % just try to read it
   disp(i);
   disp(filename{i});
-  atlas = ft_read_atlas(filename{i})
+  atlas = ft_read_atlas(filename{i});
 end
 
 % plot the template MRI together with the atlas

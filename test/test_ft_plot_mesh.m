@@ -64,7 +64,7 @@ mesh.pnt=[];
 ft_plot_mesh(mesh,'surfaceonly','yes');
 
 %% ft_plot_mesh without a pnt field should return an error
-mesh = rmfield(mesh, 'pnt')
+mesh = rmfield(mesh, 'pnt');
 try
   ft_plot_mesh(mesh, 'surfaceonly','yes')
   success = true;

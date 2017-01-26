@@ -26,7 +26,7 @@ cfg.component = 2; % chosen randomly
 rej1 = ft_rejectcomponent(cfg, comp, data);
 rej2 = ft_rejectcomponent(cfg, comp);
 
-norm(rej2.grad.tra-rej1.grad.tra)/norm(rej2.grad.tra)
+norm(rej2.grad.tra-rej1.grad.tra)/norm(rej2.grad.tra);
 figure; imagesc(rej2.grad.tra - rej1.grad.tra); caxis([-1 1])
 
 load standard_sourcemodel3d10mm
