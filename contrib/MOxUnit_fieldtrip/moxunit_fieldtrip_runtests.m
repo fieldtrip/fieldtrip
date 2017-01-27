@@ -14,6 +14,8 @@ function passed=moxunit_fieldtrip_runtests(varargin)
 %   'upload',u              If 'true' or 'yes', then results are uploaded
 %                           to the FieldTrip dashboard
 %   'dependency',d          Do not run test if it matches a dependency in d
+%   'xmloutput',f           Write JUnit-like XML file with test results to
+%                           file f
 %
 %
 % Notes:
@@ -22,27 +24,34 @@ function passed=moxunit_fieldtrip_runtests(varargin)
 % See also: ft_test
 
     % parse arguments
-    [filter_args,upload,filelist]=parse_args(varargin{:});
+
+    opt=parse_args(varargin{:});
 
     % make a suite and add the tests
     suite=MOxUnitFieldTripTestSuite();
-    suite=add_test_files(suite,filelist);
+    suite=add_test_files(suite,opt.filelist);
 
     % show number of tests
     disp(suite);
 
     % apply filter args
-    suite=filter(suite,filter_args{:});
+    suite=filter(suite,opt.filter_args{:});
 
     verbosity=2;
     output_stream=1;
     report=MOxUnitFieldTripTestReport(verbosity,output_stream);
     report=run(suite,report);
 
-    if upload
-        send_to_fieldtrip_dashboard(report);
+    if opt.upload
+        sendToFieldtripDashboard(report);
     else
         fprintf(output_stream,'Not sending results to dashboard\n');
+    end
+
+    if ~isempty(opt.xmloutput)
+        writeXML(report,opt.xmloutput);
+        fprintf(output_stream,'XML test result written to ''%s''\n',...
+                                                opt.xmloutput);
     end
 
     disp(report);
@@ -70,11 +79,12 @@ function suite=add_test_files(suite,filelist)
     end
 
 
-function [filter_args,upload,filelist]=parse_args(varargin)
+function opt=parse_args(varargin)
     filter_args={};
     upload=[];
     filelist={};
     loadfile=[];
+    xmloutput=[];
 
     pos=0;
     while true
@@ -100,6 +110,9 @@ function [filter_args,upload,filelist]=parse_args(varargin)
                 filter_args{end+1}=key;
                 filter_args{end+1}=value;
 
+            case 'xmloutput'
+                [pos,value]=get_next_element(varargin,pos);
+                xmloutput=value;
 
             otherwise
                 filelist{end+1}=key;
@@ -114,7 +127,7 @@ function [filter_args,upload,filelist]=parse_args(varargin)
     end
 
     if isempty(upload)
-        % TODO: decide whehter upload should be disabled when not running
+        % TODO: decide whether upload should be disabled when not running
         % from DCCN-like computer
         upload=ft_platform_supports_wrapper('weboptions') && ...
                 ft_platform_supports_wrapper('webwrite');
@@ -122,6 +135,12 @@ function [filter_args,upload,filelist]=parse_args(varargin)
 
 
     filter_args=[filter_args,{'loadfile',loadfile}];
+
+    opt=struct();
+    opt.filter_args=filter_args;
+    opt.upload=upload;
+    opt.filelist=filelist;
+    opt.xmloutput=xmloutput;
 
 
 function [pos,value]=get_next_element(argcell,pos)

@@ -31,7 +31,9 @@ function ft_test(varargin)
 %   ft_test moxunit_run
 %
 % This feature is currently experimental, but should support the same 
-% options as ft_test run (see above)
+% options as ft_test run (see above), and in addition:
+%   xmloutput         = string, filename for JUnit-like XML file with test
+%                       results (used for shippable CI)
 %
 % ========= Reporting on tests =========
 %
