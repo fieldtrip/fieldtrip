@@ -53,7 +53,7 @@ script:
     #      RESULT_ARGS=JUNIT_XML_FILE=shippable/testresults/test_results.xml;
     #  fi
     - if [[  "$SHIPPABLE" == "true"  ]]; then
-        EXTRA_ARGS=",'xmloutput','${SHIPPABLE_BUILD_DIR}/shippable/codecoverage/coverage.xml'";
+        EXTRA_ARGS=",'xmloutput','${SHIPPABLE_BUILD_DIR}/shippable/testresults/test_results.xml'";
       else
         EXTRA_ARGS="";
       fi
