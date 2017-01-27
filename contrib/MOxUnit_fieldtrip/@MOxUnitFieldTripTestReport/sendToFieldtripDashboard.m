@@ -1,4 +1,4 @@
-function send_to_fieldtrip_dashboard(obj)
+function sendToFieldtripDashboard(obj)
 % send test results to FieldTrip dashboard
 %
 % Notes:
