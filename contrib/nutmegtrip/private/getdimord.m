@@ -580,32 +580,31 @@ function warning_dimord_could_not_be_determined(field,data)
 
   if isempty(which('evalc'))
     % May not be available in Octave
-    warning('%s <evalc not present, cannot show data>', msg);
-    return;
-  end
-
-  % in Octave, disp typically shows full data arrays which can result in
-  % very long output. Here we take out the middle part of the output if
-  % necessary
-  content=evalc('disp(data)');
-  max_pre_post_lines=20;
-
-  newline_pos=find(content==sprintf('\n'));
-  newline_pos=newline_pos(max_pre_post_lines:(end-max_pre_post_lines));
-
-  if numel(newline_pos)>=2
-    pre_end=newline_pos(1)-1;
-    post_end=newline_pos(end)+1;
-
-    cut_content=sprintf('%s\n\n... long output omitted ...\n\n%s',...
-                        content(1:pre_end),content(post_end:end));
+    content=sprintf('object of type ''%s''',class(data));
   else
-    cut_content=content;
+    % in Octave, disp typically shows full data arrays which can result in
+    % very long output. Here we take out the middle part of the output if
+    % the output is very long (more than 40 lines)
+    full_content=evalc('disp(data)');
+    max_pre_post_lines=20;
+
+    newline_pos=find(full_content==sprintf('\n'));
+    newline_pos=newline_pos(max_pre_post_lines:(end-max_pre_post_lines));
+
+    if numel(newline_pos)>=2
+      pre_end=newline_pos(1)-1;
+      post_end=newline_pos(end)+1;
+
+      content=sprintf('%s\n\n... long output omitted ...\n\n%s',...
+                                full_content(1:pre_end),...
+                                full_content(post_end:end));
+    else
+      content=full_content;
+    end
   end
 
-  warning('%s\n\n%s', msg,cut_content);
+  warning('%s\n\n%s', msg,content);
 end % function warning_dimord_could_not_be_determined
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
