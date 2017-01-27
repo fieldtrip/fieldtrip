@@ -18,7 +18,7 @@ source.avg.pow = rand(10*11*12,1);
 source.inside = 1:660;
 source.outside = 661:1320;
 
-ft_checkdata(source, 'datatype', 'source')
+ft_checkdata(source, 'datatype', 'source');
 
 cfg = [];
 cfg.parameter = 'pow';
@@ -37,7 +37,7 @@ source.pow = rand(1320,1);
 source.inside = 1:660;
 source.outside = 661:1320;
 
-ft_checkdata(source, 'datatype', 'source')
+ft_checkdata(source, 'datatype', 'source');
 
 cfg = [];
 cfg.parameter = 'pow';
@@ -56,7 +56,7 @@ source.pow = rand(10*11*12,1);
 source.inside = 1:660;
 source.outside = 661:1320;
 
-ft_checkdata(source, 'datatype', 'source')
+ft_checkdata(source, 'datatype', 'source');
 
 cfg = [];
 cfg.parameter = 'pow';
@@ -76,7 +76,7 @@ source.avg.pow = rand(10*11*12,25);
 source.inside = 1:660;
 source.outside = 661:1320;
 
-ft_checkdata(source, 'datatype', 'source')
+ft_checkdata(source, 'datatype', 'source');
 
 cfg = [];
 cfg.parameter = 'pow';
@@ -98,7 +98,7 @@ source.avg.pow = rand(10*11*12,6,5);
 source.inside = 1:660;
 source.outside = 661:1320;
 
-ft_checkdata(source, 'datatype', 'source')
+ft_checkdata(source, 'datatype', 'source');
 
 cfg = [];
 cfg.parameter = 'pow';
