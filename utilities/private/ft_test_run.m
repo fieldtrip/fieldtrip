@@ -170,10 +170,11 @@ for i=1:numel(functionlist)
     passed = true;
     runtime = round(toc(stopwatch));
     fprintf('=== %s PASSED in %d seconds\n', functionlist{i}, runtime);
-  catch
+  catch me
     passed = false;
     runtime = round(toc(stopwatch));
     fprintf('=== %s FAILED in %d seconds\n', functionlist{i}, runtime);
+    disp(me)
   end
   close all
   

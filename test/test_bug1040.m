@@ -15,7 +15,7 @@ function test_bug1040
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % load single sphere volume conduction model
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singlesphere.mat', 'vol'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singlesphere.mat'), 'vol');
 
 % load gradiometer information of an exemplary subject
 grad_standard = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));
