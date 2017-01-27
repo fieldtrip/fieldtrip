@@ -31,6 +31,7 @@ function [cfg] = ft_layoutplot(cfg, data)
 %   cfg.output      = filename to which the layout will be written (default = [])
 %   cfg.montage     = 'no' or a montage structure (default = 'no')
 %   cfg.image       = filename, use an image to construct a layout (e.g. usefull for ECoG grids)
+%   cfg.visible     = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
@@ -90,7 +91,16 @@ if ft_abort
   return
 end
 
+% the data can be passed as input argument or can be read from disk
 hasdata = exist('data', 'var');
+
+if hasdata
+  % check if the input data is valid for this function
+  data = ft_checkdata(data);
+end
+
+% set the defaults
+cfg.visible = ft_getopt(cfg, 'visible', 'on');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % extract/generate layout information
@@ -119,7 +129,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % plot all details pertaining to the layout in one figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure;
+f = figure('visible', cfg.visible);
 
 % set the figure window title
 funcname = mfilename();

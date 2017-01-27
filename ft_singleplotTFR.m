@@ -601,9 +601,8 @@ elseif isfield(cfg,'showlabels') && strcmp(cfg.showlabels,'no')
 end
 fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 fprintf('selected cfg.ylim = [%f %f]\n', cfg.ylim(1), cfg.ylim(2));
-p = get(gcf, 'Position');
-f = figure;
-set(f, 'Position', p);
+% ensure that the new figure appears at the same position
+f = figure('Position', get(gcf, 'Position'));
 ft_topoplotTFR(cfg, data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
