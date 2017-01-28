@@ -10,11 +10,12 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %   ft_neighbourplot(cfg, data)
 %
 % where the configuration can contain
-%   cfg.verbose       = 'yes' or 'no', if 'yes' then the plot callback will include text output
+%   cfg.verbose       = string, 'yes' or 'no', whether the function will print feedback text in the command window
 %   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS (optional)
-%   cfg.enableedit    = 'yes' or 'no' (default). allows the user to
-%                       flexibly add or remove edges between vertices
-% or one of the following options
+%   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
+%   cfg.enableedit    = string, 'yes' or 'no', allows the user to flexibly add or remove edges between vertices (default = 'no')
+%                       
+% and either one of the following options
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
 %   cfg.elec          = structure with electrode definition
 %   cfg.grad          = structure with gradiometer definition
@@ -76,7 +77,9 @@ if hasdata
   data = ft_checkdata(data);
 end
 
+% set the defaults
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
+cfg.visible    = ft_getopt(cfg, 'visible', 'on');
 
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
@@ -121,7 +124,7 @@ else
   % use 3-dimensional data for plotting
   proj = sens.chanpos;
 end
-hf = figure;
+hf = figure('visible', cfg.visible);
 axis equal
 axis vis3d
 axis off
@@ -194,7 +197,7 @@ userdata.sens = sens;
 userdata.hs = hs;
 userdata.hl = hl;
 userdata.quit = false;
-hf   = getparent(hf);
+hf = getparent(hf);
 set(hf, 'UserData', userdata);
 
 if istrue(cfg.enableedit)
@@ -205,7 +208,7 @@ if istrue(cfg.enableedit)
   end
   cfg = userdata.cfg;
 
-  hf   = getparent(hf);
+  hf = getparent(hf);
   delete(hf);
 end
 % in any case remove SCALE and COMNT

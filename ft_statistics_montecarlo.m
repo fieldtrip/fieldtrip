@@ -149,9 +149,9 @@ if strcmp(cfg.correctm, 'cluster')
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       fprintf('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
-      if isfield(cfg, 'inside')
-        cfg = fixinside(cfg, 'index');
-      end
+      %if isfield(cfg, 'inside')
+      %  cfg = fixinside(cfg, 'index');
+      %end
     elseif isfield(cfg, 'tri')
       % input data describes a surface along which neighbours can be defined
       fprintf('using connectivity of vertices along triangulated surface\n');

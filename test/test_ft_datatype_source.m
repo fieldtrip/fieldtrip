@@ -25,11 +25,11 @@ failure = {};
 % these file contain data structures that have manually been identified as buggy,
 % e.g. with inconsistent dimensions of the fields in source.trial.noisecsd
 problematic = {
-  '/home/common/matlab/fieldtrip/data/test/20111231/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat'
-  '/home/common/matlab/fieldtrip/data/test/20120630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat'
-  '/home/common/matlab/fieldtrip/data/test/20121231/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat'
-  '/home/common/matlab/fieldtrip/data/test/20130630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_bti148.mat'
-  '/home/common/matlab/fieldtrip/data/test/20130630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat'
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20111231/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20120630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20121231/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20130630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_bti148.mat')
+  dccnpath('/home/common/matlab/fieldtrip/data/test/20130630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
   };
 
 for i=1:length(dirlist)

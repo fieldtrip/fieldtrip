@@ -6,9 +6,12 @@ function test_bug1042
 % TEST test_bug1042 test_bug686
 % TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel headsurface
 
-[pnt, tri] = icosahedron162;
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
 % create sensors in cm
+[pnt, tri] = icosahedron162;
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 

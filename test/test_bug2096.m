@@ -9,7 +9,6 @@ function test_bug2096
 % needed for the dccnpath function, since we will change directory later on
 addpath(fileparts(mfilename('fullpath')));
 
-% /home/common/matlab/fieldtrip/data/test/bug2096
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -6,6 +6,11 @@ function test_bug1368
 % TEST test_bug1368
 % TEST ft_prepare_sourcemodel headsurface
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+ft_default.feedback = 'no';
+
 pnt = [
   0         0    1.0000
   0.8944         0    0.4472

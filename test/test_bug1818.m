@@ -10,9 +10,9 @@ function test_bug1818
 % TEST ft_read_headshape ft_datatype_parcellation
 
 filename = {
-'/home/common/matlab/fieldtrip/data/test/bug1818/cube2mm3layervorwerk_ns_127_127_127.v' % vista
-'/home/common/matlab/fieldtrip/data/test/bug1818/tet_4layer_127_127_127.1.ele' % tetgen
-'/home/common/matlab/fieldtrip/data/test/bug1818/tet_4layer_127_127_127.1.node' % tetgen
+  dccnpath('/home/common/matlab/fieldtrip/data/test/bug1818/cube2mm3layervorwerk_ns_127_127_127.v') % vista
+  dccnpath('/home/common/matlab/fieldtrip/data/test/bug1818/tet_4layer_127_127_127.1.ele')          % tetgen
+  dccnpath('/home/common/matlab/fieldtrip/data/test/bug1818/tet_4layer_127_127_127.1.node')         % tetgen
 };
 
 for i=1:length(filename)

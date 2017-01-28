@@ -10,7 +10,7 @@ function test_bug255
 % functional data having dimord 'chan', i.e. after doing statistics with
 % 'avgoverfreq' or 'avgovertime' = 'yes';
 
-cd('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/'));
 load('preproc_neuroscan16');
 
 %there's an unresolved issue with duplicate labels 'FREE'

@@ -65,7 +65,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-basedir = '/home/common/matlab/fieldtrip/testdata/original/besa/struct';
+basedir = dccnpath('/home/common/matlab/fieldtrip/testdata/original/besa/struct');
 
 filename = {
   'besa_channels/EpochedData.mat'

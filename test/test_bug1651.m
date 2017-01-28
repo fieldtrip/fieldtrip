@@ -11,11 +11,11 @@ readfromdisk = true;
 if readfromdisk
   % the segmentation takes quite some time
   % furthermore we want to ensure that we have the old-stype segmentation
-  load('/home/common/matlab/fieldtrip/data/test/bug1651.mat');
+  load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1651.mat'));
 else
   % this is the original code to create the segmentation
   % create a 3 layered segmentation
-  mri = ft_read_mri('Subject01.mri');
+  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
   
   % this speeds up the subsequent stuff
   cfg = [];

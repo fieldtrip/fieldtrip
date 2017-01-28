@@ -82,7 +82,7 @@ elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'tal')
   % nothing to do
 elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
   pos = tal2mni(pos')'; % this function likes 3xN 
-elseif strcmp(inputcoord, 'spm') && strcmp(atlas.coordsys, 'mni')
+elseif (strcmp(inputcoord, 'spm') && strcmp(atlas.coordsys, 'mni')) || (strcmp(inputcoord, 'mni') && strcmp(atlas.coordsys, 'spm'))
   %fprintf('coordinate system of input data ''spm'' is assume to represent the same coordinate system as the atlas, which is ''mni''\n');
 elseif ~strcmp(inputcoord, atlas.coordsys)
   error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');

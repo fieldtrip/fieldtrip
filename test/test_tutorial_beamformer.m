@@ -6,7 +6,9 @@ function test_tutorial_beamformer(datadir)
 % TEST test_tutorial_beamformer
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 
+% use FieldTrip defaults instead of personal defaults
 global ft_default;
+ft_default = [];
 ft_default.feedback = 'no';
 
 if nargin==0
@@ -46,13 +48,13 @@ freqPost = ft_freqanalysis(cfg, dataPost);
 %% Compute (or load) the forward model)
 
 %try
-  %if ~exist('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat', 'file')
+  %if ~exist(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'), 'file')
   cfg = [];
   cfg.write        = 'no';
   [segmentedmri] = ft_volumesegment(cfg, mri);
 %catch
-%  mri = ft_read_mri('/home/common/matlab/fieldtrip/data/Subject01.mri');
-%  load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat')
+%  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+%  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
 %end
 
 %% Prepare head model

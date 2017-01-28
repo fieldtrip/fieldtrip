@@ -3,6 +3,10 @@
 % WALLTIME 1:00:00
 % MEM 4gb
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 % this test script is based on the tutorial under development at
 % http://www.fieldtriptoolbox.org/development/simbio
 

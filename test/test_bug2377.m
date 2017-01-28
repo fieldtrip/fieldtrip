@@ -6,7 +6,7 @@ function test_bug2377
 % TEST test_bug2377
 % TEST ft_datatype_sens ft_compute_leadfield
 
-load('/home/common/matlab/fieldtrip/data/test/bug2377/eeg_lf_scaling.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2377/eeg_lf_scaling.mat'));
 
 sens = rmfield(sens, 'tra');
 

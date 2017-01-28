@@ -6,7 +6,7 @@ function test_bug1785
 % TEST test_bug1785
 % TEST ft_read_sens read_asa_elc read_asa
 
-cd /home/common/matlab/fieldtrip/data/test/bug1785
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1785'));
 
 filename = {
   'standard_1020.elc'

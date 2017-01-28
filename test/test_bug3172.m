@@ -34,7 +34,7 @@ end
 
 %% CTF151
 
-sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds');
+sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds'));
 figure; ft_plot_sens(sens);
 figure; ft_plot_sens(sens, 'coilshape', 'point', 'coil', true);
 figure; ft_plot_sens(sens, 'coilshape', 'point', 'coil', false);
@@ -48,7 +48,7 @@ end
 
 %% NEUROMAG306
 
-sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif', 'senstype', 'meg');
+sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif'), 'senstype', 'meg');
 figure; ft_plot_sens(sens);
 figure; ft_plot_sens(sens, 'chantype', 'megmag');
 figure; ft_plot_sens(sens, 'chantype', 'megplanar');
@@ -67,7 +67,7 @@ figure; ft_plot_sens(sens, 'coilshape', 'square', 'coil', false, 'chantype', 'me
 
 %% NEUROMAG122
 
-sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag122/jg_single_01raw.fif');
+sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag122/jg_single_01raw.fif'));
 
 figure; ft_plot_sens(sens);
 figure; ft_plot_sens(sens, 'coilshape', 'point', 'coil', true);

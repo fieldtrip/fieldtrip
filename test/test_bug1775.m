@@ -6,10 +6,13 @@ function test_bug1775
 % TEST test_bug1775
 % TEST ft_sourceparcellate ft_checkdata ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+ft_default.feedback = 'no';
+
 %% create a set of sensors
-
 [pnt, tri] = icosahedron162;
-
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 

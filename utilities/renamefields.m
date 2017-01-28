@@ -3,7 +3,7 @@ function b = renamefields(a, old, new)
 % RENAMEFIELDS renames a selection of the fields in a structure
 %
 % Use as
-%   b = renamefields(a, old, new);
+%   b = renamefields(a, old, new)
 % which renames the fields with the old name to the new name. Fields that
 % are specified but not present will be silently ignored.
 %
@@ -50,7 +50,9 @@ end
 b = keepfields(a, setdiff(fieldnames(a), old));
 % copy the fields over with their new name
 for i=1:length(old)
-  if isfield(a, old{i});
-    b.(new{i}) = a.(old{i});
+  if isfield(a, old{i})
+    for j=1:numel(b)
+      b(j).(new{i}) = a(j).(old{i});
+    end
   end
 end

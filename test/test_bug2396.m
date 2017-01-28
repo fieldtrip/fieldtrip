@@ -6,7 +6,7 @@ function test_bug2396
 % TEST test_bug2396
 % TEST ft_read_headshape
 
-cd('/home/common/matlab/fieldtrip/data/test/bug2396')
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2396'));
 
 %% define the files
 

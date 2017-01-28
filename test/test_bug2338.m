@@ -6,6 +6,10 @@ function test_bug2338
 % TEST test_bug2338
 % TEST ft_prepare_bemmodel ft_prepare_headmodel ft_prepare_leadfield ft_compute_leadfield openmeeg
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 
 % 4 Layers
 r = [85 88 92 100];

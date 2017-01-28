@@ -6,7 +6,7 @@ function test_ft_denoise_synthetic
 % TEST test_ft_denoise_synthetic
 % TEST ft_denoise_synthetic
 
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151'));
 
 cfg = [];
 cfg.gradient = 'G1BR';
