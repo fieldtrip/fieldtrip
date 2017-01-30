@@ -15,11 +15,20 @@ function passed=moxunit_fieldtrip_runtests(varargin)
 %                           to the FieldTrip dashboard
 %   'dependency',d          Do not run test if it matches a dependency in d
 %   'xmloutput',f           Write JUnit-like XML file with test results to
-%                           file f
+%                           file f. This can be used with the shippable.com
+%                           continuous integration service.
 %
+% Output:
+%   passed                  scalar boolean that is false if one or more
+%                           tests failed or errored, and true otherwise.
+%                           Tests that were skipped
 %
 % Notes:
-% - This function aims to provide similar syntax as 'ft_test run'
+% - This function aims to provide similar syntax as 'ft_test run', but
+% provides an output
+%
+% #   For MOxUnit_fieldtrip's copyright information and license terms,   #
+% #   see the COPYING file distributed with MOxUnit_fieldtrip.           #
 %
 % See also: ft_test
 
