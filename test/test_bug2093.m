@@ -1,21 +1,25 @@
 function test_bug2093
-%TEST_BUG2093 Compares output of same test NEX file from ft_read_header,
+
+% WALLTIME 00:20:00
+% MEM 3gb
+
+% TEST test_bug2093
+% TEST ft_read_header ft_read_data ft_read_event read_nex_header read_nex_data read_plexon_nex
+
+% Compares output of same test NEX file from ft_read_header,
 % ft_read_data, and ft_read_event using old (master branch) and new
 % (nexhandling branch) versions of the FieldTrip code
 
-testnexfile = 'S:\Teresa\Analyses\FieldTrip\test files\p213parall.nex';
-testmatfile = 'S:\Teresa\Analyses\FieldTrip\test files\bug2093.mat';
+testnexfile = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/plexon/p213parall.nex');
+testmatfile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2093.mat');
 
 %% first get output of old code
 if ~exist(testmatfile, 'file')
-  % run only once, using old fieldtrip code
-  git checkout master
-  
+  % run only once, this is to be done using an old FT version
   old.hdr = ft_read_header(testnexfile);
   old.dat = ft_read_data(testnexfile);
   old.evt = ft_read_event(testnexfile);
   
-  git checkout nexhandling
   save(testmatfile, 'old')
 else
   % all future test executions with newer FT code
@@ -28,10 +32,9 @@ end
 new.evt = ft_read_event(testnexfile);
 
 %% then compare the 2
-% make sure the old header and data are identical, since I haven't changed
-% them yet
+% make sure the old header and data are identical, since I haven't changed them yet
 % assert(isequal(old.hdr,new.hdr))
-% assert(isequaln(old.dat,new.dat)) % data padded with NaNs should still be =
+% assert(isequaln(old.dat,new.dat)) % data padded with NaNs should still be equal
 
 %% make sure all old events are still present, despite adding more
 assert(isequal(fieldnames(old.evt), fieldnames(new.evt)))

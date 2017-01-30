@@ -14,6 +14,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.highlightcolorneg         = color of highlight marker for negative clusters (default = [0 0 0])
 %   cfg.subplotsize               = layout of subplots ([h w], default [3 5])
 %   cfg.saveaspng                 = string, filename of the output figures (default = 'no')
+%   cfg.visible                   = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %
 % You can also specify cfg options that apply to FT_TOPOPLOTTFR, except for
 % cfg.xlim, any of the FT_TOPOPLOTTFR highlight options, cfg.comment and
@@ -102,6 +103,7 @@ cfg.parameter             = ft_getopt(cfg, 'parameter',             'stat');
 cfg.saveaspng             = ft_getopt(cfg, 'saveaspng',             'no');
 cfg.subplotsize           = ft_getopt(cfg, 'subplotsize',           [3 5]);
 cfg.feedback              = ft_getopt(cfg, 'feedback',              'text');
+cfg.visible               = ft_getopt(cfg, 'visible',               'on');
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
@@ -386,7 +388,7 @@ else
   count = 0;
   % make plots
   for iPl = 1:Nfig
-    figure;
+    f = figure('visible', cfg.visible);
     if is2D
       if iPl < Nfig
         for iT = 1:numSubplots
@@ -423,17 +425,17 @@ else
       end
     else
       cfgtopo.highlightchannel = list{1};
-      cfgtopo.comment = strcat(compos,comneg);
+      cfgtopo.comment = strcat(compos, comneg);
       cfgtopo.commentpos = 'title';
       count = count+1;
       fprintf('making subplot %d from %d\n', count, Npl);
       ft_topoplotTFR(cfgtopo, stat);
     end
     % save figure
-    if isequal(cfg.saveaspng,'no');
+    if isequal(cfg.saveaspng, 'no');
     else
       filename = strcat(cfg.saveaspng, '_fig', num2str(iPl));
-      print(gcf,'-dpng',filename);
+      print(gcf, '-dpng', filename);
     end
   end
 end

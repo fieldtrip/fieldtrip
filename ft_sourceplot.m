@@ -1,26 +1,29 @@
 function ft_sourceplot(cfg, functional, anatomical)
 
-% FT_SOURCEPLOT plots functional source reconstruction data on slices or on a
-% surface, optionally as an overlay on anatomical MRI data, where statistical data
-% can be used to determine the opacity of the mask. Input data comes from
-% FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE or statistical values from
-% FT_SOURCESTATISTICS.
+% FT_SOURCEPLOT plots functional source reconstruction data on slices or on a surface,
+% optionally as an overlay on anatomical MRI data, where statistical data can be used to
+% determine the opacity of the mask. Input data comes from FT_SOURCEANALYSIS,
+% FT_SOURCEGRANDAVERAGE or statistical values from FT_SOURCESTATISTICS.
 %
 % Use as
-%   ft_sourceplot(cfg, data)
-% where the input data can contain an anatomical MRI, functional source
-% reconstruction results and/or statistical data. If both anatomical and
-% functional/statistical data is provided as input, they should be represented or
-% interpolated on the same same 3-D grid, e.g. using FT_SOURCEINTERPOLATE.
+%   ft_sourceplot(cfg, anatomical)
+%   ft_sourceplot(cfg, functional)
+%   ft_sourceplot(cfg, functional, anatomical)
+% where the input data can contain either anatomical, functional or statistical data,
+% or a combination of them.
 %
-% The slice and ortho visualization plot the data in the input data voxel
-% arrangement, i.e. the three ortho views are the 1st, 2nd and 3rd dimension of
-% the 3-D data matrix, not of the head coordinate system. The specification of the
-% coordinate for slice intersection is specified in head coordinates, i.e.
-% relative to the fiducials and in mm or cm. If you want the visualisation to be
-% consistent with the head coordinate system, you can reslice the data using
-% FT_VOLUMERESLICE.
-%
+% The input data can be in a 3-D volumetric representation or in a 2-D cortical sheet
+% representation.  If both anatomical and functional/statistical data is provided as input,
+% they should be represented in the same coordinate system or interpolated on the same
+% geometrical representation, e.g. using FT_SOURCEINTERPOLATE.
+% 
+% The slice and ortho visualization plot the data in the input data voxel arrangement, i.e.
+% the three ortho views are the 1st, 2nd and 3rd dimension of the 3-D data matrix, not of
+% the head coordinate system. The specification of the coordinate for slice intersection
+% is specified in head coordinates, i.e. relative to anatomical landmarks or fiducials and
+% expressed in mm or cm. If you want the visualisation to be consistent with the head
+% coordinate system, you can reslice the data using FT_VOLUMERESLICE. See http://bit.ly/1OkDlVF
+% 
 % The configuration should contain:
 %   cfg.method        = 'slice',      plots the data on a number of slices in the same plane
 %                       'ortho',      plots the data on three orthogonal slices
@@ -44,7 +47,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 % The following parameters can be used in all methods:
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) see FT_READ_ATLAS
-%                        for ROI masking (see "masking" below) or in "ortho-plotting" mode (see "ortho-plotting" below)
+%                        for ROI masking (see 'masking' below) or for orthogonal plots (see method='ortho' below)
+%   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -80,7 +84,13 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.roi           = string or cell of strings, region(s) of interest from anatomical atlas (see cfg.atlas above)
 %                        everything is masked except for ROI
 %
-% The following parameters apply for ortho-plotting
+% When cfg.method='ortho', three orthogonal slices will be rendered. You can click in any
+% of the slices to update the display in the other two. You can also use the arrow keys on
+% your keyboard to navigate in one-voxel steps. Note that the slices are along the first,
+% second and third voxel dimension, which do not neccessarily correspond to the axes of the
+% head coordinate system. See http://bit.ly/1OkDlVF
+% 
+% The following parameters apply when cfg.method='ortho'
 %   cfg.location      = location of cut, (default = 'auto')
 %                        'auto', 'center' if only anatomy, 'max' if functional data
 %                        'min' and 'max' position of min/max funparameter
@@ -93,8 +103,10 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.axis          = 'on' or 'off' (default = 'on')
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
+% When cfg.method='slice', a NxM montage with a large number of slices will be rendered.
+% All slices are evenly spaced and along the same dimension.
 %
-% The following parameters apply for slice-plotting
+% The following parameters apply for cfg.method='slice'
 %   cfg.nslices       = number of slices, (default = 20)
 %   cfg.slicerange    = range of slices in data, (default = 'auto')
 %                       'auto', full range of data
@@ -102,14 +114,14 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.slicedim      = dimension to slice 1 (x-axis) 2(y-axis) 3(z-axis) (default = 3)
 %   cfg.title         = string, title of the figure window
 %
-% When cfg.method = 'surface', the functional data will be rendered onto a cortical
-% mesh (can be an inflated mesh). If the input source data contains a tri-field (i.e.
-% a description of a mesh), no interpolation is needed. If the input source data does
-% not contain a tri-field, an interpolation is performed onto a specified surface.
-% Note that the coordinate system in which the surface is defined should be the same
-% as the coordinate system that is represented in source.pos.
+% When cfg.method='surface', the functional data will be rendered onto a cortical mesh
+% (can be an inflated mesh). If the input source data contains a tri-field (i.e. a
+% description of a mesh), no interpolation is needed. If the input source data does not
+% contain a tri-field, an interpolation is performed onto a specified surface. Note that
+% the coordinate system in which the surface is defined should be the same as the coordinate
+% system that is represented in the pos-field.
 %
-% The following parameters apply to surface-plotting when an interpolation is required
+% The following parameters apply to cfg.method='surface' when an interpolation is required
 %   cfg.surffile       = string, file that contains the surface (default = 'surface_white_both.mat')
 %                        'surface_white_both.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
@@ -128,7 +140,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        included in the sphere projection methods, expressed in mm
 %   cfg.distmat        = precomputed distance matrix (default = [])
 %
-% The following parameters apply to surface-plotting independent of whether an interpolation is required
+% The following parameters apply to cfg.method='surface' irrespective of whether an interpolation is required
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer', ' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
@@ -232,6 +244,7 @@ cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
+cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -602,7 +615,6 @@ elseif hasroi
 end
 
 %% give some feedback
-
 if ~hasfun && ~hasana
   % this seems to be a problem that people often have due to incorrect specification of the cfg
   error('no anatomy is present and no functional data is selected, please check your cfg.funparameter');
@@ -623,11 +635,9 @@ if ~hasroi
   fprintf('not using a region-of-interest\n');
 end
 
-
 %% start building the figure
-h = figure;
+h = figure('visible', cfg.visible);
 set(h, 'color', [1 1 1]);
-set(h, 'visible', 'on');
 set(h, 'renderer', cfg.renderer);
 if ~isempty(cfg.title)
   title(cfg.title);
@@ -653,8 +663,6 @@ switch cfg.method
     cfg.nslices    = ft_getopt(cfg, 'nslices',    20);
     cfg.slicedim   = ft_getopt(cfg, 'slicedim',   3);
     cfg.slicerange = ft_getopt(cfg, 'slicerange', 'auto');
-
-
 
     % white BG => mskana
 

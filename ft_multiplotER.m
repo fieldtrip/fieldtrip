@@ -850,9 +850,8 @@ if ~isempty(label)
   end
   cfg.refchannel = label; % FIXME this only works with label being a string
   fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel);
-  p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
+  % ensure that the new figure appears at the same position
+  f = figure('Position', get(gcf, 'Position'));
   ft_multiplotER(cfg, varargin{:});
 end
 
@@ -875,7 +874,6 @@ if ~isempty(label)
   end
   fprintf('''%s''}\n', cfg.channel{end});
   p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
+  f = figure('position', p);
   ft_singleplotER(cfg, varargin{:});
 end
