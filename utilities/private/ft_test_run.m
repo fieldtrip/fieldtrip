@@ -91,7 +91,7 @@ for i=1:numel(functionlist)
   filelist{i} = which(functionlist{i});
 end
 
-fprintf('considering %d test scripts for execution\n', numel(filelist));
+fprintf('considering %d test functions for execution\n', numel(filelist));
 
 %% make a subselection based on the filters
 dep  = true(size(filelist));
@@ -113,7 +113,7 @@ for i=1:numel(filelist)
   
   for k=1:numel(line)
     for j=1:numel(dependency)
-      % search for the dependencies in each of the test scripts
+      % search for the dependencies in each of the test functions
       [s, e] = regexp(line{k}, sprintf('%% TEST.*%s.*', dependency{j}), 'once', 'start', 'end');
       if ~isempty(s)
         dep(i) = true;
@@ -121,7 +121,7 @@ for i=1:numel(filelist)
     end
     
     if ~istrue(hasdccnpath)
-      % search for the occurence of the DCCNPATH function in each of the test scripts
+      % search for the occurence of the DCCNPATH function in each of the test functions
       [s, e] = regexp(line{k}, 'dccnpath', 'once', 'start', 'end');
       if ~isempty(s)
         file(i) = true;
