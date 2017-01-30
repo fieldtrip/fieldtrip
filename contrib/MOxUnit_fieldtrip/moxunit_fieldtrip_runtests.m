@@ -63,7 +63,7 @@ function suite=add_test_files(suite,filelist)
 % tests in the 'test' directory are added
     if isempty(filelist)
         fieldtrip_test_dir=get_fieldtrip_test_dir();
-        fieldtrip_test_file_pattern='^[Tt][Ee][sS][tT].*\.m$';
+        fieldtrip_test_file_pattern='^(fest|failed).*\.m$';
         suite=addFromDirectory(suite,fieldtrip_test_dir,...
                                     fieldtrip_test_file_pattern);
     else
