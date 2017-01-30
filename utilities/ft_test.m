@@ -20,6 +20,7 @@ function ft_test(varargin)
 %
 % Additional optional arguments are specified as key-value pairs and can include
 %   dependency       = string
+%   dccnpath         = string, can be 'yes' or 'no' (default = 'yes')
 %   maxmem           = number (in bytes) or string such as 10GB
 %   maxwalltime      = number (in seconds) or string such as HH:MM:SS
 %   upload           = string, can be 'yes' or 'no' (default = 'yes')
