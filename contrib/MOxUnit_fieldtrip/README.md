@@ -18,6 +18,9 @@ Contributor: Nikolaas N. Oosterhof <nikolaas.oosterhof@unitn.it>
 
 `moxunit_fieldtrip_runtests` is the main function to run tests. It supports the same arguments as `ft_test run`, including `maxwalltime`, `maxmem` `upload` and `dependency`. To run tests through `MoxUnit_fieldtrip` one can also use `ft_moxunit_test run`.
 
+### Continuous integration (CI) testing
+Currently CI testing is supported through the travis-ci and shippable.com services. The configuration is set in `${FIELDTRIP_ROOT}/.travis.yml`.
+
 ### How to write tests
 - Test files should be in the `${FIELDTRIP_ROOT}/test` directory and should start with 'test' or 'failed' in order to be included in the test suite.
 - Test files should consist of a function that, when called, runs the test. If a test cannot be run it is considered to have errored. If it can be run but raised an exception, the test runner considers it as failed or skipped (depending on the exception; see below). A test that runs without throwing an exception is considered as passed.
@@ -31,6 +34,7 @@ For `MOxUnit_fieldtrip`'s copyright information and license terms, see the COPYI
 [FieldTrip]: http://www.fieldtriptoolbox.org
 [MOxUnit]: https://github.com/MOxUnit/MOxUnit
 [Travis-ci]: https://travis-ci.org
+[Shippable]: https://www.shippable.com
 
 
 
