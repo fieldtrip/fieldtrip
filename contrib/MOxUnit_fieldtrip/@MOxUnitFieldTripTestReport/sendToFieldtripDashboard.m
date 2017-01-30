@@ -2,7 +2,7 @@ function sendToFieldtripDashboard(obj)
 % send test results to FieldTrip dashboard
 %
 % Notes:
-%   - unless ft_run_test, this function sends all results after all the
+%   - unlike ft_run_test, this function sends all results after all the
 %     tests have been run
 
     options = weboptions('MediaType','application/json');
