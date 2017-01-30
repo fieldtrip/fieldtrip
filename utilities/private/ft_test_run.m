@@ -192,7 +192,12 @@ for i=1:numel(functionlist)
   result.functionname     = functionlist{i};
   
   if istrue(upload)
-    options = weboptions('MediaType','application/json');
+    try
+      % the weboptions function is available in 2014b onward, but behaves inconsistently
+      options = weboptions('MediaType','application/json');
+    catch
+      options = [];
+    end
     url = 'http://dashboard.fieldtriptoolbox.org/api/';
     webwrite(url, result, options);
   else
