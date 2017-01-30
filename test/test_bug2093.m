@@ -14,17 +14,18 @@ testnexfile = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/ple
 testmatfile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2093.mat');
 
 %% first get output of old code
-if ~exist(testmatfile, 'file')
-  % run only once, this is to be done using an old FT version
-  old.hdr = ft_read_header(testnexfile);
-  old.dat = ft_read_data(testnexfile);
-  old.evt = ft_read_event(testnexfile);
-  
-  save(testmatfile, 'old')
-else
+% if ~exist(testmatfile, 'file')
+%   % run only once, this is to be done using FT version older than 9/9/2016,
+%   % last commit before changes:  c8de94a3e13df7d10737381f1070a0d467c9bfbb
+%   old.hdr = ft_read_header(testnexfile);
+%   old.dat = ft_read_data(testnexfile);
+%   old.evt = ft_read_event(testnexfile);
+%   
+%   save(testmatfile, 'old')
+% else
   % all future test executions with newer FT code
   load(testmatfile)
-end
+% end
 
 %% then get output of new code
 % new.hdr = ft_read_header(testnexfile);
