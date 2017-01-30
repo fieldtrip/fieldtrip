@@ -166,8 +166,9 @@ function opt=parse_args(varargin)
     if isempty(upload)
         % TODO: decide whether upload should be disabled when not running
         % from DCCN-like computer
-        upload=ft_platform_supports_wrapper('weboptions') && ...
-                ft_platform_supports_wrapper('webwrite');
+
+        % See if there are any upload methods available
+        upload=~isempty(moxunit_fieldtrip_util_send_json());
     end
 
 
