@@ -5,7 +5,6 @@ function sendToFieldtripDashboard(obj)
 %   - unlike ft_run_test, this function sends all results after all the
 %     tests have been run
 
-    options = weboptions('MediaType','application/json');
     url = 'http://dashboard.fieldtriptoolbox.org/api/';
 
     n_outcomes=countTestOutcomes(obj);
@@ -55,13 +54,14 @@ function sendToFieldtripDashboard(obj)
         result.fieldtripversion = revision;
         result.branch           = ft_version('branch');
         result.arch             = computer('arch');
-        result.hostname         = run_private_fieldtrip(@gethostname);
-        result.user             = run_private_fieldtrip(@getusername);
+        result.hostname         = run_private_fieldtrip('gethostname');
+        result.user             = run_private_fieldtrip('getusername');
         result.passed           = passed;
         result.runtime          = runtime;
         result.functionname     = functionname;
 
-        webwrite(url, result, options);
+        % send results
+        moxunit_fieldtrip_util_send_json(url, result);
 
         outcome_str=getOutcomeStr(test_outcome,verbosity);
         if verbosity>=2
@@ -88,7 +88,7 @@ function report_with_verbosity(stream,verbosity,msg)
     end
 
 
-function result=run_private_fieldtrip(func)
+function result=run_private_fieldtrip(func_name)
 % run function in ${FIELDTRIP_ROOT}/utilities/private
 %
 % somewhat ugly, we have to 'cd' to the directory in order to access the
@@ -101,4 +101,5 @@ function result=run_private_fieldtrip(func)
                                         'utilities','private');
 
     cd(fieldtrip_util_private_dir);
+    func=str2func(func_name);
     result=func();
