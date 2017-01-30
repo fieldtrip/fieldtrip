@@ -12,7 +12,9 @@ function passed=moxunit_fieldtrip_runtests(varargin)
 %                           with a number and suffix 'kb', 'mb', 'gb', or
 %                           'tb'
 %   'upload',u              If 'true' or 'yes', then results are uploaded
-%                           to the FieldTrip dashboard
+%                           to the FieldTrip dashboard (default: true if
+%                           the platform provides the 'weboptions' and
+%                           'weboptions' functions)
 %   'dependency',d          Do not run test if it matches a dependency in d
 %   'xmloutput',f           Write JUnit-like XML file with test results to
 %                           file f. This can be used with the shippable.com
@@ -23,6 +25,20 @@ function passed=moxunit_fieldtrip_runtests(varargin)
 %                           tests failed or errored, and true otherwise.
 %                           Tests that were skipped
 %
+% Examples:
+%   % run all tests
+%   moxunit_fieldtrip_runtests
+%   %
+%   % run tests with an expected execuation time of at most 10 minutes,
+%   % maxmimum memory usage of 1 gigabyte, and with upload disabled.
+%   moxunit_fieldtrip_runtests maxwalltime 00:10:00 maxmem 1gb upload no
+%   %
+%   % run all tests and store JUnit test results in file foo.xml. This file
+%   % contains for each tests whether it passed, failed, errored, or was
+%   % skipped; if it failed or errored, the full stack trace; if it was
+%   % skipped, the reason why it was skipped.
+%   moxunit_fieldtrip_runtests xmloutput foo.xml
+%
 % Notes:
 % - This function aims to provide similar syntax as 'ft_test run', but
 % provides an output
@@ -32,8 +48,9 @@ function passed=moxunit_fieldtrip_runtests(varargin)
 %
 % See also: ft_test
 
-    % parse arguments
+    passed=false; % fail unless all tests were successful
 
+    % parse arguments
     opt=parse_args(varargin{:});
 
     % make a suite and add the tests
@@ -46,8 +63,19 @@ function passed=moxunit_fieldtrip_runtests(varargin)
     % apply filter args
     suite=filter(suite,opt.filter_args{:});
 
-    verbosity=2;
-    output_stream=1;
+    % set output options
+    verbosity=2;     % show detailed information
+    output_stream=1; % standard output
+
+    n_tests=countTestCases(suite);
+    if n_tests==0
+        fprintf(output_stream,['No test cases found - this is '...
+                            'considered as a test suite failure\n']);
+        return;
+    end
+
+
+
     report=MOxUnitFieldTripTestReport(verbosity,output_stream);
     report=run(suite,report);
 
@@ -72,7 +100,7 @@ function suite=add_test_files(suite,filelist)
 % tests in the 'test' directory are added
     if isempty(filelist)
         fieldtrip_test_dir=get_fieldtrip_test_dir();
-        fieldtrip_test_file_pattern='^(fest|failed).*\.m$';
+        fieldtrip_test_file_pattern='^(test|failed).*\.m$';
         suite=addFromDirectory(suite,fieldtrip_test_dir,...
                                     fieldtrip_test_file_pattern);
     else
