@@ -14,7 +14,6 @@ env:
  global:
     - OCTAVE=octave
  matrix:
-    - LIMITS="'maxwalltime',1,'maxmem',1"
     - LIMITS="'maxwalltime',600,'maxmem','1gb'"
 before_install:
     # to prevent IPv6 being used for APT
