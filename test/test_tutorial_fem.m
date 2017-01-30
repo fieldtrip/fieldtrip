@@ -1,7 +1,7 @@
 % function test_tutorial_fem
 
 % WALLTIME 1:00:00
-% MEM 4gb
+% MEM 6gb
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;
