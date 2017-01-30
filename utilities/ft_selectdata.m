@@ -659,7 +659,15 @@ chanindx = cell(ndata,1);
 label    = cell(1,0);
 
 for k = 1:ndata
-  selchannel = ft_channelselection(cfg.channel, varargin{k}.label);
+  if isfield(varargin{k}, 'grad') && isfield(varargin{k}.grad, 'type')
+    % this makes channel selection more robust
+    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.grad.type);
+  elseif isfield(varargin{k}, 'elec') && isfield(varargin{k}.elec, 'type')
+    % this makes channel selection more robust
+    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.elec.type);
+  else
+    selchannel = ft_channelselection(cfg.channel, varargin{k}.label);
+  end
   label      = union(label, selchannel);
 end
 

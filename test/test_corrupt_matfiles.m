@@ -3,7 +3,7 @@ function test_corrupt_matfiles
 % MEM 8gb
 % WALLTIME 10:00:00
 
-files = findfiles('/home/common/matlab/fieldtrip/data/test');
+files = findfiles(dccnpath('/home/common/matlab/fieldtrip/data/test'));
 status = true(size(files));
 
 for i=1:length(files)

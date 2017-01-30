@@ -76,9 +76,9 @@ end
 cd(currdir);
 
 %% create mesh
-cfg=[];
-cfg.method='hexahedral';
-mesh=ft_prepare_mesh(cfg,example);
+cfg = [];
+cfg.method = 'hexahedral';
+mesh = ft_prepare_mesh(cfg,example);
 
 pos = [zeros(181,1)'; -90:1:90; zeros(181,1)']';
 

@@ -731,8 +731,7 @@ if isfield(cfg, 'ylim')
 end
 fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
-f = figure;
-set(f, 'position', p);
+f = figure('position', p);
 ft_topoplotER(cfg, data{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

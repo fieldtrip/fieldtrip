@@ -83,74 +83,74 @@ end
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1129.mat
 
-cfg=[];
-cfg.bpfreq=[8 12];
-cfg.bpfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.bpfreq = [8 12];
+cfg.bpfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.bpfreq=[8 12];
-cfg.bpfilter='yes';
-cfg.bpfilttype='fir';
-cfg.bpfiltord=2000;
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.bpfreq = [8 12];
+cfg.bpfilter = 'yes';
+cfg.bpfilttype = 'fir';
+cfg.bpfiltord = 2000;
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.bpfilttype='fir';
-cfg.bpfreq=[8 12];
-cfg.bpfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.bpfilttype = 'fir';
+cfg.bpfreq = [8 12];
+cfg.bpfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.bsfilttype='firls';
-cfg.bsfreq=[8 12];
-cfg.bsfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.bsfilttype = 'firls';
+cfg.bsfreq = [8 12];
+cfg.bsfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.bsfilttype='fir';
-cfg.bsfreq=[8 12];
-cfg.bsfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.bsfilttype = 'fir';
+cfg.bsfreq = [8 12];
+cfg.bsfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.lpfilttype='fir';
-cfg.lpfreq=[8];
-cfg.lpfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.lpfilttype = 'fir';
+cfg.lpfreq = [8];
+cfg.lpfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.hpfilttype='fir';
-cfg.hpfreq=[8];
-cfg.hpfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.hpfilttype = 'fir';
+cfg.hpfreq = [8];
+cfg.hpfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.bpfreq=[8 12];
-cfg.bpfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.bpfreq = [8 12];
+cfg.bpfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.bsfreq=[8 12];
-cfg.bsfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.bsfreq = [8 12];
+cfg.bsfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.lpfreq=[8];
-cfg.lpfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.lpfreq = [8];
+cfg.lpfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
-cfg=[];
-cfg.hpfreq=[8];
-cfg.hpfilter='yes';
-rawfilt=ft_preprocessing(cfg,raw3);
+cfg = [];
+cfg.hpfreq = [8];
+cfg.hpfilter = 'yes';
+rawfilt = ft_preprocessing(cfg,raw3);
 
 % assert(isequaln(data, datanew));
 
 %%
 % create a random signal
 close all
-N=300;
+N = 300;
 x1 = randn(1,N);
 
 % FT default filter (butterworth order 4)

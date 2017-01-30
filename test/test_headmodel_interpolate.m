@@ -6,6 +6,10 @@ function test_headmodel_interpolate
 % TEST test_headmodel_interpolate
 % TEST icosahedron162 ft_voltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% create a set of electrodes nicely covering the upper half of a sphere
 [pnt, tri] = icosahedron162;

@@ -6,14 +6,14 @@ function test_bug1725
 % TEST test_bug1725
 % TEST ft_read_atlas ft_prepare_atlas
 
-cd /home/common/matlab/fieldtrip/data/test/bug1725/afni
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1725/afni'));
 
 % try to read a collection of atlasses
 % the first one is from AFNI
 filename = 'TTatlas+tlrc.BRIK';
 atlas = ft_read_atlas(filename);
 
-cd /home/common/matlab/fieldtrip/data/test/bug1725/wfu_pickatlas
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1725/wfu_pickatlas'));
 
 % these ones are from http://fmri.wfubmc.edu/
 filename = {

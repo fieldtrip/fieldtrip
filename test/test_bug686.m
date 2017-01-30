@@ -6,11 +6,11 @@ function test_bug686
 % TEST test_bug686
 % TEST ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel headsurface
 
-global ft_default
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
 ft_default = [];
 
 [pnt, tri] = icosahedron162;
-
 pnt = pnt .* 10;           % convert to cm
 sel = find(pnt(:,3)>0);    % take the upper hemisphere
 

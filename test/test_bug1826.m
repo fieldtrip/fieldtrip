@@ -12,12 +12,12 @@ function test_bug1826
 % 4 different types of interpolation options:
 % {trilinear,nearestneighbour,sinc,spline}
 % and 5 different types of cost functions can be used:
-%{mutualinfo,corratio,normcorr,normmi,leastsq}
-%please do not forget to modify the fsl version as in your system
+% {mutualinfo,corratio,normcorr,normmi,leastsq}
+% please do not forget to modify the fsl version as in your system
 
 %% The part below relates to the within modality registration of 2 different coordinate systems requested by HCP.
-mri1 = ft_read_mri('/home/common/matlab/fieldtrip/data/test/bug1826/mri1mm.nii');
-mri2 = ft_read_mri('/home/common/matlab/fieldtrip/data/test/bug1826/mri07mm.nii.gz');
+mri1 = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/mri1mm.nii'));
+mri2 = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/mri07mm.nii.gz'));
 
 mri1.coordsys = 'bti';
 mri2.coordsys = 'spm';
@@ -84,9 +84,9 @@ mri1cx = ft_volumerealign(cfg, mri1bx, mri1x);
 % CONCLUSION: not too bad if the volumes are resliced
 
 %% The part below relates to the cross-modality registration requested by the Simbio guys.
-subjectT1  = '/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz';%'~/meeting_simbio/test_bug1826_data/test_bug1826_data/T1.nii.gz';
-subjectT2  = '/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz';%'~/meeting_simbio/test_bug1826_data/test_bug1826_data/T2.nii.gz';
-subjectDTI = '/home/common/matlab/fieldtrip/data/test/bug1826/DTI.nii';%'~/meeting_simbio/test_bug1826_data/test_bug1826_data/DTI.nii';
+subjectT1  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz'); %'~/meeting_simbio/test_bug1826_data/test_bug1826_data/T1.nii.gz';
+subjectT2  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz'); %'~/meeting_simbio/test_bug1826_data/test_bug1826_data/T2.nii.gz';
+subjectDTI = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/DTI.nii');   %'~/meeting_simbio/test_bug1826_data/test_bug1826_data/DTI.nii';
 
 % load in the data
 T1  = ft_read_mri(subjectT1);

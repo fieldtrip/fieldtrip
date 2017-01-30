@@ -51,7 +51,7 @@ bnd = ft_prepare_mesh(cfg, headmodel);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg = [];
-cfg.headshape = '/home/common/matlab/fieldtrip/data/Subject01.shape';
+cfg.headshape = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
 bnd = ft_prepare_mesh(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -59,7 +59,7 @@ bnd = ft_prepare_mesh(cfg);
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1652
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cd /home/common/matlab/fieldtrip/data/test/bug1646
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646'));
 
 load seg1
 load seg2
@@ -69,7 +69,7 @@ load seg5
 load seg6
 
 atlas = ft_read_atlas('TTatlas+tlrc.BRIK');
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri'));
 
 assert(ft_datatype(seg1, 'segmentation'));
 assert(ft_datatype(seg2, 'segmentation'));
@@ -152,81 +152,81 @@ assert(isequal(bnd(1).unit, seg6.unit));
 % setdiff(unique(mri.seg(:)),0) then there is no problem.
 
 % seg5 is indexed segmentation
-cfg=[];
-cfg.tissue=setdiff(unique(seg5.seg(:)),0);
-cfg.numvertices=1000;
+cfg = [];
+cfg.tissue = setdiff(unique(seg5.seg(:)),0);
+cfg.numvertices = 1000;
 bnd = ft_prepare_mesh(cfg, seg5);
 
 % "If the input is an indexed representation and cfg.tissue is empty, then
 % cfg.tissue should be set to unique(mri.seg(:))"
 
-cfg=[];
-cfg.numvertices=[1000 1000 1000];
-cfg.tissue=[];
+cfg = [];
+cfg.numvertices = [1000 1000 1000];
+cfg.tissue = [];
 bnd = ft_prepare_mesh(cfg, seg5);
 
-cfg=[];
-cfg.numvertices=[1000 1000 1000];
+cfg = [];
+cfg.numvertices = [1000 1000 1000];
 bnd = ft_prepare_mesh(cfg, seg5);
 
-cfg=[];
-cfg.numvertices=[1000]; % should still be converted to vector Nx3 since seg5 has 3 indices
-cfg.tissue=[];
+cfg = [];
+cfg.numvertices = [1000]; % should still be converted to vector Nx3 since seg5 has 3 indices
+cfg.tissue = [];
 bnd = ft_prepare_mesh(cfg, seg5);
 
 % "If the input is a tpm representation then cfg.tissue should be a string
 % pointing to the field."
 % Both seg1 and seg2 are tpm, but only seg2 has 'brain'.
 
-cfg=[];
-cfg.numvertices=[800];
-cfg.tissue='brain'; %this is exception in that .brain DNE in seg1
+cfg = [];
+cfg.numvertices = [800];
+cfg.tissue = 'brain'; %this is exception in that .brain DNE in seg1
 bnd = ft_prepare_mesh(cfg, seg1);
 
 try
-  cfg=[];
-  cfg.numvertices=[800];
-  cfg.tissue='randomfieldname';
+  cfg = [];
+  cfg.numvertices = [800];
+  cfg.tissue = 'randomfieldname';
   bnd = ft_prepare_mesh(cfg, seg1);
-  success=true;
+  success = true;
 catch
-  success=false;
+  success = false;
 end
 if success
   error('randomfieldname should not work for tpm type')
 end
 
 try
-  cfg=[];
-  cfg.numvertices=[800];
-  cfg.tissue='csf'; %this is exception in that .brain DNE in seg1
+  cfg = [];
+  cfg.numvertices = [800];
+  cfg.tissue = 'csf'; %this is exception in that .brain DNE in seg1
   bnd = ft_prepare_mesh(cfg, seg2);
-  success=true;
+  success = true;
 catch
-  success=false;
+  success = false;
 end
 if success
   error('randomfieldname should not work for tpm type')
 end
 
-cfg=[];
-cfg.numvertices=[800];
-cfg.tissue=1;
+cfg = [];
+cfg.numvertices = [800];
+cfg.tissue = 1;
 bnd = ft_prepare_mesh(cfg, seg1);
 
-cfg=[];
-cfg.numvertices=[800];
-cfg.tissue=1;
+cfg = [];
+cfg.numvertices = [800];
+cfg.tissue = 1;
 bnd = ft_prepare_mesh(cfg, seg2);
 
 try
-  cfg=[];
-  cfg.numvertices=[800];
-  cfg.tissue=4;
+  cfg = [];
+  cfg.numvertices = [800];
+  cfg.tissue = 4;
   bnd = ft_prepare_mesh(cfg, seg2);
-  success=true;
+  success = true;
 catch
-  success=false;
+  success = false;
 end
 if success
   error('too large of index for cfg.tissue should not work for tpm type')
@@ -238,7 +238,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all
-load('/home/common/matlab/fieldtrip/data/test/bug1651.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1651.mat'));
 
 cfg = [];
 cfg.tissue = {'brain', 'skull', 'scalp'};
@@ -255,7 +255,7 @@ bnd = ft_prepare_mesh(cfg, seg2);
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load('/home/common/matlab/fieldtrip/data/test/bug937.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug937.mat'));
 
 mri = [];
 mri.anatomy = bkgrnd;
@@ -268,7 +268,7 @@ mri.dim = size(bkgrnd);
 mri.anatomy = mri.anatomy>0;
 
 cfg = [];
-cfg.tissue      = {'sphere1' 'sphere2' 'sphere3'};
+cfg.tissue = {'sphere1' 'sphere2' 'sphere3'};
 cfg.numvertices = 1000;
 bnd = ft_prepare_mesh(cfg, mri);
 

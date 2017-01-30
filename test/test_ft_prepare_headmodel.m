@@ -18,24 +18,24 @@ function test_ft_prepare_headmodel
 % get the data which is needed
 
 % read in the gradiometer information
-hdr  = ft_read_header('/home/common/matlab/fieldtrip/data/Subject01.ds');
+hdr  = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));
 grad = hdr.grad;
 
 % read in the mri
 load standard_mri
 
 % read in the segmented mri
-load('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
 
 % specify the file for the headshape
-shapefile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';
+shapefile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
 
 % read in the headshape
 shape = ft_read_headshape(shapefile);
 shapevol.bnd = shape;
 
 % hdmfile
-hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.hdm';
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
 
 
 %   vol = ft_prepare_headmodel(cfg)       or
@@ -66,10 +66,10 @@ cfg.numvertices = 1000;
 cs4bnd = ft_prepare_mesh(cfg, cs4vol);
 
 
-load /home/common/matlab/fieldtrip/data/test/bug1646/seg2  % brain skull scalp (3 binary masks)
-load /home/common/matlab/fieldtrip/data/test/bug1646/seg5  % seg (brain, skull & scalp indexed)
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646/seg2'))  % brain skull scalp (3 binary masks)
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646/seg5'))  % seg (brain, skull & scalp indexed)
 
-elcfile  = '/home/common/matlab/fieldtrip/data/test/original/electrodes/asa/standard_primed.elc';
+elcfile  = dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/asa/standard_primed.elc');
 elec = ft_convert_units(ft_read_sens(elcfile));
 
 
@@ -92,7 +92,7 @@ end
 %% asa  - INPUT asa *.vol file
 
 cfg = [];
-cfg.hdmfile = '/home/common/matlab/fieldtrip/data/test/original/headmodel/asa/standard.vol';
+cfg.hdmfile = dccnpath('/home/common/matlab/fieldtrip/data/test/original/headmodel/asa/standard.vol');
 cfg.method = 'asa';
 vol11 = ft_prepare_headmodel(cfg);
 

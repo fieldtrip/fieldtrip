@@ -13,7 +13,7 @@ function test_bug1397
 cfg = [];
 % MODIFICATION, use trialfun handle and other path to the data
 cfg.trialfun                  = @trialfun_left;
-cfg.dataset                   = '/home/common/matlab/fieldtrip/data/SubjectCMC.ds';
+cfg.dataset                   = dccnpath('/home/common/matlab/fieldtrip/data/SubjectCMC.ds');
 cfg = ft_definetrial(cfg);
 
 % MODIFICATION, use only 10 trials

@@ -10,12 +10,12 @@ function test_headmodel_localspheres_new_old
 % get the data which is needed
 
 % read in the gradiometer information
-cd('/home/common/matlab/fieldtrip/data/');
+cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 hdr  = ft_read_header('Subject01.ds');
 grad = hdr.grad;
 
 % specify the file for the headshape
-hdmfile  = '/home/common/matlab/fieldtrip/data/Subject01.shape';
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
 
 % read in the headshape
 shape = ft_read_headshape(hdmfile);

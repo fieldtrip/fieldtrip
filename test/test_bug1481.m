@@ -6,18 +6,18 @@ function test_bug1481
 % TEST test_bug1481
 % TEST ft_rejectcomponent
 
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat'));
 
-elec=ft_read_sens('standard_1020.elc');
-data.elec=elec;
+elec = ft_read_sens('standard_1020.elc');
+data.elec = elec;
 
-cfg=[];
-cfg.reref='yes';
-cfg.refchannel='all';
-data_reref=ft_preprocessing(cfg,data);
+cfg = [];
+cfg.reref = 'yes';
+cfg.refchannel = 'all';
+data_reref = ft_preprocessing(cfg,data);
 
-cfg=[];
-cfg.method='fastica';
+cfg = [];
+cfg.method = 'fastica';
 cfg.numcomponent = 10; % to make it go fast
 cfg.randomseed = 13; % so we get the same output each time
 comp = ft_componentanalysis(cfg,data_reref);
@@ -34,8 +34,8 @@ montage.tra = eye(numel(data.label))-ones(numel(data.label))./numel(data.label);
 montage.labelorg = data.label;
 montage.labelnew = data.label;
 
-cfg=[];
-cfg.montage=montage;
-data_reref2=ft_preprocessing(cfg,data);
+cfg = [];
+cfg.montage = montage;
+data_reref2 = ft_preprocessing(cfg,data);
 
 

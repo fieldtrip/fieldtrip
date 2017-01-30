@@ -9,7 +9,7 @@ function test_tutorial_headmodel_meg(datadir)
 % intial version by Lilla Magyari
 
 if nargin==0
-  datadir = '/home/common/matlab/fieldtrip/data/';
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/');
 end
 
 mri = ft_read_mri([datadir,'ftp/tutorial/beamformer/Subject01.mri']);

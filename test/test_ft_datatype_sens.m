@@ -8,11 +8,7 @@ function test_ft_datatype_sens
 
 
 %% define the test data
-
-path = '/home/common/matlab/fieldtrip/data/test/original';
-try
-  path = dccnpath('/home/common/matlab/fieldtrip/data/test/original');
-end
+path = dccnpath('/home/common/matlab/fieldtrip/data/test/original');
 
 filename = {
   fullfile('meg', 'ctf151', 'Subject01.ds')

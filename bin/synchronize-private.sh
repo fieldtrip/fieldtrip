@@ -404,6 +404,7 @@ ARRAY+=(specest/private/fixname.m)
 ARRAY+=(statfun/private/fixname.m)
 ARRAY+=(test/private/fixname.m)
 ARRAY+=(utilities/private/fixname.m)
+ARRAY+=(compat/matlablt2014b/private/fixname.m)
 sync ${ARRAY[*]}
 
 ################################################################################

@@ -28,6 +28,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
 %   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
+%   cfg.channelclamped          = cell-array with channel labels, that (when using the 'vertical' viewmode)will always be shown at the bottom 
+%                                 This is useful for showing ECG/EOG channels along with the other channels
 %   cfg.plotlabels              = 'yes' (default), 'no', 'some'; whether to plot channel labels in vertical
 %                                 viewmode ('some' plots one in every ten labels; useful when plotting a
 %                                 large number of channels at a time)
@@ -1614,6 +1616,24 @@ figure(h); % ensure that the calling figure is in the front
 
 %fprintf('redrawing with viewmode %s\n', cfg.viewmode);
 
+cfg.channelclamped = ft_getopt(cfg, 'channelclamped');
+
+% temporarily store the originally selected list of channels
+userchan    = cfg.channel;
+
+% add the clamped channels (cfg.channelclamped) at the end of the list
+cfg.channel = setdiff(cfg.channel, cfg.channelclamped);
+cfg.channel =   union(cfg.channel, cfg.channelclamped);
+
+% if the number of channels changes, includes past channels
+if numel(cfg.channel)<numel(userchan) + numel(cfg.channelclamped)
+  addchan = numel(userchan) + numel(cfg.channelclamped) - numel(cfg.channel); % Gets the number of channels to add.
+  lastchan = min(match_str(opt.hdr.label, cfg.channel)) - 1; % Gets the previous channel.
+    
+  % Adds up to n more channels.
+  cfg.channel = union(opt.hdr.label(max(lastchan - addchan + 1, 1): lastchan), cfg.channel);
+end
+
 begsample = opt.trlvis(opt.trlop, 1);
 endsample = opt.trlvis(opt.trlop, 2);
 offset    = opt.trlvis(opt.trlop, 3);
@@ -2138,6 +2158,10 @@ title(str);
 
 % possibly adds some responsiveness if the 'thing' is clogged
 drawnow
+
+% restore the originally selected list of channels, in case a set of
+% additional fixed channels was selected
+cfg.channel = userchan;
 
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);

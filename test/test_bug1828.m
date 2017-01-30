@@ -7,7 +7,7 @@ function test_bug1828
 % TEST ft_convert_coordsys
 % TEST align_ctf2spm
 
-load('/home/common/matlab/fieldtrip/data/test/bug1828');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1828'));
 
 acvox = [89 135 125]; % voxel that is identified as ~ AC, i.e. the origin of the coordinate system
 

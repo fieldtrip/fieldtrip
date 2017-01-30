@@ -6,7 +6,9 @@ function test_bug2359
 % TEST test_bug2359
 % TEST ft_prepare_mesh ft_prepare_sourcemodel
 
-global ft_default
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 ft_default.checkconfig = 'loose'; % cfg.grid.pnt needs to be renamed to cfg.grid.pos
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2359'));

@@ -32,15 +32,15 @@ ft_plot_mesh(new_bnd);
 
 %%
 
-cfg=[];
-cfg.method='fiducial';
-cfg.target.elecpos(1,:)=NAS;
-cfg.target.elecpos(2,:)=LPA;
-cfg.target.elecpos(3,:)=RPA;
-cfg.target.chanpos=cfg.target.elecpos;
-cfg.target.label={'Nz','LPA','RPA'};
-cfg.target.unit='m';
-cfg.elec=elec1005;
+cfg = [];
+cfg.method = 'fiducial';
+cfg.target.elecpos(1,:) = NAS;
+cfg.target.elecpos(2,:) = LPA;
+cfg.target.elecpos(3,:) = RPA;
+cfg.target.chanpos = cfg.target.elecpos;
+cfg.target.label = {'Nz','LPA','RPA'};
+cfg.target.unit = 'm';
+cfg.elec = elec1005;
 
 elec = ft_electroderealign(cfg);
 elec = ft_convert_units(elec,'m');

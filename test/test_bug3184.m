@@ -17,7 +17,7 @@ assert(isfield(source.avg, 'csdlabel'));
 cfg = [];
 cfg.trials = 1:5;
 source2 = ft_selectdata(cfg, source);
-assert(isfield(source2.avg, 'csdlabel'));
+assert(isfield(source2, 'avg') && isfield(source2.avg, 'csdlabel') || isfield(source2, 'csdlabel'));
 
 source3 = ft_datatype_source(source);
 assert(isequal(getdimord(source3, 'mom'),'{pos}_ori_rpt'));
@@ -38,7 +38,7 @@ assert(isfield(source.avg, 'csdlabel'));
 cfg = [];
 cfg.trials = 1:5;
 source2 = ft_selectdata(cfg, source);
-assert(isfield(source2.avg, 'csdlabel'));
+assert(isfield(source2, 'avg') && isfield(source2.avg, 'csdlabel') || isfield(source2, 'csdlabel'));
 
 source3 = ft_datatype_source(source);
 assert(isequal(getdimord(source3, 'mom'),'{pos}_ori_rpt'));

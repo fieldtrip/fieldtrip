@@ -6,7 +6,7 @@ function test_bug1288
 % this function serves to create planar gradient data and combined planar
 % gradient data, for testing purposes of a fix for bug 1288
 
-load('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg = [];
 cfg.method = 'distance';

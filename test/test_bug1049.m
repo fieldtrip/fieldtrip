@@ -8,7 +8,9 @@ function test_bug1049
 
 % this function creates a set of source-structures to be used for testing
 
+% use FieldTrip defaults instead of personal defaults
 global ft_default;
+ft_default = [];
 ft_default.feedback = 'no';
 
 % get volume conductor model
@@ -61,7 +63,7 @@ cfg.foilim = [0 20];
 cfg.channel = 'MEG';
 freq = ft_freqanalysis(cfg, data);
 
-cd('/home/common/matlab/fieldtrip/data/test/latest/source/meg');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/source/meg'));
 
 % do LCMV beamforming
 cfg            = [];

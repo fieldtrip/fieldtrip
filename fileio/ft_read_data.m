@@ -31,6 +31,9 @@ function [dat] = ft_read_data(filename, varargin)
 %
 % The list of supported file formats can be found in FT_READ_HEADER.
 %
+% To use an external reading function, use key-value pair: 'dataformat', FUNCTION_NAME.
+% (Function needs to be on the path, and take as input: filename, hdr, begsample, endsample, chanindx.)
+%
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
 % Copyright (C) 2003-2016 Robert Oostenveld
@@ -729,7 +732,7 @@ switch dataformat
     % multiplexed data in a *.bin file, accompanied by a MATLAB file containing the header
     offset        = begsample-1;
     numsamples    = endsample-begsample+1;
-    if isfield(hdr, 'precision'),
+    if isfield(hdr, 'precision')
       sampletype  = hdr.precision;
     else
       sampletype  = 'double'; %original format without precision info in hdr is always in double
@@ -843,6 +846,12 @@ switch dataformat
     dat = log(chanindx, begsample:endsample);
     dimord = 'chans_samples';
     
+  case {'homer_nirs'}
+    % Homer files are MATLAB files in disguise
+    orig = load(filename, '-mat');
+    dat = orig.d(begsample:endsample, chanindx);
+    dimord = 'samples_chans';
+
   case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
       % big endian
@@ -1352,10 +1361,17 @@ switch dataformat
     end
     
   otherwise
-    if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
-      dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
-    else
-      error('unsupported data format (%s)', dataformat);
+    % attempt to run dataformat as a function
+    % in case using an external read function was desired, this is where it is executed
+    % if it fails, the regular unsupported error message is thrown
+    try
+      dat = feval(dataformat,filename, hdr, begsample, endsample, chanindx);
+    catch
+      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+        dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
+      else
+        error('unsupported data format (%s)', dataformat);
+      end
     end
 end % switch dataformat
 

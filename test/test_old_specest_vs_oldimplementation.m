@@ -5,11 +5,8 @@ function test_old_specest_vs_oldimplementation
 
 % TEST test_old_specest_vs_oldimplementation
 
-
-
 % read in data from /home/common/testdata (I just my own testdata)
-%data = .....
-
+% data = .....
 
 %% COHERENCE specest_mtmfft
 cfg = [];

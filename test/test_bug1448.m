@@ -7,7 +7,7 @@ function test_bug1448
 
 % this function tests whether the mask is kept inside the call to singleplotTFR
 % load data
-load('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmconvol_trl_ctf275.mat')
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmconvol_trl_ctf275.mat'));
 
 % create mask-field
 freqsize = size(freq.powspctrm);

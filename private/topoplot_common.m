@@ -45,11 +45,10 @@ if Ndata>1 && ~isnumeric(varargin{end})
     
     if k>1
       % create a new figure for the additional input arguments
-      % ensure new figures are all in the same size/position
-      p = get(gcf, 'Position');
-      f = figure();
-      set(f, 'Position', p);
+      % ensure that the new figure appears at the same position
+      f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
     end
+
     if isfield(cfg, 'inputfile')
       cfg = rmfield(cfg, 'inputfile');
     end
@@ -987,14 +986,13 @@ if isfield(cfg, 'inputfile')
 end
 cfg.refchannel = label;
 fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel{:});
-p = get(gcf, 'Position');
-f = figure;
-set(f, 'Position', p);
 cfg.highlight = 'on';
 cfg.highlightsymbol  = '.';
 cfg.highlightcolor   = 'r';
 cfg.highlightsize = 20;
 cfg.highlightchannel =  cfg.refchannel;
+% ensure that the new figure appears at the same position
+f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
 ft_topoplotER(cfg, data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1022,9 +1020,8 @@ if ~isempty(label)
     fprintf('''%s'', ', cfg.channel{i});
   end
   fprintf('''%s''}\n', cfg.channel{end});
-  p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
+  % ensure that the new figure appears at the same position
+  f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
   ft_singleplotER(cfg, data{:});
 end
 
@@ -1049,9 +1046,8 @@ if ~isempty(label)
     fprintf('''%s'', ', cfg.channel{i});
   end
   fprintf('''%s''}\n', cfg.channel{end});
-  p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
+  % ensure that the new figure appears at the same position
+  f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
   ft_singleplotTFR(cfg, data{:});
 end
 

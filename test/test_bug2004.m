@@ -8,6 +8,10 @@ function test_bug2004
 % TEST ft_connectivity_corr
 % TEST ft_connectivity_powcorr_ortho
 
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+
 %% test the functionality of ft_connectivityanalysis with respect to source level data (pcc)
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2004.mat');

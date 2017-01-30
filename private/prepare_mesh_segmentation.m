@@ -40,12 +40,8 @@ else
   cfg.numvertices = ft_getopt(cfg, 'numvertices');
 end
 
-% check that SPM is on the path, try to add the preferred version
-if strcmpi(cfg.spmversion, 'spm2'),
-  ft_hastoolbox('SPM2',1);
-elseif strcmpi(cfg.spmversion, 'spm8'),
-  ft_hastoolbox('SPM8',1);
-end
+% check that the preferred SPM version is on the path
+ft_hastoolbox(cfg.spmversion, 1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to determine the tissue (if not specified)
