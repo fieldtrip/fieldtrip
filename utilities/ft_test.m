@@ -30,9 +30,9 @@ function ft_test(varargin)
 % ========= Reporting on tests =========
 %
 % To print a table with the results on screen, you would do
-%   ft_test result
+%   ft_test report
 % to show all, or for a specific one
-%   ft_test result test_bug46
+%   ft_test report test_bug46
 %
 % Additional query arguments are specified as key-value pairs and can include
 %   matlabversion    = string, for example 2016b
