@@ -8,6 +8,8 @@ function obj=filter(obj, varargin)
 %   'maxwalltime',w     skip test if 'walltime' is set and greater than w
 %   'maxmem,m           skip test if 'mem' is set and greater than m
 %   'loadfile',lf       skip test if it used dccnpath and lf is false
+%   'exclude_if_prefix_equals_failed',e
+%                       skip test if the filename starts with 'failed'
 %
 % Output:
 %   obj                 MoxUnitFieldTripTestSuite instance with the test
