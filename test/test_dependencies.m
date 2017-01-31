@@ -1,6 +1,6 @@
 function [funlist, deplist, depmat] = test_dependencies
 
-% WALLTIME 0:20:00
+% WALLTIME 00:20:00
 % MEM 1gb
 
 % TEST_DEPENDENCIES checks the dependencies on the backward compatibility functions
