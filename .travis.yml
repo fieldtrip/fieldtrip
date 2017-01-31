@@ -15,6 +15,7 @@ env:
     - OCTAVE=octave
  matrix:
     - LIMITS="'maxwalltime',600,'maxmem','1gb'"
+    - LIMITS="'maxwalltime',600,'maxmem','1gb','exclude_if_prefix_equals_failed','yes'"
 before_install:
     # to prevent IPv6 being used for APT
     - sudo bash -c "echo 'Acquire::ForceIPv4 \"true\";' > /etc/apt/apt.conf.d/99force-ipv4"
