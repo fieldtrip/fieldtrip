@@ -1,6 +1,6 @@
 % function failed_tutorial_fem
 
-% WALLTIME 1:00:00
+% WALLTIME 01:00:00
 % MEM 6gb
 
 % TEST ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_headmodel_simbio
