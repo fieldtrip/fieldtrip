@@ -33,6 +33,10 @@ function [data] = ft_channelrepair(cfg, data)
 %   cfg.opto          = structure with optode definition, see FT_DATATYPE_SENS
 %   cfg.optofile      = name of file containing the optode definition, see FT_READ_SENS
 %
+% This function only interpolates data over space, not over time. If you want to
+% interpolate using temporal information, e.g. using a segment of data before and
+% after the nan-marked artifact, you should use FT_INTERPOLATENAN.
+%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
@@ -41,7 +45,7 @@ function [data] = ft_channelrepair(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_MEGREALIGN, FT_MEGPLANAR, FT_PREPARE_NEIGHBOURS
+% See also FT_MEGREALIGN, FT_MEGPLANAR, FT_PREPARE_NEIGHBOURS, FT_INTERPOLATENAN
 
 % Copyright (C) 2004-2009, Robert Oostenveld
 % Copyright (C) 2012-2013, J?rn M. Horschig, Jason Farquhar
