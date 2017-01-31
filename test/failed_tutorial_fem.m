@@ -1,7 +1,9 @@
-% function test_tutorial_fem
+% function failed_tutorial_fem
 
 % WALLTIME 1:00:00
 % MEM 6gb
+
+% TEST ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_headmodel_simbio
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;
@@ -116,8 +118,5 @@ cfg.grid.resolution = 10;
 cfg.elec = elec_aligned2;
 cfg.grid.unit = 'mm';
 source = ft_prepare_sourcemodel(cfg);
-
-
-
 
 
