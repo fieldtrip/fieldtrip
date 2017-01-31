@@ -98,6 +98,10 @@ function filters=get_filter_cell(varargin)
                 value=istrue(raw_value);
                 exclude=@(tc) isequal(get(tc,'dccnpath'),true) && ~value;
 
+            case 'exclude_if_prefix_equals_failed'
+                value=istrue(raw_value);
+                exclude=@(tc) value && filename_starts_with('failed',tc);
+
             otherwise
                 error('unsupported key %s', key);
         end
@@ -105,6 +109,17 @@ function filters=get_filter_cell(varargin)
         filters{k}=key;
         filters{k+1}=exclude;
     end
+
+function tf=filename_starts_with(prefix,test_case)
+    full_path=getLocation(test_case);
+    [unused,filename]=fileparts(full_path);
+
+    pat=['^' regexptranslate('escape',prefix)];
+    tf=~isempty(regexp(filename,pat,'once'));
+
+
+
+
 
 
 function value=from_number_or_parser(raw_value, parser)
