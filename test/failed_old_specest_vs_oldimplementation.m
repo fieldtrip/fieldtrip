@@ -1,4 +1,4 @@
-function test_old_specest_vs_oldimplementation
+function failed_old_specest_vs_oldimplementation
 
 % MEM 1gb
 % WALLTIME 00:10:00

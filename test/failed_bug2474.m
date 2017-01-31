@@ -1,4 +1,4 @@
-function test_bug2474
+function failed_bug2474
 
 % MEM 1000mb
 % WALLTIME 00:10:00

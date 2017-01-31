@@ -1,4 +1,4 @@
-function test_tutorial_natmeg_beamforming
+function failed_tutorial_natmeg_beamforming
 
 % WALLTIME 00:20:00
 % MEM 8gb

@@ -1,4 +1,4 @@
-function test_headmodel_simbio
+function failed_headmodel_simbio
 
 % WALLTIME 00:45:00
 % MEM 16gb

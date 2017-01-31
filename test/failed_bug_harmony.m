@@ -1,4 +1,4 @@
-function test_bug_harmony
+function failed_bug_harmony
 
 % WALLTIME 00:45:00
 % MEM 6gb

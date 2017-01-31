@@ -1,4 +1,4 @@
-function test_corrupt_matfiles
+function failed_corrupt_matfiles
 
 % MEM 8gb
 % WALLTIME 10:00:00

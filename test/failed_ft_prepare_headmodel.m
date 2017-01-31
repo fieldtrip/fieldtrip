@@ -1,4 +1,4 @@
-function test_ft_prepare_headmodel
+function failed_ft_prepare_headmodel
 
 % MEM 20gb
 % WALLTIME 03:00:00

@@ -1,4 +1,4 @@
-function test_spm8
+function failed_spm8
 
 % WALLTIME 00:10:00
 % MEM 3gb

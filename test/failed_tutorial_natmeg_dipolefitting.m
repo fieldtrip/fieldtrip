@@ -1,4 +1,4 @@
-function test_tutorial_natmeg_dipolefitting
+function failed_tutorial_natmeg_dipolefitting
 
 % WALLTIME 00:40:00
 % MEM 10gb

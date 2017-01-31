@@ -1,4 +1,4 @@
-function test_tutorial_headmodel_eeg
+function failed_tutorial_headmodel_eeg
 
 % MEM 5gb
 % WALLTIME 01:30:00
