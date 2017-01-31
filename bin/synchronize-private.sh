@@ -743,20 +743,6 @@ ARRAY+=(inverse/private/ft_inside_vol.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_platform_supports.m
-
-ARRAY=()
-ARRAY+=(engine/private/ft_platform_supports.m)
-ARRAY+=(fileio/private/ft_platform_supports.m)
-ARRAY+=(peer/private/ft_platform_supports.m)
-ARRAY+=(plotting/private/ft_platform_supports.m)
-ARRAY+=(private/ft_platform_supports.m)
-ARRAY+=(qsub/private/ft_platform_supports.m)
-ARRAY+=(test/private/ft_platform_supports.m)
-ARRAY+=(utilities/private/ft_platform_supports.m)
-sync ${ARRAY[*]}
-
-################################################################################
 # ft_preproc_bandpassfilter.m
 
 ARRAY=()
