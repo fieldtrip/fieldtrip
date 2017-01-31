@@ -1,4 +1,4 @@
-function test_headmodel_fns
+function failed_headmodel_fns
 
 % MEM 1500mb
 % WALLTIME 00:10:00

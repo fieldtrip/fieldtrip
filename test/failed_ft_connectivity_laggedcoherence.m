@@ -1,4 +1,4 @@
-function test_ft_connectivity_laggedcoherence
+function failed_ft_connectivity_laggedcoherence
 
 % WALLTIME 00:10:00
 % MEM 3gb

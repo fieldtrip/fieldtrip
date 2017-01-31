@@ -1,4 +1,4 @@
-function test_fieldtrip2fiff
+function failed_fieldtrip2fiff
 
 % MEM 11gb
 % WALLTIME 00:10:00

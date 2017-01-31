@@ -1,4 +1,4 @@
-function test_tutorial_spike
+function failed_tutorial_spike
 
 % MEM 4gb
 % WALLTIME 00:10:00

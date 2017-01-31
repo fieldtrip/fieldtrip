@@ -1,4 +1,4 @@
-function test_tutorial_spikefield
+function failed_tutorial_spikefield
 
 % MEM 2500mb
 % WALLTIME 00:10:00

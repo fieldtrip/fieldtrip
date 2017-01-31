@@ -1,4 +1,4 @@
-function test_tutorial_headmodel_meg(datadir)
+function failed_tutorial_headmodel_meg(datadir)
 
 % MEM 2000mb
 % WALLTIME 00:45:00

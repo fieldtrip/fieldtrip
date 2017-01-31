@@ -1,4 +1,4 @@
-function test_neuromag_units
+function failed_neuromag_units
 
 % MEM 1500mb
 % WALLTIME 00:10:00

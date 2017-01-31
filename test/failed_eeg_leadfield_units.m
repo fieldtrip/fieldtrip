@@ -1,4 +1,4 @@
-function test_eeg_leadfield_units
+function failed_eeg_leadfield_units
 
 % MEM 2000mb
 % WALLTIME 00:10:00

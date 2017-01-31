@@ -1,4 +1,4 @@
-function test_ft_datatype
+function failed_ft_datatype
 
 % MEM 8gb
 % WALLTIME 01:30:00

@@ -1,4 +1,4 @@
-function test_ft_headmodel_bemcp
+function failed_ft_headmodel_bemcp
 
 % MEM 12gb
 % WALLTIME 03:00:00
