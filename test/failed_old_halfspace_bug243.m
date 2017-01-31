@@ -1,4 +1,4 @@
-function test_old_halfspace_bug243
+function failed_old_halfspace_bug243
 
 % MEM 1gb
 % WALLTIME 00:10:00

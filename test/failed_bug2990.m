@@ -1,4 +1,4 @@
-function test_bug2990
+function failed_bug2990
 
 % WALLTIME 0:10:00
 % MEM 2gb

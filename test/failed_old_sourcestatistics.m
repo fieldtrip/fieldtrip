@@ -1,4 +1,4 @@
-function test_old_sourcestatistics
+function failed_old_sourcestatistics
 
 % MEM 1gb
 % WALLTIME 00:10:00

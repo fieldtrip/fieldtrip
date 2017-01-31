@@ -1,4 +1,4 @@
-function test_fairsurface
+function failed_fairsurface
 
 % MEM 1500mb
 % WALLTIME 00:10:00

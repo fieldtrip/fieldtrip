@@ -1,4 +1,4 @@
-function test_ft_statistics_montecarlo
+function failed_ft_statistics_montecarlo
 
 % MEM 4gb
 % WALLTIME 00:20:00

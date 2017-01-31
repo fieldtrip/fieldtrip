@@ -1,4 +1,4 @@
-function test_example_simulate_forward_beamforming
+function failed_example_simulate_forward_beamforming
 
 % MEM 1gb
 % WALLTIME 00:10:00

@@ -1,4 +1,4 @@
-function test_shared_virtual_channels
+function failed_shared_virtual_channels
 
 % MEM 1500mb
 % WALLTIME 00:10:00

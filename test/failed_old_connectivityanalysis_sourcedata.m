@@ -1,4 +1,4 @@
-function test_old_connectivityanalysis_sourcedata
+function failed_old_connectivityanalysis_sourcedata
 
 % MEM 1gb
 % WALLTIME 00:10:00

@@ -1,4 +1,4 @@
-function test_tutorial_ecog_human_anatomy
+function failed_tutorial_ecog_human_anatomy
 
 % MEM 5gb
 % WALLTIME 00:10:00

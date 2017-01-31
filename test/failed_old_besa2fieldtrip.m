@@ -1,4 +1,4 @@
-function test_old_besa2fieldtrip
+function failed_old_besa2fieldtrip
 
 % MEM 1gb
 % WALLTIME 00:10:00

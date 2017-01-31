@@ -1,4 +1,4 @@
-function test_tutorial_spikefield20130308
+function failed_tutorial_spikefield20130308
 
 % MEM 2500mb
 % WALLTIME 00:10:00
