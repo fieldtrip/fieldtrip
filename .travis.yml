@@ -13,6 +13,7 @@ cache:
 matrix:
   include:
   - env: LIMITS="'exclude_if_prefix_equals_failed','yes','maxwalltime',600,'maxmem','1gb'"
+  - env: LIMITS="'exclude_if_prefix_equals_failed','no','maxwalltime',600,'maxmem','1gb'
   allow_failures:
   - env: LIMITS="'exclude_if_prefix_equals_failed','no','maxwalltime',600,'maxmem','1gb'
 before_install:
