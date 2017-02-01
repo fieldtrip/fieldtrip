@@ -80,4 +80,23 @@ cfg.locationcoordinates = 'voxel';
 cfg.location = mri.dim;
 ft_sourceplot(cfg, resliced);
 
+%%
+% Arjen reported that with subject IR32 it fails
+% it is a 512?666?85 CT scan, which is ~30 degrees tilted forward and which has very unisotropic voxels
+
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3235/IR32_CT_coreg.nii');
+
+ct = ft_read_mri(filename);
+
+cfg = [];
+cfg.anaparameter = 'anatomy';
+ft_sourceplot(cfg, ct);
+
+cfg = [];
+cfg.method = 'flip';
+resliced = ft_volumereslice(cfg, mri);
+
+cfg = [];
+cfg.anaparameter = 'anatomy';
+ft_sourceplot(cfg, ct);
 

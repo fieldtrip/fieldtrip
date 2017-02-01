@@ -27,11 +27,12 @@ if nargin<2
   permutevec = 'auto';
 end
 
-if ischar(permutevec)
+if isequal(permutevec, 'auto')
   % determine the order of permutation to make the transformatiom matrix approximately diagonal
   [dum, m1]  = max(abs(T(1,1:3)));
   [dum, m2]  = max(abs(T(2,1:3)));
-  [dum, m3]  = max(abs(T(3,1:3)));
+  % [dum, m3]  = max(abs(T(3,1:3)));
+  [dum, m3]  = setdiff(1:3, [m1 m2]); % whichever dimension remains
   permutevec = [m1 m2 m3];
 end
 
