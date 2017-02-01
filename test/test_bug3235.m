@@ -118,3 +118,9 @@ ft_analysispipeline(cfg, resliced)
 assert(strcmp(resliced.cfg.previous.version.name, which('ft_annotate')))
 assert(strcmp(resliced.cfg.version.name, which('ft_volumereslice')))
 
+%%
+% check the old implicit default
+
+cfg = [];
+resliced = ft_volumereslice(cfg, mri);
+
