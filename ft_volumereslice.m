@@ -85,7 +85,7 @@ else
 end
 
 % set the defaults
-cfg.method     = ft_getopt(cfg, 'interpmethod', 'linear');
+cfg.method     = ft_getopt(cfg, 'method', 'linear');
 cfg.downsample = ft_getopt(cfg, 'downsample', 1);
 
 if isequal(cfg.method, 'flip')
