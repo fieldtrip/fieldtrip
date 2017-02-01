@@ -94,9 +94,27 @@ ft_sourceplot(cfg, ct);
 
 cfg = [];
 cfg.method = 'flip';
-resliced = ft_volumereslice(cfg, mri);
+resliced = ft_volumereslice(cfg, ct);
 
 cfg = [];
 cfg.anaparameter = 'anatomy';
-ft_sourceplot(cfg, ct);
+ft_sourceplot(cfg, resliced);
+
+%% the provenance handling changed a bit, hence I also want to check that
+
+cfg = [];
+cfg.comment = filename;
+ct = ft_annotate(cfg, ct);
+
+cfg = [];
+cfg.method = 'flip';
+cfg.downsample = 2;
+resliced = ft_volumereslice(cfg, ct);
+
+cfg = [];
+ft_analysispipeline(cfg, resliced)
+
+% ft_volumedownsample (called inside ft_volumereslice) should not be visible in the history
+assert(strcmp(resliced.cfg.previous.version.name, which('ft_annotate')))
+assert(strcmp(resliced.cfg.version.name, which('ft_volumereslice')))
 

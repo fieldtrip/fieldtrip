@@ -191,12 +191,12 @@ else
   
   % the actual work is being done by ft_sourceinterpolate
   % this interpolates the real volume on the resolution that is defined for the resliced volume
-  tmpcfg = [];
-  tmpcfg.parameter = fn;
-  tmpcfg.interpmethod = cfg.method;
-  resliced = ft_sourceinterpolate(tmpcfg, mri, resliced);
+  tmpcfg                = [];
+  tmpcfg.parameter      = fn;
+  tmpcfg.interpmethod   = cfg.method;
+  resliced              = ft_sourceinterpolate(tmpcfg, mri, resliced);
   resliced.cfg.previous = resliced.cfg.previous{1}; % the 2nd input is a dummy variable
-  cfg.method = resliced.cfg.interpmethod; % remember the method that was used
+  cfg.method = resliced.cfg.interpmethod;           % remember the method that was used
   % restore the provenance information
   [cfg, resliced] = rollback_provenance(cfg, resliced);
   
