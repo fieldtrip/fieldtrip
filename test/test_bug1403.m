@@ -11,7 +11,7 @@ cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1403/LauraPP1
 data = ft_preprocessing(cfg);
 
 cfg=[];
-cfg.layout = '61chan_MPI.lay';
+cfg.layout = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1403/61chan_MPI.lay');
 cfg.interactive = 'yes';
 figure
 ft_multiplotER(cfg, data);

@@ -12,24 +12,27 @@ function ft_test(varargin)
 %
 % To execute a test and submit the results to the database, you would do
 %   ft_test run
-% to run all, or for a specific one
+% to run all test functions, or
 %   ft_test run test_bug46
+% to run a selected test.
 %
 % Test functions should not require any input arguments. Any output arguments will
 % not be considered.
 %
 % Additional optional arguments are specified as key-value pairs and can include
 %   dependency       = string
+%   upload           = string, upload test results to the dashboard, can be 'yes' or 'no' (default = 'yes')
+%   dccnpath         = string, allow files to be read from the DCCN path, can be 'yes' or 'no' (default is automatic)
+%   assertclean      = string, test whether FT version is clean, can be 'yes' or 'no' (default = 'yes')
 %   maxmem           = number (in bytes) or string such as 10GB
 %   maxwalltime      = number (in seconds) or string such as HH:MM:SS
-%   upload           = string, can be 'yes' or 'no' (default = 'yes')
 %
 % ========= Reporting on tests =========
 %
 % To print a table with the results on screen, you would do
-%   ft_test result
+%   ft_test report
 % to show all, or for a specific one
-%   ft_test result test_bug46
+%   ft_test report test_bug46
 %
 % Additional query arguments are specified as key-value pairs and can include
 %   matlabversion    = string, for example 2016b

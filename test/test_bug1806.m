@@ -43,10 +43,10 @@ cfg = [];
 data_pc = ft_combineplanar(cfg,data_p);
 if isfield(data_pc.grad, 'type')
   % it should again be ctf151
-  assert(strcmp(data_pc.grad.type, 'ctf151'));
+  assert(strcmp(data_pc.grad.type, 'ctf151_planar_combined'));
 else
   warning('gradiometer type is missing');
-  assert(ft_senstype(data_pc.grad, 'ctf151'));
+  assert(ft_senstype(data_pc.grad, 'ctf151_planar_combined'));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

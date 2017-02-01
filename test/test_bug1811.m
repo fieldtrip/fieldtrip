@@ -19,7 +19,7 @@ end
 clear script;
 
 %check ctf275 meg preoprocessed data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat))'
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
 script = ft_analysispipeline(cfg,data);
 
 if isempty(script)

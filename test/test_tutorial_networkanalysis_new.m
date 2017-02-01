@@ -1,7 +1,7 @@
 function test_tutorial_networkanalysis_new
 
-% MEM 3000mb
 % WALLTIME 00:30:00
+% MEM 7gb
 
 % TEST test_tutorial_networkanalysis_new
 % TEST ft_networkanalysis

@@ -17,7 +17,7 @@ trl = cfg.trl;
 
 %% pre-processing and re-referencing
 cfg = [];
-cfg.datafile        = 's04.eeg';
+cfg.datafile        = dataset;
 cfg.trl             = trl;
 
 % Baseline-correction options

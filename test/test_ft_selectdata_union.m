@@ -1,6 +1,6 @@
 function test_ft_selectdata_union
 
-% WALLtime 00:10:00
+% WALLTIME 00:10:00
 % MEM 1gb
 
 % TEST test_ft_selectdata_union

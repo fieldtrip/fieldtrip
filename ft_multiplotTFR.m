@@ -720,9 +720,8 @@ cfg.dataname = info.dataname;
 
 cfg.refchannel = label;
 fprintf('selected cfg.refchannel = ''%s''\n', join_str(', ', cfg.refchannel));
-p = get(gcf, 'Position');
-f = figure;
-set(f, 'Position', p);
+% ensure that the new figure appears at the same position
+f = figure('Position', get(gcf, 'Position'));
 ft_multiplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -749,8 +748,7 @@ if ~isempty(label)
   end
   fprintf('''%s''}\n', cfg.channel{end});
   p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
+  f = figure('position', p);
   ft_singleplotTFR(cfg, varargin{:});
 end
 

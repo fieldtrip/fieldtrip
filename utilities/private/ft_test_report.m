@@ -27,7 +27,7 @@ command = varargin{1};
 assert(isequal(command, 'report'));
 varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'matlabversion', 'fieldtripversion', 'user', 'hostname', 'branch', 'arch'}));
+optbeg = find(ismember(varargin, {'matlabversion', 'fieldtripversion', 'user', 'hostname', 'branch', 'arch', 'showdate', 'showid'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -37,6 +37,8 @@ end
 
 % varargin contains the file (or files) to test
 % optarg contains the command-specific options
+showdate = ft_getopt(optarg, 'showdate', false);
+showid   = ft_getopt(optarg, 'showid', false);
 
 % construct the query string that will be passed in the URL
 query = '?';
@@ -48,7 +50,7 @@ for i=1:numel(queryparam)
   end
 end
 
-options = weboptions('ContentType','json'); % this returns the result as MATLAB structure
+options = weboptions('ContentType','json','Timeout',10); % this returns the result as MATLAB structure
 url = 'http://dashboard.fieldtriptoolbox.org/api/';
 
 if isempty(varargin)
@@ -66,8 +68,17 @@ else
   result = mergecellstruct(results);
 end
 
+% rename the automatically added fields
+result = renamefields(result, 'x_id', 'id');
+result = renamefields(result, 'createDate', 'date');
+
 % remove some of the fields
-result = removefields(result, {'x_id', 'createDate'});
+if ~istrue(showid)
+  result = removefields(result, 'id');
+end
+if ~istrue(showdate)
+  result = removefields(result, 'date');
+end
 
 % convert the struct-array to a table
 table = struct2table(result);
