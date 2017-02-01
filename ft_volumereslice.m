@@ -1,15 +1,23 @@
 function [resliced] = ft_volumereslice(cfg, mri)
 
-% FT_VOLUMERESLICE interpolates and reslices a volume along the
-% principal axes of the coordinate system according to a specified
-% resolution.
+% FT_VOLUMERESLICE flips, permutes, interpolates and reslices a volume along the
+% principal axes of the coordinate system according to a specified resolution.
 %
 % Use as
 %   mri = ft_volumereslice(cfg, mri)
-% where the input mri should be a single anatomical or functional MRI
-% volume that was for example read with FT_READ_MRI.
+% where the input MRI should be a single anatomical or functional MRI volume that
+% results from FT_READ_MRI or FT_VOLUMEREALIGN. You can visualize the the input and
+% output using FT_SOURCEPLOT.
 %
 % The configuration structure can contain
+%   cfg.method     = string, 'flip', 'nearest', 'linear', 'cubic' or 'spline' (default = 'linear')
+%   cfg.downsample = integer number (default = 1, i.e. no downsampling)
+%
+% If you specify the method as 'flip', it will only permute and flip the volume, but
+% not perform any interpolation. For the other methods the input volumetric data will
+% also be interpolated on a regular voxel grid.
+%
+% For the interpolation methods you should specify
 %   cfg.resolution = number, in physical units
 %   cfg.xrange     = [min max], in physical units
 %   cfg.yrange     = [min max], in physical units
@@ -17,9 +25,9 @@ function [resliced] = ft_volumereslice(cfg, mri)
 % or alternatively with
 %   cfg.dim        = [nx ny nz], size of the volume in each direction
 %
-% If the input mri has a coordsys-field, the centre of the volume will be
-% shifted (with respect to the origin of the coordinate system), for the
-% brain to fit nicely in the box.
+% If the input MRI has a coordsys-field and you don't specify explicit the
+% xrange/yrange/zrange, the centre of the volume will be shifted (with respect to the
+% origin of the coordinate system), for the brain to fit nicely in the box.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -29,11 +37,7 @@ function [resliced] = ft_volumereslice(cfg, mri)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE
-
-% Undocumented local options:
-%   cfg.downsample
-%   cfg.method = flip, or an option for cfg.interpmethod in ft_sourceinterpolate
+% See also FT_VOLUMEREALIGN, FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE, FT_SOURCEPLOT
 
 % Copyright (C) 2010-2017, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
@@ -64,7 +68,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar mri
+ft_preamble loadvar    mri
 ft_preamble provenance mri
 ft_preamble trackconfig
 
@@ -81,13 +85,14 @@ else
 end
 
 % set the defaults
-cfg.method     = ft_getopt(cfg, 'method');
+cfg.method     = ft_getopt(cfg, 'interpmethod', 'linear');
 cfg.downsample = ft_getopt(cfg, 'downsample', 1);
+
 if isequal(cfg.method, 'flip')
   % these do not apply when flipping
   cfg = ft_checkconfig(cfg, 'forbidden', {'resolution', 'xrange', 'yrange', 'zrange', 'dim'});
 else
-  % this only applies when interpolating
+  % these only applies when interpolating
   cfg.resolution = ft_getopt(cfg, 'resolution', 1 * ft_scalingfactor('mm', mri.unit)); % default is 1 mm, but the actual number depends on the units. See bug2906
   cfg.xrange     = ft_getopt(cfg, 'xrange', []);
   cfg.yrange     = ft_getopt(cfg, 'yrange', []);

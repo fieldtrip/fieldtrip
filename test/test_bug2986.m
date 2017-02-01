@@ -3,7 +3,7 @@ function test_bug2986
 % WALLTIME 00:20:00
 % MEM 1500mb
 
-% TEST ft_volumerealign
+% TEST ft_volumerealign ft_volumereslice
 % TEST test_bug2986
 
 load standard_mri
