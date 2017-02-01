@@ -76,6 +76,7 @@ end
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel'});
 datain = ft_selectdata(tmpcfg, datain);
+% restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
 
 % ensure that the input data is valid for this function, this will also do
