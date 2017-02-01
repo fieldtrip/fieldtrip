@@ -17,6 +17,9 @@ cfg.continuous  = 'yes';
 cfg.channel     = {'MEG'};
 data = ft_preprocessing(cfg);
 
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+cd(datadir);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BYPASS THE INTERACTIVE PART, DECLARE TRIALS 38 91 153 AS BAD
 %% make a visual inspection and reject bad trials/sensors
