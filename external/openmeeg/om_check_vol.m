@@ -5,12 +5,7 @@ function status = om_check_vol(vol)
 %   returns 1 if there is a problem with geometry
 %   else returns 0
 %
-% Copyright (C) 2010, Alexandre Gramfort, INRIA
-
-% $Id$
-% $LastChangedBy: alegra $
-% $LastChangedDate: 2010-09-06 13:58:49 +0200 (Mon, 06 Sep 2010) $
-% $Revision$
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 openmeeg_license
 om_checkombin;
