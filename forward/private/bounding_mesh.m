@@ -30,7 +30,6 @@ function [inside] = bounding_mesh(pos, pnt, tri)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
 
 % this can be used for printing detailled user feedback
 fb = false;
