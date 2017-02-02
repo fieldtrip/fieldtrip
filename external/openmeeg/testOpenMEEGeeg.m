@@ -3,6 +3,8 @@ function testOpenMEEGeeg
 % TEST testOpenMEEGeeg
 % Test the computation of an EEG leadfield with OpenMEEG
 
+% Copyright (C) 2010-2017, OpenMEEG developers
+
 addpath(cd) % Make sure current folder is in the path
 
 %% Set the position of the probe dipole
