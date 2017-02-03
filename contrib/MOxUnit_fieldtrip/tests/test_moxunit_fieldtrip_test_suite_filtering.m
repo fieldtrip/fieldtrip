@@ -51,7 +51,12 @@ function test_fieldtrip_suite_filter_basics()
                 line=line_cell{j};
                 for m=1:numel(values)
                     value=values{m};
-                    helper_test_single_test_case_filter(label,...
+
+                    test_dir=tempname();
+                    fn=randtestfilename(test_dir);
+
+                    helper_test_single_test_case_filter(fn,...
+                                                        label,...
                                                         value,...
                                                         line,...
                                                         skip_test);
@@ -60,15 +65,35 @@ function test_fieldtrip_suite_filter_basics()
         end
     end
 
-function helper_test_single_test_case_filter(arg,value,...
+function test_fieldtrip_suite_filter_exclude_if_prefix_equals_failed()
+    test_dir=tempname();
+
+    prefix='failed_';
+
+    arg='exclude_if_prefix_equals_failed';
+    no_yes_values={{'no',false},...
+                    {'yes',true}};
+    for k=1:numel(no_yes_values)
+        exclude=k>1;
+        for j=1:numel(no_yes_values{k})
+            value=no_yes_values{k}{j};
+
+            fn=randtestfilename(test_dir,prefix);
+            helper_test_single_test_case_filter(fn,arg,value,'',exclude);
+        end
+    end
+
+
+
+function helper_test_single_test_case_filter(fn,arg,value,...
                                                 line,...
                                                 skip_test)
-    test_dir=tempname();
+
+    % make test case
+    test_dir=fileparts(fn);
     suite=make_basic_test_suite(test_dir);
     dir_cleaner=onCleanup(@()clean_dir(test_dir));
 
-    % make test case
-    fn=randtestfilename(test_dir);
     tc=build_test_case(fn, {line});
 
     % suite is empty initially
@@ -90,8 +115,6 @@ function helper_test_single_test_case_filter(arg,value,...
     report=run(suite,report);
 
     assertEqual(countTestOutcomes(report),1);
-
-    new_tc=getTestNode(suite,1);
 
     % get test outcome.
     outcome=getTestOutcome(report,1);
@@ -118,9 +141,12 @@ function suite=make_basic_test_suite(test_dir)
     mkdir(test_dir);
 
 
-function fn=randtestfilename(parent_dir)
+function fn=randtestfilename(parent_dir,prefix)
+    if nargin<2
+        prefix='test_';
+    end
     test_name=randstr();
-    func_name=sprintf('test_%s',test_name);
+    func_name=sprintf('%s%s',prefix,test_name);
     fn=fullfile(parent_dir,sprintf('%s.m',func_name));
 
 

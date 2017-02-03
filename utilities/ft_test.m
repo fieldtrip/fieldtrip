@@ -36,7 +36,12 @@ function ft_test(varargin)
 % This feature is currently experimental, but should support the same 
 % options as ft_test run (see above), and in addition:
 %   xmloutput         = string, filename for JUnit-like XML file with test
-%                       results (used for shippable CI)
+%                       results (used for shippable CI).
+%   exclude_if_prefix_equals_failed = string, if set to false (or 'no')
+%                       then tests are also run if their filename starts
+%                       with 'failed'. If set to true (or 'yes'), which is
+%                       the default, then filenames starting with 'failed'
+%                       are skipped.
 %
 % ========= Reporting on tests =========
 %

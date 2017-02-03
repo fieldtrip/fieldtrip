@@ -10,11 +10,12 @@ language: java
 
 cache:
   - apt
-env:
- global:
-    - OCTAVE=octave
- matrix:
-    - LIMITS="'maxwalltime',600,'maxmem','1gb'"
+matrix:
+  include:
+  - env: LIMITS="'exclude_if_prefix_equals_failed','yes','maxwalltime',600,'maxmem','1gb'"
+  - env: LIMITS="'exclude_if_prefix_equals_failed','no','maxwalltime',600,'maxmem','1gb','upload','no'"
+  allow_failures:
+  - env: LIMITS="'exclude_if_prefix_equals_failed','no','maxwalltime',600,'maxmem','1gb','upload','no'"
 before_install:
     # to prevent IPv6 being used for APT
     - sudo bash -c "echo 'Acquire::ForceIPv4 \"true\";' > /etc/apt/apt.conf.d/99force-ipv4"
@@ -48,9 +49,13 @@ script:
       else
         EXTRA_ARGS="";
       fi
-    # run the test suite
-    - FULL_ARGS=${LIMITS}${EXTRA_ARGS}
-    - TEST_CMD="ft_defaults;[unused,ft_path]=ft_version();mo_ft_path=fullfile(ft_path,'contrib','MOxUnit_fieldtrip');addpath(mo_ft_path);succes=moxunit_fieldtrip_runtests(${FULL_ARGS});exit(~succes);"
-    - echo Test command $TEST_CMD
-    - octave --eval "${TEST_CMD}"
+    # run the test suite.
+    # Note: with the current matrix settings shippable.com adds an
+    # empty entry with LIMITS=""; in that case we are not running any tests.
+    - if [[ !  -z  $LIMITS  ]]; then
+        FULL_ARGS=${LIMITS}${EXTRA_ARGS};
+        TEST_CMD="ft_defaults;[unused,ft_path]=ft_version();mo_ft_path=fullfile(ft_path,'contrib','MOxUnit_fieldtrip');addpath(mo_ft_path);succes=moxunit_fieldtrip_runtests(${FULL_ARGS});exit(~succes);";
+        echo Test command $TEST_CMD;
+        octave --eval "${TEST_CMD}";
+      fi
 

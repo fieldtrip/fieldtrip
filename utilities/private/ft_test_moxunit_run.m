@@ -24,12 +24,19 @@ function passed = ft_test_moxunit_run(unused,varargin)
 
     % ensure path is set for MOxUnit fieldtrip test functions, but
     % set to original state after running this function
+
+
     orig_path=path();
     path_resetter=onCleanup(@()path(orig_path));
     ensure_moxunit_fieldtrip_path_is_set();
     check_dependencies();
-    
-    passed=moxunit_fieldtrip_runtests(varargin{:});
+
+    % By default, running FieldTrip excludes files if their name
+    % starts with 'failed'. Here this default behaviour is mimicked.
+    override_default_arg={'exclude_if_prefix_equals_failed',true};
+    arg=cat(2,override_default_arg,varargin);
+
+    passed=moxunit_fieldtrip_runtests(arg{:});
 
 
 

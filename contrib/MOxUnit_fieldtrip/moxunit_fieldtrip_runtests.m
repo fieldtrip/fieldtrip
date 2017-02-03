@@ -19,6 +19,10 @@ function passed=moxunit_fieldtrip_runtests(varargin)
 %   'xmloutput',f           Write JUnit-like XML file with test results to
 %                           file f. This can be used with the shippable.com
 %                           continuous integration service.
+%   'exclude_if_prefix_equals_failed',e
+%                           Exclude the test if the filename starts with
+%                           'failed'.
+
 %
 % Output:
 %   passed                  scalar boolean that is false if one or more
@@ -142,7 +146,8 @@ function opt=parse_args(varargin)
                 [pos,value]=get_next_element(varargin,pos);
                 loadfile=istrue(value);
 
-            case {'dependency','maxmem','maxwalltime'}
+            case {'dependency','maxmem','maxwalltime',...
+                        'exclude_if_prefix_equals_failed'}
                 [pos,value]=get_next_element(varargin,pos);
                 filter_args{end+1}=key;
                 filter_args{end+1}=value;
