@@ -90,3 +90,4 @@ end
 
 assert(all(ismember(oldevttable,newevttable)))
 disp('All old events found in new event output.')
+

@@ -9,10 +9,8 @@ function [vol] = openmeeg(vol, isolated)
 %  FieldTrip convention pointing outwards (with respect to the mesh center),
 %  whereas OpenMEEG binaries expect them to be poiting inwards.
 
+% Copyright (C) 2010-2017, OpenMEEG developers
 
-% Copyright (C) 2009, Alexandre Gramfort
-% INRIA Odyssee Project Team
-% $Id$
 warning('OPENMEEG is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''bem_openmeeg'' instead.')
 
 openmeeg_license

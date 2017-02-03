@@ -9,8 +9,7 @@ function [dsm] = openmeeg_dsm(pos, vol, flag)
 % flag = 1 non adaptive algorithm: does not try to approximate the
 % potential in the neighborhodd of the leads, by locally refining the BEM surface
 
-% Copyright (C) 2009, Alexandre Gramfort
-% INRIA Odyssee Project Team
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;

@@ -6,13 +6,7 @@ function [h2mm, s2mm] = openmeeg_megm(pos, vol, sens)
 % Use as
 %   [h2mm,s2mm] = openmeeg_megm(vol, isolated)
 
-% Copyright (C) 2010, Emmanuel Olivi
-% INRIA Athena Project Team
-
-% $Id$
-% $LastChangedBy: alegra $
-% $LastChangedDate: 2010-06-24 14:49:11 +0200 (Thu, 24 Jun 2010) $
-% $Revision$
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
