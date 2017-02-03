@@ -7,8 +7,8 @@ function status = om_check_vol(vol)
 %
 % Copyright (C) 2010-2017, OpenMEEG developers
 
-openmeeg_license
-om_checkombin;
+openmeeg_license;              % show the license (only once)
+prefix = om_checkombin;        % check the installation of the binaries
 
 % the first compartment should be the skin, the last the source
 % flip the order of the compartments if necessary
@@ -55,7 +55,7 @@ try
     om_write_geom(geomfile,bndfile);
 
     % Exe file
-    status = system(['om_check_geom -g ',geomfile]);
+    status = system([prefix 'om_check_geom -g ' geomfile]);
     cleaner(vol,bndfile,geomfile)
     cd(tmpfolder)
 catch
