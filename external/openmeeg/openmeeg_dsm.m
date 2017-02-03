@@ -11,9 +11,11 @@ function [dsm] = openmeeg_dsm(pos, vol, flag)
 
 % Copyright (C) 2010-2017, OpenMEEG developers
 
+openmeeg_license;              % show the license (only once)
+prefix = om_checkombin;        % check the installation of the binaries
+
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
-om_checkombin;
 
 bndom = vol.bnd;
 
@@ -73,9 +75,9 @@ try
       fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
       % the following implements Galerkin method and switch can be -DSM or -DSMNA
       % (non adaptive), see OMtrunk/src/assembleSourceMat.cpp, operators.cpp
-      fprintf(efid,['om_assemble' str ' ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,' 2>&1 > /dev/null\n']);
+      fprintf(efid,[prefix 'om_assemble' str ' ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,' 2>&1 > /dev/null\n']);
     else
-      fprintf(efid,['om_assemble' str ' ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,'\n']);
+      fprintf(efid,[prefix 'om_assemble' str ' ./',geomfile,' ./',condfile,' ./',dipfile,' ./',dsmfile,'\n']);
     end
     
     fclose(efid);
@@ -89,10 +91,10 @@ end
 
 try
     % execute OpenMEEG and read the resulting file
-    disp(['Assembling OpenMEEG DSM matrix']);
+    disp('Assembling OpenMEEG DSM matrix');
     stopwatch = tic;
     if ispc
-        dos([exefile]);
+        dos(exefile);
     else
         dos(['./' exefile]);
     end
