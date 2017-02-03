@@ -52,32 +52,27 @@ function prop=get_all_potential_methods()
     % recent Matlab's webwrite
     prop.webwrite.available=@()~isempty(which('webwrite')) && ...
                                 ~isempty(which('weboptions'));
-    prop.webwrite.func=@webwrite_send;
+    prop.webwrite.func=@matlabge2015a_webwrite_send;
 
     % Unix curl (Octave and older Matlab)
     prop.curl.available=@()isunix() && unix('which curl>/dev/null')==0;
-    prop.curl.func=@curl_send;
+    prop.curl.func=@matlablt2015a_webwrite_send;
 
-
-
-
-function webwrite_send(url, content)
+function matlabge2015a_webwrite_send(url, content)
     options = weboptions('MediaType','application/json');
     webwrite(url, content, options);
 
 
-function curl_send(url, content)
-    string=moxunit_fieldtrip_util_struct2json(content);
-    string=regexprep(string,'"','\\"');
+function matlablt2015a_webwrite_send(varargin)
+    % use webwrite compatibility function (based on curl command line)
+    [unused,ft_root_dir]=ft_version();
+    compat_dir=fullfile(ft_root_dir,'compat','matlablt2015a');
 
-    cmd=sprintf(['curl -s '...
-                '-H "Content-Type: application/json" '...
-                '-X POST '...
-                '-d "%s" %s'],...
-                string,url);
-    [was_failure,output]=unix(cmd);
+    % go to compat directory, ensuring that webwrite is used there
+    orig_pwd=pwd();
+    cleaner=onCleanup(@()cd(orig_pwd));
+    cd(compat_dir);
 
-    if was_failure
-        error('Problem sending content using curl to %s: %s',...
-                        url, output);
-    end
+    % run webwrite
+    webwrite(varargin{:});
+
