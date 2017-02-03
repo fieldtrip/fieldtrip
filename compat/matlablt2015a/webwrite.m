@@ -1,12 +1,26 @@
-function status = webwrite(varargin)
+function status = webwrite(url, data, ignored_options)
 
 % WEBWRITE is a drop-in replacement for the function with the same
 % name that was introduced in MATLAB 2014b. This function is only
 % partially compatible with the original.
 %
+% Usage:
+%   status = webwrite(url, [data], [options])
+%
+% This function posts data (which can be a struct or a string) to url.
+% The options argument is currently ignored.
+%
+% Unlike builtin Matlab webwrite, this function
+% - sets headers always to
+%  'Content-Type: application/json; charset=UTF-8' irrespective of the
+%   contents of the options argument.
+% - the status returned is zero if succesful, and nonzero otherwise
+%
 % This requires that curl is available on the command-line.
+% If curl is not available, or an other error occurs, then this function
+% raises an error.
 
-% Copyright (C) 2017, Robert Oostenveld
+% Copyright (C) 2017, Robert Oostenveld, Nikolaas N. Oosterhof
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -26,31 +40,38 @@ function status = webwrite(varargin)
 %
 % $Id$
 
-url = varargin{1};
-
-if nargin>2
-  data = varargin{2};
-else
+if nargin<2
   data = '';
 end
 
-if nargin>2
-  options = varargin{3};
-else
-  options = {};
+if nargin<3
+  % this code could be removed - it is kept because earlier versions
+  % contained it.
+  ignored_options = {};
 end
 
 if isstruct(data)
-  % convert it to JSON
+  % convert it to JSON string
   data = struct2json(data);
-  data(data==10) = []; % remove newlines
-  data(data==32) = []; % remove spaces
-  cmd = sprintf('curl -H "Content-Type: application/json; charset=UTF-8" -X POST -d ''%s'' %s', data, url);
-elseif ischar(data)
-  % send it as it is
-  cmd = sprintf('curl -H "Content-Type: application/text; charset=UTF-8" -X POST -d ''%s'' %s', data, url);
-else
-  error('unsupported data');
+  assert(ischar(data));
+
+  to_remove=sprintf('[\n ]'); % newlines and spaces
+  data = regexprep(data, to_remove, '');
 end
 
+if ~ischar(data)
+  error('unsupported data: input must be string or struct');
+end
+
+cmd = sprintf(['curl '...
+                '-s '...                                % quiet (no output)
+                '-H "Content-Type: application/json;'...  % JSON data
+                    'charset=UTF-8" '...                % charset
+                '-X POST '...                           % method
+                '-d ''%s'' %s'], ...                    % data and URL
+                data, url);
+
 [status, str] = system(cmd);
+if status
+  error('An error occured when running this command: ''%s'':\n%s',cmd,str);
+end
