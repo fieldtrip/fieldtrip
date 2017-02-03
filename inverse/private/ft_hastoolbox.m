@@ -111,7 +111,7 @@ url = {
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
   'BEMCP'         'contact Christophe Phillips'
-  'OPENMEEG'      'see http://gforge.inria.fr/projects/openmeeg and http://gforge.inria.fr/frs/?group_id=435'
+  'OPENMEEG'      'see http://openmeeg.github.io and http://www.fieldtriptoolbox.org/faq/how_do_i_install_the_openmeeg_binaries'
   'PRTOOLS'       'see http://www.prtools.org'
   'ITAB'          'contact Stefania Della Penna'
   'BSMART'        'see http://www.brain-smart.org'
@@ -216,8 +216,7 @@ switch toolbox
   case 'MRI'    % other functions in the mri section
     dependency = {'avw_hdr_read', 'avw_img_read'};
   case 'NEUROSHARE'
-    dependency = {'ns_OpenFile', 'ns_SetLibrary', ...
-                            'ns_GetAnalogData'};
+    dependency = {'ns_OpenFile', 'ns_SetLibrary', 'ns_GetAnalogData'};
   case 'ARTINIS'
     dependency = {'read_artinis_oxy3'};
   case 'BESA'
@@ -245,21 +244,21 @@ switch toolbox
   case '4D-VERSION'
     dependency  = {'read4d', 'read4dhdr'};
   case {'STATS', 'STATISTICS'}
-    dependency = has_license('statistics_toolbox');         % check the availability of a toolbox license
+    dependency = has_license('statistics_toolbox');               % also check the availability of a toolbox license
   case {'OPTIM', 'OPTIMIZATION'}
-    dependency = has_license('optimization_toolbox');       % check the availability of a toolbox license
+    dependency = has_license('optimization_toolbox');             % also check the availability of a toolbox license
   case {'SPLINES', 'CURVE_FITTING'}
-    dependency = has_license('curve_fitting_toolbox');      % check the availability of a toolbox license
+    dependency = has_license('curve_fitting_toolbox');            % also check the availability of a toolbox license
   case 'COMM'
     dependency = {has_license('communication_toolbox'), 'de2bi'}; % also check the availability of a toolbox license
   case 'SIGNAL'
-    dependency = {has_license('signal_toolbox'), 'window'}; % also check the availability of a toolbox license
+    dependency = {has_license('signal_toolbox'), 'window'};       % also check the availability of a toolbox license
   case 'IMAGE'
-    dependency = has_license('image_toolbox');              % check the availability of a toolbox license
+    dependency = has_license('image_toolbox');                    % also check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
-    dependency = has_license('distrib_computing_toolbox');  % check the availability of a toolbox license
+    dependency = has_license('distrib_computing_toolbox');        % also check the availability of a toolbox license
   case 'COMPILER'
-    dependency = has_license('compiler');                   % check the availability of a toolbox license
+    dependency = has_license('compiler');                         % also check the availability of a toolbox license
   case 'FASTICA'
     dependency = 'fpica';
   case 'BRAINSTORM'
@@ -271,8 +270,7 @@ switch toolbox
   case 'BCI2000'
     dependency  = {'load_bcidat'};
   case 'NLXNETCOM'
-    dependency = {'MatlabNetComClient', 'NlxConnectToServer', ...
-                    'NlxGetNewCSCData'};
+    dependency = {'MatlabNetComClient', 'NlxConnectToServer', 'NlxGetNewCSCData'};
   case 'DIPOLI'
     dependency = {'dipoli.maci', 'file'};
   case 'MNE'
@@ -366,8 +364,7 @@ switch toolbox
 
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
-    dependency = {'ft_read_header', 'ft_read_data', ...
-                    'ft_read_event', 'ft_read_sens'};
+    dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
   case 'FORWARD'
     dependency = {'ft_compute_leadfield', 'ft_prepare_vol_sens'};
   case 'PLOTTING'
@@ -425,8 +422,8 @@ if autoadd>0 && ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
     licensefile = [lower(toolbox) '_license'];
     if status && exist(licensefile, 'file')
-      % this will execute openmeeg_license and mne_license
-      % which display the license on screen for three seconds
+      % this will execute openmeeg_license, mne_license and artinis_license
+      % which display the license on screen for a few seconds
       feval(licensefile);
     end
   end
