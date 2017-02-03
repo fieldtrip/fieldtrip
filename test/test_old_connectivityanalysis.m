@@ -7,6 +7,14 @@ function test_old_connectivityanalysis
 
 % this script tests the functionality of connectivityanalysis
 
+is_octave=~ft_platform_supports('matlabversion',1,inf);
+if is_octave
+  % TODO: figure out what the issue is here
+  % Note: this seems hard to reproduce on non-Travis system
+  reason='This test can crash Octave on travis and has been distabled';
+  moxunit_throw_test_skipped_exception(reason)
+end
+
 % first create some data
 cfg             = [];
 cfg.method      = 'linear_mix'; 
