@@ -49,11 +49,11 @@ install:
     - travis_retry sudo apt-get -y -qq install units
     - pkgs="general io control signal statistics"
     # install Octave packages
-    - for pkg in $packages; do
+    - for pkg in $pkgs; do
          octave --eval "pkg('install','-forge','-auto','${pkg}');";
       done
     # ensure packages are loaded on startup
-    - for pkg in $packages; do
+    - for pkg in $pkgs; do
          echo "pkg load $pkg" >> ${HOME}/.octaverc;
       done
     # print packages
