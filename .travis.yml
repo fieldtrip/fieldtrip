@@ -27,6 +27,8 @@ before_install:
     - travis_retry sudo apt-get -y -qq install php5-curl
     # get Octave 4.0
     - travis_retry sudo apt-get -y -qq install octave
+    # get mkoctfile to build mex files
+    - travis_retry sudo apt-get -y -qq install liboctave-dev    
     # get Clang compiler (for Octave packages)
     - travis_retry sudo apt-get -y install clang
     - sudo update-alternatives --set c++ /usr/bin/clang++
@@ -50,7 +52,7 @@ install:
     - pkgs="general io control signal statistics"
     # install Octave packages
     - for pkg in $pkgs; do
-         octave --eval "pkg('install','-forge','-auto','${pkg}');";
+         octave --eval "fprintf('Installing %s\n','${pkg}');pkg('install','-forge','-auto','${pkg}');";
       done
     # ensure packages are loaded on startup
     - for pkg in $pkgs; do
@@ -58,6 +60,7 @@ install:
       done
     # print packages
     - octave --eval "fprintf('Installed packages:\n');pkg('list')"
+    - cat ${HOME}/.octaverc
 
 script:
     # before running the tests, test the test functions that run the tests
