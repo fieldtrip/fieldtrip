@@ -27,6 +27,12 @@ before_install:
     - travis_retry sudo apt-get -y -qq install php5-curl
     # get Octave 4.0
     - travis_retry sudo apt-get -y -qq install octave
+    # get Clang compiler (for Octave packages)
+    - travis_retry sudo apt-get -y install clang
+    - sudo update-alternatives --set c++ /usr/bin/clang++
+    - sudo ln -f -s /usr/bin/clang++ /usr/bin/g++
+    - c++ --version
+    - g++ --version
     # install MOxUnit
     - cd ..
     - rm -rf MOxUnit
@@ -38,6 +44,20 @@ before_install:
     - if [[  "$SHIPPABLE" == "true"  ]]; then
           rm -f shippable/testresults/*.xml;
       fi
+
+install:
+    - travis_retry sudo apt-get -y -qq install units
+    - pkgs="general io control signal statistics"
+    # install Octave packages
+    - for pkg in $packages; do
+         octave --eval "pkg('install','-forge','-auto','${pkg}');";
+      done
+    # ensure packages are loaded on startup
+    - for pkg in $packages; do
+         echo "pkg load $pkg" >> ${HOME}/.octaverc;
+      done
+    # print packages
+    - octave --eval "fprintf('Installed packages:\n');pkg('list')"
 
 script:
     # before running the tests, test the test functions that run the tests
