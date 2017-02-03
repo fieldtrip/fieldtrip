@@ -2074,6 +2074,16 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(forward/private/plgndr.m)
 ARRAY+=(private/plgndr.m)
+ARRAY+=(src/plgndr.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# plgndr.c
+
+ARRAY=()
+ARRAY+=(forward/private/plgndr.c)
+ARRAY+=(private/plgndr.c)
+ARRAY+=(src/plgndr.c)
 sync ${ARRAY[*]}
 
 ################################################################################
