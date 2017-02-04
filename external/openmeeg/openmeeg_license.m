@@ -23,7 +23,7 @@ if ~status
   end
   [p, f] = fileparts(tmp);
   fprintf('==============================================================================\n');
-  type(fullfile(p, 'COPYING'));
+  type(fullfile(p, 'LICENSE'));
   fprintf('==============================================================================\n');
   % remember that it has been shown
   status = true;

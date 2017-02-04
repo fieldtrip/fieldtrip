@@ -4,7 +4,7 @@ function test_bug1368
 % WALLTIME 00:20:00
 
 % TEST test_bug1368
-% TEST ft_prepare_sourcemodel headsurface
+% TEST ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;
