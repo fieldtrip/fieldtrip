@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = plgndr(varargin)
 
 % PLGNDR associated Legendre function
 %
@@ -33,31 +33,30 @@ function [varargout] = funname(varargin)
 % compile the missing mex file on the fly
 % remember the original working directory
 pwdir = pwd;
+pwdir_ressetter=onCleanup(@()cd(pwdir));
 
 % determine the name and full path of this function
 funname = mfilename('fullpath');
 mexsrc  = [funname '.c'];
 [mexdir, mexname] = fileparts(funname);
 
-try
+mexfullpath=fullfile(mexdir,sprintf('%s.%s',mexname,mexext()));
+disp(mexfullpath);
+has_mex_func=@()exist(mexfullpath,'file');
+
+if ~has_mex_func()
   % try to compile the mex file on the fly
   warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
   mex(mexsrc);
-  cd(pwdir);
-  success = true;
 
-catch
-  % compilation failed
-  disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
-  cd(pwdir);
-  success = false;
+  if ~has_mex_func()
+    error('could not locate / compile MEX file for %s in %s', ...
+                mexname, mexfullpath);
+  end
 end
 
-if success
-  % execute the mex file that was juist created
-  funname   = mfilename;
-  funhandle = str2func(funname);
-  [varargout{1:nargout}] = funhandle(varargin{:});
-end
+% execute the mex file that was juist created
+funname   = mfilename;
+funhandle = str2func(funname);
+[varargout{1:nargout}] = funhandle(varargin{:});
