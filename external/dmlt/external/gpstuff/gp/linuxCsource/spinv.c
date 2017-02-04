@@ -42,7 +42,6 @@
 #include <stdio.h>
 #include "cholmod_matlab.h"
 #include "mex.h"
-#include "matrix.h"
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 

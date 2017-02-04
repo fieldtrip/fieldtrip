@@ -14,7 +14,6 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include "mex.h"
-#include "matrix.h"
 
 #define ACQ_MSGQ_SIZE      600
 #define ACQ_MSGQ_SHMKEY    0x39457f73

@@ -40,7 +40,6 @@ Z=repop(X,'*',Y(:,:));   T=X.*repmat(Y(:,:),[1,1]);
 */
 
 #include "mex.h"
-#include "matrix.h"
 #include "mxInfo.h"
 #include "mxInfo_mex.h"
 #include "string.h"

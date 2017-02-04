@@ -7,7 +7,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include "buffer.h"
 
 #define SIZE_NIFTI_1   348

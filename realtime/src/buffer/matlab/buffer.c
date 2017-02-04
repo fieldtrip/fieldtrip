@@ -8,7 +8,6 @@
 #include <string.h>
 
 #include "mex.h"
-#include "matrix.h"
 #include "buffer.h"
 #include <pthread.h>
 #include "extern.h"

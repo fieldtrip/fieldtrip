@@ -5,7 +5,6 @@
 */
 
 #include "mex.h"
-#include "matrix.h"
 #include "buffer.h"
 #include "buffer_mxutils.h"
 

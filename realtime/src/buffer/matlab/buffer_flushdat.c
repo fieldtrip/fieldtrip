@@ -7,7 +7,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include "buffer.h"
 
 int buffer_flushdat(int server, mxArray *plhs[], const mxArray *prhs[])

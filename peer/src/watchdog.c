@@ -20,7 +20,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include <pthread.h>
 
 #include "peer.h"

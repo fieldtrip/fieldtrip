@@ -669,7 +669,6 @@
 
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
-#include "matrix.h"
 #endif /* MATLAB_MEX_FILE */
 
 #if !defined (NPRINT) || !defined (NDEBUG)
