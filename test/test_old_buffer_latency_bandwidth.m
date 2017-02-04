@@ -14,7 +14,7 @@ if is_octave
   %   In file included from $OCTAVE/4.0.3/include/octave-4.0.3/octave/matrix.h:30:
   %   In file included from $OCTAVE/4.0.3/include/octave-4.0.3/octave/mx-base.h:28:
   %   $OCTAVE/4.0.3/include/octave-4.0.3/octave/MatrixType.h:27:1: error:
-        unknown type name 'class'
+  %     unknown type name 'class'
   %   class Matrix;
   %   ^
   %
