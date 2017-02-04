@@ -58,6 +58,8 @@ install:
     - for pkg in $pkgs; do
          echo "pkg load $pkg" >> ${HOME}/.octaverc;
       done
+    # attempt to address problem with io package by not loading it
+    - echo "pkg unload io" >> ${HOME}/.octaverc;
     # print packages
     - octave --eval "fprintf('Installed packages:\n');pkg('list')"
     - cat ${HOME}/.octaverc
