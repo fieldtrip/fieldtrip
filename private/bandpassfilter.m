@@ -72,7 +72,8 @@ switch type
     if isempty(N)
       N = 25;
     end
-    [B, A] = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
+    B = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
+    A = 1;
 end
 
 % apply filter to the data
