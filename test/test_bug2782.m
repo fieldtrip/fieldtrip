@@ -16,7 +16,7 @@ timelock.trialinfo = 1:11;
 
 cfg = [];
 cfg.trials = 1;
-tmp = ft_selectdata(cfg,timelock)
+tmp = ft_selectdata(cfg,timelock);
 
 % this should not change
 assert(size(tmp.trialinfo,1)==1);
@@ -33,7 +33,7 @@ raw.sampleinfo = [1 1000];
 
 cfg = [];
 cfg.trials = 1;
-tmp = ft_selectdata(cfg,raw)
+tmp = ft_selectdata(cfg,raw);
 
 % this should not change
 assert(size(tmp.sampleinfo,1)==1);
@@ -52,7 +52,7 @@ end
 cfg = [];
 cfg.trials = 5;
 cfg.latency = [0.1 0.3];
-tmp = ft_selectdata(cfg, raw)
+tmp = ft_selectdata(cfg, raw);
 
 assert(tmp.time{1}(  1)==0.1);
 assert(tmp.time{1}(end)==0.3);

@@ -139,18 +139,18 @@ figure; ft_plot_mesh(meshA,'surfaceonly','yes')
 cfg=[];
 cfg.tissue='tissue_1';
 cfg.numvertices=3000;
-meshA=ft_prepare_mesh(cfg,seg3)
-meshB=ft_prepare_mesh(cfg,seg3p)
+meshA=ft_prepare_mesh(cfg,seg3);
+meshB=ft_prepare_mesh(cfg,seg3p);
 assert(isequalwithoutcfg(meshA,meshB),'error: 07');
 assert(isfield(meshA,'pnt') && isfield(meshA,'tri') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 cfg.method='hexahedral';
-meshA=ft_prepare_mesh(cfg,seg3)
-meshB=ft_prepare_mesh(cfg,seg3p)
+meshA=ft_prepare_mesh(cfg,seg3);
+meshB=ft_prepare_mesh(cfg,seg3p);
 assert(isequalwithoutcfg(meshA,meshB),'error: 08');
 assert(isfield(meshA,'pnt') && isfield(meshA,'hex') && isfield(meshA,'unit'), 'Missing field(s) in mesh structure');
 assert(isequalwithoutcfg(meshA.tissuelabel, {'tissue_1'}), 'error:09');
 cfg.tissue='tissue_2';
-meshB=ft_prepare_mesh(cfg,seg3)
+meshB=ft_prepare_mesh(cfg,seg3);
 assert(isequalwithoutcfg(meshB.tissuelabel, {'tissue_2'}), 'error:10');
 meshA=rmfield(meshA,'tissuelabel');
 meshB=rmfield(meshB,'tissuelabel');

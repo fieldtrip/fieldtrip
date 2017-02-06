@@ -126,7 +126,7 @@ avgFICplanarComb = ft_combineplanar(cfg,avgFICplanar);
 it = 5; % #iterations
 i = 0;
 while it < i
-    [a, b] = nanmax(nanmax(avgFICplanarComb.avg, [], 2))
+    [a, b] = nanmax(nanmax(avgFICplanarComb.avg, [], 2));
     if (b~=29) || b~= 53 || b~=4 || b~=28 || b~=3
         error('the global maxima has moved location');
     else
@@ -138,7 +138,7 @@ fprintf('global maxima seems all fine\n');
 
 i = 0;
 while it < i
-    [a, b] = nanmin(nanmin(avgFICplanarComb.avg, [], 2))
+    [a, b] = nanmin(nanmin(avgFICplanarComb.avg, [], 2));
     if b~=21|| b~=33 || b~=133 || b~=92 || b~=144
         error('the global minima has moved location');
     else

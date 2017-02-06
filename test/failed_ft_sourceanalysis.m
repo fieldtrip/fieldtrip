@@ -132,7 +132,7 @@ combination = test_ft_sourceanalysis_combinations_allowed;
 % tested to generate an explicit error -> using freq data for time domain
 % methods, or using tlck data for freq domain methods.
 
-type = {datainfo.type}'
+type = {datainfo.type}';
 sel  = strcmp(type, 'meg');
 datainfo = datainfo(sel);
 

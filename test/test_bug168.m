@@ -84,7 +84,7 @@ inlist = {
 [outlist, depmat] = mydepfun(inlist);
 
 problem = ~cellfun(@isempty, regexp(outlist, 'compat'));
-problem = outlist(problem)  % display the output
+problem = outlist(problem)  % display the output;
 
 if ~isempty(problem)
   error('there are some files that depend on the compat functions');

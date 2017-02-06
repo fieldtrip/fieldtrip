@@ -34,7 +34,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
+source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii');
 
 cfg = [];
 cfg.filetype  = 'cifti';
@@ -42,7 +42,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, source1);
 
-source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
+source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii');
 
 % assert(isequal(source , source1)); % source1 has more details
 % assert(isequal(source1, source2)); % numerical differences
@@ -66,7 +66,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
+source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii');
 
 cfg = [];
 cfg.filetype  = 'cifti';
@@ -74,7 +74,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096b';
 ft_sourcewrite(cfg, source1);
 
-source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
+source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii');
 
 % assert(isequal(source , source1));
 % assert(isequal(source1, source2));
@@ -103,7 +103,7 @@ cfg.parameter = 'imagcoh';
 cfg.filename  = 'test_bug2096b.imagcoh';
 ft_sourcewrite(cfg, source1);
 
-source2 = ft_read_cifti('test_bug2096b.imagcoh.dconn.nii')
+source2 = ft_read_cifti('test_bug2096b.imagcoh.dconn.nii');
 
 % assert(isequal(source , source1));
 % assert(isequal(source2, source1));
@@ -150,7 +150,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii')
+source1 = ft_read_cifti('test_bug2096.pow.dscalar.nii');
 
 cfg = [];
 cfg.filetype  = 'cifti';
@@ -158,7 +158,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, source1);
 
-source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii')
+source2 = ft_read_cifti('test_bug2096b.pow.dscalar.nii');
 
 cfg = [];
 cfg.parameter = 'pow';
@@ -178,7 +178,7 @@ cfg.parcellation = 'tissue';
 cfg.filename  = 'test_bug2096.pow';
 ft_sourcewrite(cfg, sourcep);
 
-sourcep1 = ft_read_cifti('test_bug2096.pow.pscalar.nii')
+sourcep1 = ft_read_cifti('test_bug2096.pow.pscalar.nii');
 
 cfg = [];
 cfg.filetype  = 'cifti';
@@ -186,7 +186,7 @@ cfg.parameter = 'pow';
 cfg.filename  = 'test_bug2096b.pow';
 ft_sourcewrite(cfg, sourcep1);
 
-sourcep2 = ft_read_cifti('test_bug2096b.pow.pscalar.nii')
+sourcep2 = ft_read_cifti('test_bug2096b.pow.pscalar.nii');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % specific tests for dscalar, dtseries, dconn
@@ -213,7 +213,7 @@ cfg.parameter = 'activity';
 cfg.filename  = 'test_bug2096.activity';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.activity.dscalar.nii')
+source1 = ft_read_cifti('test_bug2096.activity.dscalar.nii');
 ft_plot_mesh(source1, 'vertexcolor', source1.activity(:,1), 'edgecolor', 'none')
 
 %% test the dtsetries output
@@ -239,7 +239,7 @@ cfg.parameter = 'timeseries';
 cfg.filename  = 'test_bug2096.timeseries';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii')
+source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii');
 ft_plot_mesh(source1, 'vertexcolor', source1.timeseries(:,1), 'edgecolor', 'none')
 
 %% test the dconn output
@@ -261,7 +261,7 @@ cfg.parameter = 'imagcoh';
 cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii')
+source1 = ft_read_cifti('test_bug2096.imagcoh.dconn.nii');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % specific tests for pscalar, ptseries, pconn
@@ -294,7 +294,7 @@ cfg.parameter = 'activity';
 cfg.filename  = 'test_bug2096.activity';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.activity.pscalar.nii')
+source1 = ft_read_cifti('test_bug2096.activity.pscalar.nii');
 
 figure
 ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation(:), 'edgecolor', 'none')
@@ -328,7 +328,7 @@ cfg.parameter = 'timeseries';
 cfg.filename  = 'test_bug2096.timeseries';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.timeseries.ptseries.nii')
+source1 = ft_read_cifti('test_bug2096.timeseries.ptseries.nii');
 
 figure
 ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation, 'edgecolor', 'none')
@@ -358,7 +358,7 @@ cfg.parameter = 'imagcoh';
 cfg.filename  = 'test_bug2096.imagcoh';
 ft_sourcewrite(cfg, source);
 
-source1 = ft_read_cifti('test_bug2096.imagcoh.pconn.nii')
+source1 = ft_read_cifti('test_bug2096.imagcoh.pconn.nii');
 
 figure
 ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcellation, 'edgecolor', 'none')

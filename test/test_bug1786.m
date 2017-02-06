@@ -926,7 +926,7 @@ for c = 1:length(CHAN),
         CHAN1020(c) = index;
         XYZ1020(c,:) = [ x(index), y(index), z(index) ];
     else
-        msg = sprintf('No match for channel: %s\n',chan)
+        msg = sprintf('No match for channel: %s\n',chan);
         error(msg)
     end
 end

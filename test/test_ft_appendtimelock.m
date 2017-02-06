@@ -54,10 +54,10 @@ cfg=[];
 tlock1=ft_timelockanalysis(cfg,dataFC_LP);
 
 cfg=[];
-cfg.channel={'MLT*'}
+cfg.channel={'MLT*'};
 tlockl=ft_timelockanalysis(cfg,dataFC_LP);
 cfg=[];
-cfg.channel={'MRT*'}
+cfg.channel={'MRT*'};
 tlockr=ft_timelockanalysis(cfg,dataFC_LP);
 
 % should concat over channels
@@ -92,9 +92,9 @@ assert(logical(catchflag))
 cfg=[];
 cfg.keeptrials = 'yes';
 tlock1=ft_timelockanalysis(cfg,dataFC_LP);
-cfg.channel={'MLT*'}
+cfg.channel={'MLT*'};
 tlockl=ft_timelockanalysis(cfg,dataFC_LP);
-cfg.channel={'MRT*'}
+cfg.channel={'MRT*'};
 tlockr=ft_timelockanalysis(cfg,dataFC_LP);
 
 % should concat over channels

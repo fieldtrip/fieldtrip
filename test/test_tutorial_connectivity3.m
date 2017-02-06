@@ -22,7 +22,7 @@ end
 load(fullfile(datadir, 'source.mat'));
 
 [maxval, maxindx] = max(source.avg.coh);
-maxpos = source.pos(maxindx,:)
+maxpos = source.pos(maxindx,:);
 
 load(fullfile(datadir,'data.mat'));
 
