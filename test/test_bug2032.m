@@ -1,4 +1,4 @@
-function failed_bug2032
+function test_bug2032
 
 % WALLTIME 00:20:00
 % MEM 2gb
@@ -47,7 +47,6 @@ filename = {
 
 for i=1:numel(filename)
   surface = ft_read_headshape(fullfile(ftpath, filename{i}));
-  figure; ft_plot_mesh(surface); ft_plot_axes(surface); title(filename{i});
   assert(isfield(surface, 'unit'), sprintf('unit missing in %s', filename{i}));
   assert(isfield(surface, 'coordsys'), sprintf('coordsys missing in %s', filename{i}));
 end

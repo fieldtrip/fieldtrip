@@ -322,11 +322,15 @@ if hasatlas
     atlas = cfg.atlas;
   end
   % ensure that the atlas is formatted properly
-  atlas = ft_checkdata(atlas, 'hasunit', 'yes', 'hascoordsys', 'yes');
-  % ensure that the coordinate systems match
-  assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
-  % ensure that the units are consistent, the atlas will be converted if required
-  atlas = ft_convert_units(atlas, functional.unit);
+  atlas = ft_checkdata(atlas, 'hasunit', isfield(functional, 'unit'), 'hascoordsys', isfield(functional, 'coordsys'));
+  if isfield(functional, 'unit')
+    % ensure that the units are consistent, convert the units if required
+    atlas = ft_convert_units(atlas, functional.unit);
+  end
+  if isfield(functional, 'coordsys')
+    % ensure that the coordinate systems match
+    assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
+  end
 end
 
 hasroi = ~isempty(cfg.roi);
@@ -1055,16 +1059,25 @@ switch cfg.method
       interpolate2surf = 1;
     end
     
-    if interpolate2surf,
+    if interpolate2surf
       % deal with the interpolation
       % FIXME this should be dealt with by ft_sourceinterpolate
       
       % read the triangulated cortical surface from file
       surf = ft_read_headshape(cfg.surffile);
-      
-      if isfield(surf, 'transform'),
-        % compute the surface vertices in head coordinates
+      if isfield(surf, 'transform')
+        % compute the vertex positions in head coordinates
         surf.pos = ft_warp_apply(surf.transform, surf.pos);
+      end
+      % ensure that the surface is formatted properly
+      surf = ft_checkdata(surf, 'hasunit', isfield(functional, 'unit'), 'hascoordsys', isfield(functional, 'coordsys'));
+      if isfield(functional, 'unit')
+        % ensure that the units are consistent, convert the units if required
+        surf = ft_convert_units(surf, functional.unit);
+      end
+      if isfield(functional, 'coordsys')
+        % ensure that the coordinate systems match
+        assert(isequal(functional.coordsys, surf.coordsys), 'coordinate systems do not match');
       end
       
       % downsample the cortical surface
