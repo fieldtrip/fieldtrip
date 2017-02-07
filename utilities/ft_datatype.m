@@ -106,7 +106,7 @@ elseif isvolume
 elseif ismesh && isparcellation
   type = 'mesh+label';
 elseif issource && isparcellation
-  type = 'pos+label';
+  type = 'source+label';
 elseif issource && ismesh
   type = 'mesh';
 elseif ismesh
