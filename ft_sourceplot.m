@@ -321,6 +321,10 @@ if hasatlas
   else
     atlas = cfg.atlas;
   end
+  % ensure that the coordinate systems match
+  assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
+  % ensure that the units are consistent, the atlas will be converted if required
+  atlas = ft_convert_units(atlas, functional.unit);
 end
 
 hasroi = ~isempty(cfg.roi);
