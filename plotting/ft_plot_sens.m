@@ -209,26 +209,6 @@ if istrue(orientation)
   end
 end
 
-% determine the rotation-around-the-axis of each sensor
-% only applicable for neuromag planar gradiometers
-if ft_senstype(sens, 'neuromag')
-  [nchan, ncoil] = size(sens.tra);
-  chandir = nan(nchan,3);
-  for i=1:nchan
-    poscoil = find(sens.tra(i,:)>0);
-    negcoil = find(sens.tra(i,:)<0);
-    if numel(poscoil)==1 && numel(negcoil)==1
-      % planar gradiometer
-      direction = sens.coilpos(poscoil,:)-sens.coilpos(negcoil,:);
-      direction = direction/norm(direction);
-      chandir(i,:) = direction;
-    elseif (numel([poscoil negcoil]))==1
-      % magnetometer
-    elseif numel(poscoil)>1 || numel(negcoil)>1
-      error('cannot work with balanced gradiometer definition')
-    end
-  end
-end
 
 if istrue(coil)
   % simply get the position of all coils or electrodes
@@ -263,14 +243,36 @@ else
 end % if istrue(coil)
 
 switch coilshape
-  case 'point'
-    hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', 30, 'Color', edgecolor);
-  case 'circle'
-    plotcoil(pos, ori, [],      coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-  case 'square'
-    plotcoil(pos, ori, chandir, coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-  otherwise
-    error('incorrect coilshape');
+    case 'point'
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', 30, 'Color', edgecolor);
+    case 'circle'
+        plotcoil(pos, ori, [],      coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    case 'square'
+        
+        % determine the rotation-around-the-axis of each sensor
+        % only applicable for neuromag planar gradiometers
+        if ft_senstype(sens, 'neuromag')
+            [nchan, ncoil] = size(sens.tra);
+            chandir = nan(nchan,3);
+            for i=1:nchan
+                poscoil = find(sens.tra(i,:)>0);
+                negcoil = find(sens.tra(i,:)<0);
+                if numel(poscoil)==1 && numel(negcoil)==1
+                    % planar gradiometer
+                    direction = sens.coilpos(poscoil,:)-sens.coilpos(negcoil,:);
+                    direction = direction/norm(direction);
+                    chandir(i,:) = direction;
+                elseif (numel([poscoil negcoil]))==1
+                    % magnetometer
+                elseif numel(poscoil)>1 || numel(negcoil)>1
+                    error('cannot work with balanced gradiometer definition')
+                end
+            end
+        end
+        
+        plotcoil(pos, ori, chandir, coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    otherwise
+        error('incorrect coilshape');
 end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
