@@ -34,7 +34,7 @@ for k = [1 2]
   ylabel('normalized voltage')
 end
 
-event = ft_read_event(filenex)
+event = ft_read_event(filenex);
 
 cfg          = []; 
 cfg.dataset  = filenex;
@@ -53,11 +53,11 @@ cfg.trl                 = [0 hdr.nSamples*hdr.TimeStampPerSample 0];
 cfg.timestampspersecond =  spike.hdr.FileHeader.Frequency; % 40000
 spike_notrials   = ft_spike_maketrials(cfg,spike); 
 
-dat = ft_checkdata(spikeTrials,'datatype', 'raw', 'fsample', 1000)
+dat = ft_checkdata(spikeTrials,'datatype', 'raw', 'fsample', 1000);
 
 dat.trial{1}(:,4000:4004)
 
-spike_converted = ft_checkdata(dat,'datatype', 'spike')
+spike_converted = ft_checkdata(dat,'datatype', 'spike');
 
 cfg       = [];
 cfg.bins  = [0:0.0005:0.1]; % use bins of 0.5 milliseconds
@@ -80,7 +80,7 @@ filet = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spike/tt6_7.t'
 
 cfg         = [];
 cfg.dataset = filet;
-spike2 = ft_read_spike(cfg.dataset)
+spike2 = ft_read_spike(cfg.dataset);
  
 % convert timestamps to seconds
 cfg                     = [];
@@ -150,7 +150,7 @@ cfg.latency    = [0.3 max(spikeTrials.trialtime(:))]; % sustained response perio
 cfg.keeptrials = 'yes';
 rate = ft_spike_rate(cfg,spikeTrials);
 
-[R,P] = corrcoef(rate.trial)
+[R,P] = corrcoef(rate.trial);
 
 % read in the data, select the channels and define the trials
 spike = ft_read_spike(filenex); 

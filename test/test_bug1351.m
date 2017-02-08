@@ -25,7 +25,7 @@ t(i) = toc;
 end
 profile off;
 
-stats = profile('info')
+stats = profile('info');
 time = [stats.FunctionTable.TotalTime];
 [tmp, idx] = sort(time);
 

@@ -88,7 +88,7 @@ legend({'subj1', 'subj2', 'subj3', 'subj4', 'subj5', 'subj6', ...
 %% T-test with MATLAB function
 % dependent samples ttest
 FCminFIC = values_FC - values_FIC;
-[h,p,ci,stats] = ttest_wrapper(FCminFIC, 0, 0.05) % H0: mean = 0, alpha 0.05
+[h,p,ci,stats] = ttest_wrapper(FCminFIC, 0, 0.05) % H0: mean = 0, alpha 0.05;
 
 %% T-test with FieldTrip function
 cfg = [];

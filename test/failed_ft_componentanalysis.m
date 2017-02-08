@@ -75,7 +75,7 @@ switch dataset.datatype
 end
 
 cfg.inputfile  = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
-outputfile     = fullfile(dataset.origdir,version,'comp',dataset.type,['comp_',dataset.datatype])
+outputfile     = fullfile(dataset.origdir,version,'comp',dataset.type,['comp_',dataset.datatype]);
 if writeflag
   cfg.outputfile = outputfile;
 end

@@ -15,5 +15,5 @@ freq.powspctrm = randn(2, 3, 4, 5);
  
 cfg = [];
 cfg.avgovertime = 'yes';
-output = ft_selectdata(cfg, freq)
+output = ft_selectdata(cfg, freq);
 assert(isequal(output.time, 3))

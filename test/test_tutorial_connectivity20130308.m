@@ -72,7 +72,7 @@ mdata       = ft_mvaranalysis(cfg, data);
 %     fsampleorig: 200
 %             cfg: [1x1 struct]
 %             
-% The resulting variable mdata contains a description of the data in terms of a multivariate autoregressive model. For each time-lag up to the model order (which is 5 in this case), a 3×3 matrix of coefficients is outputted. The noisecov-field contains covariance matrix of the model's residuals.
+% The resulting variable mdata contains a description of the data in terms of a multivariate autoregressive model. For each time-lag up to the model order (which is 5 in this case), a 33 matrix of coefficients is outputted. The noisecov-field contains covariance matrix of the model's residuals.
 % 
 % Exercise 1
 % Compare the parameters specified for the simulation with the estimated coefficients and discuss.
@@ -273,7 +273,7 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity'));
 load source
 
 [maxval, maxindx] = max(source.avg.coh);
-maxpos = source.pos(maxindx,:)
+maxpos = source.pos(maxindx,:);
 
 % maxpos = 
 %     4 -3 12
@@ -357,7 +357,7 @@ for i=1:length(data.trial)
   virtualchanneldata.trial{i} = u(:,1)' * beamformer * data.trial{i}(chansel,:);
 end
 % Rather than using a sourcemodel in the beamformer that consists of all three (x, y, z) directions, you can also have the beamformer compute the filter for only the optimal source orientation. This is implemented using the cfg.lcmv.fixedori='yes' option.
-% Recompute the spatial filter for the optimal source orientation and using that spatial filter (a 1×151 vector) recompute the time-series.
+% Recompute the spatial filter for the optimal source orientation and using that spatial filter (a 1151 vector) recompute the time-series.
 % 
 % Investigate and describe the difference between the two time-series. What is the difference between the two dipole orientations?
 % 

@@ -32,7 +32,7 @@ hdr = {};
 dat = {};
 
 for i=1:length(filelist)
-filename = fullfile(datadir, filelist{i})
+filename = fullfile(datadir, filelist{i});
 
 % read the header and the first 5 seconds of the data
 hdr{i} = ft_read_header(filename);

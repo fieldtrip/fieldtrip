@@ -241,7 +241,7 @@ eeg_table = cellfun(@norm, eeg_leadfield);
 meg_table = cellfun(@norm, meg_leadfield);
 
 format long
-(eeg_table ./ eeg_table(1,1))
-(meg_table ./ meg_table(1,1))
+(eeg_table ./ eeg_table(1,1));
+(meg_table ./ meg_table(1,1));
 format short
 

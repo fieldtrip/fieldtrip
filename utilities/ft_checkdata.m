@@ -117,7 +117,6 @@ if (~isempty(depHastrialdef))
 end
 
 % determine the type of input data
-% this can be raw, freq, timelock, comp, spike, source, volume, dip
 israw           = ft_datatype(data, 'raw');
 isfreq          = ft_datatype(data, 'freq');
 istimelock      = ft_datatype(data, 'timelock');
