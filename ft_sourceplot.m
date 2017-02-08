@@ -329,6 +329,8 @@ if hasatlas
   end
   if isfield(functional, 'coordsys')
     % ensure that the coordinate systems match
+    functional = fixcoordsys(functional);
+    atlas      = fixcoordsys(atlas);
     assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
   end
 end
@@ -1077,6 +1079,8 @@ switch cfg.method
       end
       if isfield(functional, 'coordsys')
         % ensure that the coordinate systems match
+        functional = fixcoordsys(functional);
+        surf       = fixcoordsys(surf);
         assert(isequal(functional.coordsys, surf.coordsys), 'coordinate systems do not match');
       end
       
@@ -1231,7 +1235,7 @@ switch cfg.method
       functional = setsubfield(functional, cfg.anaparameter, ana);
     end
     
-    if hasmsk,
+    if hasmsk
       msk = getsubfield(functional, 'inside');
       msk = reshape(msk, dim);
       if hasana
