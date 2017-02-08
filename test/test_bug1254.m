@@ -10,23 +10,7 @@ return
 % TEST test_bug1254
 % TEST qsubcompile qsubcellfun
 
-% list the possible locations for the data
-dataset = {
-  '/Users/robert/data/Subject01/Subject01.ds'
-  '/home/common/matlab/fieldtrip/data/Subject01.ds'
-  };
-
-% pick the available dataset
-for i=1:length(dataset)
-  if exist(dataset{i}, 'dir')
-    dataset = dataset{i};
-    break
-  end
-end
-
-if ~ischar(dataset)
-  error('could not locate the test dataset');
-end
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 
 cfg = [];
 cfg.dataset = dataset;

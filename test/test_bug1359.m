@@ -6,8 +6,8 @@ function test_bug1359
 % TEST test_bug1359
 % TEST ft_read_header ft_read_data loadcnt
 
-% the data is shared with bug report and test script 1490
-filename = '/home/common/matlab/fieldtrip/data/test/bug1490/sub1E3a.cnt';
+% the data is shared with test script 1490
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490/sub1E3a.cnt');
 
 hdr = ft_read_header(filename);
 dat = ft_read_data(filename);

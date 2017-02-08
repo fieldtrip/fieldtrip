@@ -11,7 +11,7 @@ ft_default.feedback = 'no';
 ft_default.trackconfig = 'no'; % don't convert the cfg into a config object, as that fails in r8540 due to a subsref error
 
 if nargin==0
-  datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis';
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
 end
 
 load(fullfile(datadir, 'subjectK.mat'));

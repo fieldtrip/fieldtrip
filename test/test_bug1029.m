@@ -12,7 +12,7 @@ function test_bug1029
 %%%%%%%%%%%%%%%%
 % BEM_ASA
 %%%%%%%%%%%%%%%%
-filename = '/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol';
+filename = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol');
 vol = ft_read_vol(filename);
 
 vol = ft_headmodel_asa(filename);

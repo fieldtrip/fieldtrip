@@ -227,10 +227,8 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'latency'}); % see bug 1376 and 1076
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'wltconvol', 'wavelet'});
 
-% select trials of interest
-tmpcfg = [];
-tmpcfg.trials = cfg.trials;
-tmpcfg.channel = cfg.channel;
+% select channels and trials of interest, by default this will select all channels and trials
+tmpcfg = keepfields(cfg, {'trials', 'channel'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -317,6 +315,9 @@ switch cfg.method
     end
     return
 
+  case 'neuvar'
+     cfg.order  = ft_getopt(cfg, 'order',  1); % order of differentiation
+     
   otherwise
     error('specified cfg.method is not supported')
 end
@@ -550,6 +551,13 @@ for itrial = 1:ntrials
       ntaper = ones(1,numel(foi));
       % modify spectrum for same reason as fake ntaper
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+      
+    case 'neuvar'
+      [spectrum,foi] = ft_specest_neuvar(dat, time, options{:}, 'feedback', fbopt);
+      hastime = false;
+      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+      ntaper = ones(1,numel(foi));
+      
   end % switch
 
   % Set n's

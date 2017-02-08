@@ -45,11 +45,10 @@ if Ndata>1 && ~isnumeric(varargin{end})
     
     if k>1
       % create a new figure for the additional input arguments
-      % ensure new figures are all in the same size/position
-      p = get(gcf, 'Position');
-      f = figure();
-      set(f, 'Position', p);
+      % ensure that the new figure appears at the same position
+      f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
     end
+
     if isfield(cfg, 'inputfile')
       cfg = rmfield(cfg, 'inputfile');
     end
@@ -130,6 +129,7 @@ cfg.shading           = ft_getopt(cfg, 'shading',       'flat');
 cfg.comment           = ft_getopt(cfg, 'comment',       'auto');
 cfg.commentpos        = ft_getopt(cfg, 'commentpos',    'leftbottom');
 cfg.fontsize          = ft_getopt(cfg, 'fontsize',      8);
+cfg.fontweight        = ft_getopt(cfg, 'fontweight',    'normal');
 cfg.baseline          = ft_getopt(cfg, 'baseline',      'no'); %to avoid warning in timelock/freqbaseline
 cfg.trials            = ft_getopt(cfg, 'trials',        'all', 1);
 cfg.interactive       = ft_getopt(cfg, 'interactive',   'yes');
@@ -669,6 +669,13 @@ if strcmp(cfg.comment, 'auto')
   if ~isempty(cfg.parameter)
     comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
   end
+  if isfield(cfg,'refchannel')
+    if iscell(cfg.refchannel)
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
+    else
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
+    end
+  end
   cfg.comment = comment;
 elseif strcmp(cfg.comment, 'xlim')
   if strcmp(cfg.xlim,'maxmin')
@@ -676,17 +683,18 @@ elseif strcmp(cfg.comment, 'xlim')
   else
     comment = sprintf('%0s=[%.3g %.3g]', xparam, data.(xparam)(xmin), data.(xparam)(xmax));
   end
+  if isfield(cfg,'refchannel')
+    if iscell(cfg.refchannel)
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
+    else
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
+    end
+  end
   cfg.comment = comment;
 elseif ~ischar(cfg.comment)
   error('cfg.comment must be string');
 end
-if ~strcmp(cfg.comment, 'no') && isfield(cfg,'refchannel')
-  if iscell(cfg.refchannel)
-    cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
-  else
-    cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
-  end
-end
+
 
 % Specify the x and y coordinates of the comment
 if strcmp(cfg.commentpos,'layout')
@@ -728,8 +736,8 @@ elseif isnumeric(cfg.commentpos)
   y_comment = cfg.commentpos(2);
   HorAlign = 'left';
   VerAlign = 'middle';
-  x_comment = 0.9*((x_comment-min(x))/(max(x)-min(x))-0.5);
-  y_comment = 0.9*((y_comment-min(y))/(max(y)-min(y))-0.5);
+  x_comment = 0.9*((x_comment-min(cfg.xlim))/(max(cfg.xlim)-min(cfg.xlim))-0.5);
+  y_comment = 0.9*((y_comment-min(cfg.ylim))/(max(cfg.ylim)-min(cfg.ylim))-0.5);
 end
 
 % Draw topoplot
@@ -859,7 +867,7 @@ if ~strcmp(cfg.comment,'no')
   if strcmp(cfg.commentpos, 'title')
     title(cfg.comment, 'Fontsize', cfg.fontsize);
   else
-    ft_plot_text(x_comment,y_comment, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
+    ft_plot_text(x_comment,y_comment, cfg.comment, 'Fontsize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Fontweight', cfg.fontweight);
   end
 end
 
@@ -978,14 +986,13 @@ if isfield(cfg, 'inputfile')
 end
 cfg.refchannel = label;
 fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel{:});
-p = get(gcf, 'Position');
-f = figure;
-set(f, 'Position', p);
 cfg.highlight = 'on';
 cfg.highlightsymbol  = '.';
 cfg.highlightcolor   = 'r';
 cfg.highlightsize = 20;
 cfg.highlightchannel =  cfg.refchannel;
+% ensure that the new figure appears at the same position
+f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
 ft_topoplotER(cfg, data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1013,9 +1020,8 @@ if ~isempty(label)
     fprintf('''%s'', ', cfg.channel{i});
   end
   fprintf('''%s''}\n', cfg.channel{end});
-  p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
+  % ensure that the new figure appears at the same position
+  f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
   ft_singleplotER(cfg, data{:});
 end
 
@@ -1040,9 +1046,8 @@ if ~isempty(label)
     fprintf('''%s'', ', cfg.channel{i});
   end
   fprintf('''%s''}\n', cfg.channel{end});
-  p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
+  % ensure that the new figure appears at the same position
+  f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
   ft_singleplotTFR(cfg, data{:});
 end
 

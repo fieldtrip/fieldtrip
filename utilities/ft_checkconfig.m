@@ -80,6 +80,13 @@ checksize       = ft_getopt(varargin, 'checksize', 'off');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
+  if ft_platform_supports('matlabversion', '2015a', inf),
+    % disable config tracking for the time being, due to a known bug (3187)
+    ft_warning('disabling cfg tracking for the time being, due to a matlab version related issue');
+    trackconfig = [];
+    cfg.trackconfig = 'off';
+  end
+    
   % infer from the user configuration whether tracking should be enabled
   if isfield(cfg, 'trackconfig') && (strcmp(cfg.trackconfig, 'report') || strcmp(cfg.trackconfig, 'cleanup'))
     trackconfig = 'on'; % turn on configtracking if user requests report/cleanup
@@ -229,10 +236,10 @@ end
 % backward compatibility for the gradiometer and electrode definition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'grad') && ~isempty(cfg.grad)
-  cfg.grad = ft_datatype_sens(cfg.grad);
+  cfg.grad = ft_datatype_sens(struct(cfg.grad));
 end
 if isfield(cfg, 'elec')&& ~isempty(cfg.elec)
-  cfg.elec = ft_datatype_sens(cfg.elec);
+  cfg.elec = ft_datatype_sens(struct(cfg.elec));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

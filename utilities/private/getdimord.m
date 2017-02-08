@@ -316,7 +316,7 @@ switch field
     if isequal(datsiz, [npos nfreq ntime])
       dimord = 'pos_freq_time';
     end
-  case {'pow'}
+  case {'pow' 'noise'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
     elseif isequal(datsiz, [npos nfreq])
@@ -419,7 +419,11 @@ switch field
     end
     
   case {'cumtapcnt' 'cumsumcnt'}
-    if isequalwithoutnans(datsiz, [nrpt nan])
+    if isequalwithoutnans(datsiz, [nrpt 1])
+      dimord = 'rpt';
+    elseif isequalwithoutnans(datsiz, [nrpt nfreq])
+      dimord = 'rpt_freq';
+    elseif isequalwithoutnans(datsiz, [nrpt nan])
       dimord = 'rpt_other';
     end
     
@@ -434,7 +438,9 @@ switch field
     end
     
   case {'inside'}
-    if isequalwithoutnans(datsiz, [npos])
+    if isfield(data, 'dim') && isequal(datsiz, data.dim)
+      dimord = 'dim1_dim2_dim3';
+    elseif isequalwithoutnans(datsiz, [npos 1]) || isequalwithoutnans(datsiz, [1 npos])
       dimord = 'pos';
     end
     

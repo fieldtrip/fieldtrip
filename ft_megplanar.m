@@ -139,9 +139,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved t
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % select trials of interest
-tmpcfg = [];
-tmpcfg.trials = cfg.trials;
-tmpcfg.channel = cfg.channel;
+tmpcfg = keepfields(cfg, {'trials', 'channel'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -252,12 +250,12 @@ else
   sens = ft_convert_units(data.grad);
   chanposnans = any(isnan(sens.chanpos(:))) || any(isnan(sens.chanori(:)));
   if chanposnans
-    if isfield(sens, 'chanposorg')
+    if isfield(sens, 'chanposold')
       % temporarily replace chanpos and chanorig with the original values
-      sens.chanpos = sens.chanposorg;
-      sens.chanori = sens.chanoriorg;
-      sens.label = sens.labelorg;
-      sens = rmfield(sens, {'chanposorg', 'chanoriorg', 'labelorg'});
+      sens.chanpos = sens.chanposold;
+      sens.chanori = sens.chanoriold;
+      sens.label   = sens.labelold;
+      sens = rmfield(sens, {'chanposold', 'chanoriold', 'labelold'});
     else
       error('The channel positions (and/or orientations) contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
     end

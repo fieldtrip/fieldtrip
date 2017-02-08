@@ -1,8 +1,8 @@
-/* Simple class wrapping up functions for checking key presses in a console,
- * tested on Windows + Linux.
- * (C) 2010 Stefan Klanke
- */
+/** Simple class wrapping up functions for checking key presses in a console,
+    tested on Windows, OS X and Linux.
 
+    (C) 2010 Stefan Klanke
+ */
 
 #ifndef __ConsoleInput_h
 #define __ConsoleInput_h
@@ -18,12 +18,12 @@
 
 class ConsoleInput {
 	public:
-	
+
 	ConsoleInput() {
 		#ifdef WIN32
 		#else
 			termios term;
-			
+
 			tcgetattr(0, &oldTerm);
 			term = oldTerm;
 			term.c_lflag &= ~ICANON;
@@ -31,14 +31,14 @@ class ConsoleInput {
 			setbuf(stdin, NULL);
 		#endif
     }
-	
+
 	~ConsoleInput() {
 		#ifdef WIN32
 		#else
 			tcsetattr(0, TCSANOW, &oldTerm);
 		#endif
 	};
-	
+
 	bool checkKey() {
 		#ifdef WIN32
 			return _kbhit();
@@ -48,7 +48,7 @@ class ConsoleInput {
 			return bytesWaiting > 0;
 		#endif
 	}
-	
+
 	int getKey() {
 		#ifdef WIN32
 			return getch();
@@ -56,7 +56,7 @@ class ConsoleInput {
 			return getchar();
 		#endif
 	}
-	
+
 	void milliSleep(int ms) {
 		#ifdef WIN32
 			Sleep(ms);
@@ -64,7 +64,7 @@ class ConsoleInput {
 			usleep(ms*1000);
 		#endif
 	}
-	
+
 	protected:
 	#ifdef WIN32
 	#else

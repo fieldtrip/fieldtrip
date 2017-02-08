@@ -210,7 +210,7 @@ for k = 1:length(raw.rawdir)
         %   Now we are ready to pick
         %
         picksamp = last_pick - first_pick + 1;
-        if picksamp > 0
+        if picksamp >= 0
             data(:,dest:dest+picksamp-1) = one(:,first_pick:last_pick);
             dest = dest + picksamp;
         end

@@ -13,7 +13,7 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %
 % The configuration structure can contain
 %   cfg.output         = string or cell-array of strings, see below (default = 'tpm')
-%   cfg.spmversion     = string, 'spm2' or 'spm8' (default = 'spm8')
+%   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %   cfg.template       = filename of the template anatomical MRI (default = '/spm2/templates/T1.mnc'
 %                        or '/spm8/templates/T1.nii')
 %   cfg.tpm            = cell-array containing the filenames of the tissue probability maps
@@ -208,14 +208,8 @@ cfg.scalpsmooth      = ft_getopt(cfg, 'scalpsmooth',      5);
 cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold',   0.5);
 cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold',   0.1);
 
-% check if the required version of SPM is on your path
-if strcmpi(cfg.spmversion, 'spm2'),
-  ft_hastoolbox('SPM2',1);
-elseif strcmpi(cfg.spmversion, 'spm8'),
-  ft_hastoolbox('SPM8',1);
-elseif strcmpi(cfg.spmversion, 'spm12'),
-  ft_hastoolbox('SPM12',1);
-end
+% check that the preferred SPM version is on the path
+ft_hastoolbox(cfg.spmversion, 1);
 
 if ~isfield(cfg, 'name')
   if ~strcmp(cfg.write, 'yes')

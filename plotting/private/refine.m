@@ -45,7 +45,6 @@ function [pntr, trir, texr] = refine(pnt, tri, method, varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
 
 if nargin<3
   method = 'banks';

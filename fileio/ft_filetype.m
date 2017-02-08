@@ -297,6 +297,10 @@ elseif filetype_check_extension(filename, '.fif')
   type = 'neuromag_fif';
   manufacturer = 'Neuromag';
   content = 'MEG header and data';
+elseif filetype_check_extension(filename, '.mesh')
+  type = 'neuromag_mesh';
+  manufacturer = 'Neuromag';
+  content = 'triangulated surface mesh';
 elseif filetype_check_extension(filename, '.bdip')
   type = 'neuromag_bdip';
   manufacturer = 'Neuromag';
@@ -1023,6 +1027,7 @@ elseif filetype_check_extension(filename, '.annot')
   type = 'freesurfer_annot';
   manufacturer = 'FreeSurfer';
   content = 'parcellation annotation';
+  
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nrs_')) == 1
   % This may be improved by looking into the file, rather than assuming the
   % filename has "_nrs_" somewhere. Also, distinction by the different file
@@ -1030,12 +1035,16 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nr
   type = 'bucn_nirs';
   manufacturer = 'BUCN';
   content = 'ascii formatted nirs data';
-  
-  % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
 elseif filetype_check_extension(filename, '.nirs') && filetype_check_header(filename, 'MATLAB')
+  % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
   type = 'homer_nirs';
   manufacturer = 'Homer';
   content = '(f)NIRS data';
+elseif filetype_check_extension(filename, '.sd') && filetype_check_header(filename, 'MATLAB')
+  % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
+  type = 'homer_sd';
+  manufacturer = 'Homer';
+  content = 'source detector information';
   
   % known Artinis file format
 elseif filetype_check_extension(filename, '.oxy3')  

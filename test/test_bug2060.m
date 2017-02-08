@@ -13,6 +13,6 @@ event = ft_read_event(filename);
 assert(~isempty(event));
 
 % display
-event
+event;
 event(1)
 

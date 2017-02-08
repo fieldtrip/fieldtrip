@@ -49,6 +49,13 @@ end
 nchan = numel(label);
 Fs    = str2num(strtok(strtok(label{1},'#Time.'),'Hz'));
 
+% test whether the channel labels are non-numeric
+labelnumber = cellfun(@str2num, label, 'UniformOutput', false);
+labelstring = cellfun(@isempty, labelnumber, 'UniformOutput', true);
+if ~any(labelstring)
+  error('channel labels were not found in the first line of the file');
+end
+
 % read the rest
 dat = textscan(fid, '%f');
 fclose(fid);

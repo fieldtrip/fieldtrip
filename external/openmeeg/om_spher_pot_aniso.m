@@ -17,7 +17,7 @@ function u=om_spher_pot_aniso(x,q,p,sigmas,xis,rk) ;
 %
 % PROBLEM: Getting imaginary numbers solved ad hoc by real()
 
-% $Id$
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 [n,m] = size(x);
 if m~=3,

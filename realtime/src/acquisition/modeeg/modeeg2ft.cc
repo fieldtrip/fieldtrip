@@ -1,7 +1,9 @@
-/** ModularEEG acqusition tool to stream data to a FieldTrip buffer,
-	and write data to one or multiple GDF files (if you ever reach the size limit...).
-	(C) 2010 S. Klanke
+/*
+   ModularEEG acqusition tool to stream data to a FieldTrip buffer.
+
+   (C) 2010 S. Klanke
 */
+
 #include <serial.h>
 
 #include <OnlineDataManager.h>
@@ -38,25 +40,25 @@ int leftOverBytes = 0;
 */
 int readSyncBytes(SerialPort *SP) {
 	// printf("Looking for sync bytes 0xA5 0x5A (%c%c)\n", 0xA5, 0x5A);
-	
+
 	// read bytes until we get 0xA5,0x5A,...
 	for (int iter = 0;iter < 200; iter++) {
 		unsigned char byte;
 		int nr;
-		
+
 		nr = serialRead(SP, 1, &byte);
 		if (nr<0) {
 			fprintf(stderr, "Error when reading from serial port - exiting\n");
 			return 1;
-		} 
+		}
 		if (nr==0) {
 			printf(".");
 			usleep(10000);	// sleep for 10 ms if no byte received
 			continue;
 		}
-		
+
 		// printf("%02X %c\n", byte, byte);
-		
+
 		if (byte == 0xA5) {
 			serialBuffer[0] = byte;
 			leftOverBytes = 1;
@@ -83,33 +85,33 @@ int main(int argc, char *argv[]) {
 	int keepRunning = 1;
 	int numTimeouts = 0;
 	int numChannels;
-	
+
 	if (argc<3) {
 		puts(usageInfo);
 		return 0;
 	}
-	
-	OnlineDataManager<short,float> ODM(1, NUM_HW_CHAN, FSAMPLE);
+
+	OnlineDataManager<short,float> ODM(1, NUM_HW_CHAN, FSAMPLE, FSAMPLE);
 	ctrlServ.startListening(8000);
-	
+
 	if (convertToInt(argv[2], numChannels)) {
 		// user gave the number of channels instead of a configuration file
 		char label[16];
 		SignalConfiguration sigConf;
-		
+
 		if (numChannels<1 || numChannels > NUM_HW_CHAN) {
 			fprintf(stderr, "Number of channels must be within 1..%i\n", NUM_HW_CHAN);
 			return 1;
-		}	
+		}
 		for (int i=0;i<numChannels;i++) {
-			sprintf(label, "ModEEG%i", i+1);
+			sprintf(label, "%i", i+1);
 			sigConf.selectForStreaming(i,label);
 			sigConf.selectForSaving(i,label);
 		}
 		if (!ODM.setSignalConfiguration(sigConf)) {
 			fprintf(stderr, "Could not set configuration - weird!\n");
 			return 1;
-		}	
+		}
 	} else {
 		// user specified something else as configuration, treat it as a filename
 		int err = ODM.configureFromFile(argv[2]);
@@ -128,13 +130,13 @@ int main(int argc, char *argv[]) {
 	} else {
 		strcpy(hostname, "localhost");
 	}
-	
+
 	if (argc>4) {
 		port = atoi(argv[4]);
 	} else {
 		port = 1972;
 	}
-	
+
 	if (!serialOpenByName(&SP, argv[1])) {
 		fprintf(stderr, "Could not open serial port %s\n", argv[1]);
 		return 1;
@@ -151,7 +153,7 @@ int main(int argc, char *argv[]) {
 
 	if (!strcmp(hostname, "-")) {
 		if (!ODM.useOwnServer(port)) {
-			fprintf(stderr, "Could not spawn buffer server on port %d.\n",port);
+			fprintf(stderr, "Could not spawn buffer server on port %d\n",port);
 			return 0;
 		}
 		else {
@@ -159,37 +161,37 @@ int main(int argc, char *argv[]) {
 		}
 	} else {
 		if (!ODM.connectToServer(hostname, port)) {
-			fprintf(stderr, "Could not connect to buffer server at %s:%d.\n",hostname, port);
+			fprintf(stderr, "Could not connect to buffer server at %s:%d\n",hostname, port);
 			return 0;
 		}
-	}	
-	
+	}
+
 	if (readSyncBytes(&SP) != 2) {
 		fprintf(stderr, "Could not read synchronisation bytes from ModularEEG\n");
 		goto cleanup;
 	}
-	
+
 	ODM.enableStreaming();
-	
-	printf("Got synchronization bytes - starting acquisition\n");
+
+	printf("\nGot synchronization bytes - starting acquisition\n");
 	printf("\nPress <Esc> to quit\n\n");
-	
+
 	while (keepRunning) {
 		int numRead, numTotal, numSamples, numPending, maxReadNow;
-		
+
 		if (ConIn.checkKey()) {
 			int c = ConIn.getKey();
 			if (c==27) break; // quit
 		}
-		
+
 		ctrlServ.checkRequests(ODM);
-		
+
 		numPending = serialInputPending(&SP);
 		if (numPending < 0) {
 			fprintf(stderr, "Error when reading from serial port - exiting\n");
 			break;
 		}
-		
+
 		if (numPending == 0) {
 			if (++numTimeouts > 250) {
 				// write one fake sample and a timeout event
@@ -198,10 +200,10 @@ int main(int argc, char *argv[]) {
 				block[0] = 0; // status
 				for (int i=0;i<NUM_HW_CHAN;i++) block[i] = 0x7FFF;
 				ODM.handleBlock();
-			
+
 				fprintf(stderr, "Timeout -- re-opening serial port\n");
 				serialClose(&SP);
-				
+
 				if (!serialOpenByName(&SP, argv[1])) {
 					fprintf(stderr, "Could not open serial port %s\n", argv[1]);
 					break;
@@ -214,7 +216,7 @@ int main(int argc, char *argv[]) {
 					fprintf(stderr, "Got synchronization bytes - re-starting acquisition\n");
 					continue;
 				} else {
-					fprintf(stderr, "Could not read synchronization bytes - exiting.\n");				
+					fprintf(stderr, "Could not read synchronization bytes - exiting.\n");
 					break;
 				}
 				numTimeouts = 0;
@@ -223,48 +225,48 @@ int main(int argc, char *argv[]) {
 			}
 			continue;
 		}
-		
+
 		numTimeouts = 0; // we read something, so reset timeout counter
-		
+
 		// printf("%i left over, %i pending\n", leftOverBytes, numPending);
-		
+
 		maxReadNow = sizeof(serialBuffer) - leftOverBytes;
 		if (numPending > maxReadNow) {
 			numPending = maxReadNow;
 		}
-		
+
 		numRead = serialRead(&SP, numPending, serialBuffer + leftOverBytes);
 		if (numRead != numPending) {
 		    fprintf(stderr, "Error when reading from serial port - exiting\n");
 			break;
-		}	
-		
+		}
+
 		numTotal   = leftOverBytes + numRead;
 		numSamples = numTotal / PACKET_LEN;
-		
+
 		if (numSamples > FSAMPLE) {
 			fprintf(stderr, "Received too much data from serial port - exiting.\n");
 			break;
 		}
-		
+
 		if (numSamples == 0) {
 			leftOverBytes += numRead;
 			continue;
 		}
-		
+
 		short *block = ODM.provideBlock(numSamples);
-		
-		// first decode into switch + data 
+
+		// first decode into switch + data
 		for (int j=0;j<numSamples;j++) {
 			int soff = j*PACKET_LEN;
 			int doff = j*(1+NUM_HW_CHAN);
-			
+
 			if (serialBuffer[soff] != 0xA5 || serialBuffer[soff+1] != 0x5A) {
 				fprintf(stderr, "ModularEEG out of sync in sample %i - exiting.\n", sampleCounter + j);
 				keepRunning = 0;
 				break;
 			}
-						
+
 			short switchVal = serialBuffer[soff+16];
 			if (switchVal != switchState) {
 				switchState = switchVal;
@@ -273,13 +275,13 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			block[doff] = switchVal;
-			
+
 			for (int i=0;i<NUM_HW_CHAN;i++) {
 				short sampleData = serialBuffer[soff+4+2*i]*256 + serialBuffer[soff+5+2*i];
 				block[doff + 1 + i] = sampleData;
 			}
 		}
-		
+
 		if (!ODM.handleBlock()) {
 			fprintf(stderr, "Error in handling this data block - stopping\n");
 			break;
@@ -287,14 +289,14 @@ int main(int argc, char *argv[]) {
 
 		sampleCounter += numSamples;
 		leftOverBytes = numTotal - numSamples * PACKET_LEN;
-		
+
 		// copy left-over bytes to the beginning of the serialBuffer
 		if (leftOverBytes > 0) {
 			memcpy(serialBuffer, serialBuffer + numSamples*PACKET_LEN, leftOverBytes);
 		}
 	}
 
-cleanup:	
+cleanup:
 	serialClose(&SP);
 	return 0;
 }

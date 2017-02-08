@@ -10,7 +10,7 @@ function test_bug2332
 
 pwdir = pwd;
 
-cd('/home/common/matlab/fieldtrip/data/');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/'));
 cfg = [];
 cfg.dataset = 'Subject01.ds';
 cfg.trl     = [1 1200 0];

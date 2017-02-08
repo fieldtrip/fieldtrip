@@ -28,7 +28,7 @@ b.sampleinfo = [1 2; 3 4; 5 6];
 ft_checkdata(a, 'datatype', 'timelock', 'hassampleinfo', 'ifmakessense');
 ft_checkdata(b, 'datatype', 'timelock', 'hassampleinfo', 'ifmakessense');
 
-c = ft_appendtimelock([], a, b)
+c = ft_appendtimelock([], a, b);
 
 if isfield(c, 'avg') && ~isfield(c, 'trial')
   error('the result should have trial rather than avg');
@@ -36,7 +36,7 @@ end
 
 a = rmfield(a, 'trial');
 b = rmfield(b, 'trial');
-c = ft_appendtimelock([], a, b)
+c = ft_appendtimelock([], a, b);
 
 if isfield(c, 'avg')
   error('the result should not have an average');

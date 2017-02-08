@@ -114,7 +114,7 @@ ft_databrowser(cfg, data_eeg_repaired_spline);
 
 % treat as a missing channel
 data_eeg_miss = data_eeg_clean;
-chan_idx = ismember(data_eeg_miss.label, '25')
+chan_idx = ismember(data_eeg_miss.label, '25');
 data_eeg_miss.label(chan_idx) = []; % remove channel 25
 
 for i=1:numel(data_eeg_miss.trial) 

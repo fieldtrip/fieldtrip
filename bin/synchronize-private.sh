@@ -404,6 +404,7 @@ ARRAY+=(specest/private/fixname.m)
 ARRAY+=(statfun/private/fixname.m)
 ARRAY+=(test/private/fixname.m)
 ARRAY+=(utilities/private/fixname.m)
+ARRAY+=(compat/matlablt2014b/private/fixname.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -745,14 +746,17 @@ sync ${ARRAY[*]}
 # ft_platform_supports.m
 
 ARRAY=()
+ARRAY+=(utilities/ft_platform_supports.m)
+ARRAY+=(connectivity/private/ft_platform_supports.m)
 ARRAY+=(engine/private/ft_platform_supports.m)
 ARRAY+=(fileio/private/ft_platform_supports.m)
+ARRAY+=(forward/private/ft_platform_supports.m)
+ARRAY+=(inverse/private/ft_platform_supports.m)
 ARRAY+=(peer/private/ft_platform_supports.m)
 ARRAY+=(plotting/private/ft_platform_supports.m)
-ARRAY+=(private/ft_platform_supports.m)
+ARRAY+=(preproc/private/ft_platform_supports.m)
 ARRAY+=(qsub/private/ft_platform_supports.m)
-ARRAY+=(test/private/ft_platform_supports.m)
-ARRAY+=(utilities/private/ft_platform_supports.m)
+ARRAY+=(specest/private/ft_platform_supports.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2087,6 +2091,16 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(forward/private/plgndr.m)
 ARRAY+=(private/plgndr.m)
+ARRAY+=(src/plgndr.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# plgndr.c
+
+ARRAY=()
+ARRAY+=(forward/private/plgndr.c)
+ARRAY+=(private/plgndr.c)
+ARRAY+=(src/plgndr.c)
 sync ${ARRAY[*]}
 
 ################################################################################

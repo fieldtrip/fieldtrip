@@ -20,7 +20,6 @@ function [pos, tri] = icosahedron642()
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
 
 [pos, tri] = icosahedron;
 [pos, tri] = refine(pos, tri);

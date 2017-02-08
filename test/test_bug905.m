@@ -6,7 +6,7 @@ function test_bug905
 % TEST test_bug905
 % TEST ft_freqanalysis ft_specest_mtmfft
 
-load /home/common/matlab/fieldtrip/data/test/bug905.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug905.mat'));
 
 timeunitinsec=10^(-4); % in seconds
 fs=1/(4.8*timeunitinsec);

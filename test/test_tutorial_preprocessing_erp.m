@@ -11,7 +11,7 @@ function test_tutorial_preprocessing_erp
 interactive = false;  % use this for running it without user interaction 
 % interactive = true;  % use this for running it with user interaction 
 
-datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp';
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp');
 cd(datadir)
 
 cfg = [];

@@ -12,16 +12,19 @@ function inspect_ft_sourcemovie
 % NOT FINISHED YET, SEE BELOW
 return
 
+% use FieldTrip defaults instead of personal defaults
 global ft_default;
+ft_default = [];
 ft_default.feedback = 'no';
 
 % qsub is necessary, add fieldtrip/qsub to path
-addpath('/home/common/matlab/fieldtrip/qsub/')
+[v, p] = ft_version;
+addpath(fullfile(p, 'qsub'));
 
-load /home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat
-load /home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'))
 
-mri = ft_read_mri(fullfile(homedir, 'common', 'matlab', 'fieldtrip', 'data', 'Subject01.mri'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
 
 cfg              = [];
 cfg.output       = 'powandcsd';

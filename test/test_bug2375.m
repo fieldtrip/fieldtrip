@@ -6,7 +6,7 @@ function test_bug2375
 % TEST test_bug2375
 % TEST ft_prepare_headmodel ft_headmodel_localspheres
 
-load('/home/common/matlab/fieldtrip/data/test/bug2375/localspheres_bug.mat');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2375/localspheres_bug.mat'));
 
 vol = ft_prepare_headmodel(cfg, headshape);
 

@@ -12,7 +12,7 @@ clear all
 
 % read in an mri
 
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
 
 % teh following could also be done using ft_determine_coordsys
 mri.coordsys = 'spm';
