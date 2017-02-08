@@ -13,7 +13,7 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % Additional options should be specified in key-value pairs and can include
 %   'format'      = string, see below
-%   'unit'        = string, e.g. 'mm' (default is the native units of the file)
+%   'unit'        = string, e.g. 'mm' (default is to keep it in the native units of the file)
 %
 % For individual surface-based atlases from FreeSurfer you should specify two
 % filenames as a cell-array: the first points to the file that contains information
@@ -2211,24 +2211,35 @@ switch fileformat
         atlas.([name 'label']) = label;
       end
     elseif isfield(tmp, 'atlas')
-      % this applies to FieldTrip *.mat files
+      % this applies to most FieldTrip *.mat files
       atlas = tmp.atlas;
+    elseif numel(fieldnames(tmp))==1
+      % just take whatever variable is contained in the file
+      fn = fieldnames(tmp);
+      atlas = tmp.(fn{1});
+      if isstruct(atlas)
+        warning('assuming that the variable "%s" in "%s" represents the atlas', fn{1}, filename);
+      else
+        error('cannot read atlas structure from "%s"', filename);
+      end
     else
       error('the mat-file %s does not contain a variable called ''atlas''',filename);
     end
     
   otherwise
     error('unsupported format "%s"', fileformat);
-end % case
+    
+end % switch fileformat
 
-% this will add the units to the head shape and optionally convert
+
 if ~isempty(unit)
-  shape = ft_convert_units(shape, unit);
+  % ensure the atlas is in the desired units
+  atlas = ft_convert_units(atlas, unit);
 else
+  % ensure the units of the atlas are specified
   try
-    % ft_convert_units will fail for triangle-only gifties.
-    shape = ft_convert_units(shape);
+    atlas = ft_convert_units(atlas);
   catch
+    % ft_convert_units will fail for triangle-only gifties.
   end
 end
-
