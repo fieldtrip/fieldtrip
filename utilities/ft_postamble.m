@@ -51,7 +51,7 @@ global ft_default
 % this is a trick to pass the input arguments into the ft_postamble_xxx script
 ft_default.postamble = varargin;
 
-full_cmd=['ft_preamble_' cmd];
+full_cmd=['ft_postamble_' cmd];
 cmd_exists=false;
 
 if exist(full_cmd, 'file')
@@ -67,6 +67,13 @@ elseif ~ft_platform_supports('exists-in-private-directory')
   full_path=fullfile(private_dir,[full_cmd '.m']);
 
   cmd_exists=exist(full_path,'file');
+  full_cmd_parts={'ft_tmp_orig_pwd=pwd();',...
+                  'ft_tmp_orig_pwd_cleaner='...
+                                'onCleanup(@()cd(ft_tmp_orig_pwd));',...
+                  sprintf('cd(''%s'');',private_dir),...
+                  [full_cmd ';'],...
+                  'clear ft_tmp_orig_pwd_cleaner;'};
+  full_cmd=sprintf('%s',full_cmd_parts{:});
 end
 
 if ~cmd_exists
@@ -75,6 +82,8 @@ if ~cmd_exists
   % Should that behavior be kept?
   error('Could not run %s - does not seem to exist', full_cmd);
 end
+
+evalin('caller', full_cmd);
 
 if isfield(ft_default, 'postamble')
   % the postamble field should not remain in the ft_default structure
