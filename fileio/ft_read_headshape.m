@@ -648,6 +648,8 @@ switch fileformat
       shape = tmp.shape;
     elseif isfield(tmp, 'headshape')
       shape = tmp.headshape;
+    elseif isfield(tmp, 'surface')
+      shape = tmp.surface;
     elseif isfield(tmp, 'bnd')
       % the variable in the file is most likely a precomputed triangulation of some sort
       shape = tmp.bnd;

@@ -176,7 +176,12 @@ for i=1:numel(functionlist)
     passed = false;
     runtime = round(toc(stopwatch));
     fprintf('=== %s FAILED in %d seconds\n', functionlist{i}, runtime);
-    disp(me)
+    % show the error with the stack trace
+    fprintf('Error using %s (line %d)\n', me.stack(1).name, me.stack(1).line);
+    disp(me.message)
+    for j=2:numel(me.stack)
+      fprintf('Error in %s (line %d)\n', me.stack(j).name, me.stack(j).line);
+    end
   end
   close all
   
