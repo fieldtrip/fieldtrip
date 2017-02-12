@@ -69,7 +69,6 @@
 
 #include "d3des.h"
 #include "mex.h"
-#include "matrix.h"
 
 #define VNC_BASE 5900
 #define CHALLENGESIZE 16
