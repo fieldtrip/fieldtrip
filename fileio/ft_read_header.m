@@ -55,7 +55,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   BrainVision (*.eeg, *.seg, *.dat, *.vhdr, *.vmrk)
 %   CED - Cambridge Electronic Design (*.smr)
 %   EGI - Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw, *.sbin, *.mff)
-%   GTec (*.mat)
+%   GTec (*.mat, *.hdf5)
 %   Generic data formats (*.edf, *.gdf)
 %   Megis/BESA (*.avr, *.swf, *.besa)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
@@ -204,7 +204,7 @@ else
   checkmaxfilter = ft_getopt(varargin, 'checkmaxfilter', true);
   
   if isempty(cache)
-    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'mega_neurone', 'smi_txt', 'biosig'}))
+    if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'smi_txt', 'biosig'}))
       cache = true;
     else
       cache = false;
@@ -1279,6 +1279,34 @@ switch headerformat
       hdr.label = mxDeserialize(hdr.label);
     end
     
+  case 'gtec_hdf5'
+    % there is only a precompiled *.p reader that reads the whole file at once
+    orig = ghdf5read(filename);
+    for i=1:numel(orig.RawData.AcquisitionTaskDescription.ChannelProperties.ChannelProperties)
+      lab = orig.RawData.AcquisitionTaskDescription.ChannelProperties.ChannelProperties(i).ChannelName;
+      typ = orig.RawData.AcquisitionTaskDescription.ChannelProperties.ChannelProperties(1).ChannelType;
+      if isnumeric(lab)
+        hdr.label{i} = num2str(lab);
+      else
+        hdr.label{i} = lab;
+      end
+      if ischar(typ)
+        hdr.chantype{i} = lower(typ);
+      else
+        hdr.chantype{i} = 'unknown';
+      end
+    end
+    hdr.Fs          = orig.RawData.AcquisitionTaskDescription.SamplingFrequency;
+    hdr.nChans      = size(orig.RawData.Samples, 1);
+    hdr.nSamples    = size(orig.RawData.Samples, 2);
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1; % assume continuous data, not epoched
+    assert(orig.RawData.AcquisitionTaskDescription.NumberOfAcquiredChannels==hdr.nChans, 'inconsistent number of channels');
+    % remember the complete data upon request
+    if cache
+      hdr.orig = orig;
+    end
+    
   case 'gtec_mat'
     % this is a simple MATLAB format, it contains a log and a names variable
     tmp = load(headerfile);
@@ -1377,7 +1405,7 @@ switch headerformat
     % convert the measurement configuration details to an optode structure
     try
     end
-      hdr.opto = homer2opto(orig.SD);
+    hdr.opto = homer2opto(orig.SD);
     
     % keep the header details
     hdr.orig.SD = orig.SD;
