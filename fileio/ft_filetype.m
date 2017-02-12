@@ -1115,6 +1115,10 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   content = 'annotation/metadata';
   
   % some other known file types
+elseif filetype_check_extension(filename, '.hdf5')
+  type = 'gtec_hdf5';
+  manufacturer = 'Guger Technologies, http://www.gtec.at';
+  content = 'EEG';
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files
   % there is a MATLAB V6 file with the header and a binary file with the data (multiplexed, ieee-le, double)

@@ -63,6 +63,15 @@ for mrkn = 1:numel(mrkvarnum)
   
   % read the time of the triggers
   dum = fread(fid,hdr.varheader(mrkvarnum(mrkn)).cnt,'int32');
+  
+  % skip importing this marker if empty
+  if isempty(dum)
+    warning(['skipping marker ' deblank(hdr.varheader(mrkvarnum(mrkn)).nam) ...
+      ' because no timestamps were found'])
+    continue
+  end
+  
+  % convert timestamp to sample number
   timestamp = dum;
   dum = dum ./(hdr.filheader.frequency./smpfrq);
   mrk.tim = round(dum);
@@ -102,6 +111,14 @@ for int = 1:numel(intvarnum)
   % read the time of the triggers
   dum1 = fread(fid,hdr.varheader(intvarnum(int)).cnt,'int32');
   dum2 = fread(fid,hdr.varheader(intvarnum(int)).cnt,'int32');
+  
+  % skip importing this interval if empty
+  if isempty(dum1) &&  isempty(dum2)
+    warning(['skipping interval ' deblank(hdr.varheader(intvarnum(int)).nam) ...
+      ' because no timestamps were found'])
+    continue
+  end
+  
   timestamp = dum1;
   dum1 = dum1 ./(hdr.filheader.frequency./smpfrq);
   dum2 = dum2 ./(hdr.filheader.frequency./smpfrq);
@@ -135,6 +152,15 @@ for ev = 1:numel(evtvarnum)
 
   % read the time of the triggers
   dum = fread(fid,hdr.varheader(evtvarnum(ev)).cnt,'int32');
+  
+  % skip importing this event if empty
+  if isempty(dum)
+    warning(['skipping event ' deblank(hdr.varheader(evtvarnum(ev)).nam) ...
+      ' because no timestamps were found'])
+    continue
+  end
+  
+  % convert timestamp to sample number
   timestamp = dum;
   dum = dum ./(hdr.filheader.frequency./smpfrq);
   evt.tim = round(dum);
