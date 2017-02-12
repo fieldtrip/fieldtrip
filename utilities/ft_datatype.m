@@ -108,7 +108,7 @@ elseif ismesh && isparcellation
 elseif issource && isparcellation
   type = 'source+label';
 elseif issource && ismesh
-  type = 'mesh';
+  type = 'source+mesh';
 elseif ismesh
   type = 'mesh';
 elseif issource
