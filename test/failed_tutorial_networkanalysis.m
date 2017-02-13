@@ -52,6 +52,7 @@ cfg.method          = 'runica';
 cfg.runica.maxsteps = 50;
 cfg.randomseed      = 0;
 comp = ft_componentanalysis(cfg, datads);
+%load(fullfile(datadir,'comp.mat'));
 
 %% visualize components
 
