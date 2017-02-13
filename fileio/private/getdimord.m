@@ -438,7 +438,9 @@ switch field
     end
     
   case {'inside'}
-    if isequalwithoutnans(datsiz, [npos])
+    if isfield(data, 'dim') && isequal(datsiz, data.dim)
+      dimord = 'dim1_dim2_dim3';
+    elseif isequalwithoutnans(datsiz, [npos 1]) || isequalwithoutnans(datsiz, [1 npos])
       dimord = 'pos';
     end
     
