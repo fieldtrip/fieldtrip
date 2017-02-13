@@ -142,10 +142,10 @@ if nargin>1
     case 'volume'
       type = any(strcmp(type, {'volume', 'volume+label'}));
     case 'source'
-      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label'})); % a single mesh does qualify as source structure
+      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label', 'source+mesh'})); % a single mesh does qualify as source structure
       type = type && isstruct(data) && numel(data)==1;                            % an array of meshes does not qualify
     case 'mesh'
-      type = any(strcmp(type, {'mesh', 'mesh+label'}));
+      type = any(strcmp(type, {'mesh', 'mesh+label', 'source+mesh'}));
     case 'segmentation'
       type = any(strcmp(type, {'segmentation', 'volume+label'}));
     case 'parcellation'
