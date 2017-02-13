@@ -10,7 +10,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include <math.h>
 
 #if defined(_WIN32) || defined(_WIN64)
