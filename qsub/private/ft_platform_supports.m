@@ -135,6 +135,9 @@ switch what
   case 'webwrite'
     tf = is_matlab() && matlabversion('2015a', Inf);
     
+  case 'boundary'
+    tf = is_matlab() && matlabversion('2014b', Inf);
+    
   otherwise
     error('unsupported value for first argument: %s', what);
     
