@@ -5,6 +5,8 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 %
 % Use as
 %   [grandavg] = ft_freqgrandaverage(cfg, freq1, freq2, freq3...)
+%   or
+%   [grandavg] = ft_freqgrandaverage(cfg, {freq1, freq2, freq3...})
 %
 % The input data freq1..N are obtained from either FT_FREQANALYSIS with
 % keeptrials=no or from FT_FREQDESCRIPTIVES. The configuration structure
@@ -51,6 +53,11 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+% if user provided cell array of freq data, unpack this here
+if numel(varargin)==1 && iscell(varargin{1}) && isfield(varargin{1}{1}, 'label')
+    varargin = varargin{1};
+end
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
