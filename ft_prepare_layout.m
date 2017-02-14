@@ -511,13 +511,20 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   sizefac = mean(XYdist(1:nchan))*1.2;
   width     = ones(nchan,1) * sizefac;
   height    = ones(nchan,1) * sizefac * (4/5); 
+
+  % generate mask as the convex hull around the electrode cloud+boxes
+  boxpos = [pos(:,1) - (width/2) pos(:,2) - (height/2);... % lb
+            pos(:,1) - (width/2) pos(:,2) + (height/2);... % lt
+            pos(:,1) + (width/2) pos(:,2) - (height/2);... % rb
+            pos(:,1) + (width/2) pos(:,2) + (height/2)]; % rt
+  mask   = boxpos(convhull(boxpos(:,1),boxpos(:,2)),:); 
   
-  % generate mask (generate as the convex hull around the electrode cloud, and grow it from the center with sizefac)
-  mask     = pos(convhull(pos(:,1),pos(:,2)),:); 
-  maskcent = mean(mask,1);
-  centfac  = mask-maskcent;
-  centfac  = centfac ./ max(abs(centfac),[],2);
-  mask     = mask + (centfac * sizefac);
+  %   % generate mask as the convex hull around the electrode cloud, and grow it from the center with sizefac
+  %   mask     = pos(convhull(pos(:,1),pos(:,2)),:);
+  %   maskcent = mean(mask,1);
+  %   centfac  = mask-maskcent;
+  %   centfac  = centfac ./ max(abs(centfac),[],2);
+  %   mask     = mask + (centfac * sizefac);
 
   % put in layout
   layout.pos     = pos;
