@@ -431,8 +431,25 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       
   % determine auto view
   if strcmp(cfg.ieegview,'auto')
-    error('get to work Roemer')
-  end
+    % simple automatic determination of 'ideal' viewpoint
+    % first, depth or not: if Xvar (l/r axis) is bigger than both Yvar (post/ant axis) and Zvar (top/bottom axis), it's a depth
+    % if yes, SUP (screw INF) is more appriorate if Yvar > Zvar, otherwise POST (screw ANT)
+    % if no, it's LSAG/RSAG, sign of mean(X) indicates which side the grid is on (note, for interhemispheric grids, both L/RSAG (doenst) work)
+    coordvar = var(coords);
+    if (coordvar(1)>coordvar(2)) && (coordvar(1)>coordvar(3)) % if they're roughly equal, it's likely a diagonal depth, and any view would (not) work
+      if coordvar(2)>coordvar(3)
+        cfg.ieegview = 'SUP';
+      else
+        cfg.ieegview = 'POST';
+      end
+    else
+      if sign(mean(coords(:,1))) == -1
+        cfg.ieegview = 'LSAG';
+      else
+        cfg.ieegview = 'RSAG';
+      end
+    end
+  end  
   
   % 3D to 2D
   switch upper(cfg.ieegview)
