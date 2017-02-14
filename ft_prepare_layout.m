@@ -54,10 +54,10 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                     auto = automatic guess of the most optimal of the above
 %                      tip: use cfg.ieegview = auto per electrode grid/strip/depth for most accurate results
 %                      tip: to obtain overview of e.g. all depth electrodes, choose SUP/INF, use cfg.ieeganatomy, and
-%                           plot using ft_layoutplot with cfg.box = 'no'
+%                           plot using ft_layoutplot with cfg.box/mask = 'no'
 %   cfg.ieeganatomy = pial surface mesh or (segmented) mri to be used for generating a brain outline as layout outline for cfg.ieegview
-%                     Anatomy needs to be in same coordinate space as electrodes, and ideally match.
-%                     However, using a template will also provide (less accurate) anatomical reference
+%                     Anatomy needs to be in same coordinate space as electrodes, and ideally match. See FT_READ_MRI and FT_READ_HEADSHAPE
+%                     However, even a template will provide some useful general (less accurate) anatomical reference
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
@@ -389,8 +389,8 @@ elseif isequal(cfg.layout, 'ordered')
   y = 0/nrow;
   layout.pos(end+1,:) = [x y];
   
-  % best suited for intracranial recordings, project 3D coordinates to 2D plane determined by anatomic 'viewpoint'
-elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.elec in the set op elsif's beyond this
+  % project 3D coordinates to 2D plane determined by anatomic 'viewpoint', best suited for intracranial recordings, 
+elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.elec in the set op elseif's beyond this
   
   % TODO 
   % auto detect
@@ -410,7 +410,12 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   elseif ~any(strcmp(elec.coordsys,{'tal','mni'}))
     % TO IMPLEMENT: coordinate system should be converted when possible
     error(['elec.coordys = ' elec.coordsys ' is not supported for using cfg.ieegview, please convert to either tal/mni'])
+  else
+    eleccoordsys = elec.coordsys;
   end
+  % obtain units, to be used for outline later
+  elecunit = elec.unit; % to be used later for outline generation
+  
   % extract coordinates
   if ~isempty(cfg.channel)
     % look at the data to determine the overlapping channels
@@ -490,13 +495,20 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   width     = ones(nchan,1) * sizefac;
   height    = ones(nchan,1) * sizefac * (4/5); 
   
+  % generate mask (generate as the convex hull around the electrode cloud, and grow it from the center with sizefac)
+  mask     = pos(convhull(pos(:,1),pos(:,2)),:); 
+  maskcent = mean(mask,1);
+  centfac  = mask-maskcent;
+  centfac  = centfac ./ max(abs(centfac),[],2);
+  mask     = mask + (centfac * sizefac);
+
   % put in layout
   layout.pos     = pos;
   layout.label   = label;
   layout.width   = width;
   layout.height  = height;
   layout.outline = [];
-  layout.mask    = [];
+  layout.mask    = {mask};
  
   
   % layout outline generation
@@ -508,10 +520,16 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     elseif ~any(strcmp(cfg.ieeganatomy.coordsys,{'tal','mni'}))
       % TO IMPLEMENT: coordinate system should be converted when possible
       error(['elec.coordys = ' elec.coordsys ' is not supported for using cfg.ieegview, please convert to either tal/mni'])
+    elseif ~isequal(cfg.ieeganatomy.coordsys,eleccoordsys)
+      error('coordinate system of anatomy does not match that of electrodes')
+      %warning('coordinate system of anatomy does not match that of electrodes, generating outline regardless') % in the ca
     end
     
     % parse mesh/mri
     if ft_datatype(cfg.ieeganatomy,'volume')
+      if ~ft_platform_supports('boundary')
+        error('using an MRI as cfg.ieeganatomy is only supported in MATLAB2014b or higher, use a pial surface instead')
+      end
       if ~isfield(cfg.ieeganatomy,'brain')
         warning('no brain mask found in MRI, attempting automatic segmentation')
         cfgseg = [];
@@ -520,6 +538,9 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       else
         mriseg = cfg.ieeganatomy;
       end
+      % match units with that of electrodes
+      mriseg = ft_convert_units(mriseg,elecunit);
+      
       % extract boundary points indicating brain
       [x,y,z] = ind2sub(mriseg.dim,find(mriseg.brain));
       braincoords = cat(2,x,y,z);
@@ -530,27 +551,33 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       
     elseif ft_datatype(cfg.ieeganatomy,'mesh') || ft_datatype(cfg.ieeganatomy,'source+mesh')
       mesh = cfg.ieeganatomy;
+      
+      % match units with that of electrodes
+      mesh = ft_convert_units(mesh,elecunit);
+      
+      % extract points indicating brain
       braincoords = mesh.pnt;
     else
       error('cfg.ieeganatomy needs to contain either an MRI or a MESH, see ft_read_mri or ft_')
     end
-    
-    % apply rotation from above (!) to coordinates and extract XY
-    braincoords = braincoords * rotmat;
-    braincoords = braincoords(:, [1 3]);  
-    
-    % extract outline based on matlab version
+
+    % generate outline based on matlab version
     if ft_platform_supports('boundary')
-     
+      
+      % apply rotation from above (!) to coordinates and extract XY
+      braincoords = braincoords * rotmat;
+      braincoords = braincoords(:, [1 3]);
+      
       % get outline
       k = boundary(braincoords,.8);
       outline = braincoords(k,:);
       
-    else
+    else % fallback, sad! (not yet working for MRI, an error is thrown above if this is the case)
       
       % plot
+      mesh.pnt = mesh.pnt * rotmat;
       h = figure('visible','off');
-      ft_plot_mesh(bnd,'facecolor',[0 0 0], 'EdgeColor', 'none');
+      ft_plot_mesh(mesh,'facecolor',[0 0 0], 'EdgeColor', 'none');
       % set to base view
       view([0 0])
       axis tight
@@ -590,8 +617,18 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
  
     % save outline
     layout.outline = {outline};
-  end
-
+  end  
+  
+  % add SCALE and COMNT (using outline as reference, in nearly all, this should suffice)
+  layout.label{end+1}  = 'SCALE';
+  layout.width(end+1)  = sizefac;
+  layout.height(end+1) = sizefac * (4/5);
+  layout.pos(end+1,:)  = [min(outline(:,1)) - sizefac*2 min(outline(:,2)) - sizefac*2];
+  layout.label{end+1}  = 'COMNT';
+  layout.width(end+1)  = sizefac;
+  layout.height(end+1) = sizefac * (4/5);
+  layout.pos(end+1,:)  = [max(outline(:,1)) + sizefac*2 min(outline(:,2)) - sizefac*2];
+  
   
   % try to generate layout from other configuration options
 elseif ischar(cfg.layout)
