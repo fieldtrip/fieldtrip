@@ -461,6 +461,8 @@ switch field
       dimord = '{rpt}_time';
     elseif isvector(data.(field)) && isequal(datsiz, [1 ntime ones(1,numel(datsiz)-2)])
       dimord = 'time';
+    elseif iscell(data.(field)) && isfield(data, 'label') && isfield(data, 'timestamp') && isequal(getdimsiz(data, 'timestamp'), datsiz) && datsiz(1)==nchan
+      dimord = '{chan}_spike';
     end
     
   case {'freq'}
