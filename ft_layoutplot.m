@@ -33,6 +33,7 @@ function [cfg] = ft_layoutplot(cfg, data)
 %   cfg.image       = filename, use an image to construct a layout (e.g. usefull for ECoG grids)
 %   cfg.visible     = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %   cfg.box         = 'yes' or 'no', whether box should be plotted around electrode
+%   cfg.mask        = 'yes' or 'no', whether mask should be plotted 
 %
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
@@ -103,7 +104,9 @@ end
 % set the defaults
 cfg.visible = ft_getopt(cfg, 'visible', 'on');
 cfg.box     = ft_getopt(cfg, 'box', 'on');
+cfg.mask    = ft_getopt(cfg, 'mask', 'on');
 cfg.box     = istrue(cfg.box);
+cfg.mask    = istrue(cfg.mask);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % extract/generate layout information
@@ -175,7 +178,7 @@ if isfield(cfg, 'image') && ~isempty(cfg.image)
   axis xy
 end
 
-ft_plot_lay(lay, 'point', true, 'box', cfg.box, 'label', true, 'mask', true, 'outline', true);
+ft_plot_lay(lay, 'point', true, 'box', cfg.box, 'label', true, 'mask', cfg.mask, 'outline', true);
 
 % the following code can be used to verify a bipolar montage, given the
 % layout of the monopolar channels
