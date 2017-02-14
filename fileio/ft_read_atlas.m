@@ -81,6 +81,8 @@ elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
   l1  = fgetl(fid);
   if strcmp(l1(1),'[') && strcmp(l1(end),']')
     defaultformat = 'aal_ext';
+  elseif strcmp(l1,'Brainnetome Atlas')
+      defaultformat= 'brainnetome';
   else
     defaultformat = 'aal';
   end
@@ -160,7 +162,31 @@ switch fileformat
       atlas.tissue = reshape(j-1, atlas.dim);
       atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
     end
+  case 'brainnetome'
+      
+    % Brainnetome Atlas 
+    % L. Fan, et al.The Human Brainnetome Atlas: A New Brain Atlas Based on 
+    % Connectional Architecture. Cereb Cortex 2016; 26 (8): 3508-3526. 
+    % doi: 10.1093/cercor/bhw157
+    atlas = ft_read_mri(filename);
+    atlas.tissue = atlas.anatomy;
+    atlas = rmfield(atlas, 'anatomy');
+    atlas.coordsys = 'mni';
     
+    %Brainnetome atlas comes as radiological view convention.
+    %change to neurological view: patient Left->image Left.
+    atlas.transform(1,1)=-atlas.transform(1,1);
+    atlas.transform(1,4)=-atlas.transform(1,4);
+    
+    %labels
+    atlas.tissuelabel = cell(1,246);
+    fid = fopen(labelfile, 'rt');
+    lab  = fgetl(fid);%lab='Brainnetome Atlas'
+    for label_i=1:246
+        atlas.tissuelabel{1,label_i}=fgetl(fid);
+    end
+    fclose(fid);
+        
   case 'afni'
     % check whether the required AFNI toolbox is available
     ft_hastoolbox('afni', 1);
