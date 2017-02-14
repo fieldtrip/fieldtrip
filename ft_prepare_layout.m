@@ -1074,7 +1074,7 @@ else
 end
 
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
-if ~strcmp(cfg.style, '3d')
+if ~strcmp(cfg.style, '3d') && (~any(strcmp(cfg.layout,{'ordered','horizontal','vertical'})) && ~strncmp(fliplr(cfg.layout),fliplr('column'),6)) % why is this default here? FIXME properly
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % check whether outline and mask are available
   % if not, add default "circle with triangle" to resemble the head
