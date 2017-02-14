@@ -45,13 +45,13 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.ieegview    = string indicating 'viewpoint' used for projecting 3D electrode coordinates to 2D plane for layout
 %                     Useful for intracranial recordings, requires cfg.elec/cfg.elecfile containing 3D coordinates
 %                     Viewpoints are as follows:
-%                     LSAG = left  sagittal view, L=anterior, R=posterior, top=top, bottom=bottom
-%                     RSAG = right sagittal view, L=posterior, R=anterior, top=top, bottom=bottom
-%                     INF  = inferior axial view, L=R, R=L, top=anterior, bottom=posterior
-%                     SUP  = superior axial view, L=L, R=R, top=anterior, bottom=posterior
-%                     ANT  = anterior  coronal view, L=R, R=L, top=top, bottom=bottom
-%                     POST = posterior coronal view, L=L, R=R, top=top, bottom=bottom
-%                     auto = automatic guess of the most optimal of the above
+%                     'LSAG' = left  sagittal view, L=anterior, R=posterior, top=top, bottom=bottom
+%                     'RSAG' = right sagittal view, L=posterior, R=anterior, top=top, bottom=bottom
+%                     'INF'  = inferior axial view, L=R, R=L, top=anterior, bottom=posterior
+%                     'SUP'  = superior axial view, L=L, R=R, top=anterior, bottom=posterior
+%                     'ANT'  = anterior  coronal view, L=R, R=L, top=top, bottom=bottom
+%                     'POST' = posterior coronal view, L=L, R=R, top=top, bottom=bottom
+%                     'auto' = automatic guess of the most optimal of the above
 %                      tip: use cfg.ieegview = auto per electrode grid/strip/depth for most accurate results
 %                      tip: to obtain overview of e.g. all depth electrodes, choose SUP/INF, use cfg.ieeganatomy, and
 %                           plot using ft_layoutplot with cfg.box/mask = 'no'
@@ -392,10 +392,6 @@ elseif isequal(cfg.layout, 'ordered')
   % project 3D coordinates to 2D plane determined by anatomic 'viewpoint', best suited for intracranial recordings, 
 elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.elec in the set op elseif's beyond this
   
-  % TODO 
-  % auto detect
-  % scale and commnt are now place automatically at the bottom 
-  
   % fetch elec
   if ~isempty(cfg.elec) && isstruct(cfg.elec)
     elec = cfg.elec;
@@ -551,6 +547,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     
     % parse mesh/mri
     if ft_datatype(cfg.ieeganatomy,'volume')
+      % for the moment       FIXME: find a way to support MRI using the getframe approach too
       if ~ft_platform_supports('boundary')
         error('using an MRI as cfg.ieeganatomy is only supported in MATLAB2014b or higher, use a pial surface instead')
       end
