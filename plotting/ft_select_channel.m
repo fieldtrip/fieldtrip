@@ -80,11 +80,19 @@ end % if multiple
 % SUBFUNCTION to assist in the selection of a single channel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_channel_single(pos, callback)
-
-info  = guidata(gcf);
-x     = info.x;
-y     = info.y;
-label = info.label;
+tag = get(gca,'tag');
+% in case subplots were used
+if strncmp(tag,'axh',3)
+  info   = guidata(gcf);
+  x      = info.(tag).x(:);
+  y      = info.(tag).y(:);
+  label  = info.(tag).label(:);  
+else % no subplots were used
+  info   = guidata(gcf);
+  x      = info.x(:);
+  y      = info.y(:);
+  label  = info.label(:);
+end
 
 % compute a tolerance measure
 distance = sqrt(abs(sum([x y]'.*[x y]',1)));
@@ -125,11 +133,19 @@ end
 % SUBFUNCTION to assist in the selection of multiple channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_channel_multiple(callback,range,cmenulab) % last input is context menu label, see ft_select_range
-
-info   = guidata(gcf);
-x      = info.x(:);
-y      = info.y(:);
-label  = info.label(:);
+tag = get(gca,'tag');
+% in case subplots were used
+if strncmp(tag,'axh',3)
+  info   = guidata(gcf);
+  x      = info.(tag).x(:);
+  y      = info.(tag).y(:);
+  label  = info.(tag).label(:);  
+else % no subplots were used
+  info   = guidata(gcf);
+  x      = info.x(:);
+  y      = info.y(:);
+  label  = info.label(:);
+end
 
 % determine which channels ly in the selected range
 select = false(size(label));
