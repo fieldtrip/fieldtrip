@@ -577,7 +577,11 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       mesh = ft_convert_units(mesh,elecunit);
       
       % extract points indicating brain
-      braincoords = mesh.pnt;
+      if isfield(mesh,'pnt')
+        mesh.pos = mesh.pnt;
+        mesh = rmfield(mesh,'pnt');
+      end
+      braincoords = mesh.pos;
     else
       error('cfg.ieeganatomy needs to contain either an MRI or a MESH, see ft_read_mri or ft_')
     end
@@ -596,7 +600,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     else % fallback, sad! (not yet working for MRI, an error is thrown above if this is the case)
       
       % plot
-      mesh.pnt = mesh.pnt * rotmat;
+      mesh.pos = mesh.pos * rotmat;
       h = figure('visible','off');
       ft_plot_mesh(mesh,'facecolor',[0 0 0], 'EdgeColor', 'none');
       % set to base view
