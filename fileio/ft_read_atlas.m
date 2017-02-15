@@ -2027,6 +2027,12 @@ switch fileformat
       %  reindex = false;
       case 'freesurfer_triangle_binary'
         [pos, tri] = read_surf(filenamemesh);
+        
+        % ensure the triangles to be 1-indexed
+        if min(tri(:))==0 && max(tri(:))==size(pos,1)-1
+          tri = tri+1;
+        end
+        
         bnd.pos    = pos;
         bnd.tri    = tri;
         reindex    = true;
