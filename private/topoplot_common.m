@@ -900,7 +900,7 @@ end
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-    % add the channel information to the figure
+    % add the cfg/data/channel information to the figure under identifier linked to this axis
     ident                    = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
     set(gca,'tag',ident);
     info                     = guidata(gcf);
@@ -999,6 +999,7 @@ ft_topoplotER(cfg, data);
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotER(label)
+% fetch cfg/data based on axis indentifier given as tag
 ident       = get(gca,'tag');
 info        = guidata(gcf);
 cfg         = info.(ident).cfg;

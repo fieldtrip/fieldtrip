@@ -494,7 +494,7 @@ end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
-  % add the channel information to the figure
+  % add the cfg/data information to the figure under identifier linked to this axis
   ident             = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca,'tag',ident);
   info              = guidata(gcf);
@@ -579,7 +579,7 @@ function select_topoplotTFR(varargin)
 range = varargin{end-1};
 varargin = varargin(1:end-2); % remove range and last
 
-% get cfg/data based on tag
+% fetch cfg/data based on axis indentifier given as tag
 ident  = get(gca,'tag');
 info   = guidata(gcf);
 cfg    = info.(ident).cfg;

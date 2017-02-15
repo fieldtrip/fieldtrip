@@ -650,7 +650,8 @@ end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
-    % add the channel information to the figure
+    
+    % add the cfg/data/channel information to the figure under identifier linked to this axis
     ident                 = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
     set(gca,'tag',ident);
     info                  = guidata(gcf);
@@ -728,6 +729,7 @@ ft_multiplotTFR(cfg, varargin{:});
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotTFR(label, varargin)
+% fetch cfg/data based on axis indentifier given as tag
 ident = get(gca,'tag');
 info  = guidata(gcf);
 cfg   = info.(ident).cfg;
