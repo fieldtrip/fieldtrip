@@ -254,13 +254,9 @@ switch cfg.method
     
   case {'bemcp' 'dipoli' 'openmeeg'}
     % the low-level functions all need a mesh
-    if input_mesh
-      if ~isfield(data, 'tri')
-        error('Please give a mesh with closed triangulation');
-      else
-        geometry = data;
-      end
-    elseif input_seg
+    if isfield(data, 'pos') && isfield(data, 'tri')
+      geometry = data;
+    elseif isfield(data, 'transform') && isfield(data, 'dim')
       tmpcfg = [];
       tmpcfg.numvertices = cfg.numvertices;
       tmpcfg.tissue = cfg.tissue;

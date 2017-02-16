@@ -6,33 +6,30 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % additional deformations to the input sensors (e.g. scale them to better fit the
 % skin surface). The different methods are described in detail below.
 %
-% INTERACTIVE - You can display the skin surface together with the
-% electrode or gradiometer positions, and manually (using the graphical
-% user interface) adjust the rotation, translation and scaling parameters,
-% so that the electrodes correspond with the skin.
+% INTERACTIVE - You can display the skin surface together with the electrode or
+% gradiometer positions, and manually (using the graphical user interface) adjust the
+% rotation, translation and scaling parameters, so that the electrodes correspond
+% with the skin.
 %
 % FIDUCIAL - You can apply a rigid body realignment based on three fiducial
-% locations. After realigning, the fiducials in the input electrode set
-% (typically nose, left and right ear) are along the same axes as the
-% fiducials in the template electrode set.
+% locations. After realigning, the fiducials in the input electrode set (typically
+% nose, left and right ear) are along the same axes as the fiducials in the template
+% electrode set.
 %
-% TEMPLATE - You can apply a spatial transformation/deformation that
-% automatically minimizes the distance between the electrodes or
-% gradiometers and a template or sensor array. The warping methods use a
-% non-linear search to minimize the distance between the input sensor
-% positions and the corresponding template sensors.
+% TEMPLATE - You can apply a spatial transformation/deformation that automatically
+% minimizes the distance between the electrodes or gradiometers and a template or
+% sensor array. The warping methods use a non-linear search to minimize the distance
+% between the input sensor positions and the corresponding template sensors.
 %
-% HEADSHAPE - You can apply a spatial transformation/deformation that
-% automatically minimizes the distance between the electrodes and the head
-% surface. The warping methods use a non-linear search to minimize the
-% distance between the input sensor positions and the projection of the
-% electrodes on the head surface.
+% HEADSHAPE - You can apply a spatial transformation/deformation that automatically
+% minimizes the distance between the electrodes and the head surface. The warping
+% methods use a non-linear search to minimize the distance between the input sensor
+% positions and the projection of the electrodes on the head surface.
 %
 % PROJECT - This projects all electrodes to the nearest point on the
 % head surface mesh.
 %
 % MOVEINWARD - This moves all electrodes inward according to their normals
-% 
 %
 % Use as
 %   [elec_realigned] = ft_sensorrealign(cfg)
@@ -57,9 +54,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'nonlin3'         apply a 3rd order non-linear warp
 %                        'nonlin4'         apply a 4th order non-linear warp
 %                        'nonlin5'         apply a 5th order non-linear warp
-%                        'dykstra2012'     non-linear wrap only for headshape
-%                                          method useful for projecting ECoG onto
-%                                          cortex hull.
+%                        'dykstra2012'     non-linear wrap only for headshape method, useful for projecting ECoG onto cortex hull
 %                        'fsaverage'       surface-based realignment with the freesurfer fsaverage brain
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
@@ -93,12 +88,11 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
 %
-% If you want to align ECoG electrodes to the pial surface, you first need to
-% compute the cortex hull with FT_PREPARE_MESH. dykstra2012 uses algorithm
-% described in Dykstra et al. (2012, Neuroimage) in which electrodes are
-% projected onto pial surface while minimizing the displacement of the
-% electrodes from original location and maintaining the grid shape. It relies
-% on the optimization toolbox.
+% If you want to align ECoG electrodes to the pial surface, you first need to compute
+% the cortex hull with FT_PREPARE_MESH. dykstra2012 uses algorithm described in
+% Dykstra et al. (2012, Neuroimage) in which electrodes are projected onto pial
+% surface while minimizing the displacement of the electrodes from original location
+% and maintaining the grid shape. It relies on the optimization toolbox.
 %   cfg.method         = 'headshape'
 %   cfg.warp           = 'dykstra2012'
 %   cfg.headshape      = a filename containing headshape, a structure containing a
@@ -108,23 +102,23 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        procedure.
 %
 % If you want to move the electrodes inward, you should specify
-%   cfg.moveinward     = number, the distance that the electrode should be moved 
+%   cfg.moveinward     = number, the distance that the electrode should be moved
 %                        inward (negative numbers result in an outward move)
 %
-% If you want to align ECoG electrodes to the freesurfer average brain, you 
-% should specify the path to your headshape (e.g., lh.pial), and ensure you
-% have the corresponding registration file (e.g., lh.sphere.reg) in the same directory. 
-% Moreover, the path to the local freesurfer home is required. Note that,
-% because the electrodes are being aligned to the fsaverage brain, the corresponding brain 
-% should be also used when plotting the data, i.e. use freesurfer/subjects/fsaverage/surf/lh.pial 
+% If you want to align ECoG electrodes to the freesurfer average brain, you should
+% specify the path to your headshape (e.g., lh.pial), and ensure you have the
+% corresponding registration file (e.g., lh.sphere.reg) in the same directory.
+% Moreover, the path to the local freesurfer home is required. Note that, because the
+% electrodes are being aligned to the fsaverage brain, the corresponding brain should
+% be also used when plotting the data, i.e. use freesurfer/subjects/fsaverage/surf/lh.pial
 % rather than surface_pial_left.mat.
 %   cfg.method         = 'headshape'
 %   cfg.warp           = 'fsaverage'
-%   cfg.headshape      = a filename containing headshape (e.g. <path to freesurfer/surf/lh.pial>)
-%   cfg.fshome         = <path to freesurfer directory> 
+%   cfg.headshape      = string, filename containing headshape (e.g. <path to freesurfer/surf/lh.pial>)
+%   cfg.fshome         = string, path to freesurfer
 %
 % See also FT_READ_SENS, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_PREPARE_MESH
-%
+
 % Copyright (C) 2005-2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -208,7 +202,7 @@ switch cfg.method
     cfg = ft_checkconfig(cfg, 'required', 'headshape', 'forbidden', 'target');
   case 'fiducial'        % realign using the NAS, LPA and RPA fiducials
     cfg = ft_checkconfig(cfg, 'required', 'target', 'forbidden', 'headshape');
-  case 'moveinward'    %moves eletrodes inward
+  case 'moveinward'      % moves eletrodes inward
     cfg = ft_checkconfig(cfg, 'required', 'moveinward');
 end % switch cfg.method
 
@@ -320,9 +314,9 @@ if useheadshape
 end
 
 % convert all labels to lower case for string comparisons
-% this has to be done AFTER keeping the original labels and positions
+cfg.channel = ft_channelselection(cfg.channel, elec.label);
 if strcmp(cfg.casesensitive, 'no')
-  elec.label = lower(elec.label);
+  elec.label  = lower(elec.label);
   cfg.channel = lower(cfg.channel);
   if usetarget
     for j=1:length(target)
@@ -333,6 +327,7 @@ if strcmp(cfg.casesensitive, 'no')
   end
 end
 [cfgsel, datsel] = match_str(cfg.channel, elec.label);
+% keep the original channel labels
 label_original = elec_original.label(datsel);
 
 % start with an empty structure, this will be returned at the end
@@ -623,7 +618,15 @@ elseif strcmp(cfg.method, 'project')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'moveinward')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  elec.elecpos = moveinward(elec.elecpos, cfg.moveinward);
+  % determine electrode selection
+  cfg.channel = ft_channelselection(cfg.channel, elec.label);
+  [cfgsel, datsel] = match_str(cfg.channel, elec.label);
+  elec.label     = elec.label(datsel);
+  elec.elecpos   = elec.elecpos(datsel,:);
+  
+  norm.label = elec.label;
+  norm.elecpos = moveinward(elec.elecpos, cfg.moveinward);
+  
 else
   error('unknown method');
 end % if method
@@ -633,7 +636,7 @@ end % if method
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template', 'headshape'}
-    if strcmp(lower(cfg.warp), 'dykstra2012') || strcmp(lower(cfg.warp), 'fsaverage')
+    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'fsaverage')
       elec_realigned = norm;
       elec_realigned.label = label_original;
     else
@@ -645,10 +648,10 @@ switch cfg.method
       catch
         % the previous section will fail for nonlinear transformations
         elec_realigned.label = label_original;
-        try, elec_realigned.elecpos = ft_warp_apply(norm.m, elec_original.elecpos, cfg.warp); end
+        try, elec_realigned.elecpos = ft_warp_apply(norm.m, elec_original.elecpos, cfg.warp); end % FIXME why is an error here not dealt with?
       end
       % remember the transformation
-      elec_realigned.(cfg.warp) = norm.m;  
+      elec_realigned.(cfg.warp) = norm.m;
     end
     
   case  {'fiducial' 'interactive'}
