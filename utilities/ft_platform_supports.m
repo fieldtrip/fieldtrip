@@ -69,7 +69,7 @@ switch what
     
   case 'libmx_c_interface'
     % removed after 2013b
-    tf = is_matlab && matlabversion(-Inf, '2013b');
+    tf = is_matlab() && matlabversion(-Inf, '2013b');
     
   case 'stats'
     root_dir = fileparts(which('ft_defaults'));
