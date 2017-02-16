@@ -30,10 +30,12 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       Draw x- and y-axes for each graph
 %   cfg.box           = 'yes', 'no' (default = 'no')
 %                       Draw a box around each graph
-%   cfg.comment       = string of text (default = date + colors)
-%                       Add 'comment' to graph (according to COMNT in the layout)
 %   cfg.showlabels    = 'yes', 'no' (default = 'no')
 %   cfg.showoutline   = 'yes', 'no' (default = 'no')
+%   cfg.showscale     = 'yes', 'no' (default = 'yes')
+%   cfg.showcomment   = 'yes', 'no' (default = 'yes')
+%   cfg.comment       = string of text (default = date + zlimits)
+%                       Add 'comment' to graph (according to COMNT in the layout)
 %   cfg.fontsize      = font size of comment and labels (if present) (default = 8)
 %   cfg.interactive   = Interactive plot 'yes' or 'no' (default = 'yes')
 %                       In a interactive plot you can select areas and produce a new
@@ -163,6 +165,8 @@ cfg.comment        = ft_getopt(cfg, 'comment', strcat([date '\n']));
 cfg.axes           = ft_getopt(cfg, 'axes', 'yes');
 cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
 cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
+cfg.showscale      = ft_getopt(cfg, 'showscale',   'yes');
+cfg.showcomment    = ft_getopt(cfg, 'showcomment', 'yes');
 cfg.box            = ft_getopt(cfg, 'box', 'no');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.graphcolor     = ft_getopt(cfg, 'graphcolor', 'brgkywrgbkywrgbkywrgbkyw');
@@ -716,15 +720,19 @@ end % for number of channels
 cfg.comment = [cfg.comment colorLabels];
 
 % Write comment text:
-l = cellstrmatch('COMNT', Lbl);
-if ~isempty(l)
-  ft_plot_text(X(l), Y(l), sprintf(cfg.comment), 'Fontsize', cfg.fontsize, 'interpreter', 'none');
+if istrue(cfg.showcomment)
+  l = cellstrmatch('COMNT', Lbl);
+  if ~isempty(l)
+    ft_plot_text(X(l), Y(l), sprintf(cfg.comment), 'Fontsize', cfg.fontsize, 'interpreter', 'none');
+  end
 end
 
 % Plot scales:
-l = cellstrmatch('SCALE', Lbl);
-if ~isempty(l)
-  plotScales([xmin xmax], [ymin ymax], X(l), Y(l), width(1), height(1), cfg)
+if istrue(cfg.showscale)
+  l = cellstrmatch('SCALE', Lbl);
+  if ~isempty(l)
+    plotScales([xmin xmax], [ymin ymax], X(l), Y(l), width(1), height(1), cfg)
+  end
 end
 
 % set the figure window title
