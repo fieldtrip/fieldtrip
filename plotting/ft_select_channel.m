@@ -80,6 +80,11 @@ end % if multiple
 % SUBFUNCTION to assist in the selection of a single channel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_channel_single(pos, callback)
+% If this function is called from a plotting function that supports interactive subplots,
+% then the current axis, which was used for selection, was given a tag that starts with 'axh' followed by a unique ID.
+% If so, then the data (e.g. channel info) that should be used is contained in a subfield of the info (guidata)
+% structure, with field name being the 'tag' in question. 
+% If no such tag is found, then the simple situation is assumed, where the data is contained in the 'root' field
 tag = get(gca,'tag');
 % in case subplots were used
 if strncmp(tag,'axh',3)
@@ -133,6 +138,11 @@ end
 % SUBFUNCTION to assist in the selection of multiple channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_channel_multiple(callback,range,cmenulab) % last input is context menu label, see ft_select_range
+% If this function is called from a plotting function that supports interactive subplots,
+% then the current axis, which was used for selection, was given a tag that starts with 'axh' followed by a unique ID.
+% If so, then the data (e.g. channel info) that should be used is contained in a subfield of the info (guidata)
+% structure, with field name being the 'tag' in question. 
+% If no such tag is found, then the simple situation is assumed, where the data is contained in the 'root' field
 tag = get(gca,'tag');
 % in case subplots were used
 if strncmp(tag,'axh',3)
