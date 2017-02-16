@@ -15,9 +15,13 @@ function ft_select_channel(handle, eventdata, varargin)
 % You can pass additional arguments to the callback function in a cell-array
 % like {@function_handle,arg1,arg2}
 %
-% Example
+% Example 1
 %   % create a figure
-%   lay = ft_prepare_layout([])
+%   figure
+%   cfg = [];
+%   cfg.channel = {'chan1', 'chan2', 'chan3', 'chan4'};
+%   cfg.layout  = 'ordered';
+%   lay = ft_prepare_layout(cfg);
 %   ft_plot_lay(lay)
 %
 %   % add the required guidata
@@ -34,6 +38,34 @@ function ft_select_channel(handle, eventdata, varargin)
 %   set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
 %   set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
 %   set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
+%
+% Example 2 (executed from within a subplot
+%   % create a figure
+%   figure
+%   subplot(2,2,1)
+%   cfg = [];
+%   cfg.channel = {'chan1', 'chan2', 'chan3', 'chan4'};
+%   cfg.layout  = 'ordered';
+%   lay = ft_prepare_layout(cfg);
+%   ft_plot_lay(lay) 
+%
+%   % add the channel information to guidata under identifier linked to this axis
+%   ident              = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
+%   set(gca,'tag',ident);
+%   info               = guidata(gcf);
+%   info.(ident).x     = lay.pos(:, 1);
+%   info.(ident).y     = lay.pos(:, 2);
+%   info.(ident).label = lay.label;
+%   guidata(gcf, info)
+%
+%   % add this function as the callback to make a single selection
+%   set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'callback', @disp})
+%
+%   % or to make multiple selections
+%   set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
+%   set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
+%   set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', @disp, 'event', 'WindowButtonDownFcn'})
+%      
 %
 % Subsequently you can click in the figure and you'll see that the disp
 % function is executed as callback and that it displays the selected
