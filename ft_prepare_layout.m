@@ -166,8 +166,8 @@ cfg.ieeganatomy  = ft_getopt(cfg, 'ieeganatomy',[]); % separate form cfg.mesh
 % try to generate the layout structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-skipscale = strcmp(cfg.skipscale, 'yes'); % in general a scale is desired
-skipcomnt = strcmp(cfg.skipcomnt, 'yes'); % in general a comment desired
+skipscale = istrue(cfg.skipscale); % in general a scale is desired
+skipcomnt = istrue(cfg.skipcomnt); % in general a comment desired
 
 if isa(cfg.layout, 'config')
   % convert the nested config-object back into a normal structure
