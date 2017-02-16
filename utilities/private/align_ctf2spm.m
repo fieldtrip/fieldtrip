@@ -90,6 +90,13 @@ if opt==1
         template = fullfile(spm('Dir'),'templates','T1.nii');
       end
       
+    case 'spm12'
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
+      else
+        template = fullfile(spm('Dir'),'templates','T1.nii'); % FIXME: this is a copy of the spm8 template
+      end
+      
     otherwise
       error('unsupported spm-version');
   end
@@ -139,6 +146,13 @@ elseif opt==2
         if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.nii');
+      end
+      
+    case 'spm12'
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
+      else
+        template = fullfile(spm('Dir'),'templates','T1.nii'); % FIXME: this is a copy of the spm8 template
       end
       
     otherwise
