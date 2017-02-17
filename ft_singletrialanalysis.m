@@ -27,9 +27,9 @@ function [reconstructed, residual] = ft_singletrialanalysis(cfg, data)
 %  ongoing activity and gives an estimate of single-trial latency shift and
 %  amplitude scaling of event-related components.
 %  cfg.aseo.jitter          = value, time jitter in initial timewindow
-%                              estimate (in seconds)
+%                              estimate (in seconds). default 0.050 seconds
 %  cfg.aseo.numiteration    = value, number of iteration (default = 1)
-%  cfg.aseo.searchWindowSet = 2xN matrix, initial set of latencies in seconds of event-
+%  cfg.aseo.waveformInitSet = 2xN matrix, initial set of latencies in seconds of event-
 %                             related components, give as [comp1start, comp1end;
 %                             comp2start, comp2end] (default not specified)
 %  OR
@@ -142,7 +142,7 @@ switch method
         
         % set defaults
         waveformInitSet  = ft_getopt(cfg.aseo, 'waveformInitSet', {});
-        jitter           = ft_getopt(cfg.aseo, 'jitter', 50);
+        jitter           = ft_getopt(cfg.aseo, 'jitter', 0.050);
         numiteration     = ft_getopt(cfg.aseo, 'numiteration', 1);
         initcomp         = ft_getopt(cfg.aseo, 'initcomp', {});
                     
@@ -173,9 +173,7 @@ switch method
         if ~isempty(waveformInitSet)
             waveformInitSet = waveformInitSet';
             waveformInitSet = waveformInitSet(:);
-            for k = 1:length(waveformInitSet)
-                waveformInitSet(k,1) = nearest(data.time{1}, waveformInitSet(k,1)); % convert unit from msec to sample
-            end         
+            waveformInitSet = fsample*waveformInitSet; % convert seconds to samples
         end
         cfg.aseo.waveformInitSet = waveformInitSet;
         cfg.aseo.unit = 'sample';
