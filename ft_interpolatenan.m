@@ -6,12 +6,13 @@ function dataout = ft_interpolatenan(cfg, datain)
 %
 % Use as
 %   outdata = ft_interpolatenan(cfg, indata)
-% where indata is data as obtained from FT_PREPROCESSING
-% and cfg is a configuration structure that should contain
+% where cfg is a configuration structure and the input data is obtained from FT_PREPROCESSING.
 %
+% The configuration should contain
 %   cfg.method      = string, interpolation method, see HELP INTERP1 (default = 'linear')
 %   cfg.prewindow   = value, length of data prior to interpolation window, in seconds (default = 1)
 %   cfg.postwindow  = value, length of data after interpolation window, in seconds (default = 1)
+%   cfg.feedback    = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
 % This function only interpolates over time, not over space. If you want to
 % interpolate using spatial information, e.g. using neighbouring channels, you should
@@ -79,27 +80,28 @@ cfg             = ft_checkopt(cfg, 'prewindow', 'numericscalar');
 cfg             = ft_checkopt(cfg, 'postwindow', 'numericscalar');
 
 % get the options
-method          = ft_getopt(cfg, 'method',    'linear'); % default is linear
-prewindow       = ft_getopt(cfg, 'prewindow',  1);       % default is 1 second
-postwindow      = ft_getopt(cfg, 'postwindow', 1);       % default is 1 seconds
+cfg.method      = ft_getopt(cfg, 'method',    'linear'); % default is linear
+cfg.prewindow   = ft_getopt(cfg, 'prewindow',  1);       % default is 1 second
+cfg.postwindow  = ft_getopt(cfg, 'postwindow', 1);       % default is 1 seconds
+cfg.feedback    = ft_getopt(cfg, 'feedback', 'etf');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-prewindow = round(prewindow * datain.fsample); % Express window in samples
-postwindow = round(postwindow * datain.fsample); % Express window in samples
+prewindow  = round(cfg.prewindow * datain.fsample); % Express window in samples
+postwindow = round(cfg.postwindow * datain.fsample); % Express window in samples
 
 % Start with a copy of the input data
 dataout = datain;
 
 % Let users know that the interpolation will start and initialize the progress indicator
 ntrl = numel(datain.trial);
-fprintf('Initializing %s interpolation of %d trials\n', method, ntrl);
-ft_progress('init',  'etf');
+fprintf('Initializing %s interpolation of %d trials\n', cfg.method, ntrl);
+ft_progress('init',  cfg.feedback, 'Processing trial...');
 
 for i=1:ntrl
-  ft_progress(i/ntrl, 'Processing trial %d out of %d', i, ntrl);
+  ft_progress(i/ntrl, 'Processing trial %d from %d', i, ntrl);
   replace = isnan(datain.trial{i}); % Find samples that have been replaced by nans
   if any(replace(:)) % Check whether any values should be interpolated
     [idx_start_r, idx_start_c] = find(diff(replace, [], 2)==1); % Determine onset of nan-chunk
@@ -116,7 +118,7 @@ for i=1:ntrl
         error('Sample window overlaps with other chunk of nans');
       end;
       fill_window = idx_start_c(j):idx_end_c(j); % Indices of time-points that will be interpolated
-      fill = interp1(sample_window, datain.trial{i}(idx_start_r(j), sample_window), fill_window, method); % Interpolation
+      fill = interp1(sample_window, datain.trial{i}(idx_start_r(j), sample_window), fill_window, cfg.method); % Interpolation
       dataout.trial{i}(idx_start_r(j), fill_window)=fill; % Add interpolated segments to dataout
     end
   end

@@ -188,10 +188,6 @@ if ~isfield(cfg, 'box')
     cfg.box = 'no';
   end
 end
-if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive, 'yes')
-  warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
-  cfg.interactive = 'no';
-end
 
 dimord = data.dimord;
 dimtok = tokenize(dimord, '_');
@@ -654,17 +650,22 @@ end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
-    % add the channel information to the figure
-    info       = guidata(gcf);
-    info.x     = lay.pos(:, 1);
-    info.y     = lay.pos(:, 2);
-    info.label = lay.label;
-    info.dataname = dataname;
+    
+    % add the cfg/data/channel information to the figure under identifier linked to this axis
+    ident                 = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
+    set(gca,'tag',ident);
+    info                  = guidata(gcf);
+    info.(ident).x        = lay.pos(:, 1);
+    info.(ident).y        = lay.pos(:, 2);
+    info.(ident).label    = lay.label;
+    info.(ident).dataname = dataname;
+    info.(ident).cfg      = cfg;
+    info.(ident).data     = data;
     guidata(gcf, info);
 
-    set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, data}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, data}, 'event', 'WindowButtonMotionFcn'});
+    set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
 end
 
 axis tight
@@ -727,7 +728,12 @@ ft_multiplotTFR(cfg, varargin{:});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_singleplotTFR(label, cfg, varargin)
+function select_singleplotTFR(label, varargin)
+% fetch cfg/data based on axis indentifier given as tag
+ident = get(gca,'tag');
+info  = guidata(gcf);
+cfg   = info.(ident).cfg;
+data  = info.(ident).data;
 if ~isempty(label)
   if isfield(cfg, 'inputfile')
     % the reading has already been done and varargin contains the data
@@ -739,8 +745,7 @@ if ~isempty(label)
   cfg.baseline = 'no';
 
   % put data name in here, this cannot be resolved by other means
-  info = guidata(gcf);
-  cfg.dataname = info.dataname;
+  cfg.dataname = info.(ident).dataname;
 
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
@@ -749,7 +754,7 @@ if ~isempty(label)
   fprintf('''%s''}\n', cfg.channel{end});
   p = get(gcf, 'Position');
   f = figure('position', p);
-  ft_singleplotTFR(cfg, varargin{:});
+  ft_singleplotTFR(cfg, data);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
