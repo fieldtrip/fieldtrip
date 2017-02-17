@@ -9,8 +9,8 @@ SFG, Right Superior Frontal Gyrus A6dl, dorsolateral area 6
 SFG, Left Superior Frontal Gyrus A6dl, dorsolateral area 6
 SFG, Right Superior Frontal Gyrus A6m, medial area 6
 SFG, Left Superior Frontal Gyrus A6m, medial area 6
-SFG, Right Superior Frontal Gyrus A9m,medial area 9
-SFG, Left Superior Frontal Gyrus A9m,medial area 9
+SFG, Right Superior Frontal Gyrus A9m, medial area 9
+SFG, Left Superior Frontal Gyrus A9m, medial area 9
 SFG, Right Superior Frontal Gyrus A10m, medial area 10
 SFG, Left Superior Frontal Gyrus A10m, medial area 10
 MFG, Right Middle Frontal Gyrus A9/46d, dorsal area 9/46
@@ -27,8 +27,8 @@ MFG, Right Middle Frontal Gyrus A6vl, ventrolateral area 6
 MFG, Left Middle Frontal Gyrus A6vl, ventrolateral area 6
 MFG, Right Middle Frontal Gyrus A10l, lateral area10
 MFG, Left Middle Frontal Gyrus A10l, lateral area10
-IFG, Right Inferior Frontal Gyrus A44d,dorsal area 44
-IFG, Left Inferior Frontal Gyrus A44d,dorsal area 44
+IFG, Right Inferior Frontal Gyrus A44d, dorsal area 44
+IFG, Left Inferior Frontal Gyrus A44d, dorsal area 44
 IFG, Right Inferior Frontal Gyrus IFS, inferior frontal sulcus
 IFG, Left Inferior Frontal Gyrus IFS, inferior frontal sulcus
 IFG, Right Inferior Frontal Gyrus A45c, caudal area 45
@@ -59,12 +59,12 @@ PrG, Right Precentral Gyrus A4ul, area 4 (upper limb region)
 PrG, Left Precentral Gyrus A4ul, area 4 (upper limb region)
 PrG, Right Precentral Gyrus A4t, area 4 (trunk region)
 PrG, Left Precentral Gyrus A4t, area 4 (trunk region)
-PrG, Right Precentral Gyrus A4tl, area 4(tongue and larynx region)
-PrG, Left Precentral Gyrus A4tl, area 4(tongue and larynx region)
+PrG, Right Precentral Gyrus A4tl, area 4 (tongue and larynx region)
+PrG, Left Precentral Gyrus A4tl, area 4 (tongue and larynx region)
 PrG, Right Precentral Gyrus A6cvl, caudal ventrolateral area 6
 PrG, Left Precentral Gyrus A6cvl, caudal ventrolateral area 6
-PCL, Right Paracentral Lobule A1/2/3ll, area1/2/3 (lower limb region)
-PCL, Left Paracentral Lobule A1/2/3ll, area1/2/3 (lower limb region)
+PCL, Right Paracentral Lobule A1/2/3ll, area 1/2/3 (lower limb region)
+PCL, Left Paracentral Lobule A1/2/3ll, area 1/2/3 (lower limb region)
 PCL, Right Paracentral Lobule A4ll, area 4, (lower limb region)
 PCL, Left Paracentral Lobule A4ll, area 4, (lower limb region)
 STG, Right Superior Temporal Gyrus A38m, medial area 38
