@@ -635,17 +635,17 @@ end
 
 % make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-  % add the dataname to the figure
-  % this is used in the callbacks
-  info          = guidata(gcf);
-  info.dataname = dataname;
+  % add the cfg/data information to the figure under identifier linked to this axis
+  ident                  = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
+  set(gca,'tag',ident);
+  info                   = guidata(gcf);
+  info.(ident).cfg       = cfg;
+  info.(ident).varargin  = varargin;
+  info.(ident).dataname  = dataname;
   guidata(gcf, info);
-  % attach data to the figure with the current axis handle as a name
-  dataname = fixname(num2str(double(gca)));
-  setappdata(gcf,dataname,varargin);
-  set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg}, 'event', 'windowbuttonupfcn'});
-  set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg}, 'event', 'windowbuttondownfcn'});
-  set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER, cfg}, 'event', 'windowbuttonmotionfcn'});
+  set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonupfcn'});
+  set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
+  set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
 end
 
 % create title text containing channel name(s) and channel number(s):
@@ -699,15 +699,17 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_topoplotER(cfg, varargin)
+function select_topoplotER(varargin)
 % first to last callback-input of ft_select_range is range
 % last callback-input of ft_select_range is contextmenu label, if used
 range = varargin{end-1};
 varargin = varargin(1:end-2); % remove range and last
 
-% get appdata belonging to current axis
-dataname = fixname(num2str(double(gca)));
-data = getappdata(gcf, dataname);
+% fetch cfg/data based on axis indentifier given as tag
+ident    = get(gca,'tag');
+info     = guidata(gcf);
+cfg      = info.(ident).cfg;
+varargin = info.(ident).varargin;
 
 if isfield(cfg, 'inputfile')
   % the reading has already been done and varargin contains the data
@@ -721,9 +723,8 @@ end
 cfg.channel = 'all';
 cfg.comment = 'auto';
 cfg.xlim = range(1:2);
-% put data name in here, this cannot be resolved by other means
-info = guidata(gcf);
-cfg.dataname = info.dataname;
+%
+cfg.dataname = info.(ident).dataname;
 % if user specified a ylim, copy it over to the zlim of topoplot
 if isfield(cfg, 'ylim')
   cfg.zlim = cfg.ylim;
@@ -732,7 +733,7 @@ end
 fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
 p = get(gcf, 'position');
 f = figure('position', p);
-ft_topoplotER(cfg, data{:});
+ft_topoplotER(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which handles hot keys in the current plot

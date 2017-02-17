@@ -1,6 +1,6 @@
 function test_spm12
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % TEST test_spm12
