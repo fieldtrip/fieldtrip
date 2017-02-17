@@ -195,8 +195,8 @@ MVOcC, Right MedioVentral Occipital Cortex cCunG, caudal cuneus gyrus
 MVOcC, Left MedioVentral Occipital Cortex cCunG, caudal cuneus gyrus
 MVOcC, Right MedioVentral Occipital Cortex rLinG, rostral lingual gyrus
 MVOcC, Left MedioVentral Occipital Cortex rLinG, rostral lingual gyrus
-MVOcC, Right MedioVentral Occipital Cortex vmPOS,ventromedial parietooccipital sulcus
-MVOcC, Left MedioVentral Occipital Cortex vmPOS,ventromedial parietooccipital sulcus
+MVOcC, Right MedioVentral Occipital Cortex vmPOS, ventromedial parietooccipital sulcus
+MVOcC, Left MedioVentral Occipital Cortex vmPOS, ventromedial parietooccipital sulcus
 LOcC, Right lateral Occipital Cortex mOccG, middle occipital gyrus
 LOcC, Left lateral Occipital Cortex mOccG, middle occipital gyrus
 LOcC, Right lateral Occipital Cortex V5/MT+, area V5/MT+
