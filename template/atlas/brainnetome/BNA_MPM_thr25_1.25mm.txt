@@ -51,14 +51,14 @@ OrG, Right Orbital Gyrus A13, area 13
 OrG, Left Orbital Gyrus A13, area 13
 OrG, Right Orbital Gyrus A12/47l, lateral area 12/47
 OrG, Left Orbital Gyrus A12/47l, lateral area 12/47
-PrG, Right Precentral Gyrus A4hf, area 4(head and face region)
-PrG, Left Precentral Gyrus A4hf, area 4(head and face region)
+PrG, Right Precentral Gyrus A4hf, area 4 (head and face region)
+PrG, Left Precentral Gyrus A4hf, area 4 (head and face region)
 PrG, Right Precentral Gyrus A6cdl, caudal dorsolateral area 6
 PrG, Left Precentral Gyrus A6cdl, caudal dorsolateral area 6
-PrG, Right Precentral Gyrus A4ul, area 4(upper limb region)
-PrG, Left Precentral Gyrus A4ul, area 4(upper limb region)
-PrG, Right Precentral Gyrus A4t, area 4(trunk region)
-PrG, Left Precentral Gyrus A4t, area 4(trunk region)
+PrG, Right Precentral Gyrus A4ul, area 4 (upper limb region)
+PrG, Left Precentral Gyrus A4ul, area 4 (upper limb region)
+PrG, Right Precentral Gyrus A4t, area 4 (trunk region)
+PrG, Left Precentral Gyrus A4t, area 4 (trunk region)
 PrG, Right Precentral Gyrus A4tl, area 4(tongue and larynx region)
 PrG, Left Precentral Gyrus A4tl, area 4(tongue and larynx region)
 PrG, Right Precentral Gyrus A6cvl, caudal ventrolateral area 6
@@ -112,55 +112,55 @@ PhG, Left Parahippocampal Gyrus A35/36r, rostral area 35/36
 PhG, Right Parahippocampal Gyrus A35/36c, caudal area 35/36
 PhG, Left Parahippocampal Gyrus A35/36c, caudal area 35/36
 PhG, Right Parahippocampal Gyrus TL, area TL (lateral PPHC, posterior parahippocampal gyrus)
-PhG, Left Parahippocampal Gyrus TL, area TL (lateral PPHC, posterior parahippocampal Gyrus )
+PhG, Left Parahippocampal Gyrus TL, area TL (lateral PPHC, posterior parahippocampal gyrus)
 PhG, Right Parahippocampal Gyrus A28/34, area 28/34 (EC, entorhinal cortex)
 PhG, Left Parahippocampal Gyrus A28/34, area 28/34 (EC, entorhinal cortex)
-PhG, Right Parahippocampal Gyrus TI, area TI(temporal agranular insular cortex)
-PhG, Left Parahippocampal Gyrus TI, area TI(temporal agranular insular cortex)
+PhG, Right Parahippocampal Gyrus TI, area TI (temporal agranular insular cortex)
+PhG, Left Parahippocampal Gyrus TI, area TI (temporal agranular insular cortex)
 PhG, Right Parahippocampal Gyrus TH, area TH (medial PPHC)
 PhG, Left Parahippocampal Gyrus TH, area TH (medial PPHC)
 pSTS, Right posterior Superior Temporal Sulcus rpSTS, rostroposterior superior temporal sulcus
 pSTS, Left posterior Superior Temporal Sulcus rpSTS, rostroposterior superior temporal sulcus
 pSTS, Right posterior Superior Temporal Sulcus cpSTS, caudoposterior superior temporal sulcus
 pSTS, Left posterior Superior Temporal Sulcus cpSTS, caudoposterior superior temporal sulcus
-SPL, Right Superior Parietal LobuleA7r, rostral area 7
-SPL, Left Superior Parietal LobuleA7r, rostral area 7
-SPL, Right Superior Parietal LobuleA7c, caudal area 7
-SPL, Left Superior Parietal LobuleA7c, caudal area 7
-SPL, Right Superior Parietal LobuleA5l, lateral area 5
-SPL, Left Superior Parietal LobuleA5l, lateral area 5
-SPL, Right Superior Parietal LobuleA7pc, postcentral area 7
-SPL, Left Superior Parietal LobuleA7pc, postcentral area 7
-SPL, Right Superior Parietal LobuleA7ip, intraparietal area 7(hIP3)
-SPL, Left Superior Parietal LobuleA7ip, intraparietal area 7(hIP3)
-IPL, Right Inferior Parietal LobuleA39c, caudal area 39(PGp)
-IPL, Left Inferior Parietal LobuleA39c, caudal area 39(PGp)
-IPL, Right Inferior Parietal LobuleA39rd, rostrodorsal area 39(Hip3)
-IPL, Left Inferior Parietal LobuleA39rd, rostrodorsal area 39(Hip3)
-IPL, Right Inferior Parietal LobuleA40rd, rostrodorsal area 40(PFt)
-IPL, Left Inferior Parietal LobuleA40rd, rostrodorsal area 40(PFt)
-IPL, Right Inferior Parietal LobuleA40c, caudal area 40(PFm)
-IPL, Left Inferior Parietal LobuleA40c, caudal area 40(PFm)
-IPL, Right Inferior Parietal LobuleA39rv, rostroventral area 39(PGa)
-IPL, Left Inferior Parietal LobuleA39rv, rostroventral area 39(PGa)
-IPL, Right Inferior Parietal LobuleA40rv, rostroventral area 40(PFop)
-IPL, Left Inferior Parietal LobuleA40rv, rostroventral area 40(PFop)
-Pcun, Right PrecuneusA7m, medial area 7(PEp)
-Pcun, Left PrecuneusA7m, medial area 7(PEp)
-Pcun, Right PrecuneusA5m, medial area 5(PEm)
-Pcun, Left PrecuneusA5m, medial area 5(PEm)
-Pcun, Right PrecuneusdmPOS, dorsomedial parietooccipital  sulcus(PEr) 
-Pcun, Left PrecuneusdmPOS, dorsomedial parietooccipital  sulcus(PEr) 
+SPL, Right Superior Parietal Lobule A7r, rostral area 7
+SPL, Left Superior Parietal Lobule A7r, rostral area 7
+SPL, Right Superior Parietal Lobule A7c, caudal area 7
+SPL, Left Superior Parietal Lobule A7c, caudal area 7
+SPL, Right Superior Parietal Lobule A5l, lateral area 5
+SPL, Left Superior Parietal Lobule A5l, lateral area 5
+SPL, Right Superior Parietal Lobule A7pc, postcentral area 7
+SPL, Left Superior Parietal Lobule A7pc, postcentral area 7
+SPL, Right Superior Parietal Lobule A7ip, intraparietal area 7 (hIP3)
+SPL, Left Superior Parietal Lobule A7ip, intraparietal area 7 (hIP3)
+IPL, Right Inferior Parietal Lobule A39c, caudal area 39 (PGp)
+IPL, Left Inferior Parietal Lobule A39c, caudal area 39 (PGp)
+IPL, Right Inferior Parietal Lobule A39rd, rostrodorsal area 39 (Hip3)
+IPL, Left Inferior Parietal Lobule A39rd, rostrodorsal area 39 (Hip3)
+IPL, Right Inferior Parietal Lobule A40rd, rostrodorsal area 40 (PFt)
+IPL, Left Inferior Parietal Lobule A40rd, rostrodorsal area 40 (PFt)
+IPL, Right Inferior Parietal Lobule A40c, caudal area 40 (PFm)
+IPL, Left Inferior Parietal Lobule A40c, caudal area 40 (PFm)
+IPL, Right Inferior Parietal Lobule A39rv, rostroventral area 39 (PGa)
+IPL, Left Inferior Parietal Lobule A39rv, rostroventral area 39 (PGa)
+IPL, Right Inferior Parietal Lobule A40rv, rostroventral area 40 (PFop)
+IPL, Left Inferior Parietal Lobule A40rv, rostroventral area 40 (PFop)
+Pcun, Right PrecuneusA7m, medial area 7 (PEp)
+Pcun, Left PrecuneusA7m, medial area 7 (PEp)
+Pcun, Right PrecuneusA5m, medial area 5 (PEm)
+Pcun, Left PrecuneusA5m, medial area 5 (PEm)
+Pcun, Right PrecuneusdmPOS, dorsomedial parietooccipital sulcus (PEr) 
+Pcun, Left PrecuneusdmPOS, dorsomedial parietooccipital sulcus (PEr) 
 Pcun, Right PrecuneusA31, area 31 (Lc1)
 Pcun, Left PrecuneusA31, area 31 (Lc1)
-PoG, Right Postcentral Gyrus A1/2/3ulhf, area 1/2/3(upper limb, head and face region)
-PoG, Left Postcentral Gyrus A1/2/3ulhf, area 1/2/3(upper limb, head and face region)
-PoG, Right Postcentral Gyrus A1/2/3tonIa, area 1/2/3(tongue and larynx region)
-PoG, Left Postcentral Gyrus A1/2/3tonIa, area 1/2/3(tongue and larynx region)
+PoG, Right Postcentral Gyrus A1/2/3ulhf, area 1/2/3 (upper limb, head and face region)
+PoG, Left Postcentral Gyrus A1/2/3ulhf, area 1/2/3 (upper limb, head and face region)
+PoG, Right Postcentral Gyrus A1/2/3tonIa, area 1/2/3 (tongue and larynx region)
+PoG, Left Postcentral Gyrus A1/2/3tonIa, area 1/2/3 (tongue and larynx region)
 PoG, Right Postcentral Gyrus A2, area 2
 PoG, Left Postcentral Gyrus A2, area 2
-PoG, Right Postcentral Gyrus A1/2/3tru, area1/2/3(trunk region)
-PoG, Left Postcentral Gyrus A1/2/3tru, area1/2/3(trunk region)
+PoG, Right Postcentral Gyrus A1/2/3tru, area1/2/3 (trunk region)
+PoG, Left Postcentral Gyrus A1/2/3tru, area1/2/3 (trunk region)
 INS, Right Insular Gyrus G, hypergranular insula
 INS, Left Insular Gyrus G, hypergranular insula
 INS, Right Insular Gyrus vIa, ventral agranular insula
