@@ -32,8 +32,9 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 cfg = ft_checkconfig(cfg, 'deprecated', 'dicsfix');
 if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 1;     end
 if ~isfield(cfg, 'refchan'),    cfg.refchan    = [];    end
+if ~isfield(cfg, 'rawtrial'),   cfg.rawtrial   = [];    end
 
-keeptrials = istrue(cfg.keeptrials);
+keeptrials = istrue(cfg.keeptrials) || istrue(cfg.rawtrial);
 
 Cf = [];
 Cr = [];

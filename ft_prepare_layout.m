@@ -51,10 +51,11 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 % Alternatively you can specify the following layouts which will be
 % generated for all channels present in the data. Note that these layouts
 % are suitable for multiplotting, but not for topoplotting.
-%   cfg.layout = 'ordered'   will give you a NxN ordered layout
-%   cfg.layout = 'vertical'  will give you a Nx1 ordered layout
-%   cfg.layout = 'butterfly' will give you a layout with all channels on top of each other
-%   cfg.layout = 'circular'  will distribute the channels on a circle
+%   cfg.layout = 'ordered'    will give you a NxN ordered layout
+%   cfg.layout = 'vertical'   will give you a Nx1 ordered layout
+%   cfg.layout = 'horizontal' will give you a 1xN ordered layout
+%   cfg.layout = 'butterfly'  will give you a layout with all channels on top of each other
+%   cfg.layout = 'circular'   will distribute the channels on a circle
 %
 % The output layout structure will contain the following fields
 %   layout.label   = Nx1 cell-array with channel labels
@@ -154,7 +155,7 @@ if isa(cfg.layout, 'config')
 end
 
 % ensure that there is a label field in the data, which is needed for
-% ordered/vertical/butterfly modes
+% ordered/vertical//horizontal/butterfly modes
 if hasdata && ~isfield(data, 'label') && isfield(data, 'labelcmb')
   data.label = unique(data.labelcmb(:));
 end
@@ -235,7 +236,7 @@ elseif isequal(cfg.layout, 'butterfly')
   skipscale = true; % a scale is not desired
   skipcomnt = true; % a comment is initially not desired, or at least requires more thought
 
-elseif isequal(cfg.layout, 'vertical')
+elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
   if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
     data = ft_checkdata(data);
@@ -256,11 +257,20 @@ elseif isequal(cfg.layout, 'vertical')
     layout.label = cfg.channel;
   end
   for i=1:(nchan+2)
-    x = 0.5;
-    y = 1-i/(nchan+1+2);
-    layout.pos   (i,:) = [x y];
-    layout.width (i,1) = 0.9;
-    layout.height(i,1) = 0.9 * 1/(nchan+1+2);
+    switch cfg.layout
+      case 'vertical'
+        x = 0.5;
+        y = 1-i/(nchan+1+2);
+        layout.pos   (i,:) = [x y];
+        layout.width (i,1) = 0.9;
+        layout.height(i,1) = 0.9 * 1/(nchan+1+2);
+      case 'horizontal'
+        x = i/(nchan+1+2);
+        y = 0.5;
+        layout.pos   (i,:) = [x y];
+        layout.width (i,1) = 0.9 * 1/(nchan+1+2);
+        layout.height(i,1) = 0.9;
+    end
     if i==(nchan+1)
       layout.label{i}   = 'SCALE';
     elseif i==(nchan+2)

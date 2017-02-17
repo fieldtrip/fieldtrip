@@ -1,7 +1,7 @@
-function failed_ft_datatype
+function test_ft_datatype
 
 % MEM 8gb
-% WALLTIME 01:30:00
+% WALLTIME 02:00:00
 
 % TEST test_ft_datatype
 % TEST ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens
@@ -41,14 +41,24 @@ for j=1:length(dirlist)
   filelist = filelist(sel);
   clear p f x
   
+  nbytes = zeros(numel(filelist),1);
   for i=1:length(filelist)
+    % sort for the file size
+    tmp = dir(filelist{i});
+    nbytes(i) = tmp.bytes;
+  end
+  [nbytes,ix] = sort(nbytes);
+  filelist = filelist(ix);
+  
+   for i=1:length(filelist)
     
     try
       fprintf('processing data structure %d from %d\n', i, length(filelist));
+      fprintf('file size %d\n', nbytes(i));
       var = loadvar(filelist{i});
     catch
       % some of the mat files are corrupt, this should not spoil the test
-      disp(var);
+      % disp(var);
       disp(lasterr);
       continue
     end
