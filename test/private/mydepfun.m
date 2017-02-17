@@ -68,8 +68,8 @@ for i=1:length(s)
   sel = find(strcmp(outlist, s{i}));
   if numel(sel)>1
     depmat(:,sel(1)) = max(depmat(:,sel),[], 2);
-    outlist{sel(2:end)}  = '';  % flag for removal
-    depmat(:,sel(2:end)) = nan; % flag for removal
+    outlist(sel(2:end))  = {''};  % flag for removal
+    depmat(:,sel(2:end)) = nan;   % flag for removal
   end
 end
 % remove the flagged ones

@@ -14,7 +14,7 @@ prefix = '';
 % check whether the binary is on the path
 [status, result] = system('which om_assemble');
 if status>0
-  show_error();
+  show_error(result);
 end
 
 % figure out where it is installed
@@ -38,7 +38,7 @@ if status>0
 end
 
 if status>0
-  show_error();
+  show_error(result);
 end
 
 if nargout==0
@@ -46,7 +46,7 @@ if nargout==0
 end
 
 
-function show_error
+function show_error(result)
 disp('==============================================================================');
 disp('OpenMEEG binaries are not correctly installed')
 disp(' ')
