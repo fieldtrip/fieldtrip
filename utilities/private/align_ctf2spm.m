@@ -96,9 +96,9 @@ if opt==1
         if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==1'); end
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
-        ft_hastoolbox('spm8',1); % FIXME: enforce use of SPM8 as there's yet no spm_affreg equivalent in SPM12
       end
-      
+      error('spm12 is not yet supported'); % FIXME: there's yet no spm_affreg equivalent in external/spm12
+
     otherwise
       error('unsupported spm-version');
   end
@@ -155,8 +155,8 @@ elseif opt==2
         if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
-        ft_hastoolbox('spm8',1); % FIXME: enforce use of SPM8 as there's yet no spm_normalise equivalent in SPM12
       end
+      error('spm12 is not yet supported'); % FIXME: there's yet no spm_normalise equivalent in external/spm12
       
     otherwise
       error('unsupported spm-version');
