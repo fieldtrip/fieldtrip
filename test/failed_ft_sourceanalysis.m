@@ -485,7 +485,6 @@ cfg.channel      = 'MEG';
 cfg.grid         = grid;
 cfg.frequency    = 10;
 cfg.latency      = 0.5;
-cfg.keeptrials   = 'no';
 cfg.dics.projectnoise = 'no';
 cfg.dics.feedback     = 'none';
 % dics options
@@ -496,6 +495,7 @@ cfg.dics.lambda        = '5%';
 % get filter
 tmp = sourceanalysis_DICS_keepall(data, grid, headmodel);
 cfg.rawtrial    = 'yes';
+cfg.keeptrials  = 'yes';
 cfg.grid.filter = tmp.avg.filter;
 source = ft_sourceanalysis(cfg, data);
 
