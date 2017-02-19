@@ -4,7 +4,7 @@ function test_headmodel_openmeeg_new_old
 % WALLTIME 01:45:00
 
 % TEST test_headmodel_openmeeg_new_old
-% TEST ft_prepare_headmodel ft_headmodel_openmeeg ft_prepare_bemmodel
+% TEST ft_prepare_headmodel ft_headmodel_openmeeg ft_prepare_bemmodel ft_headmodel_openmeeg
 
 % generate a unit sphere
 [pnt, tri] = icosahedron162;

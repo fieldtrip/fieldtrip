@@ -31,7 +31,9 @@ function headmodel = ft_headmodel_openmeeg(mesh, varargin)
 
 %$Id$
 
-ft_hastoolbox('openmeeg', 1);
+ft_hastoolbox('openmeeg', 1);  % add to path (if not yet on path)
+openmeeg_license;              % show the license (only once)
+prefix = om_checkombin;        % check the installation of the binaries
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the first part is largely shared with the dipoli and bemcp implementation
@@ -93,12 +95,6 @@ headmodel.source = numboundaries;
 % this uses an implementation that was contributed by INRIA Odyssee Team
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% show the license once
-% openmeeg_license
-
-% check that the binaries are ok
-om_checkombin;
-
 % store the current path and change folder to the temporary one
 tmpfolder = cd;
 bndom = headmodel.bnd;
@@ -152,11 +148,11 @@ try
   if ~ispc
     fprintf(efid,'#!/usr/bin/env bash\n');
     fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
-    fprintf(efid,['om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile ' 2>&1 > /dev/null\n']);
-    fprintf(efid,['om_minverser ./' hmfile ' ./' hminvfile ' 2>&1 > /dev/null\n']);
+    fprintf(efid,[prefix 'om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile ' 2>&1 > /dev/null\n']);
+    fprintf(efid,[prefix 'om_minverser ./' hmfile ' ./' hminvfile ' 2>&1 > /dev/null\n']);
   else
-    fprintf(efid,['om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile '\n']);
-    fprintf(efid,['om_minverser ./' hmfile ' ./' hminvfile '\n']);
+    fprintf(efid,[prefix 'om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile '\n']);
+    fprintf(efid,[prefix 'om_minverser ./' hmfile ' ./' hminvfile '\n']);
   end
   
   fclose(efid);

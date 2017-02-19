@@ -4,7 +4,7 @@ function test_bug686
 % WALLTIME 00:30:00
 
 % TEST test_bug686
-% TEST ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel headsurface
+% TEST ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;

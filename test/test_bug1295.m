@@ -35,8 +35,8 @@ T2 = tmp2.transform;
 dir1 = cross(T1(1,1:3),T1(2,1:3));
 dir2 = cross(T2(1,1:3),T2(2,1:3));
 
-isrighthanded1 = sign(dir1*T1(3,1:3)')==1
-isrighthanded2 = sign(dir2*T2(3,1:3)')==1
+isrighthanded1 = sign(dir1*T1(3,1:3)')==1;
+isrighthanded2 = sign(dir2*T2(3,1:3)')==1;
 
 % now do the realignment with an additional zpoint
 % this is new functionality as of feb 2012
@@ -50,5 +50,5 @@ tmp1b = ft_volumerealign(cfg, mri1);
 T1b   = tmp1b.transform;
 dir1b = cross(T1b(1,1:3),T1b(2,1:3));
 
-isrighthanded1b = sign(dir1b*T1b(3,1:3)')==1
+isrighthanded1b = sign(dir1b*T1b(3,1:3)')==1;
 

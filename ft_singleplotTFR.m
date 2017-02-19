@@ -494,12 +494,16 @@ end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
-  % first, attach data to the figure with the current axis handle as a name
-  dataname = fixname(num2str(double(gca)));
-  setappdata(gcf,dataname,data);
-  set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg}, 'event', 'WindowButtonMotionFcn'});
+  % add the cfg/data information to the figure under identifier linked to this axis
+  ident             = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
+  set(gca,'tag',ident);
+  info              = guidata(gcf);
+  info.(ident).cfg  = cfg;
+  info.(ident).data = data;
+  guidata(gcf, info);
+  set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR}, 'event', 'WindowButtonUpFcn'});
+  set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR}, 'event', 'WindowButtonDownFcn'});
+  set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR}, 'event', 'WindowButtonMotionFcn'});
   %   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
   %   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg, data}, 'event', 'WindowButtonDownFcn'});
   %   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR, cfg, data}, 'event', 'WindowButtonMotionFcn'});
@@ -569,15 +573,17 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting a time range
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_topoplotTFR(cfg, varargin)
+function select_topoplotTFR(varargin)
 % first to last callback-input of ft_select_range is range
 % last callback-input of ft_select_range is contextmenu label, if used
 range = varargin{end-1};
 varargin = varargin(1:end-2); % remove range and last
 
-% get appdata belonging to current axis
-dataname = fixname(num2str(double(gca)));
-data = getappdata(gcf, dataname);
+% fetch cfg/data based on axis indentifier given as tag
+ident  = get(gca,'tag');
+info   = guidata(gcf);
+cfg    = info.(ident).cfg;
+data   = info.(ident).data;
 
 if isfield(cfg, 'inputfile')
   % the reading has already been done and varargin contains the data

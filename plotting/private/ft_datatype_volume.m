@@ -133,7 +133,7 @@ switch version
       try
         volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim);
       catch
-        warning('could not reshape %s to the expected dimensions', fn{i});
+        warning('could not reshape "%s" to the expected dimensions', fn{i});
       end
     end
 

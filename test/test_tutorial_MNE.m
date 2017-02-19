@@ -3,6 +3,8 @@ function test_tutorial_MNE
 % MEM 4gb
 % WALLTIME 00:30:00
 
+% TEST ft_volumereslice ft_volumerealign ft_volumesegment
+
 cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 mri = ft_read_mri('Subject01.mri');
 

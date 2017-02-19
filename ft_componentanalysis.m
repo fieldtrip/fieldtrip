@@ -8,15 +8,17 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % Use as
 %   [comp] = ft_componentanalysis(cfg, data)
+% where cfg is a configuration structure and the input data is obtained from
+% FT_PREPROCESSING or from FT_TIMELOCKANALYSIS.
 %
-% where the data comes from FT_PREPROCESSING and the configuration
-% structure can contain
+% The configuration should contain
 %   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.demean       = 'no' or 'yes', whether to demean the input data (default = 'yes')
 %   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
+%   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
 % The runica method supports the following method-specific options. The values that
 % these options can take can be found with HELP RUNICA.
@@ -174,6 +176,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
+istimelock = ft_datatype(data, 'timelock');
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
@@ -191,7 +194,8 @@ cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.cellmode        = ft_getopt(cfg, 'cellmode',     'no');
 cfg.doscale         = ft_getopt(cfg, 'doscale',      'yes');
-cfg.updatesens      = ft_getopt(cfg, 'updatesens',  'yes');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens',   'yes');
+cfg.feedback        = ft_getopt(cfg, 'feedback',     'text');
 
 % select channels, has to be done prior to handling of previous (un)mixing matrix
 cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -587,9 +591,9 @@ switch cfg.method
 
     % compute kernel matrix
     C = zeros(Nchans,Nchans);
-    ft_progress('init', 'text', 'computing kernel matrix...');
+    ft_progress('init', cfg.feedback, 'computing kernel matrix...');
     for k = 1:Nchans
-      ft_progress(k/Nchans);
+      ft_progress(k/Nchans, 'computing kernel matrix %d from %d', k, Nchans);
       C(k,:) = kern(dat, dat(k,:));
     end
     ft_progress('close');
@@ -862,6 +866,11 @@ end
 % copy the trialinfo into the output
 if isfield(data, 'trialinfo')
   comp.trialinfo = data.trialinfo;
+end
+
+% convert back to input type if necessary
+if istimelock
+  comp = ft_checkdata(comp, 'datatype', 'timelock+comp');
 end
 
 % do the general cleanup and bookkeeping at the end of the function

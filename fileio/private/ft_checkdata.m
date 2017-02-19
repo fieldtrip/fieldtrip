@@ -117,7 +117,6 @@ if (~isempty(depHastrialdef))
 end
 
 % determine the type of input data
-% this can be raw, freq, timelock, comp, spike, source, volume, dip
 israw           = ft_datatype(data, 'raw');
 isfreq          = ft_datatype(data, 'freq');
 istimelock      = ft_datatype(data, 'timelock');
@@ -358,6 +357,13 @@ if ~isempty(dtype)
       istimelock = 0;
       iscomp = 1;
       israw = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'timelock+comp'}) && israw && iscomp
+      data = raw2timelock(data);
+      data = ft_datatype_timelock(data);
+      istimelock = 1;
+      iscomp = 1;
+      israw = 0;
       okflag = 1;
     elseif isequal(dtype(iCell), {'raw'}) && issource
       data = source2raw(data);
