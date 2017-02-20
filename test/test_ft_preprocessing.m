@@ -94,7 +94,7 @@ cfg.trl   = cfg.trl(sel,:);
 % in the data, but creates problems if the generated data-structure is used
 % downstream (e.g. in ft_sourceanalysis, with a Cf of all(zeros))), so for
 % this type of data we shift the trl matrix a bit
-if ft_senstype(hdr.grad, 'neuromag306')
+if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag306')
   cfg.trl(:,1:2) = cfg.trl(:,1:2)+10000;
 end
 
