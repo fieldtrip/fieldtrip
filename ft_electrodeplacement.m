@@ -130,7 +130,7 @@ end
 % check if the input data is valid for this function
 switch cfg.method
   case 'volume'
-    mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes');
+    mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes', 'hascoordsys', 'yes');
   case  {'headshape', '1020'}
     headshape = fixpos(varargin{1});
     headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');

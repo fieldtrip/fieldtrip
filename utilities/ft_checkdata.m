@@ -358,6 +358,13 @@ if ~isempty(dtype)
       iscomp = 1;
       israw = 1;
       okflag = 1;
+    elseif isequal(dtype(iCell), {'timelock+comp'}) && israw && iscomp
+      data = raw2timelock(data);
+      data = ft_datatype_timelock(data);
+      istimelock = 1;
+      iscomp = 1;
+      israw = 0;
+      okflag = 1;
     elseif isequal(dtype(iCell), {'raw'}) && issource
       data = source2raw(data);
       data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
