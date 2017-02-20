@@ -89,6 +89,15 @@ cfg.trl   = [begsample(:) endsample(:) offset(:)];
 sel       = cfg.trl(:,2)<=hdr.nSamples*hdr.nTrials;
 cfg.trl   = cfg.trl(sel,:);
 
+% JM 20170220: the neuromag306 raw.fif happens to have a bunch of zeros at
+% the beginning of the file (up until ~sample 8300): this seems te be truly
+% in the data, but creates problems if the generated data-structure is used
+% downstream (e.g. in ft_sourceanalysis, with a Cf of all(zeros))), so for
+% this type of data we shift the trl matrix a bit
+if ft_senstype(hdr.grad, 'neuromag306')
+  cfg.trl(:,1:2) = cfg.trl(:,1:2)+10000;
+end
+
 cfg.continuous = 'yes';
 data           = ft_preprocessing(cfg);
 

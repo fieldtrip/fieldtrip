@@ -1,4 +1,4 @@
-function failed_ft_freqanalysis(datainfo, writeflag, version)
+function test_ft_freqanalysis(datainfo, writeflag, version)
 
 % MEM 8000mb
 % WALLTIME 01:30:00
