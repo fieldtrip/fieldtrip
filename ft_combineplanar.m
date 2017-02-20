@@ -99,9 +99,9 @@ if isfield(cfg, 'baseline')
 end
 
 israw      = ft_datatype(data, 'raw');
-isfreq     = ft_datatype(data, 'freq');
 istimelock = ft_datatype(data, 'timelock');
-if isfield(data, 'dimord'),
+isfreq     = ft_datatype(data, 'freq');
+if isfield(data, 'dimord')
   dimord = data.dimord;
 end
 

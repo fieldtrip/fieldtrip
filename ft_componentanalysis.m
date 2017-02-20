@@ -176,6 +176,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
+istimelock = ft_datatype(data, 'timelock');
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
@@ -865,6 +866,11 @@ end
 % copy the trialinfo into the output
 if isfield(data, 'trialinfo')
   comp.trialinfo = data.trialinfo;
+end
+
+% convert back to input type if necessary
+if istimelock
+  comp = ft_checkdata(comp, 'datatype', 'timelock+comp');
 end
 
 % do the general cleanup and bookkeeping at the end of the function

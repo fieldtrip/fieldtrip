@@ -101,16 +101,19 @@ switch version
       % ensure that the gradiometer structure is up to date
       timelock.grad = ft_datatype_sens(timelock.grad);
     end
-
+    
     if isfield(timelock, 'elec')
       % ensure that the electrode structure is up to date
       timelock.elec = ft_datatype_sens(timelock.elec);
     end
-
+    
+    % these fields can be present in raw data, but not desired in timelock data
+    timelock = removefields(timelock, {'sampleinfo', 'fsample'});
+    
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % there are no known conversions for backward or forward compatibility support
-
+    
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     error('unsupported version "%s" for timelock datatype', version);
