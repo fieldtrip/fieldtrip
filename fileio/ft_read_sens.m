@@ -18,6 +18,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   'senstype'       = string, can be 'eeg' or 'meg', specifies which type of sensors to read from a fif file (default = 'eeg')
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
+%   'transform'      = can be empty or a 4x4 transformation matrix (applies to bioimage_mgrid)
 %
 % An electrode definition contain the following fields
 %   elec.elecpos = Nx3 matrix with carthesian (x,y,z) coordinates of each
