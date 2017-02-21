@@ -73,6 +73,8 @@ fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 senstype       = ft_getopt(varargin, 'senstype', 'eeg');  % can be eeg or meg, this is used to decide what to return if both are present in a fif file
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
+transform      = ft_getopt(varargin, 'transform');        % empty, or a 4x4 transformation matrix
+
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -369,8 +371,26 @@ switch fileformat
       sens.chanpos = [x y z];
     end
     
-  otherwise
-    error('unknown fileformat for electrodes or gradiometers');
+  case 'bioimage_mgrid'
+    sens = read_bioimage_mgrid(filename);
+    
+    % bioimage suite indexes the first voxel as [0, 0, 0]
+    sens.elecpos = sens.elecpos+1;
+    sens.chanpos = sens.elecpos;
+      
+    if ~isempty(transform)
+      % convert xyz coordinates (in mm) to ijk coordinates
+      sens.elecpos(:,1) = round(sens.elecpos(:,1)/abs(transform(1,1)));
+      sens.elecpos(:,2) = round(sens.elecpos(:,2)/abs(transform(2,2)));
+      sens.elecpos(:,3) = round(sens.elecpos(:,3)/abs(transform(3,3)));
+      % warp ijk coordinates to ras coordinates
+      sens.elecpos = ft_warp_apply(transform, sens.elecpos);
+      sens.chanpos = sens.elecpos;
+      sens.coordsys = 'ras';
+    end
+    
+    otherwise
+        error('unknown fileformat for electrodes or gradiometers');
 end
 
 % ensure that the sensor description is up-to-date

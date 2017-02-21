@@ -2,14 +2,13 @@ function [elec] = read_bioimage_mgrid(mgridfile)
 
 % READ_BIOIMAGE_MGRID reads BioImage Suite .mgrid files and converts them 
 % into a FieldTrip-compatible elec datatype structure with electrode 
-% positions in xyz coordinates (equals voxel coordinates in mm)
+% positions in xyz ( coordinat (equals voxel coordinates in mm)es
 %
 % Use as:
 %   elec = read_bioimage_mgrid(mgridfile)
 %   where 
-%        mgridfile has an .mgrid file extension
-% 
-% See also FT_READ_SENS
+%        mgridfile has an .mgrid file extensi
+% on See also FT_READ_SENS
 
 % Copyright (C) 2017, Arjen Stolk & Sandon Griffin
 %
@@ -29,7 +28,7 @@ function [elec] = read_bioimage_mgrid(mgridfile)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
+% $Id$--
 
 
 % define output
