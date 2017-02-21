@@ -173,7 +173,10 @@ switch method
         if ~isempty(waveformInitSet)
             waveformInitSet = waveformInitSet';
             waveformInitSet = waveformInitSet(:);
-            waveformInitSet = fsample*waveformInitSet; % convert seconds to samples
+            % convert seconds into samples
+            for k = 1:length(waveformInitSet)
+                waveformInitSet(k,1) = nearest(data.time{1}, waveformInitSet(k,1)); % convert unit from sec to sample
+            end
         end
         cfg.aseo.waveformInitSet = waveformInitSet;
         cfg.aseo.unit = 'sample';
