@@ -249,16 +249,11 @@ for trialNo = 1:ntrl
     
     % Signal after removal of the other ERP components
     signal = data(:,trialNo) - (exp(-1i*freqSeq*lat_estTmp ).*erp_estTmp) * amp_estTmp.';
-    
+    temp2(:, trialNo) = signal.*inv_noise(:, trialNo).*conj(erp_est(:,compNo));
     % Estimate the ERP latency
     temp(:,trialNo) = inv_noise(:,trialNo).*conj(signal).*(erp_est(:,compNo));
 end
-temp_tau  = fft(temp, fft_point);  % Do Fourier transform on all trials at once
-temp_tau  = fftshift(temp_tau, 1); % and shift
-
-% NOTE: the IEEE paper mentions an ifft on
-% inv_noise.*signal.*conj(erp_est), however
-% fftshift(fft(x)) = ifftshift(ifft(conj(x))), so this is equivalent
+temp_tau = ifftshift(ifft(temp2, fft_point));
 
 % now extract the latencies in a different way than the original
 % implementation
