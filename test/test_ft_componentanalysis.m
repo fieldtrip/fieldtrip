@@ -1,4 +1,4 @@
-function failed_ft_componentanalysis(datainfo, writeflag, version)
+function test_ft_componentanalysis(datainfo, writeflag, version)
 
 % MEM 2gb
 % WALLTIME 00:10:00
