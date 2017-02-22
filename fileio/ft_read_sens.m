@@ -18,7 +18,6 @@ function [sens] = ft_read_sens(filename, varargin)
 %   'senstype'       = string, can be 'eeg' or 'meg', specifies which type of sensors to read from a fif file (default = 'eeg')
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
-%   'transform'      = can be empty or a 4x4 transformation matrix (applies to bioimage_mgrid)
 %
 % An electrode definition contain the following fields
 %   elec.elecpos = Nx3 matrix with carthesian (x,y,z) coordinates of each
@@ -158,10 +157,12 @@ switch fileformat
     
   case 'besa_sfp'
     [lab, pos] = read_besa_sfp(filename);
-	
     sens.label   = lab;
     sens.elecpos = pos;
-		
+    
+  case 'bioimage_mgrid'
+    sens = read_bioimage_mgrid(filename);
+    
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
@@ -372,27 +373,9 @@ switch fileformat
       sens.chanpos = [x y z];
     end
     
-  case 'bioimage_mgrid'
-    sens = read_bioimage_mgrid(filename);
-    
-    % bioimage suite indexes the first voxel as [0, 0, 0]
-    sens.elecpos = sens.elecpos+1;
-    sens.chanpos = sens.elecpos;
-      
-    if ~isempty(transform)
-      % convert xyz coordinates (in mm) to ijk coordinates
-      sens.elecpos(:,1) = round(sens.elecpos(:,1)/abs(transform(1,1)));
-      sens.elecpos(:,2) = round(sens.elecpos(:,2)/abs(transform(2,2)));
-      sens.elecpos(:,3) = round(sens.elecpos(:,3)/abs(transform(3,3)));
-      % warp ijk coordinates to ras coordinates
-      sens.elecpos = ft_warp_apply(transform, sens.elecpos);
-      sens.chanpos = sens.elecpos;
-      sens.coordsys = 'ras';
-    end
-    
-    otherwise
-        error('unknown fileformat for electrodes or gradiometers');
-end
+  otherwise
+    error('unknown fileformat for electrodes or gradiometers');
+end % switch fileformat
 
 % ensure that the sensor description is up-to-date
 % this will also add chantype and units to the sensor array if missing

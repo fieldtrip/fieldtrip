@@ -1,14 +1,14 @@
 function [elec] = read_bioimage_mgrid(mgridfile)
 
-% READ_BIOIMAGE_MGRID reads BioImage Suite .mgrid files and converts them 
-% into a FieldTrip-compatible elec datatype structure with electrode 
-% positions in xyz ( coordinat (equals voxel coordinates in mm)es
+% READ_BIOIMAGE_MGRID reads BioImage Suite *.mgrid files and converts them
+% into a FieldTrip-compatible elec datatype structure with electrode
+% positions in xyz coordinates (equals voxel coordinates in mm)
 %
-% Use as:
-%   elec = read_bioimage_mgrid(mgridfile)
-%   where 
-%        mgridfile has an .mgrid file extensi
-% on See also FT_READ_SENS
+% Use as
+%   elec = read_bioimage_mgrid(filename)
+% where the filename has the .mgrid file extension
+%
+% See also FT_READ_SENS, FT_DATATYPE_SENS
 
 % Copyright (C) 2017, Arjen Stolk & Sandon Griffin
 %
@@ -28,8 +28,7 @@ function [elec] = read_bioimage_mgrid(mgridfile)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$--
-
+% $Id$
 
 % define output
 elec.label = {}; % N x 1 cell array
@@ -50,23 +49,23 @@ while fileline >= 0 % read line by line
     
     % grid number
     if ~isempty(findstr(fileline,'# Electrode Grid '))
-     GridNr = sscanf(fileline(findstr(fileline, 'Grid '):end),'Grid %i');
-     WaitForDescript = 1;
-     WaitForDim = 1;
+      GridNr = sscanf(fileline(findstr(fileline, 'Grid '):end),'Grid %i');
+      WaitForDescript = 1;
+      WaitForDim = 1;
     end
     
     % grid description
-    if ~isempty(findstr(fileline,'#Description')) && WaitForDescript 
-       nextfileline = fgets(fid);
-       GridDescript = sscanf(nextfileline,'%s');
-       WaitForDescript = 0;
+    if ~isempty(findstr(fileline,'#Description')) && WaitForDescript
+      nextfileline = fgets(fid);
+      GridDescript = sscanf(nextfileline,'%s');
+      WaitForDescript = 0;
     end
     
     % grid dimension
-    if ~isempty(findstr(fileline,'#Dimensions')) && WaitForDim 
-       nextfileline = fgets(fid);
-       GridDim = sscanf(nextfileline,'%i %i')'; % row & column
-       WaitForDim = 0;
+    if ~isempty(findstr(fileline,'#Dimensions')) && WaitForDim
+      nextfileline = fgets(fid);
+      GridDim = sscanf(nextfileline,'%i %i')'; % row & column
+      WaitForDim = 0;
     end
     
     % electrode number
@@ -75,18 +74,18 @@ while fileline >= 0 % read line by line
       if ~strcmp(type, 'Grid')
         ElecNr = sscanf(fileline(findstr(fileline,'Electrode '):end),'Electrode %i %i')';
         WaitForPos = 1;
-      end      
+      end
     end
     
     % electrode position
-    if ~isempty(findstr(fileline,'#Position')) && WaitForPos 
-       nextfileline = fgets(fid);
-       ElecPos = sscanf(nextfileline,'%f %f %f')'; % x, y, and z
-       WaitForPos = 0;
+    if ~isempty(findstr(fileline,'#Position')) && WaitForPos
+      nextfileline = fgets(fid);
+      ElecPos = sscanf(nextfileline,'%f %f %f')'; % x, y, and z
+      WaitForPos = 0;
     end
     
     % store
-    if ~isempty(findstr(fileline,'#Value'))  
+    if ~isempty(findstr(fileline,'#Value'))
       elec.label{end+1,1} = [GridDescript num2str(GridDim(2) - ElecNr(2) + GridDim(2)*ElecNr(1))];
       elec.elecpos(end+1,:) = ElecPos;
     end
@@ -95,7 +94,10 @@ while fileline >= 0 % read line by line
 end % end of while loop
 fclose(fid);
 
-% add other fields to output
+% assume a unipolar montage, where the reference is implicit and the electrode positions are identical to the channel positions
 elec.chanpos = elec.elecpos;
 elec.tra = eye(size(elec.elecpos,1));
-elec.coordsys = 'xyz';
+
+% for now it remains unclear what units and coordinate system this is expressed, see https://github.com/fieldtrip/fieldtrip/pull/342
+% elec.coordsys = ERROR
+% elec.unit = ERROR
