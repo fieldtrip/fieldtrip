@@ -228,7 +228,7 @@ for k = 1:numel(datainfo)
       if isfield(sourcenew, 'cfg'), sourcenew = rmfield(sourcenew, 'cfg'); end% these are different, a.o. due to the callinfo
       source    = rmfield(source, 'cfg');
       if ~diagnosticsflag,
-        [ok,msg] = identical(source, sourcenew,'reltol',eps*1e6);
+        [ok,msg] = identical(source, sourcenew,'reltol',1e-5);
         
         if ~ok
           error('stored and computed data not identical: %s', msg{:});
@@ -293,6 +293,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function source = sourceanalysis_MNE_keepall(data, grid, headmodel)
+
+if ft_datatype(data, 'timelock') && ~isfield(data, 'cov')
+  % ensure an identity matrix covariance to allow for a numerically stable
+  % inverse
+  if isfield(data, 'trial'),
+    data.cov = zeros([size(data.trial,1) numel(data.label) numel(data.label)]);
+    for k = 1:size(data.trial,1)
+      data.cov(k,:,:) = eye(numel(data.label));
+    end
+  else
+    data.cov = eye(numel(data.label));
+  end
+end
 cfg                   = [];
 cfg.channel           = 'MEG';
 cfg.method            = 'mne';
@@ -305,6 +318,19 @@ cfg.nanmean           = 'yes'; % for selectdata to average TFRs
 source = ft_sourceanalysis(cfg, data);
 
 function source = sourceanalysis_MNE_keepnothing(data, grid, headmodel)
+
+if ft_datatype(data, 'timelock') && ~isfield(data, 'cov')
+  % ensure an identity matrix covariance to allow for a numerically stable
+  % inverse
+  if isfield(data, 'trial'),
+    data.cov = zeros([size(data.trial,1) numel(data.label) numel(data.label)]);
+    for k = 1:size(data.trial,1)
+      data.cov(k,:,:) = eye(numel(data.label));
+    end
+  else
+    data.cov = eye(numel(data.label));
+  end
+end
 cfg                   = [];
 cfg.channel           = 'MEG';
 cfg.method            = 'mne';
@@ -657,8 +683,8 @@ combination = {
   'sheet'    'freq_mtmfft_fourier_trl'       'DICS_refchan'
   'sheet'    'freq_mtmfft_fourier_trl'       'DICS_realfilter'
   'sheet'    'freq_mtmfft_fourier_trl'       'DICS_fixedori'
-  'sheet'    'freq_mtmfft_fourier_trl'       'MNE_keepall'
-  'sheet'    'freq_mtmfft_fourier_trl'       'MNE_keepnothing'
+  %'sheet'    'freq_mtmfft_fourier_trl'       'MNE_keepall'
+  %'sheet'    'freq_mtmfft_fourier_trl'       'MNE_keepnothing'
   %'sheet'    'freq_mtmfft_fourier_trl'       'MNE_keepall_rawtrial'
   %'sheet'    'freq_mtmfft_fourier_trl'       'MNE_keepnothing_rawtrial'
   'sheet'    'freq_mtmfft_fourier_trl'       'DICS_keepall'
@@ -682,8 +708,8 @@ combination = {
   'sheet'    'freq_mtmconvol_fourier_trl'    'DICS_refchan'
   'sheet'    'freq_mtmconvol_fourier_trl'    'DICS_realfilter'
   'sheet'    'freq_mtmconvol_fourier_trl'    'DICS_fixedori'
-  'sheet'    'freq_mtmconvol_fourier_trl'    'MNE_keepall'
-  'sheet'    'freq_mtmconvol_fourier_trl'    'MNE_keepnothing'
+  %'sheet'    'freq_mtmconvol_fourier_trl'    'MNE_keepall'
+  %'sheet'    'freq_mtmconvol_fourier_trl'    'MNE_keepnothing'
   %'sheet'    'freq_mtmconvol_fourier_trl'    'MNE_keepall_rawtrial'
   %'sheet'    'freq_mtmconvol_fourier_trl'    'MNE_keepnothing_rawtrial'
   'sheet'    'freq_mtmconvol_fourier_trl'    'DICS_keepall'
@@ -839,8 +865,8 @@ combination = {
   'grid'     'freq_mtmfft_fourier_trl'       'DICS_refchan'
   'grid'     'freq_mtmfft_fourier_trl'       'DICS_realfilter'
   'grid'     'freq_mtmfft_fourier_trl'       'DICS_fixedori'
-  'grid'     'freq_mtmfft_fourier_trl'       'MNE_keepall'
-  'grid'     'freq_mtmfft_fourier_trl'       'MNE_keepnothing'
+  %'grid'     'freq_mtmfft_fourier_trl'       'MNE_keepall'
+  %'grid'     'freq_mtmfft_fourier_trl'       'MNE_keepnothing'
   %'grid'     'freq_mtmfft_fourier_trl'       'MNE_keepall_rawtrial'
   %'grid'     'freq_mtmfft_fourier_trl'       'MNE_keepnothing_rawtrial'
   'grid'     'freq_mtmfft_fourier_trl'       'DICS_keepall'
@@ -864,8 +890,8 @@ combination = {
   'grid'     'freq_mtmconvol_fourier_trl'    'DICS_refchan'
   'grid'     'freq_mtmconvol_fourier_trl'    'DICS_realfilter'
   'grid'     'freq_mtmconvol_fourier_trl'    'DICS_fixedori'
-  'grid'     'freq_mtmconvol_fourier_trl'    'MNE_keepall'
-  'grid'     'freq_mtmconvol_fourier_trl'    'MNE_keepnothing'
+  %'grid'     'freq_mtmconvol_fourier_trl'    'MNE_keepall'
+  %'grid'     'freq_mtmconvol_fourier_trl'    'MNE_keepnothing'
   %'grid'     'freq_mtmconvol_fourier_trl'    'MNE_keepall_rawtrial'
   %'grid'     'freq_mtmconvol_fourier_trl'    'MNE_keepnothing_rawtrial'
   'grid'     'freq_mtmconvol_fourier_trl'    'DICS_keepall'
@@ -1021,8 +1047,8 @@ combination = {
   'roi'      'freq_mtmfft_fourier_trl'       'DICS_refchan'
   'roi'      'freq_mtmfft_fourier_trl'       'DICS_realfilter'
   'roi'      'freq_mtmfft_fourier_trl'       'DICS_fixedori'
-  'roi'      'freq_mtmfft_fourier_trl'       'MNE_keepall'
-  'roi'      'freq_mtmfft_fourier_trl'       'MNE_keepnothing'
+  %'roi'      'freq_mtmfft_fourier_trl'       'MNE_keepall'
+  %'roi'      'freq_mtmfft_fourier_trl'       'MNE_keepnothing'
   %'roi'      'freq_mtmfft_fourier_trl'       'MNE_keepall_rawtrial'
   %'roi'      'freq_mtmfft_fourier_trl'       'MNE_keepnothing_rawtrial'
   'roi'      'freq_mtmfft_fourier_trl'       'DICS_keepall'
@@ -1046,8 +1072,8 @@ combination = {
   'roi'      'freq_mtmconvol_fourier_trl'    'DICS_refchan'
   'roi'      'freq_mtmconvol_fourier_trl'    'DICS_realfilter'
   'roi'      'freq_mtmconvol_fourier_trl'    'DICS_fixedori'
-  'roi'      'freq_mtmconvol_fourier_trl'    'MNE_keepall'
-  'roi'      'freq_mtmconvol_fourier_trl'    'MNE_keepnothing'
+  %'roi'      'freq_mtmconvol_fourier_trl'    'MNE_keepall'
+  %'roi'      'freq_mtmconvol_fourier_trl'    'MNE_keepnothing'
   %'roi'      'freq_mtmconvol_fourier_trl'    'MNE_keepall_rawtrial'
   %'roi'      'freq_mtmconvol_fourier_trl'    'MNE_keepnothing_rawtrial'
   'roi'      'freq_mtmconvol_fourier_trl'    'DICS_keepall'
