@@ -1354,17 +1354,18 @@ if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = raw2timelock(data)
+function [tlck] = raw2timelock(data)
 
 nsmp = cellfun('size',data.time,2);
 data   = ft_checkdata(data, 'hassampleinfo', 'yes');
 ntrial = numel(data.trial);
 nchan  = numel(data.label);
 if ntrial==1
-  data.time   = data.time{1};
-  data.avg    = data.trial{1};
-  data        = rmfield(data, 'trial');
-  data.dimord = 'chan_time';
+  tlck.time   = data.time{1};
+  tlck.avg    = data.trial{1};
+  tlck.label  = data.label;
+  tlck.dimord = 'chan_time';
+  tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo'});
 else
   
   % code below tries to construct a general time-axis where samples of all trials can fall on
@@ -1389,20 +1390,12 @@ else
     tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
   end
   
-  % update the sampleinfo
-  begpad = begsmp - min(begsmp);
-  endpad = max(endsmp) - endsmp;
-  if isfield(data, 'sampleinfo')
-    data.sampleinfo = data.sampleinfo + [-begpad(:) endpad(:)];
-  end
-  
   % construct the output timelocked data
-  % data.avg     = reshape(nanmean(tmptrial,     1), nchan, length(tmptime));
-  % data.var     = reshape(nanvar (tmptrial, [], 1), nchan, length(tmptime))
-  % data.dof     = reshape(sum(~isnan(tmptrial), 1), nchan, length(tmptime));
-  data.trial   = tmptrial;
-  data.time    = time;
-  data.dimord = 'rpt_chan_time';
+  tlck.trial   = tmptrial;
+  tlck.time    = time;
+  tlck.dimord  = 'rpt_chan_time';
+  tlck.label   = data.label;
+  tlck         = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo'});
 end
 
 
