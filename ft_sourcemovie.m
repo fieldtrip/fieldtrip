@@ -105,26 +105,37 @@ if ~isempty(cfg.maskparameter) && iscell(cfg.maskparameter), cfg.maskparameter =
 dimord = getdimord(source, cfg.funparameter);
 dimtok = tokenize(dimord, '_');
 
-if isempty(cfg.xparam) && numel(dimtok)>1
-  cfg.xparam = dimtok{2};
-end
-
-if isempty(cfg.xparam) && numel(dimtok)>2
-  cfg.yparam = dimtok{3};
+if numel(dimtok)==2
+  % for example pos_freq or pos_time
+  if isempty(cfg.xparam), cfg.xparam = dimtok{2}; end
+elseif numel(dimtok)==3
+  % for example pos_freq_time
+  if isempty(cfg.yparam), cfg.yparam = dimtok{2}; end % frequency along vertical axis by default
+  if isempty(cfg.xparam), cfg.xparam = dimtok{3}; end % time along horizontal axis by default, this is also the time dimension in the movie
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% the user specifies xparam and yparam, it may be needed to permute the dimensions
+[dum, order] = match_str(dimtok, {'pos', cfg.xparam, cfg.yparam});
+
 if ~hassource2
   fun = getsubfield(source, cfg.funparameter);
+  fun = permute(fun, order);
+  
 elseif hassource2 && isfield(source2, 'pos')
   fun  = getsubfield(source, cfg.funparameter);
   fun2 = getsubfield(source2, cfg.funparameter);
+  fun  = permute(fun,  order);
+  fun2 = permute(fun2, order);
+  
 elseif hassource2
   % assume the first data argument to be a parcellation, and the second a parcellated structure
   tmp = getsubfield(source2, cfg.funparameter);
+  tmp = permute(tmp, order);
+  
   siz = [size(tmp) 1];
   fun = zeros([size(source.pos, 1), siz(2:end)]);
   parcels      = source.(cfg.parcellation);
@@ -152,6 +163,7 @@ end
 
 if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
   mask = double(getsubfield(source, cfg.maskparameter));
+  mask = permute(mask, order);
 else
   mask = 0.5*ones(size(fun));
 end
@@ -279,49 +291,49 @@ cambutton    = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutto
 playbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'play',   'userdata', 'p');
 recordbutton = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'record', 'userdata', 'r');
 quitbutton   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',   'userdata', 'q');
-if isfield(opt, 'dat2'),
+if isfield(opt, 'dat2')
   displaybutton = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'display: var1',   'userdata', 'f');
 end
 
-thrmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow');
-thr      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 't');
-thrplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'uparrow');
-spdmin   = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'shift+downarrow');
-spd      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'speed','userdata', 's');
-spdplus  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow');
-clim       = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'colorlim', 'userdata', 'z');
-climminmin = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'leftarrow');
-climmaxmin = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+leftarrow');
+thrmin      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'downarrow');
+thr         = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'threshold', 'userdata', 't');
+thrplus     = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'uparrow');
+spdmin      = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'shift+downarrow');
+spd         = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'speed','userdata', 's');
+spdplus     = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'shift+uparrow');
+clim        = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'colorlim', 'userdata', 'z');
+climminmin  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'leftarrow');
+climmaxmin  = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+leftarrow');
 climminplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'rightarrow');
 climmaxplus = uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+rightarrow');
-sliderx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.xparam));
-stringx  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
-slidery  = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.yparam));
-stringy  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
-stringz  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
-stringp  = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+sliderx     = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.xparam));
+stringx     = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+slidery     = uicontrol('parent', h, 'units', 'normalized', 'style', 'slider',     'string', sprintf('%s = ', cfg.yparam));
+stringy     = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+stringz     = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
+stringp     = uicontrol('parent', h, 'units', 'normalized', 'style', 'text');
 
 if isfield(opt,'dat2')
   set(displaybutton, 'position', [0.005 0.34 0.18 0.05], 'callback', @cb_keyboard);
 end
 
-set(cambutton,    'position', [0.095 0.28 0.09 0.05], 'callback', @cb_keyboard);
-set(quitbutton,   'position', [0.005 0.28 0.09 0.05], 'callback', @cb_keyboard);
-set(playbutton,   'position', [0.005 0.22 0.09 0.05], 'callback', @cb_keyboard);
-set(recordbutton, 'position', [0.095 0.22 0.09 0.05], 'callback', @cb_keyboard);
-set(thrmin,       'position', [0.005 0.16 0.03 0.05], 'callback', @cb_keyboard);
-set(thr,          'position', [0.035 0.16 0.12 0.05], 'callback', @cb_keyboard);
-set(thrplus,      'position', [0.155 0.16 0.03 0.05], 'callback', @cb_keyboard);
+set(cambutton,    'position', [0.095 0.28 0.09 0.05],   'callback', @cb_keyboard);
+set(quitbutton,   'position', [0.005 0.28 0.09 0.05],   'callback', @cb_keyboard);
+set(playbutton,   'position', [0.005 0.22 0.09 0.05],   'callback', @cb_keyboard);
+set(recordbutton, 'position', [0.095 0.22 0.09 0.05],   'callback', @cb_keyboard);
+set(thrmin,       'position', [0.005 0.16 0.03 0.05],   'callback', @cb_keyboard);
+set(thr,          'position', [0.035 0.16 0.12 0.05],   'callback', @cb_keyboard);
+set(thrplus,      'position', [0.155 0.16 0.03 0.05],   'callback', @cb_keyboard);
 set(climminmin,   'position', [0.005 0.10  0.03 0.025], 'callback', @cb_keyboard);
 set(climmaxmin,   'position', [0.005 0.125 0.03 0.025], 'callback', @cb_keyboard);
-set(clim,         'position', [0.035 0.10 0.12 0.05], 'callback', @cb_keyboard);
+set(clim,         'position', [0.035 0.10 0.12 0.05],   'callback', @cb_keyboard);
 set(climminplus,  'position', [0.155 0.10  0.03 0.025], 'callback', @cb_keyboard);
 set(climmaxplus,  'position', [0.155 0.125 0.03 0.025], 'callback', @cb_keyboard);
-set(spdmin,       'position', [0.005 0.04 0.03 0.05], 'callback', @cb_keyboard);
-set(spd,          'position', [0.035 0.04 0.12 0.05], 'callback', @cb_keyboard);
-set(spdplus,      'position', [0.155 0.04 0.03 0.05], 'callback', @cb_keyboard);
-set(sliderx,      'position', [0.02 0.4 0.3 0.03], 'callback',  @cb_slider);%[0.200 0.04  0.78 0.03], 'callback', @cb_slider);
-set(slidery,      'position', [0.350 0.5  0.03 0.35], 'callback', @cb_slider);
+set(spdmin,       'position', [0.005 0.04 0.03 0.05],   'callback', @cb_keyboard);
+set(spd,          'position', [0.035 0.04 0.12 0.05],   'callback', @cb_keyboard);
+set(spdplus,      'position', [0.155 0.04 0.03 0.05],   'callback', @cb_keyboard);
+set(sliderx,      'position', [0.02 0.4 0.3 0.03],      'callback', @cb_slider);  % [0.200 0.04  0.78 0.03], 'callback', @cb_slider);
+set(slidery,      'position', [0.350 0.5  0.03 0.35],   'callback', @cb_slider);
 set(stringx,      'position', [0.800 0.93 0.18 0.03]);
 set(stringy,      'position', [0.800 0.90 0.18 0.03]);
 set(stringz,      'position', [0.650 0.96 0.33 0.03]);
@@ -368,11 +380,11 @@ if ~hasyparam
   abc = axis;
   axis([opt.xparam(1) opt.xparam(end) abc(3:4)]);
   vline = plot(opt.xparam(1)*[1 1], abc(3:4), 'r');
-
+  
   if hassource2 && isfield(source2, 'pos')
     tline2 = plot(opt.xparam, mean(opt.dat2(opt.vindx,:)), 'r'); hold on;
   end
-
+  
 else
   tline = imagesc(opt.xparam, opt.yparam, shiftdim(mean(opt.dat(opt.vindx,:,:)),1)'); axis xy; hold on;
   abc   = [opt.xparam([1 end]) opt.yparam([1 end])];
@@ -393,7 +405,7 @@ opt.tline = tline; % handle to the ERF
 if exist('hline', 'var')
   opt.hline = hline;
 end
-if hassource2 && isfield(source2, 'pos'),
+if hassource2 && isfield(source2, 'pos')
   opt.tline2 = tline2;
 end
 opt.playbutton   = playbutton; % handle to the playbutton
@@ -423,7 +435,7 @@ end
 
 setappdata(h, 'opt', opt);
 
-while opt.cleanup==0
+while opt.cleanup==false
   uiwait(h);
   opt = getappdata(h, 'opt');
 end
@@ -475,11 +487,11 @@ if previous_valx~=valx || previous_valy~=valy
   % update strings
   set(opt.stringx, 'string', sprintf('%s = %3.3f\n', opt.cfg.xparam, opt.xparam(valx)));
   set(opt.stringy, 'string', sprintf('%s = %3.3f\n', opt.cfg.yparam, opt.yparam(valy)));
-
+  
   % update data in mesh
   set(opt.hs, 'FaceVertexCData',     opt.dat(:,valx,valy));
   set(opt.hs, 'FaceVertexAlphaData', mask);
-
+  
   set(opt.vline, 'xdata', [1 1]*opt.xparam(valx));
   if isfield(opt, 'hline')
     set(opt.hline, 'ydata', [1 1]*opt.yparam(valy));
@@ -503,14 +515,14 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   end
   %set(opt.hy,    'ylim',  [min(tmp(:)) max(tmp(:))]);
   %set(opt.vline, 'ydata', [min(tmp(:)) max(tmp(:))]);
-
+  
   if isfield(opt, 'dat2')
     tmp = mean(opt.dat1(opt.vindx,:,valy),1);
     set(opt.tline, 'ydata', tmp);
     tmp = mean(opt.dat2(opt.vindx,:,valy),1);
     set(opt.tline2, 'ydata', tmp);
   end
-
+  
   set(opt.hy,    'yaxislocation', 'right');
   set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
   if isfield(opt, 'parcellation'),
@@ -552,6 +564,7 @@ function cb_quitbutton(h, eventdata)
 opt = getappdata(h, 'opt');
 opt.cleanup = 1;
 setappdata(h, 'opt', opt);
+uiresume(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -616,17 +629,16 @@ if strcmp(get(get(h, 'currentaxes'), 'tag'), 'timecourse')
     set(opt.slidery, 'value', nearest(opt.yparam, pos(1,2))./numel(opt.yparam));
   end
 elseif strcmp(get(get(h, 'currentaxes'), 'tag'), 'mesh')
-  % get the current point, which is defined as the intersection through the
-  % axis-box (in 3D)
+  % get the current point, which is defined as the intersection through the axis-box (in 3D)
   pos       = get(opt.hx, 'currentpoint');
-
+  
   % get the intersection with the mesh
   [ipos, d] = intersect_line(opt.pos, opt.tri, pos(1,:), pos(2,:));
   [md, ix]  = min(abs(d));
-
+  
   dpos      = opt.pos - ipos(ix*ones(size(opt.pos,1),1),:);
   opt.vindx = nearest(sum(dpos.^2,2),0);
-
+  
 end
 setappdata(h, 'opt', opt);
 cb_slider(h);
@@ -637,7 +649,7 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_keyboard(h, eventdata)
 
-if (isempty(eventdata) && ft_platform_supports('matlabversion',-Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
+if (isempty(eventdata) && ft_platform_supports('matlabversion', -Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
@@ -660,25 +672,25 @@ switch key
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-
+    
   case 'shift+leftarrow' % change colorlim
     opt.cfg.zlim(1) = opt.cfg.zlim(1)+0.1*abs(opt.cfg.zlim(1));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-
+    
   case 'rightarrow'
     opt.cfg.zlim(2) = opt.cfg.zlim(2)-0.1*abs(opt.cfg.zlim(2));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-
+    
   case 'shift+rightarrow'
     opt.cfg.zlim(2) = opt.cfg.zlim(2)+0.1*abs(opt.cfg.zlim(2));
     setappdata(h, 'opt', opt);
     caxis(opt.cfg.zlim);
     set(opt.hx, 'Clim', opt.cfg.zlim);
-
+    
   case 'uparrow' % enhance threshold
     opt.threshold = opt.threshold+0.01.*max(opt.dat(:));
     setappdata(h, 'opt', opt);
