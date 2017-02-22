@@ -8,7 +8,7 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 % where the input source data is obtained from FT_SOURCEANALYSIS and cfg is
 % a configuratioun structure that should contain
 %
-%  cfg.funparameter    = string, functional parameter that is color coded (default = 'pow')
+%  cfg.funparameter    = string, functional parameter that is color coded
 %  cfg.maskparameter   = string, functional parameter that is used for opacity (default = [])
 %
 % To facilitate data-handling and distributed computing you can use
@@ -72,9 +72,10 @@ hassource2 = exist('source2', 'var');
 source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam',    'cfg.funparameter'});
-cfg = ft_checkconfig(cfg, 'renamed',	 {'parameter', 'cfg.funparameter'});
+cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam',    'funparameter'});
+cfg = ft_checkconfig(cfg, 'renamed',	 {'parameter', 'funparameter'});
 cfg = ft_checkconfig(cfg, 'renamed',	 {'mask',      'maskparameter'});
+cfg = ft_checkconfig(cfg, 'required',	'funparameter');
 
 % these are not needed any more, once the source structure has a proper dimord
 % cfg = ft_checkconfig(cfg, 'deprecated', 'xparam');
@@ -90,15 +91,16 @@ cfg.yparam        = ft_getopt(cfg, 'yparam');                         % default 
 cfg.funparameter  = ft_getopt(cfg, 'funparameter');
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter');
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
-cfg.title         = ft_getopt(cfg, 'title',         '');
+cfg.title         = ft_getopt(cfg, 'title');
 cfg.parcellation  = ft_getopt(cfg, 'parcellation');
 
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, source);
 cfg.maskparameter = parameterselection(cfg.maskparameter, source);
+
 % only a single parameter should be selected
-try, cfg.funparameter  = cfg.funparameter{1};  end
-try, cfg.maskparameter = cfg.maskparameter{1}; end
+if ~isempty(cfg.funparameter)  && iscell(cfg.funparameter),  cfg.funparameter  = cfg.funparameter{1};  end
+if ~isempty(cfg.maskparameter) && iscell(cfg.maskparameter), cfg.maskparameter = cfg.maskparameter{1}; end
 
 dimord = getdimord(source, cfg.funparameter);
 dimtok = tokenize(dimord, '_');
@@ -117,7 +119,7 @@ end
 
 if ~hassource2
   fun = getsubfield(source, cfg.funparameter);
-elseif hassource2 && isfield(source2, 'pos'),
+elseif hassource2 && isfield(source2, 'pos')
   fun  = getsubfield(source, cfg.funparameter);
   fun2 = getsubfield(source2, cfg.funparameter);
 elseif hassource2
