@@ -4,13 +4,9 @@ function inspect_ft_sourcemovie
 % WALLTIME 00:10:00
 
 % TEST inspect_ft_sourcemovie
-% TEST ft_sourcemovie ft_sourceanalysis ft_prepare_singleshell ft_prepare_leadfield
-% TEST qsubcellfun qsubfeval qsubget
+% TEST ft_sourcemovie ft_sourceanalysis ft_sourceinterpolate ft_volumenormalize ft_prepare_singleshell ft_prepare_leadfield qsubcellfun qsubfeval qsubget
 
 % the frequency and source analysis is based on the tutorials
-
-% NOT FINISHED YET, SEE BELOW
-return
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;
@@ -20,6 +16,8 @@ ft_default.feedback = 'no';
 % qsub is necessary, add fieldtrip/qsub to path
 [v, p] = ft_version;
 addpath(fullfile(p, 'qsub'));
+
+%%
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat'))
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'))
@@ -50,18 +48,20 @@ cfg.grid.resolution = 1; % use a 3-D grid with a 1 cm resolution
 nfreq = length(freqFIC.freq);
 ntime = length(freqFIC.time);
 
-clear cfg
+%% do the source reconstruction
+
+cfg = cell(nfreq, ntime);
 for fbin=1:nfreq
-for tbin=1:ntime
-cfg{fbin,tbin}              = []; 
-cfg{fbin,tbin}.latency      = freqFIC.time(tbin);
-cfg{fbin,tbin}.frequency    = freqFIC.freq(fbin);
-cfg{fbin,tbin}.method       = 'dics';
-cfg{fbin,tbin}.projectnoise = 'no';
-cfg{fbin,tbin}.grid         = grid; 
-cfg{fbin,tbin}.vol          = vol;
-cfg{fbin,tbin}.lambda       = 0;
-end
+  for tbin=1:ntime
+    cfg{fbin,tbin}              = [];
+    cfg{fbin,tbin}.latency      = freqFIC.time(tbin);
+    cfg{fbin,tbin}.frequency    = freqFIC.freq(fbin);
+    cfg{fbin,tbin}.method       = 'dics';
+    cfg{fbin,tbin}.projectnoise = 'no';
+    cfg{fbin,tbin}.grid         = grid;
+    cfg{fbin,tbin}.vol          = vol;
+    cfg{fbin,tbin}.lambda       = 0;
+  end
 end
 
 memreq = 600*1024^2;  % requires ~400 MB
@@ -69,7 +69,7 @@ timreq = 45;          % requires ~15 seconds
 source = qsubcellfun(@ft_sourceanalysis, cfg, repmat({freqFIC},nfreq,ntime), 'memreq', memreq, 'timreq', timreq);
 clear cfg             % this one is very large
 
-% interpolate the coarse functional data onto the individuals anatomy
+%% interpolate the coarse functional data onto the individuals anatomy
 cfg             = [];
 cfg.downsample  = 4;
 cfg.parameter   = 'avg.pow';
@@ -77,7 +77,7 @@ memreq          = 500*1024^2;  % requires ~250 MB
 timreq          = 24;          % requires ~8 seconds
 sourceInt       = qsubcellfun(@ft_sourceinterpolate, repmat({cfg},nfreq,ntime), source, repmat({mri},nfreq,ntime), 'memreq', memreq, 'timreq', timreq);
 
-% spatially normalize the individuals brain to the template brain
+%% spatially normalize the individuals brain to the template brain
 cfg             = [];
 cfg.coordsys    = 'ctf';
 cfg.nonlinear   = 'no';
@@ -86,9 +86,12 @@ memreq          = 60*1024^2;   % requires ~30 MB
 timreq          = 18;          % requires ~6 seconds
 sourceIntNorm = qsubcellfun(@ft_volumenormalise, repmat({cfg}, nfreq, ntime), sourceInt, 'memreq', memreq, 'timreq', timreq);
 
-% interpolate the functional data on the cortical sheet
-% FIXME to be continued
-error('right now I do not know how to do the interpolation on the cortical sheet')
+%% interpolate the normalized functional data on the cortical sheet
+cortex = ft_read_headshape('surface_pial_both.mat');
+cfg = [];
+sourceIntSurf = qsubcellfun(@ft_sourceinterpolate, repmat({cfg}, nfreq, ntime), sourceInt, 'memreq', memreq, 'timreq', timreq);
+
+%%
 
 npos = size(sourceIntNorm{1,1}.pos,1);
 
@@ -97,10 +100,10 @@ sourceER        = [];
 sourceER.time   = freqFIC.time;
 sourceER.pos    = sourceIntNorm{1,1}.pos;
 sourceER.dim    = sourceIntNorm{1,1}.dim;
-sourceER.dimord = 'pos_time'
+sourceER.dimord = 'pos_time';
 sourceER.pow    = zeros(npos, ntime);
 for tbin=1:ntime
-sourceER.pow(:,tbin) = sourceIntNorm{6,tbin}.avg.pow;  % fbin 6 corresponds to 22 Hz
+  sourceER.pow(:,tbin) = sourceIntNorm{6,tbin}.avg.pow;  % fbin 6 corresponds to 22 Hz
 end
 
 % construct a single source structure with all frequency and time points
@@ -109,17 +112,20 @@ sourceTFR.time   = freqFIC.time;
 sourceTFR.freq   = freqFIC.freq;
 sourceTFR.pos    = sourceIntNorm{1,1}.pos;
 sourceTFR.dim    = sourceIntNorm{1,1}.dim;
-sourceTFR.dimord = 'pos_freq_time'
+sourceTFR.dimord = 'pos_freq_time';
 sourceTFR.pow    = zeros(npos, nfreq, ntime);
 for fbin=1:nfreq
-for tbin=1:ntime
-sourceTFR.pow(:,fbin,tbin) = sourceIntNorm{fbin,tbin}.avg.pow;
+  for tbin=1:ntime
+    sourceTFR.pow(:,fbin,tbin) = sourceIntNorm{fbin,tbin}.avg.pow;
+  end
 end
-end
+
+%%
 
 cfg = [];
 ft_sourcemovie(cfg, sourceER);
 
+%%
+
 cfg = [];
 ft_sourcemovie(cfg, sourceTFR);
-
