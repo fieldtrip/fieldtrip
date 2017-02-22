@@ -15,7 +15,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % silent = 0 means that it will give some feedback about adding the toolbox
 % silent = 1 means that it will not give feedback
 
-% Copyright (C) 2005-2013, Robert Oostenveld
+% Copyright (C) 2005-2017, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -149,6 +149,7 @@ url = {
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
   'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
   'NEURONE'       'see http://www.megaemg.com/support/unrestricted-downloads'
+  'COLORBREWER'   'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
   };
 
 if nargin<2
@@ -361,6 +362,8 @@ switch toolbox
     dependency = {'write_wobj' 'read_wobj'};
   case 'NEURONE'
     dependency = {'readneurone' 'readneuronedata' 'readneuroneevents'};
+  case 'BREWERMAP'
+    dependency = {'brewermap' 'brewermap_view'};
 
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'

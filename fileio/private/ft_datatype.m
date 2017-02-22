@@ -103,16 +103,16 @@ elseif isvolume && issegmentation
   type = 'volume+label';
 elseif isvolume
   type = 'volume';
+elseif ismesh && isparcellation
+  type = 'mesh+label';
 elseif issource && isparcellation
   type = 'source+label';
 elseif issource && ismesh
   type = 'source+mesh';
-elseif issource
-  type = 'source';
-elseif ismesh && isparcellation
-  type = 'mesh+label';
 elseif ismesh
   type = 'mesh';
+elseif issource
+  type = 'source';
 elseif ischan
   % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
   type = 'chan';
@@ -142,10 +142,10 @@ if nargin>1
     case 'volume'
       type = any(strcmp(type, {'volume', 'volume+label'}));
     case 'source'
-      type = any(strcmp(type, {'source', 'source+label', 'source+mesh' 'mesh', 'mesh+label'})); % a single mesh qualifies as source structure
+      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label', 'source+mesh'})); % a single mesh does qualify as source structure
       type = type && isstruct(data) && numel(data)==1;                            % an array of meshes does not qualify
     case 'mesh'
-      type = any(strcmp(type, {'mesh', 'mesh+label' 'source+mesh'}));
+      type = any(strcmp(type, {'mesh', 'mesh+label', 'source+mesh'}));
     case 'segmentation'
       type = any(strcmp(type, {'segmentation', 'volume+label'}));
     case 'parcellation'

@@ -1,0 +1,247 @@
+Brainnetome Atlas
+SFG, Right Superior Frontal Gyrus A8m, medial area 8
+SFG, Left Superior Frontal Gyrus A8m, medial area 8
+SFG, Right Superior Frontal Gyrus A8dl, dorsolateral area 8
+SFG, Left Superior Frontal Gyrus A8dl, dorsolateral area 8
+SFG, Right Superior Frontal Gyrus A9l, lateral area 9
+SFG, Left Superior Frontal Gyrus A9l, lateral area 9
+SFG, Right Superior Frontal Gyrus A6dl, dorsolateral area 6
+SFG, Left Superior Frontal Gyrus A6dl, dorsolateral area 6
+SFG, Right Superior Frontal Gyrus A6m, medial area 6
+SFG, Left Superior Frontal Gyrus A6m, medial area 6
+SFG, Right Superior Frontal Gyrus A9m, medial area 9
+SFG, Left Superior Frontal Gyrus A9m, medial area 9
+SFG, Right Superior Frontal Gyrus A10m, medial area 10
+SFG, Left Superior Frontal Gyrus A10m, medial area 10
+MFG, Right Middle Frontal Gyrus A9/46d, dorsal area 9/46
+MFG, Left Middle Frontal Gyrus A9/46d, dorsal area 9/46
+MFG, Right Middle Frontal Gyrus IFJ, inferior frontal junction
+MFG, Left Middle Frontal Gyrus IFJ, inferior frontal junction
+MFG, Right Middle Frontal Gyrus A46, area 46
+MFG, Left Middle Frontal Gyrus A46, area 46
+MFG, Right Middle Frontal Gyrus A9/46v, ventral area 9/46 
+MFG, Left Middle Frontal Gyrus A9/46v, ventral area 9/46 
+MFG, Right Middle Frontal Gyrus A8vl, ventrolateral area 8
+MFG, Left Middle Frontal Gyrus A8vl, ventrolateral area 8
+MFG, Right Middle Frontal Gyrus A6vl, ventrolateral area 6
+MFG, Left Middle Frontal Gyrus A6vl, ventrolateral area 6
+MFG, Right Middle Frontal Gyrus A10l, lateral area10
+MFG, Left Middle Frontal Gyrus A10l, lateral area10
+IFG, Right Inferior Frontal Gyrus A44d, dorsal area 44
+IFG, Left Inferior Frontal Gyrus A44d, dorsal area 44
+IFG, Right Inferior Frontal Gyrus IFS, inferior frontal sulcus
+IFG, Left Inferior Frontal Gyrus IFS, inferior frontal sulcus
+IFG, Right Inferior Frontal Gyrus A45c, caudal area 45
+IFG, Left Inferior Frontal Gyrus A45c, caudal area 45
+IFG, Right Inferior Frontal Gyrus A45r, rostral area 45
+IFG, Left Inferior Frontal Gyrus A45r, rostral area 45
+IFG, Right Inferior Frontal Gyrus A44op, opercular area 44
+IFG, Left Inferior Frontal Gyrus A44op, opercular area 44
+IFG, Right Inferior Frontal Gyrus A44v, ventral area 44
+IFG, Left Inferior Frontal Gyrus A44v, ventral area 44
+OrG, Right Orbital Gyrus A14m, medial area 14
+OrG, Left Orbital Gyrus A14m, medial area 14
+OrG, Right Orbital Gyrus A12/47o, orbital area 12/47
+OrG, Left Orbital Gyrus A12/47o, orbital area 12/47
+OrG, Right Orbital Gyrus A11l, lateral area 11
+OrG, Left Orbital Gyrus A11l, lateral area 11
+OrG, Right Orbital Gyrus A11m, medial area 11
+OrG, Left Orbital Gyrus A11m, medial area 11
+OrG, Right Orbital Gyrus A13, area 13
+OrG, Left Orbital Gyrus A13, area 13
+OrG, Right Orbital Gyrus A12/47l, lateral area 12/47
+OrG, Left Orbital Gyrus A12/47l, lateral area 12/47
+PrG, Right Precentral Gyrus A4hf, area 4 (head and face region)
+PrG, Left Precentral Gyrus A4hf, area 4 (head and face region)
+PrG, Right Precentral Gyrus A6cdl, caudal dorsolateral area 6
+PrG, Left Precentral Gyrus A6cdl, caudal dorsolateral area 6
+PrG, Right Precentral Gyrus A4ul, area 4 (upper limb region)
+PrG, Left Precentral Gyrus A4ul, area 4 (upper limb region)
+PrG, Right Precentral Gyrus A4t, area 4 (trunk region)
+PrG, Left Precentral Gyrus A4t, area 4 (trunk region)
+PrG, Right Precentral Gyrus A4tl, area 4 (tongue and larynx region)
+PrG, Left Precentral Gyrus A4tl, area 4 (tongue and larynx region)
+PrG, Right Precentral Gyrus A6cvl, caudal ventrolateral area 6
+PrG, Left Precentral Gyrus A6cvl, caudal ventrolateral area 6
+PCL, Right Paracentral Lobule A1/2/3ll, area 1/2/3 (lower limb region)
+PCL, Left Paracentral Lobule A1/2/3ll, area 1/2/3 (lower limb region)
+PCL, Right Paracentral Lobule A4ll, area 4, (lower limb region)
+PCL, Left Paracentral Lobule A4ll, area 4, (lower limb region)
+STG, Right Superior Temporal Gyrus A38m, medial area 38
+STG, Left Superior Temporal Gyrus A38m, medial area 38
+STG, Right Superior Temporal Gyrus A41/42, area 41/42
+STG, Left Superior Temporal Gyrus A41/42, area 41/42
+STG, Right Superior Temporal Gyrus TE1.0 and TE1.2
+STG, Left Superior Temporal Gyrus TE1.0 and TE1.2
+STG, Right Superior Temporal Gyrus A22c, caudal area 22
+STG, Left Superior Temporal Gyrus A22c, caudal area 22
+STG, Right Superior Temporal Gyrus A38l, lateral area 38
+STG, Left Superior Temporal Gyrus A38l, lateral area 38
+STG, Right Superior Temporal Gyrus A22r, rostral area 22
+STG, Left Superior Temporal Gyrus A22r, rostral area 22
+MTG, Right Middle Temporal Gyrus A21c, caudal area 21
+MTG, Left Middle Temporal Gyrus A21c, caudal area 21
+MTG, Right Middle Temporal Gyrus A21r, rostral area 21
+MTG, Left Middle Temporal Gyrus A21r, rostral area 21
+MTG, Right Middle Temporal Gyrus A37dl, dorsolateral area37
+MTG, Left Middle Temporal Gyrus A37dl, dorsolateral area37
+MTG, Right Middle Temporal Gyrus aSTS, anterior superior temporal sulcus
+MTG, Left Middle Temporal Gyrus aSTS, anterior superior temporal sulcus
+ITG, Right Inferior Temporal Gyrus A20iv, intermediate ventral area 20
+ITG, Left Inferior Temporal Gyrus A20iv, intermediate ventral area 20
+ITG, Right Inferior Temporal Gyrus A37elv, extreme lateroventral area37
+ITG, Left Inferior Temporal Gyrus A37elv, extreme lateroventral area37
+ITG, Right Inferior Temporal Gyrus A20r, rostral area 20
+ITG, Left Inferior Temporal Gyrus A20r, rostral area 20
+ITG, Right Inferior Temporal Gyrus A20il, intermediate lateral area 20
+ITG, Left Inferior Temporal Gyrus A20il, intermediate lateral area 20
+ITG, Right Inferior Temporal Gyrus A37vl, ventrolateral area 37
+ITG, Left Inferior Temporal Gyrus A37vl, ventrolateral area 37
+ITG, Right Inferior Temporal Gyrus A20cl, caudolateral of area 20
+ITG, Left Inferior Temporal Gyrus A20cl, caudolateral of area 20
+ITG, Right Inferior Temporal Gyrus A20cv, caudoventral of area 20
+ITG, Left Inferior Temporal Gyrus A20cv, caudoventral of area 20
+FuG, Right Fusiform Gyrus A20rv, rostroventral area 20
+FuG, Left Fusiform Gyrus A20rv, rostroventral area 20
+FuG, Right Fusiform Gyrus A37mv, medioventral area37
+FuG, Left Fusiform Gyrus A37mv, medioventral area37
+FuG, Right Fusiform Gyrus A37lv, lateroventral area37
+FuG, Left Fusiform Gyrus A37lv, lateroventral area37
+PhG, Right Parahippocampal Gyrus A35/36r, rostral area 35/36
+PhG, Left Parahippocampal Gyrus A35/36r, rostral area 35/36
+PhG, Right Parahippocampal Gyrus A35/36c, caudal area 35/36
+PhG, Left Parahippocampal Gyrus A35/36c, caudal area 35/36
+PhG, Right Parahippocampal Gyrus TL, area TL (lateral PPHC, posterior parahippocampal gyrus)
+PhG, Left Parahippocampal Gyrus TL, area TL (lateral PPHC, posterior parahippocampal gyrus)
+PhG, Right Parahippocampal Gyrus A28/34, area 28/34 (EC, entorhinal cortex)
+PhG, Left Parahippocampal Gyrus A28/34, area 28/34 (EC, entorhinal cortex)
+PhG, Right Parahippocampal Gyrus TI, area TI (temporal agranular insular cortex)
+PhG, Left Parahippocampal Gyrus TI, area TI (temporal agranular insular cortex)
+PhG, Right Parahippocampal Gyrus TH, area TH (medial PPHC)
+PhG, Left Parahippocampal Gyrus TH, area TH (medial PPHC)
+pSTS, Right posterior Superior Temporal Sulcus rpSTS, rostroposterior superior temporal sulcus
+pSTS, Left posterior Superior Temporal Sulcus rpSTS, rostroposterior superior temporal sulcus
+pSTS, Right posterior Superior Temporal Sulcus cpSTS, caudoposterior superior temporal sulcus
+pSTS, Left posterior Superior Temporal Sulcus cpSTS, caudoposterior superior temporal sulcus
+SPL, Right Superior Parietal Lobule A7r, rostral area 7
+SPL, Left Superior Parietal Lobule A7r, rostral area 7
+SPL, Right Superior Parietal Lobule A7c, caudal area 7
+SPL, Left Superior Parietal Lobule A7c, caudal area 7
+SPL, Right Superior Parietal Lobule A5l, lateral area 5
+SPL, Left Superior Parietal Lobule A5l, lateral area 5
+SPL, Right Superior Parietal Lobule A7pc, postcentral area 7
+SPL, Left Superior Parietal Lobule A7pc, postcentral area 7
+SPL, Right Superior Parietal Lobule A7ip, intraparietal area 7 (hIP3)
+SPL, Left Superior Parietal Lobule A7ip, intraparietal area 7 (hIP3)
+IPL, Right Inferior Parietal Lobule A39c, caudal area 39 (PGp)
+IPL, Left Inferior Parietal Lobule A39c, caudal area 39 (PGp)
+IPL, Right Inferior Parietal Lobule A39rd, rostrodorsal area 39 (Hip3)
+IPL, Left Inferior Parietal Lobule A39rd, rostrodorsal area 39 (Hip3)
+IPL, Right Inferior Parietal Lobule A40rd, rostrodorsal area 40 (PFt)
+IPL, Left Inferior Parietal Lobule A40rd, rostrodorsal area 40 (PFt)
+IPL, Right Inferior Parietal Lobule A40c, caudal area 40 (PFm)
+IPL, Left Inferior Parietal Lobule A40c, caudal area 40 (PFm)
+IPL, Right Inferior Parietal Lobule A39rv, rostroventral area 39 (PGa)
+IPL, Left Inferior Parietal Lobule A39rv, rostroventral area 39 (PGa)
+IPL, Right Inferior Parietal Lobule A40rv, rostroventral area 40 (PFop)
+IPL, Left Inferior Parietal Lobule A40rv, rostroventral area 40 (PFop)
+Pcun, Right PrecuneusA7m, medial area 7 (PEp)
+Pcun, Left PrecuneusA7m, medial area 7 (PEp)
+Pcun, Right PrecuneusA5m, medial area 5 (PEm)
+Pcun, Left PrecuneusA5m, medial area 5 (PEm)
+Pcun, Right PrecuneusdmPOS, dorsomedial parietooccipital sulcus (PEr) 
+Pcun, Left PrecuneusdmPOS, dorsomedial parietooccipital sulcus (PEr) 
+Pcun, Right PrecuneusA31, area 31 (Lc1)
+Pcun, Left PrecuneusA31, area 31 (Lc1)
+PoG, Right Postcentral Gyrus A1/2/3ulhf, area 1/2/3 (upper limb, head and face region)
+PoG, Left Postcentral Gyrus A1/2/3ulhf, area 1/2/3 (upper limb, head and face region)
+PoG, Right Postcentral Gyrus A1/2/3tonIa, area 1/2/3 (tongue and larynx region)
+PoG, Left Postcentral Gyrus A1/2/3tonIa, area 1/2/3 (tongue and larynx region)
+PoG, Right Postcentral Gyrus A2, area 2
+PoG, Left Postcentral Gyrus A2, area 2
+PoG, Right Postcentral Gyrus A1/2/3tru, area1/2/3 (trunk region)
+PoG, Left Postcentral Gyrus A1/2/3tru, area1/2/3 (trunk region)
+INS, Right Insular Gyrus G, hypergranular insula
+INS, Left Insular Gyrus G, hypergranular insula
+INS, Right Insular Gyrus vIa, ventral agranular insula
+INS, Left Insular Gyrus vIa, ventral agranular insula
+INS, Right Insular Gyrus dIa, dorsal agranular insula
+INS, Left Insular Gyrus dIa, dorsal agranular insula
+INS, Right Insular Gyrus vId/vIg, ventral dysgranular and granular insula
+INS, Left Insular Gyrus vId/vIg, ventral dysgranular and granular insula
+INS, Right Insular Gyrus dIg, dorsal granular insula
+INS, Left Insular Gyrus dIg, dorsal granular insula
+INS, Right Insular Gyrus dId, dorsal dysgranular insula
+INS, Left Insular Gyrus dId, dorsal dysgranular insula
+CG, Right Cingulate Gyrus A23d, dorsal area 23
+CG, Left Cingulate Gyrus A23d, dorsal area 23
+CG, Right Cingulate Gyrus A24rv, rostroventral area 24
+CG, Left Cingulate Gyrus A24rv, rostroventral area 24
+CG, Right Cingulate Gyrus A32p, pregenual area 32
+CG, Left Cingulate Gyrus A32p, pregenual area 32
+CG, Right Cingulate Gyrus A23v, ventral area 23
+CG, Left Cingulate Gyrus A23v, ventral area 23
+CG, Right Cingulate Gyrus A24cd, caudodorsal area 24
+CG, Left Cingulate Gyrus A24cd, caudodorsal area 24
+CG, Right Cingulate Gyrus A23c, caudal area 23
+CG, Left Cingulate Gyrus A23c, caudal area 23
+CG, Right Cingulate Gyrus A32sg, subgenual area 32
+CG, Left Cingulate Gyrus A32sg, subgenual area 32
+MVOcC, Right MedioVentral Occipital Cortex cLinG, caudal lingual gyrus
+MVOcC, Left MedioVentral Occipital Cortex cLinG, caudal lingual gyrus
+MVOcC, Right MedioVentral Occipital Cortex rCunG, rostral cuneus gyrus
+MVOcC, Left MedioVentral Occipital Cortex rCunG, rostral cuneus gyrus
+MVOcC, Right MedioVentral Occipital Cortex cCunG, caudal cuneus gyrus
+MVOcC, Left MedioVentral Occipital Cortex cCunG, caudal cuneus gyrus
+MVOcC, Right MedioVentral Occipital Cortex rLinG, rostral lingual gyrus
+MVOcC, Left MedioVentral Occipital Cortex rLinG, rostral lingual gyrus
+MVOcC, Right MedioVentral Occipital Cortex vmPOS, ventromedial parietooccipital sulcus
+MVOcC, Left MedioVentral Occipital Cortex vmPOS, ventromedial parietooccipital sulcus
+LOcC, Right lateral Occipital Cortex mOccG, middle occipital gyrus
+LOcC, Left lateral Occipital Cortex mOccG, middle occipital gyrus
+LOcC, Right lateral Occipital Cortex V5/MT+, area V5/MT+
+LOcC, Left lateral Occipital Cortex V5/MT+, area V5/MT+
+LOcC, Right lateral Occipital Cortex OPC, occipital polar cortex
+LOcC, Left lateral Occipital Cortex OPC, occipital polar cortex
+LOcC, Right lateral Occipital Cortex iOccG, inferior occipital gyrus
+LOcC, Left lateral Occipital Cortex iOccG, inferior occipital gyrus
+LOcC, Right lateral Occipital Cortex msOccG, medial superior occipital gyrus
+LOcC, Left lateral Occipital Cortex msOccG, medial superior occipital gyrus
+LOcC, Right lateral Occipital Cortex lsOccG, lateral superior occipital gyrus
+LOcC, Left lateral Occipital Cortex lsOccG, lateral superior occipital gyrus
+Amyg, Right Amygdala mAmyg, medial amygdala
+Amyg, Left Amygdala mAmyg, medial amygdala
+Amyg, Right Amygdala lAmyg, lateral amygdala
+Amyg, Left Amygdala lAmyg, lateral amygdala
+Hipp, Right Hippocampus rHipp, rostral hippocampus
+Hipp, Left Hippocampus rHipp, rostral hippocampus
+Hipp, Right Hippocampus cHipp, caudal hippocampus
+Hipp, Left Hippocampus cHipp, caudal hippocampus
+BG, Right Basal Ganglia vCa, ventral caudate
+BG, Left Basal Ganglia vCa, ventral caudate
+BG, Right Basal Ganglia GP, globus pallidus
+BG, Left Basal Ganglia GP, globus pallidus
+BG, Right Basal Ganglia NAC, nucleus accumbens
+BG, Left Basal Ganglia NAC, nucleus accumbens
+BG, Right Basal Ganglia vmPu, ventromedial putamen
+BG, Left Basal Ganglia vmPu, ventromedial putamen
+BG, Right Basal Ganglia dCa, dorsal caudate
+BG, Left Basal Ganglia dCa, dorsal caudate
+BG, Right Basal Ganglia dlPu, dorsolateral putamen
+BG, Left Basal Ganglia dlPu, dorsolateral putamen
+Tha, Right Thalamus mPFtha, medial pre-frontal thalamus
+Tha, Left Thalamus mPFtha, medial pre-frontal thalamus
+Tha, Right Thalamus mPMtha, pre-motor thalamus
+Tha, Left Thalamus mPMtha, pre-motor thalamus
+Tha, Right Thalamus Stha, sensory thalamus
+Tha, Left Thalamus Stha, sensory thalamus
+Tha, Right Thalamus rTtha, rostral temporal thalamus
+Tha, Left Thalamus rTtha, rostral temporal thalamus
+Tha, Right Thalamus PPtha, posterior parietal thalamus
+Tha, Left Thalamus PPtha, posterior parietal thalamus
+Tha, Right Thalamus Otha, occipital thalamus
+Tha, Left Thalamus Otha, occipital thalamus
+Tha, Right Thalamus cTtha, caudal temporal thalamus
+Tha, Left Thalamus cTtha, caudal temporal thalamus
+Tha, Right Thalamus lPFtha, lateral pre-frontal thalamus
+Tha, Left Thalamus lPFtha, lateral pre-frontal thalamus

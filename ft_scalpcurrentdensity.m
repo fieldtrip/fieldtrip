@@ -16,13 +16,14 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % and can be used in combination with most other FieldTrip functions
 % such as FT_FREQNALYSIS or FT_TOPOPLOTER.
 %
-% The configuration can contain
+% The configuration should contain
 %   cfg.method       = 'finite' for finite-difference method or
 %                      'spline' for spherical spline method
 %                      'hjorth' for Hjorth approximation method
 %   cfg.elecfile     = string, file containing the electrode definition
 %   cfg.elec         = structure with electrode definition
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.feedback     = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
 % The finite method require the following
 %   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
@@ -32,10 +33,10 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   cfg.lambda       = regularization parameter (default = 1e-05)
 %   cfg.order        = order of the splines (default = 4)
 %   cfg.degree       = degree of legendre polynomials (default for
-%                       <=32 electrodes = 9,
-%                       <=64 electrodes = 14,
+%                       <=32 electrodes  = 9,
+%                       <=64 electrodes  = 14,
 %                       <=128 electrodes = 20,
-%                       else            = 32
+%                       else             = 32
 %
 % The hjorth method requires the following
 %   cfg.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
@@ -118,6 +119,7 @@ end
 cfg.method       = ft_getopt(cfg, 'method',       'spline');
 cfg.conductivity = ft_getopt(cfg, 'conductivity', 0.33); % in S/m
 cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 
 switch cfg.method
   case 'hjorth'
@@ -183,8 +185,7 @@ end
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
 
-  ft_progress('init', 'text');
-
+  ft_progress('init', cfg.feedback, 'computing SCD for trial...')
   for trlop=1:Ntrials
     % do not compute interpolation, but only one value at [0 0 1]
     % this also gives L1, the laplacian of the original data in which we

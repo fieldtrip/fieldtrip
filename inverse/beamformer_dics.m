@@ -616,6 +616,10 @@ if isfield(dipout, 'csd')
   dipout.csd( originside) = dipout.csd;
   dipout.csd(~originside) = {[]};
 end
+if isfield(dipout, 'noisecsd')
+  dipout.noisecsd( originside) = dipout.noisecsd;
+  dipout.noisecsd(~originside) = {[]};
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function to obtain the largest singular value
