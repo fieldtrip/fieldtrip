@@ -13,7 +13,6 @@
 
 #ifdef MATLAB_MEX_FILE
 #include "mex.h"
-#include "matrix.h"
 #endif
 
 #ifndef NULL

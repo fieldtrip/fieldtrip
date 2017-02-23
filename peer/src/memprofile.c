@@ -28,7 +28,6 @@
 #include <unistd.h>
 
 #include "mex.h"
-#include "matrix.h"
 #include "platform.h"
 #include "platform_includes.h"
 

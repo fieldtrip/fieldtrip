@@ -7,7 +7,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include "buffer.h"
 
 #define NUMBER_OF_FIELDS 5

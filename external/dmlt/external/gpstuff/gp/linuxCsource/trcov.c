@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "mex.h"
-#include "matrix.h"
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define PI (3.141592653589793)
 void cumsum2(mwIndex *p, mwIndex *c, mwIndex n);

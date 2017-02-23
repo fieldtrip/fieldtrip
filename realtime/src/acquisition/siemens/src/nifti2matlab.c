@@ -6,7 +6,6 @@
  */
 
 #include <mex.h>
-#include <matrix.h>
 #include <nifti1.h>
 
 /* incomplete, but more to follow */

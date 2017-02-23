@@ -7,7 +7,6 @@
  */
 
 #include <mex.h>
-#include <matrix.h>
 #include <siemensap.h>
 #include <string.h>
 

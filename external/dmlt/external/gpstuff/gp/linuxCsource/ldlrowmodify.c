@@ -31,7 +31,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "mex.h"
-#include "matrix.h"
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 

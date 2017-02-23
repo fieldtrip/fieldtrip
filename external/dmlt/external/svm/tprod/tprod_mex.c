@@ -16,7 +16,6 @@ $Id$
 */
 
 #include "mex.h"
-#include "matrix.h"
 #include "mxInfo.h"
 #include "mxInfo_mex.h"
 #include "tprod.h"

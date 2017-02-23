@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "mex.h"
-#include "matrix.h"
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 
 void mexFunction(const int nlhs, mxArray *plhs[],

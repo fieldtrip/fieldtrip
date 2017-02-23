@@ -14,7 +14,6 @@
 
 #include "mex.h"
 #include <math.h>
-#include <matrix.h>
 
 void mexFunction(
   int nOutputs, mxArray *pointerOutputs[],

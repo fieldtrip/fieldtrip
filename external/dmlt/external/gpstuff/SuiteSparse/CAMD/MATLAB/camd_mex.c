@@ -29,7 +29,6 @@
 
 #include "camd.h"
 #include "mex.h"
-#include "matrix.h"
 #include "UFconfig.h"
 
 void mexFunction

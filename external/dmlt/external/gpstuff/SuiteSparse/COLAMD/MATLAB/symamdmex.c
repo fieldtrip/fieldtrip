@@ -47,7 +47,6 @@
 
 #include "colamd.h"
 #include "mex.h"
-#include "matrix.h"
 #include <stdlib.h>
 #include "UFconfig.h"
 
