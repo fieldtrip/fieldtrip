@@ -5,7 +5,7 @@ function narginchk(min,max)
 %
 % narginchk is not present in older versions.
 
-n = evalin('caller', 'nargin')
+n = evalin('caller', 'nargin');
 assert(n>=min, 'not enough input arguments')
 assert(n<=max, 'too many input arguments')
 
