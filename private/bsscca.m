@@ -40,7 +40,7 @@ if isa(X, 'cell')
   maxshift = [abs(min(min(refdelay),min(chandelay))) abs(max(max(refdelay),max(chandelay)))];
   
   if ~hasrefdata
-    Y  = cellshift(cellrowselect(X, refindx),  refdelay,  2, maxshift);
+    Y  = cellshift(X,  refdelay,  2, maxshift);
   else
     Y  = cellvecadd(Y, -cellmean(Y, 2));
     Y  = cellshift(Y, refdelay, 2, maxshift);
