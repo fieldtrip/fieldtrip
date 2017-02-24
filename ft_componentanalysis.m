@@ -200,6 +200,10 @@ cfg.feedback        = ft_getopt(cfg, 'feedback',     'text');
 % select channels, has to be done prior to handling of previous (un)mixing matrix
 cfg.channel = ft_channelselection(cfg.channel, data.label);
 
+if istrue(cfg.cellmode)
+  ft_hastoolbox('cellfunction', 1);
+end
+
 if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
     'timecourses in specified data is deprecated; please specify an '...
@@ -261,11 +265,11 @@ switch cfg.method
     cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
   case 'bsscca'
     % additional options, see BSSCCA for details
-    cfg.bsscca       = ft_getopt(cfg,        'bsscca', []);
-    cfg.bsscca.delay = ft_getopt(cfg.bsscca, 'delay', 1);
+    cfg.bsscca           = ft_getopt(cfg,        'bsscca', []);
+    cfg.bsscca.refdelay  = ft_getopt(cfg.bsscca, 'refdelay', 1);
+    cfg.bsscca.chandelay = ft_getopt(cfg.bsscca, 'chandelay', 0);
     if strcmp(cfg.cellmode, 'no')
-      fprintf('switching to cell-mode for method ''bsscca''\n');
-      cfg.cellmode = 'yes';
+      error('cfg.mehod = ''bsscca'' requires cfg.cellmode = ''yes''');
     end
   otherwise
     % do nothing
@@ -744,11 +748,22 @@ switch cfg.method
     % the data in the cell-array, because the trial-boundaries are clear.
     % if represented in a concatenated array one has to keep track of the
     % trial boundaries
-
-    [unmixing, rho] = bsscca(dat,cfg.bsscca.delay);
-    mixing          = [];
-    % unmixing      = diag(rho);
-
+    
+    optarg          = ft_cfg2keyval(cfg.bsscca);
+    optarg          = cat(2,optarg, {'time', data.time});
+    [unmixing, mixing, rho, compdata, time] = bsscca(dat, optarg{:});
+    data.trial = mixing*compdata;
+    data.time  = time;
+    
+    if size(mixing,1)>numel(data.label)
+      for m = 1:(size(mixing,1)-numel(data.label))
+        data.label{end+1} = sprintf('refchan%03d',m);
+      end
+    end
+      
+    % remember the canonical correlations
+    cfg.bsscca.rho = rho;
+    
   case 'parafac'
     error('parafac is not supported anymore in ft_componentanalysis');
 
