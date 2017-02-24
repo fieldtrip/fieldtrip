@@ -5,9 +5,13 @@ function [unmixing, mixing, rho, compdata, time] = bsscca(X, varargin)
 % In its default, it implements the algorithm described in [1], computing the
 % canonical correlation between a set of signals and their lag-one-shifted
 % copy. Alternatively, if the input contains a reference signal (possibly multivariate),
-% the canonical correlation between the data in X and the reference signal is computed
+% the canonical correlation between the data in X and the reference signal is computed.
+% It requires JM's cellfunction toolbox on the MATLAB path:
+%  (github.com/schoffelen/cellfunction.git)
 %
-% DeClercq et al 2006, IEEE Biomed Eng 2583.
+% [1] DeClercq et al 2006, IEEE Biomed Eng 2583.
+
+% Copyright (C) 2017, Jan-Mathijs Schoffelen
 
 if isa(X, 'cell')
   n = size(X{1},1);
@@ -132,16 +136,18 @@ wx = wx(:,srt1(1:n));
 wy = wy(:,srt2(1:n));
 rho = rho(1:n);
 
+% get the tranpose
+wx = wx';
+wy = wy';
 
 % unmix the data
-x = wx'*X;
-y = wy'*Y;
+x = wx*X;
+y = wy*Y;
 
-ax = (XX*wx)/cov(x,1,2,1);
-ay = (YY*wy)/cov(y,1,2,1);
 
-wx  = wx';
-wy  = wy';
+ax = (XX*wx')/cov(x,1,2,1); % by construction wx*ax = I
+ay = (YY*wy')/cov(y,1,2,1);
+
 
 if dowhiten
   wx = wx*whiten_x;
