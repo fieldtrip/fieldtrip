@@ -500,7 +500,7 @@ switch cfg.method
     [weights, sphere] = runica(dat, optarg{:});
 
     % scale the sphering matrix to unit norm
-    if strcmp(cfg.normalisesphere, 'yes'),
+    if strcmp(cfg.normalisesphere, 'yes')
       sphere = sphere./norm(sphere);
     end
 
@@ -529,7 +529,7 @@ switch cfg.method
     [weights, sphere] = binica(dat, optarg{:});
 
     % scale the sphering matrix to unit norm
-    if strcmp(cfg.normalisesphere, 'yes'),
+    if strcmp(cfg.normalisesphere, 'yes')
       sphere = sphere./norm(sphere);
     end
 
@@ -570,7 +570,7 @@ switch cfg.method
 
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
-    d = sortrows(d,[-2]);
+    d = sortrows(d, -2);
 
     % return the desired number of principal components
     unmixing = E(:,d(1:cfg.numcomponent,1))';
@@ -603,7 +603,7 @@ switch cfg.method
 
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
-    d = sortrows(d,[-2]);
+    d = sortrows(d, -2);
 
     % return the desired number of principal components
     unmixing = E(:,d(1:cfg.numcomponent,1))';
@@ -809,7 +809,7 @@ comp.topo = mixing;
 comp.unmixing = unmixing;
 
 % get the labels
-if strcmp(cfg.method, 'predetermined unmixing matrix'),
+if strcmp(cfg.method, 'predetermined unmixing matrix')
   prefix = 'component';
 else
   prefix = cfg.method;
