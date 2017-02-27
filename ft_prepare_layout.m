@@ -389,7 +389,7 @@ elseif isequal(cfg.layout, 'ordered')
   y = 0/nrow;
   layout.pos(end+1,:) = [x y];
   
-  % project 3D coordinates to 2D plane determined by anatomic 'viewpoint', best suited for intracranial recordings, 
+  % project 3D coordinates to 2D plane determined by anatomic 'viewpoint', best suited for intracranial recordings,
 elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.elec in the set op elseif's beyond this
   
   % fetch elec
@@ -424,7 +424,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     label        = elec.label;
   end
   nchan = size(coords,1);
-      
+  
   % determine auto view
   if strcmp(cfg.ieegview,'auto')
     % simple automatic determination of 'ideal' viewpoint
@@ -445,54 +445,47 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
         cfg.ieegview = 'RSAG';
       end
     end
-  end  
+  end
   
   % 3D to 2D
   switch upper(cfg.ieegview)
-    % rotations below are all such that the Y dimension can de discarded (i.e. Y is the 'viewing axis')
+    % rotations below are all such that the Z dimension can de discarded (i.e. Z is the 'viewing axis')
     
     case 'LSAG'
-      % create view([-90 0]) rotation matrix
-      rotmat = [cosd(-90) -sind(-90) 0; sind(-90) cosd(-90) 0; 0 0 1]; % 
-      % extract x/y and set outline
-      pos     = coords*rotmat;
-      pos     = pos(:,[1 3]);
+      % create and apply view(-90,0) transformation matrix, extract x/y
+      rotmat = viewmtx(-90,0); %
+      pos    = ft_warp_apply(rotmat,coords,'homogenous');
+      pos    = pos(:,[1 2]); 
       
-    case 'RSAG'
-      % create view([90 0]) rotation matrix
-      rotmat = [cosd(90) -sind(90) 0; sind(90) cosd(90) 0; 0 0 1]; % 
-      % extract x/y and set outline
-      pos     = coords*rotmat;
-      pos     = pos(:,[1 3]);
+    case 'RSAG' 
+      % create and apply view(90,0) transformation matrix, extract x/y
+      rotmat = viewmtx(90,0); %
+      pos    = ft_warp_apply(rotmat,coords,'homogenous');
+      pos    = pos(:,[1 2]);
       
     case 'SUP'
-      % create view([0 -90]) rotation matrix
-      rotmat = [1 0 0; 0 cosd(-90) -sind(-90); 0 sind(-90) cosd(-90)]; % 
-      % extract x/y and set outline
-      pos     = coords*rotmat;
-      pos     = pos(:,[1 3]); 
-     
+      % create and apply view(0,90) transformation matrix, extract x/y
+      rotmat = viewmtx(0,90); %
+      pos    = ft_warp_apply(rotmat,coords,'homogenous');
+      pos    = pos(:,[1 2]);
+      
     case 'INF'
-      % create view([-180 90]) rotation matrix
-      rotmat = [1 0 0; 0 cosd(-90) -sind(-90); 0 sind(-90) cosd(-90)]; % 
-      rotmat = rotmat * [cosd(-180) -sind(-180) 0; sind(-180) cosd(-180) 0; 0 0 1]; % 
-      % extract x/y and set outline
-      pos     = coords*rotmat;
-      pos     = pos(:,[1 3]); 
+      % create and apply view(180,-90) transformation matrix, extract x/y
+      rotmat = viewmtx(180,-90); %
+      pos    = ft_warp_apply(rotmat,coords,'homogenous');
+      pos    = pos(:,[1 2]);
       
     case 'POST'
-      % create view([0 0]) rotation matrix
-      rotmat = eye(3); % no rotation needed
-      % extract x/y and set outline
-      pos     = coords*rotmat;
-      pos     = pos(:,[1 3]);
+      % create and apply view(0,0) transformation matrix, extract x/y
+      rotmat = viewmtx(0,0); %
+      pos    = ft_warp_apply(rotmat,coords,'homogenous');
+      pos    = pos(:,[1 2]);
       
     case 'ANT'
-      % create view([180 0]) rotation matrix
-      rotmat = [cosd(-180) -sind(-180) 0; sind(-180) cosd(-180) 0; 0 0 1]; % 
-      % extract x/y and set outline
-      pos     = coords*rotmat;
-      pos     = pos(:,[1 3]);
+      % create and apply view(180,0) transformation matrix, extract x/y
+      rotmat = viewmtx(180,0); %
+      pos    = ft_warp_apply(rotmat,coords,'homogenous');
+      pos    = pos(:,[1 2]);
       
     otherwise
       error(['cfg.ieegview = ' cfg.ieegview ' is not supported'])
@@ -506,14 +499,14 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   XYdist = sort(XYdist(selind),'ascend');
   sizefac = mean(XYdist(1:nchan))*1.2;
   width     = ones(nchan,1) * sizefac;
-  height    = ones(nchan,1) * sizefac * (4/5); 
-
+  height    = ones(nchan,1) * sizefac * (4/5);
+  
   % generate mask as the convex hull around the electrode cloud+boxes
   boxpos = [pos(:,1) - (width/2) pos(:,2) - (height/2);... % lb
-            pos(:,1) - (width/2) pos(:,2) + (height/2);... % lt
-            pos(:,1) + (width/2) pos(:,2) - (height/2);... % rb
-            pos(:,1) + (width/2) pos(:,2) + (height/2)]; % rt
-  mask   = boxpos(convhull(boxpos(:,1),boxpos(:,2)),:); 
+    pos(:,1) - (width/2) pos(:,2) + (height/2);... % lt
+    pos(:,1) + (width/2) pos(:,2) - (height/2);... % rb
+    pos(:,1) + (width/2) pos(:,2) + (height/2)]; % rt
+  mask   = boxpos(convhull(boxpos(:,1),boxpos(:,2)),:);
   
   %   % generate mask as the convex hull around the electrode cloud, and grow it from the center with sizefac
   %   mask     = pos(convhull(pos(:,1),pos(:,2)),:);
@@ -521,7 +514,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   %   centfac  = mask-maskcent;
   %   centfac  = centfac ./ max(abs(centfac),[],2);
   %   mask     = mask + (centfac * sizefac);
-
+  
   % put in layout
   layout.pos     = pos;
   layout.label   = label;
@@ -529,7 +522,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   layout.height  = height;
   layout.outline = [];
   layout.mask    = {mask};
- 
+  
   
   % layout outline generation
   if ~isempty(cfg.ieeganatomy)
@@ -567,8 +560,8 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       braincoords = cat(2,x,y,z);
       braincoords = ft_warp_apply(mriseg.transform,braincoords);
       
-      % subsample braincoords
-      %braincoords = braincoords(1:3:end,:); 
+      % subsample braincoords (with a standard 3T anatomical, 1/4 of voxels is sufficient) (full MRI takes very long and is noisy)
+      braincoords = braincoords(1:4:end,:);
       
     elseif ft_datatype(cfg.ieeganatomy,'mesh') || ft_datatype(cfg.ieeganatomy,'source+mesh')
       mesh = cfg.ieeganatomy;
@@ -585,13 +578,13 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     else
       error('cfg.ieeganatomy needs to contain either an MRI or a MESH, see ft_read_mri or ft_')
     end
-
+    
     % generate outline based on matlab version
     if ft_platform_supports('boundary')
       
       % apply rotation from above (!) to coordinates and extract XY
-      braincoords = braincoords * rotmat;
-      braincoords = braincoords(:, [1 3]);
+      braincoords = ft_warp_apply(rotmat,braincoords,'homogenous');
+      braincoords = braincoords(:, [1 2]);
       
       % get outline
       k = boundary(braincoords,.8);
@@ -600,11 +593,10 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     else % fallback, sad! (not yet working for MRI, an error is thrown above if this is the case)
       
       % plot
-      mesh.pos = mesh.pos * rotmat;
+      mesh.pos = ft_warp_apply(rotmat,mesh.pos,'homogenous');
       h = figure('visible','off');
       ft_plot_mesh(mesh,'facecolor',[0 0 0], 'EdgeColor', 'none');
-      % set to base view
-      view([0 0])
+      view([0 90])
       axis tight
       zlim = get(gca,'zlim');
       ylim = get(gca,'ylim');
@@ -616,10 +608,11 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       outline   = double(logical(sum(frame.cdata,3))); % needs to be binary to trace
       [row col] = find(diff(outline,[],1),1,'first'); % set arbitrary starting point at boundary
       trace = bwtraceboundary(outline,[row, col],'N');
+      close(h)
       
       % convert to used system
       xlimtouse = xlim;
-      ylimtouse = zlim;
+      ylimtouse = ylim;
       x = trace(:,2);
       y = -trace(:,1)+max(trace(:,1));
       x = x - min(x);
@@ -631,18 +624,18 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       y = y .* (ylimtouse(2)-ylimtouse(1));
       y = y - abs(ylimtouse(1));
       
-      % 
+      %
       outline = [x y];
     end
-     
+    
     % subsample outline
     if size(outline,1)>5e3 % 5e3 points should be more than enough to get an outine with acceptable detail
       outline = outline(1:floor(size(outline,1)/5e3):end,:);
     end
- 
+    
     % save outline
     layout.outline = {outline};
-  end  
+  end
   
   % add SCALE and COMNT (using outline as reference, in nearly all, this should suffice)
   layout.label{end+1}  = 'SCALE';
@@ -740,7 +733,6 @@ elseif ischar(cfg.optofile)
     layout = opto2lay(opto, opto.label);
   end
   
-  
 elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
   fprintf('creating layout from cfg.opto\n');
   opto = cfg.opto;
@@ -749,7 +741,6 @@ elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
   else
     layout = opto2lay(opto, opto.label);
   end;
-  
   
 elseif isfield(data, 'opto') && isstruct(data.opto)
   fprintf('creating layout from data.opto\n');
