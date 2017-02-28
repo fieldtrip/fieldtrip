@@ -570,7 +570,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     end
     
     % generate outline based on matlab version
-    if ft_platform_supports('boundary')
+    if false;ft_platform_supports('boundary')
       
       if isequal(outlinebase,'mri')
         % subsample braincoords (with a standard 3T anatomical, 1/4 of voxels is sufficient) (full MRI takes very long and is noisy)
@@ -591,9 +591,9 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
         case 'mri'
           switch mri.unit % only use those supported by ft_estimate units
             case 'm'
-              scalefac = 100;
+              scalefac = 1000;
             case 'dm'
-              scalefac = 10;
+              scalefac = 100;
             case 'cm'
               scalefac = 10;
             case 'mm'
