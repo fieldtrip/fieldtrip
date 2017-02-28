@@ -453,59 +453,59 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     
     case 'LSAG'
       % create and apply view(-90,0) transformation matrix, extract x/y
-      rotmat = viewmtx(-90,0); %
-      pos    = ft_warp_apply(rotmat,coords,'homogenous');
-      pos    = pos(:,[1 2]); 
+      transmat = viewmtx(-90,0); %
+      pos      = ft_warp_apply(transmat,coords,'homogenous');
+      pos      = pos(:,[1 2]); 
       
     case 'RSAG' 
       % create and apply view(90,0) transformation matrix, extract x/y
-      rotmat = viewmtx(90,0); %
-      pos    = ft_warp_apply(rotmat,coords,'homogenous');
-      pos    = pos(:,[1 2]);
+      transmat = viewmtx(90,0); %
+      pos      = ft_warp_apply(transmat,coords,'homogenous');
+      pos      = pos(:,[1 2]);
       
     case 'SUP'
       % create and apply view(0,90) transformation matrix, extract x/y
-      rotmat = viewmtx(0,90); %
-      pos    = ft_warp_apply(rotmat,coords,'homogenous');
-      pos    = pos(:,[1 2]);
+      transmat = viewmtx(0,90); %
+      pos      = ft_warp_apply(transmat,coords,'homogenous');
+      pos      = pos(:,[1 2]);
       
     case 'INF'
       % create and apply view(180,-90) transformation matrix, extract x/y
-      rotmat = viewmtx(180,-90); %
-      pos    = ft_warp_apply(rotmat,coords,'homogenous');
-      pos    = pos(:,[1 2]);
+      transmat = viewmtx(180,-90); %
+      pos      = ft_warp_apply(transmat,coords,'homogenous');
+      pos      = pos(:,[1 2]);
       
     case 'POST'
       % create and apply view(0,0) transformation matrix, extract x/y
-      rotmat = viewmtx(0,0); %
-      pos    = ft_warp_apply(rotmat,coords,'homogenous');
-      pos    = pos(:,[1 2]);
+      transmat = viewmtx(0,0); %
+      pos      = ft_warp_apply(transmat,coords,'homogenous');
+      pos      = pos(:,[1 2]);
       
     case 'ANT'
       % create and apply view(180,0) transformation matrix, extract x/y
-      rotmat = viewmtx(180,0); %
-      pos    = ft_warp_apply(rotmat,coords,'homogenous');
-      pos    = pos(:,[1 2]);
+      transmat = viewmtx(180,0); %
+      pos      = ft_warp_apply(transmat,coords,'homogenous');
+      pos      = pos(:,[1 2]);
       
     otherwise
       error(['cfg.ieegview = ' cfg.ieegview ' is not supported'])
   end
   
   % compute width/height based on distance between electrodes
-  Xdist  = abs(bsxfun(@minus,pos(:,1),pos(:,1)'));
-  Ydist  = abs(bsxfun(@minus,pos(:,2),pos(:,2)'));
-  XYdist = sqrt(Xdist.^2+Ydist.^2);
-  selind = logical(~diag(diag(ones(nchan))));
-  XYdist = sort(XYdist(selind),'ascend');
+  Xdist   = abs(bsxfun(@minus,pos(:,1),pos(:,1)'));
+  Ydist   = abs(bsxfun(@minus,pos(:,2),pos(:,2)'));
+  XYdist  = sqrt(Xdist.^2+Ydist.^2);
+  selind  = logical(~diag(diag(ones(nchan))));
+  XYdist  = sort(XYdist(selind),'ascend');
   sizefac = mean(XYdist(1:nchan))*1.2;
-  width     = ones(nchan,1) * sizefac;
-  height    = ones(nchan,1) * sizefac * (4/5);
+  width   = ones(nchan,1) * sizefac;
+  height  = ones(nchan,1) * sizefac * (4/5);
   
   % generate mask as the convex hull around the electrode cloud+boxes
   boxpos = [pos(:,1) - (width/2) pos(:,2) - (height/2);... % lb
-    pos(:,1) - (width/2) pos(:,2) + (height/2);... % lt
-    pos(:,1) + (width/2) pos(:,2) - (height/2);... % rb
-    pos(:,1) + (width/2) pos(:,2) + (height/2)]; % rt
+            pos(:,1) - (width/2) pos(:,2) + (height/2);... % lt
+            pos(:,1) + (width/2) pos(:,2) - (height/2);... % rb
+            pos(:,1) + (width/2) pos(:,2) + (height/2)]; % rt
   mask   = boxpos(convhull(boxpos(:,1),boxpos(:,2)),:);
   
   %   % generate mask as the convex hull around the electrode cloud, and grow it from the center with sizefac
@@ -540,41 +540,31 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     
     % parse mesh/mri
     if ft_datatype(cfg.ieeganatomy,'volume')
-      % for the moment       FIXME: find a way to support MRI using the getframe approach too
-      if ~ft_platform_supports('boundary')
-        error('using an MRI as cfg.ieeganatomy is only supported in MATLAB2014b or higher, use a pial surface instead')
-      end
-      if ~isfield(cfg.ieeganatomy,'brain')
+      outlinebase = 'mri';
+      mri = ft_datatype_volume(cfg.ieeganatomy);
+      if ~isfield(mri,'brain')
         warning('no brain mask found in MRI, attempting automatic segmentation')
         cfgseg = [];
         cfgseg.output = 'brain';
-        mriseg = ft_volumesegment(cfg,cfg.ieeganatomy);
-      else
-        mriseg = cfg.ieeganatomy;
+        mri = ft_volumesegment(cfg,mri);
       end
       % match units with that of electrodes
-      mriseg = ft_convert_units(mriseg,elecunit);
+      mri = ft_convert_units(mri,elecunit);
       
       % extract boundary points indicating brain
-      [x,y,z] = ind2sub(mriseg.dim,find(mriseg.brain));
+      [x,y,z] = ind2sub(mri.dim,find(mri.brain));
       braincoords = cat(2,x,y,z);
-      braincoords = ft_warp_apply(mriseg.transform,braincoords);
-      
-      % subsample braincoords (with a standard 3T anatomical, 1/4 of voxels is sufficient) (full MRI takes very long and is noisy)
-      braincoords = braincoords(1:4:end,:);
+      braincoords = ft_warp_apply(mri.transform,braincoords);
       
     elseif ft_datatype(cfg.ieeganatomy,'mesh') || ft_datatype(cfg.ieeganatomy,'source+mesh')
-      mesh = cfg.ieeganatomy;
+      outlinebase = 'surface';
+      surface = ft_datatype_headmodel(cfg.ieeganatomy);
       
       % match units with that of electrodes
-      mesh = ft_convert_units(mesh,elecunit);
+      surface = ft_convert_units(surface,elecunit);
       
       % extract points indicating brain
-      if isfield(mesh,'pnt')
-        mesh.pos = mesh.pnt;
-        mesh = rmfield(mesh,'pnt');
-      end
-      braincoords = mesh.pos;
+      braincoords = surface.pos;
     else
       error('cfg.ieeganatomy needs to contain either an MRI or a MESH, see ft_read_mri or ft_')
     end
@@ -582,47 +572,89 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     % generate outline based on matlab version
     if ft_platform_supports('boundary')
       
+      if isequal(outlinebase,'mri')
+        % subsample braincoords (with a standard 3T anatomical, 1/4 of voxels is sufficient) (full MRI takes very long and is noisy)
+        braincoords = braincoords(1:4:end,:);
+      end
+
       % apply rotation from above (!) to coordinates and extract XY
-      braincoords = ft_warp_apply(rotmat,braincoords,'homogenous');
+      braincoords = ft_warp_apply(transmat,braincoords,'homogenous');
       braincoords = braincoords(:, [1 2]);
       
       % get outline
       k = boundary(braincoords,.8);
       outline = braincoords(k,:);
       
-    else % fallback, sad! (not yet working for MRI, an error is thrown above if this is the case)
+    else % fallback, sad!
+      switch outlinebase
+       
+        case 'mri'
+          switch mri.unit % only use those supported by ft_estimate units
+            case 'm'
+              scalefac = 100;
+            case 'dm'
+              scalefac = 10;
+            case 'cm'
+              scalefac = 10;
+            case 'mm'
+              scalefac = 1;
+            otherwise
+              scalefac = 1;
+          end
+          % apply rotation from above (!) to coordinates and extract XY
+          braincoords = ft_warp_apply(transmat,braincoords,'homogenous');
+          braincoords = braincoords(:, [1 2]);
+          % round and subselect
+          braincoords = round(braincoords*scalefac);
+          braincoords = unique(braincoords,'rows');
+          % build image for tracing from coordinates, saving approximate axes
+          xlim  = [min(braincoords(:,1)) max(braincoords(:,1))];
+          ylim  = [min(braincoords(:,2)) max(braincoords(:,2))];
+          xsize = xlim(2)-xlim(1) + 1 ;
+          ysize = ylim(2)-ylim(1) + 1;
+          braincoords(:,1) = braincoords(:,1)-xlim(1)+1;
+          braincoords(:,2) = braincoords(:,2)-ylim(1)+1;
+          imtotrace = zeros(xsize,ysize);
+          linind    = sub2ind([xsize ysize],braincoords(:,1),braincoords(:,2));
+          imtotrace(linind) = 1;
+          % correct xlim/ylim for use below
+          xlim = xlim ./ scalefac;
+          ylim = ylim ./ scalefac;  
+ 
+        case 'surface'
+          % plot
+          surface.pos = ft_warp_apply(transmat,surface.pos,'homogenous');
+          h = figure('visible','off');
+          ft_plot_mesh(surface,'facecolor',[0 0 0], 'EdgeColor', 'none');
+          view([0 90])
+          axis tight
+          xlim = get(gca,'xlim');
+          ylim = get(gca,'ylim');
+          set(gca,'OuterPosition',[0.2 0.2 .6 .6]) % circumvent weird matlab bug, wth?
+          % extract frame for tracing
+          drawnow % need to flush buffer, otherwise frame will not get extracted properly
+          frame     = getframe(h);
+          close(h)
+          imtotrace = double(~logical(sum(frame.cdata,3))); % needs to be binary to trace
+          % image is not in regular xy space, flip, and transpose
+          imtotrace = flipud(imtotrace).';
+      end
       
-      % plot
-      mesh.pos = ft_warp_apply(rotmat,mesh.pos,'homogenous');
-      h = figure('visible','off');
-      ft_plot_mesh(mesh,'facecolor',[0 0 0], 'EdgeColor', 'none');
-      view([0 90])
-      axis tight
-      zlim = get(gca,'zlim');
-      ylim = get(gca,'ylim');
-      xlim = get(gca,'xlim');
-      set(gca,'OuterPosition',[0.2 0.2 .6 .6]) % circumvent weird matlab bug, wth?
-      % extract frame and trace boundary
-      drawnow % need to flush buffer, otherwise frame will not get extracted properly
-      frame = getframe(h);
-      outline   = double(logical(sum(frame.cdata,3))); % needs to be binary to trace
-      [row col] = find(diff(outline,[],1),1,'first'); % set arbitrary starting point at boundary
-      trace = bwtraceboundary(outline,[row, col],'N');
-      close(h)
+      % trace image generated above
+      [row col] = find(imtotrace,1,'first'); % set arbitrary starting point
+      trace = bwtraceboundary(imtotrace,[row, col],'N');
       
-      % convert to used system
-      xlimtouse = xlim;
-      ylimtouse = ylim;
-      x = trace(:,2);
-      y = -trace(:,1)+max(trace(:,1));
+      % convert to sens coordinates
+      x = trace(:,1);
+      y = trace(:,2);
       x = x - min(x);
       x = x ./ max(x);
-      x = x .* (xlimtouse(2)-xlimtouse(1));
-      x = x - abs(xlimtouse(1));
+      x = x .* (xlim(2)-xlim(1));
+      x = x - abs(xlim(1));
       y = y - min(y);
       y = y ./ max(y);
-      y = y .* (ylimtouse(2)-ylimtouse(1));
-      y = y - abs(ylimtouse(1));
+      y = y .* (ylim(2)-ylim(1));
+      y = y - abs(ylim(1));
       
       %
       outline = [x y];
