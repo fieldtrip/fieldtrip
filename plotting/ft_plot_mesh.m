@@ -132,6 +132,17 @@ if isempty(vertexcolor)
     vertexcolor ='k';
   end
 end
+if isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
+  if isfield(mesh, 'curv')
+    cortex_light = eval('cortex_light');
+    cortex_dark  = eval('cortex_dark');
+    % the curvature determines the color of gyri and sulci
+    vertexcolor = mesh.curv(:) * cortex_dark + (1-mesh.curv(:)) * cortex_light;
+  else
+    cortex_light = eval('cortex_light');
+    vertexcolor = repmat(cortex_light, size(mesh.pos,1), 1);
+  end
+end
 
 % convert string into boolean values
 faceindex   = istrue(faceindex);   % yes=view the face number
