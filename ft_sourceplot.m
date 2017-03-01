@@ -144,6 +144,11 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer', ' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
+%   cfg.facecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', 
+%                        or an Nx3 or Nx1 array where N is the number of faces
+%   cfg.vertexcolor    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', 
+%                        or an Nx3 or Nx1 array where N is the number of vertices
+%   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -1045,6 +1050,9 @@ switch cfg.method
     cfg.projmethod     = ft_getopt(cfg, 'projmethod',    'nearest');
     cfg.distmat        = ft_getopt(cfg, 'distmat',       []);
     cfg.camlight       = ft_getopt(cfg, 'camlight',      'yes');
+    cfg.facecolor      = ft_getopt(cfg, 'facecolor',    []);
+    cfg.vertexcolor    = ft_getopt(cfg, 'vertexcolor',   'curv'); % curvature-dependent mix of cortex_light and cortex_dark
+    cfg.edgecolor      = ft_getopt(cfg, 'edgecolor',     'none');
     
     % determine whether the source functional already contains a triangulation
     interpolate2surf = 0;
@@ -1163,25 +1171,16 @@ switch cfg.method
     end
     
     %------do the plotting
-    cortex_light = [0.781 0.762 0.664];
-    cortex_dark  = [0.781 0.762 0.664]/2;
-    if isfield(surf, 'curv')
-      % the curvature determines the color of gyri and sulci
-      color = surf.curv(:) * cortex_dark + (1-surf.curv(:)) * cortex_light;
-    else
-      color = repmat(cortex_light, size(surf.pos,1), 1);
-    end
-    
-    ft_plot_mesh(surf,'edgecolor', 'none', 'vertexcolor', color);
+    ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
     axis   off;
     axis vis3d;
     axis equal;
     
     if hasfun
       if ~hasmsk || all(maskval(:)==1)
-        ft_plot_mesh(surf, 'edgecolor', 'none', 'vertexcolor', val);
+        ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val);
       elseif hasmsk
-        ft_plot_mesh(surf, 'edgecolor', 'none', 'vertexcolor', val, 'facealpha', maskval);
+        ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval);
         try
           alim(gca, [opacmin opacmax]);
         end
