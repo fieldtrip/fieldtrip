@@ -141,6 +141,7 @@ if isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
   else
     cortex_light = eval('cortex_light');
     vertexcolor = repmat(cortex_light, size(mesh.pos,1), 1);
+    warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
 
