@@ -129,9 +129,9 @@ vertexindex = istrue(vertexindex); % yes=view the vertex number
 
 if isempty(vertexcolor)
   if haspos && hascolor && (hastri || hastet || hashex || hasline || haspoly)
-    vertexcolor = mesh.color;   
+    vertexcolor = mesh.color;
   elseif haspos && (hastri || hastet || hashex || hasline || haspoly)
-    vertexcolor ='none'; 
+    vertexcolor ='none';
   else
     vertexcolor ='k';
   end
@@ -149,7 +149,9 @@ if isequal(edgecolor, 'false') || isequal(edgecolor, 'no') || isequal(edgecolor,
 end
 
 % color management
-if isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
+if ischar(vertexcolor) && exist([vertexcolor '.m'], 'file')
+  vertexcolor = eval(vertexcolor);
+elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
   if isfield(mesh, 'curv')
     cortex_light = eval('cortex_light');
     cortex_dark  = eval('cortex_dark');
@@ -161,15 +163,11 @@ if isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
     warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
-
-if ischar(vertexcolor) && exist([vertexcolor '.m'], 'file')
-	vertexcolor = eval(vertexcolor);
-end
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
-	facecolor = eval(facecolor);
+  facecolor = eval(facecolor);
 end
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-	edgecolor = eval(edgecolor);
+  edgecolor = eval(edgecolor);
 end
 
 % everything is added to the current figure
