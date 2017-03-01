@@ -1,4 +1,4 @@
-function failed_bug3035
+function test_bug3035
 
 % MEM 1000mb
 % WALLTIME 00:10:00
@@ -55,9 +55,11 @@ if ~ok
 end
 
 % check
-tmp = cat(1, data_reject1.trial{:});
-if any(isnan(tmp(:)))
-  errfun('cleaned data contains nans');
+if exist('data_reject1', 'var')
+  tmp = cat(1, data_reject1.trial{:});
+  if any(isnan(tmp(:)))
+    errfun('cleaned data contains nans');
+  end
 end
 
 %% rejectcomponent with 3rd input argument after zeroing nans
