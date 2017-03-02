@@ -176,6 +176,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
+istimelock = ft_datatype(data, 'timelock');
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
@@ -198,6 +199,10 @@ cfg.feedback        = ft_getopt(cfg, 'feedback',     'text');
 
 % select channels, has to be done prior to handling of previous (un)mixing matrix
 cfg.channel = ft_channelselection(cfg.channel, data.label);
+
+if istrue(cfg.cellmode)
+  ft_hastoolbox('cellfunction', 1);
+end
 
 if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
@@ -260,11 +265,11 @@ switch cfg.method
     cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
   case 'bsscca'
     % additional options, see BSSCCA for details
-    cfg.bsscca       = ft_getopt(cfg,        'bsscca', []);
-    cfg.bsscca.delay = ft_getopt(cfg.bsscca, 'delay', 1);
+    cfg.bsscca           = ft_getopt(cfg,        'bsscca', []);
+    cfg.bsscca.refdelay  = ft_getopt(cfg.bsscca, 'refdelay', 1);
+    cfg.bsscca.chandelay = ft_getopt(cfg.bsscca, 'chandelay', 0);
     if strcmp(cfg.cellmode, 'no')
-      fprintf('switching to cell-mode for method ''bsscca''\n');
-      cfg.cellmode = 'yes';
+      error('cfg.mehod = ''bsscca'' requires cfg.cellmode = ''yes''');
     end
   otherwise
     % do nothing
@@ -499,7 +504,7 @@ switch cfg.method
     [weights, sphere] = runica(dat, optarg{:});
 
     % scale the sphering matrix to unit norm
-    if strcmp(cfg.normalisesphere, 'yes'),
+    if strcmp(cfg.normalisesphere, 'yes')
       sphere = sphere./norm(sphere);
     end
 
@@ -528,7 +533,7 @@ switch cfg.method
     [weights, sphere] = binica(dat, optarg{:});
 
     % scale the sphering matrix to unit norm
-    if strcmp(cfg.normalisesphere, 'yes'),
+    if strcmp(cfg.normalisesphere, 'yes')
       sphere = sphere./norm(sphere);
     end
 
@@ -569,7 +574,7 @@ switch cfg.method
 
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
-    d = sortrows(d,[-2]);
+    d = sortrows(d, -2);
 
     % return the desired number of principal components
     unmixing = E(:,d(1:cfg.numcomponent,1))';
@@ -602,7 +607,7 @@ switch cfg.method
 
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
-    d = sortrows(d,[-2]);
+    d = sortrows(d, -2);
 
     % return the desired number of principal components
     unmixing = E(:,d(1:cfg.numcomponent,1))';
@@ -743,11 +748,22 @@ switch cfg.method
     % the data in the cell-array, because the trial-boundaries are clear.
     % if represented in a concatenated array one has to keep track of the
     % trial boundaries
-
-    [unmixing, rho] = bsscca(dat,cfg.bsscca.delay);
-    mixing          = [];
-    % unmixing      = diag(rho);
-
+    
+    optarg          = ft_cfg2keyval(cfg.bsscca);
+    optarg          = cat(2,optarg, {'time', data.time});
+    [unmixing, mixing, rho, compdata, time] = bsscca(dat, optarg{:});
+    data.trial = mixing*compdata;
+    data.time  = time;
+    
+    if size(mixing,1)>numel(data.label)
+      for m = 1:(size(mixing,1)-numel(data.label))
+        data.label{end+1} = sprintf('refchan%03d',m);
+      end
+    end
+      
+    % remember the canonical correlations
+    cfg.bsscca.rho = rho;
+    
   case 'parafac'
     error('parafac is not supported anymore in ft_componentanalysis');
 
@@ -808,7 +824,7 @@ comp.topo = mixing;
 comp.unmixing = unmixing;
 
 % get the labels
-if strcmp(cfg.method, 'predetermined unmixing matrix'),
+if strcmp(cfg.method, 'predetermined unmixing matrix')
   prefix = 'component';
 else
   prefix = cfg.method;
@@ -865,6 +881,11 @@ end
 % copy the trialinfo into the output
 if isfield(data, 'trialinfo')
   comp.trialinfo = data.trialinfo;
+end
+
+% convert back to input type if necessary
+if istimelock
+  comp = ft_checkdata(comp, 'datatype', 'timelock+comp');
 end
 
 % do the general cleanup and bookkeeping at the end of the function

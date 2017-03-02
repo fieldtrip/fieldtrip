@@ -298,10 +298,13 @@ end
 
 
 function sanityCheck(tmp)
+
 % sanity checks
-if ~isequal(size(tmp.sampleinfo), [4,2])
-  error('sampleinfo is wrong');
-end
+% This does not need to be checked, because by construction
+% a timelock structure should not contain a sampleinfo field
+%if ~isequal(size(tmp.sampleinfo), [4,2])
+%  error('sampleinfo is wrong');
+%end
 
 if ~isequal(tmp.time, [-.5:.25:1]) && ...
     ~isequal(tmp.time, [-.5:.25:1]+ 0.6) && ...

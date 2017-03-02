@@ -18,32 +18,34 @@ switch style
       
       if ~isfield(segmentation, [fn{i} 'label'])
         % ensure that the tissues have labels
-        indexlabel = {};
+        indexlabel = cell(size(indexval));
         for j=1:length(indexval)
           indexlabel{indexval(j)} = sprintf('tissue %d', indexval(j));
         end
         segmentation.([fn{i} 'label']) = indexlabel;
+        
       else
-        % ensure that the tissue labels are consistent with the index values
+        % check for the situation where
+        %   indexval   = [1 2 4]
+        %   indexlabel = {'a', 'b', 'c', 'd'} or {'a', 'b', [], 'd'}
+        % which happens if the segmentation unexpectedly does not contain a certain tissue type
         indexlabel = segmentation.([fn{i} 'label']);
         if numel(indexval)>numel(indexlabel)
           error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
         elseif any(cellfun(@isempty, indexlabel(indexval)))
           error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
+        elseif numel(indexval)<numel(indexlabel)
+          warning('there are more labels than actuall tissue types in %s', [fn{i} 'label']);
+          % ensure that the indices are subsequent integers, i.e. [1 2 3] rather than [1 2 4]
+          for j=1:length(indexval)
+            tmp = segmentation.(fn{i});
+            tmp(tmp==indexval(j)) = j;
+            segmentation.(fn{i}) = tmp;
+          end
+          segmentation.([fn{i} 'label']) = segmentation.([fn{i} 'label'])(indexval);
         end
-        % the checks above allow for the situation where
-        %   indexval   = [1 2 4]
-        %   indexlabel = {'a', 'b', 'c', 'd'} or {'a', 'b', [], 'd'}
-        % which happens if the segmentation unexpectedly does not contain a certain tissue type
+        
       end
-      
-      % ensure that the indices are subsequent integers, i.e. [1 2 3] rather than [1 2 4]
-      for j=1:length(indexval)
-        tmp = segmentation.(fn{i});
-        tmp(tmp==indexval(j)) = j;
-        segmentation.(fn{i}) = tmp;
-      end
-      segmentation.([fn{i} 'label']) = segmentation.([fn{i} 'label'])(indexval);
     end
     clear tmp indexval indexlabel
     

@@ -27,7 +27,7 @@ function test_bug1786
 
 % function fixedelec = fixelec(labels, badchans,data)
 
-% error(nargchk(3, 3, nargin));
+% narginchk(3, 3);
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1786.mat'));
 
