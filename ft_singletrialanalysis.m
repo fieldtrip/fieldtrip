@@ -145,7 +145,7 @@ switch method
         jitter           = ft_getopt(cfg.aseo, 'jitter', 0.050);
         numiteration     = ft_getopt(cfg.aseo, 'numiteration', 1);
         initcomp         = ft_getopt(cfg.aseo, 'initcomp', {});
-                    
+        
         reconstructed = data;
         residual      = data;
         if isfield(data, 'cfg');
@@ -159,12 +159,14 @@ switch method
         
         if isempty(waveformInitSet) && isempty(initcomp)
             error('you should supply either an initial estimate of the waveform component, or a set of latencies');
-        end      
+        end
         
         % if jitter universal, put it in the right format
         if length(jitter)==1
             jitter = jitter*fsample; % convert jitter from sec to sample
             jitter = repmat([-jitter jitter], [size(waveformInitSet,1) 1]);
+        elseif size(jitter)==size(waveformInitSet)
+            jitter = jitter*fsample;
         elseif size(jitter)<size(waveformInitSet) | size(jitter)>size(waveformInitSet)
             error('please specify cfg.aseo.jitter as a universal single value or as a matrix with size(cfg.aseo.searchWindowSet)')
         end
@@ -250,7 +252,7 @@ switch method
                 initcomp{k} = initcomp{k} - repmat(mean(initcomp{k}),nsmp,1);
             end
             
-        
+            
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%% ASEO algorithm
