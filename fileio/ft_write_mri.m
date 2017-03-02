@@ -118,5 +118,5 @@ switch dataformat
     write_vista_vol(size(dat), dat, filename);
     
   otherwise
-    error('unsupported data format');
+    error('unsupported format "%s"', dataformat);
 end % switch dataformat

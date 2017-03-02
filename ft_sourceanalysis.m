@@ -657,7 +657,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   optarg = ft_cfg2keyval(tmpcfg);
   
   if Nrepetitions > 1
-    ft_progress('init', cfg.feedback, 'scanning repetition...');
+    ft_progress('init', cfg.(cfg.method).feedback, 'scanning repetition...');
   end
   
   for i=1:Nrepetitions
