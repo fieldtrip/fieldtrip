@@ -150,6 +150,7 @@ url = {
   'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
   'NEURONE'       'see http://www.megaemg.com/support/unrestricted-downloads'
   'COLORBREWER'   'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
+  'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
   };
 
 if nargin<2
@@ -380,6 +381,8 @@ switch toolbox
     dependency = {'ft_spiketriggeredaverage', 'ft_spiketriggeredspectrum'};
   case 'FILEEXCHANGE'
     dependency = is_subdir_in_fieldtrip_path('/external/fileexchange');
+  case 'CELLFUNCTION'
+    dependency = {'cellmean', 'cellvecadd', 'cellcat'};
   case {'INVERSE', 'REALTIME', 'SPECEST', 'PREPROC', ...
           'COMPAT', 'STATFUN', 'TRIALFUN', 'UTILITIES/COMPAT', ...
           'FILEIO/COMPAT', 'PREPROC/COMPAT', 'FORWARD/COMPAT', ...
