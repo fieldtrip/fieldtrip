@@ -36,6 +36,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Analyse
 %  - Analyze/SPM
 %  - BESA
+%  - Bioimage Suite (*.mgrid)
 %  - BrainSuite
 %  - BrainVisa
 %  - BrainVision
@@ -1292,7 +1293,10 @@ elseif filetype_check_extension(filename, '.m00')
   type = 'nihonkohden_m00';
   manufacturer = 'Nihon Kohden';
   content = 'continuous EEG';
-  
+elseif filetype_check_extension(filename, '.mgrid')
+  type = 'bioimage_mgrid';
+  manufacturer = 'Bioimage Suite';
+  content = 'electrode positions';
 end
 
 

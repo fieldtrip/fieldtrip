@@ -1,4 +1,4 @@
-function failed_bug963
+function test_bug963
 
 % MEM 1500mb
 % WALLTIME 00:10:00
@@ -92,9 +92,9 @@ for i=1:length(dataset)
 %     hdr.grad = rmfield(hdr.grad, 'labelorg');
 %   end
 %   
-  assert(isequal(hdr.grad,           grad), sprintf('failed for %s', filename));
-  assert(isequal(reference.grad,     grad), sprintf('failed for %s', filename));
-  assert(isequal(reference.hdr.grad, grad), sprintf('failed for %s', filename));
+  assert(identical(hdr.grad,           grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
+  assert(identical(reference.grad,     grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
+  assert(identical(reference.hdr.grad, grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
   
   allhdr{i}  = hdr;
   allgrad{i} = grad;

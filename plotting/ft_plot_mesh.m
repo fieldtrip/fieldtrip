@@ -123,19 +123,19 @@ if surfaceonly
   hashex   = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
 end
 
+% convert string into boolean values
+faceindex   = istrue(faceindex);   % yes=view the face number
+vertexindex = istrue(vertexindex); % yes=view the vertex number
+
 if isempty(vertexcolor)
   if haspos && hascolor && (hastri || hastet || hashex || hasline || haspoly)
-    vertexcolor = mesh.color;   
+    vertexcolor = mesh.color;
   elseif haspos && (hastri || hastet || hashex || hasline || haspoly)
-    vertexcolor ='none'; 
+    vertexcolor ='none';
   else
     vertexcolor ='k';
   end
 end
-
-% convert string into boolean values
-faceindex   = istrue(faceindex);   % yes=view the face number
-vertexindex = istrue(vertexindex); % yes=view the vertex number
 
 % there are various ways of specifying that this should not be plotted
 if isequal(vertexcolor, 'false') || isequal(vertexcolor, 'no') || isequal(vertexcolor, 'off') || isequal(vertexcolor, false)
@@ -150,13 +150,24 @@ end
 
 % color management
 if ischar(vertexcolor) && exist([vertexcolor '.m'], 'file')
-	vertexcolor = eval(vertexcolor);
+  vertexcolor = eval(vertexcolor);
+elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
+  if isfield(mesh, 'curv')
+    cortex_light = eval('cortex_light');
+    cortex_dark  = eval('cortex_dark');
+    % the curvature determines the color of gyri and sulci
+    vertexcolor = mesh.curv(:) * cortex_dark + (1-mesh.curv(:)) * cortex_light;
+  else
+    cortex_light = eval('cortex_light');
+    vertexcolor = repmat(cortex_light, size(mesh.pos,1), 1);
+    warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
+  end
 end
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
-	facecolor = eval(facecolor);
+  facecolor = eval(facecolor);
 end
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-	edgecolor = eval(edgecolor);
+  edgecolor = eval(edgecolor);
 end
 
 % everything is added to the current figure

@@ -73,6 +73,8 @@ fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 senstype       = ft_getopt(varargin, 'senstype', 'eeg');  % can be eeg or meg, this is used to decide what to return if both are present in a fif file
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
+transform      = ft_getopt(varargin, 'transform');        % empty, or a 4x4 transformation matrix
+
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,10 +157,12 @@ switch fileformat
     
   case 'besa_sfp'
     [lab, pos] = read_besa_sfp(filename);
-	
     sens.label   = lab;
     sens.elecpos = pos;
-		
+    
+  case 'bioimage_mgrid'
+    sens = read_bioimage_mgrid(filename);
+    
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
@@ -371,7 +375,7 @@ switch fileformat
     
   otherwise
     error('unknown fileformat for electrodes or gradiometers');
-end
+end % switch fileformat
 
 % ensure that the sensor description is up-to-date
 % this will also add chantype and units to the sensor array if missing
