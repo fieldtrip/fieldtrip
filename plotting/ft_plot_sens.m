@@ -12,7 +12,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
 %   'unit'            = string, convert the data to the specified geometrical units (default = [])
 %   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
-%   'coil'            = true/false, plot both gradiometer coils or only the channel position (default = false)
+%   'coil'            = true/false, plot each individual coil (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each coil (default = false)
 %   'shape'           = 'point', 'circle', 'square', or 'sphere' (default is automatic)
 %   'sensize'         = diameter or edge length of the coils or electrodes (default is automatic)
@@ -62,7 +62,7 @@ chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
 orientation     = ft_getopt(varargin, 'orientation', false);
 % this is for EEG electrodes and MEG magnetometer and/or gradiometer arrays
-both            = ft_getopt(varargin, 'both', false);
+coil            = ft_getopt(varargin, 'coil', false);
 shape           = ft_getopt(varargin, 'shape'); % default depends on the input, see below
 sensize         = ft_getopt(varargin, 'sensize');  % default depends on the input, see below
 % this is simply passed to plot3
@@ -199,7 +199,7 @@ if ~holdflag
 end
 
 if istrue(orientation)
-  if istrue(both)
+  if istrue(coil)
     if isfield(sens, 'coilori')
       pos = sens.coilpos;
       ori = sens.coilori;
@@ -229,7 +229,7 @@ if istrue(orientation)
 end
 
 
-if istrue(both)
+if istrue(coil)
   % simply get the position of all coils or electrodes
   if isfield(sens, 'coilpos')
     pos = sens.coilpos;
