@@ -1155,11 +1155,7 @@ if ~any(strcmp('COMNT', layout.label)) && strcmpi(cfg.style, '2d') && ~skipcomnt
   layout.label{end+1}  = 'COMNT';
   layout.width(end+1)  = mean(layout.width);
   layout.height(end+1) = mean(layout.height);
-  if ~isempty(layout.pos)
-    XY = layout.pos;
-  else
-    XY = cat(1, layout.outline{:}, layout.mask{:});
-  end
+  XY = cat(1, layout.pos, layout.outline{:}, layout.mask{:});
   layout.pos(end+1,:)  = [min(XY(:,1)) min(XY(:,2))];
 elseif any(strcmp('COMNT', layout.label)) && skipcomnt
   % remove the scale entry
@@ -1175,11 +1171,7 @@ if ~any(strcmp('SCALE', layout.label)) && strcmpi(cfg.style, '2d') && ~skipscale
   layout.label{end+1}  = 'SCALE';
   layout.width(end+1)  = mean(layout.width);
   layout.height(end+1) = mean(layout.height);
-  if ~isempty(layout.pos)
-    XY = layout.pos;
-  else
-    XY = cat(1, layout.outline{:}, layout.mask{:});
-  end
+  XY = cat(1, layout.pos, layout.outline{:}, layout.mask{:});
   layout.pos(end+1,:)  = [max(XY(:,1)) min(XY(:,2))];
 elseif any(strcmp('SCALE', layout.label)) && skipscale
   % remove the scale entry
