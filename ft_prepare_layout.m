@@ -55,11 +55,12 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                      tip: use cfg.ieegview = auto per electrode grid/strip/depth for most accurate results
 %                      tip: to obtain overview of e.g. all depth electrodes, choose superior/inferior, use cfg.ieeganatomy, and
 %                           plot using ft_layoutplot with cfg.box/mask = 'no'
-%   cfg.headshape   = surface mesh (e.g. pial) to be used for generating a layout outline for cfg.ieegview
+%   cfg.headshape   = surface mesh (e.g. pial, head, etc) to be used for generating a layout outline for cfg.ieegview
 %                     Needs to be in same coordinate space as electrodes. See FT_READ_HEADSHAPE
 %   cfg.mri         = mri to be used for generating a brain outline as layout outline for cfg.ieegview
 %                     Anatomy needs to be in same coordinate space as electrodes. See FT_READ_MRI 
-%                     Mri needs to be segmented and contain a 'brain' field. If not, segmentation is attempted automatically. See FT_VOLUMESEGMENT
+%                     Mri needs to be segmented and contain a 'brain' field. If not, segmentation is attempted automatically. 
+%                     See FT_VOLUMESEGMENT. 
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
