@@ -45,15 +45,15 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.ieegview    = string indicating 'viewpoint' used for projecting 3D electrode coordinates to 2D plane for layout
 %                     Useful for intracranial recordings, requires cfg.elec/cfg.elecfile containing 3D coordinates
 %                     Viewpoints are as follows:
-%                     'LSAG' = left  sagittal view, L=anterior, R=posterior, top=top, bottom=bottom
-%                     'RSAG' = right sagittal view, L=posterior, R=anterior, top=top, bottom=bottom
-%                     'INF'  = inferior axial view, L=R, R=L, top=anterior, bottom=posterior
-%                     'SUP'  = superior axial view, L=L, R=R, top=anterior, bottom=posterior
-%                     'ANT'  = anterior  coronal view, L=R, R=L, top=top, bottom=bottom
-%                     'POST' = posterior coronal view, L=L, R=R, top=top, bottom=bottom
+%                     'left'      = left  sagittal view,    L=anterior, R=posterior, top=top, bottom=bottom
+%                     'right'     = right sagittal view,    L=posterior, R=anterior, top=top, bottom=bottom
+%                     'inferior'  = inferior axial view,    L=R, R=L, top=anterior, bottom=posterior
+%                     'superior'  = superior axial view,    L=L, R=R, top=anterior, bottom=posterior
+%                     'anterior'  = anterior  coronal view, L=R, R=L, top=top, bottom=bottom
+%                     'posterior' = posterior coronal view, L=L, R=R, top=top, bottom=bottom
 %                     'auto' = automatic guess of the most optimal of the above
 %                      tip: use cfg.ieegview = auto per electrode grid/strip/depth for most accurate results
-%                      tip: to obtain overview of e.g. all depth electrodes, choose SUP/INF, use cfg.ieeganatomy, and
+%                      tip: to obtain overview of e.g. all depth electrodes, choose superior/inferior, use cfg.ieeganatomy, and
 %                           plot using ft_layoutplot with cfg.box/mask = 'no'
 %   cfg.ieeganatomy = pial surface mesh or (segmented) mri to be used for generating a brain outline as layout outline for cfg.ieegview
 %                     Anatomy needs to be in same coordinate space as electrodes, and ideally match. See FT_READ_MRI and FT_READ_HEADSHAPE
@@ -429,59 +429,59 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   if strcmp(cfg.ieegview,'auto')
     % simple automatic determination of 'ideal' viewpoint
     % first, depth or not: if Xvar (l/r axis) is bigger than both Yvar (post/ant axis) and Zvar (top/bottom axis), it's a depth
-    % if yes, SUP (screw INF) is more appriorate if Yvar > Zvar, otherwise POST (screw ANT)
-    % if no, it's LSAG/RSAG, sign of mean(X) indicates which side the grid is on (note, for interhemispheric grids, both L/RSAG (doenst) work)
+    % if yes, superior (screw inferior) is more appriorate if Yvar > Zvar, otherwise posterior (screw anterior)
+    % if no, it's left/right, sign of mean(X) indicates which side the grid is on (note, for interhemispheric grids, both left/right (doenst) work)
     coordvar = var(coords);
     if (coordvar(1)>coordvar(2)) && (coordvar(1)>coordvar(3)) % if they're roughly equal, it's likely a diagonal depth, and any view would (not) work
       if coordvar(2)>coordvar(3)
-        cfg.ieegview = 'SUP';
+        cfg.ieegview = 'superior';
       else
-        cfg.ieegview = 'POST';
+        cfg.ieegview = 'posterior';
       end
     else
       if sign(mean(coords(:,1))) == -1
-        cfg.ieegview = 'LSAG';
+        cfg.ieegview = 'left';
       else
-        cfg.ieegview = 'RSAG';
+        cfg.ieegview = 'right';
       end
     end
   end
   
   % 3D to 2D
-  switch upper(cfg.ieegview)
+  switch cfg.ieegview
     % rotations below are all such that the Z dimension can de discarded (i.e. Z is the 'viewing axis')
     
-    case 'LSAG'
+    case 'left'
       % create and apply view(-90,0) transformation matrix, extract x/y
       transmat = viewmtx(-90,0); %
       pos      = ft_warp_apply(transmat,coords,'homogenous');
       pos      = pos(:,[1 2]); 
       
-    case 'RSAG' 
+    case 'right' 
       % create and apply view(90,0) transformation matrix, extract x/y
       transmat = viewmtx(90,0); %
       pos      = ft_warp_apply(transmat,coords,'homogenous');
       pos      = pos(:,[1 2]);
       
-    case 'SUP'
+    case 'superior'
       % create and apply view(0,90) transformation matrix, extract x/y
       transmat = viewmtx(0,90); %
       pos      = ft_warp_apply(transmat,coords,'homogenous');
       pos      = pos(:,[1 2]);
       
-    case 'INF'
+    case 'inferior'
       % create and apply view(180,-90) transformation matrix, extract x/y
       transmat = viewmtx(180,-90); %
       pos      = ft_warp_apply(transmat,coords,'homogenous');
       pos      = pos(:,[1 2]);
       
-    case 'POST'
+    case 'posterior'
       % create and apply view(0,0) transformation matrix, extract x/y
       transmat = viewmtx(0,0); %
       pos      = ft_warp_apply(transmat,coords,'homogenous');
       pos      = pos(:,[1 2]);
       
-    case 'ANT'
+    case 'anterior'
       % create and apply view(180,0) transformation matrix, extract x/y
       transmat = viewmtx(180,0); %
       pos      = ft_warp_apply(transmat,coords,'homogenous');
