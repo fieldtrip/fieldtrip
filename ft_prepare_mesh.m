@@ -203,6 +203,13 @@ elseif ~isfield(bnd, 'unit')
   bnd = ft_convert_units(bnd);
 end
 
+% copy the coordinate system from the input to the output
+if ~isfield(bnd, 'coordsys') && hasdata && isfield(mri, 'coordsys')
+  for i=1:numel(bnd)
+    bnd(i).coordsys = mri.coordsys;
+  end
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
