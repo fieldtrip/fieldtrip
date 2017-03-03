@@ -55,10 +55,11 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                      tip: use cfg.ieegview = auto per electrode grid/strip/depth for most accurate results
 %                      tip: to obtain overview of e.g. all depth electrodes, choose superior/inferior, use cfg.ieeganatomy, and
 %                           plot using ft_layoutplot with cfg.box/mask = 'no'
-%   cfg.headshape   = pial (or other) surface mesh to be used for generating a brain outline as layout outline for cfg.ieegview
-%                     Needs to be in same coordinate space as electrodes, and ideally match. See FT_READ_HEADSHAPE
-%   cfg.mri         = (segmented) mri to be used for generating a brain outline as layout outline for cfg.ieegview
-%                     Anatomy needs to be in same coordinate space as electrodes, and ideally match. See FT_READ_MRI 
+%   cfg.headshape   = surface mesh (e.g. pial) to be used for generating a layout outline for cfg.ieegview
+%                     Needs to be in same coordinate space as electrodes. See FT_READ_HEADSHAPE
+%   cfg.mri         = mri to be used for generating a brain outline as layout outline for cfg.ieegview
+%                     Anatomy needs to be in same coordinate space as electrodes. See FT_READ_MRI 
+%                     Mri needs to be segmented and contain a 'brain' field. If not, segmentation is attempted automatically. See FT_VOLUMESEGMENT
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
@@ -533,8 +534,8 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   
   % layout outline generation
   if ~isempty(cfg.headshape) || ~isempty(cfg.mri)
+    % parse headshape/mri
     if ~isempty(cfg.headshape)
-      outlbasetype = 'headshape';
       if ischar(cfg.headshape) && exist(cfg.headshape, 'file')
         fprintf('reading headshape from file %s\n', cfg.headshape);
         outlbase = ft_read_headshape(cfg.headshape);
@@ -545,7 +546,6 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       end
       outlbase = ft_datatype_headmodel(outlbase);
     elseif ~isempty(cfg.mri)
-      outlbasetype = 'mri';
       if ischar(cfg.mri) && exist(cfg.mri, 'file')
         fprintf('reading MRI from file %s\n', cfg.mri);
         outlbase = ft_read_mri(cfg.mri);
@@ -555,6 +555,12 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
         error('cfg.mri does not contain mri')
       end
       outlbase = ft_datatype_volume(outlbase);
+      % create mesh from anatomical field, and use as headshape below
+      cfgpm = [];
+      cfgpm.method      = 'projectmesh';
+      cfgpm.tissue      = 'brain';
+      cfgpm.numvertices = 1e5;
+      outlbase = ft_prepare_mesh(cfgpm, outlbase);
     end
     
     % check coordinate system of outlbase
@@ -568,36 +574,12 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     
     % match units with that of electrodes
     outlbase = ft_convert_units(outlbase,elecunit);
-    
-    % get braincoords from headshape/mri
-    switch outlbasetype
-      case 'mri'
-        if ~isfield(outlbase,'brain')
-          warning('no brain mask found in mri, attempting automatic segmentation')
-          cfgseg = [];
-          cfgseg.output = 'brain';
-          outlbase = ft_volumesegment(cfg,outlbase);
-        end
-        
-        % extract boundary points indicating brain
-        [x,y,z] = ind2sub(outlbase.dim,find(outlbase.brain));
-        braincoords = cat(2,x,y,z);
-        braincoords = ft_warp_apply(outlbase.transform,braincoords);
-        
-      case 'headshape'
-        
-        % extract points indicating brain
-        braincoords = outlbase.pos;
-    end
-    
+
     % generate outline based on matlab version
     if ft_platform_supports('boundary')
       
-      if isequal(outlbasetype,'mri')
-        % subsample braincoords (with a standard 3T anatomical, 1/4 of voxels is sufficient) (full MRI takes very long and is noisy)
-        braincoords = braincoords(1:4:end,:);
-      end
-
+      % extract points indicating brain
+      braincoords = outlbase.pos;
       % apply rotation from above (!) to coordinates and extract XY
       braincoords = ft_warp_apply(transmat,braincoords,'homogenous');
       braincoords = braincoords(:, [1 2]);
@@ -607,59 +589,23 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       outline = braincoords(k,:);
       
     else % fallback, sad!
-      switch outlbasetype
-       
-        case 'mri'
-          switch outlbase.unit % only use those supported by ft_estimate units
-            case 'm'
-              scalefac = 1000;
-            case 'dm'
-              scalefac = 100;
-            case 'cm'
-              scalefac = 10;
-            case 'mm'
-              scalefac = 1;
-            otherwise
-              scalefac = 1;
-          end
-          % apply rotation from above (!) to coordinates and extract XY
-          braincoords = ft_warp_apply(transmat,braincoords,'homogenous');
-          braincoords = braincoords(:, [1 2]);
-          % round and subselect
-          braincoords = round(braincoords*scalefac);
-          braincoords = unique(braincoords,'rows');
-          % build image for tracing from coordinates, saving approximate axes
-          xlim  = [min(braincoords(:,1)) max(braincoords(:,1))];
-          ylim  = [min(braincoords(:,2)) max(braincoords(:,2))];
-          xsize = xlim(2)-xlim(1) + 1 ;
-          ysize = ylim(2)-ylim(1) + 1;
-          braincoords(:,1) = braincoords(:,1)-xlim(1)+1;
-          braincoords(:,2) = braincoords(:,2)-ylim(1)+1;
-          imtotrace = zeros(xsize,ysize);
-          linind    = sub2ind([xsize ysize],braincoords(:,1),braincoords(:,2));
-          imtotrace(linind) = 1;
-          % correct xlim/ylim for use below
-          xlim = xlim ./ scalefac;
-          ylim = ylim ./ scalefac;  
- 
-        case 'headshape'
-          % plot
-          outlbase.pos = ft_warp_apply(transmat,outlbase.pos,'homogenous');
-          h = figure('visible','off');
-          ft_plot_mesh(outlbase,'facecolor',[0 0 0], 'EdgeColor', 'none');
-          view([0 90])
-          axis tight
-          xlim = get(gca,'xlim');
-          ylim = get(gca,'ylim');
-          set(gca,'OuterPosition',[0.2 0.2 .6 .6]) % circumvent weird matlab bug, wth?
-          % extract frame for tracing
-          drawnow % need to flush buffer, otherwise frame will not get extracted properly
-          frame     = getframe(h);
-          close(h)
-          imtotrace = double(~logical(sum(frame.cdata,3))); % needs to be binary to trace
-          % image is not in regular xy space, flip, and transpose
-          imtotrace = flipud(imtotrace).';
-      end
+      
+      % plot mesh, rotate, screencap, and trace frame to generate outline
+      outlbase.pos = ft_warp_apply(transmat,outlbase.pos,'homogenous');
+      h = figure('visible','off');
+      ft_plot_mesh(outlbase,'facecolor',[0 0 0], 'EdgeColor', 'none');
+      view([0 90])
+      axis tight
+      xlim = get(gca,'xlim');
+      ylim = get(gca,'ylim');
+      set(gca,'OuterPosition',[0.2 0.2 .6 .6]) % circumvent weird matlab bug, wth?
+      % extract frame for tracing
+      drawnow % need to flush buffer, otherwise frame will not get extracted properly
+      frame     = getframe(h);
+      close(h)
+      imtotrace = double(~logical(sum(frame.cdata,3))); % needs to be binary to trace
+      % image is not in regular xy space, flip, and transpose
+      imtotrace = flipud(imtotrace).';
       
       % trace image generated above
       [row col] = find(imtotrace,1,'first'); % set arbitrary starting point
