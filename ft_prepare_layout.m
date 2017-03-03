@@ -55,9 +55,10 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                      tip: use cfg.ieegview = auto per electrode grid/strip/depth for most accurate results
 %                      tip: to obtain overview of e.g. all depth electrodes, choose superior/inferior, use cfg.ieeganatomy, and
 %                           plot using ft_layoutplot with cfg.box/mask = 'no'
-%   cfg.ieeganatomy = pial surface mesh or (segmented) mri to be used for generating a brain outline as layout outline for cfg.ieegview
-%                     Anatomy needs to be in same coordinate space as electrodes, and ideally match. See FT_READ_MRI and FT_READ_HEADSHAPE
-%                     However, even a template will provide some useful general (less accurate) anatomical reference
+%   cfg.headshape   = pial (or other) surface mesh to be used for generating a brain outline as layout outline for cfg.ieegview
+%                     Needs to be in same coordinate space as electrodes, and ideally match. See FT_READ_HEADSHAPE
+%   cfg.mri         = (segmented) mri to be used for generating a brain outline as layout outline for cfg.ieegview
+%                     Anatomy needs to be in same coordinate space as electrodes, and ideally match. See FT_READ_MRI 
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
@@ -160,7 +161,13 @@ cfg.skipscale    = ft_getopt(cfg, 'skipscale',  'no');
 cfg.skipcomnt    = ft_getopt(cfg, 'skipcomnt',  'no');
 cfg.overlap      = ft_getopt(cfg, 'overlap',    'shift');
 cfg.ieegview     = ft_getopt(cfg, 'ieegview',   []);
-cfg.ieeganatomy  = ft_getopt(cfg, 'ieeganatomy',[]); % separate form cfg.mesh
+cfg.headshape    = ft_getopt(cfg, 'headshape',  []); % separate form cfg.mesh
+cfg.mri          = ft_getopt(cfg, 'mri',        []); 
+
+% headshape/mri are mutually exclusive
+if ~isempty(cfg.headshape) && ~isempty(cfg.mri)
+  error('cfg.headshape and cfg.mri are mutually exclusive, please use only one of the two')
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to generate the layout structure
@@ -525,54 +532,68 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   
   
   % layout outline generation
-  if ~isempty(cfg.ieeganatomy)
-    
-    % check coordinate system
-    if isempty(cfg.ieeganatomy.coordsys)
-      error('no coordsys found in cfg.ieeganatomy, MRI/pial surface in unknown coordinate system, use ft_determine_coordsys')
-    elseif ~any(strcmp(cfg.ieeganatomy.coordsys,{'tal','mni'}))
-      % TO IMPLEMENT: coordinate system should be converted when possible
-      error(['elec.coordys = ' elec.coordsys ' is not supported for using cfg.ieegview, please convert to either tal/mni'])
-    elseif ~isequal(cfg.ieeganatomy.coordsys,eleccoordsys)
-      error('coordinate system of anatomy does not match that of electrodes')
-      %warning('coordinate system of anatomy does not match that of electrodes, generating outline regardless') % in the ca
+  if ~isempty(cfg.headshape) || ~isempty(cfg.mri)
+    if ~isempty(cfg.headshape)
+      outlbasetype = 'headshape';
+      if ischar(cfg.headshape) && exist(cfg.headshape, 'file')
+        fprintf('reading headshape from file %s\n', cfg.headshape);
+        outlbase = ft_read_headshape(cfg.headshape);
+      elseif ft_datatype(cfg.headshape,'mesh')
+        outlbase = cfg.headshape;
+      else
+        error('cfg.headshape does not contain headshape')
+      end
+      outlbase = ft_datatype_headmodel(outlbase);
+    elseif ~isempty(cfg.mri)
+      outlbasetype = 'mri';
+      if ischar(cfg.mri) && exist(cfg.mri, 'file')
+        fprintf('reading MRI from file %s\n', cfg.mri);
+        outlbase = ft_read_mri(cfg.mri);
+      elseif ft_datatype(cfg.mri,'volume')
+        outlbase = cfg.mri;
+      else
+        error('cfg.mri does not contain mri')
+      end
+      outlbase = ft_datatype_volume(outlbase);
     end
     
-    % parse mesh/mri
-    if ft_datatype(cfg.ieeganatomy,'volume')
-      outlinebase = 'mri';
-      mri = ft_datatype_volume(cfg.ieeganatomy);
-      if ~isfield(mri,'brain')
-        warning('no brain mask found in MRI, attempting automatic segmentation')
-        cfgseg = [];
-        cfgseg.output = 'brain';
-        mri = ft_volumesegment(cfg,mri);
-      end
-      % match units with that of electrodes
-      mri = ft_convert_units(mri,elecunit);
-      
-      % extract boundary points indicating brain
-      [x,y,z] = ind2sub(mri.dim,find(mri.brain));
-      braincoords = cat(2,x,y,z);
-      braincoords = ft_warp_apply(mri.transform,braincoords);
-      
-    elseif ft_datatype(cfg.ieeganatomy,'mesh') || ft_datatype(cfg.ieeganatomy,'source+mesh')
-      outlinebase = 'surface';
-      surface = ft_datatype_headmodel(cfg.ieeganatomy);
-      
-      % match units with that of electrodes
-      surface = ft_convert_units(surface,elecunit);
-      
-      % extract points indicating brain
-      braincoords = surface.pos;
-    else
-      error('cfg.ieeganatomy needs to contain either an MRI or a MESH, see ft_read_mri or ft_')
+    % check coordinate system of outlbase
+    if isempty(outlbase.coordsys)
+      error('no coordsys field found in mri/headshape, coordinate system unknown, use ft_determine_coordsys')
+    elseif ~any(strcmp(outlbase.coordsys,{'tal','mni'})) % FIXME: coordinate system should be converted when possible
+      error(['mri/headshape.coordys = ' outlbase.coordsys ' is not supported for creating outline by orthographic projection, please convert to either tal/mni'])
+    elseif ~isequal(outlbase.coordsys,eleccoordsys)
+      error('coordinate system of mri/headshape does not match that of electrodes')
+    end
+    
+    % match units with that of electrodes
+    outlbase = ft_convert_units(outlbase,elecunit);
+    
+    % get braincoords from headshape/mri
+    switch outlbasetype
+      case 'mri'
+        if ~isfield(outlbase,'brain')
+          warning('no brain mask found in mri, attempting automatic segmentation')
+          cfgseg = [];
+          cfgseg.output = 'brain';
+          outlbase = ft_volumesegment(cfg,outlbase);
+        end
+        
+        % extract boundary points indicating brain
+        [x,y,z] = ind2sub(outlbase.dim,find(outlbase.brain));
+        braincoords = cat(2,x,y,z);
+        braincoords = ft_warp_apply(outlbase.transform,braincoords);
+        
+      case 'headshape'
+        
+        % extract points indicating brain
+        braincoords = outlbase.pos;
     end
     
     % generate outline based on matlab version
     if ft_platform_supports('boundary')
       
-      if isequal(outlinebase,'mri')
+      if isequal(outlbasetype,'mri')
         % subsample braincoords (with a standard 3T anatomical, 1/4 of voxels is sufficient) (full MRI takes very long and is noisy)
         braincoords = braincoords(1:4:end,:);
       end
@@ -586,10 +607,10 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
       outline = braincoords(k,:);
       
     else % fallback, sad!
-      switch outlinebase
+      switch outlbasetype
        
         case 'mri'
-          switch mri.unit % only use those supported by ft_estimate units
+          switch outlbase.unit % only use those supported by ft_estimate units
             case 'm'
               scalefac = 1000;
             case 'dm'
@@ -621,11 +642,11 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
           xlim = xlim ./ scalefac;
           ylim = ylim ./ scalefac;  
  
-        case 'surface'
+        case 'headshape'
           % plot
-          surface.pos = ft_warp_apply(transmat,surface.pos,'homogenous');
+          outlbase.pos = ft_warp_apply(transmat,outlbase.pos,'homogenous');
           h = figure('visible','off');
-          ft_plot_mesh(surface,'facecolor',[0 0 0], 'EdgeColor', 'none');
+          ft_plot_mesh(outlbase,'facecolor',[0 0 0], 'EdgeColor', 'none');
           view([0 90])
           axis tight
           xlim = get(gca,'xlim');
