@@ -288,7 +288,7 @@ if ~isempty(highlight)
       % do 4
       rgbcdat = hsv2rgb(hsvcdat);
       % do 5
-      h = imagesc(hdat, vdat, rgbcdat,clim);
+      h = uimagesc(hdat, vdat, rgbcdat,clim);
       set(h,'tag',tag);
       
     case 'outline'
