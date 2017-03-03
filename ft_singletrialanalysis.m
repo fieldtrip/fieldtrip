@@ -266,8 +266,8 @@ switch method
             chandat_fft  = fft(chandat', nfft);    % Fourier transform of the signal
             output   = ft_singletrialanalysis_aseo(cfg, chandat_fft, initcomp_fft);
             
-            params(k).latency    = output.lat_est;
-            params(k).amplitude  = output.amp_est;
+            params(k).latency    = output.lat_est/fsample;
+            params(k).amplitude  = output.amp_est_unscaled;
             params(k).components = output.erp_est;
             params(k).rejectflag = output.rejectflag;
             

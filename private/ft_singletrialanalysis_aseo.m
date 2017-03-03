@@ -156,9 +156,12 @@ for k = 1:numiteration
     tmp_amp_est = amp_est.*(ones(ntrl,1)*scale);
     
     output.erp_est    = tmp_erp_est;
+    output.amp_est_unscaled = amp_est;%--> amplitude is already
+%     scaled to relative amplitude, which is needed for amplitude 
+%     parameters; it still has to be scaled for erp reconstruction
     output.amp_est    = tmp_amp_est;
     output.erp_est_f  = erp_est;
-    output.lat_est    = lat_est;
+    output.lat_est    = lat_est; % convert latency variation from samples to seconds
     output.ar         = ar(:,1);
     output.noise      = noise;
     output.sigma      = sigma;
@@ -184,7 +187,7 @@ for k = 1:numiteration
     subplot(2,2,4); imagesc(reconstructed'); drawnow;
 end
 
-params.latency    = lat_est;
+params.latency    = lat_est/fsample; % convert latency variation from samples to seconds
 params.amplitude  = tmp_amp_est;
 params.components = tmp_erp_est;
 params.rejectflag = rejectflag;
