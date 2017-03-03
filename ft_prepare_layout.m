@@ -570,7 +570,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     end
     
     % generate outline based on matlab version
-    if false;ft_platform_supports('boundary')
+    if ft_platform_supports('boundary')
       
       if isequal(outlinebase,'mri')
         % subsample braincoords (with a standard 3T anatomical, 1/4 of voxels is sufficient) (full MRI takes very long and is noisy)
