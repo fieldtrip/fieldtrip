@@ -510,13 +510,6 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   width   = ones(nchan,1) * sizefac;
   height  = ones(nchan,1) * sizefac * (4/5);
   
-  % generate mask as the convex hull around the electrode cloud+boxes
-  boxpos = [pos(:,1) - (width/2) pos(:,2) - (height/2);... % lb
-            pos(:,1) - (width/2) pos(:,2) + (height/2);... % lt
-            pos(:,1) + (width/2) pos(:,2) - (height/2);... % rb
-            pos(:,1) + (width/2) pos(:,2) + (height/2)]; % rt
-  mask   = boxpos(convhull(boxpos(:,1),boxpos(:,2)),:);
-  
   %   % generate mask as the convex hull around the electrode cloud, and grow it from the center with sizefac
   %   mask     = pos(convhull(pos(:,1),pos(:,2)),:);
   %   maskcent = mean(mask,1);
@@ -530,7 +523,6 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   layout.width   = width;
   layout.height  = height;
   layout.outline = [];
-  layout.mask    = {mask};
   
   
   % layout outline generation
@@ -637,15 +629,15 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     layout.outline = {outline};
   end
   
-  % add SCALE and COMNT (using outline as reference, in nearly all, this should suffice)
-  layout.label{end+1}  = 'SCALE';
-  layout.width(end+1)  = sizefac;
-  layout.height(end+1) = sizefac * (4/5);
-  layout.pos(end+1,:)  = [min(outline(:,1)) - sizefac*2 min(outline(:,2)) - sizefac*2];
-  layout.label{end+1}  = 'COMNT';
-  layout.width(end+1)  = sizefac;
-  layout.height(end+1) = sizefac * (4/5);
-  layout.pos(end+1,:)  = [max(outline(:,1)) + sizefac*2 min(outline(:,2)) - sizefac*2];
+  %   % add SCALE and COMNT (using outline as reference, in nearly all, this should suffice)
+  %   layout.label{end+1}  = 'SCALE';
+  %   layout.width(end+1)  = sizefac;
+  %   layout.height(end+1) = sizefac * (4/5);
+  %   layout.pos(end+1,:)  = [min(outline(:,1)) - sizefac*2 min(outline(:,2)) - sizefac*2];
+  %   layout.label{end+1}  = 'COMNT';
+  %   layout.width(end+1)  = sizefac;
+  %   layout.height(end+1) = sizefac * (4/5);
+  %   layout.pos(end+1,:)  = [max(outline(:,1)) + sizefac*2 min(outline(:,2)) - sizefac*2];
   
   
   % try to generate layout from other configuration options
@@ -1069,45 +1061,83 @@ else
 end
 
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
-if ~strcmp(cfg.style, '3d') && (~any(strcmp(cfg.layout,{'ordered','horizontal','vertical'})) && ~strncmp(fliplr(cfg.layout),fliplr('column'),6)) % why is this default here? FIXME properly
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % check whether outline and mask are available
-  % if not, add default "circle with triangle" to resemble the head
-  % in case of "circle with triangle", the electrode positions should also be
-  % scaled
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if ~isfield(layout, 'outline') || ~isfield(layout, 'mask')
-    rmax  = 0.5;
-    l     = 0:2*pi/100:2*pi;
-    HeadX = cos(l).*rmax;
-    HeadY = sin(l).*rmax;
-    NoseX = [0.18*rmax 0 -0.18*rmax];
-    NoseY = [rmax-.004 rmax*1.15 rmax-.004];
-    EarX  = [.497 .510 .518 .5299 .5419 .54 .547 .532 .510 .489];
-    EarY  = [.0555 .0775 .0783 .0746 .0555 -.0055 -.0932 -.1313 -.1384 -.1199];
-    % Scale the electrode positions to fit within a unit circle, i.e. electrode radius = 0.45
-    ind_scale = strmatch('SCALE', layout.label);
-    ind_comnt = strmatch('COMNT', layout.label);
-    sel = setdiff(1:length(layout.label), [ind_scale ind_comnt]); % these are excluded for scaling
-    x = layout.pos(sel,1);
-    y = layout.pos(sel,2);
-    xrange = range(x);
-    yrange = range(y);
-    % First scale the width and height of the box for multiplotting
-    layout.width  = layout.width./xrange;
-    layout.height = layout.height./yrange;
-    % Then shift and scale the electrode positions
-    layout.pos(:,1) = 0.9*((layout.pos(:,1)-min(x))/xrange-0.5);
-    layout.pos(:,2) = 0.9*((layout.pos(:,2)-min(y))/yrange-0.5);
-    % Define the outline of the head, ears and nose
-    layout.outline{1} = [HeadX(:) HeadY(:)];
-    layout.outline{2} = [NoseX(:) NoseY(:)];
-    layout.outline{3} = [ EarX(:)  EarY(:)];
-    layout.outline{4} = [-EarX(:)  EarY(:)];
-    % Define the anatomical mask based on a circular head
-    layout.mask{1} = [HeadX(:) HeadY(:)];
+if ~strcmp(cfg.style, '3d')
+  
+  % input is 'scalp' data for which generating a head outline makes sense
+  label = ft_channelselection(layout.label, setdiff(layout.label, {'COMNT', 'SCALE'}));
+  if (ft_senstype(label,'meg') || ft_senstype(label,'eeg') || ft_senstype(label,'nris')) && (isempty(cfg.headshape) && isempty(cfg.mri))
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % check whether outline and mask are available
+    % if not, add default "circle with triangle" to resemble the head
+    % in case of "circle with triangle", the electrode positions should also be
+    % scaled
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isfield(layout, 'outline') || ~isfield(layout, 'mask')
+      rmax  = 0.5;
+      l     = 0:2*pi/100:2*pi;
+      HeadX = cos(l).*rmax;
+      HeadY = sin(l).*rmax;
+      NoseX = [0.18*rmax 0 -0.18*rmax];
+      NoseY = [rmax-.004 rmax*1.15 rmax-.004];
+      EarX  = [.497 .510 .518 .5299 .5419 .54 .547 .532 .510 .489];
+      EarY  = [.0555 .0775 .0783 .0746 .0555 -.0055 -.0932 -.1313 -.1384 -.1199];
+      % Scale the electrode positions to fit within a unit circle, i.e. electrode radius = 0.45
+      ind_scale = strmatch('SCALE', layout.label);
+      ind_comnt = strmatch('COMNT', layout.label);
+      sel = setdiff(1:length(layout.label), [ind_scale ind_comnt]); % these are excluded for scaling
+      x = layout.pos(sel,1);
+      y = layout.pos(sel,2);
+      xrange = range(x);
+      yrange = range(y);
+      % First scale the width and height of the box for multiplotting
+      layout.width  = layout.width./xrange;
+      layout.height = layout.height./yrange;
+      % Then shift and scale the electrode positions
+      layout.pos(:,1) = 0.9*((layout.pos(:,1)-min(x))/xrange-0.5);
+      layout.pos(:,2) = 0.9*((layout.pos(:,2)-min(y))/yrange-0.5);
+      % Define the outline of the head, ears and nose
+      layout.outline{1} = [HeadX(:) HeadY(:)];
+      layout.outline{2} = [NoseX(:) NoseY(:)];
+      layout.outline{3} = [ EarX(:)  EarY(:)];
+      layout.outline{4} = [-EarX(:)  EarY(:)];
+      % Define the anatomical mask based on a circular head
+      layout.mask{1} = [HeadX(:) HeadY(:)];
+    end
+  else % data is not 'scalp' level data and head outline+mask makes no sense. See if we can generate outline/mask based on something else
+    
+    % a mesh/mri was specified for outline generation (in case an outline already exist, add it to it)
+    if (~isempty(cfg.headshape) || ~isempty(cfg.mri))
+      % placeholder
+    end
+    
+    % Below, it is assumed that 'a mask' is always preferred to 'no mask'. In the worst case scenario, it would lead to ugly topoplots, if the 
+    % user requests them. 
+    % no mask is present, generate mask as boundary/convex hull of pos+width/height
+    if ~isfield(layout, 'mask') || (isfield(layout,'mask') && isempty(layout.mask))
+      % get index of non-COMNT/SCALE in case present
+      ind1 = strcmp(layout.label,'COMNT');
+      ind2 = strcmp(layout.label,'SCALE');
+      ind  = ~(ind1 | ind2);
+      % get position of all sensor 'boxes' and draw boundary around it, or, in older matlabs, a convex hull
+      x = layout.pos(ind,1);
+      y = layout.pos(ind,2);
+      w = layout.width(ind);
+      h = layout.height(ind);
+      boxpos = [x - (w/2) y - (h/2);... % lb
+        x - (w/2) y + (h/2);... % lt
+        x + (w/2) y - (h/2);... % rb
+        x + (w/2) y + (h/2)]; % rt
+      if ft_platform_supports('boundary')
+        k = boundary(boxpos,.9);
+        mask = boxpos(k,:);
+      else
+        mask = boxpos(convhull(boxpos(:,1),boxpos(:,2)),:);
+      end
+      layout.mask{1} = mask;
+    end
+    
   end
-end
+end % if style=3d
 
 % make the subset as specified in cfg.channel
 cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
