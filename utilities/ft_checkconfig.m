@@ -80,9 +80,9 @@ checksize       = ft_getopt(varargin, 'checksize', 'off');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
-  if ft_platform_supports('matlabversion', '2015a', inf),
+  if ft_platform_supports('matlabversion', '2015a', inf)
     % disable config tracking for the time being, due to a known bug (3187)
-    ft_warning('disabling cfg tracking for the time being, due to a matlab version related issue');
+    % ft_warning('disabling cfg tracking for the time being, due to a matlab version related issue');
     trackconfig = [];
     cfg.trackconfig = 'off';
   end

@@ -1,4 +1,4 @@
-function failed_bug3119
+function test_bug3119
 
 % WALLTIME 00:20:00
 % MEM 2gb
@@ -81,7 +81,7 @@ grid = ft_prepare_leadfield(cfg);
 
 
 %% load simulated data
-load bug3119.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3119.mat'));
 
 figure
 plot(datat1.time, datat1.avg)

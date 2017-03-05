@@ -403,7 +403,8 @@ end
 
 % % Read or create the layout that will be used for plotting
 cla
-lay = ft_prepare_layout(cfg, varargin{1});
+tmpcfg = removefields(cfg, 'inputfile'); % ensure the inputfile field not to exist
+lay = ft_prepare_layout(tmpcfg, varargin{1});
 cfg.layout = lay;
 
 % plot layout

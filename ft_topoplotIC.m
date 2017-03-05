@@ -134,7 +134,8 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-cfg.layout = ft_prepare_layout(cfg, comp);
+tmpcfg     = removefields(cfg, 'inputfile');
+cfg.layout = ft_prepare_layout(tmpcfg, comp);
 
 % don't show the callinfo for each separate component
 cfg.showcallinfo = 'no';

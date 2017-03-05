@@ -1356,24 +1356,24 @@ if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [tlck] = raw2timelock(data)
 
-nsmp = cellfun('size',data.time,2);
 data   = ft_checkdata(data, 'hassampleinfo', 'yes');
 ntrial = numel(data.trial);
 nchan  = numel(data.label);
+
 if ntrial==1
   tlck.time   = data.time{1};
   tlck.avg    = data.trial{1};
   tlck.label  = data.label;
   tlck.dimord = 'chan_time';
-  tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo'});
+  tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'unmixing', 'topolabel'});
+
 else
-  
-  % code below tries to construct a general time-axis where samples of all trials can fall on
-  % find earliest beginning and latest ending
-  begtime = min(cellfun(@min,data.time));
-  endtime = max(cellfun(@max,data.time));
+  % the code below tries to construct a general time-axis where samples of all trials can fall on
+  % find the earliest beginning and latest ending
+  begtime = min(cellfun(@min, data.time));
+  endtime = max(cellfun(@max, data.time));
   % find 'common' sampling rate
-  fsample = 1./mean(cellfun(@mean,cellfun(@diff,data.time,'uniformoutput',false)));
+  fsample = 1./mean(cellfun(@mean, cellfun(@diff,data.time, 'uniformoutput', false)));
   % estimate number of samples
   nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
   % construct general time-axis
@@ -1395,7 +1395,7 @@ else
   tlck.time    = time;
   tlck.dimord  = 'rpt_chan_time';
   tlck.label   = data.label;
-  tlck         = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo'});
+  tlck         = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'unmixing', 'topolabel'});
 end
 
 

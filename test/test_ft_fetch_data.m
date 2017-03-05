@@ -1,4 +1,4 @@
-function failed_ft_fetch_data
+function test_ft_fetch_data
 
 % MEM 4gb
 % WALLTIME 00:10:00

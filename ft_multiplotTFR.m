@@ -255,7 +255,8 @@ end % if hasrpt
 % Read or create the layout that will be used for plotting:
 cla;
 hold on
-lay = ft_prepare_layout(cfg, data);
+tmpcfg = removefields(cfg, 'inputfile'); % ensure the inputfile field not to exist
+lay = ft_prepare_layout(tmpcfg, data);
 cfg.layout = lay;
 
 
