@@ -722,9 +722,9 @@ if opt.scatter % radiobutton on
       'Color', [1 1 1], ...
       'Visible', 'on');
     set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
-    opt.scatterfig_h1 = axes('position',[0.06 0.06 0.74 0.88]);
+    opt.scatterfig_h1 = axes('position',[0.02 0.02 0.96 0.96]);
     set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.axes(1), 'DataAspectRatio'));
-    axis square; axis tight;
+    axis square; axis tight; axis off;
     xlabel('x'); ylabel('y'); zlabel('z');
     
     % scatter range sliders
