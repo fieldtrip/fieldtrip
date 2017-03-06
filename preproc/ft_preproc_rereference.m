@@ -54,9 +54,9 @@ end
 
 % compute the average value over the reference channels
 if strcmp(method, 'avg')
-  ref = mean(dat(refchan,:), 1);
+  ref = nanmean(dat(refchan,:), 1);
 elseif strcmp(method, 'median')
-  ref = median(dat(refchan,:), 1);
+  ref = nanmedian(dat(refchan,:), 1);
 end
 
 % apply the new reference to the data
