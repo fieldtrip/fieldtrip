@@ -63,6 +63,9 @@ install:
     # print packages
     - octave --eval "fprintf('Installed packages:\n');pkg('list')"
     - cat ${HOME}/.octaverc
+    # build .mex files
+    - pwd
+    - make mex OCTAVE=`which octave`
 
 script:
     # before running the tests, test the test functions that run the tests
