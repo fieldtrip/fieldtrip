@@ -28,7 +28,7 @@ before_install:
     # get Octave 4.0
     - travis_retry sudo apt-get -y -qq install octave
     # get mkoctfile to build mex files
-    - travis_retry sudo apt-get -y -qq install liboctave-dev    
+    - travis_retry sudo apt-get -y -qq install liboctave-dev
     # get Clang compiler (for Octave packages)
     - travis_retry sudo apt-get -y install clang
     - sudo update-alternatives --set c++ /usr/bin/clang++
