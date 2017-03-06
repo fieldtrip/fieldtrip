@@ -92,22 +92,22 @@ data                = ft_preprocessing(tmpcfg);
 %tmpcfg.resamplefs   = 100;
 %data                = resampledata(tmpcfg, data);
 
-dat  = zeros(length(data.label), 0);
-wdat = zeros(1, 0);
-for k = 1:length(data.trial)
-  tmpdat  = data.trial{k};
-  utmpdat = unique(tmpdat','rows')';
-  dat     = [dat utmpdat];
+% changed: 06.03.2017 (Sebastian Michelmann)
+% line 95-110 replaced 
 
-  wtmpdat = zeros(1,size(utmpdat,2));
-  for m = 1:size(utmpdat,2)
-    wtmpdat(1,m) = sum(sum(tmpdat-utmpdat(:,m)*ones(1,size(tmpdat,2))==0,1)==9);
-  end
-  wdat    = [wdat wtmpdat];
-end
-dat(:, wdat<100) = [];
-wdat(wdat<100)   = [];
+[tmpdata,~,ic] = unique(cell2mat(data.trial)','rows');
+dat = tmpdata';
+clear tmpdata;
 
+%log how often each position occurs (this mimics the old w_dat)
+[w_dat, ~] = hist(ic, unique(ic));
+
+
+
+
+
+
+% end of change 
 switch grad.unit
   case 'm'
     %do nothing
