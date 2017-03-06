@@ -1400,14 +1400,14 @@ switch eventformat
     end
     % construct a event structure from data in the header
     sampleRate = hdr.Fs;
-    earliestDateTime = min([hdr.orig.Segments.dateOLE]);
+    earliestDateTime = min([hdr.orig.Segments.date]);
     for i=1:length(hdr.orig.Events)
       event(i).type     = hdr.orig.Events(i).IDStr;   % string
       event(i).value    = hdr.orig.Events(i).label;  % number or string
       event(i).offset   = 0;                         % expressed in samples      
       % calculate the sample value of the event, based on the highest
       % sample rate
-      event(i).sample   = (hdr.orig.Events(i).dateOLE-earliestDateTime)*3600*24*sampleRate;
+      event(i).sample   = seconds(hdr.orig.Events(i).date-earliestDateTime)*sampleRate;
       if event(i).sample == 0
           event(i).sample = 1;
       %elseif event(i).sample > hdr.nSamples

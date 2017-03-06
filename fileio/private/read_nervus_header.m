@@ -7,7 +7,7 @@ function output = read_nervus_header(filename)
 %   Based on ieeg-portal/Nicolet-Reader
 %   at https://github.com/ieeg-portal/Nicolet-Reader
 %
-% Copyright (C) 2016, Jan Brogger and Joost Wagenaar 
+% Copyright (C) 2016, Jan Brogger and Joost Wagenaar
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -73,25 +73,25 @@ for i=1:size(nrvHdr.Segments,2)
     totalNSamples = totalNSamples + max(nrvHdr.Segments(i).samplingRate*nrvHdr.Segments(i).duration);
 end
 
-for i=2:size(nrvHdr.Segments,2)    
-    if size(nrvHdr.Segments(i).chName, 2) ~= size(nrvHdr.Segments(1).chName, 2)       
+for i=2:size(nrvHdr.Segments,2)
+    if size(nrvHdr.Segments(i).chName, 2) ~= size(nrvHdr.Segments(1).chName, 2)
         error(strcat(['Segment ' num2str(i) ' active sensor name is different from the first segment - cannot handle this file']));
-    end    
-    if size(nrvHdr.Segments(i).refName, 2) ~= size(nrvHdr.Segments(1).refName, 2) 
+    end
+    if size(nrvHdr.Segments(i).refName, 2) ~= size(nrvHdr.Segments(1).refName, 2)
         error(strcat(['Segment ' num2str(i) ' reference sensor name different from the first segment - cannot handle this file' ]));
-    end 
+    end
     if size(nrvHdr.Segments(i).samplingRate, 2) ~= size(nrvHdr.Segments(1).samplingRate, 2)
         error(strcat(['Segment ' num2str(i) '  sampling rate is different from the first segment - cannot handle this file' ]));
-    end 
+    end
 end
 
 
 
 %Fieldtrip can't handle multiple sampling rates in a data block
 %We will return only the data for the most frequent sampling rate
-%TODO: make this a parameter to this function so that user can 
+%TODO: make this a parameter to this function so that user can
 %decide what data to get
-targetSamplingRate = mode(nrvHdr.Segments(1).samplingRate);    
+targetSamplingRate = mode(nrvHdr.Segments(1).samplingRate);
 matchingChannels = find(nrvHdr.Segments(1).samplingRate(:) == targetSamplingRate);
 firstMatchingChannel = matchingChannels(1);
 targetNumberOfChannels = length(matchingChannels);
@@ -99,7 +99,7 @@ targetNumberOfChannels = length(matchingChannels);
 targetSampleCount = 0;
 for i = 1:size(nrvHdr.Segments,2)
     targetSampleCount = targetSampleCount + nrvHdr.Segments(i).sampleCount(firstMatchingChannel);
-end    
+end
 targetSampleCount = targetSampleCount +1;
 
 newlabels = cell(targetNumberOfChannels, 1);
@@ -108,11 +108,11 @@ for i=1:size(nrvHdr.Segments(1).chName,2)
     if nrvHdr.Segments(1).samplingRate(i) == targetSamplingRate
         newlabels(j) = nrvHdr.Segments(1).chName(i);
         j = j+1;
-    end                                                                      
-end    
+    end
+end
 %if targetNumberOfChannels ~= size(nrvHdr.Segments(1).sampleCount, 2)
-%    warning('Some channels ignored due to different sampling rates');    
-%end    
+%    warning('Some channels ignored due to different sampling rates');
+%end
 
 output = struct();
 output.Fs          = targetSamplingRate;
@@ -120,7 +120,7 @@ output.nChans      = targetNumberOfChannels;
 output.label       = newlabels;
 output.nSamples    = targetSampleCount;
 output.nSamplesPre = 0;
-output.nTrials     = 1; 
+output.nTrials     = 1;
 output.reference   = nrvHdr.reference;
 output.filename    = nrvHdr.filename;
 output.orig        = nrvHdr;
@@ -223,7 +223,7 @@ for i = 1:NrStaticPackets
             StaticPackets(i).IDStr = 'DATEXDATAGUID';
         case '{35F356D9-0F1C-4DFE-8286-D3DB3346FD75}'
             StaticPackets(i).IDStr = 'TESTINFOGUID';
-            
+
         otherwise
             if isstrprop(StaticPackets(i).tag, 'digit')
                 StaticPackets(i).IDStr = num2str(StaticPackets(i).tag);
@@ -273,7 +273,7 @@ curIdx = 0;
 nextIndexPointer = indexIdx;
 curIdx2 = 1;
 while curIdx < nrEntries
-    
+
     fseek(h, nextIndexPointer, 'bof');
     nrIdx = fread(h,1, 'uint64');
     MainIndex(curIdx + nrIdx).sectionIdx = 0;   % Preallocate next set of indices
@@ -326,12 +326,13 @@ for i = 1: nrDynamicPackets
         guidmixed(13), guidmixed(14), guidmixed(15), guidmixed(16)];
     dynamicPackets(i).guid = num2str(guidnonmixed, '%02X');
     dynamicPackets(i).guidAsStr = sprintf('{%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X}', guidnonmixed);
-    dynamicPackets(i).date = datenum(1899,12,31) + fread(h,1,'double');
-    dynamicPackets(i).datefrac = fread(h,1,'double');
+    %dynamicPackets(i).date = datenum(1899,12,31) + fread(h,1,'double');
+    %dynamicPackets(i).datefrac = fread(h,1,'double');
+    dynamicPackets(i).date = datetime(fread(h,1,'double')*86400+fread(h,1,'double')- 2209161600, 'ConvertFrom', 'posixtime');
     dynamicPackets(i).internalOffsetStart = fread(h,1, 'uint64')';
     dynamicPackets(i).packetSize = fread(h,1, 'uint64')';
     dynamicPackets(i).data = zeros(0, 1,'uint8');
-    
+
     switch dynamicPackets(i).guid
         case 'BF7C95EF6C3B4E709E11779BFFF58EA7'
             dynamicPackets(i).IDStr = 'CHANNELGUID';
@@ -356,34 +357,34 @@ end
 for i = 1: nrDynamicPackets
     %Look up the GUID of this dynamic packet in the static packets
     % to find the section index
-    
+
     infoIdx = StaticPackets(find(strcmp({StaticPackets.tag},dynamicPackets(i).guidAsStr),1)).index;
-    
+
     %Matching index segments
     indexInstances = MainIndex([MainIndex.sectionIdx] == infoIdx);
-    
+
     %Then, treat all these sections as one contiguous memory block
     % and grab this packet across these instances
-    
+
     internalOffset = 0;
     remainingDataToRead = dynamicPackets(i).packetSize;
     %disp(['Target packet ' dynamicPackets(i).IDStr ' : ' num2str(dynamicPackets(i).internalOffsetStart) ' to ' num2str(dynamicPackets(i).internalOffsetStart+dynamicPackets(i).packetSize) ' target read length ' num2str(remainingDataToRead)]);
     currentTargetStart = dynamicPackets(i).internalOffsetStart;
     for j = 1: size(indexInstances,2)
         currentInstance = indexInstances(j);
-        
+
         %hitInThisSegment = '';
         if (internalOffset <= currentTargetStart) && (internalOffset+currentInstance.sectionL) >= currentTargetStart
-            
+
             startAt = currentTargetStart;
             stopAt =  min(startAt+remainingDataToRead, internalOffset+currentInstance.sectionL);
             readLength = stopAt-startAt;
-            
+
             filePosStart = currentInstance.offset+startAt-internalOffset;
             fseek(h,filePosStart, 'bof');
             dataPart = fread(h,readLength,'uint8=>uint8');
             dynamicPackets(i).data = cat(1, dynamicPackets(i).data, dataPart);
-            
+
             %hitInThisSegment = ['HIT at  ' num2str(startAt) ' to ' num2str(stopAt)];
             %if (readLength < remainingDataToRead)
             %    hitInThisSegment = [hitInThisSegment ' (partial ' num2str(readLength) ' )'];
@@ -391,13 +392,13 @@ for i = 1: nrDynamicPackets
             %    hitInThisSegment = [hitInThisSegment ' (finished - this segment contributed ' num2str(readLength) ' )'];
             %end
             %hitInThisSegment = [hitInThisSegment ' abs file pos ' num2str(filePosStart) ' - ' num2str(filePosStart+readLength)];
-            
+
             remainingDataToRead = remainingDataToRead-readLength;
             currentTargetStart = currentTargetStart + readLength;
-            
+
         end
         %disp(['    Index ' num2str(j) ' Offset: ' num2str(internalOffset) ' to ' num2str(internalOffset+currentInstance.sectionL) ' ' num2str(hitInThisSegment)]);
-        
+
         internalOffset = internalOffset + currentInstance.sectionL;
     end
 end
@@ -519,7 +520,7 @@ tsPackets = DynamicPackets(strcmp({DynamicPackets.IDStr},'TSGUID'));
 
 if isempty(tsPackets)
     ft_error(['No TSINFO found']);
-end    
+end
 
 tsPacket = tsPackets(1);
 TSInfo = read_nervus_header_one_TSInfo(tsPacket, TSLABELSIZE, LABELSIZE);
@@ -528,24 +529,24 @@ if length(tsPackets) > 1
     allEqual = 1;
     for i = 2: size(tsPackets,2)
         nextTsPacket = tsPackets(i);
-        nextTSInfo = read_nervus_header_one_TSInfo(nextTsPacket, TSLABELSIZE, LABELSIZE);       
+        nextTSInfo = read_nervus_header_one_TSInfo(nextTsPacket, TSLABELSIZE, LABELSIZE);
         areEqual = compareTsInfoPackets(TSInfo, nextTSInfo);
         if (areEqual == 0)
             allEqual = 0;
             break;
         end
-    end    
-    if (allEqual == 0)            
+    end
+    if (allEqual == 0)
         ft_error('Multiple TSInfo packets found and they are not the same.');
     end
 end
 end
 
-function [TSInfo] = read_nervus_header_one_TSInfo(tsPacket, TSLABELSIZE, LABELSIZE)    
+function [TSInfo] = read_nervus_header_one_TSInfo(tsPacket, TSLABELSIZE, LABELSIZE)
     TSInfo = struct();
     elems = typecast(tsPacket.data(753:756),'uint32');
     %alloc = typecast(tsPacket.data(757:760),'uint32');
-    
+
     offset = 761;
     for i = 1:elems
         internalOffset = 0;
@@ -575,7 +576,7 @@ function [TSInfo] = read_nervus_header_one_TSInfo(tsPacket, TSLABELSIZE, LABELSI
 
 end
 
-function areEqual = compareTsInfoPackets(TSInfo1, TSInfo2)    
+function areEqual = compareTsInfoPackets(TSInfo1, TSInfo2)
     areEqual = 1;
     if (size(TSInfo1,2) ~= size(TSInfo2,2))
         areEqual = 0;
@@ -623,7 +624,7 @@ function areEqual = compareTsInfoPackets(TSInfo1, TSInfo2)
             end
         end
     end
-        
+
 end
 
 function [segments] = read_nervus_header_Segments(h, StaticPackets, Index, TSInfo)
@@ -640,12 +641,13 @@ for i = 1: nrSegments
     segments(i).dateOLE = dateOLE;
     unix_time = (dateOLE*(3600*24)) - 2209161600; % 2208988800; %8
     segments(i).dateStr = datestr(unix_time/86400 + datenum(1970,1,1));
+    segments(i).date = datetime(dateOLE*86400- 2209161600, 'ConvertFrom', 'posixtime');
     datev = datevec( segments(i).dateStr );
     segments(i).startDate = datev(1:3);
     segments(i).startTime = datev(4:6);
     fseek(h, 8 , 'cof'); %16
     segments(i).duration = fread(h,1, 'double'); %24
-    fseek(h, 128 , 'cof'); %152       
+    fseek(h, 128 , 'cof'); %152
 end
 
 % Get nrValues per segment and channel
@@ -677,7 +679,7 @@ HCEVENT_PHOTIC            =  '{6FF394DA-D1B8-46DA-B78F-866C67CF02AF}';
 HCEVENT_POSTHYPERVENT     =  '{481DFC97-013C-4BC5-A203-871B0375A519}';
 HCEVENT_REVIEWPROGRESS    =  '{725798BF-CD1C-4909-B793-6C7864C27AB7}';
 HCEVENT_EXAMSTART         =  '{96315D79-5C24-4A65-B334-E31A95088D55}';
-HCEVENT_HYPERVENTILATION  =  '{A5A95608-A7F8-11CF-831A-0800091B5BDA}';                            
+HCEVENT_HYPERVENTILATION  =  '{A5A95608-A7F8-11CF-831A-0800091B5BDA}';
 HCEVENT_IMPEDANCE         =  '{A5A95617-A7F8-11CF-831A-0800091B5BDA}';
 DAYSECS = 86400.0;  % From nrvdate.h
 
@@ -707,7 +709,7 @@ while (pktGUID == evtPktGUID)
     evtLabel                      = fread(h,32,'uint16'); % LABELSIZE = 32;
     evtLabel                      = deblank(char(evtLabel).');    % Not used
     eventMarkers(i).label = evtLabel;
-    
+
     % Only a subset of all event types are dealt with
     switch eventMarkers(i).GUID
         case HCEVENT_SEIZURE
@@ -729,7 +731,7 @@ while (pktGUID == evtPktGUID)
         case HCEVENT_POSTHYPERVENT
             eventMarkers(i).IDStr = 'Posthyperventilation';
             eventMarkers(i).label = 'Posthyperventilation';
-        case HCEVENT_REVIEWPROGRESS 
+        case HCEVENT_REVIEWPROGRESS
             eventMarkers(i).IDStr = 'Review progress';
             eventMarkers(i).label = 'Review progress';
         case HCEVENT_EXAMSTART
@@ -745,7 +747,7 @@ while (pktGUID == evtPktGUID)
             eventMarkers(i).IDStr = 'UNKNOWN';
             eventMarkers(i).label = [eventMarkers(i).GUID(2:37) ' U:' eventMarkers(i).user];
     end
-           
+
     % Next packet
     offset = offset + pktLen;
     fseek(h,offset,'bof');
@@ -801,29 +803,29 @@ montagePackets = DynamicPackets(strcmp({DynamicPackets.IDStr},'DERIVATIONGUID'))
 montages = struct();
 for numMontage = 1:size(montagePackets,2)
     montagePacket = montagePackets(numMontage);
-    
+
     guidmixed = montagePacket.data(1:16);
     guidnonmixed = [guidmixed(04), guidmixed(03), guidmixed(02), guidmixed(01), ...
         guidmixed(06), guidmixed(05), guidmixed(08), guidmixed(07), ...
         guidmixed(09), guidmixed(10), guidmixed(11), guidmixed(12), ...
         guidmixed(13), guidmixed(15), guidmixed(15), guidmixed(16)];
     montages(numMontage).guid1 = num2str(guidnonmixed,'%02X');
-        
+
     montages(numMontage).packetSize = typecast(montagePacket.data(17:24),'uint64');
-    
+
     guidmixed2 = montagePacket.data(25:40);
     guidnonmixed2 = [guidmixed2(04), guidmixed2(03), guidmixed2(02), guidmixed2(01), ...
         guidmixed2(06), guidmixed2(05), guidmixed2(08), guidmixed2(07), ...
         guidmixed2(09), guidmixed2(10), guidmixed2(11), guidmixed2(12), ...
         guidmixed2(13), guidmixed2(15), guidmixed2(15), guidmixed2(16)];
     montages(numMontage).guid2 = num2str(guidnonmixed2,'%02X');
-    
-    montages(numMontage).itemName = deblank(cast(montagePacket.data(41:104),'char')');    
+
+    montages(numMontage).itemName = deblank(cast(montagePacket.data(41:104),'char')');
     montages(numMontage).elements = typecast(montagePacket.data(745:748),'uint32');
     montages(numMontage).alloc = typecast(montagePacket.data(749:752),'uint32');
-    
+
     offset = 753;
-    for i=1:montages(numMontage).elements        
+    for i=1:montages(numMontage).elements
         montages(numMontage).channel(i).name = deblank(cast(montagePacket.data(offset:(offset+127)),'char')');
         offset = offset + 128;
         montages(numMontage).channel(i).active = deblank(cast(montagePacket.data(offset:(offset+63)),'char')');
@@ -834,9 +836,9 @@ for numMontage = 1:size(montagePackets,2)
         offset = offset + 1;
         montages(numMontage).channel(i).isSpecial = montagePacket.data(offset);
         offset = offset + 1;
-        offset = offset + 256;        
+        offset = offset + 256;
         offset = offset + 6;
-    end        
+    end
 end
 
 end
