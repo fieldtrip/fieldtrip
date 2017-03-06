@@ -67,8 +67,29 @@ orientation     = ft_getopt(varargin, 'orientation', false);
 coil            = ft_getopt(varargin, 'coil', false);
 coilshape       = ft_getopt(varargin, 'coilshape'); % default depends on the input, see below
 coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the input, see below
-elecshape       = ft_getopt(varargin, 'coilshape'); % default depends on the input, see below
-elecsize        = ft_getopt(varargin, 'sensize');  % default depends on the input, see below
+elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
+elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
+% make sure inputs for shape/size are not specified for coils and elecs
+if ~isempty(coilshape) && ~isempty(elecshape)
+  error('coilshape and elecshape cannot both be specified')
+elseif ~isempty(coilsize) && ~isempty(elecsize)
+  error('coilsize and elecsize cannot both be specified')
+else % assign coil/elec shape/size to common variable
+  if ~isempty(coilshape)
+    shape = coilshape;
+  elseif ~isempty(elecshape)
+    shape = elecshape;
+  else
+    shape = [];
+  end
+  if ~isempty(coilsize)
+    sensize = coilsize;
+  elseif ~isempty(elecsize)
+    sensize = elecsize;
+  else
+    sensize = [];
+  end
+end
 % this is simply passed to plot3
 style           = ft_getopt(varargin, 'style');
 marker          = ft_getopt(varargin, 'marker', '.');
@@ -82,23 +103,6 @@ facecolor       = ft_getopt(varargin, 'facecolor');  % default depends on the in
 facealpha       = ft_getopt(varargin, 'facealpha',   1);
 edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
 
-% make sure inputs for shape/size are not specified for coils and elecs
-if ~isempty(coilshape) && ~isempty(elecshape)
-  error('coilshape and elecshape cannot both be specified')
-elseif ~isempty(coilsize) && ~isempty(elecsize)
-  error('coilsize and elecsize cannot both be specified')
-else % assign coil/elec shape/size to common variable
-  if ~isempty(coilshape)
-    shape = coilshape;
-  elseif ~isempty(elecshape)
-    shape = elecshape;
-  end
-  if ~isempty(coilsize)
-    sensize = coilsize;
-  elseif ~isempty(elecsize)
-    sensize = elecsize;
-  end
-end
 
 if ischar(chantype)
   % should be a cell array
