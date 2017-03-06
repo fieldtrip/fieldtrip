@@ -66,9 +66,6 @@ function [data] = regressconfound_tcg(cfg, datain)
 %
 % $Id$
 
-addpath ~/Documents/MATLAB/fieldtrip;
-ft_defaults;
-
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
 ft_nargin   = nargin;
