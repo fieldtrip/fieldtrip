@@ -14,8 +14,10 @@ function hs = ft_plot_sens(sens, varargin)
 %   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
 %   'coil'            = true/false, plot each individual coil (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each coil (default = false)
-%   'shape'           = 'point', 'circle', 'square', or 'sphere' (default is automatic)
-%   'sensize'         = diameter or edge length of the coils or electrodes (default is automatic)
+%   'coilshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
+%   'coilsize'        = diameter or edge length of the coils (default is automatic)
+%   'elecshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
+%   'elecsize'        = diameter of the electrodes (default is automatic)
 %   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces (default is automatic)
 %   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', color of channels or coils (default is automatic)
 %   'facealpha'       = transparency, between 0 and 1 (default = 1)
@@ -63,8 +65,10 @@ unit            = ft_getopt(varargin, 'unit');
 orientation     = ft_getopt(varargin, 'orientation', false);
 % this is for EEG electrodes and MEG magnetometer and/or gradiometer arrays
 coil            = ft_getopt(varargin, 'coil', false);
-shape           = ft_getopt(varargin, 'shape'); % default depends on the input, see below
-sensize         = ft_getopt(varargin, 'sensize');  % default depends on the input, see below
+coilshape       = ft_getopt(varargin, 'coilshape'); % default depends on the input, see below
+coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the input, see below
+elecshape       = ft_getopt(varargin, 'coilshape'); % default depends on the input, see below
+elecsize        = ft_getopt(varargin, 'sensize');  % default depends on the input, see below
 % this is simply passed to plot3
 style           = ft_getopt(varargin, 'style');
 marker          = ft_getopt(varargin, 'marker', '.');
@@ -77,6 +81,24 @@ end
 facecolor       = ft_getopt(varargin, 'facecolor');  % default depends on the input, see below
 facealpha       = ft_getopt(varargin, 'facealpha',   1);
 edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
+
+% make sure inputs for shape/size are not specified for coils and elecs
+if ~isempty(coilshape) && ~isempty(elecshape)
+  error('coilshape and elecshape cannot both be specified')
+elseif ~isempty(coilsize) && ~isempty(elecsize)
+  error('coilsize and elecsize cannot both be specified')
+else % assign coil/elec shape/size to common variable
+  if ~isempty(coilshape)
+    shape = coilshape;
+  elseif ~isempty(elecshape)
+    shape = elecshape;
+  end
+  if ~isempty(coilsize)
+    sensize = coilsize;
+  elseif ~isempty(elecsize)
+    sensize = elecsize;
+  end
+end
 
 if ischar(chantype)
   % should be a cell array
