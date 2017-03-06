@@ -328,9 +328,10 @@ for i = 1: nrDynamicPackets
         guidmixed(09), guidmixed(10), guidmixed(11), guidmixed(12), ...
         guidmixed(13), guidmixed(14), guidmixed(15), guidmixed(16)];
     dynamicPackets(i).guid = num2str(guidnonmixed, '%02X');
-    dynamicPackets(i).guidAsStr = sprintf('{%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X}', guidnonmixed);
-    dynamicPackets(i).date = datenum(1899,12,31) + fread(h,1,'double');
-    dynamicPackets(i).datefrac = fread(h,1,'double');
+    dynamicPackets(i).guidAsStr = sprintf('{%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X}', guidnonmixed);    
+    %dynamicPackets(i).date = datenum(1899,12,31) + fread(h,1,'double');
+    %dynamicPackets(i).datefrac = fread(h,1,'double');
+    dynamicPackets(i).date = datetime(fread(h,1,'double')*86400+fread(h,1,'double')- 2209161600, 'ConvertFrom', 'posixtime');    
     dynamicPackets(i).internalOffsetStart = fread(h,1, 'uint64')';
     dynamicPackets(i).packetSize = fread(h,1, 'uint64')';
     dynamicPackets(i).data = zeros(0, 1,'uint8');
@@ -643,6 +644,7 @@ for i = 1: nrSegments
     segments(i).dateOLE = dateOLE;
     unix_time = (dateOLE*(3600*24)) - 2209161600;% 2208988800; %8
     segments(i).dateStr = datestr(unix_time/86400 + datenum(1970,1,1));
+    segments(i).date = datetime(dateOLE*86400- 2209161600, 'ConvertFrom', 'posixtime');    
     datev = datevec( segments(i).dateStr );
     segments(i).startDate = datev(1:3);
     segments(i).startTime = datev(4:6);
@@ -698,6 +700,7 @@ while (pktGUID == evtPktGUID)
     eventMarkers(i).dateOLE = evtDate;
     eventMarkers(i).dateFraction = evtDateFraction;
     evtPOSIXTime = evtDate*DAYSECS + evtDateFraction - 2209161600;% 2208988800; %8
+    eventMarkers(i).date = datetime(evtPOSIXTime, 'ConvertFrom', 'posixtime');
     eventMarkers(i).dateStr = datestr(evtPOSIXTime/DAYSECS + datenum(1970,1,1),'dd-mmmm-yyyy HH:MM:SS.FFF'); % Save fractions of seconds, as well
     eventMarkers(i).duration  = fread(h,1,'double');
     fseek(h,48,'cof');
