@@ -15,7 +15,7 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan, method)
 %
 % See also PREPROC
 
-% Copyright (C) 1998-2008, Robert Oostenveld
+% Copyright (C) 1998-2017, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -47,19 +47,31 @@ if nargin<3 || isempty(method)
   method = 'avg';
 end
 
-% preprocessing fails on channels that contain NaN
-if any(isnan(dat(:)))
-  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+if any(any(isnan(dat(refchan,:))))
+  % preprocessing works differently if channels contain NaN
+  switch method
+    case 'avg'
+      ft_warning('FieldTrip:usingNaNMean', 'using nanmean over reference channels');
+      ref = nanmean(dat(refchan,:), 1);
+    case 'median'
+      ft_warning('FieldTrip:usingNaNMedian', 'using nanmedian over reference channels');
+      ref = nanmedian(dat(refchan,:), 1);
+    otherwise
+      error('unsupported method')
+  end % switch
+else
+  % compute the average value over the reference channels
+  switch method
+    case 'avg'
+      ref = mean(dat(refchan,:), 1);
+    case 'median'
+      ref = median(dat(refchan,:), 1);
+    otherwise
+      error('unsupported method')
+  end % switch
 end
 
-% compute the average value over the reference channels
-if strcmp(method, 'avg')
-  ref = nanmean(dat(refchan,:), 1);
-elseif strcmp(method, 'median')
-  ref = nanmedian(dat(refchan,:), 1);
-end
-
-% apply the new reference to the data
+% subtract the new reference from the data
 for chan=1:Nchans
   dat(chan,:) = dat(chan,:) - ref;
 end
