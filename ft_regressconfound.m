@@ -1,11 +1,11 @@
-function [data] = regressconfound_tcg(cfg, datain)
+function [data] = ft_regressconfound(cfg, datain)
 
 % FT_REGRESSCONFOUND estimates the regression weight of a set of confounds
 % using a General Linear Model (GLM) and removes the estimated contribution
 % from the single-trial data.
 %
 % Use as
-%   timelock = ft_regressconfound(scfg, timelock)
+%   timelock = ft_regressconfound(cfg, timelock)
 % or as
 %   freq     = ft_regressconfound(cfg, freq)
 % or as
