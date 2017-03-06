@@ -308,7 +308,7 @@ if isfield(dataout, 'elec')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble debugs
+ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous datain
 
