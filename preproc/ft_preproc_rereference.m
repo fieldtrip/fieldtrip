@@ -1,14 +1,15 @@
-function [dat, ref] = ft_preproc_rereference(dat, refchan, method)
+function [dat, ref] = ft_preproc_rereference(dat, refchan, method, handlenan)
 
 % FT_PREPROC_REREFERENCE computes the average reference over all EEG channels
 % or rereferences the data to the selected channels
 %
 % Use as
-%   [dat] = ft_preproc_rereference(dat, refchan)
+%   [dat] = ft_preproc_rereference(dat, refchan, method, handlenan)
 % where
 %   dat        data matrix (Nchans X Ntime)
-%   refchan    vector with indices of the new reference channels
+%   refchan    vector with indices of the new reference channels, or 'all'
 %   method     string, can be 'avg' or 'median'
+%   handlenan  boolean, can be true or false
 %
 % If the new reference channel is not specified, the data will be
 % rereferenced to the average of all channels.
@@ -47,19 +48,27 @@ if nargin<3 || isempty(method)
   method = 'avg';
 end
 
-if any(any(isnan(dat(refchan,:))))
+if nargin<4 || isempty(handlenan)
+  handlenan = false;
+end
+
+hasnan = any(any(isnan(dat(refchan,:))));
+
+if hasnan && handlenan
   % preprocessing works differently if channels contain NaN
   switch method
     case 'avg'
-      ft_warning('FieldTrip:usingNaNMean', 'using nanmean over reference channels');
       ref = nanmean(dat(refchan,:), 1);
     case 'median'
-      ft_warning('FieldTrip:usingNaNMedian', 'using nanmedian over reference channels');
       ref = nanmedian(dat(refchan,:), 1);
     otherwise
       error('unsupported method')
   end % switch
 else
+  % preprocessing fails on channels that contain NaN
+  if any(isnan(dat(:)))
+    ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  end
   % compute the average value over the reference channels
   switch method
     case 'avg'
