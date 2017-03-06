@@ -1399,32 +1399,43 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     % construct a event structure from data in the header
-    maxSampleRate = max([hdr.orig.Segments.samplingRate]);
+    sampleRate = hdr.Fs;
     earliestDateTime = min([hdr.orig.Segments.dateOLE]);
     for i=1:length(hdr.orig.Events)
       event(i).type     = hdr.orig.Events(i).IDStr;   % string
       event(i).value    = hdr.orig.Events(i).label;  % number or string
-      event(i).offset   = 0;                         % expressed in samples
+      event(i).offset   = 0;                         % expressed in samples      
       % calculate the sample value of the event, based on the highest
       % sample rate
-      event(i).sample   = (hdr.orig.Events(i).dateOLE-earliestDateTime)*3600*24*maxSampleRate;
+      event(i).sample   = (hdr.orig.Events(i).dateOLE-earliestDateTime)*3600*24*sampleRate;
       if event(i).sample == 0
-        event(i).sample = 1;
-      elseif event(i).sample > hdr.nSamples
-        event(i).sample = hdr.nSamples;
+          event(i).sample = 1;
+      %elseif event(i).sample > hdr.nSamples
+      %    event(i).sample = hdr.nSamples;
       end
-      event(i).duration = hdr.orig.Events(i).duration*maxSampleRate;
+      event(i).duration = hdr.orig.Events(i).duration*sampleRate;
     end
-    %Add boundary events to indicate segments
-    originalEventCount = length(hdr.orig.Events);
+  	%Add boundary events to indicate segments
+    %and correct events for pauses
+  	originalEventCount = length(hdr.orig.Events);
     boundaryEventCount = 1;
+
 		for i=2:length(hdr.orig.Segments)
 			event(originalEventCount+boundaryEventCount).type = 'boundary';
 			event(originalEventCount+boundaryEventCount).value = 'boundary';
 			event(originalEventCount+boundaryEventCount).offset = 0;
 			event(originalEventCount+boundaryEventCount).duration = hdr.orig.Segments(i-1).duration;
 			event(originalEventCount+boundaryEventCount).sample = sum([hdr.orig.Segments(1:(i-1)).sampleCount]);
-      boundaryEventCount = boundaryEventCount+1;
+          
+          %move all non-boundary events later than this segment start
+          %forward by the length of the gap
+          for j=1:originalEventCount
+              if event(j).sample > event(originalEventCount+boundaryEventCount).sample
+                  event(j).sample = event(j).sample + hdr.orig.Segments(i-1).duration;
+              end
+          end
+          
+          boundaryEventCount = boundaryEventCount+1;
 		end
     
   case {'neuromag_eve'}
