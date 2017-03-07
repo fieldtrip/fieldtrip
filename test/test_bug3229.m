@@ -3,6 +3,8 @@ function test_bug3229
 % WALLTIME 00:10:00
 % MEM 1gb
 
+% TEST ft_apply_transform
+
 elec = [];
 elec.label   = {'1';'2';'3';'4'};
 elec.elecpos = [1 1 1; 2 2 2; 3 3 3; 4 4 4];
