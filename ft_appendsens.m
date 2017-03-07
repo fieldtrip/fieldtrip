@@ -1,7 +1,7 @@
 function [sens] = ft_appendsens(cfg, varargin)
 
 % FT_APPENDSENS concatenates multiple sens (elec) structures that have been 
-% processed seperately.
+% processed separately.
 %
 % Use as
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
