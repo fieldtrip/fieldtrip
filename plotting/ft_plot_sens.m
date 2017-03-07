@@ -14,17 +14,18 @@ function hs = ft_plot_sens(sens, varargin)
 %   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
 %   'coil'            = true/false, plot each individual coil (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each coil (default = false)
-%
-% The following option only applies when individual channels or coils are being plotted
+%   'coilshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
 %   'coilsize'        = diameter or edge length of the coils (default is automatic)
-%   'coilshape'       = 'point', 'circle' or 'square' (default is automatic)
-%   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces (default = 'none')
-%   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', color of channels or coils (default = 'k')
+%   'elecshape'       = 'point', 'circle', 'square', or 'sphere' (default is automatic)
+%   'elecsize'        = diameter of the electrodes (default is automatic)
+%   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces (default is automatic)
+%   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', color of channels or coils (default is automatic)
 %   'facealpha'       = transparency, between 0 and 1 (default = 1)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
-% The following option only applies when individual coils are NOT being plotted
-%   'style'           = plotting style for the points representing the channels, see plot3 (default = 'k.')
+% The following options only apply when individual coils are NOT being plotted
+%   'style'           = plotting style for the points representing the channels, see plot3 (default = [])
+%   'marker'          = marker type representing the channels, see plot3 (default = '.')
 %
 % Example
 %   sens = ft_read_sens('Subject01.ds');
@@ -62,25 +63,46 @@ label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
 orientation     = ft_getopt(varargin, 'orientation', false);
-% this is for MEG magnetometer and/or gradiometer arrays
+% this is for EEG electrodes and MEG magnetometer and/or gradiometer arrays
 coil            = ft_getopt(varargin, 'coil', false);
-coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the input, see below
 coilshape       = ft_getopt(varargin, 'coilshape'); % default depends on the input, see below
+coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the input, see below
+elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
+elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
+% make sure inputs for shape/size are not specified for coils and elecs
+if ~isempty(coilshape) && ~isempty(elecshape)
+  error('coilshape and elecshape cannot both be specified')
+elseif ~isempty(coilsize) && ~isempty(elecsize)
+  error('coilsize and elecsize cannot both be specified')
+else % assign coil/elec shape/size to common variable
+  if ~isempty(coilshape)
+    shape = coilshape;
+  elseif ~isempty(elecshape)
+    shape = elecshape;
+  else
+    shape = [];
+  end
+  if ~isempty(coilsize)
+    sensize = coilsize;
+  elseif ~isempty(elecsize)
+    sensize = elecsize;
+  else
+    sensize = [];
+  end
+end
 % this is simply passed to plot3
-style           = ft_getopt(varargin, 'style', 'k.');
+style           = ft_getopt(varargin, 'style');
+marker          = ft_getopt(varargin, 'marker', '.');
 % this is simply passed to ft_plot_mesh
-edgecolor       = ft_getopt(varargin, 'edgecolor', 'k');
-facecolor       = ft_getopt(varargin, 'facecolor', 'none');
+if strcmp(shape, 'sphere')
+  edgecolor     = ft_getopt(varargin, 'edgecolor', 'none');
+else
+  edgecolor     = ft_getopt(varargin, 'edgecolor', 'k');
+end
+facecolor       = ft_getopt(varargin, 'facecolor');  % default depends on the input, see below
 facealpha       = ft_getopt(varargin, 'facealpha',   1);
 edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
 
-% color management
-if ischar(facecolor) && exist([facecolor '.m'], 'file')
-  facecolor = eval(facecolor);
-end
-if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-  edgecolor = eval(edgecolor);
-end
 
 if ischar(chantype)
   % should be a cell array
@@ -95,9 +117,9 @@ end
 
 if ~isempty(ft_getopt(varargin, 'coildiameter'))
   % for backward compatibility, added on 6 July 2016
-  % the size is the diameter for a circle, or the edge length for a square
-  warning('the coildiameter option is deprecated, please use coilsize instead')
-  coilsize = ft_getopt(varargin, 'coilsize');
+  % the sensize is the diameter for a circle, or the edge length for a square
+  warning('the coildiameter option is deprecated, please use sensize instead')
+  sensize = ft_getopt(varargin, 'sensize');
 end
 
 if ~isempty(unit)
@@ -105,35 +127,58 @@ if ~isempty(unit)
   sens = ft_convert_units(sens, unit);
 end
 
-if isempty(coilshape)
+if isempty(shape)
   if ft_senstype(sens, 'neuromag')
     if strcmp(chantype, 'megmag')
-      coilshape = 'point'; % these cannot be plotted as squares
+      shape = 'point'; % these cannot be plotted as squares
     else
-      coilshape = 'square';
+      shape = 'square';
     end
   elseif ft_senstype(sens, 'meg')
-    coilshape = 'circle';
+    shape = 'circle';
   else
-    coilshape = 'point';
+    shape = 'point';
   end
 end
 
-if isempty(coilsize)
+if isempty(sensize)
   switch ft_senstype(sens)
     case 'neuromag306'
-      coilsize = 30; % FIXME this is only an estimate
+      sensize = 30; % FIXME this is only an estimate
     case 'neuromag122'
-      coilsize = 35; % FIXME this is only an estimate
+      sensize = 35; % FIXME this is only an estimate
     case 'ctf151'
-      coilsize = 15; % FIXME this is only an estimate
+      sensize = 15; % FIXME this is only an estimate
     case 'ctf275'
-      coilsize = 15; % FIXME this is only an estimate
+      sensize = 15; % FIXME this is only an estimate
     otherwise
-      coilsize = 10;
+      if strcmp(shape, 'sphere')
+        sensize = 4; % assuming spheres are used for intracranial electrodes, diameter is about 4mm
+      elseif strcmp(shape, 'point')
+        sensize = 30;
+      else
+        sensize = 10;
+      end
   end
   % convert from mm to the units of the sensor array
-  coilsize = coilsize/ft_scalingfactor(sens.unit, 'mm');
+  sensize = sensize/ft_scalingfactor(sens.unit, 'mm');
+end
+
+% color management
+if isempty(facecolor) % set default color depending on shape
+  if strcmp(shape, 'point') 
+    facecolor = 'k';
+  elseif strcmp(shape, 'circle') || strcmp(shape, 'square')
+    facecolor = 'none';
+  elseif strcmp(shape, 'sphere')
+    facecolor = 'b';
+  end
+end
+if ischar(facecolor) && exist([facecolor '.m'], 'file')
+  facecolor = eval(facecolor);
+end
+if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
+  edgecolor = eval(edgecolor);
 end
 
 % select a subset of channels and coils to be plotted
@@ -242,13 +287,17 @@ else
   
 end % if istrue(coil)
 
-switch coilshape
-    case 'point'
-        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', 30, 'Color', edgecolor);
-    case 'circle'
-        plotcoil(pos, ori, [],      coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-    case 'square'
-        
+switch shape
+  case 'point'
+    if ~isempty(style)
+      hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', sensize);
+    else
+      hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', facecolor, 'Linestyle', 'none');
+    end
+  case 'circle'
+    plotcoil(pos, ori, [], sensize, shape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+  case 'square'
+    
         % determine the rotation-around-the-axis of each sensor
         % only applicable for neuromag planar gradiometers
         if ft_senstype(sens, 'neuromag')
@@ -270,9 +319,17 @@ switch coilshape
             end
         end
         
-        plotcoil(pos, ori, chandir, coilsize, coilshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+        plotcoil(pos, ori, chandir, sensize, shape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+    case 'sphere'
+        [xsp, ysp, zsp] = sphere(20);
+        rsp = sensize/2; % convert coilsensize from diameter to radius
+        hold on
+        for i=1:length(pos)
+            hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
+            set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
+        end
     otherwise
-        error('incorrect coilshape');
+        error('incorrect shape');
 end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))

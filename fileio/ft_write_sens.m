@@ -1,4 +1,4 @@
-function ft_write_sens(filename, sens)
+function ft_write_sens(filename, sens, varargin)
 
 % FT_WRITE_SENS writes electrode information to an external file for further processing in external software.
 %
@@ -44,7 +44,7 @@ sens = ft_datatype_sens(sens);
 
 switch format
   case 'bioimage_mgrid'
-    [p, f, x] = fileparts(filename)
+    [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f '.mgrid']);
     write_bioimage_mgrid(filename, sens);
     
