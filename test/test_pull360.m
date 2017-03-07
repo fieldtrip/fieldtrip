@@ -1,5 +1,5 @@
 function test_pull360
-% TEST test_pull_360
+% TEST test_pull360
 % TEST ft_prepare_sourcemodel
 
 % WALLTIME 00:10:00
