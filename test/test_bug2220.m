@@ -24,7 +24,7 @@ tmpdata = ft_preprocessing(cfg, data);
 
 tbase = tmpdata.time{1} >= cfg.baselinewindow(1) & tmpdata.time{end} <= cfg.baselinewindow(2);
 
-[ok, msg] = identical(sum(tmpdata.trial{1}(:, tbase), 2), zeros(length(data.label), 1),'abstol',eps*100);
+[ok, msg] = isalmostequal(sum(tmpdata.trial{1}(:, tbase), 2), zeros(length(data.label), 1),'abstol',eps*100);
 
 if ~ok
   error('baseline not zero: %s', msg{1});
@@ -71,7 +71,7 @@ for k = 1:numel(datainfo)
   if length(data.label) == 0
     continue;
   end
-  [ok, msg] = identical(sum(data.trial{1}(1:end, tbase), 2), zeros(length(data.label), 1),'abstol',abs(.0001 * mean(data.trial{1}(:))));
+  [ok, msg] = isalmostequal(sum(data.trial{1}(1:end, tbase), 2), zeros(length(data.label), 1),'abstol',abs(.0001 * mean(data.trial{1}(:))));
 
   if ~ok
     error('baseline not zero: %s', msg{1});

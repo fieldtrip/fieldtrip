@@ -85,5 +85,5 @@ tlckall = ft_timelockgrandaverage(cfg, tlck1, tlck2, tlck3);
 tlck    = rmfield(tlck, 'cfg');
 tlckall = rmfield(tlckall, 'cfg');
 
-assert(identical(tlck, tlckall));
+assert(isalmostequal(tlck, tlckall));
 

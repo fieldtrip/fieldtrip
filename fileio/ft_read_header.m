@@ -2245,7 +2245,7 @@ switch headerformat
     %       for j=1:length(code)
     %         codesel = false(size(tsq));
     %         for k=1:numel(codesel)
-    %           codesel(k) = identical(tsq(k).code, code{j});
+    %           codesel(k) = isequal(tsq(k).code, code{j});
     %         end
     %         % find the first instance of this logical channel
     %         this = find(chansel(:) & codesel(:), 1);

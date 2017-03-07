@@ -14,5 +14,5 @@ load bug1759.mat
 tmp{1} = tra*dat;
 tmp{2} = sparse(tra)*dat;
 
-assert(identical(tmp{1}, tmp{2}, 'reltol', 0.0001));
+assert(isalmostequal(tmp{1}, tmp{2}, 'reltol', 0.0001));
 

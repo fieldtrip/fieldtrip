@@ -19,12 +19,12 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extend
 [maxval, maxcohindx] = max(source_coh_lft.avg.coh);
 source_coh_lft.pos(maxcohindx, :)
 
-assert(identical(source_coh_lft.pos(maxcohindx, :), [3.2000   -0.6000   7.4000], 'reltol', 0.001), 'coherence peak location not what it used to be!');
+assert(isalmostequal(source_coh_lft.pos(maxcohindx, :), [3.2000   -0.6000   7.4000], 'reltol', 0.001), 'coherence peak location not what it used to be!');
 
 [maxval, maxpowindx] = max(source_diff.avg.pow);
 source_diff.pos(maxpowindx, :)
 
-assert(identical(source_diff.pos(maxpowindx, :), [0.4000   -8.8000    2.4000], 'reltol', 0.001), 'gamma power peak location not what it used to be!');
+assert(isalmostequal(source_diff.pos(maxpowindx, :), [0.4000   -8.8000    2.4000], 'reltol', 0.001), 'gamma power peak location not what it used to be!');
 
 cfg                   = [];
 cfg.covariance        = 'yes';

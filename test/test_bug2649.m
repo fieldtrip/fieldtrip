@@ -20,7 +20,7 @@ copy_hdr = ft_read_header(filecopy);
 copy_dat = ft_read_data(filecopy);
 copy_evt = ft_read_event(filecopy);
 
-assert(identical(orig_dat, copy_dat, 'reltol', 1e-6));
+assert(isalmostequal(orig_dat, copy_dat, 'reltol', 1e-6));
 assert(isequal(keepfields(orig_hdr, {'Fs', 'nChans', 'label', 'nSamples', 'nSampelsPre'}), keepfields(copy_hdr, {'Fs', 'nChans', 'label', 'nSamples', 'nSampelsPre'})));
 assert(isequal(keepfields(orig_evt, {'type', 'value', 'sample', 'duration'}), keepfields(copy_evt, {'type', 'value', 'sample', 'duration'})));
 

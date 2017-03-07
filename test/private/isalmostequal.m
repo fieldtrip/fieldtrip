@@ -1,11 +1,11 @@
-function [ok, message] = identical2(a, b, varargin)
+function [ok, message] = isalmostequal(a, b, varargin)
 
-% IDENTICAL compares two input variables and returns 1/0
+% ISALMOSTEQUAL compares two input variables and returns true/false
 % and a message containing the details on the observed difference.
 %
 % Use as
-%   [ok, message] = identical(a, b)
-%   [ok, message] = identical(a, b, ...)
+%   [ok, message] = isalmostequal(a, b)
+%   [ok, message] = isalmostequal(a, b, ...)
 %
 % This works for all possible input variables a and b, like
 % numerical arrays, string arrays, cell arrays, structures
@@ -15,9 +15,9 @@ function [ok, message] = identical2(a, b, varargin)
 %   'depth'      number, for nested structures
 %   'abstol'     number, absolute tolerance for numerical comparison
 %   'reltol'     number, relative tolerance for numerical comparison
-%   'diffabs'    boolean, check difference between absolute values for
-%                numericals (useful for e.g. mixing matrices which have
-%                arbitrary signs)
+%   'diffabs'    boolean, check difference between absolute values for numericals (useful for e.g. mixing matrices which have arbitrary signs)
+%
+% See also ISEQUAL, ISEQUALNAN
 
 % Copyright (C) 2004-2012, Robert Oostenveld & Markus Siegel
 %
