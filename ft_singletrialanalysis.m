@@ -142,7 +142,7 @@ switch method
         
         % set defaults
         waveformInitSet  = ft_getopt(cfg.aseo, 'waveformInitSet', {});
-        jitter           = ft_getopt(cfg.aseo, 'jitter', 0.050);
+        jitter           = ft_getopt(cfg.aseo, 'jitter', 0.020);
         numiteration     = ft_getopt(cfg.aseo, 'numiteration', 1);
         initcomp         = ft_getopt(cfg.aseo, 'initcomp', {});
         
@@ -203,7 +203,7 @@ switch method
         if isempty(jitter)
             jitter = cell(size(initcomp)); % MVE: what if initcomp is not yet specified?
             for k = 1:numel(jitter)
-                jitter{k} = ones(Ncomp(k),1)*[-50 50];
+                jitter{k} = ones(Ncomp(k),1)*[-cfg.aseo.jitter cfg.aseo.jitter];
             end
         elseif ~iscell(jitter)
             jitter = {jitter};
