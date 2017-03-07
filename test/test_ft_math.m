@@ -7,6 +7,15 @@ function test_ft_math
 % TEST ft_math
 
 % create some test data
+raw1 = [];
+raw1.time = {[1:10], [1:10], [1:10]};
+raw1.trial = {ones(2,10), ones(2,10), ones(2,10)};
+raw1.label = {'chan01';'chan02'};
+raw1.trialinfo = rand(3,4);
+
+raw2 = raw1;
+raw2.trial = {2*ones(2,10), 2*ones(2,10), 2*ones(2,10)};
+
 timelock1.label  = {'chan1'; 'chan2'};
 timelock1.time   = 1:5;
 timelock1.dimord = 'chan_time';
@@ -35,6 +44,35 @@ for i=1:10
   source2.mom{i} = ones(3, 20)*2;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do operation with one raw input
+
+cfg=[];
+cfg.showcallinfo = 'no';
+cfg.trackconfig  = 'no';
+cfg.parameter = 'trial';
+
+cfg.operation = 'log10';
+tmp = ft_math(cfg, raw1);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
+
+cfg.scalar = pi;
+
+cfg.operation = 'add';
+tmp = ft_math(cfg, raw1);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
+
+cfg.operation = 'subtract';
+tmp = ft_math(cfg, raw1);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
+
+cfg.operation = 'multiply';
+tmp = ft_math(cfg, raw1);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
+
+cfg.operation = 'divide';
+tmp = ft_math(cfg, raw1);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do operation with one timelock input
@@ -121,6 +159,29 @@ tmp = ft_math(cfg, source1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
 assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do operation with two raw inputs
+
+cfg=[];
+cfg.showcallinfo = 'no';
+cfg.trackconfig  = 'no';
+cfg.parameter = 'trial';
+
+cfg.operation = 'add';
+tmp = ft_math(cfg, raw1, raw2);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
+
+cfg.operation = 'subtract';
+tmp = ft_math(cfg, raw1, raw2);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
+
+cfg.operation = 'multiply';
+tmp = ft_math(cfg, raw1, raw2);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
+
+cfg.operation = 'divide';
+tmp = ft_math(cfg, raw1, raw2);
+assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do operation with two timelock inputs
@@ -222,6 +283,36 @@ assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 % check the numerical output of the operation
 
 cfg = [];
+cfg.parameter = 'trial';
+cfg.operation = 'add';
+tmp = ft_math(cfg, raw1, raw2);
+assert(tmp.trial{1}(1)==3);
+
+cfg.operation = 'subtract';
+tmp = ft_math(cfg, raw1, raw2);
+assert(tmp.trial{1}(1)==-1);
+
+cfg.operation = 'divide';
+tmp = ft_math(cfg, raw1, raw2);
+assert(tmp.trial{1}(1)==1/2);
+
+cfg.operation = 'multiply';
+tmp = ft_math(cfg, raw1, raw2);
+assert(tmp.trial{1}(1)==2);
+
+cfg.operation = 'log10';
+tmp = ft_math(cfg, raw1);
+assert(tmp.trial{1}(1)==0);
+
+cfg.operation = 'multiply';
+cfg.scalar = -1;
+tmp = ft_math(cfg, raw1);
+assert(tmp.trial{1}(1)==-1);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% idem for a timelock input
+
+cfg = [];
 cfg.parameter = 'avg';
 cfg.operation = 'add';
 tmp = ft_math(cfg, timelock1, timelock2);
@@ -230,10 +321,6 @@ assert(tmp.avg(1)==3);
 cfg.operation = 'subtract';
 tmp = ft_math(cfg, timelock1, timelock2);
 assert(tmp.avg(1)==-1);
-
-cfg.operation = 'add';
-tmp = ft_math(cfg, timelock1, timelock2);
-assert(tmp.avg(1)==3);
 
 cfg.operation = 'divide';
 tmp = ft_math(cfg, timelock1, timelock2);
@@ -274,10 +361,6 @@ cfg.operation = 'subtract';
 tmp = ft_math(cfg, source1, source2);
 assert(tmp.mom{1}(1)==-1);
 
-cfg.operation = 'add';
-tmp = ft_math(cfg, source1, source2);
-assert(tmp.mom{1}(1)==3);
-
 cfg.operation = 'divide';
 tmp = ft_math(cfg, source1, source2);
 assert(tmp.mom{1}(1)==1/2);
@@ -302,4 +385,3 @@ cfg.scalar = 2;
 cfg.operation = '(x1+x2)^s';
 tmp = ft_math(cfg, source1, source2);
 assert(tmp.mom{1}(1)==9);
-

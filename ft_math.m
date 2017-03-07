@@ -444,13 +444,13 @@ for p = 1:length(cfg.parameter)
   % store the result of the operation in the output structure
   data = setsubfield(data, cfg.parameter{p}, y);
 end % p over length(cfg.parameter)
-data.dimord = dimord;
+  data.dimord = dimord;
 
 % certain fields should remain in the output, but only if they are identical in all inputs
 keepfield = {'grad', 'elec', 'inside', 'trialinfo', 'sampleinfo', 'tri'};
 for j=1:numel(keepfield)
   if isfield(varargin{1}, keepfield{j})
-    tmp  = varargin{i}.(keepfield{j});
+    tmp  = varargin{1}.(keepfield{j});
     keep = true;
   else
     keep = false;
