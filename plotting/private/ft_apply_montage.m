@@ -18,7 +18,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %   montage.labelnew = Mx1 cell-array
 %
 % As an example, a bipolar montage could look like this
-%   bipolar.labelold  = {'1', '2', '3', '4'}
+%   bipolar.labelold  = {'1',   '2',   '3',   '4'}
 %   bipolar.labelnew  = {'1-2', '2-3', '3-4'}
 %   bipolar.tra       = [
 %     +1 -1  0  0
@@ -259,7 +259,7 @@ if k > 0 && isfield(input, 'trial') % check for raw data now only
   % use an anonymous function to test for the presence of NaNs in the input data
   hasnan = @(x) any(isnan(x(:)));
   if any(cellfun(hasnan, data_unused.trial))
-      error('FieldTrip:NaNsinInputData', ['Your input data contains NaNs in channels that are unused '...
+    error('FieldTrip:NaNsinInputData', ['Your input data contains NaNs in channels that are unused '...
       'in the supplied montage. This would result in undesired NaNs in the '...
       'output data. Please remove these channels from the input data (using '...
       'ft_selectdata) before attempting to apply the montage.']);
@@ -374,11 +374,13 @@ switch inputtype
       sens.tra = montage.tra * sens.tra;
     end
     
-    % The montage operates on the coil weights in sens.tra, but the output channels
-    % can be different. If possible, we want to keep the original channel positions
-    % and orientations.
+    % The montage operates on the coil weights in sens.tra, but the output channels can be different.
+    % If possible, we want to keep the original channel positions and orientations.
     [sel1, sel2] = match_str(montage.labelnew, inputlabel);
-    keepchans = length(sel1)==length(montage.labelnew);
+    keepchans = isequal(sel1(:)', 1:numel(montage.labelnew));
+    
+    posweight = abs(montage.tra);
+    posweight = diag(1./sum(posweight,2)) * posweight;
     
     if isfield(sens, 'chanpos')
       if keepchans
@@ -388,7 +390,8 @@ switch inputtype
           % add a chanposold only if it is not there yet
           sens.chanposold = sens.chanpos;
         end
-        sens.chanpos = nan(numel(montage.labelnew),3);
+        % compute the channel positions as a weighted sum of the original ones
+        sens.chanpos = posweight * sens.chanpos;
       end
     end
     
@@ -399,7 +402,8 @@ switch inputtype
         if ~isfield(sens, 'chanoriold')
           sens.chanoriold = sens.chanori;
         end
-        sens.chanori = nan(numel(montage.labelnew),3);
+        % compute the channel orientations as a weighted sum of the original ones
+        sens.chanori = posweight * sens.chanori;
       end
     end
     
@@ -407,10 +411,7 @@ switch inputtype
     sens.chantype = montage.chantypenew;
     sens.chanunit = montage.chanunitnew;
     
-    % keep the
-    % original label,
-    % type and unit
-    % for reference
+    % keep the original label, type and unit for reference
     if ~isfield(sens, 'labelold')
       sens.labelold = inputlabel;
     end
@@ -434,14 +435,14 @@ switch inputtype
           sens.balance.current  = 'none';
         end
       end
-    elseif ~istrue(inverse) && ~isempty(bname)
       
-      if isfield(sens, 'balance'),
+    elseif ~istrue(inverse) && ~isempty(bname)
+      if isfield(sens, 'balance')
         % check whether a balancing montage with name bname already exist,
         % and if so, how many
         mnt = fieldnames(sens.balance);
         sel = strmatch(bname, mnt);
-        if numel(sel)==0,
+        if numel(sel)==0
           % bname can stay the same
         elseif numel(sel)==1
           % the original should be renamed to 'bname1' and the new one should
@@ -477,7 +478,7 @@ switch inputtype
     input = sens;
     clear sens
     
-  case 'raw';
+  case 'raw'
     % apply the montage to the raw data that was preprocessed using fieldtrip
     data = input;
     clear input
@@ -565,13 +566,6 @@ y(x) = true;
 
 function nowarning(varargin)
 return
-
-function s = removefields(s, fn)
-for i=1:length(fn)
-  if isfield(s, fn{i})
-    s = rmfield(s, fn{i});
-  end
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HELPER FUNCTION use "old/new" instead of "org/new"

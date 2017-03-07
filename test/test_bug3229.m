@@ -34,8 +34,8 @@ bipolar.labelold  = {'1',   '2',   '3',   '4'};
 bipolar.labelnew  = {'1-2', '2-3', '3-4'};
 bipolar.tra       = [
   +1 -1  0  0
-   0 +1 -1  0
-   0  0 +1 -1
+  0 +1 -1  0
+  0  0 +1 -1
   ];
 
 elec_bi = ft_apply_montage(elec, bipolar);
@@ -45,5 +45,46 @@ assert(~isequal(elec_bi.chanpos(1:3,:), elec.chanpos(1:3,:)));
 
 % channel positions should be half-way
 assert(isequal(elec_bi.chanpos(1:3,:), (elec.chanpos(1:3,:)+elec.chanpos(2:4,:))/2));
+
+%%
+
+data = [];
+data.label = {'1', '2', '3', '4'};
+for i=1:5
+  data.trial{i} = randn(4,1000);
+  data.time{i}  = (1:1000)/1000;
+end
+data.elec = elec;
+data = ft_checkdata(data);
+
+cfg = [];
+cfg.method = 'pca';
+cfg.updatesens = 'no';
+comp = ft_componentanalysis(cfg, data);
+assert(isequal(comp.elec, data.elec)); % should be the same
+
+cfg = [];
+cfg.component = []; % keep all
+cfg.updatesens = 'no';
+backproject = ft_rejectcomponent(cfg, comp);
+assert(isequal(comp.elec, data.elec)); % should still be the same
+
+
+%%
+
+cfg = [];
+cfg.method = 'pca';
+cfg.updatesens = 'yes';
+comp = ft_componentanalysis(cfg, data);
+assert(~isequal(comp.elec), elec);
+
+cfg = [];
+cfg.component = []; % keep all
+cfg.updatesens = 'yes';
+backproject = ft_rejectcomponent(cfg, comp);
+
+% FIXME the output should be checked
+
+
 
 
