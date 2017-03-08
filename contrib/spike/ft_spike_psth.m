@@ -1,4 +1,4 @@
-function [psth] = ft_spike_psth(cfg,spike)
+function [psth] = ft_spike_psth(cfg, spike)
 
 % FT_SPIKE_PSTH computes the peristimulus histogram of spiketrains.
 %
@@ -88,7 +88,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % control input spike structure and convert to spike if raw structure
@@ -247,9 +247,9 @@ if isfield(spike,'trialinfo'),  psth.trialinfo  = spike.trialinfo(cfg.trials,:);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history psth
+ft_postamble previous   spike
+ft_postamble provenance psth
+ft_postamble history    psth
 
 
 %%%%%%%%% SUB FUNCTIONS %%%%%%%%%
