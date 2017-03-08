@@ -102,7 +102,13 @@ elseif ft_senstype(sens, 'nirs')
   individual = opto;
   sensshape  = optoshape;
   sensize    = optosize;
+else
+  warning('unknown sensor array description');
+  individual = false;
+  sensshape  = [];
+  sensize    = [];
 end
+
 % this is simply passed to plot3
 style           = ft_getopt(varargin, 'style');
 marker          = ft_getopt(varargin, 'marker', '.');
