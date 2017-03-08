@@ -834,6 +834,19 @@ else
   error('no layout detected, please specify cfg.layout')
 end
 
+
+% make the subset as specified in cfg.channel
+cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
+chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
+% return the layout for the subset of channels
+layout.pos    = layout.pos(chansel,:);
+layout.label  = layout.label(chansel);
+if ~strcmp(cfg.style, '3d')
+  % these don't exist for the 3D layout
+  layout.width  = layout.width(chansel);
+  layout.height = layout.height(chansel);
+end
+
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
 if ~strcmp(cfg.style, '3d')
   
@@ -993,7 +1006,11 @@ if ~strcmp(cfg.style, '3d')
       end
       
       % save outline
-      layout.outline{end+1} = outline;
+      if isfield(layout,'outline')
+        layout.outline{end+1} = outline;
+      else
+        layout.outline = {outline};
+      end
     end
     
     % Below, it is assumed that 'a mask' is always preferred to 'no mask'. In the worst case scenario, it would lead to ugly topoplots, if the
@@ -1025,17 +1042,7 @@ if ~strcmp(cfg.style, '3d')
   end
 end % if style=3d
 
-% make the subset as specified in cfg.channel
-cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
-chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
-% return the layout for the subset of channels
-layout.pos    = layout.pos(chansel,:);
-layout.label  = layout.label(chansel);
-if ~strcmp(cfg.style, '3d')
-  % these don't exist for the 3D layout
-  layout.width  = layout.width(chansel);
-  layout.height = layout.height(chansel);
-end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % apply the montage, i.e. combine bipolar channels into a new representation
