@@ -845,7 +845,7 @@ if ~strcmp(cfg.style, '3d')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% apply the montage, i.e. combine bipolar channels into a new representation
+% apply the montage, e.g. conert from monopolar to bipolar channels 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~strcmp(cfg.montage, 'no')
   Norg = length(cfg.montage.labelorg);

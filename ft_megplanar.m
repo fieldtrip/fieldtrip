@@ -216,15 +216,16 @@ if strcmp(cfg.planarmethod, 'sourceproject')
 
   % apply the linear transformation to the data
   interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
+  
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
 
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
-    % put the original gradiometer type in (will get _planar appended)
-    interp.grad.type = ft_senstype(data.grad);
+    interp.grad.type = [ft_senstype(data.grad) '_planar'];
+  else
+    interp.grad.type = [interp.grad.type '_planar'];
   end
-  interp.grad.type = [interp.grad.type '_planar'];
 
   %   % interpolate the data towards the planar gradiometers
   %   for i=1:Ntrials

@@ -107,7 +107,7 @@ if ~strcmp(current, 'none')
   data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
   data      = ft_apply_montage(data     , current_montage, 'keepunused', 'yes', 'inverse', 'yes');
   data.grad.balance.current = 'none';
-end % if
+end % if current
 
 if ~strcmp(desired, 'none')
   % then apply the desired balancing
@@ -120,7 +120,7 @@ if ~strcmp(desired, 'none')
   data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
   data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes', 'balancename', desired);
   %data.grad.balance.current = desired;
-end % if
+end % if desired
 
 % reorder the channels to stay close to the original ordering
 [selorg, selnew] = match_str(labelorg, data.label);

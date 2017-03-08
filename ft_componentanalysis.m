@@ -209,24 +209,24 @@ if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
     'timecourses in specified data is deprecated; please specify an '...
     'unmixing matrix instead with cfg.unmixing. '...
     'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
-
+  
   cfg.unmixing = pinv(cfg.topo);
   cfg = rmfield(cfg, 'topo');
 end
 
 if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   % use the previously determined unmixing matrix on this dataset
-
+  
   % test whether all required channels are present in the data
   [datsel, toposel] = match_str(cfg.channel, cfg.topolabel);
   if length(toposel)~=length(cfg.topolabel)
     error('not all channels that are required for the unmixing are present in the data');
   end
-
+  
   % ensure that all data channels not used in the unmixing should be removed from the channel selection
   tmpchan = match_str(cfg.channel, cfg.topolabel);
   cfg.channel = cfg.channel(tmpchan);
-
+  
   % update some settings where there is no further choice to be made by the user
   cfg.numcomponent = 'all';
   cfg.method       = 'predetermined unmixing matrix';
@@ -239,7 +239,7 @@ switch cfg.method
     cfg.icasso.mode   = ft_getopt(cfg.icasso, 'mode',   'both');
     cfg.icasso.Niter  = ft_getopt(cfg.icasso, 'Niter',  15);
     cfg.icasso.method = ft_getopt(cfg.icasso, 'method', 'fastica');
-
+    
     cfg.fastica       = ft_getopt(cfg, 'fastica', []);
   case 'fastica'
     % additional options, see FASTICA for details
@@ -329,7 +329,7 @@ else
 end
 
 if strcmp(cfg.method, 'sobi')
-
+  
   % concatenate all the data into a 3D matrix respectively 2D (sobi)
   fprintf('concatenating data');
   Nsamples = Nsamples(1);
@@ -348,9 +348,9 @@ if strcmp(cfg.method, 'sobi')
   else
     dat = shiftdim(dat,1);
   end
-
+  
 elseif strcmp(cfg.method, 'csp')
-
+  
   % concatenate the trials into two data matrices, one for each class
   sel1 = find(cfg.csp.classlabels==1);
   sel2 = find(cfg.csp.classlabels==2);
@@ -364,12 +364,12 @@ elseif strcmp(cfg.method, 'csp')
   dat2 = cat(2, data.trial{sel2});
   fprintf('concatenated data matrix size for class 1 is %dx%d\n', size(dat1,1), size(dat1,2));
   fprintf('concatenated data matrix size for class 2 is %dx%d\n', size(dat2,1), size(dat2,2));
-
+  
 elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmode, 'no')
   % concatenate all the data into a 2D matrix unless we already have an
   % unmixing matrix or unless the user request it otherwise
   fprintf('concatenating data');
-
+  
   dat = zeros(Nchans, sum(Nsamples));
   for trial=1:Ntrials
     fprintf('.');
@@ -379,7 +379,7 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   end
   fprintf('\n');
   fprintf('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
-
+  
 else
   fprintf('not concatenating data\n');
   dat = data.trial;
@@ -389,15 +389,15 @@ end
 % perform the component analysis
 fprintf('starting decomposition using %s\n', cfg.method);
 switch cfg.method
-
+  
   case 'icasso'
     % check whether the required low-level toolboxes are installed
     ft_hastoolbox('icasso',  1);
-
+    
     if strcmp(cfg.icasso.method, 'fastica')
       ft_hastoolbox('fastica', 1);
       cfg.fastica.numOfIC = cfg.numcomponent;
-
+      
       optarg = ft_cfg2keyval(cfg.(cfg.icasso.method));
       sR     = icassoEst(cfg.icasso.mode, dat, cfg.icasso.Niter, optarg{:});
     elseif strcmp(cfg.icasso.method, 'dss')
@@ -405,7 +405,7 @@ switch cfg.method
       tmpcfg        = rmfield(cfg, 'icasso');
       tmpcfg.method = cfg.icasso.method;
       tmpdata       = data;
-
+      
       % initialize the variables to hold the output
       sR.W     = cell(cfg.icasso.Niter, 1);
       sR.A     = cell(cfg.icasso.Niter, 1);
@@ -440,19 +440,19 @@ switch cfg.method
     end
     
     %[Iq, mixing, unmixing, dat] = icassoShow(sR, 'estimate', 'off', 'L', cfg.numcomponent);
-
+    
     % sort the output according to Iq
     [srt, ix] = sort(-Iq); % account for NaNs
     mixing    = mixing(:, ix);
     unmixing  = unmixing(ix, :);
-
+    
     cfg.icasso.Iq = Iq(ix);
     cfg.icasso.sR = rmfield(sR, 'signal'); % keep the rest of the information
-
+    
   case 'fastica'
     % check whether the required low-level toolboxes are installed
     ft_hastoolbox('fastica', 1);       % see http://www.cis.hut.fi/projects/ica/fastica
-
+    
     if ~defaultNumCompsUsed &&...
         (~isfield(cfg, 'fastica') || ~isfield(cfg.fastica, 'numOfIC'))
       % user has specified cfg.numcomponent and not specified
@@ -464,7 +464,7 @@ switch cfg.method
       % unsure which one to use
       error('you can specify either cfg.fastica.numOfIC or cfg.numcomponent (they will have the same effect), but not both');
     end
-
+    
     try
       % construct key-value pairs for the optional arguments
       optarg = ft_cfg2keyval(cfg.fastica);
@@ -481,12 +481,12 @@ switch cfg.method
       % forward original error
       rethrow(me);
     end
-
+    
   case 'runica'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
-
+    
     if ~defaultNumCompsUsed &&...
         (~isfield(cfg, 'runica') || ~isfield(cfg.runica, 'pca'))
       % user has specified cfg.numcomponent and not specified
@@ -498,24 +498,24 @@ switch cfg.method
       % unsure which one to use
       error('you can specify either cfg.runica.pca or cfg.numcomponent (they will have the same effect), but not both');
     end
-
+    
     % construct key-value pairs for the optional arguments
     optarg = [ft_cfg2keyval(cfg.runica) {'reset_randomseed' 0}]; % let FieldTrip deal with the random seed handling
     [weights, sphere] = runica(dat, optarg{:});
-
+    
     % scale the sphering matrix to unit norm
     if strcmp(cfg.normalisesphere, 'yes')
       sphere = sphere./norm(sphere);
     end
-
+    
     unmixing = weights*sphere;
     mixing = [];
-
+    
   case 'binica'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
-
+    
     if ~defaultNumCompsUsed &&...
         (~isfield(cfg, 'binica') || ~isfield(cfg.binica, 'pca'))
       % user has specified cfg.numcomponent and not specified
@@ -527,72 +527,72 @@ switch cfg.method
       % unsure which one to use
       error('you can specify either cfg.binica.pca or cfg.numcomponent (they will have the same effect), but not both');
     end
-
+    
     % construct key-value pairs for the optional arguments
     optarg = ft_cfg2keyval(cfg.binica);
     [weights, sphere] = binica(dat, optarg{:});
-
+    
     % scale the sphering matrix to unit norm
     if strcmp(cfg.normalisesphere, 'yes')
       sphere = sphere./norm(sphere);
     end
-
+    
     unmixing = weights*sphere;
     mixing = [];
-
+    
   case 'jader'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
-
+    
     unmixing = jader(dat, cfg.numcomponent);
     mixing = [];
-
+    
   case 'varimax'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
-
+    
     unmixing = varimax(dat);
     mixing = [];
-
+    
   case 'cca'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('cca', 1);
-
+    
     [y, w] = ccabss(dat);
     unmixing = w';
     mixing = [];
-
+    
   case 'pca'
     % compute data cross-covariance matrix
     C = (dat*dat')./(size(dat,2)-1);
-
+    
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
-
+    
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
     d = sortrows(d, -2);
-
+    
     % return the desired number of principal components
     unmixing = E(:,d(1:cfg.numcomponent,1))';
     mixing = [];
-
+    
     clear C D E d
-
+    
   case 'kpca'
-
+    
     % linear kernel (same as normal covariance)
     %kern = @(X,y) (sum(bsxfun(@times, X, y),2));
-
+    
     % polynomial kernel degree 2
     %kern = @(X,y) (sum(bsxfun(@times, X, y),2).^2);
-
+    
     % RBF kernel
     kern = @(X,y) (exp(-0.5* sqrt(sum(bsxfun(@minus, X, y).^2, 2))));
-
+    
     % compute kernel matrix
     C = zeros(Nchans,Nchans);
     ft_progress('init', cfg.feedback, 'computing kernel matrix...');
@@ -601,20 +601,20 @@ switch cfg.method
       C(k,:) = kern(dat, dat(k,:));
     end
     ft_progress('close');
-
+    
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
-
+    
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
     d = sortrows(d, -2);
-
+    
     % return the desired number of principal components
     unmixing = E(:,d(1:cfg.numcomponent,1))';
     mixing = [];
-
+    
     clear C D E d
-
+    
   case 'svd'
     % it is more memory efficient to use the (non-scaled) covariance
     if cfg.numcomponent<Nchans
@@ -625,15 +625,15 @@ switch cfg.method
       [u, s, v] = svd(dat*dat', 0);
     end
     clear s v % not needed
-
+    
     unmixing = u';
     mixing = [];
-
+    
   case 'dss'
     % check whether the required low-level toolboxes are installed
     % see http://www.cis.hut.fi/projects/dss
     ft_hastoolbox('dss', 1);
-
+    
     params         = struct(cfg.dss);
     params.denf.h  = str2func(cfg.dss.denf.function);
     if ~ischar(cfg.numcomponent)
@@ -645,7 +645,7 @@ switch cfg.method
     if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
       params.Y = params.V*dat;
     end
-
+    
     % create the state
     state   = dss_create_state(dat, params);
     if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
@@ -654,7 +654,7 @@ switch cfg.method
     if isfield(cfg.dss, 'dV') && ~isempty(cfg.dss.dV)
       state.dV = cfg.dss.dV;
     end
-
+    
     % increase the amount of information that is displayed on screen
     % state.verbose = 3;
     % start the decomposition
@@ -662,10 +662,10 @@ switch cfg.method
     state   = denss(state);  % this is for the DSS toolbox version 1.0
     % weights = state.W;
     % sphere  = state.V;
-
+    
     mixing   = state.A;
     unmixing = state.B;
-
+    
     % remember the updated configuration details
     cfg.dss.denf      = state.denf;
     cfg.dss.orthof    = state.orthof;
@@ -675,12 +675,12 @@ switch cfg.method
     cfg.dss.V         = state.V;
     cfg.dss.dV        = state.dV;
     cfg.numcomponent  = state.sdim;
-
+    
   case 'sobi'
     % check whether the required low-level toolboxes are installed
     % see http://www.sccn.ucsd.edu/eeglab
     ft_hastoolbox('eeglab', 1);
-
+    
     % check for additional options, see SOBI for details
     if ~isfield(cfg, 'sobi')
       mixing = sobi(dat, cfg.numcomponent);
@@ -691,35 +691,35 @@ switch cfg.method
     else
       error('unknown options for SOBI component analysis');
     end
-
+    
     unmixing = [];
-
+    
   case 'predetermined unmixing matrix'
     % check which labels from the cfg are identical to those of the data
     % this gives us the rows of cfg.topo (the channels) and of
     % data.trial (also channels) that we are going to use later
     [datsel, chansel] = match_str(data.label, cfg.topolabel);
-
+    
     % ensure 1:1 corresponcence between cfg.topolabel & data.label
     % otherwise we cannot compute the components (if source channels are
     % missing) or will have a problem when projecting it back (because we
     % dont have a marker to say that there are channels in data.label
     % which we did not use and thus can't recover from source-space)
-
+    
     if length(cfg.topolabel)<length(chansel)
       error('COMPONENTANALYSIS:LABELMISSMATCH:topolabel', 'cfg.topolabels do not uniquely correspond to data.label, please check')
     end
     if length(data.label)<length(datsel)
       error('COMPONENTANALYSIS:LABELMISSMATCH:topolabel', 'cfg.topolabels do not uniquely correspond to data.label, please check')
     end
-
+    
     % reorder the mixing matrix so that the channel order matches the order in the data
     cfg.unmixing  = cfg.unmixing(:,chansel);
     cfg.topolabel = cfg.topolabel(chansel);
-
+    
     unmixing = cfg.unmixing;
     mixing   = [];
-
+    
   case 'white'
     % compute the covariance matrix and an unmixing matrix that makes the data white
     c = dat*dat';
@@ -735,13 +735,13 @@ switch cfg.method
     end
     unmixing = s * u';
     mixing   = [];
-
+    
   case 'csp'
     C1 = cov(dat1');
     C2 = cov(dat2');
     unmixing = csp(C1, C2, cfg.csp.numfilters);
     mixing   = [];  % will be computed below
-
+    
   case 'bsscca'
     % this method relies on time shifting of the original data, in much the
     % same way as ft_denoise_tsr. as such it is more natural to represent
@@ -760,13 +760,13 @@ switch cfg.method
         data.label{end+1} = sprintf('refchan%03d',m);
       end
     end
-      
+    
     % remember the canonical correlations
     cfg.bsscca.rho = rho;
     
   case 'parafac'
     error('parafac is not supported anymore in ft_componentanalysis');
-
+    
   otherwise
     error('unknown method for component analysis');
 end % switch method
@@ -835,43 +835,39 @@ for k = 1:size(comp.topo,2)
 end
 comp.topolabel = data.label(:);
 
-% apply the montage also to the elec/grad, if present
 if isfield(data, 'grad')
   sensfield = 'grad';
-  if strcmp(cfg.updatesens, 'yes')
-    fprintf('applying the backprojection matrix to the gradiometer description\n');
-  else
-    fprintf('not applying the backprojection matrix to the gradiometer description\n');
-  end
-elseif isfield(data, 'elec') && isfield(data.elec, 'tra')
+elseif isfield(data, 'elec')
   sensfield = 'elec';
-  if strcmp(cfg.updatesens, 'yes')
-    fprintf('applying the backprojection matrix to the electrode description\n');
-  else
-    fprintf('not applying the backprojection matrix to the electrode description\n');
-  end
+elseif isfield(data, 'opto')
+  sensfield = 'opto';
 else
-  fprintf('not applying the backprojection matrix to the sensor description\n');
   sensfield = [];
 end
 
-if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
-  % construct a montage and apply it to the sensor description
-  montage          = [];
-  montage.labelorg = data.label;
-  montage.labelnew = comp.label;
-  montage.tra      = unmixing;
-  comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
-  % The output sensor array cannot simply be interpreted as the input
-  % sensor array, hence the type should be removed to allow autodetection
-  % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
-  if isfield(comp.(sensfield), 'type')
-    comp.(sensfield) = rmfield(comp.(sensfield), 'type');
+% apply the linear projection also to the sensor description
+if ~isempty(sensfield)
+  if  strcmp(cfg.updatesens, 'yes')
+    fprintf('also applying the unmixing matrix to the %s structure\n', sensfield);
+    % construct a montage and apply it to the sensor description
+    montage          = [];
+    montage.labelorg = data.label;
+    montage.labelnew = comp.label;
+    montage.tra      = unmixing;
+    comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
+    
+    % The output sensor array cannot simply be interpreted as the input
+    % sensor array, hence the type should be removed to allow autodetection
+    % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
+    if isfield(comp.(sensfield), 'type')
+      comp.(sensfield) = rmfield(comp.(sensfield), 'type');
+    end
+  else
+    fprintf('not applying the unmixing matrix to the %s structure\n', sensfield);
+    % simply copy it over
+    comp.(sensfield) = data.(sensfield);
   end
-elseif ~isempty(sensfield) && strcmp(cfg.updatesens, 'no')
-  % simply copy it over
-  comp.(sensfield) = data.(sensfield);
-end
+end % if sensfield
 
 % copy the sampleinfo into the output
 if isfield(data, 'sampleinfo')
