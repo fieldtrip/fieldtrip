@@ -289,8 +289,10 @@ switch senstype
     labelmegplanar = labelmeggrad;
     
   case {'ant128', 'biosemi64', 'biosemi128', 'biosemi256', 'egi32', 'egi64', 'egi128', 'egi256', 'eeg1020', 'eeg1010', 'eeg1005', 'ext1020'}
-    % use an external helper function to define the list with EEG channel names
-    labeleeg = ft_senslabel(ft_senstype(datachannel));
+    if ~ft_senstype(datachannel, 'unknown')
+      % use an external helper function to define the list with EEG channel names
+      labeleeg = ft_senslabel(ft_senstype(datachannel));
+    end
     
   case {'itab153' 'itab28' 'itab28_old'}
     % all itab MEG channels start with MAG
