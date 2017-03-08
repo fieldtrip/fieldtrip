@@ -402,84 +402,7 @@ elseif isequal(cfg.layout, 'ordered')
   x = (ncol-1)/ncol;
   y = 0/nrow;
   layout.pos(end+1,:) = [x y];
-  
-  % project 3D coordinates to 2D plane determined by anatomic 'viewpoint', best suited for intracranial recordings,
-elseif ~isempty(cfg.viewpoint) % doing this here supersedes auto parsing of cfg.elec in the set op elseif's beyond this
-  
-  % fetch elec
-  if ~isempty(cfg.elec) && isstruct(cfg.elec)
-    elec = cfg.elec;
-  elseif ischar(cfg.elecfile)
-    elec = ft_read_sens(cfg.elecfile);
-  else
-    error('elec structure required for using cfg.viewpoint, use cfg.elec or cfg.elecfile')
-  end
-  % deal with coordinate system
-  if isempty(elec.coordsys)
-    error('no elec.coordsys found, electrodes in unknown coordinate system, use ft_determine_coordsys')
-  else
-    eleccoordsys = elec.coordsys;
-  end
-  % obtain units, to be used for outline later
-  elecunit = elec.unit; % to be used later for outline generation
-  
-  % extract coordinates
-  if ~isempty(cfg.channel)
-    % look at the data to determine the overlapping channels
-    cfg.channel  = ft_channelselection(cfg.channel, elec.label);
-    chanindx     = match_str(elec.label, cfg.channel);
-    pos          = elec.chanpos(chanindx,:);
-    label        = elec.label(chanindx);
-  else
-    pos          = elec.chanpos;
-    label        = elec.label;
-  end
-  nchan = size(pos,1);
-  
-  % determine auto view
-  if strcmp(cfg.viewpoint,'auto')
-    % simple automatic determination of 'ideal' viewpoint
-    % first, depth or not: if Xvar (l/r axis) is bigger than both Yvar (post/ant axis) and Zvar (top/bottom axis), it's a depth
-    % if yes, superior (screw inferior) is more appriorate if Yvar > Zvar, otherwise posterior (screw anterior)
-    % if no, it's left/right, sign of mean(X) indicates which side the grid is on (note, for interhemispheric grids, both left/right (doenst) work)
-    posvar = var(pos);
-    if (posvar(1)>posvar(2)) && (posvar(1)>posvar(3)) % if they're roughly equal, it's likely a diagonal depth, and any view would (not) work
-      if posvar(2)>posvar(3)
-        cfg.viewpoint = 'superior';
-      else
-        cfg.viewpoint = 'posterior';
-      end
-    else
-      if sign(mean(pos(:,1))) == -1
-        cfg.viewpoint = 'left';
-      else
-        cfg.viewpoint = 'right';
-      end
-    end
-  end
-  
-  % 3D to 2D
-  pos = getorthoviewpos(pos,elec.coordsys,cfg.viewpoint);
-  
-  % compute width/height based on distance between electrodes
-  Xdist   = abs(bsxfun(@minus,pos(:,1),pos(:,1)'));
-  Ydist   = abs(bsxfun(@minus,pos(:,2),pos(:,2)'));
-  XYdist  = sqrt(Xdist.^2+Ydist.^2);
-  selind  = logical(~diag(diag(ones(nchan))));
-  XYdist  = sort(XYdist(selind),'ascend');
-  sizefac = mean(XYdist(1:nchan))*1.2;
-  width   = ones(nchan,1) * sizefac;
-  height  = ones(nchan,1) * sizefac * (4/5);
-  
-  % put in layout
-  layout.pos     = pos;
-  layout.label   = label;
-  layout.width   = width;
-  layout.height  = height;
-  layout.outline = [];
-  
-  % temporary workaround
-  sens = elec;
+
    
   % try to generate layout from other configuration options
 elseif ischar(cfg.layout)
@@ -529,40 +452,40 @@ elseif ischar(cfg.layout)
     % assume that cfg.layout is an electrode file
     fprintf('creating layout from electrode file %s\n', cfg.layout);
     sens = ft_read_sens(cfg.layout);
-    layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+    layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
   end
   
 elseif ischar(cfg.elecfile)
   fprintf('creating layout from electrode file %s\n', cfg.elecfile);
   sens = ft_read_sens(cfg.elecfile);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
   
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
   fprintf('creating layout from cfg.elec\n');
   sens = ft_datatype_sens(cfg.elec);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
   
 elseif isfield(data, 'elec') && isstruct(data.elec)
   fprintf('creating layout from data.elec\n');
   data = ft_checkdata(data);
   sens = ft_datatype_sens(data.elec);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
   
 elseif ischar(cfg.gradfile)
   fprintf('creating layout from gradiometer file %s\n', cfg.gradfile);
   sens = ft_read_sens(cfg.gradfile);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
   
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
   fprintf('creating layout from cfg.grad\n');
   sens = ft_datatype_sens(cfg.grad);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
   
 elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
   data = ft_checkdata(data);
   sens = ft_datatype_sens(data.grad);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
  
 elseif ischar(cfg.optofile)
   fprintf('creating layout from optode file %s\n', cfg.optofile);
@@ -951,7 +874,7 @@ if ~strcmp(cfg.style, '3d')
       % Define the anatomical mask based on a circular head
       layout.mask{1} = [HeadX(:) HeadY(:)];
     end
-  else % data is not 'scalp' level data and head outline+mask makes no sense. See if we can generate outline/mask based on something else
+  else % data is not 'scalp' level data and auto head outline+mask makes no sense. See if we can generate outline/mask based on something else
     
     % a mesh/mri was specified for outline generation (in case an outline already exist, add it to it)
     if (~isempty(cfg.headshape) || ~isempty(cfg.mri))
@@ -1001,6 +924,7 @@ if ~strcmp(cfg.style, '3d')
           error('coordinate system of mri/headshape does not match that of sensors')
         end
       else
+        % if used, sens would exist
         error('using cfg.headshape/mri to generate layout outline is not supported without providing elec/grad structure/file')
       end
       
@@ -1260,7 +1184,7 @@ return % function readlay
 % SUBFUNCTION
 % convert 3D electrode positions into 2D layout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function layout = sens2lay(sens, rz, method, style, overlap)
+function layout = sens2lay(sens, rotatez, projmethod, style, overlap, viewpoint)
 
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 % this not only removed the linear projections, but also ensures that the channel labels are correctly named
@@ -1284,30 +1208,72 @@ end
 
 fprintf('creating layout for %s system\n', ft_senstype(sens));
 
-% apply rotation
-if isempty(rz)
-  switch ft_senstype(sens)
-    case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_planar', 'magnetometer', 'meg'}
-      rz = 90;
-    case {'neuromag122', 'neuromag306'}
-      rz = 0;
-    case 'electrode'
-      rz = 90;
-    otherwise
-      rz = 0;
+% apply rotation, but only if viewpoint is not used specifically
+if isempty(viewpoint)
+  if isempty(rotatez)
+    switch ft_senstype(sens)
+      case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_planar', 'magnetometer', 'meg'}
+        rotatez = 90;
+      case {'neuromag122', 'neuromag306'}
+        rotatez = 0;
+      case 'electrode'
+        rotatez = 90;
+      otherwise
+        rotatez = 0;
+    end
   end
+  sens.chanpos = ft_warp_apply(rotate([0 0 rotatez]), sens.chanpos, 'homogenous');
 end
-sens.chanpos = ft_warp_apply(rotate([0 0 rz]), sens.chanpos, 'homogenous');
 
 % determine the 3D channel positions
-pnt   = sens.chanpos;
+pos   = sens.chanpos;
 label = sens.label;
 
 if strcmpi(style, '3d')
-  layout.pos   = pnt;
+  layout.pos   = pos;
   layout.label = label;
 else
-  prj = elproj(pnt, method);
+  if isempty(viewpoint)
+    % projection other than viewpoint-specific orthographic projection is requested, use elproj
+    prj = elproj(pos, projmethod);
+    
+  else
+    % apply viewpoint-specific orthographic projection
+    % deal with coordinate system
+    if isempty(sens.coordsys)
+      error('no coordinate system found, elec/grad in unknown coordinate system, use ft_determine_coordsys')
+    end
+    
+    % determine auto view if requested
+    switch sens.coordsys
+      case {'tal','mni'}
+        if strcmp(viewpoint,'auto')
+          % simple automatic determination of 'ideal' viewpoint
+          % first, depth or not: if Xvar (l/r axis) is bigger than both Yvar (post/ant axis) and Zvar (top/bottom axis), it's a depth
+          % if yes, superior (screw inferior) is more appriorate if Yvar > Zvar, otherwise posterior (screw anterior)
+          % if no, it's left/right, sign of mean(X) indicates which side the grid is on (note, for interhemispheric grids, both left/right (doenst) work)
+          posvar = var(pos);
+          if (posvar(1)>posvar(2)) && (posvar(1)>posvar(3)) % if they're roughly equal, it's likely a diagonal depth, and any view would (not) work
+            if posvar(2)>posvar(3)
+              viewpoint = 'superior';
+            else
+              viewpoint = 'posterior';
+            end
+          else
+            if sign(mean(pos(:,1))) == -1
+              viewpoint = 'left';
+            else
+              viewpoint = 'right';
+            end
+          end
+        end
+      otherwise
+        error(['cfg.viewpoint = ''auto'' is not supported for coordinate system ' sens.coordsys])
+    end
+    
+    % 3D to 2D
+    prj = getorthoviewpos(pos,sens.coordsys,viewpoint);
+  end
   
   % this copy will be used to determine the minimum distance between channels
   % we need a copy because prj retains the original positions, and
