@@ -58,9 +58,9 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.headshape   = surface mesh (e.g. pial, head, etc) to be used for generating a layout outline for cfg.ieegview
 %                     Needs to be in same coordinate space as electrodes. See FT_READ_HEADSHAPE
 %   cfg.mri         = mri to be used for generating a brain outline as layout outline for cfg.ieegview
-%                     Anatomy needs to be in same coordinate space as electrodes. See FT_READ_MRI 
-%                     Mri needs to be segmented and contain a 'brain' field. If not, segmentation is attempted automatically. 
-%                     See FT_VOLUMESEGMENT. 
+%                     Anatomy needs to be in same coordinate space as electrodes. See FT_READ_MRI
+%                     Mri needs to be segmented and contain a 'brain' field. If not, segmentation is attempted automatically.
+%                     See FT_VOLUMESEGMENT.
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
@@ -164,7 +164,7 @@ cfg.skipcomnt    = ft_getopt(cfg, 'skipcomnt',  'no');
 cfg.overlap      = ft_getopt(cfg, 'overlap',    'shift');
 cfg.ieegview     = ft_getopt(cfg, 'ieegview',   []);
 cfg.headshape    = ft_getopt(cfg, 'headshape',  []); % separate form cfg.mesh
-cfg.mri          = ft_getopt(cfg, 'mri',        []); 
+cfg.mri          = ft_getopt(cfg, 'mri',        []);
 
 % headshape/mri are mutually exclusive
 if ~isempty(cfg.headshape) && ~isempty(cfg.mri)
@@ -426,13 +426,13 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     % look at the data to determine the overlapping channels
     cfg.channel  = ft_channelselection(cfg.channel, elec.label);
     chanindx     = match_str(elec.label, cfg.channel);
-    coords       = elec.chanpos(chanindx,:);
+    pos          = elec.chanpos(chanindx,:);
     label        = elec.label(chanindx);
   else
-    coords       = elec.chanpos;
+    pos          = elec.chanpos;
     label        = elec.label;
   end
-  nchan = size(coords,1);
+  nchan = size(pos,1);
   
   % determine auto view
   if strcmp(cfg.ieegview,'auto')
@@ -440,15 +440,15 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     % first, depth or not: if Xvar (l/r axis) is bigger than both Yvar (post/ant axis) and Zvar (top/bottom axis), it's a depth
     % if yes, superior (screw inferior) is more appriorate if Yvar > Zvar, otherwise posterior (screw anterior)
     % if no, it's left/right, sign of mean(X) indicates which side the grid is on (note, for interhemispheric grids, both left/right (doenst) work)
-    coordvar = var(coords);
-    if (coordvar(1)>coordvar(2)) && (coordvar(1)>coordvar(3)) % if they're roughly equal, it's likely a diagonal depth, and any view would (not) work
-      if coordvar(2)>coordvar(3)
+    posvar = var(pos);
+    if (posvar(1)>posvar(2)) && (posvar(1)>posvar(3)) % if they're roughly equal, it's likely a diagonal depth, and any view would (not) work
+      if posvar(2)>posvar(3)
         cfg.ieegview = 'superior';
       else
         cfg.ieegview = 'posterior';
       end
     else
-      if sign(mean(coords(:,1))) == -1
+      if sign(mean(pos(:,1))) == -1
         cfg.ieegview = 'left';
       else
         cfg.ieegview = 'right';
@@ -457,48 +457,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   end
   
   % 3D to 2D
-  switch cfg.ieegview
-    % rotations below are all such that the Z dimension can de discarded (i.e. Z is the 'viewing axis')
-    
-    case 'left'
-      % create and apply view(-90,0) transformation matrix, extract x/y
-      transmat = viewmtx(-90,0); %
-      pos      = ft_warp_apply(transmat,coords,'homogenous');
-      pos      = pos(:,[1 2]); 
-      
-    case 'right' 
-      % create and apply view(90,0) transformation matrix, extract x/y
-      transmat = viewmtx(90,0); %
-      pos      = ft_warp_apply(transmat,coords,'homogenous');
-      pos      = pos(:,[1 2]);
-      
-    case 'superior'
-      % create and apply view(0,90) transformation matrix, extract x/y
-      transmat = viewmtx(0,90); %
-      pos      = ft_warp_apply(transmat,coords,'homogenous');
-      pos      = pos(:,[1 2]);
-      
-    case 'inferior'
-      % create and apply view(180,-90) transformation matrix, extract x/y
-      transmat = viewmtx(180,-90); %
-      pos      = ft_warp_apply(transmat,coords,'homogenous');
-      pos      = pos(:,[1 2]);
-      
-    case 'posterior'
-      % create and apply view(0,0) transformation matrix, extract x/y
-      transmat = viewmtx(0,0); %
-      pos      = ft_warp_apply(transmat,coords,'homogenous');
-      pos      = pos(:,[1 2]);
-      
-    case 'anterior'
-      % create and apply view(180,0) transformation matrix, extract x/y
-      transmat = viewmtx(180,0); %
-      pos      = ft_warp_apply(transmat,coords,'homogenous');
-      pos      = pos(:,[1 2]);
-      
-    otherwise
-      error(['cfg.ieegview = ' cfg.ieegview ' is not supported'])
-  end
+  pos = getorthoviewpos(pos,elec.coordsys,cfg.ieegview);
   
   % compute width/height based on distance between electrodes
   Xdist   = abs(bsxfun(@minus,pos(:,1),pos(:,1)'));
@@ -567,15 +526,14 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     
     % match units with that of electrodes
     outlbase = ft_convert_units(outlbase,elecunit);
-
+    
     % generate outline based on matlab version
     if ft_platform_supports('boundary')
       
       % extract points indicating brain
       braincoords = outlbase.pos;
       % apply rotation from above (!) to coordinates and extract XY
-      braincoords = ft_warp_apply(transmat,braincoords,'homogenous');
-      braincoords = braincoords(:, [1 2]);
+      braincoords = getorthoviewpos(braincoords,elec.coordsys,cfg.ieegview);
       
       % get outline
       k = boundary(braincoords,.8);
@@ -584,7 +542,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     else % fallback, sad!
       
       % plot mesh, rotate, screencap, and trace frame to generate outline
-      outlbase.pos = ft_warp_apply(transmat,outlbase.pos,'homogenous');
+      outlbase.pos = getorthoviewpos(outlbase.pos,elec.coordsys,cfg.ieegview);
       h = figure('visible','off');
       ft_plot_mesh(outlbase,'facecolor',[0 0 0], 'EdgeColor', 'none');
       view([0 90])
@@ -1110,8 +1068,8 @@ if ~strcmp(cfg.style, '3d')
       % placeholder
     end
     
-    % Below, it is assumed that 'a mask' is always preferred to 'no mask'. In the worst case scenario, it would lead to ugly topoplots, if the 
-    % user requests them. 
+    % Below, it is assumed that 'a mask' is always preferred to 'no mask'. In the worst case scenario, it would lead to ugly topoplots, if the
+    % user requests them.
     % no mask is present, generate mask as boundary/convex hull of pos+width/height
     if ~isfield(layout, 'mask') || (isfield(layout,'mask') && isempty(layout.mask))
       % get index of non-COMNT/SCALE in case present
@@ -1478,3 +1436,43 @@ while (~isempty(i) && l<50)
 end
 
 xy = [x; y];
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+% obtain XY pos from XYZ pos as orthographic projections dependent on viewpoint/coordsys 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function pos = getorthoviewpos(pos,coordsys,viewpoint)
+% 
+if size(pos,2)~=3
+  error('XYZ coordinates needed to obtain orthographic projections based on viewpoint')
+end
+
+% create view(az,el) transformation matrix
+switch coordsys
+  case {'tal','mni'}
+    switch viewpoint
+      case 'left'
+        transmat = viewmtx(-90,0); 
+      case 'right'
+        transmat = viewmtx(90,0); 
+      case 'superior'
+        transmat = viewmtx(0,90); 
+      case 'inferior'
+        transmat = viewmtx(180,-90); 
+      case 'posterior'
+        transmat = viewmtx(0,0); 
+      case 'anterior'
+        transmat = viewmtx(180,0); 
+      otherwise
+        error(['orthographic projection using viewpoint ' viewpoint ' is not supported'])
+    end
+  otherwise
+    error(['orthographic projection using viewpoint ' viewpoint ' is not supported for coordinate system ' coordsys])
+end
+
+% extract xy
+pos      = ft_warp_apply(transmat,pos,'homogenous');
+pos      = pos(:,[1 2]);
+
