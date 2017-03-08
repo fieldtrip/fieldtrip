@@ -22,6 +22,26 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
 %   cfg.projection  = string, 2D projection method can be 'stereographic', 'orthographic',
 %                     'polar', 'gnomic' or 'inverse' (default = 'polar')
+%                     When 'orthographic', cfg.viewpoint can be used to indicate to specificy projection (keep empty for legacy projection)
+%   cfg.viewpoint   = string indicating 'viewpoint' used for orthographic projection of 3D electrode coordinates to 2D plane
+%                     (requires cfg.projection = 'orthographic')  
+%                     Viewpoints are as follows:
+%                     'left'      = left  sagittal view,    L=anterior, R=posterior, top=top, bottom=bottom
+%                     'right'     = right sagittal view,    L=posterior, R=anterior, top=top, bottom=bottom
+%                     'inferior'  = inferior axial view,    L=R, R=L, top=anterior, bottom=posterior
+%                     'superior'  = superior axial view,    L=L, R=R, top=anterior, bottom=posterior
+%                     'anterior'  = anterior  coronal view, L=R, R=L, top=top, bottom=bottom
+%                     'posterior' = posterior coronal view, L=L, R=R, top=top, bottom=bottom
+%                     'auto'      = automatic guess of the most optimal of the above
+%                      tip: use cfg.viewpoint = auto per iEEG electrode grid/strip/depth for more accurate results
+%                      tip: to obtain overview of e.g. all iEEG electrodes, choose superior/inferior, use cfg.headshape/mri, and
+%                           plot using ft_layoutplot with cfg.box/mask = 'no'
+%   cfg.headshape   = surface mesh (e.g. pial, head, etc) to be used for generating a layout outline using cfg.viewpoint
+%                     If used, needs to be in same coordinate space as cfg.elec/grad/opto/file. See FT_READ_HEADSHAPE
+%   cfg.mri         = mri to be used for generating a brain outline as layout outline for cfg.viewpoint
+%                     If used, needs to be in same coordinate space as cfg.elec/grad/opto/file. 
+%                     Mri needs to be segmented and contain a 'brain' field. If not, segmentation is attempted automatically.
+%                     See FT_READ_MRI and FT_VOLUMESEGMENT.
 %   cfg.elec        = structure with electrode definition, or
 %   cfg.elecfile    = filename containing electrode definition
 %   cfg.grad        = structure with gradiometer definition, or
@@ -42,25 +62,6 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                     overlap is present))
 %   cfg.channel     = 'all', or Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %                     (can be used with most ways for generating a layout)
-%   cfg.ieegview    = string indicating 'viewpoint' used for projecting 3D electrode coordinates to 2D plane for layout
-%                     Useful for intracranial recordings, requires cfg.elec/cfg.elecfile containing 3D coordinates
-%                     Viewpoints are as follows:
-%                     'left'      = left  sagittal view,    L=anterior, R=posterior, top=top, bottom=bottom
-%                     'right'     = right sagittal view,    L=posterior, R=anterior, top=top, bottom=bottom
-%                     'inferior'  = inferior axial view,    L=R, R=L, top=anterior, bottom=posterior
-%                     'superior'  = superior axial view,    L=L, R=R, top=anterior, bottom=posterior
-%                     'anterior'  = anterior  coronal view, L=R, R=L, top=top, bottom=bottom
-%                     'posterior' = posterior coronal view, L=L, R=R, top=top, bottom=bottom
-%                     'auto' = automatic guess of the most optimal of the above
-%                      tip: use cfg.ieegview = auto per electrode grid/strip/depth for most accurate results
-%                      tip: to obtain overview of e.g. all depth electrodes, choose superior/inferior, use cfg.ieeganatomy, and
-%                           plot using ft_layoutplot with cfg.box/mask = 'no'
-%   cfg.headshape   = surface mesh (e.g. pial, head, etc) to be used for generating a layout outline for cfg.ieegview
-%                     Needs to be in same coordinate space as electrodes. See FT_READ_HEADSHAPE
-%   cfg.mri         = mri to be used for generating a brain outline as layout outline for cfg.ieegview
-%                     Anatomy needs to be in same coordinate space as electrodes. See FT_READ_MRI
-%                     Mri needs to be segmented and contain a 'brain' field. If not, segmentation is attempted automatically.
-%                     See FT_VOLUMESEGMENT.
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
@@ -162,13 +163,17 @@ cfg.channel      = ft_getopt(cfg, 'channel',    'all');
 cfg.skipscale    = ft_getopt(cfg, 'skipscale',  'no');
 cfg.skipcomnt    = ft_getopt(cfg, 'skipcomnt',  'no');
 cfg.overlap      = ft_getopt(cfg, 'overlap',    'shift');
-cfg.ieegview     = ft_getopt(cfg, 'ieegview',   []);
+cfg.viewpoint    = ft_getopt(cfg, 'viewpoint',  []);
 cfg.headshape    = ft_getopt(cfg, 'headshape',  []); % separate form cfg.mesh
 cfg.mri          = ft_getopt(cfg, 'mri',        []);
 
 % headshape/mri are mutually exclusive
 if ~isempty(cfg.headshape) && ~isempty(cfg.mri)
   error('cfg.headshape and cfg.mri are mutually exclusive, please use only one of the two')
+end
+% cfg.viewpoint can only be used together with cfg.projection = 'orthographic'
+if ~isempty(cfg.viewpoint) && ~isequal(cfg.projection,'orthographic')
+  error('cfg.viewpoint can only used in the case of orthographic projection')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -399,7 +404,7 @@ elseif isequal(cfg.layout, 'ordered')
   layout.pos(end+1,:) = [x y];
   
   % project 3D coordinates to 2D plane determined by anatomic 'viewpoint', best suited for intracranial recordings,
-elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.elec in the set op elseif's beyond this
+elseif ~isempty(cfg.viewpoint) % doing this here supersedes auto parsing of cfg.elec in the set op elseif's beyond this
   
   % fetch elec
   if ~isempty(cfg.elec) && isstruct(cfg.elec)
@@ -407,7 +412,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   elseif ischar(cfg.elecfile)
     elec = ft_read_sens(cfg.elecfile);
   else
-    error('elec structure required for using cfg.ieegview, use cfg.elec or cfg.elecfile')
+    error('elec structure required for using cfg.viewpoint, use cfg.elec or cfg.elecfile')
   end
   % deal with coordinate system
   if isempty(elec.coordsys)
@@ -432,7 +437,7 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   nchan = size(pos,1);
   
   % determine auto view
-  if strcmp(cfg.ieegview,'auto')
+  if strcmp(cfg.viewpoint,'auto')
     % simple automatic determination of 'ideal' viewpoint
     % first, depth or not: if Xvar (l/r axis) is bigger than both Yvar (post/ant axis) and Zvar (top/bottom axis), it's a depth
     % if yes, superior (screw inferior) is more appriorate if Yvar > Zvar, otherwise posterior (screw anterior)
@@ -440,21 +445,21 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
     posvar = var(pos);
     if (posvar(1)>posvar(2)) && (posvar(1)>posvar(3)) % if they're roughly equal, it's likely a diagonal depth, and any view would (not) work
       if posvar(2)>posvar(3)
-        cfg.ieegview = 'superior';
+        cfg.viewpoint = 'superior';
       else
-        cfg.ieegview = 'posterior';
+        cfg.viewpoint = 'posterior';
       end
     else
       if sign(mean(pos(:,1))) == -1
-        cfg.ieegview = 'left';
+        cfg.viewpoint = 'left';
       else
-        cfg.ieegview = 'right';
+        cfg.viewpoint = 'right';
       end
     end
   end
   
   % 3D to 2D
-  pos = getorthoviewpos(pos,elec.coordsys,cfg.ieegview);
+  pos = getorthoviewpos(pos,elec.coordsys,cfg.viewpoint);
   
   % compute width/height based on distance between electrodes
   Xdist   = abs(bsxfun(@minus,pos(:,1),pos(:,1)'));
@@ -979,10 +984,10 @@ if ~strcmp(cfg.style, '3d')
         outlbase = ft_prepare_mesh(cfgpm, outlbase);
       end
       
-      % check for presence of cfg.ieegview
-      if isempty(cfg.ieegview) 
+      % check for presence of cfg.viewpoint
+      if isempty(cfg.viewpoint) 
         warning('cfg.headshape/mri is supplied without explicit orthographic projection viewpoint, assuming superior view')
-        cfg.ieegview = 'superior';
+        cfg.viewpoint = 'superior';
       end
       
       % check coordinate system of outlbase
@@ -1010,7 +1015,7 @@ if ~strcmp(cfg.style, '3d')
         % extract points indicating brain
         braincoords = outlbase.pos;
         % apply orthographic projection and extract XY
-        braincoords = getorthoviewpos(braincoords,outlbase.coordsys,cfg.ieegview);
+        braincoords = getorthoviewpos(braincoords,outlbase.coordsys,cfg.viewpoint);
         
         % get outline
         k = boundary(braincoords,.8);
@@ -1019,7 +1024,7 @@ if ~strcmp(cfg.style, '3d')
       else % fallback, sad!
         
         % plot mesh in rotated view, rotate, screencap, and trace frame to generate outline
-        outlbase.pos = getorthoviewpos(outlbase.pos,outlbase.coordsys,cfg.ieegview);
+        outlbase.pos = getorthoviewpos(outlbase.pos,outlbase.coordsys,cfg.viewpoint);
         h = figure('visible','off');
         ft_plot_mesh(outlbase,'facecolor',[0 0 0], 'EdgeColor', 'none');
         view([0 90])
