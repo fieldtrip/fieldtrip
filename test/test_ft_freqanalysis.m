@@ -23,25 +23,25 @@ for k = 1:numel(datainfo)
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'fourier', 'yes');
   fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_fourier_trl_',datainfo(k).datatype]);
   load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
-  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  [ok,msg] = isalmostequal(freq, datanew, 'reltol', 1e-6);
   if ~ok, error('stored and computed data not identical: %s', msg{:}); end
   
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'powandcsd', 'yes');
   fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_powandcsd_trl_',datainfo(k).datatype]);
   load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
-  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  [ok,msg] = isalmostequal(freq, datanew, 'reltol', 1e-6);
   if ~ok, error('stored and computed data not identical: %s', msg{:}); end
   
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'pow', 'yes');
 %   fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_pow_trl_',datainfo(k).datatype]);
 %   load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
-%   [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+%   [ok,msg] = isalmostequal(freq, datanew, 'reltol', 1e-6);
 %   if ~ok, error('stored and computed data not identical: %s', msg{:}); end
   
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'powandcsd', 'no');
   fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmfft_powandcsd_',datainfo(k).datatype]);
   load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
-  [ok,msg] = identical(freq, datanew, 'reltol', 1e-5);
+  [ok,msg] = isalmostequal(freq, datanew, 'reltol', 1e-5);
   if ~ok, error('stored and computed data not identical: %s', msg{:}); end
 
   datanew = freqanalysisMtmfft(datainfo(k), writeflag, version, 'pow', 'no');
@@ -50,7 +50,7 @@ for k = 1:numel(datainfo)
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
   
-  [ok,msg] = identical(freq, datanew,'reltol',1e-6);
+  [ok,msg] = isalmostequal(freq, datanew,'reltol',1e-6);
   if ~ok
     error('stored and computed data not identical: %s', msg{:});
   end
@@ -60,13 +60,13 @@ for k = 1:numel(datainfo)
   datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'fourier', 'yes');
   fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmconvol_fourier_trl_',datainfo(k).datatype]);
   load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
-  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  [ok,msg] = isalmostequal(freq, datanew, 'reltol', 1e-6);
   if ~ok, error('stored and computed data not identical: %s', msg{:}); end
 
   datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'powandcsd', 'yes');
   fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmconvol_powandcsd_trl_',datainfo(k).datatype]);
   load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
-  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  [ok,msg] = isalmostequal(freq, datanew, 'reltol', 1e-6);
   if ~ok, error('stored and computed data not identical: %s', msg{:}); end
 
   datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'pow', 'yes');
@@ -74,7 +74,7 @@ for k = 1:numel(datainfo)
   datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'powandcsd', 'no');
   fname   = fullfile(datainfo(k).origdir,version,'freq',datainfo(k).type,['freq_mtmconvol_powandcsd_',datainfo(k).datatype]);
   load(fname); datanew = rmfield(datanew, 'cfg'); freq = rmfield(freq, 'cfg');
-  [ok,msg] = identical(freq, datanew, 'reltol', 1e-6);
+  [ok,msg] = isalmostequal(freq, datanew, 'reltol', 1e-6);
   if ~ok, error('stored and computed data not identical: %s', msg{:}); end
 
   datanew = freqanalysisMtmconvol(datainfo(k), writeflag, version, 'pow', 'no');
@@ -83,7 +83,7 @@ for k = 1:numel(datainfo)
   datanew = rmfield(datanew, 'cfg'); % these are per construction different if writeflag = 0;
   freq    = rmfield(freq,    'cfg');
   
-  [ok,msg] = identical(freq, datanew,'reltol',eps*1e6);
+  [ok,msg] = isalmostequal(freq, datanew,'reltol',eps*1e6);
   if ~ok
     error('stored and computed data not identical: %s', msg{:});
   end

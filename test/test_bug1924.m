@@ -35,7 +35,7 @@ z = xcorr(x, y, 'coeff');
 figure
 plot(z)
 
-assert(identical(x, y, 'reltol', 0.1));
+assert(isalmostequal(x, y, 'reltol', 0.1));
 % They are quite different, hence the tolerance of 10%. This might well be
 % due to the BESA conversion, in which the numbers have to be rescaled to
 % fit in the EDF file. On average the calibration seems quite OK.

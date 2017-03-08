@@ -568,8 +568,7 @@ if ~exist('dimord', 'var')
   % if it does, it might help in diagnosis to have a very informative warning message
   % since there have been problems with trials not being selected correctly due to the warning going unnoticed
   % it is better to throw an error than a warning
-  warning('could not determine dimord of "%s" in the following data', field)
-  disp(data);
+  warning_dimord_could_not_be_determined(field,data);
   
   dimtok(cellfun(@isempty, dimtok)) = {'unknown'};
   if all(~cellfun(@isempty, dimtok))
@@ -586,6 +585,41 @@ dimord = [prefix dimord];
 
 
 end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function warning_dimord_could_not_be_determined(field,data)
+  msg=sprintf('could not determine dimord of "%s" in:',field);
+
+  if isempty(which('evalc'))
+    % May not be available in Octave
+    content=sprintf('object of type ''%s''',class(data));
+  else
+    % in Octave, disp typically shows full data arrays which can result in
+    % very long output. Here we take out the middle part of the output if
+    % the output is very long (more than 40 lines)
+    full_content=evalc('disp(data)');
+    max_pre_post_lines=20;
+
+    newline_pos=find(full_content==sprintf('\n'));
+    newline_pos=newline_pos(max_pre_post_lines:(end-max_pre_post_lines));
+
+    if numel(newline_pos)>=2
+      pre_end=newline_pos(1)-1;
+      post_end=newline_pos(end)+1;
+
+      content=sprintf('%s\n\n... long output omitted ...\n\n%s',...
+                                full_content(1:pre_end),...
+                                full_content(post_end:end));
+    else
+      content=full_content;
+    end
+  end
+
+  warning('%s\n\n%s', msg,content);
+end % function warning_dimord_could_not_be_determined
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

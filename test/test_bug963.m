@@ -92,9 +92,9 @@ for i=1:length(dataset)
 %     hdr.grad = rmfield(hdr.grad, 'labelorg');
 %   end
 %   
-  assert(identical(hdr.grad,           grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
-  assert(identical(reference.grad,     grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
-  assert(identical(reference.hdr.grad, grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
+  assert(isalmostequal(hdr.grad,           grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
+  assert(isalmostequal(reference.grad,     grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
+  assert(isalmostequal(reference.hdr.grad, grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
   
   allhdr{i}  = hdr;
   allgrad{i} = grad;

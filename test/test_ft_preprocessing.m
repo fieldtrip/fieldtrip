@@ -34,7 +34,7 @@ for k = 1:numel(datainfo)
   
   % do the comparison with the header removed, the output argument still contains the header
   %assert(isequaln(data, datanew2));  
-  [ok,msg] = identical(data, datanew2,'reltol',eps*1e6);
+  [ok,msg] = isalmostequal(data, datanew2,'reltol',eps*1e6);
   disp(['now you are in k=' num2str(k)]);
   if ~ok
     error('stored and computed data not identical: %s', msg{:});

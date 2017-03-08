@@ -197,14 +197,11 @@ if haspos
   end
 end
 
-% use an anonymous function
-assign = @(var, val) assignin('caller', var, val);
-
 for p = 1:length(cfg.parameter)
   fprintf('selecting %s from the first input argument\n', cfg.parameter{p});
   % create the local variables x1, x2, ...
   for i=1:length(varargin)
-    assign(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter{p}));
+    assign_var(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter{p}));
   end
 
   % create the local variables s and m
@@ -328,7 +325,7 @@ for p = 1:length(cfg.parameter)
             for j=1:length(varargin)
               % rather than working with x1 and x2, we need to work on its elements
               % xx1 is one element of the x1 cell-array
-              assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
+              assign_var(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
             end
 
             % gather xx1, xx2, ... into a cell-array
@@ -426,7 +423,7 @@ for p = 1:length(cfg.parameter)
             for j=1:length(varargin)
               % rather than working with x1 and x2, we need to work on its elements
               % xx1 is one element of the x1 cell-array
-              assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
+              assign_var(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
             end
 
             % gather xx1, xx2, ... into a cell-array
@@ -479,6 +476,17 @@ ft_postamble previous   varargin
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
+
+
+function assign_var(var, val)
+% Note: using an anonymous function as follows does not work in Octave:
+%
+% **    assign_var = @(var, val) assignin('caller', var, val);
+%
+% Also using the name 'assign' does not seem to work, hence 'assign_var'
+
+   assignin('caller', var, val);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
