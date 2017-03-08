@@ -412,9 +412,6 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   % deal with coordinate system
   if isempty(elec.coordsys)
     error('no elec.coordsys found, electrodes in unknown coordinate system, use ft_determine_coordsys')
-  elseif ~any(strcmp(elec.coordsys,{'tal','mni'}))
-    % TO IMPLEMENT: coordinate system should be converted when possible
-    error(['elec.coordys = ' elec.coordsys ' is not supported for using cfg.ieegview, please convert to either tal/mni'])
   else
     eleccoordsys = elec.coordsys;
   end
@@ -469,13 +466,6 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   width   = ones(nchan,1) * sizefac;
   height  = ones(nchan,1) * sizefac * (4/5);
   
-  %   % generate mask as the convex hull around the electrode cloud, and grow it from the center with sizefac
-  %   mask     = pos(convhull(pos(:,1),pos(:,2)),:);
-  %   maskcent = mean(mask,1);
-  %   centfac  = mask-maskcent;
-  %   centfac  = centfac ./ max(abs(centfac),[],2);
-  %   mask     = mask + (centfac * sizefac);
-  
   % put in layout
   layout.pos     = pos;
   layout.label   = label;
@@ -483,121 +473,9 @@ elseif ~isempty(cfg.ieegview) % doing this here supersedes auto parsing of cfg.e
   layout.height  = height;
   layout.outline = [];
   
-  
-  % layout outline generation
-  if ~isempty(cfg.headshape) || ~isempty(cfg.mri)
-    % parse headshape/mri
-    if ~isempty(cfg.headshape)
-      if ischar(cfg.headshape) && exist(cfg.headshape, 'file')
-        fprintf('reading headshape from file %s\n', cfg.headshape);
-        outlbase = ft_read_headshape(cfg.headshape);
-      elseif ft_datatype(cfg.headshape,'mesh')
-        outlbase = cfg.headshape;
-      else
-        error('cfg.headshape does not contain headshape')
-      end
-      outlbase = ft_datatype_headmodel(outlbase);
-    elseif ~isempty(cfg.mri)
-      if ischar(cfg.mri) && exist(cfg.mri, 'file')
-        fprintf('reading MRI from file %s\n', cfg.mri);
-        outlbase = ft_read_mri(cfg.mri);
-      elseif ft_datatype(cfg.mri,'volume')
-        outlbase = cfg.mri;
-      else
-        error('cfg.mri does not contain mri')
-      end
-      outlbase = ft_datatype_volume(outlbase);
-      % create mesh from anatomical field, and use as headshape below
-      cfgpm = [];
-      cfgpm.method      = 'projectmesh';
-      cfgpm.tissue      = 'brain';
-      cfgpm.numvertices = 1e5;
-      outlbase = ft_prepare_mesh(cfgpm, outlbase);
-    end
-    
-    % check coordinate system of outlbase
-    if isempty(outlbase.coordsys)
-      error('no coordsys field found in mri/headshape, coordinate system unknown, use ft_determine_coordsys')
-    elseif ~any(strcmp(outlbase.coordsys,{'tal','mni'})) % FIXME: coordinate system should be converted when possible
-      error(['mri/headshape.coordys = ' outlbase.coordsys ' is not supported for creating outline by orthographic projection, please convert to either tal/mni'])
-    elseif ~isequal(outlbase.coordsys,eleccoordsys)
-      error('coordinate system of mri/headshape does not match that of electrodes')
-    end
-    
-    % match units with that of electrodes
-    outlbase = ft_convert_units(outlbase,elecunit);
-    
-    % generate outline based on matlab version
-    if ft_platform_supports('boundary')
-      
-      % extract points indicating brain
-      braincoords = outlbase.pos;
-      % apply rotation from above (!) to coordinates and extract XY
-      braincoords = getorthoviewpos(braincoords,elec.coordsys,cfg.ieegview);
-      
-      % get outline
-      k = boundary(braincoords,.8);
-      outline = braincoords(k,:);
-      
-    else % fallback, sad!
-      
-      % plot mesh, rotate, screencap, and trace frame to generate outline
-      outlbase.pos = getorthoviewpos(outlbase.pos,elec.coordsys,cfg.ieegview);
-      h = figure('visible','off');
-      ft_plot_mesh(outlbase,'facecolor',[0 0 0], 'EdgeColor', 'none');
-      view([0 90])
-      axis tight
-      xlim = get(gca,'xlim');
-      ylim = get(gca,'ylim');
-      set(gca,'OuterPosition',[0.2 0.2 .6 .6]) % circumvent weird matlab bug, wth?
-      % extract frame for tracing
-      drawnow % need to flush buffer, otherwise frame will not get extracted properly
-      frame     = getframe(h);
-      close(h)
-      imtotrace = double(~logical(sum(frame.cdata,3))); % needs to be binary to trace
-      % image is not in regular xy space, flip, and transpose
-      imtotrace = flipud(imtotrace).';
-      
-      % trace image generated above
-      [row col] = find(imtotrace,1,'first'); % set arbitrary starting point
-      trace = bwtraceboundary(imtotrace,[row, col],'N');
-      
-      % convert to sens coordinates
-      x = trace(:,1);
-      y = trace(:,2);
-      x = x - min(x);
-      x = x ./ max(x);
-      x = x .* (xlim(2)-xlim(1));
-      x = x - abs(xlim(1));
-      y = y - min(y);
-      y = y ./ max(y);
-      y = y .* (ylim(2)-ylim(1));
-      y = y - abs(ylim(1));
-      
-      %
-      outline = [x y];
-    end
-    
-    % subsample outline
-    if size(outline,1)>5e3 % 5e3 points should be more than enough to get an outine with acceptable detail
-      outline = outline(1:floor(size(outline,1)/5e3):end,:);
-    end
-    
-    % save outline
-    layout.outline = {outline};
-  end
-  
-  %   % add SCALE and COMNT (using outline as reference, in nearly all, this should suffice)
-  %   layout.label{end+1}  = 'SCALE';
-  %   layout.width(end+1)  = sizefac;
-  %   layout.height(end+1) = sizefac * (4/5);
-  %   layout.pos(end+1,:)  = [min(outline(:,1)) - sizefac*2 min(outline(:,2)) - sizefac*2];
-  %   layout.label{end+1}  = 'COMNT';
-  %   layout.width(end+1)  = sizefac;
-  %   layout.height(end+1) = sizefac * (4/5);
-  %   layout.pos(end+1,:)  = [max(outline(:,1)) + sizefac*2 min(outline(:,2)) - sizefac*2];
-  
-  
+  % temporary workaround
+  sens = elec;
+   
   % try to generate layout from other configuration options
 elseif ischar(cfg.layout)
   
@@ -645,60 +523,67 @@ elseif ischar(cfg.layout)
   elseif ~ft_filetype(cfg.layout, 'layout')
     % assume that cfg.layout is an electrode file
     fprintf('creating layout from electrode file %s\n', cfg.layout);
-    layout = sens2lay(ft_read_sens(cfg.layout), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+    sens = ft_read_sens(cfg.layout);
+    layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   end
   
 elseif ischar(cfg.elecfile)
   fprintf('creating layout from electrode file %s\n', cfg.elecfile);
-  layout = sens2lay(ft_read_sens(cfg.elecfile), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  sens = ft_read_sens(cfg.elecfile);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
   fprintf('creating layout from cfg.elec\n');
-  layout = sens2lay(cfg.elec, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  sens = ft_datatype_sens(cfg.elec);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   
 elseif isfield(data, 'elec') && isstruct(data.elec)
   fprintf('creating layout from data.elec\n');
   data = ft_checkdata(data);
-  layout = sens2lay(data.elec, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  sens = ft_datatype_sens(data.elec);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   
 elseif ischar(cfg.gradfile)
   fprintf('creating layout from gradiometer file %s\n', cfg.gradfile);
-  layout = sens2lay(ft_read_sens(cfg.gradfile), cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  sens = ft_read_sens(cfg.gradfile);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
   fprintf('creating layout from cfg.grad\n');
-  layout = sens2lay(cfg.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+  sens = ft_datatype_sens(cfg.grad);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
   
 elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
   data = ft_checkdata(data);
-  layout = sens2lay(data.grad, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
-  
+  sens = ft_datatype_sens(data.grad);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap);
+ 
 elseif ischar(cfg.optofile)
   fprintf('creating layout from optode file %s\n', cfg.optofile);
-  opto = ft_read_sens(cfg.optofile);
+  sens = ft_read_sens(cfg.optofile);
   if (hasdata)
-    layout = opto2lay(opto, data.label);
+    layout = opto2lay(sens, data.label);
   else
-    layout = opto2lay(opto, opto.label);
+    layout = opto2lay(sens, sens.label);
   end
-  
+
 elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
   fprintf('creating layout from cfg.opto\n');
-  opto = cfg.opto;
+  sens = cfg.opto;
   if (hasdata)
-    layout = opto2lay(opto, data.label);
+    layout = opto2lay(sens, data.label);
   else
-    layout = opto2lay(opto, opto.label);
+    layout = opto2lay(sens, sens.label);
   end;
   
 elseif isfield(data, 'opto') && isstruct(data.opto)
   fprintf('creating layout from data.opto\n');
-  opto = data.opto;
+  sens = data.opto;
   if (hasdata)
-    layout = opto2lay(opto, data.label);
+    layout = opto2lay(sens, data.label);
   else
-    layout = opto2lay(opto, opto.label);
+    layout = opto2lay(sens, sens.label);
   end;
   
 elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
@@ -1065,7 +950,118 @@ if ~strcmp(cfg.style, '3d')
     
     % a mesh/mri was specified for outline generation (in case an outline already exist, add it to it)
     if (~isempty(cfg.headshape) || ~isempty(cfg.mri))
-      % placeholder
+      % parse headshape/mri
+      if ~isempty(cfg.headshape)
+        if ischar(cfg.headshape) && exist(cfg.headshape, 'file')
+          fprintf('reading headshape from file %s\n', cfg.headshape);
+          outlbase = ft_read_headshape(cfg.headshape);
+        elseif ft_datatype(cfg.headshape,'mesh')
+          outlbase = cfg.headshape;
+        else
+          error('cfg.headshape does not contain headshape')
+        end
+        outlbase = ft_datatype_headmodel(outlbase);
+      elseif ~isempty(cfg.mri)
+        if ischar(cfg.mri) && exist(cfg.mri, 'file')
+          fprintf('reading MRI from file %s\n', cfg.mri);
+          outlbase = ft_read_mri(cfg.mri);
+        elseif ft_datatype(cfg.mri,'volume')
+          outlbase = cfg.mri;
+        else
+          error('cfg.mri does not contain mri')
+        end
+        outlbase = ft_datatype_volume(outlbase);
+        % create mesh from anatomical field, and use as headshape below
+        cfgpm = [];
+        cfgpm.method      = 'projectmesh';
+        cfgpm.tissue      = 'brain';
+        cfgpm.numvertices = 1e5;
+        outlbase = ft_prepare_mesh(cfgpm, outlbase);
+      end
+      
+      % check for presence of cfg.ieegview
+      if isempty(cfg.ieegview) 
+        warning('cfg.headshape/mri is supplied without explicit orthographic projection viewpoint, assuming superior view')
+        cfg.ieegview = 'superior';
+      end
+      
+      % check coordinate system of outlbase
+      if isempty(outlbase.coordsys)
+        error('no coordsys field found in mri/headshape, coordinate system unknown, use ft_determine_coordsys')
+      end
+      if exist('sens','var')
+        if ~isfield(sens,'coordsys')
+          error('no coordsys field found in elec/grad/opto, coordinate system unknown, use ft_determine_coordsys')
+        elseif ~isequal(outlbase.coordsys,sens.coordsys)
+          error('coordinate system of mri/headshape does not match that of sensors')
+        end
+      else
+        error('using cfg.headshape/mri to generate layout outline is not supported without providing elec/grad structure/file')
+      end
+      
+      % match units with that of electrodes
+      if exist('sens','var')
+        outlbase = ft_convert_units(outlbase,sens.unit);
+      end
+      
+      % generate outline based on matlab version
+      if ft_platform_supports('boundary')
+        
+        % extract points indicating brain
+        braincoords = outlbase.pos;
+        % apply orthographic projection and extract XY
+        braincoords = getorthoviewpos(braincoords,outlbase.coordsys,cfg.ieegview);
+        
+        % get outline
+        k = boundary(braincoords,.8);
+        outline = braincoords(k,:);
+        
+      else % fallback, sad!
+        
+        % plot mesh in rotated view, rotate, screencap, and trace frame to generate outline
+        outlbase.pos = getorthoviewpos(outlbase.pos,outlbase.coordsys,cfg.ieegview);
+        h = figure('visible','off');
+        ft_plot_mesh(outlbase,'facecolor',[0 0 0], 'EdgeColor', 'none');
+        view([0 90])
+        axis tight
+        xlim = get(gca,'xlim');
+        ylim = get(gca,'ylim');
+        set(gca,'OuterPosition',[0.2 0.2 .6 .6]) % circumvent weird matlab bug, wth?
+        % extract frame for tracing
+        drawnow % need to flush buffer, otherwise frame will not get extracted properly
+        frame     = getframe(h);
+        close(h)
+        imtotrace = double(~logical(sum(frame.cdata,3))); % needs to be binary to trace
+        % image is not in regular xy space, flip, and transpose
+        imtotrace = flipud(imtotrace).';
+        
+        % trace image generated above
+        [row col] = find(imtotrace,1,'first'); % set arbitrary starting point
+        trace = bwtraceboundary(imtotrace,[row, col],'N');
+        
+        % convert to sens coordinates
+        x = trace(:,1);
+        y = trace(:,2);
+        x = x - min(x);
+        x = x ./ max(x);
+        x = x .* (xlim(2)-xlim(1));
+        x = x - abs(xlim(1));
+        y = y - min(y);
+        y = y ./ max(y);
+        y = y .* (ylim(2)-ylim(1));
+        y = y - abs(ylim(1));
+        
+        %
+        outline = [x y];
+      end
+      
+      % subsample outline
+      if size(outline,1)>5e3 % 5e3 points should be more than enough to get an outine with acceptable detail
+        outline = outline(1:floor(size(outline,1)/5e3):end,:);
+      end
+      
+      % save outline
+      layout.outline{end+1} = outline;
     end
     
     % Below, it is assumed that 'a mask' is always preferred to 'no mask'. In the worst case scenario, it would lead to ugly topoplots, if the
@@ -1260,10 +1256,6 @@ return % function readlay
 % convert 3D electrode positions into 2D layout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function layout = sens2lay(sens, rz, method, style, overlap)
-
-% ensure that the sens structure is according to the latest conventions,
-% i.e. deal with backward compatibility
-sens = ft_datatype_sens(sens);
 
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 % this not only removed the linear projections, but also ensures that the channel labels are correctly named
