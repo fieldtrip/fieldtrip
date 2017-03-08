@@ -3,7 +3,6 @@ function test_ft_movieplotTFR
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_movieplotTFR
 % TEST ft_movieplotTFR ft_movieplotER
 
 % the frequency analysis is based on the tutorials

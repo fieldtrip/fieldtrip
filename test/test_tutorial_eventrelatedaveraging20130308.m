@@ -3,7 +3,6 @@ function test_tutorial_eventrelatedaveraging20130308
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_eventrelatedaveraging20130308
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this reflects  http://www.fieldtriptoolbox.org/tutorial/eventrelatedaveraging

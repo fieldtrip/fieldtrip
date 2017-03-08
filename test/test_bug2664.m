@@ -3,7 +3,6 @@ function test_bug2664
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2664
 % TEST ft_sourceanalysis ft_checkdata
 
 % use FieldTrip defaults instead of personal defaults

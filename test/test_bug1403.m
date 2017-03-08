@@ -3,7 +3,6 @@ function test_bug1403
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1403
 % TEST ft_read_header
 
 cfg=[];

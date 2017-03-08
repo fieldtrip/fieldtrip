@@ -3,7 +3,6 @@ function test_bug3196
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST test_bug3196
 % TEST ft_prepare_headmodel prepare_mesh_tetrahedral prepare_mesh_hexahedral
 
 n = 71;

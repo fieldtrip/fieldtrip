@@ -3,7 +3,6 @@ function test_bug1448
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1448
 
 % this function tests whether the mask is kept inside the call to singleplotTFR
 % load data

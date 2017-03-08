@@ -3,7 +3,6 @@ function test_bug2085
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2085
 % TEST ft_senstype ft_senslabel
 
 % use FieldTrip defaults instead of personal defaults

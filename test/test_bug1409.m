@@ -3,7 +3,6 @@ function test_bug1409
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1409
 % TEST ft_selectdata
 
 % the issue is that ft_selectdata_new removes the dimord

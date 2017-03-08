@@ -3,7 +3,6 @@ function test_bug2556
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2556
 % TEST ft_sourceparcellate ft_checkdata
 
 [ftver, ftpath] = ft_version;

@@ -3,7 +3,6 @@ function test_ft_componentanalysis(datainfo, writeflag, version)
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_componentanalysis
 % ft_componentanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk

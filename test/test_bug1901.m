@@ -3,7 +3,6 @@ function test_bug1901
 % MEM 2500mb
 % WALLTIME 00:15:00
 
-% TEST test_bug1901
 % TEST ft_prepare_leadfield ft_prepare_sourcemodel prepare_headmodel ft_convert_units
 
 % use FieldTrip defaults instead of personal defaults

@@ -3,7 +3,6 @@ function test_bug1998
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST test_bug1998
 % TEST ft_preprocessing ft_read_data read_neuralynx_ncs
 
 % this bug is detailled on http://bugzilla.fcdonders.nl/show_bug.cgi?id=1998

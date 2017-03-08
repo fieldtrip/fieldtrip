@@ -3,7 +3,6 @@ function test_bug1870
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1870
 % TEST test_ft_megplanar ft_megplanar ft_datatype_sens ft_compute_leadfield
 
 % this test is basically a small section of test_ft_megplanar

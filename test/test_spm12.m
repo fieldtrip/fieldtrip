@@ -3,7 +3,6 @@ function test_spm12
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_spm12
 % currently (Jan, 2017) SPM12 support for:
 % - ft_volumerealign
 % - ft_volumedownsample (incl smoothing)

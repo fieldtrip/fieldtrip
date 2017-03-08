@@ -3,7 +3,6 @@ function test_bug896
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug896
 % TEST ft_multiplotTFR ft_prepare_layout ft_datatype ft_datatype_freq
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug896.mat'));

@@ -3,7 +3,6 @@ function test_bug932
 % MEM 2gb
 % WALLTIME 00:20:00
 
-% TEST test_bug932
 % TEST ft_freqstatistics ft_selectdata ft_appendfreq ft_datatype_freq ft_datatype_sens
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug932'));

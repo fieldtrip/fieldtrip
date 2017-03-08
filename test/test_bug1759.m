@@ -3,7 +3,6 @@ function test_bug1759
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1759
 
 % Sparse matrix multplication results in slightly different results than nonsparse
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1759

@@ -3,7 +3,6 @@ function test_ft_timelockgrandaverage
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_timelockgrandaverage
 % TEST ft_timelockgrandaverage
 
 % this functions tests the new implementation of ft_timelockgrandaverage. the

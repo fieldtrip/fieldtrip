@@ -3,7 +3,6 @@ function test_bug3078
 % MEM 500mb
 % WALLTIME 00:15:00
 
-% TEST test_bug3078
 % TEST ft_sourceanalysis
 
 % there's something obscure going on with the channel order in the spatial filters,

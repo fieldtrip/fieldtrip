@@ -3,7 +3,6 @@ function test_bug1646
 % MEM 4gb
 % WALLTIME 00:15:00
 
-% TEST test_bug1646
 % TEST ft_prepare_mesh ft_datatype_segmentation
 
 % the purpose of this test script is to ensure that the new implementation
