@@ -175,6 +175,9 @@ end
 if ~isempty(cfg.viewpoint) && ~isequal(cfg.projection,'orthographic')
   error('cfg.viewpoint can only used in the case of orthographic projection')
 end
+if ~isempty(cfg.viewpoint) && ~isempty(cfg.rotate)
+  error('cfg.viewpoint and cfg.rotate cannot be used jointly')
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to generate the layout structure
