@@ -3,7 +3,7 @@ function test_bug3229
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST ft_apply_transform
+% TEST ft_apply_transform ft_componentanalysis ft_rejectcomponent
 
 elec = [];
 elec.label   = {'1';'2';'3';'4'};
@@ -26,8 +26,6 @@ elec_bi = ft_apply_montage(elec, bipolar);
 % channel names are the same, so keep the same position
 assert(isequal(elec_bi.chanpos(1:3,:), elec.chanpos(1:3,:)));
 
-assert(isequal(elec_bi.chanpos(1:3,:), elec.chanpos(1:3,:)));
-
 %%
 
 bipolar.labelold  = {'1',   '2',   '3',   '4'};
@@ -42,7 +40,6 @@ elec_bi = ft_apply_montage(elec, bipolar);
 
 % channel names are not same, so do not keep the same position
 assert(~isequal(elec_bi.chanpos(1:3,:), elec.chanpos(1:3,:)));
-
 % channel positions should be half-way
 assert(isequal(elec_bi.chanpos(1:3,:), (elec.chanpos(1:3,:)+elec.chanpos(2:4,:))/2));
 
@@ -57,6 +54,8 @@ end
 data.elec = elec;
 data = ft_checkdata(data);
 
+%%
+
 cfg = [];
 cfg.method = 'pca';
 cfg.updatesens = 'no';
@@ -67,7 +66,7 @@ cfg = [];
 cfg.component = []; % keep all
 cfg.updatesens = 'no';
 backproject = ft_rejectcomponent(cfg, comp);
-assert(isequal(comp.elec, data.elec)); % should still be the same
+assert(isequal(backproject.elec, data.elec)); % should still be the same
 
 
 %%
@@ -76,15 +75,21 @@ cfg = [];
 cfg.method = 'pca';
 cfg.updatesens = 'yes';
 comp = ft_componentanalysis(cfg, data);
-assert(~isequal(comp.elec), elec);
+assert(~isequal(comp.elec, data.elec));
 
 cfg = [];
 cfg.component = []; % keep all
 cfg.updatesens = 'yes';
 backproject = ft_rejectcomponent(cfg, comp);
 
-% FIXME the output should be checked
+assert(strcmp(backproject.elec.balance.current, 'invcomp'));
+assert(isalmostequal(backproject.elec.tra, eye(4), 'abstol', 1e-9));
 
+cfg = [];
+cfg.component = []; % keep all
+cfg.updatesens = 'yes';
+cleaned = ft_rejectcomponent(cfg, comp, data);
 
-
+assert(strcmp(cleaned.elec.balance.current, 'reject'));
+assert(isalmostequal(cleaned.elec.tra, eye(4), 'abstol', 1e-9));
 
