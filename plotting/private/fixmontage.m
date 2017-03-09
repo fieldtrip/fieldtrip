@@ -6,6 +6,11 @@ if nargin<2
   revert = false;
 end
 
+if ~(isstruct(montage) && numel(montage)==1)
+  % this does not look like a montage
+  return
+end
+
 if ~revert
   from = {'labelorg', 'chantypeorg', 'chanunitorg', 'chanposorg', 'chanoriorg'};
   to   = {'labelold', 'chantypeold', 'chanunitold', 'chanposold', 'chanoriold'};
@@ -14,6 +19,7 @@ else
   from = {'labelold', 'chantypeold', 'chanunitold', 'chanposold', 'chanoriold'};
 end
 
+% replace the fields
 for i=1:numel(from)
   if isfield(montage, from{i})
     montage.(to{i}) = montage.(from{i});
