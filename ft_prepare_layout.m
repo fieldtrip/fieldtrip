@@ -1337,6 +1337,13 @@ else
     mindist = sort(mindist(mindist>1e-6),'ascend');
     mindist = mindist(1:round(numel(label(boxchansel))/4));
     mindist = median(mindist);
+    %%% /workaround - make a safe guess to detect iEEG until a better solution is found
+    if any(strcmp(ft_senstype(sens),{'eeg','unknown'})) && ~isempty(viewpoint) && (numel(boxchannel) ~= numel(label))
+      mindist = min(d);
+      mindist = mindist(mindist>1e-6); % allows for substantially more overlap than the above
+      mindist = median(mindist);
+    end
+    %%% \workaround - make a safe guess to detect iEEG until a better solution is found
   else
     mindist = eps; % not sure this is a good value but it's just to prevent crashes when
     % the EEG sensor definition is meaningless
