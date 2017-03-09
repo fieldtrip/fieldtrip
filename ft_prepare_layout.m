@@ -62,6 +62,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                     overlap is present))
 %   cfg.channel     = 'all', or Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %                     (can be used with most ways for generating a layout)
+%   cfg.boxchannel  = 'all', or Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
+%                      specificies channels to use for determining channel box size (default = all, recommended for MEG/EEG, selection recommended for iEEG)
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
@@ -162,6 +164,7 @@ cfg.bw           = ft_getopt(cfg, 'bw',         0);
 cfg.channel      = ft_getopt(cfg, 'channel',    'all');
 cfg.skipscale    = ft_getopt(cfg, 'skipscale',  'no');
 cfg.skipcomnt    = ft_getopt(cfg, 'skipcomnt',  'no');
+cfg.boxchannel   = ft_getopt(cfg, 'boxchannel', 'all');
 cfg.overlap      = ft_getopt(cfg, 'overlap',    'shift');
 cfg.viewpoint    = ft_getopt(cfg, 'viewpoint',  []);
 cfg.headshape    = ft_getopt(cfg, 'headshape',  []); % separate form cfg.mesh
@@ -455,40 +458,40 @@ elseif ischar(cfg.layout)
     % assume that cfg.layout is an electrode file
     fprintf('creating layout from electrode file %s\n', cfg.layout);
     sens = ft_read_sens(cfg.layout);
-    layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
+    layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   end
   
 elseif ischar(cfg.elecfile)
   fprintf('creating layout from electrode file %s\n', cfg.elecfile);
   sens = ft_read_sens(cfg.elecfile);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
   fprintf('creating layout from cfg.elec\n');
   sens = ft_datatype_sens(cfg.elec);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif isfield(data, 'elec') && isstruct(data.elec)
   fprintf('creating layout from data.elec\n');
   data = ft_checkdata(data);
   sens = ft_datatype_sens(data.elec);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ischar(cfg.gradfile)
   fprintf('creating layout from gradiometer file %s\n', cfg.gradfile);
   sens = ft_read_sens(cfg.gradfile);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
   fprintf('creating layout from cfg.grad\n');
   sens = ft_datatype_sens(cfg.grad);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
   data = ft_checkdata(data);
   sens = ft_datatype_sens(data.grad);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
  
 elseif ischar(cfg.optofile)
   fprintf('creating layout from optode file %s\n', cfg.optofile);
@@ -847,6 +850,8 @@ if ~strcmp(cfg.style, '3d')
   layout.height = layout.height(chansel);
 end
 
+% set width and height if not already present
+
 % FIXME there is a conflict between the use of cfg.style here and in topoplot
 if ~strcmp(cfg.style, '3d')
   
@@ -1194,7 +1199,7 @@ return % function readlay
 % SUBFUNCTION
 % convert 3D electrode positions into 2D layout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function layout = sens2lay(sens, rotatez, projmethod, style, overlap, viewpoint)
+function layout = sens2lay(sens, rotatez, projmethod, style, overlap, viewpoint, boxchannel)
 
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 % this not only removed the linear projections, but also ensures that the channel labels are correctly named
@@ -1289,19 +1294,22 @@ else
   % we need a copy because prj retains the original positions, and
   % prjForDist might need to be changed if the user wants to keep
   % overlapping channels
-  prjForDist = prj;
+  % also subselect channels for computing width/height if requested by cfg.boxchannel
+  boxchannel = ft_channelselection(boxchannel, label); 
+  boxchansel    = match_str(label, boxchannel); 
+  prjForDist = prj(boxchansel,:);
   
   % check whether many channels occupy identical positions, if so shift
   % them around if requested
-  if size(unique(prj,'rows'),1) / size(prj,1) < 0.8
+  if size(unique(prjForDist,'rows'),1) / size(prjForDist,1) < 0.8
     if strcmp(overlap, 'shift')
       ft_warning('the specified sensor configuration has many overlapping channels, creating a layout by shifting them around (use a template layout for better control over the positioning)');
       prj = shiftxy(prj', 0.2)';
-      prjForDist = prj;
+      prjForDist = prj(boxchansel,:);
     elseif strcmp(overlap, 'no')
       error('the specified sensor configuration has many overlapping channels, you specified not to allow that');
     elseif strcmp(overlap, 'keep')
-      prjForDist = unique(prj, 'rows');
+      prjForDist = unique(prj(boxchansel,:), 'rows');
     else
       error('unknown value for cfg.overlap = ''%s''', overlap);
     end
@@ -1317,8 +1325,8 @@ else
   % FIXME: consider changing the box-size being determined by mindist
   % by a mean distance or so; this leads to overlapping boxes, but that
   % also exists for some .lay files
-  if any(strmatch('Fid', label))
-    tmpsel = strmatch('Fid', label);
+  if any(strmatch('Fid', label(boxchansel)))
+    tmpsel = strmatch('Fid', label(boxchansel));
     d(tmpsel, :) = inf;
     d(:, tmpsel) = inf;
   end
@@ -1341,6 +1349,7 @@ else
   layout.pos    = [X Y];
   layout.width  = Width;
   layout.height = Height;
+  layout.pos    = prj;
   layout.label  = label;
 end
 
