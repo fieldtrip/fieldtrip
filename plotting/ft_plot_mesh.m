@@ -77,7 +77,7 @@ end
 % get the optional input arguments
 vertexcolor  = ft_getopt(varargin, 'vertexcolor');
 if isfield(mesh, 'tri') && size(mesh.tri,1)>10000
-  facecolor    = ft_getopt(varargin, 'facecolor',   [0.5 0.5 0.5]);
+  facecolor    = ft_getopt(varargin, 'facecolor',   'cortex_light');
   edgecolor    = ft_getopt(varargin, 'edgecolor',   'none');
 else
   facecolor    = ft_getopt(varargin, 'facecolor',   'white');
