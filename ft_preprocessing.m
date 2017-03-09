@@ -49,7 +49,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.medianfilter  = 'no' or 'yes'  jump preserving median filter (default = 'no')
 %   cfg.lpfreq        = lowpass  frequency in Hz
 %   cfg.hpfreq        = highpass frequency in Hz
-%   cfg.bpfreq        = bandpass frequency range, specified as [low high] in Hz
+%   cfg.bpfreq        = bandpass frequency range, specified as [lowFreq highFreq] in Hz
 %   cfg.bsfreq        = bandstop frequency range, specified as [low high] in Hz
 %   cfg.dftfreq       = line noise frequencies in Hz for DFT filter (default = [50 100 150])
 %   cfg.lpfiltord     = lowpass  filter order (default set in low-level function)
