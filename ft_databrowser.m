@@ -1113,10 +1113,10 @@ else
   % cut out the requested data segment
   switch cfg.seldat
     case 'current'
-      seldata             = keepfields(opt.curdata, {'label', 'grad', 'elec', 'hdr'});
+      seldata             = keepfields(opt.curdata, {'label', 'grad', 'elec', 'opto', 'hdr'});
       seldata.trial{1}    = ft_fetch_data(opt.curdata, 'begsample', begsel, 'endsample', endsel);
     case 'all'
-      seldata             = keepfields(opt.org, {'label', 'grad', 'elec', 'hdr'});
+      seldata             = keepfields(opt.org, {'label', 'grad', 'elec', 'opto', 'hdr'});
       seldata.trial{1}    = ft_fetch_data(opt.orgdata, 'begsample', begsel, 'endsample', endsel);
   end
   seldata.time{1}     = offset2time(offset+begsel-begsample, opt.fsample, endsel-begsel+1);

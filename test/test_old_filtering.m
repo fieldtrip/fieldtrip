@@ -3,7 +3,6 @@ function test_old_filtering
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_filtering
 
 % This script is for testing ideas about how to correct
 % for edge artifacts for different filter types.

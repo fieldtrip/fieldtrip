@@ -3,7 +3,6 @@ function test_bug2965
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2965
 % TEST ft_checkdata
 
 %%

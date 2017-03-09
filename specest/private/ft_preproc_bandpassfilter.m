@@ -237,7 +237,8 @@ switch type
     if N > floor( (size(dat,2) - 1) / 3)
       N=floor(size(dat,2)/3) - 1;
     end
-    [B, A] = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
+    B = fir1(N, [min(Fbp)/Fn max(Fbp)/Fn]);
+    A = 1;
     
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453

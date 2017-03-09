@@ -3,7 +3,6 @@ function test_ft_megplanar
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_megplanar
 % TEST ft_megplanar ft_prepare_neighbours ft_topoplotER
 
 % use FieldTrip defaults instead of personal defaults

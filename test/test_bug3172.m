@@ -3,7 +3,6 @@ function test_bug3172
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug3172
 % TEST ft_plot_sens
 
 close all

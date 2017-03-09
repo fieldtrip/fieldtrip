@@ -3,7 +3,6 @@ function test_bug97
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug97
 % TEST ft_preprocessing ft_selectdata
 
 % this script tests the solution to bug 97:

@@ -3,7 +3,6 @@ function test_bug2468
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2468
 % TEST ft_sourcedescriptives
 
 % use FieldTrip defaults instead of personal defaults

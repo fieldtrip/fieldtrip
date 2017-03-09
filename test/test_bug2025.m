@@ -3,7 +3,6 @@ function test_bug2025
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2025
 % TEST ft_plot_vol ft_compute_leadfield
 
 vol = [];

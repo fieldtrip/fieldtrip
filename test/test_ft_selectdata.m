@@ -3,7 +3,6 @@ function test_ft_selectdata
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_selectdata
 % TEST ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
 
 timelock1 = [];

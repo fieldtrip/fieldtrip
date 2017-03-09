@@ -3,7 +3,6 @@ function test_bug1764
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1764
 % TEST ft_prepare_singleshell ft_prepare_mesh
 
 % This test is inspired by test test_tutorial_beamformer20120321 which uses

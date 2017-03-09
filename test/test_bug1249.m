@@ -3,7 +3,6 @@ function test_bug1249
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1249
 % TEST ft_componentanalysis ft_rejectcomponent
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275'));

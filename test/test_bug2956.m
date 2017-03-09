@@ -3,7 +3,6 @@ function test_bug2956
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST test_bug2956
 % TEST ft_preprocessing preproc ft_preproc_dftfilter 
 % Test Script for the new dftfilter option "Spectrum Interpolation" to reduce power line noise in data
 

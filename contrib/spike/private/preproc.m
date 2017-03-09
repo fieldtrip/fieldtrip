@@ -229,7 +229,7 @@ end
 
 % do a sanity check on the filter configuration
 if strcmp(cfg.bpfilter, 'yes') && ...
-    (strcmp(cfg.hpfilter, 'yes') || strcmp(cfg.lpfilter,'yes')),
+    (strcmp(cfg.hpfilter, 'yes') || strcmp(cfg.lpfilter,'yes'))
   error('you should not apply both a bandpass AND a lowpass/highpass filter');
 end
 
@@ -261,7 +261,7 @@ if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
   dat(end+1,:) = 0;
 end
 
-if strcmp(cfg.reref, 'yes'),
+if strcmp(cfg.reref, 'yes')
   cfg.refchannel = ft_channelselection(cfg.refchannel, label);
   refindx = match_str(label, cfg.refchannel);
   if isempty(refindx)

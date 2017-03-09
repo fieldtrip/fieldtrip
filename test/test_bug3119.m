@@ -3,7 +3,6 @@ function test_bug3119
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST test_bug3119
 % TEST ft_dipolefitting dipole_fit
 
 %% load template mri

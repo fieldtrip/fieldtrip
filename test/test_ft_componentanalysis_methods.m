@@ -3,7 +3,6 @@ function test_ft_componentanalysis_methods
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_componentanalysis_methods
 % TEST ft_componentanalysis, ft_rejectcomponent, ft_checkdata
 % TEST runica, fastica, sobi, jader, dss, parafac
 

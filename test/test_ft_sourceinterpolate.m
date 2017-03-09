@@ -3,7 +3,6 @@ function test_ft_sourceinterpolate
 % MEM 4500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_sourceinterpolate
 % TEST ft_sourceinterpolate ft_sourceplot
 
 % See also test_bug2769 which goes over more interpolation options using fake data

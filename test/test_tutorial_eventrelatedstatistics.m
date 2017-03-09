@@ -3,7 +3,6 @@ function test_tutorial_eventrelatedstatistics(datadir)
 % MEM 2500mb
 % WALLTIME 00:20:00
 
-% TEST test_tutorial_eventrelatedstatistics
 % TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
 % TEST ft_topoplotER ft_clusterplot
 

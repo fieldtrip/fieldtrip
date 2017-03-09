@@ -4,7 +4,6 @@ function test_bug2365
 % WALLTIME 00:10:00
 
 % TEST ft_freqanalysis
-% TEST test_bug2365
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2365.mat');
 load(filename); % loads variable 'data'

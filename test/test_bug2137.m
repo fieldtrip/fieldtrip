@@ -3,7 +3,6 @@ function test_bug2137
 % MEM 2gb
 % WALLTIME 00:30:00
 
-% TEST test_bug2137
 
 % the following lines are for interactive/manual testing
 if false

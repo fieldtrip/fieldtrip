@@ -240,7 +240,8 @@ switch type
     if N > floor( (size(dat,2) - 1) / 3)
       N=floor(size(dat,2)/3) - 1;
     end
-    [B, A] = fir1(N, max(Flp)/Fn);
+    B = fir1(N, max(Flp)/Fn);
+    A = 1;
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453
     warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')

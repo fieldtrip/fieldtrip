@@ -3,7 +3,6 @@ function test_bug3035
 % MEM 1000mb
 % WALLTIME 00:10:00
 
-% TEST test_bug3035
 % TEST ft_rejectcomponent ft_apply_montage
 
 %% load the data
@@ -125,5 +124,5 @@ data_reject1c = ft_selectdata(cfg, data_reject1b);
 d1 = cat(1, data_reject3.trial{:});
 d2 = cat(1, data_reject1c.trial{:});
 
-assert(identical(d1,d2,'reltol',1e-6));
+assert(isalmostequal(d1,d2,'reltol',1e-6));
 

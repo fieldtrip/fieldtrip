@@ -3,7 +3,6 @@ function test_config
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_config
 % TEST config
 
 %% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1614

@@ -3,7 +3,6 @@ function test_ft_checkdata
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_ft_checkdata
 % TEST ft_checkdata
 
 %% converting raw data to timelock data

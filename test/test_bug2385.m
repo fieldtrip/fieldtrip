@@ -3,7 +3,6 @@ function test_bug2385
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2385
 % TEST ft_filetype ft_read_sens
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/easycap'));

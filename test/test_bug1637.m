@@ -3,7 +3,6 @@ function test_bug1637
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1637
 % TEST megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection
 
 % this function checks whether megplanar_sincos relies on a fixed channel

@@ -3,7 +3,6 @@ function test_bug2224
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2224
 % TEST ft_selectdata ft_selectdata_new ft_postamble ft_postamble_previous ft_postamble_history
 
 freq1 = [];

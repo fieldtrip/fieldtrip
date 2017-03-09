@@ -1,7 +1,7 @@
-function [spike] = ft_spike_select(cfg,spike)
+function [spike] = ft_spike_select(cfg, spike)
 
 % FT_SPIKE_SELECT selects subsets of spikes, channels and trials from a
-% spike structure
+% spike structure.
 %
 % Use as
 %   [spike] = ft_spike_select(cfg, spike)
@@ -50,7 +50,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % control input spike structure
@@ -153,9 +153,9 @@ end
     
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history spike
+ft_postamble previous   spike
+ft_postamble provenance spike
+ft_postamble history    spike
 
 
 %%%%%%%%% SUB FUNCTIONS %%%%%%%%%

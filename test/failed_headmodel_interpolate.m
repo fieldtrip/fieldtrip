@@ -3,8 +3,7 @@ function failed_headmodel_interpolate
 % WALLTIME 00:45:00
 % MEM 6gb
 
-% TEST test_headmodel_interpolate
-% TEST icosahedron162 ft_voltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate
+% TEST icosahedron162 ft_voltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;
@@ -100,8 +99,8 @@ volB = ft_read_vol([filename '.mat']); % this is a mat file containing the "vol"
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
 
-assert(identical(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
-assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(isalmostequal(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(isalmostequal(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps(double(1))), 'the leadfield is not average referenced'); % this is in double precision
 assert(all(mean(lfb, 1)<eps(single(1))), 'the leadfield is not average referenced'); % this is in single precision
 
@@ -114,7 +113,7 @@ assert(all(mean(lfb, 1)<eps(single(1))), 'the leadfield is not average reference
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
 
-assert(identical(lfa, lfb, 'reltol', 1e-3), 'the leadfields are different');
+assert(isalmostequal(lfa, lfb, 'reltol', 1e-3), 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
 assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 
@@ -127,7 +126,7 @@ assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
 
-assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(isalmostequal(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
 assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 
@@ -154,6 +153,6 @@ assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 lfa = ft_compute_leadfield(pos2, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos2, elecBB, volBB); % the interpolation
 
-assert(identical(lfa, lfb, 'abstol', inf, 'reltol', inf, 'relnormtol', 1e-3), 'the leadfields are different');
+assert(isalmostequal(lfa, lfb, 'abstol', inf, 'reltol', inf, 'relnormtol', 1e-3), 'the leadfields are different');
 assert(~all(mean(lfa, 1)<eps), 'the leadfield is average referenced');
 assert(~all(mean(lfb, 1)<eps), 'the leadfield is average referenced');

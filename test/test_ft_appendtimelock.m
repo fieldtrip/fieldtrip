@@ -3,7 +3,6 @@ function test_ft_appendtimelock
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_appendtimelock
 % TEST ft_appendtimelock
 
 % Johanna Zumer

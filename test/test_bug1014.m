@@ -3,7 +3,6 @@ function test_bug1014
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1014
 % TEST ft_checkdata ft_appendtimelock ft_selectdata
 
 a.time   = [1 2];

@@ -3,7 +3,6 @@ function test_bug2376
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2376
 % TEST channelposition ft_plot_sens ft_plot_vol ft_plot_mesh ft_prepare_vol_sens
 
 [pnt, tri] = icosahedron162;

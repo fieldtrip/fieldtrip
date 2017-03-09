@@ -3,7 +3,6 @@ function test_bug2509
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2509
 % TEST ft_selectdata
 
 freq = [];
