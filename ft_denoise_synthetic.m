@@ -99,7 +99,7 @@ desired = cfg.gradient;
 if ~strcmp(current, 'none')
   % first undo/invert the previously applied balancing
   try
-    current_montage = getfield(data.grad.balance, current);
+    current_montage = data.grad.balance.(current);
   catch
     error('unknown balancing for input data');
   end
@@ -112,14 +112,13 @@ end % if current
 if ~strcmp(desired, 'none')
   % then apply the desired balancing
   try
-    desired_montage = getfield(data.grad.balance, desired);
+    desired_montage = data.grad.balance.(desired);
   catch
     error('unknown balancing for input data');
   end
   fprintf('converting from "none" to "%s"\n', desired);
   data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
   data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes', 'balancename', desired);
-  %data.grad.balance.current = desired;
 end % if desired
 
 % reorder the channels to stay close to the original ordering
