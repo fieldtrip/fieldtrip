@@ -388,6 +388,16 @@ ARRAY+=(utilities/private/fixinside.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fixmontage.m
+
+ARRAY=()
+ARRAY+=(fileio/private/fixmontage.m)
+ARRAY+=(forward/private/fixmontage.m)
+ARRAY+=(plotting/private/fixmontage.m)
+ARRAY+=(utilities/private/fixmontage.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # fixname.m
 
 ARRAY=()
