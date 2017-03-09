@@ -320,8 +320,8 @@ if strcmp(cfg.updatesens, 'yes') && isfield(data, 'grad')
   newgrad.chanpos  = newpos;
   newgrad.chanori  = newori;
   newgrad.label    = newlabel;
-  newgrad.newtype  = newtype;
-  newgrad.newunit  = newunit;
+  newgrad.chantype = newtype;
+  newgrad.chanunit = newunit;
   newgrad.unit     = data.grad.unit;
   newgrad.type     = [data.grad.type '_combined'];
   
