@@ -1036,7 +1036,7 @@ if ~strcmp(cfg.style, '3d')
         x + (w/2) y - (h/2);... % rb
         x + (w/2) y + (h/2)]; % rt
       if ft_platform_supports('boundary')
-        k = boundary(boxpos,.9);
+        k = boundary(boxpos,.5);
         mask = boxpos(k,:);
       else
         mask = boxpos(convhull(boxpos(:,1),boxpos(:,2)),:);
