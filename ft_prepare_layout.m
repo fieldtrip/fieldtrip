@@ -1335,7 +1335,7 @@ else
     % take mindist as the median of the first quartile of closest channel pairs with non-zero distance
     mindist = min(d); % get closest neighbour for all channels
     mindist = sort(mindist(mindist>1e-6),'ascend');
-    mindist = mindist(1:round(numel(label)/4));
+    mindist = mindist(1:round(numel(label(chansel))/4));
     mindist = median(mindist);
   else
     mindist = eps; % not sure this is a good value but it's just to prevent crashes when
