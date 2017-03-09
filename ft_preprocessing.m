@@ -213,7 +213,7 @@ cfg.dataformat     = ft_getopt(cfg, 'dataformat');          % is passed to low-l
 cfg.coordsys       = ft_getopt(cfg, 'coordsys', 'head');    % is passed to low-level function
 cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-level function
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
-cfg.montage        = ft_getopt(cfg, 'montage');
+cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'yes');   % in case a montage is specified
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of padding

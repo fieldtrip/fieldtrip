@@ -86,6 +86,7 @@ cfg.baselinewindow = ft_getopt(cfg, 'baselinewindow', [-inf inf]);
 cfg.trials         = ft_getopt(cfg, 'trials',         'all', 1);
 cfg.feedback       = ft_getopt(cfg, 'feedback',       'none');
 cfg.method         = ft_getopt(cfg, 'method',         'sum');
+cfg.updatesens     = ft_getopt(cfg, 'updatesens',     'yes');
 
 if isfield(cfg, 'baseline')
   warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
