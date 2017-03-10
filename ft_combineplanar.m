@@ -327,11 +327,11 @@ if strcmp(cfg.updatesens, 'yes') && isfield(data, 'grad')
   
   % remember the original channel position details
   if isfield(data.grad, 'chanposold')
-    newgrad = copyfields(data.grad, newgrad, {'chanposold', 'chanoriold', 'chanlabelold', 'chantypeold', 'chanunitold'});
+    newgrad = copyfields(data.grad, newgrad, {'chanposold', 'chanoriold', 'labelold', 'chantypeold', 'chanunitold'});
   else
+    newgrad.labelold     = data.grad.label;
     newgrad.chanposold   = data.grad.chanpos;
     newgrad.chanoriold   = data.grad.chanori;
-    newgrad.chanlabelold = data.grad.chanlabel;
     newgrad.chantypeold  = data.grad.chantype;
     newgrad.chanunitold  = data.grad.chanunit;
   end
