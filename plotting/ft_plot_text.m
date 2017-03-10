@@ -21,6 +21,8 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %   'height'              = height of the local axes
 %   'hlim'                = horizontal scaling limits within the local axes
 %   'vlim'                = vertical scaling limits within the local axes
+%
+% See also FT_PLOT_LINE, FT_PLOT_BOX
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %

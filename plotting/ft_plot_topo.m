@@ -27,6 +27,8 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'height'        = height of the local axes
 %   'hlim'          = horizontal scaling limits within the local axes
 %   'vlim'          = vertical scaling limits within the local axes
+%
+% See also FT_PLOT_TOPO3D, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
 %

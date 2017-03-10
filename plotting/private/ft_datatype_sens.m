@@ -154,12 +154,11 @@ switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2016'
     
-    sens = fixmontage(sens, true); % old -> org
-
     % update it to the previous standard version
     sens = ft_datatype_sens(sens, 'version', '2011v2');
     
-    sens = fixmontage(sens, false); % org -> old
+    % rename from org to old (reverse = false)
+    sens = fixoldorg(sens, false);
     
     % ensure that all numbers are represented in double precision
     sens = ft_struct2double(sens);
@@ -304,7 +303,10 @@ switch version
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
-    
+
+    % rename from old to org (reverse = true)
+    sens = fixoldorg(sens, true);
+
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
       warning('amplitude, distance and scaling are not supported for version "%s"', version);
     end
