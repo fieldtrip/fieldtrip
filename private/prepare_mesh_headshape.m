@@ -26,6 +26,7 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % get the specific options
 cfg.headshape    = ft_getopt(cfg, 'headshape');
+cfg.smooth       = ft_getopt(cfg, 'smooth');   % no default
 
 if isa(cfg, 'config')
   % convert the config-object back into a normal structure
@@ -92,6 +93,13 @@ if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
     % remove double vertices
     [headshape(i).pos,headshape(i).tri] = remove_double_vertices(pos1, tri1);
     fprintf('returning %d vertices, %d triangles\n', size(headshape(i).pos,1), size(headshape(i).tri,1));
+  end
+end
+
+% smooth the mesh
+if ~isempty(cfg.smooth)
+  for i=1:nmesh
+    [headshape(i).pos,headshape(i).tri] = fairsurface(headshape(i).pos, headshape(i).tri, cfg.smooth);
   end
 end
 
