@@ -2,6 +2,12 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % PREPARE_MESH_HEADSHAPE
 %
+% Configuration options:
+%   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
+%                     points, or a structure with a single or multiple boundaries
+%   cfg.smooth      = a scalar indicating the number of non-shrinking
+%                     smoothing iterations (default = no smoothing)
+%
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_SEGMENTATION
 
 % Copyrights (C) 2009, Robert Oostenveld
@@ -105,7 +111,7 @@ end
 
 % the output should only describe one or multiple boundaries and should not
 % include any other fields
-mesh = rmfield(headshape, setdiff(fieldnames(headshape), {'pos', 'tri'}));
+mesh = keepfields(headshape, {'pos', 'tri'});
 
 function [tri1, pos1] = refinepatch(tri, pos, numvertices)
 fprintf('the original mesh has %d vertices against the %d requested\n',size(pos,1),numvertices/3);
