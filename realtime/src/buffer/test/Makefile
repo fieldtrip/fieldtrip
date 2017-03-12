@@ -25,18 +25,22 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	INCPATH	 = -I../src
 	LIBPATH  = -L../src
-	LIBS 	 = -lbuffer -lm -lpthread -lws2_32
+	LIBS 	 = -lbuffer -lm -lpthread -lws2_32 -static
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
 	SUFFIX   = _win32.exe
 	RM       = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	INCPATH	 = -I../src
 	LIBPATH  = -L../src
-	LIBS 	 = -lbuffer -lm -lpthread -lws2_32
+	LIBS 	 = -lbuffer -lm -lpthread -lws2_32 -static
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
 	SUFFIX   = _win64.exe
 	RM       = del
@@ -117,4 +121,4 @@ clean:
 
 distclean:
 	$(RM) demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
-  $(RM) test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
+	$(RM) test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
