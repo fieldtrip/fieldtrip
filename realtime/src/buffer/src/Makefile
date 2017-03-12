@@ -50,16 +50,17 @@ ifeq "$(UNAME)" "Darwin"
     endif
 endif
 
-CFLAGS += $(INCPATH) -O0 -fPIC -g
-#CFLAGS += -Wunused -Wall -pedantic
-CFLAGS += -w
+#CFLAGS += -O0 -fPIC -g -Wunused -Wall -pedantic
+CFLAGS += -O0 -fPIC -g -w
+CFLAGS += $(INCPATH)
 
-CXXFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
+CXXFLAGS += -O0 -fPIC -g -Wunused -Wall -pedantic
+CXXFLAGS += $(INCPATH)
 
 ##############################################################################
-all: libbuffer.a rdaserver.o
+all: libbuffer.a
 
-libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o clock_gettime.o gettimeofday.o timestamp.o util.o printstruct.o swapbytes.o extern.o endianutil.o socketserver.o
+libbuffer.a: tcpserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o clock_gettime.o gettimeofday.o timestamp.o util.o printstruct.o swapbytes.o extern.o endianutil.o socketserver.o rdaserver.o
 	 ar rv $@ $^
 
 libclient.a: tcprequest.o util.o

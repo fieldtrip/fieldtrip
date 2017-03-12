@@ -70,13 +70,10 @@ $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
 # buffer_tia does not work.
-TARGETS = $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer_rda$(SUFFIX) 
+TARGETS = $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer_rda$(SUFFIX)
 
 ###############################################################################
 all: $(TARGETS)
-
-$(BINDIR)/buffer_rda$(SUFFIX): \
-	LDLIBS := $(FTBUFFER)/src/rdaserver.o $(LDLIBS)
 
 $(BINDIR)/%$(SUFFIX): %.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
