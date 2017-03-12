@@ -1,13 +1,13 @@
-function montage = fixmontage(montage, revert)
+function input = fixoldorg(input, revert)
 
-% FIXMONTAGE use "old/new" instead of "org/new"
+% FIXOLDORG use "old/new" instead of "org/new"
 
 if nargin<2
   revert = false;
 end
 
-if ~(isstruct(montage) && numel(montage)==1)
-  % this does not look like a montage
+if ~(isstruct(input) && numel(input)==1)
+  % this does not look like a montage or a sensor description
   return
 end
 
@@ -21,16 +21,16 @@ end
 
 % replace the fields
 for i=1:numel(from)
-  if isfield(montage, from{i})
-    montage.(to{i}) = montage.(from{i});
-    montage = rmfield(montage, from{i});
+  if isfield(input, from{i})
+    input.(to{i}) = input.(from{i});
+    input = rmfield(input, from{i});
   end
 end
 
 % use recursion to update the subfields
-fn = fieldnames(montage);
+fn = fieldnames(input);
 for i=1:numel(fn)
-  if isstruct(montage.(fn{i}))
-    montage.(fn{i}) = fixmontage(montage.(fn{i}), revert);
+  if isstruct(input.(fn{i}))
+    input.(fn{i}) = fixoldorg(input.(fn{i}), revert);
   end
 end
