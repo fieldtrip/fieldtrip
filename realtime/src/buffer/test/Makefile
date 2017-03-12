@@ -24,12 +24,21 @@ ifeq "$(PLATFORM)" "mingw32"
 	RM       = del
 endif
 
-ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	INCPATH	 = -I../src -I../pthreads-win64/include
-	LIBPATH  = -L../src -L../pthreads-win64/lib
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	INCPATH	 = -I../src
+	LIBPATH  = -L../src
 	LIBS 	 = -lbuffer -lm -lpthread -lws2_32
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
-	SUFFIX   = _64.exe
+	SUFFIX   = _win32.exe
+	RM       = del
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	INCPATH	 = -I../src
+	LIBPATH  = -L../src
+	LIBS 	 = -lbuffer -lm -lpthread -lws2_32
+	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
+	SUFFIX   = _win64.exe
 	RM       = del
 endif
 
@@ -52,11 +61,11 @@ CXXFLAGS += $(INCPATH) -Wunused -pedantic -O0
 
 ##############################################################################
 
-all: demo
+all: demo test
 
-test: test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_connect test_nslookup test_benchmark test_waitdat
+demo: demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
 
-demo: demo_sinewave$(SUFFIX) demo_event$(SUFFIX) demo_combined$(SUFFIX)
+test: test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
 
 demo_combined$(SUFFIX): demo_combined.o sinewave.o ../src/libbuffer.a
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
@@ -67,57 +76,45 @@ demo_sinewave$(SUFFIX): demo_sinewave.o sinewave.o ../src/libbuffer.a
 demo_event$(SUFFIX): demo_event.o event.o ../src/libbuffer.a
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-demo_buffer$(SUFFIX): demo_buffer.o ../src/libbuffer.a
+test_gethdr$(SUFFIX): test_gethdr.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-demo_buffer_rda$(SUFFIX): demo_buffer_rda.o ../src/libbuffer.a ../src/rdaserver.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)	
-	
-demo_buffer_unix$(SUFFIX): demo_buffer_unix.o ../src/libbuffer.a 
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)	
-
-test_gethdr: test_gethdr.o
+test_getdat$(SUFFIX): test_getdat.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_getdat: test_getdat.o
+test_getevt$(SUFFIX): test_getevt.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_getevt: test_getevt.o
+test_flushhdr$(SUFFIX): test_flushhdr.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_flushhdr: test_flushhdr.o
+test_flushdat$(SUFFIX): test_flushdat.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_flushdat: test_flushdat.o
+test_flushevt$(SUFFIX): test_flushevt.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_flushevt: test_flushevt.o
+test_pthread$(SUFFIX): test_pthread.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_append: test_append.o
+test_benchmark$(SUFFIX): test_benchmark.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_pthread: test_pthread.o
+test_nslookup$(SUFFIX): test_nslookup.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_benchmark: test_benchmark.o
+test_waitdat$(SUFFIX): test_waitdat.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
-test_nslookup: test_nslookup.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
-	
-test_waitdat: test_waitdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
-
-test_connect: test_connect.o
+test_connect$(SUFFIX): test_connect.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
 
 %.o: %.c message.h buffer.h
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
 
 clean:
-	$(RM) core *.o *.obj *.a 
+	$(RM) core *.o *.obj *.a
 
 distclean:
-	$(RM) test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX)
-	$(RM) rm demo_sinewave$(SUFFIX) demo_event$(SUFFIX) demo_buffer$(SUFFIX) demo_buffer_unix$(SUFFIX) demo_combined$(SUFFIX) 
+	$(RM) demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
+  $(RM) test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
