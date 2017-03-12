@@ -25,9 +25,18 @@ ifeq "$(PLATFORM)" "mingw32"
 	RM = del
 endif
 
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDFLAGS += -lws2_32 -lwinmm -static
+	SUFFIX = _win32.exe
+	RM = del
+endif
+
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	LDFLAGS += ../../external/pthreads-win64/lib/pthreadGC2-w64.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm
-	INCPATH += -I../../external/pthreads-win64/include
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDFLAGS += -lws2_32 -lwinmm -static
 	SUFFIX = _win64.exe
 	RM = del
 endif

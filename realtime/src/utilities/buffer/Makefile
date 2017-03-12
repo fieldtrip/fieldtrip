@@ -16,8 +16,10 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
+CC      = gcc
 CFLAGS 	= -Wunused -Wall -pedantic -O3 -g -I$(FTBUFFER)/src
 LDFLAGS = -L$(FTBUFFER)/src
+LDLIBS  = -lbuffer
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
