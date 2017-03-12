@@ -3,11 +3,14 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-# Use MinGW for compilation on Windows!
+# Use MinGW for compilation on Windows
+
+ifneq "$(OS)" "Windows_NT"
+	OS = $(shell uname -s)
+	MACHINE = $(shell uname -m)
+endif
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
@@ -28,7 +31,7 @@ ifeq "$(PLATFORM)" "mingw32"
 	RM = del
 endif
 
-ifeq "$(UNAME)" "Linux"
+ifeq "$(OS)" "Linux"
 	LDLIBS += -lpthread -ldl -lrt
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
@@ -45,7 +48,7 @@ ifeq "$(UNAME)" "Linux"
 	endif
 endif
 
-ifeq "$(UNAME)" "Darwin"
+ifeq "$(OS)" "Darwin"
 	LDLIBS += -lpthread
 	fixpath = $1
 	ifeq "$(MACHINE)" "i386"

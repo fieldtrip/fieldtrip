@@ -18,25 +18,25 @@
  # You should have received a copy of the GNU General Public License
  # along with Amp2ft.  If not, see <http://www.gnu.org/licenses/>.
 
-FIELDTRIP = ../../../..
+ifneq "$(OS)" "Windows_NT"
+	OS = $(shell uname -s)
+	MACHINE = $(shell uname -m)
+endif
 
-
-# Do not touch!
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
 
+FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 CPPDIR  = $(FTBUFFER)/cpp
-CPPOBJS = $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/GdfWriter.o \
-	$(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
+CPPOBJS = $(CPPDIR)/SignalConfiguration.o $(CPPDIR)/GdfWriter.o $(CPPDIR)/FtConnection.o $(CPPDIR)/StringServer.o
+
 LDFLAGS = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer $(CPPOBJS)
 CXXFLAGS = -Wunused -Wall -pedantic -O3 -g
 CXXFLAGS += -I$(FTBUFFER)/src -I. -I$(CPPDIR) -DDEBUG
 CXX = /usr/bin/g++
 
-ifeq "$(UNAME)" "Darwin"
+ifeq "$(OS)" "Darwin"
 	LDLIBS += -lpthread
     fixpath = $1
 	ifeq "$(MACHINE)" "i386"
@@ -53,7 +53,7 @@ ifeq "$(UNAME)" "Darwin"
     endif
 endif
 
-ifeq "$(UNAME)" "Linux"
+ifeq "$(OS)" "Linux"
     LDLIBS += -lbuffer -lpthread -ldl -lrt
     LDFLAGS += -L$(FTBUFFER)/src
     ifeq "$(MACHINE)" "i686"

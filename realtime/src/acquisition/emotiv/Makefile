@@ -3,12 +3,15 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-# Use MinGW for compilation on Windows!
+# Use MinGW for compilation on Windows
 # To recompile, please download the Emotiv EDK, and update the EDKPATH variable below.
 
+ifneq "$(OS)" "Windows_NT"
+	OS = $(shell uname -s)
+	MACHINE = $(shell uname -m)
+endif
+
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer

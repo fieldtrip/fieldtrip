@@ -3,11 +3,14 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-# Use MinGW for compilation on Windows!
+# Use MinGW for compilation on Windows
+
+ifneq "$(OS)" "Windows_NT"
+	OS = $(shell uname -s)
+	MACHINE = $(shell uname -m)
+endif
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
@@ -34,7 +37,7 @@ ifeq "$(PLATFORM)" "mingw32"
 	RM = del
 endif
 
-ifeq "$(UNAME)" "Linux"
+ifeq "$(OS)" "Linux"
 		LDLIBS += -lbuffer -lpthread -ldl -lrt
 		LDFLAGS += -L$(FTBUFFER)/src
     fixpath = $1
@@ -55,7 +58,7 @@ ifeq "$(UNAME)" "Linux"
     endif
 endif
 
-ifeq "$(UNAME)" "Darwin"
+ifeq "$(OS)" "Darwin"
     # Currently, only 32 bit OS X is supported since the 64 bit drivers don't seem to
     # work. This means that for correct compilation of biosemi2ft, also libbuffer
     # and ODM need to be (manually) recompiled and linked with '-m32' flag in the

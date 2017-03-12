@@ -1,3 +1,6 @@
+#ifndef PLATFORM_INCLUDES_H
+#define PLATFORM_INCLUDES_H
+
 #include "platform.h"
 #include "compiler.h"
 
@@ -150,3 +153,5 @@
     #error "Unknown combination of platform and compiler - please report this to http://bugzilla.fieldtriptoolbox.org"
 
 #endif
+
+#endif /* PLATFORM_INCLUDES_H */

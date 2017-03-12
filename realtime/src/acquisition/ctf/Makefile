@@ -3,9 +3,12 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
+ifneq "$(OS)" "Windows_NT"
+	OS = $(shell uname -s)
+	MACHINE = $(shell uname -m)
+endif
+
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
@@ -14,7 +17,7 @@ CFLAGS = -I$(FTBUFFER)/src -Wunused -Wall
 LDFLAGS = -L$(FTBUFFER)/src 
 LDLIBS = -lbuffer -lncurses -lpthread -lm
 
-ifeq "$(UNAME)" "Linux"
+ifeq "$(OS)" "Linux"
 	LDLIBS += -lrt
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -30,7 +33,7 @@ ifeq "$(UNAME)" "Linux"
 	endif
 endif
 
-ifeq "$(UNAME)" "Darwin"
+ifeq "$(OS)" "Darwin"
 	ifeq "$(MACHINE)" "i386"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS += -m32

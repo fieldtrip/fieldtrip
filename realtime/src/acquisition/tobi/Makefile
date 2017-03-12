@@ -3,11 +3,14 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-# Use MinGW for compilation on Windows!
+# Use MinGW for compilation on Windows
+
+ifneq "$(OS)" "Windows_NT"
+	OS = $(shell uname -s)
+	MACHINE = $(shell uname -m)
+endif
 
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
@@ -18,7 +21,7 @@ CFLAGS += -Wunused -Wall -pedantic -O3
 CXXFLAGS = $(CFLAGS)
 LDFLAGS = -L$(FTBUFFER)/src
 
-ifeq "$(UNAME)" "Linux"
+ifeq "$(OS)" "Linux"
     ifeq "$(MACHINE)" "x86_64"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 		LDFLAGS += -L$(BINDIR) -Llib/ticpp/linux 

@@ -3,9 +3,12 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
+ifneq "$(OS)" "Windows_NT"
+	OS = $(shell uname -s)
+	MACHINE = $(shell uname -m)
+endif
+
 PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
 
 # defaults, might be overwritten further down
 CC		 = gcc
@@ -46,7 +49,7 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	RM       = del
 endif
 
-ifeq "$(UNAME)" "Darwin"
+ifeq "$(OS)" "Darwin"
     ifeq "$(MACHINE)" "i386"
         CFLAGS += -m32
         CXXFLAGS += -m32
