@@ -3,7 +3,7 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#if defined(linux) || defined(__linux) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__) 
+#if defined(linux) || defined(__linux) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__)
 /* linux, also other platforms (Hurd etc) that use GLIBC */
 #define PLATFORM_LINUX
 
@@ -71,8 +71,7 @@
 
 #else
 /* the platform cannot be determined at compile time */
-#error "Unknown platform - please report the platform details to http://fieldtrip.fcdonders.nl"
+#error "Unknown platform - please report this to http://bugzilla.fieldtriptoolbox.org"
 #endif
 
 #endif /* PLATFORM_H */
-

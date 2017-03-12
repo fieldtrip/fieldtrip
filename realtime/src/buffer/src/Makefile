@@ -13,6 +13,9 @@ INCPATH = -I.
 LIBPATH = -L.
 LIBS = -lbuffer -lm -lpthread
 
+CFLAGS =
+CXXFLAGS =
+
 ifeq "$(PLATFORM)" "mingw32"
 	INCPATH	+= -I. -I../../external/pthreads-win32/include
 	LIBPATH += -L. -L../../external/pthreads-win32/lib
@@ -20,14 +23,16 @@ ifeq "$(PLATFORM)" "mingw32"
 	RM = rm -f
 endif
 
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	RM = del
+endif
+
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	INCPATH	+= -I. -I../../external/pthreads-win64/include
-	LIBPATH += -L. -L../../external/pthreads-win64/lib
 	RM = del
 endif
 
 ifeq "$(UNAME)" "Darwin"
-    # Snow Leopard 10.6 is the first Mac OS X version to ship with a 64 bit kernel, and obviously your
+  # Snow Leopard 10.6 is the first Mac OS X version to ship with a 64 bit kernel, and obviously your
 	# Mac has to have a 64 bit processor to utilize that kernel, but some 64 bit Mac's are not defaulting
 	# to the 64 bit kernel. Furthermore, irrespective of the kernel, the gcc compiler is able to (cross)
     # compile objects, libraries and applications for 32 and 64 bit.
@@ -45,7 +50,10 @@ ifeq "$(UNAME)" "Darwin"
     endif
 endif
 
-CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
+CFLAGS += $(INCPATH) -O0 -fPIC -g
+#CFLAGS += -Wunused -Wall -pedantic
+CFLAGS += -w
+
 CXXFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O0 -fPIC -g
 
 ##############################################################################
