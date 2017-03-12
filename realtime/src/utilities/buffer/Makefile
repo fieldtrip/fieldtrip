@@ -16,9 +16,8 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-CFLAGS = -Wunused -Wall -pedantic -O3 -g -I$(FTBUFFER)/src
+CFLAGS 	= -Wunused -Wall -pedantic -O3 -g -I$(FTBUFFER)/src
 LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR = $(FIELDTRIP)/realtime/bin/win32
@@ -29,6 +28,28 @@ ifeq "$(PLATFORM)" "mingw32"
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 	RM = del
+endif
+
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
 endif
 
 ifeq "$(OS)" "Linux"
@@ -72,7 +93,6 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-# buffer_tia does not work.
 TARGETS = $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer_rda$(SUFFIX)
 
 ###############################################################################

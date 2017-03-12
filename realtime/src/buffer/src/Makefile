@@ -32,22 +32,22 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 endif
 
 ifeq "$(OS)" "Darwin"
-  # Snow Leopard 10.6 is the first Mac OS X version to ship with a 64 bit kernel, and obviously your
+	# Snow Leopard 10.6 is the first Mac OS X version to ship with a 64 bit kernel, and obviously your
 	# Mac has to have a 64 bit processor to utilize that kernel, but some 64 bit Mac's are not defaulting
 	# to the 64 bit kernel. Furthermore, irrespective of the kernel, the gcc compiler is able to (cross)
-    # compile objects, libraries and applications for 32 and 64 bit.
-    ifeq "$(MACHINE)" "i386"
-        # compile for 32 bit
-        CFLAGS += -m32
-        CXXFLAGS += -m32
-        LDFLAGS += -m32
-    endif
-    ifeq "$(MACHINE)" "x86_64"
-        # compile for 64 bit
-        CFLAGS += -m64
-        CXXFLAGS += -m64
-        LDFLAGS += -m64
-    endif
+	# compile objects, libraries and applications for 32 and 64 bit.
+  ifeq "$(MACHINE)" "i386"
+      # compile for 32 bit
+      CFLAGS += -m32
+      CXXFLAGS += -m32
+      LDFLAGS += -m32
+  endif
+  ifeq "$(MACHINE)" "x86_64"
+      # compile for 64 bit
+      CFLAGS += -m64
+      CXXFLAGS += -m64
+      LDFLAGS += -m64
+  endif
 endif
 
 #CFLAGS += -O0 -fPIC -g -Wunused -Wall -pedantic

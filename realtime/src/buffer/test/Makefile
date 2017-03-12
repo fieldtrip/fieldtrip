@@ -11,17 +11,17 @@ endif
 PLATFORM = $(shell gcc -dumpmachine)
 
 # defaults, might be overwritten further down
-CC		 = gcc
+CC			 = gcc
 INCPATH	 = -I../src
 LIBPATH  = -L../src
-LIBS 	 = -lbuffer -lm -lpthread
+LDLIBS 	 = -lbuffer -lm -lpthread
 SUFFIX   =
 RM       = rm -f
 
 ifeq "$(PLATFORM)" "mingw32"
 	INCPATH	 = -I../src -I../pthreads-win32/include
 	LIBPATH  = -L../src -L../pthreads-win32/lib
-	LIBS 	 = -lbuffer -lm -lpthreadGC2 -lws2_32
+	LDLIBS 	 = -lbuffer -lm -lpthreadGC2 -lws2_32
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -O0 -g
 	SUFFIX   = .exe
 	RM       = del
@@ -32,7 +32,7 @@ ifeq "$(PLATFORM)" "i686-w64-mingw32"
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	INCPATH	 = -I../src
 	LIBPATH  = -L../src
-	LIBS 	 = -lbuffer -lm -lpthread -lws2_32 -static
+	LDLIBS 	 = -lbuffer -lm -lpthread -lws2_32 -static
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
 	SUFFIX   = _win32.exe
 	RM       = del
@@ -43,7 +43,7 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	INCPATH	 = -I../src
 	LIBPATH  = -L../src
-	LIBS 	 = -lbuffer -lm -lpthread -lws2_32 -static
+	LDLIBS 	 = -lbuffer -lm -lpthread -lws2_32 -static
 	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
 	SUFFIX   = _win64.exe
 	RM       = del
@@ -75,46 +75,46 @@ demo: demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
 test: test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
 
 demo_combined$(SUFFIX): demo_combined.o sinewave.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 demo_sinewave$(SUFFIX): demo_sinewave.o sinewave.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 demo_event$(SUFFIX): demo_event.o event.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_gethdr$(SUFFIX): test_gethdr.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_getdat$(SUFFIX): test_getdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_getevt$(SUFFIX): test_getevt.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_flushhdr$(SUFFIX): test_flushhdr.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_flushdat$(SUFFIX): test_flushdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_flushevt$(SUFFIX): test_flushevt.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_pthread$(SUFFIX): test_pthread.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_benchmark$(SUFFIX): test_benchmark.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_nslookup$(SUFFIX): test_nslookup.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_waitdat$(SUFFIX): test_waitdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 test_connect$(SUFFIX): test_connect.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
 %.o: %.c message.h buffer.h
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
