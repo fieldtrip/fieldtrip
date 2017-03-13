@@ -13,9 +13,6 @@ raw1.trial = {ones(2,10), ones(2,10), ones(2,10)};
 raw1.label = {'chan01';'chan02'};
 raw1.trialinfo = rand(3,4);
 
-raw2 = raw1;
-raw2.trial = {2*ones(2,10), 2*ones(2,10), 2*ones(2,10)};
-
 timelock1.label  = {'chan1'; 'chan2'};
 timelock1.time   = 1:5;
 timelock1.dimord = 'chan_time';
@@ -160,30 +157,6 @@ assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
 assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% do operation with two raw inputs
-
-cfg=[];
-cfg.showcallinfo = 'no';
-cfg.trackconfig  = 'no';
-cfg.parameter = 'trial';
-
-cfg.operation = 'add';
-tmp = ft_math(cfg, raw1, raw2);
-assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-
-cfg.operation = 'subtract';
-tmp = ft_math(cfg, raw1, raw2);
-assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-
-cfg.operation = 'multiply';
-tmp = ft_math(cfg, raw1, raw2);
-assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-
-cfg.operation = 'divide';
-tmp = ft_math(cfg, raw1, raw2);
-assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do operation with two timelock inputs
 
 cfg = [];
@@ -284,21 +257,6 @@ assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
 
 cfg = [];
 cfg.parameter = 'trial';
-cfg.operation = 'add';
-tmp = ft_math(cfg, raw1, raw2);
-assert(tmp.trial{1}(1)==3);
-
-cfg.operation = 'subtract';
-tmp = ft_math(cfg, raw1, raw2);
-assert(tmp.trial{1}(1)==-1);
-
-cfg.operation = 'divide';
-tmp = ft_math(cfg, raw1, raw2);
-assert(tmp.trial{1}(1)==1/2);
-
-cfg.operation = 'multiply';
-tmp = ft_math(cfg, raw1, raw2);
-assert(tmp.trial{1}(1)==2);
 
 cfg.operation = 'log10';
 tmp = ft_math(cfg, raw1);

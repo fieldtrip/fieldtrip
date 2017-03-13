@@ -123,6 +123,12 @@ if ~iscell(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
 
+if ft_datatype(varargin{1}, 'raw')
+    if length(varargin)>1
+        error('ft_math does not support more than one input argument if the input data is of type "raw"')
+    end
+end
+
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
 if ft_datatype(varargin{1}, 'source')
   % update the old-style beamformer source reconstruction
@@ -164,7 +170,7 @@ end
 dimord = dimordtmp{1}; clear dimordtmp
 dimtok = tokenize(dimord, '_');
 
-% construct the output data structure
+% construct the output data structure; make sure descriptive fields will get copied over
 data = keepfields(varargin{1}, {'label', 'chancmb', 'freq', 'time', 'pos', 'dim', 'transform'});
 
 for p = 1:length(cfg.parameter)
