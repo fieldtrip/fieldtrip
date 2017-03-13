@@ -123,9 +123,9 @@ if ~iscell(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
 
-if ft_datatype(varargin{1}, 'raw')
+if ft_datatype(varargin{1}, 'raw+comp')
     if length(varargin)>1
-        error('ft_math does not support more than one input argument if the input data is of type "raw"')
+        error('ft_math does not support more than one input argument if the input data is of type "raw" or "comp"')
     end
 end
 
@@ -167,11 +167,26 @@ for p = 1:length(cfg.parameter)
     error('the dimord of multiple parameters must be the same');
   end
 end
-dimord = dimordtmp{1}; clear dimordtmp
-dimtok = tokenize(dimord, '_');
+clear dimordtmp
 
 % construct the output data structure; make sure descriptive fields will get copied over
-data = keepfields(varargin{1}, {'label', 'chancmb', 'freq', 'time', 'pos', 'dim', 'transform'});
+% some ugly things need to be done in order to get the correct xxxdimord
+% fields in the output
+fn  = fieldnames(varargin{1});
+dimordfields = fn(~cellfun(@isempty, strfind(fn, 'dimord')))';
+if numel(dimordfields==1) && strcmp(dimordfields{1},'dimord'),
+    % this is OK and counts for most data structures
+else
+    % this is in the case of one or more xxxdimord fields, in which case
+    % only the requested parameters' xxxdimord fields should be returned in
+    % the output
+    ok = false(1,numel(dimordfields));
+    for p = 1:length(cfg.parameter)
+        ok(p) = any(~cellfun(@isempty, strfind(dimordfields, cfg.parameter{p})));
+    end
+    dimordfields = dimordfields(ok);
+end
+data = keepfields(varargin{1}, [dimordfields {'label', 'chancmb', 'freq', 'time', 'pos', 'dim', 'transform'}]);
 
 for p = 1:length(cfg.parameter)
   fprintf('selecting %s from the first input argument\n', cfg.parameter{p});
@@ -420,7 +435,6 @@ for p = 1:length(cfg.parameter)
   % store the result of the operation in the output structure
   data = setsubfield(data, cfg.parameter{p}, y);
 end % p over length(cfg.parameter)
-  data.dimord = dimord;
 
 % certain fields should remain in the output, but only if they are identical in all inputs
 keepfield = {'grad', 'elec', 'inside', 'trialinfo', 'sampleinfo', 'tri'};

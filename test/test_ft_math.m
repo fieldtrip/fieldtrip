@@ -132,29 +132,29 @@ cfg.parameter    = 'mom'; % note that this is {pos}_ori_time
 cfg.operation = 'log10';
 tmp = ft_math(cfg, source1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 cfg.scalar = pi;
 
 cfg.operation = 'add';
 tmp = ft_math(cfg, source1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 cfg.operation = 'subtract';
 tmp = ft_math(cfg, source1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 cfg.operation = 'multiply';
 tmp = ft_math(cfg, source1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 cfg.operation = 'divide';
 tmp = ft_math(cfg, source1);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do operation with two timelock inputs
@@ -196,22 +196,22 @@ cfg.parameter    = 'mom';
 cfg.operation = 'add';
 tmp = ft_math(cfg, source1, source2);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 cfg.operation = 'subtract';
 tmp = ft_math(cfg, source1, source2);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 cfg.operation = 'multiply';
 tmp = ft_math(cfg, source1, source2);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 cfg.operation = 'divide';
 tmp = ft_math(cfg, source1, source2);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -244,12 +244,12 @@ cfg.parameter    = 'mom';
 cfg.operation = 'add';
 tmp = ft_math(cfg, source1, source2, source1, source2);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 cfg.operation = 'multiply';
 tmp = ft_math(cfg, source1, source2, source1, source2);
 assert(isfield(tmp, cfg.parameter), 'the output parameter is missing');
-assert(isfield(tmp, 'dimord'), 'the output dimord is missing');
+assert(isfield(tmp, [cfg.parameter 'dimord']), 'the output dimord is missing');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
