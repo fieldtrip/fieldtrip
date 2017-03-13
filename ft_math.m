@@ -172,30 +172,7 @@ hastime    = any(strcmp(dimtok, 'time'));
 haspos     = any(strcmp(dimtok, 'pos'));
 
 % construct the output data structure
-data = [];
-if haschan
-  data.label = varargin{1}.label;
-end
-if haschancmb
-  data.labelcmb = varargin{1}.labelcmb;
-end
-if hasfreq
-  data.freq = varargin{1}.freq;
-end
-if hastime
-  data.time = varargin{1}.time;
-end
-if haspos
-  if isfield(varargin{1}, 'pos')
-    data.pos = varargin{1}.pos;
-  end
-  if isfield(varargin{1}, 'dim')
-    data.dim = varargin{1}.dim;
-  end
-  if isfield(varargin{1}, 'transform')
-    data.transform = varargin{1}.transform;
-  end
-end
+data = keepfields(varargin{1}, {'label', 'chancmb', 'freq', 'time', 'pos', 'dim', 'transform'});
 
 for p = 1:length(cfg.parameter)
   fprintf('selecting %s from the first input argument\n', cfg.parameter{p});
