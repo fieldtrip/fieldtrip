@@ -164,13 +164,6 @@ end
 dimord = dimordtmp{1}; clear dimordtmp
 dimtok = tokenize(dimord, '_');
 
-% this determines which descriptive fields will get copied over
-haschan    = any(strcmp(dimtok, 'chan'));
-haschancmb = any(strcmp(dimtok, 'chancmb'));
-hasfreq    = any(strcmp(dimtok, 'freq'));
-hastime    = any(strcmp(dimtok, 'time'));
-haspos     = any(strcmp(dimtok, 'pos'));
-
 % construct the output data structure
 data = keepfields(varargin{1}, {'label', 'chancmb', 'freq', 'time', 'pos', 'dim', 'transform'});
 
