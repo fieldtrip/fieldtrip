@@ -273,8 +273,8 @@ elseif catlabel
   data.label = varargin{1}.label;
   data.trial = varargin{1}.trial;
   data.time  = varargin{1}.time;
-  if hassampleinfo, data.sampleinfo=varargin{i}.sampleinfo; end
-  if hastrialinfo,  data.trialinfo =varargin{i}.trialinfo;  end
+  if hassampleinfo, data.sampleinfo=varargin{1}.sampleinfo; end
+  if hastrialinfo,  data.trialinfo =varargin{1}.trialinfo;  end
 
   for i=2:Ndata
     % concatenate the labels
