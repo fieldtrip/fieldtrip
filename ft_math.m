@@ -186,7 +186,7 @@ else
     end
     dimordfields = dimordfields(ok);
 end
-data = keepfields(varargin{1}, [dimordfields {'label', 'chancmb', 'freq', 'time', 'pos', 'dim', 'transform'}]);
+data = keepfields(varargin{1}, [dimordfields {'label', 'labelcmb', 'freq', 'time', 'pos', 'dim', 'transform'}]);
 
 for p = 1:length(cfg.parameter)
   fprintf('selecting %s from the first input argument\n', cfg.parameter{p});
