@@ -27,7 +27,7 @@ command = varargin{1};
 assert(isequal(command, 'run'));
 varargin = varargin(2:end);
 
-optbeg = find(ismember(varargin, {'dependency', 'loadfile', 'maxmem', 'maxwalltime', 'upload', 'assertclean'}));
+optbeg = find(ismember(varargin, {'dependency', 'dccnpath', 'maxmem', 'maxwalltime', 'upload', 'assertclean'}));
 if ~isempty(optbeg)
   optarg   = varargin(optbeg:end);
   varargin = varargin(1:optbeg-1);
@@ -40,7 +40,7 @@ end
 
 % get the optional input arguments
 dependency  = ft_getopt(optarg, 'dependency', {});
-loadfile    = ft_getopt(optarg, 'loadfile');  % default is handled below
+hasdccnpath = ft_getopt(optarg, 'dccnpath');  % default is handled below
 maxmem      = ft_getopt(optarg, 'maxmem', inf);
 maxwalltime = ft_getopt(optarg, 'maxwalltime', inf);
 upload      = ft_getopt(optarg, 'upload', 'yes');
@@ -51,10 +51,10 @@ if ischar(dependency)
   dependency = {dependency};
 end
 
-if isempty(loadfile)
+if isempty(hasdccnpath)
   % true when central storage is available, false otherwise
-  loadfile = exist(dccnpath('/home/common/matlab/fieldtrip/data/'), 'dir');
-end    
+  hasdccnpath = exist(dccnpath('/home/common/matlab/fieldtrip/data/'), 'dir');
+end
 
 if ischar(maxwalltime)
   % it is probably formatted as HH:MM:SS, convert to seconds
@@ -91,7 +91,7 @@ for i=1:numel(functionlist)
   filelist{i} = which(functionlist{i});
 end
 
-fprintf('considering %d test scripts for execution\n', numel(filelist));
+fprintf('considering %d test functions for execution\n', numel(filelist));
 
 %% make a subselection based on the filters
 dep  = true(size(filelist));
@@ -113,13 +113,15 @@ for i=1:numel(filelist)
   
   for k=1:numel(line)
     for j=1:numel(dependency)
+      % search for the dependencies in each of the test functions
       [s, e] = regexp(line{k}, sprintf('%% TEST.*%s.*', dependency{j}), 'once', 'start', 'end');
       if ~isempty(s)
         dep(i) = true;
       end
     end
     
-    if ~istrue(loadfile) && ~istrue(loadfile)
+    if ~istrue(hasdccnpath)
+      % search for the occurence of the DCCNPATH function in each of the test functions
       [s, e] = regexp(line{k}, 'dccnpath', 'once', 'start', 'end');
       if ~isempty(s)
         file(i) = true;
@@ -142,7 +144,7 @@ for i=1:numel(filelist)
 end % for each function/file
 
 fprintf('%3d scripts are excluded due to the dependencies\n', sum(~dep));
-fprintf('%3d scripts are excluded due to loading files\n', sum(file));
+fprintf('%3d scripts are excluded due to loading files from the DCCN path\n',  sum(file));
 fprintf('%3d scripts are excluded due to the requirements for memory\n',       sum(mem>maxmem));
 fprintf('%3d scripts are excluded due to the requirements for walltime \n',    sum(tim>maxwalltime));
 
@@ -174,7 +176,12 @@ for i=1:numel(functionlist)
     passed = false;
     runtime = round(toc(stopwatch));
     fprintf('=== %s FAILED in %d seconds\n', functionlist{i}, runtime);
-    disp(me)
+    % show the error with the stack trace
+    fprintf('Error using %s (line %d)\n', me.stack(1).name, me.stack(1).line);
+    disp(me.message)
+    for j=2:numel(me.stack)
+      fprintf('Error in %s (line %d)\n', me.stack(j).name, me.stack(j).line);
+    end
   end
   close all
   
@@ -190,7 +197,12 @@ for i=1:numel(functionlist)
   result.functionname     = functionlist{i};
   
   if istrue(upload)
-    options = weboptions('MediaType','application/json');
+    try
+      % the weboptions function is available in 2014b onward, but behaves inconsistently
+      options = weboptions('MediaType','application/json');
+    catch
+      options = [];
+    end
     url = 'http://dashboard.fieldtriptoolbox.org/api/';
     webwrite(url, result, options);
   else

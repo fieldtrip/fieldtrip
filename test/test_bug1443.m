@@ -3,7 +3,6 @@ function test_bug1443
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1443
 % TEST ft_rejectcomponent ft_componentanalysis
 
 % use FieldTrip defaults instead of personal defaults
@@ -26,7 +25,7 @@ cfg.component = 2; % chosen randomly
 rej1 = ft_rejectcomponent(cfg, comp, data);
 rej2 = ft_rejectcomponent(cfg, comp);
 
-norm(rej2.grad.tra-rej1.grad.tra)/norm(rej2.grad.tra)
+norm(rej2.grad.tra-rej1.grad.tra)/norm(rej2.grad.tra);
 figure; imagesc(rej2.grad.tra - rej1.grad.tra); caxis([-1 1])
 
 load standard_sourcemodel3d10mm

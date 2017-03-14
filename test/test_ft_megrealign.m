@@ -3,7 +3,6 @@ function test_ft_megrealign
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_megrealign
 % TEST ft_megrealign ft_prepare_neighbours ft_transform_geometry
 
 % use FieldTrip defaults instead of personal defaults

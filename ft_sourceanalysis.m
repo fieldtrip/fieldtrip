@@ -273,7 +273,7 @@ if istimelock
   source = copyfields(data, source, {'time'});
   
 elseif isfreq
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'refchan'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'refchan', 'nanmean'});
   
   % ensure that the refchan is kept, if present
   if isfield(tmpcfg, 'refchan') && ~isempty(tmpcfg.refchan) && isempty(match_str(tmpcfg.channel, tmpcfg.refchan))
@@ -657,7 +657,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   optarg = ft_cfg2keyval(tmpcfg);
   
   if Nrepetitions > 1
-    ft_progress('init', 'text');
+    ft_progress('init', cfg.(cfg.method).feedback, 'scanning repetition...');
   end
   
   for i=1:Nrepetitions
@@ -665,7 +665,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     squeeze_Cf = reshape(Cf(i,:,:), size_Cf(2:end));    
     
     if Nrepetitions > 1
-      ft_progress(i/Nrepetitions, 'scanning repetition %d of %d', i, Nrepetitions);
+      ft_progress(i/Nrepetitions, 'scanning repetition %d from %d', i, Nrepetitions);
     end
     
     switch cfg.method

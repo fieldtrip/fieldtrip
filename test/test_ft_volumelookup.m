@@ -3,7 +3,6 @@ function test_ft_volumelookup
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_volumelookup
 % TEST ft_volumelookup
 % TEST ft_read_atlas
 % TEST atlas_lookup

@@ -3,7 +3,6 @@ function test_bug1298
 % MEM 3gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1298
 % TEST ft_timelockanalysis ft_prepare_leadfield ft_sourceanalysis 
 
 % use FieldTrip defaults instead of personal defaults

@@ -117,7 +117,6 @@ if (~isempty(depHastrialdef))
 end
 
 % determine the type of input data
-% this can be raw, freq, timelock, comp, spike, source, volume, dip
 israw           = ft_datatype(data, 'raw');
 isfreq          = ft_datatype(data, 'freq');
 istimelock      = ft_datatype(data, 'timelock');
@@ -358,6 +357,13 @@ if ~isempty(dtype)
       istimelock = 0;
       iscomp = 1;
       israw = 1;
+      okflag = 1;
+    elseif isequal(dtype(iCell), {'timelock+comp'}) && israw && iscomp
+      data = raw2timelock(data);
+      data = ft_datatype_timelock(data);
+      istimelock = 1;
+      iscomp = 1;
+      israw = 0;
       okflag = 1;
     elseif isequal(dtype(iCell), {'raw'}) && issource
       data = source2raw(data);
@@ -1348,25 +1354,26 @@ if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [data] = raw2timelock(data)
+function [tlck] = raw2timelock(data)
 
-nsmp = cellfun('size',data.time,2);
 data   = ft_checkdata(data, 'hassampleinfo', 'yes');
 ntrial = numel(data.trial);
 nchan  = numel(data.label);
+
 if ntrial==1
-  data.time   = data.time{1};
-  data.avg    = data.trial{1};
-  data        = rmfield(data, 'trial');
-  data.dimord = 'chan_time';
+  tlck.time   = data.time{1};
+  tlck.avg    = data.trial{1};
+  tlck.label  = data.label;
+  tlck.dimord = 'chan_time';
+  tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'unmixing', 'topolabel'});
+
 else
-  
-  % code below tries to construct a general time-axis where samples of all trials can fall on
-  % find earliest beginning and latest ending
-  begtime = min(cellfun(@min,data.time));
-  endtime = max(cellfun(@max,data.time));
+  % the code below tries to construct a general time-axis where samples of all trials can fall on
+  % find the earliest beginning and latest ending
+  begtime = min(cellfun(@min, data.time));
+  endtime = max(cellfun(@max, data.time));
   % find 'common' sampling rate
-  fsample = 1./mean(cellfun(@mean,cellfun(@diff,data.time,'uniformoutput',false)));
+  fsample = 1./mean(cellfun(@mean, cellfun(@diff,data.time, 'uniformoutput', false)));
   % estimate number of samples
   nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
   % construct general time-axis
@@ -1383,20 +1390,12 @@ else
     tmptrial(i,:,begsmp(i):endsmp(i)) = data.trial{i};
   end
   
-  % update the sampleinfo
-  begpad = begsmp - min(begsmp);
-  endpad = max(endsmp) - endsmp;
-  if isfield(data, 'sampleinfo')
-    data.sampleinfo = data.sampleinfo + [-begpad(:) endpad(:)];
-  end
-  
   % construct the output timelocked data
-  % data.avg     = reshape(nanmean(tmptrial,     1), nchan, length(tmptime));
-  % data.var     = reshape(nanvar (tmptrial, [], 1), nchan, length(tmptime))
-  % data.dof     = reshape(sum(~isnan(tmptrial), 1), nchan, length(tmptime));
-  data.trial   = tmptrial;
-  data.time    = time;
-  data.dimord = 'rpt_chan_time';
+  tlck.trial   = tmptrial;
+  tlck.time    = time;
+  tlck.dimord  = 'rpt_chan_time';
+  tlck.label   = data.label;
+  tlck         = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'unmixing', 'topolabel'});
 end
 
 

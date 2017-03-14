@@ -19,12 +19,12 @@ end
 % this is probably due to MATLAB filename and MATLAB version issues
 var = whos('-file', filename);
 
-if length(var)==0 && nargin==1
+if isempty(var) && nargin==1
   filecontent = load(filename); % read everything from the file, regardless of how the variables are called
   varname = fieldnames(filecontent);
   if length(varname)==1
     % the one variable in the file will be returned
-    value = filecontent.(varname{i});
+    value = filecontent.(varname{1});
     clear filecontent
   else
     error('cannot read an unspecified variable in case of a file containing multiple variables');

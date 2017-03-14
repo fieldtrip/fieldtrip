@@ -133,6 +133,7 @@ if isdeployed
 else
   if ~isfield(cfg, 'template')
     spmpath = spm('dir');
+    if strcmpi(cfg.spmversion, 'spm12'), cfg.template = fullfile(spmpath, filesep, 'toolbox', filesep, 'OldNorm', filesep, 'T1.nii'); end
     if strcmpi(cfg.spmversion, 'spm8'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.nii'); end
     if strcmpi(cfg.spmversion, 'spm2'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.mnc'); end
   end
@@ -310,6 +311,9 @@ ft_postamble trackconfig
 % doing the trackconfig
 cfg.spmparams = params;
 cfg.final     = final;
+
+% restore the previous warning state
+warning(ws);
 
 ft_postamble previous   mri
 ft_postamble provenance normalised

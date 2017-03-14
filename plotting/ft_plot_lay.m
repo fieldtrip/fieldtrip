@@ -27,6 +27,8 @@ function ft_plot_lay(lay, varargin)
 %   'vpos'        = vertical position of the lower left corner of the local axes
 %   'width'       = width of the local axes
 %   'height'      = height of the local axes
+% 
+% See also FT_PREPARE_LAYOUT
 
 % Copyright (C) 2009, Robert Oostenveld
 %

@@ -79,7 +79,7 @@ cfg.refchan   = 'BR1';
 cfg.keeptrials = 'yes';
 s4             = ft_sourceanalysis(cfg, freq);
 
-assert(identical(s3.avg.coh, s4.avg.coh, 'reltol', 1e-8));
+assert(isalmostequal(s3.avg.coh, s4.avg.coh, 'reltol', 1e-8));
 end
 
 % Tthe following cfg should give an error due to the mismatch in
@@ -124,7 +124,7 @@ cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch i
 cfg.refchan   = 'BR1';
 s3b           = ft_sourceanalysis(cfg, freq);
 s3c           = ft_sourcedescriptives([], s3b);
-assert(identical(s3.avg.coh, s3c.avg.coh, 'reltol', 1e-8));
+assert(isalmostequal(s3.avg.coh, s3c.avg.coh, 'reltol', 1e-8));
 end
 
 % ALSO: check whether it also works with powandcsd data
@@ -176,7 +176,7 @@ cfg.refchan   = 'BR1';
 cfg.keeptrials = 'yes';
 s4             = ft_sourceanalysis(cfg, freq);
 
-assert(identical(s3.avg.coh, s4.avg.coh, 'reltol', 1e-8));
+assert(isalmostequal(s3.avg.coh, s4.avg.coh, 'reltol', 1e-8));
 end
 
 % Tthe following cfg should give an error due to the mismatch in
@@ -221,5 +221,5 @@ cfg.channel   = 'MEG'; % this is needed, otherwise there's a detected mismatch i
 cfg.refchan   = 'BR1';
 s3b           = ft_sourceanalysis(cfg, freq);
 s3c           = ft_sourcedescriptives([], s3b);
-assert(identical(s3.avg.coh, s3c.avg.coh, 'reltol', 1e-8));
+assert(isalmostequal(s3.avg.coh, s3c.avg.coh, 'reltol', 1e-8));
 end

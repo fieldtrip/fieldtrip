@@ -3,7 +3,6 @@ function test_bug2734
 % WALLTIME 00:10:00
 % MEM 150mb
 
-% TEST test_bug2734
 % TEST ft_read_cifti
 
 

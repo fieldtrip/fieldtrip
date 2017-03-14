@@ -3,7 +3,6 @@ function test_tutorial_multivariateanalysis(datadir, dmltdir)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_multivariateanalysis
 % TEST ft_timelockstatistics ft_topoplotER ft_freqstatistics ft_topoplotTFR
 
 % this is a test script that I made following the report of Matt on

@@ -3,7 +3,6 @@ function test_bug2773
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST test_bug2773
 % TEST ft_dipolefitting ft_movieplotER ft_prepare_sourcemodel ft_prepare_layout
 
 

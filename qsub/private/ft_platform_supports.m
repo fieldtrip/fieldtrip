@@ -69,7 +69,7 @@ switch what
     
   case 'libmx_c_interface'
     % removed after 2013b
-    tf = matlabversion(-Inf, '2013b');
+    tf = is_matlab() && matlabversion(-Inf, '2013b');
     
   case 'stats'
     root_dir = fileparts(which('ft_defaults'));
@@ -134,6 +134,9 @@ switch what
     
   case 'webwrite'
     tf = is_matlab() && matlabversion('2015a', Inf);
+    
+  case 'boundary'
+    tf = is_matlab() && matlabversion('2014b', Inf);
     
   otherwise
     error('unsupported value for first argument: %s', what);

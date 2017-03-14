@@ -3,7 +3,6 @@ function test_bug472
 % MEM 1500mb
 % WALLTIME 00:13:01
 
-% TEST test_bug472
 % TEST buffer.mexa64 buffer.mexmaci buffer.mexw64 buffer.mexglx buffer.mexmaci64 buffer.mexmac buffer.mexw32
 
 global ft_default;

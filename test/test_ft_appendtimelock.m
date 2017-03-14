@@ -3,7 +3,6 @@ function test_ft_appendtimelock
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_appendtimelock
 % TEST ft_appendtimelock
 
 % Johanna Zumer
@@ -54,10 +53,10 @@ cfg=[];
 tlock1=ft_timelockanalysis(cfg,dataFC_LP);
 
 cfg=[];
-cfg.channel={'MLT*'}
+cfg.channel={'MLT*'};
 tlockl=ft_timelockanalysis(cfg,dataFC_LP);
 cfg=[];
-cfg.channel={'MRT*'}
+cfg.channel={'MRT*'};
 tlockr=ft_timelockanalysis(cfg,dataFC_LP);
 
 % should concat over channels
@@ -92,9 +91,9 @@ assert(logical(catchflag))
 cfg=[];
 cfg.keeptrials = 'yes';
 tlock1=ft_timelockanalysis(cfg,dataFC_LP);
-cfg.channel={'MLT*'}
+cfg.channel={'MLT*'};
 tlockl=ft_timelockanalysis(cfg,dataFC_LP);
-cfg.channel={'MRT*'}
+cfg.channel={'MRT*'};
 tlockr=ft_timelockanalysis(cfg,dataFC_LP);
 
 % should concat over channels

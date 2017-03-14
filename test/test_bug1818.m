@@ -6,7 +6,6 @@ function test_bug1818
 % test the reading function of meshes used for constructing SIMBIO FEM head models
 % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1818
 
-% TEST test_bug1818
 % TEST ft_read_headshape ft_datatype_parcellation
 
 filename = {

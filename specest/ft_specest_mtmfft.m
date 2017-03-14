@@ -66,8 +66,8 @@ if isempty(fbopt),
 end
 
 % throw errors for required input
-if isempty(tapsmofrq) && strcmp(taper, 'dpss')
-  error('you need to specify tapsmofrq when using dpss tapers')
+if isempty(tapsmofrq) && (strcmp(taper, 'dpss') || strcmp(taper, 'sine'))
+  error('you need to specify tapsmofrq when using dpss or sine tapers')
 end
 
 % this does not work on integer data
@@ -115,7 +115,7 @@ elseif strcmp(freqoi,'all') % if input was 'all'
 end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
-if strcmp(taper, 'dpss') && numel(tapsmofrq)~=1 && (numel(tapsmofrq)~=nfreqoi)
+if (strcmp(taper, 'dpss') || strcmp(taper, 'sine')) && numel(tapsmofrq)~=1 && (numel(tapsmofrq)~=nfreqoi)
   error('tapsmofrq needs to contain a smoothing parameter for every frequency when requesting variable number of slepian tapers')
 end
 
@@ -177,8 +177,35 @@ else
       end
       
     case 'sine'
-      tap = sine_taper(ndatsample, ndatsample*(tapsmofrq./fsample))';
-      tap = tap(1:(end-1), :); % remove the last taper
+      if numel(tapsmofrq)==1
+        % create a sequence of sine tapers, 
+        tap = sine_taper(ndatsample, ndatsample*(tapsmofrq./fsample))';
+        % remove the last taper 
+        tap = tap(1:(end-1), :);
+        
+        % give error/warning about number of tapers
+        if isempty(tap)
+          error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/ndatsample);
+        elseif size(tap,1) == 1
+          ft_warning('using only one taper for specified smoothing');
+        end
+      elseif numel(tapsmofrq)>1
+        tap = cell(1,nfreqoi);
+        for ifreqoi = 1:nfreqoi
+          % create a sequence of sine tapers
+          currtap = sine_taper(ndatsample, ndatsample .* (tapsmofrq(ifreqoi) ./ fsample))';
+          % remove the last taper because the last slepian taper is always messy
+          currtap = currtap(1:(end-1), :);
+          
+          % give error/warning about number of tapers
+          if isempty(currtap)
+            error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), ndatsample/fsample,tapsmofrq(ifreqoi),fsample/ndatsample(ifreqoi));
+          elseif size(currtap,1) == 1
+            disp([num2str(freqoi(ifreqoi)) ' Hz: WARNING: using only one taper for specified smoothing'])
+          end
+          tap{ifreqoi} = currtap;
+        end
+      end          
       
     case 'sine_old'
       % to provide compatibility with the tapers being scaled (which was default
@@ -207,7 +234,7 @@ else
 end % isequal currargin
 
 % set ntaper
-if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % variable number of slepian tapers not requested
+if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % variable number of slepian tapers not requested
   ntaper = repmat(size(tap,1),nfreqoi,1);
 else % variable number of slepian tapers requested
   ntaper = cellfun(@size,tap,repmat({1},[1 nfreqoi]));
@@ -230,7 +257,7 @@ if timedelay ~= 0
 end
 
 % compute fft
-if ~(strcmp(taper,'dpss') && numel(tapsmofrq)>1) % ariable number of slepian tapers not requested
+if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % ariable number of slepian tapers not requested
   str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
   [st, cws] = dbstack;
   if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')

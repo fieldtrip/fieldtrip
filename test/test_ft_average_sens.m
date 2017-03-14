@@ -3,7 +3,6 @@ function test_ft_average_sens
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_average_sens
 % TEST ft_average_sens ft_transform_sens ft_transform_geometry
 
 % this script so far only tests whether it runs through for a set of eeg

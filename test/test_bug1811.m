@@ -3,7 +3,6 @@ function test_bug1811
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1811
 % TEST ft_analysispipeline
 
 % loading meg + eyelink channels data appended with function_handle variable

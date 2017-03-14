@@ -50,7 +50,7 @@ end
 
 if ~allowscaling
   % allow for some numerical imprecision
-  if abs(det(rotation)-1)>1e-6%100*eps
+  if (abs(det(rotation))-1)>1e-6%100*eps
   %if abs(det(rotation)-1)>100*eps  % allow for some numerical imprecision
     error('only a rigid body transformation without rescaling is allowed');
   end

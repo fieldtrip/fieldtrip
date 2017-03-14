@@ -49,7 +49,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.medianfilter  = 'no' or 'yes'  jump preserving median filter (default = 'no')
 %   cfg.lpfreq        = lowpass  frequency in Hz
 %   cfg.hpfreq        = highpass frequency in Hz
-%   cfg.bpfreq        = bandpass frequency range, specified as [low high] in Hz
+%   cfg.bpfreq        = bandpass frequency range, specified as [lowFreq highFreq] in Hz
 %   cfg.bsfreq        = bandstop frequency range, specified as [low high] in Hz
 %   cfg.dftfreq       = line noise frequencies in Hz for DFT filter (default = [50 100 150])
 %   cfg.lpfiltord     = lowpass  filter order (default set in low-level function)
@@ -205,31 +205,33 @@ cfg.method         = ft_getopt(cfg, 'method', 'trial');
 cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.removemcg      = ft_getopt(cfg, 'removemcg', 'no');
 cfg.removeeog      = ft_getopt(cfg, 'removeeog', 'no');
-cfg.precision      = ft_getopt(cfg, 'precision', 'double');     
+cfg.precision      = ft_getopt(cfg, 'precision', 'double');
 cfg.padding        = ft_getopt(cfg, 'padding', 0);          % padding is only done when filtering
-cfg.paddir         = ft_getopt(cfg, 'paddir', 'both');         
+cfg.paddir         = ft_getopt(cfg, 'paddir', 'both');
 cfg.headerformat   = ft_getopt(cfg, 'headerformat');        % is passed to low-level function, empty implies autodetection
 cfg.dataformat     = ft_getopt(cfg, 'dataformat');          % is passed to low-level function, empty implies autodetection
 cfg.coordsys       = ft_getopt(cfg, 'coordsys', 'head');    % is passed to low-level function
 cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-level function
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
+cfg.montage        = ft_getopt(cfg, 'montage', 'no');
+cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'yes');   % in case a montage is specified
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of padding
-cfg.dftfilter     = ft_getopt(cfg, 'dftfilter', 'no');
-cfg.lpfilter      = ft_getopt(cfg, 'lpfilter', 'no');
-cfg.hpfilter      = ft_getopt(cfg, 'hpfilter', 'no');
-cfg.bpfilter      = ft_getopt(cfg, 'bpfilter', 'no');
-cfg.bsfilter      = ft_getopt(cfg, 'bsfilter', 'no');
-cfg.medianfilter  = ft_getopt(cfg, 'medianfilter', 'no');
-cfg.padtype       = ft_getopt(cfg, 'padtype', 'data');
+cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
+cfg.lpfilter       = ft_getopt(cfg, 'lpfilter', 'no');
+cfg.hpfilter       = ft_getopt(cfg, 'hpfilter', 'no');
+cfg.bpfilter       = ft_getopt(cfg, 'bpfilter', 'no');
+cfg.bsfilter       = ft_getopt(cfg, 'bsfilter', 'no');
+cfg.medianfilter   = ft_getopt(cfg, 'medianfilter', 'no');
+cfg.padtype        = ft_getopt(cfg, 'padtype', 'data');
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of channel selection
-cfg.reref         = ft_getopt(cfg, 'reref', 'no');
-cfg.refchannel    = ft_getopt(cfg, 'refchannel', {});
-cfg.refmethod     = ft_getopt(cfg, 'refmethod', 'avg');
-cfg.implicitref   = ft_getopt(cfg, 'implicitref');
+cfg.reref          = ft_getopt(cfg, 'reref', 'no');
+cfg.refchannel     = ft_getopt(cfg, 'refchannel', {});
+cfg.refmethod      = ft_getopt(cfg, 'refmethod', 'avg');
+cfg.implicitref    = ft_getopt(cfg, 'implicitref');
 
-if ~isfield(cfg, 'feedback'),
+if ~isfield(cfg, 'feedback')
   if strcmp(cfg.method, 'channel')
     cfg.feedback = 'none';
   else
@@ -363,14 +365,31 @@ if hasdata
     
   end % for all trials
   
-  if isfield(dataout, 'grad') && isfield(cfg, 'montage') && ~strcmp(cfg.montage, 'no') && isstruct(cfg.montage)
-    % apply the montage also to the MEG-sensor description
-    if isfield(cfg.montage, 'type'),
-      bname = cfg.montage.type;
-    else
-      bname = 'preproc';
+  % apply the linear projection also to the sensor description
+  if isfield(dataout, 'grad')
+    sensfield = 'grad';
+  elseif isfield(dataout, 'elec')
+    sensfield = 'elec';
+  elseif isfield(dataout, 'opto')
+    sensfield = 'opto';
+  else
+    sensfield = [];
+  end
+  
+  if isstruct(cfg.montage)
+    if ~isempty(sensfield)
+      if  strcmp(cfg.updatesens, 'yes')
+        fprintf('also applying the montage to the %s structure\n', sensfield);
+        if isfield(cfg.montage, 'type')
+          bname = cfg.montage.type; % FIXME this is not standard
+        else
+          bname = 'preproc';
+        end
+        dataout.(sensfield) = ft_apply_montage(dataout.(sensfield), cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+      else
+        fprintf('not applying the montage to the %s structure\n', sensfield);
+      end
     end
-    dataout.grad = ft_apply_montage(dataout.grad, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
   end
   
   % convert back to input type if necessary
@@ -633,13 +652,13 @@ else
       dataout.trialinfo      = cfg.trl(:,4:end);
     end
     if isfield(hdr, 'grad')
-      dataout.grad             = hdr.grad;             % gradiometer system in head coordinates
+      dataout.grad             = hdr.grad;             % MEG gradiometer information in header (f.e. headerformat = 'ctf_ds')
     end
     if isfield(hdr, 'elec')
-      dataout.elec             = hdr.elec;             % EEG information in header (f.e. headerformat = 'neuromag_fif')
+      dataout.elec             = hdr.elec;             % EEG electrode information in header (f.e. headerformat = 'neuromag_fif')
     end
     if isfield(hdr, 'opto')
-      dataout.opto             = hdr.opto;             % NIRS  information in header (f.e. headerformat = 'artinis')
+      dataout.opto             = hdr.opto;             % NIRS optode information in header (f.e. headerformat = 'artinis')
     end
     
   end % for all channel groups

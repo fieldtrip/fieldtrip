@@ -3,7 +3,6 @@ function test_bug1490b
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1490b
 % TEST ft_read_header ft_read_data loadcnt
 
 % this is a second test pertaining to http://bugzilla.fcdonders.nl/show_bug.cgi?id=1490#c11

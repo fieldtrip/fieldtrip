@@ -50,28 +50,39 @@ global ft_default
 % this is a trick to pass the input arguments into the ft_preamble_xxx script
 ft_default.preamble = varargin;
 
-if ft_platform_supports('exists-in-private-directory')
-  % Matlab can directly see the command, no trickery needed as in Octave.
-  if exist(['ft_preamble_' cmd], 'file')
-    evalin('caller', ['ft_preamble_' cmd]);
-  end
-else
-  % Octave does not find files by name, so the full filename must be specified.
-  if exist(['private/ft_preamble_' cmd '.m'], 'file')
+full_cmd=['ft_preamble_' cmd];
+cmd_exists=false;
 
-    % save the original working directory
-    orig_pwd=pwd();
+if exist(full_cmd, 'file')
+  % Matlab can find commands in a private subdirectory; Octave cannot.
+  % If pwd is already the private directory, or if using Matlab then
+  % the command can be evaluated directly
+  cmd_exists = true;
 
-    % ensure original working directory is restored when exiting this function
-    cleaner=onCleanup(@()cd(orig_pwd));
+elseif ~ft_platform_supports('exists-in-private-directory')
+  % Octave does not find files by name in a private directory, so the full
+  % filename must be specified.
+  private_dir=fullfile(fileparts(which(mfilename)),'private');
+  full_path=fullfile(private_dir,[full_cmd '.m']);
 
-    % cd to private directory
-    cd([fileparts(which(mfilename)) '/private']);
-
-    % evaluate ft_preamble_* function
-    evalin('caller', ['ft_preamble_' cmd]);
-  end
+  cmd_exists=exist(full_path,'file');
+  full_cmd_parts={'ft_tmp_orig_pwd=pwd();',...
+                  'ft_tmp_orig_pwd_cleaner='...
+                                'onCleanup(@()cd(ft_tmp_orig_pwd));',...
+                  sprintf('cd(''%s'');',private_dir),...
+                  [full_cmd ';'],...
+                  'clear ft_tmp_orig_pwd_cleaner;'};
+  full_cmd=sprintf('%s',full_cmd_parts{:});
 end
+
+if ~cmd_exists
+  % XXX earlier versions would not do anything if ~cmd_exists,
+  % but fail silently (without raising an error or warning).
+  % Should that behavior be kept?
+  error('Could not run %s - does not seem to exist', full_cmd);
+end
+
+evalin('caller', full_cmd);
 
 if isfield(ft_default, 'preamble')
   % the preamble field should not remain in the ft_default structure

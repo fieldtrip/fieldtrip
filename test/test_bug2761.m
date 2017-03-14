@@ -4,7 +4,6 @@ function test_bug2761
 % WALLTIME 00:10:00
 % MEM 1GB
 
-% TEST test_bug2761
 % TEST ft_connectivityanalysis ft_connectivity_corr
 
 data = [];

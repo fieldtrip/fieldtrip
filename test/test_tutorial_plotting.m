@@ -1,11 +1,9 @@
 function test_tutorial_plotting
 
-% MEM 2500mb
 % WALLTIME 00:15:00
+% MEM 4gb
 
-% TEST test_tutorial_plotting
-% TEST ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF 
-%      ft_megplanar ft_combineplanar
+% TEST ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF ft_megplanar ft_combineplanar ft_volumereslice
 
 % see http://www.fieldtriptoolbox.org/tutorial/plotting
 % this testscript corresponds to the version on the wiki at 23 December 2012

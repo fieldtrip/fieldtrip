@@ -3,7 +3,6 @@ function test_ft_selectdata
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_selectdata
 % TEST ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
 
 timelock1 = [];
@@ -90,15 +89,15 @@ freq.freq  = 1:4;
 freq.time  = 1:5;
 
 cfg = [];
-freqpow = ft_selectdata(cfg, freq)
+freqpow = ft_selectdata(cfg, freq);
 
 cfg = [];
 cfg.parameter = 'powspctrm';
-freqpow = ft_selectdata(cfg, freq)
+freqpow = ft_selectdata(cfg, freq);
 
 cfg = [];
 cfg.parameter = 'crsspctrm';
-freqcrs = ft_selectdata(cfg, freq)
+freqcrs = ft_selectdata(cfg, freq);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% this part of the script tests the functionality of ft_selectdata with respect
@@ -116,37 +115,37 @@ freq.powspctrm = randn(2, 3, 4, 5);
 cfg = [];
 cfg.avgoverrpt = 'yes';
 cfg.keeprptdim = 'yes';
-freq_avgoverrpt = ft_selectdata(cfg, freq)
+freq_avgoverrpt = ft_selectdata(cfg, freq);
 cfg.keeprptdim = 'no';
-freq_avgoverrpt = ft_selectdata(cfg, freq)
+freq_avgoverrpt = ft_selectdata(cfg, freq);
 
 cfg = [];
 cfg.avgoverchan = 'yes';
 cfg.keepchandim = 'yes';
-freq_avgoverchan = ft_selectdata(cfg, freq)
+freq_avgoverchan = ft_selectdata(cfg, freq);
 cfg.keepchandim = 'no';
-freq_avgoverchan = ft_selectdata(cfg, freq)
+freq_avgoverchan = ft_selectdata(cfg, freq);
 
 cfg = [];
 cfg.avgoverfreq = 'yes';
 cfg.keepfreqdim = 'yes';
-freq_avgoverfreq = ft_selectdata(cfg, freq)
+freq_avgoverfreq = ft_selectdata(cfg, freq);
 cfg.keepfreqdim = 'no';
-freq_avgoverfreq = ft_selectdata(cfg, freq)
+freq_avgoverfreq = ft_selectdata(cfg, freq);
 
 cfg = [];
 cfg.avgovertime = 'yes';
 cfg.keeptimedim = 'yes';
-freq_avgovertime = ft_selectdata(cfg, freq)
+freq_avgovertime = ft_selectdata(cfg, freq);
 cfg.keeptimedim = 'no';
-freq_avgovertime = ft_selectdata(cfg, freq)
+freq_avgovertime = ft_selectdata(cfg, freq);
 
 cfg = [];
 cfg.avgoverrpt  = 'yes';
 cfg.avgoverchan = 'yes';
 cfg.avgoverfreq = 'yes';
 cfg.avgovertime = 'yes';
-freq_avgoverall = ft_selectdata(cfg, freq)
+freq_avgoverall = ft_selectdata(cfg, freq);
 
 % rpt_chan_time
 
@@ -158,23 +157,23 @@ timelock.avg = randn(2, 3, 4);
 
 cfg = [];
 cfg.avgoverrpt = 'yes';
-timelock_avgoverrpt = ft_selectdata(cfg, timelock)
+timelock_avgoverrpt = ft_selectdata(cfg, timelock);
 
 cfg = [];
 cfg.avgoverchan = 'yes';
-timelock_avgoverchan = ft_selectdata(cfg, timelock)
+timelock_avgoverchan = ft_selectdata(cfg, timelock);
 
 cfg = [];
 cfg.avgoverrpt = 'yes';
 cfg.avgoverchan = 'yes';
 cfg.avgovertime = 'yes';
-timelock_avgoverall = ft_selectdata(cfg, timelock)
+timelock_avgoverall = ft_selectdata(cfg, timelock);
 
 % rpt_chan_time
 
 cfg = [];
 cfg.avgovertime = 'yes';
-timelock_avgovertime = ft_selectdata(cfg, timelock)
+timelock_avgovertime = ft_selectdata(cfg, timelock);
 
 timelock = [];
 timelock.dimord = 'chan_time';
@@ -184,16 +183,16 @@ timelock.avg = randn(3, 4);
 
 cfg = [];
 cfg.avgoverchan = 'yes';
-timelock_avgoverchan = ft_selectdata(cfg, timelock)
+timelock_avgoverchan = ft_selectdata(cfg, timelock);
 
 cfg = [];
 cfg.avgovertime = 'yes';
-timelock_avgovertime = ft_selectdata(cfg, timelock)
+timelock_avgovertime = ft_selectdata(cfg, timelock);
 
 cfg = [];
 cfg.avgoverchan = 'yes';
 cfg.avgovertime = 'yes';
-timelock_avgoverall = ft_selectdata(cfg, timelock)
+timelock_avgoverall = ft_selectdata(cfg, timelock);
 
 source = [];
 source.dim = [10 11 12];
@@ -204,7 +203,7 @@ source.outside = 661:1320;
 
 cfg = [];
 cfg.avgoverpos = 'yes';
-output = ft_selectdata(cfg, source)
+output = ft_selectdata(cfg, source);
 assert(output.pos(1)==5.5);
 assert(output.pos(2)==6.0);
 assert(output.pos(3)==6.5);

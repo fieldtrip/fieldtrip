@@ -3,7 +3,6 @@ function test_tutorial_connectivity3(datadir)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_connectivity3
 % TEST ft_timelockanalysis ft_sourceanalysis ft_connectivityanalysis ft_prepare_sourcemodel headsurface
 
 % This is the third section of the connectivity tutorial, which
@@ -22,7 +21,7 @@ end
 load(fullfile(datadir, 'source.mat'));
 
 [maxval, maxindx] = max(source.avg.coh);
-maxpos = source.pos(maxindx,:)
+maxpos = source.pos(maxindx,:);
 
 load(fullfile(datadir,'data.mat'));
 
