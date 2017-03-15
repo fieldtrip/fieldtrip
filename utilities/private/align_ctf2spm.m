@@ -156,7 +156,7 @@ elseif opt==2
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
       end
-      error('spm12 is not yet supported'); % FIXME: there's yet no spm_normalise equivalent in external/spm12
+      %error('spm12 is not yet supported'); % FIXME: there's yet no spm_normalise equivalent in external/spm12
       
     otherwise
       error('unsupported spm-version');
