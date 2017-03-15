@@ -109,25 +109,6 @@ for i=1:Ndata
   label = cat(1, label(:), varargin{i}.label(:));
 end
 
-% try to locate the trial definition (trl) in the nested configuration and
-% check whether the input data contains trialinfo
-% this is DEPRECATED - don't look in cfg-tree for stuff anymore
-% hastrialinfo = 0;
-% trl = cell(1, Ndata);
-% for i=1:Ndata
-%   if isfield(varargin{i}, 'cfg')
-%     trl{i} = ft_findcfg(varargin{i}.cfg, 'trl');
-%   else
-%     trl{i} = [];
-%   end
-%   if isempty(trl{i})
-%     % a trial definition is expected in each continuous data set
-%     warning('could not locate the trial definition ''trl'' in data structure %d', i);
-%   end
-%   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
-% end
-% hastrialinfo = hastrialinfo==Ndata;
-
 hassampleinfo = 0;
 ncoltrialinfo = zeros(size(varargin));
 for i=1:Ndata
