@@ -425,7 +425,65 @@ if dotpm
           V(j) = spm_create_vol(V(j));
         end
       end
+     
+    case 'spm12'
+      Va = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
 
+      fprintf('performing the segmentation on the specified volume\n');
+      if isfield(cfg, 'tpm')
+        cfg.tpm  = char(cfg.tpm(:));
+        px.tpm   = cfg.tpm;
+        p        = spm_preproc(Va, px);
+      else
+        p        = spm_preproc(Va);
+      end
+      [po, pin] = spm_prep2sn(p);
+
+      % I took these settings from a batch
+      opts     = [];
+      opts.GM  = [0 0 1];
+      opts.WM  = [0 0 1];
+      opts.CSF = [0 0 1];
+      opts.biascor = 1;
+      opts.cleanup = 0;
+      spm_preproc_write(po, opts);
+
+      [pathstr, name, ext] = fileparts(cfg.name);
+      Vtmp = spm_vol({fullfile(pathstr,['c1', name, '.nii']);...
+        fullfile(pathstr,['c2', name, '.nii']);...
+        fullfile(pathstr,['c3', name, '.nii'])});
+
+      % read the resulting volumes
+      for j = 1:3
+        vol = spm_read_vols(Vtmp{j});
+        Vtmp{j}.dat = vol;
+        V(j) = struct(Vtmp{j});
+      end
+
+      % keep or remove the files according to the configuration
+      if strcmp(cfg.keepintermediate, 'no'),
+        delete([cfg.name, '.nii']);
+        if exist([cfg.name, '.mat'], 'file'),
+          delete([cfg.name, '.mat']);
+        end %does not always exist
+      end
+
+      % keep the files written to disk or remove them
+      % FIXME check whether this works at all
+      if strcmp(cfg.write, 'no'),
+        delete(fullfile(pathstr,['c1', name, '.nii'])); %FIXME this may not be needed in spm8
+        delete(fullfile(pathstr,['c2', name, '.nii']));
+        delete(fullfile(pathstr,['c3', name, '.nii']));
+        delete(fullfile(pathstr,['m', name, '.nii']));
+      elseif strcmp(cfg.write, 'yes')
+        for j = 1:3
+          % put the transformation-matrix in the headers
+          V(j).mat = mri.transform;
+          % write the updated header information back to file ???????
+          V(j) = spm_create_vol(V(j));
+        end
+      end
+     
     otherwise
       error('unsupported SPM version');
 
