@@ -128,14 +128,21 @@ end
 % end
 % hastrialinfo = hastrialinfo==Ndata;
 
-hastrialinfo = 0;
 hassampleinfo = 0;
+ncoltrialinfo = zeros(size(varargin));
 for i=1:Ndata
   hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
-  hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
+  if isfield(varargin{i}, 'trialinfo')
+    ncoltrialinfo(i) = size(varargin{i}.trialinfo,2);
+  end
 end
-hassampleinfo = hassampleinfo==Ndata;
-hastrialinfo = hastrialinfo==Ndata;
+hassampleinfo = hassampleinfo==Ndata; % only if all inputs have sampleinfo
+if numel(unique(ncoltrialinfo)) == 1      % all inputs have same # of columns,
+  hastrialinfo = ncoltrialinfo(1) ~= 0;   % but if 0, no inputs have trialinfo
+else                      % either not all inputs have trialinfo, 
+  hastrialinfo = false;   % or they all do, but with different #s of columns
+  warning('trialinfo cannot be merged unless the same columns are present across all inputs')
+end
 
 % check the consistency of the labels across the input-structures
 alllabel = unique(label, 'first');
@@ -238,10 +245,9 @@ elseif cattrial
   for i=1:Ndata
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
-    % check if all datasets to merge have the sampleinfo field
+    % append sampleinfo & trialinfo rows (compatibility of inputs checked above)
     if hassampleinfo, data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo); end
     if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo,  varargin{i}.trialinfo);  end
-    % FIXME is not entirely robust if the different inputs have different number of columns in trialinfo
   end
 
 elseif catlabel
@@ -264,7 +270,7 @@ elseif catlabel
     % concatenate the labels
     data.label = cat(1, data.label(:), varargin{i}.label(:));
 
-    % check whether the trialinfo and sampleinfo fields are consistent
+    % trialinfo and sampleinfo fields must match exactly across all inputs
     if hassampleinfo && ~isequaln(data.sampleinfo, varargin{i}.sampleinfo)
       removesampleinfo = 1;
     end
