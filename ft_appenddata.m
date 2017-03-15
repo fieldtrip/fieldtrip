@@ -1,11 +1,10 @@
 function [data] = ft_appenddata(cfg, varargin)
-
-% FT_APPENDDATA combines multiple datasets that have been preprocessed separately
-% into a single large dataset.
+% FT_APPENDDATA combines multiple datasets that have been preprocessed
+% separately into a single large dataset.
 %
 % Use as
 %   data = ft_appenddata(cfg, data1, data2, data3, ...)
-% where the configuration can be empty.
+% where the configuration can be empty (it is not used).
 %
 % If the input datasets all have the same channels, the trials will be
 % concatenated. This is useful for example if you have different
@@ -131,21 +130,7 @@ end
 
 hastrialinfo = 0;
 hassampleinfo = 0;
-sampleinfo = cell(1, Ndata);
 for i=1:Ndata
-  if isfield(varargin{i}, 'sampleinfo')
-    sampleinfo{i} = varargin{i}.sampleinfo;
-  else
-    sampleinfo{i} = [];
-  end
-
-  % the function should behave properly even if no sampleinfo is present,
-  % hence the warning seems inappropriate (ES, 24-apr-2014)
-%   if isempty(sampleinfo{i})
-%     % a sample definition is expected in each data set
-%     warning('no ''sampleinfo'' field in data structure %d', i);
-%   end
-
   hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
 end
@@ -226,8 +211,7 @@ if shuflabel
   fprintf('the channel order in the input-structures is not consistent, reordering\n');
   if prunelabel
     fprintf('not all input-structures contain the same channels, pruning the input prior to concatenating over trials\n');
-    selall    = find(sum(order~=0,2)==Ndata);
-    alllabel  = alllabel(selall);
+    selall    = sum(order~=0,2)==Ndata;
     order     = order(selall,:);
   end
   for i=1:Ndata
@@ -249,7 +233,7 @@ elseif cattrial
   data.trial  = {};
   data.time   = {};
   if hassampleinfo, data.sampleinfo = []; end
-  if hastrialinfo,  data.trialinfo  = []; end;
+  if hastrialinfo,  data.trialinfo  = []; end
 
   for i=1:Ndata
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
@@ -329,7 +313,7 @@ end
 % unshuffle the channels again to match the order of the first input data-structure
 if shuflabel
   fprintf('reordering the channels back to the original input order\n');
-  [dum,reorder] = sort(order(order(:,1)~=0,1));
+  [~,reorder] = sort(order(order(:,1)~=0,1));
   for i=1:length(data.trial)
     data.trial{i} = data.trial{i}(reorder,:);
   end
