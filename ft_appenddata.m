@@ -4,7 +4,7 @@ function [data] = ft_appenddata(cfg, varargin)
 %
 % Use as
 %   data = ft_appenddata(cfg, data1, data2, data3, ...)
-% where the configuration can be empty (it is not used).
+% where the configuration can be empty.
 %
 % If the input datasets all have the same channels, the trials will be
 % concatenated. This is useful for example if you have different
