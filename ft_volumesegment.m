@@ -220,6 +220,8 @@ if ~isfield(cfg, 'name')
     error('you must specify the output filename in cfg.name');
   end
 end
+[p,f,e] = fileparts(cfg.name);
+cfg.name = fullfile(p,f);
 
 if ~iscell(cfg.output)
   % ensure it to be cell, to allow for multiple outputs
@@ -504,9 +506,23 @@ if dotpm
         
         Affine = spm_maff8(obj.image(1),3,32,obj.tpm,eye(4),'mni');
         Affine = spm_maff8(obj.image(1),3,1,obj.tpm,Affine,'mni');
-        obj.Affine   = Affine;
+        obj.Affine = Affine;
         
         res = spm_preproc8(obj);
+        
+        % this writes the 'native' segmentations
+        spm_preproc_write8(res, [ones(6,1) zeros(6,3)], [0 0], [0 1], 0, 0, nan(2,3), nan);
+        %save([cfg.name '_seg8.mat'],'-struct','res', spm_get_defaults('mat.format'));
+        
+        [pathstr, name, ~] = fileparts(cfg.name);
+        d       = dir(fullfile(pathstr,['c*',name,'*']));
+        for k = 1:numel(d)
+          Vtmp = spm_vol(fullfile(pathstr,d(k).name));
+          dat  = spm_read_vols(Vtmp);
+          V(k)     = Vtmp;
+          V(k).dat = dat;
+        end
+  
       else
         error('cfg.spmmethod should be either ''old'' or ''new''');
       end
@@ -526,24 +542,27 @@ if dotpm
   segmented.gray      = V(1).dat;
   if length(V)>1, segmented.white     = V(2).dat; end
   if length(V)>2, segmented.csf       = V(3).dat; end
+  if length(V)>3, segmented.bone      = V(4).dat; end
+  if length(V)>4, segmented.softtissue = V(5).dat; end
+  if length(V)>5, segmented.air        = V(6).dat; end
   segmented.anatomy   = mri.anatomy;
 
   % flip the volumes back according to the changes introduced by align_ijk2xyz
+  fn = fieldnames(segmented);
+  fn = fn(ismember(fn, {'anatomy', 'gray', 'white', 'csf', 'bone', 'softtissue', 'air'}));
   for k = 1:3
     if flipflags(k)
-      segmented.gray    = flipdim(segmented.gray, k);
-      segmented.anatomy = flipdim(segmented.anatomy, k);
-      if isfield(segmented, 'white'), segmented.white = flipdim(segmented.white, k); end
-      if isfield(segmented, 'csf'),   segmented.csf   = flipdim(segmented.csf, k);   end
+      for j = 1:numel(fn)
+        segmented.(fn{j}) = flipdim(segmented.(fn{j}), k);
+      end
     end
   end
 
   if ~all(permutevec == [1 2 3])
-    segmented.gray    = ipermute(segmented.gray,    permutevec);
-    segmented.anatomy = ipermute(segmented.anatomy, permutevec);
-    if isfield(segmented, 'white'), segmented.white = ipermute(segmented.white, permutevec); end
-    if isfield(segmented, 'csf'),   segmented.csf   = ipermute(segmented.csf,   permutevec); end
-    segmented.dim  = size(segmented.gray);
+    for j = 1:numel(fn)
+      segmented.(fn{j}) = ipermute(segmented.(fn{j}), permutevec);
+    end
+    segmented.dim  = size(segmented.(fn{1}));
   end
 
 else
