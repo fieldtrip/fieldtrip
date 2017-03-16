@@ -20,7 +20,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %                        parameter to average. default is set to
 %                        'avg', if it is present in the data.
 %
-% If cfg.method = 'across', an plain average is performed, i.e. the
+% If cfg.method = 'across', a plain average is performed, i.e. the
 % requested parameter in each input argument is weighted equally in the
 % average. This is useful when averaging across subjects. The
 % variance-field will contain the variance across the parameter of
