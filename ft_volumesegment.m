@@ -107,10 +107,7 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %
 % See also FT_READ_MRI, FT_DETERMINE_COORDSYS, FT_PREPARE_HEADMODEL
 
-% undocumented options
-%   cfg.keepintermediate = 'yes' or 'no'
-
-% Copyright (C) 2007-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
+% Copyright (C) 2007-2017, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -149,18 +146,16 @@ if ft_abort
 end
 
 % this is not supported any more as of 26/10/2011
-if ischar(mri),
+if ischar(mri)
   error('please use cfg.inputfile instead of specifying the input variable as a string');
 end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
-cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
-%if isfield(cfg, 'coordsys') && ~isfield(mri, 'coordsys')
-%  % from revision 8680 onward (Oct 2013) it is not recommended to use cfg.coordsys to specify the coordinate system of the data.
-%  mri.coordsys = cfg.coordsys;
-%end
+cfg = ft_checkconfig(cfg, 'deprecated',{'coordsys', 'keepintermediate'});
+% as of march 2017 keepintermediate is deprecated, does not seem to be
+% used, nor sensible. If result files are to be kept, use cfg.write
 
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
@@ -170,7 +165,6 @@ cfg.output           = ft_getopt(cfg, 'output',           'tpm');
 cfg.downsample       = ft_getopt(cfg, 'downsample',       1);
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
 cfg.write            = ft_getopt(cfg, 'write',            'no');
-cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',        'old'); % doing old-style in case of spm12
 
 % set default for smooth and threshold
@@ -220,8 +214,8 @@ if ~isfield(cfg, 'name')
     error('you must specify the output filename in cfg.name');
   end
 end
-[p,f,e] = fileparts(cfg.name);
-cfg.name = fullfile(p,f);
+[pathstr, name, ~] = fileparts(cfg.name);
+cfg.name = fullfile(pathstr, name); % remove any possible file extension, to be added later
 
 if ~iscell(cfg.output)
   % ensure it to be cell, to allow for multiple outputs
@@ -252,7 +246,7 @@ end
 if isdeployed && dotpm
   cfg = ft_checkconfig(cfg, 'required', {'template' 'tpm'});
 else
-  if ~isfield(cfg, 'template'),
+  if ~isfield(cfg, 'template')
     spmpath      = spm('dir');
     % spm deals with the defaults for tpm, so they don't need to be specified here.
     if strcmpi(cfg.spmversion, 'spm8'), cfg.template = [spmpath, filesep, 'templates', filesep, 'T1.nii']; end
@@ -302,70 +296,35 @@ if dotpm
   % of the segmentation algorithm
   [mri, permutevec, flipflags] = align_ijk2xyz(mri);
 
-  % SPM can be quite noisy, this prevents the warnings from displaying on screen
-  % warning off;
-
   switch lower(cfg.spmversion)
     case 'spm2'
       Va = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'analyze_img');
 
       % set the spm segmentation defaults (from /opt/spm2/spm_defaults.m script)
-      defaults.segmented.estimate.priors = str2mat(...
+      opts.estimate.priors = char(...
         fullfile(spm('Dir'), 'apriori', 'gray.mnc'),...
         fullfile(spm('Dir'), 'apriori', 'white.mnc'),...
         fullfile(spm('Dir'), 'apriori', 'csf.mnc'));
-      defaults.segmented.estimate.reg    = 0.01;
-      defaults.segmented.estimate.cutoff = 30;
-      defaults.segmented.estimate.samp   = 3;
-      defaults.segmented.estimate.bb     =  [[-88 88]' [-122 86]' [-60 95]'];
-      defaults.segmented.estimate.affreg.smosrc = 8;
-      defaults.segmented.estimate.affreg.regtype = 'mni';
-      %defaults.segmented.estimate.affreg.weight = fullfile(spm('Dir'), 'apriori', 'brainmask.mnc');
-      defaults.segmented.estimate.affreg.weight = '';
-      defaults.segmented.write.cleanup   = 1;
-      defaults.segmented.write.wrt_cor   = 1;
-
-      flags = defaults.segmented;
+      opts.estimate.reg    = 0.01;
+      opts.estimate.cutoff = 30;
+      opts.estimate.samp   = 3;
+      opts.estimate.bb     =  [[-88 88]' [-122 86]' [-60 95]'];
+      opts.estimate.affreg.smosrc = 8;
+      opts.estimate.affreg.regtype = 'mni';
+      opts.estimate.affreg.weight = '';
+      opts.write.cleanup   = 1;
+      opts.write.wrt_cor   = 1;
 
       % perform the segmentation
       fprintf('performing the segmentation on the specified volume\n');
-      spm_segment(Va, cfg.template, flags);
-      Vtmp = spm_vol({[cfg.name, '_seg1.img'];...
-        [cfg.name, '_seg2.img'];...
-        [cfg.name, '_seg3.img']});
-
-      % read the resulting volumes
-      for j = 1:3
-        vol = spm_read_vols(Vtmp{j});
-        Vtmp{j}.dat = vol;
-        V(j) = struct(Vtmp{j});
-      end
-
-      % keep or remove the files according to the configuration
-      if strcmp(cfg.keepintermediate, 'no'),
-        delete([cfg.name, '.img']);
-        delete([cfg.name, '.hdr']);
-        delete([cfg.name, '.mat']);
-      end
-      if strcmp(cfg.write, 'no'),
-        delete([cfg.name, '_seg1.hdr']);
-        delete([cfg.name, '_seg2.hdr']);
-        delete([cfg.name, '_seg3.hdr']);
-        delete([cfg.name, '_seg1.img']);
-        delete([cfg.name, '_seg2.img']);
-        delete([cfg.name, '_seg3.img']);
-        delete([cfg.name, '_seg1.mat']);
-        delete([cfg.name, '_seg2.mat']);
-        delete([cfg.name, '_seg3.mat']);
-      elseif strcmp(cfg.write, 'yes'),
-        for j = 1:3
-          % put the transformation-matrix in the headers
-          V(j).mat = mri.transform;
-          % write the updated header information back to file ???????
-          V(j) = spm_create_vol(V(j));
-        end
-      end
-
+      spm_segment(Va, cfg.template, opts);
+      
+      % generate the list of filenames that contains the segmented volumes
+      filenames = {[cfg.name, '_seg1.img'];...
+                   [cfg.name, '_seg2.img'];...
+                   [cfg.name, '_seg3.img']};
+      
+      
     case 'spm8'
       Va = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
 
@@ -377,63 +336,30 @@ if dotpm
       else
         p        = spm_preproc(Va);
       end
-      [po, pin] = spm_prep2sn(p);
+      [po, ~] = spm_prep2sn(p);
 
-      % I took these settings from a batch
+      % These settings were taken from a batch
       opts     = [];
       opts.GM  = [0 0 1];
       opts.WM  = [0 0 1];
       opts.CSF = [0 0 1];
       opts.biascor = 1;
       opts.cleanup = 0;
+      
+      % write the segmented volumes, -> this can be done differently
       spm_preproc_write(po, opts);
 
-      [pathstr, name, ext] = fileparts(cfg.name);
-      Vtmp = spm_vol({fullfile(pathstr,['c1', name, '.img']);...
-        fullfile(pathstr,['c2', name, '.img']);...
-        fullfile(pathstr,['c3', name, '.img'])});
+      % generate the list of filenames that contains the segmented volumes
+      [pathstr, name, ~] = fileparts(cfg.name);
+      filenames = {fullfile(pathstr,['c1', name, '.img']);...
+                   fullfile(pathstr,['c2', name, '.img']);...
+                   fullfile(pathstr,['c3', name, '.img'])};
 
-      % read the resulting volumes
-      for j = 1:3
-        vol = spm_read_vols(Vtmp{j});
-        Vtmp{j}.dat = vol;
-        V(j) = struct(Vtmp{j});
-      end
-
-      % keep or remove the files according to the configuration
-      if strcmp(cfg.keepintermediate, 'no'),
-        delete([cfg.name, '.img']);
-        delete([cfg.name, '.hdr']);
-        if exist([cfg.name, '.mat'], 'file'),
-          delete([cfg.name, '.mat']);
-        end %does not always exist
-      end
-
-      % keep the files written to disk or remove them
-      % FIXME check whether this works at all
-      if strcmp(cfg.write, 'no'),
-        delete(fullfile(pathstr,['c1', name, '.hdr'])); %FIXME this may not be needed in spm8
-        delete(fullfile(pathstr,['c1', name, '.img']));
-        delete(fullfile(pathstr,['c2', name, '.hdr']));
-        delete(fullfile(pathstr,['c2', name, '.img']));
-        delete(fullfile(pathstr,['c3', name, '.hdr']));
-        delete(fullfile(pathstr,['c3', name, '.img']));
-        delete(fullfile(pathstr,['m', name, '.hdr']));
-        delete(fullfile(pathstr,['m', name, '.img']));
-      elseif strcmp(cfg.write, 'yes'),
-        for j = 1:3
-          % put the transformation-matrix in the headers
-          V(j).mat = mri.transform;
-          % write the updated header information back to file ???????
-          V(j) = spm_create_vol(V(j));
-        end
-      end
-     
     case 'spm12'
-      if strcmp(cfg.spmmethod, 'old'),
+      if strcmp(cfg.spmmethod, 'old')
         Va = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
         
-        fprintf('performing the segmentation on the specified volume\n');
+        fprintf('performing the segmentation on the specified volume, using the old-style segmentation\n');
         if isfield(cfg, 'tpm')
           cfg.tpm  = char(cfg.tpm(:));
           px.tpm   = cfg.tpm;
@@ -441,52 +367,26 @@ if dotpm
         else
           p        = spm_preproc(Va);
         end
-        [po, pin] = spm_prep2sn(p);
+        [po, ~] = spm_prep2sn(p);
         
-        % I took these settings from a batch
+        % These settings are taken from a batch
         opts     = [];
         opts.GM  = [0 0 1];
         opts.WM  = [0 0 1];
         opts.CSF = [0 0 1];
         opts.biascor = 1;
         opts.cleanup = 0;
+        
+        % write the segmented volumes, -> this can be done differently
         spm_preproc_write(po, opts);
         
-        [pathstr, name, ext] = fileparts(cfg.name);
-        Vtmp = spm_vol({fullfile(pathstr,['c1', name, '.nii']);...
-          fullfile(pathstr,['c2', name, '.nii']);...
-          fullfile(pathstr,['c3', name, '.nii'])});
+        % generate the list of filenames that contains the segmented volumes
+        [pathstr, name, ~] = fileparts(cfg.name);
+        filenames = {fullfile(pathstr,['c1', name, '.nii']);...
+                     fullfile(pathstr,['c2', name, '.nii']);...
+                     fullfile(pathstr,['c3', name, '.nii'])};
         
-        % read the resulting volumes
-        for j = 1:3
-          vol = spm_read_vols(Vtmp{j});
-          Vtmp{j}.dat = vol;
-          V(j) = struct(Vtmp{j});
-        end
         
-        % keep or remove the files according to the configuration
-        if strcmp(cfg.keepintermediate, 'no')
-          delete([cfg.name, '.nii']);
-          if exist([cfg.name, '.mat'], 'file')
-            delete([cfg.name, '.mat']);
-          end %does not always exist
-        end
-        
-        % keep the files written to disk or remove them
-        % FIXME check whether this works at all
-        if strcmp(cfg.write, 'no'),
-          delete(fullfile(pathstr,['c1', name, '.nii'])); %FIXME this may not be needed in spm8
-          delete(fullfile(pathstr,['c2', name, '.nii']));
-          delete(fullfile(pathstr,['c3', name, '.nii']));
-          delete(fullfile(pathstr,['m', name, '.nii']));
-        elseif strcmp(cfg.write, 'yes')
-          for j = 1:3
-            % put the transformation-matrix in the headers
-            V(j).mat = mri.transform;
-            % write the updated header information back to file ???????
-            V(j) = spm_create_vol(V(j));
-          end
-        end
       elseif strcmp(cfg.spmmethod, 'new')
         if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
           cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
@@ -494,55 +394,81 @@ if dotpm
         
         Va = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
         
-        fprintf('performing the segmentation on the specified volume\n');
-        obj.image    = Va;
-        obj.tpm      = spm_load_priors8(cfg.tpm);
-        obj.biasreg  = 0.0001;
-        obj.biasfwhm = 60;
-        obj.lkp      = [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]; % for whatever it's worth
-        obj.reg      = [0 0.001 0.5 0.05 0.2];
-        obj.samp     = 3;
-        obj.fwhm     = 1;
+        fprintf('performing the segmentation on the specified volume, using the new-style segmentation\n');
         
-        Affine = spm_maff8(obj.image(1),3,32,obj.tpm,eye(4),'mni');
-        Affine = spm_maff8(obj.image(1),3,1,obj.tpm,Affine,'mni');
-        obj.Affine = Affine;
+        % create the structure that is required for spm_preproc8
+        opts.image    = Va;
+        opts.tpm      = spm_load_priors8(cfg.tpm);
+        opts.biasreg  = 0.0001;
+        opts.biasfwhm = 60;
+        opts.lkp      = [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]; % for whatever it's worth
+        opts.reg      = [0 0.001 0.5 0.05 0.2];
+        opts.samp     = 3;
+        opts.fwhm     = 1;
         
-        res = spm_preproc8(obj);
+        Affine = spm_maff8(opts.image(1),3,32,opts.tpm,eye(4),'mni');
+        Affine = spm_maff8(opts.image(1),3, 1,opts.tpm,Affine,'mni');
+        opts.Affine = Affine;
+        
+        % run the segmentation
+        res = spm_preproc8(opts);
         
         % this writes the 'native' segmentations
         spm_preproc_write8(res, [ones(6,1) zeros(6,3)], [0 0], [0 1], 0, 0, nan(2,3), nan);
+        
+        % this write a mat file, may be needed for Dartel, not sure yet
         %save([cfg.name '_seg8.mat'],'-struct','res', spm_get_defaults('mat.format'));
         
         [pathstr, name, ~] = fileparts(cfg.name);
-        d       = dir(fullfile(pathstr,['c*',name,'*']));
-        for k = 1:numel(d)
-          Vtmp = spm_vol(fullfile(pathstr,d(k).name));
-          dat  = spm_read_vols(Vtmp);
-          V(k)     = Vtmp;
-          V(k).dat = dat;
-        end
-  
+        filenames = {fullfile(pathstr,['c1', name, '.nii']);...
+                     fullfile(pathstr,['c2', name, '.nii']);...
+                     fullfile(pathstr,['c3', name, '.nii']);...
+                     fullfile(pathstr,['c4', name, '.nii']);...
+                     fullfile(pathstr,['c5', name, '.nii']);...
+                     fullfile(pathstr,['c6', name, '.nii'])};
+        
       else
         error('cfg.spmmethod should be either ''old'' or ''new''');
       end
-      
-      
+            
     otherwise
       error('unsupported SPM version');
 
   end
-
+  
+  for k = 1:numel(filenames)
+    Vtmp = spm_vol(filenames{k});
+    dat  = spm_read_vols(Vtmp);
+    Vtmp.dat = dat;
+    V(k)     = Vtmp;
+  end
+  
+  if strcmp(cfg.write, 'no')
+    [pathstr, name, ~] = fileparts(cfg.name);
+    prefix = {'c1';'c2';'c3';'c3';'c4';'c5';'c6';'m';'y_';''};
+    suffix = {'_seg1.hdr';'_seg2.hdr';'_seg3.hdr';'_seg1.img';'_seg2.img';'_seg3.img';'_seg1.mat';'_seg2.mat';'_seg3.mat';'.hdr';'.img';'.nii'};
+    for k = 1:numel(prefix)
+      for j = 1:numel(suffix)
+        try, delete(fullfile(pathstr,[prefix{k}, name, suffix{j}])); end
+      end
+    end
+  elseif strctmp(cfg.write, 'yes')
+    for k= 1:numel(V)
+      % I am not sure whether or why this is needed
+      V(k).mat = mri.transform;
+      V(k)     = spm_create_vol(V(k));
+    end
+  end
+  
   % collect the results
-  segmented.dim       = size(V(1).dat);
-  segmented.dim       = segmented.dim(:)';  % enforce a row vector
+  segmented.dim       = reshape(size(V(1).dat), 1, []); % enforce a row vector
   segmented.transform = original.transform; % use the original transform
   segmented.coordsys  = original.coordsys;  % use the original coordsys
   segmented.unit      = original.unit;      % use the original units
   segmented.gray      = V(1).dat;
-  if length(V)>1, segmented.white     = V(2).dat; end
-  if length(V)>2, segmented.csf       = V(3).dat; end
-  if length(V)>3, segmented.bone      = V(4).dat; end
+  if length(V)>1, segmented.white      = V(2).dat; end
+  if length(V)>2, segmented.csf        = V(3).dat; end
+  if length(V)>3, segmented.bone       = V(4).dat; end
   if length(V)>4, segmented.softtissue = V(5).dat; end
   if length(V)>5, segmented.air        = V(6).dat; end
   segmented.anatomy   = mri.anatomy;
@@ -686,7 +612,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
 
       % output: gray, white, csf
     elseif any(strcmp(outp, 'gray')) || any(strcmp(outp, 'white')) || any(strcmp(outp, 'csf'))
-      [dummy, tissuetype] = max(cat(4, segmented.csf, segmented.gray, segmented.white), [], 4);
+      [~, tissuetype] = max(cat(4, segmented.csf, segmented.gray, segmented.white), [], 4);
       clear dummy
       if any(strcmp(outp, 'white'))
         segmented.white = (tissuetype == 3) & brainmask;
