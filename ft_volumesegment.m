@@ -14,28 +14,42 @@ function [segmented] = ft_volumesegment(cfg, mri)
 % The configuration structure can contain
 %   cfg.output         = string or cell-array of strings, see below (default = 'tpm')
 %   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.spmmethod      = string, 'old', 'new' (default = 'old'). this pertains to the algorithm
+%                          used when cfg.spmversion='spm12'. see belo
 %   cfg.template       = filename of the template anatomical MRI (default = '/spm2/templates/T1.mnc'
 %                        or '/spm8/templates/T1.nii')
 %   cfg.tpm            = cell-array containing the filenames of the tissue probability maps
 %   cfg.name           = string for output filename
 %   cfg.write          = 'no' or 'yes' (default = 'no'),
 %                        writes the probabilistic tissue maps to SPM compatible analyze (spm2),
-%                        or nifti (spm8) files,
+%                        or nifti (spm8/spm12) files,
 %                        with the suffix (spm2)
-%                        _seg1, for the gray matter segmentation
-%                        _seg2, for the white matter segmentation
-%                        _seg3, for the csf segmentation
-%                        or with the prefix (spm8)
-%                        c1, for the gray matter segmentation
-%                        c2, for the white matter segmentation
-%                        c3, for the csf segmentation
+%                         _seg1, for the gray matter segmentation
+%                         _seg2, for the white matter segmentation
+%                         _seg3, for the csf segmentation
+%                        or with the prefix (spm8, and spm12 with spmmethod='old')
+%                         c1, for the gray matter segmentation
+%                         c2, for the white matter segmentation
+%                         c3, for the csf segmentation
+%                        when using spm12 with spmmethod='new' there'll be 3 additional tissue types
+%                         c4, for the bone segmentation
+%                         c5, for the soft tissue segmentation
+%                         c6, for the air segmentation
 %   cfg.brainsmooth    = 'no', or scalar, the FWHM of the gaussian kernel in voxels, (default = 5)
 %   cfg.scalpsmooth    = 'no', or scalar, the FWHM of the gaussian kernel in voxels, (default = 5)
+%   cfg.skullsmooth    = 'no', or scalar, the FWHM of the gaussian kernel in voxels, (default = 5)
+%                        this parameter is only used when the segmentation
+%                        contains 6 tisuse types, including 'bone'
 %   cfg.brainthreshold = 'no', or scalar, relative threshold value which is used to threshold the
 %                       tpm in order to create a volumetric brainmask (see below), (default = 0.5)
 %   cfg.scalpthreshold = 'no', or scalar, relative threshold value which is used to threshold the
 %                        anatomical data in order to create a volumetric scalpmask (see below),
 %                        (default = 0.1)
+%   cfg.skullthreshold = 'no', or scalar, relative threshold value which is used to threshold the
+%                        anatomical data in order to create a volumetric scalpmask (see below),
+%                        (default = 0.5). this parameter is only used when
+%                        the segmetnation contains 6 tissue types,
+%                        including 'bone',
 %   cfg.downsample     = integer, amount of downsampling before segmentation
 %                       (default = 1; i.e., no downsampling)
 %
@@ -170,8 +184,10 @@ cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',        'old'); % doing old-st
 % set default for smooth and threshold
 cfg.brainsmooth      = ft_getopt(cfg, 'brainsmooth',      ''); % see also below
 cfg.scalpsmooth      = ft_getopt(cfg, 'scalpsmooth',      ''); % see also below
+cfg.skullsmooth      = ft_getopt(cfg, 'skullsmooth',      ''); % see also below
 cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold',   ''); % see also below
 cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold',   ''); % see also below
+
 % earlier version of smooth and threshold specification
 cfg.smooth           = ft_getopt(cfg, 'smooth',      '');
 cfg.threshold        = ft_getopt(cfg, 'threshold',   '');
@@ -200,8 +216,10 @@ end
 % then set defaults again
 cfg.brainsmooth      = ft_getopt(cfg, 'brainsmooth',      5);
 cfg.scalpsmooth      = ft_getopt(cfg, 'scalpsmooth',      5);
+cfg.skullsmooth      = ft_getopt(cfg, 'skullsmooth',      5); 
 cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold',   0.5);
 cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold',   0.1);
+cfg.skullthreshold   = ft_getopt(cfg, 'skullthreshold',   0.5);
 
 % check that the preferred SPM version is on the path
 ft_hastoolbox(cfg.spmversion, 1);
@@ -229,8 +247,16 @@ else
   needtpm = any(ismember(cfg.output, {'tpm' 'gray' 'white' 'csf' 'brain' 'skull' 'skullstrip'}));
 end
 
-if all(isfield(mri,{'gray', 'white', 'csf'}))
-  hastpm =  ~islogical(mri.gray) && ~islogical(mri.white) && ~islogical(mri.csf);  % tpm is probabilistic and not binary!
+tissue  = isfield(mri, {'gray', 'white', 'csf', 'bone', 'softtissue', 'air'});
+ntissue = sum(tissue);
+if ntissue==6
+  % this is new-style segmentation
+  hastpm = ~islogical(mri.gray) && ~islogical(mri.white) && ~islogical(mri.csf);  % tpm should be probabilistic and not binary!
+elseif all(tissue(1:3)==true)
+  hastpm = ~islogical(mri.gray) && ~islogical(mri.white) && ~islogical(mri.csf);  % tpm should be probabilistic and not binary!
+elseif any(tissue)
+  ft_warning('the input seems to contain tissue probability maps, but is incomplete for this function');
+  hastpm = false;
 else
   hastpm = false;
 end
@@ -252,12 +278,6 @@ else
     if strcmpi(cfg.spmversion, 'spm8'), cfg.template = [spmpath, filesep, 'templates', filesep, 'T1.nii']; end
     if strcmpi(cfg.spmversion, 'spm2'), cfg.template = [spmpath, filesep, 'templates', filesep, 'T1.mnc']; end
   end
-end
-
-needana    = any(ismember(cfg.output, {'scalp' 'skullstrip'})) || dotpm;
-hasanatomy = isfield(mri, 'anatomy');
-if needana && ~hasanatomy
-  error('the input volume needs an anatomy-field');
 end
 
 if cfg.downsample~=1
@@ -414,7 +434,8 @@ if dotpm
         res = spm_preproc8(opts);
         
         % this writes the 'native' segmentations
-        spm_preproc_write8(res, [ones(6,1) zeros(6,3)], [0 0], [0 1], 0, 0, nan(2,3), nan);
+        spm_preproc_write8(res, [ones(6,1) zeros(6,3)], [0 0], [0 1], 1, 1, nan(2,3), nan);
+        %spm_preproc_write8(res, [ones(6,4)], [0 0], [0 1], 1, 0, nan(2,3), nan);
         
         % this write a mat file, may be needed for Dartel, not sure yet
         %save([cfg.name '_seg8.mat'],'-struct','res', spm_get_defaults('mat.format'));
@@ -502,7 +523,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the requested output fields
 
-remove = {'anatomy' 'csf' 'gray' 'white'};
+remove = {'anatomy' 'csf' 'gray' 'white' 'bone' 'softtissue' 'air'};
 
 % check if smoothing or thresholding is required
 
@@ -514,6 +535,10 @@ dosmooth_scalp = ~strcmp(cfg.scalpsmooth, 'no');
 if dosmooth_scalp && ischar(cfg.scalpsmooth)
   error('invalid value %s for cfg.scalpsmooth', cfg.scalpsmooth);
 end
+dosmooth_skull = ~strcmp(cfg.skullsmooth, 'no');
+if dosmooth_skull && ischar(cfg.skullsmooth)
+  error('invalid value %s for cfg.skullsmooth', cfg.skullsmooth);
+end
 
 dothres_brain = ~strcmp(cfg.brainthreshold, 'no');
 if dothres_brain && ischar(cfg.brainthreshold)
@@ -522,6 +547,10 @@ end
 dothres_scalp = ~strcmp(cfg.scalpthreshold, 'no');
 if dothres_scalp && ischar(cfg.scalpthreshold)
   error('invalid value %s for cfg.scalpthreshold', cfg.scalpthreshold);
+end
+dothres_skull = ~strcmp(cfg.skullthreshold, 'no');
+if dothres_skull && ischar(cfg.skullthreshold)
+  error('invalid value %s for cfg.skullthreshold', cfg.skullthreshold);
 end
 
 outp = cfg.output;
@@ -536,17 +565,28 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
     % create scalpmask - no tpm or brainmask is required to create it
     if any(strcmp('scalp', outp))
 
-      fprintf('creating scalpmask\n');
-      anatomy = segmented.anatomy;
-      if dosmooth_scalp
-        anatomy = volumesmooth(anatomy, cfg.scalpsmooth, 'anatomy');
+      fprintf('creating scalpmask ... ');
+      % let the softtissue mask take precedence
+      if isfield(segmented, 'softtissue')
+        fprintf('using the softtissue tpm for segmentation\n');
+        fname   = 'softtissue';
+        anatomy = segmented.softtissue;
+      elseif isfield(segmented, 'anatomy')
+        fprintf('using the anatomy field for segmentation\n');
+        fname   = 'anatomy';
+        anatomy = segmented.anatomy;
       else
-        fprintf('no smoothing applied on anatomy for scalp segmentation\n');
+        error('no appropriate volume is present for the creation of a scalpmask');
+      end
+      if dosmooth_scalp
+        anatomy = volumesmooth(anatomy, cfg.scalpsmooth, fname);
+      else
+        fprintf('no smoothing applied on %s for scalp segmentation\n',fname);
       end
       if dothres_scalp
-        anatomy = volumethreshold(anatomy, cfg.scalpthreshold, 'anatomy');
+        anatomy = volumethreshold(anatomy, cfg.scalpthreshold, fname);
       else
-        fprintf('no threshold applied on anatomy for scalp segmentation\n')
+        fprintf('no threshold applied on %s for scalp segmentation\n',fname);
       end
 
       % fill the slices along each dimension (because using a single one is
@@ -572,7 +612,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
     end   % end scalp
 
     % create the brain from the tpm
-    fprintf('creating brainmask\n');
+    fprintf('creating brainmask ... using the summation of gray, white and csf tpms\n');
     brain = segmented.gray + segmented.white + segmented.csf;
     if dosmooth_brain
       brain = volumesmooth(brain,  cfg.brainsmooth, 'brainmask');
@@ -587,8 +627,8 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
 
     % output: skullstrip
     if any(strcmp('skullstrip', outp))
-
-      fprintf('creating skullstripped anatomy\n');
+      if ~isfield(segmented, 'anatomy'), error('no anatomy field present'); end
+      fprintf('creating skullstripped anatomy ...');
       brain_ss = cast(brain, class(segmented.anatomy));
       segmented.anatomy = segmented.anatomy.*brain_ss;
       clear brain_ss
@@ -631,17 +671,42 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
 
     if any(strcmp('skull', outp)) || any(strcmp('scalp', outp))
       % create skull from brain mask FIXME check this (e.g. strel_bol)
-      fprintf('creating skullmask\n');
-      braindil = imdilate(brainmask>0, strel_bol(6));
-      skullmask = braindil & ~brainmask;
+      fprintf('creating skullmask ... ');
+      if ~isfield(segmented, 'bone')
+        fprintf('using the brainmask\n');
+        braindil  = imdilate(brainmask>0, strel_bol(6));
+        skullmask = braindil & ~brainmask;
+        clear braindil
+      elseif isfield(segmented, 'bone')
+        fprintf('using the bone tpm for segmentation\n');
+        skull = segmented.bone + segmented.gray + segmented.white + segmented.csf;
+        if dosmooth_skull
+          skull = volumesmooth(skull, cfg.skullsmooth, 'skull');
+        else
+          fprintf('no smoothing applied on skull tpm for skull segmentation\n');
+        end
+        if dothres_skull
+          skull = volumethreshold(skull, cfg.skullthreshold, 'skull');
+        else
+          fprintf('no threshold applied on skull tom for skull segmentation\n')
+        end
+        
+        a1 = volumefillholes(skull, 1);
+        a2 = volumefillholes(skull, 2);
+        a3 = volumefillholes(skull, 3);
+
+        skullmask = a1 | a2 | a3;
+        skullmask = volumethreshold(skullmask);
+        
+        clear a1 a2 a3
+      end
       if any(strcmp(outp, 'skull'))
         segmented.skull = skullmask;
         if numel(outp)==1
           break
         end
       end
-      clear braindil
-
+      
       % output: scalp (exclusive type)
       if numel(outp) > 1 && any(strcmp('scalp', outp))
         scalpmask(brainmask>0)=0;
