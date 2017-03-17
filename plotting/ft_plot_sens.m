@@ -11,6 +11,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
 %   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
 %   'unit'            = string, convert the sensor array to the specified geometrical units (default = [])
+%   'fontsize'        = number, sets the fontsize of the labels (default = 10)
 %
 % The following options apply to MEG magnetometers and/or gradiometers
 %   'coil'            = true/false, plot each individual coil (default = false)
@@ -74,6 +75,7 @@ label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
 orientation     = ft_getopt(varargin, 'orientation', false);
+fontsize        = ft_getopt(varargin, 'fontsize', 10);
 
 % this is for MEG magnetometer and/or gradiometer arrays
 coil            = ft_getopt(varargin, 'coil', false);
@@ -362,7 +364,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       otherwise
         error('unsupported value for option ''label''');
     end % switch
-    text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str);
+    text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str, 'fontsize', fontsize);
   end % for
 end % if empty or off/no
 
