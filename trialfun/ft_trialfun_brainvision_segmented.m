@@ -23,7 +23,7 @@ function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
 %
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
-% Copyright (C) 20014, Robert Oostenveld, FCDC
+% Copyright (C) 2014, Robert Oostenveld, FCDC
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -97,18 +97,29 @@ endsample(end)     = hdr.nSamples*hdr.nTrials;
 
 % add the stimulus events to the output, if possible
 numstim = cellfun(@length, stim);
-if all(numstim==numstim(1))
-  for i=1:length(stim)
-    for j=1:numstim(i)
-      stimvalue  = sscanf(value{stim{i}(j)}, cfg.trigformat);
-      stimsample = sample(stim{i}(j));
-      stimtime   = (stimsample - begsample(i) + offset(i))/hdr.Fs; % relative to 'Time 0'
-      trialinfo(i,2*(j-1)+1) = stimvalue;
-      trialinfo(i,2*(j-1)+2) = stimtime;
-    end % j
-  end % i
+if (numstim > 0)
+  if all(numstim==numstim(1))
+    for i=1:length(stim)
+      for j=1:numstim(i)
+        if isempty(value{stim{i}(j)})
+          error('missing a stimulus type definition in the related *.vmrk file');
+        end
+        stimvalue  = sscanf(value{stim{i}(j)}, cfg.trigformat);
+        stimsample = sample(stim{i}(j));
+        stimtime   = (stimsample - begsample(i) + offset(i))/hdr.Fs; % relative to 'Time 0'
+        if isempty(stimvalue)
+          error('the upper case letter of the stimulus value does not match with definition of "cfg.trigformat"'); 
+        end
+        trialinfo(i,2*(j-1)+1) = stimvalue;
+        trialinfo(i,2*(j-1)+2) = stimtime;
+      end % j
+    end % i
+  else
+    warning('the trials have a varying number of stimuli, not adding them to the "trl" matrix');
+    trialinfo = [];
+  end
 else
-  warning('the trials have a varying number of stimuli, not adding them to the "trl" matrix');
+  warning('the trials have no stimuli, no "trialinfo" will be added to the "trl" matrix');
   trialinfo = [];
 end
 
