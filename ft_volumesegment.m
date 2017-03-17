@@ -697,6 +697,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
 
         skullmask = a1 | a2 | a3;
         skullmask = volumethreshold(skullmask);
+        skullmask = skullmask & ~brainmask;
         
         clear a1 a2 a3
       end
