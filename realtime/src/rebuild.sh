@@ -30,14 +30,14 @@ if [ "$UNAME" = "Linux" ]; then
   elif [ "$MACHINE" = "armv7l" ]; then
     BLACKLIST=(amp audio biosemi ctf emotiv neuralynx neuromag siemens tmsi tobi)
   elif [ "$MACHINE" = "x86_64" ]; then
-    BLACKLIST=(ctf emotiv neuralynx siemens tmsi tobi)
+    BLACKLIST=(audio ctf emotiv neuralynx siemens tmsi tobi)
   else
     BLACKLIST=(audio emotiv neuralynx siemens tmsi tobi)
   fi
 fi
 
 if [ "$UNAME" = "Darwin" ]; then
-  BLACKLIST=(audio emotiv neuralynx siemens neuromag tmsi tobi ctf)
+  BLACKLIST=(emotiv neuralynx siemens neuromag tmsi tobi ctf)
 fi
 
 echo Building buffer and ODM...
