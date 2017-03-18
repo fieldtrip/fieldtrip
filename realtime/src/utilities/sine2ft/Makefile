@@ -19,11 +19,12 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
+CC       = gcc
+CXX      = g++
 CXXFLAGS = $(shell fltk-config --cxxflags) -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
 LDFLAGS  = $(shell fltk-config --ldflags) -lpthread -lbuffer
-SUFFIX   =
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
