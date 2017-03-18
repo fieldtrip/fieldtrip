@@ -869,6 +869,8 @@ if ~isempty(label)
     cfg = rmfield(cfg, 'inputfile');
   end
   cfg.channel = label;
+  cfg.xlim = cfg.hlim;
+  cfg.ylim = cfg.vlim;
   % put data name in here, this cannot be resolved by other means
   cfg.dataname = info.(ident).dataname;
   fprintf('selected cfg.channel = {');
