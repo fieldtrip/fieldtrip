@@ -40,6 +40,9 @@ end
 
 switch version
   case 'default'
+    if isempty(str)
+      str='x';
+    end
     str = lower(str);
     str(regexp(str,'\W')) = '_';
     while(str(1) == '_'),   str = str(2:end); end;   % remove all underscore at the begin of the string

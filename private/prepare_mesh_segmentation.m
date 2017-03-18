@@ -2,8 +2,15 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % PREPARE_MESH_SEGMENTATION
 %
+% The following configuration options can be specified if cfg.method = iso2mesh:
+%   cfg.maxsurf     = 1 = only use the largest disjointed surface
+%                     0 = use all surfaces for that levelset
+%   cfg.radbound    = a scalar indicating the radius of the target surface 
+%                     mesh element bounding sphere
+%
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
 % PREPARE_MESH_HEXAHEDRAL, PREPARE_MESH_TETRAHEDRAL
+
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
@@ -31,6 +38,8 @@ mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes'
 % get the default options
 cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.method        = ft_getopt(cfg, 'method', 'projectmesh');
+cfg.maxsurf       = ft_getopt(cfg, 'maxsurf', 1);
+cfg.radbound      = ft_getopt(cfg, 'radbound', 3);
 if all(isfield(mri, {'gray', 'white', 'csf'}))
   cfg.tissue      = ft_getopt(cfg, 'tissue', 'brain');    % set the default
   cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
@@ -150,10 +159,10 @@ for i =1:numel(cfg.tissue)
       % this requires the external iso2mesh toolbox
       ft_hastoolbox('iso2mesh', 1);
       
-      opt = [];
-      opt.radbound = 3; % set the target surface mesh element bounding sphere be <3 pixels in radius
-      opt.maxnode = cfg.numvertices(i);
-      opt.maxsurf = 1;
+       opt = [];
+       opt.radbound = cfg.radbound; % set the target surface mesh element bounding sphere be <3 pixels in radius
+       opt.maxnode = cfg.numvertices(i);
+       opt.maxsurf = cfg.maxsurf;
       
       method = 'cgalsurf';
       isovalues = 0.5;
