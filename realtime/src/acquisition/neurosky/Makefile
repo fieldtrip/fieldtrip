@@ -14,31 +14,30 @@ PLATFORM = $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR = $(FTBUFFER)/cpp
 
 # better would be to make a proper library of the C++ framework
-CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
-	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
+CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 # defaults, might be overwritten further down
-CFLAGS = -Wunused -Wall -pedantic -O3 -g -I.
-CXXFLAGS = $(CFLAGS) -I$(FTBUFFER)/src -I$(CPPDIR)
-LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer $(CPPOBJ)
+CFLAGS   = -Wunused -Wall -pedantic -O3
+CXXFLAGS = -Wunused -Wall -pedantic -O3
+INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
+LIBPATH  = -L$(FTBUFFER)/src
+LDLIBS   = -lbuffer
 
 ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
-	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
+	INCPATH  += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
+	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS   += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	SUFFIX    = .exe
+	RM        = del
 	# make clean target work on windows:
-	fixpath = $(subst /,\,$1)
-	RM = del
+	fixpath   = $(subst /,\,$1)
 endif
 
 ifeq "$(OS)" "Linux"
-	LDLIBS += -lpthread -ldl -lrt
+	LDLIBS += -ldl -lrt
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -55,25 +54,21 @@ ifeq "$(OS)" "Linux"
 endif
 
 ifeq "$(OS)" "Darwin"
-	LDLIBS += -lpthread
 	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
-		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+		BINDIR    = $(FIELDTRIP)/realtime/bin/mac
 	endif
 endif
-
 
 ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
@@ -84,8 +79,14 @@ TARGETS = $(BINDIR)/thinkgear2ft$(SUFFIX)
 ##############################################################################
 all: $(TARGETS)
 
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
+
+%.o: %.cc
+	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
+
 $(BINDIR)/%$(SUFFIX): %.o serial.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS) $(CPPOBJS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

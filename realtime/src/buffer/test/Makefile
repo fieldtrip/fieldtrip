@@ -4,67 +4,59 @@
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
 ifneq "$(OS)" "Windows_NT"
-	OS = $(shell uname -s)
-	MACHINE = $(shell uname -m)
+  OS = $(shell uname -s)
+  MACHINE = $(shell uname -m)
 endif
 
 PLATFORM = $(shell gcc -dumpmachine)
 
 # defaults, might be overwritten further down
-CC			 = gcc
-INCPATH	 = -I../src
+CC       = gcc
+CFLAGS   = -fPIC -w # -Wunused -pedantic -O0
+CXXFLAGS = -fPIC -w # -Wunused -pedantic -O0
+INCPATH  = -I../src
 LIBPATH  = -L../src
-LDLIBS 	 = -lbuffer -lm -lpthread
-SUFFIX   =
+LDLIBS   = -lbuffer -lm -lpthread
 RM       = rm -f
+BINDIR   = .
+SUFFIX   =
 
 ifeq "$(PLATFORM)" "mingw32"
-	INCPATH	 = -I../src -I../pthreads-win32/include
-	LIBPATH  = -L../src -L../pthreads-win32/lib
-	LDLIBS 	 = -lbuffer -lm -lpthreadGC2 -lws2_32
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -O0 -g
-	SUFFIX   = .exe
-	RM       = del
+  INCPATH += -I../pthreads-win32/include
+  LIBPATH += -L../pthreads-win32/lib
+  LDLIBS   = -lbuffer -lm -lpthreadGC2 -lws2_32
+  SUFFIX   = .exe
+  RM       = del
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
-	# prevent dependency on libwinpthread-1.dll by linking statically
-	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	INCPATH	 = -I../src
-	LIBPATH  = -L../src
-	LDLIBS 	 = -lbuffer -lm -lpthread -lws2_32 -static
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
-	SUFFIX   = _win32.exe
-	RM       = del
+  # prevent dependency on libwinpthread-1.dll by linking statically
+  # see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+  LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+  SUFFIX   = _win32.exe
+  RM       = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	# prevent dependency on libwinpthread-1.dll by linking statically
-	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	INCPATH	 = -I../src
-	LIBPATH  = -L../src
-	LDLIBS 	 = -lbuffer -lm -lpthread -lws2_32 -static
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
-	SUFFIX   = _win64.exe
-	RM       = del
+  # prevent dependency on libwinpthread-1.dll by linking statically
+  # see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+  LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+  SUFFIX   = _win64.exe
+  RM       = del
 endif
 
 ifeq "$(OS)" "Darwin"
     ifeq "$(MACHINE)" "i386"
-        CFLAGS += -m32
+        CFLAGS   += -m32
         CXXFLAGS += -m32
-        LDFLAGS += -m32
+        LDFLAGS  += -m32
     endif
     ifeq "$(MACHINE)" "x86_64"
-        CFLAGS += -m64
+        CFLAGS   += -m64
         CXXFLAGS += -m64
-        LDFLAGS += -m64
+        LDFLAGS  += -m64
     endif
 endif
-
-BINDIR	 = .
-CFLAGS	 += $(INCPATH) -Wunused -pedantic -O0 -fPIC -g
-CXXFLAGS += $(INCPATH) -Wunused -pedantic -O0
 
 ##############################################################################
 
@@ -116,8 +108,8 @@ test_waitdat$(SUFFIX): test_waitdat.o
 test_connect$(SUFFIX): test_connect.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
 
-%.o: %.c message.h buffer.h
-	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCPATH) -c $<
 
 clean:
 	$(RM) core *.o *.obj *.a

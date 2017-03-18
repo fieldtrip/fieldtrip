@@ -13,23 +13,24 @@ endif
 PLATFORM = $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
-FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-CC      = gcc
-CFLAGS 	= -Wunused -Wall -pedantic -O3 -g -I$(FTBUFFER)/src
-LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS  = -lbuffer
+CFLAGS 	= -Wunused -Wall -pedantic -O3
+INCPATH = -I$(FTBUFFER)/src -I.
+LIBPATH = -L$(FTBUFFER)/src
+LDLIBS  = -lpthread -lbuffer
+SUFFIX  =
 
 ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
+	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
 	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	LDLIBS   += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	SUFFIX    = .exe
 	# make clean target work on windows:
-	fixpath = $(subst /,\,$1)
-	RM = del
+	fixpath   = $(subst /,\,$1)
+	RM        = del
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
@@ -76,15 +77,15 @@ ifeq "$(OS)" "Darwin"
 	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
 		BINDIR = $(FIELDTRIP)/realtime/bin/mac
@@ -100,8 +101,11 @@ TARGETS = $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer$(SUFFIX) $(BINDIR)/buffer_r
 ###############################################################################
 all: $(TARGETS)
 
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
+
 $(BINDIR)/%$(SUFFIX): %.o
-	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

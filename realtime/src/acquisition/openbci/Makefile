@@ -13,32 +13,29 @@ endif
 PLATFORM = $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
-FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR = $(FTBUFFER)/cpp
-
-# better would be to make a proper library of the C++ framework
-CPPOBJ = 
+FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-CFLAGS = -I. -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/inih/ -I$(CPPDIR)
-# CFLAGS += -Wunused -Wall -pedantic -O3 -g 
-CFLAGS += -w
-LDFLAGS = -L$(FTBUFFER)/src 
-LDLIBS = -lbuffer $(CPPOBJ)
+CFLAGS  = -Wunused -Wall -pedantic -O3
+CFLAGS  = -w
+INCPATH =  -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/inih -I.
+LIBPATH = -L$(FTBUFFER)/src
+LDLIBS = -lbuffer -lpthread
 
 ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
-	CFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDFLAGS += -L$(FIELDTRIP)/realtime/src/external/pthreads-win32/lib
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	INCPATH += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
+	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LIBPATH += -L$(FIELDTRIP)/realtime/src/external/pthreads-win32/lib
+	LDLIBS  += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	SUFFIX   = .exe
+	RM       = del
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 endif
 
 ifeq "$(OS)" "Linux"
-	LDLIBS += -ldl -lstdc++ -lpthread -lrt
+	LDLIBS += -ldl -lstdc++ -lrt
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -57,17 +54,17 @@ endif
 ifeq "$(OS)" "Darwin"
 	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
-		LDFLAGS += -m32 
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
+		CXXFLAGS += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
-		LDFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
+		CXXFLAGS += -m32
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
-		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+		BINDIR    = $(FIELDTRIP)/realtime/bin/mac
 	endif
 endif
 
@@ -80,13 +77,14 @@ TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), openbci2ft)
 ##############################################################################
 all: $(TARGETS)
 
-$(TARGETS):
-
-$(BINDIR)/%$(SUFFIX): ini.o serial.o %.o
-	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
 ini.o: $(FIELDTRIP)/realtime/src/external/inih/ini.c
-	$(CC) $(CFLAGS) -c -o $@ $^ 
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+$(BINDIR)/%$(SUFFIX): ini.o serial.o %.o
+	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

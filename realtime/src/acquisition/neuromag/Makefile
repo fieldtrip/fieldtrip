@@ -31,13 +31,13 @@ OBJECTS  = neuromag2ft.o process_tag.o process_data.o
 HEADER   = neuromag2ft.h
 
 CFLAGS   = -g -Wall -I ../../buffer/src -I ./include $(CFLAGS_PLATFORM)
-LDFLAGS  = -L ../../buffer/src -L ./lib/$(ARCH)
+LIBPATH  = -L ../../buffer/src -L ./lib/$(ARCH)
 USERLIBS = -lbuffer $(LIBS_PLATFORM) -ldacqcomm -lfiff -lerr-2.1
 SYSLIBS  = -lpthread -lm -lrt
 
 ##############################################################################
 all : $(OBJECTS) ../../buffer/src/libbuffer.a
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) $(USERLIBS) $(SYSLIBS) -o $(PROGRAM)
+	$(CC) $(CFLAGS) $(LIBPATH) $(OBJECTS) $(USERLIBS) $(SYSLIBS) -o $(PROGRAM)
 
 *.o: *.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $^ 

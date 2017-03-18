@@ -13,23 +13,50 @@ endif
 PLATFORM = $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
-FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
+FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-CFLAGS = $(INCPATH) -Wunused -Wall -pedantic -g
-LDFLAGS = -lpthread ../../buffer/src/libbuffer.a
-LDLIBS =
-INCPATH = -I../../buffer/src -I. 
-SUFFIX = 
+CFLAGS  = -Wunused -Wall -pedantic
+INCPATH = -I$(FTBUFFER)/src -I.
+LIBPATH = -L$(FTBUFFER)/src
+LDLIBS  = -lpthread -lbuffer
+SUFFIX  =
 
 ifeq "$(PLATFORM)" "mingw32"
-	LDFLAGS = pthreadGC2.dll ../../buffer/src/libbuffer.a -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-	LDLIBS =
-	INCPATH = -I../../buffer/src -I. -I../../buffer/pthreads-win32/include
-	SUFFIX = .exe
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	INCPATH += -I../../buffer/pthreads-win32/include
+	LIBPATH += -LC:/msys/1.0/local/lib
+	LDLIBS  += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	SUFFIX   = .exe
+	# make clean target work on windows:
+	fixpath  = $(subst /,\,$1)
+	RM       = del
+endif
+
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
 endif
 
 ifeq "$(OS)" "Linux"
+	fixpath = $1
 	LDLIBS += -lrt
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -46,17 +73,16 @@ ifeq "$(OS)" "Linux"
 endif
 
 ifeq "$(OS)" "Darwin"
+	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
 		BINDIR = $(FIELDTRIP)/realtime/bin/mac
@@ -72,20 +98,14 @@ TARGETS = $(BINDIR)/playback$(SUFFIX) $(BINDIR)/recording$(SUFFIX)
 ###############################################################################
 all: $(TARGETS)
 
-playback.o: playback.c
-	$(CC) -c playback.c $(CFLAGS)
-	
-recording.o: recording.c
-	$(CC) -c $^ $(CFLAGS)
-	
-ft_storage.o: ft_storage.c
-	$(CC) -c $^ $(CFLAGS)
-			
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
+
 $(BINDIR)/playback$(SUFFIX): playback.o
-	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
-		
-$(BINDIR)/recording$(SUFFIX): recording.o ft_storage.o ../../buffer/src/socketserver.o
-	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
+
+$(BINDIR)/recording$(SUFFIX): recording.o ft_storage.o
+	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

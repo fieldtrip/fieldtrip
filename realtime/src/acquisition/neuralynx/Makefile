@@ -14,22 +14,21 @@ PLATFORM = $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR = $(FTBUFFER)/cpp
 
-CXXFLAGS = -Wunused -Wall -pedantic -O3
+CXXFLAGS  = -Wunused -Wall -pedantic -O3
 CXXFLAGS += -I$(FTBUFFER)/src -I$(CPPDIR) -I.
-LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer
+LIBPATH   = -L$(FTBUFFER)/src
+LDLIBS    = -lbuffer
 
 ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
-	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll $(BINDIR)/MatlabNetComClient.dll
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	INCPATH += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
+	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS  += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll $(BINDIR)/MatlabNetComClient.dll
+	SUFFIX   = .exe
+	RM       = del
 	# make clean target work on windows:
-	fixpath = $(subst /,\,$1)
-	RM = del
+	fixpath  = $(subst /,\,$1)
 endif
 
 ifndef BINDIR
@@ -42,7 +41,7 @@ TARGETS = $(BINDIR)/nlx2ft$(SUFFIX)
 all: $(TARGETS)
 
 $(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

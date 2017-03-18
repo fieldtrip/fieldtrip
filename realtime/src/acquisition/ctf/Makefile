@@ -14,7 +14,7 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 CFLAGS = -I$(FTBUFFER)/src -Wunused -Wall
-LDFLAGS = -L$(FTBUFFER)/src 
+LIBPATH = -L$(FTBUFFER)/src 
 LDLIBS = -lbuffer -lncurses -lpthread -lm
 
 ifeq "$(OS)" "Linux"
@@ -38,13 +38,11 @@ ifeq "$(OS)" "Darwin"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
 		CFLAGS += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
 		BINDIR = $(FIELDTRIP)/realtime/bin/mac
@@ -66,7 +64,7 @@ TARGETS = $(patsubst %,$(BINDIR)/ctf_%$(SUFFIX),\
 all: $(TARGETS)
 
 $(BINDIR)/ctf_%$(SUFFIX): %.o
-	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 $(BINDIR)/acq2ftx$(SUFFIX): LDLIBS += -lm
 

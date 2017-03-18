@@ -16,20 +16,20 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-CFLAGS = -Wunused -Wall -pedantic
-CFLAGS += -I$(FTBUFFER)/src -I. 
-LDFLAGS = -L$(FTBUFFER)/src
+CFLAGS  = -Wunused -Wall -pedantic
+INCPATH = -I$(FTBUFFER)/src -I.
+LIBPATH = -L$(FTBUFFER)/src
 LDLIBS = -lbuffer -lpthread
 
 ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
+	BINDIR  = $(FIELDTRIP)/realtime/bin/win32
 	CFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	SUFFIX  = .exe
+	RM      = del
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
-	RM = del
 endif
 
 ifeq "$(OS)" "Linux"
@@ -52,19 +52,17 @@ endif
 ifeq "$(OS)" "Darwin"
 	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
-		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+		BINDIR    = $(FIELDTRIP)/realtime/bin/mac
 	endif
 endif
 
@@ -74,10 +72,14 @@ endif
 
 TARGETS = $(BINDIR)/rda2ft$(SUFFIX)
 
+##############################################################################
 all: $(TARGETS)
-	
-$(BINDIR)/rda2ft$(SUFFIX): rda2ft.c
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
+
+$(BINDIR)/rda2ft$(SUFFIX): rda2ft.o
+	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) $(call fixpath, *.o $(TARGETS))

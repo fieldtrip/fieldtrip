@@ -14,28 +14,26 @@ PLATFORM = $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR = $(FTBUFFER)/cpp
-
-# better would be to make a proper library of the C++ framework
-CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
-	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 # defaults, might be overwritten further down
-CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR)
-CFLAGS += -Wunused -Wall -pedantic -O3 -g 
-CXXFLAGS = $(CFLAGS)
-LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer -lpthread $(CPPOBJ)
+CFLAGS   = -Wunused -Wall -pedantic -O3
+CXXFLAGS = -Wunused -Wall -pedantic -O3
+INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
+LIBPATH  = -L$(FTBUFFER)/src
+LDLIBS   = -lbuffer -lpthread
+
+# better would be to make a proper library of the C++ framework
+CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
+	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
 	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS   += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	SUFFIX    = .exe
+	RM        = del
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
-	RM = del
 endif
 
 ifeq "$(OS)" "Linux"
@@ -58,19 +56,17 @@ endif
 ifeq "$(OS)" "Darwin"
 	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
-		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+		BINDIR    = $(FIELDTRIP)/realtime/bin/mac
 	endif
 endif
 
@@ -83,10 +79,14 @@ TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), modeeg2ft modeeg2ft_2chn modeeg_set
 ##############################################################################
 all: $(TARGETS)
 
-$(TARGETS): serial.o
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
-$(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+%.o: %.cc
+	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
+
+$(BINDIR)/%$(SUFFIX): %.o serial.o
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS) $(CPPOBJS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

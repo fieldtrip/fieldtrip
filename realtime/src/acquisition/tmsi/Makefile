@@ -14,27 +14,26 @@ PLATFORM = $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR  = $(FTBUFFER)/cpp
-
-# better would be to make a proper library of the C++ framework
-CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
-	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 # defaults, might be overwritten further down
-LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer $(CPPOBJ)
-CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR) -Wunused -Wall -pedantic -O3 -g 
+CFLAGS   = -Wunused -Wall -pedantic -O3
 CXXFLAGS = $(CFLAGS)
+INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
+LIBPATH  = -L$(FTBUFFER)/src
+LDLIBS   = -lbuffer
+
+# better would be to make a proper library of the C++ framework
+CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
-	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	INCPATH += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
+	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
+	LDLIBS  += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
+	SUFFIX   = .exe
+	RM       = del
 	# make clean target work on windows:
-	fixpath = $(subst /,\,$1)
-	RM = del
+	fixpath  = $(subst /,\,$1)
 endif
 
 ifndef BINDIR
@@ -47,7 +46,7 @@ TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), tmsidriver tmsi2ft)
 all: $(TARGETS)
 
 $(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS) $(CPPOBJS)
 
 $(BINDIR)/tmsidriver$(SUFFIX): Feature.o RTDevice.o
 

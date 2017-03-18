@@ -13,32 +13,36 @@ endif
 PLATFORM = $(shell gcc -dumpmachine)
 
 # defaults, might be overwritten further down
-LDFLAGS = -L../src
-LDLIBS = -lpthread -lbuffer
-INCPATH = -I../src -I.
-SUFFIX =
+CC       = gcc
+CXX      = g++
+CFLAGS   = -Wunused -Wall -pedantic -O3
+CXXFLAGS = -Wunused -Wall -pedantic -O3
+LDFLAGS  = -L../src
+LDLIBS   = -lpthread -lbuffer
+INCPATH  = -I. -I../src
+SUFFIX   =
 
 ifeq "$(PLATFORM)" "mingw32"
+  INCPATH += -I../../external/pthreads-win32/include
 	LDFLAGS += ../../external/pthreads-win32/lib/pthreadGC2.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm
-	INCPATH += -I../../external/pthreads-win32/include
-	SUFFIX = .exe
-	RM = del
+	SUFFIX   = .exe
+	RM       = del
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	LDFLAGS += -lws2_32 -lwinmm -static
-	SUFFIX = _win32.exe
-	RM = del
+	SUFFIX   = _win32.exe
+	RM       = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	LDFLAGS += -lws2_32 -lwinmm -static
-	SUFFIX = _win64.exe
-	RM = del
+	SUFFIX   = _win64.exe
+	RM       = del
 endif
 
 ifeq "$(OS)" "Linux"
@@ -59,39 +63,27 @@ endif
 ifeq "$(OS)" "Darwin"
 	LDFLAGS += -ldl
 	ifeq "$(MACHINE)" "i386"
-		CFLAGS += -m32
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		CFLAGS += -m64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 endif
 
-CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3
+includes = $(wildcard *.h)
 
 ##############################################################################
 all: odmTest$(SUFFIX)
 
-FtConnection.o: FtConnection.cc FtBuffer.h
-	g++ -c FtConnection.cc $(CFLAGS)
-
-SignalConfiguration.o: SignalConfiguration.cc SignalConfiguration.h
-	g++ -c SignalConfiguration.cc $(CFLAGS)
-
-StringServer.o: StringServer.cc StringServer.h
-	g++ -c StringServer.cc $(CFLAGS)
-
-GdfWriter.o: GdfWriter.cc GdfWriter.h
-	g++ -c GdfWriter.cc $(CFLAGS)
-
-odmTest.o: odmTest.cc OnlineDataManager.h StringServer.o GDF_BackgroundWriter.h
-	g++ -c odmTest.cc $(CFLAGS)
+%.o: %.cc ${includes}
+	$(CXX) $(CXXFLAGS) $(INCPATH) -c $<
 
 odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o
-	g++ -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 clean:
-	$(RM) *.o *.exe
+	$(RM) *.o odmTest$(SUFFIX)

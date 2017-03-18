@@ -16,17 +16,17 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-CFLAGS = -I$(FTBUFFER)/src -I. -Iinclude
-CFLAGS += -Wunused -Wall -pedantic -O3
-CXXFLAGS = $(CFLAGS)
-LDFLAGS = -L$(FTBUFFER)/src
+CFLAGS   = -Wunused -Wall -pedantic -O3
+CXXFLAGS = -Wunused -Wall -pedantic -O3
+INCPATH  = -I$(FTBUFFER)/src -I. -Iinclude
+LIBPATH  = -L$(FTBUFFER)/src
 
 ifeq "$(OS)" "Linux"
-    ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
-		LDFLAGS += -L$(BINDIR) -Llib/ticpp/linux 
-		LDLIBS += -lbuffer -lpthread -lboost_thread -lboost_system -lboost_program_options -ltia -lticpp_64 
-    endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR   = $(FIELDTRIP)/realtime/bin/glnxa64
+		LIBPATH += -L$(BINDIR) -Llib/ticpp/linux
+		LDLIBS  += -lbuffer -lpthread -lboost_thread -lboost_system -lboost_program_options -ltia -lticpp_64
+	endif
 endif
 
 ifndef BINDIR
@@ -39,10 +39,9 @@ TARGETS = $(patsubst %,$(BINDIR)/%, tia2ft)
 all: $(TARGETS)
 
 $(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) $^ $(LDFLAGS) $(LDLIBS) -o $@
+	$(CXX) $^ $(LIBPATH) $(LDLIBS) -o $@
 
 $(BINDIR)/tia2ft$(SUFFIX): ft_buffer_helper.o tia2ft.o
 
 clean:
 	rm -f *.o $(LOCAL_TARGETS) $(TARGETS)
-
