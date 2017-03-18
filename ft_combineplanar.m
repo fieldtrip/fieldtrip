@@ -325,6 +325,17 @@ if strcmp(cfg.updatesens, 'yes') && isfield(data, 'grad')
   newgrad.unit     = data.grad.unit;
   newgrad.type     = [data.grad.type '_combined'];
   
+  % remember the original channel position details
+  if isfield(grad, 'chanposold')
+    newgrad = copyfields(grad, newgrad, {'chanposold', 'chanoriold', 'chanlabelold', 'chantypeold', 'chanunitold'});
+  else
+    newgrad.chanposold   = grad.chanpos;
+    newgrad.chanoriold   = grad.chanori;
+    newgrad.chanlabelold = grad.chanlabel;
+    newgrad.chantypeold  = grad.chantype;
+    newgrad.chanunitold  = grad.chanunit;
+  end
+  
   data.grad = newgrad;
 end
 
