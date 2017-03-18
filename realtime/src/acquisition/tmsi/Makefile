@@ -16,6 +16,8 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
+CC       = gcc
+CXX      = g++
 CFLAGS   = -Wunused -Wall -pedantic -O3
 CXXFLAGS = $(CFLAGS)
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
@@ -67,8 +69,8 @@ TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), tmsidriver tmsi2ft)
 ##############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS) $(CPPOBJS)
+$(BINDIR)/%$(SUFFIX): %.o $(CPPOBJS)
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 $(BINDIR)/tmsidriver$(SUFFIX): Feature.o RTDevice.o
 

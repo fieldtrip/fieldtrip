@@ -18,6 +18,8 @@ FIELDTRIP = ../../../..
 FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
+CC       = gcc
+CXX      = g++
 CXXFLAGS = -Wunused -Wall -pedantic -O3
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp
 LIBPATH  = -L$(FTBUFFER)/src
@@ -28,7 +30,7 @@ CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtCo
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
-	INCPATH += ../../external/portaudio
+	INCPATH += -I../../external/portaudio
 	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
 	LDLIBS  += -lws2_32 $(BINDIR)/pthreadGC2.dll $(BINDIR)/PortAudio.dll
 	SUFFIX   = .exe
@@ -40,23 +42,25 @@ endif
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	INCPATH += -I../../external/portaudio
 	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
 	SUFFIX   = .exe
+	RM       = del /Q
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)
-	RM       = del
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	INCPATH += -I../../external/portaudio
 	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
 	SUFFIX   = .exe
+	RM       = del /Q
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)
-	RM       = del
 endif
 
 ifeq "$(OS)" "Linux"

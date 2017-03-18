@@ -41,16 +41,19 @@
     #include "win32/stdint.h"
 
     #define bzero(b,len)    (memset((b), '\0', (len)), (void) 0)
-    #define usleep(x)       (Sleep((x)/1000))
+    #define usleep(x)       (Sleep((x)/1000)) // should be replaced by win32/usleep.h
     #define strcasecmp(a,b) (strcmpi(a,b))
 
 #elif defined (PLATFORM_WIN64) && defined (COMPILER_MINGW_W64)
+    #include <windows.h>
     #include <winsock2.h>
     #include <sys/time.h>
     #include <stdint.h>
+    #include "win32/fsync.h"
+    #include "win32/usleep.h"
 
-    #define bzero(b,len)    (memset((b), '\0', (len)), (void) 0)
-    #define usleep(x)       (Sleep((x)/1000))
+    #define bzero(b,len)            (memset((b), '\0', (len)), (void) 0)
+    #define bcopy(src, dest, len)   (memmove(dest, src, len))
 
 #elif defined (PLATFORM_WIN32) && defined (COMPILER_BORLAND)
     #include <windows.h>
@@ -75,25 +78,29 @@
     #include "win32/stdint.h"
 
     #define bzero(b,len)    (memset((b), '\0', (len)), (void) 0)
-    #define usleep(x)       (Sleep((x)/1000))
+    #define usleep(x)       (Sleep((x)/1000))  // should be replaced by win32/usleep.h
     #define strcasecmp(a,b) (strcmpi(a,b))
 
 #elif defined (PLATFORM_WIN32) && defined (COMPILER_MINGW_W64)
+    #include <windows.h>
     #include <winsock2.h>
     #include <sys/time.h>
     #include <stdint.h>
+    #include "win32/fsync.h"
+    #include "win32/usleep.h"
 
-    #define bzero(b,len)    (memset((b), '\0', (len)), (void) 0)
-    #define usleep(x)       (Sleep((x)/1000))
+    #define bzero(b,len)            (memset((b), '\0', (len)), (void) 0)
+    #define bcopy(src, dest, len)   (memmove(dest, src, len))
 
 #elif defined (PLATFORM_WIN32) && defined (COMPILER_MINGW_ORG)
+    #include <windows.h>
     #include <winsock2.h>
     #include <sys/time.h>
     #include <stdint.h>
     #include "win32/clock_gettime.h"
 
     #define bzero(b,len)    (memset((b), '\0', (len)), (void) 0)
-    #define usleep(x)       (Sleep((x)/1000))
+    #define usleep(x)       (Sleep((x)/1000)) // should be replaced by win32/usleep.h
     #define strcasecmp(a,b) (strcmpi(a,b))
 
 #elif defined (PLATFORM_WIN32) &&  defined (COMPILER_CYGWIN)

@@ -16,6 +16,8 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
+CC       = gcc
+CXX      = g++
 CXXFLAGS = -Wunused -Wall -pedantic -O3
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
@@ -38,7 +40,7 @@ endif
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	LDLIBS   = -lws2_32 -lwinmm -lbuffer -lm -lpthread -static
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
 	SUFFIX   = .exe
 	# make clean target work on windows
@@ -49,7 +51,7 @@ endif
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	LDLIBS   = -lws2_32 -lwinmm -lbuffer -lm -lpthread -static
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
 	SUFFIX   = .exe
 	# make clean target work on windows
@@ -107,8 +109,8 @@ all: $(TARGETS)
 %.o: %.cc
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
-$(BINDIR)/biosemi2ft$(SUFFIX): biosemi2ft.o BioSemiClient.o
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS) $(CPPOBJS)
+$(BINDIR)/biosemi2ft$(SUFFIX): biosemi2ft.o BioSemiClient.o $(CPPOBJS)
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

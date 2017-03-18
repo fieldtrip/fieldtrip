@@ -15,10 +15,13 @@ PLATFORM = $(shell gcc -dumpmachine)
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
-CXXFLAGS  = -Wunused -Wall -pedantic -O3
-CXXFLAGS += -I$(FTBUFFER)/src -I$(CPPDIR) -I.
-LIBPATH   = -L$(FTBUFFER)/src
-LDLIBS    = -lbuffer
+# defaults, might be overwritten further down
+CC       = gcc
+CXX      = g++
+CXXFLAGS = -Wunused -Wall -pedantic -O3
+INCPATH  = -I$(FTBUFFER)/src -I.
+LIBPATH  = -L$(FTBUFFER)/src
+LDLIBS   = -lbuffer
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32

@@ -19,13 +19,16 @@ FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 EDKPATH = C:\Program\ Files\ (x86)\Emotiv\ Education\ Edition\ SDK_v1.0.0.5-PREMIUM\doc\examples
 
-# better would be to make a proper library of the C++ framework
-CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
-
+# defaults, might be overwritten further down
+CC       = gcc
+CXX      = g++
 CXXFLAGS = -Wunused -Wall
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer
+
+# better would be to make a proper library of the C++ framework
+CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
@@ -73,7 +76,7 @@ all: $(TARGETS)
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
 $(BINDIR)/%$(SUFFIX): %.o $(CPPOBJS)
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS) $(CPPOBJS)
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

@@ -13,9 +13,12 @@ PLATFORM = $(shell gcc -dumpmachine)
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
-CFLAGS = -I$(FTBUFFER)/src -Wunused -Wall
-LIBPATH = -L$(FTBUFFER)/src 
-LDLIBS = -lbuffer -lncurses -lpthread -lm
+# defaults, might be overwritten further down
+CC       = gcc
+CXX      = g++
+CFLAGS   = -I$(FTBUFFER)/src -Wunused -Wall
+LIBPATH  = -L$(FTBUFFER)/src
+LDLIBS   = -lbuffer -lncurses -lpthread -lm
 
 ifeq "$(OS)" "Linux"
 	LDLIBS += -lrt

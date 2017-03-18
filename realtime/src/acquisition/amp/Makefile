@@ -2,7 +2,7 @@
  # Applied Artificial Intelligence Lab
  # Computer Sciences Department
  # University of Buenos Aires, Argentina
- 
+
  # This file is part of Amp2ft
  #
  # Amp2ft is free software: you can redistribute it and/or modify
@@ -28,13 +28,37 @@ PLATFORM = $(shell gcc -dumpmachine)
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
-CXXFLAGS = -Wunused -Wall -pedantic -O3 -DDEBUG
+CC       = gcc
+CXX      = g++
+CXXFLAGS = -DDEBUG -w # -Wunused -Wall -pedantic -O3
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer -lpthread
 
 # better would be to make a proper library of the C++ framework
 CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
+
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lws2_32 -lwinmm -lbuffer -lm -lpthread -static
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	SUFFIX   = .exe
+	RM       = del
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lws2_32 -lwinmm -lm -lbuffer -lpthread -static
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	SUFFIX   = .exe
+	RM       = del
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+endif
 
 ifeq "$(OS)" "Linux"
 	fixpath = $1
@@ -65,18 +89,21 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/amp2ft
+TARGETS = $(BINDIR)/amp2ft$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
+
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
 %.o: %.cpp
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
 AmpServerClient.o: AmpServerClient.h
 
-$(BINDIR)/amp2ft: amp2ft.o AmpServerClient.o
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS) $(CPPOBJS)
+$(BINDIR)/amp2ft$(SUFFIX): amp2ft.o AmpServerClient.o $(CPPOBJS) 
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
-	rm -f *.o $(TARGETS)
+	$(RM) *.o $(call fixpath, $(TARGETS))

@@ -15,15 +15,17 @@ PLATFORM = $(shell gcc -dumpmachine)
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
-# better would be to make a proper library of the C++ framework
-CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
-
 # defaults, might be overwritten further down
+CC       = gcc
+CXX      = g++
 CFLAGS   = -Wunused -Wall -pedantic -O3
 CXXFLAGS = -Wunused -Wall -pedantic -O3
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer
+
+# better would be to make a proper library of the C++ framework
+CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
@@ -107,8 +109,8 @@ all: $(TARGETS)
 %.o: %.cc
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
-$(BINDIR)/%$(SUFFIX): %.o serial.o
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS) $(CPPOBJS)
+$(BINDIR)/%$(SUFFIX): %.o serial.o $(CPPOBJS)
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

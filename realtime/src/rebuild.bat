@@ -1,4 +1,4 @@
-:: Simple bat file to recompile on Windows usign mingw32.
+:: Simple bat file to recompile on Windows using mingw32.
 :: TODO: add checking of output
 @echo off
 SET MAKE=mingw32-make --quiet %1 %2 %3 %4 %5 %6 %7 %8 %9
@@ -9,6 +9,11 @@ PUSHD buffer\src
 POPD
 
 PUSHD buffer\cpp
+%MAKE% || goto FAILED
+POPD
+
+ECHO Building test
+PUSHD buffer\test
 %MAKE% || goto FAILED
 POPD
 
