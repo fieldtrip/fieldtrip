@@ -106,7 +106,7 @@ url = {
   'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
-
+  'GTEC'          'see http://www.gtec.at'
   'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
@@ -365,7 +365,9 @@ switch toolbox
     dependency = {'readneurone' 'readneuronedata' 'readneuroneevents'};
   case 'BREWERMAP'
     dependency = {'brewermap' 'brewermap_view'};
-
+  case 'GTEC'
+    dependency = {'ghdf5read' 'ghdf5fileimport'};
+    
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};

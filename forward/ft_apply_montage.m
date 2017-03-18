@@ -212,15 +212,14 @@ if istrue(inverse)
 end
 
 % select and keep the columns that are non-empty, i.e. remove the empty columns
-selcol           = find(~all(montage.tra==0, 1));
-montage.tra      = montage.tra(:,selcol);
-montage.labelold = montage.labelold(selcol);
+selcol              = find(~all(montage.tra==0, 1));
+montage.tra         = montage.tra(:,selcol);
+montage.labelold    = montage.labelold(selcol);
 montage.chantypeold = montage.chantypeold(selcol);
 montage.chanunitold = montage.chanunitold(selcol);
 clear selcol
 
-% select and remove the columns corresponding to channels that are not present in the
-% original data
+% select and remove the columns corresponding to channels that are not present in the original data
 remove = setdiff(montage.labelold, intersect(montage.labelold, inputlabel));
 selcol = match_str(montage.labelold, remove);
 % we cannot just remove the colums, all rows that depend on it should also be removed
@@ -265,9 +264,9 @@ if k > 0 && isfield(input, 'trial') % check for raw data now only
       'ft_selectdata) before attempting to apply the montage.']);
   end
 end
+
 if istrue(keepunused)
-  % add the channels that are not rereferenced to the input and output of the
-  % montage
+  % add the channels that are not rereferenced to the input and output of the montage
   montage.tra((m+(1:k)),(n+(1:k))) = eye(k);
   montage.labelold    = cat(1, montage.labelold(:), addlabel(:));
   montage.labelnew    = cat(1, montage.labelnew(:), addlabel(:));
@@ -388,7 +387,11 @@ switch inputtype
       else
         if ~isfield(sens, 'chanposold')
           % add a chanposold only if it is not there yet
-          sens.chanposold = sens.chanpos;
+          sens.chanposold  = sens.chanpos;
+          %  also keep the old label, type and unit for reference
+          sens.labelold    = inputlabel;
+          sens.chantypeold = inputchantype;
+          sens.chanunitold = inputchanunit;
         end
         % compute the channel positions as a weighted sum of the original ones
         sens.chanpos = posweight * sens.chanpos;
@@ -410,17 +413,6 @@ switch inputtype
     sens.label    = montage.labelnew;
     sens.chantype = montage.chantypenew;
     sens.chanunit = montage.chanunitnew;
-    
-    % keep the original label, type and unit for reference
-    if ~isfield(sens, 'labelold')
-      sens.labelold = inputlabel;
-    end
-    if ~isfield(sens, 'chantypeold')
-      sens.chantypeold = inputchantype;
-    end
-    if ~isfield(sens, 'chanunitold')
-      sens.chanunitold = inputchanunit;
-    end
     
     % keep track of the order of the balancing and which one is the current one
     if istrue(inverse)

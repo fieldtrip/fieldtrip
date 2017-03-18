@@ -48,8 +48,8 @@ ft_defaults
 if ~strcmp(ext, '.fif')
   error('if the filename is specified with extension, this should read .fif');
 end
-fifffile = [pathstr filesep name '.fif'];
-eventfile = [pathstr filesep name '-eve.fif'];
+fifffile = fullfile(pathstr ,[name '.fif']);
+eventfile = fullfile(pathstr ,[name '-eve.fif']);
 
 % ensure the mne-toolbox to be on the path
 ft_hastoolbox('mne', 1);

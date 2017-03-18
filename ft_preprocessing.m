@@ -213,22 +213,23 @@ cfg.dataformat     = ft_getopt(cfg, 'dataformat');          % is passed to low-l
 cfg.coordsys       = ft_getopt(cfg, 'coordsys', 'head');    % is passed to low-level function
 cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-level function
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
+cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'yes');   % in case a montage is specified
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of padding
-cfg.dftfilter     = ft_getopt(cfg, 'dftfilter', 'no');
-cfg.lpfilter      = ft_getopt(cfg, 'lpfilter', 'no');
-cfg.hpfilter      = ft_getopt(cfg, 'hpfilter', 'no');
-cfg.bpfilter      = ft_getopt(cfg, 'bpfilter', 'no');
-cfg.bsfilter      = ft_getopt(cfg, 'bsfilter', 'no');
-cfg.medianfilter  = ft_getopt(cfg, 'medianfilter', 'no');
-cfg.padtype       = ft_getopt(cfg, 'padtype', 'data');
+cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
+cfg.lpfilter       = ft_getopt(cfg, 'lpfilter', 'no');
+cfg.hpfilter       = ft_getopt(cfg, 'hpfilter', 'no');
+cfg.bpfilter       = ft_getopt(cfg, 'bpfilter', 'no');
+cfg.bsfilter       = ft_getopt(cfg, 'bsfilter', 'no');
+cfg.medianfilter   = ft_getopt(cfg, 'medianfilter', 'no');
+cfg.padtype        = ft_getopt(cfg, 'padtype', 'data');
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of channel selection
-cfg.reref         = ft_getopt(cfg, 'reref', 'no');
-cfg.refchannel    = ft_getopt(cfg, 'refchannel', {});
-cfg.refmethod     = ft_getopt(cfg, 'refmethod', 'avg');
-cfg.implicitref   = ft_getopt(cfg, 'implicitref');
+cfg.reref          = ft_getopt(cfg, 'reref', 'no');
+cfg.refchannel     = ft_getopt(cfg, 'refchannel', {});
+cfg.refmethod      = ft_getopt(cfg, 'refmethod', 'avg');
+cfg.implicitref    = ft_getopt(cfg, 'implicitref');
 
 if ~isfield(cfg, 'feedback')
   if strcmp(cfg.method, 'channel')

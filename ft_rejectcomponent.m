@@ -170,8 +170,8 @@ else
   keepunused = 'no'; % don't need to keep the original rejected components
   bname = 'invcomp';
 
-  % create the initial data structure
-  data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'topo', 'trialinfo', 'sampleinfo'});
+  % create the initial data structure, remove all component details
+  data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'opto', 'trialinfo', 'sampleinfo'});
 end % if hasdata
 
 % apply the linear projection to the data

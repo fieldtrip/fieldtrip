@@ -75,27 +75,27 @@ typedef uint64_t UINT64_T;
 #define VERSION_OE  (UINT16_T) (((VERSION & 0x00FF) << 8) | ((VERSION & 0xFF00) >> 8))
 
 /* these define the commands that can be used, which are split over the two available bytes */
-#define PUT_HDR    (UINT16_T)0x0101 /* 257 */
-#define PUT_DAT    (UINT16_T)0x0102 /* 258 */
-#define PUT_EVT    (UINT16_T)0x0103 /* 259 */
-#define PUT_OK     (UINT16_T)0x0104 /* 260 */
-#define PUT_ERR    (UINT16_T)0x0105 /* 261 */
+#define PUT_HDR    (UINT16_T)0x0101 /* decimal 257 */
+#define PUT_DAT    (UINT16_T)0x0102 /* decimal 258 */
+#define PUT_EVT    (UINT16_T)0x0103 /* decimal 259 */
+#define PUT_OK     (UINT16_T)0x0104 /* decimal 260 */
+#define PUT_ERR    (UINT16_T)0x0105 /* decimal 261 */
 
-#define GET_HDR    (UINT16_T)0x0201 /* 513 */
-#define GET_DAT    (UINT16_T)0x0202 /* 514 */
-#define GET_EVT    (UINT16_T)0x0203 /* 515 */
-#define GET_OK     (UINT16_T)0x0204 /* 516 */
-#define GET_ERR    (UINT16_T)0x0205 /* 517 */
+#define GET_HDR    (UINT16_T)0x0201 /* decimal 513 */
+#define GET_DAT    (UINT16_T)0x0202 /* decimal 514 */
+#define GET_EVT    (UINT16_T)0x0203 /* decimal 515 */
+#define GET_OK     (UINT16_T)0x0204 /* decimal 516 */
+#define GET_ERR    (UINT16_T)0x0205 /* decimal 517 */
 
-#define FLUSH_HDR  (UINT16_T)0x0301 
-#define FLUSH_DAT  (UINT16_T)0x0302
-#define FLUSH_EVT  (UINT16_T)0x0303
-#define FLUSH_OK   (UINT16_T)0x0304
-#define FLUSH_ERR  (UINT16_T)0x0305
+#define FLUSH_HDR  (UINT16_T)0x0301 /* decimal 769 */
+#define FLUSH_DAT  (UINT16_T)0x0302 /* decimal 770 */
+#define FLUSH_EVT  (UINT16_T)0x0303 /* decimal 771 */
+#define FLUSH_OK   (UINT16_T)0x0304 /* decimal 772 */
+#define FLUSH_ERR  (UINT16_T)0x0305 /* decimal 773 */
 
-#define WAIT_DAT   (UINT16_T)0x0402
-#define WAIT_OK    (UINT16_T)0x0404
-#define WAIT_ERR   (UINT16_T)0x0405
+#define WAIT_DAT   (UINT16_T)0x0402 /* decimal 1026 */
+#define WAIT_OK    (UINT16_T)0x0404 /* decimal 1027 */
+#define WAIT_ERR   (UINT16_T)0x0405 /* decimal 1028 */
 
 /* these are used in the data_t and event_t structure */
 #define DATATYPE_CHAR    (UINT32_T)0
@@ -255,8 +255,8 @@ typedef struct {
 } waitdef_t;
 
 typedef struct {
-    UINT32_T type;  /* One of FT_CHUNK_** (see above) */
-    UINT32_T size;  /* Size of chunk.data, total size is given by adding sizeof(ft_chunkdef_t)=8 */
+    UINT32_T type;      /* One of FT_CHUNK_** (see above) */
+    UINT32_T size;      /* Size of chunk.data, total size is given by adding sizeof(ft_chunkdef_t)=8 */
 } ft_chunkdef_t;
 
 typedef struct {
