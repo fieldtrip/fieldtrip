@@ -12,8 +12,8 @@ PLATFORM = $(shell gcc -dumpmachine)
 
 # defaults, might be overwritten further down
 CC       = gcc
-CFLAGS   = -O0 -fPIC -w # -Wunused -Wall -pedantic
-CXXFLAGS = -O0 -fPIC -w # -Wunused -Wall -pedantic
+CFLAGS   = -O2 -fPIC -w # -Wunused -Wall -pedantic
+CXXFLAGS = -O2 -fPIC -w # -Wunused -Wall -pedantic
 INCPATH  = -I.
 LIBPATH  = -L.
 LIBS     = -lbuffer -lm -lpthread

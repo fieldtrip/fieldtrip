@@ -21,7 +21,7 @@ FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 # defaults, might be overwritten further down
 CC       = gcc
 CXX      = g++
-CXXFLAGS = $(shell fltk-config --cxxflags) -Wunused -Wall -pedantic
+CXXFLAGS = $(shell fltk-config --cxxflags) -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = $(shell fltk-config --ldflags) -lpthread -lbuffer

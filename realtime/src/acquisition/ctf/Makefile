@@ -16,7 +16,8 @@ FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 # defaults, might be overwritten further down
 CC       = gcc
 CXX      = g++
-CFLAGS   = -I$(FTBUFFER)/src -Wunused -Wall
+CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
+INCPATH  = -I$(FTBUFFER)/src
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer -lncurses -lpthread -lm
 
@@ -72,7 +73,7 @@ $(BINDIR)/ctf_%$(SUFFIX): %.o
 $(BINDIR)/acq2ftx$(SUFFIX): LDLIBS += -lm
 
 %_fake.o: %.c
-	$(CC) $^ $(CFLAGS) -DFAKE_MEG -c -o $@
+	$(CC) $^ $(CFLAGS) $(INCPATH) -DFAKE_MEG -c -o $@
 
 clean:
 	$(RM) *.o $(TARGETS)

@@ -22,7 +22,7 @@ EDKPATH = C:\Program\ Files\ (x86)\Emotiv\ Education\ Edition\ SDK_v1.0.0.5-PREM
 # defaults, might be overwritten further down
 CC       = gcc
 CXX      = g++
-CXXFLAGS = -Wunused -Wall
+CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer

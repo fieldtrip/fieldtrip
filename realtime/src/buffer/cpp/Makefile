@@ -15,8 +15,8 @@ PLATFORM = $(shell gcc -dumpmachine)
 # defaults, might be overwritten further down
 CC       = gcc
 CXX      = g++
-CFLAGS   = -Wunused -Wall -pedantic -O3
-CXXFLAGS = -Wunused -Wall -pedantic -O3
+CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
+CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I../src -I.
 LIBPATH  = -L../src
 LDLIBS   = -lpthread -lbuffer

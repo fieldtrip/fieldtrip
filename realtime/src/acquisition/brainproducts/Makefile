@@ -18,7 +18,7 @@ FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 # defaults, might be overwritten further down
 CC       = gcc
 CXX      = g++
-CFLAGS   = -Wunused -Wall -pedantic
+CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I.
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer -lpthread

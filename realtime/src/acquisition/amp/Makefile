@@ -30,7 +30,7 @@ FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 CC       = gcc
 CXX      = g++
-CXXFLAGS = -DDEBUG -w # -Wunused -Wall -pedantic -O3
+CXXFLAGS = -DDEBUG -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer -lpthread
@@ -102,7 +102,7 @@ all: $(TARGETS)
 
 AmpServerClient.o: AmpServerClient.h
 
-$(BINDIR)/amp2ft$(SUFFIX): amp2ft.o AmpServerClient.o $(CPPOBJS) 
+$(BINDIR)/amp2ft$(SUFFIX): amp2ft.o AmpServerClient.o $(CPPOBJS)
 	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
