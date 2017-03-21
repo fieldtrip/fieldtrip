@@ -61,11 +61,13 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %,$(BINDIR)/ctf_%$(SUFFIX),\
-	AcqBuffer acq2ft acq2ftx fake_meg check_shm acq2ftx_fake acq2ft_fake)
+TARGETS = $(patsubst %, $(BINDIR)/ctf_%$(SUFFIX), AcqBuffer acq2ft acq2ftx fake_meg check_shm acq2ftx_fake acq2ft_fake)
 
 ##############################################################################
 all: $(TARGETS)
+
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
 $(BINDIR)/ctf_%$(SUFFIX): %.o
 	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
