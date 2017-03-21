@@ -438,7 +438,7 @@ if dotpm
         %spm_preproc_write8(res, [ones(6,4)], [0 0], [0 1], 1, 0, nan(2,3), nan);
         
         % this write a mat file, may be needed for Dartel, not sure yet
-        %save([cfg.name '_seg8.mat'],'-struct','res', spm_get_defaults('mat.format'));
+        save([cfg.name '_sn.mat'],'-struct','res');
         
         [pathstr, name, ~] = fileparts(cfg.name);
         filenames = {fullfile(pathstr,['c1', name, '.nii']);...
@@ -473,7 +473,7 @@ if dotpm
         try, delete(fullfile(pathstr,[prefix{k}, name, suffix{j}])); end
       end
     end
-  elseif strctmp(cfg.write, 'yes')
+  elseif strcmp(cfg.write, 'yes')
     for k= 1:numel(V)
       % I am not sure whether or why this is needed
       V(k).mat = mri.transform;
