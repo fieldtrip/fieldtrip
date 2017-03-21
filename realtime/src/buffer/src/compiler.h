@@ -7,7 +7,7 @@
 #elif defined (_MSC_VER)
   #define COMPILER_MSVC
 
-#elif defined (__CYGWIN32__)
+#elif defined (__CYGWIN__)
   #define COMPILER_CYGWIN
 
 #elif defined (__MINGW64__) /* this should go before the __MINGW32__ check */

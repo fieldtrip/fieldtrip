@@ -22,7 +22,7 @@
   #define PLATFORM_HP
 
 #elif defined(__CYGWIN__)
-  /* cygwin is not win32 */
+  /* cygwin is not windows */
   #define PLATFORM_CYGWIN
 
 #elif defined(_WIN64) || defined(__WIN64__) || defined(WIN64)

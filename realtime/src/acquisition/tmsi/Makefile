@@ -69,6 +69,12 @@ TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), tmsidriver tmsi2ft)
 ##############################################################################
 all: $(TARGETS)
 
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
+
+%.o: %.cpp
+	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
+
 $(BINDIR)/%$(SUFFIX): %.o $(CPPOBJS)
 	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 

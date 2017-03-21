@@ -103,10 +103,18 @@
     #define usleep(x)       (Sleep((x)/1000)) // should be replaced by win32/usleep.h
     #define strcasecmp(a,b) (strcmpi(a,b))
 
-#elif defined (PLATFORM_WIN32) &&  defined (COMPILER_CYGWIN)
-    #include <winsock2.h>
+#elif defined (PLATFORM_CYGWIN) && defined (COMPILER_CYGWIN)
+    //  #include <winsock2.h>
+    //  #include <windows.h>
+    #include <sys/socket.h>
+    #include <sys/un.h>
+    #include <netinet/in.h>
+    #include <netinet/ip.h>
+    #include <unistd.h>  /* for close() */
+    #include <netdb.h>
 
     #define strcasecmp(a,b) (strcmpi(a,b))
+    #define closesocket(s) (close(s))
 
 #elif defined (PLATFORM_WIN32) && defined (COMPILER_LCC)
     #include <winsock2.h>

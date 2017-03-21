@@ -14,8 +14,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "buffer.h"
 #include <pthread.h>
+#include "buffer.h"
 #include "extern.h"
 
 #define ACCEPTSLEEP 1000
@@ -55,7 +55,7 @@ void *tcpserver(void *arg) {
   /* struct timeval timeout; */
   int oldcancelstate, oldcanceltype;
 
-#ifdef WIN32
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
   unsigned long enable = 0;
   static WSADATA wsa = {0,0};
 #endif
@@ -89,7 +89,7 @@ void *tcpserver(void *arg) {
     goto cleanup;
   }
 
-#ifdef WIN32
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
   /* We only need to do this once ... and actually have a corresponding WSACleanup call somewhere */
   if (wsa.wVersion == 0) {
     if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
@@ -108,7 +108,7 @@ void *tcpserver(void *arg) {
   threadlocal.fd = s;
 
   /* place the socket in non-blocking mode, required to do thread cancelation */
-#ifdef WIN32
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
   enable = 0;
   ioctlsocket(s, FIONBIO, &enable);
 #else
@@ -171,7 +171,7 @@ void *tcpserver(void *arg) {
       fprintf(stderr, "tcpserver: accept\n");
 
     if (c<0) {
-#ifdef WIN32
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64)
       if(errno == 0) {
         pthread_testcancel();
         usleep(ACCEPTSLEEP);
@@ -195,8 +195,8 @@ void *tcpserver(void *arg) {
     else {
       if (verbose>0) fprintf(stderr, "tcpserver: opened connection to client on socket %d\n", c);
 
-      /* SK: we could set socket option "SO_LINGER" so resources are freed up immediately 
-         but we leave this at the default for now 
+      /* SK: we could set socket option "SO_LINGER" so resources are freed up immediately
+         but we leave this at the default for now
        */
       if (0) {
         struct linger lg;
@@ -223,7 +223,7 @@ void *tcpserver(void *arg) {
       }
 
       /* place the socket back in blocking mode, this is needed for tcpsocket  */
-#ifdef WIN32
+#if defined(PLATFORM_WIN32) || defined(PLATFORM_WIN64) 
       enable = 0;
       ioctlsocket(c, FIONBIO, &enable);
 #else
@@ -268,4 +268,3 @@ cleanup:
   pthread_cleanup_pop(1);
   return NULL;
 }
-

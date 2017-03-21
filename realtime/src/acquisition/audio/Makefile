@@ -40,11 +40,11 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	INCPATH += -I../../external/portaudio
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static $(BINDIR)/PortAudio.dll
 	SUFFIX   = .exe
 	RM       = del /Q
 	# make clean target work on windows
@@ -52,11 +52,11 @@ ifeq "$(PLATFORM)" "i686-w64-mingw32"
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	INCPATH += -I../../external/portaudio
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static $(BINDIR)/PortAudio.dll
 	SUFFIX   = .exe
 	RM       = del /Q
 	# make clean target work on windows

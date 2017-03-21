@@ -10,6 +10,9 @@ endif
 
 PLATFORM = $(shell gcc -dumpmachine)
 
+FIELDTRIP = ../../../..
+FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
+
 # defaults, might be overwritten further down
 CC       = gcc
 CFLAGS   = -O2 -fPIC -w # -Wunused -Wall -pedantic
@@ -18,43 +21,82 @@ INCPATH  = -I../src
 LIBPATH  = -L../src
 LDLIBS   = -lbuffer -lm -lpthread
 RM       = rm -f
-BINDIR   = .
 SUFFIX   =
 
-ifeq "$(PLATFORM)" "mingw32"
-  INCPATH += -I../pthreads-win32/include
-  LIBPATH += -L../pthreads-win32/lib
-  LDLIBS   = -lbuffer -lm -lpthreadGC2 -lws2_32
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+  LDLIBS   = -lbuffer -lm -lws2_32
   SUFFIX   = .exe
-  RM       = del
+  RM       = rm -f
+	fixpath  = $1
+endif
+
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+  LDLIBS   = -lbuffer -lm -lws2_32
+  SUFFIX   = .exe
+  RM       = rm -f
+	fixpath  = $1
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
   # prevent dependency on libwinpthread-1.dll by linking statically
   # see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
   LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-  SUFFIX   = _win32.exe
+  SUFFIX   = .exe
   RM       = del
+	# make clean target work on windows:
+	fixpath = $(subst /,\,$1)
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
   # prevent dependency on libwinpthread-1.dll by linking statically
   # see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
   LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-  SUFFIX   = _win64.exe
+  SUFFIX   = .exe
   RM       = del
+	# make clean target work on windows:
+	fixpath = $(subst /,\,$1)
+endif
+
+ifeq "$(OS)" "Linux"
+	fixpath = $1
+	LDLIBS += -ldl -lpthread -lportaudio
+	ifeq "$(MACHINE)" "i686"
+	 	BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+	 	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+	 	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
+	ifeq "$(MACHINE)" "armv7l"
+	 	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
 ifeq "$(OS)" "Darwin"
-    ifeq "$(MACHINE)" "i386"
-        CFLAGS   += -m32
-        CXXFLAGS += -m32
-    endif
-    ifeq "$(MACHINE)" "x86_64"
-        CFLAGS   += -m64
-        CXXFLAGS += -m64
-    endif
+	fixpath = $1
+  ifeq "$(MACHINE)" "i386"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+    CFLAGS   += -m32
+    CXXFLAGS += -m32
+  endif
+  ifeq "$(MACHINE)" "x86_64"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+    CFLAGS   += -m64
+    CXXFLAGS += -m64
+  endif
 endif
+
+ifndef BINDIR
+$(error Unsupported platform: $(PLATFORM) :/.)
+endif
+
+TARGETS = $(patsubst %, $(BINDIR)/%$(SUFFIX), demo_combined demo_sinewave demo_event test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_pthread test_benchmark test_nslookup test_waitdat test_connect)
 
 ##############################################################################
 
@@ -110,8 +152,4 @@ test_connect$(SUFFIX): test_connect.o
 	$(CC) $(CFLAGS) $(INCPATH) -c $<
 
 clean:
-	$(RM) core *.o *.obj *.a
-
-distclean:
-	$(RM) demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
-	$(RM) test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
+	$(RM) core *.o *.obj *.a $(call fixpath, $(TARGETS))
