@@ -41,7 +41,7 @@ TARGETS = $(patsubst %,$(BINDIR)/%, tia2ft)
 all: $(TARGETS)
 
 $(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) $^ $(LIBPATH) $(LDLIBS) -o $@
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 $(BINDIR)/tia2ft$(SUFFIX): ft_buffer_helper.o tia2ft.o
 

@@ -61,7 +61,7 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 endif
 
 ifeq "$(OS)" "Linux"
-	LDLIBS += -ldl -lrt
+	LDLIBS += -ldl -lrt -lpthread
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86

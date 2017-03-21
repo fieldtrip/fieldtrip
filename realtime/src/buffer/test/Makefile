@@ -49,12 +49,10 @@ ifeq "$(OS)" "Darwin"
     ifeq "$(MACHINE)" "i386"
         CFLAGS   += -m32
         CXXFLAGS += -m32
-        LDFLAGS  += -m32
     endif
     ifeq "$(MACHINE)" "x86_64"
         CFLAGS   += -m64
         CXXFLAGS += -m64
-        LDFLAGS  += -m64
     endif
 endif
 
@@ -67,46 +65,46 @@ demo: demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
 test: test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
 
 demo_combined$(SUFFIX): demo_combined.o sinewave.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 demo_sinewave$(SUFFIX): demo_sinewave.o sinewave.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 demo_event$(SUFFIX): demo_event.o event.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_gethdr$(SUFFIX): test_gethdr.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_getdat$(SUFFIX): test_getdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_getevt$(SUFFIX): test_getevt.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_flushhdr$(SUFFIX): test_flushhdr.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_flushdat$(SUFFIX): test_flushdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_flushevt$(SUFFIX): test_flushevt.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_pthread$(SUFFIX): test_pthread.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_benchmark$(SUFFIX): test_benchmark.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_nslookup$(SUFFIX): test_nslookup.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_waitdat$(SUFFIX): test_waitdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 test_connect$(SUFFIX): test_connect.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCPATH) -c $<

@@ -24,14 +24,14 @@ CXX      = g++
 CXXFLAGS = $(shell fltk-config --cxxflags) -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
-LDFLAGS  = $(shell fltk-config --ldflags) -lpthread -lbuffer
+LDLIBS   = $(shell fltk-config --ldflags) -lpthread -lbuffer
 
 ifeq "$(PLATFORM)" "mingw32"
 	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
 	CXXFLAGS += -mwindows
 	INCPATH  += -IC:/msys/1.0/local/include
 	LIBPATH  += -LC:/msys/1.0/local/lib
-	LDFLAGS  += -lws2_32 -lwinmm -mwindows -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32 $(BINDIR)/pthreadGC2.dll
+	LDLIBS   += -lws2_32 -lwinmm -mwindows -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32 $(BINDIR)/pthreadGC2.dll
 	SUFFIX    = .exe
 	# make clean target work on windows:
 	fixpath  = $(subst /,\,$1)
@@ -107,7 +107,7 @@ all: $(TARGETS)
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
 $(BINDIR)/viewer$(SUFFIX): viewer.o ../../buffer/cpp/FtConnection.o
-	$(CXX) $(LIBPATH) $(LDFLAGS) -o $@ $^
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

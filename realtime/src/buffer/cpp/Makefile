@@ -17,14 +17,14 @@ CC       = gcc
 CXX      = g++
 CFLAGS   = -Wunused -Wall -pedantic -O3
 CXXFLAGS = -Wunused -Wall -pedantic -O3
-LDFLAGS  = -L../src
+INCPATH  = -I../src -I.
+LIBPATH  = -L../src
 LDLIBS   = -lpthread -lbuffer
-INCPATH  = -I. -I../src
 SUFFIX   =
 
 ifeq "$(PLATFORM)" "mingw32"
   INCPATH += -I../../external/pthreads-win32/include
-	LDFLAGS += ../../external/pthreads-win32/lib/pthreadGC2.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm
+	LDLIBS  += ../../external/pthreads-win32/lib/pthreadGC2.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm
 	SUFFIX   = .exe
 	RM       = del
 endif
@@ -32,7 +32,7 @@ endif
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDFLAGS += -lws2_32 -lwinmm -static
+	LDLIBS  += -lws2_32 -lwinmm -static
 	SUFFIX   = _win32.exe
 	RM       = del
 endif
@@ -40,7 +40,7 @@ endif
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDFLAGS += -lws2_32 -lwinmm -static
+	LDLIBS  += -lws2_32 -lwinmm -static
 	SUFFIX   = _win64.exe
 	RM       = del
 endif
@@ -61,16 +61,14 @@ ifeq "$(OS)" "Linux"
 endif
 
 ifeq "$(OS)" "Darwin"
-	LDFLAGS += -ldl
+	LDLIBS += -ldl
 	ifeq "$(MACHINE)" "i386"
 		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS  += -m64
 	endif
 endif
 
@@ -83,7 +81,7 @@ all: odmTest$(SUFFIX)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -c $<
 
 odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o odmTest$(SUFFIX)

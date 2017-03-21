@@ -12,6 +12,7 @@
  */
 
 
+#ifdef PLATFORM_WINDOWS
 #ifndef COMPILER_MINGW
 
 #define EPOCHFILETIME ((INT64_T) 116444736000000000LL)
@@ -55,3 +56,5 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 }
 
 #endif
+#endif
+
