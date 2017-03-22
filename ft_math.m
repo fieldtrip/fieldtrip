@@ -174,7 +174,7 @@ clear dimordtmp
 % fields in the output
 fn  = fieldnames(varargin{1});
 dimordfields = fn(~cellfun(@isempty, strfind(fn, 'dimord')))';
-if numel(dimordfields==1) && strcmp(dimordfields{1},'dimord'),
+if numel(dimordfields)==1 && strcmp(dimordfields{1},'dimord'),
     % this is OK and counts for most data structures
 else
     % this is in the case of one or more xxxdimord fields, in which case

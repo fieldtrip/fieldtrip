@@ -16,8 +16,8 @@ function test_ft_prepare_singleshell
 % get the data which is needed
 
 % read in the segmented mri
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer'));
-load segmentedmri
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
+load(fullfile(datadir, 'segmentedmri.mat'));
 mri = segmentedmri; clear segmentedmri;
 
 % specify the file for the headshape
@@ -70,7 +70,10 @@ vol2b = rmfield(vol2b,'cfg');
 vol2.bnd  = rmfield(vol2.bnd, 'cfg');
 vol2b.bnd = rmfield(vol2b.bnd,'cfg');
 
-if ~isequal(vol2, vol2b)
+[ok, msg] = isalmostequal(vol2, vol2b, 'abstol', 1e-5, 'diffabs', 1);
+  
+if ~ok
+  disp(msg);
   error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
 end
 
@@ -91,6 +94,8 @@ vol3b = rmfield(vol3b,'cfg');
 vol3.bnd  = rmfield(vol3.bnd, 'cfg');
 vol3b.bnd = rmfield(vol3b.bnd,'cfg');
 
-if ~isequal(vol3, vol3b)
+[ok, msg] = isalmostequal(vol3, vol3b, 'abstol', 1e-5, 'diffabs', 1);
+if ~ok
+  disp(msg);
   error('ft_prepare_singleshell and ft_prepare_headmodel gave different outputs');
 end

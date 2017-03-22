@@ -87,7 +87,7 @@ elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
     defaultformat = 'aal';
   end
   fclose(fid);
-elseif strcmp(x, '.mgz') && ~isempty(strfind(f, 'aparc')) && ~isempty(strfind(f, 'aseg'))
+elseif strcmp(x, '.mgz') && ~isempty(strfind(f, 'aparc')) || ~isempty(strfind(f, 'aseg'))
   % individual volume based segmentation from freesurfer
   defaultformat = 'freesurfer_volume';
 elseif ft_filetype(filename, 'caret_label')
