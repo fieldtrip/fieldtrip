@@ -6,8 +6,9 @@ function test_ft_appendxxx(data,mismatch)
 %     data      = any FT data structure with trialinfo
 %     mismatch  = boolean flag for whether you want the function to artificially
 %       introduce a mismatch in trialinfo (TRUE, default) and test whether it is
-%       successfully identified and removed from the output, or leave the
-%       trialinfo alone (FALSE) to verify the identity of input and output data
+%       successfully identified and removed from the output, or make only
+%       inconsequential changes to trialinfo (FALSE) and verify that the append
+%       function runs successfully, retaining the correct trialinfo
 %
 % written 3/16/17 by Teresa E. Madsen
 
