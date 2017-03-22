@@ -243,12 +243,12 @@ if isfield(obj, 'ygrid') && ~ischar(obj.ygrid), obj.ygrid = scale * obj.ygrid; e
 if isfield(obj, 'zgrid') && ~ischar(obj.zgrid), obj.zgrid = scale * obj.zgrid; end
 
 % anatomical MRI or functional volume
-if isfield(obj, 'transform'),
+if isfield(obj, 'transform')
   H = diag([scale scale scale 1]);
   obj.transform = H * obj.transform;
 end
 
-if isfield(obj, 'transformorig'),
+if isfield(obj, 'transformorig')
   H = diag([scale scale scale 1]);
   obj.transformorig = H * obj.transformorig;
 end

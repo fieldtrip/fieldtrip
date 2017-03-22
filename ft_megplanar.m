@@ -211,7 +211,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
 
   planarmontage = [];
   planarmontage.tra      = transform;
-  planarmontage.labelorg = axial.grad.label;
+  planarmontage.labelold = axial.grad.label;
   planarmontage.labelnew = planar.grad.label;
 
   % apply the linear transformation to the data
@@ -341,13 +341,13 @@ else
   interp.grad.chanpos(ix,:) = sens.chanpos(iy,:);
 
   % if the original chanpos contained nans, make sure to put nans in the
-  % updated one as well, and move the updated chanpos values to chanposorg
+  % updated one as well, and move the updated chanpos values to chanposold
   if chanposnans
-    interp.grad.chanposorg = sens.chanpos;
-    interp.grad.chanoriorg = sens.chanori;
-    interp.grad.labelorg = sens.label;
-    interp.grad.chanpos = nan(size(interp.grad.chanpos));
-    interp.grad.chanori = nan(size(interp.grad.chanori));
+    interp.grad.chanposold = sens.chanpos;
+    interp.grad.chanoriold = sens.chanori;
+    interp.grad.labelold   = sens.label;
+    interp.grad.chanpos    = nan(size(interp.grad.chanpos));
+    interp.grad.chanori    = nan(size(interp.grad.chanori));
   end
 end
 

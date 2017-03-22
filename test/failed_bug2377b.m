@@ -78,8 +78,8 @@ assert(isequal(tryrmfield(sens0a, 'tra'), tryrmfield(sens5a, 'tra')));
 %%
 
 montage = [];
-montage.labelorg = sens.label;
-montage.labelnew = montage.labelorg;
+montage.labelold = sens.label;
+montage.labelnew = montage.labelold;
 montage.tra = detrend(eye(nchan), 'constant');
 
 sens0b = ft_apply_montage(sens0, montage);

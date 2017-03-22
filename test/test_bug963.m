@@ -84,11 +84,11 @@ for i=1:length(dataset)
 %   if isfield(hdr.grad, 'coordsys')
 %     hdr.grad = rmfield(hdr.grad, 'coordsys');
 %   end
-%   if isfield(grad, 'labelorg')
-%     grad = rmfield(grad, 'labelorg');
+%   if isfield(grad, 'labelold')
+%     grad = rmfield(grad, 'labelold');
 %   end
-%   if isfield(hdr.grad, 'labelorg')
-%     hdr.grad = rmfield(hdr.grad, 'labelorg');
+%   if isfield(hdr.grad, 'labelold')
+%     hdr.grad = rmfield(hdr.grad, 'labelold');
 %   end
 %   
   assert(isalmostequal(hdr.grad,           grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));

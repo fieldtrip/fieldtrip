@@ -30,7 +30,7 @@ rej1 = ft_rejectcomponent(cfg, comp, data_reref);
 % ft_componentanalysis/ft_rejectcomponent still works correctly.
 montage = [];
 montage.tra = eye(numel(data.label))-ones(numel(data.label))./numel(data.label);
-montage.labelorg = data.label;
+montage.labelold = data.label;
 montage.labelnew = data.label;
 
 cfg = [];

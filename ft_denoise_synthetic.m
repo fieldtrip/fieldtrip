@@ -90,7 +90,7 @@ data   = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 % remember the original channel ordering
-labelorg = data.label;
+labelold = data.label;
 
 % apply the balancing to the MEG data and to the gradiometer definition
 current = data.grad.balance.current;
@@ -122,8 +122,8 @@ if ~strcmp(desired, 'none')
 end % if desired
 
 % reorder the channels to stay close to the original ordering
-[selorg, selnew] = match_str(labelorg, data.label);
-if numel(selnew)==numel(labelorg)
+[selold, selnew] = match_str(labelold, data.label);
+if numel(selnew)==numel(labelold)
   for i=1:numel(data.trial)
     data.trial{i} = data.trial{i}(selnew,:);
   end

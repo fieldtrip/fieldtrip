@@ -30,6 +30,8 @@ function ft_select_voxel(handle, eventdata, varargin)
 % Subsequently you can click in the figure and you'll see that the disp
 % function is executed as callback and that it displays the selected
 % voxel.
+%
+% See also FT_SELECT_BOX, FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_RANGE
 
 % Copyright (C) 2010, Robert Oostenveld
 %

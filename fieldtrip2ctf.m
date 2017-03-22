@@ -57,7 +57,7 @@ switch type
       fprintf(fid, 'Name:\t%s\n', montage.labelnew{i});
       fprintf(fid, 'Unit:\n');
       for j=1:numel(sel)
-        fprintf(fid, 'Ref:\t%s,%f\n', montage.labelorg{sel(j)}, montage.tra(i,sel(j)));
+        fprintf(fid, 'Ref:\t%s,%f\n', montage.labelold{sel(j)}, montage.tra(i,sel(j)));
       end
       fprintf(fid, '}\n');
     end
