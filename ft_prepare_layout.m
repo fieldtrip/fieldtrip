@@ -1,80 +1,76 @@
 function [layout, cfg] = ft_prepare_layout(cfg, data)
 
-% FT_PREPARE_LAYOUT loads or creates a 2-D layout of the channel locations.
-% This layout is required for plotting the topographical distribution of
-% the potential or field distribution, or for plotting timecourses in a
-% topographical arrangement.
+% FT_PREPARE_LAYOUT loads or creates a 2-D layout of the channel locations. This
+% layout is required for plotting the topographical distribution of the potential or
+% field distribution, or for plotting timecourses in a topographical arrangement.
 %
 % Use as
 %   layout = ft_prepare_layout(cfg, data)
 %
-% There are several ways in which a 2-D layout can be made: it can be read
-% directly from a *.mat file containing a variable 'lay', it can be created
-% based on 3-D electrode or gradiometer positions in the configuration or
-% in the data, or it can be created based on the specification of an
-% electrode or gradiometer file. Layouts can also come from an ASCII *.lay
-% file, but this type of layout is no longer recommended.
+% There are several ways in which a 2-D layout can be made: 1) it can be read
+% directly from a layout file, 2) it can be created based on 3-D electrode or
+% gradiometer positions in the configuration or in the data, or 3) it can be created
+% based on the specification of an electrode or gradiometer file.
+%
+% Layout files are MATLAB files with a single variable representing the layout (see
+% below). The layout file can also be an ASCII *.lay file, but this type of layout is
+% no longer recommended, since the outline of the head and the mask within which the
+% interpolation is done is less refined for an ASCII layout. A large number of
+% template layout files is provided in the fieldtrip/template/layout directory. See
+% also http://fieldtriptoolbox.org/template/layout
 %
 % You can specify any one of the following configuration options
-%   cfg.layout      = filename containg the layout (.mat or .lay file)
-%                     can also be a layout structure, which is simply
-%                     returned as-is (see below for details)
-%   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
-%   cfg.projection  = string, 2D projection method can be 'stereographic', 'orthographic',
-%                     'polar', 'gnomic' or 'inverse' (default = 'polar')
-%                     When 'orthographic', cfg.viewpoint can be used to indicate to specificy projection (keep empty for legacy projection)
-%   cfg.viewpoint   = string indicating 'viewpoint' used for orthographic projection of 3D electrode coordinates to 2D plane
-%                     (requires cfg.projection = 'orthographic')  
-%                     Viewpoints are as follows:
-%                     'left'      = left  sagittal view,    L=anterior, R=posterior, top=top, bottom=bottom
-%                     'right'     = right sagittal view,    L=posterior, R=anterior, top=top, bottom=bottom
-%                     'inferior'  = inferior axial view,    L=R, R=L, top=anterior, bottom=posterior
-%                     'superior'  = superior axial view,    L=L, R=R, top=anterior, bottom=posterior
-%                     'anterior'  = anterior  coronal view, L=R, R=L, top=top, bottom=bottom
-%                     'posterior' = posterior coronal view, L=L, R=R, top=top, bottom=bottom
-%                     'auto'      = automatic guess of the most optimal of the above
-%                      tip: use cfg.viewpoint = auto per iEEG electrode grid/strip/depth for more accurate results
-%                      tip: to obtain overview of e.g. all iEEG electrodes, choose superior/inferior, use cfg.headshape/mri, and
-%                           plot using ft_layoutplot with cfg.box/mask = 'no'
-%   cfg.headshape   = surface mesh (e.g. pial, head, etc) to be used for generating a layout outline using cfg.viewpoint
-%                     If used, needs to be in same coordinate space as cfg.elec/grad/opto/file. See FT_READ_HEADSHAPE
-%   cfg.mri         = mri to be used for generating a brain outline as layout outline for cfg.viewpoint
-%                     If used, needs to be in same coordinate space as cfg.elec/grad/opto/file. 
-%                     Mri needs to be segmented and contain a 'brain' field. If not, segmentation is attempted automatically.
-%                     See FT_READ_MRI and FT_VOLUMESEGMENT.
+%   cfg.layout      = filename containg the input layout (*.mat or *.lay file), this can also be a layout
+%                     structure, which is simply returned as-is (see below for details)
+%   cfg.output      = filename (ending in .mat or .lay) to which the layout will be written (default = [])
 %   cfg.elec        = structure with electrode definition, or
 %   cfg.elecfile    = filename containing electrode definition
 %   cfg.grad        = structure with gradiometer definition, or
 %   cfg.gradfile    = filename containing gradiometer definition
 %   cfg.opto        = structure with optode structure definition, or
 %   cfg.optofile    = filename containing optode structure definition
-%   cfg.output      = filename (ending in .mat or .lay) to which the layout
-%                     will be written (default = [])
+%   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
+%   cfg.projection  = string, 2D projection method can be 'stereographic', 'orthographic',
+%                     'polar', 'gnomic' or 'inverse' (default = 'polar')
+%                     When 'orthographic', cfg.viewpoint can be used to indicate to specificy projection (keep empty for legacy projection)
+%   cfg.viewpoint   = string indicating the view point that is used for orthographic projection of 3-D sensor
+%                     positions to the 2-D plane. The possible viewpoints are
+%                     'left'      - left  sagittal view,    L=anterior, R=posterior, top=top, bottom=bottom
+%                     'right'     - right sagittal view,    L=posterior, R=anterior, top=top, bottom=bottom
+%                     'inferior'  - inferior axial view,    L=R, R=L, top=anterior, bottom=posterior
+%                     'superior'  - superior axial view,    L=L, R=R, top=anterior, bottom=posterior
+%                     'anterior'  - anterior  coronal view, L=R, R=L, top=top, bottom=bottom
+%                     'posterior' - posterior coronal view, L=L, R=R, top=top, bottom=bottom
+%                     'auto'      - automatic guess of the most optimal of the above
+%                      tip: use cfg.viewpoint = 'auto' per iEEG electrode grid/strip/depth for more accurate results
+%                      tip: to obtain an overview of all iEEG electrodes, choose superior/inferior, use cfg.headshape/mri, and plot using FT_LAYOUTPLOT with cfg.box/mask = 'no'
+%   cfg.headshape   = surface mesh (e.g. pial, head, etc) to be used for generating an outline. See FT_READ_HEADSHAPE for details
+%   cfg.mri         = segmented anatomical MRI to be used for generating an outline. See FT_READ_MRI and FT_VOLUMESEGMENT for details
 %   cfg.montage     = 'no' or a montage structure (default = 'no')
 %   cfg.image       = filename, use an image to construct a layout (e.g. useful for ECoG grids)
-%   cfg.bw          = if an image is used and bw = 1 transforms the image in
-%                     black and white (default = 0, do not transform)
-%   cfg.overlap     = string, how to deal with overlapping channels when
-%                     layout is constructed from a sensor configuration
-%                     structure (can be 'shift' (shift the positions in 2D
-%                     space to remove the overlap (default)), 'keep' (don't
-%                     shift, retain the overlap), 'no' (throw error when
-%                     overlap is present))
+%   cfg.bw          = 'yes' or 'no', if an image is used and this option is true, the image is transformed in black and white (default = 'no', i.e. do not transform)
+%   cfg.overlap     = string, how to deal with overlapping channels when the layout is constructed from a sensor configuration structure. This can be
+%                     'shift'  - shift the positions in 2D space to remove the overlap (default)
+%                     'keep'   - do not shift, retain the overlap
+%                     'no'     - throw an error when overlap is present
 %   cfg.channel     = 'all', or Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
-%                     (can be used with most ways for generating a layout)
 %   cfg.boxchannel  = 'all', or Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
-%                      specificies channels to use for determining channel box size (default = all, recommended for MEG/EEG, selection recommended for iEEG)
+%                      specificies channels to use for determining channel box size (default = 'all', recommended for MEG/EEG, a selection is recommended for iEEG)
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %
-% Alternatively the layout can be constructed from either
+% If you use cfg.headshape or cfg.mri to create a headshape outline, the input
+% geometry should be expressed in the same units and coordinate system as the input
+% sensors.
+%
+% Alternatively the layout can be constructed from either one of these in the input data structure:
 %   data.elec     = structure with electrode positions
 %   data.grad     = structure with gradiometer definition
 %   data.opto     = structure with optode structure definition
 %
-% Alternatively you can specify the following layouts which will be
-% generated for all channels present in the data. Note that these layouts
-% are suitable for multiplotting, but not for topoplotting.
+% Alternatively you can specify the following systematic layouts which will be
+% generated for all channels present in the data. Note that these layouts are only
+% suitable for multiplotting, not for topoplotting.
 %   cfg.layout = 'ordered'    will give you a NxN ordered layout
 %   cfg.layout = 'vertical'   will give you a Nx1 ordered layout
 %   cfg.layout = 'horizontal' will give you a 1xN ordered layout
@@ -87,8 +83,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.width   = Nx1 vector with the width of each box for multiplotting
 %   layout.height  = Nx1 matrix with the height of each box for multiplotting
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
-%   layout.outline = optional cell-array with line segments that represent
-%                    the head, nose, ears, sulci or other anatomical features
+%   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
 % See also FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_PLOT_LAY
 
@@ -160,7 +155,7 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',   'no');
 cfg.montage      = ft_getopt(cfg, 'montage',    'no');
 cfg.image        = ft_getopt(cfg, 'image',      []);
 cfg.mesh         = ft_getopt(cfg, 'mesh',       []); % experimental, should only work with meshes defined in 2D
-cfg.bw           = ft_getopt(cfg, 'bw',         0);
+cfg.bw           = ft_getopt(cfg, 'bw',         'no');
 cfg.channel      = ft_getopt(cfg, 'channel',    'all');
 cfg.skipscale    = ft_getopt(cfg, 'skipscale',  'no');
 cfg.skipcomnt    = ft_getopt(cfg, 'skipcomnt',  'no');
@@ -408,8 +403,8 @@ elseif isequal(cfg.layout, 'ordered')
   x = (ncol-1)/ncol;
   y = 0/nrow;
   layout.pos(end+1,:) = [x y];
-
-   
+  
+  
   % try to generate layout from other configuration options
 elseif ischar(cfg.layout)
   
@@ -492,7 +487,7 @@ elseif isfield(data, 'grad') && isstruct(data.grad)
   data = ft_checkdata(data);
   sens = ft_datatype_sens(data.grad);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
- 
+  
 elseif ischar(cfg.optofile)
   fprintf('creating layout from optode file %s\n', cfg.optofile);
   sens = ft_read_sens(cfg.optofile);
@@ -501,7 +496,7 @@ elseif ischar(cfg.optofile)
   else
     layout = opto2lay(sens, sens.label);
   end
-
+  
 elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
   fprintf('creating layout from cfg.opto\n');
   sens = cfg.opto;
@@ -525,25 +520,18 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   if ~isempty(cfg.image)
     
     fprintf('reading background image from %s\n', cfg.image);
-    [p,f,e] = fileparts(cfg.image);
+    [p, f, e] = fileparts(cfg.image);
     switch e
       case '.mat'
-        tmp    = load(cfg.image);
-        fnames = fieldnames(tmp);
-        if numel(fnames)~=1
-          error('there is not just a single variable in %s', cfg.image);
-        else
-          img = tmp.(fname{1});
-        end
+        img = loadvar(cfg.image);
       otherwise
         img = imread(cfg.image);
     end
     img = flipdim(img, 1); % in combination with "axis xy"
     
     figure
-    bw = cfg.bw;
     
-    if bw
+    if istrue(cfg.bw)
       % convert to greyscale image
       img = mean(img, 3);
       imagesc(img);
@@ -555,9 +543,9 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
     
   elseif ~isempty(cfg.mesh)
     if isfield(cfg.mesh, 'sulc')
-      ft_plot_mesh(cfg.mesh, 'edgecolor','none','vertexcolor',cfg.mesh.sulc);colormap gray;
+      ft_plot_mesh(cfg.mesh, 'edgecolor', 'none', 'vertexcolor', cfg.mesh.sulc); colormap gray;
     else
-      ft_plot_mesh(cfg.mesh, 'edgecolor','none');
+      ft_plot_mesh(cfg.mesh, 'edgecolor', 'none');
     end
   end
   hold on
@@ -602,7 +590,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           if ~isempty(cfg.image)
             h = image(img);
           else
-            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+            h = ft_plot_mesh(cfg.mesh, 'edgecolor', 'none', 'vertexcolor', cfg.mesh.sulc);
           end
           hold on
           axis equal
@@ -665,7 +653,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           if ~isempty(cfg.image)
             h = image(img);
           else
-            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+            h = ft_plot_mesh(cfg.mesh, 'edgecolor', 'none', 'vertexcolor', cfg.mesh.sulc);
           end
           hold on
           axis equal
@@ -764,7 +752,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
           if ~isempty(cfg.image)
             h = image(img);
           else
-            h = ft_plot_mesh(cfg.mesh,'edgecolor','none','vertexcolor',cfg.mesh.sulc);
+            h = ft_plot_mesh(cfg.mesh, 'edgecolor', 'none', 'vertexcolor', cfg.mesh.sulc);
           end
           hold on
           axis equal
@@ -929,7 +917,7 @@ if ~strcmp(cfg.style, '3d')
       end
       
       % check for presence of cfg.viewpoint
-      if isempty(cfg.viewpoint) 
+      if isempty(cfg.viewpoint)
         warning('cfg.headshape/mri is supplied without explicit orthographic projection viewpoint, assuming superior view')
         cfg.viewpoint = 'superior';
       end
@@ -1048,9 +1036,8 @@ if ~strcmp(cfg.style, '3d')
 end % if style=3d
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% apply the montage, e.g. conert from monopolar to bipolar channels 
+% apply the montage, e.g. convert from monopolar to bipolar channels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~strcmp(cfg.montage, 'no')
   Nold = length(cfg.montage.labelold);
@@ -1205,21 +1192,21 @@ function layout = sens2lay(sens, rotatez, projmethod, style, overlap, viewpoint,
 % this not only removed the linear projections, but also ensures that the channel labels are correctly named
 
 if isfield(sens, 'chanposold')
-    chanposold = sens.chanposold;
+  chanposold = sens.chanposold;
 else
-    chanposold = [];
+  chanposold = [];
 end
 if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
-    sens = undobalancing(sens);
-    if size(chanposold, 1) == numel(sens.label)
-        sens.chanpos = chanposold;
-    end
-% In case not all the locations have NaNs it might still be useful to plot them
-% But perhaps it'd be better to have any(any
+  sens = undobalancing(sens);
+  if size(chanposold, 1) == numel(sens.label)
+    sens.chanpos = chanposold;
+  end
+  % In case not all the locations have NaNs it might still be useful to plot them
+  % But perhaps it'd be better to have any(any
 elseif any(all(isnan(sens.chanpos)))
-    [sel1, sel2] = match_str(sens.label, sens.labelold);
-    sens.chanpos = chanposold(sel2, :);
-    sens.label   = sens.labelold(sel2);
+  [sel1, sel2] = match_str(sens.label, sens.labelold);
+  sens.chanpos = chanposold(sel2, :);
+  sens.label   = sens.labelold(sel2);
 end
 
 fprintf('creating layout for %s system\n', ft_senstype(sens));
@@ -1296,8 +1283,8 @@ else
   % prjForDist might need to be changed if the user wants to keep
   % overlapping channels
   % also subselect channels for computing width/height if requested by cfg.boxchannel
-  boxchannel = ft_channelselection(boxchannel, label); 
-  boxchansel    = match_str(label, boxchannel); 
+  boxchannel = ft_channelselection(boxchannel, label);
+  boxchansel    = match_str(label, boxchannel);
   prjForDist = prj(boxchansel,:);
   
   % check whether many channels occupy identical positions, if so shift
@@ -1393,8 +1380,7 @@ end
 %
 % Credit for this code goes to Laurence Hunt at UCL.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function xy = shiftxy(xy,mindist)
+function xy = shiftxy(xy, mindist)
 
 x = xy(1,:);
 y = xy(2,:);
@@ -1410,7 +1396,7 @@ while (~isempty(i) && l<50)
   [i,j] = find(xydist<mindist*0.999);
   rm=(i<=j); i(rm)=[]; j(rm)=[]; %only look at i>j
   
-  for m = 1:length(i);
+  for m = 1:length(i)
     if (xydist(i(m),j(m)) == 0)
       diffvec = [mindist./sqrt(2) mindist./sqrt(2)];
     else
@@ -1430,13 +1416,13 @@ xy = [x; y];
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-% obtain XY pos from XYZ pos as orthographic projections dependent on viewpoint/coordsys 
+% SUBFUNCTION to obtain XY pos from XYZ pos as orthographic projections depending on
+% the viewpoint and coordsys. See also ELPROJ
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function pos = getorthoviewpos(pos,coordsys,viewpoint)
-% 
+function pos = getorthoviewpos(pos, coordsys, viewpoint)
+
 if size(pos,2)~=3
-  error('XYZ coordinates needed to obtain orthographic projections based on viewpoint')
+  error('XYZ coordinates are required to obtain the orthographic projections based on a viewpoint')
 end
 
 % create view(az,el) transformation matrix
@@ -1444,25 +1430,24 @@ switch coordsys
   case {'tal','mni'}
     switch viewpoint
       case 'left'
-        transmat = viewmtx(-90,0); 
+        transmat = viewmtx(-90,0);
       case 'right'
-        transmat = viewmtx(90,0); 
+        transmat = viewmtx(90,0);
       case 'superior'
-        transmat = viewmtx(0,90); 
+        transmat = viewmtx(0,90);
       case 'inferior'
-        transmat = viewmtx(180,-90); 
+        transmat = viewmtx(180,-90);
       case 'posterior'
-        transmat = viewmtx(0,0); 
+        transmat = viewmtx(0,0);
       case 'anterior'
-        transmat = viewmtx(180,0); 
+        transmat = viewmtx(180,0);
       otherwise
-        error(['orthographic projection using viewpoint ' viewpoint ' is not supported'])
+        error('orthographic projection using viewpoint "%s" is not supported', viewpoint)
     end
   otherwise
-    error(['orthographic projection using viewpoint ' viewpoint ' is not supported for coordinate system ' coordsys])
+    error('orthographic projection using viewpoint "%s" is not supported for the "%s" coordinate system', viewpoint, coordsys)
 end
 
 % extract xy
 pos      = ft_warp_apply(transmat,pos,'homogenous');
 pos      = pos(:,[1 2]);
-
