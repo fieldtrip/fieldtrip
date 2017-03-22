@@ -4,11 +4,11 @@
 # (C) Lauri Parkkonen and Gustavo Sudre, 2010
 
 ifneq "$(OS)" "Windows_NT"
-	OS = $(shell uname -s)
-	MACHINE = $(shell uname -m)
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
 endif
 
-PLATFORM = $(shell gcc -dumpmachine)
+PLATFORM ?= $(shell gcc -dumpmachine)
 
 ifeq ($(OS), Linux)
 	# The Elekta Linux acquisition system is always a 64-bit system

@@ -3,6 +3,8 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
+# Use MinGW for compilation on Windows
+
 ifneq "$(OS)" "Windows_NT"
   OS      ?= $(shell uname -s)
   MACHINE ?= $(shell uname -m)

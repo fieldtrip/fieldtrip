@@ -8,11 +8,11 @@
 # Make sure you have PortAudio installed.
 
 ifneq "$(OS)" "Windows_NT"
-	OS = $(shell uname -s)
-	MACHINE = $(shell uname -m)
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
 endif
 
-PLATFORM = $(shell gcc -dumpmachine)
+PLATFORM ?= $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e -u
 
+# for cross-compilation you can use something like this
+# MAKE="make $1 MACHINE=i386 PLATFORM=Darwin"
+
 MAKE="make $1"
 PLATFORM=`gcc -dumpmachine`
 UNAME=`uname`
