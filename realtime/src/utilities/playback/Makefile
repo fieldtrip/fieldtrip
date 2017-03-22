@@ -79,11 +79,13 @@ ifeq "$(OS)" "Darwin"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS   += -m32
 		CXXFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
 		CFLAGS   += -m64
 		CXXFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
 		BINDIR = $(FIELDTRIP)/realtime/bin/mac
@@ -103,10 +105,10 @@ all: $(TARGETS)
 	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
 $(BINDIR)/playback$(SUFFIX): playback.o
-	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 $(BINDIR)/recording$(SUFFIX): recording.o ft_storage.o
-	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

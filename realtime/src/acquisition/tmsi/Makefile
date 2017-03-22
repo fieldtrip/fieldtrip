@@ -76,7 +76,7 @@ all: $(TARGETS)
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
 $(BINDIR)/%$(SUFFIX): %.o $(CPPOBJS)
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 $(BINDIR)/tmsidriver$(SUFFIX): Feature.o RTDevice.o
 

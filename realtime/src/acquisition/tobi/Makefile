@@ -41,9 +41,9 @@ TARGETS = $(patsubst %,$(BINDIR)/%, tia2ft)
 all: $(TARGETS)
 
 $(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 $(BINDIR)/tia2ft$(SUFFIX): ft_buffer_helper.o tia2ft.o
 
 clean:
-	rm -f *.o $(LOCAL_TARGETS) $(TARGETS)
+	rm -f *.o $(TARGETS)

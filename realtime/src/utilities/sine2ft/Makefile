@@ -83,11 +83,13 @@ ifeq "$(OS)" "Darwin"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS   += -m32
 		CXXFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
 		CFLAGS   += -m64
 		CXXFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/mac
@@ -107,7 +109,7 @@ all: $(TARGETS)
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
 $(BINDIR)/sine2ft$(SUFFIX): sine2ft.o
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

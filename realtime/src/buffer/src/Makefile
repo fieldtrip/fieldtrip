@@ -4,11 +4,11 @@
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
 ifneq "$(OS)" "Windows_NT"
-  OS = $(shell uname -s)
-  MACHINE = $(shell uname -m)
+  OS      ?= $(shell uname -s)
+  MACHINE ?= $(shell uname -m)
 endif
 
-PLATFORM = $(shell gcc -dumpmachine)
+PLATFORM ?= $(shell gcc -dumpmachine)
 
 # defaults, might be overwritten further down
 CC       = gcc

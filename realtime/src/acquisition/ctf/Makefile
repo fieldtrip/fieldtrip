@@ -39,14 +39,16 @@ endif
 
 ifeq "$(OS)" "Darwin"
 	ifeq "$(MACHINE)" "i386"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
 		BINDIR = $(FIELDTRIP)/realtime/bin/mac
@@ -70,7 +72,7 @@ all: $(TARGETS)
 	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
 $(BINDIR)/ctf_%$(SUFFIX): %.o
-	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 $(BINDIR)/acq2ftx$(SUFFIX): LDLIBS += -lm
 

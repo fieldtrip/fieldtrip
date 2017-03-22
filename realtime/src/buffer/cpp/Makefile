@@ -6,11 +6,11 @@
 # Use MinGW for compilation on Windows!
 
 ifneq "$(OS)" "Windows_NT"
-	OS = $(shell uname -s)
-	MACHINE = $(shell uname -m)
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
 endif
 
-PLATFORM = $(shell gcc -dumpmachine)
+PLATFORM ?= $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
@@ -87,11 +87,13 @@ ifeq "$(OS)" "Darwin"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS   += -m32
 		CXXFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
 		CFLAGS   += -m64
 		CXXFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 endif
 
@@ -110,7 +112,7 @@ all: odmTest$(SUFFIX)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -c $<
 
 odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o
-	$(CXX) -o $(BINDIR)/$@ $^ $(LIBPATH) $(LDLIBS)
+	$(CXX) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) core *.o *.obj *.a $(call fixpath, $(TARGETS))

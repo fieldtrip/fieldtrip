@@ -106,7 +106,7 @@ all: $(TARGETS)
 	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
 $(BINDIR)/%$(SUFFIX): %.o
-	$(CC) -o $@ $^ $(LIBPATH) $(LDLIBS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

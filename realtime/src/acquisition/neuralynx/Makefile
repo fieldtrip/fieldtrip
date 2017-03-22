@@ -66,7 +66,7 @@ TARGETS = $(BINDIR)/nlx2ft$(SUFFIX)
 all: $(TARGETS)
 
 $(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LIBPATH) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))
