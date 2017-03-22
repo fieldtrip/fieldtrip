@@ -572,7 +572,7 @@ if ~isempty(k)
     comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(yparam)(ymin), data.(yparam)(ymax));
     comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
   end
-  ft_plot_text(lay.pos(k, 1), lay.pos(k, 2), sprintf(comment), 'Fontsize', cfg.fontsize, 'Fontweight', cfg.fontweight);
+  ft_plot_text(lay.pos(k, 1), lay.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
 end
 
 % plot scale:

@@ -11,7 +11,7 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 % Optional arguments should come in key-value pairs and can include
 %   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
-%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %   'facecolor'       = see MATLAB standard patch properties 
 %   'facealpha'       = see MATLAB standard patch properties (note, approx. transparency can be achieved using 'facecolor')
 %   'edgecolor'       = see MATLAB standard patch properties (default is 'none') (equivalent to 'linecolor' in PLOT)
