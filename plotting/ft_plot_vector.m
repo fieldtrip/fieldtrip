@@ -10,17 +10,15 @@ function [varargout] = ft_plot_vector(varargin)
 %
 % Optional arguments should come in key-value pairs and can include
 %   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
-%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
 %   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
-%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %   'color'           = see MATLAB standard line properties and see below
 %   'linewidth'       = see MATLAB standard line properties
 %   'markersize'      = see MATLAB standard line properties
 %   'markerfacecolor' = see MATLAB standard line properties
 %   'style'           = see MATLAB standard line properties
-%   'label'           = see MATLAB standard line properties
-%   'fontsize'        = see MATLAB standard line properties
+%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %
 % The line color can be specified in a variety of ways
 %   - as a string with one character per line that you want to plot. Supported colors are teh same as in PLOT, i.e. 'bgrcmykw'.
@@ -34,6 +32,14 @@ function [varargout] = ft_plot_vector(varargin)
 %   'height'          = height of the local axes
 %   'hlim'            = horizontal scaling limits within the local axes
 %   'vlim'            = vertical scaling limits within the local axes
+%
+% When using a local pseudo-axis, you can plot a label next to the data
+%   'label'           = string, label to be plotted at the upper left corner
+%   'fontcolor'       = string, color specification (default = 'k')
+%   'fontsize'        = number, sets the size of the text (default = 10)
+%   'fontunits'       =
+%   'fontname'        =
+%   'fontweight'      =
 %
 % Example 1
 %   subplot(2,1,1); ft_plot_vector(1:100, randn(1,100), 'color', 'r')
@@ -110,7 +116,6 @@ hlim            = ft_getopt(varargin, 'hlim', 'maxmin');
 vlim            = ft_getopt(varargin, 'vlim', 'maxmin');
 style           = ft_getopt(varargin, 'style', '-');
 label           = ft_getopt(varargin, 'label');
-fontsize        = ft_getopt(varargin, 'fontsize');
 axis            = ft_getopt(varargin, 'axis', false);
 box             = ft_getopt(varargin, 'box', false);
 color           = ft_getopt(varargin, 'color');
@@ -121,6 +126,12 @@ markersize      = ft_getopt(varargin, 'markersize', 6);
 markerfacecolor = ft_getopt(varargin, 'markerfacecolor', 'none');
 tag             = ft_getopt(varargin, 'tag', '');
 parent          = ft_getopt(varargin, 'parent', []);
+% these have to do with the font of the label
+fontcolor       = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
+fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
+fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
+fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
+fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
 % if any(size(vdat)==1)
 %   % ensure that it is a column vector
@@ -236,10 +247,10 @@ end
 if any(hlim) ~= 0
   hdat = hdat - (hlim(1)+hlim(2))/2;
   % then scale to length 1
-  if hlim(2)-hlim(1)~=0
+  if (hlim(2)-hlim(1))~=0
     hdat = hdat ./ (hlim(2)-hlim(1));
   else
-    hdat = hdat /hlim(1);
+    hdat = hdat / hlim(1);
   end
   % then scale to the new width
   hdat = hdat .* width;
@@ -410,43 +421,20 @@ if ~isempty(label)
   boxposition(2) = hpos + width/2;
   boxposition(3) = vpos - height/2;
   boxposition(4) = vpos + height/2;
-  h = text(boxposition(1), boxposition(4), label);
-  if ~isempty(fontsize)
-    set(h, 'Fontsize', fontsize);
-  end
-  
+  h = text(boxposition(1), boxposition(4), label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
   if ~isempty(parent)
     set(h, 'Parent', parent);
   end
 end
 
 if box
+  boxposition = zeros(1,4);
   % this plots a box around the original hpos/vpos with appropriate width/height
-  x1 = hpos - width/2;
-  x2 = hpos + width/2;
-  y1 = vpos - height/2;
-  y2 = vpos + height/2;
-  
-  X = [x1 x2 x2 x1 x1];
-  Y = [y1 y1 y2 y2 y1];
-  h = line(X, Y);
-  set(h, 'color', 'k');
-  
-  % this plots a box around the original hpos/vpos with appropriate width/height
-  % boxposition = zeros(1,4);
-  % boxposition(1) = hpos - width/2;
-  % boxposition(2) = hpos + width/2;
-  % boxposition(3) = vpos - height/2;
-  % boxposition(4) = vpos + height/2;
-  % ft_plot_box(boxposition, 'facecolor', 'none', 'edgecolor', 'k');
-  
-  % this plots a box around the complete data
-  % boxposition = zeros(1,4);
-  % boxposition(1) = hlim(1);
-  % boxposition(2) = hlim(2);
-  % boxposition(3) = vlim(1);
-  % boxposition(4) = vlim(2);
-  % ft_plot_box(boxposition, 'hpos', hpos, 'vpos', vpos, 'width', width, 'height', height, 'hlim', hlim, 'vlim', vlim);
+  boxposition(1) = hpos - width/2;
+  boxposition(2) = hpos + width/2;
+  boxposition(3) = vpos - height/2;
+  boxposition(4) = vpos + height/2;
+  ft_plot_box(boxposition);
 end
 
 if ~isempty(axis) && ~strcmp(axis, 'no')
@@ -491,7 +479,7 @@ if ~isempty(parent)
 end
 
 % the (optional) output is the handle
-if nargout == 1;
+if nargout == 1
   varargout{1} = h;
 end
 

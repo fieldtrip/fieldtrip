@@ -714,7 +714,7 @@ cfg.comment = [cfg.comment colorLabels];
 % Write comment text:
 l = cellstrmatch('COMNT', Lbl);
 if ~isempty(l)
-  ft_plot_text(X(l), Y(l), sprintf(cfg.comment), 'Fontsize', cfg.fontsize, 'interpreter', 'none');
+  ft_plot_text(X(l), Y(l), sprintf(cfg.comment), 'FontSize', cfg.fontsize);
 end
 
 % Plot scales:
@@ -816,10 +816,10 @@ if vlim(1)<=0 && vlim(2)>=0
   ft_plot_vector(hlim, [0 0], placement{:}, 'color', 'b');
 end
 
-ft_plot_text(hlim(1), vlim(1), [num2str(hlim(1), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'Fontsize', cfg.fontsize);
-ft_plot_text(hlim(2), vlim(1), [num2str(hlim(2), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'Fontsize', cfg.fontsize);
-ft_plot_text(hlim(1), vlim(1), [num2str(vlim(1), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'Fontsize', cfg.fontsize);
-ft_plot_text(hlim(1), vlim(2), [num2str(vlim(2), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'Fontsize', cfg.fontsize);
+ft_plot_text(hlim(1), vlim(1), [num2str(hlim(1), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'FontSize', cfg.fontsize);
+ft_plot_text(hlim(2), vlim(1), [num2str(hlim(2), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'FontSize', cfg.fontsize);
+ft_plot_text(hlim(1), vlim(1), [num2str(vlim(1), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'FontSize', cfg.fontsize);
+ft_plot_text(hlim(1), vlim(2), [num2str(vlim(2), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'FontSize', cfg.fontsize);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
