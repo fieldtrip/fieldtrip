@@ -105,8 +105,6 @@ end
 cfg.visible = ft_getopt(cfg, 'visible', 'on');
 cfg.box     = ft_getopt(cfg, 'box', 'on');
 cfg.mask    = ft_getopt(cfg, 'mask', 'on');
-cfg.box     = istrue(cfg.box);
-cfg.mask    = istrue(cfg.mask);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % extract/generate layout information
@@ -178,7 +176,7 @@ if isfield(cfg, 'image') && ~isempty(cfg.image)
   axis xy
 end
 
-ft_plot_lay(lay, 'point', true, 'box', cfg.box, 'label', true, 'mask', cfg.mask, 'outline', true);
+ft_plot_lay(lay, 'point', true, 'box', istrue(cfg.box), 'label', true, 'mask', istrue(cfg.mask), 'outline', true);
 
 % the following code can be used to verify a bipolar montage, given the
 % layout of the monopolar channels
