@@ -70,6 +70,8 @@ function ft_select_channel(handle, eventdata, varargin)
 % Subsequently you can click in the figure and you'll see that the disp
 % function is executed as callback and that it displays the selected
 % channels.
+%
+% See also FT_SELECT_BOX, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_RANGE, FT_SELECT_VOXEL 
 
 % Copyright (C) 2009, Robert Oostenveld
 %

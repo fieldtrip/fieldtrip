@@ -11,7 +11,11 @@ function hs = ft_plot_sens(sens, varargin)
 %   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
 %   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
 %   'unit'            = string, convert the sensor array to the specified geometrical units (default = [])
-%   'fontsize'        = number, sets the fontsize of the labels (default = 10)
+%   'fontcolor'       = string, color specification (default = 'k')
+%   'fontsize'        = number, sets the size of the text (default = 10)
+%   'fontunits'       =
+%   'fontname'        =
+%   'fontweight'      =
 %
 % The following options apply to MEG magnetometers and/or gradiometers
 %   'coil'            = true/false, plot each individual coil (default = false)
@@ -75,7 +79,12 @@ label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
 orientation     = ft_getopt(varargin, 'orientation', false);
-fontsize        = ft_getopt(varargin, 'fontsize', 10);
+% these have to do with the font
+fontcolor       = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
+fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
+fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
+fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
+fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
 % this is for MEG magnetometer and/or gradiometer arrays
 coil            = ft_getopt(varargin, 'coil', false);
@@ -364,7 +373,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       otherwise
         error('unsupported value for option ''label''');
     end % switch
-    text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str, 'fontsize', fontsize);
+    text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
   end % for
 end % if empty or off/no
 

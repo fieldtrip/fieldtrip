@@ -38,10 +38,10 @@ elec2 = ft_datatype_sens(elec2);
 
 % create another set of electrodes representing a bipolar montage
 bipolar = [];
-bipolar.labelorg = elec1.label;
+bipolar.labelold = elec1.label;
 bipolar.tra = zeros(length(elec1.label)-1, length(elec1.label));
-for i=1:(length(bipolar.labelorg)-1)
-  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelorg{i}, bipolar.labelorg{i+1});
+for i=1:(length(bipolar.labelold)-1)
+  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelold{i}, bipolar.labelold{i+1});
   bipolar.tra(i,i  ) = +1;
   bipolar.tra(i,i+1) = -1;
 end
@@ -55,10 +55,10 @@ end
 
 % create another bipolar set of channels that is incompatible with the previous one
 bipolar = [];
-bipolar.labelorg = elec1.label;
+bipolar.labelold = elec1.label;
 bipolar.tra      = zeros(10, length(elec1.label));
 for i=1:(10)
-  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelorg{i}, bipolar.labelorg{i+2});
+  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelold{i}, bipolar.labelold{i+2});
   bipolar.tra(i,i  ) = +1;
   bipolar.tra(i,i+2) = -1;
 end
