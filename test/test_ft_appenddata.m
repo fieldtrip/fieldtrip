@@ -1,13 +1,15 @@
-function test_ft_appendxxx(data,mismatch)
+function test_ft_appenddata(data,mismatch)
 % This function tests ft_appenddata handling of trialdata, particularly with
 % different numbers of columns or other mismatches.
 %
 %   INPUTS:
-%     data      = any FT data structure with trialinfo
+%     data      = any FT data structure with trialinfo and multiple channels
+%       and/or trials - these will be split and re-merged by ft_appenddata
 %     mismatch  = boolean flag for whether you want the function to artificially
 %       introduce a mismatch in trialinfo (TRUE, default) and test whether it is
-%       successfully identified and removed from the output, or leave the
-%       trialinfo alone (FALSE) to verify the identity of input and output data
+%       successfully identified and removed from the output, or make only
+%       inconsequential changes to trialinfo (FALSE) and verify that the append
+%       function runs successfully, retaining the correct trialinfo
 %
 % written 3/16/17 by Teresa E. Madsen
 
@@ -50,9 +52,11 @@ if numel(data.label) > 1
   
   if mismatch
     assert(~isfield(dataout,'trialinfo'),'mismatched trialinfo was not removed')
+    disp('mismatched trialinfo was successfully removed upon merge by channels')
   else
-    assert(isequal(data,dataout),'something changed from input to output data')
+    assert(isequaln(data.trialinfo,dataout.trialinfo),'something changed from input to output data')
     % data.hdr not included, data.cfg should change
+    disp('trialinfo passed through split & merge by channels unchanged')
   end
 end
 
@@ -89,8 +93,9 @@ if numel(data.trial) > 1
     % this time we have to correct for the subtle mismatch that was supposed to
     % pass through undetected
     dataout.trialinfo(1,1) = dataout.trialinfo(1,1) - 1;
-    assert(isequal(data,dataout),'something changed from input to output data')
+    assert(isequaln(data.trialinfo,dataout.trialinfo),'something changed from input to output data')
     % data.hdr not included, data.cfg should change
+    disp('trialinfo passed through split & merge by channels unchanged')
   end
 end
 end
