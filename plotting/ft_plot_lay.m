@@ -10,8 +10,7 @@ function ft_plot_lay(lay, varargin)
 %   'point'       = yes/no
 %   'box'         = yes/no
 %   'label'       = yes/no
-%   'labelsize'   = number indicating font size (e.g. 6)
-%   'labeloffset' = offset of label from point (suggestion is 0.005)
+%   'labeloffset' = offset of label from point (default = 0)
 %   'labelrotate' = scalar, vector with rotation angle (in degrees) per label (default = 0)
 %   'labelalignh' = string, or cell-array specifying the horizontal alignment of the text (default = 'left')
 %   'labelalignv' = string, or cell-array specifying the vertical alignment of the text (default = 'middle')
@@ -21,13 +20,18 @@ function ft_plot_lay(lay, varargin)
 %   'pointsymbol' = string with symbol (e.g. 'o') - all three point options need to be used together
 %   'pointcolor'  = string with color (e.g. 'k')
 %   'pointsize'   = number indicating size (e.g. 8)
+%   'fontcolor'   = string, color specification (default = 'k')
+%   'fontsize'    = number, sets the size of the text (default = 10)
+%   'fontunits'   =
+%   'fontname'    =
+%   'fontweight'  =
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'        = horizontal position of the lower left corner of the local axes
 %   'vpos'        = vertical position of the lower left corner of the local axes
 %   'width'       = width of the local axes
 %   'height'      = height of the local axes
-% 
+%
 % See also FT_PREPARE_LAYOUT
 
 % Copyright (C) 2009, Robert Oostenveld
@@ -60,8 +64,6 @@ height       = ft_getopt(varargin, 'height',         []);
 point        = ft_getopt(varargin, 'point',        true);
 box          = ft_getopt(varargin, 'box',          true);
 label        = ft_getopt(varargin, 'label',        true);
-labelsize    = ft_getopt(varargin, 'labelsize',    10);
-labelfont    = ft_getopt(varargin, 'labelfont',    'helvetica');
 labeloffset  = ft_getopt(varargin, 'labeloffset',  0);
 mask         = ft_getopt(varargin, 'mask',         true);
 outline      = ft_getopt(varargin, 'outline',      true);
@@ -69,6 +71,14 @@ verbose      = ft_getopt(varargin, 'verbose',      false);
 pointsymbol  = ft_getopt(varargin, 'pointsymbol');
 pointcolor   = ft_getopt(varargin, 'pointcolor');
 pointsize    = ft_getopt(varargin, 'pointsize');
+
+% these have to do with the font
+fontcolor   = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
+fontsize    = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
+fontname    = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
+fontweight  = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
+fontunits   = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
+% these have to do with the font
 interpreter  = ft_getopt(varargin, 'interpreter', 'tex');
 
 % some stuff related to some refined label plotting
@@ -160,7 +170,7 @@ if label
   % check whether fancy label plotting is needed, this requires a for loop,
   % otherwise print text in a single shot
   if numel(labelrotate)==1
-    text(X+labeloffset, Y+(labeloffset*1.5), Lbl , 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', labelcolor);
+    text(X+labeloffset, Y+(labeloffset*1.5), Lbl , 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
   else
     n = numel(Lbl);
     if ~iscell(labelalignh)
@@ -173,7 +183,7 @@ if label
       eror('there is something wrong with the input arguments');
     end
     for k = 1:numel(Lbl)
-      text(X(k)+labeloffset, Y(k)+(labeloffset*1.5), Lbl{k}, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', labelcolor);
+      text(X(k)+labeloffset, Y(k)+(labeloffset*1.5), Lbl{k}, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     end
   end
 end

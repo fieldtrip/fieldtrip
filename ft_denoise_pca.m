@@ -291,19 +291,19 @@ else
       
       % add columns of refchannels not yet present in labelnew
       % [id, i1]  = setdiff(pca.reflabel, labelnew);
-      % labelorg  = [labelnew; pca.reflabel(sort(i1))];
-      labelorg  = data.grad.label;
-      nlabelorg = length(labelorg);
+      % labelold  = [labelnew; pca.reflabel(sort(i1))];
+      labelold  = data.grad.label;
+      nlabelold = length(labelold);
       
       % start with identity
-      montage.tra = eye(nlabelorg);
+      montage.tra = eye(nlabelold);
       
       % subtract weights
-      [i1, i2]  = match_str(labelorg, pca.reflabel);
-      [i3, i4]  = match_str(labelorg, pca.label);
+      [i1, i2]  = match_str(labelold, pca.reflabel);
+      [i3, i4]  = match_str(labelold, pca.label);
       montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
-      montage.labelorg  = labelorg;
-      montage.labelnew  = labelorg;
+      montage.labelold  = labelold;
+      montage.labelnew  = labelold;
       
       data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'pca');
       

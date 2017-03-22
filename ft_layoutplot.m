@@ -188,8 +188,8 @@ if isfield(cfg, 'montage') && ~isempty(cfg.montage)
       continue
     end
     % find the position of the begin and end of the arrow
-    beglab = cfg.montage.labelorg{begindx};
-    endlab = cfg.montage.labelorg{endindx};
+    beglab = cfg.montage.labelold{begindx};
+    endlab = cfg.montage.labelold{endindx};
     begindx = find(strcmp(lay.label, beglab)); % the index in the layout
     endindx = find(strcmp(lay.label, endlab)); % the index in the layout
     if ~numel(begindx)==1 || ~numel(endindx)==1
