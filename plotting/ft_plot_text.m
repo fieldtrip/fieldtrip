@@ -14,8 +14,9 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %   'fontweight'          =
 %   'horizontalalignment' =
 %   'verticalalignment'   =
+%   'interpreter'         = string, can be 'none', 'tex' or 'latex' (default = 'none')
 %   'rotation'            =
-%   'tag'                 = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'                 = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'                = horizontal position of the center of the local axes
@@ -73,7 +74,7 @@ fontunits           = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontu
 horizontalalignment = ft_getopt(varargin, 'horizontalalignment', 'center');
 verticalalignment   = ft_getopt(varargin, 'verticalalignment', 'middle');
 rotation            = ft_getopt(varargin, 'rotation', 0);
-interpreter         = ft_getopt(varargin, 'interpreter', 'tex');
+interpreter         = ft_getopt(varargin, 'interpreter', 'none');
 
 % color management
 if ischar(color) && exist([color '.m'], 'file')

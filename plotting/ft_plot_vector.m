@@ -17,7 +17,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   'markersize'      = see MATLAB standard line properties
 %   'markerfacecolor' = see MATLAB standard line properties
 %   'style'           = see MATLAB standard line properties
-%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %
 % The line color can be specified in a variety of ways

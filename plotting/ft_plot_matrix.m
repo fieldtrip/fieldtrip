@@ -16,7 +16,7 @@ function ft_plot_matrix(varargin)
 %   'highlight'       = a logical matrix of size C, where 0 means that the corresponding values in C are highlighted according to the highlightstyle
 %   'highlightstyle'  = can be 'saturation' or 'opacity'
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
-%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'            = horizontal position of the center of the local axes
