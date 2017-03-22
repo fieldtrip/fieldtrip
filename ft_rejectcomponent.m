@@ -151,7 +151,7 @@ if hasdata
   montage     = [];
   montage.tra = eye(length(selcomp)) - mixing(:, reject)*unmixing(reject, :);
   % we are going from data to components, and back again
-  montage.labelorg = comp.topolabel(selcomp);
+  montage.labelold = comp.topolabel(selcomp);
   montage.labelnew = comp.topolabel(selcomp);
   
   keepunused = 'yes'; % keep the original data which are not present in the mixing provided
@@ -164,7 +164,7 @@ else
   montage     = [];
   montage.tra = mixing;
   % we are going from components to data
-  montage.labelorg = comp.label;
+  montage.labelold = comp.label;
   montage.labelnew = comp.topolabel(selcomp);
   
   keepunused = 'no'; % don't need to keep the original rejected components

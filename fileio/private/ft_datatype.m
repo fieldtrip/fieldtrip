@@ -51,7 +51,7 @@ isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
 ischan         =  check_chan(data);
 issegmentation =  check_segmentation(data);
 isparcellation =  check_parcellation(data);
-ismontage      =  isfield(data, 'labelorg') && isfield(data, 'labelnew') && isfield(data, 'tra');
+ismontage      =  isfield(data, 'labelold') && isfield(data, 'labelnew') && isfield(data, 'tra');
 isevent        =  isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
 isheadmodel    =  false; % FIXME this is not yet implemented
 

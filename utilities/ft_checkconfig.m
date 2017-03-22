@@ -256,7 +256,7 @@ end
 % backward compatibility for montage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'montage') && isstruct(cfg.montage)
-  cfg.montage = fixmontage(cfg.montage);
+  cfg.montage = fixoldorg(cfg.montage);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

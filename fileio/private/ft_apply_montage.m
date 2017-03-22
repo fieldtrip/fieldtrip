@@ -75,8 +75,8 @@ if iscell(input) && iscell(input)
 end
 
 % use "old/new" instead of "org/new"
-montage = fixmontage(montage);
-input   = fixmontage(input); % the input might also be a montage
+montage = fixoldorg(montage);
+input   = fixoldorg(input); % the input might be a montage or a sensor array
 
 % get optional input arguments
 keepunused  = ft_getopt(varargin, 'keepunused',  'no');

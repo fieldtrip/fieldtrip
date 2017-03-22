@@ -254,7 +254,7 @@ end
 
 %% create output
 montage = [];
-montage.labelorg = cfg.channel;
+montage.labelold = cfg.channel;
 montage.labelnew = labelnew;
 montage.tra      = tra;
 
