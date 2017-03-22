@@ -80,9 +80,9 @@ checksize       = ft_getopt(varargin, 'checksize', 'off');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
-  if ft_platform_supports('matlabversion', '2015a', inf),
+  if ft_platform_supports('matlabversion', '2015a', inf)
     % disable config tracking for the time being, due to a known bug (3187)
-    ft_warning('disabling cfg tracking for the time being, due to a matlab version related issue');
+    % ft_warning('disabling cfg tracking for the time being, due to a matlab version related issue');
     trackconfig = [];
     cfg.trackconfig = 'off';
   end
@@ -233,21 +233,30 @@ if ~isempty(allowedval) && isfield(cfg, allowedval{1}) ...
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% backward compatibility for the gradiometer and electrode definition
+% backward compatibility for gradiometer, electrode and optode definitions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'grad') && ~isempty(cfg.grad)
   cfg.grad = ft_datatype_sens(struct(cfg.grad));
 end
-if isfield(cfg, 'elec')&& ~isempty(cfg.elec)
+if isfield(cfg, 'elec') && ~isempty(cfg.elec)
   cfg.elec = ft_datatype_sens(struct(cfg.elec));
+end
+if isfield(cfg, 'opto') && ~isempty(cfg.opto)
+  cfg.opto = ft_datatype_sens(struct(cfg.opto));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% backward compatibility for old neighbourstructures
+% backward compatibility for neighbour structures
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'neighbours') && iscell(cfg.neighbours)
-  warning('cfg.neighbours is in the old format - converting it to a structure array');
   cfg.neighbours = fixneighbours(cfg.neighbours);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% backward compatibility for montage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if isfield(cfg, 'montage') && isstruct(cfg.montage)
+  cfg.montage = fixoldorg(cfg.montage);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

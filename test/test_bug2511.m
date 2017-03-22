@@ -3,7 +3,6 @@ function test_bug2511
 % WALLTIME 00:20:00
 % MEM 8gb
 
-% TEST test_bug2511
 % TEST ft_sourceplot ft_read_headshape
 
 t1 = ft_read_mri(dccnpath('/home/common/matlab/spm8/canonical/single_subj_T1.nii'));

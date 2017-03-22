@@ -3,7 +3,6 @@ function test_tutorial_networkanalysis_new
 % WALLTIME 00:30:00
 % MEM 7gb
 
-% TEST test_tutorial_networkanalysis_new
 % TEST ft_networkanalysis
 
 %% read the continuous data and segment into 2 seconds epochs, with 50% overlap

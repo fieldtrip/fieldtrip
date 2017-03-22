@@ -12,7 +12,9 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % and high values. The magnet feature transports the crosshair to the nearest peak
 % intensity voxel, within a certain voxel radius of the selected location. The labels
 % feature displays the labels of the selected electrodes within the orthoplot. The
-% local feature allows toggling the view between all and near-crosshair markers.
+% local feature allows toggling the view between all and near-crosshair
+% markers. The scan feature allows toggling between scans when another scan
+% is given as input.
 %
 % HEADSHAPE - Navigate a triangulated scalp (for EEG) or brain (for ECoG) surface,
 % and assign an electrode location by clicking on the surface. The electrode is
@@ -28,6 +30,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % Use as
 %   [elec] = ft_electrodeplacement(cfg, mri)
+%   [elec] = ft_electrodeplacement(cfg, mri, mri2)
 % where the input mri should be an anatomical CT or MRI volume, or
 %   [elec] = ft_electrodeplacement(cfg, headshape)
 % where the input headshape should be a surface triangulation.
@@ -110,7 +113,7 @@ cfg.elec          = ft_getopt(cfg, 'elec',                []); % use previously 
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 % view options
 cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
-cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance for including in the view
+cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance for including in 'local' view
 % magnet options
 cfg.magtype       = ft_getopt(cfg, 'magtype',         'peak'); % detect peaks or troughs or center-of-mass
 cfg.magradius     = ft_getopt(cfg, 'magradius',            2); % specify the physical unit radius
@@ -130,7 +133,9 @@ end
 % check if the input data is valid for this function
 switch cfg.method
   case 'volume'
-    mri = ft_checkdata(varargin{1}, 'datatype', 'volume', 'feedback', 'yes');
+    for v = 1:numel(varargin)
+      mri{v} = ft_checkdata(varargin{v}, 'datatype', 'volume', 'feedback', 'yes', 'hascoordsys', 'yes', 'hasunit', 'yes');
+    end
   case  {'headshape', '1020'}
     headshape = fixpos(varargin{1});
     headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');
@@ -189,63 +194,69 @@ switch cfg.method
     set(h, 'CloseRequestFcn',     @cb_cleanup);
     set(h, 'renderer', cfg.renderer);
     
-    % axes settings
-    if strcmp(cfg.axisratio, 'voxel')
-      % determine the number of voxels to be plotted along each axis
-      axlen1 = mri.dim(1);
-      axlen2 = mri.dim(2);
-      axlen3 = mri.dim(3);
-    elseif strcmp(cfg.axisratio, 'data')
-      % determine the length of the edges along each axis
-      [cp_voxel, cp_head] = cornerpoints(mri.dim, mri.transform);
-      axlen1 = norm(cp_head(2,:)-cp_head(1,:));
-      axlen2 = norm(cp_head(4,:)-cp_head(1,:));
-      axlen3 = norm(cp_head(5,:)-cp_head(1,:));
-    elseif strcmp(cfg.axisratio, 'square')
-      % the length of the axes should be equal
-      axlen1 = 1;
-      axlen2 = 1;
-      axlen3 = 1;
+    % volume-dependent axis settings
+    for v = 1:numel(mri)
+      if strcmp(cfg.axisratio, 'voxel')
+        % determine the number of voxels to be plotted along each axis
+        axlen1 = mri{v}.dim(1);
+        axlen2 = mri{v}.dim(2);
+        axlen3 = mri{v}.dim(3);
+      elseif strcmp(cfg.axisratio, 'data')
+        % determine the length of the edges along each axis
+        [cp_voxel, cp_head] = cornerpoints(mri{v}.dim, mri{v}.transform);
+        axlen1 = norm(cp_head(2,:)-cp_head(1,:));
+        axlen2 = norm(cp_head(4,:)-cp_head(1,:));
+        axlen3 = norm(cp_head(5,:)-cp_head(1,:));
+      elseif strcmp(cfg.axisratio, 'square')
+        % the length of the axes should be equal
+        axlen1 = 1;
+        axlen2 = 1;
+        axlen3 = 1;
+      end
+      
+      % this is the size reserved for subplot h1, h2 and h3
+      h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
+      h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
+      h2size(1) = 0.82*axlen2/(axlen1 + axlen2);
+      h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
+      h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
+      h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
+      
+      if strcmp(cfg.voxelratio, 'square')
+        voxlen1 = 1;
+        voxlen2 = 1;
+        voxlen3 = 1;
+      elseif strcmp(cfg.voxelratio, 'data')
+        % the size of the voxel is scaled with the data
+        [cp_voxel, cp_head] = cornerpoints(mri{v}.dim, mri{v}.transform);
+        voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
+        voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
+        voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
+      end
+      
+      % axis handles will hold the anatomical functional if present, along with labels etc.
+      h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
+      h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
+      h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
+      
+      set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
+      set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
+      set(h3, 'Tag', 'ij', 'Visible', 'off');
+      
+      set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+      set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+      set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
+      
+      mri{v}.axes = [h1 h2 h3];
+      mri{v}.clim = cfg.clim;
+      mri{v}.slim = [.9 1]; % 90% - maximum
     end
     
-    % this is the size reserved for subplot h1, h2 and h3
-    h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
-    h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
-    h2size(1) = 0.82*axlen2/(axlen1 + axlen2);
-    h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
-    h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
-    h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
+    xc = round(mri{1}.dim(1)/2); % start with center view
+    yc = round(mri{1}.dim(2)/2);
+    zc = round(mri{1}.dim(3)/2);
     
-    if strcmp(cfg.voxelratio, 'square')
-      voxlen1 = 1;
-      voxlen2 = 1;
-      voxlen3 = 1;
-    elseif strcmp(cfg.voxelratio, 'data')
-      % the size of the voxel is scaled with the data
-      [cp_voxel, cp_head] = cornerpoints(mri.dim, mri.transform);
-      voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
-      voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
-      voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
-    end
-    
-    % axis handles will hold the anatomical functional if present, along with labels etc.
-    h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
-    h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
-    h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]);
-    
-    set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
-    set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
-    set(h3, 'Tag', 'ij', 'Visible', 'off');
-    
-    set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-    set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-    set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-    
-    xc = round(mri.dim(1)/2); % start with center view
-    yc = round(mri.dim(2)/2);
-    zc = round(mri.dim(3)/2);
-    
-    dat = double(mri.(cfg.parameter));
+    dat = double(mri{1}.(cfg.parameter));
     dmin = min(dat(:));
     dmax = max(dat(:));
     dat = (dat-dmin)./(dmax-dmin); % range between 0 and 1
@@ -310,7 +321,7 @@ switch cfg.method
       'Parent', h, ...
       'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
       'Units', 'normalized', ...
-      'Position', [0.07+h1size(1)+0.05 0.07 h1size(1)/2 h3size(2)], ...
+      'Position', [0.07+h1size(1)+0.05 0.02 h1size(1)/2 h3size(2)+0.05], ...
       'Callback', @cb_eleclistbox, ...
       'String', chanstring);
     
@@ -355,6 +366,16 @@ switch cfg.method
       'HandleVisibility','on', ...
       'Callback', @cb_scatterbutton);
     
+    hscan = uicontrol('Style', 'radiobutton',...
+      'Parent', h, ...
+      'Value', 0, ...
+      'String','Scan',...
+      'Units', 'normalized', ...
+      'Position',[2*h1size(1) 0.02 h1size(1)/3 0.05],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility','on', ...
+      'Callback', @cb_scanbutton);
+    
     % zoom slider
     h10text = uicontrol('Style', 'text',...
       'String','Zoom',...
@@ -384,41 +405,33 @@ switch cfg.method
     
     % create structure to be passed to gui
     opt               = [];
-    opt.dim           = mri.dim;
     opt.ijk           = [xc yc zc];
-    opt.h1size        = h1size;
-    opt.h2size        = h2size;
-    opt.h3size        = h3size;
-    opt.handlesaxes   = [h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 hscatter];
-    opt.handlesfigure = h;
+    opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
+    opt.mainfig       = h;
     opt.quit          = false;
     opt.update        = [1 1 1];
     opt.init          = true;
     opt.tag           = 'ik';
-    opt.ana           = dat;
+    opt.ana           = dat; % the plotted anatomy
     opt.mri           = mri;
     opt.showcrosshair = true;
     opt.vox           = [opt.ijk]; % voxel coordinates (physical units)
-    opt.pos           = ft_warp_apply(mri.transform, opt.ijk); % head coordinates (e.g. mm)
-    opt.showlabels    = 0;
+    opt.pos           = ft_warp_apply(mri{1}.transform, opt.ijk); % head coordinates (e.g. mm)
+    opt.showlabels    = false;
     opt.label         = cfg.channel;
     opt.magnet        = get(h7, 'Value');
     opt.magradius     = cfg.magradius;
     opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
-    opt.local        = get(h9, 'Value'); % show all markers in the current slices
+    opt.local         = get(h9, 'Value'); % show all markers in the current slices
     opt.scatter       = get(hscatter, 'Value'); % additional scatterplot
-    opt.slim          = [.8 1]; % 80% - maximum
+    opt.scan          = get(hscan, 'Value'); % switch scans
+    opt.slim          = [.9 1]; % 90% - maximum
     opt.markerlab     = markerlab;
     opt.markerpos     = markerpos;
     opt.markerdist    = cfg.markerdist; % hidden option
     opt.clim          = cfg.clim;
     opt.zoom          = 0;
-    if isfield(mri, 'unit') && ~strcmp(mri.unit, 'unknown')
-      opt.unit = mri.unit;  % this is shown in the feedback on screen
-    else
-      opt.unit = '';        % this is not shown
-    end
     
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -430,10 +443,9 @@ switch cfg.method
     delete(h);
     
     % collect the results
-    elec = keepfields(mri, {'unit', 'coordsys'});
+    elec = keepfields(mri{1}, {'unit', 'coordsys'});
     elec.label   = {};
     elec.elecpos = [];
-    elec.chanpos = [];
     for i=1:length(opt.markerlab)
       if ~isempty(opt.markerlab{i,1})
         elec.label = [elec.label; opt.markerlab{i,1}];
@@ -500,26 +512,25 @@ opt = getappdata(h, 'opt');
 curr_ax = get(h, 'currentaxes');
 tag = get(curr_ax, 'tag');
 
-mri = opt.mri;
-
-h1 = opt.handlesaxes(1);
-h2 = opt.handlesaxes(2);
-h3 = opt.handlesaxes(3);
+h1 = opt.axes(1);
+h2 = opt.axes(2);
+h3 = opt.axes(3);
 
 xi = opt.ijk(1);
 yi = opt.ijk(2);
 zi = opt.ijk(3);
 
-if any([xi yi zi] > mri.dim) || any([xi yi zi] <= 0)
+if any([xi yi zi] > opt.mri{1}.dim) || any([xi yi zi] <= 0)
   return;
 end
 
 % construct a string with user feedback
-str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), xi, yi, zi), opt.ijk);
+str1 = sprintf('voxel %d, index [%d %d %d]', sub2ind(opt.mri{1}.dim(1:3), xi, yi, zi), opt.ijk);
 
 if opt.init
+  delete(findobj(opt.mainfig,'Type','Surface')); % get rid of old orthos (to facilitate switching scans)
   ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false,'clim', opt.clim);
-  opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
+  opt.anahandles = findobj(opt.mainfig, 'type', 'surface')';
   parenttag = get(opt.anahandles,'parent');
   parenttag{1} = get(parenttag{1}, 'tag');
   parenttag{2} = get(parenttag{2}, 'tag');
@@ -535,23 +546,23 @@ if opt.init
   opt.axis([2 4 6]) = size(opt.ana) + 0.5;
 else
   ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', opt.ijk, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false,'clim', opt.clim);
-  if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
+  if all(round([xi yi zi])<=opt.mri{1}.dim) && all(round([xi yi zi])>0)
     fprintf('==================================================================================\n');
-    str = sprintf('voxel %d, index [%d %d %d]', sub2ind(mri.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
+    str = sprintf('voxel %d, index [%d %d %d]', sub2ind(opt.mri{1}.dim(1:3), round(xi), round(yi), round(zi)), round([xi yi zi]));
     
     lab = 'crosshair';
     opt.vox = [xi yi zi];
-    ind = sub2ind(mri.dim(1:3), round(opt.vox(1)), round(opt.vox(2)), round(opt.vox(3)));
-    opt.pos = ft_warp_apply(mri.transform, opt.vox);
-    switch opt.unit
+    ind = sub2ind(opt.mri{1}.dim(1:3), round(opt.vox(1)), round(opt.vox(2)), round(opt.vox(3)));
+    opt.pos = ft_warp_apply(opt.mri{1}.transform, opt.vox);
+    switch opt.mri{1}.unit
       case 'mm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.1f %.1f %.1f] %s\n', lab, ind, opt.vox, opt.pos, opt.mri{1}.unit);
       case 'cm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.2f %.2f %.2f] %s\n', lab, ind, opt.vox, opt.pos, opt.mri{1}.unit);
       case 'm'
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%.4f %.4f %.4f] %s\n', lab, ind, opt.vox, opt.pos, opt.mri{1}.unit);
       otherwise
-        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, opt.vox, opt.pos, opt.unit);
+        fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, opt.vox, opt.pos, opt.mri{1}.unit);
     end
   end
   
@@ -560,7 +571,7 @@ end
 % make the last current axes current again
 sel = findobj('type','axes','tag',tag);
 if ~isempty(sel)
-  set(opt.handlesfigure, 'currentaxes', sel(1));
+  set(opt.mainfig, 'currentaxes', sel(1));
 end
 
 % zoom
@@ -576,6 +587,7 @@ axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
 
 if opt.init
   % draw the crosshairs for the first time
+  delete(findobj(opt.mainfig,'Type','Line')); % get rid of old crosshairs (to facilitate switching scans)
   hch1 = crosshair([xi yi-yloadj zi], 'parent', h1, 'color', 'yellow'); % was [xi 1 zi], now corrected for zoom
   hch2 = crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
   hch3 = crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
@@ -595,89 +607,92 @@ else
 end
 
 % draw markers
-delete(findobj(h,'Type','line','Marker','+')); % remove previous markers
+delete(findobj(h,'Type','Line','Marker','+')); % remove previous markers
 delete(findobj(h,'Type','text')); % remove previous labels
-idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
-if ~isempty(idx)
-  for i=1:numel(idx)
-    opt.markerlab_sel{i,1} = opt.markerlab{idx(i),1};
-    opt.markerpos_sel(i,:) = opt.markerpos{idx(i),1};
-  end
-  
-  opt.vox2 = round(ft_warp_apply(inv(mri.transform), opt.markerpos_sel)); % head to vox
-  tmp1 = opt.vox2(:,1);
-  tmp2 = opt.vox2(:,2);
-  tmp3 = opt.vox2(:,3);
-  
-  subplot(h1);
-  if opt.local % filter markers distant to the current slice (N units and further)
-    posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
-    posi = tmp1(posj_idx);
-    posj = tmp2(posj_idx);
-    posk = tmp3(posj_idx);
-  else % plot all markers on the current slice
-    posj_idx = 1:numel(tmp1);
-    posi = tmp1;
-    posj = tmp2;
-    posk = tmp3;
-  end
-  if ~isempty(posi)
-    hold on
-    plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
-    if opt.showlabels
-      for i=1:numel(posj_idx)
-        text(posi(i), yi-yloadj, posk(i), opt.markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0]);
-      end
+
+if opt.showmarkers
+  idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
+  if ~isempty(idx)
+    for i=1:numel(idx)
+      opt.markerlab_sel{i,1} = opt.markerlab{idx(i),1};
+      opt.markerpos_sel(i,:) = opt.markerpos{idx(i),1};
     end
-    hold off
-  end
-  
-  subplot(h2);
-  if opt.local % filter markers distant to the current slice (N units and further)
-    posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
-    posi = tmp1(posi_idx);
-    posj = tmp2(posi_idx);
-    posk = tmp3(posi_idx);
-  else % plot all markers on the current slice
-    posi_idx = 1:numel(tmp1);
-    posi = tmp1;
-    posj = tmp2;
-    posk = tmp3;
-  end
-  if ~isempty(posj)
-    hold on
-    plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
-    if opt.showlabels
-      for i=1:numel(posi_idx)
-        text(posi(i)+xhiadj, posj(i), posk(i), opt.markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0]);
-      end
+    
+    opt.vox2 = round(ft_warp_apply(inv(opt.mri{1}.transform), opt.markerpos_sel)); % head to vox
+    tmp1 = opt.vox2(:,1);
+    tmp2 = opt.vox2(:,2);
+    tmp3 = opt.vox2(:,3);
+    
+    subplot(h1);
+    if opt.local % filter markers distant to the current slice (N units and further)
+      posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
+      posi = tmp1(posj_idx);
+      posj = tmp2(posj_idx);
+      posk = tmp3(posj_idx);
+    else % plot all markers on the current slice
+      posj_idx = 1:numel(tmp1);
+      posi = tmp1;
+      posj = tmp2;
+      posk = tmp3;
     end
-    hold off
-  end
-  
-  subplot(h3);
-  if opt.local % filter markers distant to the current slice (N units and further)
-    posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
-    posi = tmp1(posk_idx);
-    posj = tmp2(posk_idx);
-    posk = tmp3(posk_idx);
-  else % plot all markers on the current slice
-    posk_idx = 1:numel(tmp1);
-    posi = tmp1;
-    posj = tmp2;
-    posk = tmp3;
-  end
-  if ~isempty(posk)
-    hold on
-    plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
-    if opt.showlabels
-      for i=1:numel(posk_idx)
-        text(posi(i), posj(i), zi, opt.markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0]);
+    if ~isempty(posi)
+      hold on
+      plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
+      if opt.showlabels
+        for i=1:numel(posj_idx)
+          text(posi(i), yi-yloadj, posk(i), opt.markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0]);
+        end
       end
+      hold off
     end
-    hold off
-  end
-end % for all markers
+    
+    subplot(h2);
+    if opt.local % filter markers distant to the current slice (N units and further)
+      posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
+      posi = tmp1(posi_idx);
+      posj = tmp2(posi_idx);
+      posk = tmp3(posi_idx);
+    else % plot all markers on the current slice
+      posi_idx = 1:numel(tmp1);
+      posi = tmp1;
+      posj = tmp2;
+      posk = tmp3;
+    end
+    if ~isempty(posj)
+      hold on
+      plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
+      if opt.showlabels
+        for i=1:numel(posi_idx)
+          text(posi(i)+xhiadj, posj(i), posk(i), opt.markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0]);
+        end
+      end
+      hold off
+    end
+    
+    subplot(h3);
+    if opt.local % filter markers distant to the current slice (N units and further)
+      posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
+      posi = tmp1(posk_idx);
+      posj = tmp2(posk_idx);
+      posk = tmp3(posk_idx);
+    else % plot all markers on the current slice
+      posk_idx = 1:numel(tmp1);
+      posi = tmp1;
+      posj = tmp2;
+      posk = tmp3;
+    end
+    if ~isempty(posk)
+      hold on
+      plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
+      if opt.showlabels
+        for i=1:numel(posk_idx)
+          text(posi(i), posj(i), zi, opt.markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0]);
+        end
+      end
+      hold off
+    end
+  end % for all markers
+end % if showmarkers
 
 % do not initialize on the next call
 opt.init = false;
@@ -707,9 +722,9 @@ if opt.scatter % radiobutton on
       'Color', [1 1 1], ...
       'Visible', 'on');
     set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
-    opt.scatterfig_h1 = axes('position',[0.06 0.06 0.74 0.88]);
-    set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.handlesaxes(1), 'DataAspectRatio'));
-    axis square; axis tight;
+    opt.scatterfig_h1 = axes('position',[0.02 0.02 0.96 0.96]);
+    set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.axes(1), 'DataAspectRatio'));
+    axis square; axis tight; axis off;
     xlabel('x'); ylabel('y'); zlabel('z');
     
     % scatter range sliders
@@ -769,13 +784,13 @@ if opt.scatter % radiobutton on
   
   if opt.redrawscatter
     delete(findobj('type','scatter')); % remove previous scatters
-    msize = round(2000/opt.mri.dim(3)); % headsize (20 cm) / z slices
+    msize = round(2000/opt.mri{1}.dim(3)); % headsize (20 cm) / z slices
     inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
     for r = 1:4 % 4 color layers to encode peaks
       lim1 = opt.slim(1) + r*inc - inc;
       lim2 = opt.slim(1) + r*inc;
       voxind = find(opt.ana>lim1 & opt.ana<lim2);
-      [x,y,z] = ind2sub(opt.mri.dim, voxind);
+      [x,y,z] = ind2sub(opt.mri{1}.dim, voxind);
       hold on; scatter3(x,y,z,msize,'Marker','s','MarkerEdgeColor','none','MarkerFaceColor',[.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
     end
     opt.redrawscatter = 0;
@@ -842,13 +857,13 @@ switch key
     % do nothing
     
   case '1'
-    subplot(opt.handlesaxes(1));
+    subplot(opt.axes(1));
     
   case '2'
-    subplot(opt.handlesaxes(2));
+    subplot(opt.axes(2));
     
   case '3'
-    subplot(opt.handlesaxes(3));
+    subplot(opt.axes(3));
     
   case 'q'
     setappdata(h, 'opt', opt);
@@ -857,10 +872,10 @@ switch key
   case 'g' % global/local elec view (h9) toggle
     if isequal(opt.local, 0)
       opt.local = 1;
-      set(opt.handlesaxes(9), 'Value', 1);
+      set(opt.axes(9), 'Value', 1);
     elseif isequal(opt.local, 1)
       opt.local = 0;
-      set(opt.handlesaxes(9), 'Value', 0);
+      set(opt.axes(9), 'Value', 0);
     end
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -868,10 +883,10 @@ switch key
   case 'l' % elec label view (h8) toggle
     if isequal(opt.showlabels, 0)
       opt.showlabels = 1;
-      set(opt.handlesaxes(8), 'Value', 1);
+      set(opt.axes(8), 'Value', 1);
     elseif isequal(opt.showlabels, 1)
       opt.showlabels = 0;
-      set(opt.handlesaxes(8), 'Value', 0);
+      set(opt.axes(8), 'Value', 0);
     end
     opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
@@ -880,10 +895,10 @@ switch key
   case 'm' % magnet (h7) toggle
     if isequal(opt.magnet, 0)
       opt.magnet = 1;
-      set(opt.handlesaxes(7), 'Value', 1);
+      set(opt.axes(7), 'Value', 1);
     elseif isequal(opt.magnet, 1)
       opt.magnet = 0;
-      set(opt.handlesaxes(7), 'Value', 0);
+      set(opt.axes(7), 'Value', 0);
     end
     setappdata(h, 'opt', opt);
     
@@ -1041,7 +1056,7 @@ if ~isempty(tag) && ~opt.init
     opt.update = [1 1 1];
   end
 end
-opt.ijk = min(opt.ijk(:)', opt.dim);
+opt.ijk = min(opt.ijk(:)', opt.mri{1}.dim);
 opt.ijk = max(opt.ijk(:)', [1 1 1]);
 
 if opt.magnet % magnetize
@@ -1165,7 +1180,7 @@ if ~isempty(elecidx)
   elseif strfind(eleclab, 'black') % already chosen before, move cusor to marker or uncheck
     if strcmp(get(h,'SelectionType'),'normal') % single click to move cursor to
       fprintf('moving cursor to marker %s\n', opt.label{elecidx,1});
-      opt.ijk = ft_warp_apply(inv(opt.mri.transform), opt.markerpos{elecidx,1}); % move cursor to marker position
+      opt.ijk = ft_warp_apply(inv(opt.mri{1}.transform), opt.markerpos{elecidx,1}); % move cursor to marker position
     elseif strcmp(get(h,'SelectionType'),'open') % double click to uncheck
       fprintf('removing marker %s\n', opt.label{elecidx,1});
       eleclab = regexprep(eleclab, '"black"','"silver"'); % replace font color
@@ -1289,7 +1304,7 @@ function cb_scattercleanup(hObject, eventdata)
 h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.scatter = 0;
-set(opt.handlesaxes(11), 'Value', 0);
+set(opt.axes(11), 'Value', 0);
 opt = rmfield(opt, 'scatterfig');
 setappdata(h, 'opt', opt);
 delete(hObject);
@@ -1349,7 +1364,7 @@ if get(hObject, 'value') && ~isfield(opt, 'ana_strip') % skullstrip
   tmp.dim = size(opt.ana);
   tmp.coordsys = 'tal'; % assumption
   tmp.unit = 'mm'; % assumption
-  tmp.transform = opt.mri.transform;
+  tmp.transform = opt.mri{1}.transform;
   cfg.output = 'skullstrip';
   seg = ft_volumesegment(cfg, tmp);
   opt.ana_strip = seg.anatomy; clear seg tmp
@@ -1363,4 +1378,33 @@ end
 opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 figure(h);
+cb_redraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_scanbutton(hscan, eventdata)
+
+h = getparent(hscan);
+opt = getappdata(h, 'opt');
+opt.scan = get(hscan, 'value');
+if numel(opt.mri)>1
+  opt.mri{1}.clim = opt.clim; % store current clim
+  opt.mri{1}.slim = opt.slim; % store current scatter clim
+  opt.mri = flip(opt.mri); % switch mri order
+  dat = opt.mri{1}.anatomy;
+  dmin = min(dat(:));
+  dmax = max(dat(:));
+  opt.ana = (dat-dmin)./(dmax-dmin); % range between 0 and 1
+  opt.clim = opt.mri{1}.clim; % use other scan's clim  
+  set(opt.axes(4), 'Value', opt.clim(1)); % update minslider
+  set(opt.axes(5), 'Value', opt.clim(2)); % update maxslider
+  opt.slim = opt.mri{1}.slim; % use other scan's scatter clim  
+  opt.ijk = ft_warp_apply(inv(opt.mri{1}.transform), opt.pos); % move cursor to corresponding voxel location of new scan
+  opt.axes(1:3) = opt.mri{1}.axes;
+  opt.init = true;
+else
+  warning('toggling scans only works with two volumes as input arguments')
+end
+setappdata(h, 'opt', opt);
 cb_redraw(h);

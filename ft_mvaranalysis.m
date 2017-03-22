@@ -169,7 +169,7 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
 	
 	% check whether this is allowed
 	nsmp = cellfun('size', data.trial, 2);
-	if all(nsmp==nsmp(1));
+	if all(nsmp==nsmp(1))
 		oktoolbox = {'bsmart' 'biosig'};
 	else
 		oktoolbox = 'biosig'; % bsmart does not work with variable trials
@@ -182,7 +182,7 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
 elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
   % do sliding window approach
   for k = 1:numel(cfg.toi)
-		latency(k,:) = cfg.toi + cfg.t_ftimwin.*[-0.5 0.5];
+		latency(k,:) = cfg.toi + cfg.t_ftimwin.*[-0.5 0.5-1./data.fsample];
 	end
 else
   error('cfg should contain both cfg.toi and cfg.t_ftimwin');

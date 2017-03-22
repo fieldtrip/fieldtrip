@@ -3,7 +3,6 @@ function test_prepare_freq_matrices
 % WALLTIME 00:10:00
 % MEM 1000mb
 
-% TEST test_prepare_freq_matrices
 % TEST prepare_freq_matrices ft_sourceanalysis
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg');
@@ -138,17 +137,17 @@ cfg.frequency = 10;
 cfg.refchan   = 'BR1';
 [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-assert(isequal(a1,b1));
-assert(isequal(a2,b2));
-assert(isequal(a3,b3));
+assert(isalmostequal(a1,b1,'reltol',1e-9));
+assert(isalmostequal(a2,b2,'reltol',1e-9));
+assert(isalmostequal(a3,b3,'reltol',1e-9));
 
 cfg.frequency = 10.6;
 cfg.refchan   = 'BR1';
 [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-assert(isequal(a1,b1));
-assert(isequal(a2,b2));
-assert(isequal(a3,b3));
+assert(isalmostequal(a1,b1,'reltol',1e-9));
+assert(isalmostequal(a2,b2,'reltol',1e-9));
+assert(isalmostequal(a3,b3,'reltol',1e-9));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

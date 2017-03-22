@@ -135,8 +135,8 @@ if ~isdeployed
   end
   
   try
-    % some alternative implementations of statistics functions
-    if ~ft_platform_supports('stats')
+    % external/stats contains alternative implementations of some statistics functions
+    if ~ft_platform_supports('stats') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end

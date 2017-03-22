@@ -3,7 +3,6 @@ function test_bug1599(datainfo, version)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1599
 % TEST ft_sourceanalysis beamformer_lcmv
 
 % use FieldTrip defaults instead of personal defaults

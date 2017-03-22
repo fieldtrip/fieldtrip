@@ -34,6 +34,7 @@ switch purpose
   case 'allowed'
     ignore = {
       % some fields that are always allowed to be present in the configuration
+      'postamble'
       'trackconfig'
       'checkconfig'
       'checksize'
@@ -54,6 +55,7 @@ switch purpose
   case {'provenance', 'history'}
     ignore = {
       % these should not be included in the provenance or history
+      'postamble'
       'checkconfig'
       'checksize'
       'trackconfig'
@@ -77,6 +79,7 @@ switch purpose
       'artifact'
       'artfctdef'
       % these fields are for internal usage only
+      'postamble'
       'checkconfig'
       'checksize'
       'trackconfig'

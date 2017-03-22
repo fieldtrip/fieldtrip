@@ -257,7 +257,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     reflabel          = label(hdr.BalanceCoefs.G1BR.Refindex);
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G1BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G1BR = montage;
@@ -268,7 +268,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     reflabel          = label(hdr.BalanceCoefs.G2BR.Refindex);
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G2BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G2BR = montage;
@@ -279,7 +279,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     reflabel          = label(hdr.BalanceCoefs.G3BR.Refindex);
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G3BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G3BR = montage;
@@ -290,7 +290,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     reflabel          = label(hdr.BalanceCoefs.G3AR.Refindex);
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G3AR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G3AR = montage;

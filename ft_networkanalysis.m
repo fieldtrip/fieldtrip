@@ -283,7 +283,7 @@ end % for k
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 stat              = [];
-stat = keepfields(data, {'label', 'freq', 'time', 'grad', 'elec', 'dof', 'pos', 'tri', 'inside', 'brainordinate'});
+stat = keepfields(data, {'label', 'freq', 'time', 'grad', 'elec', 'opto', 'dof', 'pos', 'tri', 'inside', 'brainordinate'});
 stat.(cfg.method) = output;
 stat.dimord       = dimord;
 

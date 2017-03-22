@@ -114,10 +114,10 @@ for i=1:4
     grad2c = ft_convert_grad(grad2b, amplitude{j}, distance{i}, 'amplitude'); % should again be the same as "a"
     grad3c = ft_convert_grad(grad3b, amplitude{j}, distance{i}, 'amplitude'); % should again be the same as "a"
     grad4c = ft_convert_grad(grad4b, amplitude{j}, distance{i}, 'amplitude'); % should again be the same as "a"
-    assert(identical(grad1c, grad1a, 'reltol', 100*eps));
-    assert(identical(grad2c, grad2a, 'reltol', 100*eps));
-    assert(identical(grad3c, grad3a, 'reltol', 100*eps));
-    assert(identical(grad4c, grad4a, 'reltol', 100*eps));
+    assert(isalmostequal(grad1c, grad1a, 'reltol', 100*eps));
+    assert(isalmostequal(grad2c, grad2a, 'reltol', 100*eps));
+    assert(isalmostequal(grad3c, grad3a, 'reltol', 100*eps));
+    assert(isalmostequal(grad4c, grad4a, 'reltol', 100*eps));
   end
 end
 

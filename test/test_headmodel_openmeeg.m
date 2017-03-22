@@ -3,7 +3,6 @@ function test_headmodel_openmeeg
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_headmodel_openmeeg
 % TEST ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_openmeeg
 
 % load openmeeg paths

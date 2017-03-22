@@ -3,7 +3,6 @@ function test_bug2553
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2553
 % TEST ft_componentanalysis
 
 %% generate some data

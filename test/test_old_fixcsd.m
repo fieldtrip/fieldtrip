@@ -3,7 +3,6 @@ function test_old_fixcsd
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_fixcsd
 
 % this script tests the functionality of fixcsd/fixcoh in checkdata
 

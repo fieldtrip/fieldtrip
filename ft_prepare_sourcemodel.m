@@ -778,7 +778,7 @@ if isempty(sel)
   inside = mask(sub2ind(dim, pos(:,1), pos(:,2), pos(:,3)));
 else
   % only loop over the points that can be dealt with
-  inside = zeros(size(pos,1), 1);
+  inside = false(size(pos,1), 1);
   for i=setdiff(1:size(pos,1), sel(:)')
     inside(i) = mask(pos(i,1), pos(i,2), pos(i,3));
   end

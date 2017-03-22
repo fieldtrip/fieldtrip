@@ -211,20 +211,21 @@ if strcmp(cfg.planarmethod, 'sourceproject')
 
   planarmontage = [];
   planarmontage.tra      = transform;
-  planarmontage.labelorg = axial.grad.label;
+  planarmontage.labelold = axial.grad.label;
   planarmontage.labelnew = planar.grad.label;
 
   % apply the linear transformation to the data
   interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
+  
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
 
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
-    % put the original gradiometer type in (will get _planar appended)
-    interp.grad.type = ft_senstype(data.grad);
+    interp.grad.type = [ft_senstype(data.grad) '_planar'];
+  else
+    interp.grad.type = [interp.grad.type '_planar'];
   end
-  interp.grad.type = [interp.grad.type '_planar'];
 
   %   % interpolate the data towards the planar gradiometers
   %   for i=1:Ntrials
@@ -340,13 +341,13 @@ else
   interp.grad.chanpos(ix,:) = sens.chanpos(iy,:);
 
   % if the original chanpos contained nans, make sure to put nans in the
-  % updated one as well, and move the updated chanpos values to chanposorg
+  % updated one as well, and move the updated chanpos values to chanposold
   if chanposnans
-    interp.grad.chanposorg = sens.chanpos;
-    interp.grad.chanoriorg = sens.chanori;
-    interp.grad.labelorg = sens.label;
-    interp.grad.chanpos = nan(size(interp.grad.chanpos));
-    interp.grad.chanori = nan(size(interp.grad.chanori));
+    interp.grad.chanposold = sens.chanpos;
+    interp.grad.chanoriold = sens.chanori;
+    interp.grad.labelold   = sens.label;
+    interp.grad.chanpos    = nan(size(interp.grad.chanpos));
+    interp.grad.chanori    = nan(size(interp.grad.chanori));
   end
 end
 

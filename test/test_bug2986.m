@@ -4,7 +4,6 @@ function test_bug2986
 % MEM 1500mb
 
 % TEST ft_volumerealign ft_volumereslice
-% TEST test_bug2986
 
 load standard_mri
 

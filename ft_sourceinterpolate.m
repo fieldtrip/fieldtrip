@@ -159,7 +159,7 @@ else
 end
 
 if isUnstructuredAna
-  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
   anatomical = ft_checkdata(anatomical, 'datatype', {'volume', 'volume+label'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end

@@ -3,7 +3,6 @@ function test_bug1850
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1850
 % TEST ft_prepare_neighbours ft_channelrepair
 %
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1850

@@ -3,7 +3,6 @@ function test_ft_appendfreq
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_appendfreq
 % TEST ft_appendfreq
 
 % make some dummy frequency structures

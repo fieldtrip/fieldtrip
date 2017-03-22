@@ -3,7 +3,6 @@ function test_bug1232
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1232
 % TEST ft_selectdata ft_datatype_source
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -51,7 +51,7 @@ isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
 ischan         =  check_chan(data);
 issegmentation =  check_segmentation(data);
 isparcellation =  check_parcellation(data);
-ismontage      =  isfield(data, 'labelorg') && isfield(data, 'labelnew') && isfield(data, 'tra');
+ismontage      =  isfield(data, 'labelold') && isfield(data, 'labelnew') && isfield(data, 'tra');
 isevent        =  isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
 isheadmodel    =  false; % FIXME this is not yet implemented
 
@@ -142,10 +142,10 @@ if nargin>1
     case 'volume'
       type = any(strcmp(type, {'volume', 'volume+label'}));
     case 'source'
-      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label'})); % a single mesh does qualify as source structure
+      type = any(strcmp(type, {'source', 'source+label', 'mesh', 'mesh+label', 'source+mesh'})); % a single mesh does qualify as source structure
       type = type && isstruct(data) && numel(data)==1;                            % an array of meshes does not qualify
     case 'mesh'
-      type = any(strcmp(type, {'mesh', 'mesh+label'}));
+      type = any(strcmp(type, {'mesh', 'mesh+label', 'source+mesh'}));
     case 'segmentation'
       type = any(strcmp(type, {'segmentation', 'volume+label'}));
     case 'parcellation'

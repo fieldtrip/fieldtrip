@@ -3,7 +3,6 @@ function test_ft_volumesegment
 % MEM 2000mb
 % WALLTIME 00:30:00
 
-% TEST test_ft_volumesegment
 % TEST ft_volumesegment  ft_read_mri
 
 % initial version by Lilla Magyari 2012

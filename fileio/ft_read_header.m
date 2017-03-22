@@ -1280,6 +1280,8 @@ switch headerformat
     end
     
   case 'gtec_hdf5'
+    % check that the required low-level toolbox is available
+    ft_hastoolbox('gtec', 1);
     % there is only a precompiled *.p reader that reads the whole file at once
     orig = ghdf5read(filename);
     for i=1:numel(orig.RawData.AcquisitionTaskDescription.ChannelProperties.ChannelProperties)
@@ -2245,7 +2247,7 @@ switch headerformat
     %       for j=1:length(code)
     %         codesel = false(size(tsq));
     %         for k=1:numel(codesel)
-    %           codesel(k) = identical(tsq(k).code, code{j});
+    %           codesel(k) = isequal(tsq(k).code, code{j});
     %         end
     %         % find the first instance of this logical channel
     %         this = find(chansel(:) & codesel(:), 1);

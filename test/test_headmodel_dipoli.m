@@ -3,7 +3,6 @@ function test_headmodel_dipoli
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_headmodel_dipoli
 % TEST ft_headmodel_dipoli ft_prepare_vol_sens ft_compute_leadfield
 
 % generate a unit sphere

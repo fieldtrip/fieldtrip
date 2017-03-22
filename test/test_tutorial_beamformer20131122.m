@@ -3,7 +3,6 @@ function test_tutorial_beamformer20131122
 % MEM 10gb
 % WALLTIME 02:30:00
 
-% TEST test_tutorial_beamformer20131122
 % TEST ft_sourceanalysis ft_prepare_leadfield
 
 % use FieldTrip defaults instead of personal defaults

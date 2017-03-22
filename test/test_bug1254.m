@@ -7,7 +7,6 @@ function test_bug1254
 % executing this test
 return
 
-% TEST test_bug1254
 % TEST qsubcompile qsubcellfun
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');

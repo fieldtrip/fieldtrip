@@ -106,7 +106,7 @@ url = {
   'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
-
+  'GTEC'          'see http://www.gtec.at'
   'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
@@ -150,6 +150,7 @@ url = {
   'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
   'NEURONE'       'see http://www.megaemg.com/support/unrestricted-downloads'
   'COLORBREWER'   'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
+  'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
   };
 
 if nargin<2
@@ -364,7 +365,9 @@ switch toolbox
     dependency = {'readneurone' 'readneuronedata' 'readneuroneevents'};
   case 'BREWERMAP'
     dependency = {'brewermap' 'brewermap_view'};
-
+  case 'GTEC'
+    dependency = {'ghdf5read' 'ghdf5fileimport'};
+    
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
@@ -380,6 +383,8 @@ switch toolbox
     dependency = {'ft_spiketriggeredaverage', 'ft_spiketriggeredspectrum'};
   case 'FILEEXCHANGE'
     dependency = is_subdir_in_fieldtrip_path('/external/fileexchange');
+  case 'CELLFUNCTION'
+    dependency = {'cellmean', 'cellvecadd', 'cellcat'};
   case {'INVERSE', 'REALTIME', 'SPECEST', 'PREPROC', ...
           'COMPAT', 'STATFUN', 'TRIALFUN', 'UTILITIES/COMPAT', ...
           'FILEIO/COMPAT', 'PREPROC/COMPAT', 'FORWARD/COMPAT', ...

@@ -1050,10 +1050,10 @@ end % if style=3d
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% apply the montage, i.e. combine bipolar channels into a new representation
+% apply the montage, e.g. conert from monopolar to bipolar channels 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~strcmp(cfg.montage, 'no')
-  Norg = length(cfg.montage.labelorg);
+  Nold = length(cfg.montage.labelold);
   Nnew = length(cfg.montage.labelnew);
   
   for i=1:Nnew
@@ -1203,22 +1203,23 @@ function layout = sens2lay(sens, rotatez, projmethod, style, overlap, viewpoint,
 
 % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
 % this not only removed the linear projections, but also ensures that the channel labels are correctly named
-if isfield(sens, 'chanposorg')
-  chanposorg = sens.chanposorg;
+
+if isfield(sens, 'chanposold')
+    chanposold = sens.chanposold;
 else
-  chanposorg = [];
+    chanposold = [];
 end
 if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
-  sens = undobalancing(sens);
-  if size(chanposorg, 1) == numel(sens.label)
-    sens.chanpos = chanposorg;
-  end
-  % In case not all the locations have NaNs it might still be useful to plot them
-  % But perhaps it'd be better to have any(any
+    sens = undobalancing(sens);
+    if size(chanposold, 1) == numel(sens.label)
+        sens.chanpos = chanposold;
+    end
+% In case not all the locations have NaNs it might still be useful to plot them
+% But perhaps it'd be better to have any(any
 elseif any(all(isnan(sens.chanpos)))
-  [sel1, sel2] = match_str(sens.label, sens.labelorg);
-  sens.chanpos = chanposorg(sel2, :);
-  sens.label   = sens.labelorg(sel2);
+    [sel1, sel2] = match_str(sens.label, sens.labelold);
+    sens.chanpos = chanposold(sel2, :);
+    sens.label   = sens.labelold(sel2);
 end
 
 fprintf('creating layout for %s system\n', ft_senstype(sens));

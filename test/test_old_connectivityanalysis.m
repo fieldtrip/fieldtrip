@@ -3,7 +3,6 @@ function test_old_connectivityanalysis
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_connectivityanalysis
 
 % this script tests the functionality of connectivityanalysis
 

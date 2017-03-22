@@ -3,7 +3,6 @@ function test_tutorial_eeg_preprocessing
 % WALLTIME 00:45:00
 % MEM 2gb
 
-% TEST test_tutorial_eeg_preprocessing
 % TEST ft_definetrial ft_preprocessing
 
 %% defining trials

@@ -237,7 +237,8 @@ switch type
       N=floor(size(dat,2)/3) - 2;
       if rem(N,2)==1,   N=N+1;    end
     end
-    [B, A] = fir1(N, max(Fhp)/Fn, 'high');
+    B = fir1(N, max(Fhp)/Fn, 'high');
+    A = 1;
     
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453

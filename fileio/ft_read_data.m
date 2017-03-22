@@ -833,6 +833,8 @@ switch dataformat
     end
     
   case 'gtec_hdf5'
+    % check that the required low-level toolbox is available
+    ft_hastoolbox('gtec', 1);
     % there is only a precompiled *.p reader that reads the whole file at once
     if isfield(hdr, 'orig')
       orig = hdr.orig;
