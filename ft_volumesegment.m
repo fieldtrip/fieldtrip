@@ -175,18 +175,18 @@ cfg = ft_checkconfig(cfg, 'deprecated',{'coordsys', 'keepintermediate'});
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
 % set the defaults
-cfg.output           = ft_getopt(cfg, 'output',           'tpm');
-cfg.downsample       = ft_getopt(cfg, 'downsample',       1);
-cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
-cfg.write            = ft_getopt(cfg, 'write',            'no');
-cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',        'old'); % doing old-style in case of spm12
+cfg.output           = ft_getopt(cfg, 'output',         'tpm');
+cfg.downsample       = ft_getopt(cfg, 'downsample',     1);
+cfg.spmversion       = ft_getopt(cfg, 'spmversion',     'spm8');
+cfg.write            = ft_getopt(cfg, 'write',          'no');
+cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',      'old'); % doing old-style in case of spm12
 
 % set default for smooth and threshold
-cfg.brainsmooth      = ft_getopt(cfg, 'brainsmooth',      ''); % see also below
-cfg.scalpsmooth      = ft_getopt(cfg, 'scalpsmooth',      ''); % see also below
-cfg.skullsmooth      = ft_getopt(cfg, 'skullsmooth',      ''); % see also below
-cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold',   ''); % see also below
-cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold',   ''); % see also below
+cfg.brainsmooth      = ft_getopt(cfg, 'brainsmooth',    ''); % see also below
+cfg.scalpsmooth      = ft_getopt(cfg, 'scalpsmooth',    ''); % see also below
+cfg.skullsmooth      = ft_getopt(cfg, 'skullsmooth',    ''); % see also below
+cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold', ''); % see also below
+cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold', ''); % see also below
 
 % earlier version of smooth and threshold specification
 cfg.smooth           = ft_getopt(cfg, 'smooth',      '');
@@ -268,18 +268,6 @@ else
   dotpm = 0;
 end
 
-% get the names of the templates for the segmentation
-if isdeployed && dotpm
-  cfg = ft_checkconfig(cfg, 'required', {'template' 'tpm'});
-else
-  if ~isfield(cfg, 'template')
-    spmpath      = spm('dir');
-    % spm deals with the defaults for tpm, so they don't need to be specified here.
-    if strcmpi(cfg.spmversion, 'spm8'), cfg.template = [spmpath, filesep, 'templates', filesep, 'T1.nii']; end
-    if strcmpi(cfg.spmversion, 'spm2'), cfg.template = [spmpath, filesep, 'templates', filesep, 'T1.mnc']; end
-  end
-end
-
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
   tmpcfg = keepfields(cfg, {'downsample'});
@@ -293,7 +281,11 @@ end
 % create the tissue probability maps if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if dotpm
-
+  if isdeployed
+    % ensure that these exist in this case, otherwise deal with the defaults below
+    cfg = ft_checkconfig(cfg, 'required', {'template' 'tpm'});
+  end
+  
   % remember the original transformation matrix coordinate system
   original = [];
   original.transform = mri.transform;
@@ -318,7 +310,9 @@ if dotpm
 
   switch lower(cfg.spmversion)
     case 'spm2'
-      Va = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'analyze_img');
+      cfg.template = ft_getopt(cfg, 'template', fullfile(spm('Dir'), 'templates', 'T1.mnc'));
+      
+      VF = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'analyze_img');
 
       % set the spm segmentation defaults (from /opt/spm2/spm_defaults.m script)
       opts.estimate.priors = char(...
@@ -337,7 +331,7 @@ if dotpm
 
       % perform the segmentation
       fprintf('performing the segmentation on the specified volume\n');
-      spm_segment(Va, cfg.template, opts);
+      spm_segment(VF, cfg.template, opts);
       
       % generate the list of filenames that contains the segmented volumes
       filenames = {[cfg.name, '_seg1.img'];...
@@ -346,17 +340,26 @@ if dotpm
       
       
     case 'spm8'
-      Va = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
+      cfg.tpm = ft_getopt(cfg, 'tpm');
+      cfg.tpm = char(cfg.tpm(:));
+      if isempty(cfg, 'tpm')
+        cfg.tpm = char(fullfile(spm('Dir'),'tpm','grey.nii'),...
+             fullfile(spm('Dir'),'tpm','white.nii'),...
+             fullfile(spm('Dir'),'tpm','csf.nii'));
+      end
+      px.tpm = cfg.tpm;
+      
+      VF = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
 
       fprintf('performing the segmentation on the specified volume\n');
-      if isfield(cfg, 'tpm')
-        cfg.tpm  = char(cfg.tpm(:));
-        px.tpm   = cfg.tpm;
-        p        = spm_preproc(Va, px);
-      else
-        p        = spm_preproc(Va);
-      end
+      p = spm_preproc(VF, px);
+      
+        
       [po, ~] = spm_prep2sn(p);
+      
+      % this write a mat file, may be needed for Dartel, not sure yet
+      save([cfg.name '_sn.mat'],'-struct','po');
+     
 
       % These settings were taken from a batch
       opts     = [];
@@ -366,7 +369,7 @@ if dotpm
       opts.biascor = 1;
       opts.cleanup = 0;
       
-      % write the segmented volumes, -> this can be done differently
+      % write the segmented volumes, -> this can probably be done differently
       spm_preproc_write(po, opts);
 
       % generate the list of filenames that contains the segmented volumes
@@ -377,16 +380,19 @@ if dotpm
 
     case 'spm12'
       if strcmp(cfg.spmmethod, 'old')
-        Va = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
+        VF = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
         
         fprintf('performing the segmentation on the specified volume, using the old-style segmentation\n');
         if isfield(cfg, 'tpm')
           cfg.tpm  = char(cfg.tpm(:));
           px.tpm   = cfg.tpm;
-          p        = spm_preproc(Va, px);
+          p        = spm_preproc(VF, px);
         else
-          p        = spm_preproc(Va);
+          p        = spm_preproc(VF);
         end
+        % this write a mat file, may be needed for Dartel, not sure yet
+        save([cfg.name '_sn.mat'],'-struct','p');
+        
         [po, ~] = spm_prep2sn(p);
         
         % These settings are taken from a batch
@@ -412,12 +418,12 @@ if dotpm
           cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
         end
         
-        Va = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
+        VF = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
         
         fprintf('performing the segmentation on the specified volume, using the new-style segmentation\n');
         
         % create the structure that is required for spm_preproc8
-        opts.image    = Va;
+        opts.image    = VF;
         opts.tpm      = spm_load_priors8(cfg.tpm);
         opts.biasreg  = 0.0001;
         opts.biasfwhm = 60;
@@ -438,7 +444,7 @@ if dotpm
         %spm_preproc_write8(res, [ones(6,4)], [0 0], [0 1], 1, 0, nan(2,3), nan);
         
         % this write a mat file, may be needed for Dartel, not sure yet
-        save([cfg.name '_sn.mat'],'-struct','res');
+        save([cfg.name '_seg8.mat'],'-struct','res');
         
         [pathstr, name, ~] = fileparts(cfg.name);
         filenames = {fullfile(pathstr,['c1', name, '.nii']);...
