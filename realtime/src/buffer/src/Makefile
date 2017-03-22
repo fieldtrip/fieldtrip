@@ -18,13 +18,6 @@ INCPATH  = -I.
 LIBPATH  = -L.
 LIBS     = -lbuffer -lm -lpthread
 
-ifeq "$(PLATFORM)" "mingw32"
-  INCPATH += -I../../external/pthreads-win32/include
-  LIBPATH += -L../../external/pthreads-win32/lib
-  LIBS    += -lpthreadGC2
-  RM       = rm -f
-endif
-
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
   RM = del
 endif
