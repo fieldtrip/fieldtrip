@@ -1,9 +1,10 @@
-function test_ft_appendxxx(data,mismatch)
+function test_ft_appenddata(data,mismatch)
 % This function tests ft_appenddata handling of trialdata, particularly with
 % different numbers of columns or other mismatches.
 %
 %   INPUTS:
-%     data      = any FT data structure with trialinfo
+%     data      = any FT data structure with trialinfo and multiple channels
+%       and/or trials - these will be split and re-merged by ft_appenddata
 %     mismatch  = boolean flag for whether you want the function to artificially
 %       introduce a mismatch in trialinfo (TRUE, default) and test whether it is
 %       successfully identified and removed from the output, or make only
