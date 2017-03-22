@@ -527,7 +527,7 @@ switch submethod
       assert(isnumeric(refdip.pos) && numel(refdip.pos)==3);
       lf1 = ft_compute_leadfield(refdip.pos, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
       if isfield(refdip,'mom'); % check for fixed orientation
-        lf1 = lf1.*refdip.mom'; 
+        lf1 = lf1.*refdip.mom(:); 
       end; 
       filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
     else % backwards compatible with previous implementation - only position of refdip is present
