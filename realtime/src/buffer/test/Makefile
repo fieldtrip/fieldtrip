@@ -6,8 +6,8 @@
 # Use MinGW for compilation on Windows
 
 ifneq "$(OS)" "Windows_NT"
-  OS      ?= $(shell uname -s)
-  MACHINE ?= $(shell uname -m)
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
 endif
 
 PLATFORM ?= $(shell gcc -dumpmachine)
@@ -27,38 +27,38 @@ SUFFIX   =
 
 ifeq "$(PLATFORM)" "i686-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
-  LDLIBS   = -lbuffer -lm -lws2_32
-  SUFFIX   = .exe
-  RM       = rm -f
+	LDLIBS   = -lbuffer -lm -lws2_32
+	SUFFIX   = .exe
+	RM       = rm -f
 	fixpath  = $1
 endif
 
 ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
-  LDLIBS   = -lbuffer -lm -lws2_32
-  SUFFIX   = .exe
-  RM       = rm -f
+	LDLIBS   = -lbuffer -lm -lws2_32
+	SUFFIX   = .exe
+	RM       = rm -f
 	fixpath  = $1
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
-  # prevent dependency on libwinpthread-1.dll by linking statically
-  # see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-  LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-  SUFFIX   = .exe
-  RM       = del
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = del
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
-  # prevent dependency on libwinpthread-1.dll by linking statically
-  # see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-  LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-  SUFFIX   = .exe
-  RM       = del
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = del
 	# make clean target work on windows:
 	fixpath = $(subst /,\,$1)
 endif
@@ -82,18 +82,18 @@ endif
 
 ifeq "$(OS)" "Darwin"
 	fixpath = $1
-  ifeq "$(MACHINE)" "i386"
+	ifeq "$(MACHINE)" "i386"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
-    CFLAGS   += -m32
-    CXXFLAGS += -m32
+		CFLAGS   += -m32
+		CXXFLAGS += -m32
 		LDFLAGS  += -m32
-  endif
-  ifeq "$(MACHINE)" "x86_64"
+	endif
+	ifeq "$(MACHINE)" "x86_64"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
-    CFLAGS   += -m64
-    CXXFLAGS += -m64
+		CFLAGS   += -m64
+		CXXFLAGS += -m64
 		LDFLAGS  += -m64
-  endif
+	endif
 endif
 
 ifndef BINDIR

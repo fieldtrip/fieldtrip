@@ -26,23 +26,24 @@ INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = $(shell fltk-config --ldflags) -lpthread -lbuffer
 
-ifeq "$(PLATFORM)" "mingw32"
-	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
-	CXXFLAGS += -mwindows
-	INCPATH  += -IC:/msys/1.0/local/include
-	LIBPATH  += -LC:/msys/1.0/local/lib
-	LDLIBS   += -lws2_32 -lwinmm -mwindows -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32 $(BINDIR)/pthreadGC2.dll
-	SUFFIX    = .exe
-	# make clean target work on windows:
-	fixpath  = $(subst /,\,$1)
-	RM       = del
+# possible libraries for Cygwin are
+# -lws2_32 -lwinmm -mwindows -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32 $(BINDIR)/pthreadGC2.dll
+
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	fixpath  = $1
+endif
+
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	fixpath  = $1
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32 -static
 	SUFFIX   = .exe
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)
@@ -50,10 +51,10 @@ ifeq "$(PLATFORM)" "i686-w64-mingw32"
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32 -static
 	SUFFIX   = .exe
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)

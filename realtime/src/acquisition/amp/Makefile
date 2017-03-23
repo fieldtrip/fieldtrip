@@ -38,11 +38,27 @@ LDLIBS   = -lbuffer -lpthread
 # better would be to make a proper library of the C++ framework
 CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
+endif
+
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32 - static
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
+endif
+
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lws2_32 -lwinmm -lbuffer -lm -lpthread -static
-	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lws2_32 -lwinmm -lm -static
 	SUFFIX   = .exe
 	RM       = del
 	# make clean target work on windows
@@ -50,10 +66,10 @@ ifeq "$(PLATFORM)" "i686-w64-mingw32"
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lws2_32 -lwinmm -lm -lbuffer -lpthread -static
-	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lws2_32 -lwinmm -lm -static
 	SUFFIX   = .exe
 	RM       = del
 	# make clean target work on windows

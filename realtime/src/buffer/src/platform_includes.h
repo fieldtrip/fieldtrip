@@ -113,7 +113,6 @@
     #include <unistd.h>  /* for close() */
     #include <netdb.h>
 
-    #define strcasecmp(a,b) (strcmpi(a,b))
     #define closesocket(s) (close(s))
 
 #elif defined (PLATFORM_WIN32) && defined (COMPILER_LCC)

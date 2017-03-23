@@ -14,7 +14,7 @@
 #include "socketserver.h"
 #include <ft_storage.h>
 
-#if !defined(WIN32) || defined(COMPILER_MINGW)
+#if !defined(PLATFORM_WINDOWS) && defined(COMPILER_MINGW)
 #include <direct.h>
 #else
 #include <sys/stat.h>
@@ -60,7 +60,7 @@ int eventCounter = 0;
 char endianness[10];
 
 double getCurrentTime() {
-#if defined(WIN32) && !defined(COMPILER_MINGW)
+#if defined(PLATFORM_WINDOWS) && !defined(COMPILER_MINGW)
 	return timeGetTime() * 0.001;
 #else
 	struct timeval tv;
@@ -185,7 +185,7 @@ int write_contents() {
 	FILE *f;
 	int r;
 
-	#if defined(WIN32) && !defined(COMPILER_MINGW)
+	#if defined(PLATFORM_WINDOWS) && !defined(COMPILER_MINGW)
 	r = GetFileAttributes(baseDirectory);
 	#else
 	r = access(baseDirectory, F_OK);
@@ -356,7 +356,7 @@ int main(int argc, char *argv[]) {
 	/* verify that all datatypes have the expected syze in bytes */
 	check_datatypes();
 
-	#if defined(WIN32) && !defined(COMPILER_MINGW)
+	#if defined(PLATFORM_WINDOWS) && !defined(COMPILER_MINGW)
 	timeBeginPeriod(1);
 	#endif
 
@@ -415,7 +415,7 @@ int main(int argc, char *argv[]) {
 	printf("Done.\n");
 
 cleanup:
-	#if defined(WIN32) && !defined(COMPILER_MINGW)
+	#if defined(PLATFORM_WINDOWS) && !defined(COMPILER_MINGW)
 	timeEndPeriod(1);
 	#endif
 

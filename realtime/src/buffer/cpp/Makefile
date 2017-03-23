@@ -27,18 +27,18 @@ SUFFIX   =
 
 ifeq "$(PLATFORM)" "i686-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
-  LDLIBS  += -lm -lws2_32
-  SUFFIX   = .exe
+	LDLIBS  += -lm -lws2_32
+	SUFFIX   = .exe
 	fixpath  = $1
-  RM       = rm -f
+	RM       = rm -f
 endif
 
 ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
-  LDLIBS  += -lm -lws2_32
-  SUFFIX   = .exe
+	LDLIBS  += -lm -lws2_32
+	SUFFIX   = .exe
 	fixpath  = $1
-  RM       = rm -f
+	RM       = rm -f
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"

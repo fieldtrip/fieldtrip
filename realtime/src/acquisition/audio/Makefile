@@ -23,20 +23,27 @@ CXX      = g++
 CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp
 LIBPATH  = -L$(FTBUFFER)/src
-LDLIBS   = -lbuffer
+LDLIBS   = -lbuffer -lpthread
 
 # better would be to make a proper library of the C++ framework
 CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
-ifeq "$(PLATFORM)" "mingw32"
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
 	INCPATH += -I../../external/portaudio
-	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS  += -lws2_32 $(BINDIR)/pthreadGC2.dll $(BINDIR)/PortAudio.dll
+	LDLIBS  += -lm -lws2_32 -static $(BINDIR)/PortAudio.dll
 	SUFFIX   = .exe
-	RM       = del
-	# make clean target work on windows:
-	fixpath  = $(subst /,\,$1)
+	RM       = rm -f
+	fixpath  = $1
+endif
+
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	INCPATH += -I../../external/portaudio
+	LDLIBS   = -lm -lws2_32 -static $(BINDIR)/PortAudio.dll
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
@@ -44,7 +51,7 @@ ifeq "$(PLATFORM)" "i686-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	INCPATH += -I../../external/portaudio
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static $(BINDIR)/PortAudio.dll
+	LDLIBS  += -lm -lws2_32 -static $(BINDIR)/PortAudio.dll
 	SUFFIX   = .exe
 	RM       = del /Q
 	# make clean target work on windows
@@ -56,7 +63,7 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 	INCPATH += -I../../external/portaudio
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static $(BINDIR)/PortAudio.dll
+	LDLIBS  += -lm -lws2_32 -static $(BINDIR)/PortAudio.dll
 	SUFFIX   = .exe
 	RM       = del /Q
 	# make clean target work on windows
@@ -65,7 +72,7 @@ endif
 
 ifeq "$(OS)" "Linux"
 	fixpath = $1
-	LDLIBS += -ldl -lpthread -lportaudio
+	LDLIBS += -ldl -lportaudio
 	ifeq "$(MACHINE)" "i686"
 	 	BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
 	endif

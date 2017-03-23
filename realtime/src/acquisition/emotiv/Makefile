@@ -25,27 +25,32 @@ CXX      = g++
 CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp
 LIBPATH  = -L$(FTBUFFER)/src
-LDLIBS   = -lbuffer
+LDLIBS   = -lbuffer -lpthread
 
 # better would be to make a proper library of the C++ framework
 CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
-ifeq "$(PLATFORM)" "mingw32"
-	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
-	CXXFLAGS += -I$(EDKPATH)/include
-	LIBPATH  += -L$(EDKPATH)/lib
-	LDLIBS   += $(CPPOBJ) -lws2_32 -lwinmm $(BINDIR)/edk.dll $(BINDIR)/pthreadGC2.dll
-	SUFFIX    = .exe
-	RM        = del
-	# Make clean target work on windows:
-	fixpath   = $(subst /,\,$1)
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	fixpath  = $1
+	RM       = rm -f
+endif
+
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	fixpath  = $1
+	RM       = rm -f
 endif
 
 ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32 -static
 	SUFFIX   = .exe
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)
@@ -53,10 +58,10 @@ ifeq "$(PLATFORM)" "i686-w64-mingw32"
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
-	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32 -static
 	SUFFIX   = .exe
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)

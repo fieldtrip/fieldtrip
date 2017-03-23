@@ -44,7 +44,6 @@ Revision History:
 #include <fstream>
 #include <string>
 
-
 #include "RtDevice.h"
 #include "Feature.h"
 #include "buffer.h"

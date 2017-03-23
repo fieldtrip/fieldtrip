@@ -23,15 +23,20 @@ INCPATH  = -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/inih -I.
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer -lpthread
 
-ifeq "$(PLATFORM)" "mingw32"
-	BINDIR    = $(FIELDTRIP)/realtime/bin/win32
-	INCPATH  += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LIBPATH += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS   += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-	SUFFIX    = .exe
-	RM        = del
-	# make clean target work on windows:
-	fixpath = $(subst /,\,$1)
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
+endif
+
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
 endif
 
 ifeq "$(OS)" "Linux"
