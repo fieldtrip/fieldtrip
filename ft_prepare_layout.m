@@ -1411,7 +1411,6 @@ if ~isempty(cfg.headshape)
   else
     error('incorrect specification of cfg.headshape')
   end
-  outlbase = ft_datatype_headmodel(outlbase); % FIXME a headshape is not a headmodel
 elseif ~isempty(cfg.mri)
   if ischar(cfg.mri) && exist(cfg.mri, 'file')
     fprintf('reading MRI from file %s\n', cfg.mri);
@@ -1421,7 +1420,7 @@ elseif ~isempty(cfg.mri)
   else
     error('incorrect specification of cfg.mri')
   end
-  % create mesh from anatomical field, and use as headshape below
+  % create mesh from anatomical field, this will be used as headshape below
   cfgpm = [];
   cfgpm.method      = 'projectmesh';
   cfgpm.tissue      = 'brain';
@@ -1440,63 +1439,70 @@ assert(isfield(outlbase, 'coordsys'), 'no coordsys field found in headshape/mri,
 assert(isfield(sens, 'coordsys'), 'no coordsys field found in sensor structure, use ft_determine_coordsys')
 assert(isequal(outlbase.coordsys, sens.coordsys), 'the coordinate system of headshape/mri does not match that of sensors')
 
+% ensure that the representation is up to date
+outlbase = ft_checkdata(outlbase, 'datatype', 'mesh');
+
 % match head geometry units with that of the sensors
 outlbase = ft_convert_units(outlbase, sens.unit);
 
-% generate outline based on matlab version
-if ft_platform_supports('boundary')
+% there can be multiple meshes, e.g. left and right hemispheres
+outline = cell(size(outlbase));
+for i=1:numel(outlbase)
+  % generate outline based on matlab version
+  if ft_platform_supports('boundary')
+    
+    % extract points indicating brain
+    braincoords = outlbase(i).pos;
+    % apply orthographic projection and extract XY
+    braincoords = getorthoviewpos(braincoords, outlbase(i).coordsys, cfg.viewpoint);
+    
+    % get outline
+    k = boundary(braincoords,.8);
+    outline{i} = braincoords(k,:);
+    
+  else % fallback, sad!
+    
+    % plot mesh in rotated view, rotate, screencap, and trace frame to generate outline
+    outlbase(i).pos = getorthoviewpos(outlbase(i).pos, outlbase.coordsys, cfg.viewpoint);
+    h = figure('visible', 'off');
+    ft_plot_mesh(outlbase(i), 'facecolor', [0 0 0], 'EdgeColor', 'none');
+    view([0 90])
+    axis tight
+    xlim = get(gca, 'xlim');
+    ylim = get(gca, 'ylim');
+    set(gca,'OuterPosition', [0.2 0.2 .6 .6]) % circumvent weird matlab bug, wth?
+    % extract frame for tracing
+    drawnow % need to flush buffer, otherwise frame will not get extracted properly
+    frame     = getframe(h);
+    close(h)
+    imtotrace = double(~logical(sum(frame.cdata,3))); % needs to be binary to trace
+    % image is not in regular xy space, flip, and transpose
+    imtotrace = flipud(imtotrace).';
+    
+    % trace image generated above
+    [row, col] = find(imtotrace, 1, 'first'); % set an arbitrary starting point
+    trace = bwtraceboundary(imtotrace, [row, col], 'N');
+    
+    % convert to sens coordinates
+    x = trace(:,1);
+    y = trace(:,2);
+    x = x - min(x);
+    x = x ./ max(x);
+    x = x .* (xlim(2)-xlim(1));
+    x = x - abs(xlim(1));
+    y = y - min(y);
+    y = y ./ max(y);
+    y = y .* (ylim(2)-ylim(1));
+    y = y - abs(ylim(1));
+    
+    outline{i} = [x y];
+  end
   
-  % extract points indicating brain
-  braincoords = outlbase.pos;
-  % apply orthographic projection and extract XY
-  braincoords = getorthoviewpos(braincoords, outlbase.coordsys, cfg.viewpoint);
+  % subsample the outline
+  if size(outline{i},1)>5e3 % 5e3 points should be more than enough to get an outine with acceptable detail
+    outline{i} = outline{i}(1:floor(size(outline,1)/5e3):end,:);
+  end
   
-  % get outline
-  k = boundary(braincoords,.8);
-  outline = braincoords(k,:);
-  
-else % fallback, sad!
-  
-  % plot mesh in rotated view, rotate, screencap, and trace frame to generate outline
-  outlbase.pos = getorthoviewpos(outlbase.pos, outlbase.coordsys, cfg.viewpoint);
-  h = figure('visible', 'off');
-  ft_plot_mesh(outlbase, 'facecolor', [0 0 0], 'EdgeColor', 'none');
-  view([0 90])
-  axis tight
-  xlim = get(gca, 'xlim');
-  ylim = get(gca, 'ylim');
-  set(gca,'OuterPosition', [0.2 0.2 .6 .6]) % circumvent weird matlab bug, wth?
-  % extract frame for tracing
-  drawnow % need to flush buffer, otherwise frame will not get extracted properly
-  frame     = getframe(h);
-  close(h)
-  imtotrace = double(~logical(sum(frame.cdata,3))); % needs to be binary to trace
-  % image is not in regular xy space, flip, and transpose
-  imtotrace = flipud(imtotrace).';
-  
-  % trace image generated above
-  [row, col] = find(imtotrace, 1, 'first'); % set an arbitrary starting point
-  trace = bwtraceboundary(imtotrace, [row, col], 'N');
-  
-  % convert to sens coordinates
-  x = trace(:,1);
-  y = trace(:,2);
-  x = x - min(x);
-  x = x ./ max(x);
-  x = x .* (xlim(2)-xlim(1));
-  x = x - abs(xlim(1));
-  y = y - min(y);
-  y = y ./ max(y);
-  y = y .* (ylim(2)-ylim(1));
-  y = y - abs(ylim(1));
-  
-  outline = [x y];
-end
+end % for numel(outlbase)
 
-% subsample the outline
-if size(outline,1)>5e3 % 5e3 points should be more than enough to get an outine with acceptable detail
-  outline = outline(1:floor(size(outline,1)/5e3):end,:);
-end
 
-% it should be a cell-array
-outline = {outline};

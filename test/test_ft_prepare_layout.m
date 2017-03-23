@@ -273,5 +273,41 @@ cfg.viewpoint = 'right';
 layout = ft_prepare_layout(cfg);
 figure; ft_plot_lay(layout); title(cfg.viewpoint)
 
+%%
+% ok, here we actually start looking at what all the changes were about
+
+lh = load('SubjectUCI29_cortex_lh');
+rh = load('SubjectUCI29_cortex_rh');
+elec = ft_read_sens('SubjectUCI29_elec_tal_f.mat');
+
+% shift it a bit, otherwise it seems too high (!?)
+elec.chanpos(:,3) = elec.chanpos(:,3) - 5;
+elec.elecpos(:,3) = elec.elecpos(:,3) - 5;
+
+figure
+ft_plot_sens(elec, 'label', 'label')
+ft_plot_mesh(lh.mesh);
+ft_plot_mesh(rh.mesh);
+camlight
+
+cfg = [];
+cfg.elec = elec;
+cfg.projection = 'orthographic';
+
+cfg.headshape = lh.mesh;
+cfg.channel = 'LP*';
+cfg.viewpoint = 'left';
+cfg.mask = 'convex';
+layout = ft_prepare_layout(cfg);
+figure; ft_plot_lay(layout); title(cfg.viewpoint)
+
+cfg.headshape(1) = lh.mesh;
+cfg.headshape(2) = rh.mesh;
+cfg.channel = {'LA*', 'LH*', 'RO*', 'RT*'};
+cfg.viewpoint = 'inferior';
+cfg.mask = 'none';
+layout = ft_prepare_layout(cfg);
+figure; ft_plot_lay(layout); title(cfg.viewpoint)
+
 
 
