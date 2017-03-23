@@ -342,7 +342,7 @@ if dotpm
     case 'spm8'
       cfg.tpm = ft_getopt(cfg, 'tpm');
       cfg.tpm = char(cfg.tpm(:));
-      if isempty(cfg, 'tpm')
+      if isempty(cfg.tpm)
         cfg.tpm = char(fullfile(spm('Dir'),'tpm','grey.nii'),...
              fullfile(spm('Dir'),'tpm','white.nii'),...
              fullfile(spm('Dir'),'tpm','csf.nii'));
@@ -352,9 +352,7 @@ if dotpm
       VF = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
 
       fprintf('performing the segmentation on the specified volume\n');
-      p = spm_preproc(VF, px);
-      
-        
+      p       = spm_preproc(VF, px);
       [po, ~] = spm_prep2sn(p);
       
       % this write a mat file, may be needed for Dartel, not sure yet
@@ -380,20 +378,23 @@ if dotpm
 
     case 'spm12'
       if strcmp(cfg.spmmethod, 'old')
+        cfg.tpm = ft_getopt(cfg, 'tpm');
+        cfg.tpm = char(cfg.tpm(:));
+        if isempty(cfg.tpm)
+          cfg.tpm = char(fullfile(spm('Dir'),'tpm','grey.nii'),...
+            fullfile(spm('Dir'),'tpm','white.nii'),...
+            fullfile(spm('Dir'),'tpm','csf.nii'));
+        end
+        px.tpm = cfg.tpm;
+      
         VF = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
         
         fprintf('performing the segmentation on the specified volume, using the old-style segmentation\n');
-        if isfield(cfg, 'tpm')
-          cfg.tpm  = char(cfg.tpm(:));
-          px.tpm   = cfg.tpm;
-          p        = spm_preproc(VF, px);
-        else
-          p        = spm_preproc(VF);
-        end
-        % this write a mat file, may be needed for Dartel, not sure yet
-        save([cfg.name '_sn.mat'],'-struct','p');
-        
+        p       = spm_preproc(VF, px);
         [po, ~] = spm_prep2sn(p);
+      
+        % this write a mat file, may be needed for Dartel, not sure yet
+        save([cfg.name '_sn.mat'],'-struct','po');
         
         % These settings are taken from a batch
         opts     = [];
