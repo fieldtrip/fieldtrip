@@ -227,7 +227,7 @@ elseif (israw || istimelock)
     case 'complex'
       Nrpt = length(data.trial);
       for k = 1:Nrpt
-        combined = data.trial{1}(sel_dH,:)*1i + data.trial{1}(sel_dV,:);
+        combined = data.trial{k}(sel_dH,:)*1i + data.trial{k}(sel_dV,:);
         other    = data.trial{k}(sel_other,:);
         data.trial{k} = [combined; other];
       end
@@ -326,16 +326,17 @@ if strcmp(cfg.updatesens, 'yes') && isfield(data, 'grad')
   newgrad.type     = [data.grad.type '_combined'];
   
   % remember the original channel position details
-  if isfield(grad, 'chanposold')
-    newgrad = copyfields(grad, newgrad, {'chanposold', 'chanoriold', 'chanlabelold', 'chantypeold', 'chanunitold'});
+  if isfield(data.grad, 'chanposold')
+    newgrad = copyfields(data.grad, newgrad, {'chanposold', 'chanoriold', 'labelold', 'chantypeold', 'chanunitold'});
   else
-    newgrad.chanposold   = grad.chanpos;
-    newgrad.chanoriold   = grad.chanori;
-    newgrad.chanlabelold = grad.chanlabel;
-    newgrad.chantypeold  = grad.chantype;
-    newgrad.chanunitold  = grad.chanunit;
+    newgrad.labelold     = data.grad.label;
+    newgrad.chanposold   = data.grad.chanpos;
+    newgrad.chanoriold   = data.grad.chanori;
+    newgrad.chantypeold  = data.grad.chantype;
+    newgrad.chanunitold  = data.grad.chanunit;
   end
   
+  % replace it with the updated gradiometer description
   data.grad = newgrad;
 end
 

@@ -851,7 +851,7 @@ if ~isempty(sensfield)
     fprintf('also applying the unmixing matrix to the %s structure\n', sensfield);
     % construct a montage and apply it to the sensor description
     montage          = [];
-    montage.labelorg = data.label;
+    montage.labelold = data.label;
     montage.labelnew = comp.label;
     montage.tra      = unmixing;
     comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');

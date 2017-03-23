@@ -32,7 +32,7 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %   ft_plot_text(0, 0 , '+',                'hpos', 1, 'vpos', 1, 'width', 0.2, 'height', 0.2)
 %   axis([0 2 0 2])
 %
-% See also FT_PLOT_VECTOR, FT_PLOT_MATRIX
+% See also FT_PLOT_VECTOR, FT_PLOT_MATRIX, FT_PLOT_LINE, FT_PLOT_BOX
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %

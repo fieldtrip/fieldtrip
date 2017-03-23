@@ -388,13 +388,13 @@ ARRAY+=(utilities/private/fixinside.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# fixmontage.m
+# fixoldorg.m
 
 ARRAY=()
-ARRAY+=(fileio/private/fixmontage.m)
-ARRAY+=(forward/private/fixmontage.m)
-ARRAY+=(plotting/private/fixmontage.m)
-ARRAY+=(utilities/private/fixmontage.m)
+ARRAY+=(fileio/private/fixoldorg.m)
+ARRAY+=(forward/private/fixoldorg.m)
+ARRAY+=(plotting/private/fixoldorg.m)
+ARRAY+=(utilities/private/fixoldorg.m)
 sync ${ARRAY[*]}
 
 ################################################################################
