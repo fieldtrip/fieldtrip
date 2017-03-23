@@ -31,9 +31,9 @@ function [cfg] = ft_layoutplot(cfg, data)
 %   cfg.output      = filename to which the layout will be written (default = [])
 %   cfg.montage     = 'no' or a montage structure (default = 'no')
 %   cfg.image       = filename, use an image to construct a layout (e.g. usefull for ECoG grids)
-%   cfg.visible     = string, 'on' or 'off' whether figure will be visible (default = 'on')
-%   cfg.box         = 'yes' or 'no', whether box should be plotted around electrode
-%   cfg.mask        = 'yes' or 'no', whether mask should be plotted 
+%   cfg.visible     = string, 'yes' or 'no' whether figure will be visible (default = 'yes')
+%   cfg.box         = string, 'yes' or 'no' whether box should be plotted around electrode (default = 'yes')
+%   cfg.mask        = string, 'yes' or 'no' whether the mask should be plotted (default = 'yes')
 %
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
@@ -102,9 +102,9 @@ if hasdata
 end
 
 % set the defaults
-cfg.visible = ft_getopt(cfg, 'visible', 'on');
-cfg.box     = ft_getopt(cfg, 'box', 'on');
-cfg.mask    = ft_getopt(cfg, 'mask', 'on');
+cfg.visible = ft_getopt(cfg, 'visible', 'yes');
+cfg.box     = ft_getopt(cfg, 'box', 'yes');
+cfg.mask    = ft_getopt(cfg, 'mask', 'yes');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % extract/generate layout information
@@ -159,9 +159,9 @@ if isfield(cfg, 'image') && ~isempty(cfg.image)
   fprintf('reading background image from %s\n', cfg.image);
   img = imread(cfg.image);
   img = flipdim(img, 1); % in combination with "axis xy"
-
+  
   bw = 1;
-
+  
   if bw
     % convert to greyscale image
     img = mean(img, 3);
@@ -200,11 +200,11 @@ if isfield(cfg, 'montage') && ~isempty(cfg.montage)
       % one of the channels in the bipolar pair does not seem to be in the layout
       continue
     end
-
+    
     begpos = lay.pos(begindx,:);
     endpos = lay.pos(endindx,:);
     arrow(begpos, endpos, 'Length', 5)
-
+    
   end % for all re-referenced channels
 end % if montage
 
