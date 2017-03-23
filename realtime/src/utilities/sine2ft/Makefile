@@ -31,11 +31,17 @@ LDLIBS   = $(shell fltk-config --ldflags) -lpthread -lbuffer
 
 ifeq "$(PLATFORM)" "i686-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = rm -f
 	fixpath  = $1
 endif
 
 ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = rm -f
 	fixpath  = $1
 endif
 
