@@ -373,9 +373,6 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       otherwise
         error('unsupported value for option ''label''');
     end % switch
-    x =;
-    y = ;
-    z = sens.chanpos(i,3);
     if isfield(sens, 'chanori')
       % shift the labels along the channel orientation, which is presumably orthogonal to the scalp
       ori = sens.chanori(i,:);
