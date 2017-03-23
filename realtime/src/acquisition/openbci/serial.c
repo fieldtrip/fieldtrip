@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "platform.h"
-#include "serial.h"
+#include "compiler.h"
 #include "platform_includes.h"
 
 #define PRINTLINE { fprintf(stderr, "%s in %s at line %d\n", __FILE__, __func__, __LINE__); }
