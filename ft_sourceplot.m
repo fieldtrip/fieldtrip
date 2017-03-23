@@ -30,6 +30,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                       'surface',    plots the data on a 3D brain surface
 %                       'glassbrain', plots a max-projection through the brain
 %                       'vertex',     plots the grid points or vertices scaled according to the functional value
+%                       'cloud',      plot the data as point clouds scaled according to the functional value
+%                       
 %
 %   cfg.anaparameter  = string, field in data with the anatomical data (default = 'anatomy' if present in data)
 %   cfg.funparameter  = string, field in data with the functional parameter of interest (default = [])
@@ -80,7 +82,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        'zeromax', from 0 to max(abs(maskparameter))
 %                        'minzero', from min(abs(maskparameter)) to 0
 %                        'auto', if maskparameter values are all positive: 'zeromax',
-%                          all negative: 'minzero', both possitive and negative: 'maxabs'
+%                          all negative: 'minzero', both positive and negative: 'maxabs'
 %   cfg.roi           = string or cell of strings, region(s) of interest from anatomical atlas (see cfg.atlas above)
 %                        everything is masked except for ROI
 %
@@ -149,6 +151,11 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.vertexcolor    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', 
 %                        or an Nx3 or Nx1 array where N is the number of vertices
 %   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%
+% The following parameters apply to cfg.method='cloud'
+%   cfg.radius          = scalar, maximum radius of cloud (default = 4)
+%   cfg.colorgrad       = 'white' or a scalar (e.g. 1), degree to which color of points in cloud
+%                         changes from its center
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -315,7 +322,6 @@ end
 
 
 %% get the elements that will be plotted
-
 hasatlas = ~isempty(cfg.atlas);
 if hasatlas
   if ischar(cfg.atlas)
@@ -660,11 +666,7 @@ if ~isempty(cfg.title)
   title(cfg.title);
 end
 
-%%% set color and opacity mapping for this figure
-if hasfun
-  colormap(cfg.funcolormap);
-  cfg.funcolormap = colormap;
-end
+%% set color and opacity mapping for this figure
 if hasmsk
   cfg.opacitymap = alphamap(cfg.opacitymap);
   alphamap(cfg.opacitymap);
@@ -1282,6 +1284,36 @@ switch cfg.method
     % ensure that the axes don't change if you rotate
     axis vis3d
     
+  case 'cloud'
+    % get the optional input arguments
+    cfg.radius          = ft_getopt(cfg, 'radius', 4);
+    cfg.rmin            = ft_getopt(cfg, 'rmin', 1);
+    cfg.scalerad        = ft_getopt(cfg, 'scalerad', 'yes');
+    cfg.ptsize          = ft_getopt(cfg, 'ptsize', 1);
+    cfg.ptdensity       = ft_getopt(cfg, 'ptdensity', 20);
+    cfg.ptgradient      = ft_getopt(cfg, 'ptgradient', .5);
+    cfg.colorgrad       = ft_getopt(cfg, 'colorgrad', 'white');
+    
+    if isUnstructuredFun
+      pos = functional.pos;
+    else
+      [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+      pos = ft_warp_apply(functional.transform, [X(:) Y(:) Z(:)]);
+    end
+    
+    if hasmsk
+      pos = pos(logical(msk),:);
+      if hasfun
+        fun = fun(logical(msk));
+      end
+    end
+    
+    ft_plot_cloud(pos, 'funparam', fun, ...
+      'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
+      'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
+      'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
+      'colorbar', cfg.colorbar); 
+  
   otherwise
     error('unsupported method "%s"', cfg.method);
 end
