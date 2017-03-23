@@ -227,7 +227,7 @@ elseif (israw || istimelock)
     case 'complex'
       Nrpt = length(data.trial);
       for k = 1:Nrpt
-        combined = data.trial{1}(sel_dH,:)*1i + data.trial{1}(sel_dV,:);
+        combined = data.trial{k}(sel_dH,:)*1i + data.trial{k}(sel_dV,:);
         other    = data.trial{k}(sel_other,:);
         data.trial{k} = [combined; other];
       end
