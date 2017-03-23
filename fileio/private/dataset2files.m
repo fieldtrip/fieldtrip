@@ -164,6 +164,19 @@ switch format
     filename = fullfile(filename, 'signals'); % this is the only one we care about for the continuous signals
     headerfile = filename;
     datafile   = filename;
+  case 'tmsi_poly5'
+    [p, f, x] = fileparts(filename);
+    if strcmpi(x, '.poly5')
+      headerfile = filename;
+      datafile = filename;
+    else
+      filename = fullfile(p, f, [f '.eeg.poly5']);
+      if ~exist(filename , 'file')
+        filename  = fullfile(p, f, [f '.EEG.Poly5']);
+      end
+      headerfile = filename;
+      datafile = filename;
+    end
   otherwise
     % convert filename into filenames, assume that the header and data are the same
     datafile   = filename;

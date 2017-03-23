@@ -44,8 +44,8 @@ function y = base64encode(x, eol)
 %   URL:         http://home.online.no/~pjacklam
 
    % check number of input arguments
-   error(nargchk(1, 2, nargin));
-
+   narginchk(1, 2);
+   
    % make sure we have the EOL value
    if nargin < 2
       eol = ''; %sprintf('\n');
@@ -157,3 +157,6 @@ function y = base64encode(x, eol)
 
    % output is a character array
    y = char(y);
+   
+
+

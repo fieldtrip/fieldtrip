@@ -73,6 +73,8 @@ fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 senstype       = ft_getopt(varargin, 'senstype', 'eeg');  % can be eeg or meg, this is used to decide what to return if both are present in a fif file
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
+transform      = ft_getopt(varargin, 'transform');        % empty, or a 4x4 transformation matrix
+
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,10 +157,12 @@ switch fileformat
     
   case 'besa_sfp'
     [lab, pos] = read_besa_sfp(filename);
-	
     sens.label   = lab;
     sens.elecpos = pos;
-		
+    
+  case 'bioimage_mgrid'
+    sens = read_bioimage_mgrid(filename);
+    
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
@@ -213,21 +217,16 @@ switch fileformat
     end
     
   case 'matlab'
-    % MATLAB files can contain either electrodes or gradiometers
+    % MATLAB files can contain all sensor arrays
     matfile = filename;   % this solves a problem with the MATLAB compiler v3
-    ws = warning('off', 'MATLAB:load:variableNotFound');
-    tmp = load(matfile, 'elec', 'grad', 'sens', 'elc');
-    warning(ws);
-    if isfield(tmp, 'grad')
-      sens = tmp.grad;
-    elseif isfield(tmp, 'elec')
-      sens = tmp.elec;
-    elseif isfield(tmp, 'sens')
-      sens = tmp.sens;
-    elseif isfield(tmp, 'elc')
-      sens = tmp.elc;
+    var = whos('-file', filename);
+    sel = intersect({'elec', 'grad', 'opto', 'sens', 'elc'}, {var(:).name});
+    if numel(sel)==1
+      % read the specific variable
+      sens = loadvar(matfile, sel{1});
     else
-      error('no electrodes or gradiometers found in MATLAB file');
+      % read whatever variable is in the file, this will error if the file contains multiple variables
+      sens = loadvar(matfile);
     end
     
   case 'zebris_sfp'
@@ -328,7 +327,7 @@ switch fileformat
       % coordinate information into sens structure of channels that are
       % set.
       for i=1:numel(tmp)
-        if strcmp(tmp(i).Marker.set,'true')
+        if strcmp(tmp(i).Marker.set, 'true')
           sens.elecpos(i,1) = str2double(tmp(i).Marker.ColVec3D.data0);
           sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
           sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
@@ -356,7 +355,7 @@ switch fileformat
       x = 85*cos(radians(phi)).*sin(radians(theta));
       y = 85*sin(radians(theta)).*sin(radians(phi));
       z = 85*cos(radians(theta));
-      sens.unit = 'cm';
+      sens.unit = 'mm';
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
     else
@@ -371,7 +370,7 @@ switch fileformat
     
   otherwise
     error('unknown fileformat for electrodes or gradiometers');
-end
+end % switch fileformat
 
 % ensure that the sensor description is up-to-date
 % this will also add chantype and units to the sensor array if missing

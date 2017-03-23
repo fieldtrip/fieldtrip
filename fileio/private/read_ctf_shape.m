@@ -1,4 +1,4 @@
-function [shape] = read_ctf_shape(filename);
+function [shape] = read_ctf_shape(filename)
 
 % READ_CTF_SHAPE reads headshape points and header information
 % from a CTF *.shape teh accompanying *.shape_info file.

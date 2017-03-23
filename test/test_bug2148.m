@@ -3,7 +3,6 @@ function test_bug2148
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2148
 % TEST ft_connectivitysimulation ft_freqanalysis ft_connectivityanalysis
 % TEST ft_connectivityplot ft_freqdescriptives ft_checkdata
 

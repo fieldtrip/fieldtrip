@@ -1,13 +1,11 @@
 function test_tutorial_plotting
 
-% MEM 2500mb
 % WALLTIME 00:15:00
+% MEM 4gb
 
-% TEST test_tutorial_plotting
-% TEST ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF 
-%      ft_megplanar ft_combineplanar
+% TEST ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF ft_megplanar ft_combineplanar ft_volumereslice
 
-% see http://fieldtrip.fcdonders.nl/tutorial/plotting
+% see http://www.fieldtriptoolbox.org/tutorial/plotting
 % this testscript corresponds to the version on the wiki at 23 December 2012
 
 % use the tutorial dataset from home/common
@@ -45,11 +43,11 @@ cfg = [];
 cfg.baseline = [-0.5 -0.1]; 
 cfg.baselinetype = 'absolute'; 	
 cfg.zlim = [-1.5e-27 1.5e-27];	
-cfg.channelname   = 'MLC';
+cfg.channel       = 'MLC*';
 cfg.renderer      = 'painters'; % might be needed if colorbar does not print properly
 figure;ft_singleplotTFR(cfg, TFRhann); colorbar;
 
-cfg.channelname   = 'MRC';
+cfg.channel       = 'MRC*';
 figure;ft_singleplotTFR(cfg, TFRhann); colorbar;
 
 
@@ -170,7 +168,7 @@ mri = ft_volumereslice([], mri);
 
 cfg            = [];
 cfg.downsample = 2;
-cfg.parameter  = 'avg.pow';
+cfg.parameter  = 'pow';
 sourceDiffInt  = ft_sourceinterpolate(cfg, sourceDiff , mri);
 
 %% plot multiple 2D axial slices

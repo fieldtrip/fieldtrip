@@ -1,5 +1,7 @@
-function write_edf(filename, hdr, data);
+function write_edf(filename, hdr, data)
+
 % WRITE_EDF(filename, header, data)
+%
 % Writes a EDF file from the given header (only label, Fs, nChans are of interest)
 % and the data (unmodified). Digital and physical limits are derived from the data
 % via min and max operators. The EDF file will contain N records of 1 sample each,
@@ -58,21 +60,32 @@ if ~isreal(data)
   error 'Cannot write complex-valued data.';
 end
 
+scale = max(abs(data), [], 2);
+scale(scale==0) = 1; % prevent division-by-zero
+scale = 32767 ./ scale;
+
+for i=1:size(data,1)
+  data(i,:) = data(i,:) * scale(i);
+end
+
+data = int16(data);
+
+% the min and max should be integers
 maxV = max(data, [], 2);
 minV = min(data, [], 2);
 
-if ~strcmp(class(data),'int16')
-  warning('Warning: data type is not int16, saving to EDF might introduce round-off errors.');
-  if max(maxV) > 32767 | min(minV) < -32768
-    error('Data cannot be represented as signed 16-bit integers');
-  end
-  data = int16(data);
-end
+% if ~isa(data,'int16')
+%   warning('Warning: data type is not int16, saving to EDF might introduce round-off errors.');
+%   if max(maxV) > 32767 | min(minV) < -32768
+%     error('Data cannot be represented as signed 16-bit integers');
+%   end
+%   data = int16(data);
+% end
 
 digMin = sprintf('%-8i', minV);
 digMax = sprintf('%-8i', maxV);
-physMin = digMin;
-physMax = digMax;
+physMin = sprintf('%-8g', double(minV) ./ scale);
+physMax = sprintf('%-8g', double(maxV) ./ scale);
   
 fid = fopen(filename, 'wb', 'ieee-le');
 % first write fixed part

@@ -7,8 +7,8 @@ function ft_plot_vol(headmodel, varargin)
 %   hs = ft_plot_vol(headmodel, varargin)
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
-%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
+%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
 %   'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %   'faceindex'    = true or false
 %   'vertexindex'  = true or false
@@ -75,8 +75,8 @@ vertexindex = istrue(vertexindex); % yes=view the vertex number
 switch ft_voltype(headmodel)
   case {'singlesphere' 'concentricspheres'}
     headmodel.r = sort(headmodel.r);
-    bnd = [];
-    for i=1:length(headmodel.r)
+    bnd = repmat(struct(), numel(headmodel.r));
+    for i=1:numel(headmodel.r)
       bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
       bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(2);
       bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
@@ -87,8 +87,8 @@ switch ft_voltype(headmodel)
     end
     
   case 'localspheres'
-    bnd = [];
-    for i=1:length(headmodel.label)
+    bnd = repmat(struct(), numel(headmodel.label));
+    for i=1:numel(headmodel.label)
       bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(i,1);
       bnd(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(i,2);
       bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(i,3);

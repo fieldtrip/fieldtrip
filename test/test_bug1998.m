@@ -3,11 +3,10 @@ function test_bug1998
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST test_bug1998
 % TEST ft_preprocessing ft_read_data read_neuralynx_ncs
 
 % this bug is detailled on http://bugzilla.fcdonders.nl/show_bug.cgi?id=1998
-% and the workaround is explained on http://fieldtrip.fcdonders.nl/getting_started/neuralynx?&#discontinuous_recordings
+% and the workaround is explained on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1998'));
 
@@ -17,7 +16,7 @@ cfg.dataset = 'CSC1.Ncs';
 data        = ft_preprocessing(cfg);
 
 % Warning: discontinuous recording, predicted number of timestamps and observed number of timestamps differ by 1693523717.00
-%  Please consult the wiki on http://fieldtrip.fcdonders.nl/getting_started/neuralynx?&#discontinuous_recordings
+%  Please consult the wiki on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings
 % > In fileio/private/read_neuralynx_ncs at 94
 %   In ft_read_header at 1196
 %   In ft_preprocessing at 394

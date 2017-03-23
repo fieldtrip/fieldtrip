@@ -3,7 +3,6 @@ function test_bug1637
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1637
 % TEST megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection
 
 % this function checks whether megplanar_sincos relies on a fixed channel
@@ -41,7 +40,7 @@ try
   montage = [];
   montage{1} = megplanar_sincos(cfg, grad);
   
-  [sel12, sel22] = match_str(montage{1}.labelorg, montage_other.labelorg);
+  [sel12, sel22] = match_str(montage{1}.labelold, montage_other.labelold);
   [sel11, sel21] = match_str(montage{1}.labelnew, montage_other.labelnew);
   if ~isequal(montage{1}.tra(sel11, sel12), montage_other.tra(sel21, sel22))
     warning('tra matrix differs - but that''s because the montage_other.tra consists of nans - checking whether nonzero elements are the same')
@@ -53,9 +52,9 @@ try
     else
       disp('...passed!')
     end
-  elseif ~(all(cellfun(@isequal, montage{1}.labelorg(sel12), montage_other.labelorg(sel22))))
+  elseif ~(all(cellfun(@isequal, montage{1}.labelold(sel12), montage_other.labelold(sel22))))
     errored = true;
-    error('labelorg mismatch');
+    error('labelold mismatch');
   elseif ~(all(cellfun(@isequal, montage{1}.labelnew(sel11), montage_other.labelnew(sel21))))
     errored = true;
     error('labelnew mismatch');
@@ -77,14 +76,14 @@ try
     
     % since we now reordered everything according to cfg.channel, the
     % following should not be necessary - but hey!
-    [sel12, sel22] = match_str(montage{1}.labelorg, montage{2}.labelorg);
+    [sel12, sel22] = match_str(montage{1}.labelold, montage{2}.labelold);
     [sel11, sel21] = match_str(montage{1}.labelnew, montage{2}.labelnew);
     if ~(isequal(montage{1}.tra(sel11, sel12), montage{2}.tra(sel21, sel22)))
       errored = true;
       error('tra matrix differs')
-    elseif ~(all(cellfun(@isequal, montage{1}.labelorg(sel12), montage{2}.labelorg(sel22))))
+    elseif ~(all(cellfun(@isequal, montage{1}.labelold(sel12), montage{2}.labelold(sel22))))
       errored = true;
-      error('labelorg mismatch');
+      error('labelold mismatch');
     elseif ~(all(cellfun(@isequal, montage{1}.labelnew(sel11), montage{2}.labelnew(sel21))))
       errored = true;
       error('labelnew mismatch');
@@ -108,16 +107,16 @@ try
     
     % since we now reordered everything according to cfg.channel, the
     % following should not be necessary - but hey!
-    [sel12, sel22] = match_str(montage{1}.labelorg, montage{2}.labelorg);
+    [sel12, sel22] = match_str(montage{1}.labelold, montage{2}.labelold);
     [sel11, sel21] = match_str(montage{1}.labelnew, montage{2}.labelnew);
     idx1 = montage{1}.tra(sel11, sel12)~=0;
     idx2 = montage_other.tra(sel21, sel22)~=0;
     if ~isequal(idx1, idx2)
       errored = true;
       error('tra matrix qualitatively differ!');
-    elseif ~(all(cellfun(@isequal, montage{1}.labelorg(sel12), montage_other.labelorg(sel22))))
+    elseif ~(all(cellfun(@isequal, montage{1}.labelold(sel12), montage_other.labelold(sel22))))
       errored = true;
-      error('labelorg mismatch');
+      error('labelold mismatch');
     elseif ~(all(cellfun(@isequal, montage{1}.labelnew(sel11), montage_other.labelnew(sel21))))
       errored = true;
       error('labelnew mismatch');

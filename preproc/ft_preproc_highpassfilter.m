@@ -135,6 +135,11 @@ if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
   dat = cast(dat, 'double');
 end
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % Nyquist frequency
 Fn = Fs/2;
 
@@ -232,7 +237,8 @@ switch type
       N=floor(size(dat,2)/3) - 2;
       if rem(N,2)==1,   N=N+1;    end
     end
-    [B, A] = fir1(N, max(Fhp)/Fn, 'high');
+    B = fir1(N, max(Fhp)/Fn, 'high');
+    A = 1;
     
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453

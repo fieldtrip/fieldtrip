@@ -1,6 +1,9 @@
 function test_bug2071
 
-% TEST test_bug2071
+% WALLTIME 00:10:00
+% MEM 1gb
+
+
 % TEST ft_postamble
 % TEST ft_postamble_history
 

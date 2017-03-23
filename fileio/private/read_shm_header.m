@@ -1,7 +1,7 @@
 function [hdr] = read_shm_header(filename)
 
 % READ_SHM_HEADER reads the header in real-time from shared memory
-% this is a helper function for READ_HEADER
+% this is a helper function for FT_READ_HEADER
 
 % Copyright (C) 2007-2010, Robert Oostenveld
 %

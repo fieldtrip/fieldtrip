@@ -1,4 +1,4 @@
-function [grootte,ordening] = cluster(realdist,optie,absoluut,aantal);
+function [grootte,ordening] = cluster(realdist,optie,absoluut,aantal)
 
 % CLUSTER_WARD Hierarchical cluster algorithm
 %

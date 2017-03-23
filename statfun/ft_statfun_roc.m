@@ -137,7 +137,8 @@ for k = 1:nobs
 
 end
 
-s.stat = auc;
+% return the area under the curve as the statistic of interest
+s = struct('auc', auc);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NUMINT computes a numerical integral of a set of sampled points using

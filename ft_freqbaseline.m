@@ -6,7 +6,9 @@ function [freq] = ft_freqbaseline(cfg, freq)
 %    [freq] = ft_freqbaseline(cfg, freq)
 % where the freq data comes from FT_FREQANALYSIS and the configuration
 % should contain
-%   cfg.baseline     = [begin end] (default = 'no')
+%   cfg.baseline     = [begin end] (default = 'no'), alternatively an
+%                      Nfreq x 2 matrix can be specified, that provides
+%                      frequency specific baseline windows.
 %   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange' or 'db' (default = 'absolute')
 %   cfg.parameter    = field for which to apply baseline normalization, or
 %                      cell array of strings to specify multiple fields to normalize
@@ -71,8 +73,8 @@ cfg.baselinetype =  ft_getopt(cfg, 'baselinetype', 'absolute');
 cfg.parameter    =  ft_getopt(cfg, 'parameter', 'powspctrm');
 
 % check validity of input options
-cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector'});
-cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange','db', 'vssum'});
+cfg =               ft_checkopt(cfg, 'baseline', {'char', 'doublevector', 'doublematrix'});
+cfg =               ft_checkopt(cfg, 'baselinetype', 'char', {'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum'});
 cfg =               ft_checkopt(cfg, 'parameter', {'char', 'charcell'});
 
 % make sure cfg.parameter is a cell array of strings
@@ -94,6 +96,16 @@ elseif ischar(cfg.baseline) && strcmp(cfg.baseline, 'no')
   return
 end
 
+% allow for baseline to be nfreq x 2
+if size(cfg.baseline,1)==numel(freq.freq) && size(cfg.baseline,2)==2,
+  % this is ok
+elseif numel(cfg.baseline)==2,
+  % this is also ok
+  cfg.baseline = cfg.baseline(:)'; % ensure row vector
+else
+  error('cfg.baseline should either be a string, a 1x2 vector, or an Nfreqx2 matrix');
+end
+
 % check if the field of interest is present in the data
 if (~all(isfield(freq, cfg.parameter)))
   error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
@@ -104,12 +116,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % initialize output structure
-freqOut        = [];
-freqOut.label  = freq.label;
-freqOut.freq   = freq.freq;
-freqOut.dimord = freq.dimord;
-freqOut.time   = freq.time;
-
+freqOut = keepfields(freq, {'label' 'freq' 'dimord' 'time'});
 freqOut = copyfields(freq, freqOut,...
   {'grad', 'elec', 'trialinfo','topo', 'topolabel', 'unmixing'});
 
@@ -167,7 +174,10 @@ ft_postamble savevar    freq
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = performNormalization(timeVec, data, baseline, baselinetype)
 
-baselineTimes = (timeVec >= baseline(1) & timeVec <= baseline(2));
+baselineTimes = false(size(baseline,1),numel(timeVec));
+for k = 1:size(baseline,1)
+  baselineTimes(k,:) = (timeVec >= baseline(k,1) & timeVec <= baseline(k,2));
+end
 
 if length(size(data)) ~= 3,
   error('time-frequency matrix should have three dimensions (chan,freq,time)');
@@ -175,7 +185,15 @@ end
 
 % compute mean of time/frequency quantity in the baseline interval,
 % ignoring NaNs, and replicate this over time dimension
-meanVals = repmat(nanmean(data(:,:,baselineTimes), 3), [1 1 size(data, 3)]);
+if size(baselineTimes,1)==size(data,2)
+  % do frequency specific baseline
+  meanVals = nan+zeros(size(data));
+  for k = 1:size(baselineTimes,1)
+    meanVals(:,k,:) = repmat(nanmean(data(:,k,baselineTimes(k,:)), 3), [1 1 size(data, 3)]);
+  end
+else
+  meanVals = repmat(nanmean(data(:,:,baselineTimes), 3), [1 1 size(data, 3)]);
+end
 
 if (strcmp(baselinetype, 'absolute'))
   data = data - meanVals;

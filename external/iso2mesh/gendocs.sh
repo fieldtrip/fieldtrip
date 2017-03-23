@@ -9,7 +9,7 @@
 print_help()
 {
    awk '/^%/ {dp=1} /-- this function is part of iso2mesh/ {exit} \
-        /-- this function is part of jsonlab/ {exit} \
+        /-- this function is part of JSONLab/ {exit} \
         /^function/ {dp=1} /./ {if(dp==1) print;}' $1 \
      | grep -v 'Qianqian' | grep -v 'date:' | grep -v '^%\s*$'| \
      sed -e 's/^%//g' -e 's/^function\(.*$\)/\n==== function\1 ====/g'
@@ -20,17 +20,19 @@ print_group()
    do 
       print_help $fun.m
    done
+   echo ''
 }
 
-func_shortcut="v2m v2s s2m s2v sms"
-func_mainfun="vol2mesh vol2surf surf2mesh surf2vol"
-func_backend="binsurface cgalv2m cgals2m vol2restrictedtri surf2volz"
-func_primitive="meshabox meshasphere meshanellip meshunitsphere meshacylinder"
+func_shortcut="v2m v2s s2m s2v m2v sms"
+func_mainfun="vol2mesh vol2surf surf2mesh surf2vol mesh2vol"
+func_backend="binsurface cgalv2m cgals2m vol2restrictedtri surf2volz mesh2mask"
+func_primitive="meshabox meshasphere meshanellip meshunitsphere meshacylinder 
+                meshgrid5 meshgrid6 latticegrid"
 func_inquery="finddisconnsurf surfedge volface extractloops meshconn  
                 meshcentroid nodevolume elemvolume neighborelem 
 		faceneighbors edgeneighbors maxsurf flatsegment orderloopedge  
 		mesheuler bbxflatsegment surfplane surfinterior surfpart
-                surfseeds meshquality meshedge surfnorm uniqedges advancefront"
+                surfseeds meshquality meshedge surfacenorm uniqedges advancefront"
 func_meshfix="meshcheckrepair meshreorient removedupelem 
                 removedupnodes removeisolatednode removeisolatedsurf
                 surfaceclean getintersecttri delendelem surfreorient"
@@ -40,16 +42,16 @@ func_fileio="saveasc savedxf savestl savebinstl saveinr saveoff
                 savesmf savesurfpoly savegts readgts
                 savevrml readasc readinr readmedit readoff readsmf
 	        readtetgen deletemeshfile mcpath mwpath savemedit
-		savejson loadjson savejmesh savemphtxt savetetgenele
-                savetetgennode saveabaqus"
+		savejson loadjson saveubjson loadubjson savejmesh
+                savemphtxt savetetgenele savetetgennode saveabaqus"
 func_binimage="bwislands fillholes3d deislands2d deislands3d 
                 imedge3d internalpoint smoothbinvol 
 		thickenbinvol thinbinvol"
-func_plotting="plotmesh plotsurf plottetra qmeshcut"
+func_plotting="plotmesh plotsurf plottetra plotedges qmeshcut"
 func_misc="surfdiffuse volmap2mesh isoctavemesh getvarfrom raytrace
 		getplanefrom3pt getexeext fallbackexeext iso2meshver
                 raysurf getoptkey rotatevec3d rotmat2vec varargin2struct
-                jsonopt mergestruct"
+                jsonopt mergestruct orthdisk struct2jdata"
 
 echo === "#" Streamlined mesh generation - shortcuts ===
 print_group $func_shortcut

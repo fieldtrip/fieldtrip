@@ -75,6 +75,11 @@ fidlabel     = ft_getopt(varargin, 'fidlabel',     true);
 transform    = ft_getopt(varargin, 'transform');
 unit         = ft_getopt(varargin, 'unit');
 
+% color management, the other colors are handled in ft_plot_mesh
+if ischar(fidcolor) && exist([fidcolor '.m'], 'file')
+  fidcolor = eval(fidcolor);
+end
+
 if ~isempty(unit)
   headshape = ft_convert_units(headshape, unit);
 end
@@ -98,7 +103,7 @@ else
   mesh.tri = [];
 end
 
-ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize',vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor);
+ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor);
 
 if isfield(headshape, 'fid')
   fid = headshape.fid;
@@ -110,14 +115,14 @@ if isfield(headshape, 'fid')
   
   % show the fiducial labels
   for i=1:size(fid.pos,1)
-    hs = plot3(fid.pos(i,1), fid.pos(i,2), fid.pos(i,3), 'Marker',fidmarker,'MarkerEdgeColor',fidcolor);
-    if isfield(fid,'label') && istrue(fidlabel)
+    hs = plot3(fid.pos(i,1), fid.pos(i,2), fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor);
+    if isfield(fid, 'label') && istrue(fidlabel)
       % the text command does not like int or single position values
       x = double(fid.pos(i, 1));
       y = double(fid.pos(i, 2));
       z = double(fid.pos(i, 3));
       str = sprintf('%s', fid.label{i});
-      h   = text(x, y, z, str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle','Interpreter','none');
+      h   = text(x, y, z, str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Interpreter', 'none');
       hs  = [hs; h];
     end
   end

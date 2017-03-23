@@ -3,7 +3,6 @@ function test_bug2593
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST test_bug2593
 % TEST ft_componentanalysis
 
 % this function tests the cfg.numcomponent and related options for

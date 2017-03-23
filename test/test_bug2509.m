@@ -3,7 +3,6 @@ function test_bug2509
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2509
 % TEST ft_selectdata
 
 freq = [];
@@ -15,5 +14,5 @@ freq.powspctrm = randn(2, 3, 4, 5);
  
 cfg = [];
 cfg.avgovertime = 'yes';
-output = ft_selectdata(cfg, freq)
+output = ft_selectdata(cfg, freq);
 assert(isequal(output.time, 3))

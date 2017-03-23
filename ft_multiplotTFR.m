@@ -35,11 +35,15 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 %   cfg.colorbar         = 'yes', 'no' (default = 'no')
 %   cfg.colormap         = any sized colormap, see COLORMAP
-%   cfg.comment          = string of text (default = date + zlimits)
-%                          Add 'comment' to graph (according to COMNT in the layout)
 %   cfg.showlabels       = 'yes', 'no' (default = 'no')
 %   cfg.showoutline      = 'yes', 'no' (default = 'no')
+%   cfg.showscale        = 'yes', 'no' (default = 'yes')
+%   cfg.showcomment      = 'yes', 'no' (default = 'yes')
+%   cfg.comment          = string of text (default = date + zlimits)
+%                          Add 'comment' to graph (according to COMNT in the layout)
+%   cfg.limittext        = add user-defined text instead of cfg.comment, (default = cfg.comment)
 %   cfg.fontsize         = font size of comment and labels (if present) (default = 8)
+%   cfg.fontweight       = font weight of comment and labels (if present)
 %   cfg.interactive      = Interactive plot 'yes' or 'no' (default = 'yes')
 %                          In a interactive plot you can select areas and produce a new
 %                          interactive plot when a selected area is clicked. Multiple areas
@@ -163,10 +167,14 @@ cfg.magscale       = ft_getopt(cfg, 'magscale', 1);
 cfg.gradscale      = ft_getopt(cfg, 'gradscale', 1);
 cfg.colorbar       = ft_getopt(cfg, 'colorbar', 'no');
 cfg.comment        = ft_getopt(cfg, 'comment', date);
+cfg.limittext      = ft_getopt(cfg, 'limittext', 'default');
 cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
 cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
+cfg.showscale      = ft_getopt(cfg, 'showscale',   'yes');
+cfg.showcomment    = ft_getopt(cfg, 'showcomment', 'yes');
 cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
+cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'no');
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on default
@@ -183,10 +191,6 @@ if ~isfield(cfg, 'box')
   else
     cfg.box = 'no';
   end
-end
-if numel(findobj(gcf, 'type', 'axes', '-not', 'tag', 'ft-colorbar')) > 1 && strcmp(cfg.interactive, 'yes')
-  warning('using cfg.interactive = ''yes'' in subplots is not supported, setting cfg.interactive = ''no''')
-  cfg.interactive = 'no';
 end
 
 dimord = data.dimord;
@@ -255,7 +259,8 @@ end % if hasrpt
 % Read or create the layout that will be used for plotting:
 cla;
 hold on
-lay = ft_prepare_layout(cfg, data);
+tmpcfg = removefields(cfg, 'inputfile'); % ensure the inputfile field not to exist
+lay = ft_prepare_layout(tmpcfg, data);
 cfg.layout = lay;
 
 
@@ -560,41 +565,49 @@ for k=1:length(chanseldat)
 end % for chanseldat
 
 % write comment:
-k = cellstrmatch('COMNT', lay.label);
-if ~isempty(k)
-  comment = cfg.comment;
-  comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(xparam)(xmin), data.(xparam)(xmax));
-  comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(yparam)(ymin), data.(yparam)(ymax));
-  comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
-  ft_plot_text(lay.pos(k, 1), lay.pos(k, 2), sprintf(comment), 'Fontsize', cfg.fontsize);
+if istrue(cfg.showcomment)
+  k = cellstrmatch('COMNT', lay.label);
+  if ~isempty(k)
+    limittext = cfg.limittext;
+    if ~strcmp(limittext, 'default')
+      comment = limittext;
+    else
+      comment = cfg.comment;
+      comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(xparam)(xmin), data.(xparam)(xmax));
+      comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(yparam)(ymin), data.(yparam)(ymax));
+      comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
+    end
+    ft_plot_text(lay.pos(k, 1), lay.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
+  end
 end
 
 % plot scale:
-k = cellstrmatch('SCALE', lay.label);
-if ~isempty(k)
-  % Get average cdata across channels:
-  cdata = shiftdim(mean(datsel, 1));
-
-  % Draw plot (and mask Nan's with maskfield if requested)
-  if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
-    mask = ~isnan(cdata);
-    mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
-  elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
-    mask = ~isnan(cdata);
-    mask = mask .* mdata;
-    mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
-  elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
-    mask = mdata;
-    mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
-  else
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+if istrue(cfg.showscale)
+  k = cellstrmatch('SCALE', lay.label);
+  if ~isempty(k)
+    % Get average cdata across channels:
+    cdata = shiftdim(mean(datsel, 1));
+    
+    % Draw plot (and mask Nan's with maskfield if requested)
+    if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
+      mask = ~isnan(cdata);
+      mask = double(mask);
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+    elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
+      mask = ~isnan(cdata);
+      mask = mask .* mdata;
+      mask = double(mask);
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+    elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
+      mask = mdata;
+      mask = double(mask);
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+    else
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+    end
+    % Currently the handle isn't being used below, this is here for possible use in the future
+    h = findobj('tag', 'cip');
   end
-  % Currently the handle isn't being used below, this is here for possible use in the future
-  h = findobj('tag', 'cip');
-
 end
 
 % plot layout
@@ -645,17 +658,22 @@ end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
-    % add the channel information to the figure
-    info       = guidata(gcf);
-    info.x     = lay.pos(:, 1);
-    info.y     = lay.pos(:, 2);
-    info.label = lay.label;
-    info.dataname = dataname;
+    
+    % add the cfg/data/channel information to the figure under identifier linked to this axis
+    ident                 = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
+    set(gca,'tag',ident);
+    info                  = guidata(gcf);
+    info.(ident).x        = lay.pos(:, 1);
+    info.(ident).y        = lay.pos(:, 2);
+    info.(ident).label    = lay.label;
+    info.(ident).dataname = dataname;
+    info.(ident).cfg      = cfg;
+    info.(ident).data     = data;
     guidata(gcf, info);
 
-    set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, data}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg, data}, 'event', 'WindowButtonMotionFcn'});
+    set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
 end
 
 axis tight
@@ -711,15 +729,19 @@ cfg.dataname = info.dataname;
 
 cfg.refchannel = label;
 fprintf('selected cfg.refchannel = ''%s''\n', join_str(', ', cfg.refchannel));
-p = get(gcf, 'Position');
-f = figure;
-set(f, 'Position', p);
+% ensure that the new figure appears at the same position
+f = figure('Position', get(gcf, 'Position'));
 ft_multiplotTFR(cfg, varargin{:});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_singleplotTFR(label, cfg, varargin)
+function select_singleplotTFR(label, varargin)
+% fetch cfg/data based on axis indentifier given as tag
+ident = get(gca,'tag');
+info  = guidata(gcf);
+cfg   = info.(ident).cfg;
+data  = info.(ident).data;
 if ~isempty(label)
   if isfield(cfg, 'inputfile')
     % the reading has already been done and varargin contains the data
@@ -731,8 +753,7 @@ if ~isempty(label)
   cfg.baseline = 'no';
 
   % put data name in here, this cannot be resolved by other means
-  info = guidata(gcf);
-  cfg.dataname = info.dataname;
+  cfg.dataname = info.(ident).dataname;
 
   fprintf('selected cfg.channel = {');
   for i=1:(length(cfg.channel)-1)
@@ -740,9 +761,8 @@ if ~isempty(label)
   end
   fprintf('''%s''}\n', cfg.channel{end});
   p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
-  ft_singleplotTFR(cfg, varargin{:});
+  f = figure('position', p);
+  ft_singleplotTFR(cfg, data);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

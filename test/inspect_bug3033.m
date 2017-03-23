@@ -8,7 +8,7 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3033'));
 if true
   % this section only needs to run once
   cfg = [];
-  cfg.dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
+  cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
   cfg.continuous = 'yes';
   cfg.trl(:,1) = (1:300:10000)';
   cfg.trl(:,2) = (1:300:10000)' + 299;
@@ -19,7 +19,7 @@ if true
   save ctf ctf
   
   cfg = [];
-  cfg.dataset = '/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/oddball1_mc_downsampled.fif';
+  cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/oddball1_mc_downsampled.fif');
   cfg.continuous = 'yes';
   cfg.trl(:,1) = (1:1000:30000)';
   cfg.trl(:,2) = (1:1000:30000)' + 999;

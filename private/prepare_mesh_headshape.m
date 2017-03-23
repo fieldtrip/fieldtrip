@@ -2,6 +2,12 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % PREPARE_MESH_HEADSHAPE
 %
+% Configuration options:
+%   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
+%                     points, or a structure with a single or multiple boundaries
+%   cfg.smooth      = a scalar indicating the number of non-shrinking
+%                     smoothing iterations (default = no smoothing)
+%
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_SEGMENTATION
 
 % Copyrights (C) 2009, Robert Oostenveld
@@ -26,6 +32,7 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % get the specific options
 cfg.headshape    = ft_getopt(cfg, 'headshape');
+cfg.smooth       = ft_getopt(cfg, 'smooth');   % no default
 
 if isa(cfg, 'config')
   % convert the config-object back into a normal structure
@@ -95,9 +102,16 @@ if ~isempty(cfg.numvertices) && ~strcmp(cfg.numvertices, 'same')
   end
 end
 
+% smooth the mesh
+if ~isempty(cfg.smooth)
+  for i=1:nmesh
+    [headshape(i).pos,headshape(i).tri] = fairsurface(headshape(i).pos, headshape(i).tri, cfg.smooth);
+  end
+end
+
 % the output should only describe one or multiple boundaries and should not
 % include any other fields
-mesh = rmfield(headshape, setdiff(fieldnames(headshape), {'pos', 'tri'}));
+mesh = keepfields(headshape, {'pos', 'tri'});
 
 function [tri1, pos1] = refinepatch(tri, pos, numvertices)
 fprintf('the original mesh has %d vertices against the %d requested\n',size(pos,1),numvertices/3);
@@ -165,44 +179,6 @@ phi = storeM(i).phi;
 [x, y, z] = sph2cart(th, pi/2-phi, 1);
 pos = [x' y' z'];
 tri = convhulln(pos);
-
-function [posR, triR] = remove_double_vertices(pos, tri)
-
-% REMOVE_VERTICES removes specified vertices from a triangular mesh
-% renumbering the vertex-indices for the triangles and removing all
-% triangles with one of the specified vertices.
-%
-% Use as
-%   [pos, tri] = remove_double_vertices(pos, tri)
-
-pos1 = unique(pos, 'rows');
-keeppos   = find(ismember(pos1,pos,'rows'));
-removepos = setdiff([1:size(pos,1)],keeppos);
-
-npos = size(pos,1);
-ntri = size(tri,1);
-
-if all(removepos==0 | removepos==1)
-  removepos = find(removepos);
-end
-
-% remove the vertices and determine the new numbering (indices) in numb
-keeppos = setdiff(1:npos, removepos);
-numb    = zeros(1,npos);
-numb(keeppos) = 1:length(keeppos);
-
-% look for triangles referring to removed vertices
-removetri = false(ntri,1);
-removetri(ismember(tri(:,1), removepos)) = true;
-removetri(ismember(tri(:,2), removepos)) = true;
-removetri(ismember(tri(:,3), removepos)) = true;
-
-% remove the vertices and triangles
-posR = pos(keeppos, :);
-triR = tri(~removetri,:);
-
-% renumber the vertex indices for the triangles
-triR = numb(triR);
 
 function [pos1, tri1] = fairsurface(pos, tri, N)
 

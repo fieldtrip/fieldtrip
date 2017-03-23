@@ -1,4 +1,4 @@
-function [dat] = read_neuralynx_bin(filename, begsample, endsample);
+function [dat] = read_neuralynx_bin(filename, begsample, endsample)
 
 % READ_NEURALYNX_BIN
 %

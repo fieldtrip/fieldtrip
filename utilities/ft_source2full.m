@@ -80,11 +80,10 @@ else
   tmppos  = sparsepos(indx([1 sel(:)'+1]),:);
   tmpdpos = dpos(indx([1 sel(:)'+1]),:);
  
-  %FIXME the following is a bit experimental and not fully tested yet it works in general case
-  %rotation
+  % FIXME the following is a bit experimental and not fully tested yet it works in general case rotation
   M         = pinv(tmpdpos(2:4,:));
   
-  %get rotation such that maxima are on diagonal and positive
+  % get rotation such that maxima are on diagonal and positive
   m(1) = find(M(1,:)==max(abs(M(1,:))));
   m(2) = find(M(2,:)==max(abs(M(2,:))));
   m(3) = find(M(3,:)==max(abs(M(3,:))));
@@ -93,7 +92,7 @@ else
   M    = M*diag(sign(diag(M)));
   sparsepos = sparsepos*M;
   
-  %translation
+  % translation
   T         = -min(sparsepos,[],1)+1;
   sparsepos = sparsepos + T(ones(size(sparsepos,1),1), :);  
 

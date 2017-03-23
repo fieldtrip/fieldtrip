@@ -3,7 +3,6 @@ function test_bug2193
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_bug2193
 % TEST ft_read_atlas
 
 %%%%%% from http://fmri.wfubmc.edu
@@ -30,7 +29,7 @@ cfg = [];
 cfg.atlas = filename;
 bbl = ft_prepare_atlas(cfg);
 
-cfg.atlas = '/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'
+cfg.atlas = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 aal0a = ft_prepare_atlas(cfg);
 aal0b = ft_read_atlas(cfg.atlas);
 assert(all(~cellfun(@isempty, aal0b.tissuelabel)), 'there is an empty tissuelabel');
@@ -49,7 +48,7 @@ assert(max(aal0b.tissue(:))==length(aal0b.tissuelabel), 'inconsistent number of 
 % should not be included in the automatic regression test.
 
 if false
-  cfg.atlas = '/home/common/matlab/spm8/toolbox/wfu_pickatlas_3.03-old2/MNI_atlas_templates/aal_MNI_V4.nii'
+  cfg.atlas = dccnpath('/home/common/matlab/spm8/toolbox/wfu_pickatlas_3.03-old2/MNI_atlas_templates/aal_MNI_V4.nii');
   aal1a = ft_prepare_atlas(cfg);
   aal1b = ft_read_atlas(cfg.atlas);
   assert(all(~cellfun(@isempty, aal1b.tissuelabel)), 'there is an empty tissuelabel');
@@ -57,7 +56,7 @@ if false
   assert(all(cellfun(@strcmp, aal1a.descr.name, aal1b.tissuelabel)));
   assert(all(aal1a.brick0(:) == aal1b.tissue(:)));
   
-  cfg.atlas = '/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.nii'
+  cfg.atlas = dccnpath('/home/common/matlab/spm8/toolbox/wfu_pickatlas/MNI_atlas_templates/aal_MNI_V4.nii');
   aal2a = ft_prepare_atlas(cfg);
   aal2b = ft_read_atlas(cfg.atlas);
   assert(all(~cellfun(@isempty, aal2b.tissuelabel)), 'there is an empty tissuelabel');
@@ -65,7 +64,7 @@ if false
   assert(all(cellfun(@strcmp, aal2a.descr.name, aal2b.tissuelabel)));
   assert(all(aal2a.brick0(:) == aal2b.tissue(:)));
   
-  cfg.atlas = '/home/common/matlab/spm8/toolbox/wfu_pickatlas-old/MNI_atlas_templates/aal_MNI_V4.img'
+  cfg.atlas = dccnpath('/home/common/matlab/spm8/toolbox/wfu_pickatlas-old/MNI_atlas_templates/aal_MNI_V4.img');
   aal3a = ft_prepare_atlas(cfg);
   aal3b = ft_read_atlas(cfg.atlas);
   assert(all(~cellfun(@isempty, aal3b.brick0label)), 'there is an empty tissuelabel');

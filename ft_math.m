@@ -123,6 +123,12 @@ if ~iscell(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
 
+if ft_datatype(varargin{1}, 'raw+comp')
+    if length(varargin)>1
+        error('ft_math does not support more than one input argument if the input data is of type "raw" or "comp"')
+    end
+end
+
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
 if ft_datatype(varargin{1}, 'source')
   % update the old-style beamformer source reconstruction
@@ -161,50 +167,32 @@ for p = 1:length(cfg.parameter)
     error('the dimord of multiple parameters must be the same');
   end
 end
-dimord = dimordtmp{1}; clear dimordtmp
-dimtok = tokenize(dimord, '_');
+clear dimordtmp
 
-% this determines which descriptive fields will get copied over
-haschan    = any(strcmp(dimtok, 'chan'));
-haschancmb = any(strcmp(dimtok, 'chancmb'));
-hasfreq    = any(strcmp(dimtok, 'freq'));
-hastime    = any(strcmp(dimtok, 'time'));
-haspos     = any(strcmp(dimtok, 'pos'));
-
-% construct the output data structure
-data = [];
-if haschan
-  data.label = varargin{1}.label;
+% construct the output data structure; make sure descriptive fields will get copied over
+% some ugly things need to be done in order to get the correct xxxdimord
+% fields in the output
+fn  = fieldnames(varargin{1});
+dimordfields = fn(~cellfun(@isempty, strfind(fn, 'dimord')))';
+if numel(dimordfields)==1 && strcmp(dimordfields{1},'dimord'),
+    % this is OK and counts for most data structures
+else
+    % this is in the case of one or more xxxdimord fields, in which case
+    % only the requested parameters' xxxdimord fields should be returned in
+    % the output
+    ok = false(1,numel(dimordfields));
+    for p = 1:length(cfg.parameter)
+        ok(p) = any(~cellfun(@isempty, strfind(dimordfields, cfg.parameter{p})));
+    end
+    dimordfields = dimordfields(ok);
 end
-if haschancmb
-  data.labelcmb = varargin{1}.labelcmb;
-end
-if hasfreq
-  data.freq = varargin{1}.freq;
-end
-if hastime
-  data.time = varargin{1}.time;
-end
-if haspos
-  if isfield(varargin{1}, 'pos')
-    data.pos = varargin{1}.pos;
-  end
-  if isfield(varargin{1}, 'dim')
-    data.dim = varargin{1}.dim;
-  end
-  if isfield(varargin{1}, 'transform')
-    data.transform = varargin{1}.transform;
-  end
-end
-
-% use an anonymous function
-assign = @(var, val) assignin('caller', var, val);
+data = keepfields(varargin{1}, [dimordfields {'label', 'labelcmb', 'freq', 'time', 'pos', 'dim', 'transform'}]);
 
 for p = 1:length(cfg.parameter)
   fprintf('selecting %s from the first input argument\n', cfg.parameter{p});
   % create the local variables x1, x2, ...
   for i=1:length(varargin)
-    assign(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter{p}));
+    assign_var(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter{p}));
   end
 
   % create the local variables s and m
@@ -328,7 +316,7 @@ for p = 1:length(cfg.parameter)
             for j=1:length(varargin)
               % rather than working with x1 and x2, we need to work on its elements
               % xx1 is one element of the x1 cell-array
-              assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
+              assign_var(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
             end
 
             % gather xx1, xx2, ... into a cell-array
@@ -426,7 +414,7 @@ for p = 1:length(cfg.parameter)
             for j=1:length(varargin)
               % rather than working with x1 and x2, we need to work on its elements
               % xx1 is one element of the x1 cell-array
-              assign(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
+              assign_var(sprintf('xx%d', j), eval(sprintf('x%d{%d}', j, i)))
             end
 
             % gather xx1, xx2, ... into a cell-array
@@ -447,13 +435,12 @@ for p = 1:length(cfg.parameter)
   % store the result of the operation in the output structure
   data = setsubfield(data, cfg.parameter{p}, y);
 end % p over length(cfg.parameter)
-data.dimord = dimord;
 
 % certain fields should remain in the output, but only if they are identical in all inputs
-keepfield = {'grad', 'elec', 'inside'};
+keepfield = {'grad', 'elec', 'opto', 'inside', 'trialinfo', 'sampleinfo', 'tri'};
 for j=1:numel(keepfield)
   if isfield(varargin{1}, keepfield{j})
-    tmp  = varargin{i}.(keepfield{j});
+    tmp  = varargin{1}.(keepfield{j});
     keep = true;
   else
     keep = false;
@@ -479,6 +466,17 @@ ft_postamble previous   varargin
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
+
+
+function assign_var(var, val)
+% Note: using an anonymous function as follows does not work in Octave:
+%
+% **    assign_var = @(var, val) assignin('caller', var, val);
+%
+% Also using the name 'assign' does not seem to work, hence 'assign_var'
+
+   assignin('caller', var, val);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

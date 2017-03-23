@@ -3,7 +3,6 @@ function test_bug2482
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2482
 % TEST ft_definetrial ft_preprocessing ft_trialfun_brainvision_segmented
 
 %% define the trials

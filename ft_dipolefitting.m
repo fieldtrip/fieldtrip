@@ -45,7 +45,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dip.pos     = initial dipole position, matrix of Ndipoles x 3
 %
 % The conventional approach is to fit dipoles to event-related averages, which
-% within fieldtrip can be obtained from the FT_TIMELOCKANALYSIS or from
+% within FieldTrip can be obtained from the FT_TIMELOCKANALYSIS or from
 % the FT_TIMELOCKGRANDAVERAGE function. This has the additional options
 %   cfg.latency     = [begin end] in seconds or 'all' (default = 'all')
 %   cfg.model       = 'moving' or 'regional'
@@ -219,6 +219,11 @@ elseif ~isfield(cfg, 'dipfit') || ~isfield(cfg.dipfit, 'constr')
   cfg.dipfit.constr = [];
 end
 
+if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'moving')
+  error('the moving dipole model does not combine with the sequential constraint')
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+end
+
 if isfield(data, 'topolabel')
   % this looks like a component analysis
   iscomp = 1;
@@ -253,9 +258,9 @@ if isempty(cfg.reducerank)
 end
 
 % select the desired channels, the order should be the same as in the sensor structure
-[selsens, seldata] = match_str(sens.label, data.label);
+[selcfg, seldata] = match_str(cfg.channel, data.label);
 % take the selected channels
-Vdata = data.avg(seldata, :);
+Vdata = data.avg(selcfg, :);
 
 % sphere the date using the noise covariance matrix supplied, if any
 % this affects both the gridsearch and the nonlinear optimization
@@ -270,8 +275,12 @@ if ~isempty(noisecov)
   sphere = diag(s) * u';
   % apply the sphering to the data
   Vdata = sphere * Vdata;
-  % apply the sphering to the forward model as a pre-multiplication
-  sens.tra = sphere * sens.tra;
+  % apply the sphering as a pre-multiplication to the sensor definition
+  montage = [];
+  montage.labelold = cfg.channel;
+  montage.labelnew = cfg.channel;
+  montage.tra = sphere;
+  sens = ft_apply_montage(sens, montage, 'balancename', 'sphering');
 end
 
 if iscomp
@@ -343,24 +352,25 @@ if strcmp(cfg.gridsearch, 'yes')
     % this is ok
   elseif cfg.numdipoles==2 && ~isempty(cfg.dipfit.constr)
     % this is also ok
+  elseif isfield(cfg.grid, 'pos') && size(cfg.grid.pos,2)==cfg.numdipoles*3
+    % this is also ok
   else
     error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
   end
-
-  % construct the dipole grid on which the gridsearch will be done
+  
+  % copy all options that are potentially used in ft_prepare_sourcemodel
   tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
-  else
+  elseif ft_senstype(sens, 'meg')
     tmpcfg.grad = sens;
   end
-  
-  % copy all options that are potentially used in ft_prepare_sourcemodel
+  % construct the dipole grid on which the gridsearch will be done
   grid = ft_prepare_sourcemodel(tmpcfg);
-
+  
   ngrid = size(grid.pos,1);
-
+  
   switch cfg.model
     case 'regional'
       grid.error = nan(ngrid, 1);
@@ -369,7 +379,7 @@ if strcmp(cfg.gridsearch, 'yes')
     otherwise
       error('unsupported cfg.model');
   end
-
+  
   insideindx = find(grid.inside);
   ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(insideindx)
@@ -385,9 +395,9 @@ if strcmp(cfg.gridsearch, 'yes')
     % dipole moment this makes the model potential U=lf*pinv(lf)*V and the
     % model error is norm(V-U) = norm(V-lf*pinv(lf)*V) = norm((eye-lf*pinv(lf))*V)
     if any(isnan(lf(:)))
-        % this might happen if one of the dipole locations of the grid is
-        % outside the brain compartment
-        lf(:) = 0;
+      % this might happen if one of the dipole locations of the grid is
+      % outside the brain compartment
+      lf(:) = 0;
     end
     switch cfg.model
       case 'regional'
@@ -401,7 +411,7 @@ if strcmp(cfg.gridsearch, 'yes')
     end % switch model
   end % looping over the grid
   ft_progress('close');
-
+  
   switch cfg.model
     case 'regional'
       % find the grid point(s) with the minimum error
@@ -414,7 +424,7 @@ if strcmp(cfg.gridsearch, 'yes')
       elseif cfg.numdipoles==2
         fprintf('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
       end
-
+      
     case 'moving'
       for t=1:ntime
         % find the grid point(s) with the minimum error
@@ -428,11 +438,11 @@ if strcmp(cfg.gridsearch, 'yes')
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
         end
       end
-
+      
     otherwise
       error('unsupported cfg.model');
   end % switch model
-
+  
 elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
@@ -445,7 +455,7 @@ elseif strcmp(cfg.gridsearch, 'no')
     otherwise
       error('unsupported cfg.model');
   end % switch model
-
+  
 end % if gridsearch yes/no
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a Nx3 matrix,
 % i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
@@ -494,7 +504,7 @@ if strcmp(cfg.nonlinear, 'yes')
         success = 0;
         disp(lasterr);
       end
-
+      
     case 'moving'
       % perform the non-linear dipole fit for each latency independently
       % instead of using dip(t) = dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
@@ -535,7 +545,7 @@ if strcmp(cfg.nonlinear, 'no')
       success = ones(1,ntime);
     otherwise
       error('unsupported cfg.model');
-
+      
   end % switch model
 end
 

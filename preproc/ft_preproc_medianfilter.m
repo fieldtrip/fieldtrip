@@ -37,20 +37,42 @@ if nargin<2 || isempty(order)
   error('the order of the median filter is not specified');
 end
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % deal with padding
 pad = ceil(order/2);
 dat = ft_preproc_padding(dat, 'localmean', pad);
 
-hasfast = exist('fastmedfilt1d');
+hasfast = exist('fastmedfilt1d', 'file');
 if hasfast == 2 || hasfast == 3
   % use fast median filter mex file
   for k = 1:size(dat,1)
     dat(k,:) = fastmedfilt1d(dat(k,:), order);
   end
 else
-  % use Mathworks slow version
-  dat = medfilt1(dat, order, [], 2);
+  is_matlab=ft_platform_supports('matlabversion',1,inf);
+  if is_matlab
+    % use Mathworks slow version
+    dat = medfilt1(dat, order, [], 2);
+  else
+    % use helper function that uses Octave's medfilt1
+    dat = medfilt1_rowwise(dat, order);
+  end
 end
 
 % cut the eges
 dat = ft_preproc_padding(dat, 'remove', pad);
+
+%%%%%%%%%%%%%%%%%%%%%%
+% Helper function
+%%%%%%%%%%%%%%%%%%%%%%
+function y = medfilt1_rowwise(x,order)
+% this function is compatible with Octave;
+% Octave's medfilt1 accepts only two input arguments
+    y = zeros(size(x));
+    for k = 1:size(x,1)
+        y(k,:) = medfilt1(x(k,:),order);
+    end

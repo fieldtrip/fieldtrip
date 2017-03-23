@@ -3,14 +3,11 @@ function test_prepare_freq_matrices
 % WALLTIME 00:10:00
 % MEM 1000mb
 
-% TEST test_prepare_freq_matrices
-% TEST prepare_freq_matrices
-% TEST ft_sourceanalysis
+% TEST prepare_freq_matrices ft_sourceanalysis
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg');
 
-curdir = pwd;
-cd(dccnpath('/home/common/matlab/fieldtrip'));
+cd(dccnpath('/home/common/matlab/fieldtrip/private'));
 
 % fourier data, multiple trials
 load(fullfile(datadir,'freq_mtmfft_fourier_trl_ctf275.mat'));
@@ -32,16 +29,16 @@ cfg.refchan   = 'BR1';
 [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
-assert(isequal(a2,b2));
-assert(isequal(a3,b3));
+assert(isequal(a2,b2) ||  norm(a2-b2)<eps^2);
+assert(isequal(a3,b3) ||  norm(a3-b3)<eps^2);
 
 cfg.frequency = 10.6;
 cfg.refchan   = 'BR1';
 [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
-assert(isequal(a2,b2));
-assert(isequal(a3,b3));
+assert(isequal(a2,b2) ||  norm(a2-b2)<eps^2);
+assert(isequal(a3,b3) ||  norm(a3-b3)<eps^2);
 
 % powandcsd data, multiple trials
 load(fullfile(datadir,'freq_mtmfft_powandcsd_trl_ctf275.mat'));
@@ -140,19 +137,18 @@ cfg.frequency = 10;
 cfg.refchan   = 'BR1';
 [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-assert(isequal(a1,b1));
-assert(isequal(a2,b2));
-assert(isequal(a3,b3));
+assert(isalmostequal(a1,b1,'reltol',1e-9));
+assert(isalmostequal(a2,b2,'reltol',1e-9));
+assert(isalmostequal(a3,b3,'reltol',1e-9));
 
 cfg.frequency = 10.6;
 cfg.refchan   = 'BR1';
 [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-assert(isequal(a1,b1));
-assert(isequal(a2,b2));
-assert(isequal(a3,b3));
+assert(isalmostequal(a1,b1,'reltol',1e-9));
+assert(isalmostequal(a2,b2,'reltol',1e-9));
+assert(isalmostequal(a3,b3,'reltol',1e-9));
 
-cd(curdir);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BELOW IS THE OLD CODE
@@ -219,12 +215,12 @@ fbin = nearest(freq.freq, cfg.frequency);
 
 if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
   % use the power and cross spectrum and construct a square matrix
-
+  
   % find the index of each sensor channel into powspctrm
   % keep the channel order of the cfg
   [dum, powspctrmindx] = match_str(cfg.channel, freq.label);
   Nchans = length(powspctrmindx);
-
+  
   % find the index of each sensor channel combination into crsspctrm
   % keep the channel order of the cfg
   crsspctrmindx = zeros(Nchans);
@@ -236,7 +232,7 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
       crsspctrmindx(ch1,ch2) = sgncmblop;
     end
   end
-
+  
   % this complex rearrangement of channel indices transforms the CSDs into a square matrix
   if strcmp(freq.dimord, 'chan_freq') || strcmp(freq.dimord, 'chancmb_freq')
     % FIXME this fails in case dimord=rpt_chan_freq and only 1 trial
@@ -262,12 +258,12 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
       Cf(trial,:,:) = tmp;
     end
   end
-
+  
   % do a sanity check on the cross-spectral-density matrix
   if any(isnan(Cf(:)))
     error('The cross-spectral-density matrix is not complete');
   end
-
+  
   if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
     % contruct the cross-spectral-density vector of the reference channel with all MEG channels
     tmpindx = match_str(freq.labelcmb(:,1), cfg.refchan);
@@ -310,16 +306,16 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
       Pr = Pr(:);   % ensure that the first dimension contains the trials
     end
   end
-
+  
   if strcmp(cfg.dicsfix, 'yes')
     Cr = conj(Cr);
   end
-
+  
 elseif isfield(freq, 'crsspctrm')
   % this is from JMs version
   hastime    = isfield(freq, 'time');
   hasrefchan = ~isempty(cfg.refchan);
-
+  
   % select time-frequency window of interest
   if hastime
     freq = ft_selectdata(freq, 'foilim', cfg.frequency, 'toilim', cfg.latency);
@@ -335,13 +331,13 @@ elseif isfield(freq, 'crsspctrm')
   % computation from fourierspectra when single trial
   % estimates are not required...
   freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
-
+  
   [dum, sensindx] = match_str(cfg.channel, freq.label);
   powspctrmindx = sensindx;
   if isempty(strfind(freq.dimord, 'rpt'))
     Ntrials = 1;
     Cf      = freq.crsspctrm(sensindx,sensindx,:,:);
-    if hasrefchan, 
+    if hasrefchan,
       refindx  = match_str(freq.label, cfg.refchan);
       Cr       = freq.crsspctrm(sensindx,refindx,:,:);
       Pr       = freq.crsspctrm(refindx,refindx,:,:);
@@ -352,7 +348,7 @@ elseif isfield(freq, 'crsspctrm')
   elseif ~isempty(strfind(freq.dimord, 'rpt')),
     Ntrials = length(freq.cumtapcnt);
     Cf      = freq.crsspctrm(:,sensindx,sensindx,:,:);
-    if hasrefchan, 
+    if hasrefchan,
       refindx  = match_str(freq.label, cfg.refchan);
       Cr       = freq.crsspctrm(:,sensindx,refindx,:,:);
       Pr       = freq.crsspctrm(:,refindx,refindx,:,:);
@@ -380,15 +376,15 @@ else
       Cr = zeros(Ntrials,Nchans,1);
       Pr = zeros(Ntrials,1,1);
     end
-
+    
     if quickflag,
       ntap = sum(freq.cumtapcnt);
       dat  = transpose(freq.fourierspctrm(:, powspctrmindx, fbin));
       Cf(1,:,:) = (dat * ctranspose(dat)) ./ ntap;
       if ~isempty(refindx)
         ref = transpose(freq.fourierspctrm(:, refindx, fbin));
-    Cr(1,:,1) = dat * ctranspose(ref) ./ ntap;
-    Pr(1,1,1) = ref * ctranspose(ref) ./ ntap;
+        Cr(1,:,1) = dat * ctranspose(ref) ./ ntap;
+        Pr(1,1,1) = ref * ctranspose(ref) ./ ntap;
       end
     else
       freq.cumtapcnt = freq.cumtapcnt(:)';

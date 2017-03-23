@@ -1,4 +1,4 @@
-function varargout = cstructdecode(buf, varargin);
+function varargout = cstructdecode(buf, varargin)
 
 % CSTRUCTDECODE decodes a structure from a uint8 buffer
 %

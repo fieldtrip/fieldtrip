@@ -1,4 +1,4 @@
-function [tap] = alpha_taper(n, f);
+function [tap] = alpha_taper(n, f)
 
 % ALPHA_TAPER returns an asymmetric taper that can be used to construct a
 % complex wavelet with the peak at a distance of 0.8 times the cycle length

@@ -4,15 +4,15 @@ function data = spm2fieldtrip(D)
 %
 % Use as
 %   data = spm2fieldtrip(D)
-% where D is the SPM8 meeg object which you can load in with SPM_EEG_LOAD
+% where D is the SPM meeg object which you can load in with SPM_EEG_LOAD
 % and where data is a FieldTrip raw data structure as if it were returned
 % by FT_PREPROCESSING.
 %
 % See also FT_PREPROCESSING, SPM_EEG_LOAD
 
-if ~ft_hastoolbox('SPM12') && ~ft_hastoolbox('SPM8')
+if ~ft_hastoolbox('spm8up')
   % it should be version spm8 or higher, since spm99, spm2 and spm5 did not yet the "meeg" object
-  error('this requires the SPM toolbox on your MATLAB path');
+  error('this requires SPM8 or later to be on your MATLAB path');
 end
 
 if ~isa(D, 'meeg')

@@ -14,6 +14,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.highlightcolorneg         = color of highlight marker for negative clusters (default = [0 0 0])
 %   cfg.subplotsize               = layout of subplots ([h w], default [3 5])
 %   cfg.saveaspng                 = string, filename of the output figures (default = 'no')
+%   cfg.visible                   = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %
 % You can also specify cfg options that apply to FT_TOPOPLOTTFR, except for
 % cfg.xlim, any of the FT_TOPOPLOTTFR highlight options, cfg.comment and
@@ -102,6 +103,7 @@ cfg.parameter             = ft_getopt(cfg, 'parameter',             'stat');
 cfg.saveaspng             = ft_getopt(cfg, 'saveaspng',             'no');
 cfg.subplotsize           = ft_getopt(cfg, 'subplotsize',           [3 5]);
 cfg.feedback              = ft_getopt(cfg, 'feedback',              'text');
+cfg.visible               = ft_getopt(cfg, 'visible',               'on');
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
@@ -138,7 +140,14 @@ switch dimord
       stat = rmfield(stat, 'freq');
       stat.dimord = 'chan_time';
       % remove the singleton dimension in the middle
-      stat.(cfg.parameter) = squeeze(stat.(cfg.parameter));
+      stat.(cfg.parameter) = reshape(stat.(cfg.parameter),dimsiz([1 3]));
+      if isfield(stat, 'posclusterslabelmat')
+        stat.posclusterslabelmat = reshape(stat.posclusterslabelmat, dimsiz([1 3]));
+      end
+      if isfield(stat, 'negclusterslabelmat')
+        stat.negclusterslabelmat = reshape(stat.negclusterslabelmat, dimsiz([1 3]));
+      end
+
     elseif dimsiz(3)==1
       stat = rmfield(stat, 'time');
       stat.dimord = 'chan_freq';
@@ -202,7 +211,7 @@ else
 
   % make clusterslabel matrix per significant cluster
   if haspos
-    posCLM = squeeze(stat.posclusterslabelmat);
+    posCLM = stat.posclusterslabelmat;
     sigposCLM = zeros(size(posCLM));
     probpos = [];
     for iPos = 1:length(sigpos)
@@ -217,7 +226,7 @@ else
   end
 
   if hasneg
-    negCLM = squeeze(stat.negclusterslabelmat);
+    negCLM = stat.negclusterslabelmat;
     signegCLM = zeros(size(negCLM));
     probneg = [];
     for iNeg = 1:length(signeg)
@@ -379,7 +388,7 @@ else
   count = 0;
   % make plots
   for iPl = 1:Nfig
-    figure;
+    f = figure('visible', cfg.visible);
     if is2D
       if iPl < Nfig
         for iT = 1:numSubplots
@@ -416,17 +425,17 @@ else
       end
     else
       cfgtopo.highlightchannel = list{1};
-      cfgtopo.comment = strcat(compos,comneg);
+      cfgtopo.comment = strcat(compos, comneg);
       cfgtopo.commentpos = 'title';
       count = count+1;
       fprintf('making subplot %d from %d\n', count, Npl);
       ft_topoplotTFR(cfgtopo, stat);
     end
     % save figure
-    if isequal(cfg.saveaspng,'no');
+    if isequal(cfg.saveaspng, 'no');
     else
       filename = strcat(cfg.saveaspng, '_fig', num2str(iPl));
-      print(gcf,'-dpng',filename);
+      print(gcf, '-dpng', filename);
     end
   end
 end

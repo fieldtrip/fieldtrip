@@ -4,11 +4,14 @@ function test_bug1042
 % WALLTIME 00:45:00
 
 % TEST test_bug1042 test_bug686
-% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel headsurface
+% TEST ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
 
-[pnt, tri] = icosahedron162;
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
 % create sensors in cm
+[pnt, tri] = icosahedron162;
 pnt = pnt .* 10; % convert to cm
 sel = find(pnt(:,3)>0);
 
@@ -238,7 +241,7 @@ eeg_table = cellfun(@norm, eeg_leadfield);
 meg_table = cellfun(@norm, meg_leadfield);
 
 format long
-(eeg_table ./ eeg_table(1,1))
-(meg_table ./ meg_table(1,1))
+(eeg_table ./ eeg_table(1,1));
+(meg_table ./ meg_table(1,1));
 format short
 

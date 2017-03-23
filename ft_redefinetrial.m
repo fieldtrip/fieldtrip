@@ -10,7 +10,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % where the input data should correspond to the output of FT_PREPROCESSING and
 % the configuration should be specified as explained below. Note that some
 % options are mutually exclusive, and require two calls to this function to
-% avoid confucion about the order in which they are applied.
+% avoid confusion about the order in which they are applied.
 %
 % For selecting a subset of trials you can specify
 %   cfg.trials    = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -235,11 +235,10 @@ elseif ~isempty(cfg.trl)
   % start with a completely new data structure
   data          = [];
   data.hdr      = hdr;
-  data.label    = dataold.label;
-  data.fsample  = dataold.fsample;
   data.trial    = cell(1,size(trl,1));
   data.time     = cell(1,size(trl,1));
-
+  data          = copyfields(dataold, data, {'fsample' 'label' 'topo' 'topolabel' 'unmixing' 'mixing' 'grad' 'elec' 'opto'}); % account for all potential fields to be copied over
+  
   for iTrl=1:length(trl(:,1))
     begsample = trl(iTrl,1);
     endsample = trl(iTrl,2);
@@ -259,7 +258,8 @@ elseif ~isempty(cfg.trl)
         ft_warning('Original data has trialinfo, using user specified trialinfo instead');
       end;
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
-      if isequal(dataold.trialinfo(iTrlorig,:),1) || numel(iTrlorig)==1 % Checks whether trials that are combined have same trialinfo
+      if numel(iTrlorig) == 1 || ...  % only 1 old trial to copy trialinfo from, or
+          size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1) % all old trialinfo rows are identical
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
       else
         error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
@@ -267,16 +267,7 @@ elseif ~isempty(cfg.trl)
     end;
   end %for iTrl
 
-  % add the necessary fields to the output
-  if isfield(dataold, 'grad')
-    data.grad      = dataold.grad;
-  end
-  if isfield(dataold, 'elec')
-    data.elec      = dataold.elec;
-  end
-  if isfield(dataold, 'opto')
-    data.opto      = dataold.opto;
-  end
+  % adjust the sampleinfo in the output
   if isfield(dataold, 'sampleinfo')
     % adjust the trial definition
     data.sampleinfo  = trl(:, 1:2);

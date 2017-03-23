@@ -3,7 +3,6 @@ function test_old_appenddata_2datasets
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_appenddata_2datasets
 
 % this script tests ft_appenddata when the input is obtained from 2
 % different datafiles

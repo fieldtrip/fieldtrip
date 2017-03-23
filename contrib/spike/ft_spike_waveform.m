@@ -1,4 +1,4 @@
-function [wave,spike] = ft_spike_waveform(cfg,spike)
+function [wave, spike] = ft_spike_waveform(cfg, spike)
 
 % FT_SPIKE_WAVEFORM computes descriptive parameters on
 % waveform (mean and variance), and performs operations like realignment, outlier rejection,
@@ -55,12 +55,15 @@ function [wave,spike] = ft_spike_waveform(cfg,spike)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % ensure that the required options are present
@@ -250,8 +253,9 @@ wave.var   = varWaveform;
 wave.label = spike.label(spikesel);
 wave.dimord = 'chan_lead_time';
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history spike wave
+ft_postamble previous   spike
+ft_postamble provenance wave spike
+ft_postamble history    wave spike
 

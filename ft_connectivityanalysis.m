@@ -222,7 +222,7 @@ switch cfg.method
         end
       end
     else
-      data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+      data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source' 'source+mesh'});
       inparam = 'crsspctrm';
     end
     
@@ -282,12 +282,12 @@ switch cfg.method
     inparam = 'cov';
     outparam = cfg.method;
   case {'amplcorr' 'powcorr'}
-    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
+    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source' 'source+mesh'});
     dtype = ft_datatype(data);
     switch dtype
       case {'freq' 'freqmvar'}
         inparam = 'powcovspctrm';
-      case 'source'
+      case {'source' 'source+mesh'}
         inparam = 'powcov';
         if isempty(cfg.refindx), error('indices of reference voxels need to be specified'); end
         % if numel(cfg.refindx)>1, error('more than one reference voxel is not yet supported'); end
@@ -415,16 +415,22 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         elseif isfield(data, 'powspctrm')
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
-        tmpcfg = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
-        optarg = ft_cfg2keyval(tmpcfg.granger);
-        data   = ft_connectivity_csd2transfer(data, optarg{:});
-        % convert the inparam back to cell array in the case of granger
+        
+       % convert the inparam back to cell array in the case of granger
         if strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
+          tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
+          optarg  = ft_cfg2keyval(tmpcfg.granger);
+        else
+          tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {cfg.method});
+          optarg  = ft_cfg2keyval(tmpcfg.(cfg.method));
         end
+        
+        % compute the transfer matrix
+        data   = ft_connectivity_csd2transfer(data, optarg{:});
       end
       
-    case 'source'
+    case {'source' 'source+mesh'}
       if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
         cfg.refindx = 1:size(data.pos,1);
       elseif ischar(cfg.refindx)
@@ -756,6 +762,26 @@ switch cfg.method
       dat    = permute(dat,[posdim rptdim setdiff(1:ndims(dat),[posdim rptdim])]);
       
       datout = ft_connectivity_powcorr_ortho(dat, optarg{:});
+      
+      % HACK continued: format the output according to the inside and
+      % refindx specifications
+      if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all'),
+        % create all-to-all output
+        tmp = zeros(numel(data.inside));
+        tmp(data.inside,data.inside) = datout;
+        datout = tmp;
+        clear tmp;
+        
+        outdimord = 'pos_pos_freq';
+      else
+        % create all-to-few output
+        tmp = zeros(numel(data.inside), numel(cfg.refindx));
+        tmp(data.inside, :) = datout;
+        datout = tmp;
+        clear tmp;
+        
+        outdimord = 'pos_pos_freq';
+      end
     elseif strcmp(data.dimord, 'rpttap_chan_freq')
       % loop over all frequencies
       [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
@@ -897,8 +923,8 @@ if exist('powindx', 'var') && ~isempty(powindx),
       inside = false(zeros(1, size(data.pos, 1)));
       inside(data.inside) = true;
       inside = inside(keepchn);
-      data.inside = find(inside)';
-      data.outside = find(inside==0)';
+%       data.inside = find(inside)';
+%       data.outside = find(inside==0)';
       data.pos = data.pos(keepchn, :);
   end % switch dtype
 end
@@ -914,6 +940,9 @@ switch dtype
     end
     if isfield(data, 'labelcmb'),
       stat.labelcmb = data.labelcmb;
+      
+      % ensure the correct dimord in case the input was 'powandcsd'
+      data.dimord = strrep(data.dimord, 'chan_', 'chancmb_');
     end
     tok = tokenize(data.dimord, '_');
     dimord = '';
@@ -957,13 +986,28 @@ switch dtype
       stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
     end
     
-  case 'source'
-    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside'});
+  case {'source' 'source+mesh'}
+    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside' 'tri'});
     stat.(outparam) = datout;
     if ~isempty(varout),
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;
     end
     
+    % deal with the dimord
+    if exist('outdimord', 'var'),
+      stat.dimord = outdimord;
+    else
+      % guess
+      tok = tokenize(getdimord(data, inparam), '_');
+      dimord = '';
+      for k = 1:numel(tok)
+        if isempty(strfind(tok{k}, 'rpt'))
+          dimord = [dimord, '_', tok{k}];
+        end
+      end
+      stat.dimord = dimord(2:end);
+    end
+  
   case 'raw'
     stat = [];
     stat.label = data.label;

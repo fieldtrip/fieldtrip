@@ -4,7 +4,7 @@ function outputfile = inflate_file(inputfile)
 % compression type. Returns the full path to the extracted file or
 % directory, which will be located in a temporary location.
 
-% Copyright (C) 2012 Eelke Spaak
+% Copyright (C) 2012, Eelke Spaak
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -25,7 +25,8 @@ function outputfile = inflate_file(inputfile)
 % $Id$
 
 % use a cache to prevent extracting the same file multiple times
-persistent extractcache;
+persistent extractcache
+
 inputfilemd5 = fixname(CalcMD5(inputfile));
 if isfield(extractcache, inputfilemd5)
   outputfile = extractcache.(inputfilemd5);
@@ -41,21 +42,21 @@ end
 % determine compression type
 if filetype_check_extension(inputfile, 'zip')
   type = 'zip';
-elseif filetype_check_extension(inputfile, 'tar')...
-    || filetype_check_extension(inputfile, '.tar.gz')...
+elseif filetype_check_extension(inputfile, 'tar')     ...
+    || filetype_check_extension(inputfile, '.tar.gz') ...
     || filetype_check_extension(inputfile, 'tgz')
   type = 'tar';
 elseif filetype_check_extension(inputfile, 'gz')
   type = 'gzip';
 else
-  error('unsupported compression type, only zip/tar(gz)/gz are supported');
+  error('unsupported compression type, only zip/gz/tar/tgz/tar.gz are supported');
 end
 
 % determine temporary output folder
 outputdir = [tempdir() inputfilemd5];
 
 % give some feedback
-fprintf('extracting compressed dataset to %s...\n', outputdir);
+fprintf('extracting compressed dataset to %s...\n', [outputdir filesep]);
 
 % do appropriate inflation
 switch (type)
@@ -68,17 +69,15 @@ switch (type)
 end
 
 % if we extracted only a single file (or directory), return path to that file, if it was a
-% set of files, return path to the biggeset file
+% set of files, return path to the biggest file
 outfiles = dir(outputdir);
 if numel(outfiles) == 3 % first two will always be . and ..
-  outputfile = [outputdir '/' outfiles(3).name];
+  outputfile = [outputdir filesep outfiles(3).name];
 else
   siz = [outfiles.bytes];
   maxind = find(siz == max(siz),1); % use find() because we want at most 1
-  outputfile = [outputdir '/' outfiles(maxind).name];
+  outputfile = [outputdir filesep outfiles(maxind).name];
 end
 
 fprintf('extracted dataset is located at %s\n', outputfile);
 extractcache.(inputfilemd5) = outputfile;
-
-end

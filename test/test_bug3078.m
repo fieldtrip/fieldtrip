@@ -1,9 +1,8 @@
 function test_bug3078
 
-% MEM=500mb
-% WALLTIME=00:15:00
+% MEM 500mb
+% WALLTIME 00:15:00
 
-% TEST test_bug3078
 % TEST ft_sourceanalysis
 
 % there's something obscure going on with the channel order in the spatial filters,
@@ -80,7 +79,7 @@ source1 = ft_sourceanalysis(cfg, freq1);
 source2 = ft_sourceanalysis(cfg, freq2);
 
 firstinside         = find(source1.inside,1,'first');
-channelorderflipped = (identical(fliplr(source1.avg.filter{firstinside}),source2.avg.filter{firstinside},'reltol',1e-4))
+channelorderflipped = (isalmostequal(fliplr(source1.avg.filter{firstinside}),source2.avg.filter{firstinside},'reltol',1e-4));
 if channelorderflipped,
 	fprintf('Currently the order of the channels in the spatial filter is flipped, depending on whether ''fourier'' or ''powandcsd'' in input\n');
   % this is problematic if true, because at present there's no information
@@ -104,7 +103,7 @@ cfg.grid      = sourcemodel_lf2;
 source2 = ft_sourceanalysis(cfg, freq1);
 
 firstinside         = find(source1.inside,1,'first');
-channelordernotflipped = (identical(source1.avg.filter{firstinside},source2.avg.filter{firstinside},'reltol',1e-4))
+channelordernotflipped = (isalmostequal(source1.avg.filter{firstinside},source2.avg.filter{firstinside},'reltol',1e-4));
 if channelordernotflipped,
 	fprintf('Currently the order of the channels in the spatial filter is identical, despite the channel ordering in the input leadfields\n');
   % this is good, because it suggests that the order of labels in the data determines the channel order...

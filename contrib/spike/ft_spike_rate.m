@@ -1,13 +1,13 @@
-function [rate] = ft_spike_rate(cfg,spike)
+function [rate] = ft_spike_rate(cfg, spike)
 
 % FT_SPIKE_RATE computes the firing rate of spiketrains and their variance
 %
 % Use as
 %   [rate] = ft_spike_rate(cfg, spike)
 %
-% The input SPIKE should be organised as the spike or the (binary) raw datatype, obtained from
-% FT_SPIKE_MAKETRIALS or FT_APPENDSPIKE (in that case, conversion is done
-% within the function)
+% The input SPIKE should be organised as the spike or the (binary) raw
+% datatype, obtained from FT_SPIKE_MAKETRIALS or FT_APPENDSPIKE (in that
+% case, conversion is done within the function)
 %
 % Configurations:
 %   cfg.outputunit       = 'rate' (default) or 'spikecount'. If 'rate', we convert
@@ -58,12 +58,15 @@ function [rate] = ft_spike_rate(cfg,spike)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % control input spike structure
@@ -169,9 +172,9 @@ if isfield(spike, 'trialinfo'), rate.trialinfo = spike.trialinfo(cfg.trials,:); 
   
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history rate
+ft_postamble previous   spike
+ft_postamble provenance rate
+ft_postamble history    rate
 
 
 %%%%%%%%% SUB FUNCTIONS %%%%%%%%%

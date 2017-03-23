@@ -7,11 +7,12 @@ function [data] = ft_resampledata(cfg, data)
 %
 % The data should be organised in a structure as obtained from
 % the FT_PREPROCESSING function. The configuration should contain
-%   cfg.resamplefs = frequency at which the data will be resampled (default = 256 Hz)
-%   cfg.detrend    = 'no' or 'yes', detrend the data prior to resampling (no default specified, see below)
-%   cfg.demean     = 'no' or 'yes', baseline correct the data prior to resampling (default = 'no')
-%   cfg.feedback   = 'no', 'text', 'textbar', 'gui' (default = 'text')
-%   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.resamplefs  = frequency at which the data will be resampled (default = 256 Hz)
+%   cfg.detrend     = 'no' or 'yes', detrend the data prior to resampling (no default specified, see below)
+%   cfg.demean      = 'no' or 'yes', baseline correct the data prior to resampling (default = 'no')
+%   cfg.feedback    = 'no', 'text', 'textbar', 'gui' (default = 'text')
+%   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.sampleindex = 'no' or 'yes', add a channel with the original sample indices (default = 'no')
 %
 % Instead of specifying cfg.resamplefs, you can also specify a time axis on
 % which you want the data to be resampled. This is usefull for merging data
@@ -100,6 +101,7 @@ cfg.demean     = ft_getopt(cfg, 'demean',     'no');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.method     = ft_getopt(cfg, 'method',     'pchip');
+cfg.sampleindex = ft_getopt(cfg, 'sampleindex', 'no');
 
 % give the user control over whether to use resample (applies anti-aliasing
 % filter) or downsample (does not apply filter)
@@ -121,6 +123,16 @@ tmpcfg = keepfields(cfg, 'trials');
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
+
+if strcmp(cfg.sampleindex, 'yes') && isfield(data, 'sampleinfo')
+  data.label{end+1} = 'sampleindex';
+  for i=1:size(data.sampleinfo,1)
+    % this works for one or more trials
+    data.trial{i}(end+1,:) = data.sampleinfo(i,1):data.sampleinfo(i,2);
+  end
+elseif strcmp(cfg.sampleindex, 'yes')
+  warning('no sampleinfo present, cannot add sampleindex as channel');
+end
 
 % sampleinfo, if present, becomes invalid because of the resampling
 if isfield(data, 'sampleinfo'),

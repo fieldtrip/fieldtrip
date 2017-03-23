@@ -115,7 +115,7 @@ Frequently asked questions about iso2mesh
    temporary folder, or set your session id, you can find more info at
    [12]Advanced page.
 
-5. When displaying a surface produced by iso2mesh, there are many holes, howto fix this?
+5. When displaying a surface produced by iso2mesh, there are many holes, how to fix this?
 
    The node orders in the output surface mesh are random, some are
    oriented clockwise, some are counter-clockwise. This will make OpenGL,

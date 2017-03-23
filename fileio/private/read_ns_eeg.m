@@ -81,6 +81,7 @@ end
 
 % create empty storage for the data
 data = zeros(length(epoch), eeg.nchan, eeg.npnt);
+sweep = struct();
 
 for i=1:length(epoch)
   fseek(fid, 900, 'bof');               % skip general header

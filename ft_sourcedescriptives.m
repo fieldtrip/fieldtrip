@@ -82,10 +82,10 @@ end
 % check if the input data is valid for this function
 % source = ft_checkdata(source, 'datatype', 'source', 'feedback', 'yes');
 
-cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'});    % trial selection is not implented here, you may want to consider ft_selectdata
+% cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'});    % trial selection is not implented here, you may want to consider ft_selectdata
 
 % DEPRECATED by roboos on 13 June 2013
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2199 for more details
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2199 for more details
 % support for this functionality can be removed at the end of 2013
 cfg = ft_checkconfig(cfg, 'deprecated',  {'transform'}); % please use ft_math instead
 
@@ -102,6 +102,7 @@ cfg.eta              = ft_getopt(cfg, 'eta',              'no');
 cfg.fa               = ft_getopt(cfg, 'fa',               'no');
 cfg.kurtosis         = ft_getopt(cfg, 'kurtosis',         'no');
 cfg.keeptrials       = ft_getopt(cfg, 'keeptrials',       'no');
+cfg.trials           = ft_getopt(cfg, 'trials',           'all');
 cfg.keepcsd          = ft_getopt(cfg, 'keepcsd',          'no');
 cfg.keepmom          = ft_getopt(cfg, 'keepmom',          'yes');
 cfg.keepnoisecsd     = ft_getopt(cfg, 'keepnoisecsd',     'no');
@@ -119,6 +120,22 @@ cfg.zscore         = ft_getopt(cfg, 'zscore',         'yes');
 
 zscore = strcmp(cfg.zscore, 'yes');
 demean = strcmp(cfg.demean, 'yes');
+
+if ischar(cfg.trials) && strcmp(cfg.trials,'all')
+  % do nothing
+elseif ischar(cfg.trials)
+  error('only ''all'' is allowed for string input for cfg.trials');
+else
+  % check whether there's a trial field in the source structure, and
+  % subselect, otherwise error
+  if isfield(source, 'trial')
+    source.trial = source.trial(cfg.trials);
+    if isfield(source, 'cumtapcnt'), source.cumtapcnt = source.cumtapcnt(cfg.trials,:); end
+  else
+    error('subselecting trials in ft_sourcedescriptives is currently only possible with a ''trial'' field');   
+  end
+end
+
 
 % get desired method from source structure
 source.method = ft_getopt(source,'method',[]);

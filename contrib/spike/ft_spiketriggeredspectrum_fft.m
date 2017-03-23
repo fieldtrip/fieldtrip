@@ -69,12 +69,15 @@ function [sts] = ft_spiketriggeredspectrum_fft(cfg, data, spike)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance data spike
 ft_preamble trackconfig
 
 % check input data structure
@@ -275,9 +278,9 @@ sts.label     = spike.label(spikesel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous data
-ft_postamble history sts
+ft_postamble previous   data
+ft_postamble provenance sts
+ft_postamble history    sts
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [spikelabel, eeglabel] = detectspikechan(data)

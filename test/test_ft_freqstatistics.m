@@ -3,7 +3,6 @@ function test_ft_freqstatistics
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_freqstatistics
 % TEST ft_freqstatistics, findcluster, clusterstat, ft_statistics_montecarlo
 
 global ft_default;

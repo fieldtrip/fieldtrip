@@ -20,7 +20,7 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %                        parameter to average. default is set to
 %                        'avg', if it is present in the data.
 %
-% If cfg.method = 'across', an plain average is performed, i.e. the
+% If cfg.method = 'across', a plain average is performed, i.e. the
 % requested parameter in each input argument is weighted equally in the
 % average. This is useful when averaging across subjects. The
 % variance-field will contain the variance across the parameter of
@@ -192,7 +192,7 @@ else % ~strcmp(cfg.keepindividual, 'yes')
   % if strcmp(cfg.method, 'across')
   ResultVar      = reshape(sum(avgvar,1), datsiz)-reshape(sum(avgmat,1), datsiz).^2./ResultDOF;
   % else  % cfg.method = 'within'
-  % ResultVar      = squeeze(sum(avgvar,1)); % subtraction of means was done for each block already
+  % ResultVar      = reshape(sum(avgvar, 1), datsiz); % subtraction of means was done for each block already
   % end
   switch cfg.normalizevar
     case 'N-1'

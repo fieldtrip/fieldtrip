@@ -40,14 +40,14 @@ if mod(nargin-5,2)
 end
 
 % get the optional input arguments
-meansphereorigin  = keyval('meansphereorigin',  varargin);
-feedback          = keyval('feedback',          varargin); if isempty(feedback),  feedback = 'text';  end
-lambda            = keyval('lambda',            varargin); if isempty(lambda ),   lambda = 0;         end
-fixedori          = keyval('fixedori',          varargin); if isempty(fixedori),  fixedori = 'spinning'; end
+meansphereorigin  = ft_getopt(varargin, 'meansphereorigin');
+feedback          = ft_getopt(varargin, 'feedback', 'text');
+lambda            = ft_getopt(varargin, 'lambda', 0);
+fixedori          = ft_getopt(varargin, 'fixedori', 'spinning');
 % these settings pertain to the forward model, the defaults are set in ft_compute_leadfield
-reducerank        = keyval('reducerank',        varargin);
-normalize         = keyval('normalize',         varargin);
-normalizeparam    = keyval('normalizeparam',    varargin);
+reducerank        = ft_getopt(varargin, 'reducerank');
+normalize         = ft_getopt(varargin, 'normalize');
+normalizeparam    = ft_getopt(varargin, 'normalizeparam');
 
 % determine the mean sphere origin, required for spinning
 if isempty(meansphereorigin)
@@ -56,6 +56,8 @@ if isempty(meansphereorigin)
       meansphereorigin = headmodel.o;
     case 'localspheres'
       meansphereorigin = mean(headmodel.o, 1);
+    case 'singleshell'
+      meansphereorigin = mean(headmodel.bnd.pos,1);
     otherwise
       error('unsupported voltype for determining the mean sphere origin')
   end
@@ -81,7 +83,7 @@ origpos    = dip.pos;
 
 % select only the dipole positions inside the brain for scanning
 dip.pos    = dip.pos(originside,:);
-dip.inside = true(size(dip.pos,1),1);
+
 if isfield(dip, 'mom')
   dip.mom = dip.mom(:, dip.inside);
 end
@@ -93,6 +95,7 @@ if isfield(dip, 'filter')
   fprintf('using precomputed filters\n');
   dip.filter = dip.filter(dip.inside);
 end
+dip.inside = true(size(dip.pos,1),1);
 
 isrankdeficient = (rank(all_cov)<size(all_cov,1));
 

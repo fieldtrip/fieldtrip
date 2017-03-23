@@ -149,9 +149,9 @@ if strcmp(cfg.correctm, 'cluster')
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       fprintf('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
-      if isfield(cfg, 'inside')
-        cfg = fixinside(cfg, 'index');
-      end
+      %if isfield(cfg, 'inside')
+      %  cfg = fixinside(cfg, 'index');
+      %end
     elseif isfield(cfg, 'tri')
       % input data describes a surface along which neighbours can be defined
       fprintf('using connectivity of vertices along triangulated surface\n');
@@ -412,7 +412,7 @@ if isfield(stat, 'posclusters')
   for i=1:length(stat.posclusters)
     stat.posclusters(i).stddev  = sqrt(stat.posclusters(i).prob.*(1-stat.posclusters(i).prob)/Nrand);
     stat.posclusters(i).cirange =  1.96*stat.posclusters(i).stddev;
-    if stat.posclusters(i).prob<cfg.alpha && stat.posclusters(i).prob+stat.posclusters(i).cirange>=cfg.alpha
+    if i==1 && stat.posclusters(i).prob<cfg.alpha && stat.posclusters(i).prob+stat.posclusters(i).cirange>=cfg.alpha
       warning('FieldTrip:posCluster_exceeds_alpha', sprintf('The p-value confidence interval of positive cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
     end
   end
@@ -421,7 +421,7 @@ if isfield(stat, 'negclusters')
   for i=1:length(stat.negclusters)
     stat.negclusters(i).stddev  = sqrt(stat.negclusters(i).prob.*(1-stat.negclusters(i).prob)/Nrand);
     stat.negclusters(i).cirange =  1.96*stat.negclusters(i).stddev;
-    if stat.negclusters(i).prob<cfg.alpha && stat.negclusters(i).prob+stat.negclusters(i).cirange>=cfg.alpha
+    if i==1 && stat.negclusters(i).prob<cfg.alpha && stat.negclusters(i).prob+stat.negclusters(i).cirange>=cfg.alpha
       warning('FieldTrip:negCluster_exceeds_alpha', sprintf('The p-value confidence interval of negative cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
     end
   end

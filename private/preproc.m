@@ -79,6 +79,9 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.hpfiltdev     = highpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
 %   cfg.bpfiltdev     = bandpass max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
 %   cfg.bsfiltdev     = bandstop max passband deviation (firws with 'kaiser' window, default 0.001 set in low-level function)
+%   cfg.dftreplace    = 'zero' or 'neighbour', method used to reduce line noise, 'zero' implies DFT filter, 'neighbour' implies spectrum interpolation (default = 'zero')
+%   cfg.dftbandwidth  = bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz (default = [1 2 3])
+%   cfg.dftneighbourwidth = bandwidth of frequencies neighbouring line noise frequencies, applies to spectrum interpolation, in Hz (default = [2 2 2])
 %   cfg.plotfiltresp  = 'no' or 'yes', plot filter responses (firws, default = 'no')
 %   cfg.usefftfilt    = 'no' or 'yes', use fftfilt instead of filter (firws, default = 'no')
 %   cfg.demean        = 'no' or 'yes'
@@ -99,7 +102,7 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
-% See also READ_DATA, READ_HEADER
+% See also FT_READ_DATA, FT_READ_HEADER
 
 % TODO implement decimation and/or resampling
 
@@ -226,13 +229,13 @@ end
 
 % do a sanity check on the filter configuration
 if strcmp(cfg.bpfilter, 'yes') && ...
-    (strcmp(cfg.hpfilter, 'yes') || strcmp(cfg.lpfilter,'yes')),
+    (strcmp(cfg.hpfilter, 'yes') || strcmp(cfg.lpfilter,'yes'))
   error('you should not apply both a bandpass AND a lowpass/highpass filter');
 end
 
 % do a sanity check on the hilbert transform configuration
 if strcmp(cfg.hilbert, 'yes') && ~strcmp(cfg.bpfilter, 'yes')
-  error('hilbert transform should be applied in conjunction with bandpass filter')
+  warning('hilbert transform should be applied in conjunction with bandpass filter')
 end
 
 % do a sanity check on hilbert and rectification
@@ -258,7 +261,7 @@ if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
   dat(end+1,:) = 0;
 end
 
-if strcmp(cfg.reref, 'yes'),
+if strcmp(cfg.reref, 'yes')
   cfg.refchannel = ft_channelselection(cfg.refchannel, label);
   refindx = match_str(label, cfg.refchannel);
   if isempty(refindx)
@@ -270,10 +273,11 @@ end
 if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
   % this is an alternative approach for rereferencing, with arbitrary complex linear combinations of channels
   tmp.trial = {dat};
+  tmp.time  = {time};
   tmp.label = label;
-  tmp = ft_apply_montage(tmp, cfg.montage, 'feedback', 'none');
-  dat = tmp.trial{1};
-  label = tmp.label;
+  tmp   = ft_apply_montage(tmp, cfg.montage, 'feedback', 'none');
+  dat   = tmp.trial{1}; % the number of channels can have changed
+  label = tmp.label;    % the channels can be different than the input channel labels
   clear tmp
 end
 
@@ -357,7 +361,20 @@ else
   end
   if strcmp(cfg.dftfilter, 'yes')
     datorig = dat;
-    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq);
+    optarg = {};
+    if isfield(cfg, 'dftreplace') 
+        optarg = cat(2, optarg, {'dftreplace', cfg.dftreplace}); 
+        if strcmp(cfg.dftreplace, 'neighbour') && (begpadding>0 || endpadding>0)
+             error('Padding by data mirroring is not supported for spectrum interpolation.');
+        end
+    end
+    if isfield(cfg, 'dftbandwidth')
+        optarg = cat(2, optarg, {'dftbandwidth', cfg.dftbandwidth});
+    end
+    if isfield(cfg, 'dftneighbourwidth') 
+        optarg = cat(2, optarg, {'dftneighbourwidth', cfg.dftneighbourwidth});
+    end
+    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq, optarg{:}); 
     if strcmp(cfg.dftinvert, 'yes'),
       dat = datorig - dat;
     end

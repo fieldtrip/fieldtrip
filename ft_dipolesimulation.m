@@ -42,8 +42,8 @@ function [simulated] = ft_dipolesimulation(cfg)
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %   cfg.gradfile      = name of file containing the gradiometer definition, see FT_READ_SENS
 %
-% See also FT_SOURCEANALYSIS, FT_SOURCESTATISTICS, FT_SOURCEPLOT, FT_FREQSIMULATION,
-% FT_CONNECTIVITYSIMULATION
+% See also FT_SOURCEANALYSIS, FT_DIPOLEFITTING, FT_TIMELOCKSIMULATION,
+% FT_FREQSIMULATION, FT_CONNECTIVITYSIMULATION
 
 % Undocumented local options
 % cfg.feedback

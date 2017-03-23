@@ -1,9 +1,8 @@
 function test_ft_selectdata_union
 
-% WALLtime 00:10:00
+% WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_ft_selectdata_union
 % TEST ft_selectdata
 
 data1        = [];
@@ -38,21 +37,21 @@ cfg.channel = 'all';
 cfg.latency = 'all';
 cfg.select = 'intersect';
 
-[a, b] = ft_selectdata(cfg, data1, data2)
+[a, b] = ft_selectdata(cfg, data1, data2);
 
 assert(isequal(a.label, b.label));
 assert(isequal(a.time, b.time));
 assert(length(a.label)==2);
 assert(length(a.time)==4);
 
-[a, b] = ft_selectdata(cfg, data1, data3)
+[a, b] = ft_selectdata(cfg, data1, data3);
 
 assert(isequal(a.label, b.label));
 assert(isequal(a.time, b.time));
 assert(length(a.label)==1);
 assert(length(a.time)==5);
 
-[a, b] = ft_selectdata(cfg, data1, data4)
+[a, b] = ft_selectdata(cfg, data1, data4);
 
 assert(isequal(a.label, b.label));
 assert(isequal(a.time, b.time));
@@ -67,21 +66,21 @@ cfg.channel = 'all';
 cfg.latency = 'all';
 cfg.select = 'union';
 
-[a, b] = ft_selectdata(cfg, data1, data2)
+[a, b] = ft_selectdata(cfg, data1, data2);
 
 assert(isequal(a.label, b.label));
 assert(isequal(a.time, b.time));
 assert(length(a.label)==2);
 assert(length(a.time)==6);
 
-[a, b] = ft_selectdata(cfg, data1, data3)
+[a, b] = ft_selectdata(cfg, data1, data3);
 
 assert(isequal(a.label, b.label));
 assert(isequal(a.time, b.time));
 assert(length(a.label)==3);
 assert(length(a.time)==5);
 
-[a, b] = ft_selectdata(cfg, data1, data4)
+[a, b] = ft_selectdata(cfg, data1, data4);
 
 assert(isequal(a.label, b.label));
 assert(isequal(a.time, b.time));
@@ -103,7 +102,7 @@ data1.powspctrm = 1*ones(2,3,5);
 data2        = [];
 data2.label  = {'2' '3'};
 data2.time   = 2:6;
-data2.freq   = 2:4
+data2.freq   = 2:4;
 data2.dimord = 'chan_freq_time';
 data2.powspctrm = 2*ones(2,3,5);
 

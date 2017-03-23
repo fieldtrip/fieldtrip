@@ -45,6 +45,8 @@ if nargout>1
 end
 
 if Fold==Fnew
+  ft_warning('requested sampling rate after resampling is the same as the sampling rate of the data, no resampling is performed');
+  datout = dat;
   return
 end
 
@@ -52,6 +54,11 @@ end
 if ~strcmp(method, 'downsample')
   typ = class(dat);
   dat = cast(dat, 'double');
+end
+
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 switch method
@@ -76,32 +83,32 @@ switch method
     % the actual implementation resamples along columns
     datout = downsample(dat', fac)';
     
-    case 'fft'
-        % Code written for SPM by Jean Daunizeau
-        fac         = Fnew/Fold;
-        nresampled  = floor(nsamples*fac);
-        fac         = nresampled/nsamples;
-        datfft      = fftshift(fft(dat,[],2),2);
-        middle = floor(size(datfft,2)./2)+1;
-        if fac>1 % upsample
-            npad = floor((nresampled-nsamples)./2);
-            
-            if nsamples/2 == floor(nsamples/2)
-                datfft(:,1) = []; % throw away non symmetric DFT coef
-            end
-            
-            datfft  = [zeros(size(datfft,1),npad), datfft,zeros(size(datfft,1),npad)];
-        else % downsample
-            ncut    = floor(nresampled./2);
-            datfft  = datfft(:,middle-ncut:middle+ncut);
-        end
-        datout      = fac*ifft(ifftshift(datfft,2),[],2);
-    otherwise
-        error('unsupported resampling method');
+  case 'fft'
+    % Code written for SPM by Jean Daunizeau
+    fac         = Fnew/Fold;
+    nresampled  = floor(nsamples*fac);
+    fac         = nresampled/nsamples;
+    datfft      = fftshift(fft(dat,[],2),2);
+    middle = floor(size(datfft,2)./2)+1;
+    if fac>1 % upsample
+      npad = floor((nresampled-nsamples)./2);
+      
+      if nsamples/2 == floor(nsamples/2)
+        datfft(:,1) = []; % throw away non symmetric DFT coef
+      end
+      
+      datfft  = [zeros(size(datfft,1),npad), datfft,zeros(size(datfft,1),npad)];
+    else % downsample
+      ncut    = floor(nresampled./2);
+      datfft  = datfft(:,middle-ncut:middle+ncut);
+    end
+    datout      = fac*ifft(ifftshift(datfft,2),[],2);
+  otherwise
+    error('unsupported resampling method');
 end
 
 if ~strcmp(method, 'downsample')
-    % convert back into the original input format
-    datout = cast(datout, typ);
+  % convert back into the original input format
+  datout = cast(datout, typ);
 end
 

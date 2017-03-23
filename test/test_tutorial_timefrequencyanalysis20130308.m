@@ -3,11 +3,10 @@ function test_tutorial_timefrequencyanalysis20130308
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_tutorial_timefrequencyanalysis20130308
 % TEST ft_freqanalysis ft_preprocessing ft_multiplotTFR ft_singleplotTFR
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% this reflects  http://fieldtrip.fcdonders.nl/tutorial/timefrequencyanalysis
+% this reflects  http://www.fieldtriptoolbox.org/tutorial/timefrequencyanalysis
 % downloaded on 6 March 2013
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -60,10 +60,10 @@ data = ft_checkdata(data);
 cfg = ft_checkconfig(cfg, 'renamed',	 {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam'});
 
-% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151.lay';        end;
-%if ~isfield(cfg, 'xparam'),      cfg.xparam = 'freq';                end;
-if ~isfield(cfg, 'xlim'),        cfg.xlim   = 'all';                end;
-if ~isfield(cfg, 'parameter'),   cfg.parameter = 'avg.icohspctrm';  end;
+% if ~isfield(cfg, 'layout'),    cfg.layout = 'CTF151.lay';        end
+% if ~isfield(cfg, 'xparam'),    cfg.xparam = 'freq';              end
+if ~isfield(cfg, 'xlim'),        cfg.xlim   = 'all';                end
+if ~isfield(cfg, 'parameter'),   cfg.parameter = 'avg.icohspctrm';  end
 
 if strcmp(cfg.parameter, 'avg.icohspctrm') && ~issubfield(data, 'avg.icohspctrm'),
   data.avg.icohspctrm = abs(imag(data.avg.cohspctrm));
@@ -97,7 +97,7 @@ if isfield(cfg, 'xparam'),
   end
 end
 
-% R=read or create the layout that will be used for plotting
+% read or create the layout that will be used for plotting
 lay = ft_prepare_layout(cfg);%, varargin{1});
 cfg.layout = lay;
 ft_plot_lay(lay, 'box', false,'label','no','point','no');
@@ -113,19 +113,20 @@ chNum = numel(lay.label);
 xScaleFac = 1/(max(Width)+ max(X) - min(X));
 yScaleFac = 1/(max(Height)+ max(Y) - min(Y));
 
-
 Xpos = xScaleFac*(X-min(X));
 Ypos = 0.9*yScaleFac*(Y-min(Y));
 
 for k=1:length(chNum) - 2
   subplotOL('position',[Xpos(k) Ypos(k)+(Height(k)*yScaleFac) Width(k)*xScaleFac*2 Height(k)*yScaleFac*2])
-  config.layout     = cfg.layout;
-  if exist('tmpdata'),
-
+  config.layout = cfg.layout;
+  if exist('tmpdata', 'var')
     config.style      = 'straight';
     config.marker     = 'off';
-    try, config.refmarker = strmatch(Lbl(k), data.reflabel);
-    catch, config.refmarker  = strmatch(Lbl(k), data.label); end
+    try
+        config.refmarker = strmatch(Lbl(k), data.reflabel);
+    catch
+        config.refmarker = strmatch(Lbl(k), data.label);
+    end
     config.interplimits = 'electrodes';
     if isfield(cfg, 'xparam'),
       config.xparam = cfg.xparam;
@@ -134,13 +135,13 @@ for k=1:length(chNum) - 2
       config.xparam = 'freq';
       config.xlim   = [k-0.5 k+0.5];
     end
-    config.parameter = cfg.parameter;
+    config.parameter  = cfg.parameter;
     config.refchannel = Lbl(k);
-    config.colorbar = 'no';
-    config.zlim     = scale;
+    config.colorbar   = 'no';
+    config.zlim       = scale;
     config.grid_scale = 30;
     ft_topoplotTFR(config, data);
-    drawnow;
+    drawnow
   end
 end
 
@@ -150,3 +151,4 @@ ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble history    data
 ft_postamble provenance
+

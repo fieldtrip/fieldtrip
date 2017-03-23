@@ -1,4 +1,4 @@
-function [isih] = ft_spike_isi(cfg,spike)
+function [isih] = ft_spike_isi(cfg, spike)
 
 % FT_SPIKE_ISI computes the interspike interval histogram
 %
@@ -61,12 +61,15 @@ function [isih] = ft_spike_isi(cfg,spike)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % check if data is of proper format 
@@ -186,8 +189,8 @@ isih.(param) = out;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history isih
+ft_postamble previous   spike
+ft_postamble provenance isih
+ft_postamble history    isih
 
 

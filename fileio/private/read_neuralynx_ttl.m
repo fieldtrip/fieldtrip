@@ -1,4 +1,4 @@
-function [dat] = read_neuralynx_ttl(filename, begsample, endsample);
+function [dat] = read_neuralynx_ttl(filename, begsample, endsample)
 
 % READ_NEURALYNX_TTL reads the Parallel_in values from a *.ttl file
 %

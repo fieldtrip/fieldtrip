@@ -31,7 +31,9 @@ function label = ft_senslabel(type, varargin)
 %  'egi128'
 %  'egi256'
 %  'neuromag122'
+%  'neuromag122_planar'
 %  'neuromag306'
+%  'neuromag306_planar'
 %  'itab28'
 %  'itab153'
 %  'itab153_planar'
@@ -72,7 +74,7 @@ function label = ft_senslabel(type, varargin)
 % $Id$
 
 % these are for speeding up subsequent calls with the same input arguments
-persistent eeg electrode ant128 btiref bti148 bti148_planar bti148_planar_combined bti248 bti248_planar bti248_planar_combined ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf151_planar_combined ctf275 ctf275_planar ctf275_planar_combined neuromag122 neuromag122_combined neuromag306 neuromag306_combined eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar itab153_planar_combined yokogawa9 yokogawa64 yokogawa64_planar yokogawa64_planar_combined yokogawa160 yokogawa160_planar yokogawa160_planar_combined yokogawa440 yokogawa440_planar yokogawa440_planar_combined
+persistent eeg electrode ant128 btiref bti148 bti148_planar bti148_planar_combined bti248 bti248_planar bti248_planar_combined ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf151_planar_combined ctf275 ctf275_planar ctf275_planar_combined neuromag122 neuromag122_combined neuromag306 neuromag306_mag neuromag306_planar neuromag306_combined eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar itab153_planar_combined yokogawa9 yokogawa64 yokogawa64_planar yokogawa64_planar_combined yokogawa160 yokogawa160_planar yokogawa160_planar_combined yokogawa440 yokogawa440_planar yokogawa440_planar_combined
 % these are for backward compatibility
 persistent neuromag122alt neuromag122alt_combined neuromag306alt neuromag306alt_combined
 
@@ -1623,9 +1625,10 @@ elseif isempty(eval(type))
         'MEG2632'  'MEG2633'  'MEG2631'  'MEG2632+2633'
         'MEG2642'  'MEG2643'  'MEG2641'  'MEG2642+2643'
         };
-      neuromag306_combined = label(:,4);
-      neuromag306alt_combined = label(:,4);
-      label = label(:,1:3);
+      neuromag306_mag      = label(:,1);
+      neuromag306_planar   = label(:,[1 2]);
+      neuromag306_combined = label(:,[3 4]); % magnetometers and combined channels
+      label                = label(:,1:3);
       
     case 'eeg1020'
       label = {
@@ -3660,6 +3663,14 @@ elseif isempty(eval(type))
       % there is no default set of electrode labels for all possible EEG systems
       % but nevertheless the requested input type should not result in an error
       label = {};
+      
+    case {'neuromag122_combined' 'neuromag122alt_combined'}
+      tmp   = ft_senslabel('neuromag122'); % this is required to generate the combined version
+      label = ft_senslabel(type);
+      
+    case {'neuromag306_combined' 'neuromag306alt_combined'}
+      tmp   = ft_senslabel('neuromag306'); % this is required to generate the combined version
+      label = ft_senslabel(type);
       
     otherwise
       error('the requested sensor type "%s" is not supported', type);

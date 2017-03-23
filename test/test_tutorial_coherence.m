@@ -3,16 +3,15 @@ function test_tutorial_coherence
 % MEM 4500mb
 % WALLTIME 00:20:00
 
-% TEST test_tutorial_coherence
 % TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 
-addpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence');
-addpath('/home/common/matlab/fieldtrip/data/');
+addpath(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence'));
+addpath(dccnpath('/home/common/matlab/fieldtrip/data/'));
 
 % find the interesting epochs of data
 cfg = [];
 cfg.trialfun                  = 'trialfun_left';
-cfg.dataset                   = '/home/common/matlab/fieldtrip/data/SubjectCMC.ds';
+cfg.dataset                   = dccnpath('/home/common/matlab/fieldtrip/data/SubjectCMC.ds');
 cfg = ft_definetrial(cfg);
 
 % detect EOG artifacts in the MEG data

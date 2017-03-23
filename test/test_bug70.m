@@ -3,8 +3,11 @@ function test_bug70
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_bug70
-% TEST ft_prepare_headmodel ft_prepare_leadfield
+% TEST ft_prepare_headmodel ft_prepare_leadfield ft_headmodel_openmeeg
+
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
 % this is the output of icosahedron162, including it like this
 % makes the test script independent of that function

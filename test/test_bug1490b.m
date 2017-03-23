@@ -3,7 +3,6 @@ function test_bug1490b
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1490b
 % TEST ft_read_header ft_read_data loadcnt
 
 % this is a second test pertaining to http://bugzilla.fcdonders.nl/show_bug.cgi?id=1490#c11
@@ -13,7 +12,7 @@ return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = '/home/common/matlab/fieldtrip/data/test/bug1490/cba1ff01.cnt';
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490/cba1ff01.cnt');
 dataformat = 'ns_cnt16';
 
 hdr = ft_read_header(filename);

@@ -1,4 +1,4 @@
-function [magn] = read_ctf_sens(filename);
+function [magn] = read_ctf_sens(filename)
 
 % READ_CTF_SENS reads MEG sensor information from CTF configuration file
 %

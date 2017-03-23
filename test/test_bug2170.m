@@ -3,7 +3,6 @@ function test_bug2170
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2170
 % TEST ft_filetype ft_read_event
 
 % the 3rd dataset is different in the sense that it is a *.fif file accompanied

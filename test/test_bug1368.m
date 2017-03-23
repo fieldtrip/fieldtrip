@@ -3,8 +3,12 @@ function test_bug1368
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_bug1368
-% TEST ft_prepare_sourcemodel headsurface
+% TEST ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
+
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
+ft_default.feedback = 'no';
 
 pnt = [
   0         0    1.0000

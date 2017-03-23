@@ -10,21 +10,22 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmf
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/source/meg/source_grid_mtmfft_fourier_trl_DICS_fixedori_ctf275'));
 
 sourcemodel = ft_source2grid(source);
-sourcemodel.inside = sourcemodel.inside(1:10);
-sourcemodel.outside = setdiff(1:prod(sourcemodel.dim),sourcemodel.inside);
+sourcemodel.inside(44:end) = false;
 meglabel    = ft_channelselection('MEG', freq.label);
 
-cfg         = [];
-cfg.vol     = vol;
-cfg.grid    = sourcemodel;
-cfg.channel = meglabel;
-leadfield1  = ft_prepare_leadfield(cfg, freq);
+cfg           = [];
+cfg.headmodel = vol;
+cfg.grid      = sourcemodel;
+cfg.channel   = meglabel;
+leadfield1    = ft_prepare_leadfield(cfg, freq);
 assert(isfield(leadfield1, 'label'));
 
 shuffle     = randperm(numel(meglabel));
 cfg.channel = meglabel(shuffle);
 leadfield2  = ft_prepare_leadfield(cfg, freq);
-assert(norm(leadfield1.leadfield{4}(:)-leadfield2.leadfield{4}(:))./norm(leadfield1.leadfield{4})<10*eps);
+
+idx = find(leadfield1.inside,1,'first');
+assert(norm(leadfield1.leadfield{idx}(:)-leadfield2.leadfield{idx}(:))./norm(leadfield1.leadfield{idx})<10*eps);
 
 % OBSERVATION: giving a different order of channels to
 % ft_prepare_leadfield does not lead to a different ordering of the
@@ -33,12 +34,12 @@ assert(norm(leadfield1.leadfield{4}(:)-leadfield2.leadfield{4}(:))./norm(leadfie
 % leadfield.leadfield.
 
 cfg = [];
-cfg.method = 'dics';
-cfg.vol    = vol;
-cfg.grid   = leadfield1;
-cfg.frequency = 5;
+cfg.method      = 'dics';
+cfg.headmodel   = vol;
+cfg.grid        = leadfield1;
+cfg.frequency   = 5;
 cfg.dics.lambda = '10%';
-cfg.channel = meglabel;
+cfg.channel     = meglabel;
 source1 = ft_sourceanalysis(cfg, freq);
 
 cfg.channel = meglabel(1:2:end);

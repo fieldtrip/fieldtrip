@@ -1,4 +1,4 @@
-function [varargout] = ft_plot_patch(hdat,vdat,varargin)
+function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 
 % FT_PLOT_PATCH plot a colored shape, similar to the MATLAB patch() function. It is 
 % similar in usage as ft_plot_vector, and they can be combined, for example,
@@ -11,7 +11,7 @@ function [varargout] = ft_plot_patch(hdat,vdat,varargin)
 % Optional arguments should come in key-value pairs and can include
 %   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
-%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %   'facecolor'       = see MATLAB standard patch properties 
 %   'facealpha'       = see MATLAB standard patch properties (note, approx. transparency can be achieved using 'facecolor')
 %   'edgecolor'       = see MATLAB standard patch properties (default is 'none') (equivalent to 'linecolor' in PLOT)
@@ -35,7 +35,7 @@ function [varargout] = ft_plot_patch(hdat,vdat,varargin)
 %   hdat = [1:10 10:-1:1];
 %   vdat = rand(1,10);
 %   vdat = [vdat vdat(end:-1:1)+1];
-%   ft_plot_patch(hdat,vdat)
+%   ft_plot_patch(hdat, vdat)
 %
 % See also FT_PLOT_VECTOR
 
@@ -78,9 +78,16 @@ edgecolor       = ft_getopt(varargin, 'edgecolor', 'none');
 linestyle       = ft_getopt(varargin, 'linestyle', 'none');
 linewidth       = ft_getopt(varargin, 'linewidth', .5);
 
-
 % convert the yes/no strings into boolean values
 box = istrue(box);
+
+% color management
+if ischar(facecolor) && exist([facecolor '.m'], 'file')
+  facecolor = eval(facecolor);
+end
+if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
+  edgecolor = eval(edgecolor);
+end
 
 % this should be a string, because valid options include yes, no, xy, x, y
 if isequal(axis, true)
@@ -172,8 +179,7 @@ end
 vdat = vdat + vpos;
 
 % plot the patch
-h = patch(hdat,vdat,facecolor,'facealpha',facealpha,'edgecolor',edgecolor,'linestyle',linestyle,'linewidth',linewidth);
-
+h = patch(hdat, vdat, facecolor, 'facealpha', facealpha, 'edgecolor', edgecolor, 'linestyle', linestyle, 'linewidth', linewidth);
 
 if box
   % this plots a box around the original hpos/vpos with appropriate width/height
@@ -226,7 +232,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       [dum minind] = min(abs(hlim));
       xrange(minind) = 0;
     end
-    ft_plot_line(xrange, [0 0],'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
+    ft_plot_line(xrange, [0 0], 'hpos', hpos, 'vpos', vpos, 'hlim', hlim, 'vlim', vlim, 'width', width, 'height', height);
   end
   if yaxis
     % y-axis should touch 0,0
@@ -235,11 +241,11 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       [dum minind] = min(abs(vlim));
       yrange(minind) = 0;
     end
-    ft_plot_line([0 0], yrange,'hpos',hpos,'vpos',vpos,'hlim',hlim,'vlim',vlim,'width',width,'height',height);
+    ft_plot_line([0 0], yrange, 'hpos', hpos, 'vpos', vpos, 'hlim', hlim, 'vlim', vlim, 'width', width, 'height', height);
   end
 end
 
-set(h,'tag',tag);
+set(h, 'tag', tag);
 
 if ~isempty(parent)
   set(h, 'Parent', parent);

@@ -69,7 +69,7 @@ for offset = logspace(8, 12, 4)
   sig2_true = var(x);  % note that var also suffers from (serious) numerical imprecision.
   sig2 = nanvar(x);
   fprintf('Adding offset %.2g: var()=%.4f, nanvar()=%.4f.\n', offset, sig2_true, sig2);
-  assert(identical(sig2_true, sig2, 'reltol', 1e-3));
+  assert(isalmostequal(sig2_true, sig2, 'reltol', 1e-3));
 end
 
 % test nansum

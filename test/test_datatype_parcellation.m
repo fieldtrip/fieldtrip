@@ -3,7 +3,6 @@ function test_datatype_parcellation
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_datatype_parcellation
 % TEST ft_datatype_parcellation ft_datatype
 
 % See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1652 which

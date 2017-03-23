@@ -1,19 +1,18 @@
 /*
- * Buffer server that also writes the incoming data to disk.
+ * Simple application that sets up a buffer and writes all incoming messages (with timestamps) to disk for detailled debugging.
+ * The data stream can be played back with the same timing using the 'playback' application.
  *
  * Copyright (C) 2010, Stefan Klanke
- * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
- * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
- *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <signal.h>
+
 #include "buffer.h"
 #include "socketserver.h"
-#include <signal.h>
-#include <ft_offline.h>
+#include <ft_storage.h>
 
 #ifdef WIN32
 #include <direct.h>

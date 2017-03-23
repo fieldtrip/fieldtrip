@@ -18,7 +18,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'clim'          = [min max], limits for color scaling
 %   'shading'       = string, 'none', 'flat', 'interp' (default = 'flat')
 %   'parent'        = handle which is set as the parent for all plots
-%   'tag'           = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'           = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'          = horizontal position of the lower left corner of the local axes
@@ -28,7 +28,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'hlim'          = horizontal scaling limits within the local axes
 %   'vlim'          = vertical scaling limits within the local axes
 %
-% See also FT_PREPARE_LAYOUT,  FT_PLOT_TOPO3D
+% See also FT_PREPARE_LAYOUT, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % Copyrights (C) 2009-2016, Giovanni Piantoni, Robert Oostenveld
 %
@@ -126,7 +126,7 @@ end
 % so we need to compute the right scaling factor
 % create a matrix with all coordinates
 % from positions, mask, and outline
-allCoords = [chanX chanY];
+allCoords = [chanX(:) chanY(:)];
 if ~isempty(mask)
   for k = 1:numel(mask)
     allCoords = [allCoords; mask{k}];
@@ -323,11 +323,11 @@ elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   % 5) plot these values
   
   % enforce mask properties (satmask is 0 when a pixel needs to be masked, 1 if otherwise)
-  satmask = round(satmask); % enforce binary white-masking, the hsv approach cannot be used for 'white-shading'
-  satmask(isnan(cdat)) = false; % Make sure NaNs are plotted as white pixels, even when using non-integer mask values
+  satmask = round(double(satmask));   % enforce binary white-masking, the hsv approach cannot be used for 'white-shading'
+  satmask(isnan(cdat)) = false;       % make sure NaNs are plotted as white pixels, even when using non-integer mask values
   
   % do 1, by converting the data-values to zero-based indices of the colormap
-  ncolors = size(get(gcf,'colormap'),1); % determines range of index, if a figure has been created by the caller function, gcf changes nothing, if not, a figure is created (which the below would do otherwise)
+  ncolors = size(get(gcf, 'colormap'), 1); % determines range of index, if a figure has been created by the caller function, gcf changes nothing, if not, a figure is created (which the below would do otherwise)
   indcdat = (cdat + -clim(1)) * (ncolors / (-clim(1) + clim(2))); % transform cdat-values to have a 0-(ncolors-1) range (range depends on colormap used, and thus also on clim)
   rgbcdat = ind2rgb(uint8(floor(indcdat)), colormap);
   % do 2
@@ -342,9 +342,8 @@ elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   % do 4
   rgbcdat = hsv2rgb(hsvcdat);
   % do 5
-  h = imagesc(xi, yi, rgbcdat,clim);
-  set(h,'tag',tag);
-  
+  h = imagesc(xi, yi, rgbcdat, clim);
+  set(h, 'tag', tag);
 end
 
 % Plot the outline of the head, ears and nose

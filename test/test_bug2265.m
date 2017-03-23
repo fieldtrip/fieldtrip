@@ -3,16 +3,18 @@ function test_bug2265
 % MEM 2000mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2265
 % TEST ft_convert_units ft_prepare_sourcemodel
+
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
 clear all
 close all
 
-load('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat')
-load('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat');
-elecs = ft_read_sens('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc');
-
+load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat'));
+elecs = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
 
 %% 
 CMMM = 'cm'; scale=1;

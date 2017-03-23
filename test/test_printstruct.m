@@ -25,7 +25,7 @@ for k = 1:numtests
   % check equality
   % use abstol here because we know all floating point numeric values are
   % generated from standard normal distribution
-  [ok,msg] = identical(mystruct, newstruct, 'abstol', 1e-6);
+  [ok,msg] = isalmostequal(mystruct, newstruct, 'abstol', 1e-6);
   if ok
     fprintf('printstruct() behaves as expected for random structure %d\n', k);
   else

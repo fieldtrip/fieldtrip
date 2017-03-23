@@ -50,8 +50,7 @@ end
 
 if ~allowscaling
   % allow for some numerical imprecision
-  if abs(det(rotation)-1)>1e-6%100*eps
-  %if abs(det(rotation)-1)>100*eps  % allow for some numerical imprecision
+  if (abs(det(rotation))-1)>1e-6
     error('only a rigid body transformation without rescaling is allowed');
   end
 end
@@ -61,8 +60,8 @@ if allowscaling
   % FIXME insert check for nonuniform scaling, should give an error
 end
 
-tfields   = {'pos' 'pnt' 'o' 'chanpos' 'chanposorg' 'coilpos' 'elecpos', 'nas', 'lpa', 'rpa', 'zpoint'}; % apply rotation plus translation
-rfields   = {'ori' 'nrm' 'coilori' 'chanori'}; % only apply rotation
+tfields   = {'pos' 'pnt' 'o' 'coilpos' 'elecpos' 'optopos' 'chanpos' 'chanposold' 'nas' 'lpa' 'rpa' 'zpoint'}; % apply rotation plus translation
+rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold'                           }; % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication
 recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume
@@ -70,21 +69,21 @@ recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields
 
 fnames    = fieldnames(input);
 for k = 1:numel(fnames)
-    if ~isempty(input.(fnames{k}))
-        if any(strcmp(fnames{k}, tfields))
-            input.(fnames{k}) = apply(transform, input.(fnames{k}));
-        elseif any(strcmp(fnames{k}, rfields))
-            input.(fnames{k}) = apply(rotation, input.(fnames{k}));
-        elseif any(strcmp(fnames{k}, mfields))
-            input.(fnames{k}) = transform*input.(fnames{k});
-        elseif any(strcmp(fnames{k}, recfields))
-            for j = 1:numel(input.(fnames{k}))
-                input.(fnames{k})(j) = ft_transform_geometry(transform, input.(fnames{k})(j));
-            end
-        else
-            % do nothing
-        end
+  if ~isempty(input.(fnames{k}))
+    if any(strcmp(fnames{k}, tfields))
+      input.(fnames{k}) = apply(transform, input.(fnames{k}));
+    elseif any(strcmp(fnames{k}, rfields))
+      input.(fnames{k}) = apply(rotation, input.(fnames{k}));
+    elseif any(strcmp(fnames{k}, mfields))
+      input.(fnames{k}) = transform*input.(fnames{k});
+    elseif any(strcmp(fnames{k}, recfields))
+      for j = 1:numel(input.(fnames{k}))
+        input.(fnames{k})(j) = ft_transform_geometry(transform, input.(fnames{k})(j));
+      end
+    else
+      % do nothing
     end
+  end
 end
 output = input;
 return;
