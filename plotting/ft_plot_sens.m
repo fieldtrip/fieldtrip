@@ -385,8 +385,8 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     y = sens.chanpos(i,2) + 5 * ft_scalingfactor('mm', sens.unit) * ori(2);
     z = sens.chanpos(i,3) + 5 * ft_scalingfactor('mm', sens.unit) * ori(3);
     text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
-  end % for
-end % if empty or off/no
+  end % for each channel
+end % if label
 
 axis vis3d
 axis equal
