@@ -92,7 +92,7 @@ end
 % so we need to compute the right scaling factor
 % create a matrix with all coordinates
 % from positions, mask, and outline
-allCoords = [chanX chanY];
+allCoords = [chanX(:) chanY(:)];
 if ~isempty(mask)
   for k = 1:numel(mask)
     allCoords = [allCoords; mask{k}];
