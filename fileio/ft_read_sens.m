@@ -217,21 +217,16 @@ switch fileformat
     end
     
   case 'matlab'
-    % MATLAB files can contain either electrodes or gradiometers
+    % MATLAB files can contain all sensor arrays
     matfile = filename;   % this solves a problem with the MATLAB compiler v3
-    ws = warning('off', 'MATLAB:load:variableNotFound');
-    tmp = load(matfile, 'elec', 'grad', 'sens', 'elc');
-    warning(ws);
-    if isfield(tmp, 'grad')
-      sens = tmp.grad;
-    elseif isfield(tmp, 'elec')
-      sens = tmp.elec;
-    elseif isfield(tmp, 'sens')
-      sens = tmp.sens;
-    elseif isfield(tmp, 'elc')
-      sens = tmp.elc;
+    var = whos('-file', filename);
+    sel = intersect({'elec', 'grad', 'opto', 'sens', 'elc'}, {var(:).name});
+    if numel(sel)==1
+      % read the specific variable
+      sens = loadvar(matfile, sel{1});
     else
-      error('no electrodes or gradiometers found in MATLAB file');
+      % read whatever variable is in the file, this will error if the file contains multiple variables
+      sens = loadvar(matfile);
     end
     
   case 'zebris_sfp'
