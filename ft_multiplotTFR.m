@@ -35,11 +35,13 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 %   cfg.colorbar         = 'yes', 'no' (default = 'no')
 %   cfg.colormap         = any sized colormap, see COLORMAP
+%   cfg.showlabels       = 'yes', 'no' (default = 'no')
+%   cfg.showoutline      = 'yes', 'no' (default = 'no')
+%   cfg.showscale        = 'yes', 'no' (default = 'yes')
+%   cfg.showcomment      = 'yes', 'no' (default = 'yes')
 %   cfg.comment          = string of text (default = date + zlimits)
 %                          Add 'comment' to graph (according to COMNT in the layout)
 %   cfg.limittext        = add user-defined text instead of cfg.comment, (default = cfg.comment)
-%   cfg.showlabels       = 'yes', 'no' (default = 'no')
-%   cfg.showoutline      = 'yes', 'no' (default = 'no')
 %   cfg.fontsize         = font size of comment and labels (if present) (default = 8)
 %   cfg.fontweight       = font weight of comment and labels (if present)
 %   cfg.interactive      = Interactive plot 'yes' or 'no' (default = 'yes')
@@ -168,6 +170,8 @@ cfg.comment        = ft_getopt(cfg, 'comment', date);
 cfg.limittext      = ft_getopt(cfg, 'limittext', 'default');
 cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
 cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
+cfg.showscale      = ft_getopt(cfg, 'showscale',   'yes');
+cfg.showcomment    = ft_getopt(cfg, 'showcomment', 'yes');
 cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
@@ -561,46 +565,49 @@ for k=1:length(chanseldat)
 end % for chanseldat
 
 % write comment:
-k = cellstrmatch('COMNT', lay.label);
-if ~isempty(k)
-  limittext = cfg.limittext;
-  if ~strcmp(limittext, 'default')
-    comment = limittext;
-  else
-    comment = cfg.comment;
-    comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(xparam)(xmin), data.(xparam)(xmax));
-    comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(yparam)(ymin), data.(yparam)(ymax));
-    comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
+if istrue(cfg.showcomment)
+  k = cellstrmatch('COMNT', lay.label);
+  if ~isempty(k)
+    limittext = cfg.limittext;
+    if ~strcmp(limittext, 'default')
+      comment = limittext;
+    else
+      comment = cfg.comment;
+      comment = sprintf('%0s\nxlim=[%.3g %.3g]', comment, data.(xparam)(xmin), data.(xparam)(xmax));
+      comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, data.(yparam)(ymin), data.(yparam)(ymax));
+      comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
+    end
+    ft_plot_text(lay.pos(k, 1), lay.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
   end
-  ft_plot_text(lay.pos(k, 1), lay.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
 end
 
 % plot scale:
-k = cellstrmatch('SCALE', lay.label);
-if ~isempty(k)
-  % Get average cdata across channels:
-  cdata = shiftdim(mean(datsel, 1));
-
-  % Draw plot (and mask Nan's with maskfield if requested)
-  if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
-    mask = ~isnan(cdata);
-    mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
-  elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
-    mask = ~isnan(cdata);
-    mask = mask .* mdata;
-    mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
-  elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
-    mask = mdata;
-    mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
-  else
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+if istrue(cfg.showscale)
+  k = cellstrmatch('SCALE', lay.label);
+  if ~isempty(k)
+    % Get average cdata across channels:
+    cdata = shiftdim(mean(datsel, 1));
+    
+    % Draw plot (and mask Nan's with maskfield if requested)
+    if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
+      mask = ~isnan(cdata);
+      mask = double(mask);
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+    elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
+      mask = ~isnan(cdata);
+      mask = mask .* mdata;
+      mask = double(mask);
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+    elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
+      mask = mdata;
+      mask = double(mask);
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+    else
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+    end
+    % Currently the handle isn't being used below, this is here for possible use in the future
+    h = findobj('tag', 'cip');
   end
-  % Currently the handle isn't being used below, this is here for possible use in the future
-  h = findobj('tag', 'cip');
-
 end
 
 % plot layout
