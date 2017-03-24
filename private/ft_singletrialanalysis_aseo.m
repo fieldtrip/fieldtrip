@@ -58,8 +58,20 @@ data          = data(1:(nsmp_fft/2+1),:); % Get the signal from [0, pi).
 if isempty(erp_est), erp_est      = erp_fft(1:(nsmp_fft/2+1),:);  end  % ERP waveform, frequency domain
 if isempty(amp_est), amp_est      = ones(ntrl, ncomp);    end  % ERP amplitude
 if isempty(lat_est), lat_est      = zeros(ntrl, ncomp);   end  % ERP latency
-if isempty(noise),   noise        = ones(nsmp_fft/2+1, ntrl); end  %.*repmat(var(data_init,[],1),Nsmp/2+1,1);   % Power spectrum of on-going activity
-
+if isempty(noise) || strcmp(noise, 'pow') || strcmp(noise, 'avgpow')
+    timeaxis = (1:nsample)./fsample;
+    pad      = nsmp_fft./fsample;
+    
+    [noise, ~, freqoi] = ft_specest_mtmfft(data',timeaxis,'taper','dpss','pad',pad,'tapsmofrq',tapsmofrq);
+    noise              = squeeze(mean(abs(noise).^2))'./(nsample./2);
+    
+    if strcmp(cfg.aseo.noise, 'avgpow')
+        avg     = mean(noise,2);
+        noise  = repmat(avg, 1, ntrl);
+    end
+elseif strcmp(noise, 'white')
+    noise        = ones(nsmp_fft/2+1, ntrl); %.*repmat(var(data_init,[],1),Nsmp/2+1,1);
+end
 %--------------------------------------------------------------------------------------------
 % estimation of the ERP amplitudes and latencies, first pass, starting with uniform estimates
 if doinit,
@@ -178,7 +190,7 @@ for k = 1:numiteration
     output.freq_orig   = orig;
     [origdata, reconstructed]=reconstruct_erp(output(end));
     
-    % figure;
+    figure;
     subplot(2,2,1); plot(freqoi,mean(noise,2),freqoi,mean(orig,2),freqoi,mean(noise3,2));xlim([0 60]);drawnow;
     subplot(2,2,2); plot([origdata reconstructed]);drawnow;
     subplot(2,2,3); plot(tmp_erp_est);drawnow;
