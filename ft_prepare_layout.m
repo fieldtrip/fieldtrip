@@ -894,6 +894,8 @@ if strcmpi(cfg.style, '2d') && (~isfield(layout, 'outline') || ~isfield(layout, 
         layout.outline = outline_convex(layout);
       case 'headshape'
         layout.outline = outline_headshape(cfg, sens); % the configuration should contain headshape or mri
+      otherwise
+        layout.outline = {};
     end
   end
   
@@ -906,6 +908,8 @@ if strcmpi(cfg.style, '2d') && (~isfield(layout, 'outline') || ~isfield(layout, 
         layout.mask = outline_convex(layout);
       case 'headshape'
         layout.mask = outline_headshape(cfg, sens); % the configuration should contain headshape or mri
+      otherwise
+        layout.mask = {};
     end
   end
   
@@ -1434,13 +1438,13 @@ if isempty(cfg.viewpoint)
   cfg.viewpoint = 'superior';
 end
 
+% check that we have the right data in outlbase
+assert(isfield(outlbase, 'pos'), 'the headshape does not contain any vertices')
+
 % check coordinate system of outlbase
 assert(isfield(outlbase, 'coordsys'), 'no coordsys field found in headshape/mri, use ft_determine_coordsys')
 assert(isfield(sens, 'coordsys'), 'no coordsys field found in sensor structure, use ft_determine_coordsys')
 assert(isequal(outlbase.coordsys, sens.coordsys), 'the coordinate system of headshape/mri does not match that of sensors')
-
-% ensure that the representation is up to date
-outlbase = ft_checkdata(outlbase, 'datatype', 'mesh');
 
 % match head geometry units with that of the sensors
 outlbase = ft_convert_units(outlbase, sens.unit);

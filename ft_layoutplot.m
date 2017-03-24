@@ -133,7 +133,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % plot all details pertaining to the layout in one figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-f = figure('visible', cfg.visible);
+if istrue(cfg.visible)
+  f = figure('visible', 'on');
+else
+  f = figure('visible', 'off');
+end
 
 % set the figure window title
 funcname = mfilename();
