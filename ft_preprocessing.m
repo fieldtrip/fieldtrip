@@ -319,7 +319,7 @@ if hasdata
   cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
   
   % select trials of interest
-  tmpcfg = keepfields(cfg, {'channel', 'trials'});
+  tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
