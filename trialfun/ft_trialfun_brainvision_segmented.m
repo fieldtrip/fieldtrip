@@ -10,9 +10,9 @@ function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
 %   data = ft_preprocessing(cfg);
 %
 % Optionally, you can also specify:
-%   cfg.trigformat = 'S %d';
+%   cfg.stimformat = 'S %d';
 % which will instruct this function to parse stimulus triggers according to
-% the format you specified. The default is 'S %d'. cfg.trigformat always
+% the format you specified. The default is 'S %d'. cfg.stimformat always
 % needs to contain exactly one %d code. Trigger values read in this way
 % will be stored in columns 4 and upwards of the output 'trl' matrix, and
 % will end up in data.trialinfo if this matrix is subsequently passed to
@@ -47,7 +47,7 @@ hdr = ft_read_header(cfg.dataset);
 event = ft_read_event(cfg.dataset);
 
 % set the defaults
-cfg.trigformat = ft_getopt(cfg, 'trigformat', 'S %d');
+cfg.stimformat = ft_getopt(cfg, 'stimformat', 'S %d');
 
 sel = find(strcmp({event.type}, 'New Segment'));
 ntrial = length(sel);
@@ -104,11 +104,11 @@ if (numstim > 0)
         if isempty(value{stim{i}(j)})
           error('missing a stimulus type definition in the related *.vmrk file');
         end
-        stimvalue  = sscanf(value{stim{i}(j)}, cfg.trigformat);
+        stimvalue  = sscanf(value{stim{i}(j)}, cfg.stimformat);
         stimsample = sample(stim{i}(j));
         stimtime   = (stimsample - begsample(i) + offset(i))/hdr.Fs; % relative to 'Time 0'
         if isempty(stimvalue)
-          error('the upper case letter of the stimulus value does not match with definition of "cfg.trigformat"'); 
+          error('the upper case letter of the stimulus value does not match with definition of "cfg.stimformat"'); 
         end
         trialinfo(i,2*(j-1)+1) = stimvalue;
         trialinfo(i,2*(j-1)+2) = stimtime;
