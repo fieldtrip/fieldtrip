@@ -43,6 +43,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                     'auto'      - automatic guess of the most optimal of the above
 %                      tip: use cfg.viewpoint = 'auto' per iEEG electrode grid/strip/depth for more accurate results
 %                      tip: to obtain an overview of all iEEG electrodes, choose superior/inferior, use cfg.headshape/mri, and plot using FT_LAYOUTPLOT with cfg.box/mask = 'no'
+%   cfg.outline     = string, how to create the outline, can be 'circle', 'convex', 'headshape', 'mri' or 'no' (default is automatic)
+%   cfg.mask        = string, how to create the mask, can be 'circle', 'convex', 'headshape', 'mri' or 'no' (default is automatic)
 %   cfg.headshape   = surface mesh (e.g. pial, head, etc) to be used for generating an outline, see FT_READ_HEADSHAPE for details
 %   cfg.mri         = segmented anatomical MRI to be used for generating an outline, see FT_READ_MRI and FT_VOLUMESEGMENT for details
 %   cfg.montage     = 'no' or a montage structure (default = 'no')
@@ -133,6 +135,8 @@ hasdata = exist('data', 'var');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~hasdata
   data = struct([]);
+else
+  data = ft_checkdata(data);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -156,8 +160,8 @@ cfg.image        = ft_getopt(cfg, 'image',      []);
 cfg.mesh         = ft_getopt(cfg, 'mesh',       []); % experimental, should only work with meshes defined in 2D
 cfg.bw           = ft_getopt(cfg, 'bw',         'no');
 cfg.channel      = ft_getopt(cfg, 'channel',    'all');
-cfg.skipscale    = ft_getopt(cfg, 'skipscale',  'no');
-cfg.skipcomnt    = ft_getopt(cfg, 'skipcomnt',  'no');
+cfg.skipscale    = ft_getopt(cfg, 'skipscale',  []); % see below
+cfg.skipcomnt    = ft_getopt(cfg, 'skipcomnt',  []); % see below
 cfg.boxchannel   = ft_getopt(cfg, 'boxchannel', 'all');
 cfg.overlap      = ft_getopt(cfg, 'overlap',    'shift');
 cfg.viewpoint    = ft_getopt(cfg, 'viewpoint',  []);
@@ -166,9 +170,23 @@ cfg.mri          = ft_getopt(cfg, 'mri',        []);
 cfg.outline      = ft_getopt(cfg, 'outline',    []); % default is handled below
 cfg.mask         = ft_getopt(cfg, 'mask',       []); % default is handled below
 
+if isempty(cfg.skipscale) && ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+  cfg.skipscale = 'yes'; 
+else
+  cfg.skipscale = 'no';
+end
+
+if isempty(cfg.skipcomnt) && ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+  cfg.skipcomnt = 'yes'; 
+else
+  cfg.skipcomnt = 'no';
+end
+
 if isempty(cfg.outline)
-  if ~isempty(cfg.headshape) || ~isempty(cfg.mri)
+  if ~isempty(cfg.headshape)
     cfg.outline = 'headshape';
+  elseif ~isempty(cfg.mri)
+    cfg.outline = 'mri';
   elseif ~strcmp(cfg.projection, 'orthographic')
     cfg.outline = 'circle';
   else
@@ -177,8 +195,10 @@ if isempty(cfg.outline)
 end
 
 if isempty(cfg.mask)
-  if ~isempty(cfg.headshape) || ~isempty(cfg.mri)
+  if ~isempty(cfg.headshape)
     cfg.mask = 'headshape';
+  elseif ~isempty(cfg.mri)
+    cfg.mask = 'mri';
   elseif ~strcmp(cfg.projection, 'orthographic')
     cfg.mask = 'circle';
   else
@@ -196,6 +216,11 @@ if ~isempty(cfg.viewpoint) && ~isequal(cfg.projection, 'orthographic')
 end
 if ~isempty(cfg.viewpoint) && ~isempty(cfg.rotate)
   error('cfg.viewpoint and cfg.rotate are mutually exclusive, please use only one of the two')
+end
+
+% update the selection of channels according to the data
+if hasdata
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -269,8 +294,6 @@ elseif isequal(cfg.layout, 'circular')
   layout.height  = ones(nchan,1) * 0.01;
   layout.mask    = {};
   layout.outline = {};
-  skipscale = true; % a scale is not desired
-  skipcomnt = true; % a comment is initially not desired, or at least requires more thought
   
 elseif isequal(cfg.layout, 'butterfly')
   if hasdata && ~isempty(data)
@@ -289,13 +312,10 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.height  = ones(nchan,1) * 1.0;
   layout.mask    = {};
   layout.outline = {};
-  skipscale = true; % a scale is not desired
-  skipcomnt = true; % a comment is initially not desired, or at least requires more thought
-  
+ 
 elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout,'horizontal')
   if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
-    data = ft_checkdata(data);
     originalorder = cfg.channel;
     cfg.channel = ft_channelselection(cfg.channel, data.label);
     if iscell(originalorder) && length(originalorder)==length(cfg.channel)
@@ -341,7 +361,6 @@ elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5col
   % note that this code (in combination with the code further down) fails for 1column
   if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
-    data = ft_checkdata(data);
     originalorder = cfg.channel;
     cfg.channel = ft_channelselection(cfg.channel, data.label);
     if iscell(originalorder) && length(originalorder)==length(cfg.channel)
@@ -379,17 +398,57 @@ elseif any(strcmp(cfg.layout, {'1column', '2column', '3column', '4column', '5col
   
   layout.mask    = {};
   layout.outline = {};
-  skipscale = true; % a scale is not desired
-  skipcomnt = true; % a comment is initially not desired, or at least requires more thought
   
-elseif isequal(cfg.layout, 'ordered')
+elseif any(strcmp(cfg.layout, {'1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+  % it can be 2row, 3row, etcetera
+  % note that this code (in combination with the code further down) fails for 1row
   if hasdata && ~isempty(data)
     % look at the data to determine the overlapping channels
-    data = ft_checkdata(data);
+    originalorder = cfg.channel;
     cfg.channel = ft_channelselection(cfg.channel, data.label);
-    chanindx    = match_str(data.label, cfg.channel);
-    nchan       = length(data.label(chanindx));
-    layout.label   = data.label(chanindx);
+    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
+      % try to keep the order identical to that specified in the configuration
+      [sel1, sel2] = match_str(originalorder, cfg.channel);
+      % re-order them according to the cfg specified by the user
+      cfg.channel  = cfg.channel(sel2);
+    end
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
+    layout.label = cfg.channel;
+  else
+    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+    nchan        = length(cfg.channel);
+    layout.label = cfg.channel;
+  end
+  
+  nrow = find(strcmp(cfg.layout, {'1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}));
+  ncol = ceil(nchan/nrow);
+  
+  k = 0;
+  for i=1:nrow
+    for j=1:ncol
+      k = k+1;
+      if k>nchan
+        continue
+      end
+      x = j/(ncol+1);
+      y = 1/(nrow*2) - i/nrow;
+      layout.pos   (k,:) = [x y];
+      layout.width (k,1) = 0.85/ncol;
+      layout.height(k,1) = 0.9 * 1/(nrow+1);
+    end
+  end
+  
+  layout.mask    = {};
+  layout.outline = {};
+
+elseif isequal(cfg.layout, 'ordered')
+  if hasdata
+    % look at the data to determine the overlapping channels
+    cfg.channel   = ft_channelselection(cfg.channel, data.label);
+    chanindx      = match_str(data.label, cfg.channel);
+    nchan         = length(data.label(chanindx));
+    layout.label  = data.label(chanindx);
   else
     assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
     nchan        = length(cfg.channel);
@@ -425,8 +484,12 @@ elseif isequal(cfg.layout, 'ordered')
   y = 0/nrow;
   layout.pos(end+1,:) = [x y];
   
-  
+  layout.mask    = {};
+  layout.outline = {};
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % try to generate layout from other configuration options
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ischar(cfg.layout)
   
   % layout file name specified
@@ -489,7 +552,6 @@ elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
   
 elseif isfield(data, 'elec') && isstruct(data.elec)
   fprintf('creating layout from data.elec\n');
-  data = ft_checkdata(data);
   sens = ft_datatype_sens(data.elec);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
@@ -505,7 +567,6 @@ elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
   
 elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
-  data = ft_checkdata(data);
   sens = ft_datatype_sens(data.grad);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
@@ -867,7 +928,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check whether the outline and mask are available, create them if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmpi(cfg.style, '2d') && (~isfield(layout, 'outline') || ~isfield(layout, 'mask'))
+if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.style, '3d')
+  % the reason to check for style=3d rather than 2d is that cfg.style is also an option in ft_topoplotER and ft_topoplotTFR
+  % the style option of that function easily "leaks" into here, causing the default 2d not to be selected at the top
   
   if strcmp(cfg.outline, 'circle') || strcmp(cfg.mask, 'circle')
     % Scale the electrode positions to fit within a unit circle, i.e. electrode radius = 0.45
@@ -892,8 +955,10 @@ if strcmpi(cfg.style, '2d') && (~isfield(layout, 'outline') || ~isfield(layout, 
         layout.outline = outline_circle();
       case 'convex'
         layout.outline = outline_convex(layout);
-      case 'headshape'
-        layout.outline = outline_headshape(cfg, sens); % the configuration should contain headshape or mri
+      case {'headshape', 'mri'}
+        % the configuration should contain the headshape or mri
+        % the (segmented) mri will be converted into a headshape on the fly
+        layout.outline = outline_headshape(cfg, sens);
       otherwise
         layout.outline = {};
     end
@@ -906,8 +971,10 @@ if strcmpi(cfg.style, '2d') && (~isfield(layout, 'outline') || ~isfield(layout, 
         layout.mask = layout.mask(1); % the first is the circle, the others are nose and ears
       case 'convex'
         layout.mask = outline_convex(layout);
-      case 'headshape'
-        layout.mask = outline_headshape(cfg, sens); % the configuration should contain headshape or mri
+      case {'headshape', 'mri'}
+        % the configuration should contain the headshape or mri
+        % the (segmented) mri will be converted into a headshape on the fly
+        layout.mask = outline_headshape(cfg, sens);
       otherwise
         layout.mask = {};
     end
@@ -944,7 +1011,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % add axes positions for comments and scale information if required
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~any(strcmp('COMNT', layout.label)) && strcmpi(cfg.style, '2d') && ~skipcomnt
+if ~any(strcmp('COMNT', layout.label)) && ~strcmpi(cfg.style, '3d') && ~skipcomnt
   % add a placeholder for the comment in the upper left corner
   layout.label{end+1}  = 'COMNT';
   layout.width(end+1)  = mean(layout.width);
@@ -966,7 +1033,7 @@ elseif any(strcmp('COMNT', layout.label)) && skipcomnt
   layout.height(sel) = [];
 end
 
-if ~any(strcmp('SCALE', layout.label)) && strcmpi(cfg.style, '2d') && ~skipscale
+if ~any(strcmp('SCALE', layout.label)) && ~strcmpi(cfg.style, '3d') && ~skipscale
   % add a placeholder for the scale in the upper right corner
   layout.label{end+1}  = 'SCALE';
   layout.width(end+1)  = mean(layout.width);
@@ -992,14 +1059,14 @@ end
 layout.label  = layout.label(:);
 
 % to plot the layout for debugging, you can use this code snippet
-if strcmp(cfg.feedback, 'yes') && strcmpi(cfg.style, '2d')
+if strcmp(cfg.feedback, 'yes') && ~strcmpi(cfg.style, '3d')
   tmpcfg = [];
   tmpcfg.layout = layout;
   ft_layoutplot(tmpcfg); % FIXME this should use ft_plot_lay
 end
 
 % to write the layout to a .mat or text file, you can use this code snippet
-if ~isempty(cfg.output) && strcmpi(cfg.style, '2d')
+if ~isempty(cfg.output) && ~strcmpi(cfg.style, '3d')
   fprintf('writing layout to ''%s''\n', cfg.output);
   if strcmpi(cfg.output((end-3):end), '.mat')
     save(cfg.output,'layout');
@@ -1508,5 +1575,3 @@ for i=1:numel(outlbase)
   end
   
 end % for numel(outlbase)
-
-
