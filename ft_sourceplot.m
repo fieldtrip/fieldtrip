@@ -1289,9 +1289,11 @@ switch cfg.method
     axis vis3d
     
   case 'cloud'
-    % get the optional input arguments
-    cfg.radius          = ft_getopt(cfg, 'radius', 4);
-    cfg.rmin            = ft_getopt(cfg, 'rmin', 1);
+    % some defaults depend on the geometrical units
+    scale = ft_scalingfactor('mm', functional.unit);
+    % set the defaults for method=cloud
+    cfg.radius          = ft_getopt(cfg, 'radius', 4*scale);
+    cfg.rmin            = ft_getopt(cfg, 'rmin', 1*scale);
     cfg.scalerad        = ft_getopt(cfg, 'scalerad', 'yes');
     cfg.ptsize          = ft_getopt(cfg, 'ptsize', 1);
     cfg.ptdensity       = ft_getopt(cfg, 'ptdensity', 20);
@@ -1312,12 +1314,16 @@ switch cfg.method
       end
     end
     
-    ft_plot_cloud(pos, 'funparam', fun, ...
+    ft_plot_cloud(pos, fun, ...
       'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
       'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
-      'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
-      'colorbar', cfg.colorbar); 
-  
+      'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], 'unit', functional.unit);
+    
+    if istrue(cfg.colorbar)
+      colorbar;
+    end
+    
+    
   otherwise
     error('unsupported method "%s"', cfg.method);
 end
