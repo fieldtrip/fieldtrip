@@ -197,7 +197,7 @@ elseif isfield(hdr, 'config'),
     end
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -weights.dweights(:,order); zeros(nref, nmeg), eye(nref, nref)];
     balance           = struct(weights.position, montage);

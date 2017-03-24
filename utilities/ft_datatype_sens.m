@@ -157,30 +157,11 @@ switch version
     % update it to the previous standard version
     sens = ft_datatype_sens(sens, 'version', '2011v2');
     
+    % rename from org to old (reverse = false)
+    sens = fixoldorg(sens, false);
+    
     % ensure that all numbers are represented in double precision
     sens = ft_struct2double(sens);
-    
-    % use "old/new" rather than "org/new"
-    if isfield(sens, 'labelorg')
-      sens.labelold = sens.labelorg;
-      sens = rmfield(sens, 'labelorg');
-    end
-    if isfield(sens, 'chantypeorg')
-      sens.chantypeold = sens.chantypeorg;
-      sens = rmfield(sens, 'chantypeorg');
-    end
-    if isfield(sens, 'chanuniteorg')
-      sens.chanunitold = sens.chanunitorg;
-      sens = rmfield(sens, 'chanunitorg');
-    end
-    if isfield(sens, 'chanposorg')
-      sens.chanposold = sens.chanposorg;
-      sens = rmfield(sens, 'chanposorg');
-    end
-    if isfield(sens, 'chanoriorg')
-      sens.chanoriold = sens.chanoriorg;
-      sens = rmfield(sens, 'chanoriorg');
-    end
     
     % in version 2011v2 this was optional, now it is required
     if ~isfield(sens, 'chantype') || all(strcmp(sens.chantype, 'unknown'))
@@ -322,7 +303,10 @@ switch version
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2011v2'
-    
+
+    % rename from old to org (reverse = true)
+    sens = fixoldorg(sens, true);
+
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
       warning('amplitude, distance and scaling are not supported for version "%s"', version);
     end

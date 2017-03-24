@@ -79,11 +79,11 @@ if false
   
 else
   montage = [];
-  montage.labelorg = ft_channelselection('EEG', data_clean.label);
+  montage.labelold = ft_channelselection('EEG', data_clean.label);
   montage.labelnew = ft_channelselection('EEG', data_clean.label);
-  montage.tra = eye(length(montage.labelnew), length(montage.labelorg));
+  montage.tra = eye(length(montage.labelnew), length(montage.labelold));
   for i=1:length(montage.labelnew)
-    montage.tra(i,:) = montage.tra(i,:) - ones(1,length(montage.labelorg))/length(montage.labelorg);
+    montage.tra(i,:) = montage.tra(i,:) - ones(1,length(montage.labelold))/length(montage.labelold);
   end
   data_all      = ft_apply_montage(data_clean, montage, 'keepunused', true, 'balancename', 'avgref');
   

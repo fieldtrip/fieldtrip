@@ -204,7 +204,7 @@ elseif strcmp(cfg.method, 'finite')
   tri = delaunay(prj(:,1), prj(:,2));
   % the new electrode montage only needs to be computed once for all trials
   montage.tra = lapcal(elec.chanpos, tri);
-  montage.labelorg = data.label;
+  montage.labelold = data.label;
   montage.labelnew = data.label;
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
@@ -213,23 +213,23 @@ elseif strcmp(cfg.method, 'finite')
 elseif strcmp(cfg.method, 'hjorth')
   % convert the neighbourhood structure into a montage
   labelnew = {};
-  labelorg = {};
+  labelold = {};
   for i=1:length(cfg.neighbours)
-    labelnew  = cat(2, labelnew, cfg.neighbours(i).label);
-    labelorg = cat(2, labelorg, cfg.neighbours(i).neighblabel(:)');
+    labelnew = cat(2, labelnew, cfg.neighbours(i).label);
+    labelold = cat(2, labelold, cfg.neighbours(i).neighblabel(:)');
   end
-  labelorg = cat(2, labelnew, labelorg);
-  labelorg = unique(labelorg);
-  tra = zeros(length(labelnew), length(labelorg));
+  labelold = cat(2, labelnew, labelold);
+  labelold = unique(labelold);
+  tra = zeros(length(labelnew), length(labelold));
   for i=1:length(cfg.neighbours)
-    thischan   = match_str(labelorg, cfg.neighbours(i).label);
-    thisneighb = match_str(labelorg, cfg.neighbours(i).neighblabel);
+    thischan   = match_str(labelold, cfg.neighbours(i).label);
+    thisneighb = match_str(labelold, cfg.neighbours(i).neighblabel);
     tra(i, thischan) = 1;
     tra(i, thisneighb) = -1/length(thisneighb);
   end
   % combine it in a montage
   montage.tra = tra;
-  montage.labelorg = labelorg;
+  montage.labelold = labelold;
   montage.labelnew = labelnew;
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);

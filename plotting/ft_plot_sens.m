@@ -11,6 +11,11 @@ function hs = ft_plot_sens(sens, varargin)
 %   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
 %   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
 %   'unit'            = string, convert the sensor array to the specified geometrical units (default = [])
+%   'fontcolor'       = string, color specification (default = 'k')
+%   'fontsize'        = number, sets the size of the text (default = 10)
+%   'fontunits'       =
+%   'fontname'        =
+%   'fontweight'      =
 %
 % The following options apply to MEG magnetometers and/or gradiometers
 %   'coil'            = true/false, plot each individual coil (default = false)
@@ -66,7 +71,7 @@ function hs = ft_plot_sens(sens, varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
-% ensure that the sensor description is up-to-date (Aug 2011)
+% ensure that the sensor description is up-to-date
 sens = ft_datatype_sens(sens);
 
 % get the optional input arguments
@@ -74,6 +79,12 @@ label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
 orientation     = ft_getopt(varargin, 'orientation', false);
+% these have to do with the font
+fontcolor       = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
+fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
+fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
+fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
+fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
 % this is for MEG magnetometer and/or gradiometer arrays
 coil            = ft_getopt(varargin, 'coil', false);
@@ -362,9 +373,20 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       otherwise
         error('unsupported value for option ''label''');
     end % switch
-    text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str);
-  end % for
-end % if empty or off/no
+    if isfield(sens, 'chanori')
+      % shift the labels along the channel orientation, which is presumably orthogonal to the scalp
+      ori = sens.chanori(i,:);
+    else
+      % shift the labels away from the origin of the coordinate system
+      ori = sens.chanpos(i,:) / norm(sens.chanpos(i,:));
+    end
+    % shift the label 5 mm
+    x = sens.chanpos(i,1) + 5 * ft_scalingfactor('mm', sens.unit) * ori(1);
+    y = sens.chanpos(i,2) + 5 * ft_scalingfactor('mm', sens.unit) * ori(2);
+    z = sens.chanpos(i,3) + 5 * ft_scalingfactor('mm', sens.unit) * ori(3);
+    text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
+  end % for each channel
+end % if label
 
 axis vis3d
 axis equal
