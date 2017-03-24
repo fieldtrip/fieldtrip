@@ -1,10 +1,11 @@
 The FieldTrip buffer implements a multi-threaded network transparent
 buffer in C/C++. This buffer source code can be integrated in any
-EEG/MEG acquisition system. The buffer is instantiated by the
-acquisition software simply by linking it into the code and by
-writing header, data and/or events to it. It can be accessed from
-another application (e.g. Matlab) using the same functions that are
-used in writing to it.
+EEG/MEG acquisition system. The buffer can be instantiated in a
+separate thread by the acquisition software or can run as stand-alone
+application. The aquisition software writes the header, data and/or
+events to it. It can be accessed from another application (e.g. C/C++,
+MATLAB, Python, Java) using the same functions that are used for
+writing to it.
 
 The FieldTrip buffer software is licensed under the GNU General
 Public License (GPL) and the Berkeley Software Distribution License

@@ -217,7 +217,7 @@ elseif ismesh
       fprintf('the input is mesh data with %d vertices', size(data.pos,1));
     end
   else
-    fprintf('the input is mesh data multiple surfaces\n');
+    fprintf('the input is mesh data with multiple surfaces\n');
   end
 end % give feedback
 
