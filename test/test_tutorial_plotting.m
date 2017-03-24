@@ -5,6 +5,9 @@ function test_tutorial_plotting
 
 % TEST ft_multiplotER ft_singleplotER ft_topoplotER ft_singleplotTFR ft_multiplotTRF ft_megplanar ft_combineplanar ft_volumereslice
 
+% this tutorial reflects the plotting tutorial up to March 2017
+% around that time we did a data visualization workshop at the donders for which I created an updated tutorial
+
 % see http://www.fieldtriptoolbox.org/tutorial/plotting
 % this testscript corresponds to the version on the wiki at 23 December 2012
 

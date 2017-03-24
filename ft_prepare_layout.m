@@ -43,6 +43,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                     'auto'      - automatic guess of the most optimal of the above
 %                      tip: use cfg.viewpoint = 'auto' per iEEG electrode grid/strip/depth for more accurate results
 %                      tip: to obtain an overview of all iEEG electrodes, choose superior/inferior, use cfg.headshape/mri, and plot using FT_LAYOUTPLOT with cfg.box/mask = 'no'
+%   cfg.outline     = string, how to create the outline, can be 'circle', 'convex', 'headshape', 'mri' or 'no' (default is automatic)
+%   cfg.mask        = string, how to create the mask, can be 'circle', 'convex', 'headshape', 'mri' or 'no' (default is automatic)
 %   cfg.headshape   = surface mesh (e.g. pial, head, etc) to be used for generating an outline, see FT_READ_HEADSHAPE for details
 %   cfg.mri         = segmented anatomical MRI to be used for generating an outline, see FT_READ_MRI and FT_VOLUMESEGMENT for details
 %   cfg.montage     = 'no' or a montage structure (default = 'no')
@@ -167,8 +169,10 @@ cfg.outline      = ft_getopt(cfg, 'outline',    []); % default is handled below
 cfg.mask         = ft_getopt(cfg, 'mask',       []); % default is handled below
 
 if isempty(cfg.outline)
-  if ~isempty(cfg.headshape) || ~isempty(cfg.mri)
+  if ~isempty(cfg.headshape) 
     cfg.outline = 'headshape';
+  elseif ~isempty(cfg.mri)
+    cfg.outline = 'mri';
   elseif ~strcmp(cfg.projection, 'orthographic')
     cfg.outline = 'circle';
   else
@@ -177,8 +181,10 @@ if isempty(cfg.outline)
 end
 
 if isempty(cfg.mask)
-  if ~isempty(cfg.headshape) || ~isempty(cfg.mri)
+  if ~isempty(cfg.headshape)
     cfg.mask = 'headshape';
+  elseif ~isempty(cfg.mri)
+    cfg.mask = 'mri';
   elseif ~strcmp(cfg.projection, 'orthographic')
     cfg.mask = 'circle';
   else
@@ -196,6 +202,16 @@ if ~isempty(cfg.viewpoint) && ~isequal(cfg.projection, 'orthographic')
 end
 if ~isempty(cfg.viewpoint) && ~isempty(cfg.rotate)
   error('cfg.viewpoint and cfg.rotate are mutually exclusive, please use only one of the two')
+end
+
+% update the selection of channels according to the data
+if hasdata
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+else
+  % it should be a cell array
+  if ischar(cfg.channel)
+    cfg.channel = {cfg.channel};
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -426,7 +442,9 @@ elseif isequal(cfg.layout, 'ordered')
   layout.pos(end+1,:) = [x y];
   
   
-  % try to generate layout from other configuration options
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% try to generate layout from other configuration options
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ischar(cfg.layout)
   
   % layout file name specified
@@ -892,8 +910,10 @@ if strcmpi(cfg.style, '2d') && (~isfield(layout, 'outline') || ~isfield(layout, 
         layout.outline = outline_circle();
       case 'convex'
         layout.outline = outline_convex(layout);
-      case 'headshape'
-        layout.outline = outline_headshape(cfg, sens); % the configuration should contain headshape or mri
+      case {'headshape', 'mri'}
+        % the configuration should contain the headshape or mri
+        % the (segmented) mri will be converted into a headshape on the fly
+        layout.outline = outline_headshape(cfg, sens); 
     end
   end
   
@@ -904,8 +924,10 @@ if strcmpi(cfg.style, '2d') && (~isfield(layout, 'outline') || ~isfield(layout, 
         layout.mask = layout.mask(1); % the first is the circle, the others are nose and ears
       case 'convex'
         layout.mask = outline_convex(layout);
-      case 'headshape'
-        layout.mask = outline_headshape(cfg, sens); % the configuration should contain headshape or mri
+      case {'headshape', 'mri'}
+        % the configuration should contain the headshape or mri
+        % the (segmented) mri will be converted into a headshape on the fly
+        layout.mask = outline_headshape(cfg, sens); 
     end
   end
   

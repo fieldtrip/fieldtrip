@@ -20,7 +20,7 @@ if interactive
   cfg = [];
   cfg.image = 'easycap_m10_equidistant61chan.png';
   cfg.bw = 'yes';
-
+  
   layout = ft_prepare_layout(cfg);
   figure; ft_plot_lay(layout)
 end
@@ -309,5 +309,20 @@ cfg.mask = 'none';
 layout = ft_prepare_layout(cfg);
 figure; ft_plot_lay(layout); title(cfg.viewpoint)
 
+%%
+% test the non-topographic layouts
 
+clear all
+close all
+
+elec = ft_read_sens('easycap-M10.txt');
+
+style = {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column'}));
+
+for i=1:numel(layout)
+  cfg = [];
+  cfg.layout = style{i};
+  layout = ft_prepare_layout(cfg);
+  figure; ft_plot_lay(layout); title(style{i})
+end
 
