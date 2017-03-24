@@ -177,7 +177,7 @@ sourceDiffInt  = ft_sourceinterpolate(cfg, sourceDiff , mri);
 %% plot multiple 2D axial slices
 cfg = [];
 cfg.method        = 'slice';
-cfg.funparameter  = 'avg.pow';
+cfg.funparameter  = 'pow';
 cfg.maskparameter = cfg.funparameter;
 cfg.funcolorlim   = [0.0 1.2];
 cfg.opacitylim    = [0.0 1.2]; 
@@ -194,7 +194,7 @@ sourceDiffIntNorm = ft_volumenormalise(cfg, sourceDiffInt);
 % plot ortho
 cfg = [];
 cfg.method        = 'ortho';
-cfg.funparameter  = 'avg.pow';
+cfg.funparameter  = 'pow';
 cfg.maskparameter = cfg.funparameter;
 cfg.funcolorlim   = [0.0 1.2];
 cfg.opacitylim    = [0.0 1.2]; 
@@ -204,7 +204,7 @@ figure; ft_sourceplot(cfg, sourceDiffIntNorm);
 %% (3) MNI surface
 cfg = [];
 cfg.method         = 'surface';
-cfg.funparameter   = 'avg.pow';
+cfg.funparameter   = 'pow';
 cfg.maskparameter  = cfg.funparameter;
 cfg.funcolorlim    = [0.0 1.2];
 cfg.funcolormap    = 'jet';

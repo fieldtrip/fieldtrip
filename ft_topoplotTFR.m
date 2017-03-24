@@ -189,7 +189,7 @@ if nargin > 1
 end
 
 % prepare the layout, this should be done only once
-tmpcfg     = removefields(cfg, 'inputfile');
+tmpcfg     = removefields(cfg, {'inputfile', 'style'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{:});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR

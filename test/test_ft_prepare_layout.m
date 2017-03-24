@@ -1,4 +1,4 @@
-fnuction test_ft_prepare_layout
+function test_ft_prepare_layout
 
 % WALLTIME 00:10:00
 % MEM 4gb
