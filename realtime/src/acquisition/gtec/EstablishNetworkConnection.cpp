@@ -44,7 +44,7 @@ int EstablishNetworkConnection(socketd_t* socketfd, std::string ip, int port)
 
     if (*socketfd < 0)
 	{
-        std::cerr << "ERROR: could not open a socket" << std::endl;
+        std::cerr << "ERROR: could not open socket " << port << std::endl;
         return (int) *socketfd;
     }
 
