@@ -438,15 +438,15 @@ if dotpm
         opts.Affine = Affine;
         
         % run the segmentation
-        res = spm_preproc8(opts);
+        p = spm_preproc8(opts);
         
         % this writes the 'native' segmentations
-        spm_preproc_write8(res, [ones(6,1) zeros(6,3)], [0 0], [0 1], 1, 1, nan(2,3), nan);
-        %spm_preproc_write8(res, [ones(6,4)], [0 0], [0 1], 1, 0, nan(2,3), nan);
+        spm_preproc_write8(p, [ones(6,2) zeros(6,2)], [0 0], [0 1], 1, 1, nan(2,3), nan);
         
         % this write a mat file, may be needed for Dartel, not sure yet
-        save([cfg.name '_seg8.mat'],'-struct','res');
+        save([cfg.name '_seg8.mat'],'-struct','p');
         
+       
         [pathstr, name, ~] = fileparts(cfg.name);
         filenames = {fullfile(pathstr,['c1', name, '.nii']);...
                      fullfile(pathstr,['c2', name, '.nii']);...
