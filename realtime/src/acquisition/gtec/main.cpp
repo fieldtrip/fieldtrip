@@ -26,7 +26,7 @@ template<typename T1, typename T2> void PromptUser(std::ostream* outstream, std:
 void PrintDevices(std::ostream* outstream, const std::vector<Device>& device_list);
 
 //main entry point
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
 	int ret_main = 0;
     std::cout << "g.NEEDaccess Network Interface Demo" << std::endl << std::endl;
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 // If there are too less command line arguments, display the usage of the
 // program and return
 //------------------------------------------------------------------------------
-    if (argc < EXPECTED_ARGC) 
+    if (argc < EXPECTED_ARGC)
 	{
         std::cerr << "Error: Expected " << EXPECTED_ARGC - 1 << " arguments, but got " << argc - 1 << std::endl;
         std::cerr << "Usage: ProgramName HostIp HostPort LocalIp LocalPort" << std::endl;
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     socketd_t listen_socket = 0;
     socketd_t data_socket = 0;
 
-    try 
+    try
 	{
         int ret = InitNetworking();
         if (ret != NETWORKING_STARTUP_SUCCESS)
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         // messages to the server
         //----------------------------------------------------------------------
         ret = EstablishNetworkConnection(&command_socket, host_ip, host_port);
-        if (ret == SOCKET_ERROR) 
+        if (ret == SOCKET_ERROR)
 		{
             CloseNetworkConnection(command_socket);
             CleanupNetworking();
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 
         // Setup a message to retrieve the connected devices.
         // devices_in_use_only	'false'	derive information about all devices
-        //						'true' derive information about devices 
+        //						'true' derive information about devices
 		//							   in use only
         //----------------------------------------------------------------------
         bool devices_in_use_only = false;
@@ -112,12 +112,12 @@ int main(int argc, char* argv[])
         std::vector<Device> device_list = XMLToDevice(device_info);
 
         // Print the available devices
-        if (device_list.empty()) 
+        if (device_list.empty())
 		{
             std::cout << "No available devices on " + host_ip + "." << std::endl;
             return -1;
-        } 
-		else 
+        }
+		else
 		{
             std::cout << "Available devices on " + host_ip + ":" << std::endl << std::endl;
             PrintDevices(&std::cout, device_list);
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
         // Establish a socket which is listening for incoming connections
         //----------------------------------------------------------------------
         ListenOnNetwork(&listen_socket, local_port);
-        if (listen_socket == SOCKET_ERROR) 
+        if (listen_socket == SOCKET_ERROR)
 		{
             CloseNetworkConnection(command_socket);
             CleanupNetworking();
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
         // Accept the incoming connection (used to transfer measurement data)
         //----------------------------------------------------------------------
         data_socket = AcceptOnNetwork(listen_socket);
-        if (data_socket == SOCKET_ERROR) 
+        if (data_socket == SOCKET_ERROR)
 		{
             CloseNetworkConnection(listen_socket);
             CloseNetworkConnection(command_socket);
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
         // configuration is stored in an extra variable (for further usage)
         //----------------------------------------------------------------------
         std::string config;
-        switch (selected_device.type_) 
+        switch (selected_device.type_)
 		{
         case GHIAMP:
             config = SetupgHIampXMLConfig(selected_device.name_, ToString(sample_rate));
@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
         // data.bin
         //----------------------------------------------------------------------
         std::string sample_rate_node;
-        switch (selected_device.type_) 
+        switch (selected_device.type_)
 		{
         case GHIAMP:
             sample_rate_node = XML_GHIAMP_SAMPLE_RATE_NODE;
@@ -272,8 +272,8 @@ int main(int argc, char* argv[])
         msg = SetupXMLMessage(session_id, CMD_DISCONNECT);
         reply = transceiver.SendReceive(msg);
         CheckServerReply(reply);
-    } 
-	catch (const int &error) 
+    }
+	catch (const int &error)
 	{
         // Set the error code according to the retrieved error given by the
         // server's reply message
@@ -297,7 +297,7 @@ std::string ToString(int v)
     return converter.str();
 }
 
-bool CheckDeviceIndex(int index, const size_t& max_index) 
+bool CheckDeviceIndex(int index, const size_t& max_index)
 {
 	if (index < 0)
 		return false;
@@ -338,12 +338,12 @@ void PromptUser(std::ostream* outstream, std::istream* instream, std::string mes
 	} while (!inputValid);
 }
 
-void PrintDevices(std::ostream* outstream, const std::vector<Device>& device_list) 
+void PrintDevices(std::ostream* outstream, const std::vector<Device>& device_list)
 {
 	*outstream << "    Nr.\tDevice name\tDevice type\tIn Use" << std::endl;
 	*outstream << "    ------------------------------------------" << std::endl;
 
-    for (std::vector<Device>::size_type i = 0; i != device_list.size(); i++) 
+    for (std::vector<Device>::size_type i = 0; i != device_list.size(); i++)
 	{
 		*outstream << "    " << i;
         *outstream << "\t" << device_list[i].name_;

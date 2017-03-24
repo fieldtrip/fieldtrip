@@ -1,18 +1,23 @@
 //COPYRIGHT © 2013 G.TEC MEDICAL ENGINEERING GMBH, AUSTRIA
 #include "EstablishNetworkConnection.hpp"
 
-#if defined linux
+// these are from FieldTrip/realtime/buffer
+#include "platform.h"
+#include "compiler.h"
+#include "platform_includes.h"
 
-int InitNetworking() 
+#if !defined(PLATFORM_WINDOWS)
+
+int InitNetworking()
 {
     return 0;
 }
 
-void CleanupNetworking() 
+void CleanupNetworking()
 {
 }
 
-#elif defined _WIN32 || defined _WIN64
+#elif defined(PLATFORM_WINDOWS)
 
 int InitNetworking()
 {
@@ -32,12 +37,12 @@ void CleanupNetworking()
 
 #endif
 
-int EstablishNetworkConnection(socketd_t* socketfd, std::string ip, int port) 
+int EstablishNetworkConnection(socketd_t* socketfd, std::string ip, int port)
 {
     struct sockaddr_in gds_address;
     *socketfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    if (*socketfd < 0) 
+    if (*socketfd < 0)
 	{
         std::cerr << "ERROR: could not open a socket" << std::endl;
         return (int) *socketfd;
@@ -61,16 +66,16 @@ int EstablishNetworkConnection(socketd_t* socketfd, std::string ip, int port)
     return ret;
 }
 
-void CloseNetworkConnection(const socketd_t &socketfd) 
+void CloseNetworkConnection(const socketd_t &socketfd)
 {
     MKR_CLOSE_SOCKET(socketfd);
 }
 
-int ListenOnNetwork(socketd_t* listenfd, int port) 
+int ListenOnNetwork(socketd_t* listenfd, int port)
 {
     struct sockaddr_in local_address;
     *listenfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (*listenfd == SOCKET_ERROR) 
+    if (*listenfd == SOCKET_ERROR)
 	{
         std::cerr << "ERROR: could not open a socket for listening" << std::endl;
         return (int) *listenfd;
@@ -89,7 +94,7 @@ int ListenOnNetwork(socketd_t* listenfd, int port)
     /* Enable address reuse */
     int on = 1;
     ret = setsockopt(*listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-    if (ret < 0) 
+    if (ret < 0)
 	{
         std::cerr << "ERROR: could not set socket option: REUSEADDR" << std::endl;
         return ret;
@@ -101,7 +106,7 @@ int ListenOnNetwork(socketd_t* listenfd, int port)
     local_address.sin_port = htons(port);
 
     ret = bind(*listenfd, (struct sockaddr *) &local_address, sizeof(local_address));
-    if (ret < 0) 
+    if (ret < 0)
 	{
         std::cerr << "ERROR: could not bind listening socket" << std::endl;
         return ret;
@@ -111,7 +116,7 @@ int ListenOnNetwork(socketd_t* listenfd, int port)
     return (int) *listenfd;
 }
 
-int AcceptOnNetwork(socketd_t listen_fd, size_t receive_buffer_size) 
+int AcceptOnNetwork(socketd_t listen_fd, size_t receive_buffer_size)
 {
     struct sockaddr_in client_addr;
     socklen_t client_addr_length = 0;

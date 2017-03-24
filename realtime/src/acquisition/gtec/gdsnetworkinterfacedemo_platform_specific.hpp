@@ -2,9 +2,14 @@
 #ifndef GDSNETWORKINTERFACE_PLATFORM_SPECIFIC_HPP_INCLUDED
 #define GDSNETWORKINTERFACE_PLATFORM_SPECIFIC_HPP_INCLUDED
 
+// these are from FieldTrip/realtime/buffer
+#include "platform.h"
+#include "compiler.h"
+#include "platform_includes.h"
+
 // Linux specific stuff here ...
 //-------------------------------------------------------------------------------------
-#if defined linux
+#if !defined(PLATFORM_WINDOWS)
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -108,7 +113,7 @@ inline void DestroyEvent(event_t *ev)
 
 // MS Windows specific stuff here ...
 //-------------------------------------------------------------------------------------
-#elif defined _WIN32 || defined _WIN64
+#elif defined(PLATFORM_WINDOWS)
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
