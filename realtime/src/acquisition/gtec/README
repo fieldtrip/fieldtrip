@@ -1,0 +1,25 @@
+//COPYRIGHT © 2013 G.TEC MEDICAL ENGINEERING GMBH, AUSTRIA
+
+#Before running the demo:
+Please install g.NEEDaccess Server on the Microsoft Windows host PC. For more
+details please read its documentation "gNEEDacces - Server.pdf".
+
+When running the demo: 
+ - use the IP address of the host PC that runs the server for the 'HostIp' 
+   command line argument
+ - use the port that the server is listening to from the server's documentation
+   for the 'HostPort' command line argument
+ - use the IP address of the PC that runs the demo for the 'LocalIp' command 
+   line argument (do not use the loopback adapter address 127.0.0.1 when server 
+   and client run at different machines)
+ - use an arbitrary free port of the PC that runs the demo for the 'LocalPort'
+   command line argument.       
+
+#Command to BUILD:
+g++ *.cpp -pthread -lrt -o GDSNetworkInterfaceDemo
+
+#Command to EXECUTE:
+./GDSNetworkInterfaceDemo HostIp HostPort LocalIp LocalPort
+
+#Exmaple:
+./GDSNetworkInterfaceDemo 192.168.0.204 50223 192.168.0.220 50240
