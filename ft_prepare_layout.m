@@ -958,7 +958,8 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
       case {'headshape', 'mri'}
         % the configuration should contain the headshape or mri
         % the (segmented) mri will be converted into a headshape on the fly
-        layout.outline = outline_headshape(cfg, sens);
+        hsoutline = outline_headshape(cfg, sens); % used for mask if possible
+        layout.outline = hsoutline;
       otherwise
         layout.outline = {};
     end
@@ -974,7 +975,11 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
       case {'headshape', 'mri'}
         % the configuration should contain the headshape or mri
         % the (segmented) mri will be converted into a headshape on the fly
-        layout.mask = outline_headshape(cfg, sens);
+        if isequal(cfg.mask,cfg.outline) && exist('hsoutline','var')
+          layout.mask = hsoutline;
+        else
+          layout.mask = outline_headshape(cfg, sens);
+        end
       otherwise
         layout.mask = {};
     end
