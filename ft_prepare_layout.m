@@ -128,7 +128,7 @@ if ft_abort
 end
 
 % the data can be passed as input argument or can be read from disk
-hasdata = exist('data', 'var');
+hasdata = exist('data', 'var') && ~isempty(data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % basic check/initialization of input arguments
