@@ -219,8 +219,10 @@ if ~isempty(cfg.viewpoint) && ~isempty(cfg.rotate)
 end
 
 % update the selection of channels according to the data
-if hasdata
+if hasdata && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif hasdata && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -941,6 +943,8 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
     y = layout.pos(sel,2);
     xrange = range(x);
     yrange = range(y);
+    xrange = max(xrange, yrange);
+    yrange = max(xrange, yrange);
     % First scale the width and height of the box for multiplotting
     layout.width  = layout.width./xrange;
     layout.height = layout.height./yrange;
