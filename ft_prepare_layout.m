@@ -943,8 +943,12 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
     y = layout.pos(sel,2);
     xrange = range(x);
     yrange = range(y);
-    xrange = max(xrange, yrange);
-    yrange = max(xrange, yrange);
+    if xrange==0
+      xrange = 1;
+    end
+    if yrange==0
+      yrange = 1;
+    end
     % First scale the width and height of the box for multiplotting
     layout.width  = layout.width./xrange;
     layout.height = layout.height./yrange;
