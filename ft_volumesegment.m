@@ -355,9 +355,8 @@ if dotpm
       p       = spm_preproc(VF, px);
       [po, ~] = spm_prep2sn(p);
       
-      % this write a mat file, may be needed for Dartel, not sure yet
+      % this writes a mat file, may be needed for Dartel, not sure yet
       save([cfg.name '_sn.mat'],'-struct','po');
-     
 
       % These settings were taken from a batch
       opts     = [];
@@ -377,13 +376,14 @@ if dotpm
                    fullfile(pathstr,['c3', name, '.img'])};
 
     case 'spm12'
+      addpath(fullfile(spm('Dir'),'toolbox/OldSeg'));
       if strcmp(cfg.spmmethod, 'old')
         cfg.tpm = ft_getopt(cfg, 'tpm');
         cfg.tpm = char(cfg.tpm(:));
         if isempty(cfg.tpm)
-          cfg.tpm = char(fullfile(spm('Dir'),'tpm','grey.nii'),...
-            fullfile(spm('Dir'),'tpm','white.nii'),...
-            fullfile(spm('Dir'),'tpm','csf.nii'));
+          cfg.tpm = char(fullfile(spm('Dir'),'toolbox/OldSeg','grey.nii'),...
+            fullfile(spm('Dir'),'toolbox/OldSeg','white.nii'),...
+            fullfile(spm('Dir'),'toolbox/OldSeg','csf.nii'));
         end
         px.tpm = cfg.tpm;
       
@@ -443,7 +443,7 @@ if dotpm
         % this writes the 'native' segmentations
         spm_preproc_write8(p, [ones(6,2) zeros(6,2)], [0 0], [0 1], 1, 1, nan(2,3), nan);
         
-        % this write a mat file, may be needed for Dartel, not sure yet
+        % this writes a mat file, may be needed for Dartel, not sure yet
         save([cfg.name '_seg8.mat'],'-struct','p');
         
        
