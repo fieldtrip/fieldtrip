@@ -71,7 +71,7 @@ function hs = ft_plot_sens(sens, varargin)
 
 ws = warning('on', 'MATLAB:divideByZero');
 
-% ensure that the sensor description is up-to-date (Aug 2011)
+% ensure that the sensor description is up-to-date
 sens = ft_datatype_sens(sens);
 
 % get the optional input arguments
@@ -373,9 +373,20 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       otherwise
         error('unsupported value for option ''label''');
     end % switch
-    text(sens.chanpos(i,1), sens.chanpos(i,2), sens.chanpos(i,3), str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-  end % for
-end % if empty or off/no
+    if isfield(sens, 'chanori')
+      % shift the labels along the channel orientation, which is presumably orthogonal to the scalp
+      ori = sens.chanori(i,:);
+    else
+      % shift the labels away from the origin of the coordinate system
+      ori = sens.chanpos(i,:) / norm(sens.chanpos(i,:));
+    end
+    % shift the label 5 mm
+    x = sens.chanpos(i,1) + 5 * ft_scalingfactor('mm', sens.unit) * ori(1);
+    y = sens.chanpos(i,2) + 5 * ft_scalingfactor('mm', sens.unit) * ori(2);
+    z = sens.chanpos(i,3) + 5 * ft_scalingfactor('mm', sens.unit) * ori(3);
+    text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
+  end % for each channel
+end % if label
 
 axis vis3d
 axis equal
