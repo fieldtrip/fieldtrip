@@ -479,25 +479,26 @@ if hasfun
     
     % what if fun is 4D?
     if ndims(fun)>3 || prod(dim)==size(fun,1)
-      if strcmp(dimord, 'pos_freq_time')
+      if strcmp(dimord, 'pos_freq_time') || strcmp(dimord, 'dim1_dim2_dim3_freq_time')
         % functional contains time-frequency representation
         qi      = [1 1];
         hasfreq = numel(functional.freq)>1;
         hastime = numel(functional.time)>1;
         fun     = reshape(fun, [dim numel(functional.freq) numel(functional.time)]);
-      elseif strcmp(dimord, 'pos_time')
+      elseif strcmp(dimord, 'pos_time') || strcmp(dimord, 'dim1_dim2_dim3_time')
         % functional contains evoked field
         qi      = 1;
         hasfreq = 0;
         hastime = numel(functional.time)>1;
         fun     = reshape(fun, [dim numel(functional.time)]);
-      elseif strcmp(dimord, 'pos_freq')
+      elseif strcmp(dimord, 'pos_freq') || strcmp(dimord, 'dim1_dim2_dim3_freq')
         % functional contains frequency spectra
         qi      = 1;
         hasfreq = numel(functional.freq)>1;
         hastime = 0;
         fun     = reshape(fun, [dim numel(functional.freq)]);
       else
+        % functional contains scalar value for each position
         qi      = 1;
         hasfreq = 0;
         hastime = 0;
@@ -879,11 +880,11 @@ switch cfg.method
     else
       if isequal(cfg.location, 'auto')
         if hasfun
-          if isequal(cfg.funcolorlim, 'maxabs');
+          if isequal(cfg.funcolorlim, 'maxabs')
             loc = 'max';
-          elseif isequal(cfg.funcolorlim, 'zeromax');
+          elseif isequal(cfg.funcolorlim, 'zeromax')
             loc = 'max';
-          elseif isequal(cfg.funcolorlim, 'minzero');
+          elseif isequal(cfg.funcolorlim, 'minzero')
             loc = 'min';
           else % if numerical
             loc = 'max';
@@ -1392,11 +1393,11 @@ else
   str2 = '';
 end
 
-if opt.hasfreq && opt.hastime,
+if opt.hasfreq && opt.hastime
   str3 = sprintf('%.1f s, %.1f Hz', functional.time(opt.qi(2)), functional.freq(opt.qi(1)));
-elseif ~opt.hasfreq && opt.hastime,
+elseif ~opt.hasfreq && opt.hastime
   str3 = sprintf('%.1f s', functional.time(opt.qi(1)));
-elseif opt.hasfreq && ~opt.hastime,
+elseif opt.hasfreq && ~opt.hastime
   str3 = sprintf('%.1f Hz', functional.freq(opt.qi(1)));
 else
   str3 = '';
@@ -1513,23 +1514,23 @@ set(opt.handlesaxes(1), 'Visible',opt.axis);
 set(opt.handlesaxes(2), 'Visible',opt.axis);
 set(opt.handlesaxes(3), 'Visible',opt.axis);
 
-if opt.hasfreq && opt.hastime && opt.hasfun,
+if opt.hasfreq && opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);
   tmpdat = double(shiftdim(opt.fun(xi,yi,zi,:,:),3));
   uimagesc(double(functional.time), double(functional.freq), tmpdat); axis xy;
   xlabel('time'); ylabel('freq');
   set(h4, 'tag', 'TF1');
   caxis([opt.fcolmin opt.fcolmax]);
-elseif opt.hasfreq && opt.hasfun,
+elseif opt.hasfreq && opt.hasfun
   h4 = subplot(2,2,4);
   plot(functional.freq, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('freq');
   axis([functional.freq(1) functional.freq(end) opt.fcolmin opt.fcolmax]);
   set(h4, 'tag', 'TF2');
-elseif opt.hastime && opt.hasfun,
+elseif opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);
   plot(functional.time, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('time');
   set(h4, 'tag', 'TF3', 'xlim',functional.time([1 end]), 'ylim',[opt.fcolmin opt.fcolmax], 'layer', 'top');
-elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc'),
+elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
   if opt.hasfun
     % vectorcolorbar = linspace(fscolmin, fcolmax,length(cfg.funcolormap));
     % imagesc(vectorcolorbar,1,vectorcolorbar);colormap(cfg.funcolormap);

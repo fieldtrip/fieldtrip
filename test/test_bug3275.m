@@ -8,6 +8,25 @@ function test_bug3275
 mri = ft_read_mri('single_subj_T1_1mm.nii');
 elec = ft_read_sens('standard_1020.elc'); % this is in MNI space
 
+
+%%
+% See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3275#c2
+
+functional = mri;
+functional.pow = rand([181 217 181 10]);
+functional.powdimord = 'dim1_dim2_dim3_time';
+functional.time = (1:10)/10;
+functional.inside = functional.anatomy>10000; % very coarse segmentation
+
+
+cfg = [];
+cfg.method = 'ortho';
+cfg.funparameter = 'pow';
+cfg.funcolorlim = [0 1];
+% cfg.latency = 0.5;
+ft_sourceplot(cfg, functional)
+
+
 %%
 
 timelock = [];
@@ -22,7 +41,8 @@ source = ft_checkdata(timelock, 'datatype', 'source');
 cfg = [];
 cfg.method = 'cloud';
 cfg.funparameter = 'avg';
-ft_sourceplot(cfg, timelock, mri)
+cfg.latency = 0.5;
+ft_sourceplot(cfg, timelock)
 
 %%
 
@@ -38,6 +58,7 @@ source = ft_checkdata(freq, 'datatype', 'source');
 cfg = [];
 cfg.method = 'cloud';
 cfg.funparameter = 'powspctrm';
+cfg.frequency = 15;
 ft_sourceplot(cfg, freq)
 
 %%
@@ -55,6 +76,8 @@ source = ft_checkdata(freq, 'datatype', 'source');
 cfg = [];
 cfg.method = 'cloud';
 cfg.funparameter = 'powspctrm';
+cfg.frequency = 15;
+cfg.latency = 0.5;
 ft_sourceplot(cfg, freq)
 
 
