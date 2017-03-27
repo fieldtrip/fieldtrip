@@ -68,6 +68,13 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                          all negative: 'minzero', both possitive and negative: 'maxabs'
 %   cfg.colorbar      = 'yes' or 'no' (default = 'yes')
 %
+% The 'ortho' method can also plot time and/or frequency, the other methods can not.
+% If your functional data has a time and/or frequency dimension, you can use
+%   cfg.latency       = scalar or string, can be 'all', 'prestim', 'poststim', or [beg end], specify time range in seconds
+%   cfg.avgovertime   = string, can be 'yes' or 'no' (default = 'no')
+%   cfg.frequency     = scalar or string, can be 'all', or [beg end], specify frequency range in Hz
+%   cfg.avgoverfreq   = string, can be 'yes' or 'no' (default = 'no')
+%
 % The following parameters can be used for the masking data:
 %   cfg.opacitymap    = opacitymap for mask data, see ALPHAMAP (default = 'auto')
 %                       'auto', depends structure maskparameter, or on opacitylim
