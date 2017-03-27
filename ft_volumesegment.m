@@ -15,7 +15,7 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %   cfg.output         = string or cell-array of strings, see below (default = 'tpm')
 %   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %   cfg.spmmethod      = string, 'old', 'new' (default = 'old'). this pertains to the algorithm
-%                          used when cfg.spmversion='spm12'. see belo
+%                          used when cfg.spmversion='spm12'. see below
 %   cfg.template       = filename of the template anatomical MRI (default = '/spm2/templates/T1.mnc'
 %                        or '/spm8/templates/T1.nii')
 %   cfg.tpm            = cell-array containing the filenames of the tissue probability maps
