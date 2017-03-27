@@ -25,7 +25,8 @@ function cfg = ft_interactiverealign(cfg)
 %  cfg.template.headshape      = structure, see FT_READ_HEADSHAPE
 %  cfg.template.headshapestyle = 'vertex', 'surface' or 'both' (default = 'vertex')
 %
-% See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_READ_SENS, FT_READ_VOL, FT_READ_HEADSHAPE
+% See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS,
+% FT_READ_SENS, FT_READ_VOL, FT_READ_HEADSHAPE
 
 % Copyright (C) 2008, Vladimir Litvak
 %
