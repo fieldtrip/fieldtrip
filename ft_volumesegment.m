@@ -477,7 +477,9 @@ if dotpm
     suffix = {'_seg1.hdr';'_seg2.hdr';'_seg3.hdr';'_seg1.img';'_seg2.img';'_seg3.img';'_seg1.mat';'_seg2.mat';'_seg3.mat';'.hdr';'.img';'.nii'};
     for k = 1:numel(prefix)
       for j = 1:numel(suffix)
+        warning off; % delete is quite verbose in its warnings
         try, delete(fullfile(pathstr,[prefix{k}, name, suffix{j}])); end
+        warning on;
       end
     end
   elseif strcmp(cfg.write, 'yes')
