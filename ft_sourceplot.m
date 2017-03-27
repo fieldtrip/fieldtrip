@@ -1225,7 +1225,7 @@ switch cfg.method
     tmpcfg.locationcoordinates  = 'voxel';
     tmpcfg.maskparameter        = 'inside';
     
-    if hasfun,
+    if hasfun
       fun = getsubfield(functional, cfg.funparameter);
       fun = reshape(fun, dim);
       fun(1,:,:) = max(fun, [], 1); % get the projection along the 1st dimension
@@ -1234,7 +1234,7 @@ switch cfg.method
       functional = setsubfield(functional, cfg.funparameter, fun);
     end
     
-    if hasana,
+    if hasana
       ana = getsubfield(functional, cfg.anaparameter);
       % this remains as it is
       functional = setsubfield(functional, cfg.anaparameter, ana);
@@ -1310,7 +1310,8 @@ switch cfg.method
     if hasmsk
       pos = pos(logical(msk),:);
       if hasfun
-        fun = fun(logical(msk));
+        % functional data can have multiple dimensions
+        fun = fun(logical(msk),:,:);
       end
     end
     
