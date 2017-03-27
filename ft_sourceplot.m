@@ -31,7 +31,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                       'glassbrain', plots a max-projection through the brain
 %                       'vertex',     plots the grid points or vertices scaled according to the functional value
 %                       'cloud',      plot the data as point clouds scaled according to the functional value
-%                       
+%
 %
 %   cfg.anaparameter  = string, field in data with the anatomical data (default = 'anatomy' if present in data)
 %   cfg.funparameter  = string, field in data with the functional parameter of interest (default = [])
@@ -146,9 +146,9 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer', ' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
-%   cfg.facecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', 
+%   cfg.facecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
 %                        or an Nx3 or Nx1 array where N is the number of faces
-%   cfg.vertexcolor    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', 
+%   cfg.vertexcolor    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
 %                        or an Nx3 or Nx1 array where N is the number of vertices
 %   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %
@@ -282,6 +282,13 @@ cfg.maskparameter = parameterselection(cfg.maskparameter, functional);
 try, cfg.funparameter  = cfg.funparameter{1};  end
 try, cfg.maskparameter = cfg.maskparameter{1}; end
 
+if isfield(functional, 'time') || isfield(functional, 'freq')
+  % make a selection of the time and/or frequency dimension
+  tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime'});
+  functional = ft_selectdata(tmpcfg, functional);
+  % restore the provenance information
+  [cfg, functional] = rollback_provenance(cfg, functional);
+end
 
 % the data can be passed as input argument or can be read from disk
 hasanatomical = exist('anatomical', 'var');
@@ -683,6 +690,9 @@ end
 
 switch cfg.method
   case 'slice'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     % set the defaults for method=slice
     cfg.nslices    = ft_getopt(cfg, 'nslices',    20);
     cfg.slicedim   = ft_getopt(cfg, 'slicedim',   3);
@@ -1044,6 +1054,9 @@ switch cfg.method
     
     
   case 'surface'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     % set the defaults for method=surface
     cfg.downsample     = ft_getopt(cfg, 'downsample',     1);
     cfg.surfdownsample = ft_getopt(cfg, 'surfdownsample', 1);
@@ -1217,48 +1230,45 @@ switch cfg.method
     end
     
   case 'glassbrain'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     % This is implemented using a recursive call with an updated functional data
     % structure. The functional volume is replaced by a volume in which the maxima
     % are projected to the "edge" of the volume.
-    tmpcfg                      = keepfields(cfg, {'funparameter', 'funcolorlim', 'funcolormap', 'opacitylim', 'axis', 'renderer'});
-    tmpcfg.method               = 'ortho';
-    tmpcfg.location             = [1 1 1];
-    tmpcfg.locationcoordinates  = 'voxel';
-    tmpcfg.maskparameter        = 'inside';
+    
+    tmpfunctional = keepfields(functional, {'dim', 'transform'});
     
     if hasfun
-      fun = getsubfield(functional, cfg.funparameter);
-      fun = reshape(fun, dim);
+      if isfield(functional, 'inside')
+        fun(~functional.inside) = nan;
+      end
       fun(1,:,:) = max(fun, [], 1); % get the projection along the 1st dimension
       fun(:,1,:) = max(fun, [], 2); % get the projection along the 2nd dimension
       fun(:,:,1) = max(fun, [], 3); % get the projection along the 3rd dimension
-      functional = setsubfield(functional, cfg.funparameter, fun);
+      tmpfunctional.(cfg.funparameter) = fun;
     end
     
     if hasana
-      ana = getsubfield(functional, cfg.anaparameter);
-      % this remains as it is
-      functional = setsubfield(functional, cfg.anaparameter, ana);
-    end
-    
-    if hasmsk
-      msk = getsubfield(functional, 'inside');
-      msk = reshape(msk, dim);
-      if hasana
-        msk(1,:,:) = fun(1,:,:)>0 & imfill(abs(ana(1,:,:)-1))>0;
-        msk(:,1,:) = fun(:,1,:)>0 & imfill(abs(ana(:,1,:)-1))>0;
-        msk(:,:,1) = fun(:,:,1)>0 & imfill(abs(ana(:,:,1)-1))>0;
-      else
-        msk(1,:,:) = fun(1,:,:)>0;
-        msk(:,1,:) = fun(:,1,:)>0;
-        msk(:,:,1) = fun(:,:,1)>0;
+      if isfield(functional, 'inside')
+        % ana(~functional.inside) = nan;
       end
-      functional = setsubfield(functional, 'inside', msk);
+      ana(1,:,:) = max(ana, [], 1); % get the projection along the 1st dimension
+      ana(:,1,:) = max(ana, [], 2); % get the projection along the 2nd dimension
+      ana(:,:,1) = max(ana, [], 3); % get the projection along the 3rd dimension
+      tmpfunctional.(cfg.anaparameter) = ana;
     end
     
-    ft_sourceplot(tmpcfg, functional);
+    tmpcfg                      = keepfields(cfg, {'anaparameter', 'funparameter', 'funcolorlim', 'funcolormap', 'opacitylim', 'axis', 'renderer'});
+    tmpcfg.method               = 'ortho';
+    tmpcfg.location             = [1 1 1];
+    tmpcfg.locationcoordinates  = 'voxel';
+    ft_sourceplot(tmpcfg, tmpfunctional);
     
   case 'vertex'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     if isUnstructuredFun
       pos = functional.pos;
     else
@@ -1290,6 +1300,9 @@ switch cfg.method
     axis vis3d
     
   case 'cloud'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     % some defaults depend on the geometrical units
     scale = ft_scalingfactor('mm', functional.unit);
     % set the defaults for method=cloud
@@ -1311,8 +1324,7 @@ switch cfg.method
     if hasmsk
       pos = pos(logical(msk),:);
       if hasfun
-        % functional data can have multiple dimensions
-        fun = fun(logical(msk),:,:);
+        fun = fun(logical(msk));
       end
     end
     

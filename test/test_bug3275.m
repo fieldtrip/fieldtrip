@@ -5,26 +5,61 @@ function test_bug3275
 
 % TEST ft_sourceplot ft_checkdata
 
-mri = ft_read_mri('single_subj_T1_1mm.nii');
+mri = ft_read_mri('single_subj_T1.nii');
 elec = ft_read_sens('standard_1020.elc'); % this is in MNI space
 
 
 %%
 % See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3275#c2
 
-functional = mri;
-functional.pow = rand([181 217 181 10]);
-functional.powdimord = 'dim1_dim2_dim3_time';
+source = ft_checkdata(mri, 'datatype', 'source');
+
+tmp = sqrt(sum(source.pos.^2, 2));
+pow = repmat(max(tmp)-tmp, 1, 10);
+pow = pow + randn(size(pow))*10;
+
+functional = source;
+functional.anatomydimord = 'pos';
+functional.pow = pow;
+functional.powdimord = 'pos_time';
 functional.time = (1:10)/10;
 functional.inside = functional.anatomy>10000; % very coarse segmentation
 
+%%
 
 cfg = [];
-cfg.method = 'ortho';
 cfg.funparameter = 'pow';
-cfg.funcolorlim = [0 1];
-% cfg.latency = 0.5;
+cfg.funcolorlim = 'zeromax';
+
+cfg.method = 'ortho';
 ft_sourceplot(cfg, functional)
+% none of the others supports time/freq
+% cfg.method = 'slice';
+% ft_sourceplot(cfg, functional)
+% cfg.method = 'surface';
+% ft_sourceplot(cfg, functional)
+% cfg.method = 'glassbrain';
+% ft_sourceplot(cfg, functional)
+% cfg.method = 'vertex';
+% ft_sourceplot(cfg, functional)
+% cfg.method = 'cloud';
+% ft_sourceplot(cfg, functional)
+
+%%
+cfg.latency = 0.5;
+cfg.method = 'ortho';
+ft_sourceplot(cfg, functional)
+cfg.method = 'slice';
+ft_sourceplot(cfg, functional)
+cfg.method = 'surface';
+ft_sourceplot(cfg, functional)
+cfg.method = 'glassbrain';
+ft_sourceplot(cfg, functional)
+% these are too inefficient for volumetric data
+% cfg.method = 'vertex';
+% ft_sourceplot(cfg, functional)
+% cfg.method = 'cloud';
+% ft_sourceplot(cfg, functional)
 
 
 %%
