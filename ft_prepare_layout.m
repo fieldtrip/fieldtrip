@@ -966,7 +966,8 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
       case {'headshape', 'mri'}
         % the configuration should contain the headshape or mri
         % the (segmented) mri will be converted into a headshape on the fly
-        layout.outline = outline_headshape(cfg, sens);
+        hsoutline = outline_headshape(cfg, sens); % used for mask if possible
+        layout.outline = hsoutline;
       otherwise
         layout.outline = {};
     end
@@ -982,7 +983,11 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
       case {'headshape', 'mri'}
         % the configuration should contain the headshape or mri
         % the (segmented) mri will be converted into a headshape on the fly
-        layout.mask = outline_headshape(cfg, sens);
+        if isequal(cfg.mask,cfg.outline) && exist('hsoutline','var')
+          layout.mask = hsoutline;
+        else
+          layout.mask = outline_headshape(cfg, sens);
+        end
       otherwise
         layout.mask = {};
     end
@@ -1507,12 +1512,6 @@ elseif ~isempty(cfg.mri)
   outlbase = ft_prepare_mesh(cfgpm, outlbase);
 end
 
-% check for presence of cfg.viewpoint
-if isempty(cfg.viewpoint)
-  warning('headshape/mri is supplied without explicit orthographic projection viewpoint, assuming superior view')
-  cfg.viewpoint = 'superior';
-end
-
 % check that we have the right data in outlbase
 assert(isfield(outlbase, 'pos'), 'the headshape does not contain any vertices')
 
@@ -1532,17 +1531,53 @@ for i=1:numel(outlbase)
     
     % extract points indicating brain
     braincoords = outlbase(i).pos;
-    % apply orthographic projection and extract XY
-    braincoords = getorthoviewpos(braincoords, outlbase(i).coordsys, cfg.viewpoint);
-    
+    % apply projection and extract XY
+    if isequal(cfg.projection,'orthographic') && ~isempty(cfg.viewpoint)
+      braincoords = getorthoviewpos(braincoords, outlbase(i).coordsys, cfg.viewpoint);
+    else
+      % project identically as in sens2lay using cfg.rotate and elproj (this should be kept identical to sens2lay)
+      if isempty(cfg.rotate)
+        switch ft_senstype(sens)
+          case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_planar', 'magnetometer', 'meg'}
+            rotatez = 90;
+          case {'neuromag122', 'neuromag306'}
+            rotatez = 0;
+          case 'electrode'
+            rotatez = 90;
+          otherwise
+            rotatez = 0;
+        end
+      end
+      braincoords = ft_warp_apply(rotate([0 0 rotatez]), braincoords, 'homogenous');      
+      braincoords = elproj(braincoords, cfg.projection);
+    end
+      
     % get outline
     k = boundary(braincoords,.8);
     outline{i} = braincoords(k,:);
     
-  else % fallback, sad!
+  else % matlab version fallback
     
     % plot mesh in rotated view, rotate, screencap, and trace frame to generate outline
-    outlbase(i).pos = getorthoviewpos(outlbase(i).pos, outlbase.coordsys, cfg.viewpoint);
+    if isequal(cfg.projection,'orthographic') && ~isempty(cfg.viewpoint)
+      outlbase(i).pos = getorthoviewpos(outlbase(i).pos, outlbase(i).coordsys, cfg.viewpoint);
+    else
+      % project identically as in sens2lay using cfg.rotate and elproj (this should be kept identical to sens2lay)
+      if isempty(cfg.rotate)
+        switch ft_senstype(sens)
+          case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_planar', 'magnetometer', 'meg'}
+            rotatez = 90;
+          case {'neuromag122', 'neuromag306'}
+            rotatez = 0;
+          case 'electrode'
+            rotatez = 90;
+          otherwise
+            rotatez = 0;
+        end
+      end
+      outlbase(i).pos = ft_warp_apply(rotate([0 0 rotatez]), outlbase(i).pos, 'homogenous');
+      outlbase(i).pos = elproj(outlbase(i).pos, cfg.projection);
+    end
     h = figure('visible', 'off');
     ft_plot_mesh(outlbase(i), 'facecolor', [0 0 0], 'EdgeColor', 'none');
     view([0 90])
