@@ -40,7 +40,7 @@ else
       for i=1:dim(3)
         slice=reshape(input(:,:,i),dim([1 2]));
         im = imfill(slice,8,'holes');
-        output(:,:,3) = im;
+        output(:,:,i) = im;
       end
       
     otherwise
