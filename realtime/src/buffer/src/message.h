@@ -13,7 +13,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-    
 #endif
 
 /* FIXME these are obvious at the moment, but should be formally defined */

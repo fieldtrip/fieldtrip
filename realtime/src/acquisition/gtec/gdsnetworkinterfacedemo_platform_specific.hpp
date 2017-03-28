@@ -9,7 +9,7 @@
 
 // Linux specific stuff here ...
 //-------------------------------------------------------------------------------------
-#if !defined(PLATFORM_WINDOWS)
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_OSX)
 
 #include <sys/types.h>
 #include <sys/socket.h>
