@@ -16,6 +16,14 @@
 #include "platform_includes.h"
 #include "message.h"
 
+#include "cleanup.h"
+#include "endianutil.h"
+#include "interface.h"
+#include "message.h"
+#include "printstruct.h"
+#include "swapbytes.h"
+#include "util.h"
+
 #ifndef POLLRDNORM
 #define POLLRDNORM POLLIN
 #endif
@@ -60,45 +68,9 @@ extern "C" {
 void *tcpserver(void *);
 void *tcpsocket(void *);
 
-/* definition of the functions used in thread cancelation, see cleanup.c */
-void cleanup_message(void **arg);
-void cleanup_header(void **arg);
-void cleanup_data(void **arg);
-void cleanup_event(void **arg);
-void cleanup_buf(void **arg);
-void cleanup_socket(int *);
-
-/* definition of helper functions for debugging and printing the content of various structures */
-void print_request(messagedef_t *);
-void print_response(messagedef_t *);
-void print_headerdef(headerdef_t *);
-void print_datadef(datadef_t *);
-void print_eventdef(eventdef_t *);
-void print_datasel(datasel_t *);
-void print_eventsel(eventsel_t *);
-void print_buf(void *, int);
-
-/* definition of even more helper functions, see util.c */
-int open_connection(const char*, int);
-int open_unix_connection(const char *name);
-int close_connection(int);
-unsigned int append(void **, unsigned int, void *, unsigned int);
-unsigned int bufread(int, void *, unsigned int);
-unsigned int bufwrite(int, const void *, unsigned int);
 int clientrequest(int, const message_t *, message_t**);
 int dmarequest(const message_t *, message_t**);
 int tcprequest(int, const message_t *, message_t**);
-unsigned int wordsize_from_type(UINT32_T data_type);
-void check_datatypes(void);
-int check_event_array(unsigned int size, const void *buf);
-const ft_chunk_t *find_chunk(const void *buf, unsigned int offset0, unsigned int size, UINT32_T chunk_type);
-
-void ft_swap16(unsigned int numel, void *data);
-void ft_swap32(unsigned int numel, void *data);
-void ft_swap64(unsigned int numel, void *data);
-int ft_swap_buf_to_native(UINT16_T command, UINT32_T bufsize, void *buf);
-int ft_convert_chunks_from_native(UINT32_T size, UINT32_T nchans, void *buf);
-int ft_swap_from_native(UINT16_T orgCommand, message_t *msg);
 
 typedef struct {
     char name[HOSTNAME_LENGTH];

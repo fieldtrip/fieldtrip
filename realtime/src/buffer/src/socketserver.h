@@ -3,12 +3,12 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
+
 #ifndef __socketserver_h
 #define __socketserver_h
 
-
-#include "buffer.h"
 #include <pthread.h>
+#include "buffer.h"
 
 #define MERGE_THRESHOLD 4096    /* TODO: optimize this value? Maybe look at MTU size */
 

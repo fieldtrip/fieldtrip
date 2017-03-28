@@ -10,7 +10,6 @@
 #define __rdaserver_h
 
 #include <pthread.h>
-
 #include "platform.h"
 #include "buffer.h"
 #include "rdadefs.h"
