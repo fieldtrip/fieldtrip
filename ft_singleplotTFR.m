@@ -175,6 +175,8 @@ if hasrpt,
   tmpcfg           = [];
   tmpcfg.trials    = cfg.trials;
   tmpcfg.jackknife = 'no';
+  tmpcfg.feedback = cfg.feedback;
+  tmpcfg.showcallinfo = cfg.showcallinfo;
   % keep mask-parameter if it is set
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
