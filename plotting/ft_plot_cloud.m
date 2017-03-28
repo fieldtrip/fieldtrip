@@ -48,9 +48,13 @@ function ft_plot_cloud(pos, val, varargin)
 if size(pos,2)~=3
   error('pos has to be an Nx3 array')
 end
+
 if isempty(val)
   val = ones(size(pos,1),1); % vector of ones
 end
+
+assert(isrow(val) || iscolumn(val), 'values should be represented as a single vector')
+val = val(:); % ensure it is a column
 
 % the unit of geometry is needed for the other defaults
 % estimate the unit of geometry of the positions, FIXME this fails for a single or few points
@@ -85,6 +89,8 @@ if ischar(cmap)
   else
     cmapsc = feval(cmap, 201); % an odd number
   end
+else
+  cmapsc = cmap;
 end
 
 cmid    = size(cmapsc,1)/2;               % colorbar middle
