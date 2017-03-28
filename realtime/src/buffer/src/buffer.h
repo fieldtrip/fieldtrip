@@ -60,10 +60,6 @@ extern "C" {
 void *tcpserver(void *);
 void *tcpsocket(void *);
 
-/* definition of test functions that emulate an acquisition system */
-void *sinewave_thread(void *);
-void *event_thread(void *);
-
 /* definition of the functions used in thread cancelation, see cleanup.c */
 void cleanup_message(void **arg);
 void cleanup_header(void **arg);
@@ -116,4 +112,3 @@ typedef struct {
 #endif
 
 #endif
-

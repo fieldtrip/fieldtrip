@@ -1,19 +1,19 @@
 //COPYRIGHT © 2013 G.TEC MEDICAL ENGINEERING GMBH, AUSTRIA
 #include "ReadMeasurementData.hpp"
 
-void ReadMeasurementData(Transceiver *control_command_transceiver, 
+void ReadMeasurementData(Transceiver *control_command_transceiver,
 	socketd_t data_socketfd,
-    std::string session_id, 
+    std::string session_id,
 	std::string xml_config,
-    std::string xml_data_info, 
+    std::string xml_data_info,
 	std::string sample_rate_parent_node,
-    unsigned int duration, 
-	std::string data_file, 
-	bool disp) 
+    unsigned int duration,
+	std::string data_file,
+	bool disp)
 {
     FILE *file = fopen(data_file.c_str(), "wb");
 
-    if (file == 0) 
+    if (file == 0)
 	{
         std::cerr << "ERROR: could not create or open file '" << data_file << "' for writing." << std::endl;
         return;
@@ -24,11 +24,19 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
     size_t buffer_size_per_scan = 0;
     ParseXML(xml_data_info, &scan_count, &channels_count, &buffer_size_per_scan);
 
+    std::cerr << "DEBUG: scan_count             = " << scan_count << std::endl;
+    std::cerr << "DEBUG: channels_count         = " << channels_count << std::endl;
+    std::cerr << "DEBUG: buffer_size_per_scan   = " << buffer_size_per_scan << std::endl;
+
     scan_count = 0;
     uint64_t buffer_size_seconds = 5;
     uint64_t sample_rate = atoi(ParseXML(xml_config, sample_rate_parent_node).c_str());
     size_t buffer_size_in_samples = buffer_size_seconds * sample_rate * buffer_size_per_scan;
     float* buffer = new float[buffer_size_in_samples];
+
+    std::cerr << "DEBUG: buffer_size_seconds    = " << buffer_size_seconds << std::endl;
+    std::cerr << "DEBUG: sample_rate            = " << sample_rate << std::endl;
+    std::cerr << "DEBUG: buffer_size_in_samples = " << buffer_size_in_samples << std::endl;
 
     uint64_t total_acquired_scans = 0;
     uint64_t total_scans_to_acquire = duration * sample_rate;
@@ -36,7 +44,7 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
     if (disp)
         std::cout << std::endl << "Start reading measurement data: Expect about " << total_scans_to_acquire << " scans" << std::endl;
 
-    while (total_acquired_scans < total_scans_to_acquire) 
+    while (total_acquired_scans < total_scans_to_acquire)
 	{
         std::string data_info = SetupXMLMessage(scan_count, 0, buffer_size_in_samples);
         std::string cmd = SetupXMLMessage(session_id, CMD_GET_DATA, EscapeXML(data_info));
@@ -60,7 +68,7 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
         uint64_t transfer_parts_count = (uint64_t) floor(data_header.size_ / (double) MAX_TRANSFER_SIZE);
         uint64_t last_transfer_part_size = data_header.size_ % MAX_TRANSFER_SIZE;
 
-        for (uint64_t i = 0; i < transfer_parts_count + 1; i++) 
+        for (uint64_t i = 0; i < transfer_parts_count + 1; i++)
 		{
             uint64_t transfer_part_size = (i < transfer_parts_count) ? MAX_TRANSFER_SIZE : last_transfer_part_size;
             bytes_read = 0;
@@ -70,7 +78,7 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
                 int ret = MKR_READ( data_socketfd, (char*) buffer + i*MAX_TRANSFER_SIZE + bytes_read, transfer_part_size - bytes_read );
 				if (ret == SOCKET_ERROR)
 					std::cout << "ERROR: on reading data from the socket" << std::endl;
-                
+
 				bytes_read += ((ret < 0) ? 0 : ret);
             }
         }
@@ -83,11 +91,11 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
         if (!control_command_transceiver->Receive(CMD_GET_DATA, "", &reply))
             reply = "";
 
-        try 
+        try
 		{
             CheckServerReply(reply);
-        } 
-		catch (...) 
+        }
+		catch (...)
 		{
             delete[] buffer;
             buffer = 0;
@@ -99,8 +107,11 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
 
         total_acquired_scans += scans_available;
 
-        if (scans_available > 0)
+        if (scans_available > 0) {
+            std::cerr << "DEBUG: scans_available = " << scans_available << std::endl;
             fwrite((void*) buffer, sizeof(float), scans_available * buffer_size_per_scan, file);
+            ft_write_data()
+          }
 
         if (disp)
             std::cout << TERMINAL_CARRIAGE_RETURN_ESCAPE_CODE << total_acquired_scans << " / " << total_scans_to_acquire << " scans acquired" << std::flush;
