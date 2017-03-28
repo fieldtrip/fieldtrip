@@ -1,4 +1,5 @@
 function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
+
 % FT_TRIALFUN_BRAINVISION_SEGMENTED creates trials for a Brain Vision Analyzer
 % dataset that was segmented in the BVA software.
 %
@@ -9,21 +10,21 @@ function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
 %   cfg  = ft_definetrial(cfg);
 %   data = ft_preprocessing(cfg);
 %
-% Optionally, you can also specify:
-%   cfg.stimformat = 'S %d';
-% which will instruct this function to parse stimulus triggers according to
-% the format you specified. The default is 'S %d'. cfg.stimformat always
-% needs to contain exactly one %d code. Trigger values read in this way
+% Optionally, you can specify:
+%   cfg.stimformat = 'S %d'
+% 
+% The stimformat instruct this function to parse stimulus triggers according to
+% the specific format. The default is 'S %d'. The cfg.stimformat always
+% needs to contain exactly one %d code. The trigger values parsed in this way
 % will be stored in columns 4 and upwards of the output 'trl' matrix, and
-% will end up in data.trialinfo if this matrix is subsequently passed to
-% ft_preprocessing in order to read in data.
+% after FT_PREPROCESSING will end up in data.trialinfo.
 %
-% A dataset needs to consist of three files: a .eeg, .vhdr, and .vmrk file.
-% cfg.dataset needs to refer to the .vhdr file.
+% A BrainVision dataset consists of three files: an .eeg, .vhdr, and a .vmrk 
+% file. The option cfg.dataset should refer to the .vhdr file.
 %
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
-% Copyright (C) 2014, Robert Oostenveld, FCDC
+% Copyright (C) 2014, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -45,6 +46,9 @@ function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
 
 hdr = ft_read_header(cfg.dataset);
 event = ft_read_event(cfg.dataset);
+
+% for backward compatibility
+cfg = ft_checkconfig(cfg, 'renamed', {'trigformat', 'stimformat'});
 
 % set the defaults
 cfg.stimformat = ft_getopt(cfg, 'stimformat', 'S %d');
