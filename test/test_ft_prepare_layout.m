@@ -1,4 +1,4 @@
-fnuction test_ft_prepare_layout
+function test_ft_prepare_layout
 
 % WALLTIME 00:10:00
 % MEM 4gb
@@ -20,7 +20,7 @@ if interactive
   cfg = [];
   cfg.image = 'easycap_m10_equidistant61chan.png';
   cfg.bw = 'yes';
-
+  
   layout = ft_prepare_layout(cfg);
   figure; ft_plot_lay(layout)
 end
@@ -284,6 +284,9 @@ elec = ft_read_sens('SubjectUCI29_elec_tal_f.mat');
 elec.chanpos(:,3) = elec.chanpos(:,3) - 5;
 elec.elecpos(:,3) = elec.elecpos(:,3) - 5;
 
+% note that SubjectUCI29_elec_tal_fr is better, since projected onto the
+% cortical sheet, but it lacks the depth electrodes
+
 figure
 ft_plot_sens(elec, 'label', 'label')
 ft_plot_mesh(lh.mesh);
@@ -309,5 +312,20 @@ cfg.mask = 'none';
 layout = ft_prepare_layout(cfg);
 figure; ft_plot_lay(layout); title(cfg.viewpoint)
 
+%%
+% test the non-topographic layouts
 
+clear all
+close all
 
+elec = ft_read_sens('easycap-M10.txt');
+
+style = {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'};
+
+for i=1:numel(style)
+  cfg = [];
+  cfg.channel = elec.label;
+  cfg.layout = style{i};
+  layout = ft_prepare_layout(cfg);
+  figure; ft_plot_lay(layout); title(style{i})
+end
