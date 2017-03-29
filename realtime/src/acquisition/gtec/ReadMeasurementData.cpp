@@ -29,7 +29,7 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
     //std::cerr << "DEBUG: channels_count         = " << channels_count << std::endl;
     //std::cerr << "DEBUG: buffer_size_per_scan   = " << buffer_size_per_scan << std::endl;
 
-    int ft_status
+    int ft_status;
 //		ft_status = start_server(1972);
 //		std::cerr << "DEBUG: start_server  = " << ft_status << std::endl;
 //		if (ft_status<0) exit(-1);
