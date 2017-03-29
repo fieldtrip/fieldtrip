@@ -172,7 +172,7 @@ if hasrpt
     data = rmfield(data, 'crsspctrm');
   end
 
-  tmpcfg = keepfields(cfg, {'trials', 'feedback', 'callinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'feedback', 'showcallinfo'});
   tmpcfg.jackknife = 'no';
   % keep mask-parameter if it is set
   if ~isempty(cfg.maskparameter)
