@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 	}
 	rdac->verbosity = 6;
 
-#ifndef PLATFORM_WIN32
+#ifndef PLATFORM_WINDOWS
 	/* We want CTRL-C in this thread */
 	sigprocmask(SIG_UNBLOCK, &sigInt, NULL);
 #endif
