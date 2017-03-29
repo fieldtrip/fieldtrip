@@ -291,7 +291,7 @@ try, cfg.maskparameter = cfg.maskparameter{1}; end
 
 if isfield(functional, 'time') || isfield(functional, 'freq')
   % make a selection of the time and/or frequency dimension
-  tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime'});
+  tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'keepfreqdim', 'latency', 'avgovertime', 'keeptimedim'});
   functional = ft_selectdata(tmpcfg, functional);
   % restore the provenance information
   [cfg, functional] = rollback_provenance(cfg, functional);
