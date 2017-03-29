@@ -1,5 +1,6 @@
 //COPYRIGHT © 2013 G.TEC MEDICAL ENGINEERING GMBH, AUSTRIA
 #include "ReadMeasurementData.hpp"
+#include "interface.h"
 
 void ReadMeasurementData(Transceiver *control_command_transceiver,
 	socketd_t data_socketfd,
@@ -24,19 +25,32 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
     size_t buffer_size_per_scan = 0;
     ParseXML(xml_data_info, &scan_count, &channels_count, &buffer_size_per_scan);
 
-    std::cerr << "DEBUG: scan_count             = " << scan_count << std::endl;
-    std::cerr << "DEBUG: channels_count         = " << channels_count << std::endl;
-    std::cerr << "DEBUG: buffer_size_per_scan   = " << buffer_size_per_scan << std::endl;
+    //std::cerr << "DEBUG: scan_count             = " << scan_count << std::endl;
+    //std::cerr << "DEBUG: channels_count         = " << channels_count << std::endl;
+    //std::cerr << "DEBUG: buffer_size_per_scan   = " << buffer_size_per_scan << std::endl;
+
+    int ft_status
+//		ft_status = start_server(1972);
+//		std::cerr << "DEBUG: start_server  = " << ft_status << std::endl;
+//		if (ft_status<0) exit(-1);
+
+    int ft_server = open_connection("127.0.0.1", 1972);
+		std::cerr << "DEBUG: open_connection  = " << ft_server << std::endl;
+		if (ft_server<0) exit(-1);
 
     scan_count = 0;
     uint64_t buffer_size_seconds = 5;
     uint64_t sample_rate = atoi(ParseXML(xml_config, sample_rate_parent_node).c_str());
     size_t buffer_size_in_samples = buffer_size_seconds * sample_rate * buffer_size_per_scan;
-    float* buffer = new float[buffer_size_in_samples];
+		float* buffer = new float[buffer_size_in_samples];
 
-    std::cerr << "DEBUG: buffer_size_seconds    = " << buffer_size_seconds << std::endl;
-    std::cerr << "DEBUG: sample_rate            = " << sample_rate << std::endl;
-    std::cerr << "DEBUG: buffer_size_in_samples = " << buffer_size_in_samples << std::endl;
+    // std::cerr << "DEBUG: buffer_size_seconds    = " << buffer_size_seconds << std::endl;
+    // std::cerr << "DEBUG: sample_rate            = " << sample_rate << std::endl;
+    // std::cerr << "DEBUG: buffer_size_in_samples = " << buffer_size_in_samples << std::endl;
+
+		ft_status = write_header(ft_server, DATATYPE_FLOAT32, channels_count, sample_rate);
+		// std::cerr << "DEBUG: write_header = " << ft_status << std::endl;
+		if (ft_status!=0) exit(-1);
 
     uint64_t total_acquired_scans = 0;
     uint64_t total_scans_to_acquire = duration * sample_rate;
@@ -98,7 +112,7 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
 		catch (...)
 		{
             delete[] buffer;
-            buffer = 0;
+						buffer = 0;
             throw;
         }
 
@@ -108,14 +122,20 @@ void ReadMeasurementData(Transceiver *control_command_transceiver,
         total_acquired_scans += scans_available;
 
         if (scans_available > 0) {
-            std::cerr << "DEBUG: scans_available = " << scans_available << std::endl;
+            // std::cerr << "DEBUG: scans_available = " << scans_available << std::endl;
             fwrite((void*) buffer, sizeof(float), scans_available * buffer_size_per_scan, file);
-            ft_write_data()
+						ft_status = write_data(ft_server, DATATYPE_FLOAT32, channels_count, scans_available * buffer_size_per_scan / channels_count, (void *)buffer);
+						// std::cerr << "DEBUG: write_data  = " << ft_status << std::endl;
+						if (ft_status!=0) exit(-1);
           }
 
         if (disp)
             std::cout << TERMINAL_CARRIAGE_RETURN_ESCAPE_CODE << total_acquired_scans << " / " << total_scans_to_acquire << " scans acquired" << std::flush;
     }
+
+		ft_status = close_connection(ft_server);
+		// std::cerr << "DEBUG: close_connection  = " << ft_status << std::endl;
+		if (ft_status!=0) exit(-1);
 
     if (disp)
         std::cout << std::endl;

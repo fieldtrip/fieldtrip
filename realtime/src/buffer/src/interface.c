@@ -2,11 +2,41 @@
  * Copyright (C) 2017, Robert Oostenveld
  * Donders Institute for Brain, COgnition and Behaviour; Radboud University; NL
  *
+ * int start_server(int port);
+ * int open_connectiion(char *host, int port)
+ * int close_connection(int server)
+ * int write_header(int server, UINT32_T datatype, int nchans, int fsample)
+ * int write_data(int server, UINT32_T datatype, int nchans, int nsamples, void *buffer)
+ *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
+
 #include "buffer.h"
+
+/*******************************************************************************
+* START THE BUFFER IN A SEPARATE THREAD
+*******************************************************************************/
+int start_server(int port) {
+  int rc;
+	pthread_t tid;
+  host_t host;
+
+  sprintf(host.name, "-");
+  host.port = port;
+
+  rc = pthread_create(&tid, NULL, tcpserver, (void *)(&host));
+  if (rc) {
+    fprintf(stderr, "Error: return code from pthread_create() is %d\n", rc);
+    exit(-1);
+  }
+  pthread_detach(tid);
+  usleep(1000000);
+
+  return 0;
+}
 
 /*******************************************************************************
 * CLOSE CONNECTION
@@ -24,6 +54,7 @@ int close_connection(int s) {
 
 /*******************************************************************************
 * OPEN CONNECTION
+* returns 0 for direct memory copy, >0 for tcp, <0 in case of error
 *******************************************************************************/
 int open_connection(const char *hostname, int port) {
   int verbose = 0;
@@ -164,9 +195,10 @@ return s;
 
 /*******************************************************************************
  * WRITE HEADER
+ * returns 0 on success
  *******************************************************************************/
 int write_header(int server, UINT32_T datatype, int nchans, int fsample) {
-    int verbose = 2, status;
+    int verbose = 0, status;
 
 		/* these are used in the communication and represent statefull information */
 		message_t    *request  = NULL;
@@ -177,19 +209,19 @@ int write_header(int server, UINT32_T datatype, int nchans, int fsample) {
     header      = (header_t *)malloc(sizeof(header_t));
 		header->def = (headerdef_t *)malloc(sizeof(headerdef_t));
 		header->buf = NULL;
+    header->def->bufsize   = 0;
 		header->def->nchans    = nchans;
 		header->def->nsamples  = 0;
 		header->def->nevents   = 0;
 		header->def->fsample   = fsample;
 		header->def->data_type = datatype;
-		header->def->bufsize   = 0;
 
     /* create the request */
     request      = (message_t *)malloc(sizeof(message_t));
 		request->def = (messagedef_t *)malloc(sizeof(messagedef_t));
 		request->buf = NULL;
+    request->def->bufsize = 0;
 		request->def->version = VERSION;
-		request->def->bufsize = 0;
 		request->def->command = PUT_HDR;
 		request->def->bufsize = append(&request->buf, request->def->bufsize, header->def, sizeof(headerdef_t));
 		request->def->bufsize = append(&request->buf, request->def->bufsize, header->buf, header->def->bufsize);
@@ -214,9 +246,10 @@ int write_header(int server, UINT32_T datatype, int nchans, int fsample) {
 
 /*******************************************************************************
  * WRITE DATA
+ * returns 0 on success
  *******************************************************************************/
 int write_data(int server, UINT32_T datatype, int nchans, int nsamples, void *buffer) {
-  int verbose = 2, status;
+  int verbose = 0, status;
 
   /* these are used in the communication and represent statefull information */
   message_t    *request  = NULL;
@@ -228,7 +261,7 @@ int write_data(int server, UINT32_T datatype, int nchans, int nsamples, void *bu
   data->def = (datadef_t *)malloc(sizeof(datadef_t));
   data->def->nchans    = nchans;
   data->def->nsamples  = nsamples;
-  data->def->data_type = nsamples;
+  data->def->data_type = datatype;
   data->def->bufsize   = wordsize_from_type(datatype)*nchans*nsamples;
   data->buf            = buffer;
 
@@ -236,8 +269,8 @@ int write_data(int server, UINT32_T datatype, int nchans, int nsamples, void *bu
   request      = (message_t *)malloc(sizeof(message_t));
   request->def = (messagedef_t *)malloc(sizeof(messagedef_t));
   request->buf = NULL;
-  request->def->version = VERSION;
   request->def->bufsize = 0;
+  request->def->version = VERSION;
   request->def->command = PUT_DAT;
   request->def->bufsize = append(&request->buf, request->def->bufsize, data->def, sizeof(datadef_t));
   request->def->bufsize = append(&request->buf, request->def->bufsize, data->buf, data->def->bufsize);
@@ -252,6 +285,7 @@ int write_data(int server, UINT32_T datatype, int nchans, int nsamples, void *bu
       exit(1);
   }
 
+  /* deal with the response */
   if (response == NULL || response->def == NULL || response->def->command!=PUT_OK) {
     fprintf(stderr, "Error when writing samples.\n");
   }
