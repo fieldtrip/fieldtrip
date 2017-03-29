@@ -22,7 +22,7 @@ CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
 CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
-LDLIBS   = -lbuffer -lthread
+LDLIBS   = -lbuffer -lpthread
 
 # better would be to make a proper library of the C++ framework
 CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)

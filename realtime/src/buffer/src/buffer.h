@@ -61,16 +61,18 @@
 
 #ifdef __cplusplus
 extern "C" {
-
 #endif
 
 /* definition of the functions that implement the network transparent server */
 void *tcpserver(void *);
 void *tcpsocket(void *);
-
 int clientrequest(int, const message_t *, message_t**);
 int dmarequest(const message_t *, message_t**);
 int tcprequest(int, const message_t *, message_t**);
+
+#ifdef __cplusplus
+}
+#endif
 
 typedef struct {
     char name[HOSTNAME_LENGTH];
@@ -78,9 +80,5 @@ typedef struct {
 } host_t;
 
 #define DIE_BAD_MALLOC(ptr) if ((ptr)==NULL) { fprintf(stderr, "Out of memory in line %d", __LINE__); exit(1); }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
