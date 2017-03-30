@@ -76,7 +76,7 @@ if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
 if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
 
 % perform some checks on the configuration
-if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
+if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
     error('P-values can only be calculated if the test statistics are calculated.');
 end;
 
@@ -87,9 +87,8 @@ switch cfg.dimord
     nfreq = cfg.dim(2);
     ntime = cfg.dim(3);
     [nsmpls,nrepl] = size(dat);
-    nsmplsdivntime = floor(nsmpls/ntime);
   otherwise
-    error('Inappropriate dimord for the statistics function STATFUN_ACTVSBLT.');
+    error('Inappropriate dimord for the statistics function FT_STATFUN_ACTVSBLT.');
 end;
 
 sel1 = find(design(cfg.ivar,:)==1);
@@ -113,8 +112,8 @@ if strcmp(cfg.computestat,'yes')
     % calculate the time averages of the activation and the baseline period
     % for all units-of-observation.
     meanreshapeddat=nanmean(reshape(dat,nchan,nfreq,ntime,nrepl),3);
-    timeavgdat=repmat(eye(nchan*nfreq),ntime,1)*reshape(meanreshapeddat,(nchan*nfreq),nrepl);
-
+    timeavgdat=repmat(reshape(meanreshapeddat,(nchan*nfreq),nrepl),ntime,1);
+    
     % store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
     poslabelsperunit=zeros(nunits,2);
     poslabel1=find(design(cfg.ivar,:)==1);
@@ -125,7 +124,6 @@ if strcmp(cfg.computestat,'yes')
     poslabelsperunit(:,2)=poslabel2(i);
 
     % calculate the differences between the conditions
-    diffmat=zeros(nsmpls,nunits);
     diffmat=dat(:,poslabelsperunit(:,1))-timeavgdat(:,poslabelsperunit(:,2));
 
     % calculate the dependent samples t-statistics
