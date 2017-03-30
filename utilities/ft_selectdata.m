@@ -136,7 +136,7 @@ end
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
 % update the old-style beamformer source reconstruction to the upcoming representation
 if strcmp(dtype, 'source')
-  if isfield(varargin{1}, 'avg')
+  if isfield(varargin{1}, 'avg') && isstruct(varargin{1}.avg)
     restoreavg = fieldnames(varargin{1}.avg);
   else
     restoreavg = {};
