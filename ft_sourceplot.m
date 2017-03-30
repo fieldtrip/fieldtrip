@@ -302,7 +302,7 @@ hasanatomical = exist('anatomical', 'var');
 
 if hasanatomical
   % interpolate on the fly, this also does the downsampling if requested
-  tmpcfg = keepfields(cfg, {'downsample', 'interpmethod'});
+  tmpcfg = keepfields(cfg, {'downsample', 'interpmethod', 'sphereradius'});
   tmpcfg.parameter = cfg.funparameter;
   functional = ft_sourceinterpolate(tmpcfg, functional, anatomical);
   [cfg, functional] = rollback_provenance(cfg, functional);

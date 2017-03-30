@@ -1,8 +1,8 @@
 function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 
-% FT_STATFUN_ACTVSBLT calculates the activation-versus-baseline T-statistic 
-% on the biological data in dat (the dependent variable), using the information on 
-% the independent variable (ivar) in design. 
+% FT_STATFUN_ACTVSBLT calculates the activation-versus-baseline T-statistic
+% on the biological data in dat (the dependent variable), using the information on
+% the independent variable (ivar) in design.
 %
 % Note: It does not make sense to use this test statistic when
 % baseline-correction was performed by subtracting the time average of the
@@ -22,7 +22,7 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 %   [s,cfg] = ft_statfun_actvsblT(cfg, dat, design);
 % where
 %   dat    contains the biological data, Nsamples x Nreplications
-%   design contains the independent variable (ivar) and the unit-of-observation (uvar) 
+%   design contains the independent variable (ivar) and the unit-of-observation (uvar)
 %          factor,  Nreplications x Nvar
 %
 % Configuration options
@@ -41,11 +41,11 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 %               quantile (1-cfg.alpha) (with cfg.tail=1).
 %
 % Design specification
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be 
-%               compared (default=1). The first condition, indicated by 1, corresponds to the 
+%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be
+%               compared (default=1). The first condition, indicated by 1, corresponds to the
 %               activation period and the second, indicated by 2, corresponds to the baseline period.
 %   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
-%               (default=2). The labels are assumed to be integers ranging from 1 to 
+%               (default=2). The labels are assumed to be integers ranging from 1 to
 %               the number of units-of-observation.
 
 % Copyright (C) 2006, Eric Maris
@@ -76,8 +76,8 @@ if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
 if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
 
 % perform some checks on the configuration
-if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
+if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
+  error('P-values can only be calculated if the test statistics are calculated.');
 end;
 
 % calculate the number of time samples
@@ -87,9 +87,8 @@ switch cfg.dimord
     nfreq = cfg.dim(2);
     ntime = cfg.dim(3);
     [nsmpls,nrepl] = size(dat);
-    nsmplsdivntime = floor(nsmpls/ntime);
   otherwise
-    error('Inappropriate dimord for the statistics function STATFUN_ACTVSBLT.');
+    error('Inappropriate dimord for the statistics function FT_STATFUN_ACTVSBLT.');
 end;
 
 sel1 = find(design(cfg.ivar,:)==1);
@@ -102,36 +101,35 @@ end;
 nunits = max(design(cfg.uvar,:));
 df = nunits - 1;
 if nunits<2
-    error('The data must contain at least two units (trials or subjects).')
+  error('The data must contain at least two units (trials or subjects).')
 end;
 if (nunits*2)~=(n1+n2)
   error('Invalid specification of the design array.');
 end;
 
 if strcmp(cfg.computestat,'yes')
-% compute the statistic
-    % calculate the time averages of the activation and the baseline period
-    % for all units-of-observation.
-    meanreshapeddat=nanmean(reshape(dat,nchan,nfreq,ntime,nrepl),3);
-    timeavgdat=repmat(eye(nchan*nfreq),ntime,1)*reshape(meanreshapeddat,(nchan*nfreq),nrepl);
-
-    % store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
-    poslabelsperunit=zeros(nunits,2);
-    poslabel1=find(design(cfg.ivar,:)==1);
-    poslabel2=find(design(cfg.ivar,:)==2);
-    [dum,i]=sort(design(cfg.uvar,poslabel1),'ascend');
-    poslabelsperunit(:,1)=poslabel1(i);
-    [dum,i]=sort(design(cfg.uvar,poslabel2),'ascend');
-    poslabelsperunit(:,2)=poslabel2(i);
-
-    % calculate the differences between the conditions
-    diffmat=zeros(nsmpls,nunits);
-    diffmat=dat(:,poslabelsperunit(:,1))-timeavgdat(:,poslabelsperunit(:,2));
-
-    % calculate the dependent samples t-statistics
-    avgdiff=nanmean(diffmat,2);
-    vardiff=nanvar(diffmat,0,2);
-    s.stat=sqrt(nunits)*avgdiff./sqrt(vardiff);
+  % compute the statistic
+  % calculate the time averages of the activation and the baseline period
+  % for all units-of-observation.
+  meanreshapeddat=nanmean(reshape(dat,nchan,nfreq,ntime,nrepl),3);
+  timeavgdat=repmat(reshape(meanreshapeddat,(nchan*nfreq),nrepl),ntime,1);
+  
+  % store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
+  poslabelsperunit=zeros(nunits,2);
+  poslabel1=find(design(cfg.ivar,:)==1);
+  poslabel2=find(design(cfg.ivar,:)==2);
+  [dum,i]=sort(design(cfg.uvar,poslabel1),'ascend');
+  poslabelsperunit(:,1)=poslabel1(i);
+  [dum,i]=sort(design(cfg.uvar,poslabel2),'ascend');
+  poslabelsperunit(:,2)=poslabel2(i);
+  
+  % calculate the differences between the conditions
+  diffmat=dat(:,poslabelsperunit(:,1))-timeavgdat(:,poslabelsperunit(:,2));
+  
+  % calculate the dependent samples t-statistics
+  avgdiff=nanmean(diffmat,2);
+  vardiff=nanvar(diffmat,0,2);
+  s.stat=sqrt(nunits)*avgdiff./sqrt(vardiff);
 end;
 
 if strcmp(cfg.computecritval,'yes')
