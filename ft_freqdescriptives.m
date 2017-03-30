@@ -109,7 +109,7 @@ cfg.latency    = ft_getopt(cfg, 'latency',    'all');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
+freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', cfg.feedback);
 % get data in the correct representation, it should only have power
 freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
 
@@ -128,7 +128,7 @@ if ~hasrpt && ~strcmp(cfg.trials, 'all'), error('trial selection requires input 
 if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo'});
 freq = ft_selectdata(tmpcfg, freq);
 % restore the provenance information
 [cfg, freq] = rollback_provenance(cfg, freq);

@@ -272,6 +272,14 @@ ARRAY+=(src/det2x2.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# dimindex.m
+
+ARRAY=()
+ARRAY+=(private/dimindex.m)
+ARRAY+=(utilities/private/dimindex.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # dimlength.m
 
 ARRAY=()
