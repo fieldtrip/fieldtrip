@@ -169,8 +169,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % file. These mat files should contain only a single variable,
 % corresponding with the input/output structure.
 %
-% See also FT_READ_MRI, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS, SPM_AFFREG,
-% SPM_NORMALISE, SPM_COREG
+% See also FT_READ_MRI, FT_VOLUMERESLICE, FT_INTERACTIVEREALIGN, FT_ELECTRODEREALIGN,
+% FT_DETERMINE_COORDSYS, SPM_AFFREG, SPM_NORMALISE, SPM_COREG
 
 % Undocumented options:
 %
