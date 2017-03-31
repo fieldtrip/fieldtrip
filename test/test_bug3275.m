@@ -46,6 +46,7 @@ ft_sourceplot(cfg, functional)
 % ft_sourceplot(cfg, functional)
 
 %%
+
 cfg.latency = 0.5;
 cfg.method = 'ortho';
 ft_sourceplot(cfg, functional)
@@ -114,7 +115,5 @@ cfg.funparameter = 'powspctrm';
 cfg.frequency = 15;
 cfg.latency = 0.5;
 ft_sourceplot(cfg, freq)
-
-
 
 
