@@ -6,6 +6,13 @@ function [output] = volumethreshold(input, thresh, str)
 %
 % See also VOLUMEFILLHOLES, VOLUMESMOOTH
 
+if nargin<2 || isempty(thresh)
+  thresh = 0;
+end
+if nargin<3 || isempty(str)
+  str = 'volume';
+end
+
 % ensure that SPM is available, needed for spm_bwlabel
 hasspm = ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
