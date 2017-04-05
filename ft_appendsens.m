@@ -89,9 +89,13 @@ for i=1:Ndata
   if isfield(varargin{i}, 'elecpos')
     elecpos{i} = varargin{i}.elecpos;
   end
+  if isfield(varargin{i}, 'chanpos')
+    chanpos{i} = varargin{i}.chanpos;
+  end
 end
 sens.label = cat(1,label{:});
 sens.elecpos = cat(1,elecpos{:});
+sens.chanpos = cat(1,chanpos{:});
 
 % ensure a full sens description
 sens = ft_datatype_sens(sens);

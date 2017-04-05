@@ -75,6 +75,9 @@ if ft_abort
   return
 end
 
+% set the defaults
+cfg.appendsens         = ft_getopt(cfg, 'appendsens', 'no');
+
 % check if the input data is valid for this function
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'no');
@@ -168,23 +171,6 @@ for j=1:Ndata
   haselec = isfield(varargin{j}, 'elec') && haselec;
   hasgrad = isfield(varargin{j}, 'grad') && hasgrad;
   hasopto = isfield(varargin{j}, 'opto') && hasopto;
-end
-
-removesens = 0;
-if haselec || hasgrad || hasopto
-  sens = cell(1, Ndata);
-  for j=1:Ndata
-    if haselec, sens{j} = varargin{j}.elec; end
-    if hasgrad, sens{j} = varargin{j}.grad; end
-    if hasopto, sens{j} = varargin{j}.opto; end
-    if j>1
-      if ~isequaln(sens{j}, sens{1})
-        removesens = 1;
-        warning('sensor information does not seem to be consistent across the input arguments');
-        break;
-      end
-    end
-  end
 end
 
 % check whether the data are obtained from the same datafile in case either
@@ -334,6 +320,31 @@ if shuflabel
     data.trial{i} = data.trial{i}(reorder,:);
   end
   data.label = data.label(reorder);
+end
+
+removesens = 0;
+if haselec || hasgrad || hasopto
+  sens = cell(1, Ndata);
+  for j=1:Ndata
+    if haselec, sens{j} = varargin{j}.elec; end
+    if hasgrad, sens{j} = varargin{j}.grad; end
+    if hasopto, sens{j} = varargin{j}.opto; end
+  end
+  for j=1:Ndata
+    if j>1
+      if ~isequaln(sens{j}, sens{1})
+        removesens = 1;
+        warning('sensor information does not seem to be consistent across the input arguments');
+        break;
+      end
+    end
+  end
+  if strcmp(cfg.appendsens, 'yes')
+    fprintf('concatenating sensor information across all input arguments\n');
+    if haselec, data.elec = ft_appendsens([], sens{:}); end
+    if hasgrad, data.grad = ft_appendsens([], sens{:}); end
+    removesens = 0;
+  end
 end
 
 if removesens

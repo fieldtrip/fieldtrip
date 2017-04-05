@@ -378,13 +378,15 @@ if hasdata
   
   if isstruct(cfg.montage)
     if ~isempty(sensfield)
-      if  strcmp(cfg.updatesens, 'yes')
+      if strcmp(cfg.updatesens, 'yes')
         fprintf('also applying the montage to the %s structure\n', sensfield);
         if isfield(cfg.montage, 'type')
           bname = cfg.montage.type; % FIXME this is not standard
         else
           bname = 'preproc';
         end
+        senscfg.channel = cfg.channel; % use the selected channels
+        dataout.(sensfield) = ft_selectdata(senscfg, dataout.(sensfield));
         dataout.(sensfield) = ft_apply_montage(dataout.(sensfield), cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
       else
         fprintf('not applying the montage to the %s structure\n', sensfield);
