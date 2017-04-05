@@ -82,20 +82,36 @@ if ~unitmatch || ~coordsysmatch
 end
 
 % concatenate
-for i=1:Ndata
-  if isfield(varargin{i}, 'label')
+if isfield(varargin{1}, 'label')
+  for i=1:Ndata
     label{i} = varargin{i}.label;
   end
-  if isfield(varargin{i}, 'elecpos')
+  sens.label = cat(1,label{:});
+end
+if isfield(varargin{1}, 'elecpos')
+  for i=1:Ndata
     elecpos{i} = varargin{i}.elecpos;
   end
-  if isfield(varargin{i}, 'chanpos')
+  sens.elecpos = cat(1,elecpos{:});
+end
+if isfield(varargin{1}, 'chanpos')
+  for i=1:Ndata
     chanpos{i} = varargin{i}.chanpos;
   end
+  sens.chanpos = cat(1,chanpos{:});
 end
-sens.label = cat(1,label{:});
-sens.elecpos = cat(1,elecpos{:});
-sens.chanpos = cat(1,chanpos{:});
+if isfield(varargin{1}, 'chanposold')
+  for i=1:Ndata
+    chanposold{i} = varargin{i}.chanposold;
+  end
+  sens.chanposold = cat(1,chanposold{:});
+end
+if isfield(varargin{1}, 'labelold')
+  for i=1:Ndata
+    labelold{i} = varargin{i}.labelold;
+  end
+    sens.labelold = cat(1,labelold{:});
+end
 
 % ensure a full sens description
 sens = ft_datatype_sens(sens);
