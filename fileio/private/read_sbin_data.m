@@ -1,4 +1,4 @@
-function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanindx, gainfile, zerofile)
+function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanindx)
 
 % READ_SBIN_DATA reads the data from an EGI segmented simple binary format file
 %
@@ -6,7 +6,7 @@ function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanind
 %   [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanindx)
 % with
 %   filename       name of the input file
-%   hdr            header structure, see READ_HEADER
+%   hdr            header structure, see FT_READ_HEADER
 %   begtrial       first trial to read, mutually exclusive with begsample+endsample
 %   endtrial       last trial to read,  mutually exclusive with begsample+endsample
 %   chanindx       list with channel indices to read
@@ -18,7 +18,7 @@ function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanind
 % Modified from EGI's readEGLY.m with permission 2008-03-31 Joseph Dien
 %
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ function [trialData] = read_sbin_data(filename, hdr, begtrial, endtrial, chanind
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id: read_sbin_data.m 8121 2013-05-09 21:22:47Z josdie $
+% $Id$
 
 fh=fopen([filename],'r');
 if fh==-1
@@ -166,31 +166,10 @@ else
     end
 end
 trialData=trialData(chanindx, :,:);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%convert to mV if not yet done%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert to mV if needed
 if hdr.orig.header_array(12) ~= 0 && hdr.orig.header_array(13) ~= 0
-    if ~strcmp(gainfile,'no') && ~strcmp(zerofile,'no')
-%     if exist(gainfile,'file') == 2 && exist(zerofile,'file') == 2 % || exist([filename(1:end-4),'.GAIN'],'file') && exist([filename(1:end-4),'.ZERO'],'file')
-%         if exist(gainfile,'var') ~= 2 && exist(zerofile,'var') ~= 2 && exist([filename(1:end-4),'.GAIN'],'file') && exist([filename(1:end-4),'.ZERO'],'file')
-%             gainfile = [filename(1:end-4),'.GAIN'];
-%             zerofile = [filename(1:end-4),'.ZERO'];
-%         end;
-%       ft_warning('using .GAIN and .ZERO files to calculate uV-values from A/D-values')
-        fg = fopen(gainfile);
-        gains_val = textscan(fg,'%f %*s %f ','HeaderLines', 3 );
-        fclose(fg);
-        fz = fopen(zerofile);
-        zeros_val = textscan(fz,'%f %*s %f ','HeaderLines', 3 );
-        fclose(fg);
-        for i = 1:numel(chanindx(ismember(chanindx,zeros_val{1})))
-            trialData(i,:) = (trialData(i,:)-zeros_val{2}(chanindx(i)))*400/gains_val{2}(chanindx(i)); %Scaling Factor (acc. to manual): uV = (A/D Unit - channel zero) * (calibration signal amplitude) / channel gain
-        end;
-    else
-        trialData = (hdr.orig.header_array(13)/2^hdr.orig.header_array(12))*(trialData);
-    end;
+	trialData = (hdr.orig.header_array(13)/2^hdr.orig.header_array(12))*(trialData);
 end;
-
 status = fclose(fh);
 if status==-1
     error('Failure to close simple binary file.')
