@@ -293,26 +293,35 @@ switch cfg.method
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
     
     % electrode listbox
+    % electrode listbox
+    opt = [];
+    opt.label = {}; chanstring = {};
+    markerlab = {}; markerpos = {};
     if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
-      cfg.channel = []; % ensure cfg.channel is empty, for filling it up
       for e = 1:numel(cfg.elec.label)
-        cfg.channel{e,1} = cfg.elec.label{e};
-        chanstring{e} = ['<HTML><FONT color="black">' cfg.channel{e,1} '</FONT></HTML>']; % hmtl'ize
+        opt.label{end+1,1} = cfg.elec.label{e};
+        chanstring{end+1} = ['<HTML><FONT color="black">' cfg.elec.label{e} '</FONT></HTML>']; % hmtl'ize
         
-        markerlab{e,1} = cfg.elec.label{e};
-        markerpos{e,1} = cfg.elec.elecpos(e,:);
+        markerlab{end+1,1} = cfg.elec.label{e};
+        markerpos{end+1,1} = cfg.elec.elecpos(e,:);
       end
-    else % otherwise use standard / prespecified (cfg.channel) electrode labels
-      if isempty(cfg.channel)
-        for c = 1:150
-          cfg.channel{c,1} = sprintf('%d', c);
-        end
-      end
+    end
+    if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
       for c = 1:numel(cfg.channel)
-        chanstring{c} = ['<HTML><FONT color="silver">' cfg.channel{c,1} '</FONT></HTML>']; % hmtl'ize
+        opt.label{end+1,1} = cfg.channel{c};
+        chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
         
-        markerlab{c,1} = {};
-        markerpos{c,1} = zeros(0,3);
+        markerlab{end+1,1} = {};
+        markerpos{end+1,1} = zeros(0,3);
+      end
+    end
+    if isempty(cfg.elec) && isempty(cfg.channel) % create electrode labels on-the-fly
+      for c = 1:150
+        opt.label{end+1,1} = sprintf('%d', c);
+        chanstring{end+1} = ['<HTML><FONT color="silver">' sprintf('%d', c) '</FONT></HTML>']; % hmtl'ize
+        
+        markerlab{end+1,1} = {};
+        markerpos{end+1,1} = zeros(0,3);
       end
     end
     
@@ -406,7 +415,6 @@ switch cfg.method
       '4. See Stolk, Griffin et al. (2017) for further electrode processing options\n'));
     
     % create structure to be passed to gui
-    opt               = [];
     opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
     opt.mainfig       = h;
     opt.quit          = false;
@@ -418,7 +426,6 @@ switch cfg.method
     opt.showcrosshair = true;
     opt.pos           = [0 0 0]; % middle of the scan, head coordinates
     opt.showlabels    = false;
-    opt.label         = cfg.channel;
     opt.magnet        = get(h7, 'Value');
     opt.magradius     = cfg.magradius;
     opt.magtype       = cfg.magtype;
