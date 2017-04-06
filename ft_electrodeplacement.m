@@ -293,7 +293,6 @@ switch cfg.method
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
     
     % electrode listbox
-    % electrode listbox
     opt = [];
     opt.label = {}; chanstring = {};
     markerlab = {}; markerpos = {};
