@@ -3,10 +3,9 @@ function test_bug1390
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1390
 % TEST ft_timelockanalysis ft_datatype_raw
 
-load /home/common/matlab/fieldtrip/data/test/bug1390.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1390.mat'));
 
 % The following caused a problem in versions prior to 27 March 2012
 % that expressed itself as
@@ -15,6 +14,6 @@ load /home/common/matlab/fieldtrip/data/test/bug1390.mat
 timelock = ft_timelockanalysis(cfg, data);
 
 % this is the follow up in comment 8
-load /home/common/matlab/fieldtrip/data/test/bug1390c8.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1390c8.mat'));
 timelock = ft_timelockanalysis(cfg, data);
 

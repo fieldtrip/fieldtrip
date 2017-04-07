@@ -3,7 +3,6 @@ function test_ft_channelcombination
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_channelcombination
 % TEST ft_channelcombination
 
 % this function tests the new implementation of ft_channelcombination
@@ -68,7 +67,7 @@ function [collect] = ft_channelcombination_old(channelcmb, datachannel, includea
 
 % Copyright (C) 2003-2011, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

@@ -1,4 +1,4 @@
-function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
+function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx)
 
 % READ_BIOSEMI_BDF reads specified samples from a BDF continous datafile
 % It neglects all trial boundaries as if the data was acquired in
@@ -29,7 +29,7 @@ function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -268,7 +268,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for reading the 24 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function buf = readLowLevel(filename, offset, numwords);
+function buf = readLowLevel(filename, offset, numwords)
 if offset < 2*1024^3
   % use the external mex file, only works for <2GB
   buf = read_24bit(filename, offset, numwords);

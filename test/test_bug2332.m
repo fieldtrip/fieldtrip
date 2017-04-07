@@ -3,31 +3,35 @@ function test_bug2332
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2332
 % TEST ft_apply_montage ft_componentanalysis ft_rejectcomponent
 
 %% read some data
 
-pwdir = pwd;
-
-cd('/home/common/matlab/fieldtrip/data/');
 cfg = [];
-cfg.dataset = 'Subject01.ds';
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 cfg.trl     = [1 1200 0];
 cfg.continuous = 'yes';
-cfg.channel = 'MEG';
+cfg.channel = {'meg', 'megref'};
 data = ft_preprocessing(cfg);
+
+%% convert to 3rd order gradients
+
+cfg = [];
+cfg.gradient = 'G3BR';
+synthetic = ft_denoise_synthetic(cfg, data);
 
 %% do componentanalysis
 
 cfg = [];
 cfg.method = 'pca';
-comp = ft_componentanalysis(cfg, data);
+comp = ft_componentanalysis(cfg, synthetic);
 
 %% verify grad has been updated successfully
 
-assert(isequal(comp.grad.chanposorg, data.grad.chanpos));
-assert(all(isnan(comp.grad.chanpos(:))));
+assert(~all(isnan(comp.grad.chanpos(:)))); % as of 8 March 2017 the chanpos is updated
+
+[sel1, sel2] = match_str(comp.grad.labelold, data.grad.label);
+assert(isequal(comp.grad.chanposold(sel1,:), data.grad.chanpos(sel2,:))); % old fields should still reflect the original physical positions
 
 %% rejectcomponent
 
@@ -49,21 +53,15 @@ datplan = ft_megplanar(cfg, reject);
 
 %% verify again that grad was updated successfully
 
-assert(all(isnan(datplan.grad.chanpos(:))));
-assert(~any(isnan(datplan.grad.chanposorg(:))));
+assert(~all(isnan(datplan.grad.chanpos(:)))); % as of 8 March 2017 the chanpos is updated
 
-% *org fields should still reflect the original physical positions
-assert(isequal(datplan.grad.chanposorg, data.grad.chanpos));
+[sel1, sel2] = match_str(datplan.grad.labelold, data.grad.label);
+assert(isequal(datplan.grad.chanposold(sel1,:), data.grad.chanpos(sel2,:))); % old fields should still reflect the original physical positions
 
 %% simple check that combineplanar still works
 
-datcmb = ft_combineplanar([], datplan);
+cfg = [];
+datcmb = ft_combineplanar(cfg, datplan);
 
-% now chanpos should be nans
-assert(all(isnan(datcmb.grad.chanpos(:))));
-% FIXME do we want a chanposorg on combined planar data as well?
-
-%% move back to original working dir
-
-cd(pwdir);
+% it is not fully clear what the expected channelpositions are at this moment
 

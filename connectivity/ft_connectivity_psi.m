@@ -21,14 +21,15 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 %
 % Additional input arguments come as key-value pairs:
 %
-%   hasjack   0 or 1 specifying whether the Repetitions represent
-%                   leave-one-out samples (allowing for a variance
-%                   estimate)
-%   feedback 'none', 'text', 'textbar' type of feedback showing progress of
-%                   computation
-%   dimord          specifying how the input matrix should be interpreted
-%   powindx normalize nbin            the number of frequency bins across
-%   which to integrate
+%   nbin			=	scalar, half-bandwidth parameter: the number of frequency bins
+%								across which to integrate
+%   hasjack		= 0 or 1, specifying whether the repetitions represent
+%               leave-one-out samples (allowing for a variance estimate)
+%   feedback	= 'none', 'text', 'textbar' type of feedback showing progress of
+%               computation
+%   dimord		= string, specifying how the input matrix should be interpreted
+%   powindx
+%   normalize
 %
 % The output p contains the phase slope index, v is a variance estimate
 % which only can be computed if the data contains leave-one-out samples,
@@ -41,7 +42,7 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 
 % Copyright (C) 2009-2010 Donders Institute, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -119,7 +120,7 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2,
     p2     = p2(ones(1,siz(2)),:,:,:,:,:);
     p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), nbin, normalize), pvec);
     p(isnan(p)) = 0;
-    outsum = outsum + p;    
+    outsum = outsum + p;
     outssq = outssq + p.^2;
   end
   ft_progress('close');
@@ -130,7 +131,7 @@ n = siz(1);
 c = outsum./n;
 
 if n>1,
-  n = shiftdim(sum(~isnan(input),1),1);    
+  n = shiftdim(sum(~isnan(input),1),1);
   if hasjack
     bias = (n-1).^2;
   else

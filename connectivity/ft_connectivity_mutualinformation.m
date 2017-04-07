@@ -25,7 +25,7 @@ function output = ft_connectivity_mutualinformation(input, varargin)
 
 % Copyright (C) 2016 Donders Institute, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -72,7 +72,8 @@ if numel(lags)>1 || lags~=0,
   
   output = zeros(size(input,1), numel(lags));
   for k = 1:numel(lags)
-        
+    fprintf('computing mutualinformation for time lag in samples %d\n', lags(k));
+    
     beg1 = max(0, lags(k))  + 1;
     beg2 = max(0, -lags(k)) + 1;
     n1   = n-abs(lags(k));

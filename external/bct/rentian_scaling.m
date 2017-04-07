@@ -1,4 +1,4 @@
-function [N E] = rentian_scaling(A,XYZ,n)
+function [N,E] = rentian_scaling(A,XYZ,n)
 %RENTIAN_SCALING    Physical Rentian scaling
 %
 % [N E] = rentian_scaling(A,XYZ,n)
@@ -24,41 +24,47 @@ function [N E] = rentian_scaling(A,XYZ,n)
 % system.
 %
 % Inputs:
-% 	A is the MxM adjacency matrix which must be unweighted, binary, and symmetric.
-% 	XYZ is the vector of node placement coordinates - must be Mx3 matrix.
-%		where M is the number of nodes.
-% 	n is a scalar - the number of partitions to compute
-%		Each partition is a data point.
-%       You want a large enough number to adequately estimate the Rent's exponent.
+% 	A       MxM adjacency matrix 
+%           must be unweighted, binary, and symmetric.
+% 	XYZ     Vector of node placement coordinates
+%           must be Mx3 matrix, where M is the number of nodes.
+% 	n       Number of partitions to compute. Each partition is a data
+%           point. You want a large enough number to adequately estimate
+%           the Rent's exponent.
 %
 % Outputs:
-%	N is an nx1 vector of the number of nodes in each of the n partitions
-%	E is an nx1 vector of the number of edges crossing the boundary of each partition
+%	N       nx1 vector of the number of nodes in each of the n partitions.
+%	E       nx1 vector of the number of edges crossing the boundary of each
+%           partition.
 %
 % Subsequent Analysis:
-% 	Rentian scaling plots are then created by: figure; loglog(E,N,'*');
-%	To determine the Rent's exponent, p, it is important not to use partitions which may 
-%		be affected by boundary conditions. In Bassett et al. 2010 PLoS CB, only 
-%		partitions with N<M/2 were used in the estimation of the Rent's exponent. 
-%		Thus, we can define N_prime = N(find(N<M/2)) and E_prime = E(find(N<M/2)). Next we 
-%		need to determine the slope of Eprime vs. Nprime in loglog space, which is the Rent's 
-%		exponent. There are many ways of doing this with more or less statistical 
-%		rigor. Robustfit in MATLAB is one such option:
+%   Rentian scaling plots are then created by: figure; loglog(E,N,'*');
+%
+%	To determine the Rent's exponent, p, it is important not to use
+%	partitions which may be affected by boundary conditions. In Bassett et
+%	al. 2010 PLoS CB, only partitions with N<M/2 were used in the
+%	estimation of the Rent's exponent. Thus, we can define N_prime =
+%	N(find(N<M/2)) and E_prime = E(find(N<M/2)). Next we need to determine
+%	the slope of Eprime vs. Nprime in loglog space, which is the Rent's
+%	exponent. There are many ways of doing this with more or less
+%	statistical rigor. Robustfit in MATLAB is one such option:
 %       [b,stats] = robustfit(log10(N_prime),log10(E_prime))
-%       Then the Rent's exponent is b(1,2) and the standard error of the
-%       estimation is given by stats.se(1,2).
+%   
+%   Then the Rent's exponent is b(1,2) and the standard error of the
+%   estimation is given by stats.se(1,2). 
 %
 % Note: n=5000 was used in Bassett et al. 2010 in PLoS CB.
 %
 %
-% Reference: Danielle S. Bassett, Daniel L. Greenfield, Andreas Meyer-Lindenberg, Daniel 
-%	R. Weinberger, Simon W. Moore, Edward T. Bullmore. Efficient physical embedding 
-% 	of topologically complex information processing networks in brains and computer 
-% 	circuits. PLoS Comput Biol, 2010, 6(4):e1000748.
+% Reference: 
+%   Danielle S. Bassett, Daniel L. Greenfield, Andreas Meyer-Lindenberg,
+%   Daniel R. Weinberger, Simon W. Moore, Edward T. Bullmore. Efficient
+%   physical embedding of topologically complex information processing
+%   networks in brains and computer circuits. PLoS Comput Biol, 2010,
+%   6(4):e1000748.
 %
 %
 % Danielle Bassett, UCSB, 2010
-
 
 
 % determine the number of nodes in the system

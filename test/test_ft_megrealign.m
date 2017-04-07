@@ -3,8 +3,11 @@ function test_ft_megrealign
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_megrealign
 % TEST ft_megrealign ft_prepare_neighbours ft_transform_geometry
+
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
 datainfo = ref_datasets;
 sel      = match_str({datainfo.datatype},{'bti148' 'bti248' 'ctf151' 'ctf275' 'itab153' 'yokogawa160'}');

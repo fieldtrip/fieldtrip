@@ -10,7 +10,7 @@ function [warped]= sn2individual(P, input)
 
 % Copyright (C) 2013, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -32,9 +32,13 @@ if numel(P.Tr)==0,
   % only an affine transformation has been done
   T      = P.VF.mat*P.Affine/(P.VG.mat);
   warped = ft_warp_apply(T, input);
+
 else
   % we need the spm_dctmtx function for the nonlinear case
-  ft_hastoolbox('spm8', 1);
+  if ~ft_hastoolbox('spm')
+    % add SPM8 or later to the path
+    ft_hastoolbox('spm8up', 1);
+  end
 
   dim  = P.VG.dim(1:3);
   xyz  = ft_warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates

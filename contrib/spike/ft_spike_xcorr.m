@@ -1,4 +1,4 @@
-function [stat] = ft_spike_xcorr(cfg,spike)
+function [stat] = ft_spike_xcorr(cfg, spike)
 
 % FT_SPIKE_XCORR computes the cross-correlation histogram and shift predictor.
 %
@@ -70,7 +70,7 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 
 % Copyright (C) 2010-2012, Martin Vinck
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -88,12 +88,15 @@ function [stat] = ft_spike_xcorr(cfg,spike)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % check input spike structure
@@ -128,7 +131,7 @@ cfg = ft_checkconfig(cfg, 'allowed', {'latency', 'trials', 'keeptrials', 'method
 doShiftPredictor  = strcmp(cfg.method, 'shiftpredictor'); % shift predictor
 
 % determine the corresponding indices of the requested channel combinations
-cfg.channelcmb = ft_channelcombination(cfg.channelcmb, spike.label,true);
+cfg.channelcmb = ft_channelcombination(cfg.channelcmb, spike.label(:), true);
 cmbindx        = zeros(size(cfg.channelcmb));
 for k=1:size(cfg.channelcmb,1)
   cmbindx(k,1) = strmatch(cfg.channelcmb(k,1), spike.label, 'exact');
@@ -351,10 +354,14 @@ stat.label       = spike.label(chansel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history stat
+ft_postamble previous   spike
+ft_postamble provenance stat
+ft_postamble history    stat
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [C] = spike_crossx_matlab(tX,tY,binsize,nbins)
 tX = sort(tX(:));
 tY = sort(tY(:));

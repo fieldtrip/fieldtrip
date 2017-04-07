@@ -3,7 +3,6 @@ function test_bug1508
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1508
 % TEST ft_freqanalysis
 
 % Stan reported a strange error caused by the following:

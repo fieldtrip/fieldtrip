@@ -5,7 +5,7 @@ function montage = megplanar_orig(cfg, grad)
 
 % Copyright (C) 2004, Ole Jensen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -119,7 +119,7 @@ end
 % construct a montage, i.e. a simple linear projection matrix
 montage = [];
 montage.labelnew = cat(1, labelH(:), labelV(:));  % describes the rows
-montage.labelorg = lab(:)';                       % describes the columns
+montage.labelold = lab(:)';                       % describes the columns
 montage.tra      = cat(1, gradH, gradV);          % this is the linear projection matrix
 
   

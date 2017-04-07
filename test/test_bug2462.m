@@ -4,17 +4,19 @@ function test_bug2462
 % WALLTIME 00:10:00
 % test_bug2462
 
-homedir = '/home/common/matlab/fieldtrip/data/test/bug2462/';
-datasets = {'scan1_Filters_125HzLP-ascii-multiplexed.dat';
-           'scan1_Filters_125HzLP-ascii-vectorized.dat';
-           'scan1_Filters_125HzLP-binary-multiplexed.dat';
-           'scan1_Filters_125HzLP-binary-vectorized.dat'};
+homedir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2462/');
+datasets = {
+  'scan1_Filters_125HzLP-ascii-multiplexed.dat'
+  'scan1_Filters_125HzLP-ascii-vectorized.dat'
+  'scan1_Filters_125HzLP-binary-multiplexed.dat'
+  'scan1_Filters_125HzLP-binary-vectorized.dat'
+};
 
 data = cell(numel(datasets),1);
 
 for i=1:numel(datasets)
   cfg = [];
-  cfg.dataset = dccnpath([homedir datasets{i}]);
+  cfg.dataset = fullfile(homedir, datasets{i});
   
   data{i} = ft_preprocessing(cfg);
 end;

@@ -43,7 +43,7 @@ function [s, cfg] = ft_statfun_pooledT(cfg, dat, design)
 
 % Copyright (C) 2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -71,7 +71,5 @@ if (dfA+dfB)<size(design, 2)
 end
 sumA = sum(dat(:,selA), 2);
 sumB = sum(dat(:,selB), 2);
-s = (sumA - sumB)./sqrt(dfA);
-
-s.stat = s;
+s.stat = (sumA - sumB)./sqrt(dfA);
 

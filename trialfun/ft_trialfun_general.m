@@ -26,7 +26,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 
 % Copyright (C) 2005-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -82,13 +82,8 @@ if isfield(cfg, 'event')
   fprintf('using the events from the configuration structure\n');
   event = cfg.event;
 else
-  try
-    fprintf('reading the events from ''%s''\n', cfg.headerfile);
-    event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat);
-  catch
-    % ensure that it has the correct fields, even if it is empty
-    event = struct('type', {}, 'value', {}, 'sample', {}, 'offset', {}, 'duration', {});
-  end
+  fprintf('reading the events from ''%s''\n', cfg.headerfile);
+  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat);
 end
 
 % for the following, the trials do not depend on the events in the data

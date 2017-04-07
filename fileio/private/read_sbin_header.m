@@ -21,7 +21,7 @@ function [header_array, CateNames, CatLengths, preBaseline] = read_sbin_header(f
 % Modified from EGI's readEGLY.m with permission 2008-03-31 Joseph Dien
 %
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

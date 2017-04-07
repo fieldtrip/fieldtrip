@@ -1,32 +1,67 @@
 function test_ft_volumesegment
 
 % MEM 2000mb
-% WALLTIME 00:30:00
+% WALLTIME 01:00:00
 
-% TEST test_ft_volumesegment
 % TEST ft_volumesegment  ft_read_mri
 
 % initial version by Lilla Magyari 2012
 
-clear all
-
 % read in an mri
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
 
-mri = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
-
-% teh following could also be done using ft_determine_coordsys
+% the following could also be done using ft_determine_coordsys
 mri.coordsys = 'spm';
 
 %% output:tpm
-cfg = [];
-cfg.output = 'tpm';
-tpm = ft_volumesegment(cfg,mri);
 
-if ~(isfield(tpm,'gray')) || ~(isfield(tpm,'white')) || ~(isfield(tpm,'csf'))
-  error('tissue probability map is missing a field')
-end
+% also test the different spm versions
+mfile = mfilename('fullpath');
+[pathstr, mfile] = fileparts(mfile);
+ftpath           = pathstr(1:(strfind(pathstr, 'test')-1));
+
+restoredefaultpath;
+addpath(ftpath);
+ft_defaults;
+cfg        = [];
+cfg.output = 'tpm';
+cfg.spmversion = 'spm2';
+tpm1 = ft_volumesegment(cfg,mri);
+
+restoredefaultpath;
+addpath(ftpath);
+ft_defaults;
+cfg        = [];
+cfg.output = 'tpm';
+cfg.spmversion = 'spm8';
+tpm2 = ft_volumesegment(cfg,mri);
+
+restoredefaultpath;
+addpath(ftpath);
+ft_defaults;
+cfg        = [];
+cfg.output = 'tpm';
+cfg.spmversion = 'spm12';
+cfg.spmmethod  = 'old';
+tpm3 = ft_volumesegment(cfg,mri);
+
+restoredefaultpath;
+addpath(ftpath);
+ft_defaults;
+cfg        = [];
+cfg.output = 'tpm';
+cfg.spmversion = 'spm12';
+cfg.spmmethod  = 'new';
+tpm4 = ft_volumesegment(cfg,mri);
+
+assert(isfield(tpm1, 'gray')&&isfield(tpm1, 'white')&&isfield(tpm1, 'csf'), 'tissue probability map is missing a field');
+assert(isfield(tpm2, 'gray')&&isfield(tpm2, 'white')&&isfield(tpm2, 'csf'), 'tissue probability map is missing a field');
+assert(isfield(tpm3, 'gray')&&isfield(tpm3, 'white')&&isfield(tpm3, 'csf'), 'tissue probability map is missing a field');
+assert(isfield(tpm4, 'gray')&&isfield(tpm4, 'white')&&isfield(tpm4, 'csf'), 'tissue probability map is missing a field');
 
 %% output:brain
+tpm = tpm2; % use one of the segmentations created above for the rest
+
 cfg = [];
 cfg.output = 'brain';
 brain = ft_volumesegment(cfg,mri);

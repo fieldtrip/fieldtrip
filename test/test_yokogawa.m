@@ -3,7 +3,6 @@ function test_yokogawa
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_yokogawa
 % TEST hasyokogawa read_yokogawa_data read_yokogawa_event read_yokogawa_header yokogawa2grad yokogawa2vol
 
 % this script tests some files from the three different types of yokogawa MEG systems
@@ -11,7 +10,7 @@ function test_yokogawa
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = '/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa160/Continuous1.con';
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa160/Continuous1.con');
 hdr = ft_read_header(filename);
 
 if length(ft_channelselection('MEG', hdr.label))~=160
@@ -36,7 +35,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = '/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa440/S1_MEG_Epoch.raw';
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa440/S1_MEG_Epoch.raw');
 hdr = ft_read_header(filename);
 
 if length(ft_channelselection('MEG', hdr.label))<400
@@ -62,7 +61,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = '/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa64/2011_01_28_0354_ME053_AEF.con';
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa64/2011_01_28_0354_ME053_AEF.con');
 hdr = ft_read_header(filename);
 
 if length(ft_channelselection('MEG', hdr.label))~=64

@@ -1,4 +1,3 @@
-#include <matrix.h>
 #include <mex.h>
 #include <stdlib.h>
 #include <string.h>

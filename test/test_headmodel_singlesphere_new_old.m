@@ -3,7 +3,6 @@ function test_headmodel_singlesphere_new_old
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_headmodel_singlesphere_new_old
 % TEST ft_prepare_headmodel ft_headmodel_singlesphere ft_prepare_concentricspheres
 
 % generate a unit sphere
@@ -39,17 +38,17 @@ for i=1:size(optarg,1)
   vol{1} = ft_headmodel_singlesphere(geom.bnd(1),arg{:});
   
   % old way - low level: concentricspheres
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.headshape = geom.bnd(1);
   vol{2} = ft_prepare_concentricspheres(tmpcfg);
   
   % new way - high level: singlesphere
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'singlesphere';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
   
   % new way - high level: concentricspheres:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'concentricspheres';
   vol{4} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
   

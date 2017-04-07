@@ -1,7 +1,7 @@
-function [s] = rmsubfield(s, f, v)
+function s = rmsubfield(s, f, v)
 
 % RMSUBFIELD removes the contents of the specified field from a structure
-% just like the standard RMFIELD function, except that you can also
+% just like the standard Matlab RMFIELD function, except that you can also
 % specify nested fields using a '.' in the fieldname. The nesting can be
 % arbitrary deep.
 %
@@ -14,7 +14,7 @@ function [s] = rmsubfield(s, f, v)
 
 % Copyright (C) 2006-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

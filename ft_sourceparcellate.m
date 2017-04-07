@@ -30,7 +30,7 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 
 % Copyright (C) 2012-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,17 +48,21 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
+% do the general setup of the function
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar source
-ft_preamble provenance source
+ft_preamble loadvar source parcellation
+ft_preamble provenance source parcellation
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -68,15 +72,18 @@ cfg.parameter    = ft_getopt(cfg, 'parameter', 'all');
 cfg.method       = ft_getopt(cfg, 'method', 'mean'); % can be mean, min, max, svd
 cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
 
+% the data can be passed as input argument or can be read from disk
+hasparcellation = exist('parcellation', 'var');
+
 if ischar(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
 
-if nargin<3
+if hasparcellation
+  % the parcellation is specified as separate structure
+else
   % the parcellation is represented in the source structure itself
   parcellation = source;
-else
-  % the parcellation is specified as separate structure
 end
 
 % keep the transformation matrix
@@ -169,14 +176,8 @@ if isfield(source, 'inside')
 end
 
 % start preparing the output data structure
-parcel       = [];
+parcel       = keepfields(source, {'freq','time','cumtapcnt'});
 parcel.label = seglabel;
-if isfield(source, 'time')
-  parcel.time = source.time;
-end
-if isfield(source, 'freq')
-  parcel.freq = source.freq;
-end
 
 for i=1:numel(fn)
   % parcellate each of the desired parameters
@@ -196,13 +197,13 @@ for i=1:numel(fn)
           case 'mean'
             tmp{j1,j2} = cellmean2(dat(seg==j1,seg==j2,:));
           case 'median'
-            error('taking the median from data in a cell-array is not yet implemented');
+            tmp{j1,j2} = cellmedian2(dat(seg==j1,seg==j2,:));
           case 'min'
             tmp{j1,j2} = cellmin2(dat(seg==j1,seg==j2,:));
           case 'max'
             tmp{j1,j2} = cellmax2(dat(seg==j1,seg==j2,:));
-            % case 'eig'
-            %   tmp{j1,j2} = celleig2(dat(seg==j1,seg==j2,:));
+          case 'eig'
+            tmp{j1,j2} = celleig2(dat(seg==j1,seg==j2,:));
           otherwise
             error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -220,13 +221,13 @@ for i=1:numel(fn)
         case 'mean'
           tmp{j} = cellmean1(dat(seg==j));
         case 'median'
-          error('taking the median from data in a cell-array is not yet implemented');
+          tmp{j} = cellmedian1(dat(seg==j));
         case 'min'
           tmp{j} = cellmin1(dat(seg==j));
         case 'max'
           tmp{j} = cellmax1(dat(seg==j));
-          % case 'eig'
-          %   tmp{j} = celleig1(dat(seg==j));
+        case 'eig'
+          tmp{j} = celleig1(dat(seg==j));
         otherwise
           error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
@@ -279,7 +280,7 @@ for i=1:numel(fn)
           tmp(j,:) = arraymean1(dat(seg==j,:));
         case 'mean_thresholded'
           cfg.mean = ft_getopt(cfg, 'mean', struct('threshold', []));
-          if isempty(cfg.mean.threshold),
+          if isempty(cfg.mean.threshold)
             error('when cfg.method = ''mean_thresholded'', you should specify a cfg.mean.threshold');
           end
           if numel(cfg.mean.threshold)==size(dat,1)
@@ -441,6 +442,15 @@ for i=2:siz(1)
 end
 y = y/n;
 
+function y = cellmedian1(x)
+siz = size(x);
+if siz(1)==1 && siz(2)>1
+  siz([2 1]) = siz([1 2]);
+  x = reshape(x, siz);
+end
+x = cat(1,x{:});
+y = median(x, 1);
+
 function y = cellmin1(x)
 siz = size(x);
 if siz(1)==1 && siz(2)>1
@@ -463,20 +473,45 @@ for i=2:siz(1)
   y = max(x{i}, y);
 end
 
+function y = celleig1(x)
+% FIXME this does not work for TFR representations
+siz = size(x);
+if siz(1)==1 && siz(2)>1
+  siz([2 1]) = siz([1 2]);
+  x = reshape(x, siz);
+end
+x = cat(1,x{:});
+% [u, s, v] = svds(real(x), 1);  % x = u * s * v'
+% y = s(1,1) * v(:,1);           % retain the largest eigenvector with appropriate scaling
+
+% this is computationally more efficient and returns a complex-valued output, following a real valued svd
+[u, s] = svds(real(x*x'), 1);
+y = u(:,1)'*x;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions of a cell array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = cellmean2(x)
 siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
 y = cellmean1(x);
+
+function y = cellmedian2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
+y = cellmedian1(x);
 
 function y = cellmin2(x)
 siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
 y = cellmin1(x);
 
 function y = cellmax2(x)
 siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
 y = cellmax1(x);
+
+function y = celleig2(x)
+siz = size(x);
+x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
+y = celleig1(x);

@@ -34,7 +34,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 % See also QSUBCELLFUN, QSUBGET, FEVAL, DFEVAL, DFEVALASYNC
 
 % -----------------------------------------------------------------------
-% Copyright (C) 2011-2012, Robert Oostenveld
+% Copyright (C) 2011-2016, Robert Oostenveld
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -171,10 +171,10 @@ matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 % rename and save the variables
 argin = varargin;
 optin = options;
-% if variables < ~500 MB, store it in old (uncompressed) format, which is faster
 s1 = whos('argin');
 s2 = whos('optin');
-if (s1.bytes + s2.bytes < 500000000)
+% if variables < ~1 GB, store it in old (uncompressed) format, which is faster
+if (s1.bytes + s2.bytes < 1024^3)
   save(inputfile, 'argin', 'optin', '-v6');
 else
   save(inputfile, 'argin', 'optin', '-v7.3');
@@ -297,7 +297,7 @@ switch backend
     end
     
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
-      submitoptions = [submitoptions sprintf('-l h_vmem=%.0f ', memreq+memoverhead)];
+      submitoptions = [submitoptions sprintf('-l mem_free=%.0fG ', round((memreq+memoverhead)/1024^3))];
     end
     
     if compiled

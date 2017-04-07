@@ -1,7 +1,7 @@
 function output = read_micromed_trc(filename, begsample, endsample)
 
 %--------------------------------------------------------------------------
-% reads Micromed .TRC file into matlab, version Mariska
+% reads Micromed .TRC file into matlab, version Mariska, edited by Romain
 % input: filename
 % output: datamatrix
 %--------------------------------------------------------------------------
@@ -81,6 +81,57 @@ fseek(fid,400+8,-1);
 header.Trigger_Area=fread(fid,1,'uint32');
 header.Tigger_Area_Length=fread(fid,1,'uint32');
 
+
+% ============== Retrieving electrode info  ===============
+% Order
+fseek(fid,184,'bof');
+OrderOff = fread(fid,1,'ulong');
+fseek(fid,OrderOff,'bof');
+vOrder = zeros(header.Num_Chan,1);
+for iChan = 1 : header.Num_Chan, vOrder(iChan) = fread(fid,1,'ushort'); end
+fseek(fid,200,'bof');
+ElecOff = fread(fid,1,'ulong');
+for iChan = 1 : header.Num_Chan
+    fseek(fid,ElecOff+128*vOrder(iChan),'bof');
+    if ~fread(fid,1,'uchar'), continue; end
+    header.elec(iChan).bip = fread(fid,1,'uchar');
+    header.elec(iChan).Name = deblank(char(fread(fid,6,'char'))');
+    header.elec(iChan).Name(isspace(header.elec(iChan).Name)) = []; % remove spaces
+    header.elec(iChan).Ref = deblank(char(fread(fid,6,'char'))');
+    header.elec(iChan).LogicMin = fread(fid,1,'long');
+    header.elec(iChan).LogicMax = fread(fid,1,'long');
+    header.elec(iChan).LogicGnd = fread(fid,1,'long');
+    header.elec(iChan).PhysMin = fread(fid,1,'long');
+    header.elec(iChan).PhysMax = fread(fid,1,'long');
+    Unit = fread(fid,1,'ushort');
+    switch Unit
+        case -1
+            header.elec(iChan).Unit = 'nV';
+        case 0
+            header.elec(iChan).Unit = 'uV';
+        case 1
+            header.elec(iChan).Unit = 'mV';
+        case 2
+            header.elec(iChan).Unit = 'V';
+        case 100
+            header.elec(iChan).Unit = '%';
+        case 101
+            header.elec(iChan).Unit = 'bpm';
+        case 102
+            header.elec(iChan).Unit = 'Adim.';
+    end
+    
+    fseek(fid,ElecOff+128*vOrder(iChan)+44,'bof');
+    header.elec(iChan).FsCoeff = fread(fid,1,'ushort');
+    fseek(fid,ElecOff+128*vOrder(iChan)+90,'bof');
+    header.elec(iChan).XPos = fread(fid,1,'float');
+    header.elec(iChan).YPos = fread(fid,1,'float');
+    header.elec(iChan).ZPos = fread(fid,1,'float');
+    fseek(fid,ElecOff+128*vOrder(iChan)+102,'bof');
+    header.elec(iChan).Type = fread(fid,1,'ushort');
+end
+header.elec = header.elec;
+
 %----------------- Read Trace Data ----------
 
 if nargin==1
@@ -97,7 +148,7 @@ if nargin==1
   % output the header
   output = header;
 else
-  % determine the selection of data to read
+  % determine the header.election of data to read
   if isempty(begsample)
     begsample = 1;
   end
@@ -114,9 +165,19 @@ else
     case 4
       data = fread(fid, [header.Num_Chan endsample-begsample+1], 'uint32');
   end
-  % output the data
-  output = data-32768;
+
+%   % output the data
+  for iElec = 1 : header.Num_Chan
+         data(iElec,:) = ((data(iElec,:)-header.elec(iElec).LogicGnd)/(header.elec(iElec).LogicMax-header.elec(iElec).LogicMin+1)) ...
+        *(header.elec(iElec).PhysMax-header.elec(iElec).PhysMin);
+  end;
+  output = data;
   % FIXME why is this value of -32768 subtracted?
   % FIXME some sort of calibration should be applied to get it into microvolt
+  % FIXED by Romain Ligneul / 10-2-2015
 end
+
+
+
 fclose(fid);
+

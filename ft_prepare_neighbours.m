@@ -19,7 +19,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   neighbours = ft_prepare_neighbours(cfg, data)
 %
 % The configuration can contain
-%   cfg.method        = 'distance', 'triangulation' or 'template' 
+%   cfg.method        = 'distance', 'triangulation' or 'template'
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance')
 %   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
@@ -47,7 +47,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 
 % Copyright (C) 2006-2011, Eric Maris, Jorn M. Horschig, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -65,17 +65,21 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
 ft_preamble debug
+ft_preamble loadvar    data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -86,7 +90,8 @@ cfg = ft_checkconfig(cfg, 'required', {'method'});
 cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 
-hasdata = nargin>1;
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
 
 if hasdata
   % check if the input data is valid for this function
@@ -126,7 +131,7 @@ if strcmp(cfg.method, 'template')
   end
   % adjust filename
   if ~exist(cfg.template, 'file')
-    cfg.template = lower(cfg.template);  
+    cfg.template = lower(cfg.template);
   end
   % add necessary extensions
   if numel(cfg.template) < 4 || ~isequal(cfg.template(end-3:end), '.mat')
@@ -137,7 +142,7 @@ if strcmp(cfg.method, 'template')
   end
   % check for existence
   if ~exist(cfg.template, 'file')
-    error('Template file could not be found - please check spelling or see http://fieldtrip.fcdonders.nl/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
+    error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
@@ -150,14 +155,14 @@ else
   end
   
   if strcmp(ft_senstype(sens), 'neuromag306')
-      warning('Neuromagr06 system detected - be aware of different sensor types, see http://fieldtrip.fcdonders.nl/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
+    warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
   end
   chanpos = sens.chanpos;
   label   = sens.label;
   
   if nargin > 1
     % remove channels that are not in data
-    [dataidx sensidx] = match_str(data.label, label);
+    [dataidx, sensidx] = match_str(data.label, label);
     chanpos = chanpos(sensidx, :);
     label   = label(sensidx);
   end
@@ -234,22 +239,25 @@ desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, desired);
 
 neighb_idx = ismember(neighb_chans, desired);
 neighbours = neighbours(neighb_idx);
-  
+
 k = 0;
 for i=1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
     warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
-  % JMH: I removed this in Feb 2013 - this is handled above now
-  % note however that in case of using a template, this function behaves
-  % differently now (neighbourschans can still be channels not in
-  % cfg.channel)
-  %else % only selected desired channels    
-  %  neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
+    % JMH: I removed this in Feb 2013 - this is handled above now
+    % note however that in case of using a template, this function behaves
+    % differently now (neighbourschans can still be channels not in
+    % cfg.channel)
+    %else % only selected desired channels
+    %  neighbours(i).neighblabel = neighbours(i).neighblabel(ismember(neighbours(i).neighblabel, desired));
   end
   k = k + length(neighbours(i).neighblabel);
 end
 
-if k==0, error('No neighbours were found!'); end;
+if k==0
+  error('No neighbours were found!');
+end
+
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 
 if strcmp(cfg.feedback, 'yes')
@@ -302,7 +310,7 @@ end
 % SUBFUNCTION that computes the neighbourhood geometry from the
 % triangulation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [neighbours]=compneighbstructfromtri(chanpos, label, tri)
+function [neighbours] = compneighbstructfromtri(chanpos, label, tri)
 
 nsensors = length(label);
 
@@ -318,7 +326,7 @@ for i=1:size(tri, 1)
 end
 
 % construct a structured cell array with all neighbours
-neighbours=struct;
+neighbours = struct;
 alldist = [];
 for i=1:nsensors
   neighbours(i).label       = label{i};

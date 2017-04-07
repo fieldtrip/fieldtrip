@@ -14,7 +14,7 @@ function [event] = read_trigger(filename, varargin)
 
 % Copyright (C) 2008-2015, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -38,7 +38,7 @@ dataformat   = ft_getopt(varargin, 'dataformat'         );
 begsample    = ft_getopt(varargin, 'begsample'          );
 endsample    = ft_getopt(varargin, 'endsample'          );
 chanindx     = ft_getopt(varargin, 'chanindx'           );
-detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be bit, up, down, both, auto
+detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be bit, up, down, updiff, downdiff, both, auto
 denoise      = ft_getopt(varargin, 'denoise',      true );
 trigshift    = ft_getopt(varargin, 'trigshift',    false); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
 trigpadding  = ft_getopt(varargin, 'trigpadding',  true );
@@ -47,7 +47,7 @@ fixneuromag  = ft_getopt(varargin, 'fixneuromag',  false);
 fix4d8192    = ft_getopt(varargin, 'fix4d8192',    false);
 fixbiosemi   = ft_getopt(varargin, 'fixbiosemi',   false);
 fixartinis   = ft_getopt(varargin, 'fixartinis',   false);
-fixstaircase = ft_getopt(varargin, 'fixstaircase',   false);
+fixstaircase = ft_getopt(varargin, 'fixstaircase', false);
 threshold    = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
@@ -63,7 +63,11 @@ if isempty(endsample)
 end
 
 % read the trigger channel as raw data, can safely assume that it is continuous
-dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0);
+if ~isempty(chanindx)
+  dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0);
+else
+  dat = zeros(0, endsample-begsample+1);
+end
 
 % start with an empty event structure
 event = [];
@@ -168,11 +172,8 @@ if ~isempty(threshold)
     threshold = eval([threshold '(dat)']);
   end
   % discretize the signal
-  lo = find(dat<threshold);
-  hi = find(dat>=threshold);
-  dat(lo) = 0;
-  dat(hi) = 1;
-  clear lo hi
+  dat(dat<threshold) = 0;
+  dat(dat>=threshold) = 1;
 end
 
 if strcmp(detectflank, 'auto')
@@ -226,6 +227,13 @@ for i=1:length(chanindx)
         event(end+1).type   = channel;
         event(end  ).sample = j + begsample - 1;      % assign the sample at which the trigger has gone down
         event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
+      end
+    case 'downdiff'
+      % convert the trigger into an event with a value at a specific sample
+      for j=find(diff([pad trig(:)'])<0)
+        event(end+1).type   = channel;
+        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone down
+        event(end  ).value  = trig(j-1)-trig(j+trigshift);  % assign the trigger value just _before_ going up minus the value after
       end
     case 'both'
       % convert the trigger into an event with a value at a specific sample

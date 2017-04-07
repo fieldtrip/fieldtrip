@@ -18,7 +18,7 @@ function state = randomseed(setseed)
 
 % Copyright (C) 2011, Johanna Zumer
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -37,9 +37,10 @@ function state = randomseed(setseed)
 if nargin<1
   setseed = [];
 end
+
 state = [];
 
-if isempty(setseed)
+if isempty(setseed) || strcmp(setseed, 'yes')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % save out rand state for later use
   

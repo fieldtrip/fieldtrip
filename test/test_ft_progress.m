@@ -3,7 +3,6 @@ function test_ft_progress
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_progress
 % TEST ft_progress
 
 % testing parameters

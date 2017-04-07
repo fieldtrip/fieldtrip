@@ -35,7 +35,7 @@ function [stat, cfg] = statistics_wrapper(cfg, varargin)
 
 % Copyright (C) 2005-2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -67,7 +67,7 @@ cfg.avgoverfreq = ft_getopt(cfg, 'avgoverfreq', 'no');
 cfg.avgoverroi  = ft_getopt(cfg, 'avgoverroi',  'no');
 
 % determine the type of the input and hence the output data
-if ~exist('OCTAVE_VERSION')
+if ~exist('OCTAVE_VERSION', 'builtin')
   [s, i] = dbstack;
   if length(s)>1
     [caller_path, caller_name, caller_ext] = fileparts(s(2).name);
@@ -280,7 +280,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % determine the function handle to the intermediate-level statistics function
-if exist(['ft_statistics_' cfg.method])
+if exist(['ft_statistics_' cfg.method], 'file')
   statmethod = str2func(['ft_statistics_' cfg.method]);
 else
   error(sprintf('could not find the corresponding function for cfg.method="%s"\n', cfg.method));

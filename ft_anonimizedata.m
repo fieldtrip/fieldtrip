@@ -37,7 +37,7 @@ function data = ft_anonimizedata(cfg, data)
 
 % Copyright (C) 2014, Robert Oostenveld, DCCN
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %  FieldTrip is free software: you can redistribute it and/or modify
@@ -55,7 +55,10 @@ function data = ft_anonimizedata(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -65,8 +68,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -215,15 +218,15 @@ redraw_cb(h);
 resize_cb(h);
 
 while ~info.cleanup
-  
+
   uiwait(h); % we only get part this point with abort or cleanup
-  
+
   if ~ishandle(h)
     error('aborted by user');
   end
-  
+
   info = getappdata(h, 'info');
-  
+
   if info.cleanup
     if ~all(xor(info.keep, info.remove))
       warning('not all fields have been marked as "keep" or "remove"');
@@ -274,13 +277,22 @@ set(info.table, 'data', data);
 end % function
 
 function keyboard_cb(h, eventdata)
-if isempty(eventdata)
+
+% if isempty(eventdata)
+%   % determine the key that corresponds to the uicontrol element that was activated
+%   key = get(h, 'userdata');
+% else
+%   % determine the key that was pressed on the keyboard
+%   key = parseKeyboardEvent(eventdata);
+% end
+if (isempty(eventdata) && ft_platform_supports('matlabversion',-Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
   key = parseKeyboardEvent(eventdata);
 end
+
 h = getparent(h);
 info = getappdata(h, 'info');
 
@@ -316,6 +328,33 @@ end
 setappdata(h, 'info', info);
 redraw_cb(h)
 end % function
+
+function key = parseKeyboardEvent(eventdata)
+
+key = eventdata.Key;
+
+% handle possible numpad events (different for Windows and UNIX systems)
+% NOTE: shift+numpad number does not work on UNIX, since the shift
+% modifier is always sent for numpad events
+if isunix()
+  shiftInd = match_str(eventdata.Modifier, 'shift');
+  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+    % now we now it was a numpad keystroke (numeric character sent AND
+    % shift modifier present)
+    key = eventdata.Character;
+    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
+  end
+elseif ispc()
+  if strfind(eventdata.Key, 'numpad')
+    key = eventdata.Character;
+  end
+end
+
+if ~isempty(eventdata.Modifier)
+  key = [eventdata.Modifier{1} '+' key];
+end
+
+end % function parseKeyboardEvent
 
 function sort_cb(h, eventdata)
 h = getparent(h);

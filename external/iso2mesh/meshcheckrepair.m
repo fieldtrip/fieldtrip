@@ -4,7 +4,7 @@ function [node,elem]=meshcheckrepair(node,elem,opt,varargin)
 % 
 % check and repair a surface mesh
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2008/10/10
 %
 % input/output:

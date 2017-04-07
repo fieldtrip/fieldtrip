@@ -3,7 +3,6 @@ function test_bug1029
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1029
 % TEST ft_read_vol ft_headmodel_bem_asa ft_prepare_headmodel
 
 % tests the functionality of the forward models after changing the names of
@@ -12,7 +11,7 @@ function test_bug1029
 %%%%%%%%%%%%%%%%
 % BEM_ASA
 %%%%%%%%%%%%%%%%
-filename = '/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol';
+filename = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol');
 vol = ft_read_vol(filename);
 
 vol = ft_headmodel_asa(filename);

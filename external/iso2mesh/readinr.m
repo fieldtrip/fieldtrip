@@ -4,7 +4,7 @@ function dat=readinr(fname)
 %
 % load a volume from an INR file
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2009/05/03
 %
 % input:

@@ -1,34 +1,51 @@
-function [f F]=motif4funct_bin(W)
+function [f,F]=motif4funct_bin(A)
 %MOTIF4FUNCT_BIN       Frequency of functional class-4 motifs
 %
-%   [f F] = motif4funct_bin(W);
+%   [f,F] = motif4funct_bin(A);
 %
-%   Functional motifs are subsets of connection patterns embedded within 
-%   anatomical motifs. Motif frequency is the frequency of occurrence of 
-%   motifs around a node.
+%   *Structural motifs* are patterns of local connectivity in complex
+%   networks. In contrast, *functional motifs* are all possible subsets of
+%   patterns of local connectivity embedded within structural motifs. Such
+%   patterns are particularly diverse in directed networks. The motif
+%   frequency of occurrence around an individual node is known as the motif
+%   fingerprint of that node. The total motif frequency of occurrence in
+%   the whole network is correspondingly known as the motif fingerprint of
+%   the network.
 %
-%   Input:      W,      weighted directed connection matrix
-%                       (all weights must be between 0 and 1)
+%   Input:      A,      binary directed connection matrix
 %
-%   Output:     F,      motif frequency matrix
-%               f,      motif frequency vector (averaged over all nodes)
+%   Output:     F,      node motif frequency fingerprint
+%               f,      network motif frequency fingerprint
+%
+%   Notes: 
+%       1. The function find_motif34.m outputs the motif legend.
+%       2. There is a source of possible confusion in motif terminology.
+%          Motifs ("structural" and "functional") are most frequently
+%          considered only in the context of anatomical brain networks
+%          (Sporns and Kötter, 2004). On the other hand, motifs are not
+%          commonly studied in undirected networks, due to the paucity of
+%          local undirected connectivity patterns.
+%
+%   References: Milo et al. (2002) Science 298:824-827
+%               Sporns O, Kötter R (2004) PLoS Biol 2: e369
 %
 %
-%   Reference: Onnela et al. (2005) Phys Rev E 71:065103
-%
-%
-%   Mika Rubinov, UNSW, 2007-2010
+%   Mika Rubinov, UNSW/U Cambridge, 2007-2015
+
+%   Modification History:
+%   2007: Original
+%   2015: Improved documentation
 
 persistent M4 ID4 N4
 if isempty(N4)
     load motif34lib M4 ID4 N4                 	%load motif data
 end
 
-n=length(W);                                    %number of vertices in W
+n=length(A);                                    %number of vertices in A
 f=zeros(199,1);
 F=zeros(199,n);                                 %frequency
 
-A=1*(W~=0);                                     %adjacency matrix
+A=1*(A~=0);                                     %adjacency matrix
 As=A|A.';                                       %symmetrized adjacency
 
 for u=1:n-3                                     %loop u 1:n-2
@@ -51,8 +68,8 @@ for u=1:n-3                                     %loop u 1:n-2
                 ind=(M4*a)==N4;                 %find all contained isomorphs
                 id=ID4(ind);
 
-                [idu j]=unique(id);             %unique motif occurences
-                j=[0;j];
+                [idu,j]=unique(id);             %unique motif occurences
+                j=[0;j];                        %#ok<AGROW>
                 mu=length(idu);                 %number of unique motifs
                 f2=zeros(mu,1);
 

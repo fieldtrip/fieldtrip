@@ -3,11 +3,13 @@ function test_bug2664
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2664
 % TEST ft_sourceanalysis ft_checkdata
 
-%% create some data
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
+%% create some data
 data = [];
 data.label = {'a' 'b' 'c'};
 data.fsample = 256;

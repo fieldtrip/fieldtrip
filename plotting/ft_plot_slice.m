@@ -1,9 +1,10 @@
 function [h, T2] = ft_plot_slice(dat, varargin)
 
-% FT_PLOT_SLICE cuts a 2-D slice from a 3-D volume and interpolates if needed
+% FT_PLOT_SLICE plots a 2-D cut through a 3-D volume and interpolates if needed
 %
 % Use as
 %   ft_plot_slice(dat, ...)
+% or
 %   ft_plot_slice(dat, mask, ...)
 % where dat and mask are equal-sized 3-D arrays.
 %
@@ -15,7 +16,8 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %                    data will be plotted. location defines the origin of the plane
 %   'orientation'  = 1x3 vector specifying the direction orthogonal through the plane
 %                    which will be plotted (default = [0 0 1])
-%   'resolution'   = number (default = 1)
+%   'unit'         = string, can be 'm', 'cm' or 'mm (default is automatic)
+%   'resolution'   = number (default = 1 mm)
 %   'datmask'      = 3D-matrix with the same size as the data matrix, serving as opacitymap
 %                    If the second input argument to the function contains a matrix, this
 %                    will be used as the mask
@@ -23,18 +25,26 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'style'        = string, 'flat' or '3D'
 %   'colormap'     = string, see COLORMAP
-%   'colorlim'     = 1x2 vector specifying the min and max for the colorscale
+%   'clim'         = 1x2 vector specifying the min and max for the colorscale
+%
+% You can plot the slices from the volume together with an intersection of the slices
+% with a triangulated surface mesh (e.g. a cortical sheet) using
+%   'intersectmesh'       = triangulated mesh, see FT_PREPARE_MESH
+%   'intersectcolor'      = string, color specification
+%   'intersectlinestyle'  = string, line specification 
+%   'intersectlinewidth'  = number
 %
 % See also FT_PLOT_ORTHO, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 
-% undocumented
-%   'intersectmesh'  = triangulated mesh through which the intersection of the plane will be plotted (e.g. cortical sheet)
-%   'intersectcolor' = color for the intersection
+% Undocumented options
+%   'plotmarker'     = Nx3 matrix with points to be plotted as markers, e.g. dipole positions
+%   'markersize'
+%   'markercolor'
 
 % Copyrights (C) 2010-2014, Jan-Mathijs Schoffelen
-% Copyrights (C) 2014, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyrights (C) 2014-2016, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -74,7 +84,8 @@ end
 transform           = ft_getopt(varargin, 'transform', eye(4));
 loc                 = ft_getopt(varargin, 'location');
 ori                 = ft_getopt(varargin, 'orientation', [0 0 1]);
-resolution          = ft_getopt(varargin, 'resolution', 1);
+unit                = ft_getopt(varargin, 'unit');       % the default will be determined further down
+resolution          = ft_getopt(varargin, 'resolution'); % the default depends on the units and will be determined further down
 mask                = ft_getopt(varargin, 'datmask');
 opacitylim          = ft_getopt(varargin, 'opacitylim');
 interpmethod        = ft_getopt(varargin, 'interpmethod', 'nearest');
@@ -87,6 +98,10 @@ mesh                = ft_getopt(varargin, 'intersectmesh');
 intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'yrgbmyrgbm');
 intersectlinewidth  = ft_getopt(varargin, 'intersectlinewidth', 2);
 intersectlinestyle  = ft_getopt(varargin, 'intersectlinestyle');
+
+plotmarker          = ft_getopt(varargin, 'plotmarker');
+markersize          = ft_getopt(varargin, 'markersize', 'auto');
+markercolor         = ft_getopt(varargin, 'markercolor', 'w');
 
 % convert from yes/no/true/false/0/1 into a proper boolean
 doscale = istrue(doscale);
@@ -126,6 +141,11 @@ else
   mesh = {};
 end
 
+% replace pnt by pos
+for k = 1:numel(mesh)
+  mesh{k} = fixpos(mesh{k});
+end
+
 dointersect = ~isempty(mesh);
 if dointersect
   for k = 1:numel(mesh)
@@ -144,17 +164,6 @@ if domask
     error('the mask data should have the same dimensions as the functional data');
   end
 end
-
-% determine whether interpolation is needed
-dointerp = false;
-dointerp = dointerp || sum(sum(transform-eye(4)))~=0;
-dointerp = dointerp || ~all(round(loc)==loc);
-dointerp = dointerp || sum(ori)~=1;
-dointerp = dointerp || ~(resolution==round(resolution));
-% determine the caller function and toggle dointerp to true, if ft_plot_slice has been called from ft_plot_montage
-% this is necessary for the correct allocation of the persistent variables
-st = dbstack;
-if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
 
 % determine the voxel center
 % voxel_center_vc = [X(:) Y(:) Z(:)];
@@ -182,6 +191,33 @@ corner_vc = [
   ];
 corner_hc = ft_warp_apply(transform, corner_vc);
 
+if isempty(unit)
+  if ~isequal(transform, eye(4))
+    % estimate the geometrical units we are dealing with
+    unit = ft_estimate_units(norm(range(corner_hc)));
+  else
+    % units are in voxels, these are assumed to be close to mm
+    unit = 'mm';
+  end
+end
+if isempty(resolution)
+  % the default resolution is 1 mm
+  resolution = ft_scalingfactor('mm', unit);
+end
+
+% determine whether interpolation is needed
+dointerp = false;
+dointerp = dointerp || sum(sum(transform-eye(4)))~=0;
+dointerp = dointerp || ~all(round(loc)==loc);
+dointerp = dointerp || sum(ori)~=1;
+dointerp = dointerp || ~(resolution==round(resolution));
+% determine the caller function and toggle dointerp to true, if ft_plot_slice has been called from ft_plot_montage
+% this is necessary for the correct allocation of the persistent variables
+st = dbstack;
+if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
+
+
+
 % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
 [x, y] = projplane(ori);
 % z = ori;
@@ -201,11 +237,24 @@ T2 = [x(:) y(:) ori(:) loc(:); 0 0 0 1];
 % get the transformation matrix from projection plane to voxel coordinates
 T3 = transform\T2;
 
+min_corner_pc = min(corner_pc, [], 1);
+max_corner_pc = max(corner_pc, [], 1);
+% round the bounding box limits to the nearest mm
+switch unit
+  case 'm'
+    min_corner_pc = ceil(min_corner_pc*100)/100;
+    max_corner_pc = floor(max_corner_pc*100)/100;
+  case 'cm'
+    min_corner_pc = ceil(min_corner_pc*10)/10;
+    max_corner_pc = floor(max_corner_pc*10)/10;
+  case 'mm'
+    min_corner_pc = ceil(min_corner_pc);
+    max_corner_pc = floor(max_corner_pc);
+end
+
 % determine a grid of points in the projection plane
-% xplane = floor(min(corner_pc(:, 1))):resolution:ceil(max(corner_pc(:, 1)));
-% yplane = floor(min(corner_pc(:, 2))):resolution:ceil(max(corner_pc(:, 2)));
-xplane = ceil(min(corner_pc(:, 1))):resolution:floor(max(corner_pc(:, 1)));
-yplane = ceil(min(corner_pc(:, 2))):resolution:floor(max(corner_pc(:, 2)));
+xplane = min_corner_pc(1):resolution:max_corner_pc(1);
+yplane = min_corner_pc(2):resolution:max_corner_pc(2);
 zplane = 0;
 [Xi, Yi, Zi]      = ndgrid(xplane, yplane, zplane);
 siz               = size(squeeze(Xi));
@@ -362,25 +411,40 @@ if ~isempty(cmap)
   end
 end
 
+if ~isempty(plotmarker)
+  % determine three points on the plane
+  inplane = eye(3) - (eye(3) * ori') * ori;
+  v1 = loc + inplane(1,:);
+  v2 = loc + inplane(2,:);
+  v3 = loc + inplane(3,:);
+  pr = nan(size(plotmarker,1), 3);
+  d  = nan(size(plotmarker,1), 1);
+  for k = 1:size(plotmarker,1)
+    [pr(k,:), d(k,:)] = ptriprojn(v1, v2, v3, plotmarker(k,:));
+  end
+  sel = d<eps*1e8;
+  if sum(sel)>0
+    ft_plot_dipole(pr(sel,:), repmat([0;0;1], 1, size(pr,1)), 'length', 0, 'color', markercolor, 'diameter', markersize);
+  end
+end
 
 % update the axes to ensure that the whole volume fits
 ax = [min(corner_hc) max(corner_hc)];
 axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
 
 st = dbstack;
-if numel(st)>1,
+if numel(st)>1
   % ft_plot_slice has been called from another function
   % assume the remainder of the axis settings to be handled there
 else
-  set(gca,'xlim',[min(Xh(:))-0.5 max(Xh(:))+0.5]);
-  set(gca,'ylim',[min(Yh(:))-0.5 max(Yh(:))+0.5]);
-  set(gca,'zlim',[min(Zh(:))-0.5 max(Zh(:))+0.5]);
+  set(gca,'xlim',[min(Xh(:))-0.5*resolution max(Xh(:))+0.5*resolution]);
+  set(gca,'ylim',[min(Yh(:))-0.5*resolution max(Yh(:))+0.5*resolution]);
+  set(gca,'zlim',[min(Zh(:))-0.5*resolution max(Zh(:))+0.5*resolution]);
   
   set(gca,'dataaspectratio',[1 1 1]);
-  %axis equal; % this for some reason does not work robustly when drawing intersections, replaced by the above
+  % axis equal; % this for some reason does not work robustly when drawing intersections, replaced by the above
   axis vis3d
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

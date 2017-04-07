@@ -3,7 +3,6 @@ function test_headmodel_dipoli_new_old
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_headmodel_dipoli_new_old
 % TEST ft_headmodel_dipoli icosahedron162 ft_prepare_vol_sens ft_compute_leadfield
 
 % tests the old and new version of dipoli wrapper
@@ -43,13 +42,13 @@ for i=1:size(optarg,1)
   vol{1} = ft_headmodel_dipoli(geom.bnd,arg{:});
 
   % old way:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'dipoli';
   vol{2} = ft_prepare_bemmodel(tmpcfg,geom);
   vol{2} = rmfield(vol{2},'unit');
   
   % new way - high level:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'bem_dipoli';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd);
   vol{3} = rmfield(vol{3},'unit');

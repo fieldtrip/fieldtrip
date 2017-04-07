@@ -8,7 +8,7 @@ function [ncs] = read_neuralynx_ncs(filename, begrecord, endrecord)
 
 % Copyright (C) 2005-2007, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -165,7 +165,7 @@ if NRecords>0
   ts_range_predicted = (NRecords-1)*512*gapCorrectedTimeStampPerSample;
   ts_range_observed  = double(tsE-ts1);
   if abs(ts_range_predicted-ts_range_observed)>minJump
-    warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki on http://fieldtrip.fcdonders.nl/getting_started/neuralynx?&#discontinuous_recordings',...
+    warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings',...
       abs(ts_range_predicted-ts_range_observed) );
   end
   

@@ -214,7 +214,7 @@ design(1,(size(timelockFIC_planar_cmb.trial,1)+1):(size(timelockFIC_planar_cmb.t
 cfg.design = design;
 cfg.ivar = 1;
 
-[stat] = ft_timelockstatistics(cfg, timelockFIC_planar_cmb, timelockFC_planar_cmb)
+[stat] = ft_timelockstatistics(cfg, timelockFIC_planar_cmb, timelockFC_planar_cmb);
 
 %% assert here
 %save stat_ERF_planar_FICvsFC stat
@@ -296,7 +296,7 @@ cfg.design = design;
 cfg.uvar  = 1;
 cfg.ivar  = 2;
 
-[stat] = ft_timelockstatistics(cfg, GA_FIC, GA_FC)
+[stat] = ft_timelockstatistics(cfg, GA_FIC, GA_FC);
 
 %% assert
 % save stat_ERF_planar_FICvsFC_GA stat

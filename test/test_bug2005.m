@@ -1,7 +1,13 @@
 function test_bug2005
 
-% TEST test_bug2005
+% WALLTIME 00:20:00
+% MEM 4gb
+
 % TEST ft_sourceanalysis
+
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
 fname = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2005.mat');
 load(fname);

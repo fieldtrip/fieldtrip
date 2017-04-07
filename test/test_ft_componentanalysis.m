@@ -3,7 +3,6 @@ function test_ft_componentanalysis(datainfo, writeflag, version)
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_componentanalysis
 % ft_componentanalysis ref_datasets
 
 % writeflag determines whether the output should be saved to disk
@@ -49,7 +48,7 @@ for k = 1:numel(datainfo)
     datanew.unmixing(end-rankDiff:end,:) = 0;
   end
   
-  [ok,msg] = identical(data, datanew,'abstol',1e-7,'diffabs',1);
+  [ok, msg] = isalmostequal(data, datanew, 'abstol', 1e-5, 'diffabs', 1);
   disp(['now you are in k=' num2str(k)]);
   if ~ok
     disp(msg);
@@ -75,13 +74,13 @@ switch dataset.datatype
 end
 
 cfg.inputfile  = fullfile(dataset.origdir,version,'raw',dataset.type,['preproc_',dataset.datatype]);
-outputfile     = fullfile(dataset.origdir,version,'comp',dataset.type,['comp_',dataset.datatype])
+outputfile     = fullfile(dataset.origdir,version,'comp',dataset.type,['comp_',dataset.datatype]);
 if writeflag
   cfg.outputfile = outputfile;
 end
 
 if ~strcmp(version, 'latest') && str2double(version)<20100000
-  % -- HISTORICAL --- older fieldtrip versions don't support inputfile and outputfile
+  % -- HISTORICAL --- older FieldTrip versions don't support inputfile and outputfile
   try
     % use the previous random seed
     load(outputfile, 'comp');

@@ -43,7 +43,7 @@ function [result, M] = ft_warp_optim(input, target, method)
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -72,7 +72,7 @@ pos1 = input;
 pos2 = target;
 
 % The ft_warp_error function might be located in the private subdirectory fo
-% fieldtrip, i.e. only available to functions in the fieldtrip toolbox.
+% fieldtrip, i.e. only available to functions in the FieldTrip toolbox.
 % The following line ensures that the function can also be found by the
 % feval that is executed by the optimalization toolbox.
 errorfun = str2func('ft_warp_error');

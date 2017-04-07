@@ -16,7 +16,7 @@ function [s, cfg] = ft_statfun_mean(cfg, dat, design)
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -34,5 +34,9 @@ function [s, cfg] = ft_statfun_mean(cfg, dat, design)
 %
 % $Id$
 
-s = mean(dat,2);
+% the stat field is used in STATISTICS_MONTECARLO to make the
+% randomization distribution, but you can also return other fields
+% which will be passed on to the command line in the end.
+
+s.stat = mean(dat,2);
 

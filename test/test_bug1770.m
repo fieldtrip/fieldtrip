@@ -3,11 +3,10 @@ function test_bug1770
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1770
 % TEST read_neuralynx_dma read_neuralynx_ncs
 
-filenameA = '/home/common/matlab/fieldtrip/data/test/bug1770/2012-07-14_15-33-09';
-filenameB = '/home/common/matlab/fieldtrip/data/test/bug1770/DigitalLynxRawDataFile.nrd';
+filenameA = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1770/2012-07-14_15-33-09');
+filenameB = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1770/DigitalLynxRawDataFile.nrd');
 
 hdrA = ft_read_header(filenameA);
 hdrB = ft_read_header(filenameB);

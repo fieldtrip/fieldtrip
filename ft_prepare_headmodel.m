@@ -119,7 +119,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % Copyright (C) 2011-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Johanna Zumer
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -137,7 +137,10 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -145,15 +148,15 @@ ft_preamble init
 ft_preamble trackconfig
 ft_preamble provenance
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'method');
 cfg = ft_checkconfig(cfg, 'deprecated', 'geom');
-cfg = ft_checkconfig(cfg, 'forbidden', 'unit'); % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2375
+cfg = ft_checkconfig(cfg, 'forbidden', 'unit'); % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2375
 cfg = ft_checkconfig(cfg, 'renamed', {'geom', 'headshape'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_openmeeg', 'openmeeg'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_dipoli', 'dipoli'});
@@ -188,7 +191,10 @@ cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the in
 cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
 cfg.headmodel       = ft_getopt(cfg, 'headmodel');      % can contain CTF localspheres model
 
-if nargin>1,
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
+if hasdata
   % the data should describe the geometrical mesh
   if isfield(data, 'bnd')
     data = data.bnd;
@@ -214,8 +220,8 @@ if istrue(cfg.siunits)
   end
 end
 
-% if the conductivity is in the data cfg.conductivity is overwritten
-if nargin>1 && isfield(data, 'cond')
+% the conductivity in the data overrules cfg.conductivity
+if hasdata && isfield(data, 'cond')
   cfg.conductivity = data.cond;
 end
 
@@ -248,13 +254,9 @@ switch cfg.method
     
   case {'bemcp' 'dipoli' 'openmeeg'}
     % the low-level functions all need a mesh
-    if input_mesh
-      if ~isfield(data, 'tri')
-        error('Please give a mesh with closed triangulation');
-      else
-        geometry = data;
-      end
-    elseif input_seg
+    if isfield(data, 'pos') && isfield(data, 'tri')
+      geometry = data;
+    elseif isfield(data, 'transform') && isfield(data, 'dim')
       tmpcfg = [];
       tmpcfg.numvertices = cfg.numvertices;
       tmpcfg.tissue = cfg.tissue;
@@ -437,7 +439,7 @@ switch cfg.method
 end % switch method
 
 % ensure that the geometrical units are specified
-if ~ft_voltype(headmodel, 'infinite'),
+if ~ft_voltype(headmodel, 'infinite')
   headmodel = ft_convert_units(headmodel);
 end
 

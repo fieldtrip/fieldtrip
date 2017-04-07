@@ -3,7 +3,6 @@ function test_example_incorporate_head_movements
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_example_incorporate_head_movements
 % TEST ft_definetrial ft_preprocessing ft_timelockanalysis ft_regressconfound
 
 global ft_default;
@@ -27,7 +26,7 @@ cfg.channel                 = {'HLC0011','HLC0012','HLC0013', ...
 headpos = ft_preprocessing(cfg);
 
 % calculate the mean coil position per trial
-ntrials = length(headpos.sampleinfo)
+ntrials = length(headpos.sampleinfo);
 for t = 1:ntrials
   coil1(:,t) = [mean(headpos.trial{1,t}(1,:)); mean(headpos.trial{1,t}(2,:)); mean(headpos.trial{1,t}(3,:))];
   coil2(:,t) = [mean(headpos.trial{1,t}(4,:)); mean(headpos.trial{1,t}(5,:)); mean(headpos.trial{1,t}(6,:))];
@@ -47,7 +46,7 @@ plot(cc_rel(:,1:3)*1000) % in mm
 figure();
 plot(cc_rel(:,4:6))
 
-maxposchange = max(abs(cc_rel(:,1:3)*1000)) % in mm
+maxposchange = max(abs(cc_rel(:,1:3)*1000)) % in mm;
 
 % define trials
 cfg                         = [];
@@ -88,7 +87,7 @@ cfg.channel                 = {'HLC0011','HLC0012','HLC0013', ...
 headpos = ft_preprocessing(cfg);
 
 % calculate the mean coil position per trial
-ntrials = length(headpos.sampleinfo)
+ntrials = length(headpos.sampleinfo);
 for t = 1:ntrials
   coil1(:,t) = [mean(headpos.trial{1,t}(1,:)); mean(headpos.trial{1,t}(2,:)); mean(headpos.trial{1,t}(3,:))];
   coil2(:,t) = [mean(headpos.trial{1,t}(4,:)); mean(headpos.trial{1,t}(5,:)); mean(headpos.trial{1,t}(6,:))];
@@ -96,7 +95,7 @@ for t = 1:ntrials
 end
 
 % calculate the headposition and orientation per trial
-cc = circumcenter(coil1, coil2, coil3)
+cc = circumcenter(coil1, coil2, coil3);
 
 % demean to obtain translations and rotations from the average position and orientation
 cc_dem = [cc - repmat(mean(cc,2),1,size(cc,2))]';

@@ -3,7 +3,6 @@ function test_headmodel_singleshell_new_old
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_headmodel_singleshell_new_old
 % TEST ft_headmodel_singleshell ft_prepare_headmodel ft_headmodel_singleshell
 
 % generate a unit sphere
@@ -40,12 +39,12 @@ for i=1:size(optarg,1)
   vol{1} = ft_headmodel_singleshell(geom.bnd(1),arg{:});
   
   % old way:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.headshape = geom.bnd(1);
   vol{2} = ft_prepare_singleshell(tmpcfg);
   
   % new way - high level:
-  tmpcfg = keyval2cfg(arg{:});
+  tmpcfg = ft_keyval2cfg(arg{:});
   tmpcfg.method = 'singleshell';
   vol{3} = ft_prepare_headmodel(tmpcfg,geom.bnd(1));
   

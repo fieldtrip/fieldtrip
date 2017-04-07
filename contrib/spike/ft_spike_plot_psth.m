@@ -25,7 +25,7 @@ function [cfg] = ft_spike_plot_psth(cfg, psth)
 
 % Copyright (C) 2010, Martin Vinck
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -43,12 +43,15 @@ function [cfg] = ft_spike_plot_psth(cfg, psth)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance psth
 ft_preamble trackconfig
 
 % check the psth datatype
@@ -169,8 +172,8 @@ set(pan,'ActionPostCallback',{@mypostcallback,cfg.ylim,cfg.latency});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous psth
+ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

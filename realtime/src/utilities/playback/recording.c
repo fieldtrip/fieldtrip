@@ -1,21 +1,20 @@
 /*
- * Buffer server that also writes the incoming data to disk.
+ * Simple application that sets up a buffer and writes all incoming messages (with timestamps) to disk for detailled debugging.
+ * The data stream can be played back with the same timing using the 'playback' application.
  *
  * Copyright (C) 2010, Stefan Klanke
- * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
- * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
- *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <signal.h>
+
 #include "buffer.h"
 #include "socketserver.h"
-#include <signal.h>
-#include <ft_offline.h>
+#include <ft_storage.h>
 
-#ifdef WIN32
+#if !defined(PLATFORM_WINDOWS) && defined(COMPILER_MINGW)
 #include <direct.h>
 #else
 #include <sys/stat.h>
@@ -61,7 +60,7 @@ int eventCounter = 0;
 char endianness[10];
 
 double getCurrentTime() {
-#ifdef WIN32
+#if defined(PLATFORM_WINDOWS) && !defined(COMPILER_MINGW)
 	return timeGetTime() * 0.001;
 #else
 	struct timeval tv;
@@ -71,14 +70,14 @@ double getCurrentTime() {
 }
 
 int my_request_handler(const message_t *request, message_t **response, void *user_data) {
-	
+
 	double tAbs, tRel;
 	int res;
 	int quantity;
-	
+
 	tAbs = getCurrentTime();
 	tRel = tAbs - timePutHeader;
-	
+
 	printf("t=%8.3f ", tRel);
 	switch(request->def->command) {
 		case PUT_HDR:
@@ -133,7 +132,7 @@ int my_request_handler(const message_t *request, message_t **response, void *use
 			}
 			break;
 	}
-	
+
 	res = dmarequest(request, response);
 	if (res != 0) {
 		printf("ERROR\n");
@@ -144,9 +143,9 @@ int my_request_handler(const message_t *request, message_t **response, void *use
 				tRel = tAbs - timePutHeader;
 				printf("t=%8.3f WAIT_OK\n", tRel);
 				break;
-			case WAIT_ERR:				
+			case WAIT_ERR:
 				printf("WAIT_ERR\n");
-				break;			
+				break;
 			case PUT_OK:
 				printf("OK\n");
 				pthread_mutex_lock(&qMutex);
@@ -185,18 +184,18 @@ int write_contents() {
 	char name[512];
 	FILE *f;
 	int r;
-	
-	#ifdef WIN32
+
+	#if defined(PLATFORM_WINDOWS) && !defined(COMPILER_MINGW)
 	r = GetFileAttributes(baseDirectory);
-	#else 
+	#else
 	r = access(baseDirectory, F_OK);
 	#endif
 	if (r!=-1) {
 		fprintf(stderr, "ERROR: %s already exists in path\n", baseDirectory);
 		return 0;
 	}
-	
-	#ifdef WIN32
+
+	#if defined(WIN32)
 	r = mkdir(baseDirectory);
 	#else
 	r = mkdir(baseDirectory, 0700);
@@ -205,7 +204,7 @@ int write_contents() {
 		fprintf(stderr, "ERROR: cannot create directory %s\n", name);
 		return 0;
 	}
-	
+
 	snprintf(name, sizeof(name), "%s/contents.txt", baseDirectory);
 	f = fopen(name, "w");
 	if (f==NULL) {
@@ -224,24 +223,24 @@ int write_header_to_disk() {
 	message_t *response;
 	headerdef_t *hdef;
 	int r;
-	
+
 	request.def = &reqdef;
 	request.buf = NULL;
-	
+
 	r = dmarequest(&request, &response);
 	if (r!=0 || response == NULL || response->def == NULL || response->buf == NULL) {
 		fprintf(stderr, "ERROR: Cannot retrieve header for writing to disk\n");
 		goto cleanup;
 	}
-	
+
 	hdef = (headerdef_t *) response->buf;
-	
+
 	setCounter++;
 	sampleCounter = eventCounter = 0;
 	snprintf(name, sizeof(name), "%s/%04i", baseDirectory, setCounter);
-	
+
 	OS = ft_storage_create(name, hdef, hdef+1, &r);
-	
+
 cleanup:
 	if (response!=NULL) {
 		if (response->def != NULL) free(response->def);
@@ -259,7 +258,7 @@ int write_samples_to_disk(int nsamps, double t) {
 	message_t *response;
 	datadef_t *ddef;
 	int r;
-		
+
 	ds.begsample = sampleCounter;
 	ds.endsample = sampleCounter + nsamps - 1;
 	reqdef.version = VERSION;
@@ -267,13 +266,13 @@ int write_samples_to_disk(int nsamps, double t) {
 	reqdef.bufsize = sizeof(ds);
 	request.def = &reqdef;
 	request.buf = &ds;
-	
+
 	r = dmarequest(&request, &response);
 	if (r!=0 || response == NULL || response->def == NULL || response->buf == NULL) {
 		fprintf(stderr, "ERROR: Cannot retrieve samples for writing to disk\n");
 		goto cleanup;
 	}
-	
+
 	sampleCounter += nsamps;
 
 	ddef = (datadef_t *) response->buf;
@@ -285,7 +284,7 @@ int write_samples_to_disk(int nsamps, double t) {
 		te.time = t;
 		r = ft_storage_add_timing(OS, &te);
 	}
-			
+
 cleanup:
 	if (response!=NULL) {
 		if (response->def != NULL) free(response->def);
@@ -301,7 +300,7 @@ int write_events_to_disk(int nevs, double t) {
 	message_t request;
 	message_t *response;
 	int r;
-	
+
 	es.begevent = eventCounter;
 	es.endevent = eventCounter + nevs - 1;
 	reqdef.version = VERSION;
@@ -309,15 +308,15 @@ int write_events_to_disk(int nevs, double t) {
 	reqdef.bufsize = sizeof(es);
 	request.def = &reqdef;
 	request.buf = &es;
-	
+
 	r = dmarequest(&request, &response);
 	if (r!=0 || response == NULL || response->def == NULL || response->buf == NULL) {
 		fprintf(stderr, "ERROR: Cannot retrieve events for writing to disk\n");
 		goto cleanup;
 	}
-	
+
 	eventCounter += nevs;
-	
+
 	r = ft_storage_add_events(OS, response->def->bufsize, response->buf);
 	if (r==0) {
 		ft_timing_element_t te;
@@ -344,7 +343,7 @@ int main(int argc, char *argv[]) {
 		short word;
 		char bytes[2];
 	} endianTest;
-	
+
 	endianTest.bytes[0] = 1;
 	endianTest.bytes[1] = 0;
 
@@ -356,8 +355,8 @@ int main(int argc, char *argv[]) {
 
 	/* verify that all datatypes have the expected syze in bytes */
 	check_datatypes();
-	
-	#ifdef WIN32
+
+	#if defined(PLATFORM_WINDOWS) && !defined(COMPILER_MINGW)
 	timeBeginPeriod(1);
 	#endif
 
@@ -376,7 +375,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		port = 1972;
 	}
-	
+
 	memset(queue, sizeof(queue), 0);
 
 	if (!write_contents()) goto cleanup;
@@ -416,10 +415,9 @@ int main(int argc, char *argv[]) {
 	printf("Done.\n");
 
 cleanup:
-	#ifdef WIN32
+	#if defined(PLATFORM_WINDOWS) && !defined(COMPILER_MINGW)
 	timeEndPeriod(1);
 	#endif
 
 	return 0;
 }
-

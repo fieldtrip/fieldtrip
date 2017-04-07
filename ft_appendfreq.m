@@ -31,7 +31,7 @@ function [freq] = ft_appendfreq(cfg, varargin)
 
 % Copyright (C) 2011, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -49,7 +49,10 @@ function [freq] = ft_appendfreq(cfg, varargin)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -59,8 +62,8 @@ ft_preamble loadvar varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -96,7 +99,7 @@ tol    = cfg.tolerance;
 dimtok = tokenize(dimord{1}, '_');
 switch cfg.appenddim
   case 'auto'
-    
+
     % only allow to append across observations if these are present in the data
     if any(strcmp(dimtok, 'rpt'))
       cfg.appenddim = 'rpt';
@@ -109,7 +112,7 @@ switch cfg.appenddim
       % if not, consider some tolerance.
       boolval1 = checkchan(varargin{:}, 'identical');
       boolval2 = checkfreq(varargin{:}, 'identical', tol);
-      
+
       if isfield(varargin{1}, 'time'),
         boolval3 = checktime(varargin{:}, 'identical', tol);
         if boolval1 && boolval2 && boolval3
@@ -134,7 +137,7 @@ switch cfg.appenddim
           cfg.appenddim = 'freq';
         end
       end
-      
+
     end % determine the dimension for appending
 end
 
@@ -148,10 +151,10 @@ switch cfg.appenddim
     elseif numel(catdim)>1
       error('ambiguous dimord for concatenation');
     end
-    
+
     % if any of these are present, concatenate
     % if not prepend the dimord with rpt (and thus shift the dimensions)
-    
+
     % here we need to check whether the other dimensions are the same. if
     % not, consider some tolerance.
     boolval1 = checkchan(varargin{:}, 'identical');
@@ -161,11 +164,11 @@ switch cfg.appenddim
     else
       boolval3 = true;
     end
-    
+
     if any([boolval2 boolval3]==false)
       error('appending across observations is not possible, because the frequency and/or temporal dimensions are incompatible');
     end
-    
+
     % select and reorder the channels that are in every dataset
     tmpcfg           = [];
     tmpcfg.channel   = cfg.channel;
@@ -175,7 +178,7 @@ switch cfg.appenddim
       [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
     end
     cfg = cfg_rolledback;
-    
+
     % update the dimord
     if catdim==0
       freq.dimord = ['rpt_',varargin{1}.dimord];
@@ -206,7 +209,7 @@ switch cfg.appenddim
           hastrialinfo(end+1) = 0;
         end
       end
-      
+
       % screen concatenable fields
       if ~checkfreq(varargin{:}, 'identical', tol)
         error('the freq fields of the input data structures are not equal');
@@ -228,7 +231,7 @@ switch cfg.appenddim
       else
         istrialinfo=unique(hastrialinfo);
       end
-      
+
       % concatenating fields
       for i=1:Ndata;
         if iscumsumcnt;
@@ -241,7 +244,7 @@ switch cfg.appenddim
           trialinfo{i}=varargin{i}.trialinfo;
         end
       end
-      
+
       % fill in the rest of the descriptive fields
       if iscumsumcnt;
         freq.cumsumcnt = cat(catdim,cumsumcnt{:});
@@ -256,11 +259,11 @@ switch cfg.appenddim
         clear trialinfo;
       end
     end
-    
+
     freq.label = varargin{1}.label;
     freq.freq  = varargin{1}.freq;
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
-    
+
   case 'chan'
     catdim = find(strcmp('chan', dimtok));
     if isempty(catdim)
@@ -269,40 +272,40 @@ switch cfg.appenddim
     elseif numel(catdim)>1
       error('ambiguous dimord for concatenation');
     end
-    
+
     % check whether all channels are unique and throw an error if not
     [boolval, list] = checkchan(varargin{:}, 'unique');
     if ~boolval
       error('the input data structures have non-unique channels, concatenation across channel is not possible');
     end
-    
+
     if isfield(varargin{1}, 'time')
       if ~checktime(varargin{:}, 'identical', tol)
         error('the input data structures have non-identical time bins, concatenation across channels not possible');
       end
     end
-    
+
     if ~checkfreq(varargin{:}, 'identical', tol)
       error('the input data structures have non-identical frequency bins, concatenation across channels not possible');
     end
-    
+
     % update the channel description
     freq.label = list;
-    
+
     % fill in the rest of the descriptive fields
     freq.freq  = varargin{1}.freq;
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
     freq.dimord = varargin{1}.dimord;
-    
+
   case 'freq'
     catdim = find(strcmp('freq', dimtok));
-    
+
     % check whether all frequencies are unique and throw an error if not
     [boolval, list] = checkfreq(varargin{:}, 'unique', tol);
     if ~boolval
       error('the input data structures have non-unique frequency bins, concatenation across frequency is not possible');
     end
-    
+
     if ~checkchan(varargin{:}, 'identical')
       error('the input data structures have non-identical channels, concatenation across frequency not possible');
     end
@@ -311,41 +314,41 @@ switch cfg.appenddim
         error('the input data structures have non-identical time bins, concatenation across channels not possible');
       end
     end
-    
+
     % update the frequency description
     freq.freq = list(:)';
-    
+
     % fill in the rest of the descriptive fields
     freq.label  = varargin{1}.label;
     freq.dimord = varargin{1}.dimord;
     if isfield(varargin{1}, 'time'), freq.time = varargin{1}.time; end
-    
+
   case 'time'
     catdim = find(strcmp('time', dimtok));
-    
+
     % check whether all time points are unique and throw an error if not
     [boolval, list] = checktime(varargin{:}, 'unique', tol);
     if ~boolval
       error('the input data structures have non-unique time bins, concatenation across time is not possible');
     end
-    
+
     if ~checkchan(varargin{:}, 'identical')
       error('the input data structures have non-identical channels, concatenation across time not possible');
     end
     if ~checkfreq(varargin{:}, 'identical', tol)
       error('the input data structures have non-identical frequency bins, concatenation across time not possible');
     end
-    
+
     % update the time description
     freq.time = list(:)';
-    
+
     % fill in the rest of the descriptive fields
     freq.label  = varargin{1}.label;
     freq.freq   = varargin{1}.freq;
     freq.dimord = varargin{1}.dimord;
-    
+
   otherwise
-    error('it is not allowed to concatenate across dimension %s',cfg.appenddim);   
+    error('it is not allowed to concatenate across dimension %s',cfg.appenddim);
 end
 
 param = cfg.parameter;
@@ -358,15 +361,15 @@ chandim = find(strcmp('chan', dimtok));
 % concatenate the numeric data
 for k = 1:numel(param)
   tmp = cell(1,Ndata);
-  
+
   % get the numeric data 'param{k}' if present
   for m = 1:Ndata
-    
+
     if ~isfield(varargin{m}, param{k})
       error('parameter %s is not present in all data sets', param{k});
     end
     tmp{m} = varargin{m}.(param{k});
-    
+
     % if we are not appending along the channel dimension, make sure we
     % reorder the channel dimension across the different data sets. At this
     % point we can be sure that all data sets have identical channels.
@@ -377,7 +380,7 @@ for k = 1:numel(param)
       end
     end
   end
-  
+
   if catdim==0,
     ndim    = length(size(tmp{1}));
     freq.(param{k}) = permute(cat(ndim+1,tmp{:}),[ndim+1 1:ndim]);
@@ -392,11 +395,11 @@ if isfield(varargin{1}, 'grad') || isfield(varargin{1}, 'elec')
 
   if isfield(varargin{1}, 'grad'), sensfield = 'grad'; end
   if isfield(varargin{1}, 'elec'), sensfield = 'elec'; end
-  
+
   for k = 2:Ndata
     keepsensinfo = keepsensinfo && isequaln(varargin{1}.(sensfield), varargin{k}.(sensfield));
   end
-  
+
   if keepsensinfo,
     freq.(sensfield) = varargin{1}.(sensfield);
   end

@@ -14,6 +14,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.highlightcolorneg         = color of highlight marker for negative clusters (default = [0 0 0])
 %   cfg.subplotsize               = layout of subplots ([h w], default [3 5])
 %   cfg.saveaspng                 = string, filename of the output figures (default = 'no')
+%   cfg.visible                   = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %
 % You can also specify cfg options that apply to FT_TOPOPLOTTFR, except for
 % cfg.xlim, any of the FT_TOPOPLOTTFR highlight options, cfg.comment and
@@ -30,7 +31,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 
 % Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,7 +49,10 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -58,8 +62,8 @@ ft_preamble loadvar stat
 ft_preamble provenance stat
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -99,6 +103,7 @@ cfg.parameter             = ft_getopt(cfg, 'parameter',             'stat');
 cfg.saveaspng             = ft_getopt(cfg, 'saveaspng',             'no');
 cfg.subplotsize           = ft_getopt(cfg, 'subplotsize',           [3 5]);
 cfg.feedback              = ft_getopt(cfg, 'feedback',              'text');
+cfg.visible               = ft_getopt(cfg, 'visible',               'on');
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
@@ -121,13 +126,13 @@ dimsiz(end+1:length(dimtok)) = 1; % there can be additional trailing singleton d
 switch dimord
   case 'chan'
     is2D = false;
-    
+
   case 'chan_time'
     is2D = true;
-    
+
   case 'chan_freq'
     is2D = true;
-    
+
   case 'chan_freq_time'
     % no more than two dimensions are supported, we can ignore singleton dimensions
     is2D = true;
@@ -135,7 +140,14 @@ switch dimord
       stat = rmfield(stat, 'freq');
       stat.dimord = 'chan_time';
       % remove the singleton dimension in the middle
-      stat.(cfg.parameter) = squeeze(stat.(cfg.parameter));
+      stat.(cfg.parameter) = reshape(stat.(cfg.parameter),dimsiz([1 3]));
+      if isfield(stat, 'posclusterslabelmat')
+        stat.posclusterslabelmat = reshape(stat.posclusterslabelmat, dimsiz([1 3]));
+      end
+      if isfield(stat, 'negclusterslabelmat')
+        stat.negclusterslabelmat = reshape(stat.negclusterslabelmat, dimsiz([1 3]));
+      end
+
     elseif dimsiz(3)==1
       stat = rmfield(stat, 'time');
       stat.dimord = 'chan_freq';
@@ -143,7 +155,7 @@ switch dimord
     else
       error('this only works if either frequency or time is a singleton dimension');
     end
-    
+
   otherwise
     error('unsupported dimord %s', dimord);
 end % switch dimord
@@ -192,14 +204,14 @@ else
   Nsigpos = length(sigpos);
   Nsigneg = length(signeg);
   Nsigall = Nsigpos + Nsigneg;
-  
+
   if Nsigall == 0
     error('no clusters present with a p-value lower than the specified alpha, nothing to plot')
   end
-  
+
   % make clusterslabel matrix per significant cluster
   if haspos
-    posCLM = squeeze(stat.posclusterslabelmat);
+    posCLM = stat.posclusterslabelmat;
     sigposCLM = zeros(size(posCLM));
     probpos = [];
     for iPos = 1:length(sigpos)
@@ -212,9 +224,9 @@ else
     sigposCLM = [];
     probpos = [];
   end
-  
+
   if hasneg
-    negCLM = squeeze(stat.negclusterslabelmat);
+    negCLM = stat.negclusterslabelmat;
     signegCLM = zeros(size(negCLM));
     probneg = [];
     for iNeg = 1:length(signeg)
@@ -227,9 +239,9 @@ else
     signegCLM = [];
     probneg = [];
   end
-  
+
   fprintf('%s%i%s%g%s\n','There are ',Nsigall,' clusters smaller than alpha (',cfg.alpha,')')
-  
+
   if is2D
     % define time or freq window per cluster
     for iPos = 1:length(sigpos)
@@ -255,13 +267,13 @@ else
         fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')',', f = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
       end
     end
-    
+
     % define time- or freq-window containing all significant clusters
     possum = sum(sigposCLM,3); %sum over Chans for timevector
     possum = sum(possum,1);
     negsum = sum(signegCLM,3);
     negsum = sum(negsum,1);
-    
+
     if haspos && hasneg
       allsum = possum + negsum;
     elseif haspos
@@ -269,11 +281,11 @@ else
     else
       allsum = negsum;
     end
-    
+
     ind_timewin_min = min(find(allsum~=0));
     ind_timewin_max = max(find(allsum~=0));
     timewin = time(ind_timewin_min:ind_timewin_max);
-    
+
   else
     for iPos = 1:length(sigpos)
       fprintf('%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')')
@@ -282,7 +294,7 @@ else
       fprintf('%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')')
     end
   end
-  
+
   % setup highlight options for all clusters and make comment for 1D data
   compos = [];
   comneg = [];
@@ -311,7 +323,7 @@ else
     cfgtopo.highlightcolor{iPos}        = cfg.highlightcolorpos;
     compos = strcat(compos,cfgtopo.highlightsymbol{iPos}, 'p=',num2str(probpos(iPos)),' '); % make comment, only used for 1D data
   end
-  
+
   for iNeg = 1:length(signeg)
     if stat.negclusters(signeg(iNeg)).prob < 0.01
       cfgtopo.highlight{length(sigpos)+iNeg}         = cfg.highlightseries{1};
@@ -337,16 +349,16 @@ else
     cfgtopo.highlightcolor{length(sigpos)+iNeg}        = cfg.highlightcolorneg;
     comneg = strcat(comneg,cfgtopo.highlightsymbol{length(sigpos)+iNeg}, 'p=',num2str(probneg(iNeg)),' '); % make comment, only used for 1D data
   end
-  
+
   if is2D
     Npl = length(timewin);
   else
     Npl = 1;
   end
-  
+
   numSubplots = prod(cfg.subplotsize);
   Nfig = ceil(Npl/numSubplots);
-  
+
   % put channel indexes in list
   if is2D
     for iPl = 1:Npl
@@ -367,16 +379,16 @@ else
       end
     end
   end
-  
+
   % this does not work, because the progress tracker is also used inside ft_topoplotTFR
   %  ft_progress('init', cfg.feedback, 'making subplots...');
   %  ft_progress(count/Npl, 'making subplot %d from %d', count, Npl);
   %  ft_progress('close');
-  
+
   count = 0;
   % make plots
   for iPl = 1:Nfig
-    figure;
+    f = figure('visible', cfg.visible);
     if is2D
       if iPl < Nfig
         for iT = 1:numSubplots
@@ -413,17 +425,17 @@ else
       end
     else
       cfgtopo.highlightchannel = list{1};
-      cfgtopo.comment = strcat(compos,comneg);
+      cfgtopo.comment = strcat(compos, comneg);
       cfgtopo.commentpos = 'title';
       count = count+1;
       fprintf('making subplot %d from %d\n', count, Npl);
       ft_topoplotTFR(cfgtopo, stat);
     end
     % save figure
-    if isequal(cfg.saveaspng,'no');
+    if isequal(cfg.saveaspng, 'no');
     else
       filename = strcat(cfg.saveaspng, '_fig', num2str(iPl));
-      print(gcf,'-dpng',filename);
+      print(gcf, '-dpng', filename);
     end
   end
 end

@@ -3,7 +3,6 @@ function test_xunit_stacktest
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_xunit_stacktest
 % TEST ft_defaults ft_warning
 
 ft_defaults
@@ -76,7 +75,7 @@ function [ws warned] = ft_warning(varargin)
 % Copyright (C) 2012, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

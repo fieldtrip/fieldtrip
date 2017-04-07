@@ -1,5 +1,5 @@
 function [Pq,tpath,plq,qstop,allpths,util] = findpaths(CIJ,sources,qmax,savepths)
-% FINDPATHS     Network paths
+%FINDPATHS      Network paths
 %
 %   [Pq,tpath,plq,qstop,allpths,util] = findpaths(CIJ,sources,qmax,savepths);
 %
@@ -21,24 +21,30 @@ function [Pq,tpath,plq,qstop,allpths,util] = findpaths(CIJ,sources,qmax,savepths
 %               allpths,    a matrix containing all paths up to 'qmax'
 %               util,       node use index
 %
-%   Notes:
-%       Pq(:,:,N) can only carry entries on the diagonal, as all "legal"
-%   paths of length N-1 must terminate.  Cycles of length N are possible, 
-%   with all vertices visited exactly once (except for source and target).
-%   'qmax = N' can wreak havoc (due to memory problems).
-%       All weights are discarded.
-%       I am fairly certain that this algorithm is rather inefficient -
+%   Note that Pq(:,:,N) can only carry entries on the diagonal, as all
+%   "legal" paths of length N-1 must terminate.  Cycles of length N are
+%   possible, with all vertices visited exactly once (except for source and
+%   target). 'qmax = N' can wreak havoc (due to memory problems).
+%
+%   Note: Weights are discarded.
+%   Note: I am certain that this algorithm is rather inefficient -
 %   suggestions for improvements are welcome.
 %
-%
-% Olaf Sporns, Indiana University, 2002/2007/2008
+%   Olaf Sporns, Indiana University, 2002/2007/2008/2010
 
+%   2010 version:
+%   -- a bug affecting the calculation of 'util' was fixed -- thanks to
+%      Steve Williams
+%   -- better pre-allocation for 'npths'
+%   -- note that this code assumes a directed graph as input - calculation
+%      of paths and 'util' indices can be easily adapted to undirected
+%      graphs. 
 
 % ensure CIJ is binary...
 CIJ = double(CIJ~=0);
 
 % initialize some variables
-N = size(CIJ,1);
+N = size(CIJ,1); K = sum(sum(CIJ));
 pths = [];
 Pq = zeros(N,N,qmax);
 util = zeros(N,qmax);
@@ -46,7 +52,6 @@ util = zeros(N,qmax);
 % this code is for pathlength = 1
 % paths are seeded from 'sources'
 q = 1;
-
 for j=1:N
     for i=1:length(sources)
         is = sources(i);
@@ -56,7 +61,7 @@ for j=1:N
     end;
 end;
 
-% test: calculate the use index per vertex
+% calculate the use index per vertex (for paths of length 1)
 util(1:N,q) = util(1:N,q)+hist(reshape(pths,1,size(pths,1)*size(pths,2)),1:N)';
 % now enter the found paths of length 1 into the pathmatrix Pq
 for np=1:size(pths,2)
@@ -71,6 +76,9 @@ if (savepths~=1)
     allpths = [];
 end;
 
+% initialize
+npthscnt = K;
+
 % "big loop" for all other pathlengths 'q'
 % ----------------------------------------------------------------------
 for q=2:qmax
@@ -80,15 +88,8 @@ for q=2:qmax
 
     % old paths are now in 'pths'
     % new paths are about to be collected in 'npths'
-    % the inital assignment of the size of 'npths' should scale with N,K and
-    % needs finessing...  test runs are needed here.
-    if (N<50)
-        len_npths = N*q*10;
-    end;
-    if (N>=50)
-        len_npths = 10^(q+1);
-    end;
-    len_npths = min(len_npths,10000000);
+    % estimate needed allocation for new paths
+    len_npths = min(ceil(1.1*npthscnt*K/N),100000000);
     npths = zeros(q+1,len_npths);
 
     % find the unique set of endpoints of 'pths'
@@ -101,7 +102,7 @@ for q=2:qmax
         [pa,pb] = find(pths(q,:) == i);
         % find the outgoing connections from 'i' ("breadth-first")
         nendp = find(CIJ(i,:)==1);
-        % if there 'i' is not a dead end
+        % if 'i' is not a dead end
         if (~isempty(nendp))
             for jj=1:length(nendp)   % endpoints of next edge
                 j = nendp(jj);
@@ -117,6 +118,9 @@ for q=2:qmax
     end;
 
     % note: 'npths' now contains a list of all the paths of length 'q'
+    if (len_npths>npthscnt)
+        npths = npths(:,1:npthscnt);
+    end;
 
     % append the matrix of all paths
     if (savepths==1)
@@ -124,9 +128,9 @@ for q=2:qmax
         allpths = [allpths npths(:,1:npthscnt)];
     end;
 
-    % test: calculate the use index per vertex (correct for cycles, count
+    % calculate the use index per vertex (correct for cycles, count
     % source/target only once)
-    util(1:N,q) = util(1:N,q) + hist(reshape(npths,1,size(npths,1)*size(npths,2)),1:N)' - diag(Pq(:,:,q));
+    util(1:N,q) = util(1:N,q) + hist(reshape(npths(:,1:npthscnt),1,size(npths,1)*npthscnt),1:N)' - diag(Pq(:,:,q));
     % eliminate cycles from "making it" to the next level, so that
     % 'pths' contains all the paths that have a chance of being continued
     if (~isempty(npths))

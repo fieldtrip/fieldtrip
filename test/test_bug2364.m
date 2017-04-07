@@ -3,7 +3,6 @@ function test_bug2364
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2364
 
 nTrials = 20;
 data = [];

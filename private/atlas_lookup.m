@@ -15,7 +15,7 @@ function [label] = atlas_lookup(atlas, pos, varargin)
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -82,7 +82,7 @@ elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'tal')
   % nothing to do
 elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
   pos = tal2mni(pos')'; % this function likes 3xN 
-elseif strcmp(inputcoord, 'spm') && strcmp(atlas.coordsys, 'mni')
+elseif (strcmp(inputcoord, 'spm') && strcmp(atlas.coordsys, 'mni')) || (strcmp(inputcoord, 'mni') && strcmp(atlas.coordsys, 'spm'))
   %fprintf('coordinate system of input data ''spm'' is assume to represent the same coordinate system as the atlas, which is ''mni''\n');
 elseif ~strcmp(inputcoord, atlas.coordsys)
   error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');

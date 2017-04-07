@@ -9,7 +9,7 @@ function [data] = avgref(data, sel)
 
 % Copyright (C) 1998-2002, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -48,8 +48,8 @@ end
 if dim==3
   % the data contains multiple epochs
   for epoch=1:size(data,1)
-    reference = mean(squeeze(data(epoch,sel,:)), 1);
-    data(epoch,:,:) = squeeze(data(epoch,:,:)) - repmat(reference, size(data,2), 1);
+    reference = mean(data(epoch,sel,:), 2);
+    data(epoch,:,:) = data(epoch,:,:) - repmat(reference, [1 size(data,2) 1]);
   end
 else
   % the data contains a single epoch

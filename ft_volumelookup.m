@@ -10,9 +10,9 @@ function [output] = ft_volumelookup(cfg, volume)
 % be used as:
 %   mask = ft_volumelookup(cfg, volume)
 %
-% Given a binary volume that indicates a region of interest, it looks up
-% the corresponding anatomical or functional labels from a given atlas. In
-% this case the function is to be used as follows:
+% Given a binary volume that indicates a region of interest or a point of 
+% interest, it looks up the corresponding anatomical or functional labels 
+% from a given atlas. In this case the function is to be used as:
 %    labels = ft_volumelookup(cfg, volume)
 %
 % In both cases the input volume can be:
@@ -42,6 +42,16 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.maskparameter = string, field in volume to be lookedup, data in field should be logical
 %   cfg.maxqueryrange = number, should be 1, 3, 5 (default = 1)
 %
+% The configuration options for labels around a point of interest:
+%   cfg.roi           = Nx3 vector, coordinates of the points of interest
+%   cfg.inputcoord    = 'mni' or 'tal', coordinate system of the mri/source/stat
+%   cfg.atlas         = string, filename of atlas to use, either the AFNI
+%                        brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/afni_ttatlas/,
+%                        or the WFU atlasses available from http://fmri.wfubmc.edu. see FT_READ_ATLAS
+%   cfg.output        = 'label'
+%   cfg.maxqueryrange = number, should be 1, 3, 5 (default = 1)
+%   cfg.round2nearestvoxel = 'yes' or 'no' (default = 'yes'), voxel closest to point of interest is calculated
+%
 % The label output has a field "names", a field "count" and a field "usedqueryrange"
 % To get a list of areas of the given mask you can do for instance:
 %      [tmp ind] = sort(labels.count,1,'descend');
@@ -59,9 +69,9 @@ function [output] = ft_volumelookup(cfg, volume)
 % See also FT_READ_ATLAS, FT_SOURCEPLOT
 
 % Copyright (C) 2008-2013, Robert Oostenveld, Ingrid Nieuwenhuis
-% Copyright (C) 2013, Jan-Mathijs Schoffelen 
+% Copyright (C) 2013, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -79,7 +89,10 @@ function [output] = ft_volumelookup(cfg, volume)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -89,8 +102,8 @@ ft_preamble loadvar volume
 ft_preamble provenance volume
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -98,10 +111,14 @@ end
 % the checking of the input data is done further down
 
 cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange', 1);
+cfg.output             = ft_getopt(cfg,'output', []); % in future, cfg.output could be extended to support both 'label' and 'mask'
 
 roi2mask   = 0;
 mask2label = 0;
-if isfield(cfg, 'roi');
+roi2label = 0;
+if isfield(cfg, 'roi') && strcmp(cfg.output, 'label')
+    roi2label = 1;   
+elseif isfield(cfg, 'roi');
   roi2mask = 1;
 elseif isfield(cfg, 'maskparameter')
   mask2label = 1;
@@ -112,7 +129,7 @@ end
 if roi2mask
   % only for volume data
   volume = ft_checkdata(volume, 'datatype', 'volume');
-
+  
   cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'no');
   
   isatlas = iscell(cfg.roi) || ischar(cfg.roi);
@@ -123,22 +140,26 @@ if roi2mask
   
   if isatlas
     ft_checkconfig(cfg, 'forbidden', {'sphere' 'box'}, ...
-                        'required',  {'atlas' 'inputcoord'});  
+      'required',  {'atlas' 'inputcoord'});
   elseif ispoi
     ft_checkconfig(cfg, 'forbidden', {'atlas' 'inputcoord'});
     if isempty(ft_getopt(cfg, 'sphere')) && isempty(ft_getopt(cfg, 'box'))
       % either needs to be there
       error('either specify cfg.sphere or cfg.box')
-    end  
+    end
   end
   
-elseif mask2label
+elseif mask2label || roi2label
   % convert to source representation (easier to work with)
   volume = ft_checkdata(volume, 'datatype', 'source');
   ft_checkconfig(cfg, 'required', {'atlas' 'inputcoord'});
   
   if isempty(intersect(cfg.maxqueryrange, [1 3 5]))
     error('incorrect query range, should be one of [1 3 5]');
+  end
+  
+  if roi2label
+    cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'yes');
   end
 end
 
@@ -153,7 +174,7 @@ if roi2mask
   ijk = [I(:) J(:) K(:) ones(prod(dim),1)]';
   % determine location of each anatomical voxel in head coordinates
   xyz = volume.transform * ijk; % note that this is 4xN
-
+  
   if isatlas
     if ischar(cfg.atlas),
       % assume it to represent a filename
@@ -185,7 +206,7 @@ if roi2mask
       fn = fn(isboolean);
       isindexed = 0;
     end
- 
+    
     if ischar(cfg.roi)
       cfg.roi = {cfg.roi};
     end
@@ -251,13 +272,13 @@ if roi2mask
     end
     
   elseif ispoi
-
+    
     if istrue(cfg.round2nearestvoxel)
       for i=1:size(cfg.roi,1)
         cfg.roi(i,:) = poi2voi(cfg.roi(i,:), xyz);
       end
     end
-
+    
     % sphere(s)
     if isfield(cfg, 'sphere')
       mask = zeros(1,prod(dim));
@@ -276,12 +297,12 @@ if roi2mask
       end
     end
   end
-
+  
   mask = reshape(mask, dim);
   fprintf('%i voxels in mask, which is %.3f %% of total volume\n', sum(mask(:)), 100*mean(mask(:)));
   output = mask;
-
-elseif mask2label
+  
+elseif mask2label || roi2label
   if ischar(cfg.atlas),
     % assume it to represent a filename
     atlas = ft_read_atlas(cfg.atlas);
@@ -312,7 +333,7 @@ elseif mask2label
     fn = fn(isboolean);
     isindexed = 0;
   end
-  sel = find(volume.(cfg.maskparameter)(:));
+  
   labels.name = cell(0,1);
   for k = 1:numel(fn)
     % ensure that they are concatenated as column
@@ -324,7 +345,19 @@ elseif mask2label
   for iLab = 1:length(labels.name)
     labels.usedqueryrange{iLab} = [];
   end
-
+  
+  if mask2label
+    sel = find(volume.(cfg.maskparameter)(:));
+  elseif roi2label
+    if istrue(cfg.round2nearestvoxel)
+      % determine location of each anatomical voxel in head coordinates
+      xyz = [volume.pos ones(size(volume.pos,1),1)]'; % note that this is 4xN    
+      for i=1:size(cfg.roi,1)
+        cfg.roi(i,:) = poi2voi(cfg.roi(i,:), xyz);
+      end
+    end % round2nearestvoxel
+    sel = find(ismember(volume.pos, cfg.roi, 'rows')==1);
+  end
   for iVox = 1:length(sel)
     usedQR = 1;
     label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 1);
@@ -341,12 +374,12 @@ elseif mask2label
     elseif length(label) == 1
       label = {label};
     end
-
+    
     ind_lab = [];
     for iLab = 1:length(label)
       ind_lab = [ind_lab find(strcmp(label{iLab}, labels.name))];
     end
-
+    
     labels.count(ind_lab) = labels.count(ind_lab) + (1/length(ind_lab));
     for iFoundLab = 1:length(ind_lab)
       if isempty(labels.usedqueryrange{ind_lab(iFoundLab)})
@@ -356,9 +389,9 @@ elseif mask2label
       end
     end
   end %iVox
-
+  
   output = labels;
-
+  
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -384,4 +417,3 @@ if sum(ind_voi) > 1;
 end
 voi = xyz(1:3,ind_voi);
 fprintf('coordinates of voi: %.1f  %.1f %.1f\n', voi(1), voi(2), voi(3));
-

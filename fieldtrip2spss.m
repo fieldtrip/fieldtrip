@@ -1,6 +1,6 @@
 function fieldtrip2spss(filename, labels, data)
 
-% FIELDTRIP2SPSS compiles data and correpsonding labels into a textfile, 
+% FIELDTRIP2SPSS compiles data and correpsonding labels into a textfile,
 % suitable for import to SPSS.
 %
 % Use as:
@@ -19,14 +19,14 @@ function fieldtrip2spss(filename, labels, data)
 % In case the columns that make up the data matrix have unequal lengths
 % (e.g. because of different number of subjects per group), use:
 %   data         = ones(30,2)*9999
-%   data(1:30,1) = 1 (30 subj in Group 1) 
+%   data(1:30,1) = 1 (30 subj in Group 1)
 %   data(1:20,2) = 2 (20 subj in Group 2)
 % After importing to SPSS, click the Missing cell in the Variable View
 % window and enter 9999 as the missing value definition.
 
 % Copyright (C) 2011-2014, Arjen Stolk
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -44,7 +44,10 @@ function fieldtrip2spss(filename, labels, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults

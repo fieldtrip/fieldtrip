@@ -21,7 +21,7 @@ function [version] = hasyokogawa(desired)
 
 % Copyright (C) 2010, Tilmann Sander-Thoemmes
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,11 +47,11 @@ ws = warning('off', 'MATLAB:pfileOlderThanMfile');
 % other names. At the time of writing this, the new implementation is
 % version 1.4.
 
-if exist('getYkgwVersion')
+if exist('getYkgwVersion', 'file')
   res = getYkgwVersion();
   version = res.version;
 
-elseif exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('GetMeg160ContinuousRawDataM')
+elseif exist('GetMeg160ADbitInfoM', 'file') || exist('GetMeg160ChannelInfoM', 'file') || exist('GetMeg160ContinuousRawDataM', 'file')
   % start with unknown, try to refine the version
   version = 'unknown';
 
@@ -80,7 +80,7 @@ elseif exist('GetMeg160ADbitInfoM') || exist('GetMeg160ChannelInfoM') || exist('
     m = lasterror;
     m.identifier;
     if strcmp(m.identifier, 'MATLAB:UndefinedFunction') || strcmp(m.identifier, 'MATLAB:FileIO:InvalidFid')
-      if (exist('GetMeg160ChannelInfoM') && exist('GetMeg160ContinuousRawDataM'));
+      if (exist('GetMeg160ChannelInfoM', 'file') && exist('GetMeg160ContinuousRawDataM', 'file'));
         version = '12bitBeta3';
       end
     end

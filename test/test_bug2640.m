@@ -1,6 +1,5 @@
 function test_bug2640
 
-% TEST test_bug2640
 % TEST ft_plot_slice ft_plot_ortho
 
 % WALLTIME 00:10:00

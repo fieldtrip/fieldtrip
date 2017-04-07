@@ -37,10 +37,10 @@ The functions in the FieldTrip toolbox are copyrighted by their respective autho
   Ingrid Nieuwenhuis, DCCN, FCDC
   Saskia Haegens, DCCN, FCDC
   Martin Vinck, DCCN, SILS
-  and others ...
+  and many others ...
 
-Copyright (C) 2008-2013, Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands (DCCN, DCC, DCN)
-Copyright (C) 2012-2013, Max Planck Institute for Psycholinguistics, Nijmegen, The Netherlands (MPI)
+Copyright (C) 2008-2017, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
+Copyright (C) 2012-2017, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)
 Copyright (C) 2008-2013, The Wellcome Trust Centre for Neuroimaging, University College London, UK (UCL)
 Copyright (C) 2010-2013, Swammerdam Institute for Life Sciences, University of Amsterdam (SILS)
 Copyright (C) 2008-2009, Centre for Cognitive Neuroimaging in Glasgow, United Kingdom (CCNi)
@@ -51,7 +51,7 @@ Copyright (C) 2004-2005, Universitatsklinikum Hamburg-Eppendorf, Germany (UKE)
 Copyright (C) 2003-2004, Center for Sensory Motor Interaction, University Aalborg, Denmark (SMI)
 Copyright (C) 1999-2003, Department of Medical Physics, Radboud University Nijmegen, The Netherlands (MBFYS)
 
-The FieldTrip software is a toolbox, i.e. a library with functions.
-The release includes functions from other toolboxes that are covered
-under their respective licenses. See fieldtrip/external for details.
+The FieldTrip software is a toolbox, i.e. a library with functions. The release 
+of this toolbox includes functions from other toolboxes that are covered under 
+their respective licenses. See fieldtrip/external for details.
 

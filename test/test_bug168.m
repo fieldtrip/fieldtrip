@@ -3,7 +3,6 @@ function test_bug168
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug168
 % TEST ft_realtime_topography
  
 [ftver, ftpath] = ft_version;
@@ -84,7 +83,7 @@ inlist = {
 [outlist, depmat] = mydepfun(inlist);
 
 problem = ~cellfun(@isempty, regexp(outlist, 'compat'));
-problem = outlist(problem)  % display the output
+problem = outlist(problem)  % display the output;
 
 if ~isempty(problem)
   error('there are some files that depend on the compat functions');
@@ -99,7 +98,7 @@ end
 % end
 %
 % cfg = [];
-% cfg.dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
+% cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 % cfg.bufferdata = 'first';
 % cfg.layout = 'CTF151.lay';
 %

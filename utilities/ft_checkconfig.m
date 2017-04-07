@@ -23,7 +23,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   [cfg] = ft_checkconfig(cfg, ...)
 %
 % The behaviour of checkconfig can be controlled by the following cfg options,
-% which can be set as global fieldtrip defaults (see FT_DEFAULTS)
+% which can be set as global FieldTrip defaults (see FT_DEFAULTS)
 %   cfg.checkconfig = 'pedantic', 'loose' or 'silent' (control the feedback behaviour of checkconfig)
 %   cfg.trackconfig = 'cleanup', 'report' or 'off'
 %   cfg.checksize   = number in bytes, can be inf (set max size allowed for output cfg fields)
@@ -47,7 +47,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 
 % Copyright (C) 2007-2014, Robert Oostenveld, Saskia Haegens
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -80,6 +80,13 @@ checksize       = ft_getopt(varargin, 'checksize', 'off');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
+  if ft_platform_supports('matlabversion', '2015a', inf)
+    % disable config tracking for the time being, due to a known bug (3187)
+    % ft_warning('disabling cfg tracking for the time being, due to a matlab version related issue');
+    trackconfig = [];
+    cfg.trackconfig = 'off';
+  end
+    
   % infer from the user configuration whether tracking should be enabled
   if isfield(cfg, 'trackconfig') && (strcmp(cfg.trackconfig, 'report') || strcmp(cfg.trackconfig, 'cleanup'))
     trackconfig = 'on'; % turn on configtracking if user requests report/cleanup
@@ -186,22 +193,8 @@ end
 % check for required fields, give error when missing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(allowed)
-  % there are some general options that should always be allowed
-  allowed = union(allowed, {
-    'trackconfig'
-    'checkconfig'
-    'checksize'
-    'trackusage'
-    'trackdatainfo'
-    'trackcallinfo'
-    'showcallinfo'
-    'callinfo'
-    'version'
-    'warning'
-    'debug'
-    'previous'
-    'outputfilepresent'
-    });
+  % there are some fields that are always be allowed
+  allowed = union(allowed, ignorefields('allowed'));
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
   if ~isempty(c)
@@ -240,21 +233,30 @@ if ~isempty(allowedval) && isfield(cfg, allowedval{1}) ...
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% backward compatibility for the gradiometer and electrode definition
+% backward compatibility for gradiometer, electrode and optode definitions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'grad') && ~isempty(cfg.grad)
-  cfg.grad = ft_datatype_sens(cfg.grad);
+  cfg.grad = ft_datatype_sens(struct(cfg.grad));
 end
-if isfield(cfg, 'elec')&& ~isempty(cfg.elec)
-  cfg.elec = ft_datatype_sens(cfg.elec);
+if isfield(cfg, 'elec') && ~isempty(cfg.elec)
+  cfg.elec = ft_datatype_sens(struct(cfg.elec));
+end
+if isfield(cfg, 'opto') && ~isempty(cfg.opto)
+  cfg.opto = ft_datatype_sens(struct(cfg.opto));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% backward compatibility for old neighbourstructures
+% backward compatibility for neighbour structures
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(cfg, 'neighbours') && iscell(cfg.neighbours)
-  warning('Neighbourstructure is in old format - converting to structure array');
-  cfg.neighbours= fixneighbours(cfg.neighbours);
+  cfg.neighbours = fixneighbours(cfg.neighbours);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% backward compatibility for montage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if isfield(cfg, 'montage') && isstruct(cfg.montage)
+  cfg.montage = fixoldorg(cfg.montage);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,7 +264,7 @@ end
 %
 % This collects the optional arguments for some of the low-level
 % functions and puts them in a separate substructure. This function is to
-% ensure backward compatibility of end-user scripts, fieldtrip functions
+% ensure backward compatibility of end-user scripts, FieldTrip functions
 % and documentation that do not use the nested detailled configuration
 % but that use a flat configuration.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -272,7 +274,7 @@ if ~isempty(createsubcfg)
 
     if isfield(cfg, subname)
       % get the options that are already specified in the substructure
-      subcfg = getfield(cfg, subname);
+      subcfg = cfg.(subname);
     else
       % start with an empty substructure
       subcfg = [];
@@ -364,6 +366,24 @@ if ~isempty(createsubcfg)
           'reducerank'
           };
 
+      case 'sloreta'
+        fieldname = {
+          'feedback'
+          'fixedori'
+          'keepcov'
+          'keepfilter'
+          'keepmom'
+          'keepsubspace'
+          'lambda'
+          'normalize'
+          'normalizeparam'
+          'powmethod'
+          'projectnoise'
+          'projectmom'
+          'reducerank'
+          'subspace'
+          };
+
       case 'lcmv'
         fieldname = {
           'feedback'
@@ -398,7 +418,7 @@ if ~isempty(createsubcfg)
           'fixedori'
           };
 
-      case {'rv'}
+      case 'rv'
         fieldname = {
           'feedback'
           'lambda'
@@ -413,6 +433,7 @@ if ~isempty(createsubcfg)
           'snr'
           'scalesourcecov'
           };
+        
       case 'harmony'
         fieldname = {
           'feedback'
@@ -426,6 +447,7 @@ if ~isempty(createsubcfg)
           'connected_components'
           'number_harmonics'
           };
+
       case 'music'
         fieldname = {
           'feedback'
@@ -446,7 +468,7 @@ if ~isempty(createsubcfg)
       case 'mvl'
         fieldname = {};
 
-      case {'npsf', 'granger'}
+      case {'npsf', 'granger' 'pdc' 'dtf'}
         % non-parametric spectral factorization -> csd2transfer
         fieldname = {
           'block'
@@ -608,32 +630,10 @@ if ~isempty(trackconfig)
           r = access(cfg, 'reference');
           o = access(cfg, 'original');
 
-          key = fieldnames(cfg);
-          key = key(:)';
-
-          ignorefields = {
-             % these fields from the user should never be removed
-             'trl'
-             'trlold'
-             'event'
-             'artifact'
-             'artfctdef'
-             % these fields are for internal usage
-             'trackconfig'
-             'checkconfig'
-             'checksize'
-             'trackusage'
-             'trackdatainfo'
-             'trackcallinfo'
-             'showcallinfo'
-             'callinfo'
-             'version'
-             'warning'
-             'debug'
-             'previous'
-           };
-
-          skipsel      = match_str(key, ignorefields);
+          % this uses a helper function to identify the fields that should be ignored
+          key          = fieldnames(cfg);
+          key          = key(:)';
+          skipsel      = match_str(key, ignorefields('trackconfig'));
           key(skipsel) = [];
 
           used     = zeros(size(key));
@@ -718,14 +718,14 @@ if (s.bytes <= max_size)
   return;
 end
 
-ignorefields = {'checksize', 'trl', 'trlold', 'event', 'artifact', 'artfctdef', 'previous'}; % these fields should never be removed
-norecursion  = {'event'}; % these fields should not be handled recursively
+% these fields should not be handled recursively
+norecursion = {'event', 'headmodel', 'leadfield'}; 
 
 fieldsorig = fieldnames(cfg);
 for i=1:numel(fieldsorig)
   for k=1:numel(cfg)  % process each structure in a struct-array
 
-    if any(strcmp(fieldsorig{i}, ignorefields))
+    if any(strcmp(fieldsorig{i}, ignorefields('checksize')))
       % keep this field, regardless of its size
       continue
 

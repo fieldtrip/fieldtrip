@@ -23,7 +23,7 @@ function k = xml_findstr(s,p,i,n)
 % Copyright (C) 2002-2011  http://www.artefact.tk/
 
 % Guillaume Flandin
-% $Id$
+% $Id: xml_findstr.m 4460 2011-09-05 14:52:16Z guillaume $
 
 %error(sprintf('Missing MEX-file: %s', mfilename));
 

@@ -3,7 +3,6 @@ function test_ft_artifact_xxx
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_artifact_xxx
 % TEST ft_artifact_clip ft_artifact_eog ft_artifact_muscle ft_artifact_zvalue ft_artifact_ecg ft_artifact_jump ft_artifact_threshold
 
 % this script only checks whether the code runs without an error 

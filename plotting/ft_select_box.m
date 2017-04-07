@@ -12,10 +12,12 @@ function [x, y] = ft_select_box(handle, eventdata, varargin)
 % Optional input arguments should come in key-value pairs and can include
 %   'multiple' = true/false, make multiple selections by dragging, clicking
 %                in one will finalize the selection (default = false)
+%
+% See also FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_RANGE, FT_SELECT_VOXEL 
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

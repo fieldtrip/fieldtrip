@@ -22,7 +22,7 @@ ft_hastoolbox('besa', 1);
 %% The first part of the test script pertains to the low-level reading functions
 
 % Specify path to data folder
-strPath_Data = '/home/common/matlab/fieldtrip/data/test/bug2336/';
+strPath_Data = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2336/');
 
 % Filenames of BESA MRI output files
 strPath_Leadfield         = sprintf('%sBESA_MRI_Electrode_Config_34_PB_FEM_DATA.lft', strPath_Data);
@@ -58,7 +58,7 @@ cfg_brain = readBESAsrf(strPath__BrainSurface);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% The second part of the test script pertains to the high-level fieldtrip implementation
+%% The second part of the test script pertains to the high-level FieldTrip implementation
 
 cfg = [];
 cfg.method = 'besa';

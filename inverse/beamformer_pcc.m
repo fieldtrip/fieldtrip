@@ -40,7 +40,7 @@ function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, Cf, varargin)
 
 % Copyright (C) 2005-2014, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -157,6 +157,7 @@ Nchan    = size(Cf,1);            % should equal Nmegchan + Nrefchan + Nsupchan
 Cmeg     = Cf(megchan,megchan);   %  the filter uses the csd between all MEG channels
 
 isrankdeficient = (rank(Cmeg)<size(Cmeg,1));
+rankCmeg = rank(Cmeg);
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
@@ -167,17 +168,11 @@ if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
 end
 
 if projectnoise
-  % estimate the noise power, which is further assumed to be equal and uncorrelated over channels
-  if isrankdeficient
-    % estimated noise floor is equal to or higher than lambda
-    noise = lambda;
-  else
-    % estimate the noise level in the covariance matrix by the smallest singular value
+  % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
     noise = svd(Cmeg);
-    noise = noise(end);
+    noise = noise(rankCmeg);
     % estimated noise floor is equal to or higher than lambda
     noise = max(noise, lambda);
-  end
 end
 
 if realfilter
@@ -241,7 +236,7 @@ for i=1:size(dip.pos,1)
         end
         lfa  = lfa * maxpowori;
         dipout.ori{i} = maxpowori;
-        dipout.eta{i} = eta;
+        dipout.eta(i) = eta;
         % update the number of dipole components
         Ndip = size(lfa,2);
       end
@@ -333,7 +328,7 @@ if isfield(dipout, 'ori')
 end
 if isfield(dipout, 'eta')
   dipout.eta( originside) = dipout.eta;
-  dipout.eta(~originside) = {[]};
+  dipout.eta(~originside) = nan;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

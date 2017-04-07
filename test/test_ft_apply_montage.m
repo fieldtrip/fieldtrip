@@ -3,12 +3,11 @@ function test_ft_apply_montage
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_apply_montage
 % TEST ft_apply_montage
 
 pwdir = pwd;
 
-cd('/home/common/matlab/fieldtrip/data/');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/'));
 cfg = [];
 cfg.dataset = 'Subject01.ds';
 cfg.trl     = [1 1200 0];
@@ -17,7 +16,7 @@ data = ft_preprocessing(cfg);
 
 mont          = [];
 mont.tra      = -eye(151); %flip sign
-mont.labelorg = ft_channelselection({'MEG'}, data.label);
+mont.labelold = ft_channelselection({'MEG'}, data.label);
 mont.labelnew = ft_channelselection({'MEG'}, data.label);
 
 data2 = ft_apply_montage(data, mont, 'keepunused', 'yes');

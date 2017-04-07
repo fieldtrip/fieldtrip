@@ -64,7 +64,7 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 
 % Copyright (C) 2004-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -82,7 +82,10 @@ function [grid, cfg] = ft_prepare_leadfield(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -92,12 +95,15 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
-if nargin<2
+% the data can be passed as input arguments or can be read from disk
+hasdata = exist('data', 'var');
+
+if ~hasdata
   % the data variable will be passed to the prepare_headmodel function below
   % where it would be used for channel selection
   data = [];
@@ -154,12 +160,12 @@ grid = ft_prepare_sourcemodel(tmpcfg);
 
 % check whether units are equal (NOTE: this was previously not required,
 % this check can be removed if the underlying bug is resolved. See
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387
 if ~isfield(headmodel, 'unit') || ~isfield(grid, 'unit') || ~isfield(sens, 'unit')
-  warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387)');
+  warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
 else
   if ~strcmp(headmodel.unit, grid.unit) || ~strcmp(grid.unit, sens.unit)
-    error('geometric objects (headmodel, sourcemodel, sensor configuration) are not expressed in the same units (this used to be allowed, and will be again in the future, but for now there is a bug which prevents a correct leadfield from being computed; see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2387)');
+    error('geometric objects (headmodel, sourcemodel, sensor configuration) are not expressed in the same units (this used to be allowed, and will be again in the future, but for now there is a bug which prevents a correct leadfield from being computed; see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
   end
 end
 
@@ -167,13 +173,13 @@ if ft_voltype(headmodel, 'openmeeg')
   % repeated system calls to the openmeeg executable makes it rather slow
   % calling it once is much more efficient
   fprintf('calculating leadfield for all positions at once, this may take a while...\n');
-  
+
   % find the indices of all grid points that are inside the brain
   insideindx = find(grid.inside);
   ndip       = length(insideindx);
   ok         = false(1,ndip);
   batchsize  = ndip;
-  
+
   while ~all(ok)
     % find the first one that is not yet done
     begdip = find(~ok, 1);
@@ -195,29 +201,29 @@ if ft_voltype(headmodel, 'openmeeg')
         rethrow(me);
       end % handling this particular error
     end
-    
+
     % reassign the large leadfield matrix over the single grid locations
     for i=1:length(batch)
       sel = (3*i-2):(3*i);           % 1:3, 4:6, ...
       dipindx = insideindx(batch(i));
       grid.leadfield{dipindx} = lf(:,sel);
     end
-    
+
     clear lf
-    
+
   end % while
-  
+
 else
   % find the indices of all grid points that are inside the brain
   insideindx = find(grid.inside);
-  
+
   ft_progress('init', cfg.feedback, 'computing leadfield');
   for i=1:length(insideindx)
     % compute the leadfield on all grid positions inside the brain
     ft_progress(i/length(insideindx), 'computing leadfield %d/%d\n', i, length(insideindx));
     thisindx = insideindx(i);
     grid.leadfield{thisindx} = ft_compute_leadfield(grid.pos(thisindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
-    
+
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation
       grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);

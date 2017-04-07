@@ -1,4 +1,4 @@
-function [file] = read_ctf_ascii(filename);
+function [file] = read_ctf_ascii(filename)
 
 % READ_CTF_ASCII reads general data from an CTF configuration file
 %
@@ -20,7 +20,7 @@ function [file] = read_ctf_ascii(filename);
 
 % Copyright (C) 2003, Robert Oostenveld
 % 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

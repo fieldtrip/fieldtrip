@@ -11,7 +11,7 @@ function [dat] = ft_fetch_data(data, varargin)
 % Copyright (C) 2009-2013, Jan-Mathijs Schoffelen, Robert Oostenveld
 % Copyright (C) 2008, Esther Meeuwissen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -66,7 +66,7 @@ trlnum = length(data.trial);
 % start with the output data being all NaN
 dat = nan(numel(chanindx), endsample-begsample+1);
 
-if trlnum>1,
+if trlnum>1
   % original implementation, used when the input data has multiple trials
   
   trllen = zeros(trlnum,1);
@@ -167,7 +167,7 @@ if trlnum>1,
   utrl = unique(trialnum);
   utrl(~isfinite(utrl)) = 0;
   utrl(utrl==0) = [];
-  if length(utrl)==1,
+  if length(utrl)==1
     ok   = trialnum==utrl;
     smps = samplenum(ok);
     dat(:,ok) = data.trial{utrl}(chanindx,smps);
@@ -185,7 +185,11 @@ else
   % get the indices
   begindx  = begsample - trl(1) + 1;
   endindx  = endsample - trl(1) + 1;
-  
+  if endindx<=0 || begindx>size(data.trial{1},2)
+    % requested data samples outside the data present
+    return;
+  end
+
   tmptrl = trl([1 2]) - [trl(1) trl(1)]+1; % ignore offset in case it's present
   
   datbegindx = max(1,                     trl(1)-begsample+1);

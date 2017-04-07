@@ -9,14 +9,13 @@ function [vol] = openmeeg(vol, isolated)
 %  FieldTrip convention pointing outwards (with respect to the mesh center),
 %  whereas OpenMEEG binaries expect them to be poiting inwards.
 
+% Copyright (C) 2010-2017, OpenMEEG developers
 
-% Copyright (C) 2009, Alexandre Gramfort
-% INRIA Odyssee Project Team
-% $Id$
-warning('OPENMEEG is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''bem_openmeeg'' instead.')
+warning('OPENMEEG is deprecated, please use FT_PREPARE_HEADMODEL with cfg.method = ''openmeeg'' instead.')
 
-openmeeg_license
-om_checkombin;
+openmeeg_license;              % show the license (only once)
+prefix = om_checkombin;        % check the installation of the binaries
+
 sprintf('%s','Calculating BEM model...please wait');
 
 skin   = find_outermost_boundary(vol.bnd);
@@ -90,11 +89,11 @@ try
   if ~ispc
     fprintf(efid,'#!/usr/bin/env bash\n');
     fprintf(efid,['export OMP_NUM_THREADS=',num2str(omp_num_threads),'\n']);
-    fprintf(efid,['om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile ' 2>&1 > /dev/null\n']);
-    fprintf(efid,['om_minverser ./' hmfile ' ./' hminvfile ' 2>&1 > /dev/null\n']);
+    fprintf(efid,[prefix 'om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile ' 2>&1 > /dev/null\n']);
+    fprintf(efid,[prefix 'om_minverser ./' hmfile ' ./' hminvfile ' 2>&1 > /dev/null\n']);
   else
-    fprintf(efid,['om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile '\n']);
-    fprintf(efid,['om_minverser ./' hmfile ' ./' hminvfile '\n']);
+    fprintf(efid,[prefix 'om_assemble -HM ./' geomfile ' ./' condfile ' ./' hmfile '\n']);
+    fprintf(efid,[prefix 'om_minverser ./' hmfile ' ./' hminvfile '\n']);
   end
   
   fclose(efid);
@@ -110,7 +109,7 @@ end
 try
   % execute OpenMEEG and read the resulting file
   if ispc
-    dos([exefile]);
+    dos(exefile);
   elseif ismac
     dos(['./' exefile]);
   else % assumes linux by default

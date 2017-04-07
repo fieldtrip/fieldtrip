@@ -23,7 +23,7 @@ function [grad, elec] = bti2grad(hdr, balanceflag)
 
 % Copyright (C) 2008, Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -197,7 +197,7 @@ elseif isfield(hdr, 'config'),
     end
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -weights.dweights(:,order); zeros(nref, nmeg), eye(nref, nref)];
     balance           = struct(weights.position, montage);

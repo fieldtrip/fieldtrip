@@ -21,8 +21,10 @@ function [selected] = ft_select_point3d(bnd, varargin)
 %   ft_plot_mesh(bnd)
 %   camlight
 %   ... do something here
+%
+% See also FT_SELECT_BOX, FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_RANGE, FT_SELECT_VOXEL 
 
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -94,14 +96,46 @@ if ~holdflag
 end
 
 done = false;
+az = 0;
+el = 0;
+view(az,el);
 while ~done
   k = waitforbuttonpress;
   [p v vi facev facei] = select3d(h);
-  key = get(gcf,'CurrentCharacter'); % which key was pressed (if any)?
-  
+  if k == 1 %checks if waitforbuttonpress was a key
+    key = get(gcf,'CurrentCharacter'); % which key was pressed (if any)? 
   if strcmp(key, 'q')
     % finished selecting points
     done = true;
+  elseif strcmp(key, 'r')
+    % remove last point
+    if ~isempty(selected)
+      if ~isempty(marker)
+        delete(findobj('marker', '*'));
+        hs = plot3(selected(1:end-1,1), selected(1:end-1,2), selected(1:end-1,3), [markercolor marker]); 
+        set(hs, 'MarkerSize', markersize);
+      end
+    fprintf('removed point at [%f %f %f]\n', selected(end,1), selected(end,2), selected(end,3));
+    selected = selected(1:end-1,:);
+    end
+  elseif strcmp(key,'+')
+    zoom(1.1)
+  elseif strcmp(key,'-')
+    zoom(0.9)
+  elseif strcmp(key,'w')
+    az = az+6;  
+    view(az,el)
+  elseif strcmp(key,'a')
+    el = el+6;
+    view(az,el)
+  elseif strcmp(key,'s')
+    az = az-6;
+    view(az,el)
+  elseif strcmp(key,'d')
+    el = el-6;
+    view(az,el) 
+  end
+  
   else
     % a new point was selected
     if nearest

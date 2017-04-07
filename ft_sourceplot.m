@@ -1,25 +1,28 @@
 function ft_sourceplot(cfg, functional, anatomical)
 
-% FT_SOURCEPLOT plots functional source reconstruction data on slices or on a
-% surface, optionally as an overlay on anatomical MRI data, where statistical data
-% can be used to determine the opacity of the mask. Input data comes from
-% FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE or statistical values from
-% FT_SOURCESTATISTICS.
+% FT_SOURCEPLOT plots functional source reconstruction data on slices or on a surface,
+% optionally as an overlay on anatomical MRI data, where statistical data can be used to
+% determine the opacity of the mask. Input data comes from FT_SOURCEANALYSIS,
+% FT_SOURCEGRANDAVERAGE or statistical values from FT_SOURCESTATISTICS.
 %
 % Use as
-%   ft_sourceplot(cfg, data)
-% where the input data can contain an anatomical MRI, functional source
-% reconstruction results and/or statistical data. If both anatomical and
-% functional/statistical data is provided as input, they should be represented or
-% interpolated on the same same 3-D grid, e.g. using FT_SOURCEINTERPOLATE.
+%   ft_sourceplot(cfg, anatomical)
+%   ft_sourceplot(cfg, functional)
+%   ft_sourceplot(cfg, functional, anatomical)
+% where the input data can contain either anatomical, functional or statistical data,
+% or a combination of them.
 %
-% The slice and ortho visualization plot the data in the input data voxel
-% arrangement, i.e. the three ortho views are the 1st, 2nd and 3rd dimension of
-% the 3-D data matrix, not of the head coordinate system. The specification of the
-% coordinate for slice intersection is specified in head coordinates, i.e.
-% relative to the fiducials and in mm or cm. If you want the visualisation to be
-% consistent with the head coordinate system, you can reslice the data using
-% FT_VOLUMERESLICE.
+% The input data can be in a 3-D volumetric representation or in a 2-D cortical sheet
+% representation.  If both anatomical and functional/statistical data is provided as input,
+% they should be represented in the same coordinate system or interpolated on the same
+% geometrical representation, e.g. using FT_SOURCEINTERPOLATE.
+%
+% The slice and ortho visualization plot the data in the input data voxel arrangement, i.e.
+% the three ortho views are the 1st, 2nd and 3rd dimension of the 3-D data matrix, not of
+% the head coordinate system. The specification of the coordinate for slice intersection
+% is specified in head coordinates, i.e. relative to anatomical landmarks or fiducials and
+% expressed in mm or cm. If you want the visualisation to be consistent with the head
+% coordinate system, you can reslice the data using FT_VOLUMERESLICE. See http://bit.ly/1OkDlVF
 %
 % The configuration should contain:
 %   cfg.method        = 'slice',      plots the data on a number of slices in the same plane
@@ -27,6 +30,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                       'surface',    plots the data on a 3D brain surface
 %                       'glassbrain', plots a max-projection through the brain
 %                       'vertex',     plots the grid points or vertices scaled according to the functional value
+%                       'cloud',      plot the data as point clouds scaled according to the functional value
+%
 %
 %   cfg.anaparameter  = string, field in data with the anatomical data (default = 'anatomy' if present in data)
 %   cfg.funparameter  = string, field in data with the functional parameter of interest (default = [])
@@ -44,7 +49,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 % The following parameters can be used in all methods:
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) see FT_READ_ATLAS
-%                        for ROI masking (see "masking" below) or in "ortho-plotting" mode (see "ortho-plotting" below)
+%                        for ROI masking (see 'masking' below) or for orthogonal plots (see method='ortho' below)
+%   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -62,6 +68,13 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                          all negative: 'minzero', both possitive and negative: 'maxabs'
 %   cfg.colorbar      = 'yes' or 'no' (default = 'yes')
 %
+% The 'ortho' method can also plot time and/or frequency, the other methods can not.
+% If your functional data has a time and/or frequency dimension, you can use
+%   cfg.latency       = scalar or string, can be 'all', 'prestim', 'poststim', or [beg end], specify time range in seconds
+%   cfg.avgovertime   = string, can be 'yes' or 'no' (default = 'no')
+%   cfg.frequency     = scalar or string, can be 'all', or [beg end], specify frequency range in Hz
+%   cfg.avgoverfreq   = string, can be 'yes' or 'no' (default = 'no')
+%
 % The following parameters can be used for the masking data:
 %   cfg.opacitymap    = opacitymap for mask data, see ALPHAMAP (default = 'auto')
 %                       'auto', depends structure maskparameter, or on opacitylim
@@ -76,11 +89,17 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        'zeromax', from 0 to max(abs(maskparameter))
 %                        'minzero', from min(abs(maskparameter)) to 0
 %                        'auto', if maskparameter values are all positive: 'zeromax',
-%                          all negative: 'minzero', both possitive and negative: 'maxabs'
+%                          all negative: 'minzero', both positive and negative: 'maxabs'
 %   cfg.roi           = string or cell of strings, region(s) of interest from anatomical atlas (see cfg.atlas above)
 %                        everything is masked except for ROI
 %
-% The following parameters apply for ortho-plotting
+% When cfg.method='ortho', three orthogonal slices will be rendered. You can click in any
+% of the slices to update the display in the other two. You can also use the arrow keys on
+% your keyboard to navigate in one-voxel steps. Note that the slices are along the first,
+% second and third voxel dimension, which do not neccessarily correspond to the axes of the
+% head coordinate system. See http://bit.ly/1OkDlVF
+%
+% The following parameters apply when cfg.method='ortho'
 %   cfg.location      = location of cut, (default = 'auto')
 %                        'auto', 'center' if only anatomy, 'max' if functional data
 %                        'min' and 'max' position of min/max funparameter
@@ -93,8 +112,10 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.axis          = 'on' or 'off' (default = 'on')
 %   cfg.queryrange    = number, in atlas voxels (default 3)
 %
+% When cfg.method='slice', a NxM montage with a large number of slices will be rendered.
+% All slices are evenly spaced and along the same dimension.
 %
-% The following parameters apply for slice-plotting
+% The following parameters apply for cfg.method='slice'
 %   cfg.nslices       = number of slices, (default = 20)
 %   cfg.slicerange    = range of slices in data, (default = 'auto')
 %                       'auto', full range of data
@@ -102,16 +123,14 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.slicedim      = dimension to slice 1 (x-axis) 2(y-axis) 3(z-axis) (default = 3)
 %   cfg.title         = string, title of the figure window
 %
-% When cfg.method = 'surface', the functional data will be rendered onto a
-% cortical mesh (can be an inflated mesh). If the input source data contains a
-% tri-field, no interpolation is needed. If the input source data does not contain
-% a tri-field (i.e. a description of a mesh), an interpolation is performed onto a
-% specified surface. Note that the coordinate system in which the surface is
-% defined should be the same as the coordinate system that is represented in
-% source.pos.
+% When cfg.method='surface', the functional data will be rendered onto a cortical mesh
+% (can be an inflated mesh). If the input source data contains a tri-field (i.e. a
+% description of a mesh), no interpolation is needed. If the input source data does not
+% contain a tri-field, an interpolation is performed onto a specified surface. Note that
+% the coordinate system in which the surface is defined should be the same as the coordinate
+% system that is represented in the pos-field.
 %
-% The following parameters apply to surface-plotting when an interpolation
-% is required
+% The following parameters apply to cfg.method='surface' when an interpolation is required
 %   cfg.surffile       = string, file that contains the surface (default = 'surface_white_both.mat')
 %                        'surface_white_both.mat' contains a triangulation that corresponds with the
 %                         SPM anatomical template in MNI coordinates
@@ -130,11 +149,20 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        included in the sphere projection methods, expressed in mm
 %   cfg.distmat        = precomputed distance matrix (default = [])
 %
-% The following parameters apply to surface-plotting independent of whether
-% an interpolation is required
+% The following parameters apply to cfg.method='surface' irrespective of whether an interpolation is required
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
 %   cfg.renderer       = 'painters', 'zbuffer', ' opengl' or 'none' (default = 'opengl')
 %                        note that when using opacity the OpenGL renderer is required.
+%   cfg.facecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
+%                        or an Nx3 or Nx1 array where N is the number of faces
+%   cfg.vertexcolor    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
+%                        or an Nx3 or Nx1 array where N is the number of vertices
+%   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%
+% The following parameters apply to cfg.method='cloud'
+%   cfg.radius          = scalar, maximum radius of cloud (default = 4)
+%   cfg.colorgrad       = 'white' or a scalar (e.g. 1), degree to which color of points in cloud
+%                         changes from its center
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -156,9 +184,9 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   surface also optimal when inside present
 %   come up with a good glass brain projection
 
-% Copyright (C) 2007-2015, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2007-2016, Robert Oostenveld, Ingrid Nieuwenhuis
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -176,7 +204,10 @@ function ft_sourceplot(cfg, functional, anatomical)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -186,8 +217,8 @@ ft_preamble loadvar functional anatomical
 ft_preamble provenance functional anatomical
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -205,17 +236,17 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'maskparameter', 'avg.mom', 'mom'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'location', 'interactive', 'auto'});
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the functional data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates', 'TTlookup'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'coordsys');
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys
-  functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+  functional     = ft_checkdata(functional, 'datatype', {'source', 'volume'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 else
   % check if the input functional is valid for this function, a coordsys is not directly needed
-  functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
+  functional     = ft_checkdata(functional, 'datatype', {'source', 'volume'}, 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 % set the defaults for all methods
@@ -232,6 +263,7 @@ cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
+cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -250,10 +282,6 @@ cfg.opacitymap    = ft_getopt(cfg, 'opacitymap',    'auto');
 cfg.opacitylim    = ft_getopt(cfg, 'opacitylim',    'auto');
 cfg.roi           = ft_getopt(cfg, 'roi',           []);
 
-if isfield(cfg, 'TTlookup'),
-  error('TTlookup is old; now specify cfg.atlas, see help!');
-end
-
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, functional);
 cfg.maskparameter = parameterselection(cfg.maskparameter, functional);
@@ -261,13 +289,24 @@ cfg.maskparameter = parameterselection(cfg.maskparameter, functional);
 try, cfg.funparameter  = cfg.funparameter{1};  end
 try, cfg.maskparameter = cfg.maskparameter{1}; end
 
-if nargin==3
+if isfield(functional, 'time') || isfield(functional, 'freq')
+  % make a selection of the time and/or frequency dimension
+  tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'keepfreqdim', 'latency', 'avgovertime', 'keeptimedim'});
+  functional = ft_selectdata(tmpcfg, functional);
+  % restore the provenance information
+  [cfg, functional] = rollback_provenance(cfg, functional);
+end
+
+% the data can be passed as input argument or can be read from disk
+hasanatomical = exist('anatomical', 'var');
+
+if hasanatomical
   % interpolate on the fly, this also does the downsampling if requested
-  tmpcfg = keepfields(cfg, {'downsample', 'interpmethod'});
+  tmpcfg = keepfields(cfg, {'downsample', 'interpmethod', 'sphereradius'});
   tmpcfg.parameter = cfg.funparameter;
   functional = ft_sourceinterpolate(tmpcfg, functional, anatomical);
   [cfg, functional] = rollback_provenance(cfg, functional);
-elseif nargin==2 && cfg.downsample~=1
+elseif ~hasanatomical && cfg.downsample~=1
   % optionally downsample the functional volume
   tmpcfg = keepfields(cfg, {'downsample'});
   tmpcfg.parameter = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
@@ -297,7 +336,6 @@ end
 
 
 %% get the elements that will be plotted
-
 hasatlas = ~isempty(cfg.atlas);
 if hasatlas
   if ischar(cfg.atlas)
@@ -307,6 +345,18 @@ if hasatlas
     atlas = ft_read_atlas(cfg.atlas);
   else
     atlas = cfg.atlas;
+  end
+  % ensure that the atlas is formatted properly
+  atlas = ft_checkdata(atlas, 'hasunit', isfield(functional, 'unit'), 'hascoordsys', isfield(functional, 'coordsys'));
+  if isfield(functional, 'unit')
+    % ensure that the units are consistent, convert the units if required
+    atlas = ft_convert_units(atlas, functional.unit);
+  end
+  if isfield(functional, 'coordsys')
+    % ensure that the coordinate systems match
+    functional = fixcoordsys(functional);
+    atlas      = fixcoordsys(atlas);
+    assert(isequal(functional.coordsys, atlas.coordsys), 'coordinate systems do not match');
   end
 end
 
@@ -443,25 +493,26 @@ if hasfun
     
     % what if fun is 4D?
     if ndims(fun)>3 || prod(dim)==size(fun,1)
-      if strcmp(dimord, 'pos_freq_time')
+      if strcmp(dimord, 'pos_freq_time') || strcmp(dimord, 'dim1_dim2_dim3_freq_time')
         % functional contains time-frequency representation
         qi      = [1 1];
         hasfreq = numel(functional.freq)>1;
         hastime = numel(functional.time)>1;
         fun     = reshape(fun, [dim numel(functional.freq) numel(functional.time)]);
-      elseif strcmp(dimord, 'pos_time')
+      elseif strcmp(dimord, 'pos_time') || strcmp(dimord, 'dim1_dim2_dim3_time')
         % functional contains evoked field
         qi      = 1;
         hasfreq = 0;
         hastime = numel(functional.time)>1;
         fun     = reshape(fun, [dim numel(functional.time)]);
-      elseif strcmp(dimord, 'pos_freq')
+      elseif strcmp(dimord, 'pos_freq') || strcmp(dimord, 'dim1_dim2_dim3_freq')
         % functional contains frequency spectra
         qi      = 1;
         hasfreq = numel(functional.freq)>1;
         hastime = 0;
         fun     = reshape(fun, [dim numel(functional.freq)]);
       else
+        % functional contains scalar value for each position
         qi      = 1;
         hasfreq = 0;
         hastime = 0;
@@ -602,7 +653,6 @@ elseif hasroi
 end
 
 %% give some feedback
-
 if ~hasfun && ~hasana
   % this seems to be a problem that people often have due to incorrect specification of the cfg
   error('no anatomy is present and no functional data is selected, please check your cfg.funparameter');
@@ -623,17 +673,15 @@ if ~hasroi
   fprintf('not using a region-of-interest\n');
 end
 
-
 %% start building the figure
-h = figure;
+h = figure('visible', cfg.visible);
 set(h, 'color', [1 1 1]);
-set(h, 'visible', 'on');
 set(h, 'renderer', cfg.renderer);
 if ~isempty(cfg.title)
   title(cfg.title);
 end
 
-%%% set color and opacity mapping for this figure
+%% set color and opacity mapping for this figure
 if hasfun
   colormap(cfg.funcolormap);
   cfg.funcolormap = colormap;
@@ -649,6 +697,9 @@ end
 
 switch cfg.method
   case 'slice'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     % set the defaults for method=slice
     cfg.nslices    = ft_getopt(cfg, 'nslices',    20);
     cfg.slicedim   = ft_getopt(cfg, 'slicedim',   3);
@@ -661,6 +712,24 @@ switch cfg.method
     % if hasana; ana = shiftdim(ana,cfg.slicedim-1); end;
     % if hasfun; fun = shiftdim(fun,cfg.slicedim-1); end;
     % if hasmsk; msk = shiftdim(msk,cfg.slicedim-1); end;
+    
+    % ADDED BY JM: allow for slicedim different than 3
+    switch cfg.slicedim
+      case 1
+        dim = dim([2 3 1]);
+        if hasana, ana = permute(ana,[2 3 1]); end
+        if hasfun, fun = permute(fun,[2 3 1]); end
+        if hasmsk, msk = permute(msk,[2 3 1]); end
+        cfg.slicedim=3;
+      case 2
+        dim = dim([3 1 2]);
+        if hasana, ana = permute(ana,[3 1 2]); end
+        if hasfun, fun = permute(fun,[3 1 2]); end
+        if hasmsk, msk = permute(msk,[3 1 2]); end
+        cfg.slicedim=3;
+      otherwise
+        % nothing needed
+    end
     
     %%%%% select slices
     if ~ischar(cfg.slicerange)
@@ -708,14 +777,17 @@ switch cfg.method
       dim(end+1:3) = 1;
     end
     
+    %if cfg.slicedim~=3
+    %  error('only supported for slicedim=3');
+    %end
+    
+    
     m = dim(1);
     n = dim(2);
     M = ceil(sqrt(dim(3)));
     N = ceil(sqrt(dim(3)));
     num_patch = N*M;
-    if cfg.slicedim~=3
-      error('only supported for slicedim=3');
-    end
+    
     num_slice = (dim(cfg.slicedim));
     num_empt = num_patch-num_slice;
     % put empty slides on ana, fun, msk, mskana to fill Quilt up
@@ -728,16 +800,16 @@ switch cfg.method
       xbeg = floor((iSlice-1)./M);
       ybeg = mod(iSlice-1, M);
       if hasana
-        quilt_ana(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(ana(:,:,iSlice));
+        quilt_ana(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=ana(:,:,iSlice);
       end
       if hasfun
-        quilt_fun(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(fun(:,:,iSlice));
+        quilt_fun(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=fun(:,:,iSlice);
       end
       if hasmsk
-        quilt_msk(ybeg.*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=squeeze(msk(:,:,iSlice));
+        quilt_msk(ybeg.*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=msk(:,:,iSlice);
       end
       %     if hasmskana
-      %       quilt_mskana(ybeg.*m+1:(ybeg+1).*m, xbeg.*n+1:(xbeg+1).*n)=squeeze(mskana(:,:,iSlice));
+      %       quilt_mskana(ybeg.*m+1:(ybeg+1).*m, xbeg.*n+1:(xbeg+1).*n)=mskana(:,:,iSlice);
       %     end
     end
     % make vols and scales, containes volumes to be plotted (fun, ana, msk), added by ingnie
@@ -825,11 +897,11 @@ switch cfg.method
     else
       if isequal(cfg.location, 'auto')
         if hasfun
-          if isequal(cfg.funcolorlim, 'maxabs');
+          if isequal(cfg.funcolorlim, 'maxabs')
             loc = 'max';
-          elseif isequal(cfg.funcolorlim, 'zeromax');
+          elseif isequal(cfg.funcolorlim, 'zeromax')
             loc = 'max';
-          elseif isequal(cfg.funcolorlim, 'minzero');
+          elseif isequal(cfg.funcolorlim, 'minzero')
             loc = 'min';
           else % if numerical
             loc = 'max';
@@ -916,7 +988,7 @@ switch cfg.method
     set(h, 'CloseRequestFcn',     @cb_cleanup);
     
     % ensure that this is done in interactive mode
-    set(h, 'renderer', cfg.renderer); 
+    set(h, 'renderer', cfg.renderer);
     
     %% create figure handles
     
@@ -989,6 +1061,9 @@ switch cfg.method
     
     
   case 'surface'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     % set the defaults for method=surface
     cfg.downsample     = ft_getopt(cfg, 'downsample',     1);
     cfg.surfdownsample = ft_getopt(cfg, 'surfdownsample', 1);
@@ -1002,6 +1077,9 @@ switch cfg.method
     cfg.projmethod     = ft_getopt(cfg, 'projmethod',    'nearest');
     cfg.distmat        = ft_getopt(cfg, 'distmat',       []);
     cfg.camlight       = ft_getopt(cfg, 'camlight',      'yes');
+    cfg.facecolor      = ft_getopt(cfg, 'facecolor',    []);
+    cfg.vertexcolor    = ft_getopt(cfg, 'vertexcolor',   'curv'); % curvature-dependent mix of cortex_light and cortex_dark
+    cfg.edgecolor      = ft_getopt(cfg, 'edgecolor',     'none');
     
     % determine whether the source functional already contains a triangulation
     interpolate2surf = 0;
@@ -1018,16 +1096,27 @@ switch cfg.method
       interpolate2surf = 1;
     end
     
-    if interpolate2surf,
+    if interpolate2surf
       % deal with the interpolation
       % FIXME this should be dealt with by ft_sourceinterpolate
       
       % read the triangulated cortical surface from file
-      surf  = ft_read_headshape(cfg.surffile);
-      
-      if isfield(surf, 'transform'),
-        % compute the surface vertices in head coordinates
-        surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
+      surf = ft_read_headshape(cfg.surffile);
+      if isfield(surf, 'transform')
+        % compute the vertex positions in head coordinates
+        surf.pos = ft_warp_apply(surf.transform, surf.pos);
+      end
+      % ensure that the surface is formatted properly
+      surf = ft_checkdata(surf, 'hasunit', isfield(functional, 'unit'), 'hascoordsys', isfield(functional, 'coordsys'));
+      if isfield(functional, 'unit')
+        % ensure that the units are consistent, convert the units if required
+        surf = ft_convert_units(surf, functional.unit);
+      end
+      if isfield(functional, 'coordsys')
+        % ensure that the coordinate systems match
+        functional = fixcoordsys(functional);
+        surf       = fixcoordsys(surf);
+        assert(isequal(functional.coordsys, surf.coordsys), 'coordinate systems do not match');
       end
       
       % downsample the cortical surface
@@ -1035,13 +1124,13 @@ switch cfg.method
         if ~isempty(cfg.surfinflated)
           error('downsampling the surface is not possible in combination with an inflated surface');
         end
-        fprintf('downsampling surface from %d vertices\n', size(surf.pnt,1));
-        [temp.tri, temp.pnt] = reducepatch(surf.tri, surf.pnt, 1/cfg.surfdownsample);
+        fprintf('downsampling surface from %d vertices\n', size(surf.pos,1));
+        [temp.tri, temp.pos] = reducepatch(surf.tri, surf.pos, 1/cfg.surfdownsample);
         % find indices of retained patch faces
-        [dummy, idx] = ismember(temp.pnt, surf.pnt, 'rows');
+        [dummy, idx] = ismember(temp.pos, surf.pos, 'rows');
         idx(idx==0)  = [];
         surf.tri = temp.tri;
-        surf.pnt = temp.pnt;
+        surf.pos = temp.pos;
         clear temp
         % downsample other fields
         if isfield(surf, 'curv'),       surf.curv       = surf.curv(idx);       end
@@ -1055,7 +1144,7 @@ switch cfg.method
       end
       
       fprintf('%d voxels in functional data\n', prod(dim));
-      fprintf('%d vertices in cortical surface\n', size(surf.pnt,1));
+      fprintf('%d vertices in cortical surface\n', size(surf.pos,1));
       
       tmpcfg = [];
       tmpcfg.parameter = {cfg.funparameter};
@@ -1085,7 +1174,7 @@ switch cfg.method
       
     else
       surf     = [];
-      surf.pnt = functional.pos;
+      surf.pos = functional.pos;
       surf.tri = functional.tri;
       
       % if hasfun, val     = fun(functional.inside(:)); end
@@ -1103,43 +1192,32 @@ switch cfg.method
         surf = cfg.surfinflated;
         if isfield(surf, 'transform'),
           % compute the surface vertices in head coordinates
-          surf.pnt = ft_warp_apply(surf.transform, surf.pnt);
+          surf.pos = ft_warp_apply(surf.transform, surf.pos);
         end
       end
     end
     
     %------do the plotting
-    cortex_light = [0.781 0.762 0.664];
-    cortex_dark  = [0.781 0.762 0.664]/2;
-    if isfield(surf, 'curv')
-      % the curvature determines the color of gyri and sulci
-      color = surf.curv(:) * cortex_dark + (1-surf.curv(:)) * cortex_light;
-    else
-      color = repmat(cortex_light, size(surf.pnt,1), 1);
-    end
-    
-    h1 = patch('Vertices', surf.pnt, 'Faces', surf.tri, 'FaceVertexCData', color, 'FaceColor', 'interp');
-    set(h1, 'EdgeColor', 'none');
+    ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
     axis   off;
     axis vis3d;
     axis equal;
     
     if hasfun
-      h2 = patch('Vertices', surf.pnt, 'Faces', surf.tri, 'FaceVertexCData', val, 'FaceColor', 'interp');
-      set(h2, 'EdgeColor', 'none');
-      try
-        caxis(gca,[fcolmin fcolmax]);
-      end
-      colormap(cfg.funcolormap);
-      if hasmsk
-        set(h2, 'FaceVertexAlphaData', maskval);
-        set(h2, 'FaceAlpha',          'interp');
-        set(h2, 'AlphaDataMapping',   'scaled');
+      if ~hasmsk || all(maskval(:)==1)
+        ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val);
+      elseif hasmsk
+        ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval);
         try
           alim(gca, [opacmin opacmax]);
         end
         alphamap(cfg.opacitymap);
       end
+      
+      try
+        caxis(gca,[fcolmin fcolmax]);
+      end
+      colormap(cfg.funcolormap);
     end
     
     lighting gouraud
@@ -1159,48 +1237,45 @@ switch cfg.method
     end
     
   case 'glassbrain'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     % This is implemented using a recursive call with an updated functional data
     % structure. The functional volume is replaced by a volume in which the maxima
     % are projected to the "edge" of the volume.
-    tmpcfg                      = keepfields(cfg, {'funparameter', 'funcolorlim', 'funcolormap', 'opacitylim', 'axis', 'renderer'});
-    tmpcfg.method               = 'ortho';
-    tmpcfg.location             = [1 1 1];
-    tmpcfg.locationcoordinates  = 'voxel';
-    tmpcfg.maskparameter        = 'inside';
     
-    if hasfun,
-      fun = getsubfield(functional, cfg.funparameter);
-      fun = reshape(fun, dim);
+    tmpfunctional = keepfields(functional, {'dim', 'transform'});
+    
+    if hasfun
+      if isfield(functional, 'inside')
+        fun(~functional.inside) = nan;
+      end
       fun(1,:,:) = max(fun, [], 1); % get the projection along the 1st dimension
       fun(:,1,:) = max(fun, [], 2); % get the projection along the 2nd dimension
       fun(:,:,1) = max(fun, [], 3); % get the projection along the 3rd dimension
-      functional = setsubfield(functional, cfg.funparameter, fun);
+      tmpfunctional.(cfg.funparameter) = fun;
     end
     
-    if hasana,
-      ana = getsubfield(functional, cfg.anaparameter);
-      % this remains as it is
-      functional = setsubfield(functional, cfg.anaparameter, ana);
-    end
-    
-    if hasmsk,
-      msk = getsubfield(functional, 'inside');
-      msk = reshape(msk, dim);
-      if hasana
-        msk(1,:,:) = squeeze(fun(1,:,:))>0 & imfill(abs(squeeze(ana(1,:,:))-1))>0;
-        msk(:,1,:) = squeeze(fun(:,1,:))>0 & imfill(abs(squeeze(ana(:,1,:))-1))>0;
-        msk(:,:,1) = squeeze(fun(:,:,1))>0 & imfill(abs(ana(:,:,1)-1))>0;
-      else
-        msk(1,:,:) = squeeze(fun(1,:,:))>0;
-        msk(:,1,:) = squeeze(fun(:,1,:))>0;
-        msk(:,:,1) = squeeze(fun(:,:,1))>0;
+    if hasana
+      if isfield(functional, 'inside')
+        % ana(~functional.inside) = nan;
       end
-      functional = setsubfield(functional, 'inside', msk);
+      ana(1,:,:) = max(ana, [], 1); % get the projection along the 1st dimension
+      ana(:,1,:) = max(ana, [], 2); % get the projection along the 2nd dimension
+      ana(:,:,1) = max(ana, [], 3); % get the projection along the 3rd dimension
+      tmpfunctional.(cfg.anaparameter) = ana;
     end
     
-    ft_sourceplot(tmpcfg, functional);
+    tmpcfg                      = keepfields(cfg, {'anaparameter', 'funparameter', 'funcolorlim', 'funcolormap', 'opacitylim', 'axis', 'renderer'});
+    tmpcfg.method               = 'ortho';
+    tmpcfg.location             = [1 1 1];
+    tmpcfg.locationcoordinates  = 'voxel';
+    ft_sourceplot(tmpcfg, tmpfunctional);
     
   case 'vertex'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
     if isUnstructuredFun
       pos = functional.pos;
     else
@@ -1230,6 +1305,45 @@ switch cfg.method
     
     % ensure that the axes don't change if you rotate
     axis vis3d
+    
+  case 'cloud'
+    assert(~hastime, 'method "%s" does not support time', cfg.method);
+    assert(~hasfreq, 'method "%s" does not support freq', cfg.method);
+    
+    % some defaults depend on the geometrical units
+    scale = ft_scalingfactor('mm', functional.unit);
+    % set the defaults for method=cloud
+    cfg.radius          = ft_getopt(cfg, 'radius', 4*scale);
+    cfg.rmin            = ft_getopt(cfg, 'rmin', 1*scale);
+    cfg.scalerad        = ft_getopt(cfg, 'scalerad', 'yes');
+    cfg.ptsize          = ft_getopt(cfg, 'ptsize', 1);
+    cfg.ptdensity       = ft_getopt(cfg, 'ptdensity', 20);
+    cfg.ptgradient      = ft_getopt(cfg, 'ptgradient', .5);
+    cfg.colorgrad       = ft_getopt(cfg, 'colorgrad', 'white');
+    
+    if isUnstructuredFun
+      pos = functional.pos;
+    else
+      [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+      pos = ft_warp_apply(functional.transform, [X(:) Y(:) Z(:)]);
+    end
+    
+    if hasmsk
+      pos = pos(logical(msk),:);
+      if hasfun
+        fun = fun(logical(msk));
+      end
+    end
+    
+    ft_plot_cloud(pos, fun, ...
+      'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
+      'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
+      'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], 'unit', functional.unit);
+    
+    if istrue(cfg.colorbar)
+      colorbar;
+    end
+    
     
   otherwise
     error('unsupported method "%s"', cfg.method);
@@ -1298,11 +1412,11 @@ else
   str2 = '';
 end
 
-if opt.hasfreq && opt.hastime,
+if opt.hasfreq && opt.hastime
   str3 = sprintf('%.1f s, %.1f Hz', functional.time(opt.qi(2)), functional.freq(opt.qi(1)));
-elseif ~opt.hasfreq && opt.hastime,
+elseif ~opt.hasfreq && opt.hastime
   str3 = sprintf('%.1f s', functional.time(opt.qi(1)));
-elseif opt.hasfreq && ~opt.hastime,
+elseif opt.hasfreq && ~opt.hastime
   str3 = sprintf('%.1f Hz', functional.freq(opt.qi(1)));
 else
   str3 = '';
@@ -1372,7 +1486,6 @@ if opt.hasfun
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
         'opacitylim', [opt.opacmin opt.opacmax]);
       
-      
     else
       tmpqi = [opt.qi 1];
       tmph  = [h1 h2 h3];
@@ -1380,9 +1493,8 @@ if opt.hasfun
         'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
         'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
     end
-    % after the first call, the handles to the functional surfaces
-    % exist. create a variable containing this, and sort according to
-    % the parents
+    % After the first call, the handles to the functional surfaces exist.
+    % Create a variable containing these, and sort according to the parents.
     opt.funhandles = findobj(opt.handlesfigure, 'type', 'surface');
     opt.funtag     = get(opt.funhandles, 'tag');
     opt.funhandles = opt.funhandles(~strcmp('ana', opt.funtag));
@@ -1421,23 +1533,23 @@ set(opt.handlesaxes(1), 'Visible',opt.axis);
 set(opt.handlesaxes(2), 'Visible',opt.axis);
 set(opt.handlesaxes(3), 'Visible',opt.axis);
 
-if opt.hasfreq && opt.hastime && opt.hasfun,
+if opt.hasfreq && opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);
-  tmpdat = double(squeeze(opt.fun(xi,yi,zi,:,:)));
+  tmpdat = double(shiftdim(opt.fun(xi,yi,zi,:,:),3));
   uimagesc(double(functional.time), double(functional.freq), tmpdat); axis xy;
   xlabel('time'); ylabel('freq');
   set(h4, 'tag', 'TF1');
   caxis([opt.fcolmin opt.fcolmax]);
-elseif opt.hasfreq && opt.hasfun,
+elseif opt.hasfreq && opt.hasfun
   h4 = subplot(2,2,4);
-  plot(functional.freq, squeeze(opt.fun(xi,yi,zi,:))); xlabel('freq');
+  plot(functional.freq, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('freq');
   axis([functional.freq(1) functional.freq(end) opt.fcolmin opt.fcolmax]);
   set(h4, 'tag', 'TF2');
-elseif opt.hastime && opt.hasfun,
+elseif opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);
-  plot(functional.time, squeeze(opt.fun(xi,yi,zi,:))); xlabel('time');
+  plot(functional.time, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('time');
   set(h4, 'tag', 'TF3', 'xlim',functional.time([1 end]), 'ylim',[opt.fcolmin opt.fcolmax], 'layer', 'top');
-elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc'),
+elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
   if opt.hasfun
     % vectorcolorbar = linspace(fscolmin, fcolmax,length(cfg.funcolormap));
     % imagesc(vectorcolorbar,1,vectorcolorbar);colormap(cfg.funcolormap);

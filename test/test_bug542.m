@@ -3,7 +3,6 @@ function test_bug542
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug542
 % TEST ft_multiplotER
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));

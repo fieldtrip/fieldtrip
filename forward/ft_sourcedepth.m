@@ -16,7 +16,7 @@ function [depth] = ft_sourcedepth(dippos, headmodel)
 
 % Copyright (C) 2007-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -33,6 +33,9 @@ function [depth] = ft_sourcedepth(dippos, headmodel)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+% ensure the representation of the headmodel to be up-to-date
+headmodel = ft_datatype_headmodel(headmodel);
 
 % determine the type of volume conduction model
 switch ft_voltype(headmodel)
@@ -65,7 +68,7 @@ case {'bem' 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag','openmeeg'}
   end
   inside = bounding_mesh(dippos, pos, tri);
   ntri   = size(tri,1);
-  npos   = size(pos,1);
+  npos   = size(dippos,1);
   dist   = zeros(ntri, 1);
   depth  = zeros(npos, 1);
   for i=1:npos

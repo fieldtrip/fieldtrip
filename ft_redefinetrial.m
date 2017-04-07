@@ -10,7 +10,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % where the input data should correspond to the output of FT_PREPROCESSING and
 % the configuration should be specified as explained below. Note that some
 % options are mutually exclusive, and require two calls to this function to
-% avoid confucion about the order in which they are applied.
+% avoid confusion about the order in which they are applied.
 %
 % For selecting a subset of trials you can specify
 %   cfg.trials    = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -54,7 +54,7 @@ function [data] = ft_redefinetrial(cfg, data)
 
 % Copyright (C) 2006-2008, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -72,7 +72,10 @@ function [data] = ft_redefinetrial(cfg, data)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -82,8 +85,8 @@ ft_preamble loadvar data
 ft_preamble provenance data
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
@@ -108,7 +111,7 @@ dtype = ft_datatype(data);
 oneRptTimelock = (strcmp(dtype, 'timelock') &&...
   strcmp(data.dimord, 'rpt_chan_time') &&...
   size(data.trial, 1) == 1);
-  
+
 
 % check if the input data is valid for this function, this will convert it to raw if needed
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', cfg.feedback);
@@ -117,13 +120,13 @@ fb   = istrue(cfg.feedback);
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
   if fb, fprintf('selecting %d trials\n', length(cfg.trials)); end
-  
+
   % select trials of interest
   tmpcfg = keepfields(cfg, 'trials');
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
-  
+
   if length(cfg.offset)>1 && length(cfg.offset)~=length(cfg.trials)
     cfg.offset=cfg.offset(cfg.trials);
   end
@@ -165,19 +168,19 @@ if ~isempty(cfg.toilim)
       data.time{i}  = data.time{i} (   begsample(i):endsample(i));
     end
   end
-  
+
   % also correct the sample information
   if isfield(data, 'sampleinfo'),
     data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
     data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
   end
-  
+
   data.time     = data.time(~skiptrial);
   data.trial    = data.trial(~skiptrial);
   if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(~skiptrial, :); end
   if isfield(data, 'trialinfo'),   data.trialinfo   = data.trialinfo(~skiptrial, :);  end
   if fb, fprintf('removing %d trials in which no data was selected\n', sum(skiptrial)); end
-  
+
 elseif ~isempty(cfg.offset)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % shift the time axis from each trial
@@ -189,7 +192,7 @@ elseif ~isempty(cfg.offset)
   for i=1:Ntrial
     data.time{i} = data.time{i} + offset(i)/data.fsample;
   end
-  
+
 elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select a latency window from each trial based on begin and/or end sample
@@ -206,90 +209,81 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
     data.trial{i} = data.trial{i}(:, begsample(i):endsample(i));
     data.time{i}  = data.time{i} (   begsample(i):endsample(i));
   end
-  
+
   % also correct the sampleinfo
   if isfield(data, 'sampleinfo')
     data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
     data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
   end
-  
+
 elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select new trials from the existing data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % ensure that sampleinfo is present, otherwise ft_fetch_data will crash
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
-  
+
   dataold = data;   % make a copy of the old data
   clear data        % this line is very important, we want to completely reconstruct the data from the old data!
-  
+
   % make header
   hdr = ft_fetch_header(dataold);
-  
+
   trl = cfg.trl;
-  
+
   % start with a completely new data structure
   data          = [];
   data.hdr      = hdr;
-  data.label    = dataold.label;
-  data.fsample  = dataold.fsample;
   data.trial    = cell(1,size(trl,1));
   data.time     = cell(1,size(trl,1));
+  data          = copyfields(dataold, data, {'fsample' 'label' 'topo' 'topolabel' 'unmixing' 'mixing' 'grad' 'elec' 'opto'}); % account for all potential fields to be copied over
   
   for iTrl=1:length(trl(:,1))
     begsample = trl(iTrl,1);
     endsample = trl(iTrl,2);
     offset    = trl(iTrl,3);
     trllength = endsample - begsample + 1;
-    
+
     data.trial{iTrl} = ft_fetch_data(dataold, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', 1:hdr.nChans, 'skipcheckdata', 1);
     data.time{iTrl}  = offset2time(offset, dataold.fsample, trllength);
-    
+
     % ensure correct handling of trialinfo.
     % original trial
     iTrlorig  =  find(begsample <= dataold.sampleinfo(:,2) & endsample >= dataold.sampleinfo(:,1)); % Determines which old trials are present in new trials
-    
+
     if size(cfg.trl,2)>3 %In case user specified a trialinfo
       data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
       if isfield(dataold,'trialinfo')
         ft_warning('Original data has trialinfo, using user specified trialinfo instead');
       end;
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
-      if isequal(dataold.trialinfo(iTrlorig,:),1) || numel(iTrlorig)==1 % Checks whether trials that are combined have same trialinfo
+      if numel(iTrlorig) == 1 || ...  % only 1 old trial to copy trialinfo from, or
+          size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1) % all old trialinfo rows are identical
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
       else
         error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
       end;
     end;
   end %for iTrl
-  
-  % add the necessary fields to the output
-  if isfield(dataold, 'grad')
-    data.grad      = dataold.grad;
-  end
-  if isfield(dataold, 'elec')
-    data.elec      = dataold.elec;
-  end
-  if isfield(dataold, 'opto')
-    data.opto      = dataold.opto;
-  end
+
+  % adjust the sampleinfo in the output
   if isfield(dataold, 'sampleinfo')
     % adjust the trial definition
     data.sampleinfo  = trl(:, 1:2);
   end
-  
+
 elseif ~isempty(cfg.length)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % cut the existing trials into segments of the specified length
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
-  
+
   % create dummy trl-matrix and recursively call ft_redefinetrial
   nsmp    = round(cfg.length*data.fsample);
   nshift  = round((1-cfg.overlap)*nsmp);
-  
+
   newtrl = zeros(0,3);
   for k = 1:numel(data.trial)
     offset = time2offset(data.time{k}, data.fsample);
@@ -301,11 +295,11 @@ elseif ~isempty(cfg.length)
       newtrl = [newtrl; tmp2];
     end
   end
-  
+
   tmpcfg = [];
   tmpcfg.trl = newtrl;
   data   = ft_redefinetrial(tmpcfg, data);
-  
+
 end % processing the realignment or data selection
 
 if ~isempty(cfg.minlength)

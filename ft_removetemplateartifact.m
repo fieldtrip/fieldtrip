@@ -25,7 +25,7 @@ function data = ft_removetemplateartifact(cfg, data, template)
 
 % Copyright (C) 2014, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -47,10 +47,12 @@ function data = ft_removetemplateartifact(cfg, data, template)
 % the initial part deals with parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
-
 ft_defaults
 ft_preamble init
 ft_preamble debug
@@ -58,8 +60,8 @@ ft_preamble loadvar data template
 ft_preamble provenance data template
 ft_preamble trackconfig
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
   return
 end
@@ -97,7 +99,7 @@ for i=1:ntrial
   datbegsample = data.sampleinfo(i,1);
   datendsample = data.sampleinfo(i,2);
   dattrllength = datendsample-datbegsample+1;
-  
+
   model = zeros(nchan, dattrllength);
   count = 0;
   for j=1:nartifact
@@ -106,14 +108,14 @@ for i=1:ntrial
     if artendsample>=datbegsample && artbegsample<=datendsample
       % one of the artifacts overlaps with this trial
       count = count + 1;
-      
+
       % express the artifact relative to the trial
       artbegsample = artbegsample-datbegsample+1;
       artendsample = artendsample-datbegsample+1;
       % the artifact might partially fall outside the trial, in that case it needs to be trimmed
       artbegtrim = 0;
       artendtrim = 0;
-      
+
       if artbegsample<1
         artbegtrim   = 1 - artbegsample;
         artbegsample = 1;
@@ -122,17 +124,17 @@ for i=1:ntrial
         artendtrim   = artendsample - dattrllength;
         artendsample = dattrllength;
       end
-      
+
       % insert the trimmed template in the model for this trial
       model(:, artbegsample:artendsample) = template.avg(:, (1+artbegtrim):(end-artendtrim));
-      
+
     end
   end % for each artifact
   ft_progress(i/ntrial, 'removing %d artifacts from trial %d of %d\n', count, i, ntrial);
-  
+
   % remove the artifact model from the actual data
   data.trial{i} = data.trial{i} - model;
-  
+
 end % for each trial
 ft_progress('close');
 

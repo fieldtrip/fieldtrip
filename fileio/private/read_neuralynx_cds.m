@@ -1,4 +1,4 @@
-function [dat] = read_neuralynx_cds(filename, hdr, begsample, endsample, chanindx);
+function [dat] = read_neuralynx_cds(filename, hdr, begsample, endsample, chanindx)
 
 % READ_NEURALYNX_CDS reads selected samples and channels from a  combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
 %
@@ -8,7 +8,7 @@ function [dat] = read_neuralynx_cds(filename, hdr, begsample, endsample, chanind
 
 % Copyright (C) 2006, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

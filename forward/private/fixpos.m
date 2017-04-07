@@ -1,13 +1,20 @@
 function mesh = fixpos(mesh, recurse)
 
-% helper function to replace pnt by pos
+% FIXPOS helper function to ensure that meshes are described properly
 
 if nargin==1
   recurse = 1;
 end
 
+if isa(mesh, 'delaunayTriangulation')
+  % convert to structure, otherwise the code below won't work properly
+  ws = warning('off', 'MATLAB:structOnObject');
+  mesh = struct(mesh);
+  warning(ws);
+end
+
 if ~isa(mesh, 'struct')
-    return;
+  return;
 end
 
 if numel(mesh)>1
@@ -22,6 +29,24 @@ if numel(mesh)>1
   return
 end
 
+% convert from MATLAB delaunayTriangulation output to FieldTrip convention
+if isfield(mesh, 'Points') && isfield(mesh, 'ConnectivityList')
+  mesh.pos = mesh.Points;
+  switch size(mesh.ConnectivityList,2)
+    case 2
+      mesh.edge = mesh.ConnectivityList;
+    case 3
+      mesh.tri = mesh.ConnectivityList;
+    case 4
+      mesh.tet = mesh.ConnectivityList;
+    case 8
+      mesh.hex = mesh.ConnectivityList;
+    otherwise
+      error('unsupported ConnectivityList')
+  end % switch
+  mesh = removefields(mesh, {'Points', 'ConnectivityList', 'Constraints', 'UnderlyingObj'});
+end
+
 % convert from BrainStorm/MNE to FieldTrip convention
 if isfield(mesh, 'vertices') && isfield(mesh, 'faces')
   mesh.pos = mesh.vertices;
@@ -32,7 +57,7 @@ elseif isfield(mesh, 'Vertices') && isfield(mesh, 'Faces')
   mesh.tri = mesh.Faces;
   mesh = rmfield(mesh, {'Faces', 'Vertices'});
 end
-  
+
 % replace pnt by pos
 if isfield(mesh, 'pnt')
   mesh.pos = mesh.pnt;

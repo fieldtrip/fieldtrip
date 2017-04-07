@@ -85,7 +85,7 @@ function [sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 
 % Copyright (C) 2008-2012, Martin Vinck
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -103,12 +103,15 @@ function [sts] = ft_spiketriggeredspectrum_convol(cfg, data, spike)
 %
 % $Id$
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance data spike
 ft_preamble trackconfig
 
 % check if the input data is valid for this function
@@ -372,12 +375,14 @@ sts.trialtime = spike.trialtime;
   
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous data spike
-ft_postamble history sts
+ft_postamble previous   data spike
+ft_postamble provenance sts
+ft_postamble history    sts
 
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [spctrm,foi, numsmp] = phase_est(cfg,dat,time,fsample)
 
 % Phase estimation function

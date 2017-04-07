@@ -8,15 +8,17 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % Use as
 %   [comp] = ft_componentanalysis(cfg, data)
+% where cfg is a configuration structure and the input data is obtained from
+% FT_PREPROCESSING or from FT_TIMELOCKANALYSIS.
 %
-% where the data comes from FT_PREPROCESSING and the configuration
-% structure can contain
+% The configuration should contain
 %   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.demean       = 'no' or 'yes', whether to demean the input data (default = 'yes')
 %   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
+%   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
 % The runica method supports the following method-specific options. The values that
 % these options can take can be found with HELP RUNICA.
@@ -131,7 +133,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 
 % Copyright (C) 2003-2012, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -154,7 +156,10 @@ function [comp] = ft_componentanalysis(cfg, data)
 %     no concatenation across trials is needed. This is based on experimental
 %     code and only supported for 'dss', 'fastica' and 'bsscca' as methods.
 
-revision = '$Id$';
+% these are used by the ft_preamble/ft_postamble function and scripts
+ft_revision = '$Id$';
+ft_nargin   = nargin;
+ft_nargout  = nargout;
 
 % do the general setup of the function
 ft_defaults
@@ -165,12 +170,13 @@ ft_preamble provenance data
 ft_preamble trackconfig
 ft_preamble randomseed
 
-% the abort variable is set to true or false in ft_preamble_init
-if abort
+% the ft_abort variable is set to true or false in ft_preamble_init
+if ft_abort
   return
 end
 
 % check if the input data is valid for this function
+istimelock = ft_datatype(data, 'timelock');
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
@@ -188,10 +194,15 @@ cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.cellmode        = ft_getopt(cfg, 'cellmode',     'no');
 cfg.doscale         = ft_getopt(cfg, 'doscale',      'yes');
-cfg.updatesens      = ft_getopt(cfg, 'updatesens',  'yes');
+cfg.updatesens      = ft_getopt(cfg, 'updatesens',   'yes');
+cfg.feedback        = ft_getopt(cfg, 'feedback',     'text');
 
 % select channels, has to be done prior to handling of previous (un)mixing matrix
 cfg.channel = ft_channelselection(cfg.channel, data.label);
+
+if istrue(cfg.cellmode)
+  ft_hastoolbox('cellfunction', 1);
+end
 
 if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
   warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
@@ -254,11 +265,11 @@ switch cfg.method
     cfg.csp.classlabels = ft_getopt(cfg.csp, 'classlabels');
   case 'bsscca'
     % additional options, see BSSCCA for details
-    cfg.bsscca       = ft_getopt(cfg,        'bsscca', []);
-    cfg.bsscca.delay = ft_getopt(cfg.bsscca, 'delay', 1);
+    cfg.bsscca           = ft_getopt(cfg,        'bsscca', []);
+    cfg.bsscca.refdelay  = ft_getopt(cfg.bsscca, 'refdelay', 1);
+    cfg.bsscca.chandelay = ft_getopt(cfg.bsscca, 'chandelay', 0);
     if strcmp(cfg.cellmode, 'no')
-      fprintf('switching to cell-mode for method ''bsscca''\n');
-      cfg.cellmode = 'yes';
+      error('cfg.mehod = ''bsscca'' requires cfg.cellmode = ''yes''');
     end
   otherwise
     % do nothing
@@ -389,46 +400,54 @@ switch cfg.method
       
       optarg = ft_cfg2keyval(cfg.(cfg.icasso.method));
       sR     = icassoEst(cfg.icasso.mode, dat, cfg.icasso.Niter, optarg{:});
-    else
-      %       error('only ''fastica'' is supported as method for icasso');
-      %
-      %       % FIXME the code below does not work yet
-      
-      % recurse into ft_componentanalysis
-      tmpcfg = rmfield(cfg, 'icasso');
+    elseif strcmp(cfg.icasso.method, 'dss')
+      % recurse into ft_componentanalysis and do some post processing
+      tmpcfg        = rmfield(cfg, 'icasso');
       tmpcfg.method = cfg.icasso.method;
+      tmpdata       = data;
       
-      tmpdata = data;
-      
-      sR.W = cell(cfg.icasso.Niter, 1);
-      sR.A = cell(cfg.icasso.Niter, 1);
+      % initialize the variables to hold the output
+      sR.W     = cell(cfg.icasso.Niter, 1);
+      sR.A     = cell(cfg.icasso.Niter, 1);
       sR.index = zeros(0,2);
       for k = 1:cfg.icasso.Niter
         tmp = ft_componentanalysis(tmpcfg, tmpdata);
         sR.W{k}  = tmp.unmixing;
         sR.A{k}  = tmp.topo;
         sR.index = cat(1, sR.index, [k*ones(size(tmp.topo,2),1) (1:size(tmp.topo,2))']);
-        
-        if strcmp(tmpcfg.method, 'dss')
-          sR.whiteningMatrix   = tmp.cfg.dss.V;
-          sR.dewhiteningMatrix = tmp.cfg.dss.dV;
-        end
+        sR.whiteningMatrix   = tmp.cfg.dss.V;
+        sR.dewhiteningMatrix = tmp.cfg.dss.dV;
       end
       sR.signal = dat;
       sR.mode   = cfg.icasso.mode;
       sR.rdim   = size(tmp.topo,2);
+    else
+      error('only ''fastica'' or ''dss'' is supported as method for icasso');
     end
-    sR     = icassoExp(sR);
-    [Iq, mixing, unmixing, dat] = icassoShow(sR, 'estimate', 'off');%, 'L', cfg.numcomponent);
+    
+    % do the rest of the icasso related processing
+    sR = icassoCluster(sR,'strategy','AL','simfcn','abscorr','s2d','sim2dis','L',cfg.numcomponent);
+    sR = icassoProjection(sR,'cca','s2d','sqrtsim2dis','epochs',75);
+    [Iq, mixing, unmixing, ~, index2centrotypes]=icassoResult(sR,cfg.numcomponent);
+    
+    % this step is done, because in icassoResult mixing is determined to be
+    % pinv(unmixing), which yields strange results. Better take it from the
+    % individual iterations. NOTE: as a consequence unmixing*mixing is not
+    % necessarily identity anymore !!!
+    for k = 1:size(mixing,2)
+      ix = sR.index(index2centrotypes(k),:);
+      mixing(:,k) = sR.A{ix(1)}(:,ix(2));
+    end
+    
+    %[Iq, mixing, unmixing, dat] = icassoShow(sR, 'estimate', 'off', 'L', cfg.numcomponent);
     
     % sort the output according to Iq
     [srt, ix] = sort(-Iq); % account for NaNs
     mixing    = mixing(:, ix);
     unmixing  = unmixing(ix, :);
     
-    
     cfg.icasso.Iq = Iq(ix);
-    cfg.icasso.sR = rmfield(sR, 'signal');
+    cfg.icasso.sR = rmfield(sR, 'signal'); % keep the rest of the information
     
   case 'fastica'
     % check whether the required low-level toolboxes are installed
@@ -481,11 +500,11 @@ switch cfg.method
     end
     
     % construct key-value pairs for the optional arguments
-    optarg = ft_cfg2keyval(cfg.runica);
+    optarg = [ft_cfg2keyval(cfg.runica) {'reset_randomseed' 0}]; % let FieldTrip deal with the random seed handling
     [weights, sphere] = runica(dat, optarg{:});
     
     % scale the sphering matrix to unit norm
-    if strcmp(cfg.normalisesphere, 'yes'),
+    if strcmp(cfg.normalisesphere, 'yes')
       sphere = sphere./norm(sphere);
     end
     
@@ -514,7 +533,7 @@ switch cfg.method
     [weights, sphere] = binica(dat, optarg{:});
     
     % scale the sphering matrix to unit norm
-    if strcmp(cfg.normalisesphere, 'yes'),
+    if strcmp(cfg.normalisesphere, 'yes')
       sphere = sphere./norm(sphere);
     end
     
@@ -555,7 +574,7 @@ switch cfg.method
     
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
-    d = sortrows(d,[-2]);
+    d = sortrows(d, -2);
     
     % return the desired number of principal components
     unmixing = E(:,d(1:cfg.numcomponent,1))';
@@ -576,9 +595,9 @@ switch cfg.method
     
     % compute kernel matrix
     C = zeros(Nchans,Nchans);
-    ft_progress('init', 'text', 'computing kernel matrix...');
+    ft_progress('init', cfg.feedback, 'computing kernel matrix...');
     for k = 1:Nchans
-      ft_progress(k/Nchans);
+      ft_progress(k/Nchans, 'computing kernel matrix %d from %d', k, Nchans);
       C(k,:) = kern(dat, dat(k,:));
     end
     ft_progress('close');
@@ -588,7 +607,7 @@ switch cfg.method
     
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
-    d = sortrows(d,[-2]);
+    d = sortrows(d, -2);
     
     % return the desired number of principal components
     unmixing = E(:,d(1:cfg.numcomponent,1))';
@@ -730,9 +749,20 @@ switch cfg.method
     % if represented in a concatenated array one has to keep track of the
     % trial boundaries
     
-    [unmixing, rho] = bsscca(dat,cfg.bsscca.delay);
-    mixing          = [];
-    % unmixing      = diag(rho);
+    optarg          = ft_cfg2keyval(cfg.bsscca);
+    optarg          = cat(2,optarg, {'time', data.time});
+    [unmixing, mixing, rho, compdata, time] = bsscca(dat, optarg{:});
+    data.trial = mixing*compdata;
+    data.time  = time;
+    
+    if size(mixing,1)>numel(data.label)
+      for m = 1:(size(mixing,1)-numel(data.label))
+        data.label{end+1} = sprintf('refchan%03d',m);
+      end
+    end
+    
+    % remember the canonical correlations
+    cfg.bsscca.rho = rho;
     
   case 'parafac'
     error('parafac is not supported anymore in ft_componentanalysis');
@@ -757,7 +787,7 @@ elseif isempty(mixing) && ~isempty(unmixing)
   end
 elseif isempty(mixing) && isempty(unmixing)
   % this sanity check is needed to catch convergence problems in fastica
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1519
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1519
   error('the component unmixing failed');
 end
 
@@ -794,7 +824,7 @@ comp.topo = mixing;
 comp.unmixing = unmixing;
 
 % get the labels
-if strcmp(cfg.method, 'predetermined unmixing matrix'),
+if strcmp(cfg.method, 'predetermined unmixing matrix')
   prefix = 'component';
 else
   prefix = cfg.method;
@@ -805,43 +835,39 @@ for k = 1:size(comp.topo,2)
 end
 comp.topolabel = data.label(:);
 
-% apply the montage also to the elec/grad, if present
 if isfield(data, 'grad')
   sensfield = 'grad';
-  if strcmp(cfg.updatesens, 'yes')
-    fprintf('applying the backprojection matrix to the gradiometer description\n');
-  else
-    fprintf('not applying the backprojection matrix to the gradiometer description\n');
-  end
-elseif isfield(data, 'elec') && isfield(data.elec, 'tra')
+elseif isfield(data, 'elec')
   sensfield = 'elec';
-  if strcmp(cfg.updatesens, 'yes')
-    fprintf('applying the backprojection matrix to the electrode description\n');
-  else
-    fprintf('not applying the backprojection matrix to the electrode description\n');
-  end
+elseif isfield(data, 'opto')
+  sensfield = 'opto';
 else
-  fprintf('not applying the backprojection matrix to the sensor description\n');
   sensfield = [];
 end
 
-if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
-  % construct a montage and apply it to the sensor description
-  montage          = [];
-  montage.labelorg = data.label;
-  montage.labelnew = comp.label;
-  montage.tra      = unmixing;
-  comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
-  % The output sensor array cannot simply be interpreted as the input
-  % sensor array, hence the type should be removed to allow autodetection
-  % See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1806
-  if isfield(comp.(sensfield), 'type')
-    comp.(sensfield) = rmfield(comp.(sensfield), 'type');
+% apply the linear projection also to the sensor description
+if ~isempty(sensfield)
+  if  strcmp(cfg.updatesens, 'yes')
+    fprintf('also applying the unmixing matrix to the %s structure\n', sensfield);
+    % construct a montage and apply it to the sensor description
+    montage          = [];
+    montage.labelold = data.label;
+    montage.labelnew = comp.label;
+    montage.tra      = unmixing;
+    comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
+    
+    % The output sensor array cannot simply be interpreted as the input
+    % sensor array, hence the type should be removed to allow autodetection
+    % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
+    if isfield(comp.(sensfield), 'type')
+      comp.(sensfield) = rmfield(comp.(sensfield), 'type');
+    end
+  else
+    fprintf('not applying the unmixing matrix to the %s structure\n', sensfield);
+    % simply copy it over
+    comp.(sensfield) = data.(sensfield);
   end
-elseif ~isempty(sensfield) && strcmp(cfg.updatesens, 'no')
-  % simply copy it over
-  comp.(sensfield) = data.(sensfield);
-end
+end % if sensfield
 
 % copy the sampleinfo into the output
 if isfield(data, 'sampleinfo')
@@ -851,6 +877,11 @@ end
 % copy the trialinfo into the output
 if isfield(data, 'trialinfo')
   comp.trialinfo = data.trialinfo;
+end
+
+% convert back to input type if necessary
+if istimelock
+  comp = ft_checkdata(comp, 'datatype', 'timelock+comp');
 end
 
 % do the general cleanup and bookkeeping at the end of the function

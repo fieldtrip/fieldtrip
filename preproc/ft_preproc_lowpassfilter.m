@@ -52,7 +52,7 @@ function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir,instabilityfix,
 
 % Copyright (c) 2003-2014, Robert Oostenveld, Arjen Stolk, Andreas Widmann
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -133,6 +133,11 @@ end
 typ = class(dat);
 if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
   dat = cast(dat, 'double');
+end
+
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 % Nyquist frequency
@@ -235,7 +240,8 @@ switch type
     if N > floor( (size(dat,2) - 1) / 3)
       N=floor(size(dat,2)/3) - 1;
     end
-    [B, A] = fir1(N, max(Flp)/Fn);
+    B = fir1(N, max(Flp)/Fn);
+    A = 1;
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453
     warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')

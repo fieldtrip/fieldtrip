@@ -3,38 +3,43 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-# Use MinGW for compilation on Windows!
+# Use MinGW for compilation on Windows
 
-PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
+ifneq "$(OS)" "Windows_NT"
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
+endif
+
+PLATFORM ?= $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR = $(FTBUFFER)/cpp
-
-# better would be to make a proper library of the C++ framework
-CPPOBJ = 
 
 # defaults, might be overwritten further down
-CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR)
-CFLAGS += -Wunused -Wall -pedantic -O3 -g 
-CXXFLAGS = $(CFLAGS)
-LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer -lpthread $(CPPOBJ)
+CC       = gcc
+CXX      = g++
+CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
+INCPATH  = -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/inih -I.
+LIBPATH  = -L$(FTBUFFER)/src
+LDLIBS   = -lbuffer -lpthread
 
-ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
-	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-	# make clean target work on windows:
-	fixpath = $(subst /,\,$1)
-	RM = del
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
 endif
 
-ifeq "$(UNAME)" "Linux"
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
+endif
+
+ifeq "$(OS)" "Linux"
 	LDLIBS += -ldl -lstdc++ -lrt
 	fixpath = $1
 	ifeq "$(MACHINE)" "i686"
@@ -46,24 +51,27 @@ ifeq "$(UNAME)" "Linux"
 	ifeq "$(MACHINE)" "armv6l"
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 	endif
+	ifeq "$(MACHINE)" "armv7l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
-ifeq "$(UNAME)" "Darwin"
+ifeq "$(OS)" "Darwin"
 	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
-		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+		BINDIR    = $(FIELDTRIP)/realtime/bin/mac
 	endif
 endif
 
@@ -76,12 +84,14 @@ TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), jaga2ft)
 ##############################################################################
 all: $(TARGETS)
 
-$(TARGETS):
+jaga2ft.o: jaga2ft.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
-$(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+ini.o: $(FIELDTRIP)/realtime/src/external/inih/ini.c
+		$(CC) $(CFLAGS) -c -o $@ $^
 
-$(BINDIR)/modeeg_setupbluesmirf$(SUFFIX): LDLIBS=
+$(BINDIR)/jaga2ft$(SUFFIX): jaga2ft.o ini.o
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

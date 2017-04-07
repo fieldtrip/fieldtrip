@@ -2,8 +2,8 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 
 % FT_CONVERT_COORDSYS changes the coordinate system of the input object to
 % the specified coordinate system. The coordinate system of the input
-% object is determined from the structure field object.coordsys, or need to
-% be determined interactively by the user.
+% object is determined from the structure field object.coordsys, or needs to
+% be determined and specified interactively by the user.
 %
 % Use as
 %   [object] = ft_convert_coordsys(object)
@@ -36,7 +36,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 
 % Copyright (C) 2005-2011, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify

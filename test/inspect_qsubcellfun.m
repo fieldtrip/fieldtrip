@@ -12,9 +12,9 @@ if isempty(which('qsubcellfun'))
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% this test script is based on http://fieldtrip.fcdonders.nl/tutorial/distributedcomputing
+% this test script is based on http://www.fieldtriptoolbox.org/tutorial/distributedcomputing
 
-cd /home/common/matlab/fieldtrip/data
+cd(dccnpath('/home/common/matlab/fieldtrip/data'));
 timreq = 20*60;
 memreq = 2*1024^3;
 

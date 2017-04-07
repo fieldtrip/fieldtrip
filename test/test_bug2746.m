@@ -1,6 +1,5 @@
 function test_bug2746
 
-% TEST test_bug2746
 % TEST loadcnt
 
 % MEM 1500mb

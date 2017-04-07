@@ -46,7 +46,7 @@ function h = uimage(varargin)
 %
 % $Id$
 
-error(nargchk(3,inf,nargin));
+narginchk(3,inf);
 
 % maximum number of matrix elements to interpolate the uneven axis
 % (typically between 500 and 5000):

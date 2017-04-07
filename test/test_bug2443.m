@@ -1,6 +1,8 @@
 function test_bug2443
 
-% TEST test_bug2443
+% WALLTIME 00:20:00
+% MEM 4gb
+
 % TEST ft_multiplotER
 
 % get some data

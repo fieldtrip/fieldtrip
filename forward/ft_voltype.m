@@ -36,7 +36,7 @@ function [type] = ft_voltype(headmodel, desired)
 
 % Copyright (C) 2007-2013, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -57,8 +57,9 @@ function [type] = ft_voltype(headmodel, desired)
 % these are for remembering the type on subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
-if iscell(headmodel) && numel(headmodel)<4
-  % this might represent combined EEG, ECoG and/or MEG
+if iscell(headmodel)
+  % this represents combined EEG, ECoG and/or MEG
+  % use recursion to determine the type of each input
   type = cell(size(headmodel));
   if nargin<2
     desired = cell(size(headmodel)); % empty elements

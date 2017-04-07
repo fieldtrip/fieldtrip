@@ -3,7 +3,6 @@ function test_bug1168
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1168
 % TEST ft_multiplotTFR
 
 
@@ -81,7 +80,7 @@ cfg = d.cfg;
 % TODO: find id's for errors (gerp warning -> sort.)
 f = @() ft_multiplotTFR(cfg, freq);
 % assertExceptionThrown(f, 'fieldtrip:dimord')
-% fieldtrip error identifiers not yet decided upon, keeping code for later use
+% FieldTrip error identifiers not yet decided upon, keeping code for later use
 try
   feval(f)
 catch exception
@@ -107,7 +106,7 @@ cfg = d.cfg;
 % TODO: find id's for errors (gerp warning -> sort.)
 f = @() ft_multiplotTFR(cfg, freq);
 % assertExceptionThrown(f, 'fieldtrip:dimord')
-% fieldtrip error identifiers not yet decided upon, keeping code for later use
+% FieldTrip error identifiers not yet decided upon, keeping code for later use
 try
   feval(f)
 catch exception

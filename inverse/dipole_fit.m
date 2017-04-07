@@ -27,15 +27,16 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 %   constr.mirror     = vector, used for symmetric dipole models
 %   constr.reduce     = vector, used for symmetric dipole models
 %   constr.expand     = vector, used for symmetric dipole models
+%   constr.sequential = boolean, fit different dipoles to sequential slices of the data
 %
 % The maximum likelihood estimation implements
 %   Lutkenhoner B. "Dipole source localization by means of maximum
 %   likelihood estimation I. Theory and simulations" Electroencephalogr Clin
 %   Neurophysiol. 1998 Apr;106(4):314-21.
 
-% Copyright (C) 2003-2013, Robert Oostenveld
+% Copyright (C) 2003-2016, Robert Oostenveld
 %
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
@@ -306,7 +307,7 @@ if ~isempty(weight)
       denom = dat' * weight * dat;
       err   = sum(num(:)) ./ sum(denom(:)); % Lutkenhonner equation 7, except for the gof=1-rv
     case 'var' % residual variance
-      num   = dif' * weight * dif';
+      num   = dif' * weight * dif;
       err   = sum(num(:));
     otherwise
       error('Unsupported error metric for maximum likelihood dipole fitting');
@@ -314,11 +315,20 @@ if ~isempty(weight)
 else
   % ordinary least squares, this is the same as MLE with weight=eye(nchans,nchans)
   if constr.sequential
-    numdip = numel(pos)/3;
-    mom = zeros(3*numdip, numdip);
+    % the number of slices is the same as the number of dipoles
+    % each slice has a number of frames (time points) in it
+    % so the data can be nchan*ndip or nchan*(ndip*nframe)
+    numdip   = numel(pos)/3;
+    numframe = size(dat,2)/numdip;
+    
+    % do a sainty check on the number of frames, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+    assert(numframe>0 && numframe==round(numframe), 'the number of frames should be a positive integer');
+    
+    mom = zeros(3*numdip, numdip*numframe);
     for i=1:numdip
-      sel = (1:3)+3*(i-1);  % 1:3 for the first dipole, 4:6 for the second dipole, ...
-      mom(sel,i) = pinv(lf(:,sel))*dat(:,i);
+      dipsel   = (1:3)        + 3*(i-1);         % 1:3 for the first dipole, 4:6 for the second dipole, ...
+      framesel = (1:numframe) + numframe*(i-1);  % 1:numframe for the first, (numframe+1):(2*numframe) for the second, ...
+      mom(dipsel,framesel) = pinv(lf(:,dipsel))*dat(:,framesel);
     end
   else
     mom = pinv(lf)*dat;

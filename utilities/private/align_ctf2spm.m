@@ -1,23 +1,22 @@
 function [mri] = align_ctf2spm(mri, opt, template)
 
-% ALIGN_CTF2SPM performs an approximate alignment of the anatomical volume
-% from CTF towards SPM coordinates. Only the homogeneous transformation matrix
-% is modified and the coordsys-field is updated.
+% ALIGN_CTF2SPM performs an approximate alignment of the anatomical volume from CTF
+% towards SPM coordinates. Only the homogeneous transformation matrix is modified and
+% the coordsys-field is updated.
 %
 % Use as
 %   mri = align_ctf2spm(mri)
 %   mri = align_ctf2spm(mri, opt)
 %   mri = align_ctf2spm(mri, opt, template)
-%
-% Where mri is a FieldTrip MRI-structure, and opt an optional argument
-% specifying how the registration is done.
+% where mri is a FieldTrip MRI-structure, and opt is an optional argument specifying
+% how the registration is to be done:
 %   opt = 0: only an approximate coregistration
 %   opt = 1: an approximate coregistration, followed by spm_affreg
 %   opt = 2 (default): an approximate coregistration, followed by spm_normalise
 %
-% When opt = 1 or 2, an optional template filename can be specified, which
-% denotes the filename of the target volume. this option is required when
-% running in deployed mode
+% When opt = 1 or 2, an optional template filename can be specified, which denotes
+% the filename of the target volume. This option is required when running in deployed
+% mode.
 
 if nargin<2
   opt = 2;
@@ -29,13 +28,13 @@ end
 % SPM
 
 spmvox2spmhead = [
-     2     0     0   -92
-     0     2     0  -128
-     0     0     2   -74
-     0     0     0     1
-];
+  2     0     0   -92
+  0     2     0  -128
+  0     0     2   -74
+  0     0     0     1
+  ];
 
-% these are the voxel indices of some points in the SPM canonical T1 
+% these are the voxel indices of some points in the SPM canonical T1
 spmvox_Ac           = [46 64  37  1]';     % the anterior commissure
 spmvox_Ori          = [46 48  10  1]';     % approximately between the ears in T1.mnc
 spmvox_Nas          = [46 106 13  1]';     % approximately the nasion in T1.mnc
@@ -66,22 +65,40 @@ mri.coordsys      = 'spm';
 % different conventions defining LPA and RPA. The affine registration may
 % fail however, e.g. if the initial alignment is not close enough. In that
 % case SPM will throw an error
+
+% check for any version of SPM
+if ~ft_hastoolbox('spm')
+  % add SPM8 to the path
+  ft_hastoolbox('spm8', 1);
+end
+
+
 if opt==1
   % use spm_affreg
   
-  switch spm('ver')
-    case 'SPM8'
+  switch lower(spm('ver'))
+    case 'spm2'
       if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
-      else
-        template = fullfile(spm('Dir'),'templates','T1.nii');
-      end
-    case 'SPM2'
-      if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end    
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==1'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.mnc');
       end
+      
+    case 'spm8'
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==1'); end
+      else
+        template = fullfile(spm('Dir'),'templates','T1.nii');
+      end
+      
+    case 'spm12'
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==1'); end
+      else
+        template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
+      end
+      error('spm12 is not yet supported'); % FIXME: there's yet no spm_affreg equivalent in external/spm12
+
     otherwise
       error('unsupported spm-version');
   end
@@ -100,7 +117,7 @@ if opt==1
   % some juggling around with the transformation matrices
   ctfvox2spmhead2  = M \ V1.mat;
   spmhead2ctfhead2 = ctfvox2ctfhead / ctfvox2spmhead2;
-   
+  
   % update the transformation matrix
   mri.transform     = ctfvox2spmhead2;
   
@@ -118,19 +135,34 @@ if opt==1
 elseif opt==2
   % use spm_normalise
   
-  switch spm('ver')
-    case 'SPM8'
+  switch lower(spm('ver'))
+    case 'spm2'
+      if isdeployed
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
+      else
+        template = fullfile(spm('Dir'),'templates','T1.mnc');
+      end
+      
+    case 'spm8'
       if isdeployed
         if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.nii');
       end
-    case 'SPM2'
+      
+    case 'spm12'
+      % this uses the 'OldNorm' functionality, so the path needs to be
+      % added, can only be done if non-deployed.
       if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end    
+        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
       else
-        template = fullfile(spm('Dir'),'templates','T1.mnc');
+        template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
+        if ~exist('spm_normalise', 'file')
+          addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+        end
       end
+      %error('spm12 is not yet supported'); % FIXME: there's yet no spm_normalise equivalent in external/spm12
+      
     otherwise
       error('unsupported spm-version');
   end
@@ -161,4 +193,3 @@ elseif opt==2
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
   delete(tname2); delete(strrep(tname2, 'img', 'hdr'));
 end
-

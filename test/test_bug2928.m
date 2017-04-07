@@ -3,7 +3,6 @@ function test_bug2928
 % WALLTIME 00:20:00
 % MEM 4gb
 
-% TEST test_bug2928
 % TEST ft_volumesegment ft_volumerealign
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2928/e889.dcm');

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e -u
 
+# for cross-compilation you can use something like this
+# MAKE="make $1 MACHINE=i386 PLATFORM=Darwin"
+
 MAKE="make $1"
 PLATFORM=`gcc -dumpmachine`
 UNAME=`uname`
@@ -27,13 +30,17 @@ function contains () {
 if [ "$UNAME" = "Linux" ]; then
   if [ "$MACHINE" = "armv6l" ]; then
     BLACKLIST=(amp audio biosemi ctf emotiv neuralynx neuromag siemens tmsi tobi)
+  elif [ "$MACHINE" = "armv7l" ]; then
+    BLACKLIST=(amp audio biosemi ctf emotiv neuralynx neuromag siemens tmsi tobi)
+  elif [ "$MACHINE" = "x86_64" ]; then
+    BLACKLIST=(audio ctf emotiv neuralynx siemens tmsi tobi)
   else
     BLACKLIST=(audio emotiv neuralynx siemens tmsi tobi)
   fi
 fi
 
 if [ "$UNAME" = "Darwin" ]; then
-  BLACKLIST=(audio emotiv neuralynx siemens neuromag tmsi tobi ctf)
+  BLACKLIST=(emotiv neuralynx siemens neuromag tmsi tobi ctf)
 fi
 
 echo Building buffer and ODM...
@@ -63,4 +70,3 @@ for ac in `ls -d utilities/*/`; do
     (cd $ac && $MAKE)
   fi
 done
-

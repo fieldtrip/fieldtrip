@@ -3,19 +3,18 @@ function test_tutorial_multivariateanalysis(datadir, dmltdir)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_multivariateanalysis
 % TEST ft_timelockstatistics ft_topoplotER ft_freqstatistics ft_topoplotTFR
 
 % this is a test script that I made following the report of Matt on
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1585 and realizing that the
-% wiki page http://fieldtrip.fcdonders.nl/tutorial/multivariateanalysis was
+% wiki page http://www.fieldtriptoolbox.org/tutorial/multivariateanalysis was
 % not included in a test script.
 
 % This test script corresponds to the documentation on the wiki from 3 July 2012
 
 if nargin==0
-  datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/classification';
-  dmltdir = '/home/common/matlab/fieldtrip/external/dmlt';
+  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/classification');
+  dmltdir = dccnpath('/home/common/matlab/fieldtrip/external/dmlt');
 end
 
 addpath(genpath(dmltdir));
