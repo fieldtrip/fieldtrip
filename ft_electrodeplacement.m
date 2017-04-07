@@ -293,12 +293,11 @@ switch cfg.method
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
     
     % electrode listbox
-    opt = [];
-    opt.label = {}; chanstring = {};
+    chanlabel = {}; chanstring = {};
     markerlab = {}; markerpos = {};
     if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
       for e = 1:numel(cfg.elec.label)
-        opt.label{end+1,1} = cfg.elec.label{e};
+        chanlabel{end+1,1} = cfg.elec.label{e};
         chanstring{end+1} = ['<HTML><FONT color="black">' cfg.elec.label{e} '</FONT></HTML>']; % hmtl'ize
         
         markerlab{end+1,1} = cfg.elec.label{e};
@@ -307,8 +306,8 @@ switch cfg.method
     end
     if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
       for c = 1:numel(cfg.channel)
-        if ~ismember(cfg.channel{c}, opt.label) % avoid overlap between cfg.channel and elec.label
-          opt.label{end+1,1} = cfg.channel{c};
+        if ~ismember(cfg.channel{c}, chanlabel) % avoid overlap between cfg.channel and elec.label
+          chanlabel{end+1,1} = cfg.channel{c};
           chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
           
           markerlab{end+1,1} = {};
@@ -318,7 +317,7 @@ switch cfg.method
     end
     if isempty(cfg.elec) && isempty(cfg.channel) % create electrode labels on-the-fly
       for c = 1:150
-        opt.label{end+1,1} = sprintf('%d', c);
+        chanlabel{end+1,1} = sprintf('%d', c);
         chanstring{end+1} = ['<HTML><FONT color="silver">' sprintf('%d', c) '</FONT></HTML>']; % hmtl'ize
         
         markerlab{end+1,1} = {};
@@ -416,6 +415,8 @@ switch cfg.method
       '4. See Stolk, Griffin et al. (2017) for further electrode processing options\n'));
     
     % create structure to be passed to gui
+    opt               = [];
+    opt.label         = chanlabel;
     opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
     opt.mainfig       = h;
     opt.quit          = false;
@@ -790,11 +791,11 @@ if opt.scatter % radiobutton on
   end
   
   if opt.redrawmarker
-    if isfield(opt, 'markerpos_sel') % plot the markers
-      delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
+    delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove all scatterfig markers
+    delete(findobj(opt.scatterfig,'Type','text')); % remove all scatterfig labels
+    if opt.showmarkers && isfield(opt, 'markerpos_sel') % plot the markers
       plot3(opt.markerpos_sel(:,1),opt.markerpos_sel(:,2),opt.markerpos_sel(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
       if opt.showlabels
-        delete(findobj(opt.scatterfig,'Type','text')); % remove previous labels
         for i=1:size(opt.markerpos_sel,1)
           text(opt.markerpos_sel(i,1), opt.markerpos_sel(i,2), opt.markerpos_sel(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
         end
@@ -802,7 +803,7 @@ if opt.scatter % radiobutton on
     end
     opt.redrawmarker = 0;
   end
-  
+
   % update the existing crosshairs, don't change the handles
   crosshair([opt.pos], 'handle', opt.handlescross2);
   if opt.showcrosshair
@@ -944,7 +945,7 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
-  case 102 % 'f'
+  case 102 % 'f' for fiducials
     opt.showmarkers = ~opt.showmarkers;
     opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
@@ -1179,8 +1180,6 @@ if ~isempty(elecidx)
       eleclab = regexprep(eleclab, '"black"','"silver"'); % replace font color
       opt.markerlab{elecidx,1} = {}; % assign marker label
       opt.markerpos{elecidx,1} = []; % assign marker position
-      delete(findobj(h,'Type','Line','Marker','+')); % remove all markers
-      delete(findobj(h,'Type','text')); % remove all labels
     end
   end
   
