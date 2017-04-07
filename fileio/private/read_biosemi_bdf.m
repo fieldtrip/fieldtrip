@@ -47,10 +47,10 @@ function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx)
 %
 % $Id$
 
-if nargin==1
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % read the header, this code is from EEGLAB's openbdf
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if nargin == 1
+% -------------------------------------------------------------------------
+% read the header, this code is from EEGLAB's openbdf
+% -------------------------------------------------------------------------
   FILENAME = filename;
 
   % defines Seperator for Subdirectories
@@ -194,9 +194,9 @@ if nargin==1
   % close the file
   fclose(EDF.FILE.FID);
   
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % convert the header to Fieldtrip-style
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% -------------------------------------------------------------------------
+% convert the header to Fieldtrip-style
+% -------------------------------------------------------------------------
   if any(EDF.SampleRate~=EDF.SampleRate(1))
     error('channels with different sampling rate not supported');
   end
@@ -213,9 +213,9 @@ if nargin==1
   dat = hdr;
 
 else
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % read the data
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% -------------------------------------------------------------------------
+% read the data
+% -------------------------------------------------------------------------
   % retrieve the original header
   EDF = hdr.orig;
 
@@ -254,8 +254,34 @@ else
   endsample = endsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
   dat = dat(:, begsample:endsample);
 
-  % Calibrate the data
-  calib = diag(EDF.Cal(chanindx));
+% -------------------------------------------------------------------------
+% data calibration
+% ----------------
+% The values of the selected channels are multiplied with a calibration
+% coefficient which is specified by (EDF.PhysMax - EDF.PhysMin)/(EDF.DigMax
+% - EDF.DigMin).
+% -------------------------------------------------------------------------
+  calib = diag(EDF.Cal(chanindx)); % get the calibration coefficients
+  
+  % Change the calibration coefficient of the 'Status' channel to 1
+  %
+  % Biosemi in general puts also for the status channel the eeg 
+  % calibration parameters to the header. A calibration of the 'Status'
+  % channel with the eeg calibration parameters results in nonsense.
+  % Therefore it will be corrected here.
+  chanlabels = cellstr(EDF.Label); 
+  labelindx = find(strncmp(chanlabels, 'Status', 6)); % locate 'Status' label
+  if ~isempty(labelindx)
+    statusindx = find(chanindx == labelindx); % locate 'Status' channel on the channel index list
+  else
+    statusindx = [];
+  end
+  
+  if ~isempty(statusindx) 
+    calib(statusindx, statusindx) = 1;
+  end
+  
+  % process data calibration
   if length(chanindx)>1
     % using a sparse matrix speeds up the multiplication
     dat = sparse(calib) * dat;
@@ -263,11 +289,17 @@ else
     % in case of one channel the sparse multiplication would result in a sparse array
     dat = calib * dat;
   end
+  
+  % only the lower 16 bits of the 'STATUS' channel are carrying trigger informations
+  if ~isempty(statusindx)
+    dat(statusindx, :) = bitand(dat(statusindx,:), 2^16-1);
+  end
+  
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% -------------------------------------------------------------------------
 % SUBFUNCTION for reading the 24 bit values
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% -------------------------------------------------------------------------
 function buf = readLowLevel(filename, offset, numwords)
 if offset < 2*1024^3
   % use the external mex file, only works for <2GB
