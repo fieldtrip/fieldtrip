@@ -385,16 +385,16 @@ switch inputtype
       if keepchans
         sens.chanpos = sens.chanpos(sel2,:);
       else
+        if ~isfield(sens, 'chanposold')
+          % add a chanposold only if it is not there yet
+          sens.chanposold  = sens.chanpos;
+          %  also keep the old label, type and unit for reference
+          sens.labelold    = inputlabel;
+          sens.chantypeold = inputchantype;
+          sens.chanunitold = inputchanunit;
+        end
         % compute the channel positions as a weighted sum of the original ones
         sens.chanpos = posweight * sens.chanpos;
-      end
-      if ~isfield(sens, 'chanposold')
-        % add a chanposold only if it is not there yet
-        sens.chanposold  = sens.chanpos;
-        %  also keep the old label, type and unit for reference
-        sens.labelold    = inputlabel;
-        sens.chantypeold = inputchantype;
-        sens.chanunitold = inputchanunit;
       end
     end
     

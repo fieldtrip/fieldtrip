@@ -165,12 +165,13 @@ for j=1:Ndata
 end
 
 % check consistency of sensor positions across inputs
-haselec = 1;
-hasgrad = 1;
+haselec = 0;
+hasgrad = 0;
+hasopto = 0;
 for j=1:Ndata
-  haselec = isfield(varargin{j}, 'elec') && haselec;
-  hasgrad = isfield(varargin{j}, 'grad') && hasgrad;
-  hasopto = isfield(varargin{j}, 'opto') && hasopto;
+  haselec = isfield(varargin{j}, 'elec');
+  hasgrad = isfield(varargin{j}, 'grad');
+  hasopto = isfield(varargin{j}, 'opto');
 end
 
 % check whether the data are obtained from the same datafile in case either
@@ -323,7 +324,7 @@ if shuflabel
 end
 
 removesens = 0;
-if haselec || hasgrad || hasopto
+if haselec || hasgrad || hasopto %FIXME all might now theoretically be true due to changes at line 170
   sens = cell(1, Ndata);
   for j=1:Ndata
     if haselec, sens{j} = varargin{j}.elec; end
@@ -339,7 +340,7 @@ if haselec || hasgrad || hasopto
       end
     end
   end
-  if strcmp(cfg.appendsens, 'yes')
+  if strcmp(cfg.appendsens, 'yes') %FIXME add opto, append per senstype?
     fprintf('concatenating sensor information across all input arguments\n');
     if haselec, data.elec = ft_appendsens([], sens{:}); end
     if hasgrad, data.grad = ft_appendsens([], sens{:}); end
@@ -351,6 +352,7 @@ if removesens
   fprintf('removing sensor information from output\n');
   if haselec, data = rmfield(data, 'elec'); end
   if hasgrad, data = rmfield(data, 'grad'); end
+  if hasopto, data = rmfield(data, 'opto'); end
 end
 
 if removesampleinfo

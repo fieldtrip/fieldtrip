@@ -82,35 +82,43 @@ if ~unitmatch || ~coordsysmatch
 end
 
 % concatenate
-if isfield(varargin{1}, 'label')
-  for i=1:Ndata
+haslabelold = 0;
+haschanposold = 0;
+for i=1:Ndata
+  % the following fields should be present in any elec structure
+  if isfield(varargin{i}, 'label')
     label{i} = varargin{i}.label;
-  end
-  sens.label = cat(1,label{:});
-end
-if isfield(varargin{1}, 'elecpos')
-  for i=1:Ndata
+  end  
+  if isfield(varargin{i}, 'elecpos')
     elecpos{i} = varargin{i}.elecpos;
-  end
-  sens.elecpos = cat(1,elecpos{:});
-end
-if isfield(varargin{1}, 'chanpos')
-  for i=1:Ndata
+  end 
+  if isfield(varargin{i}, 'chanpos')
     chanpos{i} = varargin{i}.chanpos;
   end
-  sens.chanpos = cat(1,chanpos{:});
-end
-if isfield(varargin{1}, 'chanposold')
-  for i=1:Ndata
-    chanposold{i} = varargin{i}.chanposold;
-  end
-  sens.chanposold = cat(1,chanposold{:});
-end
-if isfield(varargin{1}, 'labelold')
-  for i=1:Ndata
+  % the following fields might be present in an elec structure
+  if isfield(varargin{i}, 'labelold')
     labelold{i} = varargin{i}.labelold;
+    haslabelold = 1;
+  else % use current labels in case there are no old labels
+    labelold{i} = varargin{i}.label;
   end
-    sens.labelold = cat(1,labelold{:});
+  if isfield(varargin{i}, 'chanposold')
+    chanposold{i} = varargin{i}.chanposold;
+    haschanposold = 1;
+  else % use current chanpos in case there are no old chanpos
+    chanposold{i} = varargin{i}.chanpos;
+  end
+end
+
+sens.label = cat(1,label{:});
+sens.elecpos = cat(1,elecpos{:});
+sens.chanpos = cat(1,chanpos{:});
+
+if haslabelold % append in case one of the elec structures has old labels
+  sens.labelold = cat(1,labelold{:});
+end
+if haschanposold % append in case one of the elec structures has old chanpos
+  sens.chanposold = cat(1,chanposold{:});
 end
 
 % ensure a full sens description
