@@ -90,3 +90,9 @@ assert(~isfield(data5, 'opto')) % no opto struc
 data6 = ft_appenddata([], ieeg, ieegb);
 assert(isequal(numel(data6.label),5)) % 5 ieeg labels
 assert(~isfield(data6, 'elec')) % no elec struc
+
+%% use the same sensor information
+% EEG and EEG
+data7 = ft_appenddata([], eeg, eeg);
+assert(isequal(numel(data7.label),3)) % 3 labels
+assert(isfield(data7, 'elec')) % elec struc
