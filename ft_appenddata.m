@@ -169,10 +169,13 @@ haselec = 0;
 hasgrad = 0;
 hasopto = 0;
 for j=1:Ndata
-  haselec = isfield(varargin{j}, 'elec');
-  hasgrad = isfield(varargin{j}, 'grad');
-  hasopto = isfield(varargin{j}, 'opto');
+  haselec = isfield(varargin{j}, 'elec') + haselec;
+  hasgrad = isfield(varargin{j}, 'grad') + hasgrad;
+  hasopto = isfield(varargin{j}, 'opto') + hasopto;
 end
+haselec(haselec>1) = 1;
+hasgrad(hasgrad>1) = 1;
+hasopto(hasopto>1) = 1;
 
 % check whether the data are obtained from the same datafile in case either
 % (1) we have sampleinfos and they are not identical or (2) we don't have
@@ -324,35 +327,50 @@ if shuflabel
 end
 
 removesens = 0;
-if haselec || hasgrad || hasopto %FIXME all might now theoretically be true due to changes at line 170
-  sens = cell(1, Ndata);
-  for j=1:Ndata
-    if haselec, sens{j} = varargin{j}.elec; end
-    if hasgrad, sens{j} = varargin{j}.grad; end
-    if hasopto, sens{j} = varargin{j}.opto; end
-  end
-  for j=1:Ndata
-    if j>1
-      if ~isequaln(sens{j}, sens{1})
-        removesens = 1;
-        warning('sensor information does not seem to be consistent across the input arguments');
-        break;
+if haselec || hasgrad || hasopto % see test_pull393.m for expected behavior
+  if strcmp(cfg.appendsens, 'yes')
+    fprintf('concatenating sensor information across input arguments\n');
+    elec = {}; grad = {}; opto = {};
+    for j=1:Ndata
+      if isfield(varargin{j},'elec');
+        elec{end+1} = varargin{j}.elec;
+      elseif isfield(varargin{j},'grad');
+        grad{end+1} = varargin{j}.grad;
+      elseif isfield(varargin{j},'opto');
+        opto{end+1} = varargin{j}.opto;
       end
     end
-  end
-  if strcmp(cfg.appendsens, 'yes') %FIXME add opto, append per senstype?
-    fprintf('concatenating sensor information across all input arguments\n');
-    if haselec, data.elec = ft_appendsens([], sens{:}); end
-    if hasgrad, data.grad = ft_appendsens([], sens{:}); end
-    removesens = 0;
+    if ~isempty(elec) data.elec = ft_appendsens([], elec{:}); end
+    if ~isempty(grad) data.grad = ft_appendsens([], grad{:}); end
+    if ~isempty(opto) data.opto = ft_appendsens([], opto{:}); end
+  else % discard sens when it is inconsistent across the input arguments
+    sens = {};
+    for j=1:Ndata
+      if isfield(varargin{j},'elec');
+        sens{end+1} = varargin{j}.elec;
+      elseif isfield(varargin{j},'grad');
+        sens{end+1} = varargin{j}.grad;
+      elseif isfield(varargin{j},'opto');
+        sens{end+1} = varargin{j}.opto;
+      end
+    end
+    for j=1:Ndata
+      if j>1
+        if ~isequaln(sens{j}, sens{1})
+          removesens = 1;
+          warning('sensor information does not seem to be consistent across the input arguments');
+          break;
+        end
+      end
+    end
   end
 end
 
 if removesens
   fprintf('removing sensor information from output\n');
-  if haselec, data = rmfield(data, 'elec'); end
-  if hasgrad, data = rmfield(data, 'grad'); end
-  if hasopto, data = rmfield(data, 'opto'); end
+  if haselec && isfield(data, 'elec'), data = rmfield(data, 'elec'); end
+  if hasgrad && isfield(data, 'grad'), data = rmfield(data, 'grad'); end
+  if hasopto && isfield(data, 'opto'), data = rmfield(data, 'opto'); end
 end
 
 if removesampleinfo

@@ -49,26 +49,44 @@ ieegb.elec.labelold = {'iEEG 1';'iEEG 2';'iEEG 3'}; % note the labelold field du
 ieegb.elec.chanposold = [1 1 1; 2 2 2; 3 3 3]; % note the chanposold field due to re-referencing
 
 %% append
-% append EEG and MEG
+% EEG and MEG
 cfg = [];
 cfg.appendsens = 'yes';
 data1 = ft_appenddata(cfg, eeg, meg);
 assert(isequal(numel(data1.label),6)) % 6 labels
-assert(isequal(numel(data1.elec.label),3)) % 3 elec labels (what about grad?)
-assert(isequal(numel(data1.grad.label),3)) % 3 elec labels (what about grad?)
+assert(isequal(numel(data1.elec.label),3)) % 3 elec labels
+assert(isequal(numel(data1.grad.label),3)) % 3 grad labels
 
-% append EEG and NIRS
+% EEG and NIRS
 cfg = [];
 cfg.appendsens = 'yes';
 data2 = ft_appenddata(cfg, eeg, nirs);
 assert(isequal(numel(data2.label),6)) % 6 labels
-assert(isequal(numel(data2.elec.label),3)) % 3 elec labels (what about opto?)
-assert(isequal(numel(data2.opto.label),3)) % 3 elec labels (what about grad?)
+assert(isequal(numel(data2.elec.label),3)) % 3 elec labels
+assert(isequal(numel(data2.opto.label),3)) % 3 opto labels
 
-% append monopolar iEEG and bipolar iEEG
+% monopolar iEEG and bipolar iEEG
 cfg = [];
 cfg.appendsens = 'yes';
 data3 = ft_appenddata(cfg, ieeg, ieegb);
-assert(isequal(numel(data3.label),5)) % 5 labels
-assert(isequal(numel(data3.elec.label),5)) % 5 labels
-assert(isequal(numel(data3.elec.labelold),6)) % 6 labelolds
+assert(isequal(numel(data3.label),5)) % 5 ieeg labels
+assert(isequal(numel(data3.elec.label),5)) % 5 ieeg labels
+assert(isequal(numel(data3.elec.labelold),6)) % 6 ieeg labelolds
+
+%% do not append (discard inconsistent sens information) 
+% EEG and MEG
+data4 = ft_appenddata([], eeg, meg);
+assert(isequal(numel(data4.label),6)) % 6 labels
+assert(~isfield(data4, 'elec')) % no elec struc
+assert(~isfield(data4, 'grad')) % no grad struc
+
+% EEG and NIRS
+data5 = ft_appenddata([], eeg, nirs);
+assert(isequal(numel(data5.label),6)) % 6 labels
+assert(~isfield(data5, 'elec')) % no elec struc
+assert(~isfield(data5, 'opto')) % no opto struc
+
+% monopolar iEEG and bipolar iEEG
+data6 = ft_appenddata([], ieeg, ieegb);
+assert(isequal(numel(data6.label),5)) % 5 ieeg labels
+assert(~isfield(data6, 'elec')) % no elec struc
