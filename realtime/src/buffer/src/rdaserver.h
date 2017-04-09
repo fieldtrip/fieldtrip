@@ -3,11 +3,10 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- *
  */
 
-#ifndef __rdaserver_h
-#define __rdaserver_h
+#ifndef __RDASERVER_H
+#define __RDASERVER_H
 
 #include <pthread.h>
 #include "platform.h"
@@ -117,4 +116,4 @@ int rda_get_num_clients(rda_server_ctrl_t *SC);
 }
 #endif
 
-#endif /* __rdaserver_h */
+#endif /* __RDASERVER_H */
