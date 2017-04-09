@@ -151,12 +151,17 @@ elseif opt==2
       end
       
     case 'spm12'
+      % this uses the 'OldNorm' functionality, so the path needs to be
+      % added, can only be done if non-deployed.
       if isdeployed
         if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
+        if ~exist('spm_normalise', 'file')
+          addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+        end
       end
-      error('spm12 is not yet supported'); % FIXME: there's yet no spm_normalise equivalent in external/spm12
+      %error('spm12 is not yet supported'); % FIXME: there's yet no spm_normalise equivalent in external/spm12
       
     otherwise
       error('unsupported spm-version');
