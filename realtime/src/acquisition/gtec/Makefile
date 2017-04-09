@@ -13,15 +13,15 @@ endif
 PLATFORM ?= $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
-FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
+FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
 CC       = gcc
 CXX      = g++
 CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
-INCPATH  = -I$(FTBUFFER)/src -I$(FIELDTRIP)/realtime/src/external/inih -I.
+INCPATH  = -I$(FTBUFFER)/src -I.
 LIBPATH  = -L$(FTBUFFER)/src
-LDLIBS   = -lbuffer -lpthread
+LDLIBS   = -lbuffer -lpthread -lstdc++
 
 ifeq "$(PLATFORM)" "i686-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
@@ -101,7 +101,9 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), openbci2ft)
+TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), gtec2ft)
+
+OBJECTS = main.o CheckServerReply.o EscapeXML.o EstablishNetworkConnection.o ParseXML.o ReadMeasurementData.o SetupgHIampXMLConfig.o SetupgNautilusXMLConfig.o SetupgUSBampXMLConfig.o SetupXMLMessage.o Transceiver.o XMLSTLConversions.o
 
 ##############################################################################
 all: $(TARGETS)
@@ -109,10 +111,10 @@ all: $(TARGETS)
 %.o: %.c
 	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
-ini.o: $(FIELDTRIP)/realtime/src/external/inih/ini.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+%.o: %.cpp
+	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
-$(BINDIR)/%$(SUFFIX): ini.o serial.o %.o
+$(BINDIR)/gtec2ft$(SUFFIX): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
