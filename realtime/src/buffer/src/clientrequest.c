@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "buffer.h"
 
 /*******************************************************************************
@@ -41,4 +42,3 @@ int clientrequest(int server, const message_t *request, message_t **response_ptr
 	/* everything went fine */
 	return 0;
 }
-
