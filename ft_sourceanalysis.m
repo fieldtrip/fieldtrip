@@ -396,6 +396,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do frequency domain source reconstruction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% overwritten if method=='pcc', ignored otherwise and defined only so do_freq_sourceanalysis can be called in same way for all methods
+refchanindx = []; 
+supchanindx = [];
+
 if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 'rv', 'music'}))
   
   switch cfg.method
@@ -495,6 +500,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       else
         submethod = 'dics_power';
       end
+
+      avg = []; % not used by dics, defined here just so do_freq_sourceanalysis can be called in the same way as for other methods
       
     otherwise
   end
@@ -612,10 +619,27 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     % filter and applies it to the single trial covariance/csd. The problem
     % is that beamformer will use the averaged covariance/csd to estimate the
     % power and not the single trial covariance/csd
-    error('this option contains a bug, and is therefore not supported at the moment');
-    Cf = Cf; % FIXME, should be averaged and repeated for each trial
-    Cr = Cr; % FIXME, should be averaged and repeated for each trial
-    Pr = Pr; % FIXME, should be averaged and repeated for each trial
+
+    % compute filter based on average Cf if no precomputed filter is available
+    if ~isfield(grid, 'filter')
+      Cf_avg = reshape(sum(Cf, 1) / Ntrials, [Nchans Nchans]);
+      Cr_avg = reshape(sum(Cr, 1) / Ntrials, [Nchans 1]);
+      Pr_avg = reshape(sum(Pr, 1) / Ntrials, [1 1]);
+
+      % get the relevant low level options from the cfg and convert into key-value pairs
+      tmpcfg = cfg.(cfg.method);
+      tmpcfg.keepfilter = 'yes';
+      optarg = ft_cfg2keyval(tmpcfg);
+
+      dip_avgCF = do_freq_sourceanalysis(submethod, grid, sens, headmodel, Cf_avg, optarg, Cr_avg, Pr_avg, cfg, avg, refchanindx, supchanindx);
+      % use this filter as precomputed filter in the following
+      grid.filter = dip_avgCF.filter;
+    end
+
+    % keep all the individual trials, do not average them
+    Cf = Cf;
+    Cr = Cr;
+    Pr = Pr;
     Nrepetitions = Ntrials;
     
   elseif strcmp(cfg.rawtrial, 'yes')
@@ -667,38 +691,8 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     if Nrepetitions > 1
       ft_progress(i/Nrepetitions, 'scanning repetition %d from %d', i, Nrepetitions);
     end
-    
-    switch cfg.method
-      case 'dics'
-        if strcmp(submethod, 'dics_power')
-          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:});
-        elseif strcmp(submethod, 'dics_refchan')
-          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:}, 'Cr', Cr(i,:), 'Pr', Pr(i));
-        elseif strcmp(submethod, 'dics_refdip')
-          dip(i) = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:}, 'refdip', cfg.refdip);
-        end
-      case 'pcc'
-        if ~isempty(avg) && istrue(cfg.rawtrial)
-          % FIXME added by jansch because an appropriate subselection of avg
-          % should be done first (i.e. select the tapers that belong to this
-          % repetition
-          error('rawtrial in combination with pcc has been temporarily disabled');
-        else
-          dip(i) = beamformer_pcc(grid, sens, headmodel, avg, squeeze_Cf, optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
-        end
-      case 'eloreta'
-        dip(i) = ft_eloreta(grid, sens, headmodel, avg, squeeze_Cf, optarg{:});
-      case 'mne'
-        dip(i) = minimumnormestimate(grid, sens, headmodel, avg, optarg{:});
-      case 'harmony'
-        dip(i) = harmony(grid, sens, headmodel, avg, optarg{:});
-        % error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
-      case {'rv'}
-        dip(i) = residualvariance(grid, sens, headmodel, avg, optarg{:}) ;
-      case {'music'}
-        error(sprintf('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method));
-      otherwise
-    end
+
+    dip(i) = do_freq_sourceanalysis(submethod, grid, sens, headmodel, squeeze_Cf, optarg, Cr, Pr, cfg, avg, refchanindx, supchanindx);
     
   end
   if Nrepetitions > 1
@@ -1192,3 +1186,41 @@ ft_postamble previous   data baseline
 ft_postamble provenance source
 ft_postamble history    source
 ft_postamble savevar    source
+
+end
+
+function [dipout] = do_freq_sourceanalysis(submethod, grid, sens, headmodel, squeeze_Cf, optarg, Cr, Pr, cfg, avg, refchanindx, supchanindx)
+
+    switch cfg.method
+      case 'dics'
+        if strcmp(submethod, 'dics_power')
+          dipout = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:});
+        elseif strcmp(submethod, 'dics_refchan')
+          dipout = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:}, 'Cr', Cr(i,:), 'Pr', Pr(i));
+        elseif strcmp(submethod, 'dics_refdip')
+          dipout = beamformer_dics(grid, sens, headmodel, [],  squeeze_Cf, optarg{:}, 'refdip', cfg.refdip);
+        end
+      case 'pcc'
+        if ~isempty(avg) && istrue(cfg.rawtrial)
+          % FIXME added by jansch because an appropriate subselection of avg
+          % should be done first (i.e. select the tapers that belong to this
+          % repetition
+          error('rawtrial in combination with pcc has been temporarily disabled');
+        else
+          dipout = beamformer_pcc(grid, sens, headmodel, avg, squeeze_Cf, optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
+        end
+      case 'eloreta'
+        dipout = ft_eloreta(grid, sens, headmodel, avg, squeeze_Cf, optarg{:});
+      case 'mne'
+        dipout = minimumnormestimate(grid, sens, headmodel, avg, optarg{:});
+      case 'harmony'
+        dipout = harmony(grid, sens, headmodel, avg, optarg{:});
+        % error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
+      case {'rv'}
+        dipout = residualvariance(grid, sens, headmodel, avg, optarg{:}) ;
+      case {'music'}
+        error(sprintf('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method));
+      otherwise
+    end
+
+end
