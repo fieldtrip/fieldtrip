@@ -48,13 +48,16 @@ function ft_plot_cloud(pos, val, varargin)
 if size(pos,2)~=3
   error('pos has to be an Nx3 array')
 end
+
 if isempty(val)
   val = ones(size(pos,1),1); % vector of ones
 end
 
-% the unit of geometry is needed for the other defaults
-% estimate the unit of geometry of the positions, FIXME this fails for a single or few points
-posunit = ft_estimate_units(range(pos));
+assert(isrow(val) || iscolumn(val), 'values should be represented as a single vector')
+val = val(:); % ensure it is a column
+
+% estimate the unit of geometry of the positions (needed for the other defaults)
+posunit = ft_estimate_units(range(pos).*2); % FIXME times 2 otherwise this fails for single/few points
 % determine the desired unit of geometry
 unit = ft_getopt(varargin, 'unit', posunit);
 % convert the sensor positions into the desired units
@@ -85,6 +88,8 @@ if ischar(cmap)
   else
     cmapsc = feval(cmap, 201); % an odd number
   end
+else
+  cmapsc = cmap;
 end
 
 cmid    = size(cmapsc,1)/2;               % colorbar middle
@@ -102,7 +107,7 @@ for n = 1:size(pos,1) % cloud loop
   if strcmp(scalerad, 'yes')
     rmax = rmin+(radius-rmin)*radscf(n); % maximum radius of this cloud
   else
-    rmax = radius; % each cloud the same radius
+    rmax = radius; % each cloud has the same radius
   end
   npoints   = round(ptdens*(4/3)*pi*rmax^3);  % number of points based on cloud volume
   elevation = asin(2*rand(npoints,1)-1);      % elevation angle for each point
@@ -112,18 +117,20 @@ for n = 1:size(pos,1) % cloud loop
   [x,y,z]   = sph2cart(azimuth, elevation, radii); % convert to Carthesian
   
   % color axis with radius scaling
-  if strcmp(cgrad, 'white') % color runs up to white
-    fcol  = cmapsc(ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid)),:); % color [Nx3]
+  if strcmp(cgrad, 'white')                   % color runs up to white
+    indx  = ceil(cmid) + sign(colscf(n))*floor(abs(colscf(n)*cmid));
+    indx  = max(min(indx,size(cmapsc,1)),1);  % index should fall within the colormap
+    fcol  = cmapsc(indx,:);                   % color [Nx3]
     ptcol = [linspace(fcol(1), 1, npoints)' linspace(fcol(2), 1, npoints)' linspace(fcol(3), 1, npoints)'];
-  elseif isscalar(cgrad) % color runs down towards colorbar middle
-    rnorm = radii/rmax; % normalized radius
-    if radscf(n)>=.5 % extreme values
+  elseif isscalar(cgrad)                      % color runs down towards colorbar middle
+    rnorm = radii/rmax;                       % normalized radius
+    if radscf(n)>=.5                          % extreme values
       ptcol = val(n) - (flip(1-rnorm).^inv(cgrad))*val(n); % scaled fun [Nx1]
-    elseif radscf(n)<.5 % values closest to zero
+    elseif radscf(n)<.5                       % values closest to zero
       ptcol = val(n) + (flip(1-rnorm).^inv(cgrad))*abs(val(n)); % scaled fun [Nx1]
     end
   else
-    error('cfg.colorgrad should be either ''white'' or a scalar determining color falloff')
+    error('color gradient should be either ''white'' or a scalar determining color falloff')
   end
   
   % draw the points
