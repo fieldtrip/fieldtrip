@@ -56,9 +56,8 @@ end
 assert(isrow(val) || iscolumn(val), 'values should be represented as a single vector')
 val = val(:); % ensure it is a column
 
-% the unit of geometry is needed for the other defaults
-% estimate the unit of geometry of the positions, FIXME this fails for a single or few points
-posunit = ft_estimate_units(range(pos));
+% estimate the unit of geometry of the positions (needed for the other defaults)
+posunit = ft_estimate_units(range(pos).*2); % FIXME times 2 otherwise this fails for single/few points
 % determine the desired unit of geometry
 unit = ft_getopt(varargin, 'unit', posunit);
 % convert the sensor positions into the desired units
