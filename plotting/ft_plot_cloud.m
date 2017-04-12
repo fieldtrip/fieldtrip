@@ -349,7 +349,7 @@ if dointersect
     
     slicepos = zeros(nslices,1);
     for n = 1:nslices
-      imaxslice = find(totalarea == max(totalarea)); % index of the slice with the maximum area
+      imaxslice = find(totalarea == max(totalarea), 1); % index of the slice with the maximum area
       slicepos(n) = potent_slices(imaxslice); % position of the yet unlisted slice with the maximum area
       totalarea(imaxslice-minspace:imaxslice+minspace) = 0; % change the totalarea of the chosen slice and those within minspace to 0 so that it is not chosen again
     end
