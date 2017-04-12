@@ -77,14 +77,44 @@ figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'facealpha', 0, 'edgealp
 
 %%
 % slice options
+% default 2d
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d');
+
+% 2d and 3d should cut the same slices
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'nslices', 3);
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'nslices', 3);
-figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'nslices', 3, 'minspace', 20);
 
+% increasing minspace should spread the slices out
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'nslices', 3, 'minspace', 20);
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'nslices', 3, 'minspace', 20);
+
+% test 'slicepos'
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'slicepos', 33);
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33);
-figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33, 'slicetype', 'surf');
+
+% test 'slicetype' = 'surf'
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33), 'slicetype', 'surf');
+
+% test slicing through multiple meshes 
+figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'slice', '2d', 'slicepos', 33) 
+
+% test slicing in other orientations
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'ori', 'x', 'slicepos', 33);
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'ori', 'x', 'slicepos', 33);
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'ori', 'z', 'slicepos', 30);
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'ori', 'z', 'slicepos', 30);
+
+% test intersect line settings
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33, 'intersectcolor', 'r');
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33, 'intersectlinestyle', '--');
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33, 'intersectlinewidth', 10);
+% should allow for line setting inputs for each individual mesh, but default 
+% to the first one if there is only 1
+figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'slice', '2d', 'slicepos', 33, 'intersectcolor', 'r');
+figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'slice', '2d', 'slicepos', 33, 'intersectcolor', {[0 1 0], [1 0 0]});
+figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'slice', '2d', 'slicepos', 33, 'intersectlinestyle', '--');
+figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'slice', '2d', 'slicepos', 33, 'intersectlinestyle', {'--', '-'});
+figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'slice', '2d', 'slicepos', 33, 'intersectlinewidth', 10);
+figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'slice', '2d', 'slicepos', 33, 'intersectlinewidth', [10 5]);
+
 
