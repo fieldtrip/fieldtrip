@@ -108,13 +108,16 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/audio2ft$(SUFFIX)
+TARGETS = $(BINDIR)/audio2ft$(SUFFIX) $(BINDIR)/ft2audio$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
 
 %.o: %.cc
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
+
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
 
 $(BINDIR)/%$(SUFFIX): %.o $(CPPOBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
