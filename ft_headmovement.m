@@ -100,7 +100,7 @@ dat = tmpdata';
 clear tmpdata;
 
 %log how often each position occurs (this mimics the old w_dat)
-[w_dat, ~] = hist(ic, unique(ic));
+[wdat, ~] = hist(ic, unique(ic));
 
 
 
