@@ -6,7 +6,7 @@ function test_bug3280
 %%
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3280'));
 
-dataset = 'A1826_comparisonSEF_20161212_02_signletrial.ds';
+dataset = 'A1826_comparisonSEF_20161212_02.ds';
 
 %%
 
@@ -17,3 +17,5 @@ elec = ft_read_sens(dataset, 'senstype', 'eeg');
 
 assert(isfield(grad,'coilpos'));
 assert(isfield(elec,'elecpos'));
+
+
