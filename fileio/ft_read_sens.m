@@ -70,7 +70,7 @@ end
 
 % get the options
 fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
-senstype       = ft_getopt(varargin, 'senstype', 'eeg');  % can be eeg or meg, this is used to decide what to return if both are present in a fif file
+senstype       = ft_getopt(varargin, 'senstype');         % can be eeg or meg, default is automatic when []
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
 
