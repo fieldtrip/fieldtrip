@@ -573,7 +573,13 @@ switch headerformat
     end
     % add a gradiometer structure for forward and inverse modelling
     try
-      hdr.grad = ctf2grad(orig, strcmp(coordsys, 'dewar'), coilaccuracy);
+      [grad, elec] = ctf2grad(orig, strcmp(coordsys, 'dewar'), coilaccuracy);
+      if ~isempty(grad)
+        hdr.grad = grad;
+      end
+      if ~isempty(elec)
+        hdr.elec = elec;
+      end
     catch
       % this fails if the res4 file is not correctly closed, e.g. during realtime processing
       tmp = lasterror;
