@@ -70,11 +70,9 @@ end
 
 % get the options
 fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
-senstype       = ft_getopt(varargin, 'senstype', 'eeg');  % can be eeg or meg, this is used to decide what to return if both are present in a fif file
+senstype       = ft_getopt(varargin, 'senstype');         % can be eeg or meg, default is automatic when []
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
-transform      = ft_getopt(varargin, 'transform');        % empty, or a 4x4 transformation matrix
-
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -168,20 +166,25 @@ switch fileformat
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
     % sometimes there can also be electrode position information in the header
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
+      if isempty(senstype)
+        % set the default
+        warning('both electrode and gradiometer information is present, returning the electrode information by default');
+        senstype = 'eeg';
+      end
       switch lower(senstype)
         case 'eeg'
-          warning('both electrode and gradiometer information is present, returning the electrode information');
           sens = hdr.elec;
         case 'meg'
-          warning('both electrode and gradiometer information is present, returning the gradiometer information');
           sens = hdr.grad;
+        otherwise
+          error('incorrect specification of senstype');
       end
-    elseif ~isfield(hdr, 'elec') && ~isfield(hdr, 'grad')
-      error('neither electrode nor gradiometer information is present');
     elseif isfield(hdr, 'grad')
       sens = hdr.grad;
     elseif isfield(hdr, 'elec')
       sens = hdr.elec;
+    else
+      error('neither electrode nor gradiometer information is present');
     end
     
   case 'neuromag_mne_grad'
@@ -375,3 +378,12 @@ end % switch fileformat
 % ensure that the sensor description is up-to-date
 % this will also add chantype and units to the sensor array if missing
 sens = ft_datatype_sens(sens);
+
+% ensure that the output is consistent with the type requested by the user
+if strcmpi(senstype, 'meg')
+  assert(isfield(sens,'coilpos'), 'cannot read gradiometer information from %s', filename);
+elseif strcmpi(senstype, 'eeg')
+  assert(isfield(sens,'elecpos'), 'cannot read electrode information from %s', filename);
+else
+  % it is empty if not specified by the user, in that case either one is fine
+end
