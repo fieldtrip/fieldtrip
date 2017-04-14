@@ -9,7 +9,8 @@ function [data] = ft_resampledata(cfg, data)
 % the FT_PREPROCESSING function. The configuration should contain
 %   cfg.resamplefs  = frequency at which the data will be resampled (default = 256 Hz)
 %   cfg.detrend     = 'no' or 'yes', detrend the data prior to resampling (no default specified, see below)
-%   cfg.demean      = 'no' or 'yes', baseline correct the data prior to resampling (default = 'no')
+%   cfg.demean      = 'no' or 'yes', baseline correct the data prior to
+%   resampling (default = 'no'). Uses complete trial as baseline.
 %   cfg.feedback    = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.sampleindex = 'no' or 'yes', add a channel with the original sample indices (default = 'no')
