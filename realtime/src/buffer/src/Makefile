@@ -52,7 +52,7 @@ includes = $(wildcard *.h)
 ##############################################################################
 all: libbuffer.a
 
-libbuffer.a: tcpserver.o socketserver.o rdaserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o timestamp.o util.o printstruct.o swapbytes.o extern.o endianutil.o clock_gettime.o gettimeofday.o fsync.o usleep.o
+libbuffer.a: tcpserver.o socketserver.o rdaserver.o tcpsocket.o tcprequest.o clientrequest.o dmarequest.o cleanup.o timestamp.o util.o interface.o printstruct.o swapbytes.o extern.o endianutil.o clock_gettime.o gettimeofday.o fsync.o usleep.o
 	ar rv $@ $^
 
 libclient.a: tcprequest.o util.o

@@ -92,19 +92,19 @@ end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'forbidden', {'baselinewindow'});
 
 % set the defaults
-cfg.resamplefs = ft_getopt(cfg, 'resamplefs', []);
-cfg.time       = ft_getopt(cfg, 'time',       {});
-cfg.detrend    = ft_getopt(cfg, 'detrend',    'no');
-cfg.demean     = ft_getopt(cfg, 'demean',     'no');
-cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
-cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
-cfg.method     = ft_getopt(cfg, 'method',     'pchip');
+cfg.resamplefs  = ft_getopt(cfg, 'resamplefs',  []);
+cfg.time        = ft_getopt(cfg, 'time',        {});
+cfg.detrend     = ft_getopt(cfg, 'detrend',     'no');
+cfg.demean      = ft_getopt(cfg, 'demean',      'no');
+cfg.feedback    = ft_getopt(cfg, 'feedback',    'text');
+cfg.trials      = ft_getopt(cfg, 'trials',      'all', 1);
+cfg.method      = ft_getopt(cfg, 'method',      'pchip');
 cfg.sampleindex = ft_getopt(cfg, 'sampleindex', 'no');
 
-% give the user control over whether to use resample (applies anti-aliasing
-% filter) or downsample (does not apply filter)
+% give the user control over whether to use resample (applies anti-aliasing filter) or downsample (does not apply filter)
 cfg.resamplemethod = ft_getopt(cfg, 'resamplemethod', 'resample');
 
 % store original datatype

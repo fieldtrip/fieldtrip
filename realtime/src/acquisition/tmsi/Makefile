@@ -22,7 +22,7 @@ CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
 CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
 INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
 LIBPATH  = -L$(FTBUFFER)/src
-LDLIBS   = -lbuffer -lthread
+LDLIBS   = -lbuffer -lpthread
 
 # better would be to make a proper library of the C++ framework
 CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
@@ -42,7 +42,7 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS   = -lm -lws2_32 -static
+	LDLIBS  += -lm -lws2_32 -static
 	SUFFIX   = .exe
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)

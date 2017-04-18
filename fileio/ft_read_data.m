@@ -1333,7 +1333,7 @@ switch dataformat
     dat = read_nex_data(filename, hdr, begsample, endsample, chanindx);
     
   case 'riff_wave'
-    dat = wavread(filename, [begsample endsample])';
+    dat = audioread(filename, [begsample endsample])';
     dat = dat(chanindx,:);
     
   case 'spmeeg_mat'
