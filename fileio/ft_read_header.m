@@ -978,7 +978,7 @@ switch headerformat
           for iSens = 1:numel(orig.xml.pnsSet.sensors)
             hdr.label{nbEEGchan+iSens} = num2str(orig.xml.pnsSet.sensors(iSens).sensor.name);
           end
-          if length(hdr.label) == orig.signal(2).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
+          if length(hdr.label) == orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
             % good
           elseif length(hdr.label) < orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
             warning('found less lables in xml.pnsSet than channels in signal 2, labeling with s2_unknownN instead')
