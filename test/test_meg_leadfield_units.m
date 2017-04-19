@@ -106,7 +106,7 @@ plot([lf0(:,3) lf1(:,3)]);
 %% do a forward computation for a CTF151 sensor layout
 clear all
 
-grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));
+grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
 
 vol0 = [];
 vol0.type = 'infinite_currentdipole';

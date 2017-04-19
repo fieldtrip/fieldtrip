@@ -271,7 +271,7 @@ if usetarget
     if isstruct(cfg.target{i})
       target(i) = cfg.target{i};
     else
-      target(i) = ft_read_sens(cfg.target{i});
+      target(i) = ft_read_sens(cfg.target{i}, 'senstype', 'eeg');
     end
   end
   clear tmp

@@ -537,14 +537,14 @@ elseif ischar(cfg.layout)
     
   elseif ~ft_filetype(cfg.layout, 'layout')
     % assume that cfg.layout is an electrode file
-    fprintf('creating layout from electrode file %s\n', cfg.layout);
+    fprintf('creating layout from sensor description file %s\n', cfg.layout);
     sens = ft_read_sens(cfg.layout);
     layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   end
   
 elseif ischar(cfg.elecfile)
   fprintf('creating layout from electrode file %s\n', cfg.elecfile);
-  sens = ft_read_sens(cfg.elecfile);
+  sens = ft_read_sens(cfg.elecfile, 'senstype', 'eeg');
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
@@ -559,7 +559,7 @@ elseif isfield(data, 'elec') && isstruct(data.elec)
   
 elseif ischar(cfg.gradfile)
   fprintf('creating layout from gradiometer file %s\n', cfg.gradfile);
-  sens = ft_read_sens(cfg.gradfile);
+  sens = ft_read_sens(cfg.gradfile, 'senstype', 'meg');
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
@@ -574,7 +574,7 @@ elseif isfield(data, 'grad') && isstruct(data.grad)
   
 elseif ischar(cfg.optofile)
   fprintf('creating layout from optode file %s\n', cfg.optofile);
-  sens = ft_read_sens(cfg.optofile);
+  sens = ft_read_sens(cfg.optofile, 'senstype', 'nirs');
   if (hasdata)
     layout = opto2lay(sens, data.label);
   else
