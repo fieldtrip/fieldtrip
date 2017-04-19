@@ -100,7 +100,7 @@ if hasdata
   if isfield(data, 'grad')
     cfg.senstype = ft_getopt(cfg, 'senstype', 'meg');
   elseif isfield(data, 'elec')
-    cfg.senstype = ft_getopt(cfg, 'senstype', 'meg');
+    cfg.senstype = ft_getopt(cfg, 'senstype', 'eeg');
   elseif isfield(data, 'opto')
     cfg.senstype = ft_getopt(cfg, 'senstype', 'opto');
   else
