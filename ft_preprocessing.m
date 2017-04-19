@@ -464,6 +464,7 @@ else
   
   % translate the channel groups (like 'all' and 'MEG') into real labels
   cfg.channel = ft_channelselection(cfg.channel, hdr.label);
+  assert(~isempty(cfg.channel), 'the selection of channels is empty');
   
   if ~isempty(cfg.implicitref)
     % add the label of the implicit reference channel to these cell-arrays
