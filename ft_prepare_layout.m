@@ -542,21 +542,6 @@ elseif ischar(cfg.layout)
     layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   end
   
-elseif ischar(cfg.elecfile)
-  fprintf('creating layout from electrode file %s\n', cfg.elecfile);
-  sens = ft_read_sens(cfg.elecfile, 'senstype', 'eeg');
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
-  
-elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
-  fprintf('creating layout from cfg.elec\n');
-  sens = ft_datatype_sens(cfg.elec);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
-  
-elseif isfield(data, 'elec') && isstruct(data.elec)
-  fprintf('creating layout from data.elec\n');
-  sens = ft_datatype_sens(data.elec);
-  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
-  
 elseif ischar(cfg.gradfile)
   fprintf('creating layout from gradiometer file %s\n', cfg.gradfile);
   sens = ft_read_sens(cfg.gradfile, 'senstype', 'meg');
@@ -570,6 +555,21 @@ elseif ~isempty(cfg.grad) && isstruct(cfg.grad)
 elseif isfield(data, 'grad') && isstruct(data.grad)
   fprintf('creating layout from data.grad\n');
   sens = ft_datatype_sens(data.grad);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
+  
+elseif ischar(cfg.elecfile)
+  fprintf('creating layout from electrode file %s\n', cfg.elecfile);
+  sens = ft_read_sens(cfg.elecfile, 'senstype', 'eeg');
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
+  
+elseif ~isempty(cfg.elec) && isstruct(cfg.elec)
+  fprintf('creating layout from cfg.elec\n');
+  sens = ft_datatype_sens(cfg.elec);
+  layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
+  
+elseif isfield(data, 'elec') && isstruct(data.elec)
+  fprintf('creating layout from data.elec\n');
+  sens = ft_datatype_sens(data.elec);
   layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
   
 elseif ischar(cfg.optofile)
