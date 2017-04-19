@@ -102,7 +102,7 @@ if hasdata
   elseif isfield(data, 'elec')
     cfg.senstype = ft_getopt(cfg, 'senstype', 'meg');
   elseif isfield(data, 'opto')
-    cfg.senstype = ft_getopt(cfg, 'senstype', 'meg');
+    cfg.senstype = ft_getopt(cfg, 'senstype', 'opto');
   else
     cfg.senstype = ft_getopt(cfg, 'senstype', []);
   end
