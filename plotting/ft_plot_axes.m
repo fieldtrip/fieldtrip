@@ -173,7 +173,10 @@ if ~isempty(str) && ~strcmp(str, 'unknown')
       labely = {'-Y (anterior)'  '+Y (posterior)'};
       labelz = {'-Z (inferior)'  '+Z (superior)'};
     otherwise
-      error('unknown coordsys');
+      warning('unknown coordsys');
+      labelx = {'-X (unknown)' '+X (unknown)'};
+      labely = {'-Y (unknown)' '+Y (unknown)'};
+      labelz = {'-Z (unknown)' '+Z (unknown)'};
   end
   
 else
