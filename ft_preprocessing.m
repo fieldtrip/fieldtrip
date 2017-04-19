@@ -463,7 +463,7 @@ else
   end
   
   % translate the channel groups (like 'all' and 'MEG') into real labels
-  cfg.channel = ft_channelselection(cfg.channel, hdr.label);
+  cfg.channel = ft_channelselection(cfg.channel, hdr);
   assert(~isempty(cfg.channel), 'the selection of channels is empty');
   
   if ~isempty(cfg.implicitref)
