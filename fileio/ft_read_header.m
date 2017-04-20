@@ -573,7 +573,13 @@ switch headerformat
     end
     % add a gradiometer structure for forward and inverse modelling
     try
-      hdr.grad = ctf2grad(orig, strcmp(coordsys, 'dewar'), coilaccuracy);
+      [grad, elec] = ctf2grad(orig, strcmp(coordsys, 'dewar'), coilaccuracy);
+      if ~isempty(grad)
+        hdr.grad = grad;
+      end
+      if ~isempty(elec)
+        hdr.elec = elec;
+      end
     catch
       % this fails if the res4 file is not correctly closed, e.g. during realtime processing
       tmp = lasterror;
@@ -972,7 +978,7 @@ switch headerformat
           for iSens = 1:numel(orig.xml.pnsSet.sensors)
             hdr.label{nbEEGchan+iSens} = num2str(orig.xml.pnsSet.sensors(iSens).sensor.name);
           end
-          if length(hdr.label) == orig.signal(2).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
+          if length(hdr.label) == orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
             % good
           elseif length(hdr.label) < orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
             warning('found less lables in xml.pnsSet than channels in signal 2, labeling with s2_unknownN instead')
@@ -2275,11 +2281,12 @@ switch headerformat
     end
     
   case 'riff_wave'
-    [y, fs, nbits, opts] = wavread(filename, 1); % read one sample
-    siz = wavread(filename,'size');
-    hdr.Fs          = fs;
-    hdr.nChans      = siz(2);
-    hdr.nSamples    = siz(1);
+    % prior to MATLAB R2015b this used to be done with "wavread"
+    % but the audioinfo/audioread function are at least available from 2012b up
+    info = audioinfo(filename);
+    hdr.Fs          = info.SampleRate;
+    hdr.nChans      = info.NumChannels;
+    hdr.nSamples    = info.TotalSamples;
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     [p, f, x] = fileparts(filename);
@@ -2294,7 +2301,7 @@ switch headerformat
       hdr.chantype{1,1} = 'audio';
     end
     % remember the details
-    hdr.orig = opts;
+    hdr.orig = info;
     
   case 'videomeg_aud'
     hdr = read_videomeg_aud(filename);

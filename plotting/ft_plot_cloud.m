@@ -94,8 +94,12 @@ pos = pos * ft_scalingfactor(posunit, unit);
 radius             = ft_getopt(varargin, 'radius', 4 * ft_scalingfactor('mm', unit));
 rmin               = ft_getopt(varargin, 'rmin',   1 * ft_scalingfactor('mm', unit));
 scalerad           = ft_getopt(varargin, 'scalerad', 'yes');
-cmap               = ft_getopt(varargin, 'colormap', 'parula');
 cgrad              = ft_getopt(varargin, 'colorgrad', 'white');
+if ft_platform_supports('parula')
+  cmap             = ft_getopt(varargin, 'colormap', 'parula');
+else
+  cmap             = ft_getopt(varargin, 'colormap', 'jet');
+end
 clim               = ft_getopt(varargin, 'clim');
 meshplot           = ft_getopt(varargin, 'mesh');
 

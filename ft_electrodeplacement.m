@@ -12,7 +12,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % and high values. The magnet feature transports the crosshair to the nearest peak
 % intensity voxel, within a certain voxel radius of the selected location. The labels
 % feature displays the labels of the selected electrodes within the orthoplot. The
-% local feature allows toggling the view between all and near-crosshair
+% global feature allows toggling the view between all and near-crosshair
 % markers. The scan feature allows toggling between scans when another scan
 % is given as input.
 %
@@ -113,7 +113,7 @@ cfg.elec          = ft_getopt(cfg, 'elec',                []); % use previously 
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 % view options
 cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
-cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance for including in 'local' view
+cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance view when ~global
 % magnet options
 cfg.magtype       = ft_getopt(cfg, 'magtype',         'peak'); % detect peaks or troughs or center-of-mass
 cfg.magradius     = ft_getopt(cfg, 'magradius',            2); % specify the physical unit radius
@@ -217,17 +217,17 @@ switch cfg.method
       end
       
       % this is the size reserved for subplot h1, h2 and h3
-      h1size(1) = 0.85*axlen1/(axlen1 + axlen2); % x
-      h1size(2) = 0.85*axlen3/(axlen2 + axlen3); % z
-      h2size(1) = 0.85*axlen2/(axlen1 + axlen2); % y
-      h2size(2) = 0.85*axlen3/(axlen2 + axlen3); % z
-      h3size(1) = 0.85*axlen1/(axlen1 + axlen2); % x
-      h3size(2) = 0.85*axlen2/(axlen2 + axlen3); % y
+      h1size(1) = 0.92*axlen1/(axlen1 + axlen2); % x
+      h1size(2) = 0.92*axlen3/(axlen2 + axlen3); % z
+      h2size(1) = 0.92*axlen2/(axlen1 + axlen2); % y
+      h2size(2) = 0.92*axlen3/(axlen2 + axlen3); % z
+      h3size(1) = 0.92*axlen1/(axlen1 + axlen2); % x
+      h3size(2) = 0.92*axlen2/(axlen2 + axlen3); % y
       
       % axis handles will hold the anatomical functional if present, along with labels etc.
-      h1 = axes('position',[0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]); % x z
-      h2 = axes('position',[0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]); % y z
-      h3 = axes('position',[0.06                0.06                h3size(1) h3size(2)]); % x y
+      h1 = axes('position',[0.02                0.02+0.04+h3size(2) h1size(1) h1size(2)]); % x z
+      h2 = axes('position',[0.02+0.04+h1size(1) 0.02+0.04+h3size(2) h2size(1) h2size(2)]); % y z
+      h3 = axes('position',[0.02                0.02                h3size(1) h3size(2)]); % x y
       
       set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top'); axis(h1,'equal');
       set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); axis(h2,'equal'); % after rotating in ft_plot_ortho this becomes top
@@ -250,6 +250,9 @@ switch cfg.method
       %set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
       
       mri{v}.axes = [h1 h2 h3];
+      mri{v}.h1size = h1size;
+      mri{v}.h2size = h2size;
+      mri{v}.h3size = h3size;
       mri{v}.clim = cfg.clim;
       mri{v}.slim = [.9 1]; % 90% - maximum
       
@@ -264,7 +267,7 @@ switch cfg.method
     h45text = uicontrol('Style', 'text',...
       'String','Intensity',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1)+0.03 h3size(2)+0.03 h1size(1)/4 0.04],...
+      'Position',[2*mri{1}.h1size(1)+0.03 mri{1}.h3size(2)-0.02 mri{1}.h1size(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
     
@@ -273,7 +276,7 @@ switch cfg.method
       'Min', 0, 'Max', 1, ...
       'Value', cfg.clim(1), ...
       'Units', 'normalized', ...
-      'Position', [2*h1size(1)+0.02 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
+      'Position', [2*mri{1}.h1size(1)+0.02 0.10+mri{1}.h3size(2)/3 0.05 mri{1}.h3size(2)/2-0.05], ...
       'Callback', @cb_minslider);
     
     h5 = uicontrol('Style', 'slider', ...
@@ -281,7 +284,7 @@ switch cfg.method
       'Min', 0, 'Max', 1, ...
       'Value', cfg.clim(2), ...
       'Units', 'normalized', ...
-      'Position', [2*h1size(1)+0.07 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
+      'Position', [2*mri{1}.h1size(1)+0.07 0.10+mri{1}.h3size(2)/3 0.05 mri{1}.h3size(2)/2-0.05], ...
       'Callback', @cb_maxslider);
     
     % java intensity range slider (dual-knob slider): the java component gives issues when wanting to
@@ -293,26 +296,35 @@ switch cfg.method
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
     
     % electrode listbox
+    chanlabel = {}; chanstring = {};
+    markerlab = {}; markerpos = {};
     if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
-      cfg.channel = []; % ensure cfg.channel is empty, for filling it up
       for e = 1:numel(cfg.elec.label)
-        cfg.channel{e,1} = cfg.elec.label{e};
-        chanstring{e} = ['<HTML><FONT color="black">' cfg.channel{e,1} '</FONT></HTML>']; % hmtl'ize
+        chanlabel{end+1,1} = cfg.elec.label{e};
+        chanstring{end+1} = ['<HTML><FONT color="black">' cfg.elec.label{e} '</FONT></HTML>']; % hmtl'ize
         
-        markerlab{e,1} = cfg.elec.label{e};
-        markerpos{e,1} = cfg.elec.elecpos(e,:);
+        markerlab{end+1,1} = cfg.elec.label{e};
+        markerpos{end+1,1} = cfg.elec.elecpos(e,:);
       end
-    else % otherwise use standard / prespecified (cfg.channel) electrode labels
-      if isempty(cfg.channel)
-        for c = 1:150
-          cfg.channel{c,1} = sprintf('%d', c);
+    end
+    if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
+      for c = 1:numel(cfg.channel)
+        if ~ismember(cfg.channel{c}, chanlabel) % avoid overlap between cfg.channel and elec.label
+          chanlabel{end+1,1} = cfg.channel{c};
+          chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
+          
+          markerlab{end+1,1} = {};
+          markerpos{end+1,1} = zeros(0,3);
         end
       end
-      for c = 1:numel(cfg.channel)
-        chanstring{c} = ['<HTML><FONT color="silver">' cfg.channel{c,1} '</FONT></HTML>']; % hmtl'ize
+    end
+    if isempty(cfg.elec) && isempty(cfg.channel) % create electrode labels on-the-fly
+      for c = 1:150
+        chanlabel{end+1,1} = sprintf('%d', c);
+        chanstring{end+1} = ['<HTML><FONT color="silver">' sprintf('%d', c) '</FONT></HTML>']; % hmtl'ize
         
-        markerlab{c,1} = {};
-        markerpos{c,1} = zeros(0,3);
+        markerlab{end+1,1} = {};
+        markerpos{end+1,1} = zeros(0,3);
       end
     end
     
@@ -320,7 +332,8 @@ switch cfg.method
       'Parent', h, ...
       'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
       'Units', 'normalized', ...
-      'Position', [0.06+0.06+h1size(1) 0.06 h2size(1)/2 h3size(2)], ...
+      'FontSize', 12, ...
+      'Position', [0.02+0.10+mri{1}.h1size(1) 0.02 mri{1}.h2size(1)/2.5 mri{1}.h3size(2)], ...
       'Callback', @cb_eleclistbox, ...
       'String', chanstring);
         
@@ -330,7 +343,7 @@ switch cfg.method
       'Value', 1, ...
       'String','Magnet',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1) 0.22 h1size(1)/3 0.04],...
+      'Position',[2*mri{1}.h1size(1) 0.18 mri{1}.h1size(1)/3 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_magnetbutton);
@@ -340,7 +353,7 @@ switch cfg.method
       'Value', 0, ...
       'String','Labels',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1) 0.18 h1size(1)/3 0.04],...
+      'Position',[2*mri{1}.h1size(1) 0.14 mri{1}.h1size(1)/3 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_labelsbutton);
@@ -348,19 +361,19 @@ switch cfg.method
     h9 = uicontrol('Style', 'checkbox',...
       'Parent', h, ...
       'Value', 0, ...
-      'String','Local',...
+      'String','Global',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1) 0.14 h1size(1)/3 0.04],...
+      'Position',[2*mri{1}.h1size(1) 0.10 mri{1}.h1size(1)/3 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
-      'Callback', @cb_localbutton);
+      'Callback', @cb_globalbutton);
     
     hscatter = uicontrol('Style', 'checkbox',...
       'Parent', h, ...
       'Value', 0, ...
       'String','Scatter',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1) 0.10 h1size(1)/3 0.04],...
+      'Position',[2*mri{1}.h1size(1) 0.06 mri{1}.h1size(1)/3 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_scatterbutton);
@@ -370,7 +383,7 @@ switch cfg.method
       'Value', 0, ...
       'String','CT/MRI',...
       'Units', 'normalized', ...
-      'Position',[2*h1size(1) 0.06 h1size(1)/3 0.04],...
+      'Position',[2*mri{1}.h1size(1) 0.02 mri{1}.h1size(1)/3 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Visible', 'off', ...
@@ -381,7 +394,7 @@ switch cfg.method
     h10text = uicontrol('Style', 'text',...
       'String','Zoom',...
       'Units', 'normalized', ...
-      'Position',[1.8*h1size(1)+0.01 h3size(2)+0.03 h1size(1)/4 0.04],...
+      'Position',[1.8*mri{1}.h1size(1)+0.01 mri{1}.h3size(2)-0.02 mri{1}.h1size(1)/4 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on');
     
@@ -390,7 +403,7 @@ switch cfg.method
       'Min', 0, 'Max', 0.9, ...
       'Value', 0, ...
       'Units', 'normalized', ...
-      'Position', [1.8*h1size(1)+0.02 0.15+h3size(2)/3 0.05 h3size(2)/2-0.05], ...
+      'Position', [1.8*mri{1}.h1size(1)+0.02 0.10+mri{1}.h3size(2)/3 0.05 mri{1}.h3size(2)/2-0.05], ...
       'SliderStep', [.1 .1], ...
       'Callback', @cb_zoomslider);
     
@@ -407,6 +420,7 @@ switch cfg.method
     
     % create structure to be passed to gui
     opt               = [];
+    opt.label         = chanlabel;
     opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
     opt.mainfig       = h;
     opt.quit          = false;
@@ -418,12 +432,11 @@ switch cfg.method
     opt.showcrosshair = true;
     opt.pos           = [0 0 0]; % middle of the scan, head coordinates
     opt.showlabels    = false;
-    opt.label         = cfg.channel;
     opt.magnet        = get(h7, 'Value');
     opt.magradius     = cfg.magradius;
     opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
-    opt.local         = get(h9, 'Value'); % show all markers in the current slices
+    opt.global        = get(h9, 'Value'); % show all markers in the current slices
     opt.scatter       = get(hscatter, 'Value'); % additional scatterplot
     opt.scan          = get(hscan, 'Value'); % switch scans
     opt.slim          = [.9 1]; % 90% - maximum
@@ -506,7 +519,7 @@ ft_postamble savevar    elec
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata)
-tic
+
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
@@ -608,7 +621,7 @@ if opt.showmarkers
     tmp3 = opt.markerpos_sel(:,3);
     
     subplot(h1);
-    if opt.local % filter markers distant to the current slice (N units and further)
+    if ~opt.global % filter markers distant to the current slice (N units and further)
       posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
       posi = tmp1(posj_idx);
       posj = tmp2(posj_idx);
@@ -631,7 +644,7 @@ if opt.showmarkers
     end
     
     subplot(h2);
-    if opt.local % filter markers distant to the current slice (N units and further)
+    if ~opt.global % filter markers distant to the current slice (N units and further)
       posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
       posi = tmp1(posi_idx);
       posj = tmp2(posi_idx);
@@ -654,7 +667,7 @@ if opt.showmarkers
     end
     
     subplot(h3);
-    if opt.local % filter markers distant to the current slice (N units and further)
+    if ~opt.global % filter markers distant to the current slice (N units and further)
       posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
       posi = tmp1(posk_idx);
       posj = tmp2(posk_idx);
@@ -688,7 +701,6 @@ if isfield(opt, 'scatterfig')
   cb_scatterredraw(h);
   figure(h); % this switches back to mainfig
 end
-toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -782,11 +794,11 @@ if opt.scatter % radiobutton on
   end
   
   if opt.redrawmarker
-    if isfield(opt, 'markerpos_sel') % plot the markers
-      delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove previous markers
+    delete(findobj(opt.scatterfig,'Type','line','Marker','+')); % remove all scatterfig markers
+    delete(findobj(opt.scatterfig,'Type','text')); % remove all scatterfig labels
+    if opt.showmarkers && isfield(opt, 'markerpos_sel') % plot the markers
       plot3(opt.markerpos_sel(:,1),opt.markerpos_sel(:,2),opt.markerpos_sel(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
       if opt.showlabels
-        delete(findobj(opt.scatterfig,'Type','text')); % remove previous labels
         for i=1:size(opt.markerpos_sel,1)
           text(opt.markerpos_sel(i,1), opt.markerpos_sel(i,2), opt.markerpos_sel(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
         end
@@ -794,7 +806,7 @@ if opt.scatter % radiobutton on
     end
     opt.redrawmarker = 0;
   end
-  
+
   % update the existing crosshairs, don't change the handles
   crosshair([opt.pos], 'handle', opt.handlescross2);
   if opt.showcrosshair
@@ -855,11 +867,11 @@ switch key
     cb_cleanup(h);
     
   case 'g' % global/local elec view (h9) toggle
-    if isequal(opt.local, 0)
-      opt.local = 1;
+    if isequal(opt.global, 0)
+      opt.global = 1;
       set(opt.axes(9), 'Value', 1);
-    elseif isequal(opt.local, 1)
-      opt.local = 0;
+    elseif isequal(opt.global, 1)
+      opt.global = 0;
       set(opt.axes(9), 'Value', 0);
     end
     setappdata(h, 'opt', opt);
@@ -936,7 +948,7 @@ switch key
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
-  case 102 % 'f'
+  case 102 % 'f' for fiducials
     opt.showmarkers = ~opt.showmarkers;
     opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
@@ -1171,8 +1183,6 @@ if ~isempty(elecidx)
       eleclab = regexprep(eleclab, '"black"','"silver"'); % replace font color
       opt.markerlab{elecidx,1} = {}; % assign marker label
       opt.markerpos{elecidx,1} = []; % assign marker position
-      delete(findobj(h,'Type','Line','Marker','+')); % remove all markers
-      delete(findobj(h,'Type','text')); % remove all labels
     end
   end
   
@@ -1248,11 +1258,11 @@ cb_redraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_localbutton(h9, eventdata)
+function cb_globalbutton(h9, eventdata)
 
 h = getparent(h9);
 opt = getappdata(h, 'opt');
-opt.local = get(h9, 'value');
+opt.global = get(h9, 'value');
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 

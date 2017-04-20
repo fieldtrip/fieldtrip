@@ -5,15 +5,15 @@
  * (C) 2010 Stefan Klanke
  */
 
-#include <buffer.h>
-#include <rdadefs.h>
 #include <signal.h>
 #include <pthread.h>
 #include <string.h>
-#if !defined(WIN32) || defined(COMPILER_MINGW) 
+#if !defined(WIN32) || defined(COMPILER_MINGW)
 #include <sys/time.h>
 #endif
 
+#include "buffer.h"
+#include "rdadefs.h"
 
 #define MAXLINE 256
 #define MAX_PRINT_CHN  300

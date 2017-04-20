@@ -1,0 +1,34 @@
+// This software is based on the G.Tec example code for the gNEEDAccess API interface.
+// COPYRIGHT © 2013 G.TEC MEDICAL ENGINEERING GMBH, AUSTRIA
+
+// This software includes the FieldTrip buffer library, which is Copyright (C) 2008-2017,
+// Donders Centre for Cognitive Neuroimaging, Radboud University, The Netherlands.
+// See http://www.fieldtriptoolbox.org
+
+#Before running this application:
+Please install g.NEEDaccess Server on the Microsoft Windows host PC.
+
+#Command to EXECUTE:
+./gtec2ft.exe HostIp HostPort LocalIp LocalPort BufferIP BufferPort
+
+When running this application:
+ - use the IP address of the gNEDAccess host PC that runs the server for the 'HostIp'
+   command line argument
+ - use the port that the gNEDAccess server is listening to from the server's documentation
+   for the 'HostPort' command line argument (by default this is 50223)
+ - use the IP address of the PC that runs the demo for the 'LocalIp' command
+   line argument (do not use the loopback adapter address 127.0.0.1 when server
+   and client run at different machines)
+ - use an arbitrary free port of the PC that runs the demo for the 'LocalPort'
+   command line argument.
+ - use the IP address of the computer that is running the FieldTrip buffer server
+   for the 'bufferIP' address. When specifying "-", a buffer will be started in
+   a separate thread in this application.
+ - use the port that the FieldTrip buffer is running on (when remote), or the port
+   on which the buffer should be started for the 'BufferPort' command line argument.
+
+The default port for the gNEEDAccess server is 50223, the default port for
+the FieldTrip buffer is 1972.
+
+#Example:
+./gtec2ft.exe 127.0.0.1 50223 127.0.0.1 2345 192.168.1.100 1972

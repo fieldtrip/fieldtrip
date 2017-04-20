@@ -1186,7 +1186,7 @@ switch eventformat
     
   case 'gtec_hdf5'
     % the header mentions trigger channels, but I don't know how they are stored
-    error('this has not been implemented yet due to a lack of a good example file');
+    warning('event reading for hdf5 has not yet been implemented due to a lack of a good example file');
 
   case 'gtec_mat'
     if isempty(hdr)
