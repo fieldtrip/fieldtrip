@@ -376,19 +376,27 @@ if hasdata
     sensfield = [];
   end
   
-  if isstruct(cfg.montage)
-    if ~isempty(sensfield)
-      if  strcmp(cfg.updatesens, 'yes')
-        fprintf('also applying the montage to the %s structure\n', sensfield);
-        if isfield(cfg.montage, 'type')
-          bname = cfg.montage.type; % FIXME this is not standard
-        else
-          bname = 'preproc';
-        end
-        dataout.(sensfield) = ft_apply_montage(dataout.(sensfield), cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
-      else
-        fprintf('not applying the montage to the %s structure\n', sensfield);
+  if ~isempty(sensfield)
+    if strcmp(cfg.updatesens, 'yes')
+      if ~isstruct(cfg.montage) && strcmp(cfg.reref, 'yes')
+        fprintf('creating an identity matrix montage based on the %s structure\n', sensfield);
+        cfg.montage          = [];
+        cfg.montage.labelold = cfg.channel;
+        cfg.montage.labelnew = cfg.channel;
+        cfg.montage.tra      = eye(numel(cfg.channel));
       end
+      
+      fprintf('applying the montage to the %s structure\n', sensfield);
+      if isfield(cfg.montage, 'type')
+        bname = cfg.montage.type; % FIXME this is not standard
+      else
+        bname = 'preproc';
+      end
+      senscfg.channel = cfg.channel; % only use the selected channels
+      dataout.(sensfield) = ft_selectdata(senscfg, dataout.(sensfield));
+      dataout.(sensfield) = ft_apply_montage(dataout.(sensfield), cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+    else
+      fprintf('not applying the montage to the %s structure\n', sensfield);
     end
   end
   
