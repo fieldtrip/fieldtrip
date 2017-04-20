@@ -141,14 +141,14 @@ for i=1:Ndata
   else
     sampleinfo{i} = [];
   end
-
+  
   % the function should behave properly even if no sampleinfo is present,
   % hence the warning seems inappropriate (ES, 24-apr-2014)
-%   if isempty(sampleinfo{i})
-%     % a sample definition is expected in each data set
-%     warning('no ''sampleinfo'' field in data structure %d', i);
-%   end
-
+  %   if isempty(sampleinfo{i})
+  %     % a sample definition is expected in each data set
+  %     warning('no ''sampleinfo'' field in data structure %d', i);
+  %   end
+  
   hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
 end
@@ -187,14 +187,14 @@ try
   for j=2:Ndata
     hassampleinfos = isfield(varargin{1}, 'sampleinfo') &&...
       isfield(varargin{j}, 'sampleinfo');
-
+    
     if ((hassampleinfos &&...
         ~isequal(varargin{1}.sampleinfo, varargin{j}.sampleinfo)) ||...
         ~hassampleinfos) &&...
         ~isempty(origfile1) && ~strcmp(origfile1, ft_findcfg(varargin{j}.cfg, 'datafile'))
-        removesampleinfo = 1;
-        warning('input data comes from different datafiles; removing sampleinfo field');
-        break;
+      removesampleinfo = 1;
+      warning('input data comes from different datafiles; removing sampleinfo field');
+      break;
     end
   end
 catch err
@@ -230,17 +230,17 @@ end
 
 if cattrial && catlabel
   error('cannot determine how the data should be concatenated');
-
+  
 elseif cattrial
   fprintf('concatenating the trials over all datasets\n');
-
+  
   data = [];
   data.label  = varargin{1}.label;
   data.trial  = {};
   data.time   = {};
   if hassampleinfo, data.sampleinfo = []; end
   if hastrialinfo,  data.trialinfo  = []; end;
-
+  
   for i=1:Ndata
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
@@ -249,27 +249,27 @@ elseif cattrial
     if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo,  varargin{i}.trialinfo);  end
     % FIXME is not entirely robust if the different inputs have different number of columns in trialinfo
   end
-
+  
 elseif catlabel
   fprintf('concatenating the channels within each trial\n');
-
+  
   if ~all(diff(Ntrial)==0)
     error('not all datasets have the same number of trials');
   else
     Ntrial = Ntrial(1);
   end
-
+  
   data = [];
   data.label = varargin{1}.label;
   data.trial = varargin{1}.trial;
   data.time  = varargin{1}.time;
   if hassampleinfo, data.sampleinfo=varargin{i}.sampleinfo; end
   if hastrialinfo,  data.trialinfo =varargin{i}.trialinfo;  end
-
+  
   for i=2:Ndata
     % concatenate the labels
     data.label = cat(1, data.label(:), varargin{i}.label(:));
-
+    
     % check whether the trialinfo and sampleinfo fields are consistent
     if hassampleinfo && ~isequaln(data.sampleinfo, varargin{i}.sampleinfo)
       removesampleinfo = 1;
@@ -278,17 +278,17 @@ elseif catlabel
       removetrialinfo = 1;
     end
   end
-
+  
   if ~isfield(data, 'fsample')
     fsample = 1/mean(diff(data.time{1}));
   else
     fsample = data.fsample;
   end
-
+  
   for j=1:Ntrial
     %pre-allocate memory for this trial
     data.trial{j} = [data.trial{j}; zeros(sum(Nchan(2:end)), size(data.trial{j},2))];
-
+    
     %fill this trial with data
     endchan = Nchan(1);
     %allow some jitter for irregular sample frequencies
@@ -302,7 +302,7 @@ elseif catlabel
       data.trial{j}(begchan:endchan,:) = varargin{i}.trial{j};
     end
   end
-
+  
 else
   % labels are inconsistent, cannot determine how to concatenate the data
   error('cannot determine how the data should be concatenated');
@@ -319,58 +319,75 @@ end
 % unshuffle the channels again to match the order of the first input data-structure
 if shuflabel
   fprintf('reordering the channels back to the original input order\n');
-  [dum,reorder] = sort(order(order(:,1)~=0,1));
+  [dum, reorder] = sort(order(order(:,1)~=0,1));
   for i=1:length(data.trial)
     data.trial{i} = data.trial{i}(reorder,:);
   end
   data.label = data.label(reorder);
 end
 
-removesens = 0;
-if haselec || hasgrad || hasopto % see test_pull393.m for expected behavior
+removegrad = false;
+removeelec = false;
+removeopto = false;
+
+if haselec || hasgrad || hasopto
+  % see test_pull393.m for a description of the expected behavior
   if strcmp(cfg.appendsens, 'yes')
     fprintf('concatenating sensor information across input arguments\n');
-    elec = {}; grad = {}; opto = {};
+    grad = cell(1,Ndata);
+    elec = cell(1,Ndata);
+    opto = cell(1,Ndata);
     for j=1:Ndata
-      if isfield(varargin{j},'elec');
-        elec{end+1} = varargin{j}.elec;
-      elseif isfield(varargin{j},'grad');
-        grad{end+1} = varargin{j}.grad;
-      elseif isfield(varargin{j},'opto');
-        opto{end+1} = varargin{j}.opto;
+      if isfield(varargin{j}, 'elec')
+        elec{j} = varargin{j}.elec;
+      end
+      if isfield(varargin{j}, 'grad')
+        grad{j} = varargin{j}.grad;
+      end
+      if isfield(varargin{j}, 'opto')
+        opto{j} = varargin{j}.opto;
       end
     end
-    if ~isempty(elec) data.elec = ft_appendsens([], elec{:}); end
-    if ~isempty(grad) data.grad = ft_appendsens([], grad{:}); end
-    if ~isempty(opto) data.opto = ft_appendsens([], opto{:}); end
-  else % discard sens when it is inconsistent across the input arguments
-    sens = {};
+    if hasgrad, data.grad = ft_appendsens([], grad{:}); end
+    if haselec, data.elec = ft_appendsens([], elec{:}); end
+    if hasopto, data.opto = ft_appendsens([], opto{:}); end
+  else
+    % discard sensor information when it is inconsistent across the input arguments
+    grad = cell(1,Ndata);
+    elec = cell(1,Ndata);
+    opto = cell(1,Ndata);
     for j=1:Ndata
-      if isfield(varargin{j},'elec');
-        sens{end+1} = varargin{j}.elec;
-      elseif isfield(varargin{j},'grad');
-        sens{end+1} = varargin{j}.grad;
-      elseif isfield(varargin{j},'opto');
-        sens{end+1} = varargin{j}.opto;
+      if isfield(varargin{j}, 'grad')
+        grad{j} = varargin{j}.grad;
+      end
+      if isfield(varargin{j}, 'elec')
+        elec{j} = varargin{j}.elec;
+      end
+      if isfield(varargin{j}, 'opto')
+        opto{j} = varargin{j}.opto;
       end
     end
-    for j=1:Ndata
-      if j>1
-        if ~isequaln(sens{j}, sens{1})
-          removesens = 1;
-          warning('sensor information does not seem to be consistent across the input arguments');
-          break;
-        end
-      end
+    for j=2:Ndata
+      removegrad = removegrad || ~isequaln(grad{j}, grad{1});
+      removeelec = removeelec || ~isequaln(elec{j}, elec{1});
+      removeopto = removeopto || ~isequaln(opto{j}, opto{1});
     end
   end
 end
 
-if removesens
-  fprintf('removing sensor information from output\n');
-  if haselec && isfield(data, 'elec'), data = rmfield(data, 'elec'); end
-  if hasgrad && isfield(data, 'grad'), data = rmfield(data, 'grad'); end
-  if hasopto && isfield(data, 'opto'), data = rmfield(data, 'opto'); end
+if removegrad
+  fprintf('removing gradiometer information from output\n');
+  if isfield(data, 'grad'), data = removefields(data, 'grad'); end
+end
+
+if removeelec
+  fprintf('removing electrode information from output\n');
+  if isfield(data, 'elec'), data = removefields(data, 'elec'); end
+end
+
+if removegrad
+  fprintf('removing optode information from output\n');
+  if isfield(data, 'opto'), data = removefields(data, 'opto'); end
 end
 
 if removesampleinfo
