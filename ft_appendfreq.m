@@ -186,27 +186,18 @@ switch cfg.appenddim
     else
       freq.dimord = varargin{1}.dimord;
       % FIXME append dof
+      
       % before append cumtapcnt cumsumcnt trialinfo check if there's a
       % subfield in each dataset. Append fields of different dataset might
       % lead in empty and/or non-existing fields in a particular dataset
-      hascumsumcnt = [];
-      hascumtapcnt = [];
-      hastrialinfo = [];
+      hascumsumcnt = 0;
+      hascumtapcnt = 0;
+      ncoltrialinfo = zeros(size(varargin));
       for i=1:Ndata
-        if isfield(varargin{i},'cumsumcnt');
-          hascumsumcnt(end+1) = 1;
-        else
-          hascumsumcnt(end+1) = 0;
-        end
-        if isfield(varargin{i},'cumtapcnt');
-          hascumtapcnt(end+1) = 1;
-        else
-          hascumtapcnt(end+1) = 0;
-        end
-        if isfield(varargin{i},'trialinfo');
-          hastrialinfo(end+1) = 1;
-        else
-          hastrialinfo(end+1) = 0;
+        hascumsumcnt = isfield(varargin{i}, 'cumsumcnt') + hascumsumcnt;
+        hascumtapcnt = isfield(varargin{i}, 'cumtapcnt') + hascumtapcnt;
+        if isfield(varargin{i}, 'trialinfo')
+          ncoltrialinfo(i) = size(varargin{i}.trialinfo,2);
         end
       end
 
@@ -216,20 +207,20 @@ switch cfg.appenddim
       else
         freq.freq=varargin{1}.freq;
       end
-      if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==Ndata);
+      if hascumsumcnt ~= 0 && hascumsumcnt ~= Ndata
         error('the cumsumcnt fields of the input data structures are not equal');
       else
-        iscumsumcnt=unique(hascumsumcnt);
+        iscumsumcnt = hascumsumcnt == Ndata;
       end
-      if ~sum(hascumtapcnt)==0 && ~(sum(hascumtapcnt)==Ndata);
+      if hascumtapcnt ~= 0 && hascumtapcnt ~= Ndata
         error('the cumtapcnt fields of the input data structures are not equal');
       else
-        iscumtapcnt=unique(hascumtapcnt);
+        iscumtapcnt = hascumtapcnt == Ndata;
       end
-      if ~sum(hastrialinfo)==0 && ~(sum(hastrialinfo)==Ndata);
-        error('the trialinfo fields of the input data structures are not equal');
-      else
-        istrialinfo=unique(hastrialinfo);
+      if numel(unique(ncoltrialinfo)) == 1  % all inputs have same # of columns,
+        istrialinfo = ncoltrialinfo(1) ~= 0; % but if 0, no inputs have trialinfo
+      else % either not all inputs have trialinfo, or they all do, but with different #s of columns
+        error('trialinfo cannot be merged unless the same columns are present across all inputs')
       end
 
       % concatenating fields

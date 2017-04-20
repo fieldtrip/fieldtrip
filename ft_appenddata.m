@@ -1,7 +1,6 @@
 function [data] = ft_appenddata(cfg, varargin)
-
-% FT_APPENDDATA combines multiple datasets that have been preprocessed separately
-% into a single large dataset.
+% FT_APPENDDATA combines multiple datasets that have been preprocessed
+% separately into a single large dataset.
 %
 % Use as
 %   data = ft_appenddata(cfg, data1, data2, data3, ...)
@@ -110,47 +109,21 @@ for i=1:Ndata
   label = cat(1, label(:), varargin{i}.label(:));
 end
 
-% try to locate the trial definition (trl) in the nested configuration and
-% check whether the input data contains trialinfo
-% this is DEPRECATED - don't look in cfg-tree for stuff anymore
-% hastrialinfo = 0;
-% trl = cell(1, Ndata);
-% for i=1:Ndata
-%   if isfield(varargin{i}, 'cfg')
-%     trl{i} = ft_findcfg(varargin{i}.cfg, 'trl');
-%   else
-%     trl{i} = [];
-%   end
-%   if isempty(trl{i})
-%     % a trial definition is expected in each continuous data set
-%     warning('could not locate the trial definition ''trl'' in data structure %d', i);
-%   end
-%   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
-% end
-% hastrialinfo = hastrialinfo==Ndata;
-
-hastrialinfo = 0;
 hassampleinfo = 0;
-sampleinfo = cell(1, Ndata);
+ncoltrialinfo = zeros(size(varargin));
 for i=1:Ndata
-  if isfield(varargin{i}, 'sampleinfo')
-    sampleinfo{i} = varargin{i}.sampleinfo;
-  else
-    sampleinfo{i} = [];
-  end
-
-  % the function should behave properly even if no sampleinfo is present,
-  % hence the warning seems inappropriate (ES, 24-apr-2014)
-%   if isempty(sampleinfo{i})
-%     % a sample definition is expected in each data set
-%     warning('no ''sampleinfo'' field in data structure %d', i);
-%   end
-
   hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
-  hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
+  if isfield(varargin{i}, 'trialinfo')
+    ncoltrialinfo(i) = size(varargin{i}.trialinfo,2);
+  end
 end
-hassampleinfo = hassampleinfo==Ndata;
-hastrialinfo = hastrialinfo==Ndata;
+hassampleinfo = hassampleinfo==Ndata; % only if all inputs have sampleinfo
+if numel(unique(ncoltrialinfo)) == 1      % all inputs have same # of columns,
+  hastrialinfo = ncoltrialinfo(1) ~= 0;   % but if 0, no inputs have trialinfo
+else                      % either not all inputs have trialinfo, 
+  hastrialinfo = false;   % or they all do, but with different #s of columns
+  warning('trialinfo cannot be merged unless the same columns are present across all inputs')
+end
 
 % check the consistency of the labels across the input-structures
 alllabel = unique(label, 'first');
@@ -226,8 +199,7 @@ if shuflabel
   fprintf('the channel order in the input-structures is not consistent, reordering\n');
   if prunelabel
     fprintf('not all input-structures contain the same channels, pruning the input prior to concatenating over trials\n');
-    selall    = find(sum(order~=0,2)==Ndata);
-    alllabel  = alllabel(selall);
+    selall    = sum(order~=0,2)==Ndata;
     order     = order(selall,:);
   end
   for i=1:Ndata
@@ -249,15 +221,14 @@ elseif cattrial
   data.trial  = {};
   data.time   = {};
   if hassampleinfo, data.sampleinfo = []; end
-  if hastrialinfo,  data.trialinfo  = []; end;
+  if hastrialinfo,  data.trialinfo  = []; end
 
   for i=1:Ndata
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
-    % check if all datasets to merge have the sampleinfo field
+    % append sampleinfo & trialinfo rows (compatibility of inputs checked above)
     if hassampleinfo, data.sampleinfo = cat(1, data.sampleinfo, varargin{i}.sampleinfo); end
     if hastrialinfo,  data.trialinfo  = cat(1, data.trialinfo,  varargin{i}.trialinfo);  end
-    % FIXME is not entirely robust if the different inputs have different number of columns in trialinfo
   end
 
 elseif catlabel
@@ -273,14 +244,14 @@ elseif catlabel
   data.label = varargin{1}.label;
   data.trial = varargin{1}.trial;
   data.time  = varargin{1}.time;
-  if hassampleinfo, data.sampleinfo=varargin{i}.sampleinfo; end
-  if hastrialinfo,  data.trialinfo =varargin{i}.trialinfo;  end
+  if hassampleinfo, data.sampleinfo=varargin{1}.sampleinfo; end
+  if hastrialinfo,  data.trialinfo =varargin{1}.trialinfo;  end
 
   for i=2:Ndata
     % concatenate the labels
     data.label = cat(1, data.label(:), varargin{i}.label(:));
 
-    % check whether the trialinfo and sampleinfo fields are consistent
+    % trialinfo and sampleinfo fields must match exactly across all inputs
     if hassampleinfo && ~isequaln(data.sampleinfo, varargin{i}.sampleinfo)
       removesampleinfo = 1;
     end
@@ -329,7 +300,7 @@ end
 % unshuffle the channels again to match the order of the first input data-structure
 if shuflabel
   fprintf('reordering the channels back to the original input order\n');
-  [dum,reorder] = sort(order(order(:,1)~=0,1));
+  [~,reorder] = sort(order(order(:,1)~=0,1));
   for i=1:length(data.trial)
     data.trial{i} = data.trial{i}(reorder,:);
   end
