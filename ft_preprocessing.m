@@ -365,41 +365,27 @@ if hasdata
     
   end % for all trials
   
-  % apply the linear projection also to the sensor description
-  if isfield(dataout, 'grad')
-    sensfield = 'grad';
-  elseif isfield(dataout, 'elec')
-    sensfield = 'elec';
-  elseif isfield(dataout, 'opto')
-    sensfield = 'opto';
-  else
-    sensfield = [];
-  end
-  
-  if ~isempty(sensfield)
-    if strcmp(cfg.updatesens, 'yes')
-      if ~isstruct(cfg.montage) && strcmp(cfg.reref, 'yes')
-        fprintf('creating an identity matrix montage based on the %s structure\n', sensfield);
-        cfg.montage          = [];
-        cfg.montage.labelold = cfg.channel;
-        cfg.montage.labelnew = cfg.channel;
-        cfg.montage.tra      = eye(numel(cfg.channel));
-      end
-      
-      fprintf('applying the montage to the %s structure\n', sensfield);
-      if isfield(cfg.montage, 'type')
-        bname = cfg.montage.type; % FIXME this is not standard
-      else
-        bname = 'preproc';
-      end
-      senscfg.channel = cfg.channel; % only use the selected channels
-      dataout.(sensfield) = ft_selectdata(senscfg, dataout.(sensfield));
-      dataout.(sensfield) = ft_apply_montage(dataout.(sensfield), cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+  if isstruct(cfg.montage) && strcmp(cfg.updatesens, 'yes')
+    % apply the linear projection also to the sensor description
+    if issubfield(cfg.montage, 'type')
+      bname = cfg.montage.type;
     else
-      fprintf('not applying the montage to the %s structure\n', sensfield);
+      bname = 'preproc';
+    end
+    if isfield(dataout, 'grad')
+      fprintf('applying the montage to the grad structure\n');
+      dataout.grad = ft_apply_montage(dataout.grad, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+    end
+    if isfield(dataout, 'elec')
+      fprintf('applying the montage to the grad structure\n');
+      dataout.elec = ft_apply_montage(dataout.elec, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+    end
+    if isfield(dataout, 'opto')
+      fprintf('applying the montage to the opto structure\n');
+      dataout.opto = ft_apply_montage(dataout.opto, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
     end
   end
-  
+    
   % convert back to input type if necessary
   switch convert
     case 'timelock'
