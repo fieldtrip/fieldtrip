@@ -690,9 +690,9 @@ if  hasgrad || haselec || hasopto
     removeelec = any(cellfun(@isempty, elec));
     removeopto = any(cellfun(@isempty, opto));
     for j=2:length(varargin)
-      removegrad = removegrad && ~isequaln(grad{j}, grad{1});
-      removeelec = removeelec && ~isequaln(elec{j}, elec{1});
-      removeopto = removeopto && ~isequaln(opto{j}, opto{1});
+      removegrad = removegrad || ~isequaln(grad{j}, grad{1});
+      removeelec = removeelec || ~isequaln(elec{j}, elec{1});
+      removeopto = removeopto || ~isequaln(opto{j}, opto{1});
     end
     if hasgrad && ~removegrad, freq.grad = grad{1}; end
     if haselec && ~removeelec, freq.elec = elec{1}; end
