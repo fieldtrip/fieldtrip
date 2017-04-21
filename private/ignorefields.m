@@ -5,7 +5,30 @@ function ignore = ignorefields(purpose)
 % size-checking, etc.
 
 switch purpose
-  
+
+  case 'appendtimelock'
+    ignore = {
+      'cfg'
+      'label'
+      'time'
+      'dimord'
+      'grad'
+      'elec'
+      'opto'
+    };
+
+  case 'appendfreq'
+    ignore = {
+      'cfg'
+      'label'
+      'time'
+      'freq'
+      'dimord'
+      'grad'
+      'elec'
+      'opto'
+    };
+
   case 'deface'
     ignore = {
       % some fields should be dealt with explicitly
