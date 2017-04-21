@@ -192,22 +192,26 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
   grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
   
-  for i=1:numEEG
-    n = selEEG(i);
-    if dewar
-      pos = hdr.res4.senres(n).pos0';
-    else
-      pos = hdr.res4.senres(n).pos';
+  if numEEG>0
+    for i=1:numEEG
+      n = selEEG(i);
+      if dewar
+        pos = hdr.res4.senres(n).pos0';
+      else
+        pos = hdr.res4.senres(n).pos';
+      end
+      if hdr.res4.senres(n).numCoils~=1
+        error('unexpected number of electrode positions in EEG channel');
+      end
+      % add this position
+      elec.elecpos(i       ,:) = pos(1,:);
     end
-    if hdr.res4.senres(n).numCoils~=1
-      error('unexpected number of electrode positions in EEG channel');
-    end
-    % add this position
-    elec.elecpos(i       ,:) = pos(1,:);
+    % add the electrode names
+    elec.label = cellstr(hdr.res4.chanNames(selEEG,:));
+  else
+    elec = [];
   end
-  % add the electrode names
-  elec.label = cellstr(hdr.res4.chanNames(selEEG,:));
-
+  
   % combine the bottom and top coil of each MEG channel
   for i=1:numMEG
     n = selMEG(i);

@@ -16,7 +16,7 @@ function [grad] = ft_headmovement(cfg)
 %
 % See also FT_REGRESSCONFOUND FT_REALTIME_HEADLOCALIZER
 
-% Copyright (C) 2008-2010, Jan-Mathijs Schoffelen
+% Copyright (C) 2008-2017, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -57,10 +57,12 @@ end
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % set the defaults
-if ~isfield(cfg, 'numclusters'), cfg.numclusters = 12; end
+cfg.numclusters = ft_getopt(cfg, 'numclusters', 12);
+cfg.feedback    = ft_getopt(cfg, 'feedback', 'yes');
 
 % read the header information
 hdr = ft_read_header(cfg.headerfile);
+assert(numel(intersect(hdr.label, {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'}))==9, 'the data does not contain the expected head localizer channels');
 
 % work with gradiometers in dewar coordinates, since HLCs are also
 % in dewar coords. at present I did not find the nas, lpa, rpa channels,
@@ -81,49 +83,23 @@ grad.chanpos = grad_head.chanpos; % except the chanpos, which should remain in h
 tmpcfg              = [];
 tmpcfg.dataset      = cfg.dataset;
 tmpcfg.trl          = cfg.trl;
-tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013'...
-  'HLC0021' 'HLC0022' 'HLC0023'...
-  'HLC0031' 'HLC0032' 'HLC0033'};
+tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
 
-%resample doesn't work, because data will be demeaned
-%tmpcfg              = [];
-%tmpcfg.resamplefs   = 100;
-%data                = resampledata(tmpcfg, data);
+dat = cat(2, data.trial{:});
+dat = dat * ft_scalingfactor('m', grad.unit); % scale in units of the gradiometer definition
 
-dat  = zeros(length(data.label), 0);
-wdat = zeros(1, 0);
-for k = 1:length(data.trial)
-  tmpdat  = data.trial{k};
-  utmpdat = unique(tmpdat','rows')';
-  dat     = [dat utmpdat];
+[tmpdata, dum, ic] = unique(dat', 'rows');
+dat = tmpdata';
 
-  wtmpdat = zeros(1,size(utmpdat,2));
-  for m = 1:size(utmpdat,2)
-    wtmpdat(1,m) = sum(sum(tmpdat-utmpdat(:,m)*ones(1,size(tmpdat,2))==0,1)==9);
-  end
-  wdat    = [wdat wtmpdat];
-end
-dat(:, wdat<100) = [];
-wdat(wdat<100)   = [];
+% counthow often each position occurs
+[wdat, dum] = hist(ic, unique(ic));
 
-switch grad.unit
-  case 'm'
-    %do nothing
-  case 'cm'
-    dat = dat.*100;
-  case 'mm'
-    dat = dat.*1000;
-  otherwise
-    keyboard
-end
-
-nhcoils = size(dat,1);
-nsmp    = size(dat,2);
-
+% compute the cluster means
 [bin, cluster] = kmeans(dat', cfg.numclusters);
 
+% find the three channels for each fiducial
 selnas = strmatch('HLC001', data.label);
 sellpa = strmatch('HLC002', data.label);
 selrpa = strmatch('HLC003', data.label);
@@ -136,33 +112,22 @@ for k = 1:length(ubin)
   numperbin(k) = sum(wdat(bin==ubin(k)));
 end
 
-if 1,
+if istrue(cfg.feedback)
   hc    = read_ctf_hc([cfg.datafile(1:end-4),'hc']);
-  trf   = hc.homogenous;
-  xdir  = trf(1,1:3);
-  ydir  = trf(2,1:3);
-  zdir  = trf(3,1:3);
-
-  trf2   = inv(hc.homogenous);
-  origin = trf2(1:3,4)';
-
-  xaxis  = [repmat(origin, [15 1]) + [0:14]'*xdir];
-  yaxis  = [repmat(origin, [9  1]) + [0:8]'*ydir; ...
-    repmat(origin, [9  1]) - [0:8]'*ydir];
-  zaxis  = [repmat(origin, [10 1]) + [0:9]'*zdir; ...
-    repmat(origin, [3  1]) - [0:2]'*zdir];
-
+  
   % plot some stuff
   figure; hold on;
-  plot3(xaxis(:,1),xaxis(:,2),xaxis(:,3),'k.-');
-  plot3(yaxis(:,1),yaxis(:,2),yaxis(:,3),'k.-');
-  plot3(zaxis(:,1),zaxis(:,2),zaxis(:,3),'k.-');
+  title(sprintf('%s coordinates (%s)', grad_dewar.coordsys, grad_dewar.unit));
+  ft_plot_axes(grad_dewar);
+  ft_plot_sens(grad_dewar);
+  
   fiducials = [nas;lpa;rpa];
-  h  = plot3(fiducials(:,1), fiducials(:,2), fiducials(:,3), 'b.');
+  plot3(fiducials(:,1), fiducials(:,2), fiducials(:,3), 'b.');
   plot3(hc.dewar.nas(1), hc.dewar.nas(2), hc.dewar.nas(3), 'ro');
   plot3(hc.dewar.lpa(1), hc.dewar.lpa(2), hc.dewar.lpa(3), 'ro');
   plot3(hc.dewar.rpa(1), hc.dewar.rpa(2), hc.dewar.rpa(3), 'ro');
   axis vis3d; axis off
+  
 end
 
 % compute transformation matrix from dewar to head coordinates
@@ -179,7 +144,7 @@ gradnew.coilori = zeros(size(grad.coilpos,1)*npos, size(grad.coilpos,2));
 gradnew.tra = repmat(grad.tra, [1 npos]);
 for m = 1:npos
   tmptransform                                  = transform(:,:,m);
-  gradnew.coilpos((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilpos); % back to head-crd
+  gradnew.coilpos((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilpos); % back to head coordinates
   tmptransform(1:3, 4)                          = 0; % keep rotation only
   gradnew.coilori((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilori);
   gradnew.tra(:, (m-1)*ncoils+1:(m*ncoils))     = grad.tra.*(numperbin(m)./sum(numperbin));

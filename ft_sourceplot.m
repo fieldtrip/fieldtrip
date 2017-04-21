@@ -159,10 +159,25 @@ function ft_sourceplot(cfg, functional, anatomical)
 %                        or an Nx3 or Nx1 array where N is the number of vertices
 %   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %
-% The following parameters apply to cfg.method='cloud'
+% When cfg.method = 'cloud', the functional data will be rendered as
+% point clouds around the sensor positions. These point clouds can either
+% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of 
+% a single or multiple triangulated surface mesh(es) in an Nx1 cell-array
+% to be plotted with the interpolated functional data (see FT_PLOT_CLOUD)
+%
+% The following parameters apply to cfg.method='cloud' 
 %   cfg.radius          = scalar, maximum radius of cloud (default = 4)
 %   cfg.colorgrad       = 'white' or a scalar (e.g. 1), degree to which color of points in cloud
 %                         changes from its center
+%   cfg.slice           = requires 'anatomical' as input (default = 'none')
+%                         '2d', plots 2D slices through the cloud with an outline of the mesh
+%                         '3d', draws an outline around the mesh at a particular slice
+%   cfg.ori             = 'x', 'y', or 'z', specifies the orthogonal plane which will be plotted (default = 'y')
+%   cfg.slicepos        = 'auto' or Nx1 vector specifying the position of the
+%                         slice plane along the orientation axis (default = 'auto': chooses slice(s) with
+%                         the most data)
+%   cfg.nslices         = scalar, number of slices to plot if 'slicepos' = 'auto (default = 1)
+%   cfg.minspace        = scalar, minimum spacing between slices if nslices>1 (default = 1)
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -300,7 +315,7 @@ end
 % the data can be passed as input argument or can be read from disk
 hasanatomical = exist('anatomical', 'var');
 
-if hasanatomical
+if hasanatomical && ~strcmp(cfg.method, 'cloud') % cloud method should be able to take multiple surfaces and does not require interpolation
   % interpolate on the fly, this also does the downsampling if requested
   tmpcfg = keepfields(cfg, {'downsample', 'interpmethod', 'sphereradius'});
   tmpcfg.parameter = cfg.funparameter;
@@ -1313,13 +1328,29 @@ switch cfg.method
     % some defaults depend on the geometrical units
     scale = ft_scalingfactor('mm', functional.unit);
     % set the defaults for method=cloud
-    cfg.radius          = ft_getopt(cfg, 'radius', 4*scale);
-    cfg.rmin            = ft_getopt(cfg, 'rmin', 1*scale);
-    cfg.scalerad        = ft_getopt(cfg, 'scalerad', 'yes');
-    cfg.ptsize          = ft_getopt(cfg, 'ptsize', 1);
-    cfg.ptdensity       = ft_getopt(cfg, 'ptdensity', 20);
-    cfg.ptgradient      = ft_getopt(cfg, 'ptgradient', .5);
-    cfg.colorgrad       = ft_getopt(cfg, 'colorgrad', 'white');
+    cfg.radius             = ft_getopt(cfg, 'radius', 4*scale);
+    cfg.rmin               = ft_getopt(cfg, 'rmin', 1*scale);
+    cfg.scalerad           = ft_getopt(cfg, 'scalerad', 'yes');
+    cfg.ptsize             = ft_getopt(cfg, 'ptsize', 1);
+    cfg.ptdensity          = ft_getopt(cfg, 'ptdensity', 20);
+    cfg.ptgradient         = ft_getopt(cfg, 'ptgradient', .5);
+    cfg.colorgrad          = ft_getopt(cfg, 'colorgrad', 'white');
+    cfg.slice              = ft_getopt(cfg, 'slice', 'none');
+    cfg.slicetype          = ft_getopt(cfg, 'slicetype', 'point');
+    cfg.ori                = ft_getopt(cfg, 'ori', 'y');
+    cfg.slicepos           = ft_getopt(cfg, 'slicepos', 'auto');
+    cfg.nslices            = ft_getopt(cfg, 'nslices', 1);
+    cfg.minspace           = ft_getopt(cfg, 'minspace', 1);
+    cfg.intersectcolor     = ft_getopt(cfg, 'intersectcolor', {'k'});
+    cfg.intersectlinestyle = ft_getopt(cfg, 'intersectlinestyle', {'-'});
+    cfg.intersectlinewidth = ft_getopt(cfg, 'intersectlinewidth', 2);
+    cfg.ncirc              = ft_getopt(cfg, 'ncirc', 15);
+    cfg.scalealpha         = ft_getopt(cfg, 'scalealpha', 'no');
+    cfg.facecolor          = ft_getopt(cfg, 'facecolor', [0.781 0.762 0.664]);
+    cfg.edgecolor          = ft_getopt(cfg, 'edgecolor', 'none');
+    cfg.facealpha          = ft_getopt(cfg, 'facealpha', 1);
+    cfg.edgealpha          = ft_getopt(cfg, 'edgealpha', 0);
+    if ~hasanatomical; anatomical = {}; end
     
     if isUnstructuredFun
       pos = functional.pos;
@@ -1335,13 +1366,22 @@ switch cfg.method
       end
     end
     
-    ft_plot_cloud(pos, fun, ...
+    ft_plot_cloud(pos, fun, 'mesh', anatomical,...
       'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
       'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
-      'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], 'unit', functional.unit);
+      'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
+      'unit', functional.unit, 'slice', cfg.slice, 'slicetype', cfg.slicetype, ...
+      'ori', cfg.ori, 'slicepos', cfg.slicepos, 'nslices', cfg.nslices, 'minspace', cfg.minspace,...
+      'intersectcolor', cfg.intersectcolor, 'intersectlinestyle', cfg.intersectlinestyle, ...
+      'intersectlinewidth', cfg.intersectlinewidth, 'ncirc', cfg.ncirc, ...
+      'scalealpha', cfg.scalealpha, 'facecolor', cfg.facecolor, 'edgecolor', cfg.edgecolor,...
+      'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha);
     
-    if istrue(cfg.colorbar)
+    if istrue(cfg.colorbar) && ~strcmp(cfg.slice, '2d')
       colorbar;
+    else % position the colorbar so that it does not change the axis of the last subplot
+      subplotpos = get(subplot(cfg.nslices,1,cfg.nslices), 'Position'); % position of the bottom or rightmost subplot
+      colorbar('Position', [subplotpos(1)+subplotpos(3)+0.01 subplotpos(2) .05 subplotpos(2)+subplotpos(4)*(cfg.nslices+.1)]);
     end
     
     
