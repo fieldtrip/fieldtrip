@@ -433,7 +433,7 @@ end
 %     tmpcfg.channel   = cfg.channel;
 %     tmpcfg.tolerance = cfg.tolerance;
 %     [varargin{:}]    = ft_selectdata(tmpcfg, varargin{:});
-%     for i=1:Ndata
+%     for i=1:length(varargin)
 %       [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
 %     end
 %     cfg = cfg_rolledback;
@@ -451,7 +451,7 @@ end
 %       hascumsumcnt = [];
 %       hascumtapcnt = [];
 %       hastrialinfo = [];
-%       for i=1:Ndata
+%       for i=1:length(varargin)
 %         if isfield(varargin{i},'cumsumcnt')
 %           hascumsumcnt(end+1) = 1;
 %         else
@@ -475,24 +475,24 @@ end
 %       else
 %         freq.freq=varargin{1}.freq;
 %       end
-%       if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==Ndata)
+%       if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==length(varargin))
 %         error('the cumsumcnt fields of the input data structures are not equal');
 %       else
 %         iscumsumcnt=unique(hascumsumcnt);
 %       end
-%       if ~sum(hascumtapcnt)==0 && ~(sum(hascumtapcnt)==Ndata)
+%       if ~sum(hascumtapcnt)==0 && ~(sum(hascumtapcnt)==length(varargin))
 %         error('the cumtapcnt fields of the input data structures are not equal');
 %       else
 %         iscumtapcnt=unique(hascumtapcnt);
 %       end
-%       if ~sum(hastrialinfo)==0 && ~(sum(hastrialinfo)==Ndata)
+%       if ~sum(hastrialinfo)==0 && ~(sum(hastrialinfo)==length(varargin))
 %         error('the trialinfo fields of the input data structures are not equal');
 %       else
 %         istrialinfo=unique(hastrialinfo);
 %       end
 %
 %       % concatenating fields
-%       for i=1:Ndata
+%       for i=1:length(varargin)
 %         if iscumsumcnt
 %           cumsumcnt{i}=varargin{i}.cumsumcnt;
 %         end
@@ -623,7 +623,7 @@ end
 %   tmp = cell(size(varargin));
 %
 %   % get the numeric data 'param{k}' if present
-%   for m = 1:Ndata
+%   for m = 1:length(varargin)
 %
 %     if ~isfield(varargin{m}, param{k})
 %       error('parameter %s is not present in all data sets', param{k});
@@ -666,7 +666,7 @@ if  hasgrad || haselec || hasopto
   grad = cell(size(varargin));
   elec = cell(size(varargin));
   opto = cell(size(varargin));
-  for j=1:Ndata
+  for j=1:length(varargin)
     if isfield(varargin{j}, 'elec')
       elec{j} = varargin{j}.elec;
     end

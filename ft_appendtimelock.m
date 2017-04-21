@@ -243,7 +243,7 @@ end
 %
 % % do a basic check to see whether the dimords match
 % dimord = cell(size(varargin));
-% for i=1:Ndata
+% for i=1:length(varargin)
 %   dimord{i} = varargin{i}.dimord;
 % end
 % dimordmatch = all(strcmp(dimord{1}, dimord));
@@ -274,7 +274,7 @@ end
 %     tmpcfg.channel   = cfg.channel;
 %     tmpcfg.tolerance = cfg.tolerance;
 %     [varargin{:}]    = ft_selectdata(tmpcfg, varargin{:});
-%     for i=1:Ndata
+%     for i=1:length(varargin)
 %       [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
 %     end
 %     cfg = cfg_rolledback;
@@ -405,8 +405,8 @@ if  hasgrad || haselec || hasopto
   % gather the sensor definitions from all inputs
   grad = cell(size(varargin));
   elec = cell(size(varargin));
-  opto = cell(1,Ndata);
-  for j=1:Ndata
+  opto = cell(size(varargin));
+  for j=1:length(varargin)
     if isfield(varargin{j}, 'elec')
       elec{j} = varargin{j}.elec;
     end
