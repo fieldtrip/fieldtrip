@@ -1,24 +1,23 @@
 function [data] = ft_appenddata(cfg, varargin)
 
-% FT_APPENDDATA combines multiple datasets that have been preprocessed separately
-% into a single large dataset.
+% FT_APPENDDATA concatenates multiple raw data structures that have been preprocessed
+% separately into a single raw data structure.
 %
 % Use as
 %   data = ft_appenddata(cfg, data1, data2, data3, ...)
 % where the configuration can be empty.
 %
-% If the input datasets all have the same channels, the trials will be
-% concatenated. This is useful for example if you have different
-% experimental conditions, which, besides analyzing them separately, for
-% some reason you also want to analyze together. The function will check
-% for consistency in the order of the channels. If the order is inconsistent
-% the channel order of the output will be according to the channel order of
-% the first data structure in the input.
+% If the input datasets all have the same channels, the trials will be concatenated.
+% This is useful for example if you have different experimental conditions, which,
+% besides analyzing them separately, for some reason you also want to analyze
+% together. The function will check for consistency in the order of the channels. If
+% the order is inconsistent the channel order of the output will be according to the
+% channel order of the first data structure in the input.
 %
-% If the input datasets have different channels, but the same number of
-% trials, the channels will be concatenated within each trial. This is
-% useful for example if the data that you want to analyze contains both
-% MEG and EMG channels which require different preprocessing options.
+% If the input datasets have different channels, but the same number of trials, the
+% channels will be concatenated within each trial. This is useful for example if the
+% data that you want to analyze contains both MEG and EMG channels which require
+% different preprocessing options.
 %
 % Occasionally, the data needs to be concatenated in the trial dimension while
 % there's a slight discrepancy in the channels in the input data (e.g. missing
@@ -34,7 +33,8 @@ function [data] = ft_appenddata(cfg, varargin)
 % input/output structure. The data structure in the input file should be a
 % cell array for this particular function.
 %
-% See also FT_PREPROCESSING, FT_APPENDFREQ
+% See also FT_PREPROCESSING, FT_DATAYPE_RAW, FT_APPENDTIMELOCK, FT_APPENDFREQ,
+% FT_APPENDSENS, FT_APPENDSOURCE
 
 % Copyright (C) 2005-2008, Robert Oostenveld
 % Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
@@ -66,7 +66,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar varargin
+ft_preamble loadvar    varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
@@ -75,23 +75,17 @@ if ft_abort
   return
 end
 
-% set the defaults
-cfg.appendsens         = ft_getopt(cfg, 'appendsens', 'no');
-
 % check if the input data is valid for this function
 for i=1:length(varargin)
+  % FIXME: raw+comp is not always dealt with correctly
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'no');
 end
 
-% determine the dimensions of the data
-Ndata = length(varargin);
-
-if Ndata<2
-  error('you must give at least two datasets to append');
-end
+% set the defaults
+cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
 
 % ensure consistent input data
-for i=2:Ndata
+for i=2:length(varargin)
   if isfield(varargin{1}, 'topo')
     assert(isequaln(varargin{1}.topo, varargin{i}.topo), 'the input has inconsistent topo fields')
   end
@@ -103,10 +97,10 @@ for i=2:Ndata
   end
 end
 
-Nchan  = zeros(1,Ndata);
-Ntrial = zeros(1,Ndata);
+Nchan  = zeros(size(varargin));
+Ntrial = zeros(size(varargin));
 label  = {};
-for i=1:Ndata
+for i=1:length(varargin)
   Nchan(i)  = length(varargin{i}.label);
   Ntrial(i) = length(varargin{i}.trial);
   fprintf('input dataset %d, %d channels, %d trials\n', i, Nchan(i), Ntrial(i));
@@ -117,8 +111,8 @@ end
 % check whether the input data contains trialinfo
 % this is DEPRECATED - don't look in cfg-tree for stuff anymore
 % hastrialinfo = 0;
-% trl = cell(1, Ndata);
-% for i=1:Ndata
+% trl = cell(1, length(varargin));
+% for i=1:length(varargin)
 %   if isfield(varargin{i}, 'cfg')
 %     trl{i} = ft_findcfg(varargin{i}.cfg, 'trl');
 %   else
@@ -130,12 +124,12 @@ end
 %   end
 %   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
 % end
-% hastrialinfo = hastrialinfo==Ndata;
+% hastrialinfo = hastrialinfo==length(varargin);
 
 hastrialinfo = 0;
 hassampleinfo = 0;
-sampleinfo = cell(1, Ndata);
-for i=1:Ndata
+sampleinfo = cell(size(varargin));
+for i=1:length(varargin)
   if isfield(varargin{i}, 'sampleinfo')
     sampleinfo{i} = varargin{i}.sampleinfo;
   else
@@ -152,30 +146,17 @@ for i=1:Ndata
   hassampleinfo = isfield(varargin{i}, 'sampleinfo') + hassampleinfo;
   hastrialinfo = isfield(varargin{i}, 'trialinfo') + hastrialinfo;
 end
-hassampleinfo = hassampleinfo==Ndata;
-hastrialinfo = hastrialinfo==Ndata;
+hassampleinfo = hassampleinfo==length(varargin);
+hastrialinfo = hastrialinfo==length(varargin);
 
 % check the consistency of the labels across the input-structures
 alllabel = unique(label, 'first');
-order    = zeros(length(alllabel),Ndata);
-for j=1:Ndata
+order    = zeros(length(alllabel),length(varargin));
+for j=1:length(varargin)
   tmplabel = varargin{j}.label;
   [ix,iy]  = match_str(alllabel, tmplabel);
   order(ix,j) = iy;
 end
-
-% check consistency of sensor positions across inputs
-haselec = 0;
-hasgrad = 0;
-hasopto = 0;
-for j=1:Ndata
-  haselec = isfield(varargin{j}, 'elec') + haselec;
-  hasgrad = isfield(varargin{j}, 'grad') + hasgrad;
-  hasopto = isfield(varargin{j}, 'opto') + hasopto;
-end
-haselec(haselec>1) = 1;
-hasgrad(hasgrad>1) = 1;
-hasopto(hasopto>1) = 1;
 
 % check whether the data are obtained from the same datafile in case either
 % (1) we have sampleinfos and they are not identical or (2) we don't have
@@ -184,7 +165,7 @@ removesampleinfo = 0;
 removetrialinfo  = 0;
 try
   origfile1 = ft_findcfg(varargin{1}.cfg, 'datafile');
-  for j=2:Ndata
+  for j=2:length(varargin)
     hassampleinfos = isfield(varargin{1}, 'sampleinfo') &&...
       isfield(varargin{j}, 'sampleinfo');
     
@@ -208,19 +189,19 @@ catch err
 end
 
 catlabel   = all(sum(order~=0,2)==1);
-cattrial   = any(sum(order~=0,2)==Ndata);
-shuflabel  = cattrial && ~all(all(order-repmat(order(:,1),[1 Ndata])==0));
-prunelabel = cattrial && sum(sum(order~=0,2)==Ndata)<length(alllabel);
+cattrial   = any(sum(order~=0,2)==length(varargin));
+shuflabel  = cattrial && ~all(all(order-repmat(order(:,1),[1 length(varargin)])==0));
+prunelabel = cattrial && sum(sum(order~=0,2)==length(varargin))<length(alllabel);
 
 if shuflabel
   fprintf('the channel order in the input-structures is not consistent, reordering\n');
   if prunelabel
     fprintf('not all input-structures contain the same channels, pruning the input prior to concatenating over trials\n');
-    selall    = find(sum(order~=0,2)==Ndata);
+    selall    = find(sum(order~=0,2)==length(varargin));
     alllabel  = alllabel(selall);
     order     = order(selall,:);
   end
-  for i=1:Ndata
+  for i=1:length(varargin)
     varargin{i}.label = varargin{i}.label(order(:,i));
     for j=1:length(varargin{i}.trial)
       varargin{i}.trial{j} = varargin{i}.trial{j}(order(:,i),:);
@@ -241,7 +222,7 @@ elseif cattrial
   if hassampleinfo, data.sampleinfo = []; end
   if hastrialinfo,  data.trialinfo  = []; end;
   
-  for i=1:Ndata
+  for i=1:length(varargin)
     data.trial    = cat(2, data.trial,  varargin{i}.trial(:)');
     data.time     = cat(2, data.time,   varargin{i}.time(:)');
     % check if all datasets to merge have the sampleinfo field
@@ -266,7 +247,7 @@ elseif catlabel
   if hassampleinfo, data.sampleinfo=varargin{i}.sampleinfo; end
   if hastrialinfo,  data.trialinfo =varargin{i}.trialinfo;  end
   
-  for i=2:Ndata
+  for i=2:length(varargin)
     % concatenate the labels
     data.label = cat(1, data.label(:), varargin{i}.label(:));
     
@@ -293,7 +274,7 @@ elseif catlabel
     endchan = Nchan(1);
     %allow some jitter for irregular sample frequencies
     tolerance = 0.01*(1/fsample);
-    for i=2:Ndata
+    for i=2:length(varargin)
       if ~all(data.time{j}-varargin{i}.time{j}<tolerance)
         error('there is a difference in the time axes of the input data');
       end
@@ -308,13 +289,8 @@ else
   error('cannot determine how the data should be concatenated');
 end
 
-% some fields from the input should be copied over in the output
-copyfield = {'grad', 'elec', 'topo', 'topolabel', 'unmixing', 'fsample'};
-for i=1:length(copyfield)
-  if isfield(varargin{1}, copyfield{i})
-    data.(copyfield{i}) = varargin{1}.(copyfield{i});
-  end
-end
+% copy some fields from the input over to the output
+data = copyfields(varargin{1}, data, {'topo', 'topolabel', 'unmixing', 'fsample'});
 
 % unshuffle the channels again to match the order of the first input data-structure
 if shuflabel
@@ -326,68 +302,54 @@ if shuflabel
   data.label = data.label(reorder);
 end
 
-removegrad = false;
-removeelec = false;
-removeopto = false;
-
-if haselec || hasgrad || hasopto
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the following section is shared with ft_appenddata, ft_appendtimelock and ft_appendfreq
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+hasgrad = false;
+haselec = false;
+hasopto = false;
+for i=1:length(varargin)
+  hasgrad = hasgrad || isfield(varargin{i}, 'grad');
+  haselec = haselec || isfield(varargin{i}, 'elec');
+  hasopto = hasopto || isfield(varargin{i}, 'opto');
+end
+if hasgrad || haselec || hasopto
+  % collect the sensor definitions from all inputs
+  grad = cell(size(varargin));
+  elec = cell(size(varargin));
+  opto = cell(size(varargin));
+  for j=1:length(varargin)
+    if isfield(varargin{j}, 'elec')
+      elec{j} = varargin{j}.elec;
+    end
+    if isfield(varargin{j}, 'grad')
+      grad{j} = varargin{j}.grad;
+    end
+    if isfield(varargin{j}, 'opto')
+      opto{j} = varargin{j}.opto;
+    end
+  end
   % see test_pull393.m for a description of the expected behavior
   if strcmp(cfg.appendsens, 'yes')
     fprintf('concatenating sensor information across input arguments\n');
-    grad = cell(1,Ndata);
-    elec = cell(1,Ndata);
-    opto = cell(1,Ndata);
-    for j=1:Ndata
-      if isfield(varargin{j}, 'elec')
-        elec{j} = varargin{j}.elec;
-      end
-      if isfield(varargin{j}, 'grad')
-        grad{j} = varargin{j}.grad;
-      end
-      if isfield(varargin{j}, 'opto')
-        opto{j} = varargin{j}.opto;
-      end
-    end
-    if hasgrad, data.grad = ft_appendsens([], grad{:}); end
-    if haselec, data.elec = ft_appendsens([], elec{:}); end
-    if hasopto, data.opto = ft_appendsens([], opto{:}); end
+    % append the sensor descriptions, skip the empty ones
+    if hasgrad, data.grad = ft_appendsens([], grad{~cellfun(@isempty, grad)}); end
+    if haselec, data.elec = ft_appendsens([], elec{~cellfun(@isempty, elec)}); end
+    if hasopto, data.opto = ft_appendsens([], opto{~cellfun(@isempty, opto)}); end
   else
     % discard sensor information when it is inconsistent across the input arguments
-    grad = cell(1,Ndata);
-    elec = cell(1,Ndata);
-    opto = cell(1,Ndata);
-    for j=1:Ndata
-      if isfield(varargin{j}, 'grad')
-        grad{j} = varargin{j}.grad;
-      end
-      if isfield(varargin{j}, 'elec')
-        elec{j} = varargin{j}.elec;
-      end
-      if isfield(varargin{j}, 'opto')
-        opto{j} = varargin{j}.opto;
-      end
+    removegrad = any(cellfun(@isempty, grad));
+    removeelec = any(cellfun(@isempty, elec));
+    removeopto = any(cellfun(@isempty, opto));
+    for j=2:length(varargin)
+      removegrad = removegrad && ~isequaln(grad{j}, grad{1});
+      removeelec = removeelec && ~isequaln(elec{j}, elec{1});
+      removeopto = removeopto && ~isequaln(opto{j}, opto{1});
     end
-    for j=2:Ndata
-      removegrad = removegrad || ~isequaln(grad{j}, grad{1});
-      removeelec = removeelec || ~isequaln(elec{j}, elec{1});
-      removeopto = removeopto || ~isequaln(opto{j}, opto{1});
-    end
+    if hasgrad && ~removegrad, data.grad = grad{1}; end
+    if haselec && ~removeelec, data.elec = elec{1}; end
+    if hasopto && ~removeopto, data.opto = opto{1}; end
   end
-end
-
-if removegrad
-  fprintf('removing gradiometer information from output\n');
-  if isfield(data, 'grad'), data = removefields(data, 'grad'); end
-end
-
-if removeelec
-  fprintf('removing electrode information from output\n');
-  if isfield(data, 'elec'), data = removefields(data, 'elec'); end
-end
-
-if removegrad
-  fprintf('removing optode information from output\n');
-  if isfield(data, 'opto'), data = removefields(data, 'opto'); end
 end
 
 if removesampleinfo
@@ -405,5 +367,5 @@ ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargin
-ft_postamble history data
-ft_postamble savevar data
+ft_postamble history    data
+ft_postamble savevar    data
