@@ -5,7 +5,7 @@ function ignore = ignorefields(purpose)
 % size-checking, etc.
 
 switch purpose
-
+  
   case 'appendtimelock'
     ignore = {
       'cfg'
@@ -15,8 +15,10 @@ switch purpose
       'grad'
       'elec'
       'opto'
-    };
-
+      'trialinfo'  % this is dealt with explicitly
+      'sampleinfo' % this is dealt with explicitly
+      };
+    
   case 'appendfreq'
     ignore = {
       'cfg'
@@ -27,8 +29,10 @@ switch purpose
       'grad'
       'elec'
       'opto'
-    };
-
+      'trialinfo'  % this is dealt with explicitly
+      'sampleinfo' % this is dealt with explicitly
+      };
+    
   case 'deface'
     ignore = {
       % some fields should be dealt with explicitly
@@ -44,7 +48,7 @@ switch purpose
       'fid'
       'cfg'
       };
-
+    
   case 'pipeline'
     ignore = {
       % some fields that are always allowed to be present in the configuration
@@ -53,7 +57,7 @@ switch purpose
       'cfg'
       'previous'
       };
-
+    
   case 'allowed'
     ignore = {
       % some fields that are always allowed to be present in the configuration
