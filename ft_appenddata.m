@@ -334,18 +334,18 @@ if haselec || hasgrad || hasopto
   % see test_pull393.m for a description of the expected behavior
   if strcmp(cfg.appendsens, 'yes')
     fprintf('concatenating sensor information across input arguments\n');
-    grad = cell(1,Ndata);
-    elec = cell(1,Ndata);
-    opto = cell(1,Ndata);
+    grad = {};
+    elec = {};
+    opto = {};
     for j=1:Ndata
       if isfield(varargin{j}, 'elec')
-        elec{j} = varargin{j}.elec;
+        elec{end+1} = varargin{j}.elec;
       end
       if isfield(varargin{j}, 'grad')
-        grad{j} = varargin{j}.grad;
+        grad{end+1} = varargin{j}.grad;
       end
       if isfield(varargin{j}, 'opto')
-        opto{j} = varargin{j}.opto;
+        opto{end+1} = varargin{j}.opto;
       end
     end
     if hasgrad, data.grad = ft_appendsens([], grad{:}); end
