@@ -181,18 +181,17 @@ for k=1:numel(cfg.parameter)
     dim{k} = size(varargin{1}.(cfg.parameter{k}));
 end
 
-% give some feedback on the screen, if desired
-if strcmp(cfg.feedback, 'yes')
-  if strcmp(cfg.keepindividual, 'no')
-      for k=1:numel(cfg.parameter)
-         fprintf('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
-      end
-  else
-      for k=1:numel(cfg.parameter)
-        fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
-      end
-  end
+% give some infi feedback on the screen, if desired
+if strcmp(cfg.keepindividual, 'no')
+    for k=1:numel(cfg.parameter)
+      ft_info(cfg.feedback, 'computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
+    end
+else
+    for k=1:numel(cfg.parameter)
+      ft_info(cfg.feedback, 'not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
+    end
 end
+
 
 % allocate memory to hold the data and collect it
 for k=1:numel(cfg.parameter)
