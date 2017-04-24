@@ -97,7 +97,7 @@ if opt==1
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
       end
-      warning('using ''OldNorm'' affine registration'); % FIXME there's yet no spm_affreg equivalent in external/spm12
+      fprintf('using ''OldNorm'' affine registration\n'); % FIXME there's yet no spm_affreg equivalent in external/spm12
 
     otherwise
       error('unsupported spm-version');
@@ -161,7 +161,7 @@ elseif opt==2
           addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
         end
       end
-      warning('using ''OldNorm'' normalisation'); % FIXME there's yet no spm_normalise equivalent in external/spm12
+      fprintf('using ''OldNorm'' normalisation\n'); % FIXME there's yet no spm_normalise equivalent in external/spm12
       
     otherwise
       error('unsupported spm-version');
