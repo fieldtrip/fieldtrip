@@ -39,6 +39,7 @@ c2b = ft_convert_coordsys(mri, 'tal', 2);
 rmpath(spm('dir'));
 
 %ft_volumerealign: coregistration (used in human ecog tutorial)
+mri.coordsys = 'tal';
 cfg             = [];
 cfg.method      = 'spm';
 cfg.spmversion  = 'spm12';
