@@ -1,12 +1,14 @@
 function [sens] = ft_appendsens(cfg, varargin)
 
-% FT_APPENDSENS concatenates multiple sens (elec) structures that have been 
-% processed separately.
+% FT_APPENDSENS concatenates multiple sensor definitions that have been processed
+% separately. This is specifically designed for multiple intracranial electrode
+% descriptions, e.g. to combine ECoG and sEEG.
 %
 % Use as
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
 %
-% See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_APPLY_MONTAGE
+% See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_DATAYPE_SENS,
+% FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ, FT_APPENDSOURCE
 
 % Copyright (C) 2017, Arjen Stolk
 %
@@ -37,7 +39,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar varargin
+ft_preamble loadvar    varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
@@ -46,47 +48,50 @@ if ft_abort
   return
 end
 
-Ndata = length(varargin);
-
 % check if the input data is valid for this function
-for i=1:Ndata
-  if ~((isa(varargin{i}, 'struct') && isfield(varargin{i}, 'label') && isfield(varargin{i}, 'chanpos')))
-    error('This function requires sens data as input.');
-  end
+% and ensure it is up to the latest standards
+for i=1:length(varargin)
+  assert(ft_datatype(varargin{i}, 'sens'), 'incorrect input, should be a grad/elec/opto structure');
+  varargin{i} = ft_datatype_sens(varargin{i});
 end
 
 % do a basic check whether the senstype, units, and coordinate systems match
-senstype1 = ft_senstype(varargin{1});
-for i=1:Ndata
+senstype = cell(1,length(varargin));
+for i=1:length(varargin)
   senstype{i} = ft_senstype(varargin{i});
 end
-typematch = all(strcmp(senstype1, senstype));
+typematch = all(strcmp(senstype{1}, senstype));
+
 if isfield(varargin{1}, 'unit')
-  sens.unit = varargin{1}.unit;
-  for i=1:Ndata
+  unit = cell(1,length(varargin));
+  for i=1:length(varargin)
     unit{i} = varargin{i}.unit;
   end
   unitmatch = all(strcmp(unit{1}, unit));
 else
   unitmatch = 1;
-  warning('no unit information present, assuming units match');
+  warning('no unit information present, assuming that the units match');
 end
+
 if isfield(varargin{1}, 'coordsys')
-  sens.coordsys = varargin{1}.coordsys;
-  for i=1:Ndata
+  coordsys = cell(1,length(varargin));
+  for i=1:length(varargin)
     coordsys{i} = varargin{i}.coordsys;
   end
   coordsysmatch = all(strcmp(coordsys{1}, coordsys));
 else
   coordsysmatch = 1;
-  warning('no coordinate system information present, assuming coordinate systems match');
+  warning('no coordinate system information present, assuming that the coordinate systems match');
 end
 
 if ~typematch || ~unitmatch || ~coordsysmatch
   error('the senstype, units, or coordinate systems of the inputs are not equal');
 end
 
-% concatenate (see test_pull393.m for a test script)
+% keep these fields (when present) in the output
+sens = keepfields(varargin{1}, {'type', 'unit', 'coordsys'});
+
+% concatenate - see test_pull393.m for a test script
 haslabelold = 0;
 haschanposold = 0;
 haselecpos = 0;
@@ -94,11 +99,11 @@ hascoilpos = 0;
 hascoilori = 0;
 haschanori = 0;
 hasoptopos = 0;
-for i=1:Ndata
+for i=1:length(varargin)
   % the following fields should be present in any sens structure
   if isfield(varargin{i}, 'label')
     label{i} = varargin{i}.label;
-  end  
+  end
   if isfield(varargin{i}, 'chanpos')
     chanpos{i} = varargin{i}.chanpos;
   end
@@ -166,7 +171,8 @@ if hasoptopos
   sens.optopos = cat(1,optopos{:});
 end
 
-% ensure a full sens description (FIXME: tra is not appended)
+% ensure a that the output sensor description  is according to the latest standards
+% FIXME: tra is not appended
 sens = ft_datatype_sens(sens);
 
 % do the general cleanup and bookkeeping at the end of the function
