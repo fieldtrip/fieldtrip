@@ -32,11 +32,28 @@ hastime       = isfield(varargin{1}, 'time');
 hasfreq       = isfield(varargin{1}, 'freq');
 hastrialinfo  = isfield(varargin{1}, 'trialinfo');
 hassampleinfo = isfield(varargin{1}, 'sampleinfo');
+hastopolabel  = isfield(varargin{1}, 'topolabel');
+hastopo       = isfield(varargin{1}, 'topo');
+hasunmixing   = isfield(varargin{1}, 'topo');
 for i=2:numel(varargin)
   hastime       = hastime       && isfield(varargin{i}, 'time');
   hasfreq       = hasfreq       && isfield(varargin{i}, 'freq');
   hastrialinfo  = hastrialinfo  && isfield(varargin{i}, 'trialinfo');
   hassampleinfo = hassampleinfo && isfield(varargin{i}, 'sampleinfo');
+  hastopolabel  = hastopolabel  && isfield(varargin{i}, 'topolabel');
+  hastopo       = hastopo       && isfield(varargin{i}, 'topo');
+  hasunmixing   = hasunmixing   && isfield(varargin{i}, 'unmixing');
+end
+
+if (hastopolabel || hastopo || hasunmixing) && ~strcmp(cfg.appenddim, 'chan')
+  % only proceed if the ICA/PCA mixing and/or unmixing matrix is identical in all datasets
+  identical = true;
+  for i=2:numel(varargin)
+    if hastopolabel, identical = identical && isequal(varargin{1}.topolabel, varargin{i}.topolabel); end
+    if hastopo,      identical = identical && isequal(varargin{1}.topo,      varargin{i}.topo);      end
+    if hasunmixing,  identical = identical && isequal(varargin{1}.unmixing,  varargin{i}.unmixing);  end
+  end
+  assert(identical, 'cannot append data from different ICA/PCA decompositions');
 end
 
 switch cfg.appenddim
@@ -123,9 +140,10 @@ switch cfg.appenddim
     end
     
     % start with the union of all input data
-    data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
+    data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord', 'topo', 'unmixing', 'topolabel'});
     
     % keep the trialinfo (when identical)
+    % note that we are NOT keeing the sampleinfo
     fn = {'trialinfo'};
     for i=1:numel(fn)
       keepfield = isfield(varargin{1}, fn{i});
@@ -195,7 +213,7 @@ switch cfg.appenddim
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'rpt'
-
+    
     % determine the intersection of all input data
     tmpcfg = keepfields(cfg, {'tolerance', 'channel'});
     tmpcfg.select = 'intersect';
@@ -205,7 +223,7 @@ switch cfg.appenddim
     end
     
     % start with the intersection of all input data
-    data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
+    data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord', 'topo', 'unmixing', 'topolabel'});
     if numel(cfg.parameter)>0
       % this check should not be done if there is no data to append, this happens when called from ft_appenddata
       assert(numel(data.label)>0);

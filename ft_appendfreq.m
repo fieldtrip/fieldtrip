@@ -69,7 +69,7 @@ end
 % check if the input data is valid for this function
 for i=1:length(varargin)
   % FIXME: what about freq+comp?
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'yes');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'freq', 'freq+comp'}, 'feedback', 'yes');
 end
 
 % set the defaults

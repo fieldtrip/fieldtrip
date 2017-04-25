@@ -59,7 +59,7 @@ end
 % check if the input data is valid for this function
 for i=1:length(varargin)
   % FIXME: what about timelock+comp?
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'timelock+comp'}, 'feedback', 'yes', 'hassampleinfo', 'ifmakessense');
 end
 
 % set the defaults
