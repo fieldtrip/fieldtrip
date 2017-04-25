@@ -195,6 +195,7 @@ switch cfg.appenddim
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'rpt'
+
     % determine the intersection of all input data
     tmpcfg = keepfields(cfg, {'tolerance', 'channel'});
     tmpcfg.select = 'intersect';
@@ -205,6 +206,10 @@ switch cfg.appenddim
     
     % start with the intersection of all input data
     data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
+    if numel(cfg.parameter)>0
+      % this check should not be done if there is no data to append, this happens when called from ft_appenddata
+      assert(numel(data.label)>0);
+    end
     if hastime, assert(numel(data.time)>0); end
     if hasfreq, assert(numel(data.freq)>0); end
     
