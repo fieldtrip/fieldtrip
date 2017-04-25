@@ -64,7 +64,7 @@ end
 
 % set the defaults
 cfg.channel    = ft_getopt(cfg, 'channel', 'all');
-cfg.parameter  = ft_getopt(cfg, 'cfg.parameter', []);
+cfg.parameter  = ft_getopt(cfg, 'parameter', []);
 cfg.appenddim  = ft_getopt(cfg, 'appenddim', []);
 cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5);
 cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
