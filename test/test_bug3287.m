@@ -52,14 +52,11 @@ cfg = [];
 append12 = ft_appenddata(cfg, data1, data2); % appenddim = chan
 assert(isequal(length(append12.label), 2));
 
-try
-  cfg = [];
-  append13 = ft_appenddata(cfg, data1, data3);
-  catchflag = false;
-catch
-  catchflag = true;
-end
-assert(catchflag);
+cfg = [];
+append13 = ft_appenddata(cfg, data1, data3);
+assert(isequal(length(append13.trial), 6));
+assert(isfield(append13, 'trialinfo'));
+assert(isequal(size(append13.trialinfo), [6, 2]));
 
 try
   cfg = [];
@@ -88,7 +85,6 @@ timelock3 = ft_timelockanalysis(cfg, data3);
 
 cfg = [];
 append11 = ft_appendtimelock(cfg, timelock1, timelock1); % appenddim = rpt
-assert(isequal(size(append11.avg), [2, 1, 10]));
 assert(isequal(size(append11.trial), [6, 1, 10]));
 assert(isfield(append11, 'trialinfo'));
 assert(isequal(size(append11.trialinfo), [6, 2]));
@@ -96,7 +92,6 @@ assert(isequal(size(append11.trialinfo), [6, 2]));
 
 cfg = [];
 append12 = ft_appendtimelock(cfg, timelock1, timelock2); % appenddim = chan
-assert(isequal(size(append12.avg), [2, 10]));
 assert(isequal(size(append12.trial), [3, 2, 10]));
 assert(~isfield(append12, 'trialinfo'));
 
