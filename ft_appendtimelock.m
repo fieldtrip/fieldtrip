@@ -95,8 +95,20 @@ elseif ischar(cfg.parameter)
 end
 assert(~isempty(cfg.parameter), 'cfg.parameter should be specified');
 
+if any(strcmp(cfg.parameter, 'avg')) && any(strcmp(cfg.parameter, 'trial'))
+  warning('appending the individual trials, not the averages');
+  % also prevent var and dof from being appended
+  cfg.parameter = {'trial'}; 
+end
+
 % use a low-level function that is shared with the other ft_appendxxx functions
 timelock = append_common(cfg, varargin{:});
+
+if isfield(timelock, 'avg') && ~isfield(timelock, 'trial')
+  warning('renaming the appended averages to "trial"');
+  timelock.trial = timelock.avg;
+  timelock = rmfield(timelock, 'avg');
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

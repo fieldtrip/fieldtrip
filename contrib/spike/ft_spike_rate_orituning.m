@@ -57,10 +57,10 @@ ft_preamble trackconfig
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'stimuli', 'method'});
-cfg = ft_checkopt(cfg,'stimuli','doublevector');
-cfg = ft_checkopt(cfg,'method', 'char', {'orientation', 'direction'});
+cfg = ft_checkopt(cfg, 'stimuli', 'doublevector');
+cfg = ft_checkopt(cfg, 'method', 'char', {'orientation', 'direction'});
 
-if length(varargin)<2, error('can only compute ori tuning if multiple inputs are specified'); end 
+if length(varargin)<2, error('can only compute orituning if multiple inputs are specified'); end 
   
 % check whether trials were kept in the rate function
 for k = 1:length(varargin)
