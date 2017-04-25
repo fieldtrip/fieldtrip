@@ -98,7 +98,7 @@ assert(~isempty(cfg.parameter), 'cfg.parameter should be specified');
 if any(strcmp(cfg.parameter, 'avg')) && any(strcmp(cfg.parameter, 'trial'))
   warning('appending the individual trials, not the averages');
   % also prevent var and dof from being appended
-  cfg.parameter = {'trial'}; 
+  cfg.parameter = setdiff(cfg.parameter, {'avg', 'var', 'dof'}); 
 end
 
 % use a low-level function that is shared with the other ft_appendxxx functions
