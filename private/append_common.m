@@ -205,7 +205,6 @@ switch cfg.appenddim
     
     % start with the intersection of all input data
     data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
-    assert(numel(data.label)>0);
     if hastime, assert(numel(data.time)>0); end
     if hasfreq, assert(numel(data.freq)>0); end
     
