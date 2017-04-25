@@ -96,11 +96,9 @@ for i=2:numel(varargin)
 end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
-  if isequaltime && isequallabel
+  if isequallabel || issamelabel
     cfg.appenddim = 'rpt';
-  elseif isequaltime && issamelabel
-    cfg.appenddim = 'rpt';
-  elseif isequaltime && ~isequallabel
+  elseif isequaltime && ~isequallabel && ~issamelabel
     cfg.appenddim = 'chan';
   else
     error('cannot append this data');
