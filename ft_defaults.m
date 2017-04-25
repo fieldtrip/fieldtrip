@@ -131,7 +131,9 @@ if ~isdeployed
   
   try
     % external/signal contains alternative implementations of some signal processing functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    if ~ft_hastoolbox('signal')
+        addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    end
   end
   
   try
