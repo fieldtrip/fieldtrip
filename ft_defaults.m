@@ -73,6 +73,9 @@ if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'ov
 if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no
 
+% This option allows to prefer the MATLAB toolbox implementations over the drop-in replacements.
+if ~isfield(ft_default, 'useMatlabToolboxes'), ft_default.useMatlabToolboxes  = 'no'; end % yes or no
+
 % Check whether this ft_defaults function has already been executed. Note that we
 % should not use ft_default itself directly, because the user might have set stuff
 % in that struct already prior to ft_defaults being called for the first time.
@@ -131,21 +134,23 @@ if ~isdeployed
   
   try
     % external/signal contains alternative implementations of some signal processing functions
-    if ~ft_hastoolbox('signal')
+    if ~ft_platform_supports('signal') || ~ft_hastoolbox('SIGNAL') || ~strcmp(ft_default.useMatlabToolboxes,'yes')
         addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
   
   try
     % external/stats contains alternative implementations of some statistics functions
-    if ~ft_platform_supports('stats') || ~ft_hastoolbox('stats')
+    if ~ft_platform_supports('stats') || ~ft_hastoolbox('STATS') || ~strcmp(ft_default.useMatlabToolboxes,'yes')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
   
   try
     % external/images contains alternative implementations of some image processing functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    if ~ft_platform_supports('images') || ~ft_hastoolbox('IMAGE') || ~strcmp(ft_default.useMatlabToolboxes,'yes')
+        addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    end
   end
   
   try
