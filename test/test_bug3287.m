@@ -114,5 +114,20 @@ cfg = [];
 append13 = ft_appendtimelock(cfg, timelock1, timelock3); % appenddim = time
 assert(isfield(append13, 'trialinfo'));
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART 3 - shuffle channel labels
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+data1 = [];
+data1.label = {'1', '2', '3'};
+data1.time{1}  = 1:10;
+data1.trial{1} = 1*ones(3,10);
+
+data2 = [];
+data2.label = {'2', '3', '1'};
+data2.time{1}  = 1:10;
+data2.trial{1} = 1*ones(3,10);
+
+append12 = ft_appenddata([], data1, data2);
+assert(isequal(append12.label, data1.label));
 
