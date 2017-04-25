@@ -1,98 +1,248 @@
-%% data
-% EEG
-eeg.label = {'EEG 1';'EEG 2';'EEG 3'};
-eeg.trial{1,1} = randn(3,10);
-eeg.time{1,1} = 1:10;
-eeg.elec.label = eeg.label;
-eeg.elec.elecpos = [1 1 1; 2 2 2; 3 3 3];
-eeg.elec.chanpos = [1 1 1; 2 2 2; 3 3 3];
-eeg.elec.tra = eye(3);
+function test_pull393
 
-% MEG
-meg.label = {'MEG 1';'MEG 2';'MEG 3'};
-meg.trial{1,1} = randn(3,10);
-meg.time{1,1} = 1:10;
-meg.grad.label = meg.label;
-meg.grad.coilpos = [1 1 1; 2 2 2; 3 3 3];
-meg.grad.coilori = NaN(3,3);
-meg.grad.chanpos = [1 1 1; 2 2 2; 3 3 3];
-meg.grad.chanori = NaN(3,3);
-meg.grad.tra = eye(3);
+% WALLTIME 00:10:00
+% MEM 2gb
 
-% NIRS
-nirs.label = {'NIRS 1';'NIRS 2';'NIRS 3'};
-nirs.trial{1,1} = randn(3,10);
-nirs.time{1,1} = 1:10;
-nirs.opto.label = nirs.label;
-nirs.opto.optopos = [1 1 1; 2 2 2; 3 3 3];
-nirs.opto.chanpos = [1 1 1; 2 2 2; 3 3 3];
-nirs.opto.tra = eye(3); 
+%% construct some data
+% data_eeg
+data_eeg.label = {'eeg 1';'eeg 2';'eeg 3'};
+data_eeg.trial{1,1} = randn(3,10);
+data_eeg.time{1,1} = 1:10;
+data_eeg.elec.label = data_eeg.label;
+data_eeg.elec.elecpos = [1 1 1; 2 2 2; 3 3 3];
+data_eeg.elec.chanpos = [1 1 1; 2 2 2; 3 3 3];
+data_eeg.elec.tra = eye(3);
 
-% iEEG monopolar
-ieeg.label = {'iEEG 1';'iEEG 2';'iEEG 3'};
-ieeg.trial{1,1} = randn(3,10);
-ieeg.time{1,1} = 1:10;
-ieeg.elec.label = ieeg.label;
-ieeg.elec.elecpos = [1 1 1; 2 2 2; 3 3 3];
-ieeg.elec.chanpos = [1 1 1; 2 2 2; 3 3 3];
-ieeg.elec.tra = eye(3);
+% data_meg
+data_meg.label = {'meg 1';'meg 2';'meg 3'};
+data_meg.trial{1,1} = randn(3,10);
+data_meg.time{1,1} = 1:10;
+data_meg.grad.label = data_meg.label;
+data_meg.grad.coilpos = [1 1 1; 2 2 2; 3 3 3];
+data_meg.grad.coilori = NaN(3,3);
+data_meg.grad.chanpos = [1 1 1; 2 2 2; 3 3 3];
+data_meg.grad.chanori = NaN(3,3);
+data_meg.grad.tra = eye(3);
 
-% iEEG bipolar
-ieegb.label = {'iEEG 1 - iEEG 2';'iEEG 2 - iEEG 3'};
-ieegb.trial{1,1} = randn(2,10);
-ieegb.time{1,1} = 1:10;
-ieegb.elec.label = ieegb.label;
-ieegb.elec.elecpos = [1.5 1.5 1.5; 2.5 2.5 2.5];
-ieegb.elec.chanpos = [1.5 1.5 1.5; 2.5 2.5 2.5];
-ieegb.elec.tra = eye(2);
-ieegb.elec.labelold = {'iEEG 1';'iEEG 2';'iEEG 3'}; % note the labelold field due to re-referencing
-ieegb.elec.chanposold = [1 1 1; 2 2 2; 3 3 3]; % note the chanposold field due to re-referencing
+% data_nirs
+data_nirs.label = {'nirs 1';'nirs 2';'nirs 3'};
+data_nirs.trial{1,1} = randn(3,10);
+data_nirs.time{1,1} = 1:10;
+data_nirs.opto.label = data_nirs.label;
+data_nirs.opto.optopos = [1 1 1; 2 2 2; 3 3 3];
+data_nirs.opto.chanpos = [1 1 1; 2 2 2; 3 3 3];
+data_nirs.opto.tra = eye(3); 
 
-%% append
-% EEG and MEG
+% data_ieeg monopolar
+data_ieeg.label = {'ieeg 1';'ieeg 2';'ieeg 3'};
+data_ieeg.trial{1,1} = randn(3,10);
+data_ieeg.time{1,1} = 1:10;
+data_ieeg.elec.label = data_ieeg.label;
+data_ieeg.elec.elecpos = [1 1 1; 2 2 2; 3 3 3];
+data_ieeg.elec.chanpos = [1 1 1; 2 2 2; 3 3 3];
+data_ieeg.elec.tra = eye(3);
+
+% data_ieeg bipolar
+data_ieegb.label = {'ieeg 1 - ieeg 2';'ieeg 2 - ieeg 3'};
+data_ieegb.trial{1,1} = randn(2,10);
+data_ieegb.time{1,1} = 1:10;
+data_ieegb.elec.label = data_ieegb.label;
+data_ieegb.elec.elecpos = [1 1 1; 2 2 2; 3 3 3];
+data_ieegb.elec.chanpos = [1.5 1.5 1.5; 2.5 2.5 2.5];
+data_ieegb.elec.tra = [+1 -1  0; 0 +1 -1];
+data_ieegb.elec.labelold = {'ieeg 1';'ieeg 2';'ieeg 3'}; % note the labelold field due to re-referencing
+data_ieegb.elec.chanposold = [1 1 1; 2 2 2; 3 3 3];                     % note the chanposold field due to re-referencing
+
+%% do a sanity check on the bipolar iEEG electrode definition
+
+bipolar.labelold = {
+  'ieeg 1'
+  'ieeg 2'
+  'ieeg 3'
+  };
+bipolar.labelnew = {
+  'ieeg 1 - ieeg 2'
+  'ieeg 2 - ieeg 3'
+  };
+bipolar.tra = [
+  1 -1 0
+  0 1 -1
+  ];
+
+elecb = ft_apply_montage(data_ieeg.elec, bipolar);
+
+assert(isequal(elecb, data_ieegb.elec));
+
+%% convert to timlock representation
+
+cfg = [];
+timelock_eeg   = ft_timelockanalysis(cfg, data_eeg);
+timelock_meg   = ft_timelockanalysis(cfg, data_meg);
+timelock_nirs  = ft_timelockanalysis(cfg, data_nirs);
+timelock_ieeg  = ft_timelockanalysis(cfg, data_ieeg);
+timelock_ieegb = ft_timelockanalysis(cfg, data_ieegb);
+
+
+%% convert to freq representation
+
+cfg = [];
+cfg.method = 'mtmfft';
+cfg.taper = 'hanning';
+freq_eeg   = ft_freqanalysis(cfg, data_eeg);
+freq_meg   = ft_freqanalysis(cfg, data_meg);
+freq_nirs  = ft_freqanalysis(cfg, data_nirs);
+freq_ieeg  = ft_freqanalysis(cfg, data_ieeg);
+freq_ieegb = ft_freqanalysis(cfg, data_ieegb);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% append raw data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% eeg and meg
 cfg = [];
 cfg.appendsens = 'yes';
-data1 = ft_appenddata(cfg, eeg, meg);
-assert(isequal(numel(data1.label),6)) % 6 labels
-assert(isequal(numel(data1.elec.label),3)) % 3 elec labels
-assert(isequal(numel(data1.grad.label),3)) % 3 grad labels
+append1 = ft_appenddata(cfg, data_eeg, data_meg);
+assert(isequal(numel(append1.label),6)) % 6 labels
+assert(isequal(numel(append1.elec.label),3)) % 3 elec labels
+assert(isequal(numel(append1.grad.label),3)) % 3 grad labels
 
-% EEG and NIRS
+% eeg and nirs
 cfg = [];
 cfg.appendsens = 'yes';
-data2 = ft_appenddata(cfg, eeg, nirs);
-assert(isequal(numel(data2.label),6)) % 6 labels
-assert(isequal(numel(data2.elec.label),3)) % 3 elec labels
-assert(isequal(numel(data2.opto.label),3)) % 3 opto labels
+append2 = ft_appenddata(cfg, data_eeg, data_nirs);
+assert(isequal(numel(append2.label),6)) % 6 labels
+assert(isequal(numel(append2.elec.label),3)) % 3 elec labels
+assert(isequal(numel(append2.opto.label),3)) % 3 opto labels
 
-% monopolar iEEG and bipolar iEEG
+% monopolar and bipolar
 cfg = [];
 cfg.appendsens = 'yes';
-data3 = ft_appenddata(cfg, ieeg, ieegb);
-assert(isequal(numel(data3.label),5)) % 5 ieeg labels
-assert(isequal(numel(data3.elec.label),5)) % 5 ieeg labels
-assert(isequal(numel(data3.elec.labelold),6)) % 6 ieeg labelolds
+append3 = ft_appenddata(cfg, data_ieeg, data_ieegb);
+assert(isequal(numel(append3.label),5)) % 5 ieeg labels
+assert(isequal(numel(append3.elec.label),5)) % 5 ieeg labels
+assert(isequal(numel(append3.elec.labelold),6)) % 6 ieeg labelolds
 
-%% do not append (discard inconsistent sens information) 
-% EEG and MEG
-data4 = ft_appenddata([], eeg, meg);
-assert(isequal(numel(data4.label),6)) % 6 labels
-assert(~isfield(data4, 'elec')) % no elec struc
-assert(~isfield(data4, 'grad')) % no grad struc
+% do not append (discard inconsistent sens information)
+append4 = ft_appenddata([], data_eeg, data_meg);
+assert(isequal(numel(append4.label),6)) % 6 labels
+assert(~isfield(append4, 'elec')) % no elec struc
+assert(~isfield(append4, 'grad')) % no grad struc
 
-% EEG and NIRS
-data5 = ft_appenddata([], eeg, nirs);
-assert(isequal(numel(data5.label),6)) % 6 labels
-assert(~isfield(data5, 'elec')) % no elec struc
-assert(~isfield(data5, 'opto')) % no opto struc
+% do not append (discard inconsistent sens information)
+append5 = ft_appenddata([], data_eeg, data_nirs);
+assert(isequal(numel(append5.label),6)) % 6 labels
+assert(~isfield(append5, 'elec')) % no elec struc
+assert(~isfield(append5, 'opto')) % no opto struc
 
-% monopolar iEEG and bipolar iEEG
-data6 = ft_appenddata([], ieeg, ieegb);
-assert(isequal(numel(data6.label),5)) % 5 ieeg labels
-assert(~isfield(data6, 'elec')) % no elec struc
+% monopolar and bipolar
+append6 = ft_appenddata([], data_ieeg, data_ieegb);
+assert(isequal(numel(append6.label),5)) % 5 ieeg labels
+assert(~isfield(append6, 'elec')) % no elec struc
 
-%% use the same sensor information
-% EEG and EEG
-data7 = ft_appenddata([], eeg, eeg);
-assert(isequal(numel(data7.label),3)) % 3 labels
-assert(isfield(data7, 'elec')) % elec struc
+% use the same sensor information
+append7 = ft_appenddata([], data_eeg, data_eeg);
+assert(isequal(numel(append7.label),3)) % 3 labels
+assert(isfield(append7, 'elec')) % elec struc
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% append timelock data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% eeg and meg
+cfg = [];
+cfg.appendsens = 'yes';
+append1 = ft_appendtimelock(cfg, timelock_eeg, timelock_meg);
+assert(isequal(numel(append1.label),6)) % 6 labels
+assert(isequal(numel(append1.elec.label),3)) % 3 elec labels
+assert(isequal(numel(append1.grad.label),3)) % 3 grad labels
+
+% eeg and nirs
+cfg = [];
+cfg.appendsens = 'yes';
+append2 = ft_appendtimelock(cfg, timelock_eeg, timelock_nirs);
+assert(isequal(numel(append2.label),6)) % 6 labels
+assert(isequal(numel(append2.elec.label),3)) % 3 elec labels
+assert(isequal(numel(append2.opto.label),3)) % 3 opto labels
+
+% monopolar and bipolar
+cfg = [];
+cfg.appendsens = 'yes';
+append3 = ft_appendtimelock(cfg, timelock_ieeg, timelock_ieegb);
+assert(isequal(numel(append3.label),5)) % 5 ieeg labels
+assert(isequal(numel(append3.elec.label),5)) % 5 ieeg labels
+assert(isequal(numel(append3.elec.labelold),6)) % 6 ieeg labelolds
+
+% do not append (discard inconsistent sens information)
+append4 = ft_appendtimelock([], timelock_eeg, timelock_meg);
+assert(isequal(numel(append4.label),6)) % 6 labels
+assert(~isfield(append4, 'elec')) % no elec struc
+assert(~isfield(append4, 'grad')) % no grad struc
+
+% do not append (discard inconsistent sens information)
+append5 = ft_appendtimelock([], timelock_eeg, timelock_nirs);
+assert(isequal(numel(append5.label),6)) % 6 labels
+assert(~isfield(append5, 'elec')) % no elec struc
+assert(~isfield(append5, 'opto')) % no opto struc
+
+% monopolar and bipolar
+append6 = ft_appendtimelock([], timelock_ieeg, timelock_ieegb);
+assert(isequal(numel(append6.label),5)) % 5 ieeg labels
+assert(~isfield(append6, 'elec')) % no elec struc
+
+% use the same sensor information
+append7 = ft_appendtimelock([], timelock_eeg, timelock_eeg);
+assert(isequal(numel(append7.label),3)) % 3 labels
+assert(isfield(append7, 'elec')) % elec struc
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% append freq data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% eeg and meg
+cfg = [];
+cfg.appendsens = 'yes';
+append1 = ft_appendfreq(cfg, freq_eeg, freq_meg);
+assert(isequal(numel(append1.label),6)) % 6 labels
+assert(isequal(numel(append1.elec.label),3)) % 3 elec labels
+assert(isequal(numel(append1.grad.label),3)) % 3 grad labels
+
+% eeg and nirs
+cfg = [];
+cfg.appendsens = 'yes';
+append2 = ft_appendfreq(cfg, freq_eeg, freq_nirs);
+assert(isequal(numel(append2.label),6)) % 6 labels
+assert(isequal(numel(append2.elec.label),3)) % 3 elec labels
+assert(isequal(numel(append2.opto.label),3)) % 3 opto labels
+
+% monopolar and bipolar
+cfg = [];
+cfg.appendsens = 'yes';
+append3 = ft_appendfreq(cfg, freq_ieeg, freq_ieegb);
+assert(isequal(numel(append3.label),5)) % 5 ieeg labels
+assert(isequal(numel(append3.elec.label),5)) % 5 ieeg labels
+assert(isequal(numel(append3.elec.labelold),6)) % 6 ieeg labelolds
+
+% do not append (discard inconsistent sens information)
+append4 = ft_appendfreq([], freq_eeg, freq_meg);
+assert(isequal(numel(append4.label),6)) % 6 labels
+assert(~isfield(append4, 'elec')) % no elec struc
+assert(~isfield(append4, 'grad')) % no grad struc
+
+% do not append (discard inconsistent sens information)
+append5 = ft_appendfreq([], freq_eeg, freq_nirs);
+assert(isequal(numel(append5.label),6)) % 6 labels
+assert(~isfield(append5, 'elec')) % no elec struc
+assert(~isfield(append5, 'opto')) % no opto struc
+
+% monopolar and bipolar
+append6 = ft_appendfreq([], freq_ieeg, freq_ieegb);
+assert(isequal(numel(append6.label),5)) % 5 ieeg labels
+assert(~isfield(append6, 'elec')) % no elec struc
+
+% use the same sensor information
+append7 = ft_appendfreq([], freq_eeg, freq_eeg);
+assert(isequal(numel(append7.label),3)) % 3 labels
+assert(isfield(append7, 'elec')) % elec struc
