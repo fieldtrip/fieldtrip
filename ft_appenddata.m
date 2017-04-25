@@ -86,28 +86,30 @@ cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
 cfg.appenddim  = ft_getopt(cfg, 'appenddim', []);
 cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5);
 
-isequallabel = true;
 isequaltime  = true;
+isequallabel = true;
+issamelabel  = true;
 for i=2:numel(varargin)
-  isequallabel = isequallabel && isequal(varargin{i}.label, varargin{1}.label);
   isequaltime  = isequaltime  && isequal(varargin{i}.time , varargin{1}.time );
+  isequallabel = isequallabel && isequal(varargin{i}.label, varargin{1}.label);
+  issamelabel  = issamelabel  && numel(intersect(varargin{i}.label, varargin{1}.label))==numel(varargin{1}.label);
 end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
   if isequaltime && isequallabel
     cfg.appenddim = 'rpt';
+  elseif isequaltime && issamelabel
+    cfg.appenddim = 'rpt';
   elseif isequaltime && ~isequallabel
     cfg.appenddim = 'chan';
-  elseif ~isequaltime && isequallabel
-    error('cannot append this data');
-  elseif ~isequaltime && ~isequallabel
+  else
     error('cannot append this data');
   end
 end
 fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
 
 % ft_selectdata cannot create the union of the data contained in cell-arrays
-% make a dummy that does not contain the actual data, it does retain trialinfo/sampleinfo/grad/elec/opto
+% make a dummy without the actual data, but keep trialinfo/sampleinfo/grad/elec/opto
 dummy = cell(size(varargin));
 for i=1:numel(varargin)
   dummy{i} = removefields(varargin{i}, {'trial', 'time'});
@@ -116,8 +118,9 @@ end
 % don't do any data appending inside the common function
 cfg.parameter = {};
 % use a low-level function that is shared with the other ft_appendxxx functions
+% this will handle the trialinfo/sampleinfo/grad/elec/opto
 data = append_common(cfg, dummy{:});
-% this is the data field that will be appended further down
+% this is the actual data field that will be appended further down
 cfg.parameter = {'trial'};
 
 switch cfg.appenddim
@@ -136,15 +139,32 @@ switch cfg.appenddim
     data.time  = varargin{1}.time;
     
   case 'rpt'
-    dat = cell(1,0);
-    tim = cell(1,0);
-    for i=1:numel(varargin)
-      dat = cat(2, dat, varargin{i}.trial);
-      tim = cat(2, tim, varargin{i}.time);
+    if isequallabel
+      % the channels are the same and sorted in the same order
+      dat = varargin{i}.trial;
+      tim = varargin{i}.time;
+      for i=2:numel(varargin)
+        dat = cat(2, dat, varargin{i}.trial);
+        tim = cat(2, tim, varargin{i}.time);
+      end
+      data.trial = dat;
+      data.time  = tim;
+      data.label = varargin{1}.label;
+    else
+      % the channels are the same, but they do not appear in the same order
+      % sort them according to the first dataset
+      dat = varargin{i}.trial;
+      tim = varargin{i}.time;
+      for i=2:numel(varargin)
+        % find the indices of the channels in each dataset, sorted according to the first dataset
+        [dum, indx] = match_str(varargin{1}.label, varargin{i}.label);
+        dat = cat(2, dat, varargin{i}.trial(indx,:));
+        tim = cat(2, tim, varargin{i}.time);
+      end
+      data.trial = dat;
+      data.time  = tim;
+      data.label = varargin{1}.label;
     end
-    data.trial = dat;
-    data.time  = tim;
-    data.label = varargin{1}.label;
     
   otherwise
     error('unsupported cfg.appenddim');
