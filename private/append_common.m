@@ -2,6 +2,9 @@ function data = append_common(cfg, varargin)
 
 % APPEND_COMMON is used for concatenating raw, timelock or freq data
 %
+% The general bookkeeping and the correct specification of the cfg
+% should be taken care of by the calling function.
+%
 % See FT_APPENDDATA, T_APPENDTIMELOCK, FT_APPENDFREQ
 
 % Copyright (C) 2017, Robert Oostenveld
@@ -24,17 +27,14 @@ function data = append_common(cfg, varargin)
 %
 % $Id$
 
-% the general bookkeeping and the correct specification of the cfg
-% should be taken care of by the calling function
-
-% these are being dealt with explicitly, depending on cfg.appenddim
+% when present, these must be consistent in all inputs
 hastime       = isfield(varargin{1}, 'time');
 hasfreq       = isfield(varargin{1}, 'freq');
 hastrialinfo  = isfield(varargin{1}, 'trialinfo');
 hassampleinfo = isfield(varargin{1}, 'sampleinfo');
 hastopolabel  = isfield(varargin{1}, 'topolabel');
 hastopo       = isfield(varargin{1}, 'topo');
-hasunmixing   = isfield(varargin{1}, 'topo');
+hasunmixing   = isfield(varargin{1}, 'unmixing');
 for i=2:numel(varargin)
   hastime       = hastime       && isfield(varargin{i}, 'time');
   hasfreq       = hasfreq       && isfield(varargin{i}, 'freq');
@@ -45,15 +45,33 @@ for i=2:numel(varargin)
   hasunmixing   = hasunmixing   && isfield(varargin{i}, 'unmixing');
 end
 
-if (hastopolabel || hastopo || hasunmixing) && ~strcmp(cfg.appenddim, 'chan')
-  % only proceed if the ICA/PCA mixing and/or unmixing matrix is identical in all datasets
+% these can be present in a subset of the inputs, e.g. for appending EEG and MEG data
+hasgrad = false;
+haselec = false;
+hasopto = false;
+for i=1:length(varargin)
+  hasgrad = hasgrad || isfield(varargin{i}, 'grad');
+  haselec = haselec || isfield(varargin{i}, 'elec');
+  hasopto = hasopto || isfield(varargin{i}, 'opto');
+end
+
+if hastopolabel || hastopo || hasunmixing
   identical = true;
   for i=2:numel(varargin)
     if hastopolabel, identical = identical && isequal(varargin{1}.topolabel, varargin{i}.topolabel); end
     if hastopo,      identical = identical && isequal(varargin{1}.topo,      varargin{i}.topo);      end
     if hasunmixing,  identical = identical && isequal(varargin{1}.unmixing,  varargin{i}.unmixing);  end
   end
-  assert(identical, 'cannot append data from different ICA/PCA decompositions');
+  if strcmp(cfg.appenddim, 'chan')
+    % It is possible to combine the component timeseries of different decompositions
+    % in the same dataset. In principle this could be improved by also concatenating
+    % the topo and unmixing along the correct dimension. However, at the moment the
+    % topo/unmixing are discarded.
+    warning('discarding ICA/PCA topographies and/or unmixing matrix');
+  else
+    % only proceed if the ICA/PCA topographies and/or unmixing matrix is identical in all datasets
+    assert(identical, 'cannot append data from different ICA/PCA decompositions');
+  end
 end
 
 switch cfg.appenddim
@@ -276,15 +294,7 @@ if isfield(data, 'dimord')
   end
 end
 
-hasgrad = false;
-haselec = false;
-hasopto = false;
-for i=1:length(varargin)
-  hasgrad = hasgrad || isfield(varargin{i}, 'grad');
-  haselec = haselec || isfield(varargin{i}, 'elec');
-  hasopto = hasopto || isfield(varargin{i}, 'opto');
-end
-if  hasgrad || haselec || hasopto
+if hasgrad || haselec || hasopto
   % gather the sensor definitions from all inputs
   grad = cell(size(varargin));
   elec = cell(size(varargin));
