@@ -139,8 +139,8 @@ switch cfg.appenddim
   case 'rpt'
     if isequallabel
       % the channels are the same and sorted in the same order
-      dat = varargin{i}.trial;
-      tim = varargin{i}.time;
+      dat = varargin{1}.trial;
+      tim = varargin{1}.time;
       for i=2:numel(varargin)
         dat = cat(2, dat, varargin{i}.trial);
         tim = cat(2, tim, varargin{i}.time);
@@ -151,8 +151,8 @@ switch cfg.appenddim
     else
       % the channels are the same, but they do not appear in the same order
       % sort them according to the first dataset
-      dat = varargin{i}.trial;
-      tim = varargin{i}.time;
+      dat = varargin{1}.trial;
+      tim = varargin{1}.time;
       for i=2:numel(varargin)
         % find the indices of the channels in each dataset, sorted according to the first dataset
         [dum, indx] = match_str(varargin{1}.label, varargin{i}.label);
