@@ -158,8 +158,10 @@ switch cfg.appenddim
       for i=2:numel(varargin)
         % find the indices of the channels in each dataset, sorted according to the first dataset
         [dum, indx] = match_str(varargin{1}.label, varargin{i}.label);
-        dat = cat(2, dat, varargin{i}.trial(indx,:));
-        tim = cat(2, tim, varargin{i}.time);
+        for j=1:numel(varargin{i}.trial)
+          dat = cat(2, dat, varargin{i}.trial{j}(indx,:));
+          tim = cat(2, tim, varargin{i}.time{j});
+        end
       end
       data.trial = dat;
       data.time  = tim;

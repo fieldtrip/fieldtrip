@@ -122,11 +122,19 @@ data1 = [];
 data1.label = {'1', '2', '3'};
 data1.time{1}  = 1:10;
 data1.trial{1} = 1*ones(3,10);
+data1.time{2}  = 1:10;
+data1.trial{2} = 1*ones(3,10);
+data1.time{3}  = 1:10;
+data1.trial{3} = 1*ones(3,10);
 
 data2 = [];
 data2.label = {'2', '3', '1'};
 data2.time{1}  = 1:10;
 data2.trial{1} = 1*ones(3,10);
+data2.time{2}  = 1:10;
+data2.trial{2} = 1*ones(3,10);
+data2.time{3}  = 1:10;
+data2.trial{3} = 1*ones(3,10);
 
 append12 = ft_appenddata([], data1, data2);
 assert(isequal(append12.label, data1.label));
