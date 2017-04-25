@@ -98,12 +98,12 @@ if isequal(hassampleinfo, 'ifmakessense')
     hassampleinfo = 'yes'; % if it's already there, consider keeping it
     numsmp = data.sampleinfo(:,2)-data.sampleinfo(:,1)+1;
     for i=1:length(data.trial)
-      if size(data.trial{i},2)~=numsmp(i);
+      if size(data.trial{i},2)~=numsmp(i)
         % it does not make sense, so don't keep it
         hassampleinfo = 'no';
         % the actual removal will be done further down
         warning('removing inconsistent sampleinfo');
-        break;
+        break
       end
     end
   end
