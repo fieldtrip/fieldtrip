@@ -852,7 +852,7 @@ else
 end
 
 % some fields from the input should always be copied over in the output
-freq = copyfields(data, freq, {'grad', 'elec', 'topo', 'topolabel', 'unmixing'});
+freq = copyfields(data, freq, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
   % copy the trialinfo into the output, but not the sampleinfo
