@@ -113,6 +113,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'source
 % get the options
 cfg.downsample  = ft_getopt(cfg, 'downsample', 1); % default is no downsampling
 cfg.numvertices = ft_getopt(cfg, 'numvertices');   % no default
+cfg.smooth      = ft_getopt(cfg, 'smooth');        % no default
 
 % This was changed on 3 December 2013, this backward compatibility can be removed in 6 months from now.
 if isfield(cfg, 'interactive')
@@ -208,6 +209,13 @@ if ~isfield(bnd, 'coordsys') && hasdata && isfield(mri, 'coordsys')
   for i=1:numel(bnd)
     bnd(i).coordsys = mri.coordsys;
   end
+end
+
+% smooth the mesh
+if ~isempty(cfg.smooth)
+  cfg.headshape = bnd;
+  cfg.numvertices = [];
+  bnd = prepare_mesh_headshape(cfg);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

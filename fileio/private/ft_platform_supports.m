@@ -34,6 +34,7 @@ function tf = ft_platform_supports(what,varargin)
 %   'griddata-v4'                   griddata(...,...,...,...,...,'v4') with v4 interpolation support
 %   'uimenu'                        uimenu(...)
 %   'weboptions'                    weboptions(...)
+%   'parula'                        parula(...)
 %
 % See also FT_VERSION, VERSION, VER, VERLESSTHAN
 
@@ -136,6 +137,9 @@ switch what
     tf = is_matlab() && matlabversion('2015a', Inf);
     
   case 'boundary'
+    tf = is_matlab() && matlabversion('2014b', Inf);
+    
+  case 'parula'
     tf = is_matlab() && matlabversion('2014b', Inf);
     
   otherwise
