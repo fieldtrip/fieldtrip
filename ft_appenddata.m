@@ -84,23 +84,71 @@ end
 % set the defaults
 cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
 cfg.appenddim  = ft_getopt(cfg, 'appenddim', []);
-cfg.parameter  = {'trial'}; % this is hard-coded, it is used for consistency with ft_appendtimelock and ft_appendfreq
+cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5);
+
+isequallabel = true;
+isequaltime  = true;
+for i=2:numel(varargin)
+  isequallabel = isequallabel && isequal(varargin{i}.label, varargin{1}.label);
+  isequaltime  = isequaltime  && isequal(varargin{i}.time , varargin{1}.time );
+end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
-  if checkchan(varargin{:}, 'identical') && checktime(varargin{:}, 'identical', cfg.tolerance)
+  if isequaltime && isequallabel
     cfg.appenddim = 'rpt';
-  elseif checkchan(varargin{:}, 'unique')
+  elseif isequaltime && ~isequallabel
     cfg.appenddim = 'chan';
-%   elseif checktime(varargin{:}, 'unique', cfg.tolerance)
-%     cfg.appenddim = 'time';
-  else
-    error('cfg.appenddim should be specified');
+  elseif ~isequaltime && isequallabel
+    error('cannot append this data');
+  elseif ~isequaltime && ~isequallabel
+    error('cannot append this data');
   end
 end
 fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
 
+% ft_selectdata cannot create the union of the data contained in cell-arrays
+% make a dummy that does not contain the actual data, it does retain trialinfo/sampleinfo/grad/elec/opto
+dummy = cell(size(varargin));
+for i=1:numel(varargin)
+  dummy{i} = removefields(varargin{i}, {'trial', 'time'});
+end
+
+% don't do any data appending inside the common function
+cfg.parameter = {};
 % use a low-level function that is shared with the other ft_appendxxx functions
-data = append_common(cfg, varargin{:});
+data = append_common(cfg, dummy{:});
+% this is the data field that will be appended further down
+cfg.parameter = {'trial'};
+
+switch cfg.appenddim
+  case 'chan'
+    ntrl = length(varargin{1}.trial);
+    dat = varargin{1}.trial;
+    lab = varargin{1}.label(:);
+    for i=2:numel(varargin)
+      for j=1:ntrl
+        dat{j} = cat(1, dat{j}, varargin{i}.trial{j});
+      end
+      lab = cat(1, lab, varargin{i}.label(:));
+    end
+    data.trial = dat;
+    data.label = lab;
+    data.time  = varargin{1}.time;
+    
+  case 'rpt'
+    dat = cell(1,0);
+    tim = cell(1,0);
+    for i=1:numel(varargin)
+      dat = cat(2, dat, varargin{i}.trial);
+      tim = cat(2, tim, varargin{i}.time);
+    end
+    data.trial = dat;
+    data.time  = tim;
+    data.label = varargin{1}.label;
+    
+  otherwise
+    error('unsupported cfg.appenddim');
+end % switch
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
