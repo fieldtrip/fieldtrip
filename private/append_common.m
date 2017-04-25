@@ -24,7 +24,7 @@ function data = append_common(cfg, varargin)
 %
 % $Id$
 
-% the general bookkeeping and the correct specification of the cfg 
+% the general bookkeeping and the correct specification of the cfg
 % should be taken care of by the calling function
 
 % these are being dealt with explicitly, depending on cfg.appenddim
@@ -33,10 +33,10 @@ hasfreq       = isfield(varargin{1}, 'freq');
 hastrialinfo  = isfield(varargin{1}, 'trialinfo');
 hassampleinfo = isfield(varargin{1}, 'sampleinfo');
 for i=2:numel(varargin)
-  hastime       = isfield(varargin{i}, 'time');
-  hasfreq       = isfield(varargin{i}, 'freq');
-  hastrialinfo  = isfield(varargin{i}, 'trialinfo');
-  hassampleinfo = isfield(varargin{i}, 'sampleinfo');
+  hastime       = hastime       && isfield(varargin{i}, 'time');
+  hasfreq       = hasfreq       && isfield(varargin{i}, 'freq');
+  hastrialinfo  = hastrialinfo  && isfield(varargin{i}, 'trialinfo');
+  hassampleinfo = hassampleinfo && isfield(varargin{i}, 'sampleinfo');
 end
 
 switch cfg.appenddim
@@ -102,14 +102,12 @@ switch cfg.appenddim
     
     % remember the original axes in each input
     if hasfreq
-      assert(checkfreq(varargin{:}, 'unique', cfg.tolerance));
       oldfreq = cell(size(varargin));
       for i=1:numel(varargin)
         oldfreq{i} = varargin{i}.freq;
       end
     end
     if hastime
-      assert(checktime(varargin{:}, 'unique', cfg.tolerance));
       oldtime = cell(size(varargin));
       for i=1:numel(varargin)
         oldtime{i} =  varargin{i}.time;
@@ -164,7 +162,7 @@ switch cfg.appenddim
           for j=1:numel(varargin)
             freqsel = match_val(varargin{j}.freq, oldfreq{j});
             timesel = match_val(varargin{j}.time, oldtime{j});
-            data.(cfg.parameter{i})(:,freqsel,:) = varargin{j}.(cfg.parameter{i})(:,freqsel,timesel);
+            data.(cfg.parameter{i})(:,freqsel,timesel) = varargin{j}.(cfg.parameter{i})(:,freqsel,timesel);
           end
           
         case {'rpt_chan_time' 'subj_chan_time'}
@@ -186,7 +184,7 @@ switch cfg.appenddim
           for j=1:numel(varargin)
             freqsel = match_val(varargin{j}.freq, oldfreq{j});
             timesel = match_val(varargin{j}.time, oldtime{j});
-            data.(cfg.parameter{i})(:,:,freqsel,:) = varargin{j}.(cfg.parameter{i})(:,:,freqsel,timesel);
+            data.(cfg.parameter{i})(:,:,freqsel,timesel) = varargin{j}.(cfg.parameter{i})(:,:,freqsel,timesel);
           end
           
         otherwise
@@ -209,7 +207,7 @@ switch cfg.appenddim
     data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
     assert(numel(data.label)>0);
     if hastime, assert(numel(data.time)>0); end
-    if hasfreq, assert(numel(data.data)>0); end
+    if hasfreq, assert(numel(data.freq)>0); end
     
     % also append these when present
     if hastrialinfo,  cfg.parameter{end+1} = 'trialinfo';  end
