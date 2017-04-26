@@ -28,6 +28,17 @@ assert(isequal(numel(reref_eeg_reref.label),2)) % 2 common averaged rereferenced
 assert(isequal(numel(reref_eeg_reref.elec.label),2)) % 2 common averaged rereferenced channels
 assert(isequal(reref_eeg_reref.elec.chanpos, reref_eeg_reref.elec.elecpos)) % original chanpos
 
+% reref using cfg.reref and cfg.implicitref
+cfg                    = [];
+cfg.channel            = ft_channelselection({'eeg 1','eeg 2'}, data_eeg.label);
+cfg.reref              = 'yes';
+cfg.refchannel         = 'all';
+cfg.implicitref        = 'eeg 3';
+reref_eeg_implref = ft_preprocessing(cfg, data_eeg);
+assert(isequal(numel(reref_eeg_implref.label),3)) % 3 common averaged rereferenced channels
+assert(isequal(numel(reref_eeg_implref.elec.label),2)) % 2 common averaged rereferenced channels
+assert(isequal(reref_eeg_implref.elec.chanpos, reref_eeg_implref.elec.elecpos)) % original chanpos
+
 %% data without elec
 data_eeg2.label = {'eeg 1';'eeg 2';'eeg 3'};
 data_eeg2.trial{1,1} = randn(3,10);
