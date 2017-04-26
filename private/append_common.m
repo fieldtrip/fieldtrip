@@ -113,6 +113,20 @@ switch cfg.appenddim
     for i=1:numel(cfg.parameter)
       dimsiz = getdimsiz(varargin{1}, cfg.parameter{i});
       switch getdimord(varargin{1}, cfg.parameter{i})
+        case {'chan_chan'}
+          data.(cfg.parameter{i}) = nan(dimsiz);
+          for j=1:numel(varargin)
+            chansel = match_str(varargin{j}.label, oldlabel{j});
+            data.(cfg.parameter{i})(chansel,chansel) = varargin{j}.(cfg.parameter{i})(chansel,chansel);
+          end
+          
+        case {'rpt_chan_chan'}
+          data.(cfg.parameter{i}) = nan(dimsiz);
+          for j=1:numel(varargin)
+            chansel = match_str(varargin{j}.label, oldlabel{j});
+            data.(cfg.parameter{i})(:,chansel,chansel) = varargin{j}.(cfg.parameter{i})(:,chansel,chansel);
+          end
+          
         case {'chan_time' 'chan_freq'}
           data.(cfg.parameter{i}) = nan(dimsiz);
           for j=1:numel(varargin)
@@ -256,21 +270,15 @@ switch cfg.appenddim
     for i=1:numel(cfg.parameter)
       dimsiz = getdimsiz(varargin{1}, cfg.parameter{i});
       switch getdimord(varargin{1}, cfg.parameter{i})
-        case {'chan_time' 'chan_freq'}
+        case {'chan' 'chan_time' 'chan_freq' 'chan_chan' 'chan_freq_time' 'chan_chan_freq' 'chan_chan_time' 'chan_chan_freq_time'}
           dat = cell(size(varargin));
           for j=1:numel(varargin)
-            dat{j} = reshape(varargin{j}.(cfg.parameter{i}), 1, dimsiz(1), dimsiz(2));
+            % add a singleton dimension to the beginning
+            dat{j} = reshape(varargin{j}.(cfg.parameter{i}), [1, dimsiz]);
           end
           data.(cfg.parameter{i}) = cat(1, dat{:});
           
-        case 'chan_freq_time'
-          dat = cell(size(varargin));
-          for j=1:numel(varargin)
-            dat{j} = reshape(varargin{j}.(cfg.parameter{i}), 1, dimsiz(1), dimsiz(2), dimsiz(3));
-          end
-          data.(cfg.parameter{i}) = cat(1, dat{:});
-          
-        case {'rpt_chan_time' 'rpt_chan_freq' 'rpt_chan_freq_time' 'rpttap_chan_freq' 'rpttap_chan_freq_time' 'rpt_other'}
+        case {'rpt_chan' 'rpt_chan_time' 'rpt_chan_freq' 'rpt_chan_chan' 'rpt_chan_freq_time' 'rpttap_chan_freq' 'rpttap_chan_freq_time' 'rpt_other'}
           dat = cell(size(varargin));
           for j=1:numel(varargin)
             dat{j} = varargin{j}.(cfg.parameter{i});
@@ -288,7 +296,7 @@ switch cfg.appenddim
 end
 
 if isfield(data, 'dimord')
-  dimtok = tokenize(data.dimord);
+  dimtok = tokenize(data.dimord, '_');
   if strcmp(cfg.appenddim, 'rpt') && ~any(strcmp(dimtok{1}, {'rpt', 'rpttap', 'subj'}))
     data.dimord = ['rpt_' data.dimord];
   end
