@@ -95,6 +95,13 @@ end
 haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
 haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
 
+if ~istrue(keepunused)
+  % remove the channels that are not rereferenced from the input
+  cfg = [];
+  cfg.channel = montage.labelold;
+  input = ft_selectdata(cfg, input);
+end
+
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeold')
   montage.chantypeold = repmat({'unknown'}, size(montage.labelold));
@@ -275,7 +282,7 @@ if istrue(keepunused)
   montage.chanunitold = cat(1, montage.chanunitold(:), addchanunit(:));
   montage.chanunitnew = cat(1, montage.chanunitnew(:), addchanunit(:));
 else
-  % add the channels that are not rereferenced to the input of the montage only
+  % add the channels that are not rereferenced to the input of the montage
   montage.tra(:,(n+(1:k))) = zeros(m,k);
   montage.labelold    = cat(1, montage.labelold(:), addlabel(:));
   montage.chantypeold = cat(1, montage.chantypeold(:), addchantype(:));
