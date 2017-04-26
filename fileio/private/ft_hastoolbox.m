@@ -86,7 +86,7 @@ url = {
   'COMM'       'see http://www.mathworks.com/products/communications'
   'SIGNAL'     'see http://www.mathworks.com/products/signal'
   'OPTIM'      'see http://www.mathworks.com/products/optim'
-  'IMAGE'      'see http://www.mathworks.com/products/image'  % Mathworks refers to this as IMAGES
+  'IMAGES'     'see http://www.mathworks.com/products/image'  % Mathworks refers to this as IMAGES
   'SPLINES'    'see http://www.mathworks.com/products/splines'
   'DISTCOMP'   'see http://www.mathworks.nl/products/parallel-computing/'
   'COMPILER'   'see http://www.mathworks.com/products/compiler'
@@ -255,7 +255,7 @@ switch toolbox
     dependency = {has_license('communication_toolbox'), 'de2bi'}; % also check the availability of a toolbox license
   case 'SIGNAL'
     dependency = {has_license('signal_toolbox'), 'window'};       % also check the availability of a toolbox license
-  case 'IMAGE'
+  case 'IMAGES'
     dependency = has_license('image_toolbox');                    % also check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
     dependency = has_license('distrib_computing_toolbox');        % also check the availability of a toolbox license
