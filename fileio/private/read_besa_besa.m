@@ -62,9 +62,6 @@ function [data] = read_besa_besa(filename, header, begsample, endsample, chanind
 % $Id$
 
 
-% For debugging %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-warning on;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-
 switch nargin
   case 1
     chanindx=[];
@@ -97,6 +94,8 @@ if needhdr
   data.orig.channel_info.channel_states = data.orig.channel_info.channel_states(chanindx);
   if isfield(data.orig.channel_info, 'channel_units') % test data did not have this field
     data.chanunit = data.orig.channel_info.channel_units;
+  else
+    data.chanunit = repmat({'unknown'}, size(data.orig.channel_info.channel_states));  % unknown
   end
   data.chantype = repmat({'unknown'}, size(data.orig.channel_info.channel_states));  % start with unknown
   data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_TRIGGER]==1) = {'trigger'}; % test data did not have any of the below set to 1
@@ -841,28 +840,8 @@ end
 out_offset = fread(fid,1,'*uint32');
 
 
-
-
-
-
 function [header] = read_besa_besa_header(fname)
-%% Reads BESA .besa format header information and skips data
-% See formatting document <a href="matlab:web(http://www.besa.de/downloads/file-formats/)">here</a>
-% 
-% [alldata,file_info,channel_info,tags,events] = readbesa(fname)
-% 
-% inputs:
-%  fname [string] - path to .besa file
-% 
-% outputs:
-%  header [structure] - Header information
-% 
-% 
-% 
-% 2016 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
-
-% For debugging %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-warning on;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+% READ_BESA_BESA_HEADER reads header information from a BESA fileheader and skips data
 
 %% Open file
 [fid,msg] = fopen(fname,'r');
