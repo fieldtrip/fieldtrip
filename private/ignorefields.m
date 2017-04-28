@@ -76,6 +76,7 @@ switch purpose
       'previous'
       'progress'
       'outputfilepresent'
+      'toolbox'
       };
     
     
