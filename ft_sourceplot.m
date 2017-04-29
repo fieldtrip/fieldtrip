@@ -327,6 +327,21 @@ elseif ~hasanatomical && cfg.downsample~=1
   tmpcfg.parameter = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
   functional = ft_volumedownsample(tmpcfg, functional);
   [cfg, functional] = rollback_provenance(cfg, functional);
+elseif hasanatomical && strcmp(cfg.method, 'cloud') % need to disentangle the volumetric from the surface inputs
+  cloudsurf = {};
+  cloudvol = {};
+  for n = 1:numel(anatomical)
+    if isfield(anatomical{n}, 'pos') && isfield(anatomical{n}, 'pos')
+      cloudsurf{end+1} = anatomical{n};
+    elseif isfield(anatomical{n}, 'anatomy') && isfield(anatomical{n}, 'transform')
+      if numel(cloudvol) > 1
+        error('Only one 3D volumetric representation can be input when cfg.method = "cloud"')
+      end
+      cloudvol = anatomical{n};
+    else
+      warning('anatomical{%d} was not recognized as a surface or volumetric structure, so it is being ignored', n)
+    end
+  end
 end
 
 if isfield(functional, 'dim') && isfield(functional, 'transform')
@@ -1366,7 +1381,7 @@ switch cfg.method
       end
     end
     
-    ft_plot_cloud(pos, fun, 'mesh', anatomical,...
+    ft_plot_cloud(pos, fun, 'mesh', cloudsurf, 'mri', cloudvol,...
       'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
       'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
       'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
