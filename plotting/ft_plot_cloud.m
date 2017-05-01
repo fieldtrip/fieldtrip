@@ -20,7 +20,7 @@ function ft_plot_cloud(pos, val, varargin)
 %   'unit'               = string, convert the sensor array to the specified geometrical units (default = [])
 %   'mri'                = structure, 3D volumetric representation
 %   'mesh'               = string or Nx1 cell array, triangulated mesh(es), see FT_PREPARE_MESH
-%   'slice'              = requires 'mesh' as input (default = 'none')
+%   'slice'              = requires 'mesh' or 'mri' as input (default = 'none')
 %                          '2d', plots 2D slices through the cloud with an outline of the mesh
 %                          '3d', draws an outline around the mesh at a particular slice
 %   'slicetype'          = 'surf' plots the slices as a surface
@@ -216,12 +216,12 @@ else
   domri = 0;
 end
 
-if strcmp(sli, '2d') || strcmp(sli, '3d')
-  if isempty(meshplot)
-    error('plotting a slice requires a mesh as input')
-  else
-    dointersect = 1;
-  end
+if (strcmp(sli, '2d') || strcmp(sli, '3d')) &&  isempty(meshplot) && isempty(mri)
+  error('plotting a slice requires a mesh or mri as input')
+end
+
+if (strcmp(sli, '2d') || strcmp(sli, '3d')) &&  ~isempty(meshplot)
+  dointersect = 1;
 else
   dointersect = 0;
 end
@@ -270,7 +270,7 @@ if dointersect % check intersection inputs
   end % end intersection plotting checks
 end % end dointersect checks
 
-if dointersect
+if dointersect || domri
   % Set the orientation of the slice plane
   if strcmp(ori, 'x')
     oriX = 1; oriY = 0; oriZ = 0;
@@ -310,7 +310,7 @@ else
   rmax = ones(length(pos), 1)*radius; % each cloud has the same radius
 end
 
-if dointersect
+if dointersect || domri
   % Generate Circle Points
   angles = linspace(0,2*pi,50);
   x = cos(angles)';

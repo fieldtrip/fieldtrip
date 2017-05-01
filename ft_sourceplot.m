@@ -331,7 +331,7 @@ elseif hasanatomical && strcmp(cfg.method, 'cloud') % need to disentangle the vo
   cloudsurf = {};
   cloudvol = {};
   for n = 1:numel(anatomical)
-    if isfield(anatomical{n}, 'pos') && isfield(anatomical{n}, 'pos')
+    if isfield(anatomical{n}, 'pos') && isfield(anatomical{n}, 'tri')
       cloudsurf{end+1} = anatomical{n};
     elseif isfield(anatomical{n}, 'anatomy') && isfield(anatomical{n}, 'transform')
       if numel(cloudvol) > 1
