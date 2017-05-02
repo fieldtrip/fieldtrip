@@ -68,9 +68,9 @@ switch cfg.statistic
 case {'ttest', 'ttest_samples_vs_const'}
 
   % set the defaults
-  cfg.alpha         = ft_getopt('alpha', 0.05);
-  cfg.tail          = ft_getopt('tail', 0);
-  cfg.constantvalue = ft_getopt('constantvalue', 0);
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
+  cfg.constantvalue = ft_getopt(cfg, 'constantvalue', 0);
 
   if ~any(size(design)==1)
     error('design matrix should only contain one factor (i.e. one row)');
@@ -101,8 +101,8 @@ case {'ttest', 'ttest_samples_vs_const'}
 case {'ttest2', 'ttest_2samples_by_timepoint'}
 
   % set the defaults
-  cfg.alpha         = ft_getopt('alpha', 0.05);
-  cfg.tail          = ft_getopt('tail', 0);
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
 
   if size(design,1)~=1
     error('design matrix should only contain one factor (i.e. one row)');
@@ -135,8 +135,8 @@ case {'ttest2', 'ttest_2samples_by_timepoint'}
 case {'paired-ttest'}
 
   % set the defaults
-  cfg.alpha         = ft_getopt('alpha', 0.05);
-  cfg.tail          = ft_getopt('tail', 0);
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
 
   if ~any(size(design)==1)
     error('design matrix should only contain one factor (i.e. one row)');
@@ -251,8 +251,8 @@ case 'ttest_window_avg_vs_const'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'signtest'}
   % set the defaults
-  cfg.alpha         = ft_getopt('alpha', 0.05);
-  cfg.tail          = ft_getopt('tail', 0);
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
   
   switch cfg.tail
     case 0
@@ -292,8 +292,8 @@ case {'signtest'}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'signrank'}
   % set the defaults
-  cfg.alpha         = ft_getopt('alpha', 0.05);
-  cfg.tail          = ft_getopt('tail', 0);
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
   
   switch cfg.tail
     case 0
