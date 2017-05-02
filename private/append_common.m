@@ -32,6 +32,8 @@ hastime       = isfield(varargin{1}, 'time');
 hasfreq       = isfield(varargin{1}, 'freq');
 hastrialinfo  = isfield(varargin{1}, 'trialinfo');
 hassampleinfo = isfield(varargin{1}, 'sampleinfo');
+hascumsumcnt  = isfield(varargin{1}, 'cumsumcnt');
+hascumtapcnt  = isfield(varargin{1}, 'cumtapcnt');
 hastopolabel  = isfield(varargin{1}, 'topolabel');
 hastopo       = isfield(varargin{1}, 'topo');
 hasunmixing   = isfield(varargin{1}, 'unmixing');
@@ -40,6 +42,8 @@ for i=2:numel(varargin)
   hasfreq       = hasfreq       && isfield(varargin{i}, 'freq');
   hastrialinfo  = hastrialinfo  && isfield(varargin{i}, 'trialinfo');
   hassampleinfo = hassampleinfo && isfield(varargin{i}, 'sampleinfo');
+  hascumsumcnt  = hascumsumcnt  && isfield(varargin{i}, 'cumsumcnt');
+  hascumtapcnt  = hascumtapcnt  && isfield(varargin{i}, 'cumtapcnt');
   hastopolabel  = hastopolabel  && isfield(varargin{i}, 'topolabel');
   hastopo       = hastopo       && isfield(varargin{i}, 'topo');
   hasunmixing   = hasunmixing   && isfield(varargin{i}, 'unmixing');
@@ -95,8 +99,8 @@ switch cfg.appenddim
     % start with the union of all input data
     data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
     
-    % keep the trialinfo and sampleinfo (when identical)
-    fn = {'trialinfo' 'sampleinfo'};
+    % keep these fields (when identical)
+    fn = {'trialinfo' 'sampleinfo', 'cumsumcnt', 'cumtapcnt'};
     for i=1:numel(fn)
       keepfield = isfield(varargin{1}, fn{i});
       for j=1:numel(varargin)
@@ -175,7 +179,7 @@ switch cfg.appenddim
     data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord', 'topo', 'unmixing', 'topolabel'});
     
     % keep the trialinfo (when identical)
-    % note that we are NOT keeing the sampleinfo
+    % note that we are NOT keeing the sampleinfo, cumsumcnt, cumtapcnt
     fn = {'trialinfo'};
     for i=1:numel(fn)
       keepfield = isfield(varargin{1}, fn{i});
@@ -266,6 +270,8 @@ switch cfg.appenddim
     % also append these when present
     if hastrialinfo,  cfg.parameter{end+1} = 'trialinfo';  end
     if hassampleinfo, cfg.parameter{end+1} = 'sampleinfo'; end
+    if hascumsumcnt,  cfg.parameter{end+1} = 'cumsumcnt';  end
+    if hascumtapcnt,  cfg.parameter{end+1} = 'cumtapcnt';  end
     
     for i=1:numel(cfg.parameter)
       dimsiz = getdimsiz(varargin{1}, cfg.parameter{i});
@@ -278,7 +284,7 @@ switch cfg.appenddim
           end
           data.(cfg.parameter{i}) = cat(1, dat{:});
           
-        case {'rpt_chan' 'rpt_chan_time' 'rpt_chan_freq' 'rpt_chan_chan' 'rpt_chan_freq_time' 'rpttap_chan_freq' 'rpttap_chan_freq_time' 'rpt_other'}
+        case {'rpt' 'rpt_chan' 'rpt_chan_time' 'rpt_chan_freq' 'rpt_chan_chan' 'rpt_chan_freq_time' 'rpttap_chan_freq' 'rpttap_chan_freq_time' 'rpt_other'}
           dat = cell(size(varargin));
           for j=1:numel(varargin)
             dat{j} = varargin{j}.(cfg.parameter{i});

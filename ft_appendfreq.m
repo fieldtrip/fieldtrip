@@ -114,7 +114,7 @@ if isempty(cfg.parameter)
   for i=2:numel(varargin)
     fn = intersect(fn, fieldnames(varargin{i}));
   end
-  cfg.parameter = setdiff(fn, ignorefields('appendtimelock'));
+  cfg.parameter = setdiff(fn, ignorefields('appendfreq'));
 elseif ischar(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
