@@ -1,13 +1,13 @@
 function ft_plot_cloud(pos, val, varargin)
 
 % FT_PLOT_CLOUD visualizes spatially sparse scalar data as spherical clouds and
-% optionally 2D slices through the spherical clouds. This is for example useful for
-% spectral power on depth (sEEG) electrodes.
+% optionally 2D slices through the spherical clouds. This is for example 
+% useful for spectral power on depth (sEEG) electrodes.
 %
 % Use as
 %   ft_plot_cloud(pos, val, ...)
 % where the first argument are the sensor positions and the second argument are the
-% sensor values.
+% values.
 %
 % Optional input arguments should come in key-value pairs and can include
 %   'radius'             = scalar, maximum radius of cloud (default = 4)
@@ -18,14 +18,15 @@ function ft_plot_cloud(pos, val, varargin)
 %                          in cloud changes from its center
 %   'clim'               = 1x2 vector specifying the min and max for the colorscale
 %   'unit'               = string, convert the sensor array to the specified geometrical units (default = [])
+%   'mri'                = structure, 3D volumetric representation
 %   'mesh'               = string or Nx1 cell array, triangulated mesh(es), see FT_PREPARE_MESH
-%   'slice'              = requires 'mesh' as input (default = 'none')
+%   'slice'              = requires 'mesh' or 'mri' as input (default = 'none')
 %                          '2d', plots 2D slices through the cloud with an outline of the mesh
 %                          '3d', draws an outline around the mesh at a particular slice
 %   'slicetype'          = 'surf' plots the slices as a surface
 %                          'point' (default) plots the slices as points
 %
-% The following inputs apply when 'slice' = 'none' or '3d', or '2dslicetype' = 'point'
+% The following inputs apply when 'slice' = 'none' or '3d', or 'slicetype' = 'point'
 %   'ptsize'             = scalar, size of points in cloud (default = 1)
 %   'ptdensity'          = scalar, density of points in cloud (default = 20)
 %   'ptgradient'         = scalar, degree to which density of points in cloud changes
@@ -43,13 +44,18 @@ function ft_plot_cloud(pos, val, varargin)
 %   'intersectlinestyle' = string or Nx1 cell array, line style specification (default = '-')
 %   'intersectlinewidth' = scalar or Nx1 vector, line width specification (default = 2)
 %
+% The following inputs apply when 'slice' = '3d'
+%   'intersectplane'     = 'yes' or 'no' (default), whether or not to plot
+%                          a semi-transparent plane through the 3d mesh at
+%                          the slice position
+%
 % See also FT_ELECTRODEPLACEMENT, FT_PLOT_TOPO, FT_PLOT_TOPO3D
 
 % The following inputs apply when 'slicetype' = 'surf'
-%   'ncirc'           = scalar, number of concentric circles to plot for each
+%   'ncirc'           = scalar, number of concentric circles to plot for each 
 %                       cloud slice (default = 15) make this hidden or scale
 %   'scalealpha'      = 'yes' or 'no', scale the maximum alpha value of the center circle
-%                       with distance from center of cloud
+%                       with distance from center of cloud 
 
 % Copyright (C) 2017, Arjen Stolk, Sandon Griffin
 %
@@ -94,14 +100,11 @@ pos = pos * ft_scalingfactor(posunit, unit);
 radius             = ft_getopt(varargin, 'radius', 4 * ft_scalingfactor('mm', unit));
 rmin               = ft_getopt(varargin, 'rmin',   1 * ft_scalingfactor('mm', unit));
 scalerad           = ft_getopt(varargin, 'scalerad', 'yes');
+cmap               = ft_getopt(varargin, 'colormap', 'parula');
 cgrad              = ft_getopt(varargin, 'colorgrad', 'white');
-if ft_platform_supports('parula')
-  cmap             = ft_getopt(varargin, 'colormap', 'parula');
-else
-  cmap             = ft_getopt(varargin, 'colormap', 'jet');
-end
 clim               = ft_getopt(varargin, 'clim');
 meshplot           = ft_getopt(varargin, 'mesh');
+mri                = ft_getopt(varargin, 'mri');
 
 % point related inputs
 ptsize             = ft_getopt(varargin, 'ptsize', 1);
@@ -118,6 +121,7 @@ minspace           = ft_getopt(varargin, 'minspace', 1);
 intersectcolor     = ft_getopt(varargin, 'intersectcolor', {'k'});
 intersectlinestyle = ft_getopt(varargin, 'intersectlinestyle', {'-'});
 intersectlinewidth = ft_getopt(varargin, 'intersectlinewidth', 2);
+intersectplane     = ft_getopt(varargin, 'intersectplane', 'no');
 ncirc              = ft_getopt(varargin, 'ncirc', 15);
 scalealpha         = ft_getopt(varargin, 'scalealpha', 'no');
 
@@ -131,7 +135,10 @@ if rmin < 1 * ft_scalingfactor('mm', unit)
   error('cfg.rmin must be equal or larger than 1 mm');
 end
 
-if ~isempty(meshplot)
+% point density needs to be adjusted based on the unit
+ptdens = ptdens*ft_scalingfactor(unit, 'mm')^3;
+
+if ~isempty(meshplot);
   % Mesh should be a cell-array
   if isstruct(meshplot)
     tmp = meshplot;
@@ -161,7 +168,7 @@ if ~isempty(meshplot)
   % facecolor and edgecolor should be cell array
   if ~iscell(facecolor)
     tmp = facecolor;
-    if ischar(tmp)
+    if isstr(tmp)
       facecolor = {tmp};
     elseif ismatrix(tmp) && size(tmp, 2) == 3
       facecolor = cell(size(tmp,1), 1);
@@ -174,7 +181,7 @@ if ~isempty(meshplot)
   end
   if ~iscell(edgecolor)
     tmp = edgecolor;
-    if ischar(tmp)
+    if isstr(tmp)
       edgecolor = {tmp};
     elseif ismatrix(tmp) && size(tmp, 2) == 3
       edgecolor = cell(size(tmp,1), 1);
@@ -187,7 +194,7 @@ if ~isempty(meshplot)
   end
   
   % make sure each mesh has plotting options specified
-  if numel(meshplot) > 1
+  if numel(meshplot) > 1 
     nmesh = numel(meshplot);
     if numel(facecolor) < numel(meshplot)
       for m = numel(facecolor)+1:nmesh
@@ -212,12 +219,18 @@ if ~isempty(meshplot)
   end
 end
 
-if strcmp(sli, '2d') || strcmp(sli, '3d')
-  if isempty(meshplot)
-    error('plotting a slice requires a mesh as input')
-  else
-    dointersect = 1;
-  end
+if ~isempty(mri);
+  domri = 1;
+else
+  domri = 0;
+end
+
+if (strcmp(sli, '2d') || strcmp(sli, '3d')) &&  isempty(meshplot) && isempty(mri)
+  error('plotting a slice requires a mesh or mri as input')
+end
+
+if (strcmp(sli, '2d') || strcmp(sli, '3d')) &&  ~isempty(meshplot)
+  dointersect = 1;
 else
   dointersect = 0;
 end
@@ -226,7 +239,7 @@ if dointersect % check intersection inputs
   % Color and linestyle should be cell-array
   if ~iscell(intersectcolor)
     tmp = intersectcolor;
-    if ischar(tmp)
+    if isstr(tmp)
       intersectcolor = {tmp};
     elseif ismatrix(tmp) && size(tmp, 2) == 3
       intersectcolor = cell(size(tmp,1), 1);
@@ -237,7 +250,7 @@ if dointersect % check intersection inputs
       intersectcolor = {};
     end
   end
-  if ischar(intersectlinestyle)
+  if isstr(intersectlinestyle)
     intersectlinestyle = {intersectlinestyle};
   elseif iscell(intersectlinestyle)
     % do nothing
@@ -266,7 +279,7 @@ if dointersect % check intersection inputs
   end % end intersection plotting checks
 end % end dointersect checks
 
-if dointersect
+if dointersect || domri
   % Set the orientation of the slice plane
   if strcmp(ori, 'x')
     oriX = 1; oriY = 0; oriZ = 0;
@@ -277,6 +290,12 @@ if dointersect
   else
     error('ori must be "x", "y" or "z"')
   end
+end
+
+if strcmp(intersectplane, 'yes')
+  dointersectplane = 1;
+else
+  dointersectplane = 0;
 end
 
 if isempty(clim)
@@ -306,14 +325,14 @@ else
   rmax = ones(length(pos), 1)*radius; % each cloud has the same radius
 end
 
-if dointersect
+if dointersect || domri
   % Generate Circle Points
   angles = linspace(0,2*pi,50);
   x = cos(angles)';
   y = sin(angles)';
   slicedim = zeros(length(angles),1);
   
-  if strcmp(slicepos, 'auto') % Search each slice for largest area of data
+  if strcmp(slicepos, 'auto'); % Search each slice for largest area of data
     % Find the potential limits of the interpolation
     intxmax = max(pos(:,1))+radius; intxmin = min(pos(:,1))-radius;
     intymax = max(pos(:,2))+radius; intymin = min(pos(:,2))-radius;
@@ -353,9 +372,23 @@ if dointersect
     
     slicepos = zeros(nslices,1);
     for n = 1:nslices
-      imaxslice = find(totalarea == max(totalarea), 1);       % index of the slice with the maximum area
-      slicepos(n) = potent_slices(imaxslice);                 % position of the yet unlisted slice with the maximum area
-      totalarea(imaxslice-minspace:imaxslice+minspace) = 0;   % change the totalarea of the chosen slice and those within minspace to 0 so that it is not chosen again
+      if any(totalarea)
+        imaxslice = find(totalarea == max(totalarea), 1); % index of the slice with the maximum area (take the first slice if 2 are equal)
+        slicepos(n) = potent_slices(imaxslice); % position of the yet unlisted slice with the maximum area
+        
+        % run some checks so that zeros are not added to totalarea for non-existent slices
+        if imaxslice-minspace > 0 && imaxslice+minspace <= size(totalarea,2)
+          totalarea(imaxslice-minspace:imaxslice+minspace) = 0; % change the totalarea of the chosen slice and those within minspace to 0 so that it is not chosen again
+        elseif imaxslice-minspace < 1 && imaxslice+minspace <= size(totalarea,2)
+          totalarea(1:imaxslice+minspace) = 0;
+        elseif imaxslice-minspace > 0 && imaxslice+minspace > size(totalarea,2)
+          totalarea(imaxslice-minspace:max(size(totalarea,2))) = 0;
+        elseif imaxslice-minspace < 1 && imaxslice+minspace > size(totalarea,2)
+          totalarea(1:max(size(totalarea,2))) = 0;
+        end
+      else
+        warning('With minspace set at %d, there are not %d slices with any data in them. Try decreasing minspace or nslices', minspace, nslices)
+      end
     end
   end
   
@@ -364,7 +397,10 @@ if dointersect
   intersect_exists = zeros(numel(slicepos), numel(meshplot));
 end
 
+slicepos = sort(slicepos);
+
 % draw figure
+
 if strcmp(sli, '2d')
   % Pre-allocate interpolation limits of each slice to facilitate
   % finding overall limits of all slices after plotting
@@ -372,8 +408,13 @@ if strcmp(sli, '2d')
   ysmax = NaN(numel(slicepos),1); ysmin = NaN(numel(slicepos),1);
   zsmax = NaN(numel(slicepos),1); zsmin = NaN(numel(slicepos),1);
   
-  for s = 1:numel(slicepos) % slice loop
+  for s = 1:numel(slicepos); % slice loop
     subplot(numel(slicepos),1,s); hold on;
+    if domri
+      ft_plot_slice(mri.anatomy, 'transform', mri.transform, ...
+        'location', [oriX*slicepos(s) oriY*slicepos(s) oriZ*slicepos(s)], ...
+        'orientation', [oriX oriY oriZ]);
+    end
     
     % Pre-allocate interpolation limits of each cloud to facilitate
     % finding slice limits after plotting
@@ -409,14 +450,20 @@ if strcmp(sli, '2d')
           ye = rcmax*y;
           
           % Jitter values of points in the slice plane so no surfaces overlap
-          slicedime = slicedim+(0.01*rand*ones(length(x), 1));
+          if domri
+            % pull the surfaces slightly forward so they are entirely in
+            % front of the mri surface
+            slicedime = slicedim+.5+(0.01*rand*ones(length(x), 1)); 
+          else
+            slicedime = slicedim+(0.01*rand*ones(length(x), 1));
+          end
           
           % Plot concentric circles
           for n = 0:ncirc-1 % circle loop
-            xo = xe*((ncirc-n)/ncirc);    % outer x points
-            yo = ye*((ncirc-n)/ncirc);    % outer z points
-            xi = xe*((ncirc-1-n)/ncirc);  % inner x points
-            yi = ye*((ncirc-1-n)/ncirc);  % inner z points
+            xo = xe*((ncirc-n)/ncirc); % outer x points
+            yo = ye*((ncirc-n)/ncirc); % outer z points
+            xi = xe*((ncirc-1-n)/ncirc); % inner x points
+            yi = ye*((ncirc-1-n)/ncirc); % inner z points
             if n == ncirc-1 % for the last concentric circle
               if oriX; hs = fill3(slicepos(s)+slicedime, indpos(2)+xo, indpos(3)+yo, val(c)); end
               if oriY; hs = fill3(indpos(1)+xo, slicepos(s)+slicedime, indpos(3)+yo, val(c)); end
@@ -443,12 +490,12 @@ if strcmp(sli, '2d')
             ycmax(c) = max(ye+indpos(2)); ycmin(c) = min(ye+indpos(2));
             zcmax(c) = max(slicedime+slicepos(s)); zcmin(c) = min(slicedime+indpos(s));
           end
-        elseif strcmp(slicetype, 'point')
-          rng(0, 'twister');                          % random number generator
-          npoints = round(ptdens*pi*rmax(c)^2);       % number of points based on area of cloud cross section
-          azimuth = 2*pi*rand(npoints,1);             % azimuthal angle for each point
-          radii = rmax(c)*(rand(npoints,1).^ptgrad);  % radius value for each point
-          radii = sort(radii);                        % sort radii in ascending order so they are plotted from inside out
+        elseif strcmp(slicetype, 'point');
+          rng(0, 'twister'); % random number generator
+          npoints = round(ptdens*pi*rmax(c)^2); % number of points based on area of cloud cross section
+          azimuth = 2*pi*rand(npoints,1); % azimuthal angle for each point
+          radii = rmax(c)*(rand(npoints,1).^ptgrad); % radius value for each point
+          radii = sort(radii); % sort radii in ascending order so they are plotted from inside out
           % convert to Carthesian; note that second input controls third output
           if oriX; [y,z,x] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
           if oriY; [x,z,y] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
@@ -519,19 +566,19 @@ if strcmp(sli, '2d')
         zmmax = max(meshplot{k}.pos(:,3)); zmmin = min(meshplot{k}.pos(:,3));
         
         if oriX
-          if slicepos(s) < xmmax && slicepos(s) > xmmin
+          if slicepos(s) < xmmax && slicepos(s) > xmmin;
             intersect_exists(s,k) = 1;
           else
             intersect_exists(s,k) = 0;
           end
         elseif oriY
-          if slicepos(s) < ymmax && slicepos(s) > ymmin
+          if slicepos(s) < ymmax && slicepos(s) > ymmin;
             intersect_exists(s,k) = 1;
           else
             intersect_exists(s,k) = 0;
           end
         elseif oriZ
-          if slicepos(s) < zmmax && slicepos(s) > zmmin
+          if slicepos(s) < zmmax && slicepos(s) > zmmin;
             intersect_exists(s,k) = 1;
           else
             intersect_exists(s,k) = 0;
@@ -542,7 +589,7 @@ if strcmp(sli, '2d')
           [xmesh, ymesh, zmesh] = intersect_plane(meshplot{k}.pos, meshplot{k}.tri, v1, v2, v3);
           
           % draw each individual line segment of the intersection
-          if ~isempty(xmesh)
+          if ~isempty(xmesh),
             p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
             if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor{k}); end
             if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth(k)); end
@@ -558,6 +605,7 @@ if strcmp(sli, '2d')
       end % end mesh loop
     end % end if dointersect
     
+        
     % Find limits of this particular slice
     xsmax(s) = max(xcmax); xsmin(s) = min(xcmin);
     ysmax(s) = max(ycmax); ysmin(s) = min(ycmin);
@@ -583,23 +631,26 @@ if strcmp(sli, '2d')
     if oriX; title(['slicepos = [' num2str(slicepos(s)) ' 0 0]']); end
     if oriY; title(['slicepos = [0 ' num2str(slicepos(s)) ' 0]']); end
     if oriZ; title(['slicepos = [0 0 ' num2str(slicepos(s)) ']']); end
-  end
+  end % end slice loop
   
-  % Set matching limits in the non-slice dimensions for each slice
-  for s = 1:numel(slicepos) % slice loop
-    subplot(numel(slicepos),1,s);
-    if oriX
-      xlim([xsmin(s)-2 xsmax(s)+2]);
-      ylim([min(ysmin)-2 max(ysmax)+2]);
-      zlim([min(zsmin)-2 max(zsmax)+2]);
-    elseif oriY
-      xlim([min(xsmin)-2 max(xsmax)+2]);
-      ylim([ysmin(s)-2 ysmax(s)+2]);
-      zlim([min(zsmin)-2 max(zsmax)+2]);
-    elseif oriZ
-      xlim([min(xsmin)-2 max(xsmax)+2]);
-      ylim([min(ysmin)-2 max(ysmax)+2]);
-      zlim([zsmin(s)-2 zsmax(s)+2]);
+  if domri
+    % do nothing
+  else % Set matching limits in the non-slice dimensions for each slice
+    for s = 1:numel(slicepos); % slice loop
+      subplot(numel(slicepos),1,s);
+      if oriX
+        xlim([xsmin(s)-2 xsmax(s)+2]);
+        ylim([min(ysmin)-2 max(ysmax)+2]);
+        zlim([min(zsmin)-2 max(zsmax)+2]);
+      elseif oriY
+        xlim([min(xsmin)-2 max(xsmax)+2]);
+        ylim([ysmin(s)-2 ysmax(s)+2]);
+        zlim([min(zsmin)-2 max(zsmax)+2]);
+      elseif oriZ
+        xlim([min(xsmin)-2 max(xsmax)+2]);
+        ylim([min(ysmin)-2 max(ysmax)+2]);
+        zlim([zsmin(s)-2 zsmax(s)+2]);
+      end
     end
   end
   
@@ -609,12 +660,12 @@ else % plot 3d cloud
   for n = 1:size(pos,1) % cloud loop
     % point cloud with radius scaling
     rng(0, 'twister'); % random number generator
-    npoints   = round(ptdens*(4/3)*pi*rmax(n)^3);     % number of points based on cloud volume
-    elevation = asin(2*rand(npoints,1)-1);            % elevation angle for each point
-    azimuth   = 2*pi*rand(npoints,1);                 % azimuth angle for each point
-    radii     = rmax(n)*(rand(npoints,1).^ptgrad);    % radius value for each point
-    radii     = sort(radii);                          % sort radii in ascending order so they are plotted from inside out
-    [x,y,z]   = sph2cart(azimuth, elevation, radii);  % convert to Carthesian
+    npoints   = round(ptdens*(4/3)*pi*rmax(n)^3);  % number of points based on cloud volume
+    elevation = asin(2*rand(npoints,1)-1);      % elevation angle for each point
+    azimuth   = 2*pi*rand(npoints,1);           % azimuth angle for each point
+    radii     = rmax(n)*(rand(npoints,1).^ptgrad); % radius value for each point
+    radii     = sort(radii);                    % sort radii in ascending order so they are plotted from inside out
+    [x,y,z]   = sph2cart(azimuth, elevation, radii); % convert to Carthesian
     
     % color axis with radius scaling
     if strcmp(cgrad, 'white')                   % color runs up to white
@@ -635,17 +686,24 @@ else % plot 3d cloud
     
     % draw the points
     scatter3(x+pos(n,1), y+pos(n,2), z+pos(n,3), ptsize, ptcol, '.');
+    
+    % find the limits of the plotted points for this electrode
+    xcmax(n) = max(x+pos(n,1)); xcmin(n) = min(x+pos(n,1));
+    ycmax(n) = max(y+pos(n,2)); ycmin(n) = min(y+pos(n,2));
+    zcmax(n) = max(z+pos(n,3)); zcmin(n) = min(z+pos(n,3));
+
   end % end cloud loop
   
+  
   if ~isempty(meshplot)
-    for k = 1:numel(meshplot) % mesh loop
+    for k = 1:numel(meshplot); % mesh loop
       ft_plot_mesh(meshplot{k}, 'facecolor', facecolor{k}, 'EdgeColor', edgecolor{k}, ...
         'facealpha', facealpha(k), 'edgealpha', edgealpha(k));
       material dull
     end % end mesh loop
     
     if dointersect % plot the outlines on the mesh
-      for s = 1:numel(slicepos) % slice loop
+      for s = 1:numel(slicepos); % slice loop
         if oriX; ori = [1 0 0]; loc = [slicepos(s) 0 0]; end
         if oriY; ori = [0 1 0]; loc = [0 slicepos(s) 0]; end
         if oriZ; ori = [0 0 1]; loc = [0 0 slicepos(s)]; end
@@ -670,19 +728,19 @@ else % plot 3d cloud
           zmmax = max(meshplot{k}.pos(:,3)); zmmin = min(meshplot{k}.pos(:,3));
           
           if oriX
-            if slicepos(s) < xmmax && slicepos(s) > xmmin
+            if slicepos(s) < xmmax && slicepos(s) > xmmin;
               intersect_exists(s,k) = 1;
             else
               intersect_exists(s,k) = 0;
             end
           elseif oriY
-            if slicepos(s) < ymmax && slicepos(s) > ymmin
+            if slicepos(s) < ymmax && slicepos(s) > ymmin;
               intersect_exists(s,k) = 1;
             else
               intersect_exists(s,k) = 0;
             end
           elseif oriZ
-            if slicepos(s) < zmmax && slicepos(s) > zmmin
+            if slicepos(s) < zmmax && slicepos(s) > zmmin;
               intersect_exists(s,k) = 1;
             else
               intersect_exists(s,k) = 0;
@@ -693,14 +751,44 @@ else % plot 3d cloud
             [xmesh, ymesh, zmesh] = intersect_plane(meshplot{k}.pos, meshplot{k}.tri, v1, v2, v3);
             
             % draw each individual line segment of the intersection
-            if ~isempty(xmesh)
+            if ~isempty(xmesh),
               p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
               if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor{k}); end
               if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth(k)); end
               if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle{k}); end
             end
           end
+          
         end % end mesh loop
+        
+        if dointersectplane
+          
+          % find the limits of the plotted cloud points and the mesh
+          % points to determine the size of the slice plane
+          x3dmax = max([xcmax, xmmax]); x3dmin = min([xcmin, xmmin]);
+          y3dmax = max([ycmax, ymmax]); y3dmin = min([ycmin, ymmin]);
+          z3dmax = max([zcmax, zmmax]); z3dmin = min([zcmin, zmmin]);
+          
+          if oriX
+            xplane = slicepos(s)*ones(2,2);
+            yplane = [y3dmin-5 y3dmin-5; y3dmax+5 y3dmax+5];
+            zplane = [z3dmin-5 z3dmax+5; z3dmin-5 z3dmax+5];
+          elseif oriY
+            xplane = [x3dmin-5 x3dmin-5; x3dmax+5 x3dmax+5];
+            yplane = slicepos(s)*ones(2,2);
+            zplane = [z3dmin-5 z3dmax+5; z3dmin-5 z3dmax+5];
+          elseif oriZ
+            xplane = [x3dmin-5 x3dmin-5; x3dmax+5 x3dmax+5];
+            yplane = [y3dmin-5 y3dmax+5; y3dmin-5 y3dmax+5];
+            zplane = slicepos(s)*ones(2,2);
+          elseif oriZ
+          end
+          
+          % plot the plane of the intersection
+          h = surf(xplane, yplane, zplane);
+          set(h, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 0.2, 'EdgeAlpha', 0)
+          
+        end
       end % end slice loop
     end % end plotting outline
   end % end mesh plotting
