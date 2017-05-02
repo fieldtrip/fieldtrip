@@ -85,6 +85,8 @@ for i=2:size(nrvHdr.Segments,2)
     end
 end
 
+nrvHdr.startDateTime = nrvHdr.Segments(1).date;
+
 
 
 %Fieldtrip can't handle multiple sampling rates in a data block
@@ -124,6 +126,7 @@ output.nTrials     = 1;
 output.reference   = nrvHdr.reference;
 output.filename    = nrvHdr.filename;
 output.orig        = nrvHdr;
+output.startDateTime = nrvHdr.startDateTime;
 end
 
 function [NrStaticPackets, StaticPackets] = read_nervus_header_staticpackets(h)
