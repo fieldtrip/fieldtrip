@@ -74,6 +74,7 @@ isspike           = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials
 % check if it is a sensor array
 isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'coilori');
 iselec = isfield(data, 'label') && isfield(data, 'elecpos');
+isopto = isfield(data, 'label') && isfield(data, 'optopos');
 
 if isspike
   type = 'spike';
@@ -116,10 +117,12 @@ elseif issource
 elseif ischan
   % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
   type = 'chan';
-elseif iselec
-  type = 'elec';
 elseif isgrad
   type = 'grad';
+elseif iselec
+  type = 'elec';
+elseif isopto
+  type = 'opto';
 elseif ismontage
   type = 'montage';
 elseif isevent
@@ -151,7 +154,7 @@ if nargin>1
     case 'parcellation'
       type = any(strcmp(type, {'parcellation', 'source+label' 'mesh+label'}));
     case 'sens'
-      type = any(strcmp(type, {'elec', 'grad'}));
+      type = any(strcmp(type, {'grad', 'elec', 'opto'}));
     otherwise
       type = strcmp(type, desired);
   end % switch

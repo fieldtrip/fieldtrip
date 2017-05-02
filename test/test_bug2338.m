@@ -9,7 +9,6 @@ function test_bug2338
 global ft_default;
 ft_default = [];
 
-
 % 4 Layers
 r = [85 88 92 100];
 c = [1 1/20 1/80 1];
@@ -62,7 +61,7 @@ lf1 = ft_prepare_leadfield(cfg);
 cfg.vol = vol2;
 lf2 = ft_prepare_leadfield(cfg);
 
-assert(isequal(lf1.leadfield{1}, lf2.leadfield{1}));
+assert(isalmostequal(lf1.leadfield{1}, lf2.leadfield{1}, 'reltol', 1e-6));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,4 +91,5 @@ lf1 = ft_prepare_leadfield(cfg);
 cfg.vol = vol2;
 lf2 = ft_prepare_leadfield(cfg);
 
-assert(isequal(lf1.leadfield{1}, lf2.leadfield{1}));
+assert(isalmostequal(lf1.leadfield{1}, lf2.leadfield{1}, 'reltol', 1e-6));
+

@@ -96,8 +96,11 @@ if opt==1
         if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==1'); end
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
+        if ~exist('spm_affreg', 'file')
+          addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+        end
       end
-      error('spm12 is not yet supported'); % FIXME: there's yet no spm_affreg equivalent in external/spm12
+      fprintf('using ''OldNorm'' affine registration\n');
 
     otherwise
       error('unsupported spm-version');
@@ -109,8 +112,7 @@ if opt==1
   V1 = ft_write_mri(tname1, mri.anatomy,  'transform', mri.transform,  'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
   V2 = ft_write_mri(tname2, mri2.anatomy, 'transform', mri2.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
   
-  % the below, using just spm_affreg does not work robustly enough in some
-  % cases
+  % the below, using just spm_affreg does not work robustly enough in some cases
   flags.regtype = 'rigid';
   [M, scale]    = spm_affreg(V1,V2,flags);
   
@@ -161,7 +163,7 @@ elseif opt==2
           addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
         end
       end
-      %error('spm12 is not yet supported'); % FIXME: there's yet no spm_normalise equivalent in external/spm12
+      fprintf('using ''OldNorm'' normalisation\n');
       
     otherwise
       error('unsupported spm-version');

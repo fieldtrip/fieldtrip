@@ -93,7 +93,7 @@ figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'slicepos', 33);
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33);
 
 % test 'slicetype' = 'surf'
-figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33), 'slicetype', 'surf');
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'slicepos', 33, 'slicetype', 'surf');
 
 % test slicing through multiple meshes 
 figure; ft_plot_cloud(pos, val, 'mesh', {mesh1, mesh2}, 'slice', '2d', 'slicepos', 33) 

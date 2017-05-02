@@ -398,13 +398,6 @@ elseif filetype_check_extension(filename, '.el.ascii') && filetype_check_ascii(f
   type = '4d_el_ascii';
   manufacturer = '4D/BTi';
   content = 'electrode positions';
-elseif length(f)<=4 && filetype_check_dir(p, 'config')%&& ~isempty(p) && exist(fullfile(p,'config'), 'file') %&& exist(fullfile(p,'hs_file'), 'file')
-  % this could be a 4D file with non-standard/processed name
-  % it will be detected as a 4D file when there is a config file in the
-  % same directory as the specified file
-  type = '4d';
-  manufacturer = '4D/BTi';
-  content = '';
   
   % known EEProbe file types
 elseif filetype_check_extension(filename, '.cnt') && (filetype_check_header(filename, 'RIFF') || filetype_check_header(filename, 'RF64'))

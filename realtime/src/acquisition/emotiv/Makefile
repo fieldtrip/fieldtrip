@@ -23,7 +23,7 @@ EDKPATH = C:\Program\ Files\ (x86)\Emotiv\ Education\ Edition\ SDK_v1.0.0.5-PREM
 CC       = gcc
 CXX      = g++
 CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
-INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp
+INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I$(FIELDTRIP)/realtime/src/external/emotiv
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer -lpthread
 
@@ -32,7 +32,7 @@ CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtCo
 
 ifeq "$(PLATFORM)" "i686-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
-	LDLIBS  += -lm -lws2_32 -static
+	LDLIBS  += -lm -lws2_32 -L$(BINDIR) -static
 	SUFFIX   = .exe
 	fixpath  = $1
 	RM       = rm -f
@@ -40,7 +40,7 @@ endif
 
 ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
-	LDLIBS  += -lm -lws2_32 -static
+	LDLIBS  += -lm -lws2_32 -L$(BINDIR) -static
 	SUFFIX   = .exe
 	fixpath  = $1
 	RM       = rm -f
@@ -50,7 +50,7 @@ ifeq "$(PLATFORM)" "i686-w64-mingw32"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS  += -lm -lws2_32 -static
+	LDLIBS  += -lm -lws2_32 -L$(BINDIR) -static
 	SUFFIX   = .exe
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)
@@ -61,7 +61,7 @@ ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
 	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
 	# prevent dependency on libwinpthread-1.dll by linking statically
 	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
-	LDLIBS  += -lm -lws2_32 -static
+	LDLIBS  += -lm -lws2_32 -L$(BINDIR) -static
 	SUFFIX   = .exe
 	# make clean target work on windows
 	fixpath  = $(subst /,\,$1)
