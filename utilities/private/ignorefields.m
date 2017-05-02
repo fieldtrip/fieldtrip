@@ -31,6 +31,8 @@ switch purpose
       'opto'
       'trialinfo'  % this is dealt with explicitly
       'sampleinfo' % this is dealt with explicitly
+      'cumsumcnt'  % this is dealt with explicitly
+      'cumtapcnt'  % this is dealt with explicitly
       };
     
   case 'deface'
