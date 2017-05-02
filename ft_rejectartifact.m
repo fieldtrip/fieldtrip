@@ -508,8 +508,7 @@ if isempty(cfg.trl)
 else
   if hasdata && ~strcmp(cfg.artfctdef.reject, 'nan') % Skip this step to avoid removing parts that should be filled with nans
     % apply the updated trial definition on the data
-    tmpcfg     = [];
-    tmpcfg.trl = cfg.trl;
+    tmpcfg     = keepfields(cfg, {'trl', 'showcallinfo'});
     data       = ft_redefinetrial(tmpcfg, data);
     if isfield(data, 'offset')
       data = rmfield(data, 'offset');
