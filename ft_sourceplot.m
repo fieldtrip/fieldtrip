@@ -330,6 +330,18 @@ elseif ~hasanatomical && cfg.downsample~=1
 elseif hasanatomical && strcmp(cfg.method, 'cloud') % need to disentangle the volumetric from the surface inputs
   cloudsurf = {};
   cloudvol = {};
+  
+  % check that anatomical is a cell array
+  if ~iscell(anatomical)
+    if numel(anatomical) == 1
+      tmp = anatomical;
+      anatomical = cell(1);
+      anatomical{1} = tmp;
+    else
+      error('If anatomical includes multiple meshes and/or volumes as input, they must be organized in a cell array')
+    end
+  end
+  
   for n = 1:numel(anatomical)
     if isfield(anatomical{n}, 'pos') && isfield(anatomical{n}, 'tri')
       cloudsurf{end+1} = anatomical{n};
@@ -1359,6 +1371,7 @@ switch cfg.method
     cfg.intersectcolor     = ft_getopt(cfg, 'intersectcolor', {'k'});
     cfg.intersectlinestyle = ft_getopt(cfg, 'intersectlinestyle', {'-'});
     cfg.intersectlinewidth = ft_getopt(cfg, 'intersectlinewidth', 2);
+    cfg.intersectplane     = ft_getopt(cfg, 'intersectplane', 'no');
     cfg.ncirc              = ft_getopt(cfg, 'ncirc', 15);
     cfg.scalealpha         = ft_getopt(cfg, 'scalealpha', 'no');
     cfg.facecolor          = ft_getopt(cfg, 'facecolor', [0.781 0.762 0.664]);
@@ -1388,7 +1401,7 @@ switch cfg.method
       'unit', functional.unit, 'slice', cfg.slice, 'slicetype', cfg.slicetype, ...
       'ori', cfg.ori, 'slicepos', cfg.slicepos, 'nslices', cfg.nslices, 'minspace', cfg.minspace,...
       'intersectcolor', cfg.intersectcolor, 'intersectlinestyle', cfg.intersectlinestyle, ...
-      'intersectlinewidth', cfg.intersectlinewidth, 'ncirc', cfg.ncirc, ...
+      'intersectlinewidth', cfg.intersectlinewidth, 'intersectplane', cfg.intersectplane, 'ncirc', cfg.ncirc, ...
       'scalealpha', cfg.scalealpha, 'facecolor', cfg.facecolor, 'edgecolor', cfg.edgecolor,...
       'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha);
     

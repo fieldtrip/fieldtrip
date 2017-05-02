@@ -44,6 +44,11 @@ function ft_plot_cloud(pos, val, varargin)
 %   'intersectlinestyle' = string or Nx1 cell array, line style specification (default = '-')
 %   'intersectlinewidth' = scalar or Nx1 vector, line width specification (default = 2)
 %
+% The following inputs apply when 'slice' = '3d'
+%   'intersectplane'     = 'yes' or 'no' (default), whether or not to plot
+%                          a semi-transparent plane through the 3d mesh at
+%                          the slice position
+%
 % See also FT_ELECTRODEPLACEMENT, FT_PLOT_TOPO, FT_PLOT_TOPO3D
 
 % The following inputs apply when 'slicetype' = 'surf'
@@ -116,6 +121,7 @@ minspace           = ft_getopt(varargin, 'minspace', 1);
 intersectcolor     = ft_getopt(varargin, 'intersectcolor', {'k'});
 intersectlinestyle = ft_getopt(varargin, 'intersectlinestyle', {'-'});
 intersectlinewidth = ft_getopt(varargin, 'intersectlinewidth', 2);
+intersectplane     = ft_getopt(varargin, 'intersectplane', 'no');
 ncirc              = ft_getopt(varargin, 'ncirc', 15);
 scalealpha         = ft_getopt(varargin, 'scalealpha', 'no');
 
@@ -281,6 +287,12 @@ if dointersect || domri
   else
     error('ori must be "x", "y" or "z"')
   end
+end
+
+if strcmp(intersectplane, 'yes')
+  dointersectplane = 1;
+else
+  dointersectplane = 0;
 end
 
 if isempty(clim)
@@ -671,7 +683,14 @@ else % plot 3d cloud
     
     % draw the points
     scatter3(x+pos(n,1), y+pos(n,2), z+pos(n,3), ptsize, ptcol, '.');
+    
+    % find the limits of the plotted points for this electrode
+    xcmax(n) = max(x+pos(n,1)); xcmin(n) = min(x+pos(n,1));
+    ycmax(n) = max(y+pos(n,2)); ycmin(n) = min(y+pos(n,2));
+    zcmax(n) = max(z+pos(n,3)); zcmin(n) = min(z+pos(n,3));
+
   end % end cloud loop
+  
   
   if ~isempty(meshplot)
     for k = 1:numel(meshplot); % mesh loop
@@ -734,6 +753,35 @@ else % plot 3d cloud
               if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor{k}); end
               if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth(k)); end
               if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle{k}); end
+            end
+            
+            if dointersectplane
+              
+              % find the limits of the plotted cloud points and the mesh
+              % points to determine the size of the slice plane
+              x3dmax = max([xcmax, xmmax]); x3dmin = min([xcmin, xmmin]);
+              y3dmax = max([ycmax, ymmax]); y3dmin = min([ycmin, ymmin]);
+              z3dmax = max([zcmax, zmmax]); z3dmin = min([zcmin, zmmin]);
+              
+              if oriX
+                xplane = slicepos(s)*ones(2,2);
+                yplane = [y3dmin-5 y3dmin-5; y3dmax+5 y3dmax+5];
+                zplane = [z3dmin-5 z3dmax+5; z3dmin-5 z3dmax+5];
+              elseif oriY
+                xplane = [x3dmin-5 x3dmin-5; x3dmax+5 x3dmax+5];
+                yplane = slicepos(s)*ones(2,2);
+                zplane = [z3dmin-5 z3dmax+5; z3dmin-5 z3dmax+5];
+              elseif oriZ
+                xplane = [x3dmin-5 x3dmin-5; x3dmax+5 x3dmax+5];
+                yplane = [y3dmin-5 y3dmax+5; y3dmin-5 y3dmax+5];
+                zplane = slicepos(s)*ones(2,2);
+              elseif oriZ
+              end
+              
+              % plot the plane of the intersection
+              h = surf(xplane, yplane, zplane);
+              set(h, 'FaceColor', [.5 .5 .5], 'FaceAlpha', 0.2, 'EdgeAlpha', 0)
+              
             end
           end
         end % end mesh loop
