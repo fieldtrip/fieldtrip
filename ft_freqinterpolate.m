@@ -62,9 +62,10 @@ end
 % check if the input data is valid for this function
 freq = ft_checkdata(freq, 'datatype', 'freq', 'feedback', 'yes');
 
-% set the default values
-if ~isfield(cfg, 'method'),     cfg.method = 'nan';                     end
-if ~isfield(cfg, 'foilim'),     cfg.foilim = [49 51; 99 101; 149 151];  end
+% set the defaults
+cfg.method = ft_getopt(cfg, 'method', 'nan');
+cfg.foilim = ft_getopt(cfg, 'foilim', [49 51; 99 101; 149 151]);
+
 
 for i = 1:size(cfg.foilim,1)
   % determine the exact frequency bins to interpolate
