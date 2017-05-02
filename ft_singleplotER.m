@@ -439,16 +439,16 @@ for i=1:Ndata
 end
 
 if strcmp('freq', yparam) && strcmp('freq', dtype)
-  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg = keepfields(cfg, {'parameter', 'showcallinfo'});
   tmpcfg.avgoverfreq = 'yes';
-  tmpcfg.frequency   = cfg.frequency;%cfg.zlim;
+  tmpcfg.frequency   = cfg.frequency;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 elseif strcmp('time', yparam) && strcmp('freq', dtype)
-  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg = keepfields(cfg, {'parameter', 'showcallinfo'});
   tmpcfg.avgovertime = 'yes';
-  tmpcfg.latency     = cf.latency;%cfg.zlim;
+  tmpcfg.latency     = cf.latency;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
