@@ -108,7 +108,7 @@ switch cfg.method
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 data = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 

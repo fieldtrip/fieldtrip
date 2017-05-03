@@ -95,7 +95,7 @@ for i=1:ntrial
 end
 
 % the endsample of each trial aligns with the beginsample of the next one
-endsample(1:end-1) = begsample(2:end);
+endsample(1:end-1) = begsample(2:end) - 1;
 % the last endsample corresponds to the end of the file
 endsample(end)     = hdr.nSamples*hdr.nTrials;
 
