@@ -54,7 +54,6 @@ dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
 clim          = ft_getopt(varargin, 'clim', [0 1]); % this is used to scale the orthoplot
 
-
 data  = ft_checkdata(data);
 dtype = ft_datatype(data);
 data  = ft_convert_units(data);
