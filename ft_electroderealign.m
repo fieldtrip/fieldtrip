@@ -227,7 +227,7 @@ if isfield(cfg, 'target') && isa(cfg.target, 'config')
 end
 
 % the data can be passed as input arguments or can be read from disk
-hasdata = exist('data', 'var');
+hasdata = exist('elec_original', 'var');
 
 % get the electrode definition that should be warped
 if ~hasdata

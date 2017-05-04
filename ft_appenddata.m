@@ -111,6 +111,9 @@ fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
 dummy = cell(size(varargin));
 for i=1:numel(varargin)
   dummy{i} = removefields(varargin{i}, {'trial', 'time'});
+  % add a dummy data field, this cause the datatype to become 'chan'
+  dummy{i}.dummy       = ones(numel(dummy{i}.label),1);
+  dummy{i}.dummydimord = 'chan'; 
 end
 
 % don't do any data appending inside the common function
