@@ -103,8 +103,8 @@ for i=2:length(varargin)
   if ~ok, error('input data should be of the same datatype'); end
 end
 
-% this only works on data with a well-defined dimord
-assert(ismember(dtype, {'raw', 'freq', 'timelock', 'raw+comp', 'freq+comp', 'timelock+comp', 'chan', 'spike', 'source', 'volume'}), 'invalid input data type "%s"', dtype);
+% this only works with certain data types, it is not meant for descriptive fields such as elec, grad, opto, layout, etc.
+assert(~ismember(dtype, {'elec', 'grad', 'opto', 'layout'}), 'invalid input data type "%s"', dtype);
 
 % ensure that the user does not give invalid selection options
 cfg = ft_checkconfig(cfg, 'forbidden', {'foi', 'toi'});
