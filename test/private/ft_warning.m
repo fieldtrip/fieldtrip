@@ -105,15 +105,17 @@ elseif nargin==2 && isnumeric(varargin{2})
   fname = warningArgs{1};
   
 elseif nargin==2 && isequal(varargin{1}, 'off')
+  % calling syntax ('off', msg)
   
   ft_default.warning.ignore = union(ft_default.warning.ignore, varargin{2});
   return
   
 elseif nargin==2 && isequal(varargin{1}, 'on')
+  % calling syntax ('on', msg)
   
   ft_default.warning.ignore = setdiff(ft_default.warning.ignore, varargin{2});
   return
-
+  
 elseif nargin==2 && ~isnumeric(varargin{2})
   % calling syntax (id, msg)
   
@@ -134,7 +136,7 @@ end
 
 if ismember(msg, ft_default.warning.ignore)
   % do not show this warning
-  return;
+  return
 end
 
 if isempty(timeout)
@@ -145,11 +147,11 @@ if timeout ~= inf
   fname = fixname(fname); % make a nice string that is allowed as fieldname in a structures
   line  = [];
 else
-  % here, we create the fieldname functionA.functionB.functionC... 
+  % here, we create the fieldname functionA.functionB.functionC...
   [tmpfname, ft_default.warning.identifier, line] = fieldnameFromStack(ft_default.warning.identifier);
-  if ~isempty(tmpfname),
+  if ~isempty(tmpfname)
     fname = tmpfname;
-    clear tmpfname;
+    clear tmpfname
   end
 end
 
@@ -162,31 +164,33 @@ if nargin==1 && ischar(varargin{1}) && strcmp('-clear', varargin{1})
       ft_default.warning.identifier = rmsubfield(ft_default.warning.identifier, fname);
     end
   end
-  return;
+  return
 end
 
 % and add the line number to make this unique for the last function
 fname = horzcat(fname, line);
-  
-if ~issubfield('ft_default.warning.stopwatch', fname)
+
+if ~issubfield(ft_default.warning.stopwatch, fname)
+  % store the time at which the warning was first issued
   ft_default.warning.stopwatch = setsubfield(ft_default.warning.stopwatch, fname, tic);
 end
 
-now = toc(getsubfield(ft_default.warning.stopwatch, fname)); % measure time since first function call
+% measure time since first function call
+now = toc(getsubfield(ft_default.warning.stopwatch, fname));
 
 if ~issubfield(ft_default.warning.identifier, fname) || ...
     (issubfield(ft_default.warning.identifier, fname) && now>getsubfield(ft_default.warning.identifier, [fname '.timeout']))
-
+  
   % create or reset field
   ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, fname, []);
-    
+  
   % warning never given before or timed out
   ws = warning(warningArgs{:});
   ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, [fname '.timeout'], now+timeout);
   ft_default.warning.identifier = setsubfield(ft_default.warning.identifier, [fname '.ws'], msg);
   warned = true;
+  
 else
-
   % the warning has been issued before, but has not timed out yet
   ws = getsubfield(ft_default.warning.identifier, [fname '.ws']);
   
@@ -216,14 +220,14 @@ fname = horzcat(fixname(stack(end).name));
 if ~issubfield(ft_previous_warnings, fixname(stack(end).name))
   ft_previous_warnings.(fixname(stack(end).name)) = []; % iteratively build up structure fields
 end
-  
+
 
 for i=numel(stack)-1:-1:(i0)
   % skip postamble scripts
   if strncmp(stack(i).name, 'ft_postamble', 12)
     break;
   end
-
+  
   fname = horzcat(fname, '.', horzcat(fixname(stack(i).name))); % , stack(i).file
   if ~issubfield(ft_previous_warnings, fname) % iteratively build up structure fields
     setsubfield(ft_previous_warnings, fname, []);
