@@ -364,25 +364,30 @@ if hasdata
     [dataout.trial{i}, dataout.label, dataout.time{i}, cfg] = preproc(data.trial{i}, data.label,  data.time{i}, cfg, begpadding, endpadding);
     
   end % for all trials
-  
-  if isstruct(cfg.montage) && strcmp(cfg.updatesens, 'yes')
-    % apply the linear projection also to the sensor description
-    if issubfield(cfg.montage, 'type')
-      bname = cfg.montage.type;
-    else
-      bname = 'preproc';
-    end
-    if isfield(dataout, 'grad')
-      fprintf('applying the montage to the grad structure\n');
-      dataout.grad = ft_apply_montage(dataout.grad, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
-    end
-    if isfield(dataout, 'elec')
-      fprintf('applying the montage to the grad structure\n');
-      dataout.elec = ft_apply_montage(dataout.elec, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
-    end
-    if isfield(dataout, 'opto')
-      fprintf('applying the montage to the opto structure\n');
-      dataout.opto = ft_apply_montage(dataout.opto, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+    
+  if strcmp(cfg.updatesens, 'yes')
+    if isfield(dataout, 'elec') && strcmp(cfg.reref, 'yes') && ~isstruct(cfg.montage) % create EEG montage on-the-fly in case cfg.reref
+      cfg.montage = ft_prepare_montage(keepfields(cfg, {'reref', 'refchannel', 'implicitref'}), dataout);
+    end  
+    if isstruct(cfg.montage)
+      % apply the linear projection also to the sensor description
+      if issubfield(cfg.montage, 'type')
+        bname = cfg.montage.type;
+      else
+        bname = 'preproc';
+      end
+      if isfield(dataout, 'grad')
+        fprintf('applying the montage to the grad structure\n');
+        dataout.grad = ft_apply_montage(dataout.grad, cfg.montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+      end
+      if isfield(dataout, 'elec')
+        fprintf('applying the montage to the elec structure\n');
+        dataout.elec = ft_apply_montage(dataout.elec, cfg.montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+      end
+      if isfield(dataout, 'opto')
+        fprintf('applying the montage to the opto structure\n');
+        dataout.opto = ft_apply_montage(dataout.opto, cfg.montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+      end
     end
   end
     
