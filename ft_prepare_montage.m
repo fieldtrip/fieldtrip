@@ -54,26 +54,27 @@ end
 
 % set the defaults
 cfg.reref          = ft_getopt(cfg, 'reref', 'yes');
-cfg.refchannel     = ft_getopt(cfg, 'refchannel', 'all');
-cfg.implicitref    = ft_getopt(cfg, 'implicitref', []);
+cfg.refchannel     = ft_getopt(cfg, 'refchannel', {});
+cfg.implicitref    = ft_getopt(cfg, 'implicitref');
 
 % check of input arguments
 if strcmp(cfg.reref, 'no')
   error('cfg.reref should be set to ''yes'' in order to create a montage')
 end
 
+cfg.refchannel = ft_channelselection(cfg.refchannel, data);
+
 % create the refchannel-dependent montage
 montage.labelold = data.label;
 montage.labelnew = data.label;
-montage.tra      = eye(numel(data.label)); % a simple identity matrix
-if ~strmp(cfgrefchannel, 'all')
-  montage.tra(match_str(data.label, cfg.refchannel),:) = []; % fill the refchannel column(s) with -1
-end
+montage.labelnew(match_str(data.label, cfg.refchannel)) = []; % remove the refchannel label
+montage.tra      = eye(numel(data.label)); % an identity matrix
+montage.tra(match_str(data.label, cfg.refchannel),:) = []; % empty the refchannel row(s)
 
 % append implicitref if specified
 if ~isempty(cfg.implicitref)  
   match_str(data.label, cfg.implicitref)
-  montage.tra(match_str(data.label, cfg.implicitref),:) = 0; % fill the implicitref row with 0
+  montage.tra(match_str(data.label, cfg.implicitref),:) = 0; % fill the implicitref row with zeros
 end
 
 % do the general cleanup and bookkeeping at the end of the function

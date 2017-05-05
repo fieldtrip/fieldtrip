@@ -367,7 +367,7 @@ if hasdata
     
   if strcmp(cfg.updatesens, 'yes')
     if isfield(dataout, 'elec') && strcmp(cfg.reref, 'yes') && ~isstruct(cfg.montage) % create EEG montage on-the-fly in case cfg.reref
-      cfg.montage = ft_prepare_montage(keepfields(cfg, 'reref', 'refchannel', 'implicitref'), data);
+      cfg.montage = ft_prepare_montage(keepfields(cfg, {'reref', 'refchannel', 'implicitref'}), dataout);
     end  
     if isstruct(cfg.montage)
       % apply the linear projection also to the sensor description

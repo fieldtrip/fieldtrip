@@ -99,7 +99,7 @@ if ~istrue(keepunused) && strcmp(ft_datatype(input), 'elec')
   % remove the channels that are not rereferenced from the input
   cfg = [];
   cfg.channel = montage.labelold;
-  input = ft_selectdata(cfg, input); % FIXME a low-level function (like ft_apply_montage) should never be calling a high-level function
+  input = ft_selectdata(cfg, input); % FIXME a low-level function should not be calling a high-level function like ft_selectdata
 end
 
 % make sure they always exist to facilitate the remainder of the code
