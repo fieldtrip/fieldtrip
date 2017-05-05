@@ -95,11 +95,11 @@ end
 haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
 haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
 
-if ~istrue(keepunused)
+if ~istrue(keepunused) && strcmp(ft_datatype(input), 'elec')
   % remove the channels that are not rereferenced from the input
   cfg = [];
   cfg.channel = montage.labelold;
-  input = ft_selectdata(cfg, input);
+  input = ft_selectdata(cfg, input); % FIXME a low-level function (like ft_apply_montage) should never be calling a high-level function
 end
 
 % make sure they always exist to facilitate the remainder of the code

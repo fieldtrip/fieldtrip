@@ -365,13 +365,9 @@ if hasdata
     
   end % for all trials
     
-  if strcmp(cfg.updatesens, 'yes') && (isfield(dataout, 'grad') || isfield(dataout, 'elec') || isfield(dataout, 'opto'))
-    if strcmp(cfg.reref, 'yes') && ~isstruct(cfg.montage)
-      fprintf('creating an identity matrix montage');
-      cfg.montage          = [];
-      cfg.montage.labelold = data.label;
-      cfg.montage.labelnew = data.label;
-      cfg.montage.tra      = eye(numel(data.label)); % do not adjust chanpos
+  if strcmp(cfg.updatesens, 'yes')
+    if isfield(dataout, 'elec') && strcmp(cfg.reref, 'yes') && ~isstruct(cfg.montage) % create EEG montage on-the-fly in case cfg.reref
+      cfg.montage = ft_prepare_montage(keepfields(cfg, 'reref', 'refchannel', 'implicitref'), data);
     end  
     if isstruct(cfg.montage)
       % apply the linear projection also to the sensor description
