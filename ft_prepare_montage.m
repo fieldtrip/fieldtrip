@@ -1,8 +1,8 @@
 function [montage, cfg] = ft_prepare_montage(cfg, data)
 
-% FT_PREPARE_MONTAGE creates a montage, i.e. a structure that allows a linear
-% projection to be done on (primarily) EEG/iEEG data. A montage can be used for more
-% advanced re-referencing strategies.
+% FT_PREPARE_MONTAGE creates a referencing scheme based on the input configuration
+% options and the channels in the data structure. The resulting montage can be
+% given as input to ft_apply_montage, or as cfg.montage to ft_preprocessing.
 %
 % Use as
 %   montage = ft_prepare_montage(cfg, data)
@@ -63,9 +63,12 @@ end
 cfg = ft_checkconfig(cfg, 'forbidden', {'refmethod', 'montage'});
 
 % set default configuration options
+cfg.reref          = ft_getopt(cfg, 'reref', 'yes');
 cfg.channel      = ft_getopt(cfg, 'channel', 'all');
 cfg.implicitref  = ft_getopt(cfg, 'implicitref');
 cfg.refchannel   = ft_getopt(cfg, 'refchannel');
+
+assert(istrue(cfg.reref), 'cannot create a montage without cfg.reref=''yes''');
 
 % here the actual work starts
 if hasdata
