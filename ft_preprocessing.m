@@ -644,7 +644,7 @@ if strcmp(cfg.updatesens, 'yes')
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
-    tmpcfg = keepfields(cfg, {'implicitref', 'refchannel', 'channel'});
+    tmpcfg = keepfields(cfg, {'reref', 'implicitref', 'refchannel', 'channel'});
     montage = ft_prepare_montage(tmpcfg, data);
   else
     % do not update anything
@@ -660,15 +660,15 @@ if strcmp(cfg.updatesens, 'yes')
     end
     if isfield(dataout, 'grad')
       fprintf('applying the montage to the grad structure\n');
-      dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+      dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
     end
     if isfield(dataout, 'elec')
       fprintf('applying the montage to the grad structure\n');
-      dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+      dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
     end
     if isfield(dataout, 'opto')
       fprintf('applying the montage to the opto structure\n');
-      dataout.opto = ft_apply_montage(dataout.opto, montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+      dataout.opto = ft_apply_montage(dataout.opto, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
     end
   end
 end % if updatesens
