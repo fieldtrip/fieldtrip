@@ -1,7 +1,8 @@
 /*
- * Acquisition tool to stream audio signals from a FieldTrip buffer,
- * to the sound card.This is  based on PortAudio.
- * 	
+ * Command-line application to stream signals from a FieldTrip buffer
+ * to the sound card. This is based on PortAudio. The FieldTrip buffer
+ * should contain one channel at the appropriate sampling frequency.
+ *
  * (C) 2017, Robert Oostenveld
 */
 
@@ -15,10 +16,10 @@
 
 #define NUM_SECONDS   (2)
 #define TRUE          (1)
-#define CALIB         (1000.)
+#define CALIB         (10.)
 #define MAX_RETRY     (500)
-#define SAMPLE_RATE   44100
-#define BLOCK_SIZE     (SAMPLE_RATE/2)
+#define SAMPLE_RATE   (11025)
+#define BLOCK_SIZE    (SAMPLE_RATE/2)
 #define MIN(x,y) (x<y ? x : y)
 #define MAX(x,y) (x>y ? x : y)
 
@@ -75,10 +76,11 @@ static int paWriteCallback( const void *inputBuffer,
 				userdata->current = (userdata->refresh1 ? 0 : 1);
 				userdata->sample = 0;
 			}
+			printf("ft2audio: switch to block %d\n", userdata->current);
 		}
 	}
 	if (dropped)
-		printf("ft2audio: dropped = %d\n", dropped);
+		printf("ft2audio: dropped %d samples in output\n", dropped);
 
 	return 0;
 }
@@ -90,7 +92,7 @@ int main(void)
 {
 	PaStream *stream;
 	PaError err;
-	int i, server = 0, status, retry = MAX_RETRY+1;
+	int i, server = 0, status, retry;
 	float phase = 0;
 	/* header information */
 	UINT32_T datatype;
@@ -163,12 +165,18 @@ int main(void)
 	}
 
 	while (1) {
+
+		if (!data.refresh1 && !data.refresh2) {
+			/* sleep for a short time (in miliseconds) */
+			Pa_Sleep(1000.*BLOCK_SIZE/SAMPLE_RATE);
+			continue;
+		}
+
 		if (data.refresh1) {
-			retry++;
 			status = read_data(server, begsample, endsample, rawdata);
 			/* status ==0 when new data or !=0 when data not yet ready */
 			if (status==0) {
-				printf("ft2audio: refresh1\n");
+				retry = 0;
 				begsample += BLOCK_SIZE;
 				endsample += BLOCK_SIZE;
 				for (i=0; i<BLOCK_SIZE; i++) {
@@ -188,18 +196,20 @@ int main(void)
 					}
 				}
 				data.refresh1 = 0;
-				retry = 0;
+				printf("ft2audio: refreshed block 1\n");
 				if (data.current==0)
 					data.current = 1; /* this is needed to get started */
+			}
+			else {
+				retry++;
 			}
 		}
 
 		if (data.refresh2) {
-			retry++;
 			status = read_data(server, begsample, endsample, rawdata);
 			/* status ==0 when new data or !=0 when data not yet ready */
 			if (status==0) {
-				printf("ft2audio: refresh2\n");
+				retry = 0;
 				begsample += BLOCK_SIZE;
 				endsample += BLOCK_SIZE;
 				for (i=0; i<BLOCK_SIZE; i++) {
@@ -216,20 +226,20 @@ int main(void)
 					}
 				}
 				data.refresh2 = 0;
-				retry = 0;
+				printf("ft2audio: refreshed block 2\n");
+			}
+			else {
+				retry++;
 			}
 		}
 
 		if (retry>MAX_RETRY) {
 			status = read_header(server, &datatype, &nchans, &fsample, &nsamples, &nevents);
 			if (status) goto error;
-			printf("ft2audio: nsamples = %d, waiting for %d\n", nsamples, endsample);
+			printf("ft2audio: input has %d, waiting for %d\n", nsamples, endsample);
+			/* sleep for a short time (in miliseconds) */
+			Pa_Sleep(1000.*(endsample-nsamples)/SAMPLE_RATE);
 			retry = 0;
-		}
-
-		if (!data.refresh1 && !data.refresh2) {
-			/* sleep for a short time in miliseconds */
-			Pa_Sleep(1000*(BLOCK_SIZE/10)/SAMPLE_RATE);
 		}
 
 	} /* while */
