@@ -166,7 +166,7 @@ else
     end
 end
 trialData=trialData(chanindx, :,:);
-% convert to mV if needed
+% convert to uV if needed
 if hdr.orig.header_array(12) ~= 0 && hdr.orig.header_array(13) ~= 0
 	trialData = (hdr.orig.header_array(13)/2^hdr.orig.header_array(12))*(trialData);
 end;
