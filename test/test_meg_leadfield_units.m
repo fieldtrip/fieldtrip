@@ -88,7 +88,7 @@ assert(n1/n0 < 1.01);
 assert(n1/n0 > 0.99);
 
 figure
-ft_plot_dipole(dip, [1 0 0], 'units', 'm');
+ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
 ft_plot_vol(vol1);
 ft_plot_sens(grad, 'coildiameter', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf1(:,1));
@@ -106,7 +106,7 @@ plot([lf0(:,3) lf1(:,3)]);
 %% do a forward computation for a CTF151 sensor layout
 clear all
 
-grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));
+grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
 
 vol0 = [];
 vol0.type = 'infinite_currentdipole';
@@ -139,7 +139,7 @@ assert(n1/n0 < 1.1);
 assert(n1/n0 > 0.9);
 
 figure
-ft_plot_dipole(dip, [1 0 0], 'units', 'm');
+ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
 ft_plot_vol(vol1);
 ft_plot_sens(grad, 'coildiameter', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf1(:,1));
@@ -156,7 +156,7 @@ plot([lf0(:,3) lf1(:,3)]);
 %% do a forward computation for a CTF151 sensor layout
 clear all
 
-grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));
+grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
 
 [pnt, tri] = icosahedron162;
 
@@ -212,9 +212,9 @@ assert(abs(n2/n0-1)<0.05);
 assert(abs(n3/n0-1)<0.05);
 
 figure
-ft_plot_dipole(dip, [1 0 0], 'units', 'm');
+ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
 ft_plot_vol(vol3);
-ft_plot_sens(grad, 'coildiameter', 0.01); % 10 mm
+ft_plot_sens(grad, 'coilsize', 0.01); % 10 mm
 ft_plot_topo3d(grad.chanpos, lf3(:,1));
 alpha 0.5
 

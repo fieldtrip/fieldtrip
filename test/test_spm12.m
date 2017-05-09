@@ -30,7 +30,16 @@ mri2.coordsys = 'mni';
 
 %----------------------------- SPM12 -----------------------------------
 
+%ft_convert_coordsys: currently uses OldNorm sub-toolbox (i.e. SPM8)
+ft_hastoolbox('spm12',1)
+mri.coordsys = 'ctf';
+c2a = ft_convert_coordsys(mri, 'tal', 1);
+c2b = ft_convert_coordsys(mri, 'tal', 2);
+
+rmpath(spm('dir'));
+
 %ft_volumerealign: coregistration (used in human ecog tutorial)
+mri.coordsys = 'tal';
 cfg             = [];
 cfg.method      = 'spm';
 cfg.spmversion  = 'spm12';

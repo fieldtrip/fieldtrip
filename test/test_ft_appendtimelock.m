@@ -7,7 +7,7 @@ function test_ft_appendtimelock
 
 % Johanna Zumer
 
-% make some dummy frequency structures
+% make some dummy timelock structures
 tlock.label = {'1';'2'};
 tlock.time  = 1:5;
 tlock.dimord = 'rpt_chan_time';
@@ -28,8 +28,8 @@ assert(all( size(tlockapp.trial)==[18 1 5]))
 
 % concat over channels
 clear tlock2
-tlock1.label=tlock.label{1};
-tlock2.label=tlock.label{2};
+tlock1.label=tlock.label(1);
+tlock2.label=tlock.label(2);
 tlock1.trial=tlock.trial(:,1,:);
 tlock2.trial=tlock.trial(:,2,:);
 tlock1.time=tlock.time;

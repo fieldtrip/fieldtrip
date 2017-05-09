@@ -313,7 +313,7 @@ if isfield(varargin{1}, 'label')
   % only do the channel selection when it can actually be done,
   % i.e. when the data are bivariate ft_selectdata will crash, moreover
   % the bivariate case is handled below
-  tmpcfg = keepfields(cfg, 'channel');
+  tmpcfg = keepfields(cfg, {'channel', 'showcallinfo'});
   tmpvar = varargin{1};
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
@@ -542,14 +542,14 @@ for i=1:Ndata
 end
 
 if strcmp('freq',yparam) && strcmp('freq',dtype)
-  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg = keepfields(cfg, {'parameter', 'showcallinfo'});
   tmpcfg.avgoverfreq = 'yes';
   tmpcfg.frequency   = cfg.frequency;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 elseif strcmp('time',yparam) && strcmp('freq',dtype)
-  tmpcfg = keepfields(cfg, {'parameter'});
+  tmpcfg = keepfields(cfg, {'parameter', 'showcallinfo'});
   tmpcfg.avgovertime = 'yes';
   tmpcfg.latency     = cfg.latency;
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});

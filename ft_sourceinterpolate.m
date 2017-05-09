@@ -199,7 +199,7 @@ end
 
 if ~isUnstructuredAna && cfg.downsample~=1
   % downsample the anatomical volume
-  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
   orgcfg.parameter = cfg.parameter;
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);

@@ -84,12 +84,20 @@ if nargin<3
   senstype = ft_senstype(datachannel);
 end
 
-if ~iscell(datachannel)
-  if ischar(datachannel)
-    datachannel = {datachannel};
-  else
-    error('please specify the data channels as a cell-array');
-  end
+% this will be specified further down
+datachantype = [];
+
+if iscell(datachannel)
+  % this is the expected input
+elseif ischar(datachannel)
+  datachannel = {datachannel};
+elseif isstruct(datachannel) && isfield(datachannel, 'label')
+  % it looks like a header structure
+  hdr = datachannel;
+  datachannel = hdr.label;
+  datachantype = ft_chantype(hdr);
+else
+  error('please specify the data channels as a cell-array');
 end
 
 if ~ischar(desired) && ~isnumeric(desired) && ~iscell(desired)
@@ -111,11 +119,6 @@ end
 if any(size(channel) == 0)
   % there is nothing to do if it is empty
   return
-end
-
-if ~iscell(datachannel)
-  % ensure that a single input argument like 'all' also works
-  datachannel = {datachannel};
 end
 
 if isnumeric(channel)
@@ -297,6 +300,12 @@ switch senstype
   case {'itab153' 'itab28' 'itab28_old'}
     % all itab MEG channels start with MAG
     labelmeg = datachannel(strncmp('MAG', datachannel, length('MAG')));
+    
+  otherwise
+    if ~isempty(datachantype)
+      labelmeg = datachannel(strncmp('meg', datachantype, 3));
+      labeleeg = datachannel(strncmp('eeg', datachantype, 3));
+    end
     
 end % switch ft_senstype
 

@@ -53,6 +53,7 @@ issegmentation =  check_segmentation(data);
 isparcellation =  check_parcellation(data);
 ismontage      =  isfield(data, 'labelold') && isfield(data, 'labelnew') && isfield(data, 'tra');
 isevent        =  isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
+islayout       =  all(isfield(data, {'label', 'pos', 'width', 'height'})); % mask and outline are optional
 isheadmodel    =  false; % FIXME this is not yet implemented
 
 if issource && isstruct(data) && numel(data)>1
@@ -74,6 +75,7 @@ isspike           = isfield(data, 'label') && (spk_hastimestamp || spk_hastrials
 % check if it is a sensor array
 isgrad = isfield(data, 'label') && isfield(data, 'coilpos') && isfield(data, 'coilori');
 iselec = isfield(data, 'label') && isfield(data, 'elecpos');
+isopto = isfield(data, 'label') && isfield(data, 'optopos');
 
 if isspike
   type = 'spike';
@@ -82,7 +84,7 @@ elseif israw && iscomp
 elseif istimelock && iscomp
   type = 'timelock+comp';
 elseif isfreq && iscomp
-    type = 'freq+comp';
+  type = 'freq+comp';
 elseif israw
   type = 'raw';
 elseif iscomp
@@ -116,14 +118,18 @@ elseif issource
 elseif ischan
   % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
   type = 'chan';
-elseif iselec
-  type = 'elec';
 elseif isgrad
   type = 'grad';
+elseif iselec
+  type = 'elec';
+elseif isopto
+  type = 'opto';
 elseif ismontage
   type = 'montage';
 elseif isevent
   type = 'event';
+elseif islayout
+  type = 'layout';
 else
   type = 'unknown';
 end
@@ -151,7 +157,7 @@ if nargin>1
     case 'parcellation'
       type = any(strcmp(type, {'parcellation', 'source+label' 'mesh+label'}));
     case 'sens'
-      type = any(strcmp(type, {'elec', 'grad'}));
+      type = any(strcmp(type, {'grad', 'elec', 'opto'}));
     otherwise
       type = strcmp(type, desired);
   end % switch

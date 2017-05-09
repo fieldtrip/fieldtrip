@@ -263,7 +263,7 @@ source = [];
 
 if istimelock
   % add the time axis to the output
-  tmpcfg = keepfields(cfg, {'channel', 'latency'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'showcallinfo'});
   tmpcfg.avgovertime = 'no';
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
@@ -273,7 +273,7 @@ if istimelock
   source = copyfields(data, source, {'time'});
   
 elseif isfreq
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'refchan', 'nanmean'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'refchan', 'nanmean', 'showcallinfo'});
   
   % ensure that the refchan is kept, if present
   if isfield(tmpcfg, 'refchan') && ~isempty(tmpcfg.refchan) && isempty(match_str(tmpcfg.channel, tmpcfg.refchan))
@@ -378,7 +378,7 @@ else
   % only prepare the dipole grid positions, the leadfield will be computed on the fly if not present
   
   % copy all options that are potentially used in ft_prepare_sourcemodel
-  tmpcfg           = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+  tmpcfg           = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
   tmpcfg.grad      = sens; % this can be electrodes or gradiometers
   grid = ft_prepare_sourcemodel(tmpcfg);

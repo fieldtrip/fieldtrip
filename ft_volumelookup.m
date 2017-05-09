@@ -1,18 +1,17 @@
 function [output] = ft_volumelookup(cfg, volume)
 
-% FT_VOLUMELOOKUP can be used in to combine an anatomical or functional
-% atlas with source reconstruction. You can use it for forward and reverse
-% lookup.
+% FT_VOLUMELOOKUP can be used in to combine an anatomical or functional atlas with
+% the source reconstruction results. You can use it for forward and reverse lookup.
 %
-% Given the anatomical or functional label, it looks up the locations and
-% creates a mask (as a binary volume) based on the label, or creates a
-% sphere or box around a point of interest. In this case the function is to
-% be used as:
+% Given the ROI as anatomical or functional label, it looks up the locations and
+% creates a mask (as a binary volume) based on the label. Given the ROI as point in
+% the brain, it creates a sphere or box around that point. In these two case the
+% function is to be used as:
 %   mask = ft_volumelookup(cfg, volume)
 %
-% Given a binary volume that indicates a region of interest or a point of 
-% interest, it looks up the corresponding anatomical or functional labels 
-% from a given atlas. In this case the function is to be used as:
+% Given a binary volume that indicates a region of interest or a point of
+% interest, it looks up the corresponding anatomical or functional labels
+% from the atlas. In this case the function is to be used as:
 %    labels = ft_volumelookup(cfg, volume)
 %
 % In both cases the input volume can be:
@@ -21,54 +20,51 @@ function [output] = ft_volumelookup(cfg, volume)
 %   stat   is the output of FT_SOURCESTATISTICS
 %
 % The configuration options for a mask according to an atlas:
-%   cfg.inputcoord = 'mni' or 'tal', coordinate system of the mri/source/stat
-%   cfg.atlas      = string, filename of atlas to use, either the AFNI
-%                     brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc,
-%                     or the WFU atlasses available from  http://fmri.wfubmc.edu. see FT_READ_ATLAS
-%   cfg.roi        = string or cell of strings, region(s) of interest from anatomical atlas
+%   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
+%   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
+%   cfg.roi                 = string or cell-array of strings, region(s) of interest from anatomical atlas
 %
 % The configuration options for a spherical/box mask around a point of interest:
-%   cfg.roi                = Nx3 vector, coordinates of the points of interest
-%   cfg.sphere             = radius of each sphere in cm/mm dep on unit of input
-%   cfg.box                = Nx3 vector, size of each box in cm/mm dep on unit of input
-%   cfg.round2nearestvoxel = 'yes' or 'no' (default = 'no'), voxel closest to point of interest is calculated
+%   cfg.roi                 = Nx3 vector, coordinates of the points of interest
+%   cfg.sphere              = radius of each sphere in cm/mm dep on unit of input
+%   cfg.box                 = Nx3 vector, size of each box in cm/mm dep on unit of input
+%   cfg.round2nearestvoxel  = 'yes' or 'no' (default = 'no'), voxel closest to point of interest is calculated
 %                             and box/sphere is centered around coordinates of that voxel
 %
 % The configuration options for labels from a mask:
-%   cfg.inputcoord    = 'mni' or 'tal', coordinate system of the mri/source/stat
-%   cfg.atlas         = string, filename of atlas to use, either the AFNI
-%                        brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/afni_ttatlas/,
-%                        or the WFU atlasses available from http://fmri.wfubmc.edu. see FT_READ_ATLAS
-%   cfg.maskparameter = string, field in volume to be lookedup, data in field should be logical
-%   cfg.maxqueryrange = number, should be 1, 3, 5 (default = 1)
+%   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
+%   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
+%   cfg.maskparameter       = string, field in volume to be looked up, data in field should be logical
+%   cfg.maxqueryrange       = number, should be 1, 3, 5 (default = 1)
 %
 % The configuration options for labels around a point of interest:
-%   cfg.roi           = Nx3 vector, coordinates of the points of interest
-%   cfg.inputcoord    = 'mni' or 'tal', coordinate system of the mri/source/stat
-%   cfg.atlas         = string, filename of atlas to use, either the AFNI
-%                        brik file that is available from http://afni.nimh.nih.gov/afni/doc/misc/afni_ttatlas/,
-%                        or the WFU atlasses available from http://fmri.wfubmc.edu. see FT_READ_ATLAS
-%   cfg.output        = 'label'
-%   cfg.maxqueryrange = number, should be 1, 3, 5 (default = 1)
-%   cfg.round2nearestvoxel = 'yes' or 'no' (default = 'yes'), voxel closest to point of interest is calculated
+%   cfg.output              = 'label'
+%   cfg.roi                 = Nx3 vector, coordinates of the points of interest
+%   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
+%   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
+%   cfg.maxqueryrange       = number, should be 1, 3, 5 (default = 1)
+%   cfg.round2nearestvoxel = 'yes' or 'no', voxel closest to point of interest is calculated (default = 'yes')
 %
-% The label output has a field "names", a field "count" and a field "usedqueryrange"
+% The label output has a field "names", a field "count" and a field "usedqueryrange".
 % To get a list of areas of the given mask you can do for instance:
 %      [tmp ind] = sort(labels.count,1,'descend');
 %      sel = find(tmp);
 %      for j = 1:length(sel)
 %        found_areas{j,1} = [num2str(labels.count(ind(j))) ': ' labels.name{ind(j)}];
 %      end
-% in found_areas you can then see how many times which labels are found
-% NB in the AFNI brick one location can have 2 labels!
+% In the "found_areas" variable you can then see how many times which labels are
+% found. Note that in the AFNI brick one location can have 2 labels.
 %
 % Dependent on the input coordinates and the coordinates of the atlas, the
 % input MRI is transformed betweem MNI and Talairach-Tournoux coordinates
 % See http://www.mrc-cbu.cam.ac.uk/Imaging/Common/mnispace.shtml for more details.
 %
+% See http://www.fieldtriptoolbox.org/template/atlas for a list of templates and
+% atlasses that are included in the FieldTrip release.
+%
 % See also FT_READ_ATLAS, FT_SOURCEPLOT
 
-% Copyright (C) 2008-2013, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2008-2017, Robert Oostenveld, Ingrid Nieuwenhuis
 % Copyright (C) 2013, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -117,13 +113,13 @@ roi2mask   = 0;
 mask2label = 0;
 roi2label = 0;
 if isfield(cfg, 'roi') && strcmp(cfg.output, 'label')
-    roi2label = 1;   
-elseif isfield(cfg, 'roi');
+  roi2label = 1;
+elseif isfield(cfg, 'roi')
   roi2mask = 1;
 elseif isfield(cfg, 'maskparameter')
   mask2label = 1;
 else
-  error('either specify cfg.roi, or cfg.maskparameter')
+  error('you should either specify cfg.roi, or cfg.maskparameter')
 end
 
 if roi2mask
@@ -139,20 +135,18 @@ if roi2mask
   end
   
   if isatlas
-    ft_checkconfig(cfg, 'forbidden', {'sphere' 'box'}, ...
-      'required',  {'atlas' 'inputcoord'});
+    ft_checkconfig(cfg, 'forbidden', {'sphere', 'box'}, 'required',  {'atlas', 'inputcoord'});
   elseif ispoi
     ft_checkconfig(cfg, 'forbidden', {'atlas' 'inputcoord'});
     if isempty(ft_getopt(cfg, 'sphere')) && isempty(ft_getopt(cfg, 'box'))
-      % either needs to be there
-      error('either specify cfg.sphere or cfg.box')
+      error('you should either specify cfg.sphere or cfg.box')
     end
   end
   
 elseif mask2label || roi2label
   % convert to source representation (easier to work with)
   volume = ft_checkdata(volume, 'datatype', 'source');
-  ft_checkconfig(cfg, 'required', {'atlas' 'inputcoord'});
+  ft_checkconfig(cfg, 'required', {'atlas', 'inputcoord'});
   
   if isempty(intersect(cfg.maxqueryrange, [1 3 5]))
     error('incorrect query range, should be one of [1 3 5]');
@@ -176,7 +170,7 @@ if roi2mask
   xyz = volume.transform * ijk; % note that this is 4xN
   
   if isatlas
-    if ischar(cfg.atlas),
+    if ischar(cfg.atlas)
       % assume it to represent a filename
       atlas = ft_read_atlas(cfg.atlas);
     else
@@ -211,7 +205,7 @@ if roi2mask
       cfg.roi = {cfg.roi};
     end
     
-    if isindexed,
+    if isindexed
       sel = zeros(0,2);
       for m = 1:length(fn)
         for i = 1:length(cfg.roi)
@@ -303,7 +297,7 @@ if roi2mask
   output = mask;
   
 elseif mask2label || roi2label
-  if ischar(cfg.atlas),
+  if ischar(cfg.atlas)
     % assume it to represent a filename
     atlas = ft_read_atlas(cfg.atlas);
   else
@@ -351,7 +345,7 @@ elseif mask2label || roi2label
   elseif roi2label
     if istrue(cfg.round2nearestvoxel)
       % determine location of each anatomical voxel in head coordinates
-      xyz = [volume.pos ones(size(volume.pos,1),1)]'; % note that this is 4xN    
+      xyz = [volume.pos ones(size(volume.pos,1),1)]'; % note that this is 4xN
       for i=1:size(cfg.roi,1)
         cfg.roi(i,:) = poi2voi(cfg.roi(i,:), xyz);
       end
@@ -408,7 +402,7 @@ xmin = min(abs(xyz(1,:) - poi(1))); xcl = round(abs(xyz(1,:) - poi(1))) == round
 ymin = min(abs(xyz(2,:) - poi(2))); ycl = round(abs(xyz(2,:) - poi(2))) == round(ymin);
 zmin = min(abs(xyz(3,:) - poi(3))); zcl = round(abs(xyz(3,:) - poi(3))) == round(zmin);
 xyzcls = xcl + ycl + zcl; ind_voi = xyzcls == 3;
-if sum(ind_voi) > 1;
+if sum(ind_voi) > 1
   fprintf('%i voxels at same distance of poi, taking first voxel\n', sum(ind_voi))
   ind_voi_temp = find(ind_voi); ind_voi_temp = ind_voi_temp(1);
   ind_voi = zeros(size(ind_voi));

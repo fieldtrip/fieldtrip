@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __rdadefs_h
-#define __rdadefs_h
+#ifndef __RDADEFS_H
+#define __RDADEFS_H
 
 #include "message.h"        /* for the integer datytypes */
  
@@ -68,4 +68,4 @@ typedef struct {
 }
 #endif
 
-#endif /* __rdadefs_h */
+#endif /* __RDADEFS_H */
