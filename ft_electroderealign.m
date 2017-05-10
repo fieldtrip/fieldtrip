@@ -58,7 +58,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'fsaverage'       surface-based realignment with the freesurfer fsaverage brain
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
-%   cfg.keepunused     = string, 'yes' or 'no' (default = 'no')
+%   cfg.keepchannel    = string, 'yes' or 'no' (default = 'no')
 %   cfg.fiducial       = cell-array with the name of three fiducials used for
 %                        realigning (default = {'nasion', 'lpa', 'rpa'})
 %   cfg.casesensitive  = 'yes' or 'no', determines whether string comparisons
@@ -173,7 +173,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
 % set the defaults
 cfg.warp          = ft_getopt(cfg, 'warp', 'rigidbody');
 cfg.channel       = ft_getopt(cfg, 'channel',  'all');
-cfg.keepunused    = ft_getopt(cfg, 'keepunused', 'no');
+cfg.keepchannel   = ft_getopt(cfg, 'keepchannel', 'no');
 cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
 cfg.casesensitive = ft_getopt(cfg, 'casesensitive', 'no');
 cfg.headshape     = ft_getopt(cfg, 'headshape', []);     % for triangulated head surface, without labels
@@ -706,7 +706,7 @@ switch cfg.method
     error('unknown method');
 end
 
-if istrue(cfg.keepunused)
+if istrue(cfg.keepchannel)
   % append the channels that are not realigned
   [~, idx] = setdiff(elec_original.label, elec_realigned.label);
   idx = sort(idx);
