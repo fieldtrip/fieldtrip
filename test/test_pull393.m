@@ -13,6 +13,11 @@ data_eeg.elec.elecpos = [1 1 1; 2 2 2; 3 3 3];
 data_eeg.elec.chanpos = [1 1 1; 2 2 2; 3 3 3];
 data_eeg.elec.tra = eye(3);
 
+% data_eeg2 (a different EEG recording: same labels but different elecpos)
+data_eeg2 = data_eeg;
+data_eeg2.elec.elecpos = [1 1 1; 2 2 2; 3 3 3]+1; % note the +1
+data_eeg2.elec.chanpos = [1 1 1; 2 2 2; 3 3 3]+1; % note the +1
+
 % data_meg
 data_meg.label = {'meg 1';'meg 2';'meg 3'};
 data_meg.trial{1,1} = randn(3,10);
@@ -98,6 +103,13 @@ freq_ieegb = ft_freqanalysis(cfg, data_ieegb);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% append raw data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% eeg and eeg2
+cfg = [];
+cfg.appendsens = 'yes';
+append0 = ft_appenddata(cfg, data_eeg, data_eeg2);
+assert(isequal(numel(append0.label),3)) % 3 labels (concat across rpt dim)
+assert(isequal(numel(append0.elec.label),3)) % 3 elec labels
 
 % eeg and meg
 cfg = [];

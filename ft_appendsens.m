@@ -62,26 +62,22 @@ for i=1:length(varargin)
 end
 typematch = all(strcmp(senstype{1}, senstype));
 
+unitmatch = 1;
 if isfield(varargin{1}, 'unit')
   unit = cell(1,length(varargin));
   for i=1:length(varargin)
     unit{i} = varargin{i}.unit;
   end
   unitmatch = all(strcmp(unit{1}, unit));
-else
-  unitmatch = 1;
-  warning('no unit information present, assuming that the units match');
 end
 
+coordsysmatch = 1;
 if isfield(varargin{1}, 'coordsys')
   coordsys = cell(1,length(varargin));
   for i=1:length(varargin)
     coordsys{i} = varargin{i}.coordsys;
   end
   coordsysmatch = all(strcmp(coordsys{1}, coordsys));
-else
-  coordsysmatch = 1;
-  warning('no coordinate system information present, assuming that the coordinate systems match');
 end
 
 if ~typematch || ~unitmatch || ~coordsysmatch
@@ -152,32 +148,44 @@ if haschanori
   sens.chanori = cat(1,chanori{:});
 end
 
+% remove duplicate channels
+[~, idx] = unique(sens.label);
+if ~isequal(numel(idx), numel(sens.label))
+  warning('duplicate channel labels found and removed, assuming that the chanpos fields match')
+  idx = sort(idx);
+  sens.label = sens.label(idx);
+  sens.chanpos = sens.chanpos(idx);
+  if haschanori
+    sens.chanori = sens.chanori(idx);
+  end
+end
+
 % copy original sensor positions (only if all sens originate from the same recording)
-if haselecpos && all(isequal(elecpos{1}, elecpos{:}))
+if haselecpos && all(isequal(elecpos{1}, elecpos{:})) % elecposmatch
   sens.elecpos = elecpos{1};
   if hastra && ~any(cellfun(@isempty, tra))
     sens.tra = cat(1,tra{:});
   end
 end
-if hasoptopos && all(isequal(optopos{1}, optopos{:}))
+if hasoptopos && all(isequal(optopos{1}, optopos{:})) % optoposmatch
   sens.optopos = optopos{1};
   if hastra && ~any(cellfun(@isempty, tra))
     sens.tra = cat(1,tra{:});
   end
 end
-if hascoilpos && all(isequal(coilpos{1}, coilpos{:}))
+if hascoilpos && all(isequal(coilpos{1}, coilpos{:})) % coilposmatch
   sens.coilpos = coilpos{1};
   if hastra && ~any(cellfun(@isempty, tra))
     sens.tra = cat(1,tra{:});
   end
 end
-if hascoilori && all(isequal(coilori{1}, coilori{:}))
+if hascoilori && all(isequal(coilori{1}, coilori{:})) % coilorimatch
   sens.coilori = coilori{1};
 end
-if haslabelold && all(strcmp(labelold{1}, labelold))
+if haslabelold && all(strcmp(labelold{1}, labelold)) % labeloldmatch
   sens.labelold = labelold{1};
 end
-if haschanposold && all(isequal(chanposold{1}, chanposold{:}))
+if haschanposold && all(isequal(chanposold{1}, chanposold{:})) % chanposoldmatch
   sens.chanposold = chanposold{1};
 end
 
