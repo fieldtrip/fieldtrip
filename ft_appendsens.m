@@ -7,6 +7,12 @@ function [sens] = ft_appendsens(cfg, varargin)
 % Use as
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
 %
+% A call to FT_APPENDSENS results in the label, chanpos, and when applicable, 
+% the chanori fields to be concatenated. Any duplicates will be removed. 
+% Moreover, the elecpos, labelold, and chanposold fields are copied over
+% from the first input under the condition that these fields are identical 
+% across the inputs. If applicable, the tra matrices are also merged.
+%
 % See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_DATAYPE_SENS,
 % FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ, FT_APPENDSOURCE
 
