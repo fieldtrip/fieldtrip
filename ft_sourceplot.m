@@ -327,6 +327,33 @@ elseif ~hasanatomical && cfg.downsample~=1
   tmpcfg.parameter = {cfg.funparameter, cfg.maskparameter, cfg.anaparameter};
   functional = ft_volumedownsample(tmpcfg, functional);
   [cfg, functional] = rollback_provenance(cfg, functional);
+elseif hasanatomical && strcmp(cfg.method, 'cloud') % need to disentangle the volumetric from the surface inputs
+  cloudsurf = {};
+  cloudvol = {};
+  
+  % check that anatomical is a cell array
+  if ~iscell(anatomical)
+    if numel(anatomical) == 1
+      tmp = anatomical;
+      anatomical = cell(1);
+      anatomical{1} = tmp;
+    else
+      error('If anatomical includes multiple meshes and/or volumes as input, they must be organized in a cell array')
+    end
+  end
+  
+  for n = 1:numel(anatomical)
+    if isfield(anatomical{n}, 'pos') && isfield(anatomical{n}, 'tri')
+      cloudsurf{end+1} = anatomical{n};
+    elseif isfield(anatomical{n}, 'anatomy') && isfield(anatomical{n}, 'transform')
+      if numel(cloudvol) > 1
+        error('Only one 3D volumetric representation can be input when cfg.method = "cloud"')
+      end
+      cloudvol = anatomical{n};
+    else
+      warning('anatomical{%d} was not recognized as a surface or volumetric structure, so it is being ignored', n)
+    end
+  end
 end
 
 if isfield(functional, 'dim') && isfield(functional, 'transform')
@@ -1328,6 +1355,10 @@ switch cfg.method
     % some defaults depend on the geometrical units
     scale = ft_scalingfactor('mm', functional.unit);
     % set the defaults for method=cloud
+    if ~hasanatomical
+      cloudsurf = {};
+      cloudvol = {};
+    end
     cfg.radius             = ft_getopt(cfg, 'radius', 4*scale);
     cfg.rmin               = ft_getopt(cfg, 'rmin', 1*scale);
     cfg.scalerad           = ft_getopt(cfg, 'scalerad', 'yes');
@@ -1344,6 +1375,7 @@ switch cfg.method
     cfg.intersectcolor     = ft_getopt(cfg, 'intersectcolor', {'k'});
     cfg.intersectlinestyle = ft_getopt(cfg, 'intersectlinestyle', {'-'});
     cfg.intersectlinewidth = ft_getopt(cfg, 'intersectlinewidth', 2);
+    cfg.intersectplane     = ft_getopt(cfg, 'intersectplane', 'no');
     cfg.ncirc              = ft_getopt(cfg, 'ncirc', 15);
     cfg.scalealpha         = ft_getopt(cfg, 'scalealpha', 'no');
     cfg.facecolor          = ft_getopt(cfg, 'facecolor', [0.781 0.762 0.664]);
@@ -1366,22 +1398,24 @@ switch cfg.method
       end
     end
     
-    ft_plot_cloud(pos, fun, 'mesh', anatomical,...
+    ft_plot_cloud(pos, fun, 'mesh', cloudsurf, 'mri', cloudvol,...
       'radius', cfg.radius, 'rmin', cfg.rmin, 'scalerad', cfg.scalerad, ...
       'ptsize', cfg.ptsize, 'ptdensity', cfg.ptdensity, 'ptgradient', cfg.ptgradient,...
       'colorgrad', cfg.colorgrad, 'colormap', cfg.funcolormap, 'clim', [fcolmin fcolmax], ...
       'unit', functional.unit, 'slice', cfg.slice, 'slicetype', cfg.slicetype, ...
       'ori', cfg.ori, 'slicepos', cfg.slicepos, 'nslices', cfg.nslices, 'minspace', cfg.minspace,...
       'intersectcolor', cfg.intersectcolor, 'intersectlinestyle', cfg.intersectlinestyle, ...
-      'intersectlinewidth', cfg.intersectlinewidth, 'ncirc', cfg.ncirc, ...
+      'intersectlinewidth', cfg.intersectlinewidth, 'intersectplane', cfg.intersectplane, 'ncirc', cfg.ncirc, ...
       'scalealpha', cfg.scalealpha, 'facecolor', cfg.facecolor, 'edgecolor', cfg.edgecolor,...
       'facealpha', cfg.facealpha, 'edgealpha', cfg.edgealpha);
     
-    if istrue(cfg.colorbar) && ~strcmp(cfg.slice, '2d')
-      colorbar;
-    else % position the colorbar so that it does not change the axis of the last subplot
-      subplotpos = get(subplot(cfg.nslices,1,cfg.nslices), 'Position'); % position of the bottom or rightmost subplot
-      colorbar('Position', [subplotpos(1)+subplotpos(3)+0.01 subplotpos(2) .05 subplotpos(2)+subplotpos(4)*(cfg.nslices+.1)]);
+    if istrue(cfg.colorbar) 
+      if ~strcmp(cfg.slice, '2d')
+        colorbar;
+      else % position the colorbar so that it does not change the axis of the last subplot
+        subplotpos = get(subplot(cfg.nslices,1,cfg.nslices), 'Position'); % position of the bottom or rightmost subplot
+        colorbar('Position', [subplotpos(1)+subplotpos(3)+0.01 subplotpos(2) .03 subplotpos(2)+subplotpos(4)*(cfg.nslices+.1)]);
+      end
     end
     
     
