@@ -1220,17 +1220,27 @@ end % convert from one to another bivariate representation
 function [source] = chan2source(data)
 chanpos = zeros(0,3);
 chanlab = cell(0,1);
+chanunit = [];
 if isfield(data, 'elec')
   chanpos = cat(1, chanpos, data.elec.chanpos);
   chanlab = cat(1, chanlab, data.elec.label);
+  if isfield(data.elec, 'unit')
+    chanunit = data.elec.unit;
+  end
 end
 if isfield(data, 'grad')
   chanpos = cat(1, chanpos, data.grad.chanpos);
   chanlab = cat(1, chanlab, data.grad.label);
+  if isfield(data.grad, 'unit')
+    chanunit = data.grad.unit;
+  end
 end
 if isfield(data, 'opto')
   chanpos = cat(1, chanpos, data.opto.chanpos);
   chanlab = cat(1, chanlab, data.opto.label);
+  if isfield(data.opto, 'unit')
+    chanunit = data.opto.unit;
+  end
 end
 
 fn = fieldnames(data);
@@ -1249,6 +1259,9 @@ parameter = fn(sel);
 
 source = [];
 source.pos = chanpos(possel, :);
+if ~isempty(chanunit)
+  source.unit = chanunit;
+end
 for i=1:numel(parameter)
   dat = data.(parameter{i});
   dimord = getdimord(data, parameter{i});
