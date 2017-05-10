@@ -160,7 +160,7 @@ if ~isequal(numel(idx), numel(sens.label))
   end
 end
 
-% copy original sensor positions (only if all sens originate from the same recording)
+% copy sensor information when identical across inputs (thus likely to have the same origin)
 if haselecpos && all(isequal(elecpos{1}, elecpos{:})) % elecposmatch
   sens.elecpos = elecpos{1};
   if hastra && ~any(cellfun(@isempty, tra))
