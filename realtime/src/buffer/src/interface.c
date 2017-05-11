@@ -193,7 +193,7 @@ if (verbose>0)
  * WRITE HEADER
  * returns 0 on success
  *******************************************************************************/
-int write_header(int server, UINT32_T datatype, int nchans, float fsample) {
+int write_header(int server, UINT32_T datatype, unsigned int nchans, float fsample) {
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */
@@ -244,7 +244,7 @@ int write_header(int server, UINT32_T datatype, int nchans, float fsample) {
  * WRITE DATA
  * returns 0 on success
  *******************************************************************************/
-int write_data(int server, UINT32_T datatype, int nchans, int nsamples, void *buffer) {
+int write_data(int server, UINT32_T datatype, unsigned int nchans, unsigned int nsamples, void *buffer) {
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */
@@ -294,7 +294,7 @@ int write_data(int server, UINT32_T datatype, int nchans, int nsamples, void *bu
  * READ HEADER
  * returns 0 on success
  *******************************************************************************/
-int read_header(int server, UINT32_T *datatype, int *nchans, float *fsample, int *nsamples, int *nevents) {
+int read_header(int server, UINT32_T *datatype, unsigned int *nchans, float *fsample, unsigned int *nsamples, unsigned int *nevents) {
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */
@@ -355,7 +355,7 @@ int read_header(int server, UINT32_T *datatype, int *nchans, float *fsample, int
  * READ DATA
  * returns 0 on success
  *******************************************************************************/
-int read_data(int server, int begsample, int endsample, void *buffer) {
+int read_data(int server, unsigned int begsample, unsigned int endsample, void *buffer) {
 	int status = 0, verbose = 0;
 
 	/* these are used in the communication and represent statefull information */

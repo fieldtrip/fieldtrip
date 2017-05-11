@@ -27,10 +27,10 @@ extern "C" {
 int start_server(int port);
 int open_connection(const char *hostname, int port);
 int close_connection(int s);
-int read_header(int server, UINT32_T *datatype, int *nchans, float *fsample, int *nsamples, int *nevents);
-int read_data(int server, int begsample, int endsample, void *buffer);
-int write_header(int server, UINT32_T datatype, int nchans, float fsample);
-int write_data(int server, UINT32_T datatype, int nchans, int nsamples, void *buffer);
+int read_header(int server, UINT32_T *datatype, unsigned int *nchans, float *fsample, unsigned int *nsamples, unsigned int *nevents);
+int read_data(int server, unsigned int begsample, unsigned int endsample, void *buffer);
+int write_header(int server, UINT32_T datatype, unsigned int nchans, float fsample);
+int write_data(int server, UINT32_T datatype, unsigned int nchans, unsigned int nsamples, void *buffer);
 
 #ifdef __cplusplus
 }
