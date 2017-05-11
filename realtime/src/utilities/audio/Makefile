@@ -108,7 +108,7 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/audio2ft$(SUFFIX)
+TARGETS = $(BINDIR)/ft2audio$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
