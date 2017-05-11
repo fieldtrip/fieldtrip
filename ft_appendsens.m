@@ -7,6 +7,12 @@ function [sens] = ft_appendsens(cfg, varargin)
 % Use as
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
 %
+% A call to FT_APPENDSENS results in the label, chanpos, and when applicable, 
+% the chanori fields to be concatenated. Any duplicates will be removed. 
+% Moreover, the elecpos, labelold, and chanposold fields are copied over
+% from the first input under the condition that these fields are identical 
+% across the inputs. If applicable, the tra matrices are also merged.
+%
 % See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_DATAYPE_SENS,
 % FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ, FT_APPENDSOURCE
 
@@ -62,26 +68,22 @@ for i=1:length(varargin)
 end
 typematch = all(strcmp(senstype{1}, senstype));
 
+unitmatch = 1;
 if isfield(varargin{1}, 'unit')
   unit = cell(1,length(varargin));
   for i=1:length(varargin)
     unit{i} = varargin{i}.unit;
   end
   unitmatch = all(strcmp(unit{1}, unit));
-else
-  unitmatch = 1;
-  warning('no unit information present, assuming that the units match');
 end
 
+coordsysmatch = 1;
 if isfield(varargin{1}, 'coordsys')
   coordsys = cell(1,length(varargin));
   for i=1:length(varargin)
     coordsys{i} = varargin{i}.coordsys;
   end
   coordsysmatch = all(strcmp(coordsys{1}, coordsys));
-else
-  coordsysmatch = 1;
-  warning('no coordinate system information present, assuming that the coordinate systems match');
 end
 
 if ~typematch || ~unitmatch || ~coordsysmatch
@@ -91,7 +93,7 @@ end
 % keep these fields (when present) in the output
 sens = keepfields(varargin{1}, {'type', 'unit', 'coordsys'});
 
-% concatenate - see test_pull393.m for a test script
+% make inventory
 haslabelold = 0;
 haschanposold = 0;
 haselecpos = 0;
@@ -112,14 +114,10 @@ for i=1:length(varargin)
   if isfield(varargin{i}, 'labelold')
     labelold{i} = varargin{i}.labelold;
     haslabelold = 1;
-  else % use current labels in case there are no old labels
-    labelold{i} = varargin{i}.label;
   end
   if isfield(varargin{i}, 'chanposold')
     chanposold{i} = varargin{i}.chanposold;
     haschanposold = 1;
-  else % use current chanpos in case there are no old chanpos
-    chanposold{i} = varargin{i}.chanpos;
   end
   
   % the following fields might be present in a sens structure
@@ -143,36 +141,61 @@ for i=1:length(varargin)
     optopos{i} = varargin{i}.optopos;
     hasoptopos = 1;
   end
+  if isfield(varargin{i}, 'tra') % tra
+    tra{i} = varargin{i}.tra;
+    hastra = 1;
+  end
 end
 
+% concatenate channels - see test_pull393.m for a test script
 sens.label = cat(1,label{:});
 sens.chanpos = cat(1,chanpos{:});
-
-if haslabelold % append in case one of the elec structures has old labels
-  sens.labelold = cat(1,labelold{:});
-end
-if haschanposold % append in case one of the elec structures has old chanpos
-  sens.chanposold = cat(1,chanposold{:});
-end
-
-if haselecpos
-  sens.elecpos = cat(1,elecpos{:});
-end
-if hascoilpos
-  sens.coilpos = cat(1,coilpos{:});
-end
-if hascoilori
-  sens.coilori = cat(1,coilori{:});
-end
 if haschanori
   sens.chanori = cat(1,chanori{:});
 end
-if hasoptopos
-  sens.optopos = cat(1,optopos{:});
+
+% remove duplicate channels
+[~, idx] = unique(sens.label);
+if ~isequal(numel(idx), numel(sens.label))
+  warning('duplicate channel labels found and removed, assuming that the chanpos fields match')
+  idx = sort(idx);
+  sens.label = sens.label(idx);
+  sens.chanpos = sens.chanpos(idx);
+  if haschanori
+    sens.chanori = sens.chanori(idx);
+  end
 end
 
-% ensure a that the output sensor description  is according to the latest standards
-% FIXME: tra is not appended
+% copy sensor information when identical across inputs (thus likely to have the same origin)
+if haselecpos && all(isequal(elecpos{1}, elecpos{:})) % elecposmatch
+  sens.elecpos = elecpos{1};
+  if hastra && ~any(cellfun(@isempty, tra))
+    sens.tra = cat(1,tra{:});
+  end
+end
+if hasoptopos && all(isequal(optopos{1}, optopos{:})) % optoposmatch
+  sens.optopos = optopos{1};
+  if hastra && ~any(cellfun(@isempty, tra))
+    sens.tra = cat(1,tra{:});
+  end
+end
+if hascoilpos && all(isequal(coilpos{1}, coilpos{:})) % coilposmatch
+  sens.coilpos = coilpos{1};
+  if hastra && ~any(cellfun(@isempty, tra))
+    sens.tra = cat(1,tra{:});
+  end
+end
+if hascoilori && all(isequal(coilori{1}, coilori{:})) % coilorimatch
+  sens.coilori = coilori{1};
+end
+if haslabelold && all(strcmp(labelold{1}, labelold)) % labeloldmatch
+  sens.labelold = labelold{1};
+end
+if haschanposold && all(isequal(chanposold{1}, chanposold{:})) % chanposoldmatch
+  sens.chanposold = chanposold{1};
+end
+
+% ensure up-to-date output sensor description
 sens = ft_datatype_sens(sens);
 
 % do the general cleanup and bookkeeping at the end of the function
