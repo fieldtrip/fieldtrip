@@ -1,17 +1,15 @@
 function [sens] = ft_appendsens(cfg, varargin)
 
 % FT_APPENDSENS concatenates multiple sensor definitions that have been processed
-% separately. This is specifically designed for multiple intracranial electrode
-% descriptions, e.g. to combine ECoG and sEEG.
+% separately.
 %
 % Use as
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
 %
-% A call to FT_APPENDSENS results in the label, chanpos, and when applicable, 
-% the chanori fields to be concatenated. Any duplicates will be removed. 
-% Moreover, the elecpos, labelold, and chanposold fields are copied over
-% from the first input under the condition that these fields are identical 
-% across the inputs. If applicable, the tra matrices are also merged.
+% A call to FT_APPENDSENS results in the label, pos and ori fields to be 
+% concatenated, and the tra matrix to be merged. Any duplicates will be removed. 
+% The labelold and chanposold fields are kept under the condition that they 
+% are identical across the inputs.
 %
 % See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_DATAYPE_SENS,
 % FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ, FT_APPENDSOURCE
@@ -87,20 +85,20 @@ if isfield(varargin{1}, 'coordsys')
 end
 
 if ~typematch || ~unitmatch || ~coordsysmatch
-  error('the senstype, units, or coordinate systems of the inputs are not equal');
+  error('the senstype, units, or coordinate systems of the inputs do not match');
 end
 
 % keep these fields (when present) in the output
 sens = keepfields(varargin{1}, {'type', 'unit', 'coordsys'});
 
 % make inventory
-haslabelold = 0;
-haschanposold = 0;
 haselecpos = 0;
 hascoilpos = 0;
 hascoilori = 0;
 haschanori = 0;
 hasoptopos = 0;
+haslabelold = 0;
+haschanposold = 0;
 for i=1:length(varargin)
   % the following fields should be present in any sens structure
   if isfield(varargin{i}, 'label')
@@ -110,17 +108,7 @@ for i=1:length(varargin)
     chanpos{i} = varargin{i}.chanpos;
   end
   
-  % the following fields may be present in a subset of sens structures
-  if isfield(varargin{i}, 'labelold')
-    labelold{i} = varargin{i}.labelold;
-    haslabelold = 1;
-  end
-  if isfield(varargin{i}, 'chanposold')
-    chanposold{i} = varargin{i}.chanposold;
-    haschanposold = 1;
-  end
-  
-  % the following fields might be present in a sens structure
+  % some the following fields are likely present in a sens structure
   if isfield(varargin{i}, 'elecpos') % EEG
     elecpos{i} = varargin{i}.elecpos;
     haselecpos = 1;
@@ -145,23 +133,105 @@ for i=1:length(varargin)
     tra{i} = varargin{i}.tra;
     hastra = 1;
   end
+  
+  % the following fields might be present in a sens structure
+  if isfield(varargin{i}, 'labelold')
+    labelold{i} = varargin{i}.labelold;
+    haslabelold = 1;
+  end
+  if isfield(varargin{i}, 'chanposold')
+    chanposold{i} = varargin{i}.chanposold;
+    haschanposold = 1;
+  end
 end
 
-% concatenate channels - see test_pull393.m for a test script
+% concatenate the main fields and remove duplicates
 sens.label = cat(1,label{:});
+[~, labidx] = unique(sens.label);
+labidx = sort(labidx);
+if ~isequal(numel(labidx), numel(sens.label))
+  fprintf('removing duplicate channel labels\n')
+  sens.label = sens.label(labidx);
+end
+
 sens.chanpos = cat(1,chanpos{:});
+[~, chanidx] = unique(sens.chanpos, 'rows');
+chanidx = sort(chanidx);
+if ~isequal(numel(chanidx), size(sens.chanpos,1))
+  fprintf('removing duplicate channel positions\n')
+  sens.chanpos = sens.chanpos(chanidx,:);
+  if ~isequal(labidx, chanidx) % check for matching order
+    error('inconsistent order or number of channel labels and positions')
+  end
+end
+if ~isequal(numel(sens.label), size(sens.chanpos,1)) % check for matching number
+  error('inconsistent number of channel labels and positions')
+end
 if haschanori
   sens.chanori = cat(1,chanori{:});
+  if ~isequal(numel(chanidx), size(sens.chanpos,1))
+    fprintf('removing duplicate channel orientations\n')
+    sens.chanori = sens.chanori(chanidx,:); % chanori should match chanpos
+  end
 end
 
-% remove duplicate channels
-[~, idx] = unique(sens.label);
-if ~isequal(numel(idx), numel(sens.label))
-  warning('duplicate channel labels found and removed, assuming that the chanpos fields match')
-  idx = sort(idx);
-  sens.label = sens.label(idx);
+if haselecpos
+  sens.elecpos = cat(1,elecpos{:});
+  [~, elecidx] = unique(sens.elecpos, 'rows');
+  elecidx = sort(elecidx);
+  if ~isequal(numel(elecidx), size(sens.elecpos,1))
+    fprintf('removing duplicate electrode positions\n')
+    sens.elecpos = sens.elecpos(elecidx,:);
+  end
+  if hastra && ~any(cellfun(@isempty, tra))
+    sens.tra = cat(1,tra{:});
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.elecpos,1))
+      fprintf('removing inconsistent tra matrix\n')
+      sens = rmfield(sens, 'tra');
+    end
+  end
 end
 
+if hasoptopos
+  sens.optopos = cat(1,optopos{:});
+  [~, optoidx] = unique(sens.optopos, 'rows');
+  optoidx = sort(optoidx);
+  if ~isequal(numel(optoidx), size(sens.optopos,1))
+    fprintf('removing duplicate opto positions\n')
+    sens.optopos = sens.optopos(optoidx,:);
+  end
+  if hastra && ~any(cellfun(@isempty, tra))
+    sens.tra = cat(1,tra{:});
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.optopos,1))
+      fprintf('removing inconsistent tra matrix\n')
+      sens = rmfield(sens, 'tra');
+    end
+  end
+end
+
+if hascoilpos
+  sens.coilpos = cat(1,coilpos{:});
+  [~, coilidx] = unique(sens.coilpos, 'rows');
+  coilidx = sort(coilidx);
+  if ~isequal(numel(coilidx), size(sens.coilpos,1))
+    fprintf('removing duplicate coil positions\n')
+    sens.coilpos = sens.coilpos(coilidx,:);
+  end
+  if hastra && ~any(cellfun(@isempty, tra))
+    sens.tra = cat(1,tra{:});
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.coilpos,1))
+      fprintf('removing inconsistent tra matrix\n')
+      sens = rmfield(sens, 'tra');
+    end
+  end
+end
+if hascoilori
+  sens.coilori = cat(1,coilori{:});
+  if ~isequal(numel(coilidx), size(sens.coilori,1))
+    fprintf('removing duplicate coil orientations\n')
+    sens.coilori = sens.coilori(coilidx,:); % coilori should match coilpos
+  end
+end
 
 % copy sensor information when identical across inputs (thus likely to have the same origin)
 if haselecpos && all(isequal(elecpos{1}, elecpos{:})) % elecposmatch
@@ -182,9 +252,8 @@ if hascoilpos && all(isequal(coilpos{1}, coilpos{:})) % coilposmatch
     sens.tra = cat(1,tra{:});
   end
 end
-if hascoilori && all(isequal(coilori{1}, coilori{:})) % coilorimatch
-  sens.coilori = coilori{1};
-end
+
+% keep the following fields only when identical across inputs
 if haslabelold && all(strcmp(labelold{1}, labelold)) % labeloldmatch
   sens.labelold = labelold{1};
 end
@@ -192,7 +261,7 @@ if haschanposold && all(isequal(chanposold{1}, chanposold{:})) % chanposoldmatch
   sens.chanposold = chanposold{1};
 end
 
-% ensure up-to-date output sensor description
+% ensure up-to-date and consistent output sensor description
 sens = ft_datatype_sens(sens);
 
 % do the general cleanup and bookkeeping at the end of the function
