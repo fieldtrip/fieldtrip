@@ -6,9 +6,9 @@ function [sens] = ft_appendsens(cfg, varargin)
 % Use as
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
 %
-% A call to FT_APPENDSENS results in the label, pos and ori fields to be 
-% concatenated, and the tra matrix to be merged. Any duplicates will be removed. 
-% The labelold and chanposold fields are kept under the condition that they 
+% A call to FT_APPENDSENS results in the label, pos and ori fields to be
+% concatenated, and the tra matrix to be merged. Any duplicates will be removed.
+% The labelold and chanposold fields are kept under the condition that they
 % are identical across the inputs.
 %
 % See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_DATAYPE_SENS,
@@ -99,10 +99,11 @@ haschanori = 0;
 hasoptopos = 0;
 haslabelold = 0;
 haschanposold = 0;
+tramatch = 0;
 for i=1:length(varargin)
   % the following fields should be present in any sens structure
   if isfield(varargin{i}, 'label')
-    label{i} = varargin{i}.label;
+    label{i} = varargin{i}.label(:); % ensure column orientation
   end
   if isfield(varargin{i}, 'chanpos')
     chanpos{i} = varargin{i}.chanpos;
@@ -136,7 +137,7 @@ for i=1:length(varargin)
   
   % the following fields might be present in a sens structure
   if isfield(varargin{i}, 'labelold')
-    labelold{i} = varargin{i}.labelold;
+    labelold{i} = varargin{i}.labelold(:); % ensure column orientation
     haslabelold = 1;
   end
   if isfield(varargin{i}, 'chanposold')
@@ -175,6 +176,16 @@ if haschanori
   end
 end
 
+if hastra && ~any(cellfun(@isempty, tra))
+  sens.tra = [];
+  for t = 1:numel(tra)
+    tra{t} = tra{t}(:,any(tra{t})); % delete any zero columns
+    trarow = [1:size(tra{t},1)]+size(sens.tra,1);
+    tracol = [1:size(tra{t},2)]+size(sens.tra,2);
+    sens.tra(trarow, tracol) = tra{t};
+  end
+end
+
 if haselecpos
   sens.elecpos = cat(1,elecpos{:});
   [~, elecidx] = unique(sens.elecpos, 'rows');
@@ -183,8 +194,8 @@ if haselecpos
     fprintf('removing duplicate electrode positions\n')
     sens.elecpos = sens.elecpos(elecidx,:);
   end
-  if hastra && ~any(cellfun(@isempty, tra))
-    sens.tra = cat(1,tra{:});
+  if isfield(sens, 'tra')
+    sens.tra = sens.tra(chanidx, elecidx); % remove the duplicates FIXME: this may produce zero elements
     if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.elecpos,1))
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
@@ -200,8 +211,8 @@ if hasoptopos
     fprintf('removing duplicate opto positions\n')
     sens.optopos = sens.optopos(optoidx,:);
   end
-  if hastra && ~any(cellfun(@isempty, tra))
-    sens.tra = cat(1,tra{:});
+  if isfield(sens, 'tra')
+    sens.tra = sens.tra(chanidx, optoidx); % remove the duplicates FIXME: this may produce zero elements
     if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.optopos,1))
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
@@ -217,8 +228,8 @@ if hascoilpos
     fprintf('removing duplicate coil positions\n')
     sens.coilpos = sens.coilpos(coilidx,:);
   end
-  if hastra && ~any(cellfun(@isempty, tra))
-    sens.tra = cat(1,tra{:});
+  if isfield(sens, 'tra')
+    sens.tra = sens.tra(chanidx, coilidx); % remove the duplicates FIXME: this may produce zero elements
     if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.coilpos,1))
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
@@ -230,26 +241,6 @@ if hascoilori
   if ~isequal(numel(coilidx), size(sens.coilori,1))
     fprintf('removing duplicate coil orientations\n')
     sens.coilori = sens.coilori(coilidx,:); % coilori should match coilpos
-  end
-end
-
-% copy sensor information when identical across inputs (thus likely to have the same origin)
-if haselecpos && all(isequal(elecpos{1}, elecpos{:})) % elecposmatch
-  sens.elecpos = elecpos{1};
-  if hastra && ~any(cellfun(@isempty, tra))
-    sens.tra = cat(1,tra{:});
-  end
-end
-if hasoptopos && all(isequal(optopos{1}, optopos{:})) % optoposmatch
-  sens.optopos = optopos{1};
-  if hastra && ~any(cellfun(@isempty, tra))
-    sens.tra = cat(1,tra{:});
-  end
-end
-if hascoilpos && all(isequal(coilpos{1}, coilpos{:})) % coilposmatch
-  sens.coilpos = coilpos{1};
-  if hastra && ~any(cellfun(@isempty, tra))
-    sens.tra = cat(1,tra{:});
   end
 end
 
