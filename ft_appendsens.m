@@ -99,7 +99,6 @@ haschanori = 0;
 hasoptopos = 0;
 haslabelold = 0;
 haschanposold = 0;
-tramatch = 0;
 for i=1:length(varargin)
   % the following fields should be present in any sens structure
   if isfield(varargin{i}, 'label')
