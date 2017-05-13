@@ -11,17 +11,17 @@ function test_pull434
 
 %% construct some electrode structures
 
-elec1.label = {'1', '2', '3'};
+elec1.label = {'1'; '2'; '3'};
 elec1.elecpos = [1 1 1; 2 2 2; 3 3 3];
 elec1.chanpos = [1 1 1; 2 2 2; 3 3 3];
 elec1.tra = eye(3);
 
-elec2.label = {'3', '4'};
+elec2.label = {'3'; '4'};
 elec2.elecpos = [3 3 3; 4 4 4];
 elec2.chanpos = [3 3 3; 4 4 4];
-elec2.tra = eye(3);
+elec2.tra = eye(2);
 
-elec3.label = {'4', '5', '6'};
+elec3.label = {'4'; '5'; '6'};
 elec3.elecpos = [4 4 4; 5 5 5; 6 6 6];
 elec3.chanpos = [4 4 4; 5 5 5; 6 6 6];
 elec3.tra = eye(3);
@@ -30,13 +30,19 @@ elec3.tra = eye(3);
 
 cfg = [];
 
-append1   = ft_appendsens(cfg, elec);
+append1   = ft_appendsens(cfg, elec1);
 append11  = ft_appendsens(cfg, elec1, elec1);
-append111 = ft_appendsens(cfg, elec1, elec1, elec13);
+append111 = ft_appendsens(cfg, elec1, elec1, elec1);
 
-assert(isequal(append1,   elec1));
-assert(isequal(append11,  elec1));
-assert(isequal(append111, elec1));
+assert(isequal(append1.label,   elec1.label));
+assert(isequal(append1.chanpos,   elec1.chanpos));
+assert(isequal(append1.tra,   elec1.tra));
+assert(isequal(append11.label,   elec1.label));
+assert(isequal(append11.chanpos,   elec1.chanpos));
+assert(isequal(append11.tra,   elec1.tra));
+assert(isequal(append111.label,   elec1.label));
+assert(isequal(append111.chanpos,   elec1.chanpos));
+assert(isequal(append111.tra,   elec1.tra));
 
 %%
 
@@ -83,7 +89,7 @@ elec1c.tra = eye(3);
 
 %%
 
-append11b = ft_appendsens(cfg, elec1, elec1b);
+append11b = ft_appendsens(cfg, elec1, elec1b); % same elec, diff chan
 
 assert(numel(append11b.label)==6);
 assert(size(append11b.chanpos,1)==6);
@@ -93,7 +99,7 @@ assert(isequal(size(append11b.tra), [6 3]));
 %%
 
 if false
-append11c = ft_appendsens(cfg, elec1, elec1c);
-% here I don't know yet what to expect
+append11c = ft_appendsens(cfg, elec1, elec1c); % same chan, diff elec
+% this should crash because there are 6 labels and only 3 chanpos
 end
 

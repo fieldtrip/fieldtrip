@@ -194,7 +194,7 @@ append3 = ft_appendtimelock(cfg, timelock_ieeg, timelock_ieegb);
 assert(isequal(numel(append3.label),5)) % 5 ieeg labels
 assert(isequal(numel(append3.elec.label),5)) % 5 ieeg labels
 assert(isequal(size(append3.elec.elecpos,1),3)) % 3 original elecpos
-assert(isequal(size(append3.elec.tra,1),5)) % 5 tra rows
+assert(isequal(size(append3.elec.tra),[5 3]))
 
 % do not append (discard inconsistent sens information)
 append4 = ft_appendtimelock([], timelock_eeg, timelock_meg);
