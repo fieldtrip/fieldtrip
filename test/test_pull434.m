@@ -94,7 +94,7 @@ append11b = ft_appendsens(cfg, elec1, elec1b); % same elec, diff chan
 assert(numel(append11b.label)==6);
 assert(size(append11b.chanpos,1)==6);
 assert(size(append11b.elecpos,1)==3);
-assert(isequal(size(append11b.tra), [6 3])); % FIXME this produces a 6x3 matrix, but the bottom half is zeros
+assert(isequal(size(append11b.tra), [6 3]));
 
 %%
 

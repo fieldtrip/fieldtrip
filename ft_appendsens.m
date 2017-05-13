@@ -150,7 +150,7 @@ sens.label = cat(1,label{:});
 [~, labidx] = unique(sens.label);
 labidx = sort(labidx);
 if ~isequal(numel(labidx), numel(sens.label))
-  fprintf('removing duplicate channel labels\n')
+  fprintf('removing duplicate labels\n')
   sens.label = sens.label(labidx);
 end
 
@@ -158,7 +158,7 @@ sens.chanpos = cat(1,chanpos{:});
 [~, chanidx] = unique(sens.chanpos, 'rows');
 chanidx = sort(chanidx);
 if ~isequal(numel(chanidx), size(sens.chanpos,1))
-  fprintf('removing duplicate channel positions\n')
+  fprintf('removing duplicate channels\n')
   sens.chanpos = sens.chanpos(chanidx,:);
   if ~isequal(labidx, chanidx) % check for matching order
     error('inconsistent order or number of channel labels and positions')
@@ -170,7 +170,6 @@ end
 if haschanori
   sens.chanori = cat(1,chanori{:});
   if ~isequal(numel(chanidx), size(sens.chanpos,1))
-    fprintf('removing duplicate channel orientations\n')
     sens.chanori = sens.chanori(chanidx,:); % chanori should match chanpos
   end
 end
@@ -178,7 +177,6 @@ end
 if hastra && ~any(cellfun(@isempty, tra))
   sens.tra = [];
   for t = 1:numel(tra)
-    tra{t} = tra{t}(:,any(tra{t})); % delete any zero columns
     trarow = [1:size(tra{t},1)]+size(sens.tra,1);
     tracol = [1:size(tra{t},2)]+size(sens.tra,2);
     sens.tra(trarow, tracol) = tra{t};
@@ -187,15 +185,21 @@ end
 
 if haselecpos
   sens.elecpos = cat(1,elecpos{:});
-  [~, elecidx] = unique(sens.elecpos, 'rows');
-  elecidx = sort(elecidx);
+  [~, elecidx, elecidx2] = unique(sens.elecpos, 'rows');
+  [elecidx, elecord] = sort(elecidx); % sort and keep track of the order
   if ~isequal(numel(elecidx), size(sens.elecpos,1))
-    fprintf('removing duplicate electrode positions\n')
+    fprintf('removing duplicate electrodes\n')
     sens.elecpos = sens.elecpos(elecidx,:);
   end
   if isfield(sens, 'tra')
-    sens.tra = sens.tra(chanidx, elecidx); % remove the duplicates FIXME: this may produce zero elements
-    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.elecpos,1))
+    % shape duplicates into a single column, if necessary
+    for idx = 1:numel(elecidx)
+      tmp(:, idx) = sum(sens.tra(chanidx, find(elecord(idx)==elecidx2)),2);
+    end
+    sens.tra = tmp;
+    % check for expected size and non-empty rows or columns
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.elecpos,1)) ...
+        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
     end
@@ -204,15 +208,21 @@ end
 
 if hasoptopos
   sens.optopos = cat(1,optopos{:});
-  [~, optoidx] = unique(sens.optopos, 'rows');
-  optoidx = sort(optoidx);
+  [~, optoidx, optoidx2] = unique(sens.optopos, 'rows');
+  [optoidx, optoord] = sort(optoidx); % sort and keep track of the order
   if ~isequal(numel(optoidx), size(sens.optopos,1))
-    fprintf('removing duplicate opto positions\n')
+    fprintf('removing duplicate optodes\n')
     sens.optopos = sens.optopos(optoidx,:);
   end
   if isfield(sens, 'tra')
-    sens.tra = sens.tra(chanidx, optoidx); % remove the duplicates FIXME: this may produce zero elements
-    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.optopos,1))
+    % shape duplicates into a single column, if necessary
+    for idx = 1:numel(optoidx)
+      tmp(:, idx) = sum(sens.tra(chanidx, find(optoord(idx)==optoidx2)),2);
+    end
+    sens.tra = tmp;
+    % check for expected size and non-empty rows or columns
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.optopos,1)) ...
+        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
     end
@@ -221,15 +231,21 @@ end
 
 if hascoilpos
   sens.coilpos = cat(1,coilpos{:});
-  [~, coilidx] = unique(sens.coilpos, 'rows');
-  coilidx = sort(coilidx);
+  [~, coilidx, coilidx2] = unique(sens.coilpos, 'rows');
+  [coilidx, coilord] = sort(coilidx); % sort and keep track of the order
   if ~isequal(numel(coilidx), size(sens.coilpos,1))
-    fprintf('removing duplicate coil positions\n')
+    fprintf('removing duplicate coils\n')
     sens.coilpos = sens.coilpos(coilidx,:);
   end
   if isfield(sens, 'tra')
-    sens.tra = sens.tra(chanidx, coilidx); % remove the duplicates FIXME: this may produce zero elements
-    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.coilpos,1))
+    % shape duplicates into a single column, if necessary
+    for idx = 1:numel(coilidx)
+      tmp(:, idx) = sum(sens.tra(chanidx, find(coilord(idx)==coilidx2)),2);
+    end
+    sens.tra = tmp;
+    % check for expected size and non-empty rows or columns
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.coilpos,1)) ...
+        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
       fprintf('removing inconsistent tra matrix\n')
       sens = rmfield(sens, 'tra');
     end
@@ -238,7 +254,6 @@ end
 if hascoilori
   sens.coilori = cat(1,coilori{:});
   if ~isequal(numel(coilidx), size(sens.coilori,1))
-    fprintf('removing duplicate coil orientations\n')
     sens.coilori = sens.coilori(coilidx,:); % coilori should match coilpos
   end
 end
