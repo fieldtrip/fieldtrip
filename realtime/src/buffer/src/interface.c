@@ -413,3 +413,63 @@ int read_data(int server, unsigned int begsample, unsigned int endsample, void *
 
 	return status;
 }
+
+/*******************************************************************************
+ * WAIT FOR DATA
+ * returns 0 on success
+ *******************************************************************************/
+int wait_data(int server, unsigned int nsamples, unsigned int nevents, unsigned int milliseconds){
+	int status = 0, verbose = 0;
+
+	/* these are used in the communication and represent statefull information */
+	message_t    *request  = NULL;
+	message_t    *response = NULL;
+	waitdef_t  		waitdef;
+
+	/* create the request */
+	request      = (message_t *)malloc(sizeof(message_t));
+	request->def = (messagedef_t *)malloc(sizeof(messagedef_t));
+	request->def->version = VERSION;
+	request->def->command = WAIT_DAT;
+	request->def->bufsize = 0;
+	request->buf = NULL;
+
+	waitdef.threshold.nsamples = nsamples;
+	waitdef.threshold.nevents  = nevents;
+	waitdef.milliseconds = milliseconds;
+
+	request->def->bufsize = append(&request->buf, request->def->bufsize, &waitdef, sizeof(waitdef_t));
+
+	if (verbose) printf("waiting for %d samples or %d events\n", nsamples, nevents);
+	if (verbose) print_request(request->def);
+
+	/* send the request */
+	status = clientrequest(server, request, &response);
+	cleanup_message((void **)&request);
+
+	if (verbose) print_response(response->def);
+
+	if (status) {
+		fprintf(stderr, "DEBUG: err6\n");
+		exit(1);
+	}
+
+	if (response->def->command==WAIT_OK) {
+		/* the data is included in the payload of the response */
+		samples_events_t *samples_events = (samples_events_t *) response->buf;
+
+		if (verbose) {
+			fprintf(stderr, "nsamples = %d\n", samples_events->nsamples);
+			fprintf(stderr, "nevents  = %d\n", samples_events->nevents);
+		}
+
+		status = 0;
+	}
+	else {
+		status = response->def->command;
+	}
+
+	cleanup_message((void **)&response);
+
+	return status;
+}

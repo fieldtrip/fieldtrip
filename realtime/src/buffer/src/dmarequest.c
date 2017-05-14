@@ -30,13 +30,13 @@ static int thissample = 0;    /* points at the buffer */
 static int thisevent = 0;     /* points at the buffer */
 
 /* Note that there have been problems with the order of the mutexes (e.g.
- * http://bugzilla.fcdonders.nl/show_bug.cgi?id=933). 
+ * http://bugzilla.fcdonders.nl/show_bug.cgi?id=933).
  * I have attempted to make the order of locking consistent, but can't give
  * guarantees. A more long term solution could be:
  * - find the dependencies between modifications of volatile data (e.g. events
  * depend on header),
  * - keep locks as shortly as possible (get info, release again).
- * 
+ *
  * This could results in a global lock (robust, probably not optimal in terms
  * of speed), or a series of locks sandwiching modification code in dedicated
  * functions.
@@ -143,7 +143,7 @@ void init_event(void) {
 }
 
 
-/***************************************************************************** 
+/*****************************************************************************
  * this function handles the direct memory access to the buffer
  * and copies objects to and from memory
  *****************************************************************************/
@@ -228,7 +228,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 				response->def->command = PUT_OK;
 			} else {
 				/* let's at least tell the client that something's wrong */
-				response->def->command = PUT_ERR;	
+				response->def->command = PUT_ERR;
 			}
 
 			pthread_mutex_unlock(&mutexevent);
@@ -483,7 +483,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 						/* not enough space for copying data into response */
 						fprintf(stderr, "dmarequest: out of memory\n");
 						response->def->command = GET_ERR;
-					} 
+					}
 					else {
 						/* number of bytes per sample (all channels) */
 						unsigned int chansize = data->def->nchans * wordsize;
@@ -673,11 +673,11 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 		case WAIT_DAT:
 			/* SK: This request means that the client wants to wait until
-				 MORE than waitdef_t.threshold.nsamples samples OR 
-				 MORE THAN waitdef_t.threshold.nevents events 
-				 are in the buffer, BUT 
-				 only for the time given in waitdef_t.milliseconds. 
-				 The response is just the number of samples and events 
+				 MORE than waitdef_t.threshold.nsamples samples OR
+				 MORE THAN waitdef_t.threshold.nevents events
+				 are in the buffer, BUT
+				 only for the time given in waitdef_t.milliseconds.
+				 The response is just the number of samples and events
 				 in the buffer as described by samples_events_t.
 			 */
 			response->def->version = VERSION;
@@ -709,7 +709,7 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 
 				if (wd->milliseconds == 0 || nsmp > wd->threshold.nsamples || nevt > wd->threshold.nevents) {
 					/* the client doesn't want to wait, or
-						 we're already above the threshold: 
+						 we're already above the threshold:
 						 return immediately */
 					nret->nsamples = nsmp;
 					nret->nevents = nevt;
@@ -736,9 +736,10 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 					pthread_mutex_unlock(&mutexheader);
 				} while (nsmp <= wd->threshold.nsamples && nevt <= wd->threshold.nevents && waiterr==0);
 				nret->nsamples = nsmp;
-				nret->nevents = nevt;				
+				nret->nevents = nevt;
 			}
 			break;
+
 		default:
 			fprintf(stderr, "dmarequest: unknown command\n");
 	}
@@ -748,4 +749,3 @@ int dmarequest(const message_t *request, message_t **response_ptr) {
 	/* everything went fine */
 	return 0;
 }
-

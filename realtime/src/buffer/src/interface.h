@@ -31,6 +31,7 @@ int read_header(int server, UINT32_T *datatype, unsigned int *nchans, float *fsa
 int read_data(int server, unsigned int begsample, unsigned int endsample, void *buffer);
 int write_header(int server, UINT32_T datatype, unsigned int nchans, float fsample);
 int write_data(int server, UINT32_T datatype, unsigned int nchans, unsigned int nsamples, void *buffer);
+int wait_data(int server, unsigned int nsamples, unsigned int nevents, unsigned int milliseconds);
 
 #ifdef __cplusplus
 }
