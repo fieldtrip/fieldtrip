@@ -1,7 +1,7 @@
 /*
  * Command-line application to stream signals from a FieldTrip buffer
  * to the sound card. This is based on PortAudio. The FieldTrip buffer
- * should contain one channel at the appropriate sampling frequency.
+ * should contain one or two channels at an appropriate sampling frequency.
  *
  * (C) 2017, Robert Oostenveld
 */
@@ -15,29 +15,13 @@
 #include "buffer.h"
 #include "interface.h"
 
-#define FS8K   			 	(8000.)
-#define FS16K   			(16000.)
-#define FS32K   			(32000.)
-#define FS48K   			(48000.)
-#define FS96K   			(96000.)
-#define FS192K   			(192000.)
-#define FS384K   			(384000.)
-
-#define FS11K   			(11025.)
-#define FS22K   			(22050.)
-#define FS44K   			(44100.)
-#define FS88K   			(88200.)
-#define FS176K   			(176400.)
-#define FS358K   			(352800.)
-
-#define MONITOR       (1000)  /* in milliseconds */
-#define LASTREAD      (100)
-#define TIMEOUT       (15000) /* in milliseconds */
+#define MONITOR       (2000)  /* in milliseconds */
+#define TIMEOUT       (60000) /* in milliseconds */
 #define SLIP          (3000)  /* in milliseconds */
-#define BLOCKSIZE_DIV (1)
-#define CALLBACK_DIV  (100)
+#define BLOCK_DIV 		(1)     /* sampling frequency division factor */
+#define CALLBACK_DIV  (10)    /* sampling frequency division factor */
+#define CALIB         (1.)    /* calibration factor */
 #define TRUE          (1)
-#define CALIB         (1.)
 #define MIN(x,y) (x<y ? x : y)
 #define MAX(x,y) (x>y ? x : y)
 
@@ -48,13 +32,17 @@ typedef struct
 	char refresh1;
 	char refresh2;
 	unsigned int current;
+	unsigned int nsamples;
+	float fsample;
+	unsigned int nchans;
+	unsigned int datatype;
 	unsigned int sample;
-	unsigned int blocksize;
-	unsigned int nread;
-	unsigned int nwrite;
+	unsigned int nput;
+	unsigned int nget;
 	unsigned int skipped;
 }
 callbackData_t;
+
 
 /* This routine will be called by the PortAudio engine when audio is needed.
  ** It may called at interrupt level on some machines so don't do anything
@@ -67,51 +55,59 @@ static int paWriteCallback(const void *inputBuffer,
 		PaStreamCallbackFlags statusFlags,
 		void *ptr)
 {
+	/* Prevent unused variable warning. */
+	(void) inputBuffer;
 	/* Cast data passed through stream to our structure. */
-	callbackData_t *data = ptr;
-	float *output = (float*)outputBuffer;
-	(void) inputBuffer; /* Prevent unused variable warning. */
+	callbackData_t *transfer = ptr;
+	float *output = (float *)outputBuffer;
 
   /* this is to get started */
-  if (data->current==0 && data->refresh1==0)
-	  data->current = 1; /* switch to the first block */
-	else if (data->current==0 && data->refresh2==0)
-		data->current = 2; /* switch to the second block */
+  if (transfer->current==0 && transfer->refresh1==0)
+	  transfer->current = 1; /* switch to the first available block */
+	else if (transfer->current==0 && transfer->refresh2==0)
+		transfer->current = 2; /* switch to the second available block */
 
 	while (framesPerBuffer>0) {
 		framesPerBuffer--;
 
-		if (data->current==1) {
-			*output = data->block1[data->sample];
-			data->sample++;
-			data->nwrite++;
+		if (transfer->current==1) {
+			for (unsigned int chan=0; chan<transfer->nchans; chan++)
+				output[chan] = transfer->block1[(transfer->sample)*transfer->nchans+chan];
+			transfer->sample++;
+			transfer->nget++;
 		}
-		else if (data->current==2) {
-			*output = data->block2[data->sample];
-			data->sample++;
-			data->nwrite++;
+		else if (transfer->current==2) {
+			for (unsigned int chan=0; chan<transfer->nchans; chan++)
+				output[chan] = transfer->block2[(transfer->sample)*transfer->nchans+chan];
+			transfer->sample++;
+			transfer->nget++;
 		}
 		else {
-			*output = 0;
-			data->skipped++;
+			for (unsigned int chan=0; chan<transfer->nchans; chan++)
+				output[chan] = 0;
+			transfer->skipped++;
 		}
-		output++;
 
-		if (data->sample==data->blocksize) {
-			/* try to switch to the start of the other block */
-			if (data->current==1) {
-				data->refresh1 = 1;
-				data->current = (data->refresh2 ? 0 : 2);
-				data->sample = 0;
+		for (unsigned int chan=0; chan<transfer->nchans; chan++)
+			output++;
+
+		if (transfer->sample==transfer->nsamples) {
+			if (transfer->current==1) {
+				/* switch to the start of the other block */
+				transfer->refresh1 = 1;
+				transfer->current = (transfer->refresh2 ? 0 : 2);
+				transfer->sample = 0;
 			}
-			else if (data->current==2) {
-				data->refresh2 = 1;
-				data->current = (data->refresh1 ? 0 : 1);
-				data->sample = 0;
+			else if (transfer->current==2) {
+				/* switch to the start of the other block */
+				transfer->refresh2 = 1;
+				transfer->current = (transfer->refresh1 ? 0 : 1);
+				transfer->sample = 0;
 			}
 			else {
-				data->current = 0;
-				data->sample = 0;
+				/* both blocks are not available */
+				transfer->current = 0;
+				transfer->sample = 0;
 			}
 		} /* if switch to other block */
 	} /* while framesPerBuffer */
@@ -119,18 +115,21 @@ static int paWriteCallback(const void *inputBuffer,
 	return 0;
 } /* paWriteCallback */
 
+
 /*******************************************************************/
-void tic(struct timeval *now) {
-	/* set a timer */
+void tic(struct timeval *now)
+{
+	/* Set a timer. */
   gettimeofday(now, NULL);
   return;
 }
 
 /*******************************************************************/
-int toc(struct timeval previous) {
-	 /* return elapsed time in milliseconds */
+int toc(struct timeval previous)
+{
    struct timeval now;
    gettimeofday(&now, NULL);
+	 /* Return the elapsed time in milliseconds. */
    return (now.tv_sec - previous.tv_sec)*1000 + (now.tv_usec - previous.tv_usec)/1000;
 }
 
@@ -139,8 +138,8 @@ int main(void)
 {
 	PaStream *stream;
 	PaError err;
-	callbackData_t data;
-	struct timeval timeout, monitor, lastread;
+	callbackData_t transfer;
+	struct timeval timeout, monitor;
 	int server, status, retry;
 	UINT32_T datatype;
 	float fsample;
@@ -156,81 +155,74 @@ int main(void)
 	printf("ft2audio: nchans   = %d\n", nchans);
 	printf("ft2audio: fsample  = %.0f\n", fsample);
 	printf("ft2audio: nsamples = %d\n", nsamples);
-	printf("ft2audio: nevents  = %d\n", nevents);
 
-	if (nchans!=1) {
-		printf("ft2audio: unsupported nchans = %d\n", nchans);
-		goto error;
-	}
+	/* Initialize the structure that is shared with the callback. */
+	transfer.refresh1 = 1; /* needs new data */
+	transfer.refresh2 = 1; /* needs new data */
+	transfer.current  = 0; /* neither one contains data */
+	transfer.datatype = datatype;
+	transfer.nchans   = nchans;
+	transfer.fsample  = fsample;
+	transfer.nsamples = fsample/BLOCK_DIV;
+	transfer.sample   = 0;
+	transfer.nput     = 0; /* how many samples are read from the data stream */
+	transfer.nget     = 0; /* how many samples are written to the audio stream */
+	transfer.skipped  = 0; /* how often was a sample skipped in the audio stream */
+	transfer.block1   = malloc(transfer.nchans*transfer.nsamples*sizeof(float));
+	transfer.block2   = malloc(transfer.nchans*transfer.nsamples*sizeof(float));
+	DIE_BAD_MALLOC(transfer.block1);
+	DIE_BAD_MALLOC(transfer.block2);
+	bzero(transfer.block1, transfer.nchans*transfer.nsamples*sizeof(float));
+	bzero(transfer.block2, transfer.nchans*transfer.nsamples*sizeof(float));
 
-	if (fsample!=FS8K && fsample!=FS16K && fsample!=FS32K && fsample!=FS48K && fsample!=FS96K && fsample!=FS192K && fsample!=FS384K && fsample!=FS11K && fsample!=FS22K && fsample!=FS44K && fsample!=FS88K && fsample!=FS176K && fsample!=FS358K) {
-		printf("ft2audio: unsupported fsample = %.0f\n", fsample);
-		goto error;
-	}
-
-	/* Initialize our data for use by the callback. */
-	data.refresh1 = 1; /* needs new data */
-	data.refresh2 = 1; /* needs new data */
-	data.current  = 0; /* neither one contains data */
-	data.sample   = 0;
-	data.nread    = 0; /* how many samples are read from the data stream */
-	data.nwrite   = 0; /* how many samples are written to the audio stream */
-	data.skipped  = 0; /* how often was a sample skipped in the audio stream */
-	data.blocksize = fsample/BLOCKSIZE_DIV;
-	data.block1 = malloc(data.blocksize*sizeof(float));
-	data.block2 = malloc(data.blocksize*sizeof(float));
-	DIE_BAD_MALLOC(data.block1);
-	DIE_BAD_MALLOC(data.block2);
-	bzero(data.block1, data.blocksize*sizeof(float));
-	bzero(data.block2, data.blocksize*sizeof(float));
-
+	/* Initialize to read the data from the buffer. */
 	switch (datatype) {
 		case DATATYPE_INT16:
-			bufdata = malloc(nchans*data.blocksize*WORDSIZE_INT16);
+			bufdata = malloc(transfer.nchans*transfer.nsamples*WORDSIZE_INT16);
 			break;
 		case DATATYPE_INT32:
-			bufdata = malloc(nchans*data.blocksize*WORDSIZE_INT32);
+			bufdata = malloc(transfer.nchans*transfer.nsamples*WORDSIZE_INT32);
 			break;
 		case DATATYPE_INT64:
-			bufdata = malloc(nchans*data.blocksize*WORDSIZE_INT64);
+			bufdata = malloc(transfer.nchans*transfer.nsamples*WORDSIZE_INT64);
 			break;
 		case DATATYPE_FLOAT32:
-			bufdata = malloc(nchans*data.blocksize*WORDSIZE_FLOAT32);
+			bufdata = malloc(transfer.nchans*transfer.nsamples*WORDSIZE_FLOAT32);
 			break;
 		case DATATYPE_FLOAT64:
-			bufdata = malloc(nchans*data.blocksize*WORDSIZE_FLOAT64);
+			bufdata = malloc(transfer.nchans*transfer.nsamples*WORDSIZE_FLOAT64);
 			break;
 		default:
 			printf("ft2audio: unsupported datatype = %d\n", datatype);
 			goto error;
 	}
+	DIE_BAD_MALLOC(bufdata);
 
 	/* Initialize library before making any other calls. */
 	err = Pa_Initialize();
-	if(err != paNoError) goto error;
+	if (err != paNoError) goto error;
 
 	printf("ft2audio: initialized PortAudio\n");
 
 	/* Open an audio I/O stream. */
-	err = Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, fsample, fsample/CALLBACK_DIV, paWriteCallback, &data);
-	if(err != paNoError) goto error;
+	err = Pa_OpenDefaultStream(&stream, 0, nchans, paFloat32, fsample, fsample/CALLBACK_DIV, paWriteCallback, &transfer);
+	if (err != paNoError) goto error;
 
 	printf("ft2audio: opened PortAudio stream\n");
 
 	err = Pa_StartStream(stream);
-	if(err != paNoError) goto error;
+	if (err != paNoError) goto error;
 
 	printf("ft2audio: started PortAudio stream\n");
 
 	/* jump to the end of the available data */
 	/* the case of no data will be dealt with further down */
-	begsample = nsamples-data.blocksize;
+	begsample = nsamples-transfer.nsamples;
 	endsample = nsamples-1;
 
 	/* initialize all timers */
 	tic(&timeout);
 	tic(&monitor);
-	tic(&lastread);
 
 	while (1) {
 
@@ -240,13 +232,26 @@ int main(void)
 
 			status = read_header(server, &datatype, &nchans, &fsample, &nsamples, &nevents);
 			if (status) goto error;
-			tic(&lastread); /* reset the read timer */
+
+			/* these should not change once this application is running */
+			if (datatype!=transfer.datatype) {
+				fprintf(stderr, "Error: unexpected change in datatype\n");
+				goto error;
+			}
+			if (nchans!=transfer.nchans) {
+				fprintf(stderr, "Error: unexpected change in number of channels\n");
+				goto error;
+			}
+			if (fsample!=transfer.fsample) {
+				fprintf(stderr, "Error: unexpected change in sampling rate\n");
+				goto error;
+			}
 
 			long data_lead = (long)endsample-(nsamples-1);
-			long audio_lag = (long)data.nread-data.nwrite-data.skipped;
+			long audio_lag = (long)transfer.nput-transfer.nget-transfer.skipped;
 			char jump_to_last = 0, jump_to_next = 0;
 
-			printf("ft2audio: data lead = %ld, audio lag = %ld, skipped = %d, read = %d\n", data_lead, audio_lag, data.skipped, data.nread);
+			printf("ft2audio: data lead = %ld, audio lag = %ld, skipped = %d, read = %d\n", data_lead, audio_lag, transfer.skipped, transfer.nput);
 
 			if (data_lead > +fsample*SLIP/1000) {
 				/* reading data too far in the future, data is coming in too slow */
@@ -271,133 +276,137 @@ int main(void)
 
 			if (jump_to_last) {
 				/* jump to the last available block */
-				begsample = nsamples-data.blocksize;
+				begsample = nsamples-transfer.nsamples;
 				endsample = nsamples-1;
 				/* reset the audio stream counters */
-				data.nread = 0;
-				data.nwrite = 0;
-				data.skipped = 0;
+				transfer.nput = 0;
+				transfer.nget = 0;
+				transfer.skipped = 0;
+				printf("ft2audio: new endsample = %d\n", endsample);
 			}
 			else if (jump_to_next) {
 				/* jump to the first non-available block */
 				begsample = nsamples;
-				endsample = nsamples+data.blocksize-1;
+				endsample = nsamples+transfer.nsamples-1;
 				/* reset the audio stream counters */
-				data.nread = 0;
-				data.nwrite = 0;
-				data.skipped = 0;
+				transfer.nput = 0;
+				transfer.nget = 0;
+				transfer.skipped = 0;
+				printf("ft2audio: new endsample = %d\n", endsample);
 			}
 
 		} /* if monitor */
 
-		if (data.refresh1==0 && data.refresh2==0) {
+		if (transfer.refresh1==0 && transfer.refresh2==0) {
 			/* both blocks have fresh data, sleep for some time */
-			Pa_Sleep(1000.*data.blocksize/fsample);
+			Pa_Sleep(500.*transfer.nsamples/fsample);
 		}
 
-		if (data.refresh1 && toc(lastread)>LASTREAD) {
+		if (transfer.refresh1) {
+			status = wait_data(server, endsample, 0, 1200.*transfer.nsamples/fsample);
+			if (status!=0)
+			  break;
 			status = read_data(server, begsample, endsample, bufdata);
-			tic(&lastread); /* reset the read timer */
 			/* status ==0 when new data or !=0 when data not (yet) available */
 			if (status==0) {
-				retry = 0;
-				begsample += data.blocksize;
-				endsample += data.blocksize;
-				for (unsigned int i=0; i<data.blocksize; i++) {
-					switch (datatype) {
-						case DATATYPE_INT16:
-							data.block1[i] = CALIB*((INT16_T *)bufdata)[i];
-							break;
-						case DATATYPE_INT32:
-							data.block1[i] = CALIB*((INT32_T *)bufdata)[i];
-							break;
-						case DATATYPE_INT64:
-							data.block1[i] = CALIB*((INT64_T *)bufdata)[i];
-							break;
-						case DATATYPE_FLOAT32:
-							data.block1[i] = CALIB*((FLOAT32_T *)bufdata)[i];
-							break;
-						case DATATYPE_FLOAT64:
-							data.block1[i] = CALIB*((FLOAT64_T *)bufdata)[i];
-							break;
-						default:
-							printf("ft2audio: unsupported datatype = %d\n", datatype);
-							goto error;
+				tic(&timeout);
+				begsample += transfer.nsamples; // in samples
+				endsample += transfer.nsamples;
+
+				for (unsigned int sample=0; sample<transfer.nsamples; sample++) {
+					for (unsigned int chan=0; chan<transfer.nchans; chan++) {
+						unsigned int i = (sample*transfer.nchans)+chan;
+						switch (datatype) {
+							case DATATYPE_INT16:
+								transfer.block1[i] = ((INT16_T *)bufdata)[i];
+								break;
+							case DATATYPE_INT32:
+								transfer.block1[i] = ((INT32_T *)bufdata)[i];
+								break;
+							case DATATYPE_INT64:
+								transfer.block1[i] = ((INT64_T *)bufdata)[i];
+								break;
+							case DATATYPE_FLOAT32:
+								transfer.block1[i] = ((FLOAT32_T *)bufdata)[i];
+								break;
+							case DATATYPE_FLOAT64:
+								transfer.block1[i] = ((FLOAT64_T *)bufdata)[i];
+								break;
+							default:
+								printf("ft2audio: unsupported datatype = %d\n", datatype);
+								goto error;
+						}
+						transfer.block1[i] *= CALIB;
 					}
 				}
-				data.refresh1 = 0;
-				data.nread += data.blocksize;
-				// printf("ft2audio: refreshed block 1\n");
+				transfer.refresh1 = 0;
+				transfer.nput += transfer.nsamples;
 			}
 			else {
-				retry++;
+				printf("ft2audio: reading block1 failed\n");
 			}
 		}
 
-		if (data.refresh2 && toc(lastread)>LASTREAD) {
+		if (transfer.refresh2) {
+			status = wait_data(server, endsample, 0, 1200.*transfer.nsamples/fsample);
+			if (status!=0)
+			  break;
 			status = read_data(server, begsample, endsample, bufdata);
-			tic(&lastread); /* reset the read timer */
 			/* status ==0 when new data or !=0 when data not (yet) available */
 			if (status==0) {
-				retry = 0;
-				begsample += data.blocksize;
-				endsample += data.blocksize;
-				for (unsigned int i=0; i<data.blocksize; i++) {
-					switch (datatype) {
-						case DATATYPE_INT16:
-							data.block2[i] = CALIB*((INT16_T *)bufdata)[i];
-							break;
-						case DATATYPE_INT32:
-							data.block2[i] = CALIB*((INT32_T *)bufdata)[i];
-							break;
-						case DATATYPE_INT64:
-							data.block2[i] = CALIB*((INT64_T *)bufdata)[i];
-							break;
-						case DATATYPE_FLOAT32:
-							data.block2[i] = CALIB*((FLOAT32_T *)bufdata)[i];
-							break;
-						case DATATYPE_FLOAT64:
-							data.block2[i] = CALIB*((FLOAT64_T *)bufdata)[i];
-							break;
-						default:
-							printf("ft2audio: unsupported datatype = %d\n", datatype);
-							goto error;
+				tic(&timeout);
+				begsample += transfer.nsamples; // in samples
+				endsample += transfer.nsamples;
+
+				for (unsigned int sample=0; sample<transfer.nsamples; sample++) {
+					for (unsigned int chan=0; chan<transfer.nchans; chan++) {
+						unsigned int i = (sample*transfer.nchans)+chan;
+						switch (datatype) {
+							case DATATYPE_INT16:
+								transfer.block2[i] = ((INT16_T *)bufdata)[i];
+								break;
+							case DATATYPE_INT32:
+								transfer.block2[i] = ((INT32_T *)bufdata)[i];
+								break;
+							case DATATYPE_INT64:
+								transfer.block2[i] = ((INT64_T *)bufdata)[i];
+								break;
+							case DATATYPE_FLOAT32:
+								transfer.block2[i] = ((FLOAT32_T *)bufdata)[i];
+								break;
+							case DATATYPE_FLOAT64:
+								transfer.block2[i] = ((FLOAT64_T *)bufdata)[i];
+								break;
+							default:
+								printf("ft2audio: unsupported datatype = %d\n", datatype);
+								goto error;
+						}
+						transfer.block2[i] *= CALIB;
 					}
 				}
-				data.refresh2 = 0;
-				data.nread += data.blocksize;
-				// printf("ft2audio: refreshed block 2\n");
+				transfer.refresh2 = 0;
+				transfer.nput += transfer.nsamples;
 			}
 			else {
-				retry++;
+				printf("ft2audio: reading block2 failed\n");
 			}
 		}
 
-		if (!retry) {
-			/* reading was fine, reset the timer */
-			tic(&timeout);
-		}
-		else {
-			if (retry && toc(timeout)>TIMEOUT) {
-				printf("ft2audio: timeout\n");
-				goto error;
-			}
-			else {
-				/* wait a bit for the next attempt */
-				Pa_Sleep(100);
-			}
+		if (toc(timeout)>TIMEOUT) {
+			printf("ft2audio: timeout\n");
+			goto error;
 		}
 
 	} /* while */
 
 	err = Pa_StopStream(stream);
-	if(err != paNoError) goto error;
+	if (err != paNoError) goto error;
 	err = Pa_CloseStream(stream);
-	if(err != paNoError) goto error;
+	if (err != paNoError) goto error;
 	Pa_Terminate();
 
-	free(data.block1);
-	free(data.block2);
+	free(transfer.block1);
+	free(transfer.block2);
 	close_connection(server);
 
 	printf("ft2audio finished.\n");
@@ -411,7 +420,7 @@ error:
 		fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
 	}
 	else {
-		fprintf(stderr, "An unknown error occured\n");
+		fprintf(stderr, "An error occured\n");
 	}
 	return err;
 
