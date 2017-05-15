@@ -1,7 +1,10 @@
 /*
  * Copyright (C) 2017, Robert Oostenveld
  * Donders Institute for Brain, Cognition and Behaviour; Radboud University; NL
+ *
  */
+
+ #include "message.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,4 +23,3 @@ void print_buf(void *, int);
 #ifdef __cplusplus
 }
 #endif
-

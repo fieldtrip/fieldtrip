@@ -184,12 +184,12 @@ typedef struct {
 
 /* the header definition is fixed, except for the channel labels */
 typedef struct {
-    UINT32_T nchans;
-    UINT32_T nsamples;
-    UINT32_T nevents;
+    UINT32_T  nchans;
+    UINT32_T  nsamples;
+    UINT32_T  nevents;
     FLOAT32_T fsample;
-    UINT32_T data_type;
-    UINT32_T bufsize;     /* size of the buffer in bytes */
+    UINT32_T  data_type;
+    UINT32_T  bufsize;     /* size of the buffer in bytes */
 } headerdef_t;
 
 /* the data definition is fixed */
@@ -206,9 +206,9 @@ typedef struct {
     UINT32_T type_numel;  /* length of the type string */
     UINT32_T value_type;
     UINT32_T value_numel;
-    INT32_T sample;
-    INT32_T offset;
-    INT32_T duration;
+    INT32_T  sample;
+    INT32_T  offset;
+    INT32_T  duration;
     UINT32_T bufsize;     /* size of the buffer in bytes */
 } eventdef_t;
 
