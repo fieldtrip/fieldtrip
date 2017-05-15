@@ -21,7 +21,7 @@ FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
 CC       = gcc
 CXX      = g++
 CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
-INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp
+INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp  -I$(FIELDTRIP)/realtime/src/external/inih
 LIBPATH  = -L$(FTBUFFER)/src
 LDLIBS   = -lbuffer -lpthread
 
@@ -108,7 +108,7 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/ft2audio$(SUFFIX) $(BINDIR)/test$(SUFFIX)
+TARGETS = $(BINDIR)/ft2audio$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
@@ -118,6 +118,12 @@ all: $(TARGETS)
 
 %.o: %.c
 	$(CC) $(INCPATH) $(CFLAGS) -c $<
+
+$(BINDIR)/ft2audio$(SUFFIX): ft2audio.o ini.o
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
+
+ini.o: $(FIELDTRIP)/realtime/src/external/inih/ini.c
+		$(CC) $(CFLAGS) -c -o $@ $^
 
 $(BINDIR)/%$(SUFFIX): %.o $(CPPOBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
