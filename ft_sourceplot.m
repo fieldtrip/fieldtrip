@@ -1636,14 +1636,14 @@ if ~isempty(sel)
 end
 if opt.crosshair
   if opt.init
-    hch1 = crosshair([xi 1 zi], 'parent', opt.handlesaxes(1));
-    hch3 = crosshair([xi yi opt.dim(3)], 'parent', opt.handlesaxes(3));
-    hch2 = crosshair([opt.dim(1) yi zi], 'parent', opt.handlesaxes(2));
+    hch1 = ft_plot_crosshair([xi 1 zi], 'parent', opt.handlesaxes(1));
+    hch3 = ft_plot_crosshair([xi yi opt.dim(3)], 'parent', opt.handlesaxes(3));
+    hch2 = ft_plot_crosshair([opt.dim(1) yi zi], 'parent', opt.handlesaxes(2));
     opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
   else
-    crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
-    crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
-    crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
+    ft_plot_crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
+    ft_plot_crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
+    ft_plot_crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
   end
 end
 

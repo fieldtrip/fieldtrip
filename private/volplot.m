@@ -275,21 +275,21 @@ else
   axis equal; axis tight;
   xlabel('x'); ylabel('z');
   caxis([cmin cmax]);
-  crosshair([x(xi) z(zi)], 'color', 'yellow');
+  ft_plot_crosshair([x(xi) z(zi)], 'color', 'yellow');
 
   subplot(h2);
   imagesc(y, z, squeeze(dat(xi,:,:))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('y'); ylabel('z');
   caxis([cmin cmax]);
-  crosshair([y(yi) z(zi)], 'color', 'yellow');
+  ft_plot_crosshair([y(yi) z(zi)], 'color', 'yellow');
 
   subplot(h3);
   imagesc(x, y, squeeze(dat(:,:,zi))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('x'); ylabel('y');
   caxis([cmin cmax]);
-  crosshair([x(xi) y(yi)], 'color', 'yellow');
+  ft_plot_crosshair([x(xi) y(yi)], 'color', 'yellow');
 
   subplot(h4);
   colorbar(h4, 'peer', h1);
