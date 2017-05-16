@@ -180,6 +180,11 @@ cfg.headshape     = ft_getopt(cfg, 'headshape', []);     % for triangulated head
 cfg.target        = ft_getopt(cfg, 'target',  []);       % for electrodes or fiducials, always with labels
 cfg.coordsys      = ft_getopt(cfg, 'coordsys');          % this allows for automatic template fiducial placement
 
+if isempty(cfg.target)
+  % remove the field, otherwise ft_checkconfig will complain
+  cfg = rmfield(cfg, 'target');
+end
+
 if ~isempty(cfg.coordsys) && isempty(cfg.target)
   % set the template fiducial locations according to the coordinate system
   switch lower(cfg.coordsys)

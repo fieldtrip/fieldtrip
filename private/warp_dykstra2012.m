@@ -1,4 +1,4 @@
-function [coord_snapped] = ft_warp_dykstra2012(coord, surf, feedback)
+function [coord_snapped] = warp_dykstra2012(coord, surf, feedback)
 
 % FT_WARP_DYKSTRA2012 projects the ECoG grid / strip onto a cortex hull
 % while minimizing the distance from original positions and the
