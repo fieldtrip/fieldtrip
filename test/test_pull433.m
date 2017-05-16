@@ -1,10 +1,11 @@
-function test_ft_electroderealign_headshape
+function test_pull433
 
 % MEM 2gb
 % WALLTIME 00:20:00
 
-load('SubjectUCI29_elec_tal_f.mat', 'elec_tal_f'); % FIXME: please redirect to correct location at FTP/DCCN cluster
-load('SubjectUCI29_hull_lh.mat', 'mesh'); % FIXME: please redirect to correct location at FTP/DCCN cluster
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull433'));
+load('SubjectUCI29_elec_tal_f.mat', 'elec_tal_f');
+load('SubjectUCI29_hull_lh.mat', 'mesh');
 
 % keepchannel
 elec_tal_fr = elec_tal_f;

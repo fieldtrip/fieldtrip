@@ -102,9 +102,9 @@ set(h2, 'tag', 'ji', 'clim', [0 1]);
 set(h3, 'tag', 'ik', 'clim', [0 1]);
 
 % crosshair handles
-hch1 = crosshair([zi yi], 'parent', h1, 'color', 'y');
-hch2 = crosshair([xi yi], 'parent', h2, 'color', 'y');
-hch3 = crosshair([zi xi], 'parent', h3, 'color', 'y');
+hch1 = ft_plot_crosshair([zi yi], 'parent', h1, 'color', 'y');
+hch2 = ft_plot_crosshair([xi yi], 'parent', h2, 'color', 'y');
+hch3 = ft_plot_crosshair([zi xi], 'parent', h3, 'color', 'y');
 
 % erasercontour
 he1(1,:) = line(zi-3.5+[0 0 7 7 0],yi-3.5+[0 7 7 0 0],'color','r','parent',h1); 
@@ -321,9 +321,9 @@ if isfield(opt, 'bckgrnd')
   set(opt.handlesslice(3), 'AlphaData', msk3);
 end
 
-crosshair([zi yi], 'handle', opt.handlescross(1,:));
-crosshair([xi yi], 'handle', opt.handlescross(2,:));
-crosshair([zi xi], 'handle', opt.handlescross(3,:));
+ft_plot_crosshair([zi yi], 'handle', opt.handlescross(1,:));
+ft_plot_crosshair([xi yi], 'handle', opt.handlescross(2,:));
+ft_plot_crosshair([zi xi], 'handle', opt.handlescross(3,:));
 
 cb_erasercontour(h);
 
