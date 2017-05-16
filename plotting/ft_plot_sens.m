@@ -141,15 +141,15 @@ end
 
 if ~isempty(ft_getopt(varargin, 'coilorientation'))
   % for backward compatibility, added on 17 Aug 2016
-  warning('the coilorientation option is deprecated, please use orientation instead')
+  warning('the coilorientation option is deprecated, please use "orientation" instead')
   orientation = ft_getopt(varargin, 'coilorientation');
 end
 
 if ~isempty(ft_getopt(varargin, 'coildiameter'))
   % for backward compatibility, added on 6 July 2016
   % the sensize is the diameter for a circle, or the edge length for a square
-  warning('the coildiameter option is deprecated, please use coilsize instead')
-  sensize = ft_getopt(varargin, 'sensize');
+  warning('the coildiameter option is deprecated, please use "coilsize" instead')
+  sensize = ft_getopt(varargin, 'coildiameter');
 end
 
 if ~isempty(unit)

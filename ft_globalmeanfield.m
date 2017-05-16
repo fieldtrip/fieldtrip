@@ -74,7 +74,7 @@ if ft_abort
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);

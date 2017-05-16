@@ -118,7 +118,7 @@ layout = ft_prepare_layout(cfg, data);
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
-  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter'});
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo'});
   data = ft_freqbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end

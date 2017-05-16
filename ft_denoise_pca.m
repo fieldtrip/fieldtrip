@@ -97,7 +97,7 @@ if strcmp(cfg.pertrial, 'yes')
   % iterate over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  tmpcfg  = keepfields(cfg, 'trials');
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
   % select trials of interest
   for i=1:numel(varargin)
     varargin{i}        = ft_selectdata(tmpcfg, varargin{i});
@@ -155,7 +155,7 @@ else
   end
   
   % select trials of interest
-  tmpcfg  = keepfields(cfg, 'trials');
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
   data    = ft_selectdata(tmpcfg, data);
   refdata = ft_selectdata(tmpcfg, refdata);
   % restore the provenance information

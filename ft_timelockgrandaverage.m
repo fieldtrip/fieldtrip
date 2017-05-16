@@ -136,7 +136,7 @@ else
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'parameter', 'channel', 'latency'});
+tmpcfg = keepfields(cfg, {'parameter', 'channel', 'latency', 'showcallinfo'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});

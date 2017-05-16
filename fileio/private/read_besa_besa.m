@@ -1,9 +1,8 @@
-
 function [data] = read_besa_besa(filename, header, begsample, endsample, chanindx)
-%% Reads BESA .besa format files
+
+% READ_BESA_BESA reads data and header information from a BESA file
 % See formatting document <a href="matlab:web(http://www.besa.de/downloads/file-formats/)">here</a>
 % 
-%
 % Use as
 %   [header] = read_besa_besa(filename);
 % where
@@ -15,12 +14,12 @@ function [data] = read_besa_besa(filename, header, begsample, endsample, chanind
 %   header.nSamplesPre  number of pre-trigger samples in each trial
 %   header.nTrials      number of trials
 %   header.label        cell-array with labels of each channel
-%   header.orig         detailled EDF header information
+%   header.orig         detailed BESA header information
 %
 % Use as
 %   [header] = read_besa_besa(filename, [], chanindx);
 % where
-%    filename        name of the datafile, including the .edf extension
+%    filename        name of the datafile, including the .besa extension
 %    chanindx        index of channels to read (optional, default is all)
 %                    Note that since 
 % This returns a header structure with the following elements
@@ -30,24 +29,38 @@ function [data] = read_besa_besa(filename, header, begsample, endsample, chanind
 %   header.nSamplesPre  number of pre-trigger samples in each trial
 %   header.nTrials      number of trials
 %   header.label        cell-array with labels of each channel
-%   header.orig         detailled EDF header information
+%   header.orig         detailed BESA header information
 %
 % Or use as
 %   [dat] = read_besa_besa(filename, header, begsample, endsample, chanindx);
 % where
-%    filename        name of the datafile, including the .edf extension
+%    filename        name of the datafile, including the .besa extension
 %    header          header structure, see above
 %    begsample       index of the first sample to read
 %    endsample       index of the last sample to read
 %    chanindx        index of channels to read (optional, default is all)
 % This returns a Nchans X Nsamples data matrix
-% 
-% 
-% 2016 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
 
+% Copyright (C) 2015-2017, Kristopher Anderson & Arjen Stolk
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
-% For debugging %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-warning on;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
 
 switch nargin
   case 1
@@ -59,9 +72,6 @@ switch nargin
   case 4
     error('ReadBesaMatlab:ErrorInput','Number of input arguments should be 1,2,3, or 5');
 end
-
-
-
 
 needhdr = (nargin==1)||(nargin==3);
 needevt = (nargin==2); % Not implemented yet  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
@@ -79,14 +89,23 @@ if needhdr
   data.orig.chansel = chanindx; % header.orig.chansel is used for reading channels from data
   data.nChans = numel(chanindx);
   data.label = data.label(chanindx);
-  data.orig.channel_info.orig_n_channels = data.orig.channel_info.n_channels;
-  data.orig.channel_info.n_channels = numel(chanindx);
-  data.orig.channel_info.orig_lsbs = data.orig.channel_info.lsbs;
   data.orig.channel_info.lsbs = data.orig.channel_info.lsbs(chanindx);
-  data.orig.channel_info.orig_channel_labels = data.orig.channel_info.channel_labels;
   data.orig.channel_info.channel_labels = data.orig.channel_info.channel_labels(chanindx);
-  data.orig.channel_info.orig_channel_states = data.orig.channel_info.channel_states;
   data.orig.channel_info.channel_states = data.orig.channel_info.channel_states(chanindx);
+  if isfield(data.orig.channel_info, 'channel_units') % test data did not have this field
+    data.chanunit = data.orig.channel_info.channel_units;
+  else
+    data.chanunit = repmat({'unknown'}, size(data.orig.channel_info.channel_states));  % unknown
+  end
+  data.chantype = repmat({'unknown'}, size(data.orig.channel_info.channel_states));  % start with unknown
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_TRIGGER]==1) = {'trigger'}; % test data did not have any of the below set to 1
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_CORTICALGRID]==1) = {'ecog'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_INTRACRANIAL]==1) = {'ieeg'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_SCALPELECTRODE]==1) = {'eeg'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_MAGNETOMETER]==1) = {'megmag'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_AXIAL_GRADIOMETER]==1) = {'megaxial'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_PLANAR_GRADIOMETER]==1) = {'megplanar'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_MEGREFERENCE]==1) = {'megref'};
   return
 end
 
@@ -102,13 +121,8 @@ channels_to_pull = chanindx;
 header.orig.chansel = chanindx;
 header.nChans = numel(chanindx);
 header.label = header.label(chanindx);
-header.orig.channel_info.orig_n_channels = header.orig.channel_info.n_channels;
-header.orig.channel_info.n_channels = numel(chanindx);
-header.orig.channel_info.orig_lsbs = header.orig.channel_info.lsbs;
 header.orig.channel_info.lsbs = header.orig.channel_info.lsbs(chanindx);
-header.orig.channel_info.orig_channel_labels = header.orig.channel_info.channel_labels;
 header.orig.channel_info.channel_labels = header.orig.channel_info.channel_labels(chanindx);
-header.orig.channel_info.orig_channel_states = header.orig.channel_info.channel_states;
 header.orig.channel_info.channel_states = header.orig.channel_info.channel_states(chanindx);
 
 %% Open file
@@ -826,28 +840,8 @@ end
 out_offset = fread(fid,1,'*uint32');
 
 
-
-
-
-
 function [header] = read_besa_besa_header(fname)
-%% Reads BESA .besa format header information and skips data
-% See formatting document <a href="matlab:web(http://www.besa.de/downloads/file-formats/)">here</a>
-% 
-% [alldata,file_info,channel_info,tags,events] = readbesa(fname)
-% 
-% inputs:
-%  fname [string] - path to .besa file
-% 
-% outputs:
-%  header [structure] - Header information
-% 
-% 
-% 
-% 2016 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
-
-% For debugging %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-warning on;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+% READ_BESA_BESA_HEADER reads header information from a BESA fileheader and skips data
 
 %% Open file
 [fid,msg] = fopen(fname,'r');

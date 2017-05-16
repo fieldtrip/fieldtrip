@@ -1,7 +1,8 @@
-/** Acquisition tool to stream audio signals to a FieldTrip buffer,
-    based on PortAudio for grabbing the data from the sound card.
-	
-	(C) 2010 S. Klanke
+/*
+ * Acquisition tool to stream audio signals to a FieldTrip buffer,
+ * based on PortAudio for grabbing the data from the sound card.
+ * 	
+ * (C) 2010 S. Klanke
 */
 
 #include <portaudio.h>

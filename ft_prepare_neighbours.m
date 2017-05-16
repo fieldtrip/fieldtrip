@@ -96,6 +96,16 @@ hasdata = exist('data', 'var');
 if hasdata
   % check if the input data is valid for this function
   data = ft_checkdata(data);
+  % set the default for senstype depending on the data
+  if isfield(data, 'grad')
+    cfg.senstype = ft_getopt(cfg, 'senstype', 'meg');
+  elseif isfield(data, 'elec')
+    cfg.senstype = ft_getopt(cfg, 'senstype', 'eeg');
+  elseif isfield(data, 'opto')
+    cfg.senstype = ft_getopt(cfg, 'senstype', 'opto');
+  else
+    cfg.senstype = ft_getopt(cfg, 'senstype', []);
+  end
 end
 
 if strcmp(cfg.method, 'template')
@@ -146,6 +156,7 @@ if strcmp(cfg.method, 'template')
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
+
 else
   % get the the grad or elec if not present in the data
   if hasdata
@@ -179,18 +190,7 @@ else
       % use a smart default for the distance
       if ~isfield(cfg, 'neighbourdist')
         sens = ft_checkdata(sens, 'hasunit', 'yes');
-        if isfield(sens, 'unit') && strcmp(sens.unit, 'm')
-          cfg.neighbourdist = 0.04;
-        elseif isfield(sens, 'unit') && strcmp(sens.unit, 'dm')
-          cfg.neighbourdist = 0.4;
-        elseif isfield(sens, 'unit') && strcmp(sens.unit, 'cm')
-          cfg.neighbourdist = 4;
-        elseif isfield(sens, 'unit') && strcmp(sens.unit, 'mm')
-          cfg.neighbourdist = 40;
-        else
-          % don't provide a default in case the dimensions of the sensor array are unknown
-          error('Sensor distance is measured in an unknown unit type');
-        end
+        cfg.neighbourdist = 40 * ft_scalingfactor('mm', sens.unit);
         fprintf('using a distance threshold of %g\n', cfg.neighbourdist);
       end
       

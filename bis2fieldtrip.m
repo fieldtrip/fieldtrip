@@ -31,7 +31,7 @@ function elec = bis2fieldtrip(mgridfile, mrifile)
 % $Id$
 
 % import .mgrid electrode positions
-elec_xyz = ft_read_sens(mgridfile);
+elec_xyz = ft_read_sens(mgridfile, 'senstype', 'eeg');
 
 % convert xyz coordinates to ijk coordinates
 mri = ft_read_mri(mrifile);

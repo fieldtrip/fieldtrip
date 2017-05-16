@@ -13,7 +13,7 @@ function ft_plot_axes(object, varargin)
 % and can include
 %   'axisscale'    = scaling factor for the reference axes and sphere (default = 1)
 %   'unit'         = string, convert the data to the specified geometrical units (default = [])
-%   'fontcolor'    = string, color specification (default = 'y')
+%   'fontcolor'    = string, color specification (default = [1 .5 0], i.e. orange)
 %   'fontsize'     = number, sets the size of the text (default = 10)
 %   'fontunits'    =
 %   'fontname'     =
@@ -45,7 +45,7 @@ axisscale = ft_getopt(varargin, 'axisscale', 1);   % this is used to scale the a
 unit      = ft_getopt(varargin, 'unit');
 coordsys  = ft_getopt(varargin, 'coordsys');
 % these have to do with the font
-fontcolor   = ft_getopt(varargin, 'fontcolor', 'y'); % default is yellow
+fontcolor   = ft_getopt(varargin, 'fontcolor', [1 .5 0]); % default is orange
 fontsize    = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
 fontname    = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight  = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
@@ -173,7 +173,10 @@ if ~isempty(str) && ~strcmp(str, 'unknown')
       labely = {'-Y (anterior)'  '+Y (posterior)'};
       labelz = {'-Z (inferior)'  '+Z (superior)'};
     otherwise
-      error('unknown coordsys');
+      warning('unknown coordsys');
+      labelx = {'-X (unknown)' '+X (unknown)'};
+      labely = {'-Y (unknown)' '+Y (unknown)'};
+      labelz = {'-Z (unknown)' '+Z (unknown)'};
   end
   
 else

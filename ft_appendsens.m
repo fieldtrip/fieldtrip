@@ -1,12 +1,18 @@
 function [sens] = ft_appendsens(cfg, varargin)
 
-% FT_APPENDSENS concatenates multiple sens (elec) structures that have been 
-% processed separately.
+% FT_APPENDSENS concatenates multiple sensor definitions that have been processed
+% separately.
 %
 % Use as
 %   combined = ft_appendsens(cfg, sens1, sens2, ...)
 %
-% See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_APPLY_MONTAGE
+% A call to FT_APPENDSENS results in the label, pos and ori fields to be
+% concatenated, and the tra matrix to be merged. Any duplicates will be removed.
+% The labelold and chanposold fields are kept under the condition that they
+% are identical across the inputs.
+%
+% See also FT_ELECTRODEPLACEMENT, FT_ELECTRODEREALIGN, FT_DATAYPE_SENS,
+% FT_APPENDDATA, FT_APPENDTIMELOCK, FT_APPENDFREQ, FT_APPENDSOURCE
 
 % Copyright (C) 2017, Arjen Stolk
 %
@@ -37,7 +43,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar varargin
+ft_preamble loadvar    varargin
 ft_preamble provenance varargin
 ft_preamble trackconfig
 
@@ -46,54 +52,221 @@ if ft_abort
   return
 end
 
-Ndata = length(varargin);
-
 % check if the input data is valid for this function
-for i=1:Ndata
-  if ~((isa(varargin{i}, 'struct') && isfield(varargin{i}, 'label') && isfield(varargin{i}, 'elecpos')))
-    error('This function requires sens data as input.');
-  end
+% and ensure it is up to the latest standards
+for i=1:length(varargin)
+  assert(ft_datatype(varargin{i}, 'sens'), 'incorrect input, should be a grad/elec/opto structure');
+  varargin{i} = ft_datatype_sens(varargin{i});
 end
 
-% do a basic check whether the units and coordinate systems match
+% do a basic check whether the senstype, units, and coordinate systems match
+senstype = cell(1,length(varargin));
+for i=1:length(varargin)
+  senstype{i} = ft_senstype(varargin{i});
+end
+typematch = all(strcmp(senstype{1}, senstype));
+
+unitmatch = 1;
 if isfield(varargin{1}, 'unit')
-  sens.unit = varargin{1}.unit;
-  for i=1:Ndata
+  unit = cell(1,length(varargin));
+  for i=1:length(varargin)
     unit{i} = varargin{i}.unit;
   end
   unitmatch = all(strcmp(unit{1}, unit));
-else
-  unitmatch = 1;
-  warning('no unit information present, assuming units match');
 end
+
+coordsysmatch = 1;
 if isfield(varargin{1}, 'coordsys')
-  sens.coordsys = varargin{1}.coordsys;
-  for i=1:Ndata
+  coordsys = cell(1,length(varargin));
+  for i=1:length(varargin)
     coordsys{i} = varargin{i}.coordsys;
   end
   coordsysmatch = all(strcmp(coordsys{1}, coordsys));
-else
-  coordsysmatch = 1;
-  warning('no coordinate system information present, assuming coordinate systems match');
 end
 
-if ~unitmatch || ~coordsysmatch
-  error('the units or coordinate systems of the input data structures are not equal');
+if ~typematch || ~unitmatch || ~coordsysmatch
+  error('the senstype, units, or coordinate systems of the inputs do not match');
 end
 
-% concatenate
-for i=1:Ndata
+% keep these fields (when present) in the output
+sens = keepfields(varargin{1}, {'type', 'unit', 'coordsys'});
+
+% make inventory
+haselecpos = 0;
+hascoilpos = 0;
+hascoilori = 0;
+haschanori = 0;
+hasoptopos = 0;
+haslabelold = 0;
+haschanposold = 0;
+for i=1:length(varargin)
+  % the following fields should be present in any sens structure
   if isfield(varargin{i}, 'label')
-    label{i} = varargin{i}.label;
+    label{i} = varargin{i}.label(:); % ensure column orientation
   end
-  if isfield(varargin{i}, 'elecpos')
+  if isfield(varargin{i}, 'chanpos')
+    chanpos{i} = varargin{i}.chanpos;
+  end
+  
+  % some the following fields are likely present in a sens structure
+  if isfield(varargin{i}, 'elecpos') % EEG
     elecpos{i} = varargin{i}.elecpos;
+    haselecpos = 1;
+  end
+  if isfield(varargin{i}, 'coilpos') % MEG
+    coilpos{i} = varargin{i}.coilpos;
+    hascoilpos = 1;
+  end
+  if isfield(varargin{i}, 'coilori') % MEG
+    coilori{i} = varargin{i}.coilori;
+    hascoilori = 1;
+  end
+  if isfield(varargin{i}, 'chanori') % MEG
+    chanori{i} = varargin{i}.chanori;
+    haschanori = 1;
+  end
+  if isfield(varargin{i}, 'optopos') % NIRS
+    optopos{i} = varargin{i}.optopos;
+    hasoptopos = 1;
+  end
+  if isfield(varargin{i}, 'tra') % tra
+    tra{i} = varargin{i}.tra;
+    hastra = 1;
+  end
+  
+  % the following fields might be present in a sens structure
+  if isfield(varargin{i}, 'labelold')
+    labelold{i} = varargin{i}.labelold(:); % ensure column orientation
+    haslabelold = 1;
+  end
+  if isfield(varargin{i}, 'chanposold')
+    chanposold{i} = varargin{i}.chanposold;
+    haschanposold = 1;
   end
 end
-sens.label = cat(1,label{:});
-sens.elecpos = cat(1,elecpos{:});
 
-% ensure a full sens description
+% concatenate the main fields and remove duplicates
+sens.label = cat(1,label{:});
+[~, labidx] = unique(sens.label);
+labidx = sort(labidx);
+if ~isequal(numel(labidx), numel(sens.label))
+  fprintf('removing duplicate labels\n')
+  sens.label = sens.label(labidx);
+end
+
+sens.chanpos = cat(1,chanpos{:});
+[~, chanidx] = unique(sens.chanpos, 'rows');
+chanidx = sort(chanidx);
+if ~isequal(numel(chanidx), size(sens.chanpos,1))
+  fprintf('removing duplicate channels\n')
+  sens.chanpos = sens.chanpos(chanidx,:);
+  if ~isequal(labidx, chanidx) % check for matching order
+    error('inconsistent order or number of channel labels and positions')
+  end
+end
+if ~isequal(numel(sens.label), size(sens.chanpos,1)) % check for matching number
+  error('inconsistent number of channel labels and positions')
+end
+if haschanori
+  sens.chanori = cat(1,chanori{:});
+  if ~isequal(numel(chanidx), size(sens.chanpos,1))
+    sens.chanori = sens.chanori(chanidx,:); % chanori should match chanpos
+  end
+end
+
+if hastra && ~any(cellfun(@isempty, tra))
+  sens.tra = [];
+  for t = 1:numel(tra)
+    trarow = [1:size(tra{t},1)]+size(sens.tra,1);
+    tracol = [1:size(tra{t},2)]+size(sens.tra,2);
+    sens.tra(trarow, tracol) = tra{t};
+  end
+end
+
+if haselecpos
+  sens.elecpos = cat(1,elecpos{:});
+  [~, elecidx, elecidx2] = unique(sens.elecpos, 'rows');
+  [elecidx, elecord] = sort(elecidx); % sort and keep track of the order
+  if ~isequal(numel(elecidx), size(sens.elecpos,1))
+    fprintf('removing duplicate electrodes\n')
+    sens.elecpos = sens.elecpos(elecidx,:);
+  end
+  if isfield(sens, 'tra')
+    % shape duplicates into a single column, if necessary
+    for idx = 1:numel(elecidx)
+      tmp(:, idx) = sum(sens.tra(chanidx, find(elecord(idx)==elecidx2)),2);
+    end
+    sens.tra = tmp;
+    % check for expected size and non-empty rows or columns
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.elecpos,1)) ...
+        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
+      fprintf('removing inconsistent tra matrix\n')
+      sens = rmfield(sens, 'tra');
+    end
+  end
+end
+
+if hasoptopos
+  sens.optopos = cat(1,optopos{:});
+  [~, optoidx, optoidx2] = unique(sens.optopos, 'rows');
+  [optoidx, optoord] = sort(optoidx); % sort and keep track of the order
+  if ~isequal(numel(optoidx), size(sens.optopos,1))
+    fprintf('removing duplicate optodes\n')
+    sens.optopos = sens.optopos(optoidx,:);
+  end
+  if isfield(sens, 'tra')
+    % shape duplicates into a single column, if necessary
+    for idx = 1:numel(optoidx)
+      tmp(:, idx) = sum(sens.tra(chanidx, find(optoord(idx)==optoidx2)),2);
+    end
+    sens.tra = tmp;
+    % check for expected size and non-empty rows or columns
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.optopos,1)) ...
+        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
+      fprintf('removing inconsistent tra matrix\n')
+      sens = rmfield(sens, 'tra');
+    end
+  end
+end
+
+if hascoilpos
+  sens.coilpos = cat(1,coilpos{:});
+  [~, coilidx, coilidx2] = unique(sens.coilpos, 'rows');
+  [coilidx, coilord] = sort(coilidx); % sort and keep track of the order
+  if ~isequal(numel(coilidx), size(sens.coilpos,1))
+    fprintf('removing duplicate coils\n')
+    sens.coilpos = sens.coilpos(coilidx,:);
+  end
+  if isfield(sens, 'tra')
+    % shape duplicates into a single column, if necessary
+    for idx = 1:numel(coilidx)
+      tmp(:, idx) = sum(sens.tra(chanidx, find(coilord(idx)==coilidx2)),2);
+    end
+    sens.tra = tmp;
+    % check for expected size and non-empty rows or columns
+    if ~isequal(size(sens.tra,1), size(sens.chanpos,1)) || ~isequal(size(sens.tra,2), size(sens.coilpos,1)) ...
+        || any(any(sens.tra,1)==0) || any(any(sens.tra,2)==0)
+      fprintf('removing inconsistent tra matrix\n')
+      sens = rmfield(sens, 'tra');
+    end
+  end
+end
+if hascoilori
+  sens.coilori = cat(1,coilori{:});
+  if ~isequal(numel(coilidx), size(sens.coilori,1))
+    sens.coilori = sens.coilori(coilidx,:); % coilori should match coilpos
+  end
+end
+
+% keep the following fields only when identical across inputs
+if haslabelold && all(strcmp(labelold{1}, labelold)) % labeloldmatch
+  sens.labelold = labelold{1};
+end
+if haschanposold && all(isequal(chanposold{1}, chanposold{:})) % chanposoldmatch
+  sens.chanposold = chanposold{1};
+end
+
+% ensure up-to-date and consistent output sensor description
 sens = ft_datatype_sens(sens);
 
 % do the general cleanup and bookkeeping at the end of the function

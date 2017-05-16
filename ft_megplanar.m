@@ -139,7 +139,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved t
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);

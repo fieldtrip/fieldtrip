@@ -359,7 +359,7 @@ if strcmp(cfg.gridsearch, 'yes')
   end
   
   % copy all options that are potentially used in ft_prepare_sourcemodel
-  tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+  tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
