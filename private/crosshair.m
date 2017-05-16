@@ -1,22 +1,6 @@
 function [h] = crosshair(pos, varargin)
 
-% CROSSHAIR adds a crosshair at position (x,y[,z]) to the current axes
-% additional options are passed to the builtin line function
-% the handles of the lines are returned
-%  
-% h = crosshair([x,y]) or crosshair([x,y,z])
-% 
-% You can specify the handle to the axes in which to plot the crosshair
-% with: h = crosshair(pos, 'parent', hparent), where hparent is an
-% axes-handle.
-%
-% see also: LINE, TEXT 
-
-% Undocumented you can specify the handles of existing line objects which
-% will be then updated, rather than creating a new set of lines, with:
-% h=crosshair(pos, 'handle', h), where h is a set of line handles
-% (either 2 or 3 depending on whether pos has 2 or three elements. If both
-% parent and handles ar specified, the handles prevail.
+% This function is DEPRECATED, please use FT_PLOT_CROSSHAIR instead.
 
 % Copyright (C) 2003, Robert Oostenveld
 %
