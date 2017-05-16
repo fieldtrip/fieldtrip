@@ -189,14 +189,14 @@ for k = 1:numiteration
     output.rejectflag  = rejectflag;
     output.freq_orig   = orig;
     [origdata, reconstructed]=reconstruct_erp(output(end));
-    
-    figure;
-    subplot(2,2,1); plot(freqoi,mean(noise,2),freqoi,mean(orig,2),freqoi,mean(noise3,2));xlim([0 60]);drawnow;
-    subplot(2,2,2); plot([origdata reconstructed]);drawnow;
-    subplot(2,2,3); plot(tmp_erp_est);drawnow;
+%     
+%     figure;
+%     subplot(2,2,1); plot(freqoi,mean(noise,2),freqoi,mean(orig,2),freqoi,mean(noise3,2));xlim([0 60]);drawnow;
+%     subplot(2,2,2); plot([origdata reconstructed]);drawnow;
+%     subplot(2,2,3); plot(tmp_erp_est);drawnow;
     
     [origdata, reconstructed] = reconstruct_erp(output(end),0);
-    subplot(2,2,4); imagesc(reconstructed'); drawnow;
+%     subplot(2,2,4); imagesc(reconstructed'); drawnow;
 end
 
 params.latency    = lat_est/fsample; % convert latency variation from samples to seconds
