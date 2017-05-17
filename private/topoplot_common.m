@@ -127,7 +127,7 @@ cfg.contournum        = ft_getopt(cfg, 'contournum',    6);
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',      'no');
 cfg.shading           = ft_getopt(cfg, 'shading',       'flat');
 cfg.comment           = ft_getopt(cfg, 'comment',       'auto');
-cfg.commentpos        = ft_getopt(cfg, 'commentpos',    'leftbottom');
+cfg.commentpos        = ft_getopt(cfg, 'commentpos',    []);
 cfg.fontsize          = ft_getopt(cfg, 'fontsize',      8);
 cfg.fontweight        = ft_getopt(cfg, 'fontweight',    'normal');
 cfg.baseline          = ft_getopt(cfg, 'baseline',      'no'); %to avoid warning in timelock/freqbaseline
@@ -153,6 +153,15 @@ cfg.directionality    = ft_getopt(cfg, 'directionality',    []);
 cfg.channel           = ft_getopt(cfg, 'channel',           'all');
 cfg.figurename        = ft_getopt(cfg, 'figurename',        []);
 cfg.interpolatenan    = ft_getopt(cfg, 'interpolatenan',    'yes');
+
+% default commentpos
+if isempty(cfg,'commentpos')
+  if ~isempty(strcmp(cfg.layout.label,'COMNT')) % layout went through ft_prepare_layout in ft_topoplotER/TFR
+    cfg.commentpos = 'layout';
+  else
+    cfg.commentpos = 'leftbottom';
+  end
+end
 
 % compatibility for previous highlighting option
 if isnumeric(cfg.highlight)
