@@ -155,7 +155,7 @@ cfg.figurename        = ft_getopt(cfg, 'figurename',        []);
 cfg.interpolatenan    = ft_getopt(cfg, 'interpolatenan',    'yes');
 
 % default commentpos
-if isempty(cfg, 'commentpos')
+if isempty(cfg.commentpos)
   if ~isempty(strcmp(cfg.layout.label, 'COMNT')) 
     % layout went through ft_prepare_layout in ft_topoplotER/TFR
     % use the position that is specified in the layout
