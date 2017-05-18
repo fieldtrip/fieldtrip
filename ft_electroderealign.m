@@ -407,9 +407,9 @@ elseif strcmp(cfg.method, 'headshape')
   elec.elecpos = elec.elecpos(datsel,:);
   
   norm.label = elec.label;
-  if strcmp(lower(cfg.warp), 'dykstra2012')
-    norm.elecpos = ft_warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
-  elseif strcmp(lower(cfg.warp), 'fsaverage')
+  if strcmp(cfg.warp, 'dykstra2012')
+    norm.elecpos = warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
+  elseif strcmp(cfg.warp, 'fsaverage')
     subj_pial = ft_read_headshape(cfg.headshape);
     [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
     subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
