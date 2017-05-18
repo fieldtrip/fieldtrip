@@ -1,10 +1,11 @@
 function [coord_snapped] = warp_dykstra2012(coord, surf, feedback)
 
-% FT_WARP_DYKSTRA2012 projects the ECoG grid / strip onto a cortex hull
+% WARP_DYKSTRA2012 projects the ECoG grid / strip onto a cortex hull
 % while minimizing the distance from original positions and the
 % deformation of the grid. To align ECoG electrodes to the pial surface,
 % you first need to compute the cortex hull with FT_PREPARE_MESH.
-% FT_WARP_DYKSTRA2012 uses algorithm described in Dykstra et al. (2012,
+%
+% WARP_DYKSTRA2012 uses the algorithm described in Dykstra et al. (2012,
 % Neuroimage) in which electrodes are projected onto pial surface while
 % minimizing the displacement of the electrodes from original location
 % and maintaining the grid shape. It relies on the optimization toolbox.
