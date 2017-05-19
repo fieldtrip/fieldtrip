@@ -303,8 +303,8 @@ for k = 1:nchan
 end
 
 % add 'from' and 'to' labels
-ft_plot_text(-0.5,            (nchan + 1)/1.7,     'interpreter', 'tex', '\it{from}', 'rotation', 90);
-ft_plot_text((nchan + 1)/1.7, (nchan + 1)*1.2+0.4, 'interpreter', 'tex', '\it{to}');
+ft_plot_text(-0.5,            (nchan + 1)/1.7,     '\it{from}', 'interpreter', 'tex', 'rotation', 90);
+ft_plot_text((nchan + 1)/1.7, (nchan + 1)*1.2+0.4, '\it{to}', 'interpreter', 'tex');
 
 axis([-0.2 (nchan+1).*1.2+0.2 0 (nchan+1).*1.2+0.2]);
 axis off;
