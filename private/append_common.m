@@ -81,7 +81,7 @@ end
 switch cfg.appenddim
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'chan'
-    assert(checkchan(varargin{:}, 'unique'));
+    assert(checkchan(varargin{:}, 'unique'), 'not all channels are unique');
     % remember the original channel labels in each input
     oldlabel = cell(size(varargin));
     for i=1:numel(varargin)

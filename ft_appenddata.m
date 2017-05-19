@@ -92,7 +92,7 @@ issamelabel  = true;
 for i=2:numel(varargin)
   isequaltime  = isequaltime  && isequal(varargin{i}.time , varargin{1}.time );
   isequallabel = isequallabel && isequal(varargin{i}.label, varargin{1}.label);
-  issamelabel  = issamelabel  && numel(intersect(varargin{i}.label, varargin{1}.label))==numel(varargin{1}.label);
+  issamelabel  = issamelabel  && isempty(setxor(varargin{i}.label, varargin{1}.label));
 end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
@@ -113,7 +113,7 @@ for i=1:numel(varargin)
   dummy{i} = removefields(varargin{i}, {'trial', 'time'});
   % add a dummy data field, this cause the datatype to become 'chan'
   dummy{i}.dummy       = ones(numel(dummy{i}.label),1);
-  dummy{i}.dummydimord = 'chan'; 
+  dummy{i}.dummydimord = 'chan';
 end
 
 % don't do any data appending inside the common function
@@ -126,47 +126,50 @@ cfg.parameter = {'trial'};
 
 switch cfg.appenddim
   case 'chan'
-    ntrl = length(varargin{1}.trial);
-    dat = varargin{1}.trial;
-    lab = varargin{1}.label(:);
-    for i=2:numel(varargin)
-      for j=1:ntrl
-        dat{j} = cat(1, dat{j}, varargin{i}.trial{j});
+    if isequaltime
+      ntrl = length(varargin{1}.trial);
+      dat = varargin{1}.trial;
+      lab = varargin{1}.label(:);
+      for i=2:numel(varargin)
+        for j=1:ntrl
+          dat{j} = cat(1, dat{j}, varargin{i}.trial{j});
+        end
+        lab = cat(1, lab, varargin{i}.label(:));
       end
-      lab = cat(1, lab, varargin{i}.label(:));
+      data.trial = dat;
+      data.time  = varargin{1}.time;
+      data.label = lab; % replace the one from append_common
+    else
+      error('data has different time, cannot append over channels');
     end
-    data.trial = dat;
-    data.label = lab;
-    data.time  = varargin{1}.time;
     
   case 'rpt'
     if isequallabel
       % the channels are the same and sorted in the same order
-      dat = varargin{1}.trial;
-      tim = varargin{1}.time;
-      for i=2:numel(varargin)
+      dat = cell(1,0);
+      tim = cell(1,0);
+      for i=1:numel(varargin)
         dat = cat(2, dat, varargin{i}.trial);
         tim = cat(2, tim, varargin{i}.time);
       end
       data.trial = dat;
       data.time  = tim;
-      data.label = varargin{1}.label;
     else
-      % the channels are the same, but they do not appear in the same order
-      % sort them according to the first dataset
-      dat = varargin{1}.trial;
-      tim = varargin{1}.time;
-      for i=2:numel(varargin)
-        % find the indices of the channels in each dataset, sorted according to the first dataset
-        [dum, indx] = match_str(varargin{1}.label, varargin{i}.label);
+      % the channels are not the same, or do not appear in the same order
+      % only return the intersection of the channels
+      dat = cell(1,0);
+      tim = cell(1,0);
+      for i=1:numel(varargin)
+        % find the indices of the channels in each dataset, sorted according to the first input
+        [dum, indx] = match_str(data.label, varargin{i}.label);
         for j=1:numel(varargin{i}.trial)
-          dat = cat(2, dat, varargin{i}.trial{j}(indx,:));
-          tim = cat(2, tim, varargin{i}.time{j});
+          dat = cat(2, dat, {varargin{i}.trial{j}(indx,:)});
+          tim = cat(2, tim, {varargin{i}.time{j}});
         end
       end
       data.trial = dat;
       data.time  = tim;
-      data.label = varargin{1}.label;
+      data.label;       % keep it as determined by append_common
     end
     
   otherwise
