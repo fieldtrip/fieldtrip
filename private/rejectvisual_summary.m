@@ -611,10 +611,17 @@ cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
 currfig = gcf;
 for n = 1:length(trls)
+  % ft_multiplotER should be able to make the selection, but fails due to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2978
+  % that bug is hard to fix, hence it is solved here with a work-around
+  cfg_sd = [];
+  cfg_sd.trials = trls(n);
+  cfg_sd.avgoverrpt = 'yes';
+  cfg_sd.keeprpt = 'no';
+  tmpdata = ft_selectdata(cfg_sd, info.data);
+  
   figure()
-  cfg_mp.trials = trls(n);
   cfg_mp.interactive = 'yes';
-  ft_multiplotER(cfg_mp, info.data);
+  ft_multiplotER(cfg_mp, tmpdata);
   title(sprintf('Trial %i', trls(n)));
 end
 figure(currfig);
