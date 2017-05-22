@@ -537,8 +537,8 @@ switch eventformat
     else
       origSensType = [];
     end
-    % meg channels are 5, refmag 0, refgrad 1, adcs 18, trigger 11, eeg 9
-    trigindx = find(origSensType==11);
+    % meg channels are 5, refmag 0, refgrad 1, adcs 18, trigger 11 or 20, eeg 9
+    trigindx = find(origSensType==11 | origSensType==20);
     if ~isempty(trigindx)
       % read the trigger channel and do flank detection
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', true);
