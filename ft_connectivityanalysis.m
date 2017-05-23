@@ -315,11 +315,11 @@ switch cfg.method
     dfreq = diff(data.freq)./mean(diff(data.freq));
     assert(all(dfreq>0.999) && all(dfreq<1.001), ['non equidistant frequency bins are not supported for method ',cfg.method]);
     
-  case {'dtf' 'ddtf'}
+  case {'ddtf'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = {'transfer' 'crsspctrm'};
     outparam = [cfg.method, 'spctrm'];
-  case {'pdc' 'gpdc'}
+  case {'dtf' 'pdc' 'gpdc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
     outparam = [cfg.method, 'spctrm'];
@@ -420,11 +420,15 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
         
-       % convert the inparam back to cell array in the case of granger
+        % convert the inparam back to cell array in the case of granger
         if strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
           tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
           optarg  = ft_cfg2keyval(tmpcfg.granger);
+        elseif strcmp(cfg.method, 'ddtf')
+          inparam = {'transfer' 'crsspctrm'};
+          tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'ddtf'});
+          optarg  = ft_cfg2keyval(tmpcfg.ddtf);
         else
           tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {cfg.method});
           optarg  = ft_cfg2keyval(tmpcfg.(cfg.method));
