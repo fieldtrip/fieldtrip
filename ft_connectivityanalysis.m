@@ -315,7 +315,11 @@ switch cfg.method
     dfreq = diff(data.freq)./mean(diff(data.freq));
     assert(all(dfreq>0.999) && all(dfreq<1.001), ['non equidistant frequency bins are not supported for method ',cfg.method]);
     
-  case {'dtf' 'pdc'}
+  case {'dtf' 'ddtf'}
+    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    inparam = {'transfer' 'crsspctrm'};
+    outparam = [cfg.method, 'spctrm'];
+  case {'pdc' 'gpdc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
     outparam = [cfg.method, 'spctrm'];
@@ -700,7 +704,7 @@ switch cfg.method
       error('granger for time domain data is not yet implemented');
     end
     
-  case 'dtf'
+  case {'dtf' 'ddtf'}
     % directed transfer function
     if isfield(data, 'labelcmb'),
       powindx = labelcmb2indx(data.labelcmb);
@@ -710,15 +714,17 @@ switch cfg.method
     optarg = {'feedback', cfg.feedback, 'powindx', powindx, 'hasjack', hasjack};
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
-      nrpt = size(data.(inparam), 1);
-      datin = data.(inparam);
+      nrpt = size(data.transfer, 1);
+      datin = data.transfer;
     else
       nrpt = 1;
-      datin = reshape(data.(inparam), [1 size(data.(inparam))]);
+      datin = reshape(data.transfer, [1 size(data.transfer)]);
+      data.crsspctrm = reshape(data.crsspctrm, [1 size(data.crsspctrm)]);
     end
+    if strcmp(cfg.method, 'ddtf'), optarg = cat(2, optarg, {'crsspctrm' data.crsspctrm}); end
     [datout, varout, nrpt] = ft_connectivity_dtf(datin, optarg{:});
     
-  case 'pdc'
+  case {'pdc' 'gpdc'}
     % partial directed coherence
     if isfield(data, 'labelcmb'),
       powindx = labelcmb2indx(data.labelcmb);
@@ -726,6 +732,7 @@ switch cfg.method
       powindx = [];
     end
     optarg = {'feedback', cfg.feedback, 'powindx', powindx, 'hasjack', hasjack};
+    if strcmp(cfg.method, 'gpdc'), optarg = cat(2, optarg, {'noisecov' data.noisecov}); end
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
       nrpt = size(data.(inparam), 1);
