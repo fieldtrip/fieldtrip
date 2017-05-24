@@ -294,7 +294,7 @@ switch cfg.method
       otherwise
     end
     outparam = [cfg.method, 'spctrm'];
-  case {'granger' 'instantaneous_causality' 'total_interdependence'}
+  case {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer'}
     % create subcfg for the spectral factorization
     if ~isfield(cfg, 'granger')
       cfg.granger = [];
@@ -310,7 +310,7 @@ switch cfg.method
     if strcmp(cfg.method, 'granger'),                 outparam = 'grangerspctrm'; end
     if strcmp(cfg.method, 'instantaneous_causality'), outparam = 'instantspctrm'; end
     if strcmp(cfg.method, 'total_interdependence'),   outparam = 'totispctrm';    end
-    
+    if strcmp(cfg.method, 'transfer'),                outparam = {'transfer' 'noisecov' 'crsspctrm'}; end
     % check whether the frequency bins are more or less equidistant
     dfreq = diff(data.freq)./mean(diff(data.freq));
     assert(all(dfreq>0.999) && all(dfreq<1.001), ['non equidistant frequency bins are not supported for method ',cfg.method]);
@@ -421,7 +421,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         end
         
         % convert the inparam back to cell array in the case of granger
-        if strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')
+        if any(strcmp(cfg.method, {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer'}))
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
           tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
           optarg  = ft_cfg2keyval(tmpcfg.granger);
@@ -616,6 +616,16 @@ switch cfg.method
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
+  case 'transfer'
+    % the necessary stuff has already been computed
+    datout   = data.transfer;
+    noisecov = data.noisecov;
+    crsspctrm = data.crsspctrm;
+    if ~hasrpt,
+      datout   = shiftdim(datout);
+      noisecov = shiftdim(noisecov);
+      crsspctrm = shiftdim(crsspctrm);
+    end
   case {'granger' 'instantaneous_causality' 'total_interdependence'}
     % granger causality
     if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
@@ -943,15 +953,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the output structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 switch dtype
   case {'freq' 'freqmvar'},
-    stat = [];
-    if isfield(data, 'label'),
-      stat.label = data.label;
-    end
+    stat = keepfields(data, {'label', 'labelcmb', 'grad', 'elec'});
     if isfield(data, 'labelcmb'),
-      stat.labelcmb = data.labelcmb;
-      
       % ensure the correct dimord in case the input was 'powandcsd'
       data.dimord = strrep(data.dimord, 'chan_', 'chancmb_');
     end
@@ -963,20 +969,22 @@ switch dtype
       end
     end
     stat.dimord = dimord(2:end);
-    stat.(outparam) = datout;
-    if ~isempty(varout),
-      stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
+    if ~iscell(outparam)
+      stat.(outparam) = datout;
+      if ~isempty(varout),
+        stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
+      end
+    else
+      stat.(outparam{1}) = datout;
+      for k = 2:numel(outparam)
+        if exist(outparam{k}, 'var')
+          stat.(outparam{k}) = eval(outparam{k});
+        end
+      end
     end
     
   case 'timelock'
-    stat = [];
-    if isfield(data, 'label'),
-      stat.label = data.label;
-    end
-    if isfield(data, 'labelcmb'),
-      stat.labelcmb = data.labelcmb;
-    end
-    
+    stat = keepfields(data, {'label', 'labelcmb', 'grad', 'elec'});
     % deal with the dimord
     if exist('outdimord', 'var'),
       stat.dimord = outdimord;
@@ -1041,8 +1049,6 @@ else
   if isfield(data, 'freq'), stat.freq = data.freq; end
   if isfield(data, 'time'), stat.time = data.time; end
 end
-if isfield(data, 'grad'), stat.grad = data.grad; end
-if isfield(data, 'elec'), stat.elec = data.elec; end
 if exist('dof', 'var'), stat.dof = dof; end
 
 % do the general cleanup and bookkeeping at the end of the function
