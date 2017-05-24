@@ -391,6 +391,20 @@ case 'total'
     error('blockwise conditional total interdependence is not implemented'); 
   end
   
+case 'iis'
+  ft_warning('THIS IS EXPERIMENTAL CODE, USE AT YOUR OWN RISK!');
+  % this is experimental
+  if ~issquare && isempty(powindx)
+    A = transfer2coeffs(shiftdim(H),(0:size(H,3)-1));
+    ncmb = size(A,1)./4;
+    iis = coeffs2iis(reshape(A,[2 2 ncmb size(A,2)]),reshape(Z,[2 2 ncmb]));
+    iis = repmat(iis(:),[1 4])';
+    outsum = iis(:);
+    outssq = nan(size(outsum));   
+  else
+    error('iis can only be computed when the input contains sets of bivariate factorizations');
+  end
+  
 otherwise
   error('unsupported output requested');
 end

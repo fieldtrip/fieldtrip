@@ -294,7 +294,7 @@ switch cfg.method
       otherwise
     end
     outparam = [cfg.method, 'spctrm'];
-  case {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer'}
+  case {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer' 'iis'}
     % create subcfg for the spectral factorization
     if ~isfield(cfg, 'granger')
       cfg.granger = [];
@@ -311,6 +311,7 @@ switch cfg.method
     if strcmp(cfg.method, 'instantaneous_causality'), outparam = 'instantspctrm'; end
     if strcmp(cfg.method, 'total_interdependence'),   outparam = 'totispctrm';    end
     if strcmp(cfg.method, 'transfer'),                outparam = {'transfer' 'noisecov' 'crsspctrm'}; end
+    if strcmp(cfg.method, 'iis'),                     outparam = 'iis'; end
     % check whether the frequency bins are more or less equidistant
     dfreq = diff(data.freq)./mean(diff(data.freq));
     assert(all(dfreq>0.999) && all(dfreq<1.001), ['non equidistant frequency bins are not supported for method ',cfg.method]);
@@ -421,7 +422,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
         end
         
         % convert the inparam back to cell array in the case of granger
-        if any(strcmp(cfg.method, {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer'}))
+        if any(strcmp(cfg.method, {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer' 'iis'}))
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
           tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
           optarg  = ft_cfg2keyval(tmpcfg.granger);
@@ -626,7 +627,7 @@ switch cfg.method
       noisecov = shiftdim(noisecov);
       crsspctrm = shiftdim(crsspctrm);
     end
-  case {'granger' 'instantaneous_causality' 'total_interdependence'}
+  case {'granger' 'instantaneous_causality' 'total_interdependence' 'iis'}
     % granger causality
     if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
       if isfield(data, 'labelcmb') && ~istrue(cfg.granger.conditional),
@@ -686,7 +687,16 @@ switch cfg.method
             newlabelcmb{cnt, 2} = data.block(m).name;
           end
         end
-        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, {data.label data.blockindx}, tmp);
+        
+        % make a temporary label list
+        tmp2 = cell(numel(data.labelcmb),1);
+        for m = 1:numel(data.labelcmb)
+          tok = tokenize(data.labelcmb{m},'[');
+          tmp2{m} = tok{1};
+        end
+        label = unique(tmp2);
+        
+        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
         powindx.cmbindx = cmbindx;
         powindx.n = n;
         data.labelcmb = newlabelcmb;
@@ -697,11 +707,23 @@ switch cfg.method
         end
         
       elseif isfield(cfg.granger, 'block') && ~isempty(cfg.granger.block)
+        % make a temporary label list
+        if isfield(data, 'label')
+          label = data.label;
+        else
+          tmp = cell(numel(data.labelcmb),1);
+          for m = 1:numel(data.labelcmb)
+            tok = tokenize(data.labelcmb{m},'[');
+            tmp{m} = tok{1};
+          end
+          label = unique(tmp);
+        end
+        
         % blockwise granger
         for k = 1:numel(cfg.granger.block)
           %newlabel{k, 1} = cat(2, cfg.granger.block(k).label{:});
           newlabel{k,1}  = cfg.granger.block(k).name;
-          powindx{k,1}   = match_str(data.label, cfg.granger.block(k).label);
+          powindx{k,1}   = match_str(label, cfg.granger.block(k).label);
         end
         data.label = newlabel;
       else
@@ -712,6 +734,7 @@ switch cfg.method
       if strcmp(cfg.method, 'granger'),                 methodstr = 'granger';      end
       if strcmp(cfg.method, 'instantaneous_causality'), methodstr = 'instantaneous'; end
       if strcmp(cfg.method, 'total_interdependence'),   methodstr = 'total';        end
+      if strcmp(cfg.method, 'iis'),                     methodstr = 'iis';          end
       optarg = {'hasjack', hasjack, 'method', methodstr, 'powindx', powindx, 'dimord', data.dimord};
       [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, optarg{:});
     else
