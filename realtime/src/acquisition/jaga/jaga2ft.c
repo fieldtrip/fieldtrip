@@ -453,13 +453,21 @@ int main(int argc, char *argv[]) {
     /* the packets are quite similar, the data starts at the same location */
     packet.version = packet_v3.version;
     packet.nchans  = packet_v3.nchans;
-    packet.nbit    = 16;
+    packet.nbit    = JAGA_NBIT;
     packet.fsample = packet_v3.fsample;
     packet.smp     = packet_v3.smp;
   }
   else {
     fprintf(stderr, "invalid packet version");
     exit(1);
+  }
+
+  if (config.verbose>0) {
+    printf("jaga2ft: packet.version = %d\n", packet.version);
+    printf("jaga2ft: packet.nchans  = %d\n", packet.nchans);
+    printf("jaga2ft: packet.nbit    = %d\n", packet.nbit);
+    printf("jaga2ft: packet.fsample = %d\n", packet.fsample);
+    printf("jaga2ft: packet.smp     = %d\n", packet.smp);
   }
 
   /* update the defaults */
@@ -685,7 +693,7 @@ int main(int argc, char *argv[]) {
       /* the packets are quite similar, the data starts at the same location */
       packet.version = packet_v3.version;
       packet.nchans  = packet_v3.nchans;
-      packet.nbit    = 16;
+      packet.nbit    = JAGA_NBIT;
       packet.fsample = packet_v3.fsample;
       packet.smp     = packet_v3.smp;
     }
