@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016, Robert Oostenveld
+ * Copyright (C) 2015-2017, Robert Oostenveld
  *
  * Donders Institute for Brain, Cognition and Behaviour,
  * Centre for Cognitive Neuroimaging, Radboud University,
@@ -372,7 +372,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "jaga2ft: hostname     =  %s\n", host.name);
   fprintf(stderr, "jaga2ft: port         =  %d\n", host.port);
   fprintf(stderr, "jaga2ft: timestamp    =  %s\n", config.timestamp);
-  fprintf(stderr, "jaga2ft: nchan        =  %d\n", nchans);
+  fprintf(stderr, "jaga2ft: nchans       =  %d\n", nchans);
 
   /* Spawn tcpserver or connect to remote buffer */
   if (strcmp(host.name, "-") == 0) {
@@ -720,39 +720,40 @@ int main(int argc, char *argv[]) {
     sample = 0;
     while (sample<blocksize) {
 
+      UINT16_T *raw = (buf+12);
       chan = 0;
       if (ISTRUE (config.enable_chan1))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 0];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 0];
       if (ISTRUE (config.enable_chan2))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 1];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 1];
       if (ISTRUE (config.enable_chan3))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 2];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 2];
       if (ISTRUE (config.enable_chan4))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 3];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 3];
       if (ISTRUE (config.enable_chan5))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 4];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 4];
       if (ISTRUE (config.enable_chan6))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 5];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 5];
       if (ISTRUE (config.enable_chan7))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 6];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 6];
       if (ISTRUE (config.enable_chan8))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 7];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 7];
       if (ISTRUE (config.enable_chan9))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 8];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 8];
       if (ISTRUE (config.enable_chan10))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 9];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 9];
       if (ISTRUE (config.enable_chan11))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 10];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 10];
       if (ISTRUE (config.enable_chan12))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 11];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 11];
       if (ISTRUE (config.enable_chan13))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 12];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 12];
       if (ISTRUE (config.enable_chan14))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 13];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 13];
       if (ISTRUE (config.enable_chan15))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 14];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 14];
       if (ISTRUE (config.enable_chan16))
-	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = (buf+12)[nchans * sample + 15];
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = raw[nchans * sample + 15];
 
       if (ISTRUE (config.timestamp)) {
 	if (strcasecmp (config.timeref, "start") == 0)
@@ -761,7 +762,7 @@ int main(int argc, char *argv[]) {
 	  get_monotonic_time (&toc, TIMESTAMP_REF_BOOT);
 	else if (strcasecmp (config.timeref, "epoch") == 0)
 	  get_monotonic_time (&toc, TIMESTAMP_REF_EPOCH);
-	((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] = get_elapsed_time (&tic, &toc);
+	((FLOAT32_T *) (data->buf))[nchans * sample + chan++] = get_elapsed_time (&tic, &toc);
       }
 
       sample++;
