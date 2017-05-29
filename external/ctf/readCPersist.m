@@ -43,7 +43,7 @@ EOPstring='EndOfParameters';
 
 startVal=256.^[3:-1:0]*double(startString)';
 
-D=dir(CPfile);
+D=dir([CPfile,filesep]);
 if isempty(D)
   fprintf('readCPersist:  Could not find file %s.\n',CPfile);
   Tag=struct([]);

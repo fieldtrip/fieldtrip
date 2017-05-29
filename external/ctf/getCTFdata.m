@@ -227,7 +227,7 @@ while 1
   else
     meg4Ext=['.',int2str(qFile),'_meg4'];
   end
-  D=dir([ds.path,ds.baseName,'.ds',delim,ds.baseName,meg4Ext]);
+  D=dir([ds.path,ds.baseName,'.ds',delim,ds.baseName,meg4Ext,delim]);
   if isempty(D);break;end
   % No of trials in this file.
   nFileTrial=round((D.bytes-8)/bytes_per_trial);

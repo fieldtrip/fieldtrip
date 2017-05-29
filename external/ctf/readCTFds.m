@@ -144,7 +144,7 @@ while 1
   end
   fid=fopen(meg4File,'r','ieee-be');
   if fid<=0;break;end
-  D=dir([datasetname,delim,baseName,meg4Ext]);
+  D=dir([datasetname,delim,baseName,meg4Ext,delim]);
   meg4Size=[meg4Size D.bytes];
   meg4Header=char(fread(fid,8,'uint8')');
   fclose(fid);
