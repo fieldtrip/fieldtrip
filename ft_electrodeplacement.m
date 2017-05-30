@@ -587,16 +587,16 @@ axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
 if opt.init
   % draw the crosshairs for the first time
   delete(findobj(opt.mainfig,'Type','Line')); % get rid of old crosshairs (to facilitate switching scans)
-  hch1 = crosshair([xi yi-yloadj zi], 'parent', h1, 'color', 'yellow'); % was [xi 1 zi], now corrected for zoom
-  hch2 = crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
-  hch3 = crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
+  hch1 = ft_plot_crosshair([xi yi-yloadj zi], 'parent', h1, 'color', 'yellow'); % was [xi 1 zi], now corrected for zoom
+  hch2 = ft_plot_rosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
+  hch3 = ft_plot_crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
   opt.redrawmarker = 1;
 else
   % update the existing crosshairs, don't change the handles
-  crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
-  crosshair([xi+xhiadj yi zi], 'handle', opt.handlescross(2, :));
-  crosshair([xi yi zi], 'handle', opt.handlescross(3, :));
+  ft_plot_crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
+  ft_plot_crosshair([xi+xhiadj yi zi], 'handle', opt.handlescross(2, :));
+  ft_plot_crosshair([xi yi zi], 'handle', opt.handlescross(3, :));
 end
 
 if opt.showcrosshair
@@ -765,7 +765,7 @@ if opt.scatter % radiobutton on
       'UpdateFcn', @cb_scatter_dcm);
     
     % draw the crosshair for the first time
-    opt.handlescross2 = crosshair(opt.pos, 'parent', opt.scatterfig_h1, 'color', 'blue');
+    opt.handlescross2 = ft_plot_crosshair(opt.pos, 'parent', opt.scatterfig_h1, 'color', 'blue');
     
     % instructions to the user
     fprintf(strcat(...
@@ -808,7 +808,7 @@ if opt.scatter % radiobutton on
   end
 
   % update the existing crosshairs, don't change the handles
-  crosshair([opt.pos], 'handle', opt.handlescross2);
+  ft_plot_crosshair([opt.pos], 'handle', opt.handlescross2);
   if opt.showcrosshair
     set(opt.handlescross2,'Visible','on');
   else

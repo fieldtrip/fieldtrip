@@ -1606,16 +1606,16 @@ end
 
 if opt.init
   % draw the crosshairs for the first time
-  hch1 = crosshair([xi crossoffs(2) zi], 'parent', h1, 'color', 'yellow');
-  hch2 = crosshair([crossoffs(1) yi zi], 'parent', h2, 'color', 'yellow');
-  hch3 = crosshair([xi yi crossoffs(3)], 'parent', h3, 'color', 'yellow');
+  hch1 = ft_plot_crosshair([xi crossoffs(2) zi], 'parent', h1, 'color', 'yellow');
+  hch2 = ft_plot_crosshair([crossoffs(1) yi zi], 'parent', h2, 'color', 'yellow');
+  hch3 = ft_plot_crosshair([xi yi crossoffs(3)], 'parent', h3, 'color', 'yellow');
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
   opt.handlesmarker = [];
 else
   % update the existing crosshairs, don't change the handles
-  crosshair([xi crossoffs(2) zi], 'handle', opt.handlescross(1, :));
-  crosshair([crossoffs(1) yi zi], 'handle', opt.handlescross(2, :));
-  crosshair([xi yi crossoffs(3)], 'handle', opt.handlescross(3, :));
+  ft_plot_crosshair([xi crossoffs(2) zi], 'handle', opt.handlescross(1, :));
+  ft_plot_crosshair([crossoffs(1) yi zi], 'handle', opt.handlescross(2, :));
+  ft_plot_crosshair([xi yi crossoffs(3)], 'handle', opt.handlescross(3, :));
 end
 % For some unknown god-awful reason, the line command 'disables' all transparency.
 % The below command resets it. It was the only axes property that I (=roemei) could

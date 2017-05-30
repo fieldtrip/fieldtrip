@@ -13,6 +13,7 @@ cfg               = [];
 cfg.channel       = ft_channelselection({'LPG*', 'LTG*'}, data.label);
 cfg.reref         = 'yes';
 cfg.refchannel    = 'all';
+cfg.updatesens    = 'no';
 reref_grids = ft_preprocessing(cfg, data);
 
 % CORRECT: chansel is not applied to elec struc
@@ -36,7 +37,7 @@ for d = 1:numel(depths)
     0     0     0     0     0     1    -1     0
     0     0     0     0     0     0     1    -1
     ];
-  
+  cfg.updatesens = 'yes';
   reref_depths{d} = ft_preprocessing(cfg, data);
   
   %?CORRECT: montage is applied to elec struc, i.e. tra is updated

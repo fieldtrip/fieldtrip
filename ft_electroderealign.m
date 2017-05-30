@@ -1,6 +1,6 @@
 function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 
-% FT_ELECTRODEREALING rotates, translates, scales and warps electrode positions. The
+% FT_ELECTRODEREALIGN rotates, translates, scales and warps electrode positions. The
 % default is to only rotate and translate, i.e. to do a rigid body transformation in
 % which only the coordinate system is changed. With the right settings if can apply
 % additional deformations to the input sensors (e.g. scale them to better fit the
@@ -58,6 +58,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'fsaverage'       surface-based realignment with the freesurfer fsaverage brain
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
+%   cfg.keepchannel    = string, 'yes' or 'no' (default = 'no')
 %   cfg.fiducial       = cell-array with the name of three fiducials used for
 %                        realigning (default = {'nasion', 'lpa', 'rpa'})
 %   cfg.casesensitive  = 'yes' or 'no', determines whether string comparisons
@@ -172,11 +173,17 @@ cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
 % set the defaults
 cfg.warp          = ft_getopt(cfg, 'warp', 'rigidbody');
 cfg.channel       = ft_getopt(cfg, 'channel',  'all');
+cfg.keepchannel   = ft_getopt(cfg, 'keepchannel', 'no');
 cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
 cfg.casesensitive = ft_getopt(cfg, 'casesensitive', 'no');
 cfg.headshape     = ft_getopt(cfg, 'headshape', []);     % for triangulated head surface, without labels
 cfg.target        = ft_getopt(cfg, 'target',  []);       % for electrodes or fiducials, always with labels
 cfg.coordsys      = ft_getopt(cfg, 'coordsys');          % this allows for automatic template fiducial placement
+
+if isempty(cfg.target)
+  % remove the field, otherwise ft_checkconfig will complain
+  cfg = rmfield(cfg, 'target');
+end
 
 if ~isempty(cfg.coordsys) && isempty(cfg.target)
   % set the template fiducial locations according to the coordinate system
@@ -227,7 +234,7 @@ if isfield(cfg, 'target') && isa(cfg.target, 'config')
 end
 
 % the data can be passed as input arguments or can be read from disk
-hasdata = exist('data', 'var');
+hasdata = exist('elec_original', 'var');
 
 % get the electrode definition that should be warped
 if ~hasdata
@@ -400,9 +407,9 @@ elseif strcmp(cfg.method, 'headshape')
   elec.elecpos = elec.elecpos(datsel,:);
   
   norm.label = elec.label;
-  if strcmp(lower(cfg.warp), 'dykstra2012')
-    norm.elecpos = ft_warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
-  elseif strcmp(lower(cfg.warp), 'fsaverage')
+  if strcmp(cfg.warp, 'dykstra2012')
+    norm.elecpos = warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
+  elseif strcmp(cfg.warp, 'fsaverage')
     subj_pial = ft_read_headshape(cfg.headshape);
     [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
     subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
@@ -702,6 +709,14 @@ switch cfg.method
     end
   otherwise
     error('unknown method');
+end
+
+if istrue(cfg.keepchannel)
+  % append the channels that are not realigned
+  [~, idx] = setdiff(elec_original.label, elec_realigned.label);
+  idx = sort(idx);
+  elec_realigned.label = [elec_realigned.label; elec_original.label(idx)];
+  elec_realigned.elecpos = [elec_realigned.elecpos; elec_original.elecpos(idx,:)];
 end
 
 % channel positions are identical to the electrode positions (this was checked at the start)

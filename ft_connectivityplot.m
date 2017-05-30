@@ -78,6 +78,25 @@ Ndata = numel(varargin);
 dtype = cell(Ndata, 1);
 iname = cell(Ndata+1, 1);
 for k = 1:Ndata
+  if ischar(cfg.parameter)
+    cfg.parameter = repmat({cfg.parameter}, [1 Ndata]);
+  end
+  
+  % check whether all requested parameters are the same. If not, rename
+  % this, because otherwise a call to ft_selectdata (below) won't work
+  if ~all(strcmp(cfg.parameter,cfg.parameter{1}))
+    fprintf('different types of connectivity are to be displayed in the same figure\n');
+    varargin{k}.connectivity = varargin{k}.(cfg.parameter{k});
+    varargin{k} = rmfield(varargin{k}, cfg.parameter{k});
+    if isfield(varargin{k}, [cfg.parameter{k} 'dimord']),
+      varargin{k}.connectivitydimord = varargin{k}.([cfg.parameter{k} 'dimord']);
+      varargin{k} = rmfield(varargin{k}, [cfg.parameter{k} 'dimord']);
+    end
+    cfg.parameter{k} = 'connectivity';
+  else
+    % don't worry
+  end
+  
   % check if the input data is valid for this function
   varargin{k} = ft_checkdata(varargin{k}, 'datatype', {'timelock', 'freq'});
   dtype{k}    = ft_datatype(varargin{k});
@@ -173,13 +192,13 @@ if ischar(cfg.zlim) && strcmp(cfg.zlim,'maxmin')
   zmin = inf;
   zmax = -inf;
   for k = 1:Ndata
-    zmin = min(zmin,min(varargin{k}.(cfg.parameter)(:)));
-    zmax = max(zmax,max(varargin{k}.(cfg.parameter)(:)));
+    zmin = min(zmin,min(varargin{k}.(cfg.parameter{k})(:)));
+    zmax = max(zmax,max(varargin{k}.(cfg.parameter{k})(:)));
   end
 elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
   zmax = -inf;
   for k = 1:Ndata
-    zmax = max(zmax,max(abs(varargin{k}.(parameter)(:))));
+    zmax = max(zmax,max(abs(varargin{k}.(cfg.parameter{k})(:))));
   end
   zmin = -zmax;
 else
@@ -229,8 +248,8 @@ else
   data = varargin{1};
 end
 
-if ~isfield(data, cfg.parameter)
-  error('the data does not contain the requested parameter %s', cfg.parameter);
+if ~isfield(data, cfg.parameter{1})
+  error('the data does not contain the requested parameter %s', cfg.parameter{1});
 end
 
 % get the selection of the data
@@ -247,7 +266,7 @@ data             = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
-dat   = data.(cfg.parameter);
+dat   = data.(cfg.parameter{k});
 nchan = numel(data.label);
 if hasfreq, nfreq = numel(data.freq); end
 if hastime, ntime = numel(data.time); end
@@ -303,8 +322,8 @@ for k = 1:nchan
 end
 
 % add 'from' and 'to' labels
-ft_plot_text(-0.5,            (nchan + 1)/1.7,     'interpreter', 'tex', '\it{from}', 'rotation', 90);
-ft_plot_text((nchan + 1)/1.7, (nchan + 1)*1.2+0.4, 'interpreter', 'tex', '\it{to}');
+ft_plot_text(-0.5,            (nchan + 1)/1.7,     '\it{from}', 'interpreter', 'tex', 'rotation', 90);
+ft_plot_text((nchan + 1)/1.7, (nchan + 1)*1.2+0.4, '\it{to}', 'interpreter', 'tex');
 
 axis([-0.2 (nchan+1).*1.2+0.2 0 (nchan+1).*1.2+0.2]);
 axis off;

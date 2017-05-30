@@ -86,6 +86,13 @@ c8m            = ft_connectivityanalysis(cfgc, mfreq);
 cfgc.method    = 'total_interdependence';
 c9             = ft_connectivityanalysis(cfgc, freq);
 c9m            = ft_connectivityanalysis(cfgc, mfreq);
+cfgc.method    = 'ddtf';
+c10            = ft_connectivityanalysis(cfgc, freq);
+c10m           = ft_connectivityanalysis(cfgc, mfreq);
+cfgc.method    = 'gpdc';
+c11            = ft_connectivityanalysis(cfgc, freq);
+c11m           = ft_connectivityanalysis(cfgc, mfreq);
+
 
 cfgc             = [];
 cfgc.partchannel = 'signal003'; % this should destroy coherence between 1 and 2

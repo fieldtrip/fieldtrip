@@ -468,7 +468,7 @@ if ~isempty(createsubcfg)
       case 'mvl'
         fieldname = {};
         
-      case {'npsf', 'granger' 'pdc' 'dtf'}
+      case {'npsf', 'granger' 'pdc' 'dtf' 'gpdc' 'ddtf'}
         % non-parametric spectral factorization -> csd2transfer
         fieldname = {
           'block'

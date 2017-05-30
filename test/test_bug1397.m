@@ -71,6 +71,7 @@ emg = ft_preprocessing(cfg);
 % there is a difference in the time axes of the input data
 
 data = ft_appenddata([], meg, emg);
+assert(numel(data.label)==153);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
