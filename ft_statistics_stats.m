@@ -345,14 +345,14 @@ end
 
 % assign the output variable
 stat = [];
-try, stat.mask    = h;        end
-try, stat.prob    = p;        end
-try, stat.stat    = s;        end
-try, stat.ci      = ci;       end
-try, stat.df      = df;       end
-try, stat.md      = md;       end
-try, stat.sd      = sd;       end
-try, stat.cohen_d = cohen_d;  end
+try, stat.mask      = h;        end
+try, stat.prob      = p;        end
+try, stat.stat      = s;        end
+try, stat.ci        = ci;       end
+try, stat.df        = df;       end
+try, stat.md        = md;       end
+try, stat.sd        = sd;       end
+try, stat.cohens_d  = cohens_d;  end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper functions for ttest and ttest2
