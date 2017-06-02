@@ -118,7 +118,7 @@ if hasnyq
 else
   N1 = N + 1; % the highest frequency needs to be represented twice, for symmetry purposes
 end
-Sarr(:,:,N1:N2,:) = flipdim(Sarr(:,:,2:N,:),3);
+Sarr(:,:,N1:N2,:) = flip(Sarr(:,:,2:N,:),3);
 Sarr(2,1,N1:N2,:) = conj(Sarr(2,1,N1:N2,:));
 Sarr(1,2,N1:N2,:) = conj(Sarr(1,2,N1:N2,:));
 Sarr              = permute(Sarr, [1 2 4 3]);
@@ -217,12 +217,12 @@ Z   = reshape(Z, [4*siz(3) siz(4:end)]);
 siz = [size(psi) 1 1];
 psi = reshape(psi, [4*siz(3) siz(4:end)]);
 
-if numel(selfreq)~=numel(freq)
+%if numel(selfreq)~=numel(freq)
   % return only the frequency bins that were in the input
   H   =   H(:,selfreq,:,:);
   S   =   S(:,selfreq,:,:);
   psi = psi(:,selfreq,:,:);
-end
+%end
   
 %---------------------------------------------------------------------
 function gp = PlusOperator2x2(g,ncmb,nfreq)
