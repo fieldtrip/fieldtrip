@@ -341,6 +341,7 @@ if hasdata
       % the trial is already longer than the total length requested
       begpadding = 0;
       endpadding = 0;
+      ft_warning('no padding applied because the padding duration is shorter than the trial');
     else
       switch cfg.paddir
         case 'both'
@@ -531,6 +532,7 @@ else
         offset     = cfg.trl(i,3);
         begpadding = 0;
         endpadding = 0;
+        ft_warning('no padding applied because the padding duration is shorter than the trial');
       else
         switch cfg.paddir
           case 'both'
