@@ -17,6 +17,7 @@ function [grandavg] = ft_freqgrandaverage(cfg, varargin)
 %   cfg.parameter      = string or cell-array of strings indicating which
 %                        parameter(s) to average. default is set to
 %                        'powspctrm', if it is present in the data.
+%   cfg.feedback       = 'no', 'yes' (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -81,6 +82,7 @@ cfg.channel        = ft_getopt(cfg, 'channel',    'all');
 cfg.foilim         = ft_getopt(cfg, 'foilim',     'all');
 cfg.toilim         = ft_getopt(cfg, 'toilim',     'all');
 cfg.parameter      = ft_getopt(cfg, 'parameter',  []);
+cfg.feedback       = ft_getopt(cfg, 'feedback',   'yes');
 
 if isempty(cfg.parameter) && isfield(varargin{1}, 'powspctrm')
     cfg.parameter = 'powspctrm';
@@ -179,16 +181,17 @@ for k=1:numel(cfg.parameter)
     dim{k} = size(varargin{1}.(cfg.parameter{k}));
 end
 
-% give some feedback on the screen
+% give some infi feedback on the screen, if desired
 if strcmp(cfg.keepindividual, 'no')
     for k=1:numel(cfg.parameter)
-        fprintf('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
+      ft_info(cfg.feedback, 'computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
     end
 else
     for k=1:numel(cfg.parameter)
-        fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
+      ft_info(cfg.feedback, 'not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
     end
 end
+
 
 % allocate memory to hold the data and collect it
 for k=1:numel(cfg.parameter)
