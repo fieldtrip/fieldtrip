@@ -172,6 +172,12 @@ switch cfg.appenddim
       data.label;       % keep it as determined by append_common
     end
     
+    % check whether the trials are consecutive segments
+    if isfield(data, 'sampleinfo') && any(diff(data.sampleinfo(:,1))<0)
+      warning('removing sampleinfo because the appended trials are not consecutive segments')
+      data = rmfield(data, 'sampleinfo');
+    end
+    
   otherwise
     error('unsupported cfg.appenddim');
 end % switch
