@@ -1379,7 +1379,7 @@ xy = [x; y];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to obtain XY pos from XYZ pos as orthographic projections depending on
-% the viewpoint and coordsys. See also ELPROJ
+% the viewpoint and coordsys. See also ELPROJ and COORDSYS2LABEL
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function pos = getorthoviewpos(pos, coordsys, viewpoint)
 
@@ -1391,7 +1391,7 @@ transmat = [];
 
 % create view(az,el) transformation matrix
 switch coordsys
-  case {'tal','mni','spm','neuromag','itab'}
+  case {'ras','tal','mni','spm','neuromag','itab'}
     switch viewpoint
       case 'left'
         transmat = viewmtx(-90, 0);
@@ -1406,7 +1406,7 @@ switch coordsys
       case 'anterior'
         transmat = viewmtx(180, 0);
     end % switch viewpoint
-  case {'ctf','4d','bti'}
+  case {'als','ctf','4d','bti'}
     switch viewpoint
       case 'left'
         transmat = viewmtx(180, 0);
