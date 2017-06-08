@@ -4,7 +4,7 @@ function [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 % string representation of the coordinate system.
 %
 % Use as
-%   [labelx, labely, labelz, labelo] = xyz2label(coordsys, format, both)
+%   [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 %
 % The scalar argument 'format' results in return values like these
 %   1) 'right'
