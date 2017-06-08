@@ -353,7 +353,7 @@ switch sensshape
     [xsp, ysp, zsp] = sphere(20);
     rsp = sensize/2; % convert coilsensize from diameter to radius
     hold on
-    for i=1:length(pos)
+    for i=1:size(pos,1)
       hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
     end
