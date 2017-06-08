@@ -14,7 +14,8 @@ hasspm = ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 % approach to eliminate potential vitamin E capsules etc.
 
 if ~islogical(input)
-  fprintf('thresholding %s at a relative threshold of %0.3f\n', str, thresh);
+  if nargin==2, error('if the input volume is not a boolean volume, you need to define a threshold value'); end
+  if nargin==3, fprintf('thresholding %s at a relative threshold of %0.3f\n', str, thresh); end
   output = double(input>(thresh*max(input(:))));
 else
   % there is no reason to apply a threshold, but spm_bwlabel still needs a
