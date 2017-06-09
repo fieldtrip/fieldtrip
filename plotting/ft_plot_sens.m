@@ -350,7 +350,7 @@ switch sensshape
     
     plotcoil(pos, ori, chandir, sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
   case 'sphere'
-    [xsp, ysp, zsp] = sphere(20);
+    [xsp, ysp, zsp] = sphere(100);
     rsp = sensize/2; % convert coilsensize from diameter to radius
     hold on
     for i=1:size(pos,1)
