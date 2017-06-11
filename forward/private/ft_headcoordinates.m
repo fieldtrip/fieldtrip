@@ -154,7 +154,7 @@ coordsys = lower(coordsys);
 
 % compute the origin and direction of the coordinate axes in MRI coordinates
 switch coordsys
-  case {'als_ctf' 'ctf' 'bti' '4d' 'yokogawa'}
+  case {'ctf' 'bti' '4d' 'yokogawa'}
     % rename the marker points for convenience
     nas = fid1; lpa = fid2; rpa = fid3; extrapoint = fid4; clear fid*
     origin = (lpa+rpa)/2;
@@ -164,7 +164,7 @@ switch coordsys
     dirx = dirx/norm(dirx);
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
-  case {'als_asa' 'asa'}
+  case {'asa'}
     % rename the marker points for convenience
     nas = fid1; lpa = fid2; rpa = fid3; extrapoint = fid4; clear fid*
     dirz = cross(nas-rpa, lpa-rpa);
@@ -174,7 +174,7 @@ switch coordsys
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
     origin = rpa + dot(nas-rpa,diry)*diry;
-  case {'ras_itab' 'itab' 'neuromag'}
+  case {'itab' 'neuromag'}
     % rename the fiducials
     nas = fid1; lpa = fid2; rpa = fid3; extrapoint = fid4; clear fid*
     dirz = cross(rpa-lpa,nas-lpa);
@@ -195,7 +195,7 @@ switch coordsys
     dirx = dirx/norm(dirx);
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
-  case {'ras_tal' 'tal' 'spm'}
+  case {'tal' 'spm'}
     % rename the marker points for convenience
     ac = fid1; pc = fid2; midsagittal = fid3; extrapoint = fid4; clear fid*
     origin = ac;
@@ -224,13 +224,13 @@ end
 if ~isempty(extrapoint)
   dirq = extrapoint-origin;
   dirq = dirq/norm(dirq);
-  if any(strcmp(coordsys, {'als_ctf' 'ctf' 'bti' '4d' 'yokogawa' 'ras_itab' 'itab' 'neuromag'}))
+  if any(strcmp(coordsys, {'ctf' 'bti' '4d' 'yokogawa' 'itab' 'neuromag'}))
     phi = dirq(:)'*dirz(:);
     if sign(phi)<0
       warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
       dirz = -dirz;
     end
-  elseif any(strcmp(coordsys, {'ras_tal' 'tal' 'spm'}))
+  elseif any(strcmp(coordsys, {'tal' 'spm'}))
     phi = dirq(:)'*dirx(:);
     if sign(phi)<0
       warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
