@@ -137,19 +137,19 @@ end
 % the interactive method uses a global variable to get the data from the figure when it is closed
 global norm
 
-% set the defaults
-if ~isfield(cfg, 'channel'),       cfg.channel = 'all';       end
-if ~isfield(cfg, 'coordsys'),      cfg.coordsys = [];         end
-if ~isfield(cfg, 'feedback'),      cfg.feedback = 'no';       end
-if ~isfield(cfg, 'casesensitive'), cfg.casesensitive = 'yes'; end
-if ~isfield(cfg, 'warp'),          cfg.warp = 'rigidbody';    end
-if ~isfield(cfg, 'label'),         cfg.label = 'off';         end
-
 cfg = ft_checkconfig(cfg, 'renamed',    {'template', 'target'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducials', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial',  'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'warp', 'homogenous', 'rigidbody'});
 cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
+
+% set the defaults
+cfg.channel       = ft_getopt(cfg, 'channel',       'all');
+cfg.coordsys      = ft_getopt(cfg, 'coordsys',      []);
+cfg.feedback      = ft_getopt(cfg, 'feedback',      'no');
+cfg.casesensitive = ft_getopt(cfg, 'casesensitive', 'yes');
+cfg.warp          = ft_getopt(cfg, 'warp',          'rigidbody');
+cfg.label         = ft_getopt(cfg, 'label',         'off');
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure

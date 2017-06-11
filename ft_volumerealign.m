@@ -243,7 +243,6 @@ cfg.voxelratio    = ft_getopt(cfg, 'voxelratio', 'data'); % display size of the 
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',  'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.viewresult    = ft_getopt(cfg, 'viewresult', 'no');
 
-%
 viewresult = istrue(cfg.viewresult);
 
 if isempty(cfg.method)
