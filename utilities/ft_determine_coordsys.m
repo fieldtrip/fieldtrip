@@ -26,7 +26,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % coordinate system, you should press the corresponding keyboard button.
 %
 % Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
-% neuromag, spm, mni, tal, als, ras, paxinos.
+% neuromag, spm, mni, tal, acpc, als, ras, paxinos.
 %
 % See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
 
@@ -215,9 +215,9 @@ if istrue(dointeractive)
   end
 
   if origin=='a' && strcmp(orientation, 'ras')
-    coordsys = 'spm';
+    coordsys = 'acpc'; % also used for spm, mni, tal
   elseif origin=='i' && strcmp(orientation, 'als')
-    coordsys = 'ctf';
+    coordsys = 'ctf'; % also used for 4d, bti
   elseif origin=='i' && strcmp(orientation, 'ras')
     coordsys = 'neuromag'; % also used for itab
   else
