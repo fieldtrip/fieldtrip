@@ -43,11 +43,9 @@ function [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
-  % the first part is important for the orientations
-  % the second part optionally contains information on the origin
-  coordsys = tokenize(coordsys, '_');
-  coordsys = coordsys{1};
   
+  % the coordsys consists of three letters for the direction of the positive axes
+  % or of a string that relates to external software, an atlas or a template
   if length(coordsys)==3 && length(intersect(coordsys, 'rlasif'))==3
     axis = 'XYZ';
     label = cell(1,3);
