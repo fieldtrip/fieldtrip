@@ -10,7 +10,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 % to only determine the coordinate system, or
 %   [object] = ft_convert_coordsys(object, target)
 %   [object] = ft_convert_coordsys(object, target, opt)
-%   [object] = ft_convert_coordsys(object, target, opt, template);
+%   [object] = ft_convert_coordsys(object, target, opt, template)
 % to determine and convert the coordinate system.
 %
 % The optional input argument opt determines the behavior when converting
@@ -25,7 +25,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 %   (not yet) volume conductor definition
 %   (not yet) dipole grid definition
 %
-% Possible target coordinate systems are 'spm'.
+% Possible target coordinate systems are 'spm', 'tal', 'mni'.
 %
 % Note that the conversion will be an automatic one, which means that it
 % will be an approximate conversion, not taking into account differences in
@@ -99,13 +99,13 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
         case {'itab' 'neuromag'}
           fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
           if hastemplate
-            obj = align_ctf2spm(obj, opt, template);
+            obj = align_itabspm(obj, opt, template);
           else
             obj = align_itab2spm(obj, opt);
           end
         otherwise
-      end %switch obj.coordsys
+      end % switch obj.coordsys
     otherwise
       error('conversion from %s to %s is not yet supported', obj.coordsys, target);
-  end %switch target
+  end % switch target
 end
