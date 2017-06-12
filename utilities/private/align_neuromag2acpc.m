@@ -1,12 +1,12 @@
-function [mri] = align_itab2acpc(mri, opt)
+function [mri] = align_neurtomag2acpc(mri, opt)
 
-% ALIGN_ITAB2ACPC performs an approximate alignment of the anatomical volume
-% from ITAB towards ACPC coordinates. Only the homogenous transformation matrix
+% ALIGN_NEUROMAG2ACPC performs an approximate alignment of the anatomical volume
+% from NEUROMAG towards ACPC coordinates. Only the homogenous transformation matrix
 % is modified and the coordsys-field is updated.
 %
 % Use as
-%   mri = align_itab2acpc(mri)
-%   mri = align_itab2acpc(mri, opt)
+%   mri = align_neurtomag2acpc(mri)
+%   mri = align_neurtomag2acpc(mri, opt)
 %
 % Where mri is a FieldTrip MRI-structure, and opt an optional argument
 % specifying how the registration is done.
@@ -43,17 +43,17 @@ acpchead_Nas          = acpcvox2acpchead * acpcvox_Nas ;
 acpchead_Lpa_canal    = acpcvox2acpchead * acpcvox_Lpa_canal ;
 acpchead_Rpa_canal    = acpcvox2acpchead * acpcvox_Rpa_canal ;
 
-itabvox2itabhead  = mri.transform;
-acpchead2itabhead  = ft_headcoordinates(acpchead_Nas(1:3), acpchead_Lpa_canal(1:3), acpchead_Rpa_canal(1:3), 'itab');
+neuromagvox2neuromaghead  = mri.transform;
+acpchead2neuromaghead  = ft_headcoordinates(acpchead_Nas(1:3), acpchead_Lpa_canal(1:3), acpchead_Rpa_canal(1:3), 'neuromag');
 
-%itabvox2acpchead =  inv(acpchead2itabhead) * itabvox2itabhead;
-itabvox2acpchead  =  acpchead2itabhead \ itabvox2itabhead;
+%neuromagvox2acpchead =  inv(acpchead2neuromaghead) * neuromagvox2neuromaghead;
+neuromagvox2acpchead  =  acpchead2neuromaghead \ neuromagvox2neuromaghead;
 
 % change the transformation matrix, such that it returns approximate SPM head coordinates
-mri.transform     = itabvox2acpchead;
-mri.vox2headOrig  = itabvox2itabhead;
-mri.vox2head      = itabvox2acpchead;
-mri.head2headOrig = acpchead2itabhead;
+mri.transform     = neuromagvox2acpchead;
+mri.vox2headOrig  = neuromagvox2neuromaghead;
+mri.vox2head      = neuromagvox2acpchead;
+mri.head2headOrig = acpchead2neuromaghead;
 mri.coordsys      = 'acpc';
 
 % Do a second round of affine registration (rigid body) to get improved
@@ -85,18 +85,18 @@ if opt==1
   [M, scale]    = spm_affreg(V1,V2,flags);
   
   % some juggling around with the transformation matrices
-  itabvox2acpchead2  = M \ V1.mat;
-  acpchead2itabhead2 = itabvox2itabhead / itabvox2acpchead2;
+  neuromagvox2acpchead2  = M \ V1.mat;
+  acpchead2neuromaghead2 = neuromagvox2neuromaghead / neuromagvox2acpchead2;
    
   % update the transformation matrix
-  mri.transform     = itabvox2acpchead2;
+  mri.transform     = neuromagvox2acpchead2;
   
   % this one is unchanged
-  mri.vox2headOrig  = itabvox2itabhead;
+  mri.vox2headOrig  = neuromagvox2neuromaghead;
   
   % these are new
-  mri.vox2head      = itabvox2acpchead2;
-  mri.head2headOrig = acpchead2itabhead2;
+  mri.vox2head      = neuromagvox2acpchead2;
+  mri.head2headOrig = acpchead2neuromaghead2;
   
   % delete the temporary files
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
@@ -123,18 +123,18 @@ elseif opt==2
   flags.nits       = 0; %set number of non-linear iterations to zero
   flags.regtype    = 'rigid';
   params           = spm_normalise(V2,V1,[],[],[],flags);
-  acpchead2itabhead2 = acpchead2itabhead*V1.mat*params.Affine/V2.mat;
-  itabvox2acpchead2  = acpchead2itabhead2\itabvox2itabhead;
+  acpchead2neuromaghead2 = acpchead2neuromaghead*V1.mat*params.Affine/V2.mat;
+  neuromagvox2acpchead2  = acpchead2neuromaghead2\neuromagvox2neuromaghead;
   
   % update the transformation matrix
-  mri.transform     = itabvox2acpchead2;
+  mri.transform     = neuromagvox2acpchead2;
   
   % this one is unchanged
-  mri.vox2headOrig  = itabvox2itabhead;
+  mri.vox2headOrig  = neuromagvox2neuromaghead;
   
   % these are new
-  mri.vox2head      = itabvox2acpchead2;
-  mri.head2headOrig = acpchead2itabhead2;
+  mri.vox2head      = neuromagvox2acpchead2;
+  mri.head2headOrig = acpchead2neuromaghead2;
   
   % delete the temporary files
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));

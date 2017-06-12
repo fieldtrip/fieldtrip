@@ -15,7 +15,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 %
 % The optional input argument opt determines the behavior when converting
 % to the spm coordinate system, and pertains to the functional behaviour of
-% the private functions: align_ctf2spm and align_itab2spm.
+% the private functions: align_ctf2acpc and align_neuromag2acpc.
 %
 % The following input objects are supported
 %   anatomical mri, see FT_READ_MRI
@@ -92,16 +92,16 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
         case {'ctf' 'bti' '4d'}
           fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
           if hastemplate
-            obj = align_ctf2spm(obj, opt, template);
+            obj = align_ctf2acpc(obj, opt, template);
           else
-            obj = align_ctf2spm(obj, opt);
+            obj = align_ctf2acpc(obj, opt);
           end
         case {'itab' 'neuromag'}
           fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
           if hastemplate
-            obj = align_itabspm(obj, opt, template);
+            obj = align_neuromag2acpc(obj, opt, template);
           else
-            obj = align_itab2spm(obj, opt);
+            obj = align_neuromag2acpc(obj, opt);
           end
         otherwise
       end % switch obj.coordsys
