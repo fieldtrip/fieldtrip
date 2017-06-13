@@ -40,6 +40,7 @@ invalid = {
   'Use ISCELL instead of comparing the class to ''cell''.'
   'Use ISLOGICAL instead of comparing the class to ''logical''.'
   'Use TRUE or FALSE instead of LOGICAL(1) or LOGICAL(0).'
+'produces a value that might be unused.'
   };
 
 m = {};
