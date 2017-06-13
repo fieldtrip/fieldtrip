@@ -48,8 +48,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                        'fsl'         match to template anatomical MRI
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
 %                        system. Supported coordinate systems are 'ctf', '4d',
-%                        'bti', 'yokogawa', 'asa', 'itab', 'neuromag', 'spm',
-%                        'tal' and 'paxinos'. See http://tinyurl.com/ojkuhqz
+%                        'bti', 'yokogawa', 'asa', 'itab', 'neuromag', 'acpc',
+%                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the
@@ -71,7 +71,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                         handed, the volume is flipped to yield right handed voxel
 %                         axes.
 %
-% When cfg.method = 'fiducial' and cfg.coordsys = 'spm' or 'tal', the following
+% When cfg.method = 'fiducial' and cfg.coordsys = 'acpc', the following
 % is required to specify the voxel indices of the fiducials:
 %   cfg.fiducial.ac      = [i j k], position of anterior commissure
 %   cfg.fiducial.pc      = [i j k], position of posterior commissure
@@ -226,6 +226,10 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'landmark', 'fiducial'}); % cfg.landmark -> cfg.fiducial
+% mni/spm/tal are to be interpreted as acpc with native scaling, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'mni', 'acpc'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'spm', 'acpc'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'tal', 'acpc'});
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
@@ -259,7 +263,7 @@ if isempty(cfg.coordsys)
   if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas', 'zpoint'}))
     cfg.coordsys = 'ctf';
   elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint', 'right'}))
-    cfg.coordsys = 'spm';
+    cfg.coordsys = 'acpc';
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
   else
@@ -307,7 +311,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
       fidletter = {'n', 'l', 'r', 'z'};
       fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';
       fidexplanation2 = '      press z for an extra control point that should have a positive z-value\n';
-    case {'spm' 'tal'}
+    case 'acpc'
       fidlabel  = {'ac', 'pc', 'xzpoint', 'right'};
       fidletter = {'a', 'p', 'z', 'r'};
       fidexplanation1 = '      press a for ac, p for pc, z for xzpoint\n';

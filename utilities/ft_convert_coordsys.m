@@ -25,7 +25,8 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 %   (not yet) volume conductor definition
 %   (not yet) dipole grid definition
 %
-% Possible target coordinate systems are 'spm', 'tal', 'mni'.
+% Possible input coordinate systems are 'ctf', 'bti', '4d', 'neuromag and 'itab'.
+% Possible target coordinate systems are 'acpc'.
 %
 % Note that the conversion will be an automatic one, which means that it
 % will be an approximate conversion, not taking into account differences in
@@ -66,6 +67,12 @@ if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
   error('the coordinate system of the geometrical object is not specified');
 end
 
+if any(strcmp(target, {'spm', 'mni', 'tal'})
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
+  ft_warning('Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
+  target = 'acpc';
+end
+
 % set default behavior to use an approximate alignment, followed by a call
 % to spm_normalise for a better quality alignment
 if nargin<3
@@ -87,7 +94,7 @@ hastemplate = nargin>3;
 if nargin>1 && ~strcmpi(target, obj.coordsys)
   % convert to the desired coordinate system
   switch target
-    case {'spm' 'mni' 'tal'}
+    case 'acpc'
       switch obj.coordsys
         case {'ctf' 'bti' '4d'}
           fprintf('Converting the coordinate system from %s to %s\n', obj.coordsys, target);
@@ -109,3 +116,4 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
       error('conversion from %s to %s is not yet supported', obj.coordsys, target);
   end % switch target
 end
+
