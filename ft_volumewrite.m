@@ -20,9 +20,6 @@ function ft_volumewrite(cfg, volume)
 %   cfg.filetype      = 'analyze', 'nifti', 'nifti_img', 'analyze_spm', 'mgz',
 %                         'vmp' or 'vmr'
 %   cfg.vmpversion    = 1 or 2 (default) version of the vmp-format to use
-%   cfg.coordsys      = 'spm' or 'ctf', this will only affect the
-%                          functionality in case filetype = 'analyze', 'vmp',
-%                          or 'vmr'
 %
 % The default filetype is 'nifti', which means that a single *.nii file
 % will be written using the SPM8 toolbox. The 'nifti_img' filetype uses SPM8 for
@@ -102,6 +99,7 @@ end
 volume = ft_checkdata(volume, 'datatype', 'volume', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden', {'coordsys'});  % the coordinate system should be specified in the data
 cfg = ft_checkconfig(cfg, 'required', {'filename', 'parameter'});
 cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
 
@@ -238,20 +236,24 @@ end
 switch cfg.filetype
   case {'vmp', 'vmr'}
     % the reordering for BrainVoyager has been figured out by Markus Siegel
-    if strcmp(cfg.coordsys, 'ctf')
+    if any(strcmp(volume.coordsys, {'ctf', '4d', 'bti'}))
       data = permute(data, [2 3 1]);
-    elseif strcmp(cfg.coordsys, 'spm')
+    elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
       data = permute(data, [2 3 1]);
       data = flipdim(data, 1);
       data = flipdim(data, 2);
+    else
+      error('unsupported coordinate system ''%s''', volume.coordsys);
     end
     siz = size(data);
   case 'analyze'
     % the reordering of the Analyze format is according to documentation from Darren Webber
-    if strcmp(cfg.coordsys, 'ctf')
+    if any(strcmp(volume.coordsys, {'ctf', '4d', 'bti'}))
       data = permute(data, [2 1 3]);
-    elseif strcmp(cfg.coordsys, 'spm')
+    elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
       data = flipdim(data, 1);
+    else
+      error('unsupported coordinate system ''%s''', volume.coordsys);
     end
     siz = size(data);
   case {'analyze_spm', 'nifti', 'nifti_img' 'mgz' 'mgh'}
