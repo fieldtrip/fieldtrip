@@ -37,6 +37,8 @@ invalid = {
   'Use || instead of | as the OR operator in (scalar) conditional statements.'
   'Use && instead of & as the AND operator in (scalar) conditional statements.'
   'is known to MATLAB by its file name'
+  'Use ISCELL instead of comparing the class to ''cell''.'
+  'Use ISLOGICAL instead of comparing the class to ''logical''.'
   };
 
 m = {};
@@ -59,7 +61,7 @@ for i=1:numel(filelist)
   end
 end
 
-%% 
+%%
 
 % this shows the full list of warning messages
 if false
@@ -156,8 +158,6 @@ end
 %     'Unexpected use of '.^' in a scalar context.'
 %     'Unexpected use of '[' in a scalar context.'
 %     'Use FIND with the 'first' or 'last' option.'
-%     'Use ISCELL instead of comparing the class to 'cell'.'
-%     'Use ISLOGICAL instead of comparing the class to 'logical'.'
 %     'Use STRCMP instead of == or ~= to compare character vectors.'
 %     'Use STRCMPI(str1,str2) instead of using UPPER/LOWER in a call to STRCMP.'
 %     'Use STRTRIM(str) instead of nesting FLIPLR and DEBLANK calls.'
