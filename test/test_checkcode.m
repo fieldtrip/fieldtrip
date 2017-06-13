@@ -16,7 +16,7 @@ while ~isempty(p)
   nf = dir(p{1});
   p(1) = []; % remove this one
   for i=1:numel(nf)
-    if nf(i).isdir && ~isequal(nf(i).name(1), '.') && ~isequal(nf(i).name, 'external')
+    if nf(i).isdir && ~isequal(nf(i).name(1), '.') && ~isequal(nf(i).name, 'external') && ~isequal(fn(i).name, 'test')
       p{end+1} = fullfile(nf(i).folder, nf(i).name);
     else
       if ~nf(i).isdir && nf(i).name(end-1)=='.' && nf(i).name(end)=='m'
