@@ -104,7 +104,7 @@ if isfield(cfg.artfctdef.muscle, 'artifact')
 end
 
 if ~strcmp(cfg.artfctdef.muscle.method, 'zvalue')
-  error(sprintf('muscle artifact detection only works with cfg.method=''zvalue'''));
+  error('muscle artifact detection only works with cfg.method=''zvalue''');
 end
 
 % for backward compatibility

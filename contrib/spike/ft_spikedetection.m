@@ -131,7 +131,7 @@ cfg.preproc = ft_checkconfig(cfg.preproc, 'renamed', {'blcwindow', 'baselinewind
 
 status = mkdir(cfg.output);
 if ~status
-  error(sprintf('error creating spike output dataset %s', cfg.output));
+  error('error creating spike output dataset %s', cfg.output);
 end
 
 % read the header of the completete dataset

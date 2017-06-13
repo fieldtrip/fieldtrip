@@ -67,7 +67,7 @@ hc.head.rpa     = [0 0 0];
 
 fid = fopen(filename, 'r');
 if fid==-1
-  error(sprintf('could not open file %s', filename));
+  error('could not open file %s', filename);
 end
 
 fseek(fid, 0, 'bof');
