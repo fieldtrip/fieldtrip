@@ -38,9 +38,11 @@ invalid = {
   'Use && instead of & as the AND operator in (scalar) conditional statements.'
   };
 
+m = {};
 for i=1:numel(filelist)
   f = filelist{i};
   s = checkcode(f);
+  m = union(m, {s.message});
   for j=1:numel(s)
     for k=1:numel(invalid)
       if strmatch(invalid{k},s(j).message)
@@ -56,4 +58,8 @@ for i=1:numel(filelist)
   end
 end
 
+% this shows the full list of warning messages
+if false
+  disp(m);
+end
 
