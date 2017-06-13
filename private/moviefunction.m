@@ -888,7 +888,7 @@ if opt.record
     % open a save-file dialog
     [FileName,PathName,FilterIndex] = uiputfile('*.avi', 'Save AVI-file' , 'ft_movie');
     
-    if (FileName == 0 & PathName == 0) % aborted
+    if (FileName == 0 && PathName == 0) % aborted
       cb_recordbutton(h);
       return;
     end

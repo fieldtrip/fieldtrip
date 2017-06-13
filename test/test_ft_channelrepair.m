@@ -78,7 +78,7 @@ ft_databrowser(cfg, data_eeg_interp);
 cfg.neighbours = [19 20 24 26];
 for tr=1:numel(data_eeg_interp.trial)
   tmp = repmat(data_eeg_interp.trial{tr}(end, :), 4, 1);
-  if all(tmp < data_eeg_interp.trial{tr}(cfg.neighbours, :)) | ...
+  if all(tmp < data_eeg_interp.trial{tr}(cfg.neighbours, :)) || ...
       all(tmp > data_eeg_interp.trial{tr}(cfg.neighbours, :))
     error(['The average is not in between its channel neighbours at for trial ' num2str(tr)]);
   elseif ~all(data_eeg_interp.trial{tr}(end, :) == data_eeg_repaired.trial{tr}(25, :))
@@ -198,7 +198,7 @@ ft_databrowser(cfg, data_eeg_interp);
 cfg.neighbours = [19 20 24 26];
 for tr=1:numel(data_eeg_interp.trial)
   tmp = repmat(data_eeg_interp.trial{tr}(end, :), 4, 1);
-  if all(tmp < data_eeg_interp.trial{tr}(cfg.neighbours, :)) | ...
+  if all(tmp < data_eeg_interp.trial{tr}(cfg.neighbours, :)) || ...
       all(tmp > data_eeg_interp.trial{tr}(cfg.neighbours, :))
     error(['The average is not in between its channel neighbours at for trial ' num2str(tr)]);
   elseif ~all(data_eeg_interp.trial{tr}(end, :) == data_eeg_repaired.trial{tr}(25, :))

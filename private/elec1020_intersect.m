@@ -52,12 +52,12 @@ for i=1:nsel
 end
 
 % determine which segments connect to each other
-indx = [1];
+indx = 1;
 for i=1:nsel
   for j=setdiff(1:nsel, indx)
     d1 = pntdist(cnt2(i,:), cnt1(j,:));
     d2 = pntdist(cnt2(i,:), cnt2(j,:));
-    if d1<eps | d2<eps
+    if d1<eps || d2<eps
       indx = [indx; j]; 
     end
   end
@@ -101,10 +101,10 @@ if flag==1
     if all(side==1)
       new_cnt1 = [new_cnt1; cnt1(i,:)];
       new_cnt2 = [new_cnt2; cnt2(i,:)];
-    elseif any(side==0) & any(side==1)
+    elseif any(side==0) && any(side==1)
       new_cnt1 = [new_cnt1; cnt1(i,:)];
       new_cnt2 = [new_cnt2; cnt2(i,:)];
-    elseif any(side==1) & any(side==-1)
+    elseif any(side==1) && any(side==-1)
       if side==-1
         new_cnt1 = [new_cnt1; ptriproj(t1, t2, t3, cnt1(i,:))];
         new_cnt2 = [new_cnt2; cnt2(i,:)];

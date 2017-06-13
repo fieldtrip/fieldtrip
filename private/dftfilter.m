@@ -39,7 +39,7 @@ function [filt] = dftfilter(dat,Fs,Fl)
 %
 % $Id$
 
-if nargin<3 | isempty(Fl)
+if nargin<3 || isempty(Fl)
   Fl = 50;
 end
 
@@ -51,7 +51,7 @@ sel = 1:round(floor(Nsamples * Fl/Fs) * Fs/Fl);
 
 % fit a sin and cos to the signal and subtract them
 time  = (0:Nsamples-1)/Fs;
-tmp  = exp(j*2*pi*Fl*time);                    % complex sin and cos
+tmp  = exp(1i*2*pi*Fl*time);                    % complex sin and cos
 % ampl = 2*dat*tmp'/Nsamples;                  % estimated amplitude of complex sin and cos
 ampl = 2*dat(:,sel)*tmp(sel)'/length(sel);     % estimated amplitude of complex sin and cos on integer number of cycles
 est  = ampl*tmp;                               % estimated signal at this frequency
