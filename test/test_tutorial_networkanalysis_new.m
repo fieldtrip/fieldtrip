@@ -1,13 +1,18 @@
-function test_tutorial_networkanalysis_new
+function test_tutorial_networkanalysis(datadirs)
 
 % WALLTIME 00:30:00
 % MEM 7gb
 
 % TEST ft_networkanalysis
 
+if nargin==0,
+    datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data');
+    datadirs{2} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+end
+
 %% read the continuous data and segment into 2 seconds epochs, with 50% overlap
 cfg            = [];
-cfg.dataset    = dccnpath(fullfile('/home/common/matlab/fieldtrip/data','SubjectRest.ds')); 
+cfg.dataset    = fullfile(datadirs{1},'SubjectRest.ds'); 
 cfg.continuous = 'yes';
 cfg.channel    = {'MEG'};
 data = ft_preprocessing(cfg);
@@ -22,7 +27,7 @@ cfg.demean = 'yes';
 cfg.trials = 1:(numel(data.trial)-6);
 data       = ft_preprocessing(cfg, data);
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+datadir = datadirs{2};
 cd(datadir);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,11 +60,12 @@ cfg.detrend    = 'yes';
 datads         = ft_resampledata(cfg, dataclean);
 
 %% use ICA in order to identify cardiac and blink components
-cfg                 = [];
-cfg.method          = 'runica'; 
-cfg.runica.maxsteps = 50;
-cfg.randomseed      = 0;
-comp                = ft_componentanalysis(cfg, datads);
+%cfg                 = [];
+%cfg.method          = 'runica'; 
+%cfg.runica.maxsteps = 50;
+%cfg.randomseed      = 0;
+%comp                = ft_componentanalysis(cfg, datads);
+load(fullfile(datadir,'comp.mat'));
 
 %% visualize components
 

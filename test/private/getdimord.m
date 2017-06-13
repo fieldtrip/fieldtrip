@@ -323,7 +323,8 @@ switch field
     if isequal(datsiz, [npos nfreq ntime])
       dimord = 'pos_freq_time';
     end
-  case {'pow' 'noise'}
+    
+  case {'pow' 'noise' 'rv'}
     if isequal(datsiz, [npos ntime])
       dimord = 'pos_time';
     elseif isequal(datsiz, [npos nfreq])
@@ -348,7 +349,7 @@ switch field
       dimord = 'rpt_pos_freq';
     end
     
-  case {'mom','itc','aa','stat','pval','statitc','pitc'}
+  case {'mom' 'itc' 'aa' 'stat','pval' 'statitc' 'pitc'}
     if isequal(datsiz, [npos nori nrpt])
       dimord = 'pos_ori_rpt';
     elseif isequal(datsiz, [npos nori ntime])
@@ -444,7 +445,7 @@ switch field
       dimord = 'chan_topochan';
     end
     
-  case {'inside'}
+  case {'anatomy' 'inside'}
     if isfield(data, 'dim') && isequal(datsiz, data.dim)
       dimord = 'dim1_dim2_dim3';
     elseif isequalwithoutnans(datsiz, [npos 1]) || isequalwithoutnans(datsiz, [1 npos])
