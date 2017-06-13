@@ -1,4 +1,4 @@
-function rgb = rgbcolor
+function rgb = cortex
 
 % returns a predefined color as [red green blue] values
 %

@@ -151,7 +151,7 @@ for iUnit = 1:nUnits
       df         = diff(mnOverLead);
       idx        = find(df==0)+1;
       if ~isempty(idx), 
-        if all(nanmax(mnOverLead(idx))>=mnOverLead) | all(nanmin(mnOverLead(idx))<=mnOverLead)
+        if all(nanmax(mnOverLead(idx))>=mnOverLead) || all(nanmin(mnOverLead(idx))<=mnOverLead)
           dl = [dl iWave];
         end
       end

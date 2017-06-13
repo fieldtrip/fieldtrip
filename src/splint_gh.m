@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = splint_gh(varargin)
 
 % SPLINT_GH implements equations (3) and (5b) of Perrin 1989
 % for simultaneous computation of multiple values

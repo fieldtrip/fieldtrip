@@ -119,7 +119,7 @@ global NL_CHAR;
 if nargin < 2
     error('Not enough input arguments');
 end
-if (strcmpi(operation,'read')) | (strcmpi(operation,'deletekeys'))
+if (strcmpi(operation,'read')) || (strcmpi(operation,'deletekeys'))
     if nargin < 3
         error('Not enough input arguments.');
     end
@@ -131,17 +131,17 @@ if (strcmpi(operation,'read')) | (strcmpi(operation,'deletekeys'))
         error('Keys argument has too many columns');
     end
     for ii=1:m
-        if isempty(keys(ii,3)) | ~ischar(keys{ii,3})
+        if isempty(keys(ii,3)) || ~ischar(keys{ii,3})
             error('Empty or non-char keys are not allowed.');
         end
     end
-elseif (strcmpi(operation,'write')) | (strcmpi(operation,'writetext'))
+elseif (strcmpi(operation,'write')) || (strcmpi(operation,'writetext'))
     if nargin < 3
         error('Not enough input arguments');
     end
     [m,n] = size(keys);
     for ii=1:m
-        if isempty(keys(ii,3)) | ~ischar(keys{ii,3})
+        if isempty(keys(ii,3)) || ~ischar(keys{ii,3})
             error('Empty or non-char keys are not allowed.');
         end
     end
@@ -160,7 +160,7 @@ end
 if nargin < 4 || isempty(style)
     style = 'plain';
 else
-    if ~(strcmpi(style,'plain') | strcmpi(style,'tabbed')) | ~ischar(style)
+    if ~(strcmpi(style,'plain') || strcmpi(style,'tabbed')) || ~ischar(style)
         error('Unsupported style given or style not given as a string');
     end
 end
@@ -324,7 +324,7 @@ try
             currKey = readValue;
             pos2 = ftell(fh);       % the last-byte position of the read key  - the total sum of chars read so far
             for ii=1:length(keyInd)
-               if strcmpi( keysIn(keyInd(ii),3),readKey ) & ~keysLocated(keyInd(ii))
+               if strcmpi( keysIn(keyInd(ii),3),readKey ) && ~keysLocated(keyInd(ii))
                    keysExist(keyInd(ii)) = 1;
                    startOffsets(keyInd(ii)) = pos1+1;
                    endOffsets(keyInd(ii)) = pos2;
@@ -474,7 +474,7 @@ try
             datain = [datain dataout(from:to)];    % the lines before the key
         end
         
-        if length(datain) & (~(datain(end)==RETURN | datain(end)==NEWLINE))
+        if length(datain) && (~(datain(end)==RETURN || datain(end)==NEWLINE))
             datain = [datain, sprintf(NL_CHAR)];
         end
 
@@ -500,8 +500,8 @@ try
                 subSecsExist(ind) = 1;
             end
         end
-        if secsExist(ii) & (~isempty(keysIn{ii,1})); tab = tab1;  end;
-        if subSecsExist(ii) & (~isempty(keysIn{ii,2})); tab = [tab tab1];  end;
+        if secsExist(ii) && (~isempty(keysIn{ii,1})); tab = tab1;  end;
+        if subSecsExist(ii) && (~isempty(keysIn{ii,2})); tab = [tab tab1];  end;
         datain = [datain sprintf(['%s' NL_CHAR],[tab keysIn{ii,3} ' = ' values{ii}])];
     end
     from = eo(ii);
@@ -621,12 +621,12 @@ line = strim(line);                         % removes any leading and trailing s
 if isempty(line)                            % empty line
     return
 end
-if (line(1) == '[') & (line(end) == ']')... % section found
-        & (length(line) >= 3)
+if (line(1) == '[') && (line(end) == ']')... % section found
+        && (length(line) >= 3)
     value = lower(line(2:end-1));
     status = 1;
-elseif (line(1) == '{') &...                % subsection found
-       (line(end) == '}') & (length(line) >= 3)
+elseif (line(1) == '{') &&...                % subsection found
+       (line(end) == '}') && (length(line) >= 3)
     value = lower(line(2:end-1));
     status = 2;
 else    

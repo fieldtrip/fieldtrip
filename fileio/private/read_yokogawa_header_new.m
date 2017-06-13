@@ -74,7 +74,7 @@ switch acq_type
   case handles.AcqTypeContinuousRaw
     sample_rate = acq_cond.sample_rate;
     sample_count = acq_cond.sample_count;
-    if isempty(sample_rate) | isempty(sample_count)
+    if isempty(sample_rate) || isempty(sample_count)
       error('invalid sample rate or sample count in ', filename);
       return;
     end
@@ -86,7 +86,7 @@ switch acq_type
     sample_count = acq_cond.frame_length;
     pretrigger_length = acq_cond.pretrigger_length;
     averaged_count = acq_cond.average_count; 
-    if isempty(sample_rate) | isempty(sample_count) | isempty(pretrigger_length) | isempty(averaged_count)
+    if isempty(sample_rate) || isempty(sample_count) || isempty(pretrigger_length) || isempty(averaged_count)
       error('invalid sample rate or sample count or pretrigger length or average count in ', filename);
       return;
     end
@@ -99,7 +99,7 @@ switch acq_type
     sample_count = acq_cond.frame_length;
     pretrigger_length = acq_cond.pretrigger_length;
     actual_epoch_count = acq_cond.average_count; 
-    if isempty(sample_rate) | isempty(sample_count) | isempty(pretrigger_length) | isempty(actual_epoch_count)
+    if isempty(sample_rate) || isempty(sample_count) || isempty(pretrigger_length) || isempty(actual_epoch_count)
       error('invalid sample rate or sample count or pretrigger length or epoch count in ', filename);
       return;
     end

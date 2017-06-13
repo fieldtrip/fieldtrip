@@ -68,9 +68,9 @@ if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
 if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
 
 % perform some checks on the configuration
-if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
+if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
     error('P-values can only be calculated if the test statistics are calculated.');
-end;
+end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
     error('uvar must be specified for dependent samples statistics');
 end
@@ -80,7 +80,7 @@ if ~isempty(cfg.cvar)
   nblocks=length(condlabels);
 else
   nblocks=1;
-end;
+end
 
 nunits = max(design(cfg.uvar,:));
 df = nunits - 1;

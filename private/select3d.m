@@ -71,7 +71,7 @@ if nargin<1
    obj = gco;
 end
 
-if isempty(obj) | ~ishandle(obj) | length(obj)~=1
+if isempty(obj) || ~ishandle(obj) || length(obj)~=1
     error(ERRMSG);
 end
 
@@ -172,7 +172,7 @@ end
 % NaN and Inf check 
 nan_inf_test1 = isnan(faces) | isinf(faces);
 nan_inf_test2 = isnan(vert) | isinf(vert);
-if any(nan_inf_test1(:)) | any(nan_inf_test2(:))
+if any(nan_inf_test1(:)) || any(nan_inf_test2(:))
     warning('%s does not support NaNs or Infs in face/vertex data.',mfilename);
 end
 
@@ -308,7 +308,7 @@ end
 % three vertices since that is all we need to define a plane).
 % assuming planar polygons.
 candidate_faces = candidate_faces(ind_intersection_test,1:3);
-candidate_faces = reshape(candidate_faces',1,prod(size(candidate_faces)));
+candidate_faces = reshape(candidate_faces',1,numel(candidate_faces));
 vert = vert';
 candidate_facev = vert(:,candidate_faces);
 candidate_facev = reshape(candidate_facev,3,3,length(ind_intersection_test));
@@ -319,8 +319,8 @@ v2 = squeeze(candidate_facev(:,2,:));
 v3 = squeeze(candidate_facev(:,3,:));
 
 % Get normal to face plane
-vec1 = [v2-v1];
-vec2 = [v3-v2];
+vec1 = v2-v1;
+vec2 = v3-v2;
 crs = cross(vec1,vec2);
 mag = sqrt(sum(crs.*crs));
 nplane(1,:) = crs(1,:)./mag;
