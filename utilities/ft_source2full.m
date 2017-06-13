@@ -176,7 +176,7 @@ if strcmp(stype, 'old')
       for k = 1:length(tmpparam)
         dat = getsubfield(tmpsource, tmpparam{k});
         if islogical(dat)
-          tmp         = logical(zeros(1,Nfull)); 
+          tmp         = false(1,Nfull); 
           tmp(inside) = dat;
         elseif iscell(dat)
           tmp          = cell(1,Nfull);

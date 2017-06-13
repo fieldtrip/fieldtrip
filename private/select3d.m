@@ -63,8 +63,8 @@ faceiout = [];
 
 % other variables
 ERRMSG = 'Input argument must be a valid graphics handle';
-isline = logical(0);
-isperspective = logical(0);
+isline = false;
+isperspective = false;
 
 % Parse input arguments
 if nargin<1
@@ -154,7 +154,7 @@ elseif strcmp(obj_type,'line')
     zdata = get(axchild,'zdata');
     vert = [xdata', ydata',zdata'];
     faces = []; 
-    isline = logical(1);
+    isline = true;
 
 % Ignore all other objects
 else     
@@ -259,7 +259,7 @@ end
 vert_with_negative_y = zeros(size(faces));
 face_y_vert = xvert(2,faces);
 ind_vert_with_negative_y = find(face_y_vert<0); 
-vert_with_negative_y(ind_vert_with_negative_y) = logical(1);
+vert_with_negative_y(ind_vert_with_negative_y) = true;
 
 % Find all the line segments that span the x axis
 is_line_segment_spanning_x = abs(diff([vert_with_negative_y, vert_with_negative_y(:,1)],1,2));

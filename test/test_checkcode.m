@@ -39,6 +39,7 @@ invalid = {
   'is known to MATLAB by its file name'
   'Use ISCELL instead of comparing the class to ''cell''.'
   'Use ISLOGICAL instead of comparing the class to ''logical''.'
+  'Use TRUE or FALSE instead of LOGICAL(1) or LOGICAL(0).'
   };
 
 m = {};
@@ -161,7 +162,6 @@ end
 %     'Use STRCMP instead of == or ~= to compare character vectors.'
 %     'Use STRCMPI(str1,str2) instead of using UPPER/LOWER in a call to STRCMP.'
 %     'Use STRTRIM(str) instead of nesting FLIPLR and DEBLANK calls.'
-%     'Use TRUE or FALSE instead of LOGICAL(1) or LOGICAL(0).'
 %     'Use dynamic fieldnames with structures instead of GETFIELD.'
 %     'Use dynamic fieldnames with structures instead of SETFIELD.'
 %     'Use of 'nargout' in a script will be removed in a future release.'
