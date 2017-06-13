@@ -101,7 +101,7 @@ nuospercond=zeros(nconds,1);
 for condindx=1:nconds
     nuospercond(condindx)=length(find(design(cfg.ivar,:)==condindx));
 end;
-if sum(nuospercond)<size(design,2) || nuospercond~=(nuospercond(1)*ones(nconds,1))
+if sum(nuospercond)<size(design,2) || any(nuospercond~=nuospercond(1))
   error('Invalid specification of the design array.');
 end;
 nunits = max(design(cfg.uvar,:));
