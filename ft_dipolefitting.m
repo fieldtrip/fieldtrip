@@ -171,7 +171,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved t
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % the default for this depends on the data type
-if ~isfield(cfg, 'model'),
+if ~isfield(cfg, 'model')
   if ~isempty(cfg.component)
     % each component is fitted independently
     cfg.model = 'moving';
@@ -257,10 +257,10 @@ if isempty(cfg.reducerank)
   end
 end
 
-% select the desired channels, the order should be the same as in the sensor structure
-[selcfg, seldata] = match_str(cfg.channel, data.label);
-% take the selected channels
-Vdata = data.avg(selcfg, :);
+% select the desired channels, ordered according to the sensor structure
+[selsens, seldata] = match_str(sens.label, data.label);
+% take the selected channels from the data structure
+Vdata = data.avg(seldata, :);
 
 % sphere the date using the noise covariance matrix supplied, if any
 % this affects both the gridsearch and the nonlinear optimization
