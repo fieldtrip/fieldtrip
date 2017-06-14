@@ -109,7 +109,7 @@ case {'ttest2', 'ttest_2samples_by_timepoint'}
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error(sprintf('%s method is only supported for two conditions', cfg.statistic));
+    error('%s method is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));

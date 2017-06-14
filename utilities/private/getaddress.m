@@ -1,4 +1,4 @@
-function address = getip(hostname)
+function address = getaddress(hostname)
 
 % GETADDRESS returns the IP address
 %

@@ -28,9 +28,9 @@ function [nrm] = normals(pnt, tri, opt)
 
 if nargin<3
   opt='vertex';
-elseif (opt(1)=='v' | opt(1)=='V')
+elseif (opt(1)=='v' || opt(1)=='V')
   opt='vertex';
-elseif (opt(1)=='t' | opt(1)=='T')
+elseif (opt(1)=='t' || opt(1)=='T')
   opt='triangle';
 else
   error('invalid optional argument');

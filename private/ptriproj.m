@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = ptriproj(varargin)
 
 % PTRIPROJ projects a point onto the plane going through a triangle
 %

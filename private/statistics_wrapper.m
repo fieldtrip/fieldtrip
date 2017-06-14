@@ -283,7 +283,7 @@ end
 if exist(['ft_statistics_' cfg.method], 'file')
   statmethod = str2func(['ft_statistics_' cfg.method]);
 else
-  error(sprintf('could not find the corresponding function for cfg.method="%s"\n', cfg.method));
+  error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);
 end
 fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
 

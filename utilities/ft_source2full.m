@@ -140,7 +140,7 @@ else
   stype = 'old';
 end
 
-if strcmp(stype, 'old'),
+if strcmp(stype, 'old')
   % original code
   % first do the non-trial fields
   source.dim = [1 length(inside) 1]; %to fool parameterselection
@@ -153,10 +153,10 @@ if strcmp(stype, 'old'),
   
   for j = 1:length(param)
     dat = getsubfield(source, param{j});
-    if islogical(dat),
+    if islogical(dat)
       tmp         = false(1,Nfull); 
       tmp(inside) = dat;
-    elseif iscell(dat),
+    elseif iscell(dat)
       tmp          = cell(1,Nfull);
       tmp(inside)  = dat;
       %tmp(outside) = nan;
@@ -168,17 +168,17 @@ if strcmp(stype, 'old'),
   end
   
   % then do the trial fields
-  if     isfield(source, 'trial' ),
+  if     isfield(source, 'trial' )
     for j = 1:length(source.trial)
       tmpsource     = source.trial(j);
       tmpsource.dim = source.dim; % to fool parameterselection
       tmpparam      = parameterselection('all', tmpsource);
       for k = 1:length(tmpparam)
         dat = getsubfield(tmpsource, tmpparam{k});
-        if strcmp(class(dat), 'logical'),
-          tmp         = logical(zeros(1,Nfull)); 
+        if islogical(dat)
+          tmp         = false(1,Nfull); 
           tmp(inside) = dat;
-        elseif strcmp(class(dat), 'cell'),
+        elseif iscell(dat)
           tmp          = cell(1,Nfull);
           tmp(inside)  = dat;
           %tmp(outside) = nan;
@@ -191,17 +191,17 @@ if strcmp(stype, 'old'),
       tmpsource       = rmfield(tmpsource, 'dim');
       source.trial(j) = tmpsource;
     end   
-  elseif isfield(source, 'trialA'),
+  elseif isfield(source, 'trialA')
     for j = 1:length(source.trialA)
       tmpsource     = source.trialA(j);
       tmpsource.dim = source.dim; % to fool parameterselection
       tmpparam      = parameterselection('all', tmpsource);
       for k = 1:length(tmpparam)
         dat = getsubfield(tmpsource, tmpparam{k});
-        if strcmp(class(dat), 'logical'),
-          tmp         = logical(zeros(1,Nfull)); 
+        if islogical(dat)
+          tmp         = false(1,Nfull); 
           tmp(inside) = dat;
-        elseif strcmp(class(dat), 'cell'),
+        elseif iscell(dat)
           tmp          = cell(1,Nfull);
           tmp(inside)  = dat;
           %tmp(outside) = nan;
@@ -214,17 +214,17 @@ if strcmp(stype, 'old'),
       tmpsource        = rmfield(tmpsource, 'dim');
       source.trialA(j) = tmpsource;   
     end
-  elseif isfield(source, 'trialB'),
+  elseif isfield(source, 'trialB')
     for j = 1:length(source.trialB)
       tmpsource     = source.trialB(j);
       tmpsource.dim = source.dim; % to fool parameterselection
       tmpparam      = parameterselection('all', tmpsource);
       for k = 1:length(tmpparam)
         dat = getsubfield(tmpsource, tmpparam{k});
-        if strcmp(class(dat), 'logical'),
-          tmp         = logical(zeros(1,Nfull)); 
+        if islogical(dat)
+          tmp         = false(1,Nfull); 
           tmp(inside) = dat;
-        elseif strcmp(class(dat), 'cell'),
+        elseif iscell(dat)
           tmp          = cell(1,Nfull);
           tmp(inside)  = dat;
           %tmp(outside) = nan;
@@ -261,14 +261,14 @@ elseif strcmp(stype, 'new')
   % new style conversion
   fn = fieldnames(source);
   for i=1:numel(fn)
-    if any(size(source.(fn{i}))==Nsparse),
-      if iscell(source.(fn{i})),
+    if any(size(source.(fn{i}))==Nsparse)
+      if iscell(source.(fn{i}))
         indx = find(size(source.(fn{i}))==Nsparse);
-        if all(indx==1),
+        if all(indx==1)
           tmp            = cell(Nfull,1);
           tmp(inside,1)  = source.(fn{i});
           source.(fn{i}) = tmp;
-        elseif all(indx==2),
+        elseif all(indx==2)
           tmp            = cell(1,Nfull);
           tmp(1,inside)  = source.(fn{i});
           source.(fn{i}) = tmp;
@@ -277,15 +277,15 @@ elseif strcmp(stype, 'new')
         end
       else
         indx = find(size(source.(fn{i}))==Nsparse);
-        if all(indx==1),
+        if all(indx==1)
           tmpsiz = [size(source.(fn{i})) 1];
           tmp    = nan([Nfull tmpsiz(2:end)]);
           tmp(inside,:,:,:,:) = source.(fn{i});
-        elseif all(indx==2),
+        elseif all(indx==2)
           tmpsiz = [size(source.(fn{i})) 1];
           tmp    = nan([tmpsiz(1) Nfull tmpsiz(3:end)]);
           tmp(:,inside,:,:,:) = source.(fn{i});
-        elseif all(indx==[1 2]),
+        elseif all(indx==[1 2])
           % bivariate matrix
           tmpsiz = [size(source.(fn{i})) 1];
           tmp    = nan([Nfull Nfull tmpsiz(3:end)]);

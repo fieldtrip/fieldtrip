@@ -1,4 +1,4 @@
-function [lf] = eeg_halfspace_monopole(rd, elc, vol)
+function [lf] = eeg_infinite_monopole(rd, elc, vol)
 
 % EEG_HALFSPACE_MONOPOLE calculate the halfspace medium leadfield
 % on positions pnt for a monopole at position rd and conductivity cond

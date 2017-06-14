@@ -37,7 +37,7 @@ bnd2  = read_asa(fn, 'Boundary2', '%s');
 bnd3  = read_asa(fn, 'Boundary3', '%s');
 bnd4  = read_asa(fn, 'Boundary4', '%s');
 
-if ~isempty(radii) | ~isempty(pos)
+if ~isempty(radii) || ~isempty(pos)
   % this appears to be a spherical volume conductor
   if strcmpi(UnitP,'mm')
     radii = 1*radii;

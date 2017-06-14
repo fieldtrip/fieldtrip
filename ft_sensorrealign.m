@@ -431,7 +431,7 @@ elseif strcmp(cfg.method, 'fiducial')
     lpa_indx = match_str(lower(template(i).label), lower(cfg.fiducial{2}));
     rpa_indx = match_str(lower(template(i).label), lower(cfg.fiducial{3}));
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
-      error(sprintf('not all fiducials were found in template %d', i));
+      error('not all fiducials were found in template %d', i);
     end
     templ_nas(i,:) = template(i).pos(nas_indx,:);
     templ_lpa(i,:) = template(i).pos(lpa_indx,:);

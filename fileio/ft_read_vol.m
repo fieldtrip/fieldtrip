@@ -40,7 +40,7 @@ filename = fetch_url(filename);
 
 % test whether the file exists
 if ~exist(filename)
-  error(sprintf('file ''%s'' does not exist', filename));
+  error('file ''%s'' does not exist', filename);
 end
 
 % get the options
