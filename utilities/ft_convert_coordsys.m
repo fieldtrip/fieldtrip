@@ -25,7 +25,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 %   (not yet) volume conductor definition
 %   (not yet) dipole grid definition
 %
-% Possible input coordinate systems are 'ctf', 'bti', '4d', 'neuromag and 'itab'.
+% Possible input coordinate systems are 'ctf', 'bti', '4d', 'neuromag' and 'itab'.
 % Possible target coordinate systems are 'acpc'.
 %
 % Note that the conversion will be an automatic one, which means that it
@@ -33,7 +33,7 @@ function [obj] = ft_convert_coordsys(obj, target, opt, template)
 % individual anatomies/differences in conventions where to put the
 % fiducials.
 %
-% See also FT_DETERMINE_COORDSYS, ALIGN_CTF2SPM, ALIGN_ITAB2SPM
+% See also FT_DETERMINE_COORDSYS, ALIGN_CTF2ACPC, ALIGN_NEUROMAG2ACPC, ALIGN_FSAVERAGE2MNI
 
 % Copyright (C) 2005-2011, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
