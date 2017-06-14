@@ -101,7 +101,7 @@ m=length(trace);
 tl=length(trigger);
 NoTrig=0;
 for tr=1:tl
-    if ((trigger(1,tr) <= m) & (trigger(1,tr) >= first_trigger))
+    if ((trigger(1,tr) <= m) && (trigger(1,tr) >= first_trigger))
         NoTrig=NoTrig+1;
     end
 end

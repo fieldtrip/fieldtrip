@@ -55,7 +55,7 @@ while ~feof(fid)
       % read the next line
       line = fgetl(fid);
       % process the data in the line
-      if strcmp(blocktype, 'START') & ~isempty(strfind(line, '='))
+      if strcmp(blocktype, 'START') && ~isempty(strfind(line, '='))
         % the line looks like "lhs = rhs"
         [lhs, rhs] = strtok(line, '=');
         lhs = strtrim(lhs);
@@ -74,7 +74,7 @@ while ~feof(fid)
         % FIXME
       end
 
-      if isnumeric(line) | feof(fid)
+      if isnumeric(line) || feof(fid)
         error('unexpected end of file');
       end
 

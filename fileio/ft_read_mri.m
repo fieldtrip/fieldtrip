@@ -428,7 +428,7 @@ case 'matlab'
   mri = loadvar(filename, 'mri');
 
 otherwise
-  error(sprintf('unrecognized filetype ''%s'' for ''%s''', dataformat, filename));
+  error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
 end
 
 if exist('img', 'var')

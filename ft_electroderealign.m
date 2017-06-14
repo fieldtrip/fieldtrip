@@ -510,7 +510,7 @@ elseif strcmp(cfg.method, 'fiducial')
     lpa_indx = match_str(lower(target(i).label), lower(cfg.fiducial{2}));
     rpa_indx = match_str(lower(target(i).label), lower(cfg.fiducial{3}));
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
-      error(sprintf('not all fiducials were found in template %d', i));
+      error('not all fiducials were found in template %d', i);
     end
     tmpl_nas(i,:) = target(i).elecpos(nas_indx,:);
     tmpl_lpa(i,:) = target(i).elecpos(lpa_indx,:);

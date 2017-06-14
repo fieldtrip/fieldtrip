@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = solid_angle(varargin)
 
 % SOLID_ANGLE of a planar triangle as seen from the origin
 %

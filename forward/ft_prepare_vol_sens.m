@@ -295,7 +295,7 @@ elseif ismeg
       end
       
     case 'openmeeg'
-      if isfield(headmodel,'mat') & ~isempty(headmodel.mat)
+      if isfield(headmodel,'mat') && ~isempty(headmodel.mat)
         warning('MEG with openmeeg only supported with NEMO lab pipeline. Please omit the mat matrix from the headmodel structure.');
       end
       

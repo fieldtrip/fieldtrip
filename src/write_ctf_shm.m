@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = write_ctf_shm(varargin)
 
 % WRITE_CTF_SHM writes metainformation and data as a packet to shared memory.
 % This function can be used for real-time processing of data while it is

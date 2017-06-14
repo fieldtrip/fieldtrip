@@ -72,7 +72,7 @@ end
 
 status = mkdir(cfg.output);
 if ~status
-  error(sprintf('error creating splitted DMA output dataset %s', cfg.output));
+  error('error creating splitted DMA output dataset %s', cfg.output);
 end
 fprintf('writing to output directory ''%s''\n', cfg.output);
 

@@ -259,7 +259,7 @@ if ( TimeDim > 1 ) && (avw.hdr.hist.orient ~= 0 ),
            'for volumes with dimensionality greater than 3.  Set ', ...
            'avw.hdr.hist.orient = 0 and flip your volume after ', ...
            'calling this function' ];
-   msg = sprintf( '%s (%s).', msg, mfilename );
+   msg = error( '%s (%s).', msg, mfilename );
    error( msg );
 end
 
