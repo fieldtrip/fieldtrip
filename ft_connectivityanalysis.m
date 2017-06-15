@@ -737,6 +737,9 @@ switch cfg.method
       if strcmp(cfg.method, 'iis'),                     methodstr = 'iis';          end
       optarg = {'hasjack', hasjack, 'method', methodstr, 'powindx', powindx, 'dimord', data.dimord};
       [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, optarg{:});
+      if strcmp(cfg.method, 'iis'),
+        data.freq   = nan;
+      end
     else
       error('granger for time domain data is not yet implemented');
     end

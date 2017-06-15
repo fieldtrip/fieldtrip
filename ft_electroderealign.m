@@ -510,7 +510,7 @@ elseif strcmp(cfg.method, 'fiducial')
     lpa_indx = match_str(lower(target(i).label), lower(cfg.fiducial{2}));
     rpa_indx = match_str(lower(target(i).label), lower(cfg.fiducial{3}));
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
-      error(sprintf('not all fiducials were found in template %d', i));
+      error('not all fiducials were found in template %d', i);
     end
     tmpl_nas(i,:) = target(i).elecpos(nas_indx,:);
     tmpl_lpa(i,:) = target(i).elecpos(lpa_indx,:);
@@ -693,8 +693,12 @@ switch cfg.method
     if isfield(headshape, 'coordsys')
       elec_realigned.coordsys = headshape.coordsys;
     end
-    if isfield(elec_original, 'coordsys') && (strcmp(cfg.warp, 'dykstra2012') || strcmp(cfg.warp, 'fsaverage'))
-      elec_realigned.coordsys = elec_original.coordsys; % this warp simply moves the electrodes in the same coordinate space
+    if isfield(elec_original, 'coordsys')
+      if strcmp(cfg.warp, 'dykstra2012') % this warp simply moves the electrodes in the same coordinate space
+        elec_realigned.coordsys = elec_original.coordsys;
+      elseif strcmp(cfg.warp, 'fsaverage')
+        elec_realigned.coordsys = 'fsaverage';
+      end
     end
   case 'fiducial'
     if isfield(target, 'coordsys')

@@ -10,7 +10,7 @@ function iis = coeffs2iis(A,C)
 %   A = 2x2xncmbxorder, matrix with MVAR-coefficients
 %   C = 2x2xncmb      , covariance matrices of the noise
 
-siz  = size(C);
+siz  = [size(C) 1];
 ncmb = siz(3);
 
 P1 = repmat(eye(2), [1 1 ncmb]);

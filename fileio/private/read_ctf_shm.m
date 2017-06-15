@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = read_ctf_shm(varargin)
 
 % READ_CTF_SHM reads metainformation or selected blocks of data from
 % shared memory. This function can be used for real-time processing of

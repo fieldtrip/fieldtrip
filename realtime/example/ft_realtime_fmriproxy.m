@@ -47,7 +47,7 @@ function ft_realtime_fmriproxy(cfg)
 % $Id$
 
 % set the defaults
-if isempty(cfg) | ~isfield(cfg, 'target') | ~isfield(cfg.target, 'datafile')
+if isempty(cfg) || ~isfield(cfg, 'target') || ~isfield(cfg.target, 'datafile')
   cfg.target.datafile = 'buffer://localhost:1972';  
 end
 cfg.target.dataformat = [];    

@@ -57,11 +57,11 @@ spifile = fullfile(dirname, [dirname '.spi']);
 stmfile = fullfile(dirname, [dirname '.stm']);
 bhvfile = fullfile(dirname, [dirname '.bhv']);
 
-if ~exist(anafile, 'file'), error(sprintf('the file "%s" does not exist', anafile)); end
-if ~exist(swafile, 'file'), error(sprintf('the file "%s" does not exist', swafile)); end
-if ~exist(spifile, 'file'), error(sprintf('the file "%s" does not exist', spifile)); end
-if ~exist(stmfile, 'file'), error(sprintf('the file "%s" does not exist', stmfile)); end
-if ~exist(bhvfile, 'file'), error(sprintf('the file "%s" does not exist', bhvfile)); end
+if ~exist(anafile, 'file'), error('the file "%s" does not exist', anafile); end
+if ~exist(swafile, 'file'), error('the file "%s" does not exist', swafile); end
+if ~exist(spifile, 'file'), error('the file "%s" does not exist', spifile); end
+if ~exist(stmfile, 'file'), error('the file "%s" does not exist', stmfile); end
+if ~exist(bhvfile, 'file'), error('the file "%s" does not exist', bhvfile); end
 
 % read the data
 fprintf('reading %s\n', anafile); ana = read_labview_dtlg(anafile, 'int16');

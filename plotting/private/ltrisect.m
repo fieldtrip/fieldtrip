@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = ltrisect(varargin)
 
 % LTRISECT intersects a line with a plane spanned by three vertices
 %

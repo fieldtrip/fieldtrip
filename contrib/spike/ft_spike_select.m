@@ -94,7 +94,7 @@ if ~doAll
 end
 
 % select the desired trials
-if ~isfield(spike,'trial') | ~isfield(spike,'trialtime') | ~isfield(spike,'time')
+if ~isfield(spike,'trial') || ~isfield(spike,'trialtime') || ~isfield(spike,'time')
   if ~doAllTrials
     warning('spike structure does not contain trial, time or trialtime field, cannot select trials');
   end
