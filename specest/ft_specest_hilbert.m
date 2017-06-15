@@ -59,7 +59,7 @@ polyorder = ft_getopt(varargin, 'polyorder', 0);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 
-if isempty(fbopt),
+if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
 end
@@ -68,8 +68,7 @@ end
 [nchan,ndatsample] = size(dat);
 
 % This does not work on integer data
-typ = class(dat);
-if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+if ~isa(dat, 'double') && ~isa(dat, 'single')
   dat = cast(dat, 'double');
 end
 
@@ -94,7 +93,7 @@ postpad    = ceil(((pad - dattime) * fsample) ./ 2);
 
 
 % set a default sampling for the frequencies-of-interest
-if isempty(freqoi),
+if isempty(freqoi)
   freqoi = linspace(2*width, (fsample/3), 50);
 end
 % check for freqoi = 0 and remove it

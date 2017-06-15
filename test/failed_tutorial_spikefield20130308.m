@@ -6,7 +6,7 @@ function failed_tutorial_spikefield20130308
 % TEST test_tutorial_spikefield20130308
 
 % Preprocessing
-% The data for this tutorial can be downloaded on ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/spikefield/p029_sort_final_01.nex. Make sure you add the main Fieldtrip directory to your path and run ft_defaults. We first read in the spike data by ft_read_spike and select the following channels for analysis from the spike structure using ft_spike_select by
+% The data for this tutorial can be downloaded on ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/spikefield/p029_sort_final_01.nex. Make sure you add the main Fieldtrip directory to your path and run ft_defaults. We first read in the spike data by ft_read_spike and select the following channels for analysis from the spike structure using ft_spike_select by
 
 filenex = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spikefield/p029_sort_final_01.nex');
 spike  = ft_read_spike(filenex);
@@ -132,7 +132,7 @@ spikeTrials   = ft_spike_maketrials(cfg,spike);
 %      trialtime: [600x2 double]
 % where spike.trial{i} and spike.time{i} specify, for every i-th unit, the trial in which the spike was fired and the time at which it was fired relative to the trigger, respectively.
 %
-% An equivalent method (but potentially more error-prone!) would have been to directly use the timestamp representation per event to create the trials, i.e. use the 'trialfun_stimon' that we defined in the [ftp:fieldtrip.fcdonders.nl/tutorial/spike] tutorial.
+% An equivalent method (but potentially more error-prone!) would have been to directly use the timestamp representation per event to create the trials, i.e. use the 'trialfun_stimon' that we defined in the http://www.fieldtriptoolbox.org/tutorial/spike tutorial.
 
 cfg          = [];
 cfg.dataset  = filenex;

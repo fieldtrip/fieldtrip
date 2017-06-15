@@ -89,7 +89,7 @@ else
 end;
 
 % perform some checks on the configuration
-if strcmp(cfg.computeprob,'yes') & strcmp(cfg.computestat,'no')
+if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
     error('P-values can only be calculated if the test statistics are calculated.');
 end;
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
@@ -101,7 +101,7 @@ nuospercond=zeros(nconds,1);
 for condindx=1:nconds
     nuospercond(condindx)=length(find(design(cfg.ivar,:)==condindx));
 end;
-if sum(nuospercond)<size(design,2) | nuospercond~=(nuospercond(1)*ones(nconds,1))
+if sum(nuospercond)<size(design,2) || any(nuospercond~=nuospercond(1))
   error('Invalid specification of the design array.');
 end;
 nunits = max(design(cfg.uvar,:));
@@ -110,7 +110,7 @@ if dfdenom<1
     error('The data must contain more units-of-observation (usually subjects) than the number of contrasts.')
 end;
 nrepl=nunits*nconds;
-if (nrepl~=sum(nuospercond)) | (nrepl~=size(dat,2))
+if (nrepl~=sum(nuospercond)) || (nrepl~=size(dat,2))
   error('Invalid specification of the design array.');
 end;
 nsmpls = size(dat,1);

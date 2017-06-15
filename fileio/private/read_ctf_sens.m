@@ -42,7 +42,7 @@ line = fgetl(fid);
 chan = 0;
 while (1)
   line = fgetl(fid);
-  if ~isempty(line) & line==-1
+  if ~isempty(line) && line==-1
     % reached end of file
     break
   end

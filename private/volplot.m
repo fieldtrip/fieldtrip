@@ -84,17 +84,17 @@ else
 end
 
 % convert the selection to the indices of the x/y/z intersection 
-if ischar(sel) & strcmp(sel, 'min')
+if ischar(sel) && strcmp(sel, 'min')
   [minval, minindx] = min(dat(:));
   [xi, yi, zi] = ind2sub(size(dat), minindx);
-elseif ischar(sel) & strcmp(sel, 'max')
+elseif ischar(sel) && strcmp(sel, 'max')
   [maxval, maxindx] = max(dat(:));
   [xi, yi, zi] = ind2sub(size(dat), maxindx);
-elseif ischar(sel) & strcmp(sel, 'center')
+elseif ischar(sel) && strcmp(sel, 'center')
   xi = round(length(x)/2);
   yi = round(length(y)/2);
   zi = round(length(z)/2);
-elseif ischar(sel) & strcmp(sel, 'interactive')
+elseif ischar(sel) && strcmp(sel, 'interactive')
   xi = round(length(x)/2);
   yi = round(length(y)/2);
   zi = round(length(z)/2);
@@ -146,7 +146,7 @@ if strcmp(sel, 'interactive')
       % update the view to a new position
       l1 = get(get(gca, 'xlabel'), 'string');
       l2 = get(get(gca, 'ylabel'), 'string');
-      switch l1,
+      switch l1
         case 'x'
           xc = d1;
         case 'y'
@@ -154,7 +154,7 @@ if strcmp(sel, 'interactive')
         case 'z'
           zc = d1;
       end
-      switch l2,
+      switch l2
         case 'x'
           xc = d2;
         case 'y'
@@ -256,7 +256,7 @@ elseif strcmp(sel, 'maxproject')
 
 else
   % make plot of three orthogonal slices intersecting at [xi yi zi]
-  if ~exist('xi', 'var') | ~exist('yi', 'var') | ~exist('zi', 'var')
+  if ~exist('xi', 'var') || ~exist('yi', 'var') || ~exist('zi', 'var')
     error('nothing to plot, no selection given')
   end
 
@@ -275,21 +275,21 @@ else
   axis equal; axis tight;
   xlabel('x'); ylabel('z');
   caxis([cmin cmax]);
-  crosshair([x(xi) z(zi)], 'color', 'yellow');
+  ft_plot_crosshair([x(xi) z(zi)], 'color', 'yellow');
 
   subplot(h2);
   imagesc(y, z, squeeze(dat(xi,:,:))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('y'); ylabel('z');
   caxis([cmin cmax]);
-  crosshair([y(yi) z(zi)], 'color', 'yellow');
+  ft_plot_crosshair([y(yi) z(zi)], 'color', 'yellow');
 
   subplot(h3);
   imagesc(x, y, squeeze(dat(:,:,zi))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('x'); ylabel('y');
   caxis([cmin cmax]);
-  crosshair([x(xi) y(yi)], 'color', 'yellow');
+  ft_plot_crosshair([x(xi) y(yi)], 'color', 'yellow');
 
   subplot(h4);
   colorbar(h4, 'peer', h1);

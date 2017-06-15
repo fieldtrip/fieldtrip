@@ -214,7 +214,7 @@ cfg.coordsys       = ft_getopt(cfg, 'coordsys', 'head');    % is passed to low-l
 cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-level function
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 cfg.montage        = ft_getopt(cfg, 'montage', 'no');
-cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'yes');   % in case a montage is specified
+cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
@@ -341,6 +341,7 @@ if hasdata
       % the trial is already longer than the total length requested
       begpadding = 0;
       endpadding = 0;
+      ft_warning('no padding applied because the padding duration is shorter than the trial');
     else
       switch cfg.paddir
         case 'both'
@@ -365,27 +366,6 @@ if hasdata
     
   end % for all trials
   
-  if isstruct(cfg.montage) && strcmp(cfg.updatesens, 'yes')
-    % apply the linear projection also to the sensor description
-    if issubfield(cfg.montage, 'type')
-      bname = cfg.montage.type;
-    else
-      bname = 'preproc';
-    end
-    if isfield(dataout, 'grad')
-      fprintf('applying the montage to the grad structure\n');
-      dataout.grad = ft_apply_montage(dataout.grad, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
-    end
-    if isfield(dataout, 'elec')
-      fprintf('applying the montage to the grad structure\n');
-      dataout.elec = ft_apply_montage(dataout.elec, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
-    end
-    if isfield(dataout, 'opto')
-      fprintf('applying the montage to the opto structure\n');
-      dataout.opto = ft_apply_montage(dataout.opto, cfg.montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
-    end
-  end
-    
   % convert back to input type if necessary
   switch convert
     case 'timelock'
@@ -552,6 +532,7 @@ else
         offset     = cfg.trl(i,3);
         begpadding = 0;
         endpadding = 0;
+        ft_warning('no padding applied because the padding duration is shorter than the trial');
       else
         switch cfg.paddir
           case 'both'
@@ -659,6 +640,40 @@ else
   end % for all channel groups
   
 end % if hasdata
+
+if strcmp(cfg.updatesens, 'yes')
+  % updating the sensor descriptions can be done on basis of the montage or the rereference settings
+  if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
+    montage = cfg.montage;
+  elseif strcmp(cfg.reref, 'yes')
+    tmpcfg = keepfields(cfg, {'reref', 'implicitref', 'refchannel', 'channel'});
+    montage = ft_prepare_montage(tmpcfg, data);
+  else
+    % do not update anything
+    montage = [];
+  end
+  
+  if ~isempty(montage)
+    % apply the linear projection also to the sensor description
+    if issubfield(montage, 'type')
+      bname = montage.type;
+    else
+      bname = 'preproc';
+    end
+    if isfield(dataout, 'grad')
+      fprintf('applying the montage to the grad structure\n');
+      dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+    end
+    if isfield(dataout, 'elec')
+      fprintf('applying the montage to the grad structure\n');
+      dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+    end
+    if isfield(dataout, 'opto')
+      fprintf('applying the montage to the opto structure\n');
+      dataout.opto = ft_apply_montage(dataout.opto, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+    end
+  end
+end % if updatesens
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

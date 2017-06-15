@@ -430,31 +430,20 @@ elseif strcmp(sfmethod, 'bivariate') && nrpt>1,
 end
 
 % create output
-output           = [];
+output = keepfields(freq, {'freq' 'time' 'cumtapcnt' 'cumsumcnt' 'block' 'blockindx'});
+output.crsspctrm = S;
+output.transfer  = H;
+output.noisecov  = Z;
 if strcmp(sfmethod, 'multivariate')
   output.dimord    = freq.dimord;
 else
   if strcmp(freq.dimord(1:9), 'chan_chan'),
     freq.dimord = ['chancmb_',freq.dimord(strfind(freq.dimord,'freq'):end)];
   end
-  
   output.dimord    = freq.dimord;
 end
-output.label     = freq.label;
-output.freq      = freq.freq;
-output.crsspctrm = S;
-output.transfer  = H;
-output.noisecov  = Z;
-if isfield(freq, 'time'),      output.time      = freq.time;      end
-if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end
-if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end
 if exist('labelcmb', 'var') && ~isempty(labelcmb)
   output.labelcmb = labelcmb;
-  %output          = rmfield(output, 'label');
-end
-if isfield(freq, 'blockindx')
-  output.blockindx = freq.blockindx;
-end
-if isfield(freq, 'block')
-  output.block = freq.block;
+else
+  output.label    = freq.label;
 end

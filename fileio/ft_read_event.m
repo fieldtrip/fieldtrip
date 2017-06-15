@@ -537,8 +537,8 @@ switch eventformat
     else
       origSensType = [];
     end
-    % meg channels are 5, refmag 0, refgrad 1, adcs 18, trigger 11, eeg 9
-    trigindx = find(origSensType==11);
+    % meg channels are 5, refmag 0, refgrad 1, adcs 18, trigger 11 or 20, eeg 9
+    trigindx = find(origSensType==11 | origSensType==20);
     if ~isempty(trigindx)
       % read the trigger channel and do flank detection
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixctf', true);
@@ -1187,7 +1187,7 @@ switch eventformat
   case 'gtec_hdf5'
     % the header mentions trigger channels, but I don't know how they are stored
     warning('event reading for hdf5 has not yet been implemented due to a lack of a good example file');
-
+    
   case 'gtec_mat'
     if isempty(hdr)
       hdr = ft_read_header(filename);
@@ -1449,9 +1449,10 @@ switch eventformat
     
     if iscontinuous
       analogindx = find(strcmp(ft_chantype(hdr), 'analog trigger'));
+      otherindx  = find(strcmp(ft_chantype(hdr), 'other trigger'));
       binaryindx = find(strcmp(ft_chantype(hdr), 'digital trigger'));
       
-      if isempty(binaryindx)&&isempty(analogindx)
+      if isempty(binaryindx) && isempty(analogindx) && isempty(otherindx)
         % included in case of problems with older systems and MNE reader:
         % use a predefined set of channel names
         binary     = {'STI 014', 'STI 015', 'STI 016'};
@@ -1460,6 +1461,10 @@ switch eventformat
       
       if ~isempty(binaryindx)
         trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', binaryindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
+        event   = appendevent(event, trigger);
+      end
+      if ~isempty(otherindx)
+        trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', otherindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fixneuromag', false);
         event   = appendevent(event, trigger);
       end
       if ~isempty(analogindx)

@@ -100,7 +100,7 @@ if isfield(cfg.artfctdef.jump, 'artifact')
 end
 
 if ~strcmp(cfg.artfctdef.jump.method, 'zvalue')
-  error(sprintf('jump artifact detection only works with cfg.method=''zvalue'''));
+  error('jump artifact detection only works with cfg.method=''zvalue''');
 end
 
 % for backward compatibility

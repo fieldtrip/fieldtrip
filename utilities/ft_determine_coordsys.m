@@ -16,6 +16,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % and can include
 %   interactive  = string, 'yes' or 'no' (default = 'yes')
 %   axisscale    = scaling factor for the reference axes and sphere (default = 1)
+%   clim         = lower and upper anatomical MRI limits (default = [0 1])
 %
 % This function wil pop up a figure that allows you to check whether the
 % alignment of the object relative to the coordinate system axes is correct
@@ -51,6 +52,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 
 dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
+clim          = ft_getopt(varargin, 'clim', [0 1]); % this is used to scale the orthoplot
 
 data  = ft_checkdata(data);
 dtype = ft_datatype(data);
@@ -159,12 +161,17 @@ switch dtype
     diagonal_head = norm(range(corner_head));
     diagonal_vox  = norm(range(corner_vox));
     resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
-
+    
+    % scale funparam between 0 and 1
+    dmin = min(funparam(:));
+    dmax = max(funparam(:));
+    funparam  = (funparam-dmin)./(dmax-dmin);
+    
     clear ft_plot_slice
-    ft_plot_ortho(funparam, 'transform', data.transform, 'unit', data.unit, 'resolution', resolution, 'style', 'intersect');
+    ft_plot_ortho(funparam, 'transform', data.transform, 'unit', data.unit, 'resolution', resolution, 'style', 'intersect', 'clim', clim);
     axis vis3d
     view([110 36]);
-
+    
   case 'source'
     if isfield(data, 'inside') && ~isfield(data, 'tri')
       % only plot the source locations that are inside the volume conduction model

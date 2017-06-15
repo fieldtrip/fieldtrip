@@ -53,6 +53,7 @@ issegmentation =  check_segmentation(data);
 isparcellation =  check_parcellation(data);
 ismontage      =  isfield(data, 'labelold') && isfield(data, 'labelnew') && isfield(data, 'tra');
 isevent        =  isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
+islayout       =  all(isfield(data, {'label', 'pos', 'width', 'height'})); % mask and outline are optional
 isheadmodel    =  false; % FIXME this is not yet implemented
 
 if issource && isstruct(data) && numel(data)>1
@@ -83,7 +84,7 @@ elseif israw && iscomp
 elseif istimelock && iscomp
   type = 'timelock+comp';
 elseif isfreq && iscomp
-    type = 'freq+comp';
+  type = 'freq+comp';
 elseif israw
   type = 'raw';
 elseif iscomp
@@ -127,6 +128,8 @@ elseif ismontage
   type = 'montage';
 elseif isevent
   type = 'event';
+elseif islayout
+  type = 'layout';
 else
   type = 'unknown';
 end

@@ -116,6 +116,9 @@ all: $(TARGETS)
 %.o: %.cc
 	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
+
 $(BINDIR)/%$(SUFFIX): %.o $(CPPOBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 

@@ -1,4 +1,4 @@
-function rgb = rgbcolor
+function rgb = black
 
 % returns a predefined color as [red green blue] values
 %

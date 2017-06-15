@@ -7,7 +7,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "buffer.h"
+
+#include "message.h"
 
 void print_request(messagedef_t *request) {
 	fprintf(stderr, "request.version = 0x%04x\n", request->version);
@@ -22,7 +23,7 @@ void print_response(messagedef_t *response) {
 }
 
 void print_headerdef(headerdef_t *headerdef) {
-	if (headerdef==NULL) 
+	if (headerdef==NULL)
 		fprintf(stderr, "headerdef==NULL\n");
 	else {
 		fprintf(stderr, "headerdef.nchans    = %u\n", headerdef->nchans);
@@ -35,7 +36,7 @@ void print_headerdef(headerdef_t *headerdef) {
 }
 
 void print_datadef(datadef_t *datadef) {
-	if (datadef==NULL) 
+	if (datadef==NULL)
 		fprintf(stderr, "datadef==NULL\n");
 	else {
 		fprintf(stderr, "datadef.nchans    = %u\n", datadef->nchans);
@@ -46,7 +47,7 @@ void print_datadef(datadef_t *datadef) {
 }
 
 void print_eventdef(eventdef_t *eventdef) {
-	if (eventdef==NULL) 
+	if (eventdef==NULL)
 		fprintf(stderr, "eventdef==NULL\n");
 	else {
 		fprintf(stderr, "eventdef.type_type       = %u\n", eventdef->type_type      );
@@ -77,8 +78,7 @@ void print_buf(void *buf, int bufsize) {
 		fprintf(stderr, " NULL");
 	else
 		for (i=0; i<bufsize; i++)
-			fprintf(stderr, " %02x", ((unsigned char*)buf)[i]); 
-        /* FIXME: fprint expects uint. */
+			fprintf(stderr, " %02x", ((unsigned char*)buf)[i]);
+	/* FIXME: fprint expects uint. */
 	fprintf(stderr, "\n");
 }
-
