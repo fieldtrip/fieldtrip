@@ -740,11 +740,11 @@ switch key
     end
   case 'f'
     if isfield(opt, 'dat2')
-      if isequalwithequalnans(opt.dat,opt.dat2),
+      if isequaln(opt.dat,opt.dat2),
         opt.dat = opt.dat1;
         set(opt.displaybutton, 'string', 'display: var1');
       end
-      if isequalwithequalnans(opt.dat,opt.dat1),
+      if isequaln(opt.dat,opt.dat1),
         opt.dat = opt.dat2;
         set(opt.displaybutton, 'string', 'display: var2');
       end
