@@ -78,13 +78,13 @@ switch what
     root_dir = fileparts(which('ft_defaults'));
     external_stats_dir = fullfile(root_dir, 'external', 'images');
     
-    tf = has_all_functions_in_dir(external_stats_dir, []);
+    tf = has_all_functions_in_dir(external_stats_dir, {});
     
   case 'signal'
     root_dir = fileparts(which('ft_defaults'));
     external_stats_dir = fullfile(root_dir, 'external', 'signal');
     
-    tf = has_all_functions_in_dir(external_stats_dir, []);
+    tf = has_all_functions_in_dir(external_stats_dir, {});
     
   case 'stats'
     root_dir = fileparts(which('ft_defaults'));
@@ -94,7 +94,6 @@ switch what
     exclude_mfiles = {
       'common_size.m'
       'iscomplex.m'
-      'lgamma.m'
       };
     
     tf = has_all_functions_in_dir(external_stats_dir, exclude_mfiles);
