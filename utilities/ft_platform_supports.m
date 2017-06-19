@@ -94,7 +94,6 @@ switch what
     exclude_mfiles = {
       'common_size.m'
       'iscomplex.m'
-      'lgamma.m'
       };
     
     tf = has_all_functions_in_dir(external_stats_dir, exclude_mfiles);
