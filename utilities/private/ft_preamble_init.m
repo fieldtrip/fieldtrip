@@ -72,7 +72,7 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     % the output file exists, determine how to deal with it
     switch cfg.outputfilepresent
       case 'keep'
-        if nargout>0
+        if ft_nargout>0
           % continue executing the parent function
           warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
           ft_abort = false;
