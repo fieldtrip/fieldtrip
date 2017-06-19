@@ -693,8 +693,12 @@ switch cfg.method
     if isfield(headshape, 'coordsys')
       elec_realigned.coordsys = headshape.coordsys;
     end
-    if isfield(elec_original, 'coordsys') && (strcmp(cfg.warp, 'dykstra2012') || strcmp(cfg.warp, 'fsaverage'))
-      elec_realigned.coordsys = elec_original.coordsys; % this warp simply moves the electrodes in the same coordinate space
+    if isfield(elec_original, 'coordsys')
+      if strcmp(cfg.warp, 'dykstra2012') % this warp simply moves the electrodes in the same coordinate space
+        elec_realigned.coordsys = elec_original.coordsys;
+      elseif strcmp(cfg.warp, 'fsaverage')
+        elec_realigned.coordsys = 'fsaverage';
+      end
     end
   case 'fiducial'
     if isfield(target, 'coordsys')

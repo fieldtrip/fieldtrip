@@ -343,7 +343,7 @@ switch cfg.method
         phi(k,m,:) = phi(k,m,:).*mask(k,m,:);
         phi(k,m,mask(k,m,:)) = phi(k,m,mask(k,m,:))-mean(phi(k,m,mask(k,m,:)));
         
-        coupling_ampl(k,m,:) = coupling(k,m).*krn(k,m,:);
+        coupling_ampl(k,m,:) = coupling(m,k).*krn(k,m,:);
       end
     end
     
