@@ -24,7 +24,7 @@ function T = spm_bias_estimate(V,flags)
 % $Id: spm_bias_estimate.m 1143 2008-02-07 19:33:33Z spm $
 
 
-def_flags = struct('nbins',256,'reg',0.01,'cutoff',30);
+def_flags = struct('nbins',256,'reg',0.01,'cutoff',30,'niter',128);
 if nargin < 2,
         flags = def_flags;
 else
@@ -39,6 +39,7 @@ end;
 reg     = flags.reg;     % Regularisation
 co      = flags.cutoff;  % Highest wavelength of DCT
 nh      = flags.nbins;
+niter   = flags.niter;
 
 if ischar(V), V = spm_vol(V); end;
 mx      = 1.1*get_max(V); % Maximum value in histogram
@@ -61,7 +62,7 @@ olpp     = Inf;
 x        = (0:(nh-1))'*(mx/(nh-1));
 plt      = zeros(64,2);
 
-for iter = 1:128,
+for iter = 1:flags.niter,
 
     [Alpha,Beta,ll, h, n] = spm_bias_mex(V,B1,B2,B3,T,[mx nh]);
     T     = T(:);
