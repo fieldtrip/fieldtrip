@@ -104,7 +104,7 @@ switch cfg.appenddim
     for i=1:numel(fn)
       keepfield = isfield(varargin{1}, fn{i});
       for j=1:numel(varargin)
-        if ~isfield(varargin{j}, fn{i}) || ~isequalwithequalnans(varargin{j}.(fn{i}), varargin{1}.(fn{i}))
+        if ~isfield(varargin{j}, fn{i}) || ~isequaln(varargin{j}.(fn{i}), varargin{1}.(fn{i}))
           keepfield = false;
           break
         end
