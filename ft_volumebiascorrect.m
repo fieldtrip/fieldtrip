@@ -90,8 +90,8 @@ switch cfg.spmversion
         % create the structure that is required for spm_preproc8
         opts.image    = V;
         opts.tpm      = spm_load_priors8(cfg.tpm);
-        opts.biasreg  = 0.0001;
-        opts.biasfwhm = 60;
+        opts.biasreg  = cfg.biasreg;
+        opts.biasfwhm = cfg.biasfwhm;
         opts.lkp      = [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]; % for whatever it's worth
         opts.reg      = [0 0.001 0.5 0.05 0.2];
         opts.samp     = 3;
