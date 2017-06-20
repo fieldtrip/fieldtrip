@@ -51,6 +51,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg             = [];
 %   cfg.method      = 'cortexhull';
 %   cfg.headshape   = '/path/to/surf/lh.pial';
+%   cfg.fshome      = '/path/to/freesurfer dir';
 %   cortex_hull     = ft_prepare_mesh(cfg);
 %
 % See also FT_VOLUMESEGMENT, FT_PREPARE_HEADMODEL, FT_PLOT_MESH

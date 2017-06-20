@@ -31,8 +31,8 @@ num = abs(P1(2,1,:)) + abs(P2(1,2,:));
 m12 = zeros(size(num));
 m21 = zeros(size(num));
 for k = 1:size(B12,4)
-  m12 = max(m12, abs(B12(2,1,:,k)));
-  m21 = max(m21, abs(B21(1,2,:,k)));
+  m12 = max(m12, abs(B12(1,2,:,k)));
+  m21 = max(m21, abs(B21(2,1,:,k)));
 end
 
 iis = shiftdim(num./(m12+m21));
