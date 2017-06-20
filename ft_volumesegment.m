@@ -414,7 +414,7 @@ if dotpm
                      fullfile(pathstr,['c3', name, '.nii'])};
         
         
-      elseif strcmp(cfg.spmmethod, 'new')
+      elseif strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')
         if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
           cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
         end
@@ -441,7 +441,16 @@ if dotpm
         p = spm_preproc8(opts);
         
         % this writes the 'native' segmentations
-        spm_preproc_write8(p, [ones(6,2) zeros(6,2)], [0 0], [0 1], 1, 1, nan(2,3), nan);
+        if strcmp(cfg.spmmethod, 'new')
+          spm_preproc_write8(p, [ones(6,2) zeros(6,2)], [0 0], [0 1], 1, 1, nan(2,3), nan);
+        elseif strcmp(cfg.spmmethod, 'mars')
+          ft_hastoolbox('mars', 1);
+          if ~isfield(cfg, 'mars'), cfg.mars = []; end
+          beta        = ft_getopt(cfg.mars, 'beta', 0.1);
+          convergence = ft_getopt(cfg.mars, 'convergence', 0.1);
+          tcm{1}      = fullfile(fileparts(which('spm_mars_mrf')), 'rTCM_BW20_S1.mat');
+          p = spm_mars_mrf(p, [ones(6,2) zeros(6,2)], [0 0], [0 1], tcm, beta, convergence, 1);
+        end
         
         % this writes a mat file, may be needed for Dartel, not sure yet
         save([cfg.name '_seg8.mat'],'-struct','p');
@@ -456,7 +465,7 @@ if dotpm
                      fullfile(pathstr,['c6', name, '.nii'])};
         
       else
-        error('cfg.spmmethod should be either ''old'' or ''new''');
+        error('cfg.spmmethod should be either ''old'', ''new'' or ''mars''');
       end
             
     otherwise
