@@ -1163,7 +1163,7 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'ced_spike6mat';
   manufacturer = 'Cambridge Electronic Design Limited';
   content = 'electrophysiological data';
-elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
+elseif filetype_check_extension(filename, '.mat') && (filetype_check_header(filename, 'MATLAB') || filetype_check_header(filename, 'Octave', 13))
   type = 'matlab';
   manufacturer = 'MATLAB';
   content = 'MATLAB binary data';
