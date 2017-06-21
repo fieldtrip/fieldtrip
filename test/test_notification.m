@@ -25,7 +25,7 @@ try
 catch
   me = ft_error('last')
   assert(strcmp(me.message, 'something'))
-  assert(strcmp(me.identifier, 'FieldTrip:errortest:test_notification:23'))
+  assert(strcmp(me.identifier, 'FieldTrip:errortest:test_notification:line23'))
   ok = true;
 end
 

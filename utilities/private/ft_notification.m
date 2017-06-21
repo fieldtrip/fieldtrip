@@ -65,6 +65,16 @@ end
 % remove this function itself and the calling function
 stack = stack(3:end);
 
+if strcmp(level, 'warning')
+  ws = warning;
+  % warnings should be on in general
+  warning on
+  % the backtrace is handled by this function
+  warning off backtrace
+  % the verbose message is handled by this function
+  warning off verbose
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set the notification state according to the input
 
@@ -83,34 +93,36 @@ else
   s = [];
 end
 
+if isempty(s)
+  s = struct('identifier', {}, 'state', {}, 'timestamp', {});
+end
+
 % set the default notification state
-if isempty(s) || ~ismember('all', {s.identifier})
-  s(end+1).identifier = 'all';
-  s(end  ).state      = 'on';
-  s(end  ).timestamp  = nan;  % this ensures that the field exists
+if ~ismember('all', {s.identifier})
+  s = setstate(s, 'all', 'on');
 end
 
 % set the default backtrace state
-if isempty(s) || ~ismember('backtrace', {s.identifier})
-  s(end+1).identifier = 'backtrace';
-  s(end  ).state      = 'on';
-  s(end  ).timestamp  = nan;  % this ensures that the field exists
+if ~ismember('backtrace', {s.identifier})
+  s = setstate(s, 'backtrace', 'on');
+end
+
+% set the default verbose state
+if ~ismember('verbose', {s.identifier})
+  s = setstate(s, 'verbose', 'off');
 end
 
 % set the default timeout
-if isempty(s) || ~ismember('timeout', {s.identifier})
-  s(end+1).identifier = 'timeout';
-  s(end  ).state      = 60;   % default is 60 seconds
-  s(end  ).timestamp  = nan;  % this ensures that the field exists
+if ~ismember('timeout', {s.identifier})
+  s = setstate(s, 'timeout', 60);
 end
 
 % set the last notification to empty
-if isempty(s) || ~ismember('last', {s.identifier})
-  s(end+1).identifier = 'last';
-  s(end  ).state.message    = '';
-  s(end  ).state.identifier = '';
-  s(end  ).state.stack      = struct('file', {}, 'name', {}, 'line', {});
-  s(end  ).timestamp  = nan;  % this ensures that the field exists
+if ~ismember('last', {s.identifier})
+  state.message    = '';
+  state.identifier = '';
+  state.stack      = struct('file', {}, 'name', {}, 'line', {});
+  s = setstate(s, 'last', state);
 end
 
 if isempty(varargin)
@@ -120,7 +132,7 @@ end
 if ~isempty(stack)
   % it is called from within a function
   name = {stack.name};
-  defaultId = ['FieldTrip' sprintf(':%s', name{:}) ':' num2str(stack(1).line)];
+  defaultId = ['FieldTrip' sprintf(':%s', name{:}) ':line' num2str(stack(1).line)];
 else
   % it is called from the command line
   defaultId = '';
@@ -180,24 +192,42 @@ switch varargin{1}
     if numel(varargin)>1
       % select a specific item
       msgId = varargin{2};
+      if ~ismember(msgId, {s.identifier})
+        error('Unknown setting or incorrect message identifier ''%s''.', msgId);
+      end
       msgState = getstate(s, msgId);
       if nargout
         r = struct('identifier', msgId, 'state', msgState);
         varargout{1} = r;
+      elseif strcmp(msgId, 'verbose')
+        if istrue(msgState)
+          fprintf('%s output is verbose.\n', level);
+        else
+          fprintf('%s output is terse.\n', level);
+        end
+      elseif strcmp(msgId, 'backtrace')
+        if istrue(msgState)
+          fprintf('%s backtraces are enabled.\n', level);
+        else
+          fprintf('%s backtraces are disabled.\n', level);
+        end
       else
         fprintf('The state of %s ''%s'' is ''%s''\n', level, msgId, msgState);
       end
     else
       % return all items
       r = s;
-      % don't return the backtrace, timeout and last
+      % don't return these
       r(strcmp('backtrace', {r.identifier})) = [];
-      r(strcmp('timeout', {r.identifier})) = [];
-      r(strcmp('last', {r.identifier})) = [];
+      r(strcmp('verbose',   {r.identifier})) = [];
+      r(strcmp('timeout',   {r.identifier})) = [];
+      r(strcmp('last',      {r.identifier})) = [];
+      % don't return the timestamps
+      r = rmfield(r, 'timestamp');
       
       if nargout
         % do not return the timestamp field
-        varargout{1} = rmfield(r, 'timestamp');
+        varargout{1} = r;
       else
         % show the state of all items that are different from the default
         default = getstate(s, 'all');
@@ -214,12 +244,25 @@ switch varargin{1}
     end
     
   otherwise
+    
+    if nargout
+      r = s;
+      % don't return these
+      r(strcmp('backtrace', {r.identifier})) = [];
+      r(strcmp('verbose',   {r.identifier})) = [];
+      r(strcmp('timeout',   {r.identifier})) = [];
+      r(strcmp('last',      {r.identifier})) = [];
+      % don't return the timestamps
+      r = rmfield(r, 'timestamp');
+      varargout{1} = r;
+    end
+    
     % first input might be msgId
     if any(varargin{1}==':') && numel(varargin)>1
       msgId = varargin{1};
       varargin = varargin(2:end); % shift them all by one
     else
-      msgId = [];
+      msgId = defaultId;
     end
     
     % get the state for this notification, it will default to the 'all' state
@@ -228,11 +271,6 @@ switch varargin{1}
     % errors are always to be printed
     if strcmp(level, 'error')
       msgState = 'on';
-    end
-    
-    % ensure there is a line end
-    if isempty(regexp(varargin{1}, '\\n$', 'once')) % note the double \\
-      varargin{1} = [varargin{1} '\n'];
     end
     
     if strcmp(msgState, 'once')
@@ -254,8 +292,7 @@ switch varargin{1}
     end
     
     % store the last notification
-    state.message    = sprintf(varargin{:});
-    state.message    = state.message(1:end-1); % remove the trailing newline
+    state.message    = strtrim(sprintf(varargin{:})); % remove the trailing newline
     state.identifier = msgId;
     state.stack      = stack;
     s = setstate(s, 'last', state);
@@ -263,46 +300,55 @@ switch varargin{1}
     if strcmp(msgState, 'on')
       
       if strcmp(level, 'error')
-        % update the global variable
+        % update the global variable, we won't return here after the error
         ft_default.notification.(level) = s;
         % the remainder is fully handled by the ERROR function
-        error(msgId, varargin{:});
+        if ~isempty(msgId)
+          error(msgId, varargin{:});
+        else
+          error(varargin{:});
+        end
         
       elseif strcmp(level, 'warning')
-        % the backtrace is handled by the WARNING function
-        if istrue(getstate(s, 'backtrace'))
-          warning('backtrace', 'on');
+        if ~isempty(msgId)
+          warning(msgId, varargin{:});
         else
-          warning('backtrace', 'off');
+          warning(varargin{:});
         end
-        warning(msgId, varargin{:});
         
       else
-        fprintf(varargin{:});
-        
-        % decide whether the stack should be shown
-        if istrue(getstate(s, 'backtrace'))
-          for i=numel(stack):-1:1
-            [p, f, x] = fileparts(stack(i).file);
-            if isequal(f, stack(i).name)
-              funname = stack(i).name;
-            else
-              funname = sprintf('%s>%s', f, stack(i).name);
-            end
-            filename = stack(i).file;
-            if isempty(fileparts(filename))
-              % it requires the full path
-              filename = fullfile(pwd, filename);
-            end
-            fprintf(' In <a href = "matlab: opentoline(''%s'',%d,1)">%s at line %d</a>\n', filename, stack(i).line, funname, stack(i).line);
-          end
-          fprintf('\n');
+        % ensure there is a line end
+        if isempty(regexp(varargin{1}, '\\n$', 'once')) % note the double \\
+          varargin{1} = [varargin{1} '\n'];
         end
+        fprintf(varargin{:});
         
       end % if level=error, warning or otherwise
       
-    else
-      % don't print it
+      % decide whether the stack trace should be shown
+      if istrue(getstate(s, 'backtrace'))
+        for i=numel(stack):-1:1
+          [p, f, x] = fileparts(stack(i).file);
+          if isequal(f, stack(i).name)
+            funname = stack(i).name;
+          else
+            funname = sprintf('%s>%s', f, stack(i).name);
+          end
+          filename = stack(i).file;
+          if isempty(fileparts(filename))
+            % it requires the full path
+            filename = fullfile(pwd, filename);
+          end
+          fprintf(' In <a href = "matlab: opentoline(''%s'',%d,1)">%s at line %d</a>\n', filename, stack(i).line, funname, stack(i).line);
+        end
+        fprintf('\n');
+      end
+      
+      % decide whether a verboe message should be shown
+      if istrue(getstate(s, 'verbose'))
+        fprintf('Type "ft_%s off %s" to suppress this message.\n', level, msgId)
+      end
+      
     end % if msgState is on
     
 end % switch varargin{1}
@@ -311,6 +357,10 @@ end % switch varargin{1}
 %% update the global variable
 ft_default.notification.(level) = s;
 
+if strcmp(level, 'warning')
+  % return to the original warning state
+  warning(ws);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
@@ -338,6 +388,7 @@ else
 end
 
 function s = setstate(s, msgId, state)
+if isempty(msgId), return; end % this happens from the command line
 identifier = {s.identifier};
 sel = find(strcmp(identifier, msgId));
 if numel(sel)==1
@@ -349,6 +400,7 @@ else
 end
 
 function s = settimestamp(s, msgId, timestamp)
+if isempty(msgId), return; end % this happens from the command line
 identifier = {s.identifier};
 sel = find(strcmp(identifier, msgId));
 if numel(sel)==1
