@@ -263,7 +263,9 @@ switch varargin{1}
     if strcmp(msgState, 'on')
       
       if strcmp(level, 'error')
-        % this is fully handled by the ERROR function
+        % update the global variable
+        ft_default.notification.(level) = s;
+        % the remainder is fully handled by the ERROR function
         error(msgId, varargin{:});
         
       elseif strcmp(level, 'warning')

@@ -9,7 +9,26 @@ sublevel(@ft_debug)
 sublevel(@ft_info)
 sublevel(@ft_notice)
 sublevel(@ft_warning)
-% sublevel(@ft_error)
+% sublevel(@ft_error) % this one cannot be tested the same way
+
+try
+  ft_error('off'); % this should not make a difference
+  ft_error('something');
+  ok = false;
+catch
+  me = ft_error('last');
+  assert(strcmp(me.message, 'something'))
+  assert(strcmp(me.identifier, 'FieldTrip:test_notification'))
+  ok = true;
+end
+
+if ~ok
+  error('ft_error failed');
+else
+  fprintf('========================================\n')
+  fprintf('ft_error looks good\n');
+  fprintf('========================================\n')
+end
 
 function sublevel(notice)
 
