@@ -59,6 +59,7 @@ if nargin<5 || isempty(order)
 end
 
 % This does not work on integer data
+typ = class(dat);
 if ~isa(dat, 'double') && ~isa(dat, 'single')
   dat = cast(dat, 'double');
 end
