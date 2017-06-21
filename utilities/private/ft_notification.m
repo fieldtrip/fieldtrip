@@ -11,8 +11,10 @@ function [varargout] = ft_notification(varargin)
 %  ft_info off msgId
 %  ft_info once
 %  ft_info once msgId
-%  ft_info backtrace on
-%  ft_info backtrace off
+%  ft_info on  backtrace
+%  ft_info off backtrace
+%  ft_info on  verbose
+%  ft_info off verbose
 %
 %  ft_info query      % shows the status of all notifications
 %  ft_info last       % shows the last notification
