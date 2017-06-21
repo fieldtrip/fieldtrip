@@ -3,9 +3,17 @@ function mri_unbias = ft_volumebiascorrect(cfg, mri)
 % FT_VOLUMEBIASCORRECT corrects the image inhomogeneity bias in an anatomical MRI
 %
 % Use as
-%   mri_unbias = ft_volumeunbias(cfg, mri)
+%   mri_unbias = ft_volumebiascorrect(cfg, mri)
+% where the input mri should be a single anatomical volume that was for example read with
+% FT_READ_MRI. 
 %
-% See also FT_VOLUMEREALIGN
+% The configuration structure can contain
+%   cfg.spmversion     = string, 'spm8', 'spm12' (default = 'spm8')
+%   cfg.opts           = struct, containing spmversion specific options.
+%                        See the code below and the SPM-documentation for
+%                        more information.
+%
+% See also FT_VOLUMEREALIGN FT_VOLUMESEGMENT FT_VOLUMENORMALISE
 
 ft_revision = '$Id$';
 ft_nargin = nargin;
@@ -34,6 +42,7 @@ mri = ft_checkdata(mri, 'datatype', {'volume'});
 % set the defaults
 cfg.spmversion       = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
+cfg.opts             = ft_getopt(cfg, 'opts');
 
 if ~isfield(cfg, 'intermediatename')
   cfg.intermediatename = tempname;
@@ -56,16 +65,17 @@ mri_acpc.anatomy = mri_acpc.anatomy./scale;
 % create an spm-compatible file for the anatomical volume data
 V = ft_write_mri([cfg.intermediatename '_anatomy.nii'], mri_acpc.anatomy, 'transform', mri_acpc.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
 
+% get the options from hte cfg
+opts = cfg.opts;
 switch cfg.spmversion
     case 'spm8'
         
-        cfg.nbins = ft_getopt(cfg, 'nbins', 256);
-        cfg.reg   = ft_getopt(cfg, 'reg', 0.01);
-        cfg.cutoff = ft_getopt(cfg, 'cutoff', 30);
-        cfg.niter  = ft_getopt(cfg, 'niter',  128);
+        opts.nbins = ft_getopt(opts, 'nbins', 256);
+        opts.reg   = ft_getopt(opts, 'reg', 0.01);
+        opts.cutoff = ft_getopt(opts, 'cutoff', 30);
+        opts.niter  = ft_getopt(opts, 'niter',  128);
         
-        flags = struct('nbins', cfg.nbins, 'reg', cfg.reg, 'cutoff', cfg.cutoff, 'niter', cfg.niter);
-        T = spm_bias_estimate(V, flags);
+        T  = spm_bias_estimate(V, opts);
         VO = spm_bias_apply(V,T);
         
         mri_unbias = keepfields(mri, {'coordsys', 'dim', 'transform', 'unit', 'inside'});
@@ -84,18 +94,16 @@ switch cfg.spmversion
         if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
             cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
         end
-        cfg.biasreg  = ft_getopt(cfg, 'biasreg', 0.0001);
-        cfg.biasfwhm = ft_getopt(cfg, 'biasfwhm', 60);
         
         % create the structure that is required for spm_preproc8
         opts.image    = V;
         opts.tpm      = spm_load_priors8(cfg.tpm);
-        opts.biasreg  = cfg.biasreg;
-        opts.biasfwhm = cfg.biasfwhm;
-        opts.lkp      = [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]; % for whatever it's worth
-        opts.reg      = [0 0.001 0.5 0.05 0.2];
-        opts.samp     = 3;
-        opts.fwhm     = 1;
+        opts.biasreg  = ft_getopt(opts, 'biasreg',  0.0001);
+        opts.biasfwhm = ft_getopt(opts, 'biasfwhm', 60);
+        opts.lkp      = ft_getopt(opts, 'lkp',      [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]);
+        opts.reg      = ft_getopt(opts, 'reg',      [0 0.001 0.5 0.05 0.2]);
+        opts.samp     = ft_getopt(opts, 'samp',     3);
+        opts.fwhm     = ft_getopt(opts, 'fwhm',     1);
         
         Affine = spm_maff8(opts.image(1),3,32,opts.tpm,eye(4),'mni');
         Affine = spm_maff8(opts.image(1),3, 1,opts.tpm,Affine,'mni');
@@ -111,8 +119,8 @@ switch cfg.spmversion
         [pathname,name,ext] = fileparts([cfg.intermediatename '_anatomy.nii']);
         filename = fullfile(pathname, ['m' name ext]);
         
-        VO = spm_vol(filename);
-        dat  = spm_read_vols(VO);
+        VO     = spm_vol(filename);
+        dat    = spm_read_vols(VO);
         VO.dat = dat;
         
         mri_unbias = keepfields(mri, {'coordsys', 'dim', 'transform', 'unit', 'inside'});

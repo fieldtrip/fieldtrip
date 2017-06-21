@@ -14,8 +14,10 @@ function [segmented] = ft_volumesegment(cfg, mri)
 % The configuration structure can contain
 %   cfg.output         = string or cell-array of strings, see below (default = 'tpm')
 %   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
-%   cfg.spmmethod      = string, 'old', 'new' (default = 'old'). this pertains to the algorithm
+%   cfg.spmmethod      = string, 'old', 'new', 'mars' (default = 'old'). this pertains to the algorithm
 %                          used when cfg.spmversion='spm12'. see below
+%   cfg.opts           = struct, containing spm-version specific options. See
+%                        the code and/or the SPM-documentation for more detail.
 %   cfg.template       = filename of the template anatomical MRI (default = '/spm2/templates/T1.mnc'
 %                        or '/spm8/templates/T1.nii')
 %   cfg.tpm            = cell-array containing the filenames of the tissue probability maps
@@ -35,6 +37,8 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %                         c4, for the bone segmentation
 %                         c5, for the soft tissue segmentation
 %                         c6, for the air segmentation
+%                        when using spm12 with spmmethod='mars' the tpms will be
+%                         postprocessed with the mars toolbox, yielding smoother%                         segmentations in general.
 %   cfg.brainsmooth    = 'no', or scalar, the FWHM of the gaussian kernel in voxels, (default = 5)
 %   cfg.scalpsmooth    = 'no', or scalar, the FWHM of the gaussian kernel in voxels, (default = 5)
 %   cfg.skullsmooth    = 'no', or scalar, the FWHM of the gaussian kernel in voxels, (default = 5)
@@ -311,23 +315,27 @@ if dotpm
   switch lower(cfg.spmversion)
     case 'spm2'
       cfg.template = ft_getopt(cfg, 'template', fullfile(spm('Dir'), 'templates', 'T1.mnc'));
-      
+      opts          = ft_getopt(cfg, 'opts');
+      opts.estimate = ft_getopt(opts, 'estimate');
+      opts.write    = ft_getopt(opts, 'write');
+      opts.estimate.affreg = ft_getopt(opts.estimate, 'affreg');      
+
       VF = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'analyze_img');
 
       % set the spm segmentation defaults (from /opt/spm2/spm_defaults.m script)
-      opts.estimate.priors = char(...
-        fullfile(spm('Dir'), 'apriori', 'gray.mnc'),...
-        fullfile(spm('Dir'), 'apriori', 'white.mnc'),...
-        fullfile(spm('Dir'), 'apriori', 'csf.mnc'));
-      opts.estimate.reg    = 0.01;
-      opts.estimate.cutoff = 30;
-      opts.estimate.samp   = 3;
-      opts.estimate.bb     =  [[-88 88]' [-122 86]' [-60 95]'];
-      opts.estimate.affreg.smosrc = 8;
-      opts.estimate.affreg.regtype = 'mni';
-      opts.estimate.affreg.weight = '';
-      opts.write.cleanup   = 1;
-      opts.write.wrt_cor   = 1;
+      opts.estimate.priors = ft_getopt(opts.estimate, 'priors', ...
+        char(fullfile(spm('Dir'), 'apriori', 'gray.mnc'),...
+             fullfile(spm('Dir'), 'apriori', 'white.mnc'),...
+             fullfile(spm('Dir'), 'apriori', 'csf.mnc')));
+      opts.estimate.reg    = ft_getopt(opts.estimate, 'reg',    0.01);
+      opts.estimate.cutoff = ft_getopt(opts.estimate, 'cutoff', 30);
+      opts.estimate.samp   = ft_getopt(opts.estimate, 'samp',   3);
+      opts.estimate.bb     = ft_getopt(opts.estimate, 'bb',     [[-88 88]' [-122 86]' [-60 95]']);
+      opts.estimate.affreg.smosrc  = ft_getopt(opts.estimate.affreg, 'smosrc',  8);
+      opts.estimate.affreg.regtype = ft_getopt(opts.estimate.affreg, 'regtype', 'mni');
+      opts.estimate.affreg.weight  = ft_getopt(opts.estimate.affreg, 'weight', '');
+      opts.write.cleanup   = ft_getopt(opts.write, 'cleanup', 1);
+      opts.write.wrt_cor   = ft_getopt(opts.write, 'wrt_cor', 1);
 
       % perform the segmentation
       fprintf('performing the segmentation on the specified volume\n');
@@ -359,7 +367,7 @@ if dotpm
       save([cfg.name '_sn.mat'],'-struct','po');
 
       % These settings were taken from a batch
-      opts     = [];
+      opts     = ft_getopt(cfg, 'opts');
       opts.GM  = [0 0 1];
       opts.WM  = [0 0 1];
       opts.CSF = [0 0 1];
@@ -424,14 +432,15 @@ if dotpm
         fprintf('performing the segmentation on the specified volume, using the new-style segmentation\n');
         
         % create the structure that is required for spm_preproc8
+        opts          = ft_getopt(cfg, 'opts');
         opts.image    = VF;
-        opts.tpm      = spm_load_priors8(cfg.tpm);
-        opts.biasreg  = 0.0001;
-        opts.biasfwhm = 60;
-        opts.lkp      = [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]; % for whatever it's worth
-        opts.reg      = [0 0.001 0.5 0.05 0.2];
-        opts.samp     = 3;
-        opts.fwhm     = 1;
+        opts.tpm      = ft_getopt(opts, 'tpm', spm_load_priors8(cfg.tpm));
+        opts.biasreg  = ft_getopt(opts, 'biasreg',  0.0001);
+        opts.biasfwhm = ft_getopt(opts, 'biasfwhm', 60);
+        opts.lkp      = ft_getopt(opts, 'lkp',      [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]);
+        opts.reg      = ft_getopt(opts, 'reg',      [0 0.001 0.5 0.05 0.2]);
+        opts.samp     = ft_getopt(opts, 'samp',     3);
+        opts.fwhm     = ft_getopt(opts, 'fwhm',     1);
         
         Affine = spm_maff8(opts.image(1),3,32,opts.tpm,eye(4),'mni');
         Affine = spm_maff8(opts.image(1),3, 1,opts.tpm,Affine,'mni');
