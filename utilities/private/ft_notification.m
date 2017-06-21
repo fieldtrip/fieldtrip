@@ -62,6 +62,9 @@ switch stack(2).name
     error('this function cannot be called from %s', stack(2).name);
 end
 
+% remove this function itself and the calling function
+stack = stack(3:end);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set the notification state according to the input
 
@@ -114,10 +117,10 @@ if isempty(varargin)
   varargin{1} = 'query';
 end
 
-if numel(stack)>2
+if ~isempty(stack)
   % it is called from within a function
-  name = {stack(3:end).name};
-  defaultId = ['FieldTrip' sprintf(':%s', name{:})];
+  name = {stack.name};
+  defaultId = ['FieldTrip' sprintf(':%s', name{:}) ':' num2str(stack(1).line)];
 else
   % it is called from the command line
   defaultId = '';
@@ -249,9 +252,6 @@ switch varargin{1}
     if isempty(msgId)
       msgId = defaultId;
     end
-
-    % remove this function itself and the calling function
-    stack = stack(3:end); 
     
     % store the last notification
     state.message    = sprintf(varargin{:});

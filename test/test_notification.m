@@ -5,20 +5,27 @@ function test_notification
 
 % TEST ft_debug ft_info ft_notice ft_warning ft_notification
 
-sublevel(@ft_debug)
-sublevel(@ft_info)
-sublevel(@ft_notice)
-sublevel(@ft_warning)
-% sublevel(@ft_error) % this one cannot be tested the same way
+subfunction(@ft_debug)
+subfunction(@ft_info)
+subfunction(@ft_notice)
+subfunction(@ft_warning)
+
+% ft_error cannot be tested the same way, since the error stops everything
+errortest
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function errortest
 
 try
-  ft_error('off'); % this should not make a difference
-  ft_error('something');
+  ft_error('off');        % this should not make a difference
+  ft_error('something');  % note that the line number is used further down
   ok = false;
 catch
-  me = ft_error('last');
+  me = ft_error('last')
   assert(strcmp(me.message, 'something'))
-  assert(strcmp(me.identifier, 'FieldTrip:test_notification'))
+  assert(strcmp(me.identifier, 'FieldTrip:errortest:test_notification:23'))
   ok = true;
 end
 
@@ -30,7 +37,9 @@ else
   fprintf('========================================\n')
 end
 
-function sublevel(notice)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function subfunction(notice)
 
 fprintf('========================================\n')
 fprintf('the following should not print anything\n')
@@ -88,6 +97,4 @@ fprintf('the following should show ''a''\n')
 fprintf('========================================\n')
 notice('a');
 notice('last')
-
-
 

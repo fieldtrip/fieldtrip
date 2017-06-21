@@ -1,14 +1,38 @@
 function varargout = ft_warning(varargin)
 
-% FT_ERROR prints an error message on screen, just like the standard ERROR function.
+% FT_WARNING prints a warning message on screen, depending on the verbosity 
+% settings of the calling high-level FieldTrip function. This function works
+% similar to the standard WARNING function, but also features the "once" mode.
 %
 % Use as
-%   ft_error(...)
+%   ft_warning(...)
 % with arguments similar to fprintf, or
-%   ft_error(msgId, ...)
-% with arguments similar to error.
+%   ft_warning(msgId, ...)
+% with arguments similar to warning.
 %
-% See also FT_ERROR, FT_WARNING, FT_NOTICE, FT_INFO, FT_DEBUG, ERROR, WARNING
+% You can switch of all warning messages using
+%   ft_warning off
+% or for specific ones using
+%   ft_warning off msgId
+%
+% To switch them back on, you would use 
+%   ft_warning on
+% or for specific ones using
+%   ft_warning on msgId
+% 
+% Warning messages are only printed once per timeout period using
+%   ft_warning timeout 60
+%   ft_warning once
+% or for specific ones using
+%   ft_warning once msgId
+%
+% You can see the most recent messages and identifier using
+%   ft_warning last
+%
+% You can query the current on/off/once state for all messages using
+%   ft_warning query
+%
+% See also FT_ERROR, FT_WARNING, FT_NOTICE, FT_warning, FT_DEBUG, ERROR, WARNING
 
 % Copyright (C) 2012-2017, Robert Oostenveld, J?rn M. Horschig
 %
@@ -40,6 +64,8 @@ else
 end
 
 return
+
+%% the documentation down here is to facilitate backward compatibility with the old implementation
 
 % FT_WARNING will throw a warning for every unique point in the
 % stacktrace only, e.g. in a for-loop a warning is thrown only once.
