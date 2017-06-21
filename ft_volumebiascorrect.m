@@ -40,7 +40,7 @@ end
 mri = ft_checkdata(mri, 'datatype', {'volume'});
 
 % set the defaults
-cfg.spmversion       = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm12');
 cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.opts             = ft_getopt(cfg, 'opts');
 
@@ -70,8 +70,8 @@ opts = cfg.opts;
 switch cfg.spmversion
     case 'spm8'
         
-        opts.nbins = ft_getopt(opts, 'nbins', 256);
-        opts.reg   = ft_getopt(opts, 'reg', 0.01);
+        opts.nbins  = ft_getopt(opts, 'nbins', 256);
+        opts.reg    = ft_getopt(opts, 'reg', 0.01);
         opts.cutoff = ft_getopt(opts, 'cutoff', 30);
         opts.niter  = ft_getopt(opts, 'niter',  128);
         
