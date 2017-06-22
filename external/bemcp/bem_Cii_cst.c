@@ -1,11 +1,10 @@
 /*
-IN : ind_tr, XYZv, weight, defl, tri_pt4
-OUT : Cii_lin
+  Input : ind_tr, XYZv, weight, defl, tri_pt4
+  Output : Cii_lin
 
-
-weight = (sig1-sig2)/((sig1+sig2)*2*pi)
-
+  weight = (sig1-sig2)/((sig1+sig2)*2*pi) ;
 */
+
 #include <math.h>
 #include "mex.h"
 
@@ -27,9 +26,9 @@ void Cii_constant(double C[], double ind_tr[], int Ntri, double XYZv[],
 	int i, j, u, v, w, nze, lze[NR_NEIGH_TRI] ;
 		/* 10 neighbouring triangles max for the ASA */
 
-	printf("Nvert = %d\n",Nvert) ;
-	printf("Ntri = %d\n",Ntri) ;
-	printf("weight = %f , defl =  %f \n",weight,defl) ;
+	/*printf("Nvert = %d\n",Nvert) ;*/
+	/*printf("Ntri = %d\n",Ntri) ;*/
+	/*printf("weight = %f , defl =  %f \n",weight,defl) ;*/
 
 	epsi = .00000000000000001 ;
 	pi = 4.*atan(1.) ;
@@ -301,4 +300,3 @@ void mexFunction(
 
 	mxSetPr(plhs[0],Cii_c) ;
 }
-
