@@ -671,6 +671,7 @@ for k = 1:ndata
   end
   label      = union(label, selchannel);
 end
+label = label(:);   % ensure column array
 
 % this call to match_str ensures that that labels are always in the
 % order of the first input argument see bug_2917, but also temporarily keep

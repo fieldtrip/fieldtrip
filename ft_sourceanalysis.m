@@ -696,7 +696,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       case {'rv'}
         dip(i) = residualvariance(grid, sens, headmodel, avg, optarg{:}) ;
       case {'music'}
-        error(sprintf('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method));
+        error('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method);
       otherwise
     end
     
@@ -1085,7 +1085,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       dip(i) = mvlestimate(grid, sens, headmodel, squeeze_avg, optarg{:});
     end
   else
-    error(sprintf('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method));
+    error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
   end
   
 elseif iscomp

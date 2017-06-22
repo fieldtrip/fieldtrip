@@ -26,7 +26,7 @@ end
 
 if nargin<4
   lambda = 1;
-elseif lambda < 0 | lambda > 1
+elseif lambda < 0 || lambda > 1
   error 'Forgetting factor must be within [0;1]';
 end
     

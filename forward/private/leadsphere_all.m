@@ -1,5 +1,5 @@
-function out=leadsphere_chans(xloc,sensorloc,sensorori)
-% usage: out=leadsphere_chans(xloc,sensorloc,sensorori)
+function out=leadsphere_all(xloc,sensorloc,sensorori)
+% usage: out=leadsphere_all(xloc,sensorloc,sensorori)
 
 % Copyright (C) 2003, Guido Nolte
 %

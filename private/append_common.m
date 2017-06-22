@@ -81,7 +81,7 @@ end
 switch cfg.appenddim
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'chan'
-    assert(checkchan(varargin{:}, 'unique'));
+    assert(checkchan(varargin{:}, 'unique'), 'not all channels are unique');
     % remember the original channel labels in each input
     oldlabel = cell(size(varargin));
     for i=1:numel(varargin)
@@ -104,7 +104,7 @@ switch cfg.appenddim
     for i=1:numel(fn)
       keepfield = isfield(varargin{1}, fn{i});
       for j=1:numel(varargin)
-        if ~isfield(varargin{j}, fn{i}) || ~isequal(varargin{j}.(fn{i}), varargin{1}.(fn{i}))
+        if ~isfield(varargin{j}, fn{i}) || ~isequaln(varargin{j}.(fn{i}), varargin{1}.(fn{i}))
           keepfield = false;
           break
         end

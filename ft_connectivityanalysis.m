@@ -294,7 +294,7 @@ switch cfg.method
       otherwise
     end
     outparam = [cfg.method, 'spctrm'];
-  case {'granger' 'instantaneous_causality' 'total_interdependence'}
+  case {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer' 'iis'}
     % create subcfg for the spectral factorization
     if ~isfield(cfg, 'granger')
       cfg.granger = [];
@@ -310,12 +310,17 @@ switch cfg.method
     if strcmp(cfg.method, 'granger'),                 outparam = 'grangerspctrm'; end
     if strcmp(cfg.method, 'instantaneous_causality'), outparam = 'instantspctrm'; end
     if strcmp(cfg.method, 'total_interdependence'),   outparam = 'totispctrm';    end
-    
+    if strcmp(cfg.method, 'transfer'),                outparam = {'transfer' 'noisecov' 'crsspctrm'}; end
+    if strcmp(cfg.method, 'iis'),                     outparam = 'iis'; end
     % check whether the frequency bins are more or less equidistant
     dfreq = diff(data.freq)./mean(diff(data.freq));
     assert(all(dfreq>0.999) && all(dfreq<1.001), ['non equidistant frequency bins are not supported for method ',cfg.method]);
     
-  case {'dtf' 'pdc'}
+  case {'ddtf'}
+    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
+    inparam = {'transfer' 'crsspctrm'};
+    outparam = [cfg.method, 'spctrm'];
+  case {'dtf' 'pdc' 'gpdc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'transfer';
     outparam = [cfg.method, 'spctrm'];
@@ -416,11 +421,15 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
           data = ft_checkdata(data, 'cmbrepresentation', 'full');
         end
         
-       % convert the inparam back to cell array in the case of granger
-        if strcmp(cfg.method, 'granger') || strcmp(cfg.method, 'instantaneous_causality') || strcmp(cfg.method, 'total_interdependence')
+        % convert the inparam back to cell array in the case of granger
+        if any(strcmp(cfg.method, {'granger' 'instantaneous_causality' 'total_interdependence' 'transfer' 'iis'}))
           inparam = {'transfer' 'noisecov' 'crsspctrm'};
           tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'granger'});
           optarg  = ft_cfg2keyval(tmpcfg.granger);
+        elseif strcmp(cfg.method, 'ddtf')
+          inparam = {'transfer' 'crsspctrm'};
+          tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {'ddtf'});
+          optarg  = ft_cfg2keyval(tmpcfg.ddtf);
         else
           tmpcfg  = ft_checkconfig(cfg, 'createsubcfg', {cfg.method});
           optarg  = ft_cfg2keyval(tmpcfg.(cfg.method));
@@ -608,7 +617,17 @@ switch cfg.method
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
-  case {'granger' 'instantaneous_causality' 'total_interdependence'}
+  case 'transfer'
+    % the necessary stuff has already been computed
+    datout   = data.transfer;
+    noisecov = data.noisecov;
+    crsspctrm = data.crsspctrm;
+    if ~hasrpt,
+      datout   = shiftdim(datout);
+      noisecov = shiftdim(noisecov);
+      crsspctrm = shiftdim(crsspctrm);
+    end
+  case {'granger' 'instantaneous_causality' 'total_interdependence' 'iis'}
     % granger causality
     if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar'),
       if isfield(data, 'labelcmb') && ~istrue(cfg.granger.conditional),
@@ -668,7 +687,16 @@ switch cfg.method
             newlabelcmb{cnt, 2} = data.block(m).name;
           end
         end
-        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, {data.label data.blockindx}, tmp);
+        
+        % make a temporary label list
+        tmp2 = cell(numel(data.labelcmb),1);
+        for m = 1:numel(data.labelcmb)
+          tok = tokenize(data.labelcmb{m},'[');
+          tmp2{m} = tok{1};
+        end
+        label = unique(tmp2);
+        
+        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
         powindx.cmbindx = cmbindx;
         powindx.n = n;
         data.labelcmb = newlabelcmb;
@@ -679,11 +707,23 @@ switch cfg.method
         end
         
       elseif isfield(cfg.granger, 'block') && ~isempty(cfg.granger.block)
+        % make a temporary label list
+        if isfield(data, 'label')
+          label = data.label;
+        else
+          tmp = cell(numel(data.labelcmb),1);
+          for m = 1:numel(data.labelcmb)
+            tok = tokenize(data.labelcmb{m},'[');
+            tmp{m} = tok{1};
+          end
+          label = unique(tmp);
+        end
+        
         % blockwise granger
         for k = 1:numel(cfg.granger.block)
           %newlabel{k, 1} = cat(2, cfg.granger.block(k).label{:});
           newlabel{k,1}  = cfg.granger.block(k).name;
-          powindx{k,1}   = match_str(data.label, cfg.granger.block(k).label);
+          powindx{k,1}   = match_str(label, cfg.granger.block(k).label);
         end
         data.label = newlabel;
       else
@@ -694,13 +734,17 @@ switch cfg.method
       if strcmp(cfg.method, 'granger'),                 methodstr = 'granger';      end
       if strcmp(cfg.method, 'instantaneous_causality'), methodstr = 'instantaneous'; end
       if strcmp(cfg.method, 'total_interdependence'),   methodstr = 'total';        end
+      if strcmp(cfg.method, 'iis'),                     methodstr = 'iis';          end
       optarg = {'hasjack', hasjack, 'method', methodstr, 'powindx', powindx, 'dimord', data.dimord};
       [datout, varout, nrpt] = ft_connectivity_granger(data.transfer, data.noisecov, data.crsspctrm, optarg{:});
+      if strcmp(cfg.method, 'iis'),
+        data.freq   = nan;
+      end
     else
       error('granger for time domain data is not yet implemented');
     end
     
-  case 'dtf'
+  case {'dtf' 'ddtf'}
     % directed transfer function
     if isfield(data, 'labelcmb'),
       powindx = labelcmb2indx(data.labelcmb);
@@ -710,15 +754,17 @@ switch cfg.method
     optarg = {'feedback', cfg.feedback, 'powindx', powindx, 'hasjack', hasjack};
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
-      nrpt = size(data.(inparam), 1);
-      datin = data.(inparam);
+      nrpt = size(data.transfer, 1);
+      datin = data.transfer;
     else
       nrpt = 1;
-      datin = reshape(data.(inparam), [1 size(data.(inparam))]);
+      datin = reshape(data.transfer, [1 size(data.transfer)]);
+      data.crsspctrm = reshape(data.crsspctrm, [1 size(data.crsspctrm)]);
     end
+    if strcmp(cfg.method, 'ddtf'), optarg = cat(2, optarg, {'crsspctrm' data.crsspctrm}); end
     [datout, varout, nrpt] = ft_connectivity_dtf(datin, optarg{:});
     
-  case 'pdc'
+  case {'pdc' 'gpdc'}
     % partial directed coherence
     if isfield(data, 'labelcmb'),
       powindx = labelcmb2indx(data.labelcmb);
@@ -726,6 +772,7 @@ switch cfg.method
       powindx = [];
     end
     optarg = {'feedback', cfg.feedback, 'powindx', powindx, 'hasjack', hasjack};
+    if strcmp(cfg.method, 'gpdc'), optarg = cat(2, optarg, {'noisecov' data.noisecov}); end
     hasrpt = ~isempty(strfind(data.dimord, 'rpt'));
     if hasrpt,
       nrpt = size(data.(inparam), 1);
@@ -932,15 +979,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the output structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 switch dtype
   case {'freq' 'freqmvar'},
-    stat = [];
-    if isfield(data, 'label'),
-      stat.label = data.label;
-    end
+    stat = keepfields(data, {'label', 'labelcmb', 'grad', 'elec'});
     if isfield(data, 'labelcmb'),
-      stat.labelcmb = data.labelcmb;
-      
       % ensure the correct dimord in case the input was 'powandcsd'
       data.dimord = strrep(data.dimord, 'chan_', 'chancmb_');
     end
@@ -952,20 +995,22 @@ switch dtype
       end
     end
     stat.dimord = dimord(2:end);
-    stat.(outparam) = datout;
-    if ~isempty(varout),
-      stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
+    if ~iscell(outparam)
+      stat.(outparam) = datout;
+      if ~isempty(varout),
+        stat.([outparam, 'sem']) = (varout./nrpt).^0.5;
+      end
+    else
+      stat.(outparam{1}) = datout;
+      for k = 2:numel(outparam)
+        if exist(outparam{k}, 'var')
+          stat.(outparam{k}) = eval(outparam{k});
+        end
+      end
     end
     
   case 'timelock'
-    stat = [];
-    if isfield(data, 'label'),
-      stat.label = data.label;
-    end
-    if isfield(data, 'labelcmb'),
-      stat.labelcmb = data.labelcmb;
-    end
-    
+    stat = keepfields(data, {'label', 'labelcmb', 'grad', 'elec'});
     % deal with the dimord
     if exist('outdimord', 'var'),
       stat.dimord = outdimord;
@@ -1030,8 +1075,6 @@ else
   if isfield(data, 'freq'), stat.freq = data.freq; end
   if isfield(data, 'time'), stat.time = data.time; end
 end
-if isfield(data, 'grad'), stat.grad = data.grad; end
-if isfield(data, 'elec'), stat.elec = data.elec; end
 if exist('dof', 'var'), stat.dof = dof; end
 
 % do the general cleanup and bookkeeping at the end of the function

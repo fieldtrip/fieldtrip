@@ -180,6 +180,11 @@ cfg.headshape     = ft_getopt(cfg, 'headshape', []);     % for triangulated head
 cfg.target        = ft_getopt(cfg, 'target',  []);       % for electrodes or fiducials, always with labels
 cfg.coordsys      = ft_getopt(cfg, 'coordsys');          % this allows for automatic template fiducial placement
 
+if isempty(cfg.target)
+  % remove the field, otherwise ft_checkconfig will complain
+  cfg = rmfield(cfg, 'target');
+end
+
 if ~isempty(cfg.coordsys) && isempty(cfg.target)
   % set the template fiducial locations according to the coordinate system
   switch lower(cfg.coordsys)
@@ -402,9 +407,9 @@ elseif strcmp(cfg.method, 'headshape')
   elec.elecpos = elec.elecpos(datsel,:);
   
   norm.label = elec.label;
-  if strcmp(lower(cfg.warp), 'dykstra2012')
-    norm.elecpos = ft_warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
-  elseif strcmp(lower(cfg.warp), 'fsaverage')
+  if strcmp(cfg.warp, 'dykstra2012')
+    norm.elecpos = warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
+  elseif strcmp(cfg.warp, 'fsaverage')
     subj_pial = ft_read_headshape(cfg.headshape);
     [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
     subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
@@ -505,7 +510,7 @@ elseif strcmp(cfg.method, 'fiducial')
     lpa_indx = match_str(lower(target(i).label), lower(cfg.fiducial{2}));
     rpa_indx = match_str(lower(target(i).label), lower(cfg.fiducial{3}));
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
-      error(sprintf('not all fiducials were found in template %d', i));
+      error('not all fiducials were found in template %d', i);
     end
     tmpl_nas(i,:) = target(i).elecpos(nas_indx,:);
     tmpl_lpa(i,:) = target(i).elecpos(lpa_indx,:);
@@ -688,8 +693,12 @@ switch cfg.method
     if isfield(headshape, 'coordsys')
       elec_realigned.coordsys = headshape.coordsys;
     end
-    if isfield(elec_original, 'coordsys') && (strcmp(cfg.warp, 'dykstra2012') || strcmp(cfg.warp, 'fsaverage'))
-      elec_realigned.coordsys = elec_original.coordsys; % this warp simply moves the electrodes in the same coordinate space
+    if isfield(elec_original, 'coordsys')
+      if strcmp(cfg.warp, 'dykstra2012') % this warp simply moves the electrodes in the same coordinate space
+        elec_realigned.coordsys = elec_original.coordsys;
+      elseif strcmp(cfg.warp, 'fsaverage')
+        elec_realigned.coordsys = 'fsaverage';
+      end
     end
   case 'fiducial'
     if isfield(target, 'coordsys')

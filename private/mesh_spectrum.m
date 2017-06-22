@@ -1,6 +1,6 @@
 % Mesh spectrum
 
-function [L,H,d] = ct_mesh_spectrum(S,n,varargin)
+function [L,H,d] = mesh_spectrum(S,n,varargin)
 
 %[L,H,d] = ct_mesh_spectrum(S,n,mode)
 % Compute the mesh laplace matrix and its spectrum

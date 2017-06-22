@@ -43,7 +43,13 @@ EOPstring='EndOfParameters';
 
 startVal=256.^[3:-1:0]*double(startString)';
 
-D=dir(CPfile);
+% try with ending delimiter to dereference symlinks
+D=dir([CPfile,filesep]);
+% if empty, try accessing the file directly
+if isempty(D)
+  D=dir(CPfile);
+end
+
 if isempty(D)
   fprintf('readCPersist:  Could not find file %s.\n',CPfile);
   Tag=struct([]);

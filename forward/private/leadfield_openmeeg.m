@@ -137,7 +137,7 @@ else
                 fprintf(fid,'%.15f\t%.15f\t%.15f\t%.15f\t%.15f\t%.15f\n',sens.coilpos(ii,:),sens.coilori(ii,:));
             end
         else
-            if(size(sens.tra,1) < max(chanlabel_idx)  | size(sens.tra,2) ~= length(coilpos_idx) | length(coilpos_idx) ~= size(sens.coilpos,1))
+            if(size(sens.tra,1) < max(chanlabel_idx) || size(sens.tra,2) ~= length(coilpos_idx) || length(coilpos_idx) ~= size(sens.coilpos,1))
                 % These dimensions should match; if not, some channels may have been
                 % removed, or there's unexpected handling of MEG reference coils
                 error('Mismatch between number of rows in sens.tra and number of channels... possibly some channels removed or unexpected MEG reference coil configuration');
@@ -325,7 +325,7 @@ end
 
 % Import lead field/potential
 [g, voxels_in] = import_gain(path, basefile, ft_senstype(sens, 'eeg'));
-if (voxels_in ~= voxels) & (nargout == 1); warning('Imported voxels from OpenMEEG process not the same as function input.'); end;
+if (voxels_in ~= voxels) && (nargout == 1); warning('Imported voxels from OpenMEEG process not the same as function input.'); end;
 
 lp = sens.tra*g; % Mchannels x (3 orientations x Nvoxels)
 
@@ -333,7 +333,7 @@ lp = sens.tra*g; % Mchannels x (3 orientations x Nvoxels)
 if cleanup_flag
     rmdir(basepath,'s')
 end
-if (isunix & ~ismac)
+if (isunix && ~ismac)
     setenv('LD_LIBRARY_PATH',ldLibraryPath0);
 end
 

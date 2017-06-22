@@ -8,7 +8,7 @@ function [simulated] = ft_connectivitysimulation(cfg)
 %   [data] = ft_connectivitysimulation(cfg)
 %
 % where the configuration structure should contain:
-%   cfg.method      = string, can be 'linear_mix', 'mvnrnd', 'ar' (see below)
+%   cfg.method      = string, can be 'linear_mix', 'mvnrnd', 'ar', 'ar_reverse' (see below)
 %   cfg.nsignal     = scalar, number of signals
 %   cfg.ntrials     = scalar, number of trials
 %   cfg.triallength = in seconds
@@ -66,7 +66,7 @@ function [simulated] = ft_connectivitysimulation(cfg)
 %                   deviation of white noise superimposed on top
 %                   of the simulated signals
 %
-% Method 'ar' implements an multivariate autoregressive model to generate
+% Method 'ar' implements a multivariate autoregressive model to generate
 % the data.
 %
 % Required cfg options:
@@ -77,6 +77,23 @@ function [simulated] = ft_connectivitysimulation(cfg)
 %                  signal i (at lag k).
 %   cfg.noisecov = matrix, [nsignal x nsignal] specifying the covariance
 %                  matrix of the innovation process
+%
+% Method 'ar_reverse' implements a multivariate autoregressive
+% autoregressive model to generate the data, where the model coefficients
+% are reverse-computed, based on the interaction pattern specified.
+%
+% Required cfg options:
+%   cfg.coupling = nxn matrix, specifying coupling strength, rows causing
+%                   column
+%   cfg.delay    = nxn matrix, specifying the delay, in seconds, from one
+%                   signal's spectral component to the other signal, rows
+%                   causing column
+%   cfg.ampl     = nxn matrix, specifying the amplitude 
+%   cfg.bpfreq   = nxnx2 matrix, specifying the lower and upper frequencies
+%                   of the bands that are transmitted, rows causing column
+%
+% The generated signals will have a spectrum that is 1/f + additional
+% band-limited components, as specified in the cfg.
 %
 % See also FT_FREQSIMULATION, FT_DIPOLESIMULATION, FT_SPIKESIMULATION,
 % FT_CONNECTIVITYANALYSIS
@@ -140,6 +157,9 @@ switch cfg.method
     cfg.demean   = ft_getopt(cfg, 'demean',   'yes');
     cfg.absnoise = ft_getopt(cfg, 'absnoise', 1);
     cfg          = ft_checkconfig(cfg, 'required', {'covmat' 'delay'});
+  case {'ar_reverse'}
+    % reverse engineered high order ar-model
+    cfg = ft_checkconfig(cfg, 'required', {'coupling' 'delay' 'ampl' 'bpfreq'});
   otherwise
 end
 
@@ -149,6 +169,7 @@ nsmp  = round(cfg.triallength*cfg.fsample);
 tim   = (0:nsmp-1)./cfg.fsample;
 
 % create the labels
+label = cell(cfg.nsignal,1);
 for k = 1:cfg.nsignal
   label{k,1} = ['signal',num2str(k,'%03d')];
 end
@@ -272,7 +293,115 @@ switch cfg.method
       % define time axis for this trial
       time{k}  = tim;
     end
+  case 'ar_reverse'
+    % generate a spectral transfer matrix, and a cross-spectral matrix
+    % according to the specifications
+    
+    % predefine some variables
+    fs    = cfg.fsample;
+    Nyq   = fs./2;
+    foi   = (0:0.2:Nyq);
+    omega = foi./fs;
+    n     = numel(foi);
 
+    
+    % local renaming
+    nsignal = cfg.nsignal;
+    fband   = cfg.bpfreq;
+    coupling = cfg.coupling;
+    ampl     = cfg.ampl;
+    delay    = cfg.delay;
+    
+    % create a 1/f spectrum
+    slope    = 0.5;
+    oneoverf = sqrt(max(omega(2)./10,omega).^-slope); % takes sqrt for amplitude
+    oneoverf = oneoverf./oneoverf(1);
+    
+    % convert into indices
+    findx = fband;
+    for k = 1:numel(fband)
+      if isfinite(fband(k))
+        findx(k) = nearest(foi, fband(k));
+      end
+    end
+    
+    % allocate some memory
+    mask = false(nsignal, nsignal, n);
+    krn = zeros(size(mask));
+    phi = zeros(size(krn));
+    dat = zeros(size(krn));
+    coupling_ampl = zeros(size(krn));
+    
+    for k = 1:nsignal
+      for m = 1:nsignal
+        if all(isfinite(squeeze(findx(k,m,:))))
+          mask(k,m,findx(k,m,1):findx(k,m,2)) = true;
+        end
+        krn(k,m,mask(k,m,:))  = hanning(sum(mask(k,m,:)))';
+        
+        phi(k,m,:) = 2.*pi.*delay(k,m).*foi;
+        phi(k,m,:) = phi(k,m,:).*mask(k,m,:);
+        phi(k,m,mask(k,m,:)) = phi(k,m,mask(k,m,:))-mean(phi(k,m,mask(k,m,:)));
+        
+        coupling_ampl(k,m,:) = coupling(m,k).*krn(k,m,:);
+      end
+    end
+    
+    % this matrix contains the amplitude spectra on the diagonal
+    for k = 1:nsignal
+      dat(k,k,:) = oneoverf;
+      for m = 1:nsignal
+        dat(k,k,:) = dat(k,k,:)+krn(m,m,:).*ampl(k,m);
+      end
+    end
+    
+    % now we can create a spectral transfer matrix
+    tf = zeros(nsignal,nsignal,n)+1i.*zeros(nsignal,nsignal,n);
+    for k = 1:nsignal
+      for m = 1:nsignal
+        if k~=m
+          tf(k,m,:) = coupling_ampl(k,m,:).*exp(1i.*phi(k,m,:));
+        else
+          tf(k,m,:) = dat(k,m,:);
+        end
+      end
+    end
+    
+    % create the cross spectral matrix
+    c = zeros(size(tf));
+    for k = 1:n
+      c(:,:,k) = tf(:,:,k)*tf(:,:,k)'; % assume noise to be I, i.e. the tf to swallow the amplitudes
+    end
+    
+    % create a freq-structure
+    freq           = [];
+    freq.crsspctrm = c;
+    freq.label     = label;
+    freq.freq      = foi;
+    freq.dimord    = 'chan_chan_freq';
+   
+    % estimate the transfer-matrix
+    tmpcfg        = [];
+    tmpcfg.method = 'transfer';
+    t             = ft_connectivityanalysis(tmpcfg, freq);
+    %t.noisecov = repmat(t.noisecov, [1 numel(t.freq)]);
+    %t          = ft_checkdata(t, 'cmbrepresentation', 'full');
+    %t.noisecov = t.noisecov(:,:,1);
+    
+    % estimate the ar-model coefficients
+    a = transfer2coeffs(t.transfer,t.freq);
+    
+    % recursively call this function to generate the data
+    tmpcfg = keepfields(cfg, {'fsample' 'nsignal' 'ntrials' 'triallength'});
+    tmpcfg.method = 'ar';
+    tmpcfg.params = a;
+    tmpcfg.noisecov = t.noisecov.*tmpcfg.fsample.*tmpcfg.triallength./2;
+    simulated        = ft_connectivitysimulation(tmpcfg);
+    [cfg, simulated] = rollback_provenance(cfg, simulated);
+    trial = simulated.trial;
+    time  = simulated.time;
+    label = simulated.label;
+    
   otherwise
     error('unknown method');
 end
@@ -291,3 +420,167 @@ ft_postamble randomseed
 ft_postamble provenance
 ft_postamble history simulated
 ft_postamble savevar simulated
+
+
+%%%%%%
+% helper function
+function A = transfer2coeffs(H, freq, labelcmb, maxlag)
+
+% TRANSFER2COEFFS converts a spectral transfer matrix into the time domain
+% equivalent multivariate autoregressive coefficients up to a specified
+% lag, starting from lag 1.
+
+if nargin<3
+  labelcmb = [];
+end
+if nargin<4
+  maxlag = [];
+end
+
+% do a check on the input data
+siz = size(H);
+if numel(siz)==3 && siz(1)==siz(2)
+  % assume chan_chan_freq
+  isfull = true;
+elseif numel(siz)==2
+  % assume chancmb_freq
+  isfull = false;
+  %assert(~isempty(labelcmb), 'input data appears to be chancmb_freq, but labelcmb is missing');
+else
+  error('dimensionality of input data is not supported');
+end
+
+dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
+if ~all(dfreq==dfreq(1))
+  error('FieldTrip:transfer2coeffs', 'frequency axis is not evenly spaced');
+end
+
+if freq(1)~=0
+  ft_warning('FieldTrip:transfer2coeffs', 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  dfreq = mean(dfreq);
+  npad  = freq(1)./dfreq;
+  
+  % update the freq axis and keep track of the frequency bins that are
+  % expected in the output
+  selfreq  = (1:numel(freq)) + npad;
+  freq     = [(0:(npad-1))./dfreq freq];
+  if isfull
+    H = cat(3, zeros(siz(1),siz(2),npad), H);
+  else
+    H = cat(2, zeros(siz(1),npad), H);
+  end
+else
+  selfreq  = 1:numel(freq);
+end
+
+% ensure H to be double precision
+H = double(H);
+
+% deal with the two different types of input
+if isfull
+  % check whether the last frequency bin is strictly real-valued.
+  % if that's the case, then it is assumed to be the Nyquist frequency
+  % and the two-sided spectral density will have an even number of
+  % frequency bins. if not, in order to preserve hermitian symmetry,
+  % the number of frequency bins needs to be odd.
+  Hend = H(:,:,end);
+  N    = numel(freq);
+  m    = size(H,1);
+  if all(imag(Hend(:))<abs(trace(Hend)./size(Hend,1)*1e-9))
+    N2 = 2*(N-1);
+  else
+    N2 = 2*(N-1)+1;
+  end
+
+  % preallocate memory for efficiency
+  Harr   = zeros(m,m,N2) + 1i.*zeros(m,m,N2);
+
+  % the input cross-spectral density is assumed to be weighted with a
+  % factor of 2 in all non-DC and Nyquist bins, therefore weight the
+  % DC-bin with a factor of sqrt(2) to get a correct two-sided representation
+  Harr(:,:,1) = H(:,:,1).*2;
+  for k = 2:N
+    Harr(:,:,       k) = H(:,:,k);
+    Harr(:,:,(N2+2)-k) = conj(H(:,:,k));
+  end
+  
+  % the input cross-spectral density is assumed to be weighted with a
+  % factor of 2 in all non-DC and Nyquist bins, therefore weight the
+  % Nyquist bin with a factor of sqrt(2) to get a correct two-sided representation
+  if mod(size(Harr,3),2)==0
+    Harr(:,:,N) = Harr(:,:,N).*sqrt(2);
+  end
+  
+  % invert the transfer matrix to get the fourier representation of the
+  % coefficients, and add an identity matrix 
+  I = eye(siz(1));
+  for k = 1:size(Harr,3)
+    Harr(:,:,k) = I-inv(Harr(:,:,k));
+  end
+  
+  % take the inverse fft to get the coefficients
+  A = ifft(reshape(permute(Harr, [3 1 2]), N2, []), 'symmetric');
+  A = A(2:end,:);
+  A = ipermute(reshape(A, [N2-1 siz(1) siz(1)]), [3 1 2]);
+  
+  if ~isempty(maxlag)
+    A = A(:,:,1:maxlag);
+  end
+else
+  % check whether the last frequency bin is strictly real-valued.
+  % if that's the case, then it is assumed to be the Nyquist frequency
+  % and the two-sided spectral density will have an even number of
+  % frequency bins. if not, in order to preserve hermitian symmetry,
+  % the number of frequency bins needs to be odd.
+  Hend = H(:,end);
+  N    = numel(freq);
+  m    = size(H,1);
+  if all(imag(Hend(:))<max(abs(Hend))*1e-9)
+    % the above heuristic may be a bit silly, FIXME
+    N2 = 2*(N-1);
+  else
+    N2 = 2*(N-1)+1;
+  end
+
+  % preallocate memory for efficiency
+  Harr   = zeros(m,N2) + 1i.*zeros(m,N2);
+
+  % the input cross-spectral density is assumed to be weighted with a
+  % factor of 2 in all non-DC and Nyquist bins, therefore weight the
+  % DC-bin with a factor of sqrt(2) to get a correct two-sided representation
+  Harr(:,1) = H(:,1).*sqrt(2);
+  for k = 2:N
+    Harr(:,       k) = H(:,k);
+    Harr(:,(N2+2)-k) = conj(H(:,k));
+  end
+  
+  % the input cross-spectral density is assumed to be weighted with a
+  % factor of 2 in all non-DC and Nyquist bins, therefore weight the
+  % Nyquist bin with a factor of sqrt(2) to get a correct two-sided representation
+  if mod(size(Harr,3),2)==0
+    Harr(:,N) = Harr(:,N).*sqrt(2);
+  end
+  
+  % invert the transfer matrix to get the fourier representation of the
+  % coefficients, and add an identity matrix 
+  %
+  % this assumes Harr to be in the rows quadruplets of pairwise
+  % decompositions, i.e. reshapable, without checking the labelcmb
+  ncmb = size(Harr,1)./4;
+  I = eye(2);
+  for k = 1:N2
+    Htmp = reshape(Harr(:,k), [2 2 ncmb]);
+    Htmp = repmat(I, [1 1 ncmb]) - inv2x2(Htmp);
+    Harr(:,k) = Htmp(:);
+  end
+    
+  % take the inverse fft to get the coefficients
+  A = ifft(permute(Harr, [2 1]), 'symmetric');
+  A = A(2:end,:);
+  A = ipermute(A, [2 1]);
+  
+  if ~isempty(maxlag)
+    A = A(:,1:maxlag);
+  end
+
+end
