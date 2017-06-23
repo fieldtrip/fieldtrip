@@ -21,7 +21,7 @@ if ~isempty(Ce9dei2ZOo_debug) && ~isequal(Ce9dei2ZOo_debug, 'no')
   return
 end
 
-if isfield(cfg, 'verbose')
+if isfield(cfg, 'verbose') && ischar(cfg.verbose)
   % store the current state of the notifications
   Ce9dei2ZOo_ws = ft_warning;
   Ce9dei2ZOo_ns = ft_notice;
