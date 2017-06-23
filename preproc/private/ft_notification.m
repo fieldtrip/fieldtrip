@@ -226,21 +226,22 @@ switch varargin{1}
       % return all items
       r = s;
       % don't return these
-      r(strcmp('backtrace', {r.identifier})) = [];
-      r(strcmp('verbose',   {r.identifier})) = [];
       r(strcmp('timeout',   {r.identifier})) = [];
       r(strcmp('last',      {r.identifier})) = [];
       % don't return the timestamps
       r = rmfield(r, 'timestamp');
       
       if nargout
-        % do not return the timestamp field
+        % return the state of all items
         varargout{1} = r;
       else
         % show the state of all items that are different from the default
         default = getstate(s, 'all');
         fprintf('The default %s state is ''%s''.', level, default);
         r = r(~strcmp({r.state}, default));
+        % don't show these
+        r(strcmp('verbose',   {r.identifier})) = [];
+        r(strcmp('backtrace', {r.identifier})) = [];
         if ~isempty(r)
           fprintf(' Items not set to the default are\n\n');
         end
@@ -256,8 +257,6 @@ switch varargin{1}
     if nargout
       r = s;
       % don't return these
-      r(strcmp('backtrace', {r.identifier})) = [];
-      r(strcmp('verbose',   {r.identifier})) = [];
       r(strcmp('timeout',   {r.identifier})) = [];
       r(strcmp('last',      {r.identifier})) = [];
       % don't return the timestamps
