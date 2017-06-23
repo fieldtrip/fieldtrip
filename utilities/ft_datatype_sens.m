@@ -262,7 +262,7 @@ switch version
             % no conversion needed
           else
             % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
-            ft_warning(sprintf('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i));
+            ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
           end % if
         end % for
         
@@ -284,7 +284,7 @@ switch version
             % no conversion needed
           else
             % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
-            ft_warning(sprintf('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i));
+            ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
           end % if
         end % for
         
