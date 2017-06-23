@@ -231,8 +231,7 @@ if hasrpt,
   if ~isempty(cfg.maskparameter)
     tempmask = data.(cfg.maskparameter);
   end
-  tmpcfg           = [];
-  tmpcfg.trials    = cfg.trials;
+  tmpcfg           = keepfields(cfg, {'trials', 'showcallinfo'});
   tmpcfg.jackknife = 'no';
   if isfield(cfg, 'parameter') && ~strcmp(cfg.parameter, 'powspctrm')
     % freqdesctiptives will only work on the powspctrm field
