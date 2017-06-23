@@ -529,8 +529,9 @@ elseif ischar(cfg.layout)
       fprintf('reading layout from file %s\n', cfg.layout);
       layout = readlay(cfg.layout);
     else
-      ft_warning(sprintf('layout file %s was not found on your path, attempting to use a similarly named .mat file instead',cfg.layout));
-      cfg.layout = [cfg.layout(1:end-3) 'mat'];
+      [p, f, x] = fileparts(cfg.layout);
+      ft_warning('the file "%s" was not found on your path, attempting "%s" instead', cfg.layout, fullfile(p, [f '.mat']));
+      cfg.layout = fullfile(p, [f '.mat']);
       layout = ft_prepare_layout(cfg);
       return;
     end
