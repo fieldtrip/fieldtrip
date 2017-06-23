@@ -95,6 +95,7 @@ else
   s = [];
 end
 
+% start with an empty state structure
 if isempty(s)
   s = struct('identifier', {}, 'state', {}, 'timestamp', {});
 end
@@ -106,7 +107,12 @@ end
 
 % set the default backtrace state
 if ~ismember('backtrace', {s.identifier})
-  s = setstate(s, 'backtrace', 'on');
+  switch level
+  case {'debug' 'info' 'notice'}
+    s = setstate(s, 'backtrace', 'off');
+  case {'warning' 'error'}
+    s = setstate(s, 'backtrace', 'on');
+  end % switch
 end
 
 % set the default verbose state
