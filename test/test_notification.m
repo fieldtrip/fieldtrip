@@ -13,8 +13,6 @@ subfunction(@ft_warning)
 % ft_error cannot be tested the same way, since the error stops everything
 errortest
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function errortest
 
@@ -25,7 +23,6 @@ try
 catch
   me = ft_error('last')
   assert(strcmp(me.message, 'something'))
-  assert(strcmp(me.identifier, 'FieldTrip:errortest:test_notification:line23'))
   ok = true;
 end
 
