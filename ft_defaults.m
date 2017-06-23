@@ -289,7 +289,7 @@ end
 
 list = which(keyfile, '-all');
 if length(list)>1
-  ft_warning(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
+  ft_warning('Multiple versions of %s on your path will confuse FieldTrip', toolbox);
   if ~warned % only throw the following warnings once
     warned = true;
     for i=1:length(list)

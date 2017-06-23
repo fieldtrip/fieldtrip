@@ -64,7 +64,7 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
-  ft_warning(sprintf('concatenating data from %d files', numel(filename)));
+  ft_warning('concatenating data from %d files', numel(filename));
   % this only works if the data is indexed by means of samples, not trials
   assert(isempty(ft_getopt(varargin, 'begtrial')));
   assert(isempty(ft_getopt(varargin, 'endtrial')));
