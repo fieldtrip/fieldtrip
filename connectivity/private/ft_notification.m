@@ -78,14 +78,6 @@ if strcmp(level, 'warning')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% set the notification state according to the input
-
-if numel(varargin)>0 && isstruct(varargin{1})
-  ft_default.notification.(level) = varargin{1};
-  return
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% handle the defaults
 
 if isfield(ft_default, 'notification') && isfield(ft_default.notification, level)
@@ -133,10 +125,6 @@ if ~ismember('last', {s.identifier})
   s = setstate(s, 'last', state);
 end
 
-if isempty(varargin)
-  varargin{1} = 'query';
-end
-
 if ~isempty(stack)
   % it is called from within a function
   name = {stack.name};
@@ -147,7 +135,19 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% set the notification state according to the input
+
+if numel(varargin)>0 && isstruct(varargin{1}) || isempty(varargin{1})
+  ft_default.notification.(level) = varargin{1};
+  return
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% act according to the first input argument
+
+if isempty(varargin)
+  varargin{1} = 'query';
+end
 
 switch varargin{1}
   case 'on'
