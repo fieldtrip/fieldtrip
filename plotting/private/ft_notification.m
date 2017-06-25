@@ -137,7 +137,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set the notification state according to the input
 
-if numel(varargin)>0 && isstruct(varargin{1}) || isempty(varargin{1})
+if numel(varargin)>0 && (isstruct(varargin{1}) || isempty(varargin{1}))
   ft_default.notification.(level) = varargin{1};
   return
 end
