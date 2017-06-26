@@ -114,18 +114,40 @@ switch cfg.spmversion
         p = spm_preproc8(opts);
         
         % this writes the 'native' segmentations
-        spm_preproc_write8(p, zeros(6,4), [0 1], [0 1], 0, 0, nan(2,3), nan);
+        spm_preproc_write8(p, [ones(6,1) zeros(6,3)], [0 1], [0 1], 0, 0, nan(2,3), nan);
+        
         
         [pathname,name,ext] = fileparts([cfg.intermediatename '_anatomy.nii']);
         filename = fullfile(pathname, ['m' name ext]);
         
         VO     = spm_vol(filename);
-        dat    = spm_read_vols(VO);
-        VO.dat = dat;
+        VO.dat = spm_read_vols(VO).*scale;
         
+        tmp = zeros([size(VO.dat) 6]);
+        for k = 1:6
+            cfilename    = fullfile(pathname, ['c' num2str(k) name ext]);
+            Vtmp         = spm_vol(cfilename);
+            tmp(:,:,:,k) = spm_read_vols(Vtmp);
+        end
+        tmp_tc = false(size(tmp));
+        for k = 1:6
+            notk = setdiff(1:6,k);
+            for m = notk(:)'
+                tmp_tc(:,:,:,k) = tmp(:,:,:,m)<tmp(:,:,:,k) & tmp(:,:,:,k);
+            end
+        end
+        diagn = zeros(6,5);
+        for k = 1:6
+            tmpvals    = tmp(:,:,:,k);
+            tmpvals    = tmpvals(tmp_tc(:,:,:,k));
+            diagn(k,:) = [sum(sum(sum(tmp_tc(:,:,:,k)))) mean(VO.dat(tmp_tc(:,:,:,k))) std(VO.dat(tmp_tc(:,:,:,k))) mean(tmpvals) std(tmpvals)];
+        end
+        
+   
         mri_unbias = keepfields(mri, {'coordsys', 'dim', 'transform', 'unit', 'inside'});
-        mri_unbias.anatomy = VO.dat.*scale;
-        
+        mri_unbias.anatomy = VO.dat;
+        mri_unbias.params = p;
+        mri_unbias.diagn  = diagn;     
     otherwise
         error('unsupported spmversion requested');
 end
