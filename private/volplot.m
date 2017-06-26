@@ -202,6 +202,12 @@ elseif strcmp(sel, 'sumproject')
   % change not-a-number values to zero
   dat(find(isnan(dat(:)))) = 0;
 
+  % update cmin and cmax
+  cmin = 0; 
+  cmax = squeeze(max(max(sum(dat,1))));
+  cmax = max(cmax, squeeze(max(max(sum(dat,2)))));
+  cmax = max(cmax, squeeze(max(max(sum(dat,3)))));
+
   subplot(h1);
   imagesc(x, z, squeeze(sum(dat, 2))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
