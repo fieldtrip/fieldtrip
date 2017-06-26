@@ -13,7 +13,7 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %
 % The configuration structure can contain
 %   cfg.output         = string or cell-array of strings, see below (default = 'tpm')
-%   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
 %   cfg.spmmethod      = string, 'old', 'new', 'mars' (default = 'old'). this pertains to the algorithm
 %                          used when cfg.spmversion='spm12'. see below
 %   cfg.opts           = struct, containing spm-version specific options. See
@@ -181,7 +181,7 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes
 % set the defaults
 cfg.output           = ft_getopt(cfg, 'output',         'tpm');
 cfg.downsample       = ft_getopt(cfg, 'downsample',     1);
-cfg.spmversion       = ft_getopt(cfg, 'spmversion',     'spm8');
+cfg.spmversion       = ft_getopt(cfg, 'spmversion',     'spm12');
 cfg.write            = ft_getopt(cfg, 'write',          'no');
 cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',      'old'); % doing old-style in case of spm12
 
