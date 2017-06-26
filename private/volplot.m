@@ -227,7 +227,8 @@ elseif strcmp(sel, 'sumproject')
   caxis([cmin cmax]);
 
   subplot(h4);
-  colorbar(h4, 'peer', h1);
+  imagesc(cmin:cmax);
+  caxis([cmin cmax]);
   xlabel('colorscale')
 
 elseif strcmp(sel, 'maxproject')
@@ -298,7 +299,8 @@ else
   ft_plot_crosshair([x(xi) y(yi)], 'color', 'yellow');
 
   subplot(h4);
-  colorbar(h4, 'peer', h1);
+  imagesc(cmin:cmax);
+  caxis([cmin cmax]);
   xlabel('colorscale')
 end
 
