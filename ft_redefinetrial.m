@@ -296,7 +296,7 @@ elseif ~isempty(cfg.length)
     end
   end
 
-  tmpcfg = [];
+  tmpcfg = keepfields(cfg, {'showcallinfo'});
   tmpcfg.trl = newtrl;
   data   = ft_redefinetrial(tmpcfg, data);
 
