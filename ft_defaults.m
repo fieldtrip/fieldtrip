@@ -277,14 +277,21 @@ end % function ft_default
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function checkMultipleToolbox(toolbox, keyfile)
+
+persistent warned
+if isempty(warned)
+  warned = false;
+end
+
 if ~ft_platform_supports('which-all')
   return;
 end
 
 list = which(keyfile, '-all');
 if length(list)>1
-  [ws, warned] = ft_warning(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
-  if warned % only throw the warning once
+  ft_warning('Multiple versions of %s on your path will confuse FieldTrip', toolbox);
+  if ~warned % only throw the following warnings once
+    warned = true;
     for i=1:length(list)
       warning('one version of %s is found here: %s', toolbox, list{i});
     end

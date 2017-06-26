@@ -3,6 +3,9 @@ function test_bug2225
 % WALLTIME 00:10:00
 % MEM 1gb
 
+% This started failing on 22 June 2017 in relation to https://github.com/fieldtrip/fieldtrip/pull/445
+% the "was_shown" output argument is not returned any more
+
 counter=0;
 for i=1:10
   was_shown=issue_warning();
