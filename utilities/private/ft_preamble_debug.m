@@ -14,11 +14,48 @@
 % See also FT_POSTAMBLE_DEBUG, DEBUGCLEANUP
 
 % these variables are shared by the three debug handlers
-global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin
+global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin Ce9dei2ZOo_ws Ce9dei2ZOo_ns Ce9dei2ZOo_is Ce9dei2ZOo_ds
 
 if ~isempty(Ce9dei2ZOo_debug) && ~isequal(Ce9dei2ZOo_debug, 'no')
   % the debugging handler is already set by a higher-level function
   return
+end
+
+if isfield(cfg, 'verbose') && ischar(cfg.verbose)
+  % store the current state of the notifications
+  Ce9dei2ZOo_ws = ft_warning;
+  Ce9dei2ZOo_ns = ft_notice;
+  Ce9dei2ZOo_is = ft_info;
+  Ce9dei2ZOo_ds = ft_debug;
+  switch cfg.verbose
+    case 'error'
+      ft_warning off
+      ft_notice  off
+      ft_info    off
+      ft_debug   off
+    case 'warning'
+      ft_warning on
+      ft_notice  off
+      ft_info    off
+      ft_debug   off
+    case 'notice'
+      ft_warning on
+      ft_notice  on
+      ft_info    off
+      ft_debug   off
+    case 'info'
+      ft_warning on
+      ft_notice  on
+      ft_info    on
+      ft_debug   off
+    case 'debug'
+      ft_warning on
+      ft_notice  on
+      ft_info    on
+      ft_debug   on
+    otherwise
+      % just leave them as they are
+  end
 end
 
 if ~isfield(cfg, 'debug')
