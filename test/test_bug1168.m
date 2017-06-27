@@ -76,13 +76,9 @@ freq.dimord = 'chan_ax1_ax2';
 freq.powspctrm = randn(d.nchan, nax1, nax2);
 
 cfg = d.cfg;
-% Test for specific exception using xUnit.
-% TODO: find id's for errors (gerp warning -> sort.)
-f = @() ft_multiplotTFR(cfg, freq);
-% assertExceptionThrown(f, 'fieldtrip:dimord')
-% FieldTrip error identifiers not yet decided upon, keeping code for later use
+% Test for specific exception
 try
-  feval(f)
+  ft_multiplotTFR(cfg, freq);
 catch exception
   assert(strcmp(exception.message,'This function requires freq data as input.'))
 end
@@ -102,13 +98,9 @@ freq.dimord = 'chan_freq_ax2';
 freq.powspctrm = randn(nchan, nfreq, nax2);
 
 cfg = d.cfg;
-% Test for specific exception using xUnit.
-% TODO: find id's for errors (gerp warning -> sort.)
-f = @() ft_multiplotTFR(cfg, freq);
-% assertExceptionThrown(f, 'fieldtrip:dimord')
-% FieldTrip error identifiers not yet decided upon, keeping code for later use
+% Test for specific exception
 try
-  feval(f)
+  ft_multiplotTFR(cfg, freq);
 catch exception
   assert(strcmp(exception.message,'unexpected dimord "chan_freq_ax2"'))
 end
