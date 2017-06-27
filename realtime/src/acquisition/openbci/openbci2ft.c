@@ -20,11 +20,9 @@
 #include "ini.h"
 #include "timestamp.h"
 
-#define OPENBCI_BUFLEN  33
-#define OPENBCI_NCHANS  11 /* 8x EEG, 3x accelerometer */
-#define OPENBCI_FSAMPLE 250
-#define OPENBCI_CALIB1  (4.5   / (24 * (2^23-1))) /* in uV, for 24x gain */
-#define OPENBCI_CALIB2  (0.002 / (2^4))           /* in mG */
+#define OPENBCI_BUFLEN    33
+#define OPENBCI_CALIB1    (4.5   / (24 * (2^23-1))) /* in uV, for 24x gain */
+#define OPENBCI_CALIB2    (0.002 / (2^4))           /* in mG */
 
 int keepRunning = 1;
 
@@ -40,6 +38,7 @@ typedef struct {
     const char *unwrap;
     const char *timestamp;
     const char *timeref;
+    const char *daisy;
 
     const char *enable_chan1;
     const char *enable_chan2;
@@ -52,6 +51,14 @@ typedef struct {
     const char *enable_chan9;
     const char *enable_chan10;
     const char *enable_chan11;
+    const char *enable_chan12;
+    const char *enable_chan13;
+    const char *enable_chan14;
+    const char *enable_chan15;
+    const char *enable_chan16;
+    const char *enable_chan17;
+    const char *enable_chan18;
+    const char *enable_chan19;
 
     const char *label_chan1;
     const char *label_chan2;
@@ -64,8 +71,16 @@ typedef struct {
     const char *label_chan9;
     const char *label_chan10;
     const char *label_chan11;
-    const char *label_chan12; /* this is for the sample    */
-    const char *label_chan13; /* this is for the timestamp */
+    const char *label_chan12;
+    const char *label_chan13;
+    const char *label_chan14;
+    const char *label_chan15;
+    const char *label_chan16;
+    const char *label_chan17;
+    const char *label_chan18;
+    const char *label_chan19;
+    const char *label_chan20; /* this is for the sample    */
+    const char *label_chan21; /* this is for the timestamp */
 
     const char *setting_chan1;
     const char *setting_chan2;
@@ -75,6 +90,14 @@ typedef struct {
     const char *setting_chan6;
     const char *setting_chan7;
     const char *setting_chan8;
+    const char *setting_chan9;
+    const char *setting_chan10;
+    const char *setting_chan11;
+    const char *setting_chan12;
+    const char *setting_chan13;
+    const char *setting_chan14;
+    const char *setting_chan15;
+    const char *setting_chan16;
 
     const char *impedance_chan1;
     const char *impedance_chan2;
@@ -84,6 +107,14 @@ typedef struct {
     const char *impedance_chan6;
     const char *impedance_chan7;
     const char *impedance_chan8;
+    const char *impedance_chan9;
+    const char *impedance_chan10;
+    const char *impedance_chan11;
+    const char *impedance_chan12;
+    const char *impedance_chan13;
+    const char *impedance_chan14;
+    const char *impedance_chan15;
+    const char *impedance_chan16;
 } configuration;
 
 #if defined (PLATFORM_WIN32)
@@ -161,7 +192,10 @@ static int iniHandler(void* external, const char* section, const char* name, con
         local->timestamp = strdup(value);
     } else if (MATCH("General", "timeref")) {
         local->timeref = strdup(value);
+    } else if (MATCH("General", "daisy")) {
+        local->daisy = strdup(value);
 
+        /* for channel 1-16 and accelerometers */
     } else if (MATCH("ChannelEnable", "chan1")) {
         local->enable_chan1 = strdup(value);
     } else if (MATCH("ChannelEnable", "chan2")) {
@@ -184,7 +218,24 @@ static int iniHandler(void* external, const char* section, const char* name, con
         local->enable_chan10 = strdup(value);
     } else if (MATCH("ChannelEnable", "chan11")) {
         local->enable_chan11 = strdup(value);
+    } else if (MATCH("ChannelEnable", "chan12")) {
+        local->enable_chan12 = strdup(value);
+    } else if (MATCH("ChannelEnable", "chan13")) {
+        local->enable_chan14 = strdup(value);
+    } else if (MATCH("ChannelEnable", "chan14")) {
+        local->enable_chan14 = strdup(value);
+    } else if (MATCH("ChannelEnable", "chan15")) {
+        local->enable_chan15 = strdup(value);
+    } else if (MATCH("ChannelEnable", "chan16")) {
+        local->enable_chan16 = strdup(value);
+    } else if (MATCH("ChannelEnable", "chan17")) {
+        local->enable_chan17 = strdup(value);
+    } else if (MATCH("ChannelEnable", "chan18")) {
+        local->enable_chan18 = strdup(value);
+    } else if (MATCH("ChannelEnable", "chan19")) {
+        local->enable_chan19 = strdup(value);
 
+      /* for channel 1-16 and accelerometers */
     } else if (MATCH("ChannelLabel", "chan1")) {
         local->label_chan1 = strdup(value);
     } else if (MATCH("ChannelLabel", "chan2")) {
@@ -210,9 +261,21 @@ static int iniHandler(void* external, const char* section, const char* name, con
     } else if (MATCH("ChannelLabel", "chan12")) {
         local->label_chan12 = strdup(value);
     } else if (MATCH("ChannelLabel", "chan13")) {
-        local->label_chan13 = strdup(value);
+      local->label_chan13 = strdup(value);
+    } else if (MATCH("ChannelLabel", "chan14")) {
+      local->label_chan14 = strdup(value);
+    } else if (MATCH("ChannelLabel", "chan15")) {
+      local->label_chan15 = strdup(value);
+    } else if (MATCH("ChannelLabel", "chan16")) {
+      local->label_chan16 = strdup(value);
+    } else if (MATCH("ChannelLabel", "chan17")) {
+      local->label_chan17 = strdup(value);
+    } else if (MATCH("ChannelLabel", "chan18")) {
+      local->label_chan18 = strdup(value);
+    } else if (MATCH("ChannelLabel", "chan19")) {
+      local->label_chan19 = strdup(value);
 
-        /* only for channel 1-8, not for accelerometers */
+        /* only for channel 1-16, not for accelerometers */
     } else if (MATCH("ChannelSetting", "chan1")) {
         local->setting_chan1 = strdup(value);
     } else if (MATCH("ChannelSetting", "chan2")) {
@@ -229,8 +292,24 @@ static int iniHandler(void* external, const char* section, const char* name, con
         local->setting_chan7 = strdup(value);
     } else if (MATCH("ChannelSetting", "chan8")) {
         local->setting_chan8 = strdup(value);
+    } else if (MATCH("ChannelSetting", "chan9")) {
+        local->setting_chan9 = strdup(value);
+    } else if (MATCH("ChannelSetting", "chan10")) {
+        local->setting_chan10 = strdup(value);
+    } else if (MATCH("ChannelSetting", "chan11")) {
+        local->setting_chan11 = strdup(value);
+    } else if (MATCH("ChannelSetting", "chan12")) {
+        local->setting_chan12 = strdup(value);
+    } else if (MATCH("ChannelSetting", "chan13")) {
+        local->setting_chan13 = strdup(value);
+    } else if (MATCH("ChannelSetting", "chan14")) {
+        local->setting_chan14 = strdup(value);
+    } else if (MATCH("ChannelSetting", "chan15")) {
+        local->setting_chan15 = strdup(value);
+    } else if (MATCH("ChannelSetting", "chan16")) {
+        local->setting_chan16 = strdup(value);
 
-        /* only for channel 1-8, not for accelerometers */
+        /* only for channel 1-16, not for accelerometers */
     } else if (MATCH("ChannelImpedance", "chan1")) {
         local->impedance_chan1 = strdup(value);
     } else if (MATCH("ChannelImpedance", "chan2")) {
@@ -247,6 +326,22 @@ static int iniHandler(void* external, const char* section, const char* name, con
         local->impedance_chan7 = strdup(value);
     } else if (MATCH("ChannelImpedance", "chan8")) {
         local->impedance_chan8 = strdup(value);
+    } else if (MATCH("ChannelImpedance", "chan9")) {
+        local->impedance_chan9 = strdup(value);
+    } else if (MATCH("ChannelImpedance", "chan10")) {
+        local->impedance_chan10 = strdup(value);
+    } else if (MATCH("ChannelImpedance", "chan11")) {
+        local->impedance_chan11 = strdup(value);
+    } else if (MATCH("ChannelImpedance", "chan12")) {
+        local->impedance_chan12 = strdup(value);
+    } else if (MATCH("ChannelImpedance", "chan13")) {
+        local->impedance_chan13 = strdup(value);
+    } else if (MATCH("ChannelImpedance", "chan14")) {
+        local->impedance_chan14 = strdup(value);
+    } else if (MATCH("ChannelImpedance", "chan15")) {
+        local->impedance_chan15 = strdup(value);
+    } else if (MATCH("ChannelImpedance", "chan16")) {
+        local->impedance_chan16 = strdup(value);
 
     } else {
         return 0;  /* unknown section/name, error */
@@ -260,7 +355,7 @@ void abortHandler(int sig) {
 }
 
 int main(int argc, char *argv[]) {
-    int n, i, c, prevsample = 0, thissample = 0, count = 0, sample = 0, chan = 0, status = 0, verbose = 0, labelSize;
+    int n, i, c, prevsample = 0, thissample = 0, count = 0, chan = 0, status = 0, verbose = 0, labelSize;
     unsigned char buf[OPENBCI_BUFLEN], byte;
     char *labelString;
     SerialPort SP;
@@ -268,8 +363,8 @@ int main(int argc, char *argv[]) {
     struct timespec tic, toc;
 
     /* these represent the general acquisition system properties */
-    int nchans         = OPENBCI_NCHANS;
-    float fsample      = OPENBCI_FSAMPLE;
+    int nchans         = -1;
+    float fsample      = -1;
 
     /* these are used in the communication with the FT buffer and represent statefull information */
     int ftSocket           = -1;
@@ -295,6 +390,7 @@ int main(int argc, char *argv[]) {
     config.unwrap        = strdup("off");
     config.timestamp     = strdup("off");
     config.timeref       = strdup("start");
+    config.daisy         = strdup("off");
 
     config.enable_chan1  = strdup("on");
     config.enable_chan2  = strdup("on");
@@ -307,6 +403,14 @@ int main(int argc, char *argv[]) {
     config.enable_chan9  = strdup("on");
     config.enable_chan10 = strdup("on");
     config.enable_chan11 = strdup("on");
+    config.enable_chan12 = strdup("on");
+    config.enable_chan13 = strdup("on");
+    config.enable_chan14 = strdup("on");
+    config.enable_chan15 = strdup("on");
+    config.enable_chan16 = strdup("on");
+    config.enable_chan17 = strdup("on");
+    config.enable_chan18 = strdup("on");
+    config.enable_chan19 = strdup("on");
 
     config.label_chan1  = strdup("ADC1");
     config.label_chan2  = strdup("ADC2");
@@ -316,11 +420,19 @@ int main(int argc, char *argv[]) {
     config.label_chan6  = strdup("ADC6");
     config.label_chan7  = strdup("ADC7");
     config.label_chan8  = strdup("ADC8");
-    config.label_chan9  = strdup("AccelerationX");
-    config.label_chan10 = strdup("AccelerationY");
-    config.label_chan11 = strdup("AccelerationZ");
-    config.label_chan12 = strdup("Sample");
-    config.label_chan13 = strdup("TimeStamp");
+    config.label_chan9  = strdup("ADC9");
+    config.label_chan10 = strdup("ADC10");
+    config.label_chan11 = strdup("ADC11");
+    config.label_chan12 = strdup("ADC12");
+    config.label_chan13 = strdup("ADC13");
+    config.label_chan14 = strdup("ADC14");
+    config.label_chan15 = strdup("ADC15");
+    config.label_chan16 = strdup("ADC16");
+    config.label_chan17 = strdup("AccelerationX");
+    config.label_chan18 = strdup("AccelerationY");
+    config.label_chan19 = strdup("AccelerationZ");
+    config.label_chan20 = strdup("Sample");     /* virtual channel */
+    config.label_chan21 = strdup("TimeStamp");  /* virtual channel */
 
     config.setting_chan1  = strdup("x1060110X");
     config.setting_chan2  = strdup("x2060110X");
@@ -330,6 +442,14 @@ int main(int argc, char *argv[]) {
     config.setting_chan6  = strdup("x6060110X");
     config.setting_chan7  = strdup("x7060110X");
     config.setting_chan8  = strdup("x8060110X");
+    config.setting_chan9  = strdup("x9060110X"); /* FIXME does it continue with 9, a, b, ... ? */
+    config.setting_chan10 = strdup("xa060110X");
+    config.setting_chan11 = strdup("xb060110X");
+    config.setting_chan12 = strdup("xc060110X");
+    config.setting_chan13 = strdup("xd060110X");
+    config.setting_chan14 = strdup("xe060110X");
+    config.setting_chan15 = strdup("xf060110X");
+    config.setting_chan16 = strdup("xg060110X");
 
     config.impedance_chan1  = strdup("z100Z");
     config.impedance_chan2  = strdup("z200Z");
@@ -339,6 +459,14 @@ int main(int argc, char *argv[]) {
     config.impedance_chan6  = strdup("z600Z");
     config.impedance_chan7  = strdup("z700Z");
     config.impedance_chan8  = strdup("z800Z");
+    config.impedance_chan9  = strdup("z900Z"); /* FIXME does it continue with 9, a, b, ... ? */
+    config.impedance_chan10 = strdup("za00Z");
+    config.impedance_chan11 = strdup("zb00Z");
+    config.impedance_chan12 = strdup("zc00Z");
+    config.impedance_chan13 = strdup("zd00Z");
+    config.impedance_chan14 = strdup("ze00Z");
+    config.impedance_chan15 = strdup("zf00Z");
+    config.impedance_chan16 = strdup("zg00Z");
 
     if (argc<2) {
         printf("%s", usage);
@@ -371,8 +499,27 @@ int main(int argc, char *argv[]) {
         host.port = config.port;
     }
 
+    #define ISTRUE(s) strcasecmp(s, "on")==0
+
+    if (ISTRUE(config.daisy)) {
+      nchans  = 16+3;
+      fsample = 125;
+    }
+    else {
+      nchans  = 8+3;
+      fsample = 250;
+      /* the default setting is on, switch channels 9-16 off */
+      config.enable_chan9  = strdup("off");
+      config.enable_chan10 = strdup("off");
+      config.enable_chan11 = strdup("off");
+      config.enable_chan12 = strdup("off");
+      config.enable_chan13 = strdup("off");
+      config.enable_chan14 = strdup("off");
+      config.enable_chan15 = strdup("off");
+      config.enable_chan16 = strdup("off");
+    }
+
     /* count the number of channels that should be sent */
-   #define ISTRUE(s) strcasecmp(s, "on")==0
     nchans = 0;
     if (ISTRUE(config.enable_chan1))
         nchans++;
@@ -396,6 +543,22 @@ int main(int argc, char *argv[]) {
         nchans++;
     if (ISTRUE(config.enable_chan11))
         nchans++;
+    if (ISTRUE(config.enable_chan12))
+        nchans++;
+    if (ISTRUE(config.enable_chan13))
+        nchans++;
+    if (ISTRUE(config.enable_chan14))
+        nchans++;
+    if (ISTRUE(config.enable_chan15))
+        nchans++;
+    if (ISTRUE(config.enable_chan16))
+        nchans++;
+    if (ISTRUE(config.enable_chan17))
+        nchans++;
+    if (ISTRUE(config.enable_chan18))
+        nchans++;
+    if (ISTRUE(config.enable_chan19))
+        nchans++;
     if (ISTRUE(config.sample))
         nchans++;
     if (ISTRUE(config.timestamp))
@@ -404,6 +567,8 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "openbci2ft: serial       =  %s\n", config.serial);
     fprintf(stderr, "openbci2ft: hostname     =  %s\n", host.name);
     fprintf(stderr, "openbci2ft: port         =  %d\n", host.port);
+    fprintf(stderr, "openbci2ft: nchans       =  %d\n", nchans);
+    fprintf(stderr, "openbci2ft: fsample      =  %d\n", fsample);
     fprintf(stderr, "openbci2ft: blocksize    =  %d\n", config.blocksize);
     fprintf(stderr, "openbci2ft: reset        =  %s\n", config.reset);
     fprintf(stderr, "openbci2ft: datalog      =  %s\n", config.datalog);
@@ -477,10 +642,26 @@ int main(int argc, char *argv[]) {
         labelSize += strlen (config.label_chan10) + 1;
     if (ISTRUE (config.enable_chan11))
         labelSize += strlen (config.label_chan11) + 1;
-    if (ISTRUE (config.sample))
+    if (ISTRUE (config.enable_chan12))
         labelSize += strlen (config.label_chan12) + 1;
-    if (ISTRUE (config.timestamp))
+    if (ISTRUE (config.enable_chan13))
         labelSize += strlen (config.label_chan13) + 1;
+    if (ISTRUE (config.enable_chan14))
+        labelSize += strlen (config.label_chan14) + 1;
+    if (ISTRUE (config.enable_chan15))
+        labelSize += strlen (config.label_chan15) + 1;
+    if (ISTRUE (config.enable_chan16))
+        labelSize += strlen (config.label_chan16) + 1;
+    if (ISTRUE (config.enable_chan17))
+        labelSize += strlen (config.label_chan17) + 1;
+    if (ISTRUE (config.enable_chan18))
+        labelSize += strlen (config.label_chan18) + 1;
+    if (ISTRUE (config.enable_chan19))
+        labelSize += strlen (config.label_chan19) + 1;
+    if (ISTRUE (config.sample))
+        labelSize += strlen (config.label_chan20) + 1;
+    if (ISTRUE (config.timestamp))
+        labelSize += strlen (config.label_chan21) + 1;
 
     if (verbose > 0)
         fprintf (stderr, "openbci2ft: labelSize = %d\n", labelSize);
@@ -532,13 +713,45 @@ int main(int argc, char *argv[]) {
         strcpy (labelString+labelSize, config.label_chan11);
         labelSize += strlen (config.label_chan11) + 1;
     }
-    if (ISTRUE (config.sample)) {
+    if (ISTRUE (config.enable_chan12)) {
         strcpy (labelString+labelSize, config.label_chan12);
         labelSize += strlen (config.label_chan12) + 1;
     }
-    if (ISTRUE (config.timestamp)) {
+    if (ISTRUE (config.enable_chan13)) {
         strcpy (labelString+labelSize, config.label_chan13);
         labelSize += strlen (config.label_chan13) + 1;
+    }
+    if (ISTRUE (config.enable_chan14)) {
+        strcpy (labelString+labelSize, config.label_chan14);
+        labelSize += strlen (config.label_chan14) + 1;
+    }
+    if (ISTRUE (config.enable_chan15)) {
+        strcpy (labelString+labelSize, config.label_chan15);
+        labelSize += strlen (config.label_chan15) + 1;
+    }
+    if (ISTRUE (config.enable_chan16)) {
+        strcpy (labelString+labelSize, config.label_chan16);
+        labelSize += strlen (config.label_chan16) + 1;
+    }
+    if (ISTRUE (config.enable_chan17)) {
+        strcpy (labelString+labelSize, config.label_chan17);
+        labelSize += strlen (config.label_chan17) + 1;
+    }
+    if (ISTRUE (config.enable_chan18)) {
+        strcpy (labelString+labelSize, config.label_chan18);
+        labelSize += strlen (config.label_chan18) + 1;
+    }
+    if (ISTRUE (config.enable_chan19)) {
+        strcpy (labelString+labelSize, config.label_chan19);
+        labelSize += strlen (config.label_chan19) + 1;
+    }
+    if (ISTRUE (config.sample)) {
+        strcpy (labelString+labelSize, config.label_chan20);
+        labelSize += strlen (config.label_chan20) + 1;
+    }
+    if (ISTRUE (config.timestamp)) {
+        strcpy (labelString+labelSize, config.label_chan21);
+        labelSize += strlen (config.label_chan21) + 1;
     }
 
     /* add the channel label chunk to the header */
@@ -658,6 +871,16 @@ int main(int argc, char *argv[]) {
     serialWriteSlow (&SP, strlen (config.setting_chan6), config.setting_chan6);
     serialWriteSlow (&SP, strlen (config.setting_chan7), config.setting_chan7);
     serialWriteSlow (&SP, strlen (config.setting_chan8), config.setting_chan8);
+    if (ISTRUE(config.daisy)) {
+      serialWriteSlow (&SP, strlen (config.setting_chan9), config.setting_chan9);
+      serialWriteSlow (&SP, strlen (config.setting_chan10), config.setting_chan10);
+      serialWriteSlow (&SP, strlen (config.setting_chan11), config.setting_chan11);
+      serialWriteSlow (&SP, strlen (config.setting_chan12), config.setting_chan12);
+      serialWriteSlow (&SP, strlen (config.setting_chan13), config.setting_chan13);
+      serialWriteSlow (&SP, strlen (config.setting_chan14), config.setting_chan14);
+      serialWriteSlow (&SP, strlen (config.setting_chan15), config.setting_chan15);
+      serialWriteSlow (&SP, strlen (config.setting_chan16), config.setting_chan16);
+    }
 
     if (strcasecmp (config.testsignal, "gnd") == 0)
         serialWrite (&SP, 1, "0");
@@ -708,7 +931,8 @@ int main(int argc, char *argv[]) {
 
     while (keepRunning) {
 
-        sample = 0;
+        int sample = 0;
+
         while (sample < config.blocksize) {
             /* wait for the first byte of the following packet */
             buf[0] = 0;
@@ -743,6 +967,7 @@ int main(int argc, char *argv[]) {
              *
              * Footer
              *   Byte 33: 0xC0
+             *
              */
 
             /* read the remaining 32 bytes of the packet */
@@ -758,74 +983,125 @@ int main(int argc, char *argv[]) {
                 printf ("\n");
             }
 
-            chan = 0;
-            if (ISTRUE (config.enable_chan1))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB1 * (buf[2] << 24 | buf[3] << 16 | buf[4] << 8) /
-                    255;
-            if (ISTRUE (config.enable_chan2))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB1 * (buf[5] << 24 | buf[6] << 16 | buf[7] << 8) /
-                    255;
-            if (ISTRUE (config.enable_chan3))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB1 * (buf[8] << 24 | buf[9] << 16 | buf[10] << 8) /
-                    255;
-            if (ISTRUE (config.enable_chan4))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB1 * (buf[11] << 24 | buf[12] << 16 | buf[13] << 8) /
-                    255;
-            if (ISTRUE (config.enable_chan5))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB1 * (buf[14] << 24 | buf[15] << 16 | buf[16] << 8) /
-                    255;
-            if (ISTRUE (config.enable_chan6))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB1 * (buf[17] << 24 | buf[18] << 16 | buf[19] << 8) /
-                    255;
-            if (ISTRUE (config.enable_chan7))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB1 * (buf[20] << 24 | buf[21] << 16 | buf[22] << 8) /
-                    255;
-            if (ISTRUE (config.enable_chan8))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB1 * (buf[23] << 24 | buf[24] << 16 | buf[25] << 8) /
-                    255;
+            /* these two flags are both off if there is no daisy board */
+            char lower = (ISTRUE(config.daisy) && (buf[1] % 2 == 1)); /* odd samples are for the lower 8 channels */
+            char upper = (ISTRUE(config.daisy) && (buf[1] % 2 == 0)); /* even samples are for the upper 8 channels from the daisy board */
 
-            if (ISTRUE (config.enable_chan9))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB2 * (buf[26] << 24 | buf[27] << 16) / 32767;
-            if (ISTRUE (config.enable_chan10))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB2 * (buf[28] << 24 | buf[29] << 16) / 32767;
-            if (ISTRUE (config.enable_chan11))
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    OPENBCI_CALIB2 * (buf[28] << 24 | buf[31] << 16) / 32767;
+            int chan = 0;
 
-            if (ISTRUE (config.sample)) {
-                if (ISTRUE (config.unwrap)) {
-                     thissample += (buf[1] < prevsample ? 255 + buf[1]-prevsample : buf[1]-prevsample);
-                     prevsample  = buf[1];
+            if (lower || (!lower && !upper)) {
+                /* assign the lower 8 channels */
+                if (ISTRUE (config.enable_chan1))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[2] << 24 | buf[3] << 16 | buf[4] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan2))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[5] << 24 | buf[6] << 16 | buf[7] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan3))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[8] << 24 | buf[9] << 16 | buf[10] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan4))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[11] << 24 | buf[12] << 16 | buf[13] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan5))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[14] << 24 | buf[15] << 16 | buf[16] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan6))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[17] << 24 | buf[18] << 16 | buf[19] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan7))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[20] << 24 | buf[21] << 16 | buf[22] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan8))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[23] << 24 | buf[24] << 16 | buf[25] << 8) /
+                        255;
+            } /* if lower or no daisy board */
+
+            if (upper) {
+                /* assign the upper 8 channels of the daisy board */
+                if (ISTRUE (config.enable_chan9))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[2] << 24 | buf[3] << 16 | buf[4] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan10))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[5] << 24 | buf[6] << 16 | buf[7] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan11))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[8] << 24 | buf[9] << 16 | buf[10] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan12))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[11] << 24 | buf[12] << 16 | buf[13] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan13))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[14] << 24 | buf[15] << 16 | buf[16] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan14))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[17] << 24 | buf[18] << 16 | buf[19] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan15))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[20] << 24 | buf[21] << 16 | buf[22] << 8) /
+                        255;
+                if (ISTRUE (config.enable_chan16))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB1 * (buf[23] << 24 | buf[24] << 16 | buf[25] << 8) /
+                        255;
+            } /* if upper */
+
+            if (lower || (!lower && !upper)) {
+                /* accelerometer channels */
+                if (ISTRUE (config.enable_chan9))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB2 * (buf[26] << 24 | buf[27] << 16) / 32767;
+                if (ISTRUE (config.enable_chan10))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB2 * (buf[28] << 24 | buf[29] << 16) / 32767;
+                if (ISTRUE (config.enable_chan11))
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        OPENBCI_CALIB2 * (buf[28] << 24 | buf[31] << 16) / 32767;
+
+                /* virtual channel */
+                if (ISTRUE (config.sample)) {
+                    if (ISTRUE (config.unwrap)) {
+                         thissample += (buf[1] < prevsample ? 255 + buf[1]-prevsample : buf[1]-prevsample);
+                         prevsample  = buf[1];
+                    }
+                    else {
+                      thissample = buf[1];
+                    }
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] = thissample;
                 }
-                else {
-                  thissample = buf[1];
-                }
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] = thissample;
-            } 
 
-            if (ISTRUE (config.timestamp)) {
-                if (strcasecmp (config.timeref, "start") == 0)
-                    get_monotonic_time (&toc, TIMESTAMP_REF_BOOT);
-                else if (strcasecmp (config.timeref, "boot") == 0)
-                    get_monotonic_time (&toc, TIMESTAMP_REF_BOOT);
-                else if (strcasecmp (config.timeref, "epoch") == 0)
-                    get_monotonic_time (&toc, TIMESTAMP_REF_EPOCH);
-                ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-                    get_elapsed_time (&tic, &toc);
+                /* virtual channel */
+                if (ISTRUE (config.timestamp)) {
+                    if (strcasecmp (config.timeref, "start") == 0)
+                        get_monotonic_time (&toc, TIMESTAMP_REF_BOOT);
+                    else if (strcasecmp (config.timeref, "boot") == 0)
+                        get_monotonic_time (&toc, TIMESTAMP_REF_BOOT);
+                    else if (strcasecmp (config.timeref, "epoch") == 0)
+                        get_monotonic_time (&toc, TIMESTAMP_REF_EPOCH);
+                    ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
+                        get_elapsed_time (&tic, &toc);
+                }
+            } /* if lower or no daisy board */
+
+            if (upper || (!lower && !upper)) {
+                sample++;
             }
-
-            sample++;
-        }				/* while c<config.blocksize */
+        }	/* while c<config.blocksize */
 
         count += sample;
         printf ("openbci2ft: sample count = %i\n", count);
