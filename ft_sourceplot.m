@@ -268,6 +268,7 @@ end
 cfg.method        = ft_getopt(cfg, 'method',        'ortho');
 cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
+cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
 cfg.title         = ft_getopt(cfg, 'title',         '');
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
@@ -1213,26 +1214,61 @@ switch cfg.method
     end
     
     %------do the plotting
-    ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
-    axis   off;
-    axis vis3d;
-    axis equal;
+    if ~hasfun
+      ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
+      axis   off;
+      axis vis3d;
+      axis equal;
     
-    if hasfun
+    elseif hasfun
       if ~hasmsk || all(maskval(:)==1)
-        ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val);
-      elseif hasmsk
-        ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval);
+        ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val);
+        axis   off;
+        axis vis3d;
+        axis equal;
+          
         try
-          alim(gca, [opacmin opacmax]);
+          caxis(gca,[fcolmin fcolmax]);
         end
-        alphamap(cfg.opacitymap);
-      end
+        colormap(cfg.funcolormap);
       
-      try
-        caxis(gca,[fcolmin fcolmax]);
+      elseif hasmsk
+        switch cfg.maskstyle
+          case 'opacity'
+            % this needs to be handled here, rather than in
+            % ft_plot_mesh, because the latter function needs to be
+            % called twice: once for drawing the background, with
+            % possibly a user-specified background color, and the
+            % second time for the functional data
+            ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
+            axis   off;
+            axis vis3d;
+            axis equal;  
+         
+            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval);
+            try
+              alim(gca, [opacmin opacmax]);
+            end
+            alphamap(cfg.opacitymap);
+            try
+              caxis(gca,[fcolmin fcolmax]);
+            end
+            colormap(cfg.funcolormap);
+       
+          case 'saturation'
+            % convert the specification of the background color + functional
+            % color + opacity into a single rgb value to speed up the rendering
+          
+            bgcolor = repmat([199 194 169]/255, [numel(val) 1]);
+            rgb     = bg_rgba2rgb(val, bgcolor, cfg.funcolormap, [fcolmin fcolmax], maskval, cfg.opacitymap, [opacmin opacmax]);
+        
+            ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'vertexcolor', rgb);
+          
+            axis   off;
+            axis vis3d;
+            axis equal;
+        end       
       end
-      colormap(cfg.funcolormap);
     end
     
     lighting gouraud
@@ -1245,7 +1281,14 @@ switch cfg.method
       if hasfun
         % use a normal MATLAB colorbar
         hc = colorbar;
-        set(hc, 'YLim', [fcolmin fcolmax]);
+        if strcmp(cfg.maskstyle, 'opacity')
+            % functional values are according to original input values
+            set(hc, 'YLim', [fcolmin fcolmax]);
+        else
+            % functional values have been transformed to be scaled
+            set(hc,'ticks',(0:0.1:1));
+            set(hc,'ticklabels',round(100*linspace(fcolmin,fcolmax,numel(get(hc,'ytick'))'))./100);
+        end
       else
         warning('no colorbar possible without functional data')
       end
