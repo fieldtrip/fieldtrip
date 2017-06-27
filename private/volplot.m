@@ -202,6 +202,12 @@ elseif strcmp(sel, 'sumproject')
   % change not-a-number values to zero
   dat(find(isnan(dat(:)))) = 0;
 
+  % update cmin and cmax
+  cmin = 0; 
+  cmax = squeeze(max(max(sum(dat,1))));
+  cmax = max(cmax, squeeze(max(max(sum(dat,2)))));
+  cmax = max(cmax, squeeze(max(max(sum(dat,3)))));
+
   subplot(h1);
   imagesc(x, z, squeeze(sum(dat, 2))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
@@ -221,7 +227,8 @@ elseif strcmp(sel, 'sumproject')
   caxis([cmin cmax]);
 
   subplot(h4);
-  colorbar(h4, 'peer', h1);
+  imagesc(cmin:cmax);
+  caxis([cmin cmax]);
   xlabel('colorscale')
 
 elseif strcmp(sel, 'maxproject')
@@ -292,7 +299,8 @@ else
   ft_plot_crosshair([x(xi) y(yi)], 'color', 'yellow');
 
   subplot(h4);
-  colorbar(h4, 'peer', h1);
+  imagesc(cmin:cmax);
+  caxis([cmin cmax]);
   xlabel('colorscale')
 end
 

@@ -182,11 +182,11 @@ end
 % give some feedback on the screen
 if strcmp(cfg.keepindividual, 'no')
     for k=1:numel(cfg.parameter)
-        fprintf('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
+        ft_info('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
     end
 else
     for k=1:numel(cfg.parameter)
-        fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
+        ft_info('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
     end
 end
 
