@@ -81,14 +81,14 @@ set(findobj(h, 'tag', 'lbunsel'), 'string', userdata.label(userdata.unselect));
 % set the active element in the select listbox, based on the previous active element
 tmp = min(get(findobj(h, 'tag', 'lbsel'), 'value'));
 tmp = min(tmp, length(get(findobj(h, 'tag', 'lbsel'), 'string')));
-if isempty(tmp) | tmp==0
+if isempty(tmp) || tmp==0
   tmp = 1;
 end
 set(findobj(h, 'tag', 'lbsel'  ), 'value', tmp);
 % set the active element in the unselect listbox, based on the previous active element
 tmp = min(get(findobj(h, 'tag', 'lbunsel'), 'value'));
 tmp = min(tmp, length(get(findobj(h, 'tag', 'lbunsel'), 'string')));
-if isempty(tmp) | tmp==0
+if isempty(tmp) || tmp==0
   tmp = 1;
 end
 set(findobj(h, 'tag', 'lbunsel'  ), 'value', tmp);

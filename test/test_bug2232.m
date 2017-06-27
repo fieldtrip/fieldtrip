@@ -3,14 +3,13 @@ function test_bug2232
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2232
 % TEST gifti
 % TEST ft_read_headshape
 % TEST ft_read_atlas
 
 ft_hastoolbox('gifti', 1);
 
-datadir = '/home/common/matlab/fieldtrip/data/test/bug2232';
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2232');
 d       = dir(datadir);
 subdir  = {d.name}';
 sel     = cellfun(@numel, subdir)>2;

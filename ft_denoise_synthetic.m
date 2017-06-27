@@ -84,13 +84,13 @@ if ~hasref
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, 'trials');
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
 % remember the original channel ordering
-labelorg = data.label;
+labelold = data.label;
 
 % apply the balancing to the MEG data and to the gradiometer definition
 current = data.grad.balance.current;
@@ -99,7 +99,7 @@ desired = cfg.gradient;
 if ~strcmp(current, 'none')
   % first undo/invert the previously applied balancing
   try
-    current_montage = getfield(data.grad.balance, current);
+    current_montage = data.grad.balance.(current);
   catch
     error('unknown balancing for input data');
   end
@@ -107,24 +107,23 @@ if ~strcmp(current, 'none')
   data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
   data      = ft_apply_montage(data     , current_montage, 'keepunused', 'yes', 'inverse', 'yes');
   data.grad.balance.current = 'none';
-end % if
+end % if current
 
 if ~strcmp(desired, 'none')
   % then apply the desired balancing
   try
-    desired_montage = getfield(data.grad.balance, desired);
+    desired_montage = data.grad.balance.(desired);
   catch
     error('unknown balancing for input data');
   end
   fprintf('converting from "none" to "%s"\n', desired);
   data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
   data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes', 'balancename', desired);
-  %data.grad.balance.current = desired;
-end % if
+end % if desired
 
 % reorder the channels to stay close to the original ordering
-[selorg, selnew] = match_str(labelorg, data.label);
-if numel(selnew)==numel(labelorg)
+[selold, selnew] = match_str(labelold, data.label);
+if numel(selnew)==numel(labelold)
   for i=1:numel(data.trial)
     data.trial{i} = data.trial{i}(selnew,:);
   end

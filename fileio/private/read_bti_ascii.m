@@ -37,9 +37,9 @@ end
 
 line = '';
 while ischar(line)
-  line = cleanline(fgetl(fid))
+  line = cleanline(fgetl(fid));
   
-  if isempty(line) | line==-1 | isempty(findstr(line, ':'))
+  if isempty(line) || line==-1 || isempty(findstr(line, ':'))
     continue
   end
   
@@ -65,7 +65,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function line = cleanline(line)
-if isempty(line) | line==-1
+if isempty(line) || line==-1
   return
 end
 comment = findstr(line, '//');

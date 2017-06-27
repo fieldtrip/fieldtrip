@@ -31,6 +31,9 @@ function [dat] = ft_read_data(filename, varargin)
 %
 % The list of supported file formats can be found in FT_READ_HEADER.
 %
+% To use an external reading function, use key-value pair: 'dataformat', FUNCTION_NAME.
+% (Function needs to be on the path, and take as input: filename, hdr, begsample, endsample, chanindx.)
+%
 % See also FT_READ_HEADER, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT
 
 % Copyright (C) 2003-2016 Robert Oostenveld
@@ -61,7 +64,7 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
-  ft_warning(sprintf('concatenating data from %d files', numel(filename)));
+  ft_warning('concatenating data from %d files', numel(filename));
   % this only works if the data is indexed by means of samples, not trials
   assert(isempty(ft_getopt(varargin, 'begtrial')));
   assert(isempty(ft_getopt(varargin, 'endtrial')));
@@ -268,7 +271,7 @@ if checkboundary && hdr.nTrials>1
   end
 end
 
-if any(strcmp(dataformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'mega_neurone'}))
+if any(strcmp(dataformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone'}))
   % caching for these formats is handled in the main section and in ft_read_header
 else
   % implement the caching in a data-format independent way
@@ -729,7 +732,7 @@ switch dataformat
     % multiplexed data in a *.bin file, accompanied by a MATLAB file containing the header
     offset        = begsample-1;
     numsamples    = endsample-begsample+1;
-    if isfield(hdr, 'precision'),
+    if isfield(hdr, 'precision')
       sampletype  = hdr.precision;
     else
       sampletype  = 'double'; %original format without precision info in hdr is always in double
@@ -829,6 +832,18 @@ switch dataformat
       dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
     end
     
+  case 'gtec_hdf5'
+    % check that the required low-level toolbox is available
+    ft_hastoolbox('gtec', 1);
+    % there is only a precompiled *.p reader that reads the whole file at once
+    if isfield(hdr, 'orig')
+      orig = hdr.orig;
+    else
+      orig = ghdf5read(filename);
+    end
+    dat = orig.RawData.Samples(chanindx, begsample:endsample);
+    dimord = 'chans_samples';
+    
   case 'gtec_mat'
     if isfield(hdr, 'orig')
       % these are remembered in the hdr.orig field for fast reading of subsequent segments
@@ -842,6 +857,12 @@ switch dataformat
     end
     dat = log(chanindx, begsample:endsample);
     dimord = 'chans_samples';
+    
+  case {'homer_nirs'}
+    % Homer files are MATLAB files in disguise
+    orig = load(filename, '-mat');
+    dat = orig.d(begsample:endsample, chanindx);
+    dimord = 'samples_chans';
     
   case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
@@ -950,18 +971,18 @@ switch dataformat
   case {'mpi_ds', 'mpi_dap'}
     [hdr, dat] = read_mpi_ds(filename);
     dat = dat(chanindx, begsample:endsample); % select the desired channels and samples
-  case 'nervus_eeg'     
-    hdr = read_nervus_header(filename);        
+  case 'nervus_eeg'
+    hdr = read_nervus_header(filename);
     %Nervus usually has discontinuous EEGs, e.g. pauses in clinical
     %recordings. The code currently concatenates these trials.
     %We could set this up as separate "trials" later.
-    %We could probably add "boundary events" in EEGLAB later    
+    %We could probably add "boundary events" in EEGLAB later
     dat = zeros(0,size(hdr.orig.Segments(1).chName,2));
     for segment=1:size(hdr.orig.Segments,2);
-        range = [1 hdr.orig.Segments(segment).sampleCount];
-        datseg = read_nervus_data(hdr.orig,segment, range, chanindx);        
-        dat = cat(1,dat,datseg);
-    end    
+      range = [1 hdr.orig.Segments(segment).sampleCount];
+      datseg = read_nervus_data(hdr.orig,segment, range, chanindx);
+      dat = cat(1,dat,datseg);
+    end
     dimord = 'samples_chans';
   case 'neuroscope_bin'
     switch hdr.orig.nBits
@@ -1312,7 +1333,7 @@ switch dataformat
     dat = read_nex_data(filename, hdr, begsample, endsample, chanindx);
     
   case 'riff_wave'
-    dat = wavread(filename, [begsample endsample])';
+    dat = audioread(filename, [begsample endsample])';
     dat = dat(chanindx,:);
     
   case 'spmeeg_mat'
@@ -1352,10 +1373,17 @@ switch dataformat
     end
     
   otherwise
-    if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
-      dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
-    else
-      error('unsupported data format (%s)', dataformat);
+    % attempt to run dataformat as a function
+    % in case using an external read function was desired, this is where it is executed
+    % if it fails, the regular unsupported error message is thrown
+    try
+      dat = feval(dataformat,filename, hdr, begsample, endsample, chanindx);
+    catch
+      if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
+        dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
+      else
+        error('unsupported data format (%s)', dataformat);
+      end
     end
 end % switch dataformat
 

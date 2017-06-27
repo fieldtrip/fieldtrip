@@ -187,7 +187,7 @@ template = struct([]); % initialize as empty structure
 for i=1:length(cfg.template)
   if ischar(cfg.template{i}),
     fprintf('reading template sensor position from %s\n', cfg.template{i});
-    tmp = ft_read_sens(cfg.template{i});
+    tmp = ft_read_sens(cfg.template{i}, 'senstype', 'meg');
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra'),
     tmp = cfg.template{i};
   elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra'),
@@ -242,7 +242,7 @@ else
 end
 
 % copy all options that are potentially used in ft_prepare_sourcemodel
-tmpcfg            = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+tmpcfg            = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
 tmpcfg.headmodel  = volold;
 tmpcfg.grad       = data.grad;
 % create the dipole grid on which the data will be projected

@@ -162,13 +162,16 @@ if ~isfield(cfg, 'inside')
   cfg.inside = true(cfg.dim);
 end % cfg.inside is set in ft_sourcestatistics, but is also needed for timelock and freq
 
-if isfield(cfg, 'origdim'),
+if isfield(cfg, 'origdim')
   cfg.dim = cfg.origdim;
 end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
 
+% ensure that SPM is available, needed for spm_bwlabeln
+ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2up', 1);
+
 % first do the clustering on the observed data
 spacereshapeable = numel(channeighbstructmat)==1&&~isfinite(channeighbstructmat);
-if needpos,
+if needpos
   
   if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
@@ -179,7 +182,6 @@ if needpos,
     
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
-      ft_hastoolbox('spm8',1);
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
       [posclusobs, posnum] = spm_bwlabel(tmp, 2*numdims);
     else
@@ -211,7 +213,6 @@ if needneg,
     
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
-      ft_hastoolbox('spm8',1);
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
       [negclusobs, negnum] = spm_bwlabel(tmp, 2*numdims);
     else
@@ -283,13 +284,13 @@ for i=1:Nrand
     stat    = zeros(1,Nrndpos); % this will hold the statistic for each cluster
     % fprintf('found %d positive clusters in this randomization\n', Nrndpos);
     for j = 1:Nrndpos
-      if strcmp(cfg.clusterstatistic, 'max'),
+      if strcmp(cfg.clusterstatistic, 'max')
         stat(j) = max(statrnd(posclusrnd==j,i));
-      elseif strcmp(cfg.clusterstatistic, 'maxsize'),
+      elseif strcmp(cfg.clusterstatistic, 'maxsize')
         stat(j) = length(find(posclusrnd==j));
-      elseif strcmp(cfg.clusterstatistic, 'maxsum'),
+      elseif strcmp(cfg.clusterstatistic, 'maxsum')
         stat(j) = sum(statrnd(posclusrnd==j,i));
-      elseif strcmp(cfg.clusterstatistic, 'wcm'),
+      elseif strcmp(cfg.clusterstatistic, 'wcm')
         stat(j) = sum((statrnd(posclusrnd==j,i)-postailcritval).^cfg.wcm_weight);
       else
         error('unknown clusterstatistic');
@@ -307,7 +308,7 @@ for i=1:Nrand
       if ~isempty(stat), posdistribution(i) = max(stat); end
     end
   end % needpos
-  if needneg,
+  if needneg
     if spacereshapeable
       
       tmp = zeros(cfg.dim);
@@ -332,13 +333,13 @@ for i=1:Nrand
     stat    = zeros(1,Nrndneg); % this will hold the statistic for each cluster
     % fprintf('found %d negative clusters in this randomization\n', Nrndneg);
     for j = 1:Nrndneg
-      if strcmp(cfg.clusterstatistic, 'max'),
+      if strcmp(cfg.clusterstatistic, 'max')
         stat(j) = min(statrnd(negclusrnd==j,i));
-      elseif strcmp(cfg.clusterstatistic, 'maxsize'),
+      elseif strcmp(cfg.clusterstatistic, 'maxsize')
         stat(j) = -length(find(negclusrnd==j)); % encode the size of a negative cluster as a negative value
-      elseif strcmp(cfg.clusterstatistic, 'maxsum'),
+      elseif strcmp(cfg.clusterstatistic, 'maxsum')
         stat(j) = sum(statrnd(negclusrnd==j,i));
-      elseif strcmp(cfg.clusterstatistic, 'wcm'),
+      elseif strcmp(cfg.clusterstatistic, 'wcm')
         stat(j) = -sum((abs(statrnd(negclusrnd==j,i)-negtailcritval)).^cfg.wcm_weight); % encoded as a negative value
       else
         error('unknown clusterstatistic');
@@ -360,17 +361,17 @@ end % for 1:Nrand
 ft_progress('close');
 
 % compare the values for the observed clusters with the randomization distribution
-if needpos,
+if needpos
   posclusters = [];
   stat = zeros(1,Nobspos);
   for j = 1:Nobspos
-    if strcmp(cfg.clusterstatistic, 'max'),
+    if strcmp(cfg.clusterstatistic, 'max')
       stat(j) = max(statobs(posclusobs==j));
-    elseif strcmp(cfg.clusterstatistic, 'maxsize'),
+    elseif strcmp(cfg.clusterstatistic, 'maxsize')
       stat(j) = length(find(posclusobs==j));
-    elseif strcmp(cfg.clusterstatistic, 'maxsum'),
+    elseif strcmp(cfg.clusterstatistic, 'maxsum')
       stat(j) = sum(statobs(posclusobs==j));
-    elseif strcmp(cfg.clusterstatistic, 'wcm'),
+    elseif strcmp(cfg.clusterstatistic, 'wcm')
       stat(j) = sum((statobs(posclusobs==j)-postailcritval).^cfg.wcm_weight);
     else
       error('unknown clusterstatistic');
@@ -440,13 +441,13 @@ if needneg,
   negclusters = [];
   stat = zeros(1,Nobsneg);
   for j = 1:Nobsneg
-    if strcmp(cfg.clusterstatistic, 'max'),
+    if strcmp(cfg.clusterstatistic, 'max')
       stat(j) = min(statobs(negclusobs==j));
-    elseif strcmp(cfg.clusterstatistic, 'maxsize'),
+    elseif strcmp(cfg.clusterstatistic, 'maxsize')
       stat(j) = -length(find(negclusobs==j)); % encode the size of a negative cluster as a negative value
-    elseif strcmp(cfg.clusterstatistic, 'maxsum'),
+    elseif strcmp(cfg.clusterstatistic, 'maxsum')
       stat(j) = sum(statobs(negclusobs==j));
-    elseif strcmp(cfg.clusterstatistic, 'wcm'),
+    elseif strcmp(cfg.clusterstatistic, 'wcm')
       stat(j) = -sum((abs(statobs(negclusobs==j)-negtailcritval)).^cfg.wcm_weight); % encoded as a negative value
     else
       error('unknown clusterstatistic');
@@ -526,12 +527,12 @@ end
 % collect the remaining details in the output structure
 stat = struct(); % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2972
 stat.prob = prob;
-if needpos,
+if needpos
   stat.posclusters         = posclusters;
   stat.posclusterslabelmat = posclusobs;
   stat.posdistribution     = posdistribution;
 end
-if needneg,
+if needneg
   stat.negclusters         = negclusters;
   stat.negclusterslabelmat = negclusobs;
   stat.negdistribution     = negdistribution;

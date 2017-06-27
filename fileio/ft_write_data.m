@@ -530,7 +530,7 @@ switch dataformat
     if nchans~=1
       error('this format only supports single channel continuous data');
     end
-    wavwrite(dat, hdr.Fs, nbits, filename);
+    audiowrite(filename, dat, hdr.Fs, 'BitsPerSample', nbits);
     
   case 'plexon_nex'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

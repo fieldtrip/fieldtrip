@@ -3,7 +3,6 @@ function test_old_trialdef
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_trialdef
 
 % This script tests the implementation of the new representation of trial
 % specific information in the data structure.

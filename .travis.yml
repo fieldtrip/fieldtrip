@@ -1,0 +1,89 @@
+# vim ft=yaml
+# travis-ci.org definition for Fieldtrip build (based on MOxUnit,
+# whcih is based on CoSMoMVPA, which is based on PyMVPA, which is 
+# based on nipype configuration, which in turn was based on nipy)
+#
+# We pretend to be java because we need GNU Octave which is not
+# available (as of January 2017)
+
+language: java
+
+cache:
+  - apt
+matrix:
+  include:
+  - env: LIMITS="'exclude_if_prefix_equals_failed','yes','maxwalltime',600,'maxmem','1gb'"
+  - env: LIMITS="'exclude_if_prefix_equals_failed','no','maxwalltime',600,'maxmem','1gb','upload','no'"
+  allow_failures:
+  - env: LIMITS="'exclude_if_prefix_equals_failed','no','maxwalltime',600,'maxmem','1gb','upload','no'"
+before_install:
+    # to prevent IPv6 being used for APT
+    - sudo bash -c "echo 'Acquire::ForceIPv4 \"true\";' > /etc/apt/apt.conf.d/99force-ipv4"
+    - travis_retry sudo apt-get -y -qq update
+    - travis_retry sudo apt-get install -y -qq software-properties-common python-software-properties
+    - travis_retry sudo apt-add-repository -y ppa:octave/stable
+    - travis_retry sudo apt-get -y -qq update
+    # get curl (for sending reports to the dashboard)
+    - travis_retry sudo apt-get -y -qq install php5-curl
+    # get Octave 4.0
+    - travis_retry sudo apt-get -y -qq install octave
+    # get mkoctfile to build mex files
+    - travis_retry sudo apt-get -y -qq install liboctave-dev
+    # get Clang compiler (for Octave packages)
+    - travis_retry sudo apt-get -y install clang
+    - sudo update-alternatives --set c++ /usr/bin/clang++
+    - sudo ln -f -s /usr/bin/clang++ /usr/bin/g++
+    - c++ --version
+    - g++ --version
+    # install MOxUnit
+    - cd ..
+    - rm -rf MOxUnit
+    - git clone https://github.com/MOxUnit/MOxUnit.git
+    - make -C MOxUnit install
+    # go back to original directory
+    - cd fieldtrip
+    # prevent shippable from re-using old test results
+    - if [[  "$SHIPPABLE" == "true"  ]]; then
+          rm -f shippable/testresults/*.xml;
+      fi
+
+install:
+    - travis_retry sudo apt-get -y -qq install units
+    - pkgs="general io control signal statistics"
+    # install Octave packages
+    - for pkg in $pkgs; do
+         octave --eval "fprintf('Installing %s\n','${pkg}');pkg('install','-forge','-auto','${pkg}');";
+      done
+    # ensure packages are loaded on startup
+    - for pkg in $pkgs; do
+         echo "pkg load $pkg" >> ${HOME}/.octaverc;
+      done
+    # attempt to address problem with io package by not loading it
+    - echo "pkg unload io" >> ${HOME}/.octaverc;
+    # print packages
+    - octave --eval "fprintf('Installed packages:\n');pkg('list')"
+    - cat ${HOME}/.octaverc
+    # build .mex files
+    - pwd
+    - make mex OCTAVE=`which octave`
+
+script:
+    # before running the tests, test the test functions that run the tests
+    - TEST_TEST_CMD="ft_defaults;[unused,ft_path]=ft_version();mo_ft_path=fullfile(ft_path,'contrib','MOxUnit_fieldtrip');addpath(mo_ft_path);success=moxunit_runtests(fullfile(mo_ft_path,'tests'));exit(~success);";
+    - octave --eval "${TEST_TEST_CMD}"
+    # for now do not implement coverage
+    - if [[  "$SHIPPABLE" == "true"  ]]; then
+        EXTRA_ARGS=",'xmloutput','${SHIPPABLE_BUILD_DIR}/shippable/testresults/test_results.xml'";
+      else
+        EXTRA_ARGS="";
+      fi
+    # run the test suite.
+    # Note: with the current matrix settings shippable.com adds an
+    # empty entry with LIMITS=""; in that case we are not running any tests.
+    - if [[ !  -z  $LIMITS  ]]; then
+        FULL_ARGS=${LIMITS}${EXTRA_ARGS};
+        TEST_CMD="ft_defaults;[unused,ft_path]=ft_version();mo_ft_path=fullfile(ft_path,'contrib','MOxUnit_fieldtrip');addpath(mo_ft_path);succes=moxunit_fieldtrip_runtests(${FULL_ARGS});exit(~succes);";
+        echo Test command $TEST_CMD;
+        octave --eval "${TEST_CMD}";
+      fi
+

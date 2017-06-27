@@ -91,7 +91,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % set the general defaults
@@ -126,7 +126,7 @@ cfg.preproc = ft_checkconfig(cfg.preproc, 'renamed', {'blcwindow', 'baselinewind
 
 status = mkdir(cfg.output);
 if ~status
-  error(sprintf('error creating LFP output dataset %s', cfg.output));
+  error('error creating LFP output dataset %s', cfg.output);
 end
 
 % read the header of the completete dataset
@@ -285,5 +285,5 @@ end % for each file
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 

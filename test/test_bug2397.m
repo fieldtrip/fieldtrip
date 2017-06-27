@@ -3,7 +3,6 @@ function test_bug2397
 % MEM 2000mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2397
 % TEST ft_prepare_mesh
 
 % this pertains to the OpenMEEG pipeline, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2397

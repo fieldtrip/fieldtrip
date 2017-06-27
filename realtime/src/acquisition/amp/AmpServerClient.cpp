@@ -1,6 +1,6 @@
 /* Copyright (C) 2013 Federico Raimondo
  * Applied Artificial Intelligence Lab
- * Computer Sciences Department 
+ * Computer Sciences Department
  * University of Buenos Aires, Argentina
  *
  * This file is part of Amp2ft
@@ -14,7 +14,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Amp2ft.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,9 +25,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+
+#include "platform_includes.h"
+#ifndef COMPILER_MINGW
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h> 
+#include <netdb.h>
+#endif
 
 #include <AmpServerClient.h>
 
@@ -36,7 +40,7 @@ AmpServerClient::AmpServerClient(struct AmpServerClientConfig * config) {
 	this->config = config;
 	this->connected = false;
 	this->rcvbuffer = NULL;
-	
+
 	/* Get 1 sample each every 1000/sfreq samples
 	 * cause AmpServer always sends 1000 samples per sec
 	 */
@@ -57,7 +61,7 @@ bool AmpServerClient::connectClient() {
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
 	this->cmdsockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->cmdsockfd < 0) 
+    if (this->cmdsockfd < 0)
         error("ERROR opening socket");
     server = gethostbyname(this->config->amphostname);
     if (server == NULL) {
@@ -65,41 +69,41 @@ bool AmpServerClient::connectClient() {
     }
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
+    bcopy((char *)server->h_addr,
          (char *)&serv_addr.sin_addr.s_addr,
          server->h_length);
     serv_addr.sin_port = htons(this->config->ampcommandport);
-    if (connect(this->cmdsockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
+    if (connect(this->cmdsockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
         error("ERROR connecting");
-	
-	
+
+
 	this->strsockfd = socket(AF_INET, SOCK_STREAM, 0);
 	serv_addr.sin_port = htons(this->config->ampstreamport);
-    if (connect(this->strsockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
+    if (connect(this->strsockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
         error("ERROR connecting");
-    
+
     this->strstreamin = fdopen(this->strsockfd, "r");
     this->strstreamout = fdopen(this->strsockfd, "w");
-    
-    
-    
+
+
+
 	/* Initialize commands */
 	sendCommand("SetPower", 0, 0, 1);
 	usleep(3000);
-	
-	
+
+
 	getAmpId();
-	
+
 	getAmpDetails();
-	
+
 	this->rcvbuffer = (char*)malloc(RCV_BUFFER_SIZE);
 	if (this->rcvbuffer == NULL) error("ERROR not enough memory for receive buffer");
 	DPRINTF("Receive buffer at %p\n", this->rcvbuffer);
 	memset(r_buffer, 0, COMMAND_SIZE);
-	
-	
+
+
 	sendCommand("SetDecimatedRate", 0, 0, this->config->sfreq);
-	
+
 	return true;
 }
 
@@ -111,7 +115,7 @@ void AmpServerClient::disconnectClient() {
 	close(this->strsockfd);
 	close(this->cmdsockfd);
 	this->connected = false;
-	
+
 }
 void AmpServerClient::start() {
 	sendCommand("SetPower", this->ampId, 0, 1);
@@ -141,9 +145,9 @@ void AmpServerClient::sendCommand(std::string cmd, int param1, int param2, int p
 	n = write(this->cmdsockfd, this->s_buffer, strlen(this->s_buffer));
 	if (n < 0)
 		error("ERROR writing to socket");
-		
+
 	fsync(this->strsockfd);
-	
+
 	/*do {
 		n = read(this->cmdsockfd, &r_buffer[l], 1);
 		if (n > 0) {
@@ -162,29 +166,29 @@ void AmpServerClient::sendCommand(std::string cmd, int param1, int param2, int p
 
 void AmpServerClient::sendStrCommand(std::string cmd, int param1, int param2, int param3) {
 	DPRINTF("Sending stream command %s\n", cmd.c_str());
-	
+
 	int n;
 	this->prepareCommand(cmd, param1, param2, param3);
 	DPRINTF("Sending command %s => %s", cmd.c_str(), this->s_buffer);
 	n = fwrite(this->s_buffer, sizeof(char), strlen(this->s_buffer), this->strstreamout);
 	if (n < 0)
 		error("ERROR writing to socket");
-		
+
 	fflush(this->strstreamout);
-	
+
 }
 
 void AmpServerClient::getAmpId() {
 	DPRINTF("Getting number of amps\n");
 	sendCommand("NumberOfAmps", 0, 0, 0);
-	
+
 	if (! getResponseInt("number_of_amps", &this->nAmp)) {
 		error("ERROR Cannot get number of amps");
 	}
-	
+
 	DPRINTF("Number of amps detected = %d\n", this->nAmp);
 	this->ampId = this->nAmp-1;
-	
+
 }
 
 void AmpServerClient::getAmpDetails() {
@@ -210,7 +214,7 @@ unsigned int AmpServerClient::checkNewData() {
 		//DPRINTF("New data from amp %lu (%lu bytes %lu samples)\n", \
 			this->ampDataPacketHeader.ampId, this->ampDataPacketHeader.length, this->ampDataPacketHeader.length/AMP_SAMP_SIZE);
 		return this->ampDataPacketHeader.length/AMP_SAMP_SIZE;
-	} 
+	}
 	return 0;
 }
 
@@ -252,7 +256,7 @@ unsigned int AmpServerClient::readNewData(int32_t * ptr, unsigned int topass, Ft
 					*p = ntohl( *p );
 					ptr[vsamp * this->nchannels + chan] = *p;
 					offset += sizeof(int);
-					
+
 				}
 				vsamp++;
 				rsamp += this->subsample;
@@ -263,9 +267,9 @@ unsigned int AmpServerClient::readNewData(int32_t * ptr, unsigned int topass, Ft
 		} else {
 			DPRINTF("Nothing to read! (%lu of %lu)\n", readed, size)
 		}
-		
+
 	}
-	
+
 	return retorno;
 }
 
@@ -339,9 +343,8 @@ unsigned char AmpServerClient::decodeDin(unsigned char din) {
 	}
 	if ((din & 128) != 0) {
 		result += 0;
-	} 
+	}
 	return result;
-	
-	
+
+
 }
-	

@@ -54,23 +54,18 @@ if isempty(dataformat)
   dataformat = ft_filetype(filename);
 end
 
-% if strcmp(dataformat, 'nifti') && strcmp(spmversion, 'SPM2')
-%   error('nifti can only be written by SPM5 or later');
-% end
-
 if nargout>0
   % start with an empty output argument, it will only be returned by the SPM formats
   V = [];
 end
 
 switch dataformat
-  
   case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_spm'}
     % analyze data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion);
     
   case {'freesurfer_mgz' 'mgz' 'mgh'}
-    % mgz-volume using freesurfer
+    % mgz data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
     
     % in MATLAB the transformation matrix assumes the voxel indices to be 1-based
@@ -79,8 +74,8 @@ switch dataformat
     save_mgh(dat, filename, transform);
     
   case {'nifti'}
-    ft_hastoolbox('freesurfer', 1);
     % nifti data, using Freesurfer
+    ft_hastoolbox('freesurfer', 1);
     
     datatype = class(dat);
     switch(datatype)
@@ -123,5 +118,5 @@ switch dataformat
     write_vista_vol(size(dat), dat, filename);
     
   otherwise
-    error('unsupported data format');
+    error('unsupported format "%s"', dataformat);
 end % switch dataformat

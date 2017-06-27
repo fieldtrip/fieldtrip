@@ -3,7 +3,6 @@ function test_config
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_config
 % TEST config
 
 %% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1614
@@ -212,9 +211,9 @@ a1(3).b = 1:3;
 
 a2 = config(a1);
 
-c1 = {a2.b} % works
-c2 = {a2(:).b} % fails
-c3 = {a2(1:3).b} % fails
+c1 = {a2.b} % works;
+c2 = {a2(:).b} % fails;
+c3 = {a2(1:3).b} % fails;
 
 try
   assert(length(c1)==3)

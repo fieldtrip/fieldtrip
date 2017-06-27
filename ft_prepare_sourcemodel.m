@@ -81,6 +81,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, headmodel, sens)
 %   cfg.symmetry     = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
 %   cfg.headshape    = a filename for the headshape, a structure containing a single surface,
 %                      or a Nx3 matrix with headshape surface points (default = [])
+%   cfg.spmversion   = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
@@ -137,8 +138,8 @@ cfg.moveinward = ft_getopt(cfg, 'moveinward',  []); % the default is automatic a
 cfg.spherify   = ft_getopt(cfg, 'spherify',  'no');
 cfg.headshape  = ft_getopt(cfg, 'headshape',  []);
 cfg.symmetry   = ft_getopt(cfg, 'symmetry',   []);
-cfg.grid       = ft_getopt(cfg, 'grid',       []);
 cfg.spmversion = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.grid       = ft_getopt(cfg, 'grid',       []);
 cfg.grid.unit  = ft_getopt(cfg.grid, 'unit',  'auto');
 
 % this code expects the inside to be represented as a logical array
@@ -257,14 +258,8 @@ if sum([basedonresolution basedongrid basedonpos basedonshape basedonmri basedon
 end
 
 if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || basedonmni
-  % check that SPM is on the path, try to add the preferred version
-  if strcmpi(cfg.spmversion, 'spm2'),
-    ft_hastoolbox('SPM2', 1);
-  elseif strcmpi(cfg.spmversion, 'spm8'),
-    ft_hastoolbox('SPM8', 1);
-  elseif strcmpi(cfg.spmversion, 'spm12'),
-    ft_hastoolbox('SPM12', 1);
-  end
+  % check that the preferred SPM version is on the path
+  ft_hastoolbox(cfg.spmversion, 1);
 end
 
 % start with an empty grid
@@ -330,6 +325,16 @@ if basedonresolution
       pos = headmodel.pos;
     elseif ft_voltype(headmodel, 'localspheres')
       pos = headsurface(headmodel, sens);
+    elseif ft_voltype(headmodel, 'singlesphere')
+      pos = [
+        headmodel.o - headmodel.r
+        headmodel.o + headmodel.r
+        ];
+    elseif ft_voltype(headmodel, 'concentricspheres')
+      pos = [
+        headmodel.o - max(headmodel.r)
+        headmodel.o + max(headmodel.r)
+        ];
     end
     minpos = min(pos,[],1);
     maxpos = max(pos,[],1);
@@ -773,7 +778,7 @@ if isempty(sel)
   inside = mask(sub2ind(dim, pos(:,1), pos(:,2), pos(:,3)));
 else
   % only loop over the points that can be dealt with
-  inside = zeros(size(pos,1), 1);
+  inside = false(size(pos,1), 1);
   for i=setdiff(1:size(pos,1), sel(:)')
     inside(i) = mask(pos(i,1), pos(i,2), pos(i,3));
   end

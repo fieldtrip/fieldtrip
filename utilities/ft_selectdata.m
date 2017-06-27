@@ -24,14 +24,12 @@ function [varargout] = ft_selectdata(varargin)
 %   cfg.avgoverchancmb = string, can be 'yes' or 'no' (default = 'no')
 %
 % For data with a time dimension you can specify
-%   cfg.latency     = scalar    -> can be 'all', 'prestim', 'poststim'
-%   cfg.latency     = [beg end]
+%   cfg.latency     = scalar or string, can be 'all', 'prestim', 'poststim', or [beg end], specify time range in seconds
 %   cfg.avgovertime = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
 % For data with a frequency dimension you can specify
-%   cfg.frequency   = scalar    -> can be 'all'
-%   cfg.frequency   = [beg end]
+%   cfg.frequency   = scalar or string, can be 'all', or [beg end], specify frequency range in Hz
 %   cfg.avgoverfreq = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
@@ -105,6 +103,9 @@ for i=2:length(varargin)
   if ~ok, error('input data should be of the same datatype'); end
 end
 
+% this only works with certain data types, it is not meant for descriptive fields such as elec, grad, opto, layout, etc.
+assert(~ismember(dtype, {'elec', 'grad', 'opto', 'layout'}), 'invalid input data type "%s"', dtype);
+
 % ensure that the user does not give invalid selection options
 cfg = ft_checkconfig(cfg, 'forbidden', {'foi', 'toi'});
 
@@ -138,7 +139,7 @@ end
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
 % update the old-style beamformer source reconstruction to the upcoming representation
 if strcmp(dtype, 'source')
-  if isfield(varargin{1}, 'avg')
+  if isfield(varargin{1}, 'avg') && isstruct(varargin{1}.avg)
     restoreavg = fieldnames(varargin{1}.avg);
   else
     restoreavg = {};
@@ -659,9 +660,18 @@ chanindx = cell(ndata,1);
 label    = cell(1,0);
 
 for k = 1:ndata
-  selchannel = ft_channelselection(cfg.channel, varargin{k}.label);
+  if isfield(varargin{k}, 'grad') && isfield(varargin{k}.grad, 'type')
+    % this makes channel selection more robust
+    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.grad.type);
+  elseif isfield(varargin{k}, 'elec') && isfield(varargin{k}.elec, 'type')
+    % this makes channel selection more robust
+    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.elec.type);
+  else
+    selchannel = ft_channelselection(cfg.channel, varargin{k}.label);
+  end
   label      = union(label, selchannel);
 end
+label = label(:);   % ensure column array
 
 % this call to match_str ensures that that labels are always in the
 % order of the first input argument see bug_2917, but also temporarily keep

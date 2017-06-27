@@ -65,6 +65,12 @@ if opt==1
   % use spm_affreg
   
   switch spm('ver')
+      
+    case 'SPM12'
+      template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
+        if ~exist('spm_affreg', 'file')
+          addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+        end
     case 'SPM8'
       template = fullfile(spm('Dir'),'templates','T1.nii');
     case 'SPM2'
@@ -106,6 +112,11 @@ elseif opt==2
   % use spm_normalise
   
   switch spm('ver')
+    case 'SPM12'
+      template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
+        if ~exist('spm_affreg', 'file')
+          addpath(fullfile(spm('Dir'),'toolbox','OldNorm'));
+        end
     case 'SPM8'
       template = fullfile(spm('Dir'),'templates','T1.nii');
     case 'SPM2'

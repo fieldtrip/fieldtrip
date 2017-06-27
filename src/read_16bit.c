@@ -1,7 +1,7 @@
 #include <math.h>
 #include <string.h>
 #include "mex.h"
-#include "matrix.h"
+#include <stdio.h>
 
 /*
  * Copyright (C) 2008, Robert Oostenveld, F.C. Donders Ccentre for Cognitive Neuroimaging

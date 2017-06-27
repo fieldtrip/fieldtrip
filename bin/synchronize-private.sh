@@ -272,6 +272,14 @@ ARRAY+=(src/det2x2.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# dimindex.m
+
+ARRAY=()
+ARRAY+=(private/dimindex.m)
+ARRAY+=(utilities/private/dimindex.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # dimlength.m
 
 ARRAY=()
@@ -388,6 +396,16 @@ ARRAY+=(utilities/private/fixinside.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fixoldorg.m
+
+ARRAY=()
+ARRAY+=(fileio/private/fixoldorg.m)
+ARRAY+=(forward/private/fixoldorg.m)
+ARRAY+=(plotting/private/fixoldorg.m)
+ARRAY+=(utilities/private/fixoldorg.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # fixname.m
 
 ARRAY=()
@@ -404,6 +422,7 @@ ARRAY+=(specest/private/fixname.m)
 ARRAY+=(statfun/private/fixname.m)
 ARRAY+=(test/private/fixname.m)
 ARRAY+=(utilities/private/fixname.m)
+ARRAY+=(compat/matlablt2014b/private/fixname.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -742,17 +761,36 @@ ARRAY+=(inverse/private/ft_inside_vol.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_notification.m, should be consistent with ft_warning
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_notification.m)
+ARRAY+=(engine/private/ft_notification.m)
+ARRAY+=(fileio/private/ft_notification.m)
+ARRAY+=(forward/private/ft_notification.m)
+ARRAY+=(plotting/private/ft_notification.m)
+ARRAY+=(preproc/private/ft_notification.m)
+ARRAY+=(qsub/private/ft_notification.m)
+ARRAY+=(specest/private/ft_notification.m)
+ARRAY+=(statfun/private/ft_notification.m)
+ARRAY+=(utilities/private/ft_notification.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_platform_supports.m
 
 ARRAY=()
+ARRAY+=(utilities/ft_platform_supports.m)
+ARRAY+=(connectivity/private/ft_platform_supports.m)
 ARRAY+=(engine/private/ft_platform_supports.m)
 ARRAY+=(fileio/private/ft_platform_supports.m)
+ARRAY+=(forward/private/ft_platform_supports.m)
+ARRAY+=(inverse/private/ft_platform_supports.m)
 ARRAY+=(peer/private/ft_platform_supports.m)
 ARRAY+=(plotting/private/ft_platform_supports.m)
-ARRAY+=(private/ft_platform_supports.m)
+ARRAY+=(preproc/private/ft_platform_supports.m)
 ARRAY+=(qsub/private/ft_platform_supports.m)
-ARRAY+=(test/private/ft_platform_supports.m)
-ARRAY+=(utilities/private/ft_platform_supports.m)
+ARRAY+=(specest/private/ft_platform_supports.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -824,7 +862,7 @@ ARRAY+=(plotting/private/ft_voltype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_warning.m
+# ft_warning.m, should be consistent with ft_notification
 
 ARRAY=()
 ARRAY+=(connectivity/private/ft_warning.m)
@@ -836,7 +874,6 @@ ARRAY+=(preproc/private/ft_warning.m)
 ARRAY+=(qsub/private/ft_warning.m)
 ARRAY+=(specest/private/ft_warning.m)
 ARRAY+=(statfun/private/ft_warning.m)
-ARRAY+=(test/private/ft_warning.m)
 ARRAY+=(utilities/ft_warning.m)
 sync ${ARRAY[*]}
 
@@ -2087,6 +2124,16 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(forward/private/plgndr.m)
 ARRAY+=(private/plgndr.m)
+ARRAY+=(src/plgndr.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# plgndr.c
+
+ARRAY=()
+ARRAY+=(forward/private/plgndr.c)
+ARRAY+=(private/plgndr.c)
+ARRAY+=(src/plgndr.c)
 sync ${ARRAY[*]}
 
 ################################################################################

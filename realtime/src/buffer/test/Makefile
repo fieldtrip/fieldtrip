@@ -3,121 +3,157 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
+# Use MinGW for compilation on Windows
+
+ifneq "$(OS)" "Windows_NT"
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
+endif
+
+PLATFORM ?= $(shell gcc -dumpmachine)
+
+FIELDTRIP = ../../../..
+FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-CC		 = gcc
-INCPATH	 = -I../src
+CC       = gcc
+CFLAGS   = -O2 -fPIC -w # -Wunused -Wall -pedantic
+CXXFLAGS = -O2 -fPIC -w # -Wunused -Wall -pedantic
+INCPATH  = -I../src
 LIBPATH  = -L../src
-LIBS 	 = -lbuffer -lm -lpthread
-SUFFIX   =
+LDLIBS   = -lbuffer -lm -lpthread
 RM       = rm -f
+SUFFIX   =
 
-ifeq "$(PLATFORM)" "mingw32"
-	INCPATH	 = -I../src -I../pthreads-win32/include
-	LIBPATH  = -L../src -L../pthreads-win32/lib
-	LIBS 	 = -lbuffer -lm -lpthreadGC2 -lws2_32
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -O0 -g
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS   = -lbuffer -lm -lws2_32
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
+endif
+
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS   = -lbuffer -lm -lws2_32
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
+endif
+
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
 	SUFFIX   = .exe
 	RM       = del
+	# make clean target work on windows:
+	fixpath = $(subst /,\,$1)
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	INCPATH	 = -I../src -I../pthreads-win64/include
-	LIBPATH  = -L../src -L../pthreads-win64/lib
-	LIBS 	 = -lbuffer -lm -lpthread -lws2_32
-	CFLAGS	 = $(INCPATH) -Wunused -pedantic -Wall -O0 -g
-	SUFFIX   = _64.exe
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS   = -lbuffer -lm -lpthread -lws2_32 -static
+	SUFFIX   = .exe
 	RM       = del
+	# make clean target work on windows:
+	fixpath = $(subst /,\,$1)
 endif
 
-ifeq "$(UNAME)" "Darwin"
-    ifeq "$(MACHINE)" "i386"
-        CFLAGS += -m32
-        CXXFLAGS += -m32
-        LDFLAGS += -m32
-    endif
-    ifeq "$(MACHINE)" "x86_64"
-        CFLAGS += -m64
-        CXXFLAGS += -m64
-        LDFLAGS += -m64
-    endif
+ifeq "$(OS)" "Linux"
+	fixpath = $1
+	LDLIBS += -ldl -lpthread -lportaudio
+	ifeq "$(MACHINE)" "i686"
+	 	BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+	 	BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
+	endif
+	ifeq "$(MACHINE)" "armv6l"
+	 	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
+	ifeq "$(MACHINE)" "armv7l"
+	 	BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
-BINDIR	 = .
-CFLAGS	 += $(INCPATH) -Wunused -pedantic -O0 -fPIC -g
-CXXFLAGS += $(INCPATH) -Wunused -pedantic -O0
+ifeq "$(OS)" "Darwin"
+	fixpath = $1
+	ifeq "$(MACHINE)" "i386"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
+		CXXFLAGS += -m32
+		LDFLAGS  += -m32
+	endif
+	ifeq "$(MACHINE)" "x86_64"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
+		CXXFLAGS += -m64
+		LDFLAGS  += -m64
+	endif
+endif
+
+ifndef BINDIR
+$(error Unsupported platform: $(PLATFORM) :/.)
+endif
+
+TARGETS = $(patsubst %, $(BINDIR)/%$(SUFFIX), demo_combined demo_sinewave demo_event test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_pthread test_benchmark test_nslookup test_waitdat test_connect)
 
 ##############################################################################
 
-all: demo
+all: demo test
 
-test: test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_connect test_nslookup test_benchmark test_waitdat
+demo: demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
 
-demo: demo_sinewave$(SUFFIX) demo_event$(SUFFIX) demo_combined$(SUFFIX)
+test: test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
 
 demo_combined$(SUFFIX): demo_combined.o sinewave.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 demo_sinewave$(SUFFIX): demo_sinewave.o sinewave.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 demo_event$(SUFFIX): demo_event.o event.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-demo_buffer$(SUFFIX): demo_buffer.o ../src/libbuffer.a
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_gethdr$(SUFFIX): test_gethdr.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-demo_buffer_rda$(SUFFIX): demo_buffer_rda.o ../src/libbuffer.a ../src/rdaserver.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)	
-	
-demo_buffer_unix$(SUFFIX): demo_buffer_unix.o ../src/libbuffer.a 
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)	
+test_getdat$(SUFFIX): test_getdat.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_gethdr: test_gethdr.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_getevt$(SUFFIX): test_getevt.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_getdat: test_getdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_flushhdr$(SUFFIX): test_flushhdr.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_getevt: test_getevt.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_flushdat$(SUFFIX): test_flushdat.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_flushhdr: test_flushhdr.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_flushevt$(SUFFIX): test_flushevt.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_flushdat: test_flushdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_pthread$(SUFFIX): test_pthread.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_flushevt: test_flushevt.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_benchmark$(SUFFIX): test_benchmark.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_append: test_append.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_nslookup$(SUFFIX): test_nslookup.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_pthread: test_pthread.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_waitdat$(SUFFIX): test_waitdat.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_benchmark: test_benchmark.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
+test_connect$(SUFFIX): test_connect.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
-test_nslookup: test_nslookup.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
-	
-test_waitdat: test_waitdat.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
-
-test_connect: test_connect.o
-	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS) $(LDFLAGS)
-
-%.o: %.c message.h buffer.h
-	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCPATH) -c $<
 
 clean:
-	$(RM) core *.o *.obj *.a 
-
-distclean:
-	$(RM) test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX)
-	$(RM) rm demo_sinewave$(SUFFIX) demo_event$(SUFFIX) demo_buffer$(SUFFIX) demo_buffer_unix$(SUFFIX) demo_combined$(SUFFIX) 
+	$(RM) core *.o *.obj *.a $(call fixpath, $(TARGETS))

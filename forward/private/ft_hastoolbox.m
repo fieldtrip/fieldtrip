@@ -15,7 +15,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % silent = 0 means that it will give some feedback about adding the toolbox
 % silent = 1 means that it will not give feedback
 
-% Copyright (C) 2005-2013, Robert Oostenveld
+% Copyright (C) 2005-2017, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -86,7 +86,7 @@ url = {
   'COMM'       'see http://www.mathworks.com/products/communications'
   'SIGNAL'     'see http://www.mathworks.com/products/signal'
   'OPTIM'      'see http://www.mathworks.com/products/optim'
-  'IMAGE'      'see http://www.mathworks.com/products/image'  % Mathworks refers to this as IMAGES
+  'IMAGES'     'see http://www.mathworks.com/products/image'  % Mathworks refers to this as IMAGES
   'SPLINES'    'see http://www.mathworks.com/products/splines'
   'DISTCOMP'   'see http://www.mathworks.nl/products/parallel-computing/'
   'COMPILER'   'see http://www.mathworks.com/products/compiler'
@@ -106,12 +106,12 @@ url = {
   'DENOISE'       'see http://lumiere.ens.fr/Audition/adc/meg, or contact Alain de Cheveigne'
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
-
+  'GTEC'          'see http://www.gtec.at'
   'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
   'BEMCP'         'contact Christophe Phillips'
-  'OPENMEEG'      'see http://gforge.inria.fr/projects/openmeeg and http://gforge.inria.fr/frs/?group_id=435'
+  'OPENMEEG'      'see http://openmeeg.github.io and http://www.fieldtriptoolbox.org/faq/how_do_i_install_the_openmeeg_binaries'
   'PRTOOLS'       'see http://www.prtools.org'
   'ITAB'          'contact Stefania Della Penna'
   'BSMART'        'see http://www.brain-smart.org'
@@ -149,6 +149,9 @@ url = {
   'VIDEOMEG'      'see https://github.com/andreyzhd/VideoMEG'
   'WAVEFRONT'     'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
   'NEURONE'       'see http://www.megaemg.com/support/unrestricted-downloads'
+  'BREWERMAP'     'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
+  'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
+  'MARS'          'see http://www.parralab.org/mars'
   };
 
 if nargin<2
@@ -164,8 +167,9 @@ end
 % determine whether the toolbox is installed
 toolbox = upper(toolbox);
 
-% In case SPM8 or higher not available, allow to use fallback toolbox
+% In case SPMxUP not available, allow to use fallback toolbox
 fallback_toolbox='';
+
 switch toolbox
   case 'AFNI'
     dependency={'BrikLoad', 'BrikInfo'};
@@ -181,17 +185,28 @@ switch toolbox
     dependency = {'spm', get_spm_version()==99};
   case 'SPM2'
     dependency = {'spm', get_spm_version()==2};
+  case 'SPM2UP' % version 2 or later, but not SPM 9X
+    dependency = {'spm', get_spm_version()>=2, get_spm_version()<95};
+    %This is to avoid crashes when trying to add SPM to the path
+    fallback_toolbox = 'SPM8';
   case 'SPM5'
     dependency = {'spm', get_spm_version()==5};
+  case 'SPM5UP' % version 5 or later, but not SPM 9X
+    dependency = {'spm', get_spm_version()>=5, get_spm_version()<95};
+    %This is to avoid crashes when trying to add SPM to the path
+    fallback_toolbox = 'SPM5';
   case 'SPM8'
     dependency = {'spm', get_spm_version()==8};
   case 'SPM8UP' % version 8 or later, but not SPM 9X
     dependency = {'spm', get_spm_version()>=8, get_spm_version()<95};
-
     %This is to avoid crashes when trying to add SPM to the path
     fallback_toolbox = 'SPM8';
   case 'SPM12'
     dependency = {'spm', get_spm_version()==12};
+  case 'SPM12UP' % version 12 or later, but not SPM 9X
+    dependency = {'spm', get_spm_version()>=12, get_spm_version()<95};
+    %This is to avoid crashes when trying to add SPM to the path
+    fallback_toolbox = 'SPM12';
   case 'MEG-PD'
     dependency = {'rawdata', 'channames'};
   case 'MEG-CALC'
@@ -205,8 +220,7 @@ switch toolbox
   case 'MRI'    % other functions in the mri section
     dependency = {'avw_hdr_read', 'avw_img_read'};
   case 'NEUROSHARE'
-    dependency = {'ns_OpenFile', 'ns_SetLibrary', ...
-                            'ns_GetAnalogData'};
+    dependency = {'ns_OpenFile', 'ns_SetLibrary', 'ns_GetAnalogData'};
   case 'ARTINIS'
     dependency = {'read_artinis_oxy3'};
   case 'BESA'
@@ -234,21 +248,21 @@ switch toolbox
   case '4D-VERSION'
     dependency  = {'read4d', 'read4dhdr'};
   case {'STATS', 'STATISTICS'}
-    dependency = has_license('statistics_toolbox');         % check the availability of a toolbox license
+    dependency = has_license('statistics_toolbox');               % also check the availability of a toolbox license
   case {'OPTIM', 'OPTIMIZATION'}
-    dependency = has_license('optimization_toolbox');       % check the availability of a toolbox license
+    dependency = has_license('optimization_toolbox');             % also check the availability of a toolbox license
   case {'SPLINES', 'CURVE_FITTING'}
-    dependency = has_license('curve_fitting_toolbox');      % check the availability of a toolbox license
+    dependency = has_license('curve_fitting_toolbox');            % also check the availability of a toolbox license
   case 'COMM'
     dependency = {has_license('communication_toolbox'), 'de2bi'}; % also check the availability of a toolbox license
   case 'SIGNAL'
-    dependency = {has_license('signal_toolbox'), 'window'}; % also check the availability of a toolbox license
-  case 'IMAGE'
-    dependency = has_license('image_toolbox');              % check the availability of a toolbox license
+    dependency = {has_license('signal_toolbox'), 'window'};       % also check the availability of a toolbox license
+  case 'IMAGES'
+    dependency = has_license('image_toolbox');                    % also check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
-    dependency = has_license('distrib_computing_toolbox');  % check the availability of a toolbox license
+    dependency = has_license('distrib_computing_toolbox');        % also check the availability of a toolbox license
   case 'COMPILER'
-    dependency = has_license('compiler');                   % check the availability of a toolbox license
+    dependency = has_license('compiler');                         % also check the availability of a toolbox license
   case 'FASTICA'
     dependency = 'fpica';
   case 'BRAINSTORM'
@@ -260,8 +274,7 @@ switch toolbox
   case 'BCI2000'
     dependency  = {'load_bcidat'};
   case 'NLXNETCOM'
-    dependency = {'MatlabNetComClient', 'NlxConnectToServer', ...
-                    'NlxGetNewCSCData'};
+    dependency = {'MatlabNetComClient', 'NlxConnectToServer', 'NlxGetNewCSCData'};
   case 'DIPOLI'
     dependency = {'dipoli.maci', 'file'};
   case 'MNE'
@@ -323,17 +336,17 @@ switch toolbox
     dependency = {'plx_adchan_gains', 'mexPlex'};
   case '35625-INFORMATION-THEORY-TOOLBOX'
     dependency = {'conditionalEntropy', 'entropy', 'jointEntropy',...
-                    'mutualInformation' 'nmi' 'nvi' 'relativeEntropy'};
+      'mutualInformation' 'nmi' 'nvi' 'relativeEntropy'};
   case '29046-MUTUAL-INFORMATION'
     dependency = {'MI', 'license.txt'};
   case '14888-MUTUAL-INFORMATION-COMPUTATION'
     dependency = {'condentropy', 'demo_mi', 'estcondentropy.cpp',...
-                    'estjointentropy.cpp', 'estpa.cpp', ...
-                    'findjointstateab.cpp', 'makeosmex.m',...
-                    'mutualinfo.m', 'condmutualinfo.m',...
-                    'entropy.m', 'estentropy.cpp',...
-                    'estmutualinfo.cpp', 'estpab.cpp',...
-                    'jointentropy.m' 'mergemultivariables.m' };
+      'estjointentropy.cpp', 'estpa.cpp', ...
+      'findjointstateab.cpp', 'makeosmex.m',...
+      'mutualinfo.m', 'condmutualinfo.m',...
+      'entropy.m', 'estentropy.cpp',...
+      'estmutualinfo.cpp', 'estpab.cpp',...
+      'jointentropy.m' 'mergemultivariables.m' };
   case 'PLOT2SVG'
     dependency = {'plot2svg.m', 'simulink2svg.m'};
   case 'BRAINSUITE'
@@ -352,11 +365,16 @@ switch toolbox
     dependency = {'write_wobj' 'read_wobj'};
   case 'NEURONE'
     dependency = {'readneurone' 'readneuronedata' 'readneuroneevents'};
-
+  case 'BREWERMAP'
+    dependency = {'brewermap' 'brewermap_view'};
+  case 'GTEC'
+    dependency = {'ghdf5read' 'ghdf5fileimport'};
+  case 'MARS'
+    dependency = {'spm_mars_mrf'};
+    
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
-    dependency = {'ft_read_header', 'ft_read_data', ...
-                    'ft_read_event', 'ft_read_sens'};
+    dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
   case 'FORWARD'
     dependency = {'ft_compute_leadfield', 'ft_prepare_vol_sens'};
   case 'PLOTTING'
@@ -369,12 +387,14 @@ switch toolbox
     dependency = {'ft_spiketriggeredaverage', 'ft_spiketriggeredspectrum'};
   case 'FILEEXCHANGE'
     dependency = is_subdir_in_fieldtrip_path('/external/fileexchange');
+  case 'CELLFUNCTION'
+    dependency = {'cellmean', 'cellvecadd', 'cellcat'};
   case {'INVERSE', 'REALTIME', 'SPECEST', 'PREPROC', ...
-          'COMPAT', 'STATFUN', 'TRIALFUN', 'UTILITIES/COMPAT', ...
-          'FILEIO/COMPAT', 'PREPROC/COMPAT', 'FORWARD/COMPAT', ...
-          'PLOTTING/COMPAT', 'TEMPLATE/LAYOUT', 'TEMPLATE/ANATOMY' ,...
-          'TEMPLATE/HEADMODEL', 'TEMPLATE/ELECTRODE', ...
-          'TEMPLATE/NEIGHBOURS', 'TEMPLATE/SOURCEMODEL'}
+      'COMPAT', 'STATFUN', 'TRIALFUN', 'UTILITIES/COMPAT', ...
+      'FILEIO/COMPAT', 'PREPROC/COMPAT', 'FORWARD/COMPAT', ...
+      'PLOTTING/COMPAT', 'TEMPLATE/LAYOUT', 'TEMPLATE/ANATOMY' ,...
+      'TEMPLATE/HEADMODEL', 'TEMPLATE/ELECTRODE', ...
+      'TEMPLATE/NEIGHBOURS', 'TEMPLATE/SOURCEMODEL'}
     dependency = is_subdir_in_fieldtrip_path(toolbox);
   otherwise
     if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
@@ -383,19 +403,19 @@ end
 
 status = is_present(dependency);
 if ~status && ~isempty(fallback_toolbox)
-  % in case of SPM8UP
+  % in case of SPMxUP
   toolbox = fallback_toolbox;
 end
 
 % try to determine the path of the requested toolbox
 if autoadd>0 && ~status
-
+  
   % for core FieldTrip modules
   prefix = fileparts(which('ft_defaults'));
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-
+  
   % for external FieldTrip modules
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if ~status
@@ -407,37 +427,37 @@ if autoadd>0 && ~status
       feval(licensefile);
     end
   end
-
+  
   % for contributed FieldTrip extensions
   prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
   if ~status
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
     licensefile = [lower(toolbox) '_license'];
     if status && exist(licensefile, 'file')
-      % this will execute openmeeg_license and mne_license
-      % which display the license on screen for three seconds
+      % this will execute openmeeg_license, mne_license and artinis_license
+      % which display the license on screen for a few seconds
       feval(licensefile);
     end
   end
-
+  
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-
+  
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-
+  
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
   if ~status && isdir(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
-
+  
   if ~status
     % the toolbox is not on the path and cannot be added
     sel = find(strcmp(url(:,1), toolbox));
@@ -458,13 +478,13 @@ end
 
 % this function is called many times in FieldTrip and associated toolboxes
 % use efficient handling if the same toolbox has been investigated before
-if status
-  previous.(fixname(toolbox)) = status;
-end
+% if status
+%  previous.(fixname(toolbox)) = status;
+% end
 
 % remember the previous path, allows us to determine on the next call
 % whether the path has been modified outise of this function
-previouspath = path;
+% previouspath = path;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
@@ -474,14 +494,19 @@ if isdeployed
   warning('cannot change path settings for %s in a compiled application', toolbox);
   status = 1;
 elseif exist(toolbox, 'dir')
-  if ~silent,
+  if ~silent
     ws = warning('backtrace', 'off');
     warning('adding %s toolbox to your MATLAB path', toolbox);
     warning(ws); % return to the previous warning level
   end
-  addpath(toolbox);
+  if any(~cellfun(@isempty, regexp(toolbox, {'spm2', 'spm5', 'spm8', 'spm12'})))
+    % SPM needs to be added with the subdirectories
+    addpath(genpath(toolbox));
+  else
+    addpath(toolbox);
+  end
   status = 1;
-elseif (~isempty(regexp(toolbox, 'spm5$', 'once')) || ~isempty(regexp(toolbox, 'spm8$', 'once')) || ~isempty(regexp(toolbox, 'spm12$', 'once'))) && exist([toolbox 'b'], 'dir')
+elseif (~isempty(regexp(toolbox, 'spm2$', 'once')) || ~isempty(regexp(toolbox, 'spm5$', 'once')) || ~isempty(regexp(toolbox, 'spm8$', 'once')) || ~isempty(regexp(toolbox, 'spm12$', 'once'))) && exist([toolbox 'b'], 'dir')
   status = myaddpath([toolbox 'b'], silent);
 else
   status = 0;
@@ -529,65 +554,65 @@ end
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = is_subdir_in_fieldtrip_path(toolbox_name)
-  fttrunkpath = unixpath(fileparts(which('ft_defaults')));
-  fttoolboxpath = fullfile(fttrunkpath, lower(toolbox_name));
+fttrunkpath = unixpath(fileparts(which('ft_defaults')));
+fttoolboxpath = fullfile(fttrunkpath, lower(toolbox_name));
 
-  needle=[pathsep fttoolboxpath pathsep];
-  haystack = [pathsep path() pathsep];
+needle=[pathsep fttoolboxpath pathsep];
+haystack = [pathsep path() pathsep];
 
-  status = ~isempty(findstr(needle, haystack));
+status = ~isempty(findstr(needle, haystack));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = has_mex(name)
-  full_name=[name '.' mexext];
-  status = (exist(full_name, 'file')==3);
+full_name=[name '.' mexext];
+status = (exist(full_name, 'file')==3);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function v = get_spm_version()
-  if ~is_present('spm')
-    v=NaN;
-    return
-  end
+if ~is_present('spm')
+  v=NaN;
+  return
+end
 
-  version_str = spm('ver');
-  token = regexp(version_str,'(\d*)','tokens');
-  v = str2num([token{:}{:}]);
+version_str = spm('ver');
+token = regexp(version_str,'(\d*)','tokens');
+v = str2num([token{:}{:}]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = has_license(toolbox_name)
-  status = license('checkout', toolbox_name)==1;
+status = license('checkout', toolbox_name)==1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = is_present(dependency)
-  if iscell(dependency)
-    % use recursion
-    status = all(cellfun(@is_present,dependency));
-  elseif islogical(dependency)
-    % boolean
-    status = all(dependency);
-  elseif ischar(dependency)
-    % name of a function
-    status = is_function_present_in_search_path(dependency);
-  elseif isa(dependency, 'function_handle')
-    status = dependency();
-  else
-    assert(false,'this should not happen');
-  end
+if iscell(dependency)
+  % use recursion
+  status = all(cellfun(@is_present,dependency));
+elseif islogical(dependency)
+  % boolean
+  status = all(dependency);
+elseif ischar(dependency)
+  % name of a function
+  status = is_function_present_in_search_path(dependency);
+elseif isa(dependency, 'function_handle')
+  status = dependency();
+else
+  assert(false,'this should not happen');
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = is_function_present_in_search_path(function_name)
-  w = which(function_name);
+w = which(function_name);
 
-  % must be in path and not a variable
-  status = ~isempty(w) && ~isequal(w, 'variable');
+% must be in path and not a variable
+status = ~isempty(w) && ~isequal(w, 'variable');

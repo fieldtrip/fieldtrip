@@ -3,7 +3,6 @@ function test_bug2741
 % WALLTIME 00:10:00
 % MEM 1500mb
 
-% TEST test_bug2741
 % TEST ft_read_cifti ft_write_cifti
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2741'));

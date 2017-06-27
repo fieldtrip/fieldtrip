@@ -10,7 +10,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % where the input data should correspond to the output of FT_PREPROCESSING and
 % the configuration should be specified as explained below. Note that some
 % options are mutually exclusive, and require two calls to this function to
-% avoid confucion about the order in which they are applied.
+% avoid confusion about the order in which they are applied.
 %
 % For selecting a subset of trials you can specify
 %   cfg.trials    = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -122,7 +122,7 @@ if ~strcmp(cfg.trials, 'all')
   if fb, fprintf('selecting %d trials\n', length(cfg.trials)); end
 
   % select trials of interest
-  tmpcfg = keepfields(cfg, 'trials');
+  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -258,7 +258,8 @@ elseif ~isempty(cfg.trl)
         ft_warning('Original data has trialinfo, using user specified trialinfo instead');
       end;
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
-      if isequal(dataold.trialinfo(iTrlorig,:),1) || numel(iTrlorig)==1 % Checks whether trials that are combined have same trialinfo
+      if numel(iTrlorig) == 1 || ...  % only 1 old trial to copy trialinfo from, or
+          size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1) % all old trialinfo rows are identical
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
       else
         error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');

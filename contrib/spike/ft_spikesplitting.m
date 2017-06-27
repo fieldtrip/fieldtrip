@@ -51,7 +51,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % set the general defaults
@@ -72,7 +72,7 @@ end
 
 status = mkdir(cfg.output);
 if ~status
-  error(sprintf('error creating splitted DMA output dataset %s', cfg.output));
+  error('error creating splitted DMA output dataset %s', cfg.output);
 end
 fprintf('writing to output directory ''%s''\n', cfg.output);
 
@@ -265,5 +265,5 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 

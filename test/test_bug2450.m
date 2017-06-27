@@ -3,7 +3,6 @@ function test_bug2450
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2450
 % TEST ft_rejectvisual
 
 cfg = [];

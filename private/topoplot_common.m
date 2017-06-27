@@ -45,11 +45,10 @@ if Ndata>1 && ~isnumeric(varargin{end})
     
     if k>1
       % create a new figure for the additional input arguments
-      % ensure new figures are all in the same size/position
-      p = get(gcf, 'Position');
-      f = figure();
-      set(f, 'Position', p);
+      % ensure that the new figure appears at the same position
+      f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
     end
+
     if isfield(cfg, 'inputfile')
       cfg = rmfield(cfg, 'inputfile');
     end
@@ -128,10 +127,10 @@ cfg.contournum        = ft_getopt(cfg, 'contournum',    6);
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',      'no');
 cfg.shading           = ft_getopt(cfg, 'shading',       'flat');
 cfg.comment           = ft_getopt(cfg, 'comment',       'auto');
-cfg.commentpos        = ft_getopt(cfg, 'commentpos',    'leftbottom');
+cfg.commentpos        = ft_getopt(cfg, 'commentpos',    []);  % default is handled further down
 cfg.fontsize          = ft_getopt(cfg, 'fontsize',      8);
 cfg.fontweight        = ft_getopt(cfg, 'fontweight',    'normal');
-cfg.baseline          = ft_getopt(cfg, 'baseline',      'no'); %to avoid warning in timelock/freqbaseline
+cfg.baseline          = ft_getopt(cfg, 'baseline',      'no'); % to avoid warning in timelock/freqbaseline
 cfg.trials            = ft_getopt(cfg, 'trials',        'all', 1);
 cfg.interactive       = ft_getopt(cfg, 'interactive',   'yes');
 cfg.hotkeys           = ft_getopt(cfg, 'hotkeys',       'no');
@@ -154,6 +153,18 @@ cfg.directionality    = ft_getopt(cfg, 'directionality',    []);
 cfg.channel           = ft_getopt(cfg, 'channel',           'all');
 cfg.figurename        = ft_getopt(cfg, 'figurename',        []);
 cfg.interpolatenan    = ft_getopt(cfg, 'interpolatenan',    'yes');
+
+% default commentpos
+if isempty(cfg.commentpos)
+  if ~isempty(strcmp(cfg.layout.label, 'COMNT')) 
+    % layout went through ft_prepare_layout in ft_topoplotER/TFR
+    % use the position that is specified in the layout
+    cfg.commentpos = 'layout';
+  else
+    % put it in the left bottom
+    cfg.commentpos = 'leftbottom';
+  end
+end
 
 % compatibility for previous highlighting option
 if isnumeric(cfg.highlight)
@@ -670,6 +681,13 @@ if strcmp(cfg.comment, 'auto')
   if ~isempty(cfg.parameter)
     comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
   end
+  if isfield(cfg,'refchannel')
+    if iscell(cfg.refchannel)
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
+    else
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
+    end
+  end
   cfg.comment = comment;
 elseif strcmp(cfg.comment, 'xlim')
   if strcmp(cfg.xlim,'maxmin')
@@ -677,17 +695,18 @@ elseif strcmp(cfg.comment, 'xlim')
   else
     comment = sprintf('%0s=[%.3g %.3g]', xparam, data.(xparam)(xmin), data.(xparam)(xmax));
   end
+  if isfield(cfg,'refchannel')
+    if iscell(cfg.refchannel)
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
+    else
+      cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
+    end
+  end
   cfg.comment = comment;
 elseif ~ischar(cfg.comment)
   error('cfg.comment must be string');
 end
-if ~strcmp(cfg.comment, 'no') && isfield(cfg,'refchannel')
-  if iscell(cfg.refchannel)
-    cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
-  else
-    cfg.comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
-  end
-end
+
 
 % Specify the x and y coordinates of the comment
 if strcmp(cfg.commentpos,'layout')
@@ -729,8 +748,8 @@ elseif isnumeric(cfg.commentpos)
   y_comment = cfg.commentpos(2);
   HorAlign = 'left';
   VerAlign = 'middle';
-  x_comment = 0.9*((x_comment-min(x))/(max(x)-min(x))-0.5);
-  y_comment = 0.9*((y_comment-min(y))/(max(y)-min(y))-0.5);
+  x_comment = 0.9*((x_comment-min(cfg.xlim))/(max(cfg.xlim)-min(cfg.xlim))-0.5);
+  y_comment = 0.9*((y_comment-min(cfg.ylim))/(max(cfg.ylim)-min(cfg.ylim))-0.5);
 end
 
 % Draw topoplot
@@ -809,7 +828,7 @@ for icell = 1:length(cfg.highlight)
       'pointsymbol',cfg.highlightsymbol{icell},...
       'pointcolor',cfg.highlightcolor{icell},...
       'pointsize',cfg.highlightsize{icell},...
-      'labelsize',cfg.highlightfontsize{icell},...
+      'fontsize',cfg.highlightfontsize{icell},...
       'labeloffset',cfg.labeloffset)
   end
 end % for icell
@@ -841,7 +860,7 @@ if ~strcmp(cfg.marker,'off')
     'pointsymbol',cfg.markersymbol,...
     'pointcolor',cfg.markercolor,...
     'pointsize',cfg.markersize,...
-    'labelsize',cfg.markerfontsize,...
+    'fontsize',cfg.markerfontsize,...
     'labeloffset',cfg.labeloffset)
 end
 
@@ -893,24 +912,24 @@ end
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-  % add the channel position information to the figure
-  % this section is required for ft_select_channel to do its work
-  info       = guidata(gcf);
-  info.x     = cfg.layout.pos(:,1);
-  info.y     = cfg.layout.pos(:,2);
-  info.label = cfg.layout.label;
-  guidata(gcf, info);
-  % attach data to the figure with the current axis handle as a name
-  dataname = fixname(num2str(double(gca)));
-  setappdata(gcf,dataname,varargin(1:Ndata));
+    % add the cfg/data/channel information to the figure under identifier linked to this axis
+    ident                    = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
+    set(gca,'tag',ident);
+    info                     = guidata(gcf);
+    info.(ident).x           = cfg.layout.pos(:, 1);
+    info.(ident).y           = cfg.layout.pos(:, 2);
+    info.(ident).label       = cfg.layout.label;
+    info.(ident).cfg         = cfg;
+    info.(ident).datvarargin = varargin(1:Ndata);
+    guidata(gcf, info);
   if any(strcmp(data.dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq', 'chancmb_freq', 'rpt_chancmb_freq', 'subj_chancmb_freq'}))
-    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER, cfg}, 'event', 'WindowButtonMotionFcn'});
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonMotionFcn'});
   elseif any(strcmp(data.dimord, {'chan_freq_time', 'subj_chan_freq_time', 'rpt_chan_freq_time', 'rpttap_chan_freq_time', 'chan_chan_freq_time', 'chancmb_freq_time', 'rpt_chancmb_freq_time', 'subj_chancmb_freq_time'}))
-    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR, cfg}, 'event', 'WindowButtonMotionFcn'});
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
   else
     warning('unsupported dimord "%s" for interactive plotting', data.dimord);
   end
@@ -979,24 +998,25 @@ if isfield(cfg, 'inputfile')
 end
 cfg.refchannel = label;
 fprintf('selected cfg.refchannel = ''%s''\n', cfg.refchannel{:});
-p = get(gcf, 'Position');
-f = figure;
-set(f, 'Position', p);
 cfg.highlight = 'on';
 cfg.highlightsymbol  = '.';
 cfg.highlightcolor   = 'r';
 cfg.highlightsize = 20;
 cfg.highlightchannel =  cfg.refchannel;
+% ensure that the new figure appears at the same position
+f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
 ft_topoplotER(cfg, data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_singleplotER(label, cfg)
+function select_singleplotER(label)
+% fetch cfg/data based on axis indentifier given as tag
+ident       = get(gca,'tag');
+info        = guidata(gcf);
+cfg         = info.(ident).cfg;
+datvarargin = info.(ident).datvarargin;
 if ~isempty(label)
-  % get appdata belonging to current axis
-  dataname = fixname(num2str(double(gca)));
-  data = getappdata(gcf, dataname);
   
   if isfield(cfg, 'inputfile')
     % the reading has already been done and varargin contains the data
@@ -1014,20 +1034,20 @@ if ~isempty(label)
     fprintf('''%s'', ', cfg.channel{i});
   end
   fprintf('''%s''}\n', cfg.channel{end});
-  p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
-  ft_singleplotER(cfg, data{:});
+  % ensure that the new figure appears at the same position
+  f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
+  ft_singleplotER(cfg, datvarargin{:});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_singleplotTFR(label, cfg)
+function select_singleplotTFR(label)
+ident       = get(gca,'tag');
+info        = guidata(gcf);
+cfg         = info.(ident).cfg;
+datvarargin = info.(ident).datvarargin;
 if ~isempty(label)
-  % get appdata belonging to current axis
-  dataname = fixname(num2str(double(gca)));
-  data = getappdata(gcf, dataname);
   
   if isfield(cfg, 'inputfile')
     % the reading has already been done and varargin contains the data
@@ -1041,10 +1061,9 @@ if ~isempty(label)
     fprintf('''%s'', ', cfg.channel{i});
   end
   fprintf('''%s''}\n', cfg.channel{end});
-  p = get(gcf, 'Position');
-  f = figure;
-  set(f, 'Position', p);
-  ft_singleplotTFR(cfg, data{:});
+  % ensure that the new figure appears at the same position
+  f = figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
+  ft_singleplotTFR(cfg, datvarargin{:});
 end
 
 

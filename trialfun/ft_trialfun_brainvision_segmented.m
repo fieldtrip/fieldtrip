@@ -1,4 +1,5 @@
 function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
+
 % FT_TRIALFUN_BRAINVISION_SEGMENTED creates trials for a Brain Vision Analyzer
 % dataset that was segmented in the BVA software.
 %
@@ -9,21 +10,21 @@ function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
 %   cfg  = ft_definetrial(cfg);
 %   data = ft_preprocessing(cfg);
 %
-% Optionally, you can also specify:
-%   cfg.trigformat = 'S %d';
-% which will instruct this function to parse stimulus triggers according to
-% the format you specified. The default is 'S %d'. cfg.trigformat always
-% needs to contain exactly one %d code. Trigger values read in this way
+% Optionally, you can specify:
+%   cfg.stimformat = 'S %d'
+% 
+% The stimformat instruct this function to parse stimulus triggers according to
+% the specific format. The default is 'S %d'. The cfg.stimformat always
+% needs to contain exactly one %d code. The trigger values parsed in this way
 % will be stored in columns 4 and upwards of the output 'trl' matrix, and
-% will end up in data.trialinfo if this matrix is subsequently passed to
-% ft_preprocessing in order to read in data.
+% after FT_PREPROCESSING will end up in data.trialinfo.
 %
-% A dataset needs to consist of three files: a .eeg, .vhdr, and .vmrk file.
-% cfg.dataset needs to refer to the .vhdr file.
+% A BrainVision dataset consists of three files: an .eeg, .vhdr, and a .vmrk 
+% file. The option cfg.dataset should refer to the .vhdr file.
 %
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
-% Copyright (C) 20014, Robert Oostenveld, FCDC
+% Copyright (C) 2014, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -46,8 +47,11 @@ function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
 hdr = ft_read_header(cfg.dataset);
 event = ft_read_event(cfg.dataset);
 
+% for backward compatibility
+cfg = ft_checkconfig(cfg, 'renamed', {'trigformat', 'stimformat'});
+
 % set the defaults
-cfg.trigformat = ft_getopt(cfg, 'trigformat', 'S %d');
+cfg.stimformat = ft_getopt(cfg, 'stimformat', 'S %d');
 
 sel = find(strcmp({event.type}, 'New Segment'));
 ntrial = length(sel);
@@ -91,24 +95,35 @@ for i=1:ntrial
 end
 
 % the endsample of each trial aligns with the beginsample of the next one
-endsample(1:end-1) = begsample(2:end);
+endsample(1:end-1) = begsample(2:end) - 1;
 % the last endsample corresponds to the end of the file
 endsample(end)     = hdr.nSamples*hdr.nTrials;
 
 % add the stimulus events to the output, if possible
 numstim = cellfun(@length, stim);
-if all(numstim==numstim(1))
-  for i=1:length(stim)
-    for j=1:numstim(i)
-      stimvalue  = sscanf(value{stim{i}(j)}, cfg.trigformat);
-      stimsample = sample(stim{i}(j));
-      stimtime   = (stimsample - begsample(i) + offset(i))/hdr.Fs; % relative to 'Time 0'
-      trialinfo(i,2*(j-1)+1) = stimvalue;
-      trialinfo(i,2*(j-1)+2) = stimtime;
-    end % j
-  end % i
+if (numstim > 0)
+  if all(numstim==numstim(1))
+    for i=1:length(stim)
+      for j=1:numstim(i)
+        if isempty(value{stim{i}(j)})
+          error('missing a stimulus type definition in the related *.vmrk file');
+        end
+        stimvalue  = sscanf(value{stim{i}(j)}, cfg.stimformat);
+        stimsample = sample(stim{i}(j));
+        stimtime   = (stimsample - begsample(i) + offset(i))/hdr.Fs; % relative to 'Time 0'
+        if isempty(stimvalue)
+          error('the upper case letter of the stimulus value does not match with definition of "cfg.stimformat"'); 
+        end
+        trialinfo(i,2*(j-1)+1) = stimvalue;
+        trialinfo(i,2*(j-1)+2) = stimtime;
+      end % j
+    end % i
+  else
+    warning('the trials have a varying number of stimuli, not adding them to the "trl" matrix');
+    trialinfo = [];
+  end
 else
-  warning('the trials have a varying number of stimuli, not adding them to the "trl" matrix');
+  warning('the trials have no stimuli, no "trialinfo" will be added to the "trl" matrix');
   trialinfo = [];
 end
 

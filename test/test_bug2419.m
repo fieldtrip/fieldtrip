@@ -3,7 +3,6 @@ function test_bug2419
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2419
 % TEST ft_read_headshape
 
 % reported bug: some particular fif-mesh files don't contain triangle area

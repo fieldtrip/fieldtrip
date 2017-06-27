@@ -51,6 +51,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg             = [];
 %   cfg.method      = 'cortexhull';
 %   cfg.headshape   = '/path/to/surf/lh.pial';
+%   cfg.fshome      = '/path/to/freesurfer dir';
 %   cortex_hull     = ft_prepare_mesh(cfg);
 %
 % See also FT_VOLUMESEGMENT, FT_PREPARE_HEADMODEL, FT_PLOT_MESH
@@ -113,36 +114,22 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'source
 % get the options
 cfg.downsample  = ft_getopt(cfg, 'downsample', 1); % default is no downsampling
 cfg.numvertices = ft_getopt(cfg, 'numvertices');   % no default
+cfg.smooth      = ft_getopt(cfg, 'smooth');        % no default
 
-% This was changed on 3 December 2013, this backward compatibility can be removed in 6 months from now.
-if isfield(cfg, 'interactive')
-  if strcmp(cfg.interactive, 'yes')
-    warning('please specify cfg.method=''interactive'' instead of cfg.interactive=''yes''');
-    cfg.method = 'interactive';
-  end
-  cfg = rmfield(cfg, 'interactive');
-end
-
-% This was changed on 3 December 2013, it makes sense to keep it like this on the
-% long term (previously there was no explicit use of cfg.method, now there is).
-% Translate the input options in the appropriate cfg.method.
-if ~isfield(cfg, 'method')
-  if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
-    warning('please specify cfg.method=''headshape''');
-    cfg.method = 'headshape';
-  elseif hasdata && ~strcmp(ft_voltype(mri), 'unknown')
-    % the input is a spherical volume conduction model
-    cfg.method = ft_voltype(mri);
-  elseif hasdata
-    warning('please specify cfg.method=''projectmesh'', ''iso2mesh'' or ''isosurface''');
-    warning('using ''projectmesh'' as default');
-    cfg.method = 'projectmesh';
-  end
+% Translate the input options in the appropriate default for cfg.method
+if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
+  cfg.method = ft_getopt(cfg, 'method', 'headshape');
+elseif hasdata && ~strcmp(ft_voltype(mri), 'unknown')
+  cfg.method = ft_getopt(cfg, 'method', ft_voltype(mri));
+elseif hasdata
+  cfg.method = ft_getopt(cfg, 'method', 'projectmesh');
+else
+  cfg.method = ft_getopt(cfg, 'method', []);
 end
 
 if hasdata && cfg.downsample~=1
   % optionally downsample the anatomical volume and/or tissue segmentations
-  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information
   [cfg, mri] = rollback_provenance(cfg, mri);
@@ -201,6 +188,20 @@ if ~isfield(bnd, 'unit') && hasdata && isfield(mri, 'unit')
   end
 elseif ~isfield(bnd, 'unit')
   bnd = ft_convert_units(bnd);
+end
+
+% copy the coordinate system from the input to the output
+if ~isfield(bnd, 'coordsys') && hasdata && isfield(mri, 'coordsys')
+  for i=1:numel(bnd)
+    bnd(i).coordsys = mri.coordsys;
+  end
+end
+
+% smooth the mesh
+if ~isempty(cfg.smooth)
+  cfg.headshape = bnd;
+  cfg.numvertices = [];
+  bnd = prepare_mesh_headshape(cfg);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

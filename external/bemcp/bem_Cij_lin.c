@@ -1,12 +1,11 @@
 /*
-En entree : XYZva, XYZvb, trib, weight, defl
-En sortie : Cii
+  Input : XYZva, XYZvb, trib, weight, defl
+  Output : Cii
 
-
-siga==sig[0], sigb==sig[1], sigc==sig[2], sigd==sig[3]
-weight=(sig[0]-sig[1])/((sig[2]+sig[3])*2.*pi) ;
-
+  siga==sig[0], sigb==sig[1], sigc==sig[2], sigd==sig[3]
+  weight = (sig[0]-sig[1])/((sig[2]+sig[3])*2.*pi) ;
 */
+
 #include <math.h>
 #include "mex.h"
 
@@ -20,8 +19,8 @@ void Cij_lin(double C[], double XYZva[], int Nverta, double XYZvb[], int Nvertb,
 	double tmp[3], n[3], nn, beta, ideuxA ;
 	int i, j, u, v, w ;
 
-	printf("Nverta = %d\n",Nverta);
-	printf("Ntrib = %d\n",Ntrib);
+	/*printf("Nverta = %d\n",Nverta);*/
+	/*printf("Ntrib = %d\n",Ntrib);*/
 
 	for (i=0;i<Nverta;++i) { /* Run through all vert of surf a */ 
 		si[0] = XYZva[i] ;
@@ -188,9 +187,3 @@ void mexFunction(
 	mxSetPr(plhs[0],C) ;
 
 }
-
-
-
-
-
-

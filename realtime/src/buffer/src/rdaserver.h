@@ -3,14 +3,14 @@
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
- *
  */
 
-#ifndef __rdaserver_h
-#define __rdaserver_h
- 
+#ifndef __RDASERVER_H
+#define __RDASERVER_H
+
 #include <pthread.h>
-#include "buffer.h" 
+#include "platform.h"
+#include "buffer.h"
 #include "rdadefs.h"
 
 #ifdef __cplusplus
@@ -19,10 +19,10 @@ extern "C" {
 
 /* On Windows, sockets are not described by a plain int, but by the type SOCKET, which has
    the size of a pointer. On WIN64, sizeof(SOCKET) != sizeof(int), although some people still
-   argue that it is safe to cast between those. To be sure, the RDA server implementation 
+   argue that it is safe to cast between those. To be sure, the RDA server implementation
    always uses SOCKET as the base type, and defines this as an 'int' on POSIX systems.
 */
-#ifndef WIN32
+#ifndef PLATFORM_WINDOWS
 typedef int SOCKET;
 #define INVALID_SOCKET  -1
 #endif
@@ -37,14 +37,14 @@ typedef int SOCKET;
    should really be enough for all practical purposes. Depending on
    the sampling rate and number of channels, you would probably hit
    other performance boundaries first. Since the server socket itself
-   also needs listening to (taking 1 away from the available 64), 
+   also needs listening to (taking 1 away from the available 64),
    NEVER set the following number to more than  63!!!
 */
 #define RDA_MAX_NUM_CLIENTS  32
 
 /** Number of blocks any client can lag behind before being disconnected */
 #define RDA_MAX_LAG 5
- 
+
 /** RDA server control structure for starting, inspecting, and stopping a server */
 typedef struct {
         pthread_t thread;               /**< Thread handle */
@@ -59,7 +59,7 @@ typedef struct {
         int verbosity;                  /**< Option that determines how much status information is printed during operation */
 } rda_server_ctrl_t;
 
-/** Internally used data structure to keep a linked list of 
+/** Internally used data structure to keep a linked list of
         data packets that need to be sent out */
 typedef struct rda_buffer_item {
         void *data;                     /**< Points to complete RDA packet */
@@ -106,14 +106,14 @@ rda_server_ctrl_t *rda_start_server(int ft_buffer, int use16bit, int port, int b
 */
 int rda_stop_server(rda_server_ctrl_t *SC);
 
-/** Simple helper function for retrieving the current number of clients of an RDA server 
+/** Simple helper function for retrieving the current number of clients of an RDA server
         @param  SC     Must point to an RDA server control structure as created by rda_start_server
         @return        The number of clients
-*/      
+*/
 int rda_get_num_clients(rda_server_ctrl_t *SC);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __rdaserver_h */
+#endif /* __RDASERVER_H */

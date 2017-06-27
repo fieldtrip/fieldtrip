@@ -105,9 +105,6 @@ if ft_abort
   return
 end
 
-% the data can be passed as input arguments or can be read from disk
-hasdata = exist('data', 'var');
-
 % ft_checkdata is done further down
 
 % check if the input cfg is valid for this function
@@ -424,6 +421,11 @@ if strcmp(cfg.artfctdef.reject, 'partial') || strcmp(cfg.artfctdef.reject, 'comp
     if all(not(rejecttrial))
       % the whole trial is good
       trialok = [trialok; trl(trial,:)];
+    elseif all(rejecttrial) && strcmp(cfg.artfctdef.reject, 'nan')
+      % the whole trial is bad, but it is requested to be replaced with nans
+      data.trial{trial}(:,rejecttrial) = nan;
+      count_nan = count_nan + 1;
+      trialok = [trialok; trl(trial,:)]; % Mark the trial as good as nothing will be removed
     elseif all(rejecttrial)
       % the whole trial is bad
       count_complete_reject = count_complete_reject + 1;
@@ -506,8 +508,7 @@ if isempty(cfg.trl)
 else
   if hasdata && ~strcmp(cfg.artfctdef.reject, 'nan') % Skip this step to avoid removing parts that should be filled with nans
     % apply the updated trial definition on the data
-    tmpcfg     = [];
-    tmpcfg.trl = cfg.trl;
+    tmpcfg     = keepfields(cfg, {'trl', 'showcallinfo'});
     data       = ft_redefinetrial(tmpcfg, data);
     if isfield(data, 'offset')
       data = rmfield(data, 'offset');

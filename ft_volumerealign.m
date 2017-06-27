@@ -35,8 +35,9 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   [mri] = ft_volumerealign(cfg, mri)
 % or
 %   [mri] = ft_volumerealign(cfg, mri, target)
-% where the input MRI should be an anatomical or functional MRI volume and the third
-% input argument is the the target anatomical MRI for SPM or FSL.
+% where the first input is the configuration structure, the second input should be an
+% anatomical or functional MRI volume and the third input is the the target anatomical MRI
+% for SPM or FSL.
 %
 % The configuration can contain the following options
 %   cfg.method         = string representing the method for aligning
@@ -133,12 +134,15 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                          resliced conform the target image (default = 'yes')
 %
 % When cfg.method = 'spm', a third input argument is required. The input volume is
-% coregistered to this target volume, using SPM. Additional options pertaining
-% to this method should be defined in the sub-structure cfg.spm and can include:
+% coregistered to this target volume, using SPM. You can specify the version of
+% the SPM toolbox to use with
+%   cfg.spmversion       = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+% Additional options pertaining to SPM2 and SPM8 should be defined in the
+% sub-structure cfg.spm and can include:
 %   cfg.spm.regtype      = 'subj', 'rigid'
 %   cfg.spm.smosrc       = scalar value
 %   cfg.spm.smoref       = scalar value
-% When cfg.spmversion is 'spm12', the following options apply:
+% Additional options pertaining to SPM12 are
 %   cfg.spm.sep          = optimisation sampling steps (mm), default: [4 2]
 %   cfg.spm.params       = starting estimates (6 elements), default: [0 0 0  0 0 0]
 %   cfg.spm.cost_fun     = cost function string:
@@ -165,8 +169,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % file. These mat files should contain only a single variable,
 % corresponding with the input/output structure.
 %
-% See also FT_READ_MRI, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS, SPM_AFFREG,
-% SPM_NORMALISE, SPM_COREG
+% See also FT_READ_MRI, FT_VOLUMERESLICE, FT_INTERACTIVEREALIGN, FT_ELECTRODEREALIGN,
+% FT_DETERMINE_COORDSYS, SPM_AFFREG, SPM_NORMALISE, SPM_COREG
 
 % Undocumented options:
 %
@@ -910,14 +914,8 @@ switch cfg.method
     delete(tmpname4);
     
   case 'spm'
-    % ensure that SPM is on the path
-    if strcmpi(cfg.spmversion, 'spm2'),
-      ft_hastoolbox('SPM2',1);
-    elseif strcmpi(cfg.spmversion, 'spm8'),
-      ft_hastoolbox('SPM8',1);
-    elseif strcmpi(cfg.spmversion, 'spm12'),
-      ft_hastoolbox('SPM12',1);
-    end
+    % check that the preferred SPM version is on the path
+    ft_hastoolbox(cfg.spmversion, 1);
     
     if strcmpi(cfg.spmversion, 'spm2') || strcmpi(cfg.spmversion, 'spm8')
       
@@ -979,6 +977,7 @@ switch cfg.method
       transform     = inv(spm_matrix(x(:)')); % from V1 to V2, to be multiplied still with the original transform (mri.transform), see below
       
     end
+
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
     else
@@ -1607,16 +1606,16 @@ end
 
 if opt.init
   % draw the crosshairs for the first time
-  hch1 = crosshair([xi crossoffs(2) zi], 'parent', h1, 'color', 'yellow');
-  hch2 = crosshair([crossoffs(1) yi zi], 'parent', h2, 'color', 'yellow');
-  hch3 = crosshair([xi yi crossoffs(3)], 'parent', h3, 'color', 'yellow');
+  hch1 = ft_plot_crosshair([xi crossoffs(2) zi], 'parent', h1, 'color', 'yellow');
+  hch2 = ft_plot_crosshair([crossoffs(1) yi zi], 'parent', h2, 'color', 'yellow');
+  hch3 = ft_plot_crosshair([xi yi crossoffs(3)], 'parent', h3, 'color', 'yellow');
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
   opt.handlesmarker = [];
 else
   % update the existing crosshairs, don't change the handles
-  crosshair([xi crossoffs(2) zi], 'handle', opt.handlescross(1, :));
-  crosshair([crossoffs(1) yi zi], 'handle', opt.handlescross(2, :));
-  crosshair([xi yi crossoffs(3)], 'handle', opt.handlescross(3, :));
+  ft_plot_crosshair([xi crossoffs(2) zi], 'handle', opt.handlescross(1, :));
+  ft_plot_crosshair([crossoffs(1) yi zi], 'handle', opt.handlescross(2, :));
+  ft_plot_crosshair([xi yi crossoffs(3)], 'handle', opt.handlescross(3, :));
 end
 % For some unknown god-awful reason, the line command 'disables' all transparency.
 % The below command resets it. It was the only axes property that I (=roemei) could

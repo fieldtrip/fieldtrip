@@ -3,7 +3,6 @@ function test_bug2185
 % WALLTIME 00:20:00
 % MEM 6gb
 
-% TEST test_bug2185
 % TEST ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source ft_math
 
 global ft_default
@@ -34,7 +33,7 @@ load(filename);
 cfg = [];
 cfg.parameter = 'pow';
 cfg.keepindividual = 'no';
-output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
+output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
 assert(isfield(output, 'pow'), 'missing output field');
 assert(isfield(output, 'time'), 'missing output field');
 
@@ -64,17 +63,17 @@ dim = [length(xgrid) length(ygrid) length(zgrid)];
 source3d.pos = [X(:) Y(:) Z(:)];
 source3d.dim = dim;
 % convert the regular 3d-grid source into a volume
-volume3d = ft_checkdata(source3d, 'datatype', 'volume')
+volume3d = ft_checkdata(source3d, 'datatype', 'volume');
 
 cfg = [];
 cfg.parameter = 'pow';
-source3d = ft_sourceinterpolate(cfg, source2d, volume3d)
+source3d = ft_sourceinterpolate(cfg, source2d, volume3d);
 
 cfg = [];
 cfg.avgovertime = 'yes';
 cfg.keeptimedim = 'no';
 cfg.parameter = 'pow';
-source3davg = ft_selectdata(cfg, source3d)
+source3davg = ft_selectdata(cfg, source3d);
 
 cfg = [];
 cfg.funparameter = 'pow';
@@ -87,7 +86,7 @@ ft_sourceplot(cfg, source3davg);
 cfg = [];
 cfg.parameter = 'pow';
 cfg.keepindividual = 'yes';
-output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
+output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
 assert( isfield(output, 'pow'), 'missing output field');
 assert(isfield(output, 'time'), 'missing output field');
 
@@ -101,7 +100,7 @@ assert(all(output.pow(:)==0), 'power should be zero');
 cfg = [];
 cfg.parameter = 'mom';
 cfg.keepindividual = 'no';
-output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
+output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
 assert( isfield(output, 'mom'), 'missing output field');
 assert( isfield(output, 'time'), 'missing output field');
 
@@ -115,7 +114,7 @@ assert(all(output.mom{1}(:)==0), 'moment should be zero');
 cfg = [];
 cfg.parameter = 'mom';
 cfg.keepindividual = 'yes';
-output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
+output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
 assert( isfield(output, 'mom'), 'missing output field');
 assert( isfield(output, 'time'), 'missing output field');
 
@@ -129,5 +128,5 @@ assert(all(output.mom{1}(:)==0), 'moment should be zero');
 cfg = [];
 cfg.parameter = 'noisecov';
 cfg.keepindividual = 'yes';
-output = ft_sourcegrandaverage(cfg, source_timelock_stim{:})
+output = ft_sourcegrandaverage(cfg, source_timelock_stim{:});
 

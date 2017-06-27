@@ -3,7 +3,6 @@ function test_bug1833
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1833
 % TEST ft_plot_mesh ft_read_headshape
 
 % at this moment (20 November 2012) this test script is known not to work
@@ -11,7 +10,7 @@ function test_bug1833
 return
 
 % this test script borrows some data from another bug
-cd /home/common/matlab/fieldtrip/data/test/bug1820
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1820'));
 
 mesh = ft_read_headshape('tet_4layer_127_127_127.1.node');
 mesh.tet = mesh.tet(1:10000,:); % prune the number of elements

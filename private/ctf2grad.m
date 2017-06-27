@@ -1,11 +1,11 @@
-function [grad] = ctf2grad(hdr, dewar, coilaccuracy)
+function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy)
 
 % CTF2GRAD converts a CTF header to a gradiometer structure that can be understood by
 % the FieldTrip low-level forward and inverse routines. The fieldtrip/fileio
 % read_header function can use three different implementations of the low-level code
 % for CTF data. Each of these implementations is dealt with here.
 %
-% Use as 
+% Use as
 %   grad = ctf2grad(hdr, dewar, coilaccuracy)
 % where
 %   dewar        = boolean, whether to return it in dewar or head coordinates (default is head coordinates)
@@ -14,7 +14,7 @@ function [grad] = ctf2grad(hdr, dewar, coilaccuracy)
 % See also BTI2GRAD, FIF2GRAD, MNE2GRAD, ITAB2GRAD, YOKOGAWA2GRAD,
 % FT_READ_SENS, FT_READ_HEADER
 
-% Copyright (C) 2004-2016, Robert Oostenveld
+% Copyright (C) 2004-2017, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -41,18 +41,21 @@ end
 if nargin<3 || isempty(coilaccuracy)
   % if empty it will use the original code
   % otherwise it will use the specified accuracy coil definition from the MNE coil_def.dat
-  coilaccuracy = []; 
+  coilaccuracy = [];
 end
 
 if isfield(hdr, 'orig')
   hdr = hdr.orig; % use the original CTF header, not the FieldTrip header
 end
 
-% start with empty gradiometer
+% start with empty gradiometer structure
 grad = [];
 grad.coilpos  = [];
 grad.coilori  = [];
 grad.tra      = [];
+
+% start with empty electrode structure
+elec = [];
 
 % meg channels are 5, refmag 0, refgrad 1, ADCs 18
 % UPPT001 is 11
@@ -69,7 +72,7 @@ grad.tra      = [];
 if ~isempty(coilaccuracy)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % use the coil definitions from the MNE coil_def.dat file
-  % these allow for varying accuracy which is specified by 
+  % these allow for varying accuracy which is specified by
   % coilaccuracy = 0, 1 or 2
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
@@ -80,11 +83,11 @@ if ~isempty(coilaccuracy)
   k = 1;
   for i=1:length(hdr.res4.senres)
     switch hdr.res4.senres(i).sensorTypeIndex
-      case 5; % 5001
+      case 5 % 5001
         thisdef = def([def.id]==5001 & [def.accuracy]==coilaccuracy);
-      case 0; % 5002
+      case 0 % 5002
         thisdef = def([def.id]==5002 & [def.accuracy]==coilaccuracy);
-      case 1; % 5003
+      case 1 % 5003
         thisdef = def([def.id]==5003 & [def.accuracy]==coilaccuracy);
       otherwise
         % do not add this as sensor to the gradiometer definition
@@ -171,10 +174,13 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   sensType  = [hdr.res4.senres.sensorTypeIndex];
   selMEG    = find(sensType==5);
   selREF    = find(sensType==0 | sensType==1);
+  selEEG    = find(sensType==9);
   selMEG    = selMEG(:)';
   selREF    = selREF(:)';
+  selEEG    = selEEG(:)';
   numMEG    = length(selMEG);
   numREF    = length(selREF);
+  numEEG    = length(selEEG);
   
   % determine the number of channels and coils
   coilcount = 0;
@@ -185,6 +191,26 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
   grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
   grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
+  
+  if numEEG>0
+    for i=1:numEEG
+      n = selEEG(i);
+      if dewar
+        pos = hdr.res4.senres(n).pos0';
+      else
+        pos = hdr.res4.senres(n).pos';
+      end
+      if hdr.res4.senres(n).numCoils~=1
+        error('unexpected number of electrode positions in EEG channel');
+      end
+      % add this position
+      elec.elecpos(i       ,:) = pos(1,:);
+    end
+    % add the electrode names
+    elec.label = cellstr(hdr.res4.chanNames(selEEG,:));
+  else
+    elec = [];
+  end
   
   % combine the bottom and top coil of each MEG channel
   for i=1:numMEG
@@ -257,7 +283,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     reflabel          = label(hdr.BalanceCoefs.G1BR.Refindex);
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G1BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G1BR = montage;
@@ -268,7 +294,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     reflabel          = label(hdr.BalanceCoefs.G2BR.Refindex);
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G2BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G2BR = montage;
@@ -279,7 +305,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     reflabel          = label(hdr.BalanceCoefs.G3BR.Refindex);
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G3BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G3BR = montage;
@@ -290,7 +316,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     reflabel          = label(hdr.BalanceCoefs.G3AR.Refindex);
     nmeg              = length(meglabel);
     nref              = length(reflabel);
-    montage.labelorg  = cat(1, meglabel, reflabel);
+    montage.labelold  = cat(1, meglabel, reflabel);
     montage.labelnew  = cat(1, meglabel, reflabel);
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G3AR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G3AR = montage;
@@ -441,7 +467,7 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
   % prefer to have the labels in a column vector
   grad.label = grad.label(:);
   grad.unit  = 'cm'; % the res4 file represents it in centimeter
-
+  
   % reorder the coils, such that the bottom coils are at the first N
   % locations and the top coils at the last N positions. This makes it
   % easier to use a selection of the coils for topographic plotting

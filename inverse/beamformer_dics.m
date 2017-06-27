@@ -191,6 +191,7 @@ else
 end
 
 isrankdeficient = (rank(Cf)<size(Cf,1));
+rankCf = rank(Cf);
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
@@ -205,17 +206,11 @@ if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
 end
 
 if projectnoise
-  % estimate the noise power, which is further assumed to be equal and uncorrelated over channels
-  if isrankdeficient
-    % estimated noise floor is equal to or higher than lambda
-    noise = lambda;
-  else
-    % estimate the noise level in the covariance matrix by the smallest singular value
-    noise = svd(Cf);
-    noise = noise(end);
-    % estimated noise floor is equal to or higher than lambda
-    noise = max(noise, lambda);
-  end
+  % estimate the noise level in the covariance matrix by the smallest (non-zero) singular value
+  noise = svd(Cf);
+  noise = noise(rankCf);
+  % estimated noise floor is equal to or higher than lambda
+  noise = max(noise, lambda);
 end
 
 % the inverse only has to be computed once for all dipoles
@@ -521,10 +516,26 @@ switch submethod
     if fixedori
       error('fixed orientations are not supported for beaming cortico-cortical coherence');
     end
-    % compute cortio-cortical coherence with a dipole at the reference position
-    lf1 = ft_compute_leadfield(refdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
-    % construct the spatial filter for the first (reference) dipole location
-    filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
+    if isstruct(refdip) && isfield(refdip, 'filter') % check if precomputed filter is present
+      assert(iscell(refdip.filter) && numel(refdip.filter)==1);
+      filt1 = refdip.filter{1};
+    elseif isstruct(refdip) && isfield(refdip, 'leadfield') % check if precomputed leadfield is present
+      assert(iscell(refdip.leadfield) && numel(refdip.leadfield)==1);
+      lf1 = refdip.leadfield{1};
+      filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
+    elseif isstruct(refdip) && isfield(refdip, 'pos') % check if only position of refdip is present
+      assert(isnumeric(refdip.pos) && numel(refdip.pos)==3);
+      lf1 = ft_compute_leadfield(refdip.pos, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
+      if isfield(refdip,'mom'); % check for fixed orientation
+        lf1 = lf1.*refdip.mom(:); 
+      end; 
+      filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
+    else % backwards compatible with previous implementation - only position of refdip is present
+      % compute cortio-cortical coherence with a dipole at the reference position
+      lf1 = ft_compute_leadfield(refdip, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
+      % construct the spatial filter for the first (reference) dipole location
+      filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
+    end
     if powlambda1
       Pref = lambda1(filt1 * Cf * ctranspose(filt1));      % compute the power at the first dipole location, Gross eqn. 8
     elseif powtrace
@@ -620,6 +631,10 @@ end
 if isfield(dipout, 'csd')
   dipout.csd( originside) = dipout.csd;
   dipout.csd(~originside) = {[]};
+end
+if isfield(dipout, 'noisecsd')
+  dipout.noisecsd( originside) = dipout.noisecsd;
+  dipout.noisecsd(~originside) = {[]};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,11 +1,6 @@
 function version = om_getgccversion
 % checks for gcc compiler version (works if superior to gcc3)
-% Copyright (C) 2010, Alexandre Gramfort, INRIA
-
-% $Id$
-% $LastChangedBy: alegra $
-% $LastChangedDate: 2010-04-19 11:03:39 +0200 (Mon, 19 Apr 2010) $
-% $Revision$
+% Copyright (C) 2010-2017, OpenMEEG developers
 
 tmpdir = pwd;
 cd /tmp

@@ -263,7 +263,7 @@ source = [];
 
 if istimelock
   % add the time axis to the output
-  tmpcfg = keepfields(cfg, {'channel', 'latency'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'showcallinfo'});
   tmpcfg.avgovertime = 'no';
   data = ft_selectdata(tmpcfg, data);
   % restore the provenance information
@@ -273,7 +273,7 @@ if istimelock
   source = copyfields(data, source, {'time'});
   
 elseif isfreq
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'refchan'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'refchan', 'nanmean', 'showcallinfo'});
   
   % ensure that the refchan is kept, if present
   if isfield(tmpcfg, 'refchan') && ~isempty(tmpcfg.refchan) && isempty(match_str(tmpcfg.channel, tmpcfg.refchan))
@@ -378,7 +378,7 @@ else
   % only prepare the dipole grid positions, the leadfield will be computed on the fly if not present
   
   % copy all options that are potentially used in ft_prepare_sourcemodel
-  tmpcfg           = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+  tmpcfg           = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
   tmpcfg.grad      = sens; % this can be electrodes or gradiometers
   grid = ft_prepare_sourcemodel(tmpcfg);
@@ -657,7 +657,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   optarg = ft_cfg2keyval(tmpcfg);
   
   if Nrepetitions > 1
-    ft_progress('init', 'text');
+    ft_progress('init', cfg.(cfg.method).feedback, 'scanning repetition...');
   end
   
   for i=1:Nrepetitions
@@ -665,7 +665,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     squeeze_Cf = reshape(Cf(i,:,:), size_Cf(2:end));    
     
     if Nrepetitions > 1
-      ft_progress(i/Nrepetitions, 'scanning repetition %d of %d', i, Nrepetitions);
+      ft_progress(i/Nrepetitions, 'scanning repetition %d from %d', i, Nrepetitions);
     end
     
     switch cfg.method
@@ -696,7 +696,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       case {'rv'}
         dip(i) = residualvariance(grid, sens, headmodel, avg, optarg{:}) ;
       case {'music'}
-        error(sprintf('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method));
+        error('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method);
       otherwise
     end
     
@@ -1085,7 +1085,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       dip(i) = mvlestimate(grid, sens, headmodel, squeeze_avg, optarg{:});
     end
   else
-    error(sprintf('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method));
+    error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
   end
   
 elseif iscomp

@@ -3,7 +3,6 @@ function test_bug3119
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST test_bug3119
 % TEST ft_dipolefitting dipole_fit
 
 %% load template mri
@@ -81,7 +80,7 @@ grid = ft_prepare_leadfield(cfg);
 
 
 %% load simulated data
-load bug3119.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3119.mat'));
 
 figure
 plot(datat1.time, datat1.avg)

@@ -3,7 +3,6 @@ function test_bug182
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug182
 % TEST ft_preprocessing ft_componentanalysis ft_rejectcomponent ft_componentbrowser ft_databrowser
 
 % this script addresses bug 182.
@@ -11,7 +10,7 @@ function test_bug182
 % ft_rejectcomponent should have the possibility to contain a
 % grad-structure which is balanced according to the mixing matrix
 
-cd('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/');
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/'));
 load('preproc_ctf151.mat');
 
 % the demean is essential to have an equal output for datanew1 and datanew2

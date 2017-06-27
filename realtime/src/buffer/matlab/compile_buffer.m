@@ -1,4 +1,4 @@
-function compile(cc, libpath)
+function compile_buffer(cc, libpath)
 
 % COMPILE is used for compiling and linking the 'buffer' MEX file.
 %

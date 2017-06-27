@@ -130,8 +130,7 @@ else
 end
 
 % Filtering does not work on integer data
-typ = class(dat);
-if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+if ~isa(dat, 'double') && ~isa(dat, 'single')
   dat = cast(dat, 'double');
 end
 
@@ -237,7 +236,8 @@ switch type
       N=floor(size(dat,2)/3) - 2;
       if rem(N,2)==1,   N=N+1;    end
     end
-    [B, A] = fir1(N, max(Fhp)/Fn, 'high');
+    B = fir1(N, max(Fhp)/Fn, 'high');
+    A = 1;
     
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453
@@ -286,14 +286,14 @@ catch
       rethrow(lasterror);
     case 'reduce'
       warning('backtrace', 'off')
-      ft_warning(sprintf('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1));
+      ft_warning('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
       warning('backtrace', 'on')
       filt = ft_preproc_highpassfilter(dat,Fs,Fhp,N-1,type,dir,instabilityfix);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
       warning('backtrace', 'off')
-      ft_warning(sprintf('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2));
+      ft_warning('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
       warning('backtrace', 'on')
       filt = ft_preproc_highpassfilter(dat ,Fs,Fhp,N1,type,dir,instabilityfix);
       filt = ft_preproc_highpassfilter(filt,Fs,Fhp,N2,type,dir,instabilityfix);

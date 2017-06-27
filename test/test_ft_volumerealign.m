@@ -3,8 +3,7 @@ function test_ft_volumerealign
 % MEM 2500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_volumerealign
-% TEST ft_read_mri ft_volumerealign
+% TEST ft_read_mri ft_volumerealign ft_volumereslice
 
 % to test:
 % between modalities
@@ -26,8 +25,8 @@ function test_ft_volumerealign
 
 % path to data
 
-subjectT1  = '/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz';
-subjectT2  = '/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz';
+subjectT1  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz');
+subjectT2  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz');
 
 % load in the data
 
@@ -326,8 +325,8 @@ clear all;
 
 % path to data
 
-subjectT1  = '/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz';
-subjectDTI = '/home/common/matlab/fieldtrip/data/test/bug1826/DTI.nii';
+subjectT1  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz');
+subjectDTI = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/DTI.nii');
 
 % load in the data
 
@@ -443,11 +442,11 @@ clear all;
 
 % template T1 (fuzzy)
 
-T1temp = ft_read_mri('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+T1temp = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
 
 % other subject's T1
 
-T1other = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
+T1other = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
 
 cfg=[];
 % cfg.nonlinear = 'no';  option in volumenormalise
@@ -476,11 +475,11 @@ clear all;
 
 % template T1 (fuzzy)
 
-T1temp = ft_read_mri('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+T1temp = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
 
 % other subject's T1
 
-T1other = ft_read_mri('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
+T1other = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
 
 
 cfg=[];

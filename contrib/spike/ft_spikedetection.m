@@ -87,7 +87,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance
 ft_preamble trackconfig
 
 % set the general defaults
@@ -131,7 +131,7 @@ cfg.preproc = ft_checkconfig(cfg.preproc, 'renamed', {'blcwindow', 'baselinewind
 
 status = mkdir(cfg.output);
 if ~status
-  error(sprintf('error creating spike output dataset %s', cfg.output));
+  error('error creating spike output dataset %s', cfg.output);
 end
 
 % read the header of the completete dataset
@@ -288,7 +288,7 @@ for i=chansel(:)'
           end
 
           % prevent thres crossing within mindist samples
-          if ~isempty(peaks) & ~isempty(cfg.flank.mindist)
+          if ~isempty(peaks) && ~isempty(cfg.flank.mindist)
             pd = [inf diff(peaks)];
             peaks = peaks(pd>cfg.flank.mindist);
           end
@@ -323,7 +323,7 @@ for i=chansel(:)'
         if ( (length(peaks) / (length(dat)/hdr.Fs) )  < 4)
           fprintf(', less than avg. rate of 4 spikes per sec. detected.\n');
           adjustValue = 1+(numadjustment*0.1);
-        elseif ~strcmp(cfg.method,'all') & ( (length(peaks) / (length(dat)/hdr.Fs) )  > 600)
+        elseif ~strcmp(cfg.method,'all') && ( (length(peaks) / (length(dat)/hdr.Fs) )  > 600)
           fprintf(', more than avg. rate of 600 spikes per sec. detected.\n');
           adjustValue = 1-(numadjustment*0.1);
         else
@@ -477,5 +477,5 @@ end % for each file
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
+ft_postamble provenance
 

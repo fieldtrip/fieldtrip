@@ -90,7 +90,7 @@ isuvar = isfield(data, 'label') && sum(strcmp(dimtok,'chan'))==1;
 isbvar = isfield(data, 'labelcmb');
 
 if (isfull||isuvar) && isbvar
-  error('data representaion is ambiguous');
+  error('data representation is ambiguous');
 end
 if ~isfull && ~isbvar && ~isuvar
   error('data representation is unsupported');

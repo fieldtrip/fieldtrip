@@ -1,78 +1,83 @@
+/* 
+ * Copyright (C) 2008, Robert Oostenveld & Christian Hesse
+ * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
+ * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
+ *
+ */
 
-/* prevent double include */
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#if defined(linux) || defined(__linux) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__) 
-/* linux, also other platforms (Hurd etc) that use GLIBC */
-#define PLATFORM_LINUX
+#if defined(linux) || defined(__linux) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__)
+  /* linux, also other platforms (Hurd etc) that use GLIBC */
+  #define PLATFORM_LINUX
 
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
-/* BSD */
-#define PLATFORM_BSD
+  /* BSD */
+  #define PLATFORM_BSD
 
 #elif defined(sun) || defined(__sun)
-/* Solaris */
-#define PLATFORM_SUN
+  /* Sun Solaris */
+  #define PLATFORM_SUN
 
 #elif defined(__sgi)
-/* SGI Irix */
-#define PLATFORM_SGI
+  /* SGI Irix */
+  #define PLATFORM_SGI
 
 #elif defined(__hpux)
-/* hp unix */
-#define PLATFORM_HP
+  /* HP-UX */
+  #define PLATFORM_HP
 
 #elif defined(__CYGWIN__)
-/* cygwin is not win32 */
-#define PLATFORM_CYGWIN
+  /* cygwin is not windows */
+  #define PLATFORM_CYGWIN
 
 #elif defined(_WIN64) || defined(__WIN64__) || defined(WIN64)
-/* win64 */
-#define PLATFORM_WIN64
-#define PLATFORM_WINDOWS
+  /* win64 */
+  #define PLATFORM_WIN64
+  #define PLATFORM_WINDOWS
 
 #elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
-/* win32 */
-#define PLATFORM_WIN32
-#define PLATFORM_WINDOWS
+  /* win32 */
+  #define PLATFORM_WIN32
+  #define PLATFORM_WINDOWS
 
 #elif defined(__BEOS__)
-/* BeOS */
-#define PLATFORM_BEOS
+  /* BeOS */
+  #define PLATFORM_BEOS
 
 #elif defined (__APPLE__) && defined (__MACH__)
-/* MacOSX */
-#define PLATFORM_OSX
+  /* MacOSX */
+  #define PLATFORM_OSX
 
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
-/* MacOS classic */
-#define PLATFORM_MAC
+  /* MacOS classic */
+  #define PLATFORM_MAC
 
 #elif defined(__IBMCPP__) || defined(_AIX)
-/* IBM */
-#define PLATFORM_AIX
+  /* IBM */
+  #define PLATFORM_AIX
 
 #elif defined(__amigaos__)
-/* AmigaOS */
-#define PLATFORM_AMIGA
+  /* AmigaOS */
+  #define PLATFORM_AMIGA
 
 #elif defined(__QNXNTO__)
-/* QNX */
-#define PLATFORM_QNX
+  /* QNX */
+  #define PLATFORM_QNX
 
 #elif defined(__VXWORKS__)
-/* vxWorks */
-#define PLATFORM_VXWORKS
+  /* vxWorks */
+  #define PLATFORM_VXWORKS
 
 #elif defined(unix) || defined(__unix) || defined(_XOPEN_SOURCE) || defined(_POSIX_SOURCE)
-/* generic unix platform */
-#define PLATFORM_UNIX
+  /* generic UNIX platform */
+  #define PLATFORM_UNIX
 
 #else
-/* the platform cannot be determined at compile time */
-#error "Unknown platform - please report the platform details to http://fieldtrip.fcdonders.nl"
+  /* the platform cannot be determined at compile time */
+  #error "Unknown platform - please report this to http://bugzilla.fieldtriptoolbox.org"
+
 #endif
 
 #endif /* PLATFORM_H */
-

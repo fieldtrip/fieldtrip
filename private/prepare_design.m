@@ -110,7 +110,7 @@ elseif strcmp(designtype,'within')  % within-units conditions
   for wcondindx=1:nwcond
     selvec = (cfg.design(:,1)==wcondlabels(wcondindx));
     unitsthiscond = sort(cfg.design(selvec,2));
-    if length(unitthiscond)==length(unitlabels) & ~all(unitthiscond==unitlabels)
+    if length(unitthiscond)==length(unitlabels) && ~all(unitthiscond==unitlabels)
       error('The last two columns of initialdesign do not specify a within-units design.');
     end;
   end;

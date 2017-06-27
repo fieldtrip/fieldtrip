@@ -12,11 +12,11 @@ function ft_plot_matrix(varargin)
 % respectively.
 %
 % Optional arguments should come in key-value pairs and can include
-%   'clim'            = maximum and minimum color limit
-%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
+%   'clim'            = 1x2 vector with color limits (default is automatic)
 %   'highlight'       = a logical matrix of size C, where 0 means that the corresponding values in C are highlighted according to the highlightstyle
-%   'highlightstyle'  = can be 'saturation' or 'opacity'
-%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'highlightstyle'  = can be 'saturation', 'opacity' or 'outline' (default = 'opacity')
+%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
+%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'            = horizontal position of the center of the local axes
@@ -26,10 +26,18 @@ function ft_plot_matrix(varargin)
 %   'hlim'            = horizontal scaling limits within the local axes
 %   'vlim'            = vertical scaling limits within the local axes
 %
+% When using a local pseudo-axis, you can plot a label next to the data
+%   'label'           = string, label to be plotted at the upper left corner
+%   'fontcolor'       = string, color specification (default = 'k')
+%   'fontsize'        = number, sets the size of the text (default = 10)
+%   'fontunits'       =
+%   'fontname'        =
+%   'fontweight'      =
+%
 % Example
 %   ft_plot_matrix(randn(30,50), 'width', 1, 'height', 1, 'hpos', 0, 'vpos', 0)
 %
-% See also FT_PLOT_VECTOR
+% See also FT_PLOT_VECTOR, IMAGESC
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %
@@ -68,24 +76,30 @@ else
 end
 
 % get the optional input arguments
-hpos           = ft_getopt(varargin, 'hpos');
-vpos           = ft_getopt(varargin, 'vpos');
-width          = ft_getopt(varargin, 'width');
-height         = ft_getopt(varargin, 'height');
-hlim           = ft_getopt(varargin, 'hlim');
-vlim           = ft_getopt(varargin, 'vlim');
-clim           = ft_getopt(varargin, 'clim');
-highlight      = ft_getopt(varargin, 'highlight');
-highlightstyle = ft_getopt(varargin, 'highlightstyle', 'opacity');
-box            = ft_getopt(varargin, 'box',            false);
-tag            = ft_getopt(varargin, 'tag',            '');
+hpos            = ft_getopt(varargin, 'hpos');
+vpos            = ft_getopt(varargin, 'vpos');
+width           = ft_getopt(varargin, 'width');
+height          = ft_getopt(varargin, 'height');
+hlim            = ft_getopt(varargin, 'hlim');
+vlim            = ft_getopt(varargin, 'vlim');
+clim            = ft_getopt(varargin, 'clim');
+highlight       = ft_getopt(varargin, 'highlight');
+highlightstyle  = ft_getopt(varargin, 'highlightstyle', 'opacity');
+label           = ft_getopt(varargin, 'label');
+box             = ft_getopt(varargin, 'box',            false);
+tag             = ft_getopt(varargin, 'tag',            '');
+% these have to do with the font of the label
+fontcolor       = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
+fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
+fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
+fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
+fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
 if ~isempty(highlight) && ~isequal(size(highlight), size(cdat))
   error('the dimensions of the highlight should be identical to the dimensions of the data');
 end
 
 % axis   = ft_getopt(varargin, 'axis', false);
-% label  = ft_getopt(varargin, 'label'); % FIXME
 % style  = ft_getopt(varargin, 'style'); % FIXME
 
 % convert the yes/no strings into boolean values
@@ -180,15 +194,15 @@ hlim = double(hlim);
 vlim = double(vlim);
 clim = double(clim);
 
-if isempty(hpos);
+if isempty(hpos)
   hpos = (hlim(1)+hlim(2))/2;
 end
 
-if isempty(vpos);
+if isempty(vpos)
   vpos = (vlim(1)+vlim(2))/2;
 end
 
-if isempty(width),
+if isempty(width)
   width = hlim(2)-hlim(1);
   if length(hdat)>1
     width = width * length(hdat)/(length(hdat)-1);
@@ -200,7 +214,7 @@ else
   autowidth = false;
 end
 
-if isempty(height),
+if isempty(height)
   height = vlim(2)-vlim(1);
   if length(vdat)>1
     height = height * length(vdat)/(length(vdat)-1);
@@ -288,7 +302,7 @@ if ~isempty(highlight)
       % do 4
       rgbcdat = hsv2rgb(hsvcdat);
       % do 5
-      h = imagesc(hdat, vdat, rgbcdat,clim);
+      h = uimagesc(hdat, vdat, rgbcdat,clim);
       set(h,'tag',tag);
       
     case 'outline'
@@ -313,6 +327,14 @@ if ~isempty(highlight)
     otherwise
       error('unsupported highlightstyle')
   end % switch highlightstyle
+end
+
+if ~isempty(label)
+  boxposition(1) = hpos - width/2;
+  boxposition(2) = hpos + width/2;
+  boxposition(3) = vpos - height/2;
+  boxposition(4) = vpos + height/2;
+  text(boxposition(1), boxposition(4), label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
 end
 
 if box

@@ -16,13 +16,14 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % and can be used in combination with most other FieldTrip functions
 % such as FT_FREQNALYSIS or FT_TOPOPLOTER.
 %
-% The configuration can contain
+% The configuration should contain
 %   cfg.method       = 'finite' for finite-difference method or
 %                      'spline' for spherical spline method
 %                      'hjorth' for Hjorth approximation method
 %   cfg.elecfile     = string, file containing the electrode definition
 %   cfg.elec         = structure with electrode definition
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.feedback     = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
 % The finite method require the following
 %   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
@@ -32,10 +33,10 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   cfg.lambda       = regularization parameter (default = 1e-05)
 %   cfg.order        = order of the splines (default = 4)
 %   cfg.degree       = degree of legendre polynomials (default for
-%                       <=32 electrodes = 9,
-%                       <=64 electrodes = 14,
+%                       <=32 electrodes  = 9,
+%                       <=64 electrodes  = 14,
 %                       <=128 electrodes = 20,
-%                       else            = 32
+%                       else             = 32
 %
 % The hjorth method requires the following
 %   cfg.neighbours   = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
@@ -118,6 +119,7 @@ end
 cfg.method       = ft_getopt(cfg, 'method',       'spline');
 cfg.conductivity = ft_getopt(cfg, 'conductivity', 0.33); % in S/m
 cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 
 switch cfg.method
   case 'hjorth'
@@ -150,7 +152,7 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'iseeg','yes','ismeg',[]);
 
 % select trials of interest
-tmpcfg = keepfields(cfg, 'trials');
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -183,8 +185,7 @@ end
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
 
-  ft_progress('init', 'text');
-
+  ft_progress('init', cfg.feedback, 'computing SCD for trial...')
   for trlop=1:Ntrials
     % do not compute interpolation, but only one value at [0 0 1]
     % this also gives L1, the laplacian of the original data in which we
@@ -203,7 +204,7 @@ elseif strcmp(cfg.method, 'finite')
   tri = delaunay(prj(:,1), prj(:,2));
   % the new electrode montage only needs to be computed once for all trials
   montage.tra = lapcal(elec.chanpos, tri);
-  montage.labelorg = data.label;
+  montage.labelold = data.label;
   montage.labelnew = data.label;
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
@@ -212,23 +213,23 @@ elseif strcmp(cfg.method, 'finite')
 elseif strcmp(cfg.method, 'hjorth')
   % convert the neighbourhood structure into a montage
   labelnew = {};
-  labelorg = {};
+  labelold = {};
   for i=1:length(cfg.neighbours)
-    labelnew  = cat(2, labelnew, cfg.neighbours(i).label);
-    labelorg = cat(2, labelorg, cfg.neighbours(i).neighblabel(:)');
+    labelnew = cat(2, labelnew, cfg.neighbours(i).label);
+    labelold = cat(2, labelold, cfg.neighbours(i).neighblabel(:)');
   end
-  labelorg = cat(2, labelnew, labelorg);
-  labelorg = unique(labelorg);
-  tra = zeros(length(labelnew), length(labelorg));
+  labelold = cat(2, labelnew, labelold);
+  labelold = unique(labelold);
+  tra = zeros(length(labelnew), length(labelold));
   for i=1:length(cfg.neighbours)
-    thischan   = match_str(labelorg, cfg.neighbours(i).label);
-    thisneighb = match_str(labelorg, cfg.neighbours(i).neighblabel);
+    thischan   = match_str(labelold, cfg.neighbours(i).label);
+    thisneighb = match_str(labelold, cfg.neighbours(i).neighblabel);
     tra(i, thischan) = 1;
     tra(i, thisneighb) = -1/length(thisneighb);
   end
   % combine it in a montage
   montage.tra = tra;
-  montage.labelorg = labelorg;
+  montage.labelold = labelold;
   montage.labelnew = labelnew;
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);

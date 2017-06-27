@@ -21,7 +21,7 @@ function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbind
 % Written by M. Dhamala & G. Rangarajan, UF, Aug 3-4, 2006.
 % Email addresses: mdhamala@bme.ufl.edu, rangaraj@math.iisc.ernet.in
 
-% Copyright (C) 2009-2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -44,7 +44,7 @@ function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbind
 if nargin<8, checkflag = true;   end
 if nargin<7, init      = 'chol'; end
 if nargin<6, fb        = 'none'; end
-if nargin<5, 
+if nargin<5
   error('FieldTrip:connectivity:sfactorization_wilson2x2', 'when requesting multiple pairwise spectral decomposition, ''cmbindx'' needs to be specified');
 end
 if nargin<4, tol        = 1e-8;   end
@@ -113,12 +113,12 @@ Sarr = zeros(2,2,N2,m) + 1i.*zeros(2,2,N2,m);
 for c = 1:m
   Sarr(:,:,1:N,c) = S(cmbindx(c,:),cmbindx(c,:),:);
 end
-if hasnyq,
+if hasnyq
   N1 = N;
 else
   N1 = N + 1; % the highest frequency needs to be represented twice, for symmetry purposes
 end
-Sarr(:,:,N1:N2,:) = flipdim(Sarr(:,:,2:N,:),3);
+Sarr(:,:,N1:N2,:) = flip(Sarr(:,:,2:N,:),3);
 Sarr(2,1,N1:N2,:) = conj(Sarr(2,1,N1:N2,:));
 Sarr(1,2,N1:N2,:) = conj(Sarr(1,2,N1:N2,:));
 Sarr              = permute(Sarr, [1 2 4 3]);
@@ -171,10 +171,10 @@ for iter = 1:Niterations
   psi_old = psi;
   psi     = mtimes2x2(psi, gp);
   
-  if checkflag,
+  if checkflag
     psierr  = abs(psi-psi_old)./abs(psi);
     psierrf = mean(psierr(:));
-    if(psierrf<tol), 
+    if(psierrf<tol) 
       fprintf('reaching convergence at iteration %d\n',iter);
       break; 
     end % checking convergence
@@ -197,14 +197,16 @@ for k = 1:m
   %this also makes it more equivalent to the noisecov estimated by biosig's mvar-function
 end
 
-H = complex(zeros(2,2,m,N));
-S = complex(zeros(2,2,m,N));
-for k = 1:N
-  for kk = 1:m
-    H(:,:,kk,k) = psi(:,:,kk,k)*A0inv(:,:,kk);  % Transfer function
-    S(:,:,kk,k) = psi(:,:,kk,k)*psi(:,:,kk,k)'; % Cross-spectral density
-  end
-end
+% H = complex(zeros(2,2,m,N));
+% S = complex(zeros(2,2,m,N));
+% for k = 1:N
+%   for kk = 1:m
+%     H(:,:,kk,k) = psi(:,:,kk,k)*A0inv(:,:,kk);  % Transfer function
+%     S(:,:,kk,k) = psi(:,:,kk,k)*psi(:,:,kk,k)'; % Cross-spectral density
+%   end
+% end
+H = mtimes2x2(psi,A0inv(:,:,:,ones(1,size(psi,4))));
+S = mtimes2x2(psi,ctranspose2x2(psi));
 
 siz = [size(H) 1 1];
 H   = reshape(H, [4*siz(3) siz(4:end)]);
@@ -215,12 +217,12 @@ Z   = reshape(Z, [4*siz(3) siz(4:end)]);
 siz = [size(psi) 1 1];
 psi = reshape(psi, [4*siz(3) siz(4:end)]);
 
-if numel(selfreq)~=numel(freq)
+%if numel(selfreq)~=numel(freq)
   % return only the frequency bins that were in the input
   H   =   H(:,selfreq,:,:);
   S   =   S(:,selfreq,:,:);
   psi = psi(:,selfreq,:,:);
-end
+%end
   
 %---------------------------------------------------------------------
 function gp = PlusOperator2x2(g,ncmb,nfreq)

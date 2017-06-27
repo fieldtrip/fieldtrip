@@ -227,10 +227,8 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'convol', 'mtmconvol'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'latency'}); % see bug 1376 and 1076
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'wltconvol', 'wavelet'});
 
-% select trials of interest
-tmpcfg = [];
-tmpcfg.trials = cfg.trials;
-tmpcfg.channel = cfg.channel;
+% select channels and trials of interest, by default this will select all channels and trials
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -346,7 +344,7 @@ cfg.polyremoval      = ft_getopt(cfg, 'polyremoval', 0);
 if strcmp(cfg.output, 'fourier')
   cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'yes');
   cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
-  if strcmp(cfg.keeptrials, 'no') || strcmp(cfg.keeptapers, 'no'),
+  if strcmp(cfg.keeptrials, 'no') || strcmp(cfg.keeptapers, 'no')
     error('cfg.output = ''fourier'' requires cfg.keeptrials = ''yes'' and cfg.keeptapers = ''yes''');
   end
 else
@@ -365,7 +363,7 @@ elseif strcmp(cfg.keeptrials,'yes') &&  strcmp(cfg.keeptapers,'yes')
   keeprpt = 4;
 end
 if strcmp(cfg.keeptrials,'yes') && strcmp(cfg.keeptapers,'yes')
-  if ~strcmp(cfg.output, 'fourier'),
+  if ~strcmp(cfg.output, 'fourier')
     error('Keeping trials AND tapers is only possible with fourier as the output.');
   end
 end
@@ -683,7 +681,7 @@ for itrial = 1:ntrials
       switch keeprpt
 
         case 1 % cfg.keeptrials,'no' &&  cfg.keeptapers,'no'
-          if exist('trlcnt', 'var'),
+          if exist('trlcnt', 'var')
             trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
           end
 
@@ -836,9 +834,9 @@ if csdflg
   freq.labelcmb  = cfg.channelcmb;
   freq.crsspctrm = crsspctrm;
 end
-if strcmp(cfg.calcdof, 'yes');
+if strcmp(cfg.calcdof, 'yes')
   freq.dof = 2 .* dof;
-end;
+end
 if strcmp(cfg.method, 'mtmfft') && (keeprpt == 2 || keeprpt == 4)
   freq.cumsumcnt = trllength';
 end
@@ -854,7 +852,7 @@ else
 end
 
 % some fields from the input should always be copied over in the output
-freq = copyfields(data, freq, {'grad', 'elec', 'topo', 'topolabel', 'unmixing'});
+freq = copyfields(data, freq, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
   % copy the trialinfo into the output, but not the sampleinfo

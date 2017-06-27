@@ -1,9 +1,6 @@
-#include "compiler.h"
 #include "platform.h"
+#include "compiler.h"
 #include "platform_includes.h"
-
-#ifdef WIN32
-#ifndef COMPILER_MINGW
 
 /*
  * timeval.h    1.0 01/12/19
@@ -13,6 +10,10 @@
  * By Wu Yongwei
  *
  */
+
+
+#ifdef PLATFORM_WINDOWS
+#ifndef COMPILER_MINGW
 
 #define EPOCHFILETIME ((INT64_T) 116444736000000000LL)
 
@@ -26,7 +27,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
     LARGE_INTEGER   li;
     INT64_T         t;
     static int      tzflag;
-    
+
     if (tv) {
         GetSystemTimeAsFileTime(&ft);
         li.LowPart  = ft.dwLowDateTime;
@@ -37,9 +38,9 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
         tv->tv_sec  = (long)(t / 1000000);
         tv->tv_usec = (long)(t % 1000000);
     }
-    
+
 	#ifndef COMPILER_LCC
-	/* LCC that comes with Matlab has problems with _timezone and _daylight, 
+	/* LCC that comes with MATLAB has problems with _timezone and _daylight,
 		and we don't need it anyway */
     if (tz) {
         if (!tzflag) {

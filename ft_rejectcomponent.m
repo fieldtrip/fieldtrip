@@ -144,99 +144,98 @@ end
 if hasdata
   mixing   = comp.topo(selcomp,:);
   unmixing = comp.unmixing(:,selcomp);
-
+  
   % I am not sure about this, but it gives comparable results to the ~hasdata case
   % when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
-
+  
   montage     = [];
   montage.tra = eye(length(selcomp)) - mixing(:, reject)*unmixing(reject, :);
   % we are going from data to components, and back again
-  montage.labelorg = comp.topolabel(selcomp);
+  montage.labelold = comp.topolabel(selcomp);
   montage.labelnew = comp.topolabel(selcomp);
-
+  
   keepunused = 'yes'; % keep the original data which are not present in the mixing provided
-
+  bname = 'reject';
+  
 else
   mixing = comp.topo(selcomp, :);
   mixing(:, reject) = 0;
-
+  
   montage     = [];
   montage.tra = mixing;
   % we are going from components to data
-  montage.labelorg = comp.label;
+  montage.labelold = comp.label;
   montage.labelnew = comp.topolabel(selcomp);
-
+  
   keepunused = 'no'; % don't need to keep the original rejected components
+  bname = 'invcomp';
 
-  % create data structure
-  data         = [];
-  data.trial   = comp.trial;
-  data.time    = comp.time;
-  data.label   = comp.label;
-  data.fsample = comp.fsample;
-  if isfield(comp, 'grad'),       data.grad       = comp.grad;       end
-  if isfield(comp, 'elec'),       data.elec       = comp.elec;       end
-  if isfield(comp, 'trialinfo'),  data.trialinfo  = comp.trialinfo;  end
-  if isfield(comp, 'sampleinfo'), data.sampleinfo = comp.sampleinfo; end
+  % create the initial data structure, remove all component details
+  data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'opto', 'trialinfo', 'sampleinfo'});
 end % if hasdata
 
-% apply the montage to the data and to the sensor description
+% apply the linear projection to the data
 data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback);
 
-% apply the montage also to the elec/grad, if present
 if isfield(data, 'grad')
   sensfield = 'grad';
-  if strcmp(cfg.updatesens, 'yes')
-    fprintf('applying the backprojection matrix to the gradiometer description\n');
-  else
-    fprintf('not applying the backprojection matrix to the gradiometer description\n');
-  end
-elseif isfield(data, 'elec') && isfield(data.elec, 'tra')
+elseif isfield(data, 'elec')
   sensfield = 'elec';
-  if strcmp(cfg.updatesens, 'yes')
-    fprintf('applying the backprojection matrix to the electrode description\n');
-  else
-    fprintf('not applying the backprojection matrix to the electrode description\n');
-  end
+elseif isfield(data, 'opto')
+  sensfield = 'opto';
 else
-  fprintf('not applying the backprojection matrix to the sensor description\n');
   sensfield = [];
 end
 
-if ~isempty(sensfield) && strcmp(cfg.updatesens, 'yes')
-  % keepunused = 'yes' is required to get back e.g. reference or otherwise
-  % unused sensors in the sensor description. the unused components need to
-  % be removed in a second step
-  sens = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'invcomp', 'feedback', cfg.feedback);
+% apply the linear projection also to the sensor description
+if ~isempty(sensfield)
+  if  strcmp(cfg.updatesens, 'yes')
+    fprintf('also applying the backprojection matrix to the %s structure\n', sensfield);
 
-  % there could have been sequential subspace projections, so the
-  % invcomp-field may have been renamed into invcompX. If this it the case,
-  % take the one with the highest suffix
-  invcompfield = 'invcomp';
-  if ~isfield(sens.balance, 'invcomp')
-    for k = 10:-1:1
-      if isfield(sens.balance, ['invcomp',num2str(k)])
-        invcompfield = [invcompfield,num2str(k)];
-        break;
+    % the balance field is needed to keep the sequence of linear projections
+    if ~isfield(data.(sensfield), 'balance')
+      data.(sensfield).balance.current = 'none';
+    end
+    
+    % keepunused = 'yes' is required to get back e.g. reference or otherwise
+    % unused sensors in the sensor description. the unused components need to
+    % be removed in a second step
+    sens = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', bname, 'feedback', cfg.feedback);
+    
+    % remove the unused channels from the grad/elec/opto
+    [junk, remove]    = match_str(comp.label, sens.label);
+    sens.tra(remove,:) = [];
+    sens.label(remove) = [];
+    sens.chanpos(remove,:) = [];
+    if isfield(sens, 'chanori')
+      sens.chanori(remove,:) = [];
+    end
+    
+    % there could have been sequential subspace projections, so the
+    % invcomp-field may have been renamed into invcompX. If this it the case,
+    % take the one with the highest suffix
+    invcompfield = bname;
+    if  ~isfield(sens.balance, invcompfield)
+      for k = 10:-1:1
+        if isfield(sens.balance, [bname num2str(k)])
+          invcompfield = [invcompfield num2str(k)];
+          break;
+        end
       end
     end
+    
+    % remove the unused components from the balancing
+    [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
+    sens.balance.(invcompfield).tra(remove, :)   = [];
+    sens.balance.(invcompfield).labelnew(remove) = [];
+    data.(sensfield)  = sens;
+    
+  else
+    fprintf('not applying the backprojection matrix to the %s structure\n', sensfield);
+    % simply copy it over
+    comp.(sensfield) = data.(sensfield);
   end
-
-  % remove the unused channels from the grad/elec
-  [junk, remove]    = match_str(comp.label, sens.label);
-  sens.tra(remove,:) = [];
-  sens.label(remove) = [];
-  sens.chanpos(remove,:) = [];
-  if isfield(sens, 'chanori')
-    sens.chanori(remove,:) = [];
-  end
-
-  % remove the unused components from the balancing and from the tra
-  [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
-  sens.balance.(invcompfield).tra(remove, :)   = [];
-  sens.balance.(invcompfield).labelnew(remove) = [];
-  data.(sensfield)  = sens;
-end
+end % if sensfield
 
 if istlck
   % convert the raw structure back into a timelock structure

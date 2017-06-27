@@ -36,6 +36,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Analyse
 %  - Analyze/SPM
 %  - BESA
+%  - Bioimage Suite (*.mgrid)
 %  - BrainSuite
 %  - BrainVisa
 %  - BrainVision
@@ -397,13 +398,6 @@ elseif filetype_check_extension(filename, '.el.ascii') && filetype_check_ascii(f
   type = '4d_el_ascii';
   manufacturer = '4D/BTi';
   content = 'electrode positions';
-elseif length(f)<=4 && filetype_check_dir(p, 'config')%&& ~isempty(p) && exist(fullfile(p,'config'), 'file') %&& exist(fullfile(p,'hs_file'), 'file')
-  % this could be a 4D file with non-standard/processed name
-  % it will be detected as a 4D file when there is a config file in the
-  % same directory as the specified file
-  type = '4d';
-  manufacturer = '4D/BTi';
-  content = '';
   
   % known EEProbe file types
 elseif filetype_check_extension(filename, '.cnt') && (filetype_check_header(filename, 'RIFF') || filetype_check_header(filename, 'RF64'))
@@ -1027,6 +1021,7 @@ elseif filetype_check_extension(filename, '.annot')
   type = 'freesurfer_annot';
   manufacturer = 'FreeSurfer';
   content = 'parcellation annotation';
+  
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nrs_')) == 1
   % This may be improved by looking into the file, rather than assuming the
   % filename has "_nrs_" somewhere. Also, distinction by the different file
@@ -1034,12 +1029,16 @@ elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nr
   type = 'bucn_nirs';
   manufacturer = 'BUCN';
   content = 'ascii formatted nirs data';
-  
-  % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
 elseif filetype_check_extension(filename, '.nirs') && filetype_check_header(filename, 'MATLAB')
+  % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
   type = 'homer_nirs';
   manufacturer = 'Homer';
   content = '(f)NIRS data';
+elseif filetype_check_extension(filename, '.sd') && filetype_check_header(filename, 'MATLAB')
+  % Homer is MATLAB software for NIRS processing, see http://www.nmr.mgh.harvard.edu/DOT/resources/homer2/home.htm
+  type = 'homer_sd';
+  manufacturer = 'Homer';
+  content = 'source detector information';
   
   % known Artinis file format
 elseif filetype_check_extension(filename, '.oxy3')  
@@ -1110,6 +1109,10 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   content = 'annotation/metadata';
   
   % some other known file types
+elseif filetype_check_extension(filename, '.hdf5')
+  type = 'gtec_hdf5';
+  manufacturer = 'Guger Technologies, http://www.gtec.at';
+  content = 'EEG';
 elseif length(filename)>4 && exist([filename(1:(end-4)) '.mat'], 'file') && exist([filename(1:(end-4)) '.bin'], 'file')
   % this is a self-defined FCDC data format, consisting of two files
   % there is a MATLAB V6 file with the header and a binary file with the data (multiplexed, ieee-le, double)
@@ -1283,7 +1286,10 @@ elseif filetype_check_extension(filename, '.m00')
   type = 'nihonkohden_m00';
   manufacturer = 'Nihon Kohden';
   content = 'continuous EEG';
-  
+elseif filetype_check_extension(filename, '.mgrid')
+  type = 'bioimage_mgrid';
+  manufacturer = 'Bioimage Suite';
+  content = 'electrode positions';
 end
 
 

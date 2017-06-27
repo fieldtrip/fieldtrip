@@ -1,4 +1,4 @@
-function [sdf, sdfdata] = ft_spikedensity(cfg,data)
+function [sdf, sdfdata] = ft_spikedensity(cfg, data)
 
 % FT_SPIKEDENSITY computes the spike density function of the spike trains by
 % convolving the data with a window.
@@ -55,8 +55,8 @@ function [sdf, sdfdata] = ft_spikedensity(cfg,data)
 %
 % The SDF output is a data structure similar to the TIMELOCK structure from FT_TIMELOCKANALYSIS.
 % For subsequent processing you can use for example
-%   FT_TIMELOCKSTATISTICS:               Compute statistics on SDF
-%   FT_SPIKE_PLOT_RASTER:                Plot together with the raster plots
+%   FT_TIMELOCKSTATISTICS                Compute statistics on SDF
+%   FT_SPIKE_PLOT_RASTER                 Plot together with the raster plots
 %   FT_SINGLEPLOTER and FT_MULTIPLOTER   Plot spike-density alone
 %
 % The SDFDATA output is a data structure similar to DATA type structure from FT_PREPROCESSING.
@@ -92,7 +92,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance data
 ft_preamble trackconfig
 
 % get the default options
@@ -333,14 +333,17 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
 ft_postamble previous data
-ft_postamble history sdf
+ft_postamble provenance sfd
+ft_postamble history    sdf
 if nargout==2
   ft_postamble history sdfdata
 end
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [spikelabel, eeglabel] = detectspikechan(data)
 
 % autodetect the spike channels

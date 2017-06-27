@@ -317,7 +317,7 @@ elseif resamplepermutation
       % a list of unique random numbers, and keep extending that list untill I
       % have enough unique numbers.
       if cfg.numpermutation>2^Nreplication
-        error(sprintf('it is not possible to make more random permutations than %d', 2^Nreplication));
+        error('it is not possible to make more random permutations than %d', 2^Nreplication);
       end
       number = [];
       while length(number)<cfg.numpermutation

@@ -1,4 +1,4 @@
-function varargout = funname(varargin)
+function varargout = fetch_data(varargin)
 
 % This function is a backward compatibility wrapper. It allows existing
 % MATLAB scripts that do not use the new FieldTrip ft_xxx function naming

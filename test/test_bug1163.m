@@ -16,6 +16,6 @@ data.dimord = 'subj_chan_time';
 data.cfg = {};
 
 % Example given in bug 1163
-cfg=[];
-cfg.baseline=[-0.1 0];
-data=ft_timelockbaseline(cfg, data) % produces error
+cfg = [];
+cfg.baseline = [-0.1 0];
+data = ft_timelockbaseline(cfg, data) % produces error;

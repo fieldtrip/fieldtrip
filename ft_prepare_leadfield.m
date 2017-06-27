@@ -153,7 +153,7 @@ else
 end
 
 % construct the dipole grid according to the configuration
-tmpcfg           = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift'});
+tmpcfg           = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
 tmpcfg.headmodel = headmodel;
 tmpcfg.grad      = sens; % either electrodes or gradiometers
 grid = ft_prepare_sourcemodel(tmpcfg);

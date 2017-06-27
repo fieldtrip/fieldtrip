@@ -57,7 +57,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance data
 ft_preamble trackconfig
 
 % check input data structure
@@ -170,7 +170,7 @@ end % for each trial
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous data
-ft_postamble history data
+ft_postamble previous   data
+ft_postamble provenance data
+ft_postamble history    data
 
