@@ -753,8 +753,9 @@ else
   error('unknown output %s requested\n', cfg.output{:});
 end
 
-% remove unnecessary fields
-segmented = removefields(segmented, remove);
+% remove unnecessary fields (use previously collected 'remove' and further
+% make sure only desired tissue types are present)
+segmented = removefields(segmented, unique([remove setdiff({'white' 'gray' 'csf' 'brain' 'skull' 'scalp' 'skullstrip' 'softtissue' 'bone' 'air'}, outp)]));
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
