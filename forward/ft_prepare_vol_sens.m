@@ -507,6 +507,20 @@ elseif iseeg
       
       headmodel.transfer = sb_transfer(headmodel,sens);
       
+    case 'duneuro'
+      %set electrodes
+      cfg = [];
+      cfg.type = headmodel.electrodes;
+      cfg.codims = headmodel.subentities;
+      headmodel.driver.set_electrodes(sens.elecpos', cfg);
+      
+      %compute transfer matrix
+      if(~isfield(headmodel,'transfer'))
+        cfg = [];
+        cfg.solver.reduction = headmodel.reduction;
+        headmodel.transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
+      end
+      
     case 'interpolate'
       % this is to allow moving leadfield files
       if ~exist(headmodel.filename{1}, 'file')

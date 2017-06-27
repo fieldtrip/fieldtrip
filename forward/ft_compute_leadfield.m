@@ -56,12 +56,13 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 %   multiple concentric spheres (up to 4 spheres)
 %   leadfield interpolation using a precomputed grid
 %   boundary element method (BEM)
+%   finite element method (FEM)
 %
 % See also FT_PREPARE_VOL_SENS, FT_HEADMODEL_ASA, FT_HEADMODEL_BEMCP,
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_DIPOLI, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_LOCALSPHERES, FT_HEADMODEL_OPENMEEG,
 % FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE,
-% FT_HEADMODEL_HALFSPACE
+% FT_HEADMODEL_HALFSPACE, FT_HEADMOEL_DUNEURO
 
 % Copyright (C) 2004-2016, Robert Oostenveld
 %
@@ -491,6 +492,10 @@ elseif iseeg
       ft_hastoolbox('simbio', 1);
       % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
       lf = leadfield_simbio(dippos, headmodel);
+      
+    case 'duneuro'
+      % note that the electrode information is contained in the headmodel
+      lf = leadfield_duneuro(dippos, headmodel);
       
     case 'fns'
       % note that the electrode information is contained in the headmodel

@@ -119,7 +119,7 @@ switch ft_voltype(headmodel)
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = bounding_mesh(dippos, pos, tri);
     
-  case {'simbio'}
+  case {'simbio', 'duneuro'}
     % this is a model with hexaheders or tetraheders
     if isfield(headmodel, 'tet')
       % the subsequent code works both for tetraheders or hexaheders, but assumes the volume elements to be called "hex"
@@ -134,7 +134,7 @@ switch ft_voltype(headmodel)
     
     % FIXME we have to rethink which tissue types should be flagged as inside
     tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
-
+    
     % determine all hexaheders that are labeled as brain
     insidehex = false(size(headmodel.tissue));
     for i=1:numel(tissue)
@@ -145,14 +145,14 @@ switch ft_voltype(headmodel)
     % prune the mesh, i.e. only retain hexaheders labeled as brain
     fprintf('pruning headmodel volume elements from %d to %d (%d%%)\n', numhex, sum(insidehex), round(100*sum(insidehex)/numhex));
     headmodel.hex    = headmodel.hex(insidehex,:);
-    headmodel.tissue = headmodel.tissue(insidehex); 
+    headmodel.tissue = headmodel.tissue(insidehex);
     numhex = sum(insidehex);
     clear insidehex
     
     % determine all vertices that are part of a hexaheder
     insidepos = false(numpos,1);
     insidepos(headmodel.hex) = true;
-
+    
     % prune the mesh, i.e. only retain vertices that are part of a  hexaheder
     fprintf('pruning headmodel vertices from %d to %d (%d%%)\n', numpos, sum(insidepos), round(100*sum(insidepos)/numpos));
     headmodel.pos = headmodel.pos(insidepos,:);
@@ -161,9 +161,9 @@ switch ft_voltype(headmodel)
     renumber(insidepos) = 1:numpos;          % determine the mapping from original to pruned vertex indices
     headmodel.hex = renumber(headmodel.hex); % renumber the vertex indices
     clear insidepos renumber
-
+    
     % construct a sparse matrix with the mapping between all hexaheders and vertices
-    i = repmat(transpose(1:numhex), 1, 8);
+    i = repmat(transpose(1:numhex), 1, size(headmodel.hex,2));
     j = headmodel.hex;
     s = ones(size(i));
     hex2pos = sparse(i(:),j(:),s(:),numhex,numpos);
@@ -186,7 +186,7 @@ switch ft_voltype(headmodel)
     
     % The following code is only guaranteed to work with convex elements. Regular
     % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
-    % SIMBIO have to be convex as well.
+    % SIMBIO/Duneuro have to be convex as well.
     
     inside = false(1, numdip);
     % for each dipole determine whether it is inside one of the neighbouring hexaheders
