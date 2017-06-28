@@ -1216,57 +1216,26 @@ switch cfg.method
     %------do the plotting
     if ~hasfun
       ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
-      axis   off;
-      axis vis3d;
-      axis equal;
-    
+      
     elseif hasfun
       if ~hasmsk || all(maskval(:)==1)
-        ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val);
-        axis   off;
-        axis vis3d;
-        axis equal;
-          
-        try
-          caxis(gca,[fcolmin fcolmax]);
-        end
-        colormap(cfg.funcolormap);
-      
+        ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'clim', [fcolmin fcolmax], 'colormap', cfg.funcolormap);
+        
       elseif hasmsk
         switch cfg.maskstyle
           case 'opacity'
-            % this needs to be handled here, rather than in
-            % ft_plot_mesh, because the latter function needs to be
-            % called twice: once for drawing the background, with
-            % possibly a user-specified background color, and the
-            % second time for the functional data
-            ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
-            axis   off;
-            axis vis3d;
-            axis equal;  
-         
-            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval);
-            try
-              alim(gca, [opacmin opacmax]);
-            end
-            alphamap(cfg.opacitymap);
-            try
-              caxis(gca,[fcolmin fcolmax]);
-            end
-            colormap(cfg.funcolormap);
-       
+            % this needs to be handled here, rather than in ft_plot_mesh,
+            % because the latter function needs to be called twice: once
+            % for drawing the background, with possibly a user-specified
+            % background color, and the second time for the functional data
+            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
+            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'opacity');
+            
           case 'saturation'
             % convert the specification of the background color + functional
             % color + opacity into a single rgb value to speed up the rendering
-          
-            bgcolor = repmat([199 194 169]/255, [numel(val) 1]);
-            rgb     = bg_rgba2rgb(val, bgcolor, cfg.funcolormap, [fcolmin fcolmax], maskval, cfg.opacitymap, [opacmin opacmax]);
-        
-            ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'vertexcolor', rgb);
-          
-            axis   off;
-            axis vis3d;
-            axis equal;
+            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'saturation');
+            
         end       
       end
     end
