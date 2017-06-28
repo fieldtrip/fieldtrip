@@ -1,4 +1,4 @@
-function [mri] = align_neurtomag2acpc(mri, opt)
+function [mri] = align_neuromag2acpc(mri, opt)
 
 % ALIGN_NEUROMAG2ACPC performs an approximate alignment of the anatomical volume
 % from NEUROMAG towards ACPC coordinates. Only the homogenous transformation matrix
