@@ -140,6 +140,33 @@ static char usage[] =
       ;
 #endif
 
+int interpret24bitAsInt32(char *byteArray) {
+    int newInt = (
+     ((0xFF & byteArray[0]) << 16) |
+     ((0xFF & byteArray[1]) << 8) |
+     (0xFF & byteArray[2])
+    );
+    if ((newInt & 0x00800000) > 0) {
+      newInt |= 0xFF000000;
+    } else {
+      newInt &= 0x00FFFFFF;
+    }
+    return newInt;
+}
+
+int interpret16bitAsInt32(char *byteArray) {
+    int newInt = (
+      ((0xFF & byteArray[0]) << 8) |
+       (0xFF & byteArray[1])
+      );
+    if ((newInt & 0x00008000) > 0) {
+          newInt |= 0xFFFF0000;
+    } else {
+          newInt &= 0x0000FFFF;
+    }
+    return newInt;
+  }
+
 int serialWriteSlow(SerialPort *SP, int size, void *buffer) {
   int i, retval = 0;
   for (i=0; i<size; i++) {
@@ -921,69 +948,69 @@ int main(int argc, char *argv[]) {
         /* assign the lower 8 channels */
         if (ISTRUE (config.enable_chan1))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[2] << 24 | buf[3] << 16 | buf[4] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+2);
         if (ISTRUE (config.enable_chan2))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[5] << 24 | buf[6] << 16 | buf[7] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+5);
         if (ISTRUE (config.enable_chan3))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[8] << 24 | buf[9] << 16 | buf[10] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+8);
         if (ISTRUE (config.enable_chan4))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[11] << 24 | buf[12] << 16 | buf[13] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+11);
         if (ISTRUE (config.enable_chan5))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[14] << 24 | buf[15] << 16 | buf[16] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+14);
         if (ISTRUE (config.enable_chan6))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[17] << 24 | buf[18] << 16 | buf[19] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+17);
         if (ISTRUE (config.enable_chan7))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[20] << 24 | buf[21] << 16 | buf[22] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+20);
         if (ISTRUE (config.enable_chan8))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[23] << 24 | buf[24] << 16 | buf[25] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+23);
       } /* if lower or no daisy board */
 
       if (upper) {
         /* assign the upper 8 channels of the daisy board */
         if (ISTRUE (config.enable_chan9))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[2] << 24 | buf[3] << 16 | buf[4] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+2);
         if (ISTRUE (config.enable_chan10))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[5] << 24 | buf[6] << 16 | buf[7] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+5);
         if (ISTRUE (config.enable_chan11))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[8] << 24 | buf[9] << 16 | buf[10] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+8);
         if (ISTRUE (config.enable_chan12))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[11] << 24 | buf[12] << 16 | buf[13] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+11);
         if (ISTRUE (config.enable_chan13))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[14] << 24 | buf[15] << 16 | buf[16] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+14);
         if (ISTRUE (config.enable_chan14))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[17] << 24 | buf[18] << 16 | buf[19] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+17);
         if (ISTRUE (config.enable_chan15))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[20] << 24 | buf[21] << 16 | buf[22] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+20);
         if (ISTRUE (config.enable_chan16))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB1 * (buf[23] << 24 | buf[24] << 16 | buf[25] << 8) / 255;
+            OPENBCI_CALIB1 * interpret24bitAsInt32(buf+23);
       } /* if upper */
 
       if (lower || (!lower && !upper)) {
         /* acceleration channels */
         if (ISTRUE (config.acceleration))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB2 * (buf[26] << 24 | buf[27] << 16) / 32767;
+            OPENBCI_CALIB2 * interpret16bitAsInt32(buf+26);
         if (ISTRUE (config.acceleration))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB2 * (buf[28] << 24 | buf[29] << 16) / 32767;
+            OPENBCI_CALIB2 * interpret16bitAsInt32(buf+28);
         if (ISTRUE (config.acceleration))
           ((FLOAT32_T *) (data->buf))[nchans * sample + (chan++)] =
-            OPENBCI_CALIB2 * (buf[28] << 24 | buf[31] << 16) / 32767;
+            OPENBCI_CALIB2 * interpret16bitAsInt32(buf+30);
 
         /* virtual channel with sample numbers */
         if (ISTRUE (config.sample)) {
