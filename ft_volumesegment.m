@@ -550,7 +550,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the requested output fields
 
-remove = {'anatomy' 'csf' 'gray' 'white' 'bone' 'softtissue' 'air'};
+remove = {'anatomy' 'csf' 'gray' 'white' 'bone' 'softtissue' 'air' 'skull' 'skullstrip' 'brain' 'scalp'}; % all possible tissues
 
 % check if smoothing or thresholding is required
 
@@ -584,7 +584,7 @@ outp = cfg.output;
 
 if ~isempty(intersect(outp, 'tpm'))
   % output: probability tissue maps
-  remove = intersect(remove, {'anatomy'});
+  remove = intersect(remove, {'anatomy'}); 
 elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' 'skullstrip'}))
 
   createoutputs = true;
@@ -634,6 +634,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       % output: scalp (cummulative) (if this is the only requested output)
       if numel(outp)==1
         segmented.scalp = scalpmask;
+		remove(strcmp(remove,'scalp'))=[];
         break
       end
     end   % end scalp
@@ -659,7 +660,8 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       brain_ss = cast(brain, class(segmented.anatomy));
       segmented.anatomy = segmented.anatomy.*brain_ss;
       clear brain_ss
-      remove = intersect(remove, {'gray' 'white' 'csf'});
+      remove(strcmp(remove,'skullstrip'))=[];
+	  remove(strcmp(remove,'anatomy'))=[];
       if numel(outp)==1
         break
       end
@@ -672,7 +674,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
     % output: brain
     if any(strcmp(outp, 'brain'))
       segmented.brain = brainmask;
-
+	  remove(strcmp(remove,'brain'))=[];
       if numel(outp)==1
         break
       end
@@ -683,15 +685,15 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       clear dummy
       if any(strcmp(outp, 'white'))
         segmented.white = (tissuetype == 3) & brainmask;
-        remove = intersect(remove, {'anatomy' 'gray' 'csf'});
+        remove(strcmp(remove,'white'))=[];
       end
       if any(strcmp(outp, 'gray'))
         segmented.gray = (tissuetype == 2) & brainmask;
-        remove = intersect(remove, {'anatomy' 'white' 'csf'});
+        remove(strcmp(remove,'gray'))=[];
       end
       if any(strcmp(outp, 'csf'))
         segmented.csf = (tissuetype == 1) & brainmask;
-        remove = intersect(remove, {'anatomy' 'gray' 'white'});
+        remove(strcmp(remove,'csf'))=[];
       end
 
     end % if brain or gray/while/csf
@@ -730,6 +732,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       end
       if any(strcmp(outp, 'skull'))
         segmented.skull = skullmask;
+		remove(strcmp(remove,'skull'))=[];
         if numel(outp)==1
           break
         end
@@ -742,6 +745,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
         scalpmask(skullmask>0)=0;
         clear skullmask
         segmented.scalp=scalpmask;
+		remove(strcmp(remove,'scalp'))=[];
         clear scalpmask
       end
     end
@@ -753,9 +757,8 @@ else
   error('unknown output %s requested\n', cfg.output{:});
 end
 
-% remove unnecessary fields (use previously collected 'remove' and further
-% make sure only desired tissue types are present)
-segmented = removefields(segmented, unique([remove setdiff({'white' 'gray' 'csf' 'brain' 'skull' 'scalp' 'skullstrip' 'softtissue' 'bone' 'air'}, outp)]));
+% remove unnecessary fields
+segmented = removefields(segmented, remove);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
