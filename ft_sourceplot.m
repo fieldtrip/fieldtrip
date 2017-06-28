@@ -76,6 +76,12 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.avgoverfreq   = string, can be 'yes' or 'no' (default = 'no')
 %
 % The following parameters can be used for the masking data:
+%   cfg.maskstyle     = 'opacity', or 'saturation'. If 'opacity', low-level
+%                         graphics opacity masking is applied, if
+%                         'saturation', the color data is explicitly
+%                         expressed as a single RGB value, incorporating
+%                         the opacitymask. Yields faster and more robust
+%                         rendering in general.
 %   cfg.opacitymap    = opacitymap for mask data, see ALPHAMAP (default = 'auto')
 %                       'auto', depends structure maskparameter, or on opacitylim
 %                         - maskparameter: only positive values, or opacitylim:'zeromax' -> 'rampup'
@@ -297,6 +303,7 @@ cfg.funcolorlim   = ft_getopt(cfg, 'funcolorlim',   'auto');
 cfg.opacitymap    = ft_getopt(cfg, 'opacitymap',    'auto');
 cfg.opacitylim    = ft_getopt(cfg, 'opacitylim',    'auto');
 cfg.roi           = ft_getopt(cfg, 'roi',           []);
+cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, functional);
