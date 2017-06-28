@@ -28,7 +28,19 @@ fieldsused = fieldnames(default);
 for i=1:length(fieldsused)
   fn = fieldsused{i};
   
-  if     ~isfield(input, fn) && ~isstruct(default.(fn))
+  if isstruct(default) && numel(default)>1
+    if isempty(input) || isstruct(input) && isempty(fieldnames(input))
+      input = default;
+    else
+      for j=1:numel(default)
+        if numel(input)<j
+          input(j) = default(j);
+        else
+          input(j) = mergeconfig_helper(input(j), default(j));
+        end
+      end
+    end
+  elseif  ~isfield(input, fn) && ~isstruct(default.(fn))
     % simply copy the value over
     input.(fn) = default.(fn);
   elseif ~isfield(input, fn) &&  isstruct(default.(fn))

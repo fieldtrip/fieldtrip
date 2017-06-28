@@ -105,7 +105,7 @@ end
 source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
 
 % ensure that the source and the parcellation are anatomically consistent
-if ~isequalwithequalnans(source.pos, parcellation.pos)
+if ~isequaln(source.pos, parcellation.pos)
   error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
 end
 
