@@ -16,7 +16,7 @@ ft_hastoolbox('spm8',1,0);
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1665/segmentedS2.mat'));
 struct_reslice = ft_checkdata(struct_reslice, 'datatype', 'volume');
 
-cd(dccnpath(fullfile(p, 'utilities', 'private'));
+cd(dccnpath(fullfile(p, 'utilities', 'private')));
 output = align_ctf2acpc(struct_reslice);
 
 struct_reslice.coordsys = 'itab';

@@ -67,7 +67,7 @@ if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
   error('the coordinate system of the geometrical object is not specified');
 end
 
-if any(strcmp(target, {'spm', 'mni', 'tal'})
+if any(strcmp(target, {'spm', 'mni', 'tal'}))
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
   ft_warning('Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
   target = 'acpc';
