@@ -30,7 +30,7 @@ if size(rgba,2)==1
     % this requires the data to be converted into rgb values first, and
     % needs a cmap + clim, and an alpha, alphamap and alim
     if numel(varargin)~=5,
-        error('if a vector of data points is supplied, more input arguments are required');
+        error('if a vector of color data is supplied, more input arguments are required');
     end
     cmap = varargin{1};
     if ischar(cmap)
