@@ -302,9 +302,9 @@ if dotpm
   end
   mri = ft_convert_units(mri, 'mm');
   if isdeployed
-    mri = ft_convert_coordsys(mri, 'spm', 2, cfg.template);
+    mri = ft_convert_coordsys(mri, 'acpc', 2, cfg.template);
   else
-    mri = ft_convert_coordsys(mri, 'spm');
+    mri = ft_convert_coordsys(mri, 'acpc');
   end
 
   % flip and permute the 3D volume itself, so that the voxel and

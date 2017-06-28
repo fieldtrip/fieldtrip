@@ -940,10 +940,9 @@ switch cfg.method
       if strcmp(mri.coordsys, target.coordsys)
         % this should hopefully work
       else
-        % only works when it is possible to approximately align the input to
-        % the target coordsys
-        if strcmp(target.coordsys, 'spm')
-          mri = ft_convert_coordsys(mri, 'spm');
+        % only works when it is possible to approximately align the input to the target coordsys
+        if strcmp(target.coordsys, 'acpc')
+          mri = ft_convert_coordsys(mri, 'acpc');
         else
           error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
         end
