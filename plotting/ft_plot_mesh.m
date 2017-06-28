@@ -308,7 +308,7 @@ switch maskstyle
     assert(isequal(numel(facealpha),size(pos,1)), 'facealpha should have npos elements');
     
     bgcolor = repmat(facecolor, [numel(vertexcolor) 1]);
-    rgb     = bg_rgba2rgb(vertexcolor, bgcolor, cmap, clim, facealpha, alphamapping, alphalim);
+    rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, clim, facealpha, alphamapping, alphalim);
     set(hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
 end
 

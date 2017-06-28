@@ -1,10 +1,32 @@
-function [rgb] = bg_rgba2rgb(rgba, bg, varargin)
+function [rgb] = bg_rgba2rgb(bg, rgba, varargin)
+
+% BG_RGBA2RGB overlays a transparency masked colored image on a colored background,
+% and represents the result as an RGB matrix.
+%
+% Use as:
+%   rgb = bg_rgba2rgb(bg, rgba)
+%
+% or
+%   rgb = bg_rgba2rgb(bg, rgba, cmap, clim, alpha, amap, alim);
+%
+% When 2 input arguments are supplied:
+%   bg   = Nx3 matrix of background rgb-coded color-values
+%   rgba = Nx4 matrix of rgb + alpha values
+%
+% When 7 input arguments are supplied:
+%   bg   = Nx3 matrix, Nx1 vector, or 1x3 vector.
+%   rgba = Nx1 vector with 'functional values'
+%   cmap = Mx3 colormap, or MATLAB-supported name of colormap
+%   clim = 1x2 vector denoting the color limits
+%   alpha = Nx1 vector with 'alpha values'
+%   amap = Mx1 alphamap, or MATLAB -supported name of alphamap ('rampup/down', 'vup/down')
+%   alim = 1x2 vector denoting the opacity limits
 
 if size(bg,1) ~= size(rgba,1)
-    error('the background and data should have the same number of points in the rows');
+    error('the background and color data should have the same number of rows');
 end
 
-if size(rgba,2)==1,
+if size(rgba,2)==1
     % this requires the data to be converted into rgb values first, and
     % needs a cmap + clim, and an alpha, alphamap and alim
     if numel(varargin)~=5,
@@ -45,8 +67,6 @@ if size(bg,2)~=3
         bg = repmat(bg, [1 3]);
     end
 end
-
-
 
 rgb = zeros(size(rgba,1),3);
 a_  = 1-rgba(:,4);
