@@ -43,6 +43,14 @@ if [ "$UNAME" = "Darwin" ]; then
   BLACKLIST=(emotiv neuralynx siemens neuromag tmsi tobi ctf)
 fi
 
+if [ "$UNAME" = "MINGW32_NT-6.1" ]; then
+  BLACKLIST=(amp audio emotiv siemens neuralynx neuromag tmsi tobi ctf)
+fi
+
+if [ "$UNAME" = "MINGW64_NT-6.1" ]; then
+  BLACKLIST=(amp audio emotiv siemens neuralynx neuromag tmsi tobi ctf)
+fi
+
 echo Building buffer and ODM...
 (cd buffer/src && $MAKE)
 (cd buffer/cpp && $MAKE)
