@@ -76,9 +76,9 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.avgoverfreq   = string, can be 'yes' or 'no' (default = 'no')
 %
 % The following parameters can be used for the masking data:
-%   cfg.maskstyle     = 'opacity', or 'saturation'. If 'opacity', low-level
+%   cfg.maskstyle     = 'opacity', or 'rgba2rgb'. If 'opacity', low-level
 %                         graphics opacity masking is applied, if
-%                         'saturation', the color data is explicitly
+%                         'rgba2rgb', the color data is explicitly
 %                         expressed as a single RGB value, incorporating
 %                         the opacitymask. Yields faster and more robust
 %                         rendering in general.
@@ -1238,10 +1238,10 @@ switch cfg.method
             ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
             ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'opacity');
             
-          case 'saturation'
+          case 'rgba2rgb'
             % convert the specification of the background color + functional
             % color + opacity into a single rgb value to speed up the rendering
-            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'saturation');
+            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'rgba2rgb');
             
         end       
       end

@@ -297,7 +297,7 @@ switch maskstyle
       end
       alphamap(alphamapping);
     end
-  case 'saturation' 
+  case 'rgba2rgb' 
     % ensure facecolor to be 1x3
     assert(isequal(size(facecolor),[1 3]), 'facecolor should be 1x3');
     
