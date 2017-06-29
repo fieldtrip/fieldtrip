@@ -29,9 +29,9 @@ function contains () {
 
 if [ "$UNAME" = "Linux" ]; then
   if [ "$MACHINE" = "armv6l" ]; then
-    BLACKLIST=(amp audio biosemi ctf emotiv neuralynx neuromag siemens tmsi tobi)
+    BLACKLIST=(amp audio biosemi ctf emotiv gtec neuralynx neuromag siemens tmsi tobi)
   elif [ "$MACHINE" = "armv7l" ]; then
-    BLACKLIST=(amp audio biosemi ctf emotiv neuralynx neuromag siemens tmsi tobi)
+    BLACKLIST=(amp audio biosemi ctf emotiv gtec neuralynx neuromag siemens tmsi tobi)
   elif [ "$MACHINE" = "x86_64" ]; then
     BLACKLIST=(audio ctf emotiv neuralynx siemens tmsi tobi)
   else
@@ -41,6 +41,14 @@ fi
 
 if [ "$UNAME" = "Darwin" ]; then
   BLACKLIST=(emotiv neuralynx siemens neuromag tmsi tobi ctf)
+fi
+
+if [ "$UNAME" = "MINGW32_NT-6.1" ]; then
+  BLACKLIST=(amp audio emotiv siemens neuralynx neuromag tmsi tobi ctf)
+fi
+
+if [ "$UNAME" = "MINGW64_NT-6.1" ]; then
+  BLACKLIST=(amp audio emotiv siemens neuralynx neuromag tmsi tobi ctf)
 fi
 
 echo Building buffer and ODM...
