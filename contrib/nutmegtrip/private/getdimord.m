@@ -618,7 +618,7 @@ function warning_dimord_could_not_be_determined(field,data)
     end
   end
 
-  warning('%s\n\n%s', msg,content);
+  ft_warning('%s\n\n%s', msg,content);
 end % function warning_dimord_could_not_be_determined
 
 
