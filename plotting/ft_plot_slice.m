@@ -87,6 +87,8 @@ ori                 = ft_getopt(varargin, 'orientation', [0 0 1]);
 unit                = ft_getopt(varargin, 'unit');       % the default will be determined further down
 resolution          = ft_getopt(varargin, 'resolution'); % the default depends on the units and will be determined further down
 mask                = ft_getopt(varargin, 'datmask');
+maskstyle           = ft_getopt(varargin, 'maskstyle', 'opacity');
+background          = ft_getopt(varargin, 'background');
 opacitylim          = ft_getopt(varargin, 'opacitylim');
 interpmethod        = ft_getopt(varargin, 'interpmethod', 'nearest');
 cmap                = ft_getopt(varargin, 'colormap');
@@ -162,6 +164,13 @@ domask = ~isempty(mask);
 if domask
   if ~isequal(size(dat), size(mask))
     error('the mask data should have the same dimensions as the functional data');
+  end
+end
+
+dobackground = ~isempty(background);
+if dobackground
+  if ~isequal(size(dat), size(background))
+    error('the background data should have the same dimensions as the functional data');
   end
 end
 
@@ -287,8 +296,20 @@ else
   Zi = Zi(sel1,sel2);
 end
 
-if domask,
+if domask
   Vmask = interpn(X, Y, Z, mask, Xi, Yi, Zi, interpmethod);
+end
+
+if dobackground
+  Vback = interpn(X, Y, Z, background, Xi, Yi, Zi, interpmethod);
+  
+  % convert the background plane to a grayscale image
+  bmin  = nanmin(background(:));
+  bmax  = nanmax(background(:));
+  Vback = (Vback-bmin)./(bmax-bmin);
+  Vback(~isfinite(Vback)) = 0;
+  Vback = cat(3, Vback, Vback, Vback);
+  
 end
 
 interp_center_vc = [Xi(:) Yi(:) Zi(:)]; clear Xi Yi Zi
@@ -333,7 +354,7 @@ if false
   zlabel('z')
 end
 
-if isempty(cmap),
+if isempty(cmap)
   % treat as gray value: scale and convert to rgb
   if doscale
     dmin = min(dat(:));
@@ -341,7 +362,7 @@ if isempty(cmap),
     V    = (V-dmin)./(dmax-dmin);
     clear dmin dmax
   end
-  V(isnan(V)) = 0;
+  V(~isfinite(V)) = 0;
   
   % deal with clim for RGB data here, where the purpose is to increase the
   % contrast range, rather than shift the average grey value
@@ -352,7 +373,6 @@ if isempty(cmap),
   
   % convert into RGB values, e.g. for the plotting of anatomy
   V = cat(3, V, V, V);
-  
 end
 
 % get positions of the voxels in the interpolation plane in head coordinates
@@ -360,30 +380,66 @@ Xh = reshape(interp_edge_hc(:,1), siz+1);
 Yh = reshape(interp_edge_hc(:,2), siz+1);
 Zh = reshape(interp_edge_hc(:,3), siz+1);
 
-if isempty(h),
-  % create surface object
-  h = surface(Xh, Yh, Zh, V);
-  set(h, 'linestyle', 'none');
-else
-  % update the colordata in the surface object
-  set(h, 'Cdata', V);
-  set(h, 'Xdata', Xh);
-  set(h, 'Ydata', Yh);
-  set(h, 'Zdata', Zh);
-end
-
-if domask,
-  if islogical(Vmask), Vmask = double(Vmask); end
-  set(h, 'FaceColor', 'texture');
-  set(h, 'FaceAlpha', 'texturemap'); %flat
-  set(h, 'AlphaDataMapping', 'scaled');
-  set(h, 'AlphaData', Vmask);
-  if ~isempty(opacitylim)
-    alim(opacitylim)
+% do the actual plotting of the slice
+if ~domask
+  % no masked slice to be plotted
+  if isempty(h)
+    % create surface object
+    h = surface(Xh, Yh, Zh, V);
+    set(h, 'linestyle', 'none');
+  else
+    % update the colordata in the surface object
+    set(h, 'Cdata', V);
+    set(h, 'Xdata', Xh);
+    set(h, 'Ydata', Yh);
+    set(h, 'Zdata', Zh);
+  end
+elseif domask
+  % what should be done depends on the maskstyle
+  switch maskstyle
+    case 'opacity'
+      if dobackground
+        warning('specifying maskstyle = ''opacity'' causes the supplied background image not to be used');
+      end
+      if isempty(h)
+        % create surface object
+        h = surface(Xh, Yh, Zh, V);
+        set(h, 'linestyle', 'none');
+      else
+        % update the colordata in the surface object
+        set(h, 'Cdata', V);
+        set(h, 'Xdata', Xh);
+        set(h, 'Ydata', Yh);
+        set(h, 'Zdata', Zh);
+      end
+      if islogical(Vmask), Vmask = double(Vmask); end
+      set(h, 'FaceColor', 'texture');
+      set(h, 'FaceAlpha', 'texturemap'); %flat
+      set(h, 'AlphaDataMapping', 'scaled');
+      set(h, 'AlphaData', Vmask);
+      if ~isempty(opacitylim)
+        alim(opacitylim)
+      end
+    
+    case 'rgba2rgb'
+      V = bg_rgba2rgb(Vback,V,cmap,clim,Vmask,'rampup',opacitylim);
+      if isempty(h)
+        % create surface object
+        h = surface(Xh, Yh, Zh, V);
+        set(h, 'linestyle', 'none');
+      else
+        % update the colordata in the surface object
+        set(h, 'Cdata', V);
+        set(h, 'Xdata', Xh);
+        set(h, 'Ydata', Yh);
+        set(h, 'Zdata', Zh);
+      end
+  otherwise
+    error('unsupported maskstyle');
   end
 end
 
-
+% plot the intersection with a mesh
 if dointersect
   % determine three points on the plane
   inplane = eye(3) - (eye(3) * ori') * ori;
@@ -395,7 +451,7 @@ if dointersect
     [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.tri, v1, v2, v3);
     
     % draw each individual line segment of the intersection
-    if ~isempty(xmesh),
+    if ~isempty(xmesh)
       p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
       if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k)); end
       if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
