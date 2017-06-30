@@ -87,6 +87,7 @@ else
   end
   bg  = reshape(bg, [], 3);
   
+  if numel(siz)==2 && siz(2)==1, siz = siz(1); end
   rgb = do_conversion(bg, rgba);
   rgb = reshape(rgb, [siz 3]);
 end
