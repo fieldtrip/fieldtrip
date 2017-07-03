@@ -20,6 +20,8 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'transform'           = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted
 %   'location'            = 1x3 vector specifying a point on the plane which will be plotted the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
 %   'datmask'             = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
+%   'maskstyle'           = 
+%   'background'          = 
 %   'interpmethod'        = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'            = string, see COLORMAP
 %   'unit'                = string, can be 'm', 'cm' or 'mm (default is automatic)
