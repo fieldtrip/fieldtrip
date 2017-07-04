@@ -244,7 +244,7 @@ if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
   cfg.mychanscale = [];
 end
 
-if ~isfield(cfg, 'channel'),
+if ~isfield(cfg, 'channel')
   if hascomp
     if size(data.topo,2)>9
       cfg.channel = 1:10;
@@ -417,7 +417,7 @@ end
 if ischar(cfg.ylim)
   if hasdata
     sel = 1;
-    while all(isnan(reshape(data.trial{sel}(chansel,:),[],1))),
+    while all(isnan(reshape(data.trial{sel}(chansel,:),[],1)))
       sel = sel+1;
     end
     % the first trial is used to determine the vertical scaling

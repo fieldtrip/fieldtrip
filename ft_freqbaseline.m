@@ -97,9 +97,9 @@ elseif ischar(cfg.baseline) && strcmp(cfg.baseline, 'no')
 end
 
 % allow for baseline to be nfreq x 2
-if size(cfg.baseline,1)==numel(freq.freq) && size(cfg.baseline,2)==2,
+if size(cfg.baseline,1)==numel(freq.freq) && size(cfg.baseline,2)==2
   % this is ok
-elseif numel(cfg.baseline)==2,
+elseif numel(cfg.baseline)==2
   % this is also ok
   cfg.baseline = cfg.baseline(:)'; % ensure row vector
 else
@@ -179,7 +179,7 @@ for k = 1:size(baseline,1)
   baselineTimes(k,:) = (timeVec >= baseline(k,1) & timeVec <= baseline(k,2));
 end
 
-if length(size(data)) ~= 3,
+if length(size(data)) ~= 3
   error('time-frequency matrix should have three dimensions (chan,freq,time)');
 end
 

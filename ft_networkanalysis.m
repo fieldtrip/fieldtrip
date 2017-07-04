@@ -89,7 +89,7 @@ cfg.threshold = ft_getopt(cfg, 'threshold', []);
 ft_hastoolbox('BCT', 1);
 
 % check the data for the correct dimord and for the presence of the requested parameter
-if isfield(data, [cfg.parameter,'dimord']),
+if isfield(data, [cfg.parameter,'dimord'])
   dimord = data.([cfg.parameter,'dimord']);
 elseif isfield(data, 'dimord')
   dimord = data.dimord;
@@ -97,7 +97,7 @@ else
   error('input data needs a ''dimord'' field');
 end
 
-if ~strcmp(dimord(1:7), 'pos_pos') && ~strcmp(dimord(1:9), 'chan_chan'),
+if ~strcmp(dimord(1:7), 'pos_pos') && ~strcmp(dimord(1:9), 'chan_chan')
   error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
 end
 
@@ -116,7 +116,7 @@ for k = 1:size(input,3)
   for m = 1:size(input,4)
     tmp = input(:,:,k,m);
     isbinary = all(ismember(tmp(:), [0 1]));
-    if ~isbinary,
+    if ~isbinary
       break;
     end
   end
@@ -146,7 +146,7 @@ for k = 1:size(input,3)
   for m = 1:size(input,4)
     tmp = input(:,:,k,m);
     isdirected = ~all(all(tmp==tmp.'));
-    if ~isdirected,
+    if ~isdirected
       break;
     end
   end

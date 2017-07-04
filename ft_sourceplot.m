@@ -1183,7 +1183,7 @@ switch cfg.method
       if hasfun, val      = getsubfield(tmpdata, cfg.funparameter);  val     = val(:);     end
       if hasmsk, maskval  = getsubfield(tmpdata, maskparameter);     maskval = maskval(:); end
       
-      if ~isempty(cfg.projthresh),
+      if ~isempty(cfg.projthresh)
         maskval(abs(val) < cfg.projthresh*max(abs(val(:)))) = 0;
       end
       
@@ -1205,7 +1205,7 @@ switch cfg.method
         surf = ft_read_headshape(cfg.surfinflated);
       else
         surf = cfg.surfinflated;
-        if isfield(surf, 'transform'),
+        if isfield(surf, 'transform')
           % compute the surface vertices in head coordinates
           surf.pos = ft_warp_apply(surf.transform, surf.pos);
         end

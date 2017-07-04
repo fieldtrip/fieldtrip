@@ -259,13 +259,13 @@ catch
   num = 1;
 end
 
-if num==1,
+if num==1
   % only the statistic is returned
   [statobs] = statfun(cfg, dat, design);
-elseif num==2,
+elseif num==2
   % both the statistic and the (updated) configuration are returned
   [statobs, cfg] = statfun(cfg, dat, design);
-elseif num==3,
+elseif num==3
   % both the statistic and the (updated) configuration and the (updated) data are returned
   tmpcfg = cfg;
   if strcmp(cfg. precondition, 'before'), tmpcfg.preconditionflag = 1; end
@@ -292,7 +292,7 @@ else
   prb_neg   = zeros(size(statobs));
 end
 
-if strcmp(cfg.precondition, 'after'),
+if strcmp(cfg.precondition, 'after')
   tmpcfg = cfg;
   tmpcfg.preconditionflag = 1;
   [tmpstat, tmpcfg, dat] = statfun(tmpcfg, dat, design);
@@ -480,7 +480,7 @@ if ~isfield(stat, 'stat')
   stat.stat = statobs;
 end
 
-if exist('statrand', 'var'),
+if exist('statrand', 'var')
   stat.ref = mean(statrand,2);
 end
 

@@ -215,7 +215,7 @@ end
 xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
-if hassource2 && isfield(source2, 'pos'),
+if hassource2 && isfield(source2, 'pos')
   fun2 = fun2(:,xbeg:xend,ybeg:yend);
 end
 mask    = mask(:,xbeg:xend,ybeg:yend);
@@ -525,7 +525,7 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   
   set(opt.hy,    'yaxislocation', 'right');
   set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
-  if isfield(opt, 'parcellation'),
+  if isfield(opt, 'parcellation')
     set(opt.stringp, 'string', sprintf('parcel = %s', opt.parcellationlabel{opt.parcellation(opt.vindx)}));
   end
 end
@@ -740,11 +740,11 @@ switch key
     end
   case 'f'
     if isfield(opt, 'dat2')
-      if isequaln(opt.dat,opt.dat2),
+      if isequaln(opt.dat,opt.dat2)
         opt.dat = opt.dat1;
         set(opt.displaybutton, 'string', 'display: var1');
       end
-      if isequaln(opt.dat,opt.dat1),
+      if isequaln(opt.dat,opt.dat1)
         opt.dat = opt.dat2;
         set(opt.displaybutton, 'string', 'display: var2');
       end

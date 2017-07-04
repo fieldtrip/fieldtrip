@@ -185,12 +185,12 @@ Ntrials = length(data.trial);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 template = struct([]); % initialize as empty structure
 for i=1:length(cfg.template)
-  if ischar(cfg.template{i}),
+  if ischar(cfg.template{i})
     fprintf('reading template sensor position from %s\n', cfg.template{i});
     tmp = ft_read_sens(cfg.template{i}, 'senstype', 'meg');
-  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra'),
+  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'coilpos') && isfield(cfg.template{i}, 'coilori') && isfield(cfg.template{i}, 'tra')
     tmp = cfg.template{i};
-  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra'),
+  elseif isstruct(cfg.template{i}) && isfield(cfg.template{i}, 'pnt') && isfield(cfg.template{i}, 'ori') && isfield(cfg.template{i}, 'tra')
     % it seems to be a pre-2011v1 type gradiometer structure, update it
     tmp = ft_datatype_sens(cfg.template{i});
   else
@@ -257,7 +257,7 @@ pos(sel,:) = [];
 % compute the forward model for the new gradiometer positions
 fprintf('computing forward model for %d dipoles\n', size(pos,1));
 lfnew = ft_compute_leadfield(pos, template.grad, volnew);
-if ~pertrial,
+if ~pertrial
   %this needs to be done only once
   lfold = ft_compute_leadfield(pos, data.grad, volold);
   [realign, noalign, bkalign] = computeprojection(lfold, lfnew, cfg.pruneratio, cfg.verify);
@@ -265,7 +265,7 @@ else
   %the forward model and realignment matrices have to be computed for each trial
   %this also goes for the singleshell volume conductor model
   %x = which('rigidbodyJM'); %this function is needed
-  %if isempty(x),
+  %if isempty(x)
   %  error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact jan-mathijs');
   %end
 end
@@ -273,7 +273,7 @@ end
 % interpolate the data towards the template gradiometers
 for i=1:Ntrials
   fprintf('realigning trial %d\n', i);
-  if pertrial,
+  if pertrial
     %warp the gradiometer array according to the motiontracking data
     sel   = match_str(rest.label, {'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'});
     hmdat = rest.trial{i}(sel,:);
@@ -447,7 +447,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [lfi] = prunedinv(lf, r)
 [u, s, v] = svd(lf);
-if r<1,
+if r<1
   % treat r as a ratio
   p = find(s<(s(1,1)*r) & s~=0);
 else

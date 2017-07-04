@@ -115,7 +115,7 @@ convert = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes');
 
 % set default resampling frequency
-if isempty(cfg.resamplefs) && isempty(cfg.time),
+if isempty(cfg.resamplefs) && isempty(cfg.time)
   cfg.resamplefs = 256;
 end
 
@@ -136,7 +136,7 @@ elseif strcmp(cfg.sampleindex, 'yes')
 end
 
 % sampleinfo, if present, becomes invalid because of the resampling
-if isfield(data, 'sampleinfo'),
+if isfield(data, 'sampleinfo')
   data = rmfield(data, 'sampleinfo');
 end
 
@@ -286,7 +286,7 @@ elseif usetime
     data.trial{itr} = data.trial{itr} - bsl(:,ones(1,size(data.trial{itr},2)));
 
     % perform the resampling
-    if length(data.time{itr})>1,
+    if length(data.time{itr})>1
       data.trial{itr} = interp1(data.time{itr}', data.trial{itr}', cfg.time{itr}', cfg.method)';
     else
       data.trial{itr} = repmat(data.trial{itr}, [1 length(cfg.time{itr}')]);

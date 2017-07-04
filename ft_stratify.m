@@ -159,7 +159,7 @@ if strcmp(cfg.method, 'histogram')
     for cndlop = 1:ncond
       tmpb = zeros(1, size(b{cndlop},2));
       for j = 1:nchan
-        if j == 1,
+        if j == 1
           tmpb = tmpb + (b{cndlop}(j,:)).*prod(cfg.numbin(1:(j-1)));
         else
           tmpb = tmpb + (b{cndlop}(j,:)-1).*prod(cfg.numbin(1:(j-1)));
@@ -179,7 +179,7 @@ if strcmp(cfg.method, 'histogram')
     end
     
     %------do stratification the easy or the hard way
-    if strcmp(cfg.equalbinavg, 'yes'),
+    if strcmp(cfg.equalbinavg, 'yes')
       %---this is the hard way
       if nchan>1, error('the option equalbinavg only works for one channel input at the moment'); end
       

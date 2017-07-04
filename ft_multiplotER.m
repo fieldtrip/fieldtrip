@@ -244,7 +244,7 @@ dimtok = tokenize(dimord, '_');
 % data in the input. A more generic solution should be considered.
 
 if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
-if ~any(strcmp({'freq', 'freqmvar'}, dtype)),
+if ~any(strcmp({'freq', 'freqmvar'}, dtype))
   cfg = ft_checkconfig(cfg, 'createsubcfg', {'preproc'});
 end
 if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
@@ -262,7 +262,7 @@ end
 
 for i=1:Ndata
   % this is needed for correct treatment of GRAPHCOLOR later on
-  if nargin>1,
+  if nargin>1
     if ~isempty(inputname(i+1))
       iname{i+1} = inputname(i+1);
     else
@@ -339,7 +339,7 @@ end
 % check whether rpt/subj is present and remove if necessary
 % FIXME this should be implemented with avgoverpt in ft_selectdata
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
-if strcmp(dtype, 'timelock') && hasrpt,
+if strcmp(dtype, 'timelock') && hasrpt
   tmpcfg = [];
   
   % disable hashing of input data (speeds up things)
@@ -366,12 +366,12 @@ if strcmp(dtype, 'timelock') && hasrpt,
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
   
-elseif strcmp(dtype, 'freq') && hasrpt,
+elseif strcmp(dtype, 'freq') && hasrpt
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
   % on the fly computation of coherence spectrum is not supported
   for i=1:Ndata
-    if isfield(varargin{i}, 'crsspctrm'),
+    if isfield(varargin{i}, 'crsspctrm')
       varargin{i} = rmfield(varargin{i}, 'crsspctrm');
     end
   end
@@ -474,7 +474,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
   end
   
   for i=1:Ndata
-    if ~isfull,
+    if ~isfull
       % Convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.directionality)
         sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 2)));
@@ -697,7 +697,7 @@ for m=1:length(layLabels)
   
   ft_plot_vector(xval, yval, 'width', width(m), 'height', height(m), 'hpos', layX(m), 'vpos', layY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'label', label, 'box', cfg.box, 'fontsize', cfg.fontsize);
   
-  if i==1,
+  if i==1
     % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
     chanX(m) = X(m) + 0.5 * width(m);
     chanY(m) = Y(m) + 0.5 * height(m);

@@ -103,7 +103,7 @@ if istlck
   israw = true;
 end
 
-if isfreq,
+if isfreq
   if ~isfield(data, 'fourierspctrm'), error('freq data should contain Fourier spectra'); end
 end
 

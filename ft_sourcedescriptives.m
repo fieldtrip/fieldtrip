@@ -194,11 +194,11 @@ if strcmp(cfg.fwhm, 'yes')
   end
 end
 
-if strcmp(cfg.eta, 'yes') && strcmp(cfg.cohmethod, 'svdfft'),
+if strcmp(cfg.eta, 'yes') && strcmp(cfg.cohmethod, 'svdfft')
   error('eta cannot be computed in combination with the application of svdfft');
 end
 
-if strcmp(cfg.keeptrials, 'yes') && ~strcmp(cfg.supmethod, 'none'),
+if strcmp(cfg.keeptrials, 'yes') && ~strcmp(cfg.supmethod, 'none')
   error('you cannot keep trials when you want to partialize something');
 end
 
@@ -230,7 +230,7 @@ if ispccdata
   Ndipole = size(source.pos,1);
 
   if ischar(source.avg.csdlabel{1}), source.avg.csdlabel = {source.avg.csdlabel}; end
-  if numel(source.avg.csdlabel)==1,
+  if numel(source.avg.csdlabel)==1
     source.avg.csdlabel = repmat(source.avg.csdlabel, [Ndipole 1]);
   end
 
@@ -257,7 +257,7 @@ if ispccdata
     for i=insideindx
       ft_progress(i/length(insideindx), 'projecting dipole moment %d/%d\n', i, length(insideindx));
 
-      if numel(source.avg.csdlabel)>1,
+      if numel(source.avg.csdlabel)>1
         dipsel     = find(strcmp(source.avg.csdlabel{i}, 'scandip'));
         refchansel = find(strcmp(source.avg.csdlabel{i}, 'refchan'));
         refdipsel  = find(strcmp(source.avg.csdlabel{i}, 'refdip'));
@@ -287,13 +287,13 @@ if ispccdata
 
       % create rotation-matrix
       rotmat = zeros(0, length(source.avg.csdlabel{i}));
-      if ~isempty(rmom),
+      if ~isempty(rmom)
         rotmat = [rotmat; rmom zeros(numel(refsel)+numel(supsel),1)];
       end
-      if ~isempty(rref),
+      if ~isempty(rref)
         rotmat = [rotmat; zeros(1, numel(dipsel)), rref, zeros(1,numel(refchansel)+numel(supsel))];
       end
-      if ~isempty(rsup),
+      if ~isempty(rsup)
         rotmat = [rotmat; zeros(1, numel(dipsel)+numel(refdipsel)), rsup, zeros(1,numel(refchansel)+numel(supchansel))];
       end
       for j=1:length(supchansel)
@@ -311,7 +311,7 @@ if ispccdata
       if isfield(source.avg, 'noisecsd'), source.avg.noisecsd{i} = rotmat * source.avg.noisecsd{i} * rotmat'; end
       % compute rotated filter
       if isfield(source.avg, 'filter'),   source.avg.filter{i}   = rotmat * source.avg.filter{i}; end
-      if isfield(source.avg, 'csdlabel'),
+      if isfield(source.avg, 'csdlabel')
         % remember what the interpretation is of all CSD output components
         scandiplabel = repmat({'scandip'}, 1, cfg.numcomp);          % only one dipole orientation remains
         refdiplabel  = repmat({'refdip'},  1, length(refdipsel)>0);  % for svdfft at max. only one dipole orientation remains
@@ -324,7 +324,7 @@ if ispccdata
 
       % compute rotated leadfield
       % FIXME in the presence of a refdip and/or supdip, this does not work; leadfield is Nx3
-      if isfield(source,  'leadfield'),
+      if isfield(source,  'leadfield')
         %FIXME this is a proposed dirty fix
         n1 = size(source.leadfield{i},2);
         %n2 = size(rotmat,2) - n1;
@@ -431,7 +431,7 @@ if ispccdata
       if hasrefchan, source.trial(triallop).refchanpow(source.inside) = cellfun(powmethodfun,source.trial(triallop).csd(source.inside), refchanselcell(source.inside)); end
       if hassupchan, source.trial(triallop).supchanpow(source.inside) = cellfun(powmethodfun,source.trial(triallop).csd(source.inside), supchanselcell(source.inside)); end
       %FIXME kan volgens mij niet
-      if isnoise && isfield(source.trial(triallop), 'noisecsd'),
+      if isnoise && isfield(source.trial(triallop), 'noisecsd')
         % compute the power of the noise projected on each source component
         source.trial(triallop).noise = cellfun(powmethodfun,source.trial(triallop).csd, dipselcell);
         if hasrefdip,  source.trial(triallop).refdipnoise  = cellfun(powmethodfun,source.trial(triallop).noisecsd, refdipselcell);  end
@@ -487,15 +487,15 @@ if ispccdata
       if hassupchan, source.avg.supchannoise    = nan(Ndipole, 1); end
     end % if isnoise
     if hasrefdip||hasrefchan, source.avg.coh    = nan(Ndipole, 1); end
-    if strcmp(cfg.eta, 'yes'),
+    if strcmp(cfg.eta, 'yes')
       source.avg.eta           = nan(Ndipole, 1);
       source.avg.ori             = cell(1, Ndipole);
     end
-    if strcmp(cfg.eta, 'yes') && ~isempty(refsel),
+    if strcmp(cfg.eta, 'yes') && ~isempty(refsel)
       source.avg.etacsd = nan(Ndipole, 1);
       source.avg.ucsd   = cell(1, Ndipole);
     end
-    if strcmp(cfg.fa, 'yes'),
+    if strcmp(cfg.fa, 'yes')
       source.avg.fa = nan(Ndipole, 1);
     end
 
@@ -504,7 +504,7 @@ if ispccdata
 			refsel = [refchanselcell{i} refdipselcell{i}];
 
       % compute the power of each source component
-      if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1,
+      if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1
         source.avg.pow(i) = powmethodfun(source.avg.csd{i}(dipselcell{i},dipselcell{i}), 1);
       else
         source.avg.pow(i) = powmethodfun(source.avg.csd{i}(dipselcell{i},dipselcell{i}));
@@ -516,7 +516,7 @@ if ispccdata
       if hassupchan, source.avg.supchanpow(i) = powmethodfun(source.avg.csd{i}(supchansel,supchansel)); end
       if isnoise
         % compute the power of the noise projected on each source component
-        if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1,
+        if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1
           source.avg.noise(i) = powmethodfun(source.avg.noisecsd{i}(dipselcell{i},dipselcell{i}), 1);
         else
           source.avg.noise(i) = powmethodfun(source.avg.noisecsd{i}(dipselcell{i},dipselcell{i}));
@@ -555,7 +555,7 @@ if ispccdata
       % compute eta
       if strcmp(cfg.eta, 'yes')
         [source.avg.eta(i), source.avg.ori{i}] = csd2eta(source.avg.csd{i}(dipselcell{i},dipselcell{i}));
-        if ~isempty(refsel),
+        if ~isempty(refsel)
           %FIXME this only makes sense when only a reference signal OR a dipole is selected
           [source.avg.etacsd(i), source.avg.ucsd{i}] = csd2eta(source.avg.csd{i}(dipsel,refsel));
         end
@@ -1089,7 +1089,7 @@ fa = sqrt( (ns./(ns-1)) .* (sum((s-ms).^2))./(sum(s.^2)) );
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function p = powmethod_lambda1(x, ind)
 
-if nargin==1,
+if nargin==1
   ind = 1:size(x,1);
 end
 s = svd(x(ind,ind));
@@ -1100,7 +1100,7 @@ p = s(1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function p = powmethod_trace(x, ind)
 
-if nargin==1,
+if nargin==1
   ind = 1:size(x,1);
 end
 p = trace(x(ind,ind));
@@ -1110,7 +1110,7 @@ p = trace(x(ind,ind));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function p = powmethod_regular(x, ind)
 
-if nargin==1,
+if nargin==1
   ind = 1:size(x,1);
 end
 p = abs(x(ind,ind));

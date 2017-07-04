@@ -133,7 +133,7 @@ freq = ft_selectdata(tmpcfg, freq);
 % restore the provenance information
 [cfg, freq] = rollback_provenance(cfg, freq);
 
-if jckflg,
+if jckflg
   % the data is 'sparsewithpow', so it contains a powspctrm and optionally a crsspctrm
   % the checking of a 'rpt' is handled above, so it can be assumed that the 'rpt' is the
   % first dimension
@@ -148,7 +148,7 @@ if jckflg,
   end
 end
 
-if varflg,
+if varflg
   siz    = [size(freq.powspctrm) 1];
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
@@ -164,7 +164,7 @@ if varflg,
   end
   ft_progress('close');
 
-  if jckflg,
+  if jckflg
     bias = (n-1).^2;
   else
     bias = 1;
@@ -184,7 +184,7 @@ else
   powspctrm = freq.powspctrm;
 end
 
-if hasrpt && ~keepflg,
+if hasrpt && ~keepflg
   dimtok    = tokenize(freq.dimord, '_');
   newdimord = dimtok{2};
   for k = 3:numel(dimtok)

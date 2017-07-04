@@ -271,7 +271,7 @@ ntap = size(tap,1);
 %data          = ft_redefinetrial(tmpcfg, data);
 
 %---demean
-if strcmp(cfg.demean, 'yes'),
+if strcmp(cfg.demean, 'yes')
   tmpcfg           = [];
   tmpcfg.demean    = 'yes';
   tmpcfg.baselinewindow = latency([1 end]);
@@ -287,7 +287,7 @@ if strcmp(cfg.ems, 'yes')
 end
 
 %---zscore
-if dozscore,
+if dozscore
   zwindow = latency([1 end]);
   sumval  = 0;
   sumsqr  = 0;
@@ -296,7 +296,7 @@ if dozscore,
   for k = 1:ntrl
     begsmp = nearest(data.time{k}, zwindow(1));
     endsmp = nearest(data.time{k}, zwindow(2));
-    if endsmp>=begsmp,
+    if endsmp>=begsmp
       sumval  = sumval + sum(data.trial{k}(:, begsmp:endsmp),    2);
       sumsqr  = sumsqr + sum(data.trial{k}(:, begsmp:endsmp).^2, 2);
       numsmp  = numsmp + endsmp - begsmp + 1;
@@ -425,7 +425,7 @@ for j = 1:ntoi
 				dat = catnan(tmpdata.trial, chanindx, rpt{rlop}, tap(m,:), nnans, dobvar);
 				
 				%---estimate autoregressive model
-				if dounivariate,
+				if dounivariate
 				  
 					%---loop across the channels
 					for p = 1:size(dat,1)
@@ -445,7 +445,7 @@ for j = 1:ntoi
 						coeffs(rlop,p,:,j,m) = reshape(ar, [1 cfg.order]);
 						
 						%---rescale noisecov if necessary
-						if dozscore,
+						if dozscore
 							noisecov(rlop,p,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
 						else
 							noisecov(rlop,p,j,m) = tmpnoisecov;
@@ -469,7 +469,7 @@ for j = 1:ntoi
 					coeffs(rlop,:,:,:,j,m) = reshape(ar, [nchan nchan cfg.order]);
 					
 					%---rescale noisecov if necessary
-					if dozscore,
+					if dozscore
 						noisecov(rlop,:,:,j,m) = diag(datstd)*tmpnoisecov*diag(datstd);
 					else
 						noisecov(rlop,:,:,j,m) = tmpnoisecov;
@@ -488,9 +488,9 @@ ft_progress('close');
 %---create output-structure
 mvardata          = [];
 
-if ~dobvar && ~dounivariate && dojack,
+if ~dobvar && ~dounivariate && dojack
   mvardata.dimord = 'rptjck_chan_chan_lag';
-elseif ~dobvar && ~dounivariate && keeprpt,
+elseif ~dobvar && ~dounivariate && keeprpt
   mvardata.dimord = 'rpt_chan_chan_lag';
 elseif ~dobvar && ~dounivariate
   mvardata.dimord = 'chan_chan_lag';
@@ -553,7 +553,7 @@ switch cfg.output
 					P = mvardata.coeffs(:,:,m);
 				end
 				
-				if strcmp(cfg.output, 'residual'),
+				if strcmp(cfg.output, 'residual')
 					P = -P;
 				end
 				
@@ -592,7 +592,7 @@ datamatrix = nan(nchan, sum(nsmp) + nnans*(nrpt-1));
 
 %---fill the matrix
 for k = 1:nrpt
-  if k==1,
+  if k==1
     begsmp = sumsmp(k) + 1;
     endsmp = sumsmp(k+1)  ;
   else

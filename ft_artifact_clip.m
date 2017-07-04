@@ -111,7 +111,7 @@ else
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
-  if isfield(data, 'sampleinfo'),
+  if isfield(data, 'sampleinfo')
     trl = data.sampleinfo;
     for k = 1:numel(data.trial)
       trl(k,3) = time2offset(data.time{k}, data.fsample);

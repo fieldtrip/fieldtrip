@@ -623,7 +623,7 @@ opt = getappdata(h, 'opt');
 
 artval = cell(1,opt.numtrl);
 for trlop=1:opt.numtrl
-  if opt.thresholdsum,
+  if opt.thresholdsum
     % threshold the accumulated z-values
     artval{trlop} = opt.zsum{trlop}>opt.threshold;
   else
@@ -653,7 +653,7 @@ for trlop = find(opt.keep<0 & opt.trialok==1)
   % if the user specifies that the trial is not OK
   % reject the whole trial if there is no extra-threshold data,
   % otherwise use the artifact as found by the thresholding
-  if opt.thresholdsum && opt.keep(trlop)==-1,
+  if opt.thresholdsum && opt.keep(trlop)==-1
     % threshold the accumulated z-values
     artval{trlop} = opt.zsum{trlop}>opt.threshold;
   elseif opt.keep(trlop)==-1
@@ -958,7 +958,7 @@ subplot(opt.h1);hold on;
 if isempty(get(opt.h1, 'children'))
   for k = 1:opt.numtrl
     xval = opt.trl(k,1):opt.trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};
@@ -975,7 +975,7 @@ boxhandle = findall(h1children, 'displayname', 'highlight');
 if isempty(boxhandle)
   % draw it
   xval = trl(opt.trlop,1):trl(opt.trlop,2);
-  if opt.thresholdsum,
+  if opt.thresholdsum
     yval = opt.zsum{opt.trlop};
   else
     yval = opt.zmax{opt.trlop};
@@ -984,7 +984,7 @@ if isempty(boxhandle)
 else
   % update it
   xval = trl(opt.trlop,1):trl(opt.trlop,2);
-  if opt.thresholdsum,
+  if opt.thresholdsum
     yval = opt.zsum{opt.trlop};
   else
     yval = opt.zmax{opt.trlop};
@@ -999,7 +999,7 @@ if isempty(thrhandle)
   % they have to be drawn
   for k = 1:opt.numtrl
     xval = trl(k,1):trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};
@@ -1013,7 +1013,7 @@ elseif ~isempty(thrhandle) && opt.updatethreshold
   % they can be updated
   for k = 1:opt.numtrl
     xval = trl(k,1):trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};

@@ -88,7 +88,7 @@ for k = 1:Ndata
     fprintf('different types of connectivity are to be displayed in the same figure\n');
     varargin{k}.connectivity = varargin{k}.(cfg.parameter{k});
     varargin{k} = rmfield(varargin{k}, cfg.parameter{k});
-    if isfield(varargin{k}, [cfg.parameter{k} 'dimord']),
+    if isfield(varargin{k}, [cfg.parameter{k} 'dimord'])
       varargin{k}.connectivitydimord = varargin{k}.([cfg.parameter{k} 'dimord']);
       varargin{k} = rmfield(varargin{k}, [cfg.parameter{k} 'dimord']);
     end
@@ -113,7 +113,7 @@ for k = 1:Ndata
   end
   
   % this is needed for correct treatment of graphcolor later on
-  if nargin>1,
+  if nargin>1
     if ~isempty(inputname(k+1))
       iname{k+1} = inputname(k+1);
     else
@@ -125,7 +125,7 @@ for k = 1:Ndata
   end
 end
 
-if Ndata >1,
+if Ndata >1
   if ~all(strcmp(dtype{1}, dtype))
     error('input data are of different type; this is not supported');
   end
@@ -140,8 +140,8 @@ tmpcfg = keepfields(cfg, {'channel', 'showcallinfo'});
 % check presence of time / freq axes
 hasfreq = isfield(varargin{1}, 'freq');
 hastime = isfield(varargin{1}, 'time');
-if hasfreq && hastime,
-  if Ndata>1,
+if hasfreq && hastime
+  if Ndata>1
     error('when the input data contains time-frequency representations, only a single data argument is allowed');
   end
   xparam = 'time';

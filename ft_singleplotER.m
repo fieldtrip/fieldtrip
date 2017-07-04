@@ -22,7 +22,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
-%   cfg.channel       = nx1 cell-array with selection of channels (default = 'all'),
+%   cfg.channel       = nx1 cell-array with selection of channels (default = 'all')
 %                       see ft_channelselection for details
 %   cfg.title          = string, title of plot
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
@@ -193,7 +193,7 @@ for i=1:Ndata
   dtype{i}    = ft_datatype(varargin{i});
 
   % this is needed for correct treatment of graphcolor later on
-  if nargin>1,
+  if nargin>1
     if ~isempty(inputname(i+1))
       iname{i+1} = inputname(i+1);
     else
@@ -204,7 +204,7 @@ for i=1:Ndata
   end
 end
 
-if Ndata >1,
+if Ndata >1
   if ~all(strcmp(dtype{1}, dtype))
     error('input data are of different type; this is not supported');
   end
@@ -222,7 +222,7 @@ dimtok = tokenize(dimord, '_');
 % data in the input. A more generic solution should be considered.
 
 if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
-if ~any(strcmp({'freq','freqmvar'},dtype)),
+if ~any(strcmp({'freq','freqmvar'},dtype))
   cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 end
 if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
@@ -277,7 +277,7 @@ end
 
 % check whether rpt/subj is present and remove if necessary and whether
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
-if strcmp(dtype, 'timelock') && hasrpt,
+if strcmp(dtype, 'timelock') && hasrpt
   tmpcfg        = [];
   tmpcfg.trials = cfg.trials;
   for i=1:Ndata
@@ -290,12 +290,12 @@ if strcmp(dtype, 'timelock') && hasrpt,
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
-elseif strcmp(dtype, 'freq') && hasrpt,
+elseif strcmp(dtype, 'freq') && hasrpt
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
   % on the fly computation of coherence spectrum is not supported
   for i=1:Ndata
-    if isfield(varargin{i}, 'crsspctrm'),
+    if isfield(varargin{i}, 'crsspctrm')
       varargin{i} = rmfield(varargin{i}, 'crsspctrm');
     end
   end
@@ -372,7 +372,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
   end
 
   for i=1:Ndata
-    if ~isfull,
+    if ~isfull
       % convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.directionality)
         sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));

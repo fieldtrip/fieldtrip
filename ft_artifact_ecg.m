@@ -98,7 +98,7 @@ if ~isfield(cfg.artfctdef.ecg,'feedback'),  cfg.artfctdef.ecg.feedback = 'yes'; 
 if ~isfield(cfg, 'headerformat'),          cfg.headerformat            = [];            end
 if ~isfield(cfg, 'dataformat'),            cfg.dataformat              = [];            end
 
-if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue'),
+if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue')
   error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
 end
 
@@ -114,7 +114,7 @@ else
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
-  if isfield(data, 'sampleinfo'),
+  if isfield(data, 'sampleinfo')
     trl = data.sampleinfo;
     for k = 1:numel(data.trial)
       trl(k,3) = time2offset(data.time{k}, data.fsample);
@@ -181,7 +181,7 @@ for j = 1:ntrl
 end
 
 accept = strcmp(cfg.artfctdef.ecg.feedback, 'no');
-while accept == 0,
+while accept == 0
   h = figure;
   plot(trace);zoom;
   hold on;
@@ -246,7 +246,7 @@ if ~isempty(sgnind)
       ntrlok = ntrlok + 1;
     elseif hasdata
       dum = ft_fetch_data(data, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
-      if any(~isfinite(dum(:))),
+      if any(~isfinite(dum(:)))
       else
         ntrlok = ntrlok + 1;
         dat    = dat + ft_preproc_baselinecorrect(dum);
@@ -262,7 +262,7 @@ mdat = max(abs(tmp(:)));
 
 acceptpre = strcmp(cfg.artfctdef.ecg.feedback, 'no');
 acceptpst = strcmp(cfg.artfctdef.ecg.feedback, 'no');
-while acceptpre == 0 || acceptpst == 0,
+while acceptpre == 0 || acceptpst == 0
   h = figure;
   subplot(2,1,1); plot(time, dat(end, :));
   abc = axis;
@@ -276,7 +276,7 @@ while acceptpre == 0 || acceptpst == 0,
   rectangle('Position', [xpos ypos width height], 'FaceColor', 'r');
   hold on; plot(time, dat(1:end-1, :), 'b');
 
-  if acceptpre == 0,
+  if acceptpre == 0
     fprintf(['\ncurrent pre-peak interval = %1.3f'], artfctdef.pretim);
     response = input('\nkeep the current value (y/n) ?\n','s');
     switch response
@@ -291,7 +291,7 @@ while acceptpre == 0 || acceptpst == 0,
         oldpretim = artfctdef.pretim;
     end
   end
-  if acceptpst == 0 && acceptpre == 1,
+  if acceptpst == 0 && acceptpre == 1
     fprintf(['\ncurrent post-peak interval = %1.3f'], artfctdef.psttim);
     response = input('\nkeep the current value (y/n) ?\n','s');
     switch response

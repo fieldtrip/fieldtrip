@@ -282,7 +282,7 @@ elseif isfreq
     hasrefchan = 0;
   end
   
-  if hasrefchan,
+  if hasrefchan
     if ischar(tmpcfg.refchan), tmpcfg.refchan = {tmpcfg.refchan}; end
     tmpchannel     = ft_channelselection(tmpcfg.channel, data.label); % the channels needed for the spatial filter
     tmpcfg.channel = cat(1, tmpchannel, tmpcfg.refchan);
@@ -447,12 +447,12 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
         fbin = nearest(data.freq, cfg.frequency);
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
-        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq'),
+        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq')
           avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
         elseif strcmp(data.dimord, 'chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
           avg = data.fourierspctrm(datchanindx, fbin, tbin);
-        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time'),
+        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
           avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
         end
@@ -470,12 +470,12 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
         fbin = nearest(data.freq, cfg.frequency);
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
-        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq'),
+        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq')
           avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
         elseif strcmp(data.dimord, 'chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
           avg = data.fourierspctrm(datchanindx, fbin, tbin);
-        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time'),
+        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
           avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
         end
@@ -942,7 +942,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   
   size_avg = [size(avg) 1];
   size_Cy  = [size(Cy) 1];
-  if strcmp(cfg.method, 'lcmv')% && ~isfield(grid, 'filter'),
+  if strcmp(cfg.method, 'lcmv')% && ~isfield(grid, 'filter')
     for i = 1:Nrepetitions
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
@@ -1008,7 +1008,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       dip(i) = ft_sloreta(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:});
     end
     
-  elseif strcmp(cfg.method, 'eloreta'),
+  elseif strcmp(cfg.method, 'eloreta')
     for i=1:Nrepetitions
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);

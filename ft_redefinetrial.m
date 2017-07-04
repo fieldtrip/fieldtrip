@@ -170,7 +170,7 @@ if ~isempty(cfg.toilim)
   end
 
   % also correct the sample information
-  if isfield(data, 'sampleinfo'),
+  if isfield(data, 'sampleinfo')
     data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
     data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
   end

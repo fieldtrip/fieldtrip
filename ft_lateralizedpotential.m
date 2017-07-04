@@ -91,7 +91,7 @@ avgL = ft_checkdata(avgL, 'datatype', 'timelock');
 avgR = ft_checkdata(avgR, 'datatype', 'timelock');
 
 % set the defaults
-if ~isfield(cfg, 'channelcmb'),
+if ~isfield(cfg, 'channelcmb')
   cfg.channelcmb = {
     'Fp1'   'Fp2'
     'F7'    'F8'

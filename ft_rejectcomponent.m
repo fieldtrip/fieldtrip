@@ -127,7 +127,7 @@ end
 
 % set the rejected component amplitudes to zero
 fprintf('removing %d components\n', length(reject));
-if ~hasdata,
+if ~hasdata
   fprintf('keeping %d components\n',  ncomps-length(reject));
 else
   fprintf('keeping %d components\n',  nchans-length(reject));

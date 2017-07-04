@@ -220,11 +220,11 @@ end
 
 % check whether rpt/subj is present and remove if necessary and whether
 hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
-if hasrpt,
+if hasrpt
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
   % on the fly computation of coherence spectrum is not supported
-  if isfield(data, 'crsspctrm'),
+  if isfield(data, 'crsspctrm')
     data = rmfield(data, 'crsspctrm');
   end
   % keep mask-parameter if it is set
@@ -324,7 +324,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     return
   end
 
-  if ~isfull,
+  if ~isfull
     % Convert 2-dimensional channel matrix to a single dimension:
     if isempty(cfg.directionality)
       sel1 = find(strcmp(cfg.refchannel, data.labelcmb(:, 2)));

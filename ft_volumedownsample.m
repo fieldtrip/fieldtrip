@@ -80,7 +80,7 @@ cfg.smooth     = ft_getopt(cfg, 'smooth',     'no');
 
 if strcmp(cfg.keepinside, 'yes')
   % add inside to the list of parameters
-  if ~iscell(cfg.parameter),
+  if ~iscell(cfg.parameter)
     cfg.parameter = {cfg.parameter 'inside'};
   else
     cfg.parameter(end+1) = {'inside'};
@@ -108,7 +108,7 @@ downsample.xgrid     = xsel;
 downsample.ygrid     = ysel;
 downsample.zgrid     = zsel;
 downsample.dim = [length(xsel) length(ysel) length(zsel)];
-if length(source.dim)>3,
+if length(source.dim)>3
   downsample.dim = [downsample.dim source.dim(4:end)];
 end
 
@@ -116,7 +116,7 @@ end
 downsample = grid2transform(downsample);
 
 % smooth functional parameters, excluding anatomy and inside
-if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no'),
+if isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')
   % check that the preferred SPM version is on the path
   ft_hastoolbox(cfg.spmversion, 1);
 

@@ -106,7 +106,7 @@ if ft_abort
 end
 
 % this is not supported any more as of 26/10/2011
-if ischar(anatomical),
+if ischar(anatomical)
   error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 

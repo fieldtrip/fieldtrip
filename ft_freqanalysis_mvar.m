@@ -80,7 +80,7 @@ cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 %cfg.jackknife  = ft_getopt(cfg, 'jackknife',  'no');
 %cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
 
-if strcmp(cfg.foi, 'all'),
+if strcmp(cfg.foi, 'all')
   cfg.foi = (0:1:data.fsampleorig/2);
 end
 
@@ -190,7 +190,7 @@ freq.transfer  = h;
 %freq.itransfer = a;
 freq.noisecov  = data.noisecov;
 freq.crsspctrm = crsspctrm;
-if isfield(data, 'dof'),
+if isfield(data, 'dof')
   freq.dof       = data.dof;
 end
 if isfull

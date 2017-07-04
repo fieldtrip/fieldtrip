@@ -270,7 +270,7 @@ switch cfg.filetype
     % write in BrainVoyager VMP format
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fid = fopen(sprintf('%s.vmp', cfg.filename),'w');
-    if fid < 0,
+    if fid < 0
       error('Cannot write to file %s.vmp\n',cfg.filename);
     end
 
@@ -348,7 +348,7 @@ switch cfg.filetype
     % write in BrainVoyager VMR format
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fid = fopen(sprintf('%s.vmr',cfg.filename),'w');
-    if fid < 0,
+    if fid < 0
       error('Cannot write to file %s.vmr\n',cfg.filename);
     end
 
