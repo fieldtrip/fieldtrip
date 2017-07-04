@@ -265,7 +265,7 @@ switch varargin{1}
     end
     
     % first input might be msgId
-    if any(varargin{1}==':') && numel(varargin)>1
+    if numel(varargin)>1 && ~isempty(regexp(varargin{1}, '^\w*:', 'once'))
       msgId = varargin{1};
       varargin = varargin(2:end); % shift them all by one
     else
