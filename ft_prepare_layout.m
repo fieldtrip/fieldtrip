@@ -589,7 +589,7 @@ elseif ~isempty(cfg.opto) && isstruct(cfg.opto)
     layout = opto2lay(sens, data.label);
   else
     layout = opto2lay(sens, sens.label);
-  end;
+  end
   
 elseif isfield(data, 'opto') && isstruct(data.opto)
   fprintf('creating layout from data.opto\n');
@@ -598,7 +598,7 @@ elseif isfield(data, 'opto') && isstruct(data.opto)
     layout = opto2lay(sens, data.label);
   else
     layout = opto2lay(sens, sens.label);
-  end;
+  end
   
 elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   % deal with image file

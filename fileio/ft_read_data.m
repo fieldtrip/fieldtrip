@@ -634,7 +634,7 @@ switch dataformat
       dat2=zeros(hdr.nChans,hdr.nSamples,hdr.nTrials);
       for i=1:hdr.nTrials
         dat2(:,:,i)=dat(:,hdr.orig.epochdef(i,1):hdr.orig.epochdef(i,2));
-      end;
+      end
       dat=dat2;
     end
     
@@ -650,7 +650,7 @@ switch dataformat
     for i=1:length(globalList)
       eval(['global ' globalList(i).name ';']);
       eval(['globalTemp{end+1}=' globalList(i).name ';']);
-    end;
+    end
     %%%%%%%%%%%%%%%%%%%%%%
     
     mff_setup;
@@ -662,8 +662,8 @@ switch dataformat
       eval([globalList(i).name '=globalTemp{i};']);
       if ~any(strcmp(globalList(i).name,varNames)) %was global variable originally out of scope?
         eval(['clear ' globalList(i).name ';']); %clears link to global variable without affecting it
-      end;
-    end;
+      end
+    end
     clear globalTemp globalList varNames varList;
     %%%%%%%%%%%%%%%%%%%%%%
     

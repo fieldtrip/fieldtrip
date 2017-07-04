@@ -475,15 +475,15 @@ if hasfun
       if isequal(cfg.funcolorlim, 'maxabs')
         fcolmin = -max(abs([funmin,funmax]));
         fcolmax =  max(abs([funmin,funmax]));
-        if isequal(cfg.funcolormap, 'auto'); cfg.funcolormap = 'default'; end;
+        if isequal(cfg.funcolormap, 'auto'); cfg.funcolormap = 'default'; end
       elseif isequal(cfg.funcolorlim, 'zeromax')
         fcolmin = 0;
         fcolmax = funmax;
-        if isequal(cfg.funcolormap, 'auto'); cfg.funcolormap = 'hot'; end;
+        if isequal(cfg.funcolormap, 'auto'); cfg.funcolormap = 'hot'; end
       elseif isequal(cfg.funcolorlim, 'minzero')
         fcolmin = funmin;
         fcolmax = 0;
-        if isequal(cfg.funcolormap, 'auto'); cfg.funcolormap = 'cool'; end;
+        if isequal(cfg.funcolormap, 'auto'); cfg.funcolormap = 'cool'; end
       else
         error('do not understand cfg.funcolorlim');
       end
@@ -601,15 +601,15 @@ if hasmsk
       case 'zeromax'
         opacmin = 0;
         opacmax = mskmax;
-        if isequal(cfg.opacitymap, 'auto'), cfg.opacitymap = 'rampup'; end;
+        if isequal(cfg.opacitymap, 'auto'), cfg.opacitymap = 'rampup'; end
       case 'minzero'
         opacmin = mskmin;
         opacmax = 0;
-        if isequal(cfg.opacitymap, 'auto'), cfg.opacitymap = 'rampdown'; end;
+        if isequal(cfg.opacitymap, 'auto'), cfg.opacitymap = 'rampdown'; end
       case 'maxabs'
         opacmin = -max(abs([mskmin, mskmax]));
         opacmax =  max(abs([mskmin, mskmax]));
-        if isequal(cfg.opacitymap, 'auto'), cfg.opacitymap = 'vdown'; end;
+        if isequal(cfg.opacitymap, 'auto'), cfg.opacitymap = 'vdown'; end
       otherwise
         error('incorrect specification of cfg.opacitylim');
     end % switch opacitylim
@@ -724,9 +724,9 @@ switch cfg.method
     
     % TODO: HERE THE FUNCTION THAT MAKES TO SLICE DIMENSION ALWAYS THE THIRD DIMENSION, AND ALSO KEEP TRANSFORMATION MATRIX UP TO DATE
     % zoiets
-    % if hasana; ana = shiftdim(ana,cfg.slicedim-1); end;
-    % if hasfun; fun = shiftdim(fun,cfg.slicedim-1); end;
-    % if hasmsk; msk = shiftdim(msk,cfg.slicedim-1); end;
+    % if hasana; ana = shiftdim(ana,cfg.slicedim-1); end
+    % if hasfun; fun = shiftdim(fun,cfg.slicedim-1); end
+    % if hasmsk; msk = shiftdim(msk,cfg.slicedim-1); end
     
     % ADDED BY JM: allow for slicedim different than 3
     switch cfg.slicedim
@@ -775,13 +775,13 @@ switch cfg.method
     ind_allslice = linspace(ind_fslice,ind_lslice,cfg.nslices);
     ind_allslice = round(ind_allslice);
     % make new ana, fun, msk, mskana with only the slices that will be plotted (slice dim is always third dimension)
-    if hasana; new_ana = ana(:,:,ind_allslice); clear ana; ana=new_ana; clear new_ana; end;
-    if hasfun; new_fun = fun(:,:,ind_allslice); clear fun; fun=new_fun; clear new_fun; end;
-    if hasmsk; new_msk = msk(:,:,ind_allslice); clear msk; msk=new_msk; clear new_msk; end;
-    % if hasmskana; new_mskana = mskana(:,:,ind_allslice); clear mskana; mskana=new_mskana; clear new_mskana; end;
+    if hasana; new_ana = ana(:,:,ind_allslice); clear ana; ana=new_ana; clear new_ana; end
+    if hasfun; new_fun = fun(:,:,ind_allslice); clear fun; fun=new_fun; clear new_fun; end
+    if hasmsk; new_msk = msk(:,:,ind_allslice); clear msk; msk=new_msk; clear new_msk; end
+    % if hasmskana; new_mskana = mskana(:,:,ind_allslice); clear mskana; mskana=new_mskana; clear new_mskana; end
     
     % update the dimensions of the volume
-    if hasana; dim=size(ana); else dim=size(fun); end;
+    if hasana; dim=size(ana); else dim=size(fun); end
     
     %%%%% make a "quilt", that contain all slices on 2D patched sheet
     % Number of patches along sides of Quilt (M and N)
@@ -806,10 +806,10 @@ switch cfg.method
     num_slice = (dim(cfg.slicedim));
     num_empt = num_patch-num_slice;
     % put empty slides on ana, fun, msk, mskana to fill Quilt up
-    if hasana; ana(:,:,end+1:num_patch)=0; end;
-    if hasfun; fun(:,:,end+1:num_patch)=0; end;
-    if hasmsk; msk(:,:,end+1:num_patch)=0; end;
-    % if hasmskana; mskana(:,:,end:num_patch)=0; end;
+    if hasana; ana(:,:,end+1:num_patch)=0; end
+    if hasfun; fun(:,:,end+1:num_patch)=0; end
+    if hasmsk; msk(:,:,end+1:num_patch)=0; end
+    % if hasmskana; mskana(:,:,end:num_patch)=0; end
     % put the slices in the quilt
     for iSlice = 1:num_slice
       xbeg = floor((iSlice-1)./M);
@@ -828,15 +828,15 @@ switch cfg.method
       %     end
     end
     % make vols and scales, containes volumes to be plotted (fun, ana, msk), added by ingnie
-    if hasana; vols2D{1} = quilt_ana; scales{1} = []; end; % needed when only plotting ana
-    if hasfun; vols2D{2} = quilt_fun; scales{2} = [fcolmin fcolmax]; end;
-    if hasmsk; vols2D{3} = quilt_msk; scales{3} = [opacmin opacmax]; end;
+    if hasana; vols2D{1} = quilt_ana; scales{1} = []; end % needed when only plotting ana
+    if hasfun; vols2D{2} = quilt_fun; scales{2} = [fcolmin fcolmax]; end
+    if hasmsk; vols2D{3} = quilt_msk; scales{3} = [opacmin opacmax]; end
     
     % the transpose is needed for displaying the matrix using the MATLAB image() function
-    if hasana;             ana = vols2D{1}'; end;
-    if hasfun && ~doimage; fun = vols2D{2}'; end;
-    if hasfun &&  doimage; fun = permute(vols2D{2},[2 1 3]); end;
-    if hasmsk;             msk = vols2D{3}'; end;
+    if hasana;             ana = vols2D{1}'; end
+    if hasfun && ~doimage; fun = vols2D{2}'; end
+    if hasfun &&  doimage; fun = permute(vols2D{2},[2 1 3]); end
+    if hasmsk;             msk = vols2D{3}'; end
     
     if hasana
       % scale anatomy between 0 and 1
@@ -923,7 +923,7 @@ switch cfg.method
           end
         else
           loc = 'center';
-        end;
+        end
       else
         loc = cfg.location;
       end
@@ -1718,7 +1718,7 @@ switch key
     elseif strcmp(tag, 'jk') && (strcmp(key, 'm') || strcmp(key, 'downarrow')  || isequal(key, 31)), opt.ijk(3) = opt.ijk(3)-1; opt.update = [0 0 1];
     else
       % do nothing
-    end;
+    end
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     

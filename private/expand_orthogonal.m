@@ -60,9 +60,9 @@ function [B] = expand_orthogonal(A,flg,method)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check the input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if (nargin<1) || (nargin>3), error('incorrect number of input arrguments'); end;
-if (nargin<3), method = 'svd'; end;
-if (nargin<2), flg = 0; end;
+if (nargin<1) || (nargin>3), error('incorrect number of input arrguments'); end
+if (nargin<3), method = 'svd'; end
+if (nargin<2), flg = 0; end
 
 % A must be a matrix with more rows than columns containing only real numbers
 if isempty(A) || ~isnumeric(A) || ~isreal(A) || any(~isfinite(A(:))) ...
@@ -86,7 +86,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % normalize the columns of A to unit length
 [nrows, ncols] = size(A);
-for i=1:ncols, A(:,i) = A(:,i)./norm(A(:,i),2); end;
+for i=1:ncols, A(:,i) = A(:,i)./norm(A(:,i),2); end
 % determine how many columns have to be expanded
 nxpnd = nrows-ncols;
 if (nxpnd<1)
@@ -133,7 +133,7 @@ switch lower(method)
          % determine and accumulate the vector projections of the first i-1 columns
          % onto the ith column
          tmp = tmp.*0;
-         for j=1:i-1, tmp = tmp + B(:,j).*(B(:,j)'*B(:,i)); end;
+         for j=1:i-1, tmp = tmp + B(:,j).*(B(:,j)'*B(:,i)); end
          % subtract the projections
          B(:,i) = B(:,i) - tmp;
          % normalize to unit norm
@@ -152,7 +152,7 @@ end % switch lower(method)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % optionally replace the first ncols columns of B with normalized columns of A
 % for output
-if (flg==0), B(:,1:ncols) = A; end;
+if (flg==0), B(:,1:ncols) = A; end
 
 
 % end of function

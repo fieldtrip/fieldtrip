@@ -80,15 +80,15 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'artfctdef.clip.thresh', 'artfctdef.cli
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters for clip artifacts if necessary.
-if ~isfield(cfg,'artfctdef'),                    cfg.artfctdef                    = [];    end;
-if ~isfield(cfg.artfctdef,'clip'),               cfg.artfctdef.clip               = [];    end;
-if ~isfield(cfg.artfctdef.clip,'channel'),       cfg.artfctdef.clip.channel       = 'all'; end;
-if ~isfield(cfg.artfctdef.clip,'timethreshold'), cfg.artfctdef.clip.timethreshold = 0.010; end;
-if ~isfield(cfg.artfctdef.clip,'amplthreshold'), cfg.artfctdef.clip.amplthreshold = 0.000; end;
-if ~isfield(cfg.artfctdef.clip,'pretim'),        cfg.artfctdef.clip.pretim        = 0.000; end;
-if ~isfield(cfg.artfctdef.clip,'psttim'),        cfg.artfctdef.clip.psttim        = 0.000; end;
-if ~isfield(cfg, 'headerformat'),                cfg.headerformat                 = [];    end;
-if ~isfield(cfg, 'dataformat'),                  cfg.dataformat                   = [];    end;
+if ~isfield(cfg,'artfctdef'),                    cfg.artfctdef                    = [];    end
+if ~isfield(cfg.artfctdef,'clip'),               cfg.artfctdef.clip               = [];    end
+if ~isfield(cfg.artfctdef.clip,'channel'),       cfg.artfctdef.clip.channel       = 'all'; end
+if ~isfield(cfg.artfctdef.clip,'timethreshold'), cfg.artfctdef.clip.timethreshold = 0.010; end
+if ~isfield(cfg.artfctdef.clip,'amplthreshold'), cfg.artfctdef.clip.amplthreshold = 0.000; end
+if ~isfield(cfg.artfctdef.clip,'pretim'),        cfg.artfctdef.clip.pretim        = 0.000; end
+if ~isfield(cfg.artfctdef.clip,'psttim'),        cfg.artfctdef.clip.psttim        = 0.000; end
+if ~isfield(cfg, 'headerformat'),                cfg.headerformat                 = [];    end
+if ~isfield(cfg, 'dataformat'),                  cfg.dataformat                   = [];    end
 
 % for backward compatibility
 if isfield(cfg.artfctdef.clip,'sgn')

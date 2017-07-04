@@ -28,7 +28,7 @@ function [outputlabel, outputindex] = inputlabel2outputlabel(cfg, freq)
 %
 % $Id$
 
-if ~isfield(cfg, 'combinechan'), cfg.combinechan = 'no'; end;
+if ~isfield(cfg, 'combinechan'), cfg.combinechan = 'no'; end
 
 if strcmp(cfg.combinechan, 'no')
   % the output labels are similar to the input labels

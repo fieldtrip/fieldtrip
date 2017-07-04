@@ -658,7 +658,7 @@ for k = 1:numel(dimtok)
     otherwise
       if isfield(data, dimtok{k}) % check whether field exists
         ok = numel(data.(dimtok{k}))==1;
-      end;
+      end
   end
   if ok
     break;

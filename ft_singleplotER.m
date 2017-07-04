@@ -565,7 +565,7 @@ for i=1:Ndata
     elseif strcmp(cfg.ylim,'minzero')
       ymin = min([ymin min(datavector)]);
       ymax = 0;
-    end;
+    end
   else
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);

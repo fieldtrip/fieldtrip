@@ -20,6 +20,6 @@ for i=1:numel(datasets)
    cfg.dataset = [fileloc datasets{i}];
    if strcmp(datasets{i}(10:12),'seg')
      cfg.continuous = 'no';
-   end;
+   end
    data = ft_preprocessing(cfg);
 end;

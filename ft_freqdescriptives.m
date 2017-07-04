@@ -199,12 +199,12 @@ output                = [];
 output.dimord         = newdimord;
 output.freq           = freq.freq;
 output.label          = freq.label;
-if isfield(freq, 'time'), output.time      = freq.time;      end;
-if isfield(freq, 'grad'), output.grad      = freq.grad;      end;
-if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end;
-if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end;
 output.powspctrm      = powspctrm;
-if exist('powspctrmsem', 'var'), output.powspctrmsem = powspctrmsem; end;
+if isfield(freq, 'time'),      output.time      = freq.time;      end
+if isfield(freq, 'grad'),      output.grad      = freq.grad;      end
+if isfield(freq, 'cumtapcnt'), output.cumtapcnt = freq.cumtapcnt; end
+if isfield(freq, 'cumsumcnt'), output.cumsumcnt = freq.cumsumcnt; end
+if exist('powspctrmsem', 'var'), output.powspctrmsem = powspctrmsem; end
 
 % remember the trialinfo
 if strcmp(cfg.keeptrials, 'yes') && isfield(freq, 'trialinfo')

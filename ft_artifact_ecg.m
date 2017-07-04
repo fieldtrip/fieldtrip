@@ -203,7 +203,7 @@ while accept == 0,
       ft_warning('unrecognised response, assuming no');
       oldcutoff = artfctdef.cutoff;
       artfctdef.cutoff = input('\nenter new value \n');
-  end;
+  end
   close
 end
 

@@ -107,14 +107,14 @@ output.label  = chn;
 output.labelcmb(:,1) = freq.label(cmbindx(:,1));
 output.labelcmb(:,2) = freq.label(cmbindx(:,2));
 output.cumtapcnt = freq.cumtapcnt;
-try, output.grad = freq.grad; end;
-try, output.time = freq.time; end;
+try, output.grad = freq.grad; end
+try, output.time = freq.time; end
 output.powspctrm = powspctrm;
 output.crsspctrm = crsspctrm;
 if strcmp(cfg.keepfourier, 'yes'), output.fourierspctrm = freq.fourierspctrm; end 
 
-if isempty(output.crsspctrm), output = rmfield(output, 'crsspctrm'); end;
-if isempty(output.labelcmb ), output = rmfield(output, 'labelcmb' ); end;
+if isempty(output.crsspctrm), output = rmfield(output, 'crsspctrm'); end
+if isempty(output.labelcmb ), output = rmfield(output, 'labelcmb' ); end
 
 % add information about the version of this function to the configuration
 cfg.version.name = mfilename('fullpath');

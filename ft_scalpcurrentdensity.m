@@ -140,7 +140,7 @@ switch cfg.method
       else
         cfg.degree = 32;
       end
-    end;
+    end
   otherwise
     cfg = ft_checkconfig(cfg); % perform a simple consistency check
 end

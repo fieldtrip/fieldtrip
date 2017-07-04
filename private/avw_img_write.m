@@ -245,7 +245,7 @@ if verbose, tic; end
 %    avw.hdr.dime.dim(currDim+2:minDim+1) = int16(1);
 %    avw.hdr.dime.pixdim(1) = int16(minDim);
 %    avw.hdr.dime.pixdim(currDim+2:minDim+1) = int16(1);
-% end;
+% end
 
 
 fid = fopen(sprintf('%s.hdr',fileprefix),'w',machine);

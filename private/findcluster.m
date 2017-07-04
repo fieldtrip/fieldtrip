@@ -56,11 +56,11 @@ end
 minnbchan=0;
 if length(varargin)==1
     minnbchan=varargin{1};
-end;
+end
 if length(varargin)==2
     spatdimneighbselmat=varargin{1};
     minnbchan=varargin{2};
-end;
+end
 
 if minnbchan>0
     % For every (time,frequency)-element, it is calculated how many significant
@@ -69,18 +69,18 @@ if minnbchan>0
     
     if length(varargin)==1
         selectmat = single(spatdimneighbstructmat | spatdimneighbstructmat');
-    end;
+    end
     if length(varargin)==2
         selectmat = single(spatdimneighbselmat | spatdimneighbselmat');
-    end;
+    end
     nremoved=1;
     while nremoved>0
         nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength (nfreq*ntime)]),[spatdimlength nfreq ntime]);
         remove=(onoff.*nsigneighb)<minnbchan;
         nremoved=length(find(remove.*onoff));
         onoff(remove)=0;
-    end;
-end;
+    end
+end
 
 % for each channel (combination), find the connected time-frequency clusters
 labelmat = zeros(size(onoff));

@@ -528,7 +528,7 @@ switch submethod
       lf1 = ft_compute_leadfield(refdip.pos, grad, headmodel, 'reducerank', reducerank, 'normalize', normalize);
       if isfield(refdip,'mom'); % check for fixed orientation
         lf1 = lf1.*refdip.mom(:); 
-      end; 
+      end 
       filt1 = pinv(lf1' * invCf * lf1) * lf1' * invCf;       % use PINV/SVD to cover rank deficient leadfield
     else % backwards compatible with previous implementation - only position of refdip is present
       % compute cortio-cortical coherence with a dipole at the reference position

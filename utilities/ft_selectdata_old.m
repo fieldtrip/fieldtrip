@@ -195,8 +195,8 @@ if length(data)>1 && ~israw,
            % dimtok is 'rpt' or 'rpttap'
            dimdat2 = size(data{m}.(param{1}),1);
          end
-         try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end;
-         try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end;
+         try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end
+         try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end
        end
      end
     catdim = find(sum(dimmat,2)<length(data));
@@ -519,7 +519,7 @@ if selectchan,
 end
 
 if selectfoi,
-  if numel(selfoi)==1, selfoi(2) = selfoi; end;
+  if numel(selfoi)==1, selfoi(2) = selfoi; end
   if numel(selfoi)==2,
     % treat selfoi as lower limit and upper limit
     selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
@@ -535,7 +535,7 @@ if selectfoi,
 end
 
 if selecttoi && ~israw,
-  if length(seltoi)==1, seltoi(2) = seltoi; end;
+  if length(seltoi)==1, seltoi(2) = seltoi; end
   if numel(seltoi)==2,
     % treat seltoi as lower limit and upper limit
     toitmp=nearest(data.time,[seltoi(1) seltoi(2)]);

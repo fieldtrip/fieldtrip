@@ -320,9 +320,9 @@ if dointersect
     intzmax = max(pos(:,3))+radius; intzmin = min(pos(:,3))-radius;
     
     % Define potential slices with data
-    if oriX; potent_slices = round(intxmin):round(intxmax); end;
-    if oriY; potent_slices = round(intymin):round(intymax); end;
-    if oriZ; potent_slices = round(intzmin):round(intzmax); end;
+    if oriX; potent_slices = round(intxmin):round(intxmax); end
+    if oriY; potent_slices = round(intymin):round(intymax); end
+    if oriZ; potent_slices = round(intzmin):round(intzmax); end
     
     area = NaN(length(pos),length(potent_slices)); % preallocate matrix of electrode interpolation area for each slice
     for s = 1:length(potent_slices) % only search slices that could potentially contain data

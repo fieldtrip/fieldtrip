@@ -230,9 +230,9 @@ switch cfg.timeresolved
                     power(:,lagindx,2,trialindx)       = power(:,lagindx,2,trialindx)+ abs(fcs2(chancmbind(:,2),tcounter)).^2;
                     hasdata(trialindx,lagindx)         = true;
                     nsmplslaggedcps(lagindx,trialindx) = nsmplslaggedcps(lagindx,trialindx)+1;
-                end;
-            end;
-        end;
+                end
+            end
+        end
         
         % calculate lagged coherence
         if strcmp('lcoh',cfg.output)
@@ -301,7 +301,7 @@ switch cfg.timeresolved
                     if sum(hasdata(trials,lagindx),1)==0
                         laggedcrsspctrm(trialset,:,lagindx) = NaN;
                     end
-                end;
+                end
             end
             % make output structure
             lcoh = [];
@@ -376,8 +376,8 @@ switch cfg.timeresolved
                 power(:,tcounter,1,trialindx)           = abs(fcs1(chancmbind(:,1),tcounter)).^2;
                 power(:,tcounter,2,trialindx)           = abs(fcs2(chancmbind(:,2),tcounter)).^2;
                 hasdata(trialindx,tcounter)             = true;
-            end;
-        end;
+            end
+        end
         
         % calculate lagged coherence
         if strcmp('lcoh',cfg.output)
@@ -438,7 +438,7 @@ switch cfg.timeresolved
                     laggedcrsspctrm(trialset,:,toii)= sumlaggedcps(:,toii)/sumnsmpls;
                     powspctrm1(trialset,:,toii)     = sumpower(:,toii,1)/sumnsmpls;
                     powspctrm2(trialset,:,toii)     = sumpower(:,toii,2)/sumnsmpls;
-                end;
+                end
             end
             % make output structure
             lcoh = [];

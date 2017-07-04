@@ -112,10 +112,10 @@ xLim = abc(1:2);
 yLim = abc(3:4);
 
 % limit cursor coordinates
-if p(1)<xLim(1), p(1)=xLim(1); end;
-if p(1)>xLim(2), p(1)=xLim(2); end;
-if p(2)<yLim(1), p(2)=yLim(1); end;
-if p(2)>yLim(2), p(2)=yLim(2); end;
+if p(1)<xLim(1), p(1)=xLim(1); end
+if p(1)>xLim(2), p(1)=xLim(2); end
+if p(2)<yLim(1), p(2)=yLim(1); end
+if p(2)>yLim(2), p(2)=yLim(2); end
 
 % determine whether the user is currently making a selection
 selecting = numel(userData.range)>0 && any(isnan(userData.range(end,:)));

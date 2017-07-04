@@ -256,15 +256,15 @@ elseif ~isempty(cfg.trl)
       data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
       if isfield(dataold,'trialinfo')
         ft_warning('Original data has trialinfo, using user specified trialinfo instead');
-      end;
+      end
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
       if numel(iTrlorig) == 1 || ...  % only 1 old trial to copy trialinfo from, or
           size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1) % all old trialinfo rows are identical
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
       else
         error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
-      end;
-    end;
+      end
+    end
   end %for iTrl
 
   % adjust the sampleinfo in the output

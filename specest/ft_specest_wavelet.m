@@ -190,7 +190,7 @@ for ifreqoi = 1:nfreqoi
   %   else
   %     line([ceil(tline) ceil(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
   %     line([floor(tline) floor(tline)],[-max(abs(wavelet)) max(abs(wavelet))],'color','g','linestyle','--');
-  %   end;
+  %   end
   %   subplot(2,1,2);
   %   plot(angle(wavelet),'color','g');
   %   if mod(tline,2)==0,

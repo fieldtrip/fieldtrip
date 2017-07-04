@@ -759,6 +759,6 @@ end % for each of the fieldsorig
 function [newNeighbours] = fixneighbours(neighbours)
 newNeighbours = struct;
 for i=1:numel(neighbours)
-  if i==1, newNeighbours = neighbours{i};    end;
+  if i==1, newNeighbours = neighbours{i};    end
   newNeighbours(i) = neighbours{i};
 end

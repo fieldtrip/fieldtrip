@@ -318,8 +318,8 @@ elseif iseeg
   Nchans = length(sens.label);
   
   sens.label     = sens.label(selsens);
-  try, sens.chantype  = sens.chantype(selsens); end;
-  try, sens.chanunit  = sens.chanunit(selsens); end;
+  try, sens.chantype  = sens.chantype(selsens); end
+  try, sens.chanunit  = sens.chanunit(selsens); end
   
   if isfield(sens, 'tra')
     % first only modify the linear combination of electrodes into channels

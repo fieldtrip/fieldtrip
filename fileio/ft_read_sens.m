@@ -314,7 +314,7 @@ switch fileformat
         y(i,1) = str2double(ytemp{i}(8:end-1));
         z(i,1) = str2double(ztemp{i}(8:end-3));
         lbl{i,1} = labtemp{i}(14:end-1);
-      end;
+      end
       
       % Create and fill sens structure
       sens = [];
@@ -335,11 +335,11 @@ switch fileformat
           sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
           sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
           sens.label{i} = tmp(i).Marker.description;
-        end;
-      end;
+        end
+      end
       
       sens.chanpos = sens.elecpos;
-    end;
+    end
     
   case 'easycap_txt'
     % Read the file and store all contents in cells of strings

@@ -55,7 +55,7 @@ src.vol = zeros(nx, ny, nz);
 
 for i=1:nz
   % search up to the next slice
-  while isempty(strmatch(sprintf('Z: %d', i-1), line)), line = fgetl(fid); check_feof(fid, filename); end;
+  while isempty(strmatch(sprintf('Z: %d', i-1), line)), line = fgetl(fid); check_feof(fid, filename); end
   % read all the values for this slice
   buf = fscanf(fid, '%f', [nx ny]);
   src.vol(:,:,i) = buf;

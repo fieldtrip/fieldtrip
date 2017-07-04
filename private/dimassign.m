@@ -39,22 +39,22 @@ if(~iscell(idx))
     if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
         length(dim)~=length(idx))
         error('dim and idx must be both scalars oor both must have the same length');
-    end;
+    end
     dummi=[];
     for(i=1:length(idx))
         dummi{i}=idx(i);
-    end;
+    end
     idx=dummi;
     clear dummi;
-end;
+end
 if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
     length(dim)~=length(idx))
     error('dim and idx must be both scalars or both must have the same length');
-end;
+end
 
 if(~isequal(unique(dim),sort(dim)))
     error('dim must be unique, every dimention can be addressed only once');
-end;
+end
 
 Na=ndims(A);
 for(i=1:max([max(dim),Na]))
@@ -63,11 +63,11 @@ for(i=1:max([max(dim),Na]))
         C{i}=':';
     else
         C{i}=idx{ref};
-    end;
-end;
+    end
+end
 M=A;        
 try
     M(C{:})=B;
 catch
     error('Subscripted assignment dimension mismatch.');
-end;
+end

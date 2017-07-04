@@ -69,16 +69,16 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end;
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end;
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
+if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
+if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
+if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
+if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
+if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
     error('P-values can only be calculated if the test statistics are calculated.');
-end;
+end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
     error('cfg.uvar should not exist for an independent samples statistic');
 end
@@ -101,10 +101,10 @@ nreplc2 = length(selc2);
 nrepl = nreplc1 + nreplc2;
 if nrepl<size(design,1)
   error('Invalid specification of the independent variable in the design array.');
-end;
+end
 if nreplc1<2 || nreplc2<2
     error('Every condition must contain at least two trials/tapers.');
-end;
+end
 dfc1 = nreplc1*2;
 dfc2 = nreplc2*2;
 
@@ -132,9 +132,9 @@ if strcmp(cfg.computestat, 'yes')
     denomZ=sqrt(1./(dfc1-2) + 1./(dfc2-2));
     tempstat=(atanh(abs(csdc1))-biasc1-atanh(abs(csdc2))+biasc2)./denomZ;
     s.stat(((freqtimindx-1)*nchancmb + 1):(freqtimindx*nchancmb))=tempstat(chancmbsel);
-  end;
+  end
   s.stat = reshape(s.stat, [nchancmb nfreqtim]);
-end;
+end
 
 if strcmp(cfg.computecritval,'yes')
   % also compute the critical values
@@ -144,7 +144,7 @@ if strcmp(cfg.computecritval,'yes')
     s.critval = [norminv(cfg.alpha/2),norminv(1-cfg.alpha/2)];
   elseif cfg.tail==1
     s.critval = norminv(1-cfg.alpha);
-  end;
+  end
 end
 
 if strcmp(cfg.computeprob,'yes')
@@ -155,7 +155,7 @@ if strcmp(cfg.computeprob,'yes')
     s.prob = 2*normcdf(-abs(s.stat));
   elseif cfg.tail==1
     s.prob = 1-normcdf(s.stat);
-  end;
+  end
   s.prob = reshape(s.prob, [nchancmb nfreqtim]);
 end
 

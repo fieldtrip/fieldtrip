@@ -808,7 +808,7 @@ switch eventformat
         event(eventCount).duration =  hdr.nSamples;
         event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
       end
-    end;
+    end
     
   case {'egi_mff_v1' 'egi_mff'} % this is currently the default
     % The following represents the code that was written by Ingrid, Robert
@@ -837,7 +837,7 @@ switch eventformat
       xml=struct([]);
     else
       xml=[];
-    end;
+    end
     for i = 1:numel(xmlfiles)
       if strcmpi(xmlfiles(i).name(1:6), 'Events')
         fieldname       = strrep(xmlfiles(i).name(1:end-4), ' ', '_');
@@ -892,7 +892,7 @@ switch eventformat
                   eventSample = Msamp2offset(1,EpochNum,SampIndex);
                 else
                   eventSample=[]; %Drop event if past end of epoch
-                end;
+                end
               else
                 eventSample = eventOffset+1;
               end
@@ -904,11 +904,11 @@ switch eventformat
                 event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
                 event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
                 event(eventCount).orig    = xml.(eventNames{iXml})(iEvent).event;
-              end;
+              end
             end  %if that takes care of non "-" events that are still out of range
           end %if that takes care of "-" events, which are out of range
         end %iEvent
-      end;
+      end
     end
     
     % add "epoch" events for epoched data, i.e. data with variable length segments

@@ -1757,7 +1757,7 @@ switch key
     elseif strcmp(tag,'jk') && (strcmp(key,'m') || strcmp(key,'downarrow')  || isequal(key, 31)), opt.ijk(3) = opt.ijk(3)-1; opt.update = [0 0 1];
     else
       % do nothing
-    end;
+    end
     
     setappdata(h, 'opt', opt);
     cb_redraw(h);
