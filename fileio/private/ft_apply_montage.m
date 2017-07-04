@@ -162,19 +162,19 @@ end
 
 % check the consistency of the montage
 if ~iscell(montage.labelold) || ~iscell(montage.labelnew)
-  error('montage labels need to be specified in cell-arrays');
+  ft_error('montage labels need to be specified in cell-arrays');
 end
 
 % check the consistency of the montage
 if ~all(isfield(montage, {'tra', 'labelold', 'labelnew'}))
-  error('the second input argument does not correspond to a montage');
+  ft_error('the second input argument does not correspond to a montage');
 end
 
 % check the consistency of the montage
 if size(montage.tra,1)~=length(montage.labelnew)
-  error('the number of channels in the montage is inconsistent');
+  ft_error('the number of channels in the montage is inconsistent');
 elseif size(montage.tra,2)~=length(montage.labelold)
-  error('the number of channels in the montage is inconsistent');
+  ft_error('the number of channels in the montage is inconsistent');
 end
 
 % use a default unit transfer from sensors to channels if not otherwise specified
@@ -258,7 +258,7 @@ if k > 0 && isfield(input, 'trial') % check for raw data now only
   % use an anonymous function to test for the presence of NaNs in the input data
   hasnan = @(x) any(isnan(x(:)));
   if any(cellfun(hasnan, data_unused.trial))
-    error('FieldTrip:NaNsinInputData', ['Your input data contains NaNs in channels that are unused '...
+    ft_error('FieldTrip:NaNsinInputData', ['Your input data contains NaNs in channels that are unused '...
       'in the supplied montage. This would result in undesired NaNs in the '...
       'output data. Please remove these channels from the input data (using '...
       'ft_selectdata) before attempting to apply the montage.']);
@@ -287,15 +287,15 @@ clear addlabel addchantype addchanunit m n k
 m = size(montage.tra,1);
 n = size(montage.tra,2);
 if length(unique(montage.labelnew))~=m
-  error('not all output channels of the montage are unique');
+  ft_error('not all output channels of the montage are unique');
 end
 if length(unique(montage.labelold))~=n
-  error('not all input channels of the montage are unique');
+  ft_error('not all input channels of the montage are unique');
 end
 
 % determine whether all channels that have to be rereferenced are available
 if length(intersect(inputlabel, montage.labelold))~=length(montage.labelold)
-  error('not all channels that are required in the montage are available in the data');
+  ft_error('not all channels that are required in the montage are available in the data');
 end
 
 % reorder the columns of the montage matrix
@@ -330,9 +330,9 @@ elseif isfield(input, 'chanunitnew') && ~isequal(input.chanunitnew, montage.chan
 end
 
 if isfield(input, 'chantype') && ~isequal(input.chantype, montage.chantypeold)
-  error('inconsistent chantype in data and montage');
+  ft_error('inconsistent chantype in data and montage');
 elseif isfield(input, 'chantypenew') && ~isequal(input.chantypenew, montage.chantypeold)
-  error('inconsistent chantype in data and montage');
+  ft_error('inconsistent chantype in data and montage');
 end
 
 if isfield(input, 'labelold') && isfield(input, 'labelnew')
@@ -526,7 +526,7 @@ switch inputtype
       end
       freq.fourierspctrm = output; % replace the original Fourier spectrum
     else
-      error('unsupported dimord in frequency data (%s)', freq.dimord);
+      ft_error('unsupported dimord in frequency data (%s)', freq.dimord);
     end
     
     freq.label    = montage.labelnew;
@@ -538,7 +538,7 @@ switch inputtype
     clear freq
     
   otherwise
-    error('unrecognized input');
+    ft_error('unrecognized input');
 end % switch inputtype
 
 % only retain the chantype and/or chanunit if they were present in the input

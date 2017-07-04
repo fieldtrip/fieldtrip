@@ -208,11 +208,11 @@ switch cmd
     retval = pbsid;
 
   otherwise
-    error('unsupported command (%s)', cmd);
+    ft_error('unsupported command (%s)', cmd);
 end % switch
 
 if length(list_jobid)~=length(list_pbsid)
-  error('jobid and pbsid lists are inconsistent');
+  ft_error('jobid and pbsid lists are inconsistent');
 end
 
 if mislocked && isempty(list_jobid) && isempty(list_pbsid)

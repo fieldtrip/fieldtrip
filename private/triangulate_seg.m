@@ -53,7 +53,7 @@ dim = size(seg);
 len = ceil(sqrt(sum(dim.^2))/2);
 
 if ~any(seg(:))
-  error('the segmentation is empty')
+  ft_error('the segmentation is empty')
 end
 
 % define the origin if it is not provided in the input arguments

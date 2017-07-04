@@ -43,7 +43,7 @@ else
 end
 
 if hdr.nChans~=nchan
-  error('number of channels in in header does not match with the data');
+  ft_error('number of channels in in header does not match with the data');
 end
 
 % this is the only supported data format

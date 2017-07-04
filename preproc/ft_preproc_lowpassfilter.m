@@ -159,7 +159,7 @@ switch type
 
     % Input arguments
     if length(Flp) ~= 1
-        error('One cutoff frequency required.')
+        ft_error('One cutoff frequency required.')
     end
 
     % Filter order AND transition width set?
@@ -174,7 +174,7 @@ switch type
     isOrderLow = false;
     if ~isempty(df)
       if df > maxDf
-        error('Transition band too wide. Maximum transition width is %.2f Hz.', maxDf)
+        ft_error('Transition band too wide. Maximum transition width is %.2f Hz.', maxDf)
       end
       [N, dev] = firwsord(wintype, Fs, df, dev);
     else % Check filter order otherwise
@@ -273,7 +273,7 @@ switch type
     filt        = 2*real(ifft(f,[],2)); % iFFT
     return
   otherwise
-    error('unsupported filter type "%s"', type);
+    ft_error('unsupported filter type "%s"', type);
 end
 
 % demean the data before filtering
@@ -300,7 +300,7 @@ catch
       filt = ft_preproc_lowpassfilter(dat ,Fs,Flp,N1,type,dir,instabilityfix);
       filt = ft_preproc_lowpassfilter(filt,Fs,Flp,N2,type,dir,instabilityfix);
     otherwise
-      error('incorrect specification of instabilityfix');
+      ft_error('incorrect specification of instabilityfix');
   end % switch
 end
 

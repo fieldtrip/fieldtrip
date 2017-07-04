@@ -109,7 +109,7 @@ for k = 1:Ndata
       % convert into 'chan_chan_freq'
       varargin{k} = ft_checkdata(varargin{k}, 'cmbrepresentation', 'full');
     otherwise
-      error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
+      ft_error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
   end
   
   % this is needed for correct treatment of graphcolor later on
@@ -127,7 +127,7 @@ end
 
 if Ndata >1
   if ~all(strcmp(dtype{1}, dtype))
-    error('input data are of different type; this is not supported');
+    ft_error('input data are of different type; this is not supported');
   end
 end
 
@@ -142,7 +142,7 @@ hasfreq = isfield(varargin{1}, 'freq');
 hastime = isfield(varargin{1}, 'time');
 if hasfreq && hastime
   if Ndata>1
-    error('when the input data contains time-frequency representations, only a single data argument is allowed');
+    ft_error('when the input data contains time-frequency representations, only a single data argument is allowed');
   end
   xparam = 'time';
   yparam = 'freq';
@@ -249,7 +249,7 @@ else
 end
 
 if ~isfield(data, cfg.parameter{1})
-  error('the data does not contain the requested parameter %s', cfg.parameter{1});
+  ft_error('the data does not contain the requested parameter %s', cfg.parameter{1});
 end
 
 % get the selection of the data
@@ -289,7 +289,7 @@ for k = 1:nchan
         tmp = reshape(dat(m,k,:), [nfreq 1]);
         ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.graphcolor(1));
       elseif hastime
-        error('plotting data with only a time axis is not supported yet');
+        ft_error('plotting data with only a time axis is not supported yet');
       end
       if k==1
         % first column, plot scale on y axis

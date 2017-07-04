@@ -208,14 +208,14 @@ end
 
 % headshape/mri are mutually exclusive
 if ~isempty(cfg.headshape) && ~isempty(cfg.mri)
-  error('cfg.headshape and cfg.mri are mutually exclusive, please use only one of the two')
+  ft_error('cfg.headshape and cfg.mri are mutually exclusive, please use only one of the two')
 end
 % cfg.viewpoint can only be used together with cfg.projection = 'orthographic'
 if ~isempty(cfg.viewpoint) && ~isequal(cfg.projection, 'orthographic')
-  error('cfg.viewpoint can only used in the case of orthographic projection')
+  ft_error('cfg.viewpoint can only used in the case of orthographic projection')
 end
 if ~isempty(cfg.viewpoint) && ~isempty(cfg.rotate)
-  error('cfg.viewpoint and cfg.rotate are mutually exclusive, please use only one of the two')
+  ft_error('cfg.viewpoint and cfg.rotate are mutually exclusive, please use only one of the two')
 end
 
 % update the selection of channels according to the data
@@ -282,7 +282,7 @@ elseif isequal(cfg.layout, 'circular')
     rho = 2.*pi.*rho(1:end-1);
   else
     if numel(rho) ~= nchan
-      error('the number of elements in the polar angle vector should be equal to the number of channels');
+      ft_error('the number of elements in the polar angle vector should be equal to the number of channels');
     end
     
     % convert to radians
@@ -512,7 +512,7 @@ elseif ischar(cfg.layout)
     
     fprintf('reading layout from file %s\n', cfg.layout);
     if ~exist(cfg.layout, 'file')
-      error('the specified layout file %s was not found', cfg.layout);
+      ft_error('the specified layout file %s was not found', cfg.layout);
     end
     tmp = load(cfg.layout, 'lay*');
     if isfield(tmp, 'layout')
@@ -520,7 +520,7 @@ elseif ischar(cfg.layout)
     elseif isfield(tmp, 'lay')
       layout = tmp.lay;
     else
-      error('mat file does not contain a layout');
+      ft_error('mat file does not contain a layout');
     end
     
   elseif ft_filetype(cfg.layout, 'layout')
@@ -913,7 +913,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   fprintf('\n');
   
 else
-  error('no layout detected, please specify cfg.layout')
+  ft_error('no layout detected, please specify cfg.layout')
 end
 
 % make the subset as specified in cfg.channel
@@ -1095,7 +1095,7 @@ if ~isempty(cfg.output) && ~strcmpi(cfg.style, '3d')
 elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
   % the layout file format does not support 3D positions, furthermore for
   % a 3D layout the width and height are currently set to NaN
-  error('writing a 3D layout to an output file is not supported');
+  ft_error('writing a 3D layout to an output file is not supported');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -1109,7 +1109,7 @@ ft_postamble history layout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function layout = readlay(filename)
 if ~exist(filename, 'file')
-  error('could not open layout file "%s"', filename);
+  ft_error('could not open layout file "%s"', filename);
 end
 fid=fopen(filename);
 lay_string=fread(fid,inf,'char=>char')';
@@ -1258,11 +1258,11 @@ else
       prj = shiftxy(prj', 0.2)';
       prjForDist = prj(boxchansel,:);
     elseif strcmp(overlap, 'no')
-      error('the specified sensor configuration has many overlapping channels, you specified not to allow that');
+      ft_error('the specified sensor configuration has many overlapping channels, you specified not to allow that');
     elseif strcmp(overlap, 'keep')
       prjForDist = unique(prj(boxchansel,:), 'rows');
     else
-      error('unknown value for cfg.overlap = ''%s''', overlap);
+      ft_error('unknown value for cfg.overlap = ''%s''', overlap);
     end
   end
   
@@ -1385,7 +1385,7 @@ xy = [x; y];
 function pos = getorthoviewpos(pos, coordsys, viewpoint)
 
 if size(pos,2)~=3
-  error('XYZ coordinates are required to obtain the orthographic projections based on a viewpoint')
+  ft_error('XYZ coordinates are required to obtain the orthographic projections based on a viewpoint')
 end
 
 transmat = [];
@@ -1425,7 +1425,7 @@ switch coordsys
 end % switch coordsys
 
 if isempty(transmat)
-  error('orthographic projection using viewpoint "%s" is not supported for the "%s" coordinate system', viewpoint, coordsys)
+  ft_error('orthographic projection using viewpoint "%s" is not supported for the "%s" coordinate system', viewpoint, coordsys)
 end
 
 % extract xy
@@ -1494,7 +1494,7 @@ if ~isempty(cfg.headshape)
   elseif isstruct(cfg.headshape)
     outlbase = cfg.headshape;
   else
-    error('incorrect specification of cfg.headshape')
+    ft_error('incorrect specification of cfg.headshape')
   end
 elseif ~isempty(cfg.mri)
   if ischar(cfg.mri) && exist(cfg.mri, 'file')
@@ -1503,7 +1503,7 @@ elseif ~isempty(cfg.mri)
   elseif ft_datatype(cfg.mri, 'volume')
     outlbase = cfg.mri;
   else
-    error('incorrect specification of cfg.mri')
+    ft_error('incorrect specification of cfg.mri')
   end
   % create mesh from anatomical field, this will be used as headshape below
   cfgpm = [];

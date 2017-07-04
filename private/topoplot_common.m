@@ -217,7 +217,7 @@ end
 
 % check colormap is proper format and set it
 if isfield(cfg,'colormap')
-  if size(cfg.colormap,2)~=3, error('topoplot(): Colormap must be a n x 3 matrix'); end
+  if size(cfg.colormap,2)~=3, ft_error('topoplot(): Colormap must be a n x 3 matrix'); end
   colormap(cfg.colormap);
   ncolors = size(cfg.colormap,1);
 else
@@ -274,8 +274,8 @@ switch dtype
     % the functional data is just one value per channel
     % in this case xparam, yparam are not defined
     % and the user should define the parameter
-    if ~isfield(data, 'label'), error('the input data should at least contain a label-field'); end
-    if ~isfield(cfg, 'parameter'), error('the configuration should at least contain a ''parameter'' field'); end
+    if ~isfield(data, 'label'), ft_error('the input data should at least contain a label-field'); end
+    if ~isfield(cfg, 'parameter'), ft_error('the configuration should at least contain a ''parameter'' field'); end
     if ~isfield(cfg, 'xparam'),
       cfg.xlim   = [1 1];
       xparam = '';
@@ -283,7 +283,7 @@ switch dtype
 end
 
 if isfield(cfg, 'parameter') && ~isfield(data, cfg.parameter)
-  error('cfg.parameter=%s is not present in data structure', cfg.parameter);
+  ft_error('cfg.parameter=%s is not present in data structure', cfg.parameter);
 end
 
 % user specified own fields, but no yparam (which is not asked in help)
@@ -385,7 +385,7 @@ haslabelcmb = isfield(data, 'labelcmb');
 if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
-    error('no reference channel is specified');
+    ft_error('no reference channel is specified');
   end
   
   % check for refchannel being part of selection
@@ -397,7 +397,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     end
     if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
         (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
-      error('cfg.refchannel is a not present in the (selected) channels)')
+      ft_error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
   
@@ -437,7 +437,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
     if length(sel1)+length(sel2)==0
-      error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+      ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
     end
     data.(cfg.parameter) = data.(cfg.parameter)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
@@ -582,7 +582,7 @@ if ~isempty(cfg.parameter)
   dat = dat(:);
   
 else
-  error('cannot make selection of data');
+  ft_error('cannot make selection of data');
 end
 
 if isfield(data, cfg.maskparameter)
@@ -630,7 +630,7 @@ end
 % Select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(label, cfg.layout.label);
 if isempty(seldat)
-  error('labels in data and labels in layout do not match');
+  ft_error('labels in data and labels in layout do not match');
 end
 
 dat = dat(seldat);
@@ -704,7 +704,7 @@ elseif strcmp(cfg.comment, 'xlim')
   end
   cfg.comment = comment;
 elseif ~ischar(cfg.comment)
-  error('cfg.comment must be string');
+  ft_error('cfg.comment must be string');
 end
 
 

@@ -77,5 +77,5 @@ switch version
     str = char(base64decode(str));
     
   otherwise
-    error('unsupported version "%s"', version);
+    ft_error('unsupported version "%s"', version);
 end

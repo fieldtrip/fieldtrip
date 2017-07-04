@@ -134,7 +134,7 @@ if strcmp(cfg.method, 'template')
     % check whether a layout can be used
     if ~isfield(cfg, 'layout')
       % error if that fails as well
-      error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
+      ft_error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
     end
     fprintf('Using the 2-D layout filename to determine the template filename\n');
     cfg.template = [strtok(cfg.layout, '.') '_neighb.mat'];
@@ -152,7 +152,7 @@ if strcmp(cfg.method, 'template')
   end
   % check for existence
   if ~exist(cfg.template, 'file')
-    error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
+    ft_error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
@@ -210,7 +210,7 @@ else
       tri = [tri; tri_x; tri_y];
       neighbours = compneighbstructfromtri(chanpos, label, tri);
     otherwise
-      error('Method ''%s'' not known', cfg.method);
+      ft_error('Method ''%s'' not known', cfg.method);
   end
 end
 
@@ -255,7 +255,7 @@ for i=1:length(neighbours)
 end
 
 if k==0
-  error('No neighbours were found!');
+  ft_error('No neighbours were found!');
 end
 
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));

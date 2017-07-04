@@ -403,7 +403,7 @@ switch cfg.method
     label = simulated.label;
     
   otherwise
-    error('unknown method');
+    ft_error('unknown method');
 end
 
 % create the output data
@@ -447,12 +447,12 @@ elseif numel(siz)==2
   isfull = false;
   %assert(~isempty(labelcmb), 'input data appears to be chancmb_freq, but labelcmb is missing');
 else
-  error('dimensionality of input data is not supported');
+  ft_error('dimensionality of input data is not supported');
 end
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  error('the frequency axis is not evenly spaced');
+  ft_error('the frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0

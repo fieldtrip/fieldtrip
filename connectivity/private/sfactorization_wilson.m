@@ -48,7 +48,7 @@ if nargin<3, Niterations = 1000; end
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  error('FieldTrip:connectivity:sfactorization_wilson', 'frequency axis is not evenly spaced');
+  ft_error('FieldTrip:connectivity:sfactorization_wilson', 'frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
@@ -132,7 +132,7 @@ switch init
     %tmp = triu(tmp);
     [tmp, dum] = chol(tmp);
   otherwise
-    error('initialization method should be eithe ''chol'' or ''rand''');
+    ft_error('initialization method should be eithe ''chol'' or ''rand''');
 end
 h = tmp;
 

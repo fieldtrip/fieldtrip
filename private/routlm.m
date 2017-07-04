@@ -62,7 +62,7 @@ try
 catch
   % compilation failed
   disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
+  ft_error('could not locate MEX file for %s', mexname);
   cd(pwdir);
   success = false;
 end

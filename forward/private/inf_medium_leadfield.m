@@ -35,7 +35,7 @@ elseif siz(2)==3
   rd = rd';
   rd = rd(:);
 else
-  error('incorrect specification of dipole locations');
+  ft_error('incorrect specification of dipole locations');
 end
 
 Npnt     = size(pnt,1);

@@ -13,7 +13,7 @@ switch style
       indexval = indexval(indexval~=0);            % these are the only ones that matter
       
       if any(indexval<0)
-        error('an indexed representation cannot contain negative numbers');
+        ft_error('an indexed representation cannot contain negative numbers');
       end
       
       if ~isfield(segmentation, [fn{i} 'label'])
@@ -31,9 +31,9 @@ switch style
         % which happens if the segmentation unexpectedly does not contain a certain tissue type
         indexlabel = segmentation.([fn{i} 'label']);
         if numel(indexval)>numel(indexlabel)
-          error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
+          ft_error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
         elseif any(cellfun(@isempty, indexlabel(indexval)))
-          error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
+          ft_error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
         elseif numel(indexval)<numel(indexlabel)
           ft_warning('there are more labels than actuall tissue types in %s', [fn{i} 'label']);
           % ensure that the indices are subsequent integers, i.e. [1 2 3] rather than [1 2 4]
@@ -79,5 +79,5 @@ switch style
     clear segi segj contains
     
   otherwise
-    error('unsupported style "%s"', style);
+    ft_error('unsupported style "%s"', style);
 end

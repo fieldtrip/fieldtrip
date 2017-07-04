@@ -123,7 +123,7 @@ elseif nargin==4 && isnumeric(fid4)
 elseif nargin==5
   % do nothing
 else
-  error('incorrect specification of input parameters');
+  ft_error('incorrect specification of input parameters');
 end
 
 if isnumeric(coordsys)
@@ -135,7 +135,7 @@ if isnumeric(coordsys)
   elseif coordsys==2
     coordsys = 'ftg';
   else
-    error('if coordsys is numeric, it should assume one of the values 0/1/2');
+    ft_error('if coordsys is numeric, it should assume one of the values 0/1/2');
   end
 end
 
@@ -218,7 +218,7 @@ switch coordsys
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
   otherwise
-    error('unrecognized headcoordinate system "%s"', coordsys);
+    ft_error('unrecognized headcoordinate system "%s"', coordsys);
 end
 
 % use the extra point to validate that it is a right-handed coordinate system

@@ -58,7 +58,7 @@ elseif ischar(cfg.headshape)
   % read the headshape from file
   headshape = ft_read_headshape(cfg.headshape);
 else
-  error('cfg.headshape is not specified correctly')
+  ft_error('cfg.headshape is not specified correctly')
 end
 
 % usually a headshape only describes a single surface boundaries, but there are cases

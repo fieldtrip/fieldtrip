@@ -154,11 +154,11 @@ elseif hassource2
 end
 
 if size(source.pos)~=size(fun,1)
-  error('inconsistent number of vertices in the cortical mesh');
+  ft_error('inconsistent number of vertices in the cortical mesh');
 end
 
 if ~isfield(source, 'tri')
-  error('source.tri missing, this function requires a triangulated cortical sheet as source model');
+  ft_error('source.tri missing, this function requires a triangulated cortical sheet as source model');
 end
 
 if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
@@ -170,13 +170,13 @@ end
 
 xparam = source.(cfg.xparam);
 if length(xparam)~=size(fun,2)
-  error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.xparam);
+  ft_error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.xparam);
 end
 
 if ~isempty(cfg.yparam)
   yparam = source.(cfg.yparam);
   if length(yparam)~=size(fun,3)
-    error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.yparam);
+    ft_error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.yparam);
   end
 else
   yparam = [];

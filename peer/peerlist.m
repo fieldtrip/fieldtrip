@@ -118,7 +118,7 @@ if nargout==0
       case 3
         strlist{i} = sprintf('busy slave at %s@%s:%d, working for %s, memreq = %5s, timreq = %s\n', list(i).user, list(i).hostname, list(i).port, list(i).current.user, print_mem(list(i).current.memreq), print_tim(list(i).current.timreq));
       otherwise
-        error('unknown status');
+        ft_error('unknown status');
     end
   end % for i
   strlist = sort(strlist);

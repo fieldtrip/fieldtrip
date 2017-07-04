@@ -97,7 +97,7 @@ elseif isstruct(val)
         case 'function_handle'
           line = printstr([name '.' fn{i}], func2str(fv));
         otherwise
-          error('unsupported');
+          ft_error('unsupported');
       end
       if numel(line)>1 && line(end)==10 && line(end-1)==10
         % do not repeat the end-of-line
@@ -117,7 +117,7 @@ elseif ~isstruct(val)
     case 'cell'
       str = printcell(name, val);
     otherwise
-      error('unsupported');
+      ft_error('unsupported');
   end
 end
 

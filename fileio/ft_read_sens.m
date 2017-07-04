@@ -65,7 +65,7 @@ filename = fetch_url(filename);
 
 % test whether the file exists
 if ~exist(filename, 'file')
-  error('file ''%s'' does not exist', filename);
+  ft_error('file ''%s'' does not exist', filename);
 end
 
 % get the options
@@ -85,7 +85,7 @@ switch fileformat
     sens = read_brainvision_pos(filename);
     
   case 'besa_elp'
-    error('unknown fileformat for electrodes or gradiometers');
+    ft_error('unknown fileformat for electrodes or gradiometers');
     % the code below does not yet work
     fid = fopen(filename);
     % the ascii file contains: type, label, angle, angle
@@ -102,7 +102,7 @@ switch fileformat
   case 'besa_pos'
     tmp = importdata(filename);
     if ~isnumeric(tmp)
-      error('unexpected file format for fileformat=besa_pos')
+      ft_error('unexpected file format for fileformat=besa_pos')
     end
     [nchan,nrow] = size(tmp);
     if nrow==3
@@ -115,7 +115,7 @@ switch fileformat
       sens.ori = [ori; ori];
       sens.tra = [eye(nchan) -eye(nchan)];
     else
-      error('unexpected file format for fileformat=besa_pos')
+      ft_error('unexpected file format for fileformat=besa_pos')
     end
     [p, f, x] = fileparts(filename);
     elpfile = fullfile(p, [f '.elp']);
@@ -177,14 +177,14 @@ switch fileformat
         case 'meg'
           sens = hdr.grad;
         otherwise
-          error('incorrect specification of senstype');
+          ft_error('incorrect specification of senstype');
       end
     elseif isfield(hdr, 'grad')
       sens = hdr.grad;
     elseif isfield(hdr, 'elec')
       sens = hdr.elec;
     else
-      error('neither electrode nor gradiometer information is present');
+      ft_error('neither electrode nor gradiometer information is present');
     end
     
   case 'neuromag_mne_grad'
@@ -207,7 +207,7 @@ switch fileformat
     elseif isfield(hdr, 'elec')
       sens = hdr.elec;
     else
-      error('no electrodes or gradiometers found in the file')
+      ft_error('no electrodes or gradiometers found in the file')
     end
     
   case 'polhemus_fil'
@@ -372,7 +372,7 @@ switch fileformat
     end
     
   otherwise
-    error('unknown fileformat for electrodes or gradiometers');
+    ft_error('unknown fileformat for electrodes or gradiometers');
 end % switch fileformat
 
 % ensure that the sensor description is up-to-date

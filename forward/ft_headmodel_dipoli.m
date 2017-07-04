@@ -53,13 +53,13 @@ numboundaries = numel(headmodel.bnd);
 % % feed in the correct geometry.
 % %
 % % if ~all(surface_closed(headmodel.bnd))
-% %   error('...');
+% %   ft_error('...');
 % % end
 % % if any(surface_intersection(headmodel.bnd))
-% %   error('...');
+% %   ft_error('...');
 % % end
 % % if any(surface_selfintersection(headmodel.bnd))
-% %   error('...');
+% %   ft_error('...');
 % % end
 % 
 % % The following checks should always be done.
@@ -113,12 +113,12 @@ if isempty(conductivity)
     % skin / outer skull / inner skull / brain    
     conductivity = [1 1/80 1 1] * 0.33;    
   else
-    error('Conductivity values are required!')
+    ft_error('Conductivity values are required!')
   end
   headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
-    error('a conductivity value should be specified for each compartment');
+    ft_error('a conductivity value should be specified for each compartment');
   end
   headmodel.cond = conductivity(order);
 end
@@ -144,7 +144,7 @@ switch mexext
     % linux computer
     dipoli = [dipoli '.glnx86'];
   otherwise
-    error('there is no dipoli executable for your platform');
+    ft_error('there is no dipoli executable for your platform');
 end
 fprintf('using the executable "%s"\n', dipoli);
 
@@ -208,7 +208,7 @@ try
   end
   
 catch
-  error('an error ocurred while running the dipoli executable - please look at the screen output');
+  ft_error('an error ocurred while running the dipoli executable - please look at the screen output');
 end
 
 % delete the temporary files

@@ -107,7 +107,7 @@ cfg.visible               = ft_getopt(cfg, 'visible',               'on');
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
-  error('cfg.highlightseries should be a cell-array of strings')
+  ft_error('cfg.highlightseries should be a cell-array of strings')
 end
 
 % get the options that are specific for topoplotting
@@ -153,11 +153,11 @@ switch dimord
       stat.dimord = 'chan_freq';
       % no need to remove the singleton dimension at the end
     else
-      error('this only works if either frequency or time is a singleton dimension');
+      ft_error('this only works if either frequency or time is a singleton dimension');
     end
 
   otherwise
-    error('unsupported dimord %s', dimord);
+    ft_error('unsupported dimord %s', dimord);
 end % switch dimord
 
 % these are not valid any more
@@ -206,7 +206,7 @@ else
   Nsigall = Nsigpos + Nsigneg;
 
   if Nsigall == 0
-    error('no clusters present with a p-value lower than the specified alpha, nothing to plot')
+    ft_error('no clusters present with a p-value lower than the specified alpha, nothing to plot')
   end
 
   % make clusterslabel matrix per significant cluster

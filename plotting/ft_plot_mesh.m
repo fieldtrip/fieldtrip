@@ -183,7 +183,7 @@ elseif isfield(mesh, 'prj')
   % this happens sometimes if the 3-D vertices are projected to a 2-D plane
   pos = mesh.prj;
 else
-  error('no vertices found');
+  ft_error('no vertices found');
 end
 
 if isempty(pos)
@@ -192,7 +192,7 @@ if isempty(pos)
 end
 
 if hastri+hastet+hashex+hasline+haspoly>1
-  error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
+  ft_error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
 end
 
 if hastri
@@ -392,7 +392,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
     end
     
   else
-    error('Unknown color specification for the vertices');
+    ft_error('Unknown color specification for the vertices');
   end
   
 end % plotting the vertices as points

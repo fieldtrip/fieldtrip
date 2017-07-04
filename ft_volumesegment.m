@@ -165,7 +165,7 @@ end
 
 % this is not supported any more as of 26/10/2011
 if ischar(mri)
-  error('please use cfg.inputfile instead of specifying the input variable as a string');
+  ft_error('please use cfg.inputfile instead of specifying the input variable as a string');
 end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
@@ -233,7 +233,7 @@ if ~isfield(cfg, 'name')
     tmp = tempname;
     cfg.name = tmp;
   else
-    error('you must specify the output filename in cfg.name');
+    ft_error('you must specify the output filename in cfg.name');
   end
 end
 [pathstr, name, ~] = fileparts(cfg.name);
@@ -474,11 +474,11 @@ if dotpm
                      fullfile(pathstr,['c6', name, '.nii'])};
         
       else
-        error('cfg.spmmethod should be either ''old'', ''new'' or ''mars''');
+        ft_error('cfg.spmmethod should be either ''old'', ''new'' or ''mars''');
       end
             
     otherwise
-      error('unsupported SPM version');
+      ft_error('unsupported SPM version');
 
   end
   
@@ -556,28 +556,28 @@ remove = {'anatomy' 'csf' 'gray' 'white' 'bone' 'softtissue' 'air' 'skull' 'skul
 
 dosmooth_brain = ~strcmp(cfg.brainsmooth, 'no');
 if dosmooth_brain && ischar(cfg.brainsmooth)
-  error('invalid value %s for cfg.brainsmooth', cfg.brainsmooth);
+  ft_error('invalid value %s for cfg.brainsmooth', cfg.brainsmooth);
 end
 dosmooth_scalp = ~strcmp(cfg.scalpsmooth, 'no');
 if dosmooth_scalp && ischar(cfg.scalpsmooth)
-  error('invalid value %s for cfg.scalpsmooth', cfg.scalpsmooth);
+  ft_error('invalid value %s for cfg.scalpsmooth', cfg.scalpsmooth);
 end
 dosmooth_skull = ~strcmp(cfg.skullsmooth, 'no');
 if dosmooth_skull && ischar(cfg.skullsmooth)
-  error('invalid value %s for cfg.skullsmooth', cfg.skullsmooth);
+  ft_error('invalid value %s for cfg.skullsmooth', cfg.skullsmooth);
 end
 
 dothres_brain = ~strcmp(cfg.brainthreshold, 'no');
 if dothres_brain && ischar(cfg.brainthreshold)
-  error('invalid value %s for cfg.brainthreshold', cfg.brainthreshold);
+  ft_error('invalid value %s for cfg.brainthreshold', cfg.brainthreshold);
 end
 dothres_scalp = ~strcmp(cfg.scalpthreshold, 'no');
 if dothres_scalp && ischar(cfg.scalpthreshold)
-  error('invalid value %s for cfg.scalpthreshold', cfg.scalpthreshold);
+  ft_error('invalid value %s for cfg.scalpthreshold', cfg.scalpthreshold);
 end
 dothres_skull = ~strcmp(cfg.skullthreshold, 'no');
 if dothres_skull && ischar(cfg.skullthreshold)
-  error('invalid value %s for cfg.skullthreshold', cfg.skullthreshold);
+  ft_error('invalid value %s for cfg.skullthreshold', cfg.skullthreshold);
 end
 
 outp = cfg.output;
@@ -603,7 +603,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
         fname   = 'anatomy';
         anatomy = segmented.anatomy;
       else
-        error('no appropriate volume is present for the creation of a scalpmask');
+        ft_error('no appropriate volume is present for the creation of a scalpmask');
       end
       if dosmooth_scalp
         anatomy = volumesmooth(anatomy, cfg.scalpsmooth, fname);
@@ -655,7 +655,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
 
     % output: skullstrip
     if any(strcmp('skullstrip', outp))
-      if ~isfield(segmented, 'anatomy'), error('no anatomy field present'); end
+      if ~isfield(segmented, 'anatomy'), ft_error('no anatomy field present'); end
       fprintf('creating skullstripped anatomy ...');
       brain_ss = cast(brain, class(segmented.anatomy));
       segmented.anatomy = segmented.anatomy.*brain_ss;
@@ -754,7 +754,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
   end % while createoutputs
 
 else
-  error('unknown output %s requested\n', cfg.output{:});
+  ft_error('unknown output %s requested\n', cfg.output{:});
 end
 
 % remove unnecessary fields

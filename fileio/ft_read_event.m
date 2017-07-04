@@ -283,7 +283,7 @@ switch eventformat
             event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
           end
         otherwise
-          error('incorrect specification of ''detectflank''');
+          ft_error('incorrect specification of ''detectflank''');
       end
     end
     
@@ -333,7 +333,7 @@ switch eventformat
         ft_warning('only up-going flanks are supported for Biosemi');
         detectflank = 'up';
       else
-        error('only up-going flanks are supported for Biosemi');
+        ft_error('only up-going flanks are supported for Biosemi');
         % FIXME the next section on trigger detection should be merged with the
         % READ_CTF_TRIGGER (which also does masking with bit-patterns) into the
         % READ_TRIGGER function
@@ -430,7 +430,7 @@ switch eventformat
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
     if fid==-1,
-      error('cannot open BrainVision marker file')
+      ft_error('cannot open BrainVision marker file')
     end
     line = [];
     while ischar(line) || isempty(line)
@@ -824,7 +824,7 @@ switch eventformat
     end
     
     if ~usejava('jvm')
-      error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
+      ft_error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
       % an alternative implementation which does not require the JVM but runs much slower is
       % available from http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0
     end
@@ -1065,7 +1065,7 @@ switch eventformat
       end
       available = buffer_wait_dat([nsamples nevents timeout], host, port);
       if available.nevents<nevents
-        error('buffer timed out while waiting for %d events', nevents);
+        ft_error('buffer timed out while waiting for %d events', nevents);
       end
     end
     
@@ -1307,7 +1307,7 @@ switch eventformat
       end
       
     else
-      error('Not a correct event format')
+      ft_error('Not a correct event format')
     end
     
   case {'mpi_ds', 'mpi_dap'}
@@ -1532,7 +1532,7 @@ switch eventformat
       end
       
     elseif isepoched
-      error('Support for epoched *.fif data is not yet implemented.')
+      ft_error('Support for epoched *.fif data is not yet implemented.')
     end
     
     % check whether the *.fif file is accompanied by an *.eve file
@@ -1580,7 +1580,7 @@ switch eventformat
       end
       if ~exist(ttlfile) && ~exist(tslfile) && ~exist(tshfile)
         % these files must be present in a splitted dma dataset
-        error('could not locate the individual ttl, tsl and tsh files');
+        ft_error('could not locate the individual ttl, tsl and tsh files');
       end
       % read the trigger values from the separate file
       ttl = read_neuralynx_bin(ttlfile, begsample, endsample);
@@ -1758,7 +1758,7 @@ switch eventformat
       % elseif hasmat
       % FIXME, do something here
     else
-      error('no event file found');
+      ft_error('no event file found');
     end
     
     %   The sample number is missingin the code below, since it is not available
@@ -2049,8 +2049,8 @@ end
 
 if ~isempty(event)
   % make sure that all required elements are present
-  if ~isfield(event, 'type'),     error('type field not defined for each event');     end
-  if ~isfield(event, 'sample'),   error('sample field not defined for each event');   end
+  if ~isfield(event, 'type'),     ft_error('type field not defined for each event');     end
+  if ~isfield(event, 'sample'),   ft_error('sample field not defined for each event');   end
   if ~isfield(event, 'value'),    for i=1:length(event), event(i).value = [];    end; end
   if ~isfield(event, 'offset'),   for i=1:length(event), event(i).offset = [];   end; end
   if ~isfield(event, 'duration'), for i=1:length(event), event(i).duration = []; end; end

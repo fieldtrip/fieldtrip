@@ -37,7 +37,7 @@ function [hdr] = read_ns_hdr(filename)
 fid = fopen(filename,'r','ieee-le');
 
 if fid<0,
-    error(['cannot open ', filename]);
+    ft_error(['cannot open ', filename]);
 end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

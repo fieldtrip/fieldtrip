@@ -332,7 +332,7 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for source datatype', version);
+    ft_error('unsupported version "%s" for source datatype', version);
 end
 
 function pos = grid2pos(xgrid, ygrid, zgrid)

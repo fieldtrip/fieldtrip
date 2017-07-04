@@ -50,9 +50,9 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 freqoi    = ft_getopt(varargin, 'freqoi');
 timeoi    = ft_getopt(varargin, 'timeoi', 'all');
 width     = ft_getopt(varargin, 'width', 1);
-filttype  = ft_getopt(varargin, 'filttype');    if isempty(filttype),  error('you need to specify filter type'),         end
-filtorder = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), error('you need to specify filter order'),        end
-filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   error('you need to specify filter direction'),    end
+filttype  = ft_getopt(varargin, 'filttype');    if isempty(filttype),  ft_error('you need to specify filter type'),         end
+filtorder = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), ft_error('you need to specify filter order'),        end
+filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   ft_error('you need to specify filter direction'),    end
 pad       = ft_getopt(varargin, 'pad');
 padtype   = ft_getopt(varargin, 'padtype', 'zero');
 polyorder = ft_getopt(varargin, 'polyorder', 0);
@@ -83,7 +83,7 @@ dattime = ndatsample / fsample; % total time in seconds of input data
 
 % Zero padding
 if round(pad * fsample) < ndatsample
-  error('the padding that you specified is shorter than the data');
+  ft_error('the padding that you specified is shorter than the data');
 end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;

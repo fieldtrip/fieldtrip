@@ -105,7 +105,7 @@ end
 
 % test whether the file exists
 if ~exist(filename, 'file')
-  error('file ''%s'' does not exist', filename);
+  ft_error('file ''%s'' does not exist', filename);
 end
 
 % test for the presence of some external functions from other toolboxes
@@ -195,7 +195,7 @@ case {'afni_brik' 'afni_head'}
 
   [err, img, hdr, ErrMessage] = BrikLoad(filename);
   if err
-    error('could not read AFNI file');
+    ft_error('could not read AFNI file');
   end
 
   % FIXME: this should be checked, but I only have a single BRIK file
@@ -387,7 +387,7 @@ case 'dicom_old'
 
 case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}
   if strcmp(dataformat, 'freesurfer_mgz') && ispc
-    error('Compressed .mgz files cannot be read on a PC');
+    ft_error('Compressed .mgz files cannot be read on a PC');
   end
 
   ft_hastoolbox('freesurfer', 1);
@@ -422,13 +422,13 @@ case 'yokogawa_mri'
   hdr.normalize = normalize;
   hdr.besa_fiducial_point = besa_fiducial_point;
 
-  error('FIXME yokogawa_mri implementation is incomplete');
+  ft_error('FIXME yokogawa_mri implementation is incomplete');
 
 case 'matlab'
   mri = loadvar(filename, 'mri');
 
 otherwise
-  error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
+  ft_error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
 end
 
 if exist('img', 'var')

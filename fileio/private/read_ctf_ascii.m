@@ -40,7 +40,7 @@ function [file] = read_ctf_ascii(filename)
 
 fid = fopen(filename, 'r');
 if fid==-1
-  error(sprintf('could not open file %s', filename));
+  ft_error(sprintf('could not open file %s', filename));
 end
 
 line = '';

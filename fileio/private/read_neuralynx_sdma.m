@@ -43,7 +43,7 @@ needhdr = (nargin==1);
 needdat = (nargin>=2);
 
 if ~isdir(dataset)
-  error('dataset should be a directory');
+  ft_error('dataset should be a directory');
 end
 
 % determine the content of the dataset directory
@@ -406,7 +406,7 @@ if needhdr
   % determine the number of samples for each channel
   nsamples = cell2mat({orig.nSamples});
   if any(nsamples~=nsamples(1))
-    error('different number of samples over channels are not supported');
+    ft_error('different number of samples over channels are not supported');
   else
     hdr.nSamples = nsamples(1);
   end
@@ -414,9 +414,9 @@ if needhdr
   % determine the sampling frequency for each channel
   fsample = cell2mat({orig.Fs});
   if any(diff(fsample))
-    error('different sampling rates over channels are not supported');
+    ft_error('different sampling rates over channels are not supported');
   elseif any(fsample~=hdr.Fs)
-    error('inconsistent sampling rates');
+    ft_error('inconsistent sampling rates');
   end
   
   % determine the first and last timestamp, by reading them from the timestamp channels

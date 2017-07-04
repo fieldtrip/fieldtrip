@@ -252,7 +252,7 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for raw datatype', version);
+    ft_error('unsupported version "%s" for raw datatype', version);
 end
 
 

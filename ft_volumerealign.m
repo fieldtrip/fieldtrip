@@ -267,7 +267,7 @@ if isempty(cfg.coordsys)
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
   else
-    error('you should specify the desired head coordinate system in cfg.coordsys')
+    ft_error('you should specify the desired head coordinate system in cfg.coordsys')
   end
   ft_warning('defaulting to %s coordinate system', cfg.coordsys);
 end
@@ -296,7 +296,7 @@ elseif iscell(cfg.parameter) && isempty(cfg.parameter)
     % it's OK
     cfg.parameter= 'anatomy';
   else
-    error('there''s an unexpected dimension mismatch');
+    ft_error('there''s an unexpected dimension mismatch');
   end
 end
 
@@ -322,7 +322,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
       fidexplanation1 = '      press b for bregma, l for lambda, z for yzpoint\n';
       fidexplanation2 = '';
     otherwise
-      error('unknown coordinate system "%s"', cfg.coordsys);
+      ft_error('unknown coordinate system "%s"', cfg.coordsys);
   end
   
   for i=1:length(fidlabel)
@@ -648,7 +648,7 @@ switch cfg.method
     elseif isstruct(cfg.headshape)
       % new-style specification, do nothing
     else
-      error('incorrect specification of cfg.headshape');
+      ft_error('incorrect specification of cfg.headshape');
     end
     
     if ischar(cfg.headshape.headshape)
@@ -720,7 +720,7 @@ switch cfg.method
     else
       w = cfg.weights(:);
       if numel(w)~=size(shape.pos,1)
-        error('number of weights should be equal to the number of points in the headshape');
+        ft_error('number of weights should be equal to the number of points in the headshape');
       end
     end
     
@@ -944,7 +944,7 @@ switch cfg.method
         if strcmp(target.coordsys, 'acpc')
           mri = ft_convert_coordsys(mri, 'acpc');
         else
-          error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
+          ft_error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
         end
       end
       
@@ -990,7 +990,7 @@ switch cfg.method
     delete(tname1);
     delete(tname2);
   otherwise
-    error('unsupported method "%s"', cfg.method);
+    ft_error('unsupported method "%s"', cfg.method);
 end
 
 if any(strcmp(cfg.method, {'fiducial', 'interactive'}))

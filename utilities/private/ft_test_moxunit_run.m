@@ -44,14 +44,14 @@ function check_dependencies()
 % throw an error if MOxUnit is not available
 
     if isempty(which('moxunit_runtests'))
-        error(['MOxUnit is required; see '...
+        ft_error(['MOxUnit is required; see '...
                     'https://github.com/moxunit/moxunit']);
     end
 
 function fieldtrip_root_dir=get_fieldtrip_root_dir()
     fieldtrip_root_dir=fileparts(which('ft_defaults'));
     if isempty(fieldtrip_root_dir)
-        error('Fieldtrip path is not set');
+        ft_error('Fieldtrip path is not set');
     end
 
 

@@ -9,7 +9,7 @@ function output = read_micromed_trc(filename, begsample, endsample)
 % ---------------- Opening File------------------
 fid=fopen(filename,'rb');
 if fid==-1
-  error('Can''t open *.trc file')
+  ft_error('Can''t open *.trc file')
 end
 
 %------------------reading patient & recording info----------
@@ -59,7 +59,7 @@ header.year=num2str(fread(fid,1,'char')+1900);
 fseek(fid,175,-1);
 header.Header_Type=fread(fid,1,'char');
 if header.Header_Type ~= 4
-  error('*.trc file is not Micromed System98 Header type 4')
+  ft_error('*.trc file is not Micromed System98 Header type 4')
 end
 
 fseek(fid,138,-1);

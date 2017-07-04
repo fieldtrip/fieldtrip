@@ -467,7 +467,7 @@ if autoadd>0 && ~status
       msg = sprintf('the %s toolbox is not installed', toolbox);
     end
     if autoadd==1
-      error(msg);
+      ft_error(msg);
     elseif autoadd==2
       ft_warning(msg);
     else

@@ -29,7 +29,7 @@ if buf(1)==0
 elseif buf(1)==3
   version = 3;
 else
-  error('unsupported version of packet');
+  ft_error('unsupported version of packet');
 end
 
 % the packet size is 1396 bytes with timestamp, 1388 without.

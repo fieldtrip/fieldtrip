@@ -115,15 +115,15 @@ sens.type = ft_senstype(sens);
 headmodel.type  = ft_voltype(headmodel);
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
-  error('inconsistency in the units of the volume conductor and the sensor array');
+  ft_error('inconsistency in the units of the volume conductor and the sensor array');
 end
 
 if ismeg && iseeg
   % this is something that could be implemented relatively easily
-  error('simultaneous EEG and MEG not yet supported');
+  ft_error('simultaneous EEG and MEG not yet supported');
   
 elseif ~ismeg && ~iseeg
-  error('the input does not look like EEG, nor like MEG');
+  ft_error('the input does not look like EEG, nor like MEG');
   
 elseif ismeg
   
@@ -132,7 +132,7 @@ elseif ismeg
     Nchans = length(sens.label);
     Ncoils = size(sens.coilpos,1);
     if Nchans~=Ncoils
-      error('inconsistent number of channels and coils');
+      ft_error('inconsistent number of channels and coils');
     end
     sens.tra = eye(Nchans, Ncoils);
   end
@@ -193,7 +193,7 @@ elseif ismeg
       elseif size(headmodel.r,1)==size(sens.coilpos,1) && isfield(headmodel, 'label')
         if ~isequal(headmodel.label(:), sens.label(:))
           % if only the order is different, it would be possible to reorder them
-          error('the coils in the volume conduction model do not correspond to the sensor array');
+          ft_error('the coils in the volume conduction model do not correspond to the sensor array');
         else
           % the coil-specific spheres in the volume conductor should not have a label
           % because the label is already specified for the coils in the
@@ -300,10 +300,10 @@ elseif ismeg
       end
       
     case 'simbio'
-      error('MEG not yet supported with simbio');
+      ft_error('MEG not yet supported with simbio');
       
     otherwise
-      error('unsupported volume conductor model for MEG');
+      ft_error('unsupported volume conductor model for MEG');
   end
   
 elseif iseeg
@@ -353,7 +353,7 @@ elseif iseeg
         if is_in_empty
           dPplane = abs(dot(headmodel.ori, headmodel.pos-P, 2));
           if dPplane>md
-            error('Some electrodes are too distant from the plane: consider repositioning them')
+            ft_error('Some electrodes are too distant from the plane: consider repositioning them')
           else
             % project point on plane
             Ppr = pointproj(P,[headmodel.pos headmodel.ori]);
@@ -382,7 +382,7 @@ elseif iseeg
           dPplane1 = abs(dot(headmodel.ori1, headmodel.pos1-P, 2));
           dPplane2 = abs(dot(headmodel.ori2, headmodel.pos2-P, 2));
           if dPplane1>md && dPplane2>md
-            error('Some electrodes are too distant from the planes: consider repositioning them')
+            ft_error('Some electrodes are too distant from the planes: consider repositioning them')
           elseif dPplane2>dPplane1
             % project point on nearest plane
             Ppr = pointproj(P,[headmodel.pos1 headmodel.ori1]);
@@ -539,7 +539,7 @@ elseif iseeg
       end
       
     otherwise
-      error('unsupported volume conductor model for EEG');
+      ft_error('unsupported volume conductor model for EEG');
   end
   
   % FIXME this needs careful thought to ensure that the average referencing which is now done here and there, and that the linear interpolation in case of BEM are all dealt with consistently

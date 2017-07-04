@@ -76,7 +76,7 @@ if opt==1
     case 'SPM2'
       template = fullfile(spm('Dir'),'templates','T1.mnc');
     otherwise
-      error('unsupported SPM version');
+      ft_error('unsupported SPM version');
   end
   mri2 = ft_read_mri(template);
   
@@ -122,7 +122,7 @@ elseif opt==2
     case 'SPM2'
       template = fullfile(spm('Dir'),'templates','T1.mnc');
     otherwise
-      error('unsupported SPM version');
+      ft_error('unsupported SPM version');
   end
   mri2 = ft_read_mri(template);
   

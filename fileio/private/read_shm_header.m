@@ -39,7 +39,7 @@ else
   % get the name of the headerfile from shared memory
   sel = find(msgType==0);
   if isempty(sel)
-    error('could not determine header file location from shared memory');
+    ft_error('could not determine header file location from shared memory');
   end
   buf = read_ctf_shm(sel); % this includes the headerfile as string, and the trigger information from AcqBuffer
   str = char(typecast(buf(1:256), 'uint8')); % assume that the filename will not exceed 256 characters in length
@@ -65,7 +65,7 @@ if isempty(previous_header) || isempty(previous_headerfile) || ~isequal(previous
     % do online detection of triggers inside AcqBuffer
     trgchan = find(origSensType(:)'==11);
     if length(trgchan)>10
-      error('online detection of triggers in AcqBuffer only works with up to 10 trigger channels');
+      ft_error('online detection of triggers in AcqBuffer only works with up to 10 trigger channels');
     end
     % specify the channel count and the trigger channels in the setup buffer
     buf(28160-9011) = hdr.nChans;        % tell the number of actual channels

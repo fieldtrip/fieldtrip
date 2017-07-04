@@ -41,7 +41,7 @@ elseif siz(2)==3
   rd = rd';
   rd = rd(:)'; % ensure that it is a row vector
 else
-  error('incorrect specification of pole locations');
+  ft_error('incorrect specification of pole locations');
 end
 
 Nelc     = size(elc,1);

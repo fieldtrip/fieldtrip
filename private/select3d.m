@@ -72,7 +72,7 @@ if nargin<1
 end
 
 if isempty(obj) || ~ishandle(obj) || length(obj)~=1
-    error(ERRMSG);
+    ft_error(ERRMSG);
 end
 
 % if obj is a figure

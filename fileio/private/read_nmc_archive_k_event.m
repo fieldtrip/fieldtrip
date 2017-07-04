@@ -37,7 +37,7 @@ function [event] = read_nmc_archive_k_event(eventfile)
 
 % Checking events-file:
 if exist(eventfile,'file') ~= 2
-    error('no events.mat file found in specified directory');
+    ft_error('no events.mat file found in specified directory');
 end
 
 % Load event-file as events_old

@@ -169,7 +169,7 @@ switch eventformat
         end
 
         if num~=length(msg)
-          error('problem writing to FIFO %s', fifo);
+          ft_error('problem writing to FIFO %s', fifo);
         end
       end
       fclose(fid);
@@ -260,6 +260,6 @@ switch eventformat
                 save(filename, 'event', '-v6');
             end
         else
-            error('unsupported file type')
+            ft_error('unsupported file type')
         end
 end

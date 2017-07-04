@@ -94,7 +94,7 @@ if ft_filetype(datafile, 'ced_son')
 end
 [st,libinfo] = ns_GetLibraryInfo;
 if st,
-    error(['Could not get NeuroShare library info, please use the NS_SETLIBRARY function.']);
+    ft_error(['Could not get NeuroShare library info, please use the NS_SETLIBRARY function.']);
 else,
     disp(['Loading file ' datafile ' using NeuroShare library v',...
         num2str(libinfo.LibVersionMaj),'.',num2str(libinfo.LibVersionMin),' ...']);
@@ -104,7 +104,7 @@ end;
 [st,fhandle] = ns_OpenFile(datafile);
 if st,
     [st,mesg] = ns_GetLastErrorMsg;
-    error(mesg);
+    ft_error(mesg);
 end;
 
 try,
@@ -113,7 +113,7 @@ try,
     if st,
         [st,mesg] = ns_GetLastErrorMsg;
         ns_CloseFile(fhandle);
-        error(mesg);
+        ft_error(mesg);
     end;
 
     % Build catalogue of entities
@@ -169,7 +169,7 @@ try,
             out = [];
             return
         else,
-            error(['Unknown channel mode for channel ',num2str(channr)]);
+            ft_error(['Unknown channel mode for channel ',num2str(channr)]);
         end;
     end;
     out.header = orderfields(out.header);
@@ -220,7 +220,7 @@ try,
               pars.channels = analoglist; 
           else, % renumber requested channels to entityIDs
               if length(pars.channels)>length(analoglist),
-                  error(['Requested more analog channels than present in datafile']);
+                  ft_error(['Requested more analog channels than present in datafile']);
               else,
                   pars.channels = analoglist(pars.channels);
               end;
@@ -291,6 +291,6 @@ catch,
         [st,mesg] = ns_GetLastErrorMsg;
         disp(mesg);
     end;
-    error(lasterr);
+    ft_error(lasterr);
 end;
 

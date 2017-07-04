@@ -98,7 +98,7 @@ elseif hascomp
   label   = comp.topolabel;
   ncomps  = length(comp.label);
 else
-  error('incorrect number of input arguments');
+  ft_error('incorrect number of input arguments');
 end
 
 % cfg.component can be indicated by number or by label
@@ -110,11 +110,11 @@ if isempty(reject)
 end
 
 if min(reject)<1
-  error('you cannot remove components that are not present in the data');
+  ft_error('you cannot remove components that are not present in the data');
 end
 
 if max(reject)>ncomps
-  error('you cannot remove components that are not present in the data');
+  ft_error('you cannot remove components that are not present in the data');
 end
 
 if hasdata && strcmp(cfg.demean, 'yes')

@@ -42,7 +42,7 @@ if isfield(mesh, 'Points') && isfield(mesh, 'ConnectivityList')
     case 8
       mesh.hex = mesh.ConnectivityList;
     otherwise
-      error('unsupported ConnectivityList')
+      ft_error('unsupported ConnectivityList')
   end % switch
   mesh = removefields(mesh, {'Points', 'ConnectivityList', 'Constraints', 'UnderlyingObj'});
 end

@@ -124,7 +124,7 @@ if ~isempty(renamed)
     elseif loose
       ft_warning('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     elseif pedantic
-      error('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
+      ft_error('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     end
   end
 end
@@ -140,7 +140,7 @@ if ~isempty(renamedval) && issubfield(cfg, renamedval{1})
     elseif loose
       ft_warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     elseif pedantic
-      error('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      ft_error('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     end
   end
 end
@@ -152,7 +152,7 @@ if ~isempty(required)
   fieldsused = fieldnames(cfg);
   [c, ia, ib] = setxor(required, fieldsused);
   if ~isempty(ia)
-    error('The field cfg.%s is required\n', required{ia});
+    ft_error('The field cfg.%s is required\n', required{ia});
   end
 end
 
@@ -167,7 +167,7 @@ if ~isempty(deprecated)
     elseif loose
       ft_warning('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)});
     elseif pedantic
-      error('The option cfg.%s is not longer supported\n', deprecated{ismember(deprecated, fieldsused)});
+      ft_error('The option cfg.%s is not longer supported\n', deprecated{ismember(deprecated, fieldsused)});
     end
   end
 end
@@ -184,7 +184,7 @@ if ~isempty(unused)
     elseif loose
       ft_warning('The field cfg.%s is unused, it will be removed from your configuration\n', unused{ismember(unused, fieldsused)});
     elseif pedantic
-      error('The field cfg.%s is unused\n', unused{ismember(unused, fieldsused)});
+      ft_error('The field cfg.%s is unused\n', unused{ismember(unused, fieldsused)});
     end
   end
 end
@@ -198,7 +198,7 @@ if ~isempty(allowed)
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
   if ~isempty(c)
-    error('The field cfg.%s is not allowed\n', c{1});
+    ft_error('The field cfg.%s is not allowed\n', c{1});
   end
 end
 
@@ -214,7 +214,7 @@ if ~isempty(forbidden)
     elseif loose
       ft_warning('The field cfg.%s is forbidden, it will be removed from your configuration\n', forbidden{ismember(forbidden, fieldsused)});
     elseif pedantic
-      error('The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)});
+      ft_error('The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)});
     end
   end
 end
@@ -229,7 +229,7 @@ if ~isempty(allowedval) && isfield(cfg, allowedval{1}) ...
     s = [s allowedval{k} ', '];
   end
   s = s(1:end-2); % strip last comma
-  error(s);
+  ft_error(s);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -483,7 +483,7 @@ if ~isempty(createsubcfg)
           };
         
       otherwise
-        error('unexpected name of the subfunction');
+        ft_error('unexpected name of the subfunction');
         
     end % switch subname
     
@@ -495,7 +495,7 @@ if ~isempty(createsubcfg)
         elseif loose
           ft_warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         elseif pedantic
-          error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+          ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end
         
         subcfg = setfield(subcfg, fieldname{i}, getfield(cfg, fieldname{i}));  % set it in the subconfiguration
@@ -553,7 +553,7 @@ if istrue(checkfilenames)
       % display a graphical file selection dialog
       [f, p] = uigetfile('*.*', 'Select a data file');
       if isequal(f, 0)
-        error('User pressed cancel');
+        ft_error('User pressed cancel');
       else
         d = fullfile(p, f);
       end
@@ -562,7 +562,7 @@ if istrue(checkfilenames)
       % display a graphical directory selection dialog
       d = uigetdir('*.*', 'Select a data directory');
       if isequal(d, 0)
-        error('User pressed cancel');
+        ft_error('User pressed cancel');
       end
       cfg.dataset = d;
     end

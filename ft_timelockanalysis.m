@@ -150,8 +150,8 @@ ntrial      = length(data.trial);
 nchan       = length(data.label);   % number of channels
 numsamples  = zeros(ntrial,1);      % number of selected samples in each trial, is determined later
 
-if ntrial==0, error('Number of trials selected in data is zero');   end
-if nchan==0,  error('Number of channels selected in data is zero'); end
+if ntrial==0, ft_error('Number of trials selected in data is zero');   end
+if nchan==0,  ft_error('Number of channels selected in data is zero'); end
 
 % determine the duration of each trial
 begsamplatency = zeros(1,ntrial);
@@ -177,7 +177,7 @@ latency(2)   = maxperlength(2);
 switch cfg.vartrllength
   case 0
     if ~all(minperlength==maxperlength)
-      error('data has variable trial lengths, you specified not to accept that');
+      ft_error('data has variable trial lengths, you specified not to accept that');
     end
   case 1
     if all(minperlength==maxperlength)
@@ -188,7 +188,7 @@ switch cfg.vartrllength
       disp('processing and keeping variable length single trials');
     end
   otherwise
-    error('unknown value for vartrllength');
+    ft_error('unknown value for vartrllength');
 end
 
 if strcmp(cfg.covariance, 'yes')
@@ -205,11 +205,11 @@ if strcmp(cfg.covariance, 'yes')
       case 'all'
         cfg.covariancewindow = latency;
       case 'minperlength'
-        error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
+        ft_error('cfg.covariancewindow = ''minperlength'' is not supported anymore');
       case 'maxperlength'
-        error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
+        ft_error('cfg.covariancewindow = ''maxperlength'' is not supported anymore');
       otherwise
-        error('unsupported specification of cfg.covariancewindow');
+        ft_error('unsupported specification of cfg.covariancewindow');
     end
   end
 end

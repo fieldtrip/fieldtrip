@@ -144,7 +144,7 @@ usefsample = ~isempty(cfg.resamplefs);
 usetime    = ~isempty(cfg.time);
 
 if usefsample && usetime
-  error('you should either specify cfg.resamplefs or cfg.time')
+  ft_error('you should either specify cfg.resamplefs or cfg.time')
 end
 
 % whether to use downsample() or resample()
@@ -154,7 +154,7 @@ elseif strcmp(cfg.resamplemethod, 'downsample')
   ft_warning('using cfg.resamplemethod = ''downsample'', only use this if you have applied an anti-aliasing filter prior to downsampling!');
   usedownsample = 1;
 else
-  error('unknown resamplemethod ''%s''', cfg.resamplemethod);
+  ft_error('unknown resamplemethod ''%s''', cfg.resamplemethod);
 end
 
 % remember the original sampling frequency in the configuration
@@ -215,7 +215,7 @@ if usefsample
     % perform the resampling
     if usedownsample
       if mod(fsorig, fsres) ~= 0
-        error('when using cfg.resamplemethod = ''downsample'', new sampling rate needs to be a proper divisor of original sampling rate');
+        ft_error('when using cfg.resamplemethod = ''downsample'', new sampling rate needs to be a proper divisor of original sampling rate');
       end
 
       if isa(data.trial{itr}, 'single')

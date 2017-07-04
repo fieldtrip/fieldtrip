@@ -66,10 +66,10 @@ if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
+    ft_error('P-values can only be calculated if the test statistics are calculated.');
 end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    error('cfg.uvar should not exist for an independent samples statistic');
+    ft_error('cfg.uvar should not exist for an independent samples statistic');
 end
 
 if ~isempty(cfg.cvar)
@@ -82,7 +82,7 @@ end
 [nsmpl,nrepl] = size(dat);
 df = nrepl - nblocks - 1;
 if df<1
-  error('Insufficient error degrees of freedom for this analysis.')
+  ft_error('Insufficient error degrees of freedom for this analysis.')
 end
 
 if strcmp(cfg.computestat, 'yes')

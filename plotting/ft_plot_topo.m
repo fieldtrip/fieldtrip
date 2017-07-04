@@ -269,7 +269,7 @@ elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
  
   % set mask and cdat, and check for clim
   if isempty(clim)
-    error('clim is required for style = ''imsat'' or style = ''imsatiso''')
+    ft_error('clim is required for style = ''imsat'' or style = ''imsatiso''')
   end
   satmask = maskimage;
   cdat = Zi;

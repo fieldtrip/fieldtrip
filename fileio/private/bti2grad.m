@@ -115,7 +115,7 @@ elseif isfield(hdr, 'config'),
     ori = cat(2,hdr.config.channel_data(n).device_data.loop_data.direction)';
     % determine the number of coils for this channel
     if numcoils(n) ~= size(pos,1)
-      error('number of coils does not correspond with number of coil positions');
+      ft_error('number of coils does not correspond with number of coil positions');
     end
     % add the coils of this channel to the gradiometer array
     grad.tra(i, cnt+1:cnt+numcoils(n)) = 1;
@@ -141,7 +141,7 @@ elseif isfield(hdr, 'config'),
     ori = cat(2,hdr.config.channel_data(n).device_data.loop_data.direction)';
     % determine the number of coils for this channel
     if numcoils(n) ~= size(pos,1)
-      error('number of coils does not correspond with number of coil positions');
+      ft_error('number of coils does not correspond with number of coil positions');
     end
     % add the coils of this channel to the gradiometer array
     grad.tra(numMEG+i, cnt+1:cnt+numcoils(n)) = 1; %FIXME check whether ori is OK for gradiometers

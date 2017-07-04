@@ -124,7 +124,7 @@ demean = strcmp(cfg.demean, 'yes');
 if ischar(cfg.trials) && strcmp(cfg.trials,'all')
   % do nothing
 elseif ischar(cfg.trials)
-  error('only ''all'' is allowed for string input for cfg.trials');
+  ft_error('only ''all'' is allowed for string input for cfg.trials');
 else
   % check whether there's a trial field in the source structure, and
   % subselect, otherwise error
@@ -132,7 +132,7 @@ else
     source.trial = source.trial(cfg.trials);
     if isfield(source, 'cumtapcnt'), source.cumtapcnt = source.cumtapcnt(cfg.trials,:); end
   else
-    error('subselecting trials in ft_sourcedescriptives is currently only possible with a ''trial'' field');   
+    ft_error('subselecting trials in ft_sourcedescriptives is currently only possible with a ''trial'' field');   
   end
 end
 
@@ -160,12 +160,12 @@ if strcmp(cfg.projectmom, 'yes')
   if isempty(cfg.powmethod)
     cfg.powmethod = 'regular'; % set the default
   elseif ~strcmp(cfg.powmethod, 'regular')
-    error('unsupported powmethod in combination with projectmom');
+    ft_error('unsupported powmethod in combination with projectmom');
   end
   if isempty(cfg.cohmethod)
     cfg.cohmethod = 'regular';% set the default
   elseif ~strcmp(cfg.cohmethod, 'regular')
-    error('unsupported cohmethod in combination with projectmom');
+    ft_error('unsupported cohmethod in combination with projectmom');
   end
 else
   if isempty(cfg.powmethod)
@@ -182,24 +182,24 @@ if isfield(cfg, 'singletrial'), cfg.keeptrials = cfg.singletrial;  end
 % do a validity check on the input data and specified options
 if strcmp(cfg.resolutionmatrix, 'yes')
   if ~isfield(source.avg, 'filter')
-    error('The computation of the resolution matrix requires keepfilter=''yes'' in sourceanalysis.');
+    ft_error('The computation of the resolution matrix requires keepfilter=''yes'' in sourceanalysis.');
   elseif ~isfield(source, 'leadfield')
-    error('The computation of the resolution matrix requires keepleadfield=''yes'' in sourceanalysis.');
+    ft_error('The computation of the resolution matrix requires keepleadfield=''yes'' in sourceanalysis.');
   end
 end
 
 if strcmp(cfg.fwhm, 'yes')
   if ~isfield(source.avg, 'filter')
-    error('The computation of the fwhm requires keepfilter=''yes'' in sourceanalysis.');
+    ft_error('The computation of the fwhm requires keepfilter=''yes'' in sourceanalysis.');
   end
 end
 
 if strcmp(cfg.eta, 'yes') && strcmp(cfg.cohmethod, 'svdfft')
-  error('eta cannot be computed in combination with the application of svdfft');
+  ft_error('eta cannot be computed in combination with the application of svdfft');
 end
 
 if strcmp(cfg.keeptrials, 'yes') && ~strcmp(cfg.supmethod, 'none')
-  error('you cannot keep trials when you want to partialize something');
+  ft_error('you cannot keep trials when you want to partialize something');
 end
 
 % set some flags for convenience
@@ -218,7 +218,7 @@ switch cfg.powmethod
   case 'none'
     powmethodfun = [];
   otherwise
-    error('unsupported powmethod');
+    ft_error('unsupported powmethod');
 end
 
 % represent the selection of sources in the brain as a row-vector with indices
@@ -242,7 +242,7 @@ if ispccdata
 
   % cannot handle reference channels and reference dipoles simultaneously
   if numel(refchansel)>0 && numel(refdipsel)>0
-    error('cannot simultaneously handle reference channels and reference dipole');
+    ft_error('cannot simultaneously handle reference channels and reference dipole');
   end
 
   % these are only used to count the number of reference/suppression dipoles and channels
@@ -407,7 +407,7 @@ if ispccdata
   if keeptrials
     % do the processing of the CSD matrices for each trial
     if ~strcmp(cfg.supmethod, 'none')
-      error('suppression is only supported for average CSD');
+      ft_error('suppression is only supported for average CSD');
     end
     %dipselcell = mat2cell(repmat(dipsel(:)', [Ndipole 1]), ones(Ndipole,1), length(dipsel));
     %if hasrefdip,  refdipselcell  = mat2cell(repmat(refdipsel(:)',  [Ndipole 1]), ones(Ndipole,1), length(refdipsel));  end
@@ -548,7 +548,7 @@ if ispccdata
             [cmax, indmax]     = max(ccoh);
             source.avg.coh(i)  = ccoh(indmax);
           otherwise
-            error('unsupported cohmethod');
+            ft_error('unsupported cohmethod');
         end % cohmethod
       end
 
@@ -658,7 +658,7 @@ elseif ismneavg
     for diplop=1:length(insideindx)
       mom = source.avg.mom{insideindx(diplop)};
       if length(mom)~=prod(size(mom))
-        error('kurtosis can only be computed for projected dipole moment');
+        ft_error('kurtosis can only be computed for projected dipole moment');
       end
       source.avg.k2(insideindx(diplop)) = kurtosis(mom);
     end
@@ -696,7 +696,7 @@ elseif islcmvavg
     for diplop=1:length(insideindx)
       mom = source.avg.mom{insideindx(diplop)};
       if length(mom)~=prod(size(mom))
-        error('kurtosis can only be computed for projected dipole moment');
+        ft_error('kurtosis can only be computed for projected dipole moment');
       end
       source.avg.k2(insideindx(diplop)) = kurtosis(mom);
     end
@@ -767,7 +767,7 @@ elseif islcmvtrl
       for diplop=1:length(insideindx)
         mom = source.trial(trllop).mom{insideindx(diplop)};
         if length(mom)~=numel(mom)
-          error('kurtosis can only be computed for projected dipole moment');
+          ft_error('kurtosis can only be computed for projected dipole moment');
         end
         source.trial(trllop).k2(insideindx(diplop)) = kurtosis(mom);
       end
@@ -1045,7 +1045,7 @@ if strcmp(cfg.fwhm, 'yes')
   switch cfg.fwhmmethod
     case 'barnes'
       if ~isfield(source, 'dim')
-        error('computation of fwhm is not possible with method ''barnes'' is not possible when the dipoles are not defined on a regular 3D grid');
+        ft_error('computation of fwhm is not possible with method ''barnes'' is not possible when the dipoles are not defined on a regular 3D grid');
       end
       fprintf('computing fwhm of spatial filters using method ''barnes''\n');
       source = estimate_fwhm1(source, cfg.fwhmremovecenter);
@@ -1053,7 +1053,7 @@ if strcmp(cfg.fwhm, 'yes')
       fprintf('computing fwhm of spatial filters using method ''gaussfit''\n');
       source = estimate_fwhm2(source, cfg.fwhmmaxdist);
     otherwise
-      error('unknown method for fwhm estimation');
+      ft_error('unknown method for fwhm estimation');
   end
 end
 

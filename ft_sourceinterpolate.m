@@ -107,7 +107,7 @@ end
 
 % this is not supported any more as of 26/10/2011
 if ischar(anatomical)
-  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+  ft_error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
 % check if the input cfg is valid for this function
@@ -194,7 +194,7 @@ functional = ft_convert_units(functional, anatomical.unit);
 if isfield(functional, 'coordsys') && isfield(anatomical, 'coordsys') && ~isequal(functional.coordsys, anatomical.coordsys)
   % FIXME is this different when smudged or not?
   % ft_warning('the coordinate systems are not aligned');
-  % error('the coordinate systems are not aligned');
+  % ft_error('the coordinate systems are not aligned');
 end
 
 if ~isUnstructuredAna && cfg.downsample~=1

@@ -68,7 +68,7 @@ if strcmpi(hdr.DataFormat, 'binary')
   % but that might be on another location than the present working directory
   info = dir(datafile);
   if isempty(info)
-    error('cannot determine the location of the data file %s', hdr.DataFile);
+    ft_error('cannot determine the location of the data file %s', hdr.DataFile);
   end
   switch lower(hdr.BinaryFormat)
     case 'int_16';

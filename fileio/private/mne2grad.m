@@ -372,7 +372,7 @@ else
   % check we've got all the MEG channels:
   kChan = kChan-1;
   if kChan ~= (nPlaGrad + nMag +nAxGrad)
-    error('Number of MEG channels identified does not match number of channels in grad structure');
+    ft_error('Number of MEG channels identified does not match number of channels in grad structure');
   end
   
   % determine the type of acquisition system
@@ -432,7 +432,7 @@ if nEEG>0
   
   % check we've got all the EEG channels:
   if kChan~=(nEEG)
-    error('Number of EEG channels identified does not match number of channels in elec structure!!!!!');
+    ft_error('Number of EEG channels identified does not match number of channels in elec structure!!!!!');
   end
   
   % multiply by 100 to get cm

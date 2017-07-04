@@ -85,7 +85,7 @@ if needhdr
   end
   
   if ~any(sel)
-    error('no supported files were found');
+    ft_error('no supported files were found');
   end
   
   fname = fname(sel);
@@ -98,44 +98,44 @@ if needhdr
   end
   
   if any([filehdr.nChans]~=1)
-    error('more than one channel per file not supported');
+    ft_error('more than one channel per file not supported');
   else
     hdr.nChans = sum([filehdr.nChans]);
   end
   
   if length(unique([filehdr.label]))~=nfiles
-    error('not all channels have a unique name');
+    ft_error('not all channels have a unique name');
   else
     hdr.label = [filehdr.label]';
   end
   
   if any(diff([filehdr.Fs]))
-    error('different sampling frequenties per file not supported');
+    ft_error('different sampling frequenties per file not supported');
   else
     hdr.Fs = filehdr(1).Fs;
   end
   
   if any(diff([filehdr.nSamples]))
-    error('different nSamples per file not supported');
+    ft_error('different nSamples per file not supported');
   else
     hdr.nSamples = filehdr(1).nSamples;
   end
   
   if any(diff([filehdr.nSamplesPre]))
-    error('different nSamplesPre per file not supported');
+    ft_error('different nSamplesPre per file not supported');
   else
     hdr.nSamplesPre = filehdr(1).nSamplesPre;
   end
   
   if any(diff([filehdr.nTrials]))
-    error('different nTrials per file not supported');
+    ft_error('different nTrials per file not supported');
   else
     hdr.nTrials = filehdr(1).nTrials;
   end
   
   if isfield(filehdr, 'TimeStampPerSample')
     if any(diff([filehdr.TimeStampPerSample]))
-      error('different TimeStampPerSample per file not supported');
+      ft_error('different TimeStampPerSample per file not supported');
     else
       hdr.TimeStampPerSample = filehdr(1).TimeStampPerSample;
     end
@@ -143,7 +143,7 @@ if needhdr
   
   if isfield(filehdr, 'FirstTimeStamp')
     if any(diff([filehdr.FirstTimeStamp]))
-      error('different FirstTimeStamp per file not supported');
+      ft_error('different FirstTimeStamp per file not supported');
     else
       hdr.FirstTimeStamp = filehdr(1).FirstTimeStamp;
     end

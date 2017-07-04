@@ -44,6 +44,6 @@ else
       end
       
     otherwise
-      error('invalid dimension along which to slice the volume');
+      ft_error('invalid dimension along which to slice the volume');
   end % switch
 end % if nargin

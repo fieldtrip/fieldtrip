@@ -230,7 +230,7 @@ if ~isempty(cfg.chanscale)
     ft_warning('ignoring cfg.chanscale; this should only be used when an explicit channel selection is being made');
     cfg.chanscale = [];
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
-    error('cfg.chanscale should have the same number of elements as cfg.channel');
+    ft_error('cfg.chanscale should have the same number of elements as cfg.channel');
   end
   
   % make sure chanscale is a column vector, not a row vector
@@ -393,11 +393,11 @@ end
 % FIXME make a check for the consistency of cfg.continous, cfg.blocksize, cfg.trl and the data header
 
 if Nchans == 0
-  error('no channels to display');
+  ft_error('no channels to display');
 end
 
 if Ntrials == 0
-  error('no trials to display');
+  ft_error('no trials to display');
 end
 
 if ischar(cfg.selectfeature)
@@ -450,7 +450,7 @@ if ischar(cfg.ylim)
       end
       cfg.ylim = [minval maxval];
     otherwise
-      error('unsupported value for cfg.ylim');
+      ft_error('unsupported value for cfg.ylim');
   end % switch ylim
   % zoom in a bit when viemode is vertical
   if strcmp(cfg.viewmode, 'vertical')
@@ -458,7 +458,7 @@ if ischar(cfg.ylim)
   end
 else
   if (numel(cfg.ylim) ~= 2) || ~isnumeric(cfg.ylim)
-    error('cfg.ylim needs to be a 1x2 vector [ymin ymax], describing the upper and lower limits')
+    ft_error('cfg.ylim needs to be a 1x2 vector [ymin ymax], describing the upper and lower limits')
   end
 end
 
@@ -469,13 +469,13 @@ else
   labels_all= hdr.label;
 end
 if size(cfg.channelcolormap,2) ~= 3
-  error('cfg.channelcolormap is not valid, size should be Nx3')
+  ft_error('cfg.channelcolormap is not valid, size should be Nx3')
 end
 
 if isnumeric(cfg.colorgroups)
   % groups defined by user
   if length(labels_all) ~= length(cfg.colorgroups)
-    error('length(cfg.colorgroups) should be length(data/hdr.label)')
+    ft_error('length(cfg.colorgroups) should be length(data/hdr.label)')
   end
   R = cfg.channelcolormap(:,1);
   G = cfg.channelcolormap(:,2);
@@ -513,7 +513,7 @@ elseif strcmp(cfg.colorgroups, 'sequential')
   chancolors = lines(length(labels_all));
   
 else
-  error('do not understand cfg.colorgroups')
+  ft_error('do not understand cfg.colorgroups')
 end
 
 % collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact
@@ -533,7 +533,7 @@ artifact = artifact(sel==1);
 artlabel = artlabel(sel==1);
 
 if length(artlabel) > 9
-  error('only up to 9 artifacts groups supported')
+  ft_error('only up to 9 artifacts groups supported')
 end
 
 % make artdata representing all artifacts in a "raw data" format
@@ -1063,7 +1063,7 @@ if isempty(cmenulab)
       % check if only 1 chan, other wise not clear max in which channel. %
       % ingnie: would be cool to add the option to select the channel when multiple channels
       if size(opt.curdata.trial{1},1) > 1
-        error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
+        ft_error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
       end
       if strcmp(cfg.selectmode, 'markpeakevent')
         [dum ind_minmax] = max(opt.curdata.trial{1}(begsel-begsample+1:endsel-begsample+1));
@@ -2082,7 +2082,7 @@ if strcmp(cfg.viewmode, 'component')
         zmax = max([abs(zmin) abs(zmax)]);
         zmin = -zmax;
       else
-        error('configuration option for component scaling could not be recognized');
+        ft_error('configuration option for component scaling could not be recognized');
       end
     end
     

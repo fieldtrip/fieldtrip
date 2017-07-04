@@ -95,7 +95,7 @@ if isempty(verbose), verbose = 1; end
 
 if ~exist('fileprefix','var'),
   msg = sprintf('...no input fileprefix - see help avw_img_read\n\n');
-  error(msg);
+  ft_error(msg);
 end
 if findstr('.hdr',fileprefix),
   fileprefix = strrep(fileprefix,'.hdr','');
@@ -122,7 +122,7 @@ function [ avw ] = read_image(avw,IMGorient,machine,verbose)
 fid = fopen(sprintf('%s.img',avw.fileprefix),'r',machine);
 if fid < 0,
   msg = sprintf('...cannot open file %s.img\n\n',avw.fileprefix);
-  error(msg);
+  ft_error(msg);
 end
 
 if verbose,
@@ -259,8 +259,8 @@ if ( TimeDim > 1 ) && (avw.hdr.hist.orient ~= 0 ),
            'for volumes with dimensionality greater than 3.  Set ', ...
            'avw.hdr.hist.orient = 0 and flip your volume after ', ...
            'calling this function' ];
-   msg = error( '%s (%s).', msg, mfilename );
-   error( msg );
+   msg = ft_error( '%s (%s).', msg, mfilename );
+   ft_error( msg );
 end
 
 switch double(avw.hdr.hist.orient),
@@ -493,7 +493,7 @@ case 1, % coronal unflipped
     
   otherwise
     
-    error('unknown value in avw.hdr.hist.orient, try explicit IMGorient option.');
+    ft_error('unknown value in avw.hdr.hist.orient, try explicit IMGorient option.');
     
 end
 

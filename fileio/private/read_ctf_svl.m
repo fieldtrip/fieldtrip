@@ -7,7 +7,7 @@ function [data, hdr] = read_ctf_svl(filename)
   fid = fopen(filename, 'rb', 'ieee-be', 'ISO-8859-1');
   
   if fid <= 0
-    error('Could not open SAM file: %s\n', filename);
+    ft_error('Could not open SAM file: %s\n', filename);
   end
   
 

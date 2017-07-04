@@ -77,12 +77,12 @@ if isempty(conductivity)
     % skin/skull/brain
     conductivity = [1 1/80 1] * 0.33;
   else
-    error('Conductivity values are required for 2 shells. More than 3 shells not allowed')
+    ft_error('Conductivity values are required for 2 shells. More than 3 shells not allowed')
   end
   headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
-    error('a conductivity value should be specified for each compartment');
+    ft_error('a conductivity value should be specified for each compartment');
   end
   % update the order of the compartments
   headmodel.cond = conductivity(order);
@@ -174,7 +174,7 @@ try
     if version>3
       dos(['./' exefile]);
     else
-      error('non suitable GCC compiler version (must be superior to gcc3)');
+      ft_error('non suitable GCC compiler version (must be superior to gcc3)');
     end
   end
   headmodel.mat = om_load_sym(hminvfile,'binary');
@@ -225,6 +225,6 @@ elseif w>0 && (abs(w)-4*pi)<1000*eps
   ok = 1;
 %   ft_warning('your normals are inwards oriented')
 else
-  error('your surface probably is irregular\n')
+  ft_error('your surface probably is irregular\n')
   ok = 0;
 end

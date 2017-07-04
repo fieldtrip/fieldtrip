@@ -50,7 +50,7 @@ hasmri       = nargin>1;
 
 % check the consistency of the input arguments
 if hasheadshape && hasbnd
-  error('you should not specify cfg.headshape and cfg.bnd simultaneously');
+  ft_error('you should not specify cfg.headshape and cfg.bnd simultaneously');
 end
 
 % check the consistency of the input arguments

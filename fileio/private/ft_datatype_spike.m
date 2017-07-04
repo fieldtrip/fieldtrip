@@ -206,7 +206,7 @@ switch version
             nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps            
             spikedim = dim==nSpikes;
             if isempty(spikedim)
-              error('waveforms contains data but number of waveforms does not match number of spikes');
+              ft_error('waveforms contains data but number of waveforms does not match number of spikes');
             end
             if spikedim==1
               spike.waveform{iUnit} = permute(spike.waveform{iUnit},[3 2 1]);
@@ -221,7 +221,7 @@ switch version
             leaddim  = dim<6 & dim~=nSpikes;
             sampdim  = dim>=6 & dim~=nSpikes;
             if isempty(spikedim)
-              error('waveforms contains data but number of waveforms does not match number of spikes');
+              ft_error('waveforms contains data but number of waveforms does not match number of spikes');
             end
             if sum(leaddim)~=1 || sum(sampdim)~=1, continue,end % in this case we do not know what to do                        
             if find(spikedim)~=3 && find(leaddim)~=1 && find(sampdim)~=2
@@ -270,7 +270,7 @@ switch version
         
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for spike datatype', version);
+    ft_error('unsupported version "%s" for spike datatype', version);
 end
 
 

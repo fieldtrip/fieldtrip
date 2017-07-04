@@ -502,7 +502,7 @@ switch cfg.method
     elec.label   = lab(:);
     
   otherwise
-    error('unsupported method ''%s''', cfg.method);
+    ft_error('unsupported method ''%s''', cfg.method);
     
 end % switch method
 

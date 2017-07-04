@@ -99,7 +99,7 @@ if ~isfield(cfg, 'headerformat'),          cfg.headerformat            = [];    
 if ~isfield(cfg, 'dataformat'),            cfg.dataformat              = [];            end
 
 if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue')
-  error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
+  ft_error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
 end
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
@@ -120,7 +120,7 @@ else
       trl(k,3) = time2offset(data.time{k}, data.fsample);
     end
   else
-    error('the input data does not contain a valid description of the sampleinfo');
+    ft_error('the input data does not contain a valid description of the sampleinfo');
   end
 end
 
@@ -135,9 +135,9 @@ numecgsgn         = length(sgnind);
 fltpadding        = 0;
 
 if numecgsgn<1
-  error('no ECG channels selected');
+  ft_error('no ECG channels selected');
 elseif numecgsgn>1
-  error('only one ECG channel can be selected');
+  ft_error('only one ECG channel can be selected');
 end
 
 % set default cfg.continuous

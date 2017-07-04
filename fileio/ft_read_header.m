@@ -140,7 +140,7 @@ if iscell(filename)
     combined.nTrials  = sum(ntrl);
     combined.nSamples = nsmp(1);
   else
-    error('cannot concatenate files');
+    ft_error('cannot concatenate files');
   end
   % return the header of the concatenated datafiles
   hdr = combined;
@@ -194,7 +194,7 @@ if realtime
 else
   % check whether the file or directory exists
   if  ~exist(filename, 'file')
-    error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
+    ft_error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
   end
   
   checkUniqueLabels = true;
@@ -246,7 +246,7 @@ end % if cache
 
 % the support for head/dewar coordinates is still limited
 if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4', 'neuromag_fif', 'neuromag_mne'}))
-  error('dewar coordinates are not supported for %s', headerformat);
+  ft_error('dewar coordinates are not supported for %s', headerformat);
 end
 
 % start with an empty header
@@ -345,7 +345,7 @@ switch headerformat
     else
       hdr = read_besa_besa(filename,[],1);
       if chanindx > hdr.orig.channel_info.orig_n_channels
-        error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+        ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
       else
         hdr = read_besa_besa(filename,[],chanindx);
       end
@@ -387,7 +387,7 @@ switch headerformat
   case {'biosemi_bdf', 'bham_bdf'}
     hdr = read_biosemi_bdf(filename);
     if any(diff(hdr.orig.SampleRate))
-      error('channels with different sampling rate not supported');
+      ft_error('channels with different sampling rate not supported');
     end
     
     if ~ft_senstype(hdr, 'ext1020')
@@ -415,7 +415,7 @@ switch headerformat
     % this uses the openbdf and readbdf functions that were copied from EEGLAB
     orig = openbdf(filename);
     if any(orig.Head.SampleRate~=orig.Head.SampleRate(1))
-      error('channels with different sampling rate not supported');
+      ft_error('channels with different sampling rate not supported');
     end
     hdr.Fs          = orig.Head.SampleRate(1);
     hdr.nChans      = orig.Head.NS;
@@ -429,7 +429,7 @@ switch headerformat
     fclose(orig.Head.FILE.FID);
     
   case 'blackrock_nev'
-    error('this still needs some work');
+    ft_error('this still needs some work');
     
   case 'blackrock_nsx'
     ft_hastoolbox('NPMK', 1);
@@ -481,7 +481,7 @@ switch headerformat
     % In Spike2, channels can have different sampling rates, units, length
     % etc. etc. Here, channels need to have to same properties.
     if length(unique([orig.samplerate]))>1,
-      error('channels with different sampling rates are not supported');
+      ft_error('channels with different sampling rates are not supported');
     else
       hdr.Fs   = orig(1).samplerate;
     end
@@ -491,7 +491,7 @@ switch headerformat
     hdr.nSamplesPre = 0;
     % only continuous data supported
     if sum(strcmpi({orig.mode},'continuous')) < hdr.nChans,
-      error('not all channels contain continuous data');
+      ft_error('not all channels contain continuous data');
     else
       hdr.nTrials = 1;
     end
@@ -507,7 +507,7 @@ switch headerformat
     if isempty(orig)
       % this is to deal with data from the 64 channel system and the error
       % readCTFds: .meg4 file header=MEG4CPT   Valid header options:  MEG41CP  MEG42CP
-      error('could not read CTF with this implementation, please try again with the ''ctf_old'' file format');
+      ft_error('could not read CTF with this implementation, please try again with the ''ctf_old'' file format');
     end
     hdr.Fs           = orig.res4.sample_rate;
     hdr.nChans       = orig.res4.no_channels;
@@ -691,7 +691,7 @@ switch headerformat
     else
       hdr = read_edf(filename,[],1);
       if chanindx > hdr.orig.NS
-        error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+        ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
       else
         hdr = read_edf(filename,[],chanindx);
       end
@@ -777,7 +777,7 @@ switch headerformat
     [p, f, x]       = fileparts(filename);
     
     if any(chdr(:,4)-chdr(1,4))
-      error('Sample rate not the same for all cells.');
+      ft_error('Sample rate not the same for all cells.');
     end
     
     hdr.Fs          = chdr(1,4); %making assumption that sample rate is same for all cells
@@ -791,7 +791,7 @@ switch headerformat
     hdr.nSamplesPre = ceil(fhdr(14)/(1000/hdr.Fs));
     
     if any(chdr(:,3)-chdr(1,3))
-      error('Number of samples not the same for all cells.');
+      ft_error('Number of samples not the same for all cells.');
     end
     
     hdr.nSamples    = chdr(1,3); %making assumption that number of samples is same for all cells
@@ -809,7 +809,7 @@ switch headerformat
     [p, f, x]       = fileparts(filename);
     
     if any(chdr(:,4)-chdr(1,4))
-      error('Sample rate not the same for all cells.');
+      ft_error('Sample rate not the same for all cells.');
     end
     
     hdr.Fs          = chdr(1,4); %making assumption that sample rate is same for all cells
@@ -826,7 +826,7 @@ switch headerformat
     % does not use it when generating an EGIS session file.
     
     if any(chdr(:,3)-chdr(1,3))
-      error('Number of samples not the same for all cells.');
+      ft_error('Number of samples not the same for all cells.');
     end
     
     hdr.nSamples    = chdr(1,3); %making assumption that number of samples is same for all cells
@@ -869,7 +869,7 @@ switch headerformat
     % this function as 'egi_mff_v2'.
     
     if ~usejava('jvm')
-      error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
+      ft_error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
       % an alternative implementation which does not require the JVM but runs much slower is
       % available from http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0
     end
@@ -877,7 +877,7 @@ switch headerformat
     % get header info from .bin files
     binfiles = dir(fullfile(filename, 'signal*.bin'));
     if isempty(binfiles)
-      error('could not find any signal.bin in mff directory')
+      ft_error('could not find any signal.bin in mff directory')
     end
     
     orig = [];
@@ -927,7 +927,7 @@ switch headerformat
     end
     
     if length(unique(Fs)) > 1 || length(unique(nSamples)) > 1
-      error('Fs and nSamples should be the same in all signals')
+      ft_error('Fs and nSamples should be the same in all signals')
     end
     
     hdr.Fs          = Fs(1);
@@ -1049,7 +1049,7 @@ switch headerformat
           end
           ft_warning('mff apparently generated by NetStation 4.5.4.  Adjusting time scale to microseconds from nanoseconds.');
         else
-          error('number of samples in all epochs do not add up to total number of samples')
+          ft_error('number of samples in all epochs do not add up to total number of samples')
         end
       end
       
@@ -1071,7 +1071,7 @@ switch headerformat
             end
             disp('mff apparently generated by NetStation 4.5.4.  Adjusting time scale to microseconds from nanoseconds.');
           else
-            error('number of samples in all epochs do not add up to total number of samples')
+            ft_error('number of samples in all epochs do not add up to total number of samples')
           end
         end
       end
@@ -1189,7 +1189,7 @@ switch headerformat
         % get the same selection of channels from the two chunks
         [selbuf, selres4] = match_str(orig.channel_names, cachechunk.label);
         if length(selres4)<length(orig.channel_names)
-          error('the res4 chunk did not contain all channels')
+          ft_error('the res4 chunk did not contain all channels')
         end
         % copy some of the channel details
         hdr.label     = cachechunk.label(selres4);
@@ -1362,11 +1362,11 @@ switch headerformat
         hdr(i+1) = read_biosig_header(sprintf('%s_%d%s', fullfile(p, f), i, x));
         % do some sanity checks
         if hdr(i+1).nChans~=hdr(1).nChans
-          error('multiple GDF files detected that should be appended, but the channel count is inconsistent');
+          ft_error('multiple GDF files detected that should be appended, but the channel count is inconsistent');
         elseif hdr(i+1).Fs~=hdr(1).Fs
-          error('multiple GDF files detected that should be appended, but the sampling frequency is inconsistent');
+          ft_error('multiple GDF files detected that should be appended, but the sampling frequency is inconsistent');
         elseif ~isequal(hdr(i+1).label, hdr(1).label)
-          error('multiple GDF files detected that should be appended, but the channel names are inconsistent');
+          ft_error('multiple GDF files detected that should be appended, but the channel names are inconsistent');
         end
       end % for count
       % combine all headers into one
@@ -1766,7 +1766,7 @@ switch headerformat
         % no error message from fiff_setup_read_raw? Then maxshield
         % was applied, but maxfilter wasn't, so return this error:
         if istrue(checkmaxfilter)
-          error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+          ft_error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
         else
           ft_warning('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
         end
@@ -2072,7 +2072,7 @@ switch headerformat
     numsmp = cell2mat({orig.varheader.numsmp});
     adindx = find(cell2mat({orig.varheader.typ})==5);
     if isempty(adindx)
-      error('file does not contain continuous channels');
+      ft_error('file does not contain continuous channels');
     end
     hdr.nChans      = length(orig.varheader);
     hdr.Fs          = orig.varheader(adindx(1)).wfrequency;     % take the sampling frequency from the first A/D channel
@@ -2091,7 +2091,7 @@ switch headerformat
     numsmp = cell2mat({orig.VarHeader.NPointsWave});
     adindx = find(cell2mat({orig.VarHeader.Type})==5);
     if isempty(adindx)
-      error('file does not contain continuous channels');
+      ft_error('file does not contain continuous channels');
     end
     hdr.nChans      = length(orig.VarHeader);
     hdr.Fs          = orig.VarHeader(adindx(1)).WFrequency;     % take the sampling frequency from the first A/D channel
@@ -2110,11 +2110,11 @@ switch headerformat
   case 'plexon_plx'
     orig = read_plexon_plx(filename);
     if orig.NumSlowChannels==0
-      error('file does not contain continuous channels');
+      ft_error('file does not contain continuous channels');
     end
     fsample = [orig.SlowChannelHeader.ADFreq];
     if any(fsample~=fsample(1))
-      error('different sampling rates in continuous data not supported');
+      ft_error('different sampling rates in continuous data not supported');
     end
     for i=1:length(orig.SlowChannelHeader)
       label{i} = deblank(orig.SlowChannelHeader(i).Name);
@@ -2179,7 +2179,7 @@ switch headerformat
     end
     
     if hdr.nChans ~= size(smi.label,1)
-      error('data and header have different number of channels');
+      ft_error('data and header have different number of channels');
     else
       hdr.label = smi.label;
     end
@@ -2264,7 +2264,7 @@ switch headerformat
     %         tsqorig(k)   = tsq(this);
     %       end
     %     end
-    error('not yet implemented');
+    ft_error('not yet implemented');
     
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'yokogawa_mrk'}
     % header can be read with two toolboxes: Yokogawa MEG Reader and Yokogawa MEG160 (old inofficial toolbox)
@@ -2320,7 +2320,7 @@ switch headerformat
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
         hdr = read_biosig_header(filename);
       else
-        error('unsupported header format "%s"', headerformat);
+        ft_error('unsupported header format "%s"', headerformat);
       end
     end
     
@@ -2428,7 +2428,7 @@ end
 function [siz] = filesize(filename)
 l = dir(filename);
 if l.isdir
-  error('"%s" is not a file', filename);
+  ft_error('"%s" is not a file', filename);
 end
 siz = l.bytes;
 

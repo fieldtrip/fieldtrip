@@ -102,7 +102,7 @@ cfg.parameter  = ft_getopt(cfg, 'parameter'); % the default is handled further d
 
 regr = cfg.confound;
 if any(isnan(regr(:)))
-  error('the confounds may not contain NaNs');
+  ft_error('the confounds may not contain NaNs');
 end
 nconf     = size(regr,2);
 conflist  = 1:nconf;

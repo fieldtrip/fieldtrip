@@ -257,6 +257,6 @@ for i=1:length(chanindx)
         end
       end
     otherwise
-      error('incorrect specification of ''detectflank''');
+      ft_error('incorrect specification of ''detectflank''');
   end
 end

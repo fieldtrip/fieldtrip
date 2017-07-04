@@ -67,11 +67,11 @@ function avw_img_write(avw, fileprefix, IMGorient, machine, verbose)
 
 if ~exist('avw','var')
     doc avw_img_write;
-    error('...no input avw.');
+    ft_error('...no input avw.');
 elseif isempty(avw)
-    error('...empty input avw.');
+    ft_error('...empty input avw.');
 elseif ~isfield(avw,'img')
-    error('...empty input avw.img');
+    ft_error('...empty input avw.img');
 end
 
 if ~exist('fileprefix','var')
@@ -90,7 +90,7 @@ if isempty(fileprefix)
     if pathname, cd(pathname); end
     if ~fileprefix
         doc avw_img_write;
-        error('no output .hdr file specified');
+        ft_error('no output .hdr file specified');
     end
 end
 
@@ -122,7 +122,7 @@ end
 
 fid = fopen(sprintf('%s.img',fileprefix),'w',machine);
 if fid < 0
-    error('Cannot open file %s.img\n',fileprefix);
+    ft_error('Cannot open file %s.img\n',fileprefix);
 else
     avw = write_image(fid,avw,fileprefix,IMGorient,machine,verbose);
 end
@@ -199,7 +199,7 @@ elseif ~isfield(avw,'hdr')
     avw = avw_hdr_make;
 end
 if ~isequal(avw.hdr.hk.sizeof_hdr,348)
-    error('...avw.hdr.hk.sizeof_hdr must be 348!\n');
+    ft_error('...avw.hdr.hk.sizeof_hdr must be 348!\n');
 end
 
 quit = 0;
@@ -215,7 +215,7 @@ if ~exist('fileprefix','var')
     end
     if quit
         helpwin avw_hdr_write;
-        error('...no input fileprefix - see help avw_hdr_write\n\n');
+        ft_error('...no input fileprefix - see help avw_hdr_write\n\n');
         return;
     end
 end
@@ -250,7 +250,7 @@ if verbose, tic; end
 
 fid = fopen(sprintf('%s.hdr',fileprefix),'w',machine);
 if fid < 0
-    error('Cannot write to file %s.hdr\n',fileprefix);
+    ft_error('Cannot write to file %s.hdr\n',fileprefix);
 else
     if verbose, fprintf('...writing %s Analyze header.\n',machine); end
     write_header(fid,avw,verbose);
@@ -292,11 +292,11 @@ case   8
 case  16
     avw.hdr.dime.bitpix = int16(32); precision = 'single';
 case  32
-    error('...complex datatype not yet supported.\n');
+    ft_error('...complex datatype not yet supported.\n');
 case  64
     avw.hdr.dime.bitpix = int16(64); precision = 'double';
 case 128
-    error('...RGB datatype not yet supported.\n');
+    ft_error('...RGB datatype not yet supported.\n');
 otherwise
     ft_warning('...unknown datatype, using type 16 (32 bit floats).\n');
     avw.hdr.dime.datatype = int16(16);

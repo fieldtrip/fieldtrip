@@ -37,7 +37,7 @@ elseif m==1
   dip.pos = reshape(dip.pos, 3, n/3)';
 else
   % it is not clear how to convert to a Nx3 matrix
-  error('input dipole positions should be specified as Nx3 matrix');
+  ft_error('input dipole positions should be specified as Nx3 matrix');
 end
 
 if isfield(dip, 'mom')

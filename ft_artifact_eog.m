@@ -103,7 +103,7 @@ if isfield(cfg.artfctdef.eog, 'artifact')
 end
 
 if ~strcmp(cfg.artfctdef.eog.method, 'zvalue')
-  error('EOG artifact detection only works with cfg.method=''zvalue''');
+  ft_error('EOG artifact detection only works with cfg.method=''zvalue''');
 end
 
 % for backward compatibility

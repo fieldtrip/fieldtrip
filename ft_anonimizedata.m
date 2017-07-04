@@ -222,7 +222,7 @@ while ~info.cleanup
   uiwait(h); % we only get part this point with abort or cleanup
 
   if ~ishandle(h)
-    error('aborted by user');
+    ft_error('aborted by user');
   end
 
   info = getappdata(h, 'info');

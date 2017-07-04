@@ -96,7 +96,7 @@ end
 % ft_timelockanalysis (i.e. in private/preproc), hence make sure that
 % they can also be used here for consistency
 if isfield(cfg, 'baseline') && (isfield(cfg, 'demean') || isfield(cfg, 'baselinewindow'))
-  error('conflicting configuration options, you should use cfg.baseline');
+  ft_error('conflicting configuration options, you should use cfg.baseline');
 elseif isfield(cfg, 'demean') && strcmp(cfg.demean, 'no')
   cfg.baseline = 'no';
   cfg = rmfield(cfg, 'demean');

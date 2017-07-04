@@ -131,7 +131,7 @@ cfg.precondition = ft_getopt(cfg, 'precondition', []);
 
 % explicit check for option 'yes' in cfg.correctail.
 if strcmp(cfg.correcttail,'yes')
-  error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
+  ft_error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
 end
 
 if strcmp(cfg.correctm, 'cluster')
@@ -203,7 +203,7 @@ end
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
 if isempty(statfun)
-  error('could not locate the appropriate statistics function');
+  ft_error('could not locate the appropriate statistics function');
 else
   fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
@@ -239,7 +239,7 @@ if strcmp(cfg.correctm, 'cluster')
       cfg.clustercritval    = getfield(statfun(tmpcfg, dat, design), 'critval');
     catch
       disp(lasterr);
-      error('could not determine the parametric critical value for clustering');
+      ft_error('could not determine the parametric critical value for clustering');
     end
   elseif strcmp(cfg.clusterthreshold, 'parametric') && ~isempty(cfg.clustercritval)
     fprintf('using the specified parametric threshold for clustering\n');

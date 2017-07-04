@@ -77,15 +77,15 @@ if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
+    ft_error('P-values can only be calculated if the test statistics are calculated.');
 end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    error('cfg.uvar should not exist for an independent samples statistic');
+    ft_error('cfg.uvar should not exist for an independent samples statistic');
 end
 % if ~isfield(cfg, 'label') && ~isfield(cfg, 'pos')
-%   error('the configuration needs to contain either a label or a pos field');
+%   ft_error('the configuration needs to contain either a label or a pos field');
 % elseif isfield(cfg, 'label') && isfield(cfg, 'pos') && ~isempty(cfg.label) && ~isempty(cfg.pos)
-%   error('the configuration needs to contain either a non-empty label or a non-empty pos field');
+%   ft_error('the configuration needs to contain either a non-empty label or a non-empty pos field');
 % elseif isfield(cfg, 'label') && ~isempty(cfg.label)
 %   nchan = length(cfg.label);
 % elseif isfield(cfg, 'pos') && ~isempty(cfg.pos)
@@ -100,10 +100,10 @@ nreplc1 = length(selc1);
 nreplc2 = length(selc2);
 nrepl = nreplc1 + nreplc2;
 if nrepl<size(design,1)
-  error('Invalid specification of the independent variable in the design array.');
+  ft_error('Invalid specification of the independent variable in the design array.');
 end
 if nreplc1<2 || nreplc2<2
-    error('Every condition must contain at least two trials/tapers.');
+    ft_error('Every condition must contain at least two trials/tapers.');
 end
 dfc1 = nreplc1*2;
 dfc2 = nreplc2*2;

@@ -61,7 +61,7 @@ switch stack(2).name
   case 'ft_error'
     level = 'error';
   otherwise
-    error('this function cannot be called from %s', stack(2).name);
+    ft_error('this function cannot be called from %s', stack(2).name);
 end
 
 % remove this function itself and the calling function
@@ -213,7 +213,7 @@ switch varargin{1}
       % select a specific item
       msgId = varargin{2};
       if ~ismember(msgId, {s.identifier})
-        error('Unknown setting or incorrect message identifier ''%s''.', msgId);
+        ft_error('Unknown setting or incorrect message identifier ''%s''.', msgId);
       end
       msgState = getstate(s, msgId);
       if nargout
@@ -311,9 +311,9 @@ switch varargin{1}
         ft_default.notification.(level) = s;
         % the remainder is fully handled by the ERROR function
         if ~isempty(msgId)
-          error(msgId, varargin{:});
+          ft_error(msgId, varargin{:});
         else
-          error(varargin{:});
+          ft_error(varargin{:});
         end
         
       elseif strcmp(level, 'warning')

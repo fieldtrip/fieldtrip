@@ -81,9 +81,9 @@ chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 
 if nchan==0
-  error('no channels were selected');
+  ft_error('no channels were selected');
 elseif nchan>1
-  error('this function expects that you select a single channel');
+  ft_error('this function expects that you select a single channel');
 end
 
 % determine the size of blocks to process
@@ -150,7 +150,7 @@ while true
     endsample  = min(prevSample+blocksize, hdr.nSamples*hdr.nTrials);
     begsample  = endsample - blocksize + 1;
   else
-    error('unsupported value for cfg.bufferdata');
+    ft_error('unsupported value for cfg.bufferdata');
   end
   
   % remember up to where the data was read

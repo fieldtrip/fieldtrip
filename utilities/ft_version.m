@@ -125,7 +125,7 @@ elseif isgit
           ftver = 'yes';
         end
       otherwise
-        error('unsupported command "%s"');
+        ft_error('unsupported command "%s"');
     end
     cd(olddir);
     

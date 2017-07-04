@@ -74,7 +74,7 @@ if needhdr
   ftype_nts = find(ftype==3);
 
   if length(fname)==0
-    error('the dataset directory contains no supported files');
+    ft_error('the dataset directory contains no supported files');
   end
 
   for i=1:length(fname)
@@ -87,7 +87,7 @@ if needhdr
       case 3
         orig(i) = read_neuralynx_nts(fname{i}, 0, 0);
       otherwise
-        error('unsupported');
+        ft_error('unsupported');
     end
   end
 
@@ -124,9 +124,9 @@ if needhdr
       case 2
         recordsize = 32; % each record contains 32 samples
       case 3
-        error('this has not been implemented yet');
+        ft_error('this has not been implemented yet');
       otherwise
-        error('unsupported');
+        ft_error('unsupported');
     end
     % ensure that the last timestamp refers to the last sample
     TimeStampPerSample(i) = double(LastTimeStamp(i)-FirstTimeStamp(i))/((NRecords(i)-1)*recordsize);  % this should be in double precision, since it can be fractional
@@ -142,7 +142,7 @@ if needhdr
       % there seems to be a matlab bug (observed in Matlab75 on windows) which causes this uint64 comparison to fail if there are exactly 8 files
       % therefore check once more after converting them to double
       if any(double(FirstTimeStamp(ftype_ncs))~=double(FirstTimeStamp(ftype_ncs(1))))
-        error('not all continuous channels start at the same time');
+        ft_error('not all continuous channels start at the same time');
       end
     end
     if any(LastTimeStamp(ftype_ncs)~=LastTimeStamp(ftype_ncs(1)))

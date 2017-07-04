@@ -63,7 +63,7 @@ try
       kCoil = kCoil+1;
       grad.label{k} = deblank(s(k,:));
     else
-      error('unknown sensor type');
+      ft_error('unknown sensor type');
     end
   end
 catch

@@ -116,5 +116,5 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for timelock datatype', version);
+    ft_error('unsupported version "%s" for timelock datatype', version);
 end

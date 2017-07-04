@@ -55,7 +55,7 @@ try
   clear stopwatch
   
   if ~exist(inputfile, 'file')
-    error('timeout while waiting for the input file %s', inputfile);
+    ft_error('timeout while waiting for the input file %s', inputfile);
   end
   
   % the input file contains a function handle
@@ -111,7 +111,7 @@ try
   % remove the _ at the end, note that the rename command here is a private mex file
   retval = rename(outputfile, outputfile(1:end-1));
   if retval~=0
-    error('problem renaming output file %s', outputfile);
+    ft_error('problem renaming output file %s', outputfile);
   end
   
 catch err

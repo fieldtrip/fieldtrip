@@ -70,7 +70,7 @@ end
 if ~isempty(coordsys)
   % the user specified the coordinate system
   if isfield(object, 'coordsys') && ~strcmp(coordsys, unit.coordsys)
-    error('coordsys is inconsistent with object')
+    ft_error('coordsys is inconsistent with object')
   end
 else
   % the user did not specify the coordinate system

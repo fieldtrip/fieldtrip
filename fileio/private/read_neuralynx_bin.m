@@ -120,7 +120,7 @@ switch subtype
     end
     clear p f x1 x2
   otherwise
-    error('unknown file format subtype');
+    ft_error('unknown file format subtype');
 end
 
 % determine the downscale factor, i.e. the number of bits that the integer representation has to be shifted back to the left
@@ -136,7 +136,7 @@ switch subtype
   case 3
     downscale = double(magic(8));
   otherwise
-    error('unknown file format subtype');
+    ft_error('unknown file format subtype');
 end
 
 [p1, f1, x1] = fileparts(filename);
@@ -191,7 +191,7 @@ else
     dat = dat.*(2^downscale);  
   end
   if length(dat)<(endsample-begsample+1)
-    error('could not read the requested data');
+    ft_error('could not read the requested data');
   end
 end % needdat
 
@@ -203,7 +203,7 @@ fclose(fid);
 function [siz] = filesize(filename)
 l = dir(filename);
 if l.isdir
-  error(sprintf('"%s" is not a file', filename));
+  ft_error(sprintf('"%s" is not a file', filename));
 end
 siz = l.bytes;
 

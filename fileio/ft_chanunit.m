@@ -112,7 +112,7 @@ elseif isfield(input, 'label')
   label   = input.label;
   numchan = length(label);
 else
-  error('the input that was provided to this function cannot be deciphered');
+  ft_error('the input that was provided to this function cannot be deciphered');
 end
 
 if isfield(input, 'chanunit')

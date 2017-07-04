@@ -179,5 +179,5 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for volume datatype', version);
+    ft_error('unsupported version "%s" for volume datatype', version);
 end

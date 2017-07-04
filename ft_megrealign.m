@@ -194,7 +194,7 @@ for i=1:length(cfg.template)
     % it seems to be a pre-2011v1 type gradiometer structure, update it
     tmp = ft_datatype_sens(cfg.template{i});
   else
-    error('unrecognized template input');
+    ft_error('unrecognized template input');
   end
   % prevent "Subscripted assignment between dissimilar structures" error
   template = appendstruct(template, tmp); clear tmp
@@ -266,7 +266,7 @@ else
   %this also goes for the singleshell volume conductor model
   %x = which('rigidbodyJM'); %this function is needed
   %if isempty(x)
-  %  error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact jan-mathijs');
+  %  ft_error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact jan-mathijs');
   %end
 end
 
@@ -278,7 +278,7 @@ for i=1:Ntrials
     sel   = match_str(rest.label, {'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'});
     hmdat = rest.trial{i}(sel,:);
     if ~all(hmdat==repmat(hmdat(:,1),[1 size(hmdat,2)]))
-      error('only one position per trial is at present allowed');
+      ft_error('only one position per trial is at present allowed');
     else
       %M    = rigidbodyJM(hmdat(:,1))
       M    = ft_headcoordinates(hmdat(1:3,1),hmdat(4:6,1),hmdat(7:9,1));
@@ -327,7 +327,7 @@ if strcmp(cfg.feedback, 'yes')
       [u, s, v] = svd(data.trial{1}(id,:)); p1 = u(:,1);
       [u, s, v] = svd(data.realign{1}(it,:)); p2 = u(:,1);
     otherwise
-      error('unsupported cfg.topoparam');
+      ft_error('unsupported cfg.topoparam');
   end
 
   X = [pos1(:,1) pos2(:,1)]';

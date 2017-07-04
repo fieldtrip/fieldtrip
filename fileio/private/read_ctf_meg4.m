@@ -52,16 +52,16 @@ nsmp = hdr.nSamples;
 ntrl = hdr.nTrials;
 nchn = hdr.nChans;
 
-if begsample<1,              error('cannot read before the start of the data');        end
-if endsample>nsmp*ntrl*nchn, error('cannot read beyond the end of the data');          end
-if begsample>endsample,      error('cannot read a negative number of samples');        end
+if begsample<1,              ft_error('cannot read before the start of the data');        end
+if endsample>nsmp*ntrl*nchn, ft_error('cannot read beyond the end of the data');          end
+if begsample>endsample,      ft_error('cannot read a negative number of samples');        end
 if nargin<5,                 chanindx = 1:nchn;                                        end
-if isempty(chanindx),        error('no channels were specified for reading CTF data'); end
+if isempty(chanindx),        ft_error('no channels were specified for reading CTF data'); end
 
 %open the .meg4 file
 fid = fopen(fname,'r','ieee-be');
 if fid == -1,
-  error('could not open datafile');
+  ft_error('could not open datafile');
 end
 
 %check whether it is a known format

@@ -129,7 +129,7 @@ switch ft_voltype(headmodel)
     bnd = [];
     
   otherwise
-    error('unsupported voltype')
+    ft_error('unsupported voltype')
 end
 
 % all models except for the spherical ones

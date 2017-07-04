@@ -54,7 +54,7 @@ end
 
 enghandle = enginepool('find', jobid);
 if numel(enghandle)~=1
-  error('FieldTrip:engine:jobNotFound', 'cannot locate the engine with this job');
+  ft_error('FieldTrip:engine:jobNotFound', 'cannot locate the engine with this job');
 end
 
 success   = false;
@@ -123,7 +123,7 @@ if success
   if ~isempty(err)
     if StopOnError
       if ischar(err)
-        error(err);
+        ft_error(err);
       else
         rethrow(err);
       end
@@ -144,7 +144,7 @@ if success
       varargout{1} = argout;
       varargout{2} = options;
     otherwise
-      error('invalid output option');
+      ft_error('invalid output option');
   end
   
 else
@@ -158,7 +158,7 @@ else
       varargout{1} = {};
       varargout{2} = {};
     otherwise
-      error('invalid output option');
+      ft_error('invalid output option');
   end
 end
 

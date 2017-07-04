@@ -134,7 +134,7 @@ if success
   if ~isempty(err)
     if StopOnError
       if ischar(err)
-        error(err);
+        ft_error(err);
       else
         rethrow(err);
       end
@@ -155,7 +155,7 @@ if success
       varargout{1} = argout;
       varargout{2} = options;
     otherwise
-      error('invalid output option');
+      ft_error('invalid output option');
   end
   
 else
@@ -169,7 +169,7 @@ else
       varargout{1} = {};
       varargout{2} = {};
     otherwise
-      error('invalid output option');
+      ft_error('invalid output option');
   end
 end
 

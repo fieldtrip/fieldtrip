@@ -46,7 +46,7 @@ fid = fopen(fname,'r','ieee-be');
 % Check if header file exist
 if fid == -1
   errMsg = strcat('Could not open header file:',fname);
-  error(errMsg);
+  ft_error(errMsg);
 end
 
 % First 8 bytes contain filetype, check is fileformat is correct.

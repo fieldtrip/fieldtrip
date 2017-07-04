@@ -35,9 +35,9 @@ for k = 1:numel(fn)
 end
 
 if sum(~cellfun('isempty', avgdimnum))<1 
-  error('the "%s" dimension is not present in the data', avgdim)
+  ft_error('the "%s" dimension is not present in the data', avgdim)
 elseif any(cellfun(@numel, avgdimnum)>1)
-  error('cannot average over multiple dimensions at the same time')
+  ft_error('cannot average over multiple dimensions at the same time')
 end
 
 [reduceddim, fntmp] = dimlength(data);
@@ -79,7 +79,7 @@ for i = 1:numel(param)
     end
   else
     % not yet implemented
-    error('averaging across cells is not yet possible');
+    ft_error('averaging across cells is not yet possible');
   end
    
   if ~iscelltmp,
@@ -130,7 +130,7 @@ switch avgdim
     data.time = mean(data.time);
     dimord    = data.dimord;
   otherwise
-    error('unknown dimension "%s"', avgdim);
+    ft_error('unknown dimension "%s"', avgdim);
 end
 
 if isfield(data, 'dim'),

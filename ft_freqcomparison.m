@@ -48,7 +48,7 @@ end
 
 % nargin check
 if length(varargin)~=2
-  error('two conditions required as input');
+  ft_error('two conditions required as input');
 end
 
 % check if the input data is valid for this function
@@ -86,7 +86,7 @@ if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'su
   % frequency comparison for multiple trials/subjects
 
   if size(varargin{1}.powspctrm,3) ~= size(varargin{2}.powspctrm,3)
-    error('input conditions have different sizes');
+    ft_error('input conditions have different sizes');
   end
 
   if strcmp(cfg.comparisontype, 'absolute')
@@ -102,14 +102,14 @@ if strcmp(varargin{1}.dimord, 'rpt_chan_freq') || strcmp(varargin{1}.dimord, 'su
       freq.powspctrm(j,:,:) = varargin{2}.powspctrm(j,:,:) ./ mean(varargin{1}.powspctrm,1);
     end
   else
-    error('unsupported comparisontype');
+    ft_error('unsupported comparisontype');
   end
 
 elseif strcmp(varargin{1}.dimord, 'chan_freq') || strcmp(varargin{1}.dimord, 'chan_freq_time')
   % frequency comparison for averages
 
   if size(varargin{1}.powspctrm,2) ~= size(varargin{2}.powspctrm,2)
-    error('input conditions have different sizes');
+    ft_error('input conditions have different sizes');
   end
 
   if strcmp(cfg.comparisontype, 'absolute')
@@ -119,11 +119,11 @@ elseif strcmp(varargin{1}.dimord, 'chan_freq') || strcmp(varargin{1}.dimord, 'ch
   elseif strcmp(cfg.comparisontype, 'relative')
     freq.powspctrm = varargin{2}.powspctrm ./ varargin{1}.powspctrm;
   else
-    error('unsupported comparisontype');
+    ft_error('unsupported comparisontype');
   end
 
 else
-  error('unsupported dimord')
+  ft_error('unsupported dimord')
 end
 
 % user update

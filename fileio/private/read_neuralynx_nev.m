@@ -152,7 +152,7 @@ if implementation==3
     flt_maxnumber = inf;
   end
   if fseek(fid, offset, 'bof')~=0
-    error(ferror(fid));
+    ft_error(ferror(fid));
   end
   buf = fread(fid, (flt_maxnumber-flt_minnumber+1)*184, 'uint8=>uint8');
   [PktStart, PktId , PktDataSize , TimeStamp , EventId , TTLValue , CRC , Dummy , Extra1 , Extra2 , Extra3 , Extra4 , Extra5 , Extra6 , Extra7 , Extra8 , EventString] = ...

@@ -66,7 +66,7 @@ if isequal(diameter, 'auto')
     case 'mm'
       diameter = 5;
     otherwise
-      error('unsupported unit');
+      ft_error('unsupported unit');
   end
 end
 
@@ -80,7 +80,7 @@ if isequal(length, 'auto')
     case 'mm'
       length = 15;
     otherwise
-      error('unsupported unit');
+      ft_error('unsupported unit');
   end
 end
 

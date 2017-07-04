@@ -73,12 +73,12 @@ end
 
 % throw errors for required input
 if isempty(tapsmofrq) && strcmp(taper, 'dpss')
-  error('you need to specify tapsmofrq when using dpss tapers')
+  ft_error('you need to specify tapsmofrq when using dpss tapers')
 end
 if isempty(timwin)
-  error('you need to specify timwin')
+  ft_error('you need to specify timwin')
 elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
-  error('timwin should be of equal length as freqoi')
+  ft_error('timwin should be of equal length as freqoi')
 end
 
 % Set n's
@@ -100,7 +100,7 @@ dattime = ndatsample / fsample; % total time in seconds of input data
 
 % Zero padding
 if round(pad * fsample) < ndatsample
-  error('the padding that you specified is shorter than the data');
+  ft_error('the padding that you specified is shorter than the data');
 end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
@@ -198,7 +198,7 @@ else
         
         % give error/warning about number of tapers
         if isempty(tap)
-          error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), timwinsample(ifreqoi)/fsample,tapsmofrq(ifreqoi),fsample/timwinsample(ifreqoi));
+          ft_error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), timwinsample(ifreqoi)/fsample,tapsmofrq(ifreqoi),fsample/timwinsample(ifreqoi));
         elseif size(tap,1) == 1
           disp([num2str(freqoi(ifreqoi)) ' Hz: WARNING: using only one taper for specified smoothing'])
         end

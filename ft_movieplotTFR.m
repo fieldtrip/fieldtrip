@@ -138,17 +138,17 @@ end
 if isfield(data,'dimord')
   if strcmp(data.dimord,'chan_freq_time')
     if length(xvalues)~=size(parameter,3)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end
     if length(yvalues)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
     end
   elseif strcmp(data.dimord,'chan_time')
     if length(xvalues)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end
   else
-    error('input data is incompatible')
+    ft_error('input data is incompatible')
   end
 end
 
@@ -188,7 +188,7 @@ end
 % select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(data.label, layout.label);
 if isempty(seldat)
-  error('labels in data and labels in layout do not match');
+  ft_error('labels in data and labels in layout do not match');
 end
 
 % make a subselection of the data
@@ -368,7 +368,7 @@ else
         F(iFrame) = getframe;
       end
     else
-      error('Either moviefreq or movietime should contain a bin number')
+      ft_error('Either moviefreq or movietime should contain a bin number')
     end
   else
     for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)

@@ -298,7 +298,7 @@ switch cfg.appenddim
     end % for cfg.parameter
     
   otherwise
-    error('unsupported cfg.appenddim');
+    ft_error('unsupported cfg.appenddim');
 end
 
 if isfield(data, 'dimord')

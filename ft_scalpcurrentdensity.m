@@ -236,7 +236,7 @@ elseif strcmp(cfg.method, 'hjorth')
   elec = ft_apply_montage(elec, montage);
 
 else
-  error('unknown method for SCD computation');
+  ft_error('unknown method for SCD computation');
 end
 
 if strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'finite')

@@ -113,7 +113,7 @@ for k = 1:numel(checkfields)
     for i=2:length(varargin)
       tmpvar2 = varargin{i}.(tmpstr);
       if any(size(tmpvar1)~=size(tmpvar2)) || any(tmpvar1(:)~=tmpvar2(:))
-        error('the input sources vary in the field %s', tmpstr);
+        ft_error('the input sources vary in the field %s', tmpstr);
       end
     end
   end

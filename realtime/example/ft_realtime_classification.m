@@ -82,7 +82,7 @@ chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 
 if nchan==0
-  error('no channels were selected');
+  ft_error('no channels were selected');
 end
 
 % these are for the data handling

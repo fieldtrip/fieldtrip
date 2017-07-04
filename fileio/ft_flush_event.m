@@ -59,6 +59,6 @@ switch eventformat
     end
 
   otherwise
-    error('unsupported data format');
+    ft_error('unsupported data format');
 end
 

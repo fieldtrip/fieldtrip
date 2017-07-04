@@ -60,24 +60,24 @@ function [B] = expand_orthogonal(A,flg,method)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check the input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if (nargin<1) || (nargin>3), error('incorrect number of input arrguments'); end
+if (nargin<1) || (nargin>3), ft_error('incorrect number of input arrguments'); end
 if (nargin<3), method = 'svd'; end
 if (nargin<2), flg = 0; end
 
 % A must be a matrix with more rows than columns containing only real numbers
 if isempty(A) || ~isnumeric(A) || ~isreal(A) || any(~isfinite(A(:))) ...
       || (ndims(A)>2) || (size(A,1)<size(A,2)) || (max(size(A))==1)
-   error('input argument ''A'' must be a real matrix with more rows than columns');
+   ft_error('input argument ''A'' must be a real matrix with more rows than columns');
 end
 
 % flg must be a logical
 if (flg~=0) && (flg~=1)
-   error('input argument ''flg'' must be either 0 (default) or 1');
+   ft_error('input argument ''flg'' must be either 0 (default) or 1');
 end
 
 % method must be a string
 if ~ischar(method)
-   error('input argument ''method'' must be a string');
+   ft_error('input argument ''method'' must be a string');
 end
 
 
@@ -142,7 +142,7 @@ switch lower(method)
       end
 
    otherwise
-      error(['unknown or unsupported method: ',method]);
+      ft_error(['unknown or unsupported method: ',method]);
 
 end % switch lower(method)
 

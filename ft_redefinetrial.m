@@ -142,10 +142,10 @@ Ntrial = numel(data.trial);
 % check the input arguments, only one method for processing is allowed
 numoptions = ~isempty(cfg.toilim) + ~isempty(cfg.offset) + (~isempty(cfg.begsample) || ~isempty(cfg.endsample)) + ~isempty(cfg.trl) + ~isempty(cfg.length);
 if numoptions>1
-  error('you should specify only one of the options for redefining the data segments');
+  ft_error('you should specify only one of the options for redefining the data segments');
 end
 if numoptions==0 && isempty(cfg.minlength) && strcmp(cfg.trials, 'all')
-  error('you should specify at least one configuration option');
+  ft_error('you should specify at least one configuration option');
 end
 
 % start processing
@@ -262,7 +262,7 @@ elseif ~isempty(cfg.trl)
           size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1) % all old trialinfo rows are identical
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
       else
-        error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
+        ft_error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
       end
     end
   end %for iTrl

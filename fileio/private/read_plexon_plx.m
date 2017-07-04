@@ -162,7 +162,7 @@ if ~isempty(ChannelIndex)
     
     % check whether the number of samples per block makes sense
     if any(num~=num(1))
-      error('spike channel blocks with diffent number of samples');
+      ft_error('spike channel blocks with diffent number of samples');
     end
     
     % allocate memory to hold the data
@@ -214,7 +214,7 @@ if ~isempty(SlowChannelIndex)
     sel = find(sel);
     
     if isempty(sel)
-      error(sprintf('Continuous channel %d contains no data', SlowChannelIndex(i)));
+      ft_error(sprintf('Continuous channel %d contains no data', SlowChannelIndex(i)));
       % ft_warning('Continuous channel %d contains no data', SlowChannelIndex(i));
       % varargin{end+1} = [];
       % continue;

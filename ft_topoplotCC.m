@@ -306,7 +306,7 @@ for i=srtidx(:)'
 
 
         otherwise
-          error('unsupported linestyle specified');
+          ft_error('unsupported linestyle specified');
       end
 
     end

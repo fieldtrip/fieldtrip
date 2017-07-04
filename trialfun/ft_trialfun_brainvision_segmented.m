@@ -106,13 +106,13 @@ if (numstim > 0)
     for i=1:length(stim)
       for j=1:numstim(i)
         if isempty(value{stim{i}(j)})
-          error('missing a stimulus type definition in the related *.vmrk file');
+          ft_error('missing a stimulus type definition in the related *.vmrk file');
         end
         stimvalue  = sscanf(value{stim{i}(j)}, cfg.stimformat);
         stimsample = sample(stim{i}(j));
         stimtime   = (stimsample - begsample(i) + offset(i))/hdr.Fs; % relative to 'Time 0'
         if isempty(stimvalue)
-          error('the upper case letter of the stimulus value does not match with definition of "cfg.stimformat"'); 
+          ft_error('the upper case letter of the stimulus value does not match with definition of "cfg.stimformat"'); 
         end
         trialinfo(i,2*(j-1)+1) = stimvalue;
         trialinfo(i,2*(j-1)+2) = stimtime;

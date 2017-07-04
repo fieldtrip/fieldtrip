@@ -90,7 +90,7 @@ else
         elseif strcmp(val,'little')
           txt.orig.endianness='ieee-le';
         else
-          error('Invalid value for key ''endian''.');
+          ft_error('Invalid value for key ''endian''.');
         end
       end
       continue;
@@ -103,7 +103,7 @@ else
         txt.label{ind} = name;
         nameFlag = 2;
       else
-        error('Invalid channel name definition - broken header file?');
+        ft_error('Invalid channel name definition - broken header file?');
       end
     end
   end
@@ -129,13 +129,13 @@ else
   hdr.bufsize   = fread(F,1,'uint32');
 
   if isfield(txt,'nChans') && ~isequal(hdr.nChans,txt.nChans)
-    error('Number of channels in binary header does not match ASCII definition');
+    ft_error('Number of channels in binary header does not match ASCII definition');
   end
   if isfield(txt,'nChans') && ~isequal(hdr.nSamples,txt.nSamples)
     ft_warning('Number of samples in binary header does not match ASCII definition');
   end
   if isfield(txt,'nEvents') && ~isequal(hdr.nEvents,txt.nEvents)
-    error('Number of events in binary header does not match ASCII definition');
+    ft_error('Number of events in binary header does not match ASCII definition');
   end
   if isempty(hdr.data_type)
     hdr.data_type = strmatch(txt.orig.data_type,type)-1;
@@ -144,7 +144,7 @@ else
   hdr.orig.data_type = type{hdr.data_type+1};
   hdr.orig.wordsize = wordsize{hdr.data_type+1};
   %else
-  %  error('Data type in binary header does not match ASCII definition');
+  %  ft_error('Data type in binary header does not match ASCII definition');
   %end
 
   % TODO: add chunk handling

@@ -65,7 +65,7 @@ if ~isstruct(fileorstruct) && exist(fileorstruct,'file')
 elseif isstruct(fileorstruct)
   structin=fileorstruct;
 elseif ~isstruct(fileorstruct)
-  error('please enter either a structure (beam or nuts) or filename containing either beam or nuts')
+  ft_error('please enter either a structure (beam or nuts) or filename containing either beam or nuts')
 end
 clear fileorstruct
 
@@ -86,7 +86,7 @@ elseif isfield(structin,'beam')
   end
   nutsorbeam=2;
 else
-  error('not sure of the input type. maybe you need to call nut_beam_legacy_compatibility?')
+  ft_error('not sure of the input type. maybe you need to call nut_beam_legacy_compatibility?')
 end
 
 if cfg.keepmri
@@ -232,7 +232,7 @@ elseif nutsorbeam==2
       end
     end
   else
-    error('not a valid cfg.out specified');
+    ft_error('not a valid cfg.out specified');
   end
   data=source;
   clear source

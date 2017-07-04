@@ -208,7 +208,7 @@ if strcmp(cfg.scaling, 'yes')
     case 'double'
       data = double(data ./ maxval);
     otherwise
-      error('unknown datatype');
+      ft_error('unknown datatype');
   end
 end
 
@@ -243,7 +243,7 @@ switch cfg.filetype
       data = flipdim(data, 1);
       data = flipdim(data, 2);
     else
-      error('unsupported coordinate system ''%s''', volume.coordsys);
+      ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
     siz = size(data);
   case 'analyze'
@@ -253,7 +253,7 @@ switch cfg.filetype
     elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
       data = flipdim(data, 1);
     else
-      error('unsupported coordinate system ''%s''', volume.coordsys);
+      ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
     siz = size(data);
   case {'analyze_spm', 'nifti', 'nifti_img' 'mgz' 'mgh'}
@@ -271,7 +271,7 @@ switch cfg.filetype
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fid = fopen(sprintf('%s.vmp', cfg.filename),'w');
     if fid < 0
-      error('Cannot write to file %s.vmp\n',cfg.filename);
+      ft_error('Cannot write to file %s.vmp\n',cfg.filename);
     end
 
     switch cfg.vmpversion
@@ -349,7 +349,7 @@ switch cfg.filetype
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fid = fopen(sprintf('%s.vmr',cfg.filename),'w');
     if fid < 0
-      error('Cannot write to file %s.vmr\n',cfg.filename);
+      ft_error('Cannot write to file %s.vmr\n',cfg.filename);
     end
 
     % data should be scaled between 0 and 225
@@ -406,7 +406,7 @@ switch cfg.filetype
         avw.hdr.dime.datatype = 64;
         avw.hdr.dime.bitpix   = 64;
       otherwise
-        error('unknown datatype');
+        ft_error('unknown datatype');
     end
 
     % write the header and image data

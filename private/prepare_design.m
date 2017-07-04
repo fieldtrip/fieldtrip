@@ -76,7 +76,7 @@ if ~(exist('designtype')==1)
 end
 
 if ~isfield(cfg,'design')
-  error('You should specify an initial design in cfg.design.');
+  ft_error('You should specify an initial design in cfg.design.');
 end
 initialdesign=cfg.design;
 
@@ -90,7 +90,7 @@ if strcmp(designtype,'between')   % between-units conditions
   % configuration
   if isfield(cfg,'ext')
     if size(cfg.ext,1)~=size(initialdesign,1)
-        error('Incompatible number of replications in cfg.ext.');
+        ft_error('Incompatible number of replications in cfg.ext.');
     end
     design=cfg.ext;
   end
@@ -111,7 +111,7 @@ elseif strcmp(designtype,'within')  % within-units conditions
     selvec = (cfg.design(:,1)==wcondlabels(wcondindx));
     unitsthiscond = sort(cfg.design(selvec,2));
     if length(unitthiscond)==length(unitlabels) && ~all(unitthiscond==unitlabels)
-      error('The last two columns of initialdesign do not specify a within-units design.');
+      ft_error('The last two columns of initialdesign do not specify a within-units design.');
     end
   end
   if ~isfield(cfg,'ivar')
@@ -134,7 +134,7 @@ elseif strcmp(designtype,'within')  % within-units conditions
     elseif dimext(1)==nrepl
       cfg.design(:,[1:dimext(2)])=cfg.ext;
     else
-      error('The number of rows in cfg.ext must be equal to the number of conditions or the number of replications (number of conditions times number of units-of-observation).');
+      ft_error('The number of rows in cfg.ext must be equal to the number of conditions or the number of replications (number of conditions times number of units-of-observation).');
     end
     cfg.design(:,dimext(2)+1)=initialdesign(:,(end-1));
     cfg.uvar = size(design,2);

@@ -103,7 +103,7 @@ end
 if fb; fprintf('distance = %f\n', errorfun([0 0 0 0 0 0], pos1, pos2, 'rigidbody')); end
 
 if isempty(method)
-  error('incorrect warping method specified');
+  ft_error('incorrect warping method specified');
 end
 
 % the warp is done in steps, starting simple and progressively getting more complex
@@ -119,7 +119,7 @@ level = find(strcmp(method, {
   }));
 
 if isempty(level)
-  error('incorrect warping method specified');
+  ft_error('incorrect warping method specified');
 end
 
 if level>=1

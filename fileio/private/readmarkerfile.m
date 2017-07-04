@@ -12,7 +12,7 @@ function [marker] = readmarkerfile(folder)
 
 name = fullfile(folder, 'MarkerFile.mrk');
 if ~exist(name, 'file')
-  error('%s not found', name);
+  ft_error('%s not found', name);
 end
 
 f = fopen(name, 'rt');

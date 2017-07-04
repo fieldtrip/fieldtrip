@@ -117,7 +117,7 @@ if nchan>2
   ft_warning('exactly two channels should be selected');
 end
 if nchan<2
-  error('exactly two channels should be selected');
+  ft_error('exactly two channels should be selected');
 end
 
 nhistory = 100;
@@ -172,7 +172,7 @@ while true
       begsample = prevSample+1;
       endsample = prevSample+blocksize ;
     else
-      error('unsupported value for cfg.bufferdata');
+      ft_error('unsupported value for cfg.bufferdata');
     end
     
     % remember up to where the data was read

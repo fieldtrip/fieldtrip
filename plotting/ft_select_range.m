@@ -296,7 +296,7 @@ switch lower(event)
     
     
   otherwise
-    error('unexpected event "%s"', event);
+    ft_error('unexpected event "%s"', event);
     
 end % switch event
 

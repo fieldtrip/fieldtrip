@@ -70,7 +70,7 @@ if isempty(cfg.conductivity)
     cfg.conductivity = [1 1/80 1]*0.33;
   else
     % for a 2 or 4 sphere model the order of the compartments is potentially ambiguous, hence no default should be supplied
-    error('a conductivity value should be specified for each compartment');
+    ft_error('a conductivity value should be specified for each compartment');
   end
 end
 
@@ -137,7 +137,7 @@ end
 if numel(cfg.conductivity)==numel(headshape)
   headmodel.cond = cfg.conductivity;
 else
-  error('incorrect specification of cfg.conductivity');
+  ft_error('incorrect specification of cfg.conductivity');
 end
 
 headmodel.type = 'concentricspheres';

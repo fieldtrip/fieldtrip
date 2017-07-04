@@ -66,6 +66,6 @@ fclose(fid);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function check_feof(fid, filename)
 if feof(fid)
-  error('could not read all information from file ''%s''', filename);
+  ft_error('could not read all information from file ''%s''', filename);
 end
 

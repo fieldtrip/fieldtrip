@@ -33,7 +33,7 @@ fid     = fopen(filename, 'r', 'ieee-be');
 
 header  = fread(fid, 4, 'uint8=>char')';
 if ~strcmp(header, 'DTLG')
-  error('unsupported file, header should start with DTLG');
+  ft_error('unsupported file, header should start with DTLG');
 end
 
 version     = fread(fid, 4, 'char')'; % clear version
@@ -83,7 +83,7 @@ switch datatype
   case 'int16'
     datasize = 2;
   otherwise
-    error('unsupported datatype');
+    ft_error('unsupported datatype');
 end
 
 % If the data sets are n-dimensional arrays, the first n u32 longwords in each data
@@ -101,7 +101,7 @@ if nd>1
     % determine the number and size of additional array dimensions
     n = cat(1, n, fread(fid, 1, 'int32'));
     if datasize*prod(n)>estimate
-      error('could not determine array size');
+      ft_error('could not determine array size');
     end
   end
   ndim = length(n);
@@ -114,7 +114,7 @@ else
     % determine the number and size of additional array dimensions
     n = cat(1, n, fread(fid, 1, 'int32'));
     if datasize*prod(n)>estimate
-      error('could not determine array size');
+      ft_error('could not determine array size');
     end
   end
   ndim = length(n);

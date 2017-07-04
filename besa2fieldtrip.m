@@ -151,7 +151,7 @@ if isstruct(input)
 
     %--------------------else-------------------------------------------------%
   else
-    error('unrecognized format of the input structure');
+    ft_error('unrecognized format of the input structure');
   end
 
 elseif ischar(input)
@@ -224,7 +224,7 @@ elseif ischar(input)
     if hasbesa
       fprintf('reading preprocessed channel data using BESA toolbox\n');
     else
-      error('this data format requires the BESA toolbox');
+      ft_error('this data format requires the BESA toolbox');
     end
     [p, f, x] = fileparts(input);
     input = fullfile(p, [f '.dat']);
@@ -361,11 +361,11 @@ elseif ischar(input)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   elseif strcmp(type, 'besa_pdg')
     % hmmm, I have to think about this one...
-    error('sorry, pdg is not yet supported');
+    ft_error('sorry, pdg is not yet supported');
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   else
-    error('unrecognized file format for importing BESA data');
+    ft_error('unrecognized file format for importing BESA data');
   end
 
 end % isstruct || ischar

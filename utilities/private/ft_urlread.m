@@ -16,5 +16,5 @@ if strcmp(method, 'get')
     [output, status] = urlread(event_http);
   end
 else
-  error('method "%s" is not yet implemented', method);
+  ft_error('method "%s" is not yet implemented', method);
 end

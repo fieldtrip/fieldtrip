@@ -104,7 +104,7 @@ if isctf
     elseif strcmp(x, '.txt')
       template = dlmread(cfg.template);
     else
-      error('incorrect template file specified');
+      ft_error('incorrect template file specified');
     end
   else
     template = [];
@@ -126,7 +126,7 @@ elseif isneuromag
   end
   
 else
-  error('the data does not resemble ctf, nor neuromag')
+  ft_error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
 
 
@@ -148,7 +148,7 @@ elseif isneuromag
     end
   end
   if ~exist('dip', 'var')
-    error('head localization requires digitized positions for Neuromag systems')
+    ft_error('head localization requires digitized positions for Neuromag systems')
   end
   
   % prepare the forward model and the sensor array for subsequent fitting
@@ -165,7 +165,7 @@ elseif isneuromag
   cfg.accuracy_green = cfg.accuracy_green/100;
   cfg.accuracy_orange = cfg.accuracy_orange/100;
 else
-  error('the data does not resemble ctf, nor neuromag')
+  ft_error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
 
 
@@ -191,7 +191,7 @@ elseif isneuromag
 end
 
 if isempty(chanindx)
-  error('the data does not seem to have head localization channels');
+  ft_error('the data does not seem to have head localization channels');
 end
 
 % this information is passed between the GUI callback functions
@@ -241,7 +241,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
       begsample  = prevSample + 1;
       endsample  = prevSample + info.blocksize ;
     else
-      error('unsupported value for cfg.bufferdata');
+      ft_error('unsupported value for cfg.bufferdata');
     end
     
     % remember up to where the data was read
@@ -269,7 +269,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
       % this needs to be updated if the blocksize changes
       ncoil = length(info.cfg.coilfreq);
       if ncoil==0
-        error('no coil frequencies were specified');
+        ft_error('no coil frequencies were specified');
       else
         time = (1:info.blocksize)./info.hdr.Fs;
         coilsignal = zeros(ncoil, info.blocksize);
@@ -525,7 +525,7 @@ elseif isneuromag
   end
   
 else
-  error('the data does not resemble ctf, nor neuromag')
+  ft_error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
 
 

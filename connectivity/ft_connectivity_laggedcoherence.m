@@ -127,9 +127,9 @@ cfg.foi                 =   freqout.freq(indexf);
 % check if the input data is valid for this function
 freqout = ft_checkdata(freqout, 'datatype', {'freq'}, 'feedback', cfg.feedback,'dimord',{'rpttap_chan_freq_time','rpt_chan_freq_time'});
 if ~isfield(freqout,'fourierspctrm')
-    error('ft_connectivity_laggedcoherence requires frequency data with a fourierspctrm.');
+    ft_error('ft_connectivity_laggedcoherence requires frequency data with a fourierspctrm.');
 elseif size(freqout.fourierspctrm,4)==1
-    error('ft_connectivity_laggedcoherence requires frequency data with a time axis')
+    ft_error('ft_connectivity_laggedcoherence requires frequency data with a time axis')
 end
 
 % ensure that cfg.lag is present
@@ -154,16 +154,16 @@ end
 
 % some proper error handling
 if numel(freqout.label)==0
-    error('no channels were selected');
+    ft_error('no channels were selected');
 end
 if ~(strcmp(cfg.output,'lcoh') || strcmp(cfg.output,'csd'))
-    error('cfg.output must be either ''lcoh'' or ''csd''');
+    ft_error('cfg.output must be either ''lcoh'' or ''csd''');
 end
 index = cellfun('isclass',cfg.trialsets,'char');
 if sum(index)>0
     index2               =  cellfun(@(x) strcmp(x,'all'),cfg.trialsets(index),'UniformOutput',true);
     if any(index2==0)
-        error('each cell of cfg.trialsets must contain either a 1xN vector, or ''all''');
+        ft_error('each cell of cfg.trialsets must contain either a 1xN vector, or ''all''');
     end
     cfg.trialsets(index) =  {1:size(freqout.fourierspctrm,1)};
 end
@@ -346,7 +346,7 @@ switch cfg.timeresolved
     case 'yes'
         % method-specfic checks
         if cfg.nlags>1
-            error('when calculating timeresolved lcoh, cfg.nlags must be set to 1');
+            ft_error('when calculating timeresolved lcoh, cfg.nlags must be set to 1');
         end
         
         % select pairs of timepoints with relative lag cfg.lag (identified with precision cfg.precision)

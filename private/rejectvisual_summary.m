@@ -195,7 +195,7 @@ for i=1:info.ntrl
     case 'maxzvalue'
       level(:, i) = nanmax( ( dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , [], 2);
     otherwise
-      error('unsupported method');
+      ft_error('unsupported method');
   end
 end
 ft_progress('close');

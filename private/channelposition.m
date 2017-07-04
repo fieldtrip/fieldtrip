@@ -110,7 +110,7 @@ switch ft_senstype(sens)
         dist(selrest,sum(~isinf(dist(selmode,:)))>0) = inf;
         numcoils = sum(isfinite(dist),2);
         if niter>500
-          error('Failed to extract the positions of the channels. This is most likely due to the balancing matrix being rank deficient. Please replace data.grad with the original grad-structure obtained after reading the header.');
+          ft_error('Failed to extract the positions of the channels. This is most likely due to the balancing matrix being rank deficient. Please replace data.grad with the original grad-structure obtained after reading the header.');
         end
       end
     else

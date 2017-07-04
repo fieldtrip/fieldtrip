@@ -72,7 +72,7 @@ for i=1:nFid % loop over fiducials
         case 3 % RPA
           hc.head.label{posN} = 'RPA';
         otherwise
-          error('Unidentified cardinal point in file');
+          ft_error('Unidentified cardinal point in file');
       end
       posN = posN + 1;
       
@@ -138,7 +138,7 @@ for i=1:nFid % loop over fiducials
         case 3 % RPA
           hc.dewar.label{posN} = 'RPA';
         otherwise
-          error('Unidentified cardinal point in file');
+          ft_error('Unidentified cardinal point in file');
       end
       posN = posN + 1;
       

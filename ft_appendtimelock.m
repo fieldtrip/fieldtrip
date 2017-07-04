@@ -79,7 +79,7 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
   elseif checktime(varargin{:}, 'unique', cfg.tolerance)
     cfg.appenddim = 'time';
   else
-    error('cfg.appenddim should be specified');
+    ft_error('cfg.appenddim should be specified');
   end
 end
 fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);

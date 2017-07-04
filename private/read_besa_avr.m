@@ -88,7 +88,7 @@ if ~ok
 end
 
 if ~ok
-  error('Could not interpret the header information.');
+  ft_error('Could not interpret the header information.');
 end
 
 % rewind to the beginning of the file, skip the header line

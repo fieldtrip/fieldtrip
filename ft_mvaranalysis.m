@@ -169,7 +169,7 @@ switch cfg.method
     ft_hastoolbox('bsmart', 1);
     nnans = 0;
   otherwise
-    error('toolbox %s is not yet supported', cfg.method);
+    ft_error('toolbox %s is not yet supported', cfg.method);
 end
 
 if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
@@ -193,7 +193,7 @@ elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
 		latency(k,:) = cfg.toi + cfg.t_ftimwin.*[-0.5 0.5-1./data.fsample];
 	end
 else
-  error('cfg should contain both cfg.toi and cfg.t_ftimwin');
+  ft_error('cfg should contain both cfg.toi and cfg.t_ftimwin');
 end
 
 
@@ -204,8 +204,8 @@ dozscore = istrue(cfg.zscore);
 dobvar   = isfield(cfg,           'channelcmb');
 dounivariate = istrue(cfg. univariate);
 
-if ~keeptap, error('not keeping tapers is not possible yet'); end
-if dojack && keeprpt, error('you cannot simultaneously keep trials and do jackknifing'); end
+if ~keeptap, ft_error('not keeping tapers is not possible yet'); end
+if dojack && keeprpt, ft_error('you cannot simultaneously keep trials and do jackknifing'); end
 
 tfwin    = round(data.fsample.*cfg.t_ftimwin);
 ntrl     = length(data.trial);
@@ -329,7 +329,7 @@ timeaxis = mintim:1/data.fsample:maxtim;
 %---allocate memory
 if dobvar && (keeprpt || dojack)
   % not yet implemented
-  error('doing bivariate model fits in combination with multiple replicates is not yet possible');
+  ft_error('doing bivariate model fits in combination with multiple replicates is not yet possible');
 elseif dobvar
   coeffs   = zeros(1, 2*nchan,  size(cmbindx,1), cfg.order, ntoi, ntap);
   noisecov = zeros(1, 2*nchan,  size(cmbindx,1),            ntoi, ntap);

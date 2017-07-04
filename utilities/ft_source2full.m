@@ -36,12 +36,12 @@ ft_defaults
 if ~isfield(source, 'inside')  || ...
    ~isfield(source, 'outside') || ...
    ~isfield(source, 'dim')
-  error('one of the required fields is missing in the source structure');
+  ft_error('one of the required fields is missing in the source structure');
 end
 
 if ~isfield(source, 'pos') && (~isfield(source, 'xgrid') || ~isfield(source, 'ygrid') || ...
                                ~isfield(source, 'zgrid'))
-  error('the input data needs at least a ''pos'' field, or ''x/y/zgrid''');
+  ft_error('the input data needs at least a ''pos'' field, or ''x/y/zgrid''');
 end
 
 if isfield(source, 'xgrid'),

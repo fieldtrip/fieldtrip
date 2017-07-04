@@ -64,7 +64,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
         case 'p'
           label{i} = {['-' axis(i) ' (anterior)'],   ['+' axis(i) ' (posterior)']};
         otherwise
-          error('incorrect letter in the coordsys');
+          ft_error('incorrect letter in the coordsys');
       end % switch
     end % for each of the three axes
     
@@ -139,7 +139,7 @@ switch format
     % keep it as it is
     
   otherwise
-    error('unsupported option')
+    ft_error('unsupported option')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -152,7 +152,7 @@ switch both
   case true
     % keep it as it is
   otherwise
-    error('unsupported option')
+    ft_error('unsupported option')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

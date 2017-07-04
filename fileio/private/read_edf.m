@@ -441,12 +441,12 @@ else
   fp = fopen(filename,'r','ieee-le');
   status = fseek(fp, offset, 'bof');
   if status
-    error(['failed seeking ' filename]);
+    ft_error(['failed seeking ' filename]);
   end
   [buf,num] = fread(fp,numwords,'bit16=>double');
   fclose(fp);
   if (num<numwords)
-    error(['failed reading ' filename]);
+    ft_error(['failed reading ' filename]);
   end
 end
 

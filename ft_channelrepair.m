@@ -138,7 +138,7 @@ isnirs = ft_senstype(sens, 'opto');
 % check if any of the channel positions contains NaNs; this happens when
 % component data are backprojected to the sensor level
 if any(isnan(sens.chanpos(:)))
-  error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
+  ft_error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
 end
 
 if ismeg && ~any(strcmp(ft_senstype(sens), {'ctf151', 'ctf275', 'bti148', 'bti248', 'babysquid74'}))
@@ -382,7 +382,7 @@ elseif strcmp(cfg.method, 'nan')
   end % missing channels
   
 else
-  error('unknown method "%s" for interpolation', cfg.method);
+  ft_error('unknown method "%s" for interpolation', cfg.method);
 end
 
 % copy the additional fields over to the newly interpolated data

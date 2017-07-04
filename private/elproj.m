@@ -113,5 +113,5 @@ elseif strcmp(method, 'polar')
   proj = [x, y];
 
 else
-  error('unsupported method (%s)', method);
+  ft_error('unsupported method (%s)', method);
 end

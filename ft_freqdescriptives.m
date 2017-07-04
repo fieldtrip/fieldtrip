@@ -122,9 +122,9 @@ jckflg   = strcmp(cfg.jackknife, 'yes');
 keepflg  = strcmp(cfg.keeptrials, 'yes');
 
 % check sensibility of configuration
-if sum([varflg keepflg]>1),               error('you should specify only one of cfg.keeptrials or cfg.variance');                                             end
-if ~hasrpt && (varflg || keepflg),        error('a variance-estimate or a single trial estimate without repeated observations in the input is not possible'); end
-if ~hasrpt && ~strcmp(cfg.trials, 'all'), error('trial selection requires input data with repeated observations');                                            end
+if sum([varflg keepflg]>1),               ft_error('you should specify only one of cfg.keeptrials or cfg.variance');                                             end
+if ~hasrpt && (varflg || keepflg),        ft_error('a variance-estimate or a single trial estimate without repeated observations in the input is not possible'); end
+if ~hasrpt && ~strcmp(cfg.trials, 'all'), ft_error('trial selection requires input data with repeated observations');                                            end
 if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest

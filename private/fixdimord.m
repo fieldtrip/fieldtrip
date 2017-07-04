@@ -153,7 +153,7 @@ for i=1:length(dimtok)
       % this is for bivariate source data on a 3-d grid, a cortical sheet, or unstructured positions
       
     otherwise
-      error('unexpected dimord "%s"', data.dimord);
+      ft_error('unexpected dimord "%s"', data.dimord);
       
   end % switch dimtok
 end % for length dimtok

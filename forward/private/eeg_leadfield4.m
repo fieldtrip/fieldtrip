@@ -61,7 +61,7 @@ elc = r4 * elc ./ [dist dist dist];
 
 % check whether the dipole is inside the brain [disabled for EEGLAB]
 % if sqrt(sum(R.^2))>=r1
-%   error('dipole is outside the brain compartment');
+%   ft_error('dipole is outside the brain compartment');
 % end
 
 % rotate everything so that the dipole is along the pos. z-axis

@@ -32,7 +32,7 @@ function [mri, hdr] = read_ctf_mri(filename)
 fid = fopen(filename, 'rb', 'ieee-be', 'ISO-8859-1');
 
 if fid<=0
-  error(sprintf('could not open MRI file: %s\n', filename));
+  ft_error(sprintf('could not open MRI file: %s\n', filename));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,7 +128,7 @@ elseif hdr.dataSize == 2
     precision = '*uint16';
   end
 else
-  error('unknown datasize (%d) in CTF mri file.', hdr.dataSize);
+  ft_error('unknown datasize (%d) in CTF mri file.', hdr.dataSize);
 end
 mri = fread(fid, hdr.imageSize.^3, precision);
 mri = reshape(mri, [hdr.imageSize hdr.imageSize hdr.imageSize]);

@@ -24,59 +24,59 @@ np_info=struct('filename','','pathname','','name','','firstname','','birthday','
 % -------------------------------------------------------------------------
 d=dir(filename);
 if d(1).bytes==0,
-    error('File size = 0 KB.');
+    ft_error('File size = 0 KB.');
 end
 
 fid=fopen(filename,'r');
 if fid==-1,
-    error(['Unable to open file "' filename '". Error code: ' ferror(fid)]);
+    ft_error(['Unable to open file "' filename '". Error code: ' ferror(fid)]);
 end
 
 status=fseek(fid,16,'bof');
 if status~=0,
     fclose(fid);
-    error('Unable to set filepointer to index 16.');
+    ft_error('Unable to set filepointer to index 16.');
 end
 [np_info.fp_data,count]=fread(fid,1,'int32');
 if count~=1,
     fclose(fid);
-    error('Unable to read filepointer for data block.');
+    ft_error('Unable to read filepointer for data block.');
 end
 [fp_header,count]=fread(fid,1,'int32');
 if count~=1,
     fclose(fid);
-    error('Unable to read filepointer for header block.');
+    ft_error('Unable to read filepointer for header block.');
 end
 [fp_marker,count]=fread(fid,1,'int32');
 if count~=1,
     fclose(fid);
-    error('Unable to read filepointer for marker block.');
+    ft_error('Unable to read filepointer for marker block.');
 end
 [fp_text,count]=fread(fid,1,'int32');
 if count~=1,
     fclose(fid);
-    error('Unable to read filepointer for text block.');
+    ft_error('Unable to read filepointer for text block.');
 end
 status=fseek(fid,fp_header,'bof');
 if status~=0,
     fclose(fid);
-    error('Unable to set file to fp_header.');
+    ft_error('Unable to set file to fp_header.');
 end
 [np_info.K,count]=fread(fid,1,'short');                     % lese Kanalanzahl
 if count~=1,
     fclose(fid);
-    error('Unable to read number of channels.');
+    ft_error('Unable to read number of channels.');
 end
 [ignore,count]=fscanf(fid,'%19c',1);
 if count~=1,
     fclose(fid);
-    error('Unable to read duration string.');
+    ft_error('Unable to read duration string.');
 end
 % Sampleanzahl ermitteln:
 % frühere Version:
 %       [np_info.N,count]=fread(fid,1,'int32');                
 %       if count~=1,
-%           error(['Fehler beim Lesen der Messdauer. Fehlercode: ' ferror(fid)]);
+%           ft_error(['Fehler beim Lesen der Messdauer. Fehlercode: ' ferror(fid)]);
 %       end
 % jetzt: Ermittlung aus FilePointern und FileSize!!!
 d=dir(filename);
@@ -90,18 +90,18 @@ idx=find(fp_vector==np_info.fp_data);
 % wahrscheinlich keine Daten
 %
 if (np_info.fp_data==filesize),
-    error(['Unable to read data (no data?). fp_text = ' num2str(fp_text) '; fp_marker = ' num2str(fp_marker) '; fp_header = ' num2str(fp_header) ';fp_data = ' num2str(np_info.fp_data) '; filesize = ' num2str(filesize)]);
+    ft_error(['Unable to read data (no data?). fp_text = ' num2str(fp_text) '; fp_marker = ' num2str(fp_marker) '; fp_header = ' num2str(fp_header) ';fp_data = ' num2str(np_info.fp_data) '; filesize = ' num2str(filesize)]);
 end
 np_info.N=(fp_vector(idx+1)-fp_vector(idx))/SIZEOF_FLOAT/np_info.K;
 status=fseek(fid,fp_header+39,'bof');
 if status~=0,
     fclose(fid);
-    error('Unable to set filepointer to sampling frquency of 1st channel.');
+    ft_error('Unable to set filepointer to sampling frquency of 1st channel.');
 end
 [fa_str,count]=fscanf(fid,'%19c',1);                    % lese Abtastfrequenz Kanal 1
 if count~=1,
     fclose(fid);
-    error('Unable to read sampling frquency of 1st channel.');
+    ft_error('Unable to read sampling frquency of 1st channel.');
 end
 np_info.fa=str2num(fa_str(2:19));                           % Umwandlung: CHAR-Array in double-Zahl
 
@@ -112,7 +112,7 @@ if fp_text>0,
     status=fseek(fid,fp_text,'bof');
     if status~=0,
         fclose(fid);
-        error('Unable to set filepointer to begin of text block.');
+        ft_error('Unable to set filepointer to begin of text block.');
     end
     tline=fgetl(fid);       %  [PatInfo]
     tline=fgetl(fid);       %  Name=...
@@ -146,12 +146,12 @@ for i=1:np_info.K
     status=fseek(fid,fp_header+35+(i-1)*203+166,'bof');
     if status~=0,
         fclose(fid);
-        error(['Unable to set filepointer to signal name of channel ' num2str(i) '.']);
+        ft_error(['Unable to set filepointer to signal name of channel ' num2str(i) '.']);
     end
     [h,count]=fscanf(fid,'%8c',1);
     if count~=1,
         fclose(fid);
-        error(['Unable to read channel name for channel ' num2str(i) '.']);
+        ft_error(['Unable to read channel name for channel ' num2str(i) '.']);
     end
     %
     % wahre Stringlänge bestimmen!
@@ -178,12 +178,12 @@ for i=1:np_info.K
     status=fseek(fid,fp_header+35+(i-1)*203+186,'bof');
     if status~=0,
         fclose(fid);
-        error(['Unable to set filepointer to unit of channel ' num2str(i) '.']);
+        ft_error(['Unable to set filepointer to unit of channel ' num2str(i) '.']);
     end
     [h,count]=fscanf(fid,'%16c',1);
     if count~=1,
         fclose(fid);
-        error(['unable to read unit of channel ' num2str(i) '.']);
+        ft_error(['unable to read unit of channel ' num2str(i) '.']);
     end
     h_unit=h(2:8);
     %
@@ -230,7 +230,7 @@ if strcmp(pa,''),
 end
 fid=fopen([pa filesep fn(1:14) '.EE_'],'r');
 if fid==-1,
-    error('Unable to read setup (marker 70) in *.EE_ file.');
+    ft_error('Unable to read setup (marker 70) in *.EE_ file.');
 end
 s=fscanf(fid,'%c',inf);
 fclose(fid);
@@ -251,7 +251,7 @@ else
     % Sekundärmontage
     fid=fopen([filename(1:length(filename)-1) '_'],'r');
     if fid==-1,
-        error('Unable to read setup (marker 16518) in *.EE_ file.');
+        ft_error('Unable to read setup (marker 16518) in *.EE_ file.');
     end
     s=fscanf(fid,'%c',inf);
     fclose(fid);
@@ -312,7 +312,7 @@ np_info.duration=np_info.N/np_info.fa;
 %
 fid=fopen([filename(1:length(filename)-1) '_'],'r');
 if fid==-1,
-    error('Unable to read primary setup in *.EE_ file.');
+    ft_error('Unable to read primary setup in *.EE_ file.');
 end
 s=fscanf(fid,'%c',inf);
 fclose(fid);
@@ -358,12 +358,12 @@ if (nargin==2) && (strcmp(upper(option),'NO_MINMAX'))
 end
 fid=fopen([np_info.pathname filesep np_info.filename],'r');
 if fid==-1,
-    error('Error while opening *.EEG file (read PhysMinMax).');
+    ft_error('Error while opening *.EEG file (read PhysMinMax).');
 end
 status=fseek(fid,np_info.fp_data,'bof');
 if status~=0,
     fclose(fid);
-    error('Unable to set filepointer to begin of data block (read PhysMinMax).');
+    ft_error('Unable to set filepointer to begin of data block (read PhysMinMax).');
 end
 SamplesToRead=1000;
 try
@@ -385,5 +385,5 @@ try
     fclose(fid);
 catch
     fclose(fid);
-    error('Error while calculating physical minimum or maximum.');
+    ft_error('Error while calculating physical minimum or maximum.');
 end

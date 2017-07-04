@@ -239,7 +239,7 @@ end
 
 % this is not supported any more as of 26/10/2011
 if ischar(functional)
-  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+  ft_error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
@@ -378,7 +378,7 @@ end
 hasroi = ~isempty(cfg.roi);
 if hasroi
   if ~hasatlas
-    error('specify cfg.atlas which specifies cfg.roi')
+    ft_error('specify cfg.atlas which specifies cfg.roi')
   else
     % get the mask
     tmpcfg          = [];
@@ -485,7 +485,7 @@ if hasfun
         fcolmax = 0;
         if isequal(cfg.funcolormap, 'auto'); cfg.funcolormap = 'cool'; end
       else
-        error('do not understand cfg.funcolorlim');
+        ft_error('do not understand cfg.funcolorlim');
       end
     else
       % limits are numeric
@@ -556,7 +556,7 @@ end
 hasmsk = issubfield(functional, cfg.maskparameter);
 if hasmsk
   if ~hasfun
-    error('you can not have a mask without functional data')
+    ft_error('you can not have a mask without functional data')
   else
     msk = getsubfield(functional, cfg.maskparameter);
     if islogical(msk) % otherwise sign() not posible
@@ -611,7 +611,7 @@ if hasmsk
         opacmax =  max(abs([mskmin, mskmax]));
         if isequal(cfg.opacitymap, 'auto'), cfg.opacitymap = 'vdown'; end
       otherwise
-        error('incorrect specification of cfg.opacitylim');
+        ft_error('incorrect specification of cfg.opacitylim');
     end % switch opacitylim
   else
     % limits are numeric
@@ -664,13 +664,13 @@ elseif hasfun && hasroi && hasmsk
   opacmin = [];
   opacmax = []; % has to be defined
 elseif hasroi
-  error('you can not have a roi without functional data')
+  ft_error('you can not have a roi without functional data')
 end
 
 %% give some feedback
 if ~hasfun && ~hasana
   % this seems to be a problem that people often have due to incorrect specification of the cfg
-  error('no anatomy is present and no functional data is selected, please check your cfg.funparameter');
+  ft_error('no anatomy is present and no functional data is selected, please check your cfg.funparameter');
 end
 if ~hasana
   fprintf('not plotting anatomy\n');
@@ -767,10 +767,10 @@ switch cfg.method
         ind_fslice = min(find(max(max(ana,[],1),[],2)));
         ind_lslice = max(find(max(max(ana,[],1),[],2)));
       else
-        error('no functional parameter and no anatomical parameter, can not plot');
+        ft_error('no functional parameter and no anatomical parameter, can not plot');
       end
     else
-      error('do not understand cfg.slicerange');
+      ft_error('do not understand cfg.slicerange');
     end
     ind_allslice = linspace(ind_fslice,ind_lslice,cfg.nslices);
     ind_allslice = round(ind_allslice);
@@ -793,7 +793,7 @@ switch cfg.method
     end
     
     %if cfg.slicedim~=3
-    %  error('only supported for slicedim=3');
+    %  ft_error('only supported for slicedim=3');
     %end
     
     
@@ -907,7 +907,7 @@ switch cfg.method
         % the location is already in voxel coordinates
         loc = round(cfg.location(1:3));
       else
-        error('you should specify cfg.locationcoordinates');
+        ft_error('you should specify cfg.locationcoordinates');
       end
     else
       if isequal(cfg.location, 'auto')
@@ -932,13 +932,13 @@ switch cfg.method
     % determine the initial intersection of the cursor (xi yi zi)
     if ischar(loc) && strcmp(loc, 'min')
       if isempty(cfg.funparameter)
-        error('cfg.location is min, but no functional parameter specified');
+        ft_error('cfg.location is min, but no functional parameter specified');
       end
       [dummy, minindx] = min(fun(:));
       [xi, yi, zi] = ind2sub(dim, minindx);
     elseif ischar(loc) && strcmp(loc, 'max')
       if isempty(cfg.funparameter)
-        error('cfg.location is max, but no functional parameter specified');
+        ft_error('cfg.location is max, but no functional parameter specified');
       end
       [dummy, maxindx] = max(fun(:));
       [xi, yi, zi] = ind2sub(dim, maxindx);
@@ -1137,7 +1137,7 @@ switch cfg.method
       % downsample the cortical surface
       if cfg.surfdownsample > 1
         if ~isempty(cfg.surfinflated)
-          error('downsampling the surface is not possible in combination with an inflated surface');
+          ft_error('downsampling the surface is not possible in combination with an inflated surface');
         end
         fprintf('downsampling surface from %d vertices\n', size(surf.pos,1));
         [temp.tri, temp.pos] = reducepatch(surf.tri, surf.pos, 1/cfg.surfdownsample);
@@ -1388,7 +1388,7 @@ switch cfg.method
     
     
   otherwise
-    error('unsupported method "%s"', cfg.method);
+    ft_error('unsupported method "%s"', cfg.method);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

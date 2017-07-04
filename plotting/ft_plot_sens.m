@@ -343,7 +343,7 @@ switch sensshape
         elseif (numel([poscoil negcoil]))==1
           % magnetometer
         elseif numel(poscoil)>1 || numel(negcoil)>1
-          error('cannot work with balanced gradiometer definition')
+          ft_error('cannot work with balanced gradiometer definition')
         end
       end
     end
@@ -358,7 +358,7 @@ switch sensshape
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
     end
   otherwise
-    error('incorrect shape');
+    ft_error('incorrect shape');
 end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
@@ -371,7 +371,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       case {'number' 'numbers'}
         str = num2str(i);
       otherwise
-        error('unsupported value for option ''label''');
+        ft_error('unsupported value for option ''label''');
     end % switch
     if isfield(sens, 'chanori')
       % shift the labels along the channel orientation, which is presumably orthogonal to the scalp

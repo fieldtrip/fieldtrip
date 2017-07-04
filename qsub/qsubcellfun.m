@@ -168,7 +168,7 @@ end
 
 % there are potentially errors to catch from the which() function
 if isempty(whichfunction) && ischar(fname)
-  error('Not a valid M-file (%s).', fname);
+  ft_error('Not a valid M-file (%s).', fname);
 end
 
 % determine the number of input arguments and the number of jobs
@@ -233,7 +233,7 @@ elseif numargout>nargout
   % the number of output arguments is constrained by the users' call to this function
   numargout = nargout;
 elseif nargout>numargout
-  error('Too many output arguments.');
+  ft_error('Too many output arguments.');
 end
 
 % running a compiled version in parallel takes no MATLAB licenses
@@ -342,10 +342,10 @@ end
 % check the input arguments
 for i=1:numargin
   if ~isa(varargin{i}, 'cell')
-    error('input argument #%d should be a cell-array', i+1);
+    ft_error('input argument #%d should be a cell-array', i+1);
   end
   if numel(varargin{i})~=numjob
-    error('inconsistent number of elements in input #%d', i+1);
+    ft_error('inconsistent number of elements in input #%d', i+1);
   end
 end
 
@@ -445,7 +445,7 @@ for i=1:numel(varargout)
   for j=1:numel(varargout{i})
     if numel(varargout{i}{j})~=1
       % this error message is consistent with the one from cellfun
-      error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
+      ft_error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
     end
   end
 end
