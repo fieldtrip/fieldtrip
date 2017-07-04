@@ -74,7 +74,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
     
   else
     switch lower(coordsys)
-      case {'ras' 'itab' 'neuromag' 'spm' 'mni' 'tal'}
+      case {'ras' 'itab' 'neuromag' 'acpc' 'spm' 'mni' 'tal'}
         labelx = {'-X (left)'      '+X (right)'   };
         labely = {'-Y (posterior)' '+Y (anterior)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};

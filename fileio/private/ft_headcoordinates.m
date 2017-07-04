@@ -50,6 +50,7 @@ function [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 %   according to FTG conventions:             coordsys = 'ftg'
 %   according to Talairach conventions:       coordsys = 'tal'
 %   according to SPM conventions:             coordsys = 'spm'
+%   according to ACPC conventions:            coordsys = 'acpc'
 %   according to PAXINOS conventions:         coordsys = 'paxinos'
 % If coordsys is not specified, it will default to 'ctf'.
 %
@@ -59,7 +60,7 @@ function [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 %   the Y-axis goes approximately towards lpa, orthogonal to X and in the plane spanned by the fiducials
 %   the Z-axis goes approximately towards the vertex, orthogonal to X and Y
 %
-% The TALAIRACH and SPM coordinate systems are defined as:
+% The TALAIRACH, SPM and ACPC coordinate systems are defined as:
 %   the origin corresponds with the anterior commissure
 %   the Y-axis is along the line from the posterior commissure to the anterior commissure
 %   the Z-axis is towards the vertex, in between the hemispheres
@@ -127,11 +128,11 @@ end
 
 if isnumeric(coordsys)
   % these are for backward compatibility, but should preferably not be used any more
-  if coordsys==0,
+  if coordsys==0
     coordsys = 'ctf';
-  elseif coordsys==1,
+  elseif coordsys==1
     coordsys = 'asa';
-  elseif coordsys==2,
+  elseif coordsys==2
     coordsys = 'ftg';
   else
     error('if coordsys is numeric, it should assume one of the values 0/1/2');
@@ -195,7 +196,7 @@ switch coordsys
     dirx = dirx/norm(dirx);
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
-  case {'tal' 'spm'}
+  case {'tal' 'spm' 'acpc'}
     % rename the marker points for convenience
     ac = fid1; pc = fid2; midsagittal = fid3; extrapoint = fid4; clear fid*
     origin = ac;
@@ -230,7 +231,7 @@ if ~isempty(extrapoint)
       warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
       dirz = -dirz;
     end
-  elseif any(strcmp(coordsys, {'tal' 'spm'}))
+  elseif any(strcmp(coordsys, {'tal' 'spm' 'acpc'}))
     phi = dirq(:)'*dirx(:);
     if sign(phi)<0
       warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
