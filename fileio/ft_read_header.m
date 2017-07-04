@@ -1422,7 +1422,7 @@ switch headerformat
     % read the full header information frtom the binary header structure
     header_info = read_itab_mhd(headerfile);
     
-    % these are the channels that are visible to fieldtrip
+    % these are the channels that are visible to FieldTrip
     chansel = 1:header_info.nchan;
     
     % convert the header information into a FieldTrip compatible format
@@ -1434,7 +1434,7 @@ switch headerformat
     hdr.nSamples    = header_info.ntpdata;
     hdr.nSamplesPre = 0; % it is a single continuous trial
     hdr.nTrials     = 1; % it is a single continuous trial
-    % keep the original details AND the list of channels as used by fieldtrip
+    % keep the original details AND the list of channels as used by FieldTrip
     hdr.orig         = header_info;
     hdr.orig.chansel = chansel;
     % add the gradiometer definition

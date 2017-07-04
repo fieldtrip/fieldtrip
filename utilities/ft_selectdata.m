@@ -130,7 +130,7 @@ if strcmp(dtype, 'volume') || strcmp(dtype, 'segmentation')
   end
   dtype = 'source';
 else
-  % check that the data is according to the latest fieldtrip representation
+  % check that the data is according to the latest FieldTrip representation
   for i=1:length(varargin)
     varargin{i} = ft_checkdata(varargin{i});
   end

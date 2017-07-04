@@ -3,8 +3,8 @@ function fieldtrip2spss(filename, labels, data)
 % FIELDTRIP2SPSS compiles data and correpsonding labels into a textfile,
 % suitable for import to SPSS.
 %
-% Use as:
-% fieldtrip2spss(filename, labels, data)
+% Use as
+%   fieldtrip2spss(filename, labels, data)
 %
 % When exporting from MATLAB, set:
 %   - filename; should be string (e.g. 'counts.txt')

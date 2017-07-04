@@ -893,7 +893,7 @@ switch dataformat
     else
       error('unsuppported data_type in itab format');
     end
-    % these are the channels that are visible to fieldtrip
+    % these are the channels that are visible to FieldTrip
     chansel = 1:hdr.orig.nchan;
     tmp = [hdr.orig.ch(chansel).calib];
     tmp = tmp(:);

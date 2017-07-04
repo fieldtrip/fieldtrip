@@ -62,12 +62,12 @@ ftpath = fileparts(mfilename('fullpath'));
 ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
 
 if isempty(issvn)
-  % are we dealing with an SVN working copy of fieldtrip?
+  % are we dealing with an SVN working copy of FieldTrip?
   issvn = isdir(fullfile(ftpath, '.svn'));
 end
 
 if isempty(isgit)
-  % are we dealing with an GIT working copy of fieldtrip?
+  % are we dealing with an GIT working copy of FieldTrip?
   isgit = exist(fullfile(ftpath, '.git'), 'file');
 end
 

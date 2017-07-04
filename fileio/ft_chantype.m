@@ -475,7 +475,7 @@ elseif ft_senstype(input, 'itab') && isheader
   chantype(origtype==32) = {'param'};
   chantype(origtype==64) = {'digit'};
   chantype(origtype==128) = {'flag'};
-  % these are the channels that are visible to fieldtrip
+  % these are the channels that are visible to FieldTrip
   chansel = 1:input.orig.nchan;
   chantype = chantype(chansel);
   
@@ -603,7 +603,7 @@ elseif ft_senstype(input, 'itab') && isheader
   chantype(sel) = {'aux'};
   sel = ([input.orig.ch.type]==64);
   chantype(sel) = {'digital'};
-  % not all channels are actually processed by fieldtrip, so only return
+  % not all channels are actually processed by FieldTrip, so only return
   % the types fopr the ones that read_header and read_data return
   chantype = chantype(input.orig.chansel);
   

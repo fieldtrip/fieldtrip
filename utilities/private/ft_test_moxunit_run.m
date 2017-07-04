@@ -22,7 +22,7 @@ function passed = ft_test_moxunit_run(unused,varargin)
 %
 % $Id$
 
-    % ensure path is set for MOxUnit fieldtrip test functions, but
+    % ensure path is set for MOxUnit FieldTrip test functions, but
     % set to original state after running this function
 
 
