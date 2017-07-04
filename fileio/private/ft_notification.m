@@ -100,10 +100,10 @@ end
 % set the default backtrace state
 if ~ismember('backtrace', {s.identifier})
   switch level
-  case {'debug' 'info' 'notice'}
-    s = setstate(s, 'backtrace', 'off');
-  case {'warning' 'error'}
-    s = setstate(s, 'backtrace', 'on');
+    case {'debug' 'info' 'notice'}
+      s = setstate(s, 'backtrace', 'off');
+    case {'warning' 'error'}
+      s = setstate(s, 'backtrace', 'on');
   end % switch
 end
 
@@ -155,9 +155,13 @@ switch varargin{1}
       % switch a specific item on
       msgId = varargin{2};
       s = setstate(s, msgId, 'on');
+      % return the message state of all
+      varargout{1} = getreturnstate(s, msgId);
     else
       % switch all on
       s = setstate(s, 'all', 'on');
+      % return the message state of all
+      varargout{1} = getreturnstate(s);
     end
     
   case 'off'
@@ -165,9 +169,13 @@ switch varargin{1}
       % switch a specific item off
       msgId = varargin{2};
       s = setstate(s, msgId, 'off');
+      % return the specific message state
+      varargout{1} = getreturnstate(s, msgId);
     else
       % switch all off
       s = setstate(s, 'all', 'off');
+      % return the message state of all
+      varargout{1} = getreturnstate(s);
     end
     
   case 'once'
@@ -175,9 +183,13 @@ switch varargin{1}
       % switch a specific item to once
       msgId = varargin{2};
       s = setstate(s, msgId, 'once');
+      % return the specific message state
+      varargout{1} = getreturnstate(s, msgId);
     else
       % switch all to once
       s = setstate(s, 'all', 'once');
+      % return the message state of all
+      varargout{1} = getreturnstate(s);
     end
     
   case 'timeout'
@@ -205,8 +217,7 @@ switch varargin{1}
       end
       msgState = getstate(s, msgId);
       if nargout
-        r = struct('identifier', msgId, 'state', msgState);
-        varargout{1} = r;
+        varargout{1} = getreturnstate(s, msgId);
       elseif strcmp(msgId, 'verbose')
         if istrue(msgState)
           fprintf('%s output is verbose.\n', level);
@@ -224,12 +235,7 @@ switch varargin{1}
       end
     else
       % return all items
-      r = s;
-      % don't return these
-      r(strcmp('timeout',   {r.identifier})) = [];
-      r(strcmp('last',      {r.identifier})) = [];
-      % don't return the timestamps
-      r = rmfield(r, 'timestamp');
+      r = getreturnstate(s);
       
       if nargout
         % return the state of all items
@@ -255,13 +261,7 @@ switch varargin{1}
   otherwise
     
     if nargout
-      r = s;
-      % don't return these
-      r(strcmp('timeout',   {r.identifier})) = [];
-      r(strcmp('last',      {r.identifier})) = [];
-      % don't return the timestamps
-      r = rmfield(r, 'timestamp');
-      varargout{1} = r;
+      varargout{1} = getreturnstate(s);
     end
     
     % first input might be msgId
@@ -318,9 +318,9 @@ switch varargin{1}
         
       elseif strcmp(level, 'warning')
         if ~isempty(msgId)
-          ft_warning(msgId, varargin{:});
+          warning(msgId, varargin{:});
         else
-          ft_warning(varargin{:});
+          warning(varargin{:});
         end
         
       else
@@ -366,12 +366,25 @@ ft_default.notification.(level) = s;
 
 if strcmp(level, 'warning')
   % return to the original warning state
-  ft_warning(ws);
+  warning(ws);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function r = getreturnstate(s, msgId)
+if nargin<2
+  r = s;
+  % don't return these
+  r(strcmp('timeout',   {r.identifier})) = [];
+  r(strcmp('last',      {r.identifier})) = [];
+  % don't return the timestamps
+  r = rmfield(r, 'timestamp');
+else
+  msgState = getstate(s, msgId);
+  r = struct('identifier', msgId, 'state', msgState);
+end
 
 function state = getstate(s, msgId)
 identifier = {s.identifier};

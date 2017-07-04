@@ -69,7 +69,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % $Id$
 
-ws = ft_warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % ensure that the sensor description is up-to-date
 sens = ft_datatype_sens(sens);

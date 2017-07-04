@@ -156,7 +156,7 @@ if completed
     else
       errmsg = err.message;
       % convert the MEexception object into a structure to allow a rethrow further down in the code
-      ws = ft_warning('off', 'MATLAB:structOnObject');
+      ws = warning('off', 'MATLAB:structOnObject');
       err = struct(err);
       ft_warning(ws);
     end

@@ -54,7 +54,7 @@ function ft_plot_lay(lay, varargin)
 %
 % $Id$
 
-ws = ft_warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos         = ft_getopt(varargin, 'hpos',         0);

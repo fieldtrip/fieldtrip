@@ -114,7 +114,7 @@ if isfield(data, 'cumtapcnt')
     % this happens after  mtmconvol with keeptrials
     nrpttap = sum(data.cumtapcnt,2);
     if any(nrpttap~=nrpttap(1))
-      warning('unexpected variation of the number of tapers over trials')
+      ft_warning('unexpected variation of the number of tapers over trials')
       nrpttap = nan;
     else
       nrpttap = nrpttap(1);

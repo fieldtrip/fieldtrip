@@ -85,7 +85,7 @@ refusehost  = ft_getopt(varargin, 'refusehost', {});
 if ~isempty(threads) && exist('maxNumCompThreads', 'file')
   % this function is only available from MATLAB version 7.5 (R2007b) upward
   % and has become deprecated in MATLAB version 7.9 (R2009b)
-  ws = ft_warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
+  ws = warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
   maxNumCompThreads(threads);
   ft_warning(ws);
 end

@@ -81,7 +81,7 @@ for i=1:length(indx)
 end
 
 % turn the warning off
-ws = ft_warning('off', 'MATLAB:divideByZero');
+ws = warning('off', 'MATLAB:divideByZero');
 
 pnt3 = pnt3 ./ [count count count];
 tri3 = tri2;

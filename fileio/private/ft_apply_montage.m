@@ -471,7 +471,7 @@ switch inputtype
     clear sens
     
   case 'raw'
-    % apply the montage to the raw data that was preprocessed using fieldtrip
+    % apply the montage to the raw data that was preprocessed using FieldTrip
     data = input;
     clear input
     

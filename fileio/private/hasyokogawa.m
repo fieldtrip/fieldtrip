@@ -39,7 +39,7 @@ function [version] = hasyokogawa(desired)
 %
 % $Id$
 
-ws = ft_warning('off', 'MATLAB:pfileOlderThanMfile');
+ws = warning('off', 'MATLAB:pfileOlderThanMfile');
 
 % there are a few versions of the old preliminary implementation, such as
 % 12bitBeta3, 16bitBeta3 and 16bitBeta6. In 2011 a completely new

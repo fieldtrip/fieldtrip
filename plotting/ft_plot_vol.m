@@ -45,7 +45,7 @@ function ft_plot_vol(headmodel, varargin)
 %
 % $Id$
 
-ws = ft_warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % ensure that the volume conduction model description is up-to-date (Dec 2012)
 headmodel = ft_datatype_headmodel(headmodel);

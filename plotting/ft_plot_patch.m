@@ -59,7 +59,7 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 %
 % $Id$
 
-ws = ft_warning('on', 'MATLAB:divideByZero');
+ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos            = ft_getopt(varargin, 'hpos');
