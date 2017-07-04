@@ -325,8 +325,7 @@ end
 % set all the defaults
 cfg.pad       = ft_getopt(cfg, 'pad',       []);
 if isempty(cfg.pad)
-  ft_warning('Default cfg.pad = ''maxperlen'' can run slowly.')
-  disp('Consider using cfg.pad = ''nextpow2'' for more efficient FFT computation.')
+  ft_notice('Default cfg.pad=''maxperlen'' can run slowly. Consider using cfg.pad=''nextpow2'' for more efficient FFT computation.')
   cfg.pad = 'maxperlen';
 end
 cfg.padtype   = ft_getopt(cfg, 'padtype',   'zero');
