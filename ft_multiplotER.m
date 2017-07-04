@@ -177,7 +177,7 @@ cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.preproc        = ft_getopt(cfg, 'preproc');
 cfg.tolerance      = ft_getopt(cfg, 'tolerance', 1e-5);
 cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
-cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
+cfg.latency        = ft_getopt(cfg, 'latency', 'all');   % needed for latency selection with TFR data, FIXME, probably not used
 
 Ndata = length(varargin);
 
@@ -648,8 +648,7 @@ for i=1:Ndata
   end
   
   % gather the data of multiple input arguments
-  datamatrix{i} = dat(seldat, :);
-  
+  alldat{i} = dat(seldat, :);
   % Select x and y coordinates and labels of the channels in the data
   layX = cfg.layout.pos(sellay, 1);
   layY = cfg.layout.pos(sellay, 2);
@@ -681,7 +680,7 @@ for m=1:length(layLabels)
   mask = maskmatrix(m, :);
   
   for i=1:Ndata
-    yval(i, :) = datamatrix{i}(m, :);
+    yval(i, :) = alldat{i}(m, :);
   end
   
   % Clip out of bounds y values:

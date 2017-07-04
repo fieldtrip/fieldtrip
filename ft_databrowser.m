@@ -28,11 +28,11 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.trl                     = structure that defines the data segments of interest, only applicable for trial-based data
 %   cfg.continuous              = 'yes' or 'no' whether the data should be interpreted as continuous or trial-based
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
-%   cfg.channelclamped          = cell-array with channel labels, that (when using the 'vertical' viewmode) will always be
+%   cfg.selectchannel           = 'list' or 'layout', the GUI style for selecting channels (default = 'list')
+%   cfg.plotlabels              = 'yes', 'no', 'some'; whether to plot channel labels in vertical (default = 'yes')
+%   cfg.channelclamped          = cell-array with channel labels, that - when using the 'vertical' viewmode - will always be
 %                                 shown at the bottom. This is useful for showing ECG/EOG channels along with the other channels
 %   cfg.plotlabels              = 'yes' (default), 'no', 'some'; whether to plot channel labels in vertical
-%                                 viewmode ('some' plots one in every ten labels; useful when plotting a
-%                                 large number of channels at a time)
 %   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value');
 %   cfg.plotevents              = 'no' or 'yes', whether to plot event markers. (default is 'yes')
 %   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing ICA/PCA components (default is 'butterfly')
@@ -181,6 +181,7 @@ cfg.ylim            = ft_getopt(cfg, 'ylim', 'maxabs');
 cfg.artfctdef       = ft_getopt(cfg, 'artfctdef', struct);
 cfg.selectfeature   = ft_getopt(cfg, 'selectfeature','visual');     % string or cell-array
 cfg.selectmode      = ft_getopt(cfg, 'selectmode', 'markartifact');
+cfg.selectchannel   = ft_getopt(cfg, 'selectchannel', 'layout');   % list or layout
 cfg.blocksize       = ft_getopt(cfg, 'blocksize');                 % now used for both continuous and non-continuous data, defaulting done below
 cfg.preproc         = ft_getopt(cfg, 'preproc');                   % see preproc for options
 cfg.selfun          = ft_getopt(cfg, 'selfun');                    % default functions: 'simpleFFT', 'multiplotER', 'topoplotER', 'topoplotVAR', 'movieplotER'
@@ -188,15 +189,6 @@ cfg.selcfg          = ft_getopt(cfg, 'selcfg');                    % defaulting 
 cfg.seldat          = ft_getopt(cfg, 'seldat', 'current');
 cfg.colorgroups     = ft_getopt(cfg, 'colorgroups', 'sequential');
 cfg.channelcolormap = ft_getopt(cfg, 'channelcolormap', [0.75 0 0;0 0 1;0 1 0;0.44 0.19 0.63;0 0.13 0.38;0.5 0.5 0.5;1 0.75 0;1 0 0;0.89 0.42 0.04;0.85 0.59 0.58;0.57 0.82 0.31;0 0.69 0.94;1 0 0.4;0 0.69 0.31;0 0.44 0.75]);
-cfg.eegscale        = ft_getopt(cfg, 'eegscale');
-cfg.eogscale        = ft_getopt(cfg, 'eogscale');
-cfg.ecgscale        = ft_getopt(cfg, 'ecgscale');
-cfg.emgscale        = ft_getopt(cfg, 'emgscale');
-cfg.megscale        = ft_getopt(cfg, 'megscale');
-cfg.magscale        = ft_getopt(cfg, 'magscale');
-cfg.gradscale       = ft_getopt(cfg, 'gradscale');
-cfg.chanscale       = ft_getopt(cfg, 'chanscale');
-cfg.mychanscale     = ft_getopt(cfg, 'mychanscale');
 cfg.layout          = ft_getopt(cfg, 'layout');
 cfg.plotlabels      = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event           = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
@@ -215,6 +207,16 @@ cfg.axisfontsize    = ft_getopt(cfg, 'axisfontsize', 10);
 cfg.axisfontunits   = ft_getopt(cfg, 'axisfontunits', 'points');     % inches, centimeters, normalized, points, pixels
 cfg.linewidth       = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.verticalpadding = ft_getopt(cfg, 'verticalpadding', 'auto');
+% these options pertain to scaling the data to achieve similar values
+cfg.eegscale        = ft_getopt(cfg, 'eegscale');
+cfg.eogscale        = ft_getopt(cfg, 'eogscale');
+cfg.ecgscale        = ft_getopt(cfg, 'ecgscale');
+cfg.emgscale        = ft_getopt(cfg, 'emgscale');
+cfg.megscale        = ft_getopt(cfg, 'megscale');
+cfg.magscale        = ft_getopt(cfg, 'magscale');
+cfg.gradscale       = ft_getopt(cfg, 'gradscale');
+cfg.chanscale       = ft_getopt(cfg, 'chanscale');
+cfg.mychanscale     = ft_getopt(cfg, 'mychanscale');
 
 if ~isfield(cfg, 'viewmode')
   % butterfly, vertical, component
@@ -232,11 +234,8 @@ if ~isempty(cfg.chanscale)
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
     error('cfg.chanscale should have the same number of elements as cfg.channel');
   end
-  
-  % make sure chanscale is a column vector, not a row vector
-  if size(cfg.chanscale,2) > size(cfg.chanscale,1)
-    cfg.chanscale = cfg.chanscale';
-  end
+  % make sure this is a column vector, not a row vector
+  cfg.chanscale = cfg.chanscale(:);
 end
 
 if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
@@ -256,26 +255,20 @@ if ~isfield(cfg, 'channel'),
   end
 end
 
+% read or create the layout, this will be used for the topoplots and for channelselection
+if ~isempty(cfg.layout)
+  tmpcfg = [];
+  tmpcfg.layout = cfg.layout;
+  cfg.layout = ft_prepare_layout(tmpcfg);
+end
 
 if strcmp(cfg.viewmode, 'component')
   % read or create the layout that will be used for the topoplots
-  
-  if ~isempty(cfg.layout)
-    tmpcfg = [];
-    tmpcfg.layout = cfg.layout;
-    cfg.layout = ft_prepare_layout(tmpcfg);
+  tmpcfg = keepfields(cfg, {'layout', 'grad', 'elec', 'opto', 'gradfile', 'elecfile', 'optofile'});
+  if hasdata
+    cfg.layout = ft_prepare_layout(tmpcfg, data);
   else
-    warning('No layout specified - will try to construct one using sensor positions');
-    tmpcfg = [];
-    try, tmpcfg.elec = cfg.elec; end
-    try, tmpcfg.grad = cfg.grad; end
-    try, tmpcfg.elecfile = cfg.elecfile; end
-    try, tmpcfg.gradfile = cfg.gradfile; end
-    if hasdata
-      cfg.layout = ft_prepare_layout(tmpcfg, data);
-    else
-      cfg.layout = ft_prepare_layout(tmpcfg);
-    end
+    cfg.layout = ft_prepare_layout(tmpcfg);
   end
 end
 
@@ -382,13 +375,12 @@ else
     end
   end
 end % if hasdata
+
 if strcmp(cfg.continuous, 'no') && isempty(cfg.blocksize)
   cfg.blocksize = (trlorg(1,2) - trlorg(1,1)+1) ./ hdr.Fs;
 elseif strcmp(cfg.continuous, 'yes') && isempty(cfg.blocksize)
   cfg.blocksize = 1;
 end
-
-
 
 % FIXME make a check for the consistency of cfg.continous, cfg.blocksize, cfg.trl and the data header
 
@@ -411,6 +403,59 @@ if ~isempty(cfg.selectfeature)
       cfg.artfctdef.(cfg.selectfeature{i}).artifact = zeros(0,2);
     end
   end
+end
+
+% determine the scaling for the different types of channels
+% this is done once for all channels in the dataset and later applied as a montage to every selection
+if ~isempty(cfg.chanscale)
+  % one value per channel has been specified
+  montage = [];
+  montage.labelorg = cfg.channel;
+  montage.labelnew = cfg.channel;
+  montage.tra = diag(cfg.chanscale);
+else
+  % one value per channel-type has been specified
+  datscale = ones(size(hdr.label));
+  if issubfield(hdr, 'grad.type')
+    senstype = hdr.grad.type;
+  end
+  % using wildcards to support subselection of channels
+  if ~isempty(cfg.eegscale)
+    chansel = match_str(hdr.label, ft_channelselection('EEG', hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.eegscale;
+  end
+  if ~isempty(cfg.eogscale)
+    chansel = match_str(hdr.label, ft_channelselection('EOG', hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.eogscale;
+  end
+  if ~isempty(cfg.ecgscale)
+    chansel = match_str(hdr.label, ft_channelselection('ECG', hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.ecgscale;
+  end
+  if ~isempty(cfg.emgscale)
+    chansel = match_str(hdr.label, ft_channelselection('EMG', hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.emgscale;
+  end
+  if ~isempty(cfg.megscale)
+    chansel = match_str(hdr.label, ft_channelselection('MEG', hdr.label, senstype));
+    datscale(chansel) = datscale(chansel) .* cfg.megscale;
+  end
+  if ~isempty(cfg.magscale)
+    chansel = match_str(hdr.label, ft_channelselection('MEGMAG', hdr.label, senstype));
+    datscale(chansel) = datscale(chansel) .* cfg.magscale;
+  end
+  if ~isempty(cfg.gradscale)
+    chansel = match_str(hdr.label, ft_channelselection('MEGGRAD', hdr.label, senstype));
+    datscale(chansel) = datscale(chansel) .* cfg.gradscale;
+  end
+  if ~isempty(cfg.mychanscale)
+    chansel = match_str(hdr.label, ft_channelselection(cfg.mychan, hdr.label));
+    datscale(chansel) = datscale(chansel) .* cfg.mychanscale;
+  end
+  montage = [];
+  montage.labelorg = hdr.label;
+  montage.labelnew = hdr.label;
+  montage.tra = diag(datscale);
 end
 
 % determine the vertical scaling
@@ -627,6 +672,7 @@ else
   opt.trialviewtype = 'trial';
 end
 opt.artdata     = artdata;
+opt.montage     = montage;
 opt.hdr         = hdr;
 opt.event       = event;
 opt.trlop       = 1;          % the active trial being displayed
@@ -1491,8 +1537,15 @@ switch key
     end
   case 'c'
     % select channels
-    select = match_str(opt.hdr.label, cfg.channel);
-    select = select_channel_list(opt.hdr.label, select);
+    if ~isempty(cfg.layout) && strcmp(cfg.selectchannel, 'layout')
+      select = match_str(cfg.layout.label, cfg.channel);
+      select = select_channel_list(cfg.layout, select, 'Select channels');
+      % the channel indices in the data don't match the indices in the layout
+      select = match_str(opt.hdr.label, cfg.layout.label(select));
+    else
+      select = match_str(opt.hdr.label, cfg.channel);
+      select = select_channel_list(opt.hdr.label, select, 'Select channels');
+    end
     cfg.channel = opt.hdr.label(select);
     opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     setappdata(h, 'opt', opt);
@@ -1680,46 +1733,6 @@ if nsamplepad>0
   tim = [tim linspace(tim(end),tim(end)+nsamplepad*mean(diff(tim)),nsamplepad)];  % possible machine precision error here
 end
 
-% apply scaling to selected channels
-% using wildcard to support subselection of channels
-if ~isempty(cfg.eegscale)
-  chansel = match_str(lab, ft_channelselection('EEG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.eegscale;
-end
-if ~isempty(cfg.eogscale)
-  chansel = match_str(lab, ft_channelselection('EOG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.eogscale;
-end
-if ~isempty(cfg.ecgscale)
-  chansel = match_str(lab, ft_channelselection('ECG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.ecgscale;
-end
-if ~isempty(cfg.emgscale)
-  chansel = match_str(lab, ft_channelselection('EMG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.emgscale;
-end
-if ~isempty(cfg.megscale)
-  type = opt.hdr.grad.type;
-  chansel = match_str(lab, ft_channelselection('MEG', lab, type));
-  dat(chansel,:) = dat(chansel,:) .* cfg.megscale;
-end
-if ~isempty(cfg.magscale)
-  chansel = match_str(lab, ft_channelselection('MEGMAG', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.magscale;
-end
-if ~isempty(cfg.gradscale)
-  chansel = match_str(lab, ft_channelselection('MEGGRAD', lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.gradscale;
-end
-if ~isempty(cfg.chanscale)
-  chansel = match_str(lab, ft_channelselection(cfg.channel, lab));
-  dat(chansel,:) = dat(chansel,:) .* repmat(cfg.chanscale,1,size(dat,2));
-end
-if ~isempty(cfg.mychanscale)
-  chansel = match_str(lab, ft_channelselection(cfg.mychan, lab));
-  dat(chansel,:) = dat(chansel,:) .* cfg.mychanscale;
-end
-
 opt.curdata.label      = lab;
 opt.curdata.time{1}    = tim;
 opt.curdata.trial{1}   = dat;
@@ -1727,12 +1740,24 @@ opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample offset];
 
+montage = opt.montage;
+sel1 = match_str(montage.labelnew, lab);
+sel2 = match_str(montage.labelorg, lab);
+montage.labelnew = montage.labelnew(sel1);
+montage.labelorg = montage.labelorg(sel2);
+montage.tra      = montage.tra(sel1, sel2);
+
+% apply the channel-specific scaling to the data
+opt.curdata = ft_apply_montage(opt.curdata, montage, 'bname', 'scale', 'feedback', 'no');
+
+% update the local copy of the data matrix, it might be rescaled
+dat = opt.curdata.trial{1};
+
 % to assure current feature is plotted on top
 ordervec = 1:length(opt.artdata.label);
 ordervec(opt.ftsel) = [];
 ordervec(end+1) = opt.ftsel;
 
-% FIXME speedup ft_prepare_layout
 if strcmp(cfg.viewmode, 'butterfly')
   laytime = [];
   laytime.label = {'dummy'};
@@ -1945,7 +1970,7 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       end
       
       lh = ft_plot_vector(tim, dat(datsel, :), 'box', false, 'color', color, 'tag', 'timecourse', 'hpos', opt.laytime.pos(laysel,1), 'vpos', opt.laytime.pos(laysel,2), 'width', opt.laytime.width(laysel), 'height', opt.laytime.height(laysel), 'hlim', opt.hlim, 'vlim', opt.vlim, 'linewidth', cfg.linewidth);
-      
+
       % store this data in the line object so that it can be displayed in the
       % data cursor (see subfunction datacursortext below)
       setappdata(lh, 'ft_databrowser_linetype', 'channel');
@@ -1994,7 +2019,10 @@ elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
       opt.laytime.pos(:,2)-(opt.laytime.height(laysel)/2)
       ]); % sort
     yTickLabel = {[.0 .25 .75 1] .* range(opt.vlim) + opt.vlim(1)};
+  else
+    warning('no channels were selected');
   end
+
   yTickLabel = repmat(yTickLabel, 1, length(chanindx));
   set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel);
   
@@ -2109,7 +2137,7 @@ if strcmp(cfg.viewmode, 'component')
       % laytopo is a vertical layout determining where to plot each topo, with one entry per component
       
       ft_plot_topo(chanx, chany, chanz, 'mask', laychan.mask, 'interplim', 'mask', 'outline', laychan.outline, 'tag', 'topography', 'hpos', laytopo.pos(laysel,1)-laytopo.width(laysel)/2, 'vpos', laytopo.pos(laysel,2)-laytopo.height(laysel)/2, 'width', laytopo.width(laysel), 'height', laytopo.height(laysel), 'gridscale', 45);
-      
+
       %axis equal
       %drawnow
     end

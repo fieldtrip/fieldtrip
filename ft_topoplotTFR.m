@@ -47,9 +47,10 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            'EastOutside'        outside right
 %                            'WestOutside'        outside left
 %   cfg.interplimits       = limits for interpolation (default = 'head')
-%                            'electrodes' to furthest electrode
-%                            'head' to edge of head
-%   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
+%                            'electrodes' to the furthest electrode
+%                            'head' to the edge of head
+%                            'mask' to the edges of all masks combined
+%                            'mask_individual' to the edges of each mask%   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
 %   cfg.style              = plot style (default = 'both')
 %                            'straight' colormap only
 %                            'contour' contour lines only

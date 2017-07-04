@@ -120,8 +120,8 @@ cfg.xlim              = ft_getopt(cfg, 'xlim',          'maxmin');
 cfg.ylim              = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim              = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.style             = ft_getopt(cfg, 'style',         'both');
-cfg.gridscale         = ft_getopt(cfg, 'gridscale',     67);
-cfg.interplimits      = ft_getopt(cfg, 'interplimits',  'head');
+cfg.gridscale         = ft_getopt(cfg, 'gridscale');
+cfg.interplimits      = ft_getopt(cfg, 'interplimits',  'mask_individual');
 cfg.interpolation     = ft_getopt(cfg, 'interpolation', default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',    6);
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',      'no');
@@ -757,11 +757,7 @@ cla
 hold on
 
 % Set ft_plot_topo specific options
-if strcmp(cfg.interplimits,'head')
-  interplimits = 'mask';
-else
-  interplimits = cfg.interplimits;
-end
+interplimits = cfg.interplimits;
 if strcmp(cfg.style,'both');            style = 'surfiso';     end
 if strcmp(cfg.style,'straight');        style = 'surf';        end
 if strcmp(cfg.style,'contour');         style = 'iso';         end

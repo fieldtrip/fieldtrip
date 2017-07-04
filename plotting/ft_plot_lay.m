@@ -1,4 +1,4 @@
-function ft_plot_lay(lay, varargin)
+function h = ft_plot_lay(lay, varargin)
 
 % FT_PLOT_LAY plots a two-dimensional layout
 %
@@ -20,6 +20,7 @@ function ft_plot_lay(lay, varargin)
 %   'pointsymbol' = string with symbol (e.g. 'o') - all three point options need to be used together
 %   'pointcolor'  = string with color (e.g. 'k')
 %   'pointsize'   = number indicating size (e.g. 8)
+%   'figure'      = figure handle (default is the current figure)
 %   'fontcolor'   = string, color specification (default = 'k')
 %   'fontsize'    = number, sets the size of the text (default = 10)
 %   'fontunits'   =
@@ -34,7 +35,7 @@ function ft_plot_lay(lay, varargin)
 %
 % See also FT_PREPARE_LAYOUT
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2016, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -82,9 +83,9 @@ fontunits   = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 interpreter  = ft_getopt(varargin, 'interpreter', 'tex');
 
 % some stuff related to some refined label plotting
-labelrotate   = ft_getopt(varargin, 'labelrotate',  0);
-labelalignh   = ft_getopt(varargin, 'labelalignh',  'left');
-labelalignv   = ft_getopt(varargin, 'labelalignv',  'middle');
+labelrotate   = ft_getopt(varargin, 'labelrotate', 0);
+labelalignh   = ft_getopt(varargin, 'labelalignh', 'center');
+labelalignv   = ft_getopt(varargin, 'labelalignv', 'top');
 labelcolor    = ft_getopt(varargin, 'labelcolor', 'k');
 
 % convert between true/false/yes/no etc. statements
@@ -103,6 +104,11 @@ end
 if ~(point || box || label || mask || outline)
   % there is nothing to be plotted
   return;
+end
+
+if isscalar(labeloffset)
+  % this used to be the default until 20160317
+  labeloffset(2) = 1.5*labeloffset(1);
 end
 
 % everything is added to the current figure
@@ -127,8 +133,8 @@ if isfield(lay, 'outline') &&~isempty(lay.outline)
   end
 end
 
-naturalWidth = (max(allCoords(:,1))-min(allCoords(:,1)));
-naturalHeight = (max(allCoords(:,2))-min(allCoords(:,2)));
+naturalWidth = (max(allCoords(:, 1))-min(allCoords(:, 1)));
+naturalHeight = (max(allCoords(:, 2))-min(allCoords(:, 2)));
 
 if isempty(width) && isempty(height)
   xScaling = 1;
@@ -147,18 +153,23 @@ else
   yScaling = height/naturalHeight;
 end
 
-X      = lay.pos(:,1)*xScaling + hpos;
-Y      = lay.pos(:,2)*yScaling + vpos;
+X      = lay.pos(:, 1)*xScaling + hpos;
+Y      = lay.pos(:, 2)*yScaling + vpos;
 Width  = lay.width*xScaling;
 Height = lay.height*yScaling;
 Lbl    = lay.label;
 
+h = [];
+
 if point
   if ~isempty(pointsymbol) && ~isempty(pointcolor) && ~isempty(pointsize) % if they're all non-empty, don't use the default
-    plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');
+    p = plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');
+    h = cat(2, h(:)', p(:)');
   else
-    plot(X, Y, 'marker', '.', 'color', 'b', 'linestyle', 'none');
-    plot(X, Y, 'marker', 'o', 'color', 'y', 'linestyle', 'none');
+    p = plot(X, Y, 'marker', '.', 'color', 'b', 'linestyle', 'none');
+    h = cat(2, h(:)', p(:)');
+    p = plot(X, Y, 'marker', 'o', 'color', 'y', 'linestyle', 'none');
+    h = cat(2, h(:)', p(:)');
   end
 end
 
@@ -170,26 +181,29 @@ if label
   % check whether fancy label plotting is needed, this requires a for loop,
   % otherwise print text in a single shot
   if numel(labelrotate)==1
-    text(X+labeloffset, Y+(labeloffset*1.5), Lbl , 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+    p = text(X+labeloffset(1), Y+labeloffset(2), Lbl , 'color', labelcolor, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', labelcolor);
+    h = cat(2, h(:)', p(:)'); % the text command returns an array of handles
   else
     n = numel(Lbl);
     if ~iscell(labelalignh)
-      labelalignh = repmat({labelalignh},[n 1]);
+      labelalignh = repmat({labelalignh}, [n 1]);
     end
     if ~iscell(labelalignv)
-      labelalignv = repmat({labelalignv},[n 1]);
+      labelalignv = repmat({labelalignv}, [n 1]);
     end
     if numel(Lbl)~=numel(labelrotate)||numel(Lbl)~=numel(labelalignh)||numel(Lbl)~=numel(labelalignv)
       eror('there is something wrong with the input arguments');
     end
     for k = 1:numel(Lbl)
-      text(X(k)+labeloffset, Y(k)+(labeloffset*1.5), Lbl{k}, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      p = text(X(k)+labeloffset(1), Y(k)+labeloffset(2), Lbl{k}, 'color', labelcolor, 'fontsize', labelsize, 'fontname', labelfont, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', labelcolor);
+      h = cat(2, h(:)', p(:)'); % the text command returns an array of handles
     end
   end
 end
 
 if box
-  line([X-Width/2 X+Width/2 X+Width/2 X-Width/2 X-Width/2]',[Y-Height/2 Y-Height/2 Y+Height/2 Y+Height/2 Y-Height/2]', 'color', [0 0 0]);
+  p = line([X-Width/2 X+Width/2 X+Width/2 X-Width/2 X-Width/2]', [Y-Height/2 Y-Height/2 Y+Height/2 Y+Height/2 Y-Height/2]', 'color', [0 0 0]);
+  h = cat(2, h(:)', p(:)');
 end
 
 if outline && isfield(lay, 'outline')
@@ -198,11 +212,13 @@ if outline && isfield(lay, 'outline')
   end
   for i=1:length(lay.outline)
     if ~isempty(lay.outline{i})
-      X = lay.outline{i}(:,1)*xScaling + hpos;
-      Y = lay.outline{i}(:,2)*yScaling + vpos;
-      h = line(X, Y);
-      set(h, 'color', 'k');
-      set(h, 'linewidth', 2);
+      X = lay.outline{i}(:, 1)*xScaling + hpos;
+      Y = lay.outline{i}(:, 2)*yScaling + vpos;
+      p = line(X, Y);
+      set(p, 'color', 'k');
+      set(p, 'linewidth', 2);
+      h = cat(2, h(:)', p(:)');
+      
     end
   end
 end
@@ -213,15 +229,16 @@ if mask && isfield(lay, 'mask')
   end
   for i=1:length(lay.mask)
     if ~isempty(lay.mask{i})
-      X = lay.mask{i}(:,1)*xScaling + hpos;
-      Y = lay.mask{i}(:,2)*yScaling + vpos;
+      X = lay.mask{i}(:, 1)*xScaling + hpos;
+      Y = lay.mask{i}(:, 2)*yScaling + vpos;
       % the polygon representing the mask should be closed
       X(end+1) = X(1);
       Y(end+1) = Y(1);
-      h = line(X, Y);
-      set(h, 'color', 'k');
-      set(h, 'linewidth', 1.5);
-      set(h, 'linestyle', ':');
+      p = line(X, Y);
+      set(p, 'color', 'k');
+      set(p, 'linewidth', 1.5);
+      set(p, 'linestyle', ':');
+      h = cat(2, h(:)', p(:)');
     end
   end
 end
@@ -234,4 +251,7 @@ if ~holdflag
   hold off
 end
 
+if ~nargout
+  clear h
+end
 warning(ws); %revert to original state

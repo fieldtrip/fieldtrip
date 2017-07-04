@@ -80,7 +80,7 @@ if isempty(recursion)
   recursion = false;
 end
 
-if nargin<3
+if nargin<3 || isempty(senstype)
   senstype = ft_senstype(datachannel);
 end
 
@@ -163,6 +163,7 @@ labelbham   = {'P9', 'PPO9h', 'PO7', 'PPO5h', 'PPO3h', 'PO5h', 'POO9h', 'PO9', '
 labelref    = {'M1', 'M2', 'LM', 'RM', 'A1', 'A2'}';
 labeleog    = datachannel(strncmp('EOG', datachannel, length('EOG')));               % anything that starts with EOG
 labeleog    = [labeleog(:); {'HEOG', 'VEOG', 'VEOG-L', 'VEOG-R', 'hEOG', 'vEOG', 'Eye_Ver', 'Eye_Hor'}'];     % or any of these
+labeleeg    = datachannel(strncmp('EEG', datachannel, length('EEG')));
 labelecg    = datachannel(strncmp('ECG', datachannel, length('ECG')));
 labelemg    = datachannel(strncmp('EMG', datachannel, length('EMG')));
 labellfp    = datachannel(strncmp('lfp', datachannel, length('lfp')));
@@ -287,9 +288,8 @@ switch senstype
     labelmeg = datachannel(strncmp('MEG', datachannel, length('MEG')));
     labeleeg = datachannel(strncmp('EEG', datachannel, length('EEG')));
     
-    labelmeggrad   = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*[23]$')));
-    labelmegmag    = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*1$')));
-    labelmegplanar = labelmeggrad;
+    labelmeggrad = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*[23]$')));
+    labelmegmag  = labelmeg(~cellfun(@isempty, regexp(labelmeg, '^MEG.*1$')));
     
   case {'ant128', 'biosemi64', 'biosemi128', 'biosemi256', 'egi32', 'egi64', 'egi128', 'egi256', 'eeg1020', 'eeg1010', 'eeg1005', 'ext1020'}
     if ~ft_senstype(datachannel, 'unknown')
