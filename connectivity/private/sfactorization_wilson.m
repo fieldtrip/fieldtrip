@@ -118,7 +118,7 @@ switch init
   case 'chol'
     [tmp, dum] = chol(gam0);
     if dum
-      warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
+      ft_warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
       tmp = randn(m,1000); %arbitrary initial condition
       tmp = (tmp*tmp')./1000;
       %tmp = triu(tmp);

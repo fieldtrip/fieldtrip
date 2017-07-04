@@ -44,7 +44,7 @@ model = ft_getopt(varargin, 'sourcemodel', 'monopole');
 cond  = ft_getopt(varargin, 'conductivity'); 
 
 if isempty(cond)
-  warning('Conductivity was not specified, using 1');
+  ft_warning('Conductivity was not specified, using 1');
   cond = 1;
 end
 

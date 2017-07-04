@@ -266,7 +266,7 @@ else
   %this also goes for the singleshell volume conductor model
   %x = which('rigidbodyJM'); %this function is needed
   %if isempty(x),
-  %  error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of fieldtrip. if you are interested in trying it out, contact jan-mathijs');
+  %  error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact jan-mathijs');
   %end
 end
 
@@ -311,7 +311,7 @@ end
 % plot the topography before and after the realignment
 if strcmp(cfg.feedback, 'yes')
 
-  warning('showing MEG topography (RMS value over time) in the first trial only');
+  ft_warning('showing MEG topography (RMS value over time) in the first trial only');
   Nchan = length(data.grad.label);
   [id,it]   = match_str(data.grad.label, template.grad.label);
   pos1 = data.grad.chanpos(id,:);

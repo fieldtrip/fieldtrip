@@ -137,7 +137,7 @@ if ~hasdata
   [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
 else
   tmpcfg.artfctdef.zvalue.fltpadding = 0;
-  warning('trlpadding and fltpadding are set to zero to avoid filter problems with NaN, see bug3193 for details');
+  ft_warning('trlpadding and fltpadding are set to zero to avoid filter problems with NaN, see bug3193 for details');
   [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
 end
 cfg.artfctdef.jump = tmpcfg.artfctdef.zvalue;

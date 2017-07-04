@@ -150,13 +150,13 @@ if strcmp(cfg.markfiducial, 'yes')
   lpa = cfg.fiducial.lpa;
   rpa = cfg.fiducial.rpa;
   if any(nas<minxyz) || any(nas>maxxyz)
-    warning('nasion does not lie within volume, using nearest voxel');
+    ft_warning('nasion does not lie within volume, using nearest voxel');
   end
   if any(lpa<minxyz) || any(lpa>maxxyz)
-    warning('LPA does not lie within volume, using nearest voxel');
+    ft_warning('LPA does not lie within volume, using nearest voxel');
   end
   if any(rpa<minxyz) || any(rpa>maxxyz)
-    warning('RPA does not lie within volume, using nearest voxel');
+    ft_warning('RPA does not lie within volume, using nearest voxel');
   end
   idx_nas = [nearest(x, nas(1)) nearest(y, nas(2)) nearest(z, nas(3))];
   idx_lpa = [nearest(x, lpa(1)) nearest(y, lpa(2)) nearest(z, lpa(3))];
@@ -174,7 +174,7 @@ if strcmp(cfg.markorigin, 'yes')
   % FIXME determine the voxel index of the coordinate system origin
   ori = [0 0 0];
   if any(ori<minxyz) || any(ori>maxxyz)
-    warning('origin does not ly within volume, using nearest voxel');
+    ft_warning('origin does not ly within volume, using nearest voxel');
   end
   idx_ori = [nearest(x, ori(1)) nearest(y, ori(2)) nearest(z, ori(3))];
   fprintf('origin corresponds to voxel [%d, %d, %d]\n', idx_ori);
@@ -260,7 +260,7 @@ switch cfg.filetype
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
   otherwise
-    warning('unknown fileformat\n');
+    ft_warning('unknown fileformat\n');
 end
 
 % write the volume data to file
@@ -451,7 +451,7 @@ switch cfg.filetype
     % this format supports a homogenous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ispc && strcmp(cfg.filetype, 'mgz')
-      warning('Saving in .mgz format is not possible on a PC, saving in .mgh format instead');
+      ft_warning('Saving in .mgz format is not possible on a PC, saving in .mgh format instead');
       cfg.filetype = 'mgh';
     end
     [pathstr, name, ext] = fileparts(cfg.filename);

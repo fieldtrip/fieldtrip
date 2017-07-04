@@ -89,7 +89,7 @@ function [varargout] = ft_plot_vector(varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 if nargin>1 && all(cellfun(@isnumeric, varargin(1:2)) | cellfun(@islogical, varargin(1:2)))
   % the function was called like plot(x, y, ...)
@@ -164,7 +164,7 @@ if ischar(color) && ~strcmp(color, 'none')
 end
 
 if strcmp(highlightstyle, 'difference') && isempty(highlight)
-  warning('highlight is empty, highlighting the whole time interval');
+  ft_warning('highlight is empty, highlighting the whole time interval');
   highlight = ones(size(hdat));
 end
 
@@ -272,7 +272,7 @@ vdat = vdat + vpos;
 if ~isempty(highlight) && ~islogical(highlight)
   if ~all(highlight==0 | highlight==1)
     % only warn if really different from 0/1
-    warning('converting mask to logical values')
+    ft_warning('converting mask to logical values')
   end
   highlight=logical(highlight);
 end
@@ -407,7 +407,7 @@ switch highlightstyle
         end
       end
     else
-      warning('do not know how to plot the lines in the appropriate color');
+      ft_warning('do not know how to plot the lines in the appropriate color');
       h = [];
     end
     if ~isempty(parent)

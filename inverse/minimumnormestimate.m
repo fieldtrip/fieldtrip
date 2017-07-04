@@ -182,7 +182,7 @@ if ~hasfilter
   % on source and noise covariance would be useful
   if isempty(noisecov)
     % use an unregularised minimum norm solution, i.e. using the Moore-Penrose pseudoinverse
-    warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
+    ft_warning('computing a unregularised minimum norm solution. This typically does not work due to numerical accuracy problems');
     w = pinv(lf);
     
   elseif ~isempty(noisecov)

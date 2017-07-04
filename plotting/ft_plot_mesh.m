@@ -55,7 +55,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % rename pnt into pos
 mesh = fixpos(mesh);
@@ -102,10 +102,10 @@ haspoly  = isfield(mesh, 'poly'); % polynomial surfaces in 3-D
 hascolor = isfield(mesh, 'color'); % color code for vertices
 
 if hastet && isempty(surfaceonly)
-  warning('only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
+  ft_warning('only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
   surfaceonly = true;
 elseif hashex && isempty(surfaceonly)
-  warning('only visualizing the outer surface of the hexahedral mesh, see the "surfaceonly" option')
+  ft_warning('only visualizing the outer surface of the hexahedral mesh, see the "surfaceonly" option')
   surfaceonly = true;
 else
   surfaceonly = false;
@@ -160,7 +160,7 @@ elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourc
   else
     cortex_light = eval('cortex_light');
     vertexcolor = repmat(cortex_light, size(mesh.pos,1), 1);
-    warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
+    ft_warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
 if ischar(facecolor) && exist([facecolor '.m'], 'file')

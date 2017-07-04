@@ -91,7 +91,7 @@ if insideflag
   if ~toleranceflag
     if val<minarray || val>maxarray
       if numel(array)==1
-        warning('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
+        ft_warning('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
       else
         error('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
       end

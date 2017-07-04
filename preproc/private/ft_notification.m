@@ -318,9 +318,9 @@ switch varargin{1}
         
       elseif strcmp(level, 'warning')
         if ~isempty(msgId)
-          warning(msgId, varargin{:});
+          ft_warning(msgId, varargin{:});
         else
-          warning(varargin{:});
+          ft_warning(varargin{:});
         end
         
       else
@@ -366,7 +366,7 @@ ft_default.notification.(level) = s;
 
 if strcmp(level, 'warning')
   % return to the original warning state
-  warning(ws);
+  ft_warning(ws);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

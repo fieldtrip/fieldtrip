@@ -426,7 +426,7 @@ if hasfun
   
   % ensure that the functional data is real
   if ~isreal(fun)
-    warning('functional data is complex, taking absolute value');
+    ft_warning('functional data is complex, taking absolute value');
     fun = abs(fun);
   end
   
@@ -886,7 +886,7 @@ switch cfg.method
         hc = colorbar;
         set(hc, 'YLim', [fcolmin fcolmax]);
       else
-        warning('no colorbar possible without functional data')
+        ft_warning('no colorbar possible without functional data')
       end
     end
     
@@ -1247,7 +1247,7 @@ switch cfg.method
         hc = colorbar;
         set(hc, 'YLim', [fcolmin fcolmax]);
       else
-        warning('no colorbar possible without functional data')
+        ft_warning('no colorbar possible without functional data')
       end
     end
     
@@ -1308,7 +1308,7 @@ switch cfg.method
     % scale the functional data between -30 and 30
     fun = 30*fun/max(abs(fun(:)));
     if any(fun<=0)
-      warning('using red for positive and blue for negative functional values')
+      ft_warning('using red for positive and blue for negative functional values')
       col = zeros(numel(fun), 3); % RGB
       col(fun>0,1) = 1;  % red
       col(fun<0,3) = 1;  % blue

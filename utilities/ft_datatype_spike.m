@@ -158,7 +158,7 @@ switch version
     
     if isfield(spike,'origtrial') && isfield(spike,'origtime')
       % this was the old spiketriggered spectrum output
-      warning('The spike datatype format you are using is depreciated. Converting to newer spike format');
+      ft_warning('The spike datatype format you are using is depreciated. Converting to newer spike format');
       spike.trial = {spike.origtrial};
       spike       = rmfield(spike,'origtrial');      
       spike.time  = {spike.origtime};
@@ -168,7 +168,7 @@ switch version
       end
       if ~isfield(spike, 'trialtime')
         % determine from the data itself
-        warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial. This is not the original representation');        
+        ft_warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial. This is not the original representation');        
         tmax  = nanmax(spike.trial{1});
         tsmin = nanmin(spike.time{1});
         tsmax = nanmax(spike.time{1});

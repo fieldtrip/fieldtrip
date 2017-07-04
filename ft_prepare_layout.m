@@ -688,7 +688,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
         again = 0;
         
       otherwise
-        warning('invalid button (%d)', k);
+        ft_warning('invalid button (%d)', k);
     end
   end
   
@@ -783,7 +783,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
         again = 0;
         
       otherwise
-        warning('invalid button (%d)', k);
+        ft_warning('invalid button (%d)', k);
     end
   end % while again
   % remember this set of polygons as the mask
@@ -881,7 +881,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
         again = 0;
         
       otherwise
-        warning('invalid button (%d)', k);
+        ft_warning('invalid button (%d)', k);
     end
   end % while again
   % remember this set of polygons as the outline

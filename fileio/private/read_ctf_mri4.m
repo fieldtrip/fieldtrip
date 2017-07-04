@@ -35,7 +35,7 @@ end
 [cpersist] = read_cpersist(fid);
 
 % turn warnings off
-ws = warning('off');
+ws = ft_warning('off');
 
 % general header information
 hdr.identifierString        = get_value(cpersist, '_CTFMRI_VERSION');      % CTF_MRI_FORMAT VER 4.1

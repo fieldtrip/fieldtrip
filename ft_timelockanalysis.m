@@ -193,7 +193,7 @@ end
 
 if strcmp(cfg.covariance, 'yes')
   if ~isfield(cfg, 'covariancewindow')
-    warning('the option cfg.covariancewindow is not specified, taking all time points');
+    ft_warning('the option cfg.covariancewindow is not specified, taking all time points');
     cfg.covariancewindow = latency;
   end
   if ischar(cfg.covariancewindow)
@@ -249,7 +249,7 @@ for i=1:ntrial
       %       elseif strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
       if strcmp(cfg.covariance,'yes') && (begsamplatency(i)>cfg.covariancewindow(1) || endsamplatency(i)<cfg.covariancewindow(2))
         usetrial = 0;
-        warning(['trial ' num2str(i) ' not used for avg computation because it was not used for covariance computation']);
+        ft_warning(['trial ' num2str(i) ' not used for avg computation because it was not used for covariance computation']);
       end
     case 2
       % include this trial if any data points are present in any of the specified windows
@@ -303,7 +303,7 @@ ft_progress('close');
 
 % compute the average
 if ~any(numsamples)
-  warning('no samples found in the specified time window, check option for vartrllength');
+  ft_warning('no samples found in the specified time window, check option for vartrllength');
 end
 avg = s ./ repmat(dof(:)', [nchan 1]);
 

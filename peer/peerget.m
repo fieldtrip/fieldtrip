@@ -94,9 +94,9 @@ if success
     else
       errmsg = err.message;
       % convert the MEexception object into a structure to allow a rethrow further down in the code
-      ws = warning('off', 'MATLAB:structOnObject');
+      ws = ft_warning('off', 'MATLAB:structOnObject');
       err = struct(err);
-      warning(ws);
+      ft_warning(ws);
     end
   end
   
@@ -129,7 +129,7 @@ if success
     closeline = false;
   end
   if ~isempty(warn)
-    warning(warn);
+    ft_warning(warn);
   end
   if ~isempty(err)
     if StopOnError
@@ -139,7 +139,7 @@ if success
         rethrow(err);
       end
     else
-      warning('error during remote execution: %s', errmsg);
+      ft_warning('error during remote execution: %s', errmsg);
     end
   end % ~isempty(err)
   if closeline
@@ -159,7 +159,7 @@ if success
   end
   
 else
-  warning('FieldTrip:peer:jobNotAvailable', 'the job results are not yet available');
+  ft_warning('FieldTrip:peer:jobNotAvailable', 'the job results are not yet available');
   switch output
     case 'varargout'
       % return empty output arguments

@@ -88,7 +88,7 @@ elseif strncmp(magic, 'float64', length('float64'))
   format = 'float64';
   samplesize = 8;
 else
-  warning('could not detect sample format, assuming file format subtype 1 with ''int32''');
+  ft_warning('could not detect sample format, assuming file format subtype 1 with ''int32''');
   subtype    = 1; % the file format is version 1
   format     = 'int32';
   samplesize = 4;
@@ -113,7 +113,7 @@ switch subtype
     [p, f, x1] = fileparts(filename);
     [p, f, x2] = fileparts(f);
     if isempty(x2)
-      warning('could not determine channel label');
+      ft_warning('could not determine channel label');
       label = 'unknown';
     else
       label = x2(2:end);
@@ -131,7 +131,7 @@ switch subtype
     downscale = 0;
   case 2
     % these might contain a multiplication factor but that factor cannot be retrieved from the file
-    warning('downscale factor is unknown for ''%s'', assuming that no downscaling was applied', filename);
+    ft_warning('downscale factor is unknown for ''%s'', assuming that no downscaling was applied', filename);
     downscale = 0;
   case 3
     downscale = double(magic(8));

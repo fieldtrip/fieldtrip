@@ -34,7 +34,7 @@ if isempty(backend)
 end
 
 if nargin>0 && ~isequal(userbackend, backend)
-  warning('switching to the %s backend', userbackend);
+  ft_warning('switching to the %s backend', userbackend);
   backend = userbackend;
 end
 

@@ -269,7 +269,7 @@ if isempty(cfg.coordsys)
   else
     error('you should specify the desired head coordinate system in cfg.coordsys')
   end
-  warning('defaulting to %s coordinate system', cfg.coordsys);
+  ft_warning('defaulting to %s coordinate system', cfg.coordsys);
 end
 
 % these two have to be simultaneously true for a snapshot to be taken
@@ -1028,7 +1028,7 @@ if ~isempty(transform) && ~any(isnan(transform(:)))
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
 else
-  warning('no coordinate system realignment has been done');
+  ft_warning('no coordinate system realignment has been done');
 end
 
 % visualize result

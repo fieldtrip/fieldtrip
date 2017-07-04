@@ -41,13 +41,13 @@ if ~threads
   % switch to zombie mode
   peer('status', 0);
   % start the required maintenance threads
-  ws = warning('off');
+  ws = ft_warning('off');
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
   % peer('tcpserver', 'start');
   % peer('udsserver', 'start');
-  warning(ws);
+  ft_warning(ws);
   % wait some time to ensure that all peers on the network have been found
   pause(1.5);
 end

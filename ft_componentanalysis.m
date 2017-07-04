@@ -205,7 +205,7 @@ if istrue(cfg.cellmode)
 end
 
 if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
-  warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
+  ft_warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
     'timecourses in specified data is deprecated; please specify an '...
     'unmixing matrix instead with cfg.unmixing. '...
     'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
@@ -358,7 +358,7 @@ elseif strcmp(cfg.method, 'csp')
     error('CSP requires class labels!');
   end
   if length(sel1)+length(sel2)~=length(cfg.csp.classlabels)
-    warning('not all trials belong to class 1 or 2');
+    ft_warning('not all trials belong to class 1 or 2');
   end
   dat1 = cat(2, data.trial{sel1});
   dat2 = cat(2, data.trial{sel2});

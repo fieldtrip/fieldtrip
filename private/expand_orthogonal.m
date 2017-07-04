@@ -90,12 +90,12 @@ for i=1:ncols, A(:,i) = A(:,i)./norm(A(:,i),2); end;
 % determine how many columns have to be expanded
 nxpnd = nrows-ncols;
 if (nxpnd<1)
-   warning('A is already a square matrix: orthogonal expansion not possible');
+   ft_warning('A is already a square matrix: orthogonal expansion not possible');
    if (flg==0)
-      warning('columns of input have been normalized to unit lenth for output');
+      ft_warning('columns of input have been normalized to unit lenth for output');
       B = A;
    else
-      warning('output contains orthonormal basis of the range space of input');
+      ft_warning('output contains orthonormal basis of the range space of input');
       B = orth(A);
    end
    return;

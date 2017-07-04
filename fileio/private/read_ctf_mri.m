@@ -39,7 +39,7 @@ end
 % READ THE IMAGE HEADER
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ws = warning('off');
+ws = ft_warning('off');
 
 % general header information
 hdr.identifierString = fread(fid,[1 32],'uint8=>char'); % CTF_MRI_FORMAT VER 2.2

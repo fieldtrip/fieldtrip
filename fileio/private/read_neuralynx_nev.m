@@ -94,7 +94,7 @@ nev = [];
 
 if implementation==1
   if ~isempty(flt_maxnumber)
-    warning('filtering on maximum number not yet implemneted');
+    ft_warning('filtering on maximum number not yet implemneted');
   end
   % this is the slow way of reading it
   % it also does not allow filtering
@@ -115,7 +115,7 @@ end
 
 if implementation==2
   if ~isempty(flt_maxnumber)
-    warning('filtering on maximum number not yet implemneted');
+    ft_warning('filtering on maximum number not yet implemneted');
   end
   % this is a faster way of reading it and it is still using the automatic type conversion from Matlab
   fp = offset;

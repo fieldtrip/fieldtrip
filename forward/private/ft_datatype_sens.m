@@ -239,7 +239,7 @@ switch version
         if ft_senstype(sens, 'neuromag')
           scaling = 'amplitude/distance';
         elseif ft_senstype(sens, 'yokogawa440')
-          warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
+          ft_warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
           scaling = 'amplitude';
         else
           scaling = 'amplitude';
@@ -308,7 +308,7 @@ switch version
     sens = fixoldorg(sens, true);
 
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
-      warning('amplitude, distance and scaling are not supported for version "%s"', version);
+      ft_warning('amplitude, distance and scaling are not supported for version "%s"', version);
     end
     
     % This speeds up subsequent calls to ft_senstype and channelposition.
@@ -341,7 +341,7 @@ switch version
         sens.chanpos(selsens,:) = chanpos(selpos,:);
         sens.chanori(selsens,:) = chanori(selpos,:);
         if length(selsens)~=length(sens.label)
-          warning('cannot determine the position and orientation for all channels');
+          ft_warning('cannot determine the position and orientation for all channels');
         end
       else
         % sensor description is something else, EEG/ECoG etc
@@ -353,7 +353,7 @@ switch version
         % insert the determined position/orientation on the appropriate rows
         sens.chanpos(selsens,:) = chanpos(selpos,:);
         if length(selsens)~=length(sens.label)
-          warning('cannot determine the position and orientation for all channels');
+          ft_warning('cannot determine the position and orientation for all channels');
         end
       end
     end

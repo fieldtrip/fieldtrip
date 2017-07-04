@@ -114,7 +114,7 @@ if isempty(cfg.parcellation)
   fn = fieldnames(parcellation);
   for i=1:numel(fn)
     if isfield(parcellation, [fn{i} 'label'])
-      warning('using "%s" for the parcellation', fn{i});
+      ft_warning('using "%s" for the parcellation', fn{i});
       cfg.parcellation = fn{i};
       break
     end
@@ -141,7 +141,7 @@ else
   [inside, i1, i2] = intersect(cfg.parameter, fn);
   [outside       ] = setdiff(cfg.parameter, fn);
   if ~isempty(outside)
-    warning('\nparameter "%s" cannot be parcellated', outside{:});
+    ft_warning('\nparameter "%s" cannot be parcellated', outside{:});
   end
   cfg.parameter = fn(i2);
   fn     = fn(i2);

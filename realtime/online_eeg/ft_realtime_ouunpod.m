@@ -114,7 +114,7 @@ nchan = length(chanindx);
 if nchan>2
   chanindx = [1 2];
   nchan = 2;
-  warning('exactly two channels should be selected');
+  ft_warning('exactly two channels should be selected');
 end
 if nchan<2
   error('exactly two channels should be selected');

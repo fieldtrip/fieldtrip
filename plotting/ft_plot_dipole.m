@@ -38,7 +38,7 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 amplitudescale = ft_getopt(varargin, 'scale',    'none');
@@ -51,7 +51,7 @@ alpha          = ft_getopt(varargin, 'alpha',     1);
 % for backward compatibility, this can be changed into an error at the end of 2016
 units = ft_getopt(varargin, 'units');
 if ~isempty(units)
-  warning('please use "unit" instead of "units"');
+  ft_warning('please use "unit" instead of "units"');
   unit = units;
   clear units
 end

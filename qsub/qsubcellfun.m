@@ -161,7 +161,7 @@ if isempty(whichfunction)
     whichfunction = which(fullfile(fileparts(s.file), 'private', func2str(fname)));
   end
   if ~isempty(whichfunction)
-    warning('assuming %s as full function name', whichfunction);
+    ft_warning('assuming %s as full function name', whichfunction);
   end
   clear s
 end
@@ -248,7 +248,7 @@ if (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5) || istrue(compile)
       rethrow(lasterror);
     elseif strcmp(compile, 'auto')
       % compilation was only optional, the caught error is not critical
-      warning(lasterr);
+      ft_warning(lasterr);
     end
   end % try-catch
 end % if compile
@@ -378,9 +378,9 @@ while (~all(collected))
   
   for collect=find(~collected)
     % this will return empty arguments if the job has not finished
-    ws = warning('off', 'FieldTrip:qsub:jobNotAvailable');
+    ws = ft_warning('off', 'FieldTrip:qsub:jobNotAvailable');
     [argout, options] = qsubget(jobid{collect}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
-    warning(ws);
+    ft_warning(ws);
     
     if ~isempty(argout) || ~isempty(options)
       % fprintf('collected job %d\n', collect);
@@ -431,7 +431,7 @@ end
 fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x\n', nansum(timused), toc(stopwatch), nansum(timused)/toc(stopwatch));
 
 if all(puttime>timused)
-  warning('the job submission took more time than the actual execution');
+  ft_warning('the job submission took more time than the actual execution');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -965,7 +965,7 @@ if strcmp(source.method, 'jackknife') || strcmp(source.method, 'bootstrap') || s
     bias = Ntrials;
   elseif strcmp(source.method, 'pseudovalue')
     % note that I have not put any thought in this aspect yet
-    warning('don''t know how to compute bias for pseudovalue resampling');
+    ft_warning('don''t know how to compute bias for pseudovalue resampling');
     bias = 1;
   end
 

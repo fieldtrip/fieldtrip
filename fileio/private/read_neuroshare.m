@@ -116,7 +116,7 @@ end
 
 % give warning if unkown entities are found
 if ~isempty(list.unknown)
-  warning(['There are ' num2str(length(list.unknown)) ' unknown entities found, these will be ignored.']);
+  ft_warning(['There are ' num2str(length(list.unknown)) ' unknown entities found, these will be ignored.']);
 end
 
 % retrieve event information
@@ -172,7 +172,7 @@ if strcmp(readevent, 'yes') && ~isempty(list.event)
     end
   end
 elseif strcmp(readevent, 'yes') && isempty(list.event)
-  warning('no events were found in the data')
+  ft_warning('no events were found in the data')
 end
 
 
@@ -202,7 +202,7 @@ if strcmp(readanalog, 'yes') && ~isempty(list.analog)
   [feedback analog.contcount analog.data] = ns_GetAnalogData(fileID, chanindx, begsample, itemcount);
   if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
 elseif strcmp(readanalog, 'yes') && isempty(list.analog)
-  warning('no analog events were found in the data')
+  ft_warning('no analog events were found in the data')
 end
 
 
@@ -214,7 +214,7 @@ if strcmp(readspike, 'yes') && ~isempty(list.segment)
   [feedback segment.timestamp segment.data segment.samplecount segment.unitID] = ns_GetSegmentData(fileID, list.segment, 1:max([hdr.entityinfo(list.segment).ItemCount]));
   if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
 elseif strcmp(readspike, 'yes') && isempty(list.segment)
-  warning('no spike waveforms were found in the data')
+  ft_warning('no spike waveforms were found in the data')
 end
 
 % retrieve neural events  [ spike timestamps ]
@@ -225,7 +225,7 @@ if strcmp(readspike, 'yes') && ~isempty(list.neural)
     if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
   end
 elseif strcmp(readspike, 'yes') && isempty(list.neural)
-  warning('no spike timestamps were found in the data')
+  ft_warning('no spike timestamps were found in the data')
 end
 
 

@@ -156,9 +156,9 @@ if completed
     else
       errmsg = err.message;
       % convert the MEexception object into a structure to allow a rethrow further down in the code
-      ws = warning('off', 'MATLAB:structOnObject');
+      ws = ft_warning('off', 'MATLAB:structOnObject');
       err = struct(err);
-      warning(ws);
+      ft_warning(ws);
     end
   end
   
@@ -189,7 +189,7 @@ if completed
   
   if ~isempty(warn)
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-    warning(warn);
+    ft_warning(warn);
   end
   
   if ~isempty(err)
@@ -201,7 +201,7 @@ if completed
         rethrow(err);
       end
     else
-      warning('error during remote execution: %s', errmsg);
+      ft_warning('error during remote execution: %s', errmsg);
     end
   end % ~isempty(err)
   
@@ -222,7 +222,7 @@ if completed
   end
   
 else
-  warning('FieldTrip:qsub:jobNotAvailable', 'the job results are not yet available');
+  ft_warning('FieldTrip:qsub:jobNotAvailable', 'the job results are not yet available');
   switch output
     case 'varargout'
       % return empty output arguments

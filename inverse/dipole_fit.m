@@ -60,7 +60,7 @@ function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin)
 % new style: function [dipout] = dipole_fit(dip, sens, headmodel, dat, varargin), where varargin is in key-value pairs
 if nargin==4 && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
-  warning('converting from old style input\n');
+  ft_warning('converting from old style input\n');
   olddat    = sens;
   oldsens   = headmodel;
   oldhdm    = dat;
@@ -70,7 +70,7 @@ if nargin==4 && ~isstruct(sens) && isstruct(dat)
 elseif nargin==5  && ~isstruct(sens) && isstruct(dat)
   % looks like old style, the order of the input arguments has to be changed
   % furthermore the additional constraint has to be fixed
-  warning('converting from old style input\n');
+  ft_warning('converting from old style input\n');
   olddat    = sens;
   oldsens   = headmodel;
   oldhdm    = dat;
@@ -158,7 +158,7 @@ elseif isequal(optimfun, @fminsearch)
     'MaxFunEvals',2*maxiter*length(param),...
     'Display',display);
 else
-  warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
+  ft_warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
 end
 
 % perform the optimization with either the fminsearch or fminunc function

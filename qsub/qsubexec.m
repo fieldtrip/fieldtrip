@@ -49,7 +49,7 @@ try
   stopwatch = tic;
   while (~exist(inputfile, 'file') && toc(stopwatch)<60)
     % the underlying NFS file system might be slow in updating, wait for up to 60 seconds
-    warning('the input file %s does not yet exist', inputfile);
+    ft_warning('the input file %s does not yet exist', inputfile);
     pausejava(10);
   end
   clear stopwatch
@@ -68,7 +68,7 @@ try
     % argin{1} or argin{2} might be a private function
     whichfunction = ft_getopt(tmp.optin, 'whichfunction');
     if ~isempty(whichfunction) && exist(whichfunction, 'file')
-      warning('assuming %s as full function name', whichfunction);
+      ft_warning('assuming %s as full function name', whichfunction);
       oldpwd = pwd;
       [fundir, funname] = fileparts(whichfunction);
       cd(fundir)
@@ -118,6 +118,6 @@ catch err
   % this is to avoid MATLAB from hanging in case fexec fails, since
   % after the job execution we want MATLAB to exit
   disp(err);
-  warning('an error was caught');
+  ft_warning('an error was caught');
   
 end % try-catch

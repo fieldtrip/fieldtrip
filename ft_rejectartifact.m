@@ -120,14 +120,14 @@ if ~isfield(cfg.artfctdef,'feedback'),      cfg.artfctdef.feedback = 'no';     e
 
 % convert from old-style to new-style configuration
 if isfield(cfg,'reject')
-  warning('converting from old-style artifact configuration to new-style');
+  ft_warning('converting from old-style artifact configuration to new-style');
   cfg.artfctdef.reject = cfg.reject;
   cfg = rmfield(cfg, 'reject');
 end
 
 % convert from old-style to new-style configuration
 if isfield(cfg.artfctdef,'common')
-  warning('converting from old-style artifact configuration to new-style');
+  ft_warning('converting from old-style artifact configuration to new-style');
   if isfield(cfg.artfctdef.common,'minaccepttim')
     cfg.artfctdef.minaccepttim = cfg.artfctdef.common.minaccepttim;
     cfg.artfctdef = rmfield(cfg.artfctdef, 'common');

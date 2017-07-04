@@ -142,7 +142,7 @@ if nargin==1
   datend = ftell(fid);
   header.Num_Samples = (datend-datbeg)/(header.Bytes*header.Num_Chan);
   if rem(header.Num_Samples, 1)~=0
-    warning('rounding off the number of samples');
+    ft_warning('rounding off the number of samples');
     header.Num_Samples = floor(header.Num_Samples);
   end
   % output the header

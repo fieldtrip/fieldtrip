@@ -78,7 +78,7 @@ OPENMEEG_PATH = []; % '/usr/local/bin/';    % In case OpenMEEG executables omitt
 persistent ldLibraryPath0;
 
 if ispc
-    warning('Sorry, Windows is not yet tested');
+    ft_warning('Sorry, Windows is not yet tested');
 elseif isunix
     setenv('OMP_NUM_THREADS',num2str(CPU_LIM));
     if(~ismac) % MacOS doesn't use LD_LIBRARY_PATH; in case of problems, look into "DYLD_LIBRARY_PATH"
@@ -325,7 +325,7 @@ end
 
 % Import lead field/potential
 [g, voxels_in] = import_gain(path, basefile, ft_senstype(sens, 'eeg'));
-if (voxels_in ~= voxels) && (nargout == 1); warning('Imported voxels from OpenMEEG process not the same as function input.'); end;
+if (voxels_in ~= voxels) && (nargout == 1); ft_warning('Imported voxels from OpenMEEG process not the same as function input.'); end;
 
 lp = sens.tra*g; % Mchannels x (3 orientations x Nvoxels)
 

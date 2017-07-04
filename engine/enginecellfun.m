@@ -127,7 +127,7 @@ if isempty(pool)
 end
 
 if all(isbusy)
-  warning('there is no engine available, reverting to local cellfun');
+  ft_warning('there is no engine available, reverting to local cellfun');
   % prepare the output arguments
   varargout = cell(1,numargout);
   % use the standard cellfun
@@ -241,9 +241,9 @@ while ~all(submitted) || ~all(collected)
     collect = find(jobid == pool{ready});
     
     % collect the output arguments
-    ws = warning('Off','Backtrace');
+    ws = ft_warning('Off','Backtrace');
     [argout, options] = engineget(pool{ready}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
-    warning(ws);
+    ft_warning(ws);
     
     % fprintf('collected job %d\n', collect);
     collected(collect)   = true;
@@ -304,7 +304,7 @@ fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x\n', n
 if all(puttime>timused)
   % FIXME this could be detected in the loop above, and the strategy could automatically
   % be adjusted from using the engines to local execution
-  warning('copying the jobs over the network took more time than their execution');
+  ft_warning('copying the jobs over the network took more time than their execution');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

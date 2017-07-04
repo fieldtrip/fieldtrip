@@ -52,10 +52,10 @@ else
 end
 
 if isempty(cfg.shift)
-  warning('No node-shift selected')
+  ft_warning('No node-shift selected')
   cfg.shift = 0;
 elseif cfg.shift > 0.3
-  warning('Node-shift should not be larger than 0.3')
+  ft_warning('Node-shift should not be larger than 0.3')
   cfg.shift = 0.3;
 end
 

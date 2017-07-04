@@ -134,7 +134,7 @@ if needhdr
   end % for length(orig)
 
   if any(SamplingFrequency~=SamplingFrequency(1))
-    warning('not all channels have the same sampling rate');
+    ft_warning('not all channels have the same sampling rate');
   end
 
   if ~isempty(ftype_ncs)
@@ -149,11 +149,11 @@ if needhdr
       % there seems to be a matlab bug (observed in Matlab75 on windows) which causes this uint64 comparison to fail if there are exactly 8 files
       % therefore check once more after converting them to double
       if any(double(LastTimeStamp(ftype_ncs))~=double(LastTimeStamp(ftype_ncs(1))))
-        warning('not all continuous channels end at the same time');
+        ft_warning('not all continuous channels end at the same time');
       end
     end
     if any(NRecords(ftype_ncs)~=NRecords(ftype_ncs(1)))
-      warning('not all continuous channels have the same number of records');
+      ft_warning('not all continuous channels have the same number of records');
     end
   end % if ftype_ncs
 

@@ -52,7 +52,7 @@ switch dataformat
     
   case 'matlab'
     if exist(filename, 'file')
-      warning('deleting existing file ''%s''', filename);
+      ft_warning('deleting existing file ''%s''', filename);
       delete(filename);
     end
 

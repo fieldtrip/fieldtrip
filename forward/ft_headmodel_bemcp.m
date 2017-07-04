@@ -76,7 +76,7 @@ if numel(headmodel.bnd)>1 && ~isequal(order(:)', 1:numel(headmodel.bnd))
 end
 
 if isempty(conductivity)
-  warning('No conductivity is declared, assuming standard values')
+  ft_warning('No conductivity is declared, assuming standard values')
   % brain/skull/skin
   conductivity = [1 1/80 1] * 0.33;
   headmodel.cond = conductivity;

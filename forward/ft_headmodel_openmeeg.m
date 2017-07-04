@@ -70,7 +70,7 @@ if numel(headmodel.bnd)>1
 end
 
 if isempty(conductivity)
-  warning('No conductivity is declared, Assuming standard values\n')
+  ft_warning('No conductivity is declared, Assuming standard values\n')
   if numboundaries == 1
     conductivity = 1;
   elseif numboundaries == 3
@@ -181,7 +181,7 @@ try
   cleaner(headmodel,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
   cd(tmpfolder)
 catch
-  warning('an error ocurred while running OpenMEEG');
+  ft_warning('an error ocurred while running OpenMEEG');
   disp(lasterr);
   cleaner(headmodel,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
   cd(tmpfolder)
@@ -220,10 +220,10 @@ w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   ok = 0;
-  warning('your normals are outwards oriented\n')
+  ft_warning('your normals are outwards oriented\n')
 elseif w>0 && (abs(w)-4*pi)<1000*eps
   ok = 1;
-%   warning('your normals are inwards oriented')
+%   ft_warning('your normals are inwards oriented')
 else
   error('your surface probably is irregular\n')
   ok = 0;

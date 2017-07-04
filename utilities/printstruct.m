@@ -174,7 +174,7 @@ elseif ismatrix(val)
   end
   str = strrep(str, ';', [';' 10]);
 else
-  warning('multidimensional arrays are not supported');
+  ft_warning('multidimensional arrays are not supported');
   str = '''FIXME: printing multidimensional arrays is not supported''';
 end
 
@@ -201,6 +201,6 @@ switch class(val)
     str = [str ')'];
     
   otherwise
-    warning('cannot print unknown object at this level');
+    ft_warning('cannot print unknown object at this level');
     str = '''FIXME: printing unknown objects is not supported''';
 end

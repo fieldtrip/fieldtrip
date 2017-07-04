@@ -165,7 +165,7 @@ try,
             out.header(cnt).units        = ainfo.Units;
             out.header(cnt).mode         = 'continuous';
         elseif strcmpi(MODE,'triggered'),
-            warning(['Triggered channel mode not implemented yet']);
+            ft_warning(['Triggered channel mode not implemented yet']);
             out = [];
             return
         else,
@@ -261,14 +261,14 @@ try,
               % get the same number of samples as in the target channel
               endsample               = begsample + itemcount-1;
               [st,contcount,chandata] = ns_GetAnalogData(fhandle,channr, begsample,itemcount);
-              if contcount~=itemcount, warning(['Discontinuity in data']); end;
+              if contcount~=itemcount, ft_warning(['Discontinuity in data']); end;
 
               % make a time scale
               [st,begtime]            = ns_GetTimeByIndex(fhandle,channr,begsample);
               [st,endtime]            = ns_GetTimeByIndex(fhandle,channr,endsample);          
               sourcestep              = out.header([out.header.sonentityid]==channr).samplerate;
     
-              if sourcestep~=targetstep, warning(['Source and target channels have time steps of different size']); end;
+              if sourcestep~=targetstep, ft_warning(['Source and target channels have time steps of different size']); end;
               chantime                = [begtime:1/sourcestep:endtime];
              
               out.data{cnt} = chandata(:)';              

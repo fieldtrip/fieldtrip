@@ -47,7 +47,7 @@ if ~isempty(hdr.NumberOfChannels)
     if ~isempty(resolution)
       hdr.resolution(i) = resolution;
     else
-      warning('unknown resolution (i.e. recording units) for channel %d in %s', i, filename);
+      ft_warning('unknown resolution (i.e. recording units) for channel %d in %s', i, filename);
       hdr.resolution(i) = 1;
     end
   end
@@ -110,7 +110,7 @@ elseif strcmpi(hdr.DataFormat, 'ascii')
 end
 
 if isinf(hdr.nSamples)
-  warning('cannot determine number of samples for this sub-fileformat');
+  ft_warning('cannot determine number of samples for this sub-fileformat');
 end
 
 % the number of trials is unkown, assume continuous data

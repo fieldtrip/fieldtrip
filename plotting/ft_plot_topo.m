@@ -53,7 +53,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 % these are for speeding up the plotting on subsequent calls
 persistent previous_argin previous_maskimage
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos          = ft_getopt(varargin, 'hpos',         0);
@@ -75,7 +75,7 @@ parent        = ft_getopt(varargin, 'parent', []);
 
 % check for nans in the data, they can be still left incase people want to mask non channels.
 if any(isnan(dat))
-  warning('the data passed to ft_plot_topo contains NaNs, these channels will be removed from the data to prevent interpolation errors, but will remain in the mask');
+  ft_warning('the data passed to ft_plot_topo contains NaNs, these channels will be removed from the data to prevent interpolation errors, but will remain in the mask');
   flagNaN = true;
 else
   flagNaN = false;
@@ -170,7 +170,7 @@ elseif ~isempty(mask)
   yi        = linspace(vlim(1), vlim(2), gridscale);   % y-axis for interpolation (row vector)
   [Xi, Yi]   = meshgrid(xi', yi);
   if ~isempty(newpoints) && (hpos == 0 || vpos == 0)
-    warning('Some points fall outside the outline, please consider using another layout')
+    ft_warning('Some points fall outside the outline, please consider using another layout')
     % FIXME: I am not sure about it, to be tested!
     %     tmp = [mask{1};newpoints];
     %     indx = convhull(tmp(:, 1), tmp(:, 2));

@@ -8,9 +8,9 @@ end
 
 if isa(mesh, 'delaunayTriangulation')
   % convert to structure, otherwise the code below won't work properly
-  ws = warning('off', 'MATLAB:structOnObject');
+  ws = ft_warning('off', 'MATLAB:structOnObject');
   mesh = struct(mesh);
-  warning(ws);
+  ft_warning(ws);
 end
 
 if ~isa(mesh, 'struct')

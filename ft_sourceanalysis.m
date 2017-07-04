@@ -255,7 +255,7 @@ if sum([strcmp(cfg.jackknife, 'yes'), strcmp(cfg.bootstrap, 'yes'), strcmp(cfg.p
 end
 
 if strcmp(cfg.rawtrial,'yes') && isfield(cfg,'grid') && ~isfield(cfg.grid,'filter')
-  warning('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in grid.filter');
+  ft_warning('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in grid.filter');
 end
 
 % start with an empty output structure

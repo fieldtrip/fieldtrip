@@ -19,14 +19,14 @@ if ischar(flipvecin)
   switch flipvecin
     case {'left' 'lefthanded'}
       if isrighthanded
-        warning('left-handed axes system is requested, performing flip');
+        ft_warning('left-handed axes system is requested, performing flip');
         flipvecin = [1 0 0];
       else
         flipvecin = [0 0 0];
       end
     case {'right' 'righthanded'}
       if ~isrighthanded
-        warning('right-handed axes system is requested, performing flip');
+        ft_warning('right-handed axes system is requested, performing flip');
         flipvecin = [1 0 0];
       else
         flipvecin = [0 0 0];

@@ -240,7 +240,7 @@ stat.stat = statobs;
 
 % catch situation where no clustering of the random data is needed
 if (Nobspos+Nobsneg)==0
-  warning('no clusters were found in the observed data');
+  ft_warning('no clusters were found in the observed data');
   stat.prob = ones(Nsample, 1);
   return
 end

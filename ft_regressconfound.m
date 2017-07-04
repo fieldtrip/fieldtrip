@@ -297,13 +297,13 @@ end
 
 % discard the gradiometer information because the weightings have been changed
 if isfield(dataout, 'grad')
-  warning('discarding gradiometer information because the weightings have been changed');
+  ft_warning('discarding gradiometer information because the weightings have been changed');
   dataout = rmfield(dataout, 'grad');
 end
 
 % discard the electrode information because the weightings have been changed
 if isfield(dataout, 'elec')
-  warning('discarding electrode information because the weightings have been changed');
+  ft_warning('discarding electrode information because the weightings have been changed');
   dataout = rmfield(dataout, 'elec');
 end
 

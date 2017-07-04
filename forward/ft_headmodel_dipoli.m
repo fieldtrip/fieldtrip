@@ -102,7 +102,7 @@ if numel(headmodel.bnd)>1
 end
 
 if isempty(conductivity)
-  warning('No conductivity is declared, Assuming standard values\n')
+  ft_warning('No conductivity is declared, Assuming standard values\n')
   if numboundaries == 1
     conductivity = 1;
   elseif numboundaries == 3
@@ -237,10 +237,10 @@ w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   % FIXME: this method is rigorous only for star shaped surfaces
-  warning('your normals are outwards oriented\n')
+  ft_warning('your normals are outwards oriented\n')
   ok = 0;
 elseif w>0 && (abs(w)-4*pi)<1000*eps
-  %   warning('your normals are inwards oriented\n')
+  %   ft_warning('your normals are inwards oriented\n')
   ok = 1;
 else
   fprintf('attention: your surface probably is irregular!')

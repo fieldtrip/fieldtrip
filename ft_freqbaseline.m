@@ -84,7 +84,7 @@ end
 
 % is input consistent?
 if ischar(cfg.baseline) && strcmp(cfg.baseline, 'no') && ~isempty(cfg.baselinetype)
-  warning('no baseline correction done');
+  ft_warning('no baseline correction done');
 end
 
 % process possible yes/no value of cfg.baseline

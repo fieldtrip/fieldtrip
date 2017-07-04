@@ -108,7 +108,7 @@ end
 channel = desired;
 
 if length(datachannel)~=length(unique(datachannel))
-  warning('discarding non-unique channel names');
+  ft_warning('discarding non-unique channel names');
   sel = false(size(datachannel));
   for i=1:length(datachannel)
     sel(i) = sum(strcmp(datachannel, datachannel{i}))==1;

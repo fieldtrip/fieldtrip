@@ -55,7 +55,7 @@ r4 = vol.r(4); c4 = vol.cond(4);
 % check whether the electrode ly on the sphere, allowing 0.5% tolerance
 dist = sqrt(sum(elc.^2,2));
 if any(abs(dist-r4)>r4*0.005)
-  warning('electrodes do not ly on sphere surface -> using projection')
+  ft_warning('electrodes do not ly on sphere surface -> using projection')
 end
 elc = r4 * elc ./ [dist dist dist];
 

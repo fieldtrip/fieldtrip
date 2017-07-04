@@ -71,8 +71,8 @@ end
 pos1 = input;
 pos2 = target;
 
-% The ft_warp_error function might be located in the private subdirectory fo
-% fieldtrip, i.e. only available to functions in the FieldTrip toolbox.
+% The ft_warp_error function might be located in the private subdirectory of
+% FieldTrip, i.e. only available to functions in the FieldTrip toolbox.
 % The following line ensures that the function can also be found by the
 % feval that is executed by the optimalization toolbox.
 errorfun = str2func('ft_warp_error');
@@ -97,7 +97,7 @@ elseif isequal(optimfun, @fminsearch)
   options  = optimset(options, 'Display', 'off');
   options  = optimset(options, 'MaxIter', 4500);
 else
-  warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
+  ft_warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
 end
 
 if fb; fprintf('distance = %f\n', errorfun([0 0 0 0 0 0], pos1, pos2, 'rigidbody')); end

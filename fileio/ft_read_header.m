@@ -527,7 +527,7 @@ switch headerformat
       orig.BalanceCoefs.none.MEGlist   = MEGlist;
       orig.BalanceCoefs.none.Refindex  = Refindex;
     catch
-      warning('cannot read balancing coefficients for NONE');
+      ft_warning('cannot read balancing coefficients for NONE');
     end
     if any(~cellfun(@isempty,strfind(coeftype, 'G1BR')))
       try
@@ -536,7 +536,7 @@ switch headerformat
         orig.BalanceCoefs.G1BR.MEGlist   = MEGlist;
         orig.BalanceCoefs.G1BR.Refindex  = Refindex;
       catch
-        warning('cannot read balancing coefficients for G1BR');
+        ft_warning('cannot read balancing coefficients for G1BR');
       end
     end
     if any(~cellfun(@isempty,strfind(coeftype, 'G2BR')))
@@ -546,7 +546,7 @@ switch headerformat
         orig.BalanceCoefs.G2BR.MEGlist   = MEGlist;
         orig.BalanceCoefs.G2BR.Refindex  = Refindex;
       catch
-        warning('cannot read balancing coefficients for G2BR');
+        ft_warning('cannot read balancing coefficients for G2BR');
       end
     end
     if any(~cellfun(@isempty,strfind(coeftype, 'G3BR')))
@@ -556,7 +556,7 @@ switch headerformat
         orig.BalanceCoefs.G3BR.MEGlist   = MEGlist;
         orig.BalanceCoefs.G3BR.Refindex  = Refindex;
       catch
-        warning('cannot read balancing coefficients for G3BR');
+        ft_warning('cannot read balancing coefficients for G3BR');
       end
     end
     if any(~cellfun(@isempty,strfind(coeftype, 'G3AR')))
@@ -568,7 +568,7 @@ switch headerformat
       catch
         % May not want a warning here if these are not commonly used.
         % Already get a (fprintf) warning from getCTFBalanceCoefs.m
-        % warning('cannot read balancing coefficients for G3AR');
+        % ft_warning('cannot read balancing coefficients for G3AR');
       end
     end
     % add a gradiometer structure for forward and inverse modelling
@@ -584,7 +584,7 @@ switch headerformat
       % this fails if the res4 file is not correctly closed, e.g. during realtime processing
       tmp = lasterror;
       disp(tmp.message);
-      warning('could not construct gradiometer definition from the header');
+      ft_warning('could not construct gradiometer definition from the header');
     end
     
     % for realtime analysis EOF chasing the res4 does not correctly
@@ -616,7 +616,7 @@ switch headerformat
       % this fails if the res4 file is not correctly closed, e.g. during realtime processing
       tmp = lasterror;
       disp(tmp.message);
-      warning('could not construct gradiometer definition from the header');
+      ft_warning('could not construct gradiometer definition from the header');
     end
     % add the original header details
     hdr.orig = orig;
@@ -644,7 +644,7 @@ switch headerformat
       % this fails if the res4 file is not correctly closed, e.g. during realtime processing
       tmp = lasterror;
       disp(tmp.message);
-      warning('could not construct gradiometer definition from the header');
+      ft_warning('could not construct gradiometer definition from the header');
     end
     % add the original header details
     hdr.orig = orig;
@@ -888,7 +888,7 @@ switch headerformat
     end
     
     % get hdr info from xml files
-    warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
+    ft_warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain header info...')
     for i = 1:numel(xmlfiles)
@@ -900,7 +900,7 @@ switch headerformat
         orig.xml.(fieldname) = xml2struct(filename_xml);
       end
     end
-    warning('on', 'MATLAB:REGEXP:deprecated')
+    ft_warning('on', 'MATLAB:REGEXP:deprecated')
     
     % epochs.xml seems the most common version, but epoch.xml might also
     % occur, so use only one name
@@ -960,12 +960,12 @@ switch headerformat
       if length(hdr.label) == nChans(1)
         % good
       elseif length(hdr.label) > orig.signal(1).blockhdr(1).nsignals
-        warning('found more lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
+        ft_warning('found more lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
         for iSens = 1:orig.signal(1).blockhdr(1).nsignals
           % this should be consistent with ft_senslabel
           hdr.label{iSens} = ['E' num2str(iSens)];
         end
-      else warning('found less lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
+      else ft_warning('found less lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
         for iSens = 1:orig.signal(1).blockhdr(1).nsignals
           % this should be consistent with ft_senslabel
           hdr.label{iSens} = ['E' num2str(iSens)];
@@ -981,24 +981,24 @@ switch headerformat
           if length(hdr.label) == orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
             % good
           elseif length(hdr.label) < orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
-            warning('found less lables in xml.pnsSet than channels in signal 2, labeling with s2_unknownN instead')
+            ft_warning('found less lables in xml.pnsSet than channels in signal 2, labeling with s2_unknownN instead')
             for iSens = length(hdr.label)+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
               hdr.label{iSens} = ['s2_unknown', num2str(iSens)];
             end
-          else warning('found more lables in xml.pnsSet than channels in signal 2, thus can not use info in pnsSet, and labeling with s2_eN instead')
+          else ft_warning('found more lables in xml.pnsSet than channels in signal 2, thus can not use info in pnsSet, and labeling with s2_eN instead')
             for iSens = orig.signal(1).blockhdr(1).nsignals+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
               hdr.label{iSens} = ['s2_E', num2str(iSens)];
             end
           end
         else % signal2 is not PIBbox
-          warning('creating channel labels for signal 2 on the fly')
+          ft_warning('creating channel labels for signal 2 on the fly')
           for iSens = 1:orig.signal(2).blockhdr(1).nsignals
             hdr.label{end+1} = ['s2_E', num2str(iSens)];
           end
         end
       elseif length(orig.signal) > 2
         % loop over signals and label channels accordingly
-        warning('creating channel labels for signal 2 to signal N on the fly')
+        ft_warning('creating channel labels for signal 2 to signal N on the fly')
         for iSig = 2:length(orig.signal)
           for iSens = 1:orig.signal(iSig).blockhdr(1).nsignals
             if iSig == 1 && iSens == 1
@@ -1010,7 +1010,7 @@ switch headerformat
         end
       end
     else % no xml.sensorLayout present
-      warning('no sensorLayout found in xml files, creating channel labels on the fly')
+      ft_warning('no sensorLayout found in xml files, creating channel labels on the fly')
       for iSig = 1:length(orig.signal)
         for iSens = 1:orig.signal(iSig).blockhdr(1).nsignals
           if iSig == 1 && iSens == 1
@@ -1047,7 +1047,7 @@ switch headerformat
             epochdef(iEpoch,2) = epochdef(iEpoch,2)/1000;
             epochdef(iEpoch,3) = epochdef(iEpoch,3)/1000;
           end;
-          warning('mff apparently generated by NetStation 4.5.4.  Adjusting time scale to microseconds from nanoseconds.');
+          ft_warning('mff apparently generated by NetStation 4.5.4.  Adjusting time scale to microseconds from nanoseconds.');
         else
           error('number of samples in all epochs do not add up to total number of samples')
         end
@@ -1059,7 +1059,7 @@ switch headerformat
         hdr.nTrials  = length(epochLengths);
         
       else
-        warning('the data contains multiple epochs with variable length, possibly causing discontinuities in the data')
+        ft_warning('the data contains multiple epochs with variable length, possibly causing discontinuities in the data')
         % sanity check
         if epochdef(end,2) ~= hdr.nSamples
           % check for NS 4.5.4 picosecond timing
@@ -1130,7 +1130,7 @@ switch headerformat
           % try reading the header, catch the error and retry
           orig = buffer('get_hdr', [], host, port);
         catch
-          warning('could not read header from %s, retrying in 1 second', filename);
+          ft_warning('could not read header from %s, retrying in 1 second', filename);
           pause(1);
         end
       end % while
@@ -1422,7 +1422,7 @@ switch headerformat
     % read the full header information frtom the binary header structure
     header_info = read_itab_mhd(headerfile);
     
-    % these are the channels that are visible to fieldtrip
+    % these are the channels that are visible to FieldTrip
     chansel = 1:header_info.nchan;
     
     % convert the header information into a FieldTrip compatible format
@@ -1434,7 +1434,7 @@ switch headerformat
     hdr.nSamples    = header_info.ntpdata;
     hdr.nSamplesPre = 0; % it is a single continuous trial
     hdr.nTrials     = 1; % it is a single continuous trial
-    % keep the original details AND the list of channels as used by fieldtrip
+    % keep the original details AND the list of channels as used by FieldTrip
     hdr.orig         = header_info;
     hdr.orig.chansel = chansel;
     % add the gradiometer definition
@@ -1529,7 +1529,7 @@ switch headerformat
     try
       hdr.label       = { EEG.chanlocs.labels }';
     catch
-      warning('creating default channel names');
+      ft_warning('creating default channel names');
       for i=1:hdr.nChans
         hdr.label{i} = sprintf('chan%03d', i);
       end
@@ -1789,7 +1789,7 @@ switch headerformat
         vartriallength = any(diff([evoked_data.evoked.first])) || any(diff([evoked_data.evoked.last]));
         if vartriallength
           % there are trials averages with variable durations in the file
-          warning('EVOKED FILE with VARIABLE TRIAL LENGTH! - check data have been processed accurately');
+          ft_warning('EVOKED FILE with VARIABLE TRIAL LENGTH! - check data have been processed accurately');
           hdr.nSamples = 0;
           for i=1:length(evoked_data.evoked)
             hdr.nSamples = hdr.nSamples + size(evoked_data.evoked(i).epochs, 2);
@@ -1815,7 +1815,7 @@ switch headerformat
         % this happens if fiff_read_evoked_all cannot find evoked
         % responses, in which case it errors due to not assigning the
         % output variable "data"
-        warning('%s does not contain data', filename);
+        ft_warning('%s does not contain data', filename);
         hdr.nSamples    = 0;
         hdr.nSamplesPre = 0;
         hdr.nTrials     = 0;
@@ -1964,7 +1964,7 @@ switch headerformat
     hasepp = ~isempty(trial1.epp);
     haseog = ~isempty(trial1.eog);
     if hasepp
-      warning('EPP channels are not yet supported');
+      ft_warning('EPP channels are not yet supported');
     end
     % at the moment only the EOG channels are supported here
     if haseog
@@ -2059,7 +2059,7 @@ switch headerformat
     hdr.nTrials     = 1;      % continuous
     hdr.label       = cell(1,hdr.nChans);
     % give this warning only once
-    warning('creating fake channel names');
+    ft_warning('creating fake channel names');
     for i=1:hdr.nChans
       hdr.label{i} = sprintf('%d', i);
     end
@@ -2331,20 +2331,20 @@ end % switch headerformat
 % functions. See for example bug #1572.
 % First, make sure that there are enough (potentially empty) labels:
 if numel(hdr.label) < hdr.nChans
-  warning('low-level reading function did not supply enough channel labels');
+  ft_warning('low-level reading function did not supply enough channel labels');
   hdr.label{hdr.nChans} = [];
 end
 
 % Now, replace all empty labels with new name:
 if any(cellfun(@isempty, hdr.label))
-  warning('channel labels should not be empty, creating unique labels');
+  ft_warning('channel labels should not be empty, creating unique labels');
   hdr.label = fix_empty(hdr.label);
 end
 
 if checkUniqueLabels
   if length(hdr.label)~=length(unique(hdr.label))
     % all channels must have unique names
-    warning('all channels must have unique labels, creating unique labels');
+    ft_warning('all channels must have unique labels, creating unique labels');
     megflag = ft_chantype(hdr, 'meg');
     eegflag = ft_chantype(hdr, 'eeg');
     for i=1:hdr.nChans
@@ -2456,7 +2456,7 @@ for i=1:length(lst)
     end
   catch
     thishdr = [];
-    warning(lasterr);
+    ft_warning(lasterr);
     fprintf('while reading %s\n\n', lst{i});
   end
   if ~isempty(thishdr)

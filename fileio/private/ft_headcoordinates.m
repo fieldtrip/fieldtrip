@@ -228,17 +228,17 @@ if ~isempty(extrapoint)
   if any(strcmp(coordsys, {'ctf' 'bti' '4d' 'yokogawa' 'itab' 'neuromag'}))
     phi = dirq(:)'*dirz(:);
     if sign(phi)<0
-      warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
+      ft_warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
       dirz = -dirz;
     end
   elseif any(strcmp(coordsys, {'tal' 'spm' 'acpc'}))
     phi = dirq(:)'*dirx(:);
     if sign(phi)<0
-      warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
+      ft_warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
       dirx = -dirx;
     end
   else
-    warning('the extra input coordinate is not used with coordsys "%s"', coordsys);
+    ft_warning('the extra input coordinate is not used with coordsys "%s"', coordsys);
   end
 end
 

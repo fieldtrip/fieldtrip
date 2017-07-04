@@ -61,7 +61,7 @@ while ischar(line)
       item   = strtrim(item);
 
       % turn warnings off
-      ws = warning('off');
+      ws = ft_warning('off');
       
       % the item name should be a real string, otherwise I cannot put it into the structure
       if strcmp(sprintf('%d', str2num(deblank(item))), deblank(item))
@@ -79,7 +79,7 @@ while ischar(line)
       end
 
       % revert to previous warning state
-      warning(ws);
+      ft_warning(ws);
     end
     subline = cleanline(fgetl(fid));    % read the first item
   end

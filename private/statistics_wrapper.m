@@ -266,7 +266,7 @@ end
 
 % get the design from the information in cfg and data.
 if ~isfield(cfg,'design')
-  warning('Please think about how you would create cfg.design.  Soon the call to prepare_design will be deprecated')
+  ft_warning('Please think about how you would create cfg.design.  Soon the call to prepare_design will be deprecated')
   cfg.design = data.design;
   [cfg] = prepare_design(cfg);
 end
@@ -557,10 +557,10 @@ for i=1:Nsource
       dim = [Nvoxel size(tmp{varargin{i}.inside(1)})];
     end
     if i==1 && j==1 && numel(tmp)~=Nvoxel,
-      warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
+      ft_warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
       dat    = zeros(prod(dim), sum(Ntrial)); %FIXME this is old code should be removed
     elseif i==1 && j==1 && iscell(tmp),
-      warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
+      ft_warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
       dat    = zeros(Nvoxel*numel(tmp{varargin{i}.inside(1)}), sum(Ntrial));
     elseif i==1 && j==1,
       dat = zeros(Nvoxel, sum(Ntrial));

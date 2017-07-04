@@ -67,6 +67,6 @@ try
     end
   end
 catch
-  warning('gradiometer information could not be extracted from file, returning an empty grad structure');
+  ft_warning('gradiometer information could not be extracted from file, returning an empty grad structure');
   return;
 end

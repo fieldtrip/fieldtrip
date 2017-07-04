@@ -410,7 +410,7 @@ evenx = all(abs(diff(x)/dx-1)<1e-12);     % true if X is linearly spaced
 eveny = all(abs(diff(y)/dy-1)<1e-12);     % true if Y is linearly spaced
 
 if ~evenx || ~eveny
-  warning('(one of the) axis is/are not evenly spaced, but plots are made as if axis are linear')
+  ft_warning('(one of the) axis is/are not evenly spaced, but plots are made as if axis are linear')
 end
 
 % Take subselection of channels, this only works

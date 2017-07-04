@@ -213,7 +213,7 @@ if ~compiled
     
     if system(sprintf('which %s > /dev/null', matlabcmd))==1
       % the linux command "which" returns 0 on succes and 1 on failure
-      warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
+      ft_warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
       % use whatever is available as default
       matlabcmd = 'matlab';
     end

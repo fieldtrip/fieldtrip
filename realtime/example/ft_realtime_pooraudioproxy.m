@@ -71,7 +71,7 @@ if newblocksize<0.5
   newblocksize = 0.5;
 end
 if newblocksize~=cfg.blocksize
-  warning('sestting cfg.blocksize to %f', newblocksize);
+  ft_warning('sestting cfg.blocksize to %f', newblocksize);
   cfg.blocksize = newblocksize;
 end
 

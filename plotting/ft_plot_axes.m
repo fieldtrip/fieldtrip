@@ -60,7 +60,7 @@ if ~isempty(unit)
   % convert the sensor description to the specified units
   object = ft_convert_units(object, unit);
 elseif ~isfield(object, 'unit')
-  warning('units are not known, not plotting axes')
+  ft_warning('units are not known, not plotting axes')
   return
 else
   % take the units of the object

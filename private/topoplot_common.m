@@ -170,7 +170,7 @@ end
 if isnumeric(cfg.highlight)
   cfg.highlightchannel = cfg.highlight;
   cfg.highlight = 'on';
-  warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
+  ft_warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
 elseif iscell(cfg.highlight)
   if ~iscell(cfg.highlightchannel)
     cfg.highlightchannel = cell(1,length(cfg.highlight));
@@ -179,7 +179,7 @@ elseif iscell(cfg.highlight)
     if isnumeric(cfg.highlight{icell})
       cfg.highlightchannel{icell} = cfg.highlight{icell};
       cfg.highlight{icell} = 'on';
-      warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
+      ft_warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
     end
   end
 end
@@ -211,7 +211,7 @@ end
 
 % for backwards compatability
 if strcmp(cfg.marker,'highlights')
-  warning('using cfg.marker option -highlights- is no longer used, please use cfg.highlight')
+  ft_warning('using cfg.marker option -highlights- is no longer used, please use cfg.highlight')
   cfg.marker = 'off';
 end
 
@@ -618,7 +618,7 @@ if isfield(data, cfg.maskparameter)
   end
   
   if size(msk,2)>1 || size(msk,3)>1
-    warning('no masking possible for average over multiple latencies or frequencies -> cfg.maskparameter cleared')
+    ft_warning('no masking possible for average over multiple latencies or frequencies -> cfg.maskparameter cleared')
     msk = [];
   end
   
@@ -772,7 +772,7 @@ if strcmp(cfg.style,'both_imsat');      style = 'imsatiso';    end
 % check for nans
 nanInds = isnan(dat);
 if strcmp(cfg.interpolatenan,'yes') && any(nanInds)
-  warning('removing NaNs from the data');
+  ft_warning('removing NaNs from the data');
   chanX(nanInds) = [];
   chanY(nanInds) = [];
   dat(nanInds)   = [];
@@ -931,7 +931,7 @@ if strcmp(cfg.interactive, 'yes')
     set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
   else
-    warning('unsupported dimord "%s" for interactive plotting', data.dimord);
+    ft_warning('unsupported dimord "%s" for interactive plotting', data.dimord);
   end
 end
 

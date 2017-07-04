@@ -273,7 +273,7 @@ switch cfg.method
         geometry(1).pos = geometry(1).pos + randn(size(geometry(1).pos))*ft_scalingfactor('um', geometry(1).unit);
         geometry(2).pos = geometry(2).pos + randn(size(geometry(2).pos))*ft_scalingfactor('um', geometry(2).unit);
         geometry(3).pos = geometry(3).pos + randn(size(geometry(3).pos))*ft_scalingfactor('um', geometry(3).unit);
-        warning('NaN detected, trying once more with slightly different vertex positions');
+        ft_warning('NaN detected, trying once more with slightly different vertex positions');
         headmodel = ft_headmodel_bemcp(geometry, 'conductivity', cfg.conductivity);
       end
     elseif strcmp(cfg.method, 'dipoli')

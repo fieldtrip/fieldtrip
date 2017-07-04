@@ -166,7 +166,7 @@ else
   end
   
   if strcmp(ft_senstype(sens), 'neuromag306')
-    warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
+    ft_warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
   end
   chanpos = sens.chanpos;
   label   = sens.label;
@@ -216,7 +216,7 @@ end
 
 % removed as from Nov 09 2011 - hope there are no problems with this
 % if iscell(neighbours)
-%   warning('Neighbourstructure is in old format - converting to structure array');
+%   ft_warning('Neighbourstructure is in old format - converting to structure array');
 %   neighbours = fixneighbours(neighbours);
 % end
 
@@ -243,7 +243,7 @@ neighbours = neighbours(neighb_idx);
 k = 0;
 for i=1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
-    warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
+    ft_warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
     % JMH: I removed this in Feb 2013 - this is handled above now
     % note however that in case of using a template, this function behaves
     % differently now (neighbourschans can still be channels not in

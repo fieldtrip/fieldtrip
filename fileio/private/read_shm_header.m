@@ -79,7 +79,7 @@ if isempty(previous_header) || isempty(previous_headerfile) || ~isequal(previous
     % write the updated setup packet, this should cause AcqBuffer to do online trigger detection
     write_ctf_shm(sel, 0, 0, 0, 0, 0, buf);
   else
-    warning('no setup in shared memory, could not enable trigger detection');
+    ft_warning('no setup in shared memory, could not enable trigger detection');
   end
 
 else

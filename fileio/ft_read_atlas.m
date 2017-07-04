@@ -668,7 +668,7 @@ switch fileformat
       
     else
       % the file does not exist
-      warning('cannot locate %s, making fake tissue labels', filename2);
+      ft_warning('cannot locate %s, making fake tissue labels', filename2);
       value = [];
       label = {};
       for i=1:max(brick0(:))
@@ -1985,7 +1985,7 @@ switch fileformat
       fn = fieldnames(tmp);
       atlas = tmp.(fn{1});
       if isstruct(atlas)
-        warning('assuming that the variable "%s" in "%s" represents the atlas', fn{1}, filename);
+        ft_warning('assuming that the variable "%s" in "%s" represents the atlas', fn{1}, filename);
       else
         error('cannot read atlas structure from "%s"', filename);
       end

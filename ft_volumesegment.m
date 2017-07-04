@@ -200,21 +200,21 @@ cfg.threshold        = ft_getopt(cfg, 'threshold',   '');
 if ~(isempty(cfg.smooth))
   if isempty(cfg.brainsmooth)
     cfg.brainsmooth=cfg.smooth;
-    warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for brainmask.')
+    ft_warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for brainmask.')
   end
   if isempty(cfg.scalpsmooth)
     cfg.scalpsmooth=cfg.smooth;
-    warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for scalpmask.')
+    ft_warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for scalpmask.')
   end
 end
 if ~(isempty(cfg.threshold))
   if isempty(cfg.brainthreshold)
     cfg.brainthreshold=cfg.threshold;
-    warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for brainmask.')
+    ft_warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for brainmask.')
   end
   if isempty(cfg.scalpthreshold)
     cfg.scalpthreshold=cfg.threshold;
-    warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for scalpmask.')
+    ft_warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for scalpmask.')
   end
 end
 % then set defaults again

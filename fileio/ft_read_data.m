@@ -157,19 +157,19 @@ endtrial  = double(endtrial);
 
 % ensure that the requested sample and trial numbers are integers
 if ~isempty(begsample) && mod(begsample, 1)
-  warning('rounding "begsample" to the nearest integer');
+  ft_warning('rounding "begsample" to the nearest integer');
   begsample = round(begsample);
 end
 if ~isempty(endsample) && ~isinf(endsample) && mod(endsample, 1)
-  warning('rounding "endsample" to the nearest integer');
+  ft_warning('rounding "endsample" to the nearest integer');
   endsample = round(endsample);
 end
 if ~isempty(begtrial) && mod(begtrial, 1)
-  warning('rounding "begtrial" to the nearest integer');
+  ft_warning('rounding "begtrial" to the nearest integer');
   begtrial = round(begtrial);
 end
 if ~isempty(endtrial) && mod(endtrial, 1)
-  warning('rounding "endtrial" to the nearest integer');
+  ft_warning('rounding "endtrial" to the nearest integer');
   endtrial = round(endtrial);
 end
 
@@ -324,7 +324,7 @@ switch dataformat
     if isfield(hdr.orig, 'ChannelUnitsPerBit')
       upb = hdr.orig.ChannelUnitsPerBit;
     else
-      warning('cannot determine ChannelUnitsPerBit');
+      ft_warning('cannot determine ChannelUnitsPerBit');
       upb = 1;
     end
     % jump to the desired data
@@ -570,7 +570,7 @@ switch dataformat
           data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
         end
         if sum(data_in_epoch>1) > 1
-          warning('The requested segment from %i to %i is spread out over multiple epochs with possibly discontinuous boundaries', begsample, endsample);
+          ft_warning('The requested segment from %i to %i is spread out over multiple epochs with possibly discontinuous boundaries', begsample, endsample);
         end
       end
     end
@@ -893,7 +893,7 @@ switch dataformat
     else
       error('unsuppported data_type in itab format');
     end
-    % these are the channels that are visible to fieldtrip
+    % these are the channels that are visible to FieldTrip
     chansel = 1:hdr.orig.nchan;
     tmp = [hdr.orig.ch(chansel).calib];
     tmp = tmp(:);
@@ -1173,7 +1173,7 @@ switch dataformat
   case {'neurosim_ds' 'neurosim_signals'}
     [hdr, dat] = read_neurosim_signals(filename);
     if endsample>size(dat,2)
-      warning('Simulation was not completed, reading in part of the data')
+      ft_warning('Simulation was not completed, reading in part of the data')
       endsample=size(dat,2);
     end
     dat = dat(chanindx,begsample:endsample);
@@ -1181,13 +1181,13 @@ switch dataformat
   case 'neurosim_evolution'
     [hdr, dat] = read_neurosim_evolution(filename);
     if endsample>size(dat,2)
-      warning('Simulation was not completed, reading in part of the data')
+      ft_warning('Simulation was not completed, reading in part of the data')
       endsample=size(dat,2);
     end
     dat = dat(chanindx,begsample:endsample);
     
   case 'neurosim_spikes'
-    warning('Reading Neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead.');
+    ft_warning('Reading Neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead.');
     spike = ft_read_spike(filename);
     cfg          = [];
     cfg.trialdef.triallength = inf;
@@ -1196,9 +1196,9 @@ switch dataformat
     
     cfg.datafile=filename;
     cfg.hdr = ft_read_header(cfg.datafile);
-    warning('off','FieldTrip:ft_read_event:unsupported_event_format')
+    ft_warning('off','FieldTrip:ft_read_event:unsupported_event_format')
     cfg = ft_definetrial(cfg);
-    warning('on','FieldTrip:ft_read_event:unsupported_event_format')
+    ft_warning('on','FieldTrip:ft_read_event:unsupported_event_format')
     spiketrl = ft_spike_maketrials(cfg,spike);
     
     dat=ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
@@ -1281,7 +1281,7 @@ switch dataformat
       end
     end
     if any(isnan(dat(:)))
-      warning('data has been padded with NaNs');
+      ft_warning('data has been padded with NaNs');
     end
     
   case 'plexon_plx'

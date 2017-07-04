@@ -333,7 +333,7 @@ if ~strcmp(cfg.baseline, 'no')
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
       error('baseline correction is not supported for spectra without a time dimension');
     else
-      warning('baseline correction not applied, please set xparam');
+      ft_warning('baseline correction not applied, please set xparam');
     end
   end
 end

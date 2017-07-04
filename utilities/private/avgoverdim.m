@@ -107,7 +107,7 @@ switch avgdim
   case 'rpttap'
     for i=1:length(param)
       if fb, fprintf('removing dimension %s from %s\n', avgdim, param{i}); end
-      warning('this is only allowed for cross-spectra and power-spectra');
+      ft_warning('this is only allowed for cross-spectra and power-spectra');
       tmp = data.(param{i});
       tmp = reshape(tmp, [reduceddim{i}(2:end) 1]);
       data.(param{i}) = tmp;

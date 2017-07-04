@@ -291,7 +291,7 @@ if strcmp(cfg.grid.unit, 'auto')
     % copy the units from the volume conduction model
     cfg.grid.unit = headmodel.unit;
   else
-    warning('assuming "cm" as default source units');
+    ft_warning('assuming "cm" as default source units');
     cfg.grid.unit = 'cm';
   end
 end
@@ -733,7 +733,7 @@ fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(grid.inside), sum(~
 if ~isempty(cfg.symmetry)
   if size(grid.pos,2)>3
     % sanity check, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
-    warning('the construction of a symmetric dipole model requires to start with a Nx3 description of the dipole positions, discarding subsequent columns');
+    ft_warning('the construction of a symmetric dipole model requires to start with a Nx3 description of the dipole positions, discarding subsequent columns');
     grid.pos = grid.pos(:,1:3);
   end
   if strcmp(cfg.symmetry, 'x')

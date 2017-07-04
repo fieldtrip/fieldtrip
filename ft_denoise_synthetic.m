@@ -129,7 +129,7 @@ if numel(selnew)==numel(labelold)
   end
   data.label = data.label(selnew);
 else
-  warning('channel ordering might have changed');
+  ft_warning('channel ordering might have changed');
 end
 
 % convert back to input type if necessary

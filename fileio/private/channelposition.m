@@ -332,5 +332,5 @@ lab = lab(:);
 % do a sanity check on the number of positions
 nchan = numel(sens.label);
 if length(lab)~=nchan || size(pnt,1)~=nchan || size(ori,1)~=nchan
-  warning('the positions were not determined for all channels');
+  ft_warning('the positions were not determined for all channels');
 end

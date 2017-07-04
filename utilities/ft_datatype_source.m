@@ -244,7 +244,7 @@ switch version
         try
           source.(fn{i}) = reshape(source.(fn{i}), [prod(dimsiz(1:3)) dimsiz(4:end) 1]);
         catch
-          warning('could not reshape %s to the expected dimensions', fn{i});
+          ft_warning('could not reshape %s to the expected dimensions', fn{i});
         end
       end
     end

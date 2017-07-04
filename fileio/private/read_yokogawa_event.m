@@ -134,7 +134,7 @@ if ~isempty(trigindx)
 end
 
 if isempty(event)
-  warning('no triggers were detected, please specify the "trigindx" option');
+  ft_warning('no triggers were detected, please specify the "trigindx" option');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

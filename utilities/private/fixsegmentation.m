@@ -35,7 +35,7 @@ switch style
         elseif any(cellfun(@isempty, indexlabel(indexval)))
           error('each index value should have a corresponding entry in %s', [fn{i} 'label']);
         elseif numel(indexval)<numel(indexlabel)
-          warning('there are more labels than actuall tissue types in %s', [fn{i} 'label']);
+          ft_warning('there are more labels than actuall tissue types in %s', [fn{i} 'label']);
           % ensure that the indices are subsequent integers, i.e. [1 2 3] rather than [1 2 4]
           for j=1:length(indexval)
             tmp = segmentation.(fn{i});
@@ -55,7 +55,7 @@ switch style
     contains = false(length(fn));
     if length(fn)>4
       % test for each tissue whether it is overlapping with or contained in each other tissue
-      warning('more than 4 tissue types, this may take a while');
+      ft_warning('more than 4 tissue types, this may take a while');
     end
     for i=1:length(fn)
       segi = segmentation.(fn{i})>0;

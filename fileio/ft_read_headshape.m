@@ -407,7 +407,7 @@ switch fileformat
         src(1).labelindx = label{2};
         src(2).labelindx = label{1};
       else
-        warning('incompatible annotation with triangulations, not using annotation information');
+        ft_warning('incompatible annotation with triangulations, not using annotation information');
       end
       if ~isequal(c(1),c(2))
         error('the annotation tables differ, expecting equal tables for the hemispheres');
@@ -844,7 +844,7 @@ switch fileformat
       shape.pos  = ft_warp_apply(transform, shape.pos);
       shape.unit = mri.unit;
     else
-      warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
+      ft_warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
     end
     
   case 'brainvisa_mesh'
@@ -891,7 +891,7 @@ switch fileformat
     end
     
     if isempty(transform)
-      warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
+      ft_warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
     end
     
   case 'brainvoyager_srf'

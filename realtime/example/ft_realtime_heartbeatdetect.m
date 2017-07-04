@@ -100,8 +100,8 @@ count = 0;
 
 tpl = [];
 
-ws_noPeaks    = warning('off', 'signal:findpeaks:noPeaks');
-ws_PeakHeight = warning('off', 'signal:findpeaks:largeMinPeakHeight');
+ws_noPeaks    = ft_warning('off', 'signal:findpeaks:noPeaks');
+ws_PeakHeight = ft_warning('off', 'signal:findpeaks:largeMinPeakHeight');
 
 % start the timer
 tic
@@ -223,7 +223,7 @@ while true
   
   if numel(peakind)/(blocksize/hdr.Fs)>3
     % heartbeat cannot be above 180 bpm
-    warning('skipping due to noise');
+    ft_warning('skipping due to noise');
     peakval = [];
     peakind = [];
   end

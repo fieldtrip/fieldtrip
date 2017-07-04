@@ -69,7 +69,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % ensure that the sensor description is up-to-date
 sens = ft_datatype_sens(sens);
@@ -114,7 +114,7 @@ elseif ft_senstype(sens, 'nirs')
   sensshape  = optoshape;
   sensize    = optosize;
 else
-  warning('unknown sensor array description');
+  ft_warning('unknown sensor array description');
   individual = false;
   sensshape  = [];
   sensize    = [];
@@ -141,14 +141,14 @@ end
 
 if ~isempty(ft_getopt(varargin, 'coilorientation'))
   % for backward compatibility, added on 17 Aug 2016
-  warning('the coilorientation option is deprecated, please use "orientation" instead')
+  ft_warning('the coilorientation option is deprecated, please use "orientation" instead')
   orientation = ft_getopt(varargin, 'coilorientation');
 end
 
 if ~isempty(ft_getopt(varargin, 'coildiameter'))
   % for backward compatibility, added on 6 July 2016
   % the sensize is the diameter for a circle, or the edge length for a square
-  warning('the coildiameter option is deprecated, please use "coilsize" instead')
+  ft_warning('the coildiameter option is deprecated, please use "coilsize" instead')
   sensize = ft_getopt(varargin, 'coildiameter');
 end
 
