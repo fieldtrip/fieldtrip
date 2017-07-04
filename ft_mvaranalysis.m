@@ -102,7 +102,7 @@ ft_nargout  = nargout;
 
 % this must be done prior to "ft_preamble init" which merges the cfg with the global ft_default
 if isfield(cfg, 'toolbox') && any(strcmp(cfg.toolbox, {'bsmart', 'biosig'}))
-  warning('please use cfg.method instead of cfg.toolbox');
+  ft_warning('please use cfg.method instead of cfg.toolbox');
   % cfg.toolbox is used in ft_default
   cfg.method = cfg.toolbox;
   cfg = rmfield(cfg, 'toolbox');

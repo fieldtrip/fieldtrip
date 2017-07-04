@@ -106,7 +106,7 @@ cfg.component = ft_channelselection(cfg.component, comp.label);
 reject = match_str(comp.label, cfg.component);
 
 if isempty(reject)
-  warning('no components were selected for rejection');
+  ft_warning('no components were selected for rejection');
 end
 
 if min(reject)<1
@@ -138,7 +138,7 @@ end
 [seldat, selcomp] = match_str(label, comp.topolabel);
 
 if hasdata && length(seldat)~=length(label)
-  warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
+  ft_warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
 end
 
 if hasdata

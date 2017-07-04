@@ -219,13 +219,13 @@ while (true)
     switch response
       case 'n'
         if trllop==numtrl
-          warning('already at the last trial');
+          ft_warning('already at the last trial');
         else
           trllop = trllop+1;
         end
       case 'p'
         if trllop==1
-          warning('already at first trial');
+          ft_warning('already at first trial');
         else
           trllop = trllop-1;
         end

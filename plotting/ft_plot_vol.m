@@ -45,7 +45,7 @@ function ft_plot_vol(headmodel, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % ensure that the volume conduction model description is up-to-date (Dec 2012)
 headmodel = ft_datatype_headmodel(headmodel);
@@ -123,7 +123,7 @@ switch ft_voltype(headmodel)
     bnd = [];
     
   case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
-    warning('there is nothing to plot for an infinite volume conductor')
+    ft_warning('there is nothing to plot for an infinite volume conductor')
     
     % there is no boundary to be displayed
     bnd = [];

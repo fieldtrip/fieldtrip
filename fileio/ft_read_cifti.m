@@ -94,7 +94,7 @@ fseek(fid, 0, 'bof');
 % set the default for readdata
 if isempty(readdata)
   if filesize>1e9
-    warning('Not reading data by default in case filesize>1GB. Please specify the ''readdata'' option.');
+    ft_warning('Not reading data by default in case filesize>1GB. Please specify the ''readdata'' option.');
     readdata = false;
   else
     readdata = true;
@@ -114,7 +114,7 @@ etype = fread(fid, 1, 'int32=>int32');
 hdrsize = 540;
 voxsize = filesize-hdr.vox_offset;
 if esize>(filesize-hdrsize-voxsize)
-  warning('the endianness of the header extension is inconsistent with the nifti-2 header');
+  ft_warning('the endianness of the header extension is inconsistent with the nifti-2 header');
   esize = swapbytes(esize);
   etype = swapbytes(etype);
 end
@@ -766,7 +766,7 @@ if readdata
       allthesame = allthesame && isequal(Cifti.labeltable{1}, Cifti.labeltable{i});
     end
     if allthesame
-      warning('using the same labels for all maps in the array');
+      ft_warning('using the same labels for all maps in the array');
       source.datalabel = Cifti.labeltable{1};
       Cifti = rmfield(Cifti, 'labeltable');
     else
@@ -840,7 +840,7 @@ elseif length(t)==5
   geomodel = t{4};
   content  = t{5};
 else
-  warning('cannot parse file name');
+  ft_warning('cannot parse file name');
 end
 
 if readsurface

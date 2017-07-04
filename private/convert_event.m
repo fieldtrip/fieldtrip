@@ -136,7 +136,7 @@ elseif strcmp(input_obj, 'trl') && strcmp(target,'artifact')
 elseif strcmp(input_obj, 'empty')
   obj = [];
 else
-  warning('conversion not supported yet') %FIXME
+  ft_warning('conversion not supported yet') %FIXME
 end
 
 
@@ -183,10 +183,10 @@ for i=1:length(artifact)
     artbegsample = artifact{i}(j,1);
     artendsample = artifact{i}(j,2);
     if artbegsample > endsample
-      warning('artifact definition contains later samples than endsample, these samples are ignored')
+      ft_warning('artifact definition contains later samples than endsample, these samples are ignored')
       break
     elseif artendsample > endsample
-      warning('artifact definition contains later samples than endsample, these samples are ignored')
+      ft_warning('artifact definition contains later samples than endsample, these samples are ignored')
       artendsample = endsample;
       breakflag = 1;
     end

@@ -311,7 +311,7 @@ end
 % plot the topography before and after the realignment
 if strcmp(cfg.feedback, 'yes')
 
-  warning('showing MEG topography (RMS value over time) in the first trial only');
+  ft_warning('showing MEG topography (RMS value over time) in the first trial only');
   Nchan = length(data.grad.label);
   [id,it]   = match_str(data.grad.label, template.grad.label);
   pos1 = data.grad.chanpos(id,:);

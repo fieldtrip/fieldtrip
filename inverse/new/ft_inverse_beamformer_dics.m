@@ -96,7 +96,7 @@ end
 
 isrankdeficient = (rank(Cf)<size(Cf,1));
 if isrankdeficient
-  warning('cross-spectral density matrix is rank deficient')
+  ft_warning('cross-spectral density matrix is rank deficient')
 end
 
 % it is difficult to give a quantitative estimate of lambda, therefore also

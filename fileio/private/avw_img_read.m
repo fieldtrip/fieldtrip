@@ -212,17 +212,17 @@ TimeSz   = double(avw.hdr.dime.pixdim(5));
 % perhaps to indicate flipped orientation?  If so, this code below
 % will NOT handle the flip correctly!
 if PixelSz < 0,
-  warning('X pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(2))');
+  ft_warning('X pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(2))');
   PixelSz = abs(PixelSz);
   avw.hdr.dime.pixdim(2) = single(PixelSz);
 end
 if RowSz < 0,
-  warning('Y pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(3))');
+  ft_warning('Y pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(3))');
   RowSz = abs(RowSz);
   avw.hdr.dime.pixdim(3) = single(RowSz);
 end
 if SliceSz < 0,
-  warning('Z pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(4))');
+  ft_warning('Z pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(4))');
   SliceSz = abs(SliceSz);
   avw.hdr.dime.pixdim(4) = single(SliceSz);
 end

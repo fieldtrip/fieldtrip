@@ -63,10 +63,10 @@ headshape = prepare_mesh_headshape(cfg);
 
 if isempty(cfg.conductivity)
   if numel(headshape)==1
-    warning('using default conductivity values');
+    ft_warning('using default conductivity values');
     cfg.conductivity = 1;
   elseif numel(headshape)==3
-    warning('using default conductivity values');
+    ft_warning('using default conductivity values');
     cfg.conductivity = [1 1/80 1]*0.33;
   else
     % for a 2 or 4 sphere model the order of the compartments is potentially ambiguous, hence no default should be supplied

@@ -67,10 +67,10 @@ for i=1:Ndipoles
   invacuum = acos(dot(vol.ori,(dip1-vol.pnt)./norm(dip1-vol.pnt))) < pi/2;
   
   if invacuum
-    warning('dipole lies on the vacuum side of the plane');
+    ft_warning('dipole lies on the vacuum side of the plane');
     lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
   elseif any(R1)==0
-    warning('dipole coincides with one of the electrodes');
+    ft_warning('dipole coincides with one of the electrodes');
     lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
   else
     lf(:,(1:3) + 3*(i-1)) = (r1 ./ [R1 R1 R1]) + (r2 ./ [R2 R2 R2]);
@@ -87,7 +87,7 @@ pnt = vol.pnt;
 ori = vol.ori; % already normalized
 
 if abs(dot(P1-pnt,ori))<eps
-  warning(sprintf ('point %f %f %f lies in the symmetry plane',P1(1),P1(2),P1(3)))
+  ft_warning(sprintf ('point %f %f %f lies in the symmetry plane',P1(1),P1(2),P1(3)))
   P2 = P1;
 else
   % define the plane in parametric form

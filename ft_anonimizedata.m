@@ -229,7 +229,7 @@ while ~info.cleanup
 
   if info.cleanup
     if ~all(xor(info.keep, info.remove))
-      warning('not all fields have been marked as "keep" or "remove"');
+      ft_warning('not all fields have been marked as "keep" or "remove"');
       info.cleanup = false;
     else
       delete(h);
@@ -300,7 +300,7 @@ data = get(info.table, 'data');
 
 sel = info.keep & info.remove;
 if any(sel)
-  warning('items that were marked both as "keep" and "remove" have been cleared');
+  ft_warning('items that were marked both as "keep" and "remove" have been cleared');
   info.keep(sel) = false;
   info.remove(sel) = false;
 end

@@ -57,7 +57,7 @@ for i=1:nFid % loop over fiducials
   % 1 is device, i.e. dewar
   % 4 is fiducial system, i.e. head coordinates
   if hdr.orig.dig(i).coord_frame~=4
-    warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
+    ft_warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
   end
   
   switch hdr.orig.dig(i).kind % constants defined in MNE - see p.215 of MNE manual
@@ -92,7 +92,7 @@ for i=1:nFid % loop over fiducials
       posN = posN + 1;
       
     otherwise
-      warning('Unidentified digitiser point in file!');
+      ft_warning('Unidentified digitiser point in file!');
   end
   
 end
@@ -112,7 +112,7 @@ if ~isempty(hdr.orig.dev_head_t)
     hdr.orig.dig(k).coord_frame = 1;
   end
 else
-  warning('No device to head transform available in fif file');
+  ft_warning('No device to head transform available in fif file');
   return
 end
 
@@ -123,7 +123,7 @@ for i=1:nFid % loop over fiducials
   % 1 is device, i.e. dewar
   % 4 is fiducial system, i.e. head coordinates
   if hdr.orig.dig(i).coord_frame~=1
-    warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
+    ft_warning(['Digitiser point (' num2str(i) ') not stored in head coordinates!']);
   end
   
   switch hdr.orig.dig(i).kind % constants defined in MNE - see p.215 of MNE manual
@@ -158,7 +158,7 @@ for i=1:nFid % loop over fiducials
       posN = posN + 1;
       
     otherwise
-      warning('Unidentified digitiser point in file!');
+      ft_warning('Unidentified digitiser point in file!');
   end
   
 end

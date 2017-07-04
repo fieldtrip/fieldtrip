@@ -122,7 +122,7 @@ selecting = numel(userData.range)>0 && any(isnan(userData.range(end,:)));
 pointonly = ~xrange && ~yrange;
 
 if pointonly && multiple
-  warning('multiple selections are not possible for a point');
+  ft_warning('multiple selections are not possible for a point');
   multiple = false;
 end
 

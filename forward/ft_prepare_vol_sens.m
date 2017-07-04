@@ -221,7 +221,7 @@ elseif ismeg
         % and use the globally fitted single sphere for those
         missing = setdiff(sens.label, headmodel.label);
         if ~isempty(missing)
-          warning('using the global fitted single sphere for %d channels that do not have a local sphere', length(missing));
+          ft_warning('using the global fitted single sphere for %d channels that do not have a local sphere', length(missing));
         end
         for i=1:length(missing)
           headmodel.label(end+1) = missing(i);
@@ -296,7 +296,7 @@ elseif ismeg
       
     case 'openmeeg'
       if isfield(headmodel,'mat') && ~isempty(headmodel.mat)
-        warning('MEG with openmeeg only supported with NEMO lab pipeline. Please omit the mat matrix from the headmodel structure.');
+        ft_warning('MEG with openmeeg only supported with NEMO lab pipeline. Please omit the mat matrix from the headmodel structure.');
       end
       
     case 'simbio'
@@ -408,7 +408,7 @@ elseif iseeg
       end
       distance = sqrt(sum(pos.^2,2)); % to the center of the sphere
       if any((abs(distance-radius)/radius)>0.005)
-        warning('electrodes do not lie on skin surface -> using radial projection')
+        ft_warning('electrodes do not lie on skin surface -> using radial projection')
       end
       pos = pos * radius ./ [distance distance distance];
       if isfield(headmodel, 'o')

@@ -60,7 +60,7 @@ fprintf('found %d segments in the data\n', ntrial);
 sample = [event.sample];
 if any(diff(sample)<0)
   % events should be ordered according to the sample in the file at which they occur
-  warning('reordering events based on their sample number');
+  ft_warning('reordering events based on their sample number');
   [sample, order] = sort(sample);
   event = event(order);
 end
@@ -119,11 +119,11 @@ if (numstim > 0)
       end % j
     end % i
   else
-    warning('the trials have a varying number of stimuli, not adding them to the "trl" matrix');
+    ft_warning('the trials have a varying number of stimuli, not adding them to the "trl" matrix');
     trialinfo = [];
   end
 else
-  warning('the trials have no stimuli, no "trialinfo" will be added to the "trl" matrix');
+  ft_warning('the trials have no stimuli, no "trialinfo" will be added to the "trl" matrix');
   trialinfo = [];
 end
 

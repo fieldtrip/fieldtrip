@@ -87,7 +87,7 @@ if issvn
   if status > 0
     if ~ispc
       % the command line tools will probably not be available on windows
-      warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
+      ft_warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
     end
     ftver = 'unknown';
   else
@@ -102,7 +102,7 @@ elseif isgit
   if status>0
     if ~ispc
       % the command line tools will probably not be available on windows
-      warning('you seem to have an GIT development copy of FieldTrip, yet ''git'' does not work as expected');
+      ft_warning('you seem to have an GIT development copy of FieldTrip, yet ''git'' does not work as expected');
     end
     ftver = 'unknown';
     

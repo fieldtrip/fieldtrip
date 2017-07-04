@@ -140,7 +140,7 @@ if nutsorbeam==1
     raw.grad.tra(:,1:size(structin.meg.data,2))=eye(size(structin.meg.data,2));
     raw.grad.tra(:,size(structin.meg.data,2)+1:2*size(structin.meg.data,2))=eye(size(structin.meg.data,2));
     raw.grad.tra(:,2*size(structin.meg.data,2)+1:end)=structin.meg.Gcoef;
-    warning('FIXME: should Gcoef be added regardless of structin.meg.grad_order?')
+    ft_warning('FIXME: should Gcoef be added regardless of structin.meg.grad_order?')
   end
 
   if structin.meg.grad_order==0

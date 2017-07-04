@@ -200,7 +200,7 @@ while accept == 0,
       oldcutoff = artfctdef.cutoff;
       accept = 1;
     otherwise
-      warning('unrecognised response, assuming no');
+      ft_warning('unrecognised response, assuming no');
       oldcutoff = artfctdef.cutoff;
       artfctdef.cutoff = input('\nenter new value \n');
   end;
@@ -287,7 +287,7 @@ while acceptpre == 0 || acceptpst == 0,
         oldpretim = artfctdef.pretim;
         acceptpre = 1;
       otherwise
-        warning('unrecognised response, assuming no');
+        ft_warning('unrecognised response, assuming no');
         oldpretim = artfctdef.pretim;
     end
   end
@@ -302,7 +302,7 @@ while acceptpre == 0 || acceptpst == 0,
         oldpsttim = artfctdef.psttim;
         acceptpst = 1;
       otherwise
-        warning('unrecognised response, assuming no');
+        ft_warning('unrecognised response, assuming no');
         oldpsttim = artfctdef.psttim;
     end
   end

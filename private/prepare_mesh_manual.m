@@ -487,7 +487,7 @@ while again
           setappdata(fig,'slicedata',slicedata);
         end
       otherwise
-        warning('invalid button (%d)', k);
+        ft_warning('invalid button (%d)', k);
     end
     
   end

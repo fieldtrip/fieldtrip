@@ -354,12 +354,12 @@ end
 %
 % % masking only possible for evenly spaced axis
 % if strcmp(cfg.masknans, 'yes') && (~evenx || ~eveny)
-%   warning('(one of the) axis are not evenly spaced -> nans cannot be masked out -> cfg.masknans is set to ''no'';')
+%   ft_warning('(one of the) axis are not evenly spaced -> nans cannot be masked out -> cfg.masknans is set to ''no'';')
 %   cfg.masknans = 'no';
 % end
 %
 % if ~isempty(cfg.maskparameter) && (~evenx || ~eveny)
-%   warning('(one of the) axis are not evenly spaced -> no masking possible -> cfg.maskparameter cleared')
+%   ft_warning('(one of the) axis are not evenly spaced -> no masking possible -> cfg.maskparameter cleared')
 %   cfg.maskparameter = [];
 % end
 
@@ -369,7 +369,7 @@ sellab     = match_str(data.label, selchannel);
 
 % cfg.maskparameter only possible for single channel
 if length(sellab) > 1 && ~isempty(cfg.maskparameter)
-  warning('no masking possible for average over multiple channels -> cfg.maskparameter cleared')
+  ft_warning('no masking possible for average over multiple channels -> cfg.maskparameter cleared')
   cfg.maskparameter = [];
 end
 

@@ -185,7 +185,7 @@ if ~isempty(datafile),
       fseek(fid, nbytes2 - 32, 'cof');
       
       if strcmp(header.process(np).step(ns).hdr.type, 'PDF_Weight_Table'),
-        warning('reading in weight table: no warranty that this is correct. it seems to work for the Glasgow 248-magnetometer system. if you have some code yourself, and/or would like to test it on your own data, please contact Jan-Mathijs');
+        ft_warning('reading in weight table: no warranty that this is correct. it seems to work for the Glasgow 248-magnetometer system. if you have some code yourself, and/or would like to test it on your own data, please contact Jan-Mathijs');
         tmpfp = ftell(fid);
         tmp   = fread(fid, 1, 'uint8');
         Nchan = fread(fid, 1, 'uint32');

@@ -94,7 +94,7 @@ for sgnlop=1:length(sgn)
     dat(sgnlop,:) = dum(:)' * hdr.varheader(sgn(sgnlop)).adtomv;
 
   else
-    % warning('unsupported data format for channel %s', hdr.label{sgn(sgnlop)});
+    % ft_warning('unsupported data format for channel %s', hdr.label{sgn(sgnlop)});
   end
 
 end

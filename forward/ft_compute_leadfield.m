@@ -285,7 +285,7 @@ elseif ismeg
           lf = sens.tra * lf;
         end
       else
-        warning('No system matrix is present, Calling the Nemo Lab pipeline')
+        ft_warning('No system matrix is present, Calling the Nemo Lab pipeline')
         lf = leadfield_openmeeg(dippos, headmodel, sens);
       end
       

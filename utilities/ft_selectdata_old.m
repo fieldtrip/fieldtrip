@@ -310,7 +310,7 @@ if length(data)>1 && ~israw,
       fprintf('%d voxels are inside the brain of all subjects\n',               nallinside);
       fprintf('%d voxels are inside the brain of some, but not all subjects\n', nsomeinside);
       fprintf('%d voxels are outside the brain of all subjects\n',              nalloutside);
-      warning('marking only voxels inside the brain of all subjects as ''inside''');
+      ft_warning('marking only voxels inside the brain of all subjects as ''inside''');
       
       if isboolean
         data{1}.inside = inside;
@@ -461,7 +461,7 @@ if selectrpt && ~israw
   if islogical(selrpt),
     selrpt = find(selrpt);
   elseif isempty(selrpt),
-    warning('you request all repetitions to be thrown away');
+    ft_warning('you request all repetitions to be thrown away');
   end
   
   if ~issource
@@ -498,7 +498,7 @@ elseif selectrpt && israw
   if islogical(selrpt),
     selrpt = find(selrpt);
   elseif isempty(selrpt),
-    warning('you request all repetitions to be thrown away');
+    ft_warning('you request all repetitions to be thrown away');
   end
 end
 
@@ -630,7 +630,7 @@ elseif istlck,
   if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
   if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
   if isfield(data,'trial') && isfield(data,'avg') %&& size(data.trial,3)~=size(data.avg,2)
-    warning('Warning: .avg, .var, .dof and .cov not updated.');
+    ft_warning('Warning: .avg, .var, .dof and .cov not updated.');
     if isfield(data, 'avg'), data = rmfield(data, 'avg'); end
     if isfield(data, 'cov'), data = rmfield(data, 'cov'); end
     if isfield(data, 'dof'), data = rmfield(data, 'dof'); end

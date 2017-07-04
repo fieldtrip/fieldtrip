@@ -97,7 +97,7 @@ elseif isequal(optimfun, @fminsearch)
   options  = optimset(options, 'Display', 'off');
   options  = optimset(options, 'MaxIter', 4500);
 else
-  warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
+  ft_warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
 end
 
 if fb; fprintf('distance = %f\n', errorfun([0 0 0 0 0 0], pos1, pos2, 'rigidbody')); end

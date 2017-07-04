@@ -91,7 +91,7 @@ if ~isrow(timelock.time)
   timelock.time = timelock.time';
 end
 if ~isfield(timelock, 'label')
-  warning('data structure is incorrect since it has no channel labels');
+  ft_warning('data structure is incorrect since it has no channel labels');
 end
 
 switch version

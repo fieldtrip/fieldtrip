@@ -51,7 +51,7 @@ nameFlag = 0;
 txt=[];
 finfo=dir([headerfile '.txt']);
 if ( isempty(finfo) || finfo.bytes==0 )
-  warning(sprintf('Could not open text header file : %s',headerfile));
+  ft_warning(sprintf('Could not open text header file : %s',headerfile));
 else  
   txt.nSamples=0;
   FA = fopen([headerfile '.txt'], 'r');
@@ -114,7 +114,7 @@ end
 bin=[];
 finfo=dir(headerfile);
 if ( isempty(finfo) || finfo.bytes==0 )
-  warning(sprintf('Couldnt open binary header file : %s',headerfile));
+  ft_warning(sprintf('Couldnt open binary header file : %s',headerfile));
   hdr = copyfields(txt, hdr, fieldnames(txt)); % ensure that the predefined stuff still exists
 else  
   if ( ~isfield(hdr.orig,'endianness') )
@@ -132,7 +132,7 @@ else
     error('Number of channels in binary header does not match ASCII definition');
   end
   if isfield(txt,'nChans') && ~isequal(hdr.nSamples,txt.nSamples)
-    warning('Number of samples in binary header does not match ASCII definition');
+    ft_warning('Number of samples in binary header does not match ASCII definition');
   end
   if isfield(txt,'nEvents') && ~isequal(hdr.nEvents,txt.nEvents)
     error('Number of events in binary header does not match ASCII definition');
@@ -164,7 +164,7 @@ else
       if typeAndSize(2) == 8*hdr.nChans
         hdr.resolutions = fread(F, [hdr.nChans, 1], 'double');
       else
-        warning('Invalid size of RESOLUTIONS chunk - skipping');
+        ft_warning('Invalid size of RESOLUTIONS chunk - skipping');
         dummy = fread(F, typeAndSize(2), 'uint8=>uint8');
       end
      case 4 % FT_CHUNK_ASCII_KEYVAL
@@ -175,7 +175,7 @@ else
       if typeAndSize(2) == 348
         hdr.nifti_1 = decode_nifti1(hdr.orig.nifti_1);
       else
-        warning('Invalid size of NIFTI_1 chunk - skipping');
+        ft_warning('Invalid size of NIFTI_1 chunk - skipping');
       end
      case 6 % FT_CHUNK_SIEMENS_AP = 6
       hdr.orig.siemensap = fread(F, typeAndSize(2), 'uint8=>uint8');
@@ -211,7 +211,7 @@ if ~isfield(hdr,'nSamples') || hdr.nSamples == 0
   n = fileSize / hdr.orig.wordsize / hdr.nChans;
   hdr.nSamples = floor(n);
   if hdr.nSamples ~= n
-    warning('Size of ''samples'' is not a multiple of the size of one sample');
+    ft_warning('Size of ''samples'' is not a multiple of the size of one sample');
   end
 end
 

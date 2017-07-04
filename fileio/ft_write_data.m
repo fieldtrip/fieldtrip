@@ -199,7 +199,7 @@ switch dataformat
         elseif ~isempty(strfind(lasterr, 'failed to create socket')) && (strcmp(host, 'localhost') || strcmp(host, '127.0.0.1'))
           
           % start a local instance of the TCP server
-          warning('starting FieldTrip buffer on %s:%d', host, port);
+          ft_warning('starting FieldTrip buffer on %s:%d', host, port);
           buffer('tcpserver', 'init', host, port);
           pause(1);
           
@@ -352,7 +352,7 @@ switch dataformat
         try
           s.msg = mxSerialize(hdr);
         catch
-          warning(lasterr);
+          ft_warning(lasterr);
         end
         db_insert('fieldtrip.header', s);
       end
@@ -377,7 +377,7 @@ switch dataformat
           try
             s.data = mxSerialize(reshape(dat(i,:,:), dim(2:end)));
           catch
-            warning(lasterr);
+            ft_warning(lasterr);
           end
           % insert the structure into the database
           db_insert('fieldtrip.data', s);
@@ -406,7 +406,7 @@ switch dataformat
     elseif  append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
     elseif ~append &&  exist(filename, 'file')
-      warning('deleting existing file ''%s''', filename);
+      ft_warning('deleting existing file ''%s''', filename);
       delete(filename);
     elseif ~append && ~exist(filename, 'file')
       % file does not yet exist, which is not a problem
@@ -553,7 +553,7 @@ switch dataformat
       nex.hdr.FileHeader.Frequency = hdr.Fs * hdr.TimeStampPerSample;
       nex.var.ts = hdr.FirstTimeStamp;
     else
-      warning('no timestamp information available');
+      ft_warning('no timestamp information available');
       nex.hdr.FileHeader.Frequency  = nan;
       nex.var.ts = nan;
     end

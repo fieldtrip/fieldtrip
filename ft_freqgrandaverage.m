@@ -217,10 +217,10 @@ if isfield(varargin{1}, 'labelcmb')
     grandavg.labelcmb = varargin{1}.labelcmb;
 end
 if isfield(varargin{1}, 'grad')
-    warning('discarding gradiometer information because it cannot be averaged');
+    ft_warning('discarding gradiometer information because it cannot be averaged');
 end
 if isfield(varargin{1}, 'elec')
-    warning('discarding electrode information because it cannot be averaged');
+    ft_warning('discarding electrode information because it cannot be averaged');
 end
 if strcmp(cfg.keepindividual, 'yes')
     grandavg.dimord = ['subj_',varargin{1}.dimord];

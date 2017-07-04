@@ -39,7 +39,7 @@ function [version] = hasyokogawa(desired)
 %
 % $Id$
 
-ws = warning('off', 'MATLAB:pfileOlderThanMfile');
+ws = ft_warning('off', 'MATLAB:pfileOlderThanMfile');
 
 % there are a few versions of the old preliminary implementation, such as
 % 12bitBeta3, 16bitBeta3 and 16bitBeta6. In 2011 a completely new
@@ -74,7 +74,7 @@ elseif exist('GetMeg160ADbitInfoM', 'file') || exist('GetMeg160ChannelInfoM', 'f
     elseif [0 2 2 5] == [rev_ADbitInfoM rev_ChannelInfoM rev_AmpGainM rev_MatchingInfoM]
       version='16bitBeta6';
     else
-      warning('The version of the installed Yokogawa toolbox cannot be determined.');
+      ft_warning('The version of the installed Yokogawa toolbox cannot be determined.');
     end
   catch
     m = lasterror;

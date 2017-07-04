@@ -227,7 +227,7 @@ end
 
 if ~isempty(cfg.chanscale)
   if ~isfield(cfg, 'channel')
-    warning('ignoring cfg.chanscale; this should only be used when an explicit channel selection is being made');
+    ft_warning('ignoring cfg.chanscale; this should only be used when an explicit channel selection is being made');
     cfg.chanscale = [];
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
     error('cfg.chanscale should have the same number of elements as cfg.channel');
@@ -240,7 +240,7 @@ if ~isempty(cfg.chanscale)
 end
 
 if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
-  warning('ignoring cfg.mychanscale; no channels specified in cfg.mychan');
+  ft_warning('ignoring cfg.mychanscale; no channels specified in cfg.mychan');
   cfg.mychanscale = [];
 end
 
@@ -265,7 +265,7 @@ if strcmp(cfg.viewmode, 'component')
     tmpcfg.layout = cfg.layout;
     cfg.layout = ft_prepare_layout(tmpcfg);
   else
-    warning('No layout specified - will try to construct one using sensor positions');
+    ft_warning('No layout specified - will try to construct one using sensor positions');
     tmpcfg = [];
     try, tmpcfg.elec = cfg.elec; end
     try, tmpcfg.grad = cfg.grad; end
@@ -294,7 +294,7 @@ if hasdata
   
   if isfield(data, 'cfg') && ~isempty(ft_findcfg(data.cfg, 'origfs'))
     % don't use the events in case the data has been resampled
-    warning('the data has been resampled, not showing the events');
+    ft_warning('the data has been resampled, not showing the events');
     event = [];
   elseif isfield(data, 'cfg') && isfield(data.cfg, 'event')
     % use the event structure from the data as per bug #2501
@@ -320,7 +320,7 @@ if hasdata
     end
   else
     if strcmp(cfg.continuous, 'yes') && (numel(data.trial) > 1)
-      warning('interpreting trial-based data as continous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
+      ft_warning('interpreting trial-based data as continous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
     end
   end
   
@@ -1482,7 +1482,7 @@ switch key
         if numel(tmp)==2
           cfg.ylim = tmp;
         else
-          warning('incorrect specification of cfg.ylim, not changing the limits for the vertical axes')
+          ft_warning('incorrect specification of cfg.ylim, not changing the limits for the vertical axes')
         end
       end
       setappdata(h, 'opt', opt);
@@ -1550,7 +1550,7 @@ switch key
         ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(chanposind,1), 'vpos', opt.laytime.pos(chanposind,2), 'width', opt.laytime.width(chanposind), 'height', opt.laytime.height(chanposind), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
       end
     else
-      warning('only supported with cfg.viewmode=''butterfly/vertical''');
+      ft_warning('only supported with cfg.viewmode=''butterfly/vertical''');
     end
   case 's'
     % toggle between selectmode options: switch from 'markartifact', to 'markpeakevent' to 'marktroughevent' and back with on screen feedback

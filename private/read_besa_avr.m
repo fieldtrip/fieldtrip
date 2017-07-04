@@ -117,7 +117,7 @@ else
     lbl = strrep(lbl ,'EEG ', ''); % remove the channel type
     avr.label = lbl;
   else
-    warning('Could not create channels labels.');
+    ft_warning('Could not create channels labels.');
   end
 end
 

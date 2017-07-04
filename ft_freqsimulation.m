@@ -359,10 +359,10 @@ elseif strcmp(cfg.method, 'phalow_amphigh')
     error('you cannot have a frequency higher than the sample frequency/2')
   end
   if cfg.s3.freq ~= 0 || cfg.s3.phase ~= 0
-    warning('for method phalow_amphigh s3 is DC and therefore expect freq and phase to be zero but they are not')
+    ft_warning('for method phalow_amphigh s3 is DC and therefore expect freq and phase to be zero but they are not')
   end
   if cfg.s3.ampl < cfg.s1.ampl
-    warning('expect amplitude s3 (=DC) not to be smaller than amplitude s1 (=low frequency)')
+    ft_warning('expect amplitude s3 (=DC) not to be smaller than amplitude s1 (=low frequency)')
   end
   
   % make data
@@ -407,10 +407,10 @@ elseif strcmp(cfg.method, 'amplow_amphigh')
     error('you cannot have a frequency higher than the sample frequency/2')
   end
   if cfg.s3.freq ~= 0 || cfg.s3.phase ~= 0
-    warning('for method powlow_powhigh s3 is DC and therefore expect freq and phase to be zero but they are not')
+    ft_warning('for method powlow_powhigh s3 is DC and therefore expect freq and phase to be zero but they are not')
   end
   if cfg.s3.ampl < cfg.s4.ampl
-    warning('expect amplitude s3 (=DC) not to be smaller than amplitude s4 (= AM frequency)')
+    ft_warning('expect amplitude s3 (=DC) not to be smaller than amplitude s4 (= AM frequency)')
   end
   
   % make data

@@ -277,7 +277,7 @@ if needhdr
     % continue with the subset of channels that has a consistent sampling frequency
     hdr.Fs           = EDF.SampleRate(chansel(1));
     hdr.nChans       = length(chansel);
-    warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
+    ft_warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
     hdr.label        = cellstr(EDF.Label(chansel,:));
     % it is continuous data, therefore append all records in one trial
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
@@ -312,7 +312,7 @@ if needhdr
     hdr.orig.chansel    = chansel;
     hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
     
-    warning('channels with different sampling rate not supported, selecting subset of %d channels at %f Hz', length(hdr.label), hdr.Fs);
+    ft_warning('channels with different sampling rate not supported, selecting subset of %d channels at %f Hz', length(hdr.label), hdr.Fs);
   end
   
   % return the header

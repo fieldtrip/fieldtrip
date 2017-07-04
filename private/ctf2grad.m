@@ -333,7 +333,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==13)
     grad.balance.current = 'G3AR';
   else
-    warning('cannot determine balancing of CTF gradiometers');
+    ft_warning('cannot determine balancing of CTF gradiometers');
     grad = rmfield(grad, 'balance');
   end
   

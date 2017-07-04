@@ -19,7 +19,7 @@ function [data, hdr] = read_ctf_svl(filename)
   hdr.numChans = fread(fid, 1, 'int32');
   hdr.numWeights = fread(fid, 1, 'int32'); % 0 for static image.
   if(hdr.numWeights ~= 0)
-    warning('hdr.numWeights ~= 0');
+    ft_warning('hdr.numWeights ~= 0');
   end
   
   fread(fid,1,'int32'); % Padding to next 8 byte boundary.

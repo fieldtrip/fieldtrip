@@ -205,7 +205,7 @@ switch cfg.method
   case {'coh' 'csd'}
     if ~isempty(cfg.partchannel)
       if hasrpt && ~hasjack,
-        warning('partialisation on single trial observations is not supported, removing trial dimension');
+        ft_warning('partialisation on single trial observations is not supported, removing trial dimension');
         try
           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'fullfast');
           inparam = 'crsspctrm';

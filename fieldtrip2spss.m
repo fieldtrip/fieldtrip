@@ -55,7 +55,7 @@ ft_preamble callinfo
 
 % check whether data and labels have the same lengths
 if ~isequal(size(data,2),size(labels,2))
-    warning('the data and labels have unequal number of columns');
+    ft_warning('the data and labels have unequal number of columns');
 end
 
 % print labels and append data

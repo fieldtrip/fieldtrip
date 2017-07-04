@@ -82,7 +82,7 @@ end
 if denoise
   for i=1:length(chanindx)
     if (sum(diff(find(diff(dat(i,:))~=0)) == 1)/length(dat(i,:))) > 0.8
-      warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
+      ft_warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
       dat(i,:) = 0;
     end
   end

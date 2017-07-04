@@ -185,7 +185,7 @@ while true
         Bc  = B*W;
         estimate = labeld(Bc);          % this is the estimated class
       else
-        warning('classifier has not yet been trained');
+        ft_warning('classifier has not yet been trained');
         estimate = nan;
       end
 

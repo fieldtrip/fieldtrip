@@ -122,7 +122,7 @@ if ~isempty(renamed)
     if silent
       % don't mention it
     elseif loose
-      warning('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
+      ft_warning('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     elseif pedantic
       error('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     end
@@ -138,7 +138,7 @@ if ~isempty(renamedval) && issubfield(cfg, renamedval{1})
     if silent
       % don't mention it
     elseif loose
-      warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      ft_warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     elseif pedantic
       error('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     end
@@ -165,7 +165,7 @@ if ~isempty(deprecated)
     if silent
       % don't mention it
     elseif loose
-      warning('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)});
+      ft_warning('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)});
     elseif pedantic
       error('The option cfg.%s is not longer supported\n', deprecated{ismember(deprecated, fieldsused)});
     end
@@ -182,7 +182,7 @@ if ~isempty(unused)
     if silent
       % don't mention it
     elseif loose
-      warning('The field cfg.%s is unused, it will be removed from your configuration\n', unused{ismember(unused, fieldsused)});
+      ft_warning('The field cfg.%s is unused, it will be removed from your configuration\n', unused{ismember(unused, fieldsused)});
     elseif pedantic
       error('The field cfg.%s is unused\n', unused{ismember(unused, fieldsused)});
     end
@@ -212,7 +212,7 @@ if ~isempty(forbidden)
     if silent
       % don't mention it
     elseif loose
-      warning('The field cfg.%s is forbidden, it will be removed from your configuration\n', forbidden{ismember(forbidden, fieldsused)});
+      ft_warning('The field cfg.%s is forbidden, it will be removed from your configuration\n', forbidden{ismember(forbidden, fieldsused)});
     elseif pedantic
       error('The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)});
     end
@@ -493,7 +493,7 @@ if ~isempty(createsubcfg)
         if silent
           % don't mention it
         elseif loose
-          warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+          ft_warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         elseif pedantic
           error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end

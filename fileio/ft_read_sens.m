@@ -121,12 +121,12 @@ switch fileformat
     elpfile = fullfile(p, [f '.elp']);
     elafile = fullfile(p, [f '.ela']);
     if exist(elpfile, 'file')
-      warning('reading channel labels from %s', elpfile);
+      ft_warning('reading channel labels from %s', elpfile);
       % read the channel names from the accompanying ELP file
       lbl = importdata(elpfile);
       sens.label = strrep(lbl.textdata(:,2) ,'''', '');
     elseif exist(elafile, 'file')
-      warning('reading channel labels from %s', elafile);
+      ft_warning('reading channel labels from %s', elafile);
       % read the channel names from the accompanying ELA file
       lbl = importdata(elafile);
       lbl = strrep(lbl, 'MEG ', ''); % remove the channel type
@@ -134,7 +134,7 @@ switch fileformat
       sens.label = lbl;
     else
       % the file does not have channel labels in it
-      warning('creating fake channel names for besa_pos');
+      ft_warning('creating fake channel names for besa_pos');
       for i=1:nchan
         sens.label{i} = sprintf('%03d', i);
       end
@@ -168,7 +168,7 @@ switch fileformat
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
       if isempty(senstype)
         % set the default
-        warning('both electrode and gradiometer information is present, returning the electrode information by default');
+        ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
         senstype = 'eeg';
       end
       switch lower(senstype)
@@ -214,7 +214,7 @@ switch fileformat
     % these are created at the FIL in London with a polhemus tracker
     [sens.fid.pnt, sens.pnt, sens.fid.label] = read_polhemus_fil(filename, 0);
     % the file does not have channel labels in it
-    warning('no channel names in polhemus file, using numbers instead');
+    ft_warning('no channel names in polhemus file, using numbers instead');
     for i=1:size(sens.pnt, 1)
       sens.label{i} = sprintf('%03d', i);
     end
@@ -354,7 +354,7 @@ switch fileformat
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
       radians = @(x) pi*x/180;
-      warning('assuming a head radius of 85 mm');
+      ft_warning('assuming a head radius of 85 mm');
       x = 85*cos(radians(phi)).*sin(radians(theta));
       y = 85*sin(radians(theta)).*sin(radians(phi));
       z = 85*cos(radians(theta));

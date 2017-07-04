@@ -90,7 +90,7 @@ if isFIR
     impresp = b(:)';
 else
     if ~exist('impz', 'file')
-        warning('Plotting IIR filter responses requires signal processing toolbox.')
+        ft_warning('Plotting IIR filter responses requires signal processing toolbox.')
         return
     end
     impresp = impz(b, a)';

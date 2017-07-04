@@ -36,7 +36,7 @@ function ft_plot_topo3d(pos, val, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 contourstyle  = ft_getopt(varargin, 'contourstyle', 'none');

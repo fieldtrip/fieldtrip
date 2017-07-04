@@ -71,7 +71,7 @@ if any(strcmp(cfg.statistic,{'depsamplesregrT','depsamplesT','actvsblT','depsamp
     designtype = 'within';
 end;
 if ~(exist('designtype')==1)
-    warning('Unknown test statistic.');
+    ft_warning('Unknown test statistic.');
     return
 end;
 

@@ -144,7 +144,7 @@ for k = 1:m
     case 'chol'
       [tmp, dum] = chol(gam0(:,:,k));
       if dum
-        warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
+        ft_warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
         tmp = rand(2,2); %arbitrary initial condition
         tmp = triu(tmp);
       end

@@ -307,7 +307,7 @@ fprintf('selected %d channels\n', nchans);
 fprintf('selected %d topographies\n', ntime);
 
 if nchans<cfg.numdipoles*3
-  warning('not enough channels to perform a dipole fit');
+  ft_warning('not enough channels to perform a dipole fit');
 end
 
 if ntime<1
@@ -317,7 +317,7 @@ end
 % check whether EEG is average referenced
 if ft_senstype(sens, 'eeg')
   if any(rv(Vdata, avgref(Vdata))>0.001)
-    warning('the EEG data is not average referenced, correcting this');
+    ft_warning('the EEG data is not average referenced, correcting this');
   end
   Vdata = avgref(Vdata);
 end
@@ -599,7 +599,7 @@ switch cfg.model
   case 'moving'
     if isfreq
       % although this is technically possible so far, it does not make any sense
-      warning('a moving dipole model in the frequency domain is not supported');
+      ft_warning('a moving dipole model in the frequency domain is not supported');
     end
   otherwise
     error('unsupported cfg.model');

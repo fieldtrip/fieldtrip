@@ -132,7 +132,7 @@ if strcmp(cfg.sampleindex, 'yes') && isfield(data, 'sampleinfo')
     data.trial{i}(end+1,:) = data.sampleinfo(i,1):data.sampleinfo(i,2);
   end
 elseif strcmp(cfg.sampleindex, 'yes')
-  warning('no sampleinfo present, cannot add sampleindex as channel');
+  ft_warning('no sampleinfo present, cannot add sampleindex as channel');
 end
 
 % sampleinfo, if present, becomes invalid because of the resampling
@@ -151,7 +151,7 @@ end
 if strcmp(cfg.resamplemethod, 'resample')
   usedownsample = 0;
 elseif strcmp(cfg.resamplemethod, 'downsample')
-  warning('using cfg.resamplemethod = ''downsample'', only use this if you have applied an anti-aliasing filter prior to downsampling!');
+  ft_warning('using cfg.resamplemethod = ''downsample'', only use this if you have applied an anti-aliasing filter prior to downsampling!');
   usedownsample = 1;
 else
   error('unknown resamplemethod ''%s''', cfg.resamplemethod);
@@ -184,7 +184,7 @@ if usefsample
 
   nchan  = numel(data.label);
   if any(padsmp~=0)
-    warning('not all of the trials have the same original time axis: to avoid rounding issues in the resampled time axes, data will be zero-padded to the left prior to resampling');
+    ft_warning('not all of the trials have the same original time axis: to avoid rounding issues in the resampled time axes, data will be zero-padded to the left prior to resampling');
   end
 
   for itr = 1:ntr

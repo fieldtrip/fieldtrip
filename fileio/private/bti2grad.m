@@ -43,7 +43,7 @@ function [grad, elec] = bti2grad(hdr, balanceflag)
 
 % for backward compatibility issues FIXME check whether anyone actually uses this code
 if isfield(hdr, 'Meg_pos'),
-  warning('using outdated code. this does not necessarily lead to correct output');
+  ft_warning('using outdated code. this does not necessarily lead to correct output');
   
   elec      = [];
   grad      = [];
@@ -181,7 +181,7 @@ elseif isfield(hdr, 'config'),
     weights  = hdr.user_block_data{ubsel};
     if hdr.user_block_data{ubsel}.version==1,
       % the user_block does not contain labels to the channels and references
-      % warning('the weight table does not contain contain labels to the channels and references: assuming the channel order as they occur in the header and the refchannel order M.A M.aA G.A');
+      % ft_warning('the weight table does not contain contain labels to the channels and references: assuming the channel order as they occur in the header and the refchannel order M.A M.aA G.A');
       label    = {hdr.config.channel_data(:).name}';
       meglabel = ft_channelselection('MEG',    label);
       imeg     = match_str(label, meglabel);

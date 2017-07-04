@@ -142,12 +142,12 @@ if trlnum>1
         end
       end
     else
-      warning('samples present in multiple trials, using only the last occurence of each sample')
+      ft_warning('samples present in multiple trials, using only the last occurence of each sample')
     end
   end
   
   %   if any(count==0)
-  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %     ft_warning('not all requested samples are present in the data, filling with NaNs');
   %   end
   
   % construct the output data array
@@ -196,7 +196,7 @@ else
   datendindx = min(endsample-begsample+1, trl(2)-begsample+1);
   
   %   if begsample<trl(1) || endsample>trl(2)
-  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %     ft_warning('not all requested samples are present in the data, filling with NaNs');
   %   end
   
   if begsample >= trl(1) && begsample <= trl(2)

@@ -147,7 +147,7 @@ for ifreqoi = 1:nfreqoi
     filtfreq(end+1,:) = tmpfreq;
   else
       invalidind = [invalidind ifreqoi];
-      warning(sprintf('frequency %.2f Hz cannot be estimated with resolution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
+      ft_warning(sprintf('frequency %.2f Hz cannot be estimated with resolution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
   end
 end
 

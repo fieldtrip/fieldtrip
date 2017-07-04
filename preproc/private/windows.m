@@ -46,7 +46,7 @@ end
 % Check window length
 if m ~= round(m)
     m = round(m);
-    warning('firws:nonIntegerWindowLength', 'Non-integer window length. Rounding to integer.')
+    ft_warning('firws:nonIntegerWindowLength', 'Non-integer window length. Rounding to integer.')
 end
 if m < 1
     error('Invalid window length.')

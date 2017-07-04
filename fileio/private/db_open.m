@@ -64,7 +64,7 @@ if ~strcmp(filename, prev_filename)
     prev_filename = filename;
   catch
     prev_filename = [];
-    warning(lasterr);
+    ft_warning(lasterr);
   end
 end
 

@@ -107,7 +107,7 @@ switch cmd
       engine('close');
     catch
       % this happens if enginepool and engine get out of sync
-      warning(lasterr);
+      ft_warning(lasterr);
     end
     
   case 'block'

@@ -99,23 +99,23 @@ if needhdr
   end
 
   if any(WFrequency~=WFrequency(1))
-    warning('not all channels have the same sampling rate');
+    ft_warning('not all channels have the same sampling rate');
   end
 
   if any(Frequency~=Frequency(1))
-    warning('not all channels have the same timestamp rate');
+    ft_warning('not all channels have the same timestamp rate');
   end
 
   if any(Beg~=Beg(1))
-    warning('not all channels start at the same time');
+    ft_warning('not all channels start at the same time');
   end
 
   if any(End~=End(1))
-    warning('not all channels end at the same time');
+    ft_warning('not all channels end at the same time');
   end
 
   if any(NPointsWave~=NPointsWave(1))
-    warning('not all channels have the same number of samples');
+    ft_warning('not all channels have the same number of samples');
   end
 
   % construct the header that applies to all channels combined

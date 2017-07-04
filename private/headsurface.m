@@ -211,7 +211,7 @@ if ~isempty(inwardshift) && inwardshift~=0
     tri = fliplr(tri);
     ori = -ori;
   else
-    warning('cannot determine the orientation of the vertex normals');
+    ft_warning('cannot determine the orientation of the vertex normals');
     % nothing to do
   end
   % the orientation is outward, hence shift with a negative amount

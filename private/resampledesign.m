@@ -91,12 +91,12 @@ efficient = ft_getopt(cfg, 'efficient', 'no');
 Nvar  = size(design,1);   % number of factors or regressors
 Nrepl = size(design,2);   % number of replications
 
-if ~isempty(intersect(cfg.ivar, cfg.uvar)), warning('there is an intersection between cfg.ivar and cfg.uvar'); end
-if ~isempty(intersect(cfg.ivar, cfg.wvar)), warning('there is an intersection between cfg.ivar and cfg.wvar'); end
-if ~isempty(intersect(cfg.ivar, cfg.cvar)), warning('there is an intersection between cfg.ivar and cfg.cvar'); end
-if ~isempty(intersect(cfg.uvar, cfg.wvar)), warning('there is an intersection between cfg.uvar and cfg.wvar'); end
-if ~isempty(intersect(cfg.uvar, cfg.cvar)), warning('there is an intersection between cfg.uvar and cfg.cvar'); end
-if ~isempty(intersect(cfg.wvar, cfg.cvar)), warning('there is an intersection between cfg.wvar and cfg.cvar'); end
+if ~isempty(intersect(cfg.ivar, cfg.uvar)), ft_warning('there is an intersection between cfg.ivar and cfg.uvar'); end
+if ~isempty(intersect(cfg.ivar, cfg.wvar)), ft_warning('there is an intersection between cfg.ivar and cfg.wvar'); end
+if ~isempty(intersect(cfg.ivar, cfg.cvar)), ft_warning('there is an intersection between cfg.ivar and cfg.cvar'); end
+if ~isempty(intersect(cfg.uvar, cfg.wvar)), ft_warning('there is an intersection between cfg.uvar and cfg.wvar'); end
+if ~isempty(intersect(cfg.uvar, cfg.cvar)), ft_warning('there is an intersection between cfg.uvar and cfg.cvar'); end
+if ~isempty(intersect(cfg.wvar, cfg.cvar)), ft_warning('there is an intersection between cfg.wvar and cfg.cvar'); end
 
 fprintf('total number of measurements     = %d\n', Nrepl);
 fprintf('total number of variables        = %d\n', Nvar);
@@ -257,7 +257,7 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   if any(Nrep~=Nrep(1)), error('all units of observation should have an equal number of repetitions'); end
   
   if max(units(:))<20,
-    warning('fewer than 20 units warrants explicit checking of double occurrences of ''bootstraps''');
+    ft_warning('fewer than 20 units warrants explicit checking of double occurrences of ''bootstraps''');
     checkunique = 1;
   else
     checkunique = 0;

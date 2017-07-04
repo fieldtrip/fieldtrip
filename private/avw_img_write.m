@@ -189,13 +189,13 @@ end
 % Check inputs
 
 if ~exist('avw','var')
-    warning('...no input avw - calling avw_hdr_make\n');
+    ft_warning('...no input avw - calling avw_hdr_make\n');
     avw = avw_hdr_make;
 elseif isempty(avw)
-    warning('...empty input avw - calling avw_hdr_make\n');
+    ft_warning('...empty input avw - calling avw_hdr_make\n');
     avw = avw_hdr_make;
 elseif ~isfield(avw,'hdr')
-    warning('...empty input avw.hdr - calling avw_hdr_make\n');
+    ft_warning('...empty input avw.hdr - calling avw_hdr_make\n');
     avw = avw_hdr_make;
 end
 if ~isequal(avw.hdr.hk.sizeof_hdr,348)
@@ -298,7 +298,7 @@ case  64
 case 128
     error('...RGB datatype not yet supported.\n');
 otherwise
-    warning('...unknown datatype, using type 16 (32 bit floats).\n');
+    ft_warning('...unknown datatype, using type 16 (32 bit floats).\n');
     avw.hdr.dime.datatype = int16(16);
     avw.hdr.dime.bitpix = int16(32); precision = 'single';
 end
@@ -318,7 +318,7 @@ if isempty(avw.hdr.hist.orient),
             '   in axial unflipped orientation in memory.  This is\n',...
             '   created by the avw_img_read function, which converts\n',...
             '   any input file image to axial unflipped in memory.\n'];
-    warning(msg)
+    ft_warning(msg)
 end
 
 if isempty(IMGorient),
@@ -549,7 +549,7 @@ function write_header(fid,avw,verbose)
     fclose(fid);
     if ~isequal(fbytes,348),
         msg = sprintf('...file size is not 348 bytes!\n');
-        warning(msg);
+        ft_warning(msg);
     end
     
 return

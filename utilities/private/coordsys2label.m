@@ -92,7 +92,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
         labelz = {'-Z (inferior)'  '+Z (superior)'};
       otherwise
         % the coordinate system is unknown
-        warning('unknown coordsys ''%s''', coordsys);
+        ft_warning('unknown coordsys ''%s''', coordsys);
         labelx = {'-X (unknown)' '+X (unknown)'};
         labely = {'-Y (unknown)' '+Y (unknown)'};
         labelz = {'-Z (unknown)' '+Z (unknown)'};

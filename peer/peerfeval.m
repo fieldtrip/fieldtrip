@@ -60,13 +60,13 @@ threads = threads && peer('tcpserver', 'status');
 
 if ~threads
   % start the maintenance threads
-  ws = warning('off');
+  ws = ft_warning('off');
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
   peer('tcpserver', 'start');
   % peer('udsserver', 'start');
-  warning(ws);
+  ft_warning(ws);
   % wait some time to ensure that all peers on the network have been found
   pause(1.5);
 end
@@ -210,7 +210,7 @@ while isempty(jobid)
 end % while isempty(jobid)
 
 if isempty(jobid)
-  warning('FieldTrip:peer:noSlaveAvailable', 'none of the slave peers was willing to accept the job');
+  ft_warning('FieldTrip:peer:noSlaveAvailable', 'none of the slave peers was willing to accept the job');
 end
 
 % remember the input arguments to speed up subsequent calls

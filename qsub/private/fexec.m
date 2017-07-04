@@ -214,7 +214,7 @@ catch
   optout = {'lastwarn', lastwarn, 'lasterr', struct(feval_error), 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path};
   
   % an error was detected while executing the job
-  warning('an error was detected during job execution');
+  ft_warning('an error was detected during job execution');
   
   % ensure that the memory profiler is switched off
   memprofile off

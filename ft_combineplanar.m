@@ -89,7 +89,7 @@ cfg.method         = ft_getopt(cfg, 'method',         'sum');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens',     'yes');
 
 if isfield(cfg, 'baseline')
-  warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
+  ft_warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
   cfg.demean         = 'yes';
   cfg.baselinewindow = cfg.baseline;
 end

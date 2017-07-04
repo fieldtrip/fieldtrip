@@ -200,7 +200,7 @@ if ~hasdata
     elec_original.pos    = zeros(0,3);
     elec_original.label  = cell(0,1);
     elec_original.unit   = 'mm';
-    warning(me.message, me.identifier);
+    ft_warning(me.message, me.identifier);
   end
 else
   % the input electrodes were specified as second input argument

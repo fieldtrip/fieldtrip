@@ -44,14 +44,14 @@ function hs = ft_plot_headshape(headshape,varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
+ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % rename pnt into pos
 headshape = fixpos(headshape);
 
 if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
   % the input seems like a list of points, convert into something that resembles a headshape
-  warning('off', 'MATLAB:warn_r14_stucture_assignment');
+  ft_warning('off', 'MATLAB:warn_r14_stucture_assignment');
   headshape.pos = headshape;
 end
 

@@ -141,14 +141,14 @@ if isnan(cfg.arrowsize)
   % use the size of the figure to estimate a decent number
   siz = axis;
   cfg.arrowsize = (siz(2) - siz(1))/50;
-  warning('using an arrowsize of %f', cfg.arrowsize);
+  ft_warning('using an arrowsize of %f', cfg.arrowsize);
 end
 
 if isnan(cfg.arrowoffset)
   % use the size of the figure to estimate a decent number
   siz = axis;
   cfg.arrowoffset = (siz(2) - siz(1))/100;
-  warning('using an arrowoffset of %f', cfg.arrowoffset);
+  ft_warning('using an arrowoffset of %f', cfg.arrowoffset);
 end
 
 rgb  = cfg.colormap;

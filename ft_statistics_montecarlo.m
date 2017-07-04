@@ -180,7 +180,7 @@ end
 
 % for backward compatibility and other warnings relating correcttail
 if isfield(cfg,'correctp') && strcmp(cfg.correctp,'yes')
-  warning('cfg.correctp has been renamed to cfg.correcttail and the options have been changed')
+  ft_warning('cfg.correctp has been renamed to cfg.correcttail and the options have been changed')
   disp('setting cfg.correcttail to ''prob''')
   cfg.correcttail = 'prob';
   cfg = rmfield(cfg,'correctp');
@@ -188,7 +188,7 @@ elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
   cfg = ft_checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
 end
 if strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
-  warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
+  ft_warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
 
 % for backward compatibility
@@ -214,7 +214,7 @@ resample = resampledesign(cfg, design);
 Nrand = size(resample,1);
 
 % most of the statfuns result in this warning, which is not interesting
-ws = warning('off', 'MATLAB:warn_r14_stucture_assignment');
+ws = ft_warning('off', 'MATLAB:warn_r14_stucture_assignment');
 
 if strcmp(cfg.correctm, 'cluster')
   % determine the critical value for cluster thresholding
@@ -413,7 +413,7 @@ if isfield(stat, 'posclusters')
     stat.posclusters(i).stddev  = sqrt(stat.posclusters(i).prob.*(1-stat.posclusters(i).prob)/Nrand);
     stat.posclusters(i).cirange =  1.96*stat.posclusters(i).stddev;
     if i==1 && stat.posclusters(i).prob<cfg.alpha && stat.posclusters(i).prob+stat.posclusters(i).cirange>=cfg.alpha
-      warning('FieldTrip:posCluster_exceeds_alpha', sprintf('The p-value confidence interval of positive cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
+      ft_warning('FieldTrip:posCluster_exceeds_alpha', sprintf('The p-value confidence interval of positive cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
     end
   end
 end
@@ -422,13 +422,13 @@ if isfield(stat, 'negclusters')
     stat.negclusters(i).stddev  = sqrt(stat.negclusters(i).prob.*(1-stat.negclusters(i).prob)/Nrand);
     stat.negclusters(i).cirange =  1.96*stat.negclusters(i).stddev;
     if i==1 && stat.negclusters(i).prob<cfg.alpha && stat.negclusters(i).prob+stat.negclusters(i).cirange>=cfg.alpha
-      warning('FieldTrip:negCluster_exceeds_alpha', sprintf('The p-value confidence interval of negative cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
+      ft_warning('FieldTrip:negCluster_exceeds_alpha', sprintf('The p-value confidence interval of negative cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
     end
   end
 end
 
 if ~isfield(stat, 'prob')
-  warning('probability was not computed');
+  ft_warning('probability was not computed');
 else
   switch lower(cfg.correctm)
     case 'max'

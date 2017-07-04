@@ -215,11 +215,11 @@ switch cfg.method
 end % switch cfg.method
 
 if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 'rigidbody')
-  warning('The method ''fiducial'' implies a rigid body tramsformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
+  ft_warning('The method ''fiducial'' implies a rigid body tramsformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
   cfg.warp = 'rigidbody';
 end
 if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 'rigidbody')
-  warning('The method ''interactive'' implies a rigid body transformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
+  ft_warning('The method ''interactive'' implies a rigid body transformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
   cfg.warp = 'rigidbody';
 end
 

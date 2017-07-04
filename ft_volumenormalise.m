@@ -190,7 +190,7 @@ if cfg.downsample~=1
   [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
-ws = warning('off');
+ws = ft_warning('off');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % here the normalisation starts

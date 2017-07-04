@@ -68,7 +68,7 @@ end
 CTFformat=char(fread(fid, 8, 'uint8'))';
 % This function was written for MEG41RS, but also seems to work for some other formats
 if ~strcmp(CTFformat(1,1:7),'MEG41CP') && ~strcmp(CTFformat(1,1:7),'MEG4CPT')
-  warning('meg4 format (%s) is not supported for file %s, trying anyway...', CTFformat(1,1:7), fname);
+  ft_warning('meg4 format (%s) is not supported for file %s, trying anyway...', CTFformat(1,1:7), fname);
 end
 
 %determine size of .meg4 file

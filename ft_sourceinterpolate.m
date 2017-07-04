@@ -193,7 +193,7 @@ functional = ft_convert_units(functional, anatomical.unit);
 
 if isfield(functional, 'coordsys') && isfield(anatomical, 'coordsys') && ~isequal(functional.coordsys, anatomical.coordsys)
   % FIXME is this different when smudged or not?
-  % warning('the coordinate systems are not aligned');
+  % ft_warning('the coordinate systems are not aligned');
   % error('the coordinate systems are not aligned');
 end
 
@@ -570,7 +570,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
 
     if any(dimf(4:end)>1) && ~strcmp(cfg.feedback, 'none')
       % this is needed to prevent feedback to be displayed for every time-frequency point
-      warning('disabling feedback');
+      ft_warning('disabling feedback');
       cfg.feedback = 'none';
     end
 

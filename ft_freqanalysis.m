@@ -301,7 +301,7 @@ switch cfg.method
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
 
   case 'hilbert'
-    warning('method = hilbert requires user action to deal with filtering-artifacts')
+    ft_warning('method = hilbert requires user action to deal with filtering-artifacts')
     if ~isfield(cfg, 'filttype'),         cfg.filttype      = 'but';        end
     if ~isfield(cfg, 'filtorder'),        cfg.filtorder     = 4;            end
     if ~isfield(cfg, 'filtdir'),          cfg.filtdir       = 'twopass';    end
@@ -325,7 +325,7 @@ end
 % set all the defaults
 cfg.pad       = ft_getopt(cfg, 'pad',       []);
 if isempty(cfg.pad)
-  warning('Default cfg.pad = ''maxperlen'' can run slowly.')
+  ft_warning('Default cfg.pad = ''maxperlen'' can run slowly.')
   disp('Consider using cfg.pad = ''nextpow2'' for more efficient FFT computation.')
   cfg.pad = 'maxperlen';
 end
@@ -460,7 +460,7 @@ if isfield(cfg,'tapsmofrq')
   if strcmp(cfg.method,'mtmconvol') && length(cfg.tapsmofrq) == 1 && length(cfg.foi) ~= 1
     cfg.tapsmofrq = ones(length(cfg.foi),1) * cfg.tapsmofrq;
   elseif strcmp(cfg.method,'mtmfft') && length(cfg.tapsmofrq) ~= 1
-    warning('cfg.tapsmofrq should be a single number when cfg.method = mtmfft, now using only the first element')
+    ft_warning('cfg.tapsmofrq should be a single number when cfg.method = mtmfft, now using only the first element')
     cfg.tapsmofrq = cfg.tapsmofrq(1);
   end
 end

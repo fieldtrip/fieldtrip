@@ -81,7 +81,7 @@ if isempty(distmat)
   switch projmethod
     case 'nearest'
       if ~isempty(sphereradius)
-        warning('sphereradius is not used for projmethod ''nearest''');
+        ft_warning('sphereradius is not used for projmethod ''nearest''');
       end
       % determine the nearest voxel for each surface point
       ind     = find_nearest(pos_to, pos_from, 5);

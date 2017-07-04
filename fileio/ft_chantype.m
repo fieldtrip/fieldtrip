@@ -212,7 +212,7 @@ elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysq
         others = [input.orig.chs(sel).logno] > 16;
         chantype(sel(others)) = {'other trigger'};
       else
-        warning('There does not seem to be a suitable trigger channel.');
+        ft_warning('There does not seem to be a suitable trigger channel.');
         chantype(sel) = {'other trigger'};
       end
     end
@@ -320,7 +320,7 @@ elseif ft_senstype(input, 'ctf') && isheader
   end
   
   if isempty(origSensType)
-    warning('could not determine channel chantype from the CTF header');
+    ft_warning('could not determine channel chantype from the CTF header');
   end
   
   for sel=find(origSensType(:)==0)'
