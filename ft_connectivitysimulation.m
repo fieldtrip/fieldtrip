@@ -452,11 +452,11 @@ end
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  error('FieldTrip:transfer2coeffs', 'frequency axis is not evenly spaced');
+  error('the frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
-  ft_warning('FieldTrip:transfer2coeffs', 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  ft_warning('when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   

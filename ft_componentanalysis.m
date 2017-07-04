@@ -707,10 +707,10 @@ switch cfg.method
     % which we did not use and thus can't recover from source-space)
     
     if length(cfg.topolabel)<length(chansel)
-      error('COMPONENTANALYSIS:LABELMISSMATCH:topolabel', 'cfg.topolabels do not uniquely correspond to data.label, please check')
+      error('cfg.topolabels do not uniquely correspond to data.label, please check')
     end
     if length(data.label)<length(datsel)
-      error('COMPONENTANALYSIS:LABELMISSMATCH:topolabel', 'cfg.topolabels do not uniquely correspond to data.label, please check')
+      error('cfg.topolabels do not uniquely correspond to data.label, please check')
     end
     
     % reorder the mixing matrix so that the channel order matches the order in the data

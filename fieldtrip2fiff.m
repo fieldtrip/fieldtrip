@@ -140,7 +140,7 @@ if israw
   
 elseif isepch
   
-  error('fieldtrip2fiff:NotImplementedError', 'Function to write epochs to MNE not implemented yet')
+  error('writing epochs to MNE is not implemented yet')
   
   for j = 1:length(data.trial)
     evoked(j).aspect_kind = 100;

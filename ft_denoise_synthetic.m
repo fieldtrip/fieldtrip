@@ -80,7 +80,7 @@ end
 % check whether there are reference channels in the input data
 hasref = ~isempty(ft_channelselection('MEGREF', data.label));
 if ~hasref
-  error('ft_denoise_synthetic:nohasref', 'synthetic gradients can only be computed when the input data contains reference channels');
+  error('synthetic gradients can only be computed when the input data contains reference channels');
 end
 
 % select trials of interest
