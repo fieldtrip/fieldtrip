@@ -78,7 +78,7 @@ function [varargout] = solid_angle(varargin)
 %   w = 2 * atan2 (nom, den);
 %   return
 % else
-%   error('invalid input');
+%   ft_error('invalid input');
 % end
 
 % compile the missing mex file on the fly
@@ -92,7 +92,7 @@ mexsrc  = [funname '.c'];
 
 try
   % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
+  ft_warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
 
   if ispc
@@ -110,7 +110,7 @@ try
 catch
   % compilation failed
   disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
+  ft_error('could not locate MEX file for %s', mexname);
   cd(pwdir);
   success = false;
 end

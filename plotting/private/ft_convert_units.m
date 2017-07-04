@@ -79,7 +79,7 @@ elseif isfield(obj, 'bnd') && isfield(obj.bnd, 'unit')
   
   unit = unique({obj.bnd.unit});
   if ~all(strcmp(unit, unit{1}))
-    error('inconsistent units in the individual boundaries');
+    ft_error('inconsistent units in the individual boundaries');
   else
     unit = unit{1};
   end
@@ -154,7 +154,7 @@ else
     unit = ft_estimate_units(siz);
     
   else
-    error('cannot determine geometrical units');
+    ft_error('cannot determine geometrical units');
     
   end % recognized type of volume conduction model or sensor array
 end % determine input units
@@ -225,7 +225,7 @@ if isfield(obj, 'tra') && isfield(obj, 'chanunit')
     elseif strcmp(obj.chanunit{i}, 'unknown')
       % assume that it is T or V, don't do anything
     else
-      error('unexpected units %s', obj.chanunit{i});
+      ft_error('unexpected units %s', obj.chanunit{i});
     end
   end % for
 end % if

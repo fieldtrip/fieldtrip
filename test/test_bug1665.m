@@ -9,7 +9,7 @@ function test_bug1665
 % this function tests whether align_ctf2acpc works robustly when the input
 % MRI contains NaNs
 
-% get the fieldtrip version and path
+% get the FieldTrip version and path
 [v, p] = ft_version;
 
 ft_hastoolbox('spm8',1,0);

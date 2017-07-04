@@ -34,7 +34,7 @@ function dat = ft_preproc_medianfilter(dat, order)
 
 % set the default filter order
 if nargin<2 || isempty(order)
-  error('the order of the median filter is not specified');
+  ft_error('the order of the median filter is not specified');
 end
 
 % preprocessing fails on channels that contain NaN

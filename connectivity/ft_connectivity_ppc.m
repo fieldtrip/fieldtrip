@@ -76,7 +76,7 @@ if n>1
   c          = reshape(c,siz(2:end)); % remove the first singular dimension
 else
   c = NaN(siz(2:end)); % for one observation, we should return NaNs
-  warning('ft_connectivity_ppc:nTrials', 'computation ppc requires >1 trial, returning NaNs')
+  ft_warning('ft_connectivity_ppc:nTrials', 'computation ppc requires >1 trial, returning NaNs')
 end
 
 [leave1outsum, leave1outssq] = deal(0);

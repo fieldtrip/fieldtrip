@@ -72,21 +72,21 @@ else
         error ('idx_begin is to small.');
     end
     if (N_stop>(np_info.N-1))
-        error('data_length is to big.');
+        ft_error('data_length is to big.');
     end
 end
 
 % Markeranzahl auslesen, Strukturen und cell-Arrays definieren 
 fid=fopen([filename(1:length(filename)-1) '_'],'r');
 if fid==-1,
-    error(['Unable to open file "' [filename(1:length(filename)-1) '_'] '" . Error code: ' ferror(fid)]);
+    ft_error(['Unable to open file "' [filename(1:length(filename)-1) '_'] '" . Error code: ' ferror(fid)]);
 end
 try
     s=fscanf(fid,'%c',inf);
     fclose(fid);
 catch
     fclose(fid);
-    error('Error while reading *.EE_ file.');
+    ft_error('Error while reading *.EE_ file.');
 end
 Names=strfind(s,'Name');
 Anzahl_Marker=length(Names);
@@ -230,7 +230,7 @@ for b=1:Anzahl_Bloecke
     % Ergänzung: 16.2.2005
     %
     if length(idx)>1,
-        error(['Typ ' num2str(MarkerTyp) ' was found ' num2str(length(idx)) ' times in np_marker.markernames.']);
+        ft_error(['Typ ' num2str(MarkerTyp) ' was found ' num2str(length(idx)) ' times in np_marker.markernames.']);
     end
     if ~isempty(idx),       % Fall a) ausschließen
         MarkerName=np_marker.markernames{idx};

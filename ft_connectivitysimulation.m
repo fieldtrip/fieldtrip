@@ -216,7 +216,7 @@ switch cfg.method
     delay  = delay - min(delay(:)); %make explicitly >= 0
     maxdelay = max(delay(:));
 
-    if iscell(cfg.mix),
+    if iscell(cfg.mix)
       %each trial has different mix
       mix = cfg.mix;
     else
@@ -231,12 +231,12 @@ switch cfg.method
     nmixsignal = size(mix{1}, 2); %number of "mixing signals"
     nsignal    = size(mix{1}, 1);
 
-    if numel(size(mix{1}))==2,
+    if numel(size(mix{1}))==2
       %mix is static, no function of time
       for tr = 1:cfg.ntrials
         mix{tr} = mix{tr}(:,:,ones(1,nsmp+maxdelay));
       end
-    elseif numel(size(mix{1}))==3 && size(mix{1},3)==nsmp,
+    elseif numel(size(mix{1}))==3 && size(mix{1},3)==nsmp
       %mix changes with time
       for tr = 1:cfg.ntrials
         mix{tr} = cat(3,mix{tr},mix{tr}(:,:,nsmp*ones(1,maxdelay)));
@@ -403,7 +403,7 @@ switch cfg.method
     label = simulated.label;
     
   otherwise
-    error('unknown method');
+    ft_error('unknown method');
 end
 
 % create the output data
@@ -447,16 +447,16 @@ elseif numel(siz)==2
   isfull = false;
   %assert(~isempty(labelcmb), 'input data appears to be chancmb_freq, but labelcmb is missing');
 else
-  error('dimensionality of input data is not supported');
+  ft_error('dimensionality of input data is not supported');
 end
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  error('FieldTrip:transfer2coeffs', 'frequency axis is not evenly spaced');
+  ft_error('the frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
-  ft_warning('FieldTrip:transfer2coeffs', 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  ft_warning('when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   

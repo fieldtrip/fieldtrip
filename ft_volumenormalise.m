@@ -82,7 +82,7 @@ end
 
 % this is not supported any more as of 26/10/2011
 if ischar(mri)
-  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+  ft_error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
@@ -113,7 +113,7 @@ ft_hastoolbox(cfg.spmversion, 1);
 
 % check whether the input has an anatomy
 if ~isfield(mri, 'anatomy')
-  error('no anatomical information available, this is required for normalisation');
+  ft_error('no anatomical information available, this is required for normalisation');
 end
 
 % ensure that the data has interpretable units and that the coordinate
@@ -154,11 +154,11 @@ if ~isfield(cfg, 'intermediatename')
 end
 
 if ~isfield(cfg, 'name') && strcmp(cfg.write, 'yes')
-  error('you must specify the output filename in cfg.name');
+  ft_error('you must specify the output filename in cfg.name');
 end
 
 if isempty(cfg.template)
-  error('you must specify a template anatomical MRI');
+  ft_error('you must specify a template anatomical MRI');
 end
 
 % the template anatomy should always be stored in a SPM-compatible file
@@ -167,7 +167,7 @@ if strcmp(template_ftype, 'analyze_hdr') || strcmp(template_ftype, 'analyze_img'
   % based on the filetype assume that the coordinates correspond with MNI/SPM convention
   % this is ok
 else
-  error('the head coordinate system of the template does not seem to be correspond with the mni/spm convention');
+  ft_error('the head coordinate system of the template does not seem to be correspond with the mni/spm convention');
 end
 
 % select the parameters that should be normalised
@@ -190,7 +190,7 @@ if cfg.downsample~=1
   [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
-ws = warning('off');
+ws = ft_warning('off');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % here the normalisation starts
@@ -214,7 +214,7 @@ switch template_ftype
   case {'analyze_img', 'analyze_hdr', 'nifti'}
     VG = spm_vol(cfg.template);
   otherwise
-    error('Unknown template');
+    ft_error('Unknown template');
 end
 
 fprintf('performing the normalisation\n');

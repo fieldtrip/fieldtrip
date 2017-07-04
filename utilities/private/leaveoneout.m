@@ -4,11 +4,11 @@ dimtok = tokenize(data.dimord, '_');
 rptdim = find(strcmp('rpt', dimtok)); % the selected dimension as number
 
 if length(rptdim)<1
-  error('the ''rpt'' dimension is not present in the data');
+  ft_error('the ''rpt'' dimension is not present in the data');
 elseif length(rptdim)>1
-  error('cannot jackknife over multiple dimensions at the same time');
+  ft_error('cannot jackknife over multiple dimensions at the same time');
 elseif rptdim~=1
-  error('jackknife only works if replicates are in the first dimension of the data');
+  ft_error('jackknife only works if replicates are in the first dimension of the data');
 end
 
 [reduceddim, fn] = dimlength(data);
@@ -16,7 +16,7 @@ if numel(fn)==1 && strcmp(fn{1}, 'dimord'),
   %data is not source data
   reduceddim = reduceddim{1};
 else
-  error('jackknife not yet supported for source level data');
+  ft_error('jackknife not yet supported for source level data');
 end
 reduceddim(rptdim) = 1;
 

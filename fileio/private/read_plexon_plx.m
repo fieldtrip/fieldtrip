@@ -152,7 +152,7 @@ if ~isempty(ChannelIndex)
     sel = find(sel);
     
     if isempty(sel)
-      warning('spike channel %d contains no data', ChannelIndex(i));
+      ft_warning('spike channel %d contains no data', ChannelIndex(i));
       varargin{end+1} = [];
       continue;
     end
@@ -162,7 +162,7 @@ if ~isempty(ChannelIndex)
     
     % check whether the number of samples per block makes sense
     if any(num~=num(1))
-      error('spike channel blocks with diffent number of samples');
+      ft_error('spike channel blocks with diffent number of samples');
     end
     
     % allocate memory to hold the data
@@ -214,8 +214,8 @@ if ~isempty(SlowChannelIndex)
     sel = find(sel);
     
     if isempty(sel)
-      error(sprintf('Continuous channel %d contains no data', SlowChannelIndex(i)));
-      % warning('Continuous channel %d contains no data', SlowChannelIndex(i));
+      ft_error(sprintf('Continuous channel %d contains no data', SlowChannelIndex(i)));
+      % ft_warning('Continuous channel %d contains no data', SlowChannelIndex(i));
       % varargin{end+1} = [];
       % continue;
     end
@@ -274,7 +274,7 @@ if ~isempty(EventIndex)
     
     % all information is already contained in the DataBlockHeader, i.e. there is nothing to read
     if isempty(sel)
-      warning('event channel %d contains no data', EventIndex(i));
+      ft_warning('event channel %d contains no data', EventIndex(i));
     end
     event.TimeStamp = ts(sel);
     event.Channel   = chan(sel);

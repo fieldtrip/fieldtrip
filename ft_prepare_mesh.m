@@ -178,7 +178,7 @@ switch cfg.method
     bnd = prepare_mesh_cortexhull(cfg);
     
   otherwise
-    error('unsupported cfg.method')
+    ft_error('unsupported cfg.method')
 end
 
 % copy the geometrical units from the input to the output

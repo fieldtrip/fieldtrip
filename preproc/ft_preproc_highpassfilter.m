@@ -154,12 +154,12 @@ switch type
 
     % Input arguments
     if length(Fhp) ~= 1
-        error('One cutoff frequency required.')
+        ft_error('One cutoff frequency required.')
     end
 
     % Filter order AND transition width set?
     if ~isempty(N) && ~isempty(df)
-        warning('firws:dfOverridesN', 'Filter order AND transition width set - transition width setting will override filter order.')
+        ft_warning('firws:dfOverridesN', 'Filter order AND transition width set - transition width setting will override filter order.')
     elseif isempty(N) && isempty(df) % Default transition width heuristic
         df = fir_df(Fhp, Fs);
     end
@@ -169,14 +169,14 @@ switch type
     isOrderLow = false;
     if ~isempty(df)
       if df > maxDf
-        error('Transition band too wide. Maximum transition width is %.2f Hz.', maxDf)
+        ft_error('Transition band too wide. Maximum transition width is %.2f Hz.', maxDf)
       end
       [N, dev] = firwsord(wintype, Fs, df, dev);
     else % Check filter order otherwise
       [df, dev] = invfirwsord(wintype, Fs, N, dev);
       if df > maxDf
         nOpt = firwsord(wintype, Fs, maxDf, dev);
-        warning('firws:filterOrderLow', 'Filter order too low. For better results a minimum filter order of %d is recommended. Effective cutoff frequency might deviate from requested cutoff frequency.', nOpt)
+        ft_warning('firws:filterOrderLow', 'Filter order too low. For better results a minimum filter order of %d is recommended. Effective cutoff frequency might deviate from requested cutoff frequency.', nOpt)
         isOrderLow = true;
       end
     end
@@ -241,7 +241,7 @@ switch type
     
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453
-    warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')
+    ft_warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')
     if isempty(N)
       N = 3*fix(Fs / Fhp);
       if rem(N,2)==1,   N=N+1;    end
@@ -271,7 +271,7 @@ switch type
     return
     
   otherwise
-    error('unsupported filter type "%s"', type);
+    ft_error('unsupported filter type "%s"', type);
 end
 
 % demean the data before filtering
@@ -285,20 +285,20 @@ catch
     case 'no'
       rethrow(lasterror);
     case 'reduce'
-      warning('backtrace', 'off')
+      ft_warning('backtrace', 'off')
       ft_warning('filter instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
-      warning('backtrace', 'on')
+      ft_warning('backtrace', 'on')
       filt = ft_preproc_highpassfilter(dat,Fs,Fhp,N-1,type,dir,instabilityfix);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
-      warning('backtrace', 'off')
+      ft_warning('backtrace', 'off')
       ft_warning('filter instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
-      warning('backtrace', 'on')
+      ft_warning('backtrace', 'on')
       filt = ft_preproc_highpassfilter(dat ,Fs,Fhp,N1,type,dir,instabilityfix);
       filt = ft_preproc_highpassfilter(filt,Fs,Fhp,N2,type,dir,instabilityfix);
     otherwise
-      error('incorrect specification of instabilityfix');
+      ft_error('incorrect specification of instabilityfix');
   end % switch
 end
 

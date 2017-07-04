@@ -74,7 +74,7 @@ clear pnet
 sock = pnet('tcpconnect', cfg.host, cfg.port);
 
 if (sock<0)
-  error('unable to establish connection with host');
+  ft_error('unable to establish connection with host');
 else
   fprintf('connection establised with host %s on port %d\n', cfg.host, cfg.port);
 end
@@ -92,7 +92,7 @@ while isempty(hdr)
   end
 
   % if ~isequal(msg.uid, [255 69 88 67 255 255 255 76 255 74 255 255 255 255 20 80])
-  %  error('incorrect message identifier');
+  %  ft_error('incorrect message identifier');
   % end
 
   % read the message body
@@ -119,7 +119,7 @@ while isempty(hdr)
 
     otherwise
       % skip unknown message types
-      % error('unexpected message type from RDA (%d)', msg.nType);
+      % ft_error('unexpected message type from RDA (%d)', msg.nType);
   end
 end
 
@@ -137,7 +137,7 @@ while (true)
   end
 
   %   if ~isequal(msg.uid, [255 69 88 67 255 255 255 76 255 74 255 255 255 255 20 80])
-  %     error('incorrect message identifier');
+  %     ft_error('incorrect message identifier');
   %   end
 
   % read the message body

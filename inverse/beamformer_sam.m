@@ -36,7 +36,7 @@ function [dipout] = beamformer_sam(dip, sens, headmodel, dat, all_cov, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  error('invalid number of optional arguments');
+  ft_error('invalid number of optional arguments');
 end
 
 % get the optional input arguments
@@ -59,7 +59,7 @@ if isempty(meansphereorigin)
     case 'singleshell'
       meansphereorigin = mean(headmodel.bnd.pos,1);
     otherwise
-      error('unsupported voltype for determining the mean sphere origin')
+      ft_error('unsupported voltype for determining the mean sphere origin')
   end
 end
 
@@ -199,7 +199,7 @@ for diplop=1:size(dip.pos,1)
         U = Y;
         
       otherwise
-        error('unknown orimethod');
+        ft_error('unknown orimethod');
     end
     
     % The optimum orientation is the eigenvector that corresponds to the

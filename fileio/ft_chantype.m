@@ -123,7 +123,7 @@ elseif isfield(input, 'label')
   label   = input.label;
   numchan = length(label);
 else
-  error('the input that was provided to this function cannot be deciphered');
+  ft_error('the input that was provided to this function cannot be deciphered');
 end
 
 if isfield(input, 'chantype')
@@ -212,7 +212,7 @@ elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysq
         others = [input.orig.chs(sel).logno] > 16;
         chantype(sel(others)) = {'other trigger'};
       else
-        warning('There does not seem to be a suitable trigger channel.');
+        ft_warning('There does not seem to be a suitable trigger channel.');
         chantype(sel) = {'other trigger'};
       end
     end
@@ -320,7 +320,7 @@ elseif ft_senstype(input, 'ctf') && isheader
   end
   
   if isempty(origSensType)
-    warning('could not determine channel chantype from the CTF header');
+    ft_warning('could not determine channel chantype from the CTF header');
   end
   
   for sel=find(origSensType(:)==0)'
@@ -475,7 +475,7 @@ elseif ft_senstype(input, 'itab') && isheader
   chantype(origtype==32) = {'param'};
   chantype(origtype==64) = {'digit'};
   chantype(origtype==128) = {'flag'};
-  % these are the channels that are visible to fieldtrip
+  % these are the channels that are visible to FieldTrip
   chansel = 1:input.orig.nchan;
   chantype = chantype(chansel);
   
@@ -603,7 +603,7 @@ elseif ft_senstype(input, 'itab') && isheader
   chantype(sel) = {'aux'};
   sel = ([input.orig.ch.type]==64);
   chantype(sel) = {'digital'};
-  % not all channels are actually processed by fieldtrip, so only return
+  % not all channels are actually processed by FieldTrip, so only return
   % the types fopr the ones that read_header and read_data return
   chantype = chantype(input.orig.chansel);
   

@@ -107,7 +107,7 @@ if isfield(freq, 'time') && ~isrow(freq.time)
   freq.time = freq.time';
 end
 if ~isfield(freq, 'label') && ~isfield(freq, 'labelcmb')
-  warning('data structure is incorrect since it has no channel labels');
+  ft_warning('data structure is incorrect since it has no channel labels');
 end
 
 switch version
@@ -159,5 +159,5 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for freq datatype', version);
+    ft_error('unsupported version "%s" for freq datatype', version);
 end

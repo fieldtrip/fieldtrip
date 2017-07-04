@@ -180,18 +180,18 @@ if strcmp(freq.dimord, 'chan_freq_time')
   fprintf('selecting timeslice %d\n', tbin);
   freq.time = freq.time(tbin);
   % remove all other latencies from the data structure and reduce the number of dimensions
-  if isfield(freq, 'powspctrm'),     freq.powspctrm     = squeeze(freq.powspctrm(:,:,tbin));     end;
-  if isfield(freq, 'crsspctrm'),     freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,tbin));     end;
-  if isfield(freq, 'fourierspctrm'), freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,tbin)); end;
+  if isfield(freq, 'powspctrm'),     freq.powspctrm     = squeeze(freq.powspctrm(:,:,tbin));     end
+  if isfield(freq, 'crsspctrm'),     freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,tbin));     end
+  if isfield(freq, 'fourierspctrm'), freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,tbin)); end
   freq.dimord = freq.dimord(1:(end-5));  % remove the '_time' part
 elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
   tbin = nearest(freq.time, cfg.latency);
   fprintf('selecting timeslice %d\n', tbin);
   freq.time = freq.time(tbin);
   % remove all other latencies from the data structure and reduce the number of dimensions
-  if isfield(freq, 'powspctrm'),    freq.powspctrm     = squeeze(freq.powspctrm(:,:,:,tbin));      end;
-  if isfield(freq, 'crsspctrm'),    freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,:,tbin));      end;
-  if isfield(freq, 'fourierspctrm') freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,:,tbin));  end;
+  if isfield(freq, 'powspctrm'),    freq.powspctrm     = squeeze(freq.powspctrm(:,:,:,tbin));      end
+  if isfield(freq, 'crsspctrm'),    freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,:,tbin));      end
+  if isfield(freq, 'fourierspctrm') freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,:,tbin));  end
   freq.dimord = freq.dimord(1:(end-5));  % remove the '_time' part
 else
   tbin = [];

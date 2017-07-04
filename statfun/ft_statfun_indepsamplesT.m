@@ -71,7 +71,7 @@ if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
   cfg.computestat = 'yes';
 end;
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    error('cfg.uvar should not exist for an independent samples statistic');
+    ft_error('cfg.uvar should not exist for an independent samples statistic');
 end
 
 % perform some checks on the design and data
@@ -87,7 +87,7 @@ if any(nrepl<size(design,2)),
   ft_warning('Not all replications are used for the computation of the statistic.');
 end;
 %if nrepl<3
-%    error('The data must contain at least three trials/subjects.');
+%    ft_error('The data must contain at least three trials/subjects.');
 %end;
 df = nrepl - 2;
 

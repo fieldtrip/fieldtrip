@@ -17,7 +17,6 @@ function test_bug1786
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1786
 
 % EEG bad electrode repair
-% requires fieldtrip
 % 
 % input format:
 % labels   - 1XN cell array  

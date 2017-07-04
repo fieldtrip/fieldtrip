@@ -205,7 +205,7 @@ if istrue(cfg.cellmode)
 end
 
 if isfield(cfg, 'topo') && isfield(cfg, 'topolabel')
-  warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
+  ft_warning(['Specifying cfg.topo (= mixing matrix) to determine component '...
     'timecourses in specified data is deprecated; please specify an '...
     'unmixing matrix instead with cfg.unmixing. '...
     'Using cfg.unmixing=pinv(cfg.topo) for now to reproduce old behaviour.']);
@@ -220,7 +220,7 @@ if isfield(cfg, 'unmixing') && isfield(cfg, 'topolabel')
   % test whether all required channels are present in the data
   [datsel, toposel] = match_str(cfg.channel, cfg.topolabel);
   if length(toposel)~=length(cfg.topolabel)
-    error('not all channels that are required for the unmixing are present in the data');
+    ft_error('not all channels that are required for the unmixing are present in the data');
   end
   
   % ensure that all data channels not used in the unmixing should be removed from the channel selection
@@ -269,7 +269,7 @@ switch cfg.method
     cfg.bsscca.refdelay  = ft_getopt(cfg.bsscca, 'refdelay', 1);
     cfg.bsscca.chandelay = ft_getopt(cfg.bsscca, 'chandelay', 0);
     if strcmp(cfg.cellmode, 'no')
-      error('cfg.mehod = ''bsscca'' requires cfg.cellmode = ''yes''');
+      ft_error('cfg.mehod = ''bsscca'' requires cfg.cellmode = ''yes''');
     end
   otherwise
     % do nothing
@@ -286,7 +286,7 @@ data = ft_selectdata(tmpcfg, data);
 Ntrials  = length(data.trial);
 Nchans   = length(data.label);
 if Nchans==0
-  error('no channels were selected');
+  ft_error('no channels were selected');
 end
 
 % default is to compute just as many components as there are channels in the data
@@ -355,10 +355,10 @@ elseif strcmp(cfg.method, 'csp')
   sel1 = find(cfg.csp.classlabels==1);
   sel2 = find(cfg.csp.classlabels==2);
   if min(length(sel1), length(sel2)) == 0
-    error('CSP requires class labels!');
+    ft_error('CSP requires class labels!');
   end
   if length(sel1)+length(sel2)~=length(cfg.csp.classlabels)
-    warning('not all trials belong to class 1 or 2');
+    ft_warning('not all trials belong to class 1 or 2');
   end
   dat1 = cat(2, data.trial{sel1});
   dat2 = cat(2, data.trial{sel2});
@@ -422,7 +422,7 @@ switch cfg.method
       sR.mode   = cfg.icasso.mode;
       sR.rdim   = size(tmp.topo,2);
     else
-      error('only ''fastica'' or ''dss'' is supported as method for icasso');
+      ft_error('only ''fastica'' or ''dss'' is supported as method for icasso');
     end
     
     % do the rest of the icasso related processing
@@ -462,7 +462,7 @@ switch cfg.method
         isfield(cfg, 'fastica') && isfield(cfg.fastica, 'numOfIC')
       % user specified both cfg.numcomponent and cfg.fastica.numOfIC,
       % unsure which one to use
-      error('you can specify either cfg.fastica.numOfIC or cfg.numcomponent (they will have the same effect), but not both');
+      ft_error('you can specify either cfg.fastica.numOfIC or cfg.numcomponent (they will have the same effect), but not both');
     end
     
     try
@@ -496,7 +496,7 @@ switch cfg.method
         isfield(cfg, 'runica') && isfield(cfg.runica, 'pca')
       % user specified both cfg.numcomponent and cfg.runica.pca,
       % unsure which one to use
-      error('you can specify either cfg.runica.pca or cfg.numcomponent (they will have the same effect), but not both');
+      ft_error('you can specify either cfg.runica.pca or cfg.numcomponent (they will have the same effect), but not both');
     end
     
     % construct key-value pairs for the optional arguments
@@ -525,7 +525,7 @@ switch cfg.method
         isfield(cfg, 'binica') && isfield(cfg.binica, 'pca')
       % user specified both cfg.numcomponent and cfg.binica.pca,
       % unsure which one to use
-      error('you can specify either cfg.binica.pca or cfg.numcomponent (they will have the same effect), but not both');
+      ft_error('you can specify either cfg.binica.pca or cfg.numcomponent (they will have the same effect), but not both');
     end
     
     % construct key-value pairs for the optional arguments
@@ -689,7 +689,7 @@ switch cfg.method
     elseif isfield(cfg.sobi, 'n_sources')
       mixing = sobi(dat,cfg.sobi.n_sources);
     else
-      error('unknown options for SOBI component analysis');
+      ft_error('unknown options for SOBI component analysis');
     end
     
     unmixing = [];
@@ -707,10 +707,10 @@ switch cfg.method
     % which we did not use and thus can't recover from source-space)
     
     if length(cfg.topolabel)<length(chansel)
-      error('COMPONENTANALYSIS:LABELMISSMATCH:topolabel', 'cfg.topolabels do not uniquely correspond to data.label, please check')
+      ft_error('cfg.topolabels do not uniquely correspond to data.label, please check')
     end
     if length(data.label)<length(datsel)
-      error('COMPONENTANALYSIS:LABELMISSMATCH:topolabel', 'cfg.topolabels do not uniquely correspond to data.label, please check')
+      ft_error('cfg.topolabels do not uniquely correspond to data.label, please check')
     end
     
     % reorder the mixing matrix so that the channel order matches the order in the data
@@ -765,10 +765,10 @@ switch cfg.method
     cfg.bsscca.rho = rho;
     
   case 'parafac'
-    error('parafac is not supported anymore in ft_componentanalysis');
+    ft_error('parafac is not supported anymore in ft_componentanalysis');
     
   otherwise
-    error('unknown method for component analysis');
+    ft_error('unknown method for component analysis');
 end % switch method
 
 % make sure we have both mixing and unmixing matrices
@@ -788,7 +788,7 @@ elseif isempty(mixing) && ~isempty(unmixing)
 elseif isempty(mixing) && isempty(unmixing)
   % this sanity check is needed to catch convergence problems in fastica
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1519
-  error('the component unmixing failed');
+  ft_error('the component unmixing failed');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

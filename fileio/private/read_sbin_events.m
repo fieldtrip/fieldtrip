@@ -40,7 +40,7 @@ eventData = [];
 
 fid=fopen([filename],'r');
 if fid==-1
-    error('wrong filename')
+    ft_error('wrong filename')
 end
 
 version     = fread(fid,1,'int32');
@@ -61,7 +61,7 @@ elseif (version > 6) && ~bitand(version,6)
     end
     version = swapbytes(uint32(version));
 else
-    error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.\n');
+    ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.\n');
 end
 
 if bitand(version,1) == 0
@@ -73,7 +73,7 @@ end
 
 precision = bitand(version,6);
 if precision == 0
-    error('File precision is not defined.');
+    ft_error('File precision is not defined.');
 end
 
 %       read header...

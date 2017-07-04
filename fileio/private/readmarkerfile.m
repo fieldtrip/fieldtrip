@@ -12,7 +12,7 @@ function [marker] = readmarkerfile(folder)
 
 name = fullfile(folder, 'MarkerFile.mrk');
 if ~exist(name, 'file')
-  error('%s not found', name);
+  ft_error('%s not found', name);
 end
 
 f = fopen(name, 'rt');
@@ -40,7 +40,7 @@ nsamples = str2num(char(markfile(i)));
 
 for i = 1:length(nsamples)
   if nsamples(i) == 0
-    warning('marker %s in %s has zero samples', names{i}, folder);
+    ft_warning('marker %s in %s has zero samples', names{i}, folder);
   end
 end
 

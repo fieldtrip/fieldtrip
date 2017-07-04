@@ -51,7 +51,7 @@ fitind       = ft_getopt(varargin, 'fitind', 'all');
 
 if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
   % the geometrical units should be specified in the input mesh
-  error('the ''unit'' option is not supported any more');
+  ft_error('the ''unit'' option is not supported any more');
 end
 
 if isnumeric(mesh) && size(mesh,2)==3
@@ -67,7 +67,7 @@ end
 mesh = fixpos(mesh);
 
 if ~isstruct(mesh) || ~isfield(mesh, 'pos')
-  error('the input mesh should be a set of points or a single triangulated surface')
+  ft_error('the input mesh should be a set of points or a single triangulated surface')
 end
 
 % start with an empty volume conductor
@@ -120,7 +120,7 @@ if isempty(headmodel.cond)
   elseif length(headmodel.r)==4
     headmodel.cond = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
   else
-    error('conductivity values should be specified for each tissue type');
+    ft_error('conductivity values should be specified for each tissue type');
   end
 else
   % the conductivity as specified by the user should be in the same order as the geometries

@@ -37,7 +37,7 @@ function [hdr] = read_nmc_archive_k_hdr(paramfile)
 
 % Checking paramfile
 if exist(paramfile,'file') ~= 2
-  error('specified newparams.txt file not found');
+  ft_error('specified newparams.txt file not found');
 end
 
 % Reading samplingrate and channelnumber from paramfile
@@ -74,7 +74,7 @@ while allfound == false
       channelnum = list(end);
       missingchan = setdiff(1:list(end),list);
     catch
-      error('error in newparams.txt, certain variables not present for subject')
+      ft_error('error in newparams.txt, certain variables not present for subject')
     end
   end
 end % while
@@ -91,7 +91,7 @@ while allfound == false
   if strcmp(param,'dataformat')
     dataformat = value(3:end-1);
     if ~strcmp(dataformat, 'short') && ~strcmp(dataformat, 'int16')
-      error('dataformat from newparams.txt not recognized')
+      ft_error('dataformat from newparams.txt not recognized')
     end
   end
   if ~isempty(dataformat)
@@ -106,7 +106,7 @@ fclose(paramid);
 if strcmp(dataformat, 'short') || strcmp(dataformat, 'int16')
   nBytes = 2;
 else
-  error('dataformat from newparams.txt not recognized')
+  ft_error('dataformat from newparams.txt not recognized')
 end
 
 % Get missing channel numbers from paramfile if not read in from above
@@ -161,7 +161,7 @@ if strcmp(paramfile(end-12:end),'newparams.txt')
 elseif strcmp(paramfile(end-10:end),'.params.txt')
   datafile = [paramfile(1:end-11) channelext];
 else
-  error(['could not properly parse param-file: ' paramfile])
+  ft_error(['could not properly parse param-file: ' paramfile])
 end
 datafid = fopen(datafile,'r','l');
 fseek(datafid,0,'eof');

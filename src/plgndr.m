@@ -46,7 +46,7 @@ has_mex_func=@()exist(mexfullpath,'file');
 
 if ~has_mex_func()
   % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
+  ft_warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
   mex(mexsrc);
 

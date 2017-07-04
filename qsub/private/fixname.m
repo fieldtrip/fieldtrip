@@ -45,8 +45,8 @@ switch version
     end
     str = lower(str);
     str(regexp(str,'\W')) = '_';
-    while(str(1) == '_'),   str = str(2:end); end;   % remove all underscore at the begin of the string
-    while(str(end) == '_'), str = str(1:end-1); end; % remove all underscore at the end of the string
+    while(str(1) == '_'),   str = str(2:end); end   % remove all underscore at the begin of the string
+    while(str(end) == '_'), str = str(1:end-1); end % remove all underscore at the end of the string
     if int8(str(1))<58 && int8(str(1))>47
       % the string begins with a digit, prepend an 'x'
       str = ['x' str];
@@ -77,5 +77,5 @@ switch version
     str = char(base64decode(str));
     
   otherwise
-    error('unsupported version "%s"', version);
+    ft_error('unsupported version "%s"', version);
 end

@@ -86,12 +86,12 @@ for k = 1:length(data)
 end
 
 if ~all(strcmp(dtype{1},dtype))
-  error('the data type is not consistent for all inputs');
+  ft_error('the data type is not consistent for all inputs');
 end
 
 % check consistency of input data
 if ~all(strcmp(dimord{1},dimord))
-  error('the dimord is not consistent for all inputs');
+  ft_error('the dimord is not consistent for all inputs');
 end
 
 israw      = strcmp(dtype{1},'raw') || strcmp(dtype{1},'comp'); % comp can be treated as raw
@@ -128,17 +128,17 @@ avgoverrpt  = istrue(avgoverrpt);
 dojack      = istrue(dojack);
 
 if dojack && avgoverrpt,
-  error('it is not possible to do both a jackknife and to average across replicates');
+  ft_error('it is not possible to do both a jackknife and to average across replicates');
 end
 
 if length(data)>1 && selectrpt,
-  error('multiple data structures as input is not supported in combination with subselection of trials');
+  ft_error('multiple data structures as input is not supported in combination with subselection of trials');
 end
 
 % a quick check to ensure the user does not use this function in cases
 % where it is known to contain a bug
 %if selectrpt && (isempty(selrpt) || ~any(selrpt))
-%  error('ft_selectdata_old does not work when selecting 0 trials; please use ft_selectdata_new instead (use a cfg input, instead of key-value pairs, to ft_selectdata)');
+%  ft_error('ft_selectdata_old does not work when selecting 0 trials; please use ft_selectdata_new instead (use a cfg input, instead of key-value pairs, to ft_selectdata)');
 %end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -168,7 +168,7 @@ if length(data)>1 && ~israw,
   %end
   if issource || isvolume
     if numel(param)>1,
-      error('ft_selectdata for source inputs works only for one parameter at a time');
+      ft_error('ft_selectdata for source inputs works only for one parameter at a time');
     end
     dimord(:) = {data{1}.([param{1},'dimord'])};
   end
@@ -195,8 +195,8 @@ if length(data)>1 && ~israw,
            % dimtok is 'rpt' or 'rpttap'
            dimdat2 = size(data{m}.(param{1}),1);
          end
-         try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end;
-         try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end;
+         try, dimmat(k,m) = all(dimdat(:)==dimdat2(:));            catch end
+         try, dimmat(k,m) = all(cellfun(@isequal,dimdat,dimdat2)); catch end
        end
      end
     catdim = find(sum(dimmat,2)<length(data));
@@ -212,7 +212,7 @@ if length(data)>1 && ~israw,
 %   end
 %   
   if length(catdim)>1,
-    error('ambiguous dimensions for concatenation');
+    ft_error('ambiguous dimensions for concatenation');
   elseif isempty(catdim) && isempty(intersect(dimtok, {'rpt', 'rpttap', 'subj'}))
     % treat as individual observations: prepend a first dimension 'rpt'
     % (so this part should be able to cover the functionality of ...grandaverage)
@@ -223,7 +223,7 @@ if length(data)>1 && ~israw,
   elseif ~isempty(strfind(dimtok{catdim},'pos'))
     dimtok{catdim} = 'pos';
   elseif isempty(catdim)
-    error('don''t know how to concatenate the data');
+    ft_error('don''t know how to concatenate the data');
   end
   
   % concatenate the data
@@ -250,7 +250,7 @@ if length(data)>1 && ~israw,
       % this is for source data with the positions in a cell-array
       npos = numel(tmp{1});
       if catdim==0,
-        error('not implemented yet');
+        ft_error('not implemented yet');
       elseif catdim==1,
         datacat.(param{k}) = cat(1, tmp{:});
       else
@@ -310,7 +310,7 @@ if length(data)>1 && ~israw,
       fprintf('%d voxels are inside the brain of all subjects\n',               nallinside);
       fprintf('%d voxels are inside the brain of some, but not all subjects\n', nsomeinside);
       fprintf('%d voxels are outside the brain of all subjects\n',              nalloutside);
-      warning('marking only voxels inside the brain of all subjects as ''inside''');
+      ft_warning('marking only voxels inside the brain of all subjects as ''inside''');
       
       if isboolean
         data{1}.inside = inside;
@@ -445,7 +445,7 @@ if length(data)>1 && ~israw,
   end
   
 elseif length(data)>1 && israw
-  error('concatenation of several raw data-structures is done by ''ft_appenddata''');
+  ft_error('concatenation of several raw data-structures is done by ''ft_appenddata''');
 else
   % nothing to do
   data   = data{1};
@@ -461,7 +461,7 @@ if selectrpt && ~israw
   if islogical(selrpt),
     selrpt = find(selrpt);
   elseif isempty(selrpt),
-    warning('you request all repetitions to be thrown away');
+    ft_warning('you request all repetitions to be thrown away');
   end
   
   if ~issource
@@ -498,7 +498,7 @@ elseif selectrpt && israw
   if islogical(selrpt),
     selrpt = find(selrpt);
   elseif isempty(selrpt),
-    warning('you request all repetitions to be thrown away');
+    ft_warning('you request all repetitions to be thrown away');
   end
 end
 
@@ -519,7 +519,7 @@ if selectchan,
 end
 
 if selectfoi,
-  if numel(selfoi)==1, selfoi(2) = selfoi; end;
+  if numel(selfoi)==1, selfoi(2) = selfoi; end
   if numel(selfoi)==2,
     % treat selfoi as lower limit and upper limit
     selfoi = nearest(data.freq, selfoi(1)):nearest(data.freq, selfoi(2));
@@ -535,7 +535,7 @@ if selectfoi,
 end
 
 if selecttoi && ~israw,
-  if length(seltoi)==1, seltoi(2) = seltoi; end;
+  if length(seltoi)==1, seltoi(2) = seltoi; end
   if numel(seltoi)==2,
     % treat seltoi as lower limit and upper limit
     toitmp=nearest(data.time,[seltoi(1) seltoi(2)]);
@@ -553,7 +553,7 @@ if selecttoi && ~israw,
 end
 
 if selectroi,
-  error('not yet implemented');
+  ft_error('not yet implemented');
 end
 
 if israw,
@@ -571,7 +571,7 @@ if israw,
   
 elseif isfreq,
   %   if isfield(data, 'labelcmb') && isfield(data, 'label') && (selectchan || avgoverchan)
-  %     error('selection of or averaging across channels in the presence of both label and labelcmb is not possible');
+  %     ft_error('selection of or averaging across channels in the presence of both label and labelcmb is not possible');
   %   end
   tmpdata = [];
   if isfield(data, 'labelcmb'),
@@ -586,7 +586,7 @@ elseif isfreq,
     if selectchan && isfield(data, 'label')
       selcmb = find(sum(ismember(tmpdata.label, data.label(selchan)),2)==2);
     elseif selectchan
-      error('this is not yet implemented');
+      ft_error('this is not yet implemented');
     end
     
     % make the subselection
@@ -630,7 +630,7 @@ elseif istlck,
   if selectfoi,  data = seloverdim(data, 'freq', selfoi,  fb); end
   if selecttoi,  data = seloverdim(data, 'time', seltoi,  fb); end
   if isfield(data,'trial') && isfield(data,'avg') %&& size(data.trial,3)~=size(data.avg,2)
-    warning('Warning: .avg, .var, .dof and .cov not updated.');
+    ft_warning('Warning: .avg, .var, .dof and .cov not updated.');
     if isfield(data, 'avg'), data = rmfield(data, 'avg'); end
     if isfield(data, 'cov'), data = rmfield(data, 'cov'); end
     if isfield(data, 'dof'), data = rmfield(data, 'dof'); end
@@ -652,7 +652,7 @@ elseif issource,
   if avgoverfreq, data = avgoverdim(data, 'freq'); end
   
 elseif isvolume,
-  error('this is not yet implemented');
+  ft_error('this is not yet implemented');
 elseif isfreqmvar,
   % make the subselection
   if selectrpt,  data = seloverdim(data, 'rpt',  selrpt,  fb); end

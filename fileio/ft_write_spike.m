@@ -73,7 +73,7 @@ switch dataformat
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file, '.nts']);
     if nchans>1
-      error('only supported for single-channel data');
+      ft_error('only supported for single-channel data');
     end
 
     label     = spike.label{1};
@@ -104,7 +104,7 @@ switch dataformat
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file, '.nse']);
     if nchans>1
-      error('only supported for single-channel data');
+      ft_error('only supported for single-channel data');
     end
 
     label     = spike.label{1};
@@ -145,7 +145,7 @@ switch dataformat
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file, '.nex']);
     if nchans>1
-      error('only supported for single-channel data');
+      ft_error('only supported for single-channel data');
     end
 
     nex = [];
@@ -164,6 +164,6 @@ switch dataformat
     end
 
   otherwise
-    error('not implemented');
+    ft_error('not implemented');
 end % switch dataformat
 

@@ -102,7 +102,7 @@ if fid~=-1
       case 9
         fprintf(fid, '9\t%d\t%d\t%d\t%d\n', tri');
       otherwise
-        error('unsupported size for polygons (%d)', num);
+        ft_error('unsupported size for polygons (%d)', num);
     end % case
   else
     fwrite(fid, pnt', 'single');      % float
@@ -116,5 +116,5 @@ if fid~=-1
   fclose(fid);
   
 else
-  error('unable to open file');
+  ft_error('unable to open file');
 end

@@ -71,7 +71,7 @@ switch invfun
   case {'inv' 'pinv'}
     invfun = str2func(invfun);
   otherwise
-    error('unknown specification of inversion-function for the transfer matrix');
+    ft_error('unknown specification of inversion-function for the transfer matrix');
 end
 
 % crossterms are described by chan_chan_therest

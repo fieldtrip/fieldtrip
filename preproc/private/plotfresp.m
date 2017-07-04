@@ -53,7 +53,7 @@ if nargin < 2 || isempty(a)
     a = 1;
 end
 if nargin < 1
-    error('Not enough input arguments.');
+    ft_error('Not enough input arguments.');
 end
 
 % FIR?
@@ -76,7 +76,7 @@ if strncmp('twopass', dir, 7)
     isZerophase = true;
 elseif strcmp('onepass-zerophase', dir)
     if ~isLinPhaseFir
-        error('Onepass-zerophase filtering is only allowed for linear-phase FIR filters.')
+        ft_error('Onepass-zerophase filtering is only allowed for linear-phase FIR filters.')
     end
     isTwopass = false;
     isZerophase = true;
@@ -90,7 +90,7 @@ if isFIR
     impresp = b(:)';
 else
     if ~exist('impz', 'file')
-        warning('Plotting IIR filter responses requires signal processing toolbox.')
+        ft_warning('Plotting IIR filter responses requires signal processing toolbox.')
         return
     end
     impresp = impz(b, a)';

@@ -75,9 +75,9 @@ maxV = max(data, [], 2);
 minV = min(data, [], 2);
 
 % if ~isa(data,'int16')
-%   warning('Warning: data type is not int16, saving to EDF might introduce round-off errors.');
+%   ft_warning('Warning: data type is not int16, saving to EDF might introduce round-off errors.');
 %   if max(maxV) > 32767 | min(minV) < -32768
-%     error('Data cannot be represented as signed 16-bit integers');
+%     ft_error('Data cannot be represented as signed 16-bit integers');
 %   end
 %   data = int16(data);
 % end

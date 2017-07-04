@@ -76,7 +76,7 @@ switch cmd
     
   case 'open'
     if poolsize>1
-      error('you first have to close the existing pool before opening another one');
+      ft_error('you first have to close the existing pool before opening another one');
     end
     
     desired = varargin{2};
@@ -107,7 +107,7 @@ switch cmd
       engine('close');
     catch
       % this happens if enginepool and engine get out of sync
-      warning(lasterr);
+      ft_warning(lasterr);
     end
     
   case 'block'
@@ -116,7 +116,7 @@ switch cmd
       index = str2double(index);
     end
     if index>poolsize
-      error('invalid index %s, the pool only contains %d workers', index, poolsize);
+      ft_error('invalid index %s, the pool only contains %d workers', index, poolsize);
     end
     
     % add the specified job ID to the persistent list
@@ -129,7 +129,7 @@ switch cmd
       index = str2double(index);
     end
     if index>poolsize
-      error('invalid index %s, the pool only contains %d workers', index, poolsize);
+      ft_error('invalid index %s, the pool only contains %d workers', index, poolsize);
     end
     
     % remove the job ID from the persistent list
@@ -151,7 +151,7 @@ switch cmd
     end
     
   otherwise
-    error('unsupported command "%s"', cmd);
+    ft_error('unsupported command "%s"', cmd);
 end
 
 if nargout<1

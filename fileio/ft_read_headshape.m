@@ -106,7 +106,7 @@ if iscell(filename)
   
   if  numel(filename)>1 && all(haspos==1) && strcmp(concatenate, 'yes')
     if length(bnd)>2
-      error('Cannot concatenate more than two files') % no more than two files are taken for cancatenation
+      ft_error('Cannot concatenate more than two files') % no more than two files are taken for cancatenation
     else
       fprintf('Concatenating the meshes in %s and %s\n', filename{1}, filename{2});
       
@@ -119,7 +119,7 @@ if iscell(filename)
       elseif ~isfield(bnd(1), 'tri') && ~isfield(bnd(2), 'tri')
         % this is ok
       else
-        error('not all input files seem to contain a triangulation');
+        ft_error('not all input files seem to contain a triangulation');
       end
       
       % concatenate any other fields
@@ -130,7 +130,7 @@ if iscell(filename)
         elseif ~isfield(bnd(1), fnames{k}) && ~isfield(bnd(2), fnames{k})
           % this is ok
         else
-          error('not all input files seem to contain a "%s"', fnames{k});
+          ft_error('not all input files seem to contain a "%s"', fnames{k});
         end
       end
       
@@ -166,7 +166,7 @@ if iscell(filename)
     end
   elseif numel(filename)>1 && ~all(haspos==1)
     if numel(bnd)>2
-      error('Cannot combine more than two files') % no more than two files are taken for cancatenation
+      ft_error('Cannot combine more than two files') % no more than two files are taken for cancatenation
     else
       shape = [];
       if sum(haspos==1)==1
@@ -174,14 +174,14 @@ if iscell(filename)
         shape.pos  = bnd(haspos==1).pos;
         shape.unit = bnd(haspos==1).unit;
       else
-        error('Don''t know what to do');
+        ft_error('Don''t know what to do');
       end
       if sum(hastri==1)==1
         fprintf('Using the faces definition from %s\n', filename{find(hastri==1)});
         shape.tri = bnd(hastri==1).tri;
       end
       if max(shape.tri(:))~=size(shape.pos,1)
-        error('mismatch in number of points in pos and tri');
+        ft_error('mismatch in number of points in pos and tri');
       end
     end
     
@@ -210,7 +210,7 @@ if isempty(fileformat)
 end
 
 if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
-  error('at present extracting annotation information only works in conjunction with mne_source files');
+  ft_error('at present extracting annotation information only works in conjunction with mne_source files');
 end
 
 % start with an empty structure
@@ -242,7 +242,7 @@ switch fileformat
         shape.fid.pos = cell2mat(struct2cell(orig.dewar));
         shape.coordsys = 'dewar';
       otherwise
-        error('incorrect coordsys specified');
+        ft_error('incorrect coordsys specified');
     end
     shape.fid.label = fieldnames(orig.head);
     
@@ -288,7 +288,7 @@ switch fileformat
     ft_hastoolbox('gifti', 1);
     g = gifti(filename);
     if ~isfield(g, 'vertices')
-      error('%s does not contain a tesselated surface', filename);
+      ft_error('%s does not contain a tesselated surface', filename);
     end
     shape.pos = ft_warp_apply(g.mat, g.vertices);
     shape.tri = g.faces;
@@ -367,7 +367,7 @@ switch fileformat
     % quick and dirty sanity check to see whether the indexing of the
     % points in the topology matches the number of points
     if max(tmp2.tri(:))~=size(tmp1.pos,1)
-      error('there''s a mismatch between the number of points used in the topology, and described by the coordinates');
+      ft_error('there''s a mismatch between the number of points used in the topology, and described by the coordinates');
     end
     
     shape.pos = tmp1.pos;
@@ -393,7 +393,7 @@ switch fileformat
     if ~isempty(annotationfile)
       ft_hastoolbox('freesurfer', 1);
       if numel(annotationfile)~=2
-        error('two annotationfiles expected, one for each hemisphere');
+        ft_error('two annotationfiles expected, one for each hemisphere');
       end
       for k = 1:numel(annotationfile)
         [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
@@ -407,10 +407,10 @@ switch fileformat
         src(1).labelindx = label{2};
         src(2).labelindx = label{1};
       else
-        warning('incompatible annotation with triangulations, not using annotation information');
+        ft_warning('incompatible annotation with triangulations, not using annotation information');
       end
       if ~isequal(c(1),c(2))
-        error('the annotation tables differ, expecting equal tables for the hemispheres');
+        ft_error('the annotation tables differ, expecting equal tables for the hemispheres');
       end
       c = c(1);
     end
@@ -493,7 +493,7 @@ switch fileformat
         end
         shape.coordsys = orig.dewar.coordsys;
       otherwise
-        error('incorrect coordinates specified');
+        ft_error('incorrect coordinates specified');
     end
     
   case {'yokogawa_mrk', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw' }
@@ -527,7 +527,7 @@ switch fileformat
       shape.fid.pos(1:3,:)= shape.fid.pos(sw_ind, :);
       shape.fid.label = {'nas'; 'lpa'; 'rpa'; 'Marker4'; 'Marker5'};
     else
-      error('no coil information found in Yokogawa file');
+      ft_error('no coil information found in Yokogawa file');
     end
     
     % convert to the units of the grad, the desired default for yokogawa is centimeter.
@@ -552,7 +552,7 @@ switch fileformat
       end
     end
     if size(shape.fid.label,1) ~= 5
-      error('Wrong number of coils');
+      ft_error('Wrong number of coils');
     end
     
     sw_ind = [3 1 2];
@@ -637,7 +637,7 @@ switch fileformat
     if isfield(tmp.D, 'fiducials') && ~isempty(tmp.D.fiducials)
       shape = tmp.D.fiducials;
     else
-      error('no headshape found in SPM EEG file');
+      ft_error('no headshape found in SPM EEG file');
     end
     
   case 'matlab'
@@ -668,7 +668,7 @@ switch fileformat
       shape = copyfields(tmp, shape, {'Faces', 'Curvature', 'SulciMap'});
       shape = renamefields(shape, {'Faces', 'Curvature', 'SulciMap'}, {'tri', 'curv', 'sulc'});
     else
-      error('no headshape found in MATLAB file');
+      ft_error('no headshape found in MATLAB file');
     end
     
   case {'freesurfer_triangle_binary', 'freesurfer_quadrangle'}
@@ -757,7 +757,7 @@ switch fileformat
     if isfield(hdr.orig, 'headshapedata')
       shape.pos = hdr.orig.Var.headshapedata;
     else
-      error('the NetMEG file "%s" does not contain headshape data', filename);
+      ft_error('the NetMEG file "%s" does not contain headshape data', filename);
     end
     
   case 'vista'
@@ -769,7 +769,7 @@ switch fileformat
     elseif size(elements,2)==4
       shape.tet = elements;
     else
-      error('unknown elements format')
+      ft_error('unknown elements format')
     end
     % representation of data is compatible with ft_datatype_parcellation
     shape.tissue = zeros(size(labels));
@@ -844,7 +844,7 @@ switch fileformat
       shape.pos  = ft_warp_apply(transform, shape.pos);
       shape.unit = mri.unit;
     else
-      warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
+      ft_warning('could not find accompanying MRI file, returning vertices in voxel coordinates');
     end
     
   case 'brainvisa_mesh'
@@ -891,7 +891,7 @@ switch fileformat
     end
     
     if isempty(transform)
-      warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
+      ft_warning('cound not determine the coordinate transformation, returning vertices in voxel coordinates');
     end
     
   case 'brainvoyager_srf'
@@ -953,7 +953,7 @@ switch fileformat
       try
         elec = ft_read_sens(filename);
         if ~ft_senstype(elec, 'eeg')
-          error('headshape information can not be read from MEG gradiometer file');
+          ft_error('headshape information can not be read from MEG gradiometer file');
         else
           shape.fid.pos   = elec.chanpos;
           shape.fid.label = elec.label;
@@ -970,7 +970,7 @@ switch fileformat
       try
         headmodel = ft_read_vol(filename);
         if ~ft_voltype(headmodel, 'bem')
-          error('skin surface can only be extracted from boundary element model');
+          ft_error('skin surface can only be extracted from boundary element model');
         else
           if ~isfield(headmodel, 'skin')
             headmodel.skin = find_outermost_boundary(headmodel.bnd);
@@ -985,7 +985,7 @@ switch fileformat
     end
     
     if ~success
-      error('unknown fileformat "%s" for head shape information', fileformat);
+      ft_error('unknown fileformat "%s" for head shape information', fileformat);
     end
 end % switch fileformat
 

@@ -150,7 +150,7 @@ elseif strcmp(Flreplace,'neighbour')
    Neighwidth = Neighwidth(:);
    
    if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
-       error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
+       ft_error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
    end
 
     % frequencies to interpolate

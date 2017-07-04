@@ -170,14 +170,14 @@ try, cfg.maskparameter = cfg.maskparameter{1}; end
 if isfield(ininterp,'anatomy');
   interp.anatomy = reshape(ininterp.anatomy, ininterp.dim);
 else
-  error('no anatomical data supplied');
+  ft_error('no anatomical data supplied');
 end
 
 % check functional data
 if ~isempty(cfg.funparameter)
   interp.source = double(reshape(getsubfield(ininterp, cfg.funparameter), ininterp.dim));
 else
-  error('no functional data supplied');
+  ft_error('no functional data supplied');
 end
 
 % check mask data
@@ -484,14 +484,14 @@ data = guidata(gcf);
 co(2,1) = round(mod(yi,size(data.out,1)));
 co(3,1) = round(mod(xi,size(data.out,2)));
 switch mod(data.cfg.rotate,4)
-case 1,
+case 1
   t1 = co(2);
   co(2) = co(3);
   co(3) = data.sin(3)-t1;
-case 2,
+case 2
   co(2) = data.sin(2)-co(2);
   co(3) = data.sin(3)-co(3);
-case 3,
+case 3
   t1 = co(3);
   co(3) = co(2);
   co(2) = data.sin(2)-t1;
@@ -518,7 +518,7 @@ function [h,nrows,ncols] = slicemon(a) % display the montage w/o image_toolbox
 siz = [size(a,1) size(a,2) size(a,4)];
 nn = sqrt(prod(siz))/siz(2);
 mm = siz(3)/nn;
-if (ceil(nn)-nn) < (ceil(mm)-mm),
+if (ceil(nn)-nn) < (ceil(mm)-mm)
   nn = ceil(nn); mm = ceil(siz(3)/nn);
 else
   mm = ceil(mm); nn = ceil(siz(3)/mm);
@@ -527,10 +527,10 @@ b = a(1,1);
 b(1,1) = 0;
 b = repmat(b, [mm*siz(1), nn*siz(2), size(a,3), 1]);
 rows = 1:siz(1); cols = 1:siz(2);
-for i=0:mm-1,
-  for j=0:nn-1,
+for i=0:mm-1
+  for j=0:nn-1
     k = j+i*nn+1;
-    if k<=siz(3),
+    if k<=siz(3)
       b(rows+i*siz(1),cols+j*siz(2),:) = a(:,:,:,k);
     end
   end

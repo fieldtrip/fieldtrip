@@ -119,7 +119,7 @@ for i=1:num
             %sel = [sel; find(atlas.descr.brick==0 & atlas.descr.value==brick0_val)];
             %sel = [sel; find(atlas.descr.brick==1 & atlas.descr.value==brick1_val)];
           else
-            warning('location is outside atlas volume');
+            ft_warning('location is outside atlas volume');
           end % k
           %FIXME the three loops can probably be easily vectorized
         end % dk

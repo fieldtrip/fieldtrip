@@ -105,15 +105,15 @@ else
   fsample = data.fsample;
 end
 
-if isnumeric(cfg.pulsewidth) && numel(cfg.pulsewidth)==1; temp_pulse = cfg.pulsewidth; end;
+if isnumeric(cfg.pulsewidth) && numel(cfg.pulsewidth)==1; temp_pulse = cfg.pulsewidth; end
 
 % copy for all trials
 if isnumeric(cfg.pulseonset) && numel(cfg.pulseonset)==1; cfg.pulseonset = repmat(cfg.pulseonset, numtrl, 1); end
 if isnumeric(cfg.pulsewidth) && numel(cfg.pulsewidth)==1; cfg.pulsewidth = repmat(cfg.pulsewidth, numtrl, 1); end
 
 % check wether fields are cell where necessary
-if ~iscell(cfg.pulseonset); cfg.pulseonset = num2cell(cfg.pulseonset); end;
-if ~iscell(cfg.pulsewidth); cfg.pulsewidth = num2cell(cfg.pulsewidth); end;
+if ~iscell(cfg.pulseonset); cfg.pulseonset = num2cell(cfg.pulseonset); end
+if ~iscell(cfg.pulsewidth); cfg.pulsewidth = num2cell(cfg.pulsewidth); end
 
 if isempty(cfg.pulseonset) || isempty(cfg.pulsewidth)
   for i=1:numtrl
@@ -125,7 +125,7 @@ if isempty(cfg.pulseonset) || isempty(cfg.pulsewidth)
       cfg.pulsewidth{i} = repmat(temp_pulse, 1, length(onset));
     else
       cfg.pulsewidth{i} = width;
-    end;
+    end
 
     fprintf('detected %d pulses in trial %d\n', length(onset), i);
   end
@@ -167,7 +167,7 @@ switch cfg.method
           data.trial{i} = fill;
         else
           data.trial{i}(:,begsample:endsample) = fill(:,begsample:endsample);
-        end;
+        end
       end % for pulses
     end % for trials
 
@@ -234,7 +234,7 @@ switch cfg.method
             case 'cubic+noise'
                 fill = interp1([1:size(dat1,2) 2*size(dat1,2)+1:3*size(dat1,2)], [dat1 dat2]', size(dat1,2)+1:2*length(dat1),'cubic')';
                 fill = fill + std(dat1,[],2).*randn(size(dat1,1),size(dat1,2));
-        end;
+        end
 
             % FIXME an alternative would be to replace it with an interpolated version of the signal just around it
             % FIXME an alternative would be to replace it with nan
@@ -247,7 +247,7 @@ switch cfg.method
     end % for trials
 
   otherwise
-    error('unsupported method');
+    ft_error('unsupported method');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

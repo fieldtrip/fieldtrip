@@ -69,16 +69,16 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 % $Id$
 
 % set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end;
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end;
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
+if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
+if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
+if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
+if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
+if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-  error('P-values can only be calculated if the test statistics are calculated.');
-end;
+  ft_error('P-values can only be calculated if the test statistics are calculated.');
+end
 
 % calculate the number of time samples
 switch cfg.dimord
@@ -88,24 +88,24 @@ switch cfg.dimord
     ntime = cfg.dim(3);
     [nsmpls,nrepl] = size(dat);
   otherwise
-    error('Inappropriate dimord for the statistics function FT_STATFUN_ACTVSBLT.');
-end;
+    ft_error('Inappropriate dimord for the statistics function FT_STATFUN_ACTVSBLT.');
+end
 
 sel1 = find(design(cfg.ivar,:)==1);
 sel2 = find(design(cfg.ivar,:)==2);
 n1  = length(sel1);
 n2  = length(sel2);
 if (n1+n2)<size(design,2) || (n1~=n2)
-  error('Invalid specification of the design array.');
-end;
+  ft_error('Invalid specification of the design array.');
+end
 nunits = max(design(cfg.uvar,:));
 df = nunits - 1;
 if nunits<2
-  error('The data must contain at least two units (trials or subjects).')
-end;
+  ft_error('The data must contain at least two units (trials or subjects).')
+end
 if (nunits*2)~=(n1+n2)
-  error('Invalid specification of the design array.');
-end;
+  ft_error('Invalid specification of the design array.');
+end
 
 if strcmp(cfg.computestat,'yes')
   % compute the statistic
@@ -130,7 +130,7 @@ if strcmp(cfg.computestat,'yes')
   avgdiff=nanmean(diffmat,2);
   vardiff=nanvar(diffmat,0,2);
   s.stat=sqrt(nunits)*avgdiff./sqrt(vardiff);
-end;
+end
 
 if strcmp(cfg.computecritval,'yes')
   % also compute the critical values
@@ -141,7 +141,7 @@ if strcmp(cfg.computecritval,'yes')
     s.critval = [tinv(cfg.alpha/2,df),tinv(1-cfg.alpha/2,df)];
   elseif cfg.tail==1
     s.critval = tinv(1-cfg.alpha,df);
-  end;
+  end
 end
 
 if strcmp(cfg.computeprob,'yes')
@@ -153,6 +153,6 @@ if strcmp(cfg.computeprob,'yes')
     s.prob = 2*tcdf(-abs(s.stat),s.df);
   elseif cfg.tail==1
     s.prob = 1-tcdf(s.stat,s.df);
-  end;
+  end
 end
 
