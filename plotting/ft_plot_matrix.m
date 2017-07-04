@@ -14,7 +14,7 @@ function ft_plot_matrix(varargin)
 % Optional arguments should come in key-value pairs and can include
 %   'clim'            = 1x2 vector with color limits (default is automatic)
 %   'highlight'       = a logical matrix of size C, where 0 means that the corresponding values in C are highlighted according to the highlightstyle
-%   'highlightstyle'  = can be 'saturation', 'opacity' or 'outline' (default = 'opacity')
+%   'highlightstyle'  = can be 'saturation', 'opacity', 'outline' or 'colormix' (default = 'opacity')
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %

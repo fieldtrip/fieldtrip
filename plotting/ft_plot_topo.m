@@ -14,7 +14,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'isolines'      = vector with values for isocontour lines (default = [])
 %   'interplim'    = string, 'electrodes' or 'mask' (default = 'electrodes')
 %   'interpmethod'  = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
-%   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso'
+%   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 %   'clim'          = [min max], limits for color scaling
 %   'shading'       = string, 'none', 'flat', 'interp' (default = 'flat')
 %   'parent'        = handle which is set as the parent for all plots
@@ -64,7 +64,7 @@ gridscale     = ft_getopt(varargin, 'gridscale',    67); % 67 in original
 shading       = ft_getopt(varargin, 'shading',      'flat');
 interplim     = ft_getopt(varargin, 'interplim',    'electrodes');
 interpmethod  = ft_getopt(varargin, 'interpmethod', 'v4');
-style         = ft_getopt(varargin, 'style',        'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso'
+style         = ft_getopt(varargin, 'style',        'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 tag           = ft_getopt(varargin, 'tag',          '');
 isolines      = ft_getopt(varargin, 'isolines');
 datmask       = ft_getopt(varargin, 'datmask');

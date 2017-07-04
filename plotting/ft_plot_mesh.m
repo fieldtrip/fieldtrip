@@ -22,6 +22,10 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
 %   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
+%   'maskstyle',   = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
+%                    are converted (in combination with a background color) to rgb. This bypasses
+%                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
+%                    using software opengl)
 %
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
