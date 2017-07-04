@@ -42,7 +42,7 @@ cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');
 cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
 
 if cfg.tail~=cfg.clustertail
-  error('cfg.tail and cfg.clustertail should be identical')
+  ft_error('cfg.tail and cfg.clustertail should be identical')
 end
 
 % get conncevitiy matrix for the spatially neighbouring elements
@@ -100,7 +100,7 @@ if strcmp(cfg.clusterthreshold, 'parametric')
     negtailcritval = cfg.clustercritval(1);
     postailcritval = cfg.clustercritval(2);
   else
-    error('cannot make sense out of the specified parametric critical values');
+    ft_error('cannot make sense out of the specified parametric critical values');
   end
   
 elseif strcmp(cfg.clusterthreshold, 'nonparametric_individual')
@@ -140,7 +140,7 @@ elseif strcmp(cfg.clusterthreshold, 'nonparametric_common')
   end
   
 else
-  error('no valid threshold for clustering was given')
+  ft_error('no valid threshold for clustering was given')
 end % determine clusterthreshold
 
 % these should be scalars or column vectors
@@ -240,7 +240,7 @@ stat.stat = statobs;
 
 % catch situation where no clustering of the random data is needed
 if (Nobspos+Nobsneg)==0
-  warning('no clusters were found in the observed data');
+  ft_warning('no clusters were found in the observed data');
   stat.prob = ones(Nsample, 1);
   return
 end
@@ -293,7 +293,7 @@ for i=1:Nrand
       elseif strcmp(cfg.clusterstatistic, 'wcm')
         stat(j) = sum((statrnd(posclusrnd==j,i)-postailcritval).^cfg.wcm_weight);
       else
-        error('unknown clusterstatistic');
+        ft_error('unknown clusterstatistic');
       end
     end % for 1:Nrdnpos
     if strcmp(cfg.multivariate, 'yes') || strcmp(cfg.orderedstats, 'yes')
@@ -342,7 +342,7 @@ for i=1:Nrand
       elseif strcmp(cfg.clusterstatistic, 'wcm')
         stat(j) = -sum((abs(statrnd(negclusrnd==j,i)-negtailcritval)).^cfg.wcm_weight); % encoded as a negative value
       else
-        error('unknown clusterstatistic');
+        ft_error('unknown clusterstatistic');
       end
     end % for 1:Nrndneg
     if strcmp(cfg.multivariate, 'yes') || strcmp(cfg.orderedstats, 'yes')
@@ -374,7 +374,7 @@ if needpos
     elseif strcmp(cfg.clusterstatistic, 'wcm')
       stat(j) = sum((statobs(posclusobs==j)-postailcritval).^cfg.wcm_weight);
     else
-      error('unknown clusterstatistic');
+      ft_error('unknown clusterstatistic');
     end
   end
   % sort the clusters based on their statistical value
@@ -450,7 +450,7 @@ if needneg,
     elseif strcmp(cfg.clusterstatistic, 'wcm')
       stat(j) = -sum((abs(statobs(negclusobs==j)-negtailcritval)).^cfg.wcm_weight); % encoded as a negative value
     else
-      error('unknown clusterstatistic');
+      ft_error('unknown clusterstatistic');
     end
   end
   % sort the clusters based on their statistical value

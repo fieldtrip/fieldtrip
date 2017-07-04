@@ -80,7 +80,7 @@ elseif isempty(Cr) && isempty(Pr) && isempty(refdip)
   % only compute power of a dipole at the grid positions
   submethod = 'dics_power';
 else
-  error('invalid combination of input arguments for dics');
+  ft_error('invalid combination of input arguments for dics');
 end
 
 if ~iscell(leadfield)
@@ -96,7 +96,7 @@ end
 
 isrankdeficient = (rank(Cf)<size(Cf,1));
 if isrankdeficient
-  warning('cross-spectral density matrix is rank deficient')
+  ft_warning('cross-spectral density matrix is rank deficient')
 end
 
 % it is difficult to give a quantitative estimate of lambda, therefore also
@@ -240,7 +240,7 @@ switch submethod
   case 'dics_refdip'
 
     if fixedori
-      error('fixed orientations are not supported for beaming cortico-cortical coherence');
+      ft_error('fixed orientations are not supported for beaming cortico-cortical coherence');
     end
 
     % get the leadfield of the reference source

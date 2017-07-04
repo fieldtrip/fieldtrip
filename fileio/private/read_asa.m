@@ -44,7 +44,7 @@ function [val] = read_asa(filename, elem, format, number, token)
 
 fid = fopen(filename, 'rt');
 if fid==-1
-  error(sprintf('could not open file %s', filename));
+  ft_error(sprintf('could not open file %s', filename));
 end
 
 if nargin<4

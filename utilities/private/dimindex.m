@@ -36,7 +36,7 @@ function M = dimindex(A,dim,idx)
 
 if (~iscell(idx))
   if (~any(size(dim)==1) || ~any(size(idx)==1) || ndims(dim)>2 || ndims(idx)>2 || length(dim)~=length(idx))
-    error('dim and idx must be both scalars or both vectors of the same size');
+    ft_error('dim and idx must be both scalars or both vectors of the same size');
   end
   dummi = [];
   for i=1:length(idx)
@@ -46,15 +46,15 @@ if (~iscell(idx))
   clear dummi;
 end
 if (~any(size(dim)==1) || ~any(size(idx)==1) || ndims(dim)>2 || ndims(idx)>2 || length(dim)~=length(idx))
-  error('dim and idx must be both scalars or both must have the same length');
+  ft_error('dim and idx must be both scalars or both must have the same length');
 end
 
 
 if (length(dim)>ndims(A)||any(dim>ndims(A)))
-  error('dim, or one of its contents are larger than the number of dimentions in A');
+  ft_error('dim, or one of its contents are larger than the number of dimentions in A');
 end
 if (~isequal(unique(dim),sort(dim)))
-  error('dim must be unique, every dimention can be addressed only once');
+  ft_error('dim must be unique, every dimention can be addressed only once');
 end
 
 N = ndims(A);

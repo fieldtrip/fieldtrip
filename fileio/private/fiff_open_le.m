@@ -48,24 +48,24 @@ verbose=false;
 fid = fopen(fname,'rb','ieee-le'); % Arjen Stolk: this is 'ieee-be' in fiff_open.m
 
 if (fid < 0)
-    error(me,'Cannot open file %s', fname);
+    ft_error(me,'Cannot open file %s', fname);
 end;
 %
 %   Check that this looks like a fif file
 %
 tag = fiff_read_tag_info(fid);
 if tag.kind ~= FIFF.FIFF_FILE_ID
-    error(me,'file does not start with a file id tag');
+    ft_error(me,'file does not start with a file id tag');
 end
 if tag.type ~= FIFF.FIFFT_ID_STRUCT
-    error(me,'file does not start with a file id tag');
+    ft_error(me,'file does not start with a file id tag');
 end
 if tag.size ~= 20
-    error(me,'file does not start with a file id tag');
+    ft_error(me,'file does not start with a file id tag');
 end
 tag = fiff_read_tag(fid);
 if tag.kind ~= FIFF.FIFF_DIR_POINTER
-    error(me,'file does have a directory pointer');
+    ft_error(me,'file does have a directory pointer');
 end
 if nargout == 1
     fseek(fid,0,'bof');

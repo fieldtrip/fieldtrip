@@ -96,7 +96,7 @@ fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweigh
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
 if ~isempty(highlight) && ~isequal(size(highlight), size(cdat))
-  error('the dimensions of the highlight should be identical to the dimensions of the data');
+  ft_error('the dimensions of the highlight should be identical to the dimensions of the data');
 end
 
 % axis   = ft_getopt(varargin, 'axis', false);
@@ -125,7 +125,7 @@ if ischar(hlim)
       hlim = max(abs(hdat));
       hlim = [-hlim hlim];
     otherwise
-      error('unsupported option for hlim')
+      ft_error('unsupported option for hlim')
   end % switch
 end % if ischar
 
@@ -148,7 +148,7 @@ if ischar(vlim)
       vlim = max(abs(vdat));
       vlim = [-vlim vlim];
     otherwise
-      error('unsupported option for vlim')
+      ft_error('unsupported option for vlim')
   end % switch
 end % if ischar
 
@@ -171,7 +171,7 @@ if ischar(clim)
       clim = max(abs(cdat(:)));
       clim = [-clim clim];
     otherwise
-      error('unsupported option for clim')
+      ft_error('unsupported option for clim')
   end % switch
 end % if ischar
 
@@ -325,7 +325,7 @@ if ~isempty(highlight)
       end
       
     otherwise
-      error('unsupported highlightstyle')
+      ft_error('unsupported highlightstyle')
   end % switch highlightstyle
 end
 

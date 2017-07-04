@@ -33,7 +33,7 @@ function s = rmsubfield(s, f, v)
 % $Id$
 
 if ~ischar(f)
-  error('incorrect input argument for fieldname');
+  ft_error('incorrect input argument for fieldname');
 end
 
 % remove the nested subfield using recursion

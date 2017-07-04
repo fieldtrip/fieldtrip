@@ -48,11 +48,11 @@ while ~status
       status = 1;
     elseif issubfield(cfg, 'previous');
       [val, status] = ft_findcfg(cfg.previous, var);
-      if status, break; end;
+      if status, break; end
     elseif iscell(cfg)
       for i=1:length(cfg)
         [val, status] = ft_findcfg(cfg{i}, var);
-        if status, break; end;
+        if status, break; end
       end
     else
       status = -1;

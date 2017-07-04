@@ -88,7 +88,7 @@ elseif strncmp(magic, 'float64', length('float64'))
   format = 'float64';
   samplesize = 8;
 else
-  warning('could not detect sample format, assuming file format subtype 1 with ''int32''');
+  ft_warning('could not detect sample format, assuming file format subtype 1 with ''int32''');
   subtype    = 1; % the file format is version 1
   format     = 'int32';
   samplesize = 4;
@@ -113,14 +113,14 @@ switch subtype
     [p, f, x1] = fileparts(filename);
     [p, f, x2] = fileparts(f);
     if isempty(x2)
-      warning('could not determine channel label');
+      ft_warning('could not determine channel label');
       label = 'unknown';
     else
       label = x2(2:end);
     end
     clear p f x1 x2
   otherwise
-    error('unknown file format subtype');
+    ft_error('unknown file format subtype');
 end
 
 % determine the downscale factor, i.e. the number of bits that the integer representation has to be shifted back to the left
@@ -131,12 +131,12 @@ switch subtype
     downscale = 0;
   case 2
     % these might contain a multiplication factor but that factor cannot be retrieved from the file
-    warning('downscale factor is unknown for ''%s'', assuming that no downscaling was applied', filename);
+    ft_warning('downscale factor is unknown for ''%s'', assuming that no downscaling was applied', filename);
     downscale = 0;
   case 3
     downscale = double(magic(8));
   otherwise
-    error('unknown file format subtype');
+    ft_error('unknown file format subtype');
 end
 
 [p1, f1, x1] = fileparts(filename);
@@ -191,7 +191,7 @@ else
     dat = dat.*(2^downscale);  
   end
   if length(dat)<(endsample-begsample+1)
-    error('could not read the requested data');
+    ft_error('could not read the requested data');
   end
 end % needdat
 
@@ -203,7 +203,7 @@ fclose(fid);
 function [siz] = filesize(filename)
 l = dir(filename);
 if l.isdir
-  error(sprintf('"%s" is not a file', filename));
+  ft_error(sprintf('"%s" is not a file', filename));
 end
 siz = l.bytes;
 

@@ -31,7 +31,7 @@ function [px, py, wx, wy, powx, powy] = cancorr(C,x,y,powflag,realflag,trunc)
 % $Id$
 
 if nargin<3,
-  error('to compute canonical coherence, you need to specify the indices to the cross-spectral density making up the dependent and independent variable');
+  ft_error('to compute canonical coherence, you need to specify the indices to the cross-spectral density making up the dependent and independent variable');
 elseif nargin==3,
   powflag   = 0;
   realflag  = 0;

@@ -150,7 +150,7 @@ dointersect = ~isempty(mesh);
 if dointersect
   for k = 1:numel(mesh)
     if ~isfield(mesh{k}, 'pos') || ~isfield(mesh{k}, 'tri')
-      % error('the mesh should be a structure with pos and tri');
+      % ft_error('the mesh should be a structure with pos and tri');
       mesh{k}.pos = [];
       mesh{k}.tri = [];
     end
@@ -161,7 +161,7 @@ end
 domask = ~isempty(mask);
 if domask
   if ~isequal(size(dat), size(mask))
-    error('the mask data should have the same dimensions as the functional data');
+    ft_error('the mask data should have the same dimensions as the functional data');
   end
 end
 

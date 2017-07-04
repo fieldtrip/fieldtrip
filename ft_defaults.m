@@ -91,7 +91,7 @@ end
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
 ftPath = strrep(ftPath, '\', '\\');
 if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
-  warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
+  ft_warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
   addpath(ftPath);
 end
 
@@ -293,7 +293,7 @@ if length(list)>1
   if ~warned % only throw the following warnings once
     warned = true;
     for i=1:length(list)
-      warning('one version of %s is found here: %s', toolbox, list{i});
+      ft_warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
   ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');

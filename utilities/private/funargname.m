@@ -14,7 +14,7 @@ while isempty(regexp(line, '^function', 'once')) && ~feof(fid)
   line = fgetl(fid);
 end
 if isempty(regexp(line, '^function', 'once'))
-  error('could not locate function declaration in %s', fname);
+  ft_error('could not locate function declaration in %s', fname);
 end
 
 % the declaration of the function should look like this

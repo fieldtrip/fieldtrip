@@ -67,7 +67,7 @@ hc.head.rpa     = [0 0 0];
 
 fid = fopen(filename, 'r');
 if fid==-1
-  error('could not open file %s', filename);
+  ft_error('could not open file %s', filename);
 end
 
 fseek(fid, 0, 'bof');
@@ -81,7 +81,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while ~strcmp(line, 'standard nasion coil position relative to dewar (cm):')
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.standard.nas(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.standard.nas(2) = str2num(r(2:end));
@@ -90,14 +90,14 @@ line = fgetl(fid); [t, r] = strtok(line, '='); hc.standard.nas(3) = str2num(r(2:
 while ~(strcmp(line, 'stadard left ear coil position relative to dewar (cm):') || ...
         strcmp(line, 'standard left ear coil position relative to dewar (cm):'))
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.standard.lpa(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.standard.lpa(2) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.standard.lpa(3) = str2num(r(2:end));
 while ~strcmp(line, 'standard right ear coil position relative to dewar (cm):')
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.standard.rpa(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.standard.rpa(2) = str2num(r(2:end));
@@ -111,21 +111,21 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while ~strcmp(line, 'measured nasion coil position relative to dewar (cm):')
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.dewar.nas(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.dewar.nas(2) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.dewar.nas(3) = str2num(r(2:end));
 while ~strcmp(line, 'measured left ear coil position relative to dewar (cm):')
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.dewar.lpa(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.dewar.lpa(2) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.dewar.lpa(3) = str2num(r(2:end));
 while ~strcmp(line, 'measured right ear coil position relative to dewar (cm):')
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.dewar.rpa(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.dewar.rpa(2) = str2num(r(2:end));
@@ -139,21 +139,21 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while ~strcmp(line, 'measured nasion coil position relative to head (cm):')
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.head.nas(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.head.nas(2) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.head.nas(3) = str2num(r(2:end));
 while ~strcmp(line, 'measured left ear coil position relative to head (cm):')
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.head.lpa(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.head.lpa(2) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.head.lpa(3) = str2num(r(2:end));
 while ~strcmp(line, 'measured right ear coil position relative to head (cm):')
   line = fgetl(fid);
-  if ~ischar(line) && line==-1, error('premature end of file'), end
+  if ~ischar(line) && line==-1, ft_error('premature end of file'), end
 end
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.head.rpa(1) = str2num(r(2:end));
 line = fgetl(fid); [t, r] = strtok(line, '='); hc.head.rpa(2) = str2num(r(2:end));

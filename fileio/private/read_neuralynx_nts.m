@@ -46,9 +46,9 @@ NRecords   = floor((ftell(fid) - headersize)/recordsize);
 if begrecord==0 && endrecord==0
   % only read the header  
 elseif begrecord<1
-  error('cannot read before the first record');
+  ft_error('cannot read before the first record');
 elseif begrecord>NRecords
-  error('cannot read beyond the last record')
+  ft_error('cannot read beyond the last record')
 elseif endrecord>NRecords
   endrecord = NRecords;
 end

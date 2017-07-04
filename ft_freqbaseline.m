@@ -84,7 +84,7 @@ end
 
 % is input consistent?
 if ischar(cfg.baseline) && strcmp(cfg.baseline, 'no') && ~isempty(cfg.baselinetype)
-  warning('no baseline correction done');
+  ft_warning('no baseline correction done');
 end
 
 % process possible yes/no value of cfg.baseline
@@ -97,18 +97,18 @@ elseif ischar(cfg.baseline) && strcmp(cfg.baseline, 'no')
 end
 
 % allow for baseline to be nfreq x 2
-if size(cfg.baseline,1)==numel(freq.freq) && size(cfg.baseline,2)==2,
+if size(cfg.baseline,1)==numel(freq.freq) && size(cfg.baseline,2)==2
   % this is ok
-elseif numel(cfg.baseline)==2,
+elseif numel(cfg.baseline)==2
   % this is also ok
   cfg.baseline = cfg.baseline(:)'; % ensure row vector
 else
-  error('cfg.baseline should either be a string, a 1x2 vector, or an Nfreqx2 matrix');
+  ft_error('cfg.baseline should either be a string, a 1x2 vector, or an Nfreqx2 matrix');
 end
 
 % check if the field of interest is present in the data
 if (~all(isfield(freq, cfg.parameter)))
-  error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
+  ft_error('cfg.parameter should be a string or cell array of strings referring to (a) field(s) in the freq input structure')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -143,7 +143,7 @@ for k = 1:numel(cfg.parameter)
     end
 
   else
-    error('unsupported data dimensions: %s', freq.dimord);
+    ft_error('unsupported data dimensions: %s', freq.dimord);
   end
 
 end
@@ -179,8 +179,8 @@ for k = 1:size(baseline,1)
   baselineTimes(k,:) = (timeVec >= baseline(k,1) & timeVec <= baseline(k,2));
 end
 
-if length(size(data)) ~= 3,
-  error('time-frequency matrix should have three dimensions (chan,freq,time)');
+if length(size(data)) ~= 3
+  ft_error('time-frequency matrix should have three dimensions (chan,freq,time)');
 end
 
 % compute mean of time/frequency quantity in the baseline interval,
@@ -206,5 +206,5 @@ elseif (strcmp(baselinetype, 'normchange')) || (strcmp(baselinetype, 'vssum'))
 elseif (strcmp(baselinetype, 'db'))
   data = 10*log10(data ./ meanVals);
 else
-  error('unsupported method for baseline normalization: %s', baselinetype);
+  ft_error('unsupported method for baseline normalization: %s', baselinetype);
 end

@@ -64,7 +64,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
         case 'p'
           label{i} = {['-' axis(i) ' (anterior)'],   ['+' axis(i) ' (posterior)']};
         otherwise
-          error('incorrect letter in the coordsys');
+          ft_error('incorrect letter in the coordsys');
       end % switch
     end % for each of the three axes
     
@@ -92,7 +92,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
         labelz = {'-Z (inferior)'  '+Z (superior)'};
       otherwise
         % the coordinate system is unknown
-        warning('unknown coordsys ''%s''', coordsys);
+        ft_warning('unknown coordsys ''%s''', coordsys);
         labelx = {'-X (unknown)' '+X (unknown)'};
         labely = {'-Y (unknown)' '+Y (unknown)'};
         labelz = {'-Z (unknown)' '+Z (unknown)'};
@@ -139,7 +139,7 @@ switch format
     % keep it as it is
     
   otherwise
-    error('unsupported option')
+    ft_error('unsupported option')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -152,7 +152,7 @@ switch both
   case true
     % keep it as it is
   otherwise
-    error('unsupported option')
+    ft_error('unsupported option')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

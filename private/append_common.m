@@ -71,7 +71,7 @@ if hastopolabel || hastopo || hasunmixing
     % in the same dataset. In principle this could be improved by also concatenating
     % the topo and unmixing along the correct dimension. However, at the moment the
     % topo/unmixing are discarded.
-    warning('discarding ICA/PCA topographies and/or unmixing matrix');
+    ft_warning('discarding ICA/PCA topographies and/or unmixing matrix');
   else
     % only proceed if the ICA/PCA topographies and/or unmixing matrix is identical in all datasets
     assert(identical, 'cannot append data from different ICA/PCA decompositions');
@@ -298,7 +298,7 @@ switch cfg.appenddim
     end % for cfg.parameter
     
   otherwise
-    error('unsupported cfg.appenddim');
+    ft_error('unsupported cfg.appenddim');
 end
 
 if isfield(data, 'dimord')

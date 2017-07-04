@@ -70,7 +70,7 @@ switch(om_format)
     case 'binary'
         om_ext = '.bin';
     otherwise
-        error('invalid OpenMEEG output type requested');
+        ft_error('invalid OpenMEEG output type requested');
 end
 
 OPENMEEG_PATH = []; % '/usr/local/bin/';    % In case OpenMEEG executables omitted from PATH variable
@@ -78,7 +78,7 @@ OPENMEEG_PATH = []; % '/usr/local/bin/';    % In case OpenMEEG executables omitt
 persistent ldLibraryPath0;
 
 if ispc
-    warning('Sorry, Windows is not yet tested');
+    ft_warning('Sorry, Windows is not yet tested');
 elseif isunix
     setenv('OMP_NUM_THREADS',num2str(CPU_LIM));
     if(~ismac) % MacOS doesn't use LD_LIBRARY_PATH; in case of problems, look into "DYLD_LIBRARY_PATH"
@@ -92,7 +92,7 @@ end
 
 [om_status,om_errmsg] = system(fullfile(OPENMEEG_PATH,'om_assemble')); % returns 0 if om_assemble is not happy
 if(om_status ~= 0)
-    error([om_errmsg 'Unable to properly execute OpenMEEG. Please configure variable declarations and paths in this file as needed.']);
+    ft_error([om_errmsg 'Unable to properly execute OpenMEEG. Please configure variable declarations and paths in this file as needed.']);
 else
     clear om_status
 end
@@ -140,7 +140,7 @@ else
             if(size(sens.tra,1) < max(chanlabel_idx) || size(sens.tra,2) ~= length(coilpos_idx) || length(coilpos_idx) ~= size(sens.coilpos,1))
                 % These dimensions should match; if not, some channels may have been
                 % removed, or there's unexpected handling of MEG reference coils
-                error('Mismatch between number of rows in sens.tra and number of channels... possibly some channels removed or unexpected MEG reference coil configuration');
+                ft_error('Mismatch between number of rows in sens.tra and number of channels... possibly some channels removed or unexpected MEG reference coil configuration');
             end
             
             for ii=1:length(coilpos_idx)
@@ -189,7 +189,7 @@ write_mesh(vol,path,basefile);
 disp('Validating mesh...')
 [om_status om_msg] = system([fullfile(OPENMEEG_PATH, 'om_check_geom'), ' -g ', geomFile])
 if(om_status ~= 0) % status = 0 if successful
-    error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+    ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
 end
 
 disp('Writing dipole file...')
@@ -214,7 +214,7 @@ else
     disp('Building head matrix')
     [om_status, om_msg] = system([fullfile(OPENMEEG_PATH, 'om_assemble'), ' -hm ', geomFile, ' ', condFile, ' ', hmFile])
     if(om_status ~= 0) % status = 0 if successful
-        error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+        ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
     end
 end
 
@@ -229,7 +229,7 @@ if strcmp(method,'hminv')
         else
             [om_status, om_msg] = system([fullfile(OPENMEEG_PATH, 'om_minverser'), ' ', hmFile, ' ', hminvFile])
             if(om_status ~= 0) % status = 0 if successful
-                error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+                ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
             end
         end
     end
@@ -244,7 +244,7 @@ for ii = 1:chunks
         disp('Assembling source matrix');
         [om_status, om_msg] = system([fullfile(OPENMEEG_PATH, 'om_assemble'), ' -dsm ', geomFile, ' ', condFile, ' ', dipFile{ii}, ' ' dsmFile{ii}])
         if(om_status ~= 0) % status = 0 if successful
-            error([om_msg, 'Aborting OpenMEEG pipeline due to above error. If 4-layer BEM attempted, try 3-layer BEM (scalp, skull, brain).']);
+            ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error. If 4-layer BEM attempted, try 3-layer BEM (scalp, skull, brain).']);
         end
     end
 end
@@ -271,7 +271,7 @@ else
     disp('Calculating Contribution of Ohmic Currents')
     [om_status, om_msg] = system([fullfile(OPENMEEG_PATH, 'om_assemble'), ' ', cmd, ' ', geomFile, ' ', condFile, ' ' , sensorFile, ' ' , ohmicFile])
     if(om_status ~= 0) % status = 0 if successful
-        error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+        ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
     end
 end
 
@@ -285,7 +285,7 @@ if ft_senstype(sens, 'meg')
         else
             [om_status, om_msg] = system([fullfile(OPENMEEG_PATH, 'om_assemble'), ' -ds2mm ', dipFile{ii} ,' ', sensorFile, ' ' , scFile{ii}])
             if(om_status ~= 0) % status = 0 if successful
-                error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+                ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
             end
         end
     end
@@ -319,13 +319,13 @@ for ii = 1:chunks
         end
     end
     if(om_status ~= 0) % status = 0 if successful
-        error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
+        ft_error([om_msg, 'Aborting OpenMEEG pipeline due to above error.']);
     end
 end
 
 % Import lead field/potential
 [g, voxels_in] = import_gain(path, basefile, ft_senstype(sens, 'eeg'));
-if (voxels_in ~= voxels) && (nargout == 1); warning('Imported voxels from OpenMEEG process not the same as function input.'); end;
+if (voxels_in ~= voxels) && (nargout == 1); ft_warning('Imported voxels from OpenMEEG process not the same as function input.'); end;
 
 lp = sens.tra*g; % Mchannels x (3 orientations x Nvoxels)
 
@@ -398,7 +398,7 @@ switch(om_format)
     case 'binary'
         om_ext = '.bin';
     otherwise
-        error('invalid OpenMEEG output type requested');
+        ft_error('invalid OpenMEEG output type requested');
 end
 
 if eegflag

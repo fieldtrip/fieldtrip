@@ -119,7 +119,7 @@ for g = 1:ngrids % grid loop
   elseif isequal(numel(Grid2Elec{g}), 6)
     GridDim(1) = 1; GridDim(2) = 6;
   else
-      error('At least one of the electrode tracts or grids has dimensions that are not supported by write_bioimage_mgrid. If electrodes are missing from a grid, enter NaN(1,3) for electrode position');
+      ft_error('At least one of the electrode tracts or grids has dimensions that are not supported by write_bioimage_mgrid. If electrodes are missing from a grid, enter NaN(1,3) for electrode position');
   end
   fprintf(fid, [' ' num2str(GridDim(1)) ' ' num2str(GridDim(2)) '\n']);
   fprintf(fid, '#Electrode Spacing\n');

@@ -41,7 +41,7 @@ elseif siz(2)==3
   rd = rd';
   rd = rd(:)'; % ensure that it is a row vector
 else
-  error('incorrect specification of dipole locations');
+  ft_error('incorrect specification of dipole locations');
 end
 
 Nelc     = size(elc,1);
@@ -70,10 +70,10 @@ for i=1:Npoles
   invacuum = acos(dot(vol.ori,(pole1-vol.pnt)./norm(pole1-vol.pnt))) < pi/2;
   
   if invacuum
-    warning('a pole lies on the vacuum side of the plane');
+    ft_warning('a pole lies on the vacuum side of the plane');
     lf(:,i) = NaN(Nelc,1);
   elseif any(R1)==0
-    warning('a pole coincides with one of the electrodes');
+    ft_warning('a pole coincides with one of the electrodes');
     lf(:,i) = NaN(Nelc,1);
   else
     lf(:,i) = (1 ./ R1) + (1 ./ R2);
@@ -90,7 +90,7 @@ pnt = vol.pnt;
 ori = vol.ori; % already normalized
 
 if abs(dot(P1-pnt,ori))<eps
-  warning(sprintf ('point %f %f %f lies in the symmetry plane',P1(1),P1(2),P1(3)))
+  ft_warning(sprintf ('point %f %f %f lies in the symmetry plane',P1(1),P1(2),P1(3)))
   P2 = P1;
 else
   % define the plane in parametric form

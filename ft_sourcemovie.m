@@ -154,11 +154,11 @@ elseif hassource2
 end
 
 if size(source.pos)~=size(fun,1)
-  error('inconsistent number of vertices in the cortical mesh');
+  ft_error('inconsistent number of vertices in the cortical mesh');
 end
 
 if ~isfield(source, 'tri')
-  error('source.tri missing, this function requires a triangulated cortical sheet as source model');
+  ft_error('source.tri missing, this function requires a triangulated cortical sheet as source model');
 end
 
 if ~isempty(cfg.maskparameter) && ischar(cfg.maskparameter)
@@ -170,13 +170,13 @@ end
 
 xparam = source.(cfg.xparam);
 if length(xparam)~=size(fun,2)
-  error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.xparam);
+  ft_error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.xparam);
 end
 
 if ~isempty(cfg.yparam)
   yparam = source.(cfg.yparam);
   if length(yparam)~=size(fun,3)
-    error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.yparam);
+    ft_error('inconsistent size of "%s" compared to "%s"', cfg.funparameter, cfg.yparam);
   end
 else
   yparam = [];
@@ -215,7 +215,7 @@ end
 xparam  = xparam(xbeg:xend);
 yparam  = yparam(ybeg:yend);
 fun     = fun(:,xbeg:xend,ybeg:yend);
-if hassource2 && isfield(source2, 'pos'),
+if hassource2 && isfield(source2, 'pos')
   fun2 = fun2(:,xbeg:xend,ybeg:yend);
 end
 mask    = mask(:,xbeg:xend,ybeg:yend);
@@ -525,7 +525,7 @@ if ~(numel(previous_vindx)==numel(opt.vindx) && all(previous_vindx==opt.vindx))
   
   set(opt.hy,    'yaxislocation', 'right');
   set(opt.stringz, 'string', sprintf('position = [%2.1f, %2.1f, %2.1f]', opt.pos(opt.vindx,:)));
-  if isfield(opt, 'parcellation'),
+  if isfield(opt, 'parcellation')
     set(opt.stringp, 'string', sprintf('parcel = %s', opt.parcellationlabel{opt.parcellation(opt.vindx)}));
   end
 end
@@ -740,11 +740,11 @@ switch key
     end
   case 'f'
     if isfield(opt, 'dat2')
-      if isequaln(opt.dat,opt.dat2),
+      if isequaln(opt.dat,opt.dat2)
         opt.dat = opt.dat1;
         set(opt.displaybutton, 'string', 'display: var1');
       end
-      if isequaln(opt.dat,opt.dat1),
+      if isequaln(opt.dat,opt.dat1)
         opt.dat = opt.dat2;
         set(opt.displaybutton, 'string', 'display: var2');
       end

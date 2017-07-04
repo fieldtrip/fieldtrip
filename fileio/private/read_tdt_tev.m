@@ -76,9 +76,9 @@ for i=1:numel(tsq)
         case 4
           fmt = 'double';
         case 5
-          error('don''t know what a DFORM_QWORD is');
+          ft_error('don''t know what a DFORM_QWORD is');
         otherwise
-          error('unknown tsq.type');
+          ft_error('unknown tsq.type');
       end % switch
       siz = double(tsq(i).size)-10; % in words
       fseek(fidsev(index), tsq(i).offset, 'bof');
@@ -101,9 +101,9 @@ for i=1:numel(tsq)
       case 4
         fmt = 'double';
       case 5
-        error('don''t know what a DFORM_QWORD is');
+        ft_error('don''t know what a DFORM_QWORD is');
       otherwise
-        error('unknown tsq.type');
+        ft_error('unknown tsq.type');
     end % switch
     siz = double(tsq(i).size)-10; % in words
     fseek(fidnev, tsq(i).offset, 'bof');

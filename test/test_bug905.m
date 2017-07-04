@@ -43,10 +43,10 @@ while ~finished
     if lastfreqindxthisbin>=nfreq
         lastfreqindxthisbin=nfreq;
         finished=true;
-    end;
+    end
     freqsthisbin=freqs(firstfreqindxthisbin:lastfreqindxthisbin);
     freqbins{freqbinindx}=[freqsthisbin(1),freqsthisbin(end)];
-end;
+end
 nfreqbins=length(freqbins);
 tapsmofreqs=zeros(1,nfreqbins);
 freqbinindcs=zeros(1,nfreq);

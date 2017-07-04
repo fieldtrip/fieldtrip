@@ -28,7 +28,7 @@ function grad = yokogawa2grad(hdr)
 % $Id$
 
 if ~ft_hastoolbox('yokogawa')
-    error('cannot determine whether Yokogawa toolbox is present');
+    ft_error('cannot determine whether Yokogawa toolbox is present');
 end
 
 if isfield(hdr, 'label')

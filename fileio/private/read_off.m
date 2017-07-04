@@ -33,7 +33,7 @@ if fid~=-1
   [s, count] = fscanf(fid, '%s\n', 1);
   if ~strcmp(s,'OFF')
     msg = sprintf('wrong file type %s', s);
-    error(msg);
+    ft_error(msg);
   end
 
   % read the number of vertex points and triangles
@@ -51,7 +51,7 @@ if fid~=-1
   fclose(fid);
 
 else
-  error('unable to open file');
+  ft_error('unable to open file');
 end
 
 

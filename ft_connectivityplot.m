@@ -88,7 +88,7 @@ for k = 1:Ndata
     fprintf('different types of connectivity are to be displayed in the same figure\n');
     varargin{k}.connectivity = varargin{k}.(cfg.parameter{k});
     varargin{k} = rmfield(varargin{k}, cfg.parameter{k});
-    if isfield(varargin{k}, [cfg.parameter{k} 'dimord']),
+    if isfield(varargin{k}, [cfg.parameter{k} 'dimord'])
       varargin{k}.connectivitydimord = varargin{k}.([cfg.parameter{k} 'dimord']);
       varargin{k} = rmfield(varargin{k}, [cfg.parameter{k} 'dimord']);
     end
@@ -109,11 +109,11 @@ for k = 1:Ndata
       % convert into 'chan_chan_freq'
       varargin{k} = ft_checkdata(varargin{k}, 'cmbrepresentation', 'full');
     otherwise
-      error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
+      ft_error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
   end
   
   % this is needed for correct treatment of graphcolor later on
-  if nargin>1,
+  if nargin>1
     if ~isempty(inputname(k+1))
       iname{k+1} = inputname(k+1);
     else
@@ -125,9 +125,9 @@ for k = 1:Ndata
   end
 end
 
-if Ndata >1,
+if Ndata >1
   if ~all(strcmp(dtype{1}, dtype))
-    error('input data are of different type; this is not supported');
+    ft_error('input data are of different type; this is not supported');
   end
 end
 
@@ -140,9 +140,9 @@ tmpcfg = keepfields(cfg, {'channel', 'showcallinfo'});
 % check presence of time / freq axes
 hasfreq = isfield(varargin{1}, 'freq');
 hastime = isfield(varargin{1}, 'time');
-if hasfreq && hastime,
-  if Ndata>1,
-    error('when the input data contains time-frequency representations, only a single data argument is allowed');
+if hasfreq && hastime
+  if Ndata>1
+    ft_error('when the input data contains time-frequency representations, only a single data argument is allowed');
   end
   xparam = 'time';
   yparam = 'freq';
@@ -249,7 +249,7 @@ else
 end
 
 if ~isfield(data, cfg.parameter{1})
-  error('the data does not contain the requested parameter %s', cfg.parameter{1});
+  ft_error('the data does not contain the requested parameter %s', cfg.parameter{1});
 end
 
 % get the selection of the data
@@ -289,7 +289,7 @@ for k = 1:nchan
         tmp = reshape(dat(m,k,:), [nfreq 1]);
         ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.graphcolor(1));
       elseif hastime
-        error('plotting data with only a time axis is not supported yet');
+        ft_error('plotting data with only a time axis is not supported yet');
       end
       if k==1
         % first column, plot scale on y axis

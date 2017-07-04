@@ -109,7 +109,7 @@ if ~exist('bsxfun', 'builtin')
     elseif (sA(1) == sB(1)) && (sA(2) == sB(2)) && (sA(3) == 1)
         C = fun(repmat(A, [1, 1, sB(3)]), B);
     else
-        error('A and B must have enough common dimensions.');
+        ft_error('A and B must have enough common dimensions.');
     end
 % New Matlab version: use bsxfun
 else

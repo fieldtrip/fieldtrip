@@ -89,7 +89,7 @@ if isa(X, 'cell')
   YX = C(iy,ix);
   
 else
-  error('this does not work at the moment');
+  ft_error('this does not work at the moment');
   ft_warning('Running bsscca with concatenated trial in the input, represented as a single matrix, is not optimal. Consider using cellmode');
   % input is a single data matrix assumed to be a continuous stretch 
   [n,m] = size(X);

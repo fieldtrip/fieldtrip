@@ -102,7 +102,7 @@ cfg.parameter  = ft_getopt(cfg, 'parameter'); % the default is handled further d
 
 regr = cfg.confound;
 if any(isnan(regr(:)))
-  error('the confounds may not contain NaNs');
+  ft_error('the confounds may not contain NaNs');
 end
 nconf     = size(regr,2);
 conflist  = 1:nconf;
@@ -297,13 +297,13 @@ end
 
 % discard the gradiometer information because the weightings have been changed
 if isfield(dataout, 'grad')
-  warning('discarding gradiometer information because the weightings have been changed');
+  ft_warning('discarding gradiometer information because the weightings have been changed');
   dataout = rmfield(dataout, 'grad');
 end
 
 % discard the electrode information because the weightings have been changed
 if isfield(dataout, 'elec')
-  warning('discarding electrode information because the weightings have been changed');
+  ft_warning('discarding electrode information because the weightings have been changed');
   dataout = rmfield(dataout, 'elec');
 end
 

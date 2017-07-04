@@ -133,7 +133,7 @@ for i=1:length(fn)
     end
     
     if prod(dim)~=prod(descr)
-      error('the dimensions of the source data are not consistent with the dimord (%s)', fn{i})
+      ft_error('the dimensions of the source data are not consistent with the dimord (%s)', fn{i})
     end
     
     if iscell(element)

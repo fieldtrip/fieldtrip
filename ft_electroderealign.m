@@ -198,7 +198,7 @@ if ~isempty(cfg.coordsys) && isempty(cfg.target)
       cfg.target.label{2} = 'LPA';
       cfg.target.label{3} = 'RPA';
     otherwise
-      error('the %s coordinate system is not automatically supported, please specify fiducial details in cfg.target')
+      ft_error('the %s coordinate system is not automatically supported, please specify fiducial details in cfg.target')
   end
 end
 
@@ -215,11 +215,11 @@ switch cfg.method
 end % switch cfg.method
 
 if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 'rigidbody')
-  warning('The method ''fiducial'' implies a rigid body tramsformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
+  ft_warning('The method ''fiducial'' implies a rigid body tramsformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
   cfg.warp = 'rigidbody';
 end
 if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 'rigidbody')
-  warning('The method ''interactive'' implies a rigid body transformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
+  ft_warning('The method ''interactive'' implies a rigid body transformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
   cfg.warp = 'rigidbody';
 end
 
@@ -311,7 +311,7 @@ if useheadshape
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
   else
-    error('cfg.headshape is not specified correctly')
+    ft_error('cfg.headshape is not specified correctly')
   end
   if ~isfield(headshape, 'tri') && ~isfield(headshape, 'poly')
     % generate a closed triangulation from the surface points
@@ -414,7 +414,7 @@ elseif strcmp(cfg.method, 'headshape')
     [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
     subj_reg = ft_read_headshape([PATHSTR filesep NAME '.sphere.reg']);
     if ~isdir([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf'])
-      error(['freesurfer dir ' cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf cannot be found'])
+      ft_error(['freesurfer dir ' cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf cannot be found'])
     end
     fsavg_pial = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.pial']);
     fsavg_reg = ft_read_headshape([cfg.fshome filesep 'subjects' filesep 'fsaverage' filesep 'surf' filesep NAME '.sphere.reg']);
@@ -471,7 +471,7 @@ elseif strcmp(cfg.method, 'fiducial')
     elseif length(match_str(label, option6))==3
       cfg.fiducial = option6;
     else
-      error('could not determine consistent fiducials in the input and the target, please specify cfg.fiducial or cfg.coordsys')
+      ft_error('could not determine consistent fiducials in the input and the target, please specify cfg.fiducial or cfg.coordsys')
     end
   end
   fprintf('matching fiducials {''%s'', ''%s'', ''%s''}\n', cfg.fiducial{1}, cfg.fiducial{2}, cfg.fiducial{3});
@@ -483,7 +483,7 @@ elseif strcmp(cfg.method, 'fiducial')
   elec.elecpos   = elec.elecpos(datsel,:);
   
   if length(cfg.fiducial)~=3
-    error('you must specify exactly three fiducials');
+    ft_error('you must specify exactly three fiducials');
   end
   
   % do case-insensitive search for fiducial locations
@@ -491,7 +491,7 @@ elseif strcmp(cfg.method, 'fiducial')
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
   rpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{3}));
   if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
-    error('not all fiducials were found in the electrode set');
+    ft_error('not all fiducials were found in the electrode set');
   end
   elec_nas = elec.elecpos(nas_indx,:);
   elec_lpa = elec.elecpos(lpa_indx,:);
@@ -510,7 +510,7 @@ elseif strcmp(cfg.method, 'fiducial')
     lpa_indx = match_str(lower(target(i).label), lower(cfg.fiducial{2}));
     rpa_indx = match_str(lower(target(i).label), lower(cfg.fiducial{3}));
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
-      error('not all fiducials were found in template %d', i);
+      ft_error('not all fiducials were found in template %d', i);
     end
     tmpl_nas(i,:) = target(i).elecpos(nas_indx,:);
     tmpl_lpa(i,:) = target(i).elecpos(lpa_indx,:);
@@ -636,7 +636,7 @@ elseif strcmp(cfg.method, 'moveinward')
   norm.elecpos = moveinward(elec.elecpos, cfg.moveinward);
   
 else
-  error('unknown method');
+  ft_error('unknown method');
 end % if method
 
 
@@ -675,7 +675,7 @@ switch cfg.method
     elec_realigned.label = label_original;
     
   otherwise
-    error('unknown method');
+    ft_error('unknown method');
 end
 
 % the coordinate system is in general not defined after transformation
@@ -712,7 +712,7 @@ switch cfg.method
       elec_realigned.coordsys = elec_original.coordsys;
     end
   otherwise
-    error('unknown method');
+    ft_error('unknown method');
 end
 
 if istrue(cfg.keepchannel)

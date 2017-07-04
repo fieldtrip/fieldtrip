@@ -66,7 +66,7 @@ if ~parsenull
         case {'int64' 'uint64' 'float64' 'double'}
             n = prod(siz) * 8;
         otherwise
-            error('unsupported type');
+            ft_error('unsupported type');
     end
     % read additional data from the TCP stream until there is enough
     while numel(buf)<(offset+n)

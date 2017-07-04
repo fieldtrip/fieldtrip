@@ -77,7 +77,7 @@ clear buffer
 con = pnet('udpsocket', cfg.port);
 
 if (con<0)
-  error('unable to establish connection with host');
+  ft_error('unable to establish connection with host');
 else
   fprintf('listening on UDP port %d\n', cfg.port);
 end

@@ -44,7 +44,7 @@ function [event] = read_nex_event(filename)
 hdr = read_nex_header(filename);
 adindx = find(cell2mat({hdr.varheader.typ})==5);
 if isempty(adindx)  % this would otherwise produce an error
-  warning('No continuous variables found - using hdr.filheader.frequency');
+  ft_warning('No continuous variables found - using hdr.filheader.frequency');
   smpfrq = hdr.filheader.frequency;
 else
   smpfrq = hdr.varheader(adindx(1)).wfrequency;
@@ -59,14 +59,14 @@ mrkvarnum = find([hdr.varheader.typ] == 6);
 
 for mrkn = 1:numel(mrkvarnum)
   status = fseek(fid,hdr.varheader(mrkvarnum(mrkn)).offset,'bof');
-  if status < 0;  error('error with fseek');  end
+  if status < 0;  ft_error('error with fseek');  end
   
   % read the time of the triggers
   dum = fread(fid,hdr.varheader(mrkvarnum(mrkn)).cnt,'int32');
   
   % skip importing this marker if empty
   if isempty(dum)
-    warning(['skipping marker ' deblank(hdr.varheader(mrkvarnum(mrkn)).nam) ...
+    ft_warning(['skipping marker ' deblank(hdr.varheader(mrkvarnum(mrkn)).nam) ...
       ' because no timestamps were found'])
     continue
   end
@@ -78,7 +78,7 @@ for mrkn = 1:numel(mrkvarnum)
   
   % read the value of the triggers
   status = fseek(fid,64,'cof');
-  if status < 0;  error('error with fseek');  end
+  if status < 0;  ft_error('error with fseek');  end
   dum = fread(fid, [hdr.varheader(mrkvarnum(mrkn)).mrklen, ...
     hdr.varheader(mrkvarnum(mrkn)).cnt], 'uchar');
   mrk.val = str2num(char(dum(1:5,:)')); %#ok<ST2NM> non-scalar
@@ -106,7 +106,7 @@ intvarnum = find([hdr.varheader.typ] == 2);
 
 for int = 1:numel(intvarnum)
   status = fseek(fid,hdr.varheader(intvarnum(int)).offset,'bof');
-  if status < 0;  error('error with fseek');  end
+  if status < 0;  ft_error('error with fseek');  end
 
   % read the time of the triggers
   dum1 = fread(fid,hdr.varheader(intvarnum(int)).cnt,'int32');
@@ -114,7 +114,7 @@ for int = 1:numel(intvarnum)
   
   % skip importing this interval if empty
   if isempty(dum1) &&  isempty(dum2)
-    warning(['skipping interval ' deblank(hdr.varheader(intvarnum(int)).nam) ...
+    ft_warning(['skipping interval ' deblank(hdr.varheader(intvarnum(int)).nam) ...
       ' because no timestamps were found'])
     continue
   end
@@ -148,14 +148,14 @@ evtvarnum = find([hdr.varheader.typ] == 1);
 
 for ev = 1:numel(evtvarnum)
   status = fseek(fid,hdr.varheader(evtvarnum(ev)).offset,'bof');
-  if status < 0;  error('error with fseek');  end
+  if status < 0;  ft_error('error with fseek');  end
 
   % read the time of the triggers
   dum = fread(fid,hdr.varheader(evtvarnum(ev)).cnt,'int32');
   
   % skip importing this event if empty
   if isempty(dum)
-    warning(['skipping event ' deblank(hdr.varheader(evtvarnum(ev)).nam) ...
+    ft_warning(['skipping event ' deblank(hdr.varheader(evtvarnum(ev)).nam) ...
       ' because no timestamps were found'])
     continue
   end
@@ -185,4 +185,4 @@ for ev = 1:numel(evtvarnum)
 end
 
 status = fclose(fid);
-if status < 0;  error('error with fclose');  end
+if status < 0;  ft_error('error with fclose');  end

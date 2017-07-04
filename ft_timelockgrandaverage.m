@@ -92,13 +92,13 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
   if isfield(varargin{i},'trial') && isfield(varargin{i},'avg');% see bug2372 (dieloz)
     varargin{i} = rmfield(varargin{i},'trial');
-    warning('depreciating trial field: using the avg to compute the grand average');
+    ft_warning('depreciating trial field: using the avg to compute the grand average');
     if strcmp(varargin{i}.dimord,'rpt_chan_time');
       varargin{i}.dimord = 'chan_time';
     end
   else
     if isfield(varargin{i},'trial') && ~isfield(varargin{i},'avg');
-      error('input dataset %d does not contain avg field: see ft_timelockanalysis', i);
+      ft_error('input dataset %d does not contain avg field: see ft_timelockanalysis', i);
     end
   end
 end
@@ -119,7 +119,7 @@ if iscell(cfg.parameter)
 end
 
 if strcmp(cfg.parameter,'trial');
-  error('not supporting averaging over the repetition dimension');
+  ft_error('not supporting averaging over the repetition dimension');
 end
 
 Nsubj    = length(varargin);
@@ -182,7 +182,7 @@ else % ~strcmp(cfg.keepindividual, 'yes')
           avgvar(s, :, :, :) = zeros([datsiz]); % shall we remove the .var field from the structure under these conditions ?
         end
       otherwise
-        error('unsupported value for cfg.method')
+        ft_error('unsupported value for cfg.method')
     end % switch
   end
   % average across subject dimension
@@ -219,10 +219,10 @@ switch cfg.method
 
   case 'across'
     if isfield(varargin{1}, 'grad') % positions are different between subjects
-      warning('discarding gradiometer information because it cannot be averaged');
+      ft_warning('discarding gradiometer information because it cannot be averaged');
     end
     if isfield(varargin{1}, 'elec') % positions are different between subjects
-      warning('discarding electrode information because it cannot be averaged');
+      ft_warning('discarding electrode information because it cannot be averaged');
     end
 
   case 'within'
@@ -237,7 +237,7 @@ switch cfg.method
     end
 
   otherwise
-    error('unsupported method "%s"', cfg.method);
+    ft_error('unsupported method "%s"', cfg.method);
 end
 
 if strcmp(cfg.keepindividual, 'yes')

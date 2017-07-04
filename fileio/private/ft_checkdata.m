@@ -952,10 +952,10 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
     data.dimord = 'chan_chan_freq';
   end
   
-  if isfield(data, 'trialinfo'),  data = rmfield(data, 'trialinfo'); end;
-  if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end;
-  if isfield(data, 'cumsumcnt'),  data = rmfield(data, 'cumsumcnt');  end;
-  if isfield(data, 'cumtapcnt'),  data = rmfield(data, 'cumtapcnt');  end;
+  if isfield(data, 'trialinfo'),  data = rmfield(data, 'trialinfo'); end
+  if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end
+  if isfield(data, 'cumsumcnt'),  data = rmfield(data, 'cumsumcnt');  end
+  if isfield(data, 'cumtapcnt'),  data = rmfield(data, 'cumtapcnt');  end
   
 end % convert to the requested bivariate representation
 
@@ -1424,7 +1424,7 @@ for i=1:nrpt
   end
 end
 
-if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
+if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

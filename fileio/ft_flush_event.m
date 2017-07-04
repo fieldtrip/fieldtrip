@@ -54,11 +54,11 @@ switch eventformat
 
   case 'matlab'
     if exist(filename, 'file')
-      warning('deleting existing file ''%s''', filename);
+      ft_warning('deleting existing file ''%s''', filename);
       delete(filename);
     end
 
   otherwise
-    error('unsupported data format');
+    ft_error('unsupported data format');
 end
 

@@ -64,7 +64,7 @@ if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
   % the call to ft_determine_coordsys should have taken care of this, but
   % it is possible that the user aborted the coordinate system
   % determination. See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2526
-  error('the coordinate system of the geometrical object is not specified');
+  ft_error('the coordinate system of the geometrical object is not specified');
 end
 
 if any(strcmp(target, {'spm', 'mni', 'tal'}))
@@ -86,7 +86,7 @@ else
 end
 
 if needtemplate && nargin<4
-  error('you need to specify a template filename for the coregistration');
+  ft_error('you need to specify a template filename for the coregistration');
 end
 
 hastemplate = nargin>3;
@@ -113,7 +113,7 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
         otherwise
       end % switch obj.coordsys
     otherwise
-      error('conversion from %s to %s is not yet supported', obj.coordsys, target);
+      ft_error('conversion from %s to %s is not yet supported', obj.coordsys, target);
   end % switch target
 end
 

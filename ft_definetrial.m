@@ -132,7 +132,7 @@ cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
   % there used to be other system specific trialfuns in previous versions
-  % of fieldtrip, but they are deprecated and not included in recent
+  % of FieldTrip, but they are deprecated and not included in recent
   % versions any more
   cfg.trialfun = 'ft_trialfun_general';
   ft_warning('no trialfun was specified, using ft_trialfun_general');

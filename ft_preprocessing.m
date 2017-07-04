@@ -252,7 +252,7 @@ if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
 end
 
 % this relates to a previous fix to handle 32 bit neuroscan data
-if isfield(cfg, 'nsdf'),
+if isfield(cfg, 'nsdf')
   % FIXME this should be handled by ft_checkconfig, but ft_checkconfig does not allow yet for
   % specific errors in the case of forbidden fields
   ft_error('The use of cfg.nsdf is deprecated. FieldTrip tries to determine the bit resolution automatically. You can overrule this by specifying cfg.dataformat and cfg.headerformat. See: http://www.fieldtriptoolbox.org/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');

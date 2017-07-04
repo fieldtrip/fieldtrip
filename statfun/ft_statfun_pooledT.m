@@ -67,7 +67,7 @@ selB = find(design(cfg.ivar,:)==2);
 dfA  = length(selA);
 dfB  = length(selB);
 if (dfA+dfB)<size(design, 2)
-  error('inappropriate design, should only contain 1''s and 2''s');
+  ft_error('inappropriate design, should only contain 1''s and 2''s');
 end
 sumA = sum(dat(:,selA), 2);
 sumB = sum(dat(:,selB), 2);

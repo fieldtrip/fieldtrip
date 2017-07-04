@@ -22,7 +22,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 %   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
-%   cfg.channel       = nx1 cell-array with selection of channels (default = 'all'),
+%   cfg.channel       = nx1 cell-array with selection of channels (default = 'all')
 %                       see ft_channelselection for details
 %   cfg.title          = string, title of plot
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
@@ -158,7 +158,7 @@ Ndata = numel(varargin);
 
 % interactive plotting is not allowed with more than 1 input
 % if Ndata >1 && strcmp(cfg.interactive, 'yes')
-%   error('interactive plotting is not supported with more than 1 input data set');
+%   ft_error('interactive plotting is not supported with more than 1 input data set');
 % end
 
 % FIXME rename directionality and cohrefchannel in more meaningful options
@@ -175,7 +175,7 @@ end
 
 if Ndata  > 1
   if (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) > 1)
-    error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
+    ft_error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
   elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
     tmpstyle = cfg.linestyle{1};
     cfg.linestyle = cell(Ndata , 1);
@@ -193,7 +193,7 @@ for i=1:Ndata
   dtype{i}    = ft_datatype(varargin{i});
 
   % this is needed for correct treatment of graphcolor later on
-  if nargin>1,
+  if nargin>1
     if ~isempty(inputname(i+1))
       iname{i+1} = inputname(i+1);
     else
@@ -204,9 +204,9 @@ for i=1:Ndata
   end
 end
 
-if Ndata >1,
+if Ndata >1
   if ~all(strcmp(dtype{1}, dtype))
-    error('input data are of different type; this is not supported');
+    ft_error('input data are of different type; this is not supported');
   end
 end
 dtype  = dtype{1};
@@ -222,7 +222,7 @@ dimtok = tokenize(dimord, '_');
 % data in the input. A more generic solution should be considered.
 
 if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
-if ~any(strcmp({'freq','freqmvar'},dtype)),
+if ~any(strcmp({'freq','freqmvar'},dtype))
   cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
 end
 if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
@@ -277,7 +277,7 @@ end
 
 % check whether rpt/subj is present and remove if necessary and whether
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
-if strcmp(dtype, 'timelock') && hasrpt,
+if strcmp(dtype, 'timelock') && hasrpt
   tmpcfg        = [];
   tmpcfg.trials = cfg.trials;
   for i=1:Ndata
@@ -290,12 +290,12 @@ if strcmp(dtype, 'timelock') && hasrpt,
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
-elseif strcmp(dtype, 'freq') && hasrpt,
+elseif strcmp(dtype, 'freq') && hasrpt
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
   % on the fly computation of coherence spectrum is not supported
   for i=1:Ndata
-    if isfield(varargin{i}, 'crsspctrm'),
+    if isfield(varargin{i}, 'crsspctrm')
       varargin{i} = rmfield(varargin{i}, 'crsspctrm');
     end
   end
@@ -331,9 +331,9 @@ if ~strcmp(cfg.baseline, 'no')
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
       varargin{i} = ft_freqbaseline(cfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
-      error('baseline correction is not supported for spectra without a time dimension');
+      ft_error('baseline correction is not supported for spectra without a time dimension');
     else
-      warning('baseline correction not applied, please set xparam');
+      ft_warning('baseline correction not applied, please set xparam');
     end
   end
 end
@@ -350,7 +350,7 @@ haslabelcmb = isfield(varargin{1}, 'labelcmb');
 if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % a reference channel is required:
   if ~isfield(cfg, 'refchannel')
-    error('no reference channel is specified');
+    ft_error('no reference channel is specified');
   end
 
   % check for refchannel being part of selection
@@ -362,17 +362,17 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
     end
     if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
         (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
-      error('cfg.refchannel is a not present in the (selected) channels)')
+      ft_error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
 
   % interactively select the reference channel
   if strcmp(cfg.refchannel, 'gui')
-    error('cfg.refchannel = ''gui'' is not supported in ft_singleplotER');
+    ft_error('cfg.refchannel = ''gui'' is not supported in ft_singleplotER');
   end
 
   for i=1:Ndata
-    if ~isfull,
+    if ~isfull
       % convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.directionality)
         sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:,2)));
@@ -386,7 +386,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
       if length(sel1)+length(sel2)==0
-        error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+        ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
       end
       varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2],:,:);
       varargin{i}.label     = [varargin{i}.labelcmb(sel1,1);varargin{i}.labelcmb(sel2,2)];
@@ -410,9 +410,9 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
         meandir = 1;
 
       elseif strcmp(cfg.directionality, 'ff-fd')
-        error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
+        ft_error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
       elseif strcmp(cfg.directionality, 'fd-ff')
-        error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
+        ft_error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
       end %if directionality
     end %if ~isfull
   end %for i
@@ -465,7 +465,7 @@ for i=1:Ndata
   elseif isfield(varargin{1}, 'labelcmb')
     selchannel = ft_channelselection(cfg.channel, unique(varargin{i}.labelcmb(:)));
   else
-    error('the input data does not contain a label or labelcmb-field');
+    ft_error('the input data does not contain a label or labelcmb-field');
   end
 
   % make vector dat with one value for each channel
@@ -565,7 +565,7 @@ for i=1:Ndata
     elseif strcmp(cfg.ylim,'minzero')
       ymin = min([ymin min(datavector)]);
       ymax = 0;
-    end;
+    end
   else
     ymin = cfg.ylim(1);
     ymax = cfg.ylim(2);

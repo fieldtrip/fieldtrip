@@ -94,7 +94,7 @@ nev = [];
 
 if implementation==1
   if ~isempty(flt_maxnumber)
-    warning('filtering on maximum number not yet implemneted');
+    ft_warning('filtering on maximum number not yet implemneted');
   end
   % this is the slow way of reading it
   % it also does not allow filtering
@@ -115,7 +115,7 @@ end
 
 if implementation==2
   if ~isempty(flt_maxnumber)
-    warning('filtering on maximum number not yet implemneted');
+    ft_warning('filtering on maximum number not yet implemneted');
   end
   % this is a faster way of reading it and it is still using the automatic type conversion from Matlab
   fp = offset;
@@ -152,7 +152,7 @@ if implementation==3
     flt_maxnumber = inf;
   end
   if fseek(fid, offset, 'bof')~=0
-    error(ferror(fid));
+    ft_error(ferror(fid));
   end
   buf = fread(fid, (flt_maxnumber-flt_minnumber+1)*184, 'uint8=>uint8');
   [PktStart, PktId , PktDataSize , TimeStamp , EventId , TTLValue , CRC , Dummy , Extra1 , Extra2 , Extra3 , Extra4 , Extra5 , Extra6 , Extra7 , Extra8 , EventString] = ...
