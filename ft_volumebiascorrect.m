@@ -57,7 +57,7 @@ if ~isfield(mri, 'anatomy')
 end
 
 % do an approximate alignment
-mri_acpc = ft_convert_coordsys(mri, 'spm');
+mri_acpc = ft_convert_coordsys(mri, 'acpc');
 
 scale = max(mri_acpc.anatomy(:));
 mri_acpc.anatomy = mri_acpc.anatomy./scale;

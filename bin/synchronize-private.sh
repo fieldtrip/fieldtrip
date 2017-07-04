@@ -180,6 +180,14 @@ ARRAY+=(src/compiler.h)
 sync ${ARRAY[*]}
 
 ################################################################################
+# coordsys2label.m
+
+ARRAY=()
+ARRAY+=(utilities/private/coordsys2label.m)
+ARRAY+=(plotting/private/coordsys2label.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # cornerpoints.m
 
 ARRAY=()
