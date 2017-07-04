@@ -283,11 +283,21 @@ elseif strcmp(style, 'colormix')
  
   % set mask and cdat, and check for clim
   if isempty(clim)
-    error('clim is required for style = ''imsat'' or style = ''imsatiso''')
+    error('clim is required for style = ''colormix''')
+  end
+  
+  if ~isempty(datmask)
+    % use maskimagetmp in combination with maskimage, maskimagetmp is
+    % scaled between 0 and 1
+    maskimagetmp = maskimagetmp./max(maskimagetmp(:));
+    Zmask        = double(maskimage);
+    Zmask(Zmask>0) = maskimagetmp(Zmask>0);
+  else
+    Zmask        = double(maskimage);
   end
   
   cmap    = get(gcf, 'colormap');
-  rgbcdat = bg_rgba2rgb([1 1 1], cdat, cmap, clim, highlight, 'rampup', [0 1]);
+  rgbcdat = bg_rgba2rgb([1 1 1], Zi, cmap, clim, Zmask, 'rampup', [0 1]);
       
   h = imagesc(xi, yi, rgbcdat, clim);
   set(h,'tag',tag);
