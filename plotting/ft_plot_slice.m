@@ -426,6 +426,7 @@ elseif domask
       end
     
     case 'colormix'
+      if isempty(cmap), error('using ''colormix'' as maskstyle requires an explicitly defined colormap'); end
       V = bg_rgba2rgb(Vback,V,cmap,clim,Vmask,'rampup',opacitylim);
       if isempty(h)
         % create surface object
