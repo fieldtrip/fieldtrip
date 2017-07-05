@@ -127,7 +127,7 @@ end
 
 if ~isempty(stack)
   % it is called from within a function
-  name = {stack.name};
+  name = fliplr({stack.name});
   defaultId = ['FieldTrip' sprintf(':%s', name{:}) ':line' num2str(stack(1).line)];
 else
   % it is called from the command line
