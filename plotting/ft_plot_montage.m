@@ -16,6 +16,10 @@ function ft_plot_montage(dat, varargin)
 %   'srange'        = 
 %   'slicesize'     = 
 %   'nslice'        = scalar, number of slices
+%   'maskstyle'     = string, 'opacity' or 'colormix', defines the rendering
+%   'background'    = needed when maskstyle is 'colormix', 3D-matrix with
+%                     the same size as the data matrix, serving as
+%                     grayscale image that provides the background
 % 
 % See also FT_PLOT_ORTHO, FT_PLOT_SLICE, FT_SOURCEPLOT
 

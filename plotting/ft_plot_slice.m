@@ -21,6 +21,10 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'datmask'      = 3D-matrix with the same size as the data matrix, serving as opacitymap
 %                    If the second input argument to the function contains a matrix, this
 %                    will be used as the mask
+%   'maskstyle'    = string, 'opacity' or 'colormix', defines the rendering
+%   'background'   = needed when maskstyle is 'colormix', 3D-matrix with
+%                    the same size as the data matrix, serving as
+%                    grayscale image that provides the background
 %   'opacitylim'   = 1x2 vector specifying the limits for opacity masking
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'style'        = string, 'flat' or '3D'
@@ -421,7 +425,7 @@ elseif domask
         alim(opacitylim)
       end
     
-    case 'rgba2rgb'
+    case 'colormix'
       V = bg_rgba2rgb(Vback,V,cmap,clim,Vmask,'rampup',opacitylim);
       if isempty(h)
         % create surface object
