@@ -100,11 +100,11 @@ switch cfg.method
     if ~isfield(cfg.velocity2D, 'mindur'),   cfg.velocity2D.mindur  =  3;     end % minimum microsaccade duration in samples
     if ~isfield(cfg.velocity2D, 'velthres'), cfg.velocity2D.velthres = 6;     end
   case 'clustering'
-    error('not implemented yet');
+    ft_error('not implemented yet');
     % Otero-Millan J, Castro JLA, Macknik SL, Martinez-Conde S (2014)
     % Unsupervised clustering method to detect microsaccades. J Vis 14.
   otherwise
-    error('unsupported option for cfg.method');
+    ft_error('unsupported option for cfg.method');
 end
 
 % select channels and trials of interest, by default this will select all channels and trials

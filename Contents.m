@@ -1,5 +1,5 @@
 % FieldTrip
-% Version unknown fieldtriptoolbox.org DD-MM-YYYY
+% Version unknown www.fieldtriptoolbox.org DD-MM-YYYY
 %
 % FieldTrip is the MATLAB toolbox for MEG and EEG analysis that is being developed at
 % the Centre for Cognitive Neuroimaging of the Donders Institute for Brain, Cognition

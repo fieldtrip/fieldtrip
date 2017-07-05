@@ -1,12 +1,12 @@
-function [mri] = align_itab2spm(mri, opt)
+function [mri] = align_neuromag2acpc(mri, opt)
 
-% ALIGN_ITAB2SPM performs an approximate alignment of the anatomical volume
-% from ITAB towards SPM coordinates. Only the homogenous transformation matrix
+% ALIGN_NEUROMAG2ACPC performs an approximate alignment of the anatomical volume
+% from NEUROMAG towards ACPC coordinates. Only the homogenous transformation matrix
 % is modified and the coordsys-field is updated.
 %
 % Use as
-%   mri = align_itab2spm(mri)
-%   mri = align_itab2spm(mri, opt)
+%   mri = align_neurtomag2acpc(mri)
+%   mri = align_neurtomag2acpc(mri, opt)
 %
 % Where mri is a FieldTrip MRI-structure, and opt an optional argument
 % specifying how the registration is done.
@@ -23,7 +23,7 @@ end
 % locations of the fiducials and landmarks in the template T1 image from
 % SPM
 
-spmvox2spmhead = [
+acpcvox2acpchead = [
      2     0     0   -92
      0     2     0  -128
      0     0     2   -74
@@ -31,33 +31,33 @@ spmvox2spmhead = [
 ];
 
 % these are the voxel indices of some points in the SPM canonical T1 
-spmvox_Ac           = [46 64  37  1]';     % the anterior commissure
-spmvox_Ori          = [46 48  10  1]';     % approximately between the ears in T1.mnc
-spmvox_Nas          = [46 106 13  1]';     % approximately the nasion in T1.mnc
-spmvox_Lpa_canal    = [ 5 48  10  1]';     % Left ear canal
-spmvox_Rpa_canal    = [87 48  10  1]';     % Right ear canal
+acpcvox_Ac           = [46 64  37  1]';     % the anterior commissure
+acpcvox_Ori          = [46 48  10  1]';     % approximately between the ears in T1.mnc
+acpcvox_Nas          = [46 106 13  1]';     % approximately the nasion in T1.mnc
+acpcvox_Lpa_canal    = [ 5 48  10  1]';     % Left ear canal
+acpcvox_Rpa_canal    = [87 48  10  1]';     % Right ear canal
 
-spmhead_Ac           = spmvox2spmhead * spmvox_Ac  ;
-spmhead_Ori          = spmvox2spmhead * spmvox_Ori ;
-spmhead_Nas          = spmvox2spmhead * spmvox_Nas ;
-spmhead_Lpa_canal    = spmvox2spmhead * spmvox_Lpa_canal ;
-spmhead_Rpa_canal    = spmvox2spmhead * spmvox_Rpa_canal ;
+acpchead_Ac           = acpcvox2acpchead * acpcvox_Ac  ;
+acpchead_Ori          = acpcvox2acpchead * acpcvox_Ori ;
+acpchead_Nas          = acpcvox2acpchead * acpcvox_Nas ;
+acpchead_Lpa_canal    = acpcvox2acpchead * acpcvox_Lpa_canal ;
+acpchead_Rpa_canal    = acpcvox2acpchead * acpcvox_Rpa_canal ;
 
-itabvox2itabhead  = mri.transform;
-spmhead2itabhead  = ft_headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'itab');
+neuromagvox2neuromaghead  = mri.transform;
+acpchead2neuromaghead  = ft_headcoordinates(acpchead_Nas(1:3), acpchead_Lpa_canal(1:3), acpchead_Rpa_canal(1:3), 'neuromag');
 
-%itabvox2spmhead =  inv(spmhead2itabhead) * itabvox2itabhead;
-itabvox2spmhead  =  spmhead2itabhead \ itabvox2itabhead;
+%neuromagvox2acpchead =  inv(acpchead2neuromaghead) * neuromagvox2neuromaghead;
+neuromagvox2acpchead  =  acpchead2neuromaghead \ neuromagvox2neuromaghead;
 
 % change the transformation matrix, such that it returns approximate SPM head coordinates
-mri.transform     = itabvox2spmhead;
-mri.vox2headOrig  = itabvox2itabhead;
-mri.vox2head      = itabvox2spmhead;
-mri.head2headOrig = spmhead2itabhead;
-mri.coordsys      = 'spm';
+mri.transform     = neuromagvox2acpchead;
+mri.vox2headOrig  = neuromagvox2neuromaghead;
+mri.vox2head      = neuromagvox2acpchead;
+mri.head2headOrig = acpchead2neuromaghead;
+mri.coordsys      = 'acpc';
 
 % Do a second round of affine registration (rigid body) to get improved
-% alignment with spm coordinate system. this is needed because there may be
+% alignment with ACPC coordinate system. this is needed because there may be
 % different conventions defining LPA and RPA. The affine registration may
 % fail however, e.g. if the initial alignment is not close enough. In that
 % case SPM will throw an error
@@ -76,7 +76,7 @@ if opt==1
     case 'SPM2'
       template = fullfile(spm('Dir'),'templates','T1.mnc');
     otherwise
-      error('unsupported spm-version');
+      ft_error('unsupported SPM version');
   end
   mri2 = ft_read_mri(template);
   
@@ -91,18 +91,18 @@ if opt==1
   [M, scale]    = spm_affreg(V1,V2,flags);
   
   % some juggling around with the transformation matrices
-  itabvox2spmhead2  = M \ V1.mat;
-  spmhead2itabhead2 = itabvox2itabhead / itabvox2spmhead2;
+  neuromagvox2acpchead2  = M \ V1.mat;
+  acpchead2neuromaghead2 = neuromagvox2neuromaghead / neuromagvox2acpchead2;
    
   % update the transformation matrix
-  mri.transform     = itabvox2spmhead2;
+  mri.transform     = neuromagvox2acpchead2;
   
   % this one is unchanged
-  mri.vox2headOrig  = itabvox2itabhead;
+  mri.vox2headOrig  = neuromagvox2neuromaghead;
   
   % these are new
-  mri.vox2head      = itabvox2spmhead2;
-  mri.head2headOrig = spmhead2itabhead2;
+  mri.vox2head      = neuromagvox2acpchead2;
+  mri.head2headOrig = acpchead2neuromaghead2;
   
   % delete the temporary files
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
@@ -122,7 +122,7 @@ elseif opt==2
     case 'SPM2'
       template = fullfile(spm('Dir'),'templates','T1.mnc');
     otherwise
-      error('unsupported spm-version');
+      ft_error('unsupported SPM version');
   end
   mri2 = ft_read_mri(template);
   
@@ -134,18 +134,18 @@ elseif opt==2
   flags.nits       = 0; %set number of non-linear iterations to zero
   flags.regtype    = 'rigid';
   params           = spm_normalise(V2,V1,[],[],[],flags);
-  spmhead2itabhead2 = spmhead2itabhead*V1.mat*params.Affine/V2.mat;
-  itabvox2spmhead2  = spmhead2itabhead2\itabvox2itabhead;
+  acpchead2neuromaghead2 = acpchead2neuromaghead*V1.mat*params.Affine/V2.mat;
+  neuromagvox2acpchead2  = acpchead2neuromaghead2\neuromagvox2neuromaghead;
   
   % update the transformation matrix
-  mri.transform     = itabvox2spmhead2;
+  mri.transform     = neuromagvox2acpchead2;
   
   % this one is unchanged
-  mri.vox2headOrig  = itabvox2itabhead;
+  mri.vox2headOrig  = neuromagvox2neuromaghead;
   
   % these are new
-  mri.vox2head      = itabvox2spmhead2;
-  mri.head2headOrig = spmhead2itabhead2;
+  mri.vox2head      = neuromagvox2acpchead2;
+  mri.head2headOrig = acpchead2neuromaghead2;
   
   % delete the temporary files
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));

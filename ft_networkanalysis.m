@@ -89,16 +89,16 @@ cfg.threshold = ft_getopt(cfg, 'threshold', []);
 ft_hastoolbox('BCT', 1);
 
 % check the data for the correct dimord and for the presence of the requested parameter
-if isfield(data, [cfg.parameter,'dimord']),
+if isfield(data, [cfg.parameter,'dimord'])
   dimord = data.([cfg.parameter,'dimord']);
 elseif isfield(data, 'dimord')
   dimord = data.dimord;
 else
-  error('input data needs a ''dimord'' field');
+  ft_error('input data needs a ''dimord'' field');
 end
 
-if ~strcmp(dimord(1:7), 'pos_pos') && ~strcmp(dimord(1:9), 'chan_chan'),
-  error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
+if ~strcmp(dimord(1:7), 'pos_pos') && ~strcmp(dimord(1:9), 'chan_chan')
+  ft_error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
 end
 
 % conversion to double is needed because some BCT functions want to do matrix
@@ -107,7 +107,7 @@ input = double(data.(cfg.parameter));
 
 % some metrics explicitly require a certain parameter
 if strcmp(cfg.method, 'charpath') && ~strcmp(cfg.parameter, 'distance')
-  error('characteristic path length can only be computed on distance matrices');
+  ft_error('characteristic path length can only be computed on distance matrices');
 end
 
 % check for binary or not
@@ -116,7 +116,7 @@ for k = 1:size(input,3)
   for m = 1:size(input,4)
     tmp = input(:,:,k,m);
     isbinary = all(ismember(tmp(:), [0 1]));
-    if ~isbinary,
+    if ~isbinary
       break;
     end
   end
@@ -146,7 +146,7 @@ for k = 1:size(input,3)
   for m = 1:size(input,4)
     tmp = input(:,:,k,m);
     isdirected = ~all(all(tmp==tmp.'));
-    if ~isdirected,
+    if ~isdirected
       break;
     end
   end
@@ -211,7 +211,7 @@ for k = 1:size(input, 3)
           output(:,k,m) = betweenness_wei(input(:,:,k,m));
         end
       case 'breadthdist'
-        error('not yet implemented');
+        ft_error('not yet implemented');
       case 'charpath'
         % this needs the distance matrix as input, this is dealt with
         % above
@@ -256,11 +256,11 @@ for k = 1:size(input, 3)
           output(:,:,k,m) = edge_betweenness_wei(input(:,:,k,m));
         end
       case 'efficiency'
-        error('not yet implemented');
+        ft_error('not yet implemented');
       case 'modularity'
-        error('not yet implemented');
+        ft_error('not yet implemented');
       case 'participation_coef'
-        error('not yet implemented');
+        ft_error('not yet implemented');
       case 'transitivity'
         if isbinary && isdirected
           output(k,m) = transitivity_bd(input(:,:,k,m));
@@ -272,7 +272,7 @@ for k = 1:size(input, 3)
           output(k,m) = transitivity_wu(input(:,:,k,m));
         end
       otherwise
-        error('unsupported connectivity metric %s requested');
+        ft_error('unsupported connectivity metric %s requested');
     end
 
   end % for m

@@ -44,7 +44,7 @@ function hdr = read_yokogawa_header_new(filename)
 %  fopen iee-le
 
 if ~ft_hastoolbox('yokogawa_meg_reader')
-    error('cannot determine whether Yokogawa toolbox is present');
+    ft_error('cannot determine whether Yokogawa toolbox is present');
 end
 
 handles = definehandles;
@@ -75,7 +75,7 @@ switch acq_type
     sample_rate = acq_cond.sample_rate;
     sample_count = acq_cond.sample_count;
     if isempty(sample_rate) || isempty(sample_count)
-      error('invalid sample rate or sample count in ', filename);
+      ft_error('invalid sample rate or sample count in ', filename);
       return;
     end
     pretrigger_length = 0;
@@ -87,11 +87,11 @@ switch acq_type
     pretrigger_length = acq_cond.pretrigger_length;
     averaged_count = acq_cond.average_count; 
     if isempty(sample_rate) || isempty(sample_count) || isempty(pretrigger_length) || isempty(averaged_count)
-      error('invalid sample rate or sample count or pretrigger length or average count in ', filename);
+      ft_error('invalid sample rate or sample count or pretrigger length or average count in ', filename);
       return;
     end
     if acq_cond.multi_trigger.enable 
-      error('multi trigger mode not supported for ', filename);
+      ft_error('multi trigger mode not supported for ', filename);
       return;
     end
   case handles.AcqTypeEvokedRaw
@@ -100,16 +100,16 @@ switch acq_type
     pretrigger_length = acq_cond.pretrigger_length;
     actual_epoch_count = acq_cond.average_count; 
     if isempty(sample_rate) || isempty(sample_count) || isempty(pretrigger_length) || isempty(actual_epoch_count)
-      error('invalid sample rate or sample count or pretrigger length or epoch count in ', filename);
+      ft_error('invalid sample rate or sample count or pretrigger length or epoch count in ', filename);
       return;
     end
     if acq_cond.multi_trigger.enable 
-      error('multi trigger mode not supported for ', filename);
+      ft_error('multi trigger mode not supported for ', filename);
       return;
     end
 
   otherwise
-    error('unknown data type');
+    ft_error('unknown data type');
 end
 clear('acq_cond'); % remove structure as local variables are collected in the end
 
@@ -149,7 +149,7 @@ switch orig.acq_type
     hdr.nSamplesPre = orig.pretrigger_length;
     hdr.nTrials     = orig.actual_epoch_count;
   otherwise
-    error('unknown acquisition type');
+    ft_error('unknown acquisition type');
 end
 
 % construct a cell-array with labels of each channel

@@ -17,7 +17,7 @@ switch style
     for i=1:length(fn)
       tmp = segmentation.(fn{i})>threshold;
       if any(seg(tmp(:)))
-        error('overlapping tissue probability maps cannot be converted to an indexed representation');
+        ft_error('overlapping tissue probability maps cannot be converted to an indexed representation');
         % FIXME in principle it is possible to represent two tissue types at one voxel
       else
         seg(tmp) = i;
@@ -46,5 +46,5 @@ switch style
     end % for i
     
   otherwise
-    error('unsupported style "%s"', style);
+    ft_error('unsupported style "%s"', style);
 end

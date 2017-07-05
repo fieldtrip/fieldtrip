@@ -71,7 +71,7 @@ end
 
 % there are potentially errors to catch from the which() function
 if isempty(which(fname))
-  error('Not a valid M-file (%s).', fname);
+  ft_error('Not a valid M-file (%s).', fname);
 end
 
 % determine the number of input arguments and the number of jobs
@@ -99,16 +99,16 @@ elseif numargout>nargout
   % the number of output arguments is constrained by the users' call to this function
   numargout = nargout;
 elseif nargout>numargout
-  error('Too many output arguments.');
+  ft_error('Too many output arguments.');
 end
 
 % check the input arguments
 for i=1:numargin
   if ~isa(varargin{i}, 'cell')
-    error('input argument #%d should be a cell-array', i+1);
+    ft_error('input argument #%d should be a cell-array', i+1);
   end
   if numel(varargin{i})~=numjob
-    error('inconsistent number of elements in input #%d', i+1);
+    ft_error('inconsistent number of elements in input #%d', i+1);
   end
 end
 
@@ -123,11 +123,11 @@ for i=1:numel(pool)
 end
 
 if isempty(pool)
-  error('the engine pool is empty');
+  ft_error('the engine pool is empty');
 end
 
 if all(isbusy)
-  warning('there is no engine available, reverting to local cellfun');
+  ft_warning('there is no engine available, reverting to local cellfun');
   % prepare the output arguments
   varargout = cell(1,numargout);
   % use the standard cellfun
@@ -164,7 +164,7 @@ if strcmp(order, 'random')
 elseif strcmp(order, 'original')
   priority = 1:numjob;
 else
-  error('unsupported order');
+  ft_error('unsupported order');
 end
 
 % post all jobs and gather their results
@@ -241,9 +241,9 @@ while ~all(submitted) || ~all(collected)
     collect = find(jobid == pool{ready});
     
     % collect the output arguments
-    ws = warning('Off','Backtrace');
+    ws = ft_warning('Off','Backtrace');
     [argout, options] = engineget(pool{ready}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
-    warning(ws);
+    ft_warning(ws);
     
     % fprintf('collected job %d\n', collect);
     collected(collect)   = true;
@@ -282,7 +282,7 @@ if numargout>0 && UniformOutput
     for j=1:numel(varargout{i})
       if numel(varargout{i}{j})~=1
         % this error message is consistent with the one from cellfun
-        error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
+        ft_error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
       end
     end
   end
@@ -304,7 +304,7 @@ fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x\n', n
 if all(puttime>timused)
   % FIXME this could be detected in the loop above, and the strategy could automatically
   % be adjusted from using the engines to local execution
-  warning('copying the jobs over the network took more time than their execution');
+  ft_warning('copying the jobs over the network took more time than their execution');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

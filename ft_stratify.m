@@ -90,10 +90,10 @@ cfg.linkage      = ft_getopt('linkage', 'complete');      % 'single', 'complete'
 input = varargin;
 
 if size(input{1},1)~=size(input{2},1)
-  error('the number of channels should be the same');
+  ft_error('the number of channels should be the same');
 end
 if size(input{1},1)~=1 && strcmp(cfg.equalbinavg, 'yes')
-  error('combining equalising bin-averages and simultaneous stratification of two channels is impossible');
+  ft_error('combining equalising bin-averages and simultaneous stratification of two channels is impossible');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -103,7 +103,7 @@ if strcmp(cfg.method, 'histogram')
   
   nchan = size(input{1},1);
   ncond = length(input);
-  % if nchan~=2, error('number of trials ~= 2, do not know how to stratify'); end
+  % if nchan~=2, ft_error('number of trials ~= 2, do not know how to stratify'); end
   if isfield(cfg,'cmbindx')
     [output, b] = stratify2(cfg, input{1}, input{2});
     varargout{1} = output{1};
@@ -159,7 +159,7 @@ if strcmp(cfg.method, 'histogram')
     for cndlop = 1:ncond
       tmpb = zeros(1, size(b{cndlop},2));
       for j = 1:nchan
-        if j == 1,
+        if j == 1
           tmpb = tmpb + (b{cndlop}(j,:)).*prod(cfg.numbin(1:(j-1)));
         else
           tmpb = tmpb + (b{cndlop}(j,:)-1).*prod(cfg.numbin(1:(j-1)));
@@ -179,9 +179,9 @@ if strcmp(cfg.method, 'histogram')
     end
     
     %------do stratification the easy or the hard way
-    if strcmp(cfg.equalbinavg, 'yes'),
+    if strcmp(cfg.equalbinavg, 'yes')
       %---this is the hard way
-      if nchan>1, error('the option equalbinavg only works for one channel input at the moment'); end
+      if nchan>1, ft_error('the option equalbinavg only works for one channel input at the moment'); end
       
       %---first allocate some memory
       for cndlop = 1:ncond
@@ -332,7 +332,7 @@ elseif strcmp(cfg.method, 'histogram_shift')
   
   nshift = size(input{1},1);
   ncond  = length(input);
-  %if nchan~=2, error('number of trials ~= 2, do not know how to stratify'); end
+  %if nchan~=2, ft_error('number of trials ~= 2, do not know how to stratify'); end
   
   for k = 1:cfg.niter
     tmpinput = input;
@@ -366,7 +366,7 @@ elseif strcmp(cfg.method, 'histogram_shift')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ~isempty(strfind(cfg.method, 'split'))
   ncond = length(varargin);
-  if ~size(varargin{1},1)==2, error('two channels required'); end
+  if ~size(varargin{1},1)==2, ft_error('two channels required'); end
   m1      = mean(varargin{1},2);
   m2      = mean(varargin{2},2);
   sel{1} = zeros(1,size(varargin{1},2));
@@ -408,7 +408,7 @@ elseif ~isempty(strfind(cfg.method, 'split'))
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'equatespike')
   if length(input)~=2
-    error('this requires two conditions as input');
+    ft_error('this requires two conditions as input');
   end
   datA = input{1};
   datB = input{2};
@@ -421,26 +421,26 @@ elseif strcmp(cfg.method, 'equatespike')
   nsmpB  = size(datB{1},2);
   
   if (ntrlA~=ntrlB)
-    error('number of trials should be the same in each condition');
+    ft_error('number of trials should be the same in each condition');
   end
   
   if (nchanA~=nchanB)
-    error('number of channels should be the same in each condition');
+    ft_error('number of channels should be the same in each condition');
   end
   
   if (nsmpA~=nsmpB)
-    error('number of samples should be the same in each condition');
+    ft_error('number of samples should be the same in each condition');
   end
   
   for i=1:ntrlA
     if size(datA{i},2)~=nsmpA
-      error('number of samples should be the same in each trial');
+      ft_error('number of samples should be the same in each trial');
     end
   end
   
   for i=1:ntrlB
     if size(datB{i},2)~=nsmpB
-      error('number of samples should be the same in each trial');
+      ft_error('number of samples should be the same in each trial');
     end
   end
   
@@ -499,7 +499,7 @@ elseif strcmp(cfg.method, 'equatespike')
     z = linkage(y, cfg.linkage);
     
     if any(any(z(1:ntrl,:)>2*ntrl))
-      error('trial pairs are not correct after hierarchical clustering');
+      ft_error('trial pairs are not correct after hierarchical clustering');
     else
       fprintf('remaining distance after hierarchical clustering is %d\n', sum(z(1:ntrl,3)));
     end
@@ -535,7 +535,7 @@ elseif strcmp(cfg.method, 'equatespike')
     dist = sum(abs(numA(indxA,:)-numB(indxB,:)),2);
     
   else
-    error('incorrect value for cfg.pairtrials');
+    ft_error('incorrect value for cfg.pairtrials');
   end % if pairtrials
   
   fprintf('removing %d spikes from a total of %d spikes\n', sum(dist), sum(sum(numA))+sum(sum(numB)));
@@ -594,13 +594,13 @@ elseif strcmp(cfg.method, 'lohi')
   %lowest amplitude for input 1 and highest for input 2
   %%%%%%%%%%%%%%%%%
   if length(varargin)~=2
-    error('two input arguments with data required');
+    ft_error('two input arguments with data required');
   end
   if size(varargin{1},1)~=1 || size(varargin{2},1)~=1
-    error('only one channel per input is allowed');
+    ft_error('only one channel per input is allowed');
   end
   if size(varargin{1},2)~=size(varargin{2},2)
-    error('the number of observations should be equal');
+    ft_error('the number of observations should be equal');
   end
   
   [srt1, ix1] = sort(input{1}, 'ascend');

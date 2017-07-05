@@ -34,9 +34,9 @@ hastime = isfield(data, 'time');
 hasfreq = isfield(data, 'freq');
 
 if hastime
-  error('the volume data representation should be 3-D and is not allowed to contain a time field');
+  ft_error('the volume data representation should be 3-D and is not allowed to contain a time field');
 end
 
 if hasfreq
-  error('the volume data representation should be 3-D and is not allowed to contain a freq field');
+  ft_error('the volume data representation should be 3-D and is not allowed to contain a freq field');
 end

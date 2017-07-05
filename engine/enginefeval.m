@@ -72,12 +72,12 @@ end
 
 pool = enginepool('info');
 if isempty(pool)
-  error('the pool of engines has not been started yet, please see "help enginepool"');
+  ft_error('the pool of engines has not been started yet, please see "help enginepool"');
 end
 
 busy = ~cellfun(@isempty, pool);
 if all(busy)
-  error('all engines are busy');
+  ft_error('all engines are busy');
 end
 
 % find the first free engine

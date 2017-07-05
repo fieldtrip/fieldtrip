@@ -60,7 +60,7 @@ fprintf('found %d segments in the data\n', ntrial);
 sample = [event.sample];
 if any(diff(sample)<0)
   % events should be ordered according to the sample in the file at which they occur
-  warning('reordering events based on their sample number');
+  ft_warning('reordering events based on their sample number');
   [sample, order] = sort(sample);
   event = event(order);
 end
@@ -106,24 +106,24 @@ if (numstim > 0)
     for i=1:length(stim)
       for j=1:numstim(i)
         if isempty(value{stim{i}(j)})
-          error('missing a stimulus type definition in the related *.vmrk file');
+          ft_error('missing a stimulus type definition in the related *.vmrk file');
         end
         stimvalue  = sscanf(value{stim{i}(j)}, cfg.stimformat);
         stimsample = sample(stim{i}(j));
         stimtime   = (stimsample - begsample(i) + offset(i))/hdr.Fs; % relative to 'Time 0'
         if isempty(stimvalue)
-          error('the upper case letter of the stimulus value does not match with definition of "cfg.stimformat"'); 
+          ft_error('the upper case letter of the stimulus value does not match with definition of "cfg.stimformat"'); 
         end
         trialinfo(i,2*(j-1)+1) = stimvalue;
         trialinfo(i,2*(j-1)+2) = stimtime;
       end % j
     end % i
   else
-    warning('the trials have a varying number of stimuli, not adding them to the "trl" matrix');
+    ft_warning('the trials have a varying number of stimuli, not adding them to the "trl" matrix');
     trialinfo = [];
   end
 else
-  warning('the trials have no stimuli, no "trialinfo" will be added to the "trl" matrix');
+  ft_warning('the trials have no stimuli, no "trialinfo" will be added to the "trl" matrix');
   trialinfo = [];
 end
 

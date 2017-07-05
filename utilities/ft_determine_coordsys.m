@@ -26,7 +26,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % coordinate system, you should press the corresponding keyboard button.
 %
 % Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
-% neuromag, spm, mni, tal, als, ras, paxinos.
+% neuromag, spm, mni, tal, acpc, als, ras, paxinos.
 %
 % See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE
 
@@ -77,51 +77,12 @@ elseif strcmp(dtype, 'mesh+label')
   dtype = 'mesh';
 end
 
-% NOTE this section should be kept consistent with the shorter labels in FT_PLOT_AXES
 if isfield(data, 'coordsys') && ~isempty(data.coordsys)
-  label = cell(3,1);
-  if length(data.coordsys)==3 && length(intersect(data.coordsys, 'rlasif'))==3
-    for i=1:3
-      switch data.coordsys(i)
-        case 'l'
-          label{i} = 'the left';
-        case 'r'
-          label{i} = 'the right';
-        case 'i'
-          label{i} = 'inferior';
-        case 's'
-          label{i} = 'superior';
-        case 'a'
-          label{i} = 'anterior';
-        case 'p'
-          label{i} = 'posterior';
-        otherwise
-          error('incorrect letter in the coordsys');
-      end % switch
-    end % for each of the three axes
-  elseif strcmpi(data.coordsys, 'itab') || strcmpi(data.coordsys, 'neuromag') || strcmpi(data.coordsys, 'tal') || strcmpi(data.coordsys, 'mni') || strcmpi(data.coordsys, 'spm')
-    label{1} = 'the right';
-    label{2} = 'anterior';
-    label{3} = 'superior';
-  elseif strcmpi(data.coordsys, 'ctf') || strcmpi(data.coordsys, '4d') || strcmpi(data.coordsys, 'bti')
-    label{1} = 'anterior';
-    label{2} = 'the left';
-    label{3} = 'superior';
-  elseif strcmpi(data.coordsys, 'paxinos')
-    label{1} = 'the right';
-    label{2} = 'superior';
-    label{3} = 'posterior';
-  elseif strcmpi(data.coordsys, 'unknown')
-    label{1} = 'unknown';
-    label{2} = 'unknown';
-    label{3} = 'unknown';
-  else
-    error('unsupported coordsys');
-  end
-
-  fprintf('The positive x-axis is pointing towards %s\n', label{1});
-  fprintf('The positive y-axis is pointing towards %s\n', label{2});
-  fprintf('The positive z-axis is pointing towards %s\n', label{3});
+  % print the interpretation of the coordinate system
+  [labelx, labely, labelz] = coordsys2label(data.coordsys, 2, 0);
+  fprintf('The positive x-axis is pointing towards %s\n', labelx);
+  fprintf('The positive y-axis is pointing towards %s\n', labely);
+  fprintf('The positive z-axis is pointing towards %s\n', labelz);
 end
 
 % plot the geometrical object
@@ -152,7 +113,7 @@ switch dtype
     end
 
     if isempty(funparam)
-      error('don''t know which volumetric parameter to plot');
+      ft_error('don''t know which volumetric parameter to plot');
     end
 
     % the volumetric data needs to be interpolated onto three orthogonal planes
@@ -221,7 +182,7 @@ end
 % plot the 3-D axes, labels, and sphere at the origin
 ft_plot_axes(data, 'axisscale', axisscale);
 
-if istrue(dointeractive),
+if istrue(dointeractive)
 
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
@@ -254,9 +215,9 @@ if istrue(dointeractive),
   end
 
   if origin=='a' && strcmp(orientation, 'ras')
-    coordsys = 'spm';
+    coordsys = 'acpc'; % also used for spm, mni, tal
   elseif origin=='i' && strcmp(orientation, 'als')
-    coordsys = 'ctf';
+    coordsys = 'ctf'; % also used for 4d, bti
   elseif origin=='i' && strcmp(orientation, 'ras')
     coordsys = 'neuromag'; % also used for itab
   else

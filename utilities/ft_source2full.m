@@ -36,12 +36,12 @@ ft_defaults
 if ~isfield(source, 'inside')  || ...
    ~isfield(source, 'outside') || ...
    ~isfield(source, 'dim')
-  error('one of the required fields is missing in the source structure');
+  ft_error('one of the required fields is missing in the source structure');
 end
 
 if ~isfield(source, 'pos') && (~isfield(source, 'xgrid') || ~isfield(source, 'ygrid') || ...
                                ~isfield(source, 'zgrid'))
-  error('the input data needs at least a ''pos'' field, or ''x/y/zgrid''');
+  ft_error('the input data needs at least a ''pos'' field, or ''x/y/zgrid''');
 end
 
 if isfield(source, 'xgrid'),
@@ -56,7 +56,7 @@ if isfield(source, 'xgrid'),
 else
   %FIXME this assumes that the voxel data are ordered as if in a regularly spaced 3D grid,
   %but with only the inside voxels present
-  warning('assuming the voxel data to be ordered as if in a regularly spaced 3D grid');
+  ft_warning('assuming the voxel data to be ordered as if in a regularly spaced 3D grid');
   xgrid = 1:source.dim(1);
   ygrid = 1:source.dim(2);
   zgrid = 1:source.dim(3);
@@ -273,7 +273,7 @@ elseif strcmp(stype, 'new')
           tmp(1,inside)  = source.(fn{i});
           source.(fn{i}) = tmp;
         else
-          warning('sparse to full conversion failed for field %s\n', fn{i});
+          ft_warning('sparse to full conversion failed for field %s\n', fn{i});
         end
       else
         indx = find(size(source.(fn{i}))==Nsparse);
@@ -291,7 +291,7 @@ elseif strcmp(stype, 'new')
           tmp    = nan([Nfull Nfull tmpsiz(3:end)]);
           tmp(inside,inside,:,:,:) = source.(fn{i});
         else
-          warning('sparse to full conversion failed for field %s\n', fn{i});
+          ft_warning('sparse to full conversion failed for field %s\n', fn{i});
         end
       end
       % nothing to do

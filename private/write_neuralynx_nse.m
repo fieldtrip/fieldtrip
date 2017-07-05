@@ -29,7 +29,7 @@ function write_neuralynx_nse(filename, nse)
 % $Id$
 
 if ~isa(nse.TimeStamp, 'uint64')
-  error('timestamps should be uint64');
+  ft_error('timestamps should be uint64');
 end
 
 % convert the data from uV into V
@@ -62,7 +62,7 @@ for i=1:length(f)
     case 'double'
       buf = [buf sprintf('-%s\t%g\r\n', f{i}, v)];
     otherwise
-      error('unknown class in writing header');
+      ft_error('unknown class in writing header');
   end
 end
 

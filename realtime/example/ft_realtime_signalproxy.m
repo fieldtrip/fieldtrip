@@ -147,7 +147,7 @@ while true
     case 'int16'
       dat = int16(dat);
     otherwise
-      error('unsupported value for cfg.precision');
+      ft_error('unsupported value for cfg.precision');
   end
   
   % wait for a realistic amount of time

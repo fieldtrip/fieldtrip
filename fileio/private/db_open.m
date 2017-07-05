@@ -42,7 +42,7 @@ switch nargin
     % combine the settings in a string of the form mysql://<user>:<password>@<host>:<port>
     filename = sprintf('mysql://<%s>:<%s>@<%s>:<%d>/<%s>', user, password, server, port, database);
   otherwise
-    error('incorrect input arguments');
+    ft_error('incorrect input arguments');
 end
 
 if ~strcmp(filename, prev_filename)
@@ -64,7 +64,7 @@ if ~strcmp(filename, prev_filename)
     prev_filename = filename;
   catch
     prev_filename = [];
-    warning(lasterr);
+    ft_warning(lasterr);
   end
 end
 

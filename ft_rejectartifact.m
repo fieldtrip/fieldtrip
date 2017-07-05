@@ -120,14 +120,14 @@ if ~isfield(cfg.artfctdef,'feedback'),      cfg.artfctdef.feedback = 'no';     e
 
 % convert from old-style to new-style configuration
 if isfield(cfg,'reject')
-  warning('converting from old-style artifact configuration to new-style');
+  ft_warning('converting from old-style artifact configuration to new-style');
   cfg.artfctdef.reject = cfg.reject;
   cfg = rmfield(cfg, 'reject');
 end
 
 % convert from old-style to new-style configuration
 if isfield(cfg.artfctdef,'common')
-  warning('converting from old-style artifact configuration to new-style');
+  ft_warning('converting from old-style artifact configuration to new-style');
   if isfield(cfg.artfctdef.common,'minaccepttim')
     cfg.artfctdef.minaccepttim = cfg.artfctdef.common.minaccepttim;
     cfg.artfctdef = rmfield(cfg.artfctdef, 'common');
@@ -226,7 +226,7 @@ if ~isempty(cfg.artfctdef.crittoilim)
   if (size(cfg.artfctdef.crittoilim,2) ~= 2 ...
     || (size(cfg.artfctdef.crittoilim,1) ~= size(trl,1) ...
         && size(cfg.artfctdef.crittoilim,1) ~= 1))
-    error('if specified, cfg.artfctdef.crittoilim should be a 1x2 or Nx2 vector');
+    ft_error('if specified, cfg.artfctdef.crittoilim should be a 1x2 or Nx2 vector');
   end
 
   % if specified as 1x2 vector, expand into Nx2
@@ -241,7 +241,7 @@ end
 
 % ensure that there are trials that can be scanned for artifacts and/or rejected
 if isempty(trl)
-  error('no trials were selected, cannot perform artifact detection/rejection');
+  ft_error('no trials were selected, cannot perform artifact detection/rejection');
 end
 
 % prevent double occurences of artifact types, ensure that the order remains the same
@@ -252,7 +252,7 @@ cfg.artfctdef.type = cfg.artfctdef.type(:)';
 
 % If bad parts are to be filled with nans, make sure data is available
 if strcmp(cfg.artfctdef.reject, 'nan') && ~hasdata
-    error('If bad parts are to be filled with nans, input data has to be specified');
+    ft_error('If bad parts are to be filled with nans, input data has to be specified');
 end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -386,7 +386,7 @@ rejectall = (rejectall~=0);
 if isfield(cfg.artfctdef, 'writerej') && ~isempty(cfg.artfctdef.writerej)
   fid = fopen(cfg.artfctdef.writerej, 'w');
   if fid<0
-    error('could not open rejection file for writing');
+    ft_error('could not open rejection file for writing');
   else
     % determine the begin and end of each rejected period (in samples)
     rejectonset = find(diff([0 rejectall])== 1);
@@ -504,7 +504,7 @@ else
 end
 
 if isempty(cfg.trl)
-  error('No trials left after artifact rejection.')
+  ft_error('No trials left after artifact rejection.')
 else
   if hasdata && ~strcmp(cfg.artfctdef.reject, 'nan') % Skip this step to avoid removing parts that should be filled with nans
     % apply the updated trial definition on the data

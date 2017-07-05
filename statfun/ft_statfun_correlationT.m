@@ -58,25 +58,25 @@ function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 % $Id$
 
 % set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end;
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end;
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
+if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
+if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
+if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
+if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
+if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 if ~isfield(cfg, 'type'),              cfg.type           = 'Pearson'; end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
-end;
+    ft_error('P-values can only be calculated if the test statistics are calculated.');
+end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    error('cfg.uvar should not exist for a correlation statistic');
+    ft_error('cfg.uvar should not exist for a correlation statistic');
 end
 
 [nsmpl,nrepl] = size(dat);
 df = nrepl - 1;
 if df<1
-  error('Insufficient error degrees of freedom for this analysis.')
+  ft_error('Insufficient error degrees of freedom for this analysis.')
 end
 
 if strcmp(cfg.computestat,'yes') % compute the statistic    

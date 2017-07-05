@@ -102,7 +102,7 @@ if isequal(hassampleinfo, 'ifmakessense')
         % it does not make sense, so don't keep it
         hassampleinfo = 'no';
         % the actual removal will be done further down
-        warning('removing inconsistent sampleinfo');
+        ft_warning('removing inconsistent sampleinfo');
         break
       end
     end
@@ -116,7 +116,7 @@ if isequal(hastrialinfo, 'ifmakessense')
     if size(data.trialinfo,1)~=numel(data.trial)
       % it does not make sense, so don't keep it
       hastrialinfo = 'no';
-      warning('removing inconsistent trialinfo');
+      ft_warning('removing inconsistent trialinfo');
     end
   end
 end
@@ -156,7 +156,7 @@ switch version
         end
       end
       if isnan(data.fsample)
-        warning('cannot determine sampling frequency');
+        ft_warning('cannot determine sampling frequency');
       end
     end
     
@@ -252,7 +252,7 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for raw datatype', version);
+    ft_error('unsupported version "%s" for raw datatype', version);
 end
 
 

@@ -123,7 +123,7 @@ elseif ft_hastoolbox('yokogawa');
     end
 
 else
-    error('cannot determine, whether Yokogawa toolbox is present');
+    ft_error('cannot determine, whether Yokogawa toolbox is present');
 end
 
 % read the trigger channels and detect the flanks
@@ -134,7 +134,7 @@ if ~isempty(trigindx)
 end
 
 if isempty(event)
-  warning('no triggers were detected, please specify the "trigindx" option');
+  ft_warning('no triggers were detected, please specify the "trigindx" option');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

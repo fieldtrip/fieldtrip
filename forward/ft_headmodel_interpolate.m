@@ -163,7 +163,7 @@ if isfield(grid, 'leadfield')
   
   nchan = length(sens.label);
   if size(grid.leadfield{insideindx(1)},1)~=nchan
-    error('the number of channels does not match');
+    ft_error('the number of channels does not match');
   end
   
   headmodel = [];

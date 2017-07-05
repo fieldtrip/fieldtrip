@@ -170,7 +170,7 @@ end
 if isnumeric(cfg.highlight)
   cfg.highlightchannel = cfg.highlight;
   cfg.highlight = 'on';
-  warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
+  ft_warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
 elseif iscell(cfg.highlight)
   if ~iscell(cfg.highlightchannel)
     cfg.highlightchannel = cell(1,length(cfg.highlight));
@@ -179,7 +179,7 @@ elseif iscell(cfg.highlight)
     if isnumeric(cfg.highlight{icell})
       cfg.highlightchannel{icell} = cfg.highlight{icell};
       cfg.highlight{icell} = 'on';
-      warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
+      ft_warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
     end
   end
 end
@@ -211,13 +211,13 @@ end
 
 % for backwards compatability
 if strcmp(cfg.marker,'highlights')
-  warning('using cfg.marker option -highlights- is no longer used, please use cfg.highlight')
+  ft_warning('using cfg.marker option -highlights- is no longer used, please use cfg.highlight')
   cfg.marker = 'off';
 end
 
 % check colormap is proper format and set it
 if isfield(cfg,'colormap')
-  if size(cfg.colormap,2)~=3, error('topoplot(): Colormap must be a n x 3 matrix'); end
+  if size(cfg.colormap,2)~=3, ft_error('topoplot(): Colormap must be a n x 3 matrix'); end
   colormap(cfg.colormap);
   ncolors = size(cfg.colormap,1);
 else
@@ -274,8 +274,8 @@ switch dtype
     % the functional data is just one value per channel
     % in this case xparam, yparam are not defined
     % and the user should define the parameter
-    if ~isfield(data, 'label'), error('the input data should at least contain a label-field'); end
-    if ~isfield(cfg, 'parameter'), error('the configuration should at least contain a ''parameter'' field'); end
+    if ~isfield(data, 'label'), ft_error('the input data should at least contain a label-field'); end
+    if ~isfield(cfg, 'parameter'), ft_error('the configuration should at least contain a ''parameter'' field'); end
     if ~isfield(cfg, 'xparam'),
       cfg.xlim   = [1 1];
       xparam = '';
@@ -283,7 +283,7 @@ switch dtype
 end
 
 if isfield(cfg, 'parameter') && ~isfield(data, cfg.parameter)
-  error('cfg.parameter=%s is not present in data structure', cfg.parameter);
+  ft_error('cfg.parameter=%s is not present in data structure', cfg.parameter);
 end
 
 % user specified own fields, but no yparam (which is not asked in help)
@@ -385,7 +385,7 @@ haslabelcmb = isfield(data, 'labelcmb');
 if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
-    error('no reference channel is specified');
+    ft_error('no reference channel is specified');
   end
   
   % check for refchannel being part of selection
@@ -397,7 +397,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     end
     if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
         (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
-      error('cfg.refchannel is a not present in the (selected) channels)')
+      ft_error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
   
@@ -437,7 +437,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
     if length(sel1)+length(sel2)==0
-      error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+      ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
     end
     data.(cfg.parameter) = data.(cfg.parameter)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
@@ -582,7 +582,7 @@ if ~isempty(cfg.parameter)
   dat = dat(:);
   
 else
-  error('cannot make selection of data');
+  ft_error('cannot make selection of data');
 end
 
 if isfield(data, cfg.maskparameter)
@@ -618,7 +618,7 @@ if isfield(data, cfg.maskparameter)
   end
   
   if size(msk,2)>1 || size(msk,3)>1
-    warning('no masking possible for average over multiple latencies or frequencies -> cfg.maskparameter cleared')
+    ft_warning('no masking possible for average over multiple latencies or frequencies -> cfg.maskparameter cleared')
     msk = [];
   end
   
@@ -630,7 +630,7 @@ end
 % Select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(label, cfg.layout.label);
 if isempty(seldat)
-  error('labels in data and labels in layout do not match');
+  ft_error('labels in data and labels in layout do not match');
 end
 
 dat = dat(seldat);
@@ -704,7 +704,7 @@ elseif strcmp(cfg.comment, 'xlim')
   end
   cfg.comment = comment;
 elseif ~ischar(cfg.comment)
-  error('cfg.comment must be string');
+  ft_error('cfg.comment must be string');
 end
 
 
@@ -772,7 +772,7 @@ if strcmp(cfg.style,'both_imsat');      style = 'imsatiso';    end
 % check for nans
 nanInds = isnan(dat);
 if strcmp(cfg.interpolatenan,'yes') && any(nanInds)
-  warning('removing NaNs from the data');
+  ft_warning('removing NaNs from the data');
   chanX(nanInds) = [];
   chanY(nanInds) = [];
   dat(nanInds)   = [];
@@ -931,7 +931,7 @@ if strcmp(cfg.interactive, 'yes')
     set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
   else
-    warning('unsupported dimord "%s" for interactive plotting', data.dimord);
+    ft_warning('unsupported dimord "%s" for interactive plotting', data.dimord);
   end
 end
 

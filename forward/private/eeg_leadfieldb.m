@@ -41,15 +41,15 @@ function [lf] = eeg_leadfieldb(dippos, elc, vol)
 
 % do some sanity checks
 if ~isfield(vol, 'bnd')
-  error('there are no compartment boundaries present');
+  ft_error('there are no compartment boundaries present');
 end
 
 if length(vol.bnd)~=length(vol.cond)
-  error('the number of compartments in the volume is inconsistent');
+  ft_error('the number of compartments in the volume is inconsistent');
 end
 
 if ~isfield(vol, 'mat')
-  error('there is no system matrix present');
+  ft_error('there is no system matrix present');
 end
 
 % determine the number of compartments
@@ -73,7 +73,7 @@ elseif size(vol.mat,1)==nall
 elseif strcmp(ft_voltype(vol), 'openmeeg')
   % this is handled differently, although at the moment I don't know why
 else
-  error('unexpected size of system matrix')
+  ft_error('unexpected size of system matrix')
 end
 
 % determine the conductivity of the source compartment
@@ -114,7 +114,7 @@ switch ft_voltype(vol)
     lf = cat(1, lf{:});
     
   otherwise
-    error('unsupported type of volume conductor (%s)\n', ft_voltype(vol));
+    ft_error('unsupported type of volume conductor (%s)\n', ft_voltype(vol));
 end % switch ft_voltype
 
 if isfield(vol, 'mat') && ~ft_voltype(vol, 'openmeeg')

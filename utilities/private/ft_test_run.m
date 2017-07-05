@@ -206,7 +206,7 @@ for i=1:numel(functionlist)
     url = 'http://dashboard.fieldtriptoolbox.org/api/';
     webwrite(url, result, options);
   else
-    warning('not uploading results to the FieldTrip dashboard')
+    ft_warning('not uploading results to the FieldTrip dashboard')
   end
 end
 

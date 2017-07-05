@@ -60,7 +60,7 @@ if ~isempty(unit)
   % convert the sensor description to the specified units
   object = ft_convert_units(object, unit);
 elseif ~isfield(object, 'unit')
-  warning('units are not known, not plotting axes')
+  ft_warning('units are not known, not plotting axes')
   return
 else
   % take the units of the object
@@ -70,7 +70,7 @@ end
 if ~isempty(coordsys)
   % the user specified the coordinate system
   if isfield(object, 'coordsys') && ~strcmp(coordsys, unit.coordsys)
-    error('coordsys is inconsistent with object')
+    ft_error('coordsys is inconsistent with object')
   end
 else
   % the user did not specify the coordinate system
@@ -128,7 +128,7 @@ O.pos = O.pos.*rbol;
 ft_plot_mesh(O, 'edgecolor', 'none');
 
 % create the labels that are to be plotted along the axes
-[labelx, labely, labelz] = xyz2label(coordsys);
+[labelx, labely, labelz] = coordsys2label(coordsys, 3, 1);
 
 % add the labels to the axis
 text(xdat(1,1), ydat(1,1), zdat(1,1), labelx{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
@@ -142,45 +142,3 @@ if ~prevhold
   hold off
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%
-% NOTE this should be kept consistent with the longer axes labels in FT_DETERMINE_COORDSYS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [labelx, labely, labelz] = xyz2label(str)
-
-if ~isempty(str) && ~strcmp(str, 'unknown')
-  % the first part is important for the orientations
-  % the second part optionally contains information on the origin
-  strx = tokenize(str, '_');
-  
-  switch lower(strx{1})
-    case {'ras' 'itab' 'neuromag' 'spm' 'mni' 'tal'}
-      labelx = {'-X (left)'      '+X (right)'   };
-      labely = {'-Y (posterior)' '+Y (anterior)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    case {'als' 'ctf' '4d', 'bti'}
-      labelx = {'-X (posterior)' '+X (anterior)'};
-      labely = {'-Y (right)'     '+Y (left)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    case {'paxinos'}
-      labelx = {'-X (left)'      '+X (right)'};
-      labely = {'-Y (inferior)'  '+Y (superior)'};
-      labelz = {'-Z (anterior)'  '+Z (posterior)'};
-    case {'lps'}
-      labelx = {'-X (right)'      '+X (left)'};
-      labely = {'-Y (anterior)'  '+Y (posterior)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    otherwise
-      warning('unknown coordsys');
-      labelx = {'-X (unknown)' '+X (unknown)'};
-      labely = {'-Y (unknown)' '+Y (unknown)'};
-      labelz = {'-Z (unknown)' '+Z (unknown)'};
-  end
-  
-else
-  labelx = {'-X (unknown)' '+X (unknown)'};
-  labely = {'-Y (unknown)' '+Y (unknown)'};
-  labelz = {'-Z (unknown)' '+Z (unknown)'};
-end

@@ -41,13 +41,13 @@ if ~threads
   % switch to zombie mode
   peer('status', 0);
   % start the required maintenance threads
-  ws = warning('off');
+  ws = ft_warning('off');
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
   % peer('tcpserver', 'start');
   % peer('udsserver', 'start');
-  warning(ws);
+  ft_warning(ws);
   % wait some time to ensure that all peers on the network have been found
   pause(1.5);
 end
@@ -118,7 +118,7 @@ if nargout==0
       case 3
         strlist{i} = sprintf('busy slave at %s@%s:%d, working for %s, memreq = %5s, timreq = %s\n', list(i).user, list(i).hostname, list(i).port, list(i).current.user, print_mem(list(i).current.memreq), print_tim(list(i).current.timreq));
       otherwise
-        error('unknown status');
+        ft_error('unknown status');
     end
   end % for i
   strlist = sort(strlist);

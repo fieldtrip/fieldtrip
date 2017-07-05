@@ -40,10 +40,10 @@ ntarg = size(target,1);
 
 % do basic checks
 if ninp ~= ntarg,     
-    error('you must specify same number of points for input and target');
+    ft_error('you must specify same number of points for input and target');
 end
 if  ninp < 3,     
-    error('you must specify at least three points for matching');
+    ft_error('you must specify at least three points for matching');
 end
 
 % calculate the center fo gravity

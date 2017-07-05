@@ -195,7 +195,7 @@ if strcmp(cfg.analyze,'yes')
   summary.avg     = NaN(length(summary.label), ntrials); % updated in loop
 
   % try add gradiometer info
-  if isfield(info.hdr, 'grad'),
+  if isfield(info.hdr, 'grad')
     timelock.grad = info.hdr.grad;
     freq.grad     = info.hdr.grad;
     summary.grad  = info.hdr.grad;

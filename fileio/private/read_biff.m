@@ -126,7 +126,7 @@ else
     otherwise
       fseek(fid, siz, 'cof');         % skip this chunk
       sprintf('unimplemented data type "%s" in chunk "%s"', type, id);
-      % warning(ans);
+      % ft_warning(ans);
   end                     % switch chunk type
 end                     % else
 

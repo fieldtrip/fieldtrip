@@ -129,7 +129,7 @@ cfg.title = ft_getopt(cfg, 'title', 'auto');
 
 % interactive plotting doesn't work for chan_comp dimord.
 if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
-  warning('Interactive plotting is not supported.');
+  ft_warning('Interactive plotting is not supported.');
 end
 cfg.interactive = 'no';
 

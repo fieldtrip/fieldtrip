@@ -55,13 +55,13 @@ r4 = vol.r(4); c4 = vol.cond(4);
 % check whether the electrode ly on the sphere, allowing 0.5% tolerance
 dist = sqrt(sum(elc.^2,2));
 if any(abs(dist-r4)>r4*0.005)
-  warning('electrodes do not ly on sphere surface -> using projection')
+  ft_warning('electrodes do not ly on sphere surface -> using projection')
 end
 elc = r4 * elc ./ [dist dist dist];
 
 % check whether the dipole is inside the brain [disabled for EEGLAB]
 % if sqrt(sum(R.^2))>=r1
-%   error('dipole is outside the brain compartment');
+%   ft_error('dipole is outside the brain compartment');
 % end
 
 % rotate everything so that the dipole is along the pos. z-axis

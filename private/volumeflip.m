@@ -9,8 +9,8 @@ if nargin<2
 end
 
 % do a low-level check on the input data
-if ~isfield(volume, 'transform'), error('the input volume needs a transformation matrix'); end
-if ~isfield(volume, 'dim'),       error('the input volume needs a dim field');             end
+if ~isfield(volume, 'transform'), ft_error('the input volume needs a transformation matrix'); end
+if ~isfield(volume, 'dim'),       ft_error('the input volume needs a dim field');             end
 
 isrighthanded = det(volume.transform(1:3,1:3))>0;
 
@@ -19,21 +19,21 @@ if ischar(flipvecin)
   switch flipvecin
     case {'left' 'lefthanded'}
       if isrighthanded
-        warning('left-handed axes system is requested, performing flip');
+        ft_warning('left-handed axes system is requested, performing flip');
         flipvecin = [1 0 0];
       else
         flipvecin = [0 0 0];
       end
     case {'right' 'righthanded'}
       if ~isrighthanded
-        warning('right-handed axes system is requested, performing flip');
+        ft_warning('right-handed axes system is requested, performing flip');
         flipvecin = [1 0 0];
       else
         flipvecin = [0 0 0];
       end
     case 'auto'
     otherwise
-      error('unsupported option specified');
+      ft_error('unsupported option specified');
   end
 end
 

@@ -32,7 +32,7 @@ function s = read_curry(filename)
 
 fid = fopen(filename, 'rt');
 if fid<0
-  error(sprintf('could not open file: %s', filename));
+  ft_error(sprintf('could not open file: %s', filename));
 end
 
 s    = [];
@@ -75,7 +75,7 @@ while ~feof(fid)
       end
 
       if isnumeric(line) || feof(fid)
-        error('unexpected end of file');
+        ft_error('unexpected end of file');
       end
 
     end % while ~END

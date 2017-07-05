@@ -39,7 +39,7 @@ function [x, y] = ft_select_box(handle, eventdata, varargin)
 multiple = ft_getopt(varargin, 'multiple', false);
 
 if istrue(multiple)
-  error('not yet implemented');
+  ft_error('not yet implemented');
 else
   k = waitforbuttonpress;
   point1 = get(gca,'CurrentPoint');    % button down detected

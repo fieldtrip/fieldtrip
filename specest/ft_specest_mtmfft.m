@@ -49,7 +49,7 @@ function [spectrum,ntaper,freqoi] = ft_specest_mtmfft(dat, time, varargin)
 persistent previous_argin previous_tap
 
 % get the optional input arguments
-taper     = ft_getopt(varargin, 'taper'); if isempty(taper), error('You must specify a taper'); end
+taper     = ft_getopt(varargin, 'taper'); if isempty(taper), ft_error('You must specify a taper'); end
 pad       = ft_getopt(varargin, 'pad');
 padtype   = ft_getopt(varargin, 'padtype', 'zero');
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
@@ -67,7 +67,7 @@ end
 
 % throw errors for required input
 if isempty(tapsmofrq) && (strcmp(taper, 'dpss') || strcmp(taper, 'sine'))
-  error('you need to specify tapsmofrq when using dpss or sine tapers')
+  ft_error('you need to specify tapsmofrq when using dpss or sine tapers')
 end
 
 % this does not work on integer data
@@ -92,7 +92,7 @@ dattime = ndatsample / fsample; % total time in seconds of input data
 
 % Zero padding
 if round(pad * fsample) < ndatsample
-  error('the padding that you specified is shorter than the data');
+  ft_error('the padding that you specified is shorter than the data');
 end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
@@ -115,7 +115,7 @@ end
 nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
 if (strcmp(taper, 'dpss') || strcmp(taper, 'sine')) && numel(tapsmofrq)~=1 && (numel(tapsmofrq)~=nfreqoi)
-  error('tapsmofrq needs to contain a smoothing parameter for every frequency when requesting variable number of slepian tapers')
+  ft_error('tapsmofrq needs to contain a smoothing parameter for every frequency when requesting variable number of slepian tapers')
 end
 
 % throw a warning if input freqoi is different from output freqoi
@@ -153,7 +153,7 @@ else
         
         % give error/warning about number of tapers
         if isempty(tap)
-          error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/ndatsample);
+          ft_error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/ndatsample);
         elseif size(tap,1) == 1
           ft_warning('using only one taper for specified smoothing');
         end
@@ -167,7 +167,7 @@ else
           
           % give error/warning about number of tapers
           if isempty(currtap)
-            error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), ndatsample/fsample,tapsmofrq(ifreqoi),fsample/ndatsample(ifreqoi));
+            ft_error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), ndatsample/fsample,tapsmofrq(ifreqoi),fsample/ndatsample(ifreqoi));
           elseif size(currtap,1) == 1
             disp([num2str(freqoi(ifreqoi)) ' Hz: WARNING: using only one taper for specified smoothing'])
           end
@@ -184,7 +184,7 @@ else
         
         % give error/warning about number of tapers
         if isempty(tap)
-          error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/ndatsample);
+          ft_error('datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',ndatsample/fsample,tapsmofrq,fsample/ndatsample);
         elseif size(tap,1) == 1
           ft_warning('using only one taper for specified smoothing');
         end
@@ -198,7 +198,7 @@ else
           
           % give error/warning about number of tapers
           if isempty(currtap)
-            error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), ndatsample/fsample,tapsmofrq(ifreqoi),fsample/ndatsample(ifreqoi));
+            ft_error('%.3f Hz: datalength to short for specified smoothing\ndatalength: %.3f s, smoothing: %.3f Hz, minimum smoothing: %.3f Hz',freqoi(ifreqoi), ndatsample/fsample,tapsmofrq(ifreqoi),fsample/ndatsample(ifreqoi));
           elseif size(currtap,1) == 1
             disp([num2str(freqoi(ifreqoi)) ' Hz: WARNING: using only one taper for specified smoothing'])
           end
@@ -214,7 +214,7 @@ else
       tap = tap(1:(end-1), :); % remove the last taper
       
     case 'alpha'
-      error('not yet implemented');
+      ft_error('not yet implemented');
       
     case 'hanning'
       tap = hanning(ndatsample)';

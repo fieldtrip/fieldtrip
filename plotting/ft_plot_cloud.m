@@ -73,7 +73,7 @@ function ft_plot_cloud(pos, val, varargin)
 
 % run some checks
 if size(pos,2)~=3
-  error('pos has to be an Nx3 array')
+  ft_error('pos has to be an Nx3 array')
 end
 
 if isempty(val)
@@ -128,7 +128,7 @@ facealpha          = ft_getopt(varargin, 'facealpha', 1);
 edgealpha          = ft_getopt(varargin, 'edgealpha', 0);
 
 if rmin < 1 * ft_scalingfactor('mm', unit)
-  error('cfg.rmin must be equal or larger than 1 mm');
+  ft_error('cfg.rmin must be equal or larger than 1 mm');
 end
 
 if ~isempty(meshplot)
@@ -152,7 +152,7 @@ if ~isempty(meshplot)
   
   for k = 1:numel(meshplot)
     if ~isfield(meshplot{k}, 'pos') || ~isfield(meshplot{k}, 'tri')
-      % error('the mesh should be a structure with pos and tri');
+      % ft_error('the mesh should be a structure with pos and tri');
       meshplot{k}.pos = [];
       meshplot{k}.tri = [];
     end
@@ -214,7 +214,7 @@ end
 
 if strcmp(sli, '2d') || strcmp(sli, '3d')
   if isempty(meshplot)
-    error('plotting a slice requires a mesh as input')
+    ft_error('plotting a slice requires a mesh as input')
   else
     dointersect = 1;
   end
@@ -275,7 +275,7 @@ if dointersect
   elseif strcmp(ori, 'z')
     oriX = 0; oriY = 0; oriZ = 1;
   else
-    error('ori must be "x", "y" or "z"')
+    ft_error('ori must be "x", "y" or "z"')
   end
 end
 
@@ -320,9 +320,9 @@ if dointersect
     intzmax = max(pos(:,3))+radius; intzmin = min(pos(:,3))-radius;
     
     % Define potential slices with data
-    if oriX; potent_slices = round(intxmin):round(intxmax); end;
-    if oriY; potent_slices = round(intymin):round(intymax); end;
-    if oriZ; potent_slices = round(intzmin):round(intzmax); end;
+    if oriX; potent_slices = round(intxmin):round(intxmax); end
+    if oriY; potent_slices = round(intymin):round(intymax); end
+    if oriZ; potent_slices = round(intzmin):round(intzmax); end
     
     area = NaN(length(pos),length(potent_slices)); % preallocate matrix of electrode interpolation area for each slice
     for s = 1:length(potent_slices) % only search slices that could potentially contain data
@@ -468,7 +468,7 @@ if strcmp(sli, '2d')
               ptcol = val(c) + (flip(1-rnorm).^inv(cgrad))*abs(val(c)); % scaled fun [Nx1]
             end
           else
-            error('cfg.colorgrad should be either ''white'' or a scalar determining color falloff')
+            ft_error('cfg.colorgrad should be either ''white'' or a scalar determining color falloff')
           end
           
           % draw the points
@@ -630,7 +630,7 @@ else % plot 3d cloud
         ptcol = val(n) + (flip(1-rnorm).^inv(cgrad))*abs(val(n)); % scaled fun [Nx1]
       end
     else
-      error('color gradient should be either ''white'' or a scalar determining color falloff')
+      ft_error('color gradient should be either ''white'' or a scalar determining color falloff')
     end
     
     % draw the points

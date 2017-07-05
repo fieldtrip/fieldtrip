@@ -283,7 +283,7 @@ switch eventformat
             event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
           end
         otherwise
-          error('incorrect specification of ''detectflank''');
+          ft_error('incorrect specification of ''detectflank''');
       end
     end
     
@@ -330,10 +330,10 @@ switch eventformat
     
     if ~strcmp(detectflank, 'up')
       if strcmp(detectflank, 'both')
-        warning('only up-going flanks are supported for Biosemi');
+        ft_warning('only up-going flanks are supported for Biosemi');
         detectflank = 'up';
       else
-        error('only up-going flanks are supported for Biosemi');
+        ft_error('only up-going flanks are supported for Biosemi');
         % FIXME the next section on trigger detection should be merged with the
         % READ_CTF_TRIGGER (which also does masking with bit-patterns) into the
         % READ_TRIGGER function
@@ -421,7 +421,7 @@ switch eventformat
       % represent the rising flanks in the STATUS channel as events
       event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', statusindx, 'detectflank', 'up', 'trigshift', trigshift, 'fixbiosemi', true);
     else
-      warning('BIOSIG does not have a consistent event representation, skipping events')
+      ft_warning('BIOSIG does not have a consistent event representation, skipping events')
       event = [];
     end
     
@@ -430,7 +430,7 @@ switch eventformat
   case 'brainvision_vmrk'
     fid=fopen(filename,'rt');
     if fid==-1,
-      error('cannot open BrainVision marker file')
+      ft_error('cannot open BrainVision marker file')
     end
     line = [];
     while ischar(line) || isempty(line)
@@ -440,7 +440,7 @@ switch eventformat
           % this line contains a marker
           tok = tokenize(line, '=', 0);    % do not squeeze repetitions of the separator
           if length(tok)~=2
-            warning('skipping unexpected formatted line in BrainVision marker file');
+            ft_warning('skipping unexpected formatted line in BrainVision marker file');
           else
             % the line looks like "MkXXX=YYY", which is ok
             % the interesting part now is in the YYY, i.e. the second token
@@ -693,7 +693,7 @@ switch eventformat
     if exist(trgfile, 'file')
       trg = read_eep_trg(trgfile);
     else
-      warning('The corresponding "%s" file was not found, cannot read in trigger information. No events can be read in.', trgfile);
+      ft_warning('The corresponding "%s" file was not found, cannot read in trigger information. No events can be read in.', trgfile);
       trg = []; % make it empty, needed below
     end
     
@@ -701,7 +701,7 @@ switch eventformat
       if exist(cntfile, 'file')
         hdr = ft_read_header(cntfile);
       else
-        warning('The corresponding "%s" file was not found, cannot read in header information. No events can be read in.', cntfile);
+        ft_warning('The corresponding "%s" file was not found, cannot read in header information. No events can be read in.', cntfile);
         hdr = []; % remains empty, needed below
       end
     end
@@ -808,7 +808,7 @@ switch eventformat
         event(eventCount).duration =  hdr.nSamples;
         event(eventCount).value    =  char([CateNames{segHdr(segment,1)}(1:CatLengths(segHdr(segment,1)))]);
       end
-    end;
+    end
     
   case {'egi_mff_v1' 'egi_mff'} % this is currently the default
     % The following represents the code that was written by Ingrid, Robert
@@ -824,20 +824,20 @@ switch eventformat
     end
     
     if ~usejava('jvm')
-      error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
+      ft_error('the xml2struct requires MATLAB to be running with the Java virtual machine (JVM)');
       % an alternative implementation which does not require the JVM but runs much slower is
       % available from http://www.mathworks.com/matlabcentral/fileexchange/6268-xml4mat-v2-0
     end
     
     % get event info from xml files
-    warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
+    ws = warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain event info... This might take a while if many events/triggers are present')
     if isempty(xmlfiles)
       xml=struct([]);
     else
       xml=[];
-    end;
+    end
     for i = 1:numel(xmlfiles)
       if strcmpi(xmlfiles(i).name(1:6), 'Events')
         fieldname       = strrep(xmlfiles(i).name(1:end-4), ' ', '_');
@@ -845,7 +845,7 @@ switch eventformat
         xml.(fieldname) = xml2struct(filename_xml);
       end
     end
-    warning('on', 'MATLAB:REGEXP:deprecated')
+    warning(ws); % revert the warning state
     
     % construct info needed for FieldTrip Event
     eventNames = fieldnames(xml);
@@ -892,7 +892,7 @@ switch eventformat
                   eventSample = Msamp2offset(1,EpochNum,SampIndex);
                 else
                   eventSample=[]; %Drop event if past end of epoch
-                end;
+                end
               else
                 eventSample = eventOffset+1;
               end
@@ -904,11 +904,11 @@ switch eventformat
                 event(eventCount).duration = str2double(xml.(eventNames{iXml})(iEvent).event.duration)./1000000000*hdr.Fs;
                 event(eventCount).value    = xml.(eventNames{iXml})(iEvent).event.code;
                 event(eventCount).orig    = xml.(eventNames{iXml})(iEvent).event;
-              end;
+              end
             end  %if that takes care of non "-" events that are still out of range
           end %if that takes care of "-" events, which are out of range
         end %iEvent
-      end;
+      end
     end
     
     % add "epoch" events for epoched data, i.e. data with variable length segments
@@ -1050,7 +1050,7 @@ switch eventformat
     %end
     
     if blocking && isempty(flt_minnumber) && isempty(flt_maxnumber)
-      warning('disabling blocking because no selection was specified');
+      ft_warning('disabling blocking because no selection was specified');
       blocking = false;
     end
     
@@ -1065,7 +1065,7 @@ switch eventformat
       end
       available = buffer_wait_dat([nsamples nevents timeout], host, port);
       if available.nevents<nevents
-        error('buffer timed out while waiting for %d events', nevents);
+        ft_error('buffer timed out while waiting for %d events', nevents);
       end
     end
     
@@ -1110,7 +1110,7 @@ switch eventformat
     fifo = filetype_check_uri(filename);
     
     if ~exist(fifo,'file')
-      warning('the FIFO %s does not exist; attempting to create it', fifo);
+      ft_warning('the FIFO %s does not exist; attempting to create it', fifo);
       fid = fopen(fifo, 'r');
       system(sprintf('mkfifo -m 0666 %s',fifo));
     end
@@ -1121,7 +1121,7 @@ switch eventformat
     try
       event = mxDeserialize(uint8(msg));
     catch
-      warning(lasterr);
+      ft_warning(lasterr);
     end
     
   case 'fcdc_tcp'
@@ -1141,7 +1141,7 @@ switch eventformat
           event = mxDeserialize(uint8(str2num(msg)));
         end
         %       catch
-        %         warning(lasterr);
+        %         ft_warning(lasterr);
       end
       pnet(con,'close');
     end
@@ -1164,7 +1164,7 @@ switch eventformat
         end
       end
     catch
-      warning(lasterr);
+      ft_warning(lasterr);
     end
     % On break or error close connection
     pnet(udp,'close');
@@ -1186,7 +1186,7 @@ switch eventformat
     
   case 'gtec_hdf5'
     % the header mentions trigger channels, but I don't know how they are stored
-    warning('event reading for hdf5 has not yet been implemented due to a lack of a good example file');
+    ft_warning('event reading for hdf5 has not yet been implemented due to a lack of a good example file');
     
   case 'gtec_mat'
     if isempty(hdr)
@@ -1229,7 +1229,7 @@ switch eventformat
       event(end  ).offset   = -hdr.orig.smpl(i).ntppre;  % number of samples prior to the trigger
     end
     if isempty(event)
-      warning('no events found in the event table, reading the trigger channel(s)');
+      ft_warning('no events found in the event table, reading the trigger channel(s)');
       trigindx = find(ft_chantype(hdr, 'flag'));
       trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trigindx, 'detectflank', detectflank, 'trigshift', trigshift);
       event   = appendevent(event, trigger);
@@ -1307,7 +1307,7 @@ switch eventformat
       end
       
     else
-      error('Not a correct event format')
+      ft_error('Not a correct event format')
     end
     
   case {'mpi_ds', 'mpi_dap'}
@@ -1402,7 +1402,7 @@ switch eventformat
       type(typ==0) = {'trigger'};
       if any(typ~=0)
         % see the comments in read_neuromag_eve
-        warning('entries in the *.eve file with a type other than 0 are represented as ''unknown''')
+        ft_warning('entries in the *.eve file with a type other than 0 are represented as ''unknown''')
       end
       % convert to a structure array
       event = struct('type', type, 'value', value, 'sample', sample, 'offset', offset);
@@ -1532,7 +1532,7 @@ switch eventformat
       end
       
     elseif isepoched
-      error('Support for epoched *.fif data is not yet implemented.')
+      ft_error('Support for epoched *.fif data is not yet implemented.')
     end
     
     % check whether the *.fif file is accompanied by an *.eve file
@@ -1580,7 +1580,7 @@ switch eventformat
       end
       if ~exist(ttlfile) && ~exist(tslfile) && ~exist(tshfile)
         % these files must be present in a splitted dma dataset
-        error('could not locate the individual ttl, tsl and tsh files');
+        ft_error('could not locate the individual ttl, tsl and tsh files');
       end
       % read the trigger values from the separate file
       ttl = read_neuralynx_bin(ttlfile, begsample, endsample);
@@ -1714,7 +1714,7 @@ switch eventformat
     event = read_nmc_archive_k_event(filename);
     
   case 'netmeg'
-    warning('FieldTrip:ft_read_event:unsupported_event_format', 'reading of events for the netmeg format is not yet supported');
+    ft_warning('FieldTrip:ft_read_event:unsupported_event_format', 'reading of events for the netmeg format is not yet supported');
     event = [];
     
   case 'neuroshare' % NOTE: still under development
@@ -1758,7 +1758,7 @@ switch eventformat
       % elseif hasmat
       % FIXME, do something here
     else
-      error('no event file found');
+      ft_error('no event file found');
     end
     
     %   The sample number is missingin the code below, since it is not available
@@ -2030,7 +2030,7 @@ switch eventformat
     try
       event = feval(eventformat,filename);
     catch
-      warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
+      ft_warning('FieldTrip:ft_read_event:unsupported_event_format','unsupported event format (%s)', eventformat);
       event = [];
     end
 end
@@ -2049,8 +2049,8 @@ end
 
 if ~isempty(event)
   % make sure that all required elements are present
-  if ~isfield(event, 'type'),     error('type field not defined for each event');     end
-  if ~isfield(event, 'sample'),   error('sample field not defined for each event');   end
+  if ~isfield(event, 'type'),     ft_error('type field not defined for each event');     end
+  if ~isfield(event, 'sample'),   ft_error('sample field not defined for each event');   end
   if ~isfield(event, 'value'),    for i=1:length(event), event(i).value = [];    end; end
   if ~isfield(event, 'offset'),   for i=1:length(event), event(i).offset = [];   end; end
   if ~isfield(event, 'duration'), for i=1:length(event), event(i).duration = []; end; end

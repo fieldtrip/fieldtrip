@@ -50,7 +50,7 @@ year=num2str(fread(fid,1,'char')+1900);
 fseek(fid,175,-1);
 Header_Type=fread(fid,1,'char');
 if Header_Type ~= 4
-    error('*.trc file is not Micromed System98 Header type 4')
+    ft_error('*.trc file is not Micromed System98 Header type 4')
 end
 
 fseek(fid,138,-1);

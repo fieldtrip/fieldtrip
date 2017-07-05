@@ -45,14 +45,14 @@ if nargin<8, checkflag = true;   end
 if nargin<7, init      = 'chol'; end
 if nargin<6, fb        = 'none'; end
 if nargin<5
-  error('FieldTrip:connectivity:sfactorization_wilson2x2', 'when requesting multiple pairwise spectral decomposition, ''cmbindx'' needs to be specified');
+  ft_error('FieldTrip:connectivity:sfactorization_wilson2x2', 'when requesting multiple pairwise spectral decomposition, ''cmbindx'' needs to be specified');
 end
 if nargin<4, tol        = 1e-8;   end
 if nargin<3, Niterations = 1000;  end;
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  error('FieldTrip:connectivity:sfactorization_wilson2x2', 'frequency axis is not evenly spaced');
+  ft_error('FieldTrip:connectivity:sfactorization_wilson2x2', 'frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
@@ -144,7 +144,7 @@ for k = 1:m
     case 'chol'
       [tmp, dum] = chol(gam0(:,:,k));
       if dum
-        warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
+        ft_warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
         tmp = rand(2,2); %arbitrary initial condition
         tmp = triu(tmp);
       end
@@ -152,7 +152,7 @@ for k = 1:m
       tmp = rand(2,2); %arbitrary initial condition
       tmp = triu(tmp);
     otherwise
-      error('initialization method should be eithe ''chol'' or ''rand''');
+      ft_error('initialization method should be eithe ''chol'' or ''rand''');
   end
   h(:,:,k) = tmp;
   

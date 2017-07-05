@@ -43,7 +43,7 @@ else
 end
 
 if hdr.nChans~=nchan
-  error('number of channels in in header does not match with the data');
+  ft_error('number of channels in in header does not match with the data');
 end
 
 % this is the only supported data format
@@ -67,7 +67,7 @@ datafile_without_path   = [f '.eeg'];
 % open the data file and write the binary data
 fid = fopen(datafile, 'wb', 'ieee-le');
 if length(size(dat))>2
-  warning('writing segmented data as if it were continuous');
+  ft_warning('writing segmented data as if it were continuous');
   for i=1:ntrl
     fwrite(fid, squeeze(dat(i,:,:)), 'float32');
   end

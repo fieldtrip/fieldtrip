@@ -43,7 +43,7 @@ cd(datadir);
 % trlind = [];
 % for i=1:length(dataclean.cfg.artfctdef.summary.artifact)
 %  trlind(i) = find(data.sampleinfo(:,1)==dataclean.cfg.artfctdef.summary.artifact(i));
-% end;
+% end
 % disp(trlind);
 
 badtrials  = [18 19 21 72 73 74 75 76 93 94 109 110 126 127 128 140 172 173 179 180 181 182 196 197 198 227 228 233 243 244 250 251 265 266 286];

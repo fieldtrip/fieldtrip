@@ -12,11 +12,11 @@ function data = spm2fieldtrip(D)
 
 if ~ft_hastoolbox('spm8up')
   % it should be version spm8 or higher, since spm99, spm2 and spm5 did not yet the "meeg" object
-  error('this requires SPM8 or later to be on your MATLAB path');
+  ft_error('this requires SPM8 or later to be on your MATLAB path');
 end
 
 if ~isa(D, 'meeg')
-  error('this requires an SPM "meeg" object as input')
+  ft_error('this requires an SPM "meeg" object as input')
 end
 
 % this is how SPM8 represents it
