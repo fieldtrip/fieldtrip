@@ -76,6 +76,12 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.avgoverfreq   = string, can be 'yes' or 'no' (default = 'no')
 %
 % The following parameters can be used for the masking data:
+%   cfg.maskstyle     = 'opacity', or 'saturation'. If 'opacity', low-level
+%                         graphics opacity masking is applied, if
+%                         'saturation', the color data is explicitly
+%                         expressed as a single RGB value, incorporating
+%                         the opacitymask. Yields faster and more robust
+%                         rendering in general.
 %   cfg.opacitymap    = opacitymap for mask data, see ALPHAMAP (default = 'auto')
 %                       'auto', depends structure maskparameter, or on opacitylim
 %                         - maskparameter: only positive values, or opacitylim:'zeromax' -> 'rampup'
@@ -268,6 +274,7 @@ end
 cfg.method        = ft_getopt(cfg, 'method',        'ortho');
 cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
+cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
 cfg.title         = ft_getopt(cfg, 'title',         '');
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
@@ -296,6 +303,7 @@ cfg.funcolorlim   = ft_getopt(cfg, 'funcolorlim',   'auto');
 cfg.opacitymap    = ft_getopt(cfg, 'opacitymap',    'auto');
 cfg.opacitylim    = ft_getopt(cfg, 'opacitylim',    'auto');
 cfg.roi           = ft_getopt(cfg, 'roi',           []);
+cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 
 % select the functional and the mask parameter
 cfg.funparameter  = parameterselection(cfg.funparameter, functional);
@@ -1213,26 +1221,30 @@ switch cfg.method
     end
     
     %------do the plotting
-    ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
-    axis   off;
-    axis vis3d;
-    axis equal;
-    
-    if hasfun
-      if ~hasmsk || all(maskval(:)==1)
-        ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val);
-      elseif hasmsk
-        ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval);
-        try
-          alim(gca, [opacmin opacmax]);
-        end
-        alphamap(cfg.opacitymap);
-      end
+    if ~hasfun
+      ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
       
-      try
-        caxis(gca,[fcolmin fcolmax]);
+    elseif hasfun
+      if ~hasmsk || all(maskval(:)==1)
+        ft_plot_mesh(surf,'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'clim', [fcolmin fcolmax], 'colormap', cfg.funcolormap);
+        
+      elseif hasmsk
+        switch cfg.maskstyle
+          case 'opacity'
+            % this needs to be handled here, rather than in ft_plot_mesh,
+            % because the latter function needs to be called twice: once
+            % for drawing the background, with possibly a user-specified
+            % background color, and the second time for the functional data
+            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', cfg.vertexcolor);
+            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'opacity');
+            
+          case 'saturation'
+            % convert the specification of the background color + functional
+            % color + opacity into a single rgb value to speed up the rendering
+            ft_plot_mesh(surf, 'edgecolor', cfg.edgecolor, 'facecolor', cfg.facecolor, 'vertexcolor', val, 'facealpha', maskval, 'clim', [fcolmin fcolmax], 'alphalim', [opacmin opacmax], 'alphamap', cfg.opacitymap, 'colormap', cfg.funcolormap, 'maskstyle', 'saturation');
+            
+        end       
       end
-      colormap(cfg.funcolormap);
     end
     
     lighting gouraud
@@ -1245,7 +1257,14 @@ switch cfg.method
       if hasfun
         % use a normal MATLAB colorbar
         hc = colorbar;
-        set(hc, 'YLim', [fcolmin fcolmax]);
+        if strcmp(cfg.maskstyle, 'opacity')
+            % functional values are according to original input values
+            set(hc, 'YLim', [fcolmin fcolmax]);
+        else
+            % functional values have been transformed to be scaled
+            set(hc,'ticks',(0:0.1:1));
+            set(hc,'ticklabels',round(100*linspace(fcolmin,fcolmax,numel(get(hc,'ytick'))'))./100);
+        end
       else
         ft_warning('no colorbar possible without functional data')
       end
