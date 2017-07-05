@@ -22,6 +22,10 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
 %   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
+%   'maskstyle',   = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
+%                    are converted (in combination with a background color) to rgb. This bypasses
+%                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
+%                    using software opengl)
 %
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
@@ -297,7 +301,7 @@ switch maskstyle
       end
       alphamap(alphamapping);
     end
-  case 'saturation' 
+  case 'colormix' 
     % ensure facecolor to be 1x3
     assert(isequal(size(facecolor),[1 3]), 'facecolor should be 1x3');
     
@@ -308,7 +312,7 @@ switch maskstyle
     assert(isequal(numel(facealpha),size(pos,1)), 'facealpha should have npos elements');
     
     bgcolor = repmat(facecolor, [numel(vertexcolor) 1]);
-    rgb     = bg_rgba2rgb(vertexcolor, bgcolor, cmap, clim, facealpha, alphamapping, alphalim);
+    rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, clim, facealpha, alphamapping, alphalim);
     set(hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
 end
 

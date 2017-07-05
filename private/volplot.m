@@ -299,7 +299,7 @@ else
   ft_plot_crosshair([x(xi) y(yi)], 'color', 'yellow');
 
   subplot(h4);
-  imagesc(cmin:cmax);
+  imagesc(cmin:((cmax-cmin)./64):cmax);
   caxis([cmin cmax]);
   xlabel('colorscale')
 end
