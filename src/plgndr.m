@@ -51,7 +51,7 @@ if ~has_mex_func()
   mex(mexsrc);
 
   if ~has_mex_func()
-    error('could not locate / compile MEX file for %s in %s', ...
+    ft_error('could not locate / compile MEX file for %s in %s', ...
                 mexname, mexfullpath);
   end
 end
