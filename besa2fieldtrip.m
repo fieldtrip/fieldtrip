@@ -174,8 +174,8 @@ elseif ischar(input)
     data = [];
     data.label = [];
     if isfield(tmp, 'ChannelLabels')
-        data.label = fixlabels(tmp.ChannelLabels);
-    en;
+      data.label = fixlabels(tmp.ChannelLabels);
+    end
     data.avg     = tmp.Data;
     data.time    = tmp.Time / 1000; % convert to seconds
     data.fsample = 1000/tmp.DI;
