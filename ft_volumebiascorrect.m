@@ -59,8 +59,10 @@ end
 % do an approximate alignment
 mri_acpc = ft_convert_coordsys(mri, 'acpc');
 
-scale = max(mri_acpc.anatomy(:));
-mri_acpc.anatomy = mri_acpc.anatomy./scale;
+% flip and permute the 3D volume itself, so that the voxel and
+% headcoordinates approximately correspond this improves the convergence
+% of the segmentation algorithm
+[mri_acpc, permutevec, flipflags] = align_ijk2xyz(mri_acpc);
 
 % create an spm-compatible file for the anatomical volume data
 V = ft_write_mri([cfg.intermediatename '_anatomy.nii'], mri_acpc.anatomy, 'transform', mri_acpc.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
@@ -121,7 +123,7 @@ switch cfg.spmversion
         filename = fullfile(pathname, ['m' name ext]);
         
         VO     = spm_vol(filename);
-        VO.dat = spm_read_vols(VO).*scale;
+        VO.dat = spm_read_vols(VO);
         
         tmp = zeros([size(VO.dat) 6]);
         for k = 1:6
@@ -152,6 +154,18 @@ switch cfg.spmversion
         ft_error('unsupported spmversion requested');
 end
 
+% flip the volumes back according to the changes introduced by align_ijk2xyz
+for k = 1:3
+  if flipflags(k)
+    mri_unbias.anatomy = flipdim(mri_unbias.anatomy, k);
+  end
+end
+
+if ~all(permutevec == [1 2 3])
+  mri_unbias.anatomy = ipermute(mri_unbias.anatomy, permutevec);
+  mri_unbias.dim     = size(mri_unbias.anatomy);
+end
+    
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble previous   mri
