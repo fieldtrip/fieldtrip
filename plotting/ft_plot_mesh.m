@@ -98,7 +98,7 @@ surfaceonly  = ft_getopt(varargin, 'surfaceonly');  % default is handled below
 unit         = ft_getopt(varargin, 'unit');
 clim         = ft_getopt(varargin, 'clim');
 alphalim     = ft_getopt(varargin, 'alphalim');
-alphamapping = ft_getopt(varargin, 'alphamap', 'auto');
+alphamapping = ft_getopt(varargin, 'alphamap', 'rampup');
 cmap         = ft_getopt(varargin, 'colormap');
 maskstyle    = ft_getopt(varargin, 'maskstyle', 'opacity');
 
