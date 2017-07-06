@@ -51,6 +51,11 @@ if isempty(initialized)
   initialized = false;
 end
 
+% ft_warning is located in fieldtrip/utilities, which may not be on the path yet
+if ~exist('ft_warning', 'file')
+  ft_warning = @warning;
+end
+
 % locate the file that contains the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
