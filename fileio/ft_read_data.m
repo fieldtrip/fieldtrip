@@ -1372,23 +1372,6 @@ switch dataformat
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
     
-  case 'nmc_archive_k'
-    dat = read_nmc_archive_k_data(filename, hdr, begsample, endsample, chanindx);
-    
-  case 'neuroshare' % NOTE: still under development
-    % check that the required neuroshare toolbox is available
-    ft_hastoolbox('neuroshare', 1);
-    
-    tmp = read_neuroshare(filename, 'readanalog', 'yes', 'chanindx', chanindx, 'begsample', begsample, 'endsample', endsample);
-    dat = tmp.analog.data';
-    
-  case 'bucn_nirs'
-    dat = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanindx);
-    
-  case 'riff_wave'
-    dat = wavread(filename, [begsample endsample])';
-    dat = dat(chanindx,:);
-    
   case 'blackrock_nsx'
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
@@ -1404,14 +1387,6 @@ switch dataformat
     orig = openNSx(filename, 'duration', [begsample endsample], 'channels', chanindx);
     dat  = double(orig.Data);
 		
-  case 'videomeg_aud'
-    dat = read_videomeg_aud(filename, hdr, begsample, endsample);
-    dat = dat(chanindx,:);
-    
-  case 'videomeg_vid'
-    dat = read_videomeg_vid(filename, hdr, begsample, endsample);
-    dat = dat(chanindx,:);
-  
   otherwise
     % attempt to run dataformat as a function
     % in case using an external read function was desired, this is where it is executed
