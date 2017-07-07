@@ -2021,30 +2021,13 @@ switch eventformat
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
+    event = read_spmeeg_event(filename, 'header', hdr);
   
-    if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
-      trlind = [];
-      for i = 1:numel(hdr.orig.epochs)
-        trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
-      end
-    else
-      trlind = ones(1, hdr.nSamples);
-    end
-    if isfield(hdr.orig, 'events')
-      for i = 1:numel(hdr.orig.events)
-        for j = 1:length(hdr.orig.events(i).samples)
-          event(end+1).type   = 'trigger';
-          event(end).value    = hdr.orig.events(i).label;
-          event(end).sample   = find(cumsum(trlind == hdr.orig.events(i).epochs(j))...
-            == hdr.orig.events(i).samples(j), 1, 'first');
-        end
-      end
-    end
   case {'blackrock_nev', 'blackrock_nsx'}
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
     
-		% ensure that the filename contains a full path specification,
+    % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
     [p,f,e] = fileparts(filename);
     if ~isempty(p)
@@ -2054,7 +2037,7 @@ switch eventformat
 		end
 		
     % 'noread' prevents reading of the spike waveforms 
-		% 'nosave' prevents the automatic conversion of
+    % 'nosave' prevents the automatic conversion of
     % the .nev file as a .mat file
     orig = openNEV(filename, 'noread', 'nosave')
 
@@ -2064,9 +2047,9 @@ switch eventformat
     end
 
     fs             = orig.MetaTags.SampleRes; % sampling rate
-		timestamps     = orig.Data.SerialDigitalIO.TimeStamp;
-		eventCodeTimes = double(timestamps)./double(fs); % express in seconds
-		eventCodes     = double(orig.Data.SerialDigitalIO.UnparsedData);
+    timestamps     = orig.Data.SerialDigitalIO.TimeStamp;
+    eventCodeTimes = double(timestamps)./double(fs); % express in seconds
+    eventCodes     = double(orig.Data.SerialDigitalIO.UnparsedData);
 		
     % probably not necessary for all but we often have pins up    
     % FIXME: what is the consequence for the values if the pins were not 'up'?
@@ -2080,8 +2063,6 @@ switch eventformat
       event(k).duration  = 1;
       event(k).offset    = [];
     end
-    
-    event = read_spmeeg_event(filename, 'header', hdr);
     
   otherwise
     % attempt to run eventformat as a function
