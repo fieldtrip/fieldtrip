@@ -209,6 +209,13 @@ switch cfg.method
       time{k}  = tim;
     end
 
+    % create the output data
+    simulated         = [];
+    simulated.trial   = trial;
+    simulated.time    = time;
+    simulated.fsample = cfg.fsample;
+    simulated.label   = label;
+
   case {'linear_mix'}
 
     fltpad = 50; %hard coded to avoid filtering artifacts
@@ -293,6 +300,14 @@ switch cfg.method
       % define time axis for this trial
       time{k}  = tim;
     end
+    
+    % create the output data
+    simulated         = [];
+    simulated.trial   = trial;
+    simulated.time    = time;
+    simulated.fsample = cfg.fsample;
+    simulated.label   = label;
+
   case 'ar_reverse'
     % generate a spectral transfer matrix, and a cross-spectral matrix
     % according to the specifications
@@ -391,27 +406,22 @@ switch cfg.method
     % estimate the ar-model coefficients
     a = transfer2coeffs(t.transfer,t.freq);
     
-    % recursively call this function to generate the data
-    tmpcfg = keepfields(cfg, {'fsample' 'nsignal' 'ntrials' 'triallength'});
-    tmpcfg.method = 'ar';
-    tmpcfg.params = a;
-    tmpcfg.noisecov = t.noisecov.*tmpcfg.fsample.*tmpcfg.triallength./2;
-    simulated        = ft_connectivitysimulation(tmpcfg);
-    [cfg, simulated] = rollback_provenance(cfg, simulated);
-    trial = simulated.trial;
-    time  = simulated.time;
-    label = simulated.label;
+    % recursively call this function to generate the data, this is
+    % somewhate tricky with respect to keeping the provenance info. Here,
+    % it is solved by removing from the cfg the original user-specified
+    % fields
+    cfgorig      = cfg;
+    cfg          = removefields(cfgorig, {'coupling' 'ampl' 'delay' 'bpfreq'});
+    cfg.method   = 'ar';
+    cfg.params   = a;
+    cfg.noisecov = t.noisecov.*cfg.fsample.*cfg.triallength./2;
+    simulated    = ft_connectivitysimulation(cfg);
+    cfg.previous = keepfields(cfgorig, {'coupling' 'ampl' 'delay' 'bpfreq'});
     
   otherwise
     ft_error('unknown method');
 end
 
-% create the output data
-simulated         = [];
-simulated.trial   = trial;
-simulated.time    = time;
-simulated.fsample = cfg.fsample;
-simulated.label   = label;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
