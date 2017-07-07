@@ -122,7 +122,7 @@ while true
       begsample  = prevSample + 1;
       endsample  = prevSample + blocksize ;
     else
-      error('unsupported value for cfg.bufferdata');
+      ft_error('unsupported value for cfg.bufferdata');
     end
 
     % this allows overlapping data segments

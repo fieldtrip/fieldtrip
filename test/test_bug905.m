@@ -3,10 +3,9 @@ function test_bug905
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug905
 % TEST ft_freqanalysis ft_specest_mtmfft
 
-load /home/common/matlab/fieldtrip/data/test/bug905.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug905.mat'));
 
 timeunitinsec=10^(-4); % in seconds
 fs=1/(4.8*timeunitinsec);
@@ -44,10 +43,10 @@ while ~finished
     if lastfreqindxthisbin>=nfreq
         lastfreqindxthisbin=nfreq;
         finished=true;
-    end;
+    end
     freqsthisbin=freqs(firstfreqindxthisbin:lastfreqindxthisbin);
     freqbins{freqbinindx}=[freqsthisbin(1),freqsthisbin(end)];
-end;
+end
 nfreqbins=length(freqbins);
 tapsmofreqs=zeros(1,nfreqbins);
 freqbinindcs=zeros(1,nfreq);

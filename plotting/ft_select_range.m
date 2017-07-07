@@ -41,6 +41,8 @@ function ft_select_range(handle, eventdata, varargin)
 %   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'event', 'WindowButtonDownFcn',   'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
 %   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'event', 'WindowButtonMotionFcn', 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
 %   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'event', 'WindowButtonUpFcn',     'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
+%
+% See also FT_SELECT_BOX, FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_VOXEL 
 
 % Copyright (C) 2009-2012, Robert Oostenveld
 %
@@ -110,17 +112,17 @@ xLim = abc(1:2);
 yLim = abc(3:4);
 
 % limit cursor coordinates
-if p(1)<xLim(1), p(1)=xLim(1); end;
-if p(1)>xLim(2), p(1)=xLim(2); end;
-if p(2)<yLim(1), p(2)=yLim(1); end;
-if p(2)>yLim(2), p(2)=yLim(2); end;
+if p(1)<xLim(1), p(1)=xLim(1); end
+if p(1)>xLim(2), p(1)=xLim(2); end
+if p(2)<yLim(1), p(2)=yLim(1); end
+if p(2)>yLim(2), p(2)=yLim(2); end
 
 % determine whether the user is currently making a selection
 selecting = numel(userData.range)>0 && any(isnan(userData.range(end,:)));
 pointonly = ~xrange && ~yrange;
 
 if pointonly && multiple
-  warning('multiple selections are not possible for a point');
+  ft_warning('multiple selections are not possible for a point');
   multiple = false;
 end
 
@@ -294,7 +296,7 @@ switch lower(event)
     
     
   otherwise
-    error('unexpected event "%s"', event);
+    ft_error('unexpected event "%s"', event);
     
 end % switch event
 

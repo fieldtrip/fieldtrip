@@ -92,7 +92,7 @@ resamplepermutation   = strcmp(cfg.permutation, 'yes');
 
 tmp = resamplejackknife+resamplebootstrap+resamplepseudovalue+resamplerandomization+resamplepermutation;
 if tmp>1
-  error('only one resampling strategy should be specified');
+  ft_error('only one resampling strategy should be specified');
 elseif tmp<1
   % default is to average over trials
   resampleaverage = 1;
@@ -115,7 +115,7 @@ Ncondition = cfg.numcondition;
 Ndata = (nargin-1)/Ncondition; % the first argument is the cfg
 if Ndata~=round(Ndata)
   % this should not be fractional
-  error('incorrect number of input arguments');
+  ft_error('incorrect number of input arguments');
 else
   for c=1:Ncondition
     for d=1:Ndata
@@ -146,7 +146,7 @@ if resampleaverage
       elseif siz(1)==1
         dataout{c,d} = datain{c,d};
       else
-        error('inconsistent number of replications in data');
+        ft_error('inconsistent number of replications in data');
       end
     end 
   end 
@@ -154,7 +154,7 @@ if resampleaverage
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif resamplejackknife
   if Ncondition>1
-    error('jackknife requires exactly one condition');
+    ft_error('jackknife requires exactly one condition');
   end
   % the number of replications of all dataobjects should be the same 
   Nreplication = max(Nreplication(:));
@@ -172,14 +172,14 @@ elseif resamplejackknife
     elseif siz(1)==1
       dataout{1,d} = datain{1,d};
     else
-      error('inconsistent number of replications in data');
+      ft_error('inconsistent number of replications in data');
     end
   end 
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif resamplebootstrap
   if Ncondition>1
-    error('bootstrap requires exactly one condition');
+    ft_error('bootstrap requires exactly one condition');
   end
   % the number of replications of all dataobjects should be the same 
   Nreplication = max(Nreplication(:));
@@ -197,14 +197,14 @@ elseif resamplebootstrap
     elseif siz(1)==1
       dataout{1,d} = datain{1,d};
     else
-      error('inconsistent number of replications in data');
+      ft_error('inconsistent number of replications in data');
     end
   end 
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif resamplepseudovalue
   if Ncondition>1
-    error('pseudovalue requires exactly one condition');
+    ft_error('pseudovalue requires exactly one condition');
   end
   % the number of replications of all dataobjects should be the same 
   Nreplication = max(Nreplication(:));
@@ -223,16 +223,16 @@ elseif resamplepseudovalue
         dataout{1,d}(r+1,:) = (s(:)' - datain{1,d}(r,:))./(Nreplication-1);
       end
     elseif siz(1)==1
-      error('multiple replications are required in data');
+      ft_error('multiple replications are required in data');
     else
-      error('inconsistent number of replications in data');
+      ft_error('inconsistent number of replications in data');
     end
   end 
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif resamplerandomization
   if Ncondition<2
-    error('randomization requires at least two conditions');
+    ft_error('randomization requires at least two conditions');
   end
   
   % the number of replications should be the same for the different dataobjects 
@@ -256,7 +256,7 @@ elseif resamplerandomization
     end
     for c=2:Ncondition
       if ~all(siz(c, 2:end)==siz(1, 2:end))
-        error('the dimensions should be the same for every replication in every condition')
+        ft_error('the dimensions should be the same for every replication in every condition')
       end
     end
     % concatenate the data in all conditions to facilitate the random resamplings
@@ -279,14 +279,14 @@ elseif resamplerandomization
         dataout{c,d} = datain{c,d};
       end
     else
-      error('inconsistent number of replications in data');
+      ft_error('inconsistent number of replications in data');
     end
   end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif resamplepermutation
   if Ncondition<2
-    error('permutation requires at least two conditions');
+    ft_error('permutation requires at least two conditions');
   end
   
   % the number of replications should be the same for all dataobjects in both conditions
@@ -317,7 +317,7 @@ elseif resamplepermutation
       % a list of unique random numbers, and keep extending that list untill I
       % have enough unique numbers.
       if cfg.numpermutation>2^Nreplication
-        error(sprintf('it is not possible to make more random permutations than %d', 2^Nreplication));
+        ft_error('it is not possible to make more random permutations than %d', 2^Nreplication);
       end
       number = [];
       while length(number)<cfg.numpermutation
@@ -358,7 +358,7 @@ elseif resamplepermutation
     % combine this permutation over all trials, and repeat untill theer are
     % enough resamplings of all trials.
     if ischar(cfg.numpermutation) && strcmp(cfg.numpermutation, 'all')
-      error('it is not possible to generate all possible permutations for more than two conditions');
+      ft_error('it is not possible to generate all possible permutations for more than two conditions');
     end
     allperms = sortrows(perms(1:Ncondition));
     numperms = prod(1:Ncondition);      % equal to size(allperms,1)
@@ -378,7 +378,7 @@ elseif resamplepermutation
     siz = size(datain{1,d});
     for c=2:Ncondition
       if ~all(siz==size(datain{c,d}))
-        error('the dimensions should be the same for every condition')
+        ft_error('the dimensions should be the same for every condition')
       end
     end
     % concatenate the data in all conditions to facilitate the random resamplings
@@ -399,13 +399,13 @@ elseif resamplepermutation
         dataout{c,d} = datain{c,d};
       end
     else
-      error('inconsistent number of replications in data');
+      ft_error('inconsistent number of replications in data');
     end
   end
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
-  error('unknown resampling strategy')
+  ft_error('unknown resampling strategy')
 end
 
 % reassign the resampled dataobjects over the output arguments

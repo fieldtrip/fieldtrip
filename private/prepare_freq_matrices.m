@@ -32,8 +32,9 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 cfg = ft_checkconfig(cfg, 'deprecated', 'dicsfix');
 if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 1;     end
 if ~isfield(cfg, 'refchan'),    cfg.refchan    = [];    end
+if ~isfield(cfg, 'rawtrial'),   cfg.rawtrial   = [];    end
 
-keeptrials = istrue(cfg.keeptrials);
+keeptrials = istrue(cfg.keeptrials) || istrue(cfg.rawtrial);
 
 Cf = [];
 Cr = [];
@@ -102,7 +103,7 @@ end
 if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
   refindx = match_str(freq.label, cfg.refchan);
   if isempty(refindx),
-    error('the requested reference channel is not found in the data');
+    ft_error('the requested reference channel is not found in the data');
   end
   if any(strncmp(tok, 'rpt', 3)),
     Cr = freq.crsspctrm(:,chanindx,refindx);
@@ -115,9 +116,9 @@ end
 
 % do a sanity check on the cross-spectral-density matrix
 if any(isnan(Cf(:)))
-  error('The cross-spectral-density matrix is not complete');
+  ft_error('The cross-spectral-density matrix is not complete');
 end
 if any(isnan(Cr(:)))
-  error('The cross-spectral-density with the reference channel is not complete');
+  ft_error('The cross-spectral-density with the reference channel is not complete');
 end
 

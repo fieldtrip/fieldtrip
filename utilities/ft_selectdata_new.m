@@ -82,7 +82,7 @@ dtype = ft_datatype(varargin{1});
 for i=2:length(varargin)
   % ensure that all subsequent inputs are of the same type
   ok = ft_datatype(varargin{i}, dtype);
-  if ~ok, error('input data should be of the same datatype'); end
+  if ~ok, ft_error('input data should be of the same datatype'); end
 end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'selmode',  'select'});
@@ -108,11 +108,11 @@ if strcmp(dtype, 'source')
 end
 
 if length(varargin)>1 && isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all')
-  error('it is ambiguous to make a subselection of trials while at the same time concatenating multiple data structures')
+  ft_error('it is ambiguous to make a subselection of trials while at the same time concatenating multiple data structures')
 end
 
 if strcmp(cfg.select, 'union') && any(strcmp(dtype, {'raw', 'comp', 'source'}))
-  error('cfg.select ''union'' is not yet supported for %s data', dtype);
+  ft_error('cfg.select ''union'' is not yet supported for %s data', dtype);
 end
 
 if ft_datatype(varargin{1}, 'raw')
@@ -142,7 +142,7 @@ else % not raw or comp
   elseif ischar(cfg.parameter) && isfield(varargin{1}, 'dimord')
     dimord = varargin{1}.dimord;
   else
-    error('cannot determine which parameter to select from the data, please specify cfg.parameter');
+    ft_error('cannot determine which parameter to select from the data, please specify cfg.parameter');
   end
   
   dimtok = tokenize(dimord, '_');
@@ -192,13 +192,13 @@ else % not raw or comp
           dimfields{i} = 'implicit';
           
         case 'comp'
-          error('FIXME');
+          ft_error('FIXME');
           
         case 'refchan'
-          error('FIXME');
+          ft_error('FIXME');
           
         case 'voxel'
-          error('FIXME');
+          ft_error('FIXME');
           
         otherwise
           % try to guess the size from the corresponding field
@@ -230,7 +230,7 @@ else % not raw or comp
       end
       if any(strcmp(dimfields, 'implicit'))
         % it failed
-        error('could not determine the size of the implicit "%s" dimension', dimfields{strcmp(dimfields, 'implicit')});
+        ft_error('could not determine the size of the implicit "%s" dimension', dimfields{strcmp(dimfields, 'implicit')});
       end
     end
     
@@ -287,7 +287,7 @@ else % not raw or comp
   keeptimedim = istrue(ft_getopt(cfg, 'keeptimedim', true));
   
   if strcmp(cfg.select, 'union') && (avgoverpos || avgoverrpt || avgoverchan || avgoverfreq || avgovertime)
-    error('cfg.select ''union'' in combination with averaging across one of the dimensions is not implemented');
+    ft_error('cfg.select ''union'' in combination with averaging across one of the dimensions is not implemented');
   end
   
   if avgoverpos
@@ -524,23 +524,23 @@ else % not raw or comp
       end % varargin
       
     case 'freqmvar'
-      error('FIXME');
+      ft_error('FIXME');
       
     case 'mvar'
-      error('FIXME');
+      ft_error('FIXME');
       
     case 'spike'
-      error('FIXME');
+      ft_error('FIXME');
       
     case 'volume'
-      error('FIXME');
+      ft_error('FIXME');
       
     case 'dip'
-      error('FIXME');
+      ft_error('FIXME');
       
     case 'chan'
       % this results from avgovertime/avgoverfreq after timelockstatistics or freqstatistics
-      error('FIXME');
+      ft_error('FIXME');
       
     otherwise
       % try to get the selection based on the field name
@@ -689,7 +689,7 @@ switch selmode
         case 6
           data.(datfields{i})(:,:,:,:,:,sel) = tmp(:,:,:,:,:,selindx(sel));
         otherwise
-          error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
+          ft_error('unsupported dimension (%d) for making a selection for %s', seldim, datfields{i});
       end
     end
     if avgoverdim
@@ -783,7 +783,7 @@ end % function makeselection_time
 function data = makeselection_cumtapcnt(data, selfreq, avgoverfreq)
 
 if ~isfield(data, 'time')
-  error('the subfunction makeselection_cumtapcnt should only be called when there is a time dimension in the data');
+  ft_error('the subfunction makeselection_cumtapcnt should only be called when there is a time dimension in the data');
 end
 if ~isfield(data, 'cumtapcnt')
   return;
@@ -872,7 +872,7 @@ if isfield(cfg, 'channel')
     case 'union'
       % don't do a subselection
     otherwise
-      error('invalid value for cfg.select');
+      ft_error('invalid value for cfg.select');
   end % switch
   
   for k = 1:ndata
@@ -904,7 +904,7 @@ if isfield(cfg, 'channelcmb')
     cfg.channelcmb = ft_channelcombination(cfg.channelcmb, varargin{k}.labelcmb);
   end
   
-  error('selection of channelcmb is not yet implemented');
+  ft_error('selection of channelcmb is not yet implemented');
   
 else
   for k = 1:ndata
@@ -951,7 +951,7 @@ switch selmode
   case 'union'
     % don't do a subselection
   otherwise
-    error('invalid value for cfg.select');
+    ft_error('invalid value for cfg.select');
 end
 
 if isfield(cfg, 'latency')
@@ -960,7 +960,7 @@ if isfield(cfg, 'latency')
     if strcmp(cfg.latency, 'all')
       cfg.latency = [min(timeaxis) max(timeaxis)];
     else
-      error('incorrect specification of cfg.latency');
+      ft_error('incorrect specification of cfg.latency');
     end
   end
   % deal with numeric selection
@@ -979,7 +979,7 @@ if isfield(cfg, 'latency')
     mintime = min(timeaxis);
     maxtime = max(timeaxis);
     if all(cfg.latency<mintime) || all(cfg.latency>maxtime)
-      error('the selected time range falls outside the time axis in the data');
+      ft_error('the selected time range falls outside the time axis in the data');
     end
     tbeg = nearest(timeaxis, cfg.latency(1), false, false);
     tend = nearest(timeaxis, cfg.latency(2), false, false);
@@ -997,7 +997,7 @@ if isfield(cfg, 'latency')
       timeindx{k,1} = [];
     end
   else
-    error('incorrect specification of cfg.latency');
+    ft_error('incorrect specification of cfg.latency');
   end
 end % if cfg.latency
 
@@ -1049,7 +1049,7 @@ switch selmode
   case 'union'
     % don't do a subselection
   otherwise
-    error('invalid value for cfg.select');
+    ft_error('invalid value for cfg.select');
 end
 
 if isfield(cfg, 'frequency')
@@ -1058,7 +1058,7 @@ if isfield(cfg, 'frequency')
     if strcmp(cfg.frequency, 'all')
       cfg.frequency = [min(freqaxis) max(freqaxis)];
     else
-      error('incorrect specification of cfg.frequency');
+      ft_error('incorrect specification of cfg.frequency');
     end
   end
   
@@ -1078,7 +1078,7 @@ if isfield(cfg, 'frequency')
     minfreq = min(freqaxis);
     maxfreq = max(freqaxis);
     if all(cfg.frequency<minfreq) || all(cfg.frequency>maxfreq)
-      error('the selected range falls outside the frequency axis in the data');
+      ft_error('the selected range falls outside the frequency axis in the data');
     end
     fbeg = nearest(freqaxis, cfg.frequency(1), false, false);
     fend = nearest(freqaxis, cfg.frequency(2), false, false);
@@ -1096,7 +1096,7 @@ if isfield(cfg, 'frequency')
       freqindx{k,1} = [];
     end
   else
-    error('incorrect specification of cfg.frequency');
+    ft_error('incorrect specification of cfg.frequency');
   end
 end % if cfg.frequency
 
@@ -1107,7 +1107,7 @@ if isfield(cfg, 'foilim')
     minfreq = min(freqaxis);
     maxfreq = max(freqaxis);
     if all(cfg.foilim<minfreq) || all(cfg.foilim>maxfreq)
-      error('the selected range falls outside the frequency axis in the data');
+      ft_error('the selected range falls outside the frequency axis in the data');
     end
     fbin = nan(1,2);
     fbin(1) = nearest(freqaxis, cfg.foilim(1), false, false);
@@ -1119,7 +1119,7 @@ if isfield(cfg, 'foilim')
     end
     
   else
-    error('incorrect specification of cfg.foilim');
+    ft_error('incorrect specification of cfg.foilim');
   end
 end % cfg.foilim
 
@@ -1194,9 +1194,9 @@ if isfield(cfg, 'trials') && ~isequal(cfg.trials, 'all') && ~isempty(datfields)
     end
     
     if ~isempty(rptindx) && rptindx(1)<1
-      error('cannot select rpt/subj/rpttap smaller than 1');
+      ft_error('cannot select rpt/subj/rpttap smaller than 1');
     elseif ~isempty(rptindx) && rptindx(end)>rptsiz
-      error('cannot select rpt/subj/rpttap larger than the number of repetitions in the data');
+      ft_error('cannot select rpt/subj/rpttap larger than the number of repetitions in the data');
     end
     
     % commented out because of rpttap dilemma...
@@ -1226,7 +1226,7 @@ selmode = varargin{end}; % FIXME this is still ignored
 for i=2:ndata
   if ~isequal(varargin{i}.pos, varargin{1}.pos)
     % FIXME it would be possible here to make a selection based on intersect or union
-    error('source positions are different');
+    ft_error('source positions are different');
   end
 end % for
 for i=1:ndata
@@ -1302,7 +1302,7 @@ if iscell(x)
         case 6
           x{i} = x{i}(:,:,:,:,selindx);
         otherwise
-          error('unsupported dimension (%d) for making a selection', seldim);
+          ft_error('unsupported dimension (%d) for making a selection', seldim);
       end % switch
     end % for
   end
@@ -1321,7 +1321,7 @@ else
     case 6
       x = x(:,:,:,:,:,selindx);
     otherwise
-      error('unsupported dimension (%d) for making a selection', seldim);
+      ft_error('unsupported dimension (%d) for making a selection', seldim);
   end
 end
 end % function cellmatselect

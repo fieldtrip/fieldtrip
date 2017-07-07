@@ -79,10 +79,10 @@ hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 
 % read the events
 if isfield(cfg, 'event')
-  fprintf('using the events from the configuration structure\n');
+  ft_info('using the events from the configuration structure\n');
   event = cfg.event;
 else
-  fprintf('reading the events from ''%s''\n', cfg.headerfile);
+  ft_info('reading the events from ''%s''\n', cfg.headerfile);
   event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat);
 end
 
@@ -162,12 +162,12 @@ if usegui
     % values are missing tries to ask the user for prestim/poststim
     answer = inputdlg({'Prestimulus latency (sec)','Poststimulus latency (sec)'}, 'Enter borders');
     if isempty(answer) || any(cellfun('isempty', answer))
-      error('The information in the data and cfg is insufficient to define trials.');
+      ft_error('The information in the data and cfg is insufficient to define trials.');
     else
       cfg.trialdef.prestim=str2double(answer{1});
       cfg.trialdef.poststim=str2double(answer{2});
       if isnan(cfg.trialdef.prestim) || isnan(cfg.trialdef.poststim)
-        error('Illegal input for trial borders');
+        ft_error('Illegal input for trial borders');
       end
     end
   end % if specification is not complete
@@ -245,15 +245,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function show_event(event)
 if isempty(event)
-  fprintf('no events were found in the datafile\n');
+  ft_info('no events were found in the datafile\n');
   return
 end
 eventtype = unique({event.type});
 Neventtype = length(eventtype);
 if Neventtype==0
-  fprintf('no events were found in the datafile\n');
+  ft_info('no events were found in the datafile\n');
 else
-  fprintf('the following events were found in the datafile\n');
+  ft_info('the following events were found in the datafile\n');
   for i=1:Neventtype
     sel = find(strcmp(eventtype{i}, {event.type}));
     try
@@ -263,9 +263,9 @@ else
       eventvalue = unique(cell2mat({event(sel).value}));  % array with numeric values or empty
       eventvalue = num2str(eventvalue);                   % translate into a single string
     end
-    fprintf('event type: ''%s'' ', eventtype{i});
-    fprintf('with event values: %s', eventvalue);
-    fprintf('\n');
+    ft_info('event type: ''%s'' ', eventtype{i});
+    ft_info('with event values: %s', eventvalue);
+    ft_info('\n');
   end
 end
 
@@ -274,7 +274,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function trialdef = select_event(event, trialdef)
 if isempty(event)
-  fprintf('no events were found in the datafile\n');
+  ft_info('no events were found in the datafile\n');
   return
 end
 if strcmp(trialdef.eventtype, 'gui')
@@ -284,7 +284,7 @@ else
 end
 Neventtype = length(eventtype);
 if Neventtype==0
-  fprintf('no events were found in the datafile\n');
+  ft_info('no events were found in the datafile\n');
 else
   % Two lists are built in parallel
   settings={}; % The list of actual values to be used later
@@ -300,7 +300,7 @@ else
     else
       if ~isempty(find(strcmp('Inf', {event(sel).value})))
         % It's a very unlikely scenario but ...
-        warning('Event value''Inf'' cannot be handled by GUI selection. Mistakes are possible.')
+        ft_warning('Event value''Inf'' cannot be handled by GUI selection. Mistakes are possible.')
       end
       [event(sel(emptyval)).value]=deal('Inf');
       eventvalue = unique({event(sel).value});
@@ -324,7 +324,7 @@ else
     end
   end
   if isempty(strsettings)
-    fprintf('no events of the selected type were found in the datafile\n');
+    ft_info('no events of the selected type were found in the datafile\n');
     return
   end
   

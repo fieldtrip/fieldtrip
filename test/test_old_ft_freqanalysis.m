@@ -3,7 +3,6 @@ function test_old_ft_freqanalysis
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_ft_freqanalysis
 
 function test_ft_freqanalysis
 % TEST_FT_FREQANALYSIS

@@ -3,12 +3,11 @@ function test_bug1850
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1850
 % TEST ft_prepare_neighbours ft_channelrepair
 %
 % http://bugzilla.fcdonders.nl/show_bug.cgi?id=1850
 
-load /home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat;
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
 
 cfg=[];
 cfg.method='template';

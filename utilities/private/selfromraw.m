@@ -10,7 +10,7 @@ if ischar(selrpt)
   if strcmp(selrpt, 'all')
     selrpt = 1:numel(data.trial);
   else
-    error('incorrect specification of requested repetitions');
+    ft_error('incorrect specification of requested repetitions');
   end
 else
   if islogical(selrpt)
@@ -27,14 +27,14 @@ else
 end
 
 if isempty(selchan)
-  error('no channels were selected');
+  ft_error('no channels were selected');
 end
 
 if ischar(seltim)
   if strcmp(seltim, 'all')
     doseltim = false;
   else
-    error('incorrect specification of requested latency');
+    ft_error('incorrect specification of requested latency');
   end
 else
   doseltim = true;

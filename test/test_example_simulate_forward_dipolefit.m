@@ -3,8 +3,11 @@ function test_example_simulate_forward_dipolefit
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_example_simulate_forward_dipolefit
 % TEST ft_dipolesimulation ft_timelockanalysis ft_dipolefitting
+
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % create a set of electrodes, randomly placed on the sphere

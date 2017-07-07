@@ -23,5 +23,5 @@ elseif strcmp(computer, 'MACI64')
   mex midiIn.c  -I/opt/local/include -L/opt/local/lib -lportmidi_s LDFLAGS='-framework CoreFoundation -framework CoreAudio -framework CoreMidi -framework Carbon -arch x86_64 -Wl,-syslibroot,/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -mmacosx-version-min=10.7 -bundle -Wl,-exported_symbols_list,/Applications/MATLAB_R2014b.app/extern/lib/maci64/mexFunction.map'
   mex midiOut.c -I/opt/local/include -L/opt/local/lib -lportmidi_s LDFLAGS='-framework CoreFoundation -framework CoreAudio -framework CoreMidi -framework Carbon -arch x86_64 -Wl,-syslibroot,/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -mmacosx-version-min=10.7 -bundle -Wl,-exported_symbols_list,/Applications/MATLAB_R2014b.app/extern/lib/maci64/mexFunction.map'
 else
-  error('Unsupported platform');
+  ft_error('Unsupported platform');
 end

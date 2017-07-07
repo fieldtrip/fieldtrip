@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = solid_angle(varargin)
 
 % SOLID_ANGLE of a planar triangle as seen from the origin
 %
@@ -33,7 +33,6 @@ function [varargout] = funname(varargin)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The first section contains the plain MATLAB implementation. The mex file
@@ -79,7 +78,7 @@ function [varargout] = funname(varargin)
 %   w = 2 * atan2 (nom, den);
 %   return
 % else
-%   error('invalid input');
+%   ft_error('invalid input');
 % end
 
 % compile the missing mex file on the fly
@@ -93,7 +92,7 @@ mexsrc  = [funname '.c'];
 
 try
   % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
+  ft_warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
 
   if ispc
@@ -111,7 +110,7 @@ try
 catch
   % compilation failed
   disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
+  ft_error('could not locate MEX file for %s', mexname);
   cd(pwdir);
   success = false;
 end

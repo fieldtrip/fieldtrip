@@ -1,11 +1,10 @@
-/* 
+/*
  * Copyright (C) 2008, Robert Oostenveld & Christian Hesse
  * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  *
  */
 
-/* prevent double include */
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
@@ -13,7 +12,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-    
 #endif
 
 /* FIXME these are obvious at the moment, but should be formally defined */
@@ -57,7 +55,7 @@ typedef uint64_t UINT64_T;
 
 /* these can be used for indexing the buffer pointer as array */
 #define WORDSIZE_CHAR    sizeof(CHAR_T   )
-#define WORDSIZE_UINT8   sizeof(UINT8_T  ) 
+#define WORDSIZE_UINT8   sizeof(UINT8_T  )
 #define WORDSIZE_UINT16  sizeof(UINT16_T )
 #define WORDSIZE_UINT32  sizeof(UINT32_T )
 #define WORDSIZE_UINT64  sizeof(UINT64_T )
@@ -75,27 +73,27 @@ typedef uint64_t UINT64_T;
 #define VERSION_OE  (UINT16_T) (((VERSION & 0x00FF) << 8) | ((VERSION & 0xFF00) >> 8))
 
 /* these define the commands that can be used, which are split over the two available bytes */
-#define PUT_HDR    (UINT16_T)0x0101 /* 257 */
-#define PUT_DAT    (UINT16_T)0x0102 /* 258 */
-#define PUT_EVT    (UINT16_T)0x0103 /* 259 */
-#define PUT_OK     (UINT16_T)0x0104 /* 260 */
-#define PUT_ERR    (UINT16_T)0x0105 /* 261 */
+#define PUT_HDR    (UINT16_T)0x0101 /* decimal 257 */
+#define PUT_DAT    (UINT16_T)0x0102 /* decimal 258 */
+#define PUT_EVT    (UINT16_T)0x0103 /* decimal 259 */
+#define PUT_OK     (UINT16_T)0x0104 /* decimal 260 */
+#define PUT_ERR    (UINT16_T)0x0105 /* decimal 261 */
 
-#define GET_HDR    (UINT16_T)0x0201 /* 513 */
-#define GET_DAT    (UINT16_T)0x0202 /* 514 */
-#define GET_EVT    (UINT16_T)0x0203 /* 515 */
-#define GET_OK     (UINT16_T)0x0204 /* 516 */
-#define GET_ERR    (UINT16_T)0x0205 /* 517 */
+#define GET_HDR    (UINT16_T)0x0201 /* decimal 513 */
+#define GET_DAT    (UINT16_T)0x0202 /* decimal 514 */
+#define GET_EVT    (UINT16_T)0x0203 /* decimal 515 */
+#define GET_OK     (UINT16_T)0x0204 /* decimal 516 */
+#define GET_ERR    (UINT16_T)0x0205 /* decimal 517 */
 
-#define FLUSH_HDR  (UINT16_T)0x0301 
-#define FLUSH_DAT  (UINT16_T)0x0302
-#define FLUSH_EVT  (UINT16_T)0x0303
-#define FLUSH_OK   (UINT16_T)0x0304
-#define FLUSH_ERR  (UINT16_T)0x0305
+#define FLUSH_HDR  (UINT16_T)0x0301 /* decimal 769 */
+#define FLUSH_DAT  (UINT16_T)0x0302 /* decimal 770 */
+#define FLUSH_EVT  (UINT16_T)0x0303 /* decimal 771 */
+#define FLUSH_OK   (UINT16_T)0x0304 /* decimal 772 */
+#define FLUSH_ERR  (UINT16_T)0x0305 /* decimal 773 */
 
-#define WAIT_DAT   (UINT16_T)0x0402
-#define WAIT_OK    (UINT16_T)0x0404
-#define WAIT_ERR   (UINT16_T)0x0405
+#define WAIT_DAT   (UINT16_T)0x0402 /* decimal 1026 */
+#define WAIT_OK    (UINT16_T)0x0404 /* decimal 1027 */
+#define WAIT_ERR   (UINT16_T)0x0405 /* decimal 1028 */
 
 /* these are used in the data_t and event_t structure */
 #define DATATYPE_CHAR    (UINT32_T)0
@@ -121,7 +119,7 @@ typedef uint64_t UINT64_T;
 #define EVENTSEL_MINSAMPLE 4
 #define EVENTSEL_MAXSAMPLE 5
 
-/*  
+/*
   if event->def->sample == EVENT_AUTO_SAMPLE, automatically insert current sample index instead
 */
 #define EVENT_AUTO_SAMPLE   -1
@@ -143,7 +141,7 @@ enum {
     /** FT_CHUNK_CHANNEL_FLAGS contains a 0-terminated string describing the type of flags,
         and after that N (=#channels) bytes describing each channel. This is useful for
         specifying that a channel can have a discrete number of different types, e.g.
-        chunk_data = "meg_ad_eog\0\1\1\1\1\3\3\2\2" should be used for a system with 8 channels, 
+        chunk_data = "meg_ad_eog\0\1\1\1\1\3\3\2\2" should be used for a system with 8 channels,
         the first four of which are for MEG, then 2 channels EOG, then 2 channels A/D.  */
     FT_CHUNK_CHANNEL_FLAGS = 2,
 
@@ -161,16 +159,16 @@ enum {
 
     /** FT_CHUNK_SIEMENS_AP contains Siemens Protocol data in ASCII format (string) */
     FT_CHUNK_SIEMENS_AP = 6,
-    
+
     /** FT_CHUNK_CTF_RES4 contains a .res4 file as written by the CTF MEG acquisition software (binary) */
     FT_CHUNK_CTF_RES4 = 7,
-    
+
     /** FT_CHUNK_NEUROMAG_HEADER contains a .fif file as written by the Neuromag MEG acquisition software (binary) */
     FT_CHUNK_NEUROMAG_HEADER = 8,
-    
+
     /** FT_CHUNK_NEUROMAG_ISOTRAK contains a .fif file as written by the Neuromag MEG acquisition software (binary) */
     FT_CHUNK_NEUROMAG_ISOTRAK = 9,
-    
+
     /** FT_CHUNK_NEUROMAG_HPIRESULT contains a .fif file as written by the Neuromag MEG acquisition software (binary) */
     FT_CHUNK_NEUROMAG_HPIRESULT = 10
 };
@@ -186,12 +184,12 @@ typedef struct {
 
 /* the header definition is fixed, except for the channel labels */
 typedef struct {
-    UINT32_T nchans;
-    UINT32_T nsamples;
-    UINT32_T nevents;
+    UINT32_T  nchans;
+    UINT32_T  nsamples;
+    UINT32_T  nevents;
     FLOAT32_T fsample;
-    UINT32_T data_type;
-    UINT32_T bufsize;     /* size of the buffer in bytes */
+    UINT32_T  data_type;
+    UINT32_T  bufsize;     /* size of the buffer in bytes */
 } headerdef_t;
 
 /* the data definition is fixed */
@@ -207,10 +205,10 @@ typedef struct {
     UINT32_T type_type;   /* usual would be DATATYPE_CHAR */
     UINT32_T type_numel;  /* length of the type string */
     UINT32_T value_type;
-    UINT32_T value_numel; 
-    INT32_T sample; 
-    INT32_T offset;
-    INT32_T duration;
+    UINT32_T value_numel;
+    INT32_T  sample;
+    INT32_T  offset;
+    INT32_T  duration;
     UINT32_T bufsize;     /* size of the buffer in bytes */
 } eventdef_t;
 
@@ -255,8 +253,8 @@ typedef struct {
 } waitdef_t;
 
 typedef struct {
-    UINT32_T type;  /* One of FT_CHUNK_** (see above) */
-    UINT32_T size;  /* Size of chunk.data, total size is given by adding sizeof(ft_chunkdef_t)=8 */
+    UINT32_T type;      /* One of FT_CHUNK_** (see above) */
+    UINT32_T size;      /* Size of chunk.data, total size is given by adding sizeof(ft_chunkdef_t)=8 */
 } ft_chunkdef_t;
 
 typedef struct {

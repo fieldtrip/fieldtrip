@@ -40,7 +40,7 @@ filename = fetch_url(filename);
 
 % test whether the file exists
 if ~exist(filename)
-  error(sprintf('file ''%s'' does not exist', filename));
+  ft_error('file ''%s'' does not exist', filename);
 end
 
 % get the options
@@ -63,7 +63,7 @@ switch fileformat
     headmodel = ama2vol(ama);
 
   otherwise
-    error('unknown fileformat for volume conductor model');
+    ft_error('unknown fileformat for volume conductor model');
 end
 
 % this will ensure that the structure is up to date, e.g. that the type is correct and that it has units

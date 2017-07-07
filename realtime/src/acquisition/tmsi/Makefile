@@ -3,35 +3,50 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-# Use MinGW for compilation on Windows!
+# Use MinGW for compilation on Windows
 
-PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
+ifneq "$(OS)" "Windows_NT"
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
+endif
+
+PLATFORM ?= $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
-CPPDIR  = $(FTBUFFER)/cpp
-
-# better would be to make a proper library of the C++ framework
-CPPOBJ = $(patsubst %,$(CPPDIR)/%,\
-	SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
 
 # defaults, might be overwritten further down
-LDFLAGS = -L$(FTBUFFER)/src
-LDLIBS = -lbuffer $(CPPOBJ)
-CFLAGS = -I$(FTBUFFER)/src -I. -I$(CPPDIR) -Wunused -Wall -pedantic -O3 -g 
-CXXFLAGS = $(CFLAGS)
+CC       = gcc
+CXX      = g++
+CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
+CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
+INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
+LIBPATH  = -L$(FTBUFFER)/src
+LDLIBS   = -lbuffer -lpthread
 
-ifeq "$(PLATFORM)" "mingw32"
-	BINDIR = $(FIELDTRIP)/realtime/bin/win32
-	SUFFIX = .exe
-	CXXFLAGS += -I$(FIELDTRIP)/realtime/src/external/pthreads-win32/include
-	# LDFLAGS += -L$(BINDIR) does not seem to work for DLLs. Hence:
-	LDLIBS += -lws2_32 -lwinmm $(BINDIR)/pthreadGC2.dll
-	# make clean target work on windows:
-	fixpath = $(subst /,\,$1)
-	RM = del
+# better would be to make a proper library of the C++ framework
+CPPOBJS = $(patsubst %,$(FTBUFFER)/cpp/%, SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o)
+
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
 endif
 
 ifndef BINDIR
@@ -43,8 +58,14 @@ TARGETS = $(patsubst %,$(BINDIR)/%$(SUFFIX), tmsidriver tmsi2ft)
 ##############################################################################
 all: $(TARGETS)
 
-$(BINDIR)/%$(SUFFIX): %.o
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+%.o: %.c
+	$(CC) $(INCPATH) $(CFLAGS) -c $<
+
+%.o: %.cpp
+	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
+
+$(BINDIR)/%$(SUFFIX): %.o $(CPPOBJS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 $(BINDIR)/tmsidriver$(SUFFIX): Feature.o RTDevice.o
 

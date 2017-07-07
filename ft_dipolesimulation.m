@@ -92,16 +92,16 @@ cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
 % set the defaults
-if ~isfield(cfg, 'dip'),        cfg.dip = [];             end
-if ~isfield(cfg.dip, 'pos'),    cfg.dip.pos = [-5 0 15];  end
-if ~isfield(cfg.dip, 'mom'),    cfg.dip.mom = [1 0 0]';   end
-if ~isfield(cfg, 'fsample'),    cfg.fsample = 250;        end
-if ~isfield(cfg, 'relnoise'),   cfg.relnoise = 0;         end
-if ~isfield(cfg, 'absnoise'),   cfg.absnoise = 0;         end
-if ~isfield(cfg, 'feedback'),   cfg.feedback = 'text';    end
-if ~isfield(cfg, 'channel'),    cfg.channel = 'all';      end
-if ~isfield(cfg, 'dipoleunit'), cfg.dipoleunit = 'nA*m';  end
-if ~isfield(cfg, 'chanunit'),   cfg.chanunit = {};        end
+cfg.dip         = ft_getopt(cfg, 'dip', []);
+cfg.dip.pos     = ft_getopt(cfg.dip, 'pos', [-5 0 15]);
+cfg.dip.mom     = ft_getopt(cfg.dip, 'mom', [1 0 0]');
+cfg.fsample     = ft_getopt(cfg, 'fsample', 250);
+cfg.relnoise    = ft_getopt(cfg, 'relnoise', 0);
+cfg.absnoise    = ft_getopt(cfg, 'absnoise', 0);
+cfg.feedback    = ft_getopt(cfg, 'feedback', 'text');
+cfg.channel     = ft_getopt(cfg, 'channel',  'all');
+cfg.dipoleunit  = ft_getopt(cfg, 'dipoleunit', 'nA*m');
+cfg.chanunit    = ft_getopt(cfg, 'chanunit', {});
 
 cfg.dip = fixdipole(cfg.dip);
 Ndipoles = size(cfg.dip.pos,1);
@@ -185,13 +185,13 @@ end
 if length(dippos)==1
   dippos = repmat(dippos, 1, Ntrials);
 elseif length(dippos)~=Ntrials
-  error('incorrect number of trials specified in the dipole position');
+  ft_error('incorrect number of trials specified in the dipole position');
 end
 
 if length(dipmom)==1
   dipmom = repmat(dipmom, 1, Ntrials);
 elseif length(dipmom)~=Ntrials
-  error('incorrect number of trials specified in the dipole moment');
+  ft_error('incorrect number of trials specified in the dipole moment');
 end
 
 simulated.trial  = {};
@@ -207,7 +207,7 @@ for trial=1:Ntrials
   nsamples = size(dipsignal{trial},2);
   nchannels = size(lf,1);
   simulated.trial{trial} = zeros(nchannels,nsamples);
-  for i = 1:3,
+  for i = 1:3
     simulated.trial{trial}  = simulated.trial{trial} + lf(:,i:3:end) * ...
       (repmat(dipmom{trial}(i:3:end),1,nsamples) .* dipsignal{trial});
   end

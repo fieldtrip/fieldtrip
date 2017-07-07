@@ -3,9 +3,12 @@ function test_bug2773
 % WALLTIME 00:20:00
 % MEM 2gb
 
-% TEST test_bug2773
 % TEST ft_dipolefitting ft_movieplotER ft_prepare_sourcemodel ft_prepare_layout
 
+
+% use FieldTrip defaults instead of personal defaults
+global ft_default;
+ft_default = [];
 
 orig = load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2773.mat'));
 vol  = orig.cfg.vol;

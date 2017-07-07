@@ -51,6 +51,11 @@ if isempty(initialized)
   initialized = false;
 end
 
+% ft_warning is located in fieldtrip/utilities, which may not be on the path yet
+if ~exist('ft_warning', 'file')
+  ft_warning = @warning;
+end
+
 % locate the file that contains the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
@@ -69,9 +74,15 @@ if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';
 if ~isfield(ft_default, 'debug'),             ft_default.debug          = 'no';     end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
 if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'overwrite'; end % can be keep, overwrite, error
 
-% these options allow to disable parts of the provenance
+% These options allow to disable parts of the provenance
 if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no
+
+% These options allow to prefer the MATLAB toolbox implementations ('matlab') over the drop-in replacements ('compat').
+if ~isfield(ft_default, 'toolbox'), ft_default.toolbox  = []; end
+if ~isfield(ft_default.toolbox, 'images'), ft_default.toolbox.images  = 'compat'; end % matlab or compat
+if ~isfield(ft_default.toolbox, 'stats') , ft_default.toolbox.stats   = 'compat'; end % matlab or compat
+if ~isfield(ft_default.toolbox, 'signal'), ft_default.toolbox.signal  = 'compat'; end % matlab or compat
 
 % Check whether this ft_defaults function has already been executed. Note that we
 % should not use ft_default itself directly, because the user might have set stuff
@@ -85,7 +96,7 @@ end
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
 ftPath = strrep(ftPath, '\', '\\');
 if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
-  warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
+  ft_warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
   addpath(ftPath);
 end
 
@@ -131,19 +142,23 @@ if ~isdeployed
   
   try
     % external/signal contains alternative implementations of some signal processing functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    if ~ft_platform_supports('signal') || ~ft_hastoolbox('signal') || ~strcmp(ft_default.toolbox.signal,'matlab')
+        addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    end
   end
   
   try
-    % some alternative implementations of statistics functions
-    if ~ft_platform_supports('stats')
+    % external/stats contains alternative implementations of some statistics functions
+    if ~ft_platform_supports('stats') || ~ft_hastoolbox('stats') || ~strcmp(ft_default.toolbox.stats,'matlab')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
   
   try
     % external/images contains alternative implementations of some image processing functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    if ~ft_platform_supports('images') || ~ft_hastoolbox('images') || ~strcmp(ft_default.toolbox.images,'matlab')
+        addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    end
   end
   
   try
@@ -267,16 +282,23 @@ end % function ft_default
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function checkMultipleToolbox(toolbox, keyfile)
+
+persistent warned
+if isempty(warned)
+  warned = false;
+end
+
 if ~ft_platform_supports('which-all')
   return;
 end
 
 list = which(keyfile, '-all');
 if length(list)>1
-  [ws, warned] = ft_warning(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
-  if warned % only throw the warning once
+  ft_warning('Multiple versions of %s on your path will confuse FieldTrip', toolbox);
+  if ~warned % only throw the following warnings once
+    warned = true;
     for i=1:length(list)
-      warning('one version of %s is found here: %s', toolbox, list{i});
+      ft_warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
   ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');

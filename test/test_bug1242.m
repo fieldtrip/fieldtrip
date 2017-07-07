@@ -3,7 +3,6 @@ function test_bug1242
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1242
 % TEST ft_databrowser
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1242.mat'));

@@ -1,4 +1,4 @@
-function [stat] = ft_spike_xcorr(cfg,spike)
+function [stat] = ft_spike_xcorr(cfg, spike)
 
 % FT_SPIKE_XCORR computes the cross-correlation histogram and shift predictor.
 %
@@ -96,7 +96,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % check input spike structure
@@ -354,10 +354,14 @@ stat.label       = spike.label(chansel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history stat
+ft_postamble previous   spike
+ft_postamble provenance stat
+ft_postamble history    stat
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [C] = spike_crossx_matlab(tX,tY,binsize,nbins)
 tX = sort(tX(:));
 tY = sort(tY(:));

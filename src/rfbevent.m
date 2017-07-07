@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = rfbevent(varargin)
 
 % RFBEVENT sends a keyboard or mouse event to a VNC server
 %

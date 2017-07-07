@@ -50,16 +50,16 @@ function [spectrum,freqoi,timeoi] = ft_specest_hilbert(dat, time, varargin)
 freqoi    = ft_getopt(varargin, 'freqoi');
 timeoi    = ft_getopt(varargin, 'timeoi', 'all');
 width     = ft_getopt(varargin, 'width', 1);
-filttype  = ft_getopt(varargin, 'filttype');    if isempty(filttype),  error('you need to specify filter type'),         end
-filtorder = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), error('you need to specify filter order'),        end
-filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   error('you need to specify filter direction'),    end
+filttype  = ft_getopt(varargin, 'filttype');    if isempty(filttype),  ft_error('you need to specify filter type'),         end
+filtorder = ft_getopt(varargin, 'filtorder');   if isempty(filtorder), ft_error('you need to specify filter order'),        end
+filtdir   = ft_getopt(varargin, 'filtdir');     if isempty(filtdir),   ft_error('you need to specify filter direction'),    end
 pad       = ft_getopt(varargin, 'pad');
 padtype   = ft_getopt(varargin, 'padtype', 'zero');
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 fbopt     = ft_getopt(varargin, 'feedback');
 verbose   = ft_getopt(varargin, 'verbose', true);
 
-if isempty(fbopt),
+if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
 end
@@ -68,8 +68,7 @@ end
 [nchan,ndatsample] = size(dat);
 
 % This does not work on integer data
-typ = class(dat);
-if ~strcmp(typ, 'double') && ~strcmp(typ, 'single')
+if ~isa(dat, 'double') && ~isa(dat, 'single')
   dat = cast(dat, 'double');
 end
 
@@ -84,7 +83,7 @@ dattime = ndatsample / fsample; % total time in seconds of input data
 
 % Zero padding
 if round(pad * fsample) < ndatsample
-  error('the padding that you specified is shorter than the data');
+  ft_error('the padding that you specified is shorter than the data');
 end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
@@ -94,7 +93,7 @@ postpad    = ceil(((pad - dattime) * fsample) ./ 2);
 
 
 % set a default sampling for the frequencies-of-interest
-if isempty(freqoi),
+if isempty(freqoi)
   freqoi = linspace(2*width, (fsample/3), 50);
 end
 % check for freqoi = 0 and remove it
@@ -148,7 +147,7 @@ for ifreqoi = 1:nfreqoi
     filtfreq(end+1,:) = tmpfreq;
   else
       invalidind = [invalidind ifreqoi];
-      warning(sprintf('frequency %.2f Hz cannot be estimated with resolution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
+      ft_warning(sprintf('frequency %.2f Hz cannot be estimated with resolution %.2f Hz', freqoi(ifreqoi), width(ifreqoi)));
   end
 end
 

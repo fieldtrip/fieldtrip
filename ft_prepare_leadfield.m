@@ -137,7 +137,7 @@ cfg.grid = ft_checkconfig(cfg.grid, 'renamed',  {'pnt' 'pos'});
 cfg = ft_checkconfig(cfg, 'index2logical', 'yes');
 
 if strcmp(cfg.sel50p, 'yes') && strcmp(cfg.lbex, 'yes')
-  error('subspace projection with either lbex or sel50p is mutually exclusive');
+  ft_error('subspace projection with either lbex or sel50p is mutually exclusive');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -153,7 +153,7 @@ else
 end
 
 % construct the dipole grid according to the configuration
-tmpcfg           = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift'});
+tmpcfg           = keepfields(cfg, {'grid', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'showcallinfo'});
 tmpcfg.headmodel = headmodel;
 tmpcfg.grad      = sens; % either electrodes or gradiometers
 grid = ft_prepare_sourcemodel(tmpcfg);
@@ -162,10 +162,10 @@ grid = ft_prepare_sourcemodel(tmpcfg);
 % this check can be removed if the underlying bug is resolved. See
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387
 if ~isfield(headmodel, 'unit') || ~isfield(grid, 'unit') || ~isfield(sens, 'unit')
-  warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
+  ft_warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
 else
   if ~strcmp(headmodel.unit, grid.unit) || ~strcmp(grid.unit, sens.unit)
-    error('geometric objects (headmodel, sourcemodel, sensor configuration) are not expressed in the same units (this used to be allowed, and will be again in the future, but for now there is a bug which prevents a correct leadfield from being computed; see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
+    ft_error('geometric objects (headmodel, sourcemodel, sensor configuration) are not expressed in the same units (this used to be allowed, and will be again in the future, but for now there is a bug which prevents a correct leadfield from being computed; see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
   end
 end
 

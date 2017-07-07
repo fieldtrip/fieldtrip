@@ -53,7 +53,6 @@ cfg = ft_checkconfig(cfg, 'renamed', {'spheremesh', 'numvertices'});
 cfg = ft_checkconfig(cfg, 'deprecated', 'mriunits');
 
 % set the defaults
-if ~isfield(cfg, 'smooth');        cfg.smooth = 5;          end % in voxels
 if ~isfield(cfg, 'threshold'),     cfg.threshold = 0.5;     end % relative
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = [];    end % approximate number of vertices in sphere
 

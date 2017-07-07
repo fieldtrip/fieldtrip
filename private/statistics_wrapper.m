@@ -89,7 +89,7 @@ else
 end
 
 if (istimelock+isfreq+issource)~=1
-  error('Could not determine the type of the input data');
+  ft_error('Could not determine the type of the input data');
 end
 
 if istimelock || isfreq,
@@ -107,13 +107,13 @@ if issource
   % test that all source inputs have the same dimensions and are spatially aligned
   for i=2:length(varargin)
     if isfield(varargin{1}, 'dim') && (length(varargin{i}.dim)~=length(varargin{1}.dim) || ~all(varargin{i}.dim==varargin{1}.dim))
-      error('dimensions of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
+      ft_error('dimensions of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
     end
     if isfield(varargin{1}, 'pos') && (length(varargin{i}.pos(:))~=length(varargin{1}.pos(:)) || ~all(varargin{i}.pos(:)==varargin{1}.pos(:)))
-      error('grid locations of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
+      ft_error('grid locations of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
     end
     if isfield(varargin{1}, 'transform') && ~all(varargin{i}.transform(:)==varargin{1}.transform(:))
-      error('spatial coordinates of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
+      ft_error('spatial coordinates of the source reconstructions do not match, use FT_VOLUMENORMALISE first');
     end
   end
 
@@ -174,7 +174,7 @@ if issource
         end
 
       else
-        error('incorrect specification of cfg.hemisphere');
+        ft_error('incorrect specification of cfg.hemisphere');
       end
       clear tmp
     end % for each roi
@@ -258,7 +258,7 @@ elseif isfreq || istimelock
   % averaging over channels)
   if ~(isfield(cfg, 'avgoverchan') && istrue(cfg.avgoverchan)) &&...
       ~isfield(cfg,'neighbours') && isfield(cfg, 'correctm') && strcmp(cfg.correctm, 'cluster')
-    error('You need to specify a neighbourstructure');
+    ft_error('You need to specify a neighbourstructure');
     %cfg.neighbours = ft_neighbourselection(cfg,varargin{1});
   end
 
@@ -266,7 +266,7 @@ end
 
 % get the design from the information in cfg and data.
 if ~isfield(cfg,'design')
-  warning('Please think about how you would create cfg.design.  Soon the call to prepare_design will be deprecated')
+  ft_warning('Please think about how you would create cfg.design.  Soon the call to prepare_design will be deprecated')
   cfg.design = data.design;
   [cfg] = prepare_design(cfg);
 end
@@ -283,13 +283,13 @@ end
 if exist(['ft_statistics_' cfg.method], 'file')
   statmethod = str2func(['ft_statistics_' cfg.method]);
 else
-  error(sprintf('could not find the corresponding function for cfg.method="%s"\n', cfg.method));
+  ft_error('could not find the corresponding function for cfg.method="%s"\n', cfg.method);
 end
 fprintf('using "%s" for the statistical testing\n', func2str(statmethod));
 
 % check that the design completely describes the data
 if size(dat,2) ~= size(cfg.design,2)
-  error('the size of the design matrix (%d) does not match the number of observations in the data (%d)', size(cfg.design,2), size(dat,2));
+  ft_error('the size of the design matrix (%d) does not match the number of observations in the data (%d)', size(cfg.design,2), size(dat,2));
 end
 
 % determine the number of output arguments
@@ -557,10 +557,10 @@ for i=1:Nsource
       dim = [Nvoxel size(tmp{varargin{i}.inside(1)})];
     end
     if i==1 && j==1 && numel(tmp)~=Nvoxel,
-      warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
+      ft_warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
       dat    = zeros(prod(dim), sum(Ntrial)); %FIXME this is old code should be removed
     elseif i==1 && j==1 && iscell(tmp),
-      warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
+      ft_warning('the input-data contains more entries than the number of voxels in the volume, the data will be concatenated');
       dat    = zeros(Nvoxel*numel(tmp{varargin{i}.inside(1)}), sum(Ntrial));
     elseif i==1 && j==1,
       dat = zeros(Nvoxel, sum(Ntrial));

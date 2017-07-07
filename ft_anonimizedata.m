@@ -222,14 +222,14 @@ while ~info.cleanup
   uiwait(h); % we only get part this point with abort or cleanup
 
   if ~ishandle(h)
-    error('aborted by user');
+    ft_error('aborted by user');
   end
 
   info = getappdata(h, 'info');
 
   if info.cleanup
     if ~all(xor(info.keep, info.remove))
-      warning('not all fields have been marked as "keep" or "remove"');
+      ft_warning('not all fields have been marked as "keep" or "remove"');
       info.cleanup = false;
     else
       delete(h);
@@ -277,13 +277,22 @@ set(info.table, 'data', data);
 end % function
 
 function keyboard_cb(h, eventdata)
-if isempty(eventdata)
+
+% if isempty(eventdata)
+%   % determine the key that corresponds to the uicontrol element that was activated
+%   key = get(h, 'userdata');
+% else
+%   % determine the key that was pressed on the keyboard
+%   key = parseKeyboardEvent(eventdata);
+% end
+if (isempty(eventdata) && ft_platform_supports('matlabversion',-Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
   key = parseKeyboardEvent(eventdata);
 end
+
 h = getparent(h);
 info = getappdata(h, 'info');
 
@@ -291,7 +300,7 @@ data = get(info.table, 'data');
 
 sel = info.keep & info.remove;
 if any(sel)
-  warning('items that were marked both as "keep" and "remove" have been cleared');
+  ft_warning('items that were marked both as "keep" and "remove" have been cleared');
   info.keep(sel) = false;
   info.remove(sel) = false;
 end
@@ -319,6 +328,33 @@ end
 setappdata(h, 'info', info);
 redraw_cb(h)
 end % function
+
+function key = parseKeyboardEvent(eventdata)
+
+key = eventdata.Key;
+
+% handle possible numpad events (different for Windows and UNIX systems)
+% NOTE: shift+numpad number does not work on UNIX, since the shift
+% modifier is always sent for numpad events
+if isunix()
+  shiftInd = match_str(eventdata.Modifier, 'shift');
+  if ~isnan(str2double(eventdata.Character)) && ~isempty(shiftInd)
+    % now we now it was a numpad keystroke (numeric character sent AND
+    % shift modifier present)
+    key = eventdata.Character;
+    eventdata.Modifier(shiftInd) = []; % strip the shift modifier
+  end
+elseif ispc()
+  if strfind(eventdata.Key, 'numpad')
+    key = eventdata.Character;
+  end
+end
+
+if ~isempty(eventdata.Modifier)
+  key = [eventdata.Modifier{1} '+' key];
+end
+
+end % function parseKeyboardEvent
 
 function sort_cb(h, eventdata)
 h = getparent(h);

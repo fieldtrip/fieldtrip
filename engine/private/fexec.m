@@ -48,18 +48,18 @@ memallow = [];
 try
   
   if ~iscell(argin)
-    error('input argument should be a cell-array');
+    ft_error('input argument should be a cell-array');
   end
   
   if ~ischar(argin{1}) && ~isa(argin{1}, 'function_handle')
-    error('input argument #1 should be a string or a function handle');
+    ft_error('input argument #1 should be a string or a function handle');
   end
   
   fname = argin{1};
   argin = argin(2:end);
   
   if ~iscell(optin)
-    error('input options should be a cell-array');
+    ft_error('input options should be a cell-array');
   end
   
   % check whether a diary file should be created
@@ -109,7 +109,7 @@ try
   
   % there are potentially errors to catch from the which() function
   if ischar(fname) && isempty(which(fname))
-    error('Not a valid M-file (%s).', fname);
+    ft_error('Not a valid M-file (%s).', fname);
   end
   
   % this controls the amount of data that has to be sent back, furthermore the
@@ -214,7 +214,7 @@ catch
   optout = {'lastwarn', lastwarn, 'lasterr', struct(feval_error), 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path};
   
   % an error was detected while executing the job
-  warning('an error was detected during job execution');
+  ft_warning('an error was detected during job execution');
   
   % ensure that the memory profiler is switched off
   memprofile off

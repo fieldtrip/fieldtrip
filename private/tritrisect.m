@@ -21,14 +21,14 @@ p2 = ptriside(v1, v2, v3, t2);
 p3 = ptriside(v1, v2, v3, t3);
 
 if all([p1 p2 p3]==0)
-  warning('triangle lies exactly in plane');
+  ft_warning('triangle lies exactly in plane');
   l1 = [nan, nan, nan];
   l2 = [nan, nan, nan];
   return
 end
 
 if abs(sum([p1 p2 p3]))==3
-  warning('triangle lies on one side of plane');
+  ft_warning('triangle lies on one side of plane');
   l1 = [nan, nan, nan];
   l2 = [nan, nan, nan];
   return
@@ -36,21 +36,21 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if p1==0 & p2==0 & p3~=0
+if p1==0 && p2==0 && p3~=0
   % triangle vertex 1 and 2 ly in the plane
   l1 = t1;
   l2 = t2; 
   return
 end
 
-if p1==0 & p2~=0 & p3==0
+if p1==0 && p2~=0 && p3==0
   % triangle vertex 1 and 3 ly in the plane
   l1 = t1;
   l2 = t3; 
   return
 end
 
-if p1~=0 & p2==0 & p3==0
+if p1~=0 && p2==0 && p3==0
   % triangle vertex 2 and 3 ly in the plane
   l1 = t2;
   l2 = t3; 
@@ -59,7 +59,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if p1==0 & p2~=0 & p3~=0
+if p1==0 && p2~=0 && p3~=0
   % triangle vertex 1 lies in the plane
   l1 = t1;
   % triangle edge 2-3 intersects with the plane
@@ -67,7 +67,7 @@ if p1==0 & p2~=0 & p3~=0
   return;
 end
 
-if p1~=0 & p2==0 & p3~=0
+if p1~=0 && p2==0 && p3~=0
   % triangle vertex 2 lies in the plane
   l1 = t2;
   % triangle edge 3-1 intersects with the plane
@@ -75,7 +75,7 @@ if p1~=0 & p2==0 & p3~=0
   return;
 end
 
-if p1~=0 & p2~=0 & p3==0
+if p1~=0 && p2~=0 && p3==0
   % triangle vertex 3 lies in the plane
   l1 = t3;
   % triangle edge 1-2 intersects with the plane

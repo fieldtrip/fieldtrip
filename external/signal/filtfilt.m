@@ -48,8 +48,14 @@
 
 
 function y = filtfilt(b, a, x)
+
 if (nargin ~= 3)
-    usage('y=filtfilt(b,a,x)');
+    error('Usage: y=filtfilt(b,a,x)');
+end
+
+if (min(size(b)) > 1)
+    warning('SOS structures not supported for FieldTrip drop-in filtfilt');
+    error('Usage: y=filtfilt(b,a,x)');
 end
 
 rotate = (size(x, 1)==1);

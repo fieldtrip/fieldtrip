@@ -3,11 +3,10 @@ function test_bug2585
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2585
 % TEST ft_componentanalysis ft_preamble_randomseed
 
-p = 30;
-n = 20000;
+p = 5;
+n = 100;
 data = [];
 for i=1:p
   data.label{i} = num2str(i);
@@ -35,11 +34,6 @@ comp3 = ft_componentanalysis(cfg, data);
 
 cfg.randomseed = 42;
 comp4 = ft_componentanalysis(cfg, data);
-
-comp1.trial{1}(1,1:10)
-comp2.trial{1}(1,1:10)
-comp3.trial{1}(1,1:10)
-comp4.trial{1}(1,1:10)
 
 assert( isequal(comp1.trial{1}, comp2.trial{1})); % this test fails unexpectedly, which explains the bug report
 assert( isequal(comp1.trial{1}, comp3.trial{1}));

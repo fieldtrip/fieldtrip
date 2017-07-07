@@ -15,5 +15,5 @@ switch mexext
     mex alternative.c -leng -output engine
     
   otherwise
-    error('unsupported mex platform');
+    ft_error('unsupported mex platform');
 end

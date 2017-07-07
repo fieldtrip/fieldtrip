@@ -171,7 +171,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved t
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'grid'});
 
 % the default for this depends on the data type
-if ~isfield(cfg, 'model'),
+if ~isfield(cfg, 'model')
   if ~isempty(cfg.component)
     % each component is fitted independently
     cfg.model = 'moving';
@@ -195,7 +195,7 @@ end
 % set up the symmetry constraints
 if ~isempty(cfg.symmetry)
   if cfg.numdipoles~=2
-    error('symmetry constraints are only supported for two-dipole models');
+    ft_error('symmetry constraints are only supported for two-dipole models');
   elseif strcmp(cfg.symmetry, 'x')
     % this structure is passed onto the low-level ft_dipole_fit function
     cfg.dipfit.constr.reduce = [1 2 3];         % select the parameters [x1 y1 z1]
@@ -212,7 +212,7 @@ if ~isempty(cfg.symmetry)
     cfg.dipfit.constr.expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     cfg.dipfit.constr.mirror = [1 1 1 1 1 -1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 x1 y1 -z1]
   else
-    error('unrecognized symmetry constraint');
+    ft_error('unrecognized symmetry constraint');
   end
 elseif ~isfield(cfg, 'dipfit') || ~isfield(cfg.dipfit, 'constr')
   % no symmetry constraints have been specified
@@ -220,7 +220,7 @@ elseif ~isfield(cfg, 'dipfit') || ~isfield(cfg.dipfit, 'constr')
 end
 
 if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'moving')
-  error('the moving dipole model does not combine with the sequential constraint')
+  ft_error('the moving dipole model does not combine with the sequential constraint')
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
 end
 
@@ -257,10 +257,10 @@ if isempty(cfg.reducerank)
   end
 end
 
-% select the desired channels, the order should be the same as in the sensor structure
-[selcfg, seldata] = match_str(cfg.channel, data.label);
-% take the selected channels
-Vdata = data.avg(selcfg, :);
+% select the desired channels, ordered according to the sensor structure
+[selsens, seldata] = match_str(sens.label, data.label);
+% take the selected channels from the data structure
+Vdata = data.avg(seldata, :);
 
 % sphere the date using the noise covariance matrix supplied, if any
 % this affects both the gridsearch and the nonlinear optimization
@@ -307,17 +307,17 @@ fprintf('selected %d channels\n', nchans);
 fprintf('selected %d topographies\n', ntime);
 
 if nchans<cfg.numdipoles*3
-  warning('not enough channels to perform a dipole fit');
+  ft_warning('not enough channels to perform a dipole fit');
 end
 
 if ntime<1
-  error('no spatial topography selected');
+  ft_error('no spatial topography selected');
 end
 
 % check whether EEG is average referenced
 if ft_senstype(sens, 'eeg')
   if any(rv(Vdata, avgref(Vdata))>0.001)
-    warning('the EEG data is not average referenced, correcting this');
+    ft_warning('the EEG data is not average referenced, correcting this');
   end
   Vdata = avgref(Vdata);
 end
@@ -340,7 +340,7 @@ end
 
 % check the specified dipole model
 if numel(cfg.dip.pos)~=cfg.numdipoles*3 || numel(cfg.dip.mom)~=cfg.numdipoles*3
-  error('inconsistent number of dipoles in configuration')
+  ft_error('inconsistent number of dipoles in configuration')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -355,31 +355,31 @@ if strcmp(cfg.gridsearch, 'yes')
   elseif isfield(cfg.grid, 'pos') && size(cfg.grid.pos,2)==cfg.numdipoles*3
     % this is also ok
   else
-    error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
+    ft_error('dipole scanning is only possible for a single dipole or a symmetric dipole pair');
   end
-
+  
   % copy all options that are potentially used in ft_prepare_sourcemodel
-  tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift'});
+  tmpcfg = keepfields(cfg, {'grid' 'mri' 'headshape' 'symmetry' 'smooth' 'threshold' 'spheremesh' 'inwardshift', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
-  else
+  elseif ft_senstype(sens, 'meg')
     tmpcfg.grad = sens;
   end
   % construct the dipole grid on which the gridsearch will be done
   grid = ft_prepare_sourcemodel(tmpcfg);
-
+  
   ngrid = size(grid.pos,1);
-
+  
   switch cfg.model
     case 'regional'
       grid.error = nan(ngrid, 1);
     case 'moving'
       grid.error = nan(ngrid, ntime);
     otherwise
-      error('unsupported cfg.model');
+      ft_error('unsupported cfg.model');
   end
-
+  
   insideindx = find(grid.inside);
   ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(insideindx)
@@ -395,9 +395,9 @@ if strcmp(cfg.gridsearch, 'yes')
     % dipole moment this makes the model potential U=lf*pinv(lf)*V and the
     % model error is norm(V-U) = norm(V-lf*pinv(lf)*V) = norm((eye-lf*pinv(lf))*V)
     if any(isnan(lf(:)))
-        % this might happen if one of the dipole locations of the grid is
-        % outside the brain compartment
-        lf(:) = 0;
+      % this might happen if one of the dipole locations of the grid is
+      % outside the brain compartment
+      lf(:) = 0;
     end
     switch cfg.model
       case 'regional'
@@ -407,11 +407,11 @@ if strcmp(cfg.gridsearch, 'yes')
         % remember the error for each latency independently
         grid.error(thisindx,:) = sum(((eye(nchans)-lf*pinv(lf))*Vdata).^2);
       otherwise
-        error('unsupported cfg.model');
+        ft_error('unsupported cfg.model');
     end % switch model
   end % looping over the grid
   ft_progress('close');
-
+  
   switch cfg.model
     case 'regional'
       % find the grid point(s) with the minimum error
@@ -424,7 +424,7 @@ if strcmp(cfg.gridsearch, 'yes')
       elseif cfg.numdipoles==2
         fprintf('found minimum after scanning on grid point [%g %g %g; %g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3), dip.pos(4), dip.pos(5), dip.pos(6));
       end
-
+      
     case 'moving'
       for t=1:ntime
         % find the grid point(s) with the minimum error
@@ -438,11 +438,11 @@ if strcmp(cfg.gridsearch, 'yes')
           fprintf('found minimum after scanning for topography %d on grid point [%g %g %g; %g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3), dip(t).pos(4), dip(t).pos(5), dip(t).pos(6));
         end
       end
-
+      
     otherwise
-      error('unsupported cfg.model');
+      ft_error('unsupported cfg.model');
   end % switch model
-
+  
 elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
@@ -453,9 +453,9 @@ elseif strcmp(cfg.gridsearch, 'no')
         dip(t) = struct(cfg.dip); % ensure that it is a struct, not a config object
       end
     otherwise
-      error('unsupported cfg.model');
+      ft_error('unsupported cfg.model');
   end % switch model
-
+  
 end % if gridsearch yes/no
 % multiple dipoles can be represented either as a 1x(N*3) vector or as a Nx3 matrix,
 % i.e. [x1 y1 z1 x2 y2 z2] or [x1 y1 z1; x2 y2 z2]
@@ -467,7 +467,7 @@ switch cfg.model
       dip(t) = fixdipole(dip(t));
     end
   otherwise
-    error('unsupported cfg.model');
+    ft_error('unsupported cfg.model');
 end % switch model
 
 if isfield(cfg, 'dipfit')
@@ -504,7 +504,7 @@ if strcmp(cfg.nonlinear, 'yes')
         success = 0;
         disp(lasterr);
       end
-
+      
     case 'moving'
       % perform the non-linear dipole fit for each latency independently
       % instead of using dip(t) = dipole_fit(dip(t),...), I am using temporary variables dipin and dipout
@@ -531,7 +531,7 @@ if strcmp(cfg.nonlinear, 'yes')
       dip = dipout;
       clear dipin dipout
     otherwise
-      error('unsupported cfg.model');
+      ft_error('unsupported cfg.model');
   end % switch model
 end % if nonlinear
 
@@ -544,8 +544,8 @@ if strcmp(cfg.nonlinear, 'no')
     case 'moving'
       success = ones(1,ntime);
     otherwise
-      error('unsupported cfg.model');
-
+      ft_error('unsupported cfg.model');
+      
   end % switch model
 end
 
@@ -581,7 +581,7 @@ switch cfg.model
       end
     end
   otherwise
-    error('unsupported cfg.model');
+    ft_error('unsupported cfg.model');
 end % switch model
 
 switch cfg.model
@@ -599,10 +599,10 @@ switch cfg.model
   case 'moving'
     if isfreq
       % although this is technically possible so far, it does not make any sense
-      warning('a moving dipole model in the frequency domain is not supported');
+      ft_warning('a moving dipole model in the frequency domain is not supported');
     end
   otherwise
-    error('unsupported cfg.model');
+    ft_error('unsupported cfg.model');
 end % switch model
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

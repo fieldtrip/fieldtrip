@@ -60,7 +60,7 @@ function [stat, cfg] = ft_statistics_stats(cfg, dat, design)
 ft_hastoolbox('stats', 1);
 
 % set the defaults that are common to all methods
-if ~isfield(cfg, 'feedback'), cfg.feedback = 'textbar'; end
+cfg.feedback = ft_getopt(cfg, 'feedback', 'textbar');
 
 switch cfg.statistic
 
@@ -68,16 +68,16 @@ switch cfg.statistic
 case {'ttest', 'ttest_samples_vs_const'}
 
   % set the defaults
-  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
-  if ~isfield(cfg, 'constantvalue'), cfg.constantvalue = 0; end
-  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
+  cfg.constantvalue = ft_getopt(cfg, 'constantvalue', 0);
 
   if ~any(size(design)==1)
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond>1
-    error(sprintf('%s method is only supported for one condition at a time', cfg.statistic));
+    ft_error('method "%s" is only supported for one condition', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   Nrepl = size(dat, 2); % over all conditions
@@ -101,15 +101,15 @@ case {'ttest', 'ttest_samples_vs_const'}
 case {'ttest2', 'ttest_2samples_by_timepoint'}
 
   % set the defaults
-  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
-  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
 
   if size(design,1)~=1
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error(sprintf('%s method is only supported for two condition', cfg.statistic));
+    ft_error('%s method is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));
@@ -135,22 +135,22 @@ case {'ttest2', 'ttest_2samples_by_timepoint'}
 case {'paired-ttest'}
 
   % set the defaults
-  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
-  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
 
   if ~any(size(design)==1)
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error(sprintf('%s method is only supported for two condition', cfg.statistic));
+    ft_error('method "%s" is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));
   selB = find(design~=design(1));
   Nrepl = [length(selA), length(selB)];
   if Nrepl(1)~=Nrepl(2)
-    error('number of replications per condition should be the same');
+    ft_error('number of replications per condition should be the same');
   end
 
   h = zeros(Nobs, 1);
@@ -172,7 +172,7 @@ case {'paired-ttest'}
 case {'anova1'}
 
   if ~any(size(design)==1)
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   Nobs  = size(dat, 1);
@@ -195,7 +195,7 @@ case {'anova1'}
 case {'kruskalwallis'}
 
   if ~any(size(design)==1)
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   Nobs  = size(dat, 1);
@@ -246,13 +246,13 @@ case 'ttest_window_avg_vs_const'
   % this used to be a feature of the timelockanalysis as it was
   % originally implemented by Jens Schwartzbach, but it has been
   % superseded by the use of ft_selectdata for data selection
-  error(sprintf('%s is not supported any more, use cfg.avgovertime=''yes'' instead', cfg.statistic));
+  ft_error('%s is not supported any more, use cfg.avgovertime=''yes'' instead', cfg.statistic);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'signtest'}
   % set the defaults
-  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
-  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
   
   switch cfg.tail
     case 0
@@ -261,14 +261,14 @@ case {'signtest'}
       cfg.tail = 'left';
     case 1
       cfg.tail = 'right';
-  end;
+  end
   
   if size(design,1)~=1
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error(sprintf('%s method is only supported for two condition', cfg.statistic));
+    ft_error('method "%s" is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));
@@ -292,8 +292,8 @@ case {'signtest'}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'signrank'}
   % set the defaults
-  if ~isfield(cfg, 'alpha'), cfg.alpha = 0.05; end
-  if ~isfield(cfg, 'tail'), cfg.tail = 0; end
+  cfg.alpha         = ft_getopt(cfg, 'alpha', 0.05);
+  cfg.tail          = ft_getopt(cfg, 'tail', 0);
   
   switch cfg.tail
     case 0
@@ -302,14 +302,14 @@ case {'signrank'}
       cfg.tail = 'left';
     case 1
       cfg.tail = 'right';
-  end;
+  end
   
   if size(design,1)~=1
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error(sprintf('%s method is only supported for two condition', cfg.statistic));
+    ft_error('method ''%s'' is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));
@@ -332,7 +332,7 @@ case {'signrank'}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 otherwise
-  error(sprintf('Statistical method ''%s'' is not implemented', cfg.statistic));
+  ft_error('method ''%s'' is not implemented', cfg.statistic);
 end
 
 % assign the output variable

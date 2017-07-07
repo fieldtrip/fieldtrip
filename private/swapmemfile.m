@@ -66,8 +66,8 @@ elseif isempty(file) && ischar(data) && ft_filetype(data, 'matlab')
     % select the single variable that is inside the MATLAB file
     data = getfield(data, str{1});
   else
-    error('Matlab file should contain only one variable');
+    ft_error('Matlab file should contain only one variable');
   end
 else
-  error('Unknown combination of input variable and file history');
+  ft_error('Unknown combination of input variable and file history');
 end

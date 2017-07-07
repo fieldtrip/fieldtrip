@@ -205,7 +205,7 @@ switch cfg.method
     cfg.artfctdef.tms.artifact = artifact;
     fprintf('found %d events\n', size(artifact,1));
   otherwise
-    error('unsupported method'); % This should be redundant as ft_checkconfig does not allow other methods than the supported ones.
+    ft_error('unsupported method'); % This should be redundant as ft_checkconfig does not allow other methods than the supported ones.
 end
 
 cfg = rmfield(cfg, 'method'); % FIXME - not removing this causes problems when passing to ft_preprocessing

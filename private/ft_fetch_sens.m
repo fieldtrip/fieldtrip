@@ -4,29 +4,29 @@ function [sens] = ft_fetch_sens(cfg, data)
 % data structure or a FieldTrip configuration instead of a file on disk.
 %
 % Use as
+%   [sens] = ft_fetch_sens(cfg)
+% or as
 %   [sens] = ft_fetch_sens(cfg, data)
-% where either of the two input arguments may be empty.
 %
-% The positions of the sensors are specified in a gradiometer, electrode or optode
-% configuration or from a layout. The sensor configuration can be passed into this
-% function in four ways:
+% The sensor configuration can be passed into this function in four ways:
 %
-%  (1) in a file whose name is passed in a configuration field, and that can be imported using FT_READ_SENS,
-%  (2) in a configuration field,
-%  (3) in a data field, or
-%  (4) in a layout file, see FT_PREPARE_LAYOUT
+%  (1) in a configuration field,
+%  (2) in a file whose name is passed in a configuration field, see FT_READ_SENS,
+%  (3) in a layout file, see FT_PREPARE_LAYOUT, or
+%  (4) in a data field
 %
-% Allowed configuration or data fields:
-%   gradfile      = sensor definition file to be read for MEG data
-%   elecfile      = sensor definition file to be read for EEG data
-%   optofile      = sensor definition file to be read for NIRS data
-%   grad          = sensor definition from MEG data
-%   elec          = sensor definition from EEG data
-%   opto          = sensor definition from NIRS data
+% The following fields are used from the configuration:
+%   cfg.gradfile      = sensor definition file to be read for MEG data
+%   cfg.elecfile      = sensor definition file to be read for EEG data
+%   cfg.optofile      = sensor definition file to be read for NIRS data
+%   cfg.grad          = sensor definition from MEG data
+%   cfg.elec          = sensor definition from EEG data
+%   cfg.opto          = sensor definition from NIRS data
+%   cfg.layout        = layout definition or file name, see FT_PREPARE_LAYOUT
+%   cfg.senstype      = string, can be 'meg', 'eeg', or 'nirs', this is used to choose in combined data (default = 'eeg')
 %
-% Allowed configuration fields:
-%   layout        = reference to a layout, see FT_PREPARE_LAYOUT
-%   senstype      = string, can be 'meg', 'eeg', or 'nirs', this is used to choose in combined data (default = 'eeg')
+% When not specified in the configuration, this function will fetch the grad, elec or
+% opto field from the data.
 %
 % See also FT_READ_SENS, FT_PREPARE_LAYOUT, FT_FETCH_DATA
 
@@ -58,6 +58,9 @@ end
 
 cfg = ft_checkconfig(cfg);
 
+% set the defaults
+cfg.senstype = ft_getopt(cfg, 'senstype');
+
 % meg booleans
 hasgradfile = isfield(cfg, 'gradfile');
 hascfggrad  = isfield(cfg, 'grad');
@@ -77,48 +80,49 @@ hasdataopto = isfield(data, 'opto');
 haslayout   = isfield(cfg, 'layout');
 iscfgsens   = isfield(cfg, 'pnt')  || isfield(cfg, 'chanpos');
 isdatasens  = isfield(data, 'pnt') || isfield(data, 'chanpos');
-hassenstype = isfield(cfg, 'senstype');
 
-if (hasgradfile || hascfggrad || hasdatagrad) && (haselecfile || hascfgelec || hasdataelec) && ~hassenstype
-  error('Cannot determine whether you need gradiometer or electrode sensor definition. Specify cfg.senstype as ''MEG'' or ''EEG''');
+if isempty(cfg.senstype) && ((hasgradfile || hascfggrad || hasdatagrad) + (haselecfile || hascfgelec || hasdataelec) + (hasoptofile || hascfgopto || hasdataopto))>1
+  ft_error('Cannot determine which sensor information you need. Specify cfg.senstype as ''meg'', ''eeg'' or ''nirs''');
   
-elseif hassenstype && iscell(cfg.senstype)
-  % this represents combined EEG and MEG sensors, where each modality has its own sensor definition
-  % use recursion to fetch all sensor descriptions
-  sens = cell(size(cfg.senstype));
-  for i=1:numel(cfg.senstype)
-    tmpcfg = cfg;
-    tmpcfg.senstype = cfg.senstype{i};
-    sens{i} = ft_fetch_sens(tmpcfg, data);
+elseif ~isempty(cfg.senstype)
+  if iscell(cfg.senstype)
+    % this represents combined EEG and MEG sensors, where each modality has its own sensor definition
+    % use recursion to fetch all sensor descriptions
+    sens = cell(size(cfg.senstype));
+    for i=1:numel(cfg.senstype)
+      tmpcfg = cfg;
+      tmpcfg.senstype = cfg.senstype{i};
+      sens{i} = ft_fetch_sens(tmpcfg, data);
+    end
+    return
+    
+  else
+    switch lower(cfg.senstype)
+      case 'meg'
+        haselecfile = false;
+        hascfgelec  = false;
+        hasdataelec = false;
+        hasoptofile = false;
+        hascfgopto  = false;
+        hasdataopto = false;
+      case 'eeg'
+        hasgradfile = false;
+        hascfggrad  = false;
+        hasdatagrad = false;
+        hasoptofile = false;
+        hascfgopto  = false;
+        hasdataopto = false;
+      case 'nirs'
+        haselecfile = false;
+        hascfgelec  = false;
+        hasdataelec = false;
+        hasgradfile = false;
+        hascfggrad  = false;
+        hasdatagrad = false;
+      otherwise
+        ft_error('unsupported specification of cfg.senstype as "%s"', cfg.senstype);
+    end
   end
-  return
-  
-elseif hassenstype
-  switch lower(cfg.senstype)
-    case 'meg'
-      haselecfile = false;
-      hascfgelec  = false;
-      hasdataelec = false;
-      hasoptofile = false;
-      hascfgopto  = false;
-      hasdataopto = false;
-    case 'eeg'
-      hasgradfile = false;
-      hascfggrad  = false;
-      hasdatagrad = false;
-      hasoptofile = false;
-      hascfgopto  = false;
-      hasdataopto = false;
-    case 'nirs'
-      haselecfile = false;
-      hascfgelec  = false;
-      hasdataelec = false;
-      hasgradfile = false;
-      hascfggrad  = false;
-      hasdatagrad = false;
-    otherwise
-      error('Senstype not specified correctly, please see the documentation of FT_FETCH_SENS');
-  end;
 end
 
 if (hasgradfile + hascfggrad + hasdatagrad + ...
@@ -196,7 +200,7 @@ elseif isdatasens
   sens = data;
   
 else
-  error('no electrodes, gradiometers or optodes specified.');
+  ft_error('no electrodes, gradiometers or optodes specified.');
 end
 
 % ensure that the sensor description is up-to-date

@@ -3,7 +3,6 @@ function test_bug1232
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1232
 % TEST ft_selectdata ft_datatype_source
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -21,7 +20,7 @@ end
 
 cfg = [];
 cfg.trials = [2 4 6 8 10];
-output = ft_selectdata(cfg, source)
+output = ft_selectdata(cfg, source);
 
 assert(isequal(output.pow(1,:), cfg.trials), 'incorrect selection of trials in source structure');
 assert(all(isnan(output.pow(2,:))),          'incorrect selection of trials in source structure');
@@ -43,7 +42,7 @@ end
 
 cfg = [];
 cfg.trials = [2 4 6 8 10];
-output = ft_selectdata(cfg, source)
+output = ft_selectdata(cfg, source);
 
 assert(isequal(output.pow{1}, cfg.trials(:)), 'incorrect selection of trials in source structure');
 assert(isempty(output.pow{2}),                'incorrect selection of trials in source structure');
@@ -64,7 +63,7 @@ end
 
 cfg = [];
 cfg.trials = [2 4 6 8 10];
-output = ft_selectdata(cfg, source)
+output = ft_selectdata(cfg, source);
 
 assert(isequal(squeeze(output.csd{1}(1,:,:)), 2*eye(3)), 'incorrect selection of trials in source structure');
 assert(isempty(output.csd{2}),                           'incorrect selection of trials in source structure');

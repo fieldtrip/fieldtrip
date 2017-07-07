@@ -1,7 +1,9 @@
 function ft_plot_montage(dat, varargin)
 
-% FT_PLOT_MONTAGE makes a montage of a 3-D array by selecting slices at
-% regular distances and combining them in one large 2-D image.
+% FT_PLOT_MONTAGE makes a montage of a 3-D array by selecting slices at regular distances
+% and combining them in one large 2-D image.  Note that the montage of MRI slices is not to
+% be confused with the EEG montage, which is a way of specifying the reference scheme
+% between electrodes.
 %
 % Use as
 %   ft_plot_montage(dat, ...)
@@ -14,6 +16,10 @@ function ft_plot_montage(dat, varargin)
 %   'srange'        = 
 %   'slicesize'     = 
 %   'nslice'        = scalar, number of slices
+%   'maskstyle'     = string, 'opacity' or 'colormix', defines the rendering
+%   'background'    = needed when maskstyle is 'colormix', 3D-matrix with
+%                     the same size as the data matrix, serving as
+%                     grayscale image that provides the background
 % 
 % See also FT_PLOT_ORTHO, FT_PLOT_SLICE, FT_SOURCEPLOT
 
@@ -72,7 +78,7 @@ elseif size(loc, 1) > 1 && isempty(nslice)
   nslice = size(loc, 1);
 elseif size(loc, 1) > 1 && ~isempty(nslice)
   if size(loc, 1) ~= nslice
-    error('you should either specify a set of locations or a single location with a number of slices');
+    ft_error('you should either specify a set of locations or a single location with a number of slices');
   end
 end
 

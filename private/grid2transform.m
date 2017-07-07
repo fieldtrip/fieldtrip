@@ -19,13 +19,13 @@ oldtransform = volume.transform;
 
 % check the input arguments
 if any(size(oldtransform)~=[4 4])
-  error('incorrect size of homogenous transformation matrix');
+  ft_error('incorrect size of homogenous transformation matrix');
 elseif ~all(abs(diff(xgrid,2))<=100*eps*max(abs(xgrid)))
-  error('xgrid is not monotonously decreasing or increasing');
+  ft_error('xgrid is not monotonously decreasing or increasing');
 elseif ~all(abs(diff(ygrid,2))<=100*eps*max(abs(ygrid)))
-  error('ygrid is not monotonously decreasing or increasing');
+  ft_error('ygrid is not monotonously decreasing or increasing');
 elseif ~all(abs(diff(zgrid,2))<=100*eps*max(abs(zgrid)))
-  error('zgrid is not monotonously decreasing or increasing');
+  ft_error('zgrid is not monotonously decreasing or increasing');
 end
 
 Nx = length(xgrid);
@@ -33,7 +33,7 @@ Ny = length(ygrid);
 Nz = length(zgrid);
 
 if any(volume.dim(1:3)~=[Nx Ny Nz])
-  error('dimensions do not correspond');
+  ft_error('dimensions do not correspond');
 end
 
 xmin = min(xgrid);

@@ -3,7 +3,6 @@ function test_bug1836
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1836
 % TEST ft_datatype_segmentation ft_prepare_mesh ft_write_headshape
 
 % this bugscript does not need to run automatically, because the problem is

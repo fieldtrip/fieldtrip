@@ -82,13 +82,19 @@ end
 if denoise
   for i=1:length(chanindx)
     if (sum(diff(find(diff(dat(i,:))~=0)) == 1)/length(dat(i,:))) > 0.8
-      warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
+      ft_warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
       dat(i,:) = 0;
     end
   end
 end
 
 if fixbiosemi
+  if ft_platform_supports('int32_logical_operations')
+    % convert to 32-bit integer representation and only preserve the lowest 24 bits
+    dat = bitand(int32(dat), 2^24-1);
+    % apparently the 24 bits are still shifted by one byte
+    dat = bitshift(dat,-8);
+  else
   % find indices of negative numbers
   signbit = find(dat < 0);
   % change type to double (otherwise bitcmp will fail)
@@ -101,6 +107,7 @@ if fixbiosemi
   dat(signbit) = dat(signbit)+(2^(24-1));
   % typecast the data to ensure that the status channel is represented in 32 bits
   dat = uint32(dat);
+  end
   
   byte1 = 2^8  - 1;
   byte2 = 2^16 - 1 - byte1;
@@ -250,6 +257,6 @@ for i=1:length(chanindx)
         end
       end
     otherwise
-      error('incorrect specification of ''detectflank''');
+      ft_error('incorrect specification of ''detectflank''');
   end
 end

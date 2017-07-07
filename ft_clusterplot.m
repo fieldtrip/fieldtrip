@@ -14,6 +14,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.highlightcolorneg         = color of highlight marker for negative clusters (default = [0 0 0])
 %   cfg.subplotsize               = layout of subplots ([h w], default [3 5])
 %   cfg.saveaspng                 = string, filename of the output figures (default = 'no')
+%   cfg.visible                   = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %
 % You can also specify cfg options that apply to FT_TOPOPLOTTFR, except for
 % cfg.xlim, any of the FT_TOPOPLOTTFR highlight options, cfg.comment and
@@ -102,10 +103,11 @@ cfg.parameter             = ft_getopt(cfg, 'parameter',             'stat');
 cfg.saveaspng             = ft_getopt(cfg, 'saveaspng',             'no');
 cfg.subplotsize           = ft_getopt(cfg, 'subplotsize',           [3 5]);
 cfg.feedback              = ft_getopt(cfg, 'feedback',              'text');
+cfg.visible               = ft_getopt(cfg, 'visible',               'on');
 
 % error if cfg.highlightseries is not a cell, for possible confusion with cfg-options
 if ~iscell(cfg.highlightseries)
-  error('cfg.highlightseries should be a cell-array of strings')
+  ft_error('cfg.highlightseries should be a cell-array of strings')
 end
 
 % get the options that are specific for topoplotting
@@ -151,11 +153,11 @@ switch dimord
       stat.dimord = 'chan_freq';
       % no need to remove the singleton dimension at the end
     else
-      error('this only works if either frequency or time is a singleton dimension');
+      ft_error('this only works if either frequency or time is a singleton dimension');
     end
 
   otherwise
-    error('unsupported dimord %s', dimord);
+    ft_error('unsupported dimord %s', dimord);
 end % switch dimord
 
 % these are not valid any more
@@ -174,7 +176,7 @@ end
 
 if issubfield(stat, 'cfg.correcttail') && ((strcmp(stat.cfg.correcttail,'alpha') || strcmp(stat.cfg.correcttail,'prob')) && (stat.cfg.tail == 0));
   if ~(cfg.alpha >= stat.cfg.alpha);
-    warning(['the pvalue you plot: cfg.alpha = ' num2str(cfg.alpha) ' is higher than the correcttail option you tested: stat.cfg.alpha = ' num2str(stat.cfg.alpha)]);
+    ft_warning(['the pvalue you plot: cfg.alpha = ' num2str(cfg.alpha) ' is higher than the correcttail option you tested: stat.cfg.alpha = ' num2str(stat.cfg.alpha)]);
   end
 end
 
@@ -204,7 +206,7 @@ else
   Nsigall = Nsigpos + Nsigneg;
 
   if Nsigall == 0
-    error('no clusters present with a p-value lower than the specified alpha, nothing to plot')
+    ft_error('no clusters present with a p-value lower than the specified alpha, nothing to plot')
   end
 
   % make clusterslabel matrix per significant cluster
@@ -386,7 +388,7 @@ else
   count = 0;
   % make plots
   for iPl = 1:Nfig
-    figure;
+    f = figure('visible', cfg.visible);
     if is2D
       if iPl < Nfig
         for iT = 1:numSubplots
@@ -423,17 +425,17 @@ else
       end
     else
       cfgtopo.highlightchannel = list{1};
-      cfgtopo.comment = strcat(compos,comneg);
+      cfgtopo.comment = strcat(compos, comneg);
       cfgtopo.commentpos = 'title';
       count = count+1;
       fprintf('making subplot %d from %d\n', count, Npl);
       ft_topoplotTFR(cfgtopo, stat);
     end
     % save figure
-    if isequal(cfg.saveaspng,'no');
+    if isequal(cfg.saveaspng, 'no');
     else
       filename = strcat(cfg.saveaspng, '_fig', num2str(iPl));
-      print(gcf,'-dpng',filename);
+      print(gcf, '-dpng', filename);
     end
   end
 end

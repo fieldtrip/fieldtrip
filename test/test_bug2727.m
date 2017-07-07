@@ -3,7 +3,6 @@ function test_bug2727
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2727
 % TEST ft_clusterplot
 
 label = {

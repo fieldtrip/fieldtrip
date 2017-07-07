@@ -1,10 +1,10 @@
-function test_bug2220
+function test_bug2220(datainfo)
 
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug2220
 % TEST ft_preprocessing ft_preproc_padding preproc
+
 
 %load('C:\Users\jorhor\Downloads\bugdatafile.mat')
 cfg = [];
@@ -24,14 +24,16 @@ tmpdata = ft_preprocessing(cfg, data);
 
 tbase = tmpdata.time{1} >= cfg.baselinewindow(1) & tmpdata.time{end} <= cfg.baselinewindow(2);
 
-[ok, msg] = identical(sum(tmpdata.trial{1}(:, tbase), 2), zeros(length(data.label), 1),'abstol',eps*100);
+[ok, msg] = isalmostequal(sum(tmpdata.trial{1}(:, tbase), 2), zeros(length(data.label), 1),'abstol',eps*100);
 
 if ~ok
   error('baseline not zero: %s', msg{1});
 end
 
 %% test with data on disk
-datainfo = ref_datasets;
+if nargin<1
+  datainfo = ref_datasets;
+end
 
 for k = 1:numel(datainfo)
   dataset = datainfo(k);
@@ -63,15 +65,15 @@ for k = 1:numel(datainfo)
   cfg.continuous     = 'yes';
   cfg.demean         = 'yes';
   cfg.baselinewindow = [0 0.5];
-  cfg.channel        = {upper(dataset.type)};
+  if strcmp(dataset.type, 'meg') || strcmp(dataset.type, 'eeg')
+    cfg.channel      = dataset.type;
+  else
+    cfg.channel      = 'all';
+  end
   data               = ft_preprocessing(cfg);
 
   tbase = data.time{1} >= cfg.baselinewindow(1) & data.time{end} <= cfg.baselinewindow(2);
-
-  if length(data.label) == 0
-    continue;
-  end
-  [ok, msg] = identical(sum(data.trial{1}(1:end, tbase), 2), zeros(length(data.label), 1),'abstol',abs(.0001 * mean(data.trial{1}(:))));
+ [ok, msg] = isalmostequal(sum(data.trial{1}(1:end, tbase), 2), zeros(length(data.label), 1),'abstol',abs(.0001 * mean(data.trial{1}(:))));
 
   if ~ok
     error('baseline not zero: %s', msg{1});

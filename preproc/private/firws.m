@@ -59,14 +59,14 @@ function [b, a] = firws(m, f, t, w)
     a = 1;
 
     if nargin < 2
-        error('Not enough input arguments');
+        ft_error('Not enough input arguments');
     end
     if length(m) > 1 || ~isnumeric(m) || ~isreal(m) || mod(m, 2) ~= 0 || m < 2
-        error('Filter order must be a real, even, positive integer.');
+        ft_error('Filter order must be a real, even, positive integer.');
     end
     f = f / 2;
     if any(f <= 0) || any(f >= 0.5)
-        error('Frequencies must fall in range between 0 and 1.');
+        ft_error('Frequencies must fall in range between 0 and 1.');
     end
     if nargin < 3 || isempty(t)
         t = '';

@@ -32,7 +32,7 @@ function [meg] = read_ctf_dat(filename)
 
 fid = fopen(filename, 'r');
 if fid==-1
-  error(sprintf('could not open file %s', filename));
+  ft_error(sprintf('could not open file %s', filename));
 end
 
 % read the sample number
@@ -56,7 +56,7 @@ meg.label = {};
 chan = 0;
 while (1)
   line = fgetl(fid);
-  if ~isempty(line) & line==-1
+  if ~isempty(line) && line==-1
     % reached end of file
     break
   end

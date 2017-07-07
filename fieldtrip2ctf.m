@@ -57,14 +57,14 @@ switch type
       fprintf(fid, 'Name:\t%s\n', montage.labelnew{i});
       fprintf(fid, 'Unit:\n');
       for j=1:numel(sel)
-        fprintf(fid, 'Ref:\t%s,%f\n', montage.labelorg{sel(j)}, montage.tra(i,sel(j)));
+        fprintf(fid, 'Ref:\t%s,%f\n', montage.labelold{sel(j)}, montage.tra(i,sel(j)));
       end
       fprintf(fid, '}\n');
     end
     
     % case 'event'
     %   if ~ft_filetype(filename, 'ctf_ds')
-    %     error('you should specify the directory name of a CTF dataset to which the MarkerFile.mrk will be added');
+    %     ft_error('you should specify the directory name of a CTF dataset to which the MarkerFile.mrk will be added');
     %   end
     %   
     % The MarkerFile.mrk file requires exact line spacing, otherwise the software
@@ -89,6 +89,6 @@ switch type
     % case 'dip'
 
   otherwise
-    error('unsuported data structure "%s" for exporting to CTF', type);
+    ft_error('unsuported data structure "%s" for exporting to CTF', type);
 end
 

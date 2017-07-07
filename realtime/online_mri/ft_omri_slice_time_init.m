@@ -25,9 +25,9 @@ function STM = ft_omri_slice_time_init(X0, TR, deltaT)
 %
 % $Id$
 
-STM.dims = size(X0)
+STM.dims = size(X0);
 if nargin == 3
-  if STM.dims(3)~=length(deltaT) | any(deltaT>TR) | any(deltaT<0) 
+  if STM.dims(3)~=length(deltaT) || any(deltaT>TR) || any(deltaT<0) 
     error 'You must pass in a correct timing description vector';
   end
 else

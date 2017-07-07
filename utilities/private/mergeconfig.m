@@ -9,6 +9,9 @@ function input = mergeconfig(input, default)
 % Copyright (C) 2009-2012, Robert Oostenveld
 %
 % $Id$
+  input = mergeconfig_helper(input, default);
+
+function input=mergeconfig_helper(input,default)
 
 if isempty(input) && ~isstruct(input)
   % ensure that it is an empty struct, not an empty double
@@ -25,7 +28,19 @@ fieldsused = fieldnames(default);
 for i=1:length(fieldsused)
   fn = fieldsused{i};
   
-  if     ~isfield(input, fn) && ~isstruct(default.(fn))
+  if isstruct(default) && numel(default)>1
+    if isempty(input) || isstruct(input) && isempty(fieldnames(input))
+      input = default;
+    else
+      for j=1:numel(default)
+        if numel(input)<j
+          input(j) = default(j);
+        else
+          input(j) = mergeconfig_helper(input(j), default(j));
+        end
+      end
+    end
+  elseif  ~isfield(input, fn) && ~isstruct(default.(fn))
     % simply copy the value over
     input.(fn) = default.(fn);
   elseif ~isfield(input, fn) &&  isstruct(default.(fn))
@@ -34,8 +49,8 @@ for i=1:length(fieldsused)
   elseif  isfield(input, fn) && ~isstruct(default.(fn))
     % do not copy it over, keep the original value
   elseif  isfield(input, fn) &&  isstruct(default.(fn))
-    % merge the two substructures
-    input.(fn) = mergeconfig(input.(fn), default.(fn));
+    % merge the two substructures using recursive call
+    input.(fn) = mergeconfig_helper(input.(fn), default.(fn));
   end
   
 end % for all fields

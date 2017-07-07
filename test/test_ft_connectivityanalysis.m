@@ -3,7 +3,6 @@ function test_ft_connectivityanalysis
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_connectivityanalysis
 % TEST ft_connectivityanalysis ft_connectivity_granger ft_connectivity_corr ft_connectivity_psi ft_mvaranalysis ft_connectivitysimulation ft_freqanalysis ft_connectivity_pdc ft_connectivity_dtf ft_connectivity_csd2transfer
 
 % this function tests the functionality of FT_CONNECTIVITYANALYSIS
@@ -87,6 +86,13 @@ c8m            = ft_connectivityanalysis(cfgc, mfreq);
 cfgc.method    = 'total_interdependence';
 c9             = ft_connectivityanalysis(cfgc, freq);
 c9m            = ft_connectivityanalysis(cfgc, mfreq);
+cfgc.method    = 'ddtf';
+c10            = ft_connectivityanalysis(cfgc, freq);
+c10m           = ft_connectivityanalysis(cfgc, mfreq);
+cfgc.method    = 'gpdc';
+c11            = ft_connectivityanalysis(cfgc, freq);
+c11m           = ft_connectivityanalysis(cfgc, mfreq);
+
 
 cfgc             = [];
 cfgc.partchannel = 'signal003'; % this should destroy coherence between 1 and 2

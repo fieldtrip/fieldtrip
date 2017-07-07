@@ -51,7 +51,7 @@ eeg.time = linspace(eeg.xmin, eeg.xmax, eeg.npnt);
 % open the file and seek towards the place where the raw data is
 fid = fopen(filename,'r','ieee-le');
 if fid<0
-  error(['cannot open ', filename]);
+  ft_error(['cannot open ', filename]);
 end
 
 % the default is to read all epochs
@@ -88,7 +88,7 @@ for i=1:length(epoch)
   fseek(fid, 75*eeg.nchan, 'cof');          % skip channel headers
   status = fseek(fid, (epoch(i)-1)*epoch_size, 'cof');  % skip first epochs
   if status~=0
-    error('seek error while reading epoch data');
+    ft_error('seek error while reading epoch data');
   end
 
   % fprintf('reading epoch %d at offset %d\n', epoch(i), ftell(fid));
@@ -104,7 +104,7 @@ for i=1:length(epoch)
   % read raw signal
   raw = fread(fid, eeg.nchan*eeg.npnt, datatype);
   if length(raw)~=eeg.nchan*eeg.npnt
-    error('fread error while reading epoch data');
+    ft_error('fread error while reading epoch data');
   end
   data(i,:,:) = reshape(raw, [eeg.nchan, eeg.npnt]);
 

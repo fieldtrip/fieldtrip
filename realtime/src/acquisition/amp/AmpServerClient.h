@@ -1,6 +1,6 @@
 /* Copyright (C) 2013 Federico Raimondo
  * Applied Artificial Intelligence Lab
- * Computer Sciences Department 
+ * Computer Sciences Department
  * University of Buenos Aires, Argentina
  *
  * This file is part of Amp2ft
@@ -14,7 +14,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Amp2ft.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -24,7 +24,7 @@
 #define __AMP_SERVER_CLIENT_H__
 
 #include <string>
-#include <stdint.h> 
+#include <stdint.h>
 #include <OnlineDataManager.h>
 #include <FtBuffer.h>
 
@@ -55,7 +55,7 @@ typedef struct {
 	#define PREFIX "DEBUG::%s:%d "
 	#define DPRINTF(...) { fprintf(stdout, PREFIX ,__FILE__, __LINE__); fprintf(stdout, __VA_ARGS__); }
 #else
-	#define DPRINTF(...) 
+	#define DPRINTF(...)
 #endif
 
 #define COMMAND_FORMAT "(sendCommand cmd_%s %d %d %d)\n"
@@ -64,33 +64,33 @@ class AmpServerClient {
 	public:
 		AmpServerClient(struct AmpServerClientConfig * config);
 		~AmpServerClient();
-		
+
 		bool connectClient();
 		void disconnectClient();
-		
+
 		void start();
 		void stop();
-		
+
 		void error(std::string msg);
-	
+
 		int getNumChannels();
 		int getSamplingFreq();
-		
+
 		void getAmpId();
 		void getAmpDetails();
 		int getSubsample();
 		void sendCommand(std::string cmd, int param1, int param2, int param3);
 		void sendStrCommand(std::string cmd, int param1, int param2, int param3);
-		
+
 		bool getResponseInt(std::string param, unsigned int* result);
-		
+
 		int	getCurrentTime();
-		
+
 		unsigned int checkNewData();
 		unsigned int readNewData(int32_t * ptr, unsigned int topass, FtEventList elist);
-		
+
 		inline void toHostOrder(char *data, int len);
-		
+
 	private:
 		struct 	AmpServerClientConfig * config;
 		AmpDataPacketHeader	ampDataPacketHeader;

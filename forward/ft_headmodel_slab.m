@@ -44,7 +44,7 @@ model = ft_getopt(varargin, 'sourcemodel', 'monopole');
 cond  = ft_getopt(varargin, 'conductivity'); 
 
 if isempty(cond)
-  warning('Conductivity was not specified, using 1');
+  ft_warning('Conductivity was not specified, using 1');
   cond = 1;
 end
 
@@ -62,7 +62,7 @@ elseif size(mesh1,2)==3
   pos1 = mesh1;
   pos2 = mesh2;
 else
-  error('incorrect specification of the geometry');
+  ft_error('incorrect specification of the geometry');
 end
 
 % fit a plane to the points
@@ -91,7 +91,7 @@ headmodel.ori2   = headmodel.ori2/norm(headmodel.ori2);
 if strcmpi(model,'monopole')
   headmodel.type  = 'slab_monopole';    
 else
-  error('unknow method')
+  ft_error('unknow method')
 end
 
 function [N,P] = fit_plane(X)

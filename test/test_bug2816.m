@@ -3,7 +3,6 @@ function test_bug2816
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2816
 % TEST ft_selectdata ft_timelockanalysis getdimord getdimsiz
 
 data.label = {'TETFP09'  'TETFP10'  'TETFP11'  'TETFP12'};

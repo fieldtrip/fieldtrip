@@ -91,12 +91,12 @@ efficient = ft_getopt(cfg, 'efficient', 'no');
 Nvar  = size(design,1);   % number of factors or regressors
 Nrepl = size(design,2);   % number of replications
 
-if ~isempty(intersect(cfg.ivar, cfg.uvar)), warning('there is an intersection between cfg.ivar and cfg.uvar'); end
-if ~isempty(intersect(cfg.ivar, cfg.wvar)), warning('there is an intersection between cfg.ivar and cfg.wvar'); end
-if ~isempty(intersect(cfg.ivar, cfg.cvar)), warning('there is an intersection between cfg.ivar and cfg.cvar'); end
-if ~isempty(intersect(cfg.uvar, cfg.wvar)), warning('there is an intersection between cfg.uvar and cfg.wvar'); end
-if ~isempty(intersect(cfg.uvar, cfg.cvar)), warning('there is an intersection between cfg.uvar and cfg.cvar'); end
-if ~isempty(intersect(cfg.wvar, cfg.cvar)), warning('there is an intersection between cfg.wvar and cfg.cvar'); end
+if ~isempty(intersect(cfg.ivar, cfg.uvar)), ft_warning('there is an intersection between cfg.ivar and cfg.uvar'); end
+if ~isempty(intersect(cfg.ivar, cfg.wvar)), ft_warning('there is an intersection between cfg.ivar and cfg.wvar'); end
+if ~isempty(intersect(cfg.ivar, cfg.cvar)), ft_warning('there is an intersection between cfg.ivar and cfg.cvar'); end
+if ~isempty(intersect(cfg.uvar, cfg.wvar)), ft_warning('there is an intersection between cfg.uvar and cfg.wvar'); end
+if ~isempty(intersect(cfg.uvar, cfg.cvar)), ft_warning('there is an intersection between cfg.uvar and cfg.cvar'); end
+if ~isempty(intersect(cfg.wvar, cfg.cvar)), ft_warning('there is an intersection between cfg.wvar and cfg.cvar'); end
 
 fprintf('total number of measurements     = %d\n', Nrepl);
 fprintf('total number of variables        = %d\n', Nvar);
@@ -146,11 +146,11 @@ if ~isempty(cfg.wvar)
     blklen(i) = length(blksel{i});
   end
   if any(blklen~=blklen(1))
-    error('the number of repetitions per block should be constant');
+    ft_error('the number of repetitions per block should be constant');
   end
   for i=1:size(blkmeas,2)
     if any(diff(design(:, blksel{i}), 1, 2)~=0)
-      error('the design matrix variables should be constant within a block');
+      ft_error('the design matrix variables should be constant within a block');
     end
   end
   orig_design = design;
@@ -165,7 +165,7 @@ end
 
 % do some validity checks
 if Nvar==1 && ~isempty(cfg.uvar)
-  error('A within-units shuffling requires a at least one unit variable and at least one independent variable');
+  ft_error('A within-units shuffling requires a at least one unit variable and at least one independent variable');
 end
 
 if isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
@@ -210,7 +210,7 @@ elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   if ischar(cfg.numrandomization) && strcmp(cfg.numrandomization, 'all')
     % create all possible permutations by systematic assignment
     if any(unitlen~=2)
-      error('cfg.numrandomization=''all'' is only supported for two repeated measurements');
+      ft_error('cfg.numrandomization=''all'' is only supported for two repeated measurements');
     end
     Nperm = 2^(length(unitlevel));
     fprintf('creating all possible permutations (%d)\n', 2^(length(unitlevel)));
@@ -254,10 +254,10 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   resample = zeros(cfg.numrandomization, Nrepl);
   
   %sanity check on number of repetitions
-  if any(Nrep~=Nrep(1)), error('all units of observation should have an equal number of repetitions'); end
+  if any(Nrep~=Nrep(1)), ft_error('all units of observation should have an equal number of repetitions'); end
   
   if max(units(:))<20,
-    warning('fewer than 20 units warrants explicit checking of double occurrences of ''bootstraps''');
+    ft_warning('fewer than 20 units warrants explicit checking of double occurrences of ''bootstraps''');
     checkunique = 1;
   else
     checkunique = 0;
@@ -298,7 +298,7 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   end
   
 else
-  error('Unsupported configuration for resampling.');
+  ft_error('Unsupported configuration for resampling.');
 end
 
 if ~isempty(cfg.wvar)
@@ -319,10 +319,10 @@ end
 % but important is that the relative requencies of the condition sequences remains the same
 if strcmp(efficient, 'yes')
   if numel(cfg.ivar)<1
-    error('this reqiures at least one independent variable to be specified (ivar)');
+    ft_error('this reqiures at least one independent variable to be specified (ivar)');
   end
   if numel(cfg.uvar)>0
-    error('this is not yet supported in combination with a unit of observation (uvar)');
+    ft_error('this is not yet supported in combination with a unit of observation (uvar)');
   end
   
   original = zeros(size(resample,1), numel(cfg.ivar)*size(resample,2));

@@ -295,12 +295,12 @@ case 'instantaneous'
     % S = crosspectrum      nchan x nchan x nfreq
     % powindx{1} is a list of indices for block1
     % powindx{2} is a list of indices for block2
-    error('instantaneous causality is not implemented for blockwise factorizations');
+    ft_error('instantaneous causality is not implemented for blockwise factorizations');
   elseif isstruct(powindx)
     %blockwise conditional
-    error('blockwise conditional instantaneous causality is not implemented'); 
+    ft_error('blockwise conditional instantaneous causality is not implemented'); 
   else
-    error('not implemented');
+    ft_error('not implemented');
   end
   
 case 'total'
@@ -388,11 +388,25 @@ case 'total'
     
   elseif issquare && isstruct(powindx)
     %blockwise conditional
-    error('blockwise conditional total interdependence is not implemented'); 
+    ft_error('blockwise conditional total interdependence is not implemented'); 
+  end
+  
+case 'iis'
+  ft_warning('THIS IS EXPERIMENTAL CODE, USE AT YOUR OWN RISK!');
+  % this is experimental
+  if ~issquare && isempty(powindx)
+    A = transfer2coeffs(shiftdim(H),(0:size(H,3)-1));
+    ncmb = size(A,1)./4;
+    iis = coeffs2iis(reshape(A,[2 2 ncmb size(A,2)]),reshape(Z,[2 2 ncmb]));
+    iis = repmat(iis(:),[1 4])';
+    outsum = iis(:);
+    outssq = nan(size(outsum));   
+  else
+    ft_error('iis can only be computed when the input contains sets of bivariate factorizations');
   end
   
 otherwise
-  error('unsupported output requested');
+  ft_error('unsupported output requested');
 end
 
 granger = outsum./n;

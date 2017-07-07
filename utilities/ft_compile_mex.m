@@ -48,13 +48,13 @@ end
 [ftver, ftpath] = ft_version;
 
 L = [];
-L = add_mex_source(L,'fileio/@uint64','abs');
-L = add_mex_source(L,'fileio/@uint64','min');
-L = add_mex_source(L,'fileio/@uint64','max');
-L = add_mex_source(L,'fileio/@uint64','plus');
-L = add_mex_source(L,'fileio/@uint64','minus');
-L = add_mex_source(L,'fileio/@uint64','times');
-L = add_mex_source(L,'fileio/@uint64','rdivide');
+L = add_mex_source(L,'compat/matlablt2010b/@uint64','abs');
+L = add_mex_source(L,'compat/matlablt2010b/@uint64','min');
+L = add_mex_source(L,'compat/matlablt2010b/@uint64','max');
+L = add_mex_source(L,'compat/matlablt2010b/@uint64','plus');
+L = add_mex_source(L,'compat/matlablt2010b/@uint64','minus');
+L = add_mex_source(L,'compat/matlablt2010b/@uint64','times');
+L = add_mex_source(L,'compat/matlablt2010b/@uint64','rdivide');
 
 L = add_mex_source(L,'@config/private','deepcopy');
 L = add_mex_source(L,'@config/private','increment');

@@ -3,7 +3,6 @@ function test_bug2560
 % WALLTIME 00:15:00
 % MEM 300mb
 
-% TEST test_bug2560
 % TEST ft_sourceplot
 % TEST ft_plot_slice
 

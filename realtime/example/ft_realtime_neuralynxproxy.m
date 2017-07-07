@@ -186,7 +186,7 @@ while again
 
       selectValid = (numValidSamplesArray==512);
       if ~all(selectValid)
-        warning('some samples were not valid')
+        ft_warning('some samples were not valid')
       end
 
       % remove the records that are somehow corrupted

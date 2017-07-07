@@ -32,7 +32,7 @@ function [headmodel] = ft_fetch_vol(cfg, data)
 
 % check input arguments
 if nargin > 1 
-  error('something is wrong');
+  ft_error('something is wrong');
 end
 
 % get the headmodel definition/volume conduction model
@@ -45,7 +45,7 @@ elseif isfield(cfg, 'headmodel') && iscell(cfg.headmodel)
   % this might represent combined EEG, ECoG and/or MEG
   headmodel = cfg.headmodel;
 else
-  error('no headmodel specified');
+  ft_error('no headmodel specified');
 end
 
 % ensure that the headmodel description is up-to-date

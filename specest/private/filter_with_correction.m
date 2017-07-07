@@ -48,7 +48,7 @@ dat = double(dat);
 
 poles = roots(A);
 if any(abs(poles) >= 1)
-  error('Calculated filter coefficients have poles on or outside the unit circle and will not be stable. Try a higher cutoff frequency or a different type/order of filter.');
+  ft_error('Calculated filter coefficients have poles on or outside the unit circle and will not be stable. Try a higher cutoff frequency or a different type/order of filter.');
 end
 
 dcGain = sum(B)/sum(A);
@@ -81,7 +81,7 @@ switch dir
   case 'onepass-minphase'
     filt = fir_filterdcpadded(B, A, dat', 1, usefftfilt)';
   otherwise
-    error('unsupported filter direction "%s"', dir);
+    ft_error('unsupported filter direction "%s"', dir);
 end
 
 % cast it back into the type of the input data, which can e.g. be single or int32

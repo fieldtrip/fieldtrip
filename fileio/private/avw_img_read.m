@@ -95,7 +95,7 @@ if isempty(verbose), verbose = 1; end
 
 if ~exist('fileprefix','var'),
   msg = sprintf('...no input fileprefix - see help avw_img_read\n\n');
-  error(msg);
+  ft_error(msg);
 end
 if findstr('.hdr',fileprefix),
   fileprefix = strrep(fileprefix,'.hdr','');
@@ -122,7 +122,7 @@ function [ avw ] = read_image(avw,IMGorient,machine,verbose)
 fid = fopen(sprintf('%s.img',avw.fileprefix),'r',machine);
 if fid < 0,
   msg = sprintf('...cannot open file %s.img\n\n',avw.fileprefix);
-  error(msg);
+  ft_error(msg);
 end
 
 if verbose,
@@ -212,17 +212,17 @@ TimeSz   = double(avw.hdr.dime.pixdim(5));
 % perhaps to indicate flipped orientation?  If so, this code below
 % will NOT handle the flip correctly!
 if PixelSz < 0,
-  warning('X pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(2))');
+  ft_warning('X pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(2))');
   PixelSz = abs(PixelSz);
   avw.hdr.dime.pixdim(2) = single(PixelSz);
 end
 if RowSz < 0,
-  warning('Y pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(3))');
+  ft_warning('Y pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(3))');
   RowSz = abs(RowSz);
   avw.hdr.dime.pixdim(3) = single(RowSz);
 end
 if SliceSz < 0,
-  warning('Z pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(4))');
+  ft_warning('Z pixdim < 0 !!! resetting to abs(avw.hdr.dime.pixdim(4))');
   SliceSz = abs(SliceSz);
   avw.hdr.dime.pixdim(4) = single(SliceSz);
 end
@@ -259,8 +259,8 @@ if ( TimeDim > 1 ) && (avw.hdr.hist.orient ~= 0 ),
            'for volumes with dimensionality greater than 3.  Set ', ...
            'avw.hdr.hist.orient = 0 and flip your volume after ', ...
            'calling this function' ];
-   msg = sprintf( '%s (%s).', msg, mfilename );
-   error( msg );
+   msg = ft_error( '%s (%s).', msg, mfilename );
+   ft_error( msg );
 end
 
 switch double(avw.hdr.hist.orient),
@@ -493,7 +493,7 @@ case 1, % coronal unflipped
     
   otherwise
     
-    error('unknown value in avw.hdr.hist.orient, try explicit IMGorient option.');
+    ft_error('unknown value in avw.hdr.hist.orient, try explicit IMGorient option.');
     
 end
 

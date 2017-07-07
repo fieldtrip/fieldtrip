@@ -52,7 +52,7 @@ function hdr = read_yokogawa_header(filename)
 %  fopen iee-le
 
 if ~ft_hastoolbox('yokogawa')
-    error('cannot determine whether Yokogawa toolbox is present');
+    ft_error('cannot determine whether Yokogawa toolbox is present');
 end
 
 handles = definehandles;
@@ -77,7 +77,7 @@ actual_epoch_count = [];
 switch acq_type
   case handles.AcqTypeContinuousRaw
     [sample_rate, sample_count] = GetMeg160ContinuousAcqCondM(fid);
-    if isempty(sample_rate) | isempty(sample_count)
+    if isempty(sample_rate) || isempty(sample_count)
       fclose(fid);
       return;
     end
@@ -86,20 +86,20 @@ switch acq_type
 
   case handles.AcqTypeEvokedAve
     [sample_rate, sample_count, pretrigger_length, averaged_count] = GetMeg160EvokedAcqCondM( fid );
-    if isempty(sample_rate) | isempty(sample_count) | isempty(pretrigger_length) | isempty(averaged_count)
+    if isempty(sample_rate) || isempty(sample_count) || isempty(pretrigger_length) || isempty(averaged_count)
       fclose(fid);
       return;
     end
 
   case handles.AcqTypeEvokedRaw
     [sample_rate, sample_count, pretrigger_length, actual_epoch_count] = GetMeg160EvokedAcqCondM( fid );
-    if isempty(sample_rate) | isempty(sample_count) | isempty(pretrigger_length) | isempty(actual_epoch_count)
+    if isempty(sample_rate) || isempty(sample_count) || isempty(pretrigger_length) || isempty(actual_epoch_count)
       fclose(fid);
       return;
     end
 
   otherwise
-    error('unknown data type');
+    ft_error('unknown data type');
 end
 
 % these are always present
@@ -141,7 +141,7 @@ switch orig.acq_type
     hdr.nSamplesPre = orig.pretrigger_length;
     hdr.nTrials     = orig.actual_epoch_count;
   otherwise
-    error('unknown acquisition type');
+    ft_error('unknown acquisition type');
 end
 
 % construct a cell-array with labels of each channel

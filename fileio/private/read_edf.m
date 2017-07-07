@@ -18,23 +18,9 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % override chanindx during data reading.
 %
 % Use as
-%   [hdr] = read_edf(filename);
+%   [hdr] = read_edf(filename)
 % where
 %    filename        name of the datafile, including the .edf extension
-% This returns a header structure with the following elements
-%   hdr.Fs           sampling frequency
-%   hdr.nChans       number of channels
-%   hdr.nSamples     number of samples per trial
-%   hdr.nSamplesPre  number of pre-trigger samples in each trial
-%   hdr.nTrials      number of trials
-%   hdr.label        cell-array with labels of each channel
-%   hdr.orig         detailled EDF header information
-%
-% Use as
-%   [hdr] = read_edf(filename, [], chanindx);
-% where
-%    filename        name of the datafile, including the .edf extension
-%    chanindx        index of channels to read (optional, default is all)
 % This returns a header structure with the following elements
 %   hdr.Fs           sampling frequency
 %   hdr.nChans       number of channels
@@ -45,7 +31,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 %   hdr.orig         detailled EDF header information
 %
 % Or use as
-%   [dat] = read_edf(filename, hdr, begsample, endsample, chanindx);
+%   [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % where
 %    filename        name of the datafile, including the .edf extension
 %    hdr             header structure, see above
@@ -55,7 +41,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 % This returns a Nchans X Nsamples data matrix
 %
 % Or use as
-%   [evt] = read_edf(filename, hdr);
+%   [evt] = read_edf(filename, hdr)
 % where
 %    filename        name of the datafile, including the .edf extension
 %    hdr             header structure, see above
@@ -265,12 +251,15 @@ if needhdr
     chansel=chanindx;
     hdr.Fs           = EDF.SampleRate(chanindx(1));
     hdr.nChans       = length(chansel);
-    hdr.label        = cellstr(EDF.Label);
-    hdr.label        = hdr.label(chansel);
+    hdr.label        = cellstr(EDF.Label(chansel,:));
     % it is continuous data, therefore append all records in one trial
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = 1;
+    hdr.chanunit     = cellstr(EDF.PhysDim(chansel,:));
+    hdr.chantype     = repmat({'unknown'}, size(hdr.chanunit));  % start with unknown
+    hdr.chantype(strcmp(hdr.chanunit, 'uV')) = {'eeg'};          % it might also be EOG, ECG, EMG, etc
+    hdr.chantype(strcmp(hdr.chanunit, 'Boolean')) = {'trigger'};
     hdr.orig         = EDF;
     % this will be used on subsequent reading of data
     if length(chansel) ~= EDF.NS
@@ -288,7 +277,7 @@ if needhdr
     % continue with the subset of channels that has a consistent sampling frequency
     hdr.Fs           = EDF.SampleRate(chansel(1));
     hdr.nChans       = length(chansel);
-    warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
+    ft_warning('Skipping "%s" as continuous data channel because of inconsistent sampling frequency (%g Hz)', deblank(EDF.Label(end,:)), EDF.SampleRate(end));
     hdr.label        = cellstr(EDF.Label(chansel,:));
     % it is continuous data, therefore append all records in one trial
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
@@ -323,7 +312,7 @@ if needhdr
     hdr.orig.chansel    = chansel;
     hdr.orig.annotation = find(strcmp(cellstr(hdr.orig.Label), 'EDF Annotations'));
     
-    warning('channels with different sampling rate not supported, selecting subset of %d channels at %f Hz', length(hdr.label), hdr.Fs);
+    ft_warning('channels with different sampling rate not supported, selecting subset of %d channels at %f Hz', length(hdr.label), hdr.Fs);
   end
   
   % return the header
@@ -452,12 +441,12 @@ else
   fp = fopen(filename,'r','ieee-le');
   status = fseek(fp, offset, 'bof');
   if status
-    error(['failed seeking ' filename]);
+    ft_error(['failed seeking ' filename]);
   end
   [buf,num] = fread(fp,numwords,'bit16=>double');
   fclose(fp);
   if (num<numwords)
-    error(['failed reading ' filename]);
+    ft_error(['failed reading ' filename]);
   end
 end
 

@@ -3,7 +3,6 @@ function test_old_filtering
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_filtering
 
 % This script is for testing ideas about how to correct
 % for edge artifacts for different filter types.
@@ -44,7 +43,7 @@ for k=1:4
   
   % Calculate DC gain of the filter, so we now how much 
   % of the constant part of a signal the filter lets through.
-  dcGain = polyval(B,1) / polyval(A,1)
+  dcGain = polyval(B,1) / polyval(A,1);
   
   % forward filtering (_c = with correction)
   % the correction as shown here only works for 1-D signals,

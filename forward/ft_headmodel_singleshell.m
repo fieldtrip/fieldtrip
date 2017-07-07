@@ -53,7 +53,7 @@ end
 mesh = fixpos(mesh);
 
 if ~isstruct(mesh) || ~isfield(mesh, 'pos')
-  error('the input mesh should be a set of points or a single triangulated surface')
+  ft_error('the input mesh should be a set of points or a single triangulated surface')
 end
 
 % represent the mesh in a headmodel strucure

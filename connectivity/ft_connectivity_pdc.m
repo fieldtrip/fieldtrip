@@ -14,6 +14,13 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 %                contains leave-one-outs, required for correct variance
 %                estimate
 %   'feedback' = string, determining verbosity (default = 'none'), see FT_PROGRESS
+%   'invfun'   = 'inv' (default) or 'pinv', the function used to invert the
+%                transfer matrix to obtain the fourier transform of the
+%                MVAR coefficients. Use 'pinv' if the data are
+%                poorly-conditioned.
+%   'noisecov' = matrix containing the covariance of the residuals of the
+%                MVAR model. If this matrix is defined, the function
+%                returns the generalized partial directed coherence.
 %
 % Output arguments:
 %   p = partial directed coherence matrix Nchan x Nchan x Nfreq (x Ntime).
@@ -25,8 +32,17 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 % computed across observations. When nrpt>1 and hasjack is true the input
 % is assumed to contain the leave-one-out estimates of H, thus a more
 % reliable estimate of the relevant quantities.
+%
+% This function implements the metrices described in:
+%  - Baccala et al., Biological Cybernetics 2001, 84(6), 463-74.
+%  - Baccala et al., 15th Int.Conf.on DSP 2007, 163-66.
+%
+% The implemented algorithm has been tested against the implementation in
+% the SIFT-toolbox. It yields numerically identical results to what is
+% known in the SIFT-toolbox as 'nPDC' (for PDC) and 'GPDC' for generalized
+% pdc.
 
-% Copyright (C) 2009-2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -48,15 +64,34 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 
 hasjack  = ft_getopt(varargin, 'hasjack', 0);
 feedback = ft_getopt(varargin, 'feedback', 'none');
+invfun   = ft_getopt(varargin, 'invfun',   'inv');
+noisecov = ft_getopt(varargin, 'noisecov');
+
+switch invfun
+  case {'inv' 'pinv'}
+    invfun = str2func(invfun);
+  otherwise
+    ft_error('unknown specification of inversion-function for the transfer matrix');
+end
 
 % crossterms are described by chan_chan_therest
 siz = [size(input) 1];
 n   = siz(1);
 
+if ~isempty(noisecov)
+  ft_progress('init', feedback, 'computing generalized partial directed coherence...');
+  scale = diag(sqrt(1./diag(noisecov))); % get the 1./sqrt(var) of the signals
+else
+  ft_progress('init', feedback, 'computing partial directed coherence...');
+  scale = eye(siz(2));
+end
+
+% pre-allocate some variables
 outsum = zeros(siz(2:end));
 outssq = zeros(siz(2:end));
 
-% computing pdc is easiest on the inverse of the transfer function
+% the mathematics for pdc is most straightforward using the inverse of the
+% transfer function
 pdim     = prod(siz(4:end));
 tmpinput = reshape(input, [siz(1:3) pdim]);
 ft_progress('init', feedback, 'inverting the transfer function...');
@@ -64,20 +99,22 @@ for k = 1:n
   ft_progress(k/n, 'inverting the transfer function for replicate %d from %d\n', k, n);
   tmp = reshape(tmpinput(k,:,:,:), [siz(2:3) pdim]);
   for m = 1:pdim
-    tmp(:,:,m) = inv(tmp(:,:,m));
+    tmp(:,:,m) = scale*invfun(tmp(:,:,m));
   end
   tmpinput(k,:,:,:) = tmp;
 end
 ft_progress('close');
 input = reshape(tmpinput, siz);
 
-ft_progress('init', feedback, 'computing metric...');
 for j = 1:n
   ft_progress(j/n, 'computing metric for replicate %d from %d\n', j, n);
   invh   = reshape(input(j,:,:,:,:), siz(2:end));
+  
+  
   den    = sum(abs(invh).^2,1);
   tmppdc = abs(invh)./sqrt(repmat(den, [siz(2) 1 1 1 1]));
-  %if ~isempty(cfg.submethod), tmppdc = baseline(tmppdc, cfg.submethod, baselineindx); end
+  
+  
   outsum = outsum + tmppdc;
   outssq = outssq + tmppdc.^2;
 end
