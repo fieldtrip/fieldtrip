@@ -334,7 +334,8 @@ switch varargin{1}
       
       % decide whether the stack trace should be shown
       if istrue(getstate(s, 'backtrace'))
-        for i=numel(stack):-1:1
+        for i=1:numel(stack)
+          % show the deepest and lowest-level function first
           [p, f, x] = fileparts(stack(i).file);
           if isequal(f, stack(i).name)
             funname = stack(i).name;
@@ -346,7 +347,11 @@ switch varargin{1}
             % it requires the full path
             filename = fullfile(pwd, filename);
           end
-          fprintf(' In <a href = "matlab: opentoline(''%s'',%d,1)">%s at line %d</a>\n', filename, stack(i).line, funname, stack(i).line);
+          if desktop('-inuse')
+            fprintf(' In <a href = "matlab: opentoline(''%s'',%d,1)">%s at line %d</a>\n', filename, stack(i).line, funname, stack(i).line);
+          else
+            fprintf(' In ''%s'' at line %d\n', filename, stack(i).line);
+          end
         end
         fprintf('\n');
       end
