@@ -347,7 +347,7 @@ switch varargin{1}
             % it requires the full path
             filename = fullfile(pwd, filename);
           end
-          if desktop('-inuse')
+          if ft_platform_supports('html')
             fprintf(' In <a href = "matlab: opentoline(''%s'',%d,1)">%s at line %d</a>\n', filename, stack(i).line, funname, stack(i).line);
           else
             fprintf(' In ''%s'' at line %d\n', filename, stack(i).line);

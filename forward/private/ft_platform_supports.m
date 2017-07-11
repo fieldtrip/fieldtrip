@@ -37,6 +37,7 @@ function tf = ft_platform_supports(what,varargin)
 %   'uimenu'                        uimenu(...)
 %   'weboptions'                    weboptions(...)
 %   'parula'                        parula(...)
+%   'html'                          html rendering in desktop
 %
 % See also FT_VERSION, VERSION, VER, VERLESSTHAN
 
@@ -154,6 +155,9 @@ switch what
     
   case 'parula'
     tf = is_matlab() && matlabversion('2014b', Inf);
+
+  case 'html'
+    tf = desktop('-inuse') && ~is_octave();
     
   otherwise
     ft_error('unsupported value for first argument: %s', what);
