@@ -82,7 +82,7 @@ val  = ft_getopt(opt, key);       % the default will be []
 
 if isempty(val) && ~any(strcmp(allowedtype, 'empty'))
   if isnan(ft_getopt(opt, key, nan))
-    error('the option "%s" was not specified or was empty', key);
+    ft_error('the option "%s" was not specified or was empty', key);
   end
 end
 
@@ -136,9 +136,9 @@ end
 
 if ~ok
   if length(allowedtype)==1
-    error('the type of the option "%s" is invalid, it should be "%s" instead of "%s"', key, allowedtype{1}, valtype);
+    ft_error('the type of the option "%s" is invalid, it should be "%s" instead of "%s"', key, allowedtype{1}, valtype);
   else
-    error('the type of the option "%s" is invalid, it should be any of %s instead of "%s"', key, printcell(allowedtype), valtype);
+    ft_error('the type of the option "%s" is invalid, it should be any of %s instead of "%s"', key, printcell(allowedtype), valtype);
   end
 end
 
@@ -153,7 +153,7 @@ for i=1:length(allowedval)
 end % for allowedtype
 
 if ~ok
-  error('the value of the option "%s" is invalid', key);
+  ft_error('the value of the option "%s" is invalid', key);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

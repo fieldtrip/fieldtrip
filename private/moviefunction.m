@@ -64,7 +64,7 @@ cfg.movierpt        = ft_getopt(cfg, 'movierpt',     1);
 
 for i=1:numel(varargin)
   if ~isempty(cfg.yparam) && ~isfield(varargin{i}, 'freq')
-    error('data argument %i does not have a .freq field, while all former had', i);
+    ft_error('data argument %i does not have a .freq field, while all former had', i);
   elseif isempty(cfg.yparam) && isfield(varargin{i}, 'freq')
     cfg.yparam        = 'freq';
   else
@@ -96,25 +96,25 @@ for i = 1:Ndata
   opt.isfreq(i)     = ft_datatype(varargin{i}, 'freq');
   opt.istimelock(i) = ft_datatype(varargin{i}, 'timelock');
   if opt.issource(i)+opt.isfreq(i)+opt.istimelock(i) ~= 1
-    error('data argument %i cannot be definitely identified as frequency, timelock or source data', i);
+    ft_error('data argument %i cannot be definitely identified as frequency, timelock or source data', i);
   end
 end
 
 if Ndata>1,
   if all(opt.issource==1),
     % this is allowed maybe in the future: multiple source input arguments
-    error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
+    ft_error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
   elseif all(opt.isfreq==1),
     % this is allowed maybe in the future: multiple freq input arguments
-    error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
+    ft_error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
   elseif all(opt.istimelock==1),
     % this is allowed maybe in the future: multiple timelock input arguments
-    error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
+    ft_error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
   elseif Ndata==2 && sum(opt.issource==1)
     % this may be allowed, provided the source data is a parcellation and
     % the other argument a parcellated data structure
     if ~ft_datatype(varargin{opt.issource}, 'parcellation')
-      error('the source data structure should be a parcellation');
+      ft_error('the source data structure should be a parcellation');
     end
   end
 end
@@ -167,14 +167,14 @@ end
 
 dimtok = tokenize(opt.dimord, '_');
 if any(strcmp(dimtok, 'rpt') | strcmp(dimtok, 'subj'))
-  error('the input data cannot contain trials or subjects, please average first using ft_selectdata');
+  ft_error('the input data cannot contain trials or subjects, please average first using ft_selectdata');
 end
 
 opt.ydim = find(strcmp(cfg.yparam, dimtok));
 opt.xdim = find(strcmp(cfg.xparam, dimtok));
 opt.zdim = setdiff(1:ndims(opt.dat{1}), [opt.ydim opt.xdim]);
 if opt.zdim ~=1
-  error('input %i data does not have the correct format of N x time (x freq)', i);
+  ft_error('input %i data does not have the correct format of N x time (x freq)', i);
 end
 
 % permute the data matrix
@@ -971,7 +971,7 @@ end
 %       F(iFrame) = getframe;
 %     end
 %   else
-%     error('Either moviefreq or movietime should contain a bin number')
+%     ft_error('Either moviefreq or movietime should contain a bin number')
 %   end
 % else
 %   for iFrame = 1:floor(size(opt.dat, opt.xdim)/cfg.samperframe)

@@ -59,7 +59,7 @@ hold; plot(timepts,data_intpl.trial{1});
 data_fft2 = fft(data_intpl.trial{1},Ln,2);
 figure;semilogy(frq(1:Ln),abs(data_fft2(1,1:Ln)).^2);
 
-%% now try "DFT filter" option, doesn't work for varying 50 Hz amplitude, as shown in the fieldtrip tutorial
+%% now try "DFT filter" option, doesn't work for varying 50 Hz amplitude, as shown in the FieldTrip tutorial
 
 cfg= [];
 cfg.dftfilter = 'yes';

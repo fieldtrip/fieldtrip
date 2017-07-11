@@ -63,10 +63,10 @@ try
       kCoil = kCoil+1;
       grad.label{k} = deblank(s(k,:));
     else
-      error('unknown sensor type');
+      ft_error('unknown sensor type');
     end
   end
 catch
-  warning('gradiometer information could not be extracted from file, returning an empty grad structure');
+  ft_warning('gradiometer information could not be extracted from file, returning an empty grad structure');
   return;
 end

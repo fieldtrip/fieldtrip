@@ -33,7 +33,7 @@ elseif isstruct(pos),
   pos = pos.pos;
 else
   if size(pos,1)~=dimold(1),
-    error('the first element in the second input should be equal to the number of positions');
+    ft_error('the first element in the second input should be equal to the number of positions');
   end
 end
 

@@ -67,7 +67,7 @@ for nrec=1:length(Records),
     try, 
         S(EDF.AS.IDX2)=s;
     catch,
-        error('File is incomplete (try reading begining of file)');
+        ft_error('File is incomplete (try reading begining of file)');
     end;
 
     %%%%% Test on  Over- (Under-) Flow

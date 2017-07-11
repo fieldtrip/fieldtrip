@@ -83,7 +83,7 @@ dataformat = ft_getopt(varargin, 'dataformat');
 % the following is added for backward compatibility of using 'format' rather than 'dataformat'
 format    = ft_getopt(varargin, 'format');
 if ~isempty(format)
-  warning('the option ''format'' will be deprecated soon, please use ''dataformat'' instead');
+  ft_warning('the option ''format'' will be deprecated soon, please use ''dataformat'' instead');
   if isempty(dataformat)
     dataformat  = format;
   end
@@ -105,7 +105,7 @@ end
 
 % test whether the file exists
 if ~exist(filename, 'file')
-  error('file ''%s'' does not exist', filename);
+  ft_error('file ''%s'' does not exist', filename);
 end
 
 % test for the presence of some external functions from other toolboxes
@@ -183,7 +183,7 @@ case 'analyze_old'
   % neurological conventions and a right-handed coordinate system, hence
   % the first axis of the 3D volume (right-left) should be flipped to make
   % the coordinate system comparable to SPM
-  warning('flipping 1st dimension (L-R) to obtain volume in neurological convention');
+  ft_warning('flipping 1st dimension (L-R) to obtain volume in neurological convention');
   img = flipdim(img, 1);
 
   transform      = diag(hdr.dime.pixdim(2:4));
@@ -195,12 +195,12 @@ case {'afni_brik' 'afni_head'}
 
   [err, img, hdr, ErrMessage] = BrikLoad(filename);
   if err
-    error('could not read AFNI file');
+    ft_error('could not read AFNI file');
   end
 
   % FIXME: this should be checked, but I only have a single BRIK file
   % construct the homogenous transformation matrix that defines the axes
-  warning('homogenous transformation might be incorrect for AFNI file');
+  ft_warning('homogenous transformation might be incorrect for AFNI file');
   transform        = eye(4);
   transform(1:3,4) = hdr.ORIGIN(:);
   transform(1,1)   = hdr.DELTA(1);
@@ -238,12 +238,12 @@ case 'neuromag_fif'
     if (hdr.trans.from == 4) && (hdr.trans.to == 5)
       transform = hdr.trans.trans;
     else
-      warning('W: trans does not transform from 4 to 5.');
-      warning('W: Please check the MRI fif-file');
+      ft_warning('W: trans does not transform from 4 to 5.');
+      ft_warning('W: Please check the MRI fif-file');
     end
   else
-    warning('W: trans structure is not defined.');
-    warning('W: Maybe coregistration is missing?');
+    ft_warning('W: trans structure is not defined.');
+    ft_warning('W: Maybe coregistration is missing?');
   end
   if isfield(hdr, 'voxel_trans') && issubfield(hdr.voxel_trans, 'trans')
     % centers the coordinate system
@@ -266,12 +266,12 @@ case 'neuromag_fif'
       coordsys  = 'neuromag';
       mri.unit  = 'm';
     else
-      warning('W: voxel_trans does not transform from 2001 to 5.');
-      warning('W: Please check the MRI fif-file');
+      ft_warning('W: voxel_trans does not transform from 2001 to 5.');
+      ft_warning('W: Please check the MRI fif-file');
     end
   else
-    warning('W: voxel_trans structure is not defined.');
-    warning('W: Please check the MRI fif-file');
+    ft_warning('W: voxel_trans structure is not defined.');
+    ft_warning('W: Please check the MRI fif-file');
   end
 
 case 'neuromag_fif_old'
@@ -322,13 +322,13 @@ case 'dicom_old'
   
   if isempty(dirlist)
     % this is for the Philips data acquired at KI
-    warning('could not determine list of dicom files, trying with *.dcm');
+    ft_warning('could not determine list of dicom files, trying with *.dcm');
     dirlist  = dir(fullfile(p, '*.dcm'));
     dirlist  = {dirlist.name};
   end
   
   if isempty(dirlist)
-    warning('could not determine list of dicom files, trying with *.ima');
+    ft_warning('could not determine list of dicom files, trying with *.ima');
     dirlist  = dir(fullfile(p, '*.ima'));
     dirlist  = {dirlist.name};
   end
@@ -387,7 +387,7 @@ case 'dicom_old'
 
 case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}
   if strcmp(dataformat, 'freesurfer_mgz') && ispc
-    error('Compressed .mgz files cannot be read on a PC');
+    ft_error('Compressed .mgz files cannot be read on a PC');
   end
 
   ft_hastoolbox('freesurfer', 1);
@@ -422,13 +422,13 @@ case 'yokogawa_mri'
   hdr.normalize = normalize;
   hdr.besa_fiducial_point = besa_fiducial_point;
 
-  error('FIXME yokogawa_mri implementation is incomplete');
+  ft_error('FIXME yokogawa_mri implementation is incomplete');
 
 case 'matlab'
   mri = loadvar(filename, 'mri');
 
 otherwise
-  error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
+  ft_error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
 end
 
 if exist('img', 'var')

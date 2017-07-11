@@ -105,7 +105,7 @@ if ~isfield(ft_default, 'trackusage')
   % create a salt for one-way encryption of identifying information
   rng('shuffle');
   trackusage = dec2hex(intmax('uint32')*rand(1));  % create a secret salt, this is never shared
-  warning('enabling online tracking of FieldTrip usage, see http://www.fieldtriptoolbox.org/faq/tracking');
+  ft_warning('enabling online tracking of FieldTrip usage, see http://www.fieldtriptoolbox.org/faq/tracking');
   if exist(fieldtripprefs, 'file')
     % update the existing preferences file
     save(fieldtripprefs, 'trackusage', '-append');
@@ -152,7 +152,7 @@ event_http   = sprintf('http://api.mixpanel.com/track/?data=%s', event_base64);
 [output, status] = ft_urlread(event_http);
 if ~status
   disp(output);
-  warning('could not send tracker information for "%s"', event);
+  ft_warning('could not send tracker information for "%s"', event);
 end
 
 if ~initialized
@@ -164,7 +164,7 @@ if ~initialized
   [output, status] = ft_urlread(user_http);
   if ~status
     disp(output);
-    warning('could not send tracker information for "%s"', event);
+    ft_warning('could not send tracker information for "%s"', event);
   end
 
   initialized = true;

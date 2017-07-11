@@ -49,7 +49,7 @@ elseif filetype_check_extension(inputfile, 'tar')     ...
 elseif filetype_check_extension(inputfile, 'gz')
   type = 'gzip';
 else
-  error('unsupported compression type, only zip/gz/tar/tgz/tar.gz are supported');
+  ft_error('unsupported compression type, only zip/gz/tar/tgz/tar.gz are supported');
 end
 
 % determine temporary output folder

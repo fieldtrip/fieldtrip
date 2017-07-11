@@ -67,7 +67,7 @@ elseif isfield(hdr,'siemensap') && isstruct(hdr.siemensap)
     height = width * phaseFOV / readoutFOV;
     numSlices = siemensap.sSliceArray.lSize;
 else
-  warning('No protocol information found!')
+  ft_warning('No protocol information found!')
   width = sqrt(hdr.nChans);
   height = width;
   numSlices = 1;
@@ -103,7 +103,7 @@ while true
       begsample  = prevSample+1;
       endsample  = prevSample+blocksize ;
     else
-      error('unsupported value for cfg.bufferdata');
+      ft_error('unsupported value for cfg.bufferdata');
     end
     
     prevSample  = endsample;

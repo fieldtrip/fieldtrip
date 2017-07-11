@@ -122,13 +122,13 @@ threads = threads && peer('tcpserver', 'status');
 
 if ~threads
   % start the maintenance threads
-  ws = warning('off');
+  ws = ft_warning('off');
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
   peer('tcpserver', 'start');
   % peer('udsserver', 'start');
-  warning(ws);
+  ft_warning(ws);
 end
 
 if ~access || ~threads

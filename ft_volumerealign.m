@@ -48,8 +48,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                        'fsl'         match to template anatomical MRI
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
 %                        system. Supported coordinate systems are 'ctf', '4d',
-%                        'bti', 'yokogawa', 'asa', 'itab', 'neuromag', 'spm',
-%                        'tal' and 'paxinos'. See http://tinyurl.com/ojkuhqz
+%                        'bti', 'yokogawa', 'asa', 'itab', 'neuromag', 'acpc',
+%                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
 %   cfg.clim           = [min max], scaling of the anatomy color (default
 %                        is to adjust to the minimum and maximum)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the
@@ -71,7 +71,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                         handed, the volume is flipped to yield right handed voxel
 %                         axes.
 %
-% When cfg.method = 'fiducial' and cfg.coordsys = 'spm' or 'tal', the following
+% When cfg.method = 'fiducial' and cfg.coordsys = 'acpc', the following
 % is required to specify the voxel indices of the fiducials:
 %   cfg.fiducial.ac      = [i j k], position of anterior commissure
 %   cfg.fiducial.pc      = [i j k], position of posterior commissure
@@ -226,6 +226,10 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes');
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'landmark', 'fiducial'}); % cfg.landmark -> cfg.fiducial
+% mni/spm/tal are to be interpreted as acpc with native scaling, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'mni', 'acpc'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'spm', 'acpc'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'tal', 'acpc'});
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
@@ -243,7 +247,6 @@ cfg.voxelratio    = ft_getopt(cfg, 'voxelratio', 'data'); % display size of the 
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',  'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.viewresult    = ft_getopt(cfg, 'viewresult', 'no');
 
-%
 viewresult = istrue(cfg.viewresult);
 
 if isempty(cfg.method)
@@ -260,18 +263,18 @@ if isempty(cfg.coordsys)
   if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas', 'zpoint'}))
     cfg.coordsys = 'ctf';
   elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint', 'right'}))
-    cfg.coordsys = 'spm';
+    cfg.coordsys = 'acpc';
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
   else
-    error('you should specify the desired head coordinate system in cfg.coordsys')
+    ft_error('you should specify the desired head coordinate system in cfg.coordsys')
   end
-  warning('defaulting to %s coordinate system', cfg.coordsys);
+  ft_warning('defaulting to %s coordinate system', cfg.coordsys);
 end
 
 % these two have to be simultaneously true for a snapshot to be taken
 dosnapshot = istrue(cfg.snapshot);
-if dosnapshot,
+if dosnapshot
   % create an empty array of handles
   snap = [];
 end
@@ -289,11 +292,11 @@ elseif iscell(cfg.parameter) && isempty(cfg.parameter)
   
   % assume anatomy to be the parameter of interest
   siz = size(mri.anatomy);
-  if all(siz(1:3)==mri.dim) && numel(siz)==4,
+  if all(siz(1:3)==mri.dim) && numel(siz)==4
     % it's OK
     cfg.parameter= 'anatomy';
   else
-    error('there''s an unexpected dimension mismatch');
+    ft_error('there''s an unexpected dimension mismatch');
   end
 end
 
@@ -308,7 +311,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
       fidletter = {'n', 'l', 'r', 'z'};
       fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';
       fidexplanation2 = '      press z for an extra control point that should have a positive z-value\n';
-    case {'spm' 'tal'}
+    case 'acpc'
       fidlabel  = {'ac', 'pc', 'xzpoint', 'right'};
       fidletter = {'a', 'p', 'z', 'r'};
       fidexplanation1 = '      press a for ac, p for pc, z for xzpoint\n';
@@ -319,7 +322,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
       fidexplanation1 = '      press b for bregma, l for lambda, z for yzpoint\n';
       fidexplanation2 = '';
     otherwise
-      error('unknown coordinate system "%s"', cfg.coordsys);
+      ft_error('unknown coordinate system "%s"', cfg.coordsys);
   end
   
   for i=1:length(fidlabel)
@@ -622,11 +625,11 @@ switch cfg.method
     if ischar(cfg.headshape)
       % old-style specification, convert cfg into new representation
       cfg.headshape = struct('headshape', cfg.headshape);
-      if isfield(cfg, 'scalpsmooth'),
+      if isfield(cfg, 'scalpsmooth')
         cfg.headshape.scalpsmooth = cfg.scalpsmooth;
         cfg = rmfield(cfg, 'scalpsmooth');
       end
-      if isfield(cfg, 'scalpthreshold'),
+      if isfield(cfg, 'scalpthreshold')
         cfg.headshape.scalpthreshold = cfg.scalpthreshold;
         cfg = rmfield(cfg, 'scalpthreshold');
       end
@@ -634,18 +637,18 @@ switch cfg.method
     elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
       % old-style specification, convert into new representation
       cfg.headshape = struct('headshape', cfg.headshape);
-      if isfield(cfg, 'scalpsmooth'),
+      if isfield(cfg, 'scalpsmooth')
         cfg.headshape.scalpsmooth = cfg.scalpsmooth;
         cfg = rmfield(cfg, 'scalpsmooth');
       end
-      if isfield(cfg, 'scalpthreshold'),
+      if isfield(cfg, 'scalpthreshold')
         cfg.headshape.scalpthreshold = cfg.scalpthreshold;
         cfg = rmfield(cfg, 'scalpthreshold');
       end
     elseif isstruct(cfg.headshape)
       % new-style specification, do nothing
     else
-      error('incorrect specification of cfg.headshape');
+      ft_error('incorrect specification of cfg.headshape');
     end
     
     if ischar(cfg.headshape.headshape)
@@ -684,7 +687,7 @@ switch cfg.method
     tmpcfg.numvertices = 20000;
     scalp              = ft_prepare_mesh(tmpcfg, seg);
     
-    if dointeractive,
+    if dointeractive
       fprintf('doing interactive realignment with headshape\n');
       tmpcfg                       = [];
       tmpcfg.template.elec         = shape;     % this is the Polhemus recorded headshape
@@ -706,7 +709,7 @@ switch cfg.method
     % always perform an icp-step, because this will give an estimate of the
     % initial distance of the corresponding points. depending on the value
     % for doicp, deal with the output differently
-    if doicp,
+    if doicp
       numiter = 50;
     else
       numiter = 1;
@@ -716,8 +719,8 @@ switch cfg.method
       w = ones(size(shape.pos,1),1);
     else
       w = cfg.weights(:);
-      if numel(w)~=size(shape.pos,1),
-        error('number of weights should be equal to the number of points in the headshape');
+      if numel(w)~=size(shape.pos,1)
+        ft_error('number of weights should be equal to the number of points in the headshape');
       end
     end
     
@@ -730,7 +733,7 @@ switch cfg.method
     nrm = normals(scalp.pos, scalp.tri, 'vertex');
     [R, t, err, dummy, info] = icp(scalp.pos', shape.pos', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
     
-    if doicp,
+    if doicp
       fprintf('doing iterative closest points realignment with headshape\n');
       % create the additional transformation matrix and compute the
       % distance between the corresponding points, both prior and after icp
@@ -924,12 +927,12 @@ switch cfg.method
       cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  2);
       cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
       
-      if ~isfield(mri,    'coordsys'),
+      if ~isfield(mri,    'coordsys')
         mri = ft_convert_coordsys(mri);
       else
         fprintf('Input volume has coordinate system ''%s''\n', mri.coordsys);
       end
-      if ~isfield(target, 'coordsys'),
+      if ~isfield(target, 'coordsys')
         target = ft_convert_coordsys(target);
       else
         fprintf('Target volume has coordinate system ''%s''\n', target.coordsys);
@@ -937,12 +940,11 @@ switch cfg.method
       if strcmp(mri.coordsys, target.coordsys)
         % this should hopefully work
       else
-        % only works when it is possible to approximately align the input to
-        % the target coordsys
-        if strcmp(target.coordsys, 'spm')
-          mri = ft_convert_coordsys(mri, 'spm');
+        % only works when it is possible to approximately align the input to the target coordsys
+        if strcmp(target.coordsys, 'acpc')
+          mri = ft_convert_coordsys(mri, 'acpc');
         else
-          error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
+          ft_error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
         end
       end
       
@@ -988,7 +990,7 @@ switch cfg.method
     delete(tname1);
     delete(tname2);
   otherwise
-    error('unsupported method "%s"', cfg.method);
+    ft_error('unsupported method "%s"', cfg.method);
 end
 
 if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
@@ -1026,7 +1028,7 @@ if ~isempty(transform) && ~any(isnan(transform(:)))
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
 else
-  warning('no coordinate system realignment has been done');
+  ft_warning('no coordinate system realignment has been done');
 end
 
 % visualize result
@@ -1755,7 +1757,7 @@ switch key
     elseif strcmp(tag,'jk') && (strcmp(key,'m') || strcmp(key,'downarrow')  || isequal(key, 31)), opt.ijk(3) = opt.ijk(3)-1; opt.update = [0 0 1];
     else
       % do nothing
-    end;
+    end
     
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -1805,7 +1807,7 @@ switch key
     % add point to a list
     l1 = get(get(gca, 'xlabel'), 'string');
     l2 = get(get(gca, 'ylabel'), 'string');
-    switch l1,
+    switch l1
       case 'i'
         xc = d1;
       case 'j'
@@ -1813,7 +1815,7 @@ switch key
       case 'k'
         zc = d1;
     end
-    switch l2,
+    switch l2
       case 'i'
         xc = d2;
       case 'j'

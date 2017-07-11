@@ -64,7 +64,7 @@ else
         error ('idx_begin is to small.');
     end
     if ((N_start+N-1)>(np_info.N-1))
-        error('data_length is to big.');
+        ft_error('data_length is to big.');
     end
 end
 np_data.data=zeros(N,np_info.K);
@@ -86,19 +86,19 @@ np_data.t=(N_start:N_start+N-1)'./np_info.fa;
 % -------------------------------------------------------------------------
 fid=fopen(filename,'r');
 if fid==-1,
-    error(['Unable to open file "' filename '" . Error code: ' ferror(fid)]);
+    ft_error(['Unable to open file "' filename '" . Error code: ' ferror(fid)]);
 end
 status=fseek(fid,np_info.fp_data+N_start*np_info.K*4,'bof');    % 4 Byte pro Sample
 if status~=0,
     fclose(fid);
-    error('Unable to set filepointer to begin of data block.');
+    ft_error('Unable to set filepointer to begin of data block.');
 end
 [np_data.data,count]=fread(fid,[np_info.K N],'float');      % lese Messdaten
 
 
 %if count~=N*np_info.K,
 %    fclose(fid);
-%    error('Number of read samples unequal to product N*K.');
+%    ft_error('Number of read samples unequal to product N*K.');
 %end
 np_data.data=np_data.data';         % transponieren
 fclose(fid);

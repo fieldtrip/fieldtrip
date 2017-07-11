@@ -33,7 +33,7 @@ if nargin == 1,
 end
 
 if nargin == 3,
-  error('third input argument is not used');
+  ft_error('third input argument is not used');
 end
 
 switch dim
@@ -86,5 +86,5 @@ case 8
   sx = sqrt(sum(abs(x).^2,dim)./n);
   x  = x./sx(:,:,:,:,:,:,:,ones(1,n));
 otherwise
-  error('dim too large, standardise currently supports dimensionality up to 8');
+  ft_error('dim too large, standardise currently supports dimensionality up to 8');
 end

@@ -62,7 +62,7 @@ if hasnan && handlenan
     case 'median'
       ref = nanmedian(dat(refchan,:), 1);
     otherwise
-      error('unsupported method')
+      ft_error('unsupported method')
   end % switch
 else
   % preprocessing fails on channels that contain NaN
@@ -76,7 +76,7 @@ else
     case 'median'
       ref = median(dat(refchan,:), 1);
     otherwise
-      error('unsupported method')
+      ft_error('unsupported method')
   end % switch
 end
 

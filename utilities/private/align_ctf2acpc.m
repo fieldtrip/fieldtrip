@@ -1,13 +1,13 @@
-function [mri] = align_ctf2spm(mri, opt, template)
+function [mri] = align_ctf2acpc(mri, opt, template)
 
-% ALIGN_CTF2SPM performs an approximate alignment of the anatomical volume from CTF
-% towards SPM coordinates. Only the homogeneous transformation matrix is modified and
-% the coordsys-field is updated.
+% ALIGN_CTF2ACPC performs an approximate rigid body alignment of the anatomical
+% volume from CTF towards ACPC coordinates. Only the homogeneous transformation
+% matrix is modified and the coordsys-field is updated.
 %
 % Use as
-%   mri = align_ctf2spm(mri)
-%   mri = align_ctf2spm(mri, opt)
-%   mri = align_ctf2spm(mri, opt, template)
+%   mri = align_ctf2acpc(mri)
+%   mri = align_ctf2acpc(mri, opt)
+%   mri = align_ctf2acpc(mri, opt, template)
 % where mri is a FieldTrip MRI-structure, and opt is an optional argument specifying
 % how the registration is to be done:
 %   opt = 0: only an approximate coregistration
@@ -27,7 +27,7 @@ end
 % locations of the fiducials and landmarks in the template T1 image from
 % SPM
 
-spmvox2spmhead = [
+acpcvox2acpchead = [
   2     0     0   -92
   0     2     0  -128
   0     0     2   -74
@@ -35,33 +35,33 @@ spmvox2spmhead = [
   ];
 
 % these are the voxel indices of some points in the SPM canonical T1
-spmvox_Ac           = [46 64  37  1]';     % the anterior commissure
-spmvox_Ori          = [46 48  10  1]';     % approximately between the ears in T1.mnc
-spmvox_Nas          = [46 106 13  1]';     % approximately the nasion in T1.mnc
-spmvox_Lpa_canal    = [ 5 48  10  1]';     % Left ear canal
-spmvox_Rpa_canal    = [87 48  10  1]';     % Right ear canal
+acpcvox_Ac           = [46 64  37  1]';     % the anterior commissure
+acpcvox_Ori          = [46 48  10  1]';     % approximately between the ears in T1.mnc
+acpcvox_Nas          = [46 106 13  1]';     % approximately the nasion in T1.mnc
+acpcvox_Lpa_canal    = [ 5 48  10  1]';     % Left ear canal
+acpcvox_Rpa_canal    = [87 48  10  1]';     % Right ear canal
 
-spmhead_Ac           = spmvox2spmhead * spmvox_Ac  ;
-spmhead_Ori          = spmvox2spmhead * spmvox_Ori ;
-spmhead_Nas          = spmvox2spmhead * spmvox_Nas ;
-spmhead_Lpa_canal    = spmvox2spmhead * spmvox_Lpa_canal ;
-spmhead_Rpa_canal    = spmvox2spmhead * spmvox_Rpa_canal ;
+acpchead_Ac           = acpcvox2acpchead * acpcvox_Ac  ;
+acpchead_Ori          = acpcvox2acpchead * acpcvox_Ori ;
+acpchead_Nas          = acpcvox2acpchead * acpcvox_Nas ;
+acpchead_Lpa_canal    = acpcvox2acpchead * acpcvox_Lpa_canal ;
+acpchead_Rpa_canal    = acpcvox2acpchead * acpcvox_Rpa_canal ;
 
 ctfvox2ctfhead  = mri.transform;
-spmhead2ctfhead = ft_headcoordinates(spmhead_Nas(1:3), spmhead_Lpa_canal(1:3), spmhead_Rpa_canal(1:3), 'ctf');
+acpchead2ctfhead = ft_headcoordinates(acpchead_Nas(1:3), acpchead_Lpa_canal(1:3), acpchead_Rpa_canal(1:3), 'ctf');
 
-%ctfvox2spmhead =  inv(spmhead2ctfhead) *  ctfvox2ctfhead;
-ctfvox2spmhead =  spmhead2ctfhead \ ctfvox2ctfhead;
+%ctfvox2acpchead =  inv(acpchead2ctfhead) *  ctfvox2ctfhead;
+ctfvox2acpchead =  acpchead2ctfhead \ ctfvox2ctfhead;
 
 % change the transformation matrix, such that it returns approximate SPM head coordinates
-mri.transform     = ctfvox2spmhead;
+mri.transform     = ctfvox2acpchead;
 mri.vox2headOrig  = ctfvox2ctfhead;
-mri.vox2head      = ctfvox2spmhead;
-mri.head2headOrig = spmhead2ctfhead;
-mri.coordsys      = 'spm';
+mri.vox2head      = ctfvox2acpchead;
+mri.head2headOrig = acpchead2ctfhead;
+mri.coordsys      = 'acpc';
 
 % Do a second round of affine registration (rigid body) to get improved
-% alignment with spm coordinate system. this is needed because there may be
+% alignment with ACPC coordinate system. this is needed because there may be
 % different conventions defining LPA and RPA. The affine registration may
 % fail however, e.g. if the initial alignment is not close enough. In that
 % case SPM will throw an error
@@ -79,21 +79,21 @@ if opt==1
   switch lower(spm('ver'))
     case 'spm2'
       if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==1'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==1'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.mnc');
       end
       
     case 'spm8'
       if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==1'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==1'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.nii');
       end
       
     case 'spm12'
       if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==1'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==1'); end
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
         if ~exist('spm_affreg', 'file')
@@ -103,7 +103,7 @@ if opt==1
       fprintf('using ''OldNorm'' affine registration\n');
 
     otherwise
-      error('unsupported spm-version');
+      ft_error('unsupported SPM version');
   end
   mri2 = ft_read_mri(template);
   
@@ -117,18 +117,18 @@ if opt==1
   [M, scale]    = spm_affreg(V1,V2,flags);
   
   % some juggling around with the transformation matrices
-  ctfvox2spmhead2  = M \ V1.mat;
-  spmhead2ctfhead2 = ctfvox2ctfhead / ctfvox2spmhead2;
+  ctfvox2acpchead2  = M \ V1.mat;
+  acpchead2ctfhead2 = ctfvox2ctfhead / ctfvox2acpchead2;
   
   % update the transformation matrix
-  mri.transform     = ctfvox2spmhead2;
+  mri.transform     = ctfvox2acpchead2;
   
   % this one is unchanged
   mri.vox2headOrig  = ctfvox2ctfhead;
   
   % these are new
-  mri.vox2head      = ctfvox2spmhead2;
-  mri.head2headOrig = spmhead2ctfhead2;
+  mri.vox2head      = ctfvox2acpchead2;
+  mri.head2headOrig = acpchead2ctfhead2;
   
   % delete the temporary files
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));
@@ -140,14 +140,14 @@ elseif opt==2
   switch lower(spm('ver'))
     case 'spm2'
       if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==2'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.mnc');
       end
       
     case 'spm8'
       if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==2'); end
       else
         template = fullfile(spm('Dir'),'templates','T1.nii');
       end
@@ -156,7 +156,7 @@ elseif opt==2
       % this uses the 'OldNorm' functionality, so the path needs to be
       % added, can only be done if non-deployed.
       if isdeployed
-        if nargin<3, error('you need to specify a template filename when in deployed mode and using opt==2'); end
+        if nargin<3, ft_error('you need to specify a template filename when in deployed mode and using opt==2'); end
       else
         template = fullfile(spm('Dir'),'toolbox','OldNorm','T1.nii');
         if ~exist('spm_normalise', 'file')
@@ -166,7 +166,7 @@ elseif opt==2
       fprintf('using ''OldNorm'' normalisation\n');
       
     otherwise
-      error('unsupported spm-version');
+      ft_error('unsupported SPM version');
   end
   mri2 = ft_read_mri(template);
   
@@ -178,18 +178,18 @@ elseif opt==2
   flags.nits       = 0; %set number of non-linear iterations to zero
   flags.regtype    = 'rigid';
   params           = spm_normalise(V2,V1,[],[],[],flags);
-  spmhead2ctfhead2 = spmhead2ctfhead*V1.mat*params.Affine/V2.mat;
-  ctfvox2spmhead2  = spmhead2ctfhead2\ctfvox2ctfhead;
+  acpchead2ctfhead2 = acpchead2ctfhead*V1.mat*params.Affine/V2.mat;
+  ctfvox2acpchead2  = acpchead2ctfhead2\ctfvox2ctfhead;
   
   % update the transformation matrix
-  mri.transform     = ctfvox2spmhead2;
+  mri.transform     = ctfvox2acpchead2;
   
   % this one is unchanged
   mri.vox2headOrig  = ctfvox2ctfhead;
   
   % these are new
-  mri.vox2head      = ctfvox2spmhead2;
-  mri.head2headOrig = spmhead2ctfhead2;
+  mri.vox2head      = ctfvox2acpchead2;
+  mri.head2headOrig = acpchead2ctfhead2;
   
   % delete the temporary files
   delete(tname1); delete(strrep(tname1, 'img', 'hdr'));

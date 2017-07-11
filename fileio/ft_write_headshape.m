@@ -138,10 +138,10 @@ switch fileformat
       elseif isfield(bnd,'tet')
         write_vista_mesh(filename,bnd.pnt,bnd.tet,bnd.index);
       else
-        error('unknown format')
+        ft_error('unknown format')
       end
     else
-      error('You need Simbio/Vista toolbox to write a .v file')
+      ft_error('You need Simbio/Vista toolbox to write a .v file')
     end
     
   case 'tetgen'
@@ -215,10 +215,10 @@ switch fileformat
           ix = find(n==size(tmp.vertices,1));
           tmp.private.data{ix}.metadata = metadata;
         else
-          error('the metadata structure should contain the fields ''name'' and ''value''');
+          ft_error('the metadata structure should contain the fields ''name'' and ''value''');
         end
       else
-        error('metadata should be provided as a struct-array');
+        ft_error('metadata should be provided as a struct-array');
       end
     end
         
@@ -229,9 +229,9 @@ switch fileformat
     write_surf(filename, bnd.pnt, bnd.tri);
     
   case []
-    error('you must specify the output format');
+    ft_error('you must specify the output format');
     
   otherwise
-    error('unsupported output format "%s"', fileformat);
+    ft_error('unsupported output format "%s"', fileformat);
 end
 

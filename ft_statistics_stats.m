@@ -73,11 +73,11 @@ case {'ttest', 'ttest_samples_vs_const'}
   cfg.constantvalue = ft_getopt(cfg, 'constantvalue', 0);
 
   if ~any(size(design)==1)
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond>1
-    error('method "%s" is only supported for one condition', cfg.statistic);
+    ft_error('method "%s" is only supported for one condition', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   Nrepl = size(dat, 2); % over all conditions
@@ -105,11 +105,11 @@ case {'ttest2', 'ttest_2samples_by_timepoint'}
   cfg.tail          = ft_getopt(cfg, 'tail', 0);
 
   if size(design,1)~=1
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error('%s method is only supported for two conditions', cfg.statistic);
+    ft_error('%s method is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));
@@ -139,18 +139,18 @@ case {'paired-ttest'}
   cfg.tail          = ft_getopt(cfg, 'tail', 0);
 
   if ~any(size(design)==1)
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error('method "%s" is only supported for two conditions', cfg.statistic);
+    ft_error('method "%s" is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));
   selB = find(design~=design(1));
   Nrepl = [length(selA), length(selB)];
   if Nrepl(1)~=Nrepl(2)
-    error('number of replications per condition should be the same');
+    ft_error('number of replications per condition should be the same');
   end
 
   h = zeros(Nobs, 1);
@@ -172,7 +172,7 @@ case {'paired-ttest'}
 case {'anova1'}
 
   if ~any(size(design)==1)
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   Nobs  = size(dat, 1);
@@ -195,7 +195,7 @@ case {'anova1'}
 case {'kruskalwallis'}
 
   if ~any(size(design)==1)
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   Nobs  = size(dat, 1);
@@ -246,7 +246,7 @@ case 'ttest_window_avg_vs_const'
   % this used to be a feature of the timelockanalysis as it was
   % originally implemented by Jens Schwartzbach, but it has been
   % superseded by the use of ft_selectdata for data selection
-  error('%s is not supported any more, use cfg.avgovertime=''yes'' instead', cfg.statistic);
+  ft_error('%s is not supported any more, use cfg.avgovertime=''yes'' instead', cfg.statistic);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 case {'signtest'}
@@ -264,11 +264,11 @@ case {'signtest'}
   end
   
   if size(design,1)~=1
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error('method "%s" is only supported for two conditions', cfg.statistic);
+    ft_error('method "%s" is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));
@@ -305,11 +305,11 @@ case {'signrank'}
   end
   
   if size(design,1)~=1
-    error('design matrix should only contain one factor (i.e. one row)');
+    ft_error('design matrix should only contain one factor (i.e. one row)');
   end
   Ncond = length(unique(design));
   if Ncond~=2
-    error('method ''%s'' is only supported for two conditions', cfg.statistic);
+    ft_error('method ''%s'' is only supported for two conditions', cfg.statistic);
   end
   Nobs  = size(dat, 1);
   selA = find(design==design(1));
@@ -332,7 +332,7 @@ case {'signrank'}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 otherwise
-  error('method ''%s'' is not implemented', cfg.statistic);
+  ft_error('method ''%s'' is not implemented', cfg.statistic);
 end
 
 % assign the output variable

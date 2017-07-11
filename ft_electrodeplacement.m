@@ -478,19 +478,19 @@ switch cfg.method
     lpa = cfg.fiducial.lpa;
     rpa = cfg.fiducial.rpa;
     if any(dist(headshape.pos, nas)<tolerance)
-      warning('Nasion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ft_warning('Nasion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
       nas = nas + tolerance*randn(1,3);
     end
     if any(dist(headshape.pos, ini)<tolerance)
-      warning('Inion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ft_warning('Inion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
       ini = ini + tolerance*randn(1,3);
     end
     if any(dist(headshape.pos, lpa)<tolerance)
-      warning('LPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ft_warning('LPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
       lpa = lpa + tolerance*randn(1,3);
     end
     if any(dist(headshape.pos, rpa)<tolerance)
-      warning('RPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ft_warning('RPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
       rpa = rpa + tolerance*randn(1,3);
     end
     
@@ -502,7 +502,7 @@ switch cfg.method
     elec.label   = lab(:);
     
   otherwise
-    error('unsupported method ''%s''', cfg.method);
+    ft_error('unsupported method ''%s''', cfg.method);
     
 end % switch method
 
@@ -915,7 +915,7 @@ switch key
     elseif strcmp(tag,'jk') && (strcmp(key,'m') || strcmp(key,'downarrow')  || isequal(key, 31)), opt.pos(3) = opt.pos(3)-1; opt.update = [0 0 1];
     else
       % do nothing
-    end;
+    end
     
     setappdata(h, 'opt', opt);
     cb_redraw(h);

@@ -82,7 +82,7 @@ iscfgsens   = isfield(cfg, 'pnt')  || isfield(cfg, 'chanpos');
 isdatasens  = isfield(data, 'pnt') || isfield(data, 'chanpos');
 
 if isempty(cfg.senstype) && ((hasgradfile || hascfggrad || hasdatagrad) + (haselecfile || hascfgelec || hasdataelec) + (hasoptofile || hascfgopto || hasdataopto))>1
-  error('Cannot determine which sensor information you need. Specify cfg.senstype as ''meg'', ''eeg'' or ''nirs''');
+  ft_error('Cannot determine which sensor information you need. Specify cfg.senstype as ''meg'', ''eeg'' or ''nirs''');
   
 elseif ~isempty(cfg.senstype)
   if iscell(cfg.senstype)
@@ -120,7 +120,7 @@ elseif ~isempty(cfg.senstype)
         hascfggrad  = false;
         hasdatagrad = false;
       otherwise
-        error('unsupported specification of cfg.senstype as "%s"', cfg.senstype);
+        ft_error('unsupported specification of cfg.senstype as "%s"', cfg.senstype);
     end
   end
 end
@@ -200,7 +200,7 @@ elseif isdatasens
   sens = data;
   
 else
-  error('no electrodes, gradiometers or optodes specified.');
+  ft_error('no electrodes, gradiometers or optodes specified.');
 end
 
 % ensure that the sensor description is up-to-date

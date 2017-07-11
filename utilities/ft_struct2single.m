@@ -50,7 +50,7 @@ x = convert(x, 0, maxdepth);
 function [a] = convert(a, depth, maxdepth)
 
 if depth>maxdepth
-  error('recursive depth exceeded');
+  ft_error('recursive depth exceeded');
 end
 
 switch class(a)

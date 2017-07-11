@@ -190,10 +190,10 @@ while(1)
   if ~(size(cnt1,1)>ncnt)
     tolerance = 2*tolerance;
     if tolerance>=tolerance_limit
-      warning('premature end of contour')
+      ft_warning('premature end of contour')
       break
     else
-      warning('increasing tolerance');
+      ft_warning('increasing tolerance');
     end
   end
   

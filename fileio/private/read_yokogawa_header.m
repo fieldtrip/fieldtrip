@@ -52,7 +52,7 @@ function hdr = read_yokogawa_header(filename)
 %  fopen iee-le
 
 if ~ft_hastoolbox('yokogawa')
-    error('cannot determine whether Yokogawa toolbox is present');
+    ft_error('cannot determine whether Yokogawa toolbox is present');
 end
 
 handles = definehandles;
@@ -99,7 +99,7 @@ switch acq_type
     end
 
   otherwise
-    error('unknown data type');
+    ft_error('unknown data type');
 end
 
 % these are always present
@@ -141,7 +141,7 @@ switch orig.acq_type
     hdr.nSamplesPre = orig.pretrigger_length;
     hdr.nTrials     = orig.actual_epoch_count;
   otherwise
-    error('unknown acquisition type');
+    ft_error('unknown acquisition type');
 end
 
 % construct a cell-array with labels of each channel

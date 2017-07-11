@@ -161,14 +161,14 @@ if isempty(whichfunction)
     whichfunction = which(fullfile(fileparts(s.file), 'private', func2str(fname)));
   end
   if ~isempty(whichfunction)
-    warning('assuming %s as full function name', whichfunction);
+    ft_warning('assuming %s as full function name', whichfunction);
   end
   clear s
 end
 
 % there are potentially errors to catch from the which() function
 if isempty(whichfunction) && ischar(fname)
-  error('Not a valid M-file (%s).', fname);
+  ft_error('Not a valid M-file (%s).', fname);
 end
 
 % determine the number of input arguments and the number of jobs
@@ -233,7 +233,7 @@ elseif numargout>nargout
   % the number of output arguments is constrained by the users' call to this function
   numargout = nargout;
 elseif nargout>numargout
-  error('Too many output arguments.');
+  ft_error('Too many output arguments.');
 end
 
 % running a compiled version in parallel takes no MATLAB licenses
@@ -248,7 +248,7 @@ if (strcmp(compile, 'auto') && (numjob*timreq/3600)>0.5) || istrue(compile)
       rethrow(lasterror);
     elseif strcmp(compile, 'auto')
       % compilation was only optional, the caught error is not critical
-      warning(lasterr);
+      ft_warning(lasterr);
     end
   end % try-catch
 end % if compile
@@ -342,10 +342,10 @@ end
 % check the input arguments
 for i=1:numargin
   if ~isa(varargin{i}, 'cell')
-    error('input argument #%d should be a cell-array', i+1);
+    ft_error('input argument #%d should be a cell-array', i+1);
   end
   if numel(varargin{i})~=numjob
-    error('inconsistent number of elements in input #%d', i+1);
+    ft_error('inconsistent number of elements in input #%d', i+1);
   end
 end
 
@@ -378,9 +378,9 @@ while (~all(collected))
   
   for collect=find(~collected)
     % this will return empty arguments if the job has not finished
-    ws = warning('off', 'FieldTrip:qsub:jobNotAvailable');
+    ws = ft_warning('off', 'FieldTrip:qsub:jobNotAvailable');
     [argout, options] = qsubget(jobid{collect}, 'output', 'cell', 'diary', diary, 'StopOnError', StopOnError);
-    warning(ws);
+    ft_warning(ws);
     
     if ~isempty(argout) || ~isempty(options)
       % fprintf('collected job %d\n', collect);
@@ -431,7 +431,7 @@ end
 fprintf('computational time = %.1f sec, elapsed = %.1f sec, speedup %.1f x\n', nansum(timused), toc(stopwatch), nansum(timused)/toc(stopwatch));
 
 if all(puttime>timused)
-  warning('the job submission took more time than the actual execution');
+  ft_warning('the job submission took more time than the actual execution');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -445,7 +445,7 @@ for i=1:numel(varargout)
   for j=1:numel(varargout{i})
     if numel(varargout{i}{j})~=1
       % this error message is consistent with the one from cellfun
-      error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
+      ft_error('Non-scalar in Uniform output, at index %d, output %d. Set ''UniformOutput'' to false.', j, i);
     end
   end
 end

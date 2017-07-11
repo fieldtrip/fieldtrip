@@ -14,7 +14,7 @@ function ft_plot_matrix(varargin)
 % Optional arguments should come in key-value pairs and can include
 %   'clim'            = 1x2 vector with color limits (default is automatic)
 %   'highlight'       = a logical matrix of size C, where 0 means that the corresponding values in C are highlighted according to the highlightstyle
-%   'highlightstyle'  = can be 'saturation', 'opacity' or 'outline' (default = 'opacity')
+%   'highlightstyle'  = can be 'saturation', 'opacity', 'outline' or 'colormix' (default = 'opacity')
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
@@ -96,7 +96,7 @@ fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweigh
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
 if ~isempty(highlight) && ~isequal(size(highlight), size(cdat))
-  error('the dimensions of the highlight should be identical to the dimensions of the data');
+  ft_error('the dimensions of the highlight should be identical to the dimensions of the data');
 end
 
 % axis   = ft_getopt(varargin, 'axis', false);
@@ -125,7 +125,7 @@ if ischar(hlim)
       hlim = max(abs(hdat));
       hlim = [-hlim hlim];
     otherwise
-      error('unsupported option for hlim')
+      ft_error('unsupported option for hlim')
   end % switch
 end % if ischar
 
@@ -148,7 +148,7 @@ if ischar(vlim)
       vlim = max(abs(vdat));
       vlim = [-vlim vlim];
     otherwise
-      error('unsupported option for vlim')
+      ft_error('unsupported option for vlim')
   end % switch
 end % if ischar
 
@@ -171,7 +171,7 @@ if ischar(clim)
       clim = max(abs(cdat(:)));
       clim = [-clim clim];
     otherwise
-      error('unsupported option for clim')
+      ft_error('unsupported option for clim')
   end % switch
 end % if ischar
 
@@ -274,35 +274,17 @@ if ~isempty(highlight)
       end
       
     case 'saturation'
-      % This approach changes the color of pixels to white, regardless of colormap, without using opengl
-      % It does by converting by:
-      % 1) convert the to-be-plotted data to their respective rgb color values (determined by colormap)
-      % 2) convert these rgb color values to hsv values, hue-saturation-value
-      % 3) for to-be-masked-pixels, set saturation to 0 and value to 1 (hue is irrelevant when they are)
-      % 4) convert the hsv values back to rgb values
-      % 5) plot these values
+      cmap    = get(gcf, 'colormap');
+      rgbcdat = cdat2rgb(cdat, cmap, clim, highlight);
       
-      % enforce mask properties (satmask is 0 when a pixel needs to be masked, 1 if otherwise)
-      satmask = round(double(highlight));   % enforce binary white-masking, the hsv approach cannot be used for 'white-shading'
-      satmask(isnan(cdat)) = false;         % make sure NaNs are plotted as white pixels, even when using non-integer mask values
+      h = uimagesc(hdat, vdat, rgbcdat, clim);
+      set(h,'tag',tag);
       
-      % do 1, by converting the data-values to zero-based indices of the colormap
-      ncolors = size(get(gcf,'colormap'),1); % determines range of index, if a figure has been created by the caller function, gcf changes nothing, if not, a figure is created (which the below would do otherwise)
-      indcdat = (cdat + -clim(1)) * (ncolors / (-clim(1) + clim(2))); % transform cdat-values to have a 0-(ncolors-1) range (range depends on colormap used, and thus also on clim)
-      rgbcdat = ind2rgb(uint8(floor(indcdat)), colormap);
-      % do 2
-      hsvcdat = rgb2hsv(rgbcdat);
-      % do 3
-      hsvs = hsvcdat(:,:,2);
-      hsvs(~satmask) = 0;
-      hsvv = hsvcdat(:,:,3);
-      hsvv(~satmask) = 1;
-      hsvcdat(:,:,2) = hsvs;
-      hsvcdat(:,:,3) = hsvv;
-      % do 4
-      rgbcdat = hsv2rgb(hsvcdat);
-      % do 5
-      h = uimagesc(hdat, vdat, rgbcdat,clim);
+    case 'colormix'
+      cmap    = get(gcf, 'colormap');
+      rgbcdat = bg_rgba2rgb([1 1 1], cdat, cmap, clim, highlight, 'rampup', [0 1]);
+      
+      h = uimagesc(hdat, vdat, rgbcdat, clim);
       set(h,'tag',tag);
       
     case 'outline'
@@ -325,7 +307,7 @@ if ~isempty(highlight)
       end
       
     otherwise
-      error('unsupported highlightstyle')
+      ft_error('unsupported highlightstyle')
   end % switch highlightstyle
 end
 

@@ -82,8 +82,8 @@ if ~dewar
     orig.chs = fiff_transform_meg_chs(orig.chs,orig.dev_head_t);
     orig.chs = fiff_transform_eeg_chs(orig.chs,orig.dev_head_t); % EEG channels are normally stored in head coordinates anyway, but what the heck
   else
-    warning('No device to head transform available in fif file');
-    warning('MEG channels will likely have coordinates in device frame, not head frame');
+    ft_warning('No device to head transform available in fif file');
+    ft_warning('MEG channels will likely have coordinates in device frame, not head frame');
   end
 else
   if ~isempty(orig.dev_head_t)
@@ -94,8 +94,8 @@ else
     orig.chs = fiff_transform_meg_chs(orig.chs,orig.head_dev_t); % MEG channels are normally stored in dewar coordinates anyway, but what the heck
     orig.chs = fiff_transform_eeg_chs(orig.chs,orig.head_dev_t);
   else
-    warning('No device to head transform available in fif file');
-    warning('EEG channels will likely have coordinates in head frame, not device frame');
+    ft_warning('No device to head transform available in fif file');
+    ft_warning('EEG channels will likely have coordinates in head frame, not device frame');
   end
 end
 
@@ -198,7 +198,7 @@ if ~isempty(coilaccuracy)
       others = [orig.chs(sel).logno] > 16;
       grad.chantype(sel(others)) = {'other trigger'};
     else
-      warning('There does not seem to be a suitable trigger channel.');
+      ft_warning('There does not seem to be a suitable trigger channel.');
       grad.chantype(sel) = {'other trigger'};
     end
   end
@@ -372,7 +372,7 @@ else
   % check we've got all the MEG channels:
   kChan = kChan-1;
   if kChan ~= (nPlaGrad + nMag +nAxGrad)
-    error('Number of MEG channels identified does not match number of channels in grad structure');
+    ft_error('Number of MEG channels identified does not match number of channels in grad structure');
   end
   
   % determine the type of acquisition system
@@ -432,7 +432,7 @@ if nEEG>0
   
   % check we've got all the EEG channels:
   if kChan~=(nEEG)
-    error('Number of EEG channels identified does not match number of channels in elec structure!!!!!');
+    ft_error('Number of EEG channels identified does not match number of channels in elec structure!!!!!');
   end
   
   % multiply by 100 to get cm

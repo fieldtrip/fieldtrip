@@ -93,7 +93,7 @@ for i=1:length(sel)
 end
 
 % if any(isnan(dat(:)))
-%   warning('data has been padded with NaNs');
+%   ft_warning('data has been padded with NaNs');
 %   fprintf('trials present   = %d - %d\n', min(trlNum), max(trlNum));
 %   fprintf('trials requested = %d - %d\n', begtrial, endtrial);
 % end

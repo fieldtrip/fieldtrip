@@ -37,6 +37,6 @@ elseif all(siz(1:2)==3),
 elseif numel(siz)==2,
   d = inv(x);
 else
-  error('cannot compute slicewise inverse');
+  ft_error('cannot compute slicewise inverse');
   % write for loop for the higher dimensions, using normal inv
 end

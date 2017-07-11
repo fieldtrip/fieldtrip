@@ -45,13 +45,13 @@ rotation = eye(4);
 rotation(1:3,1:3) = transform(1:3,1:3);
 
 if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
-  error('invalid transformation matrix');
+  ft_error('invalid transformation matrix');
 end
 
 if ~allowscaling
   % allow for some numerical imprecision
   if (abs(det(rotation))-1)>1e-6
-    error('only a rigid body transformation without rescaling is allowed');
+    ft_error('only a rigid body transformation without rescaling is allowed');
   end
 end
 

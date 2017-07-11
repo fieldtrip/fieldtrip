@@ -39,6 +39,28 @@ ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
 	fixpath  = $1
 endif
 
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
+endif
+
 ifeq "$(OS)" "Linux"
 	LDLIBS += -ldl -lstdc++ -lrt
 	fixpath = $1

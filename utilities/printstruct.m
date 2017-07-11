@@ -97,7 +97,7 @@ elseif isstruct(val)
         case 'function_handle'
           line = printstr([name '.' fn{i}], func2str(fv));
         otherwise
-          error('unsupported');
+          ft_error('unsupported');
       end
       if numel(line)>1 && line(end)==10 && line(end-1)==10
         % do not repeat the end-of-line
@@ -117,7 +117,7 @@ elseif ~isstruct(val)
     case 'cell'
       str = printcell(name, val);
     otherwise
-      error('unsupported');
+      ft_error('unsupported');
   end
 end
 
@@ -174,7 +174,7 @@ elseif ismatrix(val)
   end
   str = strrep(str, ';', [';' 10]);
 else
-  warning('multidimensional arrays are not supported');
+  ft_warning('multidimensional arrays are not supported');
   str = '''FIXME: printing multidimensional arrays is not supported''';
 end
 
@@ -201,6 +201,6 @@ switch class(val)
     str = [str ')'];
     
   otherwise
-    warning('cannot print unknown object at this level');
+    ft_warning('cannot print unknown object at this level');
     str = '''FIXME: printing unknown objects is not supported''';
 end

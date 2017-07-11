@@ -209,7 +209,7 @@ if nargin==1
   % convert the header to Fieldtrip-style
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if any(EDF.SampleRate~=EDF.SampleRate(1))
-    error('channels with different sampling rate not supported');
+    ft_error('channels with different sampling rate not supported');
   end
   hdr.Fs          = EDF.SampleRate(1);
   hdr.nChans      = EDF.NS;
@@ -287,12 +287,12 @@ else
   fp = fopen(filename,'r','ieee-le');
   status = fseek(fp, offset, 'bof');
   if status
-    error(['failed seeking ' filename]);
+    ft_error(['failed seeking ' filename]);
   end
   [buf,num] = fread(fp,numwords,'bit24=>double');
   fclose(fp);
   if (num<numwords)
-    error(['failed opening ' filename]);
+    ft_error(['failed opening ' filename]);
     return
   end
 end

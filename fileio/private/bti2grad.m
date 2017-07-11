@@ -43,7 +43,7 @@ function [grad, elec] = bti2grad(hdr, balanceflag)
 
 % for backward compatibility issues FIXME check whether anyone actually uses this code
 if isfield(hdr, 'Meg_pos'),
-  warning('using outdated code. this does not necessarily lead to correct output');
+  ft_warning('using outdated code. this does not necessarily lead to correct output');
   
   elec      = [];
   grad      = [];
@@ -115,7 +115,7 @@ elseif isfield(hdr, 'config'),
     ori = cat(2,hdr.config.channel_data(n).device_data.loop_data.direction)';
     % determine the number of coils for this channel
     if numcoils(n) ~= size(pos,1)
-      error('number of coils does not correspond with number of coil positions');
+      ft_error('number of coils does not correspond with number of coil positions');
     end
     % add the coils of this channel to the gradiometer array
     grad.tra(i, cnt+1:cnt+numcoils(n)) = 1;
@@ -141,7 +141,7 @@ elseif isfield(hdr, 'config'),
     ori = cat(2,hdr.config.channel_data(n).device_data.loop_data.direction)';
     % determine the number of coils for this channel
     if numcoils(n) ~= size(pos,1)
-      error('number of coils does not correspond with number of coil positions');
+      ft_error('number of coils does not correspond with number of coil positions');
     end
     % add the coils of this channel to the gradiometer array
     grad.tra(numMEG+i, cnt+1:cnt+numcoils(n)) = 1; %FIXME check whether ori is OK for gradiometers
@@ -181,7 +181,7 @@ elseif isfield(hdr, 'config'),
     weights  = hdr.user_block_data{ubsel};
     if hdr.user_block_data{ubsel}.version==1,
       % the user_block does not contain labels to the channels and references
-      % warning('the weight table does not contain contain labels to the channels and references: assuming the channel order as they occur in the header and the refchannel order M.A M.aA G.A');
+      % ft_warning('the weight table does not contain contain labels to the channels and references: assuming the channel order as they occur in the header and the refchannel order M.A M.aA G.A');
       label    = {hdr.config.channel_data(:).name}';
       meglabel = ft_channelselection('MEG',    label);
       imeg     = match_str(label, meglabel);

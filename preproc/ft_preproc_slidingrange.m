@@ -39,7 +39,7 @@ if any(isnan(dat(:)))
 end
 
 if mod(width+1, 2)
-  error('width should be an odd number');
+  ft_error('width should be an odd number');
 end
 
 % compute half width

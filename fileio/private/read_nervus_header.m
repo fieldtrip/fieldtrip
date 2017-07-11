@@ -36,7 +36,7 @@ ITEMNAMESIZE  = 64;
 % ---------------- Opening File------------------
 h = fopen(filename,'rb','ieee-le');
 if h==-1
-    error('Can''t open Nervus EEG file')
+    ft_error('Can''t open Nervus EEG file')
 end
 
 nrvHdr = struct();
@@ -482,7 +482,7 @@ function [TSInfo] = read_nervus_header_TSInfo(DynamicPackets, TSLABELSIZE, LABEL
 tsPackets = DynamicPackets(strcmp({DynamicPackets.IDStr},'TSGUID'));
 
 if isempty(tsPackets)
-    error(['No TSINFO found']);
+    ft_error(['No TSINFO found']);
 end    
 
 tsPacket = tsPackets(1);
@@ -500,7 +500,7 @@ if length(tsPackets) > 1
         end
     end    
     if (allEqual == 0)            
-        error('Multiple TSInfo packets found and they are not the same.');
+        ft_error('Multiple TSInfo packets found and they are not the same.');
     end
 end
 end

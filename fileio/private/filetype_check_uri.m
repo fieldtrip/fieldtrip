@@ -179,7 +179,7 @@ else
       varargout{3} = filename((8+1+length(tok0{1})):end);
 
     otherwise
-      error('unsupported scheme in URI')
+      ft_error('unsupported scheme in URI')
   end
 end
 

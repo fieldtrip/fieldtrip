@@ -158,7 +158,7 @@ if completed
       % convert the MEexception object into a structure to allow a rethrow further down in the code
       ws = warning('off', 'MATLAB:structOnObject');
       err = struct(err);
-      warning(ws);
+      ft_warning(ws);
     end
   end
   
@@ -189,19 +189,19 @@ if completed
   
   if ~isempty(warn)
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-    warning(warn);
+    ft_warning(warn);
   end
   
   if ~isempty(err)
     fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
     if StopOnError
       if ischar(err)
-        error(err);
+        ft_error(err);
       else
         rethrow(err);
       end
     else
-      warning('error during remote execution: %s', errmsg);
+      ft_warning('error during remote execution: %s', errmsg);
     end
   end % ~isempty(err)
   
@@ -218,11 +218,11 @@ if completed
       varargout{1} = argout;
       varargout{2} = options;
     otherwise
-      error('invalid output option');
+      ft_error('invalid output option');
   end
   
 else
-  warning('FieldTrip:qsub:jobNotAvailable', 'the job results are not yet available');
+  ft_warning('FieldTrip:qsub:jobNotAvailable', 'the job results are not yet available');
   switch output
     case 'varargout'
       % return empty output arguments
@@ -232,7 +232,7 @@ else
       varargout{1} = {};
       varargout{2} = {};
     otherwise
-      error('invalid output option');
+      ft_error('invalid output option');
   end
 end
 

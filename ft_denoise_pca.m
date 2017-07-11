@@ -173,7 +173,7 @@ else
   if ischar(cfg.truncate) && strcmp(cfg.truncate, 'no')
     cfg.truncate = length(refindx);
   elseif ischar(cfg.truncate) || (cfg.truncate>1 && cfg.truncate/round(cfg.truncate)~=1) || cfg.truncate>length(refindx)
-    error('cfg.truncate should be either ''no'', an integer number <= the number of references, or a number between 0 and 1');
+    ft_error('cfg.truncate should be either ''no'', an integer number <= the number of references, or a number between 0 and 1');
     % FIXME the default truncation applied by 4D is 1x10^-8
   end
   
@@ -245,7 +245,7 @@ else
     [i1,i2] = match_str(refchan, cfg.pca.reflabel);
     [i3,i4] = match_str(megchan, cfg.pca.label);
     if length(i2)~=length(cfg.pca.reflabel)
-      error('you specified fewer references to use as there are in the precomputed weight table');
+      ft_error('you specified fewer references to use as there are in the precomputed weight table');
     end
     
     refindx = refindx(i1);
@@ -355,7 +355,7 @@ end
 
 nx = size(x);
 if ~iscell(x) || length(nx)>2 || all(nx>1)
-  error('incorrect input for cellmean');
+  ft_error('incorrect input for cellmean');
 end
 
 if nargin==1
@@ -363,7 +363,7 @@ if nargin==1
   scx2 = cellfun('size', x, 2);
   if     all(scx2==scx2(1)), dim = 2; %let second dimension prevail
   elseif all(scx1==scx1(1)), dim = 1;
-  else   error('no dimension to compute covariance for');
+  else   ft_error('no dimension to compute covariance for');
   end
 end
 
@@ -410,7 +410,7 @@ function [m] = cellmean(x, dim)
 
 nx = size(x);
 if ~iscell(x) || length(nx)>2 || all(nx>1)
-  error('incorrect input for cellmean');
+  ft_error('incorrect input for cellmean');
 end
 
 if nargin==1
@@ -418,7 +418,7 @@ if nargin==1
   scx2 = cellfun('size', x, 2);
   if     all(scx2==scx2(1)), dim = 2; %let second dimension prevail
   elseif all(scx1==scx1(1)), dim = 1;
-  else   error('no dimension to compute mean for');
+  else   ft_error('no dimension to compute mean for');
   end
 end
 
@@ -440,7 +440,7 @@ function [sd] = cellstd(x, dim, flag)
 
 nx = size(x);
 if ~iscell(x) || length(nx)>2 || all(nx>1)
-  error('incorrect input for cellstd');
+  ft_error('incorrect input for cellstd');
 end
 
 if nargin<2
@@ -448,7 +448,7 @@ if nargin<2
   scx2 = cellfun('size', x, 2);
   if     all(scx2==scx2(1)), dim = 2; %let second dimension prevail
   elseif all(scx1==scx1(1)), dim = 1;
-  else   error('no dimension to compute mean for');
+  else   ft_error('no dimension to compute mean for');
   end
 elseif nargin==2
   flag = 1;
@@ -479,13 +479,13 @@ persistent bsxfun_exists;
 if isempty(bsxfun_exists)
   bsxfun_exists=exist('bsxfun','builtin');
   if ~bsxfun_exists
-    error('bsxfun not found.');
+    ft_error('bsxfun not found.');
   end
 end
 
 nx = size(x);
 if ~iscell(x) || length(nx)>2 || all(nx>1)
-  error('incorrect input for cellmean');
+  ft_error('incorrect input for cellmean');
 end
 
 if ~iscell(v)
@@ -506,13 +506,13 @@ persistent bsxfun_exists;
 if isempty(bsxfun_exists)
   bsxfun_exists=exist('bsxfun','builtin');
   if ~bsxfun_exists
-    error('bsxfun not found.');
+    ft_error('bsxfun not found.');
   end
 end
 
 nx = size(x);
 if ~iscell(x) || length(nx)>2 || all(nx>1)
-  error('incorrect input for cellmean');
+  ft_error('incorrect input for cellmean');
 end
 
 if ~iscell(v)
@@ -526,7 +526,7 @@ sv2 = cellfun('size', v, 2);
 if     all(sx1==sv1) && all(sv2==1)
 elseif all(sx2==sv2) && all(sv1==1)
 elseif all(sv1==1)   && all(sv2==1)
-else   error('inconsistent input');
+else   ft_error('inconsistent input');
 end
 
 y  = cellfun(@bsxfun, repmat({@times}, nx), x, v, 'UniformOutput', 0);
@@ -544,7 +544,7 @@ function [z, sd, m] = cellzscore(x, dim, flag)
 
 nx = size(x);
 if ~iscell(x) || length(nx)>2 || all(nx>1)
-  error('incorrect input for cellstd');
+  ft_error('incorrect input for cellstd');
 end
 
 if nargin<2
@@ -552,7 +552,7 @@ if nargin<2
   scx2 = cellfun('size', x, 2);
   if     all(scx2==scx2(1)), dim = 2; % let second dimension prevail
   elseif all(scx1==scx1(1)), dim = 1;
-  else   error('no dimension to compute mean for');
+  else   ft_error('no dimension to compute mean for');
   end
 elseif nargin==2
   flag = 1;

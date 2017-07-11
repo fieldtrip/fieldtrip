@@ -191,7 +191,7 @@ isfreq     = ft_datatype(data, 'freq');
 iscomp     = ft_datatype(data, 'comp');
 istimelock = ft_datatype(data, 'timelock');
 if all(~[isfreq iscomp istimelock])
-  error('input data is not recognized');
+  ft_error('input data is not recognized');
 end
 
 % set the defaults
@@ -241,9 +241,9 @@ cfg.(cfg.method).normalize     = ft_getopt(cfg.(cfg.method), 'normalize',     'n
 cfg.(cfg.method).reducerank     = ft_getopt(cfg.(cfg.method), 'reducerank',    []); % the default for this is handled below
 
 if hasbaseline && (strcmp(cfg.randomization, 'no') && strcmp(cfg.permutation, 'no'))
-  error('input of two conditions only makes sense if you want to randomize or permute');
+  ft_error('input of two conditions only makes sense if you want to randomize or permute');
 elseif ~hasbaseline && (strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
-  error('randomization or permutation requires that you give two conditions as input');
+  ft_error('randomization or permutation requires that you give two conditions as input');
 end
 
 if isfield(cfg, 'latency') && ischar(cfg.latency) && strcmp(cfg.latency, 'all') && istimelock
@@ -251,11 +251,11 @@ if isfield(cfg, 'latency') && ischar(cfg.latency) && strcmp(cfg.latency, 'all') 
 end
 
 if sum([strcmp(cfg.jackknife, 'yes'), strcmp(cfg.bootstrap, 'yes'), strcmp(cfg.pseudovalue, 'yes'), strcmp(cfg.singletrial, 'yes'), strcmp(cfg.rawtrial, 'yes'), strcmp(cfg.randomization, 'yes'), strcmp(cfg.permutation, 'yes')])>1
-  error('jackknife, bootstrap, pseudovalue, singletrial, rawtrial, randomization and permutation are mutually exclusive');
+  ft_error('jackknife, bootstrap, pseudovalue, singletrial, rawtrial, randomization and permutation are mutually exclusive');
 end
 
 if strcmp(cfg.rawtrial,'yes') && isfield(cfg,'grid') && ~isfield(cfg.grid,'filter')
-  warning('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in grid.filter');
+  ft_warning('Using each trial to compute its own filter is not currently recommended. Use this option only with precomputed filters in grid.filter');
 end
 
 % start with an empty output structure
@@ -282,7 +282,7 @@ elseif isfreq
     hasrefchan = 0;
   end
   
-  if hasrefchan,
+  if hasrefchan
     if ischar(tmpcfg.refchan), tmpcfg.refchan = {tmpcfg.refchan}; end
     tmpchannel     = ft_channelselection(tmpcfg.channel, data.label); % the channels needed for the spatial filter
     tmpcfg.channel = cat(1, tmpchannel, tmpcfg.refchan);
@@ -311,7 +311,7 @@ elseif isfreq
 elseif iscomp
   % FIXME, select the components here
   % FIXME, add the component numbers to the output
-  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
+  ft_error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
 end
 
 convertcomp = false;
@@ -411,7 +411,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       
       % HACK: use some experimental code
       if hasbaseline
-        error('not supported')
+        ft_error('not supported')
       end
       
       tmpcfg         = cfg;
@@ -447,12 +447,12 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
         fbin = nearest(data.freq, cfg.frequency);
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
-        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq'),
+        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq')
           avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
         elseif strcmp(data.dimord, 'chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
           avg = data.fourierspctrm(datchanindx, fbin, tbin);
-        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time'),
+        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
           avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
         end
@@ -470,12 +470,12 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
         fbin = nearest(data.freq, cfg.frequency);
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
-        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq'),
+        elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq')
           avg = transpose(data.fourierspctrm(:, datchanindx, fbin));
         elseif strcmp(data.dimord, 'chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
           avg = data.fourierspctrm(datchanindx, fbin, tbin);
-        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time'),
+        elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time')
           tbin = nearest(data.time, cfg.latency);
           avg  = transpose(data.fourierspctrm(:, datchanindx, fbin, tbin));
         end
@@ -524,7 +524,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     end
     if ~isequal(i1(:), (1:numel(cfg.channel))')
       % this is not so easy to deal with, throw an error
-      error('There''s a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed leadfield/filter. This is not easy to solve automatically. Please look into this.');
+      ft_error('There''s a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed leadfield/filter. This is not easy to solve automatically. Please look into this.');
     end
   end
   
@@ -552,7 +552,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   % prepare the resampling of the trials, or average the data if multiple trials are present and no resampling is neccessary
   if (Ntrials<=1) && (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes') || strcmp(cfg.randomization, 'yes') || strcmp(cfg.permutation, 'yes'))
-    error('multiple trials required in the data\n');
+    ft_error('multiple trials required in the data\n');
     
   elseif strcmp(cfg.permutation, 'yes')
     % compute the cross-spectral density matrix without resampling
@@ -612,7 +612,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
     % filter and applies it to the single trial covariance/csd. The problem
     % is that beamformer will use the averaged covariance/csd to estimate the
     % power and not the single trial covariance/csd
-    error('this option contains a bug, and is therefore not supported at the moment');
+    ft_error('this option contains a bug, and is therefore not supported at the moment');
     Cf = Cf; % FIXME, should be averaged and repeated for each trial
     Cr = Cr; % FIXME, should be averaged and repeated for each trial
     Pr = Pr; % FIXME, should be averaged and repeated for each trial
@@ -682,7 +682,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
           % FIXME added by jansch because an appropriate subselection of avg
           % should be done first (i.e. select the tapers that belong to this
           % repetition
-          error('rawtrial in combination with pcc has been temporarily disabled');
+          ft_error('rawtrial in combination with pcc has been temporarily disabled');
         else
           dip(i) = beamformer_pcc(grid, sens, headmodel, avg, squeeze_Cf, optarg{:}, 'refdip', cfg.refdip, 'refchan', refchanindx, 'supdip', cfg.supdip, 'supchan', supchanindx);
         end
@@ -692,11 +692,11 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
         dip(i) = minimumnormestimate(grid, sens, headmodel, avg, optarg{:});
       case 'harmony'
         dip(i) = harmony(grid, sens, headmodel, avg, optarg{:});
-        % error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
+        % ft_error(sprintf('method ''%s'' is unsupported for source reconstruction in the frequency domain', cfg.method));
       case {'rv'}
         dip(i) = residualvariance(grid, sens, headmodel, avg, optarg{:}) ;
       case {'music'}
-        error('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method);
+        ft_error('method ''%s'' is currently unsupported for source reconstruction in the frequency domain', cfg.method);
       otherwise
     end
     
@@ -746,7 +746,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     
     % HACK: experimental code
     if hasbaseline
-      error('not supported')
+      ft_error('not supported')
     end
     
     tmpcfg = [];
@@ -815,7 +815,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   
   % prepare the resampling of the trials, or average the data if multiple trials are present and no resampling is neccessary
   if (strcmp(cfg.jackknife, 'yes') || strcmp(cfg.bootstrap, 'yes') || strcmp(cfg.pseudovalue, 'yes') || strcmp(cfg.singletrial, 'yes') || strcmp(cfg.rawtrial, 'yes') || strcmp(cfg.randomization, 'yes')) && ~strcmp(data.dimord, 'rpt_chan_time')
-    error('multiple trials required in the data\n');
+    ft_error('multiple trials required in the data\n');
     
   elseif strcmp(cfg.permutation, 'yes')
     % compute the average and covariance without resampling
@@ -871,7 +871,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     % filter and applies it to the single trial covariance/csd. The problem
     % is that beamformer will use the averaged covariance/csd to estimate the
     % power and not the single trial covariance/csd
-    error('this option contains a bug, and is therefore not supported at the moment');
+    ft_error('this option contains a bug, and is therefore not supported at the moment');
     % average the single-trial covariance matrices
     Cy = mean(data.cov,1);
     % copy the average covariance matrix for every individual trial
@@ -936,13 +936,13 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
     end
     if ~isequal(i1(:), (1:numel(cfg.channel))')
       % this is not so easy to deal with, throw an error
-      error('There''s a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed leadfield/filter. This is not easy to solve automatically. Please look into this.');
+      ft_error('There''s a mismatch between the number/order of channels in the data, with respect to the channels in the precomputed leadfield/filter. This is not easy to solve automatically. Please look into this.');
     end
   end
   
   size_avg = [size(avg) 1];
   size_Cy  = [size(Cy) 1];
-  if strcmp(cfg.method, 'lcmv')% && ~isfield(grid, 'filter'),
+  if strcmp(cfg.method, 'lcmv')% && ~isfield(grid, 'filter')
     for i = 1:Nrepetitions
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
@@ -1008,7 +1008,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       dip(i) = ft_sloreta(grid, sens, headmodel, squeeze_avg, squeeze_Cy, optarg{:});
     end
     
-  elseif strcmp(cfg.method, 'eloreta'),
+  elseif strcmp(cfg.method, 'eloreta')
     for i=1:Nrepetitions
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
@@ -1085,13 +1085,13 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       dip(i) = mvlestimate(grid, sens, headmodel, squeeze_avg, optarg{:});
     end
   else
-    error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
+    ft_error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
   end
   
 elseif iscomp
-  error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
+  ft_error('the use of component data in ft_sourceanalysis is disabled for the time being: if you encounter this error message and you need this functionality please contact the FieldTrip development team');
 else
-  error('the specified method ''%s'' combined with the input data of type ''%s'' are not supported', cfg.method, ft_datatype(data));
+  ft_error('the specified method ''%s'' combined with the input data of type ''%s'' are not supported', cfg.method, ft_datatype(data));
 end % if freq or timelock or comp data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

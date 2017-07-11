@@ -38,7 +38,7 @@ elseif siz(2)==3
   rd = rd';
   rd = rd(:)'; % ensure that it is a row vector
 else
-  error('incorrect specification of dipole locations');
+  ft_error('incorrect specification of dipole locations');
 end
 
 Nelc     = size(elc,1);
@@ -69,10 +69,10 @@ for i=1:Ndipoles
   invacuum = acos(dot(ori,(P-pnt)./norm(P-pnt))) < pi/2;
   
   if invacuum
-    warning('dipole lies on the vacuum side of the plane');
+    ft_warning('dipole lies on the vacuum side of the plane');
     lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
   elseif any(R1)==0
-    warning('dipole coincides with one of the electrodes');
+    ft_warning('dipole coincides with one of the electrodes');
     lf(:,(1:3) + 3*(i-1)) = NaN(Nelc,3);
   else
     lf(:,(1:3) + 3*(i-1)) = (r ./ [R1 R1 R1]) + (rp ./ [R2 R2 R2]);
