@@ -46,7 +46,7 @@ ft_defaults
 % ensure that the filename has the correct extension
 [pathstr, name, ext] = fileparts(filename);
 if ~strcmp(ext, '.fif')
-  error('if the filename is specified with extension, this should read .fif');
+  ft_error('if the filename is specified with extension, this should read .fif');
 end
 fifffile = fullfile(pathstr ,[name '.fif']);
 eventfile = fullfile(pathstr ,[name '-eve.fif']);
@@ -140,7 +140,7 @@ if israw
   
 elseif isepch
   
-  error('fieldtrip2fiff:NotImplementedError', 'Function to write epochs to MNE not implemented yet')
+  ft_error('writing epochs to MNE is not implemented yet')
   
   for j = 1:length(data.trial)
     evoked(j).aspect_kind = 100;

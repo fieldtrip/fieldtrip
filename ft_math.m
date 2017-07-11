@@ -125,7 +125,7 @@ end
 
 if ft_datatype(varargin{1}, 'raw+comp')
     if length(varargin)>1
-        error('ft_math does not support more than one input argument if the input data is of type "raw" or "comp"')
+        ft_error('ft_math does not support more than one input argument if the input data is of type "raw" or "comp"')
     end
 end
 
@@ -148,7 +148,7 @@ end
 
 for p=1:length(cfg.parameter)
   if ~issubfield(varargin{1}, cfg.parameter{p})
-    error('the requested parameter is not present in the data');
+    ft_error('the requested parameter is not present in the data');
   end
 end
 
@@ -164,7 +164,7 @@ cfg.parameter = tmpcfg.parameter;
 for p = 1:length(cfg.parameter)
   dimordtmp{p} = getdimord(varargin{1}, cfg.parameter{p});
   if p>1 && ~strcmp(dimordtmp{1}, dimordtmp{p})
-    error('the dimord of multiple parameters must be the same');
+    ft_error('the dimord of multiple parameters must be the same');
   end
 end
 clear dimordtmp
@@ -174,7 +174,7 @@ clear dimordtmp
 % fields in the output
 fn  = fieldnames(varargin{1});
 dimordfields = fn(~cellfun(@isempty, strfind(fn, 'dimord')))';
-if numel(dimordfields)==1 && strcmp(dimordfields{1},'dimord'),
+if numel(dimordfields)==1 && strcmp(dimordfields{1},'dimord')
     % this is OK and counts for most data structures
 else
     % this is in the case of one or more xxxdimord fields, in which case
@@ -200,20 +200,20 @@ for p = 1:length(cfg.parameter)
   m = ft_getopt(cfg, 'matrix');
 
   % check the dimensionality of m against the input data
-  if ~isempty(m),
+  if ~isempty(m)
     for i=1:length(varargin)
       ok = isequal(size(getsubfield(varargin{i}, cfg.parameter{p})),size(m));
       if ~ok, break; end
     end
-    if ~ok,
-      error('the dimensions of cfg.matrix do not allow for element-wise operations');
+    if ~ok
+      ft_error('the dimensions of cfg.matrix do not allow for element-wise operations');
     end
   end
 
   % only one of these can be defined at the moment (i.e. not allowing for
   % operations such as (x1+m)^s for now
-  if ~isempty(m) && ~isempty(s),
-    error('you can either specify a cfg.matrix or a cfg.scalar, not both');
+  if ~isempty(m) && ~isempty(s)
+    ft_error('you can either specify a cfg.matrix or a cfg.scalar, not both');
   end
 
   % touch it to keep track of it in the output cfg
@@ -221,14 +221,14 @@ for p = 1:length(cfg.parameter)
   if ~isempty(m), cfg.matrix; end
 
   % replace s with m, so that the code below is more transparent
-  if ~isempty(m),
+  if ~isempty(m)
     s = m; clear m;
   end
 
   if length(varargin)==1
     switch cfg.operation
       case 'add'
-        if isscalar(s),
+        if isscalar(s)
           fprintf('adding %f to the %s\n', s, cfg.parameter{p});
         else
           fprintf('adding the contents of cfg.matrix to the %s\n', cfg.parameter{p});
@@ -240,7 +240,7 @@ for p = 1:length(cfg.parameter)
         end
 
       case 'subtract'
-        if isscalar(s),
+        if isscalar(s)
           fprintf('subtracting %f from the %s\n', s, cfg.parameter{p});
         else
           fprintf('subtracting the contents of cfg.matrix from the %s\n', cfg.parameter{p});
@@ -252,7 +252,7 @@ for p = 1:length(cfg.parameter)
         end
 
       case 'multiply'
-        if isscalar(s),
+        if isscalar(s)
           fprintf('multiplying %s with %f\n', cfg.parameter{p}, s);
         else
           fprintf('multiplying %s with the content of cfg.matrix\n', cfg.parameter{p});
@@ -265,7 +265,7 @@ for p = 1:length(cfg.parameter)
         end
 
       case 'divide'
-        if isscalar(s),
+        if isscalar(s)
           fprintf('dividing %s by %f\n', cfg.parameter{p}, s);
         else
           fprintf('dividing %s by the content of cfg.matrix\n', cfg.parameter{p});
@@ -359,7 +359,7 @@ for p = 1:length(cfg.parameter)
 
       case 'subtract'
         if length(varargin)>2
-          error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
+          ft_error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
         end
         fprintf('subtracting the 2nd input argument from the 1st\n');
         if iscell(x1)
@@ -370,7 +370,7 @@ for p = 1:length(cfg.parameter)
 
       case 'divide'
         if length(varargin)>2
-          error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
+          ft_error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
         end
         fprintf('dividing the 1st input argument by the 2nd\n');
         if iscell(x1)
@@ -381,7 +381,7 @@ for p = 1:length(cfg.parameter)
 
       case 'log10'
         if length(varargin)>2
-          error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
+          ft_error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
         end
         fprintf('taking the log difference between the 2nd input argument and the 1st\n');
         y = log10(x1 ./ varargin{2}.(cfg.parameter{p}));

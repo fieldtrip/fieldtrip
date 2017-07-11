@@ -165,7 +165,7 @@ end
 
 % this is not supported any more as of 26/10/2011
 if ischar(mri)
-  error('please use cfg.inputfile instead of specifying the input variable as a string');
+  ft_error('please use cfg.inputfile instead of specifying the input variable as a string');
 end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
@@ -200,21 +200,21 @@ cfg.threshold        = ft_getopt(cfg, 'threshold',   '');
 if ~(isempty(cfg.smooth))
   if isempty(cfg.brainsmooth)
     cfg.brainsmooth=cfg.smooth;
-    warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for brainmask.')
+    ft_warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for brainmask.')
   end
   if isempty(cfg.scalpsmooth)
     cfg.scalpsmooth=cfg.smooth;
-    warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for scalpmask.')
+    ft_warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for scalpmask.')
   end
 end
 if ~(isempty(cfg.threshold))
   if isempty(cfg.brainthreshold)
     cfg.brainthreshold=cfg.threshold;
-    warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for brainmask.')
+    ft_warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for brainmask.')
   end
   if isempty(cfg.scalpthreshold)
     cfg.scalpthreshold=cfg.threshold;
-    warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for scalpmask.')
+    ft_warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for scalpmask.')
   end
 end
 % then set defaults again
@@ -233,7 +233,7 @@ if ~isfield(cfg, 'name')
     tmp = tempname;
     cfg.name = tmp;
   else
-    error('you must specify the output filename in cfg.name');
+    ft_error('you must specify the output filename in cfg.name');
   end
 end
 [pathstr, name, ~] = fileparts(cfg.name);
@@ -302,9 +302,9 @@ if dotpm
   end
   mri = ft_convert_units(mri, 'mm');
   if isdeployed
-    mri = ft_convert_coordsys(mri, 'spm', 2, cfg.template);
+    mri = ft_convert_coordsys(mri, 'acpc', 2, cfg.template);
   else
-    mri = ft_convert_coordsys(mri, 'spm');
+    mri = ft_convert_coordsys(mri, 'acpc');
   end
 
   % flip and permute the 3D volume itself, so that the voxel and
@@ -474,11 +474,11 @@ if dotpm
                      fullfile(pathstr,['c6', name, '.nii'])};
         
       else
-        error('cfg.spmmethod should be either ''old'', ''new'' or ''mars''');
+        ft_error('cfg.spmmethod should be either ''old'', ''new'' or ''mars''');
       end
             
     otherwise
-      error('unsupported SPM version');
+      ft_error('unsupported SPM version');
 
   end
   
@@ -550,41 +550,41 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the requested output fields
 
-remove = {'anatomy' 'csf' 'gray' 'white' 'bone' 'softtissue' 'air'};
+remove = {'anatomy' 'csf' 'gray' 'white' 'bone' 'softtissue' 'air' 'skull' 'skullstrip' 'brain' 'scalp'}; % all possible tissues
 
 % check if smoothing or thresholding is required
 
 dosmooth_brain = ~strcmp(cfg.brainsmooth, 'no');
 if dosmooth_brain && ischar(cfg.brainsmooth)
-  error('invalid value %s for cfg.brainsmooth', cfg.brainsmooth);
+  ft_error('invalid value %s for cfg.brainsmooth', cfg.brainsmooth);
 end
 dosmooth_scalp = ~strcmp(cfg.scalpsmooth, 'no');
 if dosmooth_scalp && ischar(cfg.scalpsmooth)
-  error('invalid value %s for cfg.scalpsmooth', cfg.scalpsmooth);
+  ft_error('invalid value %s for cfg.scalpsmooth', cfg.scalpsmooth);
 end
 dosmooth_skull = ~strcmp(cfg.skullsmooth, 'no');
 if dosmooth_skull && ischar(cfg.skullsmooth)
-  error('invalid value %s for cfg.skullsmooth', cfg.skullsmooth);
+  ft_error('invalid value %s for cfg.skullsmooth', cfg.skullsmooth);
 end
 
 dothres_brain = ~strcmp(cfg.brainthreshold, 'no');
 if dothres_brain && ischar(cfg.brainthreshold)
-  error('invalid value %s for cfg.brainthreshold', cfg.brainthreshold);
+  ft_error('invalid value %s for cfg.brainthreshold', cfg.brainthreshold);
 end
 dothres_scalp = ~strcmp(cfg.scalpthreshold, 'no');
 if dothres_scalp && ischar(cfg.scalpthreshold)
-  error('invalid value %s for cfg.scalpthreshold', cfg.scalpthreshold);
+  ft_error('invalid value %s for cfg.scalpthreshold', cfg.scalpthreshold);
 end
 dothres_skull = ~strcmp(cfg.skullthreshold, 'no');
 if dothres_skull && ischar(cfg.skullthreshold)
-  error('invalid value %s for cfg.skullthreshold', cfg.skullthreshold);
+  ft_error('invalid value %s for cfg.skullthreshold', cfg.skullthreshold);
 end
 
 outp = cfg.output;
 
 if ~isempty(intersect(outp, 'tpm'))
   % output: probability tissue maps
-  remove = intersect(remove, {'anatomy'});
+  remove = intersect(remove, {'anatomy'}); 
 elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' 'skullstrip'}))
 
   createoutputs = true;
@@ -603,7 +603,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
         fname   = 'anatomy';
         anatomy = segmented.anatomy;
       else
-        error('no appropriate volume is present for the creation of a scalpmask');
+        ft_error('no appropriate volume is present for the creation of a scalpmask');
       end
       if dosmooth_scalp
         anatomy = volumesmooth(anatomy, cfg.scalpsmooth, fname);
@@ -634,6 +634,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       % output: scalp (cummulative) (if this is the only requested output)
       if numel(outp)==1
         segmented.scalp = scalpmask;
+		remove(strcmp(remove,'scalp'))=[];
         break
       end
     end   % end scalp
@@ -654,12 +655,13 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
 
     % output: skullstrip
     if any(strcmp('skullstrip', outp))
-      if ~isfield(segmented, 'anatomy'), error('no anatomy field present'); end
+      if ~isfield(segmented, 'anatomy'), ft_error('no anatomy field present'); end
       fprintf('creating skullstripped anatomy ...');
       brain_ss = cast(brain, class(segmented.anatomy));
       segmented.anatomy = segmented.anatomy.*brain_ss;
       clear brain_ss
-      remove = intersect(remove, {'gray' 'white' 'csf'});
+      remove(strcmp(remove,'skullstrip'))=[];
+	  remove(strcmp(remove,'anatomy'))=[];
       if numel(outp)==1
         break
       end
@@ -672,7 +674,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
     % output: brain
     if any(strcmp(outp, 'brain'))
       segmented.brain = brainmask;
-
+	  remove(strcmp(remove,'brain'))=[];
       if numel(outp)==1
         break
       end
@@ -683,15 +685,15 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       clear dummy
       if any(strcmp(outp, 'white'))
         segmented.white = (tissuetype == 3) & brainmask;
-        remove = intersect(remove, {'anatomy' 'gray' 'csf'});
+        remove(strcmp(remove,'white'))=[];
       end
       if any(strcmp(outp, 'gray'))
         segmented.gray = (tissuetype == 2) & brainmask;
-        remove = intersect(remove, {'anatomy' 'white' 'csf'});
+        remove(strcmp(remove,'gray'))=[];
       end
       if any(strcmp(outp, 'csf'))
         segmented.csf = (tissuetype == 1) & brainmask;
-        remove = intersect(remove, {'anatomy' 'gray' 'white'});
+        remove(strcmp(remove,'csf'))=[];
       end
 
     end % if brain or gray/while/csf
@@ -730,6 +732,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       end
       if any(strcmp(outp, 'skull'))
         segmented.skull = skullmask;
+		remove(strcmp(remove,'skull'))=[];
         if numel(outp)==1
           break
         end
@@ -742,6 +745,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
         scalpmask(skullmask>0)=0;
         clear skullmask
         segmented.scalp=scalpmask;
+		remove(strcmp(remove,'scalp'))=[];
         clear scalpmask
       end
     end
@@ -750,7 +754,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
   end % while createoutputs
 
 else
-  error('unknown output %s requested\n', cfg.output{:});
+  ft_error('unknown output %s requested\n', cfg.output{:});
 end
 
 % remove unnecessary fields

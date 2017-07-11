@@ -46,23 +46,23 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 % Copyright (c) 2009, Ingrid Nieuwenhuis
 % Copyright (c) 2011, jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
-% this file is part of fieldtrip, see http://www.fieldtriptoolbox.org
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
 %    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the gnu general public license as published by
-%    the free software foundation, either version 3 of the license, or
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
 %    (at your option) any later version.
 %
 %    FieldTrip is distributed in the hope that it will be useful,
-%    but without any warranty; without even the implied warranty of
-%    merchantability or fitness for a particular purpose.  see the
-%    gnu general public license for more details.
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
 %
-%    you should have received a copy of the gnu general public license
-%    along with fieldtrip. if not, see <http://www.gnu.org/licenses/>.
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $id: ft_movieploter.m 4354 2011-10-05 15:06:02z crimic $
+% $Id$
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
@@ -138,17 +138,17 @@ end
 if isfield(data,'dimord')
   if strcmp(data.dimord,'chan_freq_time')
     if length(xvalues)~=size(parameter,3)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end
     if length(yvalues)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, yparam);
     end
   elseif strcmp(data.dimord,'chan_time')
     if length(xvalues)~=size(parameter,2)
-      error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
+      ft_error('inconsistent size of "%s" compared to "%s"', cfg.parameter, xparam);
     end
   else
-    error('input data is incompatible')
+    ft_error('input data is incompatible')
   end
 end
 
@@ -188,7 +188,7 @@ end
 % select the channels in the data that match with the layout:
 [seldat, sellay] = match_str(data.label, layout.label);
 if isempty(seldat)
-  error('labels in data and labels in layout do not match');
+  ft_error('labels in data and labels in layout do not match');
 end
 
 % make a subselection of the data
@@ -368,7 +368,7 @@ else
         F(iFrame) = getframe;
       end
     else
-      error('Either moviefreq or movietime should contain a bin number')
+      ft_error('Either moviefreq or movietime should contain a bin number')
     end
   else
     for iFrame = 1:floor(size(parameter, 2)/cfg.samperframe)

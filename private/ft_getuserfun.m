@@ -44,7 +44,7 @@ elseif isfunction([prefix '_' func]) && ~iscompatwrapper([prefix '_' func])
 elseif isfunction(['ft_' prefix '_' func])
   func = str2func(['ft_' prefix '_' func]);
 else
-  warning(['no function by the name ''' func ''', ''' prefix '_' func...
+  ft_warning(['no function by the name ''' func ''', ''' prefix '_' func...
     ''', or ''ft_' prefix '_' func ''' could be found']);
   func = [];
 end

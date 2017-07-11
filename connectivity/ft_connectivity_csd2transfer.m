@@ -83,7 +83,7 @@ end
 % check whether input data is valid
 freq = ft_checkdata(freq, 'datatype', 'freq');
 if ~isfield(freq, 'crsspctrm') || ~isfield(freq, 'label')
-  error('the input data does not contain cross-spectral density data in the supported format');
+  ft_error('the input data does not contain cross-spectral density data in the supported format');
 end
 
 hasrpt = ~isempty(strfind(freq.dimord, 'rpt'));
@@ -115,11 +115,11 @@ end
 if ~isempty(block)
   % sanity check 1
   if ~isstruct(block) 
-    error('block should be a struct-array');
+    ft_error('block should be a struct-array');
   end
   % sanity check 2
   if strcmp(sfmethod, 'bivariate')
-    error('when block is specified, it is not OK to do bivariate decomposition');
+    ft_error('when block is specified, it is not OK to do bivariate decomposition');
   end
 end
 
@@ -143,7 +143,7 @@ if strcmp(sfmethod, 'bivariate')
 elseif strcmp(sfmethod, 'multivariate')
   fprintf('computing multivariate non-parametric spectral factorization on %d channels\n', numel(freq.label));   
 else
-  error('unknown sfmethod %s', sfmethod);
+  ft_error('unknown sfmethod %s', sfmethod);
 end
 
 
@@ -202,7 +202,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   if ntim>1,
-    error('blockwise factorization of tfrs is not yet possible');
+    ft_error('blockwise factorization of tfrs is not yet possible');
   end
   
   % create a blockindx array that assigns each channel to a block
@@ -231,7 +231,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
     nfact = size(tmp1,1)+size(tmp2,1)+1;
     maxnfact = 500;
     if nfact>maxnfact
-      error('at present the number of factorizations for conditional granger is set to 500');
+      ft_error('at present the number of factorizations for conditional granger is set to 500');
     end
     
     factorizations = cell(nfact,1);
@@ -339,7 +339,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~doblock,
  
 elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && doblock && ~doconditional,
   % error 
-  error('single trial estimates and blockwise factorisation is not yet implemented');
+  ft_error('single trial estimates and blockwise factorisation is not yet implemented');
   
 elseif strcmp(sfmethod, 'bivariate')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -425,7 +425,7 @@ elseif strcmp(sfmethod, 'bivariate')
   
 elseif strcmp(sfmethod, 'bivariate') && nrpt>1,
   % error 
-  error('single trial estimates and linear combination indexing is not implemented');
+  ft_error('single trial estimates and linear combination indexing is not implemented');
 
 end
 

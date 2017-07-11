@@ -61,18 +61,18 @@ function [s, cfg] = ft_statfun_depsamplesregrT(cfg, dat, design)
 % $Id$
 
 % set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end;
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end;
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end;
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end;
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end;
+if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
+if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
+if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
+if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
+if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
+    ft_error('P-values can only be calculated if the test statistics are calculated.');
 end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
-    error('uvar must be specified for dependent samples statistics');
+    ft_error('uvar must be specified for dependent samples statistics');
 end
 
 if ~isempty(cfg.cvar)
@@ -85,8 +85,8 @@ end
 nunits = max(design(cfg.uvar,:));
 df = nunits - 1;
 if nunits<2
-    error('The data must contain at least two units-of-observation (usually subjects).')
-end;
+    ft_error('The data must contain at least two units-of-observation (usually subjects).')
+end
 
 if strcmp(cfg.computestat,'yes')
 % compute the statistic
@@ -101,16 +101,16 @@ if strcmp(cfg.computestat,'yes')
       for blockindx=1:nblocks
         blockselvec=find(design(cfg.cvar,unitselved)==condlabels(blockindx));
         designmat(blockindx,blockselvec)=1;
-      end;
+      end
       designmat((nblocks+1),:)=indvar;
-    end;
+    end
     coeff=(designmat*designmat')\(designmat*dat(:,unitselvec)');
     regrweights(:,indx)=coeff((nblocks+1),:)';
-  end;
+  end
   avgw=mean(regrweights,2);
   varw=var(regrweights,0,2);
   s.stat=sqrt(nunits)*avgw./sqrt(varw);
-end;
+end
 
 if strcmp(cfg.computecritval,'yes')
   % also compute the critical values
@@ -121,7 +121,7 @@ if strcmp(cfg.computecritval,'yes')
     s.critval = [tinv(cfg.alpha/2,df),tinv(1-cfg.alpha/2,df)];
   elseif cfg.tail==1
     s.critval = tinv(1-cfg.alpha,df);
-  end;
+  end
 end
 
 if strcmp(cfg.computeprob,'yes')
@@ -133,6 +133,6 @@ if strcmp(cfg.computeprob,'yes')
     s.prob = 2*tcdf(-abs(s.stat),s.df);
   elseif cfg.tail==1
     s.prob = 1-tcdf(s.stat,s.df);
-  end;
+  end
 end
 

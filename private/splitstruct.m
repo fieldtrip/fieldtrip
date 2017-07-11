@@ -21,7 +21,7 @@ if isstruct(value0)
     siz = size(value0);
     dim = numel(siz);
     if dim>2
-      error('not yet supported');
+      ft_error('not yet supported');
     end
     for i1=1:siz(1)
       for i2=1:siz(2)
@@ -41,7 +41,7 @@ elseif iscell(value0)
   siz = size(value0);
   dim = numel(siz);
   if dim>2
-    error('not yet supported');
+    ft_error('not yet supported');
   end
   for i1=1:siz(1)
     for i2=1:siz(2)

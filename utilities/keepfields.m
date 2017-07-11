@@ -35,7 +35,7 @@ end
 if ischar(fields)
   fields = {fields};
 elseif ~iscell(fields)
-  error('fields input argument must be a cell array of strings or a single string');
+  ft_error('fields input argument must be a cell array of strings or a single string');
 end
 
 fields = setdiff(fieldnames(s), fields);

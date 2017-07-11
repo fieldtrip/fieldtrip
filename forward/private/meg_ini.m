@@ -74,7 +74,7 @@ elseif nargin==7;
   end
   
 else
-  error('you must provide 4,5 or 7 arguments');
+  ft_error('you must provide 4,5 or 7 arguments');
 end
 
 return % main function

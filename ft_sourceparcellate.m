@@ -106,7 +106,7 @@ source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
 
 % ensure that the source and the parcellation are anatomically consistent
 if ~isequaln(source.pos, parcellation.pos)
-  error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
+  ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
 end
 
 if isempty(cfg.parcellation)
@@ -114,7 +114,7 @@ if isempty(cfg.parcellation)
   fn = fieldnames(parcellation);
   for i=1:numel(fn)
     if isfield(parcellation, [fn{i} 'label'])
-      warning('using "%s" for the parcellation', fn{i});
+      ft_warning('using "%s" for the parcellation', fn{i});
       cfg.parcellation = fn{i};
       break
     end
@@ -122,7 +122,7 @@ if isempty(cfg.parcellation)
 end
 
 if isempty(cfg.parcellation)
-  error('you should specify the field containing the parcellation');
+  ft_error('you should specify the field containing the parcellation');
 end
 
 % determine the fields and corresponding dimords to work on
@@ -141,7 +141,7 @@ else
   [inside, i1, i2] = intersect(cfg.parameter, fn);
   [outside       ] = setdiff(cfg.parameter, fn);
   if ~isempty(outside)
-    warning('\nparameter "%s" cannot be parcellated', outside{:});
+    ft_warning('\nparameter "%s" cannot be parcellated', outside{:});
   end
   cfg.parameter = fn(i2);
   fn     = fn(i2);
@@ -154,7 +154,7 @@ fn     = fn(sel);
 dimord = dimord(sel);
 
 if numel(fn)==0
-  error('there are no source parameters that can be parcellated');
+  ft_error('there are no source parameters that can be parcellated');
 end
 
 % get the parcellation and the labels that go with it
@@ -205,7 +205,7 @@ for i=1:numel(fn)
           case 'eig'
             tmp{j1,j2} = celleig2(dat(seg==j1,seg==j2,:));
           otherwise
-            error('method %s not implemented for %s', cfg.method, dimord{i});
+            ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
       end % for j2
     end % for j1
@@ -229,7 +229,7 @@ for i=1:numel(fn)
         case 'eig'
           tmp{j} = celleig1(dat(seg==j));
         otherwise
-          error('method %s not implemented for %s', cfg.method, dimord{i});
+          ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
     end % for
     ft_progress('close');
@@ -261,7 +261,7 @@ for i=1:numel(fn)
           case 'maxabs'
             tmp(j1,j2,:) = arraymaxabs2(dat(seg==j1,seg==j2,:));
           otherwise
-            error('method %s not implemented for %s', cfg.method, dimord{i});
+            ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
       end % for j2
     end % for j1
@@ -281,7 +281,7 @@ for i=1:numel(fn)
         case 'mean_thresholded'
           cfg.mean = ft_getopt(cfg, 'mean', struct('threshold', []));
           if isempty(cfg.mean.threshold)
-            error('when cfg.method = ''mean_thresholded'', you should specify a cfg.mean.threshold');
+            ft_error('when cfg.method = ''mean_thresholded'', you should specify a cfg.mean.threshold');
           end
           if numel(cfg.mean.threshold)==size(dat,1)
             % assume one threshold per vertex
@@ -301,13 +301,13 @@ for i=1:numel(fn)
         case 'eig'
           tmp(j,:) = arrayeig1(dat(seg==j,:));
         otherwise
-          error('method %s not implemented for %s', cfg.method, dimord{i});
+          ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
     end % for
     ft_progress('close');
     
   else
-    error('unsupported dimord %s', dimord{i})
+    ft_error('unsupported dimord %s', dimord{i})
     
   end % if pos, pos_pos, {pos}, etc.
   

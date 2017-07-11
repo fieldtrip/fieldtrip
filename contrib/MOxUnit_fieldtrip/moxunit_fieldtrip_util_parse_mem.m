@@ -1,5 +1,5 @@
 function value=moxunit_fieldtrip_util_parse_mem(line)
-% parse MEM property in fieldtrip test
+% parse MEM property in FieldTrip test
 %
 % value=moxunit_fieldtrip_util_parse_mem(line)
 %

@@ -106,7 +106,7 @@ switch format
     elseif exist(fullfile(path, [file '.dat']), 'file')
       datafile   = fullfile(path, [file '.dat']);
     else
-      error('cannot determine the data file that corresponds to %s', filename);
+      ft_error('cannot determine the data file that corresponds to %s', filename);
     end
   case 'brainvision_eeg'
     [path, file, ext] = fileparts(filename);

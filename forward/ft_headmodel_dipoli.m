@@ -53,13 +53,13 @@ numboundaries = numel(headmodel.bnd);
 % % feed in the correct geometry.
 % %
 % % if ~all(surface_closed(headmodel.bnd))
-% %   error('...');
+% %   ft_error('...');
 % % end
 % % if any(surface_intersection(headmodel.bnd))
-% %   error('...');
+% %   ft_error('...');
 % % end
 % % if any(surface_selfintersection(headmodel.bnd))
-% %   error('...');
+% %   ft_error('...');
 % % end
 % 
 % % The following checks should always be done.
@@ -102,7 +102,7 @@ if numel(headmodel.bnd)>1
 end
 
 if isempty(conductivity)
-  warning('No conductivity is declared, Assuming standard values\n')
+  ft_warning('No conductivity is declared, Assuming standard values\n')
   if numboundaries == 1
     conductivity = 1;
   elseif numboundaries == 3
@@ -113,12 +113,12 @@ if isempty(conductivity)
     % skin / outer skull / inner skull / brain    
     conductivity = [1 1/80 1 1] * 0.33;    
   else
-    error('Conductivity values are required!')
+    ft_error('Conductivity values are required!')
   end
   headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
-    error('a conductivity value should be specified for each compartment');
+    ft_error('a conductivity value should be specified for each compartment');
   end
   headmodel.cond = conductivity(order);
 end
@@ -144,7 +144,7 @@ switch mexext
     % linux computer
     dipoli = [dipoli '.glnx86'];
   otherwise
-    error('there is no dipoli executable for your platform');
+    ft_error('there is no dipoli executable for your platform');
 end
 fprintf('using the executable "%s"\n', dipoli);
 
@@ -208,7 +208,7 @@ try
   end
   
 catch
-  error('an error ocurred while running the dipoli executable - please look at the screen output');
+  ft_error('an error ocurred while running the dipoli executable - please look at the screen output');
 end
 
 % delete the temporary files
@@ -237,10 +237,10 @@ w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   % FIXME: this method is rigorous only for star shaped surfaces
-  warning('your normals are outwards oriented\n')
+  ft_warning('your normals are outwards oriented\n')
   ok = 0;
 elseif w>0 && (abs(w)-4*pi)<1000*eps
-  %   warning('your normals are inwards oriented\n')
+  %   ft_warning('your normals are inwards oriented\n')
   ok = 1;
 else
   fprintf('attention: your surface probably is irregular!')

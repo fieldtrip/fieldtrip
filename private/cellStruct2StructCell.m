@@ -3,6 +3,6 @@ function structCell = cellStruct2StructCell(cellStruct)
 
 structCell = struct;
 for i=1:numel(cellStruct)
-    if i==1, structCell = cellStruct{i};    end;
+    if i==1, structCell = cellStruct{i};    end
     structCell(i) = cellStruct{i}; 
 end

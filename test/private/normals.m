@@ -33,7 +33,7 @@ elseif (opt(1)=='v' || opt(1)=='V')
 elseif (opt(1)=='t' || opt(1)=='T')
   opt='triangle';
 else
-  error('invalid optional argument');
+  ft_error('invalid optional argument');
 end
 
 npnt = size(pnt,1);

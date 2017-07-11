@@ -69,7 +69,7 @@ cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0
-  error('no channels were selected');
+  ft_error('no channels were selected');
 end
 
 % determine the size of blocks to process
@@ -105,7 +105,7 @@ while true
       begsample  = prevSample+1;
       endsample  = prevSample+blocksize ;
     else
-      error('unsupported value for cfg.bufferdata');
+      ft_error('unsupported value for cfg.bufferdata');
     end
 
     % remember up to where the data was read

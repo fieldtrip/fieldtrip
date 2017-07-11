@@ -41,7 +41,7 @@ function tf = ft_platform_supports(what,varargin)
 % See also FT_VERSION, VERSION, VER, VERLESSTHAN
 
 if ~ischar(what)
-  error('first argument must be a string');
+  ft_error('first argument must be a string');
 end
 
 switch what
@@ -156,7 +156,7 @@ switch what
     tf = is_matlab() && matlabversion('2014b', Inf);
     
   otherwise
-    error('unsupported value for first argument: %s', what);
+    ft_error('unsupported value for first argument: %s', what);
     
 end % switch
 

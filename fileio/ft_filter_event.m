@@ -84,7 +84,7 @@ testminnumber    = ~isempty(minnumber)    && isfield(event, 'number');
 testmaxnumber    = ~isempty(maxnumber)    && isfield(event, 'number');
 
 if (~isempty(minnumber) || ~isempty(maxnumber)) && ~isfield(event, 'number')
-  warning('the events are not numbered, assuming that the order corresponds to the original stream sequence');
+  ft_warning('the events are not numbered, assuming that the order corresponds to the original stream sequence');
   for i=1:length(event)
     event(i).number = i;
   end

@@ -38,11 +38,11 @@ queryrange  = ft_getopt(varargin, 'queryrange', 3);
 inputcoord  = ft_getopt(varargin, 'inputcoord');
 
 if isempty(inputcoord)
-  error('you must specify inputcoord');
+  ft_error('you must specify inputcoord');
 end
 
 if isempty(intersect(queryrange, [1 3 5 7 9 11]))
-  error('incorrect query range, should be one of [1 3 5 7 9 11]');
+  ft_error('incorrect query range, should be one of [1 3 5 7 9 11]');
 end
 
 if size(pos,1)==3 && size(pos,2)~=3
@@ -85,7 +85,7 @@ elseif strcmp(inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
 elseif (strcmp(inputcoord, 'spm') && strcmp(atlas.coordsys, 'mni')) || (strcmp(inputcoord, 'mni') && strcmp(atlas.coordsys, 'spm'))
   %fprintf('coordinate system of input data ''spm'' is assume to represent the same coordinate system as the atlas, which is ''mni''\n');
 elseif ~strcmp(inputcoord, atlas.coordsys)
-  error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
+  ft_error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
 end
 
 num = size(pos,1);
@@ -119,7 +119,7 @@ for i=1:num
             %sel = [sel; find(atlas.descr.brick==0 & atlas.descr.value==brick0_val)];
             %sel = [sel; find(atlas.descr.brick==1 & atlas.descr.value==brick1_val)];
           else
-            warning('location is outside atlas volume');
+            ft_warning('location is outside atlas volume');
           end % k
           %FIXME the three loops can probably be easily vectorized
         end % dk
@@ -132,7 +132,7 @@ for i=1:num
       end
     end
   else
-    error('support for atlases that have a probabilistic segmentationstyle is not supported yet');
+    ft_error('support for atlases that have a probabilistic segmentationstyle is not supported yet');
   end
 end
 

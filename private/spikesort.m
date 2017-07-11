@@ -55,7 +55,7 @@ fb = false;
 presort = ft_getopt(varargin, 'presort');
 
 if any(size(numA)~=size(numB))
-  error('input dimensions should be the same');
+  ft_error('input dimensions should be the same');
 end
 
 bottom      = 1;

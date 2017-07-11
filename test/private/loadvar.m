@@ -27,7 +27,7 @@ if isempty(var) && nargin==1
     value = filecontent.(varname{1});
     clear filecontent
   else
-    error('cannot read an unspecified variable in case of a file containing multiple variables');
+    ft_error('cannot read an unspecified variable in case of a file containing multiple variables');
   end
 
 elseif length(var)==1

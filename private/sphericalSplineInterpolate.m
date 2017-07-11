@@ -24,10 +24,10 @@ function [W,Gss,Gds,Hds]=sphericalSplineInterpolate(src,dest,lambda,order,type,t
 % made. This software and documents are distributed without any
 % warranty, express or implied. 
 
-if ( nargin < 3 || isempty(lambda) ) lambda=1e-5; end;
-if ( nargin < 4 || isempty(order) ) order=4; end;
-if ( nargin < 5 || isempty(type)) type='spline'; end;
-if ( nargin < 6 || isempty(tol) ) tol=eps; end;
+if ( nargin < 3 || isempty(lambda)) lambda=1e-5; end
+if ( nargin < 4 || isempty(order)) order=4; end
+if ( nargin < 5 || isempty(type)) type='spline'; end
+if ( nargin < 6 || isempty(tol)) tol=eps; end
 
 % map the positions onto the sphere (not using repop, by JMH)
 src  = src ./repmat(sqrt(sum(src.^2)),  size(src, 1), 1);  % src   = repop(src,'./',sqrt(sum(src.^2)));
@@ -44,7 +44,7 @@ cosDS = dest'*src; % angles between destination positions
 [Gds Hds]  = interpMx(cosDS,order,tol);  % [nDest x nSrc]
 
 % Include the regularisation
-if ( lambda>0 ) Gss = Gss+lambda*eye(size(Gss)); end;
+if ( lambda>0 ) Gss = Gss+lambda*eye(size(Gss)); end
 
 % Compute the mapping to the polynomial coefficients space % [nSrc+1 x nSrc+1]
 % N.B. this can be numerically unstable so use the PINV to solve..
@@ -64,7 +64,7 @@ return;
 %--------------------------------------------------------------------------
 function [G,H]=interpMx(cosEE,order,tol)
 % compute the interpolation matrix for this set of point pairs
-if ( nargin < 3 || isempty(tol) ) tol=1e-10; end;
+if ( nargin < 3 || isempty(tol) ) tol=1e-10; end
 G=zeros(size(cosEE)); H=zeros(size(cosEE));
 for i=1:numel(cosEE);
    x = cosEE(i);
@@ -81,7 +81,7 @@ for i=1:numel(cosEE);
       H(i) = H(i) + (n*n+n)*tmp;             % update function estimate, SLAP
       dG   = (abs(oGi-G(i))+dG)/2; dH=(abs(oHi-H(i))+dH)/2; % moving ave gradient est for convergence
       %fprintf('%d) dG =%g \t dH = %g\n',n,dG,dH);%abs(oGi-G(i)),abs(oHi-H(i)));
-      if ( dG<tol && dH<tol ) break; end;           % stop when tol reached
+      if ( dG<tol && dH<tol ) break; end           % stop when tol reached
    end
 end
 G= G./(4*pi);

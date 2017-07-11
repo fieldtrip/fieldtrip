@@ -29,13 +29,13 @@ function [mri, hdr, cpersist] = read_ctf_mri4(filename)
 fid = fopen(filename,'rb', 'ieee-be');
 
 if fid<=0
-  error(sprintf('could not open MRI file: %s\n', filename));
+  ft_error(sprintf('could not open MRI file: %s\n', filename));
 end
 
 [cpersist] = read_cpersist(fid);
 
 % turn warnings off
-ws = warning('off');
+ws = ft_warning('off');
 
 % general header information
 hdr.identifierString        = get_value(cpersist, '_CTFMRI_VERSION');      % CTF_MRI_FORMAT VER 4.1
@@ -118,7 +118,7 @@ for slice = 1:256
   elseif(hdr.dataSize == 2)
     slicedata = uint16(fread(fid, [256 256], 'uint16'));
   else
-    error('Unknown datasize in CTF MRI file');
+    ft_error('Unknown datasize in CTF MRI file');
   end;
 
   mri(:, :, slice) = slicedata;
@@ -217,8 +217,8 @@ hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rp
   function [value] = get_value(cpersist, key)
     idx = find(strcmp({cpersist.key}, key));
 
-    if(numel(idx) < 1), error('Specified key does not exist.'); end;
-    if(numel(idx) > 1), error('Specified key is not unique.'); end;
+    if(numel(idx) < 1), ft_error('Specified key does not exist.'); end;
+    if(numel(idx) > 1), ft_error('Specified key is not unique.'); end;
 
     value = cpersist(idx).value;
   end
@@ -232,7 +232,7 @@ hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rp
   function [cpersist] = read_cpersist(fid)
     magic = char(fread(fid, 4, 'char'))';
 
-    if(~strcmp(magic, 'WS1_')), error('Invalid CPersist header'); end;
+    if(~strcmp(magic, 'WS1_')), ft_error('Invalid CPersist header'); end;
 
     cpersist = struct('key', {}, 'value', {});
 
@@ -279,7 +279,7 @@ hdr.fiducial.head.rpa = ft_warp_apply(hdr.transformMRI2Head, hdr.fiducial.mri.rp
         vsize = fread(fid, 1, 'int32');
         value = char(fread(fid, vsize, 'char'))';
       otherwise
-        error(['Unsupported valuetype (' num2str(vtype) ') found in CPersist object']);
+        ft_error(['Unsupported valuetype (' num2str(vtype) ') found in CPersist object']);
     end
   end
 

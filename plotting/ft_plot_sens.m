@@ -114,7 +114,7 @@ elseif ft_senstype(sens, 'nirs')
   sensshape  = optoshape;
   sensize    = optosize;
 else
-  warning('unknown sensor array description');
+  ft_warning('unknown sensor array description');
   individual = false;
   sensshape  = [];
   sensize    = [];
@@ -141,14 +141,14 @@ end
 
 if ~isempty(ft_getopt(varargin, 'coilorientation'))
   % for backward compatibility, added on 17 Aug 2016
-  warning('the coilorientation option is deprecated, please use "orientation" instead')
+  ft_warning('the coilorientation option is deprecated, please use "orientation" instead')
   orientation = ft_getopt(varargin, 'coilorientation');
 end
 
 if ~isempty(ft_getopt(varargin, 'coildiameter'))
   % for backward compatibility, added on 6 July 2016
   % the sensize is the diameter for a circle, or the edge length for a square
-  warning('the coildiameter option is deprecated, please use "coilsize" instead')
+  ft_warning('the coildiameter option is deprecated, please use "coilsize" instead')
   sensize = ft_getopt(varargin, 'coildiameter');
 end
 
@@ -343,7 +343,7 @@ switch sensshape
         elseif (numel([poscoil negcoil]))==1
           % magnetometer
         elseif numel(poscoil)>1 || numel(negcoil)>1
-          error('cannot work with balanced gradiometer definition')
+          ft_error('cannot work with balanced gradiometer definition')
         end
       end
     end
@@ -358,7 +358,7 @@ switch sensshape
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
     end
   otherwise
-    error('incorrect shape');
+    ft_error('incorrect shape');
 end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
@@ -371,7 +371,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       case {'number' 'numbers'}
         str = num2str(i);
       otherwise
-        error('unsupported value for option ''label''');
+        ft_error('unsupported value for option ''label''');
     end % switch
     if isfield(sens, 'chanori')
       % shift the labels along the channel orientation, which is presumably orthogonal to the scalp

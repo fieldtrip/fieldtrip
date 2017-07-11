@@ -93,7 +93,7 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
     elseif checkchan(varargin{:}, 'unique')
       cfg.appenddim = 'chan';
     else
-      error('cfg.appenddim should be specified');
+      ft_error('cfg.appenddim should be specified');
     end
   else
     if checkchan(varargin{:}, 'identical') && checkfreq(varargin{:}, 'identical', cfg.tolerance)
@@ -103,7 +103,7 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
     elseif checkchan(varargin{:}, 'unique')
       cfg.appenddim = 'chan';
     else
-      error('cfg.appenddim should be specified');
+      ft_error('cfg.appenddim should be specified');
     end
   end
 end

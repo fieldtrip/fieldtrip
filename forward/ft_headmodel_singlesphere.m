@@ -43,7 +43,7 @@ conductivity = ft_getopt(varargin, 'conductivity', 1);
 
 if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
   % the geometrical units should be specified in the input mesh
-  error('the ''unit'' option is not supported any more');
+  ft_error('the ''unit'' option is not supported any more');
 end
 
 if isnumeric(mesh) && size(mesh,2)==3
@@ -59,15 +59,15 @@ end
 mesh = fixpos(mesh);
 
 if ~isstruct(mesh) || ~isfield(mesh, 'pos')
-  error('the input mesh should be a set of points or a single triangulated surface')
+  ft_error('the input mesh should be a set of points or a single triangulated surface')
 end
 
 if numel(conductivity)~=1
-  error('the conductivity should be a single number')
+  ft_error('the conductivity should be a single number')
 end
 
 if numel(mesh)~=1
-  error('fitting a single sphere requires a single mesh')
+  ft_error('fitting a single sphere requires a single mesh')
 end
 
 % start with an empty volume conductor

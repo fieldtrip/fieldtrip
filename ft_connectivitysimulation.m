@@ -209,6 +209,13 @@ switch cfg.method
       time{k}  = tim;
     end
 
+    % create the output data
+    simulated         = [];
+    simulated.trial   = trial;
+    simulated.time    = time;
+    simulated.fsample = cfg.fsample;
+    simulated.label   = label;
+
   case {'linear_mix'}
 
     fltpad = 50; %hard coded to avoid filtering artifacts
@@ -216,7 +223,7 @@ switch cfg.method
     delay  = delay - min(delay(:)); %make explicitly >= 0
     maxdelay = max(delay(:));
 
-    if iscell(cfg.mix),
+    if iscell(cfg.mix)
       %each trial has different mix
       mix = cfg.mix;
     else
@@ -231,12 +238,12 @@ switch cfg.method
     nmixsignal = size(mix{1}, 2); %number of "mixing signals"
     nsignal    = size(mix{1}, 1);
 
-    if numel(size(mix{1}))==2,
+    if numel(size(mix{1}))==2
       %mix is static, no function of time
       for tr = 1:cfg.ntrials
         mix{tr} = mix{tr}(:,:,ones(1,nsmp+maxdelay));
       end
-    elseif numel(size(mix{1}))==3 && size(mix{1},3)==nsmp,
+    elseif numel(size(mix{1}))==3 && size(mix{1},3)==nsmp
       %mix changes with time
       for tr = 1:cfg.ntrials
         mix{tr} = cat(3,mix{tr},mix{tr}(:,:,nsmp*ones(1,maxdelay)));
@@ -293,6 +300,14 @@ switch cfg.method
       % define time axis for this trial
       time{k}  = tim;
     end
+    
+    % create the output data
+    simulated         = [];
+    simulated.trial   = trial;
+    simulated.time    = time;
+    simulated.fsample = cfg.fsample;
+    simulated.label   = label;
+
   case 'ar_reverse'
     % generate a spectral transfer matrix, and a cross-spectral matrix
     % according to the specifications
@@ -391,27 +406,22 @@ switch cfg.method
     % estimate the ar-model coefficients
     a = transfer2coeffs(t.transfer,t.freq);
     
-    % recursively call this function to generate the data
-    tmpcfg = keepfields(cfg, {'fsample' 'nsignal' 'ntrials' 'triallength'});
-    tmpcfg.method = 'ar';
-    tmpcfg.params = a;
-    tmpcfg.noisecov = t.noisecov.*tmpcfg.fsample.*tmpcfg.triallength./2;
-    simulated        = ft_connectivitysimulation(tmpcfg);
-    [cfg, simulated] = rollback_provenance(cfg, simulated);
-    trial = simulated.trial;
-    time  = simulated.time;
-    label = simulated.label;
+    % recursively call this function to generate the data, this is
+    % somewhate tricky with respect to keeping the provenance info. Here,
+    % it is solved by removing from the cfg the original user-specified
+    % fields
+    cfgorig      = cfg;
+    cfg          = removefields(cfgorig, {'coupling' 'ampl' 'delay' 'bpfreq'});
+    cfg.method   = 'ar';
+    cfg.params   = a;
+    cfg.noisecov = t.noisecov.*cfg.fsample.*cfg.triallength./2;
+    simulated    = ft_connectivitysimulation(cfg);
+    cfg.previous = keepfields(cfgorig, {'coupling' 'ampl' 'delay' 'bpfreq'});
     
   otherwise
-    error('unknown method');
+    ft_error('unknown method');
 end
 
-% create the output data
-simulated         = [];
-simulated.trial   = trial;
-simulated.time    = time;
-simulated.fsample = cfg.fsample;
-simulated.label   = label;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -447,16 +457,16 @@ elseif numel(siz)==2
   isfull = false;
   %assert(~isempty(labelcmb), 'input data appears to be chancmb_freq, but labelcmb is missing');
 else
-  error('dimensionality of input data is not supported');
+  ft_error('dimensionality of input data is not supported');
 end
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  error('FieldTrip:transfer2coeffs', 'frequency axis is not evenly spaced');
+  ft_error('the frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
-  ft_warning('FieldTrip:transfer2coeffs', 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  ft_warning('when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   

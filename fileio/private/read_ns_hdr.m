@@ -37,7 +37,7 @@ function [hdr] = read_ns_hdr(filename)
 fid = fopen(filename,'r','ieee-le');
 
 if fid<0,
-    error(['cannot open ', filename]);
+    ft_error(['cannot open ', filename]);
 end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -310,7 +310,7 @@ elseif hdr.domain==1
   % data in frequency domain
 else
   % probably old datafile, assume the data to be in time domain
-  warning('assuming the data to be in time domain (domain was %d)', hdr.domain);
+  ft_warning('assuming the data to be in time domain (domain was %d)', hdr.domain);
   hdr.domain=0;
 end
 

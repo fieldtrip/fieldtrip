@@ -50,11 +50,11 @@ cmomnorm = conj(mom./abs(mom)); % only need to do conj() once
 n        = size(mom,1);
 ntap     = tapvec(1);
 if ~all(tapvec==ntap)
-  error('unequal number of tapers per observation is not yet supported');
+  ft_error('unequal number of tapers per observation is not yet supported');
 end
 % FIXME think about multiple tapers per trial
 %if ntap>1
-%  error('more than one taper per observation is not yet supported');
+%  ft_error('more than one taper per observation is not yet supported');
 %end
 
 % create a sparse matrix tra, that can be used as a right multiplying

@@ -189,7 +189,7 @@ end
 
 % check if the input has consistent datatypes
 if ~all(strcmp(dtype, dtype{1})) || ~all(hastime==hastime(1)) || ~all(hasfreq==hasfreq(1))
-  error('different datatypes are not allowed as input');
+  ft_error('different datatypes are not allowed as input');
 end
 dtype   = dtype{1};
 hastime = hastime(1);
@@ -197,10 +197,10 @@ hasfreq = hasfreq(1);
 
 % ensure that all inputs are sufficiently consistent
 if hastime && ~checktime(varargin{:}, 'identical', cfg.tolerance);
-  error('this function requires identical time axes for all input structures');
+  ft_error('this function requires identical time axes for all input structures');
 end
 if hasfreq && ~checkfreq(varargin{:}, 'identical', cfg.tolerance);
-  error('this function requires identical frequency axes for all input structures');
+  ft_error('this function requires identical frequency axes for all input structures');
 end
 
 %FIXME rename directionality and refchannel in more meaningful options
@@ -217,7 +217,7 @@ end
 
 if Ndata>1
   if (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) > 1)
-    error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
+    ft_error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
   elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
     tmpstyle = cfg.linestyle{1};
     cfg.linestyle = cell(Ndata , 1);
@@ -229,7 +229,7 @@ end
 
 % % interactive plotting is not allowed with more than 1 input
 % if numel(varargin)>1 && strcmp(cfg.interactive, 'yes')
-%   error('interactive plotting is not supported with more than 1 input data set');
+%   ft_error('interactive plotting is not supported with more than 1 input data set');
 % end
 
 dimord = varargin{1}.dimord;
@@ -244,7 +244,7 @@ dimtok = tokenize(dimord, '_');
 % data in the input. A more generic solution should be considered.
 
 if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; end
-if ~any(strcmp({'freq', 'freqmvar'}, dtype)),
+if ~any(strcmp({'freq', 'freqmvar'}, dtype))
   cfg = ft_checkconfig(cfg, 'createsubcfg', {'preproc'});
 end
 if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
@@ -262,7 +262,7 @@ end
 
 for i=1:Ndata
   % this is needed for correct treatment of GRAPHCOLOR later on
-  if nargin>1,
+  if nargin>1
     if ~isempty(inputname(i+1))
       iname{i+1} = inputname(i+1);
     else
@@ -339,7 +339,7 @@ end
 % check whether rpt/subj is present and remove if necessary
 % FIXME this should be implemented with avgoverpt in ft_selectdata
 hasrpt = sum(ismember(dimtok, {'rpt' 'subj'}));
-if strcmp(dtype, 'timelock') && hasrpt,
+if strcmp(dtype, 'timelock') && hasrpt
   tmpcfg = [];
   
   % disable hashing of input data (speeds up things)
@@ -366,12 +366,12 @@ if strcmp(dtype, 'timelock') && hasrpt,
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
   
-elseif strcmp(dtype, 'freq') && hasrpt,
+elseif strcmp(dtype, 'freq') && hasrpt
   % this also deals with fourier-spectra in the input
   % or with multiple subjects in a frequency domain stat-structure
   % on the fly computation of coherence spectrum is not supported
   for i=1:Ndata
-    if isfield(varargin{i}, 'crsspctrm'),
+    if isfield(varargin{i}, 'crsspctrm')
       varargin{i} = rmfield(varargin{i}, 'crsspctrm');
     end
   end
@@ -419,9 +419,9 @@ if ~strcmp(cfg.baseline, 'no')
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
       varargin{i} = ft_freqbaseline(cfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
-      error('Baseline correction is not supported for spectra without a time dimension');
+      ft_error('Baseline correction is not supported for spectra without a time dimension');
     else
-      warning('Baseline correction not applied, please set xparam');
+      ft_warning('Baseline correction not applied, please set xparam');
     end
   end
 end
@@ -438,7 +438,7 @@ haslabelcmb = isfield(varargin{1}, 'labelcmb');
 if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
-    error('no reference channel is specified');
+    ft_error('no reference channel is specified');
   end
   
   % check for refchannel being part of selection
@@ -450,7 +450,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
     end
     if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
         (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
-      error('cfg.refchannel is a not present in the (selected) channels)')
+      ft_error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
   
@@ -474,7 +474,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
   end
   
   for i=1:Ndata
-    if ~isfull,
+    if ~isfull
       % Convert 2-dimensional channel matrix to a single dimension:
       if isempty(cfg.directionality)
         sel1 = find(strcmp(cfg.refchannel, varargin{i}.labelcmb(:, 2)));
@@ -488,7 +488,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
       if length(sel1)+length(sel2)==0
-        error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+        ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
       end
       varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2], :, :);
       varargin{i}.label     = [varargin{i}.labelcmb(sel1, 1);varargin{i}.labelcmb(sel2, 2)];
@@ -513,9 +513,9 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
         meandir = 1;
         
       elseif strcmp(cfg.directionality, 'ff-fd')
-        error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotER');
+        ft_error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotER');
       elseif strcmp(cfg.directionality, 'fd-ff')
-        error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotER');
+        ft_error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_multiplotER');
       end %if directionality
     end %if ~isfull
   end %for i
@@ -570,7 +570,7 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
     seldat1 = match_str(varargin{i}.label, lay.label);   % indexes labels corresponding in input and layout
     seldat2 = match_str(varargin{i}.label, cfg.channel); % indexes labels corresponding in input and plot-selection
     if isempty(seldat1)
-      error('labels in data and labels in layout do not match');
+      ft_error('labels in data and labels in layout do not match');
     end
     data = dat(intersect(seldat1, seldat2), :);
     ymin = min([ymin min(min(min(data)))]);
@@ -644,7 +644,7 @@ for i=1:Ndata
   % Select the channels in the data that match with the layout:
   [seldat, sellay] = match_str(label, cfg.layout.label);
   if isempty(seldat)
-    error('labels in data and labels in layout do not match');
+    ft_error('labels in data and labels in layout do not match');
   end
   
   % gather the data of multiple input arguments
@@ -697,7 +697,7 @@ for m=1:length(layLabels)
   
   ft_plot_vector(xval, yval, 'width', width(m), 'height', height(m), 'hpos', layX(m), 'vpos', layY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'label', label, 'box', cfg.box, 'fontsize', cfg.fontsize);
   
-  if i==1,
+  if i==1
     % Keep ER plot coordinates (at centre of ER plot), and channel labels (will be stored in the figure's UserData struct):
     chanX(m) = X(m) + 0.5 * width(m);
     chanY(m) = Y(m) + 0.5 * height(m);

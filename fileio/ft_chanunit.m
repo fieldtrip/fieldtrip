@@ -112,7 +112,7 @@ elseif isfield(input, 'label')
   label   = input.label;
   numchan = length(label);
 else
-  error('the input that was provided to this function cannot be deciphered');
+  ft_error('the input that was provided to this function cannot be deciphered');
 end
 
 if isfield(input, 'chanunit')
@@ -170,13 +170,13 @@ elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysqui
         sel = strcmp('megplanar', input.chantype);
         if any(sel)
           chanunit(sel) = {assumption};
-          warning('assuming that planar MEG channel units are %s', assumption);
+          ft_warning('assuming that planar MEG channel units are %s', assumption);
         end
       else
         sel = strcmp('megplanar', input.chantype);
         if any(sel)
           chanunit(sel) = {'unknown'};
-          warning('cannot determine the units for the planar MEG channels');
+          ft_warning('cannot determine the units for the planar MEG channels');
         end
       end
     end
@@ -196,13 +196,13 @@ elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && 
     sel = strcmp('megplanar', input.chantype);
     if any(sel)
       chanunit(sel) = {assumption};
-      warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
+      ft_warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
     end
   else
     sel = strcmp('megplanar', input.chantype);
     if any(sel)
       chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
-      warning('cannot determine the units for the planar MEG channels');
+      ft_warning('cannot determine the units for the planar MEG channels');
     end
   end
   

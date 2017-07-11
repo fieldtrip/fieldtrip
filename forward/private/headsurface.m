@@ -87,7 +87,7 @@ elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
         % using innermost sphere
         radius = min(headmodel.r);
       otherwise
-        error('other surfaces cannot be constructed this way');
+        ft_error('other surfaces cannot be constructed this way');
     end
     if isfield(headmodel, 'o')
       origin = headmodel.o;
@@ -125,13 +125,13 @@ elseif ft_voltype(headmodel, 'localspheres')
   % local spheres MEG model, this also requires a gradiometer structure
   grad = sens;
   if ~isfield(grad, 'tra') || ~isfield(grad, 'coilpos')
-    error('incorrect specification for the gradiometer array');
+    ft_error('incorrect specification for the gradiometer array');
   end
   Nchans   = size(grad.tra, 1);
   Ncoils   = size(grad.tra, 2);
   Nspheres = size(headmodel.o, 1);
   if Nspheres~=Ncoils
-    error('there should be just as many spheres as coils');
+    ft_error('there should be just as many spheres as coils');
   end
   % for each coil, determine a surface point using the corresponding sphere
   vec = grad.coilpos - headmodel.o;
@@ -172,7 +172,7 @@ elseif ft_voltype(headmodel, 'bem') ||  ft_voltype(headmodel, 'singleshell')
       pos = headmodel.bnd(headmodel.source).pos;
       tri = headmodel.bnd(headmodel.source).tri;
     otherwise
-      error('other surfaces cannot be constructed this way');
+      ft_error('other surfaces cannot be constructed this way');
   end
 end
 
@@ -211,7 +211,7 @@ if ~isempty(inwardshift) && inwardshift~=0
     tri = fliplr(tri);
     ori = -ori;
   else
-    warning('cannot determine the orientation of the vertex normals');
+    ft_warning('cannot determine the orientation of the vertex normals');
     % nothing to do
   end
   % the orientation is outward, hence shift with a negative amount

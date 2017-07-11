@@ -164,13 +164,13 @@ if ischar(color) && ~strcmp(color, 'none')
 end
 
 if strcmp(highlightstyle, 'difference') && isempty(highlight)
-  warning('highlight is empty, highlighting the whole time interval');
+  ft_warning('highlight is empty, highlighting the whole time interval');
   highlight = ones(size(hdat));
 end
 
 if ~isempty(highlight)
   if numel(highlight)~=npos
-    error('the length of the highlight vector should correspond to the length of the data');
+    ft_error('the length of the highlight vector should correspond to the length of the data');
   else
     % make sure the vector points in the same direction as the data
     highlight = reshape(highlight, size(hdat));
@@ -201,7 +201,7 @@ if ischar(hlim)
       hlim = max(abs(hdat));
       hlim = [-hlim hlim];
     otherwise
-      error('unsupported option for hlim')
+      ft_error('unsupported option for hlim')
   end % switch
 end % if ischar
 
@@ -213,7 +213,7 @@ if ischar(vlim)
       vlim = max(abs(vdat(:)));
       vlim = [-vlim vlim];
     otherwise
-      error('unsupported option for vlim')
+      ft_error('unsupported option for vlim')
   end % switch
 end % if ischar
 
@@ -272,7 +272,7 @@ vdat = vdat + vpos;
 if ~isempty(highlight) && ~islogical(highlight)
   if ~all(highlight==0 | highlight==1)
     % only warn if really different from 0/1
-    warning('converting mask to logical values')
+    ft_warning('converting mask to logical values')
   end
   highlight=logical(highlight);
 end
@@ -349,7 +349,7 @@ switch highlightstyle
     
   case 'difference'
     if nline~=2
-      error('this only works if exactly two lines are plotted');
+      ft_error('this only works if exactly two lines are plotted');
     end
     hdatbeg = [hdat(:,1) (hdat(:,1:end-1) + hdat(:,2:end))/2            ];
     hdatend = [          (hdat(:,1:end-1) + hdat(:,2:end))/2 hdat(:,end)];
@@ -407,7 +407,7 @@ switch highlightstyle
         end
       end
     else
-      warning('do not know how to plot the lines in the appropriate color');
+      ft_warning('do not know how to plot the lines in the appropriate color');
       h = [];
     end
     if ~isempty(parent)
@@ -449,7 +449,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       xaxis = false;
       yaxis = true;
     otherwise
-      error('invalid specification of the "axis" option')
+      ft_error('invalid specification of the "axis" option')
   end
   
   if xaxis

@@ -42,7 +42,7 @@ if ft_nargin==0
   msg.message     = 'This function requires one or multiple input arguments, please refer to the documentation above';
   msg.identifier  = '';
   msg.stack       = stack;
-  error(msg);
+  ft_error(msg);
 end % if nargin
 
 % convert automatically from cell-array to structure
@@ -74,20 +74,20 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
       case 'keep'
         if ft_nargout>0
           % continue executing the parent function
-          warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
+          ft_warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
           ft_abort = false;
         else
           % stop executing the parent function
-          warning('output file %s is already present: aborting function execution', cfg.outputfile);
+          ft_warning('output file %s is already present: aborting function execution', cfg.outputfile);
           ft_abort = true;
         end
       case 'overwrite'
-        warning('output file %s is already present: it will be overwritten', cfg.outputfile);
+        ft_warning('output file %s is already present: it will be overwritten', cfg.outputfile);
         ft_abort = false;
       case 'error'
-        error('output file %s is already present', cfg.outputfile);
+        ft_error('output file %s is already present', cfg.outputfile);
       otherwise
-        error('invalid option for cfg.outputfilepresent');
+        ft_error('invalid option for cfg.outputfilepresent');
     end % case
   end
 else

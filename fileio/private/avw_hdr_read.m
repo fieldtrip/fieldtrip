@@ -45,7 +45,7 @@ if verbose,
 end
 
 if ~exist('fileprefix','var'),
-    error('...no input fileprefix - see help avw_hdr_read\n\n');
+    ft_error('...no input fileprefix - see help avw_hdr_read\n\n');
 end
 if ~exist('machine','var'), machine = 'ieee-le'; end
 
@@ -85,10 +85,10 @@ if exist(file),
     if ~isequal(avw.hdr.hk.sizeof_hdr,348)
         % Now throw an error
         if verbose, fprintf('...failed.\n'); end
-        error('...size of header not equal to 348 bytes!\n\n');
+        ft_error('...size of header not equal to 348 bytes!\n\n');
     end
 else
-    error('...cannot find file %s.hdr\n\n',file);
+    ft_error('...cannot find file %s.hdr\n\n',file);
 end
 
 if verbose

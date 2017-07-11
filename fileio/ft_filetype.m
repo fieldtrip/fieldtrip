@@ -1299,9 +1299,9 @@ end
 
 if strcmp(type, 'unknown')
   if ~exist(filename, 'file') && ~exist(filename, 'dir')
-    warning('file or directory "%s" does not exist, could not determine fileformat', filename);
+    ft_warning('file or directory "%s" does not exist, could not determine fileformat', filename);
   else
-    warning('could not determine filetype of %s', filename);
+    ft_warning('could not determine filetype of %s', filename);
   end
 end
 

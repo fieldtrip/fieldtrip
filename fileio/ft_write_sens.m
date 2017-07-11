@@ -49,6 +49,6 @@ switch format
     write_bioimage_mgrid(filename, sens);
     
   otherwise
-    error('unsupported format "%s"', format);
+    ft_error('unsupported format "%s"', format);
 end % switch format
 
