@@ -157,7 +157,7 @@ switch what
     tf = is_matlab() && matlabversion('2014b', Inf);
 
   case 'html'
-    tf = desktop('-inuse') && ~is_octave();
+    tf = ~is_octave() && usejava('desktop') && desktop('-inuse');
     
   otherwise
     ft_error('unsupported value for first argument: %s', what);
