@@ -179,20 +179,20 @@ for trlop = 1:numtrl
   
   % test the min, max and range against the specified thresholds
   if ~isempty(artfctdef.min) && minval<artfctdef.min
-    fprintf('threshold artifact scanning: trial %d from %d exceeds min-threshold\n', trlop, numtrl);
+    ft_info('threshold artifact scanning: trial %d from %d exceeds min-threshold\n', trlop, numtrl);
     artifact(end+1,1:2) = cfg.trl(trlop,1:2);
   elseif ~isempty(artfctdef.max) && maxval>artfctdef.max
-    fprintf('threshold artifact scanning: trial %d from %d exceeds max-threshold\n', trlop, numtrl);
+    ft_info('threshold artifact scanning: trial %d from %d exceeds max-threshold\n', trlop, numtrl);
     artifact(end+1,1:2) = cfg.trl(trlop,1:2);
   elseif ~isempty(artfctdef.range) && worstChanRange>artfctdef.range
-    fprintf('threshold artifact scanning: trial %d from %d exceeds range-threshold; max-range channel = %s\n', trlop, numtrl, hdr.label{channelindx(worstChanInd)});
+    ft_info('threshold artifact scanning: trial %d from %d exceeds range-threshold; max-range channel = %s\n', trlop, numtrl, hdr.label{channelindx(worstChanInd)});
     artifact(end+1,1:2) = cfg.trl(trlop,1:2);
   else
-    fprintf('threshold artifact scanning: trial %d from %d is ok\n', trlop, numtrl);
+    ft_info('threshold artifact scanning: trial %d from %d is ok\n', trlop, numtrl);
   end
 end
 
-fprintf('detected %d artifacts\n', size(artifact,1));
+ft_info('detected %d artifacts\n', size(artifact,1));
 
 % remember the details that were used here
 cfg.artfctdef.threshold          = artfctdef;
