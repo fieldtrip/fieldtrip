@@ -50,6 +50,7 @@ for g = 1:ngrids % grid loop
   end
 end
 
+% Update Grid2Elec
 for g = 1:ngrids % grid loop
   Grid2Elec{g} = match_str(ElecStrs, GridDescript{g}); % assign electrodes to grids
 end
@@ -122,28 +123,24 @@ for g = 1:ngrids % grid loop
     else
       GridDim(1) = 1; GridDim(2) = 16;
     end
-  elseif isequal(numel(Grid2Elec{g}), 15)
-    GridDim(1) = 1; GridDim(2) = 15;
-%   elseif isequal(numel(Grid2Elec{g}), 12)
-%     e6 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(6)]),:);
-%     e7 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(7)]),:);
-%     d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-%     if d6to7 > 15
-%       GridDim(1) = 2; GridDim(2) = 6;
-%     else
-%       GridDim(1) = 1; GridDim(2) = 12;
-%     end
-%   elseif isequal(numel(Grid2Elec{g}), 10)
-%     GridDim(1) = 1; GridDim(2) = 10;
-%   elseif isequal(numel(Grid2Elec{g}), 8)
-%     e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-%     e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-%     d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-%     if d4to5 < 15
-%       GridDim(1) = 1; GridDim(2) = 8;
-%     else
-%       GridDim(1) = 2; GridDim(2) = 4;
-%     end
+  elseif isequal(numel(Grid2Elec{g}), 12)
+    e6 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(6)]),:);
+    e7 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(7)]),:);
+    d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
+    if d6to7 > 15
+      GridDim(1) = 2; GridDim(2) = 6;
+    else
+      GridDim(1) = 1; GridDim(2) = 12;
+    end
+  elseif isequal(numel(Grid2Elec{g}), 8)
+    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
+    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
+    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
+    if d4to5 < 15
+      GridDim(1) = 1; GridDim(2) = 8;
+    else
+      GridDim(1) = 2; GridDim(2) = 4;
+    end
   else
     GridDim(1) = 1; GridDim(2) = numel(Grid2Elec{g});
     % error('At least one of the electrode tracts or grids has dimensions that are not supported by write_bioimage_mgrid. If electrodes are missing from a grid, enter NaN(1,3) for electrode position');
