@@ -35,7 +35,7 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
 %   cfg.maskparameter       = string, field in volume to be looked up, data in field should be logical
-%   cfg.maxqueryrange       = number, should be 1, 3, 5 (default = 1)
+%   cfg.maxqueryrange       = number, should be odd (default = 1)
 %
 % The configuration options for labels around a point of interest:
 %   cfg.output              = 'label'
@@ -148,8 +148,8 @@ elseif mask2label || roi2label
   volume = ft_checkdata(volume, 'datatype', 'source');
   ft_checkconfig(cfg, 'required', {'atlas', 'inputcoord'});
   
-  if isempty(intersect(cfg.maxqueryrange, [1 3 5]))
-    error('incorrect query range, should be one of [1 3 5]');
+  if isempty(intersect(cfg.maxqueryrange, 1:2:cfg.maxqueryrange))
+    error('incorrect query range, should be an odd number');
   end
   
   if roi2label
@@ -354,15 +354,23 @@ elseif mask2label || roi2label
   end
   for iVox = 1:length(sel)
     usedQR = 1;
-    label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 1);
+    label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 1, 'method', cfg.querymethod);
     if isempty(label) && cfg.maxqueryrange > 1
-      label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 3);
-      usedQR = 3;
+      for qr = 1:2:cfg.maxqueryrange
+        if isempty(label)
+          label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', qr, 'method', cfg.querymethod);
+          usedQR = qr;
+        end
+      end
     end
-    if isempty(label) && cfg.maxqueryrange > 3
-      label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 5);
-      usedQR = 5;
-    end
+%     if isempty(label) && cfg.maxqueryrange > 1
+%       label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 3);
+%       usedQR = 3;
+%     end
+%     if isempty(label) && cfg.maxqueryrange > 3
+%       label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 5);
+%       usedQR = 5;
+%     end
     if isempty(label)
       label = {'no_label_found'};
     elseif length(label) == 1
@@ -371,10 +379,14 @@ elseif mask2label || roi2label
     
     ind_lab = [];
     for iLab = 1:length(label)
-      ind_lab = [ind_lab find(strcmp(label{iLab}, labels.name))];
+      ind_lab = find(strcmp(label{iLab}, labels.name));
+      labels.count(ind_lab) = labels.count(ind_lab)+1; % labels.count should give the number of times a label was found within a query range
     end
     
-    labels.count(ind_lab) = labels.count(ind_lab) + (1/length(ind_lab));
+%     labels.count(ind_lab) = labels.count(ind_lab) + (1/length(ind_lab));
+%     % this merely gives each label a weight depending on the number of
+%     labels found within the query range. Using this method, all labels
+%     that were found will have the same number listed for labels.count
     for iFoundLab = 1:length(ind_lab)
       if isempty(labels.usedqueryrange{ind_lab(iFoundLab)})
         labels.usedqueryrange{ind_lab(iFoundLab)} = usedQR;
