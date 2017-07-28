@@ -183,7 +183,7 @@ for i=1:num
             sel{k}(t) = [];
           end
         end
-        label = [label; atlas.([fn{k} 'label'])(sel{k})]; % by using setdiff and/or unique, you even the count for each label, which should be preserved for ft_volumelookup
+        label = [label; atlas.([fn{k} 'label'])(sel{k})]; % by using setdiff and/or unique, the count for each label is lost, and ft_volumelookup cannot provide an accurate number for labels.count
       end
     end
   else

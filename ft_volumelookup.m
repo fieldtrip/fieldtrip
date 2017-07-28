@@ -363,14 +363,7 @@ elseif mask2label || roi2label
         end
       end
     end
-%     if isempty(label) && cfg.maxqueryrange > 1
-%       label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 3);
-%       usedQR = 3;
-%     end
-%     if isempty(label) && cfg.maxqueryrange > 3
-%       label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 5);
-%       usedQR = 5;
-%     end
+
     if isempty(label)
       label = {'no_label_found'};
     elseif length(label) == 1
@@ -384,9 +377,10 @@ elseif mask2label || roi2label
     end
     
 %     labels.count(ind_lab) = labels.count(ind_lab) + (1/length(ind_lab));
-%     % this merely gives each label a weight depending on the number of
+%     ^this gives each label a weight depending on the number of
 %     labels found within the query range. Using this method, all labels
-%     that were found will have the same number listed for labels.count
+%     that were found will have the same number listed for labels.count,
+%     which defeats the point of the labels.count field as I understand it
     for iFoundLab = 1:length(ind_lab)
       if isempty(labels.usedqueryrange{ind_lab(iFoundLab)})
         labels.usedqueryrange{ind_lab(iFoundLab)} = usedQR;
