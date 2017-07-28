@@ -43,6 +43,8 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
 %   cfg.maxqueryrange       = number, should be 1, 3, 5 (default = 1)
+%   cfg.querymethod         = 'sphere' searches voxels around the roi in a sphere (default)
+%                           = 'cube' searches voxels around the roi in a sphere
 %   cfg.round2nearestvoxel = 'yes' or 'no', voxel closest to point of interest is calculated (default = 'yes')
 %
 % The label output has a field "names", a field "count" and a field "usedqueryrange".
@@ -154,6 +156,7 @@ elseif mask2label || roi2label
   
   if roi2label
     cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'yes');
+    cfg.querymethod        = ft_getopt(cfg, 'querymethod', 'sphere');
   end
 end
 
@@ -353,14 +356,11 @@ elseif mask2label || roi2label
     sel = find(ismember(volume.pos, cfg.roi, 'rows')==1);
   end
   for iVox = 1:length(sel)
-    usedQR = 1;
-    label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', 1, 'method', cfg.querymethod);
-    if isempty(label) && cfg.maxqueryrange > 1
-      for qr = 1:2:cfg.maxqueryrange
-        if isempty(label)
-          label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', qr, 'method', cfg.querymethod);
-          usedQR = qr;
-        end
+    label = {}; 
+    for qr = 1:2:cfg.maxqueryrange
+      if isempty(label)
+        label = atlas_lookup(atlas, [volume.pos(sel(iVox),1) volume.pos(sel(iVox),2) volume.pos(sel(iVox),3)], 'inputcoord', cfg.inputcoord, 'queryrange', qr, 'method', cfg.querymethod);
+        usedQR = qr;
       end
     end
 
