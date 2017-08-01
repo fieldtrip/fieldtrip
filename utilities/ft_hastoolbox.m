@@ -131,7 +131,7 @@ url = {
   'MYSQL'         'see http://www.mathworks.com/matlabcentral/fileexchange/8663-mysql-database-connector'
   'ISO2MESH'      'see http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Home or contact Qianqian Fang'
   'DATAHASH'      'see http://www.mathworks.com/matlabcentral/fileexchange/31272'
-  'IBTB'          'see http://www.ibtb.org'
+  'IBTB'          'see https://github.com/selimonat/InformationBreakdownToolbox'
   'ICASSO'        'see http://www.cis.hut.fi/projects/ica/icasso'
   'XUNIT'         'see http://www.mathworks.com/matlabcentral/fileexchange/22846-matlab-xunit-test-framework'
   'PLEXON'        'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
@@ -327,7 +327,7 @@ switch toolbox
   case 'DATAHASH'
     dependency = {'DataHash'};
   case 'IBTB'
-    dependency = {'make_ibtb','binr'};
+    dependency = {'binr','information'};
   case 'ICASSO'
     dependency = {'icassoEst'};
   case 'XUNIT'
