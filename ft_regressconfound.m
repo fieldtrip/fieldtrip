@@ -25,7 +25,7 @@ function [data] = ft_regressconfound(cfg, datain)
 %   cfg.statistics  = string, 'yes' or 'no', whether to add the statistics
 %                     on the regression weights to the output (default = 'no')
 %   cfg.beta        = string, 'yes' or 'no', whether to add the beta
-%                     values as a field to the output (default = 'yes')
+%                     values as a field to the output (default = 'no')
 %   cfg.model       = string, 'yes' or 'no', whether to add the model to
 %                     the output (default = 'no')
 %   cfg.ftest       = string array, {N X Nconfounds}, to F-test whether
@@ -96,7 +96,7 @@ cfg.reject     = ft_getopt(cfg, 'reject', 'all');
 cfg.normalize  = ft_getopt(cfg, 'normalize', 'yes');
 cfg.model      = ft_getopt(cfg, 'model', 'no');
 cfg.statistics = ft_getopt(cfg, 'statistics', 'no');
-cfg.beta       = ft_getopt(cfg, 'beta', 'yes');
+cfg.beta       = ft_getopt(cfg, 'beta', 'no');
 cfg.ftest      = ft_getopt(cfg, 'ftest');
 cfg.parameter  = ft_getopt(cfg, 'parameter'); % the default is handled further down
 
