@@ -97,6 +97,7 @@ hascoilpos = 0;
 hascoilori = 0;
 haschanori = 0;
 hasoptopos = 0;
+hastra     = 0;
 haslabelold = 0;
 haschanposold = 0;
 for i=1:length(varargin)
