@@ -930,6 +930,8 @@ switch key
     else
       % do nothing
     end
+    opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
+    opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
     
     setappdata(h, 'opt', opt);
     cb_redraw(h);
