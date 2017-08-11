@@ -108,10 +108,13 @@ fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
 
 % ft_selectdata cannot create the union of the data contained in cell-arrays
 % make a dummy without the actual data, but keep trialinfo/sampleinfo/grad/elec/opto
+% also remove the topo/unmixing/topolabel, if present, otherwise it is not
+% possible to concatenate raw and comp data. Note that in append_common the
+% topo etc. is removed anyhow
 dummy = cell(size(varargin));
 for i=1:numel(varargin)
-  dummy{i} = removefields(varargin{i}, {'trial', 'time'});
-  % add a dummy data field, this cause the datatype to become 'chan'
+  dummy{i} = removefields(varargin{i}, {'trial', 'time', 'topo', 'unmixing', 'topolabel'});
+  % add a dummy data field, this causes the datatype to become 'chan'
   dummy{i}.dummy       = ones(numel(dummy{i}.label),1);
   dummy{i}.dummydimord = 'chan';
 end
