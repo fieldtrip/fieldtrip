@@ -284,7 +284,7 @@ switch headerformat
     hdr.nTrials     = orig.TotalEpochs;
     hdr.label       = orig.ChannelOrder(:);
     [hdr.grad, elec] = bti2grad(orig);
-    if ~isempty(elec),
+    if ~isempty(elec)
       hdr.elec = elec;
     end
     
@@ -888,7 +888,7 @@ switch headerformat
     end
     
     % get hdr info from xml files
-    ws = warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
+    ws = warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain header info...')
     for i = 1:numel(xmlfiles)
@@ -965,7 +965,8 @@ switch headerformat
           % this should be consistent with ft_senslabel
           hdr.label{iSens} = ['E' num2str(iSens)];
         end
-      else ft_warning('found less lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
+      else
+        ft_warning('found less lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
         for iSens = 1:orig.signal(1).blockhdr(1).nsignals
           % this should be consistent with ft_senslabel
           hdr.label{iSens} = ['E' num2str(iSens)];
@@ -985,7 +986,8 @@ switch headerformat
             for iSens = length(hdr.label)+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
               hdr.label{iSens} = ['s2_unknown', num2str(iSens)];
             end
-          else ft_warning('found more lables in xml.pnsSet than channels in signal 2, thus can not use info in pnsSet, and labeling with s2_eN instead')
+          else
+            ft_warning('found more lables in xml.pnsSet than channels in signal 2, thus can not use info in pnsSet, and labeling with s2_eN instead')
             for iSens = orig.signal(1).blockhdr(1).nsignals+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
               hdr.label{iSens} = ['s2_E', num2str(iSens)];
             end
@@ -1784,7 +1786,7 @@ switch headerformat
       info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
       
     elseif isaverage
-      try,
+      try
         evoked_data    = fiff_read_evoked_all(filename);
         vartriallength = any(diff([evoked_data.evoked.first])) || any(diff([evoked_data.evoked.last]));
         if vartriallength
