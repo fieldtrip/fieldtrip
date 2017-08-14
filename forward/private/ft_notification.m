@@ -67,16 +67,6 @@ end
 % remove this function itself and the calling function
 stack = stack(3:end);
 
-if strcmp(level, 'warning')
-  ws = warning;
-  % warnings should be on in general
-  warning on
-  % the backtrace is handled by this function
-  warning off backtrace
-  % the verbose message is handled by this function
-  warning off verbose
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% handle the defaults
 
@@ -98,18 +88,31 @@ if ~ismember('all', {s.identifier})
 end
 
 % set the default backtrace state
+defaultbacktrace = false;
 if ~ismember('backtrace', {s.identifier})
   switch level
     case {'debug' 'info' 'notice'}
       s = setstate(s, 'backtrace', 'off');
-    case {'warning' 'error'}
+    case 'warning'
+      defaultbacktrace = true;
+      t = warning('query', 'backtrace'); % get the default state
+      s = setstate(s, 'backtrace', t.state);
+    case 'error'
       s = setstate(s, 'backtrace', 'on');
   end % switch
 end
 
 % set the default verbose state
+defaultverbose = false;
 if ~ismember('verbose', {s.identifier})
-  s = setstate(s, 'verbose', 'off');
+  switch level
+    case 'warning'
+      defaultverbose = true;
+      t = warning('query', 'verbose');% get the default state
+      s = setstate(s, 'verbose', t.state);
+    otherwise
+      s = setstate(s, 'verbose', 'off');
+  end
 end
 
 % set the default timeout
@@ -134,6 +137,17 @@ else
   defaultId = '';
 end
 
+if strcmp(level, 'warning')
+  ws = warning;
+  % warnings should be on in general
+  warning on
+  % the backtrace is handled by this function
+  warning off backtrace
+  % the verbose message is handled by this function
+  warning off verbose
+end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set the notification state according to the input
 
@@ -155,6 +169,12 @@ switch varargin{1}
       % switch a specific item on
       msgId = varargin{2};
       s = setstate(s, msgId, 'on');
+      if strcmp(msgId, 'backtrace')
+        defaultbacktrace = false;
+      end
+      if strcmp(msgId, 'verbose')
+        defaultverbose = false;
+      end
       % return the message state of all
       varargout{1} = getreturnstate(s, msgId);
     else
@@ -169,6 +189,12 @@ switch varargin{1}
       % switch a specific item off
       msgId = varargin{2};
       s = setstate(s, msgId, 'off');
+      if strcmp(msgId, 'backtrace')
+        defaultbacktrace = false;
+      end
+      if strcmp(msgId, 'verbose')
+        defaultverbose = false;
+      end
       % return the specific message state
       varargout{1} = getreturnstate(s, msgId);
     else
@@ -367,6 +393,14 @@ end % switch varargin{1}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% update the global variable
+if defaultbacktrace && ~isempty(s)
+  % do not keep the default, it will be determined again on the next call
+  s = s(~strcmp({s.identifier}, 'backtrace'));
+end
+if defaultverbose && ~isempty(s)
+  % do not keep the default, it will be determined again on the next call
+  s = s(~strcmp({s.identifier}, 'verbose'));
+end
 ft_default.notification.(level) = s;
 
 if strcmp(level, 'warning')
