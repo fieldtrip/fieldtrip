@@ -64,8 +64,16 @@ switch stack(2).name
     error('this function cannot be called from %s', stack(2).name);
 end
 
-% remove this function itself and the calling function
+% remove this function itself and the ft_xxx calling function
 stack = stack(3:end);
+
+% remove the non-FieldTrip functions from the path, these should not be part of the default message identifier
+keep = true(size(stack));
+[v, p] = ft_version;
+for i=1:numel(stack)
+  keep(i) = strncmp(p, stack(i).file, length(p));
+end
+stack = stack(keep);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% handle the defaults
@@ -384,7 +392,11 @@ switch varargin{1}
       
       % decide whether a verboe message should be shown
       if istrue(getstate(s, 'verbose'))
-        fprintf('Type "ft_%s off %s" to suppress this message.\n', level, msgId)
+        if ~isempty(msgId)
+          fprintf('Type "ft_%s off %s" to suppress this message.\n', level, msgId)
+        else
+          fprintf('Type "ft_%s off" to suppress this message.\n', level)
+        end
       end
       
     end % if msgState is on
