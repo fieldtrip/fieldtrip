@@ -115,7 +115,7 @@ dummy = cell(size(varargin));
 for i=1:numel(varargin)
   dummy{i} = removefields(varargin{i}, {'trial', 'time'});
   if strcmp(cfg.appenddim, 'chan')
-    dummy{i} = removevields(dummy{i}, {'topo', 'unmixing', 'topolabel'});
+    dummy{i} = removefields(dummy{i}, {'topo', 'unmixing', 'topolabel'});
   end
   % add a dummy data field, this causes the datatype to become 'chan'
   dummy{i}.dummy       = ones(numel(dummy{i}.label),1);
