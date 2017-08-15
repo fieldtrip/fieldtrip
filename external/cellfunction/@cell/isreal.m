@@ -1,3 +1,3 @@
 function output = isreal(input)
 
-output = cellfun(@isreal, input, 'uniformoutput', false);
+output = all(reshape(cell2mat(cellfun(@isreal, input, 'uniformoutput', false)),[],1));
