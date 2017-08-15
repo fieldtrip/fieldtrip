@@ -29,7 +29,7 @@ function [cfg] = ft_clusterplot(cfg, stat)
 % See also:
 %   FT_TOPOPLOTTFR, FT_TOPOPLOTER, FT_SINGLEPLOTER
 
-% Copyright (C) 2007, Ingrid Nieuwenhuis, F.C. Donders Centre
+% Copyright (C) 2007, F.C. Donders Centre, Ingrid Nieuwenhuis
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

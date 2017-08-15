@@ -3,17 +3,17 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % FT_SOURCEANALYSIS performs beamformer dipole analysis on EEG or MEG data
 % after preprocessing and a timelocked or frequency analysis
 %
-% Use as either
+% Use as
 %   [source] = ft_sourceanalysis(cfg, freq)
+% or 
 %   [source] = ft_sourceanalysis(cfg, timelock)
 %
-% where the data in freq or timelock should be organised in a structure
+% where the second input argument with the data should be organised in a structure
 % as obtained from the FT_FREQANALYSIS or FT_TIMELOCKANALYSIS function. The
-% configuration "cfg" is a structure containing information about
-% source positions and other options.
+% configuration "cfg" is a structure containing information about source positions
+% and other options.
 %
-% The different source reconstruction algorithms that are implemented
-% are
+% The different source reconstruction algorithms that are implemented are
 %   cfg.method     = 'lcmv'    linear constrained minimum variance beamformer
 %                    'sam'     synthetic aperture magnetometry
 %                    'dics'    dynamic imaging of coherent sources
@@ -123,7 +123,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % cfg.trialweight   = 'equal' or 'proportional'
 % cfg.powmethod     = 'lambda1' or 'trace'
 
-% Copyright (c) 2003-2008, Robert Oostenveld, F.C. Donders Centre
+% Copyright (c) 2003-2008, F.C. Donders Centre, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

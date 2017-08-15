@@ -83,7 +83,7 @@ function [outim] = ft_sliceinterp(cfg, ininterp)
 %
 % See also FT_SOURCEANALYSIS, FT_VOLUMERESLICE
 
-% Copyright (C) 2004, Markus Siegel, markus.siegel@fcdonders.kun.nl
+% Copyright (C) 2004, Markus Siegel
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
