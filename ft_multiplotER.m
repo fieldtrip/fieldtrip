@@ -313,7 +313,8 @@ if isfield(varargin{1}, 'label')
   % only do the channel selection when it can actually be done,
   % i.e. when the data are bivariate ft_selectdata will crash, moreover
   % the bivariate case is handled below
-  tmpcfg = keepfields(cfg, {'channel', 'showcallinfo'});
+  %tmpcfg = keepfields(cfg, {'channel', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'channel', 'showcallinfo','trials'}); % HACK BY JULIAN!
   tmpvar = varargin{1};
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
@@ -346,6 +347,8 @@ if strcmp(dtype, 'timelock') && hasrpt
   tmpcfg.trackcallinfo = 'no';
   
   tmpcfg.trials = cfg.trials;
+  oldtrialsel = cfg.trials; % HACK BY JULIAN!
+  tmpcfg.trials = 'all'; % HACK BY JULIAN!
   for i=1:Ndata
     % save mask (timelockanalysis will remove it)
     if ~isempty(cfg.maskparameter)
@@ -362,6 +365,7 @@ if strcmp(dtype, 'timelock') && hasrpt
     if ~isempty(cfg.maskparameter)
       varargin{i}.(cfg.maskparameter) = tmpmask;
     end
+    varargin{i}.cfg.trials = oldtrialsel; % HACK BY JULIAN!
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
