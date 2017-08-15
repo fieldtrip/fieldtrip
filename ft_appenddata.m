@@ -110,10 +110,13 @@ fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
 % make a dummy without the actual data, but keep trialinfo/sampleinfo/grad/elec/opto
 % also remove the topo/unmixing/topolabel, if present, otherwise it is not
 % possible to concatenate raw and comp data. Note that in append_common the
-% topo etc. is removed anyhow
+% topo etc. is removed anyhow, when appenddim = 'chan'
 dummy = cell(size(varargin));
 for i=1:numel(varargin)
-  dummy{i} = removefields(varargin{i}, {'trial', 'time', 'topo', 'unmixing', 'topolabel'});
+  dummy{i} = removefields(varargin{i}, {'trial', 'time'});
+  if strcmp(cfg.appenddim, 'chan')
+    dummy{i} = removevields(dummy{i}, {'topo', 'unmixing', 'topolabel'});
+  end
   % add a dummy data field, this causes the datatype to become 'chan'
   dummy{i}.dummy       = ones(numel(dummy{i}.label),1);
   dummy{i}.dummydimord = 'chan';
