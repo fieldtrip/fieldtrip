@@ -219,6 +219,7 @@ elseif isfield(data, 'labelcmb') && strcmp(cfg.interactive, 'no')
 end
 
 % check whether rpt/subj is present and remove if necessary and whether
+% FIXME this should be done with ft_selectdata and avgoverrpt
 hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
 if hasrpt
   % this also deals with fourier-spectra in the input
@@ -318,8 +319,8 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     info.dataname = '';
     guidata(h, info);
     %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
-    set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonDownFcn'});
     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotTFR, cfg, data}, 'event', 'WindowButtonMotionFcn'});
     return
   end
@@ -591,18 +592,18 @@ if istrue(cfg.showscale)
     if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
       mask = ~isnan(cdata);
       mask = double(mask);
-      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k), 'height', lay.height(k))
     elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
       mask = ~isnan(cdata);
       mask = mask .* mdata;
       mask = double(mask);
-      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k), 'height', lay.height(k))
     elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
       mask = mdata;
       mask = double(mask);
-      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k), 'height', lay.height(k))
     else
-      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k, 1), 'height', lay.height(k, 1))
+      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', lay.pos(k, 1), 'vpos', lay.pos(k, 2), 'width', lay.width(k), 'height', lay.height(k))
     end
     % Currently the handle isn't being used below, this is here for possible use in the future
     h = findobj('tag', 'cip');
