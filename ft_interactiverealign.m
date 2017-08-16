@@ -1,29 +1,32 @@
-function cfg = ft_interactiverealign(cfg)
+function [cfg] = ft_interactiverealign(cfg)
 
-% FT_INTERACTIVEREALIGN interactively rotates, scales and translates
-% electrode positions to template electrode positions or towards
-% the head surface.
+% FT_INTERACTIVEREALIGN allows the user to interactively translate, rotate and scale an
+% individual geometrical object to a template geometrical object. It can for example be used
+% to align EEG electrodes to a model of the scalp surface.
 %
 % Use as
 %   [cfg] = ft_interactiverealign(cfg)
 %
-% The configuration structure should contain the individuals geometrical
-% objects that have to be realigned as
+% The configuration structure should contain the individuals geometrical object that
+% has to be realigned
 %  cfg.individual.elec           = structure
 %  cfg.individual.grad           = structure
 %  cfg.individual.headmodel      = structure, see FT_PREPARE_HEADMODEL
-%  cfg.individual.headmodelstyle = 'edge', 'surface' or 'both' (default = 'edge')
+%  cfg.individual.headmodelstyle = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
 %  cfg.individual.headshape      = structure, see FT_READ_HEADSHAPE
-%  cfg.individual.headshapestyle = 'vertex', 'surface' or 'both' (default = 'vertex')
+%  cfg.individual.headshapestyle = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
 %
-% The configuration structure should also contain the geometrical
-% objects of a template that serves as target
+% The configuration structure should also contain the geometrical object of a
+% template that serves as target
 %  cfg.template.elec           = structure
 %  cfg.template.grad           = structure
 %  cfg.template.headmodel      = structure, see FT_PREPARE_HEADMODEL
-%  cfg.template.headmodelstyle = 'edge', 'surface' or 'both' (default = 'edge')
+%  cfg.template.headmodelstyle = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
 %  cfg.template.headshape      = structure, see FT_READ_HEADSHAPE
-%  cfg.template.headshapestyle = 'vertex', 'surface' or 'both' (default = 'vertex')
+%  cfg.template.headshapestyle = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
+%
+% You can specify one or multiple individual objects which will all be realigned and
+% one or multiple template objects.
 %
 % See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS,
 % FT_READ_SENS, FT_READ_VOL, FT_READ_HEADSHAPE
@@ -347,6 +350,10 @@ if ~isempty(template.headmodel)
     vertexcolor = 'none';
     edgecolor   = 'none';
     facecolor   = 'skin';
+  elseif strcmp(template.headmodelstyle, 'vertex')
+    vertexcolor = 'k';
+    edgecolor   = 'none';
+    facecolor   = 'none';
   elseif strcmp(template.headmodelstyle, 'both')
     vertexcolor = 'none';
     edgecolor   = 'k';
@@ -367,6 +374,10 @@ if ~isempty(individual.headmodel)
     vertexcolor = 'none';
     edgecolor   = 'none';
     facecolor   = 'skin';
+  elseif strcmp(individual.headmodelstyle, 'vertex')
+    vertexcolor = 'k';
+    edgecolor   = 'none';
+    facecolor   = 'none';
   elseif strcmp(individual.headmodelstyle, 'both')
     vertexcolor = 'none';
     edgecolor   = 'k';
@@ -387,6 +398,10 @@ if ~isempty(template.headshape)
       vertexcolor = 'none';
       edgecolor   = 'none';
       facecolor   = 'skin';
+    elseif strcmp(template.headshapestyle, 'vertex')
+      vertexcolor = 'k';
+      edgecolor   = 'none';
+      facecolor   = 'none';
     elseif strcmp(template.headshapestyle, 'both')
       vertexcolor = 'none';
       edgecolor   = 'k';
@@ -406,6 +421,10 @@ if ~isempty(individual.headshape)
       vertexcolor = 'none';
       edgecolor   = 'none';
       facecolor   = 'skin';
+    elseif strcmp(individual.headshapestyle, 'vertex')
+      vertexcolor = 'k';
+      edgecolor   = 'none';
+      facecolor   = 'none';
     elseif strcmp(individual.headshapestyle, 'both')
       vertexcolor = 'none';
       edgecolor   = 'k';
