@@ -33,7 +33,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.showoutline   = 'yes' or 'no' (default = 'no')
 %   cfg.showscale     = 'yes' or 'no' (default = 'yes')
 %   cfg.showcomment   = 'yes' or 'no' (default = 'yes')
-%   cfg.comment       = string of text to add to the graph at the location of the COMNT in the 
+%   cfg.comment       = string of text to add to the graph at the location of the COMNT in the
 %                       layout (default consists of the date and the vertical limits)
 %   cfg.fontsize      = font size of comment and labels (default = 8)
 %   cfg.interactive   = 'yes' or 'no', make the plot interactive (default = 'yes')
@@ -196,10 +196,10 @@ hastime = hastime(1);
 hasfreq = hasfreq(1);
 
 % ensure that all inputs are sufficiently consistent
-if hastime && ~checktime(varargin{:}, 'identical', cfg.tolerance);
+if hastime && ~checktime(varargin{:}, 'identical', cfg.tolerance)
   ft_error('this function requires identical time axes for all input structures');
 end
-if hasfreq && ~checkfreq(varargin{:}, 'identical', cfg.tolerance);
+if hasfreq && ~checkfreq(varargin{:}, 'identical', cfg.tolerance)
   ft_error('this function requires identical frequency axes for all input structures');
 end
 
@@ -306,14 +306,14 @@ elseif isfield(cfg, 'channel') && isfield(varargin{1}, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
-% perform channel selection, unless in the other plotting functions this
+% Perform channel selection, unless in the other plotting functions this
 % can always be done because ft_multiplotER is the entry point into the
-% interactive stream, but will not be revisited
+% interactive stream, but will not be revisited.
 if isfield(varargin{1}, 'label')
   % only do the channel selection when it can actually be done,
   % i.e. when the data are bivariate ft_selectdata will crash, moreover
   % the bivariate case is handled below
-  tmpcfg = keepfields(cfg, {'channel', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
   tmpvar = varargin{1};
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
@@ -346,8 +346,10 @@ if strcmp(dtype, 'timelock') && hasrpt
   tmpcfg.trackcallinfo = 'no';
   
   tmpcfg.trials = cfg.trials;
+  oldtrialsel   = cfg.trials; % remember the user-supplied selection
+  tmpcfg.trials = 'all';      % the actual selection has been done with ft_selectdata
   for i=1:Ndata
-    % save mask (timelockanalysis will remove it)
+    % save the mask, since ft_timelockanalysis will remove it
     if ~isempty(cfg.maskparameter)
       tmpmask = varargin{i}.(cfg.maskparameter);
     end
@@ -358,10 +360,11 @@ if strcmp(dtype, 'timelock') && hasrpt
       varargin{i} = rmfield(varargin{i}, 'avg');
     end
     
-    % put back mask
+    % put the mask back
     if ~isempty(cfg.maskparameter)
       varargin{i}.(cfg.maskparameter) = tmpmask;
     end
+    varargin{i}.cfg.trials = oldtrialsel; % remember the user-supplied selection rather than 'all'
   end
   dimord        = varargin{1}.dimord;
   dimtok        = tokenize(dimord, '_');
@@ -467,8 +470,8 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
     info.label = lay.label;
     guidata(h, info);
     %set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'callback', {@select_topoplotER, cfg, data}});
-    set(gcf, 'WindowButtonUpFcn',  {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonDownFcn'});
     set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_multiplotER, cfg, varargin{1}}, 'event', 'WindowButtonMotionFcn'});
     return
   end
