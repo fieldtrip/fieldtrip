@@ -14,7 +14,7 @@ function ft_plot_axes(object, varargin)
 %   'axisscale'    = scaling factor for the reference axes and sphere (default = 1)
 %   'unit'         = string, convert the data to the specified geometrical units (default = [])
 %   'fontcolor'    = string, color specification (default = [1 .5 0], i.e. orange)
-%   'fontsize'     = number, sets the size of the text (default = 10)
+%   'fontsize'     = number, sets the size of the text (default is automatic)
 %   'fontunits'    =
 %   'fontname'     =
 %   'fontweight'   =
@@ -141,4 +141,3 @@ text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'linewidth', 2, 'color', fontco
 if ~prevhold
   hold off
 end
-
