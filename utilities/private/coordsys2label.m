@@ -15,7 +15,7 @@ function [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 %   0) 'right'              i.e. only the direction that it is pointing to
 %   1) {'left' 'right'}     i.e. both the directions that it is pointing from and to
 %
-% See also FT_DETERMINE_COORDSYS, FT_PLOT_AXES, FT_HEADCOORDINATES
+% See also FT_DETERMINE_COORDSYS, FT_PLOT_AXES, FT_HEADCOORDINATES, SETVIEWPOINT
 
 % Copyright (C) 2017, Robert Oostenveld
 %
