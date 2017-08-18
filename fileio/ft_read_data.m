@@ -271,7 +271,7 @@ if checkboundary && hdr.nTrials>1
   end
 end
 
-if any(strcmp(dataformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'mega_neurone'}))
+if any(strcmp(dataformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone'}))
   % caching for these formats is handled in the main section and in ft_read_header
 else
   % implement the caching in a data-format independent way
