@@ -156,13 +156,6 @@ for i=1:length(fn)
   end
 end
 
-if isempty(coordsys)
-  i = find(hastemplate, 1, 'first');
-  ft_notice('please specify the coordinate system of the "%s" structure\n', fn{i});
-  template.(fn{i}) = ft_determine_coordsys(template.(fn{i}));
-  coordsys = template.(fn{i}).coordsys;
-end
-
 % ensure that the headshape surface is triangulated
 if ~isempty(template.headshape)
   if ~isfield(template.headshape, 'tri') || isempty(template.headshape.tri)
@@ -193,9 +186,20 @@ setappdata(fig, 'toggle_axes', 1);
 setappdata(fig, 'toggle_grid', 1);
 
 % add the GUI elements
-cb_creategui(gca);
-cb_redraw(gca);
+cb_creategui(gcf);
+cb_redraw(gcf);
 rotate3d on
+
+if isempty(coordsys) || strcmp(coordsys, 'unknown')
+  ft_notice('the template coordinate system is unknown, selecting the viewpoint is not possible');
+  ft_uilayout(gcf, 'tag', 'viewpointbtn', 'Visible', 'off');
+else
+  [labelx, labely, labelz] = coordsys2label(coordsys, 2, 0);
+  ft_notice('the template coordinate system is "%s"', coordsys);
+  ft_info('the positive X-axis is pointing to %s', labelx);
+  ft_info('the positive Y-axis is pointing to %s', labely);
+  ft_info('the positive Z-axis is pointing to %s', labelz);
+end
 
 cleanup = false;
 while ~cleanup
@@ -209,6 +213,8 @@ cfg.m = getappdata(fig, 'transform');
 cfg.m;
 
 delete(fig);
+
+% FIXME the output geometry is always in mm
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -258,14 +264,14 @@ ft_uilayout(fig, 'tag', 'ty',      'BackgroundColor', [0.8 0.8 0.8], 'width',  C
 ft_uilayout(fig, 'tag', 'tz',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
 
 % control buttons
-uicontrol('tag', 'viewbtn',       'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'top|bottom|left|right|front|back', 'value',  1, 'callback', @cb_view);
+uicontrol('tag', 'viewpointbtn',  'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'top|bottom|left|right|front|back', 'value',  1, 'callback', @cb_viewpoint);
 uicontrol('tag', 'redisplaybtn',  'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay',    'value', [], 'callback', @cb_redraw);
 uicontrol('tag', 'applybtn',      'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',        'value', [], 'callback', @cb_apply);
 uicontrol('tag', 'toggle labels', 'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle label', 'value',  0,  'callback', @cb_redraw);
 uicontrol('tag', 'toggle axes',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle axes',  'value',  getappdata(fig, 'toggle_axes'),  'callback', @cb_redraw);
 uicontrol('tag', 'toggle grid',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle grid',  'value',  getappdata(fig, 'toggle_grid'),  'callback', @cb_redraw);
 uicontrol('tag', 'quitbtn',       'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',         'value',  1,  'callback', @cb_quit);
-ft_uilayout(fig, 'tag', 'viewbtn',        'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-2*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+ft_uilayout(fig, 'tag', 'viewpointbtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-2*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 ft_uilayout(fig, 'tag', 'redisplaybtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 ft_uilayout(fig, 'tag', 'applybtn',       'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-5*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 ft_uilayout(fig, 'tag', 'toggle labels',  'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-6*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
@@ -455,7 +461,7 @@ if ~getappdata(fig, 'cleanup')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_view(h, eventdata)
+function cb_viewpoint(h, eventdata)
 
 fig       = getparent(h);
 coordsys  = getappdata(fig, 'coordsys');

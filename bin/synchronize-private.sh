@@ -185,6 +185,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(utilities/private/coordsys2label.m)
 ARRAY+=(plotting/private/coordsys2label.m)
+ARRAY+=(private/coordsys2label.m)
 sync ${ARRAY[*]}
 
 ################################################################################

@@ -2,17 +2,21 @@ function setviewpoint(ax, coordsys, viewpoint)
 
 % SETVIEWPOINT changes the viewpoint for a 3D image that contains data in a known coordinate system
 %
-% Use as 
+% Use as
 %   setviewport(ax, coordsys, viewpoint)
-% 
+%
 % For example
 %   setviewport(gca, 'mni', 'left')
 %
 % See alo FT_PREPARE_LAYOUT>getorthoviewpos, COORDSYS2LABEL
 
+if isempty(coordsys)
+  coordsys = 'unknown';
+end
+
 switch viewpoint
   case 'front'
-    viewpoint = 'anteroir';
+    viewpoint = 'anterior';
   case 'back'
     viewpoint = 'posterior';
   case 'top'
@@ -82,4 +86,6 @@ switch lower(coordsys)
       case 'posterior'
         view(ax, [0 1 0]);
     end % switch viewpoint
+  otherwise
+    ft_warning('cannot change the viewpoint for "%s" coordinate system', coordsys);
 end % switch coordsys
