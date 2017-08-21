@@ -1004,8 +1004,8 @@ if ~isempty(unit)
   shape = ft_convert_units(shape, unit);
 else
   try
-    % ft_convert_units will fail for triangle-only gifties.
-    shape = ft_convert_units(shape);
+    % ft_determine_units will fail for triangle-only gifties.
+    shape = ft_determine_units(shape);
   catch
   end
 end

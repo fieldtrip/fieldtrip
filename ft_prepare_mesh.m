@@ -167,7 +167,7 @@ switch cfg.method
     fprintf('triangulating the sphere in the volume conductor\n');
     [pos, tri] = makesphere(cfg.numvertices);
     bnd = [];
-    mri = ft_convert_units(mri);      % ensure that it has units
+    mri = ft_determine_units(mri);      % ensure that it has units
     headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
     for i=1:length(headmodel.r)
       bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
@@ -189,7 +189,7 @@ if ~isfield(bnd, 'unit') && hasdata && isfield(mri, 'unit')
     bnd(i).unit = mri.unit;
   end
 elseif ~isfield(bnd, 'unit')
-  bnd = ft_convert_units(bnd);
+  bnd = ft_determine_units(bnd);
 end
 
 % copy the coordinate system from the input to the output

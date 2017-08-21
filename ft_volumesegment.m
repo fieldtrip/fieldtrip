@@ -297,7 +297,7 @@ if dotpm
   if isfield(mri, 'unit')
     original.unit = mri.unit;
   else
-    mri = ft_convert_units(mri); % guess the unit field if not present
+    mri = ft_determine_units(mri); % guess the unit field if not present
     original.unit = mri.unit;
   end
   mri = ft_convert_units(mri, 'mm');

@@ -588,6 +588,15 @@ ARRAY+=(utilities/ft_datatype_volume.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_determine_units.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_determine_units.m)
+ARRAY+=(forward/ft_determine_units.m)
+ARRAY+=(plotting/private/ft_determine_units.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_estimate_units.m
 
 ARRAY=()

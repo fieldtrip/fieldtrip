@@ -19,7 +19,7 @@ function [obj] = ft_convert_units(obj, target, varargin)
 % are specified, this function will only determine the native geometrical
 % units of the object.
 %
-% See also FT_ESTIMATE_UNITS, FT_READ_VOL, FT_READ_SENS
+% See also FT_DETERMINE_UNITS, FT_CONVERT_COORDSYS, FT_DETERMINE_COODSYS
 
 % Copyright (C) 2005-2016, Robert Oostenveld
 %
@@ -69,110 +69,20 @@ elseif iscell(obj) && numel(obj)>1
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% determine the unit-of-dimension of the input object
+% determine the units of the input object
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if isfield(obj, 'unit') && ~isempty(obj.unit)
-  % use the units specified in the object
-  unit = obj.unit;
-  
-elseif isfield(obj, 'bnd') && isfield(obj.bnd, 'unit')
-  
-  unit = unique({obj.bnd.unit});
-  if ~all(strcmp(unit, unit{1}))
-    ft_error('inconsistent units in the individual boundaries');
-  else
-    unit = unit{1};
-  end
-  
-  % keep one representation of the units rather than keeping it with each boundary
-  % the units will be reassigned further down
-  obj.bnd = rmfield(obj.bnd, 'unit');
-  
-else
-  % try to determine the units by looking at the size of the object
-  if isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
-    siz = norm(idrange(obj.chanpos));
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'elecpos') && ~isempty(obj.elecpos)
-    siz = norm(idrange(obj.elecpos));
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'coilpos') && ~isempty(obj.coilpos)
-    siz = norm(idrange(obj.coilpos));
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'pnt') && ~isempty(obj.pnt)
-    siz = norm(idrange(obj.pnt));
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'pos') && ~isempty(obj.pos)
-    siz = norm(idrange(obj.pos));
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'transform') && ~isempty(obj.transform)
-    % construct the corner points of the volume in voxel and in head coordinates
-    [pos_voxel, pos_head] = cornerpoints(obj.dim, obj.transform);
-    siz = norm(idrange(pos_head));
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'fid') && isfield(obj.fid, 'pnt') && ~isempty(obj.fid.pnt)
-    siz = norm(idrange(obj.fid.pnt));
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'fid') && isfield(obj.fid, 'pos') && ~isempty(obj.fid.pos)
-    siz = norm(idrange(obj.fid.pos));
-    unit = ft_estimate_units(siz);
-    
-  elseif ft_voltype(obj, 'infinite')
-    % this is an infinite medium volume conductor, which does not care about units
-    unit = 'm';
-    
-  elseif ft_voltype(obj,'singlesphere')
-    siz = obj.r;
-    unit = ft_estimate_units(siz);
-    
-  elseif ft_voltype(obj,'localspheres')
-    siz = median(obj.r);
-    unit = ft_estimate_units(siz);
-    
-  elseif ft_voltype(obj,'concentricspheres')
-    siz = max(obj.r);
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'bnd') && isstruct(obj.bnd) && isfield(obj.bnd(1), 'pnt') && ~isempty(obj.bnd(1).pnt)
-    siz = norm(idrange(obj.bnd(1).pnt));
-    unit = ft_estimate_units(siz);
-    
-  elseif isfield(obj, 'bnd') && isstruct(obj.bnd) && isfield(obj.bnd(1), 'pos') && ~isempty(obj.bnd(1).pos)
-    siz = norm(idrange(obj.bnd(1).pos));
-    unit = ft_estimate_units(siz);
-
-  elseif isfield(obj, 'nas') && isfield(obj, 'lpa') && isfield(obj, 'rpa')
-    pnt = [obj.nas; obj.lpa; obj.rpa];
-    siz = norm(idrange(pnt));
-    unit = ft_estimate_units(siz);
-    
-  else
-    ft_error('cannot determine geometrical units');
-    
-  end % recognized type of volume conduction model or sensor array
-end % determine input units
-
-if nargin<2 || isempty(target)
-  % just remember the units in the output and return
-  obj.unit = unit;
-  return
-elseif strcmp(unit, target)
-  % no conversion is needed
-  obj.unit = unit;
-  return
-end
+obj = ft_determine_units(obj);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the scaling factor from the input units to the desired ones
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-scale = ft_scalingfactor(unit, target);
+
+if isequal(obj.unit, target)
+  % there is nothing to do
+  return
+end
+
+scale = ft_scalingfactor(obj.unit, target);
 
 if istrue(feedback)
   % give some information about the conversion
@@ -266,15 +176,3 @@ end
 
 % remember the unit
 obj.unit = target;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% IDRANGE interdecile range for more robust range estimation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function r = idrange(x)
-keeprow=true(size(x,1),1);
-for l=1:size(x,2)
-  keeprow = keeprow & isfinite(x(:,l));
-end
-sx = sort(x(keeprow,:), 1);
-ii = round(interp1([0, 1], [1, size(x(keeprow,:), 1)], [.1, .9]));  % indices for 10 & 90 percentile
-r = diff(sx(ii, :));

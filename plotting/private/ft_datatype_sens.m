@@ -368,7 +368,7 @@ switch version
     
     if ~isfield(sens, 'unit')
       % this should be done prior to calling ft_chanunit, since ft_chanunit uses this for planar neuromag channels
-      sens = ft_convert_units(sens);
+      sens = ft_determine_units(sens);
     end
     
     if ~isfield(sens, 'chanunit') || all(strcmp(sens.chanunit, 'unknown'))

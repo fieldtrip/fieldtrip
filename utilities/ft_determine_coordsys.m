@@ -54,9 +54,8 @@ dointeractive = ft_getopt(varargin, 'interactive', 'yes');
 axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
 clim          = ft_getopt(varargin, 'clim', [0 1]); % this is used to scale the orthoplot
 
-data  = ft_checkdata(data);
+data  = ft_checkdata(data, 'hasunit', 'yes');
 dtype = ft_datatype(data);
-data  = ft_convert_units(data);
 
 % the high-level data structures are detected with ft_datatype, but there are
 % also some low-level data structures that need to be supproted here

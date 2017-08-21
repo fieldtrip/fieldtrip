@@ -61,7 +61,5 @@ end
 headmodel      = [];
 headmodel.bnd  = mesh;
 headmodel.type = 'singleshell';
-if ~isfield(headmodel, 'unit')
-  headmodel = ft_convert_units(headmodel);
-end
+headmodel = ft_determine_units(headmodel);
 

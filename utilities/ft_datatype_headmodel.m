@@ -188,9 +188,7 @@ switch version
     end
 
     % ensure that the geometrical units are specified
-    if ~isfield(headmodel, 'unit')
-      headmodel = ft_convert_units(headmodel);
-    end
+    headmodel = ft_determine_units(headmodel);
 
   otherwise
     ft_error('converting to version "%s" is not supported', version);

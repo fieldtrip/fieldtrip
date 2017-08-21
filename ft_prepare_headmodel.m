@@ -440,7 +440,7 @@ end % switch method
 
 % ensure that the geometrical units are specified
 if ~ft_voltype(headmodel, 'infinite')
-  headmodel = ft_convert_units(headmodel);
+  headmodel = ft_determine_units(headmodel);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

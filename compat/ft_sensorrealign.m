@@ -208,7 +208,6 @@ else
 end
 
 % ensure that the units are specified
-elec_original = ft_convert_units(elec_original);
 elec_original = ft_datatype_sens(elec_original); % ensure up-to-date sensor description (Oct 2011)
 
 % remember the original electrode locations and labels and do all the work
