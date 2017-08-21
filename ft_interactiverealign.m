@@ -84,7 +84,11 @@ cfg.individual.elecstyle      = ft_getopt(cfg.individual, 'elecstyle', {}); % ke
 cfg.individual.grad           = ft_getopt(cfg.individual, 'grad', []);
 cfg.individual.gradstyle      = ft_getopt(cfg.individual, 'gradstyle', {}); % key-value pairs
 cfg.individual.headshape      = ft_getopt(cfg.individual, 'headshape', []);
-cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'vertex');
+if ~isempty(cfg.individual.headshape) && isfield(cfg.individual.headshape, 'tri')
+  cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'surface');
+else
+  cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'vertex');
+end
 cfg.individual.headmodel      = ft_getopt(cfg.individual, 'headmodel', []);
 cfg.individual.headmodelstyle = ft_getopt(cfg.individual, 'headmodelstyle', 'edge');
 cfg.individual.mri            = ft_getopt(cfg.individual, 'mri', []);
@@ -95,7 +99,11 @@ cfg.template.elecstyle        = ft_getopt(cfg.template, 'elecstyle', {}); % key-
 cfg.template.grad             = ft_getopt(cfg.template, 'grad', []);
 cfg.template.gradstyle        = ft_getopt(cfg.template, 'gradstyle', {}); % key-value pairs
 cfg.template.headshape        = ft_getopt(cfg.template, 'headshape', []);
-cfg.template.headshapestyle   = ft_getopt(cfg.template, 'headshapestyle', 'vertex');
+if ~isempty(cfg.template.headshape) && isfield(cfg.template.headshape, 'tri')
+  cfg.template.headshapestyle   = ft_getopt(cfg.template, 'headshapestyle', 'surface');
+else
+  cfg.template.headshapestyle   = ft_getopt(cfg.template, 'headshapestyle', 'vertex');
+end
 cfg.template.headmodel        = ft_getopt(cfg.template, 'headmodel', []);
 cfg.template.headmodelstyle   = ft_getopt(cfg.template, 'headmodelstyle', 'edge');
 cfg.template.mri              = ft_getopt(cfg.template, 'mri', []);
@@ -105,7 +113,7 @@ cfg.template.mristyle         = ft_getopt(cfg.template, 'mristyle', {});
 cfg.template.headshapestyle   = updatestyle(cfg.template.headshapestyle);
 cfg.individual.headshapestyle = updatestyle(cfg.individual.headshapestyle);
 cfg.template.headmodelstyle   = updatestyle(cfg.template.headmodelstyle);
-cfg.individual.headshapestyle = updatestyle(cfg.individual.headmodelstyle);
+cfg.individual.headmodelstyle = updatestyle(cfg.individual.headmodelstyle);
 
 template   = struct(cfg.template);
 individual = struct(cfg.individual);
@@ -127,17 +135,21 @@ end
 % convert the coordinates of all geometrical objects into mm
 fn = {'elec', 'grad', 'headshape', 'headmodel', 'mri'};
 hasindividual = false(size(fn));
+originalunit = cell(size(fn));
 for i=1:length(fn)
   if ~isempty(individual.(fn{i}))
     hasindividual(i) = true;
+    individual.(fn{i}) = ft_determine_units(individual.(fn{i})); % ensure that it has units
+    originalunit{i} = individual.(fn{i}).unit;
     individual.(fn{i}) = ft_convert_units(individual.(fn{i}), 'mm'); % ensure that the units are all in mm
   end
 end
 hastemplate = false(size(fn));
 for i=1:length(fn)
   if ~isempty(template.(fn{i}))
+    template.(fn{i}) = ft_determine_units(template.(fn{i})); % ensure that it has units
     hastemplate(i) = true;
-    template.(fn{i}) = ft_convert_units(template.(fn{i}), 'mm');
+    template.(fn{i}) = ft_convert_units(template.(fn{i}), 'mm'); % ensure that the units are all in mm
   end
 end
 
@@ -168,6 +180,9 @@ if ~isempty(individual.headshape)
     individual.headshape.tri = projecttri(individual.headshape.pos);
   end
 end
+
+ft_info('Use the mouse to rotate the geometry, and click "redisplay" to update the light.');
+ft_info('Close the figure when you are done.');
 
 % open a figure
 fig = figure;
@@ -213,8 +228,6 @@ cfg.m = getappdata(fig, 'transform');
 cfg.m;
 
 delete(fig);
-
-% FIXME the output geometry is always in mm
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
