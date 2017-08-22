@@ -46,16 +46,16 @@ function [obj] = ft_convert_units(obj, target, varargin)
 %   2) determine the requested scaling factor to obtain the output units
 %   3) try to apply the scaling to the known geometrical elements in the input object
 
+% ensure the correct number of input and output arguments
+narginchk(1,1);
+nargoutchk(0,1);
+
 feedback = ft_getopt(varargin, 'feedback', false);
 
 if isstruct(obj) && numel(obj)>1
   % deal with a structure array
   for i=1:numel(obj)
-    if nargin>1
       tmp(i) = ft_convert_units(obj(i), target, varargin{:});
-    else
-      tmp(i) = ft_convert_units(obj(i));
-    end
   end
   obj = tmp;
   return

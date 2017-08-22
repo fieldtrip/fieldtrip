@@ -38,6 +38,10 @@ function [data] = ft_determine_units(data)
 %
 % $Id$
 
+% ensure the correct number of input and output arguments
+narginchk(1,1);
+nargoutchk(0,1);
+
 if isfield(data, 'unit') && ~isempty(data.unit)
   % use the units specified in the object
   unit = data.unit;
