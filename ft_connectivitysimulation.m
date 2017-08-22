@@ -358,7 +358,7 @@ switch cfg.method
         phi(k,m,:) = phi(k,m,:).*mask(k,m,:);
         phi(k,m,mask(k,m,:)) = phi(k,m,mask(k,m,:))-mean(phi(k,m,mask(k,m,:)));
         
-        coupling_ampl(k,m,:) = coupling(m,k).*krn(k,m,:);
+        coupling_ampl(k,m,:) = coupling(k,m).*krn(k,m,:);
       end
     end
     
@@ -366,7 +366,7 @@ switch cfg.method
     for k = 1:nsignal
       dat(k,k,:) = oneoverf;
       for m = 1:nsignal
-        dat(k,k,:) = dat(k,k,:)+krn(m,m,:).*ampl(k,m);
+        dat(k,k,:) = dat(k,k,:)+krn(m,m,:).*ampl(m,k);
       end
     end
     

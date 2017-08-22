@@ -623,9 +623,9 @@ switch cfg.method
     noisecov = data.noisecov;
     crsspctrm = data.crsspctrm;
     if ~hasrpt
-      datout   = shiftdim(datout);
-      noisecov = shiftdim(noisecov);
-      crsspctrm = shiftdim(crsspctrm);
+      datout   = shiftdim(datout,1);
+      noisecov = shiftdim(noisecov,1);
+      crsspctrm = shiftdim(crsspctrm,1);
     end
   case {'granger' 'instantaneous_causality' 'total_interdependence' 'iis'}
     % granger causality

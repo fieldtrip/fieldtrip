@@ -60,7 +60,7 @@ numiteration = ft_getopt(varargin, 'numiteration', 100);
 channelcmb   = ft_getopt(varargin, 'channelcmb',   {});
 block        = ft_getopt(varargin, 'block',        []);
 tol          = ft_getopt(varargin, 'tol',          1e-18);
-fb           = ft_getopt(varargin, 'feedback',     'textbar');
+fb           = ft_getopt(varargin, 'feedback',     'none');
 sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
 dosvd        = ft_getopt(varargin, 'svd',          'no');
 doconditional = ft_getopt(varargin, 'conditional', 0);
@@ -104,7 +104,7 @@ if isempty(channelcmb) && strcmp(sfmethod, 'bivariate')
 end
 
 
-if ~isempty(channelcmb)
+if ~isempty(channelcmb) && numel(freq.label)>1
   if numel(channelcmb)==2 && strcmp(channelcmb{1},'all') && strcmp(channelcmb{2}, 'all')
     [cmbindx(:,1), cmbindx(:,2)] = find(tril(ones(numel(freq.label)),-1));
     ok = true(size(cmbindx,1),1);
