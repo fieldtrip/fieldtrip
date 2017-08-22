@@ -1,4 +1,4 @@
-function [data] = ft_determine_units(data)
+function [obj] = ft_determine_units(obj)
 
 % FT_DETERMINE_UNITS tries to determine the units of a geometrical object by
 % looking at its size and by relating this to the approximate size of the
@@ -10,7 +10,7 @@ function [data] = ft_determine_units(data)
 %
 % Use as
 %   dataout = ft_determine_units(datain)
-% where the input data structure can be
+% where the input obj structure can be
 %  - an anatomical MRI
 %  - an electrode or gradiometer definition
 %  - a volume conduction model of the head
@@ -42,13 +42,33 @@ function [data] = ft_determine_units(data)
 narginchk(1,1);
 nargoutchk(0,1);
 
-if isfield(data, 'unit') && ~isempty(data.unit)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if isstruct(obj) && numel(obj)>1
+  % deal with a structure array
+  for i=1:numel(obj)
+    tmp(i) = ft_determine_units(obj(i));
+  end
+  obj = tmp;
+  return
+elseif iscell(obj) && numel(obj)>1
+  % deal with a cell array
+  % this might represent combined EEG, ECoG and/or MEG
+  for i=1:numel(obj)
+    obj{i} = ft_determine_units(obj{i});
+  end
+  return
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if isfield(obj, 'unit') && ~isempty(obj.unit)
   % use the units specified in the object
-  unit = data.unit;
+  unit = obj.unit;
   
-elseif isfield(data, 'bnd') && isfield(data.bnd, 'unit')
+elseif isfield(obj, 'bnd') && isfield(obj.bnd, 'unit')
   
-  unit = unique({data.bnd.unit});
+  unit = unique({obj.bnd.unit});
   if ~all(strcmp(unit, unit{1}))
     ft_error('inconsistent units in the individual boundaries');
   else
@@ -57,72 +77,72 @@ elseif isfield(data, 'bnd') && isfield(data.bnd, 'unit')
   
   % keep one representation of the units rather than keeping it with each boundary
   % the units will be reassigned further down
-  data.bnd = rmfield(data.bnd, 'unit');
+  obj.bnd = rmfield(obj.bnd, 'unit');
   
 else
   % try to determine the units by looking at the size of the object
-  if isfield(data, 'chanpos') && ~isempty(data.chanpos)
-    siz = norm(idrange(data.chanpos));
+  if isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
+    siz = norm(idrange(obj.chanpos));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'elecpos') && ~isempty(data.elecpos)
-    siz = norm(idrange(data.elecpos));
+  elseif isfield(obj, 'elecpos') && ~isempty(obj.elecpos)
+    siz = norm(idrange(obj.elecpos));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'coilpos') && ~isempty(data.coilpos)
-    siz = norm(idrange(data.coilpos));
+  elseif isfield(obj, 'coilpos') && ~isempty(obj.coilpos)
+    siz = norm(idrange(obj.coilpos));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'pnt') && ~isempty(cat(1, data.pnt))
-    % the data can be a struct.array, hence the concatenation
-    siz = norm(idrange(cat(1, data.pnt)));
+  elseif isfield(obj, 'pnt') && ~isempty(cat(1, obj.pnt))
+    % the obj can be a struct.array, hence the concatenation
+    siz = norm(idrange(cat(1, obj.pnt)));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'pos') && ~isempty(cat(1, data.pos))
-    % the data can be a struct.array, hence the concatenation
-    siz = norm(idrange(cat(1, data.pos)));
+  elseif isfield(obj, 'pos') && ~isempty(cat(1, obj.pos))
+    % the obj can be a struct.array, hence the concatenation
+    siz = norm(idrange(cat(1, obj.pos)));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'transform') && ~isempty(data.transform)
+  elseif isfield(obj, 'transform') && ~isempty(obj.transform)
     % construct the corner points of the volume in voxel and in head coordinates
-    [pos_voxel, pos_head] = cornerpoints(data.dim, data.transform);
+    [pos_voxel, pos_head] = cornerpoints(obj.dim, obj.transform);
     siz = norm(idrange(pos_head));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'fid') && isfield(data.fid, 'pnt') && ~isempty(data.fid.pnt)
-    siz = norm(idrange(data.fid.pnt));
+  elseif isfield(obj, 'fid') && isfield(obj.fid, 'pnt') && ~isempty(obj.fid.pnt)
+    siz = norm(idrange(obj.fid.pnt));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'fid') && isfield(data.fid, 'pos') && ~isempty(data.fid.pos)
-    siz = norm(idrange(data.fid.pos));
+  elseif isfield(obj, 'fid') && isfield(obj.fid, 'pos') && ~isempty(obj.fid.pos)
+    siz = norm(idrange(obj.fid.pos));
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(data, 'infinite')
+  elseif ft_voltype(obj, 'infinite')
     % this is an infinite medium volume conductor, which does not care about units
     unit = 'm';
     
-  elseif ft_voltype(data,'singlesphere')
-    siz = data.r;
+  elseif ft_voltype(obj,'singlesphere')
+    siz = obj.r;
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(data,'localspheres')
-    siz = median(data.r);
+  elseif ft_voltype(obj,'localspheres')
+    siz = median(obj.r);
     unit = ft_estimate_units(siz);
     
-  elseif ft_voltype(data,'concentricspheres')
-    siz = max(data.r);
+  elseif ft_voltype(obj,'concentricspheres')
+    siz = max(obj.r);
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'bnd') && isstruct(data.bnd) && isfield(data.bnd(1), 'pnt') && ~isempty(data.bnd(1).pnt)
-    siz = norm(idrange(data.bnd(1).pnt));
+  elseif isfield(obj, 'bnd') && isstruct(obj.bnd) && isfield(obj.bnd(1), 'pnt') && ~isempty(obj.bnd(1).pnt)
+    siz = norm(idrange(obj.bnd(1).pnt));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'bnd') && isstruct(data.bnd) && isfield(data.bnd(1), 'pos') && ~isempty(data.bnd(1).pos)
-    siz = norm(idrange(data.bnd(1).pos));
+  elseif isfield(obj, 'bnd') && isstruct(obj.bnd) && isfield(obj.bnd(1), 'pos') && ~isempty(obj.bnd(1).pos)
+    siz = norm(idrange(obj.bnd(1).pos));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'nas') && isfield(data, 'lpa') && isfield(data, 'rpa')
-    pnt = [data.nas; data.lpa; data.rpa];
+  elseif isfield(obj, 'nas') && isfield(obj, 'lpa') && isfield(obj, 'rpa')
+    pnt = [obj.nas; obj.lpa; obj.rpa];
     siz = norm(idrange(pnt));
     unit = ft_estimate_units(siz);
     
@@ -133,9 +153,9 @@ else
 end % determine input units
 
 % add the units to the output object
-for i=1:numel(data)
-  % data can be a struct-array, hence the loop
-  data(i).unit = unit;
+for i=1:numel(obj)
+  % obj can be a struct-array, hence the loop
+  obj(i).unit = unit;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -149,4 +169,3 @@ end
 sx = sort(x(keeprow,:), 1);
 ii = round(interp1([0, 1], [1, size(x(keeprow,:), 1)], [.1, .9]));  % indices for 10 & 90 percentile
 r = diff(sx(ii, :));
-

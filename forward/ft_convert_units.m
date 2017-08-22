@@ -50,7 +50,10 @@ function [obj] = ft_convert_units(obj, target, varargin)
 narginchk(2,inf);
 nargoutchk(0,1);
 
+% parse input options
 feedback = ft_getopt(varargin, 'feedback', false);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if isstruct(obj) && numel(obj)>1
   % deal with a structure array
