@@ -1,4 +1,4 @@
-function [data] = ft_determine_units(data, varargin)
+function [data] = ft_determine_units(data)
 
 % FT_DETERMINE_UNITS tries to determine the units of a geometrical object by
 % looking at its size and by relating this to the approximate size of the
