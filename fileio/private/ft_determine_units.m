@@ -38,9 +38,6 @@ function [data] = ft_determine_units(data)
 %
 % $Id$
 
-data  = ft_checkdata(data);
-dtype = ft_datatype(data);
-
 if isfield(data, 'unit') && ~isempty(data.unit)
   % use the units specified in the object
   unit = data.unit;
