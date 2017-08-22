@@ -15,7 +15,7 @@ function [data] = ft_checkdata(data, varargin)
 %
 % Optional input arguments should be specified as key-value pairs and can include
 %   feedback           = yes, no
-%   datatype           = raw, freq, timelock, comp, spike, source,  dip, volume, segmentation, parcellation
+%   datatype           = raw, freq, timelock, comp, spike, source, mesh, dip, volume, segmentation, parcellation
 %   dimord             = any combination of time, freq, chan, refchan, rpt, subj, chancmb, rpttap, pos
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
