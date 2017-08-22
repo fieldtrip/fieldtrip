@@ -72,12 +72,14 @@ else
     siz = norm(idrange(data.coilpos));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'pnt') && ~isempty(data.pnt)
-    siz = norm(idrange(data.pnt));
+  elseif isfield(data, 'pnt') && ~isempty(cat(1, data.pnt))
+    % the data can be a struct.array, hence the concatenation
+    siz = norm(idrange(cat(1, data.pnt)));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(data, 'pos') && ~isempty(data.pos)
-    siz = norm(idrange(data.pos));
+  elseif isfield(data, 'pos') && ~isempty(cat(1, data.pos))
+    % the data can be a struct.array, hence the concatenation
+    siz = norm(idrange(cat(1, data.pos)));
     unit = ft_estimate_units(siz);
     
   elseif isfield(data, 'transform') && ~isempty(data.transform)
@@ -130,7 +132,10 @@ else
 end % determine input units
 
 % add the units to the output object
-data.unit = unit;
+for i=1:numel(data)
+  % data can be a struct-array, hence the loop
+  data(i).unit = unit;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IDRANGE interdecile range for more robust range estimation
