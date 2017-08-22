@@ -20,6 +20,7 @@ function [cfg] = ft_interactiverealign(cfg)
 %
 % The configuration structure should also contain the geometrical object of a
 % template that serves as target
+%   cfg.template.axes           = string, 'yes' or 'no (default = 'no')
 %   cfg.template.elec           = structure
 %   cfg.template.grad           = structure
 %   cfg.template.headmodel      = structure, see FT_PREPARE_HEADMODEL
@@ -94,6 +95,7 @@ cfg.individual.headmodelstyle = ft_getopt(cfg.individual, 'headmodelstyle', 'edg
 cfg.individual.mri            = ft_getopt(cfg.individual, 'mri', []);
 cfg.individual.mristyle       = ft_getopt(cfg.individual, 'mristyle', {});
 
+cfg.template.axes             = ft_getopt(cfg.template, 'axes', 'no');
 cfg.template.elec             = ft_getopt(cfg.template, 'elec', []);
 cfg.template.elecstyle        = ft_getopt(cfg.template, 'elecstyle', {}); % key-value pairs
 cfg.template.grad             = ft_getopt(cfg.template, 'grad', []);
@@ -305,6 +307,7 @@ fig        = getparent(h);
 individual = getappdata(fig, 'individual');
 template   = getappdata(fig, 'template');
 transform  = getappdata(fig, 'transform');
+coordsys   = getappdata(fig, 'coordsys');
 
 % get the transformation details
 rx = str2double(get(findobj(fig, 'tag', 'rx'), 'string'));
@@ -354,6 +357,10 @@ end
 
 if ~isempty(individual.mri)
   ft_plot_ortho(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh', template.headshape, cfg.template.mristyle{:});
+end
+
+if istrue(template.axes)
+  ft_plot_axes([], 'unit', 'mm', 'coordsys', coordsys);
 end
 
 if ~isempty(template.elec)
