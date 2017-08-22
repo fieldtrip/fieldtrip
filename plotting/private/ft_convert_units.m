@@ -55,7 +55,7 @@ feedback = ft_getopt(varargin, 'feedback', false);
 if isstruct(obj) && numel(obj)>1
   % deal with a structure array
   for i=1:numel(obj)
-      tmp(i) = ft_convert_units(obj(i), target, varargin{:});
+    tmp(i) = ft_convert_units(obj(i), target, varargin{:});
   end
   obj = tmp;
   return
@@ -82,16 +82,16 @@ if isequal(obj.unit, target)
   return
 end
 
-scale = ft_scalingfactor(obj.unit, target);
-
 if istrue(feedback)
   % give some information about the conversion
-  fprintf('converting units from ''%s'' to ''%s''\n', unit, target)
+  fprintf('converting units from ''%s'' to ''%s''\n', obj.unit, target)
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % apply the scaling factor
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+scale = ft_scalingfactor(obj.unit, target);
 
 % volume conductor model
 if isfield(obj, 'r'), obj.r = scale * obj.r; end
