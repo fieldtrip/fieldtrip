@@ -47,7 +47,7 @@ function [obj] = ft_convert_units(obj, target, varargin)
 %   3) try to apply the scaling to the known geometrical elements in the input object
 
 % ensure the correct number of input and output arguments
-narginchk(1,1);
+narginchk(2,inf);
 nargoutchk(0,1);
 
 feedback = ft_getopt(varargin, 'feedback', false);
