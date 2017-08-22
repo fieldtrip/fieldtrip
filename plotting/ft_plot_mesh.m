@@ -295,7 +295,7 @@ switch maskstyle
       set(hs, 'EdgeAlpha', edgealpha);
     end
         
-    if ~(facealpha==1 & edgealpha==1)
+    if ~(facealpha==1 && edgealpha==1)
       if ~isempty(alphalim)
         alim(gca, alphalim);
       end
