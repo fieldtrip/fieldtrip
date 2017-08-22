@@ -49,6 +49,7 @@ cfg = [];
 cfg.template.headshape = skin;
 cfg.template.headshapestyle = 'surface';
 
+cfg.template.axes = 'yes';
 cfg.individual.elec = elec;
 out = ft_interactiverealign(cfg);
 
@@ -56,11 +57,11 @@ out = ft_interactiverealign(cfg);
 
 % r = rotate([0 0 -90])
 r = [
-    0.0000    1.0000         0         0
-   -1.0000    0.0000         0         0
-         0         0    1.0000         0
-         0         0         0    1.0000
-];
+  0.0000    1.0000         0         0
+  -1.0000    0.0000         0         0
+  0         0    1.0000         0
+  0         0         0    1.0000
+  ];
 
 elec_ctf = ft_transform_geometry(r, elec); % rotate 90 degrees
 elec_ctf.coordsys = 'ctf';
@@ -106,12 +107,12 @@ cfg.individual.gradstyle = {'coilshape', 'circle'};
 out = ft_interactiverealign(cfg);
 
 %%
-% following the redesign and cleanup of ft_interactiverealign, the goal is to call 
-% interactiverealign from the other data-type specific realign functions: 
-%  - ft_electroderealign.m	(method=interactive) 
+% following the redesign and cleanup of ft_interactiverealign, the goal is to call
+% interactiverealign from the other data-type specific realign functions:
+%  - ft_electroderealign.m	(method=interactive)
 %  - ft_volumerealign.m     (for the optional interactive alignment in method=headshape)
-%  - ft_surfacerealign.m    (should be renamed in ft_meshrealign)
 %  - ft_sensorrealign.m	    (has been deprecated and will not get any further updates)
+%  - ft_surfacerealign.m    (should be renamed in ft_meshrealign)
 
 cfg = [];
 cfg.method = 'interactive';
@@ -135,5 +136,41 @@ mri_realigned = ft_volumerealign(cfg, mri);
 % only interactive final check
 cfg.headshape.icp = 'no';
 mri_realigned2 = ft_volumerealign(cfg, mri_realigned);
+
+%%
+
+cfg = [];
+cfg.method = 'interactive';
+cfg.coordsys = 'ctf';
+out = ft_meshrealign(cfg, skin);
+
+ft_determine_coordsys(skin, 'interactive', 'no')
+ft_determine_coordsys(out, 'interactive', 'no')
+
+%%
+
+cfg = [];
+cfg.method = 'fiducial';
+cfg.coordsys = 'ctf';
+cfg.fiducial.nas = [2.5504 84.2050 -43.6891];
+cfg.fiducial.lpa = [-85.1794 -24.1196 -42.7575];
+cfg.fiducial.rpa = [85.6140 -15.1561 -49.6673];
+%     zpoint = [-8.4323 -19.5475 100.8559]
+out = ft_meshrealign(cfg, skin);
+
+
+ft_determine_coordsys(skin, 'interactive', 'no')
+ft_determine_coordsys(out, 'interactive', 'no')
+
+
+%%
+
+cfg = [];
+cfg.method = 'fiducial';
+cfg.coordsys = 'ctf';
+out = ft_meshrealign(cfg, skin);
+
+ft_determine_coordsys(skin, 'interactive', 'no')
+ft_determine_coordsys(out, 'interactive', 'no')
 
 
