@@ -44,7 +44,7 @@ if issubfield(source, 'filter')
 elseif issubfield(source, 'avg.filter')
   grid.filter = source.avg.filter;
 elseif issubfield(source, 'trial.filter')
-  ft_error('single trial filters are not supported here');
+  error(defaultId, 'single trial filters are not supported here');
 end
 
 if issubfield(source, 'leadfield')

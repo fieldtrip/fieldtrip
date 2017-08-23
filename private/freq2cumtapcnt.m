@@ -4,7 +4,7 @@ hasrpt   = ~isempty(strfind(freq.dimord, 'rpt'));
 hastim   = ~isempty(strfind(freq.dimord, 'time'));
 
 if ~hasrpt,
- ft_error('computation of number of tapers is not possible, there is not enough information');
+ error(defaultId, 'computation of number of tapers is not possible, there is not enough information');
 end
 
 if hastim,

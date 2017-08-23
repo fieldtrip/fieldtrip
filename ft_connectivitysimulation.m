@@ -419,7 +419,7 @@ switch cfg.method
     cfg.previous = keepfields(cfgorig, {'coupling' 'ampl' 'delay' 'bpfreq'});
     
   otherwise
-    ft_error('unknown method');
+    error(defaultId, 'unknown method');
 end
 
 
@@ -457,16 +457,16 @@ elseif numel(siz)==2
   isfull = false;
   %assert(~isempty(labelcmb), 'input data appears to be chancmb_freq, but labelcmb is missing');
 else
-  ft_error('dimensionality of input data is not supported');
+  error(defaultId, 'dimensionality of input data is not supported');
 end
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  ft_error('the frequency axis is not evenly spaced');
+  error(defaultId, 'the frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
-  ft_warning('when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  warning(defaultId, 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   

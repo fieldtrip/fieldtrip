@@ -7,9 +7,9 @@ warning1 = 'hululu';
 warning2 = 'aloah hey';
 
 for i=1:2
-  ft_warning('clear');
-  ft_warning('once');
-  ft_warning('backtrace', 'off');
+  warning(defaultId, 'clear');
+  warning(defaultId, 'once');
+  warning(defaultId, 'backtrace', 'off');
   
   [output] = evalc('warning_caller(warning1, warning2)');
   w1size = strfind(output, warning1);
@@ -54,14 +54,14 @@ end % function
 function warning_caller(warning1, warning2)
 
 for i=1:10
-  ft_warning(warning1);
-  ft_warning('FieldTrip:warning2', warning2);
+  warning(defaultId, warning1);
+  warning(defaultId, 'FieldTrip:warning2', warning2);
 end
 
 % these warnings should be thrown now !again!
 for i=1:10
-  ft_warning(warning1);
-  ft_warning('FieldTrip:warning2', warning2);
+  warning(defaultId, warning1);
+  warning(defaultId, 'FieldTrip:warning2', warning2);
 end
 
 end % function

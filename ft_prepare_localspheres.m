@@ -69,7 +69,7 @@ elseif isfield(cfg,'headshape') && nargin == 1
     headshape = cfg.headshape;
   end
 else
-  ft_error('no head shape available')
+  error(defaultId, 'no head shape available')
 end
 
 % read the gradiometer definition from file or copy it from the configuration

@@ -35,14 +35,14 @@ function [source] = ft_source2sparse(source)
 ft_defaults
 
 if ~isfield(source, 'inside')
-  ft_warning('no gridpoints defined inside the brain');
+  warning(defaultId, 'no gridpoints defined inside the brain');
   source.inside = [];
 elseif all(islogical(source.inside))
   source = fixinside(source, 'index'); % in contrast to the new convention, this function still relies on an indexed inside
 end
 
 if ~isfield(source, 'outside')
-  ft_warning('no gridpoints defined outside the brain');
+  warning(defaultId, 'no gridpoints defined outside the brain');
   source.outside = [];
 end
 
@@ -135,7 +135,7 @@ elseif strcmp(stype, 'new')
       elseif tmpsel==2,
         source.(fnames{k}) = source.(fnames{k})(:,inside,:,:,:);
       else
-        ft_warning('not subselecting voxels, because location of pos-dimension is unexpected');
+        warning(defaultId, 'not subselecting voxels, because location of pos-dimension is unexpected');
       end
     end
   end 

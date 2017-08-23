@@ -167,7 +167,7 @@ if ~isempty(cfg.coordsys)
       cfg.target.label{2} = 'LPA';
       cfg.target.label{3} = 'RPA';
     otherwise
-      ft_error('the %s coordinate system is not automatically supported, please specify the details in cfg.target')
+      error(defaultId, 'the %s coordinate system is not automatically supported, please specify the details in cfg.target')
   end
 end
 
@@ -200,7 +200,7 @@ if ~hasdata
     elec_original.pos    = zeros(0,3);
     elec_original.label  = cell(0,1);
     elec_original.unit   = 'mm';
-    ft_warning(me.message, me.identifier);
+    warning(defaultId, me.message, me.identifier);
   end
 else
   % the input electrodes were specified as second input argument
@@ -261,7 +261,7 @@ if useheadshape
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
   else
-    ft_error('cfg.headshape is not specified correctly')
+    error(defaultId, 'cfg.headshape is not specified correctly')
   end
   if ~isfield(headshape, 'tri')
     % generate a closed triangulation from the surface points
@@ -392,7 +392,7 @@ elseif strcmp(cfg.method, 'fiducial')
     elseif length(match_str(label, option6))==3
       cfg.fiducial = option6;
     else
-      ft_error('could not determine consistent fiducials in the input and the target, please specify cfg.fiducial or cfg.coordsys')
+      error(defaultId, 'could not determine consistent fiducials in the input and the target, please specify cfg.fiducial or cfg.coordsys')
     end
   end
   fprintf('matching fiducials {''%s'', ''%s'', ''%s''}\n', cfg.fiducial{1}, cfg.fiducial{2}, cfg.fiducial{3});
@@ -404,7 +404,7 @@ elseif strcmp(cfg.method, 'fiducial')
   elec.chanpos   = elec.chanpos(datsel,:);
 
   if length(cfg.fiducial)~=3
-    ft_error('you must specify three fiducials');
+    error(defaultId, 'you must specify three fiducials');
   end
 
   % do case-insensitive search for fiducial locations
@@ -412,7 +412,7 @@ elseif strcmp(cfg.method, 'fiducial')
   lpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{2}));
   rpa_indx = match_str(lower(elec.label), lower(cfg.fiducial{3}));
   if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
-    ft_error('not all fiducials were found in the electrode set');
+    error(defaultId, 'not all fiducials were found in the electrode set');
   end
   elec_nas = elec.chanpos(nas_indx,:);
   elec_lpa = elec.chanpos(lpa_indx,:);
@@ -431,7 +431,7 @@ elseif strcmp(cfg.method, 'fiducial')
     lpa_indx = match_str(lower(template(i).label), lower(cfg.fiducial{2}));
     rpa_indx = match_str(lower(template(i).label), lower(cfg.fiducial{3}));
     if length(nas_indx)~=1 || length(lpa_indx)~=1 || length(rpa_indx)~=1
-      ft_error('not all fiducials were found in template %d', i);
+      error(defaultId, 'not all fiducials were found in template %d', i);
     end
     templ_nas(i,:) = template(i).pos(nas_indx,:);
     templ_lpa(i,:) = template(i).pos(lpa_indx,:);
@@ -542,7 +542,7 @@ elseif strcmp(cfg.method, 'manual')
   end
 
 else
-  ft_error('unknown method');
+  error(defaultId, 'unknown method');
 end
 
 % apply the spatial transformation to all electrodes, and replace the
@@ -571,7 +571,7 @@ switch cfg.method
     % the positions are already assigned in correspondence with the mesh
     elec_realigned = norm;
   otherwise
-    ft_error('unknown method');
+    error(defaultId, 'unknown method');
 end
 
 % do the general cleanup and bookkeeping at the end of the function

@@ -14,7 +14,7 @@ hdr         = ft_read_header(cfg.headerfile);
 chanindx    = strmatch('EMGlft', hdr.label);
  
 if length(chanindx)>1
-  ft_error('only one EMG channel supported');
+  error(defaultId, 'only one EMG channel supported');
 end
  
 % read all data of the EMG channel, assume continuous file format

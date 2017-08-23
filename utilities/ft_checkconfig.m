@@ -82,7 +82,7 @@ trackconfig     = ft_getopt(varargin, 'trackconfig');
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
   if ft_platform_supports('matlabversion', '2015a', inf)
     % disable config tracking for the time being, due to a known bug (3187)
-    % ft_warning('disabling cfg tracking for the time being, due to a matlab version related issue');
+    % warning(defaultId, 'disabling cfg tracking for the time being, due to a matlab version related issue');
     trackconfig = [];
     cfg.trackconfig = 'off';
   end
@@ -122,9 +122,9 @@ if ~isempty(renamed)
     if silent
       % don't mention it
     elseif loose
-      ft_warning('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
+      warning(defaultId, 'use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     elseif pedantic
-      ft_error('use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
+      error(defaultId, 'use cfg.%s instead of cfg.%s', renamed{2}, renamed{1});
     end
   end
 end
@@ -138,9 +138,9 @@ if ~isempty(renamedval) && issubfield(cfg, renamedval{1})
     if silent
       % don't mention it
     elseif loose
-      ft_warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      warning(defaultId, 'use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     elseif pedantic
-      ft_error('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      error(defaultId, 'use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
     end
   end
 end
@@ -152,7 +152,7 @@ if ~isempty(required)
   fieldsused = fieldnames(cfg);
   [c, ia, ib] = setxor(required, fieldsused);
   if ~isempty(ia)
-    ft_error('The field cfg.%s is required\n', required{ia});
+    error(defaultId, 'The field cfg.%s is required\n', required{ia});
   end
 end
 
@@ -165,9 +165,9 @@ if ~isempty(deprecated)
     if silent
       % don't mention it
     elseif loose
-      ft_warning('The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)});
+      warning(defaultId, 'The option cfg.%s is deprecated, support is no longer guaranteed\n', deprecated{ismember(deprecated, fieldsused)});
     elseif pedantic
-      ft_error('The option cfg.%s is not longer supported\n', deprecated{ismember(deprecated, fieldsused)});
+      error(defaultId, 'The option cfg.%s is not longer supported\n', deprecated{ismember(deprecated, fieldsused)});
     end
   end
 end
@@ -182,9 +182,9 @@ if ~isempty(unused)
     if silent
       % don't mention it
     elseif loose
-      ft_warning('The field cfg.%s is unused, it will be removed from your configuration\n', unused{ismember(unused, fieldsused)});
+      warning(defaultId, 'The field cfg.%s is unused, it will be removed from your configuration\n', unused{ismember(unused, fieldsused)});
     elseif pedantic
-      ft_error('The field cfg.%s is unused\n', unused{ismember(unused, fieldsused)});
+      error(defaultId, 'The field cfg.%s is unused\n', unused{ismember(unused, fieldsused)});
     end
   end
 end
@@ -198,7 +198,7 @@ if ~isempty(allowed)
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
   if ~isempty(c)
-    ft_error('The field cfg.%s is not allowed\n', c{1});
+    error(defaultId, 'The field cfg.%s is not allowed\n', c{1});
   end
 end
 
@@ -212,9 +212,9 @@ if ~isempty(forbidden)
     if silent
       % don't mention it
     elseif loose
-      ft_warning('The field cfg.%s is forbidden, it will be removed from your configuration\n', forbidden{ismember(forbidden, fieldsused)});
+      warning(defaultId, 'The field cfg.%s is forbidden, it will be removed from your configuration\n', forbidden{ismember(forbidden, fieldsused)});
     elseif pedantic
-      ft_error('The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)});
+      error(defaultId, 'The field cfg.%s is forbidden\n', forbidden{ismember(forbidden, fieldsused)});
     end
   end
 end
@@ -229,7 +229,7 @@ if ~isempty(allowedval) && isfield(cfg, allowedval{1}) ...
     s = [s allowedval{k} ', '];
   end
   s = s(1:end-2); % strip last comma
-  ft_error(s);
+  error(defaultId, s);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -483,7 +483,7 @@ if ~isempty(createsubcfg)
           };
         
       otherwise
-        ft_error('unexpected name of the subfunction');
+        error(defaultId, 'unexpected name of the subfunction');
         
     end % switch subname
     
@@ -493,9 +493,9 @@ if ~isempty(createsubcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+          warning(defaultId, 'The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         elseif pedantic
-          ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+          error(defaultId, 'The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end
         
         subcfg = setfield(subcfg, fieldname{i}, getfield(cfg, fieldname{i}));  % set it in the subconfiguration
@@ -553,7 +553,7 @@ if istrue(checkfilenames)
       % display a graphical file selection dialog
       [f, p] = uigetfile('*.*', 'Select a data file');
       if isequal(f, 0)
-        ft_error('User pressed cancel');
+        error(defaultId, 'User pressed cancel');
       else
         d = fullfile(p, f);
       end
@@ -562,7 +562,7 @@ if istrue(checkfilenames)
       % display a graphical directory selection dialog
       d = uigetdir('*.*', 'Select a data directory');
       if isequal(d, 0)
-        ft_error('User pressed cancel');
+        error(defaultId, 'User pressed cancel');
       end
       cfg.dataset = d;
     end

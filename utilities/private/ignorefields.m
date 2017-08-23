@@ -140,5 +140,5 @@ switch purpose
       };
     
   otherwise
-    ft_error('invalid purpose');
+    error(defaultId, 'invalid purpose');
 end % switch purpose

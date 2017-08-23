@@ -46,7 +46,7 @@ function [obj] = convert_event(obj, target, varargin)
 
 % Check if target is specified correctly
 if sum(strcmp(target, {'event', 'trl', 'artifact', 'boolvec'})) < 1
-  ft_error('target has to be ''event'', ''trl'', ''artifact'', or ''boolvec''.')
+  error(defaultId, 'target has to be ''event'', ''trl'', ''artifact'', or ''boolvec''.')
 end
 
 % Get the options
@@ -74,7 +74,7 @@ elseif iscell(obj)
       end
     end
   else
-    ft_error('incorrect input object, see help for what is allowed.')
+    error(defaultId, 'incorrect input object, see help for what is allowed.')
   end
 elseif islogical(obj)
   input_obj = 'boolvec';
@@ -94,7 +94,7 @@ elseif size(obj,2) > 3
     obj = obj(:,1:3);
   end
 else
-  ft_error('incorrect input object, see help for what is allowed.')
+  error(defaultId, 'incorrect input object, see help for what is allowed.')
 end
 
 % do conversion
@@ -136,7 +136,7 @@ elseif strcmp(input_obj, 'trl') && strcmp(target,'artifact')
 elseif strcmp(input_obj, 'empty')
   obj = [];
 else
-  ft_warning('conversion not supported yet') %FIXME
+  warning(defaultId, 'conversion not supported yet') %FIXME
 end
 
 
@@ -153,23 +153,23 @@ artifact = varargin{1};
 if length(varargin) == 1
   if ~iscell(artifact) % assume only one artifact is given
     if isempty(artifact)
-      ft_error('When input object is empty ''endsample'' must be specified to convert into boolvec')
+      error(defaultId, 'When input object is empty ''endsample'' must be specified to convert into boolvec')
     else
       endsample = max(artifact(:,2));
     end
   elseif length(artifact) == 1
     if isempty(artifact{1})
-      ft_error('When input object is empty ''endsample'' must be specified to convert into boolvec')
+      error(defaultId, 'When input object is empty ''endsample'' must be specified to convert into boolvec')
     else
       endsample = max(artifact{1}(:,2));
     end
   else
-    ft_error('when giving multiple artifact definitions, endsample should be specified to assure all output vectors are of the same length')
+    error(defaultId, 'when giving multiple artifact definitions, endsample should be specified to assure all output vectors are of the same length')
   end
 elseif length(varargin) == 2
   endsample = varargin{2};
 elseif length(varargin) > 2
-  ft_error('too many input arguments')
+  error(defaultId, 'too many input arguments')
 end
 if ~iscell(artifact)
   artifact = {artifact};
@@ -183,10 +183,10 @@ for i=1:length(artifact)
     artbegsample = artifact{i}(j,1);
     artendsample = artifact{i}(j,2);
     if artbegsample > endsample
-      ft_warning('artifact definition contains later samples than endsample, these samples are ignored')
+      warning(defaultId, 'artifact definition contains later samples than endsample, these samples are ignored')
       break
     elseif artendsample > endsample
-      ft_warning('artifact definition contains later samples than endsample, these samples are ignored')
+      warning(defaultId, 'artifact definition contains later samples than endsample, these samples are ignored')
       artendsample = endsample;
       breakflag = 1;
     end
@@ -227,7 +227,7 @@ end
 
 if ~isempty(typenames)
   if length(artifact) ~= length(typenames)
-    ft_error('length typenames should be the same as length artifact')
+    error(defaultId, 'length typenames should be the same as length artifact')
   end
 end
 

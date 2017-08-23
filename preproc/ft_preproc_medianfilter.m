@@ -34,12 +34,12 @@ function dat = ft_preproc_medianfilter(dat, order)
 
 % set the default filter order
 if nargin<2 || isempty(order)
-  ft_error('the order of the median filter is not specified');
+  error(defaultId, 'the order of the median filter is not specified');
 end
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
-  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  warning(defaultId, 'FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 % deal with padding

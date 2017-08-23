@@ -102,7 +102,7 @@ if isequal(hassampleinfo, 'ifmakessense')
         % it does not make sense, so don't keep it
         hassampleinfo = 'no';
         % the actual removal will be done further down
-        ft_warning('removing inconsistent sampleinfo');
+        warning(defaultId, 'removing inconsistent sampleinfo');
         break
       end
     end
@@ -116,7 +116,7 @@ if isequal(hastrialinfo, 'ifmakessense')
     if size(data.trialinfo,1)~=numel(data.trial)
       % it does not make sense, so don't keep it
       hastrialinfo = 'no';
-      ft_warning('removing inconsistent trialinfo');
+      warning(defaultId, 'removing inconsistent trialinfo');
     end
   end
 end
@@ -156,7 +156,7 @@ switch version
         end
       end
       if isnan(data.fsample)
-        ft_warning('cannot determine sampling frequency');
+        warning(defaultId, 'cannot determine sampling frequency');
       end
     end
     
@@ -252,7 +252,7 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    ft_error('unsupported version "%s" for raw datatype', version);
+    error(defaultId, 'unsupported version "%s" for raw datatype', version);
 end
 
 
@@ -307,7 +307,7 @@ needfix = needfix || ~all(skew==0) && all(skew<0.01);
 
 % if the skew is less than 1% it will be corrected
 if needfix
-  ft_warning('correcting numerical inaccuracy in the time axes');
+  warning(defaultId, 'correcting numerical inaccuracy in the time axes');
   for i=1:length(data.time)
     % reconstruct the time axis of each trial, using the begin latency of
     % the first trial and the integer offset in samples of each trial

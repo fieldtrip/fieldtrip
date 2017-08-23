@@ -190,7 +190,7 @@ switch segversion
         fn = fn(sel);
 
         if numel(fn)>1
-          ft_error('cannot construct a brain mask on the fly; this requires a single indexed representation');
+          error(defaultId, 'cannot construct a brain mask on the fly; this requires a single indexed representation');
         else
           seg      = segmentation.(fn{1});
           seglabel = segmentation.([fn{1} 'label']);
@@ -199,7 +199,7 @@ switch segversion
             smooth    = 5;
             % ensure that the segmentation contains the brain mask, if not then construct it from gray+white+csf
             if length(intersect(seglabel, {'gray' 'white' 'csf'}))~=3
-              ft_error('cannot construct a brain mask on the fly; this requires gray, white and csf');
+              error(defaultId, 'cannot construct a brain mask on the fly; this requires gray, white and csf');
             end
             gray  = seg==find(strcmp(seglabel, 'gray'));
             white = seg==find(strcmp(seglabel, 'white'));
@@ -216,7 +216,7 @@ switch segversion
       elseif all(probabilistic)
         if ~isfield(segmentation, 'brain')
           if ~all(isfield(segmentation, {'gray' 'white' 'csf'}))
-            ft_error('cannot construct a brain mask on the fly; this requires gray, white and csf');
+            error(defaultId, 'cannot construct a brain mask on the fly; this requires gray, white and csf');
           end
           threshold = 0.5;
           smooth    = 5;
@@ -232,7 +232,7 @@ switch segversion
           segmentation.brain = brain;
         end
       else
-        ft_error('cannot construct a brain mask on the fly; this requires a uniquely indexed or a uniquely probabilitic representation');
+        error(defaultId, 'cannot construct a brain mask on the fly; this requires a uniquely indexed or a uniquely probabilitic representation');
       end
     end % if hasbrain
 
@@ -246,7 +246,7 @@ switch segversion
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    ft_error('unsupported version "%s" for segmentation datatype', segversion);
+    error(defaultId, 'unsupported version "%s" for segmentation datatype', segversion);
 end
 
 % the segmentation is a speciat type of volume structure, so ensure that it also fulfills the requirements for that

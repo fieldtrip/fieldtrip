@@ -91,7 +91,7 @@ if ~isrow(timelock.time)
   timelock.time = timelock.time';
 end
 if ~isfield(timelock, 'label')
-  ft_warning('data structure is incorrect since it has no channel labels');
+  warning(defaultId, 'data structure is incorrect since it has no channel labels');
 end
 
 switch version
@@ -116,5 +116,5 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    ft_error('unsupported version "%s" for timelock datatype', version);
+    error(defaultId, 'unsupported version "%s" for timelock datatype', version);
 end

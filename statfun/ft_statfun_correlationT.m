@@ -67,16 +67,16 @@ if ~isfield(cfg, 'type'),              cfg.type           = 'Pearson'; end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    ft_error('P-values can only be calculated if the test statistics are calculated.');
+    error(defaultId, 'P-values can only be calculated if the test statistics are calculated.');
 end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    ft_error('cfg.uvar should not exist for a correlation statistic');
+    error(defaultId, 'cfg.uvar should not exist for a correlation statistic');
 end
 
 [nsmpl,nrepl] = size(dat);
 df = nrepl - 1;
 if df<1
-  ft_error('Insufficient error degrees of freedom for this analysis.')
+  error(defaultId, 'Insufficient error degrees of freedom for this analysis.')
 end
 
 if strcmp(cfg.computestat,'yes') % compute the statistic    

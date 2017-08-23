@@ -137,7 +137,7 @@ end
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
-  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  warning(defaultId, 'FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 % Nyquist frequency
@@ -155,12 +155,12 @@ switch type
 
     % Input arguments
     if length(Fbp) ~= 2
-        ft_error('Two cutoff frequencies required.')
+        error(defaultId, 'Two cutoff frequencies required.')
     end
 
     % Filter order AND transition width set?
     if ~isempty(N) && ~isempty(df)
-        ft_warning('firws:dfOverridesN', 'Filter order AND transition width set - transition width setting will override filter order.')
+        warning(defaultId, 'firws:dfOverridesN', 'Filter order AND transition width set - transition width setting will override filter order.')
     elseif isempty(N) && isempty(df) % Default transition width heuristic
         df = fir_df(Fbp, Fs);
     end
@@ -170,14 +170,14 @@ switch type
     isOrderLow = false;
     if ~isempty(df)
       if df > maxDf
-        ft_error('Transition band too wide. Maximum transition width is %.2f Hz.', maxDf)
+        error(defaultId, 'Transition band too wide. Maximum transition width is %.2f Hz.', maxDf)
       end
       [N, dev] = firwsord(wintype, Fs, df, dev);
     else % Check filter order otherwise
       [df, dev] = invfirwsord(wintype, Fs, N, dev);
       if df > maxDf
         nOpt = firwsord(wintype, Fs, maxDf, dev);
-        ft_warning('firws:filterOrderLow', 'Filter order too low. For better results a minimum filter order of %d is recommended. Effective cutoff frequency might deviate from requested cutoff frequency.', nOpt)
+        warning(defaultId, 'firws:filterOrderLow', 'Filter order too low. For better results a minimum filter order of %d is recommended. Effective cutoff frequency might deviate from requested cutoff frequency.', nOpt)
         isOrderLow = true;
       end
     end
@@ -241,7 +241,7 @@ switch type
     
   case 'firls' % from NUTMEG's implementation
     % Deprecated: see bug 2453
-    ft_warning('The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')
+    warning(defaultId, 'The filter type you requested is not recommended for neural signals, only proceed if you know what you are doing.')
     if isempty(N)
       N = 3*fix(Fs / Fbp(1));
     end
@@ -280,7 +280,7 @@ switch type
     return
     
   otherwise
-    ft_error('unsupported filter type "%s"', type);
+    error(defaultId, 'unsupported filter type "%s"', type);
 end
 
 % demean the data before filtering
@@ -294,20 +294,20 @@ catch
     case 'no'
       rethrow(lasterror);
     case 'reduce'
-      ft_warning('backtrace', 'off')
-      ft_warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
-      ft_warning('backtrace', 'on')
+      warning(defaultId, 'backtrace', 'off')
+      warning(defaultId, 'instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
+      warning(defaultId, 'backtrace', 'on')
       filt = ft_preproc_bandpassfilter(dat,Fs,Fbp,N-1,type,dir,instabilityfix);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
-      ft_warning('backtrace', 'off')
-      ft_warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
-      ft_warning('backtrace', 'on')
+      warning(defaultId, 'backtrace', 'off')
+      warning(defaultId, 'instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
+      warning(defaultId, 'backtrace', 'on')
       filt = ft_preproc_bandpassfilter(dat ,Fs,Fbp,N1,type,dir,instabilityfix);
       filt = ft_preproc_bandpassfilter(filt,Fs,Fbp,N2,type,dir,instabilityfix);
     otherwise
-      ft_error('incorrect specification of instabilityfix');
+      error(defaultId, 'incorrect specification of instabilityfix');
   end % switch
 end
 

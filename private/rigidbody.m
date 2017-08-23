@@ -50,7 +50,7 @@ function [H] = rigidbody(f)
 % $Id$
 
 if numel(f)~=6
-  ft_error('incorrect input vector');
+  error(defaultId, 'incorrect input vector');
 end
 
 % compute the homogenous transformation matrix for the translation

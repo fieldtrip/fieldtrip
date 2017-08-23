@@ -37,7 +37,7 @@ Nchans   = size(grid.leadfield{grid.inside(1)}, 1);
 Ncomp    = size(grid.leadfield{grid.inside(1)}, 2);
 
 if isempty(cfg.sphereradius)
-  ft_error('cfg.sphereradius should be specified');
+  error(defaultId, 'cfg.sphereradius should be specified');
 end
 % the distance only has to be computed to voxels inside the brain
 pos  = grid.pos(grid.inside,:);

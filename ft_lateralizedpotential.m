@@ -105,7 +105,7 @@ if ~isfield(cfg, 'channelcmb')
 end
 
 if ~isequal(avgL.time, avgR.time)
-  ft_error('the time axes are not the same');
+  error(defaultId, 'the time axes are not the same');
 end
 
 % start with an empty output structure
@@ -117,12 +117,12 @@ lrp.time      = avgL.time;
 % add timelock signature
 if isfield(avgL, 'dimord') && isfield(avgR, 'dimord')
     if ~strcmp(avgL.dimord, avgR.dimord)
-        ft_error('The input data are of different dimord types');
+        error(defaultId, 'The input data are of different dimord types');
     else
         lrp.dimord = avgL.dimord;
     end
 else
-    ft_error('''dimord'' not found. The function expects timelock data');
+    error(defaultId, '''dimord'' not found. The function expects timelock data');
 end
 
 % compute the lateralized potentials

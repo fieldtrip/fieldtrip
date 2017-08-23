@@ -63,20 +63,20 @@ else
 end
 
 if isempty(trl)
-  ft_warning('the data does not contain a trial definition');
+  warning(defaultId, 'the data does not contain a trial definition');
 elseif ~isempty(trl) && size(trl,1)~=numel(nsmp)
-  ft_warning('the trial definition in the configuration is inconsistent with the actual data');
+  warning(defaultId, 'the trial definition in the configuration is inconsistent with the actual data');
   trl = [];
 elseif size(trl,1)~=ntrial
-  ft_warning('the trial definition in the configuration is inconsistent with the actual data');
+  warning(defaultId, 'the trial definition in the configuration is inconsistent with the actual data');
   trl = [];
 elseif nsmp~=(trl(:,2)-trl(:,1)+1)
-  ft_warning('the trial definition in the configuration is inconsistent with the actual data');
+  warning(defaultId, 'the trial definition in the configuration is inconsistent with the actual data');
   trl = [];
 end
 
 if isempty(trl) || ~all(nsmp==trl(:,2)-trl(:,1)+1)
-  ft_warning('reconstructing sampleinfo by assuming that the trials are consecutive segments of a continuous recording');
+  warning(defaultId, 'reconstructing sampleinfo by assuming that the trials are consecutive segments of a continuous recording');
   % construct a trial definition on the fly, assume that the trials are
   % consecutive segments of a continuous recording
   if ntrial==1,
@@ -103,7 +103,7 @@ if ~isfield(data, 'sampleinfo') && ~isempty(trl)
   data.sampleinfo = trl(:, 1:2);
 elseif ~isfield(data, 'sampleinfo') && isempty(trl)
   % this is probably an unreachable statement
-  ft_warning('failed to create sampleinfo field');
+  warning(defaultId, 'failed to create sampleinfo field');
 end
 
 if (~isfield(data, 'trialinfo') || isempty(data.trialinfo)) && ~isempty(trl) && size(trl, 2) > 3,

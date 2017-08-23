@@ -30,7 +30,7 @@ if ~all(dfreq==dfreq(1))
 end
 
 if freq(1)~=0
-  ft_warning('FieldTrip:transfer2iis', 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  warning(defaultId, 'FieldTrip:transfer2iis', 'when converting the transfer function to coefficients, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   

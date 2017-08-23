@@ -65,7 +65,7 @@ if ~isstruct(fileorstruct) && exist(fileorstruct,'file')
 elseif isstruct(fileorstruct)
   structin=fileorstruct;
 elseif ~isstruct(fileorstruct)
-  ft_error('please enter either a structure (beam or nuts) or filename containing either beam or nuts')
+  error(defaultId, 'please enter either a structure (beam or nuts) or filename containing either beam or nuts')
 end
 clear fileorstruct
 
@@ -86,7 +86,7 @@ elseif isfield(structin,'beam')
   end
   nutsorbeam=2;
 else
-  ft_error('not sure of the input type. maybe you need to call nut_beam_legacy_compatibility?')
+  error(defaultId, 'not sure of the input type. maybe you need to call nut_beam_legacy_compatibility?')
 end
 
 if cfg.keepmri
@@ -140,7 +140,7 @@ if nutsorbeam==1
     raw.grad.tra(:,1:size(structin.meg.data,2))=eye(size(structin.meg.data,2));
     raw.grad.tra(:,size(structin.meg.data,2)+1:2*size(structin.meg.data,2))=eye(size(structin.meg.data,2));
     raw.grad.tra(:,2*size(structin.meg.data,2)+1:end)=structin.meg.Gcoef;
-    ft_warning('FIXME: should Gcoef be added regardless of structin.meg.grad_order?')
+    warning(defaultId, 'FIXME: should Gcoef be added regardless of structin.meg.grad_order?')
   end
 
   if structin.meg.grad_order==0
@@ -232,7 +232,7 @@ elseif nutsorbeam==2
       end
     end
   else
-    ft_error('not a valid cfg.out specified');
+    error(defaultId, 'not a valid cfg.out specified');
   end
   data=source;
   clear source

@@ -46,12 +46,12 @@ has_mex_func=@()exist(mexfullpath,'file');
 
 if ~has_mex_func()
   % try to compile the mex file on the fly
-  ft_warning('trying to compile MEX file from %s', mexsrc);
+  warning(defaultId, 'trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
   mex(mexsrc);
 
   if ~has_mex_func()
-    ft_error('could not locate / compile MEX file for %s in %s', ...
+    error(defaultId, 'could not locate / compile MEX file for %s in %s', ...
                 mexname, mexfullpath);
   end
 end

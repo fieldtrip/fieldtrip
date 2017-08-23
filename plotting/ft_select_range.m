@@ -122,7 +122,7 @@ selecting = numel(userData.range)>0 && any(isnan(userData.range(end,:)));
 pointonly = ~xrange && ~yrange;
 
 if pointonly && multiple
-  ft_warning('multiple selections are not possible for a point');
+  warning(defaultId, 'multiple selections are not possible for a point');
   multiple = false;
 end
 
@@ -296,7 +296,7 @@ switch lower(event)
     
     
   otherwise
-    ft_error('unexpected event "%s"', event);
+    error(defaultId, 'unexpected event "%s"', event);
     
 end % switch event
 

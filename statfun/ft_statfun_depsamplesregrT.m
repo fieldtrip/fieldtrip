@@ -69,10 +69,10 @@ if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    ft_error('P-values can only be calculated if the test statistics are calculated.');
+    error(defaultId, 'P-values can only be calculated if the test statistics are calculated.');
 end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
-    ft_error('uvar must be specified for dependent samples statistics');
+    error(defaultId, 'uvar must be specified for dependent samples statistics');
 end
 
 if ~isempty(cfg.cvar)
@@ -85,7 +85,7 @@ end
 nunits = max(design(cfg.uvar,:));
 df = nunits - 1;
 if nunits<2
-    ft_error('The data must contain at least two units-of-observation (usually subjects).')
+    error(defaultId, 'The data must contain at least two units-of-observation (usually subjects).')
 end
 
 if strcmp(cfg.computestat,'yes')

@@ -158,7 +158,7 @@ Ndata = numel(varargin);
 
 % interactive plotting is not allowed with more than 1 input
 % if Ndata >1 && strcmp(cfg.interactive, 'yes')
-%   ft_error('interactive plotting is not supported with more than 1 input data set');
+%   error(defaultId, 'interactive plotting is not supported with more than 1 input data set');
 % end
 
 % FIXME rename directionality and cohrefchannel in more meaningful options
@@ -175,7 +175,7 @@ end
 
 if Ndata  > 1
   if (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) > 1)
-    ft_error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
+    error(defaultId, 'either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
   elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
     tmpstyle = cfg.linestyle{1};
     cfg.linestyle = cell(Ndata , 1);
@@ -206,7 +206,7 @@ end
 
 if Ndata >1
   if ~all(strcmp(dtype{1}, dtype))
-    ft_error('input data are of different type; this is not supported');
+    error(defaultId, 'input data are of different type; this is not supported');
   end
 end
 dtype  = dtype{1};
@@ -331,9 +331,9 @@ if ~strcmp(cfg.baseline, 'no')
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
       varargin{i} = ft_freqbaseline(cfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
-      ft_error('baseline correction is not supported for spectra without a time dimension');
+      error(defaultId, 'baseline correction is not supported for spectra without a time dimension');
     else
-      ft_warning('baseline correction not applied, please set xparam');
+      warning(defaultId, 'baseline correction not applied, please set xparam');
     end
   end
 end
@@ -350,7 +350,7 @@ haslabelcmb = isfield(varargin{1}, 'labelcmb');
 if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % a reference channel is required:
   if ~isfield(cfg, 'refchannel')
-    ft_error('no reference channel is specified');
+    error(defaultId, 'no reference channel is specified');
   end
 
   % check for refchannel being part of selection
@@ -362,13 +362,13 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
     end
     if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
         (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
-      ft_error('cfg.refchannel is a not present in the (selected) channels)')
+      error(defaultId, 'cfg.refchannel is a not present in the (selected) channels)')
     end
   end
 
   % interactively select the reference channel
   if strcmp(cfg.refchannel, 'gui')
-    ft_error('cfg.refchannel = ''gui'' is not supported in ft_singleplotER');
+    error(defaultId, 'cfg.refchannel = ''gui'' is not supported in ft_singleplotER');
   end
 
   for i=1:Ndata
@@ -386,7 +386,7 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
       end
       fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
       if length(sel1)+length(sel2)==0
-        ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+        error(defaultId, 'there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
       end
       varargin{i}.(cfg.parameter) = varargin{i}.(cfg.parameter)([sel1;sel2],:,:);
       varargin{i}.label     = [varargin{i}.labelcmb(sel1,1);varargin{i}.labelcmb(sel2,2)];
@@ -410,9 +410,9 @@ if (isfull || haslabelcmb) && (isfield(varargin{1}, cfg.parameter) && ~strcmp(cf
         meandir = 1;
 
       elseif strcmp(cfg.directionality, 'ff-fd')
-        ft_error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
+        error(defaultId, 'cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
       elseif strcmp(cfg.directionality, 'fd-ff')
-        ft_error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
+        error(defaultId, 'cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotER');
       end %if directionality
     end %if ~isfull
   end %for i
@@ -465,7 +465,7 @@ for i=1:Ndata
   elseif isfield(varargin{1}, 'labelcmb')
     selchannel = ft_channelselection(cfg.channel, unique(varargin{i}.labelcmb(:)));
   else
-    ft_error('the input data does not contain a label or labelcmb-field');
+    error(defaultId, 'the input data does not contain a label or labelcmb-field');
   end
 
   % make vector dat with one value for each channel

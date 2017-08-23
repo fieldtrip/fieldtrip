@@ -79,7 +79,7 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
   elseif checktime(varargin{:}, 'unique', cfg.tolerance)
     cfg.appenddim = 'time';
   else
-    ft_error('cfg.appenddim should be specified');
+    error(defaultId, 'cfg.appenddim should be specified');
   end
 end
 fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
@@ -96,7 +96,7 @@ end
 assert(~isempty(cfg.parameter), 'cfg.parameter should be specified');
 
 if any(strcmp(cfg.parameter, 'avg')) && any(strcmp(cfg.parameter, 'trial'))
-  ft_warning('appending the individual trials, not the averages');
+  warning(defaultId, 'appending the individual trials, not the averages');
   % also prevent var and dof from being appended
   cfg.parameter = setdiff(cfg.parameter, {'avg', 'var', 'dof'}); 
 end
@@ -105,7 +105,7 @@ end
 timelock = append_common(cfg, varargin{:});
 
 if isfield(timelock, 'avg') && ~isfield(timelock, 'trial')
-  ft_warning('renaming the appended averages to "trial"');
+  warning(defaultId, 'renaming the appended averages to "trial"');
   timelock.trial = timelock.avg;
   timelock = rmfield(timelock, 'avg');
 end

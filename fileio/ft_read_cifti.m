@@ -94,7 +94,7 @@ fseek(fid, 0, 'bof');
 % set the default for readdata
 if isempty(readdata)
   if filesize>1e9
-    ft_warning('Not reading data by default in case filesize>1GB. Please specify the ''readdata'' option.');
+    warning(defaultId, 'Not reading data by default in case filesize>1GB. Please specify the ''readdata'' option.');
     readdata = false;
   else
     readdata = true;
@@ -104,7 +104,7 @@ end
 fseek(fid, 540, 'bof');
 hdrext = fread(fid, [1 4], 'int8');
 if hdrext(1)~=1
-  ft_error('cifti requires a header extension');
+  error(defaultId, 'cifti requires a header extension');
 end
 
 % determine the size of the header extension
@@ -114,13 +114,13 @@ etype = fread(fid, 1, 'int32=>int32');
 hdrsize = 540;
 voxsize = filesize-hdr.vox_offset;
 if esize>(filesize-hdrsize-voxsize)
-  ft_warning('the endianness of the header extension is inconsistent with the nifti-2 header');
+  warning(defaultId, 'the endianness of the header extension is inconsistent with the nifti-2 header');
   esize = swapbytes(esize);
   etype = swapbytes(etype);
 end
 
 if etype~=32 && etype~=swapbytes(int32(32)) % FIXME there is an endian problem
-  ft_error('the header extension type is not cifti');
+  error(defaultId, 'the header extension type is not cifti');
 end
 
 % read the extension content, subtract the 8 bytes from esize and etype
@@ -358,7 +358,7 @@ for i=1:length(uid_MatrixIndicesMap)
             Surface(end  ).SurfaceNumberOfVertices = MatrixIndicesMap(i).BrainModel(j).SurfaceNumberOfVertices;
             
           otherwise
-            ft_error('unsupported cifti version');
+            error(defaultId, 'unsupported cifti version');
         end % switch version
         
         
@@ -367,7 +367,7 @@ for i=1:length(uid_MatrixIndicesMap)
         MatrixIndicesMap(i).BrainModel(j).VoxelIndicesIJK = reshape(tmp, 3, [])' + 1; % transpose, one offset
         
       otherwise
-        ft_error('unsupported ModelType');
+        error(defaultId, 'unsupported ModelType');
     end % switch ModelType
   end % for each BrainModel
 end % for each MatrixIndicesMap
@@ -386,7 +386,7 @@ if readdata
     case  64, [voxdata, nitemsread] = fread(fid, inf, 'double');  assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
     case 512, [voxdata, nitemsread] = fread(fid, inf, 'ushort');  assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
     case 768, [voxdata, nitemsread] = fread(fid, inf, 'uint');    assert(nitemsread==prod(hdr.dim(2:end)), 'could not read all data');
-    otherwise, ft_error('unsupported datatype');
+    otherwise, error(defaultId, 'unsupported datatype');
   end
   % hdr.dim(1) is the number of dimensions
   % hdr.dim(2) is reserved for the x-dimension
@@ -474,7 +474,7 @@ for i=1:length(MatrixIndicesMap)
           % case 'METER'
           % case 'RADIAN'
         otherwise
-          ft_error('unsupported SeriesUnit');
+          error(defaultId, 'unsupported SeriesUnit');
       end % switch SeriesUnit
       
     case 'CIFTI_INDEX_TYPE_SCALARS'
@@ -501,11 +501,11 @@ for i=1:length(MatrixIndicesMap)
           Cifti.fsample = 1/str2double(MatrixIndicesMap(i).TimeStep);
         otherwise
           % other units should be trivial to implement
-          ft_error('unsupported TimeStepUnits "%s"', MatrixIndicesMap(i).TimeStepUnits);
+          error(defaultId, 'unsupported TimeStepUnits "%s"', MatrixIndicesMap(i).TimeStepUnits);
       end % switch TimeStepUnits
       
     otherwise
-      ft_error('unsupported IndicesMapToDataType');
+      error(defaultId, 'unsupported IndicesMapToDataType');
   end % switch IndicesMapToDataType
 end % for each MatrixIndicesMap
 
@@ -541,7 +541,7 @@ if ~isempty(BrainModel)
             greynodeIndex{i}       = BrainModel(i).VertexIndices;
             brainstructureIndex{i} = 1:BrainModel(i).SurfaceNumberOfVertices;
           otherwise
-            ft_error('unsupported cifti version');
+            error(defaultId, 'unsupported cifti version');
         end % switch
         
         sel = find(strcmp({Surface(:).BrainStructure}, BrainModel(i).BrainStructure));
@@ -554,7 +554,7 @@ if ~isempty(BrainModel)
         surfaceIndex(i) = nan; % does not map onto surface
         
       otherwise
-        ft_error('unsupported ModelType "%s"', BrainModel(i).ModelType);
+        error(defaultId, 'unsupported ModelType "%s"', BrainModel(i).ModelType);
     end
   end % for each BrainModel
   
@@ -757,7 +757,7 @@ if readdata
       source.dimord = 'chan_chan_time';
       
     otherwise
-      ft_error('unsupported dimord %s', source.dimord);
+      error(defaultId, 'unsupported dimord %s', source.dimord);
   end % switch
   
   if isfield(Cifti, 'mapname') && isfield(Cifti, 'labeltable') && strcmp(mapname, 'array')
@@ -766,11 +766,11 @@ if readdata
       allthesame = allthesame && isequal(Cifti.labeltable{1}, Cifti.labeltable{i});
     end
     if allthesame
-      ft_warning('using the same labels for all maps in the array');
+      warning(defaultId, 'using the same labels for all maps in the array');
       source.datalabel = Cifti.labeltable{1};
       Cifti = rmfield(Cifti, 'labeltable');
     else
-      ft_error('multiple maps cannot be represented as array in the presence of different labeltables');
+      error(defaultId, 'multiple maps cannot be represented as array in the presence of different labeltables');
     end
   end
   
@@ -795,7 +795,7 @@ if readdata
         source.data    = dat;
         source.dimord  = [source.dimord '_mapname'];
       otherwise
-        ft_error('incorrect specification of mapname "%s"', mapname);
+        error(defaultId, 'incorrect specification of mapname "%s"', mapname);
     end % switch mapname
   else
     % the name of the data will be based on the filename
@@ -840,7 +840,7 @@ elseif length(t)==5
   geomodel = t{4};
   content  = t{5};
 else
-  ft_warning('cannot parse file name');
+  warning(defaultId, 'cannot parse file name');
 end
 
 if readsurface

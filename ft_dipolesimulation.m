@@ -185,13 +185,13 @@ end
 if length(dippos)==1
   dippos = repmat(dippos, 1, Ntrials);
 elseif length(dippos)~=Ntrials
-  ft_error('incorrect number of trials specified in the dipole position');
+  error(defaultId, 'incorrect number of trials specified in the dipole position');
 end
 
 if length(dipmom)==1
   dipmom = repmat(dipmom, 1, Ntrials);
 elseif length(dipmom)~=Ntrials
-  ft_error('incorrect number of trials specified in the dipole moment');
+  error(defaultId, 'incorrect number of trials specified in the dipole moment');
 end
 
 simulated.trial  = {};

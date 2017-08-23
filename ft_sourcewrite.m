@@ -116,7 +116,7 @@ if isempty(cfg.filetype)
     % there is a specification of a 2D cortical sheet, save as gifti
     cfg.filetype = 'gifti';
   else
-    ft_error('the input data does not look like a 2D sheet, nor as a 3D regular volume');
+    error(defaultId, 'the input data does not look like a 2D sheet, nor as a 3D regular volume');
   end
 end
 
@@ -151,7 +151,7 @@ switch (cfg.filetype)
     ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'brainstructure', cfg.brainstructure, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
 
   otherwise
-    ft_error('unsupported output format (%s)', cfg.filetype);
+    error(defaultId, 'unsupported output format (%s)', cfg.filetype);
 end % switch filetype
 
 ft_postamble debug

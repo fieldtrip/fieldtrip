@@ -10,7 +10,7 @@ if isa(mesh, 'delaunayTriangulation')
   % convert to structure, otherwise the code below won't work properly
   ws = warning('off', 'MATLAB:structOnObject');
   mesh = struct(mesh);
-  ft_warning(ws);
+  warning(defaultId, ws);
 end
 
 if ~isa(mesh, 'struct')
@@ -42,7 +42,7 @@ if isfield(mesh, 'Points') && isfield(mesh, 'ConnectivityList')
     case 8
       mesh.hex = mesh.ConnectivityList;
     otherwise
-      ft_error('unsupported ConnectivityList')
+      error(defaultId, 'unsupported ConnectivityList')
   end % switch
   mesh = removefields(mesh, {'Points', 'ConnectivityList', 'Constraints', 'UnderlyingObj'});
 end

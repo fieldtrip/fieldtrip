@@ -65,7 +65,7 @@ function [dipout] = beamformer_lcmv(dip, grad, headmodel, dat, Cy, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  ft_error('invalid number of optional arguments');
+  error(defaultId, 'invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -108,7 +108,7 @@ powtrace   = strcmp(powmethod, 'trace');
 powlambda1 = strcmp(powmethod, 'lambda1');
 
 if isfield(dip, 'mom') && fixedori
-  ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
+  error(defaultId, 'you cannot specify a dipole orientation and fixedmom simultaneously');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

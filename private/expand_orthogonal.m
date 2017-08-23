@@ -60,24 +60,24 @@ function [B] = expand_orthogonal(A,flg,method)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check the input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if (nargin<1) || (nargin>3), ft_error('incorrect number of input arrguments'); end
+if (nargin<1) || (nargin>3), error(defaultId, 'incorrect number of input arrguments'); end
 if (nargin<3), method = 'svd'; end
 if (nargin<2), flg = 0; end
 
 % A must be a matrix with more rows than columns containing only real numbers
 if isempty(A) || ~isnumeric(A) || ~isreal(A) || any(~isfinite(A(:))) ...
       || (ndims(A)>2) || (size(A,1)<size(A,2)) || (max(size(A))==1)
-   ft_error('input argument ''A'' must be a real matrix with more rows than columns');
+   error(defaultId, 'input argument ''A'' must be a real matrix with more rows than columns');
 end
 
 % flg must be a logical
 if (flg~=0) && (flg~=1)
-   ft_error('input argument ''flg'' must be either 0 (default) or 1');
+   error(defaultId, 'input argument ''flg'' must be either 0 (default) or 1');
 end
 
 % method must be a string
 if ~ischar(method)
-   ft_error('input argument ''method'' must be a string');
+   error(defaultId, 'input argument ''method'' must be a string');
 end
 
 
@@ -90,12 +90,12 @@ for i=1:ncols, A(:,i) = A(:,i)./norm(A(:,i),2); end
 % determine how many columns have to be expanded
 nxpnd = nrows-ncols;
 if (nxpnd<1)
-   ft_warning('A is already a square matrix: orthogonal expansion not possible');
+   warning(defaultId, 'A is already a square matrix: orthogonal expansion not possible');
    if (flg==0)
-      ft_warning('columns of input have been normalized to unit lenth for output');
+      warning(defaultId, 'columns of input have been normalized to unit lenth for output');
       B = A;
    else
-      ft_warning('output contains orthonormal basis of the range space of input');
+      warning(defaultId, 'output contains orthonormal basis of the range space of input');
       B = orth(A);
    end
    return;
@@ -142,7 +142,7 @@ switch lower(method)
       end
 
    otherwise
-      ft_error(['unknown or unsupported method: ',method]);
+      error(defaultId, ['unknown or unsupported method: ',method]);
 
 end % switch lower(method)
 

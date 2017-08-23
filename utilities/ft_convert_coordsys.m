@@ -64,12 +64,12 @@ if ~isfield(obj, 'coordsys') || isempty(obj.coordsys)
   % the call to ft_determine_coordsys should have taken care of this, but
   % it is possible that the user aborted the coordinate system
   % determination. See http://bugzilla.fcdonders.nl/show_bug.cgi?id=2526
-  ft_error('the coordinate system of the geometrical object is not specified');
+  error(defaultId, 'the coordinate system of the geometrical object is not specified');
 end
 
 if any(strcmp(target, {'spm', 'mni', 'tal'}))
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
-  ft_warning('Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
+  warning(defaultId, 'Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
   target = 'acpc';
 end
 
@@ -86,7 +86,7 @@ else
 end
 
 if needtemplate && nargin<4
-  ft_error('you need to specify a template filename for the coregistration');
+  error(defaultId, 'you need to specify a template filename for the coregistration');
 end
 
 hastemplate = nargin>3;
@@ -113,7 +113,7 @@ if nargin>1 && ~strcmpi(target, obj.coordsys)
         otherwise
       end % switch obj.coordsys
     otherwise
-      ft_error('conversion from %s to %s is not yet supported', obj.coordsys, target);
+      error(defaultId, 'conversion from %s to %s is not yet supported', obj.coordsys, target);
   end % switch target
 end
 

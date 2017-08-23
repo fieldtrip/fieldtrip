@@ -54,7 +54,7 @@ if isa(filename, 'cell')
     filenamemesh = filename{2};
     filename     = filename{1};
   else
-    ft_error('with multiple filenames, only 2 files are allowed');
+    error(defaultId, 'with multiple filenames, only 2 files are allowed');
   end % if precisely two input files
 end % iscell
 
@@ -668,7 +668,7 @@ switch fileformat
       
     else
       % the file does not exist
-      ft_warning('cannot locate %s, making fake tissue labels', filename2);
+      warning(defaultId, 'cannot locate %s, making fake tissue labels', filename2);
       value = [];
       label = {};
       for i=1:max(brick0(:))
@@ -1756,7 +1756,7 @@ switch fileformat
     elseif strcmp(fileformat, 'freesurfer_ba')
       parcelfield = 'BA';
     else
-      ft_error('unknown freesurfer parcellation method requested');
+      error(defaultId, 'unknown freesurfer parcellation method requested');
       %[index, label, rgb] = read_fscolorlut(lookuptable);
       %label = cellstr(label);
       %rgb = rand(length(label),3);
@@ -1776,7 +1776,7 @@ switch fileformat
         rgb   = c.table(:,5); % compound value that is used for the indexing in vector p
         index = ((1:c.numEntries)-1)';
       otherwise
-        ft_error('unsupported fileformat for parcel file');
+        error(defaultId, 'unsupported fileformat for parcel file');
     end
     
     switch ft_filetype(filenamemesh)
@@ -1797,12 +1797,12 @@ switch fileformat
         bnd.tri    = tri;
         reindex    = true;
       otherwise
-        ft_error('unsupported fileformat for surface mesh');
+        error(defaultId, 'unsupported fileformat for surface mesh');
     end
     
     % check the number of vertices
     if size(bnd.pos,1) ~= numel(p)
-      ft_error('the number of vertices in the mesh does not match the number of elements in the parcellation');
+      error(defaultId, 'the number of vertices in the mesh does not match the number of elements in the parcellation');
     end
     
     % reindex the parcels, if needed: I am not fully sure about this, but the caret
@@ -1886,7 +1886,7 @@ switch fileformat
       % if strcmp(g.private.data{k}.metadata(1).name, 'Name')
       %   parcelfield = fixname(g.private.data{k}.metadata(1).value);
       % else
-      %   ft_error('could not determine parcellation name');
+      %   error(defaultId, 'could not determine parcellation name');
       % end
       
       if size(g.cdata,2)>1
@@ -1985,16 +1985,16 @@ switch fileformat
       fn = fieldnames(tmp);
       atlas = tmp.(fn{1});
       if isstruct(atlas)
-        ft_warning('assuming that the variable "%s" in "%s" represents the atlas', fn{1}, filename);
+        warning(defaultId, 'assuming that the variable "%s" in "%s" represents the atlas', fn{1}, filename);
       else
-        ft_error('cannot read atlas structure from "%s"', filename);
+        error(defaultId, 'cannot read atlas structure from "%s"', filename);
       end
     else
-      ft_error('the mat-file %s does not contain a variable called ''atlas''',filename);
+      error(defaultId, 'the mat-file %s does not contain a variable called ''atlas''',filename);
     end
     
   otherwise
-    ft_error('unsupported format "%s"', fileformat);
+    error(defaultId, 'unsupported format "%s"', fileformat);
     
 end % switch fileformat
 

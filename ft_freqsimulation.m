@@ -353,16 +353,16 @@ elseif strcmp(cfg.method, 'phalow_amphigh')
   
   % sanity checks
   if cfg.s2.freq < cfg.s1.freq
-    ft_error('with method is phalow_amphigh freq s2 should be higher than freq s1')
+    error(defaultId, 'with method is phalow_amphigh freq s2 should be higher than freq s1')
   end
   if cfg.s2.freq > cfg.fsample/2
-    ft_error('you cannot have a frequency higher than the sample frequency/2')
+    error(defaultId, 'you cannot have a frequency higher than the sample frequency/2')
   end
   if cfg.s3.freq ~= 0 || cfg.s3.phase ~= 0
-    ft_warning('for method phalow_amphigh s3 is DC and therefore expect freq and phase to be zero but they are not')
+    warning(defaultId, 'for method phalow_amphigh s3 is DC and therefore expect freq and phase to be zero but they are not')
   end
   if cfg.s3.ampl < cfg.s1.ampl
-    ft_warning('expect amplitude s3 (=DC) not to be smaller than amplitude s1 (=low frequency)')
+    warning(defaultId, 'expect amplitude s3 (=DC) not to be smaller than amplitude s1 (=low frequency)')
   end
   
   % make data
@@ -401,16 +401,16 @@ elseif strcmp(cfg.method, 'amplow_amphigh')
   
   % sanity checks
   if cfg.s2.freq < cfg.s1.freq || cfg.s1.freq < cfg.s4.freq
-    ft_error('with method is powlow_powhigh freq s4 < s1 < s2')
+    error(defaultId, 'with method is powlow_powhigh freq s4 < s1 < s2')
   end
   if cfg.s2.freq > cfg.fsample/2
-    ft_error('you cannot have a frequency higher than the sample frequency/2')
+    error(defaultId, 'you cannot have a frequency higher than the sample frequency/2')
   end
   if cfg.s3.freq ~= 0 || cfg.s3.phase ~= 0
-    ft_warning('for method powlow_powhigh s3 is DC and therefore expect freq and phase to be zero but they are not')
+    warning(defaultId, 'for method powlow_powhigh s3 is DC and therefore expect freq and phase to be zero but they are not')
   end
   if cfg.s3.ampl < cfg.s4.ampl
-    ft_warning('expect amplitude s3 (=DC) not to be smaller than amplitude s4 (= AM frequency)')
+    warning(defaultId, 'expect amplitude s3 (=DC) not to be smaller than amplitude s4 (= AM frequency)')
   end
   
   % make data
@@ -459,7 +459,7 @@ elseif strcmp(cfg.method, 'phalow_freqhigh')
   
   % sanity checks
   if cfg.s1.freq > cfg.fsample/2 || cfg.s2.freq > cfg.fsample/2
-    ft_error('you cannot have a frequency higher than the sample frequency/2')
+    error(defaultId, 'you cannot have a frequency higher than the sample frequency/2')
   end
   
   % make data
@@ -532,7 +532,7 @@ elseif strcmp(cfg.method, 'asymmetric')
   data.fsample = cfg.fsample;
   
 else
-  ft_error('unknown method specified')
+  error(defaultId, 'unknown method specified')
 end
 
 % do the general cleanup and bookkeeping at the end of the function

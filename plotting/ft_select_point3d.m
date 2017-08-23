@@ -82,7 +82,7 @@ if isempty(h) && ~isempty(bnd)
 end
 
 if length(h)>1
-  ft_warning('using the first patch object in the figure');
+  warning(defaultId, 'using the first patch object in the figure');
   h = h(1);
 end
 

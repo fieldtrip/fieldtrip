@@ -104,10 +104,10 @@ chanunit        = ft_getopt(varargin, 'chanunit');   % this is something like V,
 dipoleunit      = ft_getopt(varargin, 'dipoleunit'); % this is something like nA*m
 
 if any(strcmp(varargin(1:2:end), 'unit'))
-  ft_error('the ''unit'' option is not supported any more, please use ''chanunit''');
+  error(defaultId, 'the ''unit'' option is not supported any more, please use ''chanunit''');
 end
 if any(strcmp(varargin(1:2:end), 'units'))
-  ft_error('the ''units'' option is not supported any more, please use ''chanunit''');
+  error(defaultId, 'the ''units'' option is not supported any more, please use ''chanunit''');
 end
 
 if ~isstruct(sens) && size(sens, 2)==3
@@ -144,15 +144,15 @@ if all(size(dippos)==[1 3*Ndipoles])
 end
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
-  ft_error('inconsistency in the units of the volume conductor and the sensor array');
+  error(defaultId, 'inconsistency in the units of the volume conductor and the sensor array');
 end
 
 if ismeg && iseeg
   % this is something that could be implemented relatively easily
-  ft_error('simultaneous EEG and MEG not supported');
+  error(defaultId, 'simultaneous EEG and MEG not supported');
   
 elseif ~ismeg && ~iseeg
-  ft_error('the input does not look like EEG, nor like MEG');
+  error(defaultId, 'the input does not look like EEG, nor like MEG');
   
 elseif ismeg
   switch ft_voltype(headmodel)
@@ -195,11 +195,11 @@ elseif ismeg
       ncoils = length(sens.coilpos);
       
       if size(headmodel.r, 1)~=ncoils
-        ft_error('number of spheres is not equal to the number of coils')
+        error(defaultId, 'number of spheres is not equal to the number of coils')
       end
       
       if size(headmodel.o, 1)~=ncoils
-        ft_error('number of spheres is not equal to the number of coils');
+        error(defaultId, 'number of spheres is not equal to the number of coils');
       end
       
       lf = zeros(ncoils, 3*Ndipoles);
@@ -278,14 +278,14 @@ elseif ismeg
         %if isfield(headmodel, 'mat')
         lf = s2mm+h2mm*(headmodel.mat*dsm);
         %else
-        %  ft_error('No system matrix is present, BEM head model not calculated yet')
+        %  error(defaultId, 'No system matrix is present, BEM head model not calculated yet')
         %end
         if isfield(sens, 'tra')
           % compute the leadfield for each gradiometer (linear combination of coils)
           lf = sens.tra * lf;
         end
       else
-        ft_warning('No system matrix is present, Calling the Nemo Lab pipeline')
+        warning(defaultId, 'No system matrix is present, Calling the Nemo Lab pipeline')
         lf = leadfield_openmeeg(dippos, headmodel, sens);
       end
       
@@ -338,7 +338,7 @@ elseif ismeg
       end
       
     otherwise
-      ft_error('unsupported volume conductor model for MEG');
+      error(defaultId, 'unsupported volume conductor model for MEG');
   end % switch voltype for MEG
   
 elseif iseeg
@@ -403,7 +403,7 @@ elseif iseeg
       
       Nspheres = length(headmodel.cond);
       if length(headmodel.r)~=Nspheres
-        ft_error('the number of spheres in the volume conductor model is ambiguous');
+        error(defaultId, 'the number of spheres in the volume conductor model is ambiguous');
       end
       
       if isfield(headmodel, 'o')
@@ -428,7 +428,7 @@ elseif iseeg
           headmodel.cond = [headmodel.cond(1) headmodel.cond(2) headmodel.cond(3) headmodel.cond(4)];
           funnam = 'eeg_leadfield4';
         otherwise
-          ft_error('more than 4 concentric spheres are not supported')
+          error(defaultId, 'more than 4 concentric spheres are not supported')
       end
       
       lf = zeros(size(sens.elecpos, 1), 3*Ndipoles);
@@ -506,7 +506,7 @@ elseif iseeg
       sens.tra = speye(length(headmodel.filename));
       
     otherwise
-      ft_error('unsupported volume conductor model for EEG');
+      error(defaultId, 'unsupported volume conductor model for EEG');
       
   end % switch voltype for EEG
   

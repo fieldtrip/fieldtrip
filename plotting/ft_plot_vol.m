@@ -123,13 +123,13 @@ switch ft_voltype(headmodel)
     bnd = [];
     
   case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
-    ft_warning('there is nothing to plot for an infinite volume conductor')
+    warning(defaultId, 'there is nothing to plot for an infinite volume conductor')
     
     % there is no boundary to be displayed
     bnd = [];
     
   otherwise
-    ft_error('unsupported voltype')
+    error(defaultId, 'unsupported voltype')
 end
 
 % all models except for the spherical ones

@@ -64,7 +64,7 @@ switch type
     
     % case 'event'
     %   if ~ft_filetype(filename, 'ctf_ds')
-    %     ft_error('you should specify the directory name of a CTF dataset to which the MarkerFile.mrk will be added');
+    %     error(defaultId, 'you should specify the directory name of a CTF dataset to which the MarkerFile.mrk will be added');
     %   end
     %   
     % The MarkerFile.mrk file requires exact line spacing, otherwise the software
@@ -89,6 +89,6 @@ switch type
     % case 'dip'
 
   otherwise
-    ft_error('unsuported data structure "%s" for exporting to CTF', type);
+    error(defaultId, 'unsuported data structure "%s" for exporting to CTF', type);
 end
 

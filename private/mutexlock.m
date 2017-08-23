@@ -25,13 +25,13 @@ while exist(lockfile, 'file')
   % wait untill another process removes the lockfile
   pause(1);
   if toc(stopwatch)>timeout
-    ft_error('timeout exceeded waiting for the lockfile to be removed');
+    error(defaultId, 'timeout exceeded waiting for the lockfile to be removed');
   end
 end
 
 % create the lockfile
 fid = fopen(lockfile, 'wb');
 if fid<0
-  ft_error('cannot open lockfile');
+  error(defaultId, 'cannot open lockfile');
 end
 flose(fid);

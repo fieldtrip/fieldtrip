@@ -115,15 +115,15 @@ sens.type = ft_senstype(sens);
 headmodel.type  = ft_voltype(headmodel);
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
-  ft_error('inconsistency in the units of the volume conductor and the sensor array');
+  error(defaultId, 'inconsistency in the units of the volume conductor and the sensor array');
 end
 
 if ismeg && iseeg
   % this is something that could be implemented relatively easily
-  ft_error('simultaneous EEG and MEG not yet supported');
+  error(defaultId, 'simultaneous EEG and MEG not yet supported');
   
 elseif ~ismeg && ~iseeg
-  ft_error('the input does not look like EEG, nor like MEG');
+  error(defaultId, 'the input does not look like EEG, nor like MEG');
   
 elseif ismeg
   
@@ -132,7 +132,7 @@ elseif ismeg
     Nchans = length(sens.label);
     Ncoils = size(sens.coilpos,1);
     if Nchans~=Ncoils
-      ft_error('inconsistent number of channels and coils');
+      error(defaultId, 'inconsistent number of channels and coils');
     end
     sens.tra = eye(Nchans, Ncoils);
   end
@@ -193,7 +193,7 @@ elseif ismeg
       elseif size(headmodel.r,1)==size(sens.coilpos,1) && isfield(headmodel, 'label')
         if ~isequal(headmodel.label(:), sens.label(:))
           % if only the order is different, it would be possible to reorder them
-          ft_error('the coils in the volume conduction model do not correspond to the sensor array');
+          error(defaultId, 'the coils in the volume conduction model do not correspond to the sensor array');
         else
           % the coil-specific spheres in the volume conductor should not have a label
           % because the label is already specified for the coils in the
@@ -221,7 +221,7 @@ elseif ismeg
         % and use the globally fitted single sphere for those
         missing = setdiff(sens.label, headmodel.label);
         if ~isempty(missing)
-          ft_warning('using the global fitted single sphere for %d channels that do not have a local sphere', length(missing));
+          warning(defaultId, 'using the global fitted single sphere for %d channels that do not have a local sphere', length(missing));
         end
         for i=1:length(missing)
           headmodel.label(end+1) = missing(i);
@@ -296,14 +296,14 @@ elseif ismeg
       
     case 'openmeeg'
       if isfield(headmodel,'mat') && ~isempty(headmodel.mat)
-        ft_warning('MEG with openmeeg only supported with NEMO lab pipeline. Please omit the mat matrix from the headmodel structure.');
+        warning(defaultId, 'MEG with openmeeg only supported with NEMO lab pipeline. Please omit the mat matrix from the headmodel structure.');
       end
       
     case 'simbio'
-      ft_error('MEG not yet supported with simbio');
+      error(defaultId, 'MEG not yet supported with simbio');
       
     otherwise
-      ft_error('unsupported volume conductor model for MEG');
+      error(defaultId, 'unsupported volume conductor model for MEG');
   end
   
 elseif iseeg
@@ -353,7 +353,7 @@ elseif iseeg
         if is_in_empty
           dPplane = abs(dot(headmodel.ori, headmodel.pos-P, 2));
           if dPplane>md
-            ft_error('Some electrodes are too distant from the plane: consider repositioning them')
+            error(defaultId, 'Some electrodes are too distant from the plane: consider repositioning them')
           else
             % project point on plane
             Ppr = pointproj(P,[headmodel.pos headmodel.ori]);
@@ -382,7 +382,7 @@ elseif iseeg
           dPplane1 = abs(dot(headmodel.ori1, headmodel.pos1-P, 2));
           dPplane2 = abs(dot(headmodel.ori2, headmodel.pos2-P, 2));
           if dPplane1>md && dPplane2>md
-            ft_error('Some electrodes are too distant from the planes: consider repositioning them')
+            error(defaultId, 'Some electrodes are too distant from the planes: consider repositioning them')
           elseif dPplane2>dPplane1
             % project point on nearest plane
             Ppr = pointproj(P,[headmodel.pos1 headmodel.ori1]);
@@ -408,7 +408,7 @@ elseif iseeg
       end
       distance = sqrt(sum(pos.^2,2)); % to the center of the sphere
       if any((abs(distance-radius)/radius)>0.005)
-        ft_warning('electrodes do not lie on skin surface -> using radial projection')
+        warning(defaultId, 'electrodes do not lie on skin surface -> using radial projection')
       end
       pos = pos * radius ./ [distance distance distance];
       if isfield(headmodel, 'o')
@@ -539,7 +539,7 @@ elseif iseeg
       end
       
     otherwise
-      ft_error('unsupported volume conductor model for EEG');
+      error(defaultId, 'unsupported volume conductor model for EEG');
   end
   
   % FIXME this needs careful thought to ensure that the average referencing which is now done here and there, and that the linear interpolation in case of BEM are all dealt with consistently

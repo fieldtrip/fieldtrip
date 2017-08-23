@@ -68,6 +68,6 @@ if usefiducial
     surface_original.pos        = transform(:,1:3);
     surface_original.cfg        = surface_realigned.cfg;
 else
-    ft_error('Cannot perform ft_surfacerealign. Please read help ft_surfacerealign, and check your cfg')
+    error(defaultId, 'Cannot perform ft_surfacerealign. Please read help ft_surfacerealign, and check your cfg')
 end
 

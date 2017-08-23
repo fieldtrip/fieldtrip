@@ -86,14 +86,14 @@ for i = 1:size(cfg.foilim,1)
       case 'rpt_chan_freq_time'
         freq.powspctrm(:,:,peakbeg:peakend,:) = nan;
       otherwise
-        ft_error('unsupported dimord');
+        error(defaultId, 'unsupported dimord');
     end % switch
 
   elseif strcmp(cfg.method, 'linear')
-    ft_error('not yet implemented');
+    error(defaultId, 'not yet implemented');
 
   else
-    ft_error('unsupported method');
+    error(defaultId, 'unsupported method');
   end
 end % for each frequency range
 

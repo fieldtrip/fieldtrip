@@ -284,7 +284,7 @@ switch cfg.method
     [chansel, trlsel, cfg] = rejectvisual_summary(cfg, tmpdata);
 
   otherwise
-    ft_error('unsupported method %s', cfg.method);
+    error(defaultId, 'unsupported method %s', cfg.method);
 end % switch method
 
 fprintf('%d trials marked as GOOD, %d trials marked as BAD\n', sum(trlsel), sum(~trlsel));
@@ -348,7 +348,7 @@ if ~all(chansel)
       cfg = copyfields(orgcfg, cfg, {'trials'});
 
     otherwise
-      ft_error('invalid specification of cfg.keepchannel')
+      error(defaultId, 'invalid specification of cfg.keepchannel')
   end % case
 end % if ~all(chansel)
 
@@ -381,7 +381,7 @@ if ~all(trlsel)
       end
 
     otherwise
-      ft_error('invalid specification of cfg.keeptrial')
+      error(defaultId, 'invalid specification of cfg.keeptrial')
   end % case
 end % if ~all(trlsel)
 

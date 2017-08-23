@@ -129,11 +129,11 @@ distance  = ft_getopt(varargin, 'distance');  % should be 'm' 'dm' 'cm' 'mm'
 scaling   = ft_getopt(varargin, 'scaling');   % should be 'amplitude' or 'amplitude/distance', the default depends on the senstype
 
 if ~isempty(amplitude) && ~any(strcmp(amplitude, {'V' 'uV' 'T' 'mT' 'uT' 'nT' 'pT' 'fT'}))
-  ft_error('unsupported unit of amplitude "%s"', amplitude);
+  error(defaultId, 'unsupported unit of amplitude "%s"', amplitude);
 end
 
 if ~isempty(distance) && ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
-  ft_error('unsupported unit of distance "%s"', distance);
+  error(defaultId, 'unsupported unit of distance "%s"', distance);
 end
 
 if strcmp(version, 'latest')
@@ -194,7 +194,7 @@ switch version
           sens.tra(i,:)    = sens.tra(i,:) * ft_scalingfactor(sens.chanunit{i}, amplitude);
           sens.chanunit{i} = amplitude;
         else
-          ft_error('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
+          error(defaultId, 'unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
         end
       end
     else
@@ -225,13 +225,13 @@ switch version
       sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
       
       if     strcmp(sens.unit, 'm') && (any(sel_dm) || any(sel_cm) || any(sel_mm))
-        ft_error('inconsistent units in input gradiometer');
+        error(defaultId, 'inconsistent units in input gradiometer');
       elseif strcmp(sens.unit, 'dm') && (any(sel_m) || any(sel_cm) || any(sel_mm))
-        ft_error('inconsistent units in input gradiometer');
+        error(defaultId, 'inconsistent units in input gradiometer');
       elseif strcmp(sens.unit, 'cm') && (any(sel_m) || any(sel_dm) || any(sel_mm))
-        ft_error('inconsistent units in input gradiometer');
+        error(defaultId, 'inconsistent units in input gradiometer');
       elseif strcmp(sens.unit, 'mm') && (any(sel_m) || any(sel_dm) || any(sel_cm))
-        ft_error('inconsistent units in input gradiometer');
+        error(defaultId, 'inconsistent units in input gradiometer');
       end
 
       % the default should be amplitude/distance for neuromag and amplitude for all others
@@ -239,7 +239,7 @@ switch version
         if ft_senstype(sens, 'neuromag')
           scaling = 'amplitude/distance';
         elseif ft_senstype(sens, 'yokogawa440')
-          ft_warning('asuming that the default scaling should be amplitude rather than amplitude/distance');
+          warning(defaultId, 'asuming that the default scaling should be amplitude rather than amplitude/distance');
           scaling = 'amplitude';
         else
           scaling = 'amplitude';
@@ -253,7 +253,7 @@ switch version
             % this channel is expressed as amplitude per distance
             coil = find(abs(sens.tra(i,:))~=0);
             if length(coil)~=2
-              ft_error('unexpected number of coils contributing to channel %d', i);
+              error(defaultId, 'unexpected number of coils contributing to channel %d', i);
             end
             baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
             sens.tra(i,:)    = sens.tra(i,:)*baseline;  % scale with the baseline distance
@@ -262,7 +262,7 @@ switch version
             % no conversion needed
           else
             % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
-            ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
+            warning(defaultId, 'unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
           end % if
         end % for
         
@@ -275,7 +275,7 @@ switch version
               % this is a magnetometer channel, no conversion needed
               continue
             elseif length(coil)~=2
-              ft_error('unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
+              error(defaultId, 'unexpected number of coils (%d) contributing to channel %s (%d)', length(coil), sens.label{i}, i);
             end
             baseline         = norm(sens.coilpos(coil(1),:) - sens.coilpos(coil(2),:));
             sens.tra(i,:)    = sens.tra(i,:)/baseline; % scale with the baseline distance
@@ -284,7 +284,7 @@ switch version
             % no conversion needed
           else
             % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144
-            ft_warning('unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
+            warning(defaultId, 'unexpected channel unit "%s" in channel %d', sens.chanunit{i}, i);
           end % if
         end % for
         
@@ -296,7 +296,7 @@ switch version
       sel_cm = ~cellfun(@isempty, regexp(sens.chanunit, '/cm$'));
       sel_mm = ~cellfun(@isempty, regexp(sens.chanunit, '/mm$'));
       if any(sel_m | sel_dm | sel_cm | sel_mm)
-        ft_error('scaling of amplitude/distance has not been considered yet for EEG');
+        error(defaultId, 'scaling of amplitude/distance has not been considered yet for EEG');
       end
       
     end % if iseeg or ismeg
@@ -308,7 +308,7 @@ switch version
     sens = fixoldorg(sens, true);
 
     if ~isempty(amplitude) || ~isempty(distance) || ~isempty(scaling)
-      ft_warning('amplitude, distance and scaling are not supported for version "%s"', version);
+      warning(defaultId, 'amplitude, distance and scaling are not supported for version "%s"', version);
     end
     
     % This speeds up subsequent calls to ft_senstype and channelposition.
@@ -341,7 +341,7 @@ switch version
         sens.chanpos(selsens,:) = chanpos(selpos,:);
         sens.chanori(selsens,:) = chanori(selpos,:);
         if length(selsens)~=length(sens.label)
-          ft_warning('cannot determine the position and orientation for all channels');
+          warning(defaultId, 'cannot determine the position and orientation for all channels');
         end
       else
         % sensor description is something else, EEG/ECoG etc
@@ -353,7 +353,7 @@ switch version
         % insert the determined position/orientation on the appropriate rows
         sens.chanpos(selsens,:) = chanpos(selpos,:);
         if length(selsens)~=length(sens.label)
-          ft_warning('cannot determine the position and orientation for all channels');
+          warning(defaultId, 'cannot determine the position and orientation for all channels');
         end
       end
     end
@@ -392,7 +392,7 @@ switch version
         isfield(sens, 'tra') && isfield(sens, 'coilori') && size(sens.tra,2)~=size(sens.coilori,1) || ...
         isfield(sens, 'chanpos') && size(sens.chanpos,1)~=length(sens.label) || ...
         isfield(sens, 'chanori') && size(sens.chanori,1)~=length(sens.label)
-      ft_error('inconsistent number of channels in sensor description');
+      error(defaultId, 'inconsistent number of channels in sensor description');
     end
     
     if ismeg
@@ -449,7 +449,7 @@ switch version
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise
-    ft_error('converting to version %s is not supported', version);
+    error(defaultId, 'converting to version %s is not supported', version);
     
 end % switch
 

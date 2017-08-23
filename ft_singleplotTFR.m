@@ -142,7 +142,7 @@ dimtok = tokenize(dimord, '_');
 
 % Set x/y/parameter defaults
 if ~any(ismember(dimtok, 'time'))
-  ft_error('input data needs a time dimension');
+  error(defaultId, 'input data needs a time dimension');
 else
   xparam = 'time';
   yparam = 'freq';
@@ -155,11 +155,11 @@ elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
 end
 
 if isempty(cfg.channel)
-  ft_error('no channels selected');
+  error(defaultId, 'no channels selected');
 end
 
 if ~isfield(data, cfg.parameter)
-  ft_error('data has no field ''%s''', cfg.parameter);
+  error(defaultId, 'data has no field ''%s''', cfg.parameter);
 end
 
 % check whether rpt/subj is present and remove if necessary and whether
@@ -218,7 +218,7 @@ haslabelcmb = isfield(data, 'labelcmb');
 if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
-    ft_error('no reference channel is specified');
+    error(defaultId, 'no reference channel is specified');
   end
 
   % check for refchannel being part of selection
@@ -230,13 +230,13 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     end
     if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
        (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
-      ft_error('cfg.refchannel is a not present in the (selected) channels)')
+      error(defaultId, 'cfg.refchannel is a not present in the (selected) channels)')
     end
   end
 
   % Interactively select the reference channel
   if strcmp(cfg.refchannel, 'gui')
-    ft_error('coh.refchannel = ''gui'' is not supported at the moment for ft_singleplotTFR');
+    error(defaultId, 'coh.refchannel = ''gui'' is not supported at the moment for ft_singleplotTFR');
 %
 %     % Open a single figure with the channel layout, the user can click on a reference channel
 %     h = clf;
@@ -269,7 +269,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
     if length(sel1)+length(sel2)==0
-      ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+      error(defaultId, 'there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
     end
     data.(cfg.parameter) = data.(cfg.parameter)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
@@ -293,9 +293,9 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
       meandir = 1;
 
     elseif strcmp(cfg.directionality, 'ff-fd')
-      ft_error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
+      error(defaultId, 'cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
     elseif strcmp(cfg.directionality, 'fd-ff')
-      ft_error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
+      error(defaultId, 'cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
     end %if directionality
   end %if ~isfull
 end %handle the bivariate data
@@ -354,12 +354,12 @@ end
 %
 % % masking only possible for evenly spaced axis
 % if strcmp(cfg.masknans, 'yes') && (~evenx || ~eveny)
-%   ft_warning('(one of the) axis are not evenly spaced -> nans cannot be masked out -> cfg.masknans is set to ''no'';')
+%   warning(defaultId, '(one of the) axis are not evenly spaced -> nans cannot be masked out -> cfg.masknans is set to ''no'';')
 %   cfg.masknans = 'no';
 % end
 %
 % if ~isempty(cfg.maskparameter) && (~evenx || ~eveny)
-%   ft_warning('(one of the) axis are not evenly spaced -> no masking possible -> cfg.maskparameter cleared')
+%   warning(defaultId, '(one of the) axis are not evenly spaced -> no masking possible -> cfg.maskparameter cleared')
 %   cfg.maskparameter = [];
 % end
 
@@ -369,7 +369,7 @@ sellab     = match_str(data.label, selchannel);
 
 % cfg.maskparameter only possible for single channel
 if length(sellab) > 1 && ~isempty(cfg.maskparameter)
-  ft_warning('no masking possible for average over multiple channels -> cfg.maskparameter cleared')
+  warning(defaultId, 'no masking possible for average over multiple channels -> cfg.maskparameter cleared')
   cfg.maskparameter = [];
 end
 
@@ -451,7 +451,7 @@ end
 
 % set colormap
 if isfield(cfg,'colormap')
-  if size(cfg.colormap,2)~=3, ft_error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
+  if size(cfg.colormap,2)~=3, error(defaultId, 'singleplotTFR(): Colormap must be a n x 3 matrix'); end
   set(gcf,'colormap',cfg.colormap);
 end
 

@@ -122,7 +122,7 @@ elseif isempty(cfg.isolatedsource) && Ncompartment==1
   % the isolated source interface should be contained within at least one other interface
   isolatedsource = false;
 elseif ~islogical(isolatedsource)
-  ft_error('cfg.isolatedsource should be true or false');
+  error(defaultId, 'cfg.isolatedsource should be true or false');
 end
 
 if cfg.isolatedsource
@@ -149,7 +149,7 @@ elseif strcmp(cfg.method, 'bemcp')
 
   % do some sanity checks
   if length(headmodel.bnd)~=3
-    ft_error('this only works for three surfaces');
+    error(defaultId, 'this only works for three surfaces');
   end
 
   numboundaries = length(headmodel.bnd);
@@ -168,7 +168,7 @@ elseif strcmp(cfg.method, 'bemcp')
   end
 
   if sum(nesting(:))~=(numboundaries*(numboundaries-1)/2)
-    ft_error('the compartment nesting cannot be determined');
+    error(defaultId, 'the compartment nesting cannot be determined');
   end
 
   % for a three compartment model, the nesting matrix should look like
@@ -282,7 +282,7 @@ elseif strcmp(cfg.method, 'openmeeg')
   ft_hastoolbox('openmeeg', 1);
 
   if size(headmodel.bnd(1).pos,1)>10000
-    ft_error('OpenMEEG does not manage meshes with more than 10000 vertices (use reducepatch)')
+    error(defaultId, 'OpenMEEG does not manage meshes with more than 10000 vertices (use reducepatch)')
   else
     % use the openmeeg wrapper function
     headmodel = openmeeg(headmodel,cfg.isolatedsource);
@@ -290,7 +290,7 @@ elseif strcmp(cfg.method, 'openmeeg')
   end
 
 else
-  ft_error('unsupported method');
+  error(defaultId, 'unsupported method');
 end % which method
 
 % ensure that the geometrical units are specified

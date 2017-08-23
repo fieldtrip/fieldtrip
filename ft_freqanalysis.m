@@ -230,11 +230,11 @@ data = ft_selectdata(tmpcfg, data);
 
 % some proper error handling
 if isfield(data, 'trial') && numel(data.trial)==0
-  ft_error('no trials were selected'); % this does not apply for MVAR data
+  error(defaultId, 'no trials were selected'); % this does not apply for MVAR data
 end
 
 if numel(data.label)==0
-  ft_error('no channels were selected');
+  error(defaultId, 'no channels were selected');
 end
 
 % switch over method and do some of the method specfic checks and defaulting
@@ -243,15 +243,15 @@ switch cfg.method
   case 'mtmconvol'
     cfg.taper = ft_getopt(cfg, 'taper', 'dpss');
     if isequal(cfg.taper, 'dpss') && ~isfield(cfg, 'tapsmofrq')
-      ft_error('you must specify a smoothing parameter with taper = dpss');
+      error(defaultId, 'you must specify a smoothing parameter with taper = dpss');
     end
     % check for foi above Nyquist
     if isfield(cfg,'foi')
       if any(cfg.foi > (data.fsample/2))
-        ft_error('frequencies in cfg.foi are above Nyquist')
+        error(defaultId, 'frequencies in cfg.foi are above Nyquist')
       end
       if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
-        ft_error('you must specify a smoothing parameter with taper = dpss');
+        error(defaultId, 'you must specify a smoothing parameter with taper = dpss');
       end
     end
     cfg = ft_checkconfig(cfg, 'required', {'toi','t_ftimwin'});
@@ -266,23 +266,23 @@ switch cfg.method
         cfg.toi = linspace(begtim, endtim, round((endtim-begtim) ./ ...
           (overlap * min(cfg.t_ftimwin))) + 1);
       else
-        ft_error('cfg.toi should be either a numeric vector or a string: can be ''all'' or a percentage (e.g., ''50%'')');
+        error(defaultId, 'cfg.toi should be either a numeric vector or a string: can be ''all'' or a percentage (e.g., ''50%'')');
       end
     end
     
   case 'mtmfft'
     cfg.taper       = ft_getopt(cfg, 'taper', 'dpss');
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
-      ft_error('you must specify a smoothing parameter with taper = dpss');
+      error(defaultId, 'you must specify a smoothing parameter with taper = dpss');
     end
     % check for foi above Nyquist
     if isfield(cfg,'foi')
       if any(cfg.foi > (data.fsample/2))
-        ft_error('frequencies in cfg.foi are above Nyquist')
+        error(defaultId, 'frequencies in cfg.foi are above Nyquist')
       end
     end
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
-      ft_error('you must specify a smoothing parameter with taper = dpss');
+      error(defaultId, 'you must specify a smoothing parameter with taper = dpss');
     end
     
   case 'wavelet'
@@ -296,7 +296,7 @@ switch cfg.method
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
     
   case 'hilbert'
-    ft_warning('method = hilbert requires user action to deal with filtering-artifacts')
+    warning(defaultId, 'method = hilbert requires user action to deal with filtering-artifacts')
     if ~isfield(cfg, 'filttype'),         cfg.filttype      = 'but';        end
     if ~isfield(cfg, 'filtorder'),        cfg.filtorder     = 4;            end
     if ~isfield(cfg, 'filtdir'),          cfg.filtdir       = 'twopass';    end
@@ -314,7 +314,7 @@ switch cfg.method
     cfg.order  = ft_getopt(cfg, 'order',  1); % order of differentiation
     
   otherwise
-    ft_error('specified cfg.method is not supported')
+    error(defaultId, 'specified cfg.method is not supported')
 end
 
 % set all the defaults
@@ -339,7 +339,7 @@ if strcmp(cfg.output, 'fourier')
   cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'yes');
   cfg.keeptapers = ft_getopt(cfg, 'keeptapers', 'yes');
   if strcmp(cfg.keeptrials, 'no') || strcmp(cfg.keeptapers, 'no')
-    ft_error('cfg.output = ''fourier'' requires cfg.keeptrials = ''yes'' and cfg.keeptapers = ''yes''');
+    error(defaultId, 'cfg.output = ''fourier'' requires cfg.keeptrials = ''yes'' and cfg.keeptapers = ''yes''');
   end
 else
   cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
@@ -352,13 +352,13 @@ if strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'no')
 elseif strcmp(cfg.keeptrials,'yes') &&  strcmp(cfg.keeptapers,'no')
   keeprpt = 2;
 elseif strcmp(cfg.keeptrials,'no') &&  strcmp(cfg.keeptapers,'yes')
-  ft_error('There is currently no support for keeping tapers WITHOUT KEEPING TRIALS.');
+  error(defaultId, 'There is currently no support for keeping tapers WITHOUT KEEPING TRIALS.');
 elseif strcmp(cfg.keeptrials,'yes') &&  strcmp(cfg.keeptapers,'yes')
   keeprpt = 4;
 end
 if strcmp(cfg.keeptrials,'yes') && strcmp(cfg.keeptapers,'yes')
   if ~strcmp(cfg.output, 'fourier')
-    ft_error('Keeping trials AND tapers is only possible with fourier as the output.');
+    error(defaultId, 'Keeping trials AND tapers is only possible with fourier as the output.');
   end
 end
 
@@ -376,7 +376,7 @@ elseif strcmp(cfg.output,'fourier')
   csdflg = 0;
   fftflg = 1;
 else
-  ft_error('Unrecognized output required');
+  error(defaultId, 'Unrecognized output required');
 end
 
 % prepare channel(cmb)
@@ -426,13 +426,13 @@ elseif strcmp(cfg.pad, 'nextpow2')
 else
   padding = cfg.pad*data.fsample;
   if padding<max(trllength)
-    ft_error('the specified padding is too short');
+    error(defaultId, 'the specified padding is too short');
   end
 end
 
 % correct foi and implement foilim 'backwards compatibility'
 if ~isempty(cfg.foi) && ~isempty(cfg.foilim)
-  ft_error('use either cfg.foi or cfg.foilim')
+  error(defaultId, 'use either cfg.foi or cfg.foilim')
 elseif ~isempty(cfg.foilim)
   % get the full foi in the current foilim and set it too be used as foilim
   fboilim = round(cfg.foilim .* cfg.pad) + 1;
@@ -454,7 +454,7 @@ if isfield(cfg,'tapsmofrq')
   if strcmp(cfg.method,'mtmconvol') && length(cfg.tapsmofrq) == 1 && length(cfg.foi) ~= 1
     cfg.tapsmofrq = ones(length(cfg.foi),1) * cfg.tapsmofrq;
   elseif strcmp(cfg.method,'mtmfft') && length(cfg.tapsmofrq) ~= 1
-    ft_warning('cfg.tapsmofrq should be a single number when cfg.method = mtmfft, now using only the first element')
+    warning(defaultId, 'cfg.tapsmofrq should be a single number when cfg.method = mtmfft, now using only the first element')
     cfg.tapsmofrq = cfg.tapsmofrq(1);
   end
 end
@@ -497,7 +497,7 @@ for itrial = 1:ntrials
       hastime = true;
       % error for different number of tapers per trial
       if (keeprpt == 4) && any(ntaper(:) ~= ntaper(1))
-        ft_error('currently you can only keep trials AND tapers, when using the number of tapers per frequency is equal across frequency')
+        error(defaultId, 'currently you can only keep trials AND tapers, when using the number of tapers per frequency is equal across frequency')
       end
       % create tapfreqind for later indexing
       freqtapind = [];

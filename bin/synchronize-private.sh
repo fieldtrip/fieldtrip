@@ -223,6 +223,22 @@ ARRAY+=(utilities/private/dataset2files.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# defaultId.m, should be consistent with ft_notification
+
+ARRAY=()
+ARRAY+=(connectivity/private/defaultId.m)
+ARRAY+=(engine/private/defaultId.m)
+ARRAY+=(fileio/private/defaultId.m)
+ARRAY+=(forward/private/defaultId.m)
+ARRAY+=(plotting/private/defaultId.m)
+ARRAY+=(preproc/private/defaultId.m)
+ARRAY+=(qsub/private/defaultId.m)
+ARRAY+=(specest/private/defaultId.m)
+ARRAY+=(statfun/private/defaultId.m)
+ARRAY+=(utilities/private/defaultId.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # det2x2.m
 
 ARRAY=()

@@ -73,7 +73,7 @@ cfg.tail     = ft_getopt(cfg, 'tail', 0);
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
 if isempty(statfun)
-  ft_error('could not locate the appropriate statistics function');
+  error(defaultId, 'could not locate the appropriate statistics function');
 else
   fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
@@ -94,7 +94,7 @@ cfg = rmfield(cfg, 'computeprob');
 cfg = rmfield(cfg, 'computecritval');
 
 if ~isfield(stat, 'prob')
-  ft_warning('probability was not computed');
+  warning(defaultId, 'probability was not computed');
 else
   switch lower(cfg.correctm)
     case 'bonferroni'
@@ -127,6 +127,6 @@ else
       fprintf('not performing a correction for multiple comparisons\n');
       stat.mask = stat.prob<=cfg.alpha;
     otherwise
-      ft_error('unsupported option "%s" for cfg.correctm', cfg.correctm);
+      error(defaultId, 'unsupported option "%s" for cfg.correctm', cfg.correctm);
   end
 end

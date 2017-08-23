@@ -89,7 +89,7 @@ cfg.method         = ft_getopt(cfg, 'method',         'sum');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens',     'yes');
 
 if isfield(cfg, 'baseline')
-  ft_warning('only supporting cfg.baseline for backwards compatibility, please update your cfg');
+  warning(defaultId, 'only supporting cfg.baseline for backwards compatibility, please update your cfg');
   cfg.demean         = 'yes';
   cfg.baselinewindow = cfg.baseline;
 end
@@ -103,7 +103,7 @@ end
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  ft_error('trial selection has not been implemented yet') % first fix ft_checkdata (see above)
+  error(defaultId, 'trial selection has not been implemented yet') % first fix ft_checkdata (see above)
 end
 
 % find the combination of horizontal and vertical channels that should be combined
@@ -128,7 +128,7 @@ lab_comb          = planar(sel_planar,end);
 % perform baseline correction
 if strcmp(cfg.demean, 'yes')
   if ~(istimelock || israw)
-    ft_error('baseline correction is only supported for timelocked or raw input data')
+    error(defaultId, 'baseline correction is only supported for timelocked or raw input data')
   end
   if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
     cfg.baselinewindow = [-inf inf];
@@ -156,12 +156,12 @@ if isfreq
           combined = data.powspctrm(:,sel_dH,:,:,:) + data.powspctrm(:,sel_dV,:,:,:);
           other    = data.powspctrm(:,sel_other,:,:,:);
         else
-          ft_error('unsupported dimension order of frequency data');
+          error(defaultId, 'unsupported dimension order of frequency data');
         end
         data.powspctrm = cat(catdim, combined, other);
         data.label     = cat(1, lab_comb(:), lab_other(:));
       else
-        ft_error('cfg.method = ''%s'' only works for frequency data with powspctrm', cfg.method);
+        error(defaultId, 'cfg.method = ''%s'' only works for frequency data with powspctrm', cfg.method);
       end
     case 'svd'
       if isfield(data, 'fourierspctrm')
@@ -202,10 +202,10 @@ if isfreq
         data.label         = cat(1, lab_comb(:), lab_other(:));
         data.freq          = data.freq(fbin);
       else
-        ft_error('cfg.method = ''%s'' only works for frequency data with fourierspctrm', cfg.method);
+        error(defaultId, 'cfg.method = ''%s'' only works for frequency data with fourierspctrm', cfg.method);
       end
     otherwise
-      ft_error('cfg.method = ''%s'' is not supported for frequency data', cfg.method);
+      error(defaultId, 'cfg.method = ''%s'' is not supported for frequency data', cfg.method);
   end % switch method
   
 elseif (israw || istimelock)
@@ -269,7 +269,7 @@ elseif (israw || istimelock)
       data.label = cat(1, lab_comb(:), lab_other(:));
       
     otherwise
-      ft_error('cfg.method = ''%s'' is not supported for timelocked or raw data', cfg.method);
+      error(defaultId, 'cfg.method = ''%s'' is not supported for timelocked or raw data', cfg.method);
   end % switch method
   
   if istimelock
@@ -278,7 +278,7 @@ elseif (israw || istimelock)
   end
   
 else
-  ft_error('unsupported input data');
+  error(defaultId, 'unsupported input data');
 end % which ft_datatype
 
 % remove the fields for which the planar gradient could not be combined

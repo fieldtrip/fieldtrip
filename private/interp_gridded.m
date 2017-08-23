@@ -40,7 +40,7 @@ function varargout = interp_gridded(transform, val, pos_to, varargin)
 % $Id$
 
 if nargin<3
-  ft_error('Not enough input arguments.');
+  error(defaultId, 'Not enough input arguments.');
 end
 
 % get the optional arguments
@@ -77,7 +77,7 @@ if isempty(distmat)
 
     case {'sphere_avg', 'sphere_weighteddistance', 'sphere_weightedprojection'}
       if isempty(sphereradius)
-        ft_error('sphereradius should be specified');
+        error(defaultId, 'sphereradius should be specified');
       end
 
       [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
@@ -103,7 +103,7 @@ if isempty(distmat)
       % do nothing I believe
     
     otherwise
-      ft_error('unsupported projection method');
+      error(defaultId, 'unsupported projection method');
   end % case projmethod
 end % if isempty distmat
 
@@ -154,7 +154,7 @@ switch projmethod
           fi   = find(dat < max(tmp2));
           val(fi) = tmp2(fi);
         else
-          ft_error('undefined method to combine projections; use cfg.projcomb= mean or max')
+          error(defaultId, 'undefined method to combine projections; use cfg.projcomb= mean or max')
         end
       end
       if strcmp(projcomb,'mean'),
@@ -167,7 +167,7 @@ switch projmethod
       %
     
   otherwise
-    ft_error('unsupported projection method');
+    error(defaultId, 'unsupported projection method');
 end  % case projmethod
 
 if nargout==1 && ~strcmp(projmethod, 'project')

@@ -56,12 +56,12 @@ elseif nargin<3
   z = 1:size(dat,3);
 elseif nargin>4
   if length(size(dat))==3
-    if length(x)~=size(dat,1), ft_error('incorrect x-axis specification'), end
-    if length(y)~=size(dat,2), ft_error('incorrect y-axis specification'), end
-    if length(z)~=size(dat,3), ft_error('incorrect z-axis specification'), end
+    if length(x)~=size(dat,1), error(defaultId, 'incorrect x-axis specification'), end
+    if length(y)~=size(dat,2), error(defaultId, 'incorrect y-axis specification'), end
+    if length(z)~=size(dat,3), error(defaultId, 'incorrect z-axis specification'), end
   end
 else
-  ft_error('incorrect number of input arguments');
+  error(defaultId, 'incorrect number of input arguments');
 end
 
 if nargin==6
@@ -264,7 +264,7 @@ elseif strcmp(sel, 'maxproject')
 else
   % make plot of three orthogonal slices intersecting at [xi yi zi]
   if ~exist('xi', 'var') || ~exist('yi', 'var') || ~exist('zi', 'var')
-    ft_error('nothing to plot, no selection given')
+    error(defaultId, 'nothing to plot, no selection given')
   end
 
   fprintf('value of %f in voxel %d at [%.02f %.02f %.02f]\n', double(dat(xi, yi, zi)), sub2ind(dim, xi, yi, zi), x(xi), y(yi), z(zi));

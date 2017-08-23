@@ -97,13 +97,13 @@ elseif isequal(optimfun, @fminsearch)
   options  = optimset(options, 'Display', 'off');
   options  = optimset(options, 'MaxIter', 4500);
 else
-  ft_warning('unknown optimization function "%s", using default parameters', func2str(optimfun));
+  warning(defaultId, 'unknown optimization function "%s", using default parameters', func2str(optimfun));
 end
 
 if fb; fprintf('distance = %f\n', errorfun([0 0 0 0 0 0], pos1, pos2, 'rigidbody')); end
 
 if isempty(method)
-  ft_error('incorrect warping method specified');
+  error(defaultId, 'incorrect warping method specified');
 end
 
 % the warp is done in steps, starting simple and progressively getting more complex
@@ -119,7 +119,7 @@ level = find(strcmp(method, {
   }));
 
 if isempty(level)
-  ft_error('incorrect warping method specified');
+  error(defaultId, 'incorrect warping method specified');
 end
 
 if level>=1

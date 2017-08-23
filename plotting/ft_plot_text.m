@@ -89,12 +89,12 @@ else
   % use the full implementation
   abc = axis;
   if isempty(hlim)
-    ft_warning('use hlim/vlim when specifying local axes');
+    warning(defaultId, 'use hlim/vlim when specifying local axes');
     hlim = abc([1 2]);
   end
   
   if isempty(vlim)
-    ft_warning('use hlim/vlim when specifying local axes');
+    warning(defaultId, 'use hlim/vlim when specifying local axes');
     vlim = abc([3 4]);
   end
   

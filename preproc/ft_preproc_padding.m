@@ -111,7 +111,7 @@ switch(padtype)
     dat       = [nan(nchans,prepadlength) dat nan(nchans,postpadlength)];
     
   otherwise
-    ft_error('unknown padding option');
+    error(defaultId, 'unknown padding option');
 end
 
 end

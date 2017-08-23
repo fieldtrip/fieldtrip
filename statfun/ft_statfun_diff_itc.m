@@ -60,10 +60,10 @@ selB = find(design(cfg.ivar,:)==2);
 dfA  = length(selA);
 dfB  = length(selB);
 if (dfA+dfB)<size(design, 2)
-  ft_error('inappropriate design, should contain 1''s and 2''s');
+  error(defaultId, 'inappropriate design, should contain 1''s and 2''s');
 end
 if isreal(dat)
-  ft_error('the data should be complex, i.e. computed with freqanalysis and cfg.output="fourier"');
+  error(defaultId, 'the data should be complex, i.e. computed with freqanalysis and cfg.output="fourier"');
 end
 % normalise the complex data in each trial
 dat = dat./abs(dat);
@@ -82,6 +82,6 @@ case 'absdiff'
   itcB = mean(dat(:,selB), 2); % ITC is here the average complex number
   s.stat = abs(itcA - itcB);
 otherwise
-  ft_error('incorrect specification of cfg.complex');
+  error(defaultId, 'incorrect specification of cfg.complex');
 end
 

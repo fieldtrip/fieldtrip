@@ -167,7 +167,7 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    ft_error('unsupported version "%s" for comp datatype', version);
+    error(defaultId, 'unsupported version "%s" for comp datatype', version);
 end
 
 

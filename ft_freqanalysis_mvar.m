@@ -90,10 +90,10 @@ isuvar = isfield(data, 'label') && sum(strcmp(dimtok,'chan'))==1;
 isbvar = isfield(data, 'labelcmb');
 
 if (isfull||isuvar) && isbvar
-  ft_error('data representation is ambiguous');
+  error(defaultId, 'data representation is ambiguous');
 end
 if ~isfull && ~isbvar && ~isuvar
-  ft_error('data representation is unsupported');
+  error(defaultId, 'data representation is unsupported');
 end
 
 %keeprpt  = strcmp(cfg.keeptrials, 'yes');
@@ -101,8 +101,8 @@ end
 %dojack   = strcmp(cfg.jackknife,  'yes');
 %dozscore = strcmp(cfg.zscore,     'yes');
 
-%if ~keeptap, ft_error('not keeping tapers is not possible yet'); end
-%if dojack && keeprpt, ft_error('you cannot simultaneously keep trials and do jackknifing'); end
+%if ~keeptap, error(defaultId, 'not keeping tapers is not possible yet'); end
+%if dojack && keeprpt, error(defaultId, 'you cannot simultaneously keep trials and do jackknifing'); end
 
 nfoi     = length(cfg.foi);
 if isfield(data, 'time')

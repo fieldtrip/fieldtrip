@@ -113,7 +113,7 @@ switch dtype
     end
 
     if isempty(funparam)
-      ft_error('don''t know which volumetric parameter to plot');
+      error(defaultId, 'don''t know which volumetric parameter to plot');
     end
 
     % the volumetric data needs to be interpolated onto three orthogonal planes

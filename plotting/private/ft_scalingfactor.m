@@ -87,7 +87,7 @@ if isempty(previous_old)
 end
 
 if ~isequal(class(old), class(new))
-  ft_error('the input arguments should be of the same class');
+  error(defaultId, 'the input arguments should be of the same class');
 end
 
 if iscell(old)
@@ -178,7 +178,7 @@ end
 eval(sprintf('oldunit = %s;', old));
 eval(sprintf('newunit = %s;', new));
 if ~isequal(oldunit, newunit)
-  ft_error('cannot convert %s to %s', old, new);
+  error(defaultId, 'cannot convert %s to %s', old, new);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -35,7 +35,7 @@ function [datsmooth] = ft_preproc_smooth(dat, n)
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
-  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  warning(defaultId, 'FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 % create smoothing kernel

@@ -48,7 +48,7 @@ switch method
     prj = elproj(pnt);
     tri = delaunay(prj(:,1), prj(:,2));
   otherwise
-    ft_error('unsupported method');
+    error(defaultId, 'unsupported method');
 end
 
 

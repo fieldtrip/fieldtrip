@@ -88,7 +88,7 @@ if ~ok
 end
 
 if ~ok
-  ft_error('Could not interpret the header information.');
+  error(defaultId, 'Could not interpret the header information.');
 end
 
 % rewind to the beginning of the file, skip the header line
@@ -117,7 +117,7 @@ else
     lbl = strrep(lbl ,'EEG ', ''); % remove the channel type
     avr.label = lbl;
   else
-    ft_warning('Could not create channels labels.');
+    warning(defaultId, 'Could not create channels labels.');
   end
 end
 

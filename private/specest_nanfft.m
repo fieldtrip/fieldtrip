@@ -184,7 +184,7 @@ switch datatype
     end
 
   otherwise
-    ft_error('unsupported configuration of NaNs in the data');
+    error(defaultId, 'unsupported configuration of NaNs in the data');
 end
 
 % set output

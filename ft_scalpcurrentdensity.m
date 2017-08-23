@@ -236,12 +236,12 @@ elseif strcmp(cfg.method, 'hjorth')
   elec = ft_apply_montage(elec, montage);
 
 else
-  ft_error('unknown method for SCD computation');
+  error(defaultId, 'unknown method for SCD computation');
 end
 
 if strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'finite')
   % correct the units
-  ft_warning('trying to correct the units, assuming uV and mm');
+  warning(defaultId, 'trying to correct the units, assuming uV and mm');
   for trlop=1:Ntrials
     % The surface laplacian is proportional to potential divided by squared distance which means that, if
     % - input potential is in uV, which is 10^6 too large

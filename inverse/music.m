@@ -52,7 +52,7 @@ normalize      = ft_getopt(varargin, 'normalize');
 normalizeparam = ft_getopt(varargin, 'normalizeparam');
 
 if isempty(numcomponent)
-  ft_error('you must specify the number of signal components');
+  error(defaultId, 'you must specify the number of signal components');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

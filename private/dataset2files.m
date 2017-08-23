@@ -46,7 +46,7 @@ if ~isempty(cfg.dataset)
     if d==0
       [f, p] = uigetfile;
       if f==0
-        ft_error('You should select a dataset file or directory');
+        error(defaultId, 'You should select a dataset file or directory');
       else
         d = fullfile(p, f);
       end

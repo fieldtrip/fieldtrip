@@ -227,10 +227,10 @@ end
 
 if ~isempty(cfg.chanscale)
   if ~isfield(cfg, 'channel')
-    ft_warning('ignoring cfg.chanscale; this should only be used when an explicit channel selection is being made');
+    warning(defaultId, 'ignoring cfg.chanscale; this should only be used when an explicit channel selection is being made');
     cfg.chanscale = [];
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
-    ft_error('cfg.chanscale should have the same number of elements as cfg.channel');
+    error(defaultId, 'cfg.chanscale should have the same number of elements as cfg.channel');
   end
   
   % make sure chanscale is a column vector, not a row vector
@@ -240,7 +240,7 @@ if ~isempty(cfg.chanscale)
 end
 
 if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
-  ft_warning('ignoring cfg.mychanscale; no channels specified in cfg.mychan');
+  warning(defaultId, 'ignoring cfg.mychanscale; no channels specified in cfg.mychan');
   cfg.mychanscale = [];
 end
 
@@ -265,7 +265,7 @@ if strcmp(cfg.viewmode, 'component')
     tmpcfg.layout = cfg.layout;
     cfg.layout = ft_prepare_layout(tmpcfg);
   else
-    ft_warning('No layout specified - will try to construct one using sensor positions');
+    warning(defaultId, 'No layout specified - will try to construct one using sensor positions');
     tmpcfg = [];
     try, tmpcfg.elec = cfg.elec; end
     try, tmpcfg.grad = cfg.grad; end
@@ -294,7 +294,7 @@ if hasdata
   
   if isfield(data, 'cfg') && ~isempty(ft_findcfg(data.cfg, 'origfs'))
     % don't use the events in case the data has been resampled
-    ft_warning('the data has been resampled, not showing the events');
+    warning(defaultId, 'the data has been resampled, not showing the events');
     event = [];
   elseif isfield(data, 'cfg') && isfield(data.cfg, 'event')
     % use the event structure from the data as per bug #2501
@@ -320,7 +320,7 @@ if hasdata
     end
   else
     if strcmp(cfg.continuous, 'yes') && (numel(data.trial) > 1)
-      ft_warning('interpreting trial-based data as continous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
+      warning(defaultId, 'interpreting trial-based data as continous, time-axis is no longer appropriate. t(0) now corresponds to the first sample of the first trial, and t(end) to the last sample of the last trial')
     end
   end
   
@@ -393,11 +393,11 @@ end
 % FIXME make a check for the consistency of cfg.continous, cfg.blocksize, cfg.trl and the data header
 
 if Nchans == 0
-  ft_error('no channels to display');
+  error(defaultId, 'no channels to display');
 end
 
 if Ntrials == 0
-  ft_error('no trials to display');
+  error(defaultId, 'no trials to display');
 end
 
 if ischar(cfg.selectfeature)
@@ -450,7 +450,7 @@ if ischar(cfg.ylim)
       end
       cfg.ylim = [minval maxval];
     otherwise
-      ft_error('unsupported value for cfg.ylim');
+      error(defaultId, 'unsupported value for cfg.ylim');
   end % switch ylim
   % zoom in a bit when viemode is vertical
   if strcmp(cfg.viewmode, 'vertical')
@@ -458,7 +458,7 @@ if ischar(cfg.ylim)
   end
 else
   if (numel(cfg.ylim) ~= 2) || ~isnumeric(cfg.ylim)
-    ft_error('cfg.ylim needs to be a 1x2 vector [ymin ymax], describing the upper and lower limits')
+    error(defaultId, 'cfg.ylim needs to be a 1x2 vector [ymin ymax], describing the upper and lower limits')
   end
 end
 
@@ -469,13 +469,13 @@ else
   labels_all= hdr.label;
 end
 if size(cfg.channelcolormap,2) ~= 3
-  ft_error('cfg.channelcolormap is not valid, size should be Nx3')
+  error(defaultId, 'cfg.channelcolormap is not valid, size should be Nx3')
 end
 
 if isnumeric(cfg.colorgroups)
   % groups defined by user
   if length(labels_all) ~= length(cfg.colorgroups)
-    ft_error('length(cfg.colorgroups) should be length(data/hdr.label)')
+    error(defaultId, 'length(cfg.colorgroups) should be length(data/hdr.label)')
   end
   R = cfg.channelcolormap(:,1);
   G = cfg.channelcolormap(:,2);
@@ -513,7 +513,7 @@ elseif strcmp(cfg.colorgroups, 'sequential')
   chancolors = lines(length(labels_all));
   
 else
-  ft_error('do not understand cfg.colorgroups')
+  error(defaultId, 'do not understand cfg.colorgroups')
 end
 
 % collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact
@@ -533,7 +533,7 @@ artifact = artifact(sel==1);
 artlabel = artlabel(sel==1);
 
 if length(artlabel) > 9
-  ft_error('only up to 9 artifacts groups supported')
+  error(defaultId, 'only up to 9 artifacts groups supported')
 end
 
 % make artdata representing all artifacts in a "raw data" format
@@ -1063,7 +1063,7 @@ if isempty(cmenulab)
       % check if only 1 chan, other wise not clear max in which channel. %
       % ingnie: would be cool to add the option to select the channel when multiple channels
       if size(opt.curdata.trial{1},1) > 1
-        ft_error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
+        error(defaultId, 'cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
       end
       if strcmp(cfg.selectmode, 'markpeakevent')
         [dum ind_minmax] = max(opt.curdata.trial{1}(begsel-begsample+1:endsel-begsample+1));
@@ -1482,7 +1482,7 @@ switch key
         if numel(tmp)==2
           cfg.ylim = tmp;
         else
-          ft_warning('incorrect specification of cfg.ylim, not changing the limits for the vertical axes')
+          warning(defaultId, 'incorrect specification of cfg.ylim, not changing the limits for the vertical axes')
         end
       end
       setappdata(h, 'opt', opt);
@@ -1550,7 +1550,7 @@ switch key
         ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(channb,:), 'box', false, 'tag', 'identify', 'hpos', opt.laytime.pos(chanposind,1), 'vpos', opt.laytime.pos(chanposind,2), 'width', opt.laytime.width(chanposind), 'height', opt.laytime.height(chanposind), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
       end
     else
-      ft_warning('only supported with cfg.viewmode=''butterfly/vertical''');
+      warning(defaultId, 'only supported with cfg.viewmode=''butterfly/vertical''');
     end
   case 's'
     % toggle between selectmode options: switch from 'markartifact', to 'markpeakevent' to 'marktroughevent' and back with on screen feedback
@@ -2082,7 +2082,7 @@ if strcmp(cfg.viewmode, 'component')
         zmax = max([abs(zmin) abs(zmax)]);
         zmin = -zmax;
       else
-        ft_error('configuration option for component scaling could not be recognized');
+        error(defaultId, 'configuration option for component scaling could not be recognized');
       end
     end
     

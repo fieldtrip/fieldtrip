@@ -162,12 +162,12 @@ if usegui
     % values are missing tries to ask the user for prestim/poststim
     answer = inputdlg({'Prestimulus latency (sec)','Poststimulus latency (sec)'}, 'Enter borders');
     if isempty(answer) || any(cellfun('isempty', answer))
-      ft_error('The information in the data and cfg is insufficient to define trials.');
+      error(defaultId, 'The information in the data and cfg is insufficient to define trials.');
     else
       cfg.trialdef.prestim=str2double(answer{1});
       cfg.trialdef.poststim=str2double(answer{2});
       if isnan(cfg.trialdef.prestim) || isnan(cfg.trialdef.poststim)
-        ft_error('Illegal input for trial borders');
+        error(defaultId, 'Illegal input for trial borders');
       end
     end
   end % if specification is not complete
@@ -300,7 +300,7 @@ else
     else
       if ~isempty(find(strcmp('Inf', {event(sel).value})))
         % It's a very unlikely scenario but ...
-        ft_warning('Event value''Inf'' cannot be handled by GUI selection. Mistakes are possible.')
+        warning(defaultId, 'Event value''Inf'' cannot be handled by GUI selection. Mistakes are possible.')
       end
       [event(sel(emptyval)).value]=deal('Inf');
       eventvalue = unique({event(sel).value});

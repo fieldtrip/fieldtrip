@@ -132,7 +132,7 @@ if strcmp(cfg.sampleindex, 'yes') && isfield(data, 'sampleinfo')
     data.trial{i}(end+1,:) = data.sampleinfo(i,1):data.sampleinfo(i,2);
   end
 elseif strcmp(cfg.sampleindex, 'yes')
-  ft_warning('no sampleinfo present, cannot add sampleindex as channel');
+  warning(defaultId, 'no sampleinfo present, cannot add sampleindex as channel');
 end
 
 % sampleinfo, if present, becomes invalid because of the resampling
@@ -144,17 +144,17 @@ usefsample = ~isempty(cfg.resamplefs);
 usetime    = ~isempty(cfg.time);
 
 if usefsample && usetime
-  ft_error('you should either specify cfg.resamplefs or cfg.time')
+  error(defaultId, 'you should either specify cfg.resamplefs or cfg.time')
 end
 
 % whether to use downsample() or resample()
 if strcmp(cfg.resamplemethod, 'resample')
   usedownsample = 0;
 elseif strcmp(cfg.resamplemethod, 'downsample')
-  ft_warning('using cfg.resamplemethod = ''downsample'', only use this if you have applied an anti-aliasing filter prior to downsampling!');
+  warning(defaultId, 'using cfg.resamplemethod = ''downsample'', only use this if you have applied an anti-aliasing filter prior to downsampling!');
   usedownsample = 1;
 else
-  ft_error('unknown resamplemethod ''%s''', cfg.resamplemethod);
+  error(defaultId, 'unknown resamplemethod ''%s''', cfg.resamplemethod);
 end
 
 % remember the original sampling frequency in the configuration
@@ -184,7 +184,7 @@ if usefsample
 
   nchan  = numel(data.label);
   if any(padsmp~=0)
-    ft_warning('not all of the trials have the same original time axis: to avoid rounding issues in the resampled time axes, data will be zero-padded to the left prior to resampling');
+    warning(defaultId, 'not all of the trials have the same original time axis: to avoid rounding issues in the resampled time axes, data will be zero-padded to the left prior to resampling');
   end
 
   for itr = 1:ntr
@@ -215,7 +215,7 @@ if usefsample
     % perform the resampling
     if usedownsample
       if mod(fsorig, fsres) ~= 0
-        ft_error('when using cfg.resamplemethod = ''downsample'', new sampling rate needs to be a proper divisor of original sampling rate');
+        error(defaultId, 'when using cfg.resamplemethod = ''downsample'', new sampling rate needs to be a proper divisor of original sampling rate');
       end
 
       if isa(data.trial{itr}, 'single')

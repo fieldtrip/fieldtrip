@@ -21,14 +21,14 @@ p2 = ptriside(v1, v2, v3, t2);
 p3 = ptriside(v1, v2, v3, t3);
 
 if all([p1 p2 p3]==0)
-  ft_warning('triangle lies exactly in plane');
+  warning(defaultId, 'triangle lies exactly in plane');
   l1 = [nan, nan, nan];
   l2 = [nan, nan, nan];
   return
 end
 
 if abs(sum([p1 p2 p3]))==3
-  ft_warning('triangle lies on one side of plane');
+  warning(defaultId, 'triangle lies on one side of plane');
   l1 = [nan, nan, nan];
   l2 = [nan, nan, nan];
   return

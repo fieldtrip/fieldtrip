@@ -112,10 +112,10 @@ for i=1:ntrl
     for j=1:size(idx_start_c, 1)
       sample_window = [idx_start_c(j)-prewindow:idx_start_c(j)-1 idx_end_c(j)+1:idx_end_c(j)+postwindow]; % Indices of time-points used for interpolation
       if any(sample_window<1) || any(sample_window>size(datain.trial{i}, 2)) % Check whether sampling window falls within data range
-        ft_warning('Sample window partially outside of data-range, using less samples');
+        warning(defaultId, 'Sample window partially outside of data-range, using less samples');
         sample_window(sample_window<1|sample_window>size(datain.trial{i}, 2))=[];
       elseif any(isnan(datain.trial{i}(idx_start_r(j), sample_window))) % Check whether sampling window overlaps with other chunk of nans
-        ft_error('Sample window overlaps with other chunk of nans');
+        error(defaultId, 'Sample window overlaps with other chunk of nans');
       end
       fill_window = idx_start_c(j):idx_end_c(j); % Indices of time-points that will be interpolated
       fill = interp1(sample_window, datain.trial{i}(idx_start_r(j), sample_window), fill_window, cfg.method); % Interpolation

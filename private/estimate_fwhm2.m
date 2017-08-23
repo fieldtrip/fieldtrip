@@ -20,13 +20,13 @@ end
 ninside = numel(inside);
 
 if ~isfield(source.avg, 'filter')
-  ft_error('the input should contain spatial filters in');
+  error(defaultId, 'the input should contain spatial filters in');
 end
 
 nchan   = size(source.avg.filter{inside(1)},2);
 ndir    = size(source.avg.filter{inside(1)},1);
 if ndir~=1, 
-  ft_error('only scalar filters are allowed as input');
+  error(defaultId, 'only scalar filters are allowed as input');
 end
 
 %get filters and positions

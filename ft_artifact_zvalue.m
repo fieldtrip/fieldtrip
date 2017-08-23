@@ -179,7 +179,7 @@ end
 cfg.feedback = ft_getopt(cfg, 'feedback',   'text');
 
 % clear old warnings from this stack
-ft_warning('-clear')
+warning(defaultId, '-clear')
 
 % flag whether to compute z-value per trial or not, rationale being that if
 % there are fluctuations in the variance across trials (e.g. due to
@@ -192,7 +192,7 @@ if pertrial
   if isfield(cfg.artfctdef.zvalue, 'ntrial') && cfg.artfctdef.zvalue.ntrial>0
     pertrial = cfg.artfctdef.zvalue.ntrial;
   else
-    ft_error('you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
+    error(defaultId, 'you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
   end
 end
 
@@ -209,7 +209,7 @@ else
   % check whether the value for trlpadding makes sense
   if cfg.artfctdef.zvalue.trlpadding > 0
     % negative trlpadding is allowed with in-memory data
-    ft_error('you cannot use positive trlpadding with in-memory data');
+    error(defaultId, 'you cannot use positive trlpadding with in-memory data');
   end
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
@@ -254,7 +254,7 @@ numsgn        = length(sgnind);
 thresholdsum  = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 
 if numsgn<1
-  ft_error('no channels selected');
+  error(defaultId, 'no channels selected');
 end
 
 % read the data and apply preprocessing options
@@ -728,7 +728,7 @@ elseif isfield(eventdata, 'Key')  % only when key was pressed
 elseif isempty(eventdata) % matlab2012b returns an empty double upon a mouse click
   curKey = get(h, 'userdata');
 else
-  ft_error('cannot process user input, please report this on http://bugzilla.fieldtriptoolbox.org including your MATLAB version');
+  error(defaultId, 'cannot process user input, please report this on http://bugzilla.fieldtriptoolbox.org including your MATLAB version');
 end
 
 h = getparent(h); % otherwise h is empty if isa [...].ActionData
