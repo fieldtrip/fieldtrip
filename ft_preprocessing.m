@@ -239,28 +239,28 @@ if ~isfield(cfg, 'feedback')
 end
 
 % support for the following options was removed on 20 August 2004 in Revision 1.46
-if isfield(cfg, 'emgchannel'), ft_error('EMG specific preprocessing is not supported any more'); end
-if isfield(cfg, 'emghpfreq'),  ft_error('EMG specific preprocessing is not supported any more'); end
-if isfield(cfg, 'emgrectify'), ft_error('EMG specific preprocessing is not supported any more'); end
-if isfield(cfg, 'emghilbert'), ft_error('EMG specific preprocessing is not supported any more'); end
-if isfield(cfg, 'eegchannel'), ft_error('EEG specific preprocessing is not supported any more'); end
-if isfield(cfg, 'resamplefs'), ft_error('resampling is not supported any more, see RESAMPLEDATA'); end
+if isfield(cfg, 'emgchannel'), error(defaultId, 'EMG specific preprocessing is not supported any more'); end
+if isfield(cfg, 'emghpfreq'),  error(defaultId, 'EMG specific preprocessing is not supported any more'); end
+if isfield(cfg, 'emgrectify'), error(defaultId, 'EMG specific preprocessing is not supported any more'); end
+if isfield(cfg, 'emghilbert'), error(defaultId, 'EMG specific preprocessing is not supported any more'); end
+if isfield(cfg, 'eegchannel'), error(defaultId, 'EEG specific preprocessing is not supported any more'); end
+if isfield(cfg, 'resamplefs'), error(defaultId, 'resampling is not supported any more, see RESAMPLEDATA'); end
 
 if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
-  ft_error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
+  error(defaultId, 'line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
 end
 
 % this relates to a previous fix to handle 32 bit neuroscan data
 if isfield(cfg, 'nsdf')
   % FIXME this should be handled by ft_checkconfig, but ft_checkconfig does not allow yet for
   % specific errors in the case of forbidden fields
-  ft_error('The use of cfg.nsdf is deprecated. FieldTrip tries to determine the bit resolution automatically. You can overrule this by specifying cfg.dataformat and cfg.headerformat. See: http://www.fieldtriptoolbox.org/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
+  error(defaultId, 'The use of cfg.nsdf is deprecated. FieldTrip tries to determine the bit resolution automatically. You can overrule this by specifying cfg.dataformat and cfg.headerformat. See: http://www.fieldtriptoolbox.org/faq/i_have_problems_reading_in_neuroscan_.cnt_files._how_can_i_fix_this');
 end
 
 if isfield(cfg, 'export') && ~isempty(cfg.export)
   % export the data to an output file
   if ~strcmp(cfg.method, 'trial')
-    ft_error('exporting to an output file is only possible when processing all channels at once')
+    error(defaultId, 'exporting to an output file is only possible when processing all channels at once')
   end
 end
 
@@ -290,7 +290,7 @@ if hasdata
         strcmp(cfg.medianfilter, 'yes')
       padding = round(cfg.padding * data.fsample);
       if strcmp(cfg.padtype, 'data')
-        ft_warning('datapadding not possible with in-memory data - padding will be performed by data mirroring');
+        warning(defaultId, 'datapadding not possible with in-memory data - padding will be performed by data mirroring');
         cfg.padtype = 'mirror';
       end
     else
@@ -307,10 +307,10 @@ if hasdata
   % some options don't make sense on component data
   if isfield(data, 'comp')
     if ~isempty(cfg.montage)
-      ft_error('the application of a montage on component data is not supported');
+      error(defaultId, 'the application of a montage on component data is not supported');
     end
     if strcmp(cfg.reref, 'yes')
-      ft_error('rereferencing component data is not supported');
+      error(defaultId, 'rereferencing component data is not supported');
     end
   end
   
@@ -341,7 +341,7 @@ if hasdata
       begpadding = 0;
       endpadding = 0;
       if padding > 0
-        ft_warning('no padding applied because the padding duration is shorter than the trial');
+        warning(defaultId, 'no padding applied because the padding duration is shorter than the trial');
       end
     else
       switch cfg.paddir
@@ -356,7 +356,7 @@ if hasdata
           begpadding = 0;
           endpadding = padding-nsamples;
         otherwise
-          ft_error('unsupported requested direction of padding');
+          error(defaultId, 'unsupported requested direction of padding');
       end
     end
     
@@ -382,7 +382,7 @@ else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   if isfield(cfg, 'trialdef') && ~isfield(cfg, 'trl')
-    ft_error('you must call FT_DEFINETRIAL prior to FT_PREPROCESSING');
+    error(defaultId, 'you must call FT_DEFINETRIAL prior to FT_PREPROCESSING');
   end
   
   % check if the input cfg is valid for this function
@@ -433,7 +433,7 @@ else
   
   % do a sanity check for the re-referencing
   if strcmp(cfg.reref, 'no') && ~isempty(cfg.refchannel)
-    ft_warning('no re-referencing is performed');
+    warning(defaultId, 'no re-referencing is performed');
     cfg.refchannel = {};
   end
   
@@ -473,12 +473,12 @@ else
       any(strmatch('rejectmuscle', fieldnames(cfg))) || ...
       any(strmatch('rejectjump',   fieldnames(cfg)))
     % this is only for backward compatibility
-    ft_error('you should call FT_REJECTARTIFACT prior to FT_PREPROCESSING, please update your scripts');
+    error(defaultId, 'you should call FT_REJECTARTIFACT prior to FT_PREPROCESSING, please update your scripts');
   end
   
   ntrl = size(cfg.trl,1);
   if ntrl<1
-    ft_error('no trials were selected for preprocessing, see FT_DEFINETRIAL for help');
+    error(defaultId, 'no trials were selected for preprocessing, see FT_DEFINETRIAL for help');
   end
   
   % compute the template for MCG and the QRS latency indices, and add it to the configuration
@@ -505,7 +505,7 @@ else
     rawloop = {rawindx};
     
   else
-    ft_error('unsupported option for cfg.method');
+    error(defaultId, 'unsupported option for cfg.method');
   end
   
   for j=1:length(chnloop)
@@ -534,7 +534,7 @@ else
         begpadding = 0;
         endpadding = 0;
         if padding > 0
-          ft_warning('no padding applied because the padding duration is shorter than the trial');
+          warning(defaultId, 'no padding applied because the padding duration is shorter than the trial');
         end
       else
         switch cfg.paddir
@@ -549,7 +549,7 @@ else
             begpadding = 0;
             endpadding = padding-nsamples;
           otherwise
-            ft_error('unsupported requested direction of padding');
+            error(defaultId, 'unsupported requested direction of padding');
         end
         
         if strcmp(cfg.padtype, 'data');
@@ -561,12 +561,12 @@ else
           endsample  = cfg.trl(i,2);
         end
         if begsample<1
-          ft_warning('cannot apply enough padding at begin of file');
+          warning(defaultId, 'cannot apply enough padding at begin of file');
           begpadding = begpadding - (1 - begsample);
           begsample  = 1;
         end
         if endsample>(hdr.nSamples*hdr.nTrials)
-          ft_warning('cannot apply enough padding at end of file');
+          warning(defaultId, 'cannot apply enough padding at end of file');
           endpadding = endpadding - (endsample - hdr.nSamples*hdr.nTrials);
           endsample  = hdr.nSamples*hdr.nTrials;
         end

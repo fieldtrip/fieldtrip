@@ -64,7 +64,7 @@ if isempty(db_blob)
 end
 
 if iscell(filename)
-  ft_warning('concatenating data from %d files', numel(filename));
+  warning(defaultId, 'concatenating data from %d files', numel(filename));
   % this only works if the data is indexed by means of samples, not trials
   assert(isempty(ft_getopt(varargin, 'begtrial')));
   assert(isempty(ft_getopt(varargin, 'endtrial')));
@@ -146,7 +146,7 @@ end
 
 % test whether the file or directory exists
 if ~any(strcmp(dataformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'})) && ~exist(filename, 'file')
-  ft_error('FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
+  error(defaultId, 'FILEIO:InvalidFileName', 'file or directory ''%s'' does not exist', filename);
 end
 
 % ensure that these are double precision and not integers, otherwise the subsequent computations will be messed up
@@ -157,19 +157,19 @@ endtrial  = double(endtrial);
 
 % ensure that the requested sample and trial numbers are integers
 if ~isempty(begsample) && mod(begsample, 1)
-  ft_warning('rounding "begsample" to the nearest integer');
+  warning(defaultId, 'rounding "begsample" to the nearest integer');
   begsample = round(begsample);
 end
 if ~isempty(endsample) && ~isinf(endsample) && mod(endsample, 1)
-  ft_warning('rounding "endsample" to the nearest integer');
+  warning(defaultId, 'rounding "endsample" to the nearest integer');
   endsample = round(endsample);
 end
 if ~isempty(begtrial) && mod(begtrial, 1)
-  ft_warning('rounding "begtrial" to the nearest integer');
+  warning(defaultId, 'rounding "begtrial" to the nearest integer');
   begtrial = round(begtrial);
 end
 if ~isempty(endtrial) && mod(endtrial, 1)
-  ft_warning('rounding "endtrial" to the nearest integer');
+  warning(defaultId, 'rounding "endtrial" to the nearest integer');
   endtrial = round(endtrial);
 end
 
@@ -208,7 +208,7 @@ else
   end
   % test whether the requested channels can be accomodated
   if min(chanindx)<1 || max(chanindx)>hdr.nChans
-    ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
+    error(defaultId, 'FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
   end
 end
 
@@ -219,16 +219,16 @@ end
 
 % test whether the requested data segment is not outside the file
 if any(begsample<1)
-  ft_error('FILEIO:InvalidBegSample', 'cannot read data before the begin of the file');
+  error(defaultId, 'FILEIO:InvalidBegSample', 'cannot read data before the begin of the file');
 elseif any(endsample>(hdr.nSamples*hdr.nTrials)) && ~blocking
-  ft_error('FILEIO:InvalidEndSample', 'cannot read data after the end of the file');
+  error(defaultId, 'FILEIO:InvalidEndSample', 'cannot read data after the end of the file');
 end
 
 requesttrials  = isempty(begsample) && isempty(endsample);
 requestsamples = isempty(begtrial)  && isempty(endtrial);
 
 if cache && requesttrials
-  ft_error('caching is not supported when reading trials')
+  error(defaultId, 'caching is not supported when reading trials')
 end
 
 if isempty(begsample) && isempty(endsample) && isempty(begtrial) && isempty(endtrial)
@@ -247,7 +247,7 @@ elseif isempty(checkboundary) && requestsamples
 end
 
 if requesttrials && requestsamples
-  ft_error('you cannot select both trials and samples at the same time');
+  error(defaultId, 'you cannot select both trials and samples at the same time');
 elseif requesttrials
   % this allows for support using a continuous reader
   if isinf(hdr.nSamples) && begtrial==1
@@ -261,13 +261,13 @@ elseif requestsamples
   begtrial = floor((begsample-1)/hdr.nSamples)+1;
   endtrial = floor((endsample-1)/hdr.nSamples)+1;
 else
-  ft_error('you should either specify begin/end trial or begin/end sample');
+  error(defaultId, 'you should either specify begin/end trial or begin/end sample');
 end
 
 % test whether the requested data segment does not extend over a discontinuous trial boundary
 if checkboundary && hdr.nTrials>1
   if begtrial~=endtrial
-    ft_error('requested data segment extends over a discontinuous trial boundary');
+    error(defaultId, 'requested data segment extends over a discontinuous trial boundary');
   end
 end
 
@@ -315,7 +315,7 @@ switch dataformat
       case 'double'
         samplesize = 8;
       otherwise
-        ft_error('unsupported data format');
+        error(defaultId, 'unsupported data format');
     end
     % 4D/BTi MEG data is multiplexed, can be epoched/discontinuous
     offset     = (begsample-1)*samplesize*hdr.nChans;
@@ -324,7 +324,7 @@ switch dataformat
     if isfield(hdr.orig, 'ChannelUnitsPerBit')
       upb = hdr.orig.ChannelUnitsPerBit;
     else
-      ft_warning('cannot determine ChannelUnitsPerBit');
+      warning(defaultId, 'cannot determine ChannelUnitsPerBit');
       upb = 1;
     end
     % jump to the desired data
@@ -357,7 +357,7 @@ switch dataformat
         % only include the gain values in the calibration
         calib = diag(gain(chanindx));
       otherwise
-        ft_error('unsupported data format');
+        error(defaultId, 'unsupported data format');
     end
     % calibrate the data
     dat = double(full(sparse(calib)*dat));
@@ -415,7 +415,7 @@ switch dataformat
       % read and concatenate all required data epochs
       [orig, buf] = readbdf(orig, i, 0);
       if size(buf,2)~=hdr.nChans || size(buf,1)~=epochlength
-        ft_error('error reading selected data from bdf-file');
+        error(defaultId, 'error reading selected data from bdf-file');
       else
         dat(:,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf(:,chanindx)';
       end
@@ -570,7 +570,7 @@ switch dataformat
           data_in_epoch(iEpoch) = length(intersect(begsamp_epoch:endsamp_epoch,begsample:endsample));
         end
         if sum(data_in_epoch>1) > 1
-          ft_warning('The requested segment from %i to %i is spread out over multiple epochs with possibly discontinuous boundaries', begsample, endsample);
+          warning(defaultId, 'The requested segment from %i to %i is spread out over multiple epochs with possibly discontinuous boundaries', begsample, endsample);
         end
       end
     end
@@ -578,7 +578,7 @@ switch dataformat
     % read in data in different signals
     binfiles = dir(fullfile(filename, 'signal*.bin'));
     if isempty(binfiles)
-      ft_error('FieldTrip:read_mff_header:nobin', ['could not find any signal.bin in ' filename_mff ])
+      error(defaultId, 'FieldTrip:read_mff_header:nobin', ['could not find any signal.bin in ' filename_mff ])
     end
     % determine which channels are in which signal
     for iSig = 1:length(hdr.orig.signal)
@@ -714,7 +714,7 @@ switch dataformat
       nevents   = 0;         % disable waiting for events
       available = buffer_wait_dat([nsamples nevents timeout], host, port);
       if available.nsamples<nsamples
-        ft_error('buffer timed out while waiting for %d samples', nsamples);
+        error(defaultId, 'buffer timed out while waiting for %d samples', nsamples);
       end
     end
     
@@ -771,7 +771,7 @@ switch dataformat
     % read from a MySQL server listening somewhere else on the network
     db_open(filename);
     if db_blob
-      ft_error('not implemented');
+      error(defaultId, 'not implemented');
     else
       for i=begtrial:endtrial
         s = db_select('fieldtrip.data', {'nChans', 'nSamples', 'data'}, i);
@@ -872,7 +872,7 @@ switch dataformat
       % little endian
       fid = fopen(datafile, 'rb', 'ieee-le');
     else
-      ft_error('unsuppported data_type in itab format');
+      error(defaultId, 'unsuppported data_type in itab format');
     end
     
     % skip the ascii header
@@ -891,7 +891,7 @@ switch dataformat
       fseek(fid, (begsample-1)*hdr.orig.nchan*4, 'cof');
       dat = fread(fid, [hdr.orig.nchan endsample-begsample+1], 'float');
     else
-      ft_error('unsuppported data_type in itab format');
+      error(defaultId, 'unsuppported data_type in itab format');
     end
     % these are the channels that are visible to FieldTrip
     chansel = 1:hdr.orig.nchan;
@@ -928,7 +928,7 @@ switch dataformat
         trlind = [trlind i*ones(1, diff(hdr.orig.epochs(i).samples) + 1)];
       end
       if checkboundary && (trlind(begsample)~=trlind(endsample))
-        ft_error('requested data segment extends over a discontinuous trial boundary');
+        error(defaultId, 'requested data segment extends over a discontinuous trial boundary');
       end
     else
       trlind = ones(1, hdr.nSamples);
@@ -991,7 +991,7 @@ switch dataformat
       case 32
         precision = 'int32';
       otherwise
-        ft_error('unknown precision');
+        error(defaultId, 'unknown precision');
     end
     dat     = LoadBinary(filename, 'frequency', hdr.Fs, 'offset', begsample-1, 'nRecords', endsample-begsample, 'nChannels', hdr.orig.nChannels, 'channels', chanindx, 'precision', precision).';
     scaling = hdr.orig.voltageRange/hdr.orig.amplification/(2^hdr.orig.nBits); % scale to S.I. units, i.e. V
@@ -1093,7 +1093,7 @@ switch dataformat
     sample1    = begsample-1;
     ldnsamples = endsample-begsample+1; % number of samples to read
     if sample1<0
-      ft_error('begin sample cannot be for the beginning of the file');
+      error(defaultId, 'begin sample cannot be for the beginning of the file');
     end
     % the hdr.nsdf was the initial FieldTrip hack to get 32 bit support, now it is realized using a extended dataformat string
     if     isfield(hdr, 'nsdf') && hdr.nsdf==16
@@ -1141,7 +1141,7 @@ switch dataformat
           trialnumber = [trialnumber i*ones(size(hdr.orig.evoked(i).times))];
         end
         if trialnumber(begsample) ~= trialnumber(endsample)
-          ft_error('requested data segment extends over a discontinuous trial boundary');
+          error(defaultId, 'requested data segment extends over a discontinuous trial boundary');
         end
       end
       dat = dat(chanindx, begsample:endsample);        % select the desired channels and samples
@@ -1160,7 +1160,7 @@ switch dataformat
     for i=begepoch:endepoch
       [buf, status] = rawdata('next');
       if ~strcmp(status, 'ok')
-        ft_error('error reading selected data from fif-file');
+        error(defaultId, 'error reading selected data from fif-file');
       else
         dat(:,((i-begepoch)*hdr.nSamples+1):((i-begepoch+1)*hdr.nSamples)) = buf(chanindx,:);
       end
@@ -1173,7 +1173,7 @@ switch dataformat
   case {'neurosim_ds' 'neurosim_signals'}
     [hdr, dat] = read_neurosim_signals(filename);
     if endsample>size(dat,2)
-      ft_warning('Simulation was not completed, reading in part of the data')
+      warning(defaultId, 'Simulation was not completed, reading in part of the data')
       endsample=size(dat,2);
     end
     dat = dat(chanindx,begsample:endsample);
@@ -1181,13 +1181,13 @@ switch dataformat
   case 'neurosim_evolution'
     [hdr, dat] = read_neurosim_evolution(filename);
     if endsample>size(dat,2)
-      ft_warning('Simulation was not completed, reading in part of the data')
+      warning(defaultId, 'Simulation was not completed, reading in part of the data')
       endsample=size(dat,2);
     end
     dat = dat(chanindx,begsample:endsample);
     
   case 'neurosim_spikes'
-    ft_warning('Reading Neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead.');
+    warning(defaultId, 'Reading Neurosim spikes as continuous data, for better memory efficiency use spike structure provided by ft_read_spike instead.');
     spike = ft_read_spike(filename);
     cfg          = [];
     cfg.trialdef.triallength = inf;
@@ -1196,9 +1196,9 @@ switch dataformat
     
     cfg.datafile=filename;
     cfg.hdr = ft_read_header(cfg.datafile);
-    ft_warning('off','FieldTrip:ft_read_event:unsupported_event_format')
+    warning(defaultId, 'off','FieldTrip:ft_read_event:unsupported_event_format')
     cfg = ft_definetrial(cfg);
-    ft_warning('on','FieldTrip:ft_read_event:unsupported_event_format')
+    warning(defaultId, 'on','FieldTrip:ft_read_event:unsupported_event_format')
     spiketrl = ft_spike_maketrials(cfg,spike);
     
     dat=ft_checkdata(spiketrl,'datatype', 'raw', 'fsample', spiketrl.hdr.Fs);
@@ -1281,7 +1281,7 @@ switch dataformat
       end
     end
     if any(isnan(dat(:)))
-      ft_warning('data has been padded with NaNs');
+      warning(defaultId, 'data has been padded with NaNs');
     end
     
   case 'plexon_plx'
@@ -1300,7 +1300,7 @@ switch dataformat
     [spikeindx, spikesel] = match_str(spikelabel, hdr.label(chanindx));
     
     if (length(contindx)+length(spikeindx))<length(chanindx)
-      ft_error('not all selected channels could be located in the data');
+      error(defaultId, 'not all selected channels could be located in the data');
     end
     
     % allocate memory to hold all data
@@ -1382,7 +1382,7 @@ switch dataformat
       if strcmp(fallback, 'biosig') && ft_hastoolbox('BIOSIG', 1)
         dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
       else
-        ft_error('unsupported data format (%s)', dataformat);
+        error(defaultId, 'unsupported data format (%s)', dataformat);
       end
     end
 end % switch dataformat
@@ -1410,7 +1410,7 @@ switch dimord
     dat = permute(dat, [2 3 1]);
     dimord = 'chans_samples_trials';
   otherwise
-    ft_error('unexpected dimord');
+    error(defaultId, 'unexpected dimord');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1418,7 +1418,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(chanunit)
   if length(chanunit)~=length(chanindx)
-    ft_error('the number of channel units is inconsistent with the number of channels');
+    error(defaultId, 'the number of channel units is inconsistent with the number of channels');
   end
   
   % determine the scaling factor for each channel
@@ -1434,7 +1434,7 @@ if ~isempty(chanunit)
         dat(i,:,:) = scaling(i) .* dat(i,:,:);
       end
     otherwise
-      ft_error('unexpected dimord');
+      error(defaultId, 'unexpected dimord');
   end % switch
 end % if
 

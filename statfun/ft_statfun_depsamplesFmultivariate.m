@@ -90,10 +90,10 @@ end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    ft_error('P-values can only be calculated if the test statistics are calculated.');
+    error(defaultId, 'P-values can only be calculated if the test statistics are calculated.');
 end
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
-    ft_error('uvar must be specified for dependent samples statistics');
+    error(defaultId, 'uvar must be specified for dependent samples statistics');
 end
 
 % perform some checks on the design
@@ -102,16 +102,16 @@ for condindx=1:nconds
     nuospercond(condindx)=length(find(design(cfg.ivar,:)==condindx));
 end
 if sum(nuospercond)<size(design,2) || any(nuospercond~=nuospercond(1))
-  ft_error('Invalid specification of the design array.');
+  error(defaultId, 'Invalid specification of the design array.');
 end
 nunits = max(design(cfg.uvar,:));
 dfdenom = nunits - ncontrasts;
 if dfdenom<1
-    ft_error('The data must contain more units-of-observation (usually subjects) than the number of contrasts.')
+    error(defaultId, 'The data must contain more units-of-observation (usually subjects) than the number of contrasts.')
 end
 nrepl=nunits*nconds;
 if (nrepl~=sum(nuospercond)) || (nrepl~=size(dat,2))
-  ft_error('Invalid specification of the design array.');
+  error(defaultId, 'Invalid specification of the design array.');
 end
 nsmpls = size(dat,1);
 
@@ -145,10 +145,10 @@ if strcmp(cfg.computecritval,'yes')
   s.dfnum = ncontrasts;
   s.dfdenom = nunits - ncontrasts;
   if cfg.tail==-1
-      ft_error('For a dependent samples F-statistic, it does not make sense to calculate a left tail critical value.');
+      error(defaultId, 'For a dependent samples F-statistic, it does not make sense to calculate a left tail critical value.');
   end
   if cfg.tail==0
-      ft_error('For a dependent samples F-statistic, it does not make sense to calculate a two-sided critical value.');
+      error(defaultId, 'For a dependent samples F-statistic, it does not make sense to calculate a two-sided critical value.');
   end
   if cfg.tail==1
     s.critval = ((nunits-1).*ncontrasts./(nunits-ncontrasts)).*finv(1-cfg.alpha,s.dfnum,s.dfdenom);
@@ -160,10 +160,10 @@ if strcmp(cfg.computeprob,'yes')
   s.dfnum = ncontrasts;
   s.dfdenom = nunits - ncontrasts;
   if cfg.tail==-1
-      ft_error('For a dependent samples F-statistic, it does not make sense to calculate a left tail p-value.');
+      error(defaultId, 'For a dependent samples F-statistic, it does not make sense to calculate a left tail p-value.');
   end
   if cfg.tail==0
-      ft_error('For a dependent samples F-statistic, it does not make sense to calculate a two-sided p-value.');
+      error(defaultId, 'For a dependent samples F-statistic, it does not make sense to calculate a two-sided p-value.');
   end
   if cfg.tail==1
     scaledstat = ((nunits-ncontrasts)./((nunits-1).*ncontrasts)).*s.stat;

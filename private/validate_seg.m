@@ -76,19 +76,19 @@ end
 
 
 if ~isequal(size(tissue1), size(tissue2))
-  ft_error('inconsistent size of segmentations')
+  error(defaultId, 'inconsistent size of segmentations')
   
 elseif ~isequal(size(tissue1), size(tissue3))
-  ft_error('inconsistent size of segmentations')
+  error(defaultId, 'inconsistent size of segmentations')
   
 elseif ~isa(tissue1, 'logical') && ~all(tissue1(:)==0 | tissue1(:)==1)
-  ft_error('the first tissue is not a binary segmentation');
+  error(defaultId, 'the first tissue is not a binary segmentation');
   
 elseif ~isa(tissue2, 'logical') && ~all(tissue2(:)==0 | tissue2(:)==1)
-  ft_error('the second tissue is not a binary segmentation');
+  error(defaultId, 'the second tissue is not a binary segmentation');
   
 elseif ~isa(tissue3, 'logical') && ~all(tissue3(:)==0 | tissue3(:)==1)
-  ft_error('the third tissue is not a binary segmentation');
+  error(defaultId, 'the third tissue is not a binary segmentation');
   
 end
 
@@ -104,7 +104,7 @@ if (~any(tissue1(:)&tissue2(:)))||(~any(tissue2(:)&tissue3(:)))||(~any(tissue3(:
   air = ~imfill(tissue1|tissue2|tissue3, 'holes');
   
   if ~all(tissue1(:)|tissue2(:)|tissue3(:)|air(:))
-    ft_error('there are voxels which do not belong to any tissue or air')
+    error(defaultId, 'there are voxels which do not belong to any tissue or air')
   end
   
   
@@ -121,44 +121,44 @@ end
 
 if nargin > 1
   if any(tissue1(:)&~tissue2(:))
-    ft_error('the first tissue outside of the second')
+    error(defaultId, 'the first tissue outside of the second')
   end
 
   if any(tissue2(:)&~tissue3(:))
-    ft_error('the second tissue is outside of the third')
+    error(defaultId, 'the second tissue is outside of the third')
   end
 
   if any(tissue1(:)&~tissue3(:))
-    ft_error('there is first tissue is outside the third')
+    error(defaultId, 'there is first tissue is outside the third')
   end
   
   if ~any(tissue2(:)&~tissue1(:))
-      ft_error('the first two tissues are not different')
+      error(defaultId, 'the first two tissues are not different')
   end
   
 end
 
 if nargin > 2
   if ~any(tissue3(:)&~tissue2(:))
-      ft_error('the last two tissues are not different')
+      error(defaultId, 'the last two tissues are not different')
   end
 end  
 
 holes = imfill(tissue1, 'holes') & ~tissue1;
 if any(holes(:))
-  ft_error('there are holes in the first tissue');
+  error(defaultId, 'there are holes in the first tissue');
 end
 
 if nargin > 1
  holes = imfill(tissue2, 'holes') & ~tissue2;
  if any(holes(:))
-  ft_error('there are holes in the second tissue');
+  error(defaultId, 'there are holes in the second tissue');
  end
 
 
  holes = imfill(tissue3, 'holes') & ~tissue3;
  if any(holes(:))
-  ft_error('there are holes in the third tissue');
+  error(defaultId, 'there are holes in the third tissue');
  end
 end
 

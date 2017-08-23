@@ -94,11 +94,11 @@ if isfield(data, [cfg.parameter,'dimord'])
 elseif isfield(data, 'dimord')
   dimord = data.dimord;
 else
-  ft_error('input data needs a ''dimord'' field');
+  error(defaultId, 'input data needs a ''dimord'' field');
 end
 
 if ~strcmp(dimord(1:7), 'pos_pos') && ~strcmp(dimord(1:9), 'chan_chan')
-  ft_error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
+  error(defaultId, 'the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
 end
 
 % conversion to double is needed because some BCT functions want to do matrix
@@ -107,7 +107,7 @@ input = double(data.(cfg.parameter));
 
 % some metrics explicitly require a certain parameter
 if strcmp(cfg.method, 'charpath') && ~strcmp(cfg.parameter, 'distance')
-  ft_error('characteristic path length can only be computed on distance matrices');
+  error(defaultId, 'characteristic path length can only be computed on distance matrices');
 end
 
 % check for binary or not
@@ -197,7 +197,7 @@ for k = 1:size(input, 3)
     % switch to the appropriate function from the BCT
     switch cfg.method
       case 'assortativity'
-        if ~isbinary, ft_warning(binarywarning); end
+        if ~isbinary, warning(defaultId, binarywarning); end
 
         if isdirected
           output(k,m) = assortativity(input(:,:,k,m), 1);
@@ -211,7 +211,7 @@ for k = 1:size(input, 3)
           output(:,k,m) = betweenness_wei(input(:,:,k,m));
         end
       case 'breadthdist'
-        ft_error('not yet implemented');
+        error(defaultId, 'not yet implemented');
       case 'charpath'
         % this needs the distance matrix as input, this is dealt with
         % above
@@ -227,7 +227,7 @@ for k = 1:size(input, 3)
           output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
         end
       case 'degrees'
-        if ~isbinary, ft_warning(binarywarning); end
+        if ~isbinary, warning(defaultId, binarywarning); end
 
         if isdirected
           [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
@@ -236,7 +236,7 @@ for k = 1:size(input, 3)
           output(:,k,m) = degrees_und(input(:,:,k,m));
         end
       case 'density'
-        if ~isbinary, ft_warning(binarywarning); end
+        if ~isbinary, warning(defaultId, binarywarning); end
 
         if isdirected
           output(k,m) = density_dir(input(:,:,k,m));
@@ -256,11 +256,11 @@ for k = 1:size(input, 3)
           output(:,:,k,m) = edge_betweenness_wei(input(:,:,k,m));
         end
       case 'efficiency'
-        ft_error('not yet implemented');
+        error(defaultId, 'not yet implemented');
       case 'modularity'
-        ft_error('not yet implemented');
+        error(defaultId, 'not yet implemented');
       case 'participation_coef'
-        ft_error('not yet implemented');
+        error(defaultId, 'not yet implemented');
       case 'transitivity'
         if isbinary && isdirected
           output(k,m) = transitivity_bd(input(:,:,k,m));
@@ -272,7 +272,7 @@ for k = 1:size(input, 3)
           output(k,m) = transitivity_wu(input(:,:,k,m));
         end
       otherwise
-        ft_error('unsupported connectivity metric %s requested');
+        error(defaultId, 'unsupported connectivity metric %s requested');
     end
 
   end % for m

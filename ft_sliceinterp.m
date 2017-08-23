@@ -170,14 +170,14 @@ try, cfg.maskparameter = cfg.maskparameter{1}; end
 if isfield(ininterp,'anatomy');
   interp.anatomy = reshape(ininterp.anatomy, ininterp.dim);
 else
-  ft_error('no anatomical data supplied');
+  error(defaultId, 'no anatomical data supplied');
 end
 
 % check functional data
 if ~isempty(cfg.funparameter)
   interp.source = double(reshape(getsubfield(ininterp, cfg.funparameter), ininterp.dim));
 else
-  ft_error('no functional data supplied');
+  error(defaultId, 'no functional data supplied');
 end
 
 % check mask data

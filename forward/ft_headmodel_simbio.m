@@ -48,7 +48,7 @@ headmodel = [];
 if isfield(mesh,'pos')
   headmodel.pos = mesh.pos;
 else
-  ft_error('Vertex field is required!')
+  error(defaultId, 'Vertex field is required!')
 end
 
 if isfield(mesh,'tet')
@@ -56,23 +56,23 @@ if isfield(mesh,'tet')
 elseif isfield(mesh,'hex')
   headmodel.hex = mesh.hex;
 else
-  ft_error('Connectivity information is required!')
+  error(defaultId, 'Connectivity information is required!')
 end
 
 if isfield(mesh,'tissue')
   headmodel.tissue = mesh.tissue;
 else
-  ft_error('No element indices declared!')
+  error(defaultId, 'No element indices declared!')
 end
 
 if isempty(conductivity)
-  ft_error('No conductivity information!')
+  error(defaultId, 'No conductivity information!')
 end
 
 if length(conductivity) >= length(unique(headmodel.tissue))
   headmodel.cond = conductivity;
 else
-  ft_error('Wrong conductivity information!')
+  error(defaultId, 'Wrong conductivity information!')
 end
 
 if ~isfield(mesh,'tissuelabel')

@@ -98,7 +98,7 @@ elseif hascomp
   label   = comp.topolabel;
   ncomps  = length(comp.label);
 else
-  ft_error('incorrect number of input arguments');
+  error(defaultId, 'incorrect number of input arguments');
 end
 
 % cfg.component can be indicated by number or by label
@@ -106,15 +106,15 @@ cfg.component = ft_channelselection(cfg.component, comp.label);
 reject = match_str(comp.label, cfg.component);
 
 if isempty(reject)
-  ft_warning('no components were selected for rejection');
+  warning(defaultId, 'no components were selected for rejection');
 end
 
 if min(reject)<1
-  ft_error('you cannot remove components that are not present in the data');
+  error(defaultId, 'you cannot remove components that are not present in the data');
 end
 
 if max(reject)>ncomps
-  ft_error('you cannot remove components that are not present in the data');
+  error(defaultId, 'you cannot remove components that are not present in the data');
 end
 
 if hasdata && strcmp(cfg.demean, 'yes')
@@ -138,7 +138,7 @@ end
 [seldat, selcomp] = match_str(label, comp.topolabel);
 
 if hasdata && length(seldat)~=length(label)
-  ft_warning('the subspace projection is not guaranteed to be correct for non-orthogonal components');
+  warning(defaultId, 'the subspace projection is not guaranteed to be correct for non-orthogonal components');
 end
 
 if hasdata

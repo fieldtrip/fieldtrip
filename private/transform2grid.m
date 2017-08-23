@@ -25,7 +25,7 @@ else
     1 1 0 0
     1 1 1 0 ];
   if any(dum(:)~=0)
-    ft_error('rotated coordinate system, cannot compute xgrid/ygrid/zgrid');
+    error(defaultId, 'rotated coordinate system, cannot compute xgrid/ygrid/zgrid');
   end
 
   % apply the homogenous coordinate transformation to each of the cardinal axes

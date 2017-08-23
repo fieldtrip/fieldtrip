@@ -101,7 +101,7 @@ if ~isequal(topostyle, false)
       end
       
     otherwise
-      ft_error('unsupported topostyle');
+      error(defaultId, 'unsupported topostyle');
   end % switch contourstyle
 end % plot the interpolated topography
 
@@ -118,7 +118,7 @@ if ~strcmp(contourstyle, 'none')
       maxval = ceil(maxval/scale)*scale;
       isolines = minval:scale:maxval;
     else
-      ft_error('unsupported isolines');
+      error(defaultId, 'unsupported isolines');
     end
   end % convert string to vector
   
@@ -212,7 +212,7 @@ if ~strcmp(contourstyle, 'none')
       end
       
     otherwise
-      ft_error('unsupported contourstyle');
+      error(defaultId, 'unsupported contourstyle');
   end % switch contourstyle
   
 end % plot the contours

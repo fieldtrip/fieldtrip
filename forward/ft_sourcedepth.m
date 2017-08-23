@@ -87,6 +87,6 @@ case {'bem' 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag','openmeeg'}
 
 % unsupported volume conductor model
 otherwise
-  ft_error('upsupported volume conductor model');
+  error(defaultId, 'upsupported volume conductor model');
 end
 

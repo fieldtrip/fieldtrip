@@ -104,7 +104,7 @@ if istlck
 end
 
 if isfreq
-  if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
+  if ~isfield(data, 'fourierspctrm'), error(defaultId, 'freq data should contain Fourier spectra'); end
 end
 
 cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
@@ -158,7 +158,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   cfg.spheremesh  = ft_getopt(cfg, 'spheremesh',  642);
 
   if isfreq
-    ft_error('the method ''sourceproject'' is not supported for frequency data as input');
+    error(defaultId, 'the method ''sourceproject'' is not supported for frequency data as input');
   end
 
   Nchan   = length(data.label);
@@ -185,7 +185,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
       % read the headshape from file
       headshape = ft_read_headshape(cfg.headshape);
     else
-      ft_error('cfg.headshape is not specified correctly')
+      error(defaultId, 'cfg.headshape is not specified correctly')
     end
     if ~isfield(headshape, 'tri')
       % generate a closed triangulation from the surface points
@@ -258,7 +258,7 @@ else
       sens.label   = sens.labelold;
       sens = rmfield(sens, {'chanposold', 'chanoriold', 'labelold'});
     else
-      ft_error('The channel positions (and/or orientations) contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
+      error(defaultId, 'The channel positions (and/or orientations) contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
     end
   end
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
@@ -295,7 +295,7 @@ else
   % % generically call megplanar_orig megplanar_sincos or megplanar_fitplane
   %fun = ['megplanar_'  cfg.planarmethod];
   %if ~exist(fun, 'file')
-  %  ft_error('unknown method for computation of planar gradient');
+  %  error(defaultId, 'unknown method for computation of planar gradient');
   %end
   %planarmontage = eval([fun '(cfg, data.grad)']);
 
@@ -312,7 +312,7 @@ else
     otherwise
       fun = ['megplanar_' cfg.planarmethod];
       if ~exist(fun, 'file')
-        ft_error('unknown method for computation of planar gradient');
+        error(defaultId, 'unknown method for computation of planar gradient');
       end
       planarmontage = eval([fun '(cfg, data.grad)']);
   end

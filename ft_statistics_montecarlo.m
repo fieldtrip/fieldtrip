@@ -131,7 +131,7 @@ cfg.precondition = ft_getopt(cfg, 'precondition', []);
 
 % explicit check for option 'yes' in cfg.correctail.
 if strcmp(cfg.correcttail,'yes')
-  ft_error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
+  error(defaultId, 'cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
 end
 
 if strcmp(cfg.correctm, 'cluster')
@@ -180,7 +180,7 @@ end
 
 % for backward compatibility and other warnings relating correcttail
 if isfield(cfg,'correctp') && strcmp(cfg.correctp,'yes')
-  ft_warning('cfg.correctp has been renamed to cfg.correcttail and the options have been changed')
+  warning(defaultId, 'cfg.correctp has been renamed to cfg.correcttail and the options have been changed')
   disp('setting cfg.correcttail to ''prob''')
   cfg.correcttail = 'prob';
   cfg = rmfield(cfg,'correctp');
@@ -188,7 +188,7 @@ elseif isfield(cfg,'correctp') && strcmp(cfg.correctp,'no')
   cfg = ft_checkconfig(cfg, 'renamed', {'correctp', 'correcttail'});
 end
 if strcmp(cfg.correcttail,'no') && cfg.tail==0 && cfg.alpha==0.05
-  ft_warning('doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
+  warning(defaultId, 'doing a two-sided test without correcting p-values or alpha-level, p-values and alpha-level will reflect one-sided tests per tail')
 end
 
 % for backward compatibility
@@ -203,7 +203,7 @@ end
 % fetch function handle to the low-level statistics function
 statfun = ft_getuserfun(cfg.statistic, 'statfun');
 if isempty(statfun)
-  ft_error('could not locate the appropriate statistics function');
+  error(defaultId, 'could not locate the appropriate statistics function');
 else
   fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
@@ -239,7 +239,7 @@ if strcmp(cfg.correctm, 'cluster')
       cfg.clustercritval    = getfield(statfun(tmpcfg, dat, design), 'critval');
     catch
       disp(lasterr);
-      ft_error('could not determine the parametric critical value for clustering');
+      error(defaultId, 'could not determine the parametric critical value for clustering');
     end
   elseif strcmp(cfg.clusterthreshold, 'parametric') && ~isempty(cfg.clustercritval)
     fprintf('using the specified parametric threshold for clustering\n');
@@ -413,7 +413,7 @@ if isfield(stat, 'posclusters')
     stat.posclusters(i).stddev  = sqrt(stat.posclusters(i).prob.*(1-stat.posclusters(i).prob)/Nrand);
     stat.posclusters(i).cirange =  1.96*stat.posclusters(i).stddev;
     if i==1 && stat.posclusters(i).prob<cfg.alpha && stat.posclusters(i).prob+stat.posclusters(i).cirange>=cfg.alpha
-      ft_warning('FieldTrip:posCluster_exceeds_alpha', sprintf('The p-value confidence interval of positive cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
+      warning(defaultId, 'FieldTrip:posCluster_exceeds_alpha', sprintf('The p-value confidence interval of positive cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
     end
   end
 end
@@ -422,13 +422,13 @@ if isfield(stat, 'negclusters')
     stat.negclusters(i).stddev  = sqrt(stat.negclusters(i).prob.*(1-stat.negclusters(i).prob)/Nrand);
     stat.negclusters(i).cirange =  1.96*stat.negclusters(i).stddev;
     if i==1 && stat.negclusters(i).prob<cfg.alpha && stat.negclusters(i).prob+stat.negclusters(i).cirange>=cfg.alpha
-      ft_warning('FieldTrip:negCluster_exceeds_alpha', sprintf('The p-value confidence interval of negative cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
+      warning(defaultId, 'FieldTrip:negCluster_exceeds_alpha', sprintf('The p-value confidence interval of negative cluster #%i includes %.3f - consider increasing the number of permutations!', i, cfg.alpha));
     end
   end
 end
 
 if ~isfield(stat, 'prob')
-  ft_warning('probability was not computed');
+  warning(defaultId, 'probability was not computed');
 else
   switch lower(cfg.correctm)
     case 'max'

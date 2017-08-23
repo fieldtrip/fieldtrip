@@ -142,10 +142,10 @@ Ntrial = numel(data.trial);
 % check the input arguments, only one method for processing is allowed
 numoptions = ~isempty(cfg.toilim) + ~isempty(cfg.offset) + (~isempty(cfg.begsample) || ~isempty(cfg.endsample)) + ~isempty(cfg.trl) + ~isempty(cfg.length);
 if numoptions>1
-  ft_error('you should specify only one of the options for redefining the data segments');
+  error(defaultId, 'you should specify only one of the options for redefining the data segments');
 end
 if numoptions==0 && isempty(cfg.minlength) && strcmp(cfg.trials, 'all')
-  ft_error('you should specify at least one configuration option');
+  error(defaultId, 'you should specify at least one configuration option');
 end
 
 % start processing
@@ -255,14 +255,14 @@ elseif ~isempty(cfg.trl)
     if size(cfg.trl,2)>3 %In case user specified a trialinfo
       data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
       if isfield(dataold,'trialinfo')
-        ft_warning('Original data has trialinfo, using user specified trialinfo instead');
+        warning(defaultId, 'Original data has trialinfo, using user specified trialinfo instead');
       end
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
       if numel(iTrlorig) == 1 || ...  % only 1 old trial to copy trialinfo from, or
           size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1) % all old trialinfo rows are identical
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
       else
-        ft_error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
+        error(defaultId, 'Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
       end
     end
   end %for iTrl

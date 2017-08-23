@@ -92,7 +92,7 @@ if isfield(cfg, 'chanlow') && isfield(cfg, 'chanhigh')
     cfg.channel = cfg.chanlow;
     cfg = removefields(cfg, 'chanlow', 'chanhigh');
   else
-    ft_error('cross-channel CFC not supported, the channel selection should be the same for low and high frequencies')
+    error(defaultId, 'cross-channel CFC not supported, the channel selection should be the same for low and high frequencies')
   end
 end
 

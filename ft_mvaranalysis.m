@@ -102,7 +102,7 @@ ft_nargout  = nargout;
 
 % this must be done prior to "ft_preamble init" which merges the cfg with the global ft_default
 if isfield(cfg, 'toolbox') && any(strcmp(cfg.toolbox, {'bsmart', 'biosig'}))
-  ft_warning('please use cfg.method instead of cfg.toolbox');
+  warning(defaultId, 'please use cfg.method instead of cfg.toolbox');
   % cfg.toolbox is used in ft_default
   cfg.method = cfg.toolbox;
   cfg = rmfield(cfg, 'toolbox');
@@ -148,7 +148,7 @@ cfg.output     = ft_getopt(cfg, 'output',     'parameters');
 
 % check that cfg.channel and cfg.channelcmb are not both specified
 if ~any(strcmp(cfg.channel, 'all')) && isfield(cfg, 'channelcmb')
-  ft_warning('cfg.channelcmb defined, overriding cfg.channel setting and computing over bivariate pairs');
+  warning(defaultId, 'cfg.channelcmb defined, overriding cfg.channel setting and computing over bivariate pairs');
 else
 	% select trials of interest
   tmpcfg = [];
@@ -169,7 +169,7 @@ switch cfg.method
     ft_hastoolbox('bsmart', 1);
     nnans = 0;
   otherwise
-    ft_error('toolbox %s is not yet supported', cfg.method);
+    error(defaultId, 'toolbox %s is not yet supported', cfg.method);
 end
 
 if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
@@ -193,7 +193,7 @@ elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
 		latency(k,:) = cfg.toi + cfg.t_ftimwin.*[-0.5 0.5-1./data.fsample];
 	end
 else
-  ft_error('cfg should contain both cfg.toi and cfg.t_ftimwin');
+  error(defaultId, 'cfg should contain both cfg.toi and cfg.t_ftimwin');
 end
 
 
@@ -204,8 +204,8 @@ dozscore = istrue(cfg.zscore);
 dobvar   = isfield(cfg,           'channelcmb');
 dounivariate = istrue(cfg. univariate);
 
-if ~keeptap, ft_error('not keeping tapers is not possible yet'); end
-if dojack && keeprpt, ft_error('you cannot simultaneously keep trials and do jackknifing'); end
+if ~keeptap, error(defaultId, 'not keeping tapers is not possible yet'); end
+if dojack && keeprpt, error(defaultId, 'you cannot simultaneously keep trials and do jackknifing'); end
 
 tfwin    = round(data.fsample.*cfg.t_ftimwin);
 ntrl     = length(data.trial);
@@ -329,7 +329,7 @@ timeaxis = mintim:1/data.fsample:maxtim;
 %---allocate memory
 if dobvar && (keeprpt || dojack)
   % not yet implemented
-  ft_error('doing bivariate model fits in combination with multiple replicates is not yet possible');
+  error(defaultId, 'doing bivariate model fits in combination with multiple replicates is not yet possible');
 elseif dobvar
   coeffs   = zeros(1, 2*nchan,  size(cmbindx,1), cfg.order, ntoi, ntap);
   noisecov = zeros(1, 2*nchan,  size(cmbindx,1),            ntoi, ntap);

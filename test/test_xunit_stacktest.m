@@ -25,11 +25,11 @@ tmpstrct2 = [];
 eval(['tmpstrct2.' fname ' =[]'])
 
 for i=1:10
-    ft_warning('Tthis is a test');
+    warning(defaultId, 'Tthis is a test');
 end
-ft_warning('Tthis is another test');
+warning(defaultId, 'Tthis is another test');
 
-ft_warning('-clear');
+warning(defaultId, '-clear');
 
 fprintf('Completed!\n');
 

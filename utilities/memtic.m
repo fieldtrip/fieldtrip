@@ -77,7 +77,7 @@ if isempty(strfind(which('memprofile'), mexext))
         output = nan;
       end
     otherwise
-      ft_error('invalid input argument #1');
+      error(defaultId, 'invalid input argument #1');
   end % switch
   return
 end % if mex file does not exist
@@ -88,7 +88,7 @@ memstat = memprofile('info');
 switch action
   case 'tic'
     if nargin>1
-      ft_error('the counter cannot be specified as imput argument');
+      error(defaultId, 'the counter cannot be specified as imput argument');
     end
     
     counter = length(state)+1;
@@ -105,7 +105,7 @@ switch action
       % take the latest
       counter = length(state);
     elseif counter<1 || counter>numel(state)
-      ft_error('invalid counter');
+      error(defaultId, 'invalid counter');
     end
     
     if counter==0
@@ -121,6 +121,6 @@ switch action
     end
     
   otherwise
-    ft_error('invalid input argument #1');
+    error(defaultId, 'invalid input argument #1');
 end % switch
 

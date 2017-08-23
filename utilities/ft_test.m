@@ -105,7 +105,7 @@ switch (varargin{1})
   case 'compare'
     ft_test_compare(varargin{:});
   otherwise
-    ft_error('unsupported command "%s"', varargin{1})
+    error(defaultId, 'unsupported command "%s"', varargin{1})
 end % switch
 
 

@@ -83,7 +83,7 @@ switch cfg.method
 case {'abscoh', 'imagcoh', 'absimagcoh', 'atanh', 'atanh_randphase'}
   % normalise, so that the complex conjugate multiplication immediately results in coherence
   if ~all(trltapcnt==trltapcnt(1))
-    ft_error('all trials should have the same number of tapers');
+    error(defaultId, 'all trials should have the same number of tapers');
   end
   for i=1:nsgn
     for k=1:nfrq
@@ -109,7 +109,7 @@ case {'amplcorr', 'absamplcorr'}
   dat = dat./sqrt(ntrl);
 
 otherwise
-  ft_error('unknown method for shift-predictor')
+  error(defaultId, 'unknown method for shift-predictor')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -219,7 +219,7 @@ case 3
     case 'absamplcorr'
       coh(:,:,i) = abs(     datref(:,:,i) * dat(:,:,i)');
     otherwise
-      ft_error('unsupported method');
+      error(defaultId, 'unsupported method');
     end
   end
 
@@ -241,12 +241,12 @@ case 1
     case 'absamplcorr'
       coh(i,k,:) = abs(     sum(datref(i,:,:) .* conj(dat(k,:,:)), 2));
     otherwise
-      ft_error('unsupported method');
+      error(defaultId, 'unsupported method');
     end
   end
   end
 otherwise
-  ft_error('unsupported loopdim');
+  error(defaultId, 'unsupported loopdim');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -117,7 +117,7 @@ else
       trl(k,3) = time2offset(data.time{k}, data.fsample);
     end
   else
-    ft_error('the input data does not contain a valid description of the sampleinfo');
+    error(defaultId, 'the input data does not contain a valid description of the sampleinfo');
   end
 end
 

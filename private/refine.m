@@ -189,6 +189,6 @@ switch lower(method)
     [trir, pntr] = reducepatch(tri, pnt, numtri);
     
   otherwise
-    ft_error('unsupported method "%s"', method);
+    error(defaultId, 'unsupported method "%s"', method);
 end
 

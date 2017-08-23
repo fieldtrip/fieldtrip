@@ -68,7 +68,7 @@ end
 
 % it should have a selection of two channels or channelgroups in each row
 if size(channelcmb,1)==2 && size(channelcmb,2)~=2
-  ft_warning('transposing channelcombination matrix');
+  warning(defaultId, 'transposing channelcombination matrix');
   channelcmb = channelcmb';
 end
 
@@ -104,7 +104,7 @@ if isempty(setdiff(channelcmb(:), datachannel))
     case 2
       channelcmb = [channelcmb; channelcmb(:,[2 1])];
     otherwise
-      ft_error('unknown value for input argument ''dirflag''');
+      error(defaultId, 'unknown value for input argument ''dirflag''');
   end
   collect = channelcmb;
 
@@ -167,7 +167,7 @@ else
       indx = [i1 i2];
 
     otherwise
-      ft_error('unknown value for input argument ''dirflag''');
+      error(defaultId, 'unknown value for input argument ''dirflag''');
   end
 
   collect = [datachannel(indx(:,1)) datachannel(indx(:,2))];

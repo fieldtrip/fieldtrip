@@ -70,19 +70,19 @@ if numel(headmodel.bnd)>1
 end
 
 if isempty(conductivity)
-  ft_warning('No conductivity is declared, Assuming standard values\n')
+  warning(defaultId, 'No conductivity is declared, Assuming standard values\n')
   if numboundaries == 1
     conductivity = 1;
   elseif numboundaries == 3
     % skin/skull/brain
     conductivity = [1 1/80 1] * 0.33;
   else
-    ft_error('Conductivity values are required for 2 shells. More than 3 shells not allowed')
+    error(defaultId, 'Conductivity values are required for 2 shells. More than 3 shells not allowed')
   end
   headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
-    ft_error('a conductivity value should be specified for each compartment');
+    error(defaultId, 'a conductivity value should be specified for each compartment');
   end
   % update the order of the compartments
   headmodel.cond = conductivity(order);
@@ -174,14 +174,14 @@ try
     if version>3
       dos(['./' exefile]);
     else
-      ft_error('non suitable GCC compiler version (must be superior to gcc3)');
+      error(defaultId, 'non suitable GCC compiler version (must be superior to gcc3)');
     end
   end
   headmodel.mat = om_load_sym(hminvfile,'binary');
   cleaner(headmodel,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
   cd(tmpfolder)
 catch
-  ft_warning('an error ocurred while running OpenMEEG');
+  warning(defaultId, 'an error ocurred while running OpenMEEG');
   disp(lasterr);
   cleaner(headmodel,bndfile,condfile,geomfile,hmfile,hminvfile,exefile)
   cd(tmpfolder)
@@ -220,11 +220,11 @@ w = sum(solid_angle(pos, tri));
 
 if w<0 && (abs(w)-4*pi)<1000*eps
   ok = 0;
-  ft_warning('your normals are outwards oriented\n')
+  warning(defaultId, 'your normals are outwards oriented\n')
 elseif w>0 && (abs(w)-4*pi)<1000*eps
   ok = 1;
-%   ft_warning('your normals are inwards oriented')
+%   warning(defaultId, 'your normals are inwards oriented')
 else
-  ft_error('your surface probably is irregular\n')
+  error(defaultId, 'your surface probably is irregular\n')
   ok = 0;
 end

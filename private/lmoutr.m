@@ -60,7 +60,7 @@ mexsrc  = [funname '.c'];
 
 try
   % try to compile the mex file on the fly
-  ft_warning('trying to compile MEX file from %s', mexsrc);
+  warning(defaultId, 'trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
   
   if ispc
@@ -77,7 +77,7 @@ try
 catch
   % compilation failed
   disp(lasterr);
-  ft_error('could not locate MEX file for %s', mexname);
+  error(defaultId, 'could not locate MEX file for %s', mexname);
   cd(pwdir);
   success = false;
 end

@@ -103,7 +103,7 @@ if isfield(cfg.artfctdef.eog, 'artifact')
 end
 
 if ~strcmp(cfg.artfctdef.eog.method, 'zvalue')
-  ft_error('EOG artifact detection only works with cfg.method=''zvalue''');
+  error(defaultId, 'EOG artifact detection only works with cfg.method=''zvalue''');
 end
 
 % for backward compatibility
@@ -141,7 +141,7 @@ if ~hasdata
 else
   tmpcfg.artfctdef.zvalue.trlpadding = 0;
   tmpcfg.artfctdef.zvalue.fltpadding = 0;
-  ft_warning('trlpadding and fltpadding are set to zero to avoid filter problems with NaN, see bug3193 for details');
+  warning(defaultId, 'trlpadding and fltpadding are set to zero to avoid filter problems with NaN, see bug3193 for details');
   [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
 end
 cfg.artfctdef.eog  = tmpcfg.artfctdef.zvalue;

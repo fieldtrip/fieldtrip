@@ -247,7 +247,7 @@ switch cfg.method
     end % for trials
 
   otherwise
-    ft_error('unsupported method');
+    error(defaultId, 'unsupported method');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

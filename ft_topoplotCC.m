@@ -141,14 +141,14 @@ if isnan(cfg.arrowsize)
   % use the size of the figure to estimate a decent number
   siz = axis;
   cfg.arrowsize = (siz(2) - siz(1))/50;
-  ft_warning('using an arrowsize of %f', cfg.arrowsize);
+  warning(defaultId, 'using an arrowsize of %f', cfg.arrowsize);
 end
 
 if isnan(cfg.arrowoffset)
   % use the size of the figure to estimate a decent number
   siz = axis;
   cfg.arrowoffset = (siz(2) - siz(1))/100;
-  ft_warning('using an arrowoffset of %f', cfg.arrowoffset);
+  warning(defaultId, 'using an arrowoffset of %f', cfg.arrowoffset);
 end
 
 rgb  = cfg.colormap;
@@ -306,7 +306,7 @@ for i=srtidx(:)'
 
 
         otherwise
-          ft_error('unsupported linestyle specified');
+          error(defaultId, 'unsupported linestyle specified');
       end
 
     end

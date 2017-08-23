@@ -112,7 +112,7 @@ else
         yshift = 30./cfg.resolution;
         zshift = 40./cfg.resolution;
       case {'acpc' 'spm' 'mni' 'tal'}
-        ft_warning('FIXME, the bounding box needs a better default');
+        warning(defaultId, 'FIXME, the bounding box needs a better default');
         xshift = 0;
         yshift = 0;
         zshift = 0;

@@ -20,5 +20,5 @@ end
 end % main function
 
 function was_shown=issue_warning
-[unused,was_shown]=ft_warning('this warning should not show too often');
+[unused,was_shown]=warning(defaultId, 'this warning should not show too often');
 end % subfunction

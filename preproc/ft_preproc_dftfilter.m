@@ -104,7 +104,7 @@ Fl = Fl(:);
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
-  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  warning(defaultId, 'FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 % Method A): DFT filter 
@@ -150,7 +150,7 @@ elseif strcmp(Flreplace,'neighbour')
    Neighwidth = Neighwidth(:);
    
    if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
-       ft_error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
+       error(defaultId, 'The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
    end
 
     % frequencies to interpolate

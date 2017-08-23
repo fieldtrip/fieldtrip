@@ -38,7 +38,7 @@ function M=dimassign(A,dim,idx,B)
 if(~iscell(idx))
     if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
         length(dim)~=length(idx))
-        ft_error('dim and idx must be both scalars oor both must have the same length');
+        error(defaultId, 'dim and idx must be both scalars oor both must have the same length');
     end
     dummi=[];
     for(i=1:length(idx))
@@ -49,11 +49,11 @@ if(~iscell(idx))
 end
 if(~any(size(dim)==1)||~any(size(idx)==1)||ndims(dim)>2||ndims(idx)>2||...
     length(dim)~=length(idx))
-    ft_error('dim and idx must be both scalars or both must have the same length');
+    error(defaultId, 'dim and idx must be both scalars or both must have the same length');
 end
 
 if(~isequal(unique(dim),sort(dim)))
-    ft_error('dim must be unique, every dimention can be addressed only once');
+    error(defaultId, 'dim must be unique, every dimention can be addressed only once');
 end
 
 Na=ndims(A);
@@ -69,5 +69,5 @@ M=A;
 try
     M(C{:})=B;
 catch
-    ft_error('Subscripted assignment dimension mismatch.');
+    error(defaultId, 'Subscripted assignment dimension mismatch.');
 end

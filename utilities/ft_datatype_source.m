@@ -131,7 +131,7 @@ switch version
 
     if isfield(source, 'avg') && isstruct(source.avg) && isfield(source, 'trial') && isstruct(source.trial) && ~isempty(intersect(fieldnames(source.avg), fieldnames(source.trial)))
       % it is not possible to convert both since they have the same field names
-      ft_warning('removing ''avg'', keeping ''trial''');
+      warning(defaultId, 'removing ''avg'', keeping ''trial''');
       source = rmfield(source, 'avg');
     end
     
@@ -244,7 +244,7 @@ switch version
         try
           source.(fn{i}) = reshape(source.(fn{i}), [prod(dimsiz(1:3)) dimsiz(4:end) 1]);
         catch
-          ft_warning('could not reshape %s to the expected dimensions', fn{i});
+          warning(defaultId, 'could not reshape %s to the expected dimensions', fn{i});
         end
       end
     end
@@ -332,7 +332,7 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    ft_error('unsupported version "%s" for source datatype', version);
+    error(defaultId, 'unsupported version "%s" for source datatype', version);
 end
 
 function pos = grid2pos(xgrid, ygrid, zgrid)

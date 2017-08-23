@@ -101,7 +101,7 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
   elseif isequaltime && ~isequallabel && ~issamelabel
     cfg.appenddim = 'chan';
   else
-    ft_error('cannot append this data');
+    error(defaultId, 'cannot append this data');
   end
 end
 fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
@@ -146,7 +146,7 @@ switch cfg.appenddim
       data.time  = varargin{1}.time;
       data.label = lab; % replace the one from append_common
     else
-      ft_error('data has different time, cannot append over channels');
+      error(defaultId, 'data has different time, cannot append over channels');
     end
     
   case 'rpt'
@@ -179,7 +179,7 @@ switch cfg.appenddim
     end
     
   otherwise
-    ft_error('unsupported cfg.appenddim');
+    error(defaultId, 'unsupported cfg.appenddim');
 end % switch
 
 % do the general cleanup and bookkeeping at the end of the function

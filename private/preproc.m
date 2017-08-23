@@ -139,7 +139,7 @@ end
 if iscell(cfg)
   % recurse over the subsequent preprocessing stages
   if begpadding>0 || endpadding>0
-    ft_error('multiple preprocessing stages are not supported in combination with filter padding');
+    error(defaultId, 'multiple preprocessing stages are not supported in combination with filter padding');
   end
   for i=1:length(cfg)
     tmpcfg = cfg{i};
@@ -224,33 +224,33 @@ if ~isfield(cfg, 'resample'),     cfg.resample = '';            end
 
 % test whether the MATLAB signal processing toolbox is available
 if strcmp(cfg.medianfilter, 'yes') && ~ft_hastoolbox('signal')
-  ft_error('median filtering requires the MATLAB signal processing toolbox');
+  error(defaultId, 'median filtering requires the MATLAB signal processing toolbox');
 end
 
 % do a sanity check on the filter configuration
 if strcmp(cfg.bpfilter, 'yes') && ...
     (strcmp(cfg.hpfilter, 'yes') || strcmp(cfg.lpfilter,'yes'))
-  ft_error('you should not apply both a bandpass AND a lowpass/highpass filter');
+  error(defaultId, 'you should not apply both a bandpass AND a lowpass/highpass filter');
 end
 
 % do a sanity check on the hilbert transform configuration
 if strcmp(cfg.hilbert, 'yes') && ~strcmp(cfg.bpfilter, 'yes')
-  ft_warning('hilbert transform should be applied in conjunction with bandpass filter')
+  warning(defaultId, 'hilbert transform should be applied in conjunction with bandpass filter')
 end
 
 % do a sanity check on hilbert and rectification
 if strcmp(cfg.hilbert, 'yes') && strcmp(cfg.rectify, 'yes')
-  ft_error('hilbert transform and rectification should not be applied both')
+  error(defaultId, 'hilbert transform and rectification should not be applied both')
 end
 
 % do a sanity check on the rereferencing/montage
 if ~strcmp(cfg.reref, 'no') && ~strcmp(cfg.montage, 'no')
-  ft_error('cfg.reref and cfg.montage are mutually exclusive')
+  error(defaultId, 'cfg.reref and cfg.montage are mutually exclusive')
 end
 
 % lnfilter is no longer used
 if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
-  ft_error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
+  error(defaultId, 'line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -265,7 +265,7 @@ if strcmp(cfg.reref, 'yes')
   cfg.refchannel = ft_channelselection(cfg.refchannel, label);
   refindx = match_str(label, cfg.refchannel);
   if isempty(refindx)
-    ft_error('reference channel was not found')
+    error(defaultId, 'reference channel was not found')
   end
   dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
 end
@@ -283,7 +283,7 @@ end
 
 if any(any(isnan(dat)))
   % filtering is not possible for at least a selection of the data
-  ft_warning('data contains NaNs, no filtering or preprocessing applied');
+  warning(defaultId, 'data contains NaNs, no filtering or preprocessing applied');
   
 else
   
@@ -365,7 +365,7 @@ else
     if isfield(cfg, 'dftreplace') 
         optarg = cat(2, optarg, {'dftreplace', cfg.dftreplace}); 
         if strcmp(cfg.dftreplace, 'neighbour') && (begpadding>0 || endpadding>0)
-             ft_error('Padding by data mirroring is not supported for spectrum interpolation.');
+             error(defaultId, 'Padding by data mirroring is not supported for spectrum interpolation.');
         end
     end
     if isfield(cfg, 'dftbandwidth')

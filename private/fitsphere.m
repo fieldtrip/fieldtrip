@@ -72,7 +72,7 @@ else
 end
 
 if isempty(pvec)
-  ft_warning('was not able to fit a sphere to the surface points');
+  warning(defaultId, 'was not able to fit a sphere to the surface points');
    C = [NaN NaN NaN];
    R = Inf;
 else

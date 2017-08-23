@@ -133,7 +133,7 @@ switch version
       try
         volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim);
       catch
-        ft_warning('could not reshape "%s" to the expected dimensions', fn{i});
+        warning(defaultId, 'could not reshape "%s" to the expected dimensions', fn{i});
       end
     end
 
@@ -179,5 +179,5 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    ft_error('unsupported version "%s" for volume datatype', version);
+    error(defaultId, 'unsupported version "%s" for volume datatype', version);
 end

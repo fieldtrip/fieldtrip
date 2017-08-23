@@ -51,7 +51,7 @@ alpha          = ft_getopt(varargin, 'alpha',     1);
 % for backward compatibility, this can be changed into an error at the end of 2016
 units = ft_getopt(varargin, 'units');
 if ~isempty(units)
-  ft_warning('please use "unit" instead of "units"');
+  warning(defaultId, 'please use "unit" instead of "units"');
   unit = units;
   clear units
 end
@@ -66,7 +66,7 @@ if isequal(diameter, 'auto')
     case 'mm'
       diameter = 5;
     otherwise
-      ft_error('unsupported unit');
+      error(defaultId, 'unsupported unit');
   end
 end
 
@@ -80,7 +80,7 @@ if isequal(length, 'auto')
     case 'mm'
       length = 15;
     otherwise
-      ft_error('unsupported unit');
+      error(defaultId, 'unsupported unit');
   end
 end
 

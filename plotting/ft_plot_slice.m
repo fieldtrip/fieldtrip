@@ -117,7 +117,7 @@ if ~isa(dat, 'double')
 end
 
 if exist('msk', 'var') && isempty(mask)
-  ft_warning('using the second input argument as mask rather than the one from the varargin list');
+  warning(defaultId, 'using the second input argument as mask rather than the one from the varargin list');
   mask = msk; clear msk;
 end
 
@@ -156,7 +156,7 @@ dointersect = ~isempty(mesh);
 if dointersect
   for k = 1:numel(mesh)
     if ~isfield(mesh{k}, 'pos') || ~isfield(mesh{k}, 'tri')
-      % ft_error('the mesh should be a structure with pos and tri');
+      % error(defaultId, 'the mesh should be a structure with pos and tri');
       mesh{k}.pos = [];
       mesh{k}.tri = [];
     end
@@ -167,7 +167,7 @@ end
 domask = ~isempty(mask);
 if domask
   if ~isequal(size(dat), size(mask))
-    ft_error('the mask data should have the same dimensions as the functional data');
+    error(defaultId, 'the mask data should have the same dimensions as the functional data');
   end
 end
 

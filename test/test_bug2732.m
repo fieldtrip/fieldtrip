@@ -14,7 +14,7 @@ dat2 = dat0; dat2(10, :) = nan;
 dat3 = dat0; dat3(10,10) = nan;
 
 warning('');          % clear previous warnings
-ft_warning('-clear'); % clear previous warnings
+warning(defaultId, '-clear'); % clear previous warnings
 
 %%
 

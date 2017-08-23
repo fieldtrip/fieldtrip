@@ -77,7 +77,7 @@ if strcmp(style, 'subplot')
   surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
   update     = ft_getopt(varargin(sellist), 'update', [true true true]);
   if ~isempty(surfhandle) && ~isempty(parents)
-    ft_error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
+    error(defaultId, 'if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
   end
 end
 
@@ -179,7 +179,7 @@ switch style
     end
     
   otherwise
-    ft_error('unsupported style %s', style);
+    error(defaultId, 'unsupported style %s', style);
     
 end % switch style
 

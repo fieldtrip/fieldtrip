@@ -67,7 +67,7 @@ function [dipout] = beamformer_dics(dip, grad, headmodel, dat, Cf, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  ft_error('invalid number of optional arguments');
+  error(defaultId, 'invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -119,7 +119,7 @@ if ~isempty(Cr)
 end
 
 if isfield(dip, 'mom') && fixedori
-  ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
+  error(defaultId, 'you cannot specify a dipole orientation and fixedmom simultaneously');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -187,7 +187,7 @@ elseif isempty(Cr) && isempty(Pr) && isempty(refdip)
   % only compute power of a dipole at the grid positions
   submethod = 'dics_power';
 else
-  ft_error('invalid combination of input arguments for dics');
+  error(defaultId, 'invalid combination of input arguments for dics');
 end
 
 isrankdeficient = (rank(Cf)<size(Cf,1));
@@ -356,7 +356,7 @@ switch submethod
           filt = pinv(lf' * invCf * lf) * lf' * invCf;
         end
       elseif hasfilter && size(filt,1) == 1
-        ft_error('the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
+        error(defaultId, 'the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
       end
       
       csd = filt * Cf * ctranspose(filt);                         % Gross eqn. 4 and 5
@@ -463,7 +463,7 @@ switch submethod
           filt = pinv(lf' * invCf * lf) * lf' * invCf;
         end
       elseif hasfilter && size(filt,1) == 1
-        ft_error('the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
+        error(defaultId, 'the precomputed filter you provided projects to a single dipole orientation, but you request fixedori=''no''; this is invalid. Either provide a filter with the three orientations retained, or specify fixedori=''yes''.');
       end
       
       if powlambda1
@@ -511,10 +511,10 @@ switch submethod
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'dics_refdip'
     if hassubspace || ~isempty(subspace)
-      ft_error('subspace projections are not supported for beaming cortico-cortical coherence');
+      error(defaultId, 'subspace projections are not supported for beaming cortico-cortical coherence');
     end
     if fixedori
-      ft_error('fixed orientations are not supported for beaming cortico-cortical coherence');
+      error(defaultId, 'fixed orientations are not supported for beaming cortico-cortical coherence');
     end
     if isstruct(refdip) && isfield(refdip, 'filter') % check if precomputed filter is present
       assert(iscell(refdip.filter) && numel(refdip.filter)==1);

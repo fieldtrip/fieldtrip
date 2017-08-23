@@ -78,7 +78,7 @@ elseif size(loc, 1) > 1 && isempty(nslice)
   nslice = size(loc, 1);
 elseif size(loc, 1) > 1 && ~isempty(nslice)
   if size(loc, 1) ~= nslice
-    ft_error('you should either specify a set of locations or a single location with a number of slices');
+    error(defaultId, 'you should either specify a set of locations or a single location with a number of slices');
   end
 end
 

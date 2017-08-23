@@ -72,6 +72,6 @@ switch dimord
     data.dimord     = dimord;
 
   otherwise
-    ft_warning('unrecognized dimord');
+    warning(defaultId, 'unrecognized dimord');
 end
 

@@ -52,10 +52,10 @@ switch dataformat
     
   case 'matlab'
     if exist(filename, 'file')
-      ft_warning('deleting existing file ''%s''', filename);
+      warning(defaultId, 'deleting existing file ''%s''', filename);
       delete(filename);
     end
 
   otherwise
-    ft_error('unsupported data format');
+    error(defaultId, 'unsupported data format');
 end

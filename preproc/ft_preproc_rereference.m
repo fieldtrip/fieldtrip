@@ -62,12 +62,12 @@ if hasnan && handlenan
     case 'median'
       ref = nanmedian(dat(refchan,:), 1);
     otherwise
-      ft_error('unsupported method')
+      error(defaultId, 'unsupported method')
   end % switch
 else
   % preprocessing fails on channels that contain NaN
   if any(isnan(dat(:)))
-    ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+    warning(defaultId, 'FieldTrip:dataContainsNaN', 'data contains NaN values');
   end
   % compute the average value over the reference channels
   switch method
@@ -76,7 +76,7 @@ else
     case 'median'
       ref = median(dat(refchan,:), 1);
     otherwise
-      ft_error('unsupported method')
+      error(defaultId, 'unsupported method')
   end % switch
 end
 

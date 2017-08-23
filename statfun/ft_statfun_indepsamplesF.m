@@ -67,10 +67,10 @@ if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    ft_error('P-values can only be calculated if the test statistics are calculated.');
+    error(defaultId, 'P-values can only be calculated if the test statistics are calculated.');
 end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    ft_error('cfg.uvar should not exist for an independent samples statistic');
+    error(defaultId, 'cfg.uvar should not exist for an independent samples statistic');
 end
     
 ncond=length(unique(design(cfg.ivar,:)));
@@ -79,10 +79,10 @@ for condindx=1:ncond
     nrepl=nrepl+length(find(design(cfg.ivar,:)==condindx));
 end
 if nrepl<size(design,2)
-  ft_error('Invalid specification of the independent variable in the design array.');
+  error(defaultId, 'Invalid specification of the independent variable in the design array.');
 end
 if nrepl<=ncond
-    ft_error('The must be more trials/subjects than levels of the independent variable.');
+    error(defaultId, 'The must be more trials/subjects than levels of the independent variable.');
 end
 dfnum = ncond - 1;
 dfdenom = nrepl - ncond;
@@ -111,10 +111,10 @@ if strcmp(cfg.computecritval,'yes')
   s.dfnum   = dfnum;
   s.dfdenom = dfdenom;
   if cfg.tail==-1
-      ft_error('For an independent samples F-statistic, it does not make sense to calculate a left tail critical value.');
+      error(defaultId, 'For an independent samples F-statistic, it does not make sense to calculate a left tail critical value.');
   end
   if cfg.tail==0
-      ft_error('For an independent samples F-statistic, it does not make sense to calculate a two-sided critical value.');
+      error(defaultId, 'For an independent samples F-statistic, it does not make sense to calculate a two-sided critical value.');
   end
   if cfg.tail==1
     s.critval = finv(1-cfg.alpha,s.dfnum,s.dfdenom);
@@ -126,10 +126,10 @@ if strcmp(cfg.computeprob,'yes')
   s.dfnum   = dfnum;
   s.dfdenom = dfdenom;
   if cfg.tail==-1
-      ft_error('For an independent samples F-statistic, it does not make sense to calculate a left tail p-value.');
+      error(defaultId, 'For an independent samples F-statistic, it does not make sense to calculate a left tail p-value.');
   end
   if cfg.tail==0
-      ft_error('For an independent samples F-statistic, it does not make sense to calculate a two-sided p-value.');
+      error(defaultId, 'For an independent samples F-statistic, it does not make sense to calculate a two-sided p-value.');
   end
   if cfg.tail==1
     s.prob = 1-fcdf(s.stat,s.dfnum,s.dfdenom);

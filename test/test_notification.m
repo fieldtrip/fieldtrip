@@ -17,11 +17,11 @@ errortest
 function errortest
 
 try
-  ft_error('off');        % this should not make a difference
-  ft_error('something');  % note that the line number is used further down
+  error(defaultId, 'off');        % this should not make a difference
+  error(defaultId, 'something');  % note that the line number is used further down
   ok = false;
 catch
-  me = ft_error('last')
+  me = error(defaultId, 'last')
   assert(strcmp(me.message, 'something'))
   ok = true;
 end

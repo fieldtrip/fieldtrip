@@ -92,7 +92,7 @@ switch dataformat
       case 'logical'
         datatype = 'uchar';
       otherwise
-        ft_error('unsupported datatype to write to Nifti');
+        error(defaultId, 'unsupported datatype to write to Nifti');
     end
     
     ndims = numel(size(dat));
@@ -118,5 +118,5 @@ switch dataformat
     write_vista_vol(size(dat), dat, filename);
     
   otherwise
-    ft_error('unsupported format "%s"', dataformat);
+    error(defaultId, 'unsupported format "%s"', dataformat);
 end % switch dataformat

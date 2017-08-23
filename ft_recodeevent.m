@@ -111,12 +111,12 @@ if nargin==2
     trl   = [];
   end
   if isempty(event)
-    ft_error('could not locate event structure in the data');
+    error(defaultId, 'could not locate event structure in the data');
   elseif isempty(trl)
-    ft_error('could not locate trial definition in the data');
+    error(defaultId, 'could not locate trial definition in the data');
   end
 elseif nargin~=3
-  ft_error('incorrect number of input arguments');
+  error(defaultId, 'incorrect number of input arguments');
 end
 
 Ntrl   = size(trl,1);
@@ -149,7 +149,7 @@ event = event(eventnum);
 Nevent = length(event);
 
 if Nevent<1
-  ft_error('there are no events to analyze');
+  error(defaultId, 'there are no events to analyze');
 end
 
 % make a list with the sample, offset and duration of each event
@@ -189,7 +189,7 @@ for i=1:Ntrl
   elseif strcmp(cfg.nearestto, 'trialend')
     trlsample = trlend;              % the sample at which the trial ends
   else
-    ft_error('incorrect specification of cfg.nearestto')
+    error(defaultId, 'incorrect specification of cfg.nearestto')
   end
 
   % compute a "distance" measure for each event towards this trial
@@ -215,13 +215,13 @@ for i=1:Ntrl
       distance = abs(sample - trlsample);
       distance(find((sample>=trlbeg) & (sample<=trlend))) = inf;
     otherwise
-      ft_error('incorrect specification of cfg.searchrange');
+      error(defaultId, 'incorrect specification of cfg.searchrange');
   end
 
   % determine the event that has the shortest distance towards this trial
   [mindist, minindx] = min(distance);
   if length(find(distance==mindist))>1
-    ft_error('multiple events are at the same distance from the trial');
+    error(defaultId, 'multiple events are at the same distance from the trial');
   end
 
   if isinf(mindist)
@@ -247,7 +247,7 @@ for i=1:Ntrl
       case 'samplefromend'
         ev(i) = event(minindx).sample - trlend;
       otherwise
-        ft_error('incorrect specification of cfg.output');
+        error(defaultId, 'incorrect specification of cfg.output');
     end
   end
 

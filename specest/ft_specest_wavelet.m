@@ -80,7 +80,7 @@ dattime = ndatsample / fsample; % total time in seconds of input data
 
 % Zero padding
 if round(pad * fsample) < ndatsample
-  ft_error('the padding that you specified is shorter than the data');
+  error(defaultId, 'the padding that you specified is shorter than the data');
 end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
@@ -113,13 +113,13 @@ if isnumeric(freqoiinput)
   % check whether padding is appropriate for the requested frequency resolution
   rayl = 1/endtime;
   if any(rem(freqoiinput,rayl)) % not always the case when they mismatch
-    ft_warning('padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip');
+    warning(defaultId, 'padding not sufficient for requested frequency resolution, for more information please see the FAQs on www.ru.nl/neuroimaging/fieldtrip');
   end
   if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
-    ft_warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
+    warning(defaultId, 'output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
   else
     if any(abs(freqoiinput-freqoi) >= eps*1e6)
-      ft_warning('output frequencies are different from input frequencies');
+      warning(defaultId, 'output frequencies are different from input frequencies');
     end
   end
 end
@@ -140,10 +140,10 @@ end
 % throw a warning if input timeoi is different from output timeoi
 if isnumeric(timeoiinput)
   if numel(timeoiinput) ~= numel(timeoi) % timeoi will not contain double time-bins when requested
-    ft_warning('output time-bins are different from input time-bins, multiples of the same bin were requested but not given');
+    warning(defaultId, 'output time-bins are different from input time-bins, multiples of the same bin were requested but not given');
   else
     if any(abs(timeoiinput-timeoi) >= eps*1e6)
-      ft_warning('output time-bins are different from input time-bins');
+      warning(defaultId, 'output time-bins are different from input time-bins');
     end
   end
 end

@@ -50,7 +50,7 @@ ntime = size(onoff, 3);
 ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
 if length(size(spatdimneighbstructmat))~=2 || ~all(size(spatdimneighbstructmat)==spatdimlength)
-  ft_error('invalid dimension of spatdimneighbstructmat');
+  error(defaultId, 'invalid dimension of spatdimneighbstructmat');
 end
 
 minnbchan=0;

@@ -60,7 +60,7 @@ function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, Cf, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  ft_error('invalid number of optional arguments');
+  error(defaultId, 'invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -144,7 +144,7 @@ end
 
 % sanity check
 if (~isempty(rf) || ~isempty(sf)) && isfield(dip, 'filter')
-  ft_error('precomputed filters cannot be used in combination with a refdip or supdip')
+  error(defaultId, 'precomputed filters cannot be used in combination with a refdip or supdip')
 end
 
 refchan  = refchan;               % these can be passed as optional inputs
@@ -220,7 +220,7 @@ for i=1:size(dip.pos,1)
       % be used for the final filter computation
       if isfield(dip, 'filter') && size(dip.filter{i},1)==1
         % nothing to do
-        ft_warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
+        warning(defaultId, 'Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
       else
         if isfield(dip, 'filter') && size(dip.filter{i},1)~=1
           filt = dip.filter{i};
@@ -241,7 +241,7 @@ for i=1:size(dip.pos,1)
         Ndip = size(lfa,2);
       end
     else
-      ft_warning('Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
+      warning(defaultId, 'Ignoring ''fixedori''. The fixedori option is supported only if there is ONE dipole for location.')
     end
   end
   

@@ -135,7 +135,7 @@ if ~isfield(cfg, 'trl') && (~isfield(cfg, 'trialfun') || isempty(cfg.trialfun))
   % of FieldTrip, but they are deprecated and not included in recent
   % versions any more
   cfg.trialfun = 'ft_trialfun_general';
-  ft_warning('no trialfun was specified, using ft_trialfun_general');
+  warning(defaultId, 'no trialfun was specified, using ft_trialfun_general');
 end
 
 % create the trial definition for this dataset and condition
@@ -156,7 +156,7 @@ elseif isfield(cfg, 'trialfun')
   cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
 
   if isempty(cfg.trialfun)
-    ft_error('the specified trialfun ''%s'' was not found', trialfunSpecified);
+    error(defaultId, 'the specified trialfun ''%s'' was not found', trialfunSpecified);
   else
     ft_info('evaluating trialfunction ''%s''\n', func2str(cfg.trialfun));
   end
@@ -178,14 +178,14 @@ elseif isfield(cfg, 'trialfun')
     [trl, event] = feval(cfg.trialfun, cfg);
   end
 else
-  ft_error('no trialfunction specified, see FT_DEFINETRIAL for help');
+  error(defaultId, 'no trialfunction specified, see FT_DEFINETRIAL for help');
 end
 
 if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg.trialdef.eventtype, '?')
   % give a gentle message instead of an error
   ft_info('no trials have been defined yet, see FT_DEFINETRIAL for further help\n');
 elseif size(trl,1)<1
-  ft_error('no trials were defined, see FT_DEFINETRIAL for help');
+  error(defaultId, 'no trials were defined, see FT_DEFINETRIAL for help');
 end
 
 % add the new trials and events to the output configuration

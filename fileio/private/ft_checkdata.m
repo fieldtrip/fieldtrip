@@ -112,7 +112,7 @@ hasbrain             = ft_getopt(varargin, 'hasbrain');
 % check whether people are using deprecated stuff
 depHastrialdef = ft_getopt(varargin, 'hastrialdef');
 if (~isempty(depHastrialdef))
-  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
+  warning(defaultId, 'ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
   hassampleinfo = depHastrialdef;
 end
 
@@ -161,7 +161,7 @@ if ~isequal(feedback, 'no')
       if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
       ft_info('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
     else
-      ft_error('cannot infer freq dimensions');
+      error(defaultId, 'cannot infer freq dimensions');
     end
   elseif isspike
     nchan  = length(data.label);
@@ -338,7 +338,7 @@ if ~isempty(dtype)
         data = parcellated2source(data);
         data = ft_datatype_volume(data);
       else
-        ft_error('cannot convert channel-level data to volumetric representation');
+        error(defaultId, 'cannot convert channel-level data to volumetric representation');
       end
       ischan = 0; istimelock = 0; isfreq = 0;
       isvolume = 1;
@@ -492,7 +492,7 @@ if ~isempty(dtype)
     else
       str = dtype{1};
     end
-    ft_error('This function requires %s data as input.', str);
+    error(defaultId, 'This function requires %s data as input.', str);
   end % if okflag
 end
 
@@ -515,7 +515,7 @@ if ~isempty(dimord)
     else
       str = dimord{1};
     end
-    ft_error('This function requires data with a dimord of %s.', str);
+    error(defaultId, 'This function requires data with a dimord of %s.', str);
   end % if okflag
 end
 
@@ -543,7 +543,7 @@ if ~isempty(stype)
     else
       str = stype{1};
     end
-    ft_error('This function requires %s data as input, but you are giving %s data.', str, ft_senstype(data));
+    error(defaultId, 'This function requires %s data as input, but you are giving %s data.', str, ft_senstype(data));
   end % if okflag
 end
 
@@ -555,9 +555,9 @@ if ~isempty(ismeg)
   end
   
   if ~okflag && isequal(ismeg, 'yes')
-    ft_error('This function requires MEG data with a ''grad'' field');
+    error(defaultId, 'This function requires MEG data with a ''grad'' field');
   elseif ~okflag && isequal(ismeg, 'no')
-    ft_error('This function should not be given MEG data with a ''grad'' field');
+    error(defaultId, 'This function should not be given MEG data with a ''grad'' field');
   end % if okflag
 end
 
@@ -569,15 +569,15 @@ if ~isempty(isnirs)
   end
   
   if ~okflag && isequal(isnirs, 'yes')
-    ft_error('This function requires NIRS data with an ''opto'' field');
+    error(defaultId, 'This function requires NIRS data with an ''opto'' field');
   elseif ~okflag && isequal(isnirs, 'no')
-    ft_error('This function should not be given NIRS data with an ''opto'' field');
+    error(defaultId, 'This function should not be given NIRS data with an ''opto'' field');
   end % if okflag
 end
 
 if ~isempty(inside)
   if strcmp(inside, 'index')
-    ft_warning('the indexed representation of inside/outside source locations is deprecated');
+    warning(defaultId, 'the indexed representation of inside/outside source locations is deprecated');
   end
   % TODO absorb the fixinside function into this code
   data   = fixinside(data, inside);
@@ -585,7 +585,7 @@ if ~isempty(inside)
   
   if ~okflag
     % construct an error message
-    ft_error('This function requires data with an ''inside'' field.');
+    error(defaultId, 'This function requires data with an ''inside'' field.');
   end % if okflag
 end
 
@@ -607,7 +607,7 @@ if isequal(hastrials, 'yes')
       ~isempty(strfind(data.dimord, 'subj'));
   end
   if ~okflag
-    ft_error('This function requires data with a ''trial'' field');
+    error(defaultId, 'This function requires data with a ''trial'' field');
   end % if okflag
 end
 
@@ -618,13 +618,13 @@ elseif strcmp(hasdim, 'no') && isfield(data, 'dim')
 end % if hasdim
 
 if strcmp(hascumtapcnt, 'yes') && ~isfield(data, 'cumtapcnt')
-  ft_error('This function requires data with a ''cumtapcnt'' field');
+  error(defaultId, 'This function requires data with a ''cumtapcnt'' field');
 elseif strcmp(hascumtapcnt, 'no') && isfield(data, 'cumtapcnt')
   data = rmfield(data, 'cumtapcnt');
 end % if hascumtapcnt
 
 if strcmp(hasdof, 'yes') && ~isfield(data, 'dof')
-  ft_error('This function requires data with a ''dof'' field');
+  error(defaultId, 'This function requires data with a ''dof'' field');
 elseif strcmp(hasdof, 'no') && isfield(data, 'dof')
   data = rmfield(data, 'dof');
 end % if hasdof
@@ -637,7 +637,7 @@ if ~isempty(cmbrepresentation)
   elseif isfreqmvar
     data = fixcsd(data, cmbrepresentation, channelcmb);
   else
-    ft_error('This function requires data with a covariance, coherence or cross-spectrum');
+    error(defaultId, 'This function requires data with a covariance, coherence or cross-spectrum');
   end
 end % cmbrepresentation
 
@@ -662,16 +662,16 @@ if any(isfield(data, {'cov', 'corr'}))
     current = 'sparse';
   end
 else
-  ft_error('Could not determine the current representation of the covariance matrix');
+  error(defaultId, 'Could not determine the current representation of the covariance matrix');
 end
 if isequal(current, desired)
   % nothing to do
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   % FIXME should be implemented
-  ft_error('not yet implemented');
+  error(defaultId, 'not yet implemented');
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   % FIXME should be implemented
-  ft_error('not yet implemented');
+  error(defaultId, 'not yet implemented');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -697,7 +697,7 @@ elseif ~isfield(data, 'labelcmb')
 elseif isfield(data, 'labelcmb')
   current = 'sparse';
 else
-  ft_error('Could not determine the current representation of the %s matrix', param);
+  error(defaultId, 'Could not determine the current representation of the %s matrix', param);
 end
 
 % first go from univariate fourier to the required bivariate representation
@@ -794,7 +794,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   
-  if isempty(channelcmb), ft_error('no channel combinations are specified'); end
+  if isempty(channelcmb), error(defaultId, 'no channel combinations are specified'); end
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpttap',   dimtok))
     nrpt = size(data.cumtapcnt,1);
@@ -897,7 +897,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   if ~isempty(strmatch('rpttap',dimtok)), nrpt=size(data.cumtapcnt, 1); else nrpt = 1; end
   if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);       else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);       else ntim = 1; end
-  if any(data.cumtapcnt(1,:) ~= data.cumtapcnt(1,1)), ft_error('this only works when all frequencies have the same number of tapers'); end
+  if any(data.cumtapcnt(1,:) ~= data.cumtapcnt(1,1)), error(defaultId, 'this only works when all frequencies have the same number of tapers'); end
   nchan     = length(data.label);
   crsspctrm = zeros(nrpt,nchan,nchan,nfrq,ntim);
   sumtapcnt = [0;cumsum(data.cumtapcnt(:,1))];
@@ -967,10 +967,10 @@ elseif (strcmp(current, 'full')       && strcmp(desired, 'fourier')) || ...
     (strcmp(current, 'sparse')        && strcmp(desired, 'fourier')) || ...
     (strcmp(current, 'sparsewithpow') && strcmp(desired, 'fourier'))
   % this is not possible
-  ft_error('converting the cross-spectrum into a Fourier representation is not possible');
+  error(defaultId, 'converting the cross-spectrum into a Fourier representation is not possible');
   
 elseif strcmp(current, 'full') && strcmp(desired, 'sparsewithpow')
-  ft_error('not yet implemented');
+  error(defaultId, 'not yet implemented');
   
 elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
   % convert back to crsspctrm/powspctrm representation: useful for plotting functions etc
@@ -1286,7 +1286,7 @@ source = copyfields(data, source, {'time', 'freq'});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [source] = parcellated2source(data)
 if ~isfield(data, 'brainordinate')
-  ft_error('projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
+  error(defaultId, 'projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
 end
 % the main structure contains the functional data on the parcels
 % the brainordinate sub-structure contains the original geometrical model
@@ -1315,7 +1315,7 @@ for i=1:numel(fn)
 end
 parcelparam = fn(sel);
 if numel(parcelparam)~=1
-  ft_error('cannot determine which parcellation to use');
+  error(defaultId, 'cannot determine which parcellation to use');
 else
   parcelparam = parcelparam{1}(1:(end-5)); % minus the 'label'
 end
@@ -1386,7 +1386,7 @@ if isfield(freq, 'powspctrm')
 elseif isfield(freq, 'fourierspctrm')
   param = 'fourierspctrm';
 else
-  ft_error('not supported for this data representation');
+  error(defaultId, 'not supported for this data representation');
 end
 
 if strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
@@ -1395,7 +1395,7 @@ elseif strcmp(freq.dimord, 'chan_freq_time')
   dat = freq.(param);
   dat = reshape(dat, [1 size(dat)]); % add a singleton dimension
 else
-  ft_error('not supported for dimord %s', freq.dimord);
+  error(defaultId, 'not supported for dimord %s', freq.dimord);
 end
 
 nrpt  = size(dat,1);
@@ -1530,7 +1530,7 @@ elseif sum(strcmp(dimord, 'chan_time'))==1
   data.trial = {data.(fn)};
   data = rmfield(data, fn);
 else
-  ft_error('unsupported data structure');
+  error(defaultId, 'unsupported data structure');
 end
 % remove unwanted fields
 data = removefields(data, {'avg', 'var', 'cov', 'dimord', 'numsamples' ,'dof'});
@@ -1561,7 +1561,7 @@ nTrials 	 = length(data.trial);
 spikesel     = match_str(data.label, spikelabel);
 nUnits       = length(spikesel);
 if nUnits==0
-  ft_error('cannot convert raw data to spike format since the raw data structure does not contain spike channels');
+  error(defaultId, 'cannot convert raw data to spike format since the raw data structure does not contain spike channels');
 end
 
 trialTimes  = zeros(nTrials,2);
@@ -1598,7 +1598,7 @@ function [data] = spike2raw(spike, fsample)
 if nargin<2 || isempty(fsample)
   timeDiff = abs(diff(sort([spike.time{:}])));
   fsample  = 1/min(timeDiff(timeDiff>0));
-  ft_warning('Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
+  warning(defaultId, 'Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
 end
 
 % get some sizes

@@ -91,7 +91,7 @@ switch mri.unit
     axmax = 0.15;
     rbol  = 0.005;
   otherwise
-    ft_error('unknown units (%s)', unit);
+    error(defaultId, 'unknown units (%s)', unit);
 end
 
 figHandle = figure;
@@ -262,10 +262,10 @@ elseif ismesh
     dimtok = tokenize(dimord{i}, '_');
     % do some sanity checks
     if any(strcmp(dimtok, '{pos}'))
-      ft_error('not supported');
+      error(defaultId, 'not supported');
     end
     if numel(dimtok)>5
-      ft_error('too many dimensions');
+      error(defaultId, 'too many dimensions');
     end
     % remove the same positions from each matching dimension
     if numel(dimtok)>0 && strcmp(dimtok{1}, 'pos')

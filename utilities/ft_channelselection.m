@@ -97,18 +97,18 @@ elseif isstruct(datachannel) && isfield(datachannel, 'label')
   datachannel = hdr.label;
   datachantype = ft_chantype(hdr);
 else
-  ft_error('please specify the data channels as a cell-array');
+  error(defaultId, 'please specify the data channels as a cell-array');
 end
 
 if ~ischar(desired) && ~isnumeric(desired) && ~iscell(desired)
-  ft_error('please specify the desired channels as a cell-array or a string');
+  error(defaultId, 'please specify the desired channels as a cell-array or a string');
 end
 
 % start with the list of desired channels, this will be pruned/expanded
 channel = desired;
 
 if length(datachannel)~=length(unique(datachannel))
-  ft_warning('discarding non-unique channel names');
+  warning(defaultId, 'discarding non-unique channel names');
   sel = false(size(datachannel));
   for i=1:length(datachannel)
     sel(i) = sum(strcmp(datachannel, datachannel{i}))==1;

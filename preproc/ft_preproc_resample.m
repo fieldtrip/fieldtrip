@@ -45,7 +45,7 @@ if nargout>1
 end
 
 if Fold==Fnew
-  ft_warning('requested sampling rate after resampling is the same as the sampling rate of the data, no resampling is performed');
+  warning(defaultId, 'requested sampling rate after resampling is the same as the sampling rate of the data, no resampling is performed');
   datout = dat;
   return
 end
@@ -58,7 +58,7 @@ end
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
-  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  warning(defaultId, 'FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
 switch method
@@ -104,7 +104,7 @@ switch method
     end
     datout      = fac*ifft(ifftshift(datfft,2),[],2);
   otherwise
-    ft_error('unsupported resampling method');
+    error(defaultId, 'unsupported resampling method');
 end
 
 if ~strcmp(method, 'downsample')

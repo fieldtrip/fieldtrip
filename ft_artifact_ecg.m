@@ -99,7 +99,7 @@ if ~isfield(cfg, 'headerformat'),          cfg.headerformat            = [];    
 if ~isfield(cfg, 'dataformat'),            cfg.dataformat              = [];            end
 
 if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue')
-  ft_error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
+  error(defaultId, 'method "%s" is not applicable', cfg.artfctdef.ecg.method);
 end
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
@@ -120,7 +120,7 @@ else
       trl(k,3) = time2offset(data.time{k}, data.fsample);
     end
   else
-    ft_error('the input data does not contain a valid description of the sampleinfo');
+    error(defaultId, 'the input data does not contain a valid description of the sampleinfo');
   end
 end
 
@@ -135,9 +135,9 @@ numecgsgn         = length(sgnind);
 fltpadding        = 0;
 
 if numecgsgn<1
-  ft_error('no ECG channels selected');
+  error(defaultId, 'no ECG channels selected');
 elseif numecgsgn>1
-  ft_error('only one ECG channel can be selected');
+  error(defaultId, 'only one ECG channel can be selected');
 end
 
 % set default cfg.continuous
@@ -200,7 +200,7 @@ while accept == 0
       oldcutoff = artfctdef.cutoff;
       accept = 1;
     otherwise
-      ft_warning('unrecognised response, assuming no');
+      warning(defaultId, 'unrecognised response, assuming no');
       oldcutoff = artfctdef.cutoff;
       artfctdef.cutoff = input('\nenter new value \n');
   end
@@ -287,7 +287,7 @@ while acceptpre == 0 || acceptpst == 0
         oldpretim = artfctdef.pretim;
         acceptpre = 1;
       otherwise
-        ft_warning('unrecognised response, assuming no');
+        warning(defaultId, 'unrecognised response, assuming no');
         oldpretim = artfctdef.pretim;
     end
   end
@@ -302,7 +302,7 @@ while acceptpre == 0 || acceptpst == 0
         oldpsttim = artfctdef.psttim;
         acceptpst = 1;
       otherwise
-        ft_warning('unrecognised response, assuming no');
+        warning(defaultId, 'unrecognised response, assuming no');
         oldpsttim = artfctdef.psttim;
     end
   end

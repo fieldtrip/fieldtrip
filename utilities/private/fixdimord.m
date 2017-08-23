@@ -50,7 +50,7 @@ function [data] = fixdimord(data)
 %
 % if any(ft_datatype(data, {'source', 'volume'})) && isfield(data, 'dimord') && ~keepsourcedimord
 %   % the old source data representation does not have a dimord, whereas the new source data representation does have a dimord
-%   ft_warning(sprintf('removing dimord "%s" from source representation data', data.dimord));
+%   warning(defaultId, sprintf('removing dimord "%s" from source representation data', data.dimord));
 %   data = rmfield(data, 'dimord');
 %   return
 % else
@@ -140,7 +140,7 @@ for i=1:length(dimtok)
       
     case {'voxel' 'vox' 'repl' 'wcond'}
       % these are used in some FieldTrip functions, but are not considered standard
-      ft_warning('unexpected dimord "%s"', data.dimord);
+      warning(defaultId, 'unexpected dimord "%s"', data.dimord);
       
     case {'pos'}
       % this is for source data on a 3-d grid, a cortical sheet, or unstructured positions
@@ -153,7 +153,7 @@ for i=1:length(dimtok)
       % this is for bivariate source data on a 3-d grid, a cortical sheet, or unstructured positions
       
     otherwise
-      ft_error('unexpected dimord "%s"', data.dimord);
+      error(defaultId, 'unexpected dimord "%s"', data.dimord);
       
   end % switch dimtok
 end % for length dimtok

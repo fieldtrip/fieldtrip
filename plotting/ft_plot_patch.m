@@ -110,7 +110,7 @@ if ischar(hlim)
       hlim = max(abs(hdat));
       hlim = [-hlim hlim];
     otherwise
-      ft_error('unsupported option for hlim')
+      error(defaultId, 'unsupported option for hlim')
   end % switch
 end % if ischar
 
@@ -122,7 +122,7 @@ if ischar(vlim)
       vlim = max(abs(vdat(:)));
       vlim = [-vlim vlim];
     otherwise
-      ft_error('unsupported option for vlim')
+      error(defaultId, 'unsupported option for vlim')
   end % switch
 end % if ischar
 
@@ -222,7 +222,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
       xaxis = false;
       yaxis = true;
     otherwise
-      ft_error('invalid specification of the "axis" option')
+      error(defaultId, 'invalid specification of the "axis" option')
   end
   
   if xaxis

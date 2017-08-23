@@ -150,13 +150,13 @@ if strcmp(cfg.markfiducial, 'yes')
   lpa = cfg.fiducial.lpa;
   rpa = cfg.fiducial.rpa;
   if any(nas<minxyz) || any(nas>maxxyz)
-    ft_warning('nasion does not lie within volume, using nearest voxel');
+    warning(defaultId, 'nasion does not lie within volume, using nearest voxel');
   end
   if any(lpa<minxyz) || any(lpa>maxxyz)
-    ft_warning('LPA does not lie within volume, using nearest voxel');
+    warning(defaultId, 'LPA does not lie within volume, using nearest voxel');
   end
   if any(rpa<minxyz) || any(rpa>maxxyz)
-    ft_warning('RPA does not lie within volume, using nearest voxel');
+    warning(defaultId, 'RPA does not lie within volume, using nearest voxel');
   end
   idx_nas = [nearest(x, nas(1)) nearest(y, nas(2)) nearest(z, nas(3))];
   idx_lpa = [nearest(x, lpa(1)) nearest(y, lpa(2)) nearest(z, lpa(3))];
@@ -174,7 +174,7 @@ if strcmp(cfg.markorigin, 'yes')
   % FIXME determine the voxel index of the coordinate system origin
   ori = [0 0 0];
   if any(ori<minxyz) || any(ori>maxxyz)
-    ft_warning('origin does not ly within volume, using nearest voxel');
+    warning(defaultId, 'origin does not ly within volume, using nearest voxel');
   end
   idx_ori = [nearest(x, ori(1)) nearest(y, ori(2)) nearest(z, ori(3))];
   fprintf('origin corresponds to voxel [%d, %d, %d]\n', idx_ori);
@@ -208,7 +208,7 @@ if strcmp(cfg.scaling, 'yes')
     case 'double'
       data = double(data ./ maxval);
     otherwise
-      ft_error('unknown datatype');
+      error(defaultId, 'unknown datatype');
   end
 end
 
@@ -243,7 +243,7 @@ switch cfg.filetype
       data = flipdim(data, 1);
       data = flipdim(data, 2);
     else
-      ft_error('unsupported coordinate system ''%s''', volume.coordsys);
+      error(defaultId, 'unsupported coordinate system ''%s''', volume.coordsys);
     end
     siz = size(data);
   case 'analyze'
@@ -253,14 +253,14 @@ switch cfg.filetype
     elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
       data = flipdim(data, 1);
     else
-      ft_error('unsupported coordinate system ''%s''', volume.coordsys);
+      error(defaultId, 'unsupported coordinate system ''%s''', volume.coordsys);
     end
     siz = size(data);
   case {'analyze_spm', 'nifti', 'nifti_img' 'mgz' 'mgh'}
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
   otherwise
-    ft_warning('unknown fileformat\n');
+    warning(defaultId, 'unknown fileformat\n');
 end
 
 % write the volume data to file
@@ -271,7 +271,7 @@ switch cfg.filetype
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fid = fopen(sprintf('%s.vmp', cfg.filename),'w');
     if fid < 0
-      ft_error('Cannot write to file %s.vmp\n',cfg.filename);
+      error(defaultId, 'Cannot write to file %s.vmp\n',cfg.filename);
     end
 
     switch cfg.vmpversion
@@ -349,7 +349,7 @@ switch cfg.filetype
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fid = fopen(sprintf('%s.vmr',cfg.filename),'w');
     if fid < 0
-      ft_error('Cannot write to file %s.vmr\n',cfg.filename);
+      error(defaultId, 'Cannot write to file %s.vmr\n',cfg.filename);
     end
 
     % data should be scaled between 0 and 225
@@ -406,7 +406,7 @@ switch cfg.filetype
         avw.hdr.dime.datatype = 64;
         avw.hdr.dime.bitpix   = 64;
       otherwise
-        ft_error('unknown datatype');
+        error(defaultId, 'unknown datatype');
     end
 
     % write the header and image data
@@ -451,7 +451,7 @@ switch cfg.filetype
     % this format supports a homogenous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ispc && strcmp(cfg.filetype, 'mgz')
-      ft_warning('Saving in .mgz format is not possible on a PC, saving in .mgh format instead');
+      warning(defaultId, 'Saving in .mgz format is not possible on a PC, saving in .mgh format instead');
       cfg.filetype = 'mgh';
     end
     [pathstr, name, ext] = fileparts(cfg.filename);

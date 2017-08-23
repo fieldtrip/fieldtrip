@@ -53,7 +53,7 @@ ft_hastoolbox(cfg.spmversion, 1);
 
 % check whether the input has an anatomy
 if ~isfield(mri, 'anatomy')
-  ft_error('no anatomical information available, this is required for bias correction');
+  error(defaultId, 'no anatomical information available, this is required for bias correction');
 end
 
 % do an approximate alignment
@@ -151,7 +151,7 @@ switch cfg.spmversion
         mri_unbias.params = p;
         mri_unbias.diagn  = diagn;     
     otherwise
-        ft_error('unsupported spmversion requested');
+        error(defaultId, 'unsupported spmversion requested');
 end
 
 % flip the volumes back according to the changes introduced by align_ijk2xyz

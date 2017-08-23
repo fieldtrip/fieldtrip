@@ -68,7 +68,7 @@ Nchn   = length(chnindx);
 Ncmb   = size(cmbindx,1);
 
 %%FIXME
-%if Ntim>1, ft_error('correct handling of time-frequency data is not yet implemented, no information about tapers is available'); end
+%if Ntim>1, error(defaultId, 'correct handling of time-frequency data is not yet implemented, no information about tapers is available'); end
 
 %keeping track of the tapers
 %in the case of tfr fourier-data cumtapcnt is highly redundant; for each frequency

@@ -153,7 +153,7 @@ switch eventformat
       fifo = filetype_check_uri(filename);
       
       if ~exist(fifo,'file')
-          ft_warning('the FIFO %s does not exist; attempting to create it', fifo);          
+          warning(defaultId, 'the FIFO %s does not exist; attempting to create it', fifo);          
           system(sprintf('mkfifo -m 0666 %s',fifo));          
       end
 
@@ -165,11 +165,11 @@ switch eventformat
           msg = mxSerialize(event(i));
           num = fwrite(fid, msg, 'uint8');
         catch
-          ft_warning(lasterr);
+          warning(defaultId, lasterr);
         end
 
         if num~=length(msg)
-          ft_error('problem writing to FIFO %s', fifo);
+          error(defaultId, 'problem writing to FIFO %s', fifo);
         end
       end
       fclose(fid);
@@ -197,7 +197,7 @@ switch eventformat
                     pnet(con,'printf','\n');
                 end
 %            catch             
-%                ft_warning(lasterr);
+%                warning(defaultId, lasterr);
             end
             
             pnet(con,'close');
@@ -224,7 +224,7 @@ switch eventformat
                 end
 
             catch
-              ft_warning(lasterr);
+              warning(defaultId, lasterr);
             end
             pnet(udp,'close');
         end
@@ -260,6 +260,6 @@ switch eventformat
                 save(filename, 'event', '-v6');
             end
         else
-            ft_error('unsupported file type')
+            error(defaultId, 'unsupported file type')
         end
 end

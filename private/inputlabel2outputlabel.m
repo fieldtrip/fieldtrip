@@ -95,5 +95,5 @@ elseif iscell(cfg.combinechan(1)),
     outputlabel{i} = cell2mat(freq.label(outputindex{i})');
   end
 else
-  ft_error('unknown combination method');
+  error(defaultId, 'unknown combination method');
 end

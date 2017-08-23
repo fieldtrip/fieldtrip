@@ -245,7 +245,7 @@ end
 
 % this is not supported any more as of 26/10/2011
 if ischar(functional)
-  ft_error('please use cfg.inputfile instead of specifying the input variable as a sting');
+  error(defaultId, 'please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
@@ -386,7 +386,7 @@ end
 hasroi = ~isempty(cfg.roi);
 if hasroi
   if ~hasatlas
-    ft_error('specify cfg.atlas which specifies cfg.roi')
+    error(defaultId, 'specify cfg.atlas which specifies cfg.roi')
   else
     % get the mask
     tmpcfg          = [];
@@ -434,7 +434,7 @@ if hasfun
   
   % ensure that the functional data is real
   if ~isreal(fun)
-    ft_warning('functional data is complex, taking absolute value');
+    warning(defaultId, 'functional data is complex, taking absolute value');
     fun = abs(fun);
   end
   
@@ -493,7 +493,7 @@ if hasfun
         fcolmax = 0;
         if isequal(cfg.funcolormap, 'auto'); cfg.funcolormap = 'cool'; end
       else
-        ft_error('do not understand cfg.funcolorlim');
+        error(defaultId, 'do not understand cfg.funcolorlim');
       end
     else
       % limits are numeric
@@ -564,7 +564,7 @@ end
 hasmsk = issubfield(functional, cfg.maskparameter);
 if hasmsk
   if ~hasfun
-    ft_error('you can not have a mask without functional data')
+    error(defaultId, 'you can not have a mask without functional data')
   else
     msk = getsubfield(functional, cfg.maskparameter);
     if islogical(msk) % otherwise sign() not posible
@@ -619,7 +619,7 @@ if hasmsk
         opacmax =  max(abs([mskmin, mskmax]));
         if isequal(cfg.opacitymap, 'auto'), cfg.opacitymap = 'vdown'; end
       otherwise
-        ft_error('incorrect specification of cfg.opacitylim');
+        error(defaultId, 'incorrect specification of cfg.opacitylim');
     end % switch opacitylim
   else
     % limits are numeric
@@ -672,13 +672,13 @@ elseif hasfun && hasroi && hasmsk
   opacmin = [];
   opacmax = []; % has to be defined
 elseif hasroi
-  ft_error('you can not have a roi without functional data')
+  error(defaultId, 'you can not have a roi without functional data')
 end
 
 %% give some feedback
 if ~hasfun && ~hasana
   % this seems to be a problem that people often have due to incorrect specification of the cfg
-  ft_error('no anatomy is present and no functional data is selected, please check your cfg.funparameter');
+  error(defaultId, 'no anatomy is present and no functional data is selected, please check your cfg.funparameter');
 end
 if ~hasana
   fprintf('not plotting anatomy\n');
@@ -775,10 +775,10 @@ switch cfg.method
         ind_fslice = min(find(max(max(ana,[],1),[],2)));
         ind_lslice = max(find(max(max(ana,[],1),[],2)));
       else
-        ft_error('no functional parameter and no anatomical parameter, can not plot');
+        error(defaultId, 'no functional parameter and no anatomical parameter, can not plot');
       end
     else
-      ft_error('do not understand cfg.slicerange');
+      error(defaultId, 'do not understand cfg.slicerange');
     end
     ind_allslice = linspace(ind_fslice,ind_lslice,cfg.nslices);
     ind_allslice = round(ind_allslice);
@@ -801,7 +801,7 @@ switch cfg.method
     end
     
     %if cfg.slicedim~=3
-    %  ft_error('only supported for slicedim=3');
+    %  error(defaultId, 'only supported for slicedim=3');
     %end
     
     
@@ -894,7 +894,7 @@ switch cfg.method
         hc = colorbar;
         set(hc, 'YLim', [fcolmin fcolmax]);
       else
-        ft_warning('no colorbar possible without functional data')
+        warning(defaultId, 'no colorbar possible without functional data')
       end
     end
     
@@ -915,7 +915,7 @@ switch cfg.method
         % the location is already in voxel coordinates
         loc = round(cfg.location(1:3));
       else
-        ft_error('you should specify cfg.locationcoordinates');
+        error(defaultId, 'you should specify cfg.locationcoordinates');
       end
     else
       if isequal(cfg.location, 'auto')
@@ -940,13 +940,13 @@ switch cfg.method
     % determine the initial intersection of the cursor (xi yi zi)
     if ischar(loc) && strcmp(loc, 'min')
       if isempty(cfg.funparameter)
-        ft_error('cfg.location is min, but no functional parameter specified');
+        error(defaultId, 'cfg.location is min, but no functional parameter specified');
       end
       [dummy, minindx] = min(fun(:));
       [xi, yi, zi] = ind2sub(dim, minindx);
     elseif ischar(loc) && strcmp(loc, 'max')
       if isempty(cfg.funparameter)
-        ft_error('cfg.location is max, but no functional parameter specified');
+        error(defaultId, 'cfg.location is max, but no functional parameter specified');
       end
       [dummy, maxindx] = max(fun(:));
       [xi, yi, zi] = ind2sub(dim, maxindx);
@@ -1145,7 +1145,7 @@ switch cfg.method
       % downsample the cortical surface
       if cfg.surfdownsample > 1
         if ~isempty(cfg.surfinflated)
-          ft_error('downsampling the surface is not possible in combination with an inflated surface');
+          error(defaultId, 'downsampling the surface is not possible in combination with an inflated surface');
         end
         fprintf('downsampling surface from %d vertices\n', size(surf.pos,1));
         [temp.tri, temp.pos] = reducepatch(surf.tri, surf.pos, 1/cfg.surfdownsample);
@@ -1266,7 +1266,7 @@ switch cfg.method
             set(hc,'ticklabels',round(100*linspace(fcolmin,fcolmax,numel(get(hc,'ticks'))'))./100);
         end
       else
-        ft_warning('no colorbar possible without functional data')
+        warning(defaultId, 'no colorbar possible without functional data')
       end
     end
     
@@ -1327,7 +1327,7 @@ switch cfg.method
     % scale the functional data between -30 and 30
     fun = 30*fun/max(abs(fun(:)));
     if any(fun<=0)
-      ft_warning('using red for positive and blue for negative functional values')
+      warning(defaultId, 'using red for positive and blue for negative functional values')
       col = zeros(numel(fun), 3); % RGB
       col(fun>0,1) = 1;  % red
       col(fun<0,3) = 1;  % blue
@@ -1407,7 +1407,7 @@ switch cfg.method
     
     
   otherwise
-    ft_error('unsupported method "%s"', cfg.method);
+    error(defaultId, 'unsupported method "%s"', cfg.method);
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -1626,7 +1626,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
       set(opt.hc, 'XLim', [opt.fcolmin opt.fcolmax]);
     end
   else
-    ft_warning('no colorbar possible without functional data');
+    warning(defaultId, 'no colorbar possible without functional data');
   end
 end
 

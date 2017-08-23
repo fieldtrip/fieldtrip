@@ -65,7 +65,7 @@ filename = fetch_url(filename);
 
 % test whether the file exists
 if ~exist(filename, 'file')
-  ft_error('file ''%s'' does not exist', filename);
+  error(defaultId, 'file ''%s'' does not exist', filename);
 end
 
 % get the options
@@ -85,7 +85,7 @@ switch fileformat
     sens = read_brainvision_pos(filename);
     
   case 'besa_elp'
-    ft_error('unknown fileformat for electrodes or gradiometers');
+    error(defaultId, 'unknown fileformat for electrodes or gradiometers');
     % the code below does not yet work
     fid = fopen(filename);
     % the ascii file contains: type, label, angle, angle
@@ -102,7 +102,7 @@ switch fileformat
   case 'besa_pos'
     tmp = importdata(filename);
     if ~isnumeric(tmp)
-      ft_error('unexpected file format for fileformat=besa_pos')
+      error(defaultId, 'unexpected file format for fileformat=besa_pos')
     end
     [nchan,nrow] = size(tmp);
     if nrow==3
@@ -115,18 +115,18 @@ switch fileformat
       sens.ori = [ori; ori];
       sens.tra = [eye(nchan) -eye(nchan)];
     else
-      ft_error('unexpected file format for fileformat=besa_pos')
+      error(defaultId, 'unexpected file format for fileformat=besa_pos')
     end
     [p, f, x] = fileparts(filename);
     elpfile = fullfile(p, [f '.elp']);
     elafile = fullfile(p, [f '.ela']);
     if exist(elpfile, 'file')
-      ft_warning('reading channel labels from %s', elpfile);
+      warning(defaultId, 'reading channel labels from %s', elpfile);
       % read the channel names from the accompanying ELP file
       lbl = importdata(elpfile);
       sens.label = strrep(lbl.textdata(:,2) ,'''', '');
     elseif exist(elafile, 'file')
-      ft_warning('reading channel labels from %s', elafile);
+      warning(defaultId, 'reading channel labels from %s', elafile);
       % read the channel names from the accompanying ELA file
       lbl = importdata(elafile);
       lbl = strrep(lbl, 'MEG ', ''); % remove the channel type
@@ -134,7 +134,7 @@ switch fileformat
       sens.label = lbl;
     else
       % the file does not have channel labels in it
-      ft_warning('creating fake channel names for besa_pos');
+      warning(defaultId, 'creating fake channel names for besa_pos');
       for i=1:nchan
         sens.label{i} = sprintf('%03d', i);
       end
@@ -168,7 +168,7 @@ switch fileformat
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
       if isempty(senstype)
         % set the default
-        ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
+        warning(defaultId, 'both electrode and gradiometer information is present, returning the electrode information by default');
         senstype = 'eeg';
       end
       switch lower(senstype)
@@ -177,14 +177,14 @@ switch fileformat
         case 'meg'
           sens = hdr.grad;
         otherwise
-          ft_error('incorrect specification of senstype');
+          error(defaultId, 'incorrect specification of senstype');
       end
     elseif isfield(hdr, 'grad')
       sens = hdr.grad;
     elseif isfield(hdr, 'elec')
       sens = hdr.elec;
     else
-      ft_error('neither electrode nor gradiometer information is present');
+      error(defaultId, 'neither electrode nor gradiometer information is present');
     end
     
   case 'neuromag_mne_grad'
@@ -207,14 +207,14 @@ switch fileformat
     elseif isfield(hdr, 'elec')
       sens = hdr.elec;
     else
-      ft_error('no electrodes or gradiometers found in the file')
+      error(defaultId, 'no electrodes or gradiometers found in the file')
     end
     
   case 'polhemus_fil'
     % these are created at the FIL in London with a polhemus tracker
     [sens.fid.pnt, sens.pnt, sens.fid.label] = read_polhemus_fil(filename, 0);
     % the file does not have channel labels in it
-    ft_warning('no channel names in polhemus file, using numbers instead');
+    warning(defaultId, 'no channel names in polhemus file, using numbers instead');
     for i=1:size(sens.pnt, 1)
       sens.label{i} = sprintf('%03d', i);
     end
@@ -354,7 +354,7 @@ switch fileformat
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
       radians = @(x) pi*x/180;
-      ft_warning('assuming a head radius of 85 mm');
+      warning(defaultId, 'assuming a head radius of 85 mm');
       x = 85*cos(radians(phi)).*sin(radians(theta));
       y = 85*sin(radians(theta)).*sin(radians(phi));
       z = 85*cos(radians(theta));
@@ -372,7 +372,7 @@ switch fileformat
     end
     
   otherwise
-    ft_error('unknown fileformat for electrodes or gradiometers');
+    error(defaultId, 'unknown fileformat for electrodes or gradiometers');
 end % switch fileformat
 
 % ensure that the sensor description is up-to-date

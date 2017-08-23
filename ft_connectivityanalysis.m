@@ -187,7 +187,7 @@ if isfield(data, 'label')
 elseif isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
   if ~isempty(cfg.partchannel)
-    ft_error('partialisation is only possible without linearly indexed bivariate data');
+    error(defaultId, 'partialisation is only possible without linearly indexed bivariate data');
   end
   if ~isempty(cfg.channelcmb)
     % FIXME do something extra here
@@ -205,20 +205,20 @@ switch cfg.method
   case {'coh' 'csd'}
     if ~isempty(cfg.partchannel)
       if hasrpt && ~hasjack
-        ft_warning('partialisation on single trial observations is not supported, removing trial dimension');
+        warning(defaultId, 'partialisation on single trial observations is not supported, removing trial dimension');
         try
           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'fullfast');
           inparam = 'crsspctrm';
           hasrpt = 0;
         catch
-          ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
+          error(defaultId, 'partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
         end
       else
         try
           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
           inparam = 'crsspctrm';
         catch
-          ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
+          error(defaultId, 'partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
         end
       end
     else
@@ -236,8 +236,8 @@ switch cfg.method
     dtype = ft_datatype(data);
     switch dtype
       case 'source'
-        if isempty(cfg.refindx), ft_error('indices of reference voxels need to be specified'); end
-        % if numel(cfg.refindx)>1, ft_error('more than one reference voxel is not yet supported'); end
+        if isempty(cfg.refindx), error(defaultId, 'indices of reference voxels need to be specified'); end
+        % if numel(cfg.refindx)>1, error(defaultId, 'more than one reference voxel is not yet supported'); end
       otherwise
     end
     % FIXME think of accommodating partial coherence for source data with only a few references
@@ -246,25 +246,25 @@ switch cfg.method
     inparam = 'crsspctrm';
     outparam = 'wplispctrm';
     debiaswpli = 0;
-    if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
+    if hasjack, error(defaultId, 'to compute wpli, data should be in rpt format'); end
   case {'wpli_debiased'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     outparam = 'wpli_debiasedspctrm';
     debiaswpli = 1;
-    if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
+    if hasjack, error(defaultId, 'to compute wpli, data should be in rpt format'); end
   case {'ppc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     outparam = 'ppcspctrm';
     weightppc = 0;
-    if hasjack, ft_error('to compute ppc, data should be in rpt format'); end
+    if hasjack, error(defaultId, 'to compute ppc, data should be in rpt format'); end
   case {'wppc'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
     inparam = 'crsspctrm';
     outparam = 'wppcspctrm';
     weightppc = 1;
-    if hasjack, ft_error('to compute wppc, data should be in rpt format'); end
+    if hasjack, error(defaultId, 'to compute wppc, data should be in rpt format'); end
   case {'plv'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source'});
     inparam = 'crsspctrm';
@@ -289,8 +289,8 @@ switch cfg.method
         inparam = 'powcovspctrm';
       case {'source' 'source+mesh'}
         inparam = 'powcov';
-        if isempty(cfg.refindx), ft_error('indices of reference voxels need to be specified'); end
-        % if numel(cfg.refindx)>1, ft_error('more than one reference voxel is not yet supported'); end
+        if isempty(cfg.refindx), error(defaultId, 'indices of reference voxels need to be specified'); end
+        % if numel(cfg.refindx)>1, error(defaultId, 'more than one reference voxel is not yet supported'); end
       otherwise
     end
     outparam = [cfg.method, 'spctrm'];
@@ -372,7 +372,7 @@ switch cfg.method
   case {'di'}
     % wat eigenlijk?
   otherwise
-    ft_error('unknown method % s', cfg.method);
+    error(defaultId, 'unknown method % s', cfg.method);
 end
 
 dtype = ft_datatype(data);
@@ -443,7 +443,7 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
       if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
         cfg.refindx = 1:size(data.pos,1);
       elseif ischar(cfg.refindx)
-        ft_error('cfg.refindx should be a 1xN vector, or ''all''');
+        error(defaultId, 'cfg.refindx should be a 1xN vector, or ''all''');
       end
       if strcmp(inparam, 'crsspctrm')
         [data, powindx, hasrpt] = univariate2bivariate(data, 'mom', 'crsspctrm', dtype, 'cmb', cfg.refindx, 'keeprpt', 0);
@@ -741,7 +741,7 @@ switch cfg.method
         data.freq   = nan;
       end
     else
-      ft_error('granger for time domain data is not yet implemented');
+      error(defaultId, 'granger for time domain data is not yet implemented');
     end
     
   case {'dtf' 'ddtf'}
@@ -841,7 +841,7 @@ switch cfg.method
       % HACK otherwise I don't know how to inform the code further down about the dimord
       data.dimord = 'rpttap_chan_chan_freq';
     else
-      ft_error('unsupported data representation');
+      error(defaultId, 'unsupported data representation');
     end
     varout = [];
     nrpt = numel(data.cumtapcnt);
@@ -851,7 +851,7 @@ switch cfg.method
     % presence of the toolbox is checked in the low-level function
     
     if ~strcmp(dtype, 'raw') && (numel(cfg.mi.lags)>1 || cfg.mi.lags~=0)
-      ft_error('computation of lagged mutual information is only possible with ''raw'' data in the input');
+      error(defaultId, 'computation of lagged mutual information is only possible with ''raw'' data in the input');
     end
     
     switch dtype
@@ -867,7 +867,7 @@ switch cfg.method
         elseif numel(cfg.refindx)==1
           outdimord = 'chan';
         else
-          ft_error('at present cfg.refindx should be either ''all'', or scalar');
+          error(defaultId, 'at present cfg.refindx should be either ''all'', or scalar');
         end
         if numel(cfg.mi.lags)>1
           data.time = cfg.mi.lags./data.fsample;
@@ -885,12 +885,12 @@ switch cfg.method
         elseif numel(cfg.refindx)==1
           outdimord = 'chan';
         else
-          ft_error('at present cfg.refindx should be either ''all'', or scalar');
+          error(defaultId, 'at present cfg.refindx should be either ''all'', or scalar');
         end
         
         %data.dimord = 'chan_chan';
       case 'freq'
-        ft_error('not yet implemented');
+        error(defaultId, 'not yet implemented');
       case 'source'
         % for the time being work with mom
         % dat = cat(2, data.mom{data.inside}).';
@@ -910,18 +910,18 @@ switch cfg.method
     
   case 'xcorr'
     % cross-correlation function
-    ft_error('method %s is not yet implemented', cfg.method);
+    error(defaultId, 'method %s is not yet implemented', cfg.method);
     
   case 'spearman'
     % spearman's rank correlation
-    ft_error('method %s is not yet implemented', cfg.method);
+    error(defaultId, 'method %s is not yet implemented', cfg.method);
     
   case 'di'
     % directionality index
-    ft_error('method %s is not yet implemented', cfg.method);
+    error(defaultId, 'method %s is not yet implemented', cfg.method);
     
   otherwise
-    ft_error('unknown method %s', cfg.method);
+    error(defaultId, 'unknown method %s', cfg.method);
     
 end % switch method
 

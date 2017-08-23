@@ -103,7 +103,7 @@ end
 if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
   refindx = match_str(freq.label, cfg.refchan);
   if isempty(refindx),
-    ft_error('the requested reference channel is not found in the data');
+    error(defaultId, 'the requested reference channel is not found in the data');
   end
   if any(strncmp(tok, 'rpt', 3)),
     Cr = freq.crsspctrm(:,chanindx,refindx);
@@ -116,9 +116,9 @@ end
 
 % do a sanity check on the cross-spectral-density matrix
 if any(isnan(Cf(:)))
-  ft_error('The cross-spectral-density matrix is not complete');
+  error(defaultId, 'The cross-spectral-density matrix is not complete');
 end
 if any(isnan(Cr(:)))
-  ft_error('The cross-spectral-density with the reference channel is not complete');
+  error(defaultId, 'The cross-spectral-density with the reference channel is not complete');
 end
 

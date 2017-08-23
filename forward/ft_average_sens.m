@@ -100,7 +100,7 @@ end
 
 for i=1:nsens
   if ~isequal(sens(i).label(:), sens(1).label(:))
-    ft_error('all sensor arrays should have the same sensors for averaging');
+    error(defaultId, 'all sensor arrays should have the same sensors for averaging');
   end
   
   % add them to the sum, to compute the mean location of each ref sensor
@@ -146,7 +146,7 @@ elseif iseeg
   asens     = csens;
   
 else
-  ft_error('unsupported sensor type');
+  error(defaultId, 'unsupported sensor type');
 end
 
 if toplot
@@ -183,7 +183,7 @@ switch nfid
       end
       
       if ~isequal(fiducials(i).fid.label, fiducials(1).fid.label)
-        ft_error('all fiducials should have the same labels for averaging');
+        error(defaultId, 'all fiducials should have the same labels for averaging');
       end
       
       tra1 = ft_headcoordinates(sens(i).chanpos(ind1, :), sens(i).chanpos(ind2, :), sens(i).chanpos(ind3, :));
@@ -219,5 +219,5 @@ switch nfid
     afiducials.pos = afiducials.pos(ind, :);
     
   otherwise
-    ft_error('there should be either one set of fiducials or a set per sensor array');
+    error(defaultId, 'there should be either one set of fiducials or a set per sensor array');
 end % switch nfid

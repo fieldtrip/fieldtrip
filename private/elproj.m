@@ -61,7 +61,7 @@ if strcmp(method, 'orthographic')
   num = length(find(z<0));
   str = sprintf('%d electrodes may be folded inwards in orthographic projection\n', num);
   if num
-    ft_warning(str);
+    warning(defaultId, str);
   end
   proj = [xp yp];
 
@@ -77,7 +77,7 @@ elseif strcmp(method, 'gnomic')
   num = length(find(th==pi/2 | z<0));
   str = sprintf('removing %d electrodes from gnomic projection\n', num);
   if num
-    ft_warning(str);
+    warning(defaultId, str);
   end
   xp(find(th==pi/2 | z<0)) = NaN;
   yp(find(th==pi/2 | z<0)) = NaN;
@@ -94,7 +94,7 @@ elseif strcmp(method, 'stereographic')
   num = length(find(th==pi/2 | z<0));
   str = sprintf('removing %d electrodes from stereographic projection\n', num);
   if num
-    ft_warning(str);
+    warning(defaultId, str);
   end
   xp(find(th==pi/2 | z<0)) = NaN;
   yp(find(th==pi/2 | z<0)) = NaN;
@@ -113,5 +113,5 @@ elseif strcmp(method, 'polar')
   proj = [x, y];
 
 else
-  ft_error('unsupported method (%s)', method);
+  error(defaultId, 'unsupported method (%s)', method);
 end

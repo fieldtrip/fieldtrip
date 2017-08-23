@@ -58,12 +58,12 @@ cv = dml.crossvalidator('mva', cfg.mva, 'type', 'nfold', 'folds', cfg.nfolds,...
   'resample', cfg.resample, 'compact', true, 'verbose', true);
 
 if any(isinf(dat(:)))
-  ft_warning('Inf encountered; replacing by zeros');
+  warning(defaultId, 'Inf encountered; replacing by zeros');
   dat(isinf(dat(:))) = 0;
 end
 
 if any(isnan(dat(:)))
-  ft_warning('Nan encountered; replacing by zeros');
+  warning(defaultId, 'Nan encountered; replacing by zeros');
   dat(isnan(dat(:))) = 0;
 end
 

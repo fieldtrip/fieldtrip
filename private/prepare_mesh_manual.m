@@ -50,7 +50,7 @@ hasmri       = nargin>1;
 
 % check the consistency of the input arguments
 if hasheadshape && hasbnd
-  ft_error('you should not specify cfg.headshape and cfg.bnd simultaneously');
+  error(defaultId, 'you should not specify cfg.headshape and cfg.bnd simultaneously');
 end
 
 % check the consistency of the input arguments
@@ -487,7 +487,7 @@ while again
           setappdata(fig,'slicedata',slicedata);
         end
       otherwise
-        ft_warning('invalid button (%d)', k);
+        warning(defaultId, 'invalid button (%d)', k);
     end
     
   end

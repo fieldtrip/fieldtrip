@@ -71,9 +71,9 @@ hasleadfield   = isfield(dip, 'leadfield');
 hasfilter      = isfield(dip, 'filter');
 
 if isempty(lambda) && isempty(snr) && ~isfield(dip, 'filter')
-  ft_error('either lambda or snr should be specified');
+  error(defaultId, 'either lambda or snr should be specified');
 elseif ~isempty(lambda) && ~isempty(snr)
-  ft_error('either lambda or snr should be specified, not both');
+  error(defaultId, 'either lambda or snr should be specified, not both');
 end
 
 
@@ -111,7 +111,7 @@ if isfield(dip, 'filter')
 end
 
 %if ~isempty(snr) && doscale
-%  ft_error('scaling of the source covariance in combination with a specified snr parameter is not allowed');
+%  error(defaultId, 'scaling of the source covariance in combination with a specified snr parameter is not allowed');
 %end
 
 % compute leadfield
@@ -188,7 +188,7 @@ if num_comp == 1
 elseif num_comp == 2
   H_blk = blkdiag(H{1},H{2});
 else
-  ft_error('This function only supports meshes with 1 or 2 connected components')
+  error(defaultId, 'This function only supports meshes with 1 or 2 connected components')
 end
 
 if num_dip == 1
@@ -198,7 +198,7 @@ elseif num_dip == 2
 elseif num_dip == 3
   H_tot = blkdiag(H_blk,H_blk,H_blk);
 else
-  ft_error('This function only supports source model with 1,2 or 3 dimensional source values')
+  error(defaultId, 'This function only supports source model with 1,2 or 3 dimensional source values')
 end
 
 

@@ -123,7 +123,7 @@ elseif nargin==4 && isnumeric(fid4)
 elseif nargin==5
   % do nothing
 else
-  ft_error('incorrect specification of input parameters');
+  error(defaultId, 'incorrect specification of input parameters');
 end
 
 if isnumeric(coordsys)
@@ -135,7 +135,7 @@ if isnumeric(coordsys)
   elseif coordsys==2
     coordsys = 'ftg';
   else
-    ft_error('if coordsys is numeric, it should assume one of the values 0/1/2');
+    error(defaultId, 'if coordsys is numeric, it should assume one of the values 0/1/2');
   end
 end
 
@@ -218,7 +218,7 @@ switch coordsys
     diry = diry/norm(diry);
     dirz = dirz/norm(dirz);
   otherwise
-    ft_error('unrecognized headcoordinate system "%s"', coordsys);
+    error(defaultId, 'unrecognized headcoordinate system "%s"', coordsys);
 end
 
 % use the extra point to validate that it is a right-handed coordinate system
@@ -228,17 +228,17 @@ if ~isempty(extrapoint)
   if any(strcmp(coordsys, {'ctf' 'bti' '4d' 'yokogawa' 'itab' 'neuromag'}))
     phi = dirq(:)'*dirz(:);
     if sign(phi)<0
-      ft_warning('the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
+      warning(defaultId, 'the input coordinate system seems left-handed, flipping z-axis to keep the transformation matrix consistent');
       dirz = -dirz;
     end
   elseif any(strcmp(coordsys, {'tal' 'spm' 'acpc'}))
     phi = dirq(:)'*dirx(:);
     if sign(phi)<0
-      ft_warning('the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
+      warning(defaultId, 'the input coordinate system seems left-handed, flipping x-axis to keep the transformation matrix consistent');
       dirx = -dirx;
     end
   else
-    ft_warning('the extra input coordinate is not used with coordsys "%s"', coordsys);
+    warning(defaultId, 'the extra input coordinate is not used with coordsys "%s"', coordsys);
   end
 end
 

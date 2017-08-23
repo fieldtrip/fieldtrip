@@ -111,10 +111,10 @@ haspoly  = isfield(mesh, 'poly'); % polynomial surfaces in 3-D
 hascolor = isfield(mesh, 'color'); % color code for vertices
 
 if hastet && isempty(surfaceonly)
-  ft_warning('only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
+  warning(defaultId, 'only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
   surfaceonly = true;
 elseif hashex && isempty(surfaceonly)
-  ft_warning('only visualizing the outer surface of the hexahedral mesh, see the "surfaceonly" option')
+  warning(defaultId, 'only visualizing the outer surface of the hexahedral mesh, see the "surfaceonly" option')
   surfaceonly = true;
 else
   surfaceonly = false;
@@ -169,7 +169,7 @@ elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourc
   else
     cortex_light = eval('cortex_light');
     vertexcolor = repmat(cortex_light, size(mesh.pos,1), 1);
-    ft_warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
+    warning(defaultId, 'no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
@@ -192,7 +192,7 @@ elseif isfield(mesh, 'prj')
   % this happens sometimes if the 3-D vertices are projected to a 2-D plane
   pos = mesh.prj;
 else
-  ft_error('no vertices found');
+  error(defaultId, 'no vertices found');
 end
 
 if isempty(pos)
@@ -201,7 +201,7 @@ if isempty(pos)
 end
 
 if hastri+hastet+hashex+hasline+haspoly>1
-  ft_error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
+  error(defaultId, 'cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
 end
 
 if hastri
@@ -433,7 +433,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
     end
     
   else
-    ft_error('Unknown color specification for the vertices');
+    error(defaultId, 'Unknown color specification for the vertices');
   end
   
 end % plotting the vertices as points

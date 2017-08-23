@@ -267,9 +267,9 @@ if isempty(cfg.coordsys)
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
   else
-    ft_error('you should specify the desired head coordinate system in cfg.coordsys')
+    error(defaultId, 'you should specify the desired head coordinate system in cfg.coordsys')
   end
-  ft_warning('defaulting to %s coordinate system', cfg.coordsys);
+  warning(defaultId, 'defaulting to %s coordinate system', cfg.coordsys);
 end
 
 % these two have to be simultaneously true for a snapshot to be taken
@@ -296,7 +296,7 @@ elseif iscell(cfg.parameter) && isempty(cfg.parameter)
     % it's OK
     cfg.parameter= 'anatomy';
   else
-    ft_error('there''s an unexpected dimension mismatch');
+    error(defaultId, 'there''s an unexpected dimension mismatch');
   end
 end
 
@@ -322,7 +322,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
       fidexplanation1 = '      press b for bregma, l for lambda, z for yzpoint\n';
       fidexplanation2 = '';
     otherwise
-      ft_error('unknown coordinate system "%s"', cfg.coordsys);
+      error(defaultId, 'unknown coordinate system "%s"', cfg.coordsys);
   end
   
   for i=1:length(fidlabel)
@@ -648,7 +648,7 @@ switch cfg.method
     elseif isstruct(cfg.headshape)
       % new-style specification, do nothing
     else
-      ft_error('incorrect specification of cfg.headshape');
+      error(defaultId, 'incorrect specification of cfg.headshape');
     end
     
     if ischar(cfg.headshape.headshape)
@@ -720,7 +720,7 @@ switch cfg.method
     else
       w = cfg.weights(:);
       if numel(w)~=size(shape.pos,1)
-        ft_error('number of weights should be equal to the number of points in the headshape');
+        error(defaultId, 'number of weights should be equal to the number of points in the headshape');
       end
     end
     
@@ -944,7 +944,7 @@ switch cfg.method
         if strcmp(target.coordsys, 'acpc')
           mri = ft_convert_coordsys(mri, 'acpc');
         else
-          ft_error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
+          error(defaultId, 'The coordinate systems of the input and target volumes are different, coregistration is not possible');
         end
       end
       
@@ -990,7 +990,7 @@ switch cfg.method
     delete(tname1);
     delete(tname2);
   otherwise
-    ft_error('unsupported method "%s"', cfg.method);
+    error(defaultId, 'unsupported method "%s"', cfg.method);
 end
 
 if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
@@ -1028,7 +1028,7 @@ if ~isempty(transform) && ~any(isnan(transform(:)))
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
 else
-  ft_warning('no coordinate system realignment has been done');
+  warning(defaultId, 'no coordinate system realignment has been done');
 end
 
 % visualize result

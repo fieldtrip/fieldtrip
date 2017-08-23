@@ -61,17 +61,17 @@ deepelec     = ft_getopt(varargin, 'deepelec', []); % used in the case of deep v
 tolerance    = ft_getopt(varargin, 'tolerance', 1e-8);
 
 if isempty(sens)
-  ft_error('A set of sensors is required')
+  error(defaultId, 'A set of sensors is required')
 end
 
 if ispc
-  ft_error('FNS only works on Linux and OS X')
+  error(defaultId, 'FNS only works on Linux and OS X')
 end
 
 % check the consistency between tissue values and the segmentation
 vecval = ismember(tissueval,unique(seg(:)));
 if any(vecval)==0
-  ft_warning('Some of the tissue values are not in the segmentation')
+  warning(defaultId, 'Some of the tissue values are not in the segmentation')
 end
 
 % create the files to be written
