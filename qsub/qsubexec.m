@@ -49,13 +49,13 @@ try
   stopwatch = tic;
   while (~exist(inputfile, 'file') && toc(stopwatch)<60)
     % the underlying NFS file system might be slow in updating, wait for up to 60 seconds
-    ft_warning('the input file %s does not yet exist', inputfile);
+    warning('the input file %s does not yet exist', inputfile);
     pausejava(10);
   end
   clear stopwatch
   
   if ~exist(inputfile, 'file')
-    ft_error('timeout while waiting for the input file %s', inputfile);
+    error('timeout while waiting for the input file %s', inputfile);
   end
   
   % the input file contains a function handle
@@ -68,7 +68,7 @@ try
     % argin{1} or argin{2} might be a private function
     whichfunction = ft_getopt(tmp.optin, 'whichfunction');
     if ~isempty(whichfunction) && exist(whichfunction, 'file')
-      ft_warning('assuming %s as full function name', whichfunction);
+      warning('assuming %s as full function name', whichfunction);
       oldpwd = pwd;
       [fundir, funname] = fileparts(whichfunction);
       cd(fundir)
@@ -111,13 +111,13 @@ try
   % remove the _ at the end, note that the rename command here is a private mex file
   retval = rename(outputfile, outputfile(1:end-1));
   if retval~=0
-    ft_error('problem renaming output file %s', outputfile);
+    error('problem renaming output file %s', outputfile);
   end
   
 catch err
   % this is to avoid MATLAB from hanging in case fexec fails, since
   % after the job execution we want MATLAB to exit
   disp(err);
-  ft_warning('an error was caught');
+  warning('an error was caught');
   
 end % try-catch
