@@ -20,6 +20,8 @@ function [varargout] = ft_notification(varargin)
 %  ft_info last       % shows the last notification
 %  ft_info clear      % clears the status of all notifications
 %  ft_info timeout 10 % sets the timeout (for 'once') to 10 seconds
+%
+% See also DEFAULTID
 
 % Copyright (C) 2012-2017, Robert Oostenveld, J?rn M. Horschig
 %
@@ -136,15 +138,6 @@ if ~ismember('last', {s.identifier})
   s = setstate(s, 'last', state);
 end
 
-if ~isempty(stack)
-  % it is called from within a function
-  name = fliplr({stack.name});
-  defaultId = ['FieldTrip' sprintf(':%s', name{:}) ':line' num2str(stack(1).line)];
-else
-  % it is called from the command line
-  defaultId = '';
-end
-
 if strcmp(level, 'warning')
   ws = warning;
   % warnings should be on in general
@@ -154,7 +147,6 @@ if strcmp(level, 'warning')
   % the verbose message is handled by this function
   warning off verbose
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set the notification state according to the input
