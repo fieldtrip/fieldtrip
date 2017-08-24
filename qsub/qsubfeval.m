@@ -149,7 +149,7 @@ end
 if ~isempty(previous_argin) && ~isequal(varargin{1}, previous_argin{1})
   % this can be skipped if the previous call used the same function
   if ischar(varargin{1}) && isempty(which(varargin{1}))
-    ft_error('Not a valid M-file (%s).', varargin{1});
+    error('Not a valid M-file (%s).', varargin{1});
   end
 end
 
@@ -213,7 +213,7 @@ if ~compiled
     
     if system(sprintf('which %s > /dev/null', matlabcmd))==1
       % the linux command "which" returns 0 on succes and 1 on failure
-      ft_warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
+      warning('the executable for "%s" could not be found, trying "matlab" instead', matlabcmd);
       % use whatever is available as default
       matlabcmd = 'matlab';
     end
@@ -358,7 +358,7 @@ switch backend
     
     if any(curPwd==' ')
       % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1898
-      ft_error('you cannot execute jobs from within a directory that has a space in its name');
+      error('you cannot execute jobs from within a directory that has a space in its name');
     end
     
     % pass the command to qsub with all requirements
@@ -469,7 +469,7 @@ switch backend
     cmdline = sprintf('echo "%s" | bsub -J %s %s -o %s -e %s', cmdline, jobid, submitoptions, logout, logerr);
     
   otherwise
-    ft_error('unsupported backend "%s"', backend);
+    error('unsupported backend "%s"', backend);
     
 end % switch
 
@@ -480,7 +480,7 @@ if ~strcmp(backend, 'local')
   [status, result] = system(cmdline);
   if status
     % this should have returned 0, the screen output in result will probably be informative
-    ft_error(result);
+    error(result);
   end
 else
   % this will read the job input *.mat file, call feval with all try-catch

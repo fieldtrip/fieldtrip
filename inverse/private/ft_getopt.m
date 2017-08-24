@@ -64,7 +64,7 @@ if isa(opt, 'struct') || isa(opt, 'config')
 elseif isa(opt, 'cell')
   % get the key-value from the cell-array
   if mod(length(opt),2)
-    ft_error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
+    error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
   end
 
   % the 1st, 3rd, etc. contain the keys, the 2nd, 4th, etc. contain the values
@@ -78,7 +78,7 @@ elseif isa(opt, 'cell')
   end
 
   if ~all(valid)
-    ft_error('optional input arguments should come in key-value pairs, the optional input argument %d is invalid (should be a string)', i);
+    error('optional input arguments should come in key-value pairs, the optional input argument %d is invalid (should be a string)', i);
   end
 
   hit = find(strcmpi(key, keys));
@@ -89,7 +89,7 @@ elseif isa(opt, 'cell')
     % the requested key was found
     val = vals{hit};
   else
-    ft_error('multiple input arguments with the same name');
+    error('multiple input arguments with the same name');
   end
 
 elseif isempty(opt)
