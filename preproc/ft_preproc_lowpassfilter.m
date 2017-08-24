@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
+function [filt, B, A] = ft_preproc_lowpassfilter(dat,Fs,Flp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
 
 % FT_PREPROC_LOWPASSFILTER applies a low-pass filter to the data and thereby
 % removes all high frequency components in the data

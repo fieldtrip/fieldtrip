@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
+function [filt, B, A] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
 
 % FT_PREPROC_BANDSTOPFILTER applies a band-stop filter to the data and thereby
 % removes the spectral components in the specified frequency band
