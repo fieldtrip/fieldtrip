@@ -26,7 +26,17 @@ function id = defaultId
 % $Id$
 
 stack = dbstack('-completenames');
-stack = stack(2:end); % this is this function itself
+
+% remove the functions that pertain to the notification system itself
+keep = true(size(stack));
+keep(strcmp({stack.name}, 'defaultId'))       = false; % this function itself
+keep(strcmp({stack.name}, 'ft_notification')) = false; % this one is doing the work underneath ft_error/ft_warning/ft_notice/etc.
+keep(strcmp({stack.name}, 'ft_error'))        = false;
+keep(strcmp({stack.name}, 'ft_warning'))      = false;
+keep(strcmp({stack.name}, 'ft_notice'))       = false;
+keep(strcmp({stack.name}, 'ft_info'))         = false;
+keep(strcmp({stack.name}, 'ft_debug'))        = false;
+stack = stack(keep);
 
 % remove the non-FieldTrip functions from the path, these should not be part of the default message identifier
 keep = true(size(stack));
@@ -36,11 +46,11 @@ for i=1:numel(stack)
 end
 stack = stack(keep);
 
-
 if ~isempty(stack)
   % it is called from within a function
-  name = fliplr({stack.name});
-  id = ['FieldTrip' sprintf(':%s', name{:}) ':line' num2str(stack(1).line)];
+  stack = flipud(stack);
+  name  = {stack.name};
+  id    = ['FieldTrip' sprintf(':%s', name{:}) ':line' num2str(stack(end).line)];
 else
   % it is called from the command line
   id = 'FieldTrip:commandline';

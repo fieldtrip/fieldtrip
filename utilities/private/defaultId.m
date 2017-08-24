@@ -49,18 +49,8 @@ stack = stack(keep);
 if ~isempty(stack)
   % it is called from within a function
   stack = flipud(stack);
-  name = cell(size(stack));
-  for i=1:numel(stack)
-    [p, filename] = fileparts(stack(i).file);
-    funname = stack(i).name;
-    if ~isequal(filename, funname)
-      % the warning function does not support special characters such as '>' in the identifier
-      name{i} = funname;
-    else
-      name{i} = filename;
-    end
-  end
-  id = ['FieldTrip' sprintf(':%s', name{:}) ':line' num2str(stack(end).line)];
+  name  = {stack.name};
+  id    = ['FieldTrip' sprintf(':%s', name{:}) ':line' num2str(stack(end).line)];
 else
   % it is called from the command line
   id = 'FieldTrip:commandline';
