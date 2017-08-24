@@ -37,7 +37,7 @@ if ~isempty(option_pwd)
     % the "catch me" syntax is broken on MATLAB74, this fixes it
     cd_error = lasterror;
     % don't throw an error, just give a warning (and hope for the best...)
-    ft_warning(cd_error.message);
+    warning(cd_error.message);
   end
 end
 
