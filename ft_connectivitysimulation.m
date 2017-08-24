@@ -318,7 +318,6 @@ switch cfg.method
     foi   = (0:0.2:Nyq);
     omega = foi./fs;
     n     = numel(foi);
-
     
     % local renaming
     nsignal = cfg.nsignal;
@@ -331,6 +330,11 @@ switch cfg.method
     slope    = 0.5;
     oneoverf = sqrt(max(omega(2)./10,omega).^-slope); % takes sqrt for amplitude
     oneoverf = oneoverf./oneoverf(1);
+    oneoverf = oneoverf;%.*exp(-1i.*2.*pi.*foi.*0.005);
+    %oneoverf(1) = 0;
+    z = firws_filter(5.*fs, fs, Nyq./1.05);
+    z = z(1:numel(foi)).*exp(-1i.*pi.*foi.*rand(1)./100);
+    oneoverf = z.*oneoverf;
     
     % convert into indices
     findx = fband;
@@ -355,28 +359,42 @@ switch cfg.method
         krn(k,m,mask(k,m,:))  = hanning(sum(mask(k,m,:)))';
         
         phi(k,m,:) = 2.*pi.*delay(k,m).*foi;
-        phi(k,m,:) = phi(k,m,:).*mask(k,m,:);
-        phi(k,m,mask(k,m,:)) = phi(k,m,mask(k,m,:))-mean(phi(k,m,mask(k,m,:)));
+        %phi(k,m,:) = phi(k,m,:).*mask(k,m,:);
+        %phi(k,m,mask(k,m,:)) = phi(k,m,mask(k,m,:))-mean(phi(k,m,mask(k,m,:)));
+        %if all(isfinite(squeeze(findx(k,m,:))))
+        %  phi(k,m,1:findx(k,m,1)) = phi(k,m,findx(k,m,1));
+        %  phi(k,m,findx(k,m,2):end) = phi(k,m,findx(k,m,2));
+        %end
         
         coupling_ampl(k,m,:) = coupling(k,m).*krn(k,m,:);
       end
     end
     
-    % this matrix contains the amplitude spectra on the diagonal
+    % this matrix contains the intrinsic amplitude spectra on the diagonal
     for k = 1:nsignal
-      dat(k,k,:) = oneoverf;
-      for m = 1:nsignal
-        dat(k,k,:) = dat(k,k,:)+krn(m,m,:).*ampl(m,k);
-      end
+      z = firws_filter(5.*fs, fs, [fband(k,k,1) fband(k,k,2)]);
+      z = z(1:numel(foi)).*exp(-1i.*pi.*foi.*rand(1)./100); 
+  
+      %dat(k,k,:) = oneoverf;
+      %dat(k,k,:) = dat(k,k,:) + shiftdim(z.*ampl(k,k),-1);%dat(k,k,:)+krn(k,k,:).*ampl(k,k);
+      dat(k,k,:) = (abs(oneoverf)+ampl(k,k).*abs(z)).*exp(1i.*(angle(z)+angle(oneoverf)));
+      
+      %for m = 1:nsignal
+      %  dat(k,k,:) = dat(k,k,:)+krn(m,m,:).*ampl(m,m);
+      %end
     end
     
     % now we can create a spectral transfer matrix
     tf = zeros(nsignal,nsignal,n)+1i.*zeros(nsignal,nsignal,n);
     for k = 1:nsignal
       for m = 1:nsignal
-        if k~=m
-          tf(k,m,:) = coupling_ampl(k,m,:).*exp(1i.*phi(k,m,:));
-        else
+        if k~=m && all(isfinite(squeeze(fband(k,m,:))))
+          z = firws_filter(5.*fs, fs, [fband(k,m,1) fband(k,m,2)]);
+          z = z(1:numel(foi));
+          %tf(k,m,:) = coupling_ampl(k,m,:).*exp(1i.*phi(k,m,:));
+          tf(m,k,:) = coupling(k,m).*exp(-1i.*phi(k,m,:)).*shiftdim(z,-1);
+        
+        elseif k==m
           tf(k,m,:) = dat(k,m,:);
         end
       end
@@ -387,7 +405,7 @@ switch cfg.method
     for k = 1:n
       c(:,:,k) = tf(:,:,k)*tf(:,:,k)'; % assume noise to be I, i.e. the tf to swallow the amplitudes
     end
-    
+      
     % create a freq-structure
     freq           = [];
     freq.crsspctrm = c;
@@ -593,4 +611,17 @@ else
     A = A(:,1:maxlag);
   end
 
+end
+
+function z = firws_filter(N, Fs, Fbp)
+
+switch numel(Fbp)
+  case 1
+    [~, B, ~] = ft_preproc_lowpassfilter(randn(1,N), Fs, Fbp, [], 'firws', 'onepass-minphase');
+    z  = fft(B, N);
+
+  case 2
+    [~, B, ~] = ft_preproc_bandpassfilter(randn(1,N), Fs, Fbp, [], 'firws', 'onepass-minphase');
+    z  = fft(B, N);
+  
 end

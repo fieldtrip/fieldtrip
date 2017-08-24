@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
+function [filt, B, A] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
 
 % FT_PREPROC_HIGHPASSFILTER applies a high-pass filter to the data and thereby removes
 % the low frequency components in the data
