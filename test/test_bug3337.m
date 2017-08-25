@@ -12,8 +12,8 @@ for i=1:3
   data.sampleinfo(i,:) = [(i-1)*1000+1 i*1000];
 end
 
-data.trial{1}(1,30:40)  = nan;
-data.trial{1}(2,80:90)  = nan; % 2nd segment within one trial
+data.trial{1}(:,30:40)  = nan;
+data.trial{1}(:,80:90)  = nan; % 2nd segment within one trial
 data.trial{2}(1,100)    = nan; % one sample
 data.trial{3}(1,:)      = nan; % whole trial
 
@@ -31,3 +31,16 @@ correct = [
   ];
 
 assert(isequal(artifact, correct));
+
+%%
+
+cfg.artfctdef.reject = 'nan';
+datanan = ft_rejectartifact(cfg, data);
+assert(isequaln(data.trial{1}, datanan.trial{1}));
+
+%%
+
+cfg.artfctdef.minaccepttim = 0;
+cfg.artfctdef.reject = 'partial';
+datapartial = ft_rejectartifact(cfg, data);
+assert(numel(datapartial.trial)==5);
