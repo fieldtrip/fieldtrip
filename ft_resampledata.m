@@ -309,7 +309,7 @@ elseif usetime
 
 end % if usefsample or usetime
 
-fprintf('original sampling rate = %d Hz\nnew sampling rate = %d Hz\n', cfg.origfs, data.fsample);
+ft_info('original sampling rate = %d Hz\nnew sampling rate = %d Hz\n', cfg.origfs, data.fsample);
 
 % convert back to input type if necessary
 switch convert

@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
+function [filt, B, A] = ft_preproc_bandpassfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
 
 % FT_PREPROC_BANDPASSFILTER applies a band-pass filter to the data and thereby
 % removes the spectral components in the data except for the ones in the

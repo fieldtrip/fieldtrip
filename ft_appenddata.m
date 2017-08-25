@@ -104,7 +104,7 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
     ft_error('cannot append this data');
   end
 end
-fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
+ft_info('concatenating over the "%s" dimension\n', cfg.appenddim);
 
 % ft_selectdata cannot create the union of the data contained in cell-arrays
 % make a dummy without the actual data, but keep trialinfo/sampleinfo/grad/elec/opto

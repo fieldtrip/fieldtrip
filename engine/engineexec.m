@@ -34,6 +34,6 @@ catch err
   % this is to avoid MATLAB from hanging in case fexec fails, since
   % after the job execution we want MATLAB to exit
   disp(err);
-  ft_warning('an error was caught');
+  warning('an error was caught');
   
 end % try-catch

@@ -6,10 +6,18 @@ function test_warning_once
 warning1 = 'hululu';
 warning2 = 'aloah hey';
 
+ft_warning('clear');
+[output] = evalc('warning_caller(warning1, warning2)');
+w1size = strfind(output, warning1);
+w2size = strfind(output, warning2);
+if numel(w1size)<20 ||  numel(w2size)<20
+  error('too few warnings thrown');
+end
+
 for i=1:2
   ft_warning('clear');
   ft_warning('once');
-  ft_warning('backtrace', 'off');
+  ft_warning('off', 'backtrace');
   
   [output] = evalc('warning_caller(warning1, warning2)');
   w1size = strfind(output, warning1);
