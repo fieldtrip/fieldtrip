@@ -99,8 +99,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %   cfg.headshape      = a filename containing headshape, a structure containing a
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
-%   cfg.feedback       = 'yes' or 'no' (feedback includes the output of the iteration
-%                        procedure.
+%   cfg.feedback       = 'yes' or 'no' (default), feedback of the iteration procedure
 %
 % If you want to move the electrodes inward, you should specify
 %   cfg.moveinward     = number, the distance that the electrode should be moved
@@ -408,7 +407,7 @@ elseif strcmp(cfg.method, 'headshape')
   
   norm.label = elec.label;
   if strcmp(cfg.warp, 'dykstra2012')
-    norm.elecpos = warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
+    norm.elecpos = warp_dykstra2012(cfg, elec, headshape);
   elseif strcmp(cfg.warp, 'fsaverage')
     subj_pial = ft_read_headshape(cfg.headshape);
     [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
