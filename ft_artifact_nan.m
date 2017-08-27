@@ -47,8 +47,10 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-% ft_preamble provenance is not needed because just a call to ft_artifact_zvalue
-% ft_preamble loadvar data is not needed because ft_artifact_zvalue will do this
+ft_preamble debug
+ft_preamble loadvar    data
+ft_preamble provenance data
+ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -71,3 +73,11 @@ for i=1:numel(data.trial)
   end
 end % for each trial
 
+% remember the details that were used here
+cfg.artfctdef.nan          = [];
+cfg.artfctdef.nan.artifact = artifact;
+
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous   data
