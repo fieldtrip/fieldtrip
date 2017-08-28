@@ -86,7 +86,7 @@ issquare = length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))=
 switch method
 case 'granger'
 
-  if issquare && isempty(powindx),
+  if issquare && isempty(powindx)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%  
     % data are chan_chan_therest
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%

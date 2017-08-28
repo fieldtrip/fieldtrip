@@ -188,21 +188,21 @@ switch cfg.method
       % 13, 2011. This swaps the directional influence for existing scripts.
     end
     for k = 1:cfg.ntrials
-      tmp   = zeros(nsignal, nsmp+nlag);
-      noise  = mvnrnd(zeros(nsignal,1), cfg.noisecov, nsmp+nlag)';
+      tmp   = zeros(nsignal, nsmp+ceil(nlag*1.05));
+      noise  = mvnrnd(zeros(nsignal,1), cfg.noisecov, ceil(nsmp+nlag*1.05))';
       state0 = zeros(nsignal*nlag, 1);
       for m = 1:nlag
         indx = ((m-1)*nsignal+1):m*nsignal;
         state0(indx) = params(indx,:)'*noise(:,m);
       end
-      tmp(:,1:nlag) = fliplr(reshape(state0, [nsignal nlag]));
+      tmp(:,1:nlag) = flip(reshape(state0, [nsignal nlag]),2);
 
-      for m = (nlag+1):(nsmp+nlag)
-        state0    = reshape(fliplr(tmp(:,(m-nlag):(m-1))), [nlag*nsignal 1]);
+      for m = (nlag+1):(nsmp+ceil(nlag*1.05))
+        state0    = reshape(flip(tmp(:,(m-nlag):(m-1)),2), [nlag*nsignal 1]);
         tmp(:, m) = params'*state0 + noise(:,m);
       end
 
-      trial{k} = tmp(:,nlag+1:end);
+      trial{k} = tmp(:,(ceil(nlag*1.05)+1):end);
       if any(cfg.absnoise>0)
         trial{k} = trial{k} + diag(cfg.absnoise)*randn(size(trial{k}));
       end
@@ -372,16 +372,14 @@ switch cfg.method
     
     % this matrix contains the intrinsic amplitude spectra on the diagonal
     for k = 1:nsignal
-      z = firws_filter(5.*fs, fs, [fband(k,k,1) fband(k,k,2)]);
-      z = z(1:numel(foi)).*exp(-1i.*pi.*foi.*rand(1)./100); 
-  
-      %dat(k,k,:) = oneoverf;
-      %dat(k,k,:) = dat(k,k,:) + shiftdim(z.*ampl(k,k),-1);%dat(k,k,:)+krn(k,k,:).*ampl(k,k);
-      dat(k,k,:) = (abs(oneoverf)+ampl(k,k).*abs(z)).*exp(1i.*(angle(z)+angle(oneoverf)));
-      
-      %for m = 1:nsignal
-      %  dat(k,k,:) = dat(k,k,:)+krn(m,m,:).*ampl(m,m);
-      %end
+      if all(isfinite(squeeze(fband(k,k,:))))      
+        z = firws_filter(5.*fs, fs, [fband(k,k,1) fband(k,k,2)]);
+        z = z(1:numel(foi)).*exp(-1i.*pi.*foi.*rand(1)./100); 
+        z = z.*ampl(k,k);
+        dat(k,k,:) = (abs(oneoverf)+abs(z)).*exp(1i.*(angle(z)+angle(oneoverf)));
+      else
+        dat(k,k,:) = oneoverf;
+      end
     end
     
     % now we can create a spectral transfer matrix
@@ -391,8 +389,7 @@ switch cfg.method
         if k~=m && all(isfinite(squeeze(fband(k,m,:))))
           z = firws_filter(5.*fs, fs, [fband(k,m,1) fband(k,m,2)]);
           z = z(1:numel(foi));
-          %tf(k,m,:) = coupling_ampl(k,m,:).*exp(1i.*phi(k,m,:));
-          tf(m,k,:) = coupling(k,m).*exp(-1i.*phi(k,m,:)).*shiftdim(z,-1);
+          tf(m,k,:) = coupling(k,m).*exp(-1i.*phi(k,m,:)).*shiftdim(z,-1); % deliberate index swap!
         
         elseif k==m
           tf(k,m,:) = dat(k,m,:);
@@ -413,13 +410,10 @@ switch cfg.method
     freq.freq      = foi;
     freq.dimord    = 'chan_chan_freq';
    
-    % estimate the transfer-matrix
+    % estimate the transfer-matrix non-parametrically
     tmpcfg        = [];
     tmpcfg.method = 'transfer';
     t             = ft_connectivityanalysis(tmpcfg, freq);
-    %t.noisecov = repmat(t.noisecov, [1 numel(t.freq)]);
-    %t          = ft_checkdata(t, 'cmbrepresentation', 'full');
-    %t.noisecov = t.noisecov(:,:,1);
     
     % estimate the ar-model coefficients
     a = transfer2coeffs(t.transfer,t.freq);
@@ -432,7 +426,7 @@ switch cfg.method
     cfg          = removefields(cfgorig, {'coupling' 'ampl' 'delay' 'bpfreq'});
     cfg.method   = 'ar';
     cfg.params   = a;
-    cfg.noisecov = t.noisecov.*cfg.fsample.*cfg.triallength./2;
+    cfg.noisecov = diag(diag(t.noisecov.*cfg.fsample./2));
     simulated    = ft_connectivitysimulation(cfg);
     cfg.previous = keepfields(cfgorig, {'coupling' 'ampl' 'delay' 'bpfreq'});
     
