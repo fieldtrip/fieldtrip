@@ -15,7 +15,9 @@ function [vol, M, dcminfo, mr_parms] = load_dicom_fl(flist)
 %
 % Does not handle multiple frames correctly yet.
 %
-
+% Bugfix: added feature that ensures similar structures across a dicom 
+% series by removing fields not present in the first file of the series
+% Arjen Stolk, August 2017
 
 %
 % load_dicom_fl.m
@@ -64,6 +66,7 @@ for n = 1:nfiles
       fprintf('ERROR: series number inconsistency (%s)\n',fname);
       return;
     end
+    tmpinfo = checkstructsim(tmpinfo, dcminfo0); % avoid dissimilar structures
   end
   tmpinfo.fname = fname;
   dcminfo0(n) = tmpinfo;
@@ -194,4 +197,15 @@ function dcminfo2 = sort_by_sliceloc(dcminfo)
 return;
 
 %----------------------------------------------------------%
+function dcminfo = checkstructsim(dcminfo, dcminfolist)
+% this subfunction ensures similar structures across a dicom series by 
+% removing fields not present in the first file of the series
+% Arjen Stolk, 2017
 
+fields = fieldnames(dcminfo);
+fidx = find(ismember(fields, fieldnames(dcminfolist(1)))==0); % fields not present in dcminfolist
+if ~isempty(fidx)
+  dcminfo = rmfield(dcminfo, fields(fidx));
+end
+
+return;
