@@ -121,8 +121,13 @@ channels_to_pull = chanindx;
 header.orig.chansel = chanindx;
 header.nChans = numel(chanindx);
 header.label = header.label(chanindx);
+header.orig.channel_info.orig_n_channels = header.orig.channel_info.n_channels;
+header.orig.channel_info.n_channels = numel(chanindx);
+header.orig.channel_info.orig_lsbs = header.orig.channel_info.lsbs;
 header.orig.channel_info.lsbs = header.orig.channel_info.lsbs(chanindx);
+header.orig.channel_info.orig_channel_labels = header.orig.channel_info.channel_labels;
 header.orig.channel_info.channel_labels = header.orig.channel_info.channel_labels(chanindx);
+header.orig.channel_info.orig_channel_states = header.orig.channel_info.channel_states;
 header.orig.channel_info.channel_states = header.orig.channel_info.channel_states(chanindx);
 
 %% Open file
