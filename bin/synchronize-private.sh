@@ -185,6 +185,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(utilities/private/coordsys2label.m)
 ARRAY+=(plotting/private/coordsys2label.m)
+ARRAY+=(private/coordsys2label.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -601,6 +602,15 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(plotting/private/ft_datatype_volume.m)
 ARRAY+=(utilities/ft_datatype_volume.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# ft_determine_units.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_determine_units.m)
+ARRAY+=(forward/ft_determine_units.m)
+ARRAY+=(plotting/private/ft_determine_units.m)
 sync ${ARRAY[*]}
 
 ################################################################################

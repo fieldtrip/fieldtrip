@@ -13,8 +13,9 @@ function ft_plot_axes(object, varargin)
 % and can include
 %   'axisscale'    = scaling factor for the reference axes and sphere (default = 1)
 %   'unit'         = string, convert the data to the specified geometrical units (default = [])
+%   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
 %   'fontcolor'    = string, color specification (default = [1 .5 0], i.e. orange)
-%   'fontsize'     = number, sets the size of the text (default = 10)
+%   'fontsize'     = number, sets the size of the text (default is automatic)
 %   'fontunits'    =
 %   'fontname'     =
 %   'fontweight'   =
@@ -56,31 +57,35 @@ if ischar(fontcolor) && exist([fontcolor '.m'], 'file')
   fontcolor = eval(fontcolor);
 end
 
-if ~isempty(unit)
-  % convert the sensor description to the specified units
+if ~isempty(object) && ~isempty(unit)
+  % convert the object to the specified units
   object = ft_convert_units(object, unit);
-elseif ~isfield(object, 'unit')
+elseif ~isempty(object) &&  isempty(unit)
+  % take the units from the object
+  unit = object.unit;
+elseif  isempty(object) && ~isempty(unit)
+  % there is no object, but the units have been specified
+elseif  isempty(object) &&  isempty(unit)
   ft_warning('units are not known, not plotting axes')
   return
-else
-  % take the units of the object
-  unit = object.unit;
 end
 
-if ~isempty(coordsys)
-  % the user specified the coordinate system
-  if isfield(object, 'coordsys') && ~strcmp(coordsys, unit.coordsys)
-    ft_error('coordsys is inconsistent with object')
-  end
-else
-  % the user did not specify the coordinate system
-  if isfield(object, 'coordsys')
-    % use the one from the object
-    coordsys = object.coordsys;
-  else
-    % this is not a problem per see
-    coordsys = 'unknown';
-  end
+if ~isempty(object) && ~isfield(object, 'coordsys')
+  % set it to unknown, that makes the subsequent code easier
+  object.coordsys = 'unknown';
+end
+
+if ~isempty(object) && ~isempty(coordsys)
+  % check the user specified coordinate system with the one in the object
+  assert(strcmp(coordsys, unit.coordsys), 'coordsys is inconsistent with the object')
+elseif ~isempty(object) &&  isempty(coordsys)
+  % take the coordinate system from the object
+  coordsys = object.coordsys;
+elseif  isempty(object) && ~isempty(coordsys)
+  % there is no object, but the coordsys has been specified
+elseif  isempty(object) &&  isempty(coordsys)
+  % this is not a problem per see
+  coordsys = 'unknown';
 end
 
 axmax = 150 * ft_scalingfactor('mm', unit);
@@ -141,4 +146,3 @@ text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'linewidth', 2, 'color', fontco
 if ~prevhold
   hold off
 end
-

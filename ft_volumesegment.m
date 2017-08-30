@@ -14,8 +14,8 @@ function [segmented] = ft_volumesegment(cfg, mri)
 % The configuration structure can contain
 %   cfg.output         = string or cell-array of strings, see below (default = 'tpm')
 %   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
-%   cfg.spmmethod      = string, 'old', 'new', 'mars' (default = 'old'). this pertains to the algorithm
-%                          used when cfg.spmversion='spm12'. see below
+%   cfg.spmmethod      = string, 'old', 'new', 'mars' (default = 'old'). This pertains 
+%                        to the algorithm used when cfg.spmversion='spm12', see below.
 %   cfg.opts           = struct, containing spm-version specific options. See
 %                        the code and/or the SPM-documentation for more detail.
 %   cfg.template       = filename of the template anatomical MRI (default = '/spm2/templates/T1.mnc'
@@ -199,21 +199,21 @@ cfg.threshold        = ft_getopt(cfg, 'threshold',   '');
 % chech whether earlier version of smooth and threshold was specified
 if ~(isempty(cfg.smooth))
   if isempty(cfg.brainsmooth)
-    cfg.brainsmooth=cfg.smooth;
+    cfg.brainsmooth = cfg.smooth;
     ft_warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for brainmask.')
   end
   if isempty(cfg.scalpsmooth)
-    cfg.scalpsmooth=cfg.smooth;
+    cfg.scalpsmooth = cfg.smooth;
     ft_warning('Smoothing can be specified separately for scalp and brain. User-specified smoothing will be applied for scalpmask.')
   end
 end
 if ~(isempty(cfg.threshold))
   if isempty(cfg.brainthreshold)
-    cfg.brainthreshold=cfg.threshold;
+    cfg.brainthreshold = cfg.threshold;
     ft_warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for brainmask.')
   end
   if isempty(cfg.scalpthreshold)
-    cfg.scalpthreshold=cfg.threshold;
+    cfg.scalpthreshold = cfg.threshold;
     ft_warning('Threshold can be specified separately for scalp and brain. User-specified threshold will be applied for scalpmask.')
   end
 end
@@ -297,7 +297,7 @@ if dotpm
   if isfield(mri, 'unit')
     original.unit = mri.unit;
   else
-    mri = ft_convert_units(mri); % guess the unit field if not present
+    mri = ft_determine_units(mri); % guess the unit field if not present
     original.unit = mri.unit;
   end
   mri = ft_convert_units(mri, 'mm');

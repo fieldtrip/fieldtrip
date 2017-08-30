@@ -199,7 +199,7 @@ switch nfid
     cfiducials.fid.pos = fidpos;
     afiducials = ft_transform_headshape(inv(tra), cfiducials);
     
-    afiducials = ft_convert_units(afiducials);
+    afiducials = ft_determine_units(afiducials);
     
     % remove redundant headshape points (3 cm precision)
     tolerance = 3;

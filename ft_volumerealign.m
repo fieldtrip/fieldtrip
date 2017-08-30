@@ -14,21 +14,23 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % implemented, which are described in detail below:
 %
 % INTERACTIVE - Use a graphical user interface to click on the location of anatomical
-% fiducials. The coordinate system is updated according to the definition of the
-% coordinates of these fiducials.
+% landmarks or fiducials. The anatomical data can be displayed as three orthogonal
+% MRI slices or as a rendering of the head surface. The coordinate system is updated
+% according to the definition of the coordinates of these fiducials.
 %
 % FIDUCIAL - The coordinate system is updated according to the definition of the
-% coordinates of fiducials that are specified in the configuration.
+% coordinates of anatomical landmarks or fiducials that are specified in the
+% configuration.
 %
 % HEADSHAPE - Match the head surface from the MRI with a measured head surface using
 % an iterative closest point procedure. The MRI will be updated to match the measured
-% head surface. This includes an optional manual coregistration of the two head
+% head surface. You can optionally do an initial manual coregistration of the two head
 % surfaces.
 %
-% SPM - align the individual MRI to the coordinate system of a target or template MRI
+% SPM - Align the individual MRI to the coordinate system of a target or template MRI
 % by matching the two volumes.
 %
-% FSL - align the individual MRI to the coordinate system of a target or template MRI
+% FSL - Align the individual MRI to the coordinate system of a target or template MRI
 % by matching the two volumes.
 %
 % Use as
@@ -670,6 +672,7 @@ switch cfg.method
       % extract the scalp surface from the anatomical image
       tmpcfg        = [];
       tmpcfg.output = 'scalp';
+      tmpcfg.spmversion     = cfg.spmversion;
       tmpcfg.scalpsmooth    = cfg.headshape.scalpsmooth;
       tmpcfg.scalpthreshold = cfg.headshape.scalpthreshold;
       if isfield(cfg, 'template')
@@ -684,16 +687,16 @@ switch cfg.method
     tmpcfg             = [];
     tmpcfg.tissue      = 'scalp';
     tmpcfg.method      = 'projectmesh';%'isosurface';
+    tmpcfg.spmversion  = cfg.spmversion;
     tmpcfg.numvertices = 20000;
     scalp              = ft_prepare_mesh(tmpcfg, seg);
     
     if dointeractive
       fprintf('doing interactive realignment with headshape\n');
-      tmpcfg                       = [];
-      tmpcfg.template.elec         = shape;     % this is the Polhemus recorded headshape
-      tmpcfg.template.elec.chanpos = shape.pos; % ft_interactiverealign needs the field chanpos
-      tmpcfg.template.elec.label = cellstr(num2str((1:size(shape.pos,1))'));
-      tmpcfg.individual.headshape  = scalp;     % this is the headshape extracted from the anatomical MRI
+      tmpcfg                           = [];
+      tmpcfg.template.headshape        = shape;     % this is the Polhemus recorded headshape
+      tmpcfg.template.headshapestyle   = 'vertex'; 
+      tmpcfg.individual.headshape      = scalp;     % this is the headshape extracted from the anatomical MRI
       tmpcfg.individual.headshapestyle = 'surface';
       tmpcfg = ft_interactiverealign(tmpcfg);
       M      = tmpcfg.m;

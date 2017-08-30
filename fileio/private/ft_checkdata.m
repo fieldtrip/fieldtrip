@@ -591,7 +591,7 @@ end
 
 if istrue(hasunit) && ~isfield(data, 'unit')
   % calling convert_units with only the input data adds the units without converting
-  data = ft_convert_units(data);
+  data = ft_determine_units(data);
 end % if hasunit
 
 if istrue(hascoordsys) && ~isfield(data, 'coordsys')

@@ -1827,7 +1827,7 @@ switch fileformat
     atlas.(parcelfield)            = newp;
     atlas.([parcelfield, 'label']) = label;
     atlas.rgba  = rgba;
-    atlas       = ft_convert_units(atlas);
+    atlas       = ft_determine_units(atlas);
     
   case 'caret_label'
     ft_hastoolbox('gifti', 1);
@@ -1904,7 +1904,7 @@ switch fileformat
       tmp       = ft_read_headshape(filenamemesh);
       atlas.pos = tmp.pos;
       atlas.tri = tmp.tri;
-      atlas     = ft_convert_units(atlas);
+      atlas     = ft_determine_units(atlas);
     elseif ~isfield(atlas, 'coordsys')
       atlas.coordsys = 'unknown';
     end
@@ -2005,8 +2005,8 @@ if ~isempty(unit)
 else
   % ensure the units of the atlas are specified
   try
-    atlas = ft_convert_units(atlas);
+    atlas = ft_determine_units(atlas);
   catch
-    % ft_convert_units will fail for triangle-only gifties.
+    % ft_determine_units will fail for triangle-only gifties.
   end
 end
