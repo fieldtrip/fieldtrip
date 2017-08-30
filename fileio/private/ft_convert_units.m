@@ -47,13 +47,22 @@ function [obj] = ft_convert_units(obj, target, varargin)
 %   3) try to apply the scaling to the known geometrical elements in the input object
 
 % ensure the correct number of input and output arguments
-narginchk(2,inf);
+% narginchk(2,inf); % see below
 nargoutchk(0,1);
+
+% the "target" input argument has been made required in Aug 2017
+% prior to that it was also possible to use this function to estimate units
+% the backward compatibility support can be removed in Aug 2018
+if nargin<2
+  ft_warning('calling this function only to determine units is deprecated, please use FT_DETERMINE_COORDSYS instead');
+  obj = ft_determine_units(obj);
+  return
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % parse input options
 feedback = ft_getopt(varargin, 'feedback', false);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if isstruct(obj) && numel(obj)>1
   % deal with a structure array
