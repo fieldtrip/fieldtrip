@@ -22,19 +22,15 @@ function [data] = ft_regressconfound(cfg, datain)
 %                     are to be rejected (default = 'all')
 %   cfg.normalize   = string, 'yes' or 'no', normalization to
 %                     make the confounds orthogonal (default = 'yes')
-%   cfg.statistics  = string, 'yes' or 'no', whether to add the statistics
-%                     on the regression weights to the output (default = 'no')
-%   cfg.beta        = string, 'yes' or 'no', whether to add the beta
-%                     values as a field to the output (default = 'yes')
-%   cfg.model       = string, 'yes' or 'no', whether to add the model to
-%                     the output (default = 'no')
-%   cfg.ftest       = string array, {N X Nconfounds}, to F-test whether
-%                     the full model explains more variance than reduced models
-%                     (e.g. {'1 2'; '3 4'; '5'} where iteratively the added value of
-%                     regressors 1 and 2, and then 3 and 4, etc., are tested)
+%   cfg.output      = 'residual' (default), 'beta', or 'model'.
+%                     If 'residual' is specified, the output is a data
+%                     structure containing the residuals after regressing
+%                     out the in cfg.reject listed confounds. If 'beta' or 'model'
+%                     is specified, the output is a data structure containing
+%                     the regression weights or the model, respectively.
 %
 % This method is described by Stolk et al., Online and offline tools for head
-% movement compensation in MEG. NeuroImage, 2012.
+% movement compensation in MEG (Neuroimage, 2013)
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -46,7 +42,16 @@ function [data] = ft_regressconfound(cfg, datain)
 %
 % See also FT_REJECTCOMPONENT, FT_REJECTARTIFACT
 
-% Copyright (C) 2011, Arjen Stolk, Robert Oostenveld, Lennart Verhagen
+% Undocumented local options:
+%   cfg.ftest       = string array, {N X Nconfounds}, to F-test whether
+%                     the full model explains more variance than reduced models
+%                     (e.g. {'1 2'; '3 4'; '5'} where iteratively the added value of
+%                     regressors 1 and 2, and then 3 and 4, etc., are tested)
+%   cfg.statistics  = string, 'yes' or 'no', whether to add the statistics
+%                     on the regression weights to the output (default = 'no',
+%                     applies only when cfg.output = 'beta')
+
+% Copyright (C) 2011-2017, Arjen Stolk, Robert Oostenveld, Lennart Verhagen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -87,16 +92,19 @@ end
 % check if the input data is valid for this function
 datain = ft_checkdata(datain, 'datatype', {'timelock', 'freq', 'source'}, 'feedback', 'yes');
 
+if isfield(cfg, 'beta') || isfield(cfg, 'model')
+ ft_error('The options cfg.beta and cfg.model have been removed as of Aug 2017, please use cfg.output instead');
+end
+
 % ensure that the required options are present
-cfg = ft_checkconfig(cfg, 'required', {'confound'}, 'renamed', {'Ftest','ftest'});
+cfg = ft_checkconfig(cfg, 'required', {'confound'}, 'renamed', {'Ftest','ftest'}, 'forbidden', {'beta','model'});
 
 % specify the defaults
 cfg.confound   = ft_getopt(cfg, 'confound');
 cfg.reject     = ft_getopt(cfg, 'reject', 'all');
 cfg.normalize  = ft_getopt(cfg, 'normalize', 'yes');
-cfg.model      = ft_getopt(cfg, 'model', 'no');
+cfg.output     = ft_getopt(cfg, 'output', 'residual');
 cfg.statistics = ft_getopt(cfg, 'statistics', 'no');
-cfg.beta       = ft_getopt(cfg, 'beta', 'yes');
 cfg.ftest      = ft_getopt(cfg, 'ftest');
 cfg.parameter  = ft_getopt(cfg, 'parameter'); % the default is handled further down
 
@@ -180,12 +188,9 @@ dat = reshape(dat, nrpt, []);
 
 % estimate and remove the confounds
 fprintf('estimating the regression weights and removing the confounds \n');
-if isempty(find(isnan(dat))) % if there are no NaNs, process all at once
-
-  beta = regr\dat;                                                        % B = X\Y
-
-else % otherwise process per colum set as defined by the nan distribution
-
+if isempty(find(isnan(dat))) % if there are no NaNs, process all at once 
+  beta = regr\dat;                                                        % B = X\Y 
+else % otherwise process per colum set as defined by the nan distribution  
   [u,i,j] = unique(~isnan(dat)','rows','first'); % find unique rows
   uniquecolumns = u'; % unique column types
   Nuniques = numel(i); % number of unique types
@@ -198,38 +203,18 @@ else % otherwise process per colum set as defined by the nan distribution
     end
   end
   beta = reshape(nansum(beta_temp,1),[nconf size(dat,2)]); % sum the betas
-  clear beta_temp;
-
+  clear beta_temp
 end
 
 model = regr(:, cfg.reject) * beta(cfg.reject, :);                        % model = confounds * weights = X * X\Y
 Yc = dat - model;                                                         % Yclean = Y - X * X\Y
 
-% beta statistics
-if strcmp(cfg.statistics, 'yes')
-
-  fprintf('performing statistics on the regression weights \n');
-  dfe        = nrpt - nconf;                                              % degrees of freedom
-  err        = dat - regr * beta;                                         % err = Y - X * B
-  mse        = sum((err).^2)/dfe;                                         % mean squared error
-  covar      = diag(regr'*regr)';                                         % regressor covariance
-  bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
-  tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
-  prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
-  clear err dfe mse bvar;
-  % FIXME: drop in replace tcdf from the statfun/private dir
-
-end
-
 % reduced models analyses
-if ~isempty(cfg.ftest)
-
+if ~isempty(cfg.ftest)  
   dfe        = nrpt - nconf;                                              % degrees of freedom
   err        = dat - regr * beta;                                         % err = Y - X * B
   tmse       = sum((err).^2)/dfe;                                         % mean squared error
-
-  for iter = 1:numel(cfg.ftest)
-
+  for iter = 1:numel(cfg.ftest)    
     % regressors to test if they explain additional variance
     r          = str2num(cfg.ftest{iter});
     fprintf('F-testing explained additional variance of regressors %s \n', num2str(r));
@@ -245,7 +230,7 @@ if ~isempty(cfg.ftest)
     rerr       = dat-rX*rb;                % residual error
     rmse       = sum(rerr'.^2,2)./rdfe;	   % mean squared error
     % F-test
-    F(iter,:)          = ((rmse'-tmse)./(nconf-rnr)) ./ (tmse./(dfe-2));
+    F(iter,:)  = ((rmse'-tmse)./(nconf-rnr)) ./ (tmse./(dfe-2));
     % Rik Henson defined F-test
     % F = ( ( rerr'*rerr - err'*err ) / ( nconf-rnr ) ) / ( err'*err/ ( nrpt-nconf ) );
     % convert F-value to p-value
@@ -255,44 +240,46 @@ if ~isempty(cfg.ftest)
     p(iter,idx_pos) = (1-fcdf(F(iter,idx_pos),rnr,rdfe));
     p(iter,idx_neg) = fcdf(-F(iter,idx_neg),rnr,rdfe);
     clear rerr rmse
-    % FIXME: drop in replace tcdf from the statfun/private dir
-
+    % FIXME: drop in replace tcdf from the statfun/private dir   
   end
-
-  clear dfe err tmse;
+  clear dfe err tmse
 end
 
-% prepare the output, start with only the administrative fields
+% organize the output
 dataout = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
-
-if strcmp(cfg.model, 'yes')
-    fprintf('outputting the model which contains the confounds x weights \n');
-  dataout.model = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
-  dataout.model.(cfg.parameter) = reshape(model, [nrpt, dimsiz(datdim)]);
-  clear model;
-end
-
-% beta statistics
-if strcmp(cfg.statistics, 'yes')
-  dataout.stat     = reshape(tval, [nconf dimsiz(datdim)]);
-  dataout.prob     = reshape(prob, [nconf dimsiz(datdim)]);
-  clear tval prob;
+switch cfg.output
+  case 'residual'
+    dataout.(cfg.parameter) = reshape(Yc, [nrpt dimsiz(datdim)]); % either powspctrm, trial, or pow
+    clear Yc   
+  case 'beta'
+    dataout.beta = reshape(beta, [nconf, dimsiz(datdim)]);
+    if strcmp(cfg.statistics, 'yes') % beta statistics
+      fprintf('performing statistics on the regression weights \n');
+      dfe        = nrpt - nconf;                                              % degrees of freedom
+      err        = dat - regr * beta;                                         % err = Y - X * B
+      mse        = sum((err).^2)/dfe;                                         % mean squared error
+      covar      = diag(regr'*regr)';                                         % regressor covariance
+      bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
+      tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
+      prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
+      clear err dfe mse bvar
+      % FIXME: drop in replace tcdf from the statfun/private dir
+      dataout.stat = reshape(tval, [nconf dimsiz(datdim)]);
+      dataout.prob = reshape(prob, [nconf dimsiz(datdim)]);
+      clear tval prob
+    end    
+  case 'model'
+    dataout.model = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
+    dataout.model.(cfg.parameter) = reshape(model, [nrpt, dimsiz(datdim)]);
+  otherwise
+    error('output ''%s'' is not supported', cfg.output);    
 end
 
 % reduced models analyses
 if ~isempty(cfg.ftest)
   dataout.fvar   = reshape(F, [numel(cfg.ftest) dimsiz(datdim)]);
   dataout.pvar   = reshape(p, [numel(cfg.ftest) dimsiz(datdim)]);
-  clear F p;
-end
-
-dataout.(cfg.parameter) = reshape(Yc, [nrpt dimsiz(datdim)]);
-clear Yc;
- 
-% add the beta weights to the output
-if strcmp(cfg.beta, 'yes')
-  dataout.beta       = reshape(beta, [nconf, dimsiz(datdim)]);
-  clear beta;
+  clear F p
 end
 
 % discard the gradiometer information because the weightings have been changed
