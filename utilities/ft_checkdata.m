@@ -66,6 +66,7 @@ function [data] = ft_checkdata(data, varargin)
 %   fixinside
 %   fixprecision
 %   fixvolume
+%   fixpos
 %   data2raw
 %   raw2data
 %   grid2transform
@@ -112,7 +113,7 @@ hasbrain             = ft_getopt(varargin, 'hasbrain');
 % check whether people are using deprecated stuff
 depHastrialdef = ft_getopt(varargin, 'hastrialdef');
 if (~isempty(depHastrialdef))
-  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
+  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; please use ''hassampleinfo'' instead');
   hassampleinfo = depHastrialdef;
 end
 
@@ -133,13 +134,38 @@ ischan          = ft_datatype(data, 'chan');
 ismesh          = ft_datatype(data, 'mesh');
 % FIXME use the istrue function on ismeg and hasxxx options
 
-if ~isequal(feedback, 'no')
+if istrue(feedback)
   if iscomp
     % it can be comp and raw/timelock/freq at the same time, therefore this has to go first
     nchan = size(data.topo,1);
     ncomp = size(data.topo,2);
     ft_info('the input is component data with %d components and %d original channels\n', ncomp, nchan);
-  end
+  end  % if iscomp
+  
+  if ismesh
+    % it can be comp and source at the same time, therefore this has to go first
+    data = fixpos(data);
+    npos = 0;
+    ntri = 0;
+    nhex = 0;
+    ntet = 0;
+    % the data can contain multiple surfaces
+    for i=1:numel(data)
+      npos = npos+size(data.pos,1);
+      if isfield(data, 'tri'), ntri = ntri+size(data.tri,1); end
+      if isfield(data, 'hex'), nhex = nhex+size(data.hex,1); end
+      if isfield(data, 'tet'), ntet = ntet+size(data.tet,1); end
+    end
+    if isfield(data,'tri')
+      ft_info('the input is mesh data with %d vertices and %d triangles\n', npos, ntri);
+    elseif isfield(data,'hex')
+      ft_info('the input is mesh data with %d vertices and %d hexahedrons\n', npos, nhex);
+    elseif isfield(data,'tet')
+      ft_info('the input is mesh data with %d vertices and %d tetrahedrons\n', npos, ntet);
+    else
+      ft_info('the input is mesh data with %d vertices', npos);
+    end
+  end % if ismesh
   
   if israw
     nchan = length(data.label);
@@ -184,8 +210,6 @@ if ~isequal(feedback, 'no')
     end
     if isfield(data, 'dim')
       ft_info('the input is %s data with %d brainordinates on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
-    elseif isfield(data, 'tri')
-      ft_info('the input is %s data with %d vertex positions and %d triangles\n', subtype, nsource, size(data.tri, 1));
     else
       ft_info('the input is %s data with %d brainordinates\n', subtype, nsource);
     end
@@ -203,22 +227,7 @@ if ~isequal(feedback, 'no')
     else
       ft_info('the input is chan data with %d channels\n', nchan);
     end
-  end
-elseif ismesh
-  data = fixpos(data);
-  if numel(data)==1
-    if isfield(data,'tri')
-      ft_info('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
-    elseif isfield(data,'hex')
-      ft_info('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
-    elseif isfield(data,'tet')
-      ft_info('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));
-    else
-      ft_info('the input is mesh data with %d vertices', size(data.pos,1));
-    end
-  else
-    ft_info('the input is mesh data with multiple surfaces\n');
-  end
+  end % if israw etc.
 end % give feedback
 
 if issource && isvolume
