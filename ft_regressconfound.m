@@ -92,8 +92,12 @@ end
 % check if the input data is valid for this function
 datain = ft_checkdata(datain, 'datatype', {'timelock', 'freq', 'source'}, 'feedback', 'yes');
 
+if isfield(cfg, 'beta') || isfield(cfg, 'model')
+ ft_error('The options cfg.beta and cfg.model have been removed as of Aug 2017, please use cfg.output instead');
+end
+
 % ensure that the required options are present
-cfg = ft_checkconfig(cfg, 'required', {'confound'}, 'renamed', {'Ftest','ftest'}, 'deprecated', {'beta','model'});
+cfg = ft_checkconfig(cfg, 'required', {'confound'}, 'renamed', {'Ftest','ftest'}, 'forbidden', {'beta','model'});
 
 % specify the defaults
 cfg.confound   = ft_getopt(cfg, 'confound');
