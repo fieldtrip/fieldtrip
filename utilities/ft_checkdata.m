@@ -134,7 +134,7 @@ ischan          = ft_datatype(data, 'chan');
 ismesh          = ft_datatype(data, 'mesh');
 % FIXME use the istrue function on ismeg and hasxxx options
 
-if istrue(feedback)
+if ~isequal(feedback, 'no') % can be 'yes' or 'text'
   if iscomp
     % it can be comp and raw/timelock/freq at the same time, therefore this has to go first
     nchan = size(data.topo,1);
