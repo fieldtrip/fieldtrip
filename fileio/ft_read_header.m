@@ -31,6 +31,9 @@ function [hdr] = ft_read_header(filename, varargin)
 %   hdr.FirstTimeStamp      number, represented as 32 bit or 64 bit unsigned integer
 %   hdr.TimeStampPerSample  number, represented in double precision
 %
+% For the BioSemi BDF format, an additional statusChannels field is
+% returned containing the BioSemi Trigger channel and control fields. 
+%
 % For continuously recorded data, nSamplesPre=0 and nTrials=1.
 %
 % To use an external reading function, use key-value pair: 'headerformat', FUNCTION_NAME.
@@ -410,6 +413,10 @@ switch headerformat
         hdr.label(chan) = labelnew(chan);
       end
     end
+    % Read the BioSemi status channel and parse it
+    statChanData = read_biosemi_bdf(filename, hdr, 1, hdr.nSamples, hdr.nChans); % Read last channel
+    statusChannels = read_biosemi_status_channel(statChanData);
+    hdr.statusChannels = statusChannels;
     
   case {'biosemi_old'}
     % this uses the openbdf and readbdf functions that were copied from EEGLAB
