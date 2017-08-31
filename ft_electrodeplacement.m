@@ -47,10 +47,12 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %   cfg.elec           = struct containing previously placed electrodes (this overwrites cfg.channel)
 %   cfg.clim           = color range of the data (default = [0 1], i.e. the full range)
 %   cfg.magtype        = string representing the 'magnet' type used for placing the electrodes
+%                        'peakweighted'    place electrodes at weighted peak intensity voxel (default)
+%                        'troughweighted'  place electrodes at weighted trough intensity voxel
 %                        'peak'            place electrodes at peak intensity voxel (default)
 %                        'trough'          place electrodes at trough intensity voxel
 %                        'weighted'        place electrodes at center-of-mass
-%   cfg.magradius      = number representing the radius for the cfg.magtype based search (default = 2)
+%   cfg.magradius      = number representing the radius for the cfg.magtype based search (default = 3)
 %
 % The following options apply to the 1020 method
 %   cfg.fiducial.nas   = 1x3 vector with coordinates
@@ -115,8 +117,8 @@ cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
 cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance view when ~global
 % magnet options
-cfg.magtype       = ft_getopt(cfg, 'magtype',         'peak'); % detect peaks or troughs or center-of-mass
-cfg.magradius     = ft_getopt(cfg, 'magradius',            2); % specify the physical unit radius
+cfg.magtype       = ft_getopt(cfg, 'magtype',         'peakweighted'); % detect weighted peaks or troughs
+cfg.magradius     = ft_getopt(cfg, 'magradius',            3); % specify the physical unit radius
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',      'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',       'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 
@@ -259,10 +261,10 @@ switch cfg.method
       dat = double(mri{v}.(cfg.parameter));
       dmin = min(dat(:));
       dmax = max(dat(:));
-      mri{v}.dat = (dat-dmin)./(dmax-dmin); % range between 0 and 1  
+      mri{v}.dat = (dat-dmin)./(dmax-dmin); % range between 0 and 1
       clear dat dmin dmax
     end
-
+    
     % intensity range sliders
     h45text = uicontrol('Style', 'text',...
       'String','Intensity',...
@@ -336,17 +338,29 @@ switch cfg.method
       'Position', [mri{1}.h1size(1)+0.07 0.02 mri{1}.h2size(1)/2.5 mri{1}.h3size(2)], ...
       'Callback', @cb_eleclistbox, ...
       'String', chanstring);
-        
+    
     % switches / radio buttons
-    h7 = uicontrol('Style', 'checkbox',...
-      'Parent', h, ...
-      'Value', 1, ...
+    h7text = uicontrol('Style', 'text',...
       'String','Magnet',...
       'Units', 'normalized', ...
-      'Position',[2*mri{1}.h1size(1)-0.05 0.18 mri{1}.h1size(1)/3 0.04],...
+      'Position',[2*mri{1}.h1size(1)-0.047 0.18 mri{1}.h1size(1)/3 0.04],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility','on');
+    
+    h7 = uicontrol('Style', 'popupmenu',...
+      'Parent', h, ...
+      'Value', 4, ... % corresponding to magradius = 3 (see String)
+      'String', {'0','1','2','3','4','5'}, ...
+      'Units', 'normalized', ...
+      'Position',[2*mri{1}.h1size(1)-0.103 0.18 mri{1}.h1size(1)/4.25 0.04],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility','on', ...
       'Callback', @cb_magnetbutton);
+    radii = get(h7, 'String');
+    if ~ismember(num2str(cfg.magradius), radii) % add user-specified radius to the list
+      set(h7, 'String', [radii(:); num2str(cfg.magradius)]);
+      set(h7, 'Value', numel(radii)+1);
+    end
     
     h8 = uicontrol('Style', 'checkbox',...
       'Parent', h, ...
@@ -478,19 +492,19 @@ switch cfg.method
     lpa = cfg.fiducial.lpa;
     rpa = cfg.fiducial.rpa;
     if any(dist(headshape.pos, nas)<tolerance)
-      warning('Nasion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ft_warning('Nasion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
       nas = nas + tolerance*randn(1,3);
     end
     if any(dist(headshape.pos, ini)<tolerance)
-      warning('Inion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ft_warning('Inion coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
       ini = ini + tolerance*randn(1,3);
     end
     if any(dist(headshape.pos, lpa)<tolerance)
-      warning('LPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ft_warning('LPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
       lpa = lpa + tolerance*randn(1,3);
     end
     if any(dist(headshape.pos, rpa)<tolerance)
-      warning('RPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
+      ft_warning('RPA coincides with headshape vertex, addding random displacement of about %f %s', tolerance, headshape.unit);
       rpa = rpa + tolerance*randn(1,3);
     end
     
@@ -502,7 +516,7 @@ switch cfg.method
     elec.label   = lab(:);
     
   otherwise
-    error('unsupported method ''%s''', cfg.method);
+    ft_error('unsupported method ''%s''', cfg.method);
     
 end % switch method
 
@@ -806,7 +820,7 @@ if opt.scatter % radiobutton on
     end
     opt.redrawmarker = 0;
   end
-
+  
   % update the existing crosshairs, don't change the handles
   ft_plot_crosshair([opt.pos], 'handle', opt.handlescross2);
   if opt.showcrosshair
@@ -915,7 +929,9 @@ switch key
     elseif strcmp(tag,'jk') && (strcmp(key,'m') || strcmp(key,'downarrow')  || isequal(key, 31)), opt.pos(3) = opt.pos(3)-1; opt.update = [0 0 1];
     else
       % do nothing
-    end;
+    end
+    opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
+    opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
     
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -1056,7 +1072,7 @@ if ~isempty(tag) && ~opt.init
   opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
 end
 
-if opt.magnet % magnetize
+if opt.magradius>0 % magnetize
   opt = magnetize(opt);
 end
 setappdata(h, 'opt', opt);
@@ -1202,7 +1218,9 @@ function cb_magnetbutton(h7, eventdata)
 
 h = getparent(h7);
 opt = getappdata(h, 'opt');
-opt.magnet = get(h7, 'value');
+radii = get(h7,'String');
+opt.magradius = str2double(radii{get(h7, 'value')});
+fprintf(' changed magnet radius to %.1f %s\n', opt.magradius, opt.mri{1}.unit);
 setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1230,12 +1248,43 @@ try
     dim = size(cubic);
     [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
     cubic = cubic./sum(cubic(:));
-    ix = round(X(:)' * cubic(:));
-    iy = round(Y(:)' * cubic(:));
-    iz = round(Z(:)' * cubic(:));
+    ix = (X(:)' * cubic(:));
+    iy = (Y(:)' * cubic(:));
+    iz = (Z(:)' * cubic(:));
+  elseif strcmp(opt.magtype, 'peakweighted')    
+    % find the peak intensity voxel and then the center of mass
+    [val, idx] = max(cubic(:));
+    [ix, iy, iz] = ind2sub(size(cubic), idx);
+    vox = [ix, iy, iz] + vox - opt.magradius - 1; % move cursor to peak
+    xsel = vox(1)+(-opt.magradius:opt.magradius);
+    ysel = vox(2)+(-opt.magradius:opt.magradius);
+    zsel = vox(3)+(-opt.magradius:opt.magradius);
+    cubic = opt.ana(xsel, ysel, zsel);
+    dim = size(cubic);
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    cubic = cubic./sum(cubic(:));  
+    ix = (X(:)' * cubic(:));
+    iy = (Y(:)' * cubic(:));
+    iz = (Z(:)' * cubic(:));
+  elseif strcmp(opt.magtype, 'troughweighted')    
+    % find the peak intensity voxel and then the center of mass
+    [val, idx] = min(cubic(:));
+    [ix, iy, iz] = ind2sub(size(cubic), idx);
+    vox = [ix, iy, iz] + vox - opt.magradius - 1; % move cursor to trough
+    xsel = vox(1)+(-opt.magradius:opt.magradius);
+    ysel = vox(2)+(-opt.magradius:opt.magradius);
+    zsel = vox(3)+(-opt.magradius:opt.magradius);
+    cubic = opt.ana(xsel, ysel, zsel);
+    dim = size(cubic);
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    cubic = 1-cubic;
+    cubic = cubic./(sum(cubic(:)));  
+    ix = (X(:)' * cubic(:));
+    iy = (Y(:)' * cubic(:));
+    iz = (Z(:)' * cubic(:));
   end
   % adjust the indices for the selection
-  voxadj = [ix, iy, iz] + vox - opt.magradius - 1;
+  voxadj = [ix, iy, iz] + vox - opt.magradius - 1; 
   opt.pos = ft_warp_apply(opt.mri{1}.transform, voxadj);
   fprintf('==================================================================================\n');
   fprintf(' clicked at [%.1f %.1f %.1f], %s magnetized adjustment [%.1f %.1f %.1f] %s\n', pos, opt.magtype, opt.pos-pos, opt.mri{1}.unit);
@@ -1340,7 +1389,7 @@ function dcm_txt = cb_scatter_dcm(hObject, eventdata)
 h = findobj('type','figure','name',mfilename);
 opt = getappdata(h, 'opt');
 opt.pos = get(eventdata, 'Position'); % current datamarker position
-if opt.magnet % magnetize
+if opt.magradius>0 % magnetize
   opt = magnetize(opt);
 end
 dcm_txt = ['']; % ['index = [' num2str(opt.pos) ']'];
@@ -1366,7 +1415,7 @@ if get(hObject, 'value') && ~isfield(opt.mri{1}, 'dat_strip') % skullstrip
   seg = ft_volumesegment(cfg, tmp);
   dmin = min(seg.anatomy(:));
   dmax = max(seg.anatomy(:));
-  opt.mri{1}.dat_strip = (seg.anatomy-dmin)./(dmax-dmin); % range between 0 and 1 
+  opt.mri{1}.dat_strip = (seg.anatomy-dmin)./(dmax-dmin); % range between 0 and 1
   opt.ana = opt.mri{1}.dat_strip; % overwrite with skullstrip
   clear seg tmp dmin dmax
 elseif ~get(hObject, 'value') && isfield(opt.mri{1}, 'dat_strip') % use original again

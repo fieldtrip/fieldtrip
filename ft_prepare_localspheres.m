@@ -69,7 +69,7 @@ elseif isfield(cfg,'headshape') && nargin == 1
     headshape = cfg.headshape;
   end
 else
-  error('no head shape available')
+  ft_error('no head shape available')
 end
 
 % read the gradiometer definition from file or copy it from the configuration
@@ -185,7 +185,7 @@ end % for all channels
 headmodel.type = 'localspheres';
 
 % ensure that the geometrical units are specified
-headmodel = ft_convert_units(headmodel);
+headmodel = ft_determine_units(headmodel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

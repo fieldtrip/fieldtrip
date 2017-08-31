@@ -43,7 +43,7 @@ permutemat(permutevec(2),2) = 1;
 permutemat(permutevec(3),3) = 1;
 transform = permutemat;
 if length(unique(permutevec))<3
-  error('could not determine the correspondence between volume and headcoordinate axes');
+  ft_error('could not determine the correspondence between volume and headcoordinate axes');
 else
   for i=1:length(param)
     interp = setsubfield(interp, param{i}, permute(getsubfield(interp, param{i}), permutevec));

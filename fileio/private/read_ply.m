@@ -25,13 +25,13 @@ if fid~=-1
   line = readline(fid);
   if ~strcmp(line, 'ply')
     fclose(fid);
-    error('unexpected header line');
+    ft_error('unexpected header line');
   end
   line = readline(fid);
   
   if ~strncmp(line, 'format', 6)
     fclose(fid);
-    error('unexpected header line');
+    ft_error('unexpected header line');
   else
     format = line(8:end);
   end
@@ -39,7 +39,7 @@ if fid~=-1
   
   if ~strncmp(line, 'element vertex', 14)
     fclose(fid);
-    error('unexpected header line');
+    ft_error('unexpected header line');
   else
     nvert = str2double(line(16:end));
   end
@@ -55,7 +55,7 @@ if fid~=-1
   
   if ~strncmp(line, 'element face', 12)
     fclose(fid);
-    error('unexpected header line');
+    ft_error('unexpected header line');
   else
     nface = str2double(line(14:end));
   end
@@ -68,7 +68,7 @@ if fid~=-1
     % it would not be very difficult to enhance the reader here with another
     % representation of the faces, i.e. something else than "uchar int"
     fclose(fid);
-    error('unexpected header line');
+    ft_error('unexpected header line');
   end
   line = readline(fid);
   
@@ -178,11 +178,11 @@ if fid~=-1
       fclose(fid);
       
     otherwise
-      error('unsupported format');
+      ft_error('unsupported format');
   end % switch
   
 else
-  error('unable to open file');
+  ft_error('unable to open file');
 end
 
 % each polygon can have a different number of elements

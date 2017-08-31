@@ -62,7 +62,7 @@ for k = 1:nchan
   if nargin==1,
     %autoindx = find(sel1 & sel2);
     autoindx = find(sel(:,1) & sel(:,2), 1, 'first');
-    if isempty(autoindx), error('the required autocombination is not found in the input'); end
+    if isempty(autoindx), ft_error('the required autocombination is not found in the input'); end
   else
     autoindx = k;
   end

@@ -74,13 +74,13 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo',
 
 % check whether it is CTF data
 if ~ft_senstype(data, 'ctf')
-  error('synthetic gradients can only be computed for CTF data');
+  ft_error('synthetic gradients can only be computed for CTF data');
 end
 
 % check whether there are reference channels in the input data
 hasref = ~isempty(ft_channelselection('MEGREF', data.label));
 if ~hasref
-  error('ft_denoise_synthetic:nohasref', 'synthetic gradients can only be computed when the input data contains reference channels');
+  ft_error('synthetic gradients can only be computed when the input data contains reference channels');
 end
 
 % select trials of interest
@@ -101,7 +101,7 @@ if ~strcmp(current, 'none')
   try
     current_montage = data.grad.balance.(current);
   catch
-    error('unknown balancing for input data');
+    ft_error('unknown balancing for input data');
   end
   fprintf('converting from "%s" to "none"\n', current);
   data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
@@ -114,7 +114,7 @@ if ~strcmp(desired, 'none')
   try
     desired_montage = data.grad.balance.(desired);
   catch
-    error('unknown balancing for input data');
+    ft_error('unknown balancing for input data');
   end
   fprintf('converting from "none" to "%s"\n', desired);
   data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
@@ -129,7 +129,7 @@ if numel(selnew)==numel(labelold)
   end
   data.label = data.label(selnew);
 else
-  warning('channel ordering might have changed');
+  ft_warning('channel ordering might have changed');
 end
 
 % convert back to input type if necessary

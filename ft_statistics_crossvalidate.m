@@ -21,7 +21,7 @@ function [stat, cfg] = ft_statistics_crossvalidate(cfg, dat, design)
 %   stat.model        = the models associated with this multivariate analysis
 %
 
-% Copyright (c) 2007-2011, Marcel van Gerven, F.C. Donders Centre
+% Copyright (c) 2007-2011, F.C. Donders Centre, Marcel van Gerven
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,12 +58,12 @@ cv = dml.crossvalidator('mva', cfg.mva, 'type', 'nfold', 'folds', cfg.nfolds,...
   'resample', cfg.resample, 'compact', true, 'verbose', true);
 
 if any(isinf(dat(:)))
-  warning('Inf encountered; replacing by zeros');
+  ft_warning('Inf encountered; replacing by zeros');
   dat(isinf(dat(:))) = 0;
 end
 
 if any(isnan(dat(:)))
-  warning('Nan encountered; replacing by zeros');
+  ft_warning('Nan encountered; replacing by zeros');
   dat(isnan(dat(:))) = 0;
 end
 

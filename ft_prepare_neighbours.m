@@ -134,7 +134,7 @@ if strcmp(cfg.method, 'template')
     % check whether a layout can be used
     if ~isfield(cfg, 'layout')
       % error if that fails as well
-      error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
+      ft_error('You need to define a template or layout or give data as an input argument when ft_prepare_neighbours is called with cfg.method=''template''');
     end
     fprintf('Using the 2-D layout filename to determine the template filename\n');
     cfg.template = [strtok(cfg.layout, '.') '_neighb.mat'];
@@ -152,7 +152,7 @@ if strcmp(cfg.method, 'template')
   end
   % check for existence
   if ~exist(cfg.template, 'file')
-    error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
+    ft_error('Template file could not be found - please check spelling or see http://www.fieldtriptoolbox.org/faq/how_can_i_define_my_own_neighbourhood_template (please consider sharing it with others via the FT mailing list)');
   end
   load(cfg.template);
   fprintf('Successfully loaded neighbour structure from %s\n', cfg.template);
@@ -166,7 +166,7 @@ else
   end
   
   if strcmp(ft_senstype(sens), 'neuromag306')
-    warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
+    ft_warning('Neuromag306 system detected - be aware of different sensor types, see http://www.fieldtriptoolbox.org/faq/why_are_there_multiple_neighbour_templates_for_the_neuromag306_system');
   end
   chanpos = sens.chanpos;
   label   = sens.label;
@@ -210,13 +210,13 @@ else
       tri = [tri; tri_x; tri_y];
       neighbours = compneighbstructfromtri(chanpos, label, tri);
     otherwise
-      error('Method ''%s'' not known', cfg.method);
+      ft_error('Method ''%s'' not known', cfg.method);
   end
 end
 
 % removed as from Nov 09 2011 - hope there are no problems with this
 % if iscell(neighbours)
-%   warning('Neighbourstructure is in old format - converting to structure array');
+%   ft_warning('Neighbourstructure is in old format - converting to structure array');
 %   neighbours = fixneighbours(neighbours);
 % end
 
@@ -243,7 +243,7 @@ neighbours = neighbours(neighb_idx);
 k = 0;
 for i=1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
-    warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
+    ft_warning('FIELDTRIP:NoNeighboursFound', 'no neighbours found for %s\n', neighbours(i).label);
     % JMH: I removed this in Feb 2013 - this is handled above now
     % note however that in case of using a template, this function behaves
     % differently now (neighbourschans can still be channels not in
@@ -255,7 +255,7 @@ for i=1:length(neighbours)
 end
 
 if k==0
-  error('No neighbours were found!');
+  ft_error('No neighbours were found!');
 end
 
 fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));

@@ -65,18 +65,18 @@ function avw_img_write(avw, fileprefix, IMGorient, machine, verbose)
 %------------------------------------------------------------------------
 % Check inputs
 
-if ~exist('avw','var'),
+if ~exist('avw','var')
     doc avw_img_write;
-    error('...no input avw.');
-elseif isempty(avw),
-    error('...empty input avw.');
-elseif ~isfield(avw,'img'),
-    error('...empty input avw.img');
+    ft_error('...no input avw.');
+elseif isempty(avw)
+    ft_error('...empty input avw.');
+elseif ~isfield(avw,'img')
+    ft_error('...empty input avw.img');
 end
 
-if ~exist('fileprefix','var'),
-    if isfield(avw,'fileprefix'),
-        if ~isempty(avw.fileprefix),
+if ~exist('fileprefix','var')
+    if isfield(avw,'fileprefix')
+        if ~isempty(avw.fileprefix)
             fileprefix = avw.fileprefix;
         else
             fileprefix = [];
@@ -85,20 +85,20 @@ if ~exist('fileprefix','var'),
         fileprefix = [];
     end
 end
-if isempty(fileprefix),
+if isempty(fileprefix)
     [fileprefix, pathname, filterindex] = uiputfile('*.hdr','Specify an output Analyze .hdr file');
     if pathname, cd(pathname); end
-    if ~fileprefix,
+    if ~fileprefix
         doc avw_img_write;
-        error('no output .hdr file specified');
+        ft_error('no output .hdr file specified');
     end
 end
 
-if findstr('.hdr',fileprefix),
+if findstr('.hdr',fileprefix)
 %    fprintf('AVW_IMG_WRITE: Removing .hdr extension from ''%s''\n',fileprefix);
     fileprefix = strrep(fileprefix,'.hdr','');
 end
-if findstr('.img',fileprefix),
+if findstr('.img',fileprefix)
 %    fprintf('AVW_IMG_WRITE: Removing .img extension from ''%s''\n',fileprefix);
     fileprefix = strrep(fileprefix,'.img','');
 end
@@ -115,20 +115,19 @@ if isempty(verbose), verbose = 1; end
 
 %------------------------------------------------------------------------
 % MAIN
-if verbose,
+if verbose
     version = '[$Revision$]';
     fprintf('\nAVW_IMG_WRITE [v%s]\n',version(12:16));  tic;
 end
 
 fid = fopen(sprintf('%s.img',fileprefix),'w',machine);
-if fid < 0,
-    msg = sprintf('Cannot open file %s.img\n',fileprefix);
-    error(msg);
+if fid < 0
+    ft_error('Cannot open file %s.img\n',fileprefix);
 else
     avw = write_image(fid,avw,fileprefix,IMGorient,machine,verbose);
 end
 
-if verbose,
+if verbose
     t=toc; fprintf('...done (%5.2f sec).\n\n',t);
 end
 
@@ -189,40 +188,39 @@ end
 %----------------------------------------------------------------------------
 % Check inputs
 
-if ~exist('avw','var'),
-    warning('...no input avw - calling avw_hdr_make\n');
+if ~exist('avw','var')
+    ft_warning('...no input avw - calling avw_hdr_make\n');
     avw = avw_hdr_make;
-elseif isempty(avw),
-    warning('...empty input avw - calling avw_hdr_make\n');
+elseif isempty(avw)
+    ft_warning('...empty input avw - calling avw_hdr_make\n');
     avw = avw_hdr_make;
-elseif ~isfield(avw,'hdr'),
-    warning('...empty input avw.hdr - calling avw_hdr_make\n');
+elseif ~isfield(avw,'hdr')
+    ft_warning('...empty input avw.hdr - calling avw_hdr_make\n');
     avw = avw_hdr_make;
 end
-if ~isequal(avw.hdr.hk.sizeof_hdr,348),
-    msg = sprintf('...avw.hdr.hk.sizeof_hdr must be 348!\n');
-    error(msg);
+if ~isequal(avw.hdr.hk.sizeof_hdr,348)
+    ft_error('...avw.hdr.hk.sizeof_hdr must be 348!\n');
 end
 
 quit = 0;
-if ~exist('fileprefix','var'),
-    if isfield(avw,'fileprefix'),
-        if ~isempty(avw.fileprefix),
+if ~exist('fileprefix','var')
+    if isfield(avw,'fileprefix')
+        if ~isempty(avw.fileprefix)
             fileprefix = avw.fileprefix;
-        else,
+        else
             quit = 1;
         end
     else
         quit = 1;
     end
-    if quit,
+    if quit
         helpwin avw_hdr_write;
-        error('...no input fileprefix - see help avw_hdr_write\n\n');
+        ft_error('...no input fileprefix - see help avw_hdr_write\n\n');
         return;
     end
 end
 
-if findstr('.hdr',fileprefix),
+if findstr('.hdr',fileprefix)
 %    fprintf('AVW_HDR_WRITE: Removing .hdr extension from ''%s''\n',fileprefix);
     fileprefix = strrep(fileprefix,'.hdr','');
 end
@@ -247,13 +245,12 @@ if verbose, tic; end
 %    avw.hdr.dime.dim(currDim+2:minDim+1) = int16(1);
 %    avw.hdr.dime.pixdim(1) = int16(minDim);
 %    avw.hdr.dime.pixdim(currDim+2:minDim+1) = int16(1);
-% end;
+% end
 
 
 fid = fopen(sprintf('%s.hdr',fileprefix),'w',machine);
-if fid < 0,
-    msg = sprintf('Cannot write to file %s.hdr\n',fileprefix);
-    error(msg);
+if fid < 0
+    ft_error('Cannot write to file %s.hdr\n',fileprefix);
 else
     if verbose, fprintf('...writing %s Analyze header.\n',machine); end
     write_header(fid,avw,verbose);
@@ -283,25 +280,25 @@ function avw = write_image(fid,avw,fileprefix,IMGorient,machine,verbose)
 % #define DT_RGB            128    /*A Red-Green-Blue datatype*/
 % #define DT_ALL            255    /*Undocumented*/
 
-switch double(avw.hdr.dime.datatype),
-case   1,
+switch double(avw.hdr.dime.datatype)
+case   1
     avw.hdr.dime.bitpix = int16( 1); precision = 'bit1';
-case   2,
+case   2
     avw.hdr.dime.bitpix = int16( 8); precision = 'uchar';
-case   4,
+case   4
     avw.hdr.dime.bitpix = int16(16); precision = 'int16';
-case   8,
+case   8
     avw.hdr.dime.bitpix = int16(32); precision = 'int32';
-case  16,
+case  16
     avw.hdr.dime.bitpix = int16(32); precision = 'single';
-case  32,
-    error('...complex datatype not yet supported.\n');
-case  64,
+case  32
+    ft_error('...complex datatype not yet supported.\n');
+case  64
     avw.hdr.dime.bitpix = int16(64); precision = 'double';
-case 128,
-    error('...RGB datatype not yet supported.\n');
+case 128
+    ft_error('...RGB datatype not yet supported.\n');
 otherwise
-    warning('...unknown datatype, using type 16 (32 bit floats).\n');
+    ft_warning('...unknown datatype, using type 16 (32 bit floats).\n');
     avw.hdr.dime.datatype = int16(16);
     avw.hdr.dime.bitpix = int16(32); precision = 'single';
 end
@@ -321,7 +318,7 @@ if isempty(avw.hdr.hist.orient),
             '   in axial unflipped orientation in memory.  This is\n',...
             '   created by the avw_img_read function, which converts\n',...
             '   any input file image to axial unflipped in memory.\n'];
-    warning(msg)
+    ft_warning(msg)
 end
 
 if isempty(IMGorient),
@@ -552,7 +549,7 @@ function write_header(fid,avw,verbose)
     fclose(fid);
     if ~isequal(fbytes,348),
         msg = sprintf('...file size is not 348 bytes!\n');
-        warning(msg);
+        ft_warning(msg);
     end
     
 return

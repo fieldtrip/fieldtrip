@@ -85,7 +85,7 @@ function [ s ] = xml2struct( file )
         end
         
         if (exist(file,'file') == 0)
-            error(['The file ' file ' could not be found']);
+            ft_error(['The file ' file ' could not be found']);
         end
     end
     %fprintf('xml2struct reading %s\n', file); % gp 11/12/15

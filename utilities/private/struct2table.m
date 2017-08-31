@@ -50,7 +50,7 @@ for i=1:numel(s)
           val = 'false';
         end
       otherwise
-        error('not yet implemented for class "%s"', class(val));
+        ft_error('not yet implemented for class "%s"', class(val));
     end
     s(i).(fn{j}) = val;
   end

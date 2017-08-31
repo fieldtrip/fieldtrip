@@ -120,7 +120,7 @@ end
 fclose(fid);
 
 if ~nboards
-  error('could not determine the number of boards and channels');
+  ft_error('could not determine the number of boards and channels');
 end
 
 % deal with ascii and numeric input for the channel selection
@@ -168,7 +168,7 @@ elseif nargin>3 && ischar(channel)
     case 'all'
       chanindx = 1:blocksize;
     otherwise
-      error('unknown value in channel');
+      ft_error('unknown value in channel');
   end
 elseif nargin<4
   channel = 'all';
@@ -233,11 +233,11 @@ if needhdr
   fclose(fid);
   % check that the junk at the beginning was correctly detected
   if (beg_stx~=2048)
-    error('problem with STX at the begin of the file');
+    ft_error('problem with STX at the begin of the file');
   end
   % check that the file is truely continuous, i.e. no gaps with junk in between
   if (end_stx~=2048)
-    error('problem with STX at the end of the file');
+    ft_error('problem with STX at the end of the file');
   end
   % combine the two uint32 words into a uint64
   hdr.FirstTimeStamp = timestamp_neuralynx(beg_tsl, beg_tsh);
@@ -257,7 +257,7 @@ elseif length(chanindx)>1
   dat = fread(fid, [blocksize (endsample-begsample+1)], 'int32=>int32');
   fclose(fid);
   if size(dat,2)<(endsample-begsample+1)
-    error('could not read all samples');
+    ft_error('could not read all samples');
   end
   if ~strcmp(channel, 'all')
     % select the subset of desired channels
@@ -273,7 +273,7 @@ elseif length(chanindx)==1
   % Note that the last block with 274*4 bytes can sometimes be incomplete, which is relevant when endsample=inf
   dat = fread(fid, [1 (endsample-begsample+1)], 'int32=>int32', (nboards*32+18-1)*4);
   if size(dat,2)<(endsample-begsample+1)
-    error('could not read all samples');
+    ft_error('could not read all samples');
   end
   fclose(fid);
 end

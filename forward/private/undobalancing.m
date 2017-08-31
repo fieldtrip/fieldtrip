@@ -49,7 +49,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     end
     
   else
-    warning('cannot undo %s balancing in the gradiometer definition\n', sens.balance.current);
+    ft_warning('cannot undo %s balancing in the gradiometer definition\n', sens.balance.current);
     break
   end
 end

@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = write_ctf_shm(varargin)
 
 % WRITE_CTF_SHM writes metainformation and data as a packet to shared memory.
 % This function can be used for real-time processing of data while it is
@@ -39,7 +39,7 @@ mexsrc  = [funname '.c'];
 
 try
   % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
+  ft_warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
   mex(mexsrc);
   cd(pwdir);
@@ -48,7 +48,7 @@ try
 catch
   % compilation failed
   disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
+  ft_error('could not locate MEX file for %s', mexname);
   cd(pwdir);
   success = false;
 end

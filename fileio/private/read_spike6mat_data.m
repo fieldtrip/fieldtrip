@@ -40,7 +40,7 @@ if isempty(endsample), endsample = header.nSamples; end;
 try
     vars = struct2cell(load(filename));
 catch
-    error('File not found or wrong format.');
+    ft_error('File not found or wrong format.');
 end
 
 if isempty(chanindx)

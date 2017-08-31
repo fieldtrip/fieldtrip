@@ -37,7 +37,7 @@ bnd2  = read_asa(fn, 'Boundary2', '%s');
 bnd3  = read_asa(fn, 'Boundary3', '%s');
 bnd4  = read_asa(fn, 'Boundary4', '%s');
 
-if ~isempty(radii) | ~isempty(pos)
+if ~isempty(radii) || ~isempty(pos)
   % this appears to be a spherical volume conductor
   if strcmpi(UnitP,'mm')
     radii = 1*radii;
@@ -49,7 +49,7 @@ if ~isempty(radii) | ~isempty(pos)
     radii = 1000*radii;
     pos   = 1000*pos;
   else
-    error(sprintf('Unknown unit of distance for volume (%s)', UnitP));
+    ft_error(sprintf('Unknown unit of distance for volume (%s)', UnitP));
   end
 end
 
@@ -60,7 +60,7 @@ elseif strcmpi(UnitC,'s/cm')
 elseif strcmpi(UnitC,'s/mm')
   cond = cond/1000;
 else
-  error(sprintf('Unknown unit of conductivity for volume (%s)', UnitC));
+  ft_error(sprintf('Unknown unit of conductivity for volume (%s)', UnitC));
 end
 
 if ~isempty(radii)
@@ -84,7 +84,7 @@ else
     vol.bnd(4) = read_asa_bnd(fullfile(path, bnd4));
   end
   if Nbnd>=5
-    error('cannot read more than 4 boundaries');
+    ft_error('cannot read more than 4 boundaries');
   end
 
   % if there is a precomputed matrix, read it from an external file
@@ -95,7 +95,7 @@ else
     mab_file = read_asa(fullfile(path, mat_file), 'Matrix', '%s');
     fid = fopen(fullfile(path, mab_file), 'rb', 'ieee-le');
     if fid==-1
-      error(sprintf('could not open file %s', mab_file));
+      ft_error(sprintf('could not open file %s', mab_file));
     else
       vol.mat = fread(fid, [nr nc], 'float32');
       fclose(fid);

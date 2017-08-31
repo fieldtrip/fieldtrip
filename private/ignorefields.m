@@ -74,6 +74,7 @@ switch purpose
       'callinfo'
       'version'
       'warning'
+      'notification'
       'debug'
       'previous'
       'progress'
@@ -94,6 +95,7 @@ switch purpose
       'trackcallinfo'
       'showcallinfo'
       'warning'
+      'notification'
       'debug'
       'progress'
       };
@@ -120,6 +122,7 @@ switch purpose
       'callinfo'
       'version'
       'warning'
+      'notification'
       'debug'
       'previous'
       };
@@ -137,5 +140,5 @@ switch purpose
       };
     
   otherwise
-    error('invalid purpose');
+    ft_error('invalid purpose');
 end % switch purpose

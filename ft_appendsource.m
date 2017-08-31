@@ -76,7 +76,7 @@ end
 dimordmatch = all(strcmp(dimord{1}, dimord));
 
 if ~dimordmatch
-  error('the dimords of the input data structures are not equal');
+  ft_error('the dimords of the input data structures are not equal');
 end
 
 % create the output structure from scratch
@@ -116,7 +116,7 @@ switch cfg.appenddim
         elseif boolval1 && boolval2 && ~boolval3
           cfg.appenddim = 'time';
         else
-          error('the input datasets have multiple non-identical dimensions, this function only appends one dimension at a time');
+          ft_error('the input datasets have multiple non-identical dimensions, this function only appends one dimension at a time');
         end
       else
         if boolval1 && boolval2
@@ -140,7 +140,7 @@ switch cfg.appenddim
     elseif numel(catdim)==1
       % this is OK
     elseif numel(catdim)>1
-      error('ambiguous dimord for concatenation');
+      ft_error('ambiguous dimord for concatenation');
     end
 
     % if any of these are present, concatenate
@@ -162,7 +162,7 @@ switch cfg.appenddim
     end
 
     if any([boolval1 boolval2 boolval3]==false)
-      error('appending across observations is not possible, because the spatial, spectral and/or temporal dimensions are incompatible');
+      ft_error('appending across observations is not possible, because the spatial, spectral and/or temporal dimensions are incompatible');
     end
 
     % select and reorder the channels that are in every dataset
@@ -207,22 +207,22 @@ switch cfg.appenddim
 
       % screen concatenable fields
       if ~checkfreq(varargin{:}, 'identical', tol)
-        error('the freq fields of the input data structures are not equal');
+        ft_error('the freq fields of the input data structures are not equal');
       else
         source.freq=varargin{1}.freq;
       end
       if ~sum(hascumsumcnt)==0 && ~(sum(hascumsumcnt)==Ndata);
-        error('the cumsumcnt fields of the input data structures are not equal');
+        ft_error('the cumsumcnt fields of the input data structures are not equal');
       else
         iscumsumcnt=unique(hascumsumcnt);
       end
       if ~sum(hascumtapcnt)==0 && ~(sum(hascumtapcnt)==Ndata);
-        error('the cumtapcnt fields of the input data structures are not equal');
+        ft_error('the cumtapcnt fields of the input data structures are not equal');
       else
         iscumtapcnt=unique(hascumtapcnt);
       end
       if ~sum(hastrialinfo)==0 && ~(sum(hastrialinfo)==Ndata);
-        error('the trialinfo fields of the input data structures are not equal');
+        ft_error('the trialinfo fields of the input data structures are not equal');
       else
         istrialinfo=unique(hastrialinfo);
       end
@@ -262,24 +262,24 @@ switch cfg.appenddim
 
   case 'pos'
     % FIXME
-    error('this functionality does not work.....yet');
+    ft_error('this functionality does not work.....yet');
 
 
   case 'freq'
     % FIXME
-    error('this functionality does not work.....yet');
+    ft_error('this functionality does not work.....yet');
 
   case 'time'
     % FIXME
-    error('this functionality does not work.....yet');
+    ft_error('this functionality does not work.....yet');
 
   otherwise
-    error('it is not allowed to concatenate across dimension %s',cfg.appenddim);
+    ft_error('it is not allowed to concatenate across dimension %s',cfg.appenddim);
 end
 
 param = cfg.parameter;
 if iscell(param) && numel(param)>1
-  error('it is not possible yet to append multiple parameters in a single call');
+  ft_error('it is not possible yet to append multiple parameters in a single call');
 elseif iscell(param)
   param = param{1};
 end
@@ -291,7 +291,7 @@ tmp = cell(1,Ndata);
 for m = 1:Ndata
 
   if ~isfield(varargin{m}, param)
-    error('parameter %s is not present in all data sets', param);
+    ft_error('parameter %s is not present in all data sets', param);
   end
   tmp{m} = varargin{m}.(param);
 

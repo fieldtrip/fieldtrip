@@ -6,11 +6,6 @@
  * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
  */
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -18,6 +13,7 @@
 #include <signal.h>
 
 #include "platform.h"
+#include "platform_includes.h"
 #include "buffer.h"
 #include "socketserver.h"
 #include "ini.h"

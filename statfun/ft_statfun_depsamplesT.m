@@ -69,10 +69,10 @@ if ~isfield(cfg, 'tail'),           cfg.tail           = 1;     end
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    error('P-values can only be calculated if the test statistics are calculated.');
+    ft_error('P-values can only be calculated if the test statistics are calculated.');
 end;
 if ~isfield(cfg,'uvar') || isempty(cfg.uvar)
-    error('uvar must be specified for dependent samples statistics');
+    ft_error('uvar must be specified for dependent samples statistics');
 end
 
 % perform some checks on the design
@@ -81,15 +81,15 @@ sel2 = find(design(cfg.ivar,:)==2);
 n1  = length(sel1);
 n2  = length(sel2);
 if (n1+n2)<size(design,2) || (n1~=n2)
-  error('Invalid specification of the design array.');
+  ft_error('Invalid specification of the design array.');
 end
 nunits = length(design(cfg.uvar, sel1));
 df = nunits - 1;
 if nunits<2
-    error('The data must contain at least two units (usually subjects).')
+    ft_error('The data must contain at least two units (usually subjects).')
 end
 if (nunits*2)~=(n1+n2)
-  error('Invalid specification of the design array.');
+  ft_error('Invalid specification of the design array.');
 end
 nsmpls = size(dat,1);
 

@@ -17,7 +17,7 @@ parameter = ft_getopt(varargin, 'parameter', 'all');
 maxdist   = ft_getopt(varargin, 'maxdist', []);
 
 if ischar(parameter) && strcmp(parameter, 'all')
-  error('not yet implemented');	
+  ft_error('not yet implemented');	
 elseif ischar(parameter)
 	parameter = {parameter};
 end

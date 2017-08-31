@@ -121,7 +121,7 @@ elseif isfield(cfg, 'roi')
 elseif isfield(cfg, 'maskparameter')
   mask2label = 1;
 else
-  error('you should either specify cfg.roi, or cfg.maskparameter')
+  ft_error('you should either specify cfg.roi, or cfg.maskparameter')
 end
 
 if roi2mask
@@ -133,7 +133,7 @@ if roi2mask
   isatlas = iscell(cfg.roi) || ischar(cfg.roi);
   ispoi   = isnumeric(cfg.roi);
   if isatlas+ispoi ~= 1
-    error('do not understand cfg.roi')
+    ft_error('do not understand cfg.roi')
   end
   
   if isatlas
@@ -141,7 +141,7 @@ if roi2mask
   elseif ispoi
     ft_checkconfig(cfg, 'forbidden', {'atlas' 'inputcoord'});
     if isempty(ft_getopt(cfg, 'sphere')) && isempty(ft_getopt(cfg, 'box'))
-      error('you should either specify cfg.sphere or cfg.box')
+      ft_error('you should either specify cfg.sphere or cfg.box')
     end
   end
   
@@ -151,7 +151,7 @@ elseif mask2label || roi2label
   ft_checkconfig(cfg, 'required', {'atlas', 'inputcoord'});
   
   if isempty(intersect(cfg.maxqueryrange, 1:2:cfg.maxqueryrange))
-    error('incorrect query range, should be an odd number');
+    ft_error('incorrect query range, should be an odd number');
   end
   
   if roi2label
@@ -235,7 +235,7 @@ if roi2mask
       elseif strcmp(cfg.inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
         xyz(1:3,:) = tal2mni(xyz(1:3,:));
       elseif ~strcmp(cfg.inputcoord, atlas.coordsys)
-        error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
+        ft_error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
       end
       
       % determine location of each anatomical voxel in atlas voxel coordinates
@@ -263,7 +263,7 @@ if roi2mask
         mask = mask | (brick_val{i}==value(i));
       end
     else
-      error('support for atlases that have a probabilistic segmentationstyle is not supported yet');
+      ft_error('support for atlases that have a probabilistic segmentationstyle is not supported yet');
       % NOTE: this may be very straightforward indeed: the mask is just the
       % logical or of the specified rois.
     end

@@ -64,14 +64,14 @@ switch invfun
   case {'inv' 'pinv'}
     invfun = str2func(invfun);
   otherwise
-    error('unknown specification of inversion-function for the transfer matrix');
+    ft_error('unknown specification of inversion-function for the transfer matrix');
 end
 
 if ~isempty(powindx)
   % this error message is rather uninformative, but is kept for now for
   % backward compatibility reasons (i.e. it might exist when called from
   % ft_connectivityanalysis
-  error('linearly indexed data for dtf computation is at the moment not supported');
+  ft_error('linearly indexed data for dtf computation is at the moment not supported');
 end
 
 siz    = [size(input) 1];

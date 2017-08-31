@@ -201,7 +201,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
         pos = hdr.res4.senres(n).pos';
       end
       if hdr.res4.senres(n).numCoils~=1
-        error('unexpected number of electrode positions in EEG channel');
+        ft_error('unexpected number of electrode positions in EEG channel');
       end
       % add this position
       elec.elecpos(i       ,:) = pos(1,:);
@@ -224,7 +224,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
       ori = hdr.res4.senres(n).ori';
     end
     if hdr.res4.senres(n).numCoils~=2
-      error('unexpected number of coils in MEG channel');
+      ft_error('unexpected number of coils in MEG channel');
     end
     % add the coils of this channel to the gradiometer array
     grad.coilpos(i       ,:) = pos(1,:);
@@ -333,7 +333,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==13)
     grad.balance.current = 'G3AR';
   else
-    warning('cannot determine balancing of CTF gradiometers');
+    ft_warning('cannot determine balancing of CTF gradiometers');
     grad = rmfield(grad, 'balance');
   end
   
@@ -371,7 +371,7 @@ elseif isfield(hdr, 'sensType') && isfield(hdr, 'Chan')
     % determine the number of coils for this channel
     numcoils = sum(sum(pos.^2, 2)~=0);
     if numcoils~=2
-      error('unexpected number of coils in MEG channel');
+      ft_error('unexpected number of coils in MEG channel');
     end
     % add the coils of this channel to the gradiometer array
     grad.coilpos(i       ,:) = pos(1,:);
@@ -420,7 +420,7 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
   
   if dewar
     % this does not work for Daren Webers implementation
-    error('cannot return the gradiometer definition in dewar coordinates');
+    ft_error('cannot return the gradiometer definition in dewar coordinates');
   end
   
   % only work on the MEG channels
@@ -442,7 +442,7 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
       % assume that the orientation of the upper coil is opposite to the lower coil
       ori = [ori; -ori];
     else
-      error('do not know how to deal with higher order gradiometer hardware')
+      ft_error('do not know how to deal with higher order gradiometer hardware')
     end
     
     % add this channels coil positions and orientations
@@ -460,7 +460,7 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
       grad.tra(i,end+1) = 1;
       grad.tra(i,end+1) = 1;
     else
-      error('do not know how to deal with higher order gradiometer hardware')
+      ft_error('do not know how to deal with higher order gradiometer hardware')
     end
   end
   
@@ -480,5 +480,5 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
   end
   
 else
-  error('unknown header to contruct gradiometer definition');
+  ft_error('unknown header to contruct gradiometer definition');
 end

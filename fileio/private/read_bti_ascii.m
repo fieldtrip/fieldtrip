@@ -32,14 +32,14 @@ function [file] = read_bti_ascii(filename)
 
 fid = fopen(filename, 'r');
 if fid==-1
-  error(sprintf('could not open file %s', filename));
+  ft_error(sprintf('could not open file %s', filename));
 end
 
 line = '';
 while ischar(line)
-  line = cleanline(fgetl(fid))
+  line = cleanline(fgetl(fid));
   
-  if isempty(line) | line==-1 | isempty(findstr(line, ':'))
+  if isempty(line) || line==-1 || isempty(findstr(line, ':'))
     continue
   end
   
@@ -65,7 +65,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function line = cleanline(line)
-if isempty(line) | line==-1
+if isempty(line) || line==-1
   return
 end
 comment = findstr(line, '//');

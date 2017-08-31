@@ -14,7 +14,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.maskparameter  = field in the data to be used for masking of data
 %                        (not possible for mean over multiple channels, or when input contains multiple subjects
 %                        or trials)
-%   cfg.maskstyle      = style used to masking, 'opacity', 'saturation' or 'outline' (default = 'opacity')
+%   cfg.maskstyle      = style used to masking, 'opacity', 'saturation', 'outline' or 'colormix' (default = 'opacity')
 %                        use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 %   cfg.maskalpha      = alpha value between 0 (transparant) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
 %   cfg.masknans       = 'yes' or 'no' (default = 'yes')
@@ -142,7 +142,7 @@ dimtok = tokenize(dimord, '_');
 
 % Set x/y/parameter defaults
 if ~any(ismember(dimtok, 'time'))
-  error('input data needs a time dimension');
+  ft_error('input data needs a time dimension');
 else
   xparam = 'time';
   yparam = 'freq';
@@ -155,11 +155,11 @@ elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
 end
 
 if isempty(cfg.channel)
-  error('no channels selected');
+  ft_error('no channels selected');
 end
 
 if ~isfield(data, cfg.parameter)
-  error('data has no field ''%s''', cfg.parameter);
+  ft_error('data has no field ''%s''', cfg.parameter);
 end
 
 % check whether rpt/subj is present and remove if necessary and whether
@@ -218,7 +218,7 @@ haslabelcmb = isfield(data, 'labelcmb');
 if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.parameter, 'powspctrm'))
   % A reference channel is required:
   if ~isfield(cfg, 'refchannel')
-    error('no reference channel is specified');
+    ft_error('no reference channel is specified');
   end
 
   % check for refchannel being part of selection
@@ -230,13 +230,13 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     end
     if (isfull      && ~any(ismember(data.label, cfg.refchannel))) || ...
        (haslabelcmb && ~any(ismember(data.labelcmb(:), cfg.refchannel)))
-      error('cfg.refchannel is a not present in the (selected) channels)')
+      ft_error('cfg.refchannel is a not present in the (selected) channels)')
     end
   end
 
   % Interactively select the reference channel
   if strcmp(cfg.refchannel, 'gui')
-    error('coh.refchannel = ''gui'' is not supported at the moment for ft_singleplotTFR');
+    ft_error('coh.refchannel = ''gui'' is not supported at the moment for ft_singleplotTFR');
 %
 %     % Open a single figure with the channel layout, the user can click on a reference channel
 %     h = clf;
@@ -269,7 +269,7 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
     end
     fprintf('selected %d channels for %s\n', length(sel1)+length(sel2), cfg.parameter);
     if length(sel1)+length(sel2)==0
-      error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
+      ft_error('there are no channels selected for plotting: you may need to look at the specification of cfg.directionality');
     end
     data.(cfg.parameter) = data.(cfg.parameter)([sel1;sel2],:,:);
     data.label     = [data.labelcmb(sel1,1);data.labelcmb(sel2,2)];
@@ -293,9 +293,9 @@ if (isfull || haslabelcmb) && (isfield(data, cfg.parameter) && ~strcmp(cfg.param
       meandir = 1;
 
     elseif strcmp(cfg.directionality, 'ff-fd')
-      error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
+      ft_error('cfg.directionality = ''ff-fd'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
     elseif strcmp(cfg.directionality, 'fd-ff')
-      error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
+      ft_error('cfg.directionality = ''fd-ff'' is not supported anymore, you have to manually subtract the two before the call to ft_singleplotTFR');
     end %if directionality
   end %if ~isfull
 end %handle the bivariate data
@@ -354,12 +354,12 @@ end
 %
 % % masking only possible for evenly spaced axis
 % if strcmp(cfg.masknans, 'yes') && (~evenx || ~eveny)
-%   warning('(one of the) axis are not evenly spaced -> nans cannot be masked out -> cfg.masknans is set to ''no'';')
+%   ft_warning('(one of the) axis are not evenly spaced -> nans cannot be masked out -> cfg.masknans is set to ''no'';')
 %   cfg.masknans = 'no';
 % end
 %
 % if ~isempty(cfg.maskparameter) && (~evenx || ~eveny)
-%   warning('(one of the) axis are not evenly spaced -> no masking possible -> cfg.maskparameter cleared')
+%   ft_warning('(one of the) axis are not evenly spaced -> no masking possible -> cfg.maskparameter cleared')
 %   cfg.maskparameter = [];
 % end
 
@@ -369,7 +369,7 @@ sellab     = match_str(data.label, selchannel);
 
 % cfg.maskparameter only possible for single channel
 if length(sellab) > 1 && ~isempty(cfg.maskparameter)
-  warning('no masking possible for average over multiple channels -> cfg.maskparameter cleared')
+  ft_warning('no masking possible for average over multiple channels -> cfg.maskparameter cleared')
   cfg.maskparameter = [];
 end
 
@@ -451,7 +451,7 @@ end
 
 % set colormap
 if isfield(cfg,'colormap')
-  if size(cfg.colormap,2)~=3, error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
+  if size(cfg.colormap,2)~=3, ft_error('singleplotTFR(): Colormap must be a n x 3 matrix'); end
   set(gcf,'colormap',cfg.colormap);
 end
 

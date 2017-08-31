@@ -62,7 +62,7 @@ fun = st.nmt.fun{cfg.axsel}(:,:,st.nmt.cfg.freq_idx(1));
 fun(excludeindices,:,:,:) = NaN; % NaN out values outside search range
 
 %%
-if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
+if(~isfield(cfg,'time') && ~isfield(cfg,'vox'))
     switch(cfg.peaktype)
         case 'max'
             [~,peakind] = max(fun(:));
@@ -76,7 +76,7 @@ if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
     end
     t_idx = peaktimeind;
     vox_idx = peakvoxind;
-elseif(~isfield(cfg,'time') & isfield(cfg,'vox'))
+elseif(~isfield(cfg,'time') && isfield(cfg,'vox'))
     switch(cfg.peaktype)
         case 'max'
             [peakval,t_idx_peak] = max(fun(cfg.vox,:));
@@ -87,7 +87,7 @@ elseif(~isfield(cfg,'time') & isfield(cfg,'vox'))
     end
     t_idx = t_idx_peak;
     vox_idx = cfg.vox; % searchign over time, so voxel doesn't change
-elseif(isfield(cfg,'time') & ~isfield(cfg,'vox'))
+elseif(isfield(cfg,'time') && ~isfield(cfg,'vox'))
     t_idx = cfg.time;
     if(t_idx(2)~=t_idx(1))
         funval = nmt_ts_intervalpower(fun(:,t_idx(1):t_idx(2)));

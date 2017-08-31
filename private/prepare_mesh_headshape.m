@@ -58,7 +58,7 @@ elseif ischar(cfg.headshape)
   % read the headshape from file
   headshape = ft_read_headshape(cfg.headshape);
 else
-  error('cfg.headshape is not specified correctly')
+  ft_error('cfg.headshape is not specified correctly')
 end
 
 % usually a headshape only describes a single surface boundaries, but there are cases
@@ -148,7 +148,7 @@ while (1)
       phi(end+1) = newphi;
       th(end+1)  = (j/Q)*2*pi;
       % in case of even number of contours
-      if mod(M,2) & k>(M/2)
+      if mod(M,2) && k>(M/2)
         th(end) = th(end) + pi/Q;
       end
     end

@@ -51,15 +51,15 @@ function y = base64encode(x, eol)
       eol = ''; %sprintf('\n');
    else
       if sum(size(eol) > 1) > 1
-         error('EOL must be a vector.');
+         ft_error('EOL must be a vector.');
       end
       if any(eol(:) > 255)
-         error('EOL can not contain values larger than 255.');
+         ft_error('EOL can not contain values larger than 255.');
       end
    end
 
    if sum(size(x) > 1) > 1
-      error('STR must be a vector.');
+      ft_error('STR must be a vector.');
    end
 
    x   = uint8(x);

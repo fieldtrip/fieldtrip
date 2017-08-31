@@ -58,7 +58,7 @@ end
 if isfield(cfg, 'numbins')
   % this function was completely reimplemented on 21 July 2008 by Robert Oostenveld
   % the old function had a positive bias in the AUC (i.e. the expected value was not 0.5)
-  error('the option cfg.numbins is not supported any more');
+  ft_error('the option cfg.numbins is not supported any more');
 end
 
 % start with a quick test to see whether there appear to be NaNs

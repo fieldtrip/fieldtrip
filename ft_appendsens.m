@@ -85,7 +85,7 @@ if isfield(varargin{1}, 'coordsys')
 end
 
 if ~typematch || ~unitmatch || ~coordsysmatch
-  error('the senstype, units, or coordinate systems of the inputs do not match');
+  ft_error('the senstype, units, or coordinate systems of the inputs do not match');
 end
 
 % keep these fields (when present) in the output
@@ -97,6 +97,7 @@ hascoilpos = 0;
 hascoilori = 0;
 haschanori = 0;
 hasoptopos = 0;
+hastra     = 0;
 haslabelold = 0;
 haschanposold = 0;
 for i=1:length(varargin)
@@ -161,11 +162,11 @@ if ~isequal(numel(chanidx), size(sens.chanpos,1))
   fprintf('removing duplicate channels\n')
   sens.chanpos = sens.chanpos(chanidx,:);
   if ~isequal(labidx, chanidx) % check for matching order
-    error('inconsistent order or number of channel labels and positions')
+    ft_error('inconsistent order or number of channel labels and positions')
   end
 end
 if ~isequal(numel(sens.label), size(sens.chanpos,1)) % check for matching number
-  error('inconsistent number of channel labels and positions')
+  ft_error('inconsistent number of channel labels and positions')
 end
 if haschanori
   sens.chanori = cat(1,chanori{:});

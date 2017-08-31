@@ -66,18 +66,18 @@ function [cfg] = prepare_design(cfg)
 % determine whether a beween or a within-units design is requested.
 if any(strcmp(cfg.statistic,{'indepsamplesT','indepsamplesregrT','indepsamplesZcoh','indepsamplesF'}))
     designtype = 'between';
-end;
+end
 if any(strcmp(cfg.statistic,{'depsamplesregrT','depsamplesT','actvsblT','depsamplesFmultivariate'}))
     designtype = 'within';
-end;
+end
 if ~(exist('designtype')==1)
-    warning('Unknown test statistic.');
+    ft_warning('Unknown test statistic.');
     return
-end;
+end
 
 if ~isfield(cfg,'design')
-  error('You should specify an initial design in cfg.design.');
-end;
+  ft_error('You should specify an initial design in cfg.design.');
+end
 initialdesign=cfg.design;
 
 if strcmp(designtype,'between')   % between-units conditions
@@ -85,15 +85,15 @@ if strcmp(designtype,'between')   % between-units conditions
   cfg.design=initialdesign(:,end); % the default option
   if ~isfield(cfg,'ivar')
     cfg.ivar = 1;
-  end;
+  end
   % overwrite the default option if there is a .ext-field in the
   % configuration
   if isfield(cfg,'ext')
     if size(cfg.ext,1)~=size(initialdesign,1)
-        error('Incompatible number of replications in cfg.ext.');
-    end;
+        ft_error('Incompatible number of replications in cfg.ext.');
+    end
     design=cfg.ext;
-  end;
+  end
 
 elseif strcmp(designtype,'within')  % within-units conditions
   % construct the design matrix
@@ -110,16 +110,16 @@ elseif strcmp(designtype,'within')  % within-units conditions
   for wcondindx=1:nwcond
     selvec = (cfg.design(:,1)==wcondlabels(wcondindx));
     unitsthiscond = sort(cfg.design(selvec,2));
-    if length(unitthiscond)==length(unitlabels) & ~all(unitthiscond==unitlabels)
-      error('The last two columns of initialdesign do not specify a within-units design.');
-    end;
-  end;
+    if length(unitthiscond)==length(unitlabels) && ~all(unitthiscond==unitlabels)
+      ft_error('The last two columns of initialdesign do not specify a within-units design.');
+    end
+  end
   if ~isfield(cfg,'ivar')
     cfg.ivar = 1;
-  end;
+  end
   if ~isfield(cfg,'uvar')
     cfg.uvar = 2;
-  end;
+  end
   % overwrite the default option if there is a .ext-field in the
   % configuration
   if isfield(cfg,'ext')
@@ -129,17 +129,17 @@ elseif strcmp(designtype,'within')  % within-units conditions
       for wcondindx=1:nwcond
         for unitindx=1:nunits
           cfg.design(((wcondindx-1)*nunits + unitindx),[1:dimext(2)])=cfg.ext;
-        end;
-      end;
+        end
+      end
     elseif dimext(1)==nrepl
       cfg.design(:,[1:dimext(2)])=cfg.ext;
     else
-      error('The number of rows in cfg.ext must be equal to the number of conditions or the number of replications (number of conditions times number of units-of-observation).');
-    end;
+      ft_error('The number of rows in cfg.ext must be equal to the number of conditions or the number of replications (number of conditions times number of units-of-observation).');
+    end
     cfg.design(:,dimext(2)+1)=initialdesign(:,(end-1));
     cfg.uvar = size(design,2);
-  end;
-end;
+  end
+end
 
 % add version information to the configuration
 cfg.version.name = mfilename('fullpath');

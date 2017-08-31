@@ -132,7 +132,7 @@ switch version
     elseif isfield(headmodel, 'cond') && isfield(headmodel, 'c') && isequal(headmodel.cond, headmodel.c)
       headmodel = rmfield(headmodel, 'c');
     elseif isfield(headmodel, 'cond') && isfield(headmodel, 'c') && ~isequal(headmodel.cond, headmodel.c)
-      error('inconsistent specification of conductive properties for %s model', headmodel.type);
+      ft_error('inconsistent specification of conductive properties for %s model', headmodel.type);
     end
 
   case '2012'
@@ -165,9 +165,9 @@ switch version
       elseif strcmp(headmodel.type, 'fdm_fns')
         headmodel.type = 'fns';
       elseif strcmp(headmodel.type, 'bem')
-        error('not able to convert the original ''bem'' volume type, try using headmodel.type=''dipoli''');
+        ft_error('not able to convert the original ''bem'' volume type, try using headmodel.type=''dipoli''');
       elseif strcmp(headmodel.type, 'avo')
-        error('this format is not supported anymore');
+        ft_error('this format is not supported anymore');
       end
     end
 
@@ -183,15 +183,13 @@ switch version
       elseif isfield(headmodel, 'cond') && isfield(headmodel, 'c') && isequal(headmodel.cond, headmodel.c)
         headmodel = rmfield(headmodel, 'cond');
       elseif isfield(headmodel, 'cond') && isfield(headmodel, 'c') && ~isequal(headmodel.cond, headmodel.c)
-        error('inconsistent specification of conductive properties for %s model', headmodel.type);
+        ft_error('inconsistent specification of conductive properties for %s model', headmodel.type);
       end
     end
 
     % ensure that the geometrical units are specified
-    if ~isfield(headmodel, 'unit')
-      headmodel = ft_convert_units(headmodel);
-    end
+    headmodel = ft_determine_units(headmodel);
 
   otherwise
-    error('converting to version "%s" is not supported', version);
+    ft_error('converting to version "%s" is not supported', version);
 end

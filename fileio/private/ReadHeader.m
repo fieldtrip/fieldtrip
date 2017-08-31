@@ -54,7 +54,7 @@ if strcmp(headerLine, beginheader)
 
    H{1} = headerLine;
 
-   while ~feof(fp) & ~strcmp(headerLine, endheader)     
+   while ~feof(fp) && ~strcmp(headerLine, endheader)     
       headerLine = fgetl(fp);
       iH = iH+1;
 

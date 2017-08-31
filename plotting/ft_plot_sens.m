@@ -114,7 +114,7 @@ elseif ft_senstype(sens, 'nirs')
   sensshape  = optoshape;
   sensize    = optosize;
 else
-  warning('unknown sensor array description');
+  ft_warning('unknown sensor array description');
   individual = false;
   sensshape  = [];
   sensize    = [];
@@ -141,14 +141,14 @@ end
 
 if ~isempty(ft_getopt(varargin, 'coilorientation'))
   % for backward compatibility, added on 17 Aug 2016
-  warning('the coilorientation option is deprecated, please use "orientation" instead')
+  ft_warning('the coilorientation option is deprecated, please use "orientation" instead')
   orientation = ft_getopt(varargin, 'coilorientation');
 end
 
 if ~isempty(ft_getopt(varargin, 'coildiameter'))
   % for backward compatibility, added on 6 July 2016
   % the sensize is the diameter for a circle, or the edge length for a square
-  warning('the coildiameter option is deprecated, please use "coilsize" instead')
+  ft_warning('the coildiameter option is deprecated, please use "coilsize" instead')
   sensize = ft_getopt(varargin, 'coildiameter');
 end
 
@@ -319,14 +319,29 @@ end % if istrue(individual)
 switch sensshape
   case 'point'
     if ~isempty(style)
-      hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', sensize);
+      % the style can include the color and/or the shape of the marker
+      % check whether the marker shape is specified
+      possible = {'+', 'o', '*', '.', 'x', 'v', '^', '>', '<', 'square', 'diamond', 'pentagram', 'hexagram'};
+      specified = false(size(possible));
+      for i=1:numel(possible)
+        specified(i) = ~isempty(strfind(style, possible{i}));
+      end
+      if any(specified)
+        % the marker shape is specified in the style option
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', sensize);
+      else
+        % the marker shape is not specified in the style option, use the marker option instead and assume that the style option represents the color
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', style, 'Linestyle', 'none');
+      end
     else
+      % the style is not specified, use facecolor for the marker
       hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', facecolor, 'Linestyle', 'none');
     end
+    
   case 'circle'
     plotcoil(pos, ori, [], sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+
   case 'square'
-    
     % determine the rotation-around-the-axis of each sensor
     % only applicable for neuromag planar gradiometers
     if ft_senstype(sens, 'neuromag')
@@ -343,12 +358,15 @@ switch sensshape
         elseif (numel([poscoil negcoil]))==1
           % magnetometer
         elseif numel(poscoil)>1 || numel(negcoil)>1
-          error('cannot work with balanced gradiometer definition')
+          ft_error('cannot work with balanced gradiometer definition')
         end
       end
+    else
+      chandir = [];
     end
     
     plotcoil(pos, ori, chandir, sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+
   case 'sphere'
     [xsp, ysp, zsp] = sphere(100);
     rsp = sensize/2; % convert coilsensize from diameter to radius
@@ -357,8 +375,9 @@ switch sensshape
       hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
     end
+    
   otherwise
-    error('incorrect shape');
+    ft_error('incorrect shape');
 end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
@@ -371,7 +390,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
       case {'number' 'numbers'}
         str = num2str(i);
       otherwise
-        error('unsupported value for option ''label''');
+        ft_error('unsupported value for option ''label''');
     end % switch
     if isfield(sens, 'chanori')
       % shift the labels along the channel orientation, which is presumably orthogonal to the scalp

@@ -6,7 +6,7 @@ function [shape] = ft_transform_headshape(transform, shape)
 % Use as
 %   shape = ft_transform_headshape(transform, shape)
 %
-% See also FT_READ_HEADSHAPE
+% See also FT_READ_HEADSHAPE, FT_TRANSFORM_GEOMETRY
 
 % Copyright (C) 2008, Robert Oostenveld
 %

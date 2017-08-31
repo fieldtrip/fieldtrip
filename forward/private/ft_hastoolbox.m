@@ -151,6 +151,7 @@ url = {
   'NEURONE'       'see http://www.megaemg.com/support/unrestricted-downloads'
   'BREWERMAP'     'see https://nl.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer--attractive-and-distinctive-colormaps'
   'CELLFUNCTION'  'see https://github.com/schoffelen/cellfunction'
+  'MARS'          'see http://www.parralab.org/mars'
   };
 
 if nargin<2
@@ -368,6 +369,8 @@ switch toolbox
     dependency = {'brewermap' 'brewermap_view'};
   case 'GTEC'
     dependency = {'ghdf5read' 'ghdf5fileimport'};
+  case 'MARS'
+    dependency = {'spm_mars_mrf'};
     
     % the following are FieldTrip modules/toolboxes
   case 'FILEIO'
@@ -394,7 +397,7 @@ switch toolbox
       'TEMPLATE/NEIGHBOURS', 'TEMPLATE/SOURCEMODEL'}
     dependency = is_subdir_in_fieldtrip_path(toolbox);
   otherwise
-    if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
+    if ~silent, ft_warning('cannot determine whether the %s toolbox is present', toolbox); end
     dependency = false;
 end
 
@@ -464,7 +467,7 @@ if autoadd>0 && ~status
       msg = sprintf('the %s toolbox is not installed', toolbox);
     end
     if autoadd==1
-      error(msg);
+      ft_error(msg);
     elseif autoadd==2
       ft_warning(msg);
     else
@@ -488,13 +491,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = myaddpath(toolbox, silent)
 if isdeployed
-  warning('cannot change path settings for %s in a compiled application', toolbox);
+  ft_warning('cannot change path settings for %s in a compiled application', toolbox);
   status = 1;
 elseif exist(toolbox, 'dir')
   if ~silent
-    ws = warning('backtrace', 'off');
-    warning('adding %s toolbox to your MATLAB path', toolbox);
-    warning(ws); % return to the previous warning level
+    ws = ft_warning('backtrace', 'off');
+    ft_warning('adding %s toolbox to your MATLAB path', toolbox);
+    ft_warning(ws); % return to the previous warning level
   end
   if any(~cellfun(@isempty, regexp(toolbox, {'spm2', 'spm5', 'spm8', 'spm12'})))
     % SPM needs to be added with the subdirectories
@@ -533,9 +536,9 @@ catch
   m = lasterror;
   if strcmp(m.identifier, 'MATLAB:license:checkouterror')
     if nargin>1
-      warning('the %s toolbox is available, but you don''t have a license for it', toolbox);
+      ft_warning('the %s toolbox is available, but you don''t have a license for it', toolbox);
     else
-      warning('the function ''%s'' is available, but you don''t have a license for it', funname);
+      ft_warning('the function ''%s'' is available, but you don''t have a license for it', funname);
     end
     status = false;
   elseif strcmp(m.identifier, 'MATLAB:UndefinedFunction')

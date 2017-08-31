@@ -61,7 +61,7 @@ elseif size(cfg.input,1) == 1
     fullnames{k} = [basedir filesep D(k).name];
   end
 else
-  error('Don''t know what to do with cfg.input');  
+  ft_error('Don''t know what to do with cfg.input');  
 end
 
 DN = tempname; % Dicom Name

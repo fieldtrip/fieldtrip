@@ -106,8 +106,8 @@ if ft_abort
 end
 
 % this is not supported any more as of 26/10/2011
-if ischar(anatomical),
-  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+if ischar(anatomical)
+  ft_error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
 % check if the input cfg is valid for this function
@@ -193,8 +193,8 @@ functional = ft_convert_units(functional, anatomical.unit);
 
 if isfield(functional, 'coordsys') && isfield(anatomical, 'coordsys') && ~isequal(functional.coordsys, anatomical.coordsys)
   % FIXME is this different when smudged or not?
-  % warning('the coordinate systems are not aligned');
-  % error('the coordinate systems are not aligned');
+  % ft_warning('the coordinate systems are not aligned');
+  % ft_error('the coordinate systems are not aligned');
 end
 
 if ~isUnstructuredAna && cfg.downsample~=1
@@ -570,7 +570,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
 
     if any(dimf(4:end)>1) && ~strcmp(cfg.feedback, 'none')
       % this is needed to prevent feedback to be displayed for every time-frequency point
-      warning('disabling feedback');
+      ft_warning('disabling feedback');
       cfg.feedback = 'none';
     end
 

@@ -49,7 +49,7 @@ singlesphere  = ft_getopt(varargin, 'singlesphere', 'no');
 
 if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'units'))
   % the geometrical units should be specified in the input mesh
-  error('the ''unit'' option is not supported any more');
+  ft_error('the ''unit'' option is not supported any more');
 end
 
 % convert from 'yes'/'no' string into boolean value
@@ -68,18 +68,18 @@ end
 mesh = fixpos(mesh);
 
 if ~isstruct(mesh) || ~isfield(mesh, 'pos')
-  error('the input mesh should be a set of points or a single triangulated surface')
+  ft_error('the input mesh should be a set of points or a single triangulated surface')
 end
 
 if isstruct(mesh) && numel(mesh)>1
-  error('There must be only 1 mesh given as input');
+  ft_error('There must be only 1 mesh given as input');
 end
 
 % start with an empty volume conductor
 headmodel = [];
 
 % ensure that the mesh has units, estimate them if needed
-mesh = ft_convert_units(mesh);
+mesh = ft_determine_units(mesh);
 
 % ensure that it has a consistent representation and consistent units
 grad = ft_datatype_sens(grad);
@@ -143,7 +143,7 @@ if any(~isfinite(allpos(:)))
     allpos = grad.chanposold;
     allori = grad.chanoriold;
   else
-    error('cannot extract channel position information from sensor description');
+    ft_error('cannot extract channel position information from sensor description');
   end
 end
 

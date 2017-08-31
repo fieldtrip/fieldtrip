@@ -22,7 +22,7 @@ if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
 elseif ~isfield(data, field) && isfield(data, 'trial') && isfield(data.trial, field)
   field = ['trial.' field];
 elseif ~isfield(data, field)
-  error('field "%s" not present in data', field);
+  ft_error('field "%s" not present in data', field);
 end
 
 if strncmp(field, 'avg.', 4)

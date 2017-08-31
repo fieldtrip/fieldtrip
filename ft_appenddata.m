@@ -101,17 +101,23 @@ if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
   elseif isequaltime && ~isequallabel && ~issamelabel
     cfg.appenddim = 'chan';
   else
-    error('cannot append this data');
+    ft_error('cannot append this data');
   end
 end
-fprintf('concatenating over the "%s" dimension\n', cfg.appenddim);
+ft_info('concatenating over the "%s" dimension\n', cfg.appenddim);
 
 % ft_selectdata cannot create the union of the data contained in cell-arrays
 % make a dummy without the actual data, but keep trialinfo/sampleinfo/grad/elec/opto
+% also remove the topo/unmixing/topolabel, if present, otherwise it is not
+% possible to concatenate raw and comp data. Note that in append_common the
+% topo etc. is removed anyhow, when appenddim = 'chan'
 dummy = cell(size(varargin));
 for i=1:numel(varargin)
   dummy{i} = removefields(varargin{i}, {'trial', 'time'});
-  % add a dummy data field, this cause the datatype to become 'chan'
+  if strcmp(cfg.appenddim, 'chan')
+    dummy{i} = removefields(dummy{i}, {'topo', 'unmixing', 'topolabel'});
+  end
+  % add a dummy data field, this causes the datatype to become 'chan'
   dummy{i}.dummy       = ones(numel(dummy{i}.label),1);
   dummy{i}.dummydimord = 'chan';
 end
@@ -140,7 +146,7 @@ switch cfg.appenddim
       data.time  = varargin{1}.time;
       data.label = lab; % replace the one from append_common
     else
-      error('data has different time, cannot append over channels');
+      ft_error('data has different time, cannot append over channels');
     end
     
   case 'rpt'
@@ -173,7 +179,7 @@ switch cfg.appenddim
     end
     
   otherwise
-    error('unsupported cfg.appenddim');
+    ft_error('unsupported cfg.appenddim');
 end % switch
 
 % do the general cleanup and bookkeeping at the end of the function

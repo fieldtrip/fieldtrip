@@ -46,7 +46,7 @@ function [ws warned] = print_once(varargin)
 global ft_default
 
 if nargin < 1
-  error('You need to specify at least a message');
+  ft_error('You need to specify at least a message');
 end
 
 warned = false;
@@ -94,7 +94,7 @@ elseif nargin==1
 end
 
 if isempty(timeout)
-  error('Timeout ill-specified');
+  ft_error('Timeout ill-specified');
 end
 
 if timeout ~= inf

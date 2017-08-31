@@ -16,7 +16,7 @@ if ~isfield(data, field) && isfield(data, 'avg') && isfield(data.avg, field)
 elseif ~isfield(data, field) && isfield(data, 'trial') && isfield(data.trial, field)
   field = ['trial.' field];
 elseif ~isfield(data, field)
-  error('field "%s" not present in data', field);
+  ft_error('field "%s" not present in data', field);
 end
 
 if strncmp(field, 'avg.', 4)
@@ -114,7 +114,7 @@ if isfield(data, 'cumtapcnt')
     % this happens after  mtmconvol with keeptrials
     nrpttap = sum(data.cumtapcnt,2);
     if any(nrpttap~=nrpttap(1))
-      warning('unexpected variation of the number of tapers over trials')
+      ft_warning('unexpected variation of the number of tapers over trials')
       nrpttap = nan;
     else
       nrpttap = nrpttap(1);
@@ -618,7 +618,7 @@ function warning_dimord_could_not_be_determined(field,data)
     end
   end
 
-  warning('%s\n\n%s', msg,content);
+  ft_warning('%s\n\n%s', msg,content);
 end % function warning_dimord_could_not_be_determined
 
 

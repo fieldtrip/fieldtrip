@@ -79,7 +79,7 @@ if ~cmd_exists
   % XXX earlier versions would not do anything if ~cmd_exists,
   % but fail silently (without raising an error or warning).
   % Should that behavior be kept?
-  error('Could not run %s - does not seem to exist', full_cmd);
+  ft_error('Could not run %s - does not seem to exist', full_cmd);
 end
 
 evalin('caller', full_cmd);

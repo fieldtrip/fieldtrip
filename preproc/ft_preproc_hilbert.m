@@ -75,5 +75,5 @@ switch option
     case 'unwrap_angle'
         dat = unwrap(angle(dat./abs(dat)),[],2);
     otherwise
-        error('incorrect specification of the optional input argument');
+        ft_error('incorrect specification of the optional input argument');
 end

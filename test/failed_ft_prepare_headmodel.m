@@ -70,7 +70,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646/seg2'))  % brain 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646/seg5'))  % seg (brain, skull & scalp indexed)
 
 elcfile  = dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/asa/standard_primed.elc');
-elec = ft_convert_units(ft_read_sens(elcfile));
+elec = ft_read_sens(elcfile);
 
 
 %%%%%%%%%%%%%%%%%%%%%

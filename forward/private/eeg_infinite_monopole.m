@@ -1,4 +1,4 @@
-function [lf] = eeg_halfspace_monopole(rd, elc, vol)
+function [lf] = eeg_infinite_monopole(rd, elc, vol)
 
 % EEG_HALFSPACE_MONOPOLE calculate the halfspace medium leadfield
 % on positions pnt for a monopole at position rd and conductivity cond
@@ -41,7 +41,7 @@ elseif siz(2)==3
   rd = rd';
   rd = rd(:)'; % ensure that it is a row vector
 else
-  error('incorrect specification of dipole locations');
+  ft_error('incorrect specification of dipole locations');
 end
 
 Nelc     = size(elc,1);

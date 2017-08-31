@@ -44,7 +44,7 @@ function [dat] = read_nmc_archive_k_data(datafile, hdr, begsample, endsample, ch
 % Getting data-directory out of data-filename and check
 datadir = datafile(1:(findstr(datafile, 'eeg.noreref')+11));
 if exist(datadir,'dir') ~= 7
-    error('no proper data-directory provided, please check your paths');
+    ft_error('no proper data-directory provided, please check your paths');
 end
 
 % Getting session name + path out of data-filename
