@@ -21,9 +21,36 @@ function write_bioimage_mgrid(filename, elec)
 for e = 1:numel(elec.label) % electrode loop
   ElecStrs{e,1} = regexprep(elec.label{e}, '\d+(?:_(?=\d))?', ''); % without electrode numbers
   ElecNrs(e) = str2double(regexp(elec.label{e},'-?\d+\.?\d*|-?\d*\.?\d+', 'match')); % without electrode strings
+  tmp = strfind(elec.label{e}, num2str(ElecNrs(e))); % the position of the first number within the label
+  ElecNumPos(e) = tmp:tmp+numel(ElecNrs(e))-1; % the positions of the numbers within the label
 end
 GridDescript = unique(ElecStrs);
 ngrids = numel(GridDescript);
+for g = 1:ngrids % grid loop
+  Grid2Elec{g} = match_str(ElecStrs, GridDescript{g}); % assign electrodes to grids
+end
+
+% Check to make sure there are no electrodes missing and if some appear to
+% be missing, add electrodes with NaN's for the position in order to have
+% the numbers of the electrodes in the mgrid file match the numbers in the
+% elec file
+for g = 1:ngrids % grid loop
+  if max(ElecNrs(Grid2Elec{g})) ~= numel(Grid2Elec{g}) % if there is an electrode in the grid that appears to be missing
+    for e = 1:max(ElecNrs(Grid2Elec{g}))
+      tmp = find(ElecNrs(Grid2Elec{g}) == e);
+      if isempty(tmp)
+        warning('Electrode %s%d appears to be missing, so a filler electrode with no location will be added in its place', char(unique(ElecStrs(Grid2Elec{g}))), e);
+        n_elecs = numel(elec.label); % number of electrodes currently described in elec file
+        ElecStrs{n_elecs+1} = char(unique(ElecStrs(Grid2Elec{g})));
+        ElecNrs(n_elecs+1) = e;
+        elec.label{n_elecs+1} = [char(unique(ElecStrs(Grid2Elec{g}))), num2str(e)];
+        elec.elecpos(n_elecs+1, :) = [NaN NaN NaN];
+      end
+    end
+  end
+end
+
+% Update Grid2Elec
 for g = 1:ngrids % grid loop
   Grid2Elec{g} = match_str(ElecStrs, GridDescript{g}); % assign electrodes to grids
 end
@@ -105,8 +132,6 @@ for g = 1:ngrids % grid loop
     else
       GridDim(1) = 1; GridDim(2) = 12;
     end
-  elseif isequal(numel(Grid2Elec{g}), 10)
-    GridDim(1) = 1; GridDim(2) = 10;
   elseif isequal(numel(Grid2Elec{g}), 8)
     e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
     e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
@@ -116,10 +141,9 @@ for g = 1:ngrids % grid loop
     else
       GridDim(1) = 2; GridDim(2) = 4;
     end
-  elseif isequal(numel(Grid2Elec{g}), 6)
-    GridDim(1) = 1; GridDim(2) = 6;
   else
-      ft_error('At least one of the electrode tracts or grids has dimensions that are not supported by write_bioimage_mgrid. If electrodes are missing from a grid, enter NaN(1,3) for electrode position');
+    GridDim(1) = 1; GridDim(2) = numel(Grid2Elec{g});
+    % ft_error('At least one of the electrode tracts or grids has dimensions that are not supported by write_bioimage_mgrid. If electrodes are missing from a grid, enter NaN(1,3) for electrode position');
   end
   fprintf(fid, [' ' num2str(GridDim(1)) ' ' num2str(GridDim(2)) '\n']);
   fprintf(fid, '#Electrode Spacing\n');
