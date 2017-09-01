@@ -1,6 +1,6 @@
 function [dataout] = ft_channelnormalise(cfg, data)
 
-% FT_CHANNELNORMALISE shifts and scales all channles of the the input data
+% FT_CHANNELNORMALISE shifts and scales all channels of the the input data
 % to a mean of zero and a standard deviation of one.
 %
 % Use as
@@ -8,6 +8,7 @@ function [dataout] = ft_channelnormalise(cfg, data)
 %
 % The configuration can contain
 %   cfg.trials = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.demean = 'yes' or 'no' (or boolean value) (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -59,6 +60,8 @@ end
 
 % set the defaults
 cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.demean = ft_getopt(cfg, 'demean', 'yes');
+dodemean   = istrue(cfg.demean);
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -102,9 +105,21 @@ end
 datmean = datsum./sum(n);
 datstd  = sqrt( (datssq - (datsum.^2)./sum(n))./sum(n)); %quick way to compute std from sum and sum-of-squared values
 
+% keep mean and std in output cfg
+if dodemean
+  cfg.mu    = datmean;
+else
+  cfg.mu    = [];
+end
+cfg.sigma = datstd;
+
 % demean and normalise
 for k = 1:ntrl
-  dataout.trial{k} = (data.trial{k}-datmean(:,ones(1,n(k))))./datstd(:,ones(1,n(k)));
+  if dodemean 
+    dataout.trial{k} = (data.trial{k}-datmean(:,ones(1,n(k))))./datstd(:,ones(1,n(k)));
+  else
+    dataout.trial{k} = data.trial{k}./datstd(:,ones(1,n(k)));
+  end
 end
 
 % convert back to input type if necessary
