@@ -1,4 +1,4 @@
-function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbindx,fb,init,checkflag)
+function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbindx,fb,init,checkflag,stabilityfix)
 
 % SFACTORIZATION_WILSON2X2 performs pairwise non-parametric spectral factorization on
 % cross-spectra, based on Wilson's algorithm.
@@ -41,6 +41,7 @@ function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbind
 %
 % $Id$
 
+if nargin<9, stabilityfix = false; end
 if nargin<8, checkflag = true;   end
 if nargin<7, init      = 'chol'; end
 if nargin<6, fb        = 'none'; end
@@ -166,7 +167,7 @@ for iter = 1:Niterations
   ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
   invpsi = inv2x2(psi);
   g      = sandwich2x2(invpsi, Sarr) + I;
-  gp     = PlusOperator2x2(g,m,N); %gp constitutes positive and half of zero lags 
+  gp     = PlusOperator2x2(g,m,N,stabilityfix); %gp constitutes positive and half of zero lags 
   
   psi_old = psi;
   psi     = mtimes2x2(psi, gp);
@@ -186,6 +187,7 @@ ft_progress('close');
 gamtmp = reshape(real(ifft(transpose(reshape(psi, [4*m N2]))))', [2 2 m N2]);
 
 %Step 6: Getting noise covariance & transfer function (see Example pp. 424)
+%
 A0    = gamtmp(:,:,:,1); 
 A0inv = inv2x2(A0);
 
@@ -225,7 +227,7 @@ psi = reshape(psi, [4*siz(3) siz(4:end)]);
 %end
   
 %---------------------------------------------------------------------
-function gp = PlusOperator2x2(g,ncmb,nfreq)
+function gp = PlusOperator2x2(g,ncmb,nfreq, stabilityfix)
 
 % This function is for [ ]+operation: 
 % to take the positive lags & half of the zero lag and reconstitute 
@@ -244,6 +246,15 @@ beta0 = 0.5*gam(1,:);
 beta0(2:4:4*ncmb)   = 0;
 gamp(1,:)           = beta0;
 gamp(nfreq+1:end,:) = 0;
+
+% smooth with a window, only for the long latency boundary: this is a
+% stabilityfix proposed by Martin Vinck
+if stabilityfix
+  w = tukeywin(nfreq*2, 0.5);
+  gamp(1:nfreq,:) = gamp(1:nfreq,:).*repmat(w(nfreq+1:end),[1 nchan^2]);
+else
+  % nothing to be done here  
+end
 
 % reconstituting
 gp = fft(gamp);
