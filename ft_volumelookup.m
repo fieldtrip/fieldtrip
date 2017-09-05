@@ -154,10 +154,8 @@ elseif mask2label || roi2label
     ft_error('incorrect query range, should be an odd number');
   end
   
-  if roi2label
-    cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'yes');
-    cfg.querymethod        = ft_getopt(cfg, 'querymethod', 'sphere');
-  end
+  cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'yes');
+  cfg.querymethod        = ft_getopt(cfg, 'querymethod', 'sphere');
 end
 
 
