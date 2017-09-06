@@ -313,9 +313,10 @@ switch cfg.method
     % according to the specifications
     
     % predefine some variables
+    fstep = 1/5;
     fs    = cfg.fsample;
     Nyq   = fs./2;
-    foi   = (0:0.2:Nyq);
+    foi   = (0:fstep:Nyq);
     omega = foi./fs;
     n     = numel(foi);
     
@@ -330,11 +331,10 @@ switch cfg.method
     slope    = 0.5;
     oneoverf = sqrt(max(omega(2)./10,omega).^-slope); % takes sqrt for amplitude
     oneoverf = oneoverf./oneoverf(1);
-    oneoverf = oneoverf;%.*exp(-1i.*2.*pi.*foi.*0.005);
     %oneoverf(1) = 0;
-    z = firws_filter(5.*fs, fs, Nyq./1.05);
-    z = z(1:numel(foi)).*exp(-1i.*pi.*foi.*rand(1)./100);
-    oneoverf = z.*oneoverf;
+    %z = firws_filter(5.*fs, fs, Nyq./1.01);
+    %z = z(1:numel(foi));%.*exp(-1i.*pi.*foi.*rand(1)./100);
+    %oneoverf = z.*oneoverf;
     
     % convert into indices
     findx = fband;
@@ -361,10 +361,11 @@ switch cfg.method
         phi(k,m,:) = 2.*pi.*delay(k,m).*foi;
         %phi(k,m,:) = phi(k,m,:).*mask(k,m,:);
         %phi(k,m,mask(k,m,:)) = phi(k,m,mask(k,m,:))-mean(phi(k,m,mask(k,m,:)));
-        %if all(isfinite(squeeze(findx(k,m,:))))
-        %  phi(k,m,1:findx(k,m,1)) = phi(k,m,findx(k,m,1));
-        %  phi(k,m,findx(k,m,2):end) = phi(k,m,findx(k,m,2));
-        %end
+        if all(isfinite(squeeze(findx(k,m,:))))
+          phi(k,m,1:findx(k,m,1)) = phi(k,m,findx(k,m,1));
+          phi(k,m,findx(k,m,2):end) = phi(k,m,findx(k,m,2));
+          phi(k,m,:) = phi(k,m,:)-mean(phi(k,m,:));
+        end
         
         coupling_ampl(k,m,:) = coupling(k,m).*krn(k,m,:);
       end
@@ -373,8 +374,8 @@ switch cfg.method
     % this matrix contains the intrinsic amplitude spectra on the diagonal
     for k = 1:nsignal
       if all(isfinite(squeeze(fband(k,k,:))))      
-        z = firws_filter(5.*fs, fs, [fband(k,k,1) fband(k,k,2)]);
-        z = z(1:numel(foi)).*exp(-1i.*pi.*foi.*rand(1)./100); 
+        z = firws_filter((1/fstep).*fs, fs, [fband(k,k,1) fband(k,k,2)]);
+        z = z(1:numel(foi));%.*exp(-1i.*pi.*foi.*rand(1)./100); 
         z = z.*ampl(k,k);
         dat(k,k,:) = (abs(oneoverf)+abs(z)).*exp(1i.*(angle(z)+angle(oneoverf)));
       else
@@ -387,7 +388,7 @@ switch cfg.method
     for k = 1:nsignal
       for m = 1:nsignal
         if k~=m && all(isfinite(squeeze(fband(k,m,:))))
-          z = firws_filter(5.*fs, fs, [fband(k,m,1) fband(k,m,2)]);
+          z = firws_filter((1/fstep).*fs, fs, [fband(k,m,1) fband(k,m,2)]);
           z = z(1:numel(foi));
           tf(m,k,:) = coupling(k,m).*exp(-1i.*phi(k,m,:)).*shiftdim(z,-1); % deliberate index swap!
         
@@ -402,7 +403,11 @@ switch cfg.method
     for k = 1:n
       c(:,:,k) = tf(:,:,k)*tf(:,:,k)'; % assume noise to be I, i.e. the tf to swallow the amplitudes
     end
-      
+    
+    % scale the Nyquist and DC bins
+    c(:,:,1)   = real(c(:,:,1)./2);
+    c(:,:,end) = real(c(:,:,end)./2);
+    
     % create a freq-structure
     freq           = [];
     freq.crsspctrm = c;
