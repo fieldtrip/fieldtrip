@@ -82,8 +82,8 @@ if any(isnan(dat(:)))
   if ~(check1 || check2)
     usesamples = repmat(usesamples, [size(dat,1) 1]);
     usesamples = usesamples & ~isnan(dat);
-  else
-    usesamples(sum(datnans,1)>0) = false; % switch the nan samples off, they are not to be used for the regression
+  elseif check1
+    usesamples(sum(datnans,1)==size(dat,1)) = false; % switch the nan samples off, they are not to be used for the regression
   end
 else
   check1 = true;
