@@ -163,7 +163,7 @@ switch ft_voltype(headmodel)
     clear insidepos renumber
 
     % construct a sparse matrix with the mapping between all hexaheders and vertices
-    i = repmat(transpose(1:numhex), 1, 8);
+    i = repmat(transpose(1:numhex), 1, size(headmodel.hex,2));
     j = headmodel.hex;
     s = ones(size(i));
     hex2pos = sparse(i(:),j(:),s(:),numhex,numpos);
