@@ -139,8 +139,8 @@ cfg.sigma = datstd;
 
 % demean and normalise
 for k = 1:ntrl
-  if dodemean
-    onesvec          = ones(1,size(data.trial{k},2)); 
+  onesvec          = ones(1,size(data.trial{k},2));
+  if dodemean     
     dataout.trial{k} = (data.trial{k}-datmean(:,onesvec))./datstd(:,onesvec);
   else
     dataout.trial{k} = data.trial{k}./datstd(:,onesvec);
