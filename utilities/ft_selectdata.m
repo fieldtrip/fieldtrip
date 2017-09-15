@@ -217,12 +217,12 @@ end
 dimtok = unique(dimtok);
 
 hasspike   = any(ismember(dimtok, 'spike'));
-haspos     = any(ismember(dimtok, {'pos', '{pos}'}));
-haschan    = any(ismember(dimtok, {'chan', '{chan}'}));
+haspos     = any(ismember(dimtok, {'pos' '{pos}'}));
+haschan    = any(ismember(dimtok, {'chan' '{chan}'}));
 haschancmb = any(ismember(dimtok, 'chancmb'));
 hasfreq    = any(ismember(dimtok, 'freq'));
 hastime    = any(ismember(dimtok, 'time'));
-hasrpt     = any(ismember(dimtok, {'rpt', 'subj'}));
+hasrpt     = any(ismember(dimtok, {'rpt' 'subj' '{rpt}'}));
 hasrpttap  = any(ismember(dimtok, 'rpttap'));
 
 if hasspike
@@ -1129,6 +1129,7 @@ if isequal(cfg.trials, 'all')
   rpttapindx = nan; % the nan return value specifies that no selection was specified
   
 elseif isempty(rptdim)
+  % FIXME should [] not mean that none of the trials is to be selected?
   rptindx    = nan; % the nan return value specifies that no selection was specified
   rpttapindx = nan; % the nan return value specifies that no selection was specified
   

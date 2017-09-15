@@ -399,19 +399,19 @@ if ~isempty(dtype)
       istimelock = 0;
       israw = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && israw
+    elseif isequal(dtype(iCell), {'comp'}) && israw  && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       israw = 0;
       iscomp = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && istimelock
+    elseif isequal(dtype(iCell), {'comp'}) && istimelock && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       istimelock = 0;
       iscomp = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && isfreq
+    elseif isequal(dtype(iCell), {'comp'}) && isfreq && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       isfreq = 0;
@@ -608,16 +608,23 @@ if istrue(hascoordsys) && ~isfield(data, 'coordsys')
 end % if hascoordsys
 
 if isequal(hastrials, 'yes')
-  okflag = isfield(data, 'trial');
-  if ~okflag && isfield(data, 'dimord')
+  hasrpt = isfield(data, 'trial');
+  if ~hasrpt && isfield(data, 'dimord')
     % instead look in the dimord for rpt or subj
-    okflag = ~isempty(strfind(data.dimord, 'rpt')) || ...
+    hasrpt = ~isempty(strfind(data.dimord, 'rpt')) || ...
       ~isempty(strfind(data.dimord, 'rpttap')) || ...
       ~isempty(strfind(data.dimord, 'subj'));
   end
-  if ~okflag
+  if ~hasrpt
     ft_error('This function requires data with a ''trial'' field');
-  end % if okflag
+  end % if hasrpt
+elseif isequal(hastrials, 'no') && istimelock
+  if ~isfield(data, 'avg') && (isfield(data, 'trial') || isfield(data, 'individual'))
+    % average on the fly
+    tmpcfg = [];
+    tmpcfg.keeptrials = 'no';
+    data = ft_timelockanalysis(tmpcfg, data); 
+  end
 end
 
 if strcmp(hasdim, 'yes') && ~isfield(data, 'dim')

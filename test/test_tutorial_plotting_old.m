@@ -58,7 +58,8 @@ figure;ft_singleplotTFR(cfg, TFRhann); colorbar;
 cfg = [];                            
 cfg.xlim = [0.3 0.5];                
 cfg.zlim = [0 6e-14];                
-cfg.layout = 'CTF151.lay';            
+cfg.layout = 'CTF151.lay';    
+cfg.parameter = 'individual'; % the default (avg) is not present
 figure; ft_topoplotER(cfg,GA_FC); colorbar;    
 
 cfg = [];

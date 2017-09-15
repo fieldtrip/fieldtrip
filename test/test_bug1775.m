@@ -23,7 +23,7 @@ for i=1:length(sel)
   grad.label{i} = sprintf('magnetometer%d', i);
 end
 grad.unit = 'cm';
-grad.type = 'magnetometer';
+grad.type = 'meg';
 
 grad = ft_datatype_sens(grad);
 

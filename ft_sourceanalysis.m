@@ -5,7 +5,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %
 % Use as
 %   [source] = ft_sourceanalysis(cfg, freq)
-% or 
+% or
 %   [source] = ft_sourceanalysis(cfg, timelock)
 %
 % where the second input argument with the data should be organised in a structure
@@ -662,7 +662,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   for i=1:Nrepetitions
     size_Cf    = size(Cf);
-    squeeze_Cf = reshape(Cf(i,:,:), size_Cf(2:end));    
+    squeeze_Cf = reshape(Cf(i,:,:), size_Cf(2:end));
     
     if Nrepetitions > 1
       ft_progress(i/Nrepetitions, 'scanning repetition %d from %d', i, Nrepetitions);
@@ -711,7 +711,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
 elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv', 'music', 'pcc', 'mvl', 'sloreta', 'eloreta'}))
   
   % determine the size of the data
-  Nsamples = size(data.avg,2);
+  Nsamples = length(data.time);
   Nchans   = length(data.label);
   if isfield(data, 'cov') && length(size(data.cov))==3
     Ntrials = size(data.cov,1);
@@ -764,7 +764,6 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       data.avg = data.avg(datchanindx,:);
       data.cov = data.cov(datchanindx,datchanindx);
     else
-      data.avg   = data.avg(datchanindx,:);
       data.cov   = data.cov(:,datchanindx,datchanindx);
       data.trial = data.trial(:,datchanindx,:);
     end
@@ -793,10 +792,11 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       data.avg = data.avg(datchanindx,:);
       %data.cov = reshape(data.cov, length(datchanindx), length(datchanindx));
       data.cov = data.cov(datchanindx,datchanindx);
-    else
-      data.avg   = data.avg(datchanindx,:);
+    elseif strcmp(data.dimord, 'rpt_chan_time')
       data.cov   = data.cov(:,datchanindx,datchanindx);
       data.trial = data.trial(:,datchanindx,:);
+    else
+      ft_error('unexpected dimord');
     end
     data.label = data.label(datchanindx);
     Nchans     = length(data.label);
@@ -890,8 +890,8 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   elseif Ntrials>1
     % average the single-trial covariance matrices
     Cy  = reshape(mean(data.cov,1), [Nchans Nchans]);
-    % select the average ERF
-    avg = data.avg;
+    % compute the average ERF
+    avg = shiftdim(mean(data.trial,1),1);
     Nrepetitions = 1;
     
   elseif Ntrials==1
