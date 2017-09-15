@@ -619,7 +619,7 @@ if isequal(hastrials, 'yes')
     ft_error('This function requires data with a ''trial'' field');
   end % if hasrpt
 elseif isequal(hastrials, 'no') && istimelock
-  if isfield(data, 'trial') && ~isfield(data, 'avg')
+  if ~isfield(data, 'avg') && (isfield(data, 'trial') || isfield(data, 'individual'))
     % average on the fly
     tmpcfg = [];
     tmpcfg.keeptrials = 'no';
