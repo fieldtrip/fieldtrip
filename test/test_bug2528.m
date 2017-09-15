@@ -45,6 +45,6 @@ data2.dimord = 'rpt_chan_time';
 
 cfg = [];
 cfg.operation = 'subtract';
-cfg.parameter = 'avg';
+cfg.parameter = 'trial';  % since the data contains both avg and trial, the avg will be discarded by ft_checkdata (as of timelock data structure version 2017)
 output = ft_math(cfg, data1, data2);
 

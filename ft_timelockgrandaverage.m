@@ -89,18 +89,18 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
-  if isfield(varargin{i},'trial') && isfield(varargin{i},'avg');% see bug2372 (dieloz)
+  if isfield(varargin{i},'trial') && isfield(varargin{i},'avg') % see bug2372 (dieloz)
     varargin{i} = rmfield(varargin{i},'trial');
     ft_warning('depreciating trial field: using the avg to compute the grand average');
-    if strcmp(varargin{i}.dimord,'rpt_chan_time');
+    if strcmp(varargin{i}.dimord,'rpt_chan_time')
       varargin{i}.dimord = 'chan_time';
     end
   else
-    if isfield(varargin{i},'trial') && ~isfield(varargin{i},'avg');
+    if isfield(varargin{i},'trial') && ~isfield(varargin{i},'avg')
       ft_error('input dataset %d does not contain avg field: see ft_timelockanalysis', i);
     end
   end
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
 end
 
 % set the defaults
@@ -118,7 +118,7 @@ if iscell(cfg.parameter)
   cfg.parameter = cfg.parameter{1};
 end
 
-if strcmp(cfg.parameter,'trial');
+if strcmp(cfg.parameter,'trial')
   ft_error('not supporting averaging over the repetition dimension');
 end
 
@@ -163,7 +163,7 @@ if strcmp(cfg.keepindividual, 'yes')
     avgmat(s, :, :) = varargin{s}.(cfg.parameter);
   end
   grandavg.individual = avgmat; % Nsubj x Nchan x Nsamples
-
+  
 else % ~strcmp(cfg.keepindividual, 'yes')
   avgdof  = ones([Nsubj, datsiz]);
   avgvar  = zeros([Nsubj, datsiz]);
@@ -179,7 +179,7 @@ else % ~strcmp(cfg.keepindividual, 'yes')
           avgvar(s, :, :, :) = (varargin{s}.(cfg.parameter).^2).*varargin{s}.dof;
           % avgvar(s, :, :, :) = varargin{s}.var .* (varargin{s}.dof-1); % reversing the last div in ft_timelockanalysis
         else
-          avgvar(s, :, :, :) = zeros([datsiz]); % shall we remove the .var field from the structure under these conditions ?
+          avgvar(s, :, :, :) = zeros(datsiz); % shall we remove the .var field from the structure under these conditions ?
         end
       otherwise
         ft_error('unsupported value for cfg.method')
@@ -216,7 +216,7 @@ if isfield(varargin{1}, 'labelcmb')
 end
 
 switch cfg.method
-
+  
   case 'across'
     if isfield(varargin{1}, 'grad') % positions are different between subjects
       ft_warning('discarding gradiometer information because it cannot be averaged');
@@ -224,7 +224,7 @@ switch cfg.method
     if isfield(varargin{1}, 'elec') % positions are different between subjects
       ft_warning('discarding electrode information because it cannot be averaged');
     end
-
+    
   case 'within'
     % misses the test for all equal grad fields (should be the case for
     % averaging across blocks, if all block data is corrected for head
@@ -235,7 +235,7 @@ switch cfg.method
     if isfield(varargin{1}, 'elec')
       grandavg.elec = varargin{1}.elec;
     end
-
+    
   otherwise
     ft_error('unsupported method "%s"', cfg.method);
 end
