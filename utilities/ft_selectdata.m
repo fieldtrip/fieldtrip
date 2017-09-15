@@ -1129,6 +1129,7 @@ if isequal(cfg.trials, 'all')
   rpttapindx = nan; % the nan return value specifies that no selection was specified
   
 elseif isempty(rptdim)
+  % FIXME should [] not mean that none of the trials is to be selected?
   rptindx    = nan; % the nan return value specifies that no selection was specified
   rpttapindx = nan; % the nan return value specifies that no selection was specified
   
