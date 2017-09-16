@@ -287,16 +287,16 @@ catch
     case 'no'
       rethrow(lasterror);
     case 'reduce'
-      ft_warning('backtrace', 'off')
+      ft_warning off backtrace
       ft_warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
-      ft_warning('backtrace', 'on')
+      ft_warning on backtrace
       filt = ft_preproc_lowpassfilter(dat,Fs,Flp,N-1,type,dir,instabilityfix);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
-      ft_warning('backtrace', 'off')
+      ft_warning off backtrace
       ft_warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
-      ft_warning('backtrace', 'on')
+      ft_warning on backtrace
       filt = ft_preproc_lowpassfilter(dat ,Fs,Flp,N1,type,dir,instabilityfix);
       filt = ft_preproc_lowpassfilter(filt,Fs,Flp,N2,type,dir,instabilityfix);
     otherwise
