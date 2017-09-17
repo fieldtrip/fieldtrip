@@ -55,7 +55,7 @@ disp('using warp algorithm described in Dykstra et al. 2012 Neuroimage PMID: 221
 cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
 
 % undocumented local options
-cfg.pairingmethod = ft_getopt(cfg, 'pairingmethod', 'pos'); % eletrode pairing based on electrode 'pos' or 'label' (for computing deformation energy)
+cfg.pairmethod    = ft_getopt(cfg, 'pairmethod', 'pos'); % eletrode pairing based on electrode 'pos' or 'label' (for computing deformation energy)
 cfg.deformweight  = ft_getopt(cfg, 'deformweight',  1); % weight of deformation relative to shift energy cost
 
 % get starting coordinates
@@ -63,7 +63,7 @@ coord0 = elec.elecpos;
 coord = elec.elecpos;
 
 % compute pairs of neighbors
-pairs = create_elecpairs(elec, cfg.pairingmethod);
+pairs = create_elecpairs(elec, cfg.pairmethod);
 
 % anonymous function handles
 efun = @(coord_snapped) energy_electrodesnap(coord_snapped, coord, pairs, cfg.deformweight);
@@ -191,11 +191,14 @@ end
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function GridDim = determine_griddim(elec)
-% inspired by write_bioimage_mgrid, assumes intact grids and elec count starting at 1
+% assumes intact grids/strips and elec count starting at 1
+% A. Stolk, 2017
 
 % extract numbers from elec labels
-labels = regexp(elec.label, '\d+', 'match');
-labels = [labels{:}]';
+digits = regexp(elec.label, '\d+', 'match');
+for l=1:numel(digits)
+  labels{l,1} = digits{l}{1}; % use first found digit
+end
 
 % determine grid dimensions (1st dim: number of arrays, 2nd dim: number of elecs in an array)
 if isequal(numel(labels), 256)
@@ -226,6 +229,18 @@ elseif isequal(numel(labels), 32)
   elseif d4to5 > d8to9 % break between e4 and e5
     GridDim(1) = 8; GridDim(2) = 4;
   end
+elseif isequal(numel(labels), 24)
+  e4 = elec.elecpos(match_str(labels, num2str(4)),:);
+  e5 = elec.elecpos(match_str(labels, num2str(5)),:);
+  e6 = elec.elecpos(match_str(labels, num2str(6)),:);
+  e7 = elec.elecpos(match_str(labels, num2str(7)),:);
+  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
+  d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
+  if d6to7 >= d4to5 % break between e6 and e7
+    GridDim(1) = 4; GridDim(2) = 6;
+  elseif d4to5 > d6to7 % break between e4 and e5
+    GridDim(1) = 6; GridDim(2) = 4;
+  end
 elseif isequal(numel(labels), 20)
   e4 = elec.elecpos(match_str(labels, num2str(4)),:);
   e5 = elec.elecpos(match_str(labels, num2str(5)),:);
@@ -244,20 +259,25 @@ elseif isequal(numel(labels), 16)
   e9 = elec.elecpos(match_str(labels, num2str(9)),:);
   d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
   d8to9 = sqrt(sum((e8-e9).^2)); % distance of elec 8 to 9
+  d4to8 = sqrt(sum((e4-e8).^2)); % distance of elec 4 to 8
   if d8to9 > 2*d4to5 % break between e8 and e9
     GridDim(1) = 2; GridDim(2) = 8;
-  elseif d4to5 > 2*d8to9 % break between e4 and e5
+  elseif d4to5 > 2*d4to8 % break between e4 and e5
     GridDim(1) = 4; GridDim(2) = 4;
   else
     GridDim(1) = 1; GridDim(2) = 16;
   end
-elseif isequal(numel(labels), 12) % neglecting 3x4 and 4x3
+elseif isequal(numel(labels), 12)
+  e4 = elec.elecpos(match_str(labels, num2str(4)),:);
   e5 = elec.elecpos(match_str(labels, num2str(5)),:);
   e6 = elec.elecpos(match_str(labels, num2str(6)),:);
   e7 = elec.elecpos(match_str(labels, num2str(7)),:);
+  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 3 to 4
   d5to6 = sqrt(sum((e5-e6).^2)); % distance of elec 5 to 6
   d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-  if d6to7 > 2*d5to6 % break between e6 and e7
+  if d4to5 > 2*d5to6 % break between e4 and e5
+    GridDim(1) = 3; GridDim(2) = 4; % 4x3 unsuppported
+  elseif d6to7 > 2*d5to6 % break between e6 and e7
     GridDim(1) = 2; GridDim(2) = 6;
   else
     GridDim(1) = 1; GridDim(2) = 12;
@@ -279,9 +299,9 @@ end
 
 % provide feedback of what grid dimensions were found
 if any(GridDim==1) % if not because of strips, this could happen in case of missing electrodes
-  warning('assuming grid dimensions are %d by %d: if incorrect, use cfg.pairingmethod = ''pos'' instead\n', GridDim(1), GridDim(2));
+  warning('assuming %d x %d grid dimensions: if incorrect, use cfg.pairmethod = ''pos'' instead\n', GridDim(1), GridDim(2));
 else
-  fprintf('assuming grid dimensions are %d by %d\n', GridDim(1), GridDim(2));
+  fprintf('assuming %d x %d grid dimensions\n', GridDim(1), GridDim(2));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

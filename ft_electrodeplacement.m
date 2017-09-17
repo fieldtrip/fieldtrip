@@ -471,8 +471,8 @@ switch cfg.method
     
     % collect the results
     elec = keepfields(mri{1}, {'unit', 'coordsys'});
-    elec.label   = {};
-    elec.elecpos = [];
+    elec.label    = {};
+    elec.elecpos  = [];
     for i=1:length(opt.markerlab)
       if ~isempty(opt.markerlab{i,1})
         elec.label = [elec.label; opt.markerlab{i,1}];
