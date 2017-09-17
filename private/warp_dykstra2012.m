@@ -195,8 +195,10 @@ function GridDim = determine_griddim(elec)
 % A. Stolk, 2017
 
 % extract numbers from elec labels
-labels = regexp(elec.label, '\d+', 'match');
-labels = [labels{:}]';
+digits = regexp(elec.label, '\d+', 'match');
+for l=1:numel(digits)
+  labels{l,1} = digits{l}{1}; % use first found digit
+end
 
 % determine grid dimensions (1st dim: number of arrays, 2nd dim: number of elecs in an array)
 if isequal(numel(labels), 256)
