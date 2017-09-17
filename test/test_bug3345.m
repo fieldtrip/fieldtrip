@@ -234,7 +234,7 @@ end % plotoption
 close all
 
 plotoption = {@ft_multiplotER, @ft_singleplotER};
-for xxx=1:3
+for xxx=1:2
   ft_xxxplot = plotoption{xxx};
   
   cfg = [];
