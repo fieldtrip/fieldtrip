@@ -272,7 +272,7 @@ elseif isequal(numel(labels), 12)
   e5 = elec.elecpos(match_str(labels, num2str(5)),:);
   e6 = elec.elecpos(match_str(labels, num2str(6)),:);
   e7 = elec.elecpos(match_str(labels, num2str(7)),:);
-  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 3 to 4
+  d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
   d5to6 = sqrt(sum((e5-e6).^2)); % distance of elec 5 to 6
   d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
   if d4to5 > 2*d5to6 % break between e4 and e5
