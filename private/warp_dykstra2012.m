@@ -55,7 +55,7 @@ disp('using warp algorithm described in Dykstra et al. 2012 Neuroimage PMID: 221
 cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
 
 % undocumented local options
-cfg.pairmethod = ft_getopt(cfg, 'pairmethod', 'pos'); % eletrode pairing based on electrode 'pos' or 'label' (for computing deformation energy)
+cfg.pairmethod    = ft_getopt(cfg, 'pairmethod', 'pos'); % eletrode pairing based on electrode 'pos' or 'label' (for computing deformation energy)
 cfg.deformweight  = ft_getopt(cfg, 'deformweight',  1); % weight of deformation relative to shift energy cost
 
 % get starting coordinates
