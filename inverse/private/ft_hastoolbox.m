@@ -495,9 +495,9 @@ if isdeployed
   status = 1;
 elseif exist(toolbox, 'dir')
   if ~silent
-    ft_warning off backtrace
+    ft_warning('off','backtrace');
     ft_warning('adding %s toolbox to your MATLAB path', toolbox);
-    ft_warning on backtrace
+    ft_warning('on','backtrace');
   end
   if any(~cellfun(@isempty, regexp(toolbox, {'spm2', 'spm5', 'spm8', 'spm12'})))
     % SPM needs to be added with the subdirectories
