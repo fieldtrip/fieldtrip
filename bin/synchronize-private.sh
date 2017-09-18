@@ -185,6 +185,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(utilities/private/coordsys2label.m)
 ARRAY+=(plotting/private/coordsys2label.m)
+ARRAY+=(private/coordsys2label.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -220,6 +221,23 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(fileio/private/dataset2files.m)
 ARRAY+=(utilities/private/dataset2files.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# defaultId.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/defaultId.m)
+ARRAY+=(fileio/private/defaultId.m)
+ARRAY+=(forward/private/defaultId.m)
+ARRAY+=(inverse/private/defaultId.m)
+ARRAY+=(plotting/private/defaultId.m)
+ARRAY+=(preproc/private/defaultId.m)
+ARRAY+=(private/defaultId.m)
+ARRAY+=(specest/private/defaultId.m)
+ARRAY+=(statfun/private/defaultId.m)
+ARRAY+=(trialfun/private/defaultId.m)
+ARRAY+=(utilities/private/defaultId.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -587,6 +605,15 @@ ARRAY+=(utilities/ft_datatype_volume.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_determine_units.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_determine_units.m)
+ARRAY+=(forward/ft_determine_units.m)
+ARRAY+=(plotting/private/ft_determine_units.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_estimate_units.m
 
 ARRAY=()
@@ -773,14 +800,12 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(connectivity/private/ft_notification.m)
-ARRAY+=(engine/private/ft_notification.m)
 ARRAY+=(fileio/private/ft_notification.m)
 ARRAY+=(forward/private/ft_notification.m)
+ARRAY+=(inverse/private/ft_notification.m)
 ARRAY+=(plotting/private/ft_notification.m)
 ARRAY+=(preproc/private/ft_notification.m)
-ARRAY+=(qsub/private/ft_notification.m)
 ARRAY+=(specest/private/ft_notification.m)
-ARRAY+=(statfun/private/ft_notification.m)
 ARRAY+=(utilities/private/ft_notification.m)
 sync ${ARRAY[*]}
 
@@ -870,18 +895,16 @@ ARRAY+=(plotting/private/ft_voltype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_warning.m, should be consistent with ft_notification
+# ft_warning.m, should be consistent with ft_notification.m
 
 ARRAY=()
 ARRAY+=(connectivity/private/ft_warning.m)
-ARRAY+=(engine/private/ft_warning.m)
 ARRAY+=(fileio/private/ft_warning.m)
 ARRAY+=(forward/private/ft_warning.m)
+ARRAY+=(inverse/private/ft_warning.m)
 ARRAY+=(plotting/private/ft_warning.m)
 ARRAY+=(preproc/private/ft_warning.m)
-ARRAY+=(qsub/private/ft_warning.m)
 ARRAY+=(specest/private/ft_warning.m)
-ARRAY+=(statfun/private/ft_warning.m)
 ARRAY+=(utilities/ft_warning.m)
 sync ${ARRAY[*]}
 

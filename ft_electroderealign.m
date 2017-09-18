@@ -69,8 +69,8 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %   cfg.elec          = structure with electrode positions, see FT_DATATYPE_SENS
 %   cfg.elecfile      = name of file containing the electrode positions, see FT_READ_SENS
 %
-% If you want to realign the EEG electrodes using anatomical fiducials, the template
-% has to contain the three fiducials, e.g.
+% If you want to realign the EEG electrodes using anatomical fiducials, you should
+% specify the target location of the three fiducials, e.g.
 %   cfg.target.pos(1,:) = [110 0 0]     % location of the nose
 %   cfg.target.pos(2,:) = [0  90 0]     % location of the left ear
 %   cfg.target.pos(3,:) = [0 -90 0]     % location of the right ear
@@ -99,8 +99,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %   cfg.headshape      = a filename containing headshape, a structure containing a
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
-%   cfg.feedback       = 'yes' or 'no' (feedback includes the output of the iteration
-%                        procedure.
+%   cfg.feedback       = 'yes' or 'no' (default), feedback of the iteration procedure
 %
 % If you want to move the electrodes inward, you should specify
 %   cfg.moveinward     = number, the distance that the electrode should be moved
@@ -218,10 +217,6 @@ if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 
   ft_warning('The method ''fiducial'' implies a rigid body tramsformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
   cfg.warp = 'rigidbody';
 end
-if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 'rigidbody')
-  ft_warning('The method ''interactive'' implies a rigid body transformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
-  cfg.warp = 'rigidbody';
-end
 
 if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
   % convert the nested config-object back into a normal structure
@@ -245,13 +240,13 @@ else
 end
 
 % ensure that the units are specified
-elec_original = ft_convert_units(elec_original);
+elec_original = ft_determine_units(elec_original);
 
 % ensure up-to-date sensor description (Oct 2011)
 elec_original = ft_datatype_sens(elec_original);
 
 % ensure that channel and electrode positions are the same
-assert(isequaln(elec_original.elecpos, elec_original.chanpos), 'this function requires same electrode and channel positions.');
+assert(isequaln(elec_original.elecpos, elec_original.chanpos), 'this function requires same electrode and channel positions');
 
 % remember the original electrode locations and labels and do all the work with a
 % temporary copy, this involves channel selection and changing to lower case
@@ -408,7 +403,7 @@ elseif strcmp(cfg.method, 'headshape')
   
   norm.label = elec.label;
   if strcmp(cfg.warp, 'dykstra2012')
-    norm.elecpos = warp_dykstra2012(elec.elecpos, headshape, cfg.feedback);
+    norm.elecpos = warp_dykstra2012(cfg, elec, headshape);
   elseif strcmp(cfg.warp, 'fsaverage')
     subj_pial = ft_read_headshape(cfg.headshape);
     [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
@@ -583,33 +578,32 @@ elseif strcmp(cfg.method, 'fiducial')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'interactive')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % give the user instructions
-  disp('Use the mouse to rotate the head and the electrodes around, and click "redisplay"');
-  disp('Close the figure when you are done');
-  % open a figure
-  fig = figure;
-  % add the data to the figure
-  set(fig, 'CloseRequestFcn', @cb_close);
-  setappdata(fig, 'elec', elec);
-  setappdata(fig, 'transform', eye(4));
-  if useheadshape
-    setappdata(fig, 'headshape', headshape);
+  
+  tmpcfg = [];
+  tmpcfg.individual.elec = elec;
+  if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
+    tmpcfg.template.headshape = cfg.headshape;
   end
-  if usetarget
-    % FIXME interactive realigning to template electrodes is not yet supported
-    % this requires a consistent handling of channel selection etc.
-    setappdata(fig, 'target', target);
+  if isfield(cfg, 'target') && ~isempty(cfg.target)
+    if iscell(cfg.target)
+      if numel(cfg.target)>1
+        ft_notice('computing the average electrode positions');
+        tmpcfg.template.elec = ft_average_sens(cfg.target);
+      else
+        tmpcfg.template.elec = cfg.target{1};
+      end
+    elseif isstruct(cfg.target)
+      tmpcfg.template.elec = cfg.target;
+    end
+    tmpcfg.template.elecstyle = {'facecolor', 'blue'};
+    ft_info('plotting the target electrodes in blue');
   end
-  % add the GUI elements
-  cb_creategui(gca);
-  cb_redraw(gca);
-  rotate3d on
-  waitfor(fig);
-  % get the data from the figure that was left behind as global variable
-  tmp = norm;
-  clear global norm
-  norm = tmp;
-  clear tmp
+  
+  % use the more generic ft_interactiverealign for the actual work
+  tmpcfg = ft_interactiverealign(tmpcfg);
+  % only keep the transformation, it will be applied to the electrodes further down
+  norm.m = tmpcfg.m;
+  
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'project')
@@ -656,7 +650,9 @@ switch cfg.method
       catch
         % the previous section will fail for nonlinear transformations
         elec_realigned.label = label_original;
-        try, elec_realigned.elecpos = ft_warp_apply(norm.m, elec_original.elecpos, cfg.warp); end % FIXME why is an error here not dealt with?
+        try
+          elec_realigned.elecpos = ft_warp_apply(norm.m, elec_original.elecpos, cfg.warp);
+        end % FIXME why is an error here not dealt with?
       end
       % remember the transformation
       elec_realigned.(cfg.warp) = norm.m;
@@ -747,169 +743,3 @@ function my_line3(xyzB, xyzE, varargin)
 for i=1:size(xyzB,1)
   line([xyzB(i,1) xyzE(i,1)], [xyzB(i,2) xyzE(i,2)], [xyzB(i,3) xyzE(i,3)], varargin{:})
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_creategui(hObject, eventdata, handles)
-% % define the position of each GUI element
-fig = get(hObject, 'parent');
-% constants
-CONTROL_WIDTH  = 0.05;
-CONTROL_HEIGHT = 0.06;
-CONTROL_HOFFSET = 0.7;
-CONTROL_VOFFSET = 0.5;
-% rotateui
-uicontrol('tag', 'rotateui', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'rotate', 'callback', [])
-uicontrol('tag', 'rx', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'ry', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'rz', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-ft_uilayout(fig, 'tag', 'rotateui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET);
-ft_uilayout(fig, 'tag', 'rx',       'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET);
-ft_uilayout(fig, 'tag', 'ry',       'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET);
-ft_uilayout(fig, 'tag', 'rz',       'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET);
-
-% scaleui
-uicontrol('tag', 'scaleui', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'scale', 'callback', [])
-uicontrol('tag', 'sx', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
-uicontrol('tag', 'sy', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
-uicontrol('tag', 'sz', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
-ft_uilayout(fig, 'tag', 'scaleui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'sx',      'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'sy',      'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'sz',      'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-CONTROL_HEIGHT);
-
-% translateui
-uicontrol('tag', 'translateui', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'translate', 'callback', [])
-uicontrol('tag', 'tx', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'ty', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'tz', 'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-ft_uilayout(fig, 'tag', 'translateui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 2*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET,                 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'tx',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'ty',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'tz',          'BackgroundColor', [0.8 0.8 0.8], 'width', CONTROL_WIDTH,   'height', CONTROL_HEIGHT/2, 'hpos', CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos', CONTROL_VOFFSET-2*CONTROL_HEIGHT);
-
-% control buttons
-uicontrol('tag', 'redisplaybtn', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay', 'value', [], 'callback', @cb_redraw);
-uicontrol('tag', 'applybtn', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',     'value', [], 'callback', @cb_apply);
-uicontrol('tag', 'toggle labels', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle label', 'value', 0, 'callback', @cb_redraw);
-uicontrol('tag', 'toggle axes', 'parent', fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle axes', 'value', 0, 'callback', @cb_redraw);
-ft_uilayout(fig, 'tag', 'redisplaybtn',  'BackgroundColor', [0.8 0.8 0.8], 'width', 6*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'applybtn',      'BackgroundColor', [0.8 0.8 0.8], 'width', 6*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'toggle labels', 'BackgroundColor', [0.8 0.8 0.8], 'width', 6*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-5*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'toggle axes',   'BackgroundColor', [0.8 0.8 0.8], 'width', 6*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-6*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
-
-% alpha ui (somehow not implemented, facealpha is fixed at 0.7
-uicontrol('tag', 'alphaui', 'parent', fig, 'units', 'normalized', 'style', 'text', 'string', 'alpha', 'value', [], 'callback', []);
-uicontrol('tag', 'alpha',   'parent', fig, 'units', 'normalized', 'style', 'edit', 'string', '0.7',   'value', [], 'callback', @cb_redraw);
-ft_uilayout(fig, 'tag', 'alphaui', 'BackgroundColor', [0.8 0.8 0.8], 'width', 3*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-7*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'alpha',   'BackgroundColor', [0.8 0.8 0.8], 'width', 3*CONTROL_WIDTH, 'height', CONTROL_HEIGHT/2, 'vpos', CONTROL_VOFFSET-7*CONTROL_HEIGHT, 'hpos', CONTROL_HOFFSET+3*CONTROL_WIDTH);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_redraw(hObject, eventdata, handles)
-fig = get(hObject, 'parent');
-headshape = getappdata(fig, 'headshape');
-elec      = getappdata(fig, 'elec');
-target    = getappdata(fig, 'target');
-% get the transformation details
-rx = str2num(get(findobj(fig, 'tag', 'rx'), 'string'));
-ry = str2num(get(findobj(fig, 'tag', 'ry'), 'string'));
-rz = str2num(get(findobj(fig, 'tag', 'rz'), 'string'));
-tx = str2num(get(findobj(fig, 'tag', 'tx'), 'string'));
-ty = str2num(get(findobj(fig, 'tag', 'ty'), 'string'));
-tz = str2num(get(findobj(fig, 'tag', 'tz'), 'string'));
-sx = str2num(get(findobj(fig, 'tag', 'sx'), 'string'));
-sy = str2num(get(findobj(fig, 'tag', 'sy'), 'string'));
-sz = str2num(get(findobj(fig, 'tag', 'sz'), 'string'));
-R = rotate   ([rx ry rz]);
-T = translate([tx ty tz]);
-S = scale    ([sx sy sz]);
-H = S * T * R;
-elec = ft_transform_sens(H, elec);
-axis vis3d; cla
-xlabel('x')
-ylabel('y')
-zlabel('z')
-
-if ~isempty(target)
-  disp('Plotting the target electrodes in blue');
-  if size(target.elecpos, 2)==2
-    hs = plot(target.elecpos(:,1), target.elecpos(:,2), 'b.', 'MarkerSize', 20);
-  else
-    hs = plot3(target.elecpos(:,1), target.elecpos(:,2), target.elecpos(:,3), 'b.', 'MarkerSize', 20);
-  end
-end
-
-if ~isempty(headshape)
-  % plot the faces of the 2D or 3D triangulation
-  skin = [255 213 119]/255;
-  ft_plot_mesh(headshape,'facecolor', skin,'EdgeColor','none','facealpha',0.7);
-  lighting gouraud
-  material shiny
-  camlight
-end
-
-if isfield(elec, 'fid') && ~isempty(elec.fid.pos)
-  disp('Plotting the fiducials in red');
-  ft_plot_sens(elec.fid,'style', 'r*');
-end
-
-if get(findobj(fig, 'tag', 'toggle axes'), 'value')
-  axis on
-  grid on
-else
-  axis off
-  grid on
-end
-
-hold on
-if get(findobj(fig, 'tag', 'toggle labels'), 'value')
-  ft_plot_sens(elec,'label', 'on');
-else
-  ft_plot_sens(elec,'label', 'off');
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_apply(hObject, eventdata, handles)
-fig = get(hObject, 'parent');
-elec      = getappdata(fig, 'elec');
-transform = getappdata(fig, 'transform');
-% get the transformation details
-rx = str2num(get(findobj(fig, 'tag', 'rx'), 'string'));
-ry = str2num(get(findobj(fig, 'tag', 'ry'), 'string'));
-rz = str2num(get(findobj(fig, 'tag', 'rz'), 'string'));
-tx = str2num(get(findobj(fig, 'tag', 'tx'), 'string'));
-ty = str2num(get(findobj(fig, 'tag', 'ty'), 'string'));
-tz = str2num(get(findobj(fig, 'tag', 'tz'), 'string'));
-sx = str2num(get(findobj(fig, 'tag', 'sx'), 'string'));
-sy = str2num(get(findobj(fig, 'tag', 'sy'), 'string'));
-sz = str2num(get(findobj(fig, 'tag', 'sz'), 'string'));
-R = rotate   ([rx ry rz]);
-T = translate([tx ty tz]);
-S = scale    ([sx sy sz]);
-H = S * T * R;
-elec = ft_transform_headshape(H, elec);
-transform = H * transform;
-set(findobj(fig, 'tag', 'rx'), 'string', 0);
-set(findobj(fig, 'tag', 'ry'), 'string', 0);
-set(findobj(fig, 'tag', 'rz'), 'string', 0);
-set(findobj(fig, 'tag', 'tx'), 'string', 0);
-set(findobj(fig, 'tag', 'ty'), 'string', 0);
-set(findobj(fig, 'tag', 'tz'), 'string', 0);
-set(findobj(fig, 'tag', 'sx'), 'string', 1);
-set(findobj(fig, 'tag', 'sy'), 'string', 1);
-set(findobj(fig, 'tag', 'sz'), 'string', 1);
-setappdata(fig, 'elec', elec);
-setappdata(fig, 'transform', transform);
-cb_redraw(hObject);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_close(hObject, eventdata, handles)
-% make the current transformation permanent and subsequently allow deleting the figure
-cb_apply(gca);
-% get the updated electrode from the figure
-fig    = hObject;
-% hmmm, this is ugly
-global norm
-norm   = getappdata(fig, 'elec');
-norm.m = getappdata(fig, 'transform');
-set(fig, 'CloseRequestFcn', @delete);
-delete(fig);

@@ -19,8 +19,8 @@ clear tmp stat
 tmp.trial = rand(10,3,5);
 tmp.label = {'1';'2';'3'};
 tmp.dimord = 'rpt_chan_time';
-tmp.time = [1:5];
-tmp.cov = rand(3,3);
+tmp.time = 1:5;
+tmp.cov = rand(10,3,3);
 
 cfg = [];
 cfg.method = 'corr';

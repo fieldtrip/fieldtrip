@@ -31,10 +31,9 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.datafile     = string with the filename
 %   cfg.headerfile   = string with the filename
 %
-% If you are calling FT_PREPROCESSING with also the second input argument
-% "data", then that should contain data that was already read from file in
-% a previous call to FT_PREPROCESSING. In that case only the configuration
-% options below apply.
+% If you are calling FT_PREPROCESSING with the second input argument "data", then
+% that should contain data that was already read from file in a previous call to
+% FT_PREPROCESSING. In that case only the configuration options below apply.
 %
 % The channels that will be read and/or preprocessed are specified with
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),

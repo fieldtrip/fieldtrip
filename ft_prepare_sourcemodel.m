@@ -282,8 +282,8 @@ end
 if strcmp(cfg.grid.unit, 'auto')
   if isfield(cfg.grid, 'pos') && size(cfg.grid.pos,1)>10
     % estimate the units based on the existing source positions
-    cfg.grid = rmfield(cfg.grid, 'unit'); % remove 'auto' and have ft_convert_units determine it properly
-    cfg.grid = ft_convert_units(cfg.grid);
+    cfg.grid = rmfield(cfg.grid, 'unit'); % remove 'auto' and have ft_determine_units determine it properly
+    cfg.grid = ft_determine_units(cfg.grid);
   elseif ~isempty(sens)
     % copy the units from the sensor array
     cfg.grid.unit = sens.unit;
@@ -414,7 +414,7 @@ if basedonmri
 
   % ensure the mri to have units
   if ~isfield(mri, 'unit')
-    mri = ft_convert_units(mri);
+    mri = ft_determine_units(mri);
   end
 
   if ~isfield(cfg.grid, 'resolution')

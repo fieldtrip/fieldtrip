@@ -319,14 +319,29 @@ end % if istrue(individual)
 switch sensshape
   case 'point'
     if ~isempty(style)
-      hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', sensize);
+      % the style can include the color and/or the shape of the marker
+      % check whether the marker shape is specified
+      possible = {'+', 'o', '*', '.', 'x', 'v', '^', '>', '<', 'square', 'diamond', 'pentagram', 'hexagram'};
+      specified = false(size(possible));
+      for i=1:numel(possible)
+        specified(i) = ~isempty(strfind(style, possible{i}));
+      end
+      if any(specified)
+        % the marker shape is specified in the style option
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', sensize);
+      else
+        % the marker shape is not specified in the style option, use the marker option instead and assume that the style option represents the color
+        hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', style, 'Linestyle', 'none');
+      end
     else
+      % the style is not specified, use facecolor for the marker
       hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', sensize, 'Color', facecolor, 'Linestyle', 'none');
     end
+    
   case 'circle'
     plotcoil(pos, ori, [], sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+
   case 'square'
-    
     % determine the rotation-around-the-axis of each sensor
     % only applicable for neuromag planar gradiometers
     if ft_senstype(sens, 'neuromag')
@@ -346,9 +361,12 @@ switch sensshape
           ft_error('cannot work with balanced gradiometer definition')
         end
       end
+    else
+      chandir = [];
     end
     
     plotcoil(pos, ori, chandir, sensize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
+
   case 'sphere'
     [xsp, ysp, zsp] = sphere(100);
     rsp = sensize/2; % convert coilsensize from diameter to radius
@@ -357,6 +375,7 @@ switch sensshape
       hs = surf(rsp*xsp+pos(i,1), rsp*ysp+pos(i,2), rsp*zsp+pos(i,3));
       set(hs, 'EdgeColor', edgecolor, 'FaceColor', facecolor, 'EdgeAlpha', edgealpha, 'FaceAlpha', facealpha);
     end
+    
   otherwise
     ft_error('incorrect shape');
 end % switch

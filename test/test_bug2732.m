@@ -9,9 +9,13 @@ Fs = 1000;
 
 dat0 = randn(nchan, ntime);
 
-dat1 = dat0; dat1( :,10) = nan;
-dat2 = dat0; dat2(10, :) = nan;
-dat3 = dat0; dat3(10,10) = nan;
+nan1 = false(size(dat0)); nan1(:,10)  = true;
+nan2 = false(size(dat0)); nan2(10,:)  = true; 
+nan3 = false(size(dat0)); nan3(10,10) = true;
+
+dat1 = dat0; dat1(nan1) = nan;
+dat2 = dat0; dat2(nan2) = nan;
+dat3 = dat0; dat3(nan3) = nan;
 
 warning('');          % clear previous warnings
 ft_warning('-clear'); % clear previous warnings
@@ -27,10 +31,10 @@ out3 = ft_preproc_baselinecorrect(dat3);
 assert(isequal(id, 'FieldTrip:dataContainsNaN'));
 warning(''); % clear previous warnings
 
-assert(sum(isnan(out1(:,end)))==nchan);
-assert(sum(isnan(out2(:,end)))==1);
-assert(sum(isnan(out3(:,10)))==1);
-assert(sum(isnan(out3(10,:)))==ntime);
+assert(all(isnan(out0(:))==false));
+assert(all(isnan(out1(:))==nan1(:)));
+assert(all(isnan(out2(:))==nan2(:)));
+assert(all(isnan(out3(:))==nan3(:)));
 
 %%
 
@@ -177,10 +181,10 @@ out3 = ft_preproc_detrend(dat3);
 assert(isequal(id, 'FieldTrip:dataContainsNaN'));
 warning(''); % clear previous warnings
 
-assert(sum(isnan(out1(:,end)))==nchan);
-assert(sum(isnan(out2(:,end)))==1);
-assert(sum(isnan(out3(:,10)))==1);
-assert(sum(isnan(out3(10,:)))==ntime);
+assert(all(isnan(out0(:))==false));
+assert(all(isnan(out1(:))==nan1(:)));
+assert(all(isnan(out2(:))==nan2(:)));
+assert(all(isnan(out3(:))==nan3(:)));
 
 %%
 
@@ -210,10 +214,10 @@ out3 = ft_preproc_polyremoval(dat3, order);
 assert(isequal(id, 'FieldTrip:dataContainsNaN'));
 warning(''); % clear previous warnings
 
-assert(sum(isnan(out1(:,end)))==nchan);
-assert(sum(isnan(out2(:,end)))==1);
-assert(sum(isnan(out3(:,10)))==1);
-assert(sum(isnan(out3(10,:)))==ntime);
+assert(all(isnan(out0(:))==false));
+assert(all(isnan(out1(:))==nan1(:)));
+assert(all(isnan(out2(:))==nan2(:)));
+assert(all(isnan(out3(:))==nan3(:)));
 
 %%
 

@@ -33,7 +33,7 @@ if ischar(x)
   elseif any(strcmpi(x, false_list))
     y = false;
   else
-    ft_error('cannot determine whether "%s" should be interpreted as true or false', x);
+    error('cannot determine whether "%s" should be interpreted as true or false', x);
   end
 else
   % convert numerical value to boolean

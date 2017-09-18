@@ -32,16 +32,18 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'stl'          STereoLithography file format, for use with CAD and/or generic 3D mesh editing programs
 %   'vtk'          Visualization ToolKit file format, for use with Paraview
 %   'mne_*'        MNE surface description in ASCII format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
+%   'obj'          Wavefront .obj file obtained with the structure.io
+%   'off'
+%   'ply'
+%   'itab_asc'
 %   'ctf_*'
 %   '4d_*'
-%   'itab_asc'
 %   'neuromag_*'
-%   'mne_source'
 %   'yokogawa_*'
 %   'polhemus_*'
-%   'spmeeg_mat'
-%   'off'
 %   'freesurfer_*'
+%   'mne_source'
+%   'spmeeg_mat'
 %   'netmeg'
 %   'vista'
 %   'tet'
@@ -53,11 +55,10 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'caret_spec'
 %   'brainvisa_mesh'
 %   'brainsuite_dfs'
-%   'obj'           Wavefront .obj file obtained with the structure.io
 %
 % See also FT_READ_VOL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2016 Robert Oostenveld
+% Copyright (C) 2008-2017 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1004,8 +1005,8 @@ if ~isempty(unit)
   shape = ft_convert_units(shape, unit);
 else
   try
-    % ft_convert_units will fail for triangle-only gifties.
-    shape = ft_convert_units(shape);
+    % ft_determine_units will fail for triangle-only gifties.
+    shape = ft_determine_units(shape);
   catch
   end
 end

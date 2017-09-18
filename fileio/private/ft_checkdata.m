@@ -15,7 +15,7 @@ function [data] = ft_checkdata(data, varargin)
 %
 % Optional input arguments should be specified as key-value pairs and can include
 %   feedback           = yes, no
-%   datatype           = raw, freq, timelock, comp, spike, source,  dip, volume, segmentation, parcellation
+%   datatype           = raw, freq, timelock, comp, spike, source, mesh, dip, volume, segmentation, parcellation
 %   dimord             = any combination of time, freq, chan, refchan, rpt, subj, chancmb, rpttap, pos
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
@@ -66,6 +66,7 @@ function [data] = ft_checkdata(data, varargin)
 %   fixinside
 %   fixprecision
 %   fixvolume
+%   fixpos
 %   data2raw
 %   raw2data
 %   grid2transform
@@ -112,7 +113,7 @@ hasbrain             = ft_getopt(varargin, 'hasbrain');
 % check whether people are using deprecated stuff
 depHastrialdef = ft_getopt(varargin, 'hastrialdef');
 if (~isempty(depHastrialdef))
-  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
+  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; please use ''hassampleinfo'' instead');
   hassampleinfo = depHastrialdef;
 end
 
@@ -133,13 +134,38 @@ ischan          = ft_datatype(data, 'chan');
 ismesh          = ft_datatype(data, 'mesh');
 % FIXME use the istrue function on ismeg and hasxxx options
 
-if ~isequal(feedback, 'no')
+if ~isequal(feedback, 'no') % can be 'yes' or 'text'
   if iscomp
     % it can be comp and raw/timelock/freq at the same time, therefore this has to go first
     nchan = size(data.topo,1);
     ncomp = size(data.topo,2);
     ft_info('the input is component data with %d components and %d original channels\n', ncomp, nchan);
-  end
+  end  % if iscomp
+  
+  if ismesh
+    % it can be comp and source at the same time, therefore this has to go first
+    data = fixpos(data);
+    npos = 0;
+    ntri = 0;
+    nhex = 0;
+    ntet = 0;
+    % the data can contain multiple surfaces
+    for i=1:numel(data)
+      npos = npos+size(data.pos,1);
+      if isfield(data, 'tri'), ntri = ntri+size(data.tri,1); end
+      if isfield(data, 'hex'), nhex = nhex+size(data.hex,1); end
+      if isfield(data, 'tet'), ntet = ntet+size(data.tet,1); end
+    end
+    if isfield(data,'tri')
+      ft_info('the input is mesh data with %d vertices and %d triangles\n', npos, ntri);
+    elseif isfield(data,'hex')
+      ft_info('the input is mesh data with %d vertices and %d hexahedrons\n', npos, nhex);
+    elseif isfield(data,'tet')
+      ft_info('the input is mesh data with %d vertices and %d tetrahedrons\n', npos, ntet);
+    else
+      ft_info('the input is mesh data with %d vertices', npos);
+    end
+  end % if ismesh
   
   if israw
     nchan = length(data.label);
@@ -184,8 +210,6 @@ if ~isequal(feedback, 'no')
     end
     if isfield(data, 'dim')
       ft_info('the input is %s data with %d brainordinates on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
-    elseif isfield(data, 'tri')
-      ft_info('the input is %s data with %d vertex positions and %d triangles\n', subtype, nsource, size(data.tri, 1));
     else
       ft_info('the input is %s data with %d brainordinates\n', subtype, nsource);
     end
@@ -203,22 +227,7 @@ if ~isequal(feedback, 'no')
     else
       ft_info('the input is chan data with %d channels\n', nchan);
     end
-  end
-elseif ismesh
-  data = fixpos(data);
-  if numel(data)==1
-    if isfield(data,'tri')
-      ft_info('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
-    elseif isfield(data,'hex')
-      ft_info('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
-    elseif isfield(data,'tet')
-      ft_info('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));
-    else
-      ft_info('the input is mesh data with %d vertices', size(data.pos,1));
-    end
-  else
-    ft_info('the input is mesh data with multiple surfaces\n');
-  end
+  end % if israw etc.
 end % give feedback
 
 if issource && isvolume
@@ -390,19 +399,19 @@ if ~isempty(dtype)
       istimelock = 0;
       israw = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && israw
+    elseif isequal(dtype(iCell), {'comp'}) && israw  && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       israw = 0;
       iscomp = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && istimelock
+    elseif isequal(dtype(iCell), {'comp'}) && istimelock && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       istimelock = 0;
       iscomp = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && isfreq
+    elseif isequal(dtype(iCell), {'comp'}) && isfreq && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       isfreq = 0;
@@ -591,7 +600,7 @@ end
 
 if istrue(hasunit) && ~isfield(data, 'unit')
   % calling convert_units with only the input data adds the units without converting
-  data = ft_convert_units(data);
+  data = ft_determine_units(data);
 end % if hasunit
 
 if istrue(hascoordsys) && ~isfield(data, 'coordsys')
@@ -599,16 +608,23 @@ if istrue(hascoordsys) && ~isfield(data, 'coordsys')
 end % if hascoordsys
 
 if isequal(hastrials, 'yes')
-  okflag = isfield(data, 'trial');
-  if ~okflag && isfield(data, 'dimord')
+  hasrpt = isfield(data, 'trial');
+  if ~hasrpt && isfield(data, 'dimord')
     % instead look in the dimord for rpt or subj
-    okflag = ~isempty(strfind(data.dimord, 'rpt')) || ...
+    hasrpt = ~isempty(strfind(data.dimord, 'rpt')) || ...
       ~isempty(strfind(data.dimord, 'rpttap')) || ...
       ~isempty(strfind(data.dimord, 'subj'));
   end
-  if ~okflag
+  if ~hasrpt
     ft_error('This function requires data with a ''trial'' field');
-  end % if okflag
+  end % if hasrpt
+elseif isequal(hastrials, 'no') && istimelock
+  if ~isfield(data, 'avg') && (isfield(data, 'trial') || isfield(data, 'individual'))
+    % average on the fly
+    tmpcfg = [];
+    tmpcfg.keeptrials = 'no';
+    data = ft_timelockanalysis(tmpcfg, data); 
+  end
 end
 
 if strcmp(hasdim, 'yes') && ~isfield(data, 'dim')

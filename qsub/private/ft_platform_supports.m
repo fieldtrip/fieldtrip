@@ -42,7 +42,7 @@ function tf = ft_platform_supports(what,varargin)
 % See also FT_VERSION, VERSION, VER, VERLESSTHAN
 
 if ~ischar(what)
-  ft_error('first argument must be a string');
+  error('first argument must be a string');
 end
 
 switch what
@@ -160,7 +160,7 @@ switch what
     tf = ~is_octave() && usejava('desktop') && desktop('-inuse');
     
   otherwise
-    ft_error('unsupported value for first argument: %s', what);
+    error('unsupported value for first argument: %s', what);
     
 end % switch
 

@@ -21,6 +21,10 @@ function [output] = ft_connectivity_csd2transfer(freq, varargin)
 %                    a multiple pairwise factorization is done.
 %   tol          = scalar value (default: 1e-18) tolerance limit truncating
 %                    the iterations
+%   sfmethod     = 'multivariate', or 'bivariate' 
+%   stabilityfix = false, or true. zigzag-reduction by means of tapering of the
+%                    intermediate time domain representation when computing the
+%                    plusoperator
 %
 % The code for the Wilson-Burg algorithm has been very generously provided by 
 % Dr. Mukesh Dhamala, and Prof. Mingzhou Ding and his group. 
@@ -35,8 +39,10 @@ function [output] = ft_connectivity_csd2transfer(freq, varargin)
 %   block
 %   blockindx
 %   svd
+%   conditional
+%   init
 %
-% Copyright (C) 2009-2011, Jan-Mathijs Schoffelen
+% Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -60,12 +66,13 @@ numiteration = ft_getopt(varargin, 'numiteration', 100);
 channelcmb   = ft_getopt(varargin, 'channelcmb',   {});
 block        = ft_getopt(varargin, 'block',        []);
 tol          = ft_getopt(varargin, 'tol',          1e-18);
-fb           = ft_getopt(varargin, 'feedback',     'textbar');
+fb           = ft_getopt(varargin, 'feedback',     'none');
 sfmethod     = ft_getopt(varargin, 'sfmethod',     'multivariate');
 dosvd        = ft_getopt(varargin, 'svd',          'no');
 doconditional = ft_getopt(varargin, 'conditional', 0);
 init         = ft_getopt(varargin, 'init',         'chol');
 checkconvergence = ft_getopt(varargin, 'checkconvergence', true);
+stabilityfix = istrue(ft_getopt(varargin, 'stabilityfix', false));
 
 dosvd         = istrue(dosvd);
 doconditional = istrue(doconditional);
@@ -104,7 +111,7 @@ if isempty(channelcmb) && strcmp(sfmethod, 'bivariate')
 end
 
 
-if ~isempty(channelcmb)
+if ~isempty(channelcmb) && numel(freq.label)>1
   if numel(channelcmb)==2 && strcmp(channelcmb{1},'all') && strcmp(channelcmb{2}, 'all')
     [cmbindx(:,1), cmbindx(:,2)] = find(tril(ones(numel(freq.label)),-1));
     ok = true(size(cmbindx,1),1);
@@ -179,7 +186,7 @@ if strcmp(sfmethod, 'multivariate') && nrpt==1 && ~doconditional,
       Stmp = nan;
     else
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                                                   numiteration, tol, fb, init);
+                             numiteration, tol, fb, init, stabilityfix);
     end
     
     % undo SVD
@@ -273,7 +280,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
     end
     
     [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, freq.freq, ...
-                                                 numiteration, tol, fb, init);  
+                           numiteration, tol, fb, init, stabilityfix);  
     
     % undo PCA
     if dopca
@@ -330,7 +337,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~doblock,
     for m = 1:ntim
       tmp = reshape(freq.crsspctrm(k,:,:,:,m), siz(2:end-1));
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                                                   numiteration, tol, fb, init);
+                             numiteration, tol, fb, init, stabilityfix);
       H(k,:,:,:,m) = Htmp;
       Z(k,:,:,m)   = Ztmp;
       S(k,:,:,:,m) = Stmp;
@@ -368,7 +375,7 @@ elseif strcmp(sfmethod, 'bivariate')
   if ntim>1,
     for kk = 1:ntim
       [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm(:,:,:,kk), ...
-                               freq.freq, numiteration, tol, cmbindx, fb, init, checkconvergence);
+                             freq.freq, numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
       if kk==1,
         H   = Htmp;
         Z   = Ztmp;
@@ -395,7 +402,7 @@ elseif strcmp(sfmethod, 'bivariate')
       for k = 1:numel(begchunk)
         fprintf('computing factorization of chunck %d/%d\n', k, numel(begchunk));
         [Htmp, Ztmp, Stmp] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                                             numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init, checkconvergence);
+                               numiteration, tol, cmbindx(begchunk(k):endchunk(k),:), fb, init, checkconvergence, stabilityfix);
                                            
         begix = (k-1)*nperchunk*4+1;
         endix = min(k*nperchunk*4, size(cmbindx,1)*4);
@@ -406,7 +413,7 @@ elseif strcmp(sfmethod, 'bivariate')
       end
     else
       [H, Z, S] = sfactorization_wilson2x2(freq.crsspctrm, freq.freq, ...
-                                             numiteration, tol, cmbindx, fb, init, checkconvergence);
+                    numiteration, tol, cmbindx, fb, init, checkconvergence, stabilityfix);
     end
   end
   

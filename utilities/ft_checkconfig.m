@@ -480,6 +480,7 @@ if ~isempty(createsubcfg)
           'svd'
           'init'
           'checkconvergence'
+          'stabilityfix'
           };
         
       otherwise

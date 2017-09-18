@@ -117,6 +117,7 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
 %   cfg.queryrange    = number, in atlas voxels (default 3)
+%   cfg.clim          = lower and upper anatomical MRI limits (default = [0 1])
 %
 % When cfg.method='slice', a NxM montage with a large number of slices will be rendered.
 % All slices are evenly spaced and along the same dimension.
@@ -286,6 +287,7 @@ cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.visible       = ft_getopt(cfg, 'visible',       'on');
+cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % this is used to scale the orthoplot
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -1067,7 +1069,7 @@ switch cfg.method
     opt.fcolmax       = fcolmax;
     opt.opacmin       = opacmin;
     opt.opacmax       = opacmax;
-    opt.clim          = []; % contrast limits for the anatomy, see ft_volumenormalise
+    opt.clim          = cfg.clim; % contrast limits for the anatomy, see ft_volumenormalise
     opt.colorbar      = cfg.colorbar;
     opt.queryrange    = cfg.queryrange;
     opt.funcolormap   = cfg.funcolormap;

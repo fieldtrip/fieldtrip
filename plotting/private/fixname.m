@@ -54,7 +54,7 @@ switch version
     % truncate the string if it's too long: MATLAB maximizes the string length to 63 characters (and throws a warning when truncating)
     if numel(str)>63
       str = str(1:63);
-      ft_warning('%s exceeds MATLAB''s maximum name length of 63 characters and has been truncated to %s', str, str(1:63));
+      warning('%s exceeds MATLAB''s maximum name length of 63 characters and has been truncated to %s', str, str(1:63));
     end
     
   case '2014a'
@@ -77,5 +77,5 @@ switch version
     str = char(base64decode(str));
     
   otherwise
-    ft_error('unsupported version "%s"', version);
+    error('unsupported version "%s"', version);
 end

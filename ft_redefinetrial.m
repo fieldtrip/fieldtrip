@@ -251,15 +251,16 @@ elseif ~isempty(cfg.trl)
     % ensure correct handling of trialinfo.
     % original trial
     iTrlorig  =  find(begsample <= dataold.sampleinfo(:,2) & endsample >= dataold.sampleinfo(:,1)); % Determines which old trials are present in new trials
-
+    
     if size(cfg.trl,2)>3 %In case user specified a trialinfo
       data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
       if isfield(dataold,'trialinfo')
         ft_warning('Original data has trialinfo, using user specified trialinfo instead');
       end
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
-      if numel(iTrlorig) == 1 || ...  % only 1 old trial to copy trialinfo from, or
-          size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1) % all old trialinfo rows are identical
+      if (numel(iTrlorig) == 1 ...  % only 1 old trial to copy trialinfo from, or
+          || size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1)) ... % all old trialinfo rows are identical
+          && ~any(diff(dataold.sampleinfo(:,1))<=0) % and the trials are consecutive segments
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
       else
         ft_error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');

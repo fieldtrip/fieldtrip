@@ -36,7 +36,7 @@ if iscell(f)
 end
 
 if ~ischar(f)
-  ft_error('incorrect input argument for fieldname');
+  error('incorrect input argument for fieldname');
 end
 
 t = textscan(f,'%s','delimiter','.');

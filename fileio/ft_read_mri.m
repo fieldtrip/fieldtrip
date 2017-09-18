@@ -458,7 +458,7 @@ end
 
 try
   % try to determine the units of the coordinate system
-  mri = ft_convert_units(mri);
+  mri = ft_determine_units(mri);
 end
 
 try
