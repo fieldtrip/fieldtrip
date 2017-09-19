@@ -7,6 +7,7 @@ function ft_plot_lay(lay, varargin)
 % where the layout is a FieldTrip structure obtained from FT_PREPARE_LAYOUT.
 %
 % Additional options should be specified in key-value pairs and can be
+%   'chanindx'    = list of channels to plot (default is all)
 %   'point'       = yes/no
 %   'box'         = yes/no
 %   'label'       = yes/no
@@ -57,14 +58,17 @@ function ft_plot_lay(lay, varargin)
 ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
+chanindx     = ft_getopt(varargin, 'chanindx',     []);
 hpos         = ft_getopt(varargin, 'hpos',         0);
 vpos         = ft_getopt(varargin, 'vpos',         0);
-width        = ft_getopt(varargin, 'width',          []);
-height       = ft_getopt(varargin, 'height',         []);
+width        = ft_getopt(varargin, 'width',        []);
+height       = ft_getopt(varargin, 'height',       []);
 point        = ft_getopt(varargin, 'point',        true);
 box          = ft_getopt(varargin, 'box',          true);
 label        = ft_getopt(varargin, 'label',        true);
 labeloffset  = ft_getopt(varargin, 'labeloffset',  0);
+labelxoffset = ft_getopt(varargin, 'labelxoffset', labeloffset);
+labelyoffset = ft_getopt(varargin, 'labelyoffset', labeloffset*1.5);
 mask         = ft_getopt(varargin, 'mask',         true);
 outline      = ft_getopt(varargin, 'outline',      true);
 verbose      = ft_getopt(varargin, 'verbose',      false);
@@ -111,10 +115,16 @@ if ~holdflag
   hold on
 end
 
-% layout units can be arbitrary (e.g. pixels for .mat files)
-% so we need to compute the right scaling factor and offset
-% create a matrix with all coordinates
-% from positions, mask, and outline
+% make a selection of the channels
+if ~isempty(chanindx)
+  lay.pos    = lay.pos(chanindx,:);
+  lay.width  = lay.width(chanindx);
+  lay.height = lay.height(chanindx);
+  lay.label  = lay.label(chanindx);
+end
+
+% the units can be arbitrary (e.g. relative or pixels), so we need to compute the right scaling factor and offset
+% create a matrix with all coordinates from positions, mask, and outline
 allCoords = lay.pos;
 if isfield(lay, 'mask') && ~isempty(lay.mask)
   for k = 1:numel(lay.mask)
@@ -170,7 +180,7 @@ if label
   % check whether fancy label plotting is needed, this requires a for loop,
   % otherwise print text in a single shot
   if numel(labelrotate)==1
-    text(X+labeloffset, Y+(labeloffset*1.5), Lbl , 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+    text(X+labelxoffset, Y+labelyoffset, Lbl , 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
   else
     n = numel(Lbl);
     if ~iscell(labelalignh)
@@ -183,7 +193,7 @@ if label
       eror('there is something wrong with the input arguments');
     end
     for k = 1:numel(Lbl)
-      text(X(k)+labeloffset, Y(k)+(labeloffset*1.5), Lbl{k}, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      h = text(X(k)+labelxoffset, Y(k)+labelyoffset, Lbl{k}, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     end
   end
 end
