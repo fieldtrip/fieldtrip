@@ -13,6 +13,7 @@ function data = ft_steadystatesimulation(cfg)
 %   cfg.duration  = scalar, trial length in seconds (default = 4.56)
 %   cfg.baseline  = scalar, baseline length in seconds (default = 0)
 %   cfg.ntrials   = integer N, number of trials (default = 320)
+%   cfg.iti       = scalar, inter-trial interval in seconds (default = 1)
 %
 % Each trial can contain multiple nested experimental manipulations
 %   cfg.level1.condition = scalar, or vector of length L1 (default = 1)
@@ -104,6 +105,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
+ft_preamble provenance
 ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -127,6 +129,7 @@ cfg.ntrials   = ft_getopt(cfg, 'ntrials', 320);
 cfg.fsample   = ft_getopt(cfg, 'fsample', 512);
 cfg.duration  = ft_getopt(cfg, 'duration', 4.5);
 cfg.baseline  = ft_getopt(cfg, 'baseline', 0);
+cfg.iti       = ft_getopt(cfg, 'iti', 1);
 
 cfg.stimulus1 = ft_getopt(cfg, 'stimulus1');
 cfg.stimulus2 = ft_getopt(cfg, 'stimulus2');
@@ -176,6 +179,9 @@ switch cfg.stimulus2.mode
     assert(numel(cfg.stimulus2.condition)==cfg.stimulus2.number);
     assert(numel(cfg.stimulus2.gain)==cfg.stimulus2.number);
 end
+
+% they cannot be the same, as that would confuse the trialinfo
+assert(~isequal(cfg.stimulus1.mode, cfg.stimulus2.mode));
 
 % determine which levels are being used
 level1 = ncondition1>0;
@@ -268,14 +274,18 @@ for cond3=1:max(ncondition3, 1)
         switch stimcfg.mode
           case 'periodic'
             sample = nearest(time, stimcfg.onset + rand(1)*stimcfg.onsetjitter);
-            while true
+            for i=1:ceil((cfg.duration-stimcfg.onset)/stimcfg.isi)
               sample = sample + round(cfg.fsample*(stimcfg.isi + stimcfg.isijitter*rand(1)));
               if sample>length(signal)
-                break
+                % this periodic stimulus falls outside the trial
+                sample = nan;
               else
                 signal(sample) = 1;
               end
+              trialinfo = [trialinfo sample+length(baseline)];
+              varname(end+1) = {sprintf('p%d_sample', i)};
             end % while
+            
           case 'transient'
             shuffle = randperm(numel(stimcfg.gain));
             sample  = nearest(time, stimcfg.onset + rand(1)*stimcfg.onsetjitter);
@@ -285,38 +295,39 @@ for cond3=1:max(ncondition3, 1)
               sample = sample + round(cfg.fsample*(stimcfg.isi + stimcfg.isijitter*rand(1)));
               if sample>length(signal)
                 warning('transient stimulus falls outside of trial');
-                trialinfo = [trialinfo transientcondition(i)];
-                varname(end+1) = {sprintf('t1_%d_cond', i)};
-                trialinfo = [trialinfo nan];
-                varname(end+1) = {sprintf('t1_%d_sample', i)};
+                sample = nan;
               else
                 signal(sample) = transientgain(i);
-                trialinfo = [trialinfo transientcondition(i)];
-                varname(end+1) = {sprintf('t1_%d_cond', i)};
-                trialinfo = [trialinfo nan];
-                varname(end+1) = {sprintf('t1_%d_sample', i)};
               end
+              trialinfo = [trialinfo transientcondition(i)];
+              varname(end+1) = {sprintf('t%d_cond', i)};
+              trialinfo = [trialinfo sample+length(baseline)];
+              varname(end+1) = {sprintf('t%d_sample', i)};
               
             end % while
         end % switch mode
         
-        dat(2,:) = [zeros(size(baseline)) signal*trialgain];
-        dat(3,:) = erpconvolve(dat(2,:), kernel1);
+        dat(2,:) = [zeros(size(baseline))             signal*trialgain          ];
+        dat(3,:) = [zeros(size(baseline)) erpconvolve(signal*trialgain, kernel1)];
         
-        stimcfg   = cfg.stimulus2;
-        signal = zeros(size(time));  % the baseline will be added later
+        stimcfg  = cfg.stimulus2;
+        signal   = zeros(size(time));  % the baseline will be added later
         
         switch stimcfg.mode
           case 'periodic'
             sample = nearest(time, stimcfg.onset + rand(1)*stimcfg.onsetjitter);
-            while true
+            for i=1:ceil((cfg.duration-stimcfg.onset)/stimcfg.isi)
               sample = sample + round(cfg.fsample*(stimcfg.isi + stimcfg.isijitter*rand(1)));
               if sample>length(signal)
-                break
+                % this periodic stimulus falls outside the trial
+                sample = nan;
               else
                 signal(sample) = 1;
               end
+              trialinfo = [trialinfo sample+length(baseline)];
+              varname(end+1) = {sprintf('p%d_sample', i)};
             end % while
+            
           case 'transient'
             shuffle = randperm(numel(stimcfg.gain));
             sample  = nearest(time, stimcfg.onset + rand(1)*stimcfg.onsetjitter);
@@ -326,26 +337,26 @@ for cond3=1:max(ncondition3, 1)
               sample = sample + round(cfg.fsample*(stimcfg.isi + stimcfg.isijitter*rand(1)));
               if sample>length(signal)
                 warning('transient stimulus falls outside of trial');
-                trialinfo = [trialinfo transientcondition(i)];
-                varname(end+1) = {sprintf('t2_%d_cond', i)};
-                trialinfo = [trialinfo nan];
-                varname(end+1) = {sprintf('t2_%d_sample', i)};
+                sample = nan;
               else
                 signal(sample) = transientgain(i);
-                trialinfo = [trialinfo transientcondition(i)];
-                varname(end+1) = {sprintf('t2_%d_cond', i)};
-                trialinfo = [trialinfo sample];
-                varname(end+1) = {sprintf('t2_%d_sample', i)};
               end
+              trialinfo = [trialinfo transientcondition(i)];
+              varname(end+1) = {sprintf('t%d_cond', i)};
+              trialinfo = [trialinfo sample+length(baseline)];
+              varname(end+1) = {sprintf('t%d_sample', i)};
             end % while
+            
         end % switch mode
         
-        dat(4,:) = [zeros(size(baseline)) signal*trialgain];
-        dat(5,:) = erpconvolve(dat(4,:), kernel2);
+        dat(4,:) = [zeros(size(baseline))             signal*trialgain          ];
+        dat(5,:) = [zeros(size(baseline)) erpconvolve(signal*trialgain, kernel2)];
         
-        dat(1,:) = sum(dat(3:2:end,:), 1);
+        % the first channel contains the sum of the two convolved signals
+        dat(1,:) = sum(dat([3 5],:), 1);
+        
         data.trial{k} = dat;
-        data.time{k} = [baseline time];
+        data.time{k}  = [baseline time];
         data.trialinfo(k,:) = trialinfo;
         
         k = k+1;
@@ -363,6 +374,20 @@ data.label = {
   'stickfunction2'
   'convolved2'
   };
+
+% construct the sample information, start with consecutive segments
+nsample = length(baseline) + length(time);
+data.sampleinfo(:,1) = ((1:ntrial)-1)*nsample + 1;
+data.sampleinfo(:,2) = ((1:ntrial)  )*nsample;
+% add the inter-trial-interval
+data.sampleinfo(:,1) = data.sampleinfo(:,1) + transpose((1:ntrial)-1)*round(cfg.iti*cfg.fsample);
+data.sampleinfo(:,2) = data.sampleinfo(:,2) + transpose((1:ntrial)-1)*round(cfg.iti*cfg.fsample);
+
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
