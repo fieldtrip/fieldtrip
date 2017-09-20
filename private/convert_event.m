@@ -53,6 +53,10 @@ end
 endsample = ft_getopt(varargin, 'endsample');
 typenames = ft_getopt(varargin, 'typenames');
 
+if istable(obj)
+  obj = table2array(obj);
+end
+
 % Determine what the input object is
 if isempty(obj)
   input_obj = 'empty';
