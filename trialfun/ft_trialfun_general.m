@@ -112,11 +112,11 @@ end
 trl = [];
 val = [];
 if isfield(cfg.trialdef, 'eventtype')
-  if strcmp(cfg.trialdef.eventtype, '?')
+  if isequal(cfg.trialdef.eventtype, '?')
     % no trials should be added, show event information using subfunction and exit
     show_event(event);
     return
-  elseif strcmp(cfg.trialdef.eventtype, 'gui') || (isfield(cfg.trialdef, 'eventvalue') && length(cfg.trialdef.eventvalue)==1 && strcmp(cfg.trialdef.eventvalue, 'gui'))
+  elseif isequal(cfg.trialdef.eventtype, 'gui') || (isfield(cfg.trialdef, 'eventvalue') && length(cfg.trialdef.eventvalue)==1 && strcmp(cfg.trialdef.eventvalue, 'gui'))
     cfg.trialdef = select_event(event, cfg.trialdef);
     usegui = 1;
   else
@@ -237,7 +237,7 @@ if usegui && ~isempty(trl)
   
   indx = select_channel_list(eventstrings, selected , 'Select events');
   
-  trl=trl(indx, :);
+  trl = trl(indx, :);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

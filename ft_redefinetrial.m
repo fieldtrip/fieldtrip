@@ -238,6 +238,10 @@ elseif ~isempty(cfg.trl)
   data.trial    = cell(1,size(trl,1));
   data.time     = cell(1,size(trl,1));
   data          = copyfields(dataold, data, {'fsample' 'label' 'topo' 'topolabel' 'unmixing' 'mixing' 'grad' 'elec' 'opto'}); % account for all potential fields to be copied over
+
+  if isfield(dataold,'trialinfo')
+    ft_warning('Original data has trialinfo, using user specified trialinfo instead');
+  end
   
   for iTrl=1:length(trl(:,1))
     begsample = trl(iTrl,1);
@@ -254,9 +258,6 @@ elseif ~isempty(cfg.trl)
     
     if size(cfg.trl,2)>3 %In case user specified a trialinfo
       data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
-      if isfield(dataold,'trialinfo')
-        ft_warning('Original data has trialinfo, using user specified trialinfo instead');
-      end
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
       if (numel(iTrlorig) == 1 ...  % only 1 old trial to copy trialinfo from, or
           || size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1)) ... % all old trialinfo rows are identical

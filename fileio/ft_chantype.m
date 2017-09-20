@@ -303,7 +303,7 @@ elseif ft_senstype(input, 'ctf') && isheader
   % eFitErr           28 Fit error from each head localization coil
   % eOtherRef         29 Any other type of sensor not mentioned but still valid
   % eInvalidType      30 An invalid sensor
-
+  
   % start with an empty one
   origSensType = [];
   if isfield(input, 'orig')
@@ -435,9 +435,9 @@ elseif ft_senstype(input, 'bti')
       selchan = find(strcmp('meg', gradtype));
       for k = 1:length(selchan)
         ncoils = length(find(input.tra(selchan(k),:)==1));
-        if ncoils==1,
+        if ncoils==1
           gradtype{selchan(k)} = 'megmag';
-        elseif ncoils==2,
+        elseif ncoils==2
           gradtype{selchan(k)} = 'meggrad';
         end
       end
