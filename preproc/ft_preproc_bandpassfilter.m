@@ -310,4 +310,3 @@ catch
       ft_error('incorrect specification of instabilityfix');
   end % switch
 end
-
