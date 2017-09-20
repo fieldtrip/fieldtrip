@@ -190,7 +190,7 @@ end
 
 % make sure figure window titles are labeled appropriately, pass this onto the actual
 % plotting function if we don't specify this, the window will be called
-% 'ft_topoplotTFR', which is confusing to the user
+% 'ft_topoplotER', which is confusing to the user
 cfg.funcname = mfilename;
 if nargin > 1 && ~isfield(cfg, 'dataname')
   cfg.dataname = {inputname(2)};
