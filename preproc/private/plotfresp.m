@@ -74,7 +74,7 @@ end
 if strncmp('twopass', dir, 7)
     isTwopass = true;
     isZerophase = true;
-elseif strcmp('onepass-zerophase', dir)
+elseif strcmp('onepass-zerophase', dir) || strcmp('onepass-reverse-zerophase', dir)
     if ~isLinPhaseFir
         ft_error('Onepass-zerophase filtering is only allowed for linear-phase FIR filters.')
     end

@@ -24,6 +24,7 @@ function [filt, B, A] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabil
 %                'twopass-reverse' zero-phase reverse and forward filter
 %                'twopass-average' average of the twopass and the twopass-reverse
 %                'onepass-zerophase' zero-phase forward filter with delay compensation (default for firws, linear-phase symmetric FIR only)
+%                'onepass-reverse-zerophase' zero-phase reverse filter with delay compensation
 %                'onepass-minphase' minimum-phase converted forward filter (non-linear!, firws only)
 %   instabilityfix optional method to deal with filter instabilities
 %                'no'       only detect and give error (default)
@@ -301,4 +302,3 @@ catch
       ft_error('incorrect specification of instabilityfix');
   end % switch
 end
-
