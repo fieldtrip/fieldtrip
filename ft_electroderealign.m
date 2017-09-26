@@ -722,6 +722,17 @@ end
 % channel positions are identical to the electrode positions (this was checked at the start)
 elec_realigned.chanpos = elec_realigned.elecpos;
 
+% copy over unit, chantype, and chanunit information in case this was not already done
+if ~isfield(elec_realigned, 'unit') && isfield(elec_original, 'unit')
+  elec_realigned.unit = elec_original.unit;
+end
+if ~isfield(elec_realigned, 'chantype') && isfield(elec_original, 'chantype')
+  elec_realigned.chantype = elec_original.chantype;
+end
+if ~isfield(elec_realigned, 'chanunit') && isfield(elec_original, 'chanunit')
+  elec_realigned.chanunit = elec_original.chanunit;
+end
+
 % update it to the latest version
 elec_realigned = ft_datatype_sens(elec_realigned);
 

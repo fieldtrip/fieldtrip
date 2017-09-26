@@ -314,7 +314,9 @@ end
 if strcmp(cfg.doscale, 'yes')
   % determine the scaling of the data, scale it to approximately unity
   % this will improve the performance of some methods, esp. fastica
-  scale = norm((data.trial{1}*data.trial{1}')./size(data.trial{1},2));
+  tmp                 = data.trial{1};
+  tmp(~isfinite(tmp)) = 0; % ensure that the scaling is a finite value
+  scale = norm((tmp*tmp')./size(tmp,2)); clear tmp;
   scale = sqrt(scale);
   if scale ~= 0
     fprintf('scaling data with 1 over %f\n', scale);
@@ -380,9 +382,16 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   fprintf('\n');
   fprintf('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
   
+  hasdatanans = any(~isfinite(dat(:)));
+  if hasdatanans
+    fprintf('data contains nans, only using the non-nan samples\n');
+    finitevals = sum(~isfinite(dat))==0;
+    dat        = dat(:,finitevals);
+  end
 else
   fprintf('not concatenating data\n');
   dat = data.trial;
+  % FIXME cellmode processing is not nan-transparent yet
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
