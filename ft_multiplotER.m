@@ -478,8 +478,12 @@ if istrue(cfg.showcomment)
   % Add the colors of the different datasets to the comment
   colorLabels = [];
   if Ndata > 1
-    if ischar(graphcolor);        colorLabels = [colorLabels dataname{i} '='         graphcolor(i)     '\n'];
-    elseif isnumeric(graphcolor); colorLabels = [colorLabels dataname{i} '=' num2str(graphcolor(i, :)) '\n'];
+    for i=1:Ndata
+      if ischar(graphcolor)
+        colorLabels = [colorLabels '\n' dataname{i} '='         graphcolor(i)     ];
+      elseif isnumeric(graphcolor)
+        colorLabels = [colorLabels '\n' dataname{i} '=' num2str(graphcolor(i, :)) ];
+      end
     end
   end
   cfg.comment = [cfg.comment colorLabels];
