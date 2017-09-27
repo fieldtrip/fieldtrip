@@ -222,21 +222,23 @@ if Ndata>1
 end
 
 % this is needed for the figure title and correct labeling of graphcolor later on
-if isfield(cfg, 'dataname')
-  dataname = cfg.dataname;
-elseif nargin==1
-  dataname = cfg.inputfile;
-elseif ~isempty(inputname(i+1))
-  dataname = cell(1,Ndata);
-  for i=1:Ndata
-    dataname{i} = inputname(i+1);
+if nargin>1
+  if isfield(cfg, 'dataname')
+    dataname = cfg.dataname;
+  else
+    dataname = cell(1,Ndata);
+    for i=1:Ndata
+      if ~isempty(inputname(i+1))
+        dataname{i} = inputname(i+1);
+      else
+        dataname{i} = ['data' num2str(i,'%02d')];
+      end
+    end
   end
-else
-  dataname = cell(1,Ndata);
-  for i=1:Ndata
-    dataname{i} = ['input' num2str(i,'%02d')];
-  end
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
+
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 

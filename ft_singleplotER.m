@@ -193,20 +193,21 @@ elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
 end
 
 % this is needed for the figure title and correct labeling of graphcolor later on
-if isfield(cfg, 'dataname')
-  dataname = cfg.dataname;
-elseif nargin==1
-  dataname = cfg.inputfile;
-elseif ~isempty(inputname(i+1))
-  dataname = cell(1,Ndata);
-  for i=1:Ndata
-    dataname{i} = inputname(i+1);
+if nargin>1
+  if isfield(cfg, 'dataname')
+    dataname = cfg.dataname;
+  else
+    dataname = cell(1,Ndata);
+    for i=1:Ndata
+      if ~isempty(inputname(i+1))
+        dataname{i} = inputname(i+1);
+      else
+        dataname{i} = ['data' num2str(i,'%02d')];
+      end
+    end
   end
-else
-  dataname = cell(1,Ndata);
-  for i=1:Ndata
-    dataname{i} = ['input' num2str(i, '%02d')];
-  end
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
@@ -473,19 +474,12 @@ if isempty(get(gcf, 'Name'))
   else
     chans = '<multiple channels>';
   end
-  if isfield(cfg, 'dataname')
-    if iscell(cfg.dataname)
-      dataname = cfg.dataname{1};
-    else
-      dataname = cfg.dataname;
-    end
-  elseif nargin > 1
-    dataname = inputname(2);
-  else % data provided through cfg.inputfile
-    dataname = cfg.inputfile;
-  end
   if isempty(cfg.figurename)
-    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, dataname, chans));
+    if iscell(dataname)
+      set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, join_str(', ', dataname), chans));
+    else
+      set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, dataname, chans));
+    end
     set(gcf, 'NumberTitle', 'off');
   else
     set(gcf, 'name', cfg.figurename);

@@ -214,17 +214,25 @@ if isfield(cfg,'colormap')
   end
 end
 
-if isfield(cfg, 'dataname')
-  if iscell(cfg.dataname)
-    dataname = cfg.dataname{1};
+% this is needed for the figure title and correct labeling of graphcolor later on
+if nargin>1
+  if isfield(cfg, 'dataname')
+    if iscell(cfg.dataname)
+      dataname = cfg.dataname{1}; % only one can be plotted
+    else
+      dataname = cfg.dataname;
+    end
   else
-    dataname = cfg.dataname;
+    if ~isempty(inputname(2))
+      dataname = inputname(2);
+    else
+      dataname = ['data' num2str(1,'%02d')];
+    end
   end
-elseif nargin > 1
-  dataname = inputname(2);
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
+
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
