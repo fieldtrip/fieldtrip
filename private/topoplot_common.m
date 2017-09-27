@@ -797,7 +797,10 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).label       = cfg.layout.label;
   info.(ident).dataname    = dataname;
   info.(ident).cfg         = cfg;
-  info.(ident).datvarargin = varargin(1:Ndata);
+  if ~isfield(info.(ident),'datvarargin')
+    info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
+  end
+  info.(ident).datvarargin{indx} = data; % update current dataset (e.g. baselined, channel selection, etc)
   guidata(gcf, info);
   if any(strcmp(data.dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq', 'chancmb_freq', 'rpt_chancmb_freq', 'subj_chancmb_freq'}))
     set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
