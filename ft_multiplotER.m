@@ -402,6 +402,8 @@ end
 % Get the index of the nearest bin, this is the same in all datasets
 xminindx = nearest(varargin{1}.(xparam), xmin);
 xmaxindx = nearest(varargin{1}.(xparam), xmax);
+xmin = varargin{1}.(xparam)(xminindx);
+xmax = varargin{1}.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 xval = varargin{1}.(xparam)(selx);
 

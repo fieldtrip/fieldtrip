@@ -283,6 +283,8 @@ end
 % Get the index of the nearest bin
 xminindx = nearest(data.(xparam), xmin);
 xmaxindx = nearest(data.(xparam), xmax);
+xmin = data.(xparam)(xminindx);
+xmax = data.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 xval = data.(xparam)(selx);
 
@@ -298,6 +300,8 @@ end
 % Get the index of the nearest bin
 yminindx = nearest(data.(yparam), ymin);
 ymaxindx = nearest(data.(yparam), ymax);
+ymin = data.(yparam)(yminindx);
+ymax = data.(yparam)(ymaxindx);
 sely = yminindx:ymaxindx;
 yval = data.(yparam)(sely);
 
