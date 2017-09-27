@@ -69,7 +69,11 @@ if Ndata>1 && ~isnumeric(varargin{end})
     % all data avalaible. At the moment I couldn't think of anything better than
     % using an additional indx variable and letting the function recursively call
     % itself.
-    tmpcfg = rmfield(cfg, 'inputfile');
+    if isfield(cfg, 'inputfile')
+      tmpcfg = rmfield(cfg, 'inputfile');
+    else
+      tmpcfg = cfg;
+    end
     topoplot_common(tmpcfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
   end
