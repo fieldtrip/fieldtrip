@@ -429,6 +429,7 @@ if strcmp(cfg.interactive, 'yes')
   % add the cfg/data information to the figure under identifier linked to this axis
   ident             = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca, 'tag',ident);
+  info                  = guidata(gcf);
   info.(ident).dataname = dataname;
   info.(ident).cfg      = cfg;
   info.(ident).data     = data;
