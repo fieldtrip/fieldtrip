@@ -181,6 +181,13 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
+% parse cfg.channel 
+if isfield(cfg, 'channel') && isfield(data, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'showcallinfo', 'trials'});
 if hasrpt
@@ -190,8 +197,11 @@ else
 end
 tmpvar = data;
 [data] = ft_selectdata(tmpcfg, data);
-% restore the provenance information
+% restore the provenance information and put back cfg.channel
+tmpchannel  = cfg.channel;
 [cfg, data] = rollback_provenance(cfg, data);
+cfg.channel = tmpchannel;
+
 
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(data, cfg.maskparameter)
   % the mask parameter is not present after ft_selectdata, because it is
