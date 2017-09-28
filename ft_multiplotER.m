@@ -299,6 +299,10 @@ end
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
   for i=1:Ndata
+    % keep mask-parameter if it is set
+    if ~isempty(cfg.maskparameter)
+      tempmask = varargin{i}.(cfg.maskparameter);
+    end
     if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
       varargin{i} = ft_timelockbaseline(cfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
@@ -307,6 +311,10 @@ if ~strcmp(cfg.baseline, 'no')
       ft_error('Baseline correction is not supported for spectra without a time dimension');
     else
       ft_warning('Baseline correction not applied, please set xparam');
+    end
+    % put mask-parameter back if it is set
+    if ~isempty(cfg.maskparameter)
+      varargin{i}.(cfg.maskparameter) = tempmask;
     end
   end
 end

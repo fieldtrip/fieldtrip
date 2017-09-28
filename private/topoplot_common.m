@@ -312,12 +312,21 @@ end
 
 % Apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
   if strcmp(xparam, 'time') && strcmp(yparam, 'freq')
     data = ft_freqbaseline(cfg, data);
   elseif strcmp(xparam, 'time') && strcmp(yparam, '')
     data = ft_timelockbaseline(cfg, data);
   end
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
+  end
 end
+
 
 % time and/or frequency should NOT be selected and averaged here, since a singleplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});

@@ -270,6 +270,10 @@ end
 % apply baseline correction
 if ~strcmp(cfg.baseline, 'no')
   for i=1:Ndata
+    % keep mask-parameter if it is set
+    if ~isempty(cfg.maskparameter)
+      tempmask = varargin{i}.(cfg.maskparameter);
+    end
     if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
       varargin{i} = ft_timelockbaseline(cfg, varargin{i});
     elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
@@ -279,8 +283,13 @@ if ~strcmp(cfg.baseline, 'no')
     else
       ft_warning('baseline correction not applied, please set xparam');
     end
+    % put mask-parameter back if it is set
+    if ~isempty(cfg.maskparameter)
+      varargin{i}.(cfg.maskparameter) = tempmask;
+    end
   end
 end
+
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'showcallinfo', 'trials'});
@@ -411,7 +420,7 @@ end
 
 if ~isempty(cfg.maskparameter)
   % one value for each channel, or one value for each channel-time point
-  maskmatrix = varargin{1}.(cfg.maskparameter)(seldat, selx);
+  maskmatrix = varargin{1}.(cfg.maskparameter)(selchan, selx);
 else
   % create an Nx0 matrix
   maskmatrix = zeros(length(selchan), 0);
