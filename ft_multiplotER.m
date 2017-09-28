@@ -417,7 +417,7 @@ selx = xminindx:xmaxindx;
 xval = varargin{1}.(xparam)(selx);
 
 % Get physical y-axis range, i.e. of the parameter to be plotted
-if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
+if ~isnumeric(cfg.ylim)
   % Find maxmin throughout all varargins
   ymin = [];
   ymax = [];
@@ -427,7 +427,6 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
     ymin = min([ymin min(min(min(dat)))]);
     ymax = max([ymax max(max(max(dat)))]);
   end
-  
   if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
     ymin = -ymax;
@@ -436,7 +435,6 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
   elseif strcmp(cfg.ylim, 'minzero')
     ymax = 0;
   end
-  
 else
   ymin = cfg.ylim(1);
   ymax = cfg.ylim(2);

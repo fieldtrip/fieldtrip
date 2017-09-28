@@ -387,7 +387,7 @@ selx = xminindx:xmaxindx;
 xval = varargin{1}.(xparam)(selx);
 
 % Get physical y-axis range, i.e. parameter to be plotted
-if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
+if ~isnumeric(cfg.ylim)
   % Find maxmin throughout all varargins
   ymin = [];
   ymax = [];
@@ -397,7 +397,6 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
     ymin = min([ymin min(min(min(dat)))]);
     ymax = max([ymax max(max(max(dat)))]);
   end
-  
   if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
     ymin = -ymax;
@@ -406,7 +405,6 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
   elseif strcmp(cfg.ylim, 'minzero')
     ymax = 0;
   end
-  
 else
   ymin = cfg.ylim(1);
   ymax = cfg.ylim(2);
@@ -437,7 +435,7 @@ mask = squeeze(mean(maskmatrix, 1)); % over channels
 
 ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor, ...
   'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
-  'hlim', cfg.xlim, 'vlim', cfg.ylim);
+  'hlim', [xmin xmax], 'vlim', [ymin ymax]);
 
 colorLabels = [];
 if Ndata > 1
