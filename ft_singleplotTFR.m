@@ -342,7 +342,7 @@ hold on
 
 zval = mean(datamatrix, 1); % over channels
 zval = reshape(zval, size(zval,2), size(zval,3));
-mask = mean(maskmatrix, 1); % over channels
+mask = squeeze(mean(maskmatrix, 1)); % over channels
 
 % Get physical z-axis range (color axis):
 if strcmp(cfg.zlim, 'maxmin')
