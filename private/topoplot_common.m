@@ -229,12 +229,18 @@ end
 
 % check colormap is proper format and set it
 if isfield(cfg, 'colormap')
-  if size(cfg.colormap,2)~=3, ft_error('topoplot(): Colormap must be a n x 3 matrix'); end
+  if ~isnumeric(cfg.colormap)
+    cfg.colormap = colormap(cfg.colormap);
+  end
+  if size(cfg.colormap,2)~=3
+    ft_error('topoplot(): Colormap must be a n x 3 matrix');
+  end
   colormap(cfg.colormap);
   ncolors = size(cfg.colormap,1);
 else
   ncolors = []; % let the low-level function deal with this
 end
+
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 

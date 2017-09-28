@@ -207,6 +207,9 @@ end
 
 % set colormap
 if isfield(cfg,'colormap')
+  if ~isnumeric(cfg.colormap)
+    cfg.colormap = colormap(cfg.colormap);
+  end
   if size(cfg.colormap,2)~=3
     ft_error('colormap must be a n x 3 matrix');
   else
