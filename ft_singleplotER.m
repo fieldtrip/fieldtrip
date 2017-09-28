@@ -393,7 +393,7 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
   ymax = [];
   for i=1:Ndata
     % Select the channels in the data that match with the layout and that are selected for plotting
-    dat = varargin{i}.(cfg.parameter)(selchan,selx);
+    dat = mean(varargin{i}.(cfg.parameter)(selchan,selx),1); % mean over channels, as that is what will be plotted 
     ymin = min([ymin min(min(min(dat)))]);
     ymax = max([ymax max(max(max(dat)))]);
   end
@@ -433,7 +433,7 @@ hold on
 
 yval = mean(datamatrix, 2); % over channels
 yval = reshape(yval, size(yval,1), size(yval,3));
-mask = mean(maskmatrix, 1); % over channels
+mask = squeeze(mean(maskmatrix, 1)); % over channels
 
 ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor, ...
   'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
@@ -508,7 +508,6 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
-axis tight
 hold off
 
 % Make the figure interactive
