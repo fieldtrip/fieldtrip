@@ -267,6 +267,21 @@ elseif isfield(cfg, 'channel') && isfield(varargin{1}, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
 end
 
+% apply baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  for i=1:Ndata
+    if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
+      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
+    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
+      varargin{i} = ft_freqbaseline(cfg, varargin{i});
+    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
+      ft_error('baseline correction is not supported for spectra without a time dimension');
+    else
+      ft_warning('baseline correction not applied, please set xparam');
+    end
+  end
+end
+
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'showcallinfo', 'trials'});
 if hasrpt
@@ -334,20 +349,6 @@ for i=1:Ndata
   varargin{i}= chanscale_common(tmpcfg, varargin{i});
 end
 
-% apply baseline correction
-if ~strcmp(cfg.baseline, 'no')
-  for i=1:Ndata
-    if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
-      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
-    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
-      varargin{i} = ft_freqbaseline(cfg, varargin{i});
-    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
-      ft_error('baseline correction is not supported for spectra without a time dimension');
-    else
-      ft_warning('baseline correction not applied, please set xparam');
-    end
-  end
-end
 
 %% Section 3: select the data to be plotted and determine min/max range
 

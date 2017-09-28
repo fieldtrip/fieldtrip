@@ -262,6 +262,19 @@ elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
 end
 
+% Apply baseline correction:
+if ~strcmp(cfg.baseline, 'no')
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
+  data = ft_freqbaseline(cfg, data);
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
+  end
+end
+
 % channels SHOULD be selected here, as no interactive action produces a new multiplot
 tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
 if hasrpt
@@ -316,18 +329,6 @@ end
 tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
 data = chanscale_common(tmpcfg, data);
 
-% Apply baseline correction:
-if ~strcmp(cfg.baseline, 'no')
-  % keep mask-parameter if it is set
-  if ~isempty(cfg.maskparameter)
-    tempmask = data.(cfg.maskparameter);
-  end
-  data = ft_freqbaseline(cfg, data);
-  % put mask-parameter back if it is set
-  if ~isempty(cfg.maskparameter)
-    data.(cfg.maskparameter) = tempmask;
-  end
-end
 
 %% Section 3: select the data to be plotted and determine min/max range
 

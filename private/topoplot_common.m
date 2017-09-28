@@ -304,6 +304,15 @@ elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
   cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
 end
 
+% Apply baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  if strcmp(xparam, 'time') && strcmp(yparam, 'freq')
+    data = ft_freqbaseline(cfg, data);
+  elseif strcmp(xparam, 'time') && strcmp(yparam, '')
+    data = ft_timelockbaseline(cfg, data);
+  end
+end
+
 % time and/or frequency should NOT be selected and averaged here, since a singleplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
 if hasrpt
@@ -359,14 +368,6 @@ end
 tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
 data = chanscale_common(tmpcfg, data);
 
-% Apply baseline correction
-if ~strcmp(cfg.baseline, 'no')
-  if strcmp(xparam, 'time') && strcmp(yparam, 'freq')
-    data = ft_freqbaseline(cfg, data);
-  elseif strcmp(xparam, 'time') && strcmp(yparam, '')
-    data = ft_timelockbaseline(cfg, data);
-  end
-end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
