@@ -1198,7 +1198,7 @@ for i=(numel(siz)+1):numel(dim)
   % all trailing singleton dimensions have length 1
   siz(i) = 1;
 end
-if isvector(x) || istable(x)
+if isvector(x)
   % there is no harm to keep it as it is
 else
   x = reshape(x, [siz(~dim) 1]);
@@ -1270,9 +1270,7 @@ if iscell(x)
 else
   switch seldim
     case 1
-      if istable(x)
-        x = x(selindx,:);
-      elseif maybevector && isvector(x)
+      if maybevector && isvector(x)
         % sometimes the data is 1xN, whereas the dimord describes only the first dimension
         % in this case a row and column vector can be interpreted as equivalent
         x = x(selindx);
