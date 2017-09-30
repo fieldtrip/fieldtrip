@@ -266,7 +266,7 @@ else
   %this also goes for the singleshell volume conductor model
   %x = which('rigidbodyJM'); %this function is needed
   %if isempty(x)
-  %  ft_error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact jan-mathijs');
+  %  ft_error('you are trying out experimental code for which you need some extra functionality which is currently not in the release version of FieldTrip. if you are interested in trying it out, contact Jan-Mathijs');
   %end
 end
 

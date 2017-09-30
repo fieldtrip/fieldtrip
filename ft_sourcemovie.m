@@ -17,7 +17,7 @@ function [cfg, M] = ft_sourcemovie(cfg, source, source2)
 % file on disk. This mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
-% See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE
+% See also FT_SOURCEPLOT, FT_SOURCEINTERPOLATE, FT_MOVIEPLOTER, FT_MOVIEPLOTTFR
 
 % Undocumented options:
 %   cfg.parcellation
