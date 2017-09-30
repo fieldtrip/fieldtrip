@@ -1098,19 +1098,7 @@ end % if freq or timelock or comp data
 % clean up and collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isfield(grid, 'dim')
-  % the source reconstruction was perfomed on a regular 3d volume, remember the dimensions of the volume
-  source.dim = grid.dim;
-end
-
-if isfield(grid, 'tri')
-  % the source reconstruction was perfomed on a tesselated cortical sheet, remember the triangles
-  source.tri = grid.tri;
-end
-
-if exist('grid', 'var')
-  source = copyfields(grid, source, {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
-end
+source = copyfields(grid, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
 
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the grid structure
