@@ -11,7 +11,7 @@ function [s, cfg] = ft_statfun_diff(cfg, dat, design)
 % permutation test, without having to worry about the representation
 % of the data.
 %
-% See also FT_STATFUN_MEAN for an other example function
+% See also FT_STATFUN_MEAN for another example function
 
 % Copyright (C) 2006, Robert Oostenveld 
 %
