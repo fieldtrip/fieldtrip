@@ -60,15 +60,13 @@ if nargin<1
   return
 end
 
-%% Since the functionality is still in beta testing, only enable the tracking for some developpers
+%% only enable the tracking for people at the DCCN
 knownuser = false;
-knownuser = knownuser || (strcmp(getusername, 'roboos')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^mac011', 'once'))));
-%knownuser = knownuser || (strcmp(getusername, 'jansch')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
-knownuser = knownuser || (strcmp(getusername, 'jimher')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
-%knownuser = knownuser || (strcmp(getusername, 'nielam')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
-knownuser = knownuser || (strcmp(getusername, 'tzvpop')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
-knownuser = knownuser || (strcmp(getusername, 'lucamb')  && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
-knownuser = knownuser || (strcmp(getusername, 'elivzan') && (~isempty(regexp(gethostname, '^dccn', 'once')) || ~isempty(regexp(gethostname, '^fcdc', 'once'))));
+knownuser = knownuser || ~isempty(isempty(regexp(lower(gethostname), '^mac011', 'once')));
+knownuser = knownuser || ~isempty(isempty(regexp(lower(gethostname), '^mbp', 'once')));
+knownuser = knownuser || ~isempty(isempty(regexp(lower(gethostname), '^dccn', 'once')));
+knownuser = knownuser || ~isempty(isempty(regexp(lower(gethostname), '^fcdc', 'once')));
+
 if ~knownuser
   return
 end
@@ -129,7 +127,7 @@ if isequal(ft_default.trackusage, false) || isequal(ft_default.trackusage, 'no')
   return
 end
 
-% this are the default properties to track
+% these are the default properties to track
 properties.token       = '1187d9a6959c39d0e733d6273d1658a5'; % this is specific for the FieldTrip project
 properties.user        = ft_hash(sprintf('%s%s', ft_default.trackusage, getusername)); % hash it with a secret salt
 properties.host        = ft_hash(sprintf('%s%s', ft_default.trackusage, gethostname)); % hash it with a secret salt
@@ -138,7 +136,19 @@ properties.fieldtrip   = ft_version;
 properties.computer    = lower(computer);
 properties.distinct_id = properties.user; % this links the event to the profile
 
-% add the custom properties, these come in key-value pairs
+% user information only gets send once at startup
+if ~initialized
+  % construct the HTTP request for Mixpanel, see https://mixpanel.com/help/reference/http
+  user_json   = sprintf('{"$token": "%s", "$distinct_id": "%s", "$ip": "%s", "$set": {} }',  properties.token, properties.user, getaddress());
+  user_base64 = base64encode(user_json);
+  user_http   = sprintf('http://api.mixpanel.com/engage/?data=%s', user_base64);
+  
+  [output, status] = ft_urlread(user_http);
+  
+  initialized = true;
+end % if initialized
+
+% add the properties for the particular event, these come in key-value pairs
 for i=1:2:numel(varargin)
   properties.(varargin{i}) = varargin{i+1};
 end
@@ -148,26 +158,10 @@ event_json   = sprintf('{"event": "%s", "properties": {%s}}', event, ft_struct2j
 event_base64 = base64encode(event_json);
 event_http   = sprintf('http://api.mixpanel.com/track/?data=%s', event_base64);
 
-
 [output, status] = ft_urlread(event_http);
 if ~status
   disp(output);
   ft_warning('could not send tracker information for "%s"', event);
+  return
 end
-
-if ~initialized
-  % this only gets send once
-  user_json   = sprintf('{"$token": "%s", "$distinct_id": "%s", "$ip": "%s", "$set": {} }',  properties.token, properties.user, getaddress());
-  user_base64 = base64encode(user_json);
-  user_http   = sprintf('http://api.mixpanel.com/engage/?data=%s', user_base64);
-
-  [output, status] = ft_urlread(user_http);
-  if ~status
-    disp(output);
-    ft_warning('could not send tracker information for "%s"', event);
-  end
-
-  initialized = true;
-end % if initialized
-
 
