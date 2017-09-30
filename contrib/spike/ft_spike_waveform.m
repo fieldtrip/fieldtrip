@@ -70,7 +70,7 @@ ft_preamble trackconfig
 cfg = ft_checkconfig(cfg, 'required', {'fsample'});
 
 % support the typo in this cfg option that was present in older versions of this function
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1814
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1814
 cfg = ft_checkconfig(cfg, 'renamed', {'allign', 'align'});
 
 % get the default options

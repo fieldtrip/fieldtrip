@@ -34,7 +34,7 @@ function [el, prj] = project_elec(elc, pnt, tri)
 Nelc = size(elc,1);
 el   = zeros(Nelc, 4);
 
-% this is a work-around for http://bugzilla.fcdonders.nl/show_bug.cgi?id=2369
+% this is a work-around for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2369
 elc = double(elc);
 pnt = double(pnt);
 tri = double(tri);

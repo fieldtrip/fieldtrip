@@ -13,7 +13,7 @@ function test_bug1800
 % channels and it seems to assume that the are already matched. This results in a
 % wrong topology plot. 
 %
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1800
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1800
 
 % Load the timelocked data
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))

@@ -258,7 +258,7 @@ end
 
 % Numerical inaccuracies in the binary representations of floating point
 % values may accumulate. The following code corrects for small inaccuracies
-% in the time axes of the trials. See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1390
+% in the time axes of the trials. See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1390
 data = fixtimeaxes(data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

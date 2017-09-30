@@ -70,7 +70,7 @@ Nb = numel(b);
 % According to the original implementation empty numeric elements are
 % allowed, but are not returned as match. This is different to empty string
 % elements, which are returned as match.
-% See also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1808
+% See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1808
 empty_a = cellfun(@isnumeric, a) & cellfun(@isempty, a);
 empty_b = cellfun(@isnumeric, b) & cellfun(@isempty, b);
 % the following allows the unique function to operate normally

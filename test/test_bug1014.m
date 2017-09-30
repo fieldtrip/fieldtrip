@@ -18,7 +18,7 @@ b.avg    = [2 2];
 b.trial  = reshape([6 6; 0 0; 0 0], [3 1 2]);
 
 % the following is to work around
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1013
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1013
 
 a.sampleinfo = [1 2; 3 4; 5 6];
 b.sampleinfo = [1 2; 3 4; 5 6];

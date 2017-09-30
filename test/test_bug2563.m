@@ -28,7 +28,7 @@ disp(freq)
 disp(output)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% the following was reported as http://bugzilla.fcdonders.nl/show_bug.cgi?id=2561
+% the following was reported as http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2561
 % but seems to be related, i.e. both have subjects in the data
 
 timelock = [];

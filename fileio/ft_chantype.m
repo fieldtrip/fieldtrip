@@ -458,7 +458,7 @@ elseif ft_senstype(input, 'bti')
       sel       = find(strcmp('unknown', chantype));
       if ~isempty(sel)
         % channels that start with E are assumed to be EEG
-        % channels that end with -1 are also assumed to be EEG, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2389
+        % channels that end with -1 are also assumed to be EEG, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2389
         chantype(sel(cellfun(@(x) strcmp(x(end-1:end),'-1') || strcmp(x(1),'E'), label(sel)))) = {'eeg'};
       end
     end

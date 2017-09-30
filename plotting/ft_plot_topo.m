@@ -245,7 +245,7 @@ if ~isempty(maskimage)
   Zi(~maskimage) = NaN;
 end
 
-% The topography should be plotted prior to the isolines to ensure that it is exported correctly, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2496
+% The topography should be plotted prior to the isolines to ensure that it is exported correctly, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2496
 if strcmp(style, 'surf') || strcmp(style, 'surfiso')
   
   deltax = xi(2)-xi(1); % length of grid entry
