@@ -1,14 +1,13 @@
 function [data] = ft_checkdata(data, varargin)
 
-% FT_CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether
-% the type of data strucure corresponds with the required data. If neccessary
-% and possible, this function will adjust the data structure to the input
-% requirements (e.g. change dimord, average over trials, convert inside from
-% index into logical).
+% FT_CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether the
+% type of data strucure corresponds with the required data. If neccessary and possible,
+% this function will adjust the data structure to the input requirements (e.g. change
+% dimord, average over trials, convert inside from index into logical).
 %
-% If the input data does NOT correspond to the requirements, this function
-% is supposed to give a elaborate warning message and if applicable point
-% the user to external documentation (link to website).
+% If the input data does NOT correspond to the requirements, this function will give a
+% warning message and if applicable point the user to external documentation (link to
+% website).
 %
 % Use as
 %   [data] = ft_checkdata(data, ...)
@@ -36,6 +35,8 @@ function [data] = ft_checkdata(data, varargin)
 % For some options you can specify multiple values, e.g.
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
 %   [data] = ft_checkdata(data, 'datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
+%
+% See also FT_DATATYPE_XXX for each of the respective data types.
 
 % Copyright (C) 2007-2015, Robert Oostenveld
 % Copyright (C) 2010-2012, Martin Vinck
@@ -495,13 +496,18 @@ if ~isempty(dtype)
   
   if ~okflag
     % construct an error message
-    if length(dtype)>1
-      str = sprintf('%s, ', dtype{1:(end-2)});
-      str = sprintf('%s%s or %s', str, dtype{end-1}, dtype{end});
-    else
-      str = dtype{1};
+    typestr = printor(dtype);
+    helpfun = cell(size(dtype));
+    for i=1:numel(dtype)
+      helpfun{i} = sprintf('ft_datatype_%s', dtype{i});
     end
-    ft_error('This function requires %s data as input.', str);
+    helpfun = helpfun(cellfun(@exist, helpfun)>0);
+    if ~isempty(helpfun)
+      helpstr = printor(helpfun);
+      ft_error('This function requires %s data as input, see %s.', typestr, helpstr);
+    else
+      ft_error('This function requires %s data as input.', typestr);
+    end
   end % if okflag
 end
 
