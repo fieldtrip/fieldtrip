@@ -301,6 +301,8 @@ elseif ~isempty(cfg.length)
   tmpcfg = keepfields(cfg, {'showcallinfo'});
   tmpcfg.trl = newtrl;
   data   = ft_redefinetrial(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
 
 end % processing the realignment or data selection
 
