@@ -1,6 +1,7 @@
 function prefix = om_checkombin
 
-% Check if OpenMEEG binaries are installed and work.
+% Check if OpenMEEG binaries are installed and work. This function
+% will return the prefix required to execute the binaries.
 %
 % Copyright (C) 2010-2017, OpenMEEG developers
 
@@ -8,37 +9,65 @@ function prefix = om_checkombin
 % $LastChangedDate: 2010-09-30 11:15:51 +0200 (Thu, 30 Sep 2010) $
 % $Revision$
 
-% start with an empty return value
-prefix = '';
-
-% check whether the binary is on the path
-[status, result] = system('which om_assemble');
-if status>0
-  show_error(result);
-end
-
-% figure out where it is installed
-openmeeg_bin = fileparts(result);
-openmeeg_lib = fullfile(fileparts(openmeeg_bin), 'lib');
-
-% check whether the binary can be executed
-[status, result] = system('om_assemble');
-
-% the failure might be due to the libraries not being found
-if status>0
-  if ismac
-    prefix = ['export DYLD_LIBRARY_PATH=' openmeeg_lib ' && '];
-    [status, result] = system([prefix 'om_assemble']);
-  elseif isunix
-    prefix = ['export LD_LIBRARY_PATH=' openmeeg_lib ' && '];
-    [status, result] = system([prefix 'om_assemble']);
-  elseif ispc
-    % don't know how to determine this on Windows
+if ispc
+  [status, result] = system('om_assemble.exe');
+  if status>0
+    show_error(result);
+  else
+    prefix = '';
   end
-end
-
-if status>0
-  show_error(result);
+  
+else
+  % the remainder of the code does not apply to windows
+  
+  location = {
+    ''
+    '/usr/bin'
+    '/usr/local/bin'
+    '/usr/local/openmeeg/bin'
+    '/opt/bin'
+    '/opt/openmeeg/bin'
+    };
+  
+  % start with an empty return value
+  prefix = '';
+  
+  for i=1:numel(location)
+    % check whether the binary can be found
+    [status, result] = system(sprintf('which %s', fullfile(location{i}, 'om_assemble')));
+    if status==0
+      prefix = location{i};
+      % we found it
+      break
+    end
+  end
+  
+  if status>0
+    show_error(result);
+  end
+  
+  % figure out where it is installed
+  openmeeg_bin = fileparts(result);
+  openmeeg_lib = fullfile(fileparts(openmeeg_bin), 'lib');
+  
+  % check whether the binary can be executed
+  [status, result] = system([openmeeg_bin 'om_assemble']);
+  
+  % the failure might be due to the libraries not being found
+  if status>0
+    if ismac
+      prefix = ['export DYLD_LIBRARY_PATH=' openmeeg_lib ' && ' openmeeg_bin filesep];
+      [status, result] = system([prefix 'om_assemble']);
+    elseif isunix
+      prefix = ['export LD_LIBRARY_PATH=' openmeeg_lib ' && ' openmeeg_bin filesep];
+      [status, result] = system([prefix 'om_assemble']);
+    end
+  end
+  
+  if status>0
+    show_error(result);
+  end
+  
 end
 
 if nargout==0
