@@ -665,7 +665,7 @@ switch cfg.method
     % remember the transformation
     elec_realigned.homogeneous = norm.m;
     
-  case {'project','moveinward'}
+  case {'project', 'moveinward'}
     % nothing to be done
     elec_realigned = norm;
     elec_realigned.label = label_original;
@@ -702,7 +702,7 @@ switch cfg.method
     end
   case 'interactive'
     % the coordinate system is not known
-  case {'project','moveinward'}
+  case {'project', 'moveinward'}
     % the coordinate system remains the same
     if isfield(elec_original, 'coordsys')
       elec_realigned.coordsys = elec_original.coordsys;

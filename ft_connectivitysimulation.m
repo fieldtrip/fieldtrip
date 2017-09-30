@@ -171,7 +171,7 @@ tim   = (0:nsmp-1)./cfg.fsample;
 % create the labels
 label = cell(cfg.nsignal,1);
 for k = 1:cfg.nsignal
-  label{k,1} = ['signal',num2str(k,'%03d')];
+  label{k,1} = ['signal',num2str(k, '%03d')];
 end
 
 switch cfg.method

@@ -79,8 +79,8 @@ ft_preamble trackconfig
 % read from an old *.mat file
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
-if isfield(data,'fsample');
-  fsample = getsubfield(data,'fsample');
+if isfield(data, 'fsample');
+  fsample = getsubfield(data, 'fsample');
 else
   fsample = 1./(mean(diff(data.time{1})));
 end
@@ -135,7 +135,7 @@ for i=1:ntrial
     case 'velocity2D'
 
       % demean horizontal and vertical time courses
-      if strcmp(cfg.velocity2D.demean,'yes');
+      if strcmp(cfg.velocity2D.demean, 'yes');
         dat = ft_preproc_polyremoval(dat, 0, 1, ndatsample);
       end
 

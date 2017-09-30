@@ -152,9 +152,9 @@ set(h, 'menuBar', 'none')
 mp = get(0, 'MonitorPosition');
 if size(mp,1)==1
   % there is only a single monitor, we can try to go fullscreen
-  set(h,'units','normalized','position',[0 0 1 1])
+  set(h, 'units', 'normalized', 'position', [0 0 1 1])
 else
-  set(h,'units','normalized');
+  set(h, 'units', 'normalized');
 end
 
 %% add the table to the GUI

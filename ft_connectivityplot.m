@@ -117,7 +117,7 @@ for k = 1:Ndata
     if ~isempty(inputname(k+1))
       iname{k+1} = inputname(k+1);
     else
-      iname{k+1} = ['input',num2str(k,'%02d')];
+      iname{k+1} = ['input',num2str(k, '%02d')];
     end
   else
     % not yet supported
@@ -157,7 +157,7 @@ end
 
 
 % Get physical min/max range of x:
-if ischar(cfg.xlim) && strcmp(cfg.xlim,'maxmin')
+if ischar(cfg.xlim) && strcmp(cfg.xlim, 'maxmin')
   xmin = inf;
   xmax = -inf;
   for k = 1:Ndata
@@ -188,14 +188,14 @@ end
 cfg.ylim = [ymin ymax];
 
 % Get physical min/max range of z, which is the functional data:
-if ischar(cfg.zlim) && strcmp(cfg.zlim,'maxmin')
+if ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxmin')
   zmin = inf;
   zmax = -inf;
   for k = 1:Ndata
     zmin = min(zmin,min(varargin{k}.(cfg.parameter{k})(:)));
     zmax = max(zmax,max(varargin{k}.(cfg.parameter{k})(:)));
   end
-elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxabs')
   zmax = -inf;
   for k = 1:Ndata
     zmax = max(zmax,max(abs(varargin{k}.(cfg.parameter{k})(:))));
