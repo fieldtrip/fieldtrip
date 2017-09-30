@@ -1,7 +1,7 @@
 function data = ft_removetemplateartifact(cfg, data, template)
 
 % FT_REMOVETEMPLATEARTIFACT removes an artifact from preprocessed data by template
-% subtraction. The template can for example be formed by averaging an ECG triggered
+% subtraction. The template can for example be formed by averaging an ECG-triggered
 % MEG timecourse.
 %
 % Use as
@@ -84,10 +84,12 @@ cfg.feedback = ft_getopt(cfg, 'method', 'text');
 cfg.channel = ft_channelselection(cfg.channel, data.label);
 cfg.channel = ft_channelselection(cfg.channel, template.label);
 
-tmpcfg = [];
-tmpcfg.channel = cfg.channel;
+tmpcfg   = keepfields(cfg, {'channel'});
 data     = ft_selectdata(tmpcfg, data);
 template = ft_selectdata(tmpcfg, template);
+% restore the provenance information
+[cfg, data]     = rollback_provenance(cfg, data);
+[cfg, template] = rollback_provenance(cfg, template);
 
 ntrial    = length(data.trial);
 nchan     = length(cfg.channel);
