@@ -177,11 +177,6 @@ if ~isdeployed
   end
   
   try
-    % this directory contains the backward compatibility wrappers for the ft_xxx function name change
-    ft_hastoolbox('compat', 3, 1); % not required
-  end
-  
-  try
     % these directories deal with compatibility with older MATLAB versions
     if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2008b'), ft_hastoolbox('compat/matlablt2009a', 3, 1); end
