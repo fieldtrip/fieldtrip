@@ -160,7 +160,7 @@ assert(length(comp8f.label)==nchan);
 assert(length(comp10f.label)==nchan);
 assert(length(comp11f.label)==nchan);
 
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=903
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=903
 assert(length(comp1s.label)==nchan-1);
 assert(length(comp2s.label)==nchan-1);
 % assert(length(comp3s.label)==nchan);

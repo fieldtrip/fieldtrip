@@ -14,7 +14,7 @@ function test_bug1786
 % Thanks
 % Yoel
 %
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1786
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1786
 
 % EEG bad electrode repair
 % 

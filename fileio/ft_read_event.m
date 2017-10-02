@@ -1380,7 +1380,7 @@ switch eventformat
     
   case {'neuromag_eve'}
     % previously this was called babysquid_eve, now it is neuromag_eve
-    % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=2170
+    % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2170
     [p, f, x] = fileparts(filename);
     evefile = fullfile(p, [f '.eve']);
     fiffile = fullfile(p, [f '.fif']);

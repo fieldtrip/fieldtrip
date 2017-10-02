@@ -7,7 +7,7 @@ function [dat] = ft_trialfun_example2(cfg)
 % You would use this function as follows
 %   cfg           = [];   
 %   cfg.dataset   = string, containing filename or directory
-%   cfg.trialfun  = 'trialfun_emgdetect';
+%   cfg.trialfun  = 'ft_trialfun_example2';
 %   cfg           = definetrial(cfg);
 %   data          = preprocessing(cfg);
 %

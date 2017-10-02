@@ -31,7 +31,7 @@ if verLessThan('matlab', '8.3')
   argout = mxDeserialize_c(argin);
 else
   % use the C++ implementation of the mex file
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2452
   argout = mxDeserialize_cpp(argin);
 end
 

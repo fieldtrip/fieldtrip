@@ -25,7 +25,8 @@ assert(ft_voltype(svol,'unknown'))
 
 tcfg=[];
 tcfg.headshape=svol.bnd;
-svolcs=ft_prepare_concentricspheres(tcfg);
+tcfg.method = 'concentricspheres'
+svolcs = ft_prepare_headmodel(tcfg);
 assert(ft_voltype(svolcs,'concentricspheres'))
 
 

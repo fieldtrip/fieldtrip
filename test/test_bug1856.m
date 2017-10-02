@@ -21,7 +21,7 @@ filename = {
   dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag122/jg_single_01raw.fif')
   dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif')
   dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa160/Continuous1.con')    % this one has 28 channels of an unknown type
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/bdf/050327BH_overCZnoAlpha.bdf') % this has 10-20 EEG channel labels, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1856#c8
+  dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/bdf/050327BH_overCZnoAlpha.bdf') % this has 10-20 EEG channel labels, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1856#c8
   };
 
 for i=1:length(filename)

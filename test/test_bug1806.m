@@ -80,7 +80,7 @@ data_c = ft_componentanalysis(cfg, data);
 %   assert(~ft_senstype(data_c.grad, 'ctf151'));
 % end
 
-% on 19 Feb 2013 I changed it, because of http://bugzilla.fcdonders.nl/show_bug.cgi?id=1959#c7
+% on 19 Feb 2013 I changed it, because of http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1959#c7
 if isfield(data_c.grad, 'type')
   % it should still be detected as ctf151
   assert(strcmp(data_c.grad.type, 'ctf151'));

@@ -7,8 +7,8 @@ function [cfg] = ft_clusterplot(cfg, stat)
 % where the input data is obtained from FT_TIMELOCKSTATISTICS or FT_FREQSTATISTICS
 % and the configuration options can be
 %   cfg.alpha                     = number, highest cluster p-value to be plotted max 0.3 (default = 0.05)
-%   cfg.highlightseries           = 1x5 cell-array, highlight option series  with 'on','labels' or 'numbers' (default {'on','on','on','on','on'} for p < [0.01 0.05 0.1 0.2 0.3]
-%   cfg.highlightsymbolseries     = 1x5 vector, highlight marker symbol series (default ['*','x','+','o','.'] for p < [0.01 0.05 0.1 0.2 0.3]
+%   cfg.highlightseries           = 1x5 cell-array, highlight option series  with 'on', 'labels' or 'numbers' (default {'on', 'on', 'on', 'on', 'on'} for p < [0.01 0.05 0.1 0.2 0.3]
+%   cfg.highlightsymbolseries     = 1x5 vector, highlight marker symbol series (default ['*', 'x', '+', 'o', '.'] for p < [0.01 0.05 0.1 0.2 0.3]
 %   cfg.highlightsizeseries       = 1x5 vector, highlight marker size series   (default [6 6 6 6 6] for p < [0.01 0.05 0.1 0.2 0.3])
 %   cfg.highlightcolorpos         = color of highlight marker for positive clusters (default = [0 0 0])
 %   cfg.highlightcolorneg         = color of highlight marker for negative clusters (default = [0 0 0])
@@ -93,8 +93,8 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'highlight', ...
 % set the defaults
 cfg.marker                = ft_getopt(cfg, 'marker',                'off');
 cfg.alpha                 = ft_getopt(cfg, 'alpha',                 0.05);
-cfg.highlightseries       = ft_getopt(cfg, 'highlightseries',       {'on','on','on','on','on'});
-cfg.highlightsymbolseries = ft_getopt(cfg, 'highlightsymbolseries', ['*','x','+','o','.']);
+cfg.highlightseries       = ft_getopt(cfg, 'highlightseries',       {'on', 'on', 'on', 'on', 'on'});
+cfg.highlightsymbolseries = ft_getopt(cfg, 'highlightsymbolseries', ['*', 'x', '+', 'o', '.']);
 cfg.highlightsizeseries   = ft_getopt(cfg, 'highlightsizeseries',   [6 6 6 6 6]);
 cfg.hllinewidthseries     = ft_getopt(cfg, 'hllinewidthseries',     [1 1 1 1 1]);
 cfg.highlightcolorpos     = ft_getopt(cfg, 'highlightcolorpos',     [0 0 0]);
@@ -174,7 +174,7 @@ elseif hasfreq
   time = stat.freq;
 end
 
-if issubfield(stat, 'cfg.correcttail') && ((strcmp(stat.cfg.correcttail,'alpha') || strcmp(stat.cfg.correcttail,'prob')) && (stat.cfg.tail == 0));
+if issubfield(stat, 'cfg.correcttail') && ((strcmp(stat.cfg.correcttail, 'alpha') || strcmp(stat.cfg.correcttail, 'prob')) && (stat.cfg.tail == 0));
   if ~(cfg.alpha >= stat.cfg.alpha);
     ft_warning(['the pvalue you plot: cfg.alpha = ' num2str(cfg.alpha) ' is higher than the correcttail option you tested: stat.cfg.alpha = ' num2str(stat.cfg.alpha)]);
   end
@@ -183,11 +183,11 @@ end
 % find significant clusters
 sigpos = [];
 signeg = [];
-haspos = isfield(stat,'posclusters');
-hasneg = isfield(stat,'negclusters');
+haspos = isfield(stat, 'posclusters');
+hasneg = isfield(stat, 'negclusters');
 
 if haspos == 0 && hasneg == 0
-  fprintf('%s\n','no significant clusters in data; nothing to plot')
+  fprintf('%s\n', 'no significant clusters in data; nothing to plot')
 else
   if haspos
     for iPos = 1:length(stat.posclusters)
@@ -240,7 +240,7 @@ else
     probneg = [];
   end
 
-  fprintf('%s%i%s%g%s\n','There are ',Nsigall,' clusters smaller than alpha (',cfg.alpha,')')
+  fprintf('There are %d clusters smaller than alpha (%g)', Nsigall, cfg.alpha);
 
   if is2D
     % define time or freq window per cluster
@@ -250,9 +250,9 @@ else
       ind_max = max(find(possum_perclus~=0));
       time_perclus = [time(ind_min) time(ind_max)];
       if hastime
-        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')',', t = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n', 'Positive cluster: ',num2str(sigpos(iPos)), ', pvalue: ',num2str(probpos(iPos)), ' (',hlsignpos(iPos), ')', ', t = ',num2str(time_perclus(1)), ' to ',num2str(time_perclus(2)))
       elseif hasfreq
-        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')',', f = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n', 'Positive cluster: ',num2str(sigpos(iPos)), ', pvalue: ',num2str(probpos(iPos)), ' (',hlsignpos(iPos), ')', ', f = ',num2str(time_perclus(1)), ' to ',num2str(time_perclus(2)))
       end
     end
     for iNeg = 1:length(signeg)
@@ -262,9 +262,9 @@ else
       time_perclus = [time(ind_min) time(ind_max)];
       if hastime
         time_perclus = [time(ind_min) time(ind_max)];
-        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')',', t = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n', 'Negative cluster: ',num2str(signeg(iNeg)), ', pvalue: ',num2str(probneg(iNeg)), ' (',hlsignneg(iNeg), ')', ', t = ',num2str(time_perclus(1)), ' to ',num2str(time_perclus(2)))
       elseif hasfreq
-        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')',', f = ',num2str(time_perclus(1)),' to ',num2str(time_perclus(2)))
+        fprintf('%s%s%s%s%s%s%s%s%s%s%s\n', 'Negative cluster: ',num2str(signeg(iNeg)), ', pvalue: ',num2str(probneg(iNeg)), ' (',hlsignneg(iNeg), ')', ', f = ',num2str(time_perclus(1)), ' to ',num2str(time_perclus(2)))
       end
     end
 
@@ -288,10 +288,10 @@ else
 
   else
     for iPos = 1:length(sigpos)
-      fprintf('%s%s%s%s%s%s%s\n','Positive cluster: ',num2str(sigpos(iPos)),', pvalue: ',num2str(probpos(iPos)),' (',hlsignpos(iPos),')')
+      fprintf('%s%s%s%s%s%s%s\n', 'Positive cluster: ',num2str(sigpos(iPos)), ', pvalue: ',num2str(probpos(iPos)), ' (',hlsignpos(iPos), ')')
     end
     for iNeg = 1:length(signeg)
-      fprintf('%s%s%s%s%s%s%s\n','Negative cluster: ',num2str(signeg(iNeg)),', pvalue: ',num2str(probneg(iNeg)),' (',hlsignneg(iNeg),')')
+      fprintf('%s%s%s%s%s%s%s\n', 'Negative cluster: ',num2str(signeg(iNeg)), ', pvalue: ',num2str(probneg(iNeg)), ' (',hlsignneg(iNeg), ')')
     end
   end
 
@@ -321,7 +321,7 @@ else
       cfgtopo.highlightsize{iPos}     = cfg.highlightsizeseries(5);
     end
     cfgtopo.highlightcolor{iPos}        = cfg.highlightcolorpos;
-    compos = strcat(compos,cfgtopo.highlightsymbol{iPos}, 'p=',num2str(probpos(iPos)),' '); % make comment, only used for 1D data
+    compos = strcat(compos,cfgtopo.highlightsymbol{iPos}, 'p=',num2str(probpos(iPos)), ' '); % make comment, only used for 1D data
   end
 
   for iNeg = 1:length(signeg)
@@ -347,7 +347,7 @@ else
       cfgtopo.highlightsize{length(sigpos)+iNeg}     = cfg.highlightsizeseries(5);
     end
     cfgtopo.highlightcolor{length(sigpos)+iNeg}        = cfg.highlightcolorneg;
-    comneg = strcat(comneg,cfgtopo.highlightsymbol{length(sigpos)+iNeg}, 'p=',num2str(probneg(iNeg)),' '); % make comment, only used for 1D data
+    comneg = strcat(comneg,cfgtopo.highlightsymbol{length(sigpos)+iNeg}, 'p=',num2str(probneg(iNeg)), ' '); % make comment, only used for 1D data
   end
 
   if is2D

@@ -4,7 +4,7 @@ function failed_ft_prepare_mesh
 % WALLTIME 00:10:00
 
 % test ft_prepare_mesh also used for constructing SIMBIO FEM head models
-% see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1815
+% see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1815
 
 % TEST test_ft_prepare_mesh
 % TEST ft_prepare_mesh ft_datatype_segmentation ft_plot_mesh

@@ -90,10 +90,10 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters for clip artifacts if necessary
-if ~isfield(cfg, 'artfctdef'),          cfg.artfctdef            = [];  end
-if ~isfield(cfg.artfctdef,'threshold'), cfg.artfctdef.threshold  = [];  end
-if ~isfield(cfg, 'headerformat'),       cfg.headerformat         = [];  end
-if ~isfield(cfg, 'dataformat'),         cfg.dataformat           = [];  end
+if ~isfield(cfg, 'artfctdef'),           cfg.artfctdef            = [];  end
+if ~isfield(cfg.artfctdef, 'threshold'), cfg.artfctdef.threshold  = [];  end
+if ~isfield(cfg, 'headerformat'),        cfg.headerformat         = [];  end
+if ~isfield(cfg, 'dataformat'),          cfg.dataformat           = [];  end
 
 % copy the specific configuration for this function out of the master cfg
 artfctdef = cfg.artfctdef.threshold;

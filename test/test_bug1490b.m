@@ -5,7 +5,7 @@ function test_bug1490b
 
 % TEST ft_read_header ft_read_data loadcnt
 
-% this is a second test pertaining to http://bugzilla.fcdonders.nl/show_bug.cgi?id=1490#c11
+% this is a second test pertaining to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1490#c11
 
 warning('this bug cannot be fixed in FieldTrip, but should be fixed in EEGLAB');
 return

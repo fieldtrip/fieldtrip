@@ -188,17 +188,17 @@ switch cfg.appenddim
       hascumtapcnt = [];
       hastrialinfo = [];
       for i=1:Ndata
-        if isfield(varargin{i},'cumsumcnt');
+        if isfield(varargin{i}, 'cumsumcnt');
           hascumsumcnt(end+1) = 1;
         else
           hascumsumcnt(end+1) = 0;
         end
-        if isfield(varargin{i},'cumtapcnt');
+        if isfield(varargin{i}, 'cumtapcnt');
           hascumtapcnt(end+1) = 1;
         else
           hascumtapcnt(end+1) = 0;
         end
-        if isfield(varargin{i},'trialinfo');
+        if isfield(varargin{i}, 'trialinfo');
           hastrialinfo(end+1) = 1;
         else
           hastrialinfo(end+1) = 0;

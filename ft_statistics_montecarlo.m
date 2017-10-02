@@ -100,7 +100,8 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %
 % $Id$
 
-ft_preamble randomseed; % deal with the user specified random seed
+% deal with the user specified random seed
+ft_preamble randomseed
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
@@ -492,7 +493,8 @@ for i=1:length(fn)
   end
 end
 
-ft_postamble randomseed; % deal with the potential user specified randomseed
+% deal with the potential user specified randomseed
+ft_postamble randomseed
 
 warning(ws); % revert to original state
 

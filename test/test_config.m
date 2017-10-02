@@ -5,7 +5,7 @@ function test_config
 
 % TEST config
 
-%% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1614
+%% See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1614
 
 % one reported issue had to do with cell-arrays
 a1           = [];
@@ -37,7 +37,7 @@ a2.field2    = a3;
 assert(isequal(struct(a2), a1));
 assert(isequal(printstruct('a', a2), printstruct('a', a1)));
 
-%% See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1762
+%% See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1762
 
 % this has to do with gathering multiple "ans" outputs in single array
 
@@ -200,7 +200,7 @@ catch
 end
 
 %%
-% the following was detected in http://bugzilla.fcdonders.nl/show_bug.cgi?id=2709#c1
+% the following was detected in http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2709#c1
 % it seems to be similar to the test performed in the previous section
 
 clear a1 a2

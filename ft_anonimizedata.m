@@ -33,7 +33,7 @@ function data = ft_anonimizedata(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_ANALYSISPIPELINE
+% See also FT_DEFACEVOLUME, FT_DEFACEMESH, FT_ANALYSISPIPELINE
 
 % Copyright (C) 2014, Robert Oostenveld, DCCN
 %
@@ -152,9 +152,9 @@ set(h, 'menuBar', 'none')
 mp = get(0, 'MonitorPosition');
 if size(mp,1)==1
   % there is only a single monitor, we can try to go fullscreen
-  set(h,'units','normalized','position',[0 0 1 1])
+  set(h, 'units', 'normalized', 'position', [0 0 1 1])
 else
-  set(h,'units','normalized');
+  set(h, 'units', 'normalized');
 end
 
 %% add the table to the GUI
@@ -218,15 +218,15 @@ redraw_cb(h);
 resize_cb(h);
 
 while ~info.cleanup
-
+  
   uiwait(h); % we only get part this point with abort or cleanup
-
+  
   if ~ishandle(h)
     ft_error('aborted by user');
   end
-
+  
   info = getappdata(h, 'info');
-
+  
   if info.cleanup
     if ~all(xor(info.keep, info.remove))
       ft_warning('not all fields have been marked as "keep" or "remove"');
@@ -311,7 +311,8 @@ info.remove(~info.hide) = cell2mat(data(:,2));
 switch key
   case 'q'
     info.cleanup = true;
-    uiresume
+    setappdata(h, 'info', info); % store it immediately
+    uiresume                     % resume from uiwait in the main function
   case 'a'
     info.hide(info.keep)   = true;
     info.hide(info.remove) = true;

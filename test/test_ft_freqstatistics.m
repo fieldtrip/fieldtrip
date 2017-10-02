@@ -12,7 +12,7 @@ ft_default.feedback = 'no';
 
 %%***********************************
 % Expected support for freq_time without chan was removed by Robert around r9309, see
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1201#c20
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1201#c20
 %%***********************************
 % For the case of "freq_time"
 %

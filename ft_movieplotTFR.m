@@ -42,9 +42,11 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 % if you specify this option the input data will be read from a *.mat
 % file on disk. this mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
+%
+% See also FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR, FT_MOVIEPLOTER, FT_SOURCEMOVIE
 
 % Copyright (c) 2009, Ingrid Nieuwenhuis
-% Copyright (c) 2011, jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (c) 2011, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

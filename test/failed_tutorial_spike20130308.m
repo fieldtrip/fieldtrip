@@ -9,7 +9,7 @@ function failed_tutorial_spike20130308
 % 
 % Make sure you run ft_defaults after having added the main FieldTrip path (e.g. addpath('path_to_fieldtrip')), ensuring that the required functions are in your MATLAB path. For spike analysis there is spike toolbox that is located in fieldtrip/contrib/spike.
 % 
-% Spike data can be read out using the function ft_read_spike. At the time of writing this tutorial the supported formats are neurosim, mclust t files, neuralynx (nse, nst, ntt, nts) and plexon (nex and plx) files.. The original data can be obtained from ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/spike/p029_sort_final_01.nex. After reading out the spike data, we select the spike channels of interest.
+% Spike data can be read out using the function ft_read_spike. At the time of writing this tutorial the supported formats are neurosim, mclust t files, neuralynx (nse, nst, ntt, nts) and plexon (nex and plx) files.. The original data can be obtained from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/spike/p029_sort_final_01.nex. After reading out the spike data, we select the spike channels of interest.
 
 cd (dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spike'));
 
@@ -239,7 +239,7 @@ end
 
 % This gives two figures, one with a longer refractory period (the narrow spiking cell; top), and one with a bursting pattern (the broad spiking cell; bottom)
 % 
-% We also read in an additional dataset consisting of an M-clust .t file, that can be found at ftp://ftp.fcdonders.nl/pub/fieldtrip/tutorial/spike/tt6_7.t
+% We also read in an additional dataset consisting of an M-clust .t file, that can be found at ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/spike/tt6_7.t
 % 
 % read in the .t file
 filename    = 'tt6_7.t';

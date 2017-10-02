@@ -11,7 +11,7 @@ function pausejava(tPauseSec)
 % updating all Matlab figure windows.
 %
 % http://undocumentedmatlab.com/blog/pause-for-the-better/
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1997
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1997
 
 if usejava('jvm')
   th = java.lang.Thread.currentThread();  % Get current Thread

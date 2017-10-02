@@ -691,7 +691,7 @@ switch cfg.method
         % make a temporary label list
         tmp2 = cell(numel(data.labelcmb),1);
         for m = 1:numel(data.labelcmb)
-          tok = tokenize(data.labelcmb{m},'[');
+          tok = tokenize(data.labelcmb{m}, '[');
           tmp2{m} = tok{1};
         end
         label = unique(tmp2);
@@ -713,7 +713,7 @@ switch cfg.method
         else
           tmp = cell(numel(data.labelcmb),1);
           for m = 1:numel(data.labelcmb)
-            tok = tokenize(data.labelcmb{m},'[');
+            tok = tokenize(data.labelcmb{m}, '[');
             tmp{m} = tok{1};
           end
           label = unique(tmp);
@@ -801,9 +801,9 @@ switch cfg.method
       % HACK
       dimord = getdimord(data, 'mom');
       dimtok = tokenize(dimord, '_');
-      posdim = find(strcmp(dimtok,'{pos}'));
+      posdim = find(strcmp(dimtok, '{pos}'));
       posdim = 4; % we concatenate across positions...
-      rptdim = find(~cellfun('isempty',strfind(dimtok,'rpt')));
+      rptdim = find(~cellfun('isempty',strfind(dimtok, 'rpt')));
       rptdim = rptdim-1; % the posdim has to be taken into account...
       dat    = cat(4, data.mom{data.inside});
       dat    = permute(dat,[posdim rptdim setdiff(1:ndims(dat),[posdim rptdim])]);
@@ -871,7 +871,7 @@ switch cfg.method
         end
         if numel(cfg.mi.lags)>1
           data.time = cfg.mi.lags./data.fsample;
-          outdimord = [outdimord,'_time'];
+          outdimord = [outdimord, '_time'];
         else
           data = rmfield(data, 'time');
         end

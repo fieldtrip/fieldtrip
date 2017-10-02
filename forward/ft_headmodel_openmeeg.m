@@ -168,7 +168,7 @@ end
 try
   % execute OpenMEEG and read the resulting file
   if ispc
-    dos([exefile]);
+    dos(exefile);
   else
     version = om_getgccversion;
     if version>3

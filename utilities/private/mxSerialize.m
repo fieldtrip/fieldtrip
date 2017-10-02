@@ -31,7 +31,7 @@ if ft_platform_supports('libmx_c_interface') % older than 2014a
   argout = mxSerialize_c(argin);
 else
   % use the C++ implementation of the mex file
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2452
   argout = mxSerialize_cpp(argin);
 end
 

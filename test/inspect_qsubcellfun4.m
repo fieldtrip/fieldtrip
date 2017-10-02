@@ -3,7 +3,7 @@ function inspect_qsubcellfun4
 % TEST inspect_qsubcellfun4
 
 % this test is designed for executing functions that are private to the function in which qsubcellfun is called
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1891
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1891
 
 [ftver, ftpath] = ft_version;
 
