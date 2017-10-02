@@ -154,16 +154,22 @@ elseif strcmp(sfmethod, 'bivariate_conditional')
   
   % remove double occurrences, unique does not work for cell arrays with
   % the argument 'rows'
-  tmp = '';
-  for k = 1:size(channeltriplet,1)
-    tmptmp = char(sort(channeltriplet(k,:)))';
-    tmp(k,1:numel(tmptmp)) = tmptmp;
+  tmp     = channeltriplet;
+  utmp    = unique(tmp(:));
+  ok      = true(size(tmp,1),1);
+  tmpindx = zeros(size(tmp));
+  for k = 1:size(tmpindx,1)
+    [~, tmpindx(k,:)] = match_str(tmp(k,:)', utmp);
+    tmptmpindx = tmpindx(k,:);
+    tmptmpindx = tmptmpindx([1 2 3;1 3 2;2 1 3;2 3 1;3 1 2;3 2 1]);
+    if ~isempty(intersect(tmpindx(1:(k-1),:), tmptmpindx, 'rows'))
+      ok(k) = false;
+    elseif tmpindx(k,1)==tmpindx(k,2)
+      ok(k) = false;
+    end
   end
-  tmp = unique(tmp,'rows'); clear channeltriplet;
-  for k = 1:size(tmp,1)
-    channeltriplet(k,:) = cellstr(tmp(k,:)')';
-  end
-
+  channeltriplet = channeltriplet(ok,:);
+%   
 %   tmp = cell(0,3);
 %   while ~isempty(channeltriplet)
 %     tmp = cat(1, tmp, channeltriplet(end,:));
@@ -172,7 +178,7 @@ elseif strcmp(sfmethod, 'bivariate_conditional')
 %                    strcmp(channeltriplet(:,3),channeltriplet{end,3}),:) = [];
 %   end
 %   channeltriplet = tmp;
-  
+%   
 end
 
 if ~isempty(channelcmb) && numel(freq.label)>1 && strncmp(sfmethod, 'bivariate', 9)
