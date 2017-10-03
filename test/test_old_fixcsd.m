@@ -43,7 +43,7 @@ cfg = [];
 cfg.method = 'coh';
 cfg.channelcmb = channelcmb(1,:);
 coh = ft_connectivityanalysis(cfg, freq);
-coh2 = checkdata(coh, 'cmbrepresentation', 'sparse');
+coh2 = ft_checkdata(coh, 'cmbrepresentation', 'sparse');
 
 cfg = [];
 cfg.method = 'granger';
