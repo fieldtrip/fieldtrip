@@ -54,7 +54,10 @@ end
 
 %% Prepare head model
 cfg = [];
-vol = ft_prepare_singleshell(cfg, segmentedmri);
+% vol = ft_prepare_singleshell(cfg, segmentedmri);
+cfg.method = 'singleshell';
+vol = ft_prepare_headmodel(cfg, segmentedmri);
+
 
 %% Prepare leadfield
 cfg                 = [];
