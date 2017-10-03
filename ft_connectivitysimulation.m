@@ -418,10 +418,11 @@ switch cfg.method
     % estimate the transfer-matrix non-parametrically
     tmpcfg        = [];
     tmpcfg.method = 'transfer';
+    tmpcfg.granger.stabilityfix = true;
     t             = ft_connectivityanalysis(tmpcfg, freq);
     
     % estimate the ar-model coefficients
-    a = transfer2coeffs(t.transfer,t.freq);
+     a = transfer2coeffs(t.transfer,t.freq);
     
     % recursively call this function to generate the data, this is
     % somewhate tricky with respect to keeping the provenance info. Here,
