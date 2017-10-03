@@ -27,7 +27,6 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline      = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
-%   cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.trials        = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.axes          = string, 'yes' or 'no' whether to draw x- and y-axes for each graph (default = 'yes')
 %   cfg.box           = string, 'yes' or 'no' whether to draw a box around each graph (default = 'no')
