@@ -261,7 +261,7 @@ if strcmp(sfmethod, 'multivariate') && nrpt==1 && ~doconditional,
       Stmp = nan;
     else
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                             numiteration, tol, fb, init, stabilityfix);
+                             numiteration, tol, fb, init, checkconvergence, stabilityfix);
     end
     
     % undo SVD
@@ -355,7 +355,7 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
     end
     
     [Htmp, Ztmp, Stmp] = sfactorization_wilson(Stmp, freq.freq, ...
-                           numiteration, tol, fb, init, stabilityfix);  
+                           numiteration, tol, fb, init, checkconvergence, stabilityfix);  
     
     % undo PCA
     if dopca
@@ -412,14 +412,14 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && ~doblock,
     for m = 1:ntim
       tmp = reshape(freq.crsspctrm(k,:,:,:,m), siz(2:end-1));
       [Htmp, Ztmp, Stmp] = sfactorization_wilson(tmp, freq.freq, ...
-                             numiteration, tol, fb, init, stabilityfix);
+                             numiteration, tol, fb, init, checkconvergence, stabilityfix);
       H(k,:,:,:,m) = Htmp;
       Z(k,:,:,m)   = Ztmp;
       S(k,:,:,:,m) = Stmp;
     end 
   end
  
-elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && doblock && ~doconditional,
+elseif strcmp(sfmethod, 'multivariate') && nrpt>1 && doblock && ~doconditional
   % error 
   ft_error('single trial estimates and blockwise factorisation is not yet implemented');
   
