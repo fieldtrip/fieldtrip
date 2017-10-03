@@ -223,17 +223,48 @@ fprintf('performing the normalisation\n');
 % step 2: compute transformation parameters
 % step 3: write the results to a file with prefix 'w'
 
-if ~isfield(cfg, 'spmparams') && strcmp(cfg.nonlinear, 'yes')
-  fprintf('warping the individual anatomy to the template anatomy\n');
-  % compute the parameters by warping the individual anatomy
-  VF        = spm_vol([cfg.intermediatename '_anatomy.img']);
-  params    = spm_normalise(VG,VF);
-elseif ~isfield(cfg, 'spmparams') && strcmp(cfg.nonlinear, 'no')
-  fprintf('warping the individual anatomy to the template anatomy, using only linear transformations\n');
-  % compute the parameters by warping the individual anatomy
-  VF         = spm_vol([cfg.intermediatename '_anatomy.img']);
-  flags.nits = 0; % put number of non-linear iterations to zero
-  params     = spm_normalise(VG,VF,[],[],[],flags);
+if ~isfield(cfg, 'spmparams')
+  if strcmp(cfg.nonlinear, 'yes') && ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
+    fprintf('warping the individual anatomy to the template anatomy\n');
+    % compute the parameters by warping the individual anatomy
+    VF        = spm_vol([cfg.intermediatename '_anatomy.img']);
+    params    = spm_normalise(VG,VF);
+  elseif strcmp(cfg.nonlinear, 'no') && ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
+    fprintf('warping the individual anatomy to the template anatomy, using only linear transformations\n');
+    % compute the parameters by warping the individual anatomy
+    VF         = spm_vol([cfg.intermediatename '_anatomy.img']);
+    flags.nits = 0; % put number of non-linear iterations to zero
+    params     = spm_normalise(VG,VF,[],[],[],flags);
+  elseif strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new')
+    if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
+      cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
+    end
+    
+    VF = ft_write_mri([cfg.intermediatename, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
+    
+    fprintf('warping the individual anatomy to the template anatomy, using the new-style segmentation\n');
+    
+    % create the structure that is required for spm_preproc8
+    opts          = ft_getopt(cfg, 'opts');
+    opts.image    = VF;
+    opts.tpm      = ft_getopt(opts, 'tpm', spm_load_priors8(cfg.tpm));
+    opts.biasreg  = ft_getopt(opts, 'biasreg',  0.0001);
+    opts.biasfwhm = ft_getopt(opts, 'biasfwhm', 60);
+    opts.lkp      = ft_getopt(opts, 'lkp',      [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]);
+    opts.reg      = ft_getopt(opts, 'reg',      [0 0.001 0.5 0.05 0.2]);
+    opts.samp     = ft_getopt(opts, 'samp',     3);
+    opts.fwhm     = ft_getopt(opts, 'fwhm',     1);
+    
+    Affine = spm_maff8(opts.image(1),3,32,opts.tpm,eye(4),'mni');
+    Affine = spm_maff8(opts.image(1),3, 1,opts.tpm,Affine,'mni');
+    opts.Affine = Affine;
+    
+    % run the segmentation
+    p = spm_preproc8(opts);
+    
+    % this writes the 'native' segmentations
+    spm_preproc_write8(p, [zeros(6,2) ones(6,2)], [0 0], [0 1], 1, 1, nan(2,3), nan);
+  end
 else
   fprintf('using the parameters specified in the configuration, skipping the parameter estimation\n');
   % use the externally specified parameters
