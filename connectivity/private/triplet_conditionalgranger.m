@@ -68,7 +68,8 @@ for k = 1:size(cmbindx,1)
          0 tmp3 1];
      
   P    = p2*p1;
-
+  invP = inv(P);
+  
   %bivariate system  
   sel2     = find(all(ismember(cmbindx2, cmbindx(k,[1 3])),2));
   tmp      = cmbindx2(sel2,:);
@@ -77,18 +78,42 @@ for k = 1:size(cmbindx,1)
   h2 = reshape(H2(reorder2, reorder2, sel2, :), [2 2 nfreq]);
   z2 = Z2(reorder2, reorder2, sel2);
   
-  for kk = 1:size(h2,3)
-    HH = h123(:,:,kk)/P;
-    Q  = [1                 0;
-          -z2(1,2)/z2(1,1) 1];
-    B  = Q/h2(:,:,kk);
-    BB = [B(1,1) 0 B(1,2);
-          0      1 0;
-          B(2,1) 0 B(2,2)];
-    FF = BB*HH;
-    numer = z2(1,1);
-    denom = abs(FF(1,1)*z123(1,1)*conj(FF(1,1)));
-
-    Cij(k,kk) = log(numer./denom);
-  end
+  Q  = [1                 0;
+        -z2(1,2)/z2(1,1) 1];
+  numer = z2(1,1);
+  
+  invh2   = inv2x2(h2);
+  
+  HH   = mtimes3x3(h123, invP(:,:,ones(size(h123,3),1)));
+  B    = mtimes2x2(Q(:,:,ones(size(invh2,3),1)), invh2);
+  FF   = shiftdim(B(1,1,:).*HH(1,1,:)+B(1,2,:).*HH(3,1,:),1);
+  denom = abs(FF.*conj(FF)).*z123(1,1);
+  Cij(k,:) = log(numer./denom);
+  
+%   % it seems only FF(1,1) is needed (as per the commented for-loop
+%   for kk = 1:size(h2,3)
+%     HH = h123(:,:,kk)/P;
+%     B  = Q/h2(:,:,kk);
+%     FF = B(1,:)*HH([1 3],1);
+%     denom = abs(FF(1,1)*z123(1,1)*conj(FF(1,1)));
+% 
+%     Cij(k,kk) = log(numer./denom);
+%     
+%   end
+%   
+  
+%   for kk = 1:size(h2,3)
+%     HH = h123(:,:,kk)/P;
+%     Q  = [1                 0;
+%           -z2(1,2)/z2(1,1) 1];
+%     B  = Q/h2(:,:,kk);
+%     BB = [B(1,1) 0 B(1,2);
+%           0      1 0;
+%           B(2,1) 0 B(2,2)];
+%     FF = BB*HH;
+%     numer = z2(1,1);
+%     denom = abs(FF(1,1)*z123(1,1)*conj(FF(1,1)));
+% 
+%     Cij(k,kk) = log(numer./denom);
+%   end
 end
