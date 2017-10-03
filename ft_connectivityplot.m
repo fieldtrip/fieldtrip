@@ -71,6 +71,7 @@ cfg.zlim      = ft_getopt(cfg, 'zlim',      'maxmin');
 cfg.ylim      = ft_getopt(cfg, 'ylim',      'maxmin');
 cfg.xlim      = ft_getopt(cfg, 'xlim',      'maxmin');
 cfg.graphcolor = ft_getopt(cfg, 'graphcolor', 'brgkywrgbkywrgbkywrgbkyw');
+if ischar(cfg.graphcolor), cfg.graphcolor = cfg.graphcolor(:); end
 
 % check if the input data is valid for this function
 % ensure that the input is correct
@@ -287,7 +288,7 @@ for k = 1:nchan
         ft_plot_matrix(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'clim', cfg.zlim, 'box', 'yes');
       elseif hasfreq
         tmp = reshape(dat(m,k,:), [nfreq 1]);
-        ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.graphcolor(1));
+        ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.graphcolor(1,:));
       elseif hastime
         ft_error('plotting data with only a time axis is not supported yet');
       end
