@@ -207,6 +207,9 @@ end
 
 % set colormap
 if isfield(cfg,'colormap')
+  if ~isnumeric(cfg.colormap)
+    cfg.colormap = colormap(cfg.colormap);
+  end
   if size(cfg.colormap,2)~=3
     ft_error('colormap must be a n x 3 matrix');
   else
@@ -214,17 +217,25 @@ if isfield(cfg,'colormap')
   end
 end
 
-if isfield(cfg, 'dataname')
-  if iscell(cfg.dataname)
-    dataname = cfg.dataname{1};
+% this is needed for the figure title and correct labeling of graphcolor later on
+if nargin>1
+  if isfield(cfg, 'dataname')
+    if iscell(cfg.dataname)
+      dataname = cfg.dataname{1}; % only one can be plotted
+    else
+      dataname = cfg.dataname;
+    end
   else
-    dataname = cfg.dataname;
+    if ~isempty(inputname(2))
+      dataname = inputname(2);
+    else
+      dataname = ['data' num2str(1,'%02d')];
+    end
   end
-elseif nargin > 1
-  dataname = inputname(2);
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
+
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
@@ -247,6 +258,27 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
+% parse cfg.channel 
+if isfield(cfg, 'channel') && isfield(data, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+% Apply baseline correction:
+if ~strcmp(cfg.baseline, 'no')
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
+  data = ft_freqbaseline(cfg, data);
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
+  end
+end
+
+% channels SHOULD be selected here, as no interactive action produces a new multiplot
 tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
@@ -300,18 +332,6 @@ end
 tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
 data = chanscale_common(tmpcfg, data);
 
-% Apply baseline correction:
-if ~strcmp(cfg.baseline, 'no')
-  % keep mask-parameter if it is set
-  if ~isempty(cfg.maskparameter)
-    tempmask = data.(cfg.maskparameter);
-  end
-  data = ft_freqbaseline(cfg, data);
-  % put mask-parameter back if it is set
-  if ~isempty(cfg.maskparameter)
-    data.(cfg.maskparameter) = tempmask;
-  end
-end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -334,6 +354,8 @@ end
 % Get the index of the nearest bin, this is the same in all datasets
 xminindx = nearest(data.(xparam), xmin);
 xmaxindx = nearest(data.(xparam), xmax);
+xmin = data.(xparam)(xminindx);
+xmax = data.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 xval = data.(xparam)(selx);
 
@@ -349,6 +371,8 @@ end
 % Get the index of the nearest bin, this is the same in all datasets
 yminindx = nearest(data.(yparam), ymin);
 ymaxindx = nearest(data.(yparam), ymax);
+ymin = data.(yparam)(yminindx);
+ymax = data.(yparam)(ymaxindx);
 sely = yminindx:ymaxindx;
 yval = data.(yparam)(sely);
 

@@ -193,20 +193,21 @@ elseif (length(cfg.linestyle) < Ndata ) && (length(cfg.linestyle) == 1)
 end
 
 % this is needed for the figure title and correct labeling of graphcolor later on
-if isfield(cfg, 'dataname')
-  dataname = cfg.dataname;
-elseif nargin==1
-  dataname = cfg.inputfile;
-elseif ~isempty(inputname(i+1))
-  dataname = cell(1,Ndata);
-  for i=1:Ndata
-    dataname{i} = inputname(i+1);
+if nargin>1
+  if isfield(cfg, 'dataname')
+    dataname = cfg.dataname;
+  else
+    dataname = cell(1,Ndata);
+    for i=1:Ndata
+      if ~isempty(inputname(i+1))
+        dataname{i} = inputname(i+1);
+      else
+        dataname{i} = ['data' num2str(i,'%02d')];
+      end
+    end
   end
-else
-  dataname = cell(1,Ndata);
-  for i=1:Ndata
-    dataname{i} = ['input' num2str(i, '%02d')];
-  end
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
@@ -259,6 +260,37 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
+% parse cfg.channel 
+if isfield(cfg, 'channel') && isfield(varargin{1}, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, varargin{1}.label);
+elseif isfield(cfg, 'channel') && isfield(varargin{1}, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
+end
+
+% apply baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  for i=1:Ndata
+    % keep mask-parameter if it is set
+    if ~isempty(cfg.maskparameter)
+      tempmask = varargin{i}.(cfg.maskparameter);
+    end
+    if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
+      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
+    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
+      varargin{i} = ft_freqbaseline(cfg, varargin{i});
+    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
+      ft_error('baseline correction is not supported for spectra without a time dimension');
+    else
+      ft_warning('baseline correction not applied, please set xparam');
+    end
+    % put mask-parameter back if it is set
+    if ~isempty(cfg.maskparameter)
+      varargin{i}.(cfg.maskparameter) = tempmask;
+    end
+  end
+end
+
+
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'showcallinfo', 'trials'});
 if hasrpt
@@ -275,8 +307,10 @@ else
 end
 tmpvar = varargin{1};
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
-% restore the provenance information
+% restore the provenance information and put back cfg.channel
+tmpchannel  = cfg.channel;
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+cfg.channel = tmpchannel;
 
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
   % the mask parameter is not present after ft_selectdata, because it is
@@ -324,20 +358,6 @@ for i=1:Ndata
   varargin{i}= chanscale_common(tmpcfg, varargin{i});
 end
 
-% apply baseline correction
-if ~strcmp(cfg.baseline, 'no')
-  for i=1:Ndata
-    if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
-      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
-    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
-      varargin{i} = ft_freqbaseline(cfg, varargin{i});
-    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
-      ft_error('baseline correction is not supported for spectra without a time dimension');
-    else
-      ft_warning('baseline correction not applied, please set xparam');
-    end
-  end
-end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -361,21 +381,22 @@ end
 % Get the index of the nearest bin, this is the same in all datasets
 xminindx = nearest(varargin{1}.(xparam), xmin);
 xmaxindx = nearest(varargin{1}.(xparam), xmax);
+xmin = varargin{1}.(xparam)(xminindx);
+xmax = varargin{1}.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 xval = varargin{1}.(xparam)(selx);
 
 % Get physical y-axis range, i.e. parameter to be plotted
-if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
+if ~isnumeric(cfg.ylim)
   % Find maxmin throughout all varargins
   ymin = [];
   ymax = [];
   for i=1:Ndata
     % Select the channels in the data that match with the layout and that are selected for plotting
-    dat = varargin{i}.(cfg.parameter)(selchan,selx);
+    dat = mean(varargin{i}.(cfg.parameter)(selchan,selx),1); % mean over channels, as that is what will be plotted 
     ymin = min([ymin min(min(min(dat)))]);
     ymax = max([ymax max(max(max(dat)))]);
   end
-  
   if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
     ymin = -ymax;
@@ -384,7 +405,6 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
   elseif strcmp(cfg.ylim, 'minzero')
     ymax = 0;
   end
-  
 else
   ymin = cfg.ylim(1);
   ymax = cfg.ylim(2);
@@ -398,7 +418,7 @@ end
 
 if ~isempty(cfg.maskparameter)
   % one value for each channel, or one value for each channel-time point
-  maskmatrix = varargin{1}.(cfg.maskparameter)(seldat, selx);
+  maskmatrix = varargin{1}.(cfg.maskparameter)(selchan, selx);
 else
   % create an Nx0 matrix
   maskmatrix = zeros(length(selchan), 0);
@@ -411,16 +431,20 @@ hold on
 
 yval = mean(datamatrix, 2); % over channels
 yval = reshape(yval, size(yval,1), size(yval,3));
-mask = mean(maskmatrix, 1); % over channels
+mask = squeeze(mean(maskmatrix, 1)); % over channels
 
 ft_plot_vector(xval, yval, 'style', cfg.linestyle{i}, 'color', graphcolor, ...
   'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, ...
-  'hlim', cfg.xlim, 'vlim', cfg.ylim);
+  'hlim', [xmin xmax], 'vlim', [ymin ymax]);
 
 colorLabels = [];
 if Ndata > 1
-  if ischar(graphcolor);        colorLabels = [colorLabels dataname{i} '='         graphcolor(i)     '\n'];
-  elseif isnumeric(graphcolor); colorLabels = [colorLabels dataname{i} '=' num2str(graphcolor(i, :)) '\n'];
+  for i=1:Ndata
+    if ischar(graphcolor)
+      colorLabels = [colorLabels '\n' dataname{i} '='         graphcolor(i)     ];
+    elseif isnumeric(graphcolor)
+      colorLabels = [colorLabels '\n' dataname{i} '=' num2str(graphcolor(i, :)) ];
+    end
   end
 end
 
@@ -464,19 +488,12 @@ if isempty(get(gcf, 'Name'))
   else
     chans = '<multiple channels>';
   end
-  if isfield(cfg, 'dataname')
-    if iscell(cfg.dataname)
-      dataname = cfg.dataname{1};
-    else
-      dataname = cfg.dataname;
-    end
-  elseif nargin > 1
-    dataname = inputname(2);
-  else % data provided through cfg.inputfile
-    dataname = cfg.inputfile;
-  end
   if isempty(cfg.figurename)
-    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, dataname, chans));
+    if iscell(dataname)
+      set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, join_str(', ', dataname), chans));
+    else
+      set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, dataname, chans));
+    end
     set(gcf, 'NumberTitle', 'off');
   else
     set(gcf, 'name', cfg.figurename);
@@ -489,7 +506,6 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
-axis tight
 hold off
 
 % Make the figure interactive

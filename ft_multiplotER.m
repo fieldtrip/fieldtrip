@@ -222,21 +222,23 @@ if Ndata>1
 end
 
 % this is needed for the figure title and correct labeling of graphcolor later on
-if isfield(cfg, 'dataname')
-  dataname = cfg.dataname;
-elseif nargin==1
-  dataname = cfg.inputfile;
-elseif ~isempty(inputname(i+1))
-  dataname = cell(1,Ndata);
-  for i=1:Ndata
-    dataname{i} = inputname(i+1);
+if nargin>1
+  if isfield(cfg, 'dataname')
+    dataname = cfg.dataname;
+  else
+    dataname = cell(1,Ndata);
+    for i=1:Ndata
+      if ~isempty(inputname(i+1))
+        dataname{i} = inputname(i+1);
+      else
+        dataname{i} = ['data' num2str(i,'%02d')];
+      end
+    end
   end
-else
-  dataname = cell(1,Ndata);
-  for i=1:Ndata
-    dataname{i} = ['input' num2str(i,'%02d')];
-  end
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
+
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
@@ -287,6 +289,37 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
+% parse cfg.channel 
+if isfield(cfg, 'channel') && isfield(varargin{1}, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, varargin{1}.label);
+elseif isfield(cfg, 'channel') && isfield(varargin{1}, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(varargin{1}.labelcmb(:)));
+end
+
+% Apply baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  for i=1:Ndata
+    % keep mask-parameter if it is set
+    if ~isempty(cfg.maskparameter)
+      tempmask = varargin{i}.(cfg.maskparameter);
+    end
+    if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
+      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
+    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
+      varargin{i} = ft_freqbaseline(cfg, varargin{i});
+    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
+      ft_error('Baseline correction is not supported for spectra without a time dimension');
+    else
+      ft_warning('Baseline correction not applied, please set xparam');
+    end
+    % put mask-parameter back if it is set
+    if ~isempty(cfg.maskparameter)
+      varargin{i}.(cfg.maskparameter) = tempmask;
+    end
+  end
+end
+
+% channels SHOULD be selected here, as no interactive action produces a new multiplot
 tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
@@ -351,20 +384,6 @@ for i=1:Ndata
   varargin{i}= chanscale_common(tmpcfg, varargin{i});
 end
 
-% Apply baseline correction
-if ~strcmp(cfg.baseline, 'no')
-  for i=1:Ndata
-    if strcmp(dtype, 'timelock') && strcmp(xparam, 'time')
-      varargin{i} = ft_timelockbaseline(cfg, varargin{i});
-    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'time')
-      varargin{i} = ft_freqbaseline(cfg, varargin{i});
-    elseif strcmp(dtype, 'freq') && strcmp(xparam, 'freq')
-      ft_error('Baseline correction is not supported for spectra without a time dimension');
-    else
-      ft_warning('Baseline correction not applied, please set xparam');
-    end
-  end
-end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -392,11 +411,13 @@ end
 % Get the index of the nearest bin, this is the same in all datasets
 xminindx = nearest(varargin{1}.(xparam), xmin);
 xmaxindx = nearest(varargin{1}.(xparam), xmax);
+xmin = varargin{1}.(xparam)(xminindx);
+xmax = varargin{1}.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 xval = varargin{1}.(xparam)(selx);
 
 % Get physical y-axis range, i.e. of the parameter to be plotted
-if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
+if ~isnumeric(cfg.ylim)
   % Find maxmin throughout all varargins
   ymin = [];
   ymax = [];
@@ -406,7 +427,6 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
     ymin = min([ymin min(min(min(dat)))]);
     ymax = max([ymax max(max(max(dat)))]);
   end
-  
   if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);
     ymin = -ymax;
@@ -415,7 +435,6 @@ if strcmp(cfg.ylim, 'maxmin') || strcmp(cfg.ylim, 'maxabs')
   elseif strcmp(cfg.ylim, 'minzero')
     ymax = 0;
   end
-  
 else
   ymin = cfg.ylim(1);
   ymax = cfg.ylim(2);
@@ -466,8 +485,12 @@ if istrue(cfg.showcomment)
   % Add the colors of the different datasets to the comment
   colorLabels = [];
   if Ndata > 1
-    if ischar(graphcolor);        colorLabels = [colorLabels dataname{i} '='         graphcolor(i)     '\n'];
-    elseif isnumeric(graphcolor); colorLabels = [colorLabels dataname{i} '=' num2str(graphcolor(i, :)) '\n'];
+    for i=1:Ndata
+      if ischar(graphcolor)
+        colorLabels = [colorLabels '\n' dataname{i} '='         graphcolor(i)     ];
+      elseif isnumeric(graphcolor)
+        colorLabels = [colorLabels '\n' dataname{i} '=' num2str(graphcolor(i, :)) ];
+      end
     end
   end
   cfg.comment = [cfg.comment colorLabels];

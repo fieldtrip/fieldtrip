@@ -189,14 +189,24 @@ if ft_abort
 end
 
 % make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function if we don't specify this, the window will be called
+% plotting function. if we don't specify this, the window will be called
 % 'ft_topoplotER', which is confusing to the user
 cfg.funcname = mfilename;
-if nargin > 1 && ~isfield(cfg, 'dataname')
-  cfg.dataname = {inputname(2)};
-  for k = 3:nargin
-    cfg.dataname{end+1} = inputname(k);
+if nargin>1
+  if ~isfield(cfg, 'dataname')
+    cfg.dataname = [];
+    for k = 2:nargin
+      if isstruct(varargin{k-1})
+        if ~isempty(inputname(k))
+          cfg.dataname{k-1} = inputname(k);
+        else
+          cfg.dataname{k-1} = ['data' num2str(k-1,'%02d')];
+        end
+      end
+    end
   end
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
 
 % prepare the layout, this should be done only once

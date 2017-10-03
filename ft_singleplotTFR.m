@@ -148,17 +148,25 @@ cfg.directionality = ft_getopt(cfg, 'directionality', []);
 cfg.figurename     = ft_getopt(cfg, 'figurename',     []);
 cfg.parameter      = ft_getopt(cfg, 'parameter',     'powspctrm');
 
-if isfield(cfg, 'dataname')
-  if iscell(cfg.dataname)
-    dataname = cfg.dataname{1};
+% this is needed for the figure title and correct labeling of graphcolor later on
+if nargin>1
+  if isfield(cfg, 'dataname')
+    if iscell(cfg.dataname)
+      dataname = cfg.dataname{1};
+    else
+      dataname = cfg.dataname;
+    end
   else
-    dataname = cfg.dataname;
+    if ~isempty(inputname(2))
+      dataname = inputname(2);
+    else
+      dataname = ['data' num2str(1, '%02d')];
+    end
   end
-elseif nargin > 1
-  dataname = inputname(2);
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
+
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
@@ -181,6 +189,26 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
+% parse cfg.channel 
+if isfield(cfg, 'channel') && isfield(data, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+% Apply baseline correction:
+if ~strcmp(cfg.baseline, 'no')
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
+  data = ft_freqbaseline(cfg, data);
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
+  end
+end
+
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'showcallinfo', 'trials'});
 if hasrpt
@@ -190,8 +218,11 @@ else
 end
 tmpvar = data;
 [data] = ft_selectdata(tmpcfg, data);
-% restore the provenance information
+% restore the provenance information and put back cfg.channel
+tmpchannel  = cfg.channel;
 [cfg, data] = rollback_provenance(cfg, data);
+cfg.channel = tmpchannel;
+
 
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(data, cfg.maskparameter)
   % the mask parameter is not present after ft_selectdata, because it is
@@ -235,18 +266,6 @@ end
 tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
 [data] = chanscale_common(tmpcfg, data);
 
-% Apply baseline correction:
-if ~strcmp(cfg.baseline, 'no')
-  % keep mask-parameter if it is set
-  if ~isempty(cfg.maskparameter)
-    tempmask = data.(cfg.maskparameter);
-  end
-  data = ft_freqbaseline(cfg, data);
-  % put mask-parameter back if it is set
-  if ~isempty(cfg.maskparameter)
-    data.(cfg.maskparameter) = tempmask;
-  end
-end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -265,6 +284,8 @@ end
 % Get the index of the nearest bin
 xminindx = nearest(data.(xparam), xmin);
 xmaxindx = nearest(data.(xparam), xmax);
+xmin = data.(xparam)(xminindx);
+xmax = data.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 xval = data.(xparam)(selx);
 
@@ -280,6 +301,8 @@ end
 % Get the index of the nearest bin
 yminindx = nearest(data.(yparam), ymin);
 ymaxindx = nearest(data.(yparam), ymax);
+ymin = data.(yparam)(yminindx);
+ymax = data.(yparam)(ymaxindx);
 sely = yminindx:ymaxindx;
 yval = data.(yparam)(sely);
 
@@ -319,7 +342,7 @@ hold on
 
 zval = mean(datamatrix, 1); % over channels
 zval = reshape(zval, size(zval,2), size(zval,3));
-mask = mean(maskmatrix, 1); % over channels
+mask = squeeze(mean(maskmatrix, 1)); % over channels
 
 % Get physical z-axis range (color axis):
 if strcmp(cfg.zlim, 'maxmin')
@@ -358,6 +381,9 @@ end
 
 % set colormap
 if isfield(cfg, 'colormap')
+  if ~isnumeric(cfg.colormap)
+    cfg.colormap = colormap(cfg.colormap);
+  end
   if size(cfg.colormap,2)~=3
     ft_error('colormap must be a Nx3 matrix');
   else
@@ -419,6 +445,7 @@ if strcmp(cfg.interactive, 'yes')
   % add the cfg/data information to the figure under identifier linked to this axis
   ident             = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca, 'tag',ident);
+  info                  = guidata(gcf);
   info.(ident).dataname = dataname;
   info.(ident).cfg      = cfg;
   info.(ident).data     = data;

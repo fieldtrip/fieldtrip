@@ -69,7 +69,11 @@ if Ndata>1 && ~isnumeric(varargin{end})
     % all data avalaible. At the moment I couldn't think of anything better than
     % using an additional indx variable and letting the function recursively call
     % itself.
-    tmpcfg = rmfield(cfg, 'inputfile');
+    if isfield(cfg, 'inputfile')
+      tmpcfg = rmfield(cfg, 'inputfile');
+    else
+      tmpcfg = cfg;
+    end
     topoplot_common(tmpcfg, varargin{1:Ndata}, indx);
     indx = indx + 1;
   end
@@ -225,12 +229,18 @@ end
 
 % check colormap is proper format and set it
 if isfield(cfg, 'colormap')
-  if size(cfg.colormap,2)~=3, ft_error('topoplot(): Colormap must be a n x 3 matrix'); end
+  if ~isnumeric(cfg.colormap)
+    cfg.colormap = colormap(cfg.colormap);
+  end
+  if size(cfg.colormap,2)~=3
+    ft_error('topoplot(): Colormap must be a n x 3 matrix');
+  end
   colormap(cfg.colormap);
   ncolors = size(cfg.colormap,1);
 else
   ncolors = []; % let the low-level function deal with this
 end
+
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
@@ -293,6 +303,31 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
+% parse cfg.channel 
+if isfield(cfg, 'channel') && isfield(data, 'label')
+  cfg.channel = ft_channelselection(cfg.channel, data.label);
+elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
+  cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
+end
+
+% Apply baseline correction
+if ~strcmp(cfg.baseline, 'no')
+  % keep mask-parameter if it is set
+  if ~isempty(cfg.maskparameter)
+    tempmask = data.(cfg.maskparameter);
+  end
+  if strcmp(xparam, 'time') && strcmp(yparam, 'freq')
+    data = ft_freqbaseline(cfg, data);
+  elseif strcmp(xparam, 'time') && strcmp(yparam, '')
+    data = ft_timelockbaseline(cfg, data);
+  end
+  % put mask-parameter back if it is set
+  if ~isempty(cfg.maskparameter)
+    data.(cfg.maskparameter) = tempmask;
+  end
+end
+
+
 % time and/or frequency should NOT be selected and averaged here, since a singleplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
 if hasrpt
@@ -348,14 +383,6 @@ end
 tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
 data = chanscale_common(tmpcfg, data);
 
-% Apply baseline correction
-if ~strcmp(cfg.baseline, 'no')
-  if strcmp(xparam, 'time') && strcmp(yparam, 'freq')
-    data = ft_freqbaseline(cfg, data);
-  elseif strcmp(xparam, 'time') && strcmp(yparam, '')
-    data = ft_timelockbaseline(cfg, data);
-  end
-end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -389,6 +416,8 @@ else
 end
 xminindx = nearest(data.(xparam), xmin);
 xmaxindx = nearest(data.(xparam), xmax);
+xmin = data.(xparam)(xminindx);
+xmax = data.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 
 % Get physical min/max range of y
@@ -402,6 +431,8 @@ if ~isempty(yparam)
   end
   yminindx = nearest(data.(yparam), ymin);
   ymaxindx = nearest(data.(yparam), ymax);
+  ymin = data.(yparam)(yminindx);
+  ymax = data.(yparam)(ymaxindx);
   sely = yminindx:ymaxindx;
 end
 
@@ -786,7 +817,10 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).label       = cfg.layout.label;
   info.(ident).dataname    = dataname;
   info.(ident).cfg         = cfg;
-  info.(ident).datvarargin = varargin(1:Ndata);
+  if ~isfield(info.(ident),'datvarargin')
+    info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
+  end
+  info.(ident).datvarargin{indx} = data; % update current dataset (e.g. baselined, channel selection, etc)
   guidata(gcf, info);
   if any(strcmp(data.dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq', 'chancmb_freq', 'rpt_chancmb_freq', 'subj_chancmb_freq'}))
     set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
@@ -826,7 +860,7 @@ if ~isempty(label)
   cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
   cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
   cfg.channel = label;
-  cfg.dataname = info.(ident).dataname;   % put data name in here, this cannot be resolved by other means
+  %cfg.dataname = info.(ident).dataname;  DATANAME is still present in cfg, and contains all datasets to be plotted
   cfg.trials = 'all';                     % trial selection has already been taken care of
   cfg.xlim = 'maxmin';
   % if user specified a zlim, copy it over to the ylim of singleplot
