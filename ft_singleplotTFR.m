@@ -322,7 +322,12 @@ if strcmp(cfg.masknans, 'yes') && (~evenx || ~eveny)
   cfg.masknans = 'no';
 end
 
-datamatrix = data.(cfg.parameter)(selchan, sely, selx);
+% the usual data is chan_freq_time, but other dimords should also work
+dimtok = tokenize(dimord, '_');
+datamatrix = data.(cfg.parameter);
+[c, ia, ib] = intersect(dimtok, {'chan', yparam, xparam});
+datamatrix = permute(datamatrix, ia);
+datamatrix = datamatrix(selchan, sely, selx);
 
 if ~isempty(cfg.maskparameter)
   maskmatrix = data.(cfg.maskparameter)(selchan, sely, selx);

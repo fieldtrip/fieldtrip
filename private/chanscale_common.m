@@ -38,7 +38,7 @@ dimord = getdimord(data, cfg.parameter);
 
 switch dimord
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  case {'chan_time' 'chan_freq' 'chan_freq_time'}
+  case {'chan_time' 'chan_freq' 'chan_freq_time' 'chan_time_freq'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % get the data from the structure
