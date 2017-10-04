@@ -81,6 +81,12 @@ if Ndata>1 && ~isnumeric(varargin{end})
   return
 end
 
+if iscell(cfg.dataname)
+  dataname = cfg.dataname{indx};
+else
+  dataname = cfg.dataname;
+end  
+
 data = varargin{indx};
 data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'});
 
@@ -773,7 +779,7 @@ if isempty(get(gcf, 'Name'))
     funcname = mfilename;
   end
   if isempty(cfg.figurename)
-    dataname_str = join_str(', ', cfg.dataname{indx});
+    dataname_str = join_str(', ', dataname);
     set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, dataname_str));
     set(gcf, 'NumberTitle', 'off');
   else
@@ -800,7 +806,7 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).x           = cfg.layout.pos(:, 1);
   info.(ident).y           = cfg.layout.pos(:, 2);
   info.(ident).label       = cfg.layout.label;
-  info.(ident).dataname    = cfg.dataname{indx};
+  info.(ident).dataname    = dataname;
   info.(ident).cfg         = cfg;
   if ~isfield(info.(ident),'datvarargin')
     info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
