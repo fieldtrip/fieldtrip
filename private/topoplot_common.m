@@ -42,7 +42,7 @@ cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 Ndata = numel(varargin);
 if isnumeric(varargin{end})
-  % the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotTFR itself
+  % the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotER/TFR itself
   % the last input argument points to the specific data to be plotted
   Ndata = Ndata - 1;
   indx  = varargin{end};
@@ -50,7 +50,8 @@ elseif isstruct(varargin{end})
   indx  = 1;
 end
 
-% the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotTFR itself
+% the call with multiple inputs is done by ft_topoplotIC and recursively by ft_topoplotER/TFR itself
+% the last input argument points to the specific data to be plotted
 if Ndata>1 && ~isnumeric(varargin{end})
   for k=1:Ndata
     
@@ -60,15 +61,15 @@ if Ndata>1 && ~isnumeric(varargin{end})
       figure('Position', get(gcf, 'Position'), 'Visible', get(gcf, 'Visible'));
     end
     
-    % the indexing is necessary if ft_topoplotTFR is called from ft_singleplotER when
-    % more input data structures exist. Somehow we need to keep track of which of the
-    % data arguments is to be plotted (otherwise the first data argument is only
-    % plotted). yet, we cannot throw away the other data structures, because in the
-    % interactive mode ft_singleplotER needs all data again and the entry into
-    % ft_singleplotER will be through one of the figures (which thus needs to have
-    % all data avalaible. At the moment I couldn't think of anything better than
-    % using an additional indx variable and letting the function recursively call
-    % itself.
+    % the indexing is necessary if ft_topoplotER/TFR is called from
+    % ft_singleplotER/TFR when more input data structures exist. Somehow we need to
+    % keep track of which of the data arguments is to be plotted (otherwise the first
+    % data argument is only plotted). Yet, we cannot throw away the other data
+    % structures, because in the interactive mode ft_singleplotER/TFR needs all data
+    % again and the entry into ft_singleplotER/TFR will be through one of the figures,
+    % which thus needs to have all data avalaible. At the moment I couldn't think of
+    % anything better than using an additional indx variable and letting the function
+    % recursively call itself.
     if isfield(cfg, 'inputfile')
       tmpcfg = rmfield(cfg, 'inputfile');
     else
@@ -326,7 +327,6 @@ if ~strcmp(cfg.baseline, 'no')
     data.(cfg.maskparameter) = tempmask;
   end
 end
-
 
 % time and/or frequency should NOT be selected and averaged here, since a singleplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
@@ -765,21 +765,6 @@ if ~isempty(cfg.renderer)
   set(gcf, 'renderer', cfg.renderer)
 end
 
-if isfield(cfg, 'dataname')
-  if iscell(cfg.dataname)
-    dataname = cfg.dataname{indx};
-  else
-    dataname = cfg.dataname;
-  end
-elseif nargin > 1
-  dataname = {inputname(2)};
-  for k = 2:Ndata
-    dataname{end+1} = inputname(k+1);
-  end
-else % data provided through cfg.inputfile
-  dataname = cfg.inputfile;
-end
-
 % set the figure window title, but only if the user has not changed it
 if isempty(get(gcf, 'Name'))
   if isfield(cfg, 'funcname')
@@ -788,7 +773,7 @@ if isempty(get(gcf, 'Name'))
     funcname = mfilename;
   end
   if isempty(cfg.figurename)
-    dataname_str=join_str(', ', dataname);
+    dataname_str = join_str(', ', cfg.dataname{indx});
     set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, dataname_str));
     set(gcf, 'NumberTitle', 'off');
   else
@@ -815,7 +800,7 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).x           = cfg.layout.pos(:, 1);
   info.(ident).y           = cfg.layout.pos(:, 2);
   info.(ident).label       = cfg.layout.label;
-  info.(ident).dataname    = dataname;
+  info.(ident).dataname    = cfg.dataname{indx};
   info.(ident).cfg         = cfg;
   if ~isfield(info.(ident),'datvarargin')
     info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
@@ -860,7 +845,7 @@ if ~isempty(label)
   cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
   cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
   cfg.channel = label;
-  %cfg.dataname = info.(ident).dataname;  DATANAME is still present in cfg, and contains all datasets to be plotted
+  cfg.dataname = info.(ident).dataname;   % put data name in here, this cannot be resolved by other means
   cfg.trials = 'all';                     % trial selection has already been taken care of
   cfg.xlim = 'maxmin';
   % if user specified a zlim, copy it over to the ylim of singleplot
