@@ -207,7 +207,7 @@ if nargin>1
     end
   end
 else  % data provided through cfg.inputfile
-  cfg.dataname = cfg.inputfile;
+  dataname = cfg.inputfile;
 end
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data

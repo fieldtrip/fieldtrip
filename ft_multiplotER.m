@@ -235,7 +235,7 @@ if nargin>1
     end
   end
 else  % data provided through cfg.inputfile
-  cfg.dataname = cfg.inputfile;
+  dataname = cfg.inputfile;
 end
 
 
