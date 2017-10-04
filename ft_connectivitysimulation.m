@@ -377,7 +377,10 @@ switch cfg.method
         z = firws_filter((1/fstep).*fs, fs, [fband(k,k,1) fband(k,k,2)]);
         z = z(1:numel(foi));%.*exp(-1i.*pi.*foi.*rand(1)./100); 
         z = z.*ampl(k,k);
-        dat(k,k,:) = (abs(oneoverf)+abs(z)).*exp(1i.*(angle(z)+angle(oneoverf)));
+        
+        plateau = nearest(foi,fband(k,k,1)):nearest(foi,fband(k,k,2));
+        oneoverf(plateau) = mean(abs(oneoverf(plateau)));
+        dat(k,k,:) = -(abs(oneoverf)+abs(z)).*exp(1i.*(angle(z)+angle(oneoverf)));
       else
         dat(k,k,:) = oneoverf;
       end
