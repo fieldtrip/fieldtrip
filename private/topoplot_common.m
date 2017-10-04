@@ -85,7 +85,7 @@ if iscell(cfg.dataname)
   dataname = cfg.dataname{indx};
 else
   dataname = cfg.dataname;
-end  
+end
 
 data = varargin{indx};
 data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'});
@@ -240,7 +240,7 @@ if isfield(cfg, 'colormap')
     cfg.colormap = colormap(cfg.colormap);
   end
   if size(cfg.colormap,2)~=3
-    ft_error('topoplot(): Colormap must be a n x 3 matrix');
+    ft_error('cfg.colormap must be Nx3');
   end
   colormap(cfg.colormap);
   ncolors = size(cfg.colormap,1);
@@ -275,15 +275,18 @@ switch dtype
       cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
     end
   case 'comp'
-    % Add a pseudo-axis with the component numbers:
+    % Add a pseudo-axis with the component numbers
     data.comp = 1:size(data.topo,2);
-    % Specify the components
     if ~isempty(cfg.component)
-      data.comp = cfg.component;
-      data.topo = data.topo(:,cfg.component);
+      % make a selection of components
+      data.comp  = data.comp(cfg.component);
+      data.topo  = data.topo(:,cfg.component);
+      data.label = data.label(cfg.component);
     end
-    % Rename the field with topographic label information:
-    data.label = data.topolabel;
+    % Rename the field with topographic label information
+    data.label      = data.topolabel;
+    data.topodimord = 'chan_comp';
+    data = rmfield(data, 'topolabel'); % not needed any more
     xparam = 'comp';
     yparam = '';
     cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
@@ -310,7 +313,7 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
-% parse cfg.channel 
+% parse cfg.channel
 if isfield(cfg, 'channel') && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
@@ -652,14 +655,14 @@ if strcmp(cfg.style, 'both_imsat');      style = 'imsatiso';    end
 % Draw plot
 if ~strcmp(cfg.style, 'blank')
   opt = {'interpmethod', cfg.interpolation, ...
-         'interplim',    interplimits, ...
-         'gridscale',    cfg.gridscale, ...
-         'outline',      cfg.layout.outline, ...
-         'shading',      cfg.shading, ...
-         'isolines',     cfg.contournum, ...
-         'mask',         cfg.layout.mask, ...
-         'style',        style, ...
-         'datmask',      msk};
+    'interplim',    interplimits, ...
+    'gridscale',    cfg.gridscale, ...
+    'outline',      cfg.layout.outline, ...
+    'shading',      cfg.shading, ...
+    'isolines',     cfg.contournum, ...
+    'mask',         cfg.layout.mask, ...
+    'style',        style, ...
+    'datmask',      msk};
   if strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
     % add clim to opt
     opt = [opt {'clim', [zmin zmax], 'ncolors',ncolors}];
