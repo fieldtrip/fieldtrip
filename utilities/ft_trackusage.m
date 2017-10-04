@@ -64,10 +64,10 @@ try
   
   %% only enable the tracking for people at the DCCN
   knownuser = false;
-  knownuser = knownuser || ~isempty(isempty(regexp(lower(gethostname), '^mac011', 'once')));
-  knownuser = knownuser || ~isempty(isempty(regexp(lower(gethostname), '^mbp', 'once')));
-  knownuser = knownuser || ~isempty(isempty(regexp(lower(gethostname), '^dccn', 'once')));
-  knownuser = knownuser || ~isempty(isempty(regexp(lower(gethostname), '^fcdc', 'once')));
+  knownuser = knownuser || ~isempty(regexp(lower(gethostname), '^mac011', 'once'));
+  knownuser = knownuser || ~isempty(regexp(lower(gethostname), '^mbp', 'once'));
+  knownuser = knownuser || ~isempty(regexp(lower(gethostname), '^dccn', 'once'));
+  knownuser = knownuser || ~isempty(regexp(lower(gethostname), '^fcdc', 'once'));
   
   if ~knownuser
     return
