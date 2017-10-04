@@ -630,7 +630,7 @@ switch cfg.method
   case {'granger' 'instantaneous_causality' 'total_interdependence' 'iis'}
     % granger causality
     if ft_datatype(data, 'freq') || ft_datatype(data, 'freqmvar')
-      if isfield(data, 'labelcmb') && strcmp(cfg.granger.sfmethod, 'bivariate_conditional')
+      if isfield(data, 'labelcmb') && isfield(cfg.granger, 'sfmethod') && strcmp(cfg.granger.sfmethod, 'bivariate_conditional')
         % create a powindx variable that ft_connectivity_granger can use to
         % do the conditioning
         [indx, label, blockindx, blocklabel] = labelcmb2indx(data.labelcmb);
