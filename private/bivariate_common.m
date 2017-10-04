@@ -10,19 +10,19 @@ function [varargout] = bivariate_common(cfg, varargin)
 % See also TOPOPLOT_COMMON
 
 % reference channel is required
-if ~isfield(cfg, 'refchannel')
+if ~isfield(cfg, 'refchannel') || isempty(cfg.refchannel)
   ft_error('no reference channel is specified');
 end
 
 % check for refchannel being part of selection
 if ~strcmp(cfg.refchannel, 'gui')
-  if haslabelcmb
+  if isfield(varargin{1}, 'labelcmb')
     cfg.refchannel = ft_channelselection(cfg.refchannel, unique(varargin{1}.labelcmb(:)));
   else
     cfg.refchannel = ft_channelselection(cfg.refchannel, varargin{1}.label);
   end
-  if (isfull      && ~any(ismember(varargin{1}.label, cfg.refchannel))) || ...
-      (haslabelcmb && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
+  if (isfield(varargin{1}, 'label')    && ~any(ismember(varargin{1}.label,       cfg.refchannel))) || ...
+     (isfield(varargin{1}, 'labelcmb') && ~any(ismember(varargin{1}.labelcmb(:), cfg.refchannel)))
     ft_error('cfg.refchannel is a not present in the (selected) channels)')
   end
 end

@@ -41,7 +41,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
 %   cfg.highlightsize      = highlight marker size (default = 6)
 %   cfg.highlightfontsize  = highlight marker size (default = 8)
-%   cfg.hotkeys            = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
+%   cfg.hotkeys            = enables hotkeys (pageup/pagedown/m) for dynamic zoom and translation (ctrl+) of the color limits
 %   cfg.colorbar           = 'yes'
 %                            'no' (default)
 %                            'North'              inside plot box near top
@@ -64,8 +64,8 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'blank' only the head shape
 %   cfg.gridscale          = scaling grid size (default = 67)
 %                            determines resolution of figure
-%   cfg.shading            = 'flat' 'interp' (default = 'flat')
-%   cfg.comment            = string 'no' 'auto' or 'xlim' (default = 'auto')
+%   cfg.shading            = 'flat' or 'interp' (default = 'flat')
+%   cfg.comment            = 'no', 'auto' or 'xlim' (default = 'auto')
 %                            'auto': date, xparam and zparam limits are printed
 %                            'xlim': only xparam limits are printed
 %   cfg.commentpos         = string or two numbers, position of comment (default 'leftbottom')
@@ -139,7 +139,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
 
-% Copyright (C) 2005-2011, F.C. Donders Centre
+% Copyright (C) 2005-2017, F.C. Donders Centre
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -158,6 +158,17 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEVELOPERS NOTE: This code is organized in a similar fashion for multiplot/singleplot/topoplot 
+% and for ER/TFR and should remain consistent over those 6 functions.
+% Section 1: general cfg handling that is independent from the data
+% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
+% Section 3: cfg handling that depends on the data
+% Section 4: actual plotting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Section 1: general cfg handling that is independent from the data
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
@@ -178,14 +189,24 @@ if ft_abort
 end
 
 % make sure figure window titles are labeled appropriately, pass this onto the actual
-% plotting function if we don't specify this, the window will be called
-% 'ft_topoplotTFR', which is confusing to the user
+% plotting function. if we don't specify this, the window will be called
+% 'ft_topoplotER', which is confusing to the user
 cfg.funcname = mfilename;
-if nargin > 1 && ~isfield(cfg, 'dataname')
-  cfg.dataname = {inputname(2)};
-  for k = 3:nargin
-    cfg.dataname{end+1} = inputname(k);
+if nargin>1
+  if ~isfield(cfg, 'dataname')
+    cfg.dataname = [];
+    for k = 2:nargin
+      if isstruct(varargin{k-1})
+        if ~isempty(inputname(k))
+          cfg.dataname{k-1} = inputname(k);
+        else
+          cfg.dataname{k-1} = ['data' num2str(k-1,'%02d')];
+        end
+      end
+    end
   end
+else  % data provided through cfg.inputfile
+  cfg.dataname = cfg.inputfile;
 end
 
 % prepare the layout, this should be done only once
