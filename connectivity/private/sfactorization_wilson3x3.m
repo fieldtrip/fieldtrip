@@ -1,6 +1,6 @@
-function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbindx,fb,init,checkflag,stabilityfix)
+function [H, Z, S, psi] = sfactorization_wilson3x3(S,freq,Niterations,tol,cmbindx,fb,init,checkflag,stabilityfix)
 
-% SFACTORIZATION_WILSON2X2 performs pairwise non-parametric spectral factorization on
+% SFACTORIZATION_WILSON3X3 performs triplet-wise non-parametric spectral factorization on
 % cross-spectra, based on Wilson's algorithm.
 %
 % Usage  : [H, Z, psi] = sfactorization_wilson(S,freq);
@@ -41,23 +41,23 @@ function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbind
 %
 % $Id$
 
-if nargin<9 || isempty(stabilityfix), stabilityfix = false;  end
-if nargin<8 || isempty(checkflag),    checkflag    = true;   end
-if nargin<7 || isempty(init),         init         = 'chol'; end
-if nargin<6 || isempty(fb),           fb           = 'none'; end
-if nargin<5 || isempty(cmbindx)
-  ft_error('FieldTrip:connectivity:sfactorization_wilson2x2', 'when requesting multiple pairwise spectral decomposition, ''cmbindx'' needs to be specified');
+if nargin<9, stabilityfix = false; end
+if nargin<8, checkflag = true;   end
+if nargin<7, init      = 'chol'; end
+if nargin<6, fb        = 'none'; end
+if nargin<5
+  ft_error('FieldTrip:connectivity:sfactorization_wilson3x3', 'when requesting multiple triplet-wise spectral decomposition, ''cmbindx'' needs to be specified');
 end
-if nargin<4 || isempty(tol),          tol          = 1e-8;   end
-if nargin<3 || isempty(Niterations),  Niterations  = 1000;   end;
+if nargin<4, tol        = 1e-8;   end
+if nargin<3, Niterations = 1000;  end;
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
-  ft_error('FieldTrip:connectivity:sfactorization_wilson2x2', 'frequency axis is not evenly spaced');
+  ft_error('FieldTrip:connectivity:sfactorization_wilson3x3', 'frequency axis is not evenly spaced');
 end
 
 if freq(1)~=0
-  ft_warning('FieldTrip:connectivity:sfactorization_wilson2x2', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
+  ft_warning('FieldTrip:connectivity:sfactorization_wilson3x3', 'when performing non-parametric spectral factorization, the frequency axis should ideally start at 0, zero padding the spectral density'); 
   dfreq = mean(dfreq);
   npad  = freq(1)./dfreq;
   
@@ -90,12 +90,27 @@ else
 end
 
 % preallocate memory for the identity matrix
-I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
+I      = repmat(eye(3),[1 1 m N2]); % Defining 3 x 3 identity matrix
+
+% %Step 1: Forming 2-sided spectral densities for ifft routine in matlab
+% Sarr   = zeros(3,3,m,N2) + 1i.*zeros(3,3,m,N2);
+% for c = 1:m
+%   Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
+%   
+%   % the input cross-spectral density is assumed to be weighted with a
+%   % factor of 2 in all non-DC and Nyquist bins, therefore weight the 
+%   % DC-bin with a factor of 2 to get a correct two-sided representation
+%   Sarr(:,:,c,1) = Stmp(:,:,1).*2;
+%   
+%   for f_ind = 2:N
+%     Sarr(:,:,c,       f_ind) = Stmp(:,:,f_ind);
+%     Sarr(:,:,c,(N2+2)-f_ind) = Stmp(:,:,f_ind).';
+%   end
+% end
+% Sarr2 = Sarr;
 
 % preallocate memory for the 2-sided spectral density
-Sarr = zeros(2,2,N2,m) + 1i.*zeros(2,2,N2,m);
-
-% --- Step 1: Form 2-sided spectral densities for ifft routine in matlab
+Sarr = zeros(3,3,N2,m) + 1i.*zeros(3,3,N2,m);
 for c = 1:m
   Sarr(:,:,1:N,c) = S(cmbindx(c,:),cmbindx(c,:),:);
 end
@@ -107,6 +122,10 @@ end
 Sarr(:,:,N1:N2,:) = flip(Sarr(:,:,2:N,:),3);
 Sarr(2,1,N1:N2,:) = conj(Sarr(2,1,N1:N2,:));
 Sarr(1,2,N1:N2,:) = conj(Sarr(1,2,N1:N2,:));
+Sarr(3,1,N1:N2,:) = conj(Sarr(3,1,N1:N2,:));
+Sarr(1,3,N1:N2,:) = conj(Sarr(1,3,N1:N2,:));
+Sarr(3,2,N1:N2,:) = conj(Sarr(3,2,N1:N2,:));
+Sarr(2,3,N1:N2,:) = conj(Sarr(2,3,N1:N2,:));
 Sarr              = permute(Sarr, [1 2 4 3]);
 Sarr(:,:,:,1)     = Sarr(:,:,:,1).*2; % weight the DC-bin
 
@@ -118,10 +137,10 @@ if hasnyq
   Sarr(:,:,:,N) = Sarr(:,:,:,N).*2;
 end
 
-% --- Step 2: Compute covariance matrices
-gam = real(reshape(ifft(reshape(Sarr, [4*m N2]), [], 2),[2 2 m N2]));
+%Step 2: Computing covariance matrices
+gam = real(reshape(ifft(reshape(Sarr, [9*m N2]), [], 2),[3 3 m N2]));
 
-% --- Step 3: Initialize for iterations 
+%Step 3: Initializing for iterations 
 gam0 = gam(:,:,:,1);
 
 h    = complex(zeros(size(gam0)));
@@ -131,11 +150,11 @@ for k = 1:m
       [tmp, dum] = chol(gam0(:,:,k));
       if dum
         ft_warning('initialization with ''chol'' for iterations did not work well, using arbitrary starting condition');
-        tmp = rand(2,2); %arbitrary initial condition
+        tmp = rand(3,3); %arbitrary initial condition
         tmp = triu(tmp);
       end
     case 'rand'
-      tmp = rand(2,2); %arbitrary initial condition
+      tmp = rand(3,3); %arbitrary initial condition
       tmp = triu(tmp);
     otherwise
       ft_error('initialization method should be eithe ''chol'' or ''rand''');
@@ -146,16 +165,16 @@ for k = 1:m
 end
 psi  = repmat(h, [1 1 1 N2]);
 
-% --- Step 4: Iterations to get spectral factors
+%Step 4: Iterating to get spectral factors
 ft_progress('init', fb, 'computing spectral factorization');
 for iter = 1:Niterations
   ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
-  invpsi = inv2x2(psi);
-  g      = sandwich2x2(invpsi, Sarr) + I;
-  gp     = PlusOperator2x2(g,m,N,stabilityfix); %gp constitutes positive and half of zero lags 
+  invpsi = inv3x3(psi);
+  g      = sandwich3x3(invpsi, Sarr) + I;
+  gp     = PlusOperator3x3(g,m,N,stabilityfix); %gp constitutes positive and half of zero lags 
   
   psi_old = psi;
-  psi     = mtimes2x2(psi, gp);
+  psi     = mtimes3x3(psi, gp);
   
   if checkflag
     psierr  = abs(psi-psi_old)./abs(psi);
@@ -168,46 +187,57 @@ for iter = 1:Niterations
 end 
 ft_progress('close');
 
-%i --- Step 5: Get covariance matrix from spectral factors
-gamtmp = reshape(real(ifft(transpose(reshape(psi, [4*m N2]))))', [2 2 m N2]);
+%Step 5: Getting covariance matrix from spectral factors
+gamtmp = reshape(real(ifft(transpose(reshape(psi, [9*m N2]))))', [3 3 m N2]);
 
-% --- Step 6: Get noise covariance & transfer function
+%Step 6: Getting noise covariance & transfer function (see Example pp. 424)
 %
 A0    = gamtmp(:,:,:,1); 
-A0inv = inv2x2(A0);
+A0inv = inv3x3(A0);
 
-Z = zeros(2,2,m);
+Z = zeros(3,3,m);
 for k = 1:m
   %Z     = A0*A0.'*fs; %Noise covariance matrix
   Z(:,:,k) = A0(:,:,k)*A0(:,:,k).'; %Noise covariance matrix not multiplied by sampling frequency
   %FIXME check this; at least not multiplying it removes the need to correct later on
   %this also makes it more equivalent to the noisecov estimated by biosig's mvar-function
 end
-H = mtimes2x2(psi,A0inv(:,:,:,ones(1,size(psi,4))));
-S = mtimes2x2(psi,ctranspose2x2(psi));
+
+% H = complex(zeros(3,3,m,N));
+% S = complex(zeros(3,3,m,N));
+% for k = 1:N
+%   for kk = 1:m
+%     H(:,:,kk,k) = psi(:,:,kk,k)*A0inv(:,:,kk);  % Transfer function
+%     S(:,:,kk,k) = psi(:,:,kk,k)*psi(:,:,kk,k)'; % Cross-spectral density
+%   end
+% end
+H = mtimes3x3(psi,A0inv(:,:,:,ones(1,size(psi,4))));
+S = mtimes3x3(psi,ctranspose3x3(psi));
 
 siz = [size(H) 1 1];
-H   = reshape(H, [4*siz(3) siz(4:end)]);
+H   = reshape(H, [9*siz(3) siz(4:end)]);
 siz = [size(S) 1 1];
-S   = reshape(S, [4*siz(3) siz(4:end)]);
+S   = reshape(S, [9*siz(3) siz(4:end)]);
 siz = [size(Z) 1 1];
-Z   = reshape(Z, [4*siz(3) siz(4:end)]);
+Z   = reshape(Z, [9*siz(3) siz(4:end)]);
 siz = [size(psi) 1 1];
-psi = reshape(psi, [4*siz(3) siz(4:end)]);
+psi = reshape(psi, [9*siz(3) siz(4:end)]);
 
-% return only the frequency bins that were in the input
-H   =   H(:,selfreq,:,:);
-S   =   S(:,selfreq,:,:);
-psi = psi(:,selfreq,:,:);
+%if numel(selfreq)~=numel(freq)
+  % return only the frequency bins that were in the input
+  H   =   H(:,selfreq,:,:);
+  S   =   S(:,selfreq,:,:);
+  psi = psi(:,selfreq,:,:);
+%end
   
 %---------------------------------------------------------------------
-function gp = PlusOperator2x2(g,ncmb,nfreq, stabilityfix)
+function gp = PlusOperator3x3(g,ncmb,nfreq, stabilityfix)
 
 % This function is for [ ]+operation: 
 % to take the positive lags & half of the zero lag and reconstitute 
 % M. Dhamala, UF, August 2006
 
-g   = transpose(reshape(g, 4*ncmb, []));
+g   = transpose(reshape(g, 9*ncmb, []));
 gam = ifft(g);
 
 % taking only the positive lags and half of the zero lag
@@ -217,7 +247,9 @@ beta0 = 0.5*gam(1,:);
 %for k = 1:ncmb
 %  gamp(1,(k-1)*4+1:k*4) = reshape(triu(reshape(beta0(1,(k-1)*4+1:k*4),[2 2])),[1 4]);
 %end
-beta0(2:4:4*ncmb)   = 0;
+beta0(2:9:9*ncmb)   = 0;
+beta0(3:9:9*ncmb)   = 0;
+beta0(6:9:9*ncmb)   = 0;
 gamp(1,:)           = beta0;
 gamp(nfreq+1:end,:) = 0;
 
@@ -232,4 +264,4 @@ end
 
 % reconstituting
 gp = fft(gamp);
-gp = reshape(transpose(gp), [2 2 ncmb numel(gp)/(4*ncmb)]); 
+gp = reshape(transpose(gp), [3 3 ncmb numel(gp)/(9*ncmb)]); 
