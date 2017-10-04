@@ -139,7 +139,7 @@ properties.distinct_id = properties.user; % this links the event to the profile
 % user information only gets send once at startup
 if ~initialized
   % construct the HTTP request for Mixpanel, see https://mixpanel.com/help/reference/http
-  user_json   = sprintf('{"$token": "%s", "$distinct_id": "%s", "$ip": "%s", "$set": {} }',  properties.token, properties.user, getaddress());
+  user_json   = sprintf('{"$token": "%s", "$distinct_id": "%s", "$ip": "%s", "$set": { "Computer": "%s", "Matlab": "%s" } }',  properties.token, properties.user, getaddress(), properties.computer, properties.matlab);
   user_base64 = base64encode(user_json);
   user_http   = sprintf('http://api.mixpanel.com/engage/?data=%s', user_base64);
   
