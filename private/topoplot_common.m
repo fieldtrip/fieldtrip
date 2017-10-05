@@ -261,6 +261,8 @@ switch dtype
     yparam = '';
     if isfield(data, 'trial')
       cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
+    elseif isfield(data, 'individual')
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'individual');
     elseif isfield(data, 'avg')
       cfg.parameter = ft_getopt(cfg, 'parameter', 'avg');
     end

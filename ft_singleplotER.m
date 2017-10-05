@@ -233,6 +233,8 @@ switch dtype
     xparam = 'time';
     if isfield(varargin{1}, 'trial')
       cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
+    elseif isfield(varargin{1}, 'individual')
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'individual');
     elseif isfield(varargin{1}, 'avg')
       cfg.parameter = ft_getopt(cfg, 'parameter', 'avg');
     end
