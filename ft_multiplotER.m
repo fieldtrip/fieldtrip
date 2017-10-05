@@ -380,7 +380,7 @@ end
 % Apply channel-type specific scaling
 tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
 for i=1:Ndata
-  varargin{i}= chanscale_common(tmpcfg, varargin{i});
+  varargin{i} = chanscale_common(tmpcfg, varargin{i});
 end
 
 
