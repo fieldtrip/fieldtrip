@@ -185,37 +185,16 @@ if isempty(cfg.commentpos)
   end
 end
 
-% compatibility for previous highlighting option
-if isnumeric(cfg.highlight)
-  cfg.highlightchannel = cfg.highlight;
-  cfg.highlight = 'on';
-  ft_warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
-elseif iscell(cfg.highlight)
-  if ~iscell(cfg.highlightchannel)
-    cfg.highlightchannel = cell(1,length(cfg.highlight));
-  end
-  for icell = 1:length(cfg.highlight)
-    if isnumeric(cfg.highlight{icell})
-      cfg.highlightchannel{icell} = cfg.highlight{icell};
-      cfg.highlight{icell} = 'on';
-      ft_warning('cfg.highlight is now used for specifying highlighting-mode, use cfg.highlightchannel instead of cfg.highlight for specifying channels')
-    end
-  end
-end
-
 % Converting all highlight options to cell-arrays if they're not cell-arrays,
 % to make defaulting, checking for backwards compatibility and error
 % checking easier
-if ~iscell(cfg.highlight),            cfg.highlight         = {cfg.highlight};            end
-if isempty(cfg.highlightchannel),     cfg.highlightchannel  = ''; end
 if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end
-if ischar(cfg.highlightchannel{1}),   cfg.highlightchannel  = {cfg.highlightchannel};     end % {'all'} is valid input to channelselection, {1:5} isn't
 if ~iscell(cfg.highlightsymbol),      cfg.highlightsymbol   = {cfg.highlightsymbol};      end
 if ~iscell(cfg.highlightcolor),       cfg.highlightcolor    = {cfg.highlightcolor};       end
 if ~iscell(cfg.highlightsize),        cfg.highlightsize     = {cfg.highlightsize};        end
 if ~iscell(cfg.highlightfontsize),    cfg.highlightfontsize = {cfg.highlightfontsize};    end
 % then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
-ncellhigh = length(cfg.highlight);
+ncellhigh = length(cfg.highlightchannel);
 if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
 if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [0 0 0];   end
 if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = 6;         end
@@ -675,68 +654,76 @@ elseif ~strcmp(cfg.style, 'blank')
   ft_plot_lay(cfg.layout, 'box', 'no', 'label', 'no', 'point', 'no')
 end
 
-% Plotting markers for channels and/or highlighting a selection of channels
-highlightchansel = []; % used for remembering selection of channels
-templay.outline = cfg.layout.outline;
-templay.mask    = cfg.layout.mask;
 % For Highlight (channel-selection)
-for icell = 1:length(cfg.highlight)
-  if ~strcmp(cfg.highlight{icell}, 'off')
-    [dum, labelindex]  = match_str(ft_channelselection(cfg.highlightchannel{icell}, data.label), cfg.layout.label);
-    highlightchansel   = [highlightchansel; match_str(data.label,ft_channelselection(cfg.highlightchannel{icell}, data.label))];
-    templay.pos        = cfg.layout.pos(labelindex,:);
-    templay.width      = cfg.layout.width(labelindex);
-    templay.height     = cfg.layout.height(labelindex);
-    templay.label      = cfg.layout.label(labelindex);
-    if strcmp(cfg.highlight{icell}, 'labels') || strcmp(cfg.highlight{icell}, 'numbers')
-      labelflg = 1;
-    else
-      labelflg = 0;
-    end
-    if strcmp(cfg.highlight{icell}, 'numbers')
-      for ichan = 1:length(labelindex)
-        templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
-      end
-    end
-    ft_plot_lay(templay, 'box', 'no', 'label',labelflg, 'point', 'yes',...
-      'pointsymbol',cfg.highlightsymbol{icell},...
-      'pointcolor',cfg.highlightcolor{icell},...
-      'pointsize',cfg.highlightsize{icell},...
-      'fontsize',cfg.highlightfontsize{icell},...
-      'labeloffset',cfg.labeloffset)
+cfg = ft_checkopt(cfg, 'highlight', {}, {'on', 'off', 'labels', 'numbers'});
+if ~strcmp(cfg.highlight, 'off')
+  cfg.highlightchannel = ft_channelselection(cfg.highlightchannel, data.label);
+  [dum, layoutindex] = match_str(cfg.highlightchannel, cfg.layout.label);
+  templay = [];
+  templay.outline = cfg.layout.outline;
+  templay.mask    = cfg.layout.mask;
+  templay.pos     = cfg.layout.pos(layoutindex,:);
+  templay.width   = cfg.layout.width(layoutindex);
+  templay.height  = cfg.layout.height(layoutindex);
+  templay.label   = cfg.layout.label(layoutindex);
+  if strcmp(cfg.highlight, 'labels') || strcmp(cfg.highlight, 'numbers')
+    labelflg = 1;
+  else
+    labelflg = 0;
   end
-end % for icell
+  if strcmp(cfg.highlight, 'numbers')
+    for ichan = 1:length(layoutindex)
+      templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
+    end
+  end
+  
+  ft_plot_lay(templay, 'box', 'no', 'label', labelflg, 'point', ~labelflg, ...
+    'pointsymbol',  cfg.highlightsymbol{icell}, ...
+    'pointcolor',   cfg.highlightcolor{icell}, ...
+    'pointsize',    cfg.highlightsize{icell}, ...
+    'fontsize',     cfg.highlightfontsize{icell}, ...
+    'labeloffset',  cfg.labeloffset, ...
+    'labelalignh', 'center', ...
+    'labelalignv', 'middle');
+end
 
 % For Markers (all channels)
+cfg = ft_checkopt(cfg, 'marker', {}, {'on', 'off', 'labels', 'numbers'});
 if ~strcmp(cfg.marker, 'off')
   channelsToMark = 1:length(data.label);
+  highlightchansel = match_str(data.label, cfg.highlightchannel);
   if strcmp(cfg.interpolatenan, 'no')
     channelsNotMark = highlightchansel;
   else
     channelsNotMark = union(find(isnan(dat)),highlightchansel);
   end
   channelsToMark(channelsNotMark) = [];
-  [dum, labelindex] = match_str(ft_channelselection(channelsToMark, data.label),cfg.layout.label);
-  templay.pos       = cfg.layout.pos(labelindex,:);
-  templay.width     = cfg.layout.width(labelindex);
-  templay.height    = cfg.layout.height(labelindex);
-  templay.label     = cfg.layout.label(labelindex);
+  [dum, layoutindex] = match_str(ft_channelselection(channelsToMark, data.label), cfg.layout.label);
+  templay = [];
+  templay.outline = cfg.layout.outline;
+  templay.mask    = cfg.layout.mask;
+  templay.pos     = cfg.layout.pos(layoutindex,:);
+  templay.width   = cfg.layout.width(layoutindex);
+  templay.height  = cfg.layout.height(layoutindex);
+  templay.label   = cfg.layout.label(layoutindex);
   if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
     labelflg = 1;
   else
     labelflg = 0;
   end
   if strcmp(cfg.marker, 'numbers')
-    for ichan = 1:length(labelindex)
+    for ichan = 1:length(layoutindex)
       templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
     end
   end
-  ft_plot_lay(templay, 'box', 'no', 'label',labelflg, 'point', 'yes',...
-    'pointsymbol',cfg.markersymbol,...
-    'pointcolor',cfg.markercolor,...
-    'pointsize',cfg.markersize,...
-    'fontsize',cfg.markerfontsize,...
-    'labeloffset',cfg.labeloffset)
+  ft_plot_lay(templay, 'box', 'no', 'label',labelflg, 'point', ~labelflg, ...
+    'pointsymbol',  cfg.markersymbol, ...
+    'pointcolor',   cfg.markercolor, ...
+    'pointsize',    cfg.markersize, ...
+    'fontsize',     cfg.markerfontsize, ...
+    'labeloffset',  cfg.labeloffset, ...
+    'labelalignh', 'center', ...
+    'labelalignv', 'middle');
 end
 
 if isfield(cfg, 'vector')

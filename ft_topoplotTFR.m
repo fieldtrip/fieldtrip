@@ -210,8 +210,6 @@ else  % data provided through cfg.inputfile
   cfg.dataname = cfg.inputfile;
 end
 
-
-
 % prepare the layout, this should be done only once
 tmpcfg     = removefields(cfg, {'inputfile', 'style'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
