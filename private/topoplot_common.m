@@ -281,13 +281,13 @@ switch dtype
       % make a selection of components
       data.comp  = data.comp(cfg.component);
       data.topo  = data.topo(:,cfg.component);
-      data.label = data.label(cfg.component);
+      try, data.label     = data.label(cfg.component); end
       try, data.unmixing  = data.unmixing(cfg.component,:); end
     end
     % Rename the field with topographic label information
     data.label      = data.topolabel;
     data.topodimord = 'chan_comp';
-    data = removefields(data, {'topolabel', 'unmixing'}); % not needed any more
+    data = removefields(data, {'topolabel', 'unmixing', 'unmixingdimord'}); % not needed any more
     xparam = 'comp';
     yparam = '';
     cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
