@@ -95,6 +95,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'electrodes',     'dotnum',      'numbe
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',           'absmax',      'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback',    'inflow'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'highlight',      'yes',         'on'});
 
 % check for renamed options
 cfg = ft_checkconfig(cfg, 'renamed',     {'matrixside',    'directionality'});
@@ -185,26 +186,30 @@ if isempty(cfg.commentpos)
   end
 end
 
-% Converting all highlight options to cell-arrays if they're not cell-arrays,
-% to make defaulting, checking for backwards compatibility and error
-% checking easier
-if ~iscell(cfg.highlightchannel),     cfg.highlightchannel  = {cfg.highlightchannel};     end
-if ~iscell(cfg.highlightsymbol),      cfg.highlightsymbol   = {cfg.highlightsymbol};      end
-if ~iscell(cfg.highlightcolor),       cfg.highlightcolor    = {cfg.highlightcolor};       end
-if ~iscell(cfg.highlightsize),        cfg.highlightsize     = {cfg.highlightsize};        end
-if ~iscell(cfg.highlightfontsize),    cfg.highlightfontsize = {cfg.highlightfontsize};    end
-% then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
-ncellhigh = length(cfg.highlightchannel);
-if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
-if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [0 0 0];   end
-if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = 6;         end
-if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = 8;         end
-% then default all empty cells
-for icell = 1:ncellhigh
-  if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
-  if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
-  if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
-  if isempty(cfg.highlightfontsize{icell}),  cfg.highlightfontsize{icell} = 8;     end
+if ~iscell(cfg.highlight)
+  % a single group of channels has been specified for highlighting
+  cfg.highlight         = {cfg.highlight};
+  cfg.highlightchannel  = {cfg.highlightchannel};
+  cfg.highlightsymbol   = {cfg.highlightsymbol};
+  cfg.highlightcolor    = {cfg.highlightcolor};
+  cfg.highlightsize     = {cfg.highlightsize};
+  cfg.highlightfontsize = {cfg.highlightfontsize};
+  % then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
+  ncellhigh = length(cfg.highlightchannel);
+  if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
+  if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [0 0 0];   end
+  if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = 6;         end
+  if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = 8;         end
+  % then default all empty cells
+  for icell = 1:ncellhigh
+    if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
+    if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
+    if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
+    if isempty(cfg.highlightfontsize{icell}),  cfg.highlightfontsize{icell} = 8;     end
+  end
+else
+  % multiple groups of channels (clusters) have been selected for highlighting
+  % this results from ft_clusterplot
 end
 
 % for backwards compatability
@@ -655,37 +660,38 @@ elseif ~strcmp(cfg.style, 'blank')
 end
 
 % For Highlight (channel-selection)
-cfg = ft_checkopt(cfg, 'highlight', {}, {'on', 'off', 'labels', 'numbers'});
-if ~strcmp(cfg.highlight, 'off')
-  cfg.highlightchannel = ft_channelselection(cfg.highlightchannel, data.label);
-  [dum, layoutindex] = match_str(cfg.highlightchannel, cfg.layout.label);
-  templay = [];
-  templay.outline = cfg.layout.outline;
-  templay.mask    = cfg.layout.mask;
-  templay.pos     = cfg.layout.pos(layoutindex,:);
-  templay.width   = cfg.layout.width(layoutindex);
-  templay.height  = cfg.layout.height(layoutindex);
-  templay.label   = cfg.layout.label(layoutindex);
-  if strcmp(cfg.highlight, 'labels') || strcmp(cfg.highlight, 'numbers')
-    labelflg = 1;
-  else
-    labelflg = 0;
-  end
-  if strcmp(cfg.highlight, 'numbers')
-    for ichan = 1:length(layoutindex)
-      templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
+for icell = 1:length(cfg.highlight)
+  if ~strcmp(cfg.highlight{icell}, 'off')
+    cfg.highlightchannel = ft_channelselection(cfg.highlightchannel{icell}, data.label);
+    [dum, layoutindex] = match_str(cfg.highlightchannel{icell}, cfg.layout.label);
+    templay = [];
+    templay.outline = cfg.layout.outline;
+    templay.mask    = cfg.layout.mask;
+    templay.pos     = cfg.layout.pos(layoutindex,:);
+    templay.width   = cfg.layout.width(layoutindex);
+    templay.height  = cfg.layout.height(layoutindex);
+    templay.label   = cfg.layout.label(layoutindex);
+    if strcmp(cfg.highlight{icell}, 'labels') || strcmp(cfg.highlight{icell}, 'numbers')
+      labelflg = 1;
+    else
+      labelflg = 0;
     end
+    if strcmp(cfg.highlight{icell}, 'numbers')
+      for ichan = 1:length(layoutindex)
+        templay.label{ichan} = num2str(match_str(data.label, templay.label{ichan}));
+      end
+    end
+    
+    ft_plot_lay(templay, 'box', 'no', 'label', labelflg, 'point', ~labelflg, ...
+      'pointsymbol',  cfg.highlightsymbol{icell}, ...
+      'pointcolor',   cfg.highlightcolor{icell}, ...
+      'pointsize',    cfg.highlightsize{icell}, ...
+      'fontsize',     cfg.highlightfontsize{icell}, ...
+      'labeloffset',  cfg.labeloffset, ...
+      'labelalignh', 'center', ...
+      'labelalignv', 'middle');
   end
-  
-  ft_plot_lay(templay, 'box', 'no', 'label', labelflg, 'point', ~labelflg, ...
-    'pointsymbol',  cfg.highlightsymbol{icell}, ...
-    'pointcolor',   cfg.highlightcolor{icell}, ...
-    'pointsize',    cfg.highlightsize{icell}, ...
-    'fontsize',     cfg.highlightfontsize{icell}, ...
-    'labeloffset',  cfg.labeloffset, ...
-    'labelalignh', 'center', ...
-    'labelalignv', 'middle');
-end
+end % for icell
 
 % For Markers (all channels)
 cfg = ft_checkopt(cfg, 'marker', {}, {'on', 'off', 'labels', 'numbers'});

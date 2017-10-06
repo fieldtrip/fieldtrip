@@ -10,14 +10,12 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % The input freq structrure should contain a time-resolved power or
 % coherence spectrum from FT_FREQANALYSIS or FT_FREQDESCRIPTIVES.
 %
-% The configuration can have the following parameters:
-%   cfg.parameter          = field that contains the data to be plotted as color
-%                           'avg', 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
-%   cfg.maskparameter      = field in the data to be used for masking of
-%                            data. Values between 0 and 1, 0 = transparent
-%   cfg.xlim               = selection boundaries over first dimension in data (e.g., time)
-%                            'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
+% The configuration can have the following parameters
+%   cfg.parameter          = field that contains the data to be plotted as color, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
+%   cfg.maskparameter      = field in the data to be used for masking of data. It should have alues between 0 and 1, where 0 corresponds to transparent.
+%   cfg.xlim               = limit for 1st dimension in data (e.g., time), can be 'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim               = limit for 2nd dimension in data (e.g., freq), can be 'maxmin' or [ymin ymax] (default = 'maxmin')
+%   cfg.zlim               = limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.refchannel         = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
@@ -29,7 +27,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %   cfg.markercolor        = channel marker color (default = [0 0 0] (black))
 %   cfg.markersize         = channel marker size (default = 2)
 %   cfg.markerfontsize     = font size of channel labels (default = 8 pt)
-%   cfg.highlight          = 'on', 'labels', 'numbers', 'off'
+%   cfg.highlight          = 'off', 'on', 'labels', 'numbers'
 %   cfg.highlightchannel   =  Nx1 cell-array with selection of channels, or vector containing channel indices see FT_CHANNELSELECTION
 %   cfg.highlightsymbol    = highlight marker symbol (default = 'o')
 %   cfg.highlightcolor     = highlight marker color (default = [0 0 0] (black))
@@ -161,7 +159,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % $Id$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DEVELOPERS NOTE: This code is organized in a similar fashion for multiplot/singleplot/topoplot 
+% DEVELOPERS NOTE: This code is organized in a similar fashion for multiplot/singleplot/topoplot
 % and for ER/TFR and should remain consistent over those 6 functions.
 % Section 1: general cfg handling that is independent from the data
 % Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
