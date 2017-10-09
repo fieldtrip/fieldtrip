@@ -40,6 +40,3 @@ for tmpindx=1:length(ft_default.postamble)
   end
 end
 clear tmpindx
-
-% clear warnings from ft_default, so that they don't end up in the next cfg
-ft_warning('-clear');
