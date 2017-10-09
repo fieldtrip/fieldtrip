@@ -157,6 +157,10 @@ case {'paired-ttest'}
   p = zeros(Nobs, 1);
   s = zeros(Nobs, 1);
   ci = zeros(Nobs, 2);
+  df = zeros(Nobs, 1);
+  md = zeros(Nobs, 1);
+  sd = zeros(Nobs, 1);
+  cohens_d = zeros(Nobs, 1);
   fprintf('number of observations %d\n', Nobs);
   fprintf('number of replications %d and %d\n', Nrepl(1), Nrepl(2));
 
@@ -165,6 +169,10 @@ case {'paired-ttest'}
     ft_progress(chan/Nobs, 'Processing observation %d/%d\n', chan, Nobs);
     [h(chan), p(chan), ci(chan, :), stats] = ttest_wrapper(dat(chan, selA)-dat(chan, selB), 0, cfg.alpha, cfg.tail);
     s(chan) = stats.tstat;
+    df(chan) = stats.df;
+    md(chan) = mean(dat(chan, selA)-dat(chan, selB));
+    sd(chan) = stats.sd;
+    cohens_d(chan) = md(chan)/sd(chan);
   end
   ft_progress('close');
 
@@ -337,9 +345,14 @@ end
 
 % assign the output variable
 stat = [];
-try, stat.mask = h; end
-try, stat.prob = p; end
-try, stat.stat = s; end
+try, stat.mask      = h;        end
+try, stat.prob      = p;        end
+try, stat.stat      = s;        end
+try, stat.ci        = ci;       end
+try, stat.df        = df;       end
+try, stat.md        = md;       end
+try, stat.sd        = sd;       end
+try, stat.cohens_d  = cohens_d;  end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper functions for ttest and ttest2
