@@ -192,7 +192,7 @@ end
 if ~iscell(cfg.highlight)
   cfg.highlight = {cfg.highlight};
 end
-if iscell(cfg.highlightchannel) && ~iscell(cfg.highlightchannel{1})
+if iscell(cfg.highlightchannel) && ~(iscell(cfg.highlightchannel{1}) || isnumeric(cfg.highlightchannel{1}))
   cfg.highlightchannel = {cfg.highlightchannel};
 elseif ischar(cfg.highlightchannel)
   cfg.highlightchannel = {{cfg.highlightchannel}};

@@ -66,6 +66,8 @@ if ft_abort
   return
 end
 
+ws = ft_warning('off', 'FieldTrip:getdimord:warning_dimord_could_not_be_determined');
+
 % check if the input data is valid for this function
 stat = ft_checkdata(stat, 'datatype', {'timelock', 'freq'}, 'feedback', 'yes');
 
@@ -239,14 +241,14 @@ else
     probneg = [];
   end
   
-  fprintf('There are %d clusters smaller than alpha (%g)', Nsigall, cfg.alpha);
+  fprintf('There are %d clusters smaller than alpha (%g)\n', Nsigall, cfg.alpha);
   
   if is2D
     % define time or freq window per cluster
     for iPos = 1:length(sigpos)
       possum_perclus = sum(sigposCLM(:,:,iPos),1); %sum over chans for each time- or freq-point
-      ind_min = min(find(possum_perclus~=0));
-      ind_max = max(find(possum_perclus~=0));
+      ind_min = find(possum_perclus~=0, 1 );
+      ind_max = find(possum_perclus~=0, 1, 'last' );
       time_perclus = [time(ind_min) time(ind_max)];
       if hastime
         fprintf('%s%s%s%s%s%s%s%s%s%s%s\n', 'Positive cluster: ',num2str(sigpos(iPos)), ', pvalue: ',num2str(probpos(iPos)), ' (',hlsignpos(iPos), ')', ', t = ',num2str(time_perclus(1)), ' to ',num2str(time_perclus(2)))
@@ -256,8 +258,8 @@ else
     end
     for iNeg = 1:length(signeg)
       negsum_perclus = sum(signegCLM(:,:,iNeg),1);
-      ind_min = min(find(negsum_perclus~=0));
-      ind_max = max(find(negsum_perclus~=0));
+      ind_min = find(negsum_perclus~=0, 1 );
+      ind_max = find(negsum_perclus~=0, 1, 'last' );
       time_perclus = [time(ind_min) time(ind_max)];
       if hastime
         time_perclus = [time(ind_min) time(ind_max)];
@@ -281,8 +283,8 @@ else
       allsum = negsum;
     end
     
-    ind_timewin_min = min(find(allsum~=0));
-    ind_timewin_max = max(find(allsum~=0));
+    ind_timewin_min = find(allsum~=0, 1 );
+    ind_timewin_max = find(allsum~=0, 1, 'last' );
     timewin = time(ind_timewin_min:ind_timewin_max);
     
   else
@@ -449,6 +451,9 @@ else
 end
 
 ft_progress('close');
+
+% return to previous warning settings
+ft_warning(ws);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
