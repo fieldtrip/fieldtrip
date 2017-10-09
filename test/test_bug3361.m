@@ -60,6 +60,7 @@ ft_topoplotTFR(cfg, ga)
 
 cfg.highlight = 'on';
 cfg.highlightsymbol = '+';
+cfg.highlightsize = 30;
 cfg.highlightchannel = 'all';
 
 close all

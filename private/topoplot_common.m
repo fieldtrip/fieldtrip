@@ -186,11 +186,13 @@ if isempty(cfg.commentpos)
   end
 end
 
+% the user can either specify a single group of channels for highlighting (all in the
+% same style), or multiple groups with a different style for each group. The latter
+% is used by ft_clusterplot.
 if ~iscell(cfg.highlight)
   cfg.highlight = {cfg.highlight};
 end
 if iscell(cfg.highlightchannel) && ~iscell(cfg.highlightchannel{1})
-  % a single group of channels has been specified for highlighting
   cfg.highlightchannel = {cfg.highlightchannel};
 elseif ischar(cfg.highlightchannel)
   cfg.highlightchannel = {{cfg.highlightchannel}};
@@ -706,11 +708,16 @@ end % for icell
 cfg = ft_checkopt(cfg, 'marker', {}, {'on', 'off', 'labels', 'numbers'});
 if ~strcmp(cfg.marker, 'off')
   channelsToMark = 1:length(data.label);
-  highlightchansel = match_str(data.label, cfg.highlightchannel);
+  channelsToHighlight = [];
+  for icell = 1:length(cfg.highlight)
+    if ~strcmp(cfg.highlight{icell}, 'off')
+      channelsToHighlight = [channelsToHighlight; match_str(data.label, cfg.highlightchannel{icell})];
+    end
+  end
   if strcmp(cfg.interpolatenan, 'no')
-    channelsNotMark = highlightchansel;
+    channelsNotMark = channelsToHighlight;
   else
-    channelsNotMark = union(find(isnan(dat)),highlightchansel);
+    channelsNotMark = union(find(isnan(dat)), channelsToHighlight);
   end
   channelsToMark(channelsNotMark) = [];
   [dum, layoutindex] = match_str(ft_channelselection(channelsToMark, data.label), cfg.layout.label);
