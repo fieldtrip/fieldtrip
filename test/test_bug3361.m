@@ -65,3 +65,28 @@ cfg.highlightchannel = 'all';
 
 close all
 ft_topoplotTFR(cfg, ga)
+
+
+%% 
+% I detected another problem with clusterplot and highlighting
+
+clear all
+close all
+load bug3361b.mat
+
+% fake the first 5 positive clusters such that they show up
+stat.posclusters(1).prob = 0.01 - 0.0001;
+stat.posclusters(2).prob = 0.05 - 0.0001;
+stat.posclusters(3).prob = 0.10 - 0.0001;
+stat.posclusters(4).prob = 0.20 - 0.0001;
+stat.posclusters(5).prob = 0.30 - 0.0001;
+% ensure that the negative clusters don't show up
+stat.negclusters(1).prob = 1;
+stat.negclusters(2).prob = 1;
+stat.negclusters(3).prob = 1;
+stat.negclusters(4).prob = 1;
+stat.negclusters(5).prob = 1;
+
+cfg.alpha = 0.3;
+ft_clusterplot(cfg, stat);
+
