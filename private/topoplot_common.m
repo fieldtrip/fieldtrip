@@ -187,29 +187,38 @@ if isempty(cfg.commentpos)
 end
 
 if ~iscell(cfg.highlight)
+  cfg.highlight = {cfg.highlight};
+end
+if iscell(cfg.highlightchannel) && ~iscell(cfg.highlightchannel{1})
   % a single group of channels has been specified for highlighting
-  cfg.highlight         = {cfg.highlight};
-  cfg.highlightchannel  = {cfg.highlightchannel};
-  cfg.highlightsymbol   = {cfg.highlightsymbol};
-  cfg.highlightcolor    = {cfg.highlightcolor};
-  cfg.highlightsize     = {cfg.highlightsize};
+  cfg.highlightchannel = {cfg.highlightchannel};
+elseif ischar(cfg.highlightchannel)
+  cfg.highlightchannel = {{cfg.highlightchannel}};
+end
+if ~iscell(cfg.highlightsymbol)
+  cfg.highlightsymbol = {cfg.highlightsymbol};
+end
+if ~iscell(cfg.highlightcolor)
+  cfg.highlightcolor = {cfg.highlightcolor};
+end
+if ~iscell(cfg.highlightsize)
+  cfg.highlightsize = {cfg.highlightsize};
+end
+if ~iscell(cfg.highlightfontsize)
   cfg.highlightfontsize = {cfg.highlightfontsize};
-  % then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
-  ncellhigh = length(cfg.highlightchannel);
-  if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
-  if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [0 0 0];   end
-  if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = 6;         end
-  if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = 8;         end
-  % then default all empty cells
-  for icell = 1:ncellhigh
-    if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
-    if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
-    if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
-    if isempty(cfg.highlightfontsize{icell}),  cfg.highlightfontsize{icell} = 8;     end
-  end
-else
-  % multiple groups of channels (clusters) have been selected for highlighting
-  % this results from ft_clusterplot
+end
+% then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
+ncellhigh = length(cfg.highlightchannel);
+if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
+if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [0 0 0];   end
+if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = 6;         end
+if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = 8;         end
+% then default all empty cells
+for icell = 1:ncellhigh
+  if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
+  if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
+  if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
+  if isempty(cfg.highlightfontsize{icell}),  cfg.highlightfontsize{icell} = 8;     end
 end
 
 % for backwards compatability
@@ -662,7 +671,7 @@ end
 % For Highlight (channel-selection)
 for icell = 1:length(cfg.highlight)
   if ~strcmp(cfg.highlight{icell}, 'off')
-    cfg.highlightchannel = ft_channelselection(cfg.highlightchannel{icell}, data.label);
+    cfg.highlightchannel{icell} = ft_channelselection(cfg.highlightchannel{icell}, data.label);
     [dum, layoutindex] = match_str(cfg.highlightchannel{icell}, cfg.layout.label);
     templay = [];
     templay.outline = cfg.layout.outline;
