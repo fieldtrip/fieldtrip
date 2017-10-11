@@ -521,8 +521,8 @@ switch headerformat
     %looking for more wav files in folder with same basename
     TRACK_TOKEN='Tr';
     [p, f, x] = fileparts(filename);
-    s=regexp(f,strcat("(",TRACK_TOKEN,")(\d*)"));
-    session_filenames=dir(char(strcat(p,filesep,extractBetween(f,1,s-1),TRACK_TOKEN,"*",x)));
+    s=regexp(f,strcat('(',TRACK_TOKEN,')(\d*)'));
+    session_filenames=dir(char(strcat(p,filesep,extractBetween(f,1,s-1),TRACK_TOKEN,'*',x)));
     info=cellfun(@(x) audioinfo(strcat(p,filesep,x)),{session_filenames(:).name});
     
     %cheking consistency
@@ -538,10 +538,10 @@ switch headerformat
     channels={};
     for i=1:numel(info)
         [~, fi, ~] = fileparts(info(i).Filename);
-        tr=regexp(fi,strcat("(",TRACK_TOKEN,")(\d*)"),'match');
+        tr=regexp(fi,strcat('(',TRACK_TOKEN,')(\d*)'),'match');
         if info(i).NumChannels > 1
             for j=1:info(i).NumChannels
-                channels = cat(1,channels, strcat(tr{1},"_c",num2str(j)));
+                channels = cat(1,channels, strcat(tr{1},'_c',num2str(j)));
             end
         else
             channels = cat(1,channels,tr{1});      

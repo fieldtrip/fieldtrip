@@ -462,7 +462,7 @@ switch dataformat
     % These are MATLAB *.mat files created by the software 'Map File
     % Converter' from the original .mpx files recorded by NeuroOmega
     get_channel = @(ch) double(getfield(hdr.orig,ch)) * ...
-           getfield(hdr.orig,char(strcat(ch,"_BitResolution"))); 
+           getfield(hdr.orig,char(strcat(ch,'_BitResolution'))); 
     dat=cell2mat(cellfun(get_channel,hdr.label,'UniformOutput',false));
     dat = dat(:, begsample:endsample); 
 
