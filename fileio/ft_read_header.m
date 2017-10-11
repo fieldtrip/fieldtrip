@@ -14,6 +14,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'chanindx'       = list with channel indices in case of different sampling frequencies (only for EDF)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
+%   'chantype'       = string or cell of strings. Defines channel types to be read (only for NeuroOmega)
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -153,6 +154,10 @@ retry          = ft_getopt(varargin, 'retry', false);     % the default is not t
 chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF with different sampling rates
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
+
+%2017.10.10 AB: This parameter is used to select channels in NeuroOmega files, which contain
+%channels of different sampling rate. Matches the output field hdr.chantype.
+chantype       = ft_getopt(varargin, 'chantype');   
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -453,6 +458,64 @@ switch headerformat
     hdr.label       = deblank({orig.ElectrodesInfo.Label})';
     hdr.chanunit    = deblank({orig.ElectrodesInfo.AnalogUnits})';
     hdr.orig        = orig;
+    
+	case 'neuroomega_mat'
+    % These are MATLAB *.mat files created by the software 'Map File
+    % Converter' from the original .mpx files recorded by NeuroOmega
+    
+    chantype_dict={'Micro','Macro',     'Audio';...
+                   'CRAW', 'CMacro_RAW','CANALOG'};            
+    if isempty(chantype) 
+        chantype = {'Micro','Macro'};
+    elseif ~iscell(chantype)
+        if strcmp(chantype,'all')
+        	chantype = {'Micro','Macro'};
+        else
+            chantype = {chantype};
+        end
+    end    
+
+    %indetifying channels to be loaded
+    orig = load(filename);
+    fields_orig=fields(orig);
+    neuroomega_param={'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'};
+    is_param=endsWith(fields_orig,neuroomega_param);
+    channels={};
+    channelstype={};
+    for c = 1:length(chantype)
+        chanbasename=chantype_dict{2,strcmp(chantype_dict(1,:),chantype{c})};
+        sel_chan=fields_orig(strncmpi(fields_orig,chanbasename,length(chanbasename)) & ~is_param);
+        channels=[channels;sel_chan];
+        channelstype=[channelstype;repmat(chantype(c),  size(sel_chan))];
+    end
+    
+    %verifying consistency of the channels    
+    Fs=uniquetol(cellfun(@(ch) getfield(orig,[ch,'_KHz']),channels),1e-6);
+    T0=uniquetol(cellfun(@(ch) getfield(orig,[ch,'_TimeBegin']),channels),1e-6);
+    nSamples=uniquetol(cellfun(@(ch) size(getfield(orig,ch),2),channels),1e-6);
+    if length(Fs)>1
+    	ft_error('channels with different sampling rates are not supported');
+    end
+    if length(T0)>1
+        ft_error('channels with different time origins are not supported');
+    end
+    if length(nSamples)>1
+        ft_error('channels with different number of samples are not supported');
+    end
+    
+    %building header
+    hdr.Fs          = Fs*1000;
+    hdr.nChans      = length(channels);
+    hdr.nSamples    = nSamples;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+    hdr.label       = deblank(channels);
+    hdr.T0          = T0;
+    % store the complete information in hdr.orig
+    % ft_read_data and ft_read_event will get it from there
+    hdr.orig        = orig;  
+    hdr.chantype    = channelstype;
+    hdr.chanunit    = repmat({'uV'},  size(hdr.label));
     
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}
     orig = read_brainvision_vhdr(filename);

@@ -38,6 +38,7 @@ function [data] = ft_preprocessing(cfg, data)
 % The channels that will be read and/or preprocessed are specified with
 %   cfg.channel      = Nx1 cell-array with selection of channels (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
+%   cfg.chantype     = string or Nx1 cell-array with channel types to be read (only for NeuroOmega)
 %
 % The preprocessing options for the selected channels are specified with
 %   cfg.lpfilter      = 'no' or 'yes'  lowpass filter (default = 'no')
@@ -214,6 +215,7 @@ cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-l
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
+cfg.chantype       = ft_getopt(cfg, 'chantype', []);        %2017.10.10 AB required for NeuroOmega files
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
@@ -392,7 +394,9 @@ else
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   
   % read the header
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat, 'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy, 'checkmaxfilter', istrue(cfg.checkmaxfilter));
+  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat,...
+    'coordsys', cfg.coordsys, 'coilaccuracy', cfg.coilaccuracy,...
+    'checkmaxfilter', istrue(cfg.checkmaxfilter), 'chantype', cfg.chantype);
   
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')

@@ -458,6 +458,14 @@ switch dataformat
     %apply v = a*d + b to each row of the matrix
     dat=bsxfun(@plus,bsxfun(@times, double(orig.Data), a'),b');
     
+  case 'neuroomega_mat'
+    % These are MATLAB *.mat files created by the software 'Map File
+    % Converter' from the original .mpx files recorded by NeuroOmega
+    get_channel = @(ch) double(getfield(hdr.orig,ch)) * ...
+           getfield(hdr.orig,char(strcat(ch,"_BitResolution"))); 
+    dat=cell2mat(cellfun(get_channel,hdr.label,'UniformOutput',false));
+    dat = dat(:, begsample:endsample); 
+    
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
     dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample, chanindx);
     
