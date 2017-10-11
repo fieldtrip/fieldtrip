@@ -516,6 +516,47 @@ switch headerformat
     hdr.orig        = orig;  
     hdr.chantype    = channelstype;
     hdr.chanunit    = repmat({'uV'},  size(hdr.label));
+   
+  case 'audio_wav'
+    %looking for more wav files in folder with same basename
+    TRACK_TOKEN='Tr';
+    [p, f, x] = fileparts(filename);
+    s=regexp(f,strcat("(",TRACK_TOKEN,")(\d*)"));
+    session_filenames=dir(char(strcat(p,filesep,extractBetween(f,1,s-1),TRACK_TOKEN,"*",x)));
+    info=cellfun(@(x) audioinfo(strcat(p,filesep,x)),{session_filenames(:).name});
+    
+    %cheking consistency
+    Fs=uniquetol([info(:).SampleRate],1e-6);
+    nSamples=uniquetol([info(:).TotalSamples],1e-6);
+    if length(Fs)>1
+    	ft_error('channels with different sampling rates are not supported');
+    end
+    if length(nSamples)>1
+        ft_error('channels with different number of samples are not supported');
+    end
+
+    channels={};
+    for i=1:numel(info)
+        [~, fi, ~] = fileparts(info(i).Filename);
+        tr=regexp(fi,strcat("(",TRACK_TOKEN,")(\d*)"),'match');
+        if info(i).NumChannels > 1
+            for j=1:info(i).NumChannels
+                channels = cat(1,channels, strcat(tr{1},"_c",num2str(j)));
+            end
+        else
+            channels = cat(1,channels,tr{1});      
+        end
+    end
+    
+    hdr.Fs          = Fs;
+    hdr.nChans      = numel(channels);
+    hdr.nSamples    = nSamples;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+    hdr.label       = deblank(channels);
+    hdr.orig        = info;  
+    hdr.chantype    = repmat({'Audio'},  size(hdr.label));
+    hdr.chanunit    = repmat({'au'},  size(hdr.label));
     
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}
     orig = read_brainvision_vhdr(filename);

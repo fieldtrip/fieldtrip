@@ -872,6 +872,11 @@ elseif (filetype_check_extension(filename, '.vid') || filetype_check_extension(f
   manufacturer = 'VideoMEG';
   content = 'video';
 
+elseif filetype_check_extension(filename, '.wav') 
+  type = 'audio_wav';
+  manufacturer = 'unknown';
+  content = 'audio';  
+  
 elseif (filetype_check_extension(filename, '.dat') ||  filetype_check_extension(filename, '.Dat')) && (exist(fullfile(p, [f '.ini']), 'file') || exist(fullfile(p, [f '.Ini']), 'file'))
   % this should go before curry_dat
   type = 'deymed_dat';
