@@ -60,6 +60,7 @@ function [data] = ft_appenddata(cfg, varargin)
 %
 % $Id$
 
+
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_revision = '$Id$';
 ft_nargin   = nargin;
@@ -185,7 +186,7 @@ switch cfg.appenddim
       data.label;       % keep it as determined by append_common
     end
     
-	case 'time' %AB 2017.10.11
+  case 'time' %AB 2017.10.11
 
     if ~isequallabel
         ft_error('Same channels in same order required to append data by time')
@@ -196,7 +197,8 @@ switch cfg.appenddim
     if ~isequalfreq
         ft_error('Same Fs required to append data by time')        
     end
-    Fs=varargin{1}.hdr.Fs;
+    data.fsample=varargin{1}.hdr.Fs;
+    data.sampleinfo=[];
     
     % the channels are the same and sorted in the same order
     dat = cell(1,0);
@@ -208,14 +210,16 @@ switch cfg.appenddim
       for i=1:numel(varargin)
         trial_dat = cat(2, trial_dat, varargin{i}.trial{t});
         time0=varargin{i}.time{t}(1);
-        trial_tim = cat(2, trial_tim, curtime-time0+1/Fs+varargin{i}.time{t});
+        trial_tim = cat(2, trial_tim, curtime-time0+1/data.fsample+varargin{i}.time{t});
         curtime=trial_tim(end);
       end
       dat = cat(2, dat, trial_dat);
       tim = cat(2, tim, trial_tim);
+      data.sampleinfo=[data.sampleinfo;[1,size(trial_dat,2)]];
     end
     data.trial = dat;
     data.time  = tim;      
+
     
   otherwise
     ft_error('unsupported cfg.appenddim');
