@@ -24,6 +24,9 @@ function [data] = ft_appenddata(cfg, varargin)
 % channels in one of the data structures). The function will then return a data
 % structure containing only the channels which are present in all inputs.
 %
+% To manually select the dimension in which the data will be appended use
+% cfg.appenddim  = 'chan', 'rpt' or 'time' 
+%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
@@ -89,10 +92,14 @@ cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5);
 isequaltime  = true;
 isequallabel = true;
 issamelabel  = true;
+isequaltrial = true;
+isequalfreq  = true;
 for i=2:numel(varargin)
   isequaltime  = isequaltime  && isequal(varargin{i}.time , varargin{1}.time );
   isequallabel = isequallabel && isequal(varargin{i}.label, varargin{1}.label);
   issamelabel  = issamelabel  && isempty(setxor(varargin{i}.label, varargin{1}.label));
+  isequaltrial = isequaltrial && isequal(numel(varargin{i}.trial),numel(varargin{1}.trial));
+  isequalfreq  = isequalfreq && length(uniquetol([varargin{i}.hdr.Fs,varargin{1}.hdr.Fs],cfg.tolerance))==1;
 end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')
@@ -177,6 +184,38 @@ switch cfg.appenddim
       data.time  = tim;
       data.label;       % keep it as determined by append_common
     end
+    
+	case 'time' %AB 2017.10.11
+
+    if ~isequallabel
+        ft_error('Same channels in same order required to append data by time')
+    end
+    if ~isequaltrial
+        ft_error('Same number of trials required to append data by time')
+    end  
+    if ~isequalfreq
+        ft_error('Same Fs required to append data by time')        
+    end
+    Fs=varargin{1}.hdr.Fs;
+    
+    % the channels are the same and sorted in the same order
+    dat = cell(1,0);
+    tim = cell(1,0);
+    for t=1:numel(varargin{1}.trial)
+      trial_dat=[];
+      trial_tim=[];
+      curtime=varargin{i}.time{t}(1);
+      for i=1:numel(varargin)
+        trial_dat = cat(2, trial_dat, varargin{i}.trial{t});
+        time0=varargin{i}.time{t}(1);
+        trial_tim = cat(2, trial_tim, curtime-time0+1/Fs+varargin{i}.time{t});
+        curtime=trial_tim(end);
+      end
+      dat = cat(2, dat, trial_dat);
+      tim = cat(2, tim, trial_tim);
+    end
+    data.trial = dat;
+    data.time  = tim;      
     
   otherwise
     ft_error('unsupported cfg.appenddim');
