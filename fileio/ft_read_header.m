@@ -451,7 +451,7 @@ switch headerformat
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1; %?
     hdr.label       = deblank({orig.ElectrodesInfo.Label})';
-    hdr.chanunit    = deblank({hdr.orig.ElectrodesInfo.AnalogUnits})';
+    hdr.chanunit    = deblank({orig.ElectrodesInfo.AnalogUnits})';
     hdr.orig        = orig;
     
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}

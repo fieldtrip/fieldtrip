@@ -438,14 +438,25 @@ switch dataformat
     
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,f,e] = fileparts(filename);
+    [p,~,~] = fileparts(filename);
     if ~isempty(p)
       % this is OK
     elseif isempty(p)
       filename = which(filename);
     end
     orig = openNSx(filename, 'duration', [begsample endsample]);
-    keyboard
+    % 2017.10.09 AB - Transforming integer values to double
+    d_min=[orig.ElectrodesInfo.MinDigiValue];
+    d_max=[orig.ElectrodesInfo.MaxDigiValue];
+    v_min=[orig.ElectrodesInfo.MinAnalogValue];
+    v_max=[orig.ElectrodesInfo.MaxAnalogValue];
+
+    %calculating slope (a) and ordinate (b) of the calibration
+    b=double(v_min .* d_max - v_max .* d_min) ./ double(d_max - d_min);
+    a=double(v_max-v_min)./double(d_max-d_min);
+   
+    %apply v = a*d + b to each row of the matrix
+    dat=bsxfun(@plus,bsxfun(@times, double(orig.Data), a'),b');
     
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
     dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample, chanindx);
