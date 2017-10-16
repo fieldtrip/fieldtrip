@@ -14,7 +14,8 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'chanindx'       = list with channel indices in case of different sampling frequencies (only for EDF)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
-%   'chantype'       = string or cell of strings. Defines channel types to be read (only for NeuroOmega)
+%   'chantype'       = string or cell of strings. Defines channel types to be read (only for NeuroOmega). 
+%                      Use cfg.chantype='chaninfo' to get hdr.chaninfo table
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -461,56 +462,78 @@ switch headerformat
     
 	case 'neuroomega_mat'
     % These are MATLAB *.mat files created by the software 'Map File
-    % Converter' from the original .mpx files recorded by NeuroOmega
-    
-    chantype_dict={'Micro','Macro',     'Audio';...
-                   'CRAW', 'CMacro_RAW','CANALOG'};            
-    if isempty(chantype) 
-        chantype = {'Micro','Macro'};
-    elseif ~iscell(chantype)
-        if strcmp(chantype,'all')
-        	chantype = {'Micro','Macro'};
-        else
-            chantype = {chantype};
-        end
-    end    
-
-    %indetifying channels to be loaded
-    orig = load(filename);
-    fields_orig=fields(orig);
+    % Converter' from the original .mpx files recorded by NeuroOmega 
+    chantype_dict={'micro','macro',     'analog', 'digital','micro_lfp','macro_lfp','micro_hp','add_analog';...
+                   'CRAW', 'CMacro_RAW','CANALOG','CDIG',   'CLFP',     'CMacro',   'CSPK'    ,'CADD_ANALOG'};            
     neuroomega_param={'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'};
-    is_param=endsWith(fields_orig,neuroomega_param);
-    channels={};
-    channelstype={};
-    for c = 1:length(chantype)
-        chanbasename=chantype_dict{2,strcmp(chantype_dict(1,:),chantype{c})};
-        sel_chan=fields_orig(strncmpi(fields_orig,chanbasename,length(chanbasename)) & ~is_param);
-        channels=[channels;sel_chan];
-        channelstype=[channelstype;repmat(chantype(c),  size(sel_chan))];
-    end
+
+    if isempty(chantype) 
+        chantype = {};
+    elseif ~iscell(chantype)
+        chantype = {chantype};
+    end    
     
-    %verifying consistency of the channels    
-    Fs=uniquetol(cellfun(@(ch) getfield(orig,[ch,'_KHz']),channels),1e-6);
-    T0=uniquetol(cellfun(@(ch) getfield(orig,[ch,'_TimeBegin']),channels),1e-6);
-    nSamples=uniquetol(cellfun(@(ch) size(getfield(orig,ch),2),channels),1e-6);
-    if length(Fs)>1
-    	ft_error('channels with different sampling rates are not supported');
+    %identifying channels to be loaded
+    orig = load(filename); fields_orig=fields(orig);
+    is_param=endsWith(fields_orig,neuroomega_param);
+    channels={}; channelstype={};
+    for c = 1:length(chantype)
+        chantype_dict_sel=strcmpi(chantype_dict(1,:),chantype{c});
+        if sum(chantype_dict_sel)==0
+          ft_warning(strjoin({'unknown chantype ',chantype{c}}))
+        else
+          chanbasename=chantype_dict{2, chantype_dict_sel};
+          sel_chan=fields_orig(strncmpi(fields_orig,chanbasename,length(chanbasename)) & ~is_param);
+          if isempty(sel_chan)
+            ft_warning(strjoin({'chantype ',chantype{c},' selected but no ',chanbasename,' found'}))
+          else
+            channels=[channels;sel_chan];
+            channelstype=[channelstype;repmat(chantype(c),  size(sel_chan))];
+          end
+        end
     end
-    if length(T0)>1
-        ft_error('channels with different time origins are not supported');
-    end
-    if length(nSamples)>1
-        ft_error('channels with different number of samples are not supported');
+    if ~isempty(channels)
+      %verifying consistency of the channels
+      chan_t=table(channels,...
+            cellfun(@(ch) getfield(orig,[ch,'_KHz'])*1000,channels),...
+            cellfun(@(ch) getfield(orig,[ch,'_TimeBegin']),channels),...
+            cellfun(@(ch) size(getfield(orig,ch),2),channels),...
+            'VariableNames',{'channel' 'Fs' 'T0' 'nSamples'});
+      Fs=uniquetol(chan_t.Fs,1e-6);
+      T0=uniquetol(chan_t.T0,1e-6);
+      nSamples=uniquetol(chan_t.nSamples,1e-6);
+      if length(Fs)>1 || length(T0)>1 
+        chan_t %; printing table for user
+        ft_error('inconsistent channels with different sampling rates or initial times');
+      end
+      if length(nSamples)>1
+        chan_t %; printing table for user
+        ft_warning('inconsistent number of samples across channels. Selecting minimun nSample')
+        nSamples=min(nSamples);
+      end
+      
+    else %If no channel selected print table with available channels and chantypes
+      channels=fields_orig(contains(fields_orig,chantype_dict(2,:)) & ~is_param);
+      %Matching channels to chantypes
+      M=cell2mat(cellfun(@(x) contains(channels,x),chantype_dict(2,:),'UniformOutput',false));
+      chantype_ix = sum( cumprod(M == 0, 2), 2) + 1;
+      Fs=cellfun(@(x) getfield(orig,[x '_KHz'])*1000,channels);
+      chaninfo=table(channels,chantype_dict(1,chantype_ix)',Fs,...
+        'VariableNames',{'channel' 'chantype' 'Fs'}) %; print table for user
+      ft_warning(['No channel selected, see hdr.chaninfo. \nAvailable CFG.CHANTYPEs are: ',strjoin(unique(chaninfo.chantype),' ')])
+      Fs=nan; nSamples=nan; channelstype=chaninfo.chantype; hdr.chaninfo=chaninfo;
+      if isempty(chantype) || ~strcmpi(chantype{1},'chaninfo')
+        ft_error('Use chantype=''chaninfo'' for ft_read_header to return hdr with hdf.chaninfo')
+      end
     end
     
     %building header
-    hdr.Fs          = Fs*1000;
+    hdr.Fs          = Fs;
     hdr.nChans      = length(channels);
     hdr.nSamples    = nSamples;
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1;
     hdr.label       = deblank(channels);
-    hdr.T0          = T0;
     % store the complete information in hdr.orig
     % ft_read_data and ft_read_event will get it from there
     hdr.orig        = orig;  

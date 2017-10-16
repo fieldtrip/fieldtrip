@@ -198,7 +198,7 @@ switch cfg.appenddim
         ft_error('Same Fs required to append data by time')        
     end
     data.fsample=varargin{1}.hdr.Fs;
-    data.sampleinfo=[];
+    %data.sampleinfo=[]; 
     
     % the channels are the same and sorted in the same order
     dat = cell(1,0);
@@ -215,7 +215,7 @@ switch cfg.appenddim
       end
       dat = cat(2, dat, trial_dat);
       tim = cat(2, tim, trial_tim);
-      data.sampleinfo=[data.sampleinfo;[1,size(trial_dat,2)]];
+      %data.sampleinfo=[data.sampleinfo;[1,size(trial_dat,2)]];
     end
     data.trial = dat;
     data.time  = tim;      

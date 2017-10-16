@@ -461,10 +461,17 @@ switch dataformat
   case 'neuroomega_mat'
     % These are MATLAB *.mat files created by the software 'Map File
     % Converter' from the original .mpx files recorded by NeuroOmega
-    get_channel = @(ch) double(getfield(hdr.orig,ch)) * ...
-           getfield(hdr.orig,char(strcat(ch,'_BitResolution'))); 
-    dat=cell2mat(cellfun(get_channel,hdr.label,'UniformOutput',false));
-    dat = dat(:, begsample:endsample); 
+    %extract_range = @(x,s,e) x(s:e);
+    %get_channel = @(ch) extract_range(double(getfield(hdr.orig,ch)),begsample,endsample) * ...
+    %       getfield(hdr.orig,char(strcat(ch,'_BitResolution'))); 
+    %dat=cell2mat(cellfun(get_channel,hdr.label,'UniformOutput',false));
+    dat=zeros(hdr.nChans,hdr.nSamples);
+    for i=1:hdr.nChans
+      v=double(getfield(hdr.orig,hdr.label{i}));
+      v=v*getfield(hdr.orig,char(strcat(hdr.label{i},'_BitResolution')));
+      dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
+    end
+    %dat = dat(:, begsample:endsample); 
 
   case 'audio_wav'
     dat=[];

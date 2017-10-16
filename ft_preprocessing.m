@@ -50,7 +50,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.lpfreq        = lowpass  frequency in Hz
 %   cfg.hpfreq        = highpass frequency in Hz
 %   cfg.bpfreq        = bandpass frequency range, specified as [lowFreq highFreq] in Hz
-%   cfg.bsfreq        = bandstop frequency range, specified as [low high] in Hz
+%   cfg.bsfreq        = bandstop frequency range, specified as [low high] in Hz (or as Nx2 matrix for notch filter)
 %   cfg.dftfreq       = line noise frequencies in Hz for DFT filter (default = [50 100 150])
 %   cfg.lpfiltord     = lowpass  filter order (default set in low-level function)
 %   cfg.hpfiltord     = highpass filter order (default set in low-level function)
@@ -215,7 +215,7 @@ cfg.coilaccuracy   = ft_getopt(cfg, 'coilaccuracy');        % is passed to low-l
 cfg.checkmaxfilter = ft_getopt(cfg, 'checkmaxfilter');      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 cfg.montage        = ft_getopt(cfg, 'montage', 'no');
 cfg.updatesens     = ft_getopt(cfg, 'updatesens', 'no');    % in case a montage or rereferencing is specified
-cfg.chantype       = ft_getopt(cfg, 'chantype', []);        %2017.10.10 AB required for NeuroOmega files
+cfg.chantype       = ft_getopt(cfg, 'chantype', {});        %2017.10.10 AB required for NeuroOmega files
 
 % these options relate to the actual preprocessing, it is neccessary to specify here because of padding
 cfg.dftfilter      = ft_getopt(cfg, 'dftfilter', 'no');
