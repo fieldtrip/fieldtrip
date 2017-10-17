@@ -474,7 +474,10 @@ switch headerformat
     end    
     
     %identifying channels to be loaded
-    orig = load(filename); fields_orig=fields(orig);
+    %orig = load(filename); 
+    orig = matfile(filename);
+    %fields_orig=fields(orig);
+    fields_orig=who(orig);
     is_param=endsWith(fields_orig,neuroomega_param);
     channels={}; channelstype={};
     for c = 1:length(chantype)
@@ -494,11 +497,22 @@ switch headerformat
     end
     if ~isempty(channels)
       %verifying consistency of the channels
-      chan_t=table(channels,...
-            cellfun(@(ch) getfield(orig,[ch,'_KHz'])*1000,channels),...
-            cellfun(@(ch) getfield(orig,[ch,'_TimeBegin']),channels),...
-            cellfun(@(ch) size(getfield(orig,ch),2),channels),...
-            'VariableNames',{'channel' 'Fs' 'T0' 'nSamples'});
+%       chan_t=table(channels,...
+%             cellfun(@(ch) getfield(orig,[ch,'_KHz'])*1000,channels),...
+%             cellfun(@(ch) getfield(orig,[ch,'_TimeBegin']),channels),...
+%             cellfun(@(ch) size(getfield(orig,ch),2),channels),...
+%             'VariableNames',{'channel' 'Fs' 'T0' 'nSamples'});
+      chan_t=table;
+      for i=1:length(channels)
+        ch=channels{i};
+        ch_whos=whos(orig,ch);
+        chan_t=[chan_t;{ch,...
+          orig.([ch,'_KHz'])*1000,...
+          orig.([ch,'_TimeBegin']),...
+          ch_whos.size(2)}];
+      end
+      chan_t.Properties.VariableNames={'channel' 'Fs' 'T0' 'nSamples'};
+
       Fs=uniquetol(chan_t.Fs,1e-6);
       T0=uniquetol(chan_t.T0,1e-6);
       nSamples=uniquetol(chan_t.nSamples,1e-6);
@@ -517,7 +531,7 @@ switch headerformat
       %Matching channels to chantypes
       M=cell2mat(cellfun(@(x) contains(channels,x),chantype_dict(2,:),'UniformOutput',false));
       chantype_ix = sum( cumprod(M == 0, 2), 2) + 1;
-      Fs=cellfun(@(x) getfield(orig,[x '_KHz'])*1000,channels);
+      Fs=cellfun(@(x) orig.([x '_KHz'])*1000,channels);
       chaninfo=table(channels,chantype_dict(1,chantype_ix)',Fs,...
         'VariableNames',{'channel' 'chantype' 'Fs'}) %; print table for user
       ft_warning(['No channel selected, see hdr.chaninfo. \nAvailable CFG.CHANTYPEs are: ',strjoin(unique(chaninfo.chantype),' ')])
