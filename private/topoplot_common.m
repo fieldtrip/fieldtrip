@@ -343,7 +343,9 @@ else
   tmpcfg.avgoverrpt = 'no';
 end
 tmpvar = data;
+ws = ft_warning('off', 'FieldTrip:getdimord:warning_dimord_could_not_be_determined');
 [data] = ft_selectdata(tmpcfg, data);
+ft_warning(ws);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -538,8 +540,6 @@ end
 
 % make comment
 switch cfg.comment
-  case 'no'
-    cfg.comment = '';
   case 'auto'
     comment = date;
     if ~isempty(xparam)
@@ -551,29 +551,30 @@ switch cfg.comment
     if ~isempty(cfg.parameter)
       comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
     end
-    cfg.comment = comment;
   case 'xlim'
     comment = date;
     if ~isempty(xparam)
-      cfg.comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
     end
   case 'ylim'
     comment = date;
     if ~isempty(yparam)
-      cfg.comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
     end
   case 'zlim'
     comment = date;
     if ~isempty(yparam)
-      cfg.comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
+      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
     end
+  otherwise
+    comment = '';
 end % switch comment
 
 if ~isempty(cfg.refchannel)
   if iscell(cfg.refchannel)
-    cfg.comment = sprintf('%s\nreference=%s %s', cfg.comment, cfg.refchannel{:});
+    comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
   else
-    cfg.comment = sprintf('%s\nreference=%s %s', cfg.comment, cfg.refchannel);
+    comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
   end
 end
 
