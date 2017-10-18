@@ -38,7 +38,6 @@ function cfg = topoplot_common(cfg, varargin)
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
-cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 Ndata = numel(varargin);
 if isnumeric(varargin{end})
@@ -265,8 +264,8 @@ hastime = isfield(data, 'time');
 % Set x/y/parameter defaults according to datatype and dimord
 switch dtype
   case 'timelock'
-    xparam = 'time';
-    yparam = '';
+    xparam = ft_getopt(cfg, 'xparam', 'time');
+    yparam = ft_getopt(cfg, 'yparam', '');
     if isfield(data, 'trial')
       cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
     elseif isfield(data, 'individual')
@@ -276,8 +275,8 @@ switch dtype
     end
   case 'freq'
     if hastime
-      xparam = 'time';
-      yparam = 'freq';
+    xparam = ft_getopt(cfg, 'xparam', 'time');
+    yparam = ft_getopt(cfg, 'yparam', 'freq');
       cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
     else
       xparam = 'freq';

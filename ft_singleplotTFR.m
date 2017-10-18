@@ -124,7 +124,6 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	   {'zparam',         'parameter'});
-cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam',         'yparam'});
 
 % Set the defaults
 cfg.baseline       = ft_getopt(cfg, 'baseline',      'no');
@@ -175,8 +174,8 @@ hasfreq = isfield(data, 'freq');
 
 assert((hastime && hasfreq), 'please use ft_singleplotER for time-only or frequency-only data');
 
-xparam = 'time';
-yparam = 'freq';
+xparam = ft_getopt(cfg, 'xparam', 'time');
+yparam = ft_getopt(cfg, 'yparam', 'freq');
 
 % check whether rpt/subj is present and remove if necessary
 dimord = getdimord(data, cfg.parameter);
@@ -325,8 +324,8 @@ end
 % the usual data is chan_freq_time, but other dimords should also work
 dimtok = tokenize(dimord, '_');
 datamatrix = data.(cfg.parameter);
-[c, ia, ib] = intersect(dimtok, {'chan', yparam, xparam});
-datamatrix = permute(datamatrix, ia);
+[c, ia, ib] = intersect({'chan', yparam, xparam}, dimtok, 'stable');
+datamatrix = permute(datamatrix, ib);
 datamatrix = datamatrix(selchan, sely, selx);
 
 if ~isempty(cfg.maskparameter)
