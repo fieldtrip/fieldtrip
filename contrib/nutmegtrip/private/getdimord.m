@@ -618,7 +618,9 @@ function warning_dimord_could_not_be_determined(field,data)
     end
   end
 
-  ft_warning('%s\n\n%s', msg,content);
+  id = 'FieldTrip:getdimord:warning_dimord_could_not_be_determined';
+  msg = sprintf('%s\n\n%s', msg, content);
+  ft_warning(id, msg);
 end % function warning_dimord_could_not_be_determined
 
 
@@ -658,7 +660,7 @@ for k = 1:numel(dimtok)
     otherwise
       if isfield(data, dimtok{k}) % check whether field exists
         ok = numel(data.(dimtok{k}))==1;
-      end;
+      end
   end
   if ok
     break;

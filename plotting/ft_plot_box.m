@@ -25,6 +25,8 @@ function [varargout] = ft_plot_box(position, varargin)
 % Example
 %   ft_plot_box([-1 1 2 3], 'facecolor', 'b')
 %   axis([-4 4 -4 4])
+%
+% See also FT_PLOT_LINE
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %
@@ -84,29 +86,27 @@ if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(h
   
 else
   % use the full implementation
-  abc = axis;
-  
   if isempty(hlim)
-    hlim = abc([1 2]);
+    hlim = get(gca, 'XLim');
   end
   
   if isempty(vlim)
-    vlim = abc([3 4]);
+    vlim = get(gca, 'YLim');
   end
   
-  if isempty(hpos);
+  if isempty(hpos)
     hpos = (hlim(1)+hlim(2))/2;
   end
   
-  if isempty(vpos);
+  if isempty(vpos)
     vpos = (vlim(1)+vlim(2))/2;
   end
   
-  if isempty(width),
+  if isempty(width)
     width = hlim(2)-hlim(1);
   end
   
-  if isempty(height),
+  if isempty(height)
     height = vlim(2)-vlim(1);
   end
   

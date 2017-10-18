@@ -20,6 +20,7 @@ function [stat, cfg] = ft_statistics_crossvalidate(cfg, dat, design)
 %   stat.statistic    = the statistics to report
 %   stat.model        = the models associated with this multivariate analysis
 %
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
 % Copyright (c) 2007-2011, F.C. Donders Centre, Marcel van Gerven
 %

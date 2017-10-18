@@ -387,7 +387,7 @@ layout    = layout(1:maxheight,1:maxwidth);
 fig = figure;
 hold on
 axis manual; % the axis should not change during the contruction of the arrows, otherwise the arrowheads will be distorted
-set(gca,'Units','normalized'); % use normalized units
+set(gca, 'Units', 'normalized'); % use normalized units
 set(gcf, 'ToolBar', 'none');
 axis([0 1 0 1])
 axis off;
@@ -405,7 +405,7 @@ for i=1:numel(pipeline)
   label = strrep(label, '_', '\_');
   
   % strip blank line if present and not needed
-  if strcmp(label{end},'')
+  if strcmp(label{end}, '')
     label(end) = [];
   end
   

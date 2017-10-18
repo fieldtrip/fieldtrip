@@ -17,10 +17,11 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmen
 stopwatch = tic;
 
 cfg = [];
-vol = ft_prepare_singleshell(cfg, segmentedmri);
+cfg.method = 'singleshell';
+headmodel = ft_prepare_headmodel(cfg, segmentedmri);
 
 elapsed = toc(stopwatch);
 
 if elapsed>60
-  error('ft_prepare_singleshell took too long, probably due to ft_prepare_mesh');
+  error('ft_prepare_headmodel took too long, probably due to ft_prepare_mesh');
 end

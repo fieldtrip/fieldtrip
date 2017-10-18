@@ -41,15 +41,15 @@ function [H, Z, S, psi] = sfactorization_wilson2x2(S,freq,Niterations,tol,cmbind
 %
 % $Id$
 
-if nargin<9, stabilityfix = false; end
-if nargin<8, checkflag = true;   end
-if nargin<7, init      = 'chol'; end
-if nargin<6, fb        = 'none'; end
-if nargin<5
+if nargin<9 || isempty(stabilityfix), stabilityfix = false;  end
+if nargin<8 || isempty(checkflag),    checkflag    = true;   end
+if nargin<7 || isempty(init),         init         = 'chol'; end
+if nargin<6 || isempty(fb),           fb           = 'none'; end
+if nargin<5 || isempty(cmbindx)
   ft_error('FieldTrip:connectivity:sfactorization_wilson2x2', 'when requesting multiple pairwise spectral decomposition, ''cmbindx'' needs to be specified');
 end
-if nargin<4, tol        = 1e-8;   end
-if nargin<3, Niterations = 1000;  end;
+if nargin<4 || isempty(tol),          tol          = 1e-8;   end
+if nargin<3 || isempty(Niterations),  Niterations  = 1000;   end;
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))
@@ -92,25 +92,10 @@ end
 % preallocate memory for the identity matrix
 I      = repmat(eye(2),[1 1 m N2]); % Defining 2 x 2 identity matrix
 
-% %Step 1: Forming 2-sided spectral densities for ifft routine in matlab
-% Sarr   = zeros(2,2,m,N2) + 1i.*zeros(2,2,m,N2);
-% for c = 1:m
-%   Stmp  = S(cmbindx(c,:),cmbindx(c,:),:);
-%   
-%   % the input cross-spectral density is assumed to be weighted with a
-%   % factor of 2 in all non-DC and Nyquist bins, therefore weight the 
-%   % DC-bin with a factor of 2 to get a correct two-sided representation
-%   Sarr(:,:,c,1) = Stmp(:,:,1).*2;
-%   
-%   for f_ind = 2:N
-%     Sarr(:,:,c,       f_ind) = Stmp(:,:,f_ind);
-%     Sarr(:,:,c,(N2+2)-f_ind) = Stmp(:,:,f_ind).';
-%   end
-% end
-% Sarr2 = Sarr;
-
 % preallocate memory for the 2-sided spectral density
 Sarr = zeros(2,2,N2,m) + 1i.*zeros(2,2,N2,m);
+
+% --- Step 1: Form 2-sided spectral densities for ifft routine in matlab
 for c = 1:m
   Sarr(:,:,1:N,c) = S(cmbindx(c,:),cmbindx(c,:),:);
 end
@@ -133,10 +118,10 @@ if hasnyq
   Sarr(:,:,:,N) = Sarr(:,:,:,N).*2;
 end
 
-%Step 2: Computing covariance matrices
+% --- Step 2: Compute covariance matrices
 gam = real(reshape(ifft(reshape(Sarr, [4*m N2]), [], 2),[2 2 m N2]));
 
-%Step 3: Initializing for iterations 
+% --- Step 3: Initialize for iterations 
 gam0 = gam(:,:,:,1);
 
 h    = complex(zeros(size(gam0)));
@@ -161,7 +146,7 @@ for k = 1:m
 end
 psi  = repmat(h, [1 1 1 N2]);
 
-%Step 4: Iterating to get spectral factors
+% --- Step 4: Iterations to get spectral factors
 ft_progress('init', fb, 'computing spectral factorization');
 for iter = 1:Niterations
   ft_progress(iter./Niterations, 'computing iteration %d/%d\n', iter, Niterations);
@@ -183,10 +168,10 @@ for iter = 1:Niterations
 end 
 ft_progress('close');
 
-%Step 5: Getting covariance matrix from spectral factors
+%i --- Step 5: Get covariance matrix from spectral factors
 gamtmp = reshape(real(ifft(transpose(reshape(psi, [4*m N2]))))', [2 2 m N2]);
 
-%Step 6: Getting noise covariance & transfer function (see Example pp. 424)
+% --- Step 6: Get noise covariance & transfer function
 %
 A0    = gamtmp(:,:,:,1); 
 A0inv = inv2x2(A0);
@@ -198,15 +183,6 @@ for k = 1:m
   %FIXME check this; at least not multiplying it removes the need to correct later on
   %this also makes it more equivalent to the noisecov estimated by biosig's mvar-function
 end
-
-% H = complex(zeros(2,2,m,N));
-% S = complex(zeros(2,2,m,N));
-% for k = 1:N
-%   for kk = 1:m
-%     H(:,:,kk,k) = psi(:,:,kk,k)*A0inv(:,:,kk);  % Transfer function
-%     S(:,:,kk,k) = psi(:,:,kk,k)*psi(:,:,kk,k)'; % Cross-spectral density
-%   end
-% end
 H = mtimes2x2(psi,A0inv(:,:,:,ones(1,size(psi,4))));
 S = mtimes2x2(psi,ctranspose2x2(psi));
 
@@ -219,12 +195,10 @@ Z   = reshape(Z, [4*siz(3) siz(4:end)]);
 siz = [size(psi) 1 1];
 psi = reshape(psi, [4*siz(3) siz(4:end)]);
 
-%if numel(selfreq)~=numel(freq)
-  % return only the frequency bins that were in the input
-  H   =   H(:,selfreq,:,:);
-  S   =   S(:,selfreq,:,:);
-  psi = psi(:,selfreq,:,:);
-%end
+% return only the frequency bins that were in the input
+H   =   H(:,selfreq,:,:);
+S   =   S(:,selfreq,:,:);
+psi = psi(:,selfreq,:,:);
   
 %---------------------------------------------------------------------
 function gp = PlusOperator2x2(g,ncmb,nfreq, stabilityfix)

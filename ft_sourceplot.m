@@ -192,8 +192,8 @@ function ft_sourceplot(cfg, functional, anatomical)
 % disk. This mat files should contain only a single variable corresponding to the
 % input structure.
 %
-% See also FT_SOURCEMOVIE, FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE,
-% FT_SOURCESTATISTICS, FT_VOLUMELOOKUP, FT_READ_ATLAS, FT_READ_MRI
+% See also FT_SOURCEMOVIE, FT_SOURCEANALYSIS, FT_SOURCEGRANDAVERAGE, FT_SOURCESTATISTICS,
+% FT_VOLUMELOOKUP, FT_READ_ATLAS, FT_READ_MRI
 
 % TODO have to be built in:
 %   cfg.marker        = [Nx3] array defining N marker positions to display (orig: from sliceinterp)

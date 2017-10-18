@@ -357,7 +357,7 @@ switch backend
     end
     
     if any(curPwd==' ')
-      % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1898
+      % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1898
       error('you cannot execute jobs from within a directory that has a space in its name');
     end
     

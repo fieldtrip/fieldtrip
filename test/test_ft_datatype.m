@@ -105,7 +105,7 @@ end % for dirlist
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% see how it deals with raw/timelock/freq structures with component topographies
-% see SVN revision 9336 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=2518
+% see SVN revision 9336 and http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2518
 
 raw = [];
 raw.label = {'1', '2', '3'};

@@ -6,10 +6,6 @@ function failed_bug2355
 % TEST test_bug2355
 % TEST ft_prepare_sourcemodel
 
-global ft_default
-ft_default.checkconfig = 'off';
-ft_default.trackconfig = 'off';
-
 %% make a spherical model fitted to scalp surface, in cm
 vol = [];
 vol.r = 12;

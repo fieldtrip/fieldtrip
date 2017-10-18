@@ -64,7 +64,7 @@ cfg.hpfreq       = 10;
 cfg.rectify      = 'yes';
 emg = ft_preprocessing(cfg);
 
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1397
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1397
 % the reported problem in fieldtrip-20120302 was
 % 
 % ??? Error using ==> ft_appenddata at 266

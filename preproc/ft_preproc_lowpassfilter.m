@@ -306,4 +306,3 @@ end
 
 % add the mean back to the filtered data
 filt = bsxfun(@plus, filt, meandat);
-

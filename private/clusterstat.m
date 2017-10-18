@@ -40,6 +40,10 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs, varargin)
 cfg.orderedstats = ft_getopt(cfg, 'orderedstats', 'no');
 cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');
 cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
+cfg.spmversion   = ft_getopt(cfg, 'spmversion', 'spm8');
+
+% ensure that the preferred SPM version is on the path
+ft_hastoolbox(cfg.spmversion, 1);
 
 if cfg.tail~=cfg.clustertail
   ft_error('cfg.tail and cfg.clustertail should be identical')
@@ -191,7 +195,7 @@ if needpos
     posclusobs = posclusobs(cfg.inside);
     
   else
-    if 0
+    if false
       posclusobs = findcluster(reshape(postailobs, [cfg.dim,1]),cfg.chancmbneighbstructmat,cfg.chancmbneighbselmat,cfg.minnbchan);
     else
       posclusobs = findcluster(reshape(postailobs, [cfg.dim,1]),channeighbstructmat,cfg.minnbchan);
@@ -202,7 +206,7 @@ if needpos
   fprintf('found %d positive clusters in observed data\n', Nobspos);
   
 end % if needpos
-if needneg,
+if needneg
   
   if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
@@ -222,7 +226,7 @@ if needneg,
     negclusobs = negclusobs(cfg.inside);
     
   else
-    if 0
+    if false
       negclusobs = findcluster(reshape(negtailobs, [cfg.dim,1]),cfg.chancmbneighbstructmat,cfg.chancmbneighbselmat,cfg.minnbchan);
     else
       negclusobs = findcluster(reshape(negtailobs, [cfg.dim,1]),channeighbstructmat,cfg.minnbchan);

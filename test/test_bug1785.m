@@ -19,7 +19,7 @@ elec2 = ft_read_sens(filename{2}, 'fileformat', 'asa_elc');
 elec3 = ft_read_sens(filename{3}, 'fileformat', 'asa_elc');
 
 % the fourth file turns out not to be an ASA file format, but a custom file format
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1785#c4
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1785#c4
 
 % elec4 = ft_read_sens(filename{4}, 'fileformat', 'asa_elc');
 

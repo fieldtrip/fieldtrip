@@ -6,7 +6,7 @@ function [index] = ft_documentationindex(filename)
 % http://www.fieldtriptoolboxorg/reference/index where the output of this
 % function can be found.
 %
-% See FT_DOCUMENTATIONREFERENCE
+% See also FT_DOCUMENTATIONREFERENCE
 
 % Copyright (C) 2008-2012, Robert Oostenveld
 %
