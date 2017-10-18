@@ -186,12 +186,17 @@ if isempty(cfg.commentpos)
   end
 end
 
-% the user can either specify a single group of channels for highlighting (all in the
-% same style), or multiple groups with a different style for each group. The latter
-% is used by ft_clusterplot.
-if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ~(iscell(cfg.highlightchannel{1}) || isnumeric(cfg.highlightchannel{1}))
+% the user can either specify a single group of channels for highlighting
+% which are all to be plotted in the same style, or multiple groups with a
+% different style for each group. The latter is used by ft_clusterplot.
+if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ~iscell(cfg.highlightchannel{1}) 
+  % it is a single cell-array with channels names, e.g. {'C1', 'Cz', 'C2'}
+  cfg.highlightchannel = {cfg.highlightchannel};
+elseif isnumeric(cfg.highlightchannel)
+  % it is a numeric selection of channels, e.g. [1 2 3 4]
   cfg.highlightchannel = {cfg.highlightchannel};
 elseif ischar(cfg.highlightchannel)
+  % it is a single channel or channel group, e.g. 'all'
   cfg.highlightchannel = {{cfg.highlightchannel}};
 end
 if ~iscell(cfg.highlight)
