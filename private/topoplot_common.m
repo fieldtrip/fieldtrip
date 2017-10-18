@@ -189,13 +189,13 @@ end
 % the user can either specify a single group of channels for highlighting (all in the
 % same style), or multiple groups with a different style for each group. The latter
 % is used by ft_clusterplot.
-if ~iscell(cfg.highlight)
-  cfg.highlight = {cfg.highlight};
-end
-if iscell(cfg.highlightchannel) && ~(iscell(cfg.highlightchannel{1}) || isnumeric(cfg.highlightchannel{1}))
+if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ~(iscell(cfg.highlightchannel{1}) || isnumeric(cfg.highlightchannel{1}))
   cfg.highlightchannel = {cfg.highlightchannel};
 elseif ischar(cfg.highlightchannel)
   cfg.highlightchannel = {{cfg.highlightchannel}};
+end
+if ~iscell(cfg.highlight)
+  cfg.highlight = {cfg.highlight};
 end
 if ~iscell(cfg.highlightsymbol)
   cfg.highlightsymbol = {cfg.highlightsymbol};
@@ -209,14 +209,22 @@ end
 if ~iscell(cfg.highlightfontsize)
   cfg.highlightfontsize = {cfg.highlightfontsize};
 end
-% then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
+% make sure all cell-arrays for options are sufficiently long
 ncellhigh = length(cfg.highlightchannel);
-if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
-if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [0 0 0];   end
-if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = 6;         end
-if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = 8;         end
+if length(cfg.highlight)          < ncellhigh,   cfg.highlight{ncellhigh}          = [];  end
+if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = [];  end
+if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [];  end
+if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = [];  end
+if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = [];  end
+% make sure all cell-arrays for options are not too long
+cfg.highlight         (ncellhigh+1:end) = [];
+cfg.highlightsymbol   (ncellhigh+1:end) = [];
+cfg.highlightcolor    (ncellhigh+1:end) = [];
+cfg.highlightsize     (ncellhigh+1:end) = [];
+cfg.highlightfontsize (ncellhigh+1:end) = [];
 % then default all empty cells
 for icell = 1:ncellhigh
+  if isempty(cfg.highlight{icell}),          cfg.highlight{icell} = 'on';          end
   if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
   if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
   if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
@@ -766,9 +774,9 @@ end
 % Write comment
 if ~strcmp(cfg.comment, 'no')
   if strcmp(cfg.commentpos, 'title')
-    title(cfg.comment, 'FontSize', cfg.fontsize);
+    title(comment, 'FontSize', cfg.fontsize);
   else
-    ft_plot_text(x_comment, y_comment, cfg.comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
+    ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
   end
 end
 
