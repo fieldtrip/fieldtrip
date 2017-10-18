@@ -8,6 +8,7 @@ function test_bug1502
 % this test script should be explicit about ft_default
 global ft_default
 ft_default = [];
+ft_default.checkconfig = 'pedantic';
 
 cfg   = [];
 cfg.a = 1;
