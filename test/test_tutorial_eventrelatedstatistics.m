@@ -6,9 +6,6 @@ function test_tutorial_eventrelatedstatistics
 % TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
 % TEST ft_topoplotER ft_clusterplot
 
-global ft_default
-ft_default.feedback = 'no';
-
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedstatistics/ERF_orig.mat'));
 
 % Tutorial update on 3 Feb: no longer give grandaverage inarg to
