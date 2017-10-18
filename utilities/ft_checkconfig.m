@@ -198,7 +198,13 @@ if ~isempty(allowed)
   fieldsused = fieldnames(cfg);
   [c, i] = setdiff(fieldsused, allowed);
   if ~isempty(c)
-    ft_error('The field cfg.%s is not allowed\n', c{1});
+    if silent
+      % don't mention it
+    elseif loose
+      ft_warning('The field cfg.%s is not allowed\n', c{1});
+    elseif pedantic
+      ft_error('The field cfg.%s is not allowed\n', c{1});
+    end
   end
 end
 

@@ -7,9 +7,6 @@ function test_tutorial_clusterpermutationfreq(dataset, datadir)
 % TEST ft_freqanalysis ft_multiplotTFR ft_singleplotTFR ft_freqstatistics
 % TEST ft_topoplotTFR ft_clustTFRplot ft_megplanar ft_combineplanar
 
-global ft_default;
-ft_default.feedback = 'no';
-
 if nargin==0
   dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
   datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_freq');
