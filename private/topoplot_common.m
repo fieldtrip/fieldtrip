@@ -706,47 +706,51 @@ for icell = 1:length(cfg.highlight)
 end % for icell
 
 % For Markers (all channels)
-cfg = ft_checkopt(cfg, 'marker', {}, {'on', 'off', 'labels', 'numbers'});
-if ~strcmp(cfg.marker, 'off')
-  channelsToMark = 1:length(data.label);
-  channelsToHighlight = [];
-  for icell = 1:length(cfg.highlight)
-    if ~strcmp(cfg.highlight{icell}, 'off')
-      channelsToHighlight = [channelsToHighlight; match_str(data.label, cfg.highlightchannel{icell})];
+switch cfg.marker
+  case {'off', 'no'}
+    % do not show the markers
+  case {'on', 'labels', 'numbers'}
+    channelsToMark = 1:length(data.label);
+    channelsToHighlight = [];
+    for icell = 1:length(cfg.highlight)
+      if ~strcmp(cfg.highlight{icell}, 'off')
+        channelsToHighlight = [channelsToHighlight; match_str(data.label, cfg.highlightchannel{icell})];
+      end
     end
-  end
-  if strcmp(cfg.interpolatenan, 'no')
-    channelsNotMark = channelsToHighlight;
-  else
-    channelsNotMark = union(find(isnan(dat)), channelsToHighlight);
-  end
-  channelsToMark(channelsNotMark) = [];
-  [dum, layoutindex] = match_str(ft_channelselection(channelsToMark, data.label), cfg.layout.label);
-  templay = [];
-  templay.outline = cfg.layout.outline;
-  templay.mask    = cfg.layout.mask;
-  templay.pos     = cfg.layout.pos(layoutindex,:);
-  templay.width   = cfg.layout.width(layoutindex);
-  templay.height  = cfg.layout.height(layoutindex);
-  templay.label   = cfg.layout.label(layoutindex);
-  if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
-    labelflg = 1;
-  else
-    labelflg = 0;
-  end
-  if strcmp(cfg.marker, 'numbers')
-    for ichan = 1:length(layoutindex)
-      templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
+    if strcmp(cfg.interpolatenan, 'no')
+      channelsNotMark = channelsToHighlight;
+    else
+      channelsNotMark = union(find(isnan(dat)), channelsToHighlight);
     end
-  end
-  ft_plot_lay(templay, 'box', 'no', 'label',labelflg, 'point', ~labelflg, ...
-    'pointsymbol',  cfg.markersymbol, ...
-    'pointcolor',   cfg.markercolor, ...
-    'pointsize',    cfg.markersize, ...
-    'fontsize',     cfg.markerfontsize, ...
-    'labeloffset',  cfg.labeloffset, ...
-    'labelalignh', 'center', ...
-    'labelalignv', 'middle');
+    channelsToMark(channelsNotMark) = [];
+    [dum, layoutindex] = match_str(ft_channelselection(channelsToMark, data.label), cfg.layout.label);
+    templay = [];
+    templay.outline = cfg.layout.outline;
+    templay.mask    = cfg.layout.mask;
+    templay.pos     = cfg.layout.pos(layoutindex,:);
+    templay.width   = cfg.layout.width(layoutindex);
+    templay.height  = cfg.layout.height(layoutindex);
+    templay.label   = cfg.layout.label(layoutindex);
+    if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
+      labelflg = 1;
+    else
+      labelflg = 0;
+    end
+    if strcmp(cfg.marker, 'numbers')
+      for ichan = 1:length(layoutindex)
+        templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
+      end
+    end
+    ft_plot_lay(templay, 'box', 'no', 'label',labelflg, 'point', ~labelflg, ...
+      'pointsymbol',  cfg.markersymbol, ...
+      'pointcolor',   cfg.markercolor, ...
+      'pointsize',    cfg.markersize, ...
+      'fontsize',     cfg.markerfontsize, ...
+      'labeloffset',  cfg.labeloffset, ...
+      'labelalignh', 'center', ...
+      'labelalignv', 'middle');
+  otherwise
+    ft_error('incorrect value for cfg.marker');
 end
 
 if isfield(cfg, 'vector')
