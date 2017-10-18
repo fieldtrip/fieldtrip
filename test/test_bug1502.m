@@ -5,6 +5,10 @@ function test_bug1502
 
 % TEST ft_checkconfig
 
+% this test script should be explicit about ft_default
+global ft_default
+ft_default = [];
+
 cfg   = [];
 cfg.a = 1;
 cfg.b = 2;
