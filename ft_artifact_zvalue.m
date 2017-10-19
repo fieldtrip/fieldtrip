@@ -287,8 +287,8 @@ for trlop = 1:numtrl
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat,2);
-      sumsqr = sumsqr + sum(dat.^2,2);
+      sumval = sumval + nansum(dat,2);
+      sumsqr = sumsqr + nansum(dat.^2,2);
       numsmp = numsmp + size(dat,2);
     else
       % store per trial the sum and the sum-of-squares
@@ -318,8 +318,8 @@ for trlop = 1:numtrl
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat{trlop},2);
-      sumsqr = sumsqr + sum(dat{trlop}.^2,2);
+      sumval = sumval + nansum(dat{trlop},2);
+      sumsqr = sumsqr + nansum(dat{trlop}.^2,2);
       numsmp = numsmp + size(dat{trlop},2);
     else
       % store per trial the sum and the sum-of-squares
