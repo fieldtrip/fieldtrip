@@ -1,6 +1,6 @@
-function [stat] = ft_spike_jpsth(cfg,psth)
+function [stat] = ft_spike_jpsth(cfg, psth)
 
-% FT_spike_JPSTH computes the joint peristimulus histograms for spiketrains
+% FT_SPIKE_JPSTH computes the joint peristimulus histograms for spiketrains
 % and a shift predictor (for example see Aertsen et al. 1989).
 %
 % The shift predictor is computed in consecutive trials in a symmetric way.
@@ -16,7 +16,7 @@ function [stat] = ft_spike_jpsth(cfg,psth)
 %   [jpsth] = ft_spike_jpsth(cfg,psth)
 %
 % The input PSTH should be organised as the input from FT_SPIKE_PSTH,
-% FT_SPIKE_DENSITY or TIMELOCKANALYSIS containing a field PSTH.trial and
+% FT_SPIKE_DENSITY or FT_TIMELOCKANALYSIS containing a field PSTH.trial and
 % PSTH.time. In any case, one is expected to use cfg.keeptrials = 'yes' in
 % these functions.
 %
@@ -25,16 +25,13 @@ function [stat] = ft_spike_jpsth(cfg,psth)
 %                           output the normal stat. If 'shiftpredictor',
 %                           we compute the jpsth after shuffling subsequent
 %                           trials.
-%   cfg.normalization    = 'no' (default), or 'yes'.  If requested (see cfg.normalization), the joint
-%                           psth is normalized as in van Aertsen et al.
-%                           (1989). 
-%   cfg.channelcmb       =  Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
-%                           see FT_CHANNELCOMBINATION for details
+%   cfg.normalization    = 'no' (default), or 'yes'. If requested, the joint psth is normalized as in van Aertsen et al. (1989).
+%   cfg.channelcmb       =  Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}), see FT_CHANNELCOMBINATION for details
 %   cfg.trials           = 'all' (default) or numerical or logical array of to be selected trials.
-%   cfg.latency          = [begin end] in seconds, 'maxperiod' (default), 'prestim'(t<=0), or
-%                          'poststim' (t>=0).
-%   cfg.keeptrials       = 'yes' or 'no' (default).
+%   cfg.latency          = [begin end] in seconds, 'maxperiod' (default), 'prestim'(t<=0), or 'poststim' (t>=0)
+%   cfg.keeptrials       = 'yes' or 'no' (default)
 %
+% See also FT_SPIKE_PSTH
 
 % Copyright (C) 2010, Martin Vinck
 %
@@ -64,7 +61,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance psth
 ft_preamble trackconfig
 
 psth = ft_checkdata(psth, 'datatype', 'timelock', 'hastrials', 'yes', 'feedback', 'yes');
@@ -79,7 +76,7 @@ cfg.channelcmb     = ft_getopt(cfg,'channelcmb', 'all');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
-cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'method', 'char', {'jpsth', 'shiftpredictor'});
 cfg = ft_checkopt(cfg,'normalization', 'char', {'yes', 'no'});
@@ -139,82 +136,82 @@ chanSel = unique(cmbindx(:)); % this gets sorted ascending by default
 nChans  = length(chanSel);
 
 % preallocate avg in chan x chan format, this can take more memory, but its more intuitive
-if strcmp(cfg.keeptrials,'yes'), 
-  singleTrials = NaN(nTrials,nChans,nChans,nBins,nBins); 
+if strcmp(cfg.keeptrials,'yes')
+  singleTrials = NaN(nTrials,nChans,nChans,nBins,nBins);
   warning('storing single trials for jpsth is memory expensive, please check');
 end
 [out,varOut,dofOut] = deal(zeros(nChans,nChans,nBins,nBins));
 
 % compute the joint psth
-ft_progress('init', 'text',     'Please wait...');
+ft_progress('init', 'text', 'Please wait...');
 for iCmb = 1:nCmbs
   indxData1 = cmbindx(iCmb,1); % index for the data
   indxData2 = cmbindx(iCmb,2);
   indxOut1 = find(chanSel==indxData1); % this is in the order of the output
   indxOut2 = find(chanSel==indxData2);
-    
+  
   [ss,s,df]  = deal(zeros(nBins,nBins));
-    
+  
   % already compute the quantities to normalize the jpsth
   if strcmp(cfg.normalization,'yes')
     mean1    = squeeze(nanmean(psth.trial(:,indxData1,:))); % psth can contain nans
     mean2    = squeeze(nanmean(psth.trial(:,indxData2,:)))';
-    mean12   = mean1(:)*mean2(:)';    
+    mean12   = mean1(:)*mean2(:)';
     diff1    = nansum(diff(squeeze(psth.trial(:,indxData1,:)),[],1),1); % this is just to avoid rounding errors, as var gives these
     diff2    = nansum(diff(squeeze(psth.trial(:,indxData2,:)),[],1),1); % this is just to avoid rounding errors, as var gives these
     var1     = squeeze(nanvar(psth.trial(:,indxData1,:),1,1));
     var1(diff1==0) = 0;
     var2     = squeeze(nanvar(psth.trial(:,indxData2,:),1,1))';
-    var2(diff2==0) = 0;    
+    var2(diff2==0) = 0;
     var12    = var1(:)*var2(:)';
     var12(mean12==0) = 0;
   end
   
   for iTrial = 1:nTrials
-    ft_progress(iTrial/nTrials, 'Processing trial %d from %d for combination %d out of %d', iTrial, nTrials, iCmb, nCmbs);    
+    ft_progress(iTrial/nTrials, 'Processing trial %d from %d for combination %d out of %d', iTrial, nTrials, iCmb, nCmbs);
     psth1 = squeeze(psth.trial(iTrial,indxData1, :)); % first chan
     psth2 = squeeze(psth.trial(iTrial,indxData2, :)); % second chan
     isNum1 = double(~isnan(psth1));
     isNum2 = double(~isnan(psth2));
     
     switch cfg.method
-      case 'jpsth'        
-    
+      case 'jpsth'
+        
         % compute the 2-D product with the matrix multiplication
         jpsthTrial = psth1(:)*psth2(:)';
         dofTrial   = isNum1(:)*isNum2(:)';
-                  
+        
         % compute the sum and the squared sum (for the variance)
-        s(dofTrial>0)  = s(dofTrial>0)  + jpsthTrial(dofTrial>0); 
+        s(dofTrial>0)  = s(dofTrial>0)  + jpsthTrial(dofTrial>0);
         ss(dofTrial>0) = ss(dofTrial>0) + jpsthTrial(dofTrial>0).^2;
         df(dofTrial>0) = df(dofTrial>0) + dofTrial(dofTrial>0);
         jpsthTrial(dofTrial==0) = NaN;
-        if strcmp(cfg.keeptrials,'yes'),
-          singleTrials(iTrial,indxOut1,indxOut2,:,:) = jpsthTrial; 
-          singleTrials(iTrial,indxOut2,indxOut1,:,:) = jpsthTrial';           
+        if strcmp(cfg.keeptrials,'yes')
+          singleTrials(iTrial,indxOut1,indxOut2,:,:) = jpsthTrial;
+          singleTrials(iTrial,indxOut2,indxOut1,:,:) = jpsthTrial';
         end
-         
+        
       case 'shiftpredictor'
-   
+        
         if iTrial>1
           psth1Prev    = squeeze(psth.trial(iTrial-1,indxData1, :)); % first chan
-          psth2Prev    = squeeze(psth.trial(iTrial-1,indxData2, :)); % second chan          
+          psth2Prev    = squeeze(psth.trial(iTrial-1,indxData2, :)); % second chan
           isNum1Prev = double(~isnan(psth1Prev));
           isNum2Prev = double(~isnan(psth2Prev));
-    
+          
           jpsthTrial = nansum(cat(3,psth1(:)*psth2Prev(:)',psth1Prev(:)*psth2(:)'),3);
           dofTrial   = nansum(cat(3,isNum1(:)*isNum2Prev(:)',isNum1Prev(:)*isNum2(:)'),3);
-                              
+          
           s(dofTrial>0)     = s(dofTrial>0)   + jpsthTrial(dofTrial>0); % now dof goes times 2
-          ss(dofTrial>0)    = ss(dofTrial>0)  + jpsthTrial(dofTrial>0).^2;         
-          df(dofTrial>0)    = df(dofTrial>0) + dofTrial(dofTrial>0);                  
+          ss(dofTrial>0)    = ss(dofTrial>0)  + jpsthTrial(dofTrial>0).^2;
+          df(dofTrial>0)    = df(dofTrial>0) + dofTrial(dofTrial>0);
           jpsthTrial(dofTrial==0) = NaN;
           jpsthTrial = jpsthTrial./dofTrial; % normalize for having two combinations
-        
-          if strcmp(cfg.keeptrials,'yes'),
+          
+          if strcmp(cfg.keeptrials,'yes')
             singleTrials(iTrial,indxOut1,indxOut2,:,:) = jpsthTrial;
-            singleTrials(iTrial,indxOut2,indxOut1,:,:) = jpsthTrial';            
-          end          
+            singleTrials(iTrial,indxOut2,indxOut1,:,:) = jpsthTrial';
+          end
         end
     end
   end
@@ -227,19 +224,19 @@ for iCmb = 1:nCmbs
     m(var12==0)  = 0; % if variance is zero, we assume 0/0 = 0
   end
   m(df==0) = NaN; % no trials: must be a NaN
-
+  
   out(indxOut1,indxOut2,:,:)       = m;
   out(indxOut2,indxOut1,:,:)       = m';
-
+  
   v = (ss - s.^2./df)./(df-1);
   v(df<=1) = NaN;
   varOut(indxOut1,indxOut2,:,:)    = v;
-  varOut(indxOut2,indxOut1,:,:)    = v';               
+  varOut(indxOut2,indxOut1,:,:)    = v';
   
   dofOut(indxOut1,indxOut2,:,:)    = df;
   dofOut(indxOut2,indxOut1,:,:)    = df';
   
-end
+end % for iCmb
 ft_progress('close')
 
 % collect the results
@@ -251,8 +248,8 @@ end
 stat.var        = varOut;
 stat.dof        = df;
 stat.time       = psth.time;
-stat.psth       = psth.avg(chanSel,:);
-stat.label      = psth.label(chanSel); % keep this as reference for JPSTH.avg  
+stat.psth       = shiftdim(mean(psth.trial(:,chanSel,:), 1), 1); % the input is single-trials, compute the mean over selected trials
+stat.label      = psth.label(chanSel); % keep this as reference for JPSTH.avg
 if (strcmp(cfg.keeptrials,'yes'))
   stat.trial = singleTrials;
   stat.dimord = 'rpt_time_time_chan_chan';
@@ -262,7 +259,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous psth
-ft_postamble history jpsth
-
+ft_postamble previous   psth
+ft_postamble provenance stat
+ft_postamble history    stat

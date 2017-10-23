@@ -48,7 +48,7 @@ vol2 = tryrmsubfield(vol2, 'bnd.cfg');
 vol  = ft_convert_units(vol, 'mm');
 vol2 = ft_convert_units(vol2,'mm');
 
-assert(identical(vol,vol2,'abstol',0.0001),'The headmodel does not match the headmodel stored on the ftp site.');
+assert(isalmostequal(vol,vol2,'abstol',0.0001),'The headmodel does not match the headmodel stored on the ftp site.');
 
 %
 

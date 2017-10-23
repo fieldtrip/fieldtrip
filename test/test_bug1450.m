@@ -3,7 +3,6 @@ function test_bug1450
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1450
 % TEST mergeconfig
 
 % ft_checkconfig used to be responsible for mergeconfig, but on 19-10-2015
@@ -23,6 +22,9 @@ ft_default.sub.sub.field3 = 3;
 ft_default.sub.sub.sub.field1 = 1;
 ft_default.sub.sub.sub.field2 = 2;
 ft_default.sub.sub.sub.field3 = 3;
+ft_default.sub.sub.sub.sub(1).field1 = 1.1;
+ft_default.sub.sub.sub.sub(2).field1 = 1.2;
+ft_default.sub.sub.sub.sub(3).field1 = 1.3;
 
 cfg = [];
 cfg = mergeconfig(cfg, ft_default);
@@ -57,3 +59,9 @@ cfg.sub.sub.sub.field1 = 1;
 cfg = mergeconfig(cfg, ft_default);
 % do the same test, but now three levels deep
 assert(isequal(cfg, ft_default));
+
+cfg = [];
+cfg.sub.sub.sub.sub.field2 = 2;
+cfg = mergeconfig(cfg, ft_default);
+% should be concatenated
+assert(numel(cfg.sub.sub.sub.sub)==4);

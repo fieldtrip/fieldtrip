@@ -6,11 +6,6 @@ function failed_shared_virtual_channels
 % TEST test_shared_virtual_channels
 % TEST ft_timelockanalysis ft_sourceanalysis ft_channelselection ft_databrowser
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
-
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/hdm.mat'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/source_diff'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/source_coh_lft'));
@@ -19,12 +14,12 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extend
 [maxval, maxcohindx] = max(source_coh_lft.avg.coh);
 source_coh_lft.pos(maxcohindx, :)
 
-assert(identical(source_coh_lft.pos(maxcohindx, :), [3.2000   -0.6000   7.4000], 'reltol', 0.001), 'coherence peak location not what it used to be!');
+assert(isalmostequal(source_coh_lft.pos(maxcohindx, :), [3.2000   -0.6000   7.4000], 'reltol', 0.001), 'coherence peak location not what it used to be!');
 
 [maxval, maxpowindx] = max(source_diff.avg.pow);
 source_diff.pos(maxpowindx, :)
 
-assert(identical(source_diff.pos(maxpowindx, :), [0.4000   -8.8000    2.4000], 'reltol', 0.001), 'gamma power peak location not what it used to be!');
+assert(isalmostequal(source_diff.pos(maxpowindx, :), [0.4000   -8.8000    2.4000], 'reltol', 0.001), 'gamma power peak location not what it used to be!');
 
 cfg                   = [];
 cfg.covariance        = 'yes';

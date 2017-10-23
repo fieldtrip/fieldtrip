@@ -10,7 +10,7 @@ if numel(fn)==1 && strcmp(fn{1}, 'dimord'),
   dim = dim{1};
 elseif numel(fn)>1,
   %data is source data new style
-  error('selparam only works with input data which is not of type ''source''');
+  ft_error('selparam only works with input data which is not of type ''source''');
 end
 ndim = length(dim);
 

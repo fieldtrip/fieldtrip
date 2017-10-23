@@ -3,7 +3,6 @@ function test_example_combineplanar_pipelineorder
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST test_example_combineplanar_pipelineorder
 % TEST ft_dipolesimulation ft_combineplanar ft_singleplotER ft_topoplotER
 
 % use FieldTrip defaults instead of personal defaults

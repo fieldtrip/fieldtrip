@@ -4,7 +4,7 @@ function failed_bug1794
 % WALLTIME 00:10:00
 
 % TEST test_bug1794
-% TEST ft_prepare_sourcemodel ft_convert_units ft_prepare_leadfield
+% TEST ft_prepare_sourcemodel ft_determine_units ft_convert_units ft_prepare_leadfield
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;

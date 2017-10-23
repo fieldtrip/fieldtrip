@@ -537,7 +537,7 @@ for funidx = 1:length(funparameters)
             end
             
             if ndims(fun)>3 || prod(dim)==size(fun,1)
-                if strcmp(dimord, 'pos_freq_time') | strcmp(dimord, 'pos_ori_time')
+                if strcmp(dimord, 'pos_freq_time') || strcmp(dimord, 'pos_ori_time')
                     % functional contains time-frequency representation
                     qi      = [1 1];
                     hasfreq = numel(functional.freq)>1;
@@ -753,7 +753,7 @@ for funidx = 1:length(funparameters)
             st.nmt.fun{funidx} = fun;
             clear fun;
             
-            if(hastime & ~hasfreq)
+            if(hastime && ~hasfreq)
                 % voxels x time
                 st.nmt.time = functional.time;
                 if(isfield(functional,'freqbands'))
@@ -762,19 +762,19 @@ for funidx = 1:length(funparameters)
                     st.nmt.freq = [0 inf];
                 end
                 
-                if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                if(~isfield(cfg,'time') && ~isfield(cfg,'vox'))
                     [~,peakind] = max(abs(st.nmt.fun{funidx}(:)));
                     [peakvox_idx,peaktime_idx] = ind2sub(size(st.nmt.fun{funidx}),peakind);
                     cfg.time_idx(1) = peaktime_idx;
                     cfg.vox_idx = peakvox_idx;
                 end
                 
-                if(~isfield(cfg,'time') & isfield(cfg,'vox'))
+                if(~isfield(cfg,'time') && isfield(cfg,'vox'))
                     [~,peaktime_idx] = max(abs(st.nmt.fun{funidx}(cfg.vox_idx,:)));
                     cfg.time_idx(1) = peaktime_idx;
                 end
                 
-                if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                if(isfield(cfg,'time') && ~isfield(cfg,'vox'))
                     [~,peakvox_idx] = max(abs(st.nmt.fun{funidx}(cfg.time_idx,:)));
                     cfg.vox_idx = peakvox_idx;
                 end
@@ -787,12 +787,12 @@ for funidx = 1:length(funparameters)
                 end
                 
                 cfg.freq_idx = [1 1];
-            elseif(hastime & hasfreq)
+            elseif(hastime && hasfreq)
                 % voxels x frequency x time
                 st.nmt.time = functional.time;
                 st.nmt.freq = functional.freqbands;
                 
-                if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                if(~isfield(cfg,'time') && ~isfield(cfg,'vox'))
                     [~,peakind] = max(abs(st.nmt.fun{funidx}(:)));
                     [peakvox_idx,peaktime_idx,peakfreq_idx] = ind2sub(size(st.nmt.fun{funidx}),peakind);
                     cfg.time_idx(1) = peaktime_idx;
@@ -800,12 +800,12 @@ for funidx = 1:length(funparameters)
                     cfg.vox_idx = peakvox_idx;
                 end
                 
-                if(~isfield(cfg,'time') & isfield(cfg,'vox'))
+                if(~isfield(cfg,'time') && isfield(cfg,'vox'))
                     [~,peaktime_idx] = max(abs(st.nmt.fun{funidx}(cfg.vox_idx,:)));
                     cfg.time_idx(1) = peaktime_idx;
                 end
                 
-                if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                if(isfield(cfg,'time') && ~isfield(cfg,'vox'))
                     [~,peakvox_idx] = max(abs(st.nmt.fun{funidx}(cfg.time_idx,:)));
                     cfg.vox_idx = peakvox_idx;
                 end

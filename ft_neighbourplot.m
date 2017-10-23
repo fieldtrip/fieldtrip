@@ -184,7 +184,7 @@ for i=1:length(cfg.neighbours)
       'UserData',         i,                        ...
       'ButtonDownFcn',    @showLabelInTitle);
   else
-    error('Channel coordinates are too high dimensional');
+    ft_error('Channel coordinates are too high dimensional');
   end
 end
 hold off;
@@ -347,7 +347,7 @@ elseif istrue(cfg.enableedit)
       'UserData',         lastSensId,                        ...
       'ButtonDownFcn',    @showLabelInTitle);
   else
-    error('Channel coordinates are too high dimensional');
+    ft_error('Channel coordinates are too high dimensional');
   end
 
   if cfg.verbose

@@ -104,7 +104,7 @@ switch method
     end
     datout      = fac*ifft(ifftshift(datfft,2),[],2);
   otherwise
-    error('unsupported resampling method');
+    ft_error('unsupported resampling method');
 end
 
 if ~strcmp(method, 'downsample')

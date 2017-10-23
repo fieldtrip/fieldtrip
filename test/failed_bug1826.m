@@ -231,7 +231,7 @@ end
 %     aa=horzcat(cfg.fsl.path,'-fslsplit ',DTIname,' splitted_',DTIname,'_ -t');
 %     unix(aa,'-echo')
 % else
-% end;
+% end
 %
 % bb='';
 % switch cfg.fsl.T2interp
@@ -241,12 +241,12 @@ end
 %             bb=horzcat(bb,' DTI_T1_space_spline_000',num2str(ii-1));
 %             aa=horzcat(cfg.fsl.path,'applywarp --in=splitted_',DTIname,'_000',num2str(ii-1),' --ref=',subjectT2aligned,' --out=DTI_T1_space_spline_000',num2str(ii-1),' --premat=DTI_T1Space.mat --interp=spline');
 %             unix(aa,'-echo')
-%         end;
+%         end
 %         for ii=11:size(DTI.anatomy,4);
 %             bb=horzcat(bb,' DTI_T1_space_spline_00',num2str(ii-1));
 %             aa=horzcat(cfg.fsl.path,'applywarp --in=splitted_',DTIname,'_00',num2str(ii-1),' --ref=',subjectT2aligned,' --out=DTI_T1_space_spline_00',num2str(ii-1),' --premat=DTI_T1Space.mat --interp=spline');
 %             unix(aa,'-echo')
-%         end;
+%         end
 %
 %         delete(horzcat('splitted_',DTIname,'*'))
 %
@@ -263,13 +263,13 @@ end
 %             bb=horzcat(bb,' DTI_T1_space_',cfg.fsl.DTIinterp,'_000',num2str(ii-1));
 %             aa=horzcat(cfg.fsl.path,'flirt -in splitted_',DTIname,'_000',num2str(ii-1),' -ref ',subjectT2aligned,' -out DTI_T1_space_',cfg.fsl.DTIinterp,'_000',num2str(ii-1),' -init DTI_T1Space.mat -applyxfm');
 %             unix(aa,'-echo')
-%         end;
+%         end
 %         for ii=11:size(DTI.anatomy,4);
 %
 %             bb=horzcat(bb,' DTI_T1_space_',cfg.fsl.DTIinterp,'_00',num2str(ii-1));
 %             aa=horzcat(cfg.fsl.path,'flirt -in splitted_',DTIname,'_00',num2str(ii-1),' -ref ',subjectT2aligned,' -out DTI_T1_space_',cfg.fsl.DTIinterp,'_00',num2str(ii-1),' -init DTI_T1Space.mat -applyxfm');
 %             unix(aa,'-echo')
-%         end;
+%         end
 %
 %         delete(horzcat('splitted_',DTIname,'*'))
 %         aa=horzcat(cfg.fsl.path,'fslmerge -t ',DTIname,'_T1_space',bb);

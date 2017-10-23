@@ -3,7 +3,6 @@ function test_bug2401
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2401
 % TEST ft_prepare_headmodel ft_prepare_vol_sens ft_read_vol read_ctf_hdm
 
 hdr = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));

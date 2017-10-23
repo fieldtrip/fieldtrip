@@ -3,7 +3,6 @@ function test_spm12
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_spm12
 % currently (Jan, 2017) SPM12 support for:
 % - ft_volumerealign
 % - ft_volumedownsample (incl smoothing)
@@ -31,7 +30,16 @@ mri2.coordsys = 'mni';
 
 %----------------------------- SPM12 -----------------------------------
 
+%ft_convert_coordsys: currently uses OldNorm sub-toolbox (i.e. SPM8)
+ft_hastoolbox('spm12',1)
+mri.coordsys = 'ctf';
+c2a = ft_convert_coordsys(mri, 'tal', 1);
+c2b = ft_convert_coordsys(mri, 'tal', 2);
+
+rmpath(spm('dir'));
+
 %ft_volumerealign: coregistration (used in human ecog tutorial)
+mri.coordsys = 'tal';
 cfg             = [];
 cfg.method      = 'spm';
 cfg.spmversion  = 'spm12';

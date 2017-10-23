@@ -11,7 +11,7 @@ elseif ori==-1
   % the normals are inward oriented
   nor = -nor;
 else
-  warning('cannot determine the orientation of the vertex normals');
+  ft_warning('cannot determine the orientation of the vertex normals');
 end
 pos = pos-move*nor; % moves pos inwards according to their normals
 end

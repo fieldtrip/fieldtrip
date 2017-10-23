@@ -3,7 +3,6 @@ function test_bug538
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug538
 % TEST ft_freqanalysis ft_connectivityanalysis ft_freqstatistics
 
 % this script addresses bug 538, i.e. incompatibility between

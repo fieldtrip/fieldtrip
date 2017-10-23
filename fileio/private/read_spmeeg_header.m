@@ -23,7 +23,7 @@ try
     D = load(filename, 'D');
     D = D.D;
 catch
-    error('File not found or wrong format.');
+    ft_error('File not found or wrong format.');
 end
 
 header = [];
@@ -62,7 +62,7 @@ elseif all(isfield(D, {'type', 'Nsamples', 'Fsample', 'timeOnset'})) % SPM8
     end
     
 else
-    error('Cannot recognize an SPM EEG header format');
+    ft_error('Cannot recognize an SPM EEG header format');
 end
     
 header.orig = D;

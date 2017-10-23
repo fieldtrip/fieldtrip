@@ -38,7 +38,7 @@ if ~isempty(datafile),
   fid = fopen(datafile, 'r', 'b');
   
   if fid == -1
-    error('Cannot open file %s', datafile);
+    ft_error('Cannot open file %s', datafile);
   end
   
   fseek(fid, 0, 'eof');
@@ -185,7 +185,7 @@ if ~isempty(datafile),
       fseek(fid, nbytes2 - 32, 'cof');
       
       if strcmp(header.process(np).step(ns).hdr.type, 'PDF_Weight_Table'),
-        warning('reading in weight table: no warranty that this is correct. it seems to work for the Glasgow 248-magnetometer system. if you have some code yourself, and/or would like to test it on your own data, please contact Jan-Mathijs');
+        ft_warning('reading in weight table: no warranty that this is correct. it seems to work for the Glasgow 248-magnetometer system. if you have some code yourself, and/or would like to test it on your own data, please contact Jan-Mathijs');
         tmpfp = ftell(fid);
         tmp   = fread(fid, 1, 'uint8');
         Nchan = fread(fid, 1, 'uint32');
@@ -233,7 +233,7 @@ end
 fid = fopen(configfile, 'r', 'b');
 
 if fid == -1
-  error('Cannot open config file');
+  ft_error('Cannot open config file');
 end
 
 header.config_data.version           = fread(fid, 1, 'uint16=>uint16');
@@ -499,7 +499,7 @@ for ch = 1:header.config_data.total_chans
     case 8%shorted
       header.config.channel_data(ch).device_data.reserved        = fread(fid, 32, 'uchar=>uchar')';
     otherwise
-      error('Unknown device type: %d\n', header.config.channel_data(ch).type);
+      ft_error('Unknown device type: %d\n', header.config.channel_data(ch).type);
   end
 end
 

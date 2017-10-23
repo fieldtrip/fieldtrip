@@ -122,7 +122,7 @@ if isempty(cfg.filetype) && ~isempty(cfg.filename)
     case '.dot'
       cfg.filetype = 'dot';
     otherwise
-      error('cannot determine filetype');
+      ft_error('cannot determine filetype');
   end
 end
 
@@ -247,7 +247,7 @@ else
     case 'html'
       pipeline2htmlfile(cfg, pipeline);
     otherwise
-      error('unsupported filetype');
+      ft_error('unsupported filetype');
   end
 end
 
@@ -272,7 +272,7 @@ if isfield(cfg, 'previous') && ~isempty(cfg.previous) && iscell(cfg.previous)
 elseif isfield(cfg, 'previous') && ~isempty(cfg.previous) && isstruct(cfg.previous)
   previous = walktree(cfg.previous);
 elseif isfield(cfg, 'previous') && ~isempty(cfg.previous)
-  error('unexpected content in cfg.previous');
+  ft_error('unexpected content in cfg.previous');
 else
   previous = {};
 end
@@ -309,7 +309,7 @@ if isfield(cfg, 'previous') && ~isempty(cfg.previous) && iscell(cfg.previous)
 elseif isfield(cfg, 'previous') && ~isempty(cfg.previous) && isstruct(cfg.previous)
   node.parent   = {ft_hash(cfg.previous)};
 elseif isfield(cfg, 'previous') && ~isempty(cfg.previous)
-  error('unexpected content in cfg.previous');
+  ft_error('unexpected content in cfg.previous');
 else
   node.parent   = {};
 end
@@ -387,7 +387,7 @@ layout    = layout(1:maxheight,1:maxwidth);
 fig = figure;
 hold on
 axis manual; % the axis should not change during the contruction of the arrows, otherwise the arrowheads will be distorted
-set(gca,'Units','normalized'); % use normalized units
+set(gca, 'Units', 'normalized'); % use normalized units
 set(gcf, 'ToolBar', 'none');
 axis([0 1 0 1])
 axis off;
@@ -405,7 +405,7 @@ for i=1:numel(pipeline)
   label = strrep(label, '_', '\_');
   
   % strip blank line if present and not needed
-  if strcmp(label{end},'')
+  if strcmp(label{end}, '')
     label(end) = [];
   end
   

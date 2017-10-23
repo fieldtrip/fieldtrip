@@ -98,12 +98,12 @@ if isequal(hassampleinfo, 'ifmakessense')
     hassampleinfo = 'yes'; % if it's already there, consider keeping it
     numsmp = data.sampleinfo(:,2)-data.sampleinfo(:,1)+1;
     for i=1:length(data.trial)
-      if size(data.trial{i},2)~=numsmp(i);
+      if size(data.trial{i},2)~=numsmp(i)
         % it does not make sense, so don't keep it
         hassampleinfo = 'no';
         % the actual removal will be done further down
-        warning('removing inconsistent sampleinfo');
-        break;
+        ft_warning('removing inconsistent sampleinfo');
+        break
       end
     end
   end
@@ -116,7 +116,7 @@ if isequal(hastrialinfo, 'ifmakessense')
     if size(data.trialinfo,1)~=numel(data.trial)
       % it does not make sense, so don't keep it
       hastrialinfo = 'no';
-      warning('removing inconsistent trialinfo');
+      ft_warning('removing inconsistent trialinfo');
     end
   end
 end
@@ -156,7 +156,7 @@ switch version
         end
       end
       if isnan(data.fsample)
-        warning('cannot determine sampling frequency');
+        ft_warning('cannot determine sampling frequency');
       end
     end
     
@@ -252,13 +252,13 @@ switch version
     
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for raw datatype', version);
+    ft_error('unsupported version "%s" for raw datatype', version);
 end
 
 
 % Numerical inaccuracies in the binary representations of floating point
 % values may accumulate. The following code corrects for small inaccuracies
-% in the time axes of the trials. See http://bugzilla.fcdonders.nl/show_bug.cgi?id=1390
+% in the time axes of the trials. See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1390
 data = fixtimeaxes(data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

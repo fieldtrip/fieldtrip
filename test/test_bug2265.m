@@ -3,7 +3,6 @@ function test_bug2265
 % MEM 2000mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2265
 % TEST ft_convert_units ft_prepare_sourcemodel
 
 % use FieldTrip defaults instead of personal defaults

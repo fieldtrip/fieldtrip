@@ -3,7 +3,6 @@ function test_tutorial_coherence
 % MEM 4500mb
 % WALLTIME 00:20:00
 
-% TEST test_tutorial_coherence
 % TEST ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 
 addpath(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence'));
@@ -251,7 +250,7 @@ trl = [];
 for j = 1:length(trig)-1
   trg1 = trig(j);
   trg2 = trig(j+1);
-  if trg1<=100 & trg2==2080,
+  if trg1<=100 && trg2==2080
     trlok      = [[indx(j)+1:1200:indx(j+1)-1200]' [indx(j)+1200:1200:indx(j+1)]'];
     trlok(:,3) = [0:-1200:-1200*(size(trlok,1)-1)]';
     trl        = [trl; trlok];

@@ -131,7 +131,7 @@ if ischar(grid)
   grid.leadfield = cell(dim);
   
   % ensure that it has geometrical units (probably mm)
-  grid = ft_convert_units(grid);
+  grid = ft_determine_units(grid);
   
   % Read leadfield, all channels, all locations, 3 orientations
   [lftdim, lft] = readBESAlft(lftfile);
@@ -163,7 +163,7 @@ if isfield(grid, 'leadfield')
   
   nchan = length(sens.label);
   if size(grid.leadfield{insideindx(1)},1)~=nchan
-    error('the number of channels does not match');
+    ft_error('the number of channels does not match');
   end
   
   headmodel = [];
@@ -180,7 +180,7 @@ if isfield(grid, 'leadfield')
     headmodel.unit = grid.unit;
   else
     % estimate the units
-    headmodel = ft_convert_units(headmodel);
+    headmodel = ft_determine_units(headmodel);
   end
   
   % these go in the same directory as the other nii files, they will be removed after use
@@ -279,24 +279,24 @@ elseif isfield(grid, 'filename')
   n4 = length(sens.label);        % desired channels
   
   % this is the montage for getting the the desired channels from the desired electrode positions
-  make4from3.labelorg = cell(n3,1);
+  make4from3.labelold = cell(n3,1);
   make4from3.labelnew = sens.label;
   make4from3.tra      = sens.tra;
   for i=1:n3
-    make4from3.labelorg{i} = sprintf('3to4_%d', i);
+    make4from3.labelold{i} = sprintf('3to4_%d', i);
   end
   
   % this is the montage for getting the computed channels from the computed electrode positions
-  make1from2.labelorg = cell(n2,1);
+  make1from2.labelold = cell(n2,1);
   make1from2.labelnew = inputvol.sens.label;
   make1from2.tra      = inputvol.sens.tra;
   for i=1:n2
-    make1from2.labelorg{i} = sprintf('2to1_%d', i);
+    make1from2.labelold{i} = sprintf('2to1_%d', i);
   end
   
   % this is the montage that maps the computed electrode positions to the desired positions
-  make3from2.labelorg = make1from2.labelorg; % the computed electrodes
-  make3from2.labelnew = make4from3.labelorg; % the desired electrodes
+  make3from2.labelold = make1from2.labelold; % the computed electrodes
+  make3from2.labelnew = make4from3.labelold; % the desired electrodes
   make3from2.tra      = tra;
   
   % the following should be read as a sequence of left-hand multiplications
@@ -305,7 +305,7 @@ elseif isfield(grid, 'filename')
   % or as             make4from3 * make3from2 * inv(make1from2)
   
   make4from1.tra      = make4from3.tra * make3from2.tra / make1from2.tra;
-  make4from1.labelorg = make1from2.labelnew;
+  make4from1.labelold = make1from2.labelnew;
   make4from1.labelnew = make4from3.labelnew;
   
   sens = ft_apply_montage(inputvol.sens, make4from1, 'keepunused', 'no');

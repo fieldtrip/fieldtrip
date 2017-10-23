@@ -50,7 +50,7 @@ function [varargout] = ndgrid(varargin)
 % $Id$
 
 if nargin==0
-  error('MATLAB:ndgrid:NotEnoughInputs', 'Not enough input arguments.');
+  ft_error('MATLAB:ndgrid:NotEnoughInputs', 'Not enough input arguments.');
 end
 if nargin==1, varargin = repmat(varargin,[1 max(nargout,2)]); end
 
@@ -117,7 +117,7 @@ case 5
   varargout{4} = xx(ones1, ones2, ones3, :,ones5);
   varargout{5} = yy(ones1, ones2, ones3, :,ones5);
 otherwise
-  error('this version of ndgrid supports inputs up to 5 dimensions');
+  ft_error('this version of ndgrid supports inputs up to 5 dimensions');
   %call the ndgrid from elmat
   %FIXME this has to be done
 end

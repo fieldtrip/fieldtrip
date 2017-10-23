@@ -3,7 +3,6 @@ function test_old_ft_singleplotTFR
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_ft_singleplotTFR
 
 % this script tests the functionality of ft_singleplotTFR with respect to the 
 % different input datatypes. no other functionality is tested.
@@ -19,10 +18,7 @@ data.label{2} = 'FREE2';
 data.label{3} = 'FREE3';
 data.label{4} = 'FREE4';
 
-cfg = [];
-cfg.channel = 'Pz';
-
-%create frequency-data
+% create frequency-data
 cfgf = [];
 cfgf.method = 'mtmconvol';
 cfgf.taper  = 'hanning';
@@ -33,10 +29,21 @@ cfgf.foi    = [10 20 30];
 cfgf.t_ftimwin = [0.5 0.5 0.5];
 freq = ft_freqanalysis(cfgf, data);
 
-%plot frequency-data
+% plot frequency-data
+cfg = [];
+cfg.channel = 'Pz';
 ft_singleplotTFR(cfg, freq);
 
-%create connectivity-data
+cfg = [];
+cfg.channel = 'all';
+cfg.layout = 'elec1005';
+cfg.highlight = 'labels';
+cfg.highlightchannel = {'Cz'};
+cfg.markers = 'numbers';
+ft_topoplotTFR(cfg, freq);
+
+
+% create connectivity-data
 cfgf.output = 'fourier';
 cfgf.trials = 1:10;
 freqx = ft_freqanalysis(cfgf, data);
@@ -45,14 +52,42 @@ cfgc2 = [];
 cfgc2.method = 'coh';
 coh   = ft_connectivityanalysis(cfgc2, freqx);
 
-%plot connectivity-data
+% plot connectivity-data
+cfg = [];
+cfg.channel = 'Pz';
 cfg.parameter = 'cohspctrm';
 cfg.refchannel = 'Cz';
-figure;ft_singleplotTFR(cfg, coh);
+ft_singleplotTFR(cfg, coh);
 
-%create connectivity-data with sparse linear indexing
+cfg = [];
+cfg.channel = 'all';
+cfg.parameter = 'cohspctrm';
+% cfg.refchannel = 'Cz';
+cfg.refchannel = 'gui';
+cfg.layout = 'elec1005';
+ft_multiplotTFR(cfg, coh);
+
+
+% create connectivity-data with sparse linear indexing
 cfgc2.channelcmb = [repmat({'Cz'},[numel(freqx.label)-1 1]) setdiff(freqx.label,'Cz')];
 coh2  = ft_connectivityanalysis(cfgc2, freqx);
 
-%plot
-figure;ft_singleplotTFR(cfg, coh2);
+% plot
+cfg = [];
+cfg.channel = 'Pz';
+cfg.parameter = 'cohspctrm';
+cfg.refchannel = 'Cz';
+ft_singleplotTFR(cfg, coh2);
+
+cfg = [];
+cfg.channel = 'all';
+cfg.parameter = 'cohspctrm';
+% cfg.refchannel = 'Cz';
+cfg.refchannel = 'gui';
+cfg.layout = 'elec1005';
+ft_multiplotTFR(cfg, coh2);
+
+
+%%
+
+cfg.layout = 'elec1005'

@@ -12,7 +12,7 @@ for i=1:numel(fn)
     case 'double'
       fv{i} = num2str(val);
     otherwise
-      error('class %s is not supported\n', type(val));
+      ft_error('class %s is not supported\n', type(val));
   end
 end
 f = cat(1, fn', fv');

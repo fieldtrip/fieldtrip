@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = lmoutr(varargin)
 
 % LMOUTR computes the la/mu parameters of a point projected to a triangle
 %

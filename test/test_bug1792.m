@@ -6,7 +6,6 @@ function test_bug1792
 % this script should not be included in the regression test (yet)
 return
 
-% TEST test_bug1792
 % TEST ft_realtime_headlocalizer
 
 fieldtripdir = mfilename('fullpath');

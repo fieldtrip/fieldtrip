@@ -58,7 +58,7 @@ elseif ismac || isunix
 end
 
 % if ~isMexv6 && ~mexWarning
-%   warning('Reading Neuralynx CSC files is faster if you install the MATLAB importer mex files, see http://neuralynx.com/research_software/file_converters_and_utilities/');
+%   ft_warning('Reading Neuralynx CSC files is faster if you install the MATLAB importer mex files, see http://neuralynx.com/research_software/file_converters_and_utilities/');
 %   mexWarning = true;
 % end
 
@@ -111,7 +111,7 @@ if NRecords>0
       % set to the correct position
       status = fseek(fid, headersize + (k-1)*recordsize, 'bof');
       if status~=0
-        error('cannot jump to the requested record');
+        ft_error('cannot jump to the requested record');
       end
       
       % read a single continuous data record
@@ -133,7 +133,7 @@ if NRecords>0
   % explain the jump (which is always > one block)
   Fs       = mode(double(SampFreq));
   if abs(Fs/hdr.SamplingFrequency-1)>0.01
-    warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
+    ft_warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
       hdr.SamplingFrequency, Fs);
     
     % check which one was correct
@@ -141,7 +141,7 @@ if NRecords>0
     fsEst = 1e6./mode(d);
     indx = nearest([Fs hdr.SamplingFrequency], fsEst);
     if indx==1
-      warning('correcting the header frequency from %2.2f to %2.2f', hdr.SamplingFrequency, Fs);
+      ft_warning('correcting the header frequency from %2.2f to %2.2f', hdr.SamplingFrequency, Fs);
       hdr.SamplingFrequency = Fs;
     end
   end
@@ -165,7 +165,7 @@ if NRecords>0
   ts_range_predicted = (NRecords-1)*512*gapCorrectedTimeStampPerSample;
   ts_range_observed  = double(tsE-ts1);
   if abs(ts_range_predicted-ts_range_observed)>minJump
-    warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings',...
+    ft_warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings',...
       abs(ts_range_predicted-ts_range_observed) );
   end
   
@@ -177,9 +177,9 @@ end
 if begrecord==0 && endrecord==0
   % only read the header
 elseif begrecord<1
-  error('cannot read before the first record');
+  ft_error('cannot read before the first record');
 elseif begrecord>NRecords
-  error('cannot read beyond the last record')
+  ft_error('cannot read beyond the last record')
 elseif endrecord>NRecords
   endrecord = NRecords;
 end
@@ -188,20 +188,20 @@ if begrecord>=1 && endrecord>=begrecord
   % leave numrecord information here for proper synchronisation
   numrecord    = (endrecord-begrecord+1);
   if isMexv6
-    % warning('Reading with neuralynx_v6 mex files');
+    % ft_warning('Reading with neuralynx_v6 mex files');
     [TimeStamp, ChanNumber, SampFreq, NumValidSamp, Samp] = Nlx2MatCSC(filename, READ_ALL, HEADER_NO, EXTRACT_RECORD_RANGE, [begrecord, endrecord]);
     TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output
   elseif isMexv3
-    % warning('Reading with neuralynx_v3 mex files');
+    % ft_warning('Reading with neuralynx_v3 mex files');
     % note that the indexing in the mex file is 0-offset (C++ style) rather than 1-offset (MATLAB style)
     [TimeStamp, ChanNumber, SampFreq, NumValidSamp, Samp] = Nlx2MatCSC_v3(filename, READ_ALL, HEADER_NO, EXTRACT_RECORD_RANGE, [begrecord-1, endrecord-1]);
     TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output
   else
-    % warning('Reading with native MATLAB code');
+    % ft_warning('Reading with native MATLAB code');
     % rewind to the first record to be read
     status = fseek(fid, headersize + (begrecord-1)*recordsize, 'bof');
     if status~=0
-      error('cannot jump to the requested record');
+      ft_error('cannot jump to the requested record');
     end
     
     TimeStamp    = zeros(1,numrecord,'uint64');

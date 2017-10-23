@@ -31,7 +31,7 @@ function grad = yokogawa2grad_new(hdr)
 % The following line is only a safety measure: No function of the toolbox
 % is actually called in this routine.
 if ~ft_hastoolbox('yokogawa_meg_reader')
-    error('cannot determine whether Yokogawa toolbox is present');
+    ft_error('cannot determine whether Yokogawa toolbox is present');
 end
 
 if isfield(hdr, 'label')

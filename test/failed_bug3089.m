@@ -1,13 +1,13 @@
-function failed_bug3089
+function test_bug3089
 
 % MEM 4000mb
 % WALLTIME 00:20:00
 
-% TEST test_bug3089
-% TEST ft_dipolefitting ft_compute_leadfield
+% TEST ft_dipolefitting ft_compute_leadfield ft_apply_transform
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/oddball1_mc_downsampled.fif');
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3089'));
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3089');
+addpath(datadir); % for the trialfuns
 
 %%
 
@@ -41,8 +41,8 @@ data_raw = ft_preprocessing(cfg);
 
 %% reject noisy trials
 
-if exist('data_clean.mat', 'file')
-  load('data_clean.mat')
+if exist(fullfile(datadir,'data_clean.mat'), 'file')
+  load(fullfile(datadir, 'data_clean.mat'));
 
 else
   cfg = [];
@@ -58,7 +58,7 @@ else
   cfg.channel = {'MEG*2', 'MEG*3'}; % MEGGRAD
   data_clean = ft_rejectvisual(cfg, data_clean);
   
-  save data_clean data_clean
+  save(fullfile(datadir,'data_clean'), 'data_clean');
 end
 
 %% reference eeg data
@@ -79,11 +79,11 @@ if false
   
 else
   montage = [];
-  montage.labelorg = ft_channelselection('EEG', data_clean.label);
+  montage.labelold = ft_channelselection('EEG', data_clean.label);
   montage.labelnew = ft_channelselection('EEG', data_clean.label);
-  montage.tra = eye(length(montage.labelnew), length(montage.labelorg));
+  montage.tra = eye(length(montage.labelnew), length(montage.labelold));
   for i=1:length(montage.labelnew)
-    montage.tra(i,:) = montage.tra(i,:) - ones(1,length(montage.labelorg))/length(montage.labelorg);
+    montage.tra(i,:) = montage.tra(i,:) - ones(1,length(montage.labelold))/length(montage.labelold);
   end
   data_all      = ft_apply_montage(data_clean, montage, 'keepunused', true, 'balancename', 'avgref');
   
@@ -103,7 +103,7 @@ end
 cfg = [];
 timelock_all = ft_timelockanalysis(cfg, data_all);
 
-save timelock_all timelock_all
+save(fullfile(datadir,'timelock_all'),'timelock_all');
 
 %%
 
@@ -126,12 +126,12 @@ cfg.covariance = 'yes';
 cfg.covariancewindow = [-0.2 0];
 timelock_cov = ft_timelockanalysis(cfg, data_all);
 
-save timelock_cov timelock_cov
+save(fullfile(datadir,'timelock_cov'),'timelock_cov');
 
 %% load headmodels
 
-load headmodel_eeg
-load headmodel_meg
+load(fullfile(datadir,'headmodel_eeg'));
+load(fullfile(datadir,'headmodel_meg'));
 
 %% convert units
 

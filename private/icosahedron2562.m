@@ -1,4 +1,4 @@
-function [pnt, tri] = icosahedron()
+function [pnt, tri] = icosahedron2562()
 
 % ICOSAHEDRON2562 creates a 4-fold refined icosahedron
 

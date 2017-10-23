@@ -192,7 +192,7 @@ if pertrial
   if isfield(cfg.artfctdef.zvalue, 'ntrial') && cfg.artfctdef.zvalue.ntrial>0
     pertrial = cfg.artfctdef.zvalue.ntrial;
   else
-    error('you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
+    ft_error('you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
   end
 end
 
@@ -209,7 +209,7 @@ else
   % check whether the value for trlpadding makes sense
   if cfg.artfctdef.zvalue.trlpadding > 0
     % negative trlpadding is allowed with in-memory data
-    error('you cannot use positive trlpadding with in-memory data');
+    ft_error('you cannot use positive trlpadding with in-memory data');
   end
   % check if the input data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
@@ -254,7 +254,7 @@ numsgn        = length(sgnind);
 thresholdsum  = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
 
 if numsgn<1
-  error('no channels selected');
+  ft_error('no channels selected');
 end
 
 % read the data and apply preprocessing options
@@ -267,9 +267,9 @@ for trlop = 1:numtrl
   
   if strcmp(cfg.memory, 'low') % store nothing in memory
     if hasdata
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
     else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
@@ -287,8 +287,8 @@ for trlop = 1:numtrl
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat,2);
-      sumsqr = sumsqr + sum(dat.^2,2);
+      sumval = sumval + nansum(dat,2);
+      sumsqr = sumsqr + nansum(dat.^2,2);
       numsmp = numsmp + size(dat,2);
     else
       % store per trial the sum and the sum-of-squares
@@ -298,9 +298,9 @@ for trlop = 1:numtrl
     end
   else % store all data in memory, saves computation time
     if hasdata
-      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'skipcheckdata', 1);
+      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
     else
-      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat{trlop},2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     
@@ -318,8 +318,8 @@ for trlop = 1:numtrl
     
     if ~pertrial
       % accumulate the sum and the sum-of-squares
-      sumval = sumval + sum(dat{trlop},2);
-      sumsqr = sumsqr + sum(dat{trlop}.^2,2);
+      sumval = sumval + nansum(dat{trlop},2);
+      sumsqr = sumsqr + nansum(dat{trlop}.^2,2);
       numsmp = numsmp + size(dat{trlop},2);
     else
       % store per trial the sum and the sum-of-squares
@@ -361,9 +361,9 @@ for trlop = 1:numtrl
   if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*
     fprintf('.');
     if hasdata
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
     else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'), 'dataformat', cfg.dataformat);
+      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
     zmax{trlop}  = -inf + zeros(1,size(dat,2));
@@ -412,9 +412,9 @@ end
 %  for trlop = 1:numtrl
 %    fprintf('.');
 %    if hasdata
-%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
+%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    else
-%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous,'no'));
+%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', sgnind(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
 %    end
 %    dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel(sgnlop), hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
 %    % accumulate the sum and the sum-of-squares
@@ -572,7 +572,7 @@ artbeg = find(diff([0 artval])== 1);
 artend = find(diff([artval 0])==-1);
 artifact = [artbeg(:) artend(:)];
 
-if strcmp(cfg.artfctdef.zvalue.artfctpeak,'yes')
+if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
   cnt=1;
   shift=opt.trl(1,1)-1;
   for tt=1:opt.numtrl
@@ -623,7 +623,7 @@ opt = getappdata(h, 'opt');
 
 artval = cell(1,opt.numtrl);
 for trlop=1:opt.numtrl
-  if opt.thresholdsum,
+  if opt.thresholdsum
     % threshold the accumulated z-values
     artval{trlop} = opt.zsum{trlop}>opt.threshold;
   else
@@ -653,7 +653,7 @@ for trlop = find(opt.keep<0 & opt.trialok==1)
   % if the user specifies that the trial is not OK
   % reject the whole trial if there is no extra-threshold data,
   % otherwise use the artifact as found by the thresholding
-  if opt.thresholdsum && opt.keep(trlop)==-1,
+  if opt.thresholdsum && opt.keep(trlop)==-1
     % threshold the accumulated z-values
     artval{trlop} = opt.zsum{trlop}>opt.threshold;
   elseif opt.keep(trlop)==-1
@@ -711,7 +711,7 @@ function keyboard_cb(h, eventdata)
 % If a mouseclick was made, use that value. If not, determine the key that
 % corresponds to the uicontrol element that was activated.
 
-if isa(eventdata,'matlab.ui.eventdata.ActionData') % only the case when clicked with mouse
+if isa(eventdata, 'matlab.ui.eventdata.ActionData') % only the case when clicked with mouse
   curKey = get(h, 'userdata');
 elseif isa(eventdata, 'matlab.ui.eventdata.KeyData') % only when key was pressed
   if isempty(eventdata.Character) && any(strcmp(eventdata.Key, {'control', 'shift', 'alt', '0'}))
@@ -728,7 +728,7 @@ elseif isfield(eventdata, 'Key')  % only when key was pressed
 elseif isempty(eventdata) % matlab2012b returns an empty double upon a mouse click
   curKey = get(h, 'userdata');
 else
-  error('cannot process user input, please report this on http://bugzilla.fieldtriptoolbox.org including your MATLAB version');
+  ft_error('cannot process user input, please report this on http://bugzilla.fieldtriptoolbox.org including your MATLAB version');
 end
 
 h = getparent(h); % otherwise h is empty if isa [...].ActionData
@@ -942,9 +942,9 @@ else
 end
 
 if ~isempty(opt.data)
-  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+  data = ft_fetch_data(opt.data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
 else
-  data = ft_read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous,'no'));
+  data = ft_read_data(cfg.datafile,   'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'));
 end
 %data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
 str  = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{sgnind});
@@ -958,7 +958,7 @@ subplot(opt.h1);hold on;
 if isempty(get(opt.h1, 'children'))
   for k = 1:opt.numtrl
     xval = opt.trl(k,1):opt.trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};
@@ -975,7 +975,7 @@ boxhandle = findall(h1children, 'displayname', 'highlight');
 if isempty(boxhandle)
   % draw it
   xval = trl(opt.trlop,1):trl(opt.trlop,2);
-  if opt.thresholdsum,
+  if opt.thresholdsum
     yval = opt.zsum{opt.trlop};
   else
     yval = opt.zmax{opt.trlop};
@@ -984,7 +984,7 @@ if isempty(boxhandle)
 else
   % update it
   xval = trl(opt.trlop,1):trl(opt.trlop,2);
-  if opt.thresholdsum,
+  if opt.thresholdsum
     yval = opt.zsum{opt.trlop};
   else
     yval = opt.zmax{opt.trlop};
@@ -999,7 +999,7 @@ if isempty(thrhandle)
   % they have to be drawn
   for k = 1:opt.numtrl
     xval = trl(k,1):trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};
@@ -1013,7 +1013,7 @@ elseif ~isempty(thrhandle) && opt.updatethreshold
   % they can be updated
   for k = 1:opt.numtrl
     xval = trl(k,1):trl(k,2);
-    if opt.thresholdsum,
+    if opt.thresholdsum
       yval = opt.zsum{k};
     else
       yval = opt.zmax{k};

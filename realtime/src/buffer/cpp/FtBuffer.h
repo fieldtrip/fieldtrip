@@ -98,7 +98,7 @@ class FtBufferRequest {
 		m_def.command = GET_ERR;
 		m_def.bufsize = 0;
 
-		UINT32_T  wordSize = wordsize_from_type(dataType);
+		unsigned int wordSize = wordsize_from_type(dataType);
 		if (wordSize == 0) return false;
 
 		UINT32_T  dataSize = wordSize * numSamples * numChannels;
@@ -558,7 +558,7 @@ class FtSampleBlock {
 	protected:
 
 	UINT32_T datatype;
-	UINT32_T wordsize;
+	unsigned int wordsize;
 	datadef_t *ddef;
 	unsigned int sizeAlloc;
 	messagedef_t reqdef;

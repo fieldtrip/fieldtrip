@@ -5,8 +5,8 @@ function [volume, permutevec] = volumepermute(volume, permutevec)
 % See also VOLUMEFLIP
 
 % do a low-level check on the input data
-if ~isfield(volume, 'transform'), error('the input volume needs a transformation matrix'); end
-if ~isfield(volume, 'dim'),       error('the input volume needs a dim field');             end
+if ~isfield(volume, 'transform'), ft_error('the input volume needs a transformation matrix'); end
+if ~isfield(volume, 'dim'),       ft_error('the input volume needs a dim field');             end
 
 % define some variable locally
 T   = volume.transform;

@@ -3,8 +3,7 @@ function failed_bug2377b
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2377b
-% TEST ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens
+% TEST ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens ft_apply_transform
 
 [pnt, tri] = icosahedron162;
 
@@ -79,8 +78,8 @@ assert(isequal(tryrmfield(sens0a, 'tra'), tryrmfield(sens5a, 'tra')));
 %%
 
 montage = [];
-montage.labelorg = sens.label;
-montage.labelnew = montage.labelorg;
+montage.labelold = sens.label;
+montage.labelnew = montage.labelold;
 montage.tra = detrend(eye(nchan), 'constant');
 
 sens0b = ft_apply_montage(sens0, montage);

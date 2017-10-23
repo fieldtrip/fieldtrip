@@ -4,7 +4,6 @@ function test_pull348
 % WALLTIME 00:10:00
 %
 % TEST ft_componentanalysis 
-% TEST test_pull348
 % TEST bsscca
 
 % this function tests whether the bsscca method works ok in

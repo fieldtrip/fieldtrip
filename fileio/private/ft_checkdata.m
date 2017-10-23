@@ -1,25 +1,25 @@
 function [data] = ft_checkdata(data, varargin)
 
-% FT_CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether
-% the type of data strucure corresponds with the required data. If neccessary
-% and possible, this function will adjust the data structure to the input
-% requirements (e.g. change dimord, average over trials, convert inside from
-% index into logical).
+% FT_CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether the
+% type of data strucure corresponds with the required data. If neccessary and possible,
+% this function will adjust the data structure to the input requirements (e.g. change
+% dimord, average over trials, convert inside from index into logical).
 %
-% If the input data does NOT correspond to the requirements, this function
-% is supposed to give a elaborate warning message and if applicable point
-% the user to external documentation (link to website).
+% If the input data does NOT correspond to the requirements, this function will give a
+% warning message and if applicable point the user to external documentation (link to
+% website).
 %
 % Use as
 %   [data] = ft_checkdata(data, ...)
 %
 % Optional input arguments should be specified as key-value pairs and can include
 %   feedback           = yes, no
-%   datatype           = raw, freq, timelock, comp, spike, source,  dip, volume, segmentation, parcellation
+%   datatype           = raw, freq, timelock, comp, spike, source, mesh, dip, volume, segmentation, parcellation
 %   dimord             = any combination of time, freq, chan, refchan, rpt, subj, chancmb, rpttap, pos
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   inside             = logical, index
 %   ismeg              = yes, no
+%   iseeg              = yes, no
 %   isnirs             = yes, no
 %   hasunit            = yes, no
 %   hascoordsys        = yes, no
@@ -36,6 +36,8 @@ function [data] = ft_checkdata(data, varargin)
 % For some options you can specify multiple values, e.g.
 %   [data] = ft_checkdata(data, 'senstype', {'ctf151', 'ctf275'}), e.g. in megrealign
 %   [data] = ft_checkdata(data, 'datatype', {'timelock', 'freq'}), e.g. in sourceanalysis
+%
+% See also FT_DATATYPE_XXX for each of the respective data types.
 
 % Copyright (C) 2007-2015, Robert Oostenveld
 % Copyright (C) 2010-2012, Martin Vinck
@@ -66,6 +68,7 @@ function [data] = ft_checkdata(data, varargin)
 %   fixinside
 %   fixprecision
 %   fixvolume
+%   fixpos
 %   data2raw
 %   raw2data
 %   grid2transform
@@ -93,6 +96,7 @@ dtype                = ft_getopt(varargin, 'datatype'); % should not conflict wi
 dimord               = ft_getopt(varargin, 'dimord');
 stype                = ft_getopt(varargin, 'senstype'); % senstype is a function name which should not be masked
 ismeg                = ft_getopt(varargin, 'ismeg');
+iseeg                = ft_getopt(varargin, 'iseeg');
 isnirs               = ft_getopt(varargin, 'isnirs');
 inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'index'
 hastrials            = ft_getopt(varargin, 'hastrials');
@@ -112,7 +116,7 @@ hasbrain             = ft_getopt(varargin, 'hasbrain');
 % check whether people are using deprecated stuff
 depHastrialdef = ft_getopt(varargin, 'hastrialdef');
 if (~isempty(depHastrialdef))
-  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; use ''hassampleinfo'' instead');
+  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; please use ''hassampleinfo'' instead');
   hassampleinfo = depHastrialdef;
 end
 
@@ -133,46 +137,71 @@ ischan          = ft_datatype(data, 'chan');
 ismesh          = ft_datatype(data, 'mesh');
 % FIXME use the istrue function on ismeg and hasxxx options
 
-if ~isequal(feedback, 'no')
+if ~isequal(feedback, 'no') % can be 'yes' or 'text'
   if iscomp
     % it can be comp and raw/timelock/freq at the same time, therefore this has to go first
     nchan = size(data.topo,1);
     ncomp = size(data.topo,2);
-    fprintf('the input is component data with %d components and %d original channels\n', ncomp, nchan);
-  end
+    ft_info('the input is component data with %d components and %d original channels\n', ncomp, nchan);
+  end  % if iscomp
+  
+  if ismesh
+    % it can be comp and source at the same time, therefore this has to go first
+    data = fixpos(data);
+    npos = 0;
+    ntri = 0;
+    nhex = 0;
+    ntet = 0;
+    % the data can contain multiple surfaces
+    for i=1:numel(data)
+      npos = npos+size(data.pos,1);
+      if isfield(data, 'tri'), ntri = ntri+size(data.tri,1); end
+      if isfield(data, 'hex'), nhex = nhex+size(data.hex,1); end
+      if isfield(data, 'tet'), ntet = ntet+size(data.tet,1); end
+    end
+    if isfield(data,'tri')
+      ft_info('the input is mesh data with %d vertices and %d triangles\n', npos, ntri);
+    elseif isfield(data,'hex')
+      ft_info('the input is mesh data with %d vertices and %d hexahedrons\n', npos, nhex);
+    elseif isfield(data,'tet')
+      ft_info('the input is mesh data with %d vertices and %d tetrahedrons\n', npos, ntet);
+    else
+      ft_info('the input is mesh data with %d vertices', npos);
+    end
+  end % if ismesh
   
   if israw
     nchan = length(data.label);
     ntrial = length(data.trial);
-    fprintf('the input is raw data with %d channels and %d trials\n', nchan, ntrial);
+    ft_info('the input is raw data with %d channels and %d trials\n', nchan, ntrial);
   elseif istimelock
     nchan = length(data.label);
     ntime = length(data.time);
-    fprintf('the input is timelock data with %d channels and %d timebins\n', nchan, ntime);
+    ft_info('the input is timelock data with %d channels and %d timebins\n', nchan, ntime);
   elseif isfreq
     if isfield(data, 'label')
       nchan = length(data.label);
       nfreq = length(data.freq);
       if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
-      fprintf('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
+      ft_info('the input is freq data with %d channels, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
     elseif isfield(data, 'labelcmb')
       nchan = length(data.labelcmb);
       nfreq = length(data.freq);
       if isfield(data, 'time'), ntime = num2str(length(data.time)); else ntime = 'no'; end
-      fprintf('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
+      ft_info('the input is freq data with %d channel combinations, %d frequencybins and %s timebins\n', nchan, nfreq, ntime);
     else
-      error('cannot infer freq dimensions');
+      ft_error('cannot infer freq dimensions');
     end
   elseif isspike
     nchan  = length(data.label);
-    fprintf('the input is spike data with %d channels\n', nchan);
+    ft_info('the input is spike data with %d channels\n', nchan);
   elseif isvolume
     if issegmentation
       subtype = 'segmented volume';
     else
       subtype = 'volume';
     end
-    fprintf('the input is %s data with dimensions [%d %d %d]\n', subtype, data.dim(1), data.dim(2), data.dim(3));
+    ft_info('the input is %s data with dimensions [%d %d %d]\n', subtype, data.dim(1), data.dim(2), data.dim(3));
     clear subtype
   elseif issource
     data = fixpos(data); % ensure that positions are in pos, not in pnt
@@ -183,42 +212,25 @@ if ~isequal(feedback, 'no')
       subtype = 'source';
     end
     if isfield(data, 'dim')
-      fprintf('the input is %s data with %d brainordinates on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
-    elseif isfield(data, 'tri')
-      fprintf('the input is %s data with %d vertex positions and %d triangles\n', subtype, nsource, size(data.tri, 1));
+      ft_info('the input is %s data with %d brainordinates on a [%d %d %d] grid\n', subtype, nsource, data.dim(1), data.dim(2), data.dim(3));
     else
-      fprintf('the input is %s data with %d brainordinates\n', subtype, nsource);
+      ft_info('the input is %s data with %d brainordinates\n', subtype, nsource);
     end
     clear subtype
   elseif isdip
-    fprintf('the input is dipole data\n');
+    ft_info('the input is dipole data\n');
   elseif ismvar
-    fprintf('the input is mvar data\n');
+    ft_info('the input is mvar data\n');
   elseif isfreqmvar
-    fprintf('the input is freqmvar data\n');
+    ft_info('the input is freqmvar data\n');
   elseif ischan
     nchan = length(data.label);
     if isfield(data, 'brainordinate')
-      fprintf('the input is parcellated data with %d parcels\n', nchan);
+      ft_info('the input is parcellated data with %d parcels\n', nchan);
     else
-      fprintf('the input is chan data with %d channels\n', nchan);
+      ft_info('the input is chan data with %d channels\n', nchan);
     end
-  end
-elseif ismesh
-  data = fixpos(data);
-  if numel(data)==1
-    if isfield(data,'tri')
-      fprintf('the input is mesh data with %d vertices and %d triangles\n', size(data.pos,1), size(data.tri,1));
-    elseif isfield(data,'hex')
-      fprintf('the input is mesh data with %d vertices and %d hexahedrons\n', size(data.pos,1), size(data.hex,1));
-    elseif isfield(data,'tet')
-      fprintf('the input is mesh data with %d vertices and %d tetrahedrons\n', size(data.pos,1), size(data.tet,1));
-    else
-      fprintf('the input is mesh data with %d vertices', size(data.pos,1));
-    end
-  else
-    fprintf('the input is mesh data multiple surfaces\n');
-  end
+  end % if israw etc.
 end % give feedback
 
 if issource && isvolume
@@ -334,15 +346,24 @@ if ~isempty(dtype)
       issource = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'volume'}) && (ischan || istimelock || isfreq)
-      data = parcellated2source(data);
-      data = ft_datatype_volume(data);
-      ischan = 0;
+      if isfield(data, 'brainordinate')
+        data = parcellated2source(data);
+        data = ft_datatype_volume(data);
+      else
+        ft_error('cannot convert channel-level data to volumetric representation');
+      end
+      ischan = 0; istimelock = 0; isfreq = 0;
       isvolume = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'source'}) && (ischan || istimelock || isfreq)
-      data = parcellated2source(data);
-      data = ft_datatype_source(data);
-      ischan = 0;
+      if isfield(data, 'brainordinate')
+        data = parcellated2source(data);
+        data = ft_datatype_source(data);
+      else
+        data = chan2source(data);
+        data = ft_datatype_source(data);
+      end % converting channel data
+      ischan = 0; istimelock = 0; isfreq = 0;
       issource = 1;
       okflag = 1;
     elseif isequal(dtype(iCell), {'volume'}) && issource
@@ -381,19 +402,19 @@ if ~isempty(dtype)
       istimelock = 0;
       israw = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && israw
+    elseif isequal(dtype(iCell), {'comp'}) && israw  && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       israw = 0;
       iscomp = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && istimelock
+    elseif isequal(dtype(iCell), {'comp'}) && istimelock && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       istimelock = 0;
       iscomp = 1;
       okflag = 1;
-    elseif isequal(dtype(iCell), {'comp'}) && isfreq
+    elseif isequal(dtype(iCell), {'comp'}) && isfreq && iscomp
       data = keepfields(data, {'label', 'topo', 'topolabel', 'unmixing', 'elec', 'grad', 'cfg'}); % these are the only relevant fields
       data = ft_datatype_comp(data);
       isfreq = 0;
@@ -477,13 +498,18 @@ if ~isempty(dtype)
   
   if ~okflag
     % construct an error message
-    if length(dtype)>1
-      str = sprintf('%s, ', dtype{1:(end-2)});
-      str = sprintf('%s%s or %s', str, dtype{end-1}, dtype{end});
-    else
-      str = dtype{1};
+    typestr = printor(dtype, true);
+    helpfun = cell(size(dtype));
+    for i=1:numel(dtype)
+      helpfun{i} = sprintf('ft_datatype_%s', dtype{i});
     end
-    error('This function requires %s data as input.', str);
+    helpfun = helpfun(cellfun(@exist, helpfun)>0);
+    if ~isempty(helpfun)
+      helpstr = printor(helpfun);
+      ft_error('This function requires %s data as input, see %s.', typestr, helpstr);
+    else
+      ft_error('This function requires %s data as input.', typestr);
+    end
   end % if okflag
 end
 
@@ -500,13 +526,7 @@ if ~isempty(dimord)
   
   if ~okflag
     % construct an error message
-    if length(dimord)>1
-      str = sprintf('%s, ', dimord{1:(end-2)});
-      str = sprintf('%s%s or %s', str, dimord{end-1}, dimord{end});
-    else
-      str = dimord{1};
-    end
-    error('This function requires data with a dimord of %s.', str);
+    ft_error('This function requires data with a dimord of %s.', printor(dimord, true));
   end % if okflag
 end
 
@@ -524,17 +544,14 @@ if ~isempty(stype)
     else
       okflag = 0;
     end
+  else
+    % the data does not contain a sensor array
+    okflag = 0;
   end
   
   if ~okflag
     % construct an error message
-    if length(stype)>1
-      str = sprintf('%s, ', stype{1:(end-2)});
-      str = sprintf('%s%s or %s', str, stype{end-1}, stype{end});
-    else
-      str = stype{1};
-    end
-    error('This function requires %s data as input, but you are giving %s data.', str, ft_senstype(data));
+    ft_error('This function requires data with an %s sensor array.', printor(stype, true));
   end % if okflag
 end
 
@@ -546,9 +563,23 @@ if ~isempty(ismeg)
   end
   
   if ~okflag && isequal(ismeg, 'yes')
-    error('This function requires MEG data with a ''grad'' field');
+    ft_error('This function requires MEG data with a ''grad'' field');
   elseif ~okflag && isequal(ismeg, 'no')
-    error('This function should not be given MEG data with a ''grad'' field');
+    ft_error('This function should not be given MEG data with a ''grad'' field');
+  end % if okflag
+end
+
+if ~isempty(iseeg)
+  if isequal(iseeg, 'yes')
+    okflag = isfield(data, 'grad');
+  elseif isequal(iseeg, 'no')
+    okflag = ~isfield(data, 'grad');
+  end
+  
+  if ~okflag && isequal(iseeg, 'yes')
+    ft_error('This function requires EEG data with an ''elec'' field');
+  elseif ~okflag && isequal(iseeg, 'no')
+    ft_error('This function should not be given EEG data with an ''elec'' field');
   end % if okflag
 end
 
@@ -560,15 +591,15 @@ if ~isempty(isnirs)
   end
   
   if ~okflag && isequal(isnirs, 'yes')
-    error('This function requires NIRS data with an ''opto'' field');
+    ft_error('This function requires NIRS data with an ''opto'' field');
   elseif ~okflag && isequal(isnirs, 'no')
-    error('This function should not be given NIRS data with an ''opto'' field');
+    ft_error('This function should not be given NIRS data with an ''opto'' field');
   end % if okflag
 end
 
 if ~isempty(inside)
   if strcmp(inside, 'index')
-    warning('the indexed representation of inside/outside source locations is deprecated');
+    ft_warning('the indexed representation of inside/outside source locations is deprecated');
   end
   % TODO absorb the fixinside function into this code
   data   = fixinside(data, inside);
@@ -576,13 +607,13 @@ if ~isempty(inside)
   
   if ~okflag
     % construct an error message
-    error('This function requires data with an ''inside'' field.');
+    ft_error('This function requires data with an ''inside'' field.');
   end % if okflag
 end
 
 if istrue(hasunit) && ~isfield(data, 'unit')
   % calling convert_units with only the input data adds the units without converting
-  data = ft_convert_units(data);
+  data = ft_determine_units(data);
 end % if hasunit
 
 if istrue(hascoordsys) && ~isfield(data, 'coordsys')
@@ -590,16 +621,23 @@ if istrue(hascoordsys) && ~isfield(data, 'coordsys')
 end % if hascoordsys
 
 if isequal(hastrials, 'yes')
-  okflag = isfield(data, 'trial');
-  if ~okflag && isfield(data, 'dimord')
+  hasrpt = isfield(data, 'trial');
+  if ~hasrpt && isfield(data, 'dimord')
     % instead look in the dimord for rpt or subj
-    okflag = ~isempty(strfind(data.dimord, 'rpt')) || ...
+    hasrpt = ~isempty(strfind(data.dimord, 'rpt')) || ...
       ~isempty(strfind(data.dimord, 'rpttap')) || ...
       ~isempty(strfind(data.dimord, 'subj'));
   end
-  if ~okflag
-    error('This function requires data with a ''trial'' field');
-  end % if okflag
+  if ~hasrpt
+    ft_error('This function requires data with a ''trial'' field');
+  end % if hasrpt
+elseif isequal(hastrials, 'no') && istimelock
+  if ~isfield(data, 'avg') && (isfield(data, 'trial') || isfield(data, 'individual'))
+    % average on the fly
+    tmpcfg = [];
+    tmpcfg.keeptrials = 'no';
+    data = ft_timelockanalysis(tmpcfg, data);
+  end
 end
 
 if strcmp(hasdim, 'yes') && ~isfield(data, 'dim')
@@ -609,13 +647,13 @@ elseif strcmp(hasdim, 'no') && isfield(data, 'dim')
 end % if hasdim
 
 if strcmp(hascumtapcnt, 'yes') && ~isfield(data, 'cumtapcnt')
-  error('This function requires data with a ''cumtapcnt'' field');
+  ft_error('This function requires data with a ''cumtapcnt'' field');
 elseif strcmp(hascumtapcnt, 'no') && isfield(data, 'cumtapcnt')
   data = rmfield(data, 'cumtapcnt');
 end % if hascumtapcnt
 
 if strcmp(hasdof, 'yes') && ~isfield(data, 'dof')
-  error('This function requires data with a ''dof'' field');
+  ft_error('This function requires data with a ''dof'' field');
 elseif strcmp(hasdof, 'no') && isfield(data, 'dof')
   data = rmfield(data, 'dof');
 end % if hasdof
@@ -628,7 +666,7 @@ if ~isempty(cmbrepresentation)
   elseif isfreqmvar
     data = fixcsd(data, cmbrepresentation, channelcmb);
   else
-    error('This function requires data with a covariance, coherence or cross-spectrum');
+    ft_error('This function requires data with a covariance, coherence or cross-spectrum');
   end
 end % cmbrepresentation
 
@@ -653,16 +691,16 @@ if any(isfield(data, {'cov', 'corr'}))
     current = 'sparse';
   end
 else
-  error('Could not determine the current representation of the covariance matrix');
+  ft_error('Could not determine the current representation of the covariance matrix');
 end
 if isequal(current, desired)
   % nothing to do
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
   % FIXME should be implemented
-  error('not yet implemented');
+  ft_error('not yet implemented');
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   % FIXME should be implemented
-  error('not yet implemented');
+  ft_error('not yet implemented');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -688,7 +726,7 @@ elseif ~isfield(data, 'labelcmb')
 elseif isfield(data, 'labelcmb')
   current = 'sparse';
 else
-  error('Could not determine the current representation of the %s matrix', param);
+  ft_error('Could not determine the current representation of the %s matrix', param);
 end
 
 % first go from univariate fourier to the required bivariate representation
@@ -785,7 +823,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   end
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   
-  if isempty(channelcmb), error('no channel combinations are specified'); end
+  if isempty(channelcmb), ft_error('no channel combinations are specified'); end
   dimtok = tokenize(data.dimord, '_');
   if ~isempty(strmatch('rpttap',   dimtok))
     nrpt = size(data.cumtapcnt,1);
@@ -888,7 +926,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   if ~isempty(strmatch('rpttap',dimtok)), nrpt=size(data.cumtapcnt, 1); else nrpt = 1; end
   if ~isempty(strmatch('freq',  dimtok)), nfrq=length(data.freq);       else nfrq = 1; end
   if ~isempty(strmatch('time',  dimtok)), ntim=length(data.time);       else ntim = 1; end
-  if any(data.cumtapcnt(1,:) ~= data.cumtapcnt(1,1)), error('this only works when all frequencies have the same number of tapers'); end
+  if any(data.cumtapcnt(1,:) ~= data.cumtapcnt(1,1)), ft_error('this only works when all frequencies have the same number of tapers'); end
   nchan     = length(data.label);
   crsspctrm = zeros(nrpt,nchan,nchan,nfrq,ntim);
   sumtapcnt = [0;cumsum(data.cumtapcnt(:,1))];
@@ -943,10 +981,10 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast'),
     data.dimord = 'chan_chan_freq';
   end
   
-  if isfield(data, 'trialinfo'),  data = rmfield(data, 'trialinfo'); end;
-  if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end;
-  if isfield(data, 'cumsumcnt'),  data = rmfield(data, 'cumsumcnt');  end;
-  if isfield(data, 'cumtapcnt'),  data = rmfield(data, 'cumtapcnt');  end;
+  if isfield(data, 'trialinfo'),  data = rmfield(data, 'trialinfo'); end
+  if isfield(data, 'sampleinfo'), data = rmfield(data, 'sampleinfo'); end
+  if isfield(data, 'cumsumcnt'),  data = rmfield(data, 'cumsumcnt');  end
+  if isfield(data, 'cumtapcnt'),  data = rmfield(data, 'cumtapcnt');  end
   
 end % convert to the requested bivariate representation
 
@@ -958,10 +996,10 @@ elseif (strcmp(current, 'full')       && strcmp(desired, 'fourier')) || ...
     (strcmp(current, 'sparse')        && strcmp(desired, 'fourier')) || ...
     (strcmp(current, 'sparsewithpow') && strcmp(desired, 'fourier'))
   % this is not possible
-  error('converting the cross-spectrum into a Fourier representation is not possible');
+  ft_error('converting the cross-spectrum into a Fourier representation is not possible');
   
 elseif strcmp(current, 'full') && strcmp(desired, 'sparsewithpow')
-  error('not yet implemented');
+  ft_error('not yet implemented');
   
 elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
   % convert back to crsspctrm/powspctrm representation: useful for plotting functions etc
@@ -1208,9 +1246,76 @@ end % convert from one to another bivariate representation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [source] = chan2source(data)
+chanpos = zeros(0,3);
+chanlab = cell(0,1);
+posunit = [];
+if isfield(data, 'elec')
+  chanpos = cat(1, chanpos, data.elec.chanpos);
+  chanlab = cat(1, chanlab, data.elec.label);
+  if isfield(data.elec, 'unit')
+    posunit = data.elec.unit;
+  end
+end
+if isfield(data, 'grad')
+  chanpos = cat(1, chanpos, data.grad.chanpos);
+  chanlab = cat(1, chanlab, data.grad.label);
+  if isfield(data.grad, 'unit')
+    posunit = data.grad.unit;
+  end
+end
+if isfield(data, 'opto')
+  chanpos = cat(1, chanpos, data.opto.chanpos);
+  chanlab = cat(1, chanlab, data.opto.label);
+  if isfield(data.opto, 'unit')
+    posunit = data.opto.unit;
+  end
+end
+
+fn = fieldnames(data);
+fn = setdiff(fn, {'label', 'time', 'freq', 'hdr', 'cfg', 'grad', 'elec', 'dimord', 'unit'}); % remove irrelevant fields
+fn(~cellfun(@isempty, regexp(fn, 'dimord$'))) = []; % remove irrelevant (dimord) fields
+sel = false(size(fn));
+for i=1:numel(fn)
+  try
+    sel(i) = ismember(getdimord(data, fn{i}), {'chan', 'chan_time', 'chan_freq', 'chan_freq_time', 'chan_chan'});
+  end
+end
+parameter = fn(sel);
+
+% determine the channel indices for which the position is known
+[datsel, possel] = match_str(data.label, chanlab);
+
+source = [];
+source.pos = chanpos(possel, :);
+if ~isempty(posunit)
+  source.unit = posunit;
+end
+for i=1:numel(parameter)
+  dat = data.(parameter{i});
+  dimord = getdimord(data, parameter{i});
+  dimtok = tokenize(dimord, '_');
+  for dim=1:numel(dimtok)
+    if strcmp(dimtok{dim}, 'chan')
+      dat = dimindex(dat, dim, {datsel});
+      dimtok{dim} = 'pos';
+    end
+  end
+  dimord = sprintf('%s_', dimtok{:});
+  dimord = dimord(1:end-1); % remove the last '_'
+  % copy the data to the source representation
+  source.(parameter{i})            = dat;
+  source.([parameter{i} 'dimord']) = dimord;
+end
+% copy the descriptive fields, these are necessary for visualising the data in ft_sourceplot
+source = copyfields(data, source, {'time', 'freq'});
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% convert between datatypes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [source] = parcellated2source(data)
 if ~isfield(data, 'brainordinate')
-  error('projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
+  ft_error('projecting parcellated data onto the full brain model geometry requires the specification of brainordinates');
 end
 % the main structure contains the functional data on the parcels
 % the brainordinate sub-structure contains the original geometrical model
@@ -1239,7 +1344,7 @@ for i=1:numel(fn)
 end
 parcelparam = fn(sel);
 if numel(parcelparam)~=1
-  error('cannot determine which parcellation to use');
+  ft_error('cannot determine which parcellation to use');
 else
   parcelparam = parcelparam{1}(1:(end-5)); % minus the 'label'
 end
@@ -1248,7 +1353,7 @@ for i=1:numel(parameter)
   source.(parameter{i}) = unparcellate(data, source, parameter{i}, parcelparam);
 end
 
-% copy over fields (these are necessary for visualising the data in ft_sourceplot)
+% copy the descriptive fields, these are necessary for visualising the data in ft_sourceplot
 source = copyfields(data, source, {'time', 'freq'});
 
 
@@ -1310,7 +1415,7 @@ if isfield(freq, 'powspctrm')
 elseif isfield(freq, 'fourierspctrm')
   param = 'fourierspctrm';
 else
-  error('not supported for this data representation');
+  ft_error('not supported for this data representation');
 end
 
 if strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
@@ -1319,7 +1424,7 @@ elseif strcmp(freq.dimord, 'chan_freq_time')
   dat = freq.(param);
   dat = reshape(dat, [1 size(dat)]); % add a singleton dimension
 else
-  error('not supported for dimord %s', freq.dimord);
+  ft_error('not supported for dimord %s', freq.dimord);
 end
 
 nrpt  = size(dat,1);
@@ -1348,7 +1453,7 @@ for i=1:nrpt
   end
 end
 
-if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end;
+if isfield(freq, 'trialinfo'), data.trialinfo = freq.trialinfo; end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1366,7 +1471,7 @@ if ntrial==1
   tlck.label  = data.label;
   tlck.dimord = 'chan_time';
   tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'unmixing', 'topolabel'});
-
+  
 else
   % the code below tries to construct a general time-axis where samples of all trials can fall on
   % find the earliest beginning and latest ending
@@ -1417,7 +1522,7 @@ end
 % the fields trial, individual and avg (with their corresponding default dimord) are preferred
 if sum(strcmp(dimord, 'rpt_chan_time'))==1
   fn = fn{strcmp(dimord, 'rpt_chan_time')};
-  fprintf('constructing trials from "%s"\n', fn);
+  ft_info('constructing trials from "%s"\n', fn);
   dimsiz = getdimsiz(data, fn);
   ntrial = dimsiz(1);
   nchan  = dimsiz(2);
@@ -1433,7 +1538,7 @@ if sum(strcmp(dimord, 'rpt_chan_time'))==1
   data.time  = tmptime;
 elseif sum(strcmp(dimord, 'subj_chan_time'))==1
   fn = fn{strcmp(dimord, 'subj_chan_time')};
-  fprintf('constructing trials from "%s"\n', fn);
+  ft_info('constructing trials from "%s"\n', fn);
   dimsiz = getdimsiz(data, fn);
   nsubj = dimsiz(1);
   nchan  = dimsiz(2);
@@ -1449,12 +1554,12 @@ elseif sum(strcmp(dimord, 'subj_chan_time'))==1
   data.time  = tmptime;
 elseif sum(strcmp(dimord, 'chan_time'))==1
   fn = fn{strcmp(dimord, 'chan_time')};
-  fprintf('constructing single trial from "%s"\n', fn);
+  ft_info('constructing single trial from "%s"\n', fn);
   data.time  = {data.time};
   data.trial = {data.(fn)};
   data = rmfield(data, fn);
 else
-  error('unsupported data structure');
+  ft_error('unsupported data structure');
 end
 % remove unwanted fields
 data = removefields(data, {'avg', 'var', 'cov', 'dimord', 'numsamples' ,'dof'});
@@ -1479,13 +1584,13 @@ data.time   = 0;
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [spike] = raw2spike(data)
-fprintf('converting raw data into spike data\n');
+ft_info('converting raw data into spike data\n');
 nTrials 	 = length(data.trial);
 [spikelabel] = detectspikechan(data);
 spikesel     = match_str(data.label, spikelabel);
 nUnits       = length(spikesel);
 if nUnits==0
-  error('cannot convert raw data to spike format since the raw data structure does not contain spike channels');
+  ft_error('cannot convert raw data to spike format since the raw data structure does not contain spike channels');
 end
 
 trialTimes  = zeros(nTrials,2);
@@ -1522,7 +1627,7 @@ function [data] = spike2raw(spike, fsample)
 if nargin<2 || isempty(fsample)
   timeDiff = abs(diff(sort([spike.time{:}])));
   fsample  = 1/min(timeDiff(timeDiff>0));
-  warning('Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
+  ft_warning('Desired sampling rate for spike data not specified, automatically resampled to %f', fsample);
 end
 
 % get some sizes
@@ -1648,4 +1753,3 @@ end
 % before adding these times, first remove the old ones
 spikeTimes(multiSpikes) = [];
 spikeTimes              = sort([spikeTimes(:); addTimes(:)]);
-

@@ -74,7 +74,7 @@ if n>1
   wpli = reshape(wpli,siz(2:end)); % remove the first singular dimension
 else
   wpli = NaN(siz(2:end)); % for one observation, we should return NaNs
-  warning('ft_connectivity_wpli:nTrials', 'computation wpli requires >1 trial, returning NaNs');
+  ft_warning('ft_connectivity_wpli:nTrials', 'computation wpli requires >1 trial, returning NaNs');
 end
 
 [leave1outsum, leave1outssq] = deal(zeros([1 siz(2:end)]));

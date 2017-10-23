@@ -73,6 +73,6 @@ elseif all(isfield(D, {'type', 'Nsamples', 'Fsample', 'timeOnset'})) % SPM8
     end
     
 else
-    error('Cannot recognize an SPM EEG header format');
+    ft_error('Cannot recognize an SPM EEG header format');
 end
 

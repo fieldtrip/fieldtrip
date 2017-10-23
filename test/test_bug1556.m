@@ -3,7 +3,6 @@ function test_bug1556
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1556
 % TEST ft_statfun_depsamplesFmultivariate ft_statfun_depsamplesFunivariate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -15,8 +15,9 @@ load(filename);
 in  = find(data.inside);
 sel = ~cellfun('isempty',data.avg.mom(in));
 in  = in(sel);
-data.inside = in(:)';
-data.outside = setdiff(1:size(data.pos,1),in);
+data.inside = false(size(data.pos,1),1);
+data.inside(in) = true;
+if isfield(data, 'outside'), data = rmfield(data, 'outside'); end
 
 rpt = cfg.trials;
 

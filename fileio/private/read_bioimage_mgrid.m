@@ -84,6 +84,15 @@ while fileline >= 0 % read line by line
       WaitForPos = 0;
     end
     
+    % electrode present
+    if ~isempty(findstr(fileline,'#Electrode Present'))
+      nextfileline = fgets(fid);
+      ElecPres = logical(sscanf(nextfileline,'%f'))'; % 1 = present; 0 = not present
+      if ~ElecPres
+        ElecPos = NaN(1,3);
+      end
+    end
+    
     % store
     if ~isempty(findstr(fileline,'#Value'))
       elec.label{end+1,1} = [GridDescript num2str(GridDim(2) - ElecNr(2) + GridDim(2)*ElecNr(1))];

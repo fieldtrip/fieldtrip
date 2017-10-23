@@ -1,6 +1,5 @@
 function test_bug2647
 
-% TEST test_bug2647
 % TEST ft_freqstatistics
 
 % WALLTIME 00:10:00

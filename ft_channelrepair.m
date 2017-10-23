@@ -138,12 +138,12 @@ isnirs = ft_senstype(sens, 'opto');
 % check if any of the channel positions contains NaNs; this happens when
 % component data are backprojected to the sensor level
 if any(isnan(sens.chanpos(:)))
-  error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
+  ft_error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
 end
 
 if ismeg && ~any(strcmp(ft_senstype(sens), {'ctf151', 'ctf275', 'bti148', 'bti248', 'babysquid74'}))
   % MEG systems with only magnetometers or axial gradiometers are easy, planar systems are not
-  warning('be careful when using "%s" - mixing of sensor types (e.g. magnetometers and gradiometers) can lead to wrong data. Check your neighbour-structure thoroughly', ft_senstype(sens));
+  ft_warning('be careful when using "%s" - mixing of sensor types (e.g. magnetometers and gradiometers) can lead to wrong data. Check your neighbour-structure thoroughly', ft_senstype(sens));
 end
 
 % get selection of channels that are missing and/or bad
@@ -155,7 +155,7 @@ fprintf('There are %d missing channels\n', length(cfg.missingchannel));
 
 % warn if weighted neighbour approach (see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=634)
 if ~isempty(cfg.missingchannel) && strcmp(cfg.method, 'weighted')
-  warning('Reconstructing missing channels using the weighted neighbour approach is not recommended!');
+  ft_warning('Reconstructing missing channels using the weighted neighbour approach is not recommended!');
 end
 
 % store the realigned data in a new structure
@@ -303,7 +303,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   d = sqrt(sum(d.^2, 2));
   d = mean(abs(d) / r);
   if abs(d-1) > 0.1
-    warning('bad spherical fit (residual: %.2f%%). The interpolation will be inaccurate.', 100*(d-1));
+    ft_warning('bad spherical fit (residual: %.2f%%). The interpolation will be inaccurate.', 100*(d-1));
   elseif abs(d-1) < 0.01
     fprintf('perfect spherical fit (residual: %.1f%%)\n', 100*(d-1));
   else
@@ -311,7 +311,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   end
   
   if strcmp(cfg.method, 'slap')
-    warning('''slap'' method is not fully supported - be careful in interpreting your results');
+    ft_warning('''slap'' method is not fully supported - be careful in interpreting your results');
   end
   % move missing channels to the end
   missidx = find(ismember(label, cfg.missingchannel));
@@ -326,7 +326,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
   if isempty(goodchanindcs)
     goodchanindcs = 1:numel(label);
     allchans = true;
-    warning('No good channels found - interpolating based on all channels');
+    ft_warning('No good channels found - interpolating based on all channels');
   end
   % undo automatical sorting by setdiff
   goodchanindcs      = sort(goodchanindcs);
@@ -382,7 +382,7 @@ elseif strcmp(cfg.method, 'nan')
   end % missing channels
   
 else
-  error('unknown method "%s" for interpolation', cfg.method);
+  ft_error('unknown method "%s" for interpolation', cfg.method);
 end
 
 % copy the additional fields over to the newly interpolated data

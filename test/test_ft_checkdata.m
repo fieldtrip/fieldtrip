@@ -3,7 +3,6 @@ function test_ft_checkdata
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_ft_checkdata
 % TEST ft_checkdata
 
 %% converting raw data to timelock data
@@ -153,7 +152,7 @@ end
 
 tmp = ft_checkdata(data, 'datatype', 'timelock');
 
-if sum(tmp.time-[-1.5:0.22:3]) > 12e-17 | numel(tmp.time) ~= 21
+if sum(tmp.time-[-1.5:0.22:3]) > 12e-17 || numel(tmp.time) ~= 21
   error('time axis is wrong');
 end
 

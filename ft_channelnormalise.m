@@ -1,13 +1,20 @@
 function [dataout] = ft_channelnormalise(cfg, data)
 
-% FT_CHANNELNORMALISE shifts and scales all channles of the the input data
-% to a mean of zero and a standard deviation of one.
+% FT_CHANNELNORMALISE shifts and scales all channels of the the input data.
+% The default behavior is to subtract each channel's mean, and scale to a
+% standard deviation of 1, for each channel individually.
 %
 % Use as
 %   [dataout] = ft_channelnormalise(cfg, data)
 %
 % The configuration can contain
+%   cfg.channel = 'all', or a selection of channels  
 %   cfg.trials = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.demean = 'yes' or 'no' (or boolean value) (default = 'yes')
+%   cfg.method = 'perchannel', or 'acrosschannel', computes the
+%                   standard deviation per channel, or across all channels.
+%                   The latter method leads to the same scaling across 
+%                   channels and preserves topographical distributions
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -57,8 +64,21 @@ if ft_abort
   return
 end
 
+cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'perchannel', 'acrosschannel'});
+
 % set the defaults
+cfg.channel = ft_getopt(cfg, 'channel', 'all');
 cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.demean = ft_getopt(cfg, 'demean', 'yes');
+cfg.method = ft_getopt(cfg, 'method', 'perchannel'); % or acrosschannel
+dodemean   = istrue(cfg.demean);
+doperchannel = strcmp(cfg.method, 'perchannel');
+
+% select channels and trials of interest, by default this will select all channels and trials
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+data = ft_selectdata(tmpcfg, data);
+% restore the provenance information
+[cfg, data] = rollback_provenance(cfg, data);
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -67,7 +87,7 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % select trials of interest
-tmpcfg = keepfields(cfg, 'trials');
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -94,17 +114,37 @@ for i=1:length(copyfield)
 end
 
 % compute the mean and std
+n = zeros(numel(data.label), numel(data.trial));
 for k = 1:ntrl
-    n(k,1) = size(data.trial{k},2);
-    datsum = datsum + sum(data.trial{k},2);
-    datssq = datssq + sum(data.trial{k}.^2,2);
+    n(:,k) = sum(~isnan(data.trial{k}),2);
+    datsum = datsum + nansum(data.trial{k},2);
+    datssq = datssq + nansum(data.trial{k}.^2,2);
 end
-datmean = datsum./sum(n);
-datstd  = sqrt( (datssq - (datsum.^2)./sum(n))./sum(n)); %quick way to compute std from sum and sum-of-squared values
+datmean = datsum./nansum(n, 2); % apply the mean per channel always
+if ~doperchannel
+  % update the intermediate variables in order to compute std across channels
+  datsum(:) = nansum(datsum);
+  datssq(:) = nansum(datssq);
+  n         = repmat(nansum(n, 1), size(n, 1), 1);
+end
+datstd  = sqrt( (datssq - (datsum.^2)./nansum(n, 2))./nansum(n, 2)); %quick way to compute std from sum and sum-of-squared values
+
+% keep mean and std in output cfg
+if dodemean
+  cfg.mu    = datmean;
+else
+  cfg.mu    = [];
+end
+cfg.sigma = datstd;
 
 % demean and normalise
 for k = 1:ntrl
-  dataout.trial{k} = (data.trial{k}-datmean(:,ones(1,n(k))))./datstd(:,ones(1,n(k)));
+  onesvec          = ones(1,size(data.trial{k},2));
+  if dodemean     
+    dataout.trial{k} = (data.trial{k}-datmean(:,onesvec))./datstd(:,onesvec);
+  else
+    dataout.trial{k} = data.trial{k}./datstd(:,onesvec);
+  end
 end
 
 % convert back to input type if necessary

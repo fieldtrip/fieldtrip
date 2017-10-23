@@ -3,7 +3,6 @@ function test_bug2502
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2502
 % TEST ft_freqstatistics
 % TEST ft_selectdata
 

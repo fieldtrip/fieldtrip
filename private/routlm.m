@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = routlm(varargin)
 
 % ROUTLM computes the projection of a point from its la/mu parameters
 % these equal the "Barycentric" coordinates
@@ -45,7 +45,7 @@ mexsrc  = [funname '.c'];
 
 try
   % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
+  ft_warning('trying to compile MEX file from %s', mexsrc);
   cd(mexdir);
   
   if ispc
@@ -62,7 +62,7 @@ try
 catch
   % compilation failed
   disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
+  ft_error('could not locate MEX file for %s', mexname);
   cd(pwdir);
   success = false;
 end

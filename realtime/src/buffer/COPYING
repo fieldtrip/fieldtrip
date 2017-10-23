@@ -1,6 +1,6 @@
-Copyright (C) 2008, Robert Oostenveld
-F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen, The Netherlands.
-http://www.ru.nl/fcdonders/fieldtrip
+Copyright (C) 2008-2017, Robert Oostenveld
+Donders Centre for Cognitive Neuroimaging, Radboud University, The Netherlands.
+http://www.fieldtriptoolbox.org
 
 The FieldTrip buffer software is licensed under the GNU General Public
 License (GPL) and the Berkeley Software Distribution License (BSD).
@@ -20,5 +20,5 @@ When using FieldTrip buffer in your open source or commercial application, you a
 - Distribute the license (GNU GPL or BSD) of your choise with your application (i.e. the plain-text file)
 - Provide a suitable acknowledgement, either in the program's "About" box or in the user's manual (or both), for example:
 
-This software uses the FieldTrip buffer open source library. See http://www.ru.nl/fcdonders/fieldtrip for details.
+This software uses the FieldTrip buffer open source library. See http:/www.fieldtriptoolbox.org for details.
 The FieldTrip buffer is used under the [GNU-GPL or BSD] License, version [license version].

@@ -3,8 +3,11 @@ function test_bug1502
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1502
 % TEST ft_checkconfig
+
+% this test script should be explicit about ft_default
+global ft_default
+ft_default = [];
 
 cfg   = [];
 cfg.a = 1;

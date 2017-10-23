@@ -17,7 +17,7 @@ tmp(46,20,39) = 10;
 spm_smooth(tmp, tmp, 10);
 mri.pow = tmp;
 
-% visualize it using fieldtrip
+% visualize it using FieldTrip
 cfg = [];
 cfg.funparameter = 'pow';
 figure;ft_sourceplot(cfg, mri);

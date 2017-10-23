@@ -3,7 +3,6 @@ function test_bug1658
 % WALLTIME 00:20:00
 % MEM 4gb
 
-% TEST test_bug1658
 % TEST ft_sourcedescriptives
 % TEST ft_selectdata
 

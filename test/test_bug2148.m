@@ -3,7 +3,6 @@ function test_bug2148
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2148
 % TEST ft_connectivitysimulation ft_freqanalysis ft_connectivityanalysis
 % TEST ft_connectivityplot ft_freqdescriptives ft_checkdata
 
@@ -84,7 +83,7 @@ vol.r = 12;
 vol.unit = 'cm';
 vol.cond = 0.5;
 vol.type = 'singlesphere';
-cfgs.vol = vol;
+cfgs.headmodel = vol;
 cfgs.frequency = 10;
 cfgs.elecfile = 'standard_1020.elc';
 ft_sourceanalysis(cfgs, tmp);
@@ -110,7 +109,7 @@ vol.r = 12;
 vol.cond = 0.5;
 vol.unit = 'cm';
 vol.type = 'singlesphere';
-cfgs.vol = vol;
+cfgs.headmodel = vol;
 cfgs.frequency = 10;
 cfgs.elecfile = 'standard_1020.elc';
 ft_sourceanalysis(cfgs, tmp);
@@ -133,7 +132,7 @@ vol.r = 12;
 vol.cond = 0.5;
 vol.unit = 'cm';
 vol.type = 'singlesphere';
-cfgs.vol = vol;
+cfgs.headmodel = vol;
 cfgs.elecfile = 'standard_1020.elc';
 cfgs.frequency = 10;
 ft_sourceanalysis(cfgs, tmp);

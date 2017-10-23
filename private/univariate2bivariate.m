@@ -50,7 +50,7 @@ switch dtype
     end
     getpowindx = 0;
     if ncmb==0,
-      error('no channel combinations are specified');
+      ft_error('no channel combinations are specified');
     elseif ncmb==nchan^2 || ncmb==(nchan+1)*nchan*0.5,
       dofull = 1;
     else
@@ -74,7 +74,7 @@ switch dtype
       else
         % data = ft_checkdata(data, 'cmbrepresentation', 'full');
         % this should not be possible
-        error('cannot convert to a full csd representation');
+        ft_error('cannot convert to a full csd representation');
       end
       
     elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm'),
@@ -123,7 +123,7 @@ switch dtype
       data = rmfield(data, 'crsspctrm');
       
     else
-      error('unknown conversion from univariate to bivariate representation');
+      ft_error('unknown conversion from univariate to bivariate representation');
     end % if inparam is fourierspctrm or crsspctrm
     
     if ~isempty(cmb) && (ncmb < (nchan-1)*nchan*0.5 || getpowindx==1),
@@ -277,7 +277,7 @@ switch dtype
         mom(:, tmpinside(:)) = cat(2, data.mom{data.inside});
         
         if keeprpt,
-          error('keeprpt with multivariate dipole moments is not supported');
+          ft_error('keeprpt with multivariate dipole moments is not supported');
           % FIXME should this be supported
         elseif tmpncmb<size(mom,2)
           % do it computationally more efficient
@@ -323,7 +323,7 @@ switch dtype
       end % if sizmom(2)==1 or >1
       
     else
-      error('unknown conversion from univariate to bivariate representation');
+      ft_error('unknown conversion from univariate to bivariate representation');
     end
     
     % the code in the caller function requires this to be a boolean vector
@@ -334,9 +334,9 @@ switch dtype
     timelock = [];
 
     if ~strcmp(inparam, 'trial')
-      error('incorrect specification of inparam')
+      ft_error('incorrect specification of inparam')
     elseif ~strcmp(outparam, 'cov'),
-      error('incorrect specification of outparam')
+      ft_error('incorrect specification of outparam')
     end
     
     nrpt  = length(data.trial);
@@ -398,7 +398,7 @@ switch dtype
     data = timelock;
     
   otherwise
-    error('unsupported input data type');
+    ft_error('unsupported input data type');
 end % swith dtype
 
 if ~exist('hasrpt', 'var')

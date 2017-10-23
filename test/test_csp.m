@@ -3,7 +3,6 @@ function test_csp
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_csp
 % TEST ft_component_analysis
 
 % Please beware of notations mistakes in [1]. For example equation (1) does not

@@ -3,7 +3,6 @@ function test_bug1871
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1871
 % TEST ft_struct2single 
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
@@ -26,7 +25,7 @@ freq.powspctrm = ft_struct2single(freq.powspctrm);
 cfg = [];
 cfg.interactive = 'yes';
 % cfg.showlabels  = 'no'; % this is a deprecated option, use cfg.marker instead
-cfg.marker = 'no'; 
+cfg.marker      = 'off'; 
 cfg.zlim        = 'maxabs';
 cfg.layout      = 'neuromag306cmb.lay';
 ft_topoplotTFR(cfg, freq);

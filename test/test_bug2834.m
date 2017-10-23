@@ -4,7 +4,6 @@ function test_bug2834
 % WALLTIME 00:20:00
 
 % TEST ft_sourceanalysis
-% TEST test_bug2834
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;

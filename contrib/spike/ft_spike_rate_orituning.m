@@ -1,14 +1,12 @@
-function [Stat] = ft_spike_rate_orituning(cfg,varargin)
+function [Stat] = ft_spike_rate_orituning(cfg, varargin)
 
 % FT_SPIKE_RATE_ORITUNING computes a model of the firing rate as a function
 % of orientation or direction.
 %
 % Use as
-%   [stat] = ft_spike_rate_tuning(cfg, rate1,rate2,...rateN)
+%   [stat] = ft_spike_rate_tuning(cfg, rate1, rate2, ... rateN)
 %
-% Inputs rate should be the output from FT_SPIKE_RATE
-% Tip: put singel rate structures in cell array rate and write
-% stat = ft_spike_rate_tuning(cfg,rate{:});
+% The inputs RATE should be the output from FT_SPIKE_RATE. 
 %
 % Configurations:
 %   cfg.stimuli  = should be an 1 x nConditions array of orientations or
@@ -17,12 +15,12 @@ function [Stat] = ft_spike_rate_orituning(cfg,varargin)
 %   cfg.method   = model to apply, implemented are 'orientation' and 'direction'
 %
 % Outputs:
-%   Stat.ang       = mean angle of orientation / direction (1 x nUnits)
-%   Stat.osi       = orientation selectivity index (Womelsdorf et al., 2012,
+%   stat.ang       = mean angle of orientation / direction (1 x nUnits)
+%   stat.osi       = orientation selectivity index (Womelsdorf et al., 2012,
 %                    PNAS), that is resultant length.
 %                    if cfg.method = 'orientation', then orientations are
 %                    first projected on the unit circle.
-%   Stat.di        = direction index, 1 - min/max response
+%   stat.di        = direction index, 1 - min/max response
 
 % FIXME: models for contrast etc.
 
@@ -54,15 +52,15 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance varargin
 ft_preamble trackconfig
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'stimuli', 'method'});
-cfg = ft_checkopt(cfg,'stimuli','doublevector');
-cfg = ft_checkopt(cfg,'method', 'char', {'orientation', 'direction'});
+cfg = ft_checkopt(cfg, 'stimuli', 'doublevector');
+cfg = ft_checkopt(cfg, 'method', 'char', {'orientation', 'direction'});
 
-if length(varargin)<2, error('can only compute ori tuning if multiple inputs are specified'); end 
+if length(varargin)<2, error('can only compute orituning if multiple inputs are specified'); end 
   
 % check whether trials were kept in the rate function
 for k = 1:length(varargin)
@@ -132,7 +130,7 @@ Stat.label   = Tune.label;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous Tune
-ft_postamble history Stat
+ft_postamble previous   Tune
+ft_postamble provenance Stat
+ft_postamble history    Stat
 

@@ -3,8 +3,7 @@ function failed_headmodel_interpolate
 % WALLTIME 00:45:00
 % MEM 6gb
 
-% TEST test_headmodel_interpolate
-% TEST icosahedron162 ft_voltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate
+% TEST icosahedron162 ft_voltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
 
 % use FieldTrip defaults instead of personal defaults
 global ft_default;
@@ -39,10 +38,10 @@ elec2 = ft_datatype_sens(elec2);
 
 % create another set of electrodes representing a bipolar montage
 bipolar = [];
-bipolar.labelorg = elec1.label;
+bipolar.labelold = elec1.label;
 bipolar.tra = zeros(length(elec1.label)-1, length(elec1.label));
-for i=1:(length(bipolar.labelorg)-1)
-  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelorg{i}, bipolar.labelorg{i+1});
+for i=1:(length(bipolar.labelold)-1)
+  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelold{i}, bipolar.labelold{i+1});
   bipolar.tra(i,i  ) = +1;
   bipolar.tra(i,i+1) = -1;
 end
@@ -56,10 +55,10 @@ end
 
 % create another bipolar set of channels that is incompatible with the previous one
 bipolar = [];
-bipolar.labelorg = elec1.label;
+bipolar.labelold = elec1.label;
 bipolar.tra      = zeros(10, length(elec1.label));
 for i=1:(10)
-  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelorg{i}, bipolar.labelorg{i+2});
+  bipolar.labelnew{i} = sprintf('%s-%s', bipolar.labelold{i}, bipolar.labelold{i+2});
   bipolar.tra(i,i  ) = +1;
   bipolar.tra(i,i+2) = -1;
 end
@@ -100,8 +99,8 @@ volB = ft_read_vol([filename '.mat']); % this is a mat file containing the "vol"
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
 
-assert(identical(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
-assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(isalmostequal(lf1, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(isalmostequal(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps(double(1))), 'the leadfield is not average referenced'); % this is in double precision
 assert(all(mean(lfb, 1)<eps(single(1))), 'the leadfield is not average referenced'); % this is in single precision
 
@@ -114,7 +113,7 @@ assert(all(mean(lfb, 1)<eps(single(1))), 'the leadfield is not average reference
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
 
-assert(identical(lfa, lfb, 'reltol', 1e-3), 'the leadfields are different');
+assert(isalmostequal(lfa, lfb, 'reltol', 1e-3), 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
 assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 
@@ -127,7 +126,7 @@ assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
 
-assert(identical(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
+assert(isalmostequal(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
 assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 
@@ -154,6 +153,6 @@ assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 lfa = ft_compute_leadfield(pos2, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos2, elecBB, volBB); % the interpolation
 
-assert(identical(lfa, lfb, 'abstol', inf, 'reltol', inf, 'relnormtol', 1e-3), 'the leadfields are different');
+assert(isalmostequal(lfa, lfb, 'abstol', inf, 'reltol', inf, 'relnormtol', 1e-3), 'the leadfields are different');
 assert(~all(mean(lfa, 1)<eps), 'the leadfield is average referenced');
 assert(~all(mean(lfb, 1)<eps), 'the leadfield is average referenced');

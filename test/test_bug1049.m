@@ -3,15 +3,9 @@ function failed_bug1049
 % MEM 2000mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1049
 % TEST ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
 
 % this function creates a set of source-structures to be used for testing
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
 
 % get volume conductor model
 volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');

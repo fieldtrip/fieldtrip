@@ -3,7 +3,6 @@ function test_bug1618
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1618
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1618/bug1618.dat');
 

@@ -1,6 +1,5 @@
 function test_bug2994
 
-% TEST test_bug2994
 % TEST ft_freqstatistics
 % TEST ft_freqgrandaverage
 % TEST ft_selectdata

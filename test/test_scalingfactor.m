@@ -3,7 +3,6 @@ function test_scalingfactor
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_scalingfactor
 % TEST ft_scalingfactor ft_convert_units
 
 % since the function to test is in a private directory, we explicitely have to cd into that directory

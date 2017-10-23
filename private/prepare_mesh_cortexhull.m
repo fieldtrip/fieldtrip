@@ -7,25 +7,21 @@ function headshape = prepare_mesh_cortexhull(cfg)
 % 'make_outer_surface' in the FreeSurfer/matlab folder
 %
 % Configuration options:
-%   cfg.method      = 'cortexhull'
-%   cfg.headshape   = a filename containing the pial surface computed by
+%   cfg.method       = 'cortexhull'
+%   cfg.headshape    = a filename containing the pial surface computed by
 %                     FreeSurfer recon-all ('/path/to/surf/lh.pial')
-%   cfg.resolution  = (optional, default: 1) resolution of the volume
+%   cfg.resolution   = (optional, default: 1) resolution of the volume
 %                     delimited by headshape being floodfilled by mris_fill
+%   cfg.fshome       = FreeSurfer folder location (default: '/Applications/freesurfer')
 %   cfg.outer_surface_sphere = (optional, default: 15) diameter of the sphere
 %                     used by make_outer_surface to close the sulci using
 %                     morphological operations.
 %   cfg.smooth_steps = (optional, default: 60) number of smoothing iterations
 %                     performed by mris_smooth
 %
-% Error that 'mris_fill' was not found means that FreeSurfer is not installed.
-%
-% Error that 'make_outer_surface' is not in matlab, means that you need to add
-% 'freesurfer/matlab' to your path.
-%
 % See also FT_PREPARE_MESH
 
-% Copyright (C) 2012-2016, Gio Piantoni, Andrew Dykstra
+% Copyright (C) 2012-2016, Gio Piantoni, Andrew Dykstra, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -48,16 +44,23 @@ function headshape = prepare_mesh_cortexhull(cfg)
 disp('Please cite: Dykstra et al. 2012 Neuroimage PMID: 22155045')
 
 % get the default options
-resolution = ft_getopt(cfg, 'resolution', 1);
+resolution           = ft_getopt(cfg, 'resolution', 1);
 outer_surface_sphere = ft_getopt(cfg, 'outer_surface_sphere', 15);
-smooth_steps = ft_getopt(cfg, 'smooth_steps', 60);
+smooth_steps         = ft_getopt(cfg, 'smooth_steps', 60);
+headshape            = ft_getopt(cfg, 'headshape');
+fshome               = ft_getopt(cfg, 'fshome', '/Applications/freesurfer');
 
-headshape = ft_getopt(cfg, 'headshape');
+% add the FreeSurfer environment 
+fprintf('adding the FreeSurfer environment\n')
+addpath([fshome '/matlab']); % where make_outer_surface is located
+setenv('FREESURFER_HOME', fshome);
+PATH = getenv('PATH');
+setenv('PATH', [PATH ':' fshome '/bin']); % where mris_fill is located
 
 % temporary files
-surf_filled = [tempname() '_pial.filled.mgz'];
-surf_outer = [tempname() '_pial_outer'];
-surf_smooth = [tempname() '_pial_smooth'];
+surf_filled  = [tempname() '_pial.filled.mgz'];
+surf_outer   = [tempname() '_pial_outer'];
+surf_smooth  = [tempname() '_pial_smooth'];
 
 cmd = sprintf('mris_fill -c -r %d %s %s', resolution, headshape, ...
   surf_filled);

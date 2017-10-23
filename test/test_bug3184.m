@@ -3,7 +3,6 @@ function test_bug3184
 % WALLTIME 00:10:00
 % MEM 300mb
 
-% TEST test_bug3184
 % TEST getdimord ft_datatype_source ft_selectdata
 
 % it seems it already goes wrong at an earlier stage, since the data lacks

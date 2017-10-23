@@ -1,5 +1,5 @@
 function value=moxunit_fieldtrip_util_parse_dependency(line)
-% parse WALLTIME property in fieldtrip test
+% parse WALLTIME property in FieldTrip test
 %
 % value=moxunit_fieldtrip_util_parse_walltime(line)
 %

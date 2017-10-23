@@ -1,6 +1,5 @@
 function test_bug2639
 
-% TEST test_bug2639
 % TEST ft_checkdata
 
 % MEM 2gb

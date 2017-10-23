@@ -43,7 +43,7 @@ if ischar(new)
 end
 
 if length(old)~=length(new)
-  error('the number of field names does not match between old and new');
+  ft_error('the number of field names does not match between old and new');
 end
 
 % keep the fields that were not mentioned

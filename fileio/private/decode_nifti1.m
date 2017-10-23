@@ -28,7 +28,7 @@ end
 H = [];
 
 magic = char(blob(345:347));
-if blob(348)~=0 | magic~='ni1' & magic~='n+1'
+if blob(348)~=0 || magic~='ni1' && magic~='n+1'
   error 'Not a NIFTI-1 header!';
 end
 

@@ -47,7 +47,7 @@ if strcmpi(UnitT,'ms')
 elseif strcmpi(UnitT,'s')
   time = 1000*time;
 elseif ~isempty(UnitT)
-  error(sprintf('Unknown unit of time (%s)', UnitT));
+  ft_error(sprintf('Unknown unit of time (%s)', UnitT));
 end
 
 if strcmpi(UnitM,'uv')
@@ -63,7 +63,7 @@ elseif strcmpi(UnitM,'ft')
 elseif strcmpi(UnitM,'pt')
   val = 1000*val;
 elseif ~isempty(UnitM)
-  error(sprintf('Unknown unit of measurement (%s)', UnitM));
+  ft_error(sprintf('Unknown unit of measurement (%s)', UnitM));
 end
 
 if length(size(lab))==2

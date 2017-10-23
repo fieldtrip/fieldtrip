@@ -3,7 +3,6 @@ function test_bug1878
 % MEM 3gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1878
 % TEST ft_artifact_clip
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
@@ -19,7 +18,7 @@ load bug1878.mat
 % addpath(dccnpath('/home/common/matlab/fieldtrip'));
 % [cfg2, artifact2] = ft_artifact_clip(cfg, data1);
 
-% from now on the error should not happen any more with any future version of fieldtrip
+% from now on the error should not happen any more with any future version of FieldTrip
 [cfg2, artifact2] = ft_artifact_clip(cfg, data1);
 
 assert(isempty(artifact2), 'this dataset contains no clipping artifacts');

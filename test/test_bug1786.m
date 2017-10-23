@@ -3,7 +3,6 @@ function test_bug1786
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1786
 % TEST ft_channelrepair ft_prepare_neighbours
 
 % Original report:
@@ -15,10 +14,9 @@ function test_bug1786
 % Thanks
 % Yoel
 %
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1786
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1786
 
 % EEG bad electrode repair
-% requires fieldtrip
 % 
 % input format:
 % labels   - 1XN cell array  

@@ -3,13 +3,7 @@ function test_bug1775
 % MEM 2gb
 % WALLTIME 00:10:00
 
-% TEST test_bug1775
 % TEST ft_sourceparcellate ft_checkdata ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
 
 %% create a set of sensors
 [pnt, tri] = icosahedron162;
@@ -24,7 +18,7 @@ for i=1:length(sel)
   grad.label{i} = sprintf('magnetometer%d', i);
 end
 grad.unit = 'cm';
-grad.type = 'magnetometer';
+grad.type = 'meg';
 
 grad = ft_datatype_sens(grad);
 

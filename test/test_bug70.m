@@ -3,7 +3,6 @@ function test_bug70
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_bug70
 % TEST ft_prepare_headmodel ft_prepare_leadfield ft_headmodel_openmeeg
 
 % use FieldTrip defaults instead of personal defaults

@@ -44,7 +44,7 @@ function [trl] = read_fcdc_trl(fn)
 
 fid = fopen(fn, 'rt');
 if fid<0
-   error('could not open file');
+   ft_error('could not open file');
 end
 
 trl = [];

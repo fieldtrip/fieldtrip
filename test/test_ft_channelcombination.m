@@ -3,7 +3,6 @@ function test_ft_channelcombination
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_channelcombination
 % TEST ft_channelcombination
 
 % this function tests the new implementation of ft_channelcombination

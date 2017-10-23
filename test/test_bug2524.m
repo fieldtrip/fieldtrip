@@ -3,7 +3,6 @@ function test_bug2524
 % WALLTIME 00:10:00
 % MEM 1024mb
 
-% TEST test_bug2524
 % TEST ft_write_mri
 
 data = zeros(5,5,5);

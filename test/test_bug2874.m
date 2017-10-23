@@ -3,7 +3,6 @@ function test_bug2874
 % WALLTIME 00:10:100
 % MEM 1000mb
 
-% TEST test_bug2874
 % TEST ft_sourcegrandaverage
 
 pos = randn(19344, 3);

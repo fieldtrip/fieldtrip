@@ -58,7 +58,7 @@ if ~isfield(cfg.target, 'dataformat'),  cfg.target.dataformat = [];             
 % make a connection to the serial port
 fid = fopen(cfg.filename, 'r');
 if fid<0
-  error('cannot open %s', cfg.filename);
+  ft_error('cannot open %s', cfg.filename);
 else
   fprintf('opened %s\n', cfg.filename);
   c = onCleanup(@()fclose(fid));

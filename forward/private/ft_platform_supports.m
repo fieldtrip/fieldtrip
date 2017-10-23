@@ -18,6 +18,8 @@ function tf = ft_platform_supports(what,varargin)
 %   'int32_logical_operations'      bitand(a,b) with a, b of type int32
 %   'graphics_objects'              graphics sysem is object-oriented
 %   'libmx_c_interface'             libmx is supported through mex in the C-language (recent MATLAB versions only support C++)
+%   'images'                        all image processing functions in FieldTrip's external/images directory
+%   'signal'                        all signal processing functions in FieldTrip's external/signal directory
 %   'stats'                         all statistical functions in FieldTrip's external/stats directory
 %   'program_invocation_name'       program_invocation_name() (GNU Octave)
 %   'singleCompThread'              start MATLAB with -singleCompThread
@@ -34,6 +36,8 @@ function tf = ft_platform_supports(what,varargin)
 %   'griddata-v4'                   griddata(...,...,...,...,...,'v4') with v4 interpolation support
 %   'uimenu'                        uimenu(...)
 %   'weboptions'                    weboptions(...)
+%   'parula'                        parula(...)
+%   'html'                          html rendering in desktop
 %
 % See also FT_VERSION, VERSION, VER, VERLESSTHAN
 
@@ -70,6 +74,18 @@ switch what
   case 'libmx_c_interface'
     % removed after 2013b
     tf = is_matlab() && matlabversion(-Inf, '2013b');
+
+  case 'images'
+    root_dir = fileparts(which('ft_defaults'));
+    external_stats_dir = fullfile(root_dir, 'external', 'images');
+    
+    tf = has_all_functions_in_dir(external_stats_dir, {});
+    
+  case 'signal'
+    root_dir = fileparts(which('ft_defaults'));
+    external_stats_dir = fullfile(root_dir, 'external', 'signal');
+    
+    tf = has_all_functions_in_dir(external_stats_dir, {});
     
   case 'stats'
     root_dir = fileparts(which('ft_defaults'));
@@ -79,7 +95,6 @@ switch what
     exclude_mfiles = {
       'common_size.m'
       'iscomplex.m'
-      'lgamma.m'
       };
     
     tf = has_all_functions_in_dir(external_stats_dir, exclude_mfiles);
@@ -137,6 +152,12 @@ switch what
     
   case 'boundary'
     tf = is_matlab() && matlabversion('2014b', Inf);
+    
+  case 'parula'
+    tf = is_matlab() && matlabversion('2014b', Inf);
+
+  case 'html'
+    tf = ~is_octave() && usejava('desktop') && desktop('-inuse');
     
   otherwise
     error('unsupported value for first argument: %s', what);

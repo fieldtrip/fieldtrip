@@ -38,7 +38,7 @@ function out = read_nervus_data(nrvHdr, segment, range, chIdx)
 
 
 if nargin == 0
-    error('Missing argument');
+    ft_error('Missing argument');
 elseif nargin == 1
     segment = 1;
     range = [1 nrvHdr.Segments(1).duration*max(nrvHdr.Segments(1).samplingRate)];
@@ -111,7 +111,7 @@ for i = 1 : lChIdx
     end
     
     if lastSection > lastSectionForSegment
-        error('Index out of range for current section: %i > %i, on channel: %i', ...
+        ft_error('Index out of range for current section: %i > %i, on channel: %i', ...
             range(2), cSectionLengths(lastSectionForSegment+1), chIdx(i));
     end
     

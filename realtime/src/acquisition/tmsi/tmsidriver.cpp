@@ -5,7 +5,7 @@
 
 
 /*++
- 
+
 Copyright (c) 2000 TMS International
 
 Author:
@@ -14,11 +14,11 @@ Author:
 Environment:
     User mode
 
-Revision History: 
+Revision History:
 1 - Version 1,00:	first release
-2 - Version 1,01:	Support for multiple devices 
-3 - Version 1.02:	Support for Calibration and Impedance measurement 
-4 - Version 1.03:	Support for device specific features 
+2 - Version 1,01:	Support for multiple devices
+3 - Version 1.02:	Support for Calibration and Impedance measurement
+4 - Version 1.03:	Support for device specific features
 5 - Version 1.04;   Using Device Instance Id
 
 --*/
@@ -26,11 +26,11 @@ Revision History:
 /*
 
   General:
-		
-		Whenever I refer to a 'sample' in this software I mean 
-		a data structure representing a conversion result for all 
-		channels/signal for one single sample moment.  
-	
+
+		Whenever I refer to a 'sample' in this software I mean
+		a data structure representing a conversion result for all
+		channels/signal for one single sample moment.
+
 */
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -39,120 +39,119 @@ Revision History:
 #include <stdio.h>
 #include <wchar.h>
 #include <conio.h>
-#include <tchar.h> 
+#include <tchar.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 
-
 #include "RtDevice.h"
-#include "Feature.h" 
-#include "buffer.h" 
-#include "pthread.h" 
+#include "Feature.h"
+#include "buffer.h"
+#include "pthread.h"
 #include <math.h>
 
 using namespace std;
-  
+
 #define MAX_DEVICE			1	//Max number of devices supported by this demo
 #define USE_MASTER_SLAVE	FALSE
 
 
 /*
 *	SignalInfo
-*	function is used to get information about available signals of a device 
+*	function is used to get information about available signals of a device
 */
 
 
 ULONG SignalInfo(RTDevice *Device)
-{	BOOLEAN Allocate = FALSE; 
-	ULONG BytesPerSample = 0 ; 
+{	BOOLEAN Allocate = FALSE;
+	ULONG BytesPerSample = 0 ;
 	ULONG i,NumberOfChannels = 0;
 
 
 	PSIGNAL_FORMAT psf;
-	
-	if( Allocate ) 
+
+	if( Allocate )
 	{
 		SIGNAL_FORMAT sf;
 		memset( &sf ,0, sizeof( SIGNAL_FORMAT ) );
-		sf.Elements = 1; 
-		sf.Size = sizeof( SIGNAL_FORMAT ); 
-		
+		sf.Elements = 1;
+		sf.Size = sizeof( SIGNAL_FORMAT );
+
 
 		if( Device->GetSignalFormat( &sf ) != NULL )
-		{	ULONG TotalSize = sf.Size * sf.Elements; 
-			
-			psf = (SIGNAL_FORMAT *) LocalAlloc( LMEM_FIXED | LMEM_ZEROINIT , TotalSize ); 
-			if( psf == NULL ) return 0; 
+		{	ULONG TotalSize = sf.Size * sf.Elements;
 
-			psf[0].Size = sf.Size; 
-			psf[0].Elements = sf.Elements; 
-			
+			psf = (SIGNAL_FORMAT *) LocalAlloc( LMEM_FIXED | LMEM_ZEROINIT , TotalSize );
+			if( psf == NULL ) return 0;
+
+			psf[0].Size = sf.Size;
+			psf[0].Elements = sf.Elements;
+
 			Device->GetSignalFormat( psf );
 		}
 	}
-	else 
-		psf = Device->GetSignalFormat( NULL ); 
+	else
+		psf = Device->GetSignalFormat( NULL );
 
-	if( psf != NULL ) 
-	{	
-		UINT Size = LocalSize( psf ); 
-		
-		if( Size < sizeof( SIGNAL_FORMAT ) * psf->Elements ) 
-			return 0; 
-				
-		NumberOfChannels = psf->Elements; 
+	if( psf != NULL )
+	{
+		UINT Size = LocalSize( psf );
+
+		if( Size < sizeof( SIGNAL_FORMAT ) * psf->Elements )
+			return 0;
+
+		NumberOfChannels = psf->Elements;
 		wprintf(L"\n");
-		for( i = 0 ; i < NumberOfChannels ; i++ ) 
-		{	BytesPerSample += psf[i].Bytes; 
-			wprintf(L"\nChannel %3d: %s on device %s:%d",i+1,psf[i].Name,psf[i].PortName,psf[i].SerialNumber ); 
+		for( i = 0 ; i < NumberOfChannels ; i++ )
+		{	BytesPerSample += psf[i].Bytes;
+			wprintf(L"\nChannel %3d: %s on device %s:%d",i+1,psf[i].Name,psf[i].PortName,psf[i].SerialNumber );
 		}
 		//Remove the data from memory
-		if( Allocate ) LocalFree( psf ); 
-		else Device->Free( psf ); 
+		if( Allocate ) LocalFree( psf );
+		else Device->Free( psf );
 
 		wprintf(L"\n");
-	}	
-	
-	return BytesPerSample; 
+	}
+
+	return BytesPerSample;
 }
 
 
 
 
 ULONG UseMasterSlave( RTDeviceEx **Devices , ULONG Max )
-{	ULONG NrOfDevices; 
+{	ULONG NrOfDevices;
 	ULONG x;
 
 	for(x = 0 ; x < Max ;x++ )
 	{	Devices[x] = new RTDeviceEx(x);
-		if( Devices[x] == NULL ) break; 
-		
-		if( !Devices[x]->InitOk) 
-		{	delete Devices[x]; 
-			Devices[x] = NULL; 
-			break; 
-		}		
+		if( Devices[x] == NULL ) break;
+
+		if( !Devices[x]->InitOk)
+		{	delete Devices[x];
+			Devices[x] = NULL;
+			break;
+		}
 	}
 
-	NrOfDevices = x; 
+	NrOfDevices = x;
 
-	for( x = 0 ; x < NrOfDevices ; x++ ) 
-	{	TCHAR DeviceName[40] = _T("Unknown Device"); 
-		ULONG SerialNumber = 0; 
+	for( x = 0 ; x < NrOfDevices ; x++ )
+	{	TCHAR DeviceName[40] = _T("Unknown Device");
+		ULONG SerialNumber = 0;
 		ULONG Size;
-	
+
 		Size = sizeof( SerialNumber );
 		RegQueryValueEx( Devices[x]->DeviceRegKey , _T("DeviceSerialNumber"), NULL , NULL , (PBYTE)&SerialNumber , &Size  );
 
 		Size = sizeof( DeviceName );
-		RegQueryValueEx( Devices[x]->DeviceRegKey , _T("DeviceDescription"), NULL , NULL , (PBYTE)&DeviceName[0] , &Size  ); 
-		
-		_tprintf( _T("%d . %s %d\n"), x + 1, DeviceName , SerialNumber	); 
+		RegQueryValueEx( Devices[x]->DeviceRegKey , _T("DeviceDescription"), NULL , NULL , (PBYTE)&DeviceName[0] , &Size  );
 
-		
-		if( x!= 0 ) 
-		{	HANDLE SlaveHandle = Devices[x]->GetSlaveHandle(); 
+		_tprintf( _T("%d . %s %d\n"), x + 1, DeviceName , SerialNumber	);
+
+
+		if( x!= 0 )
+		{	HANDLE SlaveHandle = Devices[x]->GetSlaveHandle();
 			if(SlaveHandle == 0 )
 				_tprintf( _T("Unable to get a handle from device %d\n"), x + 1 );
 			break;
@@ -165,107 +164,107 @@ ULONG UseMasterSlave( RTDeviceEx **Devices , ULONG Max )
 
 
 RTDeviceEx *SelectDevice( IN BOOLEAN Present )
-{	ULONG Count = 0; 
-	ULONG Max = 0; 
-	RTDeviceEx *Device; 
+{	ULONG Count = 0;
+	ULONG Max = 0;
+	RTDeviceEx *Device;
 
-	Device = new RTDeviceEx; 
+	Device = new RTDeviceEx;
 
 	if( Device == NULL )
 		return NULL;
 
 	if( !Device->InitOk  )
 	{	delete Device;
-		return NULL; 
+		return NULL;
 	}
-	
-	PSP_DEVICE_PATH Id; 
+
+	PSP_DEVICE_PATH Id;
 
 	while(1)
-	{	TCHAR DeviceName[40] = _T("Unknown Device"); 
-		ULONG SerialNumber = 0; 
+	{	TCHAR DeviceName[40] = _T("Unknown Device");
+		ULONG SerialNumber = 0;
 
-	
-		HKEY hKey; 
-		
-		Id = Device->GetInstanceId( Count++ , Present , &Max ); 
-		if( !Id ) break; 
 
-		hKey = Device->OpenRegistryKey( Id ); 
+		HKEY hKey;
 
-		if( hKey != INVALID_HANDLE_VALUE ) 
-		{	ULONG Size; 
-	
+		Id = Device->GetInstanceId( Count++ , Present , &Max );
+		if( !Id ) break;
+
+		hKey = Device->OpenRegistryKey( Id );
+
+		if( hKey != INVALID_HANDLE_VALUE )
+		{	ULONG Size;
+
 			Size = sizeof( SerialNumber );
 			RegQueryValueEx( hKey , _T("DeviceSerialNumber"), NULL , NULL , (PBYTE)&SerialNumber , &Size  );
 
 			Size = sizeof( DeviceName );
-			if( RegQueryValueEx( hKey , _T("DeviceDescription"), NULL , NULL , (PBYTE)&DeviceName[0] , &Size  ) 
+			if( RegQueryValueEx( hKey , _T("DeviceDescription"), NULL , NULL , (PBYTE)&DeviceName[0] , &Size  )
 				== ERROR_SUCCESS )
 			{
-				_tprintf( "%d . %s %d\n" , Count , DeviceName , SerialNumber	); 
+				_tprintf( "%d . %s %d\n" , Count , DeviceName , SerialNumber	);
 			}
-				
-			RegCloseKey( hKey ); 
+
+			RegCloseKey( hKey );
 		}
 
-		Device->Free( Id ); 		
+		Device->Free( Id );
 	}
 
-	if( Max == 0 ) 
+	if( Max == 0 )
 	{	printf("There are no device connected to the PC\n");
-		return NULL; 
+		return NULL;
 	}
 
 	if( Max == 1 )
 	{	Id = Device->GetInstanceId( 0 , Present );
-	
+
 	}
 	else
-	{	printf("Please select device ...\n\n"); 
+	{	printf("Please select device ...\n\n");
 		while( _kbhit() ){}
 		while( !_kbhit() ){}
 		int key = _getch() - '0';
 		Id = Device->GetInstanceId( key - 1 , Present );
 	}
 
-	if( !Device->Open( Id ) ) 
-	{	Device->Free( Id );	
-		delete Device; 
-		return NULL; 
+	if( !Device->Open( Id ) )
+	{	Device->Free( Id );
+		delete Device;
+		return NULL;
 	}
 
-	return Device; 
+	return Device;
 }
 
 
 
 RTDeviceEx *InitDevice( ULONG SampRate)
-// Get handle to my device and init the device 
-{	ULONG Index;	
-	ULONG NrOfSamples=0,Total=0; 
+// Get handle to my device and init the device
+{	ULONG Index;
+	ULONG NrOfSamples=0,Total=0;
 
 
 	RTDeviceEx *Device[MAX_DEVICE];
 	for(Index=0;Index < MAX_DEVICE;Index++)
 		Device[Index] = NULL;
-	
-	RTDeviceEx *MasterL;
-	
-	if( USE_MASTER_SLAVE )
-		UseMasterSlave( Device , MAX_DEVICE ); 
-	else 
-		Device[0] = SelectDevice( TRUE );  
 
-	MasterL = Device[0]; 
-		
-	if( MasterL == NULL ) 
+	RTDeviceEx *MasterL;
+
+	if( USE_MASTER_SLAVE )
+		UseMasterSlave( Device , MAX_DEVICE );
+	else
+		Device[0] = SelectDevice( TRUE );
+
+	MasterL = Device[0];
+
+	if( MasterL == NULL )
 	{	_getch();
-		return 0; 
-	
+		return 0;
+
 	}
 
-	MasterL->Reset();		
+	MasterL->Reset();
 
 return MasterL;
 }
@@ -273,36 +272,36 @@ return MasterL;
 bool fexists(const char *filename)
 {
   ifstream ifile(filename);
-  return ifile;
+  return (!ifile.bad());
 }
 
 
 int main(int argc, char* argv[])
-{	
+{
 	ULONG SampleRate;
 	int BufSizeFactor=5;
 	int SaveData;
 	ULONG BufferSize;
 
-	
-	ULONG NrOfSamples=0,Total=0; 
+
+	ULONG NrOfSamples=0,Total=0;
 	ULONG PercentFull,Overflow;
 	ULONG BytesPerSample=72;
 	ULONG BytesReturned;
 	ULONG TotalNrChannelsInDevice;
 
-// Buffer for storing the samples; 
+// Buffer for storing the samples;
 	ULONG SignalBuffer[1000];
 	SampleRate = MAX_SAMPLE_RATE;
 	BufferSize = MAX_BUFFER_SIZE;
 
 
-	
+
 	SIGNAL_FORMAT sf;
     PSIGNAL_FORMAT psf;
 	memset( &sf ,0, sizeof( SIGNAL_FORMAT ) );
-		sf.Elements = 1; 
-		sf.Size = sizeof( SIGNAL_FORMAT ); 
+		sf.Elements = 1;
+		sf.Size = sizeof( SIGNAL_FORMAT );
 
 
 	RTDeviceEx *Master;
@@ -311,46 +310,46 @@ int main(int argc, char* argv[])
 
 	Master->SetSignalBuffer(&SampleRate,&BufferSize);
 
-	ULONG TotalSize = sf.Size * sf.Elements; 
-	
+	ULONG TotalSize = sf.Size * sf.Elements;
 
-	
 
-	psf = (SIGNAL_FORMAT *) LocalAlloc( LMEM_FIXED | LMEM_ZEROINIT , TotalSize ); 
-			if( psf == NULL ) return 0; 
 
-			psf[0].Size = sf.Size; 
+
+	psf = (SIGNAL_FORMAT *) LocalAlloc( LMEM_FIXED | LMEM_ZEROINIT , TotalSize );
+			if( psf == NULL ) return 0;
+
+			psf[0].Size = sf.Size;
 			psf[0].Elements = sf.Elements;
 
 	Master->GetSignalFormat( psf );
 
 	TotalNrChannelsInDevice=psf[0].Elements;
 	//Remove the data from memory
-	 LocalFree( psf ); 
+	 LocalFree( psf );
 
-// Get the size of each sample 
-//BytesPerSample = SignalInfo(Master); 
-//Leuk dit lijkt niet te kloppen volgens inf en documentatie geeft de refa inderdaad 220 bytes per samples af 
+// Get the size of each sample
+//BytesPerSample = SignalInfo(Master);
+//Leuk dit lijkt niet te kloppen volgens inf en documentatie geeft de refa inderdaad 220 bytes per samples af
 // helaas wordt in de buffer vier bytes per channel * 74 =296 GEBRUIKT
 // dus bij het lezen van de Buffer dit getal bebruiken
 	BytesPerSample=4*(TotalNrChannelsInDevice);
 
-	if( BytesPerSample == 0 ) 
-	{	printf( "\nDevice returns no samples" ); 
+	if( BytesPerSample == 0 )
+	{	printf( "\nDevice returns no samples" );
 		_getch();
-		return 0; 
+		return 0;
 	}
 
 	wprintf(L"\nMaximum sample rate = %d Hz",SampleRate  / 1000 );
 	wprintf(L"\nMaximum Buffer size = %d Samples",BufferSize);
-	
+
 	// Read sample freq and  blocksize factor from parameter file
 	char dummy1[80],dummy2[80],dummy3[80];
 	FILE *pFile;
-    
+
 	if( fexists("parameter.txt"))
 	{
-	
+
 
 	pFile=fopen("parameter.txt","r");
 	  fscanf (pFile, "%s %s %s", dummy1,dummy2,dummy3);
@@ -358,8 +357,8 @@ int main(int argc, char* argv[])
       fclose (pFile);
 	  printf("\n %s %s %s \n ", dummy1,dummy2,dummy3);
       printf("\n %u %u %u \n ",SampleRate,BufSizeFactor,SaveData);
-	
-	} 
+
+	}
 	//create datafile to store data from the aquisition device
 	FILE *pOutputFile;
     char maand[2],dag[2],uur[4],minuut[2],seconde[4];
@@ -386,11 +385,11 @@ int main(int argc, char* argv[])
 	pOutputFile=fopen(filename,"w");
 	}
 	//fclose (pOutputFile);
-	
-	//Set sample rate 
-	//SampleRate = 500000 ;     
+
+	//Set sample rate
+	//SampleRate = 500000 ;
 	//Set buffer size;
-	BufferSize = 1000; 
+	BufferSize = 1000;
 
 	Master->SetSignalBuffer(&SampleRate ,&BufferSize);
 
@@ -402,10 +401,10 @@ int main(int argc, char* argv[])
     pthread_t tid;
     int connection;
 
-	check_datatypes(); 
+	check_datatypes();
 	sprintf(host.name, DEFAULT_HOSTNAME);
 	host.port = DEFAULT_PORT;
-	
+
 	/* start the buffer in a seperate thread */
 	rc = pthread_create(&tid, NULL, tcpserver, (void *)(&host));
 	if (rc) {
@@ -417,13 +416,13 @@ int main(int argc, char* argv[])
 
     int i=0, j=0,k=0,sample = 0, status = 0, verbose = 0,datablockready=0;
 	long tdif;
-	
+
 
 	/* these represent the acquisition system properties */
-	
 
-	
- 
+
+
+
 	int nchans         = TotalNrChannelsInDevice+1;//one channel extra for the sample nr
 	int fsample        = SampleRate/1000;
 	int buffersamp	   = 0;
@@ -500,14 +499,14 @@ int main(int argc, char* argv[])
     request = NULL;
     response = NULL;
 
-	// Some example routines for testing device features 
-	
-	/********** MEASURING MODE ****************/ 
-	
-	// Measuring mode can switch the device to 
-	// Calbartion mode 
+	// Some example routines for testing device features
+
+	/********** MEASURING MODE ****************/
+
+	// Measuring mode can switch the device to
+	// Calbartion mode
 	// Impedance mode
-	// and back to normal measurment 
+	// and back to normal measurment
 
 	/*
 	#define MEASURE_MODE_NORMAL			((ULONG)0x0)
@@ -515,105 +514,105 @@ int main(int argc, char* argv[])
 	#define MEASURE_MODE_CALIBRATION	((ULONG)0x2)
 	#define MEASURE_MODE_IMPEDANCE_EX	((ULONG)0x3)
 	#define MEASURE_MODE_CALIBRATION_EX	((ULONG)0x4)
-	
-	
-	if( !Master->MeasuringMode( MEASURE_MODE_IMPEDANCE_EX  ,  1   ) ) 
+
+
+	if( !Master->MeasuringMode( MEASURE_MODE_IMPEDANCE_EX  ,  1   ) )
 	{
 		wprintf(L"\nCalibartion and Impedance measurement not supported by this device\n");
 	}
-	
-	return 0; 
+
+	return 0;
 	*/
 
-	
+
 	/************ RTC *****************/
 	//Some portable devices has an internal clock
-	
-	/*
-	SYSTEMTIME time ; 
-	
-	GetLocalTime( &time ); 
 
-	Master->SetRtcAlarmTime( &time ); 
-	Master->SetRtcTime( &time ); 
+	/*
+	SYSTEMTIME time ;
+
+	GetLocalTime( &time );
+
+	Master->SetRtcAlarmTime( &time );
+	Master->SetRtcTime( &time );
 	if( Master->GetRtcTime( &time ) )
 	{	wprintf(L"\nDevice has a realtime clock ,");
 		wprintf(L"Date = %d-%d-%d , Time = %d:%d:%d " ,
-				time.wDay ,time.wMonth , time.wYear , 
-				time.wHour , time.wMinute ,time.wSecond ); 	
+				time.wDay ,time.wMonth , time.wYear ,
+				time.wHour , time.wMinute ,time.wSecond );
 	}
-	
-	*/	
-	/********** OFFSET **********/ 
+
+	*/
+	/********** OFFSET **********/
 	/*
-	float Offset[2] = { 1000, 1000 }; 
-	if( !Master->SetOffset( Offset, sizeof(Offset) / sizeof(float)  ) ) 
+	float Offset[2] = { 1000, 1000 };
+	if( !Master->SetOffset( Offset, sizeof(Offset) / sizeof(float)  ) )
 	{	ShowError("Unable to set offset");
 	}
 	*/
-			
-	/********** GAIN **********/ 
+
+	/********** GAIN **********/
 	/*
-	float Gain[2] = { 1 , 1 }; 
-	if( !Master->SetGain( Gain , sizeof(Gain) / sizeof(float)  ) ) 
+	float Gain[2] = { 1 , 1 };
+	if( !Master->SetGain( Gain , sizeof(Gain) / sizeof(float)  ) )
 	{	ShowError("Unable to set gain");
-	}		
+	}
 	*/
-	/********** HIGHPASS **********/ 
+	/********** HIGHPASS **********/
 	/*
-	float HighPass[2]; 
-	HighPass[0] = (float)10.0 * ( SampleRate / 1000 ) ; //10 second highpass filter for channel 0 
+	float HighPass[2];
+	HighPass[0] = (float)10.0 * ( SampleRate / 1000 ) ; //10 second highpass filter for channel 0
 	HighPass[1] = (float)0.1 * ( SampleRate / 1000 ) ;  //0.1 second highpass filter for channel 1
-	if( !Master->SetHighPass( HighPass , sizeof(HighPass) / sizeof(float)  ) ) 
+	if( !Master->SetHighPass( HighPass , sizeof(HighPass) / sizeof(float)  ) )
 	{	ShowError("Unable to set highpass filter");
 	}
-	/********** LOWPASS **********/ 
+	/********** LOWPASS **********/
 	/*
-	float LowPass[2]; 
-	LowPass[0] = (float)10.0 * ( SampleRate / 1000 ) ; 
-	LowPass[1] = (float)0.1 * ( SampleRate / 1000 ) ; 
-	if( !Master->SetLowPass( LowPass , sizeof(LowPass) / sizeof(float)  ) ) 
+	float LowPass[2];
+	LowPass[0] = (float)10.0 * ( SampleRate / 1000 ) ;
+	LowPass[1] = (float)0.1 * ( SampleRate / 1000 ) ;
+	if( !Master->SetLowPass( LowPass , sizeof(LowPass) / sizeof(float)  ) )
 	{	ShowError("Unable to set lowpass filter");
 	}
 	*/
-    
-//Set sample rate 
-	
-    
+
+//Set sample rate
+
+
 	if(Master->Start() )
-	{	
+	{
 		//ULONG ShowChannel = 1;
 		wprintf(L"\nPress any key to quit \n");
 
 		// Stop the program if we hit any key
 		i=0; j=0; char intstr[5];
 		while(!_kbhit())
-		{	//beginwhile		
+		{	//beginwhile
 			//Get Signal buffer information
 			Master->GetBufferInfo(&Overflow,&PercentFull);
-			
+
 			if( PercentFull > 0)
 			{	//beginPF
 				// if there is data available get samples from the device
 				// GetSamples returns the number of bytes written in the signal buffer
-				// This will always be a multiple op BytesPerSample. 
-			
+				// This will always be a multiple op BytesPerSample.
+
 				// Divide the result by BytesPerSamples to get the number of samples returned
-	           
-			
+
+
 				BytesReturned = Master->GetSamples((PULONG)SignalBuffer,sizeof(SignalBuffer));
-				
-				if( BytesReturned != 0) 
-				{	Total += BytesReturned; 
+
+				if( BytesReturned != 0)
+				{	Total += BytesReturned;
 	//				wprintf(L"\rSampleCounter = %8d, ,Sampwritten=%8d,Samp[%d]=%d, %d ,Buffer  = %d, Overflow = %d      " , Total /BytesPerSample ,sample, ShowChannel,SignalBuffer[ShowChannel], SignalBuffer[ShowChannel + 1],PercentFull,Overflow);
 				buffersamp=(BytesReturned/BytesPerSample);
 				Totalsamp+=buffersamp;
 				/*fill the data block */
 				k=0;
 				while (k<buffersamp)
-				{	
+				{
 					while ((i<blocksize)&&(k<buffersamp))
-						{	
+						{
 						for (j=0; j<nchans;j++)
 						{
 						if (j<1)
@@ -637,13 +636,13 @@ int main(int argc, char* argv[])
 						k++;i++;sample++;
 						}//end while blocksize
 
-				
+
 				if (i==blocksize)
-				{  
-			
-				
-		
-		
+				{
+
+
+
+
 		/* create the request */
 		request      =static_cast<message_t*>(malloc(sizeof(message_t)));
 		request->def =static_cast<messagedef_t*>(malloc(sizeof(messagedef_t)));
@@ -682,13 +681,13 @@ int main(int argc, char* argv[])
 		}//endK
 
 		}//endBytesreturned
-			else 
-			{	//allow other applications some extra process time 
+			else
+			{	//allow other applications some extra process time
 				Sleep(10);
 			}
-		}//end PercentFull	
-		
-		
+		}//end PercentFull
+
+
 		}//endwhile
 
 		//Stop the device
@@ -712,28 +711,28 @@ int main(int argc, char* argv[])
 		}
 		else
 		{	wprintf(L"\nUnable to stop the device\n");
-		
+
 		}
-		
-	   //Unchain any slave devices 
+
+	   //Unchain any slave devices
 		Master->GetSlaveHandle();
 
 	}
-	else 
+	else
 	{	wprintf(L"\nUnable to start the Device\n");
 
 	}
 
-	//Clear memory before closing 
+	//Clear memory before closing
 //	for(Index=0;Index < MAX_DEVICE;Index++)
 //	{	if( Device[Index] != NULL )
-//		{	delete Device[Index]; 
-//			Device[Index] = NULL; 
+//		{	delete Device[Index];
+//			Device[Index] = NULL;
 //		}
 //	}
 
-	_getch(); 
-	
+	_getch();
+
     fclose (pOutputFile);
     pthread_exit(0);
 	return 0;

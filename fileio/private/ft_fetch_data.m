@@ -48,7 +48,7 @@ if isempty(hdr)
 end
 
 if isempty(begsample) || isempty(endsample)
-  error('begsample and endsample must be specified');
+  ft_error('begsample and endsample must be specified');
 end
 
 if isempty(chanindx)
@@ -59,7 +59,7 @@ end
 if isfield(data, 'sampleinfo')
   trl = data.sampleinfo;
 else
-  error('data does not contain a consistent trial definition, fetching data is not possible');
+  ft_error('data does not contain a consistent trial definition, fetching data is not possible');
 end
 trlnum = length(data.trial);
 
@@ -76,15 +76,15 @@ if trlnum>1
   
   % check whether data.trial is consistent with trl
   if size(trl,1)~=length(data.trial)
-    error('trial definition is not internally consistent')
+    ft_error('trial definition is not internally consistent')
   elseif any(trllen~=(trl(:,2)-trl(:,1)+1))
-    error('trial definition is not internally consistent')
+    ft_error('trial definition is not internally consistent')
   end
   
   minchan = min(chanindx);
   maxchan = max(chanindx);
   if minchan<1 || maxchan>hdr.nChans
-    error('selected channels are not present in the data')
+    ft_error('selected channels are not present in the data')
   end
   
   % these are for bookkeeping
@@ -127,7 +127,7 @@ if trlnum>1
   % check if all samples are present and are not present twice or more
   if any(count>1)
     if ~allowoverlap
-      % error('some of the requested samples occur twice in the data');
+      % ft_error('some of the requested samples occur twice in the data');
       % this  can be considered OK if the overlap has exactly identical values
       sel = find(count>1); % must be row vector
       for smplop=sel
@@ -137,17 +137,17 @@ if trlnum>1
         for i=2:length(seltrl)
           % compare all occurences to the first one
           if ~all(data.trial{seltrl(i)}(:,selsmp(i)) == data.trial{seltrl(1)}(:,selsmp(1)))
-            error('some of the requested samples occur twice in the data and have conflicting values');
+            ft_error('some of the requested samples occur twice in the data and have conflicting values');
           end
         end
       end
     else
-      warning('samples present in multiple trials, using only the last occurence of each sample')
+      ft_warning('samples present in multiple trials, using only the last occurence of each sample')
     end
   end
   
   %   if any(count==0)
-  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %     ft_warning('not all requested samples are present in the data, filling with NaNs');
   %   end
   
   % construct the output data array
@@ -196,7 +196,7 @@ else
   datendindx = min(endsample-begsample+1, trl(2)-begsample+1);
   
   %   if begsample<trl(1) || endsample>trl(2)
-  %     warning('not all requested samples are present in the data, filling with NaNs');
+  %     ft_warning('not all requested samples are present in the data, filling with NaNs');
   %   end
   
   if begsample >= trl(1) && begsample <= trl(2)

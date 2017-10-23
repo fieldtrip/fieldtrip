@@ -1,0 +1,12 @@
+[General]
+port=1972
+hostname=-
+verbose=2
+; all latencies are specified in milliseconds
+monitor=5000
+timeout=60000
+slip=5000
+blocksize=2000
+callbacksize=50
+; this allows you to change the loudness
+calib=1

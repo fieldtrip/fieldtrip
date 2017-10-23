@@ -1,6 +1,5 @@
 function test_bug2800
 
-% TEST test_bug2800
 % TEST project_elec
 
 % WALLTIME 00:10:00

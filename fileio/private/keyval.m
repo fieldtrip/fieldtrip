@@ -44,7 +44,7 @@ if nargin==2 && iscell(varargin{1})
 end
 
 if mod(length(varargin),2)
-  error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
+  ft_error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
 end
 
 % the 1st, 3rd, etc. contain the keys, the 2nd, 4th, etc. contain the values
@@ -58,7 +58,7 @@ for i=1:numel(keys)
 end
 
 if ~all(valid)
-  error('optional input arguments should come in key-value pairs, the optional input argument %d is invalid (should be a string)', i);
+  ft_error('optional input arguments should come in key-value pairs, the optional input argument %d is invalid (should be a string)', i);
 end
 
 hit = find(strcmpi(key, keys));
@@ -69,7 +69,7 @@ elseif length(hit)==1
   % the requested key was found
   val = vals{hit};
 else
-  error('multiple input arguments with the same name');
+  ft_error('multiple input arguments with the same name');
 end
 
 if nargout>1

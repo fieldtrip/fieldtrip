@@ -85,10 +85,10 @@ switch lower(spmversion)
       case 4
         N.dat(:,:,:, :) = data;
       otherwise
-        error('Invalid output dimensions');
+        ft_error('Invalid output dimensions');
     end
     Va = spm_vol(N.dat.fname);
     
   otherwise
-    error('unsupported SPM version requested');
+    ft_error('unsupported SPM version requested');
 end

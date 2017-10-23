@@ -140,7 +140,7 @@ switch cfg.method
       else
         cfg.degree = 32;
       end
-    end;
+    end
   otherwise
     cfg = ft_checkconfig(cfg); % perform a simple consistency check
 end
@@ -152,7 +152,7 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'iseeg','yes','ismeg',[]);
 
 % select trials of interest
-tmpcfg = keepfields(cfg, 'trials');
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -204,7 +204,7 @@ elseif strcmp(cfg.method, 'finite')
   tri = delaunay(prj(:,1), prj(:,2));
   % the new electrode montage only needs to be computed once for all trials
   montage.tra = lapcal(elec.chanpos, tri);
-  montage.labelorg = data.label;
+  montage.labelold = data.label;
   montage.labelnew = data.label;
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
@@ -213,35 +213,35 @@ elseif strcmp(cfg.method, 'finite')
 elseif strcmp(cfg.method, 'hjorth')
   % convert the neighbourhood structure into a montage
   labelnew = {};
-  labelorg = {};
+  labelold = {};
   for i=1:length(cfg.neighbours)
-    labelnew  = cat(2, labelnew, cfg.neighbours(i).label);
-    labelorg = cat(2, labelorg, cfg.neighbours(i).neighblabel(:)');
+    labelnew = cat(2, labelnew, cfg.neighbours(i).label);
+    labelold = cat(2, labelold, cfg.neighbours(i).neighblabel(:)');
   end
-  labelorg = cat(2, labelnew, labelorg);
-  labelorg = unique(labelorg);
-  tra = zeros(length(labelnew), length(labelorg));
+  labelold = cat(2, labelnew, labelold);
+  labelold = unique(labelold);
+  tra = zeros(length(labelnew), length(labelold));
   for i=1:length(cfg.neighbours)
-    thischan   = match_str(labelorg, cfg.neighbours(i).label);
-    thisneighb = match_str(labelorg, cfg.neighbours(i).neighblabel);
+    thischan   = match_str(labelold, cfg.neighbours(i).label);
+    thisneighb = match_str(labelold, cfg.neighbours(i).neighblabel);
     tra(i, thischan) = 1;
     tra(i, thisneighb) = -1/length(thisneighb);
   end
   % combine it in a montage
   montage.tra = tra;
-  montage.labelorg = labelorg;
+  montage.labelold = labelold;
   montage.labelnew = labelnew;
   % apply the montage to the data, also update the electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
 
 else
-  error('unknown method for SCD computation');
+  ft_error('unknown method for SCD computation');
 end
 
 if strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'finite')
   % correct the units
-  warning('trying to correct the units, assuming uV and mm');
+  ft_warning('trying to correct the units, assuming uV and mm');
   for trlop=1:Ntrials
     % The surface laplacian is proportional to potential divided by squared distance which means that, if
     % - input potential is in uV, which is 10^6 too large

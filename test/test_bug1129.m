@@ -3,7 +3,6 @@ function test_bug1129
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1129
 % TEST ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
 
 % change filter order for 'fir' (fir1) filter type, rather than 25 by

@@ -101,7 +101,7 @@ pchanindx   = ft_getopt(varargin, 'pchanindx');
 allchanindx = ft_getopt(varargin, 'allchanindx');
 
 if isempty(dimord)
-  error('input parameters should contain a dimord');
+  ft_error('input parameters should contain a dimord');
 end
 
 siz = [size(input) 1];
@@ -120,7 +120,7 @@ if ~isempty(pchanindx),
   A  = zeros(newsiz);
   
   % FIXME this only works for data without time dimension
-  if numel(siz)==5 && siz(5)>1, error('this only works for data without time'); end
+  if numel(siz)==5 && siz(5)>1, ft_error('this only works for data without time'); end
   for j = 1:siz(1) %rpt loop
     AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  siz(4:end)]);
     AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan siz(4:end)]);
@@ -233,5 +233,5 @@ switch str
   case '-logabs'
     c = -log(1 - abs(c).^2);
   otherwise
-    error('complex = ''%s'' not supported', str);
+    ft_error('complex = ''%s'' not supported', str);
 end

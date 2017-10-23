@@ -62,12 +62,12 @@ ftpath = fileparts(mfilename('fullpath'));
 ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
 
 if isempty(issvn)
-  % are we dealing with an SVN working copy of fieldtrip?
+  % are we dealing with an SVN working copy of FieldTrip?
   issvn = isdir(fullfile(ftpath, '.svn'));
 end
 
 if isempty(isgit)
-  % are we dealing with an GIT working copy of fieldtrip?
+  % are we dealing with an GIT working copy of FieldTrip?
   isgit = exist(fullfile(ftpath, '.git'), 'file');
 end
 
@@ -87,7 +87,7 @@ if issvn
   if status > 0
     if ~ispc
       % the command line tools will probably not be available on windows
-      warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
+      ft_warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
     end
     ftver = 'unknown';
   else
@@ -102,7 +102,7 @@ elseif isgit
   if status>0
     if ~ispc
       % the command line tools will probably not be available on windows
-      warning('you seem to have an GIT development copy of FieldTrip, yet ''git'' does not work as expected');
+      ft_warning('you seem to have an GIT development copy of FieldTrip, yet ''git'' does not work as expected');
     end
     ftver = 'unknown';
     
@@ -125,7 +125,7 @@ elseif isgit
           ftver = 'yes';
         end
       otherwise
-        error('unsupported command "%s"');
+        ft_error('unsupported command "%s"');
     end
     cd(olddir);
     

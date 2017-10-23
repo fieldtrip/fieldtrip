@@ -88,7 +88,7 @@ if ~isfield(cfg, 'cutoff')
 else
   cutoff = cfg.cutoff / (0.5*hdr.Fs);
   if cutoff >= 1
-    error('Cutoff frequency too high');
+    ft_error('Cutoff frequency too high');
   end
 end
 [B,A] = butter(cfg.order, cutoff, 'low');
@@ -98,7 +98,7 @@ cfg.channel = ft_channelselection(cfg.channel, hdr.label);
 chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 if nchan==0
-  error('no channels were selected');
+  ft_error('no channels were selected');
 end
 
 minblocksmp = round(cfg.minblocksize*hdr.Fs);

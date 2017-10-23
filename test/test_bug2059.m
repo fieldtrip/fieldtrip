@@ -3,7 +3,6 @@ function test_bug2059
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2059
 % TEST ft_topoplotER ft_channelselection
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));

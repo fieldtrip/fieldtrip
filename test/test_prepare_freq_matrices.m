@@ -3,7 +3,6 @@ function test_prepare_freq_matrices
 % WALLTIME 00:10:00
 % MEM 1000mb
 
-% TEST test_prepare_freq_matrices
 % TEST prepare_freq_matrices ft_sourceanalysis
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg');
@@ -138,17 +137,17 @@ cfg.frequency = 10;
 cfg.refchan   = 'BR1';
 [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-assert(isequal(a1,b1));
-assert(isequal(a2,b2));
-assert(isequal(a3,b3));
+assert(isalmostequal(a1,b1,'reltol',1e-9));
+assert(isalmostequal(a2,b2,'reltol',1e-9));
+assert(isalmostequal(a3,b3,'reltol',1e-9));
 
 cfg.frequency = 10.6;
 cfg.refchan   = 'BR1';
 [a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
-assert(isequal(a1,b1));
-assert(isequal(a2,b2));
-assert(isequal(a3,b3));
+assert(isalmostequal(a1,b1,'reltol',1e-9));
+assert(isalmostequal(a2,b2,'reltol',1e-9));
+assert(isalmostequal(a3,b3,'reltol',1e-9));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -181,18 +180,18 @@ if strcmp(freq.dimord, 'chan_freq_time')
   fprintf('selecting timeslice %d\n', tbin);
   freq.time = freq.time(tbin);
   % remove all other latencies from the data structure and reduce the number of dimensions
-  if isfield(freq, 'powspctrm'),     freq.powspctrm     = squeeze(freq.powspctrm(:,:,tbin));     end;
-  if isfield(freq, 'crsspctrm'),     freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,tbin));     end;
-  if isfield(freq, 'fourierspctrm'), freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,tbin)); end;
+  if isfield(freq, 'powspctrm'),     freq.powspctrm     = squeeze(freq.powspctrm(:,:,tbin));     end
+  if isfield(freq, 'crsspctrm'),     freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,tbin));     end
+  if isfield(freq, 'fourierspctrm'), freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,tbin)); end
   freq.dimord = freq.dimord(1:(end-5));  % remove the '_time' part
 elseif strcmp(freq.dimord, 'rpt_chan_freq_time') || strcmp(freq.dimord, 'rpttap_chan_freq_time')
   tbin = nearest(freq.time, cfg.latency);
   fprintf('selecting timeslice %d\n', tbin);
   freq.time = freq.time(tbin);
   % remove all other latencies from the data structure and reduce the number of dimensions
-  if isfield(freq, 'powspctrm'),    freq.powspctrm     = squeeze(freq.powspctrm(:,:,:,tbin));      end;
-  if isfield(freq, 'crsspctrm'),    freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,:,tbin));      end;
-  if isfield(freq, 'fourierspctrm') freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,:,tbin));  end;
+  if isfield(freq, 'powspctrm'),    freq.powspctrm     = squeeze(freq.powspctrm(:,:,:,tbin));      end
+  if isfield(freq, 'crsspctrm'),    freq.crsspctrm     = squeeze(freq.crsspctrm(:,:,:,tbin));      end
+  if isfield(freq, 'fourierspctrm') freq.fourierspctrm = squeeze(freq.fourierspctrm(:,:,:,tbin));  end
   freq.dimord = freq.dimord(1:(end-5));  % remove the '_time' part
 else
   tbin = [];

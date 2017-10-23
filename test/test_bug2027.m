@@ -3,7 +3,6 @@ function test_bug2027
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_bug2027
 % TEST read_4d_hdr
 % TEST ft_read_header
 % TEST ft_channelselection

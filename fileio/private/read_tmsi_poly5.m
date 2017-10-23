@@ -1,4 +1,4 @@
-function [out] = read_tmri_poly5(filename, varargin)
+function [out] = read_tmsi_poly5(filename, varargin)
 
 % READ_TMSI_POLY5
 %

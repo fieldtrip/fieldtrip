@@ -30,7 +30,7 @@ function [shape] = read_ctf_shape(filename)
 shape = read_ctf_ascii([filename '_info']);
 
 if ~strcmp(shape.MRI_Info.COORDINATES, 'HEAD')
-  warning('points on head shape are NOT in headcoordinates')
+  ft_warning('points on head shape are NOT in headcoordinates')
 end
 
 fid = fopen(filename, 'rt');

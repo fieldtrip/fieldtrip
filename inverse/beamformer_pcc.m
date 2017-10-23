@@ -60,7 +60,7 @@ function [dipout] = beamformer_pcc(dip, grad, headmodel, dat, Cf, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  error('invalid number of optional arguments');
+  ft_error('invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -144,7 +144,7 @@ end
 
 % sanity check
 if (~isempty(rf) || ~isempty(sf)) && isfield(dip, 'filter')
-  error('precomputed filters cannot be used in combination with a refdip or supdip')
+  ft_error('precomputed filters cannot be used in combination with a refdip or supdip')
 end
 
 refchan  = refchan;               % these can be passed as optional inputs

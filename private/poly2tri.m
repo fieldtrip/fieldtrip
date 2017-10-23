@@ -11,9 +11,9 @@ function mesh = poly2tri(mesh)
 % See also MESH2EDGE
 
 if ~isfield(mesh, 'poly')
-  error('the mesh does not contain polygons')
+  ft_error('the mesh does not contain polygons')
 elseif ~size(mesh.poly,2)==4
-  error('this is only implemented for polygons with 4 corner points')
+  ft_error('this is only implemented for polygons with 4 corner points')
 end
 
 % there are 4 vertices per polygon, which do not have to ly in a single plane

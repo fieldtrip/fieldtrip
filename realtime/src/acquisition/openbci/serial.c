@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "platform.h"
+#include "compiler.h"
+#include "platform_includes.h"
+
 #define PRINTLINE { fprintf(stderr, "%s in %s at line %d\n", __FILE__, __func__, __LINE__); }
 
 static const char serialErrOpen[]="Could not open the serial port.\n";
@@ -14,7 +18,7 @@ static const char serialErrGetT[]="Could not read serial port timeouts.\n";
 static const char serialErrSetP[]="Could not set serial port parameters.\n";
 static const char serialErrSetT[]="Could not set serial port timeout.\n";
 
-#ifdef WIN32
+#if defined(PLATFORM_WINDOWS)
 
 #include <windows.h>
 
@@ -24,7 +28,7 @@ int serialOpenByNumber(SerialPort *SP, int port) {
   sprintf(device,"\\\\.\\COM%d",port);
 
   return serialOpenByName(SP, device);
-} 
+}
 
 int serialOpenByName(SerialPort *SP, const char *device) {
   SP->comPort = CreateFile(device, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -48,7 +52,7 @@ int serialOpenByName(SerialPort *SP, const char *device) {
   }
   PurgeComm(SP->comPort, PURGE_RXCLEAR | PURGE_TXCLEAR);
   return 1;
-} 
+}
 
 
 int serialSetParameters(SerialPort *SP, int baudrate, int bits, int parity, int stops, int timeout) {
@@ -98,7 +102,7 @@ int serialSetParameters(SerialPort *SP, int baudrate, int bits, int parity, int 
     fputs("Couldn't set serial port timeouts\n",stderr);
     return 0;
   }
-  return 1;	
+  return 1;
 }
 
 int serialClose(SerialPort *SP) {
@@ -160,7 +164,7 @@ int serialOpenByNumber(SerialPort *SP, int port) {
 
   snprintf(device,16,"/dev/ttyS%d",port);
   return serialOpenByName(SP, device);
-}   
+}
 
 
 int serialOpenByName(SerialPort *SP, const char *device) {
@@ -270,14 +274,14 @@ int serialSetParameters(SerialPort *SP, int baudrate, int bits, int parity, int 
   newtio.c_lflag = 0;
 
   newtio.c_cc[VTIME]    = timeout;     /* deciseconds */
-  newtio.c_cc[VMIN ]    = 0; 
+  newtio.c_cc[VMIN ]    = 0;
 
   if (tcsetattr(SP->comPort, TCSANOW, &newtio)) {
     perror("tcsetattr");
     fputs("Couldn't change serial port settings\n",stderr);
     return 0;
   }
-  return 1;	
+  return 1;
 }
 
 int serialClose(SerialPort *SP) {
@@ -314,4 +318,3 @@ int serialInputPending(SerialPort *SP) {
 }
 
 #endif
-

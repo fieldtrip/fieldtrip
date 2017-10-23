@@ -3,7 +3,6 @@ function test_ft_selectdata_union
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_ft_selectdata_union
 % TEST ft_selectdata
 
 data1        = [];

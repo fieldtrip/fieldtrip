@@ -23,8 +23,8 @@ figure, ft_plot_box([-1 1 2 3], 'facecolor', 'brain')
 
 % ft_plot_sens, _vol, _headshape, and _dipole just forward to ft_plot_mesh
 elecs = [];
-elecs.chanpos = [23 42 -31; 69 52 1; 61 67 26; 52 65 45];
-elecs.label = {'a';'a';'a';'a'};
+elecs.elecpos = [23 42 -31; 69 52 1; 61 67 26; 52 65 45];
+elecs.label = {'1' '2' '3' '4'};
 figure, ft_plot_sens(elecs, 'edgecolor', 'red')
 
 load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_singleshell.mat'))

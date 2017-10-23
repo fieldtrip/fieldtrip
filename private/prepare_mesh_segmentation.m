@@ -2,8 +2,15 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 
 % PREPARE_MESH_SEGMENTATION
 %
+% The following configuration options can be specified if cfg.method = iso2mesh:
+%   cfg.maxsurf     = 1 = only use the largest disjointed surface
+%                     0 = use all surfaces for that levelset
+%   cfg.radbound    = a scalar indicating the radius of the target surface 
+%                     mesh element bounding sphere
+%
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
 % PREPARE_MESH_HEXAHEDRAL, PREPARE_MESH_TETRAHEDRAL
+
 
 % Copyrights (C) 2009, Robert Oostenveld
 %
@@ -31,6 +38,8 @@ mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes'
 % get the default options
 cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
 cfg.method        = ft_getopt(cfg, 'method', 'projectmesh');
+cfg.maxsurf       = ft_getopt(cfg, 'maxsurf', 1);
+cfg.radbound      = ft_getopt(cfg, 'radbound', 3);
 if all(isfield(mri, {'gray', 'white', 'csf'}))
   cfg.tissue      = ft_getopt(cfg, 'tissue', 'brain');    % set the default
   cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
@@ -48,16 +57,16 @@ ft_hastoolbox(cfg.spmversion, 1);
 
 % special exceptional case first
 if isempty(cfg.tissue) && numel(cfg.numvertices)==1 && isfield(mri,'white') && isfield(mri,'gray') && isfield(mri,'csf')
-  mri=ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
-  cfg.tissue='brain';
+  mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
+  cfg.tissue = 'brain';
 end
 
 if isempty(cfg.tissue)
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
   fn = fieldnames(mri);
   for i=1:numel(fn)
-    if numel(mri.(fn{i}))==prod(mri.dim) && isfield(mri, [fn{i},'label'])
-      segfield=fn{i};
+    if numel(mri.(fn{i}))==prod(mri.dim) && isfield(mri, [fn{i}, 'label'])
+      segfield = fn{i};
     end
   end
   if isfield(mri, [segfield 'label'])
@@ -102,7 +111,7 @@ for i =1:numel(cfg.tissue)
     try
       seg = mri.(fixname(cfg.tissue{i}));
     catch
-      error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
+      ft_error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
     end
     tissue = cfg.tissue{i};
   else
@@ -113,7 +122,7 @@ for i =1:numel(cfg.tissue)
       try
         tissue = mri.seglabel{cfg.tissue(i)};
       catch
-        error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
+        ft_error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
       end
     else
       tissue = sprintf('tissue %d', i);
@@ -150,10 +159,10 @@ for i =1:numel(cfg.tissue)
       % this requires the external iso2mesh toolbox
       ft_hastoolbox('iso2mesh', 1);
       
-      opt = [];
-      opt.radbound = 3; % set the target surface mesh element bounding sphere be <3 pixels in radius
-      opt.maxnode = cfg.numvertices(i);
-      opt.maxsurf = 1;
+       opt = [];
+       opt.radbound = cfg.radbound; % set the target surface mesh element bounding sphere be <3 pixels in radius
+       opt.maxnode = cfg.numvertices(i);
+       opt.maxsurf = cfg.maxsurf;
       
       method = 'cgalsurf';
       isovalues = 0.5;
@@ -171,7 +180,7 @@ for i =1:numel(cfg.tissue)
       [pos, tri] = triangulate_seg(seg, cfg.numvertices(i), ori);
       
     otherwise
-      error('unsupported method "%s"', cfg.method);
+      ft_error('unsupported method "%s"', cfg.method);
   end % case
   
   numvoxels(i) = sum(find(seg(:))); % the number of voxels in this tissue

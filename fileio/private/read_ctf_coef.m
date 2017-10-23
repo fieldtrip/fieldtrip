@@ -30,7 +30,7 @@ function [coef] = read_ctf_coef
 % $Id$
 
 if nargin~=0
-  error('this function does not accept input parameters')
+  ft_error('this function does not accept input parameters')
 end
 
 % start with an empty coefficient list

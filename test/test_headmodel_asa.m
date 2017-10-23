@@ -3,13 +3,12 @@ function test_headmodel_asa
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_headmodel_asa
 % TEST ft_headmodel_asa ft_prepare_vol_sens ft_compute_leadfield
 
 % the standard BEM model that is supplied on the FieldTrip ftp server 
 % and included in EEGLAB was originally constructed in ASA version 2
 
-% see ftp://ftp.fcdonders.nl/pub/fieldtrip/standard_BEM.zip
+% see ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/standard_BEM.zip
 % although that zip file does not contain the original file ASA formats
 
 hdmfile = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat');

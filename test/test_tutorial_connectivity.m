@@ -3,7 +3,6 @@ function test_tutorial_connectivity
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_connectivity
 % TEST ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 
 % This is the first section of the connectivity tutorial, which
@@ -11,9 +10,6 @@ function test_tutorial_connectivity
 % spectral decomposition for coherence and granger
 
 % See also test_tutorial_connectivity2 and test_tutorial_connectivity3
-
-global ft_default;
-ft_default.feedback = 'no';
 
 %% simulate data
 cfg             = [];

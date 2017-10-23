@@ -40,7 +40,7 @@ try
   pause(1);
 catch
   if ~isempty(strfind(lasterr, 'thread is already running'))
-    warning('thread is already running');
+    ft_warning('thread is already running');
   else
     rethrow(lasterror);
   end

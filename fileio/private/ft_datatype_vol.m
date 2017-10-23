@@ -97,6 +97,6 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for freq datatype', version);
+    ft_error('unsupported version "%s" for freq datatype', version);
 end
 

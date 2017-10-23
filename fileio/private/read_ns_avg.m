@@ -51,7 +51,7 @@ end
 % open the file and seek towards the place where the raw data is
 fid = fopen(filename,'r','ieee-le');
 if fid<0
-  error(['cannot open ', filename]);
+  ft_error(['cannot open ', filename]);
 else
   fseek(fid, 900, 'cof');       % skip general header
   fseek(fid, 75*avg.nchan, 'cof');  % skip channel headers

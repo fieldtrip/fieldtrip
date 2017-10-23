@@ -4,7 +4,6 @@ function test_subfield
 % WALLTIME 00:10:00
 
 % TEST issubfield getsubfield setsubfield
-% TEST test_subfield
 
 a.b.c = 1;
 assert(issubfield(a,'b.c')==true);

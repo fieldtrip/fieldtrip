@@ -112,14 +112,14 @@ ft_preamble init
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 cfg = ft_checkconfig(cfg, 'required', 'method');
-cfg = ft_checkconfig(cfg, 'allowedval',{'method','detect','marker'});
+cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'detect', 'marker'});
 
 % set default rejection parameters
-if ~isfield(cfg,'artfctdef'),                       cfg.artfctdef                   = [];        end
-if ~isfield(cfg,'method'),                          cfg.method                      = 'detect';  end
-if ~isfield(cfg.artfctdef,'tms'),                   cfg.artfctdef.tms               = [];        end
-if ~isfield(cfg,'prestim'),                         cfg.prestim                     = 0.005;     end
-if ~isfield(cfg,'poststim'),                        cfg.poststim                    = 0.010;     end
+if ~isfield(cfg, 'artfctdef'),                       cfg.artfctdef                   = [];        end
+if ~isfield(cfg, 'method'),                          cfg.method                      = 'detect';  end
+if ~isfield(cfg.artfctdef, 'tms'),                   cfg.artfctdef.tms               = [];        end
+if ~isfield(cfg, 'prestim'),                         cfg.prestim                     = 0.005;     end
+if ~isfield(cfg, 'poststim'),                        cfg.poststim                    = 0.010;     end
 
 if isfield(cfg.artfctdef.tms, 'artifact')
   fprintf('tms artifact detection has already been done, retaining artifacts\n');
@@ -130,14 +130,14 @@ end
 switch cfg.method
   case 'detect'
     % settings for preprocessing
-    if ~isfield(cfg.artfctdef.tms,'derivative'),   cfg.artfctdef.tms.derivative   = 'yes';    end
+    if ~isfield(cfg.artfctdef.tms, 'derivative'),   cfg.artfctdef.tms.derivative   = 'yes';    end
     % settings for the zvalue subfunction
-    if ~isfield(cfg.artfctdef.tms,'method'),     cfg.artfctdef.tms.method      = 'zvalue';    end
-    if ~isfield(cfg.artfctdef.tms,'channel'),    cfg.artfctdef.tms.channel     = 'all';       end
-    if ~isfield(cfg.artfctdef.tms,'trlpadding'), cfg.artfctdef.tms.trlpadding  = 0.1;         end
-    if ~isfield(cfg.artfctdef.tms,'fltpadding'), cfg.artfctdef.tms.fltpadding  = 0.1;         end
-    if ~isfield(cfg.artfctdef.tms,'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;        end
-    if ~isfield(cfg.artfctdef.tms,'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;           end
+    if ~isfield(cfg.artfctdef.tms, 'method'),     cfg.artfctdef.tms.method      = 'zvalue';    end
+    if ~isfield(cfg.artfctdef.tms, 'channel'),    cfg.artfctdef.tms.channel     = 'all';       end
+    if ~isfield(cfg.artfctdef.tms, 'trlpadding'), cfg.artfctdef.tms.trlpadding  = 0.1;         end
+    if ~isfield(cfg.artfctdef.tms, 'fltpadding'), cfg.artfctdef.tms.fltpadding  = 0.1;         end
+    if ~isfield(cfg.artfctdef.tms, 'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;        end
+    if ~isfield(cfg.artfctdef.tms, 'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;           end
     % construct a temporary configuration that can be passed onto artifact_zvalue
     tmpcfg                  = [];
     tmpcfg.trl              = cfg.trl;
@@ -186,12 +186,12 @@ switch cfg.method
   case 'marker'
     % Check if the cfg is correct for this method
     cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
-    ft_checkconfig(cfg, 'required','trialdef');
+    ft_checkconfig(cfg, 'required', 'trialdef');
     cfg.trialfun = ft_getopt(cfg, 'trialfun', 'ft_trialfun_general');
     trialdef = cfg.trialdef;
     trialdef.prestim = cfg.prestim;
     trialdef.poststim = cfg.poststim;
-    cfg.trialdef = ft_checkconfig(trialdef,'required',{'eventvalue','eventtype'});
+    cfg.trialdef = ft_checkconfig(trialdef, 'required', {'eventvalue', 'eventtype'});
 
     % Get the trialfun
     cfg.trialfun = ft_getuserfun(cfg.trialfun, 'trialfun');
@@ -205,7 +205,7 @@ switch cfg.method
     cfg.artfctdef.tms.artifact = artifact;
     fprintf('found %d events\n', size(artifact,1));
   otherwise
-    error('unsupported method'); % This should be redundant as ft_checkconfig does not allow other methods than the supported ones.
+    ft_error('unsupported method'); % This should be redundant as ft_checkconfig does not allow other methods than the supported ones.
 end
 
 cfg = rmfield(cfg, 'method'); % FIXME - not removing this causes problems when passing to ft_preprocessing

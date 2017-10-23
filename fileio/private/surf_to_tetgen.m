@@ -44,7 +44,7 @@ for i=1:(N_elements)
                 fprintf(fid,['1  0  302  # ' num2str(i) '\n']);
                 fprintf(fid,'3  %u  %u  %u\n',elements(i,:));
         otherwise
-            error('currently, only type 302 elements (triangles) are supported')
+            ft_error('currently, only type 302 elements (triangles) are supported')
     end             
 end
 fprintf(fid,'0\n');

@@ -79,7 +79,7 @@ assert(abs(n3/n0-2)<0.3);
 assert(abs(n4/n0-2)<0.3);
 
 figure
-ft_plot_dipole(dip, [1 0 0], 'units', 'm');
+ft_plot_dipole(dip, [1 0 0], 'unit', 'm');
 ft_plot_vol(vol3, 'edgecolor', 'none', 'facealpha', 0.2);
 ft_plot_sens(elec);
 ft_plot_topo3d(elec.chanpos, lf3(:,1), 'facealpha', 0.6);

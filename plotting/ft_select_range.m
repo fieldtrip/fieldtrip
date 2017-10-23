@@ -4,15 +4,15 @@ function ft_select_range(handle, eventdata, varargin)
 % in a figure. It allows the user to select a horizontal or a vertical
 % range, or one or multiple boxes.
 %
-% The callback function (and it's arguments) specified in callback is called 
-% on a left-click inside a selection, or using the right-click context-menu. 
+% The callback function (and it's arguments) specified in callback is called
+% on a left-click inside a selection, or using the right-click context-menu.
 % The callback function will have as its first-to-last input argument the range of
 % all selections. The last input argument is either empty, or, when using the context
 % menu, a label of the item clicked.
 % Context menus are shown as the labels presented in the input. When activated,
 % the callback function is called, with the last input argument being the label of
 % the selection option.
-% 
+%
 % Input arguments:
 %   'event'       = string, event used as hook.
 %   'callback'    = function handle or cell-array containing function handle and additional input arguments
@@ -41,6 +41,8 @@ function ft_select_range(handle, eventdata, varargin)
 %   set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'event', 'WindowButtonDownFcn',   'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
 %   set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'event', 'WindowButtonMotionFcn', 'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
 %   set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'event', 'WindowButtonUpFcn',     'multiple', false, 'xrange', false, 'yrange', false, 'callback', @disp});
+%
+% See also FT_SELECT_BOX, FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_VOXEL
 
 % Copyright (C) 2009-2012, Robert Oostenveld
 %
@@ -79,16 +81,16 @@ clear     = istrue(clear);
 
 % get the figure handle, dependent on MATLAB version
 if ft_platform_supports('graphics_objects')
- while ~isa(handle, 'matlab.ui.Figure')
+  while ~isa(handle, 'matlab.ui.Figure')
     handle = p;
     p = get(handle, 'parent');
- end
+  end
 else
-    p = handle;
-    while ~isequal(p, 0) 
-      handle = p;
-      p = get(handle, 'parent');
-    end
+  p = handle;
+  while ~isequal(p, 0)
+    handle = p;
+    p = get(handle, 'parent');
+  end
 end
 
 if ishandle(handle)
@@ -105,22 +107,21 @@ end
 p = get(gca, 'CurrentPoint');
 p = p(1,1:2);
 
-abc = axis;
-xLim = abc(1:2);
-yLim = abc(3:4);
+xLim = get(gca, 'XLim');
+yLim = get(gca, 'YLim');
 
 % limit cursor coordinates
-if p(1)<xLim(1), p(1)=xLim(1); end;
-if p(1)>xLim(2), p(1)=xLim(2); end;
-if p(2)<yLim(1), p(2)=yLim(1); end;
-if p(2)>yLim(2), p(2)=yLim(2); end;
+if p(1)<xLim(1), p(1)=xLim(1); end
+if p(1)>xLim(2), p(1)=xLim(2); end
+if p(2)<yLim(1), p(2)=yLim(1); end
+if p(2)>yLim(2), p(2)=yLim(2); end
 
 % determine whether the user is currently making a selection
 selecting = numel(userData.range)>0 && any(isnan(userData.range(end,:)));
 pointonly = ~xrange && ~yrange;
 
 if pointonly && multiple
-  warning('multiple selections are not possible for a point');
+  ft_warning('multiple selections are not possible for a point');
   multiple = false;
 end
 
@@ -198,7 +199,7 @@ switch lower(event)
   case lower('WindowButtonUpFcn')
     switch lastmousebttn
       case 'normal' % left click
-
+        
         if selecting
           % select the other corner of the box
           userData.range(end,2) = p(1);
@@ -294,7 +295,7 @@ switch lower(event)
     
     
   otherwise
-    error('unexpected event "%s"', event);
+    ft_error('unexpected event "%s"', event);
     
 end % switch event
 
@@ -388,7 +389,3 @@ else
   funhandle = varargin{1};
   feval(funhandle, val, cmenulab);
 end
-
-
-
-

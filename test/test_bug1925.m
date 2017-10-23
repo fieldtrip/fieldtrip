@@ -3,7 +3,6 @@ function test_bug1925
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1925
 % TEST surface_nesting ft_headmodel_bemcp
 
 [ftver, ftpath] = ft_version;

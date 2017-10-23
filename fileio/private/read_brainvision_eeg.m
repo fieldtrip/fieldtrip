@@ -167,7 +167,7 @@ elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'vectori
   fclose(fid);
   
 else
-  error('unsupported sub-fileformat');
+  ft_error('unsupported sub-fileformat');
 end
 
 if ~isempty(chanindx)

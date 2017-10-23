@@ -50,5 +50,5 @@ if fid~=-1
   fclose(fid);
   
 else
-  error('unable to open file');
+  ft_error('unable to open file');
 end

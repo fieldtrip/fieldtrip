@@ -8,19 +8,19 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 % where the input values are
 %   s               = structure or cell-array
 %   key             = string
-%   default         = any valid MATLAB data type
+%   default         = any valid MATLAB data type (optional, default = [])
 %   emptymeaningful = boolean value (optional, default = 0)
 %
-% If the key is present as field in the structure, or as key-value
-% pair in the cell-array, the corresponding value will be returned.
+% If the key is present as field in the structure, or as key-value pair in the
+% cell-array, the corresponding value will be returned.
 %
-% If the key is not present, ft_getopt will return an empty array.
+% If the key is not present, ft_getopt will return the default, or an empty array
+% when no default was specified.
 %
-% If the key is present but has an empty value, then the emptymeaningful
-% flag specifies whether the empty value or the default value should
-% be returned. If emptymeaningful==true, then an empty array will be
-% returned. If emptymeaningful==false, then the specified default will
-% be returned.
+% If the key is present but has an empty value, then the emptymeaningful flag
+% specifies whether the empty value or the default value should be returned.
+% If emptymeaningful==true, then the empty array will be returned.
+% If emptymeaningful==false, then the specified default will be returned.
 %
 % See also FT_SETOPT, FT_CHECKOPT
 
@@ -60,27 +60,27 @@ if isa(opt, 'struct') || isa(opt, 'config')
   else
     val = opt.(key);
   end
-
+  
 elseif isa(opt, 'cell')
   % get the key-value from the cell-array
   if mod(length(opt),2)
     error('optional input arguments should come in key-value pairs, i.e. there should be an even number');
   end
-
+  
   % the 1st, 3rd, etc. contain the keys, the 2nd, 4th, etc. contain the values
   keys = opt(1:2:end);
   vals = opt(2:2:end);
-
+  
   % the following may be faster than cellfun(@ischar, keys)
   valid = false(size(keys));
   for i=1:numel(keys)
     valid(i) = ischar(keys{i});
   end
-
+  
   if ~all(valid)
     error('optional input arguments should come in key-value pairs, the optional input argument %d is invalid (should be a string)', i);
   end
-
+  
   hit = find(strcmpi(key, keys));
   if isempty(hit)
     % the requested key was not found
@@ -91,7 +91,7 @@ elseif isa(opt, 'cell')
   else
     error('multiple input arguments with the same name');
   end
-
+  
 elseif isempty(opt)
   % no options are specified, return default
   val = default;

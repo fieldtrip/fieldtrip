@@ -228,7 +228,7 @@ for k = 1:numel(datainfo)
       if isfield(sourcenew, 'cfg'), sourcenew = rmfield(sourcenew, 'cfg'); end% these are different, a.o. due to the callinfo
       source    = rmfield(source, 'cfg');
       if ~diagnosticsflag,
-        [ok,msg] = identical(source, sourcenew,'reltol',1e-5);
+        [ok,msg] = isalmostequal(source, sourcenew,'reltol',1e-5);
         
         if ~ok
           error('stored and computed data not identical: %s', msg{:});

@@ -3,8 +3,6 @@ function test_ft_redefinetrial
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_redefinetrial
-% TEST test_ft_redefinetrial
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151'));
 

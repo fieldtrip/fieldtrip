@@ -12,7 +12,7 @@ hasspm = ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
 dimdim = find(size(inpoints) == 3);
 if isempty(dimdim)
-  error('input must be a N by 3 or 3 by N matrix')
+  ft_error('input must be a N by 3 or 3 by N matrix')
 end
 if dimdim == 2
   inpoints = inpoints';

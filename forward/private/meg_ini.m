@@ -74,7 +74,7 @@ elseif nargin==7;
   end
   
 else
-  error('you must provide 4,5 or 7 arguments');
+  ft_error('you must provide 4,5 or 7 arguments');
 end
 
 return % main function
@@ -94,9 +94,9 @@ bt=leadsphere_all(x1',x2',n2');
 n1rep=reshape(repmat(n1',1,nchan),3,ndip,nchan);
 b=dotproduct(n1rep,bt);
 ctc=gradbas'*gradbas;
-warning('OFF', 'MATLAB:nearlySingularMatrix');
+warning('off', 'MATLAB:nearlySingularMatrix');
 coeffs=inv(ctc)*gradbas'*b;
-warning('ON', 'MATLAB:nearlySingularMatrix');
+warning('on', 'MATLAB:nearlySingularMatrix');
 return
 
 function field=getfield(source,device,coeffs,center,order)

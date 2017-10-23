@@ -3,11 +3,10 @@ function test_tutorial_multivariateanalysis(datadir, dmltdir)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_tutorial_multivariateanalysis
 % TEST ft_timelockstatistics ft_topoplotER ft_freqstatistics ft_topoplotTFR
 
 % this is a test script that I made following the report of Matt on
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1585 and realizing that the
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1585 and realizing that the
 % wiki page http://www.fieldtriptoolbox.org/tutorial/multivariateanalysis was
 % not included in a test script.
 

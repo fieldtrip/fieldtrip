@@ -10,7 +10,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % where the input data should correspond to the output of FT_PREPROCESSING and
 % the configuration should be specified as explained below. Note that some
 % options are mutually exclusive, and require two calls to this function to
-% avoid confucion about the order in which they are applied.
+% avoid confusion about the order in which they are applied.
 %
 % For selecting a subset of trials you can specify
 %   cfg.trials    = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -122,7 +122,7 @@ if ~strcmp(cfg.trials, 'all')
   if fb, fprintf('selecting %d trials\n', length(cfg.trials)); end
 
   % select trials of interest
-  tmpcfg = keepfields(cfg, 'trials');
+  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -142,10 +142,10 @@ Ntrial = numel(data.trial);
 % check the input arguments, only one method for processing is allowed
 numoptions = ~isempty(cfg.toilim) + ~isempty(cfg.offset) + (~isempty(cfg.begsample) || ~isempty(cfg.endsample)) + ~isempty(cfg.trl) + ~isempty(cfg.length);
 if numoptions>1
-  error('you should specify only one of the options for redefining the data segments');
+  ft_error('you should specify only one of the options for redefining the data segments');
 end
 if numoptions==0 && isempty(cfg.minlength) && strcmp(cfg.trials, 'all')
-  error('you should specify at least one configuration option');
+  ft_error('you should specify at least one configuration option');
 end
 
 % start processing
@@ -170,7 +170,7 @@ if ~isempty(cfg.toilim)
   end
 
   % also correct the sample information
-  if isfield(data, 'sampleinfo'),
+  if isfield(data, 'sampleinfo')
     data.sampleinfo(:, 1) = data.sampleinfo(:, 1) + begsample - 1;
     data.sampleinfo(:, 2) = data.sampleinfo(:, 1) + endsample - begsample;
   end
@@ -238,6 +238,10 @@ elseif ~isempty(cfg.trl)
   data.trial    = cell(1,size(trl,1));
   data.time     = cell(1,size(trl,1));
   data          = copyfields(dataold, data, {'fsample' 'label' 'topo' 'topolabel' 'unmixing' 'mixing' 'grad' 'elec' 'opto'}); % account for all potential fields to be copied over
+
+  if isfield(dataold,'trialinfo')
+    ft_warning('Original data has trialinfo, using user specified trialinfo instead');
+  end
   
   for iTrl=1:length(trl(:,1))
     begsample = trl(iTrl,1);
@@ -251,19 +255,18 @@ elseif ~isempty(cfg.trl)
     % ensure correct handling of trialinfo.
     % original trial
     iTrlorig  =  find(begsample <= dataold.sampleinfo(:,2) & endsample >= dataold.sampleinfo(:,1)); % Determines which old trials are present in new trials
-
+    
     if size(cfg.trl,2)>3 %In case user specified a trialinfo
       data.trialinfo(iTrl,:) = cfg.trl(iTrl,4:end);
-      if isfield(dataold,'trialinfo')
-        ft_warning('Original data has trialinfo, using user specified trialinfo instead');
-      end;
     elseif isfield(dataold,'trialinfo') % If old data has trialinfo
-      if isequal(dataold.trialinfo(iTrlorig,:),1) || numel(iTrlorig)==1 % Checks whether trials that are combined have same trialinfo
+      if (numel(iTrlorig) == 1 ...  % only 1 old trial to copy trialinfo from, or
+          || size(unique(dataold.trialinfo(iTrlorig,:),'rows'),1)) ... % all old trialinfo rows are identical
+          && ~any(diff(dataold.sampleinfo(:,1))<=0) % and the trials are consecutive segments
         data.trialinfo(iTrl,:) = dataold.trialinfo(iTrlorig(1),:);
       else
-        error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
-      end;
-    end;
+        ft_error('Old trialinfo cannot be combined into new trialinfo, please specify trialinfo in cfg.trl(:,4)');
+      end
+    end
   end %for iTrl
 
   % adjust the sampleinfo in the output
@@ -295,9 +298,11 @@ elseif ~isempty(cfg.length)
     end
   end
 
-  tmpcfg = [];
+  tmpcfg = keepfields(cfg, {'showcallinfo'});
   tmpcfg.trl = newtrl;
   data   = ft_redefinetrial(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
 
 end % processing the realignment or data selection
 

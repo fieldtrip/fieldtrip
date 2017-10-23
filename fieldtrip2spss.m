@@ -3,12 +3,12 @@ function fieldtrip2spss(filename, labels, data)
 % FIELDTRIP2SPSS compiles data and correpsonding labels into a textfile,
 % suitable for import to SPSS.
 %
-% Use as:
-% fieldtrip2spss(filename, labels, data)
+% Use as
+%   fieldtrip2spss(filename, labels, data)
 %
 % When exporting from MATLAB, set:
 %   - filename; should be string (e.g. 'counts.txt')
-%   - labels; should be a cell array (e.g. {'ones','twos','threes'})
+%   - labels; should be a cell array (e.g. {'ones', 'twos', 'threes'})
 %   - data; should be either a vector or matrix (e.g. [1 2 3; 1 2 3; 1 2 3])
 %
 % When importing to SPSS, set;
@@ -55,7 +55,7 @@ ft_preamble callinfo
 
 % check whether data and labels have the same lengths
 if ~isequal(size(data,2),size(labels,2))
-    warning('the data and labels have unequal number of columns');
+    ft_warning('the data and labels have unequal number of columns');
 end
 
 % print labels and append data

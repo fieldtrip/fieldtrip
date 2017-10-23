@@ -63,7 +63,7 @@ end
 frewind(fid1);
 
 if length(time)~=Ntim
-  error('incorrect timescale');
+  ft_error('incorrect timescale');
 end
 
 while isempty(pos)

@@ -3,7 +3,6 @@ function test_bug1924
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1924
 % TEST read_deymed_dat read_deymed_ini ft_filetype ft_read_header ft_read_data ft_read_event
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1924'));
@@ -35,7 +34,7 @@ z = xcorr(x, y, 'coeff');
 figure
 plot(z)
 
-assert(identical(x, y, 'reltol', 0.1));
+assert(isalmostequal(x, y, 'reltol', 0.1));
 % They are quite different, hence the tolerance of 10%. This might well be
 % due to the BESA conversion, in which the numbers have to be rescaled to
 % fit in the EDF file. On average the calibration seems quite OK.

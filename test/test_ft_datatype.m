@@ -3,7 +3,6 @@ function test_ft_datatype
 % MEM 8gb
 % WALLTIME 02:00:00
 
-% TEST test_ft_datatype
 % TEST ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,7 +105,7 @@ end % for dirlist
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% see how it deals with raw/timelock/freq structures with component topographies
-% see SVN revision 9336 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=2518
+% see SVN revision 9336 and http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2518
 
 raw = [];
 raw.label = {'1', '2', '3'};

@@ -114,21 +114,22 @@ cfg.spikechannel = spikeTrials.label([1 2]);
 cfg.latency      = [-1 3];
 cfg.errorbars    = 'std'; % plot with the standard deviation
 cfg.interactive  = 'no'; % toggle off interactive mode
-figure, ft_spike_plot_raster(cfg,spikeTrials, psth); 
+figure, ft_spike_plot_raster(cfg, spikeTrials, psth); 
 
 
 cfg         = [];
 cfg.latency = [0 0.4]; 
 cfg.timwin  = [-0.025 0.025];
 cfg.fsample = 1000; % sample at 1000 hz
-sdf = ft_spikedensity(cfg,spikeTrials);
+sdf = ft_spikedensity(cfg, spikeTrials);
+
 cfg              = [];
 cfg.topplotfunc  = 'line'; % plot as a line plot
 cfg.spikechannel = spikeTrials.label([1 2]); % can also select one unit here
 cfg.latency      = [-1 3];
 cfg.errorbars    = 'std'; % plot with standard deviation
 cfg.interactive  = 'no'; % toggle off interactive mode
-figure, ft_spike_plot_raster(cfg,spikeTrials, sdf) 
+figure, ft_spike_plot_raster(cfg, spikeTrials, sdf) 
 
 
  

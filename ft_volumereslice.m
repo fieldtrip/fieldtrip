@@ -111,6 +111,11 @@ else
         xshift = 0;
         yshift = 30./cfg.resolution;
         zshift = 40./cfg.resolution;
+      case {'acpc' 'spm' 'mni' 'tal'}
+        ft_warning('FIXME, the bounding box needs a better default');
+        xshift = 0;
+        yshift = 0;
+        zshift = 0;
       otherwise
         xshift = 0;
         yshift = 0;
@@ -148,7 +153,7 @@ end % if method~=fip
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
-  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information
   [cfg, mri] = rollback_provenance(cfg, mri);

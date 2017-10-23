@@ -29,12 +29,12 @@ function d = sine_taper_scaled(n, k)
 % $Id$
 
 if nargin < 2
-  error('usage: sine_taper_scaled(n, k)');
+  ft_error('usage: sine_taper_scaled(n, k)');
 end
 
 k = round(k * 2);
 if k <= 0 || k > n
-  error('sine_taper_scaled: k is %g, must be in (1:n)/2', k)
+  ft_error('sine_taper_scaled: k is %g, must be in (1:n)/2', k)
 end
 
 x = (1:k) .* (pi / (n + 1));

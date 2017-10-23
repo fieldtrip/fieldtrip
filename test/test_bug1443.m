@@ -3,13 +3,7 @@ function test_bug1443
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1443
 % TEST ft_rejectcomponent ft_componentanalysis
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
 

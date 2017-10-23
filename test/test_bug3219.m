@@ -3,7 +3,6 @@ function test_bug3219
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug3219
 % TEST ft_rejectartifact
 % TEST ft_rejectvisual
 

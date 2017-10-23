@@ -65,7 +65,7 @@ function [dipout] = ft_sloreta(dip, grad, headmodel, dat, Cy, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  error('invalid number of optional arguments');
+  ft_error('invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -108,7 +108,7 @@ powtrace   = strcmp(powmethod, 'trace');
 powlambda1 = strcmp(powmethod, 'lambda1');
 
 if isfield(dip, 'mom') && fixedori
-  error('you cannot specify a dipole orientation and fixedmom simultaneously');
+  ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -256,7 +256,7 @@ for i=1:size(dip.pos,1)
     end
   end
   if(any(~isreal(filt)))
-      error('spatial filter has complex values -- did you set lambda properly?');
+      ft_error('spatial filter has complex values -- did you set lambda properly?');
   end
   if projectmom
     [u, s, v] = svd(filt * Cy * ctranspose(filt));

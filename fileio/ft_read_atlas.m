@@ -54,7 +54,7 @@ if isa(filename, 'cell')
     filenamemesh = filename{2};
     filename     = filename{1};
   else
-    error('with multiple filenames, only 2 files are allowed');
+    ft_error('with multiple filenames, only 2 files are allowed');
   end % if precisely two input files
 end % iscell
 
@@ -87,7 +87,7 @@ elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
     defaultformat = 'aal';
   end
   fclose(fid);
-elseif strcmp(x, '.mgz') && ~isempty(strfind(f, 'aparc')) && ~isempty(strfind(f, 'aseg'))
+elseif strcmp(x, '.mgz') && ~isempty(strfind(f, 'aparc')) || ~isempty(strfind(f, 'aseg'))
   % individual volume based segmentation from freesurfer
   defaultformat = 'freesurfer_volume';
 elseif ft_filetype(filename, 'caret_label')
@@ -668,7 +668,7 @@ switch fileformat
       
     else
       % the file does not exist
-      warning('cannot locate %s, making fake tissue labels', filename2);
+      ft_warning('cannot locate %s, making fake tissue labels', filename2);
       value = [];
       label = {};
       for i=1:max(brick0(:))
@@ -1756,7 +1756,7 @@ switch fileformat
     elseif strcmp(fileformat, 'freesurfer_ba')
       parcelfield = 'BA';
     else
-      error('unknown freesurfer parcellation method requested');
+      ft_error('unknown freesurfer parcellation method requested');
       %[index, label, rgb] = read_fscolorlut(lookuptable);
       %label = cellstr(label);
       %rgb = rand(length(label),3);
@@ -1776,7 +1776,7 @@ switch fileformat
         rgb   = c.table(:,5); % compound value that is used for the indexing in vector p
         index = ((1:c.numEntries)-1)';
       otherwise
-        error('unsupported fileformat for parcel file');
+        ft_error('unsupported fileformat for parcel file');
     end
     
     switch ft_filetype(filenamemesh)
@@ -1797,12 +1797,12 @@ switch fileformat
         bnd.tri    = tri;
         reindex    = true;
       otherwise
-        error('unsupported fileformat for surface mesh');
+        ft_error('unsupported fileformat for surface mesh');
     end
     
     % check the number of vertices
     if size(bnd.pos,1) ~= numel(p)
-      error('the number of vertices in the mesh does not match the number of elements in the parcellation');
+      ft_error('the number of vertices in the mesh does not match the number of elements in the parcellation');
     end
     
     % reindex the parcels, if needed: I am not fully sure about this, but the caret
@@ -1827,7 +1827,7 @@ switch fileformat
     atlas.(parcelfield)            = newp;
     atlas.([parcelfield, 'label']) = label;
     atlas.rgba  = rgba;
-    atlas       = ft_convert_units(atlas);
+    atlas       = ft_determine_units(atlas);
     
   case 'caret_label'
     ft_hastoolbox('gifti', 1);
@@ -1886,7 +1886,7 @@ switch fileformat
       % if strcmp(g.private.data{k}.metadata(1).name, 'Name')
       %   parcelfield = fixname(g.private.data{k}.metadata(1).value);
       % else
-      %   error('could not determine parcellation name');
+      %   ft_error('could not determine parcellation name');
       % end
       
       if size(g.cdata,2)>1
@@ -1904,7 +1904,7 @@ switch fileformat
       tmp       = ft_read_headshape(filenamemesh);
       atlas.pos = tmp.pos;
       atlas.tri = tmp.tri;
-      atlas     = ft_convert_units(atlas);
+      atlas     = ft_determine_units(atlas);
     elseif ~isfield(atlas, 'coordsys')
       atlas.coordsys = 'unknown';
     end
@@ -1985,16 +1985,16 @@ switch fileformat
       fn = fieldnames(tmp);
       atlas = tmp.(fn{1});
       if isstruct(atlas)
-        warning('assuming that the variable "%s" in "%s" represents the atlas', fn{1}, filename);
+        ft_warning('assuming that the variable "%s" in "%s" represents the atlas', fn{1}, filename);
       else
-        error('cannot read atlas structure from "%s"', filename);
+        ft_error('cannot read atlas structure from "%s"', filename);
       end
     else
-      error('the mat-file %s does not contain a variable called ''atlas''',filename);
+      ft_error('the mat-file %s does not contain a variable called ''atlas''',filename);
     end
     
   otherwise
-    error('unsupported format "%s"', fileformat);
+    ft_error('unsupported format "%s"', fileformat);
     
 end % switch fileformat
 
@@ -2005,8 +2005,8 @@ if ~isempty(unit)
 else
   % ensure the units of the atlas are specified
   try
-    atlas = ft_convert_units(atlas);
+    atlas = ft_determine_units(atlas);
   catch
-    % ft_convert_units will fail for triangle-only gifties.
+    % ft_determine_units will fail for triangle-only gifties.
   end
 end

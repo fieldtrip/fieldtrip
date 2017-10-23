@@ -92,7 +92,7 @@ if isfield(cfg, 'chanlow') && isfield(cfg, 'chanhigh')
     cfg.channel = cfg.chanlow;
     cfg = removefields(cfg, 'chanlow', 'chanhigh');
   else
-    error('cross-channel CFC not supported, the channel selection should be the same for low and high frequencies')
+    ft_error('cross-channel CFC not supported, the channel selection should be the same for low and high frequencies')
   end
 end
 
@@ -191,7 +191,7 @@ switch cfg.method
   
   case 'coh'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
-    if strcmp(cfg.keeptrials,'no')
+    if strcmp(cfg.keeptrials, 'no')
       crsspctrm = reshape(abs(mean(cfcdata,1)), [nchan, nlf, nhf]);
       dimord = 'chan_freqlow_freqhigh' ;
     else
@@ -201,7 +201,7 @@ switch cfg.method
     
   case 'plv'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
-    if strcmp(cfg.keeptrials,'no')
+    if strcmp(cfg.keeptrials, 'no')
       crsspctrm = reshape(abs(mean(cfcdata,1)), [nchan, nlf, nhf]);
       dimord = 'chan_freqlow_freqhigh' ;
     else
@@ -211,7 +211,7 @@ switch cfg.method
     
   case  'mvl'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
-    if strcmp(cfg.keeptrials,'no')
+    if strcmp(cfg.keeptrials, 'no')
       crsspctrm = reshape(abs(mean(cfcdata,1)), [nchan, nlf, nhf]);
       dimord = 'chan_freqlow_freqhigh' ;
     else
@@ -222,7 +222,7 @@ switch cfg.method
   case  'mi'
     [ntrial,nchan,nlf,nhf,nbin] = size(cfcdata);
     
-    if strcmp(cfg.keeptrials,'yes')
+    if strcmp(cfg.keeptrials, 'yes')
       dimord = 'rpt_chan_freqlow_freqhigh' ;
       crsspctrm = zeros(ntrial,nchan,nlf,nhf);
       for k =1:ntrial

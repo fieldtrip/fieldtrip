@@ -82,7 +82,7 @@ chanindx    = match_str(hdr.label, cfg.channel);
 nchan       = length(chanindx);
 
 if nchan==0
-  error('no channels were selected');
+  ft_error('no channels were selected');
 end
 
 % these are for the data handling
@@ -185,7 +185,7 @@ while true
         Bc  = B*W;
         estimate = labeld(Bc);          % this is the estimated class
       else
-        warning('classifier has not yet been trained');
+        ft_warning('classifier has not yet been trained');
         estimate = nan;
       end
 

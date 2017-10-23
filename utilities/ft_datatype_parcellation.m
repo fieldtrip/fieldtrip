@@ -171,7 +171,7 @@ switch parcelversion
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for parcellation datatype', parcelversion);
+    ft_error('unsupported version "%s" for parcellation datatype', parcelversion);
 end
 
 % the parcellation is a speciat type of volume structure, so ensure that it also fulfills the requirements for that

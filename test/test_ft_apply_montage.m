@@ -3,7 +3,6 @@ function test_ft_apply_montage
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_apply_montage
 % TEST ft_apply_montage
 
 pwdir = pwd;
@@ -17,7 +16,7 @@ data = ft_preprocessing(cfg);
 
 mont          = [];
 mont.tra      = -eye(151); %flip sign
-mont.labelorg = ft_channelselection({'MEG'}, data.label);
+mont.labelold = ft_channelselection({'MEG'}, data.label);
 mont.labelnew = ft_channelselection({'MEG'}, data.label);
 
 data2 = ft_apply_montage(data, mont, 'keepunused', 'yes');
