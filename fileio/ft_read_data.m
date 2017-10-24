@@ -435,17 +435,18 @@ switch dataformat
   case 'blackrock_nsx'
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
-    
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
     [p,~,~] = fileparts(filename);
-    if ~isempty(p)
-      % this is OK
-    elseif isempty(p)
+    if isempty(p)
       filename = which(filename);
     end
-    orig = openNSx(filename, 'duration', [begsample endsample]);
-    % 2017.10.09 AB - Transforming integer values to double
+    % 2017.10.17 AB - Allowing partial load
+    chan_sel=contains({hdr.orig.ElectrodesInfo.Label},hdr.label);
+    orig = openNSx(filename, 'channels',find(chan_sel),...
+      'duration', [(begsample-1)*hdr.skipfactor+1 endsample*hdr.skipfactor],...
+      'skipfactor', hdr.skipfactor);
+
     d_min=[orig.ElectrodesInfo.MinDigiValue];
     d_max=[orig.ElectrodesInfo.MaxDigiValue];
     v_min=[orig.ElectrodesInfo.MinAnalogValue];
