@@ -441,7 +441,9 @@ switch dataformat
       filename = which(filename);
     end
     % 2017.10.17 AB - Allowing partial load
-    chan_sel=contains({hdr.orig.ElectrodesInfo.Label},hdr.label);
+    chan_sel=ismember(hdr.label,deblank({hdr.orig.ElectrodesInfo.Label})); % matlab 2015a
+    %chan_sel=contains({hdr.orig.ElectrodesInfo.Label},hdr.label); %matlab 2017a
+    
     orig = openNSx(filename, 'channels',find(chan_sel),...
       'duration', [(begsample-1)*hdr.skipfactor+1 endsample*hdr.skipfactor],...
       'skipfactor', hdr.skipfactor);
