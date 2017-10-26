@@ -872,6 +872,11 @@ elseif (filetype_check_extension(filename, '.vid') || filetype_check_extension(f
   manufacturer = 'VideoMEG';
   content = 'video';
 
+elseif filetype_check_extension(filename, '.wav') 
+  type = 'audio_wav';
+  manufacturer = 'unknown';
+  content = 'audio';  
+  
 elseif (filetype_check_extension(filename, '.dat') ||  filetype_check_extension(filename, '.Dat')) && (exist(fullfile(p, [f '.ini']), 'file') || exist(fullfile(p, [f '.Ini']), 'file'))
   % this should go before curry_dat
   type = 'deymed_dat';
@@ -1163,6 +1168,10 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'ced_spike6mat';
   manufacturer = 'Cambridge Electronic Design Limited';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_neuroomega_mat(filename)
+  type = 'neuroomega_mat';
+  manufacturer = 'Alpha Omega';
+  content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
   manufacturer = 'MATLAB';
@@ -1409,6 +1418,13 @@ else
   d = dir;
 end
 res = any(strcmp(filename,{d.name}));
+
+%2017.10.10 AB
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for NeuroOmega mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_neuroomega_mat(filename)
+res=~isempty(regexp(filename,'[RL]T[1-5]D[-]{0,1}\d+\.\d+([+-]M){0,1}F\d+\.mat','once'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks whether the directory is neuralynx_cds
