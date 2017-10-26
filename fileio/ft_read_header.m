@@ -456,10 +456,11 @@ switch headerformat
     
   case 'audio_wav'
     %looking for more wav files in folder with same basename
-    TRACK_TOKEN='Tr';
+    TRACK_TOKEN='_Tr';
     [p, f, x] = fileparts(filename);
     s=regexp(f,strcat('(',TRACK_TOKEN,')(\d*)'));
-    session_filenames=dir(char(strcat(p,filesep,extractBetween(f,1,s-1),TRACK_TOKEN,'*',x)));
+    %session_filenames=dir(char(strcat(p,filesep,extractBetween(f,1,s-1),TRACK_TOKEN,'*',x))); %matlab 2017a
+    session_filenames=dir(char(strcat(p,filesep,f(1:s-1),TRACK_TOKEN,'*',x))); %matlab 2015a
     info=cellfun(@(x) audioinfo(strcat(p,filesep,x)),{session_filenames(:).name});
     
     %cheking consistency
