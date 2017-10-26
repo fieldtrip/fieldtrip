@@ -472,7 +472,12 @@ switch headerformat
     %identifying channels to be loaded
     orig = matfile(filename);
     fields_orig=who(orig);
-    is_param=endsWith(fields_orig,neuroomega_param);
+    %is_param=endsWith(fields_orig,neuroomega_param); %Matlab 2017a
+    is_param=zeros(length(fields_orig),1); %ugly workaround for endsWith in Matlab 2015a
+    for i=1:length(neuroomega_param)
+        is_param = is_param | ~cellfun('isempty',regexp(fields_orig,strcat(neuroomega_param(i),'$'),'start'));
+    end
+    
     channels={}; channelstype={};
     for c = 1:length(chantype)
         chantype_dict_sel=strcmpi(chantype_dict(1,:),chantype{c});
