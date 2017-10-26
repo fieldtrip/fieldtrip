@@ -431,21 +431,32 @@ switch dataformat
     ft_hastoolbox('BIOSIG', 1);
     dat = read_biosig_data(filename, hdr, begsample, endsample, chanindx);
     
-    
   case 'blackrock_nsx'
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
-    
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,f,e] = fileparts(filename);
-    if ~isempty(p)
-      % this is OK
-    elseif isempty(p)
+    [p,~,~] = fileparts(filename);
+    if isempty(p)
       filename = which(filename);
     end
-    orig = openNSx(filename, 'duration', [begsample endsample]);
-    keyboard
+    % 2017.10.17 AB - Allowing partial load
+    chan_sel=contains({hdr.orig.ElectrodesInfo.Label},hdr.label);
+    orig = openNSx(filename, 'channels',find(chan_sel),...
+      'duration', [(begsample-1)*hdr.skipfactor+1 endsample*hdr.skipfactor],...
+      'skipfactor', hdr.skipfactor);
+
+    d_min=[orig.ElectrodesInfo.MinDigiValue];
+    d_max=[orig.ElectrodesInfo.MaxDigiValue];
+    v_min=[orig.ElectrodesInfo.MinAnalogValue];
+    v_max=[orig.ElectrodesInfo.MaxAnalogValue];
+
+    %calculating slope (a) and ordinate (b) of the calibration
+    b=double(v_min .* d_max - v_max .* d_min) ./ double(d_max - d_min);
+    a=double(v_max-v_min)./double(d_max-d_min);
+   
+    %apply v = a*d + b to each row of the matrix
+    dat=bsxfun(@plus,bsxfun(@times, double(orig.Data), a'),b');
     
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
     dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample, chanindx);
