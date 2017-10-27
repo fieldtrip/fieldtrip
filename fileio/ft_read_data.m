@@ -1382,6 +1382,21 @@ switch dataformat
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
     
+  case 'blackrock_nsx'
+    % use the NPMK toolbox for the file reading
+    ft_hastoolbox('NPMK', 1);
+    
+    % ensure that the filename contains a full path specification,
+    % otherwise the low-level function fails
+    [p,f,e] = fileparts(filename);
+    if ~isempty(p)
+      % this is OK
+    elseif isempty(p)
+      filename = which(filename);
+    end
+    orig = openNSx(filename, 'duration', [begsample endsample], 'channels', chanindx);
+    dat  = double(orig.Data);
+		
   otherwise
     % attempt to run dataformat as a function
     % in case using an external read function was desired, this is where it is executed
