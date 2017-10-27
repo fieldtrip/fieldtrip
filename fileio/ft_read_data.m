@@ -447,6 +447,16 @@ switch dataformat
     orig = openNSx(filename, 'duration', [begsample endsample]);
     keyboard
     
+  case 'neuroomega_mat'
+    % These are MATLAB *.mat files created by the software 'Map File
+    % Converter' from the original .mpx files recorded by NeuroOmega
+    dat=zeros(hdr.nChans,hdr.nSamples);
+    for i=1:hdr.nChans
+      v=double(hdr.orig.(hdr.label{i}));
+      v=v*hdr.orig.(char(strcat(hdr.label{i},'_BitResolution')));
+      dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
+    end
+    
   case {'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
     dat = read_brainvision_eeg(filename, hdr.orig, begsample, endsample, chanindx);
     
