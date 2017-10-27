@@ -5,9 +5,6 @@ function [channel] = ft_channelselection(desired, datachannel, senstype)
 % labels as they occur in the data. This channel selection procedure can be
 % used throughout FieldTrip.
 %
-% Use as:
-%   channel = ft_channelselection(desired, datachannel)
-%
 % You can specify a mixture of real channel labels and of special strings,
 % or index numbers that will be replaced by the corresponding channel
 % labels. Channels that are not present in the raw datafile are

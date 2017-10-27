@@ -128,7 +128,7 @@ elseif numthreads>0 && isinf(numthreads)
   % the default behaviour of the MCR is to start as many computational threads as cores available
   runtimeopt = '-nodisplay';
 else
-  ft_error('unsupported number of threads (%d)', numthreads);
+  error('unsupported number of threads (%d)', numthreads);
 end
 
 if ~isempty(toolbox)
@@ -138,7 +138,7 @@ if ~isempty(toolbox)
     % find the directory where the toolbox is to be found
     toolboxpath = fileparts(which(fullfile(toolbox{i}, 'Contents.m')));
     if isempty(toolboxpath)
-      ft_error('the Mathworks toolbox "%s" could not be found', toolbox{i});
+      error('the Mathworks toolbox "%s" could not be found', toolbox{i});
     else
       fprintf('including %s\n', toolboxpath);
     end
@@ -159,7 +159,7 @@ if ~isempty(executable)
   % precisely locate the executable, including the full path
   executable = fullfile(p, [f x]);
   if ~exist(executable, 'file')
-    ft_error('executable "%s" does not exist', executable);
+    error('executable "%s" does not exist', executable);
   end
   fprintf('using "%s"\n', executable);
 else

@@ -38,9 +38,9 @@
 %   Lilla Magyari, MPI, DCCN
 %   and others ...
 %
-% Copyrights (C) 2008-2014, Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands (DCCN, DCC, DCN)
-% Copyrights (C) 2007-2014, University College London, United Kingdom (UCL)
-% Copyrights (C) 2011-2014, Max Planck Institute for Psycholynguistics, Nijmegen, The Netherlands (MPI)
+% Copyrights (C) 2008-2017, Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands (DCCN, DCC, DCN)
+% Copyrights (C) 2011-2017, Max Planck Institute for Psycholynguistics, Nijmegen, The Netherlands (MPI)
+% Copyrights (C) 2007-2017, The Wellcome Trust Centre for Neuroimaging, University College London, UK (UCL)
 % Copyrights (C) 2008-2010, Centre for Cognitive Neuroimaging, Glasgow, United Kingdom (CCNi)
 % Copyrights (C) 2003-2008, F.C. Donders Centre, Radboud University Nijmegen, The Netherlands (FCDC)
 % Copyrights (C) 2004-2007, Nijmegen Institute for Cognition and Information, Radboud University Nijmegen, The Netherlands (NICI)

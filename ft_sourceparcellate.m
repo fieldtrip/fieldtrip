@@ -1,6 +1,7 @@
 function parcel = ft_sourceparcellate(cfg, source, parcellation)
 
-% FT_SOURCEPARCELLATE combines the source-reconstruction parameters over the parcels.
+% FT_SOURCEPARCELLATE combines the source-reconstruction parameters over the parcels, for
+% example by averaging all the values in the anatomically or functionally labeled parcel.
 %
 % Use as
 %    output = ft_sourceparcellate(cfg, source, parcellation)
@@ -11,14 +12,12 @@ function parcel = ft_sourceparcellate(cfg, source, parcellation)
 % individual subject. The output is a channel-based representation with the combined (e.g.
 % averaged) representation of the source parameters per parcel.
 %
-% The configuration "cfg" is a structure that can contain the following
-% fields
+% The configuration "cfg" is a structure that can contain the following fields
 %   cfg.method       = string, method to combine the values, see below (default = 'mean')
 %   cfg.parcellation = string, fieldname that contains the desired parcellation
 %   cfg.parameter    = cell-array with strings, fields that should be parcellated (default = 'all')
 %
-% The values within a parcel or parcel-combination can be combined using
-% the following methods:
+% The values within a parcel or parcel-combination can be combined with different methods:
 %   'mean'      compute the mean
 %   'median'    compute the median (unsupported for fields that are represented in a cell-array)
 %   'eig'       compute the largest eigenvector

@@ -5,7 +5,7 @@ function test_bug1850
 
 % TEST ft_prepare_neighbours ft_channelrepair
 %
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1850
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1850
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
 

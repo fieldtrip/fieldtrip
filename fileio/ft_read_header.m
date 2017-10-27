@@ -13,8 +13,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'checkmaxfilter' = boolean, whether to check that maxfilter has been correctly applied (default = true)
 %   'chanindx'       = list with channel indices in case of different sampling frequencies (only for EDF)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
-%   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
-%   'chantype'       = string or cell of strings, channel types to be read (BlackRock).
+%   'chantype'       = string or cell of strings, channel types to be read (NeuroOmega, BlackRock). 
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -160,6 +159,11 @@ coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number b
 chantype       = ft_getopt(varargin, 'chantype', {});   
 if ~iscell(chantype); chantype = {chantype}; end
 
+%2017.10.10 AB: This parameter is used to select channels in NeuroOmega files, which contain
+%channels of different sampling rate. Matches the output field hdr.chantype.
+chantype       = ft_getopt(varargin, 'chantype', {});   
+if ~iscell(chantype); chantype = {chantype}; end
+
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
@@ -290,7 +294,7 @@ switch headerformat
     hdr.nTrials     = orig.TotalEpochs;
     hdr.label       = orig.ChannelOrder(:);
     [hdr.grad, elec] = bti2grad(orig);
-    if ~isempty(elec),
+    if ~isempty(elec)
       hdr.elec = elec;
     end
     
@@ -508,6 +512,90 @@ switch headerformat
     hdr.orig        = orig;
     hdr.skipfactor  = skipfactor;
     
+  case 'neuroomega_mat'
+    % These are MATLAB *.mat files created by the software 'Map File
+    % Converter' from the original .mpx files recorded by NeuroOmega 
+    chantype_dict={'micro','macro',     'analog', 'digital','micro_lfp','macro_lfp','micro_hp','add_analog';...
+                   'CRAW', 'CMacro_RAW','CANALOG','CDIG',   'CLFP',     'CMacro',   'CSPK'    ,'CADD_ANALOG'};            
+    neuroomega_param={'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'}; 
+    
+    %identifying channels to be loaded
+    orig = matfile(filename);
+    fields_orig=who(orig);
+    %is_param=endsWith(fields_orig,neuroomega_param); %Matlab 2017a
+    is_param=zeros(length(fields_orig),1); %ugly workaround for endsWith in Matlab 2015a
+    for i=1:length(neuroomega_param)
+        is_param = is_param | ~cellfun('isempty',regexp(fields_orig,strcat(neuroomega_param(i),'$'),'start'));
+    end
+    
+    channels={}; channelstype={};
+    for c = 1:length(chantype)
+        chantype_dict_sel=strcmpi(chantype_dict(1,:),chantype{c});
+        if sum(chantype_dict_sel)>0
+          chanbasename=chantype_dict{2, chantype_dict_sel};
+          sel_chan=fields_orig(strncmpi(fields_orig,chanbasename,length(chanbasename)) & ~is_param);
+          if isempty(sel_chan)
+            ft_warning(strjoin({'chantype ',chantype{c},' selected but no ',chanbasename,' found'}))
+          else
+            channels=[channels;sel_chan];
+            channelstype=[channelstype;repmat(chantype(c),  size(sel_chan))];
+          end
+        elseif ~strcmpi(chantype{c},'chaninfo')
+          ft_warning(strjoin({'unknown chantype ',chantype{c}}));
+        end
+    end
+    if ~isempty(channels)
+      chan_t=table;
+      for i=1:length(channels)
+        ch=channels{i};
+        ch_whos=whos(orig,ch);
+        chan_t=[chan_t;{ch,orig.([ch,'_KHz'])*1000, orig.([ch,'_TimeBegin']), ch_whos.size(2)}];
+      end
+      chan_t.Properties.VariableNames={'channel' 'Fs' 'T0' 'nSamples'};
+
+      Fs=uniquetol(chan_t.Fs,1e-6);
+      T0=uniquetol(chan_t.T0,1e-6);
+      nSamples=uniquetol(chan_t.nSamples,1e-6);
+      if length(Fs)>1 || length(T0)>1 
+        chan_t %; printing table for user
+        ft_error('inconsistent channels with different sampling rates or initial times');
+      end
+      if length(nSamples)>1
+        chan_t %; printing table for user
+        ft_warning('inconsistent number of samples across channels. Selecting minimun nSample')
+        nSamples=min(nSamples);
+      end
+      
+    else %If no channel selected
+      channels=fields_orig(contains(fields_orig,chantype_dict(2,:)) & ~is_param);
+      %Matching channels to chantypes
+      M=cell2mat(cellfun(@(x) contains(channels,x),chantype_dict(2,:),'UniformOutput',false));
+      chantype_ix = sum( cumprod(M == 0, 2), 2) + 1;
+      Fs=cellfun(@(x) orig.([x '_KHz'])*1000,channels);
+      chaninfo=table(channels,chantype_dict(1,chantype_ix)',Fs,'VariableNames',{'channel' 'chantype' 'Fs'});
+      if isempty(chantype)
+        chaninfo %printing channel info for user. ToDo: ft_print_table
+        ft_error('Define cfg.chantype of interest from table above or use ''chaninfo''');
+      elseif strcmpi(chantype{1},'chaninfo') %returning inconsistent header
+        Fs=nan; nSamples=nan; channelstype=chaninfo.chantype; hdr.chaninfo=chaninfo;        
+      else
+        ft_error(['Incorrect cfg.chantype, use one of ',strjoin(unique(chaninfo.chantype),' ')])
+      end
+    end
+    
+    %building header
+    hdr.Fs          = Fs;
+    hdr.nChans      = length(channels);
+    hdr.nSamples    = nSamples;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+    hdr.label       = deblank(channels);
+    % store the complete information in hdr.orig
+    % ft_read_data and ft_read_event will get it from there
+    hdr.orig        = orig;  
+    hdr.chantype    = channelstype;
+    hdr.chanunit    = repmat({'uV'},  size(hdr.label));
+
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}
     orig = read_brainvision_vhdr(filename);
     hdr.Fs          = orig.Fs;
@@ -942,7 +1030,7 @@ switch headerformat
     end
     
     % get hdr info from xml files
-    ws = warning('off', 'MATLAB:REGEXP:deprecated') % due to some small code xml2struct
+    ws = warning('off', 'MATLAB:REGEXP:deprecated'); % due to some small code xml2struct
     xmlfiles = dir( fullfile(filename, '*.xml'));
     disp('reading xml files to obtain header info...')
     for i = 1:numel(xmlfiles)
@@ -1019,7 +1107,8 @@ switch headerformat
           % this should be consistent with ft_senslabel
           hdr.label{iSens} = ['E' num2str(iSens)];
         end
-      else ft_warning('found less lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
+      else
+        ft_warning('found less lables in xml.sensorLayout than channels in signal 1, thus can not use info in sensorLayout, creating labels on the fly')
         for iSens = 1:orig.signal(1).blockhdr(1).nsignals
           % this should be consistent with ft_senslabel
           hdr.label{iSens} = ['E' num2str(iSens)];
@@ -1039,7 +1128,8 @@ switch headerformat
             for iSens = length(hdr.label)+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
               hdr.label{iSens} = ['s2_unknown', num2str(iSens)];
             end
-          else ft_warning('found more lables in xml.pnsSet than channels in signal 2, thus can not use info in pnsSet, and labeling with s2_eN instead')
+          else
+            ft_warning('found more lables in xml.pnsSet than channels in signal 2, thus can not use info in pnsSet, and labeling with s2_eN instead')
             for iSens = orig.signal(1).blockhdr(1).nsignals+1 : orig.signal(1).blockhdr(1).nsignals + orig.signal(2).blockhdr(1).nsignals
               hdr.label{iSens} = ['s2_E', num2str(iSens)];
             end
@@ -1838,7 +1928,7 @@ switch headerformat
       info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
       
     elseif isaverage
-      try,
+      try
         evoked_data    = fiff_read_evoked_all(filename);
         vartriallength = any(diff([evoked_data.evoked.first])) || any(diff([evoked_data.evoked.last]));
         if vartriallength

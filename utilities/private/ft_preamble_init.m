@@ -42,7 +42,7 @@ if ft_nargin==0
   msg.message     = 'This function requires one or multiple input arguments, please refer to the documentation above';
   msg.identifier  = '';
   msg.stack       = stack;
-  ft_error(msg);
+  error(msg);
 end % if nargin
 
 % convert automatically from cell-array to structure

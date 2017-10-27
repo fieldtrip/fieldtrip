@@ -132,7 +132,7 @@ function [data] = ft_freqsimulation(cfg)
 % See also FT_FREQANALYSIS, FT_TIMELOCKSIMULATION, FT_DIPOLESIMULATION,
 % FT_CONNECTIVITYSIMULATION
 
-% Copyright (C) 2007-2008, Ingrid Nieuwenhuis & Robert Oostenveld, F.C. Donders Centre
+% Copyright (C) 2007-2008, Ingrid Nieuwenhuis & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

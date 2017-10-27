@@ -3,7 +3,7 @@ function [gradnew] = ft_convert_grad(grad, amplitude, distance, scaling)
 % FT_CONVERT_GRAD is deprecated, please use ft_datatype_sens
 
 % DEPRECATED by roboos on 1 July 2013
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=963 for more details
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=963 for more details
 % this function can be completely removed medio 2014
 warning('this function is deprecated, please use ft_datatype_sens');
 

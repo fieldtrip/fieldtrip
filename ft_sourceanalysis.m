@@ -3,17 +3,17 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % FT_SOURCEANALYSIS performs beamformer dipole analysis on EEG or MEG data
 % after preprocessing and a timelocked or frequency analysis
 %
-% Use as either
+% Use as
 %   [source] = ft_sourceanalysis(cfg, freq)
+% or
 %   [source] = ft_sourceanalysis(cfg, timelock)
 %
-% where the data in freq or timelock should be organised in a structure
+% where the second input argument with the data should be organised in a structure
 % as obtained from the FT_FREQANALYSIS or FT_TIMELOCKANALYSIS function. The
-% configuration "cfg" is a structure containing information about
-% source positions and other options.
+% configuration "cfg" is a structure containing information about source positions
+% and other options.
 %
-% The different source reconstruction algorithms that are implemented
-% are
+% The different source reconstruction algorithms that are implemented are
 %   cfg.method     = 'lcmv'    linear constrained minimum variance beamformer
 %                    'sam'     synthetic aperture magnetometry
 %                    'dics'    dynamic imaging of coherent sources
@@ -123,7 +123,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 % cfg.trialweight   = 'equal' or 'proportional'
 % cfg.powmethod     = 'lambda1' or 'trace'
 
-% Copyright (c) 2003-2008, Robert Oostenveld, F.C. Donders Centre
+% Copyright (c) 2003-2008, F.C. Donders Centre, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -662,7 +662,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   for i=1:Nrepetitions
     size_Cf    = size(Cf);
-    squeeze_Cf = reshape(Cf(i,:,:), size_Cf(2:end));    
+    squeeze_Cf = reshape(Cf(i,:,:), size_Cf(2:end));
     
     if Nrepetitions > 1
       ft_progress(i/Nrepetitions, 'scanning repetition %d from %d', i, Nrepetitions);
@@ -711,7 +711,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
 elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv', 'music', 'pcc', 'mvl', 'sloreta', 'eloreta'}))
   
   % determine the size of the data
-  Nsamples = size(data.avg,2);
+  Nsamples = length(data.time);
   Nchans   = length(data.label);
   if isfield(data, 'cov') && length(size(data.cov))==3
     Ntrials = size(data.cov,1);
@@ -764,7 +764,6 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       data.avg = data.avg(datchanindx,:);
       data.cov = data.cov(datchanindx,datchanindx);
     else
-      data.avg   = data.avg(datchanindx,:);
       data.cov   = data.cov(:,datchanindx,datchanindx);
       data.trial = data.trial(:,datchanindx,:);
     end
@@ -793,10 +792,11 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
       data.avg = data.avg(datchanindx,:);
       %data.cov = reshape(data.cov, length(datchanindx), length(datchanindx));
       data.cov = data.cov(datchanindx,datchanindx);
-    else
-      data.avg   = data.avg(datchanindx,:);
+    elseif strcmp(data.dimord, 'rpt_chan_time')
       data.cov   = data.cov(:,datchanindx,datchanindx);
       data.trial = data.trial(:,datchanindx,:);
+    else
+      ft_error('unexpected dimord');
     end
     data.label = data.label(datchanindx);
     Nchans     = length(data.label);
@@ -890,8 +890,8 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne','harmony', 'rv
   elseif Ntrials>1
     % average the single-trial covariance matrices
     Cy  = reshape(mean(data.cov,1), [Nchans Nchans]);
-    % select the average ERF
-    avg = data.avg;
+    % compute the average ERF
+    avg = shiftdim(mean(data.trial,1),1);
     Nrepetitions = 1;
     
   elseif Ntrials==1
@@ -1098,19 +1098,7 @@ end % if freq or timelock or comp data
 % clean up and collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isfield(grid, 'dim')
-  % the source reconstruction was perfomed on a regular 3d volume, remember the dimensions of the volume
-  source.dim = grid.dim;
-end
-
-if isfield(grid, 'tri')
-  % the source reconstruction was perfomed on a tesselated cortical sheet, remember the triangles
-  source.tri = grid.tri;
-end
-
-if exist('grid', 'var')
-  source = copyfields(grid, source, {'pos', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
-end
+source = copyfields(grid, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});%, 'filter'});
 
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the grid structure

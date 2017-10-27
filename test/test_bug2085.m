@@ -32,7 +32,7 @@ grad.unit = 'cm';
 grad1 = ft_datatype_sens(grad);
 grad2 = ft_datatype_sens(grad);
 
-grad2.type = 'magnetometer'; % this makes ft_senstype much faster
+grad2.type = 'meg'; % this makes ft_senstype much faster
 
 %% determine the time to compute some leadfields
 

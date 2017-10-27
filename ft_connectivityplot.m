@@ -71,6 +71,7 @@ cfg.zlim      = ft_getopt(cfg, 'zlim',      'maxmin');
 cfg.ylim      = ft_getopt(cfg, 'ylim',      'maxmin');
 cfg.xlim      = ft_getopt(cfg, 'xlim',      'maxmin');
 cfg.graphcolor = ft_getopt(cfg, 'graphcolor', 'brgkywrgbkywrgbkywrgbkyw');
+if ischar(cfg.graphcolor), cfg.graphcolor = cfg.graphcolor(:); end
 
 % check if the input data is valid for this function
 % ensure that the input is correct
@@ -117,7 +118,7 @@ for k = 1:Ndata
     if ~isempty(inputname(k+1))
       iname{k+1} = inputname(k+1);
     else
-      iname{k+1} = ['input',num2str(k,'%02d')];
+      iname{k+1} = ['input',num2str(k, '%02d')];
     end
   else
     % not yet supported
@@ -157,7 +158,7 @@ end
 
 
 % Get physical min/max range of x:
-if ischar(cfg.xlim) && strcmp(cfg.xlim,'maxmin')
+if ischar(cfg.xlim) && strcmp(cfg.xlim, 'maxmin')
   xmin = inf;
   xmax = -inf;
   for k = 1:Ndata
@@ -188,14 +189,14 @@ end
 cfg.ylim = [ymin ymax];
 
 % Get physical min/max range of z, which is the functional data:
-if ischar(cfg.zlim) && strcmp(cfg.zlim,'maxmin')
+if ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxmin')
   zmin = inf;
   zmax = -inf;
   for k = 1:Ndata
     zmin = min(zmin,min(varargin{k}.(cfg.parameter{k})(:)));
     zmax = max(zmax,max(varargin{k}.(cfg.parameter{k})(:)));
   end
-elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'maxabs')
+elseif ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxabs')
   zmax = -inf;
   for k = 1:Ndata
     zmax = max(zmax,max(abs(varargin{k}.(cfg.parameter{k})(:))));
@@ -287,7 +288,7 @@ for k = 1:nchan
         ft_plot_matrix(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'clim', cfg.zlim, 'box', 'yes');
       elseif hasfreq
         tmp = reshape(dat(m,k,:), [nfreq 1]);
-        ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.graphcolor(1));
+        ft_plot_vector(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'vlim', cfg.zlim, 'box', 'yes', 'color', cfg.graphcolor(1,:));
       elseif hastime
         ft_error('plotting data with only a time axis is not supported yet');
       end

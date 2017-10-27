@@ -1,4 +1,4 @@
-function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
+function [filt, B, A] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
 
 % FT_PREPROC_BANDSTOPFILTER applies a band-stop filter to the data and thereby
 % removes the spectral components in the specified frequency band
@@ -24,6 +24,7 @@ function [filt] = ft_preproc_bandstopfilter(dat,Fs,Fbp,N,type,dir,instabilityfix
 %                'twopass-reverse' zero-phase reverse and forward filter
 %                'twopass-average' average of the twopass and the twopass-reverse
 %                'onepass-zerophase' zero-phase forward filter with delay compensation (default for firws, linear-phase symmetric FIR only)
+%                'onepass-reverse-zerophase' zero-phase reverse filter with delay compensation
 %                'onepass-minphase' minimum-phase converted forward filter (non-linear!, firws only)
 %   instabilityfix optional method to deal with filter instabilities
 %                'no'       only detect and give error (default)
@@ -291,16 +292,16 @@ catch
     case 'no'
       rethrow(lasterror);
     case 'reduce'
-      ft_warning('backtrace', 'off')
+      ft_warning('off','backtrace');
       ft_warning('instability detected - reducing the %dth order filter to an %dth order filter', N, N-1);
-      ft_warning('backtrace', 'on')
+      ft_warning('on','backtrace');
       filt = ft_preproc_bandstopfilter(dat,Fs,Fbp,N-1,type,dir,instabilityfix);
     case 'split'
       N1 = ceil(N/2);
       N2 = floor(N/2);
-      ft_warning('backtrace', 'off')
+      ft_warning('off','backtrace');
       ft_warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', N, N1, N2);
-      ft_warning('backtrace', 'on')
+      ft_warning('on','backtrace');
       filt1 = ft_preproc_bandstopfilter(dat  ,Fs,Fbp,N1,type,dir,instabilityfix);
       filt  = ft_preproc_bandstopfilter(filt1,Fs,Fbp,N2,type,dir,instabilityfix);
     otherwise
@@ -310,4 +311,3 @@ end
 
 % add the mean back to the filtered data
 filt = bsxfun(@plus, filt, meandat);
-

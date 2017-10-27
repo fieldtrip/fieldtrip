@@ -8,8 +8,8 @@ function [mri] = align_ctf2acpc(mri, opt, template)
 %   mri = align_ctf2acpc(mri)
 %   mri = align_ctf2acpc(mri, opt)
 %   mri = align_ctf2acpc(mri, opt, template)
-% where mri is a FieldTrip MRI-structure, and opt is an optional argument specifying
-% how the registration is to be done:
+% where the first argument is a FieldTrip MRI-structure, and the second optional
+% argument specifies how the registration is to be done:
 %   opt = 0: only an approximate coregistration
 %   opt = 1: an approximate coregistration, followed by spm_affreg
 %   opt = 2 (default): an approximate coregistration, followed by spm_normalise
@@ -47,7 +47,7 @@ acpchead_Nas          = acpcvox2acpchead * acpcvox_Nas ;
 acpchead_Lpa_canal    = acpcvox2acpchead * acpcvox_Lpa_canal ;
 acpchead_Rpa_canal    = acpcvox2acpchead * acpcvox_Rpa_canal ;
 
-ctfvox2ctfhead  = mri.transform;
+ctfvox2ctfhead   = mri.transform;
 acpchead2ctfhead = ft_headcoordinates(acpchead_Nas(1:3), acpchead_Lpa_canal(1:3), acpchead_Rpa_canal(1:3), 'ctf');
 
 %ctfvox2acpchead =  inv(acpchead2ctfhead) *  ctfvox2ctfhead;
@@ -60,18 +60,12 @@ mri.vox2head      = ctfvox2acpchead;
 mri.head2headOrig = acpchead2ctfhead;
 mri.coordsys      = 'acpc';
 
+%--------------------------------------------------------------------------
 % Do a second round of affine registration (rigid body) to get improved
 % alignment with ACPC coordinate system. this is needed because there may be
 % different conventions defining LPA and RPA. The affine registration may
 % fail however, e.g. if the initial alignment is not close enough. In that
 % case SPM will throw an error
-
-% check for any version of SPM
-if ~ft_hastoolbox('spm')
-  % add SPM8 to the path
-  ft_hastoolbox('spm8', 1);
-end
-
 
 if opt==1
   % use spm_affreg
@@ -101,7 +95,7 @@ if opt==1
         end
       end
       fprintf('using ''OldNorm'' affine registration\n');
-
+      
     otherwise
       ft_error('unsupported SPM version');
   end

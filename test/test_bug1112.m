@@ -8,7 +8,7 @@ function test_bug1112
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1112
 
-sens = ft_convert_units(sens);
+sens = ft_determine_units(sens);
 
 if ~strcmp(sens.unit, 'cm')
   error('the estimated units are incorrect');

@@ -15,10 +15,11 @@ freq1.powspctrm = randn(20,2,10);
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'}; % this needs stat toolbox
 freq1_out = ft_regressconfound(cfg, freq1);
+assert(isfield(freq1_out, 'powspctrm'));
+assert(~isfield(freq1_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -31,10 +32,12 @@ freq2.powspctrm = randn(20,2,10,5);
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
+cfg.output = 'beta';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 freq2_out = ft_regressconfound(cfg, freq2);
+assert(isfield(freq2_out, 'beta'));
+assert(~isfield(freq2_out, 'powspctrm'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -47,10 +50,12 @@ timelock.avg = randn(2,5);
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
+cfg.output = 'model';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 timelock_out = ft_regressconfound(cfg, timelock);
+assert(isfield(timelock_out, 'model'));
+assert(~isfield(timelock_out, 'trial'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -65,10 +70,11 @@ end
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 source_out = ft_regressconfound(cfg, source);
+assert(isfield(source_out, 'pow'));
+assert(~isfield(source_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -82,10 +88,11 @@ timelock2.trial(3,1,3:5) = NaN;
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 timelock2_out = ft_regressconfound(cfg, timelock2);
+assert(isfield(timelock2_out, 'trial'));
+assert(~isfield(timelock2_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -101,9 +108,10 @@ source2.trial(1,10).pow = NaN(size(source2.pos(:,1)));
 
 cfg = [];
 cfg.confound = randn(20,3);
-cfg.model = 'yes';
 cfg.reject = [1:3];
 %cfg.Ftest = {'1','2','3'};
 source2_out = ft_regressconfound(cfg, source2);
+assert(isfield(source2_out, 'pow'));
+assert(~isfield(source2_out, 'beta'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

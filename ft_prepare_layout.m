@@ -1069,8 +1069,11 @@ elseif any(strcmp('SCALE', layout.label)) && skipscale
   layout.height(sel) = [];
 end
 
-% the labels should be represented in a column vector (see bug 1909 -roevdmei)
+% these should be represented in a column vector (see bug 1909 -roevdmei)
 layout.label  = layout.label(:);
+% the width and height are not present in a 3D layout as used in SPM
+if isfield(layout, 'width'),  layout.width  = layout.width(:);  end
+if isfield(layout, 'height'), layout.height = layout.height(:); end
 
 % to plot the layout for debugging, you can use this code snippet
 if strcmp(cfg.feedback, 'yes') && ~strcmpi(cfg.style, '3d')
@@ -1383,16 +1386,15 @@ xy = [x; y];
 % the viewpoint and coordsys. See also ELPROJ and COORDSYS2LABEL
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function pos = getorthoviewpos(pos, coordsys, viewpoint)
+% see also 
 
 if size(pos,2)~=3
   ft_error('XYZ coordinates are required to obtain the orthographic projections based on a viewpoint')
 end
 
-transmat = [];
-
 % create view(az,el) transformation matrix
 switch coordsys
-  case {'ras','tal','mni','spm','neuromag','itab'}
+  case {'ras' 'itab' 'neuromag' 'acpc' 'spm' 'mni' 'tal'}
     switch viewpoint
       case 'left'
         transmat = viewmtx(-90, 0);
@@ -1406,8 +1408,10 @@ switch coordsys
         transmat = viewmtx(0, 0);
       case 'anterior'
         transmat = viewmtx(180, 0);
+      otherwise
+        ft_error('orthographic projection using viewpoint "%s" is not supported', viewpoint)
     end % switch viewpoint
-  case {'als','ctf','4d','bti'}
+  case {'als' 'ctf' '4d' 'bti'}
     switch viewpoint
       case 'left'
         transmat = viewmtx(180, 0);
@@ -1421,12 +1425,13 @@ switch coordsys
         transmat = viewmtx(-90, 0);
       case 'anterior'
         transmat = viewmtx(90, 0);
+      otherwise
+        ft_error('orthographic projection using viewpoint "%s" is not supported', viewpoint)
     end % switch viewpoint
+  otherwise
+    ft_error('orthographic projection using coordinate system "%s" is not supported', coordsys)
 end % switch coordsys
 
-if isempty(transmat)
-  ft_error('orthographic projection using viewpoint "%s" is not supported for the "%s" coordinate system', viewpoint, coordsys)
-end
 
 % extract xy
 pos      = ft_warp_apply(transmat, pos, 'homogenous');

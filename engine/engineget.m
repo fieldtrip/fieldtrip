@@ -54,7 +54,7 @@ end
 
 enghandle = enginepool('find', jobid);
 if numel(enghandle)~=1
-  ft_error('FieldTrip:engine:jobNotFound', 'cannot locate the engine with this job');
+  error('FieldTrip:engine:jobNotFound', 'cannot locate the engine with this job');
 end
 
 success   = false;
@@ -92,7 +92,7 @@ if success
       % convert the MEexception object into a structure to allow a rethrow further down in the code
       ws = warning('off', 'MATLAB:structOnObject');
       err = struct(err);
-      ft_warning(ws);
+      warning(ws);
     end
   end
   
@@ -118,17 +118,17 @@ if success
     closeline = false;
   end
   if ~isempty(warn)
-    ft_warning(warn);
+    warning(warn);
   end
   if ~isempty(err)
     if StopOnError
       if ischar(err)
-        ft_error(err);
+        error(err);
       else
         rethrow(err);
       end
     else
-      ft_warning('error during remote execution: %s', errmsg);
+      warning('error during remote execution: %s', errmsg);
     end
   end % ~isempty(err)
   if closeline
@@ -144,11 +144,11 @@ if success
       varargout{1} = argout;
       varargout{2} = options;
     otherwise
-      ft_error('invalid output option');
+      error('invalid output option');
   end
   
 else
-  ft_warning('FieldTrip:engine:jobNotAvailable', 'the job results are not yet available');
+  warning('FieldTrip:engine:jobNotAvailable', 'the job results are not yet available');
   switch output
     case 'varargout'
       % return empty output arguments
@@ -158,7 +158,7 @@ else
       varargout{1} = {};
       varargout{2} = {};
     otherwise
-      ft_error('invalid output option');
+      error('invalid output option');
   end
 end
 

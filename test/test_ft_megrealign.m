@@ -30,7 +30,6 @@ for k = 1:numel(datainfo)
   vol.unit = 'cm';
   
   % ensure units in the gradiometer array and volume conductor to be equal
-  data.grad = ft_convert_units(data.grad);
   data.grad = ft_convert_units(data.grad, 'cm');
   vol       = ft_convert_units(vol, data.grad.unit);
   

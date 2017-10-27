@@ -560,7 +560,7 @@ end % if iseeg or ismeg
 if isfield(sens, 'tra')
   if issparse(sens.tra) && size(sens.tra, 1)==1
     % this multiplication would result in a sparse leadfield, which is not what we want
-    % the effect can be demonstrated as sparse(1)*rand(1,10), see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1169#c7
+    % the effect can be demonstrated as sparse(1)*rand(1,10), see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1169#c7
     sens.tra = full(sens.tra);
   elseif ~issparse(sens.tra) && size(sens.tra, 1)>1
     % the multiplication of the "sensor" leadfield (electrode or coil) with the tra matrix to get the "channel" leadfield

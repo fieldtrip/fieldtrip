@@ -90,10 +90,10 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
 % set default rejection parameters for clip artifacts if necessary
-if ~isfield(cfg, 'artfctdef'),          cfg.artfctdef            = [];  end
-if ~isfield(cfg.artfctdef,'threshold'), cfg.artfctdef.threshold  = [];  end
-if ~isfield(cfg, 'headerformat'),       cfg.headerformat         = [];  end
-if ~isfield(cfg, 'dataformat'),         cfg.dataformat           = [];  end
+if ~isfield(cfg, 'artfctdef'),           cfg.artfctdef            = [];  end
+if ~isfield(cfg.artfctdef, 'threshold'), cfg.artfctdef.threshold  = [];  end
+if ~isfield(cfg, 'headerformat'),        cfg.headerformat         = [];  end
+if ~isfield(cfg, 'dataformat'),          cfg.dataformat           = [];  end
 
 % copy the specific configuration for this function out of the master cfg
 artfctdef = cfg.artfctdef.threshold;
@@ -179,20 +179,20 @@ for trlop = 1:numtrl
   
   % test the min, max and range against the specified thresholds
   if ~isempty(artfctdef.min) && minval<artfctdef.min
-    fprintf('threshold artifact scanning: trial %d from %d exceeds min-threshold\n', trlop, numtrl);
+    ft_info('threshold artifact scanning: trial %d from %d exceeds min-threshold\n', trlop, numtrl);
     artifact(end+1,1:2) = cfg.trl(trlop,1:2);
   elseif ~isempty(artfctdef.max) && maxval>artfctdef.max
-    fprintf('threshold artifact scanning: trial %d from %d exceeds max-threshold\n', trlop, numtrl);
+    ft_info('threshold artifact scanning: trial %d from %d exceeds max-threshold\n', trlop, numtrl);
     artifact(end+1,1:2) = cfg.trl(trlop,1:2);
   elseif ~isempty(artfctdef.range) && worstChanRange>artfctdef.range
-    fprintf('threshold artifact scanning: trial %d from %d exceeds range-threshold; max-range channel = %s\n', trlop, numtrl, hdr.label{channelindx(worstChanInd)});
+    ft_info('threshold artifact scanning: trial %d from %d exceeds range-threshold; max-range channel = %s\n', trlop, numtrl, hdr.label{channelindx(worstChanInd)});
     artifact(end+1,1:2) = cfg.trl(trlop,1:2);
   else
-    fprintf('threshold artifact scanning: trial %d from %d is ok\n', trlop, numtrl);
+    ft_info('threshold artifact scanning: trial %d from %d is ok\n', trlop, numtrl);
   end
 end
 
-fprintf('detected %d artifacts\n', size(artifact,1));
+ft_info('detected %d artifacts\n', size(artifact,1));
 
 % remember the details that were used here
 cfg.artfctdef.threshold          = artfctdef;

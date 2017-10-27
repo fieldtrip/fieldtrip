@@ -199,6 +199,10 @@ end
         functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
     end
     
+    if(isfield(functional,'dim'))
+        functional = rmfield(functional,'dim');
+    end
+    
     % determine the type of functional
     issource = ft_datatype(functional, 'source');
     isvolume = ft_datatype(functional, 'volume');
@@ -687,7 +691,9 @@ for funidx = 1:length(funparameters)
             msk(functional.inside) = 1;
         else
             if hasana
-                msk(functional.inside) = 0.5; % so anatomy is visible
+%                msk(functional.inside) = 0.5; % so anatomy is visible
+% FIXME: this lets nutmegtrip display at proper colorscale, but is the 0.5 functionality desired?
+                msk(functional.inside) = 1;
             else
                 msk(functional.inside) = 1;
             end
@@ -739,6 +745,8 @@ for funidx = 1:length(funparameters)
     if ~isempty(cfg.funparameter)
         if issubfield(functional, cfg.funparameter)
             hasfun = 1;
+ 
+            cfg.inside_idx = find(functional.inside);
             
             st.nmt.pos = functional.pos;
             

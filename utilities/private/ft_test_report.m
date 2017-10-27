@@ -50,7 +50,7 @@ for i=1:numel(queryparam)
   end
 end
 
-options = weboptions('ContentType','json','Timeout',10); % this returns the result as MATLAB structure
+options = weboptions('ContentType', 'json', 'Timeout', 30); % this returns the result as MATLAB structure
 url = 'http://dashboard.fieldtriptoolbox.org/api/';
 
 if isempty(varargin)

@@ -11,7 +11,7 @@ function [s, cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_indepsamplesZcoh'
 %
-% see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
+% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
 %
 % For low-level use, the external interface of this function has to be
 %   [s,cfg] = ft_statfun_indepsamplesZcoh(cfg, dat, design);

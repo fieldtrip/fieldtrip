@@ -37,8 +37,10 @@ function [varargout] = ft_stratify(cfg, varargin)
 % The following options apply only to the equatespike method.
 %   cfg.pairtrials  = 'spikesort', 'linkage' or 'no' (default = 'spikesort')
 %   cfg.channel     = 'all' or list with indices ( default = 'all')
+%
+% See also FT_FREQSTATISTICS, FT_TIMELOCKSTATISTICS, FT_SOURCESTATISTICS
 
-% Copyright (C) 2007 F.C.Donders Centre, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2007 Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

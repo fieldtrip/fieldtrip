@@ -60,7 +60,7 @@ dointersect = ~isempty(ft_getopt(varargin, 'intersectmesh'));
 domarker    = ~isempty(ft_getopt(varargin, 'plotmarker'));
 
 % set the location if empty
-if isempty(loc) && (isempty(transform) || all(all(transform-eye(4)==0)==1))
+if isempty(loc) && (isempty(transform) || isequal(transform, eye(4)))
   % go to the middle of the volume if the data seem to be in voxel coordinates
   loc = size(dat)./2;
 elseif isempty(loc)
@@ -93,7 +93,7 @@ for k = 1:size(ori,1)
 end
 
 % determine the slice range
-if size(loc, 1) == 1 && nslice > 1,
+if size(loc, 1) == 1 && nslice > 1
   if isempty(srange) || (ischar(srange) && strcmp(srange, 'auto'))
     srange = [-50 70];
   else
@@ -102,15 +102,15 @@ if size(loc, 1) == 1 && nslice > 1,
 end
 
 % ensure that the ori has the same size as the loc
-if size(ori,1)==1 && size(loc,1)>1,
+if size(ori,1)==1 && size(loc,1)>1
   ori = repmat(ori, size(loc,1), 1);
 end
 
 div     = [ceil(sqrt(nslice)) ceil(sqrt(nslice))];
 optarg  = varargin;
 corners = [inf -inf inf -inf inf -inf]; % get the corners for the axis specification
+
 for k = 1:nslice
-  
   % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
   [x, y] = projplane(ori(k,:)); % z = ori
   

@@ -45,8 +45,7 @@ for k = 1:numel(datainfo)
   vol.unit = 'cm';
   
   % ensure units in the gradiometer array and volume conductor to be equal
-  data.grad = ft_convert_units(data.grad);
-  vol       = ft_convert_units(vol, data.grad.unit);
+  vol = ft_convert_units(vol, data.grad.unit);
   cfg.planarmethod = 'sourceproject';
   cfg.vol = vol;
   data5 = ft_megplanar(cfg, data);

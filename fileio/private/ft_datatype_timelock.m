@@ -36,7 +36,10 @@ function [timelock] = ft_datatype_timelock(timelock, varargin)
 %
 % Revision history:
 %
-% (2011v2/latest) The description of the sensors has changed, see FT_DATATYPE_SENS
+% (2017/latest) The data structure cannot contain an average and simultaneously single
+% trial information any more, i.e. avg/var/dof and trial/individual are mutually exclusive.
+%
+% (2011v2) The description of the sensors has changed, see FT_DATATYPE_SENS
 % for further information.
 %
 % (2011) The field 'fsample' was removed, as it was redundant.
@@ -69,7 +72,7 @@ function [timelock] = ft_datatype_timelock(timelock, varargin)
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2011v2';
+  version = '2017';
 end
 
 if isempty(timelock)
@@ -95,6 +98,31 @@ if ~isfield(timelock, 'label')
 end
 
 switch version
+  case '2017'
+    timelock = ft_datatype_timelock(timelock, 'version', '2011v2');
+    fn = fieldnames(timelock);
+    fn = setdiff(fn, ignorefields('appendtimelock'));
+    dimord = cell(size(fn));
+    hasrpt = false(size(fn));
+    for i=1:numel(fn)
+      dimord{i} = getdimord(timelock, fn{i});
+      hasrpt(i) = ~isempty(strfind(dimord{i}, 'rpt')) || ~isempty(strfind(dimord{i}, 'subj'));
+    end
+    if any(hasrpt) && ~all(hasrpt)
+      ft_warning('timelock structure contains field with and without repetitions');
+      str = sprintf('%s, ', fn{hasrpt});
+      str = str(1:end-2);
+      ft_notice('selecting these fields that have repetitions: %s', str);
+      str = sprintf('%s, ', fn{~hasrpt});
+      str = str(1:end-2);
+      ft_notice('removing these fields that do not have repetitions: %s', str);
+      timelock = removefields(timelock, fn(~hasrpt));
+      if isfield(timelock, 'dimord') && ~ismember(timelock.dimord, dimord(hasrpt))
+        % the dimord does not apply to any of the existing fields any more
+        timelock = rmfield(timelock, 'dimord');
+      end
+    end
+    
   case '2011v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(timelock, 'grad')

@@ -53,7 +53,7 @@ assert(all(~isnan(val)), 'incorrect value (NaN)');
 
 if numel(val)==2
   % interpret this as a range specification like [minval maxval]
-  % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1431
+  % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1431
   intervaltol = eps;
   sel = find(array>=val(1) & array<=val(2));
   if isempty(sel)
@@ -130,7 +130,7 @@ elseif val<minarray
 
 else
   % implements a threshold to correct for errors due to numerical precision
-  % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=498 and http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
+  % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=498 and http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1943
   %   if maxarray==minarray
   %     precision = 1;
   %   else
@@ -140,7 +140,7 @@ else
   %   % return the first occurence of the nearest number
   %   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
 
-  % use find instead, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1943
+  % use find instead, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1943
   wassorted = true;
   if ~issorted(array)
     wassorted = false;
