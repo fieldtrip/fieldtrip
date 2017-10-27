@@ -13,7 +13,6 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'checkmaxfilter' = boolean, whether to check that maxfilter has been correctly applied (default = true)
 %   'chanindx'       = list with channel indices in case of different sampling frequencies (only for EDF)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
-%   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
 %   'chantype'       = string or cell of strings, channel types to be read (NeuroOmega, BlackRock). 
 %
 % This returns a header structure with the following elements
@@ -37,8 +36,9 @@ function [hdr] = ft_read_header(filename, varargin)
 % To use an external reading function, use key-value pair: 'headerformat', FUNCTION_NAME.
 % (Function needs to be on the path, and take as input: filename)
 %
-% Use cfg.chantype='chaninfo' to get hdr.chaninfo table. 
-%
+% Use cfg.chantype='chaninfo' to get hdr.chaninfo table. For BlackRock 
+% specify decimation with chantype:skipfactor (e.g. cfg.chantype='analog:10')
+%  
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
 %
@@ -156,6 +156,8 @@ retry          = ft_getopt(varargin, 'retry', false);     % the default is not t
 chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF with different sampling rates
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
+chantype       = ft_getopt(varargin, 'chantype', {});   
+if ~iscell(chantype); chantype = {chantype}; end
 
 %2017.10.10 AB: This parameter is used to select channels in NeuroOmega files, which contain
 %channels of different sampling rate. Matches the output field hdr.chantype.
@@ -441,26 +443,74 @@ switch headerformat
     
   case 'blackrock_nsx'
     ft_hastoolbox('NPMK', 1);
-    
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p, f, x] = fileparts(filename);
-    if ~isempty(p)
-      % this is OK
-    elseif isempty(p)
+    [p, ~, ~] = fileparts(filename);
+    if isempty(p)
       filename = which(filename);
     end
-    orig = openNSx(filename, 'noread');
     
-    hdr             = [];
-    hdr.Fs          = orig.MetaTags.SamplingFreq;
-    hdr.nChans      = orig.MetaTags.ChannelCount;
-    hdr.nSamples    = orig.MetaTags.DataPoints;
+    orig = openNSx(filename, 'noread');
+    channelstype=regexp({orig.ElectrodesInfo.Label},'[a-z]\w+','match');
+    chaninfo=table([orig.ElectrodesInfo.ElectrodeID]',...
+      transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype{1,:}]',...
+      [orig.ElectrodesInfo.ConnectorBank]',[orig.ElectrodesInfo.ConnectorPin]',...
+      transpose(deblank({orig.ElectrodesInfo.AnalogUnits})),...
+      'VariableNames',{'id' 'label' 'chantype' 'bank' 'pin' 'unit'});
+   
+    if isempty(chantype)
+      chantype = unique(cellfun(@(x)x(1),channelstype));
+    end
+    
+    %selecting channel according to chantype
+    orig_label=deblank({orig.ElectrodesInfo.Label});
+    orig_unit=deblank({orig.ElectrodesInfo.AnalogUnits});
+    channels={}; channelstype={}; channelsunit={}; skipfactor=[];
+    for c=1:length(chantype)
+      chantype_split=strsplit(chantype{c},':');
+      if numel(chantype_split) == 2
+        chantype{c}=chantype_split{1};
+        skipfactor=[skipfactor,str2double(chantype_split{2})];
+      elseif numel(chantype_split) > 2
+        ft_error('Use : to specify skipfactor, e.g. analog:10')
+      end
+      chan_sel=strncmpi(orig_label,chantype{c},length(chantype{c}));
+      if sum(chan_sel)==0
+          ft_warning(strjoin({'unknown chantype ',chantype{c}}))
+      else
+        channels=[channels, orig_label(chan_sel)];
+        channelsunit=[channelsunit, orig_unit(chan_sel)];
+        channelstype=[channelstype, repmat(chantype(c), 1, sum(chan_sel))];
+      end
+    end
+    
+    skipfactor=unique(skipfactor);
+    if isempty(skipfactor)
+      skipfactor=1;
+    elseif length(skipfactor)>1
+      ft_error('inconsistent skip factors across channels');
+    end
+    
+    %If no channel selected print table with available channels and chantypes
+    if isempty(channels) 
+      chaninfo %printing table for user (should probably create a ft_print_table function
+      ft_warning(['No channel selected, see hdr.chaninfo. \nAvailable CFG.CHANTYPEs are: ',strjoin(unique(chaninfo.chantype),' ')])
+      channelstype=chaninfo.chantype; hdr.chaninfo=chaninfo;
+      if isempty(chantype) || ~strcmpi(chantype{1},'chaninfo')
+        ft_error('Use chantype=''chaninfo'' for ft_read_header to return hdr with hdf.chaninfo')
+      end
+    end
+    
+    hdr.Fs          = orig.MetaTags.SamplingFreq/skipfactor;
+    hdr.nChans      = length(channels);
+    hdr.nSamples    = floor(orig.MetaTags.DataPoints/skipfactor);
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1; %?
-    hdr.label       = deblank({orig.ElectrodesInfo.Label})';
-    hdr.chanunit    = deblank({hdr.orig.ElectrodesInfo.AnalogUnits})';
+    hdr.label       = deblank(channels)';
+    hdr.chantype    = channelstype;
+    hdr.chanunit    = channelsunit;
     hdr.orig        = orig;
+    hdr.skipfactor  = skipfactor;
     
   case 'neuroomega_mat'
     % These are MATLAB *.mat files created by the software 'Map File
