@@ -2022,6 +2022,47 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     event = read_spmeeg_event(filename, 'header', hdr);
+  
+  case {'blackrock_nev', 'blackrock_nsx'}
+    % use the NPMK toolbox for the file reading
+    ft_hastoolbox('NPMK', 1);
+    
+    % ensure that the filename contains a full path specification,
+    % otherwise the low-level function fails
+    [p,f,e] = fileparts(filename);
+    if ~isempty(p)
+      % this is OK
+    elseif isempty(p)
+      filename = which(filename);
+		end
+		
+    % 'noread' prevents reading of the spike waveforms 
+    % 'nosave' prevents the automatic conversion of
+    % the .nev file as a .mat file
+    orig = openNEV(filename, 'noread', 'nosave')
+
+    if orig.MetaTags.SampleRes ~= 30000
+      error('sampling rate is different from 30 kHz') 
+      % FIXME: why would this be a problem?
+    end
+
+    fs             = orig.MetaTags.SampleRes; % sampling rate
+    timestamps     = orig.Data.SerialDigitalIO.TimeStamp;
+    eventCodeTimes = double(timestamps)./double(fs); % express in seconds
+    eventCodes     = double(orig.Data.SerialDigitalIO.UnparsedData);
+		
+    % probably not necessary for all but we often have pins up    
+    % FIXME: what is the consequence for the values if the pins were not 'up'?
+    % Should this be solved more generically? E.g. with an option? 
+    eventCodes2= eventCodes-min(eventCodes)+1;
+    
+    for k=1:numel(eventCodes2)
+      event(k).type      = 'trigger';
+      event(k).sample    = eventCodeTimes(k);      
+      event(k).value     = eventCodes2(k); 
+      event(k).duration  = 1;
+      event(k).offset    = [];
+    end
     
   otherwise
     % attempt to run eventformat as a function

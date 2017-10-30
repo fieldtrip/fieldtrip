@@ -13,7 +13,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'checkmaxfilter' = boolean, whether to check that maxfilter has been correctly applied (default = true)
 %   'chanindx'       = list with channel indices in case of different sampling frequencies (only for EDF)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
-%   'coilaccuracy'   = can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
+%   'chantype'       = string or cell of strings, channel types to be read (NeuroOmega, BlackRock). 
 %
 % This returns a header structure with the following elements
 %   hdr.Fs                  sampling frequency
@@ -36,6 +36,9 @@ function [hdr] = ft_read_header(filename, varargin)
 % To use an external reading function, use key-value pair: 'headerformat', FUNCTION_NAME.
 % (Function needs to be on the path, and take as input: filename)
 %
+% Use cfg.chantype='chaninfo' to get hdr.chaninfo table. For BlackRock 
+% specify decimation with chantype:skipfactor (e.g. cfg.chantype='analog:10')
+%  
 % Depending on the file format, additional header information can be
 % returned in the hdr.orig subfield.
 %
@@ -153,6 +156,13 @@ retry          = ft_getopt(varargin, 'retry', false);     % the default is not t
 chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF with different sampling rates
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
+chantype       = ft_getopt(varargin, 'chantype', {});   
+if ~iscell(chantype); chantype = {chantype}; end
+
+%2017.10.10 AB: This parameter is used to select channels in NeuroOmega files, which contain
+%channels of different sampling rate. Matches the output field hdr.chantype.
+chantype       = ft_getopt(varargin, 'chantype', {});   
+if ~iscell(chantype); chantype = {chantype}; end
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -433,27 +443,159 @@ switch headerformat
     
   case 'blackrock_nsx'
     ft_hastoolbox('NPMK', 1);
-    
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p, f, x] = fileparts(filename);
-    if ~isempty(p)
-      % this is OK
-    elseif isempty(p)
+    [p, ~, ~] = fileparts(filename);
+    if isempty(p)
       filename = which(filename);
     end
-    orig = openNSx(filename, 'noread');
     
-    hdr             = [];
-    hdr.Fs          = orig.MetaTags.SamplingFreq;
-    hdr.nChans      = orig.MetaTags.ChannelCount;
-    hdr.nSamples    = orig.MetaTags.DataPoints;
+    orig = openNSx(filename, 'noread');
+    channelstype=regexp({orig.ElectrodesInfo.Label},'[a-z]\w+','match');
+    chaninfo=table([orig.ElectrodesInfo.ElectrodeID]',...
+      transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype{1,:}]',...
+      [orig.ElectrodesInfo.ConnectorBank]',[orig.ElectrodesInfo.ConnectorPin]',...
+      transpose(deblank({orig.ElectrodesInfo.AnalogUnits})),...
+      'VariableNames',{'id' 'label' 'chantype' 'bank' 'pin' 'unit'});
+   
+    if isempty(chantype)
+      chantype = unique(cellfun(@(x)x(1),channelstype));
+    end
+    
+    %selecting channel according to chantype
+    orig_label=deblank({orig.ElectrodesInfo.Label});
+    orig_unit=deblank({orig.ElectrodesInfo.AnalogUnits});
+    channels={}; channelstype={}; channelsunit={}; skipfactor=[];
+    for c=1:length(chantype)
+      chantype_split=strsplit(chantype{c},':');
+      if numel(chantype_split) == 2
+        chantype{c}=chantype_split{1};
+        skipfactor=[skipfactor,str2double(chantype_split{2})];
+      elseif numel(chantype_split) > 2
+        ft_error('Use : to specify skipfactor, e.g. analog:10')
+      end
+      chan_sel=strncmpi(orig_label,chantype{c},length(chantype{c}));
+      if sum(chan_sel)==0
+          ft_warning(strjoin({'unknown chantype ',chantype{c}}))
+      else
+        channels=[channels, orig_label(chan_sel)];
+        channelsunit=[channelsunit, orig_unit(chan_sel)];
+        channelstype=[channelstype, repmat(chantype(c), 1, sum(chan_sel))];
+      end
+    end
+    
+    skipfactor=unique(skipfactor);
+    if isempty(skipfactor)
+      skipfactor=1;
+    elseif length(skipfactor)>1
+      ft_error('inconsistent skip factors across channels');
+    end
+    
+    %If no channel selected print table with available channels and chantypes
+    if isempty(channels) 
+      chaninfo %printing table for user (should probably create a ft_print_table function
+      ft_warning(['No channel selected, see hdr.chaninfo. \nAvailable CFG.CHANTYPEs are: ',strjoin(unique(chaninfo.chantype),' ')])
+      channelstype=chaninfo.chantype; hdr.chaninfo=chaninfo;
+      if isempty(chantype) || ~strcmpi(chantype{1},'chaninfo')
+        ft_error('Use chantype=''chaninfo'' for ft_read_header to return hdr with hdf.chaninfo')
+      end
+    end
+    
+    hdr.Fs          = orig.MetaTags.SamplingFreq/skipfactor;
+    hdr.nChans      = length(channels);
+    hdr.nSamples    = floor(orig.MetaTags.DataPoints/skipfactor);
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1; %?
-    hdr.label       = deblank({orig.ElectrodesInfo.Label})';
-    hdr.chanunit    = deblank({hdr.orig.ElectrodesInfo.AnalogUnits})';
+    hdr.label       = deblank(channels)';
+    hdr.chantype    = channelstype;
+    hdr.chanunit    = channelsunit;
     hdr.orig        = orig;
+    hdr.skipfactor  = skipfactor;
     
+  case 'neuroomega_mat'
+    % These are MATLAB *.mat files created by the software 'Map File
+    % Converter' from the original .mpx files recorded by NeuroOmega 
+    chantype_dict={'micro','macro',     'analog', 'digital','micro_lfp','macro_lfp','micro_hp','add_analog';...
+                   'CRAW', 'CMacro_RAW','CANALOG','CDIG',   'CLFP',     'CMacro',   'CSPK'    ,'CADD_ANALOG'};            
+    neuroomega_param={'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'}; 
+    
+    %identifying channels to be loaded
+    orig = matfile(filename);
+    fields_orig=who(orig);
+    %is_param=endsWith(fields_orig,neuroomega_param); %Matlab 2017a
+    is_param=zeros(length(fields_orig),1); %ugly workaround for endsWith in Matlab 2015a
+    for i=1:length(neuroomega_param)
+        is_param = is_param | ~cellfun('isempty',regexp(fields_orig,strcat(neuroomega_param(i),'$'),'start'));
+    end
+    
+    channels={}; channelstype={};
+    for c = 1:length(chantype)
+        chantype_dict_sel=strcmpi(chantype_dict(1,:),chantype{c});
+        if sum(chantype_dict_sel)>0
+          chanbasename=chantype_dict{2, chantype_dict_sel};
+          sel_chan=fields_orig(strncmpi(fields_orig,chanbasename,length(chanbasename)) & ~is_param);
+          if isempty(sel_chan)
+            ft_warning(strjoin({'chantype ',chantype{c},' selected but no ',chanbasename,' found'}))
+          else
+            channels=[channels;sel_chan];
+            channelstype=[channelstype;repmat(chantype(c),  size(sel_chan))];
+          end
+        elseif ~strcmpi(chantype{c},'chaninfo')
+          ft_warning(strjoin({'unknown chantype ',chantype{c}}));
+        end
+    end
+    if ~isempty(channels)
+      chan_t=table;
+      for i=1:length(channels)
+        ch=channels{i};
+        ch_whos=whos(orig,ch);
+        chan_t=[chan_t;{ch,orig.([ch,'_KHz'])*1000, orig.([ch,'_TimeBegin']), ch_whos.size(2)}];
+      end
+      chan_t.Properties.VariableNames={'channel' 'Fs' 'T0' 'nSamples'};
+
+      Fs=uniquetol(chan_t.Fs,1e-6);
+      T0=uniquetol(chan_t.T0,1e-6);
+      nSamples=uniquetol(chan_t.nSamples,1e-6);
+      if length(Fs)>1 || length(T0)>1 
+        chan_t %; printing table for user
+        ft_error('inconsistent channels with different sampling rates or initial times');
+      end
+      if length(nSamples)>1
+        chan_t %; printing table for user
+        ft_warning('inconsistent number of samples across channels. Selecting minimun nSample')
+        nSamples=min(nSamples);
+      end
+      
+    else %If no channel selected
+      channels=fields_orig(contains(fields_orig,chantype_dict(2,:)) & ~is_param);
+      %Matching channels to chantypes
+      M=cell2mat(cellfun(@(x) contains(channels,x),chantype_dict(2,:),'UniformOutput',false));
+      chantype_ix = sum( cumprod(M == 0, 2), 2) + 1;
+      Fs=cellfun(@(x) orig.([x '_KHz'])*1000,channels);
+      chaninfo=table(channels,chantype_dict(1,chantype_ix)',Fs,'VariableNames',{'channel' 'chantype' 'Fs'});
+      if isempty(chantype)
+        chaninfo %printing channel info for user. ToDo: ft_print_table
+        ft_error('Define cfg.chantype of interest from table above or use ''chaninfo''');
+      elseif strcmpi(chantype{1},'chaninfo') %returning inconsistent header
+        Fs=nan; nSamples=nan; channelstype=chaninfo.chantype; hdr.chaninfo=chaninfo;        
+      else
+        ft_error(['Incorrect cfg.chantype, use one of ',strjoin(unique(chaninfo.chantype),' ')])
+      end
+    end
+    
+    %building header
+    hdr.Fs          = Fs;
+    hdr.nChans      = length(channels);
+    hdr.nSamples    = nSamples;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+    hdr.label       = deblank(channels);
+    % store the complete information in hdr.orig
+    % ft_read_data and ft_read_event will get it from there
+    hdr.orig        = orig;  
+    hdr.chantype    = channelstype;
+    hdr.chanunit    = repmat({'uV'},  size(hdr.label));
+
   case {'brainvision_vhdr', 'brainvision_seg', 'brainvision_eeg', 'brainvision_dat'}
     orig = read_brainvision_vhdr(filename);
     hdr.Fs          = orig.Fs;
