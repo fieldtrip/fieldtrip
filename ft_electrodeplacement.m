@@ -930,6 +930,7 @@ switch key
     else
       % do nothing
     end
+    opt.update = [1 1 1]; % overwrite: update all panels instead of one
     opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
     opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
     
