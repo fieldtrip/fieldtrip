@@ -8,5 +8,5 @@ function leadgrid = nmt_reducerank(cfg,leadgrid)
 
 inside_idx = find(leadgrid.inside);
 for ii=1:length(inside_idx)
-    leadgrid.leadfield{inside_idx(ii)} = nemo_eigtrunc(leadgrid.leadfield{inside_idx(ii)},1:cfg.reducerank);
+    leadgrid.leadfield{inside_idx(ii)} = nmt_svdtrunc(leadgrid.leadfield{inside_idx(ii)},1:cfg.reducerank);
 end
