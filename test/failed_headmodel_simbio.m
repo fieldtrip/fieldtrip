@@ -6,10 +6,6 @@ function failed_headmodel_simbio
 % TEST test_headmodel_simbio
 % TEST ft_prepare_headmodel ft_prepare_mesh ft_prepare_leadfield ft_prepare_sourcemodel 
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % this function tests that simbio forward model works, comparing the results with a 3 concentric spheres model
 % intial version by Lilla Magyari 2013
 

@@ -6,10 +6,6 @@ function failed_tutorial_meguk2015
 % TEST test_tutorial_meguk2015
 % TEST ft_preprocessing ft_appenddata ft_timelockanalysis ft_componentanalysis ft_rejectcomponent ft_freqanalysis ft_math ft_sourceanalysis ft_sourceinterpolate ft_volumerealign ft_determine_coordsys ft_sourceplot ft_timelockstatistics ft_multiplotER ft_multiplotTFR ft_singleplotER ft_singleplotTFR
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % This script is the concatenation of the various parts of the MEG-UK 2015
 % workshop demonstration. It has been editted to make it smaller and faster
 % and to avoid parts with external dependencies.

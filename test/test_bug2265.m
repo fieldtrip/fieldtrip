@@ -5,10 +5,6 @@ function test_bug2265
 
 % TEST ft_convert_units ft_prepare_sourcemodel
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 clear all
 close all
 

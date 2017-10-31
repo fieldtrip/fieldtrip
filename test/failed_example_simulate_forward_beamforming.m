@@ -6,10 +6,6 @@ function failed_example_simulate_forward_beamforming
 % TEST test_example_simulate_forward_beamforming
 % TEST ft_dipolesimulation ft_timelockanalysis ft_sourceanalysis
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % This example script shows you how to create some simulated channel-level
 % MEG data with a single dipole at a specified location in the head.
 % Subsequently it does a beamformer source reconstruction to localize that
