@@ -5,10 +5,6 @@ function test_bug2468
 
 % TEST ft_sourcedescriptives
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % this test function tests the functionality to do projectmom on the output
 % of a pcc-beamformer with a different number of components per dipole.
 

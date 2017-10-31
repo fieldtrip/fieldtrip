@@ -5,10 +5,6 @@ function failed_bug2850
 
 % TEST ft_sourceanalysis ft_eloreta
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/avgFIC.mat'));
 
 vol = [];

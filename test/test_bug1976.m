@@ -5,10 +5,6 @@ function test_bug1976
 
 % TEST test_bug1976 ft_sourceanalysis test_ft_sourceanalysis
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % clear all
 % close all
 % addpath('/users/MEG-Data/misc/pawel/tmp/fieldtrip-20130205/')

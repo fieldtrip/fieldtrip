@@ -8,10 +8,6 @@ function test_bug367
 % this test script is for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=367
 % and was constructed from http://www.fieldtriptoolbox.org/example/megrealign
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % the two example files with the 151 and 275 channel CTF specifications are available from
 % ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/example/megrealign
 

@@ -5,10 +5,6 @@ function test_bug1832
 
 % TEST ft_read_mri ft_volumesegment ft_prepare_headmodel ft_prepare_sourcemodel
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % for the warp template example script:
 % 1) make test script that checks on the units in these objects (with assert)
 % 2) also go through the rest of the example script and check on units
