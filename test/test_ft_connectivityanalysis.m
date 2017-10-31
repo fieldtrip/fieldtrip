@@ -11,9 +11,6 @@ function test_ft_connectivityanalysis
 % apart from using FT_CONNECTIVITYANALYSIS, it also relies on
 % FT_CONNECTIVITYSIMULATION, FT_FREQANALYSIS, FT_MVARANALYSIS
 
-global ft_default;
-ft_default.feedback = 'no';
-
 % first create some data
 %--------------------------------------------------------
 % make 3 channels with no direct link between 1 and 2

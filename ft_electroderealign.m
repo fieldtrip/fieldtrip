@@ -665,7 +665,7 @@ switch cfg.method
     % remember the transformation
     elec_realigned.homogeneous = norm.m;
     
-  case {'project','moveinward'}
+  case {'project', 'moveinward'}
     % nothing to be done
     elec_realigned = norm;
     elec_realigned.label = label_original;
@@ -702,7 +702,7 @@ switch cfg.method
     end
   case 'interactive'
     % the coordinate system is not known
-  case {'project','moveinward'}
+  case {'project', 'moveinward'}
     % the coordinate system remains the same
     if isfield(elec_original, 'coordsys')
       elec_realigned.coordsys = elec_original.coordsys;
@@ -721,6 +721,17 @@ end
 
 % channel positions are identical to the electrode positions (this was checked at the start)
 elec_realigned.chanpos = elec_realigned.elecpos;
+
+% copy over unit, chantype, and chanunit information in case this was not already done
+if ~isfield(elec_realigned, 'unit') && isfield(elec_original, 'unit')
+  elec_realigned.unit = elec_original.unit;
+end
+if ~isfield(elec_realigned, 'chantype') && isfield(elec_original, 'chantype')
+  elec_realigned.chantype = elec_original.chantype;
+end
+if ~isfield(elec_realigned, 'chanunit') && isfield(elec_original, 'chanunit')
+  elec_realigned.chanunit = elec_original.chanunit;
+end
 
 % update it to the latest version
 elec_realigned = ft_datatype_sens(elec_realigned);

@@ -159,9 +159,9 @@ case 'nifti_spm'
   transform = hdr.mat;
 
 case {'analyze_img' 'analyze_hdr'}
-  if ~(hasspm8)
-    fprintf('the SPM8 toolbox is required to read analyze files\n');
-    ft_hastoolbox('spm8', 1);
+  if ~(hasspm8 || hasspm12)
+    fprintf('the SPM8 or newer toolbox is required to read analyze files\n');
+    ft_hastoolbox('spm8up', 1);
   end
 
   % use the image file instead of the header

@@ -5,11 +5,6 @@ function test_tutorial_beamformer(datadir)
 
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
-
 if nargin==0
   % this is where the data should be located
   datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');

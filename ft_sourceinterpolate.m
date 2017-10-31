@@ -63,8 +63,8 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_READ_MRI, FT_SOURCEANALYSIS, FT_SOURCESTATISTICS,
-% FT_READ_HEADSHAPE, FT_SOURCEPLOT, FT_SOURCEWRITE
+% See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_SOURCEPLOT, FT_SOURCEANALYSIS,
+% FT_SOURCEWRITE
 
 % Copyright (C) 2003-2007, Robert Oostenveld
 % Copyright (C) 2011-2014, Jan-Mathijs Schoffelen

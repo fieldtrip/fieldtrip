@@ -97,7 +97,7 @@ if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
         cfg.callinfo.outputhash{iargout} = ft_hash(tmparg);
       catch
         % the mxSerialize mex file is not available on all platforms, do not compute a hash
-        % http://bugzilla.fcdonders.nl/show_bug.cgi?id=2452
+        % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2452
       end
     else
       % the data is too large, do not compute a hash

@@ -7,11 +7,6 @@ function failed_bug1049
 
 % this function creates a set of source-structures to be used for testing
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
-
 % get volume conductor model
 volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
 vol     = ft_read_vol(volname);

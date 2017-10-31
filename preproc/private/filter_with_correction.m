@@ -43,7 +43,7 @@ function filt = filter_with_correction(B,A,dat,dir,usefftfilt)
 % $Id$
 
 % convert the data to double precision
-% see  http://bugzilla.fcdonders.nl/show_bug.cgi?id=2653
+% see  http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2653
 inputclass = class(dat);
 B = double(B);
 A = double(A);

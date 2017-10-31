@@ -381,7 +381,7 @@ switch version
     
     if any(strcmp(sens.type, {'meg', 'eeg', 'magnetometer', 'electrode', 'unknown'}))
       % this is not sufficiently informative, so better remove it
-      % see also http://bugzilla.fcdonders.nl/show_bug.cgi?id=1806
+      % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
       sens = rmfield(sens, 'type');
     end
     

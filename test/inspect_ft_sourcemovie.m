@@ -8,11 +8,6 @@
 
 % the frequency and source analysis is based on the tutorials
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
-
 % qsub is necessary, add fieldtrip/qsub to path
 [v, p] = ft_version;
 addpath(fullfile(p, 'qsub'));

@@ -31,7 +31,7 @@ function [grandavg] = ft_sourcegrandaverage(cfg, varargin)
 % input/output structure. For this particular function, the input data
 % should be structured as a single cell array.
 %
-% See also FT_SOURCEANALYSIS, FT_VOLUMENORMALISE, FT_SOURCESTATISTICS
+% See also FT_SOURCEANALYSIS, FT_SOURCEDESCRIPTIVES, FT_SOURCESTATISTICS, FT_MATH
 
 % Undocumented local options
 %  You can also use FT_SOURCEGRANDAVERAGE to compute averages after

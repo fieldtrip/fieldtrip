@@ -41,7 +41,7 @@ data2.trialinfo = randn(42,5);
 data2.dimord = 'rpt_chan_time';
 
 % the following is known to fail with the latest version on 8 April 2014
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=2528
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2528
 
 cfg = [];
 cfg.operation = 'subtract';

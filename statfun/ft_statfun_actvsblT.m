@@ -4,7 +4,7 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 % on the biological data in dat (the dependent variable), using the information on
 % the independent variable (ivar) in design.
 %
-% Note: It does not make sense to use this test statistic when
+% Note that it does not make sense to use this test statistic when
 % baseline-correction was performed by subtracting the time average of the
 % baseline period. Instead of this type of baseline-correction, one may
 % subtract the time average of the combined baseline and activation
@@ -16,7 +16,8 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
 % with the following configuration option
 %   cfg.statistic = 'ft_statfun_actvsblT'
-% see FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
+%
+% See FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS for details.
 %
 % For low-level use, the external interface of this function has to be
 %   [s,cfg] = ft_statfun_actvsblT(cfg, dat, design);

@@ -6,11 +6,6 @@ function test_tutorial_beamformer20120321
 % TEST test_tutorial_beamformer
 % TEST ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-ft_default.feedback = 'no';
-
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat'));
 
 %% Preprocess time windows of interest
@@ -54,7 +49,10 @@ end
 
 %% Prepare head model
 cfg = [];
-vol = ft_prepare_singleshell(cfg, segmentedmri);
+% vol = ft_prepare_singleshell(cfg, segmentedmri);
+cfg.method = 'singleshell';
+vol = ft_prepare_headmodel(cfg, segmentedmri);
+
 
 %% Prepare leadfield
 cfg                 = [];
