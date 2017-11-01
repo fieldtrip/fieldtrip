@@ -1,7 +1,8 @@
 % FT_PREAMBLE_INIT is a helper script that is used at the start of all FieldTrip main
 % functions. It checks whether the user specified at lease one input arguments (i.e.
-% the cfg) or shows the help of the calling function. It checks whether the output file
-% already exists and whether it is OK to overwrite it. It tracks the function call.
+% the cfg) or shows the help of the calling function. It merges the global defaults
+% with the cfg. It checks whether the output file already exists and whether it is OK
+% to overwrite it. It tracks the function call.
 %
 % Use as
 %   ft_preamble init
