@@ -49,14 +49,14 @@ col = '';
 
 nin = nargin;
 % Parse the string inputs
-while ischar(varargin{nin}),
+while ischar(varargin{nin})
   vv = varargin{nin};
   if ~isempty(vv) && strcmpi(vv(1),'f')
     filled = 1;
     nin = nin-1;
   else
     [l,c,m,msg] = colstyle(vv);
-    if ~isempty(msg), 
+    if ~isempty(msg) 
       error('Unknown option "%s".',vv);
     end
     if ~isempty(l), ls = l; end
@@ -67,12 +67,12 @@ while ischar(varargin{nin}),
   end
 end
 
-if(nin < 4 | nin < 7)
+if(nin < 4 || nin < 7)
     error('Incorrect number of input arguments to tbxdt_quiver3.')
 end
 
 % Check numeric input arguments
-if nin<6, % quiver3(z,u,v,w) or quiver3(z,u,v,w,s)
+if nin<6 % quiver3(z,u,v,w) or quiver3(z,u,v,w,s)
   [msg,x,y,z] = xyzchk(varargin{1});
   u = varargin{2};
   v = varargin{3};
@@ -96,15 +96,15 @@ if ~isequal(size(x),size(y),size(z),size(u),size(v),size(w))
 end
 
 % Get autoscale value if present
-if nin==5 || nin==7, % quiver3(z,u,v,w,s) or quiver3(x,y,z,u,v,w,s)
+if nin==5 || nin==7 % quiver3(z,u,v,w,s) or quiver3(x,y,z,u,v,w,s)
   autoscale = varargin{nin};
 end
 
-if length(autoscale)>1,
+if length(autoscale)>1
   error('S must be a scalar.');
 end
 
-if autoscale,
+if autoscale
   % Base autoscale value on average spacing in the x and y
   % directions.  Estimate number of points in each direction as
   % either the size of the input arrays or the effective square
@@ -142,7 +142,7 @@ ww = [z-.5*w;z+.5*w;NaN(size(u))];
 
 h1 = plot3(uu(:),vv(:),ww(:),[col ls]);
 
-if plotarrows,
+if plotarrows
   beta = beta * sqrt(u.*u + v.*v + w.*w) ./ (sqrt(u.*u + v.*v) + eps);
 
   % Make arrow heads and plot them
@@ -158,7 +158,7 @@ else
   h2 = [];
 end
 
-if ~isempty(ms), % Plot marker on base
+if ~isempty(ms) % Plot marker on base
   hu = x; hv = y; hw = z;
   hold on
   h3 = plot3(hu(:),hv(:),hw(:),[col ms]);
