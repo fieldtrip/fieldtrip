@@ -1,4 +1,4 @@
-function hh = tbxdti_quiver3(varargin)
+function hh = nmt_tbxdti_quiver3(varargin)
 %QUIVER3 3-D quiver plot.
 %   QUIVER3(X,Y,Z,U,V,W) plots velocity vectors as arrows with components
 %   (u,v,w) at the points (x,y,z).  The matrices X,Y,Z,U,V,W must all be
