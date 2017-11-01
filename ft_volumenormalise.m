@@ -99,7 +99,7 @@ mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes
 
 % set the defaults
 cfg.spmversion       = ft_getopt(cfg, 'spmversion',       'spm8');
-cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',        'old'); % in case of spm12, use the old-style
+cfg.spmmethod        = ft_getopt(cfg, 'spmmethod',        'old'); % in case of spm12, use the old-style normalisation by default
 cfg.parameter        = ft_getopt(cfg, 'parameter',        'all');
 cfg.downsample       = ft_getopt(cfg, 'downsample',       1);
 cfg.write            = ft_getopt(cfg, 'write',            'no');
@@ -136,7 +136,7 @@ else
     spmpath = spm('dir');
     if strcmpi(cfg.spmversion, 'spm2'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.mnc'); end
     if strcmpi(cfg.spmversion, 'spm8'),  cfg.template = fullfile(spmpath, filesep, 'templates', filesep, 'T1.nii'); end
-    if strcmpi(cfg.spmversion, 'spm12'), cfg.template = fullfile(spmpath, filesep, 'toolbox', filesep, 'OldNorm', filesep, 'T1.nii'); end
+    if strcmpi(cfg.spmversion, 'spm12'), cfg.template = fullfile(spmpath, filesep, 'toolbox',   filesep, 'OldNorm', filesep, 'T1.nii'); end
   end
 end
 
@@ -178,7 +178,7 @@ sel = strcmp(cfg.parameter, 'anatomy');
 if ~any(sel)
   cfg.parameter = [{'anatomy'} cfg.parameter];
 else
-  [dum, indx] = sort(sel);
+  [~, indx] = sort(sel);
   cfg.parameter = cfg.parameter(fliplr(indx));
 end
 
@@ -192,19 +192,28 @@ end
 
 ws = ft_warning('off');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% here the normalisation starts
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% use nii if possible
+if strcmpi(cfg.spmversion, 'spm2')
+  ext = '.img';
+else
+  ext = '.nii';
+end
 
 % create an spm-compatible header for the anatomical volume data
-VF = ft_write_mri([cfg.intermediatename '_anatomy.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion);
-
+writeoptions = {'transform',mri.transform,'spmversion',cfg.spmversion};
+switch ext
+  case '.img'
+    % nothing to be done
+  case '.nii'
+    writeoptions(end+(1:2)) = {'dataformat', 'nifti_spm'};
+end
+VF = ft_write_mri([cfg.intermediatename '_anatomy' ext], mri.anatomy, writeoptions{:});
+  
 % create an spm-compatible file for each of the functional volumes
-for parlop=2:length(cfg.parameter)  % skip the anatomy
-  tmp  = cfg.parameter{parlop};
-  data = reshape(getsubfield(mri, tmp), mri.dim);
-  tmp(tmp=='.') = '_';
-  ft_write_mri([cfg.intermediatename '_' tmp '.img'], data, 'transform', mri.transform, 'spmversion', cfg.spmversion);
+for k = 2:length(cfg.parameter)  % skip the anatomy
+  tmp   = strrep(cfg.parameter{k}, '.', '_');
+  data  = reshape(getsubfield(mri, tmp), mri.dim);
+  VF(k) = ft_write_mri([cfg.intermediatename '_' tmp ext], data, writeoptions{:});
 end
 
 % read the template anatomical volume
@@ -217,37 +226,33 @@ switch template_ftype
     ft_error('Unknown template');
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% compute the normalisation parameters, if needed
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf('performing the normalisation\n');
-% do spatial normalisation according to these steps
-% step 1: read header information for template and source image
-% step 2: compute transformation parameters
-% step 3: write the results to a file with prefix 'w'
-
 if ~isfield(cfg, 'spmparams')
   if strcmp(cfg.nonlinear, 'yes') && ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
     fprintf('warping the individual anatomy to the template anatomy\n');
     % compute the parameters by warping the individual anatomy
-    VF        = spm_vol([cfg.intermediatename '_anatomy.img']);
-    params    = spm_normalise(VG,VF);
+    %VF        = spm_vol([cfg.intermediatename '_anatomy' ext]);
+    params    = spm_normalise(VG, VF(1));
   elseif strcmp(cfg.nonlinear, 'no') && ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
     fprintf('warping the individual anatomy to the template anatomy, using only linear transformations\n');
     % compute the parameters by warping the individual anatomy
-    VF         = spm_vol([cfg.intermediatename '_anatomy.img']);
+    %VF         = spm_vol([cfg.intermediatename '_anatomy' ext]);
     flags.nits = 0; % put number of non-linear iterations to zero
-    params     = spm_normalise(VG,VF,[],[],[],flags);
+    params     = spm_normalise(VG, VF(1), [], [], [], flags);
   elseif strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new')
     if ~isfield(cfg, 'tpm') || isempty(cfg.tpm)
       cfg.tpm = fullfile(spm('dir'),'tpm','TPM.nii');
     end
     
-    VF = ft_write_mri([cfg.intermediatename, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
-    
     fprintf('warping the individual anatomy to the template anatomy, using the new-style segmentation\n');
     
     % create the structure that is required for spm_preproc8
     opts          = ft_getopt(cfg, 'opts');
-    opts.image    = VF;
-    opts.tpm      = ft_getopt(opts, 'tpm', spm_load_priors8(cfg.tpm));
+    opts.image    = VF(1);
+    opts.tpm      = ft_getopt(opts, 'tpm',      spm_load_priors8(cfg.tpm));
     opts.biasreg  = ft_getopt(opts, 'biasreg',  0.0001);
     opts.biasfwhm = ft_getopt(opts, 'biasfwhm', 60);
     opts.lkp      = ft_getopt(opts, 'lkp',      [1 1 2 2 3 3 4 4 4 5 5 5 5 6 6 ]);
@@ -260,47 +265,72 @@ if ~isfield(cfg, 'spmparams')
     opts.Affine = Affine;
     
     % run the segmentation
-    p = spm_preproc8(opts);
+    params = spm_preproc8(opts);
     
-    % this writes the 'native' segmentations
-    spm_preproc_write8(p, [zeros(6,2) ones(6,2)], [0 0], [0 1], 1, 1, nan(2,3), nan);
+    % this writes the 'deformation field'
+    fprintf('writing the deformation field to file\n');
+    spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, nan(2,3), cfg.downsample.*[1 1 1]);
+    
+    
   end
+  
 else
   fprintf('using the parameters specified in the configuration, skipping the parameter estimation\n');
   % use the externally specified parameters
-  VF     = spm_vol([cfg.intermediatename '_anatomy.img']);
+  VF     = spm_vol([cfg.intermediatename '_anatomy' ext]);
   params = cfg.spmparams;
 end
-flags.vox = [cfg.downsample,cfg.downsample,cfg.downsample];
 
-% determine the affine source->template coordinate transformation
-final = VG.mat * inv(params.Affine) * inv(VF.mat) * initial;
-
-% apply the normalisation parameters to each of the volumes
-files  = cell(1,numel(cfg.parameter));
-wfiles = cell(1,numel(cfg.parameter));
-for parlop=1:length(cfg.parameter)
-  fprintf('creating normalised analyze-file for %s\n', cfg.parameter{parlop});
-  tmp = cfg.parameter{parlop};
-  tmp(tmp=='.') = '_';
-  files{parlop} = sprintf('%s_%s.img', cfg.intermediatename, tmp);
-  [p, f, x] = fileparts(files{parlop});
-  wfiles{parlop} = fullfile(p, ['w' f x]);
-end
-spm_write_sn(char(files),params,flags);  % this creates the 'w' prefixed files
-
-% spm_figure('Create', 'Graphics');
-% spm_normalise_disp(params,VF);
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% apply the normalisation parameters to the specified volumes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 normalised = [];
+flags.vox  = cfg.downsample.*[1 1 1]; %FIXME: downsample does not yet work for spmmethod='new'
+
+fprintf('creating the normalized volumes\n');
+if ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
+    
+%   % apply the normalisation parameters to each of the volumes
+%   files  = cell(1,numel(cfg.parameter));
+%   wfiles = cell(1,numel(cfg.parameter));
+%   for k=1:length(cfg.parameter)
+%     fprintf('creating normalised analyze-file for %s\n', cfg.parameter{k});
+%     tmp = cfg.parameter{k};
+%     tmp(tmp=='.') = '_';
+%     files{k} = sprintf('%s_%s.img', cfg.intermediatename, tmp);
+%     [p, f, x] = fileparts(files{k});
+%     wfiles{k} = fullfile(p, ['w' f x]);
+%   end
+  Vout = spm_write_sn(VF, params, flags);  % this creates the 'w' prefixed files
+
+else
+  
+  [pth,fname,ext] = fileparts(params.image.fname);
+  
+  tmp        = [];
+  tmp.fnames = {VF(:).fname};
+  tmp.savedir.saveusr{1} = pth;
+  tmp.interp = 4;
+  tmp.mask   = 0;
+  tmp.fwhm   = [0 0 0];
+  
+  job             = [];
+  job.comp{1}.def = {fullfile(pth,['y_',fname,ext])};
+  job.out{1}.pull = tmp;
+  out = spm_deformations(job);
+  Vout = spm_vol(char(out.warped));
+  
+end
 
 % read the normalised results from the 'w' prefixed files
-V = spm_vol(char(wfiles));
-for vlop=1:length(V)
-  normalised = setsubfield(normalised, cfg.parameter{vlop}, spm_read_vols(V(vlop)));
+for k=1:length(Vout)
+  normalised = setsubfield(normalised, cfg.parameter{k}, spm_read_vols(Vout(k)));
 end
+  
+% determine the affine source->template coordinate transformation
+final = VG.mat * inv(params.Affine) * inv(VF(1).mat) * initial;
 
-normalised.transform = V(1).mat;
+normalised.transform = Vout(1).mat;
 normalised.dim       = size(normalised.anatomy);
 normalised.params    = params;  % this holds the normalization parameters
 normalised.initial   = initial; % this holds the initial co-registration to approximately align with the template
@@ -316,20 +346,19 @@ normalised = align_ijk2xyz(normalised);
 
 if strcmp(cfg.write, 'yes')
   % create an spm-compatible file for each of the normalised volumes
-  for parlop=1:length(cfg.parameter)  % include the anatomy
-    tmp  = cfg.parameter{parlop};
+  for k = 1:length(cfg.parameter)  % include the anatomy
+    tmp  = strrep(cfg.parameter{k}, '.', '_');
     data = reshape(getsubfield(normalised, tmp), normalised.dim);
-    tmp(tmp=='.') = '_';
-    ft_write_mri([cfg.name '_' tmp '.img'], data, 'transform', normalised.transform, 'spmversion', cfg.spmversion);
+    ft_write_mri([cfg.name '_' tmp ext], data, writeoptions);
   end
 end
 
 if strcmp(cfg.keepintermediate, 'no')
   % remove the intermediate files
-  for flop=1:length(files)
-    [p, f, x] = fileparts(files{flop});
+  for k = 1:length(Vout)
+    [p, f, ~] = fileparts(VF(k).fname);
     delete(fullfile(p, [f, '.*']));
-    [p, f, x] = fileparts(wfiles{flop});
+    [p, f, ~] = fileparts(Vout(k).fname);
     delete(fullfile(p, [f, '.*']));
   end
 end
