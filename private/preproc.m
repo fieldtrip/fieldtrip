@@ -98,7 +98,14 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s)
-%   cfg.refmethod     = 'avg' or 'median' (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median' or 'rest' (default = 'avg')
+%   cfg.leadfield      = leadfield
+%                     if select 'rest','leadfield' is required.
+%                     The leadfield can be a matrix (sources X channels)
+%                     which is calculated by using the forward theory, based on
+%                     the electrode montage, head model and equivalent source
+%                     model. It can also be the output of ft_prepare_leadfield.m
+%                     (e.g. lf.leadfield) based on real head modal using FieldTrip.
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure (default = 'no')
 %
@@ -267,7 +274,15 @@ if strcmp(cfg.reref, 'yes')
   if isempty(refindx)
     ft_error('reference channel was not found')
   end
-  dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
+  if isequal(cfg.refmethod,'rest')
+      if isfield(cfg,'leadfield')
+          dat = ft_preproc_rereference(dat, refindx, cfg.refmethod,[],cfg.leadfield);
+      else
+        ft_error('Leadfield is required to re-refer to REST');  
+      end 
+  else
+      dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
+  end
 end
 
 if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
