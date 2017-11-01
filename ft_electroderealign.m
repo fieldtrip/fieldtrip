@@ -90,12 +90,11 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        points
 %
 % If you want to align ECoG electrodes to the pial surface, you first need to compute
-% the cortex hull with FT_PREPARE_MESH. dykstra2012 uses algorithm described in
-% Dykstra et al. (2012, Neuroimage) in which electrodes are projected onto pial
-% surface while minimizing the displacement of the electrodes from original location
-% and maintaining the grid shape. It relies on the optimization toolbox.
+% the cortex hull with FT_PREPARE_MESH. Then, use either the algorithm described in
+% Dykstra et al. (2012, Neuroimage) or in Hermes et al. (2010, J Neuro methods) to snap 
+% the electrodes to the cortex hull, e.g.
 %   cfg.method         = 'headshape'
-%   cfg.warp           = 'dykstra2012'
+%   cfg.warp           = 'dykstra2012' (or 'hermes2010')
 %   cfg.headshape      = a filename containing headshape, a structure containing a
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
@@ -692,7 +691,7 @@ switch cfg.method
       elec_realigned.coordsys = headshape.coordsys;
     end
     if isfield(elec_original, 'coordsys')
-      if strcmp(cfg.warp, 'dykstra2012') % this warp simply moves the electrodes in the same coordinate space
+      if strcmp(cfg.warp, 'dykstra2012') || strcmp(cfg.warp, 'hermes2010') % this warp simply moves the electrodes in the same coordinate space
         elec_realigned.coordsys = elec_original.coordsys;
       elseif strcmp(cfg.warp, 'fsaverage')
         elec_realigned.coordsys = 'fsaverage';
