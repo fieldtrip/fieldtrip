@@ -404,6 +404,8 @@ elseif strcmp(cfg.method, 'headshape')
   norm.label = elec.label;
   if strcmp(cfg.warp, 'dykstra2012')
     norm.elecpos = warp_dykstra2012(cfg, elec, headshape);
+  elseif strcmp(cfg.warp, 'hermes2010')
+    norm.elecpos = warp_hermes2010(cfg, elec, headshape);
   elseif strcmp(cfg.warp, 'fsaverage')
     subj_pial = ft_read_headshape(cfg.headshape);
     [PATHSTR, NAME] = fileparts(cfg.headshape); % lh or rh
@@ -638,7 +640,7 @@ end % if method
 % electrode labels by their case-sensitive original values
 switch cfg.method
   case {'template', 'headshape'}
-    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'fsaverage')
+    if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || strcmpi(cfg.warp, 'fsaverage')
       elec_realigned = norm;
       elec_realigned.label = label_original;
     else
