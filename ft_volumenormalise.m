@@ -290,19 +290,13 @@ flags.vox  = cfg.downsample.*[1 1 1]; %FIXME: downsample does not yet work for s
 fprintf('creating the normalized volumes\n');
 if ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
     
-%   % apply the normalisation parameters to each of the volumes
-%   files  = cell(1,numel(cfg.parameter));
-%   wfiles = cell(1,numel(cfg.parameter));
-%   for k=1:length(cfg.parameter)
-%     fprintf('creating normalised analyze-file for %s\n', cfg.parameter{k});
-%     tmp = cfg.parameter{k};
-%     tmp(tmp=='.') = '_';
-%     files{k} = sprintf('%s_%s.img', cfg.intermediatename, tmp);
-%     [p, f, x] = fileparts(files{k});
-%     wfiles{k} = fullfile(p, ['w' f x]);
-%   end
-  Vout = spm_write_sn(VF, params, flags);  % this creates the 'w' prefixed files
-
+  % apply the normalisation parameters to each of the volumes
+  spm_write_sn(char({VF.fname}), params, flags);  % this creates the 'w' prefixed files
+  for k = 1:numel(VF)
+    [p, f, x] = fileparts(VF(k).fname);
+    Vout(k)   = spm_vol(fullfile(p, ['w' f x]));
+  end
+    
 else
   
   [pth,fname,ext] = fileparts(params.image.fname);
