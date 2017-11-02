@@ -182,8 +182,9 @@ else
   cfg.parameter = cfg.parameter(fliplr(indx));
 end
 
-if cfg.downsample~=1
-  % optionally downsample the anatomical and/or functional volumes
+if cfg.downsample~=1 && ~(strcmp(cfg.spmversion, 'spm12')&&strcmp(cfg.spmmethod,'new'))
+  % optionally downsample the anatomical and/or functional volumes, this is
+  % not needed when using spm12 in combination with spmmethod='new'
   tmpcfg = keepfields(cfg, {'downsample', 'parameter', 'smooth', 'showcallinfo'});
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information
@@ -229,6 +230,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the normalisation parameters, if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+olparams  = true;
+newparams = false;
 fprintf('performing the normalisation\n');
 if ~isfield(cfg, 'spmparams')
   if strcmp(cfg.nonlinear, 'yes') && ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
@@ -272,13 +275,26 @@ if ~isfield(cfg, 'spmparams')
     [bb, ~] = spm_get_bbox(opts.tpm.V(1));
     spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
     
+    oldparams = false;
+    newparams = true;
   end
   
 else
   fprintf('using the parameters specified in the configuration, skipping the parameter estimation\n');
   % use the externally specified parameters
-  VF     = spm_vol([cfg.intermediatename '_anatomy' ext]);
+  %VF     = spm_vol([cfg.intermediatename '_anatomy' ext]);
   params = cfg.spmparams;
+  
+  if ~isfield(params, 'Tr')
+    ft_error('Using precomputed parameters is not allowed with spmmethod=''new'', not sure whether this will work');
+    oldparams = false;
+    newparams = true;
+    
+    % this writes the 'deformation field'
+    fprintf('writing the deformation field to file\n');
+    [bb, ~] = spm_get_bbox(params.tpm(1));
+    spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -287,8 +303,7 @@ end
 normalised = [];
 
 fprintf('creating the normalized volumes\n');
-if ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
-    
+if oldparams
   % apply the normalisation parameters to each of the volumes
   flags.vox  = cfg.downsample.*[1 1 1];
   spm_write_sn(char({VF.fname}), params, flags);  % this creates the 'w' prefixed files
@@ -296,9 +311,7 @@ if ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
     [p, f, x] = fileparts(VF(k).fname);
     Vout(k)   = spm_vol(fullfile(p, ['w' f x]));
   end
-    
-else
-  
+elseif newparams
   [pth,fname,ext] = fileparts(params.image.fname);
   
   tmp        = [];
@@ -313,7 +326,6 @@ else
   job.out{1}.pull = tmp;
   out = spm_deformations(job);
   Vout = spm_vol(char(out.warped));
-  
 end
 
 % read the normalised results from the 'w' prefixed files
