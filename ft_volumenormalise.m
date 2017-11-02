@@ -269,8 +269,8 @@ if ~isfield(cfg, 'spmparams')
     
     % this writes the 'deformation field'
     fprintf('writing the deformation field to file\n');
-    spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, nan(2,3), cfg.downsample.*[1 1 1]);
-    
+    [bb, ~] = spm_get_bbox(opts.tpm.V(1));
+    spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
     
   end
   
@@ -285,12 +285,12 @@ end
 % apply the normalisation parameters to the specified volumes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 normalised = [];
-flags.vox  = cfg.downsample.*[1 1 1]; %FIXME: downsample does not yet work for spmmethod='new'
 
 fprintf('creating the normalized volumes\n');
 if ~(strcmp(cfg.spmversion, 'spm12') && strcmp(cfg.spmmethod, 'new'))
     
   % apply the normalisation parameters to each of the volumes
+  flags.vox  = cfg.downsample.*[1 1 1];
   spm_write_sn(char({VF.fname}), params, flags);  % this creates the 'w' prefixed files
   for k = 1:numel(VF)
     [p, f, x] = fileparts(VF(k).fname);
