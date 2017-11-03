@@ -28,41 +28,49 @@ function [warped]= sn2individual(P, input)
 %
 % $Id$
 
-if numel(P.Tr)==0,
-  % only an affine transformation has been done
-  T      = P.VF.mat*P.Affine/(P.VG.mat);
-  warped = ft_warp_apply(T, input);
-
-else
-  % we need the spm_dctmtx function for the nonlinear case
-  if ~ft_hastoolbox('spm')
-    % add SPM8 or later to the path
-    ft_hastoolbox('spm8up', 1);
-  end
-
-  dim  = P.VG.dim(1:3);
-  xyz  = ft_warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates
+if isfield(P, 'Tr')
+  % this is an old-style representation of the parameters, so it uses the
+  % code adjusted from nut_mni2mri
   
-  basX = spm_dctmtx(dim(1), size(P.Tr,1), xyz(:,1)-1);
-  basY = spm_dctmtx(dim(2), size(P.Tr,2), xyz(:,2)-1);
-  basZ = spm_dctmtx(dim(3), size(P.Tr,3), xyz(:,3)-1);
-
-  siz = size(P.Tr);
-  Tr1 = reshape(P.Tr(:,:,:,1),siz(1)*siz(2),siz(3));
-  Tr2 = reshape(P.Tr(:,:,:,2),siz(1)*siz(2),siz(3));
-  Tr3 = reshape(P.Tr(:,:,:,3),siz(1)*siz(2),siz(3));
+  if numel(P.Tr)==0
+    % only an affine transformation has been done
+    T      = P.VF.mat*P.Affine/(P.VG.mat);
+    warped = ft_warp_apply(T, input);
     
-  xyztmp = zeros(size(xyz));
-  for i=1:size(xyz,1)
-    bx = basX(i,:);
-	  by = basY(i,:);
-	  bz = basZ(i,:);
-	  tx = reshape(Tr1*bz', siz(1), siz(2) );
-	  ty = reshape(Tr2*bz', siz(1), siz(2) );
-	  tz = reshape(Tr3*bz', siz(1), siz(2) );
-	  xyztmp(i,:) = [bx*tx*by' bx*ty*by' bx*tz*by'];
+  else
+    % we need the spm_dctmtx function for the nonlinear case
+    if ~ft_hastoolbox('spm')
+      % add SPM8 or later to the path
+      ft_hastoolbox('spm8up', 1);
+    end
+    
+    dim  = P.VG.dim(1:3);
+    xyz  = ft_warp_apply(inv(P.VG.mat), input); % goes into voxel coordinates
+    
+    basX = spm_dctmtx(dim(1), size(P.Tr,1), xyz(:,1)-1);
+    basY = spm_dctmtx(dim(2), size(P.Tr,2), xyz(:,2)-1);
+    basZ = spm_dctmtx(dim(3), size(P.Tr,3), xyz(:,3)-1);
+    
+    siz = size(P.Tr);
+    Tr1 = reshape(P.Tr(:,:,:,1),siz(1)*siz(2),siz(3));
+    Tr2 = reshape(P.Tr(:,:,:,2),siz(1)*siz(2),siz(3));
+    Tr3 = reshape(P.Tr(:,:,:,3),siz(1)*siz(2),siz(3));
+    
+    xyztmp = zeros(size(xyz));
+    for i=1:size(xyz,1)
+      bx = basX(i,:);
+      by = basY(i,:);
+      bz = basZ(i,:);
+      tx = reshape(Tr1*bz', siz(1), siz(2) );
+      ty = reshape(Tr2*bz', siz(1), siz(2) );
+      tz = reshape(Tr3*bz', siz(1), siz(2) );
+      xyztmp(i,:) = [bx*tx*by' bx*ty*by' bx*tz*by'];
+    end
+    
+    T      = P.VF.mat*P.Affine;
+    warped = ft_warp_apply(T, xyz+xyztmp);
   end
   
-  T      = P.VF.mat*P.Affine;
-  warped = ft_warp_apply(T, xyz+xyztmp);
-end;
+else
+  
+end

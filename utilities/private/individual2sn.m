@@ -37,23 +37,62 @@ function [warped]= individual2sn(P, input)
 %
 % $Id$
 
-% check for any version of SPM
-if ~ft_hastoolbox('spm')
-  % add SPM8 to the path
-  ft_hastoolbox('spm8', 1);
+if isfield(P, 'Tr')
+  % this is an old-style representation of the parameters, 
+  
+  % check for any version of SPM
+  if ~ft_hastoolbox('spm')
+    % add SPM8 to the path
+    ft_hastoolbox('spm8', 1);
+  end
+  
+  % The following is a three-step procedure
+  
+  % 1: create the spatial deformation field from the sn parameters
+  [Def, M] = get_sn2def(P);
+  
+  % 2a: invert the spatial deformation field
+  [p,f,e]         = fileparts(which('spm_invdef'));
+  templatedirname = fullfile(p,'templates');
+  d               = dir([templatedirname,'/T1*']);
+  %VT              = spm_vol(fullfile(templatedirname,d(1).name));
+  VT.dim = [91 109 91];
+  VT.mat = [-2 0 0 92; 0 2 0 -128; 0 0 2 -74; 0 0 0 1];
+  [iy(:,:,:,1), iy(:,:,:,2), iy(:,:,:,3)] = spm_invdef(Def{1},Def{2},Def{3},VT.dim(1:3),inv(VT.mat),M);
+  
+else
+  
+  % this requires spm12 on the path
+  ft_hastoolbox('spm12', 1);
+  
+  prm     = [3 3 3 0 0 0];
+  Coef    = cell(1,3);
+  Coef{1} = spm_bsplinc(P.Twarp(:,:,:,1),prm);
+  Coef{2} = spm_bsplinc(P.Twarp(:,:,:,2),prm);
+  Coef{3} = spm_bsplinc(P.Twarp(:,:,:,3),prm);
+  
+  VT        = P.tpm(1);
+  M1        = VT.mat;
+  d1        = VT.dim;
+   
+  M  = M1\P.Affine*P.image(1).mat;
+  d  = P.image(1).dim;
+  
+  [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
+  x3 = 1:d(3);
+  
+  y = zeros([d 3],'single');
+  for z=1:length(x3)
+    [t1,t2,t3] = defs(Coef,z,P.MT,prm,x1,x2,x3,M);
+    y(:,:,z,1) = t1;
+    y(:,:,z,2) = t2;
+    y(:,:,z,3) = t3;
+  end
+  
+  iy = spm_diffeo('invdef',y,d1,eye(4),P.image(1).mat);
+  iy = spm_extrapolate_def(iy,M1);
+  clear y;
 end
-
-% The following is a three-step procedure
-
-% 1: create the spatial deformation field from the sn parameters
-[Def, M] = get_sn2def(P);
-
-% 2a: invert the spatial deformation field
-[p,f,e]         = fileparts(which('spm_invdef'));
-templatedirname = fullfile(p,'templates');
-d               = dir([templatedirname,'/T1*']);
-VT              = spm_vol(fullfile(templatedirname,d(1).name));
-[iy1,iy2,iy3]   = spm_invdef(Def{1},Def{2},Def{3},VT.dim(1:3),inv(VT.mat),M);
 
 % 2b: write the deformation fields in x/y/z direction to temporary files
 V1.fname     = [tempname '.img'];
@@ -62,7 +101,7 @@ V1.pinfo     = [1 0 0]';
 V1.mat       = VT.mat;
 V1.dt        = [64 0];
 V1.descrip   = 'Inverse deformation field';
-spm_write_vol(V1,iy1);
+spm_write_vol(V1,iy(:,:,:,1));
 
 V2.fname     = [tempname '.img'];
 V2.dim(1:3)  = VT.dim(1:3);
@@ -70,7 +109,7 @@ V2.pinfo     = [1 0 0]';
 V2.mat       = VT.mat;
 V2.dt        = [64 0];
 V2.descrip   = 'Inverse deformation field';
-spm_write_vol(V2,iy2);                                                                                   
+spm_write_vol(V2,iy(:,:,:,2));
 
 V3.fname     = [tempname '.img'];
 V3.dim(1:3)  = VT.dim(1:3);
@@ -78,13 +117,13 @@ V3.pinfo     = [1 0 0]';
 V3.mat       = VT.mat;
 V3.dt        = [64 0];
 V3.descrip   = 'Inverse deformation field';
-spm_write_vol(V3,iy3);
+spm_write_vol(V3,iy(:,:,:,3));
 
 % 3: extract the coordinates
 warped = ft_warp_apply(inv(V1.mat), input);  % Express as voxel indices
 warped = cat(2, spm_sample_vol(V1,warped(:,1),warped(:,2),warped(:,3),1), ...
-                spm_sample_vol(V2,warped(:,1),warped(:,2),warped(:,3),1), ... 
-                spm_sample_vol(V3,warped(:,1),warped(:,2),warped(:,3),1));
+  spm_sample_vol(V2,warped(:,1),warped(:,2),warped(:,3),1), ...
+  spm_sample_vol(V3,warped(:,1),warped(:,2),warped(:,3),1));
 
 %_______________________________________________________________________
 function [Def,mat] = get_sn2def(sn)
@@ -101,7 +140,7 @@ mat = sn.VG(1).mat;
 
 st = size(sn.Tr);
 
-if (prod(st) == 0),
+if (prod(st) == 0)
     affine_only = true;
     basX = 0;
     basY = 0;
@@ -144,6 +183,24 @@ for j=1:length(z)
     Def{3}(:,:,j) = single(Z2);
 end;
 %_______________________________________________________________________
+
+% the below is copied from spm_preproc_write8, and adjusted a bit
+%==========================================================================
+% function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
+%==========================================================================
+function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
+iMT = inv(MT);
+x1  = x0*iMT(1,1)+iMT(1,4);
+y1  = y0*iMT(2,2)+iMT(2,4);
+z1  = (z0(z)*iMT(3,3)+iMT(3,4))*ones(size(x1));
+x1a = x0    + spm_bsplins(sol{1},x1,y1,z1,prm);
+y1a = y0    + spm_bsplins(sol{2},x1,y1,z1,prm);
+z1a = z0(z) + spm_bsplins(sol{3},x1,y1,z1,prm);
+x1  = M(1,1)*x1a + M(1,2)*y1a + M(1,3)*z1a + M(1,4);
+y1  = M(2,1)*x1a + M(2,2)*y1a + M(2,3)*z1a + M(2,4);
+z1  = M(3,1)*x1a + M(3,2)*y1a + M(3,3)*z1a + M(3,4);
+
+
 
               
               
