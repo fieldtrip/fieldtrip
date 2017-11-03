@@ -230,7 +230,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the normalisation parameters, if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-olparams  = true;
+oldparams = true;
 newparams = false;
 fprintf('performing the normalisation\n');
 if ~isfield(cfg, 'spmparams')
