@@ -30,7 +30,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %
 % Use as
 %   [elec] = ft_electrodeplacement(cfg, ct)
-%   [elec] = ft_electrodeplacement(cfg, ct, mri)
+%   [elec] = ft_electrodeplacement(cfg, ct, mri, ..)
 % where the input mri should be an anatomical CT or MRI volume, or
 %   [elec] = ft_electrodeplacement(cfg, headshape)
 % where the input headshape should be a surface triangulation.
