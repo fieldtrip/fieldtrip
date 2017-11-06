@@ -14,10 +14,10 @@ function [warped]= individual2sn(P, input)
 %
 % Input parameters:
 %   P     = structure that contains the contents of an spm generated _sn.mat
-%           file
+%           file, or the representaiton of the parameters as of SPM12
 %   input = Nx3 array containing the input positions
 
-% Copyright (C) 2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2013-2017, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -40,10 +40,10 @@ function [warped]= individual2sn(P, input)
 if isfield(P, 'Tr')
   % this is an old-style representation of the parameters, 
   
-  % check for any version of SPM
+  % check for a sufficiently recent version of SPM
   if ~ft_hastoolbox('spm')
     % add SPM8 to the path
-    ft_hastoolbox('spm8', 1);
+    ft_hastoolbox('spm8up', 1);
   end
   
   % The following is a three-step procedure
@@ -75,7 +75,7 @@ else
   M1        = VT.mat;
   d1        = VT.dim;
    
-  M  = M1\P.Affine*P.image(1).mat;
+  M  = M1\P.Affine*P.image(1).mat; % this is an Affine mapping that goes from image voxels to TPM voxels
   d  = P.image(1).dim;
   
   [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
@@ -184,7 +184,7 @@ for j=1:length(z)
 end;
 %_______________________________________________________________________
 
-% the below is copied from spm_preproc_write8, and adjusted a bit
+% the below is copied from spm_preproc_write8
 %==========================================================================
 % function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
 %==========================================================================
@@ -200,7 +200,3 @@ x1  = M(1,1)*x1a + M(1,2)*y1a + M(1,3)*z1a + M(1,4);
 y1  = M(2,1)*x1a + M(2,2)*y1a + M(2,3)*z1a + M(2,4);
 z1  = M(3,1)*x1a + M(3,2)*y1a + M(3,3)*z1a + M(3,4);
 
-
-
-              
-              
