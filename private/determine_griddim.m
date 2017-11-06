@@ -1,4 +1,50 @@
 function GridDim = determine_griddim(elec)
+
+% DETERMINE_GRIDDIM uses the labels and positions of electrodes in elec to
+% determine the dimensions of each set of electroges (i.e., electrodes with
+% the same string, but different numbers)
+%
+% use as: 
+%   GridDim = determine_griddim(elec)
+%   where elec is a structure that contains an elecpos field and a label field
+%   and GridDim(1) = number of rows and GridDim(2) = number of columns
+%   
+%
+% See also FT_ELECTRODEREALIGN
+
+% Copyright (C) 2012-2017, Arjen Stolk, Sandon Griffin
+%
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 % determine grid dimensions (1st dim: number of rows, 2nd dim: number of columns)
 % A. Stolk & S. Griffin, 2017
 
