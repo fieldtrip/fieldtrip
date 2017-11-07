@@ -65,4 +65,16 @@ pos12new_sn = ft_warp_apply(P, pos, 'individual2sn');
 pos12new_sn_ind = ft_warp_apply(P, pos12new_sn, 'sn2individual');
 
 
+cfg                 = [];
+cfg.spmversion      = 'spm12';
+cfg.spmmethod       = 'new';
+cfg.mri             = mri;
+cfg.threshold       = 0.1;
+cfg.grid.resolution = 6;
+cfg.grid.warpmni    = 'yes';
+cfg.grid.nonlinear  = 'yes';
+sourcemodel_warp    = ft_prepare_sourcemodel(cfg);
 
+rmpath(genpath(fullfile(p,'external','spm12')));
+cfg.spmmethod = 'old';
+sourcemodel_warp2 = ft_prepare_sourcemodel(cfg);
