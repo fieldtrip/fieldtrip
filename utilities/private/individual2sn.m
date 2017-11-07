@@ -52,46 +52,41 @@ if isfield(P, 'Tr')
   [Def, M] = get_sn2def(P);
   
   % 2a: invert the spatial deformation field
-  [p,f,e]         = fileparts(which('spm_invdef'));
-  templatedirname = fullfile(p,'templates');
-  d               = dir([templatedirname,'/T1*']);
+  %[p,f,e]         = fileparts(which('spm_invdef'));
+  %templatedirname = fullfile(p,'templates');
+  %d               = dir([templatedirname,'/T1*']);
   %VT              = spm_vol(fullfile(templatedirname,d(1).name));
   VT.dim = [91 109 91];
   VT.mat = [-2 0 0 92; 0 2 0 -128; 0 0 2 -74; 0 0 0 1];
   [iy(:,:,:,1), iy(:,:,:,2), iy(:,:,:,3)] = spm_invdef(Def{1},Def{2},Def{3},VT.dim(1:3),inv(VT.mat),M);
   
 else
-  
   % this requires spm12 on the path
   ft_hastoolbox('spm12', 1);
+
+  fprintf('creating the deformation field and writing it to a temporary file\n');
+  [bb, ~] = spm_get_bbox(P.image(1));
   
-  prm     = [3 3 3 0 0 0];
-  Coef    = cell(1,3);
-  Coef{1} = spm_bsplinc(P.Twarp(:,:,:,1),prm);
-  Coef{2} = spm_bsplinc(P.Twarp(:,:,:,2),prm);
-  Coef{3} = spm_bsplinc(P.Twarp(:,:,:,3),prm);
+  fname  = [tempname,'.nii'];
+  V      = nifti;
+  V.dat  = file_array(fname, P.image(1).dim(1:3), [spm_type('float32') spm_platform('bigend')], 0, 1, 0);
+  V.mat  = P.image(1).mat;
+  V.mat0 = P.image(1).mat;
+  V.descrip = 'dummy volume';
+  create(V);
+  V.dat(:) = 0;
+  P.image(1).private = V;
+  P.image(1).fname   = fname;
   
-  VT        = P.tpm(1);
-  M1        = VT.mat;
-  d1        = VT.dim;
-   
-  M  = M1\P.Affine*P.image(1).mat; % this is an Affine mapping that goes from image voxels to TPM voxels
-  d  = P.image(1).dim;
+  spm_preproc_write8(P, zeros(6,4), [0 0], [1 0], 1, 1, bb, 1);
   
-  [x1,x2,o] = ndgrid(1:d(1),1:d(2),1);
-  x3 = 1:d(3);
+  [pth,nam,ext] = fileparts(fname);
+  V  = nifti(fullfile(pth,['iy_',nam,ext]));
+  iy = squeeze(V.dat(:,:,:,:,:));
   
-  y = zeros([d 3],'single');
-  for z=1:length(x3)
-    [t1,t2,t3] = defs(Coef,z,P.MT,prm,x1,x2,x3,M);
-    y(:,:,z,1) = t1;
-    y(:,:,z,2) = t2;
-    y(:,:,z,3) = t3;
-  end
-  
-  iy = spm_diffeo('invdef',y,d1,eye(4),P.image(1).mat);
-  iy = spm_extrapolate_def(iy,M1);
-  clear y;
+  siz    = size(iy);
+  VT.dim = siz(1:3);
+  VT.mat = P.image(1).mat;
 end
 
 % 2b: write the deformation fields in x/y/z direction to temporary files
@@ -183,20 +178,3 @@ for j=1:length(z)
     Def{3}(:,:,j) = single(Z2);
 end;
 %_______________________________________________________________________
-
-% the below is copied from spm_preproc_write8
-%==========================================================================
-% function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
-%==========================================================================
-function [x1,y1,z1] = defs(sol,z,MT,prm,x0,y0,z0,M)
-iMT = inv(MT);
-x1  = x0*iMT(1,1)+iMT(1,4);
-y1  = y0*iMT(2,2)+iMT(2,4);
-z1  = (z0(z)*iMT(3,3)+iMT(3,4))*ones(size(x1));
-x1a = x0    + spm_bsplins(sol{1},x1,y1,z1,prm);
-y1a = y0    + spm_bsplins(sol{2},x1,y1,z1,prm);
-z1a = z0(z) + spm_bsplins(sol{3},x1,y1,z1,prm);
-x1  = M(1,1)*x1a + M(1,2)*y1a + M(1,3)*z1a + M(1,4);
-y1  = M(2,1)*x1a + M(2,2)*y1a + M(2,3)*z1a + M(2,4);
-z1  = M(3,1)*x1a + M(3,2)*y1a + M(3,3)*z1a + M(3,4);
-
