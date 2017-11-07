@@ -8,6 +8,7 @@ function test_bug1450
 % ft_checkconfig used to be responsible for mergeconfig, but on 19-10-2015
 % that moved to ft_preable_init which is called prior to ft_checkconfig
 
+% this test script should be explicit about ft_default
 global ft_default
 ft_default = [];
 ft_default.field1 = 1;

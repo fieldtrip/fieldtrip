@@ -166,7 +166,6 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'}
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'unused', {'cohtargetchannel'});
-% cfg = ft_checkconfig(cfg, 'deprecated', {'xparam', 'yparam'});
 
 % set the defaults
 cfg.parameter      = ft_getopt(cfg, 'parameter', 'powspctrm');
@@ -395,8 +394,8 @@ end
 % the usual data is chan_freq_time, but other dimords should also work
 dimtok = tokenize(dimord, '_');
 datamatrix = data.(cfg.parameter);
-[c, ia, ib] = intersect(dimtok, {'chan', yparam, xparam});
-datamatrix = permute(datamatrix, ia);
+[c, ia, ib] = intersect({'chan', yparam, xparam}, dimtok, 'stable');
+datamatrix = permute(datamatrix, ib);
 datamatrix = datamatrix(selchan, sely, selx);
 
 if ~isempty(cfg.maskparameter)

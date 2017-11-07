@@ -3,7 +3,11 @@ function test_bug3361
 % MEM 2gb
 % WALLTIME 00:10:00
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361.mat'));
+% I noticed an error in MATLAB 2017b which would try to evaluate "ga" as a
+% function, even though it was read from the file. The solution is to read
+% it explicitly.
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361.mat'), 'cfg');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361.mat'), 'ga');
 
 %%
 
@@ -67,12 +71,14 @@ close all
 ft_topoplotTFR(cfg, ga)
 
 
-%% 
+%%
 % I detected another problem with clusterplot and highlighting
 
 clear all
 close all
-load bug3361b.mat
+
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361b.mat'), 'cfg');
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361b.mat'), 'stat');
 
 % fake the first 5 positive clusters such that they show up
 stat.posclusters(1).prob = 0.01 - 0.0001;
@@ -89,4 +95,3 @@ stat.negclusters(5).prob = 1;
 
 cfg.alpha = 0.3;
 ft_clusterplot(cfg, stat);
-

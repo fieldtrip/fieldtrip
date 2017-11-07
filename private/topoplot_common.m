@@ -38,7 +38,6 @@ function cfg = topoplot_common(cfg, varargin)
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
-cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 Ndata = numel(varargin);
 if isnumeric(varargin{end})
@@ -186,16 +185,21 @@ if isempty(cfg.commentpos)
   end
 end
 
-% the user can either specify a single group of channels for highlighting (all in the
-% same style), or multiple groups with a different style for each group. The latter
-% is used by ft_clusterplot.
-if ~iscell(cfg.highlight)
-  cfg.highlight = {cfg.highlight};
-end
-if iscell(cfg.highlightchannel) && ~(iscell(cfg.highlightchannel{1}) || isnumeric(cfg.highlightchannel{1}))
+% the user can either specify a single group of channels for highlighting
+% which are all to be plotted in the same style, or multiple groups with a
+% different style for each group. The latter is used by ft_clusterplot.
+if iscell(cfg.highlightchannel) && ~isempty(cfg.highlightchannel) && ischar(cfg.highlightchannel{1}) 
+  % it is a single cell-array with channels names, e.g. {'C1', 'Cz', 'C2'}
+  cfg.highlightchannel = {cfg.highlightchannel};
+elseif isnumeric(cfg.highlightchannel)
+  % it is a numeric selection of channels, e.g. [1 2 3 4]
   cfg.highlightchannel = {cfg.highlightchannel};
 elseif ischar(cfg.highlightchannel)
+  % it is a single channel or single channel group, e.g. 'all'
   cfg.highlightchannel = {{cfg.highlightchannel}};
+end
+if ~iscell(cfg.highlight)
+  cfg.highlight = {cfg.highlight};
 end
 if ~iscell(cfg.highlightsymbol)
   cfg.highlightsymbol = {cfg.highlightsymbol};
@@ -209,14 +213,22 @@ end
 if ~iscell(cfg.highlightfontsize)
   cfg.highlightfontsize = {cfg.highlightfontsize};
 end
-% then make sure all cell-arrays for options have length ncellhigh and default the last element if not present
+% make sure all cell-arrays for options are sufficiently long
 ncellhigh = length(cfg.highlightchannel);
-if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = 'o';       end
-if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [0 0 0];   end
-if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = 6;         end
-if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = 8;         end
+if length(cfg.highlight)          < ncellhigh,   cfg.highlight{ncellhigh}          = [];  end
+if length(cfg.highlightsymbol)    < ncellhigh,   cfg.highlightsymbol{ncellhigh}    = [];  end
+if length(cfg.highlightcolor)     < ncellhigh,   cfg.highlightcolor{ncellhigh}     = [];  end
+if length(cfg.highlightsize)      < ncellhigh,   cfg.highlightsize{ncellhigh}      = [];  end
+if length(cfg.highlightfontsize)  < ncellhigh,   cfg.highlightfontsize{ncellhigh}  = [];  end
+% make sure all cell-arrays for options are not too long
+cfg.highlight         (ncellhigh+1:end) = [];
+cfg.highlightsymbol   (ncellhigh+1:end) = [];
+cfg.highlightcolor    (ncellhigh+1:end) = [];
+cfg.highlightsize     (ncellhigh+1:end) = [];
+cfg.highlightfontsize (ncellhigh+1:end) = [];
 % then default all empty cells
 for icell = 1:ncellhigh
+  if isempty(cfg.highlight{icell}),          cfg.highlight{icell} = 'on';          end
   if isempty(cfg.highlightsymbol{icell}),    cfg.highlightsymbol{icell} = 'o';     end
   if isempty(cfg.highlightcolor{icell}),     cfg.highlightcolor{icell} = [0 0 0];  end
   if isempty(cfg.highlightsize{icell}),      cfg.highlightsize{icell} = 6;         end
@@ -252,8 +264,8 @@ hastime = isfield(data, 'time');
 % Set x/y/parameter defaults according to datatype and dimord
 switch dtype
   case 'timelock'
-    xparam = 'time';
-    yparam = '';
+    xparam = ft_getopt(cfg, 'xparam', 'time');
+    yparam = ft_getopt(cfg, 'yparam', '');
     if isfield(data, 'trial')
       cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
     elseif isfield(data, 'individual')
@@ -263,8 +275,8 @@ switch dtype
     end
   case 'freq'
     if hastime
-      xparam = 'time';
-      yparam = 'freq';
+    xparam = ft_getopt(cfg, 'xparam', 'time');
+    yparam = ft_getopt(cfg, 'yparam', 'freq');
       cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
     else
       xparam = 'freq';
@@ -343,7 +355,9 @@ else
   tmpcfg.avgoverrpt = 'no';
 end
 tmpvar = data;
+ws = ft_warning('off', 'FieldTrip:getdimord:warning_dimord_could_not_be_determined');
 [data] = ft_selectdata(tmpcfg, data);
+ft_warning(ws);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -538,8 +552,6 @@ end
 
 % make comment
 switch cfg.comment
-  case 'no'
-    cfg.comment = '';
   case 'auto'
     comment = date;
     if ~isempty(xparam)
@@ -551,29 +563,30 @@ switch cfg.comment
     if ~isempty(cfg.parameter)
       comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
     end
-    cfg.comment = comment;
   case 'xlim'
     comment = date;
     if ~isempty(xparam)
-      cfg.comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
     end
   case 'ylim'
     comment = date;
     if ~isempty(yparam)
-      cfg.comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
     end
   case 'zlim'
     comment = date;
     if ~isempty(yparam)
-      cfg.comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
+      comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
     end
+  otherwise
+    comment = '';
 end % switch comment
 
 if ~isempty(cfg.refchannel)
   if iscell(cfg.refchannel)
-    cfg.comment = sprintf('%s\nreference=%s %s', cfg.comment, cfg.refchannel{:});
+    comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
   else
-    cfg.comment = sprintf('%s\nreference=%s %s', cfg.comment, cfg.refchannel);
+    comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
   end
 end
 
@@ -705,47 +718,51 @@ for icell = 1:length(cfg.highlight)
 end % for icell
 
 % For Markers (all channels)
-cfg = ft_checkopt(cfg, 'marker', {}, {'on', 'off', 'labels', 'numbers'});
-if ~strcmp(cfg.marker, 'off')
-  channelsToMark = 1:length(data.label);
-  channelsToHighlight = [];
-  for icell = 1:length(cfg.highlight)
-    if ~strcmp(cfg.highlight{icell}, 'off')
-      channelsToHighlight = [channelsToHighlight; match_str(data.label, cfg.highlightchannel{icell})];
+switch cfg.marker
+  case {'off', 'no'}
+    % do not show the markers
+  case {'on', 'labels', 'numbers'}
+    channelsToMark = 1:length(data.label);
+    channelsToHighlight = [];
+    for icell = 1:length(cfg.highlight)
+      if ~strcmp(cfg.highlight{icell}, 'off')
+        channelsToHighlight = [channelsToHighlight; match_str(data.label, cfg.highlightchannel{icell})];
+      end
     end
-  end
-  if strcmp(cfg.interpolatenan, 'no')
-    channelsNotMark = channelsToHighlight;
-  else
-    channelsNotMark = union(find(isnan(dat)), channelsToHighlight);
-  end
-  channelsToMark(channelsNotMark) = [];
-  [dum, layoutindex] = match_str(ft_channelselection(channelsToMark, data.label), cfg.layout.label);
-  templay = [];
-  templay.outline = cfg.layout.outline;
-  templay.mask    = cfg.layout.mask;
-  templay.pos     = cfg.layout.pos(layoutindex,:);
-  templay.width   = cfg.layout.width(layoutindex);
-  templay.height  = cfg.layout.height(layoutindex);
-  templay.label   = cfg.layout.label(layoutindex);
-  if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
-    labelflg = 1;
-  else
-    labelflg = 0;
-  end
-  if strcmp(cfg.marker, 'numbers')
-    for ichan = 1:length(layoutindex)
-      templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
+    if strcmp(cfg.interpolatenan, 'no')
+      channelsNotMark = channelsToHighlight;
+    else
+      channelsNotMark = union(find(isnan(dat)), channelsToHighlight);
     end
-  end
-  ft_plot_lay(templay, 'box', 'no', 'label',labelflg, 'point', ~labelflg, ...
-    'pointsymbol',  cfg.markersymbol, ...
-    'pointcolor',   cfg.markercolor, ...
-    'pointsize',    cfg.markersize, ...
-    'fontsize',     cfg.markerfontsize, ...
-    'labeloffset',  cfg.labeloffset, ...
-    'labelalignh', 'center', ...
-    'labelalignv', 'middle');
+    channelsToMark(channelsNotMark) = [];
+    [dum, layoutindex] = match_str(ft_channelselection(channelsToMark, data.label), cfg.layout.label);
+    templay = [];
+    templay.outline = cfg.layout.outline;
+    templay.mask    = cfg.layout.mask;
+    templay.pos     = cfg.layout.pos(layoutindex,:);
+    templay.width   = cfg.layout.width(layoutindex);
+    templay.height  = cfg.layout.height(layoutindex);
+    templay.label   = cfg.layout.label(layoutindex);
+    if strcmp(cfg.marker, 'labels') || strcmp(cfg.marker, 'numbers')
+      labelflg = 1;
+    else
+      labelflg = 0;
+    end
+    if strcmp(cfg.marker, 'numbers')
+      for ichan = 1:length(layoutindex)
+        templay.label{ichan} = num2str(match_str(data.label,templay.label{ichan}));
+      end
+    end
+    ft_plot_lay(templay, 'box', 'no', 'label',labelflg, 'point', ~labelflg, ...
+      'pointsymbol',  cfg.markersymbol, ...
+      'pointcolor',   cfg.markercolor, ...
+      'pointsize',    cfg.markersize, ...
+      'fontsize',     cfg.markerfontsize, ...
+      'labeloffset',  cfg.labeloffset, ...
+      'labelalignh', 'center', ...
+      'labelalignv', 'middle');
+  otherwise
+    ft_error('incorrect value for cfg.marker');
 end
 
 if isfield(cfg, 'vector')
@@ -761,9 +778,9 @@ end
 % Write comment
 if ~strcmp(cfg.comment, 'no')
   if strcmp(cfg.commentpos, 'title')
-    title(cfg.comment, 'FontSize', cfg.fontsize);
+    title(comment, 'FontSize', cfg.fontsize);
   else
-    ft_plot_text(x_comment, y_comment, cfg.comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
+    ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
   end
 end
 

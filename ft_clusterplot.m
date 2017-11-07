@@ -397,7 +397,7 @@ else
   
   % make plots
   for iPl = 1:Nfig
-    f = figure('visible', cfg.visible);
+    figure('visible', cfg.visible);
     if is2D
       if iPl < Nfig
         for iT = 1:numSubplots

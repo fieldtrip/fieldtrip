@@ -5,10 +5,6 @@ function test_example_combineplanar_pipelineorder
 
 % TEST ft_dipolesimulation ft_combineplanar ft_singleplotER ft_topoplotER
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf275.mat'));
 
 vol = [];

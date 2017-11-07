@@ -100,15 +100,17 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %, $(BINDIR)/%$(SUFFIX), demo_combined demo_sinewave demo_event test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_pthread test_benchmark test_nslookup test_waitdat test_connect)
+TARGETS = $(patsubst %, $(BINDIR)/%$(SUFFIX), demo_combined demo_sinewave demo_event test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_pthread test_benchmark test_nslookup test_waitdat test_connect interface_write interface_server)
 
 ##############################################################################
 
-all: demo test
+all: demo test interface
 
 demo: demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
 
 test: test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
+
+interface: interface_write$(SUFFIX) interface_server$(SUFFIX)
 
 demo_combined$(SUFFIX): demo_combined.o sinewave.o ../src/libbuffer.a
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
@@ -150,6 +152,12 @@ test_waitdat$(SUFFIX): test_waitdat.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 test_connect$(SUFFIX): test_connect.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
+
+interface_write$(SUFFIX): interface_write.o
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
+
+interface_server$(SUFFIX): interface_server.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 %.o: %.c
