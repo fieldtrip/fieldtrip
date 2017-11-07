@@ -177,7 +177,7 @@ datfield  = setdiff(datfield, {'label' 'labelcmb'}); % these fields will be used
 datfield  = setdiff(datfield, {'dim'});              % not used for selection, also not treated as data field
 xtrafield =  {'cfg' 'hdr' 'fsample' 'fsampleorig' 'grad' 'elec' 'opto' 'transform' 'unit' 'topolabel'}; % these fields will not be touched in any way by the code
 datfield  = setdiff(datfield, xtrafield);
-orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$'))&cellfun(@isempty, regexp(datfield, '^csd'))); % xxxlabel, with the exception of csdlabel
+orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'label$')) & cellfun(@isempty, regexp(datfield, '^csd'))); % xxxlabel, with the exception of csdlabel
 datfield  = setdiff(datfield, orgdim1);
 datfield  = datfield(:)';
 orgdim1   = datfield(~cellfun(@isempty, regexp(datfield, 'dimord$'))); % xxxdimord
@@ -217,12 +217,12 @@ end
 dimtok = unique(dimtok);
 
 hasspike   = any(ismember(dimtok, 'spike'));
-haspos     = any(ismember(dimtok, {'pos', '{pos}'}));
-haschan    = any(ismember(dimtok, {'chan', '{chan}'}));
+haspos     = any(ismember(dimtok, {'pos' '{pos}'}));
+haschan    = any(ismember(dimtok, {'chan' '{chan}'}));
 haschancmb = any(ismember(dimtok, 'chancmb'));
 hasfreq    = any(ismember(dimtok, 'freq'));
 hastime    = any(ismember(dimtok, 'time'));
-hasrpt     = any(ismember(dimtok, {'rpt', 'subj'}));
+hasrpt     = any(ismember(dimtok, {'rpt' 'subj' '{rpt}'}));
 hasrpttap  = any(ismember(dimtok, 'rpttap'));
 
 if hasspike
@@ -453,8 +453,8 @@ varargout = varargin;
 ft_postamble debug              % this clears the onCleanup function used for debugging in case of an error
 ft_postamble trackconfig        % this converts the config object back into a struct and can report on the unused fields
 ft_postamble provenance         % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
-% ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-% ft_postamble history varargout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
+ft_postamble previous varargin  % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
+ft_postamble history varargout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
 
 % note that the cfg.previous thingy does not work with the postamble,
 % because the postamble puts the cfgs of all input arguments in the (first)
@@ -1129,6 +1129,7 @@ if isequal(cfg.trials, 'all')
   rpttapindx = nan; % the nan return value specifies that no selection was specified
   
 elseif isempty(rptdim)
+  % FIXME should [] not mean that none of the trials is to be selected?
   rptindx    = nan; % the nan return value specifies that no selection was specified
   rpttapindx = nan; % the nan return value specifies that no selection was specified
   

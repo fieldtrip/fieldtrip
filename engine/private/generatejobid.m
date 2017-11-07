@@ -16,7 +16,7 @@ function job = generatejobid(batch)
 persistent jobNum
 
 if nargin~=1
-  ft_error('incorrect number of input arguments');
+  error('incorrect number of input arguments');
 end
 
 if length(jobNum)>=batch

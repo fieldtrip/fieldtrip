@@ -48,7 +48,7 @@ for k = 1:numel(datainfo)
     datanew.unmixing(end-rankDiff:end,:) = 0;
   end
   
-  [ok, msg] = isalmostequal(data, datanew, 'abstol', 1e-5, 'diffabs', 1);
+  [ok, msg] = isalmostequal(data, datanew, 'abstol', 1e-4, 'diffabs', 1);
   disp(['now you are in k=' num2str(k)]);
   if ~ok
     disp(msg);
@@ -107,4 +107,3 @@ else
   
   comp = ft_componentanalysis(cfg);
 end
-

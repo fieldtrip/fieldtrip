@@ -87,7 +87,7 @@ if ~isempty(threads) && exist('maxNumCompThreads', 'file')
   % and has become deprecated in MATLAB version 7.9 (R2009b)
   ws = warning('off', 'MATLAB:maxNumCompThreads:Deprecated');
   maxNumCompThreads(threads);
-  ft_warning(ws);
+  warning(ws);
 end
 
 % these should be cell arrays
@@ -158,13 +158,13 @@ threads = threads && peer('tcpserver', 'status');
 
 if ~threads
   % start the maintenance threads
-  ws = ft_warning('off');
+  ws = warning('off');
   peer('announce',  'start');
   peer('discover',  'start');
   peer('expire',    'start');
   peer('tcpserver', 'start');
   % peer('udsserver', 'start');
-  ft_warning(ws);
+  warning(ws);
 end
 
 % the available resources will be announced and are used to drop requests that are too large
@@ -238,7 +238,7 @@ while true
     try
       peer('put', joblist.hostid, argout, options, 'jobid', joblist.jobid);
     catch
-      ft_warning('failed to return job results to the master');
+      warning('failed to return job results to the master');
     end
 
     % remove the job from the tcpserver

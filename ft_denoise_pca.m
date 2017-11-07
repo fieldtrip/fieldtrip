@@ -313,7 +313,7 @@ else
       for k = 1:numel(fnames)
         tmp(k) = isstruct(data.(sensfield).balance.(fnames{k}));
       end
-      [tmp, ix] = sort(tmp,'descend');
+      [tmp, ix] = sort(tmp, 'descend');
       data.grad.balance = orderfields(data.(sensfield).balance, fnames(ix));
       
     else
@@ -477,7 +477,7 @@ function [y] = cellvecadd(x, v)
 % check once and for all to save time
 persistent bsxfun_exists;
 if isempty(bsxfun_exists)
-  bsxfun_exists=exist('bsxfun','builtin');
+  bsxfun_exists=exist('bsxfun', 'builtin');
   if ~bsxfun_exists
     ft_error('bsxfun not found.');
   end
@@ -504,7 +504,7 @@ function [y] = cellvecmult(x, v)
 % check once and for all to save time
 persistent bsxfun_exists;
 if isempty(bsxfun_exists)
-  bsxfun_exists=exist('bsxfun','builtin');
+  bsxfun_exists=exist('bsxfun', 'builtin');
   if ~bsxfun_exists
     ft_error('bsxfun not found.');
   end

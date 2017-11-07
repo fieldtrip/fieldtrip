@@ -3,21 +3,18 @@ function test_ft_timelockanalysis_new(datainfo,writeflag)
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% ft_timelockanalysis_new ft_timelockanalysis ref_datasets
-
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
-% this is a function for testing ft_timelockanalysis_new, which is not official yet
+% TEST ft_timelockanalysis_new ft_timelockanalysis ref_datasets
 
 % the optional writeflag determines whether the output should be saved to
 % disk
 
 %% 
+% this is a function for testing ft_timelockanalysis_new, which is not official yet
+%
 % This function is testing a new ft_timelockanalysis_new which is something
 % Johanna is working on and not in SVN yet.
-return;
+
+return
 
 %%
 
@@ -27,6 +24,7 @@ end
 if nargin<1
   datainfo = ref_datasets;
 end
+
 % for k = 1:numel(datainfo)
 for k = 1:10
   datanew = timelockanalysis10trials(datainfo(k), writeflag);

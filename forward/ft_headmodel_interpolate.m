@@ -131,7 +131,7 @@ if ischar(grid)
   grid.leadfield = cell(dim);
   
   % ensure that it has geometrical units (probably mm)
-  grid = ft_convert_units(grid);
+  grid = ft_determine_units(grid);
   
   % Read leadfield, all channels, all locations, 3 orientations
   [lftdim, lft] = readBESAlft(lftfile);
@@ -180,7 +180,7 @@ if isfield(grid, 'leadfield')
     headmodel.unit = grid.unit;
   else
     % estimate the units
-    headmodel = ft_convert_units(headmodel);
+    headmodel = ft_determine_units(headmodel);
   end
   
   % these go in the same directory as the other nii files, they will be removed after use

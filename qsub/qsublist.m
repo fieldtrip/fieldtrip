@@ -83,7 +83,7 @@ if isempty(jobid) && ~isempty(pbsid)
   if length(sel)==1
     jobid = list_jobid{sel};
   else
-    ft_warning('cannot determine the jobid that corresponds to pbsid %s', pbsid);
+    warning('cannot determine the jobid that corresponds to pbsid %s', pbsid);
   end
 end
 
@@ -93,7 +93,7 @@ if isempty(pbsid) && ~isempty(jobid)
   if length(sel)==1
     pbsid = list_pbsid{sel};
   else
-    ft_warning('cannot determine the pbsid that corresponds to jobid %s', jobid);
+    warning('cannot determine the pbsid that corresponds to jobid %s', jobid);
   end
 end
 
@@ -166,7 +166,7 @@ switch cmd
         case 'torque'
           [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o "[A-Z]"']);
           if isempty(jobstatus)
-            ft_warning('cannot determine the status for pbsid %s', pbsid);
+            warning('cannot determine the status for pbsid %s', pbsid);
             retval = 1;
           else
             retval = strcmp(strtrim(jobstatus) ,'C');
@@ -208,11 +208,11 @@ switch cmd
     retval = pbsid;
 
   otherwise
-    ft_error('unsupported command (%s)', cmd);
+    error('unsupported command (%s)', cmd);
 end % switch
 
 if length(list_jobid)~=length(list_pbsid)
-  ft_error('jobid and pbsid lists are inconsistent');
+  error('jobid and pbsid lists are inconsistent');
 end
 
 if mislocked && isempty(list_jobid) && isempty(list_pbsid)

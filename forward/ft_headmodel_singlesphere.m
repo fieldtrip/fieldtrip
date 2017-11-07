@@ -74,7 +74,7 @@ end
 headmodel = [];
 
 % ensure that the mesh has units, estimate them if needed
-mesh = ft_convert_units(mesh);
+mesh = ft_determine_units(mesh);
 
 % copy the geometrical units into the volume conductor
 headmodel.unit = mesh.unit;

@@ -121,11 +121,13 @@ end
 % this will remove all time-series information
 comp = ft_checkdata(comp, 'datatype', 'comp');
 
+% set the config defaults
+cfg.title     = ft_getopt(cfg, 'title', 'auto');
+cfg.parameter = ft_getopt(cfg, 'parameter', 'topo'); % needed in topoplot_common
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
-
-% set the config defaults
-cfg.title = ft_getopt(cfg, 'title', 'auto');
+cfg = ft_checkconfig(cfg, 'allowedval', {'parameter' 'topo'});
 
 % interactive plotting doesn't work for chan_comp dimord.
 if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')

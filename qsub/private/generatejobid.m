@@ -49,7 +49,7 @@ function id = generatejobid(batch, batchid)
 persistent jobNum
 
 if nargin<1
-  ft_error('incorrect number of input arguments');
+  error('incorrect number of input arguments');
 end
 
 if nargin<2

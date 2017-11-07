@@ -61,8 +61,8 @@ function ft_test(varargin)
 % ========= Comparing tests =========
 %
 % To print a table comparing different test results, you would do
-%   ft_test compare matlabversion     ea3c2b9  314d186
-%   ft_test compare fieldtripversion  2015b    2016b
+%   ft_test compare matlabversion     2015b    2016b
+%   ft_test compare fieldtripversion  ea3c2b9  314d186
 %   ft_test compare arch              glnxa64  win32
 %
 % Additional query arguments are specified as key-value pairs and can include

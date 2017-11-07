@@ -45,8 +45,8 @@ function [freq] = ft_freqdescriptives(cfg, freq)
 % cfg.previous
 % cfg.version
 
-% Copyright (C) 2004-2006, Pascal Fries & Jan-Mathijs Schoffelen, F.C. Donders Centre
-% Copyright (C) 2010, Jan-Mathijs Schoffelen, F.C. Donders Centre
+% Copyright (C) 2004-2006, Pascal Fries & Jan-Mathijs Schoffelen
+% Copyright (C) 2010, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

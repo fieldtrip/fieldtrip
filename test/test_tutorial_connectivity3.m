@@ -9,10 +9,6 @@ function test_tutorial_connectivity3(datadir)
 % starts with the CMC dataset, extracts a virtual channel and performs
 % connectivity analysis on the virtual channel time series.
 
-global ft_default;
-ft_default.feedback = 'no';
-ft_default.checkconfig = 'loose';
-
 if nargin==0
   % this is where the data should be located
   datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity');

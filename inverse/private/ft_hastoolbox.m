@@ -107,7 +107,7 @@ url = {
   'BCI2000'       'see http://bci2000.org'
   'NLXNETCOM'     'see http://www.neuralynx.com'
   'GTEC'          'see http://www.gtec.at'
-  'DIPOLI'        'see ftp://ftp.fcdonders.nl/pub/fieldtrip/external'
+  'DIPOLI'        'see ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/external'
   'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
   'BEMCP'         'contact Christophe Phillips'
@@ -495,9 +495,9 @@ if isdeployed
   status = 1;
 elseif exist(toolbox, 'dir')
   if ~silent
-    ws = ft_warning('backtrace', 'off');
+    ft_warning('off','backtrace');
     ft_warning('adding %s toolbox to your MATLAB path', toolbox);
-    ft_warning(ws); % return to the previous warning level
+    ft_warning('on','backtrace');
   end
   if any(~cellfun(@isempty, regexp(toolbox, {'spm2', 'spm5', 'spm8', 'spm12'})))
     % SPM needs to be added with the subdirectories

@@ -1,0 +1,7 @@
+This directory contains some deprecated functions from old FieldTrip
+versions. These functions are unsupported and not maintained. If you
+wish to continue using these functions, you should copy them to the main
+FieldTrip directory.
+
+See also http://www.fieldtriptoolbox.org/development/deprecated
+and http://www.fieldtriptoolbox.org/development/guidelines/code#document_deprecated_source_code
