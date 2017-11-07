@@ -152,8 +152,7 @@ if ~isempty(vertical_skip) && size(vertical_skip,1)>2 % if this is a two dimensi
   end
   
 else
-  elec.elecpos(find(isnan(elec.elecpos))) = []; % remove NaNs from elec.elecpos if they exist
-  GridDim(2) = size(elec.elecpos,1);
+  GridDim(2) = maxdigit;
   GridDim(1) = 1;
 end
 
