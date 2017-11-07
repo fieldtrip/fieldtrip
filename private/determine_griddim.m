@@ -70,7 +70,7 @@ for e = 1:maxdigit;
   end
 end
 if dowarn
-  ft_warning('%s appears to be missing electrodes %s or have electrodes that are labeled using an unconventional numbering system', ElecStr, num2str(elec.cutout));
+  ft_warning('%s appears to be missing electrodes %s or have electrodes that are labeled using an unconventional numbering system', ElecStr, num2str(cutout));
 end
 
 % determine if the labels are out of order and if they are, then re-order
