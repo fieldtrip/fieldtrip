@@ -79,14 +79,14 @@ end
 % stratification
 
 % set the defaults
-cfg.method       = ft_getopt('method', 'histogram');
-cfg.equalbinavg  = ft_getopt('equalbinavg', 'yes');
-cfg.numbin       = ft_getopt('numbin', 10);
-cfg.numiter      = ft_getopt('numiter', 2000);
-cfg.binedges     = ft_getopt('binedges', []);
-cfg.pairtrials   = ft_getopt('pairtrials', 'spikesort');
-cfg.channel      = ft_getopt('channel', 'all');
-cfg.linkage      = ft_getopt('linkage', 'complete');      % 'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'
+cfg.method       = ft_getopt(cfg, 'method', 'histogram');
+cfg.equalbinavg  = ft_getopt(cfg, 'equalbinavg', 'yes');
+cfg.numbin       = ft_getopt(cfg, 'numbin', 10);
+cfg.numiter      = ft_getopt(cfg, 'numiter', 2000);
+cfg.binedges     = ft_getopt(cfg, 'binedges', []);
+cfg.pairtrials   = ft_getopt(cfg, 'pairtrials', 'spikesort');
+cfg.channel      = ft_getopt(cfg, 'channel', 'all');
+cfg.linkage      = ft_getopt(cfg, 'linkage', 'complete');      % 'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'
 
 % the input data is a cell-array containing matrices for each condition
 input = varargin;
