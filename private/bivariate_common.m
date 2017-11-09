@@ -60,10 +60,10 @@ if isfield(cfg, 'inputfile')
   cfg = rmfield(cfg, 'inputfile');
 end
 
-dimord = getdimord(varargin{1}, cfg.parameter);
-dimtok = tokenize(dimord, '_');
-
 for i=1:numel(varargin)
+  dimord = getdimord(varargin{i}, cfg.parameter);
+  dimtok = tokenize(dimord, '_');
+  
   if isequal(dimtok{1}, 'chancmb')
     % Convert 2-dimensional channel matrix to a single dimension
     if isempty(cfg.directionality)
