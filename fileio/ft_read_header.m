@@ -434,7 +434,38 @@ switch headerformat
     fclose(orig.Head.FILE.FID);
     
   case 'blackrock_nev'
-    ft_error('this still needs some work');
+    % read header for nsX file associated with NEV file
+    % use ft_read_event to read event information in .nev file
+    
+    ft_hastoolbox('NPMK', 1);   
+    % ensure that the filename contains a full path specification,
+    % otherwise the low-level function fails
+    [p,n,~] = fileparts(filename);
+    if isempty(p)
+      filename = which(filename);
+      [p,n,~] = fileparts(filename);
+    end
+		
+    NEV = openNEV(filename,'noread','nosave');
+    
+    %searching for associated nsX file in same folder
+    files=dir(strcat(fullfile(p,n),'.ns*')); 
+    if isempty(files)
+      ft_error('no .ns* file associated to %s in %s',n,p);
+    end
+    
+    %searching for nsX file with same sampling freq that NEV
+    for i=1:numel(files)
+      nsX_hdr = ft_read_header(fullfile(p,files(i).name),'chantype',chantype);
+      if nsX_hdr.Fs == NEV.MetaTags.SampleRes
+        hdr = nsX_hdr;
+        break
+      end
+    end
+    
+    if isempty(hdr)
+      ft_error('no .ns* file with same sampling frequency as %s (%i)',n,NEV.MetaTags.SampleRes);
+    end
     
   case 'blackrock_nsx'
     ft_hastoolbox('NPMK', 1);
