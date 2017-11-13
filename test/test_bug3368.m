@@ -23,3 +23,6 @@ test_ft_header    = ft_read_header(ieeg_name_gdf);
 % now check whether the loaded data are the same as the written data, 
 % the following should be zero:
 [ok,msg] = isalmostequal(ft_data.trial{1}, test_ft_data);
+
+indx = find(isfinite(test_ft_data));
+assert(isequal(test_ft_data(indx), ft_data.trial{1}(indx))); % ensure that at least all numerical data is equal
