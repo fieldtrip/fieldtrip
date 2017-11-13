@@ -883,7 +883,7 @@ if ~isempty(label)
   cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
   cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
   cfg.channel = label;
-  cfg.dataname = info.(ident).dataname;   % put data name in here, this cannot be resolved by other means
+  cfg.dataname = info.(ident).cfg.dataname;   % put data name in here, this cannot be resolved by other means
   cfg.trials = 'all';                     % trial selection has already been taken care of
   cfg.xlim = 'maxmin';
   % if user specified a zlim, copy it over to the ylim of singleplot
