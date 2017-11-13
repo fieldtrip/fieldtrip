@@ -3,7 +3,9 @@ function nmt_animate(cfg)
 
 global st
 
-cfg=[];
+if(~exist('cfg','var'))
+    cfg=[];
+end
 
 switch(get(st.nmt.gui.animate,'String'))
     case 'Stop'
