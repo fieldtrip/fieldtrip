@@ -310,6 +310,10 @@ elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif'
   type = 'neuromag_eve'; % these are being used by Tristan Technologies for the BabySQUID system
   manufacturer = 'Neuromag';
   content = 'events';
+elseif filetype_check_extension(filename, '.log') && filetype_check_header(filename, '*** This is Elekta Neuromag MaxFilter', 61)
+  type = 'neuromag_maxfilterlog'; 
+  manufacturer = 'Neuromag';
+  content = 'MaxFilter log information';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
