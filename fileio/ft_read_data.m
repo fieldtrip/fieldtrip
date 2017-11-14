@@ -1132,6 +1132,22 @@ switch dataformat
     dat       = dat(:,chanindx,:);      % select channels
     dimord    = 'trials_chans_samples'; % selection using begsample and endsample will be done later
     
+  case 'neuromag_maxfilterlog'
+    log = hdr.orig;
+    dat = [
+      log.t(:)'
+      log.e(:)'
+      log.g(:)'
+      log.v(:)'
+      log.r(:)'
+      log.d(:)'
+      ];
+    for i=1:length(log.hpi)
+      dat = cat(1, dat, log.hpi{i});
+    end
+    dat = dat(chanindx, begsample:endsample);
+    dimord = 'chans_samples';
+
   case {'neuromag_fif' 'neuromag_mne'}
     % check that the required low-level toolbox is available
     ft_hastoolbox('mne', 1);

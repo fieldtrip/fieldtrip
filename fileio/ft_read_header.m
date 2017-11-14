@@ -1754,6 +1754,22 @@ switch headerformat
     
   case 'nexstim_nxe'
     hdr = read_nexstim_nxe(filename);
+
+  case 'neuromag_maxfilterlog'
+    log = read_neuromag_maxfilterlog(filename);
+    hdr = [];
+    hdr.label = {'t' 'e' 'g' 'v' 'r' 'd'};
+    for i=1:numel(log.hpi)
+      for j=1:11
+        hdr.label{end+1} = sprintf('hpi%d_%02d', i, j);
+      end
+    end
+    hdr.nChans = length(hdr.label);
+    hdr.nSamples = length(log.t);
+    hdr.nSamplesPre = 0;
+    hdr.nTrials = 1;
+    hdr.Fs = 1 / median(diff(log.t));
+    hdr.orig = log;
     
   case {'neuromag_fif' 'neuromag_mne'}
     % check that the required low-level toolbox is available
