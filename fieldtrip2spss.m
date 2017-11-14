@@ -1,7 +1,7 @@
 function fieldtrip2spss(filename, labels, data)
 
 % FIELDTRIP2SPSS compiles data and correpsonding labels into a textfile,
-% suitable for import to SPSS.
+% suitable for importing into SPSS or JASP (jasp-stats.org).
 %
 % Use as
 %   fieldtrip2spss(filename, labels, data)
