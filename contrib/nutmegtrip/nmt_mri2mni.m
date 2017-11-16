@@ -35,7 +35,7 @@ Viy = spm_vol(iyimg);
 vx = double(nmt_transform_coord(inv(Viy(1).mat),xyz_i));  % The voxel in the deformation to sample
 xyz_o = [ spm_sample_vol(Viy(1),vx(:,1),vx(:,2),vx(:,3),1) spm_sample_vol(Viy(2),vx(:,1),vx(:,2),vx(:,3),1) spm_sample_vol(Viy(3),vx(:,1),vx(:,2),vx(:,3),1)];
 
-if ~exist('doaffine') | isempty(doaffine)
+if ~exist('doaffine') || isempty(doaffine)
     doaffine=0;
 end
 
