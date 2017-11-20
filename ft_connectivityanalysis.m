@@ -711,12 +711,10 @@ switch cfg.method
           tok = tokenize(data.labelcmb{m}, '[');
           tmp2{m} = tok{1};
         end
-        label = unique(tmp2);
+        label = cat(1,data.block.label);%unique(tmp2);
         
-        [cmbindx, n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
-        powindx.cmbindx = cmbindx;
-        powindx.n = n;
-        data.labelcmb = newlabelcmb;
+        [powindx.cmbindx, powindx.n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
+        data.labelcmb                = newlabelcmb;
         
         if isfield(data, 'label')
           % this field should be removed
