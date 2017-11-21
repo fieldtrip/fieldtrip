@@ -62,17 +62,6 @@ try
     return
   end
   
-  %% only enable the tracking for people at the DCCN
-  knownuser = false;
-  knownuser = knownuser || ~isempty(regexp(lower(gethostname), '^mac011', 'once'));
-  knownuser = knownuser || ~isempty(regexp(lower(gethostname), '^mbp', 'once'));
-  knownuser = knownuser || ~isempty(regexp(lower(gethostname), '^dccn', 'once'));
-  knownuser = knownuser || ~isempty(regexp(lower(gethostname), '^fcdc', 'once'));
-  
-  if ~knownuser
-    return
-  end
-  
   if ~strcmp(mfilename, 'ft_trackusage')
     % this function should not be used outside of the FieldTrip toolbox without updating the token (see below)
     return
