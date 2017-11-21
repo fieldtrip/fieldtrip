@@ -312,14 +312,14 @@ for i1 = 1:numel(ev_type)
     
     if any(i_type & i_value)
       eve(i_type & i_value, 1) = [event(i_type & i_value).sample];
-      eve(i_type & i_value, 2) = marker;
+      eve(i_type & i_value, 3) = marker;
     end
     
   end
 end
 
 % report event coding
-newev = unique(eve(:,2));
+newev = unique(eve(:,3));
 fprintf('EVENTS have been coded as:\n')
 for i = 1:numel(newev)
   i_type = floor(newev(i)/10);
