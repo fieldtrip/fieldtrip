@@ -129,6 +129,8 @@ if isempty(cfg.method) && ~isempty(varargin)
       cfg.method = 'volume';
     case 'mesh'
       cfg.method = 'headshape';
+    case 'source+mesh'
+      cfg.method = 'headshape';  
   end
 end
 
