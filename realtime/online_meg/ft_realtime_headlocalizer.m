@@ -73,6 +73,9 @@ cfg.template        = ft_getopt(cfg, 'template',         []); % template dataset
 cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % Hz, Neuromag
+cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
+cfg.head            = ft_getopt(cfg, 'head',             []); % mesh of the head
+cfg.headmovement    = ft_getopt(cfg, 'headmovement',     []); % movement file computed with maxfilter
 
 % ensure pesistent variables are cleared
 clear ft_read_header
@@ -135,12 +138,13 @@ end % if ctf or neuromag
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isctf
   sens = hdr.grad;
+  sens = ft_convert_units(sens,'cm');
   % not needed for CTF275 systems
   dip  = [];
   vol  = [];
   coilsignal = [];
 elseif isneuromag
-    shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif','unit','m'); % ensure SI units
+    shape = ft_read_headshape(cfg.headerfile, 'format', 'neuromag_fif','unit','m'); % ensure SI units
   for i = 1:min(size(shape.pos,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
       dip(i).pos = shape.pos(i,:); % chan X pos, initial guess for each of the dipole/coil positions
@@ -158,7 +162,7 @@ elseif isneuromag
   %cfg.channel = setdiff(ft_channelselection('MEG', hdr.label),ft_channelselection('MEGMAG', hdr.label)); % just trying out (planar mags)
   %cfg.channel = ft_channelselection('IAS*',hdr.label); % internal active shielding
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
-  sens = ft_datatype_sens(sens, 'version', 'upcoming', 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
+  %sens = ft_datatype_sens(sens, 'version', '2016', 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
   coilsignal = [];
   
   % update distances, given that sensor units are m an not cm
@@ -217,17 +221,23 @@ guidata(hMainFig, info);
 % initiate gui controls
 uicontrol_sub(hMainFig);
 
+count = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while ishandle(hMainFig) && info.continue % while the flag is one, the loop continues
-  
+
   % get the potentially updated information from the main window
   info = guidata(hMainFig);
   
   % determine number of samples available in buffer
   info.hdr = ft_read_header(info.cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
+  
+  %read local neuromag file for quaternion, this will be extended to
+  %realtime
+  % tranformation is saved in quaternions from P.J. Besl and N.D. McKay, A Method for Registration of 3-D Shapes, IEEE Trans. Patt. Anal. Machine Intell., 14, 239 - 255, 1992  
+ 
   
   % see whether new samples are available
   newsamples = (info.hdr.nSamples*info.hdr.nTrials-prevSample);
@@ -263,7 +273,9 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     data.label    = info.hdr.label(chanindx);
     data.hdr      = info.hdr;
     data.fsample  = info.hdr.Fs;
-    
+    if info.isneuromag
+        data.shape    = shape;
+    end
     if info.isneuromag && size(coilsignal,2)~=info.blocksize
       % construct the reference signal for each of the coils
       % this needs to be updated if the blocksize changes
@@ -281,8 +293,8 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     end
     
     % compute the HPI coil positions, this takes some time
-    [hpi, info.dip] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
-    
+    [hpi, info.dip] = data2hpi(data, info.dip,  info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
+
     if ~ishandle(hMainFig)
       % the figure has been closed
       break
@@ -292,6 +304,15 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     info = guidata(hMainFig);
     % update the info
     info.hpi = hpi;
+    if info.isneuromag
+        movement = importdata(info.cfg.headmovement);
+        q(2:7) = movement.data(count,2:7);
+        q(1) = sqrt(1-q(2)^2-q(3)^2-q(4)^2);
+        info.q = q;
+        for j = 1:length(info.hpi)
+            info.hpi{j} = ft_warp_apply(q,info.hpi{j}','quaternion')';
+        end
+    end
     % store the updated gui variables
     guidata(hMainFig, info);
     
@@ -335,21 +356,24 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     draw_sub(hMainFig);
     
     % viewing angle
-    if get(info.hViewRadioButton1,'Value') == 1
+    if get(info.hViewMirrorButton,'Value') == 1
       if info.isctf
-        view(135, 0)
+        set(gca, 'Ydir', 'reverse')
+        view(45, 0)
       elseif info.isneuromag
-        view(180, 0)
-      end
-      title(sprintf('anterior view, clock time %s', datestr(now))); % show current data & time
-      
-    elseif get(info.hViewRadioButton2,'Value') == 1
-      if info.isctf
-        view(-45, 0)
-      elseif info.isneuromag
+        set(gca, 'Ydir', 'reverse')  
         view(0, 0)
       end
-      title(sprintf('posterior view, clock time %s', datestr(now))); % show current data & time
+      title(sprintf('Mirror view, clock time %s', datestr(now))); % show current data & time
+    else
+      if info.isctf
+        set(gca, 'Ydir', 'normal')  
+        view(135, 0)
+      elseif info.isneuromag
+        set(gca, 'Ydir', 'normal') 
+        view(180, 0)
+      end
+      title(sprintf('Normal view, clock time %s', datestr(now))); % show current data & time
     end
     
     % force Matlab to update the figure
@@ -390,79 +414,116 @@ hQuitButton = uicontrol(...
   'FontSize', 12,...
   'Callback', {@quit_ButtonDownFcn});
 
-hCoilCheckBox = uicontrol(...
+hSphereCheckBox = uicontrol(...
   'Parent', handle,...
   'Style', 'checkbox',...
-  'String', 'Coils',...
+  'String', 'Sphere',...
   'Units', 'normalized',...
   'Position', [.05 .1 .075 .05],...
   'FontSize', 8,...
   'BackgroundColor', [.8 .8 .8],...
   'Value', 1,...
-  'Callback', {@coil_CheckBox});
+  'Callback', {@sphere_CheckBox});
 
 hHeadCheckBox = uicontrol(...
   'Parent', handle,...
   'Style', 'checkbox',...
   'String', 'Head',...
   'Units', 'normalized',...
-  'Position', [.125 .1 .075 .05],...
+  'Position', [.125 .1 .1 .05],...
   'FontSize', 8,...
   'BackgroundColor', [.8 .8 .8],...
-  'Value', 1,...
+  'Value', 1,... % by default switched on
   'Callback', {@head_CheckBox});
+
+hPolhemusCheckBox = uicontrol(...
+  'Parent', handle,...
+  'Style', 'checkbox',...
+  'String', 'Polhemus',...
+  'Units', 'normalized',...
+  'Position', [.2 .1 .075 .05],...
+  'FontSize', 8,...
+  'BackgroundColor', [.8 .8 .8],...
+  'Value', 0,...
+  'Callback', {@Polhemus_CheckBox});
+
+hDewarCheckBox = uicontrol(...
+  'Parent', handle,...
+  'Style', 'checkbox',...
+  'String', 'Dewar',...
+  'Units', 'normalized',...
+  'Position', [.275 .1 .075 .05],...
+  'FontSize', 8,...
+  'BackgroundColor', [.8 .8 .8],...
+  'Value', 0,...
+  'Callback', {@Dewar_CheckBox});
+
+hCoilCheckBox = uicontrol(...
+  'Parent', handle,...
+  'Style', 'checkbox',...
+  'String', 'Coils',...
+  'Units', 'normalized',...
+  'Position', [.35 .1 .075 .05],...
+  'FontSize', 8,...
+  'BackgroundColor', [.8 .8 .8],...
+  'Value', 0,...
+  'Callback', {@coil_CheckBox});
 
 hSensorCheckBox = uicontrol(...
   'Parent', handle,...
   'Style', 'checkbox',...
   'String', 'Sensors',...
   'Units', 'normalized',...
-  'Position', [.2 .1 .075 .05],...
+  'Position', [.425 .1 .075 .05],...
   'FontSize', 8,...
   'BackgroundColor', [.8 .8 .8],...
   'Value', 0,...
   'Callback', {@sensor_CheckBox});
 
-hViewRadioButton1 = uicontrol(...
+hAxisCheckBox = uicontrol(...
   'Parent', handle,...
-  'Style', 'radiobutton',...
-  'String', 'Anterior view',...
+  'Style', 'checkbox',...
+  'String', 'Axis',...
   'Units', 'normalized',...
-  'Position', [.275 .1 .1 .05],...
+  'Position', [.5 .1 .075 .05],...
   'FontSize', 8,...
   'BackgroundColor', [.8 .8 .8],...
-  'Value', 0,... % by default switched off
-  'Callback', {@view_RadioButton1});
-
-hViewRadioButton2 = uicontrol(...
-  'Parent', handle,...
-  'Style', 'radiobutton',...
-  'String', 'Posterior view',...
-  'Units', 'normalized',...
-  'Position', [.375 .1 .1 .05],...
-  'FontSize', 8,...
-  'BackgroundColor', [.8 .8 .8],...
-  'Value', 1,... % by default switched on
-  'Callback', {@view_RadioButton2});
+  'Value', 0,...
+  'Callback', {@axis_CheckBox});
 
 hBlocksizeMenu = uicontrol(...
   'Parent', handle,...
   'Style', 'popupmenu',...
   'String', {'.1 second','.2 second','.5 second','1 second','1.5 second','2 seconds','5 seconds','10 seconds','30 seconds'},...
   'Units', 'normalized',...
-  'Position', [.475 .0925 .1 .05],...
+  'Position', [.6 .1925 .1 .05],...
   'FontSize', 8,...
   'BackgroundColor', [.8 .8 .8],...
-  'Value', 4,... % default
+  'Value', 1,... % default
   'Callback', {@blocksize_Menu});
+
+hViewMirrorButton = uicontrol(...
+  'Parent', handle,...
+  'Style', 'checkbox',...
+  'String', 'Mirror View',...
+  'Units', 'normalized',...
+  'Position', [.8 .1925 .1 .05],...
+  'FontSize', 8,...
+  'BackgroundColor', [.8 .8 .8],...
+  'Value', 1,... % by default switched on
+  'Callback', {@mirror_CheckBox});
 
 info.hQuitButton        = hQuitButton;
 info.hCoilCheckBox      = hCoilCheckBox;
-info.hHeadCheckBox      = hHeadCheckBox;
+info.hSphereCheckBox    = hSphereCheckBox;
+info.hDewarCheckBox     = hDewarCheckBox;
 info.hSensorCheckBox    = hSensorCheckBox;
-info.hViewRadioButton1  = hViewRadioButton1;
-info.hViewRadioButton2  = hViewRadioButton2;
+info.hViewMirrorButton  = hViewMirrorButton;
 info.hBlocksizeMenu     = hBlocksizeMenu;
+info.hRealistic         = hHeadCheckBox;
+info.hPolhemusCheckBox  = hPolhemusCheckBox; 
+info.hAxisCheckBox      = hAxisCheckBox;
+
 
 % put the info back
 guidata(handle, info);
@@ -471,7 +532,7 @@ guidata(handle, info);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the HPI coil positions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [hpi, dip] = data2hpi(data, dip, vol, sens, coilsignal, isctf, isneuromag)
+function [hpi, dip] = data2hpi(data, dip, isctf, isneuromag)
 
 % The CTF275 system localizes the HPI coil positions online, and writes them
 % to the dataset. For the Neuromag systems the signals evoked by the HPI coils
@@ -496,36 +557,17 @@ if isctf
   hpi{3} = data.trial{1}([x3 y3 z3],end) * 100;
   
 elseif isneuromag
-  % estimate the complex-valued MEG topography for each coil
-  % this implements a discrete Fourier transform (DFT)
-  topo = [];
-  %[x, ut] = svdfft( data.trial{1} );
-  %data.trial{1} = x;
-  topo = ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal);
+  [dum, hpi1] = match_str('hpi_1', data.shape.label);
+  [dum, hpi2] = match_str('hpi_2', data.shape.label);
+  [dum, hpi3] = match_str('hpi_3', data.shape.label);
+  [dum, hpi4] = match_str('hpi_4', data.shape.label);
+  [dum, hpi5] = match_str('hpi_5', data.shape.label);
   
-  % ignore the out-of-phase spectral component in the topography
-  topo = real(topo); % THIS SEEMS TO BE CRUCIAL
-  
-  % fit a magnetic dipole to each of the topographies
-  constr.sequential = true; % for BTI systems this would be 'false' as all coils have the same frequency
-  constr.rigidbody = true;
-  
-  % fit the coils together
-  dipall = [];
-  ncoil = numel(dip);
-  for i=1:ncoil
-    dipall.pos(i,:) = dip(i).pos;
-  end
-  dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr, 'display', 'off');
-  for i=1:ncoil
-    sel = (1:3) + 3*(i-1);
-    dip(i).pos = dipall.pos(i,:);
-    dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
-    hpi{i} = dip(i).pos;
-  end
-  
-else
-  ft_error('the data does not resemble ctf, nor neuromag')
+  hpi{1} = data.shape.pos(hpi1,1:3)' * 100;
+  hpi{2} = data.shape.pos(hpi2,1:3)' * 100;
+  hpi{3} = data.shape.pos(hpi3,1:3)' * 100;
+  hpi{4} = data.shape.pos(hpi4,1:3)' * 100;
+  hpi{5} = data.shape.pos(hpi5,1:3)' * 100;
 end % if ctf or neuromag
 
 
@@ -582,35 +624,9 @@ function draw_sub(handle)
 % get the info
 info = guidata(handle);
 
-if get(info.hSensorCheckBox, 'Value') && ~isempty(info.sens)
-  % plot the sensors
-  hold on; ft_plot_sens(info.sens, 'style', 'k.');
-end
-
-% plot the template fiducial positions
-if ~isempty(info.template)
-  if info.isctf
-    plot3(info.template(1,1), info.template(1,2), info.template(1,3), 'k^', 'MarkerSize', 27, 'LineWidth', 2); % chan X pos
-    plot3(info.template(2,1), info.template(2,2), info.template(2,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
-    plot3(info.template(3,1), info.template(3,2), info.template(3,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
-    
-    text(-8,8, info.template(2,3), 'Left', 'FontSize', 15);
-    text(6,-6, info.template(3,3), 'Right', 'FontSize', 15);
-  elseif info.isneuromag
-    for j = 1:size(info.template,1)
-      plot3(info.template(j,1), info.template(j,2), info.template(j,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2); % chan X pos
-    end
-  end
-end
-
-% plot the HPI coil positions
-for j = 1:numel(info.hpi)
-  plot3(info.hpi{j}(1), info.hpi{j}(2), info.hpi{j}(3), 'ko', 'LineWidth', 1,'MarkerSize', 5)
-end
-
+%plot the HPI mismatch
 if get(info.hCoilCheckBox, 'Value')
-  if info.isctf
-    
+  if info.isctf    
     % draw nasion position
     if ~isempty(info.template)
       if abs(info.template(1,1))-info.cfg.accuracy_green < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_green ...
@@ -673,27 +689,7 @@ if get(info.hCoilCheckBox, 'Value')
       plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25)
       head3 = false;
     end
-    
-    if get(info.hHeadCheckBox, 'Value')
-      % draw 3d head
-      cc = circumcenter(info.hpi);
-      x_radius = sqrt((info.hpi{2}(1) - cc(1))^2 + (info.hpi{2}(2) - cc(2))^2);
-      y_radius = sqrt((info.hpi{3}(1) - cc(1))^2 + (info.hpi{3}(2) - cc(2))^2);
-      [xe, ye, ze] = ellipsoid(cc(1),cc(2),cc(3),x_radius,y_radius,11);
-      hh = surfl(xe, ye, ze);
-      shading interp
-      if get(info.hCoilCheckBox, 'Value') % this only works if 'coils' are updated
-        if head1 == true && head2 == true && head3 == true
-          colormap cool
-        else
-          colormap hot
-        end
-      end
-      alpha(.15)
-    end
-    
-  elseif info.isneuromag
-    
+    elseif info.isneuromag 
     % plot fitted positions of each coil
     if ~isempty(info.template)
       for j = 1:size(info.template,1)
@@ -712,9 +708,87 @@ if get(info.hCoilCheckBox, 'Value')
     else
       for j = 1:numel(info.hpi)
         plot3(info.hpi{j}(1),info.hpi{j}(2), info.hpi{j}(3),'ro', 'MarkerFaceColor',[1 0 0],'MarkerSize',25);
+        head1 = false; head2 = false; head3 = false;
       end
     end
+  end    
+end
+
+% plot the template fiducial positions
+if ~isempty(info.template)
+  if info.isctf
+    plot3(info.template(1,1), info.template(1,2), info.template(1,3), 'k^', 'MarkerSize', 27, 'LineWidth', 2); % chan X pos
+    plot3(info.template(2,1), info.template(2,2), info.template(2,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
+    plot3(info.template(3,1), info.template(3,2), info.template(3,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
+  
+    text(-8,8, info.template(2,3), 'Left', 'FontSize', 15);
+    text(6,-6, info.template(3,3), 'Right', 'FontSize', 15);
+  elseif info.isneuromag
+    for j = 1:size(info.template,1)
+      plot3(info.template(j,1), info.template(j,2), info.template(j,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2); % chan X pos
+    end
   end
+end
+
+%plot sphere model 
+if get(info.hSphereCheckBox, 'Value')
+    cc = circumcenter(info.hpi);
+    x_radius = sqrt((info.hpi{2}(1) - cc(1))^2 + (info.hpi{2}(2) - cc(2))^2);
+    y_radius = sqrt((info.hpi{3}(1) - cc(1))^2 + (info.hpi{3}(2) - cc(2))^2);
+    [xe, ye, ze] = ellipsoid(cc(1),cc(2),cc(3),x_radius,y_radius,11);
+    hh = surfl(xe, ye, ze);
+    shading interp
+    if get(info.hCoilCheckBox, 'Value') % this only works if 'coils' are updated
+      if head1 == true && head2 == true && head3 == true
+        colormap cool
+      else
+        colormap hot
+      end
+    end
+    alpha(.15)
+end  
+
+%plot realistic head mdoel
+if get(info.hRealistic, 'Value') && ~isempty(info.cfg.head) 
+    if info.isctf  
+    % draw 3d head
+        update   = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'ctf');
+        update(1:3,1:3) = inv(update(1:3,1:3));
+        update(1:3,4)   = -update(1:3,4)'*inv(update(1:3,1:3));
+        head     = info.cfg.head;
+        head.pos = ft_warp_apply(update,head.pos);  
+        ft_plot_mesh(head)
+      % draw 3d head
+    elseif info.isneuromag
+         head     = info.cfg.head;
+         head.pos = ft_warp_apply(info.q,head.pos,'quaternion');
+         ft_plot_mesh(head)
+    end
+end   
+
+%plot sensors
+if get(info.hSensorCheckBox, 'Value') && ~isempty(info.sens)
+  % plot the sensors
+  hold on; ft_plot_sens(info.sens, 'style', 'k.');
+end
+
+% plot the HPI coil positions
+for j = 1:numel(info.hpi)
+  plot3(info.hpi{j}(1), info.hpi{j}(2), info.hpi{j}(3), 'ko', 'LineWidth', 1,'MarkerSize', 5)
+end
+
+%plot the dewar
+if get(info.hDewarCheckBox, 'Value')
+    if ~isempty(info.cfg.dewar) && ~isempty(info.cfg.head)
+        ft_plot_mesh(info.cfg.dewar,'facealpha',0.5);
+    end
+end
+
+if get(info.hPolhemusCheckBox, 'Value')
+end
+
+if get(info.hAxisCheckBox, 'Value')
+    ft_plot_axes(info.sens)
 end
 
 % axis
@@ -725,7 +799,7 @@ zlabel('z (cm)');
 set(gca, 'xtick', -10:2:10)
 set(gca, 'ytick', -10:2:10)
 set(gca, 'ztick', -40:2:-10) % note the different scaling
-axis square
+%axis square
 
 % put the info back
 guidata(handle, info);
@@ -757,7 +831,7 @@ switch eventdata.Key
     fprintf('stopping the application \n')
     info.continue = false;
   case 'c'
-    % display the sensors/dewar
+    % display the coils
     if get(info.hCoilCheckBox,'Value') == 0;
       fprintf('displaying coils \n')
       set(info.hCoilCheckBox, 'Value', 1); % toggle on
@@ -765,15 +839,15 @@ switch eventdata.Key
       set(info.hCoilCheckBox, 'Value', 0); % toggle off
     end
   case 'h'
-    % display the sensors/dewar
-    if get(info.hHeadCheckBox,'Value') == 0;
+    % display the dewar
+    if get(info.hSphereCheckBox,'Value') == 0;
       fprintf('displaying head \n')
-      set(info.hHeadCheckBox, 'Value', 1); % toggle on
-    elseif get(info.hHeadCheckBox,'Value') == 1;
-      set(info.hHeadCheckBox, 'Value', 0); % toggle off
+      set(info.hSphereCheckBox, 'Value', 1); % toggle on
+    elseif get(info.hSphereCheckBox,'Value') == 1;
+      set(info.hSphereCheckBox, 'Value', 0); % toggle off
     end
   case 's'
-    % display the sensors/dewar
+    % display the sensors
     if get(info.hSensorCheckBox,'Value') == 0;
       fprintf('displaying sensors/dewar \n')
       set(info.hSensorCheckBox, 'Value', 1); % toggle on
@@ -825,25 +899,26 @@ guidata(handle, info);
 function coil_CheckBox(hObject, eventdata)
 % toggle coils display
 
-function head_CheckBox(hObject, eventdata)
+function sphere_CheckBox(hObject, eventdata)
 % toggle head display
 
 function sensor_CheckBox(hObject, eventdata)
 % toggle sensors display
 
-function view_RadioButton1(handle, eventdata)
+function head_CheckBox(hObject, eventdata)
+% toggle head display
+
+function Dewar_CheckBox(hObject, eventdata)
+% toggle dewar display
+
+function axis_CheckBox(hObject, eventdata)
+% toggle axis display
+
+
+function mirror_CheckBox(handle, eventdata)
 
 % get the info
 info = guidata(handle);
-
-% toggle front view - in combination with view_RadioButton2
-if get(info.hViewRadioButton1,'Value') == 1;
-  set(info.hViewRadioButton2, 'Value', 0); % toggle off radiobutton 2
-  set(info.hViewRadioButton1, 'Value', 1); % toggle on radiobutton 1
-elseif get(info.hViewRadioButton1,'Value') == 0;
-  set(info.hViewRadioButton2, 'Value', 1); % toggle on radiobutton 2
-  set(info.hViewRadioButton1, 'Value', 0); % toggle off radiobutton 1
-end
 
 % put the info back
 guidata(handle, info);
@@ -852,15 +927,6 @@ function view_RadioButton2(handle, eventdata)
 
 % get the info
 info = guidata(handle);
-
-% toggle back view - in combination with view_RadioButton1
-if get(info.hViewRadioButton2,'Value') == 1;
-  set(info.hViewRadioButton1, 'Value', 0); % toggle off radiobutton 1
-  set(info.hViewRadioButton2, 'Value', 1); % toggle on radiobutton 2
-elseif get(info.hViewRadioButton2,'Value') == 0;
-  set(info.hViewRadioButton1, 'Value', 1); % toggle on radiobutton 1
-  set(info.hViewRadioButton2, 'Value', 0); % toggle off radiobutton 2
-end
 
 % put the info back
 guidata(handle, info);
