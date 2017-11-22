@@ -5,7 +5,7 @@ function [newnode,newface]=surfreorient(node,face)
 % reorder nodes in a single closed surface to ensure the norms of all
 % triangles are pointing outward
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2012/07/06
 %
 % input:

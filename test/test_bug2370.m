@@ -3,7 +3,6 @@ function test_bug2370
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2370
 % TEST ft_filetype ft_read_headshape ft_write_headshape read_ply write_ply
 
 filename = [tempname '.ply'];

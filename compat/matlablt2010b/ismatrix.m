@@ -6,7 +6,7 @@ function status = ismatrix(x)
 % ismatrix is not present in older versions.
 
 siz = size(x);
-status = numel(siz)==2 && siz(1)>0 && siz(2)>0;
+status = numel(siz)==2 && siz(1)>=0 && siz(2)>=0;
 
 end % function
 

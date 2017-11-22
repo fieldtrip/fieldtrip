@@ -25,7 +25,7 @@ function varargout = cstructdecode(buf, varargin)
 % $Id$
 
 if ~isa(buf, 'uint8')
-  error('incorrect type of input data, should be uint8');
+  ft_error('incorrect type of input data, should be uint8');
 end
 
 nbytes = numel(buf);
@@ -66,7 +66,7 @@ for i=1:nfield
         wordsize(i) = 1;
       end
     else
-      error('incorrect type specification');
+      ft_error('incorrect type specification');
     end
   end
 end

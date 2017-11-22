@@ -3,7 +3,6 @@ function test_bug2570
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2570
 % TEST ft_apply_montage ft_scalingfactor
 
 montage = [];
@@ -42,17 +41,17 @@ data_uV.time = {1:10};
 data_uV.trial = {ones(1,10)*1000000};
 data_uV.chanunit = {'uV'};
 
-output1 = ft_apply_montage(data_V,  montage)
-output2 = ft_apply_montage(data_mV, montage)
-output3 = ft_apply_montage(data_uV, montage)
+output1 = ft_apply_montage(data_V,  montage);
+output2 = ft_apply_montage(data_mV, montage);
+output3 = ft_apply_montage(data_uV, montage);
 
 assert(isequal(output1, output2));
 assert(isequal(output1, output3));
 assert(isequal(output1, data_uV)); % they should all be in uV
 
-output1 = ft_apply_montage(data_V,  montage, 'inverse', 'yes')
-output2 = ft_apply_montage(data_mV, montage, 'inverse', 'yes')
-output3 = ft_apply_montage(data_uV, montage, 'inverse', 'yes')
+output1 = ft_apply_montage(data_V,  montage, 'inverse', 'yes');
+output2 = ft_apply_montage(data_mV, montage, 'inverse', 'yes');
+output3 = ft_apply_montage(data_uV, montage, 'inverse', 'yes');
 
 assert(isequal(output1, output2));
 assert(isequal(output1, output3));

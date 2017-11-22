@@ -47,7 +47,7 @@ function varargout = interp_ungridded(pos_from, pos_to, varargin)
 % $Id$
 
 if nargin<3
-  error('Not enough input arguments.');
+  ft_error('Not enough input arguments.');
 end
 
 % get the optional arguments
@@ -81,7 +81,7 @@ if isempty(distmat)
   switch projmethod
     case 'nearest'
       if ~isempty(sphereradius)
-        warning('sphereradius is not used for projmethod ''nearest''');
+        ft_warning('sphereradius is not used for projmethod ''nearest''');
       end
       % determine the nearest voxel for each surface point
       ind     = find_nearest(pos_to, pos_from, 5);
@@ -91,7 +91,7 @@ if isempty(distmat)
 
     case {'sphere_avg', 'sphere_weighteddistance'}
       if isempty(sphereradius)
-        error('sphereradius should be specified');
+        ft_error('sphereradius should be specified');
       end
       % compute the distance between voxels and each surface point
       dpos_fromsq = sum(pos_from.^2,2); % squared distance to origin
@@ -129,7 +129,7 @@ if isempty(distmat)
 
     case 'smudge'
       if isempty(triout),
-        error('the ''smudge'' method needs a triangle definition');
+        ft_error('the ''smudge'' method needs a triangle definition');
       end
       [datin, loc] = ismember(pos_to, pos_from, 'rows');
       [datout, S1] = smudge(datin, triout, 6); %FIXME 6 is number of iterations, improve here
@@ -139,7 +139,7 @@ if isempty(distmat)
       distmat = S1 * S2;
     
     otherwise
-      error('unsupported projection method');
+      ft_error('unsupported projection method');
   end % case projmethod
 end % if isempty distmat
 
@@ -169,7 +169,7 @@ switch projmethod
   
  
   otherwise
-    error('unsupported projection method');
+    ft_error('unsupported projection method');
 end  % case projmethod
 
 if hasdat

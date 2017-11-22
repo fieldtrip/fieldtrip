@@ -3,13 +3,8 @@ function test_bug1309
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1309
-
 % This tests for the reliability of the ft_convert_units function when dealing
 % with different input types (vol,sens,etc.)
-
-global ft_default;
-ft_default.feedback = 'no';
 
 % artificially create timelock data
 timelock_data.fsamepl = 500;

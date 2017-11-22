@@ -58,7 +58,7 @@ end
 % input check
 ndatasets = length(varargin);
 if ndatasets<2
-  error('not enough input arguments; there should be at least two');
+  ft_error('not enough input arguments; there should be at least two');
 end
 % check if the input data is valid for this function
 for i = 1:ndatasets
@@ -92,7 +92,7 @@ for i = 1:ndatasets-1
 
       % equal size input check
       if ~isequal(size(data1.stat), size(data2.stat))
-        error('the input arguments have different sizes');
+        ft_error('the input arguments have different sizes');
       end
 
       % prepare the output data structure
@@ -128,7 +128,7 @@ for i = 1:ndatasets-1
 
       % equal size input check
       if ~isequal(size(data1.avg.pow), size(data2.avg.pow))
-        error('the input arguments have different sizes');
+        ft_error('the input arguments have different sizes');
       end
 
       conjunction = data1;
@@ -149,7 +149,7 @@ for i = 1:ndatasets-1
 
       % equal size input check
       if ~isequal(size(data1.stat), size(data2.stat))
-        error('the input arguments have different sizes');
+        ft_error('the input arguments have different sizes');
       end
 
       % prepare the output data structure
@@ -185,7 +185,7 @@ for i = 1:ndatasets-1
 
       % equal size input check
       if ~isequal(size(data1.powspctrm), size(data2.powspctrm))
-        error('the input arguments have different sizes');
+        ft_error('the input arguments have different sizes');
       end
 
       conjunction = data1;
@@ -196,7 +196,7 @@ for i = 1:ndatasets-1
 
       % equal size input check
       if ~isequal(size(data1.avg), size(data2.avg))
-        error('the input arguments have different sizes');
+        ft_error('the input arguments have different sizes');
       end
 
       conjunction = data1;

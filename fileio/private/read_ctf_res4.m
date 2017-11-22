@@ -46,14 +46,14 @@ fid = fopen(fname,'r','ieee-be');
 % Check if header file exist
 if fid == -1
   errMsg = strcat('Could not open header file:',fname);
-  error(errMsg);
+  ft_error(errMsg);
 end
 
 % First 8 bytes contain filetype, check is fileformat is correct.
 % This function was written for MEG41RS, but also seems to work for some other formats
 CTFformat=char(fread(fid,8,'uint8'))';
 if ~strcmp(CTFformat(1,1:7),'MEG41RS') && ~strcmp(CTFformat(1,1:7),'MEG42RS') && ~strcmp(CTFformat(1,1:7),'MEG3RES')
-  warning('res4 format (%s) is not supported for file %s, trying anyway...', CTFformat(1,1:7), fname);
+  ft_warning('res4 format (%s) is not supported for file %s, trying anyway...', CTFformat(1,1:7), fname);
 end
 
 % Read the initial parameters

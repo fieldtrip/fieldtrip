@@ -4,7 +4,7 @@ function elem=removedupelem(elem)
 %
 % remove doubly duplicated (folded) elements
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %    elem: list of elements (node indices)

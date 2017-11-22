@@ -3,17 +3,13 @@ function test_ft_freqstatistics
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_ft_freqstatistics
 % TEST ft_freqstatistics, findcluster, clusterstat, ft_statistics_montecarlo
-
-global ft_default;
-ft_default.feedback = 'no';
 
 % copyright, Roemer, bug 1201 (copyright? really? did I really put this in here? :P) - roevdmei
 
 %%***********************************
 % Expected support for freq_time without chan was removed by Robert around r9309, see
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1201#c20
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1201#c20
 %%***********************************
 % For the case of "freq_time"
 %

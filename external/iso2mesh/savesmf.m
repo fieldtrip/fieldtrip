@@ -4,7 +4,7 @@ function savesmf(v,f,fname)
 %
 % save a surface mesh to smf format
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2007/11/21
 %
 % input:
@@ -16,6 +16,6 @@ function savesmf(v,f,fname)
 %
 
 fid=fopen(fname,'wt');
-fprintf(fid,'v %f %f %f\n',v');
+fprintf(fid,'v %.16f %.16f %.16f\n',v');
 fprintf(fid,'f %d %d %d\n',f');
 fclose(fid);

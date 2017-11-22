@@ -3,7 +3,6 @@ function test_bug1887
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1887
 % TEST ft_checkdata ft_datatype_raw ft_datatype_comp ft_datatype_timelock ft_componentanalysis ft_connectivityanalysis
 
 % this contains raw data, 32 channels, 10 trials with nans

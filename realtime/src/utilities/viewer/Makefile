@@ -3,34 +3,72 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-# Use MinGW for compilation on Windows!
+# Use MinGW for compilation on Windows
+
 # This Makefile assumes that FLTK has been installed to a place where the compiler can find it.
 # On Windows, this location is C:/msys/1.0/local -- change this if need be
 
-PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
+ifneq "$(OS)" "Windows_NT"
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
+endif
+
+PLATFORM ?= $(shell gcc -dumpmachine)
 
 FIELDTRIP = ../../../..
 FTBUFFER = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-FLFLAGS = $(shell fltk-config --cxxflags)
-LDFL	= $(shell fltk-config --ldflags)
-CXXFLAGS = $(FLFLAGS) -I../../buffer/src -I../../buffer/cpp -I. -Wunused -Wall -pedantic
-LDFLAGS = $(shell fltk-config --ldflags) -lpthread ../../buffer/src/libbuffer.a
-SUFFIX  = 
+CC       = gcc
+CXX      = g++
+CXXFLAGS = $(shell fltk-config --cxxflags) -O2 -w # -Wunused -Wall -pedantic
+INCPATH  = -I$(FTBUFFER)/src -I$(FTBUFFER)/cpp -I.
+LIBPATH  = -L$(FTBUFFER)/src
+LDLIBS   = $(shell fltk-config --ldstaticflags) -lpthread -lbuffer
 
-# Windows doesn't know "uname", so we need to check for the GCC platform first 
-ifeq "$(PLATFORM)" "mingw32"
-	FLPREFIX = C:/msys/1.0/local
-	LDFLAGS  = pthreadGC2.dll ../../buffer/src/libbuffer.a	-mwindows
-	FLFLAGS  = -I$(FLPREFIX)/include -mwindows
-	LDFL	 = -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32 -L$(FLPREFIX)/lib
+# possible libraries for Cygwin are
+# -lws2_32 -lwinmm -mwindows -mno-cygwin -lfltk -lole32 -luuid -lcomctl32 -lgdi32 -lwsock32 $(BINDIR)/pthreadGC2.dll
+
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32 -static
 	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
 endif
 
-ifeq "$(UNAME)" "Linux"
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	RM       = rm -f
+	fixpath  = $1
+endif
+
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
+endif
+
+ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS  += -lm -lws2_32 -static
+	SUFFIX   = .exe
+	# make clean target work on windows
+	fixpath  = $(subst /,\,$1)
+	RM       = del
+endif
+
+ifeq "$(OS)" "Linux"
+	fixpath = $1
 	LDLIBS += -lrt
 	ifeq "$(MACHINE)" "i686"
 		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
@@ -41,23 +79,27 @@ ifeq "$(UNAME)" "Linux"
 	ifeq "$(MACHINE)" "armv6l"
 		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 	endif
+	ifeq "$(MACHINE)" "armv7l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
 endif
 
-ifeq "$(UNAME)" "Darwin"
+ifeq "$(OS)" "Darwin"
+	fixpath = $1
 	ifeq "$(MACHINE)" "i386"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci
-		CFLAGS += -m32
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		BINDIR = $(FIELDTRIP)/realtime/bin/maci64
-		CFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 	ifeq "$(MACHINE)" "Power Macintosh"
-		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+		BINDIR    = $(FIELDTRIP)/realtime/bin/mac
 	endif
 endif
 
@@ -65,16 +107,16 @@ ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(BINDIR)/bufferViewer$(SUFFIX)
+TARGETS = $(BINDIR)/viewer$(SUFFIX)
 
 ##############################################################################
 all: $(TARGETS)
 
-bufferViewer.o: bufferViewer.cc
-	g++ -c bufferViewer.cc $(CXXFLAGS)
+%.o: %.cc
+	$(CXX) $(INCPATH) $(CXXFLAGS) -c $<
 
-$(BINDIR)/bufferViewer$(SUFFIX): bufferViewer.o ../../buffer/cpp/FtConnection.o
-	g++ -o $@ $^ $(LDFLAGS)
+$(BINDIR)/viewer$(SUFFIX): viewer.o ../../buffer/cpp/FtConnection.o
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
 	$(RM) *.o $(call fixpath, $(TARGETS))

@@ -2,14 +2,14 @@ function [header] = read_ahdf5_hdr(datafile)
 
 %read header
 if nargin ~= 1
-    error('Wrong number of input arguments');
+    ft_error('Wrong number of input arguments');
 end
 
 if ~isempty(datafile),
  
   id = h5readatt(datafile, '/', 'id');
   if ~strcmp(id, 'AnyWave')
-      error('This is not the ahf5 format.');
+      ft_error('This is not the ahf5 format.');
   end
   
   ch = h5read(datafile, '/channels');

@@ -112,7 +112,7 @@ elseif isfield(input, 'label')
   label   = input.label;
   numchan = length(label);
 else
-  error('the input that was provided to this function cannot be deciphered');
+  ft_error('the input that was provided to this function cannot be deciphered');
 end
 
 if isfield(input, 'chanunit')
@@ -170,13 +170,13 @@ elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysqui
         sel = strcmp('megplanar', input.chantype);
         if any(sel)
           chanunit(sel) = {assumption};
-          warning('assuming that planar MEG channel units are %s', assumption);
+          ft_warning('assuming that planar MEG channel units are %s', assumption);
         end
       else
         sel = strcmp('megplanar', input.chantype);
         if any(sel)
           chanunit(sel) = {'unknown'};
-          warning('cannot determine the units for the planar MEG channels');
+          ft_warning('cannot determine the units for the planar MEG channels');
         end
       end
     end
@@ -196,13 +196,13 @@ elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && 
     sel = strcmp('megplanar', input.chantype);
     if any(sel)
       chanunit(sel) = {assumption};
-      warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
+      ft_warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
     end
   else
     sel = strcmp('megplanar', input.chantype);
     if any(sel)
       chanunit(strcmp('megplanar',        input.chantype)) = {'unknown'};
-      warning('cannot determine the units for the planar MEG channels');
+      ft_warning('cannot determine the units for the planar MEG channels');
     end
   end
   
@@ -221,7 +221,7 @@ elseif ft_senstype(input, 'yokogawa') && isfield(input, 'chantype')
   chanunit(strcmp('megplanar',        input.chantype)) = {'T'}; % I am not sure whether it is T or T/m
   
 elseif ft_senstype(input, 'bti') && isfield(input, 'chantype')
-  chanunit(strcmp('meg',                 input.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1807
+  chanunit(strcmp('meg',                 input.chantype)) = {'T'}; % this was the channel type until approx. 2 November 2012, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1807
   chanunit(strcmp('megmag',              input.chantype)) = {'T'}; % applies for magnetometer 4D/BTi systems
   chanunit(strcmp('eeg',                 input.chantype)) = {'V'}; % seems to be true for the example I have (VL)
   chanunit(strcmp('meggrad',             input.chantype)) = {'T'}; % this is the plain difference in the field at the two coils, i.e. in T

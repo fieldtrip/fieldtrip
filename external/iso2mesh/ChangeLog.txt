@@ -1,14 +1,34 @@
 ============================================================================
 
-     iso2mesh - a compact, powerful yet simple-to-use 3D mesh generator
+     Iso2mesh - a compact, powerful yet simple-to-use 3D mesh generator
 
 ----------------------------------------------------------------------------
 
-iso2mesh ChangeLog (key features marked by *):
+Iso2mesh ChangeLog (key features marked by *):
 
-2013/07/16  (1.5.0, codename: Laba Porridge)
-        1.*label-wise mesh density control in CGAL 3D mesher (Peter Varga)
-        2. plotting mesh slices with the "{x,y,z}=value" syntax in plotmesh
+2015/09/19  (1.7.9, codename: Deviled Egg - beta)
+        1. make v2m(method=cgalmesh) output repeatable
+        2.**JSONlab update to 1.1
+        3. qmeshcut allows to exact plane that are exactly parallel to the faces
+        4.*surf2mesh supports region-based volume control
+        5. fix getvarfrom workspace bug
+        6.*meshrefine can insert external nodes to the mesh
+        7. allow binsurface to mesh a 2d image
+        8.**significantly improved meshrefine - sizing field, new nodes etc
+        9. support OSX Yosemite
+        10. fix s2m face label bug
+        11.*plotmesh supports plotting 3d polyline and loop objects
+        12. extract junction lines from a surface group
+        13. extractloops now supports open contours
+        14. latticegrid - 3D lattice function
+        15.**GPU accelerated mesh rasterization - mesh2mask/mesh2vol/m2v (experimental)
+        16. add regular grid generation by meshgrid5 and meshgrid6
+        17. fix plotmesh bugs
+        18. export to GMSH format (by Riccardo Scorretti)
+
+2013/07/16  (1.5.0, codename: Laba Porridge - final)
+        1.*label-wise mesh density control in CGAL 3D mesher (contributed by Peter Varga)
+        2. plotting mesh slices using "{x,y,z}=value" syntax in plotmesh selector
 
 2013/01/20  (1.4.9, codename: Laba Porridge - beta)
         1.*loadjson and savejson for unified 3D mesh data exchange

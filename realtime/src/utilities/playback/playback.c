@@ -1,17 +1,19 @@
 /*
  * Simple application for playing back an online experiment through the FieldTrip buffer.
- * Opposite functionality of 'saving_buffer'
+ * This is the opposite functionality of the 'recording' application.
+ *
  * (C) 2010 Stefan Klanke
  */
-#include <buffer.h>
-#include <rdadefs.h>
+
 #include <signal.h>
 #include <pthread.h>
 #include <string.h>
-#ifndef WIN32
+#if !defined(WIN32) || defined(COMPILER_MINGW)
 #include <sys/time.h>
 #endif
 
+#include "buffer.h"
+#include "rdadefs.h"
 
 #define MAXLINE 256
 #define MAX_PRINT_CHN  300
@@ -30,7 +32,7 @@ int numWriteOps, allocedWriteOps;
 INT64_T totalSamples, totalEvents;
 INT64_T sizeSamples, sizeEvents;
 int curSamplesFile = 0, numSamplesFiles = 1;
-unsigned int bytesPerSample; 
+unsigned int bytesPerSample;
 
 WriteOperation *writeOps = NULL;
 FILE *fSamples;
@@ -41,7 +43,7 @@ UINT32_T headerSize;
 static char usage[] = "Usage: playback <directory> [hostname=localhost [port=1972]]\n";
 
 double getCurrentTime() {
-#ifdef WIN32
+#if defined(WIN32) && !defined(COMPILER_MINGW)
 	return timeGetTime() * 0.001;
 #else
 	struct timeval tv;
@@ -54,31 +56,31 @@ int readHeader(const char *directory) {
 	char filename[MAXLINE];
 	FILE *f;
 	long size;
-	
+
 	snprintf(filename, MAXLINE, "%s/header", directory);
 	f = fopen(filename, "rb");
 	if (f == NULL) {
 		fprintf(stderr, "Can not read file %s\n", filename);
 		return -1;
 	}
-	
+
 	fseek(f, 0, SEEK_END);
 	size = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	
+
 	if (header != NULL) free(header);
 	header = (headerdef_t *) malloc(size);
-	
+
 	if (header == NULL) {
 		fprintf(stderr, "Cannot allocate %li bytes for reading the header.\n", size);
 		exit(1);
 	}
-	
+
 	fread(header, 1, size, f);
 	fclose(f);
 
 	headerSize = size;
-	
+
 	return headerSize;
 }
 
@@ -87,42 +89,42 @@ int readTiming(const char *directory, double speedup) {
 	FILE *f;
 	char filename[MAXLINE];
 	long offEvts = 0;
-	
+
 	snprintf(filename, MAXLINE, "%s/timing", directory);
 	f = fopen(filename, "r");
 	if (f == NULL) {
 		fprintf(stderr, "Can not read file %s\n", filename);
 		return -1;
 	}
-	
+
 	allocedWriteOps = 1000;
 	numWriteOps = 0;
 	totalSamples = totalEvents = 0;
 	if (writeOps != NULL) free(writeOps);
 	writeOps = (WriteOperation *) malloc(allocedWriteOps * sizeof(WriteOperation));
-	
+
 	if (writeOps == NULL) {
 		fprintf(stderr, "Out of memory\n");
 		exit(1);
 	}
-	
+
 	while (!feof(f)) {
 		char type;
 		double time;
 		int num, r, i;
 		WriteOperation *wop;
 		eventdef_t *evdef;
-		
+
 		r = fscanf(f, "%c %i %lf\n", &type, &num, &time);
-		
+
 		if (r!=3) continue;
-		
+
 		if (numWriteOps == allocedWriteOps) {
 			void *newmem = realloc(writeOps, (allocedWriteOps + 1000) * sizeof(WriteOperation));
 			if (newmem == NULL) {
 				fprintf(stderr, "Out of memory\n");
 				exit(1);
-			} 
+			}
 			writeOps = (WriteOperation *) newmem;
 			allocedWriteOps += 1000;
 		}
@@ -143,10 +145,10 @@ int readTiming(const char *directory, double speedup) {
 				wop->size = 0;
 				for (i=0;i<num;i++) {
 					int siz;
-					
+
 					evdef = (eventdef_t *) (eventBuffer+offEvts);
 					siz = sizeof(eventdef_t) + evdef->bufsize;
-					
+
 					totalEvents++;
 					printf("%li. event:  %i bytes @ %li\n", (long) totalEvents, siz, offEvts);
 
@@ -167,7 +169,7 @@ int readTiming(const char *directory, double speedup) {
 INT64_T openSamplesFile(const char *directory, int counter) {
 	char filename[MAXLINE];
 	long size;
-	
+
 	if (counter < 1) {
 		snprintf(filename, MAXLINE, "%s/samples", directory);
 	} else {
@@ -180,33 +182,33 @@ INT64_T openSamplesFile(const char *directory, int counter) {
 		}
 		return -1;
 	}
-	
+
 	fseek(fSamples, 0, SEEK_END);
 	size = ftell(fSamples);
-	fseek(fSamples, 0, SEEK_SET);	
+	fseek(fSamples, 0, SEEK_SET);
 	return size;
 }
 
 int readAllEvents(const char *directory) {
 	char filename[MAXLINE];
 	FILE *f;
-	
+
 	snprintf(filename, MAXLINE, "%s/events", directory);
 	f = fopen(filename, "rb");
 	if (f == NULL) {
 		fprintf(stderr, "Can not read file %s\n", filename);
 		return -1;
 	}
-	
+
 	fseek(f, 0, SEEK_END);
 	sizeEvents = ftell(f);
-	fseek(f, 0, SEEK_SET);	
+	fseek(f, 0, SEEK_SET);
 	if (sizeEvents > 0) {
 		eventBuffer = (char *) malloc(sizeEvents);
 		if (eventBuffer == NULL) {
 			fprintf(stderr, "Cannot allocate %li bytes for reading events\n", (long) sizeEvents);
 		}
-	
+
 		fread(eventBuffer, 1, sizeEvents, f);
 	}
 	fclose(f);
@@ -222,21 +224,21 @@ void run() {
 	message_t request, *response;
 	double T0, t;
 	int op;
-	
+
 	/* search for first sample operation */
 	for (op = 0; op < numWriteOps; op++) {
 		if (writeOps[op].numSamples > 0) {
 			nextSampleOp = op;
 			break;
 		}
-	}	
-	
+	}
+
 	for (op = 0; op < numWriteOps; op++) {
 		if (writeOps[op].numSamples > 0 && writeOps[op].size > maxSize) {
 			maxSize = writeOps[op].size;
 		}
 	}
-		
+
 	if (maxSize > 0) {
 		ddef = (datadef_t *) malloc(sizeof(datadef_t) + maxSize);
 		if (ddef == NULL) {
@@ -256,7 +258,7 @@ void run() {
 	reqdef.command = PUT_HDR;
 	reqdef.bufsize = headerSize;
 	request.buf = header;
-	
+
 	T0 = getCurrentTime();
 	printf("Writing header...\n");
 	r = clientrequest(ftSocket, &request, &response);
@@ -267,16 +269,16 @@ void run() {
 	if (response->buf != NULL) free(response->buf);
 	free(response->def);
 	free(response);
-	
+
 	op=0;
-	
+
 	for (op=0;op<numWriteOps;op++) {
 		t = getCurrentTime() - T0;
 		if (writeOps[op].time > t) {
 			usleep(1.0e6*(writeOps[op].time -  t));
 			t = getCurrentTime() - T0;
 		}
-		
+
 		if (writeOps[op].numSamples > 0) {
 			reqdef.command = PUT_DAT;
 			reqdef.bufsize = sizeof(datadef_t) + writeOps[op].size;
@@ -288,15 +290,15 @@ void run() {
 			request.buf = eventBuffer + writeOps[op].offset;
 			printf("%.3f: Writing %i event(s)\n", t, writeOps[op].numEvents);
 		}
-		r = clientrequest(ftSocket, &request, &response);		
-	
+		r = clientrequest(ftSocket, &request, &response);
+
 		if (r!=0 || response->def == NULL || response->def->command != PUT_OK) {
 			fprintf(stderr, "Error in FieldTrip request\n");
 		}
 		if (response->buf != NULL) free(response->buf);
 		free(response->def);
 		free(response);
-		
+
 		if (writeOps[op].numSamples > 0) {
 			/* pre-load next bunch of samples */
 			for (nextSampleOp = op+1; nextSampleOp < numWriteOps; nextSampleOp++) {
@@ -305,14 +307,14 @@ void run() {
 			if (nextSampleOp < numWriteOps) {
 				INT64_T numSamplesRead;
 				char *sampleBuffer;
-				
+
 				ddef->nchans    = header->nchans;
 				ddef->data_type = header->data_type;
 				ddef->bufsize   = writeOps[nextSampleOp].numSamples * bytesPerSample;
 				ddef->nsamples  = writeOps[nextSampleOp].numSamples;
-				
+
 				sampleBuffer = (char *) (ddef+1);
-				
+
 				numSamplesRead = fread(sampleBuffer, bytesPerSample, writeOps[nextSampleOp].numSamples, fSamples);
 				if (numSamplesRead < writeOps[nextSampleOp].numSamples) {
 					if (curSamplesFile == numSamplesFiles) {
@@ -320,10 +322,10 @@ void run() {
 						break;
 					} else {
 						int remain = writeOps[nextSampleOp].numSamples - numSamplesRead;
-						
+
 						fclose(fSamples);
 						if (openSamplesFile(directory, ++curSamplesFile) < 0) break;
-						
+
 						sampleBuffer += bytesPerSample * numSamplesRead;
 						numSamplesRead = fread(sampleBuffer, bytesPerSample, remain, fSamples);
 						if (numSamplesRead < remain) {
@@ -342,16 +344,16 @@ int main(int argc, char **argv) {
 	char hostname[MAXLINE] = "localhost";
 	int port, nops;
 	double speed = 1.0;
-	
-	#ifdef WIN32
+
+	#if defined(WIN32) && !defined(COMPILER_MINGW)
 	timeBeginPeriod(1);
 	#endif
-	
+
 	if (argc<2) {
 		fputs(usage, stderr);
 		exit(1);
 	}
-	
+
 	strncpy(directory, argv[1], MAXLINE);
 	if (argc>2) {
 		strncpy(hostname, argv[2], MAXLINE);
@@ -361,20 +363,20 @@ int main(int argc, char **argv) {
 	} else {
 		port = 1972;
 	}
-	
+
 	if (argc>4) {
 		speed = strtod(argv[4], NULL);
 		if (speed <= 0.0) {
 			fprintf(stderr, "4th argument, if given, must be positive speedup-factor\n");
 			exit(1);
-		}	
+		}
 	}
-	
+
 	if (readHeader(directory) < 0) {
 		exit(1);
 	}
 	bytesPerSample = header->nchans * wordsize_from_type(header->data_type);
-	
+
 	sizeSamples = openSamplesFile(directory, 0);
 	if (sizeSamples < 0) {
 		exit(1);
@@ -390,7 +392,7 @@ int main(int argc, char **argv) {
 	printf("Total size of samples: %li MB\n", (long) (sizeSamples >> 20));
 	/* re-open first samples file */
 	if (openSamplesFile(directory, 0) < 0) exit(1);
-	
+
 	if (readAllEvents(directory) < 0) exit(1);
 
 	nops = readTiming(directory, speed);
@@ -402,9 +404,9 @@ int main(int argc, char **argv) {
 		exit(0);
 	} else {
 		INT64_T siz = totalSamples * (INT64_T) bytesPerSample;
-		
-		printf("Total samples: %li  events: %li\n", (long) totalSamples, (long) totalEvents);	
-		
+
+		printf("Total samples: %li  events: %li\n", (long) totalSamples, (long) totalEvents);
+
 		if (siz > sizeSamples) {
 			fputs("Error: 'samples' file(s) too small for given 'timing' definition\n", stderr);
 			exit(1);
@@ -413,7 +415,7 @@ int main(int argc, char **argv) {
 			printf("Warning: 'samples' file contains %li bytes, but 'timing' definition specifies %li bytes\n", (long) sizeSamples, (long) siz);
 		}
 	}
-	
+
 	printf("Trying to connect to %s:%i...\n", hostname, port);
 	ftSocket = open_connection(hostname, port);
 	if (ftSocket < 0) {
@@ -421,15 +423,15 @@ int main(int argc, char **argv) {
 	}
 
 	run();
-	
+
 	close_connection(ftSocket);
-	
+
 	fclose(fSamples);
 	free(writeOps);
 	free(header);
 	if (eventBuffer != NULL) free(eventBuffer);
-	
-	#ifdef WIN32
+
+	#if defined(WIN32) && !defined(COMPILER_MINGW)
 	timeEndPeriod(1);
 	#endif
 

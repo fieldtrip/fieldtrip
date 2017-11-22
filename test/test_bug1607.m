@@ -3,7 +3,6 @@ function test_bug1607
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1607
 % TEST ft_channelrepair ft_topoplotER
 
 % During preprocessing I lost some channels which I got back through

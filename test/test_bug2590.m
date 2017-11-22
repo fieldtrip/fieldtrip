@@ -3,7 +3,6 @@ function test_bug2590
 % WALLTIME 00:10:00
 % MEM 1500mb
 
-% TEST test_bug2590
 % TEST ft_removetemplateartifact ft_definetrial ft_artifact_ecg ft_preprocessing ft_timelockanalysis
 
 clear all

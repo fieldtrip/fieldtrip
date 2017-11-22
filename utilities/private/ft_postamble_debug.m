@@ -7,10 +7,18 @@
 %   .... regular code goes here ...
 %   ft_postamble debug
 %
-% See also FT_PREAMBLE_DEBUG DEBUGCLEANUP
+% See also FT_PREAMBLE_DEBUG, DEBUGCLEANUP
 
 % these variables are shared by the three debug handlers
-global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin
+global Ce9dei2ZOo_debug Ce9dei2ZOo_funname Ce9dei2ZOo_argin Ce9dei2ZOo_ws Ce9dei2ZOo_ns Ce9dei2ZOo_is Ce9dei2ZOo_ds
+
+if isfield(cfg, 'verbose') && ischar(cfg.verbose)
+  % restore the previous state of the notifications
+  ft_warning(Ce9dei2ZOo_ws)
+  ft_notice(Ce9dei2ZOo_ns);
+  ft_info(Ce9dei2ZOo_is);
+  ft_debug(Ce9dei2ZOo_ds);
+end
 
 if ~isfield(cfg, 'debug')
   % do not provide extra debugging facilities

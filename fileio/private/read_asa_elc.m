@@ -45,7 +45,7 @@ elseif strcmpi(Unit,'cm')
 elseif strcmpi(Unit,'m')
   pnt = 1000*pnt;
 elseif ~isempty(Unit)
-  error('Unknown unit of distance for electrodes (%s)', Unit);
+  ft_error('Unknown unit of distance for electrodes (%s)', Unit);
 end
 
 tmp = tokenize(lab{1});

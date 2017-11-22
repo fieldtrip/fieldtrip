@@ -4,7 +4,7 @@ function flag=deletemeshfile(fname)
 %
 % delete a given work mesh file under the working directory
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %     fname: specified file name (without path)

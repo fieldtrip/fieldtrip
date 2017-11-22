@@ -35,9 +35,9 @@ switch dtype
     fmt   = 'double';
     wsize = 8;
   case 5
-    error('don''t know what a DFORM_QWORD is');
+    ft_error('don''t know what a DFORM_QWORD is');
   otherwise
-    error('unknown dtype');
+    ft_error('unknown dtype');
 end
 
 fseek(fid, begsample*wsize, 'cof');

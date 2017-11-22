@@ -1,5 +1,5 @@
 function [ws warned] = print_once(varargin)
-%
+
 % PRINT_ONCE will print a message for every unique point in the
 % stacktrace only, e.g. in a for-loop a warning is thrown only once.
 %
@@ -19,6 +19,8 @@ function [ws warned] = print_once(varargin)
 %   print_once('the value is %d', 10)
 % instead you should do
 %   print_once(sprintf('the value is %d', 10))
+%
+% See also FT_WARNING
 
 % Copyright (C) 2012, Robert Oostenveld
 % Copyright (C) 2013, Robert Oostenveld, Jörn M. Horschig
@@ -44,7 +46,7 @@ function [ws warned] = print_once(varargin)
 global ft_default
 
 if nargin < 1
-  error('You need to specify at least a message');
+  ft_error('You need to specify at least a message');
 end
 
 warned = false;
@@ -92,7 +94,7 @@ elseif nargin==1
 end
 
 if isempty(timeout)
-  error('Timeout ill-specified');
+  ft_error('Timeout ill-specified');
 end
 
 if timeout ~= inf

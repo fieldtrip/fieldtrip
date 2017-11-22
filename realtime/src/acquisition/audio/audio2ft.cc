@@ -1,7 +1,8 @@
-/** Acquisition tool to stream audio signals to a FieldTrip buffer,
-    based on PortAudio for grabbing the data from the sound card.
-	
-	(C) 2010 S. Klanke
+/*
+ * Acquisition tool to stream audio signals to a FieldTrip buffer,
+ * based on PortAudio for grabbing the data from the sound card.
+ * 	
+ * (C) 2010 S. Klanke
 */
 
 #include <portaudio.h>
@@ -9,6 +10,8 @@
 #include <OnlineDataManager.h>
 #include <ConsoleInput.h>
 #include <StringServer.h>
+
+#define FSAMPLE 44100.0
 
 PaStream *stream = NULL;
 int numInputs = 0;
@@ -88,7 +91,7 @@ int openDevice(int nr) {
 	parIn.suggestedLatency = 0.0;
 	parIn.hostApiSpecificStreamInfo = NULL;
 
-	PaError err = Pa_OpenStream(&stream, &parIn, NULL, 44100.0, 0, paNoFlag, audioCallback, NULL);
+	PaError err = Pa_OpenStream(&stream, &parIn, NULL, FSAMPLE, 0, paNoFlag, audioCallback, NULL);
 	if (err != paNoError) return 0;
 	
 	const PaStreamInfo *info = Pa_GetStreamInfo(stream);
@@ -130,7 +133,7 @@ int main(int argc, char *argv[]) {
 		port = atoi(argv[3]);
 	}
 	
-	ODM = new OnlineDataManager<float, float>(0, numInputs, 44100.0);
+	ODM = new OnlineDataManager<float, float>(0, numInputs, FSAMPLE, FSAMPLE);
 	
 	if (0==strcmp(hostname, "-")) {
 		if (!ODM->useOwnServer(port)) {

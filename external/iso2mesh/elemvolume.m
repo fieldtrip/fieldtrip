@@ -4,7 +4,7 @@ function vol=elemvolume(node,elem,option)
 %
 % calculate the volume for a list of simplexes
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2007/11/21
 %
 % input:

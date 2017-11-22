@@ -1,4 +1,4 @@
-function [estimate] = ft_inverse_pcc(csd, leadfield, varargin)
+function [estimate] = ft_inverse_beamformer_pcc(csd, leadfield, varargin)
 
 % FT_INVERSE_PCC
 %

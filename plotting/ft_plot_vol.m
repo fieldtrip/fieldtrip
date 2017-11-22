@@ -7,8 +7,8 @@ function ft_plot_vol(headmodel, varargin)
 %   hs = ft_plot_vol(headmodel, varargin)
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of faces
-%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx1 array where N is the number of vertices
+%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
 %   'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %   'faceindex'    = true or false
 %   'vertexindex'  = true or false
@@ -123,13 +123,13 @@ switch ft_voltype(headmodel)
     bnd = [];
     
   case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
-    warning('there is nothing to plot for an infinite volume conductor')
+    ft_warning('there is nothing to plot for an infinite volume conductor')
     
     % there is no boundary to be displayed
     bnd = [];
     
   otherwise
-    error('unsupported voltype')
+    ft_error('unsupported voltype')
 end
 
 % all models except for the spherical ones

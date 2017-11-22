@@ -53,14 +53,14 @@ end
 
 if hdr.sizeof_hdr~=348 && hdr.sizeof_hdr~=540
   fclose(fid);
-  error('cannot open %s as nifti file, hdr size = %d, should be 348 or 540\n', filename, hdr.sizeof_hdr);
+  ft_error('cannot open %s as nifti file, hdr size = %d, should be 348 or 540\n', filename, hdr.sizeof_hdr);
 else
   % the file is now open with the appropriate little or big-endianness
 end
 
 if hdr.sizeof_hdr==348
   % the remainder of the code is for nifti-2 files
-  error('%s seems to be a nifti-1 file', filename)
+  ft_error('%s seems to be a nifti-1 file', filename)
 end
 
 hdr.magic           = fread(fid, [1 8 ], 'int8=>int8'     ); % 4       `n', '+', `2', `\0','\r','\n','\032','\n' or (0x6E,0x2B,0x32,0x00,0x0D,0x0A,0x1A,0x0A)
@@ -70,7 +70,7 @@ hdr.dim             = fread(fid, [1 8 ], 'int64=>double'  ); % 16      See file 
 
 if hdr.dim(1)<1 || hdr.dim(1)>7
   % see http://nifti.nimh.nih.gov/nifti-1/documentation/nifti1fields/nifti1fields_pages/dim.html
-  error('inconsistent endianness in the header');
+  ft_error('inconsistent endianness in the header');
 end
 
 hdr.intent_p1       = fread(fid, [1 1 ], 'double=>double' ); % 80      0

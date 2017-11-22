@@ -6,7 +6,7 @@ function saveabaqus(node,face,elem,fname,heading)
 %
 % save a tetrahedral and/or surface mesh as an ABAQUS input file
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2012/07/05
 %
 % input:

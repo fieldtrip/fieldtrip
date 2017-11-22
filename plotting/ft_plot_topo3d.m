@@ -14,7 +14,7 @@ function ft_plot_topo3d(pos, val, varargin)
 %   'facealpha'    = scalar, between 0 and 1 (default = 1)
 %   'refine'       = scalar, number of refinement steps for the triangulation, to get a smoother interpolation (default = 0)
 %
-% See also FT_PLOT_TOPO
+% See also FT_PLOT_TOPO, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % Copyright (C) 2009-2015, Robert Oostenveld
 %
@@ -101,7 +101,7 @@ if ~isequal(topostyle, false)
       end
       
     otherwise
-      error('unsupported topostyle');
+      ft_error('unsupported topostyle');
   end % switch contourstyle
 end % plot the interpolated topography
 
@@ -118,7 +118,7 @@ if ~strcmp(contourstyle, 'none')
       maxval = ceil(maxval/scale)*scale;
       isolines = minval:scale:maxval;
     else
-      error('unsupported isolines');
+      ft_error('unsupported isolines');
     end
   end % convert string to vector
   
@@ -212,7 +212,7 @@ if ~strcmp(contourstyle, 'none')
       end
       
     otherwise
-      error('unsupported contourstyle');
+      ft_error('unsupported contourstyle');
   end % switch contourstyle
   
 end % plot the contours

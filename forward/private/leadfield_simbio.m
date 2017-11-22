@@ -23,6 +23,6 @@ try
     end    
     lf = lf';
 catch
-  warning('an error occurred while running simbio');
+  ft_warning('an error occurred while running simbio');
   rethrow(lasterror)
 end

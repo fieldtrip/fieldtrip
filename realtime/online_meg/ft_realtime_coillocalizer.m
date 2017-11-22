@@ -123,7 +123,7 @@ chanindx    = sort([megindx(:)' refindx(:)']);
 
 nchan = length(chanindx);
 if nchan==0
-    error('no channels were selected');
+    ft_error('no channels were selected');
 end
 
 % determine the size of blocks to process
@@ -134,7 +134,7 @@ overlap   = round(cfg.overlap*hdr.Fs);
 % FIXME the blocksize should match an integer number of cycles -> perhaps use nan and nansum?
 ncoil = length(cfg.coilfreq);
 if ncoil==0
-    error('no coil frequencies were specified');
+    ft_error('no coil frequencies were specified');
 else
     time = (1:blocksize)./hdr.Fs;
     coil = zeros(ncoil, blocksize);
@@ -194,7 +194,7 @@ while true
             begsample  = prevSample+1;
             endsample  = prevSample+blocksize ;
         else
-            error('unsupported value for cfg.bufferdata');
+            ft_error('unsupported value for cfg.bufferdata');
         end
         
         % this allows overlapping data segments

@@ -1,14 +1,11 @@
 function test_tutorial_clusterpermutationfreq(dataset, datadir)
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 % TEST test_tutorial_eventrelatedstatistics
 % TEST ft_freqanalysis ft_multiplotTFR ft_singleplotTFR ft_freqstatistics
 % TEST ft_topoplotTFR ft_clustTFRplot ft_megplanar ft_combineplanar
-
-global ft_default;
-ft_default.feedback = 'no';
 
 if nargin==0
   dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');

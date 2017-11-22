@@ -48,7 +48,7 @@ hdr.nChans    = fread(fid, [1, 1],  'int8');
 
 dummy         = fread(fid, [1, 1],  'int8'); % this is 4 in the example file
 if dummy~=4
-  warning('deviant header format detected');
+  ft_warning('deviant header format detected');
 end
 
 % A numerical comparison between a deymed dat file and a BESA-exported edf version of the

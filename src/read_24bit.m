@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = read_24bit(varargin)
 
 % READ_24BIT read a stream of 24 bit values and converts them to doubles
 % This function is designed for Biosemi BDF files and is implemented as mex

@@ -3,80 +3,116 @@
 # Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
 # Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
 
-# Use MinGW for compilation on Windows!
+# Use MinGW for compilation on Windows
 
-PLATFORM = $(shell gcc -dumpmachine)
-UNAME = $(shell uname)
-MACHINE = $(shell uname -m)
+ifneq "$(OS)" "Windows_NT"
+	OS      ?= $(shell uname -s)
+	MACHINE ?= $(shell uname -m)
+endif
+
+PLATFORM ?= $(shell gcc -dumpmachine)
+
+FIELDTRIP = ../../../..
+FTBUFFER  = $(FIELDTRIP)/realtime/src/buffer
 
 # defaults, might be overwritten further down
-LDFLAGS = -L../src
-LDLIBS = -lpthread -lbuffer
-INCPATH = -I../src -I. 
-SUFFIX =
+CC       = gcc
+CXX      = g++
+CFLAGS   = -O2 -w # -Wunused -Wall -pedantic
+CXXFLAGS = -O2 -w # -Wunused -Wall -pedantic
+INCPATH  = -I../src -I.
+LIBPATH  = -L../src
+LDLIBS   = -lpthread -lbuffer
+SUFFIX   =
 
-ifeq "$(PLATFORM)" "mingw32"
-	LDFLAGS += ../../external/pthreads-win32/lib/pthreadGC2.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-	INCPATH += -I../../external/pthreads-win32/include
-	SUFFIX = .exe
-	RM = del
+ifeq "$(PLATFORM)" "i686-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	LDLIBS  += -lm -lws2_32
+	SUFFIX   = .exe
+	fixpath  = $1
+	RM       = rm -f
+endif
+
+ifeq "$(PLATFORM)" "x86_64-pc-cygwin"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	LDLIBS  += -lm -lws2_32
+	SUFFIX   = .exe
+	fixpath  = $1
+	RM       = rm -f
+endif
+
+ifeq "$(PLATFORM)" "i686-w64-mingw32"
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win32
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS  += -lws2_32 -lwinmm -static
+	SUFFIX   = .exe
+	RM       = del
+	# make clean target work on windows:
+	fixpath = $(subst /,\,$1)
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	LDFLAGS += ../../external/pthreads-win64/lib/pthreadGC2-w64.dll -LC:/msys/1.0/local/lib -lws2_32 -lwinmm 
-	INCPATH += -I../../external/pthreads-win64/include
-	SUFFIX = _64.exe
-	RM = del
+	BINDIR   = $(FIELDTRIP)/realtime/bin/win64
+	# prevent dependency on libwinpthread-1.dll by linking statically
+	# see http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+	LDLIBS  += -lws2_32 -lwinmm -static
+	SUFFIX   = .exe
+	RM       = del
+	# make clean target work on windows:
+	fixpath = $(subst /,\,$1)
 endif
 
-ifeq "$(UNAME)" "Linux"
+ifeq "$(OS)" "Linux"
+	fixpath = $1
+	LDLIBS += -ldl -lrt
 	ifeq "$(MACHINE)" "i686"
-		LDLIBS += -ldl -lrt
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnx86
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		LDLIBS += -ldl -lrt
+		BINDIR = $(FIELDTRIP)/realtime/bin/glnxa64
 	endif
 	ifeq "$(MACHINE)" "armv6l"
-		LDLIBS += -ldl -lrt
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
+	endif
+	ifeq "$(MACHINE)" "armv7l"
+		BINDIR = $(FIELDTRIP)/realtime/bin/raspberrypi
 	endif
 endif
 
-ifeq "$(UNAME)" "Darwin"
-	LDFLAGS += -ldl
+ifeq "$(OS)" "Darwin"
+	fixpath = $1
+	LDLIBS += -ldl
 	ifeq "$(MACHINE)" "i386"
-		CFLAGS += -m32
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
+		CFLAGS   += -m32
 		CXXFLAGS += -m32
-		LDFLAGS += -m32
+		LDFLAGS  += -m32
 	endif
 	ifeq "$(MACHINE)" "x86_64"
-		CFLAGS += -m64
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
 		CXXFLAGS += -m64
-		LDFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 endif
 
-CFLAGS += $(INCPATH) -Wunused -Wall -pedantic -O3
+ifndef BINDIR
+$(error Unsupported platform: $(PLATFORM) :/.)
+endif
+
+INCLUDES = $(wildcard *.h)
+
+TARGETS = $(patsubst %, $(BINDIR)/%$(SUFFIX), odmTest)
 
 ##############################################################################
 all: odmTest$(SUFFIX)
 
-FtConnection.o: FtConnection.cc FtBuffer.h
-	g++ -c FtConnection.cc $(CFLAGS)	
-	
-SignalConfiguration.o: SignalConfiguration.cc SignalConfiguration.h
-	g++ -c SignalConfiguration.cc $(CFLAGS)	
-	
-StringServer.o: StringServer.cc StringServer.h
-	g++ -c StringServer.cc $(CFLAGS)	
-	
-GdfWriter.o: GdfWriter.cc GdfWriter.h 
-	g++ -c GdfWriter.cc $(CFLAGS)	
-	
-odmTest.o: odmTest.cc OnlineDataManager.h StringServer.o GDF_BackgroundWriter.h
-	g++ -c odmTest.cc $(CFLAGS)
+%.o: %.cc ${INCLUDES}
+	$(CXX) $(CXXFLAGS) $(INCPATH) -c $<
 
 odmTest$(SUFFIX): odmTest.o SignalConfiguration.o GdfWriter.o FtConnection.o StringServer.o
-	g++ -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	$(CXX) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 clean:
-	$(RM) *.o *.exe
+	$(RM) core *.o *.obj *.a $(call fixpath, $(TARGETS))

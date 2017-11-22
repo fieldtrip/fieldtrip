@@ -2,12 +2,11 @@
 #include "platform.h"
 #include "platform_includes.h"
 
+#ifdef PLATFORM_OSX
 /*
- * work around lack of clock_gettime in os x
+ * work around lack of clock_gettime in OS-X
  * https://gist.github.com/jbenet/1087739
  */
-
-#ifdef PLATFORM_OSX
 
 #include <mach/clock.h>
 #include <mach/mach.h>
@@ -26,7 +25,10 @@ int clock_gettime(int ignore, struct timespec *ts) {
   return 0;
 }
 
-#elif defined (COMPILER_MINGW)
+#elif defined (COMPILER_MINGW_ORG)
+/*
+ * work around lack of clock_gettime in Mingw on windows
+ */
 
 LARGE_INTEGER
 getFILETIMEoffset()
@@ -49,11 +51,12 @@ getFILETIMEoffset()
     return (t);
 }
 
+
 int
 clock_gettime(int ignore, struct timeval *tv)
 {
     LARGE_INTEGER           t;
-    FILETIME            f;
+    FILETIME                f;
     double                  microseconds;
     static LARGE_INTEGER    offset;
     static double           frequencyToMicroseconds;

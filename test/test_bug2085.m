@@ -3,7 +3,6 @@ function test_bug2085
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2085
 % TEST ft_senstype ft_senslabel
 
 %% create a volume conductor
@@ -29,7 +28,7 @@ grad.unit = 'cm';
 grad1 = ft_datatype_sens(grad);
 grad2 = ft_datatype_sens(grad);
 
-grad2.type = 'magnetometer'; % this makes ft_senstype much faster
+grad2.type = 'meg'; % this makes ft_senstype much faster
 
 %% determine the time to compute some leadfields
 

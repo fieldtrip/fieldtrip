@@ -3,7 +3,6 @@ function test_ft_prepare_neighbours
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_ft_prepare_neighbours
 % TEST ft_prepare_neighbours
 
 datainfo = ref_datasets;
@@ -12,8 +11,10 @@ datainfo = ref_datasets;
 eeginfo = datainfo(4);
 meginfo = datainfo(7);
 
+megdir = dccnpath(meginfo.origdir);
+
 % do the MEG processing
-fname = fullfile(meginfo.origdir,'latest', 'raw',meginfo.type,['preproc_' meginfo.datatype]);
+fname = fullfile(megdir,'latest', 'raw',meginfo.type,['preproc_' meginfo.datatype]);
 data = [];
 load(fname);
 
@@ -56,7 +57,9 @@ neighbours = ft_prepare_neighbours(cfg, data1);
 
 
 %% do the EEG processing
-fname = fullfile(eeginfo.origdir,'latest', 'raw',eeginfo.type,['preproc_' eeginfo.datatype]);
+eegdir = dccnpath(eeginfo.origdir);
+
+fname = fullfile(eegdir,'latest', 'raw',eeginfo.type,['preproc_' eeginfo.datatype]);
 data = [];
 load(fname);
 

@@ -12,9 +12,6 @@ function test_tutorial_connectivityextended
 
 % See also test_tutorial_connectivity2 and test_tutorial_connectivity3
 
-global ft_default;
-ft_default.feedback = 'no';
-
 %% simulate data
 cfg             = [];
 cfg.ntrials     = 500;
@@ -113,7 +110,7 @@ tlock                 = ft_timelockanalysis(cfg, data_cmb);
 
 cfg              = [];
 cfg.method       = 'lcmv';
-cfg.vol          = hdm;
+cfg.headmodel    = hdm;
 cfg.grid.pos     = sourcemodel.pos([maxcohindx maxpowindx], :);
 cfg.grid.inside  = true(2,1);
 cfg.grid.unit    = sourcemodel.unit;

@@ -79,7 +79,7 @@ elseif ft_filetype(filename, 'loreta_lorb')
   source.zgrid =  -41:7:71;
   source.transform = eye(4);      % FIXME the transformation matrix should be assigned properly
 else
-  error('unsupported LORETA format');
+  ft_error('unsupported LORETA format');
 end
 
 
@@ -103,7 +103,7 @@ if ~is_txt
     fseek(fid, 4*voxnumber*(timeframe-1), 'bof');
     activity = fread(fid, [voxnumber 1], 'float=>single');
   else
-    error('you can read either one timeframe, or the complete timecourse');
+    ft_error('you can read either one timeframe, or the complete timecourse');
   end
   fclose(fid);
 else
@@ -115,7 +115,7 @@ else
     end
     Ntime = size(activity,2);
   else
-    error('expect column or row to be length 2394 or 6239')
+    ft_error('expect column or row to be length 2394 or 6239')
   end
   if isempty(timeframe)
   else

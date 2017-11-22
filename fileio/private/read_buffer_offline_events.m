@@ -69,7 +69,7 @@ while ~feof(F)
   value_size = wordsize{value_type+1}*value_numel;
   
   if type_size + value_size > bufsize
-     warning('Invalid event definition - skipping remaining contents');
+     ft_warning('Invalid event definition - skipping remaining contents');
      break;
   end
     

@@ -3,7 +3,6 @@ function test_bug1786
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1786
 % TEST ft_channelrepair ft_prepare_neighbours
 
 % Original report:
@@ -15,10 +14,9 @@ function test_bug1786
 % Thanks
 % Yoel
 %
-% http://bugzilla.fcdonders.nl/show_bug.cgi?id=1786
+% http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1786
 
 % EEG bad electrode repair
-% requires fieldtrip
 % 
 % input format:
 % labels   - 1XN cell array  
@@ -27,9 +25,9 @@ function test_bug1786
 
 % function fixedelec = fixelec(labels, badchans,data)
 
-% error(nargchk(3, 3, nargin));
+% narginchk(3, 3);
 
-load /home/common/matlab/fieldtrip/data/test/bug1786.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1786.mat'));
 
 labels = electrodes_names_to_keep;
 badchans = interpolate_at_z;
@@ -926,7 +924,7 @@ for c = 1:length(CHAN),
         CHAN1020(c) = index;
         XYZ1020(c,:) = [ x(index), y(index), z(index) ];
     else
-        msg = sprintf('No match for channel: %s\n',chan)
+        msg = sprintf('No match for channel: %s\n',chan);
         error(msg)
     end
 end

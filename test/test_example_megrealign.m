@@ -3,11 +3,7 @@ function test_example_megrealign
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_example_megrealign
 % TEST ft_read_sens ft_dipolesimulation ft_timelockanalysis 
-
-global ft_default;
-ft_default.feedback = 'no';
 
 grad151 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf151.mat'));
 grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf275.mat'));

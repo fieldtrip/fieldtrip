@@ -1,10 +1,11 @@
 function mri = ft_defacevolume(cfg, mri)
 
-% FT_DEFACEVOLUME allows you to de-identify an anatomical MRI by erasing specific regions, such as the face and ears. The graphical
-% user interface allows you to position a box over the anatomical data inside which
-% all anatomical voxel values will be replaced by zero. You might have to call this
-% function multiple times when both face and ears need to be removed. Following
-% defacing, you should check the result with FT_SOURCEPLOT.
+% FT_DEFACEVOLUME allows you to de-identify an anatomical MRI by erasing specific
+% regions, such as the face and ears. The graphical user interface allows you to
+% position a box over the anatomical data inside which all anatomical voxel values will
+% be replaced by zero. You might have to call this function multiple times when both
+% face and ears need to be removed. Following defacing, you should check the result
+% with FT_SOURCEPLOT.
 %
 % Use as
 %   mri = ft_defacevolume(cfg, mri)
@@ -91,7 +92,7 @@ switch mri.unit
     axmax = 0.15;
     rbol  = 0.005;
   otherwise
-    error('unknown units (%s)', unit);
+    ft_error('unknown units (%s)', unit);
 end
 
 figHandle = figure;
@@ -117,7 +118,11 @@ if ismri
   
   ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
 elseif ismesh
-  ft_plot_mesh(mri);
+  if isfield(mri, 'hex')  
+    ft_plot_mesh(mri, 'surfaceonly', 'yes');
+  else
+    ft_plot_mesh(mri);
+  end  
 end
 
 axis vis3d
@@ -258,10 +263,10 @@ elseif ismesh
     dimtok = tokenize(dimord{i}, '_');
     % do some sanity checks
     if any(strcmp(dimtok, '{pos}'))
-      error('not supported');
+      ft_error('not supported');
     end
     if numel(dimtok)>5
-      error('too many dimensions');
+      ft_error('too many dimensions');
     end
     % remove the same positions from each matching dimension
     if numel(dimtok)>0 && strcmp(dimtok{1}, 'pos')

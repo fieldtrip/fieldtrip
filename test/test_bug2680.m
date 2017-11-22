@@ -1,6 +1,5 @@
 function test_bug2680
 
-% TEST test_bug2680
 % TEST ft_redefinetrial ft_timelockanalysis
 
 % WALLTIME 00:10:00

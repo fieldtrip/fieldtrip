@@ -49,8 +49,15 @@ else
 end
 
 [p, f, x] = fileparts(file);
-if ~exist(file, 'file') && exist([f x], 'file')
-  warning('using local copy %s instead of %s', [f x], file);
-  file = [f x];
+
+alternative1 = [f x];
+alternative2 = strrep(filename, '/home/common/matlab/fieldtrip/data/test', '/Volumes/128GB/bug');
+
+if ~exist(file, 'file') && exist(alternative1, 'file')
+  warning('using local copy %s instead of %s', alternative1, file);
+  file = alternative1;
+elseif ~exist(file, 'file') && exist(alternative2, 'file')
+  warning('using local copy %s instead of %s', alternative2, file);
+  file = alternative2;
 end
 

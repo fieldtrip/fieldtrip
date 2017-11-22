@@ -32,7 +32,7 @@ function [magn] = read_ctf_sens(filename)
 
 fid = fopen(filename, 'r');
 if fid==-1
-  error(sprintf('could not open file %s', filename));
+  ft_error(sprintf('could not open file %s', filename));
 end
 
 % skip the first line
@@ -42,7 +42,7 @@ line = fgetl(fid);
 chan = 0;
 while (1)
   line = fgetl(fid);
-  if ~isempty(line) & line==-1
+  if ~isempty(line) && line==-1
     % reached end of file
     break
   end

@@ -48,7 +48,7 @@ function [H] = quaternion(q)
 % $Id$
 
 if numel(q)~=7
-  error('incorrect input vector');
+  ft_error('incorrect input vector');
 end
 
 % all of these quaternions are zero-offset in the original equation, but one-offset in the MATLAB vector

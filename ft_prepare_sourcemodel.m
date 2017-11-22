@@ -1,6 +1,6 @@
 function [grid, cfg] = ft_prepare_sourcemodel(cfg, headmodel, sens)
 
-% FT_PREPARE_SOURCEMODEL constructs a source model, for example a 3-D grid or a
+% FT_PREPARE_SOURCEMODEL constructs a source model, for example a 3D grid or a
 % cortical sheet. The source model that can be used for source reconstruction,
 % beamformer scanning, linear estimation and MEG interpolation.
 %
@@ -22,7 +22,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, headmodel, sens)
 % The approach that will be used depends on the configuration options that
 % you specify.
 %
-% Configuration options for generating a regular 3-D grid
+% Configuration options for generating a regular 3D grid
 %   cfg.grid.xgrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.grid.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
@@ -31,7 +31,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, headmodel, sens)
 % Configuration options for a predefined grid
 %   cfg.grid.pos        = N*3 matrix with position of each source
 %   cfg.grid.inside     = N*1 vector with boolean value whether grid point is inside brain (optional)
-%   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3-D grid (optional)
+%   cfg.grid.dim        = [Nx Ny Nz] vector with dimensions in case of 3D grid (optional)
 %
 % The following fields are not used in this function, but will be copied along to the output
 %   cfg.grid.leadfield
@@ -81,6 +81,7 @@ function [grid, cfg] = ft_prepare_sourcemodel(cfg, headmodel, sens)
 %   cfg.symmetry     = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
 %   cfg.headshape    = a filename for the headshape, a structure containing a single surface,
 %                      or a Nx3 matrix with headshape surface points (default = [])
+%   cfg.spmversion   = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
 %
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
@@ -137,8 +138,8 @@ cfg.moveinward = ft_getopt(cfg, 'moveinward',  []); % the default is automatic a
 cfg.spherify   = ft_getopt(cfg, 'spherify',  'no');
 cfg.headshape  = ft_getopt(cfg, 'headshape',  []);
 cfg.symmetry   = ft_getopt(cfg, 'symmetry',   []);
-cfg.grid       = ft_getopt(cfg, 'grid',       []);
 cfg.spmversion = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.grid       = ft_getopt(cfg, 'grid',       []);
 cfg.grid.unit  = ft_getopt(cfg.grid, 'unit',  'auto');
 
 % this code expects the inside to be represented as a logical array
@@ -163,13 +164,13 @@ if ~isfield(cfg, 'grad') && ~isfield(cfg, 'elec') && nargin>2
 end
 
 if isfield(cfg.grid, 'resolution') && isfield(cfg.grid, 'xgrid') && ~ischar(cfg.grid.xgrid)
-  error('You cannot specify cfg.grid.resolution and an explicit cfg.grid.xgrid simultaneously');
+  ft_error('You cannot specify cfg.grid.resolution and an explicit cfg.grid.xgrid simultaneously');
 end
 if isfield(cfg.grid, 'resolution') && isfield(cfg.grid, 'ygrid') && ~ischar(cfg.grid.ygrid)
-  error('You cannot specify cfg.grid.resolution and an explicit cfg.grid.ygrid simultaneously');
+  ft_error('You cannot specify cfg.grid.resolution and an explicit cfg.grid.ygrid simultaneously');
 end
 if isfield(cfg.grid, 'resolution') && isfield(cfg.grid, 'zgrid') && ~ischar(cfg.grid.zgrid)
-  error('You cannot specify cfg.grid.resolution and an explicit cfg.grid.zgrid simultaneously');
+  ft_error('You cannot specify cfg.grid.resolution and an explicit cfg.grid.zgrid simultaneously');
 end
 
 % the source model can be constructed in a number of ways
@@ -253,18 +254,12 @@ end
 
 % these are mutually exclusive
 if sum([basedonresolution basedongrid basedonpos basedonshape basedonmri basedonvol basedoncortex basedonmni])~=1
-  error('incorrect cfg specification for constructing a dipole grid');
+  ft_error('incorrect cfg specification for constructing a dipole grid');
 end
 
 if (isfield(cfg, 'smooth') && ~strcmp(cfg.smooth, 'no')) || basedonmni
-  % check that SPM is on the path, try to add the preferred version
-  if strcmpi(cfg.spmversion, 'spm2'),
-    ft_hastoolbox('SPM2', 1);
-  elseif strcmpi(cfg.spmversion, 'spm8'),
-    ft_hastoolbox('SPM8', 1);
-  elseif strcmpi(cfg.spmversion, 'spm12'),
-    ft_hastoolbox('SPM12', 1);
-  end
+  % check that the preferred SPM version is on the path
+  ft_hastoolbox(cfg.spmversion, 1);
 end
 
 % start with an empty grid
@@ -287,8 +282,8 @@ end
 if strcmp(cfg.grid.unit, 'auto')
   if isfield(cfg.grid, 'pos') && size(cfg.grid.pos,1)>10
     % estimate the units based on the existing source positions
-    cfg.grid = rmfield(cfg.grid, 'unit'); % remove 'auto' and have ft_convert_units determine it properly
-    cfg.grid = ft_convert_units(cfg.grid);
+    cfg.grid = rmfield(cfg.grid, 'unit'); % remove 'auto' and have ft_determine_units determine it properly
+    cfg.grid = ft_determine_units(cfg.grid);
   elseif ~isempty(sens)
     % copy the units from the sensor array
     cfg.grid.unit = sens.unit;
@@ -296,7 +291,7 @@ if strcmp(cfg.grid.unit, 'auto')
     % copy the units from the volume conduction model
     cfg.grid.unit = headmodel.unit;
   else
-    warning('assuming "cm" as default source units');
+    ft_warning('assuming "cm" as default source units');
     cfg.grid.unit = 'cm';
   end
 end
@@ -316,32 +311,43 @@ if basedonresolution
   % construct a regular 3D grid that spans a box encompassing all electrode
   % or gradiometer coils, this will typically also cover the complete brain
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if ~isempty(sens)
+  if ~isempty(sens) && isfield(headmodel, 'chanpos')
+    % determine the bounding box of the sensor array
     minpos = min(sens.chanpos,[],1);
     maxpos = max(sens.chanpos,[],1);
   elseif ~isempty(headmodel)
-    minpos = [inf inf inf];
-    maxpos = [-inf -inf -inf];
-    for k = 1:numel(headmodel.bnd)
-      tmpbnd = headmodel.bnd(k);
-      if ~isfield(tmpbnd, 'pnt') && isfield(tmpbnd, 'pos')
-        pos = tmpbnd.pos;
-      elseif isfield(tmpbnd, 'pnt') && ~isfield(tmpbnd, 'pos')
-        pos = tmpbnd.pnt;
-      end
-      minpos = min(minpos, min(pos,[],1));
-      maxpos = max(maxpos, max(pos,[],1));
+    % determine the bounding box of the volume conduction model
+    if isfield(headmodel, 'bnd') && isfield(headmodel.bnd, 'pos')
+      pos = cat(1, headmodel.bnd(:).pos);
+    elseif isfield(headmodel, 'bnd') && isfield(headmodel.bnd, 'pnt')
+      pos = cat(1, headmodel.bnd(:).pnt);
+    elseif isfield(headmodel, 'pos')
+      pos = headmodel.pos;
+    elseif ft_voltype(headmodel, 'localspheres')
+      pos = headsurface(headmodel, sens);
+    elseif ft_voltype(headmodel, 'singlesphere')
+      pos = [
+        headmodel.o - headmodel.r
+        headmodel.o + headmodel.r
+        ];
+    elseif ft_voltype(headmodel, 'concentricspheres')
+      pos = [
+        headmodel.o - max(headmodel.r)
+        headmodel.o + max(headmodel.r)
+        ];
     end
-
-    % add a few % on either side
+    minpos = min(pos,[],1);
+    maxpos = max(pos,[],1);
+    % add a few percent on either side
     minpos(minpos<0) = minpos(minpos<0).*1.08;
     maxpos(maxpos>0) = maxpos(maxpos>0).*1.08;
     minpos(minpos>0) = minpos(minpos>0).*0.92;
     maxpos(maxpos<0) = maxpos(maxpos<0).*0.92;
   else
-    error('creating a 3D-grid sourcemodel this way requires either sensor position information or a headmodel to estimate the extent of the brain');
+    ft_error('creating a 3D grid based on resolution requires either sensor positions or a headmodel to estimate the extent');
   end
-  fprintf('creating dipole grid with %g %s resolution\n', cfg.grid.resolution, cfg.grid.unit);
+  
+  fprintf('creating 3D grid with %g %s resolution\n', cfg.grid.resolution, cfg.grid.unit);
   
   % round the bounding box limits to the nearest cm
   switch cfg.grid.unit
@@ -369,6 +375,7 @@ if basedonresolution
   [X, Y, Z]  = ndgrid(grid.xgrid, grid.ygrid, grid.zgrid);
   grid.pos   = [X(:) Y(:) Z(:)];
   grid.unit  = cfg.grid.unit;
+  fprintf('initial 3D grid dimensions are [%d %d %d]\n', grid.dim(1), grid.dim(2), grid.dim(3));
 end
 
 if basedongrid
@@ -407,7 +414,7 @@ if basedonmri
 
   % ensure the mri to have units
   if ~isfield(mri, 'unit')
-    mri = ft_convert_units(mri);
+    mri = ft_determine_units(mri);
   end
 
   if ~isfield(cfg.grid, 'resolution')
@@ -466,7 +473,7 @@ if basedonmri
     end
     dat = double(dat);
   else
-    error('cannot determine the format of the segmentation in cfg.mri');
+    ft_error('cannot determine the format of the segmentation in cfg.mri');
   end
 
 
@@ -549,7 +556,7 @@ if basedonshape
     % read the headshape from file
     headshape = ft_read_headshape(cfg.headshape);
   else
-    error('cfg.headshape is not specified correctly')
+    ft_error('cfg.headshape is not specified correctly')
   end
   % ensure that the headshape is in the same units as the source
   headshape = ft_convert_units(headshape, cfg.grid.unit);
@@ -578,7 +585,7 @@ end
 
 if basedonmni
   if ~isfield(cfg.grid, 'template') && ~isfield(cfg.grid, 'resolution')
-    error('you either need to specify the filename of a template grid in cfg.grid.template, or a resolution in cfg.grid.resolution');
+    ft_error('you either need to specify the filename of a template grid in cfg.grid.template, or a resolution in cfg.grid.resolution');
   elseif isfield(cfg.grid, 'template')
     % let the template filename prevail
     fname = cfg.grid.template;
@@ -598,7 +605,7 @@ if basedonmni
   % get the mri
   if ischar(cfg.mri)
     if ~exist(fname, 'file')
-      error('the MNI template grid based on the specified resolution does not exist');
+      ft_error('the MNI template grid based on the specified resolution does not exist');
     end
     mri = ft_read_mri(cfg.mri);
   else
@@ -621,7 +628,7 @@ if basedonmni
   mnigrid = fixinside(mnigrid);
 
   % spatial normalisation of mri and construction of subject specific dipole grid positions
-  tmpcfg           = [];
+  tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod'});
   tmpcfg.nonlinear = cfg.grid.nonlinear;
   if isfield(cfg.grid, 'templatemri')
     tmpcfg.template = cfg.grid.templatemri;
@@ -657,7 +664,7 @@ grid = ft_convert_units(grid, cfg.grid.unit);
 
 if strcmp(cfg.spherify, 'yes')
   if ~ft_voltype(headmodel, 'singlesphere') && ~ft_voltype(headmodel, 'concentricspheres')
-    error('this only works for spherical volume conduction models');
+    ft_error('this only works for spherical volume conduction models');
   end
   % deform the cortex so that it fits in a unit sphere
   pos = mesh_spherify(grid.pos, [], 'shift', 'range');
@@ -726,7 +733,7 @@ fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(grid.inside), sum(~
 if ~isempty(cfg.symmetry)
   if size(grid.pos,2)>3
     % sanity check, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
-    warning('the construction of a symmetric dipole model requires to start with a Nx3 description of the dipole positions, discarding subsequent columns');
+    ft_warning('the construction of a symmetric dipole model requires to start with a Nx3 description of the dipole positions, discarding subsequent columns');
     grid.pos = grid.pos(:,1:3);
   end
   if strcmp(cfg.symmetry, 'x')
@@ -742,7 +749,7 @@ if ~isempty(cfg.symmetry)
     expand = [1 2 3 1 2 3];   % repeat them as [x1 y1 z1 x1 y1 z1]
     mirror = [1 1 1 1 1 -1];  % multiply each of them with 1 or -1, resulting in [x1 y1 z1 x1 y1
   else
-    error('unrecognized symmetry constraint');
+    ft_error('unrecognized symmetry constraint');
   end
   fprintf('each source describes two dipoles with symmetry along %s axis\n', cfg.symmetry);
   % expand the number of parameters from one (3) to two dipoles (6)
@@ -771,7 +778,7 @@ if isempty(sel)
   inside = mask(sub2ind(dim, pos(:,1), pos(:,2), pos(:,3)));
 else
   % only loop over the points that can be dealt with
-  inside = zeros(size(pos,1), 1);
+  inside = false(size(pos,1), 1);
   for i=setdiff(1:size(pos,1), sel(:)')
     inside(i) = mask(pos(i,1), pos(i,2), pos(i,3));
   end

@@ -70,7 +70,7 @@ normalize = ft_getopt(varargin, 'normalize', 'no');
 nbin      = ft_getopt(varargin, 'nbin');
 
 if isempty(dimord)
-  error('input parameters should contain a dimord');
+  ft_error('input parameters should contain a dimord');
 end
 
 if (length(strfind(dimord, 'chan'))~=2 || ~isempty(strfind(dimord, 'pos'))>0) && ~isempty(powindx),

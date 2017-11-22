@@ -180,6 +180,15 @@ ARRAY+=(src/compiler.h)
 sync ${ARRAY[*]}
 
 ################################################################################
+# coordsys2label.m
+
+ARRAY=()
+ARRAY+=(utilities/private/coordsys2label.m)
+ARRAY+=(plotting/private/coordsys2label.m)
+ARRAY+=(private/coordsys2label.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # cornerpoints.m
 
 ARRAY=()
@@ -212,6 +221,23 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(fileio/private/dataset2files.m)
 ARRAY+=(utilities/private/dataset2files.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# defaultId.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/defaultId.m)
+ARRAY+=(fileio/private/defaultId.m)
+ARRAY+=(forward/private/defaultId.m)
+ARRAY+=(inverse/private/defaultId.m)
+ARRAY+=(plotting/private/defaultId.m)
+ARRAY+=(preproc/private/defaultId.m)
+ARRAY+=(private/defaultId.m)
+ARRAY+=(specest/private/defaultId.m)
+ARRAY+=(statfun/private/defaultId.m)
+ARRAY+=(trialfun/private/defaultId.m)
+ARRAY+=(utilities/private/defaultId.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -269,6 +295,71 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(connectivity/private/det2x2.mexw64)
 ARRAY+=(src/det2x2.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# det3x3.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/det3x3.m)
+ARRAY+=(src/det3x3.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# det3x3.mexa64
+
+ARRAY=()
+ARRAY+=(connectivity/private/det3x3.mexa64)
+ARRAY+=(src/det3x3.mexa64)
+sync ${ARRAY[*]}
+
+################################################################################
+# det3x3.mexglx
+
+ARRAY=()
+ARRAY+=(connectivity/private/det3x3.mexglx)
+ARRAY+=(src/det3x3.mexglx)
+sync ${ARRAY[*]}
+
+################################################################################
+# det3x3.mexmaci
+
+ARRAY=()
+ARRAY+=(connectivity/private/det3x3.mexmaci)
+ARRAY+=(src/det3x3.mexmaci)
+sync ${ARRAY[*]}
+
+################################################################################
+# det3x3.mexmaci64
+
+ARRAY=()
+ARRAY+=(connectivity/private/det3x3.mexmaci64)
+ARRAY+=(private/det3x3.mexmaci64)
+ARRAY+=(src/det3x3.mexmaci64)
+sync ${ARRAY[*]}
+
+################################################################################
+# det3x3.mexw32
+
+ARRAY=()
+ARRAY+=(connectivity/private/det3x3.mexw32)
+ARRAY+=(src/det3x3.mexw32)
+sync ${ARRAY[*]}
+
+################################################################################
+# det3x3.mexw64
+
+ARRAY=()
+ARRAY+=(connectivity/private/det3x3.mexw64)
+ARRAY+=(src/det3x3.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# dimindex.m
+
+ARRAY=()
+ARRAY+=(private/dimindex.m)
+ARRAY+=(utilities/private/dimindex.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -388,6 +479,16 @@ ARRAY+=(utilities/private/fixinside.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fixoldorg.m
+
+ARRAY=()
+ARRAY+=(fileio/private/fixoldorg.m)
+ARRAY+=(forward/private/fixoldorg.m)
+ARRAY+=(plotting/private/fixoldorg.m)
+ARRAY+=(utilities/private/fixoldorg.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # fixname.m
 
 ARRAY=()
@@ -404,6 +505,7 @@ ARRAY+=(specest/private/fixname.m)
 ARRAY+=(statfun/private/fixname.m)
 ARRAY+=(test/private/fixname.m)
 ARRAY+=(utilities/private/fixname.m)
+ARRAY+=(compat/matlablt2014b/private/fixname.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -557,6 +659,15 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(plotting/private/ft_datatype_volume.m)
 ARRAY+=(utilities/ft_datatype_volume.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# ft_determine_units.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_determine_units.m)
+ARRAY+=(forward/ft_determine_units.m)
+ARRAY+=(plotting/private/ft_determine_units.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -742,17 +853,34 @@ ARRAY+=(inverse/private/ft_inside_vol.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_notification.m, should be consistent with ft_warning
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_notification.m)
+ARRAY+=(fileio/private/ft_notification.m)
+ARRAY+=(forward/private/ft_notification.m)
+ARRAY+=(inverse/private/ft_notification.m)
+ARRAY+=(plotting/private/ft_notification.m)
+ARRAY+=(preproc/private/ft_notification.m)
+ARRAY+=(specest/private/ft_notification.m)
+ARRAY+=(utilities/private/ft_notification.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_platform_supports.m
 
 ARRAY=()
+ARRAY+=(utilities/ft_platform_supports.m)
+ARRAY+=(connectivity/private/ft_platform_supports.m)
 ARRAY+=(engine/private/ft_platform_supports.m)
 ARRAY+=(fileio/private/ft_platform_supports.m)
+ARRAY+=(forward/private/ft_platform_supports.m)
+ARRAY+=(inverse/private/ft_platform_supports.m)
 ARRAY+=(peer/private/ft_platform_supports.m)
 ARRAY+=(plotting/private/ft_platform_supports.m)
-ARRAY+=(private/ft_platform_supports.m)
+ARRAY+=(preproc/private/ft_platform_supports.m)
 ARRAY+=(qsub/private/ft_platform_supports.m)
-ARRAY+=(test/private/ft_platform_supports.m)
-ARRAY+=(utilities/private/ft_platform_supports.m)
+ARRAY+=(specest/private/ft_platform_supports.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -824,19 +952,16 @@ ARRAY+=(plotting/private/ft_voltype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_warning.m
+# ft_warning.m, should be consistent with ft_notification.m
 
 ARRAY=()
 ARRAY+=(connectivity/private/ft_warning.m)
-ARRAY+=(engine/private/ft_warning.m)
 ARRAY+=(fileio/private/ft_warning.m)
 ARRAY+=(forward/private/ft_warning.m)
+ARRAY+=(inverse/private/ft_warning.m)
 ARRAY+=(plotting/private/ft_warning.m)
 ARRAY+=(preproc/private/ft_warning.m)
-ARRAY+=(qsub/private/ft_warning.m)
 ARRAY+=(specest/private/ft_warning.m)
-ARRAY+=(statfun/private/ft_warning.m)
-ARRAY+=(test/private/ft_warning.m)
 ARRAY+=(utilities/ft_warning.m)
 sync ${ARRAY[*]}
 
@@ -1132,6 +1257,71 @@ ARRAY+=(src/inv2x2.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# inv3x3.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/inv3x3.m)
+ARRAY+=(src/inv3x3.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# inv3x3.mexa64
+
+ARRAY=()
+ARRAY+=(connectivity/private/inv3x3.mexa64)
+ARRAY+=(src/inv3x3.mexa64)
+sync ${ARRAY[*]}
+
+################################################################################
+# inv3x3.mexglx
+
+ARRAY=()
+ARRAY+=(connectivity/private/inv3x3.mexglx)
+ARRAY+=(src/inv3x3.mexglx)
+sync ${ARRAY[*]}
+
+################################################################################
+# inv3x3.mexmaci
+
+ARRAY=()
+ARRAY+=(connectivity/private/inv3x3.mexmaci)
+ARRAY+=(src/inv3x3.mexmaci)
+sync ${ARRAY[*]}
+
+################################################################################
+# inv3x3.mexmaci64
+
+ARRAY=()
+ARRAY+=(connectivity/private/inv3x3.mexmaci64)
+ARRAY+=(private/inv3x3.mexmaci64)
+ARRAY+=(src/inv3x3.mexmaci64)
+sync ${ARRAY[*]}
+
+################################################################################
+# inv3x3.mexw32
+
+ARRAY=()
+ARRAY+=(connectivity/private/inv3x3.mexw32)
+ARRAY+=(src/inv3x3.mexw32)
+sync ${ARRAY[*]}
+
+################################################################################
+# inv3x3.mexw64
+
+ARRAY=()
+ARRAY+=(connectivity/private/inv3x3.mexw64)
+ARRAY+=(src/inv3x3.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# isalmostequal.m
+
+ARRAY=()
+ARRAY+=(test/private/isalmostequal.m)
+ARRAY+=(private/isalmostequal.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # isrealmat.m
 
 ARRAY=()
@@ -1168,6 +1358,7 @@ sync ${ARRAY[*]}
 # istrue.m
 
 ARRAY=()
+ARRAY+=(connectivity/private/istrue.m)
 ARRAY+=(engine/private/istrue.m)
 ARRAY+=(fileio/private/istrue.m)
 ARRAY+=(forward/private/istrue.m)
@@ -1175,6 +1366,8 @@ ARRAY+=(peer/private/istrue.m)
 ARRAY+=(plotting/private/istrue.m)
 ARRAY+=(preproc/private/istrue.m)
 ARRAY+=(qsub/private/istrue.m)
+ARRAY+=(specest/private/istrue.m)
+ARRAY+=(statfun/private/istrue.m)
 ARRAY+=(utilities/istrue.m)
 sync ${ARRAY[*]}
 
@@ -1309,8 +1502,9 @@ sync ${ARRAY[*]}
 # lmoutrn.m
 
 ARRAY=()
-ARRAY+=(forward/private/lmoutrn.m)
 ARRAY+=(private/lmoutrn.m)
+ARRAY+=(plotting/private/lmoutrn.m)
+ARRAY+=(forward/private/lmoutrn.m)
 ARRAY+=(utilities/private/lmoutrn.m)
 sync ${ARRAY[*]}
 
@@ -1338,6 +1532,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexa64)
+ARRAY+=(private/ltrisect.mexa64)
 ARRAY+=(src/ltrisect.mexa64)
 sync ${ARRAY[*]}
 
@@ -1346,6 +1541,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexglx)
+ARRAY+=(private/ltrisect.mexglx)
 ARRAY+=(src/ltrisect.mexglx)
 sync ${ARRAY[*]}
 
@@ -1354,6 +1550,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmac)
+ARRAY+=(private/ltrisect.mexmac)
 ARRAY+=(src/ltrisect.mexmac)
 sync ${ARRAY[*]}
 
@@ -1362,6 +1559,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmaci)
+ARRAY+=(private/ltrisect.mexmaci)
 ARRAY+=(src/ltrisect.mexmaci)
 sync ${ARRAY[*]}
 
@@ -1370,6 +1568,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexmaci64)
+ARRAY+=(private/ltrisect.mexmaci64)
 ARRAY+=(src/ltrisect.mexmaci64)
 sync ${ARRAY[*]}
 
@@ -1378,6 +1577,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexw32)
+ARRAY+=(private/ltrisect.mexw32)
 ARRAY+=(src/ltrisect.mexw32)
 sync ${ARRAY[*]}
 
@@ -1386,6 +1586,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(plotting/private/ltrisect.mexw64)
+ARRAY+=(private/ltrisect.mexw64)
 ARRAY+=(src/ltrisect.mexw64)
 sync ${ARRAY[*]}
 
@@ -1576,6 +1777,63 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(connectivity/private/mtimes2x2.mexw64)
 ARRAY+=(src/mtimes2x2.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# mtimes3x3.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/mtimes3x3.m)
+ARRAY+=(src/mtimes3x3.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# mtimes3x3.mexa64
+
+ARRAY=()
+ARRAY+=(connectivity/private/mtimes3x3.mexa64)
+ARRAY+=(src/mtimes3x3.mexa64)
+sync ${ARRAY[*]}
+
+################################################################################
+# mtimes3x3.mexglx
+
+ARRAY=()
+ARRAY+=(connectivity/private/mtimes3x3.mexglx)
+ARRAY+=(src/mtimes3x3.mexglx)
+sync ${ARRAY[*]}
+
+################################################################################
+# mtimes3x3.mexmaci
+
+ARRAY=()
+ARRAY+=(connectivity/private/mtimes3x3.mexmaci)
+ARRAY+=(src/mtimes3x3.mexmaci)
+sync ${ARRAY[*]}
+
+################################################################################
+# mtimes3x3.mexmaci64
+
+ARRAY=()
+ARRAY+=(connectivity/private/mtimes3x3.mexmaci64)
+ARRAY+=(private/mtimes3x3.mexmaci64)
+ARRAY+=(src/mtimes3x3.mexmaci64)
+sync ${ARRAY[*]}
+
+################################################################################
+# mtimes3x3.mexw32
+
+ARRAY=()
+ARRAY+=(connectivity/private/mtimes3x3.mexw32)
+ARRAY+=(src/mtimes3x3.mexw32)
+sync ${ARRAY[*]}
+
+################################################################################
+# mtimes3x3.mexw64
+
+ARRAY=()
+ARRAY+=(connectivity/private/mtimes3x3.mexw64)
+ARRAY+=(src/mtimes3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2057,8 +2315,9 @@ sync ${ARRAY[*]}
 # pinvNx2.m
 
 ARRAY=()
-ARRAY+=(forward/private/pinvNx2.m)
 ARRAY+=(private/pinvNx2.m)
+ARRAY+=(plotting/private/pinvNx2.m)
+ARRAY+=(forward/private/pinvNx2.m)
 ARRAY+=(utilities/private/pinvNx2.m)
 sync ${ARRAY[*]}
 
@@ -2078,6 +2337,16 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(forward/private/plgndr.m)
 ARRAY+=(private/plgndr.m)
+ARRAY+=(src/plgndr.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# plgndr.c
+
+ARRAY=()
+ARRAY+=(forward/private/plgndr.c)
+ARRAY+=(private/plgndr.c)
+ARRAY+=(src/plgndr.c)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2326,6 +2595,14 @@ ARRAY=()
 ARRAY+=(forward/private/ptriprojn.m)
 ARRAY+=(private/ptriprojn.m)
 ARRAY+=(utilities/private/ptriprojn.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# ptriside.m
+
+ARRAY=()
+ARRAY+=(plotting/private/ptriside.m)
+ARRAY+=(private/ptriside.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2730,6 +3007,63 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(connectivity/private/sandwich2x2.mexw64)
 ARRAY+=(src/sandwich2x2.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# sandwich3x3.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/sandwich3x3.m)
+ARRAY+=(src/sandwich3x3.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# sandwich3x3.mexa64
+
+ARRAY=()
+ARRAY+=(connectivity/private/sandwich3x3.mexa64)
+ARRAY+=(src/sandwich3x3.mexa64)
+sync ${ARRAY[*]}
+
+################################################################################
+# sandwich3x3.mexglx
+
+ARRAY=()
+ARRAY+=(connectivity/private/sandwich3x3.mexglx)
+ARRAY+=(src/sandwich3x3.mexglx)
+sync ${ARRAY[*]}
+
+################################################################################
+# sandwich3x3.mexmaci
+
+ARRAY=()
+ARRAY+=(connectivity/private/sandwich3x3.mexmaci)
+ARRAY+=(src/sandwich3x3.mexmaci)
+sync ${ARRAY[*]}
+
+################################################################################
+# sandwich3x3.mexmaci64
+
+ARRAY=()
+ARRAY+=(connectivity/private/sandwich3x3.mexmaci64)
+ARRAY+=(private/sandwich3x3.mexmaci64)
+ARRAY+=(src/sandwich3x3.mexmaci64)
+sync ${ARRAY[*]}
+
+################################################################################
+# sandwich3x3.mexw32
+
+ARRAY=()
+ARRAY+=(connectivity/private/sandwich3x3.mexw32)
+ARRAY+=(src/sandwich3x3.mexw32)
+sync ${ARRAY[*]}
+
+################################################################################
+# sandwich3x3.mexw64
+
+ARRAY=()
+ARRAY+=(connectivity/private/sandwich3x3.mexw64)
+ARRAY+=(src/sandwich3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################

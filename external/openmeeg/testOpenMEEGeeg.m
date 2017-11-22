@@ -3,10 +3,12 @@ function testOpenMEEGeeg
 % TEST testOpenMEEGeeg
 % Test the computation of an EEG leadfield with OpenMEEG
 
+% Copyright (C) 2010-2017, OpenMEEG developers
+
 addpath(cd) % Make sure current folder is in the path
 
 %% Set the position of the probe dipole
-pos = [0 0 70];
+dippos = [0 0 70];
 
 %% Set the radius and conductivities of each of the compartments
 
@@ -14,7 +16,7 @@ pos = [0 0 70];
 r = [85 88 92 100];
 c = [1 1/20 1/80 1];
 
-[rdms,mags] = run_bem_computation(r,c,pos);
+[rdms,mags] = run_bem_computation(r,c,dippos);
 
 % the following would require the installation of xunit toolbox
 % assertElementsAlmostEqual(rdms, [0.019963 0.019962 0.10754], 'absolute', 1e-3)
@@ -29,7 +31,7 @@ assert(norm(mags-[0.84467 0.84469 0.83887])<thr)
 r = [88 92 100];
 c = [1 1/80 1];
 
-[rdms,mags] = run_bem_computation(r,c,pos);
+[rdms,mags] = run_bem_computation(r,c,dippos);
 % assertElementsAlmostEqual(rdms, [0.064093 0.064092 0.13532], 'absolute', 1e-3)
 % assertElementsAlmostEqual(mags, [1.0498 1.0498 1.0207], 'absolute', 1e-3)
 assert(norm(rdms-[0.064093 0.064092 0.13532])<thr)
@@ -39,7 +41,7 @@ assert(norm(mags-[1.0498 1.0498 1.0207])<thr)
 r = [92 100];
 c = [1 1/4];
 
-[rdms,mags] = run_bem_computation(r,c,pos);
+[rdms,mags] = run_bem_computation(r,c,dippos);
 % assertElementsAlmostEqual(rdms, [0.15514 0.15514 0.1212], 'absolute', 1e-3)
 % assertElementsAlmostEqual(mags, [1.8211 1.8211 1.3606], 'absolute', 1e-3)
 assert(norm(rdms-[0.15514 0.15514 0.1212])<thr)
@@ -49,14 +51,14 @@ assert(norm(mags-[1.8211 1.8211 1.3606])<thr)
 r = [100];
 c = [1];
 
-[rdms,mags] = run_bem_computation(r,c,pos);
+[rdms,mags] = run_bem_computation(r,c,dippos);
 % assertElementsAlmostEqual(rdms, [0.18934 0.18931 0.0778], 'absolute', 1e-3)
 % assertElementsAlmostEqual(mags, [1.3584 1.3583 1.2138], 'absolute', 1e-3)
 assert(norm(rdms-[0.18934 0.18931 0.0778])<thr)
 assert(norm(mags-[1.3584 1.3583 1.2138])<thr)
 
 
-function [rdms,mags] = run_bem_computation(r,c,pos)
+function [rdms,mags] = run_bem_computation(r,c,dippos)
 
     %% Description of the spherical mesh
     [pos, tri] = icosahedron42;
@@ -66,6 +68,7 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     %% Create a set of electrodes on the outer surface
     sens.elecpos = max(r) * pos;
     sens.label = {};
+    sens.unit = 'mm';
     nsens = size(sens.elecpos,1);
     for ii=1:nsens
         sens.label{ii} = sprintf('vertex%03d', ii);
@@ -80,15 +83,15 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     
     
     %% Compute the BEM model
+    cfg = [];
     cfg.conductivity = c;
     cfg.method = 'openmeeg';
 
-    vol1 = ft_prepare_bemmodel(cfg, vol);
-    vol2 = ft_prepare_headmodel(cfg, vol);
-    vol_bem = vol1;
+    vol_bem = ft_prepare_headmodel(cfg, vol);
     
-    cfg.vol = vol_bem;
-    cfg.grid.pos = pos;
+    cfg.headmodel = vol_bem;
+    cfg.grid.pos = dippos;
+    cfg.grid.unit = 'mm';
     cfg.elec = sens;
     grid = ft_prepare_leadfield(cfg);
 
@@ -102,7 +105,7 @@ function [rdms,mags] = run_bem_computation(r,c,pos)
     vol_sphere = [];
     vol_sphere.r = r;
     vol_sphere.cond = c;
-    lf_sphere = ft_compute_leadfield(pos, sens, vol_sphere);
+    lf_sphere = ft_compute_leadfield(dippos, sens, vol_sphere);
 
     %% Evaluate the quality of the result using RDM and MAG
     rdms = zeros(1,size(lf_openmeeg,2));

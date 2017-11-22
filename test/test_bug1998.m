@@ -3,10 +3,9 @@ function test_bug1998
 % WALLTIME 00:10:00
 % MEM 2gb
 
-% TEST test_bug1998
 % TEST ft_preprocessing ft_read_data read_neuralynx_ncs
 
-% this bug is detailled on http://bugzilla.fcdonders.nl/show_bug.cgi?id=1998
+% this bug is detailled on http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1998
 % and the workaround is explained on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1998'));

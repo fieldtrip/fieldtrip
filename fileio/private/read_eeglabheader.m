@@ -50,7 +50,7 @@ header.nTrials     = EEG.trials;
 try
   header.label       = { EEG.chanlocs.labels }';
 catch
-  warning('creating default channel names');
+  ft_warning('creating default channel names');
   for i=1:header.nChans
     header.label{i} = sprintf('chan%03d', i);
   end

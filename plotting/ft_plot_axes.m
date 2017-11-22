@@ -11,9 +11,14 @@ function ft_plot_axes(object, varargin)
 %
 % Additional optional input arguments should be specified as key-value pairs
 % and can include
-%   axisscale    = scaling factor for the reference axes and sphere (default = 1)
-%   fontcolor    = string (default = 'y')
-%   'unit'       = string, convert the data to the specified geometrical units (default = [])
+%   'axisscale'    = scaling factor for the reference axes and sphere (default = 1)
+%   'unit'         = string, convert the data to the specified geometrical units (default = [])
+%   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
+%   'fontcolor'    = string, color specification (default = [1 .5 0], i.e. orange)
+%   'fontsize'     = number, sets the size of the text (default is automatic)
+%   'fontunits'    =
+%   'fontname'     =
+%   'fontweight'   =
 %
 % See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_VOL
 
@@ -38,24 +43,47 @@ function ft_plot_axes(object, varargin)
 % $Id$
 
 axisscale = ft_getopt(varargin, 'axisscale', 1);   % this is used to scale the axmax and rbol
-fontcolor = ft_getopt(varargin, 'fontcolor', 'y'); % default is yellow
 unit      = ft_getopt(varargin, 'unit');
+coordsys  = ft_getopt(varargin, 'coordsys');
+% these have to do with the font
+fontcolor   = ft_getopt(varargin, 'fontcolor', [1 .5 0]); % default is orange
+fontsize    = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
+fontname    = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
+fontweight  = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
+fontunits   = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
-if ~isempty(unit)
-  % convert the sensor description to the specified units
-  object = ft_convert_units(object, unit);
+% color management
+if ischar(fontcolor) && exist([fontcolor '.m'], 'file')
+  fontcolor = eval(fontcolor);
 end
 
-if isfield(object, 'unit')
+if ~isempty(object) && ~isempty(unit)
+  % convert the object to the specified units
+  object = ft_convert_units(object, unit);
+elseif ~isempty(object) &&  isempty(unit)
+  % take the units from the object
   unit = object.unit;
-else
-  warning('units are not known, not plotting axes')
+elseif  isempty(object) && ~isempty(unit)
+  % there is no object, but the units have been specified
+elseif  isempty(object) &&  isempty(unit)
+  ft_warning('units are not known, not plotting axes')
   return
 end
 
-if isfield(object, 'coordsys')
+if ~isempty(object) && ~isfield(object, 'coordsys')
+  % set it to unknown, that makes the subsequent code easier
+  object.coordsys = 'unknown';
+end
+
+if ~isempty(object) && ~isempty(coordsys)
+  % check the user specified coordinate system with the one in the object
+  assert(strcmp(coordsys, unit.coordsys), 'coordsys is inconsistent with the object')
+elseif ~isempty(object) &&  isempty(coordsys)
+  % take the coordinate system from the object
   coordsys = object.coordsys;
-else
+elseif  isempty(object) && ~isempty(coordsys)
+  % there is no object, but the coordsys has been specified
+elseif  isempty(object) &&  isempty(coordsys)
   % this is not a problem per see
   coordsys = 'unknown';
 end
@@ -105,56 +133,16 @@ O.pos = O.pos.*rbol;
 ft_plot_mesh(O, 'edgecolor', 'none');
 
 % create the labels that are to be plotted along the axes
-[labelx, labely, labelz] = xyz2label(coordsys);
+[labelx, labely, labelz] = coordsys2label(coordsys, 3, 1);
 
 % add the labels to the axis
-text(xdat(1,1), ydat(1,1), zdat(1,1), labelx{1}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
-text(xdat(1,2), ydat(1,2), zdat(1,2), labely{1}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
-text(xdat(1,3), ydat(1,3), zdat(1,3), labelz{1}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
-text(xdat(2,1), ydat(2,1), zdat(2,1), labelx{2}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
-text(xdat(2,2), ydat(2,2), zdat(2,2), labely{2}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
-text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'color', fontcolor, 'fontsize', 15, 'linewidth', 2);
+text(xdat(1,1), ydat(1,1), zdat(1,1), labelx{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+text(xdat(1,2), ydat(1,2), zdat(1,2), labely{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+text(xdat(1,3), ydat(1,3), zdat(1,3), labelz{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+text(xdat(2,1), ydat(2,1), zdat(2,1), labelx{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+text(xdat(2,2), ydat(2,2), zdat(2,2), labely{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
 
 if ~prevhold
   hold off
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%
-% NOTE this should be kept consistent with the longer axes labels in FT_DETERMINE_COORDSYS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [labelx, labely, labelz] = xyz2label(str)
-
-if ~isempty(str) && ~strcmp(str, 'unknown')
-  % the first part is important for the orientations
-  % the second part optionally contains information on the origin
-  strx = tokenize(str, '_');
-  
-  switch lower(strx{1})
-    case {'ras' 'itab' 'neuromag' 'spm' 'mni' 'tal'}
-      labelx = {'-X (left)'      '+X (right)'   };
-      labely = {'-Y (posterior)' '+Y (anterior)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    case {'als' 'ctf' '4d', 'bti'}
-      labelx = {'-X (posterior)' '+X (anterior)'};
-      labely = {'-Y (right)'     '+Y (left)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    case {'paxinos'}
-      labelx = {'-X (left)'      '+X (right)'};
-      labely = {'-Y (inferior)'  '+Y (superior)'};
-      labelz = {'-Z (anterior)'  '+Z (posterior)'};
-    case {'lps'}
-      labelx = {'-X (right)'      '+X (left)'};
-      labely = {'-Y (anterior)'  '+Y (posterior)'};
-      labelz = {'-Z (inferior)'  '+Z (superior)'};
-    otherwise
-      error('unknown coordsys');
-  end
-  
-else
-  labelx = {'-X (unknown)' '+X (unknown)'};
-  labely = {'-Y (unknown)' '+Y (unknown)'};
-  labelz = {'-Z (unknown)' '+Z (unknown)'};
 end

@@ -63,7 +63,11 @@ if isempty(endsample)
 end
 
 % read the trigger channel as raw data, can safely assume that it is continuous
-dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0);
+if ~isempty(chanindx)
+  dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0);
+else
+  dat = zeros(0, endsample-begsample+1);
+end
 
 % start with an empty event structure
 event = [];
@@ -78,13 +82,19 @@ end
 if denoise
   for i=1:length(chanindx)
     if (sum(diff(find(diff(dat(i,:))~=0)) == 1)/length(dat(i,:))) > 0.8
-      warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
+      ft_warning(['trigger channel ' hdr.label{chanindx(i)} ' looks like noise and will be ignored']);
       dat(i,:) = 0;
     end
   end
 end
 
 if fixbiosemi
+  if ft_platform_supports('int32_logical_operations')
+    % convert to 32-bit integer representation and only preserve the lowest 24 bits
+    dat = bitand(int32(dat), 2^24-1);
+    % apparently the 24 bits are still shifted by one byte
+    dat = bitshift(dat,-8);
+  else
   % find indices of negative numbers
   signbit = find(dat < 0);
   % change type to double (otherwise bitcmp will fail)
@@ -97,6 +107,7 @@ if fixbiosemi
   dat(signbit) = dat(signbit)+(2^(24-1));
   % typecast the data to ensure that the status channel is represented in 32 bits
   dat = uint32(dat);
+  end
   
   byte1 = 2^8  - 1;
   byte2 = 2^16 - 1 - byte1;
@@ -123,12 +134,17 @@ end
 % fix suggested by Ralph Huonker to deal with triggers that need to be
 % interpreted as unsigned integers, rather than signed
 if strncmpi(dataformat, 'neuromag', 8) && ~fixneuromag
-  if any(dat<0)
-    tmpdat = zeros(size(dat));
-    for k = 1:size(dat,1)
-      tmpdat(k,:) = double(typecast(int16(dat(k,:)), 'uint16'));
+  for k = 1:size(dat,1)
+    switch hdr.chantype{chanindx(1)}
+      case 'binary trigger'
+        if any(dat(k,:)<0)
+          dat(k,:) = double(typecast(int16(dat(k,:)), 'uint16'));
+        end
+      case 'analog trigger'
+        % keep it as it is
+      case 'other trigger'
+        % keep it as it is
     end
-    dat = tmpdat; clear tmpdat;
   end
 end
 
@@ -246,6 +262,6 @@ for i=1:length(chanindx)
         end
       end
     otherwise
-      error('incorrect specification of ''detectflank''');
+      ft_error('incorrect specification of ''detectflank''');
   end
 end

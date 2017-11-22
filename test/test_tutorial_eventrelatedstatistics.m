@@ -1,26 +1,12 @@
-function test_tutorial_eventrelatedstatistics(datadir)
+function test_tutorial_eventrelatedstatistics
 
 % MEM 2500mb
 % WALLTIME 00:20:00
 
-% TEST test_tutorial_eventrelatedstatistics
 % TEST ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics
 % TEST ft_topoplotER ft_clusterplot
 
-global ft_default;
-ft_default.feedback = 'no';
-
-if nargin==0
-  if ispc
-    datadir = 'H:';
-  else
-    datadir = '/home';
-  end
-  
-  load(fullfile(datadir, 'common', 'matlab', 'fieldtrip', 'data', 'ftp', 'tutorial', 'eventrelatedstatistics', 'ERF_orig.mat'));
-else
-  load(fullfile(datadir, 'ERF_orig.mat'));
-end
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedstatistics/ERF_orig.mat'));
 
 % Tutorial update on 3 Feb: no longer give grandaverage inarg to
 % ft_XX_statistics, instead introduce cell-array inarg. 
@@ -88,7 +74,7 @@ legend({'subj1', 'subj2', 'subj3', 'subj4', 'subj5', 'subj6', ...
 %% T-test with MATLAB function
 % dependent samples ttest
 FCminFIC = values_FC - values_FIC;
-[h,p,ci,stats] = ttest_wrapper(FCminFIC, 0, 0.05) % H0: mean = 0, alpha 0.05
+[h,p,ci,stats] = ttest_wrapper(FCminFIC, 0, 0.05) % H0: mean = 0, alpha 0.05;
 
 %% T-test with FieldTrip function
 cfg = [];
@@ -107,7 +93,7 @@ cfg.design(2,1:2*Nsub)  = [1:Nsub 1:Nsub];
 cfg.ivar                = 1; % the 1st row in cfg.design contains the independent variable
 cfg.uvar                = 2; % the 2nd row in cfg.design contains the subject number
  
-stat = ft_timelockstatistics(cfg,allsubjFC{:},allsubjFIC{:});
+stat = ft_timelockstatistics(cfg, allsubjFC{:}, allsubjFIC{:});
 
 %% Multiple comparisons
 
@@ -157,7 +143,7 @@ cfg.parameter   = 'avg';
 cfg.method      = 'analytic';
 cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05;
-cfg.correctm    = 'bonferoni';
+cfg.correctm    = 'bonferroni';
  
 Nsub = 10;
 cfg.design(1,1:2*Nsub)  = [ones(1,Nsub) 2*ones(1,Nsub)];
@@ -166,7 +152,7 @@ cfg.ivar                = 1; % the 1st row in cfg.design contains the independen
 cfg.uvar                = 2; % the 2nd row in cfg.design contains the subject number
  
  
-stat = ft_timelockstatistics(cfg,allsubjFC{:},allsubjFIC{:});
+stat = ft_timelockstatistics(cfg, allsubjFC{:}, allsubjFIC{:});
 
 
 %% NON-PARAMETRIC Permutation test based on t statistics
@@ -188,7 +174,7 @@ cfg.design(2,1:2*Nsub)  = [1:Nsub 1:Nsub];
 cfg.ivar                = 1; % the 1st row in cfg.design contains the independent variable
 cfg.uvar                = 2; % the 2nd row in cfg.design contains the subject number
  
-stat = ft_timelockstatistics(cfg,allsubjFIC{:},allsubjFC{:});
+stat = ft_timelockstatistics(cfg, allsubjFIC{:}, allsubjFC{:});
  
 % make the plot
 cfg = [];

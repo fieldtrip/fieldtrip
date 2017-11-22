@@ -10,7 +10,7 @@ function h = ft_plot_line(X, Y, varargin)
 %   'color'           =
 %   'linestyle'       =
 %   'linewidth'       =
-%   'tag'             = string, the name this vector gets. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'            = horizontal position of the center of the local axes
@@ -19,6 +19,8 @@ function h = ft_plot_line(X, Y, varargin)
 %   'height'          = height of the local axes
 %   'hlim'            = horizontal scaling limits within the local axes
 %   'vlim'            = vertical scaling limits within the local axes
+%
+% See also FT_PLOT_BOX
 
 % Copyrights (C) 2009-2011, Robert Oostenveld
 %
@@ -54,35 +56,38 @@ linestyle   = ft_getopt(varargin, 'linestyle',  '-');
 linewidth   = ft_getopt(varargin, 'linewidth',  0.5);
 tag         = ft_getopt(varargin, 'tag',        '');
 
+% color management
+if ischar(color) && exist([color '.m'], 'file')
+  color = eval(color);
+end
+
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine
   % use a shortcut to speed up the plotting
   
 else
   % use the full implementation
-  abc = axis;
-  
   if isempty(hlim)
-    hlim = abc([1 2]);
+    hlim = get(gca, 'XLim');
   end
   
   if isempty(vlim)
-    vlim = abc([3 4]);
+    vlim = get(gca, 'YLim');
   end
   
-  if isempty(hpos);
+  if isempty(hpos)
     hpos = (hlim(1)+hlim(2))/2;
   end
   
-  if isempty(vpos);
+  if isempty(vpos)
     vpos = (vlim(1)+vlim(2))/2;
   end
   
-  if isempty(width),
+  if isempty(width)
     width = hlim(2)-hlim(1);
   end
   
-  if isempty(height),
+  if isempty(height)
     height = vlim(2)-vlim(1);
   end
   
@@ -109,4 +114,4 @@ end % shortcut
 h = line(X, Y, 'Color', color, 'LineStyle', linestyle, 'LineWidth', linewidth);
 set(h, 'tag', tag);
 
-warning(ws); %revert to original state
+warning(ws); % revert to original state

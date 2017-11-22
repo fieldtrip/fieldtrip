@@ -3,7 +3,6 @@ function test_bug1832
 % MEM 1500mb
 % WALLTIME 00:20:00
 
-% TEST test_bug1832
 % TEST ft_read_mri ft_volumesegment ft_prepare_headmodel ft_prepare_sourcemodel
 
 % for the warp template example script:

@@ -1,4 +1,4 @@
-function [x, state] = ft_preproc_standardize(x, begsample, endsample, state)
+function [dat, state] = ft_preproc_standardize(dat, begsample, endsample, state)
 
 % FT_PREPROC_STANDARDIZE performs a z-transformation or standardization
 % of the data. The standardized data will have a zero-mean and a unit
@@ -7,7 +7,7 @@ function [x, state] = ft_preproc_standardize(x, begsample, endsample, state)
 % Use as
 %   [dat] = ft_preproc_standardize(dat, begsample, endsample)
 % where
-%   dat        data matrix (Nchans X Ntime)
+%   dat        data matrix (Nchans dat Ntime)
 %   begsample  index of the begin sample for the mean and stdev estimate
 %   endsample  index of the end sample for the mean and stdev estimate
 %
@@ -41,17 +41,22 @@ if nargin<2 || isempty(begsample)
 end
 
 if nargin<3 || isempty(endsample)
-  endsample = size(x,2);
+  endsample = size(dat,2);
 end
 
 if nargin<4
   state = [];
 end
 
-% get the data selection
-y = x(:,begsample:endsample);
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
 
-% determine the size of the selected data: nChans X nSamples
+% get the data selection
+y = dat(:,begsample:endsample);
+
+% determine the size of the selected data: nChans dat nSamples
 [m, n] = size(y);
 
 % compute the sum and sum of squares
@@ -70,7 +75,7 @@ my = s ./ n;
 sy = sqrt((ss - (s.^2)./n) ./ (n-1));
 
 % standardize the complete input data
-x  = (x - repmat(my, 1, size(x, 2))) ./ repmat(sy, 1, size(x, 2));
+dat = (dat - repmat(my, 1, size(dat, 2))) ./ repmat(sy, 1, size(dat, 2));
 
 % remember the state
 state.s  = s;  % sum

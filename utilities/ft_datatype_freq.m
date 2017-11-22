@@ -107,7 +107,7 @@ if isfield(freq, 'time') && ~isrow(freq.time)
   freq.time = freq.time';
 end
 if ~isfield(freq, 'label') && ~isfield(freq, 'labelcmb')
-  warning('data structure is incorrect since it has no channel labels');
+  ft_warning('data structure is incorrect since it has no channel labels');
 end
 
 switch version
@@ -128,11 +128,21 @@ switch version
       freq.freq = freq.foi;
       freq = rmfield(freq, 'foi');
     end
-
+    
     if isfield(freq, 'toi') && ~isfield(freq, 'time')
       % this was still the case in early 2006
       freq.time = freq.toi;
       freq = rmfield(freq, 'toi');
+    end
+    
+    if isfield(freq, 'cumtapcnt') && isvector(freq.cumtapcnt)
+      % ensure that it is a column vector
+      freq.cumtapcnt = freq.cumtapcnt(:);
+    end
+    
+    if isfield(freq, 'cumsumcnt') && isvector(freq.cumsumcnt)
+      % ensure that it is a column vector
+      freq.cumsumcnt = freq.cumsumcnt(:);
     end
 
   case '2008'
@@ -149,5 +159,5 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for freq datatype', version);
+    ft_error('unsupported version "%s" for freq datatype', version);
 end

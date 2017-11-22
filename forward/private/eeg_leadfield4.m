@@ -55,18 +55,18 @@ r4 = vol.r(4); c4 = vol.cond(4);
 % check whether the electrode ly on the sphere, allowing 0.5% tolerance
 dist = sqrt(sum(elc.^2,2));
 if any(abs(dist-r4)>r4*0.005)
-  warning('electrodes do not ly on sphere surface -> using projection')
+  ft_warning('electrodes do not ly on sphere surface -> using projection')
 end
 elc = r4 * elc ./ [dist dist dist];
 
 % check whether the dipole is inside the brain [disabled for EEGLAB]
 % if sqrt(sum(R.^2))>=r1
-%   error('dipole is outside the brain compartment');
+%   ft_error('dipole is outside the brain compartment');
 % end
 
 % rotate everything so that the dipole is along the pos. z-axis
 % only if the dipole is not in the origin or along the positive z-axis
-if R(1)~=0 | R(2)~=0
+if R(1)~=0 || R(2)~=0
   % compute the rotation matrix
   % the inverse rotation matrix is the transposed of this one
   val1 = norm(R);
@@ -81,9 +81,8 @@ if R(1)~=0 | R(2)~=0
   % rotate the electrodes
   elc = elc*rot';
 elseif R(1)==0 && R(2)==0 && R(3)<0
-  % dipole on negative z-axis, rotation is very simple: around x-axis
-  elc(2,:) = -elc(2,:);
-  elc(3,:) = -elc(3,:);
+  % dipole on negative z-axis, this case is very simple: reflect on xy-plane
+  elc(:,3) = -elc(:,3);
 else
   % dipole is on positive z-axis, nothing has to be done
 end
@@ -136,7 +135,6 @@ end
 if R(1)~=0 || R(2)~=0
   lf = lf*rot;
 elseif R(1)==0 && R(2)==0 && R(3)<0
-  lf(2,:) = -lf(2,:);
-  lf(3,:) = -lf(3,:);
+  lf(:,3) = -lf(:,3);
 end
 

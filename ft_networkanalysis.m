@@ -89,8 +89,16 @@ cfg.threshold = ft_getopt(cfg, 'threshold', []);
 ft_hastoolbox('BCT', 1);
 
 % check the data for the correct dimord and for the presence of the requested parameter
-if ~strcmp(data.dimord(1:7), 'pos_pos') && ~strcmp(data.dimord(1:9), 'chan_chan'),
-  error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
+if isfield(data, [cfg.parameter,'dimord'])
+  dimord = data.([cfg.parameter,'dimord']);
+elseif isfield(data, 'dimord')
+  dimord = data.dimord;
+else
+  ft_error('input data needs a ''dimord'' field');
+end
+
+if ~strcmp(dimord(1:7), 'pos_pos') && ~strcmp(dimord(1:9), 'chan_chan')
+  ft_error('the dimord of the input data should start with ''chan_chan'' or ''pos_pos''');
 end
 
 % conversion to double is needed because some BCT functions want to do matrix
@@ -99,7 +107,7 @@ input = double(data.(cfg.parameter));
 
 % some metrics explicitly require a certain parameter
 if strcmp(cfg.method, 'charpath') && ~strcmp(cfg.parameter, 'distance')
-  error('characteristic path length can only be computed on distance matrices');
+  ft_error('characteristic path length can only be computed on distance matrices');
 end
 
 % check for binary or not
@@ -108,7 +116,7 @@ for k = 1:size(input,3)
   for m = 1:size(input,4)
     tmp = input(:,:,k,m);
     isbinary = all(ismember(tmp(:), [0 1]));
-    if ~isbinary,
+    if ~isbinary
       break;
     end
   end
@@ -138,7 +146,7 @@ for k = 1:size(input,3)
   for m = 1:size(input,4)
     tmp = input(:,:,k,m);
     isdirected = ~all(all(tmp==tmp.'));
-    if ~isdirected,
+    if ~isdirected
       break;
     end
   end
@@ -158,10 +166,10 @@ switch cfg.method
     outsiz = [size(input) 1];
     outsiz(1:2) = [];
     output = zeros(outsiz);
-    if strcmp(data.dimord(1:3), 'pos')
-      dimord = data.dimord(9:end);
-    elseif strcmp(data.dimord(1:4), 'chan')
-      dimord = data.dimord(11:end);
+    if strcmp(dimord(1:3), 'pos')
+      dimord = dimord(9:end);
+    elseif strcmp(dimord(1:4), 'chan')
+      dimord = dimord(11:end);
     end
     needlabel = false;
   case {'betweenness' 'clustering_coef' 'degrees'}
@@ -169,16 +177,16 @@ switch cfg.method
     outsiz = [size(input) 1];
     outsiz(1) = [];
     output = zeros(outsiz);
-    if strcmp(data.dimord(1:3), 'pos')
-      dimord = data.dimord(5:end);
-    elseif strcmp(data.dimord(1:4), 'chan')
-      dimord = data.dimord(6:end);
+    if strcmp(dimord(1:3), 'pos')
+      dimord = dimord(5:end);
+    elseif strcmp(dimord(1:4), 'chan')
+      dimord = dimord(6:end);
     end
   case {'distance' 'edge_betweenness'}
     % 1 value per node pair
     outsiz = [size(input) 1];
     output = zeros(outsiz);
-    dimord = data.dimord;
+    dimord = dimord;
 end
 
 binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
@@ -203,7 +211,7 @@ for k = 1:size(input, 3)
           output(:,k,m) = betweenness_wei(input(:,:,k,m));
         end
       case 'breadthdist'
-        error('not yet implemented');
+        ft_error('not yet implemented');
       case 'charpath'
         % this needs the distance matrix as input, this is dealt with
         % above
@@ -248,11 +256,11 @@ for k = 1:size(input, 3)
           output(:,:,k,m) = edge_betweenness_wei(input(:,:,k,m));
         end
       case 'efficiency'
-        error('not yet implemented');
+        ft_error('not yet implemented');
       case 'modularity'
-        error('not yet implemented');
+        ft_error('not yet implemented');
       case 'participation_coef'
-        error('not yet implemented');
+        ft_error('not yet implemented');
       case 'transitivity'
         if isbinary && isdirected
           output(k,m) = transitivity_bd(input(:,:,k,m));
@@ -264,7 +272,7 @@ for k = 1:size(input, 3)
           output(k,m) = transitivity_wu(input(:,:,k,m));
         end
       otherwise
-        error('unsupported connectivity metric %s requested');
+        ft_error('unsupported connectivity metric %s requested');
     end
 
   end % for m
@@ -275,15 +283,9 @@ end % for k
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 stat              = [];
+stat = keepfields(data, {'label', 'freq', 'time', 'grad', 'elec', 'opto', 'dof', 'pos', 'tri', 'inside', 'brainordinate'});
 stat.(cfg.method) = output;
 stat.dimord       = dimord;
-if isfield(data, 'label') && needlabel,  stat.label  = data.label;  end
-if isfield(data, 'freq'),   stat.freq   = data.freq;   end
-if isfield(data, 'time'),   stat.time   = data.time;   end
-if isfield(data, 'grad'),   stat.grad   = data.grad;   end
-if isfield(data, 'elec'),   stat.elec   = data.elec;   end
-if exist('dof',  'var'),    stat.dof    = dof;         end
-% FIXME this needs to be implemented still
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

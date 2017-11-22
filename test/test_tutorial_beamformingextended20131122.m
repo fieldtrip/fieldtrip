@@ -9,9 +9,6 @@ function test_tutorial_beamformingextended20131122
 % this test script represents the MATLAB code from http://www.fieldtriptoolbox.org/tutorial/beamformer
 % as downloaded from the wiki on 22 November 2013
 
-global ft_default
-ft_default = [];
-
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis/subjectK.mat'));
 data_combined = ft_appenddata([], data_left, data_right);
 

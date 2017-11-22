@@ -58,9 +58,37 @@ if nargin<5 || isempty(order)
   flag = 0;
 end
 
-% this does not work on integer data
+% This does not work on integer data
 typ = class(dat);
-dat = cast(dat, 'double');
+if ~isa(dat, 'double') && ~isa(dat, 'single')
+  dat = cast(dat, 'double');
+end
+
+usesamples = false(1,size(dat,2));
+usesamples(begsample:endsample) = true;
+
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+  
+  datnans = isnan(dat);
+  
+  % if a nan occurs, it's for all time points
+  check1  = all(ismember(sum(datnans,1),[0 size(dat,1)]));
+  
+  % if a channel has nans, it's for all samples
+  check2  = all(ismember(sum(datnans,2),[0 size(dat,2)])); 
+  
+  if ~(check1 || check2)
+    usesamples = repmat(usesamples, [size(dat,1) 1]);
+    usesamples = usesamples & ~isnan(dat);
+  elseif check1
+    usesamples(sum(datnans,1)==size(dat,1)) = false; % switch the nan samples off, they are not to be used for the regression
+  end
+else
+  check1 = true;
+  check2 = true;
+end
 
 % construct a "time" axis
 nsamples = size(dat,2);
@@ -75,10 +103,20 @@ for i = 0:order
   x(i+1,:) = basis.^(i);
 end
 
-% estimate the contribution of the basis functions
-% beta = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to numerical issues, even in simple examples
-invxcov = inv(x(:,begsample:endsample)*x(:,begsample:endsample)');
-beta    = dat(:,begsample:endsample)*x(:,begsample:endsample)'*invxcov;
+if ~(check1 || check2)
+  % loop across rows
+  beta    = zeros(size(dat,1),size(x,1));
+  for k = 1:size(dat,1)
+    invxcov   = inv(x(:,usesamples(k,:))*x(:,usesamples(k,:))');
+    beta(k,:) = dat(k,usesamples(k,:))*x(:,usesamples(k,:))'*invxcov;
+  end
+else
+  
+  % estimate the contribution of the basis functions
+  % beta = dat(:,begsample:endsample)/x(:,begsample:endsample); <-this leads to numerical issues, even in simple examples
+  invxcov = inv(x(:,usesamples)*x(:,usesamples)');
+  beta    = dat(:,usesamples)*x(:,usesamples)'*invxcov;
+end
 
 % remove the estimated basis functions
 dat = dat - beta*x;

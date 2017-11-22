@@ -1,8 +1,9 @@
 function ft_defaults
 
 % FT_DEFAULTS (ending with "s") sets some general settings in the global variable
-% ft_default (without the "s") and takes care of the required path settings. This
-% function is called at the begin of all FieldTrip functions.
+% ft_default (without the "s") and takes care of the required path settings. You can
+% call this function in your startup.m script. This function is also called at the
+% begin of all FieldTrip functions.
 %
 % The configuration defaults are stored in the global "ft_default" structure.
 % The ft_checkconfig function that is called by many FieldTrip functions will
@@ -10,16 +11,25 @@ function ft_defaults
 % the FieldTrip function that you are calling.
 %
 % The global options and their default values are
-%   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
-%   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
 %   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.checkconfig       = string, can be 'pedantic', 'loose', 'silent' (default = 'loose')
 %   ft_default.checksize         = number in bytes, can be inf (default = 1e5)
+%   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
+%   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
+%   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
+%   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
 %   ft_default.debug             = string, can be 'display', 'displayonerror', 'displayonsuccess', 'save', 'saveonerror', saveonsuccess' or 'no' (default = 'no')
-%   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
+%   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
 %
-% See also FT_HASTOOLBOX, FT_CHECKCONFIG
+% The toolbox option for signal, stats and images allows you to specify whether you
+% want to use a compatible drop-in to be used for these MathWorks toolboxes, or the
+% original version from MathWorks.  The default is 'compat', which has the advantage
+% that you do not need a license for these toolboxes.
+%
+% See also FT_HASTOOLBOX, FT_CHECKCONFIG, FT_TRACKUSAGE
 
 % undocumented options
 %   ft_default.siunits        = 'yes' or 'no'
@@ -51,6 +61,11 @@ if isempty(initialized)
   initialized = false;
 end
 
+% ft_warning is located in fieldtrip/utilities, which may not be on the path yet
+if ~exist('ft_warning', 'file')
+  ft_warning = @warning;
+end
+
 % locate the file that contains the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
@@ -69,9 +84,15 @@ if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';
 if ~isfield(ft_default, 'debug'),             ft_default.debug          = 'no';     end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
 if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'overwrite'; end % can be keep, overwrite, error
 
-% these options allow to disable parts of the provenance
+% These options allow to disable parts of the provenance
 if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no
+
+% These options allow to prefer the MATLAB toolbox implementations ('matlab') over the drop-in replacements ('compat').
+if ~isfield(ft_default, 'toolbox'), ft_default.toolbox  = []; end
+if ~isfield(ft_default.toolbox, 'images'), ft_default.toolbox.images  = 'compat'; end % matlab or compat
+if ~isfield(ft_default.toolbox, 'stats') , ft_default.toolbox.stats   = 'compat'; end % matlab or compat
+if ~isfield(ft_default.toolbox, 'signal'), ft_default.toolbox.signal  = 'compat'; end % matlab or compat
 
 % Check whether this ft_defaults function has already been executed. Note that we
 % should not use ft_default itself directly, because the user might have set stuff
@@ -85,7 +106,7 @@ end
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
 ftPath = strrep(ftPath, '\', '\\');
 if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
-  warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
+  ft_warning('FieldTrip is not yet on your MATLAB path, adding %s', strrep(ftPath, '\\', '\'));
   addpath(ftPath);
 end
 
@@ -131,29 +152,28 @@ if ~isdeployed
   
   try
     % external/signal contains alternative implementations of some signal processing functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    if ~ft_platform_supports('signal') || ~ft_hastoolbox('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab')
+      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    end
   end
   
   try
-    % some alternative implementations of statistics functions
-    if ~ft_platform_supports('stats')
+    % external/stats contains alternative implementations of some statistics functions
+    if ~ft_platform_supports('stats') || ~ft_hastoolbox('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
   
   try
     % external/images contains alternative implementations of some image processing functions
-    addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    if ~ft_platform_supports('images') || ~ft_hastoolbox('images') || ~strcmp(ft_default.toolbox.images, 'matlab')
+      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    end
   end
   
   try
     % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required
-  end
-  
-  try
-    % this directory contains the backward compatibility wrappers for the ft_xxx function name change
-    ft_hastoolbox('compat', 3, 1); % not required
   end
   
   try
@@ -267,16 +287,23 @@ end % function ft_default
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function checkMultipleToolbox(toolbox, keyfile)
+
+persistent warned
+if isempty(warned)
+  warned = false;
+end
+
 if ~ft_platform_supports('which-all')
   return;
 end
 
 list = which(keyfile, '-all');
 if length(list)>1
-  [ws, warned] = ft_warning(sprintf('Multiple versions of %s on your path will confuse FieldTrip', toolbox));
-  if warned % only throw the warning once
+  ft_warning('Multiple versions of %s on your path will confuse FieldTrip', toolbox);
+  if ~warned % only throw the following warnings once
+    warned = true;
     for i=1:length(list)
-      warning('one version of %s is found here: %s', toolbox, list{i});
+      ft_warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
   ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behaviour. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');

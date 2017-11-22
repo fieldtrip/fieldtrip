@@ -4,7 +4,7 @@ function [edges,idx,edgemap]=uniqedges(elem)
 %
 % return the unique edge list from a surface or tetrahedral mesh
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %     elem: a list of elements, each row is a list of nodes for an element.

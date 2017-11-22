@@ -4,7 +4,7 @@ function newnode=sms(node,face,iter,alpha,method)
 %
 % simplified version of surface mesh smoothing
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2009/10/21
 %
 % input:

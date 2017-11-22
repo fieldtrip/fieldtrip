@@ -21,6 +21,8 @@ function [selected] = ft_select_point3d(bnd, varargin)
 %   ft_plot_mesh(bnd)
 %   camlight
 %   ... do something here
+%
+% See also FT_SELECT_BOX, FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_RANGE, FT_SELECT_VOXEL 
 
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,7 +82,7 @@ if isempty(h) && ~isempty(bnd)
 end
 
 if length(h)>1
-  warning('using the first patch object in the figure');
+  ft_warning('using the first patch object in the figure');
   h = h(1);
 end
 

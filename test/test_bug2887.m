@@ -3,7 +3,6 @@ function test_bug2887
 % WALLTIME 00:10:00
 % MEM 1gb
 
-% TEST test_bug2887
 % TEST ft_read_header ft_read_data ft_read_event read_edf
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2887/EDFtest.edf');

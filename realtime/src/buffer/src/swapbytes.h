@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2010, Stefan Klanke
+ * F.C. Donders Centre for Cognitive Neuroimaging, Radboud University Nijmegen,
+ * Kapittelweg 29, 6525 EN Nijmegen, The Netherlands
+ *
+ */
+
 #ifndef SWAP_BYTES_H
 #define SWAP_BYTES_H
 

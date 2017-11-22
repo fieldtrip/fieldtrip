@@ -3,7 +3,6 @@ function test_old_ft_multiplotER
 % MEM 1gb
 % WALLTIME 00:10:00
 
-% TEST test_old_ft_multiplotER
 
 % this script tests the functionality of ft_multiplotER with respect to the 
 % different input datatypes. no other functionality is tested.

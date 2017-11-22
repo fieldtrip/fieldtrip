@@ -3,7 +3,6 @@ function test_bug1397
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1397
 % TEST ft_preprocessing ft_appenddata
 
 % the following code was obtained from http://www.fieldtriptoolbox.org/tutorial/coherence
@@ -13,7 +12,7 @@ function test_bug1397
 cfg = [];
 % MODIFICATION, use trialfun handle and other path to the data
 cfg.trialfun                  = @trialfun_left;
-cfg.dataset                   = '/home/common/matlab/fieldtrip/data/SubjectCMC.ds';
+cfg.dataset                   = dccnpath('/home/common/matlab/fieldtrip/data/SubjectCMC.ds');
 cfg = ft_definetrial(cfg);
 
 % MODIFICATION, use only 10 trials
@@ -65,13 +64,14 @@ cfg.hpfreq       = 10;
 cfg.rectify      = 'yes';
 emg = ft_preprocessing(cfg);
 
-% see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1397
+% see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1397
 % the reported problem in fieldtrip-20120302 was
 % 
 % ??? Error using ==> ft_appenddata at 266
 % there is a difference in the time axes of the input data
 
 data = ft_appenddata([], meg, emg);
+assert(numel(data.label)==153);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -98,7 +98,7 @@ trl = [];
 for j = 1:length(trig)-1
   trg1 = trig(j);
   trg2 = trig(j+1);
-  if trg1<=100 & trg2==2080,
+  if trg1<=100 && trg2==2080
     trlok      = [[indx(j)+1:1200:indx(j+1)-1200]' [indx(j)+1200:1200:indx(j+1)]'];
     trlok(:,3) = [0:-1200:-1200*(size(trlok,1)-1)]';
     trl        = [trl; trlok];

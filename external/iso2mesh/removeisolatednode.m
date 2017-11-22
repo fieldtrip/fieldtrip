@@ -4,7 +4,7 @@ function [no,el]=removeisolatednode(node,elem)
 %
 % remove isolated nodes: nodes that are not included in any element
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %     node: list of node coordinates

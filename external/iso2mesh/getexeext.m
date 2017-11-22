@@ -4,7 +4,7 @@ function exesuff=getexeext()
 %
 % get meshing external tool extension names for the current platform
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % output:
 %     exesuff: file extension for iso2mesh tool binaries

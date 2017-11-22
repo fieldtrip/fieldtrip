@@ -1,7 +1,8 @@
 % FT_PREAMBLE_INIT is a helper script that is used at the start of all FieldTrip main
 % functions. It checks whether the user specified at lease one input arguments (i.e.
-% the cfg) or shows the help of the calling function. It checks whether the output file
-% already exists and whether it is OK to overwrite it. It tracks the function call.
+% the cfg) or shows the help of the calling function. It merges the global defaults
+% with the cfg. It checks whether the output file already exists and whether it is OK
+% to overwrite it. It tracks the function call.
 %
 % Use as
 %   ft_preamble init
@@ -72,22 +73,22 @@ if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
     % the output file exists, determine how to deal with it
     switch cfg.outputfilepresent
       case 'keep'
-        if nargout>0
+        if ft_nargout>0
           % continue executing the parent function
-          warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
+          ft_warning('output file %s is already present, but you also requested an output argument: continuing function execution', cfg.outputfile);
           ft_abort = false;
         else
           % stop executing the parent function
-          warning('output file %s is already present: aborting function execution', cfg.outputfile);
+          ft_warning('output file %s is already present: aborting function execution', cfg.outputfile);
           ft_abort = true;
         end
       case 'overwrite'
-        warning('output file %s is already present: it will be overwritten', cfg.outputfile);
+        ft_warning('output file %s is already present: it will be overwritten', cfg.outputfile);
         ft_abort = false;
       case 'error'
-        error('output file %s is already present', cfg.outputfile);
+        ft_error('output file %s is already present', cfg.outputfile);
       otherwise
-        error('invalid option for cfg.outputfilepresent');
+        ft_error('invalid option for cfg.outputfilepresent');
     end % case
   end
 else

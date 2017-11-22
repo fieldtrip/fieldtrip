@@ -71,6 +71,7 @@ timelock = ft_checkdata(timelock, 'datatype',...
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden', 'baselinetype');
 
 % set the defaults
 cfg.baseline  = ft_getopt(cfg, 'baseline',  'no');
@@ -96,7 +97,7 @@ end
 % ft_timelockanalysis (i.e. in private/preproc), hence make sure that
 % they can also be used here for consistency
 if isfield(cfg, 'baseline') && (isfield(cfg, 'demean') || isfield(cfg, 'baselinewindow'))
-  error('conflicting configuration options, you should use cfg.baseline');
+  ft_error('conflicting configuration options, you should use cfg.baseline');
 elseif isfield(cfg, 'demean') && strcmp(cfg.demean, 'no')
   cfg.baseline = 'no';
   cfg = rmfield(cfg, 'demean');
@@ -116,7 +117,7 @@ if ischar(cfg.baseline)
     cfg.baseline = [-inf inf];
     % is input consistent?
   elseif strcmp(cfg.baseline, 'no')
-    warning('no baseline correction done');
+    ft_warning('no baseline correction done');
     return;
   end
 end
@@ -158,7 +159,7 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
       elseif d == 2
         timelock.(par)(chansel,:) = ft_preproc_baselinecorrect(timelock.(par)(chansel,:), tbeg, tend);
       else
-        warning('Not doing anything - matrices up to only three dimensions are supported');
+        ft_warning('Not doing anything - matrices up to only three dimensions are supported');
       end
 
     end

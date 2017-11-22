@@ -1,13 +1,12 @@
 /*
-Direct potential for a vertex approach
+  Direct potential for a vertex approach
 
-IN : 	XYZ_v, XYZ_d, weight
+  Input : XYZ_v, XYZ_d, weight
+  Output : Gi *transposed* !!!!
 
-OUT : Gi *transposed* !!!!
-
-
-weight = 1/(2*pi*(siga+sigb))
+  weight = 1/(2*pi*(siga+sigb)) ;
 */
+
 #include <math.h>
 #include "mex.h"
 
@@ -19,8 +18,8 @@ void G_vert(double Gi[], double XYZ_v[], int Nvert, double XYZ_d[],
 	int i, j ;
 
 
-	printf("Nvert = %d\n",Nvert);
-	printf("Ndip  = %d\n",Ndip);
+	/*printf("Nvert = %d\n",Nvert);*/
+	/*printf("Ndip  = %d\n",Ndip);*/
 
 	for (i=0;i<Nvert;++i) { 
 		/*printf("j= %d\n",j);*/

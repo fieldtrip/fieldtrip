@@ -82,7 +82,7 @@ switch datatype
       besa_save2Avr(custom_path, file_name, data_matrix, time_samples, channel_labels, data_scale_factor, time_scale_factor);
 
     else
-      error('unsupported data structure');
+      ft_error('unsupported data structure');
     end
 
   case {'elec', 'grad'}
@@ -137,6 +137,6 @@ switch datatype
     besa_save2Elp(custom_path, filename, SphericalCoords, channel_labels, channel_type);
 
   otherwise
-    error('unsupported data structure');
+    ft_error('unsupported data structure');
 
 end % switch type

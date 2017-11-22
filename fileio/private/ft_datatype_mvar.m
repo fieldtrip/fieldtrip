@@ -102,5 +102,5 @@ switch version
 
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    error('unsupported version "%s" for mvar datatype', version);
+    ft_error('unsupported version "%s" for mvar datatype', version);
 end

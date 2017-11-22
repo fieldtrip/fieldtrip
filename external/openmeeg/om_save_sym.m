@@ -10,6 +10,8 @@ function om_save_sym(data,filename,format)
 %       FORMAT : can be 'ascii' or 'binary' or 'matlab' (default)
 %
 
+% Copyright (C) 2010-2017, OpenMEEG developers
+
 me = 'OM_SAVE_SYM';
 
 if nargin == 0

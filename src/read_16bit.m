@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = read_16bit(varargin)
 
 % READ_16BIT read a stream of 16 bit values and converts them to doubles
 % This function is designed for EDF files and is implemented as mex

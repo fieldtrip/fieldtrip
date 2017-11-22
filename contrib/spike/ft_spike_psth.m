@@ -1,14 +1,14 @@
-function [psth] = ft_spike_psth(cfg,spike)
+function [psth] = ft_spike_psth(cfg, spike)
 
 % FT_SPIKE_PSTH computes the peristimulus histogram of spiketrains.
 %
 % Use as
 %   [psth] = ft_spike_psth(cfg, spike)
 %
-% The input SPIKE should be organised as a) the spike datatype, obtained
-% from FT_SPIKE_MAKETRIALS b) the raw datatype, containing binary spike
-% trains, obtained from FT_APPENDSPIKE or FT_CHECKDATA. In this case the
-% raw datatype is converted to the spike datatype.
+% The input SPIKE should be organised as either the spike datatype,
+% obtained from FT_SPIKE_MAKETRIALS, or the raw datatype, containing binary
+% spike trains, obtained from FT_APPENDSPIKE or FT_CHECKDATA. In this case
+% the raw datatype is converted to the spike datatype.
 %
 % Configurations:
 %   cfg.binsize          =  [binsize] in sec or string. 
@@ -43,7 +43,7 @@ function [psth] = ft_spike_psth(cfg,spike)
 %                          available 'minperiod', i.e., the minimal period
 %                          all trials share, 'prestim' (all t<=0) 'poststim'
 %                          (all t>=0).
-%   cfg.keeptrials       = 'yes' or 'no' (default).
+%   cfg.keeptrials       = 'yes' or 'no' (default)
 %   cfg.trials           =  numeric or logical selection of trials (default = 'all')
 %
 % Outputs:
@@ -88,7 +88,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble callinfo
+ft_preamble provenance spike
 ft_preamble trackconfig
 
 % control input spike structure and convert to spike if raw structure
@@ -101,7 +101,7 @@ cfg.spikechannel = ft_getopt(cfg, 'spikechannel', 'all');
 cfg.trials       = ft_getopt(cfg, 'trials', 'all');
 cfg.latency      = ft_getopt(cfg, 'latency','maxperiod');
 cfg.vartriallen  = ft_getopt(cfg, 'vartriallen', 'yes');
-cfg.keeptrials   = ft_getopt(cfg, 'keeptrials', 'yes');
+cfg.keeptrials   = ft_getopt(cfg, 'keeptrials', 'no');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg,'outputunit',   'char',  {'rate', 'spikecount'});
@@ -247,9 +247,9 @@ if isfield(spike,'trialinfo'),  psth.trialinfo  = spike.trialinfo(cfg.trials,:);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
-ft_postamble callinfo
-ft_postamble previous spike
-ft_postamble history psth
+ft_postamble previous   spike
+ft_postamble provenance psth
+ft_postamble history    psth
 
 
 %%%%%%%%% SUB FUNCTIONS %%%%%%%%%

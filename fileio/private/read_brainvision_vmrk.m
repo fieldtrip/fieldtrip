@@ -42,7 +42,7 @@ hdr=read_brainvision_vhdr([filename(1:(end-4)) 'vhdr']);
 
 fid=fopen(filename,'rt');
 if fid==-1,
-    error('cannot open marker file')
+    ft_error('cannot open marker file')
 end
 
 line=1;

@@ -3,15 +3,20 @@
 ;###########################################################
 ; settings that apply to all channels
 
-hostname   = -                            ; for the fieldtrip buffer, using '-' starts a local buffer on the given port
-port       = 1972                         ; for the fieldtrip buffer
-serial     = /dev/tty.usbserial-DN0094FY  ; serial device name, for example COM3: on windows
-blocksize  = 10                           ; in samples, sampling rate is 250 Hz
-reset      = on                           ; perform soft reset, can be on or off
-datalog    = off                          ; can be off, 14sec, 5min, 15min, 30min, 1hr, 2hr, 4hr, 12hr, 24hr
-testsignal = off                          ; can be off, gnd, dc, 1xSlow, 1xFast, 2xSlow, 2xFast
-timestamp  = on                           ; add timestamp channel, can be on or off
-timeref    = boot                         ; can be epoch, boot or start
+hostname     = -                            ; for the fieldtrip buffer, using '-' starts a local buffer on the given port
+port         = 1972                         ; for the fieldtrip buffer
+verbose      = 0
+serial       = /dev/tty.usbserial-DN0094FY  ; serial device name, for example COM3: on windows
+blocksize    = 10                           ; in samples, sampling rate is 250 Hz
+reset        = on                           ; perform soft reset, can be on or off
+datalog      = off                          ; can be off, 14sec, 5min, 15min, 30min, 1hr, 2hr, 4hr, 12hr, 24hr
+testsignal   = off                          ; can be off, gnd, dc, 1xSlow, 1xFast, 2xSlow, 2xFast
+sample       = off                          ; add sample channel, can be on or off
+unwrap       = on                           ; unwrap the sample channel, can be on or off
+timestamp    = off                          ; add timestamp channel, can be on or off
+timeref      = boot                         ; can be epoch, boot or start
+acceleration = on                           ; include acceleration channels in the output, can be on or off
+daisy        = off                          ; should be on for 16 channels, off for 8 channels
 
 ;###########################################################
 [ChannelEnable]
@@ -26,10 +31,15 @@ chan5  = on
 chan6  = on
 chan7  = on
 chan8  = on
-chan9  = on ; accelerometer in X-direction
-chan10 = on ; accelerometer in Y-direction
-chan11 = on ; accelerometer in Z-direction
-; channel 12 will contain the timestamps (if enabled)
+; the following settings only apply if the daisy board is connected
+chan9  = on
+chan10 = on
+chan11 = on
+chan12 = on
+chan13 = on
+chan14 = on
+chan15 = on
+chan16 = on
 
 ;###########################################################
 [ChannelLabel]
@@ -44,10 +54,15 @@ chan5  = 5N-SRB2
 chan6  = 6N-SRB2
 chan7  = 7N-SRB2
 chan8  = 8N-SRB2
-chan9  = AccelerationX  ; accelerometer in X-direction
-chan10 = AccelerationY  ; accelerometer in Y-direction
-chan11 = AccelerationZ  ; accelerometer in Z-direction
-chan12 = TimeStamp      ; this only applies if enabled
+; the following settings only apply if the daisy board is connected
+chan9  = 9P-SRB2
+chan10 = 10P-SRB2
+chan11 = 11P-SRB2
+chan12 = 12P-SRB2
+chan13 = 13P-SRB2
+chan14 = 14P-SRB2
+chan15 = 15P-SRB2
+chan16 = 16P-SRB2
 
 ;###########################################################
 [ChannelSetting]
@@ -56,12 +71,20 @@ chan12 = TimeStamp      ; this only applies if enabled
 ; x (CHANNEL, POWER_DOWN, GAIN_SET, INPUT_TYPE_SET, BIAS_SET, SRB2_SET, SRB1_SET) X
 ; z (CHANNEL, PCHAN, NCHAN) Z
 
-chan1 = x1060110X
-chan2 = x2060110X
-chan3 = x3060110X
-chan4 = x4060110X
-chan5 = x5060110X
-chan6 = x6060110X
-chan7 = x7060110X
-chan8 = x8060110X
-
+chan1  = x1060110X
+chan2  = x2060110X
+chan3  = x3060110X
+chan4  = x4060110X
+chan5  = x5060110X
+chan6  = x6060110X
+chan7  = x7060110X
+chan8  = x8060110X
+; the following settings only apply if the daisy board is connected
+chan9  = xQ060110X
+chan10 = xW060110X
+chan11 = xE060110X
+chan12 = xR060110X
+chan13 = xT060110X
+chan14 = xY060110X
+chan15 = xU060110X
+chan16 = xI060110X

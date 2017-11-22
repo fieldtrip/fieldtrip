@@ -67,7 +67,7 @@ if isempty(hdr)
   % sizeof(NexVarHeader) = 208
   hdr.FileHeader = NexFileHeader(fid);
   if hdr.FileHeader.NumVars<1
-    error('no channels present in file');
+    ft_error('no channels present in file');
   end
   hdr.VarHeader = NexVarHeader(fid, hdr.FileHeader.NumVars);
 end
@@ -102,14 +102,14 @@ for i=1:length(channel)
 
     case 4
       % Population vector
-      error('population vectors are not supported');
+      ft_error('population vectors are not supported');
 
     case 5
       % Continuously recorded variables
       buf.ts   = fread(fid, [1 vh.Count], 'int32=>int32');
       buf.indx = fread(fid, [1 vh.Count], 'int32=>int32');
       if vh.Count>1 && (begsample~=1 || endsample~=inf)
-        error('reading selected samples from multiple AD segments is not supported');
+        ft_error('reading selected samples from multiple AD segments is not supported');
       end
       if ~tsonly
         numsample = min(endsample - begsample + 1, vh.NPointsWave);
@@ -130,7 +130,7 @@ for i=1:length(channel)
       end
 
     otherwise
-      error('incorrect channel type');
+      ft_error('incorrect channel type');
   end % switch channel type
 
   % return the data of this channel

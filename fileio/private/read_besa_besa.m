@@ -1,9 +1,8 @@
-
 function [data] = read_besa_besa(filename, header, begsample, endsample, chanindx)
-%% Reads BESA .besa format files
+
+% READ_BESA_BESA reads data and header information from a BESA file
 % See formatting document <a href="matlab:web(http://www.besa.de/downloads/file-formats/)">here</a>
 % 
-%
 % Use as
 %   [header] = read_besa_besa(filename);
 % where
@@ -15,12 +14,12 @@ function [data] = read_besa_besa(filename, header, begsample, endsample, chanind
 %   header.nSamplesPre  number of pre-trigger samples in each trial
 %   header.nTrials      number of trials
 %   header.label        cell-array with labels of each channel
-%   header.orig         detailled EDF header information
+%   header.orig         detailed BESA header information
 %
 % Use as
 %   [header] = read_besa_besa(filename, [], chanindx);
 % where
-%    filename        name of the datafile, including the .edf extension
+%    filename        name of the datafile, including the .besa extension
 %    chanindx        index of channels to read (optional, default is all)
 %                    Note that since 
 % This returns a header structure with the following elements
@@ -30,24 +29,38 @@ function [data] = read_besa_besa(filename, header, begsample, endsample, chanind
 %   header.nSamplesPre  number of pre-trigger samples in each trial
 %   header.nTrials      number of trials
 %   header.label        cell-array with labels of each channel
-%   header.orig         detailled EDF header information
+%   header.orig         detailed BESA header information
 %
 % Or use as
 %   [dat] = read_besa_besa(filename, header, begsample, endsample, chanindx);
 % where
-%    filename        name of the datafile, including the .edf extension
+%    filename        name of the datafile, including the .besa extension
 %    header          header structure, see above
 %    begsample       index of the first sample to read
 %    endsample       index of the last sample to read
 %    chanindx        index of channels to read (optional, default is all)
 % This returns a Nchans X Nsamples data matrix
-% 
-% 
-% 2016 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
 
+% Copyright (C) 2015-2017, Kristopher Anderson & Arjen Stolk
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
-% For debugging %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-warning on;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
 
 switch nargin
   case 1
@@ -57,11 +70,8 @@ switch nargin
   case 3
     chanindx=begsample;
   case 4
-    error('ReadBesaMatlab:ErrorInput','Number of input arguments should be 1,2,3, or 5');
+    ft_error('ReadBesaMatlab:ErrorInput','Number of input arguments should be 1,2,3, or 5');
 end
-
-
-
 
 needhdr = (nargin==1)||(nargin==3);
 needevt = (nargin==2); % Not implemented yet  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
@@ -79,14 +89,23 @@ if needhdr
   data.orig.chansel = chanindx; % header.orig.chansel is used for reading channels from data
   data.nChans = numel(chanindx);
   data.label = data.label(chanindx);
-  data.orig.channel_info.orig_n_channels = data.orig.channel_info.n_channels;
-  data.orig.channel_info.n_channels = numel(chanindx);
-  data.orig.channel_info.orig_lsbs = data.orig.channel_info.lsbs;
   data.orig.channel_info.lsbs = data.orig.channel_info.lsbs(chanindx);
-  data.orig.channel_info.orig_channel_labels = data.orig.channel_info.channel_labels;
   data.orig.channel_info.channel_labels = data.orig.channel_info.channel_labels(chanindx);
-  data.orig.channel_info.orig_channel_states = data.orig.channel_info.channel_states;
   data.orig.channel_info.channel_states = data.orig.channel_info.channel_states(chanindx);
+  if isfield(data.orig.channel_info, 'channel_units') % test data did not have this field
+    data.chanunit = data.orig.channel_info.channel_units;
+  else
+    data.chanunit = repmat({'unknown'}, size(data.orig.channel_info.channel_states));  % unknown
+  end
+  data.chantype = repmat({'unknown'}, size(data.orig.channel_info.channel_states));  % start with unknown
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_TRIGGER]==1) = {'trigger'}; % test data did not have any of the below set to 1
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_CORTICALGRID]==1) = {'ecog'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_INTRACRANIAL]==1) = {'ieeg'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_SCALPELECTRODE]==1) = {'eeg'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_MAGNETOMETER]==1) = {'megmag'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_AXIAL_GRADIOMETER]==1) = {'megaxial'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_PLANAR_GRADIOMETER]==1) = {'megplanar'};
+  data.chantype([data.orig.channel_info.channel_states(:).BSA_CHANTYPE_MEGREFERENCE]==1) = {'megref'};
   return
 end
 
@@ -164,7 +183,7 @@ if needdat
   % Check for necessary values
   if(~isfield(header.orig.channel_info,'n_channels'))
     fclose(fid);
-    error('ReadBesaMatlab:ErrorNoNChannels','header.orig.channel_info.n_channels does not exist. This is needed for reading data blocks');
+    ft_error('ReadBesaMatlab:ErrorNoNChannels','header.orig.channel_info.n_channels does not exist. This is needed for reading data blocks');
   end
   if(~isfield(header.orig.channel_info,'lsbs'))
     % No least significant bit values found, so setting them all to 1.0
@@ -223,7 +242,7 @@ CONST_ZLIB_DD_ALLINT = 29;
 % Skip to start of BDAT section
 if(fseek(fid,double(bdat_offset),'bof') == -1) % double() because Windows can't seek to uint64
   fclose(fid);
-  error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BDAT]',bdat_offset);
+  ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BDAT]',bdat_offset);
 end
 
 % Read BDAT tag and offset
@@ -233,7 +252,7 @@ end
 if(file_length < (ftell(fid)+ofst_BDAT))
   expected_length = ftell(fid)+ofst_BDAT;
   fclose(fid);
-  error('ReadBesaMatlab:ErrorFileTooShortForDataBlock','Data block expected file at least %d bytes long but file is %d bytes long',expected_length,file_length);
+  ft_error('ReadBesaMatlab:ErrorFileTooShortForDataBlock','Data block expected file at least %d bytes long but file is %d bytes long',expected_length,file_length);
 end
 
 % Determine type of data in this block
@@ -377,7 +396,7 @@ switch num2str([data_type data_comp])
         otherwise
           current_loc = ftell(fid);
           fclose(fid);
-          error('ReadBesaMatlab:ErrorBDATReadPrefixValueUnknownScheme','Unknown scheme  CH:%d  prefix_val:%d  File offset:%d',channel_n,prefix_val,current_loc);
+          ft_error('ReadBesaMatlab:ErrorBDATReadPrefixValueUnknownScheme','Unknown scheme  CH:%d  prefix_val:%d  File offset:%d',channel_n,prefix_val,current_loc);
       end
     end
     
@@ -389,7 +408,7 @@ end
 
 % Check that expected amout of data was read
 if((data_block_offset+double(data_block_length)) ~= ftell(fid))
-  warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from data block. Should have read %d bytes', ...
+  ft_warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from data block. Should have read %d bytes', ...
     (ftell(fid)-data_block_offset)-double(data_block_length),ftell(fid)-data_block_offset,double(data_block_length));
 end
 
@@ -434,7 +453,7 @@ if isempty(ab_idx)
       expected_samples = numel(outbuffer((last_outbuffer_idx+1):end));
       received_samples = numel(firstscheme_lookuptable(inbuffer+1));
       fclose(fid);
-      error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [first scheme, no ABs]', ...
+      ft_error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [first scheme, no ABs]', ...
         expected_samples,received_samples);
     else
       rethrow(ME);
@@ -458,7 +477,7 @@ while ~isempty(ab_idx)
       expected_samples = numel(outbuffer((last_outbuffer_idx+1):(last_outbuffer_idx+2*(ab_idx-last_ab_idx-1))));
       received_samples = numel(firstscheme_lookuptable(inbuffer((last_ab_idx+1):(ab_idx-1))+1,:));
       fclose(fid);
-      error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [first scheme, middle of buffer]', ...
+      ft_error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [first scheme, middle of buffer]', ...
         expected_samples,received_samples);
     else
       rethrow(ME);
@@ -493,7 +512,7 @@ while ~isempty(ab_idx)
   else
     % not an alowed announcing byte value
     fclose(fid);
-    error('ReadBesaMatlab:ErrorABOutOfRange','Announcing byte out of range: %d',inbuffer(ab_idx));
+    ft_error('ReadBesaMatlab:ErrorABOutOfRange','Announcing byte out of range: %d',inbuffer(ab_idx));
   end
   
   % Go to next AB
@@ -512,7 +531,7 @@ if(last_ab_idx<numel(inbuffer))
       expected_samples = numel(outbuffer((last_outbuffer_idx+1):end));
       received_samples = numel(firstscheme_lookuptable(inbuffer((last_ab_idx+1):end)+1,:));
       fclose(fid);
-      error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [first scheme, end of buffer]', ...
+      ft_error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [first scheme, end of buffer]', ...
         expected_samples,received_samples);
     else
       rethrow(ME);
@@ -556,7 +575,7 @@ if isempty(ab_idx)
       expected_samples = numel(outbuffer((last_outbuffer_idx+1):end));
       received_samples = numel(secondscheme_lookup(inbuffer+1,meshgrid_vals));
       fclose(fid);
-      error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [second scheme, no ABs]', ...
+      ft_error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [second scheme, no ABs]', ...
         expected_samples,received_samples);
     else
       rethrow(ME);
@@ -598,7 +617,7 @@ while ~isempty(ab_idx)
   else
     % not an allowed announcing byte value
     fclose(fid);
-    error('ReadBesaMatlab:ErrorABOutOfRange','Announcing byte out of range [second scheme]: %d',inbuffer(ab_idx));
+    ft_error('ReadBesaMatlab:ErrorABOutOfRange','Announcing byte out of range [second scheme]: %d',inbuffer(ab_idx));
   end
   
   % Go to next AB
@@ -617,7 +636,7 @@ if(last_ab_idx<numel(inbuffer))
       expected_samples = numel(outbuffer((last_outbuffer_idx+1):end));
       received_samples = numel(secondscheme_lookup(inbuffer((last_ab_idx+1):end)+1,meshgrid_vals));
       fclose(fid);
-      error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [second scheme, end of buffer]', ...
+      ft_error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [second scheme, end of buffer]', ...
         expected_samples,received_samples);
     else
       rethrow(ME);
@@ -688,7 +707,7 @@ if isempty(ab_idx)
       expected_samples = numel(outbuffer((last_outbuffer_idx+1):end));
       received_samples = numel(thirdscheme_lookup(inbuffer+1,meshgrid_vals));
       fclose(fid);
-      error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [third scheme, no ABs]', ...
+      ft_error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [third scheme, no ABs]', ...
         expected_samples,received_samples);
     else
       rethrow(ME);
@@ -730,7 +749,7 @@ while ~isempty(ab_idx)
   else
     % not an allowed announcing byte value
     fclose(fid);
-    error('ReadBesaMatlab:ErrorABOutOfRange','Announcing byte out of range [third scheme]: %d',inbuffer(ab_idx));
+    ft_error('ReadBesaMatlab:ErrorABOutOfRange','Announcing byte out of range [third scheme]: %d',inbuffer(ab_idx));
   end
   
   % Go to next AB
@@ -749,7 +768,7 @@ if(last_ab_idx<numel(inbuffer))
       expected_samples = numel(outbuffer((last_outbuffer_idx+1):end));
       received_samples = numel(thirdscheme_lookup(inbuffer((last_ab_idx+1):end)+1,meshgrid_vals));
       fclose(fid);
-      error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [third scheme, end of buffer]', ...
+      ft_error('ReadBesaMatlab:ErrorUnexpectedNSamplesFromPreCompression','Expected %d samples, but got %d samples. [third scheme, end of buffer]', ...
         expected_samples,received_samples);
     else
       rethrow(ME);
@@ -819,35 +838,15 @@ if(nargin>1)
   if ~strcmp(expected_tag,out_tag)
     curr_offset = ftell(fid);
     fclose(fid);
-    error('ReadBesaMatlab:ErrorTagMismatch','Expecting [%s] but read [%s] at offset %d',expected_tag,out_tag,curr_offset);
+    ft_error('ReadBesaMatlab:ErrorTagMismatch','Expecting [%s] but read [%s] at offset %d',expected_tag,out_tag,curr_offset);
   end
 end
 % Read offset value following tag
 out_offset = fread(fid,1,'*uint32');
 
 
-
-
-
-
 function [header] = read_besa_besa_header(fname)
-%% Reads BESA .besa format header information and skips data
-% See formatting document <a href="matlab:web(http://www.besa.de/downloads/file-formats/)">here</a>
-% 
-% [alldata,file_info,channel_info,tags,events] = readbesa(fname)
-% 
-% inputs:
-%  fname [string] - path to .besa file
-% 
-% outputs:
-%  header [structure] - Header information
-% 
-% 
-% 
-% 2016 - Kristopher Anderson, Knight Lab, Helen Wills Neuroscience Institute, University of California, Berkeley
-
-% For debugging %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-warning on;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
+% READ_BESA_BESA_HEADER reads header information from a BESA fileheader and skips data
 
 %% Open file
 [fid,msg] = fopen(fname,'r');
@@ -879,15 +878,15 @@ while ~feof(fid) && ftell(fid) < (8+ofst_BCF1) % 8 for header tag ('BCF1') and h
       BCAL_offset = fread(fid,1,'*int64');
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if((ftell(fid)+current_length) <= file_length)
         if(fseek(fid,current_length,'cof') == -1)
           fclose(fid);
-          error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in header block [BCF1]))',current_length);
+          ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in header block [BCF1]))',current_length);
         end
       else
         fclose(fid);
-        error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
+        ft_error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
       end
   end
   
@@ -896,15 +895,15 @@ end
 % Check for necessary header data
 if ~exist('BFMI_offset','var')
   fclose(fid);
-  error('ReadBesaMatlab:ErrorNoHeaderBFMI','No BFMI block found in header');
+  ft_error('ReadBesaMatlab:ErrorNoHeaderBFMI','No BFMI block found in header');
 end
 if ~exist('BTAG_offset','var')
   fclose(fid);
-  error('ReadBesaMatlab:ErrorNoHeaderBTAG','No BTAG block found in header');
+  ft_error('ReadBesaMatlab:ErrorNoHeaderBTAG','No BTAG block found in header');
 end
 if ~exist('BCAL_offset','var')
   fclose(fid);
-  error('ReadBesaMatlab:ErrorNoHeaderBCAL','No BCAL block found in header');
+  ft_error('ReadBesaMatlab:ErrorNoHeaderBCAL','No BCAL block found in header');
 end
 
 %% 'tag list' blocks
@@ -921,7 +920,7 @@ header.orig.tags = rmfield(header.orig.tags,'next_BTAG_ofst');
 %  This does not take into account length of final block but might still be useful
 if(file_length <= header.orig.tags.tags.position(end))
   fclose(fid);
-  error('ReadBesaMatlab:ErrorFileTooShort','Expected file at least %d bytes long but file is %d bytes long',header.orig.tags.tags(end).position,file_length);
+  ft_error('ReadBesaMatlab:ErrorFileTooShort','Expected file at least %d bytes long but file is %d bytes long',header.orig.tags.tags(end).position,file_length);
 end
 
 %% 'file main info' blocks
@@ -945,7 +944,7 @@ header.orig.channel_info = rmfield(header.orig.channel_info,'next_BCAL_ofst');
 % NEED TO IMPLEMENT OVERWRITES %%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
 
 if ~isfield(header.orig.channel_info,'n_channels')
-  error('ReadBesaMatlab:ErrorNoHeaderNChannels','Missing number of channels in header [BCAL:CHNR]');
+  ft_error('ReadBesaMatlab:ErrorNoHeaderNChannels','Missing number of channels in header [BCAL:CHNR]');
 end
 
 % Combine info from channel_info.coord_data and channel_info.channel_states to get actual coordinate data
@@ -1011,13 +1010,13 @@ header.nChans = header.orig.channel_info.n_channels;
 if isfield(header.orig.file_info,'s_rate')
   header.Fs = header.orig.file_info.s_rate;
 else
-  warning('ReadBesaMatlab:WarningMissingHeaderInfo','Missing sample rate in header');
+  ft_warning('ReadBesaMatlab:WarningMissingHeaderInfo','Missing sample rate in header');
   header.Fs = [];
 end
 if isfield(header.orig.file_info,'n_samples')
   header.nSamples = header.orig.file_info.n_samples;
 else
-  warning('ReadBesaMatlab:WarningMissingHeaderInfo','Missing number of samples in header');
+  ft_warning('ReadBesaMatlab:WarningMissingHeaderInfo','Missing number of samples in header');
   header.nSamples = [];
 end
 
@@ -1028,7 +1027,7 @@ header.nTrials     = 1;  % Continuous data
 if isfield(header.orig.channel_info,'channel_labels')
   header.label = header.orig.channel_info.channel_labels;
 else
-  warning('ReadBesaMatlab:WarningMissingHeaderInfo','Missing channel labels in header.orig. Creating default channel names');
+  ft_warning('ReadBesaMatlab:WarningMissingHeaderInfo','Missing channel labels in header.orig. Creating default channel names');
   for channel_n = 1:header.nChans
     header.label{channel_n} = sprintf('chan%03d', channel_n);
   end
@@ -1057,7 +1056,7 @@ function tags = read_BTAG(fid, file_length, tags)
 % Skip to start of BTAG section
 if(fseek(fid,tags.next_BTAG_ofst,'bof') == -1)
   fclose(fid);
-  error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BTAG]',tags.next_BTAG_ofst);
+  ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BTAG]',tags.next_BTAG_ofst);
 end
 tags.offsets(end+1) = tags.next_BTAG_ofst;
 
@@ -1079,15 +1078,15 @@ while ftell(fid) < (uint64(tags.offsets(end))+uint64(tag_block_length))
       tags.tags.n_samples(tags.n_tags) = double(fread(fid,1,'*uint32'));
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if((ftell(fid)+current_length) <= file_length)
         if(fseek(fid,current_length,'cof') == -1)
           fclose(fid);
-          error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BTAG]))',current_length);
+          ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BTAG]))',current_length);
         end
       else
         fclose(fid);
-        error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
+        ft_error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
       end
   end
 end
@@ -1095,7 +1094,7 @@ end
 % Check that expected amout of file was read
 expected_length = double(tag_block_length) + 8; % 8 for tag and offset
 if((tags.offsets(end)+expected_length) ~= ftell(fid))
-  warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from tag block. Should have read %d bytes', ...
+  ft_warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from tag block. Should have read %d bytes', ...
     (ftell(fid)-tags.offsets(end))-expected_length,ftell(fid)-tags.offsets(end),expected_length);
 end
 
@@ -1111,7 +1110,7 @@ function file_info = read_BFMI(fid, file_length, file_info)
 % Skip to start of BFMI section
 if(fseek(fid,file_info.next_BFMI_ofst,'bof') == -1)
   fclose(fid);
-  error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BFMI]',file_info.next_BFMI_ofst);
+  ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BFMI]',file_info.next_BFMI_ofst);
 end
 file_info.offsets(end+1) = file_info.next_BFMI_ofst;
 
@@ -1167,15 +1166,15 @@ while ftell(fid) < (uint64(file_info.offsets(end))+uint64(fileinfo_block_length)
             file_info.institution.phone_number = read_chars(fid,current_length);
           otherwise
             % Unrecognzed tag. Try to skip forward by offset
-            warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+            ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
             if((ftell(fid)+current_length) <= file_length)
               if(fseek(fid,current_length,'cof') == -1)
                 fclose(fid);
-                error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BFMI:FINA]))',current_length);
+                ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BFMI:FINA]))',current_length);
               end
             else
               fclose(fid);
-              error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
+              ft_error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
             end
         end
       end
@@ -1241,15 +1240,15 @@ while ftell(fid) < (uint64(file_info.offsets(end))+uint64(fileinfo_block_length)
             file_info.staff(end).function = read_chars(fid,current_length);
           otherwise
             % Unrecognzed tag. Try to skip forward by offset
-            warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+            ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
             if((ftell(fid)+current_length) <= file_length)
               if(fseek(fid,current_length,'cof') == -1)
                 fclose(fid);
-                error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BFMI:RSTA]))',current_length);
+                ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BFMI:RSTA]))',current_length);
               end
             else
               fclose(fid);
-              error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
+              ft_error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
             end
         end
       end
@@ -1313,15 +1312,15 @@ while ftell(fid) < (uint64(file_info.offsets(end))+uint64(fileinfo_block_length)
             file_info.subject.address.phone_number = read_chars(fid,current_length);
           otherwise
             % Unrecognzed tag. Try to skip forward by offset
-            warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+            ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
             if((ftell(fid)+current_length) <= file_length)
               if(fseek(fid,current_length,'cof') == -1)
                 fclose(fid);
-                error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BFMI:PAAD]))',current_length);
+                ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BFMI:PAAD]))',current_length);
               end
             else
               fclose(fid);
-              error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
+              ft_error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
             end
         end
       end
@@ -1346,15 +1345,15 @@ while ftell(fid) < (uint64(file_info.offsets(end))+uint64(fileinfo_block_length)
       file_info.additional_info.inf2 = read_chars(fid,current_length);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if((ftell(fid)+current_length) <= file_length)
         if(fseek(fid,current_length,'cof') == -1)
           fclose(fid);
-          error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BFMI]))',current_length);
+          ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BFMI]))',current_length);
         end
       else
         fclose(fid);
-        error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
+        ft_error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
       end
   end
 end
@@ -1362,7 +1361,7 @@ end
 % Check that expected amout of file was read
 expected_length = double(fileinfo_block_length) + 8; % 8 for tag and offset
 if((file_info.offsets(end)+expected_length) ~= ftell(fid))
-  warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from file info block. Should have read %d bytes', ...
+  ft_warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from file info block. Should have read %d bytes', ...
     (ftell(fid)-file_info.offsets(end))-expected_length,ftell(fid)-file_info.offsets(end),expected_length);
 end
 
@@ -1378,7 +1377,7 @@ function channel_info = read_BCAL(fid, file_length, channel_info)
 % Skip to start of BCAL section
 if(fseek(fid,channel_info.next_BCAL_ofst,'bof') == -1)
   fclose(fid);
-  error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BCAL]',channel_info.next_BCAL_ofst);
+  ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BCAL]',channel_info.next_BCAL_ofst);
 end
 channel_info.offsets(end+1) = channel_info.next_BCAL_ofst;
 
@@ -1522,12 +1521,12 @@ while ftell(fid) < (uint64(channel_info.offsets(end))+uint64(channel_block_lengt
         channel_info.filter_info(channel_n).pass_freq   = fread(fid,1,'*single');
         channel_info.filter_info(channel_n).pass_width  = fread(fid,1,'*single');
         if(ftell(fid) ~= filter_object_offset+filter_object_size)
-          warning('ReadBesaMatlab:WarningFilterInfoObject','Did not read expected number bytes in filter object [BCAL:CHFI]. Filter information may be incorrect');
+          ft_warning('ReadBesaMatlab:WarningFilterInfoObject','Did not read expected number bytes in filter object [BCAL:CHFI]. Filter information may be incorrect');
         end
       end
       % Check that expected amout of file was read and move to correct position if not
       if(ftell(fid) ~= offset_end_chfi)
-        warning('ReadBesaMatlab:WarningFilterInfoBlock','Did not read expected number of bytes in filter info block [BCAL:CHFI]. Filter information may be incorrect. Skipping to next block');
+        ft_warning('ReadBesaMatlab:WarningFilterInfoBlock','Did not read expected number of bytes in filter info block [BCAL:CHFI]. Filter information may be incorrect. Skipping to next block');
         fseek(fid,offset_end_chfi+1,'bof');
       end
       % Somewhat complicated structure, no test data %%%%%%%%%%%%%%%%%% TODO
@@ -1542,31 +1541,31 @@ while ftell(fid) < (uint64(channel_info.offsets(end))+uint64(channel_block_lengt
       % BESA CTF component. Internal use only
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BCAL:%s]',current_length,current_tag);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BCAL:%s]',current_length,current_tag);
       end
     case 'COMH'
       % BESA head transformation. Internal use only
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BCAL:%s]',current_length,current_tag);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BCAL:%s]',current_length,current_tag);
       end
     case 'CHSC'
       % BESA spatial components. Internal use only
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BCAL:%s]',current_length,current_tag);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BCAL:%s]',current_length,current_tag);
       end
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if((ftell(fid)+current_length) <= file_length)
         if(fseek(fid,current_length,'cof') == -1)
           fclose(fid);
-          error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag [BCAL]))',current_length);
+          ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag [BCAL]))',current_length);
         end
       else
         fclose(fid);
-        error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
+        ft_error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
       end
   end
 end
@@ -1574,7 +1573,7 @@ end
 % Check that expected amout of file was read
 expected_length = double(channel_block_length) + 8; % 8 for tag and offset
 if((channel_info.offsets(end)+expected_length) ~= ftell(fid))
-  warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from channel block. Should have read %d bytes', ...
+  ft_warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from channel block. Should have read %d bytes', ...
     (ftell(fid)-channel_info.offsets(end))-expected_length,ftell(fid)-channel_info.offsets(end),expected_length);
 end
 
@@ -1593,7 +1592,7 @@ function events = read_BEVT(fid, file_length, events, BEVT_offset)
 % Skip to start of BEVT section
 if(fseek(fid,BEVT_offset,'bof') == -1)
   fclose(fid);
-  error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BEVT]',BEVT_offset);
+  ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [BEVT]',BEVT_offset);
 end
 
 % Read BEVT tag and offset
@@ -1616,15 +1615,15 @@ while ~feof(fid) && ftell(fid) < (head_offset+head_length)
       events.version = double(fread(fid,1,'*uint32'));
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if((ftell(fid)+current_length) <= file_length)
         if(fseek(fid,current_length,'cof') == -1)
           fclose(fid);
-          error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:HEAD]))',current_length);
+          ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:HEAD]))',current_length);
         end
       else
         fclose(fid);
-        error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
+        ft_error('ReadBesaMatlab:ErrorSkippingForwardAfterUnexpectedTag','Offset after unexpected [%d] tag points to beyond eof [%d]',current_length,file_length);
       end
   end
 end
@@ -1638,7 +1637,7 @@ end
 % Check that expected amout of file was read
 expected_length = double(event_block_length) + 8; % 8 for tag and offset
 if((BEVT_offset+expected_length) ~= ftell(fid))
-  warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from event block. Should have read %d bytes', ...
+  ft_warning('ReadBesaMatlab:WarningDidNotReadExactBlockLength','%d bytes off. Read %d bytes from event block. Should have read %d bytes', ...
     (ftell(fid)-BEVT_offset)-expected_length,ftell(fid)-BEVT_offset,expected_length);
 end
 
@@ -1671,14 +1670,14 @@ switch event_tag
     %   used by BESA internally
     if(fseek(fid,event_length,'cof') == -1)
       fclose(fid);
-      error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPS]',event_length);
+      ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPS]',event_length);
     end
   case 'MPSC'
     % Classified multiple pattern search event tag
     %   used by BESA internally
     if(fseek(fid,event_length,'cof') == -1)
       fclose(fid);
-      error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPSC]',event_length);
+      ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPSC]',event_length);
     end
   case 'PATT'
     % Pattern event tag
@@ -1700,10 +1699,10 @@ switch event_tag
     event_obj = read_event_tag_imp(fid,ftell(fid),event_length,event_obj);
   otherwise
     % Unrecognzed tag. Try to skip forward by offset
-    warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',event_tag,ftell(fid));
+    ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',event_tag,ftell(fid));
     if(fseek(fid,event_length,'cof') == -1)
       fclose(fid);
-      error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [LIST]))',event_length);
+      ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [LIST]))',event_length);
     end
 end
 
@@ -1752,10 +1751,10 @@ while ~feof(fid) && ftell(fid) < (base_offset+base_length)
       event_obj.state.EVT_STATE_DELETED = logical(bitand(event_obj.state.value,uint32(hex2dec('01000000')),'uint32'));
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:BASE]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:BASE]))',current_length);
       end
   end
 end
@@ -1773,10 +1772,10 @@ while ~feof(fid) && ftell(fid) < (comm_offset+comm_length)
       event_obj = read_event_tag_base(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:COMM]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:COMM]))',current_length);
       end
   end
 end
@@ -1791,10 +1790,10 @@ while ~feof(fid) && ftell(fid) < (mark_offset+mark_length)
       event_obj = read_event_tag_base(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:MARK]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:MARK]))',current_length);
       end
   end
 end
@@ -1809,10 +1808,10 @@ while ~feof(fid) && ftell(fid) < (gene_offset+gene_length)
       event_obj = read_event_tag_comm(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:GENE]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:GENE]))',current_length);
       end
   end
 end
@@ -1845,10 +1844,10 @@ while ~feof(fid) && ftell(fid) < (segm_offset+segm_length)
       event_obj = read_event_tag_comm(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:SEGM]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:SEGM]))',current_length);
       end
   end
 end
@@ -1869,10 +1868,10 @@ while ~feof(fid) && ftell(fid) < (asgm_offset+asgm_length)
       event_obj = read_event_tag_comm(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:ASGM]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:ASGM]))',current_length);
       end
   end
 end
@@ -1887,10 +1886,10 @@ while ~feof(fid) && ftell(fid) < (patt_offset+patt_length)
       event_obj = read_event_tag_base(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:PATT]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:PATT]))',current_length);
       end
   end
 end
@@ -1911,10 +1910,10 @@ while ~feof(fid) && ftell(fid) < (trig_offset+trig_length)
       event_obj = read_event_tag_comm(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:TRIG]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:TRIG]))',current_length);
       end
   end
 end
@@ -1946,12 +1945,12 @@ while ~feof(fid) && ftell(fid) < (pair_offset+pair_length)
         case 'MPS '
           if(fseek(fid,event_length,'cof') == -1)
             fclose(fid);
-            error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPS]',event_length);
+            ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPS]',event_length);
           end
         case 'MPSC'
           if(fseek(fid,event_length,'cof') == -1)
             fclose(fid);
-            error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPSC]',event_length);
+            ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed [LIST:MPSC]',event_length);
           end
         case 'PATT'
           event_obj.partner_event = read_event_tag_patt(fid,ftell(fid),event_length,event_obj);
@@ -1967,20 +1966,20 @@ while ~feof(fid) && ftell(fid) < (pair_offset+pair_length)
           event_obj.partner_event = read_event_tag_imp(fid,ftell(fid),event_length,event_obj);
         otherwise
           % Unrecognzed tag. Try to skip forward by offset
-          warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] in PAIR:PART at offset %d',event_tag,ftell(fid));
+          ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] in PAIR:PART at offset %d',event_tag,ftell(fid));
           if(fseek(fid,event_length,'cof') == -1)
             fclose(fid);
-            error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:PAIR:PART]))',event_length);
+            ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:PAIR:PART]))',event_length);
           end
       end
     case 'COMM'
       event_obj = read_event_tag_comm(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:PAIR]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:PAIR]))',current_length);
       end
   end
 end
@@ -1995,10 +1994,10 @@ while ~feof(fid) && ftell(fid) < (arti_offset+arti_length)
       event_obj = read_event_tag_pair(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:ARTI]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:ARTI]))',current_length);
       end
   end
 end
@@ -2013,10 +2012,10 @@ while ~feof(fid) && ftell(fid) < (epoc_offset+epoc_length)
       event_obj = read_event_tag_pair(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:EPOC]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:EPOC]))',current_length);
       end
   end
 end
@@ -2056,10 +2055,10 @@ while ~feof(fid) && ftell(fid) < (imp_offset+imp_length)
       event_obj = read_event_tag_base(fid,ftell(fid),current_length,event_obj);
     otherwise
       % Unrecognzed tag. Try to skip forward by offset
-      warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
+      ft_warning('ReadBesaMatlab:WarningUnexpectedTag','Read unexpected tag [%s] at offset %d',current_tag,ftell(fid));
       if(fseek(fid,current_length,'cof') == -1)
         fclose(fid);
-        error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:IMP]))',current_length);
+        ft_error('ReadBesaMatlab:ErrorFseek','fseek to %d failed (after unexpected tag in [BEVT:IMP]))',current_length);
       end
   end
 end

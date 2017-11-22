@@ -20,14 +20,14 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg.tissue      = cell-array with tissue types or numeric vector with integer values
 %   cfg.numvertices = numeric vector, should have same number of elements as cfg.tissue
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
-%   cfg.headshape   = (optional) a filename containing headshape, a Nx3 matrix with surface
+%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%
+% For method 'headshape you should specify
+%   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
 %
-% Method 'cortexhull' has its own specific configuration options:
-%   cfg.headshape   = a filename containing the pial surface computed by
-%                     freesurfer recon-all ('/path/to/surf/lh.pial')
-%   cfg.
-%
+% For method 'cortexhull' you should specify
+%   cfg.headshape   = sting, filename containing the pial surface computed by freesurfer recon-all
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -52,6 +52,7 @@ function [bnd, cfg] = ft_prepare_mesh(cfg, mri)
 %   cfg             = [];
 %   cfg.method      = 'cortexhull';
 %   cfg.headshape   = '/path/to/surf/lh.pial';
+%   cfg.fshome      = '/path/to/freesurfer dir';
 %   cortex_hull     = ft_prepare_mesh(cfg);
 %
 % See also FT_VOLUMESEGMENT, FT_PREPARE_HEADMODEL, FT_PLOT_MESH
@@ -114,36 +115,23 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'source
 % get the options
 cfg.downsample  = ft_getopt(cfg, 'downsample', 1); % default is no downsampling
 cfg.numvertices = ft_getopt(cfg, 'numvertices');   % no default
+cfg.smooth      = ft_getopt(cfg, 'smooth');        % no default
+cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
 
-% This was changed on 3 December 2013, this backward compatibility can be removed in 6 months from now.
-if isfield(cfg, 'interactive')
-  if strcmp(cfg.interactive, 'yes')
-    warning('please specify cfg.method=''interactive'' instead of cfg.interactive=''yes''');
-    cfg.method = 'interactive';
-  end
-  cfg = rmfield(cfg, 'interactive');
-end
-
-% This was changed on 3 December 2013, it makes sense to keep it like this on the
-% long term (previously there was no explicit use of cfg.method, now there is).
-% Translate the input options in the appropriate cfg.method.
-if ~isfield(cfg, 'method')
-  if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
-    warning('please specify cfg.method=''headshape''');
-    cfg.method = 'headshape';
-  elseif hasdata && ~strcmp(ft_voltype(mri), 'unknown')
-    % the input is a spherical volume conduction model
-    cfg.method = ft_voltype(mri);
-  elseif hasdata
-    warning('please specify cfg.method=''projectmesh'', ''iso2mesh'' or ''isosurface''');
-    warning('using ''projectmesh'' as default');
-    cfg.method = 'projectmesh';
-  end
+% Translate the input options in the appropriate default for cfg.method
+if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
+  cfg.method = ft_getopt(cfg, 'method', 'headshape');
+elseif hasdata && ~strcmp(ft_voltype(mri), 'unknown')
+  cfg.method = ft_getopt(cfg, 'method', ft_voltype(mri));
+elseif hasdata
+  cfg.method = ft_getopt(cfg, 'method', 'projectmesh');
+else
+  cfg.method = ft_getopt(cfg, 'method', []);
 end
 
 if hasdata && cfg.downsample~=1
   % optionally downsample the anatomical volume and/or tissue segmentations
-  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information
   [cfg, mri] = rollback_provenance(cfg, mri);
@@ -154,32 +142,32 @@ switch cfg.method
     % this makes sense with a non-segmented MRI as input
     % call the corresponding helper function
     bnd = prepare_mesh_manual(cfg, mri);
-
+    
   case {'projectmesh', 'iso2mesh', 'isosurface'}
     % this makes sense with a segmented MRI as input
     % call the corresponding helper function
     bnd = prepare_mesh_segmentation(cfg, mri);
-
+    
   case 'headshape'
     % call the corresponding helper function
     bnd = prepare_mesh_headshape(cfg);
-
+    
   case 'hexahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
     bnd = prepare_mesh_hexahedral(cfg, mri);
-
+    
   case 'tetrahedral'
     % the MRI is assumed to contain a segmentation
     % call the corresponding helper function
     bnd = prepare_mesh_tetrahedral(cfg, mri);
-
+    
   case {'singlesphere' 'concentricspheres' 'localspheres'}
     % FIXME for localspheres it should be replaced by an outline of the head, see private/headsurface
     fprintf('triangulating the sphere in the volume conductor\n');
     [pos, tri] = makesphere(cfg.numvertices);
     bnd = [];
-    mri = ft_convert_units(mri);      % ensure that it has units
+    mri = ft_determine_units(mri);      % ensure that it has units
     headmodel = ft_datatype_headmodel(mri); % rename it and ensure that it is consistent and up-to-date
     for i=1:length(headmodel.r)
       bnd(i).pos(:,1) = pos(:,1)*headmodel.r(i) + headmodel.o(1);
@@ -187,12 +175,12 @@ switch cfg.method
       bnd(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
       bnd(i).tri = tri;
     end
-
+    
   case 'cortexhull'
-    bnd = prepare_cortexhull(cfg);
-
+    bnd = prepare_mesh_cortexhull(cfg);
+    
   otherwise
-    error('unsupported cfg.method')
+    ft_error('unsupported cfg.method')
 end
 
 % copy the geometrical units from the input to the output
@@ -201,7 +189,21 @@ if ~isfield(bnd, 'unit') && hasdata && isfield(mri, 'unit')
     bnd(i).unit = mri.unit;
   end
 elseif ~isfield(bnd, 'unit')
-  bnd = ft_convert_units(bnd);
+  bnd = ft_determine_units(bnd);
+end
+
+% copy the coordinate system from the input to the output
+if ~isfield(bnd, 'coordsys') && hasdata && isfield(mri, 'coordsys')
+  for i=1:numel(bnd)
+    bnd(i).coordsys = mri.coordsys;
+  end
+end
+
+% smooth the mesh
+if ~isempty(cfg.smooth)
+  cfg.headshape = bnd;
+  cfg.numvertices = [];
+  bnd = prepare_mesh_headshape(cfg);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

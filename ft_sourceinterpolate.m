@@ -63,8 +63,8 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_READ_MRI, FT_SOURCEANALYSIS, FT_SOURCESTATISTICS,
-% FT_READ_HEADSHAPE, FT_SOURCEPLOT, FT_SOURCEWRITE
+% See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_SOURCEPLOT, FT_SOURCEANALYSIS,
+% FT_SOURCEWRITE
 
 % Copyright (C) 2003-2007, Robert Oostenveld
 % Copyright (C) 2011-2014, Jan-Mathijs Schoffelen
@@ -106,8 +106,8 @@ if ft_abort
 end
 
 % this is not supported any more as of 26/10/2011
-if ischar(anatomical),
-  error('please use cfg.inputfile instead of specifying the input variable as a sting');
+if ischar(anatomical)
+  ft_error('please use cfg.inputfile instead of specifying the input variable as a sting');
 end
 
 % check if the input cfg is valid for this function
@@ -119,9 +119,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.mom', 'mom'});
 
 % set the defaults
-cfg.downsample = ft_getopt(cfg, 'downsample', 1);
-cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
-% cfg.interpmethod depends on how the interpolation should be done and will be specified below
+cfg.downsample   = ft_getopt(cfg, 'downsample', 1);
+cfg.feedback     = ft_getopt(cfg, 'feedback',   'text');
+cfg.interpmethod = ft_getopt(cfg, 'interpmethod', []);   % cfg.interpmethod depends on how the interpolation should be done and actual defaults will be specified below
 
 % replace pnt by pos
 anatomical = fixpos(anatomical);
@@ -129,6 +129,13 @@ functional = fixpos(functional);
 
 % ensure the functional data to be in double precision
 functional = ft_struct2double(functional);
+
+if strcmp(cfg.interpmethod, 'nearest') && (ft_datatype(functional, 'volume+label') || ft_datatype(functional, 'source+label'))
+  % the first input argument describes a parcellation or segmentation with tissue labels
+  isAtlasFun = true;
+else
+  isAtlasFun = false;
+end
 
 if isfield(anatomical, 'transform') && isfield(anatomical, 'dim')
   % anatomical volume
@@ -152,9 +159,9 @@ else
 end
 
 if isUnstructuredAna
-  anatomical = ft_checkdata(anatomical, 'datatype', 'source', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
-  anatomical = ft_checkdata(anatomical, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', {'volume', 'volume+label'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 if isUnstructuredFun
@@ -186,13 +193,13 @@ functional = ft_convert_units(functional, anatomical.unit);
 
 if isfield(functional, 'coordsys') && isfield(anatomical, 'coordsys') && ~isequal(functional.coordsys, anatomical.coordsys)
   % FIXME is this different when smudged or not?
-  % warning('the coordinate systems are not aligned');
-  % error('the coordinate systems are not aligned');
+  % ft_warning('the coordinate systems are not aligned');
+  % ft_error('the coordinate systems are not aligned');
 end
 
 if ~isUnstructuredAna && cfg.downsample~=1
   % downsample the anatomical volume
-  tmpcfg = keepfields(cfg, {'downsample'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
   orgcfg.parameter = cfg.parameter;
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
@@ -563,7 +570,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
 
     if any(dimf(4:end)>1) && ~strcmp(cfg.feedback, 'none')
       % this is needed to prevent feedback to be displayed for every time-frequency point
-      warning('disabling feedback');
+      ft_warning('disabling feedback');
       cfg.feedback = 'none';
     end
 
@@ -607,6 +614,19 @@ if isfield(interp, 'freq') || isfield(interp, 'time')
     [x, y, z] = voxelcoords(interp.dim, interp.transform);
     interp.pos = [x(:) y(:) z(:)];
   end
+end
+
+if isAtlasFun
+  for i=1:numel(dat_name)
+    % keep the labels that describe the different tissue types
+    interp = copyfields(functional, interp, [dat_name{i} 'label']);
+    % replace NaNs that fall outside the labeled area with zero
+    tmp = interp.(dat_name{i});
+    tmp(isnan(tmp)) = 0;
+    interp.(dat_name{i}) = tmp;
+  end
+  % remove the inside field if present
+  interp = removefields(interp, 'inside');
 end
 
 if exist('interpmat', 'var')

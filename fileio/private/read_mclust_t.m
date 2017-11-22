@@ -6,7 +6,7 @@ function S = read_mclust_t(tfilelist)
 % Check input type
 %-------------------
 if ~isa(tfilelist, 'cell')
-   error('LoadSpikes: tfilelist should be a cell array.');
+   ft_error('LoadSpikes: tfilelist should be a cell array.');
 end
 
 nFiles = length(tfilelist);

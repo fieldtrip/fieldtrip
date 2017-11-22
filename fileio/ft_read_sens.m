@@ -65,12 +65,12 @@ filename = fetch_url(filename);
 
 % test whether the file exists
 if ~exist(filename, 'file')
-  error('file ''%s'' does not exist', filename);
+  ft_error('file ''%s'' does not exist', filename);
 end
 
 % get the options
 fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
-senstype       = ft_getopt(varargin, 'senstype', 'eeg');  % can be eeg or meg, this is used to decide what to return if both are present in a fif file
+senstype       = ft_getopt(varargin, 'senstype');         % can be eeg or meg, default is automatic when []
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
 
@@ -85,7 +85,7 @@ switch fileformat
     sens = read_brainvision_pos(filename);
     
   case 'besa_elp'
-    error('unknown fileformat for electrodes or gradiometers');
+    ft_error('unknown fileformat for electrodes or gradiometers');
     % the code below does not yet work
     fid = fopen(filename);
     % the ascii file contains: type, label, angle, angle
@@ -102,7 +102,7 @@ switch fileformat
   case 'besa_pos'
     tmp = importdata(filename);
     if ~isnumeric(tmp)
-      error('unexpected file format for fileformat=besa_pos')
+      ft_error('unexpected file format for fileformat=besa_pos')
     end
     [nchan,nrow] = size(tmp);
     if nrow==3
@@ -115,18 +115,18 @@ switch fileformat
       sens.ori = [ori; ori];
       sens.tra = [eye(nchan) -eye(nchan)];
     else
-      error('unexpected file format for fileformat=besa_pos')
+      ft_error('unexpected file format for fileformat=besa_pos')
     end
     [p, f, x] = fileparts(filename);
     elpfile = fullfile(p, [f '.elp']);
     elafile = fullfile(p, [f '.ela']);
     if exist(elpfile, 'file')
-      warning('reading channel labels from %s', elpfile);
+      ft_warning('reading channel labels from %s', elpfile);
       % read the channel names from the accompanying ELP file
       lbl = importdata(elpfile);
       sens.label = strrep(lbl.textdata(:,2) ,'''', '');
     elseif exist(elafile, 'file')
-      warning('reading channel labels from %s', elafile);
+      ft_warning('reading channel labels from %s', elafile);
       % read the channel names from the accompanying ELA file
       lbl = importdata(elafile);
       lbl = strrep(lbl, 'MEG ', ''); % remove the channel type
@@ -134,7 +134,7 @@ switch fileformat
       sens.label = lbl;
     else
       % the file does not have channel labels in it
-      warning('creating fake channel names for besa_pos');
+      ft_warning('creating fake channel names for besa_pos');
       for i=1:nchan
         sens.label{i} = sprintf('%03d', i);
       end
@@ -155,29 +155,36 @@ switch fileformat
     
   case 'besa_sfp'
     [lab, pos] = read_besa_sfp(filename);
-	
     sens.label   = lab;
     sens.elecpos = pos;
-		
+    
+  case 'bioimage_mgrid'
+    sens = read_bioimage_mgrid(filename);
+    
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'itab_raw' 'itab_mhd', 'netmeg'}
     % gradiometer information is always stored in the header of the MEG dataset, hence uses the standard fieldtrip/fileio ft_read_header function
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
     % sometimes there can also be electrode position information in the header
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
+      if isempty(senstype)
+        % set the default
+        ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
+        senstype = 'eeg';
+      end
       switch lower(senstype)
         case 'eeg'
-          warning('both electrode and gradiometer information is present, returning the electrode information');
           sens = hdr.elec;
         case 'meg'
-          warning('both electrode and gradiometer information is present, returning the gradiometer information');
           sens = hdr.grad;
+        otherwise
+          ft_error('incorrect specification of senstype');
       end
-    elseif ~isfield(hdr, 'elec') && ~isfield(hdr, 'grad')
-      error('neither electrode nor gradiometer information is present');
     elseif isfield(hdr, 'grad')
       sens = hdr.grad;
     elseif isfield(hdr, 'elec')
       sens = hdr.elec;
+    else
+      ft_error('neither electrode nor gradiometer information is present');
     end
     
   case 'neuromag_mne_grad'
@@ -200,34 +207,29 @@ switch fileformat
     elseif isfield(hdr, 'elec')
       sens = hdr.elec;
     else
-      error('no electrodes or gradiometers found in the file')
+      ft_error('no electrodes or gradiometers found in the file')
     end
     
   case 'polhemus_fil'
     % these are created at the FIL in London with a polhemus tracker
     [sens.fid.pnt, sens.pnt, sens.fid.label] = read_polhemus_fil(filename, 0);
     % the file does not have channel labels in it
-    warning('no channel names in polhemus file, using numbers instead');
+    ft_warning('no channel names in polhemus file, using numbers instead');
     for i=1:size(sens.pnt, 1)
       sens.label{i} = sprintf('%03d', i);
     end
     
   case 'matlab'
-    % MATLAB files can contain either electrodes or gradiometers
+    % MATLAB files can contain all sensor arrays
     matfile = filename;   % this solves a problem with the MATLAB compiler v3
-    ws = warning('off', 'MATLAB:load:variableNotFound');
-    tmp = load(matfile, 'elec', 'grad', 'sens', 'elc');
-    warning(ws);
-    if isfield(tmp, 'grad')
-      sens = tmp.grad;
-    elseif isfield(tmp, 'elec')
-      sens = tmp.elec;
-    elseif isfield(tmp, 'sens')
-      sens = tmp.sens;
-    elseif isfield(tmp, 'elc')
-      sens = tmp.elc;
+    var = whos('-file', filename);
+    sel = intersect({'elec', 'grad', 'opto', 'sens', 'elc'}, {var(:).name});
+    if numel(sel)==1
+      % read the specific variable
+      sens = loadvar(matfile, sel{1});
     else
-      error('no electrodes or gradiometers found in MATLAB file');
+      % read whatever variable is in the file, this will error if the file contains multiple variables
+      sens = loadvar(matfile);
     end
     
   case 'zebris_sfp'
@@ -312,7 +314,7 @@ switch fileformat
         y(i,1) = str2double(ytemp{i}(8:end-1));
         z(i,1) = str2double(ztemp{i}(8:end-3));
         lbl{i,1} = labtemp{i}(14:end-1);
-      end;
+      end
       
       % Create and fill sens structure
       sens = [];
@@ -333,11 +335,11 @@ switch fileformat
           sens.elecpos(i,2) = str2double(tmp(i).Marker.ColVec3D.data1);
           sens.elecpos(i,3) = str2double(tmp(i).Marker.ColVec3D.data2);
           sens.label{i} = tmp(i).Marker.description;
-        end;
-      end;
+        end
+      end
       
       sens.chanpos = sens.elecpos;
-    end;
+    end
     
   case 'easycap_txt'
     % Read the file and store all contents in cells of strings
@@ -352,7 +354,7 @@ switch fileformat
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
       radians = @(x) pi*x/180;
-      warning('assuming a head radius of 85 mm');
+      ft_warning('assuming a head radius of 85 mm');
       x = 85*cos(radians(phi)).*sin(radians(theta));
       y = 85*sin(radians(theta)).*sin(radians(phi));
       z = 85*cos(radians(theta));
@@ -370,9 +372,18 @@ switch fileformat
     end
     
   otherwise
-    error('unknown fileformat for electrodes or gradiometers');
-end
+    ft_error('unknown fileformat for electrodes or gradiometers');
+end % switch fileformat
 
 % ensure that the sensor description is up-to-date
 % this will also add chantype and units to the sensor array if missing
 sens = ft_datatype_sens(sens);
+
+% ensure that the output is consistent with the type requested by the user
+if strcmpi(senstype, 'meg')
+  assert(isfield(sens,'coilpos'), 'cannot read gradiometer information from %s', filename);
+elseif strcmpi(senstype, 'eeg')
+  assert(isfield(sens,'elecpos'), 'cannot read electrode information from %s', filename);
+else
+  % it is empty if not specified by the user, in that case either one is fine
+end

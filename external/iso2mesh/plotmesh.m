@@ -64,7 +64,7 @@ if(nargin>1)
    hasopt=0;
    for i=1:length(varargin)
    	if(ischar(varargin{i}))
-		if(regexp(varargin{i},'[0-9x-zX-Z><=&|]'))
+		if(~isempty(regexp(varargin{i},'[x-zX-Z]')) && ~isempty(regexp(varargin{i},'[><=&|]')))
 			selector=varargin{i};
 			if(nargin>=i+1) opt=varargin(i+1:end); end
 		else
@@ -75,15 +75,15 @@ if(nargin>1)
 		elseif(i==2)
 			if(iscell(varargin{1}) | size(varargin{1},2)<4)
 				face=varargin{1}; elem=[];
-                        elseif(size(varargin{1},2)==4)
-                            faceid=unique(varargin{1}(:,4));
-                            if(length(faceid)==1)
-                                face=varargin{1}; elem=[];
-                            elseif(any(hist(varargin{1}(:,4),unique(varargin{1}(:,4)))>50))
-                                face=varargin{1}; elem=[];
-                            else
-                                elem=varargin{1}; face=[];
-                            end
+			elseif(size(varargin{1},2)==4)
+                faceid=unique(varargin{1}(:,4));
+                if(length(faceid)==1)
+                    face=varargin{1}; elem=[];
+                elseif(any(hist(varargin{1}(:,4),unique(varargin{1}(:,4)))>50))
+                    face=varargin{1}; elem=[];
+                else
+                    elem=varargin{1}; face=[];
+                end
 			else
 				elem=varargin{1}; face=[];
 			end
@@ -189,20 +189,20 @@ if(~isempty(elem))
    		h=plottetra(node,elem,opt{:});
 	end
    else
-	cent=meshcentroid(node,elem(:,1:4));
-	x=cent(:,1);
-    y=cent(:,2);
-	z=cent(:,3);
-    if(regexp(selector,'='))
+   cent=meshcentroid(node,elem(:,1:4));
+   x=cent(:,1);
+   y=cent(:,2);
+   z=cent(:,3);
+   if(regexp(selector,'='))
       if(size(node,2)==4)
-          [cutpos,cutvalue,facedata]=qmeshcut(elem,node(:,1:3),node(:,1:4),selector);  
+          [cutpos,cutvalue,facedata]=qmeshcut(elem,node(:,1:3),node(:,4),selector);  
       elseif(size(node,2)==3)
           [cutpos,cutvalue,facedata]=qmeshcut(elem,node,node(:,3),selector);
       else
           error('plotmesh can only plot 3D tetrahedral meshes');
       end
       h=patch('Vertices',cutpos,'Faces',facedata,'FaceVertexCData',cutvalue,'facecolor','interp',opt{:});
-    else
+   else
       idx=eval(['find(' selector ')']);
       if(~isempty(idx))
 	    if(isempty(opt))
@@ -214,13 +214,16 @@ if(~isempty(elem))
         warning('no tetrahedral element to plot');
 	end
      end
-    end
+   end
 end
 
 if(exist('h','var') & ~holdstate)
   hold off;
 end
-if(exist('h','var')) 
+if(exist('h','var'))
+  if(any(get(gca,'dataaspectratio')>1e8))
+     view(3);
+  end
   axis equal;
 end
 if(exist('h','var') & nargout>=1)

@@ -2,7 +2,7 @@ function hm=plotsurf(node,face,varargin)
 %
 % hm=plotsurf(node,face,opt)
 %
-% plot 3D surface meshes
+% plot 3D surface meshes (2d manifold) or polylines (1d manifold)
 % 
 % author: Qianqian Fang <fangq at nmr.mgh.harvard.edu>
 %
@@ -25,7 +25,8 @@ function hm=plotsurf(node,face,varargin)
 %
 %   h=plotsurf(node,face);
 %   h=plotsurf(node,face,'facecolor','r');
-% 
+%   h=plotsurf(node,edges,'linestyle','-','linewidth',2,'color','r');
+%
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
@@ -71,7 +72,7 @@ if(nargin>=2)
         if(isempty(newsurf{i})); continue; end
         try 
             subface=cell2mat(newsurf{i}')';
-            if(size(subface,1)>1 && ndims(subface)==2)
+            if(size(subface,1)>1 && ismatrix(subface))
                subface=subface';
             end
             h=[h patch('Vertices',node,'Faces',subface,'facecolor',sc(i,:),varargin{:})];
@@ -89,9 +90,9 @@ if(nargin>=2)
 		h=[];
 	    for i=1:length(types)
             if(size(node,2)==3)
-                h=[h plotasurf(node,face(find(tag==types(i)),1:3),'facecolor',rand(3,1),varargin{:})];
+                h=[h plotasurf(node,face(tag==types(i),1:3),'facecolor',rand(3,1),varargin{:})];
             else
-                h=[h plotasurf(node,face(find(tag==types(i)),1:3),varargin{:})];
+                h=[h plotasurf(node,face(tag==types(i),1:3),varargin{:})];
             end
         end
     else
@@ -114,17 +115,21 @@ rand ('state',rngstate);
 %-------------------------------------------------------------------------
 function hh=plotasurf(node,face,varargin)
 isoct=isoctavemesh;
-if(size(node,2)==4)
+if(size(face,2)<=2)
+    h=plotedges(node,face,varargin{:});
+else
+  if(size(node,2)==4)
 	if(isoct && ~exist('trisurf','file'))
 	    h=trimesh(face(:,1:3),node(:,1),node(:,2),node(:,3),node(:,4),'edgecolor','k',varargin{:});
 	else
 	    h=trisurf(face(:,1:3),node(:,1),node(:,2),node(:,3),node(:,4),varargin{:});
 	end
-else
+  else
 	if(isoct && ~exist('trisurf','file'))
 	    h=trimesh(face(:,1:3),node(:,1),node(:,2),node(:,3),'edgecolor','k',varargin{:});
 	else
 	    h=trisurf(face(:,1:3),node(:,1),node(:,2),node(:,3),varargin{:});
-	end
+    end
+  end
 end
 if(exist('h','var')) hh=h; end

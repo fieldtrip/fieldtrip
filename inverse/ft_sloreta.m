@@ -65,7 +65,7 @@ function [dipout] = ft_sloreta(dip, grad, headmodel, dat, Cy, varargin)
 
 if mod(nargin-5,2)
   % the first 5 arguments are fixed, the other arguments should come in pairs
-  error('invalid number of optional arguments');
+  ft_error('invalid number of optional arguments');
 end
 
 % these optional settings do not have defaults
@@ -108,7 +108,7 @@ powtrace   = strcmp(powmethod, 'trace');
 powlambda1 = strcmp(powmethod, 'lambda1');
 
 if isfield(dip, 'mom') && fixedori
-  error('you cannot specify a dipole orientation and fixedmom simultaneously');
+  ft_error('you cannot specify a dipole orientation and fixedmom simultaneously');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -208,6 +208,10 @@ elseif ~isempty(subspace)
   end
 end
 
+L = cell2mat(dip.leadfield);
+G = L*L'; % Gram matrix
+invG = inv(G + lambda * eye(size(G))); % regularized G^-1
+
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
 
@@ -229,29 +233,8 @@ for i=1:size(dip.pos,1)
     lf = ft_compute_leadfield(dip.pos(i,:), grad, headmodel, 'reducerank', reducerank, 'normalize', normalize, 'normalizeparam', normalizeparam);
   end
   
-  if isfield(dip, 'subspace')
-    % do subspace projection of the forward model
-    lf    = dip.subspace{i} * lf;
-    % the data and the covariance become voxel dependent due to the projection
-    dat   =      dip.subspace{i} * dat_pre_subspace;
-    Cy    =      dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}';
-    invCy = pinv(dip.subspace{i} * (Cy_pre_subspace + lambda * eye(size(Cy_pre_subspace))) * dip.subspace{i}');
-  elseif ~isempty(subspace)
-    % do subspace projection of the forward model only
-    lforig = lf;
-    lf     = subspace * lf;
-    
-    % according to Kensuke's paper, the eigenspace bf boils down to projecting
-    % the 'traditional' filter onto the subspace
-    % spanned by the first k eigenvectors [u,s,v] = svd(Cy); filt = ESES*filt; 
-    % ESES = u(:,1:k)*u(:,1:k)';
-    % however, even though it seems that the shape of the filter is identical to
-    % the shape it is obtained with the following code, the w*lf=I does not hold.
-  end
   
-  G = lf * lf'; % Gram matrix
-  invG = inv(G + lambda * eye(size(G))); % regularized G^-1
-  
+
   if fixedori
       [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * Cy * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
       [~,maxeig]=max(diag(dd));
@@ -273,7 +256,7 @@ for i=1:size(dip.pos,1)
     end
   end
   if(any(~isreal(filt)))
-      error('spatial filter has complex values -- did you set lambda properly?');
+      ft_error('spatial filter has complex values -- did you set lambda properly?');
   end
   if projectmom
     [u, s, v] = svd(filt * Cy * ctranspose(filt));

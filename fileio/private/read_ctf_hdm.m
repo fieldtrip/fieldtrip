@@ -50,7 +50,7 @@ elseif isfield(ascii, 'MEG_Sphere')
   vol.o(2) = ascii.MEG_Sphere.ORIGIN_Y;
   vol.o(3) = ascii.MEG_Sphere.ORIGIN_Z;
 else
-  error('no headmodel information found');
+  ft_error('no headmodel information found');
 end
 
 % add the fiducials, these are in raw MRI coordinates

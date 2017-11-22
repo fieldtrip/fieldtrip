@@ -20,8 +20,9 @@ function [stat, cfg] = ft_statistics_crossvalidate(cfg, dat, design)
 %   stat.statistic    = the statistics to report
 %   stat.model        = the models associated with this multivariate analysis
 %
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
 
-% Copyright (c) 2007-2011, Marcel van Gerven, F.C. Donders Centre
+% Copyright (c) 2007-2011, F.C. Donders Centre, Marcel van Gerven
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,12 +59,12 @@ cv = dml.crossvalidator('mva', cfg.mva, 'type', 'nfold', 'folds', cfg.nfolds,...
   'resample', cfg.resample, 'compact', true, 'verbose', true);
 
 if any(isinf(dat(:)))
-  warning('Inf encountered; replacing by zeros');
+  ft_warning('Inf encountered; replacing by zeros');
   dat(isinf(dat(:))) = 0;
 end
 
 if any(isnan(dat(:)))
-  warning('Nan encountered; replacing by zeros');
+  ft_warning('Nan encountered; replacing by zeros');
   dat(isnan(dat(:))) = 0;
 end
 
@@ -80,19 +81,19 @@ end
 stat.model = cv.model;
 
 fn = fieldnames(stat.model{1});
-if any(strcmp(fn, 'weights')),
+if any(strcmp(fn, 'weights'))
   % create the 'encoding' matrix from the weights, as per Haufe 2014.
   covdat = cov(dat');
   for i=1:length(stat.model)
     W = stat.model{i}.weights;
     M = dat'*W;
     covM = cov(M);
-    stat.model{i}.weightsinv = covdat*W*inv(covM);
+    stat.model{i}.weightsinv = covdat*W/covM;
   end
 end
 
+fn = fieldnames(stat.model{1}); % may now also contain weightsinv
 for i=1:length(stat.model)
-
   for k=1:length(fn)
     if numel(stat.model{i}.(fn{k}))==prod(cfg.dim)
       stat.model{i}.(fn{k}) = reshape(stat.model{i}.(fn{k}),cfg.dim);

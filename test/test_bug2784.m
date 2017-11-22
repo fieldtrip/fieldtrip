@@ -3,7 +3,6 @@ function test_bug2784
 % MEM 150mb
 % WALLTIME 00:10:00
 
-% TEST test_bug2784
 % TEST ft_mvaranalysis
 
 data = [];

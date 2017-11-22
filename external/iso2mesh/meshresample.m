@@ -4,7 +4,7 @@ function [node,elem]=meshresample(v,f,keepratio)
 %
 % resample mesh using CGAL mesh simplification utility
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2007/11/12
 %
 % input:

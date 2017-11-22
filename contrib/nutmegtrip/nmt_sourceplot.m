@@ -188,6 +188,7 @@ end
 
     % set the defaults for all methods
     cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
+    cfg.vecparameter  = ft_getopt(cfg, 'vecparameter',  []);
     cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
     
         
@@ -197,6 +198,10 @@ end
     else
         % check if the input functional is valid for this function, a coordsys is not directly needed
         functional     = ft_checkdata(functional, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes');
+    end
+    
+    if(isfield(functional,'dim'))
+        functional = rmfield(functional,'dim');
     end
     
     % determine the type of functional
@@ -533,7 +538,7 @@ for funidx = 1:length(funparameters)
             end
             
             if ndims(fun)>3 || prod(dim)==size(fun,1)
-                if strcmp(dimord, 'pos_freq_time') | strcmp(dimord, 'pos_ori_time')
+                if strcmp(dimord, 'pos_freq_time') || strcmp(dimord, 'pos_ori_time')
                     % functional contains time-frequency representation
                     qi      = [1 1];
                     hasfreq = numel(functional.freq)>1;
@@ -687,7 +692,9 @@ for funidx = 1:length(funparameters)
             msk(functional.inside) = 1;
         else
             if hasana
-                msk(functional.inside) = 0.5; % so anatomy is visible
+%                msk(functional.inside) = 0.5; % so anatomy is visible
+% FIXME: this lets nutmegtrip display at proper colorscale, but is the 0.5 functionality desired?
+                msk(functional.inside) = 1;
             else
                 msk(functional.inside) = 1;
             end
@@ -739,13 +746,15 @@ for funidx = 1:length(funparameters)
     if ~isempty(cfg.funparameter)
         if issubfield(functional, cfg.funparameter)
             hasfun = 1;
+ 
+            cfg.inside_idx = find(functional.inside);
             
             st.nmt.pos = functional.pos;
             
             st.nmt.fun{funidx} = fun;
             clear fun;
             
-            if(hastime & ~hasfreq)
+            if(hastime && ~hasfreq)
                 % voxels x time
                 st.nmt.time = functional.time;
                 if(isfield(functional,'freqbands'))
@@ -754,19 +763,19 @@ for funidx = 1:length(funparameters)
                     st.nmt.freq = [0 inf];
                 end
                 
-                if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                if(~isfield(cfg,'time') && ~isfield(cfg,'vox'))
                     [~,peakind] = max(abs(st.nmt.fun{funidx}(:)));
                     [peakvox_idx,peaktime_idx] = ind2sub(size(st.nmt.fun{funidx}),peakind);
                     cfg.time_idx(1) = peaktime_idx;
                     cfg.vox_idx = peakvox_idx;
                 end
                 
-                if(~isfield(cfg,'time') & isfield(cfg,'vox'))
+                if(~isfield(cfg,'time') && isfield(cfg,'vox'))
                     [~,peaktime_idx] = max(abs(st.nmt.fun{funidx}(cfg.vox_idx,:)));
                     cfg.time_idx(1) = peaktime_idx;
                 end
                 
-                if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                if(isfield(cfg,'time') && ~isfield(cfg,'vox'))
                     [~,peakvox_idx] = max(abs(st.nmt.fun{funidx}(cfg.time_idx,:)));
                     cfg.vox_idx = peakvox_idx;
                 end
@@ -779,12 +788,12 @@ for funidx = 1:length(funparameters)
                 end
                 
                 cfg.freq_idx = [1 1];
-            elseif(hastime & hasfreq)
+            elseif(hastime && hasfreq)
                 % voxels x frequency x time
                 st.nmt.time = functional.time;
                 st.nmt.freq = functional.freqbands;
                 
-                if(~isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                if(~isfield(cfg,'time') && ~isfield(cfg,'vox'))
                     [~,peakind] = max(abs(st.nmt.fun{funidx}(:)));
                     [peakvox_idx,peaktime_idx,peakfreq_idx] = ind2sub(size(st.nmt.fun{funidx}),peakind);
                     cfg.time_idx(1) = peaktime_idx;
@@ -792,12 +801,12 @@ for funidx = 1:length(funparameters)
                     cfg.vox_idx = peakvox_idx;
                 end
                 
-                if(~isfield(cfg,'time') & isfield(cfg,'vox'))
+                if(~isfield(cfg,'time') && isfield(cfg,'vox'))
                     [~,peaktime_idx] = max(abs(st.nmt.fun{funidx}(cfg.vox_idx,:)));
                     cfg.time_idx(1) = peaktime_idx;
                 end
                 
-                if(isfield(cfg,'time') & ~isfield(cfg,'vox'))
+                if(isfield(cfg,'time') && ~isfield(cfg,'vox'))
                     [~,peakvox_idx] = max(abs(st.nmt.fun{funidx}(cfg.time_idx,:)));
                     cfg.vox_idx = peakvox_idx;
                 end
@@ -844,4 +853,21 @@ for funidx = 1:length(funparameters)
     nmt_spm_plot(cfg);
     nmt_update_panel(funidx);
     nmt_image;
+    
+    if ~isempty(cfg.vecparameter)
+        if issubfield(functional, cfg.vecparameter)
+            oritmp = getsubfield(functional, cfg.vecparameter);
+            Nvoxels = length(insideindx)
+            Nsamples = size(oritmp{insideindx(1)},2)
+            ori = zeros(Nvoxels,3,Nsamples);
+            for ii=1:Nvoxels
+                ori(ii,:,:) = oritmp{insideindx(ii)};
+            end
+            
+            st.nmt.ori = ori;
+            nmt_sourceoriplot;
+        else
+            error('cfg.vecparameter not found in functional');
+        end
+    end
 end

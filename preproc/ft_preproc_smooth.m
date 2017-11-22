@@ -33,6 +33,11 @@ function [datsmooth] = ft_preproc_smooth(dat, n)
 %
 % $Id$
 
+% preprocessing fails on channels that contain NaN
+if any(isnan(dat(:)))
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
+end
+
 % create smoothing kernel
 if isscalar(n)
   krn = ones(1,n)/n;
@@ -43,7 +48,6 @@ end
 
 % deal with padding
 dat = ft_preproc_padding(dat, 'localmean', ceil(n/2));
-
 
 % do the smoothing
 if n<100

@@ -3,17 +3,13 @@ function test_bug1806
 % MEM 1500mb
 % WALLTIME 00:10:00
 
-% TEST test_bug1806
 % TEST ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
 
-global ft_default
-ft_default = [];
-
-ctf151_sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat');
-ctf275_sens = ft_read_sens('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat');
+ctf151_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat'));
+ctf275_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));
 
 cfg = [];
-cfg.dataset = '/home/common/matlab/fieldtrip/data/Subject01.ds';
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 cfg.trl = [1 900 0];
 data = ft_preprocessing(cfg);
 % the following applies since 30 October 2012
@@ -42,10 +38,10 @@ cfg = [];
 data_pc = ft_combineplanar(cfg,data_p);
 if isfield(data_pc.grad, 'type')
   % it should again be ctf151
-  assert(strcmp(data_pc.grad.type, 'ctf151'));
+  assert(strcmp(data_pc.grad.type, 'ctf151_planar_combined'));
 else
   warning('gradiometer type is missing');
-  assert(ft_senstype(data_pc.grad, 'ctf151'));
+  assert(ft_senstype(data_pc.grad, 'ctf151_planar_combined'));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,7 +76,7 @@ data_c = ft_componentanalysis(cfg, data);
 %   assert(~ft_senstype(data_c.grad, 'ctf151'));
 % end
 
-% on 19 Feb 2013 I changed it, because of http://bugzilla.fcdonders.nl/show_bug.cgi?id=1959#c7
+% on 19 Feb 2013 I changed it, because of http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1959#c7
 if isfield(data_c.grad, 'type')
   % it should still be detected as ctf151
   assert(strcmp(data_c.grad.type, 'ctf151'));

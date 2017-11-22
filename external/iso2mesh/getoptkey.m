@@ -6,7 +6,7 @@ function val=getoptkey(key,default,varargin)
 %
 % query the value of a key from a structure or a list of key/value pairs
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input:
 %   key: a string name for the target struct field name

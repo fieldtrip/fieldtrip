@@ -4,7 +4,7 @@ function [X,V,E,F]=mesheuler(face)
 %
 % Euler's charastistics of a mesh
 %
-% author: Qianqian Fang, <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % input: 
 %   face: a closed surface mesh

@@ -1,4 +1,4 @@
-function [varargout] = funname(varargin)
+function [varargout] = meg_leadfield1(varargin)
 
 % MEG_LEADFIELD1 magnetic leadfield for a dipole in a homogenous sphere
 %

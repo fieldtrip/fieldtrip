@@ -1,0 +1,54 @@
+;###########################################################
+[General]
+;###########################################################
+
+hostname   = -                            ; for the fieldtrip buffer, using '-' starts a local buffer on the given port
+port       = 1972                         ; for the fieldtrip buffer
+timestamp  = off                           ; add timestamp channel, can be on or off
+timeref    = boot                         ; can be epoch, boot or start
+verbose = 1
+
+;###########################################################
+[ChannelEnable]
+;###########################################################
+; whether the received data is send to FieldTrip buffer, can be on or off
+
+chan1  = on
+chan2  = on
+chan3  = on
+chan4  = on
+chan5  = on
+chan6  = on
+chan7  = on
+chan8  = on
+chan9  = on
+chan10 = on
+chan11 = on
+chan12 = on
+chan13 = on
+chan14 = on
+chan15 = on
+chan16 = on
+
+;###########################################################
+[ChannelLabel]
+;###########################################################
+; string with the channel label
+
+chan1  = 1
+chan2  = 2
+chan3  = 3
+chan4  = 4
+chan5  = 5
+chan6  = 6
+chan7  = 7
+chan8  = 8
+chan9  = 9
+chan10 = 10
+chan11 = 11
+chan12 = 12
+chan13 = 13
+chan14 = 14
+chan15 = 15
+chan16 = 16
+chan17 = TimeStamp

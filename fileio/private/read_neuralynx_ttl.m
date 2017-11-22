@@ -45,7 +45,7 @@ fseek(fid,  8, 'cof');             % skip the 8-byte header with the filetype id
 fseek(fid,  begsample-1, 'cof');   % skip to the beginning of the interesting data
 dat = fread(fid, endsample-begsample+1, 'uint32=>uint32')';
 if length(dat)<(endsample-begsample+1)
-  error('could not read the requested data');
+  ft_error('could not read the requested data');
 end
 
 fclose(fid);

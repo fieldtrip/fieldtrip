@@ -1,10 +1,10 @@
 /*
-En entree : ind_tr, XYZv, weight, defl
-En Sortie : Cii_cog
+  Input : ind_tr, XYZv, weight, defl
+  Output : Cii_cog
 
-weight=(sig[0]-sig[1])/((sig[0]+sig[1])*2.*pi) ;
-
+  weight = (sig[0]-sig[1])/((sig[0]+sig[1])*2.*pi) ;
 */
+
 #include <math.h>
 #include "mex.h"
 
@@ -16,8 +16,8 @@ void Cii_cog(double C[], double ind_tr[], int Ntri, double XYZv[], int Nvert,
 	double r1[3], r2[3], r3[3], det, den, d1, d2, d3 ;
 	int i, j, u, v, w ;
 
-	printf("Ntri = %d\n",Ntri);
-	printf("weight = %f , defl =  %f \n",weight,defl) ;
+	/*printf("Ntri = %d\n",Ntri);*/
+	/*printf("weight = %f , defl =  %f \n",weight,defl) ;*/
 
 	for (i=0;i<Ntri;++i) {
 		u=ind_tr[i] - 1 ;
@@ -118,4 +118,3 @@ void mexFunction(
 
 	mxSetPr(plhs[0],Cii) ;
 }
-

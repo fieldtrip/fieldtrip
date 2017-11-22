@@ -11,7 +11,7 @@ function [trl, event] = ft_trialfun_edf(cfg)
 % See also FT_DEFINETRIAL, FT_PREPROCESSING
 
 if strcmp(mfilename,'ft_trialfun_edf')
-  warning('this trial function is only an example, please copy it and adapt it to your specific EDF situation - see http://www.fieldtriptoolbox.org/getting_started/edf');
+  ft_warning('this trial function is only an example, please copy it and adapt it to your specific EDF situation - see http://www.fieldtriptoolbox.org/getting_started/edf');
 end
 
 % read the header information

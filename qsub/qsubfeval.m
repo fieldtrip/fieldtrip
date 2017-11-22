@@ -171,10 +171,10 @@ matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 % rename and save the variables
 argin = varargin;
 optin = options;
-% if variables < ~500 MB, store it in old (uncompressed) format, which is faster
 s1 = whos('argin');
 s2 = whos('optin');
-if (s1.bytes + s2.bytes < 500000000)
+% if variables < ~1 GB, store it in old (uncompressed) format, which is faster
+if (s1.bytes + s2.bytes < 1024^3)
   save(inputfile, 'argin', 'optin', '-v6');
 else
   save(inputfile, 'argin', 'optin', '-v7.3');
@@ -357,7 +357,7 @@ switch backend
     end
     
     if any(curPwd==' ')
-      % see http://bugzilla.fcdonders.nl/show_bug.cgi?id=1898
+      % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1898
       error('you cannot execute jobs from within a directory that has a space in its name');
     end
     

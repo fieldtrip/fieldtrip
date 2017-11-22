@@ -4,7 +4,7 @@ function [isoctave verinfo]=isoctavemesh
 %
 % determine whether the code is running in octave
 %
-% author: Qianqian Fang (fangq<at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang, <q.fang at neu.edu>
 %
 % output:
 %   isoctave: 1 if in octave, otherwise 0
@@ -13,7 +13,7 @@ function [isoctave verinfo]=isoctavemesh
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 verinfo='';
-isoctave=(exist('OCTAVE_VERSION')~=0);
+isoctave=(exist('OCTAVE_VERSION','builtin')~=0);
 if(nargout==2 && isoctave)
     verinfo=OCTAVE_VERSION;
 end
