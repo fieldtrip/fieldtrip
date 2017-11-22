@@ -840,6 +840,8 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).label       = cfg.layout.label;
   info.(ident).dataname    = dataname;
   info.(ident).cfg         = cfg;
+  info.(ident).comment     = comment;
+  info.(ident).commentpos  = cfg.commentpos;
   if ~isfield(info.(ident),'datvarargin')
     info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
   end
@@ -923,6 +925,10 @@ end
 % SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(handle, eventdata, varargin)
+ident       = get(gca, 'tag');
+info        = guidata(gcf);
+cfg         = info.(ident).cfg;
+
 climits = caxis;
 incr_c  = abs(climits(2) - climits(1)) /10;
 
@@ -944,4 +950,7 @@ else
     case 'm'
       caxis([varargin{1} varargin{2}]);
   end % switch
+  
+  % also update the comment string if applicable
+  % TODO
 end % if
