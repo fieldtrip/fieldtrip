@@ -1314,6 +1314,14 @@ ARRAY+=(src/inv3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# isalmostequal.m
+
+ARRAY=()
+ARRAY+=(test/private/isalmostequal.m)
+ARRAY+=(private/isalmostequal.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # isrealmat.m
 
 ARRAY=()
