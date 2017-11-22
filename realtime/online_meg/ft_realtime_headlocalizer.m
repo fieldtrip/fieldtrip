@@ -785,6 +785,9 @@ if get(info.hDewarCheckBox, 'Value')
 end
 
 if get(info.hPolhemusCheckBox, 'Value')
+    if info.isneuromag
+         ft_plot_mesh(info.hdr.elec.elecpos,'vertexmarker','o')
+    end     
 end
 
 if get(info.hAxisCheckBox, 'Value')
@@ -912,6 +915,9 @@ function Dewar_CheckBox(hObject, eventdata)
 % toggle dewar display
 
 function axis_CheckBox(hObject, eventdata)
+% toggle axis display
+
+function Polhemus_CheckBox(hObject, eventdata)
 % toggle axis display
 
 
