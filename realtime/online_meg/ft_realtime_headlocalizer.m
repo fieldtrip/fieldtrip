@@ -158,10 +158,10 @@ elseif isneuromag
   % prepare the forward model and the sensor array for subsequent fitting
   % note that the forward model is a magnetic dipole in an infinite vacuum
   %cfg.channel = ft_channelselection('MEG', hdr.label); % because we want to planars as well (previously only magnetometers)
-  cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
+  %cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
   %cfg.channel = setdiff(ft_channelselection('MEG', hdr.label),ft_channelselection('MEGMAG', hdr.label)); % just trying out (planar mags)
   %cfg.channel = ft_channelselection('IAS*',hdr.label); % internal active shielding
-  [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
+  [vol, sens] = ft_prepare_vol_sens([], hdr.grad);
   %sens = ft_datatype_sens(sens, 'version', '2016', 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
   coilsignal = [];
   
@@ -304,15 +304,23 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     info = guidata(hMainFig);
     % update the info
     info.hpi = hpi;
-    if info.isneuromag
+    
+    % compute transformation
+    if info.isctf    
+        info.M          = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'ctf');
+        info.M(1:3,1:3) = inv(info.M(1:3,1:3));
+        info.M(1:3,4)   = -info.M(1:3,4)'*inv(info.M(1:3,1:3));   
+    elseif info.isneuromag
         movement = importdata(info.cfg.headmovement);
-        q(2:7) = movement.data(count,2:7);
-        q(1) = sqrt(1-q(2)^2-q(3)^2-q(4)^2);
+        q(1:6) = movement.data(count,2:7);
         info.q = q;
+        info.origin = ft_warp_apply(q, [0 0 0], 'quaternion')*100;
         for j = 1:length(info.hpi)
-            info.hpi{j} = ft_warp_apply(q,info.hpi{j}','quaternion')';
+            info.hpi{j} = ft_warp_apply(info.q,info.hpi{j}','quaternion')'-info.origin';
         end
     end
+    
+
     % store the updated gui variables
     guidata(hMainFig, info);
     
@@ -750,18 +758,14 @@ end
 
 %plot realistic head mdoel
 if get(info.hRealistic, 'Value') && ~isempty(info.cfg.head) 
-    if info.isctf  
-    % draw 3d head
-        update   = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'ctf');
-        update(1:3,1:3) = inv(update(1:3,1:3));
-        update(1:3,4)   = -update(1:3,4)'*inv(update(1:3,1:3));
+    if info.isctf
         head     = info.cfg.head;
-        head.pos = ft_warp_apply(update,head.pos);  
+        head.pos = ft_warp_apply(info.M,head.pos);  
         ft_plot_mesh(head)
       % draw 3d head
     elseif info.isneuromag
          head     = info.cfg.head;
-         head.pos = ft_warp_apply(info.q,head.pos,'quaternion');
+         head.pos = ft_warp_apply(info.q,head.pos,'quaternion')-repmat(info.origin,length(head.pos),1);
          ft_plot_mesh(head)
     end
 end   
@@ -779,19 +783,27 @@ end
 
 %plot the dewar
 if get(info.hDewarCheckBox, 'Value')
-    if ~isempty(info.cfg.dewar) && ~isempty(info.cfg.head)
-        ft_plot_mesh(info.cfg.dewar,'facealpha',0.5);
-    end
+    if ~isempty(info.cfg.dewar)
+        ft_plot_mesh(info.cfg.dewar,'facecolor','skin','facealpha',0.5);  
+    end  
 end
 
 if get(info.hPolhemusCheckBox, 'Value')
-    if info.isneuromag
-         ft_plot_mesh(info.hdr.elec.elecpos,'vertexmarker','o')
+    if ~isempty(info.hdr.elec)
+        if info.isctf 
+            ft_plot_mesh(ft_warp_apply(info.M,info.hdr.elec.elecpos),'vertexmarker','.')
+        elseif info.isneuromag    
+            ft_plot_mesh(info.hdr.elec.elecpos-repmat(info.origin,length(info.hdr.elec.elecpos),1),'vertexmarker','.')
+        end    
     end     
 end
 
 if get(info.hAxisCheckBox, 'Value')
-    ft_plot_axes(info.sens)
+    if info.isctf
+        ft_plot_axes([],'coordsys','ctf','unit','cm');
+    elseif info.isneuromag
+        ft_plot_axes([],'coordsys','neuromag','unit','cm');
+    end    
 end
 
 % axis
@@ -801,7 +813,7 @@ ylabel('y (cm)');
 zlabel('z (cm)');
 set(gca, 'xtick', -10:2:10)
 set(gca, 'ytick', -10:2:10)
-set(gca, 'ztick', -40:2:-10) % note the different scaling
+set(gca, 'ztick', -60:2:-10) % note the different scaling
 %axis square
 
 % put the info back
@@ -922,20 +934,8 @@ function Polhemus_CheckBox(hObject, eventdata)
 
 
 function mirror_CheckBox(handle, eventdata)
+% toggle mirror display
 
-% get the info
-info = guidata(handle);
-
-% put the info back
-guidata(handle, info);
-
-function view_RadioButton2(handle, eventdata)
-
-% get the info
-info = guidata(handle);
-
-% put the info back
-guidata(handle, info);
 
 function blocksize_Menu(handle, eventdata)
 
