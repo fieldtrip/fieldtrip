@@ -927,7 +927,6 @@ end
 function key_sub(handle, eventdata, varargin)
 ident       = get(gca, 'tag');
 info        = guidata(gcf);
-cfg         = info.(ident).cfg;
 
 climits = caxis;
 incr_c  = abs(climits(2) - climits(1)) /10;
