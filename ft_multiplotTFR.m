@@ -186,7 +186,7 @@ cfg.channel        = ft_getopt(cfg, 'channel', 'all');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
-cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'no');
+cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'yes');
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha', 1);
@@ -477,6 +477,7 @@ if isfield(cfg, 'colormap')
 end
 
 % show comment
+comment_handle = [];
 if istrue(cfg.showcomment)
   k = find(strcmp('COMNT', cfg.layout.label));
   if ~isempty(k)
@@ -489,7 +490,7 @@ if istrue(cfg.showcomment)
       comment = sprintf('%0s\nylim=[%.3g %.3g]', comment, ymin, ymax);
       comment = sprintf('%0s\nzlim=[%.3g %.3g]', comment, zmin, zmax);
     end
-    ft_plot_text(cfg.layout.pos(k, 1), cfg.layout.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
+    comment_handle = ft_plot_text(cfg.layout.pos(k, 1), cfg.layout.pos(k, 2), sprintf(comment), 'FontSize', cfg.fontsize, 'FontWeight', cfg.fontweight);
   end
 end
 
@@ -580,6 +581,7 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).dataname = dataname;
   info.(ident).cfg      = cfg;
   info.(ident).data     = data;
+  info.(ident).commenth = comment_handle;
   guidata(gcf, info);
   set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonUpFcn'});
   set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
@@ -643,14 +645,41 @@ end
 % SUBFUNCTION which handles hot keys in the current plot
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function key_sub(handle, eventdata, varargin)
-incr = (max(caxis)-min(caxis)) /10;
-% symmetrically scale color bar down by 10 percent
-if strcmp(eventdata.Key, 'uparrow')
-  caxis([min(caxis)-incr max(caxis)+incr]);
-  % symmetrically scale color bar up by 10 percent
-elseif strcmp(eventdata.Key, 'downarrow')
-  caxis([min(caxis)+incr max(caxis)-incr]);
-  % resort to minmax of data for colorbar
-elseif strcmp(eventdata.Key, 'm')
-  caxis([data varargin{2}]);
+ident       = get(gca, 'tag');
+info        = guidata(gcf);
+
+climits = caxis;
+incr_c  = abs(climits(2) - climits(1)) /10;
+
+newz = climits;
+if length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:}, 'control')
+  % TRANSLATE by 10%
+  switch eventdata.Key
+    case 'pageup'
+      newz = [climits(1)+incr_c climits(2)+incr_c];
+    case 'pagedown'
+      newz = [climits(1)-incr_c climits(2)-incr_c];
+  end % switch
+else
+  % ZOOM by 10%
+  switch eventdata.Key
+    case 'pageup'
+      newz = [climits(1)-incr_c climits(2)+incr_c];
+    case 'pagedown'
+      newz = [climits(1)+incr_c climits(2)-incr_c];
+    case 'm'
+      newz = [varargin{1} varargin{2}];
+  end % switch
+end % if
+
+% update the color axis
+caxis(newz);
+
+if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident).commenth)
+  commentstr = get(info.(ident).commenth, 'string');
+  sel        = contains(commentstr, 'zlim');
+  if any(sel)
+    commentstr{sel} = sprintf('%0s=[%.3g %.3g]', 'zlim', newz(1), newz(2));
+    set(info.(ident).commenth, 'string', commentstr);
+  end
 end
