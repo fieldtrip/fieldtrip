@@ -267,6 +267,11 @@ for i=1:ntrial
     endsampl = nearest(data.time{i}, latency(2));
     numsamples(i) = endsampl-begsampl+1;
     dat = data.trial{i}(:, begsampl:endsampl);
+    if isfield(data, 'sampleinfo')
+      tmpsampl = data.sampleinfo(i,1):data.sampleinfo(i,2);
+      data.sampleinfo(i,:) = tmpsampl([begsampl endsampl]);
+    end
+    
     if (latency(1)<begsamplatency(i))
       trlshift = floor((begsamplatency(i)-latency(1))*data.fsample);
     else
@@ -363,8 +368,10 @@ end
 timelock = copyfields(data, timelock, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
-  % copy the trialinfo into the output, but not the sampleinfo
   timelock.trialinfo = data.trialinfo;
+end
+if isfield(data, 'sampleinfo') && strcmp(cfg.keeptrials, 'yes')
+  timelock.sampleinfo = data.sampleinfo;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
