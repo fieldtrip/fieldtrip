@@ -57,6 +57,10 @@ if isfield(dip, 'subspace')
   dip.subspace = dip.subspace(originside);
 end
 
+if isfield(dip, 'leadfield')
+  dip.leadfield = dip.leadfield(originside);
+end
+
 if isfield(dip, 'subspace')
   % remember the original data prior to the voxel dependant subspace projection
   dat_pre_subspace = dat;

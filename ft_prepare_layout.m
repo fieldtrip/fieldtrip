@@ -170,16 +170,21 @@ cfg.mri          = ft_getopt(cfg, 'mri',        []);
 cfg.outline      = ft_getopt(cfg, 'outline',    []); % default is handled below
 cfg.mask         = ft_getopt(cfg, 'mask',       []); % default is handled below
 
-if isempty(cfg.skipscale) && ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
-  cfg.skipscale = 'yes'; 
-else
-  cfg.skipscale = 'no';
+if isempty(cfg.skipscale)
+  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+    cfg.skipscale = 'yes';
+  else
+    cfg.skipscale = 'no';
+  end
 end
 
-if isempty(cfg.skipcomnt) && ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
-  cfg.skipcomnt = 'yes'; 
-else
-  cfg.skipcomnt = 'no';
+
+if isempty(cfg.skipcomnt)
+  if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular', '1column', '2column', '3column', '4column', '5column', '6column', '7column', '8column', '9column', '1row', '2row', '3row', '4row', '5row', '6row', '7row', '8row', '9row'}))
+    cfg.skipcomnt = 'yes';
+  else
+    cfg.skipcomnt = 'no';
+  end
 end
 
 if isempty(cfg.outline)

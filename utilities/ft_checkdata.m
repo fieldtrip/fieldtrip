@@ -571,9 +571,9 @@ end
 
 if ~isempty(iseeg)
   if isequal(iseeg, 'yes')
-    okflag = isfield(data, 'grad');
+    okflag = isfield(data, 'elec');
   elseif isequal(iseeg, 'no')
-    okflag = ~isfield(data, 'grad');
+    okflag = ~isfield(data, 'elec');
   end
   
   if ~okflag && isequal(iseeg, 'yes')
