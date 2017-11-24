@@ -782,6 +782,8 @@ if ~strcmp(cfg.comment, 'no')
   else
     comment_handle = ft_plot_text(x_comment, y_comment, comment, 'FontSize', cfg.fontsize, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'FontWeight', cfg.fontweight);
   end
+else
+  comment_handle = [];
 end
 
 % Set colour axis
@@ -954,7 +956,7 @@ end % if
 % update the color axis
 caxis(newz);
 
-if ~isempty(ident) && isfield(info.(ident), 'commenth')
+if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident).commenth)
   commentstr = get(info.(ident).commenth, 'string');
   sel        = contains(commentstr, info.(ident).cfg.parameter);
   if any(sel)
