@@ -79,102 +79,10 @@ for g = 1:ngrids % grid loop
   fprintf(fid, '#Dimensions\n');
   
   % determine grid dimensions
-  if isequal(numel(Grid2Elec{g}), 256)
-    GridDim(1) = 16; GridDim(2) = 16;
-  elseif isequal(numel(Grid2Elec{g}), 64)
-    GridDim(1) = 8; GridDim(2) = 8;
-  elseif isequal(numel(Grid2Elec{g}), 48)
-    e6 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(6)]),:);
-    e7 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(7)]),:);
-    e8 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(8)]),:);
-    e9 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(9)]),:);
-    d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-    d8to9 = sqrt(sum((e8-e9).^2)); % distance of elec 8 to 9
-    if d8to9 >= d6to7  % break between e8 and e9
-      GridDim(1) = 6; GridDim(2) = 8;
-    elseif d6to7 > d8to9 % break between e6 and e7
-      GridDim(1) = 8; GridDim(2) = 6;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 32)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    e8 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(8)]),:);
-    e9 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(9)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    d8to9 = sqrt(sum((e8-e9).^2)); % distance of elec 8 to 9
-    if d8to9 >= d4to5  % break between e8 and e9
-      GridDim(1) = 4; GridDim(2) = 8;
-    elseif d4to5 > d8to9 % break between e4 and e5
-      GridDim(1) = 8; GridDim(2) = 4;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 24)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    e6 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(6)]),:);
-    e7 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(7)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-    if d6to7 >= d4to5 % break between e6 and e7
-      GridDim(1) = 4; GridDim(2) = 6;
-    elseif d4to5 > d6to7 % break between e4 and e5
-      GridDim(1) = 6; GridDim(2) = 4;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 20)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    d5to6 = sqrt(sum((e5-e6).^2)); % distance of elec 5 to 6
-    if d5to6 >= d4to5 % break between e5 and e6
-      GridDim(1) = 4; GridDim(2) = 5;
-    elseif d4to5 > d5to6 % break between e4 and e5
-      GridDim(1) = 5; GridDim(2) = 4;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 16)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    e8 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(8)]),:);
-    e9 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(9)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    d8to9 = sqrt(sum((e8-e9).^2)); % distance of elec 8 to 9
-    d4to8 = sqrt(sum((e4-e8).^2)); % distance of elec 4 to 8
-    if d8to9 > 2*d4to5 % break between e8 and e9
-      GridDim(1) = 2; GridDim(2) = 8;
-    elseif d4to5 > 2*d4to8 % break between e4 and e5
-      GridDim(1) = 4; GridDim(2) = 4;
-    else
-      GridDim(1) = 1; GridDim(2) = 16;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 12)
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    e6 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(6)]),:);
-    e7 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(7)]),:);
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 5 to 6
-    d5to6 = sqrt(sum((e5-e6).^2)); % distance of elec 5 to 6
-    d6to7 = sqrt(sum((e6-e7).^2)); % distance of elec 6 to 7
-    if d4to5 > 2*d5to6 % break between e4 and e5
-      GridDim(1) = 3; GridDim(2) = 4; % 4x3 unsuppported
-    elseif d6to7 > 2*d5to6 % break between e6 and e7
-      GridDim(1) = 2; GridDim(2) = 6;
-    else
-      GridDim(1) = 1; GridDim(2) = 12;
-    end
-  elseif isequal(numel(Grid2Elec{g}), 8)
-    e3 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(3)]),:);
-    e4 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(4)]),:);
-    e5 = elec.elecpos(match_str(elec.label, [GridDescript{g} num2str(5)]),:);
-    d3to4 = sqrt(sum((e3-e4).^2)); % distance of elec 3 to 4
-    d4to5 = sqrt(sum((e4-e5).^2)); % distance of elec 4 to 5
-    if d4to5 > 2*d3to4 % break between e4 and e5
-      GridDim(1) = 2; GridDim(2) = 4;
-    else
-      GridDim(1) = 1; GridDim(2) = 8;
-    end
-  else
-    GridDim(1) = 1; GridDim(2) = numel(Grid2Elec{g});
-    % ft_error('At least one of the electrode tracts or grids has dimensions that are not supported by write_bioimage_mgrid. If electrodes are missing from a grid, enter NaN(1,3) for electrode position');
-  end
-  fprintf('assuming %s has %d x %d dimensions\n', GridDescript{g}, GridDim(1), GridDim(2)); % feedback of the grid dimensions
+  elec_g = elec;
+  elec_g.label = elec.label(Grid2Elec{g});
+  elec_g.elecpos = elec.elecpos(Grid2Elec{g}, :);
+  GridDim = determine_griddim(elec_g);
 
   fprintf(fid, [' ' num2str(GridDim(1)) ' ' num2str(GridDim(2)) '\n']);
   fprintf(fid, '#Electrode Spacing\n');

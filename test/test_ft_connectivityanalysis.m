@@ -504,3 +504,16 @@ g3               = ft_connectivityanalysis(cfgc, freq);
 cfgc.granger.conditional = 'yes';
 g4               = ft_connectivityanalysis(cfgc, freq);
 
+% make the blocks a bit more funky
+cfgc.granger.block(1).name =  'block1';
+cfgc.granger.block(1).label = freq.label(1:2);
+cfgc.granger.block(2).name = 'block2';
+cfgc.granger.block(2).label = freq.label(3:5);
+cfgc.granger.block(3).name = 'block3';
+cfgc.granger.block(3).label = freq.label(6:7);
+cfgc.granger.block(4).name = 'block4';
+cfgc.granger.block(4).label = freq.label(8);
+cfgc.granger.conditional = 'no';
+g5               = ft_connectivityanalysis(cfgc, freq);
+cfgc.granger.conditional = 'yes';
+g6               = ft_connectivityanalysis(cfgc, freq);

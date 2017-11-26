@@ -711,7 +711,7 @@ switch cfg.method
           tok = tokenize(data.labelcmb{m}, '[');
           tmp2{m} = tok{1};
         end
-        label = {data.block.name}';%unique(tmp2);
+        label = cat(1,data.block.label);%unique(tmp2);
         
         [powindx.cmbindx, powindx.n] = blockindx2cmbindx(data.labelcmb, {label data.blockindx}, tmp);
         data.labelcmb                = newlabelcmb;
