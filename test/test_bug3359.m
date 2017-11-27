@@ -125,7 +125,3 @@ catch
 end
 ft_topoplotER(cfg, psi1);
 ft_topoplotER(cfg, psi2);
-
-
-
-keyboard
