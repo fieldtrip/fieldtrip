@@ -395,9 +395,9 @@ if ~isnumeric(cfg.ylim)
   ymax = [];
   for i=1:Ndata
     % Select the channels in the data that match with the layout and that are selected for plotting
-    dat = mean(varargin{i}.(cfg.parameter)(selchan,selx),1); % mean over channels, as that is what will be plotted 
-    ymin = min([ymin min(min(min(dat)))]);
-    ymax = max([ymax max(max(max(dat)))]);
+    dat = nanmean(varargin{i}.(cfg.parameter)(selchan,selx),1); % mean over channels, as that is what will be plotted 
+    ymin = nanmin([ymin nanmin(nanmin(nanmin(dat)))]);
+    ymax = nanmax([ymax nanmax(nanmax(nanmax(dat)))]);
   end
   if strcmp(cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
     ymax = max([abs(ymax) abs(ymin)]);

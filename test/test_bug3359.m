@@ -103,10 +103,28 @@ cfg.layout    = 'CTF151_helmet.mat';
 cfg.refchannel = 'refchannel';
 ft_topoplotER(cfg, psi0);
 ft_topoplotER(cfg, psi1);
+try
+  ft_topoplotER(cfg, psi2);
+catch
+  fprintf('running ft_topoplotER with ''chancmb'' without cfg.directionality leads to a problem with psi2\n');
+end
+cfg.directionality = 'inflow';
+ft_topoplotER(cfg, psi0);
+try
+  ft_topoplotER(cfg, psi1);
+catch
+  fprintf('error psi1 plotting with ''inflow''\n');
+end
 ft_topoplotER(cfg, psi2);
 
-
-
+cfg.directionality = 'outflow';
+try
+  ft_topoplotER(cfg, psi0);
+catch
+  fprintf('error psi0 plotting with ''outflow''\n');
+end
+ft_topoplotER(cfg, psi1);
+ft_topoplotER(cfg, psi2);
 
 
 
