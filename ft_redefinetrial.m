@@ -287,7 +287,7 @@ elseif ~isempty(cfg.length)
   nshift  = round((1-cfg.overlap)*nsmp);
 
   if isfield(data, 'trialinfo')
-    newtrl = zeros(0,4);
+    newtrl = zeros(0,size(data.trialinfo, 2) + 3);
   else
     newtrl = zeros(0,3);
   end
@@ -299,7 +299,9 @@ elseif ~isempty(cfg.length)
       tmp2(:,2) = tmp2 + nsmp - 1;
       tmp2(:,3) = tmp2(:,1) + offset - tmp2(1,1);
       if isfield(data, 'trialinfo')
-        tmp2(:,4) = data.trialinfo(k);
+        for l = 1:size(data.trialinfo, 2)
+          tmp2(:,3+l) = data.trialinfo(k,l);
+        end
       end
       newtrl = [newtrl; tmp2];
     end
