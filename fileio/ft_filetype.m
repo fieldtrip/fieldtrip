@@ -310,6 +310,10 @@ elseif filetype_check_extension(filename, '.eve') && exist(fullfile(p, [f '.fif'
   type = 'neuromag_eve'; % these are being used by Tristan Technologies for the BabySQUID system
   manufacturer = 'Neuromag';
   content = 'events';
+elseif filetype_check_extension(filename, '.log') && filetype_check_header(filename, '*** This is Elekta Neuromag MaxFilter', 61)
+  type = 'neuromag_maxfilterlog'; 
+  manufacturer = 'Neuromag';
+  content = 'MaxFilter log information';
   
   % known Yokogawa file types
 elseif filetype_check_extension(filename, '.ave') || filetype_check_extension(filename, '.sqd')
@@ -1163,6 +1167,10 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'ced_spike6mat';
   manufacturer = 'Cambridge Electronic Design Limited';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_neuroomega_mat(filename)
+  type = 'neuroomega_mat';
+  manufacturer = 'Alpha Omega';
+  content = 'electrophysiological data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
   manufacturer = 'MATLAB';
@@ -1409,6 +1417,12 @@ else
   d = dir;
 end
 res = any(strcmp(filename,{d.name}));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for NeuroOmega mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_neuroomega_mat(filename)
+res=~isempty(regexp(filename,'[RL]T[1-5]D[-]{0,1}\d+\.\d+([+-]M){0,1}F\d+\.mat','once'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks whether the directory is neuralynx_cds

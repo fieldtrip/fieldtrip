@@ -377,8 +377,8 @@ elseif strcmp(sfmethod, 'multivariate') && nrpt==1 && doblock,
     cmbtmp  = cell(siz(1), 2);
     [tmpindx(:,1), tmpindx(:,2)] = ind2sub(sqrt(siz(1))*[1 1],1:siz(1));
     for kk = 1:size(cmbtmp,1)
-      cmbtmp{kk,1} = [freq.label{sel(tmpindx(kk,1))},'[',cat(2,freq.label{sel}),']'];
-      cmbtmp{kk,2} = [freq.label{sel(tmpindx(kk,2))},'[',cat(2,freq.label{sel}),']'];
+      cmbtmp{kk,1} = [freq.label{sel(tmpindx(kk,1))},'[',strjoin(freq.label(sel),','),']'];
+      cmbtmp{kk,2} = [freq.label{sel(tmpindx(kk,2))},'[',strjoin(freq.label(sel),','),']'];
     end
     
     %concatenate
@@ -494,7 +494,7 @@ elseif strcmp(sfmethod, 'bivariate')
   
   labelcmb = cell(size(cmbindx,1)*4, 2);
   for k = 1:size(cmbindx,1)
-    duplet = strcat(channelcmb{k,:});  
+    duplet = sprintf('%s,%s',channelcmb{k,1},channelcmb{k,2});  
     indx   = (k-1)*4 + (1:4);
     labelcmb{indx(1),1} = [channelcmb{k,1},'[',duplet,']'];
     labelcmb{indx(1),2} = [channelcmb{k,1},'[',duplet,']'];
@@ -605,7 +605,7 @@ elseif strcmp(sfmethod, 'trivariate')
   
   labelcmb = cell(size(cmbindx,1)*9, 2);
   for k = 1:size(cmbindx,1)
-    triplet = strcat(channeltriplet{k,:});
+    triplet = sprintf('%s,%s,%s',channeltriplet{k,1},channeltriplet{k,2},channeltriplet{k,3});
     indx    = (k-1)*9 + (1:9);
     
     labelcmb{indx(1),1} = [channeltriplet{k,1},'[',triplet,']'];

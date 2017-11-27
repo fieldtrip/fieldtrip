@@ -6,10 +6,6 @@ function failed_ft_statistics_montecarlo
 % TEST test_ft_statistics_montecarlo
 % TEST ft_statistics_montecarlo ft_timelockstatistics ft_freqstatistics ft_sourcestatistics clusterstat findcluster
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % test the functionality of ft_statistics_montecarlo, in particular with respect to the clustering behaviour.
 
 % start with some data

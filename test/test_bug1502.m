@@ -5,14 +5,11 @@ function test_bug1502
 
 % TEST ft_checkconfig
 
-% this test script should be explicit about ft_default
-global ft_default
-ft_default = [];
-
 cfg   = [];
 cfg.a = 1;
 cfg.b = 2;
 cfg.c = 3;
+cfg.checkconfig = 'pedantic'; % this field pertains to error handling and is not checked itself
 
 cfg = ft_checkconfig(cfg, 'allowed', {'a', 'b', 'c'});
 

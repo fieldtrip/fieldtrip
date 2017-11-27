@@ -5,10 +5,6 @@
 
 % TEST ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_headmodel_simbio
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
 % this test script is based on the tutorial under development at
 % http://www.fieldtriptoolbox.org/development/simbio
 

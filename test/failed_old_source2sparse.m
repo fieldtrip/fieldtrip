@@ -5,12 +5,8 @@ function failed_old_source2sparse
 
 % TEST test_old_source2sparse
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
-%this script tests the functionality of ft_source2sparse with respect
-%to source data new style
+% this script tests the functionality of ft_source2sparse with respect
+% to source data new style
 
 %-------------------------------------
 %generate data

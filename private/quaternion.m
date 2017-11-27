@@ -9,11 +9,12 @@ function [H] = quaternion(q)
 %   Q       [q0, q1, q2, q3, q4, q5, q6] vector with parameters
 %   H       corresponding homogenous transformation matrix
 %
-% See Elekta/Neuromag MaxFilter manual version 2.2, section "D2 Coordinate Matching",
-% page 77 for more details and
+% If the input vector has length 6, it is assumed to represent a unit quaternion without scaling.
+%
+% See Elekta/Neuromag MaxFilter manual version 2.2, section "D2 Coordinate Matching", page 77 for more details and
 % https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Conversion_to_and_from_the_matrix_representation
 
-% Copyright (C) 2016, Robert Oostenveld
+% Copyright (C) 2016-2017, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -46,6 +47,13 @@ function [H] = quaternion(q)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if numel(q)==6
+  % this is used a lot by the Elekta software, where the first element is left out and a rigid body transformation wothout scaling is used.
+  % see also https://github.com/mne-tools/mne-python/blob/maint/0.15/mne/transforms.py#L1137
+  q0 = sqrt(1 - q(1)^2 - q(2)^2 - q(3)^2);
+  q = [q0 q];
+end
 
 if numel(q)~=7
   ft_error('incorrect input vector');

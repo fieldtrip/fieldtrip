@@ -5,11 +5,7 @@ function failed_old_fixsource
 
 % TEST test_old_fixsource
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
-%this script tests the fixsource function which is part of ft_checkdata
+% this script tests the fixsource function which is part of ft_checkdata
 
 %-------------------------------------
 %generate data

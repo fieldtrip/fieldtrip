@@ -5,12 +5,8 @@ function failed_old_connectivityanalysis_sourcedata
 
 % TEST test_old_connectivityanalysis_sourcedata
 
-% use FieldTrip defaults instead of personal defaults
-global ft_default;
-ft_default = [];
-
-%this script tests the functionality of connectivityanalysis with respect
-%to source data
+% this script tests the functionality of connectivityanalysis with respect
+% to source data
 
 %-------------------------------------
 %generate data
