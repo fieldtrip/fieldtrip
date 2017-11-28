@@ -145,8 +145,64 @@ switch cfg.method
     headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');
 end
 
+% set-up channels labels if possible
+chanlabel = {}; chanstring = {};
+markerlab = {}; markerpos = {};
+if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
+  for e = 1:numel(cfg.elec.label)
+    chanlabel{end+1,1} = cfg.elec.label{e};
+    chanstring{end+1} = ['<HTML><FONT color="black">' cfg.elec.label{e} '</FONT></HTML>']; % hmtl'ize
+    
+    markerlab{end+1,1} = cfg.elec.label{e};
+    markerpos{end+1,1} = cfg.elec.elecpos(e,:);
+  end
+end
+if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
+  for c = 1:numel(cfg.channel)
+    if ~ismember(cfg.channel{c}, chanlabel) % avoid overlap between cfg.channel and elec.label
+      chanlabel{end+1,1} = cfg.channel{c};
+      chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
+      
+      markerlab{end+1,1} = {};
+      markerpos{end+1,1} = zeros(0,3);
+    end
+  end
+end
+if isempty(cfg.elec) && isempty(cfg.channel) % create electrode labels on-the-fly
+  for c = 1:300
+    chanlabel{end+1,1} = sprintf('%d', c);
+    chanstring{end+1} = ['<HTML><FONT color="silver">' sprintf('%d', c) '</FONT></HTML>']; % hmtl'ize
+    
+    markerlab{end+1,1} = {};
+    markerpos{end+1,1} = zeros(0,3);
+  end
+end
+
+% draw the user-interfaces
 switch cfg.method
   case 'headshape'
+      
+    % start building the figure
+    h = figure(...
+      'Name', mfilename,...
+      'Units', 'normalized', ...
+      'Color', [1 1 1], ...
+      'Visible', 'on');
+    set(h, 'windowbuttondownfcn', @cb_buttonpress);
+    set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
+    set(h, 'windowkeypressfcn',   @cb_keyboard);
+    set(h, 'CloseRequestFcn',     @cb_cleanup);
+    set(h, 'renderer', cfg.renderer);  
+    
+    % electrode listbox
+    h1 = uicontrol('Style', 'listbox', ...
+      'Parent', h, ...
+      'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
+      'Units', 'normalized', ...
+      'FontSize', 12, ...
+      'Position', [.8 0.02 .15 .4], ...
+      'Callback', @cb_eleclistbox, ...
+      'String', chanstring);
     
     % give the user instructions
     disp('Use the mouse to click on the desired electrode positions');
@@ -155,10 +211,8 @@ switch cfg.method
     disp('Press "+/-" to zoom in/out');
     disp('Press "w/a/s/d" to rotate');
     disp('Press "q" when you are done');
-    % open a figure
-    figure;
+
     % plot the faces of the 2D or 3D triangulation
-    
     if isfield(headshape, 'color');
       skin = 'none';
       ft_plot_mesh(headshape);
@@ -170,20 +224,42 @@ switch cfg.method
       camlight
     end
     
-    % rotate3d on
-    xyz = ft_select_point3d(headshape, 'nearest', false, 'multiple', true, 'marker', '*');
-    numelec = size(xyz, 1);
+    % create structure to be passed to gui
+    opt               = [];
+    opt.method        = 'headshape'; % this is to use the same functionalities across volume and headshape
+    opt.headshape     = headshape;
+    opt.label         = chanlabel;
+    opt.axes          = [h1];
+    opt.mainfig       = h;
+    opt.quit          = false;
+    opt.init          = true;
+    opt.showcrosshair = true;
+    opt.showlabels    = false;
+    opt.showmarkers   = true;
+    opt.markerlab     = markerlab;
+    opt.markerpos     = markerpos;
+    opt.markerdist    = cfg.markerdist; % hidden option
     
-    % construct the output electrode structure
+    setappdata(h, 'opt', opt);
+    
+    while(opt.quit==0)
+      uiwait(h);
+      opt = getappdata(h, 'opt');
+    end
+    delete(h);
+    
+    % collect the results
     elec = keepfields(headshape, {'unit', 'coordsys'});
-    elec.elecpos = xyz;
-    for i=1:numelec
-      try
-        elec.label{i} = cfg.channel{i,1};
-      catch
-        elec.label{i} = sprintf('%d', i);
+    elec.label    = {};
+    elec.elecpos  = [];
+    for i=1:length(opt.markerlab)
+      if ~isempty(opt.markerlab{i,1})
+        elec.label = [elec.label; opt.markerlab{i,1}];
+        elec.elecpos = [elec.elecpos; opt.markerpos{i,1}];
       end
     end
+    elec.chanpos = elec.elecpos;
+    elec.tra = eye(size(elec.elecpos,1));
     
   case 'volume'
     
@@ -300,38 +376,6 @@ switch cfg.method
     %     'Background', java.awt.Color.white, 'StateChangedCallback', @cb_intensityslider);
     
     % electrode listbox
-    chanlabel = {}; chanstring = {};
-    markerlab = {}; markerpos = {};
-    if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
-      for e = 1:numel(cfg.elec.label)
-        chanlabel{end+1,1} = cfg.elec.label{e};
-        chanstring{end+1} = ['<HTML><FONT color="black">' cfg.elec.label{e} '</FONT></HTML>']; % hmtl'ize
-        
-        markerlab{end+1,1} = cfg.elec.label{e};
-        markerpos{end+1,1} = cfg.elec.elecpos(e,:);
-      end
-    end
-    if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
-      for c = 1:numel(cfg.channel)
-        if ~ismember(cfg.channel{c}, chanlabel) % avoid overlap between cfg.channel and elec.label
-          chanlabel{end+1,1} = cfg.channel{c};
-          chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
-          
-          markerlab{end+1,1} = {};
-          markerpos{end+1,1} = zeros(0,3);
-        end
-      end
-    end
-    if isempty(cfg.elec) && isempty(cfg.channel) % create electrode labels on-the-fly
-      for c = 1:150
-        chanlabel{end+1,1} = sprintf('%d', c);
-        chanstring{end+1} = ['<HTML><FONT color="silver">' sprintf('%d', c) '</FONT></HTML>']; % hmtl'ize
-        
-        markerlab{end+1,1} = {};
-        markerpos{end+1,1} = zeros(0,3);
-      end
-    end
-    
     h6 = uicontrol('Style', 'listbox', ...
       'Parent', h, ...
       'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
@@ -436,6 +480,7 @@ switch cfg.method
     
     % create structure to be passed to gui
     opt               = [];
+    opt.method        = 'volume'; % this is to use the same functionalities across volume and headshape 
     opt.label         = chanlabel;
     opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
     opt.mainfig       = h;
@@ -1024,14 +1069,17 @@ function cb_buttonpress(h, eventdata)
 
 h = getparent(h);
 cb_getposition(h);
-switch get(h, 'selectiontype')
-  case 'normal'
-    % just update to new position, nothing else to be done here
-    cb_redraw(h);
-  case 'alt'
-    set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
-    cb_redraw(h);
-  otherwise
+opt = getappdata(h, 'opt');
+if strcmp(opt.method, 'volume') % only redraw volume/orthoplot
+  switch get(h, 'selectiontype')
+    case 'normal'
+      % just update to new position, nothing else to be done here
+      cb_redraw(h);
+    case 'alt'
+      set(h, 'windowbuttonmotionfcn', @cb_tracemouse);
+      cb_redraw(h);
+    otherwise
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1057,26 +1105,30 @@ function cb_getposition(h, eventdata)
 
 h   = getparent(h);
 opt = getappdata(h, 'opt');
-curr_ax = get(h,       'currentaxes');
-tag = get(curr_ax, 'tag');
-if ~isempty(tag) && ~opt.init
-  pos     = mean(get(curr_ax, 'currentpoint'));
-  if strcmp(tag, 'ik')
-    opt.pos([1 3])  = pos([1 3]);
-    opt.update = [1 1 1];
-  elseif strcmp(tag, 'ij')
-    opt.pos([1 2])  = pos([1 2]);
-    opt.update = [1 1 1];
-  elseif strcmp(tag, 'jk')
-    opt.pos([2 3])  = pos([2 3]);
-    opt.update = [1 1 1];
-  end
-  opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
-  opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
-end
 
-if opt.magradius>0 % magnetize
-  opt = magnetize(opt);
+if strcmp(opt.method, 'volume')
+  curr_ax = get(h,       'currentaxes');
+  tag = get(curr_ax, 'tag');
+  if ~isempty(tag) && ~opt.init
+    pos     = mean(get(curr_ax, 'currentpoint'));
+    if strcmp(tag, 'ik')
+      opt.pos([1 3])  = pos([1 3]);
+      opt.update = [1 1 1];
+    elseif strcmp(tag, 'ij')
+      opt.pos([1 2])  = pos([1 2]);
+      opt.update = [1 1 1];
+    elseif strcmp(tag, 'jk')
+      opt.pos([2 3])  = pos([2 3]);
+      opt.update = [1 1 1];
+    end
+    opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
+    opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
+  end
+  if opt.magradius>0 % magnetize
+    opt = magnetize(opt);
+  end
+elseif strcmp(opt.method, 'headshape')
+  opt.pos = ft_select_point3d(opt.headshape, 'nearest', false, 'multiple', false, 'marker', '+'); % rotate3d on
 end
 setappdata(h, 'opt', opt);
 
@@ -1211,7 +1263,9 @@ if ~isempty(elecidx)
   set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
   opt.redrawmarker = 1;
   setappdata(h, 'opt', opt);
-  cb_redraw(h);
+  if strcmp(opt.method, 'volume')
+    cb_redraw(h);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
