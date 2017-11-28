@@ -27,7 +27,7 @@ function ft_realtime_headlocalizer(cfg)
 %   cfg.accuracy_orange = orange when within limits, red when out (default = 0.3 cm)
 %
 % This method is described in Stolk A, Todorovic A, Schoffelen JM, Oostenveld R.
-% "Online and offline tools for head movement compensation in MEG." 
+% "Online and offline tools for head movement compensation in MEG."
 % Neuroimage. 2013 Mar;68:39-48. doi: 10.1016/j.neuroimage.2012.11.047.
 
 % Copyright (C) 2008-2013,  Arjen Stolk & Robert Oostenveld
@@ -76,6 +76,7 @@ cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); %
 cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
 cfg.head            = ft_getopt(cfg, 'head',             []); % mesh of the head
 cfg.headmovement    = ft_getopt(cfg, 'headmovement',     []); % movement file computed with maxfilter
+
 
 % ensure pesistent variables are cleared
 clear ft_read_header
@@ -138,13 +139,13 @@ end % if ctf or neuromag
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isctf
   sens = hdr.grad;
-  sens = ft_convert_units(sens,'cm');
   % not needed for CTF275 systems
   dip  = [];
   vol  = [];
   coilsignal = [];
+  
 elseif isneuromag
-    shape = ft_read_headshape(cfg.headerfile, 'format', 'neuromag_fif','unit','m'); % ensure SI units
+  shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif','unit','m'); % ensure SI units
   for i = 1:min(size(shape.pos,1),length(cfg.coilfreq)) % for as many digitized or specified coils
     if ~isempty(strfind(shape.label{i},'hpi'))
       dip(i).pos = shape.pos(i,:); % chan X pos, initial guess for each of the dipole/coil positions
@@ -158,11 +159,11 @@ elseif isneuromag
   % prepare the forward model and the sensor array for subsequent fitting
   % note that the forward model is a magnetic dipole in an infinite vacuum
   %cfg.channel = ft_channelselection('MEG', hdr.label); % because we want to planars as well (previously only magnetometers)
-  %cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
+  cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
   %cfg.channel = setdiff(ft_channelselection('MEG', hdr.label),ft_channelselection('MEGMAG', hdr.label)); % just trying out (planar mags)
   %cfg.channel = ft_channelselection('IAS*',hdr.label); % internal active shielding
-  [vol, sens] = ft_prepare_vol_sens([], hdr.grad);
-  %sens = ft_datatype_sens(sens, 'version', '2016', 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
+  [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
+  sens = ft_datatype_sens(sens, 'scaling', 'amplitude/distance', 'distance', 'm'); % ensure SI units
   coilsignal = [];
   
   % update distances, given that sensor units are m an not cm
@@ -178,9 +179,17 @@ end % if ctf or neuromag
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isctf
   [dum, chanindx] = match_str('headloc', hdr.chantype);
+  
 elseif isneuromag
-  % 102 magnetometers
-  [dum, chanindx] = match_str('megmag', hdr.chantype);
+  
+  chanindx = find(startsWith(hdr.label, 'CHPI'));
+  if numel(chanindx)==9
+    % work with these channels
+  else
+    % select the 102 magnetometers
+    [dum, chanindx] = match_str('megmag', hdr.chantype);
+  end
+  
   
   % all 306
   %[dum, chanindx1] = match_str('megmag', hdr.chantype);
@@ -191,7 +200,7 @@ elseif isneuromag
   %[dum, chanindx] = match_str('megplanar', hdr.chantype);
   
   % 11 IAS
-  % chanindx = 1:11;  
+  % chanindx = 1:11;
 end
 
 if isempty(chanindx)
@@ -221,23 +230,17 @@ guidata(hMainFig, info);
 % initiate gui controls
 uicontrol_sub(hMainFig);
 
-count = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while ishandle(hMainFig) && info.continue % while the flag is one, the loop continues
-
+  
   % get the potentially updated information from the main window
   info = guidata(hMainFig);
   
   % determine number of samples available in buffer
   info.hdr = ft_read_header(info.cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
-  
-  %read local neuromag file for quaternion, this will be extended to
-  %realtime
-  % tranformation is saved in quaternions from P.J. Besl and N.D. McKay, A Method for Registration of 3-D Shapes, IEEE Trans. Patt. Anal. Machine Intell., 14, 239 - 255, 1992  
- 
   
   % see whether new samples are available
   newsamples = (info.hdr.nSamples*info.hdr.nTrials-prevSample);
@@ -293,8 +296,10 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     end
     
     % compute the HPI coil positions, this takes some time
-    [hpi, info.dip] = data2hpi(data, info.dip,  info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
-
+    [hpi, info.dip, info.q] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.cfg, count, info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
+    
+    guidata(hMainFig, info);
+    
     if ~ishandle(hMainFig)
       % the figure has been closed
       break
@@ -305,22 +310,6 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     % update the info
     info.hpi = hpi;
     
-    % compute transformation
-    if info.isctf    
-        info.M          = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'ctf');
-        info.M(1:3,1:3) = inv(info.M(1:3,1:3));
-        info.M(1:3,4)   = -info.M(1:3,4)'*inv(info.M(1:3,1:3));   
-    elseif info.isneuromag
-        movement = importdata(info.cfg.headmovement);
-        q(1:6) = movement.data(count,2:7);
-        info.q = q;
-        info.origin = ft_warp_apply(q, [0 0 0], 'quaternion')*100;
-        for j = 1:length(info.hpi)
-            info.hpi{j} = ft_warp_apply(info.q,info.hpi{j}','quaternion')'-info.origin';
-        end
-    end
-    
-
     % store the updated gui variables
     guidata(hMainFig, info);
     
@@ -532,7 +521,6 @@ info.hRealistic         = hHeadCheckBox;
 info.hPolhemusCheckBox  = hPolhemusCheckBox; 
 info.hAxisCheckBox      = hAxisCheckBox;
 
-
 % put the info back
 guidata(handle, info);
 
@@ -540,7 +528,7 @@ guidata(handle, info);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the HPI coil positions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [hpi, dip] = data2hpi(data, dip, isctf, isneuromag)
+function [hpi, dip, q] = data2hpi(data, dip, vol, sens, coilsignal, cfg, count, isctf, isneuromag)
 
 % The CTF275 system localizes the HPI coil positions online, and writes them
 % to the dataset. For the Neuromag systems the signals evoked by the HPI coils
@@ -564,18 +552,61 @@ if isctf
   hpi{2} = data.trial{1}([x2 y2 z2],end) * 100;
   hpi{3} = data.trial{1}([x3 y3 z3],end) * 100;
   
-elseif isneuromag
-  [dum, hpi1] = match_str('hpi_1', data.shape.label);
-  [dum, hpi2] = match_str('hpi_2', data.shape.label);
-  [dum, hpi3] = match_str('hpi_3', data.shape.label);
-  [dum, hpi4] = match_str('hpi_4', data.shape.label);
-  [dum, hpi5] = match_str('hpi_5', data.shape.label);
+  q = [];
   
-  hpi{1} = data.shape.pos(hpi1,1:3)' * 100;
-  hpi{2} = data.shape.pos(hpi2,1:3)' * 100;
-  hpi{3} = data.shape.pos(hpi3,1:3)' * 100;
-  hpi{4} = data.shape.pos(hpi4,1:3)' * 100;
-  hpi{5} = data.shape.pos(hpi5,1:3)' * 100;
+elseif isneuromag
+  if all(startsWith(data.label, 'CHPI'))
+      q1 = data.trial{1}(strcmp(data.label, 'CHPI001'),:);
+      q2 = data.trial{1}(strcmp(data.label, 'CHPI002'),:);
+      q3 = data.trial{1}(strcmp(data.label, 'CHPI003'),:);
+      q4 = data.trial{1}(strcmp(data.label, 'CHPI004'),:);
+      q5 = data.trial{1}(strcmp(data.label, 'CHPI005'),:);
+      q6 = data.trial{1}(strcmp(data.label, 'CHPI006'),:);
+      q = [q1(:) q2(:) q3(:) q4(:) q5(:) q6(:)];
+  elseif ~isempty(cfg.headmovement)
+      movement = importdata(cfg.headmovement);
+      q1 = movement.data(count,2);
+      q(1:6) = movement.data(count,2:7);
+  end
+  for i=1:numel(q1)
+    % compute the anatomical landmark location in cm
+    hpi{1}(:,i) = (ft_warp_apply(q(i,:), data.hdr.orig.dig(1).r', 'quaternion') - ft_warp_apply(q, [0 0 0], 'quaternion'))'*100;
+    hpi{2}(:,i) = (ft_warp_apply(q(i,:), data.hdr.orig.dig(2).r', 'quaternion') - ft_warp_apply(q, [0 0 0], 'quaternion'))'*100;
+    hpi{3}(:,i) = (ft_warp_apply(q(i,:), data.hdr.orig.dig(3).r', 'quaternion') - ft_warp_apply(q, [0 0 0], 'quaternion'))'*100;
+  end
+  
+elseif isneuromag
+  
+  % estimate the complex-valued MEG topography for each coil
+  % this implements a discrete Fourier transform (DFT)
+  topo = [];
+  %[x, ut] = svdfft( data.trial{1} );
+  %data.trial{1} = x;
+  topo = ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal);
+  
+  % ignore the out-of-phase spectral component in the topography
+  topo = real(topo); % THIS SEEMS TO BE CRUCIAL
+  
+  % fit a magnetic dipole to each of the topographies
+  constr.sequential = true; % for BTI systems this would be 'false' as all coils have the same frequency
+  constr.rigidbody = true;
+  
+  % fit the coils together
+  dipall = [];
+  ncoil = numel(dip);
+  for i=1:ncoil
+    dipall.pos(i,:) = dip(i).pos;
+  end
+  dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr, 'display', 'off');
+  for i=1:ncoil
+    sel = (1:3) + 3*(i-1);
+    dip(i).pos = dipall.pos(i,:);
+    dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
+    hpi{i} = dip(i).pos;
+  end
+  
+else
+  ft_error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
 
 
@@ -631,6 +662,15 @@ function draw_sub(handle)
 
 % get the info
 info = guidata(handle);
+
+% compute transformation
+    if info.isctf    
+        M          = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)],[info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)],[info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)],'ctf');
+        M(1:3,1:3) = inv(M(1:3,1:3));
+        M(1:3,4)   = -M(1:3,4)'/M(1:3,1:3);   
+    elseif info.isneuromag
+        info.origin = ft_warp_apply(info.q, [0 0 0], 'quaternion')*100;
+    end
 
 %plot the HPI mismatch
 if get(info.hCoilCheckBox, 'Value')
@@ -760,7 +800,7 @@ end
 if get(info.hRealistic, 'Value') && ~isempty(info.cfg.head) 
     if info.isctf
         head     = info.cfg.head;
-        head.pos = ft_warp_apply(info.M,head.pos);  
+        head.pos = ft_warp_apply(M,head.pos);  
         ft_plot_mesh(head)
       % draw 3d head
     elseif info.isneuromag
@@ -788,16 +828,18 @@ if get(info.hDewarCheckBox, 'Value')
     end  
 end
 
+%plot Polhemus
 if get(info.hPolhemusCheckBox, 'Value')
     if ~isempty(info.hdr.elec)
         if info.isctf 
-            ft_plot_mesh(ft_warp_apply(info.M,info.hdr.elec.elecpos),'vertexmarker','.')
+            ft_plot_mesh(ft_warp_apply(M,info.hdr.elec.elecpos),'vertexmarker','.')
         elseif info.isneuromag    
             ft_plot_mesh(info.hdr.elec.elecpos-repmat(info.origin,length(info.hdr.elec.elecpos),1),'vertexmarker','.')
         end    
     end     
 end
 
+%plot Axis
 if get(info.hAxisCheckBox, 'Value')
     if info.isctf
         ft_plot_axes([],'coordsys','ctf','unit','cm');
@@ -846,7 +888,7 @@ switch eventdata.Key
     fprintf('stopping the application \n')
     info.continue = false;
   case 'c'
-    % display the coils
+    % display the sensors/dewar
     if get(info.hCoilCheckBox,'Value') == 0;
       fprintf('displaying coils \n')
       set(info.hCoilCheckBox, 'Value', 1); % toggle on
@@ -854,15 +896,15 @@ switch eventdata.Key
       set(info.hCoilCheckBox, 'Value', 0); % toggle off
     end
   case 'h'
-    % display the dewar
-    if get(info.hSphereCheckBox,'Value') == 0;
+    % display the sensors/dewar
+    if get(info.hHeadCheckBox,'Value') == 0;
       fprintf('displaying head \n')
-      set(info.hSphereCheckBox, 'Value', 1); % toggle on
-    elseif get(info.hSphereCheckBox,'Value') == 1;
-      set(info.hSphereCheckBox, 'Value', 0); % toggle off
+      set(info.hHeadCheckBox, 'Value', 1); % toggle on
+    elseif get(info.hHeadCheckBox,'Value') == 1;
+      set(info.hHeadCheckBox, 'Value', 0); % toggle off
     end
   case 's'
-    % display the sensors
+    % display the sensors/dewar
     if get(info.hSensorCheckBox,'Value') == 0;
       fprintf('displaying sensors/dewar \n')
       set(info.hSensorCheckBox, 'Value', 1); % toggle on
